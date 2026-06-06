@@ -1,12 +1,12 @@
-import type { MonthlyFinance } from "../../cursor/schemas/index.js";
-import type { Property } from "../../cursor/schemas/index.js";
-import type { PropertyRevenuePlan } from "../../cursor/schemas/index.js";
+import type { MonthlyFinance } from "../../schemas/index.js";
+import type { Property } from "../../schemas/index.js";
+import type { PropertyRevenuePlan } from "../../schemas/index.js";
 import { formatCurrency, formatPercent, currentDate } from "./utils.js";
 import { analyzeAllProperties } from "./analyze.js";
 import { generateForecast, formatForecastMarkdown } from "./forecast.js";
 import { scanContractAlerts, formatAlertsMarkdown } from "./alerts.js";
 import type { StewardData } from "./data.js";
-import type { FixedCosts, Loans } from "../../cursor/schemas/index.js";
+import type { FixedCosts, Loans } from "../../schemas/index.js";
 
 function sumRevenue(f: MonthlyFinance): number {
   return f.revenue.reduce((s, r) => s + r.amount, 0);

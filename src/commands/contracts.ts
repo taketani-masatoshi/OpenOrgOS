@@ -1,5 +1,5 @@
 import { loadContracts } from "../lib/data.js";
-import type { ContractType } from "../../cursor/schemas/index.js";
+import type { ContractType } from "../../schemas/index.js";
 
 export function runContractsList(options: {
   type?: string;
@@ -21,9 +21,10 @@ export function runContractsList(options: {
 
   console.log(
     "ID".padEnd(10) +
-      "Name".padEnd(35) +
-      "Type".padEnd(14) +
-      "Counterparty".padEnd(25) +
+      "Name".padEnd(30) +
+      "Type".padEnd(12) +
+      "Status".padEnd(10) +
+      "Counterparty".padEnd(18) +
       "End".padEnd(12) +
       "Risk"
   );
@@ -32,9 +33,10 @@ export function runContractsList(options: {
   for (const c of contracts) {
     console.log(
       c.id.padEnd(10) +
-        c.name.slice(0, 33).padEnd(35) +
-        c.type.padEnd(14) +
-        c.counterparty.slice(0, 23).padEnd(25) +
+        c.name.slice(0, 28).padEnd(30) +
+        c.type.padEnd(12) +
+        (c.status ?? "draft").padEnd(10) +
+        c.counterparty.slice(0, 16).padEnd(18) +
         (c.end_date ?? "-").padEnd(12) +
         (c.risk?.risk_level ?? "-")
     );

@@ -8,93 +8,52 @@ alwaysApply: false
 
 # Steward OS 運用ルール
 
-## フォルダ構成（厳守）
+## 分け方の原則
 
-| フォルダ | 置いてよい形式 | 用途 |
-|---------|---------------|------|
-| **`docs/`** | `.md` `.csv` のみ | 人が読む・書く |
-| **`cursor/data/`** | `.yaml` のみ | 正データ |
-| **`cursor/schemas/`** | `.ts` | 検証スキーマ |
-| **`cursor/reports/`** | `.pdf` のみ | 決算・事業報告 PDF |
-| **`docs/reports/`** | `.md` のみ | CLI 生成レポート |
+**「誰が読むか」でフォルダを決める。** CLI が生成したからといって Cursor フォルダに置かない。
 
-**YAML と Markdown を同じフォルダに置かない。**
+| ゾーン | パス | 中身 |
+|--------|------|------|
+| **人** | `docs/` | MD・CSV・**PDF**（読む・印刷・提出） |
+| **Cursor** | `cursor/` | **YAML 正データ** + scratch 試行のみ |
+| **プログラム** | `src/` `schemas/` `assets/` | TS・フォント等 |
 
-## データ配置規約（`cursor/data/` · YAML のみ）
+## Cursor ゾーン（`cursor/`）
 
-- 会社情報: `cursor/data/company.yaml`
-- 物件: `cursor/data/properties/PROP-{NNN}.yaml`
-- 契約: `cursor/data/contracts/CTR-{NNN}.yaml`
-- 月次収支: `cursor/data/finances/monthly/{YYYY-MM}.yaml`
-- 固定費: `cursor/data/finances/fixed-costs.yaml`
-- 役員報酬: `cursor/data/finances/payroll.yaml`
-- 融資: `cursor/data/finances/loans.yaml`
-- 事業計画: `cursor/data/plans/business-plan.yaml`
-- 売上計画: `cursor/data/plans/revenue-plan.yaml`
-- 利益計画: `cursor/data/plans/profit-plan.yaml`
-- 費用計画: `cursor/data/plans/expense-plan.yaml`
-- 投資計画: `cursor/data/plans/investment-plan.yaml`
-- 月次予実: `cursor/data/plans/yojitsu-fy{YYYY}.yaml`
+| フォルダ | 用途 |
+|---------|------|
+| `cursor/data/` | 正データ（.yaml） |
+| `cursor/scratch/` | 中間試行（gitignore） |
 
-## 人向けドキュメント（`docs/` · MD / CSV のみ）
+**PDF・生成物・フォントは cursor/ に置かない。**
 
-- 決算書・予実表: `docs/plans/fy{YYYY}-pl.md`
-- 計画 CSV: `docs/data/売上計画.csv` 等（YAML の写し）
-- CLI レポート: `docs/reports/monthly/` 等
+## 人ゾーン（`docs/`）
 
-## ID 命名規則
+| フォルダ | 用途 |
+|---------|------|
+| `docs/plans/` | 決算書・予実 MD |
+| `docs/corporate/` | 法人書類 MD |
+| `docs/corporate/pdf/` | 決算・事業報告 PDF |
+| `docs/contracts/` | 契約書 MD |
+| `docs/data/` | CSV |
+| `docs/reports/` | CLI 生成 MD |
 
-- 物件: `PROP-001`, `PROP-002`, ...
-- 契約: `CTR-001`, `CTR-002`, ...
-- 融資: `LOAN-001`, `LOAN-002`, ...
+## 正データ（`cursor/data/`）
 
-## 契約書取込テンプレート
-
-契約書 PDF やテキストから情報を抽出する際、以下の YAML 形式で `cursor/data/contracts/` に保存する:
-
-```yaml
-id: CTR-XXX
-name: "契約名"
-counterparty: "相手先名"
-type: management
-start_date: YYYY-MM-DD
-end_date: YYYY-MM-DD
-auto_renewal: true
-owner: "担当者"
-property_id: PROP-XXX
-monthly_cost: 0
-risk:
-  renewal_deadline: YYYY-MM-DD
-  termination_deadline: YYYY-MM-DD
-  risk_level: low
-  notes: ""
-```
+- 会社: `company.yaml`
+- 物件: `properties/PROP-{NNN}.yaml`
+- 契約: `contracts/CTR-{NNN}.yaml`
+- 月次: `finances/monthly/{YYYY-MM}.yaml`
+- 計画: `plans/*.yaml`
 
 ## レポート生成
 
-- 月次レポート（MD）: `npm run steward -- report monthly` → `docs/reports/monthly/`
-- 決算報告書（PDF）: `npm run steward -- report kessan` → `cursor/reports/kessan/`
-- 事業報告書（PDF）: `npm run steward -- report jigyo` → `cursor/reports/jigyo/`
-- CF予測・アラート等（MD）: `docs/reports/` 配下
+- MD → `docs/reports/`
+- PDF → `docs/corporate/pdf/`（`npm run steward -- report kessan|jigyo`）
+- フォント → `assets/fonts/`
 
-## データ入力時のルール
+## データ入力
 
-1. 新規データ追加後は `npm run validate` を実行
-2. 数値は YAML を先に更新 → CSV を同期
-3. 日付は `YYYY-MM-DD`、月は `YYYY-MM` 形式
-4. 金額は整数（円単位）
-
-## 月次収支入力テンプレート
-
-```yaml
-month: "YYYY-MM"
-revenue:
-  - property_id: PROP-001
-    category: rent
-    amount: 350000
-expenses:
-  - property_id: PROP-001
-    category: repair
-    amount: 50000
-notes: ""
-```
+1. `cursor/data/` YAML 更新 → `npm run validate`
+2. `docs/` CSV・MD 同期
+3. 試行は `cursor/scratch/` → 確定後 `docs/` または `cursor/data/` へ

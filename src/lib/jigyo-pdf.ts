@@ -1,9 +1,9 @@
 import { join } from "node:path";
-import type { YojitsuPlan } from "../../cursor/schemas/finance.js";
-import type { Company } from "../../cursor/schemas/company.js";
-import type { BusinessPlan } from "../../cursor/schemas/finance.js";
-import type { Property } from "../../cursor/schemas/property.js";
-import type { Loans } from "../../cursor/schemas/finance.js";
+import type { YojitsuPlan } from "../../schemas/finance.js";
+import type { Company } from "../../schemas/company.js";
+import type { BusinessPlan } from "../../schemas/finance.js";
+import type { Property } from "../../schemas/property.js";
+import type { Loans } from "../../schemas/finance.js";
 import {
   createPdfWriter,
   fiscalPeriodLabel,

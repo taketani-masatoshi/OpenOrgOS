@@ -22,7 +22,7 @@ import {
   type Loans,
   type BusinessPlan,
   type PropertyRevenuePlan,
-} from "../../cursor/schemas/index.js";
+} from "../../schemas/index.js";
 import {
   DATA_DIR,
   readYamlFile,
@@ -117,7 +117,7 @@ export function loadPropertyRevenuePlan(): PropertyRevenuePlan {
   );
 }
 
-export function loadYojitsuPlan(year: number): import("../../cursor/schemas/finance.js").YojitsuPlan | undefined {
+export function loadYojitsuPlan(year: number): import("../../schemas/finance.js").YojitsuPlan | undefined {
   const path = join(DATA_DIR, "plans", `yojitsu-${year}.yaml`);
   try {
     return readYamlFile(path, yojitsuPlanSchema);
@@ -128,7 +128,7 @@ export function loadYojitsuPlan(year: number): import("../../cursor/schemas/fina
 
 export function loadYojitsuFyPlan(
   fiscalYear: string
-): import("../../cursor/schemas/finance.js").YojitsuPlan | undefined {
+): import("../../schemas/finance.js").YojitsuPlan | undefined {
   const id = fiscalYear.toLowerCase().replace(/^fy/, "fy");
   const path = join(DATA_DIR, "plans", `yojitsu-${id}.yaml`);
   try {

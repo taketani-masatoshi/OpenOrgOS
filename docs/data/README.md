@@ -8,5 +8,8 @@
 | [利益計画.csv](利益計画.csv) | `cursor/data/plans/profit-plan.yaml` |
 | [費用計画.csv](費用計画.csv) | `cursor/data/plans/expense-plan.yaml` |
 | [投資計画.csv](投資計画.csv) | `cursor/data/plans/investment-plan.yaml` |
+| [契約管理表.csv](契約管理表.csv) | `cursor/data/contracts/*.yaml` |
+
+契約書本文は [`docs/contracts/`](../contracts/) を参照。
 
 YAML を更新したら CSV も同期してください。

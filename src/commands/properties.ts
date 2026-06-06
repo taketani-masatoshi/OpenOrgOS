@@ -1,5 +1,5 @@
 import { loadProperties } from "../lib/data.js";
-import type { PropertyType } from "../../cursor/schemas/index.js";
+import type { PropertyType } from "../../schemas/index.js";
 import { formatCurrency } from "../lib/utils.js";
 
 export function runPropertiesList(options: { type?: string }): void {

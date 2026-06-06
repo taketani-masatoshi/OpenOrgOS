@@ -2,7 +2,7 @@ import type {
   Property,
   PropertyRevenuePlan,
   MonthlyFinance,
-} from "../../cursor/schemas/index.js";
+} from "../../schemas/index.js";
 import { formatCurrency, formatPercent } from "./utils.js";
 
 export interface PropertyAnalysis {

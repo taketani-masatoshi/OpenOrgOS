@@ -12,6 +12,6 @@
     "rootDir": ".",
     "declaration": true
   },
-  "include": ["src/**/*", "cursor/schemas/**/*"],
+  "include": ["src/**/*", "schemas/**/*"],
   "exclude": ["node_modules", "dist"]
 }

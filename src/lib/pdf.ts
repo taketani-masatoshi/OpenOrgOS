@@ -2,10 +2,10 @@ import { existsSync } from "node:fs";
 import { createWriteStream } from "node:fs";
 import { join } from "node:path";
 import PDFDocument from "pdfkit";
-import { CURSOR_DIR, formatCurrency } from "./utils.js";
+import { ASSETS_DIR, formatCurrency } from "./utils.js";
 
 const FONT_CANDIDATES = [
-  join(CURSOR_DIR, "assets/fonts/NotoSansCJKjp-Regular.otf"),
+  join(ASSETS_DIR, "fonts/NotoSansCJKjp-Regular.otf"),
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
 ];
@@ -15,7 +15,7 @@ export function resolveJapaneseFont(): string {
     if (existsSync(path)) return path;
   }
   throw new Error(
-    "Japanese font not found. Run: curl -fsSL -o cursor/assets/fonts/NotoSansCJKjp-Regular.otf " +
+    "Japanese font not found. Run: curl -fsSL -o assets/fonts/NotoSansCJKjp-Regular.otf " +
       "https://github.com/notofonts/noto-cjk/raw/refs/heads/main/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf"
   );
 }

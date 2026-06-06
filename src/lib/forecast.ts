@@ -4,7 +4,7 @@ import type {
   Loans,
   PropertyRevenuePlan,
   Property,
-} from "../../cursor/schemas/index.js";
+} from "../../schemas/index.js";
 import {
   addMonths,
   currentMonth,

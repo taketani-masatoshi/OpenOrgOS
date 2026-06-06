@@ -1,6 +1,9 @@
 node_modules/
 dist/
-cursor/reports/
-docs/reports/
+cursor/scratch/*
+!cursor/scratch/README.md
+docs/reports/*
+docs/corporate/pdf/*
+!docs/corporate/pdf/README.md
 *.log
 .DS_Store

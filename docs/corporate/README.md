@@ -1,0 +1,43 @@
+# 法人書類（株式会社MAL）
+
+**このフォルダには会社として必要な正式書類（Markdown）を置きます。**  
+数値の正データは [`cursor/data/`](../../cursor/data/) の YAML を参照してください。
+
+## 書類一覧
+
+| ファイル | 用途 | 提出・保管先 |
+|---------|------|-------------|
+| [fy2026-meeting-schedule.md](fy2026-meeting-schedule.md) | 第9期 決算・総会・**税務・公告** 年間予定表 | 社内参照 |
+| [fy2026-shukai-gijiroku.md](fy2026-shukai-gijiroku.md) | 第9期 定時株主総会議事録 | 登記簿・社内保管 |
+| [fy2026-torishimari-gijiroku.md](fy2026-torishimari-gijiroku.md) | 第9期 取締役会議事録（決算確認） | 社内保管 |
+| [fy2026-keisansyorui.md](fy2026-keisansyorui.md) | 第9期 計算書類（損益計算書・貸借対照表） | 税務申告・株主総会添付 |
+| [fy2026-hojin-gaikyo.md](fy2026-hojin-gaikyo.md) | 法人概況説明書 | 税務署提出（法人税申告時） |
+
+## 関連ファイル
+
+| 種別 | パス |
+|------|------|
+| 決算書（詳細版） | [`docs/plans/fy2026-pl.md`](../plans/fy2026-pl.md) |
+| 月次予実（正データ） | [`cursor/data/plans/yojitsu-fy2026.yaml`](../../cursor/data/plans/yojitsu-fy2026.yaml) |
+| 決算報告書 PDF | [`pdf/kessan/`](pdf/kessan/) |
+| 事業報告書 PDF | [`pdf/jigyo/`](pdf/jigyo/) |
+
+## 会計年度
+
+| 項目 | 値 |
+|------|-----|
+| 会社 | 株式会社MAL |
+| 第9期 | 2026年2月1日 〜 2027年1月31日 |
+| 決算確定日 | 2027年2月15日（予想ベース） |
+
+## 注意事項
+
+- 本フォルダの書類は **予想ベース・簡易版** です。税理士確認後に確定版へ更新してください。
+- **TBD（要入力）** 項目: 資本金、現金残高、利益剰余金繰越、累計減価償却
+- PDF 版の決算・事業報告書は `npm run steward -- report annual --fy FY2026` で生成
+
+## 更新ルール
+
+1. 数値変更 → 先に `cursor/data/` の YAML を更新 → `npm run validate`
+2. 決算確定後 → 本フォルダの MD を更新 → PDF を再生成
+3. 署名欄は印刷後に手書き署名

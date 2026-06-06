@@ -5,7 +5,7 @@ import {
   loadMonthlyFinances,
   loadMonthlyFinance,
 } from "../lib/data.js";
-import { monthlyFinanceSchema } from "../../cursor/schemas/index.js";
+import { monthlyFinanceSchema } from "../../schemas/index.js";
 import { DATA_DIR, writeYamlFile } from "../lib/utils.js";
 import {
   financesSummary,

@@ -9,8 +9,17 @@ export const ROOT_DIR = join(__dirname, "..", "..");
 export const DOCS_DIR = join(ROOT_DIR, "docs");
 export const CURSOR_DIR = join(ROOT_DIR, "cursor");
 export const DATA_DIR = join(CURSOR_DIR, "data");
-export const REPORTS_DIR = join(CURSOR_DIR, "reports");
+export const SCRATCH_DIR = join(CURSOR_DIR, "scratch");
+export const ASSETS_DIR = join(ROOT_DIR, "assets");
 export const DOCS_REPORTS_DIR = join(DOCS_DIR, "reports");
+/** 法人書類 PDF（人が読む・印刷する） */
+export const DOCS_CORPORATE_PDF_DIR = join(DOCS_DIR, "corporate", "pdf");
+
+/** @deprecated use DOCS_CORPORATE_PDF_DIR */
+export const OUTPUT_PDF_DIR = DOCS_CORPORATE_PDF_DIR;
+
+/** @deprecated use DOCS_CORPORATE_PDF_DIR */
+export const REPORTS_DIR = DOCS_CORPORATE_PDF_DIR;
 
 export function readYamlFile<T>(path: string, schema: ZodSchema<T>): T {
   const raw = readFileSync(path, "utf-8");
@@ -94,10 +103,15 @@ export function parsePercentChange(value: string): number {
   return parseFloat(trimmed);
 }
 
-export function ensureReportsDir(subdir?: string): string {
-  const dir = subdir ? join(REPORTS_DIR, subdir) : REPORTS_DIR;
+export function ensurePdfOutputDir(subdir?: string): string {
+  const dir = subdir ? join(DOCS_CORPORATE_PDF_DIR, subdir) : DOCS_CORPORATE_PDF_DIR;
   mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+/** @deprecated use ensurePdfOutputDir */
+export function ensureReportsDir(subdir?: string): string {
+  return ensurePdfOutputDir(subdir);
 }
 
 export function ensureDocsReportsDir(subdir?: string): string {
@@ -118,7 +132,7 @@ export function writeMarkdownReport(
   return path;
 }
 
-/** @deprecated use writeMarkdownReport for .md; cursor/reports/ is PDF only */
+/** @deprecated use writeMarkdownReport for .md; PDF goes to docs/corporate/pdf/ */
 export function writeReport(subdir: string, filename: string, content: string): string {
   return writeMarkdownReport(subdir, filename, content);
 }

@@ -1,0 +1,2 @@
+contract_id,name,counterparty,counterparty_type,type,status,start_date,end_date,executed_date,compensation_type,compensation_amount_tax_included,payment_terms,auto_renewal,owner,risk_level,draft_doc,executed_doc,notes
+CTR-001,業務委託契約（竹谷昌敏）,竹谷昌敏,individual,outsourcing,executed,2026-08-06,2027-01-31,2026-08-06,monthly,30000,2027-01-31一括180000円・請求書不要,false,段燕燕,low,docs/contracts/CTR-001/01-draft.md,docs/contracts/CTR-001/02-executed.md,Steward OS保守。振込口座は別途通知。

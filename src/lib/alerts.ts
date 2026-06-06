@@ -1,4 +1,4 @@
-import type { Contract } from "../../cursor/schemas/index.js";
+import type { Contract } from "../../schemas/index.js";
 import { daysBetween, currentDate } from "./utils.js";
 
 export type AlertType = "end_date" | "renewal_deadline" | "termination_deadline";

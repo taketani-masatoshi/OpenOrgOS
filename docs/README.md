@@ -1,48 +1,53 @@
-# Steward OS — ドキュメント（人が読むもの）
+# ドキュメント（人が読むゾーン）
 
-**このフォルダには Markdown（`.md`）と CSV（`.csv`）のみ置きます。**  
-YAML や CLI 用データは [`cursor/`](../cursor/) に集約されています。
+**経営・契約・決算・印刷用 PDF は、すべてここ。**
 
-## 構成
+数値の正データ（YAML）は [`cursor/data/`](../cursor/data/) にあり、Cursor が更新します。
+
+---
+
+## クイックリンク
+
+| 見たいもの | ファイル |
+|-----------|---------|
+| FY2026 決算書 | [plans/fy2026-pl.md](plans/fy2026-pl.md) |
+| 法人書類（議事録等） | [corporate/](corporate/) |
+| 決算・総会・税務予定 | [corporate/fy2026-meeting-schedule.md](corporate/fy2026-meeting-schedule.md) |
+| 決算・事業報告 PDF | [corporate/pdf/](corporate/pdf/) |
+| 契約書 | [contracts/](contracts/) |
+| 契約一覧表 | [data/契約管理表.csv](data/契約管理表.csv) |
+
+---
+
+## フォルダ構成
 
 ```
 docs/
-├── README.md          ← 今ここ
-├── spec-v0.2.md       仕様書
-├── web-updates.md     運用手順
-├── plans/             決算書・予実表など（.md のみ）
-├── data/              計画数値表（.csv のみ）
-└── reports/           CLI 生成レポート（.md のみ）
+├── plans/             決算書・予実（MD）
+├── corporate/         法人書類（MD）
+│   └── pdf/           決算・事業報告（PDF）
+├── contracts/         契約書
+├── data/              計画・台帳 CSV
+└── reports/           CLI 自動生成 MD
 ```
 
-```
-cursor/
-├── data/              正データ（.yaml のみ）
-├── schemas/           検証スキーマ
-├── assets/            フォント等
-└── reports/           生成 PDF（.pdf のみ）
-```
+---
 
-## 目次
+## 正データとの対応
 
-| ファイル | 内容 |
-|---------|------|
-| [spec-v0.2.md](spec-v0.2.md) | システム仕様・MVP 機能 |
-| [plans/fy2026-pl.md](plans/fy2026-pl.md) | FY2026 決算書 |
-| [plans/2026-yojitsu.md](plans/2026-yojitsu.md) | 2026年 予実（暦年・参照用） |
-| [data/](data/) | 売上・利益・費用・投資計画 CSV |
-| [web-updates.md](web-updates.md) | Web 更新手順 |
-
-## YAML との対応
-
-| 人向け（docs/） | 正データ（cursor/data/） |
-|----------------|-------------------------|
+| 人（docs/） | 正データ（cursor/data/） |
+|------------|-------------------------|
 | [plans/fy2026-pl.md](plans/fy2026-pl.md) | `plans/yojitsu-fy2026.yaml` |
-| [data/売上計画.csv](data/売上計画.csv) | `plans/revenue-plan.yaml` |
-| [data/利益計画.csv](data/利益計画.csv) | `plans/profit-plan.yaml` |
+| [corporate/](corporate/) | 複数 YAML |
+| [corporate/pdf/](corporate/pdf/) | 同上から CLI 生成 |
+
+---
 
 ## 更新ルール
 
-1. **数値** → 先に `cursor/data/` の YAML を更新 → `npm run validate`
-2. **CSV** → YAML と同内容になるよう `docs/data/` を同期
-3. **決算書・説明文** → `docs/plans/` の Markdown を更新
+1. 数値変更 → `cursor/data/` YAML → `npm run validate`
+2. CSV・MD を同期
+3. `npm run steward -- report ...` で PDF 再生成
+4. 試行中は `cursor/scratch/` → 確定後 `docs/` へ
+
+全体地図: [ルート README](../README.md)
