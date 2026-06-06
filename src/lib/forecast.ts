@@ -52,7 +52,7 @@ function monthlyFixedCosts(fixedCosts: FixedCosts): number {
   return fixedCosts.items.reduce((s, i) => s + i.monthly_amount, 0);
 }
 
-function monthlyLoanPayments(loans: Loans, interestRateChange = 0): number {
+export function monthlyLoanPayments(loans: Loans, interestRateChange = 0): number {
   return loans.loans.reduce((s, l) => {
     if (interestRateChange !== 0) {
       const adjustedRate = l.interest_rate + interestRateChange;

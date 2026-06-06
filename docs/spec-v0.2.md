@@ -49,11 +49,42 @@ Stewardは蓄積された情報を利用して、
 7. 契約期限アラート — `steward alerts`
 8. **データ成熟度** — `steward status`
 9. **CSV 同期** — `steward sync all`
+10. **書類 I/O** — `steward io`（inbox 受信 / outbox 印刷）
+11. **経営ダッシュボード** — `steward dashboard` / `steward report dashboard`（日次 MD → `docs/reports/dashboard/`）
+12. **依存影響チェック** — `steward deps check` / `steward impact`（`cursor/data/dependency-graph.yaml`）
+
+## パラメータ依存関係
+
+正データ間・docs への連動は `cursor/data/dependency-graph.yaml` で定義。
+
+```bash
+npm run steward -- deps check --file cursor/data/contracts/CTR-008.yaml
+npm run steward -- impact cursor/data/properties/PROP-002.yaml
+npm run steward -- deps graph
+npm run validate -- --deps   # 下流ファイルの鮮度警告
+```
+
+手順: [docs/plans/dependency-update-guide.md](plans/dependency-update-guide.md)
+
+## 書類の受け渡し（Input / Output）
+
+| ゾーン | パス | 用途 |
+|--------|------|------|
+| **Input** | `docs/inbox/` | スキャン・契約原本・申請書（未処理） |
+| **Output** | `docs/outbox/` | 印刷・提出・掲示用 PDF |
+| **台帳** | `cursor/data/document-io.yaml` | 受信/出力キュー |
+
+```bash
+npm run steward -- io inbox add --from ./scan.pdf --category licenses --title "許可証"
+npm run steward -- io inbox done INB-001 --archive docs/corporate/licenses/ryokan/records/x.pdf
+npm run steward -- io outbox list
+```
 
 ## データ検証
 
 - スキーマ: Zod（`schemas/`）
 - 参照整合性: loan↔contract↔property、operations、HR
+- 依存グラフ: `cursor/data/dependency-graph.yaml`（`steward deps` / `validate --deps`）
 - `npm run validate -- --warnings` で非致命警告も表示
 
 ## Cursor 運用

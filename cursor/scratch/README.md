@@ -7,6 +7,8 @@ Cursor が試行錯誤するときの**一時置き場**です。gitignore 対�
 | 試行中 | 確定後の移動先 |
 |--------|---------------|
 | 契約書ドラフト | `docs/contracts/CTR-XXX/` |
+| スキャン・原本（未処理） | `docs/inbox/` → 処理後 `records/` |
+| 印刷用 PDF | `docs/outbox/` |
 | 計画数値 | `cursor/data/plans/` + `docs/data/*.csv` |
 | レポート草稿 | `docs/plans/` または `docs/reports/` |
 | 法人書類草稿 | `docs/corporate/` |

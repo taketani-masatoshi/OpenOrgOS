@@ -1,0 +1,8 @@
+# Document I/O 台帳 — inbox（受信）/ outbox（印刷・提出）
+# 操作: npm run steward -- io status
+
+inbox_items: []
+outbox_items: []
+notes: |
+  紙・スキャン・申請書 → docs/inbox/ に置き `io inbox add` で登録。
+  処理後 → 保管先（records/）+ outbox/。CLI 生成 PDF は自動登録。

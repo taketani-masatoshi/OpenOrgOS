@@ -12,8 +12,18 @@ export const DATA_DIR = join(CURSOR_DIR, "data");
 export const SCRATCH_DIR = join(CURSOR_DIR, "scratch");
 export const ASSETS_DIR = join(ROOT_DIR, "assets");
 export const DOCS_REPORTS_DIR = join(DOCS_DIR, "reports");
-/** 法人書類 PDF（人が読む・印刷する） */
-export const DOCS_CORPORATE_PDF_DIR = join(DOCS_DIR, "corporate", "pdf");
+
+/** 受信トレイ — スキャン・申請書・契約原本など（未処理） */
+export const DOCS_INBOX_DIR = join(DOCS_DIR, "inbox");
+
+/** 出力トレイ — 印刷・提出用 PDF（処理済み） */
+export const DOCS_OUTBOX_DIR = join(DOCS_DIR, "outbox");
+
+/** 法人書類 PDF → outbox/corporate */
+export const DOCS_CORPORATE_PDF_DIR = join(DOCS_OUTBOX_DIR, "corporate");
+
+/** 亀沢ゲスト掲示 PDF → outbox/lodging */
+export const DOCS_LODGING_PDF_DIR = join(DOCS_OUTBOX_DIR, "lodging");
 
 /** @deprecated use DOCS_CORPORATE_PDF_DIR */
 export const OUTPUT_PDF_DIR = DOCS_CORPORATE_PDF_DIR;

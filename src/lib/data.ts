@@ -16,6 +16,7 @@ import {
   investmentPlanSchema,
   facilityPublicSchema,
   employeesFileSchema,
+  documentIoSchema,
   type Company,
   type Property,
   type Contract,
@@ -235,6 +236,9 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
 
   tryLoad("cursor/data/operations/kamezawa-public.yaml", () => loadOperationsPublic());
   tryLoad("cursor/data/hr/employees.yaml", () => loadEmployees());
+  tryLoad("cursor/data/document-io.yaml", () =>
+    readYamlFile(join(DATA_DIR, "document-io.yaml"), documentIoSchema)
+  );
 
   // Cross-reference validation (legacy inline checks)
   if (errors.length === 0) {

@@ -1,9 +1,11 @@
 import { validateAll } from "../lib/data.js";
 import { runIntegrityChecks, integrityErrorsOnly, type IntegrityIssue } from "../lib/integrity.js";
+import { printStaleDependencyWarnings } from "./deps.js";
 
 export interface ValidateOptions {
   warnings?: boolean;
   strict?: boolean;
+  deps?: boolean;
 }
 
 export function runValidate(opts: ValidateOptions = {}): void {
@@ -18,6 +20,9 @@ export function runValidate(opts: ValidateOptions = {}): void {
     console.log("✓ All data files are valid.");
     if (opts.warnings || opts.strict) {
       printWarnings(runIntegrityChecks());
+    }
+    if (opts.deps) {
+      printStaleDependencyWarnings();
     }
     process.exit(0);
   }

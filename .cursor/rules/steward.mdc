@@ -33,7 +33,8 @@ alwaysApply: false
 |---------|------|
 | `docs/plans/` | 決算書・予実 MD |
 | `docs/corporate/` | 法人書類 MD |
-| `docs/corporate/pdf/` | 決算・事業報告 PDF |
+| `docs/inbox/` | **受信トレイ**（スキャン・申請書・未処理） |
+| `docs/outbox/` | **出力トレイ**（印刷・提出・掲示 PDF） |
 | `docs/contracts/` | 契約書 MD |
 | `docs/operations/` | 業務台帳テンプレ・プライバシー（記入済は records/） |
 | `docs/data/` | CSV |
@@ -46,16 +47,18 @@ alwaysApply: false
 - 契約: `contracts/CTR-{NNN}.yaml`
 - 月次: `finances/monthly/{YYYY-MM}.yaml`
 - 計画: `plans/*.yaml`
+- I/O 台帳: `document-io.yaml`（inbox/outbox キュー）
 
 ## レポート生成
 
 - MD → `docs/reports/`
-- PDF → `docs/corporate/pdf/`（`npm run steward -- report kessan|jigyo`）
+- PDF → `docs/outbox/corporate/`（`npm run steward -- report kessan|jigyo`）
 - フォント → `assets/fonts/`
 
 ## データ入力
 
 1. `cursor/data/` YAML 更新 → `npm run validate`
-2. `npm run steward -- sync all`（CSV 利用時）
-3. `npm run steward -- status`（成熟度確認）
-4. 試行は `cursor/scratch/` → 確定後 `docs/` または `cursor/data/` へ
+2. スキャン受信 → `docs/inbox/` または `steward io inbox add`
+3. `npm run steward -- sync all`（CSV 利用時）
+4. `npm run steward -- io status`（受信/出力確認）
+5. 試行は `cursor/scratch/` → 確定後 `docs/` または `cursor/data/` へ

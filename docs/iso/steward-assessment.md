@@ -9,7 +9,7 @@
 
 | 領域 | 成熟度 | 一言 |
 |------|:------:|------|
-| データ基盤（YAML・CLI） | ●●●●○ | **95% (A)** · validate/sync/status 整備 |
+| データ基盤（YAML・CLI） | ●●●●○ | **95% (A)** · validate/sync/status/**io** |
 | 契約台帳 | ●●●○○ | 貸付・Airbnb executed、**保険・清掃は手続中** |
 | 法人書類・決算 | ●●●○○ | 税理士チェックリスト整備、**数値 TBD 残** |
 | 社内規程 | ●●●●○ | **REG 全16件** 制定文書化（001-008は2027/3/15付） |
@@ -32,6 +32,8 @@
 | CSV 同期 | `steward sync all` |
 
 カタログ: [`cursor/data/README.md`](../../cursor/data/README.md)
+
+**書類 I/O:** [`docs/inbox/`](../inbox/) · [`docs/outbox/`](../outbox/) · `steward io status`
 
 ---
 

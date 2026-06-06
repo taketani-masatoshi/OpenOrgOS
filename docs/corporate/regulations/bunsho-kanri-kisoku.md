@@ -15,13 +15,14 @@
 
 | 種類 | 保管場所 | 形式 |
 |------|---------|------|
-| 人が読む書類 | [`docs/`](../../README.md) | Markdown・CSV・PDF |
+| **受信（未処理）** | [`docs/inbox/`](../../inbox/README.md) | PDF・画像（**Git 非追跡**） |
+| **出力（印刷・提出）** | [`docs/outbox/`](../../outbox/README.md) | PDF（**Git 非追跡**） |
+| 人が読む書類 | [`docs/`](../../README.md) | Markdown・CSV |
 | 業務台帳（様式） | [`docs/operations/`](../../operations/README.md) | CSV テンプレート |
 | 業務台帳（記入済） | `docs/operations/**/records/` | CSV・PDF（**Git 非追跡**） |
 | ISO / MS 方針 | [`docs/iso/`](../../iso/README.md) | Markdown |
-| 正データ | [`cursor/data/`](../../../cursor/data/) | YAML |
+| 正データ・I/O 台帳 | [`cursor/data/`](../../../cursor/data/) | YAML |
 | 試行中 | [`cursor/scratch/`](../../../cursor/scratch/) | 任意（確定後移動） |
-| 生成 PDF | [`docs/corporate/pdf/`](../pdf/) | PDF |
 
 ## 第3条（保管期間）
 

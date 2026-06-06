@@ -1,5 +1,5 @@
-# PDF 出力（gitignore）
+# ゲスト向け PDF（移行先）
 
-生成 PDF をここに置く。ソースは `templates/guest-facing/`。
+**→ 掲示用 PDF は [`docs/outbox/lodging/`](../../outbox/lodging/) に出力してください。**
 
-手順: [PDF.md](../PDF.md)
+手順は [PDF.md](../PDF.md) を参照。

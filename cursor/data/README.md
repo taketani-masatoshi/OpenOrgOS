@@ -24,6 +24,8 @@
 | `plans/property-revenue.yaml` | propertyRevenuePlan | 物件別収益前提 |
 | `operations/kamezawa-public.yaml` | facilityPublic | 亀沢公開情報 |
 | `operations/kamezawa-secrets.yaml` | — | 鍵・Wi-Fi（**gitignore**） |
+| `document-io.yaml` | documentIo | **受信/出力トレイ台帳** |
+| `dependency-graph.yaml` | dependencyGraph | **パラメータ依存関係マップ** |
 | `hr/employees.yaml` | employeesFile | 従業員マスタ |
 
 ---
@@ -50,6 +52,10 @@ npm run validate              # スキーマ + 参照エラー
 npm run validate -- --warnings  # 警告も表示
 npm run steward -- status     # データ成熟度レポート
 npm run steward -- sync all   # docs/data CSV を YAML から再生成
+npm run steward -- io status  # 受信/出力トレイ
+npm run steward -- io guide   # I/O フロー
+npm run steward -- deps check --file cursor/data/...  # 依存影響チェック
+npm run steward -- deps graph # 依存関係マップ
 ```
 
 ---
@@ -57,8 +63,11 @@ npm run steward -- sync all   # docs/data CSV を YAML から再生成
 ## 更新手順
 
 1. YAML を編集
-2. `npm run validate`
-3. `npm run steward -- sync all`（CSV 利用時）
-4. 必要なら `docs/` の MD を同期
+2. `npm run steward -- deps check --file <編集したファイル>` — 下流の確認リスト
+3. `npm run validate`（必要なら `--deps` で鮮度警告）
+4. `npm run steward -- sync all`（CSV 利用時）
+5. 必要なら `docs/` の MD を同期
+
+詳細: [docs/plans/dependency-update-guide.md](../../docs/plans/dependency-update-guide.md)
 
 *機密・個情は `records/` または `*-secrets.yaml`（gitignore）のみ。*

@@ -1,0 +1,63 @@
+# Outbox — 出力トレイ（Output）
+
+**印刷・提出・現地掲示用 PDF** の置き場。処理済み・生成済みの「出ていく書類」はここに集約します。
+
+中身は **gitignore**（再生成可能）。台帳は `cursor/data/document-io.yaml`。
+
+---
+
+## フォルダ
+
+| パス | 用途 |
+|------|------|
+| [corporate/kessan/](corporate/kessan/) | 決算報告書 PDF（CLI） |
+| [corporate/jigyo/](corporate/jigyo/) | 事業報告書 PDF（CLI） |
+| [lodging/](lodging/) | 亀沢ゲスト掲示 PDF |
+| [licenses/](licenses/) | 許認可・保険の印刷用コピー |
+| [submissions/](submissions/) | 役所提出控え |
+| [contracts/](contracts/) | 契約書印刷用 |
+| [misc/](misc/) | その他 |
+
+---
+
+## 生成
+
+```bash
+# 決算・事業報告 → corporate/kessan|jigyo/
+npm run steward -- report annual --fy FY2026
+
+# ゲスト掲示（MD → PDF はブラウザ印刷 or md-to-pdf）
+# 出力先: docs/outbox/lodging/
+```
+
+---
+
+## 印刷フロー
+
+```bash
+npm run steward -- io outbox list          # 印刷待ち一覧
+# … 印刷 …
+npm run steward -- io outbox printed OUT-001
+```
+
+CLI で生成した PDF は **自動で outbox 台帳に登録**されます。手動で置いた PDF は:
+
+```bash
+npm run steward -- io outbox scan
+```
+
+---
+
+## 旧パスからの移行
+
+| 旧 | 新 |
+|----|-----|
+| `docs/corporate/pdf/` | `docs/outbox/corporate/` |
+| `docs/operations/lodging/pdf/` | `docs/outbox/lodging/` |
+
+---
+
+## 関連
+
+- 受信: [../inbox/README.md](../inbox/README.md)
+- 文書管理: [REG-007](../corporate/regulations/bunsho-kanri-kisoku.md)

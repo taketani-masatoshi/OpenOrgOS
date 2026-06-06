@@ -3,6 +3,12 @@ dist/
 cursor/scratch/*
 !cursor/scratch/README.md
 docs/reports/*
+docs/inbox/**
+!docs/inbox/README.md
+!docs/inbox/**/README.md
+docs/outbox/**
+!docs/outbox/README.md
+!docs/outbox/**/README.md
 docs/corporate/pdf/*
 !docs/corporate/pdf/README.md
 docs/corporate/licenses/**/records/**

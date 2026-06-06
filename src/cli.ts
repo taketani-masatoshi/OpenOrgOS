@@ -22,8 +22,21 @@ import { runAnalyzeProperty } from "./commands/analyze.js";
 import { runScenarioCommand } from "./commands/scenario.js";
 import { runAlerts } from "./commands/alerts.js";
 import { runReportMonthly, runReportKessan, runReportJigyo, runReportAnnual } from "./commands/report.js";
+import { runDashboard } from "./commands/dashboard.js";
 import { runStatus } from "./commands/status.js";
 import { runSyncAll, runSyncContracts } from "./commands/sync.js";
+import {
+  runIoStatus,
+  runIoInboxList,
+  runIoInboxAdd,
+  runIoInboxDone,
+  runIoOutboxList,
+  runIoOutboxAdd,
+  runIoOutboxPrinted,
+  runIoOutboxScan,
+  runIoGuide,
+} from "./commands/io.js";
+import { runDepsCheck, runDepsGraph, runImpact } from "./commands/deps.js";
 
 const program = new Command();
 
@@ -37,7 +50,13 @@ program
   .description("Validate all data files")
   .option("--warnings", "Show integrity warnings (non-fatal)")
   .option("--strict", "Alias for --warnings")
-  .action((opts) => runValidate({ warnings: opts.warnings || opts.strict }));
+  .option("--deps", "Warn when downstream files are older than sources (dependency graph)")
+  .action((opts) =>
+    runValidate({
+      warnings: opts.warnings || opts.strict,
+      deps: opts.deps,
+    })
+  );
 
 program
   .command("status")
@@ -156,6 +175,18 @@ program
   .action(runScenarioCommand);
 
 program
+  .command("dashboard")
+  .description("経営ダッシュボード（オーナー向け日次サマリー）")
+  .option("--no-markdown", "ファイル保存せずコンソールのみ")
+  .option("-o, --output <filename>", "Save to docs/reports/dashboard/")
+  .action((opts) =>
+    runDashboard({
+      markdown: opts.markdown,
+      output: opts.output,
+    })
+  );
+
+program
   .command("alerts")
   .description("Contract deadline alerts")
   .option("-d, --days <number>", "Days ahead to scan", "90")
@@ -172,6 +203,18 @@ program
   );
 
 const report = program.command("report").description("Report generation");
+
+report
+  .command("dashboard")
+  .description("経営ダッシュボード（オーナー向け日次サマリー）")
+  .option("--no-markdown", "ファイル保存せずコンソールのみ")
+  .option("-o, --output <filename>", "Save to docs/reports/dashboard/")
+  .action((opts) =>
+    runDashboard({
+      markdown: opts.markdown,
+      output: opts.output,
+    })
+  );
 
 report
   .command("monthly")
@@ -199,5 +242,119 @@ report
   .description("Generate 決算報告書 and 事業報告書 PDFs")
   .option("--fy <fiscalYear>", "Fiscal year (e.g. FY2026)", "FY2026")
   .action((opts) => runReportAnnual({ fy: opts.fy }));
+
+const io = program.command("io").description("Document inbox/outbox (Input/Output)");
+
+io.command("status").description("Inbox/outbox queue status").action(runIoStatus);
+
+io.command("guide")
+  .description("Print I/O workflow guide")
+  .option("-o, --output <filename>", "Save to docs/reports/io/")
+  .action((opts) => runIoGuide({ output: opts.output }));
+
+const inbox = io.command("inbox").description("Incoming documents");
+
+inbox.command("list").description("List inbox items").action(runIoInboxList);
+
+inbox
+  .command("add")
+  .description("Register file to inbox (copy + queue)")
+  .requiredOption("--from <path>", "Source file path")
+  .requiredOption("--category <cat>", "contracts|licenses|applications|receipts|corporate|misc")
+  .requiredOption("--title <title>", "Document title")
+  .option("--source <source>", "scan|email|mail|download|other", "scan")
+  .option("--related <id>", "Related CTR/REG id")
+  .option("--notes <notes>", "Notes")
+  .action((opts) =>
+    runIoInboxAdd({
+      from: opts.from,
+      category: opts.category,
+      title: opts.title,
+      source: opts.source,
+      related: opts.related,
+      notes: opts.notes,
+    })
+  );
+
+inbox
+  .command("done <id>")
+  .description("Mark inbox item processed")
+  .option("--archive <path>", "Archive copy destination")
+  .option("--output <path>", "Outbox PDF destination")
+  .option("--notes <notes>", "Processing notes")
+  .action((id, opts) =>
+    runIoInboxDone({
+      id,
+      archive: opts.archive,
+      output: opts.output,
+      notes: opts.notes,
+    })
+  );
+
+const outbox = io.command("outbox").description("Print-ready PDFs");
+
+outbox.command("list").description("List pending outbox items").action(runIoOutboxList);
+
+outbox
+  .command("add")
+  .description("Register PDF to outbox")
+  .requiredOption("--from <path>", "PDF file path")
+  .requiredOption("--category <cat>", "corporate|contracts|lodging|licenses|submissions|misc")
+  .option("--purpose <purpose>", "print|submit|display", "print")
+  .option("--title <title>", "Title")
+  .option("--subdir <subdir>", "Subfolder under category")
+  .action((opts) =>
+    runIoOutboxAdd({
+      from: opts.from,
+      category: opts.category,
+      purpose: opts.purpose,
+      title: opts.title,
+      subdir: opts.subdir,
+    })
+  );
+
+outbox.command("scan").description("Register unlisted PDFs in outbox/").action(runIoOutboxScan);
+
+outbox
+  .command("printed <id>")
+  .description("Mark outbox item as printed")
+  .action(runIoOutboxPrinted);
+
+const deps = program
+  .command("deps")
+  .description("Parameter dependency / impact propagation");
+
+deps
+  .command("check")
+  .description("List downstream items to review after a file change")
+  .option("--file <path>", "Changed file path (repo-relative or absolute)")
+  .option("--markdown", "Markdown output")
+  .option("-o, --output <filename>", "Save to docs/reports/deps/")
+  .action((opts) =>
+    runDepsCheck({
+      file: opts.file,
+      markdown: opts.markdown,
+      output: opts.output,
+    })
+  );
+
+deps
+  .command("graph")
+  .description("Print dependency relationship map (markdown)")
+  .option("-o, --output <filename>", "Save to docs/reports/deps/")
+  .action((opts) => runDepsGraph({ output: opts.output }));
+
+program
+  .command("impact <path>")
+  .description("Alias for deps check — downstream impact of a changed file")
+  .option("--markdown", "Markdown output")
+  .option("-o, --output <filename>", "Save to docs/reports/deps/")
+  .action((path, opts) =>
+    runImpact(path, {
+      file: path,
+      markdown: opts.markdown,
+      output: opts.output,
+    })
+  );
 
 program.parse();

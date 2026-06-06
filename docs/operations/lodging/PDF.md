@@ -19,10 +19,15 @@ Markdown から PDF を生成し、亀沢に掲示する。
 3. ブラウザで MD を開き **印刷 → PDF**、又は:
 
 ```bash
-npx --yes md-to-pdf docs/operations/lodging/templates/guest-facing/welcome-sheet.md --dest docs/operations/lodging/pdf/
+npx --yes md-to-pdf docs/operations/lodging/templates/guest-facing/welcome-sheet.md --dest docs/outbox/lodging/
 ```
 
-4. 生成 PDF は `pdf/`（gitignore）— USB 又は現地 PC にコピー
+4. 生成 PDF は **`docs/outbox/lodging/`**（gitignore）— USB 又は現地 PC にコピー
+
+```bash
+npm run steward -- io outbox scan    # 台帳に登録
+npm run steward -- io outbox list    # 印刷待ち確認
+```
 
 ## 掲示セット
 

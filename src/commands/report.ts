@@ -11,6 +11,7 @@ import { generateKessanPdf } from "../lib/kessan-pdf.js";
 import { generateJigyoPdf } from "../lib/jigyo-pdf.js";
 import { generateMonthlyReport } from "../lib/report.js";
 import { writeMarkdownReport, currentMonth, ensureReportsDir } from "../lib/utils.js";
+import { initDocumentIoFile, registerGeneratedPdf } from "../lib/document-io.js";
 
 function resolveFiscalYear(fy?: string): string {
   return (fy ?? "FY2026").toUpperCase();
@@ -50,6 +51,8 @@ export async function runReportKessan(options: {
     { ...data, fiscalYear },
     outputPath
   );
+  initDocumentIoFile();
+  registerGeneratedPdf(path, "corporate", `report kessan --fy ${fiscalYear}`, "kessan");
   console.log(`✓ 決算報告書 PDF: ${path}`);
 }
 
@@ -68,6 +71,8 @@ export async function runReportJigyo(options: {
     { ...data, fiscalYear },
     outputPath
   );
+  initDocumentIoFile();
+  registerGeneratedPdf(path, "corporate", `report jigyo --fy ${fiscalYear}`, "jigyo");
   console.log(`✓ 事業報告書 PDF: ${path}`);
 }
 

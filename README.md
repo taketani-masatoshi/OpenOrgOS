@@ -20,7 +20,9 @@
 | 自動レポート（MD） | [`docs/reports/`](docs/reports/) |
 | ISO・現状評価 | [`docs/iso/`](docs/iso/) |
 
-PDF（決算報告書・事業報告書）も **`docs/corporate/pdf/`** にあります。
+PDF（決算報告書・事業報告書）は **`docs/outbox/corporate/`** に出力されます。
+
+**書類の受け渡し:** スキャン等 → [`docs/inbox/`](docs/inbox/) · 印刷用 → [`docs/outbox/`](docs/outbox/) · `npm run steward -- io status`
 
 ---
 
@@ -56,7 +58,8 @@ Steward/
 ├── docs/                      【人】読む・印刷・提出
 │   ├── plans/                 決算・予実 MD
 │   ├── corporate/             法人書類 MD
-│   │   └── pdf/               決算・事業報告 PDF
+│   ├── inbox/                 受信トレイ（Input・スキャン等）
+│   ├── outbox/                出力トレイ（Output・印刷 PDF）
 │   ├── iso/                   ISO方針・ギャップ分析
 │   ├── contracts/             契約書
 │   ├── operations/            業務台帳・宿泊者名簿
@@ -90,7 +93,12 @@ npm run validate -- --warnings   # 参照警告も表示
 npm run steward -- status        # データ成熟度
 npm run steward -- sync all      # CSV ← YAML
 npm run steward -- contracts list
-npm run steward -- report annual --fy FY2026   # → docs/corporate/pdf/
+npm run steward -- io status       # 受信/出力トレイ
+npm run steward -- io guide        # I/O フロー
+npm run steward -- dashboard       # 経営ダッシュボード（日次）→ docs/reports/dashboard/
+npm run steward -- deps check --file cursor/data/...  # 編集後の影響チェック
+npm run steward -- deps graph      # 依存関係マップ
+npm run steward -- report annual --fy FY2026   # → docs/outbox/corporate/
 ```
 
 詳細: [docs/spec-v0.2.md](docs/spec-v0.2.md)

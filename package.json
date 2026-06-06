@@ -7,8 +7,8 @@
     "steward": "./src/cli.ts"
   },
   "scripts": {
-    "steward": "tsx src/cli.ts",
-    "validate": "tsx src/cli.ts validate",
+    "steward": "node --import tsx src/cli.ts",
+    "validate": "node --import tsx src/cli.ts validate",
     "test": "vitest run",
     "test:watch": "vitest"
   },

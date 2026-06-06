@@ -6,3 +6,5 @@ export * from "./finance.js";
 export * from "./plan.js";
 export * from "./operations.js";
 export * from "./hr.js";
+export * from "./document-io.js";
+export * from "./dependency-graph.js";
