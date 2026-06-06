@@ -4,7 +4,7 @@ import {
   formatPropertyAnalysisMarkdown,
   parsePeriod,
 } from "../lib/analyze.js";
-import { writeReport } from "../lib/utils.js";
+import { writeMarkdownReport } from "../lib/utils.js";
 
 export function runAnalyzeProperty(options: {
   id?: string;
@@ -26,7 +26,7 @@ export function runAnalyzeProperty(options: {
   const output = formatPropertyAnalysisMarkdown(analyses);
 
   if (options.output) {
-    const path = writeReport("analyze", options.output, output);
+    const path = writeMarkdownReport("analyze", options.output, output);
     console.log(`✓ Report saved to ${path}`);
   } else {
     console.log(output);

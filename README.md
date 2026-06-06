@@ -6,13 +6,16 @@
 
 ```
 Steward/
-├── docs/              # 人が読む・書く（仕様書・PL・運用メモ）
-├── cursor/            # Cursor / CLI が使うデータ（一箇所に集約）
-│   ├── data/          #   YAML 正データ
-│   ├── schemas/       #   Zod スキーマ
-│   └── reports/       #   CLI 生成レポート（gitignore）
-├── src/               # CLI プログラム
-└── tests/             # テスト
+├── docs/              # 人が読む（.md / .csv のみ）
+│   ├── plans/         #   決算書・予実表
+│   ├── data/          #   計画 CSV
+│   └── reports/       #   CLI 生成 MD
+├── cursor/            # Cursor / CLI 用（YAML・PDF）
+│   ├── data/          #   正データ（.yaml のみ）
+│   ├── schemas/
+│   └── reports/       #   生成 PDF（.pdf のみ）
+├── src/
+└── tests/
 ```
 
 人向けドキュメントの目次は [docs/README.md](docs/README.md) を参照。
@@ -103,17 +106,24 @@ npm test
 
 ## レポート出力
 
-CLI が生成するレポートは `cursor/reports/` に保存される（gitignore 対象）。
+| 形式 | 保存先 | 内容 |
+|------|--------|------|
+| Markdown | `docs/reports/` | 月次・CF予測・アラート等 |
+| PDF | `cursor/reports/` | 決算報告書・事業報告書 |
+
+いずれも gitignore 対象（生成物）。
 
 ```
+docs/reports/
+├── monthly/     # 月次レポート（MD）
+
 cursor/reports/
-├── monthly/     # 月次レポート
-├── kessan/      # 決算報告書 PDF
-├── jigyo/       # 事業報告書 PDF
-├── forecast/    # CF予測
-├── analyze/     # 物件分析
-├── scenario/    # シナリオ分析
-└── alerts/      # 契約アラート
+├── kessan/      # 決算報告書（PDF）
+├── jigyo/       # 事業報告書（PDF）
+├── forecast/
+├── analyze/
+├── scenario/
+└── alerts/
 ```
 
 ## 仕様書

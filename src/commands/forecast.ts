@@ -4,7 +4,7 @@ import {
   formatForecastMarkdown,
   formatForecastJson,
 } from "../lib/forecast.js";
-import { writeReport, currentMonth } from "../lib/utils.js";
+import { writeMarkdownReport, currentMonth } from "../lib/utils.js";
 
 export function runForecast(options: {
   months: number;
@@ -29,7 +29,7 @@ export function runForecast(options: {
   }
 
   if (options.output) {
-    const path = writeReport("forecast", options.output, output);
+    const path = writeMarkdownReport("forecast", options.output, output);
     console.log(`✓ Report saved to ${path}`);
   } else {
     console.log(output);

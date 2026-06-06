@@ -10,7 +10,7 @@ import {
 import { generateKessanPdf } from "../lib/kessan-pdf.js";
 import { generateJigyoPdf } from "../lib/jigyo-pdf.js";
 import { generateMonthlyReport } from "../lib/report.js";
-import { writeReport, currentMonth, ensureReportsDir } from "../lib/utils.js";
+import { writeMarkdownReport, currentMonth, ensureReportsDir } from "../lib/utils.js";
 
 function resolveFiscalYear(fy?: string): string {
   return (fy ?? "FY2026").toUpperCase();
@@ -87,7 +87,7 @@ export function runReportMonthly(options: {
   const report = generateMonthlyReport(data, month);
   const filename = options.output ?? `${month}.md`;
 
-  const path = writeReport("monthly", filename, report);
+  const path = writeMarkdownReport("monthly", filename, report);
   console.log(`✓ Monthly report saved to ${path}`);
   console.log(report);
 }

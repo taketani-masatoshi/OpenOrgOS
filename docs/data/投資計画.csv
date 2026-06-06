@@ -1,0 +1,4 @@
+fiscal_year,period_from,period_to,item_id,item_name,property_id,month,amount_jpy,notes
+FY2026,2026-02,2027-01,kamezawa_capex_q1,亀沢旅館 上置き建築費,PROP-002,2026-03,13000000,半期分・概算
+FY2026,2026-02,2027-01,kamezawa_capex_q2,亀沢旅館 上置き建築費,PROP-002,2026-04,13000000,半期分・概算
+FY2028,2028-02,2029-01,kamezawa_maintenance,亀沢旅館 保守改修,PROP-002,,5000000,中期計画より

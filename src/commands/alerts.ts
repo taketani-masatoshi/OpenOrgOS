@@ -4,7 +4,7 @@ import {
   formatAlertsMarkdown,
   formatAlertsTable,
 } from "../lib/alerts.js";
-import { writeReport, currentDate } from "../lib/utils.js";
+import { writeMarkdownReport, currentDate } from "../lib/utils.js";
 
 export function runAlerts(options: {
   days: number;
@@ -17,7 +17,7 @@ export function runAlerts(options: {
 
   if (options.output) {
     const content = formatAlertsMarkdown(alerts, options.days);
-    const path = writeReport("alerts", options.output, content);
+    const path = writeMarkdownReport("alerts", options.output, content);
     console.log(`✓ Report saved to ${path}`);
   } else if (options.markdown) {
     console.log(formatAlertsMarkdown(alerts, options.days));

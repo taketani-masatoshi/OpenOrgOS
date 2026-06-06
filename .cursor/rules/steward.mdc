@@ -2,28 +2,45 @@
 description: Steward OS data conventions and operational rules
 globs:
   - cursor/**/*
+  - docs/**/*
 alwaysApply: false
 ---
 
 # Steward OS 運用ルール
 
-## フォルダ構成
+## フォルダ構成（厳守）
 
-- **人が読むもの:** `docs/`（仕様書・PL・運用メモ）
-- **Cursor / CLI が使うデータ:** `cursor/`（YAML 正データ・スキーマ・生成レポート）
+| フォルダ | 置いてよい形式 | 用途 |
+|---------|---------------|------|
+| **`docs/`** | `.md` `.csv` のみ | 人が読む・書く |
+| **`cursor/data/`** | `.yaml` のみ | 正データ |
+| **`cursor/schemas/`** | `.ts` | 検証スキーマ |
+| **`cursor/reports/`** | `.pdf` のみ | 決算・事業報告 PDF |
+| **`docs/reports/`** | `.md` のみ | CLI 生成レポート |
 
-## データ配置規約（`cursor/data/`）
+**YAML と Markdown を同じフォルダに置かない。**
 
-- 会社情報: `cursor/data/company.yaml`（単一法人）
-- 物件: `cursor/data/properties/PROP-{NNN}.yaml`（1物件1ファイル）
-- 契約: `cursor/data/contracts/CTR-{NNN}.yaml`（1契約1ファイル）
+## データ配置規約（`cursor/data/` · YAML のみ）
+
+- 会社情報: `cursor/data/company.yaml`
+- 物件: `cursor/data/properties/PROP-{NNN}.yaml`
+- 契約: `cursor/data/contracts/CTR-{NNN}.yaml`
 - 月次収支: `cursor/data/finances/monthly/{YYYY-MM}.yaml`
 - 固定費: `cursor/data/finances/fixed-costs.yaml`
 - 役員報酬: `cursor/data/finances/payroll.yaml`
 - 融資: `cursor/data/finances/loans.yaml`
 - 事業計画: `cursor/data/plans/business-plan.yaml`
-- 月次予実計画: `cursor/data/plans/yojitsu-fy{YYYY}.yaml`（会計年度ベース）
-- 予実計画書（人向け）: `docs/plans/fy{YYYY}-pl.md`（PL・予実表）
+- 売上計画: `cursor/data/plans/revenue-plan.yaml`
+- 利益計画: `cursor/data/plans/profit-plan.yaml`
+- 費用計画: `cursor/data/plans/expense-plan.yaml`
+- 投資計画: `cursor/data/plans/investment-plan.yaml`
+- 月次予実: `cursor/data/plans/yojitsu-fy{YYYY}.yaml`
+
+## 人向けドキュメント（`docs/` · MD / CSV のみ）
+
+- 決算書・予実表: `docs/plans/fy{YYYY}-pl.md`
+- 計画 CSV: `docs/data/売上計画.csv` 等（YAML の写し）
+- CLI レポート: `docs/reports/monthly/` 等
 
 ## ID 命名規則
 
@@ -39,41 +56,33 @@ alwaysApply: false
 id: CTR-XXX
 name: "契約名"
 counterparty: "相手先名"
-type: management  # rental|management|cleaning|ota|insurance|construction|outsourcing|advisory|system|nda|partnership
+type: management
 start_date: YYYY-MM-DD
 end_date: YYYY-MM-DD
 auto_renewal: true
 owner: "担当者"
-property_id: PROP-XXX  # 該当する場合
+property_id: PROP-XXX
 monthly_cost: 0
 risk:
   renewal_deadline: YYYY-MM-DD
   termination_deadline: YYYY-MM-DD
-  risk_level: low  # low|medium|high
+  risk_level: low
   notes: ""
 ```
 
 ## レポート生成
 
-レポート生成時は CLI を優先利用する:
-
-- 月次レポート: `npm run steward -- report monthly --month YYYY-MM`
-- 決算報告書 PDF: `npm run steward -- report kessan --fy FY2026`
-- 事業報告書 PDF: `npm run steward -- report jigyo --fy FY2026`
-- 決算・事業報告（一括）: `npm run steward -- report annual --fy FY2026`
-- CF予測: `npm run steward -- forecast --months 12`
-- 物件分析: `npm run steward -- analyze property`
-- 契約アラート: `npm run steward -- alerts --days 90 --markdown`
-
-生成されたレポートは `cursor/reports/` に保存される。
+- 月次レポート（MD）: `npm run steward -- report monthly` → `docs/reports/monthly/`
+- 決算報告書（PDF）: `npm run steward -- report kessan` → `cursor/reports/kessan/`
+- 事業報告書（PDF）: `npm run steward -- report jigyo` → `cursor/reports/jigyo/`
+- CF予測・アラート等（MD）: `docs/reports/` 配下
 
 ## データ入力時のルール
 
-1. 新規データ追加後は `npm run validate` を実行して検証する
-2. 日付は `YYYY-MM-DD`、月は `YYYY-MM` 形式
-3. 金額は整数（円単位）
-4. 空室率・稼働率は 0〜1 の小数（例: 0.05 = 5%）
-5. `property_id` は必ず存在する物件 ID を参照する
+1. 新規データ追加後は `npm run validate` を実行
+2. 数値は YAML を先に更新 → CSV を同期
+3. 日付は `YYYY-MM-DD`、月は `YYYY-MM` 形式
+4. 金額は整数（円単位）
 
 ## 月次収支入力テンプレート
 
@@ -81,11 +90,11 @@ risk:
 month: "YYYY-MM"
 revenue:
   - property_id: PROP-001
-    category: rent  # rent|hotel_revenue|other_revenue
+    category: rent
     amount: 350000
 expenses:
   - property_id: PROP-001
-    category: repair  # repair|cleaning|management_fee|utilities|other_property|fixed_rent|communication|insurance|advisory|system|loan_payment|capex|other
+    category: repair
     amount: 50000
 notes: ""
 ```

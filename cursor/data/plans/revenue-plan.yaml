@@ -1,0 +1,69 @@
+# 売上計画（年度別・セグメント別）
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    lines:
+      - id: bancho_rent
+        name: 番町ハイム312（賃貸）
+        property_id: PROP-001
+        amount: 1200000
+        notes: 10万円×12ヶ月
+      - id: kamezawa_hotel
+        name: 亀沢旅館（宿泊）
+        property_id: PROP-002
+        amount: 6300000
+        notes: 105万×6ヶ月（8月開業）
+      - id: translation
+        name: 翻訳・通訳
+        amount: 0
+        notes: 未計上
+      - id: services
+        name: DX・ソフトウェア等
+        amount: 0
+        notes: 未計上
+    total: 7500000
+    notes: 決算確定（予想ベース）
+
+  - fiscal_year: FY2027
+    period_from: "2027-02"
+    period_to: "2028-01"
+    lines:
+      - id: bancho_rent
+        name: 番町ハイム312（賃貸）
+        property_id: PROP-001
+        amount: 1200000
+      - id: kamezawa_hotel
+        name: 亀沢旅館（宿泊）
+        property_id: PROP-002
+        amount: 12600000
+        notes: 105万×12ヶ月
+      - id: translation
+        name: 翻訳・通訳
+        amount: 0
+      - id: services
+        name: DX・ソフトウェア等
+        amount: 0
+    total: 13800000
+
+  - fiscal_year: FY2028
+    period_from: "2028-02"
+    period_to: "2029-01"
+    lines:
+      - id: bancho_rent
+        name: 番町ハイム312（賃貸）
+        property_id: PROP-001
+        amount: 1200000
+      - id: kamezawa_hotel
+        name: 亀沢旅館（宿泊）
+        property_id: PROP-002
+        amount: 13230000
+        notes: 前年度比+5%
+      - id: translation
+        name: 翻訳・通訳
+        amount: 0
+      - id: services
+        name: DX・ソフトウェア等
+        amount: 0
+    total: 14430000

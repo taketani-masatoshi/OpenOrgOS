@@ -1,6 +1,6 @@
 import { loadAllData } from "../lib/data.js";
 import { runScenario, compareScenarios } from "../lib/scenario.js";
-import { parsePercentChange, writeReport } from "../lib/utils.js";
+import { parsePercentChange, writeMarkdownReport } from "../lib/utils.js";
 import type { ScenarioOverrides } from "../lib/forecast.js";
 
 export function runScenarioCommand(options: {
@@ -28,7 +28,7 @@ export function runScenarioCommand(options: {
   const output = compareScenarios(baseline, scenario);
 
   if (options.output) {
-    const path = writeReport("scenario", options.output, output);
+    const path = writeMarkdownReport("scenario", options.output, output);
     console.log(`✓ Report saved to ${path}`);
   } else {
     console.log(output);

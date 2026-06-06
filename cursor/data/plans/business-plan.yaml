@@ -71,4 +71,5 @@ funding_plan: |
 notes: |
   会計年度: 2月始まり1月決算（fiscal_year_end_month: 1）。
   予実・PL: docs/plans/fy2026-pl.md / cursor/data/plans/yojitsu-fy2026.yaml
-  サービス事業（翻訳・DX等）の売上は今後追加。
+  計画YAML: cursor/data/plans/revenue-plan.yaml, profit-plan.yaml, expense-plan.yaml, investment-plan.yaml
+  計画CSV: docs/data/

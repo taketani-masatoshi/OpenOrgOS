@@ -1,0 +1,13 @@
+fiscal_year,period_from,period_to,line_id,line_name,property_id,amount_jpy,notes
+FY2026,2026-02,2027-01,kamezawa_operations,亀沢旅館 運営費,PROP-002,2980500,49.7万×6ヶ月
+FY2026,2026-02,2027-01,depreciation,減価償却費（番町ハイム）,PROP-001,353191,1660万÷47年
+FY2026,2026-02,2027-01,officer_compensation,役員報酬,,0,
+FY2026,2026-02,2027-01,company_fixed,本社固定費,,0,番町ハイム312に本社兼置
+FY2027,2027-02,2028-01,kamezawa_operations,亀沢旅館 運営費,PROP-002,5961000,49.7万×12ヶ月
+FY2027,2027-02,2028-01,depreciation,減価償却費（番町ハイム）,PROP-001,353191,
+FY2027,2027-02,2028-01,officer_compensation,役員報酬,,0,
+FY2027,2027-02,2028-01,company_fixed,本社固定費,,0,
+FY2028,2028-02,2029-01,kamezawa_operations,亀沢旅館 運営費,PROP-002,6259050,前年度比+5%
+FY2028,2028-02,2029-01,depreciation,減価償却費（番町ハイム）,PROP-001,353191,
+FY2028,2028-02,2029-01,officer_compensation,役員報酬,,0,
+FY2028,2028-02,2029-01,company_fixed,本社固定費,,0,

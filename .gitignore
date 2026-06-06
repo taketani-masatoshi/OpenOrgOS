@@ -1,5 +1,6 @@
 node_modules/
 dist/
 cursor/reports/
+docs/reports/
 *.log
 .DS_Store

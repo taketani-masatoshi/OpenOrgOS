@@ -10,6 +10,10 @@ import {
   propertyRevenuePlanSchema,
   yojitsuPlanSchema,
   payrollSchema,
+  revenuePlanSchema,
+  profitPlanSchema,
+  expensePlanSchema,
+  investmentPlanSchema,
   type Company,
   type Property,
   type Contract,
@@ -134,6 +138,22 @@ export function loadYojitsuFyPlan(
   }
 }
 
+export function loadRevenuePlan() {
+  return readYamlFile(join(DATA_DIR, "plans", "revenue-plan.yaml"), revenuePlanSchema);
+}
+
+export function loadProfitPlan() {
+  return readYamlFile(join(DATA_DIR, "plans", "profit-plan.yaml"), profitPlanSchema);
+}
+
+export function loadExpensePlan() {
+  return readYamlFile(join(DATA_DIR, "plans", "expense-plan.yaml"), expensePlanSchema);
+}
+
+export function loadInvestmentPlan() {
+  return readYamlFile(join(DATA_DIR, "plans", "investment-plan.yaml"), investmentPlanSchema);
+}
+
 export function loadAllData(): StewardData {
   return {
     company: loadCompany(),
@@ -186,6 +206,10 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("cursor/data/finances/loans.yaml", () => loadLoans());
   tryLoad("cursor/data/plans/business-plan.yaml", () => loadBusinessPlan());
   tryLoad("cursor/data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());
+  tryLoad("cursor/data/plans/revenue-plan.yaml", () => loadRevenuePlan());
+  tryLoad("cursor/data/plans/profit-plan.yaml", () => loadProfitPlan());
+  tryLoad("cursor/data/plans/expense-plan.yaml", () => loadExpensePlan());
+  tryLoad("cursor/data/plans/investment-plan.yaml", () => loadInvestmentPlan());
   for (const f of listYamlFiles(join(DATA_DIR, "plans")).filter((p) =>
     p.includes("yojitsu-")
   )) {

@@ -93,7 +93,7 @@ program
   .description("Cash flow forecast")
   .option("-m, --months <number>", "Number of months to forecast", "12")
   .option("-f, --format <format>", "Output format (markdown|json)", "markdown")
-  .option("-o, --output <filename>", "Save to cursor/reports/forecast/")
+  .option("-o, --output <filename>", "Save to docs/reports/forecast/")
   .action((opts) =>
     runForecast({
       months: parseInt(opts.months, 10),
@@ -109,7 +109,7 @@ analyze
   .description("Property-level revenue analysis")
   .option("--id <propertyId>", "Filter by property ID")
   .option("--period <period>", "Period (YYYY-QN or YYYY)")
-  .option("-o, --output <filename>", "Save to cursor/reports/analyze/")
+  .option("-o, --output <filename>", "Save to docs/reports/analyze/")
   .action(runAnalyzeProperty);
 
 program
@@ -122,7 +122,7 @@ program
   .option("--adr <change>", "ADR change (e.g. -10%)")
   .option("--rent-change <change>", "Rent change (e.g. -5%)")
   .option("--interest-rate <change>", "Interest rate change (e.g. 0.5%)")
-  .option("-o, --output <filename>", "Save to cursor/reports/scenario/")
+  .option("-o, --output <filename>", "Save to docs/reports/scenario/")
   .action(runScenarioCommand);
 
 program
@@ -131,7 +131,7 @@ program
   .option("-d, --days <number>", "Days ahead to scan", "90")
   .option("--risk-level <level>", "Filter by risk level (low|medium|high)")
   .option("--markdown", "Output as markdown")
-  .option("-o, --output <filename>", "Save to cursor/reports/alerts/")
+  .option("-o, --output <filename>", "Save to docs/reports/alerts/")
   .action((opts) =>
     runAlerts({
       days: parseInt(opts.days, 10),

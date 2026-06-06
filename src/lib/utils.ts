@@ -6,9 +6,11 @@ import type { ZodSchema } from "zod";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT_DIR = join(__dirname, "..", "..");
+export const DOCS_DIR = join(ROOT_DIR, "docs");
 export const CURSOR_DIR = join(ROOT_DIR, "cursor");
 export const DATA_DIR = join(CURSOR_DIR, "data");
 export const REPORTS_DIR = join(CURSOR_DIR, "reports");
+export const DOCS_REPORTS_DIR = join(DOCS_DIR, "reports");
 
 export function readYamlFile<T>(path: string, schema: ZodSchema<T>): T {
   const raw = readFileSync(path, "utf-8");
@@ -98,9 +100,25 @@ export function ensureReportsDir(subdir?: string): string {
   return dir;
 }
 
-export function writeReport(subdir: string, filename: string, content: string): string {
-  const dir = ensureReportsDir(subdir);
+export function ensureDocsReportsDir(subdir?: string): string {
+  const dir = subdir ? join(DOCS_REPORTS_DIR, subdir) : DOCS_REPORTS_DIR;
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+/** CLI が生成する Markdown レポート（人向け → docs/reports/） */
+export function writeMarkdownReport(
+  subdir: string,
+  filename: string,
+  content: string
+): string {
+  const dir = ensureDocsReportsDir(subdir);
   const path = join(dir, filename);
   writeFileSync(path, content, "utf-8");
   return path;
+}
+
+/** @deprecated use writeMarkdownReport for .md; cursor/reports/ is PDF only */
+export function writeReport(subdir: string, filename: string, content: string): string {
+  return writeMarkdownReport(subdir, filename, content);
 }

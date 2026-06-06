@@ -20,15 +20,15 @@ Stewardは蓄積された情報を利用して、
 
 ## データ構造
 
-詳細は各 `cursor/data/` 配下の YAML ファイルを参照。
+**正データは `cursor/data/` 配下の YAML のみ。** 人向けの読み物は `docs/`（Markdown / CSV）。
 
 - **Company**: `cursor/data/company.yaml`
 - **Property**: `cursor/data/properties/{id}.yaml`
 - **Contract**: `cursor/data/contracts/{id}.yaml`
 - **Monthly Finance**: `cursor/data/finances/monthly/{YYYY-MM}.yaml`
-- **Plans**: `cursor/data/plans/`
-
-人向けの PL・予実表は `docs/plans/` に Markdown で置く。
+- **Plans**: `cursor/data/plans/*.yaml`
+- **決算書・PL**: `docs/plans/*.md`
+- **計画 CSV**: `docs/data/*.csv`
 
 ## MVP 機能
 
