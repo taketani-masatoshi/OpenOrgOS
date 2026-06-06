@@ -71,5 +71,5 @@
 
 ## 関連
 
-- [ISO 9001 ギャップ分析](../../iso/ISO-9001/README.md)
+- [ISO 9001 ギャップ分析](../../iso/ISO-9001/00-このフォルダについて.md)
 - [business-plan.yaml](../../../cursor/data/plans/business-plan.yaml)

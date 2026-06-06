@@ -67,5 +67,5 @@
 ## 制定後作業
 
 - [ ] 各 REG の版を v1.0・制定日 2027/3/15 に更新
-- [ ] [regulations/README.md](regulations/README.md) 更新
+- [ ] [regulations/00-このフォルダについて.md](regulations/00-このフォルダについて.md) 更新
 - [ ] 印刷・10年保管

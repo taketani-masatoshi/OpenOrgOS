@@ -1,0 +1,19 @@
+# 現預金残高 — ランウェイ算出用
+# 金額を入力し status を confirmed にするとダッシュボードでランウェイが算出されます。
+
+as_of: "2027-01-31"
+status: template
+currency: JPY
+accounts:
+  - id: main
+    name: 法人メイン口座
+    institution: "TBD（銀行名・支店）"
+    amount: null
+  - id: reserve
+    name: 予備口座・定期等
+    institution: "TBD"
+    amount: null
+total: null
+notes: |
+  2027年1月31日時点の全口座残高合計を total に記入するか、各 accounts[].amount を入力してください。
+  入力後は status: confirmed に変更し `npm run validate` を実行。

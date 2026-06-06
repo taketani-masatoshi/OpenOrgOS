@@ -84,7 +84,7 @@
 
 | ファイル | 内容 |
 |---------|------|
-| [regulations/README.md](../regulations/README.md) | 規程一覧 |
+| [regulations/00-このフォルダについて.md](../regulations/00-このフォルダについて.md) | 規程一覧 |
 | [REG-009 〜 REG-016](../regulations/) | 本日制定規程 |
 | [iso/steward-assessment.md](../../iso/steward-assessment.md) | 現状評価 |
 | [fy2026-torishimari-gijiroku.md](fy2026-torishimari-gijiroku.md) | 第9期決算確認（2027/2） |

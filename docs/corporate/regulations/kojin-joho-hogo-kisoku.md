@@ -97,5 +97,5 @@
 
 - [REG-009 情報セキュリティ管理規程](joho-security-kanri-kisoku.md)
 - [REG-012 宿泊運営・サステナビリティ規程](shukuhaku-unyo-kisoku.md)
-- [業務台帳・プライバシー](../../operations/README.md)
+- [業務台帳・プライバシー](../../operations/00-このフォルダについて.md)
 - [個人情報取扱ルール](../../operations/privacy/personal-data-handling-rules.md)

@@ -26,6 +26,8 @@ Stewardは蓄積された情報を利用して、
 | Cursor | `cursor/data/` YAML、`cursor/scratch/` 試行 |
 | プログラム | `src/` `schemas/` `assets/` | CLI・フォント |
 
+**フォルダ説明ファイル:** `docs/` 配下は `00-このフォルダについて.md`、`cursor/`・`assets/` は `00-README.md`（エクスプローラで先頭に並ぶ）。リポジトリルートのみ `README.md`。
+
 ## データ構造
 
 **正データは `cursor/data/` 配下の YAML のみ。** 人向けの読み物は `docs/`（Markdown / CSV）。

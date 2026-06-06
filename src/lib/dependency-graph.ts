@@ -79,19 +79,20 @@ export function resolveSourceNodes(graph: DependencyGraph, input: string): Depen
   for (const node of graph.nodes) {
     if (node.id === input || node.id === idOnly || node.id === normalized) {
       matched.add(node);
-      continue;
     }
     for (const p of nodePaths(node)) {
       if (p === normalized || normalized.endsWith(`/${p}`) || p.endsWith(`/${normalized}`)) {
         matched.add(node);
-        break;
       }
     }
     for (const alias of node.aliases ?? []) {
       if (alias === input || alias === idOnly || alias === normalized) {
         matched.add(node);
-        break;
       }
+    }
+    // ファイル編集時、同一 path の parameter ノードも起点に含める
+    if (node.category === "parameter" && node.path && normalizePath(node.path) === normalized) {
+      matched.add(node);
     }
   }
 
@@ -154,16 +155,20 @@ export function computeImpact(
       depth: current.depth,
     });
 
+    const isSource = sources.some((s) => s.id === current.nodeId);
+    if (node && node.expand === false && !isSource) {
+      continue;
+    }
+
     for (const edge of adjacency.get(current.nodeId) ?? []) {
-      if (!seen.has(edge.to)) {
-        queue.push({
-          nodeId: edge.to,
-          depth: current.depth + 1,
-          reason: edge.reason,
-          action: edge.action,
-          edgeCategory: edge.category,
-        });
-      }
+      if (seen.has(edge.to)) continue;
+      queue.push({
+        nodeId: edge.to,
+        depth: current.depth + 1,
+        reason: edge.reason,
+        action: edge.action,
+        edgeCategory: edge.category,
+      });
     }
   }
 

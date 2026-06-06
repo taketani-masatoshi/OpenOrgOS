@@ -10,6 +10,8 @@ import {
   propertyRevenuePlanSchema,
   yojitsuPlanSchema,
   payrollSchema,
+  cashBalanceSchema,
+  type CashBalance,
   revenuePlanSchema,
   profitPlanSchema,
   expensePlanSchema,
@@ -105,6 +107,22 @@ export function loadFixedCosts(): FixedCosts {
 
 export function loadPayroll() {
   return readYamlFile(join(DATA_DIR, "finances", "payroll.yaml"), payrollSchema);
+}
+
+export function loadCashBalance(): CashBalance | undefined {
+  const path = join(DATA_DIR, "finances", "cash-balance.yaml");
+  try {
+    return readYamlFile(path, cashBalanceSchema);
+  } catch {
+    return undefined;
+  }
+}
+
+export function resolveCashBalanceTotal(balance: CashBalance): number | null {
+  if (balance.total != null) return balance.total;
+  const amounts = balance.accounts.map((a) => a.amount).filter((a): a is number => a != null);
+  if (amounts.length === 0 || amounts.length < balance.accounts.length) return null;
+  return amounts.reduce((s, a) => s + a, 0);
 }
 
 export function loadLoans(): Loans {
@@ -219,6 +237,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
 
   tryLoad("cursor/data/finances/fixed-costs.yaml", () => loadFixedCosts());
   tryLoad("cursor/data/finances/payroll.yaml", () => loadPayroll());
+  tryLoad("cursor/data/finances/cash-balance.yaml", () => loadCashBalance());
   tryLoad("cursor/data/finances/loans.yaml", () => loadLoans());
   tryLoad("cursor/data/plans/business-plan.yaml", () => loadBusinessPlan());
   tryLoad("cursor/data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());

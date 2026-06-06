@@ -183,6 +183,24 @@ export const yojitsuPlanSchema = z.object({
   months: z.array(yojitsuMonth).default([]),
 });
 
+export const cashBalanceAccountSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  institution: z.string().optional(),
+  amount: z.number().nonnegative().nullable().optional(),
+});
+
+export const cashBalanceSchema = z.object({
+  as_of: dateString,
+  status: z.enum(["template", "confirmed"]),
+  currency: z.literal("JPY").default("JPY"),
+  accounts: z.array(cashBalanceAccountSchema).default([]),
+  total: z.number().nonnegative().nullable().optional(),
+  notes: z.string().optional(),
+});
+
+export type CashBalance = z.infer<typeof cashBalanceSchema>;
+
 export type YojitsuPlan = z.infer<typeof yojitsuPlanSchema>;
 
 export type MonthlyFinance = z.infer<typeof monthlyFinanceSchema>;

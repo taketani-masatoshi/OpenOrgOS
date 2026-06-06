@@ -27,7 +27,7 @@
 
 ## 第4条（契約締結）
 
-1. 契約は [`docs/contracts/`](../../contracts/README.md) および [`契約管理表.csv`](../../data/契約管理表.csv) に登録する。
+1. 契約は [`docs/contracts/`](../../contracts/00-このフォルダについて.md) および [`契約管理表.csv`](../../data/契約管理表.csv) に登録する。
 2. 新規契約（CTR-XXX）は、締結前に決裁区分 B 以上を満たす承認を得る。
 3. 利益相反取引に該当する場合は [利益相反取引規程](riekisohan-torihiki-kisoku.md) に従う。
 

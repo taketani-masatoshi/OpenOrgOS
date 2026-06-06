@@ -2,14 +2,14 @@
 
 **Cursor が読み書きする正データ（YAML）と作業用スクラッチだけ**を置くフォルダです。
 
-人が読む書類（Markdown・CSV・**PDF**）はすべて [`docs/`](../docs/README.md) にあります。  
-CLI やプログラムの資源（フォント等）は [`assets/`](../assets/) にあります。
+人が読む書類（Markdown・CSV・**PDF**）はすべて [`docs/`](../docs/00-このフォルダについて.md) にあります。  
+CLI やプログラムの資源（フォント等）は [`assets/`](../assets/00-README.md) にあります。
 
 ## 構成
 
 ```
 cursor/
-├── README.md       ← 今ここ
+├── 00-README.md       ← 今ここ
 ├── data/           正データ（.yaml のみ）
 └── scratch/        中間試行・作業用（gitignore）
 ```

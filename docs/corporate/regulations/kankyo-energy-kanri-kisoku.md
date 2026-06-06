@@ -68,5 +68,5 @@
 
 ## 関連
 
-- [ISO 14001](../../iso/ISO-14001/README.md) · [ISO 50001](../../iso/ISO-50001/README.md)
+- [ISO 14001](../../iso/ISO-14001/00-このフォルダについて.md) · [ISO 50001](../../iso/ISO-50001/00-このフォルダについて.md)
 - [expense-plan.yaml](../../../cursor/data/plans/expense-plan.yaml)

@@ -25,6 +25,8 @@ alwaysApply: false
 | `cursor/data/` | 正データ（.yaml） |
 | `cursor/scratch/` | 中間試行（gitignore） |
 
+**フォルダ説明ファイル:** `cursor/`・`assets/` は `00-README.md`、ルートのみ `README.md`。
+
 **PDF・生成物・フォントは cursor/ に置かない。**
 
 ## 人ゾーン（`docs/`）
@@ -39,6 +41,8 @@ alwaysApply: false
 | `docs/operations/` | 業務台帳テンプレ・プライバシー（記入済は records/） |
 | `docs/data/` | CSV |
 | `docs/reports/` | CLI 生成 MD |
+
+**フォルダ説明ファイル:** 各フォルダの索引は `00-このフォルダについて.md`（エクスプローラで先頭に並ぶ）。
 
 ## 正データ（`cursor/data/`）
 

@@ -4,6 +4,8 @@ import {
   loadAllData,
   loadYojitsuFyPlan,
   loadExpensePlan,
+  loadCashBalance,
+  resolveCashBalanceTotal,
 } from "./data.js";
 import { scanContractAlerts, type ContractAlert } from "./alerts.js";
 import {
@@ -198,12 +200,27 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
       ? fixedCosts / contributionMargin
       : null;
 
-  const cashBalance: number | null = null;
-  notes.push("現預金残高: データ未登録（TBD）— runway 算出不可");
+  let cashBalance: number | null = null;
+  const cashData = loadCashBalance();
+  if (cashData) {
+    const total = resolveCashBalanceTotal(cashData);
+    if (total != null && cashData.status === "confirmed") {
+      cashBalance = total;
+      notes.push(`現預金残高: ${cashData.as_of} 時点 ${total.toLocaleString("ja-JP")}円`);
+    } else if (total != null) {
+      notes.push("現預金: 金額入力済み — status を confirmed にするとランウェイ算出");
+    } else {
+      notes.push("現預金: cash-balance.yaml テンプレート — 金額入力待ち");
+    }
+  } else {
+    notes.push("現預金残高: cash-balance.yaml 未作成 — runway 算出不可");
+  }
 
   let runwayMonths: number | null = null;
   if (cashBalance !== null && burnRate > 0) {
     runwayMonths = cashBalance / burnRate;
+  } else if (cashBalance !== null && burnRate <= 0) {
+    notes.push("黒字運転のためランウェイは実質無制限（バーンレート≤0）");
   }
 
   return {
@@ -307,12 +324,12 @@ function roadmapTbdTasks(): DashboardTask[] {
     },
     {
       id: "TBD-CASH",
-      title: "現預金残高を cursor/data に登録",
+      title: "cash-balance.yaml に現預金残高を入力",
       category: "財務データ",
       urgency: "medium",
       importance: "high",
-      link: "docs/plans/cashflow-detail.md",
-      notes: "runway 算出に必要",
+      link: "cursor/data/finances/cash-balance.yaml",
+      notes: "テンプレート作成済み — 金額入力後 status: confirmed",
     },
   ];
   return items;
@@ -432,7 +449,9 @@ function buildKpis(
       label: "ランウェイ",
       value: cashFlow.runwayMonths !== null ? `${cashFlow.runwayMonths.toFixed(1)} ヶ月` : "TBD",
       explanation:
-        "現預金残高 ÷ 月次ネットバーン。残高未登録のため算出保留。",
+        cashFlow.runwayMonths !== null
+          ? "現預金残高 ÷ 月次ネットバーン。"
+          : "現預金残高 ÷ 月次ネットバーン。cash-balance.yaml 確定後に算出。",
     },
     {
       id: "burn_rate",
@@ -530,7 +549,7 @@ export function computeDashboard(data?: StewardData): DashboardReport {
   const monthlyTrend = buildMonthlyTrend(fiscalYear);
 
   const tbdItems = [
-    "現預金残高（cursor/data 未登録）",
+    "現預金残高（cash-balance.yaml — 金額入力待ち）",
     "役員貸付返済スケジュール詳細（business-plan TBD）",
     "翻訳・サービス事業の月次収支（計画未含）",
     "保険証券 CTR-013 / CTR-014（draft）",
@@ -585,7 +604,7 @@ export function formatDashboardMarkdown(report: DashboardReport): string {
     "",
     "| 指標 | 値 | 備考 |",
     "|------|---:|------|",
-    `| ランウェイ | ${cf.runwayMonths !== null ? `${cf.runwayMonths.toFixed(1)} ヶ月` : "**TBD**"} | 現預金未登録 |`,
+    `| ランウェイ | ${cf.runwayMonths !== null ? `${cf.runwayMonths.toFixed(1)} ヶ月` : "**TBD**"} | cash-balance.yaml 確定後 |`,
     `| バーンレート | ${formatCurrency(cf.burnRate)} | 正=流出 |`,
     `| 月次売上 | ${formatCurrency(cf.monthlyRevenue)} | ${cf.basisMonth} (${sourceLabel(cf.source)}) |`,
     `| 月次利益 | ${formatCurrency(cf.monthlyProfit)} | 営業近似 |`,

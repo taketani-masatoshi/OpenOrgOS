@@ -43,3 +43,23 @@ export const facilityPublicSchema = z.object({
 });
 
 export type FacilityPublic = z.infer<typeof facilityPublicSchema>;
+
+export const facilitySecretsSchema = z.object({
+  smart_lock_code: z.string().min(1),
+  wifi_ssid: z.string().min(1),
+  wifi_password: z.string().min(1),
+  host_phone_24h: z.string().min(1),
+  host_phone_backup: z.string().min(1),
+  cleaning_vendor_line: z.string().min(1),
+  cleaning_vendor_phone: z.string().optional(),
+  extinguisher_location: z.string().min(1),
+  breaker_location: z.string().min(1),
+  water_shutoff: z.string().min(1),
+  gas_meter_location: z.string().optional(),
+  first_aid_location: z.string().optional(),
+  emergency_contact_property_mgmt: z.string().optional(),
+  ota_backup_contact: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type FacilitySecrets = z.infer<typeof facilitySecretsSchema>;

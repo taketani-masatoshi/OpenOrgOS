@@ -70,5 +70,5 @@
 
 ## 関連
 
-- [ISO 22301 ギャップ分析](../../iso/ISO-22301/README.md)
+- [ISO 22301 ギャップ分析](../../iso/ISO-22301/00-このフォルダについて.md)
 - [meeting-schedule](../fy2026-meeting-schedule.md)

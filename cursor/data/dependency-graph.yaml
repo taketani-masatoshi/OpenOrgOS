@@ -73,6 +73,7 @@ nodes:
   - id: cursor/data/finances/loans.yaml
     label: 借入・役員貸付台帳
     category: file
+    expand: false
   - id: cursor/data/finances/fixed-costs.yaml
     label: 本社固定費
     category: file

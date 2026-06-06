@@ -23,6 +23,8 @@ export const dependencyNodeSchema = z.object({
   /** 実ファイルパス（repo ルート相対）。parameter ノードの親ファイルにも使用 */
   path: z.string().optional(),
   aliases: z.array(z.string()).optional(),
+  /** false のとき、他ノード経由で到達した場合は下流展開しない（ハブ用） */
+  expand: z.boolean().default(true),
 });
 
 export const dependencyEdgeSchema = z.object({

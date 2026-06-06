@@ -15,6 +15,7 @@
 | `finances/fixed-costs.yaml` | fixedCosts | 本社固定費 |
 | `finances/payroll.yaml` | payroll | 役員報酬 |
 | `finances/loans.yaml` | loans | 借入・役員貸付 |
+| `finances/cash-balance.yaml` | cashBalance | 現預金残高（ランウェイ） |
 | `plans/business-plan.yaml` | businessPlan | 中期計画 |
 | `plans/yojitsu-{year\|fy}.yaml` | yojitsuPlan | 予実（カレンダー/FY） |
 | `plans/revenue-plan.yaml` | revenuePlan | 売上計画 |

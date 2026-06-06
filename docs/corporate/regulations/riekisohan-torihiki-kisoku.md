@@ -32,7 +32,7 @@
 |------|------|------|
 | 役員からの貸付（番町1,660万） | [CTR-008](../../contracts/CTR-008/02-executed.md) | **2026/6/6** [議事録](../../fy2026-torishimari-gijiroku-yakuin-kashitsuke.md) |
 | 役員からの貸付（亀沢9,600万） | [CTR-009](../../contracts/CTR-009/02-executed.md) | **2026/6/6** 同上 |
-| 取締役委任 | [CTR-004/005](../../contracts/README.md) | 株主総会選任 |
+| 取締役委任 | [CTR-004/005](../../contracts/00-このフォルダについて.md) | 株主総会選任 |
 
 ## 第5条（開示・記録）
 

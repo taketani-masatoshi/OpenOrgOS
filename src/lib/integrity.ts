@@ -9,8 +9,11 @@ import {
   loadOperationsPublic,
   loadEmployees,
   loadYojitsuPlan,
+  loadCashBalance,
+  resolveCashBalanceTotal,
 } from "./data.js";
-import { ROOT_DIR } from "./utils.js";
+import { facilitySecretsSchema } from "../../schemas/operations.js";
+import { CURSOR_DIR, readYamlFile, ROOT_DIR } from "./utils.js";
 
 export interface IntegrityIssue {
   level: "error" | "warning";
@@ -108,6 +111,49 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch (e) {
     push("warning", "cursor/data/operations/kamezawa-public.yaml", e instanceof Error ? e.message : String(e));
+  }
+
+  const secretsPath = join(CURSOR_DIR, "data", "operations", "kamezawa-secrets.yaml");
+  if (existsSync(secretsPath)) {
+    try {
+      const secrets = readYamlFile(secretsPath, facilitySecretsSchema);
+      const placeholders = Object.entries(secrets).filter(
+        ([, v]) => typeof v === "string" && (v === "REPLACE_ME" || v === "TBD" || v.startsWith("TBD"))
+      );
+      if (placeholders.length) {
+        push(
+          "warning",
+          "cursor/data/operations/kamezawa-secrets.yaml",
+          `${placeholders.length} 項目が未入力（REPLACE_ME / TBD）`
+        );
+      }
+    } catch (e) {
+      push("warning", "cursor/data/operations/kamezawa-secrets.yaml", e instanceof Error ? e.message : String(e));
+    }
+  } else {
+    push(
+      "warning",
+      "cursor/data/operations/kamezawa-secrets.yaml",
+      "未作成 — example をコピーして実値を記入"
+    );
+  }
+
+  try {
+    const cash = loadCashBalance();
+    if (cash) {
+      const total = resolveCashBalanceTotal(cash);
+      if (cash.status === "template" && total == null) {
+        push(
+          "warning",
+          "cursor/data/finances/cash-balance.yaml",
+          "テンプレート — 残高入力後 status: confirmed に変更"
+        );
+      } else if (cash.status === "confirmed" && total == null) {
+        push("warning", "cursor/data/finances/cash-balance.yaml", "confirmed だが total / accounts が未入力");
+      }
+    }
+  } catch (e) {
+    push("warning", "cursor/data/finances/cash-balance.yaml", e instanceof Error ? e.message : String(e));
   }
 
   try {
