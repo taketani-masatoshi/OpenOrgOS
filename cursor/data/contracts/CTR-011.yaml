@@ -1,0 +1,22 @@
+id: CTR-011
+name: "Booking.com 宿泊パートナー契約（亀沢旅館）"
+counterparty: "Booking.com B.V."
+counterparty_type: company
+type: ota
+status: draft
+start_date: "2026-08-01"
+auto_renewal: true
+owner: "段燕燕"
+property_id: PROP-002
+compensation:
+  payment_terms: "成果報酬型。日本国内目安12〜15%（契約後のPartner Agreementで確定）。掲載料無料。"
+scope_summary: |
+  Booking.com Extranet に亀沢旅館を掲載し予約を受ける。
+  パートナー契約・利用規約への同意が必要。
+documents:
+  draft: "docs/contracts/CTR-011/01-draft.md"
+risk:
+  risk_level: medium
+  notes: "審査・現地決済/事前決済設定に注意。Genius等で実効手数料変動。"
+notes: |
+  Airbnbと併用想定。正確なCommissionはExtranetのPartner Agreement要確認。

@@ -10,8 +10,27 @@
 | [fy2026-meeting-schedule.md](fy2026-meeting-schedule.md) | 第9期 決算・総会・**税務・公告** 年間予定表 | 社内参照 |
 | [fy2026-shukai-gijiroku.md](fy2026-shukai-gijiroku.md) | 第9期 定時株主総会議事録 | 登記簿・社内保管 |
 | [fy2026-torishimari-gijiroku.md](fy2026-torishimari-gijiroku.md) | 第9期 取締役会議事録（決算確認） | 社内保管 |
+| [fy2026-torishimari-gijiroku-regulations-iso.md](fy2026-torishimari-gijiroku-regulations-iso.md) | 取締役会議事録（**REG-009〜016 制定**） | 社内保管 |
 | [fy2026-keisansyorui.md](fy2026-keisansyorui.md) | 第9期 計算書類（損益計算書・貸借対照表） | 税務申告・株主総会添付 |
 | [fy2026-hojin-gaikyo.md](fy2026-hojin-gaikyo.md) | 法人概況説明書 | 税務署提出（法人税申告時） |
+
+## 社内規程
+
+| 一覧 | [regulations/README.md](regulations/README.md) |
+|------|-----------------------------------------------|
+
+役員報酬・議事・稟議等 **REG-001〜008**（ドラフト）＋ ISO 関連 **REG-009〜016**（2026/6/6 制定済）。
+
+## ISO マネジメント
+
+| 一覧 | [iso/README.md](../iso/README.md) |
+| 現状評価 | [iso/steward-assessment.md](../iso/steward-assessment.md) |
+
+## 業務台帳・運用
+
+| 一覧 | [operations/README.md](../operations/README.md) |
+| 宿泊運営 | [operations/lodging/](operations/lodging/) |
+| 個人情報・告知 | [operations/privacy/](operations/privacy/) |
 
 ## 関連ファイル
 

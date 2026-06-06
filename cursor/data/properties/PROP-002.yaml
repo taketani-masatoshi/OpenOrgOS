@@ -1,5 +1,5 @@
 id: PROP-002
-name: "亀沢旅館（建築中）"
+name: "亀沢旅館"
 location: "東京都墨田区亀沢1"
 type: hotel
 acquired_date: "2025-06-01"
@@ -9,6 +9,7 @@ hotel:
   room_count: 1
   occupancy_rate: 0.70
   adr: 50000
+  opened_date: "2026-08-01"
 operating_costs:
   cleaning_per_stay: 12000
   ota_commission_rate: 0.155
@@ -23,6 +24,6 @@ operating_costs:
     Wi-Fi: 5,000円/月（Stay Buddy 3,000〜6,000円参考）
 notes: |
   土地: 2025年6月購入、7,000万円。上置き2,600万円。総投資9,600万円（役員貸付・全額）。
-  開業予定: 2026年8月。
+  開業: 2026年8月（opened_date）。
   1棟貸し。物理3室・最大7名・平均5名。
   料金: 10,000円/人/泊×5名＝50,000円/泊。稼働率70%。

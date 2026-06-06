@@ -3,11 +3,15 @@ import { dateString, riskLevel } from "./common.js";
 
 export const contractType = z.enum([
   "rental",
+  "lease",
+  "purchase",
+  "director",
   "management",
   "cleaning",
   "ota",
   "insurance",
   "construction",
+  "loan",
   "outsourcing",
   "advisory",
   "system",
@@ -34,6 +38,7 @@ export const counterpartyType = z.enum(["individual", "company"]);
 export const contractDocumentsSchema = z.object({
   draft: z.string().optional(),
   executed: z.string().optional(),
+  enrollment: z.string().optional(),
 });
 
 export const contractCompensationSchema = z.object({
@@ -62,6 +67,7 @@ export const contractSchema = z.object({
   scope_summary: z.string().optional(),
   documents: contractDocumentsSchema.optional(),
   executed_date: dateString.optional(),
+  conflict_approval_date: dateString.optional(),
   risk: contractRiskSchema.optional(),
   notes: z.string().optional(),
 });

@@ -4,3 +4,5 @@ export * from "./property.js";
 export * from "./contract.js";
 export * from "./finance.js";
 export * from "./plan.js";
+export * from "./operations.js";
+export * from "./hr.js";

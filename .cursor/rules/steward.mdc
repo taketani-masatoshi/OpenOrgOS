@@ -35,6 +35,7 @@ alwaysApply: false
 | `docs/corporate/` | 法人書類 MD |
 | `docs/corporate/pdf/` | 決算・事業報告 PDF |
 | `docs/contracts/` | 契約書 MD |
+| `docs/operations/` | 業務台帳テンプレ・プライバシー（記入済は records/） |
 | `docs/data/` | CSV |
 | `docs/reports/` | CLI 生成 MD |
 
@@ -55,5 +56,6 @@ alwaysApply: false
 ## データ入力
 
 1. `cursor/data/` YAML 更新 → `npm run validate`
-2. `docs/` CSV・MD 同期
-3. 試行は `cursor/scratch/` → 確定後 `docs/` または `cursor/data/` へ
+2. `npm run steward -- sync all`（CSV 利用時）
+3. `npm run steward -- status`（成熟度確認）
+4. 試行は `cursor/scratch/` → 確定後 `docs/` または `cursor/data/` へ

@@ -1,0 +1,8 @@
+doc_id,category,title,property_id,contract_id,issued_by,issued_date,expiry_date,storage_path,status,notes
+LIC-001,ryokan,旅館業許可,PROP-002,,墨田区,,,records/ryokan/,pending,原本スキャン要
+LIC-002,ryokan,消防設備配置証明,PROP-002,,消防署,,,records/ryokan/,pending,
+LIC-003,building,建築確認済証,PROP-002,CTR-007,,,,records/ryokan/,pending,CTR-007原本と照合
+LIC-004,insurance,火災保険証券（番町）,PROP-001,CTR-013,,,,records/insurance/,pending_enrollment,02-enrollment-packet
+LIC-005,insurance,火災保険証券（亀沢）,PROP-002,CTR-014,,,,records/insurance/,pending_enrollment,最優先
+LIC-006,registry,登記簿謄本,,"","法務局",,,records/corporate-registry/,pending,
+LIC-007,registry,定款,,,"","",,records/corporate-registry/,pending,teikan-summary.md参照

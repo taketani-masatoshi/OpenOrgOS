@@ -22,6 +22,8 @@ import { runAnalyzeProperty } from "./commands/analyze.js";
 import { runScenarioCommand } from "./commands/scenario.js";
 import { runAlerts } from "./commands/alerts.js";
 import { runReportMonthly, runReportKessan, runReportJigyo, runReportAnnual } from "./commands/report.js";
+import { runStatus } from "./commands/status.js";
+import { runSyncAll, runSyncContracts } from "./commands/sync.js";
 
 const program = new Command();
 
@@ -33,7 +35,35 @@ program
 program
   .command("validate")
   .description("Validate all data files")
-  .action(runValidate);
+  .option("--warnings", "Show integrity warnings (non-fatal)")
+  .option("--strict", "Alias for --warnings")
+  .action((opts) => runValidate({ warnings: opts.warnings || opts.strict }));
+
+program
+  .command("status")
+  .description("Data maturity health report")
+  .option("--markdown", "Markdown output")
+  .option("--verbose", "Include integrity warnings")
+  .option("-o, --output <filename>", "Save to docs/reports/status/")
+  .action((opts) =>
+    runStatus({
+      markdown: opts.markdown,
+      verbose: opts.verbose,
+      output: opts.output,
+    })
+  );
+
+const sync = program.command("sync").description("Sync docs/data CSV from YAML");
+
+sync
+  .command("all")
+  .description("Sync all plan CSVs and contract ledger")
+  .action(runSyncAll);
+
+sync
+  .command("contracts")
+  .description("Sync 契約管理表.csv only")
+  .action(runSyncContracts);
 
 const contracts = program.command("contracts").description("Contract ledger");
 

@@ -14,6 +14,8 @@ import {
   profitPlanSchema,
   expensePlanSchema,
   investmentPlanSchema,
+  facilityPublicSchema,
+  employeesFileSchema,
   type Company,
   type Property,
   type Contract,
@@ -22,6 +24,8 @@ import {
   type Loans,
   type BusinessPlan,
   type PropertyRevenuePlan,
+  type FacilityPublic,
+  type EmployeesFile,
 } from "../../schemas/index.js";
 import {
   DATA_DIR,
@@ -154,6 +158,17 @@ export function loadInvestmentPlan() {
   return readYamlFile(join(DATA_DIR, "plans", "investment-plan.yaml"), investmentPlanSchema);
 }
 
+export function loadOperationsPublic(): FacilityPublic {
+  return readYamlFile(
+    join(DATA_DIR, "operations", "kamezawa-public.yaml"),
+    facilityPublicSchema
+  );
+}
+
+export function loadEmployees(): EmployeesFile {
+  return readYamlFile(join(DATA_DIR, "hr", "employees.yaml"), employeesFileSchema);
+}
+
 export function loadAllData(): StewardData {
   return {
     company: loadCompany(),
@@ -218,7 +233,10 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     );
   }
 
-  // Cross-reference validation
+  tryLoad("cursor/data/operations/kamezawa-public.yaml", () => loadOperationsPublic());
+  tryLoad("cursor/data/hr/employees.yaml", () => loadEmployees());
+
+  // Cross-reference validation (legacy inline checks)
   if (errors.length === 0) {
     try {
       const data = loadAllData();

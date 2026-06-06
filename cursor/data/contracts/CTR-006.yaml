@@ -1,0 +1,28 @@
+id: CTR-006
+name: "不動産売買契約（亀沢土地）"
+counterparty: "TBD（売主）"
+counterparty_type: company
+type: purchase
+status: executed
+start_date: "2025-06-01"
+executed_date: "2025-06-01"
+auto_renewal: false
+owner: "段燕燕"
+property_id: PROP-002
+compensation:
+  type: fixed
+  amount: 70000000
+  tax_included: false
+  payment_terms: "役員貸付（LOAN-002）により調達。土地代金7,000万円。"
+scope_summary: |
+  東京都墨田区亀沢1の土地取得。
+  旅館（1棟貸し）開発用地。取得価格7,000万円（建物除く土地部分）。
+documents:
+  draft: "docs/contracts/CTR-006/01-draft.md"
+  executed: "docs/contracts/CTR-006/02-executed.md"
+risk:
+  risk_level: medium
+  notes: "売主・地目・境界・農地転用等の登記情報は契約書原本要確認。"
+notes: |
+  PROP-002の土地部分。2025-06-01取得。
+  総投資9,600万円=土地7,000万+上置き2,600万（CTR-007）。

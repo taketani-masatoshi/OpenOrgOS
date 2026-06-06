@@ -13,3 +13,8 @@
 契約書本文は [`docs/contracts/`](../contracts/) を参照。
 
 YAML を更新したら CSV も同期してください。
+
+```bash
+npm run steward -- sync all      # 全 CSV を YAML から再生成
+npm run steward -- sync contracts # 契約管理表のみ
+```

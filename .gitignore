@@ -5,5 +5,13 @@ cursor/scratch/*
 docs/reports/*
 docs/corporate/pdf/*
 !docs/corporate/pdf/README.md
+docs/corporate/licenses/**/records/**
+!docs/corporate/licenses/**/records/README.md
+docs/operations/lodging/pdf/*
+!docs/operations/lodging/pdf/README.md
+cursor/data/operations/kamezawa-secrets.yaml
+docs/operations/**/records/**
+!docs/operations/**/records/README.md
+docs/operations/accounting/records/receipts/**
 *.log
 .DS_Store

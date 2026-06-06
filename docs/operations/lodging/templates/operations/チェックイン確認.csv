@@ -1,0 +1,1 @@
+ci_id,stay_id,reservation_id,check_in_date,scheduled_time,actual_ci_time,guest_name,guest_count,id_verified,privacy_notice_shown,house_rules_shown,access_sent,register_completed,foreign_guest_report_needed,issues,operator,notes

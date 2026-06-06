@@ -54,14 +54,23 @@ export const fixedCostsSchema = z.object({
   items: z.array(fixedCostItem).default([]),
 });
 
+export const loanDocumentsSchema = z.object({
+  executed: z.string().optional(),
+  repayment: z.string().optional(),
+});
+
 export const loanSchema = z.object({
   id: z.string().regex(/^LOAN-\d{3,}$/),
   lender: z.string().min(1),
   property_id: z.string().optional(),
+  contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
   balance: z.number().nonnegative(),
   interest_rate: z.number().min(0),
   monthly_payment: z.number().nonnegative(),
   maturity_date: dateString,
+  executed_date: dateString.optional(),
+  conflict_approval: z.string().optional(),
+  documents: loanDocumentsSchema.optional(),
   notes: z.string().optional(),
 });
 

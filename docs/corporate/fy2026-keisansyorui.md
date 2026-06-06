@@ -139,7 +139,8 @@
 ### 6. その他
 
 - 亀沢旅館の上置き建築費2,600万円は取得原価（9,600万円）に含む
-- 役員貸付の返済条件・スケジュールは別途整理（TBD）
+- 役員貸付の返済条件は [CTR-008/009](../contracts/CTR-008/02-executed.md) 及び [2026/6/6 議事録](fy2026-torishimari-gijiroku-yakuin-kashitsuke.md) 参照
+- 税理士確認: [fy2026-tax-advisor-checklist.md](fy2026-tax-advisor-checklist.md)
 - 法人税等775,000円は概算。確定申告時に精算
 
 ---

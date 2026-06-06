@@ -1,17 +1,32 @@
 loans:
   - id: LOAN-001
-    lender: "役員貸付"
+    lender: "役員貸付（段燕燕・宮城万貴子 各50%）"
     property_id: PROP-001
+    contract_id: CTR-008
     balance: 16600000
     interest_rate: 0
     monthly_payment: 0
-    maturity_date: "2099-12-31"
-    notes: "番町ハイム312。返済条件・返済スケジュール TBD"
+    maturity_date: "2035-01-31"
+    executed_date: "2025-02-10"
+    conflict_approval: "2026-06-06 取締役会（fy2026-torishimari-gijiroku-yakuin-kashitsuke.md）"
+    documents:
+      executed: "docs/contracts/CTR-008/02-executed.md"
+      repayment: "docs/contracts/CTR-008/repayment-schedule.md"
+    notes: |
+      番町ハイム312。無利息。2035/1/31まで全額返済。
+      2028年度以降、CFに応じ任意返済。
   - id: LOAN-002
-    lender: "役員貸付"
+    lender: "役員貸付（段燕燕・宮城万貴子 各50%）"
     property_id: PROP-002
+    contract_id: CTR-009
     balance: 96000000
     interest_rate: 0
     monthly_payment: 0
-    maturity_date: "2099-12-31"
-    notes: "亀沢旅館。土地7,000万＋上置き2,600万。全額役員貸付。返済条件 TBD"
+    maturity_date: "2040-01-31"
+    executed_date: "2025-06-01"
+    conflict_approval: "2026-06-06 取締役会"
+    documents:
+      executed: "docs/contracts/CTR-009/02-executed.md"
+      repayment: "docs/contracts/CTR-009/repayment-schedule.md"
+    notes: |
+      亀沢。土地7,000万+建築2,600万。2030年度以降段階返済、2040/1/31期限。

@@ -1,0 +1,17 @@
+# 従業員マスタ（非個情メタデータ）
+
+# 個人の住所・生年月日・給与詳細は docs/operations/hr/records/ に保管（Git 非追跡）。
+# 雇用開始時に employee_id を付与し、ここに勤務形態・部署等のみ記録可。
+
+employees: []
+# 例:
+#   - id: EMP-001
+#     name: "（records/ 参照）"
+#     hired_date: null
+#     job_type: null
+#     status: inactive
+
+notes: |
+  現状従業員0名。
+  雇用時: docs/operations/hr/templates/従業員名簿.csv へ記入。
+  マイナンバーは本リポジトリに保存しない。

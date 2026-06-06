@@ -13,6 +13,7 @@ export const hotelBlock = z.object({
   room_count: z.number().int().positive(),
   occupancy_rate: z.number().min(0).max(1),
   adr: z.number().nonnegative(),
+  opened_date: dateString.optional(),
 });
 
 export const depreciationBlock = z.object({

@@ -1,1 +1,9 @@
-items: []
+items:
+  - name: Steward OS 保守（竹谷・CTR-001）
+    monthly_amount: 0
+    annual_amount: 180000
+  - name: 通信費（info@malkk.com 等）
+    monthly_amount: 3000
+notes: |
+  Steward保守は FY2026 に一括180,000円計上（expense-plan CTR-001）。
+  本社家賃は番町ハイム312内に兼置のため0。

@@ -1,0 +1,89 @@
+# ISO マネジメントシステム（株式会社MAL）
+
+**人が読むゾーン:** 認証取得の準備・方針・ギャップ管理。  
+正データは [`cursor/data/`](../../cursor/data/)。評価の全体像は [steward-assessment.md](steward-assessment.md)。
+
+---
+
+## 方針
+
+- ISO 認証は **法的義務ではない**。取引先要件・ブランド・リスク管理のために段階導入する。
+- いきなり全規格を取らない。**スコープを MAL の事業に絞る**。
+- 各規格は **L0（未着手）〜 L4（認証済）** で maturity を管理する。
+
+| Level | 意味 |
+|-------|------|
+| L0 | 未検討 |
+| L2 | 方針・**記録運用開始**（リスク・監査・KPI） |
+| L3 | 内部監査・MR 実施記録 |
+| L4 | 認証機関審査・登録 |
+
+---
+
+## 規格一覧（高〜中優先度）
+
+| 優先 | 規格 | フォルダ | 対象事業 | 現状 |
+|:----:|------|---------|---------|:----:|
+| 高 | **ISO/IEC 27001** | [ISO-27001/](ISO-27001/) | Steward・ゲスト情報・全社 | L2 |
+| 高 | **ISO 9001** | [ISO-9001/](ISO-9001/) | 翻訳・SES・PMO | L1 |
+| 高 | **ISO 21401** | [ISO-21401/](ISO-21401/) | **亀沢旅館** | L2 |
+| 中 | **ISO 22301** | [ISO-22301/](ISO-22301/) | 事業継続・BCP | L2 |
+| 中 | **ISO 45001** | [ISO-45001/](ISO-45001/) | 労働安全（**雇用後**） | L1 |
+| 中 | **ISO 14001** | [ISO-14001/](ISO-14001/) | 環境 | L1 |
+| 中 | **ISO 50001** | [ISO-50001/](ISO-50001/) | エネルギー | L1 |
+
+### 低優先（本フォルダ対象外）
+
+ISO 22000（食安全）、ISO 37001（贈収賄）、ISO 31000（リスクガイド）— 必要時に追加。
+
+---
+
+## MAL 事業との対応
+
+```
+番町ハイム（賃貸・本社）  → 27001, 9001, 14001
+亀沢旅館（宿泊）         → 21401, 22301, 50001, 27001, 45001（雇用後）
+Steward OS / DX         → 27001, 9001
+```
+
+---
+
+## 推奨導入順序
+
+```
+1. ISO/IEC 27001  … 情報資産の整理（コスト対効果最大）
+2. ISO 21401      … 亀沢の差別化・SDGs
+3. ISO 9001       … B2B 案件獲得時
+4. ISO 22301      … BCP 文書化（21401 と整合）
+5. ISO 45001      … 初雇用時
+6. ISO 14001/50001 … 21401 目標の具体化
+```
+
+---
+
+## 社内規程・契約との関係
+
+| 規程 | ISO |
+|------|-----|
+| [REG-009 情報セキュリティ](../corporate/regulations/joho-security-kanri-kisoku.md) | 27001 |
+| [REG-010 個人情報保護](../corporate/regulations/kojin-joho-hogo-kisoku.md) | 27001, 21401 |
+| [REG-011 品質管理](../corporate/regulations/hinshitsu-kanri-kisoku.md) | 9001 |
+| [REG-012 宿泊運営](../corporate/regulations/shukuhaku-unyo-kisoku.md) | 21401 |
+| [REG-013 事業継続](../corporate/regulations/jigyo-keizoku-kisoku.md) | 22301 |
+| [REG-014 環境・エネルギー](../corporate/regulations/kankyo-energy-kanri-kisoku.md) | 14001, 50001 |
+| [REG-015 安全衛生](../corporate/regulations/anzen-eisei-kanri-kisoku.md) | 45001 |
+| [REG-016 内部監査](../corporate/regulations/naibu-kansa-kisoku.md) | 全MS |
+| [REG-007 文書管理](../corporate/regulations/bunsho-kanri-kisoku.md) | 記録管理 |
+| [REG-004 稟議・決裁](../corporate/regulations/ringi-kessai-kisoku.md) | 変更管理 |
+
+**制定議事録:** [2026/6/6 取締役会](../corporate/fy2026-torishimari-gijiroku-regulations-iso.md)
+
+---
+
+## 更新ルール
+
+1. 各 `ISO-XXXX/README.md` のギャップチェックを四半期ごとに見直し
+2. maturity 変更は本 README の表を更新
+3. 認証取得時は `certificates/` サブフォルダを追加（将来）
+
+*最終更新: 2026年6月*

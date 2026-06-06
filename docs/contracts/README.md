@@ -2,40 +2,58 @@
 
 契約の**本文**は Markdown、**台帳データ**は [`cursor/data/contracts/`](../../cursor/data/contracts/) の YAML です。
 
-## フォルダ構成
-
-```
-docs/contracts/
-├── README.md           ← 今ここ
-└── CTR-{NNN}/
-    ├── 01-draft.md     ドラフト（交渉・レビュー用）
-    └── 02-executed.md  締結版（署名・締結日を記載した確定版）
-```
-
-## ステータスと更新フロー
-
-| status（YAML） | 意味 | 操作 |
-|----------------|------|------|
-| `draft` | ドラフト作成中・交渉中 | `01-draft.md` を編集 |
-| `pending_signature` | 内容確定・署名待ち | `02-executed.md` を確定版に更新 |
-| `executed` | 締結済み | `executed_date` を YAML に記録 |
-| `terminated` | 終了 | 終了日・理由を YAML に記録 |
-
-1. ドラフト合意 → `02-executed.md` に締結日・署名欄を記入
-2. [`cursor/data/contracts/CTR-XXX.yaml`](../../cursor/data/contracts/) の `status` を `executed` に更新
-3. [`docs/data/契約管理表.csv`](../data/契約管理表.csv) を同期
-4. `npm run validate`
-
 ## 契約一覧
 
-| ID | 契約名 | 相手方 | ステータス |
-|----|--------|--------|-----------|
-| [CTR-001](CTR-001/01-draft.md) | 業務委託契約（竹谷昌敏） | 竹谷昌敏 | executed |
+| ID | 契約名 | 相手方 | 物件 | ステータス |
+|----|--------|--------|------|-----------|
+| [CTR-001](CTR-001/01-draft.md) | 業務委託（Steward保守） | 竹谷昌敏 | — | executed |
+| [CTR-002](CTR-002/01-draft.md) | 番町ハイム312 購入 | TBD（売主） | PROP-001 | executed ※本文TBD |
+| [CTR-003](CTR-003/01-draft.md) | 番町ハイム312 賃貸 | TBD（借主） | PROP-001 | executed ※本文TBD |
+| [CTR-004](CTR-004/01-draft.md) | 取締役委任（段燕燕） | 段燕燕 | — | executed |
+| [CTR-005](CTR-005/01-draft.md) | 取締役委任（宮城万貴子） | 宮城万貴子 | — | executed |
+| [CTR-006](CTR-006/01-draft.md) | 亀沢 土地購入 | TBD（売主） | PROP-002 | executed ※本文TBD |
+| [CTR-007](CTR-007/01-draft.md) | 亀沢旅館 建築請負 | TBD（請負業者） | PROP-002 | executed ※本文TBD |
+| [CTR-008](CTR-008/01-draft.md) | **金銭消費貸借**（LOAN-001） | 段・宮城 | PROP-001 | **draft** |
+| [CTR-009](CTR-009/01-draft.md) | **金銭消費貸借**（LOAN-002） | 段・宮城 | PROP-002 | **draft** |
+| [CTR-010](CTR-010/01-draft.md) | **Airbnb** ホスト規約 | Airbnb | PROP-002 | pending_signature |
+| [CTR-011](CTR-011/01-draft.md) | **Booking.com** パートナー | Booking.com | PROP-002 | draft |
+| [CTR-012](CTR-012/01-draft.md) | **清掃**委託 | TBD | PROP-002 | draft |
+| [CTR-013](CTR-013/01-draft.md) | **火災保険**（番町） | TBD | PROP-001 | draft |
+| [CTR-014](CTR-014/01-draft.md) | **火災保険**（亀沢） | TBD | PROP-002 | draft |
+
+台帳 CSV: [契約管理表.csv](../data/契約管理表.csv)
+
+## 更新フロー
+
+1. 原本を `01-draft.md` / `02-executed.md` に反映
+2. `cursor/data/contracts/CTR-XXX.yaml` を更新
+3. CSV を同期 → `npm run validate`
+
+---
+
+## 未登録・要検討（残）
+
+| 優先 | 種類 |
+|:----:|------|
+| 中 | インターネット回線（亀沢 Wi-Fi） |
+| 中 | 旅館業許可・消防・建築確認（許認可**書類**保管） |
+| 低 | 管理組合規約（番町ハイム312） |
+| 低 | 定款・株主間契約（定款は登記簿） |
+
+社内規程 → [regulations/](../corporate/regulations/README.md)
+
+---
 
 ## 参考（Web）
 
-- [フリーランス新法と契約書の明示事項（モノリス法律事務所)](https://monolith.law/corporate/freelance-law-contract)
-- [業務委託契約書の書き方（マネーフォワード クラウド契約）](https://biz.moneyforward.com/contract/basic/2188/)
-- [フリーランス新法対応ひな形（Collabo Tips）](https://www.collabotips.com/guide/freelance-contract-template/)
+| テーマ | リンク |
+|--------|--------|
+| 役員借入金契約 | [MySign ひな形](https://mysign.jp/templates/yakuin-kariirekin-kinshou-shouhi-taishaku-keiyaku) |
+| 役員取引Q&A | [長谷川公認会計士事務所](https://www.sah-cpa.com/%E5%BD%B9%E5%93%A1%E5%8F%96%E5%BC%95q-a) |
+| Airbnb 規約 | [サービス利用規約](https://www.airbnb.jp/help/article/2908) |
+| Booking 手数料 | [民泊OL](https://minpaku-mlit.jp/booking-registration/) |
+| 清掃委託 | [コザクラ行政書士](https://kozakur-contract.tokyo/seisou/) |
+| 民泊清掃ガイド | [民泊学校 2026](https://minpakugakko.com/minpaku-contract-template-2026/) |
+| テナント火災保険 | [マネーサロン](https://moneysalon.jp/blog/kasai-hoken-tenant) |
 
-※ 本リポジトリの契約書ドラフトは上記を参考にブラッシュアップしたものです。**最終版は弁護士・税理士確認を推奨**します。
+※ **最終版は弁護士・税理士・保険代理店確認を推奨**します。

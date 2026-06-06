@@ -1,0 +1,27 @@
+id: CTR-002
+name: "不動産売買契約（番町ハイム312）"
+counterparty: "TBD（売主）"
+counterparty_type: company
+type: purchase
+status: executed
+start_date: "2025-02-10"
+executed_date: "2025-02-10"
+auto_renewal: false
+owner: "段燕燕"
+property_id: PROP-001
+compensation:
+  type: fixed
+  amount: 16600000
+  tax_included: false
+  payment_terms: "役員貸付（LOAN-001）により全額調達。売主への支払条件は契約書要確認。"
+scope_summary: |
+  東京都千代田区二番町 番町ハイム312号室の取得。
+  取得価格1,660万円。本社兼用賃貸物件。
+documents:
+  draft: "docs/contracts/CTR-002/01-draft.md"
+  executed: "docs/contracts/CTR-002/02-executed.md"
+risk:
+  risk_level: low
+  notes: "売主名・登記情報・手付金等は契約書原本要確認。"
+notes: |
+  PROP-001。取得日2025-02-10。融資は役員貸付全額（LOAN-001）。

@@ -22,7 +22,12 @@ years:
         name: 本社固定費
         amount: 0
         notes: 番町ハイム312に本社兼置
-    total: 3333691
+      - id: steward_outsourcing
+        name: 業務委託（竹谷・Steward保守）
+        contract_id: CTR-001
+        amount: 180000
+        notes: 2027-01-31一括支払（FY2026計上）
+    total: 3513691
     notes: 決算確定（予想ベース）
 
   - fiscal_year: FY2027

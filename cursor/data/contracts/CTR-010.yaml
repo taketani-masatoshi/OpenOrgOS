@@ -1,0 +1,26 @@
+id: CTR-010
+name: "Airbnb ホスト利用規約（亀沢旅館）"
+counterparty: "Airbnb（Airbnb Ireland UC 等）"
+counterparty_type: company
+type: ota
+status: executed
+start_date: "2026-08-01"
+executed_date: "2026-08-01"
+auto_renewal: true
+owner: "段燕燕"
+property_id: PROP-002
+compensation:
+  type: fixed
+  amount: 0
+  payment_terms: "予約総額（税抜）のホスト手数料15.5%。"
+scope_summary: |
+  Airbnbで亀沢旅館をリスティング。規約同意により成立。
+documents:
+  draft: "docs/contracts/CTR-010/01-draft.md"
+  executed: "docs/contracts/CTR-010/02-executed.md"
+monthly_cost: 0
+risk:
+  risk_level: medium
+  notes: "規約改定監視。許可番号掲載要。"
+notes: |
+  手数料15.5%。Extranetと02-executedの同意日を照合。

@@ -47,6 +47,14 @@ Stewardは蓄積された情報を利用して、
 5. 物件別収益分析 — `steward analyze property`
 6. シナリオ分析 — `steward scenario`
 7. 契約期限アラート — `steward alerts`
+8. **データ成熟度** — `steward status`
+9. **CSV 同期** — `steward sync all`
+
+## データ検証
+
+- スキーマ: Zod（`schemas/`）
+- 参照整合性: loan↔contract↔property、operations、HR
+- `npm run validate -- --warnings` で非致命警告も表示
 
 ## Cursor 運用
 

@@ -1,0 +1,1 @@
+payroll_id,payment_year_month,employee_id,employee_name,work_days,paid_leave_days,base_salary,allowances,overtime_pay,social_insurance,withholding_tax,other_deductions,net_pay,paid_at,payment_method,notes

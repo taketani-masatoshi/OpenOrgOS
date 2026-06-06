@@ -13,9 +13,12 @@
 | FY2026 決算書 | [plans/fy2026-pl.md](plans/fy2026-pl.md) |
 | 法人書類（議事録等） | [corporate/](corporate/) |
 | 決算・総会・税務予定 | [corporate/fy2026-meeting-schedule.md](corporate/fy2026-meeting-schedule.md) |
+| 社内規程 | [corporate/regulations/](corporate/regulations/) |
+| ISO / マネジメント | [iso/](iso/) · [現状評価](iso/steward-assessment.md) |
 | 決算・事業報告 PDF | [corporate/pdf/](corporate/pdf/) |
 | 契約書 | [contracts/](contracts/) |
 | 契約一覧表 | [data/契約管理表.csv](data/契約管理表.csv) |
+| **業務台帳・名簿** | [operations/](operations/) · [亀沢運用ガイド](operations/lodging/daily-operations-guide.md) |
 
 ---
 
@@ -27,6 +30,7 @@ docs/
 ├── corporate/         法人書類（MD）
 │   └── pdf/           決算・事業報告（PDF）
 ├── contracts/         契約書
+├── operations/        業務台帳・宿泊者名簿・プライバシー
 ├── data/              計画・台帳 CSV
 └── reports/           CLI 自動生成 MD
 ```
