@@ -1,0 +1,91 @@
+---
+description: Steward OS data conventions and operational rules
+globs:
+  - cursor/**/*
+alwaysApply: false
+---
+
+# Steward OS 運用ルール
+
+## フォルダ構成
+
+- **人が読むもの:** `docs/`（仕様書・PL・運用メモ）
+- **Cursor / CLI が使うデータ:** `cursor/`（YAML 正データ・スキーマ・生成レポート）
+
+## データ配置規約（`cursor/data/`）
+
+- 会社情報: `cursor/data/company.yaml`（単一法人）
+- 物件: `cursor/data/properties/PROP-{NNN}.yaml`（1物件1ファイル）
+- 契約: `cursor/data/contracts/CTR-{NNN}.yaml`（1契約1ファイル）
+- 月次収支: `cursor/data/finances/monthly/{YYYY-MM}.yaml`
+- 固定費: `cursor/data/finances/fixed-costs.yaml`
+- 役員報酬: `cursor/data/finances/payroll.yaml`
+- 融資: `cursor/data/finances/loans.yaml`
+- 事業計画: `cursor/data/plans/business-plan.yaml`
+- 月次予実計画: `cursor/data/plans/yojitsu-fy{YYYY}.yaml`（会計年度ベース）
+- 予実計画書（人向け）: `docs/plans/fy{YYYY}-pl.md`（PL・予実表）
+
+## ID 命名規則
+
+- 物件: `PROP-001`, `PROP-002`, ...
+- 契約: `CTR-001`, `CTR-002`, ...
+- 融資: `LOAN-001`, `LOAN-002`, ...
+
+## 契約書取込テンプレート
+
+契約書 PDF やテキストから情報を抽出する際、以下の YAML 形式で `cursor/data/contracts/` に保存する:
+
+```yaml
+id: CTR-XXX
+name: "契約名"
+counterparty: "相手先名"
+type: management  # rental|management|cleaning|ota|insurance|construction|outsourcing|advisory|system|nda|partnership
+start_date: YYYY-MM-DD
+end_date: YYYY-MM-DD
+auto_renewal: true
+owner: "担当者"
+property_id: PROP-XXX  # 該当する場合
+monthly_cost: 0
+risk:
+  renewal_deadline: YYYY-MM-DD
+  termination_deadline: YYYY-MM-DD
+  risk_level: low  # low|medium|high
+  notes: ""
+```
+
+## レポート生成
+
+レポート生成時は CLI を優先利用する:
+
+- 月次レポート: `npm run steward -- report monthly --month YYYY-MM`
+- 決算報告書 PDF: `npm run steward -- report kessan --fy FY2026`
+- 事業報告書 PDF: `npm run steward -- report jigyo --fy FY2026`
+- 決算・事業報告（一括）: `npm run steward -- report annual --fy FY2026`
+- CF予測: `npm run steward -- forecast --months 12`
+- 物件分析: `npm run steward -- analyze property`
+- 契約アラート: `npm run steward -- alerts --days 90 --markdown`
+
+生成されたレポートは `cursor/reports/` に保存される。
+
+## データ入力時のルール
+
+1. 新規データ追加後は `npm run validate` を実行して検証する
+2. 日付は `YYYY-MM-DD`、月は `YYYY-MM` 形式
+3. 金額は整数（円単位）
+4. 空室率・稼働率は 0〜1 の小数（例: 0.05 = 5%）
+5. `property_id` は必ず存在する物件 ID を参照する
+
+## 月次収支入力テンプレート
+
+```yaml
+month: "YYYY-MM"
+revenue:
+  - property_id: PROP-001
+    category: rent  # rent|hotel_revenue|other_revenue
+    amount: 350000
+expenses:
+  - property_id: PROP-001
+    category: repair  # repair|cleaning|management_fee|utilities|other_property|fixed_rent|communication|insurance|advisory|system|loan_payment|capex|other
+    amount: 50000
+notes: ""
+```

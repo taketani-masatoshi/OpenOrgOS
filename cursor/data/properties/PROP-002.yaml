@@ -1,0 +1,28 @@
+id: PROP-002
+name: "亀沢旅館（建築中）"
+location: "東京都墨田区亀沢1"
+type: hotel
+acquired_date: "2025-06-01"
+acquisition_price: 96000000
+financing: LOAN-002
+hotel:
+  room_count: 1
+  occupancy_rate: 0.70
+  adr: 50000
+operating_costs:
+  cleaning_per_stay: 12000
+  ota_commission_rate: 0.155
+  utilities_monthly: 35000
+  amenities_per_stay: 2000
+  wifi_monthly: 5000
+  notes: |
+    清掃: 一軒家相場10,000〜15,000円/回→12,000円（民泊navi・民泊管理バンク参考）
+    OTA: Airbnbホスト手数料15.5%（Arch 2025/12〜統一モデル）
+    光熱費: 高稼働一軒家2〜5万円/月→35,000円（airhost・エビス電力参考）
+    アメニティ: 2,000円/回（消耗品目安）
+    Wi-Fi: 5,000円/月（Stay Buddy 3,000〜6,000円参考）
+notes: |
+  土地: 2025年6月購入、7,000万円。上置き2,600万円。総投資9,600万円（役員貸付・全額）。
+  開業予定: 2026年8月。
+  1棟貸し。物理3室・最大7名・平均5名。
+  料金: 10,000円/人/泊×5名＝50,000円/泊。稼働率70%。

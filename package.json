@@ -1,0 +1,31 @@
+{
+  "name": "steward-os",
+  "version": "0.2.0",
+  "description": "Steward OS - Property Business Edition",
+  "type": "module",
+  "bin": {
+    "steward": "./src/cli.ts"
+  },
+  "scripts": {
+    "steward": "tsx src/cli.ts",
+    "validate": "tsx src/cli.ts validate",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "pdfkit": "^0.18.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/pdfkit": "^0.17.6",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

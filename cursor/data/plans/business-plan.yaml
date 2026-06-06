@@ -1,0 +1,74 @@
+# 株式会社MAL 事業計画（2026-2028）
+
+period: "2026-2028"
+
+vision: |
+  外国人と日本人を繋ぎ、不動産オーナーの経営を言語・文化・DXの面から支援する。
+  自社物件運営とサービス事業の両輪で、持続可能な収益基盤を構築する。
+
+mid_term_goals:
+  - "亀沢旅館（2026年8月開業）の稼働率70%安定化"
+  - "番町ハイム312の安定賃貸収益確保"
+  - "翻訳・通訳サービスの定額化・パッケージ化"
+  - "ソフトウェア・DX支援による付加価値収益の拡大"
+
+segments:
+  - name: "翻訳・通訳（不動産）"
+    description: "オーナーと入居外国人の間のコミュニケーション支援"
+    revenue_driver: "月額定額契約・案件単価"
+  - name: "番町ハイム312（賃貸）"
+    description: "千代田区二番町。月額10万円・満室"
+    revenue_driver: "月額賃料"
+  - name: "亀沢旅館（1棟貸し）"
+    description: "2026年8月開業。1万円/人×5名平均・稼働70%"
+    revenue_driver: "1棟貸し宿泊料金×稼働率"
+  - name: "DX・ソフトウェア"
+    description: "受託開発、SES、業務DX化支援"
+    revenue_driver: "プロジェクト単価・月額保守"
+  - name: "コンサル・PMO"
+    description: "新規事業・事業再生支援"
+    revenue_driver: "月額顧問・プロジェクト報酬"
+
+kpi:
+  - name: "亀沢旅館 稼働率"
+    target: "70"
+    unit: "%"
+  - name: "番町ハイム 空室率"
+    target: "0"
+    unit: "%"
+  - name: "FY2026 売上（物件中心）"
+    target: "750"
+    unit: "万円"
+  - name: "FY2026 営業利益"
+    target: "417"
+    unit: "万円"
+
+years:
+  - year: 2026
+    revenue_plan: 7500000
+    operating_profit_plan: 4166309
+    investment_plan: 26000000
+    borrowing_plan: 0
+    notes: "FY2026 決算確定（2027-02-15・予想ベース）。売上750万・営業利益417万・当期純利益339万（税概算775,000控除後）"
+  - year: 2027
+    revenue_plan: 13800000
+    operating_profit_plan: 7839000
+    investment_plan: 0
+    borrowing_plan: 0
+    notes: "FY2027（2027/2〜2028/1）。亀沢フル12ヶ月+番町120万"
+  - year: 2028
+    revenue_plan: 14430000
+    operating_profit_plan: 8170950
+    investment_plan: 5000000
+    borrowing_plan: 0
+    notes: "FY2028。亀沢+5%成長想定"
+
+funding_plan: |
+  亀沢旅館: 土地7,000万＋上置き2,600万＝9,600万円。全額役員貸付（LOAN-002）。
+  番町ハイム312: 1,660万円。役員貸付（LOAN-001）。
+  返済スケジュール・利息条件は別途整理（TBD）。
+
+notes: |
+  会計年度: 2月始まり1月決算（fiscal_year_end_month: 1）。
+  予実・PL: docs/plans/fy2026-pl.md / cursor/data/plans/yojitsu-fy2026.yaml
+  サービス事業（翻訳・DX等）の売上は今後追加。

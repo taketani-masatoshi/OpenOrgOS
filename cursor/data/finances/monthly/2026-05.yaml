@@ -1,0 +1,11 @@
+month: 2026-05
+revenue:
+  - property_id: PROP-001
+    category: rent
+    amount: 100000
+expenses:
+  - property_id: PROP-001
+    category: other
+    amount: 29433
+    notes: 減価償却費（番町ハイム）
+notes: 予想ベース決算

@@ -1,0 +1,61 @@
+year: 2026
+fiscal_year: "FY2026"
+period_from: "2026-02"
+period_to: "2027-01"
+closing:
+  status: closed
+  basis: forecast
+  closed_at: "2027-02-15"
+  notes: "計画値を実績として確定（翻訳・役員報酬は0円のまま）。税務申告は税理士確認後。"
+assumptions: |
+  会計年度: 2026年2月1日〜2027年1月31日（決算月1月）。
+  番町ハイム312: 月10万円・本社兼用（事務所家賃なし）。
+  亀沢旅館: 2026年8月開業。105万/月（粗売上）×6ヶ月。
+  翻訳: 売上0円（未計上）。人件費: 役員報酬0円（未計上）。
+  減価償却: 番町ハイム1,660万円÷47年＝353,191円/年（月29,433円）。
+summary:
+  revenue_total: 7500000
+  operating_profit: 4166309
+  pretax_profit: 4166309
+  tax_estimate: 775000
+  net_profit: 3391309
+months:
+  - month: "2026-02"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2026-03"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 13000000 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 13000000 }
+    notes: "上置き建築費（半期分・概算）"
+  - month: "2026-04"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 13000000 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 13000000 }
+    notes: "上置き建築費（半期分・概算）"
+  - month: "2026-05"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2026-06"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2026-07"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 0, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 0, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2026-08"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    notes: "亀沢旅館 開業"
+  - month: "2026-09"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2026-10"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2026-11"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2026-12"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+  - month: "2027-01"
+    plan: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
+    actual: { revenue_bancho: 100000, revenue_kamezawa: 1050000, revenue_translation: 0, revenue_services: 0, expense_bancho: 0, expense_kamezawa: 496750, expense_officer: 0, expense_company: 0, depreciation: 29433, capex: 0 }
