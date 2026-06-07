@@ -1,0 +1,17 @@
+# Steward OS — AI 自動コンテキスト除外（Git 境界とは別）
+# Zone C: 個情 vault — 必要時のみ @file で明示参照
+**/records/**
+
+# 試行・一時
+scratch/**
+
+# 受信/出力トレイ（スキャン・PDF）
+docs/io/inbox/**
+docs/io/outbox/**
+
+# 大容量生成物
+docs/**/*.pdf
+node_modules/**
+dist/**
+
+# bank-accounts.yaml / stakeholders.yaml / *-secrets.yaml は意図的に除外しない

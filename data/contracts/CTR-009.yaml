@@ -1,6 +1,6 @@
 id: CTR-009
 name: "金銭消費貸借契約（亀沢旅館・LOAN-002）"
-counterparty: "段燕燕・宮城万貴子"
+counterparty: "段燕燕"
 counterparty_type: individual
 type: loan
 status: executed
@@ -23,4 +23,4 @@ risk:
   risk_level: low
   notes: "2030年度以降の段階返済をMRで見直し。"
 notes: |
-  LOAN-002。CTR-008と同貸主・同持分。
+  LOAN-002。貸主=段燕燕100%（CTR-008 と同一貸主 · 2026-06 経営確認）。

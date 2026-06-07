@@ -9,7 +9,8 @@
   "scripts": {
     "steward": "node --import tsx src/cli.ts",
     "validate": "node --import tsx src/cli.ts validate",
-    "daily": "npm run validate && npm run steward -- dashboard && npm run steward -- io status && npm run validate -- --deps",
+    "check": "npm run validate && npm run steward -- classification check",
+    "daily": "npm run check && npm run steward -- dashboard && npm run steward -- io status && npm run validate -- --deps",
     "test": "vitest run",
     "test:watch": "vitest"
   },

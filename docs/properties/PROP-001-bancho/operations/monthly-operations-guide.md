@@ -25,7 +25,7 @@
 
 | 論点 | 現状 SoT | アクション |
 |------|---------|-----------|
-| 借主名・連絡先 | CTR-003 `counterparty: TBD` | 契約書原本で確定 → YAML 更新 |
+| 借主名・連絡先 | 株式会社サウスウッド（STK-003）· 担当 鈴木氏 | `data/contracts/CTR-003.yaml` · STK-003 profile |
 | 自社使用 vs 第三者賃貸 | 満室・10万/月想定 | 実態と乖離があれば按分方針を Finance へ |
 | 事務所家賃（本社固定費） | 0 円想定 | [`fixed-costs.yaml`](../../../../data/finance/fixed-costs.yaml) と整合 |
 

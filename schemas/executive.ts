@@ -114,6 +114,40 @@ export const externalContactSchema = z.object({
   org: z.string().optional(),
   relationship: z.string().optional(),
   preferred_channel: z.string().optional(),
+  /** 詳細は gitignore の stakeholders.yaml へ */
+  stakeholder_id: z.string().regex(/^STK-\d{3,}$/).optional(),
+  notes: z.string().optional(),
+});
+
+export const piiLevelSchema = z.enum(["L0", "L1", "L2"]);
+
+export const stakeholderContactSchema = z.object({
+  email: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  chat: z.string().nullable().optional(),
+});
+
+export const stakeholderSchema = z.object({
+  id: z.string().regex(/^STK-\d{3,}$/),
+  name: z.string().min(1),
+  name_en: z.string().optional(),
+  org: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  relationship: z.array(z.string()).default([]),
+  primary_agent: z.string().optional(),
+  secondary_agents: z.array(z.string()).default([]),
+  contract_ids: z.array(z.string()).default([]),
+  pii_level: piiLevelSchema.default("L1"),
+  preferred_channel: z.string().optional(),
+  /** リポジトリルートからの相対パス（gitignore 想定） */
+  profile_md: z.string().optional(),
+  contact: stakeholderContactSchema.optional(),
+  background_summary: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const stakeholdersFileSchema = z.object({
+  stakeholders: z.array(stakeholderSchema).default([]),
   notes: z.string().optional(),
 });
 
@@ -130,3 +164,5 @@ export type OneOnOne = z.infer<typeof oneOnOneSchema>;
 export type OneOnOnesFile = z.infer<typeof oneOnOnesFileSchema>;
 export type ExternalContact = z.infer<typeof externalContactSchema>;
 export type ExternalContactsFile = z.infer<typeof externalContactsFileSchema>;
+export type Stakeholder = z.infer<typeof stakeholderSchema>;
+export type StakeholdersFile = z.infer<typeof stakeholdersFileSchema>;

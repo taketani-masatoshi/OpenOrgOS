@@ -1,7 +1,7 @@
 id: CTR-003
 name: "賃貸借契約（番町ハイム312・貸主MAL）"
-counterparty: "TBD（借主）"
-counterparty_type: individual
+counterparty: "株式会社サウスウッド"
+counterparty_type: company
 type: lease
 status: executed
 start_date: "2025-03-01"
@@ -25,7 +25,8 @@ monthly_cost: 0
 risk:
   renewal_deadline: "2026-12-01"
   risk_level: low
-  notes: "借主名・更新条項・敷金礼金は契約書原本要確認。満室稼働想定。"
+  notes: "借主=株式会社サウスウッド（STK-003）。更新条項・敷金礼金は契約書原本要確認。満室稼働想定。"
 notes: |
-  貸主=株式会社MAL。月額10万円。空室率0%想定。
+  貸主=株式会社MAL。借主=株式会社サウスウッド（STK-003 · invoice@southwood.co.jp · 担当 鈴木氏）。
+  月額10万円。空室率0%想定。
   ※本社兼用のため、実態が自社使用のみの場合は契約の要否を税理士確認。

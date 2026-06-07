@@ -13,6 +13,10 @@
 | `tasks.yaml` | tasksFile | 社長タスク（dashboard P0 とは別） |
 | `one-on-ones.yaml` | oneOnOnesFile | 1-on-1 レジストリと次回準備 |
 | `external-contacts.yaml` | externalContactsFile | 主要社外連絡先（最小限） |
+| `stakeholders.yaml` | stakeholdersFile | **利害関係者レジストリ（gitignore · ローカル正本）** |
+| `stakeholders.yaml.example` | stakeholdersFile | テンプレート（Git 追跡） |
+
+プロフィール MD: [`docs/executive/stakeholders/`](../../docs/executive/stakeholders/00-このフォルダについて.md)（実体は gitignore）
 
 ---
 

@@ -3,12 +3,22 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import type { ZodSchema } from "zod";
+import { sanitizeForTrackedOutput } from "./sanitize-output.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT_DIR = join(__dirname, "..", "..");
 export const DOCS_DIR = join(ROOT_DIR, "docs");
 export const DATA_DIR = join(ROOT_DIR, "data");
 export const SCRATCH_DIR = join(ROOT_DIR, "scratch");
+
+/** 利害関係者レジストリ（gitignore — GitHub に push しない） */
+export const EXECUTIVE_DIR = join(DATA_DIR, "executive");
+export const STAKEHOLDERS_YAML = join(EXECUTIVE_DIR, "stakeholders.yaml");
+export const STAKEHOLDERS_DOCS_DIR = join(DOCS_DIR, "executive", "stakeholders");
+
+/** 法人銀行口座（gitignore — 口座番号等 L2） */
+export const BANK_ACCOUNTS_YAML = join(DATA_DIR, "finance", "bank-accounts.yaml");
+export const CLASSIFICATION_REGISTRY_YAML = join(DATA_DIR, "classification-registry.yaml");
 export const ASSETS_DIR = join(ROOT_DIR, "assets");
 export const DOCS_REPORTS_DIR = join(DOCS_DIR, "reports");
 
@@ -132,7 +142,7 @@ export function ensureDocsReportsDir(subdir?: string): string {
   return dir;
 }
 
-/** CLI が生成する Markdown レポート（人向け → docs/reports/） */
+/** CLI が生成する Markdown レポート（人向け → docs/reports/ · L1 サニタイズ） */
 export function writeMarkdownReport(
   subdir: string,
   filename: string,
@@ -140,7 +150,7 @@ export function writeMarkdownReport(
 ): string {
   const dir = ensureDocsReportsDir(subdir);
   const path = join(dir, filename);
-  writeFileSync(path, content, "utf-8");
+  writeFileSync(path, sanitizeForTrackedOutput(content), "utf-8");
   return path;
 }
 

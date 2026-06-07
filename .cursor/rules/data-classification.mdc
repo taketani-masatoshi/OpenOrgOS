@@ -1,0 +1,41 @@
+---
+description: データ機密階層 L0–L3 · Git/AI 境界 · 出力禁止
+globs:
+  - data/**/*
+  - docs/**/*
+  - steward/**/*
+alwaysApply: true
+---
+
+# データ分類・AI 開示ルール
+
+正本: `data/classification-registry.yaml` · `steward/rules/folder_access_policy.md` §1.3
+
+## 3 境界
+
+| 境界 | 制御 | 目的 |
+|------|------|------|
+| **Git** | `.gitignore` | GitHub 非公開（L2） |
+| **AI 自動** | `.cursorignore` | 個情 vault 等を勝手に載せない |
+| **AI 出力** | L3 ルール | チャット・tracked MD に L2 値を書かない |
+
+## 開示レベル（AI 利用時）
+
+| レベル | 例 | Git | AI |
+|--------|-----|-----|-----|
+| L0 | 会社概要・公開 URL | ○ | 自動可 |
+| L1 | 契約概要・残高・業務メール | ○ | 自動可 |
+| L2 | 口座番号・Wi-Fi・stakeholders 詳細 | × | `@file` / 担当 Agent で可 |
+| L3 | L2 の転記・要約への混入 | × | **禁止** |
+
+## 必須ルール
+
+1. **L2/L3 を tracked ファイル（`docs/` の git 追跡 MD、`data/` の非 gitignore YAML）に書かない**
+2. 口座・個人住所は **`bank_account_id` / `stakeholder_id` リンクのみ** — 値は gitignore 側
+3. Agent 要約（`docs/reports/`）は **L1 以下** — 口座番号・個人携帯・Wi-Fi パスワード禁止
+4. 振込・請求の実行指示は **`npm run steward -- broker transfer`** — チャットに口座番号を出力しない
+5. Zone C（`**/records/**`）は `.cursorignore` — 秘書タスク時のみ `@file` で明示参照
+
+## Privacy Mode
+
+L2 を AI に渡す場合は Cursor **Privacy Mode ON**（ZDR）を前提とする。

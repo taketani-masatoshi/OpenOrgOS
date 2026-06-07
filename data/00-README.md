@@ -15,7 +15,9 @@
 | `finance/fixed-costs.yaml` | fixedCosts | 本社固定費 |
 | `finance/payroll.yaml` | payroll | 役員報酬 |
 | `finance/loans.yaml` | loans | 借入・役員貸付 |
-| `finance/cash-balance.yaml` | cashBalance | 現預金残高（ランウェイ） |
+| `finance/cash-balance.yaml` | cashBalance | 現預金残高（L1 · `bank_account_id` でリンク） |
+| `finance/bank-accounts.yaml` | bankAccountsFile | 法人口座番号（**gitignore** · `.example` 参照） |
+| `classification-registry.yaml` | classificationRegistry | 機密階層 L0–L3 · エージェントアクセス |
 | `finance/fixed-assets.yaml` | fixedAssets | 固定資産台帳 |
 | `finance/tax-profile.yaml` | taxProfile | 税務プロファイル |
 | `finance/chart-of-accounts.yaml` | chartOfAccounts | 勘定科目 |
@@ -34,7 +36,8 @@
 | `executive/calendar.yaml` | calendarFile | 社長カレンダー（Secretary） |
 | `executive/tasks.yaml` | tasksFile | 社長タスク |
 | `executive/one-on-ones.yaml` | oneOnOnesFile | 1-on-1 レジストリ |
-| `executive/external-contacts.yaml` | externalContactsFile | 社外連絡先 |
+| `executive/external-contacts.yaml` | externalContactsFile | 社外連絡先（索引） |
+| `executive/stakeholders.yaml` | stakeholdersFile | 利害関係者（**gitignore** · `.example` 参照） |
 
 ---
 
@@ -78,4 +81,9 @@ npm run steward -- deps graph # 依存関係マップ
 
 詳細: [docs/plans/dependency-update-guide.md](../docs/plans/dependency-update-guide.md)
 
-*機密・個情は `records/` または `*-secrets.yaml`（gitignore）のみ。*
+*機密・個情は `records/` または `*-secrets.yaml` / `bank-accounts.yaml`（gitignore）のみ。*
+
+**口座セットアップ:** `cp data/finance/bank-accounts.yaml.example data/finance/bank-accounts.yaml` → 三井住友・GMOあおぞらの口座番号を入力。
+
+**分類チェック:** `npm run steward -- classification check`  
+**振込 Broker:** `npm run steward -- broker transfer --from BANK-001 --amount 100000 --payee "..." --reference "..." --write`

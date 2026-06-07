@@ -1,0 +1,8 @@
+# コードベース索引から除外（@file 明示参照は可）
+docs/exports/**
+docs/data/**
+docs/**/*.pdf
+docs/io/**
+node_modules/**
+dist/**
+scratch/**

@@ -20,6 +20,24 @@ tasks:
     delegated_to: Secretary Agent
     source: calendar EVT-002
 
+  - id: TASK-005
+    title: 6/7 銀座会食（竹谷）— 店舗確定・予約・招待連絡
+    due: "2026-06-07"
+    priority: p0
+    status: open
+    category: dining
+    delegated_to: Secretary Agent
+    source: calendar EVT-003
+
+  - id: TASK-006
+    title: 6/7 会食 — 領収書取得・経費精算（接待交際費）
+    due: "2026-06-21"
+    priority: p2
+    status: open
+    category: business
+    delegated_to: Finance Agent
+    source: calendar EVT-003 · REG-005
+
   - id: TASK-003
     title: 税理士・顧問先への四半期報告メール下書き確認
     due: "2026-06-30"

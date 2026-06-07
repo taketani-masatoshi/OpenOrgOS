@@ -18,3 +18,13 @@ business_description: |
   インボイス登録番号: T4010001189530
   旧商号: 株式会社ほんとのあなた（2024-12-27にMALへ変更）
   旧本店: 東京都文京区小石川3丁目28番13号（2024-12-18に現住所へ移転）
+# 公式サイト公開値（登記・税務 SoT は tax-profile / 登記簿で要確定）
+public_disclosure:
+  website: "https://malkk.com/property/"
+  about_url: "http://malkk.com/property/about-us"
+  contact_email: "info@malkk.com"
+  capital_yen: 8500000
+  capital_as_of: "2025-09"
+  employees: 3
+  source: "公式 About us ページ"
+  note: "tax-profile.capital_stock は TBD — 登記簿と照合後に確定"

@@ -2,6 +2,15 @@
 import { Command } from "commander";
 import { runValidate } from "./commands/validate.js";
 import {
+  runClassificationCheck,
+  runClassificationAccess,
+} from "./commands/classification.js";
+import {
+  runBrokerBankList,
+  runBrokerBankShow,
+  runBrokerTransfer,
+} from "./commands/broker.js";
+import {
   runContractsList,
   runContractsShow,
   CONTRACT_TYPES,
@@ -377,6 +386,61 @@ invoice
       tenantName: opts.tenantName,
       tenantEmail: opts.tenantEmail,
       bankAccount: opts.bankAccount,
+    })
+  );
+
+const classification = program
+  .command("classification")
+  .description("Data classification registry and access control");
+
+classification
+  .command("check")
+  .description("Verify gitignore coverage and bank-account links")
+  .option("--json", "JSON output")
+  .action((opts) => runClassificationCheck({ json: opts.json }));
+
+classification
+  .command("access")
+  .description("Check if an agent may access a resource path")
+  .requiredOption("--agent <id>", "Agent id (e.g. finance)")
+  .requiredOption("--path <path>", "Resource path (e.g. data/finance/bank-accounts.yaml)")
+  .option("--operation <op>", "read | write | export", "read")
+  .action((opts) => runClassificationAccess(opts.agent, opts.path, opts.operation));
+
+const broker = program.command("broker").description("Capability broker — L2 口座をチャットに出さない");
+
+broker
+  .command("list")
+  .description("List corporate bank accounts (redacted by default)")
+  .option("--mode <mode>", "redacted | full", "redacted")
+  .action((opts) => runBrokerBankList({ mode: opts.mode }));
+
+broker
+  .command("bank")
+  .description("Show one bank account by ID")
+  .requiredOption("--id <id>", "BANK-001")
+  .option("--mode <mode>", "redacted | full", "redacted")
+  .action((opts) => runBrokerBankShow({ id: opts.id, mode: opts.mode }));
+
+broker
+  .command("transfer")
+  .description("Generate transfer instruction (masked account · dry-run default)")
+  .requiredOption("--from <id>", "Source BANK-xxx")
+  .requiredOption("--amount <yen>", "Amount in JPY", parseInt)
+  .requiredOption("--payee <name>", "Payee name")
+  .requiredOption("--reference <text>", "Transfer reference")
+  .option("--stakeholder <stkId>", "STK-xxx for payee hints")
+  .option("--confirm", "Mark as confirmed (not dry-run)")
+  .option("--write", "Save to scratch/broker/ (gitignore)")
+  .action((opts) =>
+    runBrokerTransfer({
+      from: opts.from,
+      amount: opts.amount,
+      payee: opts.payee,
+      reference: opts.reference,
+      stakeholderId: opts.stakeholder,
+      dryRun: !opts.confirm,
+      write: opts.write ?? false,
     })
   );
 

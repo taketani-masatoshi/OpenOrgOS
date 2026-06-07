@@ -9,6 +9,7 @@
 | データ | パス |
 |--------|------|
 | 社外連絡先 | `data/executive/external-contacts.yaml` |
+| 利害関係者（詳細） | `data/executive/stakeholders.yaml` · `docs/executive/stakeholders/`（**gitignore**） |
 | カレンダー（公開可のみ） | `data/executive/calendar.yaml`（`external_visible: true`） |
 | 境界ルール | [steward/rules/secretary_steward_boundary.md](../steward/rules/secretary_steward_boundary.md) |
 
@@ -46,7 +47,7 @@
 
 ## ワークフロー
 
-1. 連絡元を `external-contacts.yaml` と照合（不明なら新規 ID 提案は人間確認後）
+1. 連絡元を `external-contacts.yaml` と照合（`stakeholder_id` があれば `stakeholders.yaml` + プロフィール MD を参照）
 2. 依頼タイプを分類（日程 / 情報 / 業務 / 拒否）
 3. 拒否・ルート対象は [照会フォーマット](../steward/rules/folder_access_policy.md) で Executive へ
 4. 下書きを出力（自動送信しない）

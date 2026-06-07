@@ -8,7 +8,7 @@ import {
   validateAll,
 } from "./data.js";
 import { runIntegrityChecks, summarizeIntegrity } from "./integrity.js";
-import { DATA_DIR, ROOT_DIR } from "./utils.js";
+import { DATA_DIR, ROOT_DIR, STAKEHOLDERS_YAML } from "./utils.js";
 
 export interface HealthMetric {
   id: string;
@@ -146,6 +146,12 @@ export function computeDataHealth(): DataHealthReport {
     });
   } catch {
     metrics.push({ id: "hr", label: "HR マスタ", score: 0, max: 5, detail: "要修正" });
+  }
+
+  if (!existsSync(STAKEHOLDERS_YAML)) {
+    recommendations.push(
+      "stakeholders.yaml を example からコピー（利害関係者 · GitHub 非公開）"
+    );
   }
 
   const overall = metrics.reduce((s, m) => s + m.score, 0);

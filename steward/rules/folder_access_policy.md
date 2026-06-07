@@ -26,12 +26,17 @@
 
 ### 1.3 機密階層
 
-| レベル | 例 | 取扱 |
-|--------|-----|------|
-| L0 公開 | `kamezawa-public.yaml` · lodging テンプレ | 全エージェント読取可 |
-| L1 社内 | 財務 YAML · 契約 MD · 規程 | 役割に応じた Primary/Read |
-| L2 機密 | `kamezawa-secrets.yaml` · `**/records/` 個情 | Hospitality（編集）· Compliance（監査読取）のみ |
-| L3 禁止出力 | secrets 内容 · ゲスト個情 | **いかなるエージェントも** チャットログ・docs へ転記禁止 |
+| レベル | 例 | Git | AI 自動 | AI @file |
+|--------|-----|-----|---------|----------|
+| L0 公開 | `kamezawa-public.yaml` | 追跡 | ○ | ○ |
+| L1 社内 | 財務 YAML · 契約 MD | 追跡 | ○ | ○ |
+| L2 機密 | `bank-accounts.yaml` · secrets | **gitignore** | △ on_demand | ○ |
+| L2 vault | `**/records/**` 個情 | **gitignore** | **× blocked** | 明示のみ |
+| L3 禁止出力 | L2 の転記 | — | — | **チャット/docs 不可** |
+
+**3 境界:** `.gitignore`（Git）· `.cursorignore`（AI 自動）· `sanitize-output`（tracked MD 書込）· `steward broker`（振込）。
+
+正本: `data/classification-registry.yaml` · `.cursor/rules/data-classification.mdc`
 
 ---
 
@@ -79,6 +84,8 @@ npm run steward -- alerts
 | パス | 権限 |
 |------|------|
 | `data/finance/**` | R/W |
+| `data/finance/bank-accounts.yaml` | **R/W（L2 · gitignore · 口座番号）** |
+| `data/classification-registry.yaml` | R |
 | `data/plans/**` | R/W |
 | `docs/plans/**` | R/W |
 | `docs/exports/*.csv` | R/W（sync 後確認） |
@@ -108,6 +115,8 @@ npm run steward -- alerts
 | `data/finance/loans.yaml` | R（LOAN↔CTR） |
 | `data/properties/**` | R |
 | `docs/io/inbox/**` | R（契約原本の受信確認） |
+| `data/executive/stakeholders.yaml` | R（`contract_ids` 紐づく STK のみ · gitignore） |
+| `docs/executive/stakeholders/**` | R（同上 · gitignore） |
 | `finances/monthly/**` | **禁止** |
 
 **状態遷移:**
@@ -212,6 +221,8 @@ npm run steward -- io status
 | パス | 権限 |
 |------|------|
 | `data/executive/**` | R/W（Primary · SoT） |
+| `data/executive/stakeholders.yaml` | R/W（gitignore · ローカル正本） |
+| `docs/executive/stakeholders/**` | R/W（gitignore · プロフィール） |
 | `docs/executive/**` | R/W |
 | `docs/reports/dashboard/` | R（**要約行のみ**） |
 | `docs/reports/executive-notes/` | R（サニタイズ済みのみ） |

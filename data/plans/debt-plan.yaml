@@ -18,7 +18,7 @@ summary:
 policies:
   - id: POL-DEBT-001
     title: 調達方針
-    description: 物件取得資金は役員貸付（段燕燕・宮城万貴子 各50%）で調達。銀行借入は計画しない。
+    description: 物件取得資金は役員貸付（段燕燕）で調達。銀行借入は計画しない。
   - id: POL-DEBT-002
     title: 金利条件
     description: 現行 LOAN-001/002 は無利息（年0%）。利息支払は debt service に含めない。
@@ -34,7 +34,7 @@ loans:
     contract_id: CTR-008
     property_id: PROP-001
     property_name: 番町ハイム312
-    lender: 役員貸付（段燕燕・宮城万貴子 各50%）
+    lender: 役員貸付（段燕燕）
     balance: 16600000
     interest_rate: 0
     executed_date: "2025-02-10"
@@ -49,7 +49,7 @@ loans:
     contract_id: CTR-009
     property_id: PROP-002
     property_name: 亀沢旅館
-    lender: 役員貸付（段燕燕・宮城万貴子 各50%）
+    lender: 役員貸付（段燕燕）
     balance: 96000000
     interest_rate: 0
     executed_date: "2025-06-01"

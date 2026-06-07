@@ -1,6 +1,6 @@
 id: CTR-008
 name: "金銭消費貸借契約（番町ハイム312・LOAN-001）"
-counterparty: "段燕燕・宮城万貴子"
+counterparty: "段燕燕"
 counterparty_type: individual
 type: loan
 status: executed
@@ -23,4 +23,4 @@ risk:
   risk_level: low
   notes: "返済計画・振込記録を保管。税理士確認推奨。"
 notes: |
-  LOAN-001。貸主持分50/50。議事録: fy2026-torishimari-gijiroku-yakuin-kashitsuke.md
+  LOAN-001。貸主=段燕燕100%（2026-06 経営確認）。draft 議事録の50/50表記は obsolete — lender-split.md 参照。

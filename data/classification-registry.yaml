@@ -1,0 +1,142 @@
+# データ分類レジストリ — 機密階層とエージェントアクセス（正本）
+# 実装: src/lib/classification.ts · CLI: steward classification check
+# AI 境界: .cursorignore · .cursorindexingignore · .cursor/rules/data-classification.mdc
+
+version: "1"
+as_of: "2026-06-08"
+
+levels:
+  L0:
+    label: 公開
+    description: 公式サイト・ゲスト向け公開情報。Git 追跡可。全エージェント読取可。
+    export_allowed: true
+  L1:
+    label: 社内
+    description: 財務サマリ・契約概要・業務メール。Git 追跡可。役割に応じた読取。
+    export_allowed: conditional
+  L2:
+    label: 機密
+    description: 口座番号・個人住所・Wi-Fi 鍵・個情。Git 非追跡（gitignore）。限定エージェントのみ。
+    export_allowed: false
+  L3:
+    label: 禁止出力
+    description: L2 の内容をチャット・docs 追跡 MD・PR へ転記禁止。存在のみ報告可。
+    export_allowed: false
+
+# ai_context: auto=自動コンテキスト可 · on_demand=@file/明示参照 · blocked=.cursorignore
+agents:
+  executive_steward:
+    label: Executive Steward
+    max_level: L2
+    output_max_level: L1
+  secretary:
+    label: Secretary
+    max_level: L2
+    output_max_level: L1
+  finance:
+    label: Finance
+    max_level: L2
+    output_max_level: L1
+  contract:
+    label: Contract
+    max_level: L1
+    output_max_level: L1
+  property_rental:
+    label: Property Rental
+    max_level: L1
+    output_max_level: L1
+  hospitality:
+    label: Hospitality
+    max_level: L2
+    output_max_level: L1
+  compliance:
+    label: Compliance
+    max_level: L2
+    output_max_level: L1
+  operations:
+    label: Operations
+    max_level: L1
+    output_max_level: L1
+
+resources:
+  - id: RES-BANK-ACCOUNTS
+    path: data/finance/bank-accounts.yaml
+    example_path: data/finance/bank-accounts.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 法人銀行口座（支店・口座番号）
+    read_agents: [finance, compliance, secretary, executive_steward]
+    write_agents: [finance]
+    link_from:
+      - path: data/finance/cash-balance.yaml
+        field: accounts[].bank_account_id
+        allowed_fields: [bank_account_id, amount, as_of, status]
+
+  - id: RES-CASH-BALANCE
+    path: data/finance/cash-balance.yaml
+    level: L1
+    git: track
+    ai_context: auto
+    description: 現預金残高（口座番号なし · bank_account_id でリンク）
+    read_agents: [finance, executive_steward, compliance, secretary]
+    write_agents: [finance]
+
+  - id: RES-KAMEZAWA-SECRETS
+    path: data/operations/kamezawa-secrets.yaml
+    example_path: data/operations/kamezawa-secrets.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 亀沢 Wi-Fi・鍵・緊急連絡
+    read_agents: [hospitality, compliance]
+    write_agents: [hospitality]
+
+  - id: RES-STAKEHOLDERS
+    path: data/executive/stakeholders.yaml
+    example_path: data/executive/stakeholders.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 利害関係者連絡先（L1 メール · L2 は records/）
+    read_agents: [secretary, contract, property_rental, hospitality, finance, compliance, executive_steward]
+    write_agents: [secretary, contract]
+
+  - id: RES-STAKEHOLDER-PROFILES
+    path: docs/executive/stakeholders/*.md
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 利害関係者プロフィール MD
+    read_agents: [secretary, contract, property_rental, hospitality]
+    write_agents: [secretary, contract]
+
+  - id: RES-PII-RECORDS
+    path: "**/records/**"
+    level: L2
+    git: ignore
+    ai_context: blocked
+    cursorignore: true
+    description: 個人住所・携帯等（L2 専用 · .cursorignore）
+    read_agents: [compliance, secretary]
+    write_agents: [secretary]
+
+  - id: RES-COMPANY-PUBLIC
+    path: data/company.yaml
+    level: L0
+    git: track
+    ai_context: auto
+    description: 会社概要（公開値含む）
+    read_agents: [executive_steward, secretary, finance, contract, property_rental, hospitality, compliance, operations]
+
+rules:
+  - id: RULE-LINK-ONLY
+    text: L1 ファイルは L2 リソースへ bank_account_id / stakeholder_id のみリンク可。口座番号・個人住所のインライン記載禁止。
+  - id: RULE-EXPORT-L3
+    text: L2/L3 リソースのフィールド値を Agent チャット・docs 追跡 MD・GitHub PR へ出力禁止。「更新済」「存在する」のみ可。
+  - id: RULE-GITIGNORE
+    text: git:ignore の resource は .gitignore にパターン登録必須。validate --warnings で未登録を警告。
+  - id: RULE-AI-BOUNDARY
+    text: ai_context:blocked は .cursorignore 必須。ai_context:on_demand は gitignore のみ（Privacy Mode 前提で @file 可）。
+  - id: RULE-BROKER
+    text: 振込・請求の口座詳細は steward broker CLI 経由。チャットへの口座番号出力禁止。

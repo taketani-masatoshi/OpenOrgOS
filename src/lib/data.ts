@@ -40,15 +40,20 @@ import {
   tasksFileSchema,
   oneOnOnesFileSchema,
   externalContactsFileSchema,
+  stakeholdersFileSchema,
+  classificationRegistrySchema,
   type CalendarFile,
   type TasksFile,
   type OneOnOnesFile,
   type ExternalContactsFile,
+  type StakeholdersFile,
 } from "../../schemas/index.js";
+import { existsSync } from "node:fs";
 import {
   DATA_DIR,
   readYamlFile,
   listYamlFiles,
+  STAKEHOLDERS_YAML,
 } from "./utils.js";
 
 export interface StewardData {
@@ -336,6 +341,10 @@ export function loadExternalContacts(): ExternalContactsFile {
   );
 }
 
+export function loadStakeholders(): StakeholdersFile {
+  return readYamlFile(join(DATA_DIR, "executive", "stakeholders.yaml"), stakeholdersFileSchema);
+}
+
 export function loadAllData(): StewardData {
   return {
     company: loadCompany(),
@@ -411,6 +420,12 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("data/executive/tasks.yaml", () => loadExecutiveTasks());
   tryLoad("data/executive/one-on-ones.yaml", () => loadOneOnOnes());
   tryLoad("data/executive/external-contacts.yaml", () => loadExternalContacts());
+  if (existsSync(STAKEHOLDERS_YAML)) {
+    tryLoad("data/executive/stakeholders.yaml", () => loadStakeholders());
+  }
+  tryLoad("data/classification-registry.yaml", () =>
+    readYamlFile(join(DATA_DIR, "classification-registry.yaml"), classificationRegistrySchema)
+  );
   tryLoad("data/document-io.yaml", () =>
     readYamlFile(join(DATA_DIR, "document-io.yaml"), documentIoSchema)
   );

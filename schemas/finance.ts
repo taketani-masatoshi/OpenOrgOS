@@ -206,11 +206,15 @@ export const yojitsuPlanSchema = z.object({
 });
 
 export const cashBalanceAccountSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
+  id: z.string().min(1).optional(),
+  bank_account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
+  name: z.string().min(1).optional(),
   institution: z.string().optional(),
   amount: z.number().nonnegative().nullable().optional(),
-});
+}).refine(
+  (a) => a.bank_account_id != null || (a.id != null && a.name != null),
+  { message: "cash balance account requires bank_account_id or id+name" }
+);
 
 export const cashBalanceSchema = z.object({
   as_of: dateString,

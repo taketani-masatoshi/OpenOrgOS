@@ -13,7 +13,9 @@ import {
   resolveCashBalanceTotal,
 } from "./data.js";
 import { facilitySecretsSchema } from "../../schemas/operations.js";
-import { DATA_DIR, readYamlFile, ROOT_DIR } from "./utils.js";
+import { classificationRegistrySchema } from "../../schemas/classification.js";
+import { runClassificationChecks } from "./classification.js";
+import { DATA_DIR, readYamlFile, ROOT_DIR, CLASSIFICATION_REGISTRY_YAML } from "./utils.js";
 
 export interface IntegrityIssue {
   level: "error" | "warning";
@@ -165,6 +167,20 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch (e) {
     push("warning", "data/hr/employees.yaml", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
+    readYamlFile(CLASSIFICATION_REGISTRY_YAML, classificationRegistrySchema);
+  } catch (e) {
+    push(
+      "error",
+      "data/classification-registry.yaml",
+      e instanceof Error ? e.message : String(e)
+    );
+  }
+
+  for (const ci of runClassificationChecks()) {
+    push(ci.severity, "data/classification-registry.yaml", ci.message);
   }
 
   return issues;

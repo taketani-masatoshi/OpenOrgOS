@@ -1,6 +1,6 @@
 id: CTR-006
 name: "不動産売買契約（亀沢土地）"
-counterparty: "TBD（売主）"
+counterparty: "株式会社日本住宅"
 counterparty_type: company
 type: purchase
 status: executed
@@ -22,7 +22,8 @@ documents:
   executed: "docs/contracts/CTR-006/02-executed.md"
 risk:
   risk_level: medium
-  notes: "売主・地目・境界・農地転用等の登記情報は契約書原本要確認。"
+  notes: "地目・境界・農地転用等の登記情報は契約書原本要確認。"
 notes: |
   PROP-002の土地部分。2025-06-01取得。
+  売主: 株式会社日本住宅（錦糸町付近）。営業窓口: 佐々木。STK-004。
   総投資9,600万円=土地7,000万+上置き2,600万（CTR-007）。

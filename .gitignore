@@ -16,6 +16,12 @@ docs/company/licenses/**/records/**
 docs/properties/PROP-002-kamezawa/operations/pdf/*
 !docs/properties/PROP-002-kamezawa/operations/pdf/00-このフォルダについて.md
 data/operations/kamezawa-secrets.yaml
+data/finance/bank-accounts.yaml
+data/executive/stakeholders.yaml
+docs/executive/stakeholders/**
+!docs/executive/stakeholders/00-このフォルダについて.md
+!docs/executive/stakeholders/*.example.md
+docs/executive/stakeholders/records/**
 docs/company/hr/records/**
 !docs/company/hr/records/00-このフォルダについて.md
 docs/compliance/privacy/records/**

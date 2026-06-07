@@ -1,6 +1,6 @@
 id: CTR-007
 name: "工事請負契約（亀沢旅館 上置き建築）"
-counterparty: "TBD（請負業者）"
+counterparty: "株式会社日本住宅"
 counterparty_type: company
 type: construction
 status: executed
@@ -23,7 +23,8 @@ documents:
   executed: "docs/contracts/CTR-007/02-executed.md"
 risk:
   risk_level: medium
-  notes: "請負業者名・工期・瑕疵担保・建築確認済証は契約書原本要確認。"
+  notes: "工期・瑕疵担保・建築確認済証は契約書原本要確認。"
 notes: |
   上置き建築費2,600万円（概算）。開業2026-08。
+  請負業者: 株式会社日本住宅。営業窓口: 佐々木。STK-004。
   建築確認・用途変更・旅館業許可等の許認可書類は別途保管。

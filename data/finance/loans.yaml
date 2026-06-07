@@ -1,6 +1,6 @@
 loans:
   - id: LOAN-001
-    lender: "役員貸付（段燕燕・宮城万貴子 各50%）"
+    lender: "役員貸付（段燕燕）"
     property_id: PROP-001
     contract_id: CTR-008
     balance: 16600000
@@ -22,7 +22,7 @@ loans:
       2028年度以降、CFに応じ任意返済。
       返済計画: data/plans/debt-plan.yaml · docs/finance/loan-repayment-plan.md
   - id: LOAN-002
-    lender: "役員貸付（段燕燕・宮城万貴子 各50%）"
+    lender: "役員貸付（段燕燕）"
     property_id: PROP-002
     contract_id: CTR-009
     balance: 96000000

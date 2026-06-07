@@ -29,6 +29,8 @@
 | `data/executive/tasks.yaml` | 社長タスク |
 | `data/executive/one-on-ones.yaml` | 1-on-1 レジストリ |
 | `data/executive/external-contacts.yaml` | 社外連絡先（最小限） |
+| `data/executive/stakeholders.yaml` | 利害関係者レジストリ（**gitignore**） |
+| `docs/executive/stakeholders/` | プロフィール MD（**gitignore**） |
 | `docs/executive/` | 週次ブリーフ・運用ガイド・生成物 |
 
 ## Read Only（制限付き）
