@@ -3,6 +3,8 @@
 **English role:** Executive Secretary · **日本語:** 秘書エージェント  
 **4 層:** **Agent** — 社長の行動・時間・対外窓口。`data/executive/` を SoT とする。
 
+**構成:** [repository_layout.md](../rules/repository_layout.md)
+
 ---
 
 ## 役割

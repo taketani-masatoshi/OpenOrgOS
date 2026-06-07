@@ -1,7 +1,8 @@
 # Steward OS — マルチエージェントアーキテクチャ
 
 > **正本（4 層）:** [steward/rules/agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/agents/](../steward/agents/) · [steward/skills/](../steward/skills/)  
-> 本書は **現行パス詳細索引（レガシー）** として維持する。
+> **物理パス正本:** [steward/rules/repository_layout.md](../steward/rules/repository_layout.md)（2026-06 再編 · レガシースタブ削除済み）  
+> 本書は **現行パス詳細索引** として維持する。
 
 **版:** 2026-06-08 · **対象:** 株式会社MAL（段100%株主 · 番町賃貸 PROP-001 · 亀沢旅館 PROP-002）
 
@@ -41,10 +42,9 @@ Steward/
 | `docs/company/tax/` | 税務申告・試算 | Finance · Compliance |
 | `docs/contracts/` | 契約書 MD（CTR-001〜014） | Contract |
 | `docs/exports/` | 計画・台帳 CSV（`steward sync all` で YAML から生成） | Finance · Contract |
-| `docs/operations/` | 業務台帳テンプレ・運用ガイド | Operations · Hospitality · Finance |
+| `docs/finance/accounting/` | 経理テンプレ CSV | Finance · Operations |
 | `docs/properties/PROP-001-bancho/operations/` | 番町賃貸運用 SOP · 様式 | Property Rental |
 | `docs/properties/PROP-002-kamezawa/operations/` | 亀沢旅館運用（PROP-002） | Hospitality |
-| `docs/finance/accounting/` | 経理テンプレ CSV | Finance |
 | `docs/company/hr/` | 人事テンプレ CSV | Operations · Compliance |
 | `docs/compliance/privacy/` | 個情テンプレ | Compliance |
 | `docs/compliance/iso/` | ISO 方針・ギャップ・監査計画 | Compliance |
@@ -209,7 +209,7 @@ Steward/
 
 | 区分 | 実パス |
 |------|--------|
-| Primary | `docs/io/inbox/` · `docs/io/outbox/` · `data/document-io.yaml` · `docs/operations/`（lodging 除く横断） |
+| Primary | `docs/io/inbox/` · `docs/io/outbox/` · `data/document-io.yaml` · `docs/finance/accounting/` · `docs/company/hr/` |
 | Sub-areas | `docs/company/hr/` · `docs/finance/accounting/templates/`（Finance と協調） |
 | Read only | 全 `docs/contracts/`（归档参照）· `data/`（I/O 関連以外は編集不可） |
 | CLI | `steward io inbox add/done` · `steward io outbox list` · `steward io status` |
@@ -230,7 +230,7 @@ Steward/
 | **Property Rental** | `PROP-001.yaml` | 番町関連 CTR · 財務 · 決算 MD | `PROP-001.yaml` | PROP-002 · lodging/ · secrets | 本社兼用按分は Finance/Compliance と協議 |
 | **Hospitality** | `PROP-002.yaml` · `kamezawa-*` · `docs/properties/PROP-002-kamezawa/operations/` | 関連 CTR · `property-revenue.yaml` | 上記 Primary | secrets の外部出力 · 財務 YAML | secrets は gitignore · example のみコミット可 |
 | **Compliance** | `regulations/` · `licenses/` · `iso/` · `privacy/` | `company.yaml` · secrets（監査・非複製） | 規程 · ISO · privacy テンプレ | 財務数値 · 契約 fee 改定 · secrets 複製 | 届出期限は Executive へエスカレーション |
-| **Operations** | `inbox/` · `outbox/` · `document-io.yaml` · `docs/operations/`（lodging 除く） | 契約 MD · corporate PDF 路径 | I/O 台帳 · inbox 処理状態 · HR テンプレ | 正データ finances/contracts/properties · secrets | lodging 実運用記録は Hospitality が主 |
+| **Operations** | `inbox/` · `outbox/` · `document-io.yaml` · `docs/finance/accounting/` · `docs/company/hr/` | 契約 MD · corporate PDF 路径 | I/O 台帳 · inbox 処理状態 · HR テンプレ | 正データ finances/contracts/properties · secrets | lodging 実運用記録は Hospitality が主 |
 
 ### 機密境界（全エージェント共通）
 

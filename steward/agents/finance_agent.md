@@ -1,7 +1,9 @@
 # Finance Agent
 
 **English role:** Finance & Planning · **日本語:** 財務・計画エージェント  
-**4 層:** **Agent** — 03_finance / 01_business_plan の Data を管理し Skill で処理、要約を Steward へ返す。
+**4 層:** **Agent** — `data/finance/` · `data/plans/` · `docs/plans/` · `docs/exports/` を管轄。
+
+**構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---
 

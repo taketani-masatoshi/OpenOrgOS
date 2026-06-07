@@ -54,7 +54,7 @@ docs/plans/outsourcing/                   # 外部委託
 docs/plans/compliance/                    # 法令許認可
 docs/plans/reports/                       # レポート仕様
 docs/plans/variance/                      # 差異分析
-docs/operations/rental/                   # 番町運用 SOP（新設）
+docs/properties/PROP-001-bancho/operations/   # 番町運用 SOP
 ```
 
 **正データ YAML:** 数値変更は **Finance Agent に委譲**。本エージェントは MD 起稿と `dependency-graph.yaml` へのノード追加提案のみ。

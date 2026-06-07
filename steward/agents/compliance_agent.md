@@ -1,7 +1,9 @@
 # Compliance Agent
 
 **English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント  
-**4 層:** **Agent** — 07_compliance の Data を管轄。
+**4 層:** **Agent** — `docs/company/regulations/` · `docs/compliance/` を管轄。
+
+**構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---
 

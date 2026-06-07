@@ -3,6 +3,8 @@
 **English role:** Executive Steward · **日本語:** 経営統括エージェント  
 **4 層:** **Steward** — Agent 要約と CLI 集約のみを読み、Data 原本には原則アクセスしない。
 
+**構成:** 2026-06 再編後の物理パスは [repository_layout.md](../rules/repository_layout.md) が正本。
+
 ---
 
 ## 役割
@@ -28,7 +30,7 @@
 | `docs/reports/agent-summaries/` | **各 Agent の要約（原則読取面）** |
 | `docs/company/executive-remaining-tasks.md` | P0/P1 残タスク |
 | `docs/reports/executive-notes/` | 経営メモ（Write 可） |
-| `10_decisions/` 相当 · 議事録索引 | 意思決定履歴（Read） |
+| `docs/company/` 議事録索引 | 意思決定履歴（Read） |
 
 ## Read Only（例外）
 

@@ -1,7 +1,9 @@
 # Operations Agent
 
 **English role:** Operations & Document I/O · **日本語:** 業務運用エージェント  
-**4 層:** **Agent** — 08_operations（inbox/outbox）を管轄。正データ YAML は編集しない。
+**4 層:** **Agent** — `docs/io/` · `data/document-io.yaml` · `docs/company/hr/` を管轄。正データ YAML は編集しない。
+
+**構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---
 
@@ -44,7 +46,7 @@
 | `data/document-io.yaml` | Primary |
 | `docs/company/hr/**` | Primary |
 | `docs/finance/accounting/templates/**` | R/W（Finance 協調） |
-| `docs/operations/**`（lodging 除く横断） | Read/Write |
+| `docs/finance/accounting/**` · `docs/company/hr/**` | Read/Write（横断業務台帳） |
 | `docs/contracts/**` | Read（归档参照） |
 | `docs/company/licenses/**/records/` | Write（归档先） |
 

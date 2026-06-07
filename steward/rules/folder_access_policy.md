@@ -1,6 +1,6 @@
 # Steward OS — フォルダアクセスポリシー
 
-**版:** 2026-06-08 · **正本:** 本ファイル（`steward/rules/`） · **上位:** [agent_skill_architecture.md](agent_skill_architecture.md)
+**版:** 2026-06-08 · **正本:** 本ファイル（`steward/rules/`） · **上位:** [agent_skill_architecture.md](agent_skill_architecture.md) · **構成:** [repository_layout.md](repository_layout.md)
 
 本書は 8 エージェント間の **読取・編集・禁止** を運用レベルで定義する。Steward OS は経営支援 OS であり、エージェントは **提案と下書き** を行い、**最終判断は人間（段100%株主）** が行う。
 
@@ -360,6 +360,7 @@ npm run steward -- io status
 
 ## 関連
 
+- [repository_layout.md](repository_layout.md)
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [steward/agents/](../steward/agents/00-このフォルダについて.md)

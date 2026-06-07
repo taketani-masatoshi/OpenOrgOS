@@ -22,9 +22,6 @@ export const CLASSIFICATION_REGISTRY_YAML = join(DATA_DIR, "classification-regis
 export const ASSETS_DIR = join(ROOT_DIR, "assets");
 export const DOCS_REPORTS_DIR = join(DOCS_DIR, "reports");
 
-/** @deprecated cursor/ zone removed — use DATA_DIR / SCRATCH_DIR */
-export const CURSOR_DIR = join(ROOT_DIR, "cursor");
-
 /** 受信トレイ — スキャン・申請書・契約原本など（未処理） */
 export const DOCS_INBOX_DIR = join(DOCS_DIR, "io", "inbox");
 

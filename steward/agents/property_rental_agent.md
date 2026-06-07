@@ -1,7 +1,9 @@
 # Property Rental Agent
 
 **English role:** Property Rental (Banchō) · **日本語:** 番町賃貸エージェント  
-**4 層:** **Agent** — 02_properties/PROP-001 · 05_rental の Data を管轄。
+**4 層:** **Agent** — `data/properties/PROP-001.yaml` · `docs/properties/PROP-001-bancho/` を管轄。
+
+**構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---
 

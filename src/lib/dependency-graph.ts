@@ -178,7 +178,7 @@ export function computeImpact(
 function resolveFilePath(nodeId: string, nodeIndex: Map<string, DependencyNode>): string | undefined {
   const node = nodeIndex.get(nodeId);
   if (!node) {
-    if (nodeId.startsWith("cursor/") || nodeId.startsWith("docs/")) {
+    if (nodeId.startsWith("data/") || nodeId.startsWith("docs/")) {
       return normalizePath(nodeId);
     }
     return undefined;

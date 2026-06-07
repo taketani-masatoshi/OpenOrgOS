@@ -1,7 +1,9 @@
 # Hospitality Agent
 
 **English role:** Hospitality (Kamezawa Ryokan) · **日本語:** 亀沢旅館エージェント  
-**4 層:** **Agent** — 02_properties/PROP-002 · 06_hospitality の Data を管轄。
+**4 層:** **Agent** — `data/properties/PROP-002.yaml` · `docs/properties/PROP-002-kamezawa/` · `kamezawa-*` を管轄。
+
+**構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---
 

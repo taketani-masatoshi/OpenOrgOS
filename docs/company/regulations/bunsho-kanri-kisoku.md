@@ -19,13 +19,13 @@
 | **受信（未処理）** | [`docs/io/inbox/`](../../inbox/00-このフォルダについて.md) | PDF・画像（**Git 非追跡**） |
 | **出力（印刷・提出）** | [`docs/io/outbox/`](../../io/outbox/00-このフォルダについて.md) | PDF（**Git 非追跡**） |
 | 人が読む書類 | [`docs/`](../../00-このフォルダについて.md) | Markdown・CSV |
-| 業務台帳（様式） | [`docs/operations/`](../../operations/00-このフォルダについて.md) | CSV テンプレート |
-| 業務台帳（記入済） | `docs/operations/**/records/` | CSV・PDF（**Git 非追跡**） |
+| 業務台帳（様式） | [`docs/finance/accounting/`](../../finance/accounting/00-このフォルダについて.md) · [`docs/company/hr/`](../../company/hr/00-このフォルダについて.md) | CSV テンプレート |
+| 業務台帳（記入済） | `docs/**/records/` | CSV・PDF（**Git 非追跡**） |
 | ISO / MS 方針 | [`docs/compliance/iso/`](../../compliance/iso/00-このフォルダについて.md) | Markdown |
 | 正データ・I/O 台帳 | [`data/`](../../../data/) | YAML |
 | 試行中 | [`scratch/`](../../../scratch/) | 任意（確定後移動） |
 
-各フォルダの索引ファイル名: **`docs/` → `00-このフォルダについて.md`**、`cursor/`・`assets/` → **`00-README.md`**（エクスプローラで先頭に並ぶ）。
+各フォルダの索引ファイル名: **`docs/` → `00-このフォルダについて.md`**、`data/`・`scratch/`・`assets/` → **`00-README.md`**（エクスプローラで先頭に並ぶ）。
 
 ## 第3条（保管期間）
 
@@ -42,7 +42,7 @@
 ## 第4条（契約・規程の管理）
 
 1. 契約は **CTR-XXX**、社内規程は **REG-XXX** で ID を付与する。
-2. 台帳: [契約管理表.csv](../../data/契約管理表.csv)、[regulations/00-このフォルダについて.md](00-このフォルダについて.md)
+2. 台帳: [契約管理表.csv](../../exports/契約管理表.csv)、[regulations/00-このフォルダについて.md](00-このフォルダについて.md)
 3. 改定時は版番号・制定日を文書冒頭に記載する。
 4. ISO 関連規程（REG-009 〜 REG-016）は [ISO 一覧](../../compliance/iso/00-このフォルダについて.md) と整合させる。
 
@@ -73,4 +73,4 @@ ISO 9001 等のマネジメントシステムに属する文書化情報は、�
 ## 関連
 
 - [Steward フォルダ構成](../../../README.md)
-- [文書管理 — cursor/00-README](../../../cursor/00-README.md)
+- [リポジトリ構成 — steward/rules/repository_layout.md](../../../steward/rules/repository_layout.md)

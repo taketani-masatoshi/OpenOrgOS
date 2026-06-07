@@ -1,7 +1,9 @@
 # Contract Agent
 
 **English role:** Contract Management · **日本語:** 契約管理エージェント  
-**4 層:** **Agent** — 04_contracts の Data を管理し Skill で台帳・期限を処理する。
+**4 層:** **Agent** — `data/contracts/` · `docs/contracts/` · `docs/exports/契約管理表.csv` を管轄。
+
+**構成:** [repository_layout.md](../rules/repository_layout.md)
 
 ---
 

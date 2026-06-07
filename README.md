@@ -4,7 +4,7 @@
 
 **分け方の原則:** 「誰が読むか」でフォルダを決める。生成元（CLI / Cursor）では決めない。
 
-**フォルダ索引:** サブフォルダの説明は `docs/` → `00-このフォルダについて.md`、`cursor/`・`assets/` → `00-README.md`（エクスプローラ先頭）。
+**フォルダ索引:** サブフォルダの説明は `docs/` → `00-このフォルダについて.md`、`data/`・`scratch/`・`assets/` → `00-README.md`（エクスプローラ先頭）。全体地図: [steward/rules/repository_layout.md](steward/rules/repository_layout.md)
 
 ---
 
@@ -37,7 +37,7 @@ PDF（決算報告書・事業報告書）は **`docs/io/outbox/corporate/`** �
 | 正データ（YAML） | [`data/`](data/) |
 | 中間試行 | [`scratch/`](scratch/) |
 
-`cursor/` に PDF や生成物は置きません。
+`data/` に PDF や生成物は置きません（人向けは `docs/`）。
 
 ---
 
