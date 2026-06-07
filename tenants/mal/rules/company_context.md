@@ -41,4 +41,4 @@
 
 ## 会社固有規程
 
-`docs/company/regulations/` — REG-001 〜 REG-010 等。Compliance Agent が管轄。
+`regulations.yaml` · `docs/company/regulations/` — 有効 REG のみ（Compliance Agent）。索引: `rules/active_context.md`

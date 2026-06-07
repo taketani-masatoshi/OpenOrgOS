@@ -26,6 +26,8 @@
 tenants/mal/
 ├── tenant.yaml              テナントメタ
 ├── modules.yaml             業務モジュール ON/OFF
+├── standards.yaml           ISO 有効化
+├── regulations.yaml         社内規程有効化
 ├── data/                    正データ
 ├── docs/                    人向け書類
 └── rules/
@@ -73,6 +75,7 @@ docs/
 | [agents/](../agents/00-このフォルダについて.md) | 6 コア Agent 定義 |
 | [modules/](../modules/00-このフォルダについて.md) | 業務モジュールカタログ · `{id}/seed/` 雛形 |
 | [standards/iso/](../standards/iso/00-このフォルダについて.md) | ISO 標準テンプレート（汎用） |
+| [standards/regulations/](../standards/regulations/00-このフォルダについて.md) | 社内規程テンプレ · catalog.yaml |
 | [skills/](../skills/00-このフォルダについて.md) | Skill 定義 |
 | [rules/](00-このフォルダについて.md) | 原則 · ポリシー · **本書** |
 | [orchestrators/](../orchestrators/00-このフォルダについて.md) | 横断ワークフロー |

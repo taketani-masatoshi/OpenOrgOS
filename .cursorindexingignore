@@ -10,3 +10,4 @@ steward/modules/*/agent.md
 steward/modules/*/skills/**
 steward/modules/*/seed/**
 steward/standards/iso/ISO-*/
+steward/standards/regulations/**/template.md

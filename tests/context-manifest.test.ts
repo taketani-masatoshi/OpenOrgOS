@@ -19,6 +19,8 @@ describe("context-manifest", () => {
     expect(md).toContain("## 有効業務モジュール");
     expect(md).toContain("`rental`");
     expect(md).toContain("`hospitality`");
+    expect(md).toContain("## 有効社内規程");
+    expect(md).toContain("REG-012");
     expect(md).toContain("## 無効業務モジュール（読取禁止）");
     expect(md).toContain("`venture_capital`");
     expect(md).toContain("**読まない**");

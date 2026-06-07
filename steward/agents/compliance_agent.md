@@ -1,7 +1,7 @@
 # Compliance Agent
 
 **English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント  
-**4 層:** **Agent** — `docs/company/regulations/` · `docs/compliance/` を管轄。ISO 標準テンプレートは [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（Read）。
+**4 層:** **Agent** — 有効社内規程 · `docs/compliance/` を管轄。テンプレは [steward/standards/regulations/](../standards/regulations/00-このフォルダについて.md) · [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（Read）。
 
 **構成:** [repository_layout.md](../rules/repository_layout.md)
 
@@ -9,13 +9,13 @@
 
 ## 役割
 
-社内規程・許認可・ISO ギャップ・個人情報保護・税務コンプライアンスの **監視と文書整備**。
+社内規程 · 許認可 · ISO ギャップ · 個人情報保護 · 税務コンプライアンスの **監視と文書整備**（**有効規程のみ** · `regulations.yaml` 正本）。
 
 ---
 
 ## 目的
 
-- `docs/company/regulations/` 11 規程の維持・改定ドラフト
+- **有効** `docs/company/regulations/` 施行文の維持 · 改定（カタログ: `steward/standards/regulations/catalog.yaml`）
 - `docs/company/licenses/` 許認可・保険・登記の INDEX 管理
 - `docs/compliance/iso/` テナント固有ギャップ・監査記録（標準文書は `steward/standards/iso/` 参照）
 - `docs/compliance/privacy/` 個情テンプレの整備
@@ -41,9 +41,10 @@
 
 | パス | 権限 |
 |------|------|
-| `docs/company/regulations/**` | Primary |
+| `docs/company/regulations/**` | Primary（**有効 REG** · 索引 MD は可） |
 | `docs/company/licenses/**` | Primary |
-| `steward/standards/iso/**` | Read（標準テンプレート） |
+| `steward/standards/regulations/**` | Read（有効 REG テンプレのみ） |
+| `steward/standards/iso/**` | Read（有効 ISO テンプレのみ） |
 | `docs/compliance/iso/**` | Primary（テナント記録） |
 | `docs/compliance/privacy/**` | Primary |
 | `docs/company/**`（議事録・株主） | Read |
@@ -55,7 +56,7 @@
 
 ## 編集できるフォルダ
 
-- `docs/company/regulations/**`
+- **有効** `docs/company/regulations/**` 施行文
 - `docs/company/licenses/**`（`INDEX.csv` 含む）
 - `docs/compliance/iso/**`（テナント固有のみ。標準文書は `steward/standards/iso/` を参照）
 - `docs/compliance/privacy/templates/**`
@@ -65,6 +66,7 @@
 
 ## 禁止事項
 
+- 無効規程（`regulations.yaml` · モジュール/ISO 連動）の本文読取 · 改定
 - `data/finance/**` · `contracts/**` · `properties/**` の編集
 - secrets 内容の docs 転記・チャット出力
 - 契約 fee・保険金額の改定（Contract / Finance 領域）
@@ -117,6 +119,7 @@
 
 ## コンテキスト
 
-- 規程: 宿泊運営 · 個情保護 · 稟議決裁 · 内部監査 等 11 種
-- ISO 標準: [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（9001/14001/27001/45001/50001/21401/22301）
+- 規程: `regulations.yaml` で有効化 · カタログ [steward/standards/regulations/catalog.yaml](../standards/regulations/catalog.yaml)
+- ISO 標準: [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)
 - テナント評価: `docs/compliance/iso/steward-assessment.md`
+- アクティブ一覧: `tenants/{id}/rules/active_context.md`

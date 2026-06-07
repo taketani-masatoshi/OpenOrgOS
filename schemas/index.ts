@@ -13,3 +13,5 @@ export * from "./classification.js";
 export * from "./modules.js";
 export * from "./venture-capital.js";
 export * from "./tenant-standards.js";
+export * from "./regulations-catalog.js";
+export * from "./tenant-regulations.js";

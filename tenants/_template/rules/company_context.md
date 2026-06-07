@@ -39,4 +39,4 @@
 
 ## 会社固有規程
 
-`docs/company/regulations/` — Compliance Agent が管轄。
+`docs/company/regulations/` — Compliance Agent（`regulations.yaml` で有効化）

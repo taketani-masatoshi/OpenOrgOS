@@ -173,7 +173,9 @@ npm run steward -- alerts
 
 | パス | 権限 |
 |------|------|
-| `docs/company/regulations/**` | R/W |
+| `steward/standards/iso/**` | Read（有効 ISO のみ · active_context） |
+| `steward/standards/regulations/**` | Read（有効 REG テンプレのみ） |
+| `docs/company/regulations/**` | R/W（**有効 REG** 施行文 · 索引 MD） |
 | `docs/company/licenses/**` | R/W |
 | `steward/standards/iso/**` | R（標準テンプレート） |
 | `docs/compliance/iso/**` | R/W（テナント固有記録） |

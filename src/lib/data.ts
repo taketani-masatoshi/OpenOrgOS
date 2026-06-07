@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { validateModules } from "./modules.js";
+import { validateRegulations } from "./regulations.js";
 import {
   companySchema,
   propertySchema,
@@ -432,6 +433,10 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   );
 
   for (const issue of validateModules()) {
+    errors.push({ file: issue.file, message: issue.message });
+  }
+
+  for (const issue of validateRegulations()) {
     errors.push({ file: issue.file, message: issue.message });
   }
 

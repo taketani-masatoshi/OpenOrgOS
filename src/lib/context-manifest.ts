@@ -1,39 +1,21 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { tenantStandardsFileSchema } from "../../schemas/tenant-standards.js";
 import {
   listCatalogModuleIds,
   loadEnabledModules,
   loadModulesFile,
 } from "./modules.js";
+import { listEffectiveRegulations } from "./regulations.js";
+import { loadEnabledIsoIds } from "./tenant-standards.js";
 import { listIsoStandardIds } from "./standards.js";
 import { getTenantDir, getTenantId, ROOT_DIR } from "./tenant.js";
-import { readYamlFile } from "./utils.js";
+
+export { loadEnabledIsoIds } from "./tenant-standards.js";
 
 export const STANDARDS_FILE = "standards.yaml";
+export const REGULATIONS_FILE = "regulations.yaml";
 export const ACTIVE_CONTEXT_REL = "rules/active_context.md";
 export const CURSOR_ACTIVE_RULE = ".cursor/rules/tenant-active-context.mdc";
-
-export function standardsFilePath(): string {
-  return join(getTenantDir(), STANDARDS_FILE);
-}
-
-export function loadTenantStandards() {
-  const path = standardsFilePath();
-  if (!existsSync(path)) {
-    return { iso: [] as { id: string; enabled: boolean; notes?: string }[] };
-  }
-  return readYamlFile(path, tenantStandardsFileSchema);
-}
-
-export function loadEnabledIsoIds(): string[] {
-  const file = loadTenantStandards();
-  const enabled = new Set(
-    file.iso.filter((e) => e.enabled).map((e) => e.id)
-  );
-  if (enabled.size === 0) return [];
-  return listIsoStandardIds().filter((id) => enabled.has(id));
-}
 
 export function buildActiveContextMarkdown(): string {
   const tenantId = getTenantId();
@@ -43,13 +25,15 @@ export function buildActiveContextMarkdown(): string {
   const enabledIso = loadEnabledIsoIds();
   const allIso = listIsoStandardIds();
   const disabledIso = allIso.filter((id) => !enabledIso.includes(id));
+  const effectiveRegs = listEffectiveRegulations().filter((r) => r.effective);
+  const inactiveRegs = listEffectiveRegulations().filter((r) => !r.effective);
 
   const lines: string[] = [
     `# アクティブコンテキスト — テナント \`${tenantId}\``,
     "",
-    "**正本:** `modules.yaml` · `standards.yaml` · **生成:** `npm run steward -- modules sync-context`",
+    "**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run steward -- modules sync-context`",
     "",
-    "> **トークン節約:** 本ファイルに列挙されたパスのみ Agent が読む。無効モジュール · 無効 ISO · カタログ seed は **@file 明示時以外読まない。**",
+    "> **トークン節約:** 本ファイルに列挙されたパスのみ Agent が読む。無効モジュール · 無効 ISO · 無効規程 · カタログ seed/テンプレは **@file 明示時以外読まない。**",
     "",
     "---",
     "",
@@ -103,6 +87,29 @@ export function buildActiveContextMarkdown(): string {
     lines.push(`- \`${id}\` — \`steward/standards/iso/${id}/\` **読まない**`);
   }
 
+  lines.push("", "## 有効社内規程", "");
+  if (effectiveRegs.length === 0) {
+    lines.push("（なし — `regulations.yaml` で有効化）");
+  } else {
+    for (const reg of effectiveRegs) {
+      lines.push(
+        `- **${reg.id}** ${reg.name} — 施行: \`${reg.tenantDocPath}\` · テンプレ: \`${reg.templatePath}\``
+      );
+    }
+  }
+
+  lines.push("", "## 無効社内規程（読取禁止）", "");
+  if (inactiveRegs.length === 0) {
+    lines.push("（なし）");
+  } else {
+    for (const reg of inactiveRegs) {
+      const reason = reg.blockReason ?? (reg.tenantEnabled ? "—" : "regulations.yaml で無効");
+      lines.push(
+        `- \`${reg.id}\` ${reg.name} — \`${reg.tenantDocPath}\` · テンプレ **読まない**（${reason}）`
+      );
+    }
+  }
+
   const catalogOnly = listCatalogModuleIds().filter(
     (id) => !allModules.some((m) => m.agent === id)
   );
@@ -118,8 +125,9 @@ export function buildActiveContextMarkdown(): string {
     "## Steward / Executive",
     "",
     "- コア Agent のみ常時: `steward/agents/`",
+    "- 規程索引のみ: `docs/company/regulations/00-このフォルダについて.md`（本文は有効 REG のみ）",
     "- 要約: 有効モジュールの `summary_dir` のみ",
-    "- カタログ索引: `steward/modules/00-このフォルダについて.md`（一覧のみ）",
+    "- カタログ: `steward/modules/00-このフォルダについて.md` · `steward/standards/regulations/00-このフォルダについて.md`",
     ""
   );
 
@@ -130,6 +138,7 @@ export function buildCursorActiveRuleMdc(): string {
   const tenantId = getTenantId();
   const enabledModules = loadEnabledModules();
   const enabledIso = loadEnabledIsoIds();
+  const effectiveRegs = listEffectiveRegulations().filter((r) => r.effective);
 
   const moduleRefs = enabledModules
     .map(
@@ -145,8 +154,15 @@ export function buildCursorActiveRuleMdc(): string {
     )
     .join("\n");
 
+  const regRefs = effectiveRegs
+    .map(
+      (r) =>
+        `- **${r.id}** ${r.name}: 施行 \`${r.tenantDocPath}\`（テンプレ \`${r.templatePath}\` は改定時のみ）`
+    )
+    .join("\n");
+
   return `---
-description: Active tenant modules and ISO — load only these paths (token saving)
+description: Active tenant modules, ISO, and regulations — token saving
 alwaysApply: true
 ---
 
@@ -158,8 +174,10 @@ alwaysApply: true
 
 - \`steward/modules/{id}/\` のうち **下表にない id** の agent.md · skills · seed
 - \`steward/standards/iso/ISO-*\` のうち **下表にない規格**
+- \`steward/standards/regulations/**/template.md\` のうち **下表にない REG**
+- \`docs/company/regulations/*.md\` のうち **下表にない REG** 施行文
 - 無効 \`modules.yaml\` エントリの \`data_root\` · \`docs_root\`
-- \`@folder\` で \`steward/modules/\` 全体を指定しない
+- \`@folder\` で \`steward/modules/\` · \`regulations/\` 全体を指定しない
 
 ## 有効業務モジュール
 
@@ -169,11 +187,15 @@ ${moduleRefs || "（なし）"}
 
 ${isoRefs || "（なし — standards.yaml で有効化）"}
 
+## 有効社内規程
+
+${regRefs || "（なし — regulations.yaml で有効化）"}
+
 ## コア Agent（常時）
 
 Executive · Secretary · Finance · Contract · Compliance · Operations — \`steward/agents/\`
 
-業務モジュール作業時のみ、上記 **有効業務モジュール** の agent.md を @ 参照する。
+業務モジュール · 規程作業時のみ、上記 **有効** の agent.md / 施行文を @ 参照する。
 `;
 }
 

@@ -12,11 +12,14 @@
 フレームワーク（汎用 · MAL 非依存）
 ├── steward/modules/{id}/     Agent · skills · seed/（雛形データ）
 ├── steward/standards/iso/    ISO 標準方針・記録様式
+├── steward/standards/regulations/  社内規程テンプレ · catalog.yaml
 ├── steward/agents/           6 コア Agent
 ├── src/ · schemas/ · docs/
 
 テナント（接続・バインド）
 ├── tenants/{id}/modules.yaml   モジュール ON/OFF · パス参照
+├── tenants/{id}/standards.yaml ISO ON/OFF
+├── tenants/{id}/regulations.yaml  社内規程 ON/OFF
 ├── tenants/{id}/data/          正データ
 ├── tenants/{id}/docs/          人向け書類（ISO ギャップ・監査等はここ）
 └── tenants/{id}/rules/         会社コンテキスト
@@ -26,7 +29,9 @@
 |----|-----|
 | モジュール seed | `steward/modules/rental/seed/` |
 | ISO 標準文 | `steward/standards/iso/ISO-9001/` |
+| 規程テンプレ | `steward/standards/regulations/catalog.yaml` |
 | テナント ISO 記録 | `tenants/mal/docs/compliance/iso/` |
+| テナント規程施行文 | `tenants/mal/docs/company/regulations/` |
 
 ```bash
 npm run steward -- modules list

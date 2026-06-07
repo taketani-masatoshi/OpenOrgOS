@@ -1,0 +1,76 @@
+# 社内規程 — テナント有効化
+# 正本: tenants/{id}/regulations.yaml · カタログ: steward/standards/regulations/catalog.yaml
+# 生成: npm run steward -- modules sync-context
+
+regulations:
+  # ガバナンス（常時）
+  - id: REG-001
+    enabled: true
+  - id: REG-002
+    enabled: true
+  - id: REG-003
+    enabled: true
+  - id: REG-004
+    enabled: true
+  - id: REG-005
+    enabled: true
+  - id: REG-006
+    enabled: true
+  - id: REG-007
+    enabled: true
+  - id: REG-008
+    enabled: true
+
+  # MS / ISO 連動
+  - id: REG-009
+    enabled: true
+    notes: ISO-27001
+  - id: REG-010
+    enabled: true
+    notes: 全事業横断
+  - id: REG-011
+    enabled: true
+    notes: ISO-9001
+  - id: REG-013
+    enabled: false
+    notes: ISO-22301 無効のため停止
+  - id: REG-014
+    enabled: true
+    notes: ISO-21401 経由で有効
+  - id: REG-015
+    enabled: false
+    notes: ISO-45001 無効のため停止
+  - id: REG-016
+    enabled: true
+    notes: 有効 ISO あり
+
+  # 事業モジュール連動
+  - id: REG-012
+    enabled: true
+    notes: hospitality
+
+  # 将来モジュール（無効）
+  - id: REG-017
+    enabled: false
+    notes: restaurant
+  - id: REG-018
+    enabled: false
+    notes: clinic
+  - id: REG-019
+    enabled: false
+    notes: construction
+  - id: REG-020
+    enabled: false
+    notes: staffing
+  - id: REG-021
+    enabled: false
+    notes: education
+  - id: REG-022
+    enabled: false
+    notes: ecommerce
+  - id: REG-023
+    enabled: false
+    notes: logistics
+  - id: REG-024
+    enabled: false
+    notes: membership

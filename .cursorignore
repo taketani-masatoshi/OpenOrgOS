@@ -23,3 +23,6 @@ steward/modules/*/seed/**
 
 # ISO テンプレカタログ — standards.yaml 有効分のみ参照
 steward/standards/iso/ISO-*/
+
+# 社内規程テンプレ — active_context 列挙分のみ @file 参照
+steward/standards/regulations/**/template.md

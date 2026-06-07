@@ -8,6 +8,7 @@ import {
   buildLiquidityOutlook,
   type DashboardReport,
 } from "./dashboard.js";
+import { loadEnabledRegulationIds } from "./regulations.js";
 import {
   currentDate,
   DOCS_DIR,
@@ -295,13 +296,14 @@ export function formatComplianceSummary(data: StewardData, report: DashboardRepo
   const insuranceDrafts = data.contracts.filter(
     (c) => c.status === "draft" && c.type === "insurance"
   );
+  const enabledRegs = loadEnabledRegulationIds();
 
   return [
     `# Compliance Agent 要約 ${report.reportDate}`,
     "",
     "## 結論",
     "",
-    "- 社内規程 REG-001〜016 施行済（9001 v1.1 改定含む）",
+    `- 有効社内規程 **${enabledRegs.length} 件**: ${enabledRegs.join(", ") || "（なし）"}`,
     `- 保険 CTR draft **${insuranceDrafts.length} 件** — コンプライアンス P0`,
     "- ISO 9001: L2（記録様式整備 · 初回監査未実施）",
     "",
@@ -325,8 +327,8 @@ export function formatComplianceSummary(data: StewardData, report: DashboardRepo
     "",
     "## 根拠",
     "",
-    "- `docs/company/regulations/` · `docs/compliance/iso/`（テナント記録）",
-    "- ISO 標準: `steward/standards/iso/`",
+    "- `regulations.yaml` · `docs/company/regulations/`（有効 REG のみ）",
+    "- `docs/compliance/iso/` · `steward/standards/iso/`",
     "- Skill: [steward/skills/permit_expiry_check.md](../../../steward/skills/permit_expiry_check.md)",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,
