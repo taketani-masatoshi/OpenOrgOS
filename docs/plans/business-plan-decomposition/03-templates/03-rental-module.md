@@ -13,7 +13,7 @@
 | **必要な入力** | 相場 · 募集媒体 · CTR-011 テンプレ |
 | **出力** | 募集フロー · 審査基準 · 平均募集日数目標 |
 | **KPI** | 平均募集日数 · 内見→契約转化率 |
-| **関連フォルダ** | `docs/plans/rental/tenant-acquisition-plan.md` · `docs/operations/rental/bancho/` |
+| **関連フォルダ** | `docs/plans/rental/tenant-acquisition-plan.md` · `docs/properties/PROP-001-bancho/operations/` |
 | **担当** | Property Rental |
 | **更新頻度** | 空室発生時 · 年次見直し |
 | **リスク** | 長期空室 · 借主審査不備 |

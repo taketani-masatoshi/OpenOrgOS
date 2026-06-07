@@ -55,7 +55,7 @@ npm run steward -- finances
 ### 5. 賃貸モジュール（番町）
 
 - CTR-011 executed 後 → `lease-contract-plan.md` · `tenant-acquisition-plan.md` 確定
-- `docs/operations/rental/bancho/` 運用 SOP 新設
+- `docs/properties/PROP-001-bancho/operations/` 運用 SOP（整備済）
 
 ### 6. 財務計画 MD 群
 

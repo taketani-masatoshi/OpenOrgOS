@@ -27,13 +27,13 @@
 |------|-------------|
 | `00_company/` | `data/company.yaml` · `docs/company/` |
 | `01_business_plan/` | `data/plans/` · `docs/plans/` |
-| `02_properties/` | `data/properties/` · `docs/properties/PROP-002-kamezawa/operations/` · `docs/operations/rental/`（新設） |
+| `02_properties/` | `data/properties/` · `docs/properties/PROP-001-bancho/operations/` · `docs/properties/PROP-002-kamezawa/operations/` |
 | `03_finance/` | `data/finance/` · `docs/plans/` · `docs/exports/` |
 | `04_contracts/` | `data/contracts/` · `docs/contracts/` |
 | `05_rental/` | `PROP-001` 関連 · Property Rental Agent |
 | `06_hospitality/` | `PROP-002` · `docs/properties/PROP-002-kamezawa/operations/` |
 | `07_compliance/` | `docs/company/regulations/` · `licenses/` · `docs/compliance/iso/` |
-| `08_operations/` | `docs/operations/` · `inbox/` · `outbox/` |
+| `08_operations/` | `docs/io/inbox/` · `docs/io/outbox/` · `docs/finance/accounting/` |
 | `09_reports/` | `docs/reports/` |
 | `10_decisions/` | `docs/company/`（議事録）· `docs/plans/`（差異分析） |
 | `11_prompts/` | `prompts/` · `.cursor/rules/` |

@@ -112,7 +112,7 @@
 | **必要な入力** | CTR-011 · `rental.*` · 入居者情報 |
 | **出力** | 運用 SOP · 月次チェックリスト |
 | **KPI** | 空室率 · 賃料回収率 · 更新率 |
-| **関連フォルダ** | `docs/operations/rental/bancho/` · `docs/plans/rental/` |
+| **関連フォルダ** | `docs/properties/PROP-001-bancho/operations/` · `docs/plans/rental/` |
 | **担当** | Property Rental |
 | **更新頻度** | 月次 |
 | **リスク** | CTR-011 draft · 借主 TBD |

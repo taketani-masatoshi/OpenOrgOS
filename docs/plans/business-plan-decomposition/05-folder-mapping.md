@@ -39,7 +39,7 @@
 |------|----------|----------|
 | 正データ | **`data/properties/PROP-001.yaml`** | **`data/properties/PROP-002.yaml`** |
 | 物件基本〜リスク 11 計画 | **`docs/plans/properties/PROP-001/`** | **`docs/plans/properties/PROP-002/`** |
-| 運用ドキュメント | **`docs/operations/rental/`**（新設） | **`docs/properties/PROP-002-kamezawa/operations/`** |
+| 運用ドキュメント | **`docs/properties/PROP-001-bancho/operations/`** | **`docs/properties/PROP-002-kamezawa/operations/`** |
 | 機密 | — | `data/operations/kamezawa-secrets.yaml` |
 
 ---
@@ -70,7 +70,7 @@
 | 計画 | パス |
 |------|------|
 | 賃貸 9 モジュール計画 | **`docs/plans/rental/`** |
-| 番町運用 | **`docs/operations/rental/bancho/`** |
+| 番町運用 | **`docs/properties/PROP-001-bancho/operations/`** |
 | エージェント | **`steward/agents/property_rental_agent.md`** |
 
 ---
