@@ -8,6 +8,19 @@ alwaysApply: false
 
 # Steward OS 運用ルール
 
+## 4 層アーキテクチャ
+
+Steward OS は **1 体 AI が全情報を読む設計にしない**。
+
+```
+Steward → Agent（11_agents/）→ Skill（12_skills/）→ Data（cursor/data/ · docs/）
+```
+
+- **Steward:** `docs/reports/agent-summaries/` + dashboard のみ原則読取
+- **Agent:** 部門フォルダを読み Skill を呼ぶ
+- **Skill:** 限定入出力（[12_skills/](../../12_skills/)）
+- **原則:** [13_rules/steward_os_principles.md](../../13_rules/steward_os_principles.md)
+
 ## 分け方の原則
 
 **「誰が読むか」でフォルダを決める。** CLI が生成したからといって Cursor フォルダに置かない。
@@ -66,3 +79,9 @@ alwaysApply: false
 3. `npm run steward -- sync all`（CSV 利用時）
 4. `npm run steward -- io status`（受信/出力確認）
 5. 試行は `cursor/scratch/` → 確定後 `docs/` または `cursor/data/` へ
+
+## Agent / Skill 参照
+
+- Agent: [11_agents/](../../11_agents/00-このフォルダについて.md)
+- Skill: [12_skills/](../../12_skills/00-このフォルダについて.md)
+- ルール: [13_rules/](../../13_rules/steward_os_principles.md)

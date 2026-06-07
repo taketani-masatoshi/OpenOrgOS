@@ -101,6 +101,9 @@ nodes:
   - id: cursor/data/plans/investment-plan.yaml
     label: 投資計画
     category: file
+  - id: cursor/data/plans/debt-plan.yaml
+    label: 借入・返済・DSCR 計画
+    category: file
   - id: cursor/data/plans/yojitsu-fy2026.yaml
     label: 予実 FY2026
     category: file
@@ -158,6 +161,15 @@ nodes:
     category: file
   - id: docs/plans/2026-yojitsu.md
     label: 2026予実 MD
+    category: file
+  - id: docs/plans/finance/borrowing-plan.md
+    label: 借入計画 MD
+    category: file
+  - id: docs/plans/finance/loan-repayment-plan.md
+    label: 返済計画 MD
+    category: file
+  - id: docs/plans/finance/dscr-plan.md
+    label: DSCR 管理計画 MD
     category: file
 
   # --- レポート ---
@@ -394,6 +406,51 @@ edges:
     to: report-dashboard
     category: data→reports
     reason: 借入返済スケジュールは CF・バーンレートに影響
+    action: regenerate
+  - from: cursor/data/plans/debt-plan.yaml
+    to: cursor/data/finances/loans.yaml
+    category: data→data
+    reason: 返済実行・残高変更時は loans.yaml balance と整合
+    action: update
+  - from: cursor/data/finances/loans.yaml
+    to: cursor/data/plans/debt-plan.yaml
+    category: data→data
+    reason: 借入残高・条件変更時は debt-plan シナリオを見直す
+    action: review
+  - from: cursor/data/plans/business-plan.yaml
+    to: cursor/data/plans/debt-plan.yaml
+    category: data→data
+    reason: funding_plan · borrowing_plan は debt-plan と整合
+    action: review
+  - from: cursor/data/plans/debt-plan.yaml
+    to: cursor/data/plans/business-plan.yaml
+    category: data→data
+    reason: 借入方針変更時は business-plan funding_plan を更新
+    action: update
+  - from: cursor/data/plans/profit-plan.yaml
+    to: cursor/data/plans/debt-plan.yaml
+    category: data→data
+    reason: DSCR 算定の operating_profit 前提は profit-plan と一致
+    action: update
+  - from: cursor/data/plans/debt-plan.yaml
+    to: docs/plans/finance/borrowing-plan.md
+    category: data→docs
+    reason: debt-plan 更新後は人向け借入計画 MD を同期
+    action: review
+  - from: cursor/data/plans/debt-plan.yaml
+    to: docs/plans/finance/loan-repayment-plan.md
+    category: data→docs
+    reason: 返済シナリオ変更時は返済計画 MD を同期
+    action: review
+  - from: cursor/data/plans/debt-plan.yaml
+    to: docs/plans/finance/dscr-plan.md
+    category: data→docs
+    reason: DSCR 目標・前提変更時は DSCR 計画 MD を同期
+    action: review
+  - from: cursor/data/plans/debt-plan.yaml
+    to: report-dashboard
+    category: data→reports
+    reason: 返済スケジュールは CF 予測・ランウェイに影響
     action: regenerate
   - from: cursor/data/finances/fixed-costs.yaml
     to: report-forecast

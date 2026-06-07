@@ -20,7 +20,7 @@ npm run steward -- deps check --file cursor/data/finances/cash-balance.yaml
 
 ### 2. Phase 1 MD 生成（Cursor Agent）
 
-プロンプト: `@prompts/business_plan_decomposition_agent.md`
+プロンプト: `@14_prompts/business_plan_decomposition.md` · Agent: `@11_agents/`
 
 以下を **正データから自動起稿**（1 セッション 5–10 ファイル）:
 
@@ -85,14 +85,14 @@ npm run steward -- finances
 
 ## Cursor ワークフロー（推奨）
 
-| シーン | エージェント | コマンド/参照 |
-|--------|-------------|--------------|
-| 計画分解・起稿 | Business Plan Decomposition | `@prompts/business_plan_decomposition_agent.md` |
-| 数値更新 | Finance | `@prompts/finance_agent.md` + `steward sync` |
-| 契約 draft→executed | Contract + Operations | inbox 処理 |
-| 番町運用 | Property Rental | `@prompts/property_rental_agent.md` |
-| 亀沢運用 | Hospitality | `@prompts/hospitality_agent.md` |
-| 経営判断 | Executive | `npm run steward -- dashboard` |
+| シーン | 参照 | コマンド/参照 |
+|--------|------|--------------|
+| 計画分解・起稿 | 14_prompts | `@14_prompts/business_plan_decomposition.md` |
+| 数値更新 | Finance Agent | `@11_agents/finance_agent.md` + `steward sync` |
+| 契約 draft→executed | Contract + Operations | `@11_agents/contract_agent.md` |
+| 番町運用 | Property Rental | `@11_agents/property_rental_agent.md` |
+| 亀沢運用 | Hospitality | `@11_agents/hospitality_agent.md` |
+| 経営判断 | Executive | `@11_agents/executive_steward_agent.md` + dashboard |
 
 ---
 

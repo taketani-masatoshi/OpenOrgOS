@@ -66,10 +66,13 @@ years:
 funding_plan: |
   亀沢旅館: 土地7,000万＋上置き2,600万＝9,600万円。全額役員貸付（LOAN-002）。
   番町ハイム312: 1,660万円。役員貸付（LOAN-001）。
-  返済スケジュール・利息条件は別途整理（TBD）。
+  借入総額 1億1,260万円。無利息。銀行借入予定なし（borrowing_plan: 0）。
+  返済・DSCR: cursor/data/plans/debt-plan.yaml
+  人向け: docs/plans/finance/borrowing-plan.md · loan-repayment-plan.md · dscr-plan.md
+  契約確定スケジュール: TBD（協議条項 · CTR-008/009 返済 MD は目安）
 
 notes: |
   会計年度: 2月始まり1月決算（fiscal_year_end_month: 1）。
   予実・PL: docs/plans/fy2026-pl.md / cursor/data/plans/yojitsu-fy2026.yaml
-  計画YAML: cursor/data/plans/revenue-plan.yaml, profit-plan.yaml, expense-plan.yaml, investment-plan.yaml
+  計画YAML: cursor/data/plans/revenue-plan.yaml, profit-plan.yaml, expense-plan.yaml, investment-plan.yaml, debt-plan.yaml
   計画CSV: docs/data/

@@ -16,6 +16,7 @@ import {
   profitPlanSchema,
   expensePlanSchema,
   investmentPlanSchema,
+  debtPlanSchema,
   facilityPublicSchema,
   employeesFileSchema,
   documentIoSchema,
@@ -177,6 +178,10 @@ export function loadInvestmentPlan() {
   return readYamlFile(join(DATA_DIR, "plans", "investment-plan.yaml"), investmentPlanSchema);
 }
 
+export function loadDebtPlan() {
+  return readYamlFile(join(DATA_DIR, "plans", "debt-plan.yaml"), debtPlanSchema);
+}
+
 export function loadOperationsPublic(): FacilityPublic {
   return readYamlFile(
     join(DATA_DIR, "operations", "kamezawa-public.yaml"),
@@ -245,6 +250,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("cursor/data/plans/profit-plan.yaml", () => loadProfitPlan());
   tryLoad("cursor/data/plans/expense-plan.yaml", () => loadExpensePlan());
   tryLoad("cursor/data/plans/investment-plan.yaml", () => loadInvestmentPlan());
+  tryLoad("cursor/data/plans/debt-plan.yaml", () => loadDebtPlan());
   for (const f of listYamlFiles(join(DATA_DIR, "plans")).filter((p) =>
     p.includes("yojitsu-")
   )) {

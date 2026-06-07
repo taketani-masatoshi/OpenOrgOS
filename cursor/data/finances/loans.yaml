@@ -15,6 +15,7 @@ loans:
     notes: |
       番町ハイム312。無利息。2035/1/31まで全額返済。
       2028年度以降、CFに応じ任意返済。
+      返済計画: cursor/data/plans/debt-plan.yaml · docs/plans/finance/loan-repayment-plan.md
   - id: LOAN-002
     lender: "役員貸付（段燕燕・宮城万貴子 各50%）"
     property_id: PROP-002
@@ -30,3 +31,4 @@ loans:
       repayment: "docs/contracts/CTR-009/repayment-schedule.md"
     notes: |
       亀沢。土地7,000万+建築2,600万。2030年度以降段階返済、2040/1/31期限。
+      返済計画: cursor/data/plans/debt-plan.yaml · docs/plans/finance/loan-repayment-plan.md

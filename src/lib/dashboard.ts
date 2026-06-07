@@ -5,6 +5,8 @@ import {
   loadYojitsuFyPlan,
   loadExpensePlan,
   loadCashBalance,
+  loadDebtPlan,
+  loadPayroll,
   resolveCashBalanceTotal,
 } from "./data.js";
 import { scanContractAlerts, type ContractAlert } from "./alerts.js";
@@ -18,8 +20,11 @@ import { listPendingInbox } from "./document-io.js";
 import {
   currentDate,
   currentMonth,
+  daysBetween,
   formatCurrency,
   formatPercent,
+  monthRange,
+  parseMonth,
 } from "./utils.js";
 
 export type TaskUrgency = "high" | "medium";
@@ -40,7 +45,21 @@ export interface DashboardTask {
 export interface CashFlowMetrics {
   cashBalance: number | null;
   runwayMonths: number | null;
+  /** 支出+返済−収入。正=キャッシュ消耗、負=キャッシュ増 */
   burnRate: number;
+  cashFlowMode: "surplus" | "deficit" | "break_even";
+  /** 黒字時の月次キャッシュ増（burnRate<0 の絶対値） */
+  monthlyCashSurplus: number;
+  /** 赤字時の月次ネットバーン（burnRate>0） */
+  monthlyNetBurn: number;
+  /** 内部目標現預金（既定 1,000万円）到達までの月数。黒字・残高確定時のみ */
+  monthsToCashTarget: number | null;
+  /** 直近 N ヶ月のキャッシュ増減見込み */
+  projectedCashChange: number;
+  /** 現預金 + projectedCashChange。残高確定時のみ */
+  projectedCashBalance: number | null;
+  cashTargetAmount: number;
+  liquidityProjectionMonths: number;
   monthlyRevenue: number;
   monthlyExpenses: number;
   monthlyLoanPayments: number;
@@ -70,18 +89,120 @@ export interface MonthlyTrendPoint {
   notes?: string;
 }
 
+export type PaymentCategory = "固定費" | "給与" | "借入返済" | "契約";
+export type PaymentRecurrence = "monthly" | "annual" | "once";
+
+export interface UpcomingPayment {
+  id: string;
+  title: string;
+  category: PaymentCategory;
+  amount: number | null;
+  dueDate: string;
+  daysRemaining: number;
+  recurrence: PaymentRecurrence;
+  source: string;
+  notes?: string;
+  relatedTaskId?: string;
+}
+
 export interface DashboardReport {
   generatedAt: string;
   reportDate: string;
   fiscalYear: string;
   companyName: string;
   cashFlow: CashFlowMetrics;
+  upcomingPayments: UpcomingPayment[];
   highImportanceTasks: DashboardTask[];
   highUrgencyTasks: DashboardTask[];
   kpis: KpiItem[];
   monthlyTrend: MonthlyTrendPoint[];
   monthlyTrendNarrative: string[];
   tbdItems: string[];
+}
+
+export const DEFAULT_CASH_TARGET = 10_000_000;
+export const LIQUIDITY_PROJECTION_MONTHS = 3;
+
+export interface LiquidityOutlook {
+  mode: CashFlowMetrics["cashFlowMode"];
+  primaryLabel: string;
+  primaryValue: string;
+  primaryNote: string;
+  netCashFlowLabel: string;
+  netCashFlowValue: string;
+  netCashFlowNote: string;
+}
+
+export function monthlyCashSurplus(burnRate: number): number {
+  return burnRate < 0 ? -burnRate : 0;
+}
+
+export function monthlyNetBurn(burnRate: number): number {
+  return burnRate > 0 ? burnRate : 0;
+}
+
+export function resolveCashFlowMode(burnRate: number): CashFlowMetrics["cashFlowMode"] {
+  if (burnRate < 0) return "surplus";
+  if (burnRate > 0) return "deficit";
+  return "break_even";
+}
+
+export function buildLiquidityOutlook(cf: CashFlowMetrics): LiquidityOutlook {
+  const { cashTargetAmount, liquidityProjectionMonths: months } = cf;
+
+  if (cf.cashFlowMode === "surplus") {
+    let primaryValue: string;
+    let primaryNote: string;
+
+    if (cf.cashBalance !== null && cf.cashBalance >= cashTargetAmount) {
+      primaryValue = `目標達成（${formatCurrency(cf.cashBalance)}）`;
+      primaryNote = `内部目標 ${formatCurrency(cashTargetAmount)} 以上`;
+    } else if (cf.monthsToCashTarget !== null) {
+      primaryValue = `${formatCurrency(cf.projectedCashChange)}（${months}ヶ月）`;
+      primaryNote = `目標 ${formatCurrency(cashTargetAmount)} まで ${cf.monthsToCashTarget.toFixed(1)} ヶ月`;
+      if (cf.projectedCashBalance !== null) {
+        primaryNote += ` · ${months}ヶ月後見込 ${formatCurrency(cf.projectedCashBalance)}`;
+      }
+    } else {
+      primaryValue = `${formatCurrency(cf.projectedCashChange)}（${months}ヶ月）`;
+      primaryNote = "現預金未確定 — 月次キャッシュ増の累積見込み";
+    }
+
+    return {
+      mode: "surplus",
+      primaryLabel: "資金見通し",
+      primaryValue,
+      primaryNote,
+      netCashFlowLabel: "月次キャッシュ増",
+      netCashFlowValue: formatCurrency(cf.monthlyCashSurplus),
+      netCashFlowNote: "収入 − 支出 − 返済（黒字運転）",
+    };
+  }
+
+  if (cf.cashFlowMode === "deficit") {
+    return {
+      mode: "deficit",
+      primaryLabel: "ランウェイ",
+      primaryValue: cf.runwayMonths !== null ? `${cf.runwayMonths.toFixed(1)} ヶ月` : "TBD",
+      primaryNote:
+        cf.runwayMonths !== null
+          ? "現預金 ÷ ネットバーン"
+          : "cash-balance.yaml 確定後",
+      netCashFlowLabel: "ネットバーン",
+      netCashFlowValue: formatCurrency(cf.monthlyNetBurn),
+      netCashFlowNote: "月次のキャッシュ流出",
+    };
+  }
+
+  return {
+    mode: "break_even",
+    primaryLabel: "ランウェイ",
+    primaryValue: cf.cashBalance !== null ? "収支均衡" : "TBD",
+    primaryNote: "収支トントン — 現預金残高の維持が焦点",
+    netCashFlowLabel: "月次ネットCF",
+    netCashFlowValue: formatCurrency(0),
+    netCashFlowNote: "収入 ≒ 支出",
+  };
 }
 
 function sumRevenue(finance: MonthlyFinance): number {
@@ -192,6 +313,15 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
 
   const monthlyProfit = monthlyRevenue - monthlyExpenses - monthlyLoan;
   const burnRate = monthlyExpenses + monthlyLoan - monthlyRevenue;
+  const cashFlowMode = resolveCashFlowMode(burnRate);
+  const surplus = monthlyCashSurplus(burnRate);
+  const netBurn = monthlyNetBurn(burnRate);
+  const projectedCashChange =
+    cashFlowMode === "surplus"
+      ? surplus * LIQUIDITY_PROJECTION_MONTHS
+      : cashFlowMode === "deficit"
+        ? -netBurn * LIQUIDITY_PROJECTION_MONTHS
+        : 0;
 
   const contributionMargin =
     monthlyRevenue > 0 ? (monthlyRevenue - variableCosts) / monthlyRevenue : null;
@@ -217,16 +347,43 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
   }
 
   let runwayMonths: number | null = null;
+  let monthsToCashTarget: number | null = null;
+  let projectedCashBalance: number | null = null;
+
   if (cashBalance !== null && burnRate > 0) {
     runwayMonths = cashBalance / burnRate;
-  } else if (cashBalance !== null && burnRate <= 0) {
-    notes.push("黒字運転のためランウェイは実質無制限（バーンレート≤0）");
+  }
+
+  if (cashBalance !== null) {
+    projectedCashBalance = cashBalance + projectedCashChange;
+    if (surplus > 0 && cashBalance < DEFAULT_CASH_TARGET) {
+      monthsToCashTarget = (DEFAULT_CASH_TARGET - cashBalance) / surplus;
+    }
+  }
+
+  if (cashFlowMode === "surplus") {
+    notes.push(
+      `黒字運転 — ${LIQUIDITY_PROJECTION_MONTHS}ヶ月キャッシュ増見込 ${formatCurrency(projectedCashChange)}`
+    );
+    if (monthsToCashTarget !== null) {
+      notes.push(
+        `内部目標 ${formatCurrency(DEFAULT_CASH_TARGET)} まで ${monthsToCashTarget.toFixed(1)} ヶ月`
+      );
+    }
   }
 
   return {
     cashBalance,
     runwayMonths,
     burnRate,
+    cashFlowMode,
+    monthlyCashSurplus: surplus,
+    monthlyNetBurn: netBurn,
+    monthsToCashTarget,
+    projectedCashChange,
+    projectedCashBalance,
+    cashTargetAmount: DEFAULT_CASH_TARGET,
+    liquidityProjectionMonths: LIQUIDITY_PROJECTION_MONTHS,
     monthlyRevenue,
     monthlyExpenses,
     monthlyLoanPayments: monthlyLoan,
@@ -442,24 +599,27 @@ function buildKpis(
 
   const hotelPlan = data.propertyRevenuePlan.hotel[0];
   const rentalPlan = data.propertyRevenuePlan.rental[0];
+  const liquidity = buildLiquidityOutlook(cashFlow);
 
   const kpis: KpiItem[] = [
     {
-      id: "runway",
-      label: "ランウェイ",
-      value: cashFlow.runwayMonths !== null ? `${cashFlow.runwayMonths.toFixed(1)} ヶ月` : "TBD",
-      explanation:
-        cashFlow.runwayMonths !== null
-          ? "現預金残高 ÷ 月次ネットバーン。"
-          : "現預金残高 ÷ 月次ネットバーン。cash-balance.yaml 確定後に算出。",
+      id: "liquidity",
+      label: liquidity.primaryLabel,
+      value: liquidity.primaryValue,
+      explanation: liquidity.primaryNote,
+      trend:
+        cashFlow.cashFlowMode === "surplus" && cashFlow.projectedCashBalance !== null
+          ? `${cashFlow.liquidityProjectionMonths}ヶ月後 ${formatCurrency(cashFlow.projectedCashBalance)}`
+          : cashFlow.cashFlowMode === "deficit" && cashFlow.burnRate > 0
+            ? "要監視"
+            : undefined,
     },
     {
-      id: "burn_rate",
-      label: "バーンレート",
-      value: formatCurrency(cashFlow.burnRate),
-      explanation:
-        "月次支出（返済含む）− 月次収入。正の値はキャッシュ流出、負の値は黒字運転。",
-      trend: cashFlow.burnRate <= 0 ? "黒字運転" : "要監視",
+      id: "net_cash_flow",
+      label: liquidity.netCashFlowLabel,
+      value: liquidity.netCashFlowValue,
+      explanation: liquidity.netCashFlowNote,
+      trend: cashFlow.cashFlowMode === "surplus" ? "黒字運転" : undefined,
     },
     {
       id: "revenue",
@@ -539,6 +699,192 @@ function sourceLabel(source: CashFlowMetrics["source"]): string {
   }
 }
 
+function addDays(date: string, days: number): string {
+  const d = new Date(`${date}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function lastDayOfMonth(month: string): string {
+  const { year, month: m } = parseMonth(month);
+  const d = new Date(year, m, 0);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function fiscalYearEndDate(fiscalYear: string, fiscalYearEndMonth: number): string {
+  const startYear = parseInt(fiscalYear.replace("FY", ""), 10);
+  const endYear = fiscalYearEndMonth === 12 ? startYear : startYear + 1;
+  return lastDayOfMonth(`${endYear}-${String(fiscalYearEndMonth).padStart(2, "0")}`);
+}
+
+function nextFiscalYear(fiscalYear: string): string {
+  const year = parseInt(fiscalYear.replace("FY", ""), 10);
+  return `FY${year + 1}`;
+}
+
+function paymentDaysRemaining(reportDate: string, dueDate: string): number {
+  return daysBetween(reportDate, dueDate);
+}
+
+function slugId(text: string): string {
+  return text.replace(/\s+/g, "-").slice(0, 40);
+}
+
+export function collectUpcomingPayments(
+  data: StewardData,
+  fiscalYear: string,
+  reportDate: string,
+  tasks: DashboardTask[],
+  horizonDays = 90
+): UpcomingPayment[] {
+  const windowEnd = addDays(reportDate, horizonDays);
+  const payments: UpcomingPayment[] = [];
+  const fiscalEndMonth = data.company.fiscal_year_end_month;
+
+  const months = monthRange(reportDate.slice(0, 7), windowEnd.slice(0, 7));
+  for (const month of months) {
+    const dueDate = lastDayOfMonth(month);
+    if (dueDate < reportDate || dueDate > windowEnd) continue;
+
+    for (const item of data.fixedCosts.items) {
+      if (item.monthly_amount <= 0) continue;
+      payments.push({
+        id: `FIXED-M-${slugId(item.name)}-${month}`,
+        title: item.name,
+        category: "固定費",
+        amount: item.monthly_amount,
+        dueDate,
+        daysRemaining: paymentDaysRemaining(reportDate, dueDate),
+        recurrence: "monthly",
+        source: "cursor/data/finances/fixed-costs.yaml",
+      });
+    }
+  }
+
+  const payroll = loadPayroll();
+  const monthlyPayroll = Math.round(payroll.officer_compensation_annual / 12);
+  if (monthlyPayroll > 0) {
+    for (const month of months) {
+      const dueDate = lastDayOfMonth(month);
+      if (dueDate < reportDate || dueDate > windowEnd) continue;
+      payments.push({
+        id: `PAYROLL-${month}`,
+        title: "役員報酬",
+        category: "給与",
+        amount: monthlyPayroll,
+        dueDate,
+        daysRemaining: paymentDaysRemaining(reportDate, dueDate),
+        recurrence: "monthly",
+        source: "cursor/data/finances/payroll.yaml",
+        notes: payroll.notes?.trim(),
+      });
+    }
+  }
+
+  for (const item of data.fixedCosts.items) {
+    if (!item.annual_amount || item.monthly_amount > 0) continue;
+    const dueDate = fiscalYearEndDate(fiscalYear, fiscalEndMonth);
+    if (dueDate < reportDate || dueDate > windowEnd) continue;
+    payments.push({
+      id: `FIXED-A-${slugId(item.name)}-${fiscalYear}`,
+      title: item.name,
+      category: "固定費",
+      amount: item.annual_amount,
+      dueDate,
+      daysRemaining: paymentDaysRemaining(reportDate, dueDate),
+      recurrence: "annual",
+      source: "cursor/data/finances/fixed-costs.yaml",
+      notes: "年次支払 — 支払日は会計処理に合わせ要確認",
+    });
+  }
+
+  try {
+    const debtPlan = loadDebtPlan();
+    const baseScenario =
+      debtPlan.scenarios.find((s) => s.id === "base") ?? debtPlan.scenarios[0];
+    const fyEnd = fiscalYearEndDate(fiscalYear, fiscalEndMonth);
+
+    for (const entry of baseScenario.repayments) {
+      if (entry.principal <= 0) continue;
+      const dueDate = fiscalYearEndDate(entry.fiscal_year, fiscalEndMonth);
+      const inCurrentFy = entry.fiscal_year === fiscalYear;
+      const inWindow = dueDate >= reportDate && dueDate <= windowEnd;
+      if (!inCurrentFy && !inWindow) continue;
+      if (dueDate < reportDate && !inCurrentFy) continue;
+
+      const loan = debtPlan.loans.find((l) => l.loan_id === entry.loan_id);
+      payments.push({
+        id: `LOAN-${entry.loan_id}-${entry.fiscal_year}`,
+        title: `${loan?.property_name ?? entry.loan_id} 元本返済（${entry.fiscal_year}）`,
+        category: "借入返済",
+        amount: entry.principal,
+        dueDate,
+        daysRemaining: paymentDaysRemaining(reportDate, dueDate),
+        recurrence: "annual",
+        source: "cursor/data/plans/debt-plan.yaml",
+        notes: `${baseScenario.name} · status: ${entry.status}${entry.notes ? ` · ${entry.notes}` : ""}`,
+      });
+    }
+
+    const currentFyRepayments = baseScenario.repayments.filter(
+      (e) => e.fiscal_year === fiscalYear
+    );
+    const hasCurrentFyPayment = currentFyRepayments.some((e) => e.principal > 0);
+    if (!payments.some((p) => p.category === "借入返済") && !hasCurrentFyPayment && fyEnd >= reportDate) {
+      payments.push({
+        id: `LOAN-NONE-${fiscalYear}`,
+        title: `${fiscalYear} 借入返済（base シナリオ）`,
+        category: "借入返済",
+        amount: 0,
+        dueDate: fyEnd,
+        daysRemaining: paymentDaysRemaining(reportDate, fyEnd),
+        recurrence: "once",
+        source: "cursor/data/plans/debt-plan.yaml",
+        notes: "当年度の計画返済なし — 返済開始は debt-plan を参照",
+      });
+    }
+  } catch {
+    payments.push({
+      id: "LOAN-TBD",
+      title: "借入返済スケジュール",
+      category: "借入返済",
+      amount: null,
+      dueDate: windowEnd,
+      daysRemaining: horizonDays,
+      recurrence: "once",
+      source: "cursor/data/plans/debt-plan.yaml",
+      notes: "debt-plan.yaml 未整備または読取不可",
+    });
+  }
+
+  for (const task of tasks) {
+    if (!task.dueDate || (task.category !== "契約期限" && task.category !== "保険")) continue;
+    if (task.dueDate < reportDate || task.dueDate > windowEnd) continue;
+    payments.push({
+      id: `CTR-${task.id}`,
+      title: task.title,
+      category: "契約",
+      amount: null,
+      dueDate: task.dueDate,
+      daysRemaining: task.daysRemaining ?? paymentDaysRemaining(reportDate, task.dueDate),
+      recurrence: "once",
+      source: task.link ?? "cursor/data/contracts/",
+      notes: "契約更新・加入 — 支払額は契約条項を参照（tasks と連動）",
+      relatedTaskId: task.id,
+    });
+  }
+
+  payments.sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.title.localeCompare(b.title));
+
+  const seen = new Set<string>();
+  return payments.filter((p) => {
+    const key = `${p.id}:${p.dueDate}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function computeDashboard(data?: StewardData): DashboardReport {
   const d = data ?? loadAllData();
   const fiscalYear = resolveFiscalYear(d.company.fiscal_year_end_month);
@@ -547,6 +893,8 @@ export function computeDashboard(data?: StewardData): DashboardReport {
   const highImportanceTasks = allTasks.filter((t) => t.importance === "high");
   const highUrgencyTasks = allTasks.filter((t) => t.urgency === "high");
   const monthlyTrend = buildMonthlyTrend(fiscalYear);
+  const reportDate = currentDate();
+  const upcomingPayments = collectUpcomingPayments(d, fiscalYear, reportDate, allTasks);
 
   const tbdItems = [
     "現預金残高（cash-balance.yaml — 金額入力待ち）",
@@ -557,10 +905,11 @@ export function computeDashboard(data?: StewardData): DashboardReport {
 
   return {
     generatedAt: new Date().toISOString(),
-    reportDate: currentDate(),
+    reportDate,
     fiscalYear,
     companyName: d.company.name,
     cashFlow,
+    upcomingPayments,
     highImportanceTasks,
     highUrgencyTasks,
     kpis: buildKpis(d, cashFlow, fiscalYear),
@@ -591,8 +940,34 @@ function formatTaskTable(tasks: DashboardTask[]): string {
   return lines.join("\n") + "\n";
 }
 
-export function formatDashboardMarkdown(report: DashboardReport): string {
+function formatUpcomingPaymentsTable(payments: UpcomingPayment[]): string {
+  if (payments.length === 0) return "該当なし。\n";
+  const lines = [
+    "| 期限 | カテゴリ | 内容 | 金額 | 残日 | 頻度 | ソース |",
+    "|---|---|---|---:|---:|---|---|",
+  ];
+  for (const p of payments) {
+    const amount = p.amount === null ? "—" : formatCurrency(p.amount);
+    lines.push(
+      `| ${p.dueDate} | ${p.category} | ${p.title} | ${amount} | ${p.daysRemaining} | ${p.recurrence} | ${p.source} |`
+    );
+  }
+  const withNotes = payments.filter((p) => p.notes);
+  if (withNotes.length) {
+    lines.push("");
+    for (const p of withNotes) {
+      lines.push(`- **${p.id}**: ${p.notes}`);
+    }
+  }
+  return lines.join("\n") + "\n";
+}
+
+export function formatDashboardMarkdown(
+  report: DashboardReport,
+  agentSummariesSection?: string
+): string {
   const cf = report.cashFlow;
+  const liquidity = buildLiquidityOutlook(cf);
   const lines = [
     `# 経営ダッシュボード — ${report.companyName}`,
     "",
@@ -600,18 +975,24 @@ export function formatDashboardMarkdown(report: DashboardReport): string {
     "",
     "> 1日1回更新。詳細 KPI 定義は [executive-dashboard-guide.md](../plans/executive-dashboard-guide.md)、キャッシュフロー表は [cashflow-detail.md](../plans/cashflow-detail.md) を参照。",
     "",
+    agentSummariesSection ?? "",
     "## サマリー",
     "",
     "| 指標 | 値 | 備考 |",
     "|------|---:|------|",
-    `| ランウェイ | ${cf.runwayMonths !== null ? `${cf.runwayMonths.toFixed(1)} ヶ月` : "**TBD**"} | cash-balance.yaml 確定後 |`,
-    `| バーンレート | ${formatCurrency(cf.burnRate)} | 正=流出 |`,
+    `| ${liquidity.primaryLabel} | ${liquidity.primaryValue.includes("TBD") ? "**TBD**" : liquidity.primaryValue} | ${liquidity.primaryNote} |`,
+    `| ${liquidity.netCashFlowLabel} | ${liquidity.netCashFlowValue} | ${liquidity.netCashFlowNote} |`,
     `| 月次売上 | ${formatCurrency(cf.monthlyRevenue)} | ${cf.basisMonth} (${sourceLabel(cf.source)}) |`,
     `| 月次利益 | ${formatCurrency(cf.monthlyProfit)} | 営業近似 |`,
     `| 固定費/月 | ${formatCurrency(cf.fixedCosts)} | |`,
     `| 変動費/月 | ${formatCurrency(cf.variableCosts)} | |`,
     `| 損益分岐売上 | ${cf.breakEvenRevenue ? formatCurrency(cf.breakEvenRevenue) : "—"} | 限界利益率 ${cf.contributionMargin ? formatPercent(cf.contributionMargin) : "—"} |`,
     "",
+    "## 次の支払い",
+    "",
+    "90 日以内の定期支払・当年度借入返済（base シナリオ）・契約期限（tasks 連動）。",
+    "",
+    formatUpcomingPaymentsTable(report.upcomingPayments),
     "## 重要タスク（高重要度）",
     "",
     formatTaskTable(report.highImportanceTasks),

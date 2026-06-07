@@ -1,0 +1,513 @@
+import type { Contract } from "../../schemas/index.js";
+import type { StewardData } from "./data.js";
+import { loadAllData } from "./data.js";
+import { scanContractAlerts } from "./alerts.js";
+import { listPendingInbox, loadDocumentIo } from "./document-io.js";
+import {
+  computeDashboard,
+  buildLiquidityOutlook,
+  type DashboardReport,
+} from "./dashboard.js";
+import {
+  currentDate,
+  DOCS_DIR,
+  formatCurrency,
+  formatPercent,
+  writeMarkdownReport,
+} from "./utils.js";
+import { join } from "node:path";
+import { readdirSync, existsSync } from "node:fs";
+
+export const AGENT_SUMMARIES_SUBDIR = "agent-summaries";
+
+export interface AgentSummaryPaths {
+  finance: string;
+  contract: string;
+  prop001: string;
+  prop002: string;
+  compliance: string;
+  operations: string;
+  executive: string;
+}
+
+function summaryFilename(suffix = "dashboard-sync"): string {
+  return `${currentDate()}-${suffix}.md`;
+}
+
+function reportsRelLink(absPath: string): string {
+  const marker = `${DOCS_DIR}/reports/`;
+  if (absPath.startsWith(marker)) {
+    return `../${absPath.slice(marker.length)}`;
+  }
+  return absPath;
+}
+
+function relDocsPath(absPath: string): string {
+  return absPath.replace(`${DOCS_DIR}/`, "docs/");
+}
+
+function draftContracts(contracts: Contract[]): Contract[] {
+  return contracts.filter((c) => c.status === "draft");
+}
+
+function executedCount(contracts: Contract[]): number {
+  return contracts.filter((c) => c.status === "executed").length;
+}
+
+export function formatFinanceSummary(report: DashboardReport): string {
+  const cf = report.cashFlow;
+  const liquidity = buildLiquidityOutlook(cf);
+  return [
+    `# Finance Agent 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- **${report.fiscalYear}** 月次売上 ${formatCurrency(cf.monthlyRevenue)}（${cf.basisMonth} · ${cf.source}）`,
+    `- 月次利益（営業近似）${formatCurrency(cf.monthlyProfit)} · ${liquidity.netCashFlowLabel} ${liquidity.netCashFlowValue}`,
+    `- ${liquidity.primaryLabel}: ${liquidity.primaryValue}${liquidity.primaryValue === "TBD" ? "（cash-balance.yaml 未確定）" : ""}`,
+    "",
+    "## KPI / 状態",
+    "",
+    "| 指標 | 値 |",
+    "|------|---:|",
+    `| 固定費/月 | ${formatCurrency(cf.fixedCosts)} |`,
+    `| 変動費/月 | ${formatCurrency(cf.variableCosts)} |`,
+    `| 損益分岐売上 | ${cf.breakEvenRevenue ? formatCurrency(cf.breakEvenRevenue) : "—"} |`,
+    `| ${report.fiscalYear} 純利益（予実） | ${report.kpis.find((k) => k.id === "fy_net_profit")?.value ?? "—"} |`,
+    "",
+    "## リスク・P0",
+    "",
+    ...report.tbdItems
+      .filter((t) => t.includes("現預金") || t.includes("返済"))
+      .map((t) => `- ${t}`),
+    ...(cf.notes.length ? cf.notes.map((n) => `- ${n}`) : ["- 特になし"]),
+    "",
+    "## 推奨アクション",
+    "",
+    "1. `cash-balance.yaml` に残高入力 → `status: confirmed` → `npm run validate`",
+    "2. 月次 YAML 更新時は `steward deps check` → `validate` → `sync all`",
+    "",
+    "## 根拠",
+    "",
+    "- `cursor/data/finances/` · `cursor/data/plans/`",
+    "- Skill: [12_skills/cashflow_forecast.md](../../../12_skills/cashflow_forecast.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function formatContractSummary(data: StewardData, report: DashboardReport): string {
+  const drafts = draftContracts(data.contracts);
+  const alerts = scanContractAlerts(data.contracts, 90);
+  const insuranceDrafts = drafts.filter((c) => c.type === "insurance");
+
+  return [
+    `# Contract Agent 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- 契約 **${executedCount(data.contracts)}/${data.contracts.length}** executed`,
+    `- **draft ${drafts.length} 件**（P0 保険 ${insuranceDrafts.length} 件）`,
+    `- 90 日以内期限アラート **${alerts.length} 件**`,
+    "",
+    "## KPI / 状態",
+    "",
+    "| ID | 名称 | 状態 | 物件 |",
+    "|----|------|------|------|",
+    ...drafts.map(
+      (c) => `| ${c.id} | ${c.name} | draft | ${c.property_id ?? "—"} |`
+    ),
+    ...(drafts.length === 0 ? ["| — | draft なし | — | — |"] : []),
+    "",
+    "## リスク・P0",
+    "",
+    ...insuranceDrafts.map((c) => `- **${c.id}** ${c.name} — 未加入`),
+    ...drafts
+      .filter((c) => c.type !== "insurance")
+      .map((c) => `- ${c.id} ${c.name}（draft）`),
+    "",
+    "## 推奨アクション",
+    "",
+    "1. CTR-013/014 火災保険 — inbox 証券 → executed",
+    "2. CTR-011 賃貸借 · CTR-012 清掃 — 締結",
+    "3. `npm run steward -- alerts` で期限確認",
+    "",
+    "## 根拠",
+    "",
+    "- `cursor/data/contracts/`",
+    "- Skill: [12_skills/contract_expiry_check.md](../../../12_skills/contract_expiry_check.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function formatProp001Summary(data: StewardData, report: DashboardReport): string {
+  const p = data.properties.find((x) => x.id === "PROP-001");
+  if (!p || p.type !== "rental") {
+    return `# Property Rental 要約 ${report.reportDate}\n\nPROP-001 未找到。\n`;
+  }
+  const rental = p.rental!;
+  const annualRent = rental.monthly_rent * 12 * (1 - rental.vacancy_rate);
+  const noiApprox = annualRent - (p.depreciation?.annual_amount ?? 0);
+
+  return [
+    `# Property Rental Agent 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- **${p.name}** 月額賃料 ${formatCurrency(rental.monthly_rent)} · 空室率 ${formatPercent(rental.vacancy_rate)}`,
+    `- 年間賃料収入（概算）${formatCurrency(annualRent)} · NOI 近似 ${formatCurrency(noiApprox)}（減価除く前）`,
+    `- 関連 draft: CTR-011（賃貸借）· CTR-013（火災保険）`,
+    "",
+    "## KPI / 状態",
+    "",
+    "| 項目 | 値 |",
+    "|------|---:|",
+    `| 取得価格 | ${formatCurrency(p.acquisition_price)} |`,
+    `| 減価償却/年 | ${formatCurrency(p.depreciation?.annual_amount ?? 0)} |`,
+    `| 管理費 | ${formatCurrency(rental.management_fee)}/月 |`,
+    "",
+    "## リスク・P0",
+    "",
+    "- CTR-013 火災保険 draft",
+    "- CTR-011 借主 TBD",
+    "",
+    "## 推奨アクション",
+    "",
+    "1. 保険加入（Contract 連携）",
+    "2. 賃貸借 executed 化",
+    "",
+    "## 根拠",
+    "",
+    "- `cursor/data/properties/PROP-001.yaml`",
+    "- Skill: [12_skills/noi_analysis.md](../../../12_skills/noi_analysis.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function formatProp002Summary(data: StewardData, report: DashboardReport): string {
+  const p = data.properties.find((x) => x.id === "PROP-002");
+  if (!p || p.type !== "hotel") {
+    return `# Hospitality Agent 要約 ${report.reportDate}\n\nPROP-002 未找到。\n`;
+  }
+  const h = p.hotel!;
+  const oc = p.operating_costs;
+  const daysPerMonth = 30 * h.occupancy_rate;
+  const monthlyGross = h.adr * daysPerMonth;
+  const revpar = h.adr * h.occupancy_rate;
+
+  return [
+    `# Hospitality Agent 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- **${p.name}** 開業予定 ${h.opened_date ?? "TBD"}`,
+    `- 計画 ADR ${formatCurrency(h.adr)} · 稼働率 ${formatPercent(h.occupancy_rate)} · RevPAR ${formatCurrency(revpar)}`,
+    `- 月次売上見込（稼働のみ）${formatCurrency(monthlyGross)}`,
+    `- 関連 draft: CTR-012（清掃）· CTR-014（火災保険）`,
+    "",
+    "## KPI / 状態",
+    "",
+    "| 項目 | 値 |",
+    "|------|---:|",
+    `| 清掃/回 | ${formatCurrency(oc?.cleaning_per_stay ?? 0)} |`,
+    `| OTA 手数料 | ${formatPercent(oc?.ota_commission_rate ?? 0)} |`,
+    `| 光熱費/月 | ${formatCurrency(oc?.utilities_monthly ?? 0)} |`,
+    "",
+    "## リスク・P0",
+    "",
+    "- CTR-014 旅館火災保険 draft",
+    "- CTR-012 清掃委託 draft",
+    "- 開業前 secrets · 許認可確認",
+    "",
+    "## 推奨アクション",
+    "",
+    "1. pre-opening-checklist 残項目",
+    "2. OTA 掲載 · 清掃 CTR executed",
+    "",
+    "## 根拠",
+    "",
+    "- `cursor/data/properties/PROP-002.yaml`",
+    "- Skill: [12_skills/revpar_analysis.md](../../../12_skills/revpar_analysis.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function formatComplianceSummary(data: StewardData, report: DashboardReport): string {
+  const insuranceDrafts = data.contracts.filter(
+    (c) => c.status === "draft" && c.type === "insurance"
+  );
+
+  return [
+    `# Compliance Agent 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    "- 社内規程 REG-001〜016 施行済（9001 v1.1 改定含む）",
+    `- 保険 CTR draft **${insuranceDrafts.length} 件** — コンプライアンス P0`,
+    "- ISO 9001: L2（記録様式整備 · 初回監査未実施）",
+    "",
+    "## KPI / 状態",
+    "",
+    "| 領域 | 状態 |",
+    "|------|------|",
+    "| 旅館業法 / 許認可 | `docs/corporate/licenses/` 要確認 |",
+    "| 個情 | REG-010 · privacy テンプレ |",
+    "| 保険 | CTR-013/014 draft |",
+    "",
+    "## リスク・P0",
+    "",
+    ...insuranceDrafts.map((c) => `- ${c.id} ${c.name} 未加入`),
+    "- B/S TBD — 税務届出ブロッカー（Finance 連携）",
+    "",
+    "## 推奨アクション",
+    "",
+    "1. 保険証券取得 · licenses INDEX 更新",
+    "2. `permit_expiry_check` Skill 定期実行",
+    "",
+    "## 根拠",
+    "",
+    "- `docs/corporate/regulations/` · `docs/iso/`",
+    "- Skill: [12_skills/permit_expiry_check.md](../../../12_skills/permit_expiry_check.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function formatOperationsSummary(report: DashboardReport): string {
+  const inbox = listPendingInbox();
+  const io = loadDocumentIo();
+  const outboxCount = io.outbox_items.length;
+
+  return [
+    `# Operations Agent 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- inbox 未処理 **${inbox.length} 件**`,
+    `- outbox 登録 **${outboxCount} 件**（document-io.yaml）`,
+    "- I/O 台帳運用中",
+    "",
+    "## KPI / 状態",
+    "",
+    "| キュー | 件数 |",
+    "|--------|---:|",
+    `| inbox pending | ${inbox.length} |`,
+    `| outbox | ${outboxCount} |`,
+    "",
+    ...(inbox.length
+      ? ["## 未処理 inbox", "", ...inbox.map((i) => `- ${i.id}: ${i.title}`), ""]
+      : []),
+    "## リスク・P0",
+    "",
+    ...(inbox.length > 0
+      ? ["- inbox 滞留 — 48h 以内分類"]
+      : ["- inbox 空 — 正常"]),
+    "- 保険証券スキャン受信時は Contract へ路由",
+    "",
+    "## 推奨アクション",
+    "",
+    "1. `npm run steward -- io status`",
+    "2. 証券 PDF → `io inbox add` → Contract 归档",
+    "",
+    "## 根拠",
+    "",
+    "- `cursor/data/document-io.yaml` · `docs/inbox/` · `docs/outbox/`",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function formatExecutiveSummary(
+  report: DashboardReport,
+  paths: Omit<AgentSummaryPaths, "executive">
+): string {
+  const p0Tasks = report.highUrgencyTasks.filter((t) => t.importance === "high").slice(0, 5);
+  const cf = report.cashFlow;
+  const liquidity = buildLiquidityOutlook(cf);
+
+  return [
+    `# Executive Steward 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- **${report.companyName}** ${report.fiscalYear} — 経営判断材料を Agent 要約から統合`,
+    `- ${liquidity.primaryLabel} ${liquidity.primaryValue} · 月次利益 ${formatCurrency(cf.monthlyProfit)}`,
+    `- P0 集中: 火災保険 draft · 現預金未入力 · 契約 draft 4 件`,
+    "",
+    "## KPI スナップショット",
+    "",
+    "| 指標 | 値 |",
+    "|------|---:|",
+    ...report.kpis.slice(0, 6).map((k) => `| ${k.label} | ${k.value} |`),
+    "",
+    "## 今日の判断が必要な項目",
+    "",
+    ...(p0Tasks.length
+      ? p0Tasks.map((t, i) => `${i + 1}. **${t.id}** ${t.title}`)
+      : ["1. P0 タスクなし — 計画通り"]),
+    "",
+    "## Agent 要約（読取面）",
+    "",
+    "| Agent | ファイル |",
+    "|-------|---------|",
+    `| Finance | [${relDocsPath(paths.finance).split("/").pop()}](${reportsRelLink(paths.finance)}) |`,
+    `| Contract | [${relDocsPath(paths.contract).split("/").pop()}](${reportsRelLink(paths.contract)}) |`,
+    `| Property Rental | [${relDocsPath(paths.prop001).split("/").pop()}](${reportsRelLink(paths.prop001)}) |`,
+    `| Hospitality | [${relDocsPath(paths.prop002).split("/").pop()}](${reportsRelLink(paths.prop002)}) |`,
+    `| Compliance | [${relDocsPath(paths.compliance).split("/").pop()}](${reportsRelLink(paths.compliance)}) |`,
+    `| Operations | [${relDocsPath(paths.operations).split("/").pop()}](${reportsRelLink(paths.operations)}) |`,
+    "",
+    "## リスク・注意",
+    "",
+    ...report.tbdItems.map((t) => `- ${t}`),
+    "",
+    "## 推奨 CLI",
+    "",
+    "```bash",
+    "npm run steward -- dashboard",
+    "npm run steward -- alerts",
+    "npm run steward -- status",
+    "```",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function writeAgentSummaries(
+  report?: DashboardReport,
+  data?: StewardData
+): AgentSummaryPaths {
+  const d = data ?? loadAllData();
+  const r = report ?? computeDashboard(d);
+  const filename = summaryFilename();
+
+  const financePath = writeMarkdownReport(
+    `${AGENT_SUMMARIES_SUBDIR}/finance`,
+    filename,
+    formatFinanceSummary(r)
+  );
+  const contractPath = writeMarkdownReport(
+    `${AGENT_SUMMARIES_SUBDIR}/contract`,
+    filename,
+    formatContractSummary(d, r)
+  );
+  const prop001Path = writeMarkdownReport(
+    `${AGENT_SUMMARIES_SUBDIR}/prop-001`,
+    filename,
+    formatProp001Summary(d, r)
+  );
+  const prop002Path = writeMarkdownReport(
+    `${AGENT_SUMMARIES_SUBDIR}/prop-002`,
+    filename,
+    formatProp002Summary(d, r)
+  );
+  const compliancePath = writeMarkdownReport(
+    `${AGENT_SUMMARIES_SUBDIR}/compliance`,
+    filename,
+    formatComplianceSummary(d, r)
+  );
+  const operationsPath = writeMarkdownReport(
+    `${AGENT_SUMMARIES_SUBDIR}/operations`,
+    filename,
+    formatOperationsSummary(r)
+  );
+
+  const partialPaths = {
+    finance: financePath,
+    contract: contractPath,
+    prop001: prop001Path,
+    prop002: prop002Path,
+    compliance: compliancePath,
+    operations: operationsPath,
+  };
+
+  const executivePath = writeMarkdownReport(
+    "executive-notes",
+    filename,
+    formatExecutiveSummary(r, partialPaths)
+  );
+
+  return { ...partialPaths, executive: executivePath };
+}
+
+/** 最新の dashboard-sync 要約パス（存在しなければ undefined） */
+export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
+  const domains: (keyof Omit<AgentSummaryPaths, "executive">)[] = [
+    "finance",
+    "contract",
+    "prop001",
+    "prop002",
+    "compliance",
+    "operations",
+  ];
+  const folderMap: Record<(typeof domains)[number], string> = {
+    finance: "finance",
+    contract: "contract",
+    prop001: "prop-001",
+    prop002: "prop-002",
+    compliance: "compliance",
+    operations: "operations",
+  };
+
+  const result: Partial<AgentSummaryPaths> = {};
+  let any = false;
+
+  for (const key of domains) {
+    const dir = join(DOCS_DIR, "reports", AGENT_SUMMARIES_SUBDIR, folderMap[key]);
+    if (!existsSync(dir)) continue;
+    const files = readdirSync(dir)
+      .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))
+      .sort()
+      .reverse();
+    if (files[0]) {
+      result[key] = join(dir, files[0]);
+      any = true;
+    }
+  }
+
+  const execDir = join(DOCS_DIR, "reports", "executive-notes");
+  if (existsSync(execDir)) {
+    const execFiles = readdirSync(execDir)
+      .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))
+      .sort()
+      .reverse();
+    if (execFiles[0]) {
+      result.executive = join(execDir, execFiles[0]);
+      any = true;
+    }
+  }
+
+  return any ? result : null;
+}
+
+export function formatAgentSummariesSection(paths: AgentSummaryPaths): string {
+  const rows = [
+    ["Finance", paths.finance],
+    ["Contract", paths.contract],
+    ["Property Rental", paths.prop001],
+    ["Hospitality", paths.prop002],
+    ["Compliance", paths.compliance],
+    ["Operations", paths.operations],
+    ["Executive", paths.executive],
+  ];
+
+  const lines = [
+    "## Agent 要約（Steward 読取面）",
+    "",
+    "各 Agent の最新要約。詳細 Data は Agent 経由で参照。",
+    "",
+    "| Agent | 要約ファイル |",
+    "|-------|-------------|",
+    ...rows.map(([name, p]) => {
+      const rel = relDocsPath(p);
+      return `| ${name} | [${rel.split("/").pop()}](${reportsRelLink(p)}) |`;
+    }),
+    "",
+    "索引: [agent-summaries/00-このフォルダについて.md](../agent-summaries/00-このフォルダについて.md)",
+    "",
+  ];
+  return lines.join("\n");
+}

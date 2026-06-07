@@ -18,7 +18,7 @@
 | `docs/plans/kpi-plan.md` | 📝 |
 | `docs/plans/cashflow-detail.md` | ✅（拡張 📝） |
 | `docs/plans/investment-plan.md` | 📝（YAML あり） |
-| `docs/plans/borrowing-plan.md` | 📝 |
+| `docs/plans/finance/borrowing-plan.md` | ✅ |
 | `docs/plans/tax-plan-fy2026.md` | 📝 |
 | `docs/plans/contract-management-plan.md` | 📝 |
 | `docs/plans/risk-management-plan.md` | 📝 |
@@ -104,8 +104,8 @@
 | `docs/plans/finance/property-pl-plan.md` | 📝 |
 | `docs/plans/finance/company-pl-plan.md` | 📝（`fy2026-pl.md` ✅） |
 | `docs/plans/finance/cashflow-plan.md` | 📝 |
-| `docs/plans/finance/loan-repayment-plan.md` | 📝 |
-| `docs/plans/finance/dscr-plan.md` | 📝 |
+| `docs/plans/finance/loan-repayment-plan.md` | ✅ |
+| `docs/plans/finance/dscr-plan.md` | ✅ |
 | `docs/plans/finance/tax-payment-plan.md` | 📝 |
 | `docs/plans/finance/liquidity-crisis-plan.md` | 📝 |
 
