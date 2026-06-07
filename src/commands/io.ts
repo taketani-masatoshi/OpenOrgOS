@@ -129,7 +129,7 @@ export function runIoOutboxScan(): void {
 export function runIoGuide(opts: { output?: string }): void {
   const md = `# Document I/O ガイド
 
-## 受信（Input）→ \`docs/inbox/\`
+## 受信（Input）→ \`docs/io/inbox/\`
 
 | フォルダ | 置くもの |
 |---------|---------|
@@ -142,10 +142,10 @@ export function runIoGuide(opts: { output?: string }): void {
 
 \`\`\`bash
 npm run steward -- io inbox add --from ~/Downloads/scan.pdf --category licenses --title "旅館業許可証"
-npm run steward -- io inbox done INB-001 --archive docs/corporate/licenses/ryokan/records/permit.pdf
+npm run steward -- io inbox done INB-001 --archive docs/company/licenses/ryokan/records/permit.pdf
 \`\`\`
 
-## 出力（Output）→ \`docs/outbox/\`
+## 出力（Output）→ \`docs/io/outbox/\`
 
 \`\`\`bash
 npm run steward -- report annual --fy FY2026
@@ -153,7 +153,7 @@ npm run steward -- io outbox list
 npm run steward -- io outbox printed OUT-001
 \`\`\`
 
-台帳: \`cursor/data/document-io.yaml\`
+台帳: \`data/document-io.yaml\`
 `;
   if (opts.output) {
     console.log(`✓ Guide: ${writeMarkdownReport("io", opts.output, md)}`);

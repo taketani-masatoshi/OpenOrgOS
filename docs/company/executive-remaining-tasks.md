@@ -4,7 +4,7 @@
 **基準日:** 2026年6月7日（commit `ae0b0a4` 時点）  
 **完成度:** リポジトリ準備 **約96%** — 残りは **実手続・実データ入力** で 100% へ
 
-> 本ファイルは [steward-assessment.md](../iso/steward-assessment.md) の「100% ユーザー・外部アクション」、 [pre-opening-checklist.md](../operations/lodging/pre-opening-checklist.md)、 [fy2026-tax-readiness-assessment.md](tax/fy2026-tax-readiness-assessment.md)、 [fy2026-tax-advisor-checklist.md](fy2026-tax-advisor-checklist.md)、 [executive-dashboard-guide.md](../plans/executive-dashboard-guide.md) を **経営者視点で1枚に集約** したものです。
+> 本ファイルは [steward-assessment.md](../compliance/iso/steward-assessment.md) の「100% ユーザー・外部アクション」、 [pre-opening-checklist.md](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)、 [fy2026-tax-readiness-assessment.md](tax/fy2026-tax-readiness-assessment.md)、 [fy2026-tax-advisor-checklist.md](fy2026-tax-advisor-checklist.md)、 [executive-dashboard-guide.md](../plans/executive-dashboard-guide.md) を **経営者視点で1枚に集約** したものです。
 
 ---
 
@@ -23,9 +23,9 @@
 ## 今すぐ（P0）
 
 - [ ] **[P0] CTR-014 亀沢旅館 火災保険に加入する**
-  - **やること:** 加入パケットに沿い保険会社へ申込 → 証券 PDF 取得 → `docs/inbox/` 保管 → CTR-014 を executed 化
+  - **やること:** 加入パケットに沿い保険会社へ申込 → 証券 PDF 取得 → `docs/io/inbox/` 保管 → CTR-014 を executed 化
   - **なぜ:** 亀沢は **稼働中**。民泊対応火災保険・施設賠償1億円以上が未加入のままは最大リスク
-  - **関連:** [CTR-014 加入パケット](../contracts/CTR-014/02-enrollment-packet.md) · [pre-opening B4–B8](../operations/lodging/pre-opening-checklist.md)
+  - **関連:** [CTR-014 加入パケット](../contracts/CTR-014/02-enrollment-packet.md) · [pre-opening B4–B8](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
   - **工数:** 半日（保険会社審査は別途）
 
 - [ ] **[P0] CTR-013 番町 火災保険に加入する**
@@ -37,7 +37,7 @@
 - [ ] **[P0] 現預金残高を `cash-balance.yaml` に入力する**
   - **やること:** 全口座の 2027/1/31 残高を入力 → `status: confirmed` → `npm run validate`
   - **なぜ:** B/S 確定・ランウェイ算出・経営ダッシュボードの前提データ。未入力だと **ランウェイ TBD**
-  - **関連:** [`cursor/data/finances/cash-balance.yaml`](../../cursor/data/finances/cash-balance.yaml) · [executive-dashboard-guide](../plans/executive-dashboard-guide.md)
+  - **関連:** [`data/finance/cash-balance.yaml`](../../data/finance/cash-balance.yaml) · [executive-dashboard-guide](../plans/executive-dashboard-guide.md)
   - **工数:** 30分
 
 - [ ] **[P0] B/S 3項目の原資料を入手する（資本金・繰越剰余金・銀行残高）**
@@ -55,13 +55,13 @@
 - [ ] **[P0] `kamezawa-secrets.yaml` を実値で作成する**
   - **やること:** `cp kamezawa-secrets.yaml.example kamezawa-secrets.yaml` → スマートロック・Wi-Fi・緊急連絡先・設備位置を記入（gitignore 済み）
   - **なぜ:** 日常運用・緊急時対応が example のままでは現場で使えない
-  - **関連:** [`cursor/data/operations/kamezawa-secrets.yaml.example`](../../cursor/data/operations/kamezawa-secrets.yaml.example) · [pre-opening C3–C6](../operations/lodging/pre-opening-checklist.md)
+  - **関連:** [`data/operations/kamezawa-secrets.yaml.example`](../../data/operations/kamezawa-secrets.yaml.example) · [pre-opening C3–C6](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
   - **工数:** 1時間
 
 - [ ] **[P0] CTR-012 清掃業者を1社選定し契約締結する**
   - **やること:** 候補3社テンプレから選定 → 契約締結 → CTR-012 を executed 化
   - **なぜ:** 清掃未契約のままでは turnover 運用が属人化・コンプライアンスリスク
-  - **関連:** [CTR-012](../contracts/CTR-012/01-draft.md) · [pre-opening E3](../operations/lodging/pre-opening-checklist.md)
+  - **関連:** [CTR-012](../contracts/CTR-012/01-draft.md) · [pre-opening E3](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
   - **工数:** 半日
 
 ---
@@ -117,37 +117,37 @@
 - [ ] **[P0] 営業許可証を施設内に掲示する**
   - **やること:** 旅館業許可証を見やすい場所に掲示
   - **なぜ:** 旅館業法上の義務。未掲示は行政指導対象
-  - **関連:** [pre-opening A2](../operations/lodging/pre-opening-checklist.md)
+  - **関連:** [pre-opening A2](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
   - **工数:** 15分
 
 - [ ] **[P1] 許可証・申請控えをスキャン保管する**
-  - **やること:** スキャン → `docs/corporate/licenses/ryokan/records/` → `steward io inbox add` で台帳登録
+  - **やること:** スキャン → `docs/company/licenses/ryokan/records/` → `steward io inbox add` で台帳登録
   - **なぜ:** 監査・変更届・引継ぎの証跡
-  - **関連:** [pre-opening A3](../operations/lodging/pre-opening-checklist.md) · [licenses/](../corporate/licenses/)
+  - **関連:** [pre-opening A3](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md) · [licenses/](../licenses/)
   - **工数:** 30分
 
 - [ ] **[P1] ゲスト向け掲示 PDF を本番版で outbox 出力する**
-  - **やること:** House Rules・宿泊約款等を PDF 再生成 → `docs/outbox/` 登録
+  - **やること:** House Rules・宿泊約款等を PDF 再生成 → `docs/io/outbox/` 登録
   - **なぜ:** test PDF は登録済みだが **本番掲示版** が未出力
-  - **関連:** [pre-opening D9](../operations/lodging/pre-opening-checklist.md) · [guest-facing テンプレ](../operations/lodging/templates/guest-facing/)
+  - **関連:** [pre-opening D9](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md) · [guest-facing テンプレ](../properties/PROP-002-kamezawa/operations/templates/guest-facing/)
   - **工数:** 30分
 
 - [ ] **[P1] 宿泊者名簿 3年保存運用を開始する**
   - **やること:** 様式に沿い最初の宿泊から記録開始（電磁保存可）
   - **なぜ:** 旅館業法・個人情報規程 REG-012 準拠
-  - **関連:** [pre-opening A5](../operations/lodging/pre-opening-checklist.md) · [daily-operations-guide.md](../operations/lodging/daily-operations-guide.md)
+  - **関連:** [pre-opening A5](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md) · [daily-operations-guide.md](../properties/PROP-002-kamezawa/operations/daily-operations-guide.md)
   - **工数:** 15分/回（初回設定 30分）
 
 - [ ] **[P2] 鍵・スマートロック運用ルールを CTR-012 別紙で確定する**
   - **やること:** 清掃業者への鍵渡し・コード更新ルールを文書化
   - **なぜ:** CTR-012 締結後の運用ギャップ解消
-  - **関連:** [pre-opening E4](../operations/lodging/pre-opening-checklist.md)
+  - **関連:** [pre-opening E4](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
   - **工数:** 30分
 
 - [ ] **[P2] 借家人賠償（番町・該当時）の要否を確認する**
   - **やること:** CTR-003 賃貸条件と保険証券を照合
   - **なぜ:** 賃貸借契約上の賠償義務と保険カバレッジの整合
-  - **関連:** [pre-opening B9](../operations/lodging/pre-opening-checklist.md) · [CTR-003](../contracts/CTR-003/02-executed.md)
+  - **関連:** [pre-opening B9](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md) · [CTR-003](../contracts/CTR-003/02-executed.md)
   - **工数:** 30分
 
 ---
@@ -191,7 +191,7 @@
 - [ ] **[P1] 毎日 `npm run daily` を実行する**
   - **やること:** validate · dashboard · io status · deps 鮮度チェックを1日1回
   - **なぜ:** データ整合・契約アラート・成熟度 **96%→維持** の要
-  - **関連:** [steward-assessment 自動化](../iso/steward-assessment.md) · [executive-dashboard-guide](../plans/executive-dashboard-guide.md)
+  - **関連:** [steward-assessment 自動化](../compliance/iso/steward-assessment.md) · [executive-dashboard-guide](../plans/executive-dashboard-guide.md)
   - **工数:** 5分/日
 
 - [ ] **[P1] 週次: `steward alerts` で契約期限・高リスクを確認する**
@@ -201,27 +201,27 @@
   - **工数:** 10分/週
 
 - [ ] **[P1] 月次: 予実 YAML 更新とダッシュボード月次レビュー**
-  - **やること:** `cursor/data/finances/monthly/` または予実 YAML 更新 → dashboard 確認 → ナラティブ1行記録
+  - **やること:** `data/finance/monthly/` または予実 YAML 更新 → dashboard 確認 → ナラティブ1行記録
   - **なぜ:** キャッシュフロー・損益分岐・計画比の経営判断材料
-  - **関連:** [cashflow-detail.md](../plans/cashflow-detail.md) · [yojitsu-fy2026.yaml](../../cursor/data/plans/yojitsu-fy2026.yaml)
+  - **関連:** [cashflow-detail.md](../plans/cashflow-detail.md) · [yojitsu-fy2026.yaml](../../data/plans/yojitsu-fy2026.yaml)
   - **工数:** 30分/月
 
 - [ ] **[P1] 2026/8/18 内部監査第1回を実施する**
   - **やること:** ISO 監査計画に沿い L2 記録・不適合の有無を確認
   - **なぜ:** REG-009〜016 制定後の初回監査（プレースホルダー日付確定済み）
-  - **関連:** [internal-audit-plan-fy2026.md](../iso/internal-audit-plan-fy2026.md) · [pre-opening E7](../operations/lodging/pre-opening-checklist.md)
+  - **関連:** [internal-audit-plan-fy2026.md](../compliance/iso/internal-audit-plan-fy2026.md) · [pre-opening E7](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
   - **工数:** 半日
 
 - [ ] **[P2] Inbox 未処理を週次でゼロにする**
   - **やること:** `steward io status` → スキャン・申請書を処理 or 台帳登録
   - **なぜ:** 現状 inbox 空を維持。受信滞留は高緊急度アラート対象
-  - **関連:** [docs/inbox/](../inbox/00-このフォルダについて.md)
+  - **関連:** [docs/io/inbox/](../inbox/00-このフォルダについて.md)
   - **工数:** 15分/週
 
 - [ ] **[P2] 四半期: steward-assessment と本ファイルを見直す**
   - **やること:** 完了項目にチェック → 新規ブロッカーを追記
   - **なぜ:** 96%→100% 進捗の可視化・次期準備
-  - **関連:** [steward-assessment.md](../iso/steward-assessment.md)
+  - **関連:** [steward-assessment.md](../compliance/iso/steward-assessment.md)
   - **工数:** 30分/四半期
 
 ---
@@ -243,8 +243,8 @@
 
 | ファイル | 内容 |
 |---------|------|
-| [steward-assessment.md](../iso/steward-assessment.md) | 全体完成度 96% · Top 3 推奨 |
-| [pre-opening-checklist.md](../operations/lodging/pre-opening-checklist.md) | 亀沢 42項目詳細 |
+| [steward-assessment.md](../compliance/iso/steward-assessment.md) | 全体完成度 96% · Top 3 推奨 |
+| [pre-opening-checklist.md](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md) | 亀沢 42項目詳細 |
 | [fy2026-tax-readiness-assessment.md](tax/fy2026-tax-readiness-assessment.md) | 申告可否・e-Tax ブロッカー |
 | [fy2026-tax-advisor-checklist.md](fy2026-tax-advisor-checklist.md) | 税理士依頼10項目 |
 | [executive-dashboard-guide.md](../plans/executive-dashboard-guide.md) | KPI 定義・daily 運用 |

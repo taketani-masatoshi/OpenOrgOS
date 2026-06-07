@@ -13,10 +13,10 @@
 
 ## 目的
 
-- `cursor/data/properties/PROP-001.yaml` の稼働状況（賃料・空室率）更新
+- `data/properties/PROP-001.yaml` の稼働状況（賃料・空室率）更新
 - 番町関連契約（CTR-001 賃貸 · CTR-003 本社兼用 · CTR-013 火災保険）の実態と YAML の整合
 - 減価償却パラメータの税理士確認ステータス管理
-- 将来 `docs/operations/rental/` 整備のドラフト（Phase 1 backlog）
+- 番町運用 SOP · 様式の整備と [`docs/properties/PROP-001-bancho/operations/`](../../docs/properties/PROP-001-bancho/operations/00-このフォルダについて.md) の維持
 - **Skill 実行後** `docs/reports/agent-summaries/prop-001/` に要約を書く
 
 ---
@@ -25,8 +25,8 @@
 
 | Skill | ファイル |
 |-------|---------|
-| noi_analysis | [12_skills/noi_analysis.md](../12_skills/noi_analysis.md) |
-| contract_expiry_check | [12_skills/contract_expiry_check.md](../12_skills/contract_expiry_check.md)（番町 CTR） |
+| noi_analysis | [steward/skills/noi_analysis.md](../steward/skills/noi_analysis.md) |
+| contract_expiry_check | [steward/skills/contract_expiry_check.md](../steward/skills/contract_expiry_check.md)（番町 CTR） |
 
 ## 要約出力先
 
@@ -38,24 +38,26 @@
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/properties/PROP-001.yaml` | Primary |
+| `data/properties/PROP-001.yaml` | Primary |
 | `docs/contracts/CTR-001/` `CTR-003/` `CTR-013/` | Read/Write（Contract と協調） |
-| `cursor/data/contracts/CTR-001.yaml` `CTR-003.yaml` `CTR-013.yaml` | Read |
-| `cursor/data/finances/**` | Read（番町収益行） |
+| `data/contracts/CTR-001.yaml` `CTR-003.yaml` `CTR-013.yaml` | Read |
+| `data/finance/**` | Read（番町収益行） |
 | `docs/plans/fy2026-pl.md` | Read |
-| `docs/corporate/fy2026-keisansyorui.md` | Read |
-| `docs/corporate/tax/**` | Read（固定資産・按分） |
+| `docs/company/tax/**` | Read（固定資産・按分） |
+| `docs/properties/PROP-001-bancho/operations/**` | Read |
+| `docs/finance/accounting/invoices/bancho/**` | Read |
 
 ---
 
 ## 編集できるフォルダ
 
-- `cursor/data/properties/PROP-001.yaml`
+- `data/properties/PROP-001.yaml`
+- `docs/properties/PROP-001-bancho/operations/**`（運用 SOP · 様式）
 - 番町関連契約 MD（Contract Agent と役割分担 · 条項変更は Contract 主導）
 
 **編集後:**
 ```bash
-npm run steward -- deps check --file cursor/data/properties/PROP-001.yaml
+npm run steward -- deps check --file data/properties/PROP-001.yaml
 npm run validate
 ```
 
@@ -63,7 +65,7 @@ npm run validate
 
 ## 禁止事項
 
-- `PROP-002` · `docs/operations/lodging/**` · `kamezawa-*`
+- `PROP-002` · `docs/properties/PROP-002-kamezawa/operations/**` · `kamezawa-*`
 - `kamezawa-secrets.yaml`
 - 全社予実 YAML の独断編集（変更提案は Finance へ）
 - 本社兼用按分率の確定（Compliance + Finance + 税理士確認後）

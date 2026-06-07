@@ -8,7 +8,7 @@ import {
   validateAll,
 } from "./data.js";
 import { runIntegrityChecks, summarizeIntegrity } from "./integrity.js";
-import { CURSOR_DIR, DATA_DIR, ROOT_DIR } from "./utils.js";
+import { DATA_DIR, ROOT_DIR } from "./utils.js";
 
 export interface HealthMetric {
   id: string;
@@ -119,7 +119,7 @@ export function computeDataHealth(): DataHealthReport {
   try {
     loadOperationsPublic();
     opsScore = 5;
-    if (!existsSync(join(CURSOR_DIR, "data", "operations", "kamezawa-secrets.yaml"))) {
+    if (!existsSync(join(DATA_DIR, "operations", "kamezawa-secrets.yaml"))) {
       recommendations.push("kamezawa-secrets.yaml を作成（Wi-Fi・緊急連絡）");
     } else {
       opsScore = 10;
@@ -197,11 +197,11 @@ export function dataCatalogPaths(): string[] {
     const full = join(ROOT_DIR, rel);
     if (existsSync(full)) paths.push(rel);
   };
-  walk("cursor/data/company.yaml");
-  walk("cursor/data/operations/kamezawa-public.yaml");
-  walk("cursor/data/hr/employees.yaml");
-  walk("cursor/data/finances/loans.yaml");
-  walk("cursor/data/finances/fixed-costs.yaml");
-  walk("cursor/data/finances/payroll.yaml");
+  walk("data/company.yaml");
+  walk("data/operations/kamezawa-public.yaml");
+  walk("data/hr/employees.yaml");
+  walk("data/finance/loans.yaml");
+  walk("data/finance/fixed-costs.yaml");
+  walk("data/finance/payroll.yaml");
   return paths;
 }

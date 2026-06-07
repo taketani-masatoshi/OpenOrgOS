@@ -59,7 +59,7 @@
 
 1. 管理組合規約・CTR-003 の保険条項確認
 2. 保険代理店で **テナント向け火災保険 / 企業総合** を見積
-3. 証券 PDF を `02-executed.md` または `docs/corporate/` 配下に保管
+3. 証券 PDF を `02-executed.md` または `docs/company/` 配下に保管
 4. YAML `status: executed`、`executed_date`、保険会社名・証券番号を記録
 
 ---

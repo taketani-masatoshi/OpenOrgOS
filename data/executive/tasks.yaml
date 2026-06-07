@@ -39,5 +39,5 @@ tasks:
     source: one-on-ones OOO-001
 
 notes: |
-  P0 経営残タスクは docs/corporate/executive-remaining-tasks.md が正。
+  P0 経営残タスクは docs/company/executive-remaining-tasks.md が正。
   本ファイルは社長の行動・対外・準備タスクを Secretary が管理する。

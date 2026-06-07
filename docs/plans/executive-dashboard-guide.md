@@ -59,7 +59,7 @@
 
 ## 月次トレンドの読み方
 
-予実 YAML（`cursor/data/plans/yojitsu-fy*.yaml`）の月次行から:
+予実 YAML（`data/plans/yojitsu-fy*.yaml`）の月次行から:
 
 1. **開業前** — 番町賃料のみ、設備投資（capex）集中月は単月赤字が計画内
 2. **開業後** — 亀沢売上加算、運営費（変動費）発生
@@ -96,7 +96,7 @@
 
 | 項目 | 登録先（案） | 影響 |
 |------|-------------|------|
-| 現預金残高 | `cursor/data/finances/cash-balance.yaml`（未作成） | ランウェイ（赤字時）· 目標到達期間（黒字時） |
+| 現預金残高 | `data/finance/cash-balance.yaml`（未作成） | ランウェイ（赤字時）· 目標到達期間（黒字時） |
 | 返済スケジュール詳細 | `business-plan.yaml` / LOAN 返済表 | 長期 CF |
 | 翻訳・サービス収支 | 月次 YAML | 売上構成比 |
 | 保険証券 | CTR-013/014 executed | リスク |

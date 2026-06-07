@@ -6,9 +6,9 @@
 
 ## 入力
 
-- `cursor/data/plans/investment-plan.yaml`
+- `data/plans/investment-plan.yaml`
 - 工事見積 · 物件 CAPEX 計画 MD
-- `cursor/data/properties/PROP-002.yaml`（亀沢上置き等）
+- `data/properties/PROP-002.yaml`（亀沢上置き等）
 
 ## 出力
 
@@ -24,13 +24,13 @@ Finance Agent · Hospitality Agent（亀沢 CAPEX 入力）
 
 | 種別 | パス |
 |------|------|
-| 正データ | `cursor/data/plans/investment-plan.yaml` |
+| 正データ | `data/plans/investment-plan.yaml` |
 | 要約 | `docs/reports/agent-summaries/finance/` |
 
 ## CLI
 
 ```bash
-npm run steward -- deps check --file cursor/data/plans/investment-plan.yaml
+npm run steward -- deps check --file data/plans/investment-plan.yaml
 npm run validate
 npm run steward -- sync all
 ```

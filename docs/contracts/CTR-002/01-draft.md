@@ -14,7 +14,7 @@
 | 売主 | **TBD** |
 | 物件 | 東京都千代田区二番町 番町ハイム **312号室** |
 | 売買代金 | **16,600,000円** |
-| 引渡日 / 登記 | **2025年2月10日**（[`PROP-001`](../../../cursor/data/properties/PROP-001.yaml)） |
+| 引渡日 / 登記 | **2025年2月10日**（[`PROP-001`](../../../data/properties/PROP-001.yaml)） |
 | 資金調達 | 役員貸付 LOAN-001 全額 |
 
 ---
@@ -32,8 +32,8 @@
 
 | 種別 | 参照 |
 |------|------|
-| 物件 | [`PROP-001`](../../../cursor/data/properties/PROP-001.yaml) |
-| 融資 | [`LOAN-001`](../../../cursor/data/finances/loans.yaml) |
+| 物件 | [`PROP-001`](../../../data/properties/PROP-001.yaml) |
+| 融資 | [`LOAN-001`](../../../data/finance/loans.yaml) |
 | 賃貸 | [CTR-003](../CTR-003/01-draft.md) |
 
 **※ 最終版は司法書士・税理士確認を推奨。**

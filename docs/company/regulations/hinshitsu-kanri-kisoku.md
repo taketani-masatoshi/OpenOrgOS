@@ -17,7 +17,7 @@
 
 1. **品質マネジメントシステム（QMS）のスコープ:** 株式会社MAL における次の **サービス提供**。
    - 翻訳・通訳、業務DX支援、ソフトウェア開発・SES、PMO、Steward OS 提供
-2. **スコープ文書:** 本規程第2条・第3条・第3条の2及び [`docs/iso/ISO-9001/quality-objectives.md`](../../iso/ISO-9001/quality-objectives.md) を QMS スコープの維持文書とする。
+2. **スコープ文書:** 本規程第2条・第3条・第3条の2及び [`docs/compliance/iso/ISO-9001/quality-objectives.md`](../../compliance/iso/ISO-9001/quality-objectives.md) を QMS スコープの維持文書とする。
 3. **宿泊サービス:** 亀沢旅館は [REG-012 宿泊運営・サステナビリティ規程](shukuhaku-unyo-kisoku.md) 及び ISO 21401 を **主たる管理枠組** とする。9001 では、ゲスト満足・クレーム（REG-012 第5条）を **マネジメントレビュー**（[REG-016](naibu-kansa-kisoku.md) 第7条）へ入力する。
 4. **除外:** 製造・物理製品の生産プロセスは対象外（サービス業に限定）。
 
@@ -30,13 +30,13 @@
 ## 第3条の2（品質目標）
 
 1. 品質目標は **関連する機能・プロセス** ごとに、**測定可能** であり、品質方針と整合するものとする。
-2. 目標は [`docs/iso/ISO-9001/quality-objectives.md`](../../iso/ISO-9001/quality-objectives.md) に **年1回** 設定・見直し、取締役会で承認する。
+2. 目標は [`docs/compliance/iso/ISO-9001/quality-objectives.md`](../../compliance/iso/ISO-9001/quality-objectives.md) に **年1回** 設定・見直し、取締役会で承認する。
 3. 達成状況は **四半期ごと** に確認し、年次マネジメントレビュー（REG-016）で評価する。
 
 ## 第3条の3（リスクと機会）
 
 1. 品質・納期・顧客満足に影響する **リスクと機会** を **年1回以上** 見直す。
-2. 記録: [`docs/iso/ISO-9001/risk-opportunities.csv`](../../iso/ISO-9001/risk-opportunities.csv)
+2. 記録: [`docs/compliance/iso/ISO-9001/risk-opportunities.csv`](../../compliance/iso/ISO-9001/risk-opportunities.csv)
 3. 重大なリスクは是正措置又は [REG-004](ringi-kessai-kisoku.md) の決裁区分に従い対応する。
 
 ## 第4条（組織・責任）
@@ -50,7 +50,7 @@
 
 ## 第4条の2（QMSプロセス）
 
-次のプロセス及びその相互作用を QMS の基本とする。詳細は各条及び [`docs/iso/ISO-9001/`](../../iso/ISO-9001/) に記録する。
+次のプロセス及びその相互作用を QMS の基本とする。詳細は各条及び [`docs/compliance/iso/ISO-9001/`](../../compliance/iso/ISO-9001/) に記録する。
 
 ```
 受注・要求レビュー → 実行・納品 → 顧客フィードバック
@@ -69,7 +69,7 @@
 ## 第4条の3（力量）
 
 1. QMS に影響を与える業務（受注、実行、納品、不適合対応）を行う者は、 **必要な力量**（教育・訓練・技能・経験）を有すること。
-2. 従業員がいない期間は、代表取締役2名が該当する。力量は **年1回** 自己確認し、[`docs/iso/ISO-9001/`](../../iso/ISO-9001/) に記録する。
+2. 従業員がいない期間は、代表取締役2名が該当する。力量は **年1回** 自己確認し、[`docs/compliance/iso/ISO-9001/`](../../compliance/iso/ISO-9001/) に記録する。
 3. 力量不足が判明した場合、OJT・外部研修等の措置を講じ、効果を確認する。
 
 ## 第5条（受注・要求事項のレビュー）
@@ -93,13 +93,13 @@
 
 1. 外注先は契約台帳に登録する。
 2. 初回又は重要な外注は、能力・納期・秘密保持を確認する。
-3. 評価記録は [`docs/iso/ISO-9001/`](../../iso/ISO-9001/) に残す。
+3. 評価記録は [`docs/compliance/iso/ISO-9001/`](../../compliance/iso/ISO-9001/) に残す。
 
 ## 第8条（不適合・クレーム）
 
 1. **不適合:** 要求未達、誤訳、バグ、納期遅延等。
 2. 不適合又はクレームを受けた場合、**7日以内** に原因を記録し、是正措置を実施する。
-3. 記録様式: [`docs/iso/ISO-9001/nonconformance-log.csv`](../../iso/ISO-9001/nonconformance-log.csv)
+3. 記録様式: [`docs/compliance/iso/ISO-9001/nonconformance-log.csv`](../../compliance/iso/ISO-9001/nonconformance-log.csv)
 4. 再発防止が必要な場合は、プロセス又はチェックリストを改定する。
 5. 宿泊に関するクレームは REG-012 第5条の記録を MR へ集約する。
 
@@ -117,5 +117,5 @@
 
 ## 関連
 
-- [ISO 9001 規程ギャップ評価](../../iso/ISO-9001/regulation-gap-assessment.md)
-- [business-plan.yaml](../../../cursor/data/plans/business-plan.yaml)
+- [ISO 9001 規程ギャップ評価](../../compliance/iso/ISO-9001/regulation-gap-assessment.md)
+- [business-plan.yaml](../../../data/plans/business-plan.yaml)

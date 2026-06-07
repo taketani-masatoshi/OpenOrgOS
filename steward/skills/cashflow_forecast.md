@@ -6,10 +6,10 @@
 
 ## 入力
 
-- `cursor/data/finances/cash-balance.yaml`
-- `cursor/data/finances/loans.yaml`
-- `cursor/data/plans/revenue-plan.yaml` · `expense-plan.yaml`
-- `cursor/data/plans/investment-plan.yaml`
+- `data/finance/cash-balance.yaml`
+- `data/finance/loans.yaml`
+- `data/plans/revenue-plan.yaml` · `expense-plan.yaml`
+- `data/plans/investment-plan.yaml`
 
 ## 出力
 

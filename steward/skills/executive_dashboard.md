@@ -8,18 +8,18 @@
 
 | データ | パス |
 |--------|------|
-| 会社 | `cursor/data/company.yaml` |
-| 現預金 | `cursor/data/finances/cash-balance.yaml` |
-| 借入 | `cursor/data/finances/loans.yaml` |
-| 返済計画 | `cursor/data/plans/debt-plan.yaml` |
-| 固定費 | `cursor/data/finances/fixed-costs.yaml` |
-| 給与 | `cursor/data/finances/payroll.yaml` |
-| 月次実績 | `cursor/data/finances/monthly/{YYYY-MM}.yaml` |
-| 予実 | `cursor/data/plans/yojitsu-fy*.yaml` |
-| 契約 | `cursor/data/contracts/*.yaml` |
-| 収益計画 | `cursor/data/plans/property-revenue.yaml` |
-| 事業計画 | `cursor/data/plans/business-plan.yaml` |
-| I/O 台帳 | `cursor/data/document-io.yaml` |
+| 会社 | `data/company.yaml` |
+| 現預金 | `data/finance/cash-balance.yaml` |
+| 借入 | `data/finance/loans.yaml` |
+| 返済計画 | `data/plans/debt-plan.yaml` |
+| 固定費 | `data/finance/fixed-costs.yaml` |
+| 給与 | `data/finance/payroll.yaml` |
+| 月次実績 | `data/finance/monthly/{YYYY-MM}.yaml` |
+| 予実 | `data/plans/yojitsu-fy*.yaml` |
+| 契約 | `data/contracts/*.yaml` |
+| 収益計画 | `data/plans/property-revenue.yaml` |
+| 事業計画 | `data/plans/business-plan.yaml` |
+| I/O 台帳 | `data/document-io.yaml` |
 
 ## 出力
 
@@ -27,7 +27,7 @@
 |------|------|
 | 経営ダッシュボード MD | `docs/reports/dashboard/YYYY-MM-DD.md` |
 | Agent 要約 7 件 | `docs/reports/agent-summaries/{finance,contract,prop-001,prop-002,compliance,operations,executive}/` |
-| 経営メモ（参照） | `docs/reports/executive-notes/` · `docs/corporate/executive-remaining-tasks.md` |
+| 経営メモ（参照） | `docs/reports/executive-notes/` · `docs/company/executive-remaining-tasks.md` |
 
 ## 使用 Agent
 
@@ -77,5 +77,5 @@ npm run steward -- dashboard
 
 - 現預金残高の **invent**（`cash-balance.yaml` 未確定時は TBD 表示）
 - 返済実行 · 契約更新の **自動決定**
-- Data 原本（`cursor/data/**/*.yaml`）の Executive 直編集
+- Data 原本（`data/**/*.yaml`）の Executive 直編集
 - Agent 要約を省略した全件 YAML 走査

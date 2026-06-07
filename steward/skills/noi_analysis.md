@@ -6,9 +6,9 @@ PROP-001 番町の NOI（純営業収益）を試算し、改善 levers を提�
 
 ## 入力
 
-- `cursor/data/properties/PROP-001.yaml`（rental.*）
-- `cursor/data/plans/property-revenue.yaml`（番町行）
-- `cursor/data/plans/expense-plan.yaml`（番町費用）
+- `data/properties/PROP-001.yaml`（rental.*）
+- `data/plans/property-revenue.yaml`（番町行）
+- `data/plans/expense-plan.yaml`（番町費用）
 
 ## 出力
 

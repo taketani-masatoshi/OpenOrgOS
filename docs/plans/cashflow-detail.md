@@ -1,6 +1,6 @@
 # キャッシュフロー詳細表
 
-経営ダッシュボードからリンクされる月次キャッシュフローの詳細。数値の正データは `cursor/data/` YAML。
+経営ダッシュボードからリンクされる月次キャッシュフローの詳細。数値の正データは `data/` YAML。
 
 ---
 
@@ -25,7 +25,7 @@
 
 **年間合計（予実）:** 売上 7,500,000円 · 当期純利益 3,391,309円（税引前営業利益 4,166,309円）
 
-ソース: `cursor/data/plans/yojitsu-fy2026.yaml`
+ソース: `data/plans/yojitsu-fy2026.yaml`
 
 ---
 
@@ -74,8 +74,8 @@ npm run steward -- forecast -o 2026-06-06.md
 
 ## 更新手順
 
-1. 月次実績 → `cursor/data/finances/monthly/{YYYY-MM}.yaml`
-2. 予実修正 → `cursor/data/plans/yojitsu-fy*.yaml`
+1. 月次実績 → `data/finance/monthly/{YYYY-MM}.yaml`
+2. 予実修正 → `data/plans/yojitsu-fy*.yaml`
 3. `npm run validate`
 4. `npm run steward -- dashboard`
 

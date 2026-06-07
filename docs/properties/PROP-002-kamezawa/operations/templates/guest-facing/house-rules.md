@@ -72,6 +72,6 @@ We dispose on the proper collection days. Thank you for sorting.
 ---
 
 **MAL Inc.** · info@malkk.com  
-Privacy: [guest privacy notice](../../../privacy/guest-privacy-notice.md)
+Privacy: [guest privacy notice](../../../../../../compliance/privacy/guest-privacy-notice.md)
 
 *Please read the [Local Guide (English)](local-guide-en.md) for sightseeing and transport.*

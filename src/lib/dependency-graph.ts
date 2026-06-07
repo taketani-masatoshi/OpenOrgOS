@@ -96,7 +96,7 @@ export function resolveSourceNodes(graph: DependencyGraph, input: string): Depen
     }
   }
 
-  // 契約・物件 ID からの部分一致（例: CTR-008 → cursor/data/contracts/CTR-008.yaml）
+  // 契約・物件 ID からの部分一致（例: CTR-008 → data/contracts/CTR-008.yaml）
   if (matched.size === 0) {
     for (const node of graph.nodes) {
       if (node.id.includes(idOnly) || (node.path && normalizePath(node.path).includes(idOnly))) {
@@ -266,7 +266,7 @@ export function formatImpactMarkdown(
   lines.push("## 推奨コマンド", "");
   lines.push("```bash");
   lines.push("npm run validate");
-  if (impacts.some((i) => i.action === "sync" || i.path?.startsWith("docs/data/"))) {
+  if (impacts.some((i) => i.action === "sync" || i.path?.startsWith("docs/exports/"))) {
     lines.push("npm run steward -- sync all");
   }
   if (impacts.some((i) => i.nodeId.includes("dashboard") || i.path?.includes("reports/dashboard"))) {

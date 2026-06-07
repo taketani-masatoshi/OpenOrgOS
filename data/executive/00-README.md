@@ -1,4 +1,4 @@
-# cursor/data/executive — 社長オペレーション正データ
+# data/executive — 社長オペレーション正データ
 
 **Owner:** Secretary Agent（秘書エージェント）  
 **用途:** 社長のスケジュール・タスク・1-on-1・社外連絡先の Source of Truth
@@ -19,8 +19,8 @@
 ## 境界
 
 - **Executive Steward** は本ゾーンを **読まない**（経営 KPI は dashboard / agent-summaries 経由）
-- **Secretary** は `cursor/data/finances/**` · `contracts/**` を **読まない**
-- 詳細: [13_rules/secretary_steward_boundary.md](../../13_rules/secretary_steward_boundary.md)
+- **Secretary** は `data/finance/**` · `contracts/**` を **読まない**
+- 詳細: [steward/rules/secretary_steward_boundary.md](../../steward/rules/secretary_steward_boundary.md)
 
 ---
 

@@ -1,6 +1,6 @@
 # 内部監査計画 — FY2026
 
-**規程:** [REG-016 内部監査規程](../corporate/regulations/naibu-kansa-kisoku.md)  
+**規程:** [REG-016 内部監査規程](../../company/regulations/naibu-kansa-kisoku.md)  
 **年度:** 2026年6月 〜 2027年5月  
 **作成:** 2026年6月6日（取締役会決議第1号に基づく）
 
@@ -29,7 +29,7 @@
 
 ## チェック観点（共通）
 
-- [ ] 規程 v1.0 が `docs/corporate/regulations/` に存在
+- [ ] 規程 v1.0 が `docs/company/regulations/` に存在
 - [ ] `operations/records/` に記録が開始されている
 - [ ] 契約 executed / 手続パケットが最新
 - [ ] 前回指摘の是正完了
@@ -38,10 +38,10 @@
 
 ## 記録保管
 
-`docs/iso/audit-records/fy2026/`（監査報告・是正記録）
+`docs/compliance/iso/audit-records/fy2026/`（監査報告・是正記録）
 
 ---
 
 ## 関連
 
-- [2026/6/6 取締役会議事録](../corporate/fy2026-torishimari-gijiroku-regulations-iso.md)
+- [2026/6/6 取締役会議事録](../../company/fy2026-torishimari-gijiroku-regulations-iso.md)

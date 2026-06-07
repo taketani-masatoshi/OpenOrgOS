@@ -1,6 +1,6 @@
 # テンプレート — 6. 契約計画（10）
 
-**保存先:** `docs/plans/contracts/` · **正データ:** `cursor/data/contracts/`
+**保存先:** `docs/plans/contracts/` · **正データ:** `data/contracts/`
 
 ---
 
@@ -58,7 +58,7 @@
 | **必要な入力** | contracts YAML · maturity · renewal |
 | **出力** | 期限レポート · タスク |
 | **KPI** | 更新漏れ 0 · アラート lead time |
-| **関連フォルダ** | `cursor/data/contracts/` · `docs/plans/contracts/renewal-management-plan.md` |
+| **関連フォルダ** | `data/contracts/` · `docs/plans/contracts/renewal-management-plan.md` |
 | **担当** | Contract · Operations |
 | **更新頻度** | 月次 |
 | **リスク** | 自動通知未実装 |

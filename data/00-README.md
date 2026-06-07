@@ -1,6 +1,6 @@
-# cursor/data — 正データカタログ
+# data/ — 正データカタログ
 
-**Source of Truth:** このディレクトリの YAML のみ。人向け表は `docs/data/*.csv`（`steward sync all` で生成）。
+**Source of Truth:** このディレクトリの YAML のみ。人向け表は `docs/exports/*.csv`（`steward sync all` で生成）。
 
 ---
 
@@ -11,11 +11,14 @@
 | `company.yaml` | company | 法人基本情報 |
 | `properties/PROP-*.yaml` | property | 物件台帳 |
 | `contracts/CTR-*.yaml` | contract | 契約台帳 |
-| `finances/monthly/{YYYY-MM}.yaml` | monthlyFinance | 月次収支 |
-| `finances/fixed-costs.yaml` | fixedCosts | 本社固定費 |
-| `finances/payroll.yaml` | payroll | 役員報酬 |
-| `finances/loans.yaml` | loans | 借入・役員貸付 |
-| `finances/cash-balance.yaml` | cashBalance | 現預金残高（ランウェイ） |
+| `finance/monthly/{YYYY-MM}.yaml` | monthlyFinance | 月次収支 |
+| `finance/fixed-costs.yaml` | fixedCosts | 本社固定費 |
+| `finance/payroll.yaml` | payroll | 役員報酬 |
+| `finance/loans.yaml` | loans | 借入・役員貸付 |
+| `finance/cash-balance.yaml` | cashBalance | 現預金残高（ランウェイ） |
+| `finance/fixed-assets.yaml` | fixedAssets | 固定資産台帳 |
+| `finance/tax-profile.yaml` | taxProfile | 税務プロファイル |
+| `finance/chart-of-accounts.yaml` | chartOfAccounts | 勘定科目 |
 | `plans/business-plan.yaml` | businessPlan | 中期計画 |
 | `plans/yojitsu-{year\|fy}.yaml` | yojitsuPlan | 予実（カレンダー/FY） |
 | `plans/revenue-plan.yaml` | revenuePlan | 売上計画 |
@@ -56,10 +59,10 @@ operations.property_id ──→ PROP.id
 npm run validate              # スキーマ + 参照エラー
 npm run validate -- --warnings  # 警告も表示
 npm run steward -- status     # データ成熟度レポート
-npm run steward -- sync all   # docs/data CSV を YAML から再生成
+npm run steward -- sync all   # docs/exports CSV を YAML から再生成
 npm run steward -- io status  # 受信/出力トレイ
 npm run steward -- io guide   # I/O フロー
-npm run steward -- deps check --file cursor/data/...  # 依存影響チェック
+npm run steward -- deps check --file data/...  # 依存影響チェック
 npm run steward -- deps graph # 依存関係マップ
 ```
 
@@ -73,6 +76,6 @@ npm run steward -- deps graph # 依存関係マップ
 4. `npm run steward -- sync all`（CSV 利用時）
 5. 必要なら `docs/` の MD を同期
 
-詳細: [docs/plans/dependency-update-guide.md](../../docs/plans/dependency-update-guide.md)
+詳細: [docs/plans/dependency-update-guide.md](../docs/plans/dependency-update-guide.md)
 
 *機密・個情は `records/` または `*-secrets.yaml`（gitignore）のみ。*

@@ -42,18 +42,18 @@
 
 | データ | パス |
 |--------|------|
-| 会社情報 | [`cursor/data/company.yaml`](../../../../cursor/data/company.yaml) |
-| 月次予実 | [`cursor/data/plans/yojitsu-fy2026.yaml`](../../../../cursor/data/plans/yojitsu-fy2026.yaml) |
-| 利益計画 | [`cursor/data/plans/profit-plan.yaml`](../../../../cursor/data/plans/profit-plan.yaml) |
-| 費用計画 | [`cursor/data/plans/expense-plan.yaml`](../../../../cursor/data/plans/expense-plan.yaml) |
-| 物件 | [`cursor/data/properties/`](../../../../cursor/data/properties/) |
-| 融資 | [`cursor/data/finances/loans.yaml`](../../../../cursor/data/finances/loans.yaml) |
+| 会社情報 | [`data/company.yaml`](../../../../data/company.yaml) |
+| 月次予実 | [`data/plans/yojitsu-fy2026.yaml`](../../../../data/plans/yojitsu-fy2026.yaml) |
+| 利益計画 | [`data/plans/profit-plan.yaml`](../../../../data/plans/profit-plan.yaml) |
+| 費用計画 | [`data/plans/expense-plan.yaml`](../../../../data/plans/expense-plan.yaml) |
+| 物件 | [`data/properties/`](../../../../data/properties/) |
+| 融資 | [`data/finance/loans.yaml`](../../../../data/finance/loans.yaml) |
 
 ---
 
 ## 4. inbox / outbox / licenses
 
-### 4-1. docs/inbox/（受信・未処理）
+### 4-1. docs/io/inbox/（受信・未処理）
 
 | 想定書類 | 用途 |
 |---------|------|
@@ -62,9 +62,9 @@
 | 税理士からのドラフト申告書 | 確認用 |
 | 登記簿謄本（最新） | 資本金 |
 
-索引: [`docs/inbox/00-このフォルダについて.md`](../../../../inbox/00-このフォルダについて.md)
+索引: [`docs/io/inbox/00-このフォルダについて.md`](../../../../inbox/00-このフォルダについて.md)
 
-### 4-2. docs/outbox/（提出・印刷済）
+### 4-2. docs/io/outbox/（提出・印刷済）
 
 | 想定書類 | 用途 |
 |---------|------|
@@ -72,9 +72,9 @@
 | 決算報告書 PDF | 株主総会 |
 | 償却資産税申告書（提出控） | 各区 |
 
-索引: [`docs/outbox/00-このフォルダについて.md`](../../../../outbox/00-このフォルダについて.md)
+索引: [`docs/io/outbox/00-このフォルダについて.md`](../../../../io/outbox/00-このフォルダについて.md)
 
-### 4-3. docs/corporate/licenses/
+### 4-3. docs/company/licenses/
 
 | サブフォルダ | 内容 |
 |-------------|------|

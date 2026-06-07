@@ -1,5 +1,5 @@
 # 主要社外連絡先（最小限・PII 過多禁止）
-# 個人の連絡先詳細は docs/operations/hr/records/ 等（Git 非追跡）
+# 個人の連絡先詳細は docs/company/hr/records/ 等（Git 非追跡）
 
 contacts:
   - id: EXT-001

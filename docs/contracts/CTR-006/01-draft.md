@@ -32,8 +32,8 @@
 
 | 種別 | 参照 |
 |------|------|
-| 物件 | [`PROP-002`](../../../cursor/data/properties/PROP-002.yaml) |
+| 物件 | [`PROP-002`](../../../data/properties/PROP-002.yaml) |
 | 建築 | [CTR-007](../CTR-007/01-draft.md) |
-| 融資 | [`LOAN-002`](../../../cursor/data/finances/loans.yaml) |
+| 融資 | [`LOAN-002`](../../../data/finance/loans.yaml) |
 
 **※ 最終版は司法書士確認を推奨。**

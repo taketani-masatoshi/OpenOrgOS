@@ -76,12 +76,12 @@
 | 施設賠償限度額 | |
 | 火災保険金額（建物） | |
 
-**保管:** [`docs/corporate/licenses/insurance/`](../../corporate/licenses/insurance/)
+**保管:** [`docs/company/licenses/insurance/`](../../company/licenses/insurance/)
 
 ---
 
 ## 関連
 
-- [開業前チェックリスト](../../operations/lodging/pre-opening-checklist.md)
+- [開業前チェックリスト](../../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
 - [CTR-012 清掃](../CTR-012/01-draft.md)
-- [宿泊者名簿様式](../../operations/lodging/templates/compliance/宿泊者名簿.csv)
+- [宿泊者名簿様式](../../properties/PROP-002-kamezawa/operations/templates/compliance/宿泊者名簿.csv)

@@ -91,8 +91,8 @@
 
 | 種別 | 参照 |
 |------|------|
-| 融資 | [`LOAN-001`](../../../cursor/data/finances/loans.yaml) |
-| 物件 | [`PROP-001`](../../../cursor/data/properties/PROP-001.yaml) |
+| 融資 | [`LOAN-001`](../../../data/finance/loans.yaml) |
+| 物件 | [`PROP-001`](../../../data/properties/PROP-001.yaml) |
 | 亀沢分 | [CTR-009](../CTR-009/01-draft.md) |
 
 **※ 最終版は税理士・弁護士確認を推奨。**

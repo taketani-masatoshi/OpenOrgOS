@@ -14,7 +14,7 @@
 | 予約チャネル | Airbnb（CTR-010）・Booking（CTR-011） |
 | 清掃 | 委託（CTR-012）。CO 後 **4〜6時間以内** 完了 |
 | 担当 | 代表取締役2名（フロント常駐なし） |
-| 緊急 | [REG-013](../../corporate/regulations/jigyo-keizoku-kisoku.md) · [緊急時案内](templates/guest-facing/緊急時連絡・避難.md) |
+| 緊急 | [REG-013](../../../company/regulations/jigyo-keizoku-kisoku.md) · [緊急時案内](templates/guest-facing/緊急時連絡・避難.md) |
 
 ---
 
@@ -92,5 +92,5 @@ records/2026/
 ## 関連
 
 - [guest-register-rules.md](guest-register-rules.md)
-- [REG-012](../../corporate/regulations/shukuhaku-unyo-kisoku.md)
+- [REG-012](../../../company/regulations/shukuhaku-unyo-kisoku.md)
 - [CTR-012 清掃契約](../../contracts/CTR-012/01-draft.md)

@@ -4,7 +4,7 @@
 **文書ID:** OPS-PRIV-001  
 **版:** v1.0  
 **制定:** 2026年6月6日（REG-010 運用細則）  
-**関連:** [REG-010](../../corporate/regulations/kojin-joho-hogo-kisoku.md)
+**関連:** [REG-010](../../company/regulations/kojin-joho-hogo-kisoku.md)
 
 ---
 

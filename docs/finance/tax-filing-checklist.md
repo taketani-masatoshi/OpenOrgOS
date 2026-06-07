@@ -1,7 +1,7 @@
 # 税務申告チェックリスト — 第9期（FY2026）
 
 **株式会社MAL · 2026/2/1〜2027/1/31 · 決算月1月**  
-**正データ:** [`cursor/data/finances/tax-profile.yaml`](../../../cursor/data/finances/tax-profile.yaml)
+**正データ:** [`data/finance/tax-profile.yaml`](../../../data/finance/tax-profile.yaml)
 
 ---
 
@@ -82,7 +82,7 @@
 
 ## 税理士への依頼リスト
 
-詳細は [`docs/corporate/fy2026-tax-advisor-checklist.md`](../../corporate/fy2026-tax-advisor-checklist.md) および [`docs/corporate/tax/fy2026-tax-readiness-assessment.md`](../../corporate/tax/fy2026-tax-readiness-assessment.md) を参照。
+詳細は [`docs/company/fy2026-tax-advisor-checklist.md`](../../company/fy2026-tax-advisor-checklist.md) および [`docs/company/tax/fy2026-tax-readiness-assessment.md`](../../company/tax/fy2026-tax-readiness-assessment.md) を参照。
 
 ---
 
@@ -90,6 +90,6 @@
 
 ```bash
 npm run validate
-npm run steward -- deps check --file cursor/data/finances/fixed-assets.yaml
+npm run steward -- deps check --file data/finance/fixed-assets.yaml
 npm run steward -- report kessan   # 決算 MD/PDF 生成（データ確定後）
 ```

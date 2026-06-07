@@ -61,7 +61,7 @@
 
 1. **CTR-008**（LOAN-001）を **2025年2月10日** 付で締結済みとし、条件を [返済計画](../contracts/CTR-008/repayment-schedule.md) に従う。
 2. **CTR-009**（LOAN-002）を **2025年6月1日** 付で締結済みとし、条件を [返済計画](../contracts/CTR-009/repayment-schedule.md) に従う。
-3. 契約書正本・振込記録を [`docs/contracts/`](../contracts/) 及び [`cursor/data/finances/loans.yaml`](../../cursor/data/finances/loans.yaml) と整合させる。
+3. 契約書正本・振込記録を [`docs/contracts/`](../contracts/) 及び [`data/finance/loans.yaml`](../../data/finance/loans.yaml) と整合させる。
 
 ---
 

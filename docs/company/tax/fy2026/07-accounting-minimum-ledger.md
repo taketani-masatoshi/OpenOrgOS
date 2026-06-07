@@ -25,7 +25,7 @@
 |------|:------:|-----------------|:--------:|
 | **仕訳帳**（仕訳伝票） | **必須** | 会計ソフト or 税理士 | 法人 **10年** |
 | **総勘定元帳** | **必須** | 同上 | 10年 |
-| 現金出納帳 | 推奨 | 銀行明細 + [`cash-balance.yaml`](../../../../cursor/data/finances/cash-balance.yaml) | 10年 |
+| 現金出納帳 | 推奨 | 銀行明細 + [`cash-balance.yaml`](../../../../data/finance/cash-balance.yaml) | 10年 |
 | 固定資産台帳 | 推奨 | PROP-001/002 + keisansyorui 減価償却試算 | 10年 |
 | 売掛・買掛帳 | 該当時 | OTA 入金・業者支払は月次 YAML | 10年 |
 | 領収書・請求書 | 立証 | inbox / receipts | 7〜10年 |
@@ -69,7 +69,7 @@
 |------|---------|
 | 会計ソフト | **未導入** — 税理士・MF 等の選定要 |
 | Steward YAML | 経営分析用正データ（申告 XML には直結しない） |
-| 証憑 PDF | `docs/inbox/` · `licenses/records/` |
+| 証憑 PDF | `docs/io/inbox/` · `licenses/records/` |
 
 ---
 

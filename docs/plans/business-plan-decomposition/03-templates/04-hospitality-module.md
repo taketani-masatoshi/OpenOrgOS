@@ -13,7 +13,7 @@
 | **必要な入力** | `licenses/` · 行政書士 · 保健所要件 |
 | **出力** | 許認可一覧 · 更新カレンダー · 開業チェック |
 | **KPI** | 許認可有効率 · 更新漏れ 0 |
-| **関連フォルダ** | `docs/corporate/licenses/` · `docs/operations/lodging/pre-opening-checklist.md` |
+| **関連フォルダ** | `docs/company/licenses/` · `docs/properties/PROP-002-kamezawa/operations/pre-opening-checklist.md` |
 | **担当** | Compliance · Hospitality |
 | **更新頻度** | 年次 · 届出随時 |
 | **リスク** | 開業遅延 · 届出不備 |
@@ -29,7 +29,7 @@
 | **必要な入力** | `kamezawa-public.yaml` · ハウスルール |
 | **出力** | 運用ルール · ゲスト向けガイド |
 | **KPI** | 規約違反件数 · 平均人数 |
-| **関連フォルダ** | `docs/operations/lodging/` · `docs/plans/hospitality/room-operation-plan.md` |
+| **関連フォルダ** | `docs/properties/PROP-002-kamezawa/operations/` · `docs/plans/hospitality/room-operation-plan.md` |
 | **担当** | Hospitality |
 | **更新頻度** | 四半期 |
 | **リスク** | 定員超過 · 近隣クレーム |
@@ -141,7 +141,7 @@
 | **必要な入力** | 点検記録 · 法令要件 |
 | **出力** | 点検カレンダー · 対応記録 |
 | **KPI** | 点検実施率 · 指摘是正率 |
-| **関連フォルダ** | `docs/plans/compliance/` · `docs/operations/lodging/` |
+| **関連フォルダ** | `docs/plans/compliance/` · `docs/properties/PROP-002-kamezawa/operations/` |
 | **担当** | Compliance · Hospitality |
 | **更新頻度** | 法定周期 |
 | **リスク** | 指摘 · 営業停止 |

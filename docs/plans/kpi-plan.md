@@ -15,9 +15,9 @@
 
 ## 必要な入力情報
 
-- `cursor/data/plans/business-plan.yaml`（kpi セクション）
-- `cursor/data/properties/PROP-001.yaml` · `PROP-002.yaml`
-- `cursor/data/plans/yojitsu-fy2026.yaml`
+- `data/plans/business-plan.yaml`（kpi セクション）
+- `data/properties/PROP-001.yaml` · `PROP-002.yaml`
+- `data/plans/yojitsu-fy2026.yaml`
 - `docs/reports/dashboard/`（CLI 出力）
 
 ## 出力すべき情報
@@ -52,7 +52,7 @@
 
 ## 関連フォルダ
 
-- `cursor/data/plans/business-plan.yaml`
+- `data/plans/business-plan.yaml`
 - `docs/plans/kpi-plan.md`
 - `docs/reports/dashboard/`
 
@@ -74,7 +74,7 @@
 ## 正データ参照
 
 ```yaml
-# cursor/data/plans/business-plan.yaml
+# data/plans/business-plan.yaml
 kpi:
   - name: 亀沢旅館 稼働率
     target: "70"

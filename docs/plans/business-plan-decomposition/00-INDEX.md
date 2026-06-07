@@ -1,7 +1,7 @@
 # Steward OS — 事業計画分解（マスター索引）
 
 **版:** 2026-06-07 · **対象:** 株式会社MAL（不動産賃貸 + 旅館業 + サービス事業）  
-**正データ:** `cursor/data/plans/business-plan.yaml` · **エージェント:** [14_prompts/business_plan_decomposition.md](../../../14_prompts/business_plan_decomposition.md)
+**正データ:** `data/plans/business-plan.yaml` · **エージェント:** [steward/orchestrators/business_plan_decomposition.md](../../../steward/orchestrators/business_plan_decomposition.md)
 
 ---
 
@@ -25,17 +25,17 @@
 
 | 論理 | 現行 Steward |
 |------|-------------|
-| `00_company/` | `cursor/data/company.yaml` · `docs/corporate/` |
-| `01_business_plan/` | `cursor/data/plans/` · `docs/plans/` |
-| `02_properties/` | `cursor/data/properties/` · `docs/operations/lodging/` · `docs/operations/rental/`（新設） |
-| `03_finance/` | `cursor/data/finances/` · `docs/plans/` · `docs/data/` |
-| `04_contracts/` | `cursor/data/contracts/` · `docs/contracts/` |
+| `00_company/` | `data/company.yaml` · `docs/company/` |
+| `01_business_plan/` | `data/plans/` · `docs/plans/` |
+| `02_properties/` | `data/properties/` · `docs/properties/PROP-002-kamezawa/operations/` · `docs/operations/rental/`（新設） |
+| `03_finance/` | `data/finance/` · `docs/plans/` · `docs/exports/` |
+| `04_contracts/` | `data/contracts/` · `docs/contracts/` |
 | `05_rental/` | `PROP-001` 関連 · Property Rental Agent |
-| `06_hospitality/` | `PROP-002` · `docs/operations/lodging/` |
-| `07_compliance/` | `docs/corporate/regulations/` · `licenses/` · `docs/iso/` |
+| `06_hospitality/` | `PROP-002` · `docs/properties/PROP-002-kamezawa/operations/` |
+| `07_compliance/` | `docs/company/regulations/` · `licenses/` · `docs/compliance/iso/` |
 | `08_operations/` | `docs/operations/` · `inbox/` · `outbox/` |
 | `09_reports/` | `docs/reports/` |
-| `10_decisions/` | `docs/corporate/`（議事録）· `docs/plans/`（差異分析） |
+| `10_decisions/` | `docs/company/`（議事録）· `docs/plans/`（差異分析） |
 | `11_prompts/` | `prompts/` · `.cursor/rules/` |
 
 ---

@@ -5,7 +5,7 @@
 
 > **注意:** 本計算書類は **予想ベース・簡易版** です。税理士確認後に確定版へ更新してください。  
 > **決算確定日:** 2027年2月15日  
-> **データ:** [`cursor/data/plans/yojitsu-fy2026.yaml`](../../cursor/data/plans/yojitsu-fy2026.yaml)
+> **データ:** [`data/plans/yojitsu-fy2026.yaml`](../../data/plans/yojitsu-fy2026.yaml)
 
 ---
 
@@ -136,7 +136,7 @@
 | 現金及び預金 | 銀行残高明細（2027/1/31時点） |
 | 繰越利益剰余金 | 前期までの決算書 |
 | 累計減価償却 | 上記試算済み — 税理士帳簿で確定 |
-| 現預金登録 | [`cursor/data/finances/cash-balance.yaml`](../../cursor/data/finances/cash-balance.yaml) |
+| 現預金登録 | [`data/finance/cash-balance.yaml`](../../data/finance/cash-balance.yaml) |
 
 ### 6. その他
 
@@ -152,5 +152,5 @@
 | ファイル | 内容 |
 |---------|------|
 | [`docs/plans/fy2026-pl.md`](../plans/fy2026-pl.md) | 決算書（詳細版） |
-| [`cursor/data/properties/`](../../cursor/data/properties/) | 物件データ |
-| [`cursor/data/finances/loans.yaml`](../../cursor/data/finances/loans.yaml) | 融資データ |
+| [`data/properties/`](../../data/properties/) | 物件データ |
+| [`data/finance/loans.yaml`](../../data/finance/loans.yaml) | 融資データ |

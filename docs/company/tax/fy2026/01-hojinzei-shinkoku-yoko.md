@@ -210,7 +210,7 @@
 
 | ファイル | 内容 |
 |---------|------|
-| [`yojitsu-fy2026.yaml`](../../../../cursor/data/plans/yojitsu-fy2026.yaml) | 月次正データ |
+| [`yojitsu-fy2026.yaml`](../../../../data/plans/yojitsu-fy2026.yaml) | 月次正データ |
 | [`fy2026-keisansyorui.md`](../../fy2026-keisansyorui.md) | 計算書類 |
 | [`06-zeimu-attachment-index.md`](06-zeimu-attachment-index.md) | 添付一覧 |
 

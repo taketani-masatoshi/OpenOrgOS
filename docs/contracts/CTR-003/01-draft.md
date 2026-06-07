@@ -31,7 +31,7 @@
 
 | 種別 | 参照 |
 |------|------|
-| 物件 | [`PROP-001`](../../../cursor/data/properties/PROP-001.yaml) |
+| 物件 | [`PROP-001`](../../../data/properties/PROP-001.yaml) |
 | 取得 | [CTR-002](../CTR-002/01-draft.md) |
 
 **※ 最終版は税理士確認を推奨（収益計上・自社使用区分）。**

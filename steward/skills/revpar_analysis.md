@@ -6,8 +6,8 @@ PROP-002 亀沢の RevPAR（ADR × 稼働率）を分析し、収益改善材料
 
 ## 入力
 
-- `cursor/data/properties/PROP-002.yaml`（hotel.* · operating_costs）
-- `docs/operations/lodging/templates/operations/予約稼働台帳.csv`（実績）
+- `data/properties/PROP-002.yaml`（hotel.* · operating_costs）
+- `docs/properties/PROP-002-kamezawa/operations/templates/operations/予約稼働台帳.csv`（実績）
 - OTA データ（手入力）
 
 ## 出力

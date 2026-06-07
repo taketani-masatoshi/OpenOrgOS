@@ -11,7 +11,7 @@
 | 役割 | エージェント | 対象 | 主な読取面 |
 |------|-------------|------|-----------|
 | **社内経営 OS** | Executive Steward | オーナー（段）の経営判断 | dashboard · agent-summaries · executive-remaining-tasks |
-| **社長の行動・時間・対外窓口** | Secretary Agent | スケジュール・タスク・1-on-1・社外調整 | `cursor/data/executive/` · `docs/executive/` |
+| **社長の行動・時間・対外窓口** | Secretary Agent | スケジュール・タスク・1-on-1・社外調整 | `data/executive/` · `docs/executive/` |
 
 **結論:** Steward は **社内向け**、社外の日程調整・連絡の一次受けは **Secretary が主インターフェース**。財務・契約・コンプライアンスの質問は Secretary が受け、**Executive Steward または専門 Agent へルーティング**する。
 
@@ -40,7 +40,7 @@ flowchart LR
     DASH[docs/reports/dashboard/]
     SUM[agent-summaries/]
     P0[executive-remaining-tasks.md]
-    FIN[cursor/data/finances/]
+    FIN[data/finance/]
   end
 
   subgraph Executive["社長オペ（Secretary）"]
@@ -71,20 +71,20 @@ flowchart LR
 
 | パス | 条件 |
 |------|------|
-| `cursor/data/executive/**` | R/W（Primary） |
+| `data/executive/**` | R/W（Primary） |
 | `docs/executive/**` | R/W |
 | `docs/reports/dashboard/` | **要約行のみ**（KPI 表の見出し・P0 件数程度） |
 | `docs/reports/executive-notes/` | **サニタイズ済みメモのみ**（財務詳細・契約金額なし） |
-| `docs/corporate/executive-remaining-tasks.md` | Read（重複管理しない） |
-| `cursor/data/hr/employees.yaml` | Read（1-on-1 紐付け） |
+| `docs/company/executive-remaining-tasks.md` | Read（重複管理しない） |
+| `data/hr/employees.yaml` | Read（1-on-1 紐付け） |
 
 ### Secretary が読めないもの
 
 | パス | 理由 |
 |------|------|
-| `cursor/data/finances/**` | 財務機密 |
-| `cursor/data/contracts/**` | 契約条件・金額 |
-| `cursor/data/operations/kamezawa-secrets.yaml` | L2 機密 |
+| `data/finance/**` | 財務機密 |
+| `data/contracts/**` | 契約条件・金額 |
+| `data/operations/kamezawa-secrets.yaml` | L2 機密 |
 | `docs/contracts/**` 本文 | 契約詳細 |
 | ゲスト PII · `**/records/**` | 個情 |
 
@@ -92,7 +92,7 @@ flowchart LR
 
 | パス | 理由 |
 |------|------|
-| `cursor/data/executive/**` | Secretary の SoT。混在を防ぐ |
+| `data/executive/**` | Secretary の SoT。混在を防ぐ |
 | 社長カレンダー詳細 | 秘書領域 |
 
 ---
@@ -138,6 +138,6 @@ flowchart LR
 
 ## 関連
 
-- [11_agents/secretary_agent.md](../11_agents/secretary_agent.md)
-- [11_agents/executive_steward_agent.md](../11_agents/executive_steward_agent.md)
-- [cursor/data/executive/00-README.md](../cursor/data/executive/00-README.md)
+- [steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md)
+- [steward/agents/executive_steward_agent.md](../steward/agents/executive_steward_agent.md)
+- [data/executive/00-README.md](../data/executive/00-README.md)

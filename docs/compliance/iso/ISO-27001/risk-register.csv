@@ -1,6 +1,6 @@
 risk_id,asset,threat,vulnerability,impact,likelihood,treatment,owner,status,review_date
 
-R-001,cursor/data/ 経営YAML,漏えい・不正アクセス,個人PC・MFA未設定,高,中,MFA・アクセス制限,宮城万貴子,open,2026-08
+R-001,data/ 経営YAML,漏えい・不正アクセス,個人PC・MFA未設定,高,中,MFA・アクセス制限,宮城万貴子,open,2026-08
 R-002,OTA ゲスト情報,漏えい,OTA依存,中,中,名簿転記・REG-010,段燕燕,open,2026-08
 R-003,GitHub リポジトリ,改ざん・消失,単一リモート,中,低,バックアップ手順,段燕燕,open,2026-08
 R-004,スマートロック,不正入室,コード共有,高,低,ハウスルール・コード管理,段燕燕,open,2026-08

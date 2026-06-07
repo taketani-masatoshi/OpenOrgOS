@@ -13,7 +13,7 @@ import {
   resolveCashBalanceTotal,
 } from "./data.js";
 import { facilitySecretsSchema } from "../../schemas/operations.js";
-import { CURSOR_DIR, readYamlFile, ROOT_DIR } from "./utils.js";
+import { DATA_DIR, readYamlFile, ROOT_DIR } from "./utils.js";
 
 export interface IntegrityIssue {
   level: "error" | "warning";
@@ -46,27 +46,27 @@ export function runIntegrityChecks(): IntegrityIssue[] {
 
   for (const c of data.contracts) {
     if (c.property_id && !propertyIds.has(c.property_id)) {
-      push("error", `cursor/data/contracts/${c.id}.yaml`, `property_id ${c.property_id} not found`);
+      push("error", `data/contracts/${c.id}.yaml`, `property_id ${c.property_id} not found`);
     }
     if (c.status === "executed" && !c.executed_date) {
-      push("warning", `cursor/data/contracts/${c.id}.yaml`, "executed status but no executed_date");
+      push("warning", `data/contracts/${c.id}.yaml`, "executed status but no executed_date");
     }
     if (c.status === "executed" && c.documents?.executed && !docExists(c.documents.executed)) {
-      push("warning", `cursor/data/contracts/${c.id}.yaml`, `executed doc missing: ${c.documents.executed}`);
+      push("warning", `data/contracts/${c.id}.yaml`, `executed doc missing: ${c.documents.executed}`);
     }
     if (c.status === "draft" && c.documents?.enrollment && !docExists(c.documents.enrollment)) {
-      push("warning", `cursor/data/contracts/${c.id}.yaml`, `enrollment doc missing: ${c.documents.enrollment}`);
+      push("warning", `data/contracts/${c.id}.yaml`, `enrollment doc missing: ${c.documents.enrollment}`);
     }
   }
 
   for (const plan of data.propertyRevenuePlan.rental) {
     if (!propertyIds.has(plan.property_id)) {
-      push("error", "cursor/data/plans/property-revenue.yaml", `rental plan references unknown property ${plan.property_id}`);
+      push("error", "data/plans/property-revenue.yaml", `rental plan references unknown property ${plan.property_id}`);
     }
   }
   for (const plan of data.propertyRevenuePlan.hotel) {
     if (!propertyIds.has(plan.property_id)) {
-      push("error", "cursor/data/plans/property-revenue.yaml", `hotel plan references unknown property ${plan.property_id}`);
+      push("error", "data/plans/property-revenue.yaml", `hotel plan references unknown property ${plan.property_id}`);
     }
   }
 
@@ -74,15 +74,15 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     if (p.financing) {
       const loan = loanById.get(p.financing);
       if (!loan) {
-        push("error", `cursor/data/properties/${p.id}.yaml`, `financing ${p.financing} not found in loans.yaml`);
+        push("error", `data/properties/${p.id}.yaml`, `financing ${p.financing} not found in loans.yaml`);
       } else {
         if (loan.property_id && loan.property_id !== p.id) {
-          push("error", "cursor/data/finances/loans.yaml", `${loan.id} property_id ${loan.property_id} ≠ ${p.id}`);
+          push("error", "data/finance/loans.yaml", `${loan.id} property_id ${loan.property_id} ≠ ${p.id}`);
         }
         if (p.acquisition_price !== undefined && loan.balance !== p.acquisition_price) {
           push(
             "warning",
-            `cursor/data/properties/${p.id}.yaml`,
+            `data/properties/${p.id}.yaml`,
             `acquisition_price ${p.acquisition_price} ≠ loan balance ${loan.balance}`
           );
         }
@@ -96,24 +96,24 @@ export function runIntegrityChecks(): IntegrityIssue[] {
 
   const yojitsu2026 = loadYojitsuPlan(2026);
   if (yojitsu2026 && yojitsu2026.months.length !== 12) {
-    push("warning", "cursor/data/plans/yojitsu-2026.yaml", `expected 12 months, got ${yojitsu2026.months.length}`);
+    push("warning", "data/plans/yojitsu-2026.yaml", `expected 12 months, got ${yojitsu2026.months.length}`);
   }
 
   try {
     const ops = loadOperationsPublic();
     if (ops.property_id && !propertyIds.has(ops.property_id)) {
-      push("error", "cursor/data/operations/kamezawa-public.yaml", `property_id ${ops.property_id} not found`);
+      push("error", "data/operations/kamezawa-public.yaml", `property_id ${ops.property_id} not found`);
     }
     for (const [, path] of Object.entries(ops.guest_docs ?? {})) {
       if (path && !docExists(path)) {
-        push("warning", "cursor/data/operations/kamezawa-public.yaml", `guest doc missing: ${path}`);
+        push("warning", "data/operations/kamezawa-public.yaml", `guest doc missing: ${path}`);
       }
     }
   } catch (e) {
-    push("warning", "cursor/data/operations/kamezawa-public.yaml", e instanceof Error ? e.message : String(e));
+    push("warning", "data/operations/kamezawa-public.yaml", e instanceof Error ? e.message : String(e));
   }
 
-  const secretsPath = join(CURSOR_DIR, "data", "operations", "kamezawa-secrets.yaml");
+  const secretsPath = join(DATA_DIR, "operations", "kamezawa-secrets.yaml");
   if (existsSync(secretsPath)) {
     try {
       const secrets = readYamlFile(secretsPath, facilitySecretsSchema);
@@ -123,17 +123,17 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       if (placeholders.length) {
         push(
           "warning",
-          "cursor/data/operations/kamezawa-secrets.yaml",
+          "data/operations/kamezawa-secrets.yaml",
           `${placeholders.length} 項目が未入力（REPLACE_ME / TBD）`
         );
       }
     } catch (e) {
-      push("warning", "cursor/data/operations/kamezawa-secrets.yaml", e instanceof Error ? e.message : String(e));
+      push("warning", "data/operations/kamezawa-secrets.yaml", e instanceof Error ? e.message : String(e));
     }
   } else {
     push(
       "warning",
-      "cursor/data/operations/kamezawa-secrets.yaml",
+      "data/operations/kamezawa-secrets.yaml",
       "未作成 — example をコピーして実値を記入"
     );
   }
@@ -145,26 +145,26 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       if (cash.status === "template" && total == null) {
         push(
           "warning",
-          "cursor/data/finances/cash-balance.yaml",
+          "data/finance/cash-balance.yaml",
           "テンプレート — 残高入力後 status: confirmed に変更"
         );
       } else if (cash.status === "confirmed" && total == null) {
-        push("warning", "cursor/data/finances/cash-balance.yaml", "confirmed だが total / accounts が未入力");
+        push("warning", "data/finance/cash-balance.yaml", "confirmed だが total / accounts が未入力");
       }
     }
   } catch (e) {
-    push("warning", "cursor/data/finances/cash-balance.yaml", e instanceof Error ? e.message : String(e));
+    push("warning", "data/finance/cash-balance.yaml", e instanceof Error ? e.message : String(e));
   }
 
   try {
     const hr = loadEmployees();
     for (const emp of hr.employees) {
       if (emp.contract_id && !contractById.has(emp.contract_id)) {
-        push("error", "cursor/data/hr/employees.yaml", `${emp.id} references unknown contract ${emp.contract_id}`);
+        push("error", "data/hr/employees.yaml", `${emp.id} references unknown contract ${emp.contract_id}`);
       }
     }
   } catch (e) {
-    push("warning", "cursor/data/hr/employees.yaml", e instanceof Error ? e.message : String(e));
+    push("warning", "data/hr/employees.yaml", e instanceof Error ? e.message : String(e));
   }
 
   return issues;
@@ -177,29 +177,29 @@ function checkLoanRefs(
   push: (level: IntegrityIssue["level"], file: string, message: string) => void
 ): void {
   if (loan.property_id && !propertyById.has(loan.property_id)) {
-    push("error", "cursor/data/finances/loans.yaml", `${loan.id} property_id ${loan.property_id} not found`);
+    push("error", "data/finance/loans.yaml", `${loan.id} property_id ${loan.property_id} not found`);
   }
   if (loan.contract_id) {
     const ctr = contractById.get(loan.contract_id);
     if (!ctr) {
-      push("error", "cursor/data/finances/loans.yaml", `${loan.id} contract_id ${loan.contract_id} not found`);
+      push("error", "data/finance/loans.yaml", `${loan.id} contract_id ${loan.contract_id} not found`);
       return;
     }
     if (ctr.type !== "loan") {
-      push("warning", "cursor/data/finances/loans.yaml", `${loan.id} linked contract ${loan.contract_id} type is ${ctr.type}`);
+      push("warning", "data/finance/loans.yaml", `${loan.id} linked contract ${loan.contract_id} type is ${ctr.type}`);
     }
     if (loan.property_id && ctr.property_id && loan.property_id !== ctr.property_id) {
-      push("error", "cursor/data/finances/loans.yaml", `${loan.id} property_id ≠ contract ${loan.contract_id} property_id`);
+      push("error", "data/finance/loans.yaml", `${loan.id} property_id ≠ contract ${loan.contract_id} property_id`);
     }
     if (ctr.compensation?.amount !== undefined && loan.balance !== ctr.compensation.amount) {
       push(
         "warning",
-        "cursor/data/finances/loans.yaml",
+        "data/finance/loans.yaml",
         `${loan.id} balance ${loan.balance} ≠ contract amount ${ctr.compensation.amount}`
       );
     }
     if (loan.documents?.executed && !docExists(loan.documents.executed)) {
-      push("warning", "cursor/data/finances/loans.yaml", `${loan.id} executed doc missing: ${loan.documents.executed}`);
+      push("warning", "data/finance/loans.yaml", `${loan.id} executed doc missing: ${loan.documents.executed}`);
     }
   }
 }

@@ -146,7 +146,7 @@
 
 | ファイル | 内容 |
 |---------|------|
-| [`PROP-001.yaml`](../../../../cursor/data/properties/PROP-001.yaml) | 番町 |
-| [`PROP-002.yaml`](../../../../cursor/data/properties/PROP-002.yaml) | 亀沢 |
+| [`PROP-001.yaml`](../../../../data/properties/PROP-001.yaml) | 番町 |
+| [`PROP-002.yaml`](../../../../data/properties/PROP-002.yaml) | 亀沢 |
 | [`fy2026-tax-advisor-checklist.md`](../../fy2026-tax-advisor-checklist.md) | 按分確認 #7 |
 | [`06-zeimu-attachment-index.md`](06-zeimu-attachment-index.md) | 通知書保管 |

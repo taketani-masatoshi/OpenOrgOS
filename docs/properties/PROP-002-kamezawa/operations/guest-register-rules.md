@@ -29,7 +29,7 @@
 
 ## 第4条（チェックイン手順）
 
-1. [宿泊者向け告知](../privacy/guest-privacy-notice.md) を提示
+1. [宿泊者向け告知](../../../../compliance/privacy/guest-privacy-notice.md) を提示
 2. 本人確認（旅券・運転免許等）
 3. 名簿へ記入（代表者1名 + 全宿泊者氏名を推奨）
 4. 外国籍: 第5条へ
@@ -62,5 +62,5 @@
 
 ## 参考
 
-- [個人情報取扱ルール](../privacy/personal-data-handling-rules.md)
+- [個人情報取扱ルール](../../../../compliance/privacy/personal-data-handling-rules.md)
 - [墨田区 旅館業](https://www.city.sumida.lg.jp/) — 届出様式は所轄警察署・区の最新様式を確認

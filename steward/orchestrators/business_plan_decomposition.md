@@ -18,25 +18,25 @@
 
 | 事業 | 物件 | 正データ |
 |------|------|---------|
-| 不動産賃貸 | 番町ハイム312 | `cursor/data/properties/PROP-001.yaml` |
-| 旅館業（1 棟貸し） | 亀沢旅館 | `cursor/data/properties/PROP-002.yaml` |
-| 混在法人 | 株式会社 MAL | `cursor/data/company.yaml` |
+| 不動産賃貸 | 番町ハイム312 | `data/properties/PROP-001.yaml` |
+| 旅館業（1 棟貸し） | 亀沢旅館 | `data/properties/PROP-002.yaml` |
+| 混在法人 | 株式会社 MAL | `data/company.yaml` |
 
 ---
 
 ## 読取パス
 
 ```
-cursor/data/plans/business-plan.yaml      # 事業計画上流
-cursor/data/plans/*.yaml                  # 売上・費用・投資・予実
-cursor/data/properties/                   # 物件正データ
-cursor/data/finances/                     # 借入・CF・固定費
-cursor/data/contracts/                    # 契約台帳
-cursor/data/dependency-graph.yaml         # 依存関係
+data/plans/business-plan.yaml      # 事業計画上流
+data/plans/*.yaml                  # 売上・費用・投資・予実
+data/properties/                   # 物件正データ
+data/finance/                     # 借入・CF・固定費
+data/contracts/                    # 契約台帳
+data/dependency-graph.yaml         # 依存関係
 docs/plans/business-plan-decomposition/   # 本分解設計
-11_agents/                                # 委譲先 Agent
-12_skills/                                # 委譲先 Skill
-13_rules/
+steward/agents/                                # 委譲先 Agent
+steward/skills/                                # 委譲先 Skill
+steward/rules/
 ```
 
 ---
@@ -63,7 +63,7 @@ docs/operations/rental/                   # 番町運用 SOP（新設）
 
 ## 禁止
 
-- `cursor/data/operations/kamezawa-secrets.yaml` の編集・転記
+- `data/operations/kamezawa-secrets.yaml` の編集・転記
 - 契約本文（executed）の改定 — Contract Agent へ
 - 未確認数値の invent — TBD 明示
 
@@ -105,14 +105,14 @@ docs/operations/rental/                   # 番町運用 SOP（新設）
 
 | タスク | 委譲先 |
 |--------|--------|
-| 数値・YAML 更新 | [11_agents/finance_agent.md](../11_agents/finance_agent.md) |
-| CTR draft/executed | [11_agents/contract_agent.md](../11_agents/contract_agent.md) |
-| 番町運用詳細 | [11_agents/property_rental_agent.md](../11_agents/property_rental_agent.md) |
-| 亀沢運用・許認可 | [11_agents/hospitality_agent.md](../11_agents/hospitality_agent.md) |
-| 規程・個情 | [11_agents/compliance_agent.md](../11_agents/compliance_agent.md) |
-| inbox 証憑 | [11_agents/operations_agent.md](../11_agents/operations_agent.md) |
-| 社長スケジュール・1-on-1・社外調整 | [11_agents/secretary_agent.md](../11_agents/secretary_agent.md) |
-| 経営判断・優先度 | [11_agents/executive_steward_agent.md](../11_agents/executive_steward_agent.md) |
+| 数値・YAML 更新 | [steward/agents/finance_agent.md](../steward/agents/finance_agent.md) |
+| CTR draft/executed | [steward/agents/contract_agent.md](../steward/agents/contract_agent.md) |
+| 番町運用詳細 | [steward/agents/property_rental_agent.md](../steward/agents/property_rental_agent.md) |
+| 亀沢運用・許認可 | [steward/agents/hospitality_agent.md](../steward/agents/hospitality_agent.md) |
+| 規程・個情 | [steward/agents/compliance_agent.md](../steward/agents/compliance_agent.md) |
+| inbox 証憑 | [steward/agents/operations_agent.md](../steward/agents/operations_agent.md) |
+| 社長スケジュール・1-on-1・社外調整 | [steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md) |
+| 経営判断・優先度 | [steward/agents/executive_steward_agent.md](../steward/agents/executive_steward_agent.md) |
 
 ---
 
@@ -120,7 +120,7 @@ docs/operations/rental/                   # 番町運用 SOP（新設）
 
 ```bash
 npm run validate
-npm run steward -- deps check --file cursor/data/plans/business-plan.yaml
+npm run steward -- deps check --file data/plans/business-plan.yaml
 npm run steward -- deps graph
 npm run steward -- sync all
 npm run steward -- dashboard
@@ -131,7 +131,7 @@ npm run steward -- dashboard
 ## 起動例
 
 ```
-@14_prompts/business_plan_decomposition.md
+@steward/orchestrators/business_plan_decomposition.md
 
 Phase 1 の risk-management-plan.md を起稿してください。
 ```

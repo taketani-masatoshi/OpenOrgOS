@@ -102,13 +102,13 @@ export function loadContract(id: string): Contract | undefined {
 }
 
 export function loadMonthlyFinances(): MonthlyFinance[] {
-  return listYamlFiles(join(DATA_DIR, "finances", "monthly"))
+  return listYamlFiles(join(DATA_DIR, "finance", "monthly"))
     .map((f) => readYamlFile(f, monthlyFinanceSchema))
     .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 export function loadMonthlyFinance(month: string): MonthlyFinance | undefined {
-  const path = join(DATA_DIR, "finances", "monthly", `${month}.yaml`);
+  const path = join(DATA_DIR, "finance", "monthly", `${month}.yaml`);
   try {
     return readYamlFile(path, monthlyFinanceSchema);
   } catch {
@@ -117,15 +117,15 @@ export function loadMonthlyFinance(month: string): MonthlyFinance | undefined {
 }
 
 export function loadFixedCosts(): FixedCosts {
-  return readYamlFile(join(DATA_DIR, "finances", "fixed-costs.yaml"), fixedCostsSchema);
+  return readYamlFile(join(DATA_DIR, "finance", "fixed-costs.yaml"), fixedCostsSchema);
 }
 
 export function loadPayroll() {
-  return readYamlFile(join(DATA_DIR, "finances", "payroll.yaml"), payrollSchema);
+  return readYamlFile(join(DATA_DIR, "finance", "payroll.yaml"), payrollSchema);
 }
 
 export function loadCashBalance(): CashBalance | undefined {
-  const path = join(DATA_DIR, "finances", "cash-balance.yaml");
+  const path = join(DATA_DIR, "finance", "cash-balance.yaml");
   try {
     return readYamlFile(path, cashBalanceSchema);
   } catch {
@@ -141,20 +141,20 @@ export function resolveCashBalanceTotal(balance: CashBalance): number | null {
 }
 
 export function loadLoans(): Loans {
-  return readYamlFile(join(DATA_DIR, "finances", "loans.yaml"), loansSchema);
+  return readYamlFile(join(DATA_DIR, "finance", "loans.yaml"), loansSchema);
 }
 
 export function loadFixedAssets(): FixedAssets {
-  return readYamlFile(join(DATA_DIR, "finances", "fixed-assets.yaml"), fixedAssetsSchema);
+  return readYamlFile(join(DATA_DIR, "finance", "fixed-assets.yaml"), fixedAssetsSchema);
 }
 
 export function loadTaxProfile(): TaxProfile {
-  return readYamlFile(join(DATA_DIR, "finances", "tax-profile.yaml"), taxProfileSchema);
+  return readYamlFile(join(DATA_DIR, "finance", "tax-profile.yaml"), taxProfileSchema);
 }
 
 export function loadChartOfAccounts(): ChartOfAccounts {
   return readYamlFile(
-    join(DATA_DIR, "finances", "chart-of-accounts.yaml"),
+    join(DATA_DIR, "finance", "chart-of-accounts.yaml"),
     chartOfAccountsSchema
   );
 }
@@ -363,55 +363,55 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     }
   };
 
-  tryLoad("cursor/data/company.yaml", () => loadCompany());
+  tryLoad("data/company.yaml", () => loadCompany());
 
   for (const f of listYamlFiles(join(DATA_DIR, "properties"))) {
-    tryLoad(f.replace(DATA_DIR + "/", "cursor/data/"), () =>
+    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
       readYamlFile(f, propertySchema)
     );
   }
 
   for (const f of listYamlFiles(join(DATA_DIR, "contracts"))) {
-    tryLoad(f.replace(DATA_DIR + "/", "cursor/data/"), () =>
+    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
       readYamlFile(f, contractSchema)
     );
   }
 
-  for (const f of listYamlFiles(join(DATA_DIR, "finances", "monthly"))) {
-    tryLoad(f.replace(DATA_DIR + "/", "cursor/data/"), () =>
+  for (const f of listYamlFiles(join(DATA_DIR, "finance", "monthly"))) {
+    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
       readYamlFile(f, monthlyFinanceSchema)
     );
   }
 
-  tryLoad("cursor/data/finances/fixed-costs.yaml", () => loadFixedCosts());
-  tryLoad("cursor/data/finances/payroll.yaml", () => loadPayroll());
-  tryLoad("cursor/data/finances/cash-balance.yaml", () => loadCashBalance());
-  tryLoad("cursor/data/finances/loans.yaml", () => loadLoans());
-  tryLoad("cursor/data/finances/fixed-assets.yaml", () => loadFixedAssets());
-  tryLoad("cursor/data/finances/tax-profile.yaml", () => loadTaxProfile());
-  tryLoad("cursor/data/finances/chart-of-accounts.yaml", () => loadChartOfAccounts());
-  tryLoad("cursor/data/plans/business-plan.yaml", () => loadBusinessPlan());
-  tryLoad("cursor/data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());
-  tryLoad("cursor/data/plans/revenue-plan.yaml", () => loadRevenuePlan());
-  tryLoad("cursor/data/plans/profit-plan.yaml", () => loadProfitPlan());
-  tryLoad("cursor/data/plans/expense-plan.yaml", () => loadExpensePlan());
-  tryLoad("cursor/data/plans/investment-plan.yaml", () => loadInvestmentPlan());
-  tryLoad("cursor/data/plans/debt-plan.yaml", () => loadDebtPlan());
+  tryLoad("data/finance/fixed-costs.yaml", () => loadFixedCosts());
+  tryLoad("data/finance/payroll.yaml", () => loadPayroll());
+  tryLoad("data/finance/cash-balance.yaml", () => loadCashBalance());
+  tryLoad("data/finance/loans.yaml", () => loadLoans());
+  tryLoad("data/finance/fixed-assets.yaml", () => loadFixedAssets());
+  tryLoad("data/finance/tax-profile.yaml", () => loadTaxProfile());
+  tryLoad("data/finance/chart-of-accounts.yaml", () => loadChartOfAccounts());
+  tryLoad("data/plans/business-plan.yaml", () => loadBusinessPlan());
+  tryLoad("data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());
+  tryLoad("data/plans/revenue-plan.yaml", () => loadRevenuePlan());
+  tryLoad("data/plans/profit-plan.yaml", () => loadProfitPlan());
+  tryLoad("data/plans/expense-plan.yaml", () => loadExpensePlan());
+  tryLoad("data/plans/investment-plan.yaml", () => loadInvestmentPlan());
+  tryLoad("data/plans/debt-plan.yaml", () => loadDebtPlan());
   for (const f of listYamlFiles(join(DATA_DIR, "plans")).filter((p) =>
     p.includes("yojitsu-")
   )) {
-    tryLoad(f.replace(DATA_DIR + "/", "cursor/data/"), () =>
+    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
       readYamlFile(f, yojitsuPlanSchema)
     );
   }
 
-  tryLoad("cursor/data/operations/kamezawa-public.yaml", () => loadOperationsPublic());
-  tryLoad("cursor/data/hr/employees.yaml", () => loadEmployees());
-  tryLoad("cursor/data/executive/calendar.yaml", () => loadExecutiveCalendar());
-  tryLoad("cursor/data/executive/tasks.yaml", () => loadExecutiveTasks());
-  tryLoad("cursor/data/executive/one-on-ones.yaml", () => loadOneOnOnes());
-  tryLoad("cursor/data/executive/external-contacts.yaml", () => loadExternalContacts());
-  tryLoad("cursor/data/document-io.yaml", () =>
+  tryLoad("data/operations/kamezawa-public.yaml", () => loadOperationsPublic());
+  tryLoad("data/hr/employees.yaml", () => loadEmployees());
+  tryLoad("data/executive/calendar.yaml", () => loadExecutiveCalendar());
+  tryLoad("data/executive/tasks.yaml", () => loadExecutiveTasks());
+  tryLoad("data/executive/one-on-ones.yaml", () => loadOneOnOnes());
+  tryLoad("data/executive/external-contacts.yaml", () => loadExternalContacts());
+  tryLoad("data/document-io.yaml", () =>
     readYamlFile(join(DATA_DIR, "document-io.yaml"), documentIoSchema)
   );
 
@@ -424,7 +424,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
       for (const c of data.contracts) {
         if (c.property_id && !propertyIds.has(c.property_id)) {
           errors.push({
-            file: `cursor/data/contracts/${c.id}.yaml`,
+            file: `data/contracts/${c.id}.yaml`,
             message: `property_id ${c.property_id} not found`,
           });
         }
@@ -433,7 +433,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
       for (const plan of data.propertyRevenuePlan.rental) {
         if (!propertyIds.has(plan.property_id)) {
           errors.push({
-            file: "cursor/data/plans/property-revenue.yaml",
+            file: "data/plans/property-revenue.yaml",
             message: `rental plan references unknown property ${plan.property_id}`,
           });
         }
@@ -442,7 +442,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
       for (const plan of data.propertyRevenuePlan.hotel) {
         if (!propertyIds.has(plan.property_id)) {
           errors.push({
-            file: "cursor/data/plans/property-revenue.yaml",
+            file: "data/plans/property-revenue.yaml",
             message: `hotel plan references unknown property ${plan.property_id}`,
           });
         }
@@ -450,7 +450,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
 
       for (const issue of validateFixedAssetConsistency()) {
         errors.push({
-          file: "cursor/data/finances/fixed-assets.yaml",
+          file: "data/finance/fixed-assets.yaml",
           message: issue.message,
         });
       }

@@ -47,8 +47,8 @@ CTR-008 と同様、**株主総会又は取締役会**の承認が必要。承�
 
 | 種別 | 参照 |
 |------|------|
-| 融資 | [`LOAN-002`](../../../cursor/data/finances/loans.yaml) |
-| 物件 | [`PROP-002`](../../../cursor/data/properties/PROP-002.yaml) |
+| 融資 | [`LOAN-002`](../../../data/finance/loans.yaml) |
+| 物件 | [`PROP-002`](../../../data/properties/PROP-002.yaml) |
 | 土地売買 | [CTR-006](../CTR-006/01-draft.md) |
 | 建築請負 | [CTR-007](../CTR-007/01-draft.md) |
 | 番町分 | [CTR-008](../CTR-008/01-draft.md) |

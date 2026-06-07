@@ -113,6 +113,6 @@
 
 | ファイル | 内容 |
 |---------|------|
-| [`expense-plan.yaml`](../../../../cursor/data/plans/expense-plan.yaml) | 委託180,000 |
-| [`loans.yaml`](../../../../cursor/data/finances/loans.yaml) | 役員貸付 |
+| [`expense-plan.yaml`](../../../../data/plans/expense-plan.yaml) | 委託180,000 |
+| [`loans.yaml`](../../../../data/finance/loans.yaml) | 役員貸付 |
 | [`fy2026-meeting-schedule.md`](../../fy2026-meeting-schedule.md) | 1/31期限 |

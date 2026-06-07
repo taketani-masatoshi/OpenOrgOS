@@ -118,4 +118,4 @@
 | [`fy2026-keisansyorui.md`](../fy2026-keisansyorui.md) | 計算書類 |
 | [`fy2026-tax-advisor-checklist.md`](../fy2026-tax-advisor-checklist.md) | 税理士依頼リスト |
 | [`fy2026-meeting-schedule.md`](../fy2026-meeting-schedule.md) | 申告期限 |
-| [`cursor/data/plans/yojitsu-fy2026.yaml`](../../cursor/data/plans/yojitsu-fy2026.yaml) | 月次予実（正データ） |
+| [`data/plans/yojitsu-fy2026.yaml`](../../data/plans/yojitsu-fy2026.yaml) | 月次予実（正データ） |

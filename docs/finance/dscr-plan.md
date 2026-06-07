@@ -1,6 +1,6 @@
 # DSCR 管理計画
 
-**版:** 2026-06-07 · **正データ:** [`cursor/data/plans/debt-plan.yaml`](../../../cursor/data/plans/debt-plan.yaml)
+**版:** 2026-06-07 · **正データ:** [`data/plans/debt-plan.yaml`](../../../data/plans/debt-plan.yaml)
 
 ## 目的
 
@@ -78,7 +78,7 @@ DSCR = NOI（代理） ÷ 年間元本返済額（debt service）
 
 - [返済計画](loan-repayment-plan.md)
 - [借入計画](borrowing-plan.md)
-- `cursor/data/plans/profit-plan.yaml`
+- `data/plans/profit-plan.yaml`
 - KPI 計画: [kpi-plan.md](../kpi-plan.md)（DSCR KPI 追加検討）
 
 ## 担当

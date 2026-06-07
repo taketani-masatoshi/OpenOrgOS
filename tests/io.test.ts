@@ -12,7 +12,7 @@ import {
 } from "../src/lib/document-io.js";
 import { documentIoSchema } from "../schemas/document-io.js";
 
-const IO_PATH = join(process.cwd(), "cursor/data/document-io.yaml");
+const IO_PATH = join(process.cwd(), "data/document-io.yaml");
 const IO_BACKUP = join(tmpdir(), "steward-document-io-backup.yaml");
 
 describe("document-io", () => {
@@ -68,7 +68,7 @@ describe("document-io", () => {
       title: "申請書テスト",
     });
     createdPaths.push(item.path);
-    const archiveRel = `cursor/scratch/test-archive-${Date.now()}.pdf`;
+    const archiveRel = `scratch/test-archive-${Date.now()}.pdf`;
     createdPaths.push(archiveRel);
     const done = completeInboxItem({
       id: item.id,
@@ -81,7 +81,7 @@ describe("document-io", () => {
   });
 
   it("registers outbox item without duplicate", () => {
-    const outRel = `docs/outbox/lodging/test-out-${Date.now()}.pdf`;
+    const outRel = `docs/io/outbox/lodging/test-out-${Date.now()}.pdf`;
     const outAbs = join(process.cwd(), outRel);
     mkdirSync(join(outAbs, ".."), { recursive: true });
     writeFileSync(outAbs, "%PDF out");

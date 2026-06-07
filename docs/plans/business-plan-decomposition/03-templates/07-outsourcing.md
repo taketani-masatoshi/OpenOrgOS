@@ -41,7 +41,7 @@
 | **必要な入力** | 顧問契約 · 申告チェックリスト |
 | **出力** | 申告スケジュール · 資料提出 |
 | **KPI** | 期限遵守 · 修正回数 |
-| **関連フォルダ** | `docs/corporate/tax/fy2026/fy2026-tax-advisor-checklist.md` |
+| **関連フォルダ** | `docs/company/tax/fy2026/fy2026-tax-advisor-checklist.md` |
 | **担当** | Finance · Compliance |
 | **更新頻度** | 年次 |
 | **リスク** | B/S TBD ブロッカー |

@@ -40,7 +40,7 @@ Data / File（事実）
 
 ## データ原則
 
-- 正データ: `cursor/data/**/*.yaml`（編集後 `npm run validate`）
+- 正データ: `data/**/*.yaml`（編集後 `npm run validate`）
 - 人向け: `docs/**`（MD · CSV · PDF）
 - Steward が読むのは **原本ではなく Agent 要約**（`docs/reports/agent-summaries/`）
 - 原本 PDF と要約 MD を分ける（inbox → records/ · outbox/）
@@ -58,5 +58,5 @@ Data / File（事実）
 
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [folder_access_policy.md](folder_access_policy.md)
-- [11_agents/](../11_agents/00-このフォルダについて.md)
-- [12_skills/](../12_skills/00-このフォルダについて.md)
+- [steward/agents/](../steward/agents/00-このフォルダについて.md)
+- [steward/skills/](../steward/skills/00-このフォルダについて.md)

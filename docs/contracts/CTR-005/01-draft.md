@@ -38,5 +38,5 @@
 
 | 種別 | 参照 |
 |------|------|
-| 会社 | [`company.yaml`](../../../cursor/data/company.yaml) |
+| 会社 | [`company.yaml`](../../../data/company.yaml) |
 | 他取締役 | [CTR-004](../CTR-004/01-draft.md) |

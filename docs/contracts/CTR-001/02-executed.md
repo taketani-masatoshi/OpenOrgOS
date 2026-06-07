@@ -86,8 +86,8 @@
 
 | 保管先     | ファイル                                                                                |
 | ------- | ----------------------------------------------------------------------------------- |
-| Steward | `[cursor/data/contracts/CTR-001.yaml](../../../cursor/data/contracts/CTR-001.yaml)` |
-| 契約管理表   | `[docs/data/契約管理表.csv](../../data/契約管理表.csv)`                                       |
+| Steward | `[data/contracts/CTR-001.yaml](../../../data/contracts/CTR-001.yaml)` |
+| 契約管理表   | `[docs/exports/契約管理表.csv](../../data/契約管理表.csv)`                                       |
 
 
 ---

@@ -23,22 +23,22 @@ Stewardは蓄積された情報を利用して、
 | ゾーン | パス | 内容 |
 |--------|------|------|
 | 人 | `docs/` | MD・CSV・PDF（印刷・提出） |
-| Cursor | `cursor/data/` YAML、`cursor/scratch/` 試行 |
+| Cursor | `data/` YAML、`scratch/` 試行 |
 | プログラム | `src/` `schemas/` `assets/` | CLI・フォント |
 
 **フォルダ説明ファイル:** `docs/` 配下は `00-このフォルダについて.md`、`cursor/`・`assets/` は `00-README.md`（エクスプローラで先頭に並ぶ）。リポジトリルートのみ `README.md`。
 
 ## データ構造
 
-**正データは `cursor/data/` 配下の YAML のみ。** 人向けの読み物は `docs/`（Markdown / CSV）。
+**正データは `data/` 配下の YAML のみ。** 人向けの読み物は `docs/`（Markdown / CSV）。
 
-- **Company**: `cursor/data/company.yaml`
-- **Property**: `cursor/data/properties/{id}.yaml`
-- **Contract**: `cursor/data/contracts/{id}.yaml`
-- **Monthly Finance**: `cursor/data/finances/monthly/{YYYY-MM}.yaml`
-- **Plans**: `cursor/data/plans/*.yaml`
+- **Company**: `data/company.yaml`
+- **Property**: `data/properties/{id}.yaml`
+- **Contract**: `data/contracts/{id}.yaml`
+- **Monthly Finance**: `data/finance/monthly/{YYYY-MM}.yaml`
+- **Plans**: `data/plans/*.yaml`
 - **決算書・PL**: `docs/plans/*.md`
-- **計画 CSV**: `docs/data/*.csv`
+- **計画 CSV**: `docs/exports/*.csv`
 
 ## MVP 機能
 
@@ -53,15 +53,15 @@ Stewardは蓄積された情報を利用して、
 9. **CSV 同期** — `steward sync all`
 10. **書類 I/O** — `steward io`（inbox 受信 / outbox 印刷）
 11. **経営ダッシュボード** — `steward dashboard` / `steward report dashboard`（日次 MD → `docs/reports/dashboard/`）
-12. **依存影響チェック** — `steward deps check` / `steward impact`（`cursor/data/dependency-graph.yaml`）
+12. **依存影響チェック** — `steward deps check` / `steward impact`（`data/dependency-graph.yaml`）
 
 ## パラメータ依存関係
 
-正データ間・docs への連動は `cursor/data/dependency-graph.yaml` で定義。
+正データ間・docs への連動は `data/dependency-graph.yaml` で定義。
 
 ```bash
-npm run steward -- deps check --file cursor/data/contracts/CTR-008.yaml
-npm run steward -- impact cursor/data/properties/PROP-002.yaml
+npm run steward -- deps check --file data/contracts/CTR-008.yaml
+npm run steward -- impact data/properties/PROP-002.yaml
 npm run steward -- deps graph
 npm run validate -- --deps   # 下流ファイルの鮮度警告
 ```
@@ -72,13 +72,13 @@ npm run validate -- --deps   # 下流ファイルの鮮度警告
 
 | ゾーン | パス | 用途 |
 |--------|------|------|
-| **Input** | `docs/inbox/` | スキャン・契約原本・申請書（未処理） |
-| **Output** | `docs/outbox/` | 印刷・提出・掲示用 PDF |
-| **台帳** | `cursor/data/document-io.yaml` | 受信/出力キュー |
+| **Input** | `docs/io/inbox/` | スキャン・契約原本・申請書（未処理） |
+| **Output** | `docs/io/outbox/` | 印刷・提出・掲示用 PDF |
+| **台帳** | `data/document-io.yaml` | 受信/出力キュー |
 
 ```bash
 npm run steward -- io inbox add --from ./scan.pdf --category licenses --title "許可証"
-npm run steward -- io inbox done INB-001 --archive docs/corporate/licenses/ryokan/records/x.pdf
+npm run steward -- io inbox done INB-001 --archive docs/company/licenses/ryokan/records/x.pdf
 npm run steward -- io outbox list
 ```
 
@@ -86,10 +86,10 @@ npm run steward -- io outbox list
 
 - スキーマ: Zod（`schemas/`）
 - 参照整合性: loan↔contract↔property、operations、HR
-- 依存グラフ: `cursor/data/dependency-graph.yaml`（`steward deps` / `validate --deps`）
+- 依存グラフ: `data/dependency-graph.yaml`（`steward deps` / `validate --deps`）
 - `npm run validate -- --warnings` で非致命警告も表示
 
 ## Cursor 運用
 
-Cursor Chat で契約書・請求書・議事録等を投入し、YAML データとして `cursor/data/` に蓄積する。
+Cursor Chat で契約書・請求書・議事録等を投入し、YAML データとして `data/` に蓄積する。
 レポート生成時は `steward report monthly` 等の CLI を優先利用する。

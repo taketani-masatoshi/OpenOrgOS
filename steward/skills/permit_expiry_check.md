@@ -6,9 +6,9 @@
 
 ## 入力
 
-- `docs/corporate/licenses/INDEX.csv`
-- `cursor/data/contracts/CTR-013.yaml` · `CTR-014.yaml`
-- `docs/iso/` 監査計画（任意）
+- `docs/company/licenses/INDEX.csv`
+- `data/contracts/CTR-013.yaml` · `CTR-014.yaml`
+- `docs/compliance/iso/` 監査計画（任意）
 
 ## 出力
 

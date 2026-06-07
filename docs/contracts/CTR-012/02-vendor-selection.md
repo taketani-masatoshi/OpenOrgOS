@@ -29,11 +29,11 @@
 
 1. 本ファイルに業者名・連絡先を記入
 2. [01-draft.md](01-draft.md) の乙欄署名 → [02-executed.md](02-executed.md) 作成
-3. [清掃チェックリスト](../../operations/lodging/templates/housekeeping/清掃チェックリスト.md) を共有
+3. [清掃チェックリスト](../../properties/PROP-002-kamezawa/operations/templates/housekeeping/清掃チェックリスト.md) を共有
 4. YAML `status: executed` 更新
 
 ---
 
 ## 暫定運用（業者確定前）
 
-代表取締役2名による **自主清掃** 又は **都度発注**。記録は [清掃記録.csv](../../operations/lodging/templates/housekeeping/清掃記録.csv)。
+代表取締役2名による **自主清掃** 又は **都度発注**。記録は [清掃記録.csv](../../properties/PROP-002-kamezawa/operations/templates/housekeeping/清掃記録.csv)。

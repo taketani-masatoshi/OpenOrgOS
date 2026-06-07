@@ -1,5 +1,5 @@
 # 税務プロファイル — 申告区分・期限・担当（TBD 明示）
-# 人向け: docs/plans/finance/tax-filing-checklist.md
+# 人向け: docs/finance/tax-filing-checklist.md
 
 entity:
   name: 株式会社MAL
@@ -96,7 +96,7 @@ contacts:
   notes: 税理士契約・会計ソフト選定は executive-remaining-tasks 参照
 
 related_docs:
-  - docs/corporate/tax/fy2026-tax-readiness-assessment.md
-  - docs/corporate/tax/fy2026/01-hojinzei-shinkoku-yoko.md
-  - docs/corporate/fy2026-tax-advisor-checklist.md
-  - docs/plans/finance/tax-filing-checklist.md
+  - docs/company/tax/fy2026-tax-readiness-assessment.md
+  - docs/company/tax/fy2026/01-hojinzei-shinkoku-yoko.md
+  - docs/company/fy2026-tax-advisor-checklist.md
+  - docs/finance/tax-filing-checklist.md

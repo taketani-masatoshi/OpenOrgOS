@@ -15,27 +15,27 @@
 | 見たいもの | 場所 |
 |-----------|------|
 | 決算書・予実 | [`docs/plans/`](docs/plans/) |
-| 法人書類（議事録・PDF） | [`docs/corporate/`](docs/corporate/) |
+| 法人書類（議事録・PDF） | [`docs/company/`](docs/company/) |
 | 契約書 | [`docs/contracts/`](docs/contracts/) |
-| 計画表（CSV） | [`docs/data/`](docs/data/) |
-| **業務台帳・名簿** | [`docs/operations/`](docs/operations/) |
+| 計画表（CSV） | [`docs/exports/`](docs/exports/) |
+| 業務台帳・名簿 | [`docs/finance/accounting/`](docs/finance/accounting/) · [`docs/company/hr/`](docs/company/hr/) · [`docs/properties/`](docs/properties/) |
 | 自動レポート（MD） | [`docs/reports/`](docs/reports/) |
-| ISO・現状評価 | [`docs/iso/`](docs/iso/) |
+| ISO・現状評価 | [`docs/compliance/iso/`](docs/compliance/iso/) |
 
-PDF（決算報告書・事業報告書）は **`docs/outbox/corporate/`** に出力されます。
+PDF（決算報告書・事業報告書）は **`docs/io/outbox/corporate/`** に出力されます。
 
-**書類の受け渡し:** スキャン等 → [`docs/inbox/`](docs/inbox/) · 印刷用 → [`docs/outbox/`](docs/outbox/) · `npm run steward -- io status`
+**書類の受け渡し:** スキャン等 → [`docs/io/inbox/`](docs/io/inbox/) · 印刷用 → [`docs/io/outbox/`](docs/io/outbox/) · `npm run steward -- io status`
 
 ---
 
 ## Cursor はどこを触る？
 
-**→ [`cursor/data/`](cursor/data/) と [`cursor/scratch/`](cursor/scratch/) のみ**
+**→ [`data/`](data/) と [`scratch/`](scratch/) のみ**
 
 | 用途 | 場所 |
 |------|------|
-| 正データ（YAML） | [`cursor/data/`](cursor/data/) |
-| 中間試行 | [`cursor/scratch/`](cursor/scratch/) |
+| 正データ（YAML） | [`data/`](data/) |
+| 中間試行 | [`scratch/`](scratch/) |
 
 `cursor/` に PDF や生成物は置きません。
 
@@ -59,18 +59,18 @@ Steward/
 │
 ├── docs/                      【人】読む・印刷・提出
 │   ├── plans/                 決算・予実 MD
-│   ├── corporate/             法人書類 MD
-│   ├── inbox/                 受信トレイ（Input・スキャン等）
-│   ├── outbox/                出力トレイ（Output・印刷 PDF）
-│   ├── iso/                   ISO方針・ギャップ分析
+│   ├── company/               法人書類 MD
+│   ├── finance/               経理・会計
+│   ├── compliance/            ISO・プライバシー
+│   ├── properties/            物件別運用（PROP-001/002）
+│   ├── io/inbox|outbox/       受信・出力トレイ
 │   ├── contracts/             契約書
-│   ├── operations/            業務台帳・宿泊者名簿
-│   ├── data/                  表 CSV
+│   ├── exports/               表 CSV
 │   └── reports/               CLI 生成 MD
 │
-├── cursor/                    【Cursor】正データのみ
-│   ├── data/                  YAML
-│   └── scratch/               試行（gitignore）
+├── data/                      【正データ】YAML
+├── scratch/                   試行（gitignore）
+├── steward/                   Agent · Skill · Rules · Orchestrators
 │
 ├── assets/                    【プログラム】フォント等
 ├── src/                       CLI
@@ -98,9 +98,9 @@ npm run steward -- contracts list
 npm run steward -- io status       # 受信/出力トレイ
 npm run steward -- io guide        # I/O フロー
 npm run steward -- dashboard       # 経営ダッシュボード（日次）→ docs/reports/dashboard/
-npm run steward -- deps check --file cursor/data/...  # 編集後の影響チェック
+npm run steward -- deps check --file data/...  # 編集後の影響チェック
 npm run steward -- deps graph      # 依存関係マップ
-npm run steward -- report annual --fy FY2026   # → docs/outbox/corporate/
+npm run steward -- report annual --fy FY2026   # → docs/io/outbox/corporate/
 ```
 
 詳細: [docs/spec-v0.2.md](docs/spec-v0.2.md)

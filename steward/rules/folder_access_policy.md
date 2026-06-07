@@ -1,6 +1,6 @@
 # Steward OS — フォルダアクセスポリシー
 
-**版:** 2026-06-08 · **正本:** 本ファイル（`13_rules/`） · **上位:** [agent_skill_architecture.md](agent_skill_architecture.md)
+**版:** 2026-06-08 · **正本:** 本ファイル（`steward/rules/`） · **上位:** [agent_skill_architecture.md](agent_skill_architecture.md)
 
 本書は 8 エージェント間の **読取・編集・禁止** を運用レベルで定義する。Steward OS は経営支援 OS であり、エージェントは **提案と下書き** を行い、**最終判断は人間（段100%株主）** が行う。
 
@@ -14,15 +14,15 @@
 
 | ゾーン | パス | ルール |
 |--------|------|--------|
-| 正データ | `cursor/data/**/*.yaml` | 編集後 **必ず** `npm run validate` |
+| 正データ | `data/**/*.yaml` | 編集後 **必ず** `npm run validate` |
 | 人向け | `docs/**` | MD/CSV/PDF。YAML から `steward sync all` で CSV 再生成 |
-| 試行 | `cursor/scratch/` | gitignore。確定後 Primary へ移動 |
+| 試行 | `scratch/` | gitignore。確定後 Primary へ移動 |
 | プログラム | `src/` `schemas/` | エージェントは原則触らない（開発タスク除く） |
 
 ### 1.2 正データ優先
 
 - `docs/` と YAML が矛盾した場合、**YAML が正**。
-- CSV（`docs/data/`）は生成物。手編集した場合は Finance/Contract が YAML へ逆反映するか、次回 sync で上書きされることを確認する。
+- CSV（`docs/exports/`）は生成物。手編集した場合は Finance/Contract が YAML へ逆反映するか、次回 sync で上書きされることを確認する。
 
 ### 1.3 機密階層
 
@@ -48,7 +48,7 @@
 | 7 | Compliance | コンプライアンス | §2.6 |
 | 8 | Operations | 業務運用 | §2.7 |
 
-索引: [11_agents/00-このフォルダについて.md](../11_agents/00-このフォルダについて.md)
+索引: [steward/agents/00-このフォルダについて.md](../steward/agents/00-このフォルダについて.md)
 
 ---
 
@@ -58,10 +58,10 @@
 
 | 操作 | 許可 |
 |------|------|
-| 読取（Primary） | `docs/reports/dashboard/` · `docs/reports/agent-summaries/` · `docs/corporate/executive-remaining-tasks.md` |
+| 読取（Primary） | `docs/reports/dashboard/` · `docs/reports/agent-summaries/` · `docs/company/executive-remaining-tasks.md` |
 | 読取（例外） | 要約未生成時のみ `docs/plans/` 要約 MD · CLI 出力 |
 | 書込 | `docs/reports/executive-notes/`（注釈のみ） |
-| 禁止 | 全 YAML 編集 · `cursor/data/**` 直読 · secrets · 契約・規程の直接改定 |
+| 禁止 | 全 YAML 編集 · `data/**` 直読 · secrets · 契約・規程の直接改定 |
 
 **CLI 必須セット（日次）:**
 ```bash
@@ -78,14 +78,14 @@ npm run steward -- alerts
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/finances/**` | R/W |
-| `cursor/data/plans/**` | R/W |
+| `data/finance/**` | R/W |
+| `data/plans/**` | R/W |
 | `docs/plans/**` | R/W |
-| `docs/data/*.csv` | R/W（sync 後確認） |
-| `docs/operations/accounting/**` | R/W |
-| `cursor/data/properties/**` | R（減価・収益前提） |
-| `cursor/data/contracts/**` | R（費用按分） |
-| `docs/corporate/tax/**` | R |
+| `docs/exports/*.csv` | R/W（sync 後確認） |
+| `docs/finance/accounting/**` | R/W |
+| `data/properties/**` | R（減価・収益前提） |
+| `data/contracts/**` | R（費用按分） |
+| `docs/company/tax/**` | R |
 | `document-io.yaml` | **禁止** |
 
 **編集後チェックリスト:**
@@ -102,12 +102,12 @@ npm run steward -- alerts
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/contracts/CTR-*.yaml` | R/W |
+| `data/contracts/CTR-*.yaml` | R/W |
 | `docs/contracts/CTR-*/**` | R/W |
-| `docs/data/契約管理表.csv` | R/W |
-| `cursor/data/finances/loans.yaml` | R（LOAN↔CTR） |
-| `cursor/data/properties/**` | R |
-| `docs/inbox/**` | R（契約原本の受信確認） |
+| `docs/exports/契約管理表.csv` | R/W |
+| `data/finance/loans.yaml` | R（LOAN↔CTR） |
+| `data/properties/**` | R |
+| `docs/io/inbox/**` | R（契約原本の受信確認） |
 | `finances/monthly/**` | **禁止** |
 
 **状態遷移:**
@@ -122,11 +122,13 @@ npm run steward -- alerts
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/properties/PROP-001.yaml` | R/W |
+| `data/properties/PROP-001.yaml` | R/W |
 | `docs/contracts/CTR-001/` `CTR-003/` `CTR-013/` | R/W（契約 Agent と協調） |
-| `cursor/data/finances/**` | R |
+| `data/finance/**` | R |
+| `docs/properties/PROP-001-bancho/operations/**` | R/W |
+| `docs/finance/accounting/invoices/bancho/**` | R |
 | `docs/plans/fy2026-pl.md` 等 | R |
-| `PROP-002` · `lodging/` · secrets | **禁止** |
+| `PROP-002` · `PROP-002-kamezawa/` · secrets | **禁止** |
 
 **協調必須事項:**
 - CTR-003 本社兼用按分 → Finance + Compliance
@@ -140,11 +142,11 @@ npm run steward -- alerts
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/properties/PROP-002.yaml` | R/W |
-| `cursor/data/operations/kamezawa-public.yaml` | R/W |
-| `cursor/data/operations/kamezawa-secrets.yaml` | **R/W（唯一）** |
-| `docs/operations/lodging/**` | R/W |
-| `cursor/data/plans/property-revenue.yaml` | R |
+| `data/properties/PROP-002.yaml` | R/W |
+| `data/operations/kamezawa-public.yaml` | R/W |
+| `data/operations/kamezawa-secrets.yaml` | **R/W（唯一）** |
+| `docs/properties/PROP-002-kamezawa/operations/**` | R/W |
+| `data/plans/property-revenue.yaml` | R |
 | secrets → docs/ 転記 | **禁止** |
 
 **secrets 運用:**
@@ -160,12 +162,12 @@ npm run steward -- alerts
 
 | パス | 権限 |
 |------|------|
-| `docs/corporate/regulations/**` | R/W |
-| `docs/corporate/licenses/**` | R/W |
-| `docs/iso/**` | R/W |
-| `docs/operations/privacy/**` | R/W |
-| `docs/corporate/tax/**` | R |
-| `cursor/data/company.yaml` | R |
+| `docs/company/regulations/**` | R/W |
+| `docs/company/licenses/**` | R/W |
+| `docs/compliance/iso/**` | R/W |
+| `docs/compliance/privacy/**` | R/W |
+| `docs/company/tax/**` | R |
+| `data/company.yaml` | R |
 | `kamezawa-secrets.yaml` | R（存在・項目充足監査のみ。値の複製禁止） |
 | 財務 YAML · 契約 fee | **禁止** |
 
@@ -182,13 +184,13 @@ npm run steward -- alerts
 
 | パス | 権限 |
 |------|------|
-| `docs/inbox/**` | R/W |
-| `docs/outbox/**` | R/W |
-| `cursor/data/document-io.yaml` | R/W |
-| `docs/operations/hr/**` | R/W |
-| `docs/operations/accounting/templates/**` | R/W（Finance と協調） |
-| `docs/operations/lodging/**` | R（実運用記録は Hospitality が主） |
-| `cursor/data/finances/**` `contracts/**` `properties/**` | **禁止** |
+| `docs/io/inbox/**` | R/W |
+| `docs/io/outbox/**` | R/W |
+| `data/document-io.yaml` | R/W |
+| `docs/company/hr/**` | R/W |
+| `docs/finance/accounting/templates/**` | R/W（Finance と協調） |
+| `docs/properties/PROP-002-kamezawa/operations/**` | R（実運用記録は Hospitality が主） |
+| `data/finance/**` `contracts/**` `properties/**` | **禁止** |
 | secrets | **禁止** |
 
 **I/O フロー:**
@@ -196,7 +198,7 @@ npm run steward -- alerts
 # 受信
 npm run steward -- io inbox add --from ./scan.pdf --category licenses --title "許可証"
 # 処理完了 → 归档
-npm run steward -- io inbox done INB-001 --archive docs/corporate/licenses/ryokan/records/x.pdf
+npm run steward -- io inbox done INB-001 --archive docs/company/licenses/ryokan/records/x.pdf
 # 状態確認
 npm run steward -- io status
 ```
@@ -209,14 +211,14 @@ npm run steward -- io status
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/executive/**` | R/W（Primary · SoT） |
+| `data/executive/**` | R/W（Primary · SoT） |
 | `docs/executive/**` | R/W |
 | `docs/reports/dashboard/` | R（**要約行のみ**） |
 | `docs/reports/executive-notes/` | R（サニタイズ済みのみ） |
-| `docs/corporate/executive-remaining-tasks.md` | R |
-| `cursor/data/hr/employees.yaml` | R |
-| `cursor/data/company.yaml` | R |
-| `cursor/data/finances/**` `contracts/**` `plans/**` | **禁止** |
+| `docs/company/executive-remaining-tasks.md` | R |
+| `data/hr/employees.yaml` | R |
+| `data/company.yaml` | R |
+| `data/finance/**` `contracts/**` `plans/**` | **禁止** |
 | `kamezawa-secrets.yaml` · `**/records/**` | **禁止** |
 
 **境界:** [secretary_steward_boundary.md](secretary_steward_boundary.md)
@@ -276,7 +278,7 @@ npm run steward -- io status
 
 **件名:** （一行）
 **背景:** （なぜ今必要か）
-**参照パス:** `cursor/data/...` または `docs/...`
+**参照パス:** `data/...` または `docs/...`
 **質問:** （具体的に 1–3 点）
 **希望回答形式:** 数値 / 是非 / ドラフト MD / CLI コマンド
 **期限:** （任意）
@@ -349,6 +351,6 @@ npm run steward -- io status
 
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
-- [11_agents/](../11_agents/00-このフォルダについて.md)
-- [12_skills/](../12_skills/00-このフォルダについて.md)
-- [cursor/data/00-README.md](../cursor/data/00-README.md)
+- [steward/agents/](../steward/agents/00-このフォルダについて.md)
+- [steward/skills/](../steward/skills/00-このフォルダについて.md)
+- [data/00-README.md](../data/00-README.md)

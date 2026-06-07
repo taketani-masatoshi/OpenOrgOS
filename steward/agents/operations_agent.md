@@ -13,11 +13,11 @@
 
 ## 目的
 
-- `docs/inbox/` 未処理書類の分類・路由（Contract / Compliance / Hospitality へ）
-- `docs/outbox/` 印刷・提出 PDF の出力管理
-- `cursor/data/document-io.yaml` のキュー更新
-- `docs/operations/hr/` テンプレ整備
-- `docs/operations/accounting/templates/` の Finance との協調
+- `docs/io/inbox/` 未処理書類の分類・路由（Contract / Compliance / Hospitality へ）
+- `docs/io/outbox/` 印刷・提出 PDF の出力管理
+- `data/document-io.yaml` のキュー更新
+- `docs/company/hr/` テンプレ整備
+- `docs/finance/accounting/templates/` の Finance との協調
 - `steward io` CLI による I/O 自動化
 - **Skill 実行後** `docs/reports/agent-summaries/operations/` に要約を書く
 
@@ -27,7 +27,7 @@
 
 | Skill | ファイル |
 |-------|---------|
-| contract_register | [12_skills/contract_register.md](../12_skills/contract_register.md)（inbox→归档） |
+| contract_register | [steward/skills/contract_register.md](../steward/skills/contract_register.md)（inbox→归档） |
 
 ## 要約出力先
 
@@ -39,24 +39,24 @@
 
 | パス | 権限 |
 |------|------|
-| `docs/inbox/**` | Primary |
-| `docs/outbox/**` | Primary |
-| `cursor/data/document-io.yaml` | Primary |
-| `docs/operations/hr/**` | Primary |
-| `docs/operations/accounting/templates/**` | R/W（Finance 協調） |
+| `docs/io/inbox/**` | Primary |
+| `docs/io/outbox/**` | Primary |
+| `data/document-io.yaml` | Primary |
+| `docs/company/hr/**` | Primary |
+| `docs/finance/accounting/templates/**` | R/W（Finance 協調） |
 | `docs/operations/**`（lodging 除く横断） | Read/Write |
 | `docs/contracts/**` | Read（归档参照） |
-| `docs/corporate/licenses/**/records/` | Write（归档先） |
+| `docs/company/licenses/**/records/` | Write（归档先） |
 
 ---
 
 ## 編集できるフォルダ
 
-- `docs/inbox/**`
-- `docs/outbox/**`
-- `cursor/data/document-io.yaml`
-- `docs/operations/hr/**`
-- `docs/operations/accounting/templates/**`
+- `docs/io/inbox/**`
+- `docs/io/outbox/**`
+- `data/document-io.yaml`
+- `docs/company/hr/**`
+- `docs/finance/accounting/templates/**`
 - 归档先 `docs/**/records/`（Compliance 指示に従う）
 
 **CLI:**
@@ -71,11 +71,11 @@ npm run steward -- io outbox list
 
 ## 禁止事項
 
-- `cursor/data/finances/**` · `contracts/**` · `properties/**` の編集
+- `data/finance/**` · `contracts/**` · `properties/**` の編集
 - `kamezawa-secrets.yaml`
 - 契約条項・規程本文の改定
 - inbox 書類の **内容判断**（路由のみ · 専門エージェントが内容確認）
-- `docs/operations/lodging/` の実運用記録の主編集（Hospitality 主導）
+- `docs/properties/PROP-002-kamezawa/operations/` の実運用記録の主編集（Hospitality 主導）
 
 ---
 
@@ -123,5 +123,5 @@ npm run steward -- io outbox list
 ## コンテキスト
 
 - I/O ガイド: `npm run steward -- io guide`
-- inbox/outbox 説明: [docs/inbox/](../docs/inbox/00-このフォルダについて.md) · [docs/outbox/](../docs/outbox/00-このフォルダについて.md)
-- 台帳: [document-io.yaml](../cursor/data/document-io.yaml)
+- inbox/outbox 説明: [docs/io/inbox/](../docs/io/inbox/00-このフォルダについて.md) · [docs/io/outbox/](../docs/io/outbox/00-このフォルダについて.md)
+- 台帳: [document-io.yaml](../data/document-io.yaml)

@@ -30,7 +30,7 @@ export function runFinancesAdd(options: {
   const parsed = YAML.parse(raw);
   const entry = monthlyFinanceSchema.parse({ ...parsed, month: options.month });
 
-  const path = join(DATA_DIR, "finances", "monthly", `${options.month}.yaml`);
+  const path = join(DATA_DIR, "finance", "monthly", `${options.month}.yaml`);
   writeYamlFile(path, entry);
   console.log(`✓ Saved ${path}`);
 }

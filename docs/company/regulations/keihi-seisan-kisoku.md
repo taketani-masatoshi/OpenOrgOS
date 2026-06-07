@@ -51,6 +51,6 @@
 
 ## 関連
 
-- [`expense-plan.yaml`](../../../cursor/data/plans/expense-plan.yaml)
+- [`expense-plan.yaml`](../../../data/plans/expense-plan.yaml)
 - [旅費規程 REG-008](ryohi-kisoku.md)
 - [稟議・決裁規程](ringi-kessai-kisoku.md)

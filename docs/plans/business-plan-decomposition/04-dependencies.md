@@ -1,6 +1,6 @@
 # Step 4 — 計画間依存関係
 
-**機械可読版:** `cursor/data/dependency-graph.yaml` · CLI: `npm run steward -- deps graph`
+**機械可読版:** `data/dependency-graph.yaml` · CLI: `npm run steward -- deps graph`
 
 ---
 

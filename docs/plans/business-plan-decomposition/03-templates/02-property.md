@@ -1,7 +1,7 @@
 # テンプレート — 2. 物件別計画（11）
 
 **インスタンス:** `docs/plans/properties/PROP-001/` · `docs/plans/properties/PROP-002/`  
-**正データ:** `cursor/data/properties/{PROP-ID}.yaml`
+**正データ:** `data/properties/{PROP-ID}.yaml`
 
 各計画で `{PROP}` = PROP-001 または PROP-002 に置換。
 
@@ -16,7 +16,7 @@
 | **必要な入力** | `{PROP}.yaml` · 登記 · 固定資産台帳 |
 | **出力** | 物件概要 1 枚 · 正データリンク · ステークホルダー |
 | **KPI** | データ鮮度 · validate 合格 |
-| **関連フォルダ** | `cursor/data/properties/{PROP}.yaml` · `docs/plans/properties/{PROP}/basic-plan.md` |
+| **関連フォルダ** | `data/properties/{PROP}.yaml` · `docs/plans/properties/{PROP}/basic-plan.md` |
 | **担当** | Property Rental（001）/ Hospitality（002） |
 | **更新頻度** | 四半期 · 取得/売却時 |
 | **リスク** | YAML と docs 不整合 |
@@ -48,7 +48,7 @@
 | **必要な入力** | `property-revenue.yaml` · `{PROP}.yaml` · 市場相場 |
 | **出力** | 月次売上目標 · シナリオ（楽観/悲観） |
 | **KPI** | 月次売上 · 予実差異率 |
-| **関連フォルダ** | `cursor/data/plans/property-revenue.yaml` |
+| **関連フォルダ** | `data/plans/property-revenue.yaml` |
 | **担当** | Finance · 物件エージェント |
 | **更新頻度** | 月次 |
 | **リスク** | 稼働率前提の変動 |
@@ -64,7 +64,7 @@
 | **必要な入力** | `expense-plan.yaml` · `{PROP}.operating_costs` |
 | **出力** | 月次費用予算 · コスト削減案 |
 | **KPI** | OPEX 率 · 費用予実差 |
-| **関連フォルダ** | `docs/data/費用計画.csv` · `docs/plans/properties/{PROP}/expense-plan.md` |
+| **関連フォルダ** | `docs/exports/費用計画.csv` · `docs/plans/properties/{PROP}/expense-plan.md` |
 | **担当** | Finance |
 | **更新頻度** | 月次 |
 | **リスク** | 変動費の急増 |
@@ -96,7 +96,7 @@
 | **必要な入力** | `investment-plan.yaml` · 工事契約 |
 | **出力** | CAPEX スケジュール · 支払 · 償却 |
 | **KPI** | CAPEX 額 · 工期遵守 |
-| **関連フォルダ** | `cursor/data/plans/investment-plan.yaml` |
+| **関連フォルダ** | `data/plans/investment-plan.yaml` |
 | **担当** | Finance · Hospitality（002） |
 | **更新頻度** | 四半期 |
 | **リスク** | コスト超過 · 開業遅延 |
@@ -128,7 +128,7 @@
 | **必要な入力** | `hotel.*` · `pre-opening-checklist.md` · secrets |
 | **出力** | 運用マニュアル · 日次/週次チェック |
 | **KPI** | 稼働率 70% · RevPAR · ゲスト評価 |
-| **関連フォルダ** | `docs/operations/lodging/` |
+| **関連フォルダ** | `docs/properties/PROP-002-kamezawa/operations/` |
 | **担当** | Hospitality |
 | **更新頻度** | 週次 |
 | **リスク** | 許認可 · 低稼働 |

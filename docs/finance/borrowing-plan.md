@@ -1,6 +1,6 @@
 # 借入計画（借入計画書）
 
-**版:** 2026-06-07 · **正データ:** [`cursor/data/plans/debt-plan.yaml`](../../../cursor/data/plans/debt-plan.yaml)
+**版:** 2026-06-07 · **正データ:** [`data/plans/debt-plan.yaml`](../../../data/plans/debt-plan.yaml)
 
 ## 目的
 
@@ -54,7 +54,7 @@
 | 使途 | 金額 | 投資計画 | 借入 |
 |------|-----:|---------|------|
 | 亀沢 土地 | 70,000,000 | FY2026 前 | LOAN-002 |
-| 亀沢 上置き建築 | 26,000,000 | [`investment-plan.yaml`](../../../cursor/data/plans/investment-plan.yaml) FY2026 | LOAN-002 |
+| 亀沢 上置き建築 | 26,000,000 | [`investment-plan.yaml`](../../../data/plans/investment-plan.yaml) FY2026 | LOAN-002 |
 | 番町 取得 | 16,600,000 | 実行済 | LOAN-001 |
 
 ## 将来の銀行借入
@@ -74,9 +74,9 @@
 
 ## 関連フォルダ
 
-- `cursor/data/plans/debt-plan.yaml`
-- `cursor/data/finances/loans.yaml`
-- `cursor/data/plans/business-plan.yaml`
+- `data/plans/debt-plan.yaml`
+- `data/finance/loans.yaml`
+- `data/plans/business-plan.yaml`
 - `docs/contracts/CTR-008/` · `CTR-009/`
 
 ## 担当

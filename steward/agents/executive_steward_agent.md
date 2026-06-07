@@ -26,7 +26,7 @@
 |------|------|
 | `docs/reports/dashboard/` | CLI 日次ダッシュボード |
 | `docs/reports/agent-summaries/` | **各 Agent の要約（原則読取面）** |
-| `docs/corporate/executive-remaining-tasks.md` | P0/P1 残タスク |
+| `docs/company/executive-remaining-tasks.md` | P0/P1 残タスク |
 | `docs/reports/executive-notes/` | 経営メモ（Write 可） |
 | `10_decisions/` 相当 · 議事録索引 | 意思決定履歴（Read） |
 
@@ -35,12 +35,12 @@
 | パス | 条件 |
 |------|------|
 | `docs/plans/*.md` | **要約未生成時のみ** · 決算要約 MD |
-| `docs/outbox/corporate/` | 提出済 PDF 路径確認 |
+| `docs/io/outbox/corporate/` | 提出済 PDF 路径確認 |
 
 ## Forbidden
 
-- `cursor/data/**/*.yaml` 直読・編集
-- `docs/contracts/**` · `docs/operations/lodging/**` 詳細
+- `data/**/*.yaml` 直読・編集
+- `docs/contracts/**` · `docs/properties/PROP-002-kamezawa/operations/**` 詳細
 - `kamezawa-secrets.yaml`
 - 契約本文・規程の改定
 
@@ -59,12 +59,12 @@ npm run steward -- scenario
 
 | Skill | 用途 |
 |-------|------|
-| [executive_dashboard](../12_skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
+| [executive_dashboard](../steward/skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
 | `steward dashboard` | 上記 Skill の CLI 実装 |
 | `steward alerts` | P0 契約・許認可 |
 | `steward forecast` / `scenario` | CF 要約（Finance 要約と併用） |
 
-各 Agent の Skill 出力: [12_skills/](../12_skills/00-このフォルダについて.md)
+各 Agent の Skill 出力: [steward/skills/](../steward/skills/00-このフォルダについて.md)
 
 ---
 
@@ -77,9 +77,9 @@ npm run steward -- scenario
 
 ## 禁止事項
 
-- `cursor/data/**/*.yaml` の直接編集
+- `data/**/*.yaml` の直接編集
 - Data 原本の **全件走査**（要約経由を原則とする）
-- `cursor/data/operations/kamezawa-secrets.yaml` へのアクセス
+- `data/operations/kamezawa-secrets.yaml` へのアクセス
 - 契約本文・社内規程の改定
 - 専門 Agent の領域を越えた数値変更
 - 「自動承認」「自動締結」など人間判断の代替
@@ -123,7 +123,7 @@ npm run steward -- scenario
 | 規程・許認可・ISO・個情 | **Compliance Agent** |
 | inbox 滞留・書類归档 | **Operations Agent** |
 
-照会時は [folder_access_policy.md](../13_rules/folder_access_policy.md) §4 のフォーマットを使う。
+照会時は [folder_access_policy.md](../steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
 
 ---
 
@@ -131,4 +131,4 @@ npm run steward -- scenario
 
 - **法人:** 株式会社MAL · 段100%株主
 - **物件:** PROP-001 番町ハイム312（賃貸）· PROP-002 亀沢旅館（旅館 · 2026-08 開業）
-- **参照:** [agent_skill_architecture.md](../13_rules/agent_skill_architecture.md) · [11_agents/](00-このフォルダについて.md)
+- **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/agents/](00-このフォルダについて.md)

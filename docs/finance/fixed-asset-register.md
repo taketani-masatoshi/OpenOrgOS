@@ -1,7 +1,7 @@
 # 固定資産台帳（第9期期末）
 
 **株式会社MAL · 基準日 2027年1月31日（第9期期末）**  
-**正データ:** [`cursor/data/finances/fixed-assets.yaml`](../../../cursor/data/finances/fixed-assets.yaml)
+**正データ:** [`data/finance/fixed-assets.yaml`](../../../data/finance/fixed-assets.yaml)
 
 ---
 
@@ -73,8 +73,8 @@ investment-plan（亀沢上置き建築費 2,600万）と一致。
 
 ## 関連ファイル
 
-- 物件: `cursor/data/properties/PROP-001.yaml`, `PROP-002.yaml`
-- 借入: `cursor/data/finances/loans.yaml`
-- 費用計画: `cursor/data/plans/expense-plan.yaml`
-- テンプレ CSV: `docs/operations/accounting/templates/固定資産台帳.csv`
+- 物件: `data/properties/PROP-001.yaml`, `PROP-002.yaml`
+- 借入: `data/finance/loans.yaml`
+- 費用計画: `data/plans/expense-plan.yaml`
+- テンプレ CSV: `docs/finance/accounting/templates/固定資産台帳.csv`
 - 会計方針: [accounting-policy.md](accounting-policy.md)

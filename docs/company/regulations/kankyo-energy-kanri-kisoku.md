@@ -17,7 +17,7 @@
 1. **優先:** 亀沢旅館の運営（電力・ガス・上下水・廃棄物・洗濯）
 2. **段階的:** 番町本社（オフィス・番町ハイム312）
 
-宿泊の社会的側面は [REG-012](shukuhaku-unyo-kisoku.md)、21401 目標は [`docs/iso/ISO-21401/`](../../iso/ISO-21401/) と整合する。
+宿泊の社会的側面は [REG-012](shukuhaku-unyo-kisoku.md)、21401 目標は [`docs/compliance/iso/ISO-21401/`](../../compliance/iso/ISO-21401/) と整合する。
 
 ## 第3条（基本方針）
 
@@ -34,12 +34,12 @@
 | アメニティ包装 | プラスチック | 詰替・最小包装 |
 | 騒音 | 近隣 | 静穏時間帯の遵守 |
 
-正式な評価表は [`docs/iso/ISO-14001/`](../../iso/ISO-14001/) に置く。
+正式な評価表は [`docs/compliance/iso/ISO-14001/`](../../compliance/iso/ISO-14001/) に置く。
 
 ## 第5条（エネルギー管理）
 
-1. 亀沢の **電力・ガス使用量** を月次で記録し、[`yojitsu-fy2026.yaml`](../../../cursor/data/plans/yojitsu-fy2026.yaml) 等と照合する。
-2. **エネルギー基準値**（例: kWh/泊）を [`docs/iso/ISO-50001/`](../../iso/ISO-50001/) で設定し、年1回見直す。
+1. 亀沢の **電力・ガス使用量** を月次で記録し、[`yojitsu-fy2026.yaml`](../../../data/plans/yojitsu-fy2026.yaml) 等と照合する。
+2. **エネルギー基準値**（例: kWh/泊）を [`docs/compliance/iso/ISO-50001/`](../../compliance/iso/ISO-50001/) で設定し、年1回見直す。
 3. 省エネ施策（LED、待機電力削減等）の実施状況を記録する。
 
 ## 第6条（法令・規制）
@@ -68,5 +68,5 @@
 
 ## 関連
 
-- [ISO 14001](../../iso/ISO-14001/00-このフォルダについて.md) · [ISO 50001](../../iso/ISO-50001/00-このフォルダについて.md)
-- [expense-plan.yaml](../../../cursor/data/plans/expense-plan.yaml)
+- [ISO 14001](../../compliance/iso/ISO-14001/00-このフォルダについて.md) · [ISO 50001](../../compliance/iso/ISO-50001/00-このフォルダについて.md)
+- [expense-plan.yaml](../../../data/plans/expense-plan.yaml)

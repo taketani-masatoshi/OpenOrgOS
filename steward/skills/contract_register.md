@@ -6,14 +6,14 @@ CTR YAML と契約 MD・契約管理表 CSV を整合させる。
 
 ## 入力
 
-- `cursor/data/contracts/CTR-*.yaml`
+- `data/contracts/CTR-*.yaml`
 - `docs/contracts/CTR-*/**`
 - inbox 原本（Operations 归档後）
 
 ## 出力
 
 - 更新済 CTR YAML/MD
-- `docs/data/契約管理表.csv`（sync 後）
+- `docs/exports/契約管理表.csv`（sync 後）
 - `docs/reports/agent-summaries/contract/register-{YYYY-MM-DD}.md`
 
 ## 使用 Agent
@@ -24,9 +24,9 @@ Contract Agent · Operations Agent（inbox→归档）
 
 | 種別 | パス |
 |------|------|
-| 正データ | `cursor/data/contracts/` |
+| 正データ | `data/contracts/` |
 | 本文 | `docs/contracts/` |
-| CSV | `docs/data/契約管理表.csv` |
+| CSV | `docs/exports/契約管理表.csv` |
 
 ## CLI
 
@@ -34,7 +34,7 @@ Contract Agent · Operations Agent（inbox→归档）
 npm run steward -- contracts show CTR-XXX
 npm run steward -- sync contracts
 npm run validate
-npm run steward -- deps check --file cursor/data/contracts/CTR-XXX.yaml
+npm run steward -- deps check --file data/contracts/CTR-XXX.yaml
 ```
 
 ## 禁止

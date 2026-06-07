@@ -8,9 +8,9 @@
 
 | データ | パス |
 |--------|------|
-| 社外連絡先 | `cursor/data/executive/external-contacts.yaml` |
-| カレンダー（公開可のみ） | `cursor/data/executive/calendar.yaml`（`external_visible: true`） |
-| 境界ルール | [13_rules/secretary_steward_boundary.md](../13_rules/secretary_steward_boundary.md) |
+| 社外連絡先 | `data/executive/external-contacts.yaml` |
+| カレンダー（公開可のみ） | `data/executive/calendar.yaml`（`external_visible: true`） |
+| 境界ルール | [steward/rules/secretary_steward_boundary.md](../steward/rules/secretary_steward_boundary.md) |
 
 ## 出力
 
@@ -48,7 +48,7 @@
 
 1. 連絡元を `external-contacts.yaml` と照合（不明なら新規 ID 提案は人間確認後）
 2. 依頼タイプを分類（日程 / 情報 / 業務 / 拒否）
-3. 拒否・ルート対象は [照会フォーマット](../13_rules/folder_access_policy.md) で Executive へ
+3. 拒否・ルート対象は [照会フォーマット](../steward/rules/folder_access_policy.md) で Executive へ
 4. 下書きを出力（自動送信しない）
 
 ## 禁止

@@ -1,5 +1,5 @@
 # 勘定科目（最小セット）— 複式簿記・申告書対応の科目コード
-# 会計方針: docs/plans/finance/accounting-policy.md
+# 会計方針: docs/finance/accounting-policy.md
 
 version: "1"
 currency: JPY
@@ -10,30 +10,30 @@ accounts:
     name: 現金及び預金
     type: asset
     normal_balance: debit
-    data_source: cursor/data/finances/cash-balance.yaml
+    data_source: data/finance/cash-balance.yaml
   - code: "1200"
     name: 建物
     type: asset
     normal_balance: debit
-    data_source: cursor/data/finances/fixed-assets.yaml
+    data_source: data/finance/fixed-assets.yaml
     filter: category=建物
   - code: "1210"
     name: 土地
     type: asset
     normal_balance: debit
-    data_source: cursor/data/finances/fixed-assets.yaml
+    data_source: data/finance/fixed-assets.yaml
     filter: category=土地
   - code: "1290"
     name: 減価償却累計額
     type: asset_contra
     normal_balance: credit
-    data_source: cursor/data/finances/fixed-assets.yaml
+    data_source: data/finance/fixed-assets.yaml
     field: accumulated_depreciation
   - code: "1300"
     name: 役員貸付金
     type: asset
     normal_balance: debit
-    data_source: cursor/data/finances/loans.yaml
+    data_source: data/finance/loans.yaml
     note: 貸付対象者は負債科目（役員借入金）と相殺せず別管理（税理士確認）
 
   # 負債
@@ -41,7 +41,7 @@ accounts:
     name: 役員借入金
     type: liability
     normal_balance: credit
-    data_source: cursor/data/finances/loans.yaml
+    data_source: data/finance/loans.yaml
     note: 無利息役員貸付 LOAN-001/002。みなし利息調整は tax-profile 参照
 
   # 純資産
@@ -77,7 +77,7 @@ accounts:
     name: 減価償却費
     type: expense
     normal_balance: debit
-    data_source: cursor/data/plans/expense-plan.yaml
+    data_source: data/plans/expense-plan.yaml
     line_id: depreciation
   - code: "5200"
     name: 旅館運営費
@@ -88,7 +88,7 @@ accounts:
     name: 役員報酬
     type: expense
     normal_balance: debit
-    data_source: cursor/data/finances/payroll.yaml
+    data_source: data/finance/payroll.yaml
   - code: "5400"
     name: 業務委託費
     type: expense

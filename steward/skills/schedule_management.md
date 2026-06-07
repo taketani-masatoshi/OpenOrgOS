@@ -8,16 +8,16 @@
 
 | データ | パス |
 |--------|------|
-| カレンダー | `cursor/data/executive/calendar.yaml` |
-| 社長タスク | `cursor/data/executive/tasks.yaml` |
-| 社外連絡先 | `cursor/data/executive/external-contacts.yaml` |
+| カレンダー | `data/executive/calendar.yaml` |
+| 社長タスク | `data/executive/tasks.yaml` |
+| 社外連絡先 | `data/executive/external-contacts.yaml` |
 
 ## 出力
 
 | 種別 | パス |
 |------|------|
 | 競合レポート（チャットまたは MD） | `docs/executive/`（任意） |
-| カレンダー更新 | `cursor/data/executive/calendar.yaml` |
+| カレンダー更新 | `data/executive/calendar.yaml` |
 
 ## 使用 Agent
 
@@ -51,5 +51,5 @@ Phase 0 では手動 YAML 編集 + 本 Skill の手順に従う。
 
 ## 禁止
 
-- `cursor/data/finances/**` を日程判断に使わない
+- `data/finance/**` を日程判断に使わない
 - 社外へ `external_visible: false` の予定を開示しない

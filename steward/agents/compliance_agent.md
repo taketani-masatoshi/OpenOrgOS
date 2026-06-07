@@ -13,10 +13,10 @@
 
 ## 目的
 
-- `docs/corporate/regulations/` 11 規程の維持・改定ドラフト
-- `docs/corporate/licenses/` 許認可・保険・登記の INDEX 管理
-- `docs/iso/` ギャップ分析・内部監査計画
-- `docs/operations/privacy/` 個情テンプレの整備
+- `docs/company/regulations/` 11 規程の維持・改定ドラフト
+- `docs/company/licenses/` 許認可・保険・登記の INDEX 管理
+- `docs/compliance/iso/` ギャップ分析・内部監査計画
+- `docs/compliance/privacy/` 個情テンプレの整備
 - secrets の **存在・項目充足** 監査（値の複製は禁止）
 - 届出・総会期限の Executive へのエスカレーション
 - **Skill 実行後** `docs/reports/agent-summaries/compliance/` に要約を書く
@@ -27,7 +27,7 @@
 
 | Skill | ファイル |
 |-------|---------|
-| permit_expiry_check | [12_skills/permit_expiry_check.md](../12_skills/permit_expiry_check.md) |
+| permit_expiry_check | [steward/skills/permit_expiry_check.md](../steward/skills/permit_expiry_check.md) |
 
 ## 要約出力先
 
@@ -39,30 +39,30 @@
 
 | パス | 権限 |
 |------|------|
-| `docs/corporate/regulations/**` | Primary |
-| `docs/corporate/licenses/**` | Primary |
-| `docs/iso/**` | Primary |
-| `docs/operations/privacy/**` | Primary |
-| `docs/corporate/**`（議事録・株主） | Read |
-| `docs/corporate/tax/**` | Read |
-| `cursor/data/company.yaml` | Read |
-| `cursor/data/operations/kamezawa-secrets.yaml` | Read（監査のみ · 非複製） |
+| `docs/company/regulations/**` | Primary |
+| `docs/company/licenses/**` | Primary |
+| `docs/compliance/iso/**` | Primary |
+| `docs/compliance/privacy/**` | Primary |
+| `docs/company/**`（議事録・株主） | Read |
+| `docs/company/tax/**` | Read |
+| `data/company.yaml` | Read |
+| `data/operations/kamezawa-secrets.yaml` | Read（監査のみ · 非複製） |
 
 ---
 
 ## 編集できるフォルダ
 
-- `docs/corporate/regulations/**`
-- `docs/corporate/licenses/**`（`INDEX.csv` 含む）
-- `docs/iso/**`
-- `docs/operations/privacy/templates/**`
-- 規程改定に伴う `docs/corporate/*.md` 議事録参照リンク
+- `docs/company/regulations/**`
+- `docs/company/licenses/**`（`INDEX.csv` 含む）
+- `docs/compliance/iso/**`
+- `docs/compliance/privacy/templates/**`
+- 規程改定に伴う `docs/company/*.md` 議事録参照リンク
 
 ---
 
 ## 禁止事項
 
-- `cursor/data/finances/**` · `contracts/**` · `properties/**` の編集
+- `data/finance/**` · `contracts/**` · `properties/**` の編集
 - secrets 内容の docs 転記・チャット出力
 - 契約 fee・保険金額の改定（Contract / Finance 領域）
 - 個情 records/ の不必要な閲覧・複製
@@ -83,7 +83,7 @@
 |----|--------|------|------|
 
 ## 改定ドラフト
-- ファイル: `docs/corporate/regulations/...`
+- ファイル: `docs/company/regulations/...`
 - 変更概要: ...
 
 ## 監査（secrets）
@@ -94,7 +94,7 @@
 - Executive: 要 / 不要
 
 ## 根拠
-- [steward-assessment.md](../docs/iso/steward-assessment.md)
+- [steward-assessment.md](../docs/compliance/iso/steward-assessment.md)
 ```
 
 ---
@@ -116,4 +116,4 @@
 
 - 規程: 宿泊運営 · 個情保護 · 稟議決裁 · 内部監査 等 11 種
 - ISO: 9001/14001/27001/45001/50001/21401/22301 ギャップ評価
-- 評価: [docs/iso/steward-assessment.md](../docs/iso/steward-assessment.md)
+- 評価: [docs/compliance/iso/steward-assessment.md](../docs/compliance/iso/steward-assessment.md)

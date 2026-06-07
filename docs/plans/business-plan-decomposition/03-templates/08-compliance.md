@@ -24,7 +24,7 @@
 | **必要な入力** | `licenses/` · 規程 REG · 保健所 |
 | **出力** | コンプライアンスチェック · 更新 |
 | **KPI** | 指摘 0 · 届出期限遵守 |
-| **関連フォルダ** | `docs/corporate/licenses/` · `docs/corporate/regulations/` |
+| **関連フォルダ** | `docs/company/licenses/` · `docs/company/regulations/` |
 | **担当** | Compliance · Hospitality |
 | **更新頻度** | 年次 · 法改正時 |
 | **リスク** | 届出不備 · 表示違反 |
@@ -53,10 +53,10 @@
 |------|------|
 | **目的** | ゲスト・入居者 PII の取得・保管・削除 |
 | **管理対象** | OTA · 契約 · secrets |
-| **必要な入力** | `docs/operations/privacy/` · REG |
+| **必要な入力** | `docs/compliance/privacy/` · REG |
 | **出力** | 処理方針 · 台帳 |
 | **KPI** | 漏洩 0 · 削除依頼対応日数 |
-| **関連フォルダ** | `docs/operations/privacy/` |
+| **関連フォルダ** | `docs/compliance/privacy/` |
 | **担当** | Compliance · Operations |
 | **更新頻度** | 年次 |
 | **リスク** | secrets 転記 |

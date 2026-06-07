@@ -1,7 +1,9 @@
 ---
 description: Steward OS data conventions and operational rules
 globs:
-  - cursor/**/*
+  - data/**/*
+  - scratch/**/*
+  - steward/**/*
   - docs/**/*
 alwaysApply: false
 ---
@@ -13,13 +15,13 @@ alwaysApply: false
 Steward OS は **1 体 AI が全情報を読む設計にしない**。
 
 ```
-Steward → Agent（11_agents/）→ Skill（12_skills/）→ Data（cursor/data/ · docs/）
+Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（data/ · docs/）
 ```
 
 - **Steward:** `docs/reports/agent-summaries/` + dashboard のみ原則読取
 - **Agent:** 部門フォルダを読み Skill を呼ぶ
-- **Skill:** 限定入出力（[12_skills/](../../12_skills/)）
-- **原則:** [13_rules/steward_os_principles.md](../../13_rules/steward_os_principles.md)
+- **Skill:** 限定入出力（[steward/skills/](../../steward/skills/)）
+- **原則:** [steward/rules/steward_os_principles.md](../../steward/rules/steward_os_principles.md)
 
 ## 分け方の原則
 
@@ -28,61 +30,65 @@ Steward → Agent（11_agents/）→ Skill（12_skills/）→ Data（cursor/data
 | ゾーン | パス | 中身 |
 |--------|------|------|
 | **人** | `docs/` | MD・CSV・**PDF**（読む・印刷・提出） |
-| **Cursor** | `cursor/` | **YAML 正データ** + scratch 試行のみ |
+| **データ** | `data/` `scratch/` | **YAML 正データ** + 試行（scratch は gitignore） |
+| **定義** | `steward/` | Agent · Skill · Rules · Orchestrators |
 | **プログラム** | `src/` `schemas/` `assets/` | TS・フォント等 |
 
-## Cursor ゾーン（`cursor/`）
+## データゾーン
 
 | フォルダ | 用途 |
 |---------|------|
-| `cursor/data/` | 正データ（.yaml） |
-| `cursor/scratch/` | 中間試行（gitignore） |
+| `data/` | 正データ（.yaml） |
+| `scratch/` | 中間試行（gitignore） |
 
-**フォルダ説明ファイル:** `cursor/`・`assets/` は `00-README.md`、ルートのみ `README.md`。
+**フォルダ説明ファイル:** `data/`・`scratch/`・`assets/` は `00-README.md`、ルートのみ `README.md`。
 
-**PDF・生成物・フォントは cursor/ に置かない。**
+**PDF・生成物・フォントは data/ に置かない。**
 
 ## 人ゾーン（`docs/`）
 
 | フォルダ | 用途 |
 |---------|------|
 | `docs/plans/` | 決算書・予実 MD |
-| `docs/corporate/` | 法人書類 MD |
-| `docs/inbox/` | **受信トレイ**（スキャン・申請書・未処理） |
-| `docs/outbox/` | **出力トレイ**（印刷・提出・掲示 PDF） |
+| `docs/company/` | 法人書類 MD |
+| `docs/io/inbox/` | **受信トレイ**（スキャン・申請書・未処理） |
+| `docs/io/outbox/` | **出力トレイ**（印刷・提出・掲示 PDF） |
 | `docs/contracts/` | 契約書 MD |
-| `docs/operations/` | 業務台帳テンプレ・プライバシー（記入済は records/） |
-| `docs/data/` | CSV |
+| `docs/finance/` | 経理テンプレ・請求書 |
+| `docs/company/hr/` | 人事テンプレ |
+| `docs/compliance/` | ISO · プライバシー |
+| `docs/properties/` | 物件別運用（PROP-001/002） |
+| `docs/exports/` | CSV |
 | `docs/reports/` | CLI 生成 MD |
 
 **フォルダ説明ファイル:** 各フォルダの索引は `00-このフォルダについて.md`（エクスプローラで先頭に並ぶ）。
 
-## 正データ（`cursor/data/`）
+## 正データ（`data/`）
 
 - 会社: `company.yaml`
 - 物件: `properties/PROP-{NNN}.yaml`
 - 契約: `contracts/CTR-{NNN}.yaml`
-- 月次: `finances/monthly/{YYYY-MM}.yaml`
+- 月次: `finance/monthly/{YYYY-MM}.yaml`
 - 計画: `plans/*.yaml`
 - I/O 台帳: `document-io.yaml`（inbox/outbox キュー）
 
 ## レポート生成
 
 - MD → `docs/reports/`
-- PDF → `docs/outbox/corporate/`（`npm run steward -- report kessan|jigyo`）
+- PDF → `docs/io/outbox/corporate/`（`npm run steward -- report kessan|jigyo`）
 - フォント → `assets/fonts/`
 
 ## データ入力
 
-1. `cursor/data/` YAML 更新 → `npm run validate`
-2. スキャン受信 → `docs/inbox/` または `steward io inbox add`
+1. `data/` YAML 更新 → `npm run validate`
+2. スキャン受信 → `docs/io/inbox/` または `steward io inbox add`
 3. `npm run steward -- sync all`（CSV 利用時）
 4. `npm run steward -- io status`（受信/出力確認）
-5. 試行は `cursor/scratch/` → 確定後 `docs/` または `cursor/data/` へ
+5. 試行は `scratch/` → 確定後 `docs/` または `data/` へ
 
 ## Agent / Skill 参照
 
-**8 Agent:** [11_agents/00-このフォルダについて.md](../../11_agents/00-このフォルダについて.md)
+**8 Agent:** [steward/agents/00-このフォルダについて.md](../../steward/agents/00-このフォルダについて.md)
 
 | Agent | 用途 |
 |-------|------|
@@ -95,6 +101,6 @@ Steward → Agent（11_agents/）→ Skill（12_skills/）→ Data（cursor/data
 | Compliance | 規程 · 許認可 · ISO |
 | Operations | inbox · outbox |
 
-- Skill: [12_skills/](../../12_skills/00-このフォルダについて.md)
-- ルール: [13_rules/](../../13_rules/steward_os_principles.md)
-- Steward ↔ Secretary 境界: [secretary_steward_boundary.md](../../13_rules/secretary_steward_boundary.md)
+- Skill: [steward/skills/](../../steward/skills/00-このフォルダについて.md)
+- ルール: [steward/rules/](../../steward/rules/steward_os_principles.md)
+- Steward ↔ Secretary 境界: [secretary_steward_boundary.md](../../steward/rules/secretary_steward_boundary.md)

@@ -128,8 +128,8 @@
 
 ## 関連ファイル
 
-- [REG-011 品質管理規程](../../corporate/regulations/hinshitsu-kanri-kisoku.md) v1.1
-- [REG-016 内部監査規程](../../corporate/regulations/naibu-kansa-kisoku.md) v1.1
-- [REG-007 文書管理規程](../../corporate/regulations/bunsho-kanri-kisoku.md) v1.1
-- [REG-012 宿泊運営規程](../../corporate/regulations/shukuhaku-unyo-kisoku.md)
+- [REG-011 品質管理規程](../../../company/regulations/hinshitsu-kanri-kisoku.md) v1.1
+- [REG-016 内部監査規程](../../../company/regulations/naibu-kansa-kisoku.md) v1.1
+- [REG-007 文書管理規程](../../../company/regulations/bunsho-kanri-kisoku.md) v1.1
+- [REG-012 宿泊運営規程](../../../company/regulations/shukuhaku-unyo-kisoku.md)
 - [00-このフォルダについて.md](00-このフォルダについて.md)

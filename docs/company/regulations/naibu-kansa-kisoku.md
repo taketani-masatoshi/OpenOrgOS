@@ -30,7 +30,7 @@
 ## 第4条（監査計画）
 
 1. 毎年1月に **年度監査計画** を作成する（対象規程、時期、担当）。
-2. 計画は [`docs/iso/`](../../iso/00-このフォルダについて.md) 配下に保管する。
+2. 計画は [`docs/compliance/iso/`](../../compliance/iso/00-このフォルダについて.md) 配下に保管する。
 
 ## 第5条（監査実施）
 
@@ -67,5 +67,5 @@
 
 ## 関連
 
-- [ISO 一覧](../../iso/00-このフォルダについて.md)
-- [steward-assessment](../../iso/steward-assessment.md)
+- [ISO 一覧](../../compliance/iso/00-このフォルダについて.md)
+- [steward-assessment](../../compliance/iso/steward-assessment.md)

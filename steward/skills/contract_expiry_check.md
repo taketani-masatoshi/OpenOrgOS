@@ -6,8 +6,8 @@
 
 ## 入力
 
-- `cursor/data/contracts/*.yaml`（maturity · renewal · status）
-- `docs/data/契約管理表.csv`
+- `data/contracts/*.yaml`（maturity · renewal · status）
+- `docs/exports/契約管理表.csv`
 
 ## 出力
 

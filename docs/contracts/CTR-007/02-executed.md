@@ -6,4 +6,4 @@
 |------|------|
 | 請負先 | TBD（原本で確定） |
 | 概算 | 26,000,000円 |
-| 関連 | [建築確認済証](../../corporate/licenses/INDEX.csv) LIC-003 |
+| 関連 | [建築確認済証](../../company/licenses/INDEX.csv) LIC-003 |

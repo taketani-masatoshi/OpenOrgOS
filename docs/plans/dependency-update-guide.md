@@ -1,8 +1,8 @@
 # 依存関係更新ガイド
 
-正データ（`cursor/data/*.yaml`）や関連 docs を編集したあと、**下流の確認漏れを防ぐ**ための手順。
+正データ（`data/*.yaml`）や関連 docs を編集したあと、**下流の確認漏れを防ぐ**ための手順。
 
-依存関係の定義は **`cursor/data/dependency-graph.yaml`**（Source of Truth）。
+依存関係の定義は **`data/dependency-graph.yaml`**（Source of Truth）。
 
 ---
 
@@ -25,16 +25,16 @@
 # 1. YAML / docs を編集
 
 # 2. 影響範囲を確認（チェックリスト）
-npm run steward -- deps check --file cursor/data/contracts/CTR-008.yaml
+npm run steward -- deps check --file data/contracts/CTR-008.yaml
 # または
-npm run steward -- impact cursor/data/properties/PROP-002.yaml
+npm run steward -- impact data/properties/PROP-002.yaml
 
 # 3. スキーマ検証 + 依存鮮度警告
 npm run validate
 npm run validate -- --deps    # ソースより古い下流 CSV/MD を警告
 
 # 4. 下流を更新
-npm run steward -- sync all   # docs/data/*.csv
+npm run steward -- sync all   # docs/exports/*.csv
 npm run steward -- dashboard  # 経営ダッシュボード再生成
 
 # 5. 再検証
@@ -44,7 +44,7 @@ npm run validate
 Markdown で保存する場合:
 
 ```bash
-npm run steward -- deps check --file cursor/data/plans/yojitsu-fy2026.yaml --markdown -o impact-yojitsu.md
+npm run steward -- deps check --file data/plans/yojitsu-fy2026.yaml --markdown -o impact-yojitsu.md
 ```
 
 ---
@@ -70,22 +70,22 @@ yojitsu + monthly + fixed-costs ──→ dashboard（バーンレート等）
 ### 計画 → 人向け CSV
 
 ```
-revenue/expense/profit/investment-plan ──→ docs/data/*.csv  (steward sync all)
+revenue/expense/profit/investment-plan ──→ docs/exports/*.csv  (steward sync all)
 contracts/*.yaml ──→ 契約管理表.csv
 ```
 
 ### 保険契約 → 証券保管
 
 ```
-CTR-013/014 (executed) ──→ docs/corporate/licenses/ 配下
+CTR-013/014 (executed) ──→ docs/company/licenses/ 配下
                         ──→ document-io.yaml（inbox 処理）
 ```
 
 ### 亀沢公開情報 → ゲスト MD → 掲示 PDF
 
 ```
-kamezawa-public.yaml ──→ docs/operations/lodging/templates/guest-facing/*.md
-                      ──→ docs/outbox/lodging/
+kamezawa-public.yaml ──→ docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/*.md
+                      ──→ docs/io/outbox/lodging/
 ```
 
 ---
@@ -101,7 +101,7 @@ npm run steward -- deps graph -o dependency-map.md
 
 ## グラフのメンテナンス
 
-新しい連動関係が分かったら `cursor/data/dependency-graph.yaml` に **ノード** と **エッジ** を追加する。
+新しい連動関係が分かったら `data/dependency-graph.yaml` に **ノード** と **エッジ** を追加する。
 
 - `reason`: 日本語で「なぜ更新が必要か」
 - `action`: `review` | `sync` | `update` | `regenerate`

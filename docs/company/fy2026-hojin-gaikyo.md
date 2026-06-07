@@ -137,5 +137,5 @@
 |---------|------|
 | [`fy2026-keisansyorui.md`](fy2026-keisansyorui.md) | 計算書類 |
 | [`fy2026-shukai-gijiroku.md`](fy2026-shukai-gijiroku.md) | 株主総会議事録 |
-| [`cursor/data/company.yaml`](../../cursor/data/company.yaml) | 会社情報（正データ） |
-| [`cursor/data/plans/business-plan.yaml`](../../cursor/data/plans/business-plan.yaml) | 事業計画（正データ） |
+| [`data/company.yaml`](../../data/company.yaml) | 会社情報（正データ） |
+| [`data/plans/business-plan.yaml`](../../data/plans/business-plan.yaml) | 事業計画（正データ） |

@@ -7,7 +7,7 @@ Secretary Agent が毎週（推奨: 月曜朝）生成する社長向けサマ�
 ```markdown
 # 社長週次ブリーフ YYYY-MM-DD（第 N 週）
 
-> 生成: Secretary Agent · データ: cursor/data/executive/
+> 生成: Secretary Agent · データ: data/executive/
 
 ## 今週のハイライト（3 行以内）
 
@@ -48,7 +48,7 @@ Secretary Agent が毎週（推奨: 月曜朝）生成する社長向けサマ�
 
 ## メモ
 
-- 経営 P0 は [executive-remaining-tasks.md](../corporate/executive-remaining-tasks.md) を参照（Secretary は要約のみ）
+- 経営 P0 は [executive-remaining-tasks.md](../company/executive-remaining-tasks.md) を参照（Secretary は要約のみ）
 ```
 
 ---

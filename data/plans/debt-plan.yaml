@@ -1,6 +1,6 @@
 # 借入・返済・DSCR 統合計画
-# 正データ: cursor/data/plans/debt-plan.yaml
-# 人向け: docs/plans/finance/borrowing-plan.md · loan-repayment-plan.md · dscr-plan.md
+# 正データ: data/plans/debt-plan.yaml
+# 人向け: docs/finance/borrowing-plan.md · loan-repayment-plan.md · dscr-plan.md
 
 currency: JPY
 as_of: "2026-06-07"
@@ -372,7 +372,7 @@ dscr:
     NOI 代理指標: profit-plan.yaml の operating_profit（全社営業利益）。
     FY2029 以降は FY2028 計画値（817万/年）を横ばい前提（TBD: 中期計画更新で再算定）。
     debt service = 元本返済のみ（無利息）。返済ゼロ年は DSCR = N/A。
-    参考月次CF: cursor/data/finances/monthly/2027-01.yaml（売上115万・利益約62万/月）。
+    参考月次CF: data/finance/monthly/2027-01.yaml（売上115万・利益約62万/月）。
   projections:
     - fiscal_year: FY2027
       scenario_id: base
@@ -410,11 +410,11 @@ dscr:
       notes: LOAN-001 期限一括含む。期限前に前倒し返済で平準化を検討（TBD）
 
 documents:
-  borrowing: docs/plans/finance/borrowing-plan.md
-  repayment: docs/plans/finance/loan-repayment-plan.md
-  dscr: docs/plans/finance/dscr-plan.md
-  source_loans: cursor/data/finances/loans.yaml
-  source_business_plan: cursor/data/plans/business-plan.yaml
+  borrowing: docs/finance/borrowing-plan.md
+  repayment: docs/finance/loan-repayment-plan.md
+  dscr: docs/finance/dscr-plan.md
+  source_loans: data/finance/loans.yaml
+  source_business_plan: data/plans/business-plan.yaml
 
 tbd:
   - item: 返済スケジュールの契約確定
@@ -435,5 +435,5 @@ tbd:
     notes: 保守シナリオ採用、または基本シナリオの年次返済額見直し。
 
 notes: |
-  関連: cursor/data/finances/loans.yaml · investment-plan.yaml · profit-plan.yaml
-  依存: npm run steward -- deps check --file cursor/data/plans/debt-plan.yaml
+  関連: data/finance/loans.yaml · investment-plan.yaml · profit-plan.yaml
+  依存: npm run steward -- deps check --file data/plans/debt-plan.yaml

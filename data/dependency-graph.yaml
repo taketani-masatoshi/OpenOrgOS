@@ -1,16 +1,16 @@
 # Steward OS — パラメータ依存関係グラフ
 #
-# 目的: 正データ（cursor/data/*.yaml）や関連 docs を編集したとき、
+# 目的: 正データ（data/*.yaml）や関連 docs を編集したとき、
 #       確認・同期が必要な下流項目を機械的に列挙する。
 #
 # 使い方:
-#   npm run steward -- deps check --file cursor/data/contracts/CTR-008.yaml
-#   npm run steward -- impact cursor/data/properties/PROP-002.yaml
+#   npm run steward -- deps check --file data/contracts/CTR-008.yaml
+#   npm run steward -- impact data/properties/PROP-002.yaml
 #   npm run steward -- deps graph
 #   npm run validate -- --deps   # ソースより古い下流ファイルを警告
 #
 # ノード id:
-#   - ファイル: repo ルート相対パス（cursor/data/... または docs/...）
+#   - ファイル: repo ルート相対パス（data/... または docs/...）
 #   - パラメータ: PROP-002.hotel.occupancy_rate 等（path に親 YAML）
 #
 # 自動同期は行わない。チェックリストとして人間が更新する。
@@ -22,174 +22,174 @@ description: |
 
 nodes:
   # --- 契約 ---
-  - id: cursor/data/contracts/CTR-008.yaml
+  - id: data/contracts/CTR-008.yaml
     label: CTR-008 金銭消費貸借（番町・LOAN-001）
     category: file
     aliases: [CTR-008]
-  - id: cursor/data/contracts/CTR-009.yaml
+  - id: data/contracts/CTR-009.yaml
     label: CTR-009 金銭消費貸借（亀沢・LOAN-002）
     category: file
     aliases: [CTR-009]
-  - id: cursor/data/contracts/CTR-013.yaml
+  - id: data/contracts/CTR-013.yaml
     label: CTR-013 火災保険（番町）
     category: file
     aliases: [CTR-013]
-  - id: cursor/data/contracts/CTR-014.yaml
+  - id: data/contracts/CTR-014.yaml
     label: CTR-014 火災保険（亀沢）
     category: file
     aliases: [CTR-014]
   - id: contracts-all
     label: 契約台帳（全 CTR）
     category: file
-    path: cursor/data/contracts
+    path: data/contracts
 
   # --- 物件 ---
-  - id: cursor/data/properties/PROP-001.yaml
+  - id: data/properties/PROP-001.yaml
     label: PROP-001 番町ハイム312
     category: file
     aliases: [PROP-001]
-  - id: cursor/data/properties/PROP-002.yaml
+  - id: data/properties/PROP-002.yaml
     label: PROP-002 亀沢旅館
     category: file
     aliases: [PROP-002]
   - id: PROP-002.acquisition_price
     label: 亀沢 取得価格（9,600万）
     category: parameter
-    path: cursor/data/properties/PROP-002.yaml
+    path: data/properties/PROP-002.yaml
   - id: PROP-002.hotel.occupancy_rate
     label: 亀沢 稼働率
     category: parameter
-    path: cursor/data/properties/PROP-002.yaml
+    path: data/properties/PROP-002.yaml
   - id: PROP-002.hotel.adr
     label: 亀沢 ADR
     category: parameter
-    path: cursor/data/properties/PROP-002.yaml
+    path: data/properties/PROP-002.yaml
   - id: PROP-002.operating_costs
     label: 亀沢 運営コスト前提
     category: parameter
-    path: cursor/data/properties/PROP-002.yaml
+    path: data/properties/PROP-002.yaml
 
   # --- 財務 ---
-  - id: cursor/data/finances/loans.yaml
+  - id: data/finance/loans.yaml
     label: 借入・役員貸付台帳
     category: file
     expand: false
-  - id: cursor/data/finances/fixed-costs.yaml
+  - id: data/finance/fixed-costs.yaml
     label: 本社固定費
     category: file
-  - id: cursor/data/finances/payroll.yaml
+  - id: data/finance/payroll.yaml
     label: 役員報酬
     category: file
-  - id: cursor/data/finances/fixed-assets.yaml
+  - id: data/finance/fixed-assets.yaml
     label: 固定資産台帳
     category: file
-  - id: cursor/data/finances/tax-profile.yaml
+  - id: data/finance/tax-profile.yaml
     label: 税務プロファイル
     category: file
-  - id: cursor/data/finances/chart-of-accounts.yaml
+  - id: data/finance/chart-of-accounts.yaml
     label: 勘定科目
     category: file
   - id: finances-monthly
     label: 月次収支（全月）
     category: file
-    path: cursor/data/finances/monthly
+    path: data/finance/monthly
 
   # --- 計画 ---
-  - id: cursor/data/plans/property-revenue.yaml
+  - id: data/plans/property-revenue.yaml
     label: 物件別収益前提
     category: file
-  - id: cursor/data/plans/revenue-plan.yaml
+  - id: data/plans/revenue-plan.yaml
     label: 売上計画
     category: file
-  - id: cursor/data/plans/expense-plan.yaml
+  - id: data/plans/expense-plan.yaml
     label: 費用計画
     category: file
-  - id: cursor/data/plans/profit-plan.yaml
+  - id: data/plans/profit-plan.yaml
     label: 利益計画
     category: file
-  - id: cursor/data/plans/investment-plan.yaml
+  - id: data/plans/investment-plan.yaml
     label: 投資計画
     category: file
-  - id: cursor/data/plans/debt-plan.yaml
+  - id: data/plans/debt-plan.yaml
     label: 借入・返済・DSCR 計画
     category: file
-  - id: cursor/data/plans/yojitsu-fy2026.yaml
+  - id: data/plans/yojitsu-fy2026.yaml
     label: 予実 FY2026
     category: file
-  - id: cursor/data/plans/yojitsu-2026.yaml
+  - id: data/plans/yojitsu-2026.yaml
     label: 予実 カレンダー2026
     category: file
-  - id: cursor/data/plans/business-plan.yaml
+  - id: data/plans/business-plan.yaml
     label: 中期事業計画
     category: file
 
   # --- 運用 ---
-  - id: cursor/data/operations/kamezawa-public.yaml
+  - id: data/operations/kamezawa-public.yaml
     label: 亀沢公開情報（OTA・ゲスト）
     category: file
-  - id: cursor/data/operations/kamezawa-secrets.yaml
+  - id: data/operations/kamezawa-secrets.yaml
     label: 亀沢機密（鍵・Wi-Fi）
     category: file
 
   # --- 法人・人事 ---
-  - id: cursor/data/company.yaml
+  - id: data/company.yaml
     label: 法人基本情報
     category: file
-  - id: cursor/data/hr/employees.yaml
+  - id: data/hr/employees.yaml
     label: 従業員マスタ
     category: file
 
   # --- I/O ---
-  - id: cursor/data/document-io.yaml
+  - id: data/document-io.yaml
     label: 書類 I/O 台帳
     category: file
 
   # --- docs CSV ---
-  - id: docs/data/契約管理表.csv
+  - id: docs/exports/契約管理表.csv
     label: 契約管理表 CSV
     category: file
-  - id: docs/data/売上計画.csv
+  - id: docs/exports/売上計画.csv
     label: 売上計画 CSV
     category: file
-  - id: docs/data/費用計画.csv
+  - id: docs/exports/費用計画.csv
     label: 費用計画 CSV
     category: file
-  - id: docs/data/利益計画.csv
+  - id: docs/exports/利益計画.csv
     label: 利益計画 CSV
     category: file
-  - id: docs/data/投資計画.csv
+  - id: docs/exports/投資計画.csv
     label: 投資計画 CSV
     category: file
 
   # --- docs MD ---
-  - id: docs/operations/lodging/templates/guest-facing/house-rules.md
+  - id: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/house-rules.md
     label: ゲスト向けハウスルール
     category: file
-  - id: docs/operations/lodging/templates/guest-facing/local-guide-en.md
+  - id: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/local-guide-en.md
     label: ゲスト向けローカルガイド
     category: file
-  - id: docs/operations/lodging/templates/guest-facing/welcome-sheet.md
+  - id: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/welcome-sheet.md
     label: ウェルカムシート
     category: file
   - id: docs/plans/2026-yojitsu.md
     label: 2026予実 MD
     category: file
-  - id: docs/plans/finance/borrowing-plan.md
+  - id: docs/finance/borrowing-plan.md
     label: 借入計画 MD
     category: file
-  - id: docs/plans/finance/loan-repayment-plan.md
+  - id: docs/finance/loan-repayment-plan.md
     label: 返済計画 MD
     category: file
-  - id: docs/plans/finance/dscr-plan.md
+  - id: docs/finance/dscr-plan.md
     label: DSCR 管理計画 MD
     category: file
-  - id: docs/plans/finance/fixed-asset-register.md
+  - id: docs/finance/fixed-asset-register.md
     label: 固定資産台帳 MD
     category: file
-  - id: docs/plans/finance/tax-filing-checklist.md
+  - id: docs/finance/tax-filing-checklist.md
     label: 税務申告チェックリスト MD
     category: file
-  - id: docs/plans/finance/accounting-policy.md
+  - id: docs/finance/accounting-policy.md
     label: 会計方針 MD
     category: file
 
@@ -208,29 +208,29 @@ nodes:
   - id: records-insurance-bancho
     label: 番町 火災保険証券（records）
     category: file
-    path: docs/corporate/licenses
+    path: docs/company/licenses
   - id: records-insurance-kamezawa
     label: 亀沢 火災保険証券（records）
     category: file
-    path: docs/corporate/licenses/insurance
-  - id: docs/outbox/lodging
+    path: docs/company/licenses/insurance
+  - id: docs/io/outbox/lodging
     label: 亀沢掲示 PDF（outbox/lodging）
     category: file
 
   # --- 社長オペ（Secretary Agent） ---
-  - id: cursor/data/executive/calendar.yaml
+  - id: data/executive/calendar.yaml
     label: 社長カレンダー
     category: file
     aliases: [executive-calendar]
-  - id: cursor/data/executive/tasks.yaml
+  - id: data/executive/tasks.yaml
     label: 社長タスク
     category: file
     aliases: [executive-tasks]
-  - id: cursor/data/executive/one-on-ones.yaml
+  - id: data/executive/one-on-ones.yaml
     label: 1-on-1 レジストリ
     category: file
     aliases: [executive-one-on-ones]
-  - id: cursor/data/executive/external-contacts.yaml
+  - id: data/executive/external-contacts.yaml
     label: 社外連絡先（最小限）
     category: file
     aliases: [executive-external-contacts]
@@ -241,226 +241,226 @@ nodes:
 
 edges:
   # --- 契約 ↔ 借入 ↔ 物件 ---
-  - from: cursor/data/contracts/CTR-008.yaml
-    to: cursor/data/finances/loans.yaml
+  - from: data/contracts/CTR-008.yaml
+    to: data/finance/loans.yaml
     category: contract→loan
     reason: LOAN-001 の残高・返済条件・contract_id は CTR-008 と一致させる
     action: update
-  - from: cursor/data/finances/loans.yaml
-    to: cursor/data/contracts/CTR-008.yaml
+  - from: data/finance/loans.yaml
+    to: data/contracts/CTR-008.yaml
     category: contract→loan
     reason: 借入残高変更時は契約書・返済計画 MD を確認
     action: review
-  - from: cursor/data/contracts/CTR-009.yaml
-    to: cursor/data/finances/loans.yaml
+  - from: data/contracts/CTR-009.yaml
+    to: data/finance/loans.yaml
     category: contract→loan
     reason: LOAN-002 の残高（9,600万）は CTR-009 と PROP-002 取得価格と一致
     action: update
-  - from: cursor/data/finances/loans.yaml
-    to: cursor/data/contracts/CTR-009.yaml
+  - from: data/finance/loans.yaml
+    to: data/contracts/CTR-009.yaml
     category: contract→loan
     reason: 借入条件変更時は契約書・返済計画を確認
     action: review
-  - from: cursor/data/contracts/CTR-009.yaml
+  - from: data/contracts/CTR-009.yaml
     to: PROP-002.acquisition_price
     category: contract→loan
     reason: 役員貸付総額＝土地7,000万＋建築2,600万＝取得価格9,600万
     action: update
   - from: PROP-002.acquisition_price
-    to: cursor/data/finances/loans.yaml
+    to: data/finance/loans.yaml
     category: property→plan
     reason: 取得価格変更時は LOAN-002 balance を同期
     action: update
-  - from: cursor/data/properties/PROP-002.yaml
-    to: cursor/data/finances/loans.yaml
+  - from: data/properties/PROP-002.yaml
+    to: data/finance/loans.yaml
     category: property→plan
     reason: financing フィールド（LOAN-002）と loans.yaml を整合
     action: review
-  - from: cursor/data/properties/PROP-001.yaml
-    to: cursor/data/finances/loans.yaml
+  - from: data/properties/PROP-001.yaml
+    to: data/finance/loans.yaml
     category: property→plan
     reason: financing フィールド（LOAN-001）と loans.yaml を整合
     action: review
 
   # --- 固定資産 ↔ 物件・借入・費用計画 ---
-  - from: cursor/data/properties/PROP-001.yaml
-    to: cursor/data/finances/fixed-assets.yaml
+  - from: data/properties/PROP-001.yaml
+    to: data/finance/fixed-assets.yaml
     category: property→plan
     reason: 減価償却前提（depreciation）は ASSET-001 と expense-plan と一致させる
     action: update
-  - from: cursor/data/properties/PROP-002.yaml
-    to: cursor/data/finances/fixed-assets.yaml
+  - from: data/properties/PROP-002.yaml
+    to: data/finance/fixed-assets.yaml
     category: property→plan
     reason: 土地7,000万・建物2,600万の区分は ASSET-002/003 と LOAN-002 と一致
     action: update
-  - from: cursor/data/finances/fixed-assets.yaml
-    to: cursor/data/plans/expense-plan.yaml
+  - from: data/finance/fixed-assets.yaml
+    to: data/plans/expense-plan.yaml
     category: data→data
     reason: 年間減価償却額（番町353,191円）は expense-plan depreciation 行と一致
     action: update
-  - from: cursor/data/finances/fixed-assets.yaml
-    to: cursor/data/finances/loans.yaml
+  - from: data/finance/fixed-assets.yaml
+    to: data/finance/loans.yaml
     category: data→data
     reason: fixed_asset_ids と取得原価合計は借入残高（1.126億）と一致
     action: review
-  - from: cursor/data/finances/fixed-assets.yaml
-    to: docs/plans/finance/fixed-asset-register.md
+  - from: data/finance/fixed-assets.yaml
+    to: docs/finance/fixed-asset-register.md
     category: data→docs
     reason: 固定資産台帳 MD は YAML 更新後に同期
     action: review
-  - from: cursor/data/finances/tax-profile.yaml
-    to: docs/plans/finance/tax-filing-checklist.md
+  - from: data/finance/tax-profile.yaml
+    to: docs/finance/tax-filing-checklist.md
     category: data→docs
     reason: 申告期限・TBD 項目はチェックリスト MD と一致
     action: review
-  - from: cursor/data/finances/chart-of-accounts.yaml
-    to: cursor/data/finances/monthly
+  - from: data/finance/chart-of-accounts.yaml
+    to: data/finance/monthly
     category: data→data
     reason: 月次 category_mapping 変更時は月次 YAML 科目整合を確認
     action: review
-  - from: cursor/data/plans/investment-plan.yaml
-    to: cursor/data/finances/fixed-assets.yaml
+  - from: data/plans/investment-plan.yaml
+    to: data/finance/fixed-assets.yaml
     category: data→data
     reason: CAPEX 確定時は fixed-assets に資産登録
     action: update
 
   # --- 契約 → CSV ---
   - from: contracts-all
-    to: docs/data/契約管理表.csv
+    to: docs/exports/契約管理表.csv
     category: data→docs
     reason: 契約 YAML 更新後は steward sync contracts で CSV を再生成
     action: sync
-  - from: cursor/data/contracts/CTR-008.yaml
-    to: docs/data/契約管理表.csv
+  - from: data/contracts/CTR-008.yaml
+    to: docs/exports/契約管理表.csv
     category: data→docs
     reason: 契約ステータス・金額変更は契約管理表に反映
     action: sync
-  - from: cursor/data/contracts/CTR-009.yaml
-    to: docs/data/契約管理表.csv
+  - from: data/contracts/CTR-009.yaml
+    to: docs/exports/契約管理表.csv
     category: data→docs
     reason: 契約ステータス・金額変更は契約管理表に反映
     action: sync
 
   # --- 保険契約 → 証券保管 ---
-  - from: cursor/data/contracts/CTR-013.yaml
+  - from: data/contracts/CTR-013.yaml
     to: records-insurance-bancho
     category: contract→records
     reason: 契約 executed 後、証券 PDF を licenses/ に保管し inbox から登録
     action: update
-  - from: cursor/data/contracts/CTR-014.yaml
+  - from: data/contracts/CTR-014.yaml
     to: records-insurance-kamezawa
     category: contract→records
     reason: 契約 executed 後、証券 PDF を licenses/insurance/ に保管（最優先）
     action: update
-  - from: cursor/data/contracts/CTR-013.yaml
-    to: cursor/data/document-io.yaml
+  - from: data/contracts/CTR-013.yaml
+    to: data/document-io.yaml
     category: contract→records
     reason: 証券スキャン受領時は io inbox add → done でアーカイブ
     action: review
-  - from: cursor/data/contracts/CTR-014.yaml
-    to: cursor/data/document-io.yaml
+  - from: data/contracts/CTR-014.yaml
+    to: data/document-io.yaml
     category: contract→records
     reason: 証券スキャン受領時は io inbox add → done でアーカイブ
     action: review
 
   # --- 物件パラメータ → 計画・予実 ---
   - from: PROP-002.hotel.occupancy_rate
-    to: cursor/data/plans/property-revenue.yaml
+    to: data/plans/property-revenue.yaml
     category: parameter→plan
     reason: 稼働率変更は物件別収益前提の月次売上を再計算
     action: update
   - from: PROP-002.hotel.adr
-    to: cursor/data/plans/property-revenue.yaml
+    to: data/plans/property-revenue.yaml
     category: parameter→plan
     reason: ADR 変更は宿泊単価前提を更新
     action: update
   - from: PROP-002.operating_costs
-    to: cursor/data/plans/yojitsu-fy2026.yaml
+    to: data/plans/yojitsu-fy2026.yaml
     category: parameter→plan
     reason: 清掃・OTA・光熱費等の変更は expense_kamezawa 月次を見直す
     action: update
   - from: PROP-002.operating_costs
-    to: cursor/data/plans/yojitsu-2026.yaml
+    to: data/plans/yojitsu-2026.yaml
     category: parameter→plan
     reason: 運営コスト前提変更はカレンダー予実の expense_kamezawa に反映
     action: update
   - from: PROP-002.operating_costs
-    to: cursor/data/plans/expense-plan.yaml
+    to: data/plans/expense-plan.yaml
     category: parameter→plan
     reason: kamezawa_operations 行の年間運営費を再集計
     action: update
-  - from: cursor/data/plans/property-revenue.yaml
-    to: cursor/data/plans/revenue-plan.yaml
+  - from: data/plans/property-revenue.yaml
+    to: data/plans/revenue-plan.yaml
     category: data→data
     reason: 物件別収益から FY 売上計画（kamezawa_hotel 等）を更新
     action: update
-  - from: cursor/data/plans/property-revenue.yaml
-    to: cursor/data/plans/yojitsu-fy2026.yaml
+  - from: data/plans/property-revenue.yaml
+    to: data/plans/yojitsu-fy2026.yaml
     category: data→data
     reason: revenue_kamezawa / expense_kamezawa の計画列を同期
     action: update
-  - from: cursor/data/plans/property-revenue.yaml
-    to: cursor/data/plans/yojitsu-2026.yaml
+  - from: data/plans/property-revenue.yaml
+    to: data/plans/yojitsu-2026.yaml
     category: data→data
     reason: カレンダー予実の亀沢売上・費用計画列を同期
     action: update
 
   # --- 固定費 ↔ 費用計画 ↔ 予実 ---
-  - from: cursor/data/finances/fixed-costs.yaml
-    to: cursor/data/plans/expense-plan.yaml
+  - from: data/finance/fixed-costs.yaml
+    to: data/plans/expense-plan.yaml
     category: data→data
     reason: 本社固定費（通信費等）は expense_company 行に反映
     action: update
-  - from: cursor/data/finances/fixed-costs.yaml
-    to: cursor/data/plans/yojitsu-fy2026.yaml
+  - from: data/finance/fixed-costs.yaml
+    to: data/plans/yojitsu-fy2026.yaml
     category: data→data
     reason: 月次 expense_company は fixed-costs の合計と一致させる
     action: update
-  - from: cursor/data/plans/expense-plan.yaml
-    to: cursor/data/plans/profit-plan.yaml
+  - from: data/plans/expense-plan.yaml
+    to: data/plans/profit-plan.yaml
     category: data→data
     reason: 費用計画変更は利益計画の費用側を再計算
     action: update
-  - from: cursor/data/plans/revenue-plan.yaml
-    to: cursor/data/plans/profit-plan.yaml
+  - from: data/plans/revenue-plan.yaml
+    to: data/plans/profit-plan.yaml
     category: data→data
     reason: 売上計画変更は利益計画の収入側を再計算
     action: update
-  - from: cursor/data/plans/yojitsu-fy2026.yaml
-    to: cursor/data/plans/profit-plan.yaml
+  - from: data/plans/yojitsu-fy2026.yaml
+    to: data/plans/profit-plan.yaml
     category: data→data
     reason: 予実確定値は利益計画の実績ベース更新に使用
     action: review
-  - from: cursor/data/finances/payroll.yaml
-    to: cursor/data/plans/yojitsu-fy2026.yaml
+  - from: data/finance/payroll.yaml
+    to: data/plans/yojitsu-fy2026.yaml
     category: data→data
     reason: 役員報酬変更は expense_officer 月次を見直す
     action: update
 
   # --- 計画 → CSV ---
-  - from: cursor/data/plans/revenue-plan.yaml
-    to: docs/data/売上計画.csv
+  - from: data/plans/revenue-plan.yaml
+    to: docs/exports/売上計画.csv
     category: data→docs
     reason: steward sync all で CSV を再生成
     action: sync
-  - from: cursor/data/plans/expense-plan.yaml
-    to: docs/data/費用計画.csv
+  - from: data/plans/expense-plan.yaml
+    to: docs/exports/費用計画.csv
     category: data→docs
     reason: steward sync all で CSV を再生成
     action: sync
-  - from: cursor/data/plans/profit-plan.yaml
-    to: docs/data/利益計画.csv
+  - from: data/plans/profit-plan.yaml
+    to: docs/exports/利益計画.csv
     category: data→docs
     reason: steward sync all で CSV を再生成
     action: sync
-  - from: cursor/data/plans/investment-plan.yaml
-    to: docs/data/投資計画.csv
+  - from: data/plans/investment-plan.yaml
+    to: docs/exports/投資計画.csv
     category: data→docs
     reason: steward sync all で CSV を再生成
     action: sync
 
   # --- 予実 → docs MD ---
-  - from: cursor/data/plans/yojitsu-fy2026.yaml
+  - from: data/plans/yojitsu-fy2026.yaml
     to: docs/plans/2026-yojitsu.md
     category: data→docs
     reason: 予実 YAML 更新後は人向け予実 MD を手動または Cursor で同期
@@ -472,148 +472,148 @@ edges:
     category: data→reports
     reason: 現金残高・実績ベース CF は月次収支から取得
     action: regenerate
-  - from: cursor/data/plans/yojitsu-fy2026.yaml
+  - from: data/plans/yojitsu-fy2026.yaml
     to: report-dashboard
     category: data→reports
     reason: 未到来月の revenue/expense は yojitsu 計画列を使用
     action: regenerate
-  - from: cursor/data/finances/fixed-costs.yaml
+  - from: data/finance/fixed-costs.yaml
     to: report-dashboard
     category: data→reports
     reason: バーンレートの固定費部分に本社固定費が含まれる
     action: regenerate
-  - from: cursor/data/plans/expense-plan.yaml
+  - from: data/plans/expense-plan.yaml
     to: report-dashboard
     category: data→reports
     reason: 減価償却・運営費は expense-plan 経由でダッシュボードに反映
     action: regenerate
-  - from: cursor/data/finances/loans.yaml
+  - from: data/finance/loans.yaml
     to: report-dashboard
     category: data→reports
     reason: 借入返済スケジュールは CF・バーンレートに影響
     action: regenerate
-  - from: cursor/data/plans/debt-plan.yaml
-    to: cursor/data/finances/loans.yaml
+  - from: data/plans/debt-plan.yaml
+    to: data/finance/loans.yaml
     category: data→data
     reason: 返済実行・残高変更時は loans.yaml balance と整合
     action: update
-  - from: cursor/data/finances/loans.yaml
-    to: cursor/data/plans/debt-plan.yaml
+  - from: data/finance/loans.yaml
+    to: data/plans/debt-plan.yaml
     category: data→data
     reason: 借入残高・条件変更時は debt-plan シナリオを見直す
     action: review
-  - from: cursor/data/plans/business-plan.yaml
-    to: cursor/data/plans/debt-plan.yaml
+  - from: data/plans/business-plan.yaml
+    to: data/plans/debt-plan.yaml
     category: data→data
     reason: funding_plan · borrowing_plan は debt-plan と整合
     action: review
-  - from: cursor/data/plans/debt-plan.yaml
-    to: cursor/data/plans/business-plan.yaml
+  - from: data/plans/debt-plan.yaml
+    to: data/plans/business-plan.yaml
     category: data→data
     reason: 借入方針変更時は business-plan funding_plan を更新
     action: update
-  - from: cursor/data/plans/profit-plan.yaml
-    to: cursor/data/plans/debt-plan.yaml
+  - from: data/plans/profit-plan.yaml
+    to: data/plans/debt-plan.yaml
     category: data→data
     reason: DSCR 算定の operating_profit 前提は profit-plan と一致
     action: update
-  - from: cursor/data/plans/debt-plan.yaml
-    to: docs/plans/finance/borrowing-plan.md
+  - from: data/plans/debt-plan.yaml
+    to: docs/finance/borrowing-plan.md
     category: data→docs
     reason: debt-plan 更新後は人向け借入計画 MD を同期
     action: review
-  - from: cursor/data/plans/debt-plan.yaml
-    to: docs/plans/finance/loan-repayment-plan.md
+  - from: data/plans/debt-plan.yaml
+    to: docs/finance/loan-repayment-plan.md
     category: data→docs
     reason: 返済シナリオ変更時は返済計画 MD を同期
     action: review
-  - from: cursor/data/plans/debt-plan.yaml
-    to: docs/plans/finance/dscr-plan.md
+  - from: data/plans/debt-plan.yaml
+    to: docs/finance/dscr-plan.md
     category: data→docs
     reason: DSCR 目標・前提変更時は DSCR 計画 MD を同期
     action: review
-  - from: cursor/data/plans/debt-plan.yaml
+  - from: data/plans/debt-plan.yaml
     to: report-dashboard
     category: data→reports
     reason: 返済スケジュールは CF 予測・ランウェイに影響
     action: regenerate
-  - from: cursor/data/finances/fixed-costs.yaml
+  - from: data/finance/fixed-costs.yaml
     to: report-forecast
     category: data→reports
     reason: CF 予測の固定費入力
     action: regenerate
-  - from: cursor/data/plans/yojitsu-fy2026.yaml
+  - from: data/plans/yojitsu-fy2026.yaml
     to: report-forecast
     category: data→reports
     reason: CF 予測の計画月次
     action: regenerate
-  - from: cursor/data/plans/yojitsu-fy2026.yaml
+  - from: data/plans/yojitsu-fy2026.yaml
     to: report-kessan
     category: plan→report
     reason: 決算 PDF の PL 実績は yojitsu から集計
     action: regenerate
 
   # --- 亀沢公開情報 ↔ ゲスト MD ↔ outbox ---
-  - from: cursor/data/operations/kamezawa-public.yaml
-    to: docs/operations/lodging/templates/guest-facing/house-rules.md
+  - from: data/operations/kamezawa-public.yaml
+    to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/house-rules.md
     category: operations→docs
     reason: チェックイン時間・人数上限等はゲスト MD と一致させる
     action: review
-  - from: cursor/data/operations/kamezawa-public.yaml
-    to: docs/operations/lodging/templates/guest-facing/local-guide-en.md
+  - from: data/operations/kamezawa-public.yaml
+    to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/local-guide-en.md
     category: operations→docs
     reason: アクセス・最寄駅情報を同期
     action: review
-  - from: cursor/data/operations/kamezawa-public.yaml
-    to: docs/operations/lodging/templates/guest-facing/welcome-sheet.md
+  - from: data/operations/kamezawa-public.yaml
+    to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/welcome-sheet.md
     category: operations→docs
     reason: 連絡先・施設名をウェルカムシートに反映
     action: review
-  - from: cursor/data/operations/kamezawa-public.yaml
-    to: docs/outbox/lodging
+  - from: data/operations/kamezawa-public.yaml
+    to: docs/io/outbox/lodging
     category: operations→docs
     reason: ゲスト掲示 PDF 更新時は outbox/lodging に再出力
     action: regenerate
-  - from: cursor/data/operations/kamezawa-secrets.yaml
-    to: docs/outbox/lodging
+  - from: data/operations/kamezawa-secrets.yaml
+    to: docs/io/outbox/lodging
     category: operations→docs
     reason: 鍵・Wi-Fi 変更時は掲示 PDF を再印刷
     action: regenerate
 
   # --- 法人情報 ---
-  - from: cursor/data/company.yaml
+  - from: data/company.yaml
     to: report-kessan
     category: data→reports
     reason: 決算報告書の会社名・代表者情報
     action: regenerate
-  - from: cursor/data/company.yaml
-    to: docs/data/契約管理表.csv
+  - from: data/company.yaml
+    to: docs/exports/契約管理表.csv
     category: data→docs
     reason: オーナー名変更時は契約台帳の owner 列を確認
     action: review
 
   # --- 社長オペ（Secretary） ---
-  - from: cursor/data/company.yaml
-    to: cursor/data/executive/one-on-ones.yaml
+  - from: data/company.yaml
+    to: data/executive/one-on-ones.yaml
     category: data→executive
     reason: 役員・代表者変更時は 1-on-1 レジストリの person/role を確認
     action: review
-  - from: cursor/data/hr/employees.yaml
-    to: cursor/data/executive/one-on-ones.yaml
+  - from: data/hr/employees.yaml
+    to: data/executive/one-on-ones.yaml
     category: data→executive
     reason: 従業員雇用時は 1-on-1 エントリと EMP ID を紐付け
     action: review
-  - from: cursor/data/executive/calendar.yaml
+  - from: data/executive/calendar.yaml
     to: docs/executive
     category: executive→docs
     reason: 週次ブリーフ・1-on-1 準備 MD はカレンダーと整合させる
     action: regenerate
-  - from: cursor/data/executive/tasks.yaml
+  - from: data/executive/tasks.yaml
     to: docs/executive
     category: executive→docs
     reason: 週次ブリーフのタスク表は tasks.yaml と一致させる
     action: regenerate
-  - from: cursor/data/executive/one-on-ones.yaml
+  - from: data/executive/one-on-ones.yaml
     to: docs/executive
     category: executive→docs
     reason: 1-on-1 準備 MD はレジストリの action_items と同期

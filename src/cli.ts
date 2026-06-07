@@ -73,7 +73,7 @@ program
     })
   );
 
-const sync = program.command("sync").description("Sync docs/data CSV from YAML");
+const sync = program.command("sync").description("Sync docs/exports CSV from YAML");
 
 sync
   .command("all")

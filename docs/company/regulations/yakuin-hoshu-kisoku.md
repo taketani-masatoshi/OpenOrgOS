@@ -55,6 +55,6 @@
 
 - [取締役委任契約（段）](../../contracts/CTR-004/01-draft.md)
 - [取締役委任契約（宮城）](../../contracts/CTR-005/01-draft.md)
-- [`payroll.yaml`](../../../cursor/data/finances/payroll.yaml)
+- [`payroll.yaml`](../../../data/finance/payroll.yaml)
 
 **※ 税理士・司法書士確認を推奨。**

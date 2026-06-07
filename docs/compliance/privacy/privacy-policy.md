@@ -8,7 +8,7 @@
 
 ## 1. 基本方針
 
-株式会社MAL（以下「当社」）は、宿泊サービス、翻訳・通訳、業務DX支援等の事業において取得する個人情報を、個人情報保護法及び社内 [個人情報保護規程](../../corporate/regulations/kojin-joho-hogo-kisoku.md)（REG-010）に従い、適正に取り扱います。
+株式会社MAL（以下「当社」）は、宿泊サービス、翻訳・通訳、業務DX支援等の事業において取得する個人情報を、個人情報保護法及び社内 [個人情報保護規程](../../company/regulations/kojin-joho-hogo-kisoku.md)（REG-010）に従い、適正に取り扱います。
 
 ## 2. 取得する情報
 
@@ -39,7 +39,7 @@ OTA 等、外国にサーバを置くサービスを利用する場合があり�
 
 ## 6. 安全管理
 
-アクセス制限、MFA、最小保管、委託先管理を実施します（[情報セキュリティ管理規程](../../corporate/regulations/joho-security-kanri-kisoku.md)）。
+アクセス制限、MFA、最小保管、委託先管理を実施します（[情報セキュリティ管理規程](../../company/regulations/joho-security-kanri-kisoku.md)）。
 
 ## 7. 開示・訂正・利用停止
 
@@ -60,4 +60,4 @@ OTA 等、外国にサーバを置くサービスを利用する場合があり�
 〒102-0084 東京都千代田区二番町1  
 インボイス登録番号: T4010001189530
 
-*Web 掲載用。社内正本は `docs/operations/privacy/`。*
+*Web 掲載用。社内正本は `docs/compliance/privacy/`。*

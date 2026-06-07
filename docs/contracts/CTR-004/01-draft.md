@@ -39,6 +39,6 @@
 
 | 種別 | 参照 |
 |------|------|
-| 会社 | [`company.yaml`](../../../cursor/data/company.yaml) |
-| 株主総会 | [fy2026-shukai-gijiroku.md](../../corporate/fy2026-shukai-gijiroku.md) |
+| 会社 | [`company.yaml`](../../../data/company.yaml) |
+| 株主総会 | [fy2026-shukai-gijiroku.md](../../company/fy2026-shukai-gijiroku.md) |
 | 他取締役 | [CTR-005](../CTR-005/01-draft.md) |

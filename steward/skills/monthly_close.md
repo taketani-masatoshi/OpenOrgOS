@@ -6,10 +6,10 @@
 
 ## 入力
 
-- `cursor/data/finances/monthly/{YYYY-MM}.yaml`
-- `cursor/data/finances/fixed-assets.yaml`（減価償却整理仕訳）
-- `cursor/data/finances/chart-of-accounts.yaml`（科目マッピング）
-- 領収書・経費データ（`docs/operations/accounting/`）
+- `data/finance/monthly/{YYYY-MM}.yaml`
+- `data/finance/fixed-assets.yaml`（減価償却整理仕訳）
+- `data/finance/chart-of-accounts.yaml`（科目マッピング）
+- 領収書・経費データ（`docs/finance/accounting/`）
 - 物件 Agent からの収益前提（番町賃料 · 亀沢宿泊）
 
 ## 出力
@@ -26,14 +26,14 @@ Finance Agent
 
 | 種別 | パス |
 |------|------|
-| 正データ | `cursor/data/finances/monthly/` |
+| 正データ | `data/finance/monthly/` |
 | 要約 | `docs/reports/agent-summaries/finance/` |
 
 ## CLI
 
 ```bash
 npm run steward -- finances add --month YYYY-MM
-npm run steward -- deps check --file cursor/data/finances/monthly/YYYY-MM.yaml
+npm run steward -- deps check --file data/finance/monthly/YYYY-MM.yaml
 npm run validate
 npm run steward -- sync all
 ```

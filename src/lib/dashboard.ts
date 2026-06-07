@@ -439,7 +439,7 @@ function alertToTask(alert: ContractAlert): DashboardTask {
     importance,
     dueDate: alert.deadline,
     daysRemaining: alert.daysRemaining,
-    link: `cursor/data/contracts/${alert.contractId}.yaml`,
+    link: `data/contracts/${alert.contractId}.yaml`,
     notes: alert.notes,
   };
 }
@@ -476,7 +476,7 @@ function roadmapTbdTasks(): DashboardTask[] {
       category: "資金計画",
       urgency: "medium",
       importance: "high",
-      link: "cursor/data/plans/business-plan.yaml",
+      link: "data/plans/business-plan.yaml",
       notes: "business-plan funding_plan に TBD 記載",
     },
     {
@@ -485,7 +485,7 @@ function roadmapTbdTasks(): DashboardTask[] {
       category: "財務データ",
       urgency: "medium",
       importance: "high",
-      link: "cursor/data/finances/cash-balance.yaml",
+      link: "data/finance/cash-balance.yaml",
       notes: "テンプレート作成済み — 金額入力後 status: confirmed",
     },
   ];
@@ -536,7 +536,7 @@ function buildMonthlyTrend(fiscalYear: string): MonthlyTrendPoint[] {
 
 function buildTrendNarrative(trend: MonthlyTrendPoint[]): string[] {
   if (trend.length === 0) {
-    return ["予実データなし — `cursor/data/plans/yojitsu-*.yaml` を整備してください。"];
+    return ["予実データなし — `data/plans/yojitsu-*.yaml` を整備してください。"];
   }
 
   const lines: string[] = [];
@@ -756,7 +756,7 @@ export function collectUpcomingPayments(
         dueDate,
         daysRemaining: paymentDaysRemaining(reportDate, dueDate),
         recurrence: "monthly",
-        source: "cursor/data/finances/fixed-costs.yaml",
+        source: "data/finance/fixed-costs.yaml",
       });
     }
   }
@@ -775,7 +775,7 @@ export function collectUpcomingPayments(
         dueDate,
         daysRemaining: paymentDaysRemaining(reportDate, dueDate),
         recurrence: "monthly",
-        source: "cursor/data/finances/payroll.yaml",
+        source: "data/finance/payroll.yaml",
         notes: payroll.notes?.trim(),
       });
     }
@@ -793,7 +793,7 @@ export function collectUpcomingPayments(
       dueDate,
       daysRemaining: paymentDaysRemaining(reportDate, dueDate),
       recurrence: "annual",
-      source: "cursor/data/finances/fixed-costs.yaml",
+      source: "data/finance/fixed-costs.yaml",
       notes: "年次支払 — 支払日は会計処理に合わせ要確認",
     });
   }
@@ -821,7 +821,7 @@ export function collectUpcomingPayments(
         dueDate,
         daysRemaining: paymentDaysRemaining(reportDate, dueDate),
         recurrence: "annual",
-        source: "cursor/data/plans/debt-plan.yaml",
+        source: "data/plans/debt-plan.yaml",
         notes: `${baseScenario.name} · status: ${entry.status}${entry.notes ? ` · ${entry.notes}` : ""}`,
       });
     }
@@ -839,7 +839,7 @@ export function collectUpcomingPayments(
         dueDate: fyEnd,
         daysRemaining: paymentDaysRemaining(reportDate, fyEnd),
         recurrence: "once",
-        source: "cursor/data/plans/debt-plan.yaml",
+        source: "data/plans/debt-plan.yaml",
         notes: "当年度の計画返済なし — 返済開始は debt-plan を参照",
       });
     }
@@ -852,7 +852,7 @@ export function collectUpcomingPayments(
       dueDate: windowEnd,
       daysRemaining: horizonDays,
       recurrence: "once",
-      source: "cursor/data/plans/debt-plan.yaml",
+      source: "data/plans/debt-plan.yaml",
       notes: "debt-plan.yaml 未整備または読取不可",
     });
   }
@@ -868,7 +868,7 @@ export function collectUpcomingPayments(
       dueDate: task.dueDate,
       daysRemaining: task.daysRemaining ?? paymentDaysRemaining(reportDate, task.dueDate),
       recurrence: "once",
-      source: task.link ?? "cursor/data/contracts/",
+      source: task.link ?? "data/contracts/",
       notes: "契約更新・加入 — 支払額は契約条項を参照（tasks と連動）",
       relatedTaskId: task.id,
     });

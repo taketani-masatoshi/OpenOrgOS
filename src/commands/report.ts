@@ -21,7 +21,7 @@ function loadReportData(fiscalYear: string) {
   const yojitsu = loadYojitsuFyPlan(fiscalYear);
   if (!yojitsu) {
     throw new Error(
-      `Yojitsu plan not found for ${fiscalYear}. Expected cursor/data/plans/yojitsu-${fiscalYear.toLowerCase()}.yaml`
+      `Yojitsu plan not found for ${fiscalYear}. Expected data/plans/yojitsu-${fiscalYear.toLowerCase()}.yaml`
     );
   }
   if (yojitsu.closing?.status !== "closed") {

@@ -30,4 +30,4 @@
 |------|-------:|-----:|------|
 | — | — | 16,600,000 | — |
 
-※ 返済実行時に追記。 [`loans.yaml`](../../../cursor/data/finances/loans.yaml) と同期。
+※ 返済実行時に追記。 [`loans.yaml`](../../../data/finance/loans.yaml) と同期。

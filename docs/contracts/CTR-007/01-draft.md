@@ -43,7 +43,7 @@
 | 種別 | 参照 |
 |------|------|
 | 土地 | [CTR-006](../CTR-006/01-draft.md) |
-| 物件 | [`PROP-002`](../../../cursor/data/properties/PROP-002.yaml) |
-| 投資計画 | [`investment-plan.yaml`](../../../cursor/data/plans/investment-plan.yaml) |
+| 物件 | [`PROP-002`](../../../data/properties/PROP-002.yaml) |
+| 投資計画 | [`investment-plan.yaml`](../../../data/plans/investment-plan.yaml) |
 
 **※ 最終版は弁護士・建築士確認を推奨。**

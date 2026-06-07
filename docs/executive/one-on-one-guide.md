@@ -53,7 +53,7 @@
 1-on-1 で財務・契約・許認可の判断が必要な場合:
 
 1. Secretary が準備 MD の「委譲」欄に記載
-2. Executive Steward へ [照会フォーマット](../../13_rules/folder_access_policy.md) で依頼
+2. Executive Steward へ [照会フォーマット](../../steward/rules/folder_access_policy.md) で依頼
 3. 回答を次回 1-on-1 の議題に反映（数値のコピペは最小限）
 
 ---
@@ -69,5 +69,5 @@
 ## 関連
 
 - [weekly-brief-template.md](weekly-brief-template.md)
-- [12_skills/one_on_one_prep.md](../../12_skills/one_on_one_prep.md)
-- [cursor/data/executive/one-on-ones.yaml](../../cursor/data/executive/one-on-ones.yaml)
+- [steward/skills/one_on_one_prep.md](../../steward/skills/one_on_one_prep.md)
+- [data/executive/one-on-ones.yaml](../../data/executive/one-on-ones.yaml)

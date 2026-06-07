@@ -155,7 +155,7 @@
 
 | ファイル | 内容 |
 |---------|------|
-| [`PROP-001.yaml`](../../../../cursor/data/properties/PROP-001.yaml) | 番町 · 千代田区 |
-| [`PROP-002.yaml`](../../../../cursor/data/properties/PROP-002.yaml) | 亀沢 · 墨田区 |
+| [`PROP-001.yaml`](../../../../data/properties/PROP-001.yaml) | 番町 · 千代田区 |
+| [`PROP-002.yaml`](../../../../data/properties/PROP-002.yaml) | 亀沢 · 墨田区 |
 | [`01-hojinzei-shinkoku-yoko.md`](01-hojinzei-shinkoku-yoko.md) | 法人税 |
 | [`05-kotei-shisanzei.md`](05-kotei-shisanzei.md) | 固定資産税 |

@@ -11,7 +11,7 @@
 | **必要な入力** | `business-plan.yaml` · 市場調査 · 株主意向 · `investment-plan.yaml` |
 | **出力** | 中期目標リスト · 年度別 ROADMAP · 投資優先順位 · リスク登録 |
 | **KPI** | 3 年累計売上 · 営業利益率 · 物件稼働率 · サービス収益比率 |
-| **関連フォルダ** | `cursor/data/plans/business-plan.yaml` · `docs/plans/mid-term-plan.md` |
+| **関連フォルダ** | `data/plans/business-plan.yaml` · `docs/plans/mid-term-plan.md` |
 | **担当** | Executive Steward |
 | **更新頻度** | 年次（四半期レビュー） |
 | **リスク** | サービスセグメント未数値化 · 亀沢開業遅延 |
@@ -27,7 +27,7 @@
 | **必要な入力** | 中期計画 · 物件収益 · 前年度予実 · 税務カレンダー |
 | **出力** | 年度 P/L 目標 · 月次分解 · 部門別目標 · 承認記録 |
 | **KPI** | 売上 · 営業利益 · 投資額 · 借入返済額 |
-| **関連フォルダ** | `cursor/data/plans/revenue-plan.yaml` 等 · `docs/plans/annual-plan-fy2026.md` |
+| **関連フォルダ** | `data/plans/revenue-plan.yaml` 等 · `docs/plans/annual-plan-fy2026.md` |
 | **担当** | Executive Steward · Finance |
 | **更新頻度** | 年次策定 · 月次見直し |
 | **リスク** | 予実乖離 · B/S 未確定 |
@@ -43,7 +43,7 @@
 | **必要な入力** | 年度計画 · 前月実績 · 契約イベント · 修繕予定 |
 | **出力** | 月次予算 · ToDo · 例外事項 |
 | **KPI** | 月次売上 · 月次営業利益 · ランウェイ |
-| **関連フォルダ** | `cursor/data/finances/monthly/` · `docs/plans/monthly/` |
+| **関連フォルダ** | `data/finance/monthly/` · `docs/plans/monthly/` |
 | **担当** | Finance · Operations |
 | **更新頻度** | 月次（月初 5 営業日以内） |
 | **リスク** | 月次 YAML 未整備 |
@@ -75,7 +75,7 @@
 | **必要な入力** | `cash-balance.yaml` · CF 計画 · 借入返済 · 投資 |
 | **出力** | 13 ヶ月 CF 表 · ランウェイ · ショートアラート |
 | **KPI** | 最低現預金 · ランウェイ月数 · CF 差異 |
-| **関連フォルダ** | `cursor/data/finances/cash-balance.yaml` · `docs/plans/cashflow-detail.md` |
+| **関連フォルダ** | `data/finance/cash-balance.yaml` · `docs/plans/cashflow-detail.md` |
 | **担当** | Finance |
 | **更新頻度** | 週次確認 · 月次更新 |
 | **リスク** | 現預金 TBD · 返済任意条項 |
@@ -91,7 +91,7 @@
 | **必要な入力** | `investment-plan.yaml` · 工事見積 · 物件 CAPEX |
 | **出力** | 投資スケジュール · 資金源 · 償却影響 |
 | **KPI** | 投資額 · ROI · 回収期間 |
-| **関連フォルダ** | `cursor/data/plans/investment-plan.yaml` · `docs/data/投資計画.csv` |
+| **関連フォルダ** | `data/plans/investment-plan.yaml` · `docs/exports/投資計画.csv` |
 | **担当** | Executive Steward · Finance |
 | **更新頻度** | 年次 · 大型案件随時 |
 | **リスク** | コスト超過 · 開業遅延 |
@@ -107,7 +107,7 @@
 | **必要な入力** | `loans.yaml` · CTR-008/009 · 取締役会議事録 |
 | **出力** | 借入残高 · 返済シナリオ · 利息（将来） |
 | **KPI** | 借入残高 · 返済率 · DSCR |
-| **関連フォルダ** | `cursor/data/finances/loans.yaml` · `docs/contracts/CTR-008/` |
+| **関連フォルダ** | `data/finance/loans.yaml` · `docs/contracts/CTR-008/` |
 | **担当** | Finance · Executive |
 | **更新頻度** | 四半期 · 返済実行随時 |
 | **リスク** | 返済条件 TBD · CF 不足 |
@@ -123,7 +123,7 @@
 | **必要な入力** | P/L · B/S · 税理士指示 · e-Tax 要件 |
 | **出力** | 申告カレンダー · 試算 · 支払予定 |
 | **KPI** | 実効税率 · 納税額 · 申告期限遵守 |
-| **関連フォルダ** | `docs/corporate/tax/fy2026/` |
+| **関連フォルダ** | `docs/company/tax/fy2026/` |
 | **担当** | Finance · Compliance |
 | **更新頻度** | 年次 · 中間申告 |
 | **リスク** | B/S 3 項目 TBD · e-Tax 不可 |
@@ -136,10 +136,10 @@
 |------|------|
 | **目的** | 全 CTR の draft/executed・更新・リスクを統括管理 |
 | **管理対象** | CTR-001〜014 |
-| **必要な入力** | `cursor/data/contracts/` · inbox 証憑 |
+| **必要な入力** | `data/contracts/` · inbox 証憑 |
 | **出力** | 契約台帳 · 期限アラート · 未締結一覧 |
 | **KPI** | executed 率 · 更新漏れ 0 · draft 解消日数 |
-| **関連フォルダ** | `cursor/data/contracts/` · `docs/contracts/` |
+| **関連フォルダ** | `data/contracts/` · `docs/contracts/` |
 | **担当** | Contract · Operations |
 | **更新頻度** | 随時 · 月次棚卸 |
 | **リスク** | CTR-011/012/013/014 draft |

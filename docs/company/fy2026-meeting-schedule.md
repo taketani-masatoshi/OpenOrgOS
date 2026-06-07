@@ -156,7 +156,7 @@
 |------|--------|------|
 | 2027/1/31 まで | 償却資産税申告 | 各区役所 |
 | 2027/1/31 まで | 法定調書（2026年暦年分） | 税務署 |
-| 2027/1月末 | 月次収支・予実確定 | [`cursor/data/finances/monthly/`](../../cursor/data/finances/monthly/) |
+| 2027/1月末 | 月次収支・予実確定 | [`data/finance/monthly/`](../../data/finance/monthly/) |
 | 2027/2月上旬 | 税理士確認・法人税等確定 | [fy2026-pl.md](../plans/fy2026-pl.md) |
 | 2027/2/9 まで | 計算書類・決算/事業報告 PDF | [pdf/](pdf/) |
 | 2027/2/10 | **取締役会** | 本ファイル |
@@ -190,7 +190,7 @@
 | [fy2026-keisansyorui.md](fy2026-keisansyorui.md) | 計算書類（公告・申告の基礎） |
 | [fy2026-hojin-gaikyo.md](fy2026-hojin-gaikyo.md) | 法人概況説明書 |
 | [fy2026-pl.md](../plans/fy2026-pl.md) | 決算書（詳細） |
-| [`cursor/data/plans/yojitsu-fy2026.yaml`](../../cursor/data/plans/yojitsu-fy2026.yaml) | 月次予実（正データ） |
+| [`data/plans/yojitsu-fy2026.yaml`](../../data/plans/yojitsu-fy2026.yaml) | 月次予実（正データ） |
 
 ---
 

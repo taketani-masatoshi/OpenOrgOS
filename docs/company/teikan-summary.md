@@ -17,13 +17,13 @@
 | 旧商号 | 株式会社ほんとのあなた（2024-12-27変更） |
 | 旧本店 | 東京都文京区小石川3-28-13（2024-12-18移転） |
 
-出典: [`cursor/data/company.yaml`](../../cursor/data/company.yaml)
+出典: [`data/company.yaml`](../../data/company.yaml)
 
 ---
 
 ## 目的（事業目的 · 要約）
 
-[`company.yaml`](../../cursor/data/company.yaml) の `business_description` に準ずる:
+[`company.yaml`](../../data/company.yaml) の `business_description` に準ずる:
 
 - 不動産オーナー向け翻訳・通訳、イベントスペース貸出、旅館運営
 - 業務DX支援、ソフトウェア開発、コンサル・PMO・SES

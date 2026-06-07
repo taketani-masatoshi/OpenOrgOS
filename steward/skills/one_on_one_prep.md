@@ -8,10 +8,10 @@
 
 | データ | パス |
 |--------|------|
-| 1-on-1 レジストリ | `cursor/data/executive/one-on-ones.yaml` |
-| 社長タスク | `cursor/data/executive/tasks.yaml` |
-| カレンダー | `cursor/data/executive/calendar.yaml` |
-| 役員情報 | `cursor/data/company.yaml` · `cursor/data/hr/employees.yaml` |
+| 1-on-1 レジストリ | `data/executive/one-on-ones.yaml` |
+| 社長タスク | `data/executive/tasks.yaml` |
+| カレンダー | `data/executive/calendar.yaml` |
+| 役員情報 | `data/company.yaml` · `data/hr/employees.yaml` |
 
 ## 出力
 
@@ -38,7 +38,7 @@
 
 ## 出力テンプレート
 
-[11_agents/secretary_agent.md](../11_agents/secretary_agent.md) の「1-on-1 準備」形式。  
+[steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md) の「1-on-1 準備」形式。  
 運用詳細: [docs/executive/one-on-one-guide.md](../docs/executive/one-on-one-guide.md)
 
 ## 禁止

@@ -79,10 +79,10 @@
 
 | データ | 保管場所 | 保管期間 |
 |--------|---------|---------|
-| ゲスト台帳・予約記録 | [`docs/operations/lodging/records/`](../../operations/lodging/records/) | 宿泊終了後 **5年** |
+| ゲスト台帳・予約記録 | [`docs/properties/PROP-002-kamezawa/operations/records/`](../../properties/PROP-002-kamezawa/operations/records/) | 宿泊終了後 **5年** |
 | 取引先担当者 | 案件・契約フォルダ | 取引終了後 **5年** |
-| インシデント記録 | [`docs/operations/privacy/records/`](../../operations/privacy/records/) | **3年** |
-| 雇用関連 | [`docs/operations/hr/records/`](../../operations/hr/records/) | 労基法に従う |
+| インシデント記録 | [`docs/compliance/privacy/records/`](../../operations/privacy/records/) | **3年** |
+| 雇用関連 | [`docs/company/hr/records/`](../../operations/hr/records/) | 労基法に従う |
 
 記入済みデータは **Git に含めない**（`.gitignore`）。  
 保管期間経過後は、復元不能な方法で削除する。

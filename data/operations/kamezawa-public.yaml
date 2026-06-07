@@ -30,9 +30,9 @@ contact:
   emergency_note: "119/110 for fire/ambulance/police. Property urgent: see kamezawa-secrets.yaml"
 
 guest_docs:
-  house_rules_en: "docs/operations/lodging/templates/guest-facing/house-rules.md"
-  local_guide_en: "docs/operations/lodging/templates/guest-facing/local-guide-en.md"
-  welcome_sheet: "docs/operations/lodging/templates/guest-facing/welcome-sheet.md"
+  house_rules_en: "docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/house-rules.md"
+  local_guide_en: "docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/local-guide-en.md"
+  welcome_sheet: "docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/welcome-sheet.md"
 
 notes: |
   番地・スマートロック・Wi-Fiは secrets ファイルで管理。

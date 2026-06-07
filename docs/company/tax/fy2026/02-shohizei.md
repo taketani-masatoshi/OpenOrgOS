@@ -148,6 +148,6 @@
 
 | ファイル | 内容 |
 |---------|------|
-| [`company.yaml`](../../../../cursor/data/company.yaml) | インボイス番号 |
+| [`company.yaml`](../../../../data/company.yaml) | インボイス番号 |
 | [`02-shohizei.md`](02-shohizei.md) | 本ファイル |
 | [`01-hojinzei-shinkoku-yoko.md`](01-hojinzei-shinkoku-yoko.md) | 法人税 |

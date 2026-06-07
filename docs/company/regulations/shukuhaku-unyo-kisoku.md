@@ -10,7 +10,7 @@
 
 ## 第1条（目的）
 
-本規程は、亀沢旅館（[PROP-002](../../../cursor/data/properties/PROP-002.yaml)）の **安全で持続可能な宿泊サービス** の提供、ゲスト満足、地域・環境への配慮を定める。
+本規程は、亀沢旅館（[PROP-002](../../../data/properties/PROP-002.yaml)）の **安全で持続可能な宿泊サービス** の提供、ゲスト満足、地域・環境への配慮を定める。
 
 ## 第2条（適用範囲）
 
@@ -32,7 +32,7 @@
 
 1. 問合せ・苦情は **24時間以内** に一次応答し、**72時間以内** に解決方針を提示する（緊急時は即時）。
 2. 記録項目: 日時、ゲスト識別、内容、対応、結果。
-3. 記録様式: [`docs/operations/lodging/templates/guest-service/クレーム記録.csv`](../../operations/lodging/templates/guest-service/クレーム記録.csv)（`records/` に保管）
+3. 記録様式: [`docs/properties/PROP-002-kamezawa/operations/templates/guest-service/クレーム記録.csv`](../../properties/PROP-002-kamezawa/operations/templates/guest-service/クレーム記録.csv)（`records/` に保管）
 4. 個人情報は [REG-010](kojin-joho-hogo-kisoku.md) に従う。
 
 ## 第6条（環境・資源）
@@ -42,7 +42,7 @@
 1. ゴミの分別・減量化
 2. 洗剤・消耗品の環境配慮型選定
 3. 電力・水道の **月次記録**（予実 YAML と整合）
-4. 年間目標（例）: ゴミ量/泊、電力/泊 — [`docs/iso/ISO-21401/`](../../iso/ISO-21401/) で設定・見直し
+4. 年間目標（例）: ゴミ量/泊、電力/泊 — [`docs/compliance/iso/ISO-21401/`](../../compliance/iso/ISO-21401/) で設定・見直し
 
 ## 第7条（地域・ステークホルダー）
 
@@ -60,7 +60,7 @@
 ## 第10条（記録・見直し）
 
 1. 清掃・メンテ・クレーム記録を **3年** 保管する。
-2. **宿泊者名簿** は [宿泊者名簿運用規則](../../operations/lodging/guest-register-rules.md) に従い [`docs/operations/lodging/`](../../operations/lodging/) で管理する。
+2. **宿泊者名簿** は [宿泊者名簿運用規則](../../properties/PROP-002-kamezawa/operations/guest-register-rules.md) に従い [`docs/properties/PROP-002-kamezawa/operations/`](../../properties/PROP-002-kamezawa/operations/) で管理する。
 3. 本方針及び目標は **年1回** 見直す（マネジメントレビュー）。
 
 ## 第11条（改定）
@@ -71,5 +71,5 @@
 
 ## 関連
 
-- [ISO 21401 ギャップ分析](../../iso/ISO-21401/00-このフォルダについて.md)
+- [ISO 21401 ギャップ分析](../../compliance/iso/ISO-21401/00-このフォルダについて.md)
 - [REG-011 品質管理規程](hinshitsu-kanri-kisoku.md)（宿泊は本規程が優先）

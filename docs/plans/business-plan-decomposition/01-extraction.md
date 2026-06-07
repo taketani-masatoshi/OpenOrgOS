@@ -1,6 +1,6 @@
 # Step 1 — 事業計画解析（抽出結果）
 
-**ソース:** `cursor/data/plans/business-plan.yaml` · `company.yaml` · `properties/` · `finances/` · `contracts/` · `docs/plans/fy2026-pl.md`
+**ソース:** `data/plans/business-plan.yaml` · `company.yaml` · `properties/` · `finances/` · `contracts/` · `docs/plans/fy2026-pl.md`
 
 ---
 
@@ -101,18 +101,18 @@
 ## 抽出に使用したファイル
 
 ```
-cursor/data/plans/business-plan.yaml
-cursor/data/plans/revenue-plan.yaml
-cursor/data/plans/profit-plan.yaml
-cursor/data/plans/expense-plan.yaml
-cursor/data/plans/investment-plan.yaml
-cursor/data/plans/property-revenue.yaml
-cursor/data/company.yaml
-cursor/data/properties/PROP-001.yaml
-cursor/data/properties/PROP-002.yaml
-cursor/data/finances/loans.yaml
-cursor/data/finances/cash-balance.yaml
-cursor/data/dependency-graph.yaml
+data/plans/business-plan.yaml
+data/plans/revenue-plan.yaml
+data/plans/profit-plan.yaml
+data/plans/expense-plan.yaml
+data/plans/investment-plan.yaml
+data/plans/property-revenue.yaml
+data/company.yaml
+data/properties/PROP-001.yaml
+data/properties/PROP-002.yaml
+data/finance/loans.yaml
+data/finance/cash-balance.yaml
+data/dependency-graph.yaml
 docs/plans/fy2026-pl.md
-docs/corporate/executive-remaining-tasks.md
+docs/company/executive-remaining-tasks.md
 ```

@@ -1,6 +1,6 @@
 # テンプレート — 5. 財務計画（10）
 
-**正データ:** `cursor/data/plans/` · `cursor/data/finances/` · **人向け:** `docs/plans/` · `docs/data/`
+**正データ:** `data/plans/` · `data/finance/` · **人向け:** `docs/plans/` · `docs/exports/`
 
 ---
 
@@ -13,7 +13,7 @@
 | **必要な入力** | `revenue-plan.yaml` · 物件パラメータ |
 | **出力** | 売上分解 · CSV/MD |
 | **KPI** | 売上 · セグメント構成比 |
-| **関連フォルダ** | `cursor/data/plans/revenue-plan.yaml` · `docs/data/売上計画.csv` |
+| **関連フォルダ** | `data/plans/revenue-plan.yaml` · `docs/exports/売上計画.csv` |
 | **担当** | Finance |
 | **更新頻度** | 月次予実 |
 | **リスク** | サービス未計上 |
@@ -29,7 +29,7 @@
 | **必要な入力** | 契約 · 給与 · 減価償却 |
 | **出力** | 固定費一覧 · 月次按分 |
 | **KPI** | 固定費率 · 予実差 |
-| **関連フォルダ** | `cursor/data/finances/fixed-costs.yaml` |
+| **関連フォルダ** | `data/finance/fixed-costs.yaml` |
 | **担当** | Finance |
 | **更新頻度** | 月次 |
 | **リスク** | 固定費増 |
@@ -45,7 +45,7 @@
 | **必要な入力** | 稼働率 · 単価前提 |
 | **出力** | 変動費モデル · 感度分析 |
 | **KPI** | 変動費/売上 · コスト/泊 |
-| **関連フォルダ** | `cursor/data/plans/expense-plan.yaml` |
+| **関連フォルダ** | `data/plans/expense-plan.yaml` |
 | **担当** | Finance · Hospitality |
 | **更新頻度** | 月次 |
 | **リスク** | 単価上昇 |
@@ -61,7 +61,7 @@
 | **必要な入力** | `property-revenue.yaml` · 物件費用 |
 | **出力** | 物件 P/L · NOI |
 | **KPI** | 物件営業利益 · NOI 率 |
-| **関連フォルダ** | `cursor/data/plans/property-revenue.yaml` |
+| **関連フォルダ** | `data/plans/property-revenue.yaml` |
 | **担当** | Finance |
 | **更新頻度** | 月次 |
 | **リスク** | 配賦基準 |
@@ -109,7 +109,7 @@
 | **必要な入力** | `loans.yaml` · CF |
 | **出力** | 返済表 · シナリオ |
 | **KPI** | 返済進捗 · 残高 |
-| **関連フォルダ** | `cursor/data/finances/loans.yaml` |
+| **関連フォルダ** | `data/finance/loans.yaml` |
 | **担当** | Finance |
 | **更新頻度** | 四半期 |
 | **リスク** | 任意返済の不確実性 |
@@ -125,7 +125,7 @@
 | **必要な入力** | 物件 NOI · 返済スケジュール |
 | **出力** | DSCR 推移 · アラート |
 | **KPI** | DSCR ≥ 1.2（目安） |
-| **関連フォルダ** | `docs/plans/finance/dscr-plan.md` |
+| **関連フォルダ** | `docs/finance/dscr-plan.md` |
 | **担当** | Finance · Executive |
 | **更新頻度** | 四半期 |
 | **リスク** | 低稼働で DSCR 悪化 |
@@ -141,7 +141,7 @@
 | **必要な入力** | 税務 MD · 税理士 |
 | **出力** | 支払予定 · 引当 |
 | **KPI** | 期限遵守 · 引当精度 |
-| **関連フォルダ** | `docs/corporate/tax/fy2026/` |
+| **関連フォルダ** | `docs/company/tax/fy2026/` |
 | **担当** | Finance · Compliance |
 | **更新頻度** | 年次 · 中間 |
 | **リスク** | 納付資金不足 |
@@ -157,7 +157,7 @@
 | **必要な入力** | `cash-balance.yaml` · アラート |
 | **出力** | エスカレーション · コスト削減 · 追加調達 |
 | **KPI** | ランウェイ月数 · 最低残高 |
-| **関連フォルダ** | `docs/plans/finance/liquidity-crisis-plan.md` |
+| **関連フォルダ** | `docs/finance/liquidity-crisis-plan.md` |
 | **担当** | Executive · Finance |
 | **更新頻度** | 随時（トリガー） |
 | **リスク** | 現預金 TBD |

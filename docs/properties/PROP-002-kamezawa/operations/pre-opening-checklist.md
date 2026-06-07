@@ -95,7 +95,7 @@
 | E4 | 鍵・スマートロック運用ルール | ☐ | CTR-012 別紙 |
 | E5 | 月次光熱メーター記録 | ✅ | 様式あり |
 | E6 | ISO 21401 L2 記録開始 | ✅ | |
-| E7 | 内部監査第1回（2026-08-18予定） | ☐ | [監査計画](../../iso/internal-audit-plan-fy2026.md) |
+| E7 | 内部監査第1回（2026-08-18予定） | ☐ | [監査計画](../../../../compliance/iso/internal-audit-plan-fy2026.md) |
 
 ---
 
@@ -113,4 +113,4 @@
 
 - [daily-operations-guide.md](daily-operations-guide.md)
 - [00-このフォルダについて.md](00-このフォルダについて.md)
-- [steward-assessment.md](../../iso/steward-assessment.md)
+- [steward-assessment.md](../../../../compliance/iso/steward-assessment.md)

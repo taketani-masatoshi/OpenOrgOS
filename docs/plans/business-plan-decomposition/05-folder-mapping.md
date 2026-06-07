@@ -8,10 +8,10 @@
 
 | 計画・文書 | 保存先 |
 |-----------|--------|
-| 会社概要 | **`cursor/data/company.yaml`** |
-| 株主名簿 | **`docs/corporate/shareholder-register.md`** |
-| 定款・登記 | `docs/corporate/` |
-| 役員・組織 | `docs/corporate/` · `cursor/data/hr/employees.yaml` |
+| 会社概要 | **`data/company.yaml`** |
+| 株主名簿 | **`docs/company/shareholder-register.md`** |
+| 定款・登記 | `docs/company/` |
+| 役員・組織 | `docs/company/` · `data/hr/employees.yaml` |
 
 ---
 
@@ -19,16 +19,16 @@
 
 | 計画 | 正データ（YAML） | 人向け（MD） |
 |------|-----------------|-------------|
-| 事業計画 | **`cursor/data/plans/business-plan.yaml`** | **`docs/plans/business-plan-decomposition/`** |
-| 中期経営計画 | `cursor/data/plans/business-plan.yaml`（mid_term_goals） | **`docs/plans/mid-term-plan.md`** |
+| 事業計画 | **`data/plans/business-plan.yaml`** | **`docs/plans/business-plan-decomposition/`** |
+| 中期経営計画 | `data/plans/business-plan.yaml`（mid_term_goals） | **`docs/plans/mid-term-plan.md`** |
 | 年度計画 | `revenue/expense/profit/investment-plan.yaml` | **`docs/plans/annual-plan-fy2026.md`** |
-| 月次計画 | `cursor/data/finances/monthly/{YYYY-MM}.yaml` | **`docs/plans/monthly-plan-template.md`** |
+| 月次計画 | `data/finance/monthly/{YYYY-MM}.yaml` | **`docs/plans/monthly-plan-template.md`** |
 | KPI 計画 | `business-plan.yaml`（kpi） | **`docs/plans/kpi-plan.md`** |
-| 資金繰り | **`cursor/data/finances/cash-balance.yaml`** | **`docs/plans/cashflow-detail.md`** |
-| 投資計画 | **`cursor/data/plans/investment-plan.yaml`** | `docs/data/投資計画.csv` |
-| 借入計画 | **`cursor/data/finances/loans.yaml`** | `docs/contracts/CTR-008/` · `CTR-009/` |
-| 税務計画 | — | **`docs/corporate/tax/fy2026/`** |
-| 契約管理計画 | `cursor/data/contracts/` | **`docs/plans/contract-management-plan.md`** |
+| 資金繰り | **`data/finance/cash-balance.yaml`** | **`docs/plans/cashflow-detail.md`** |
+| 投資計画 | **`data/plans/investment-plan.yaml`** | `docs/exports/投資計画.csv` |
+| 借入計画 | **`data/finance/loans.yaml`** | `docs/contracts/CTR-008/` · `CTR-009/` |
+| 税務計画 | — | **`docs/company/tax/fy2026/`** |
+| 契約管理計画 | `data/contracts/` | **`docs/plans/contract-management-plan.md`** |
 | リスク管理計画 | — | **`docs/plans/risk-management-plan.md`** |
 
 ---
@@ -37,10 +37,10 @@
 
 | 計画 | PROP-001 | PROP-002 |
 |------|----------|----------|
-| 正データ | **`cursor/data/properties/PROP-001.yaml`** | **`cursor/data/properties/PROP-002.yaml`** |
+| 正データ | **`data/properties/PROP-001.yaml`** | **`data/properties/PROP-002.yaml`** |
 | 物件基本〜リスク 11 計画 | **`docs/plans/properties/PROP-001/`** | **`docs/plans/properties/PROP-002/`** |
-| 運用ドキュメント | **`docs/operations/rental/`**（新設） | **`docs/operations/lodging/`** |
-| 機密 | — | `cursor/data/operations/kamezawa-secrets.yaml` |
+| 運用ドキュメント | **`docs/operations/rental/`**（新設） | **`docs/properties/PROP-002-kamezawa/operations/`** |
+| 機密 | — | `data/operations/kamezawa-secrets.yaml` |
 
 ---
 
@@ -48,10 +48,10 @@
 
 | 計画 | 正データ | 人向け |
 |------|---------|--------|
-| 売上・費用・損益 | **`cursor/data/plans/revenue-plan.yaml`** 等 | **`docs/plans/fy2026-pl.md`** · **`docs/data/*.csv`** |
-| 物件別損益 | **`cursor/data/plans/property-revenue.yaml`** | `docs/data/物件別収益.csv` |
-| 予実 | **`cursor/data/plans/yojitsu-fy2026.yaml`** | **`docs/plans/2026-yojitsu.md`** |
-| CF・DSCR・税 | `finances/` · `plans/` | **`docs/plans/cashflow-detail.md`** · `docs/corporate/tax/` |
+| 売上・費用・損益 | **`data/plans/revenue-plan.yaml`** 等 | **`docs/plans/fy2026-pl.md`** · **`docs/exports/*.csv`** |
+| 物件別損益 | **`data/plans/property-revenue.yaml`** | `docs/exports/物件別収益.csv` |
+| 予実 | **`data/plans/yojitsu-fy2026.yaml`** | **`docs/plans/2026-yojitsu.md`** |
+| CF・DSCR・税 | `finances/` · `plans/` | **`docs/plans/cashflow-detail.md`** · `docs/company/tax/` |
 
 ---
 
@@ -59,7 +59,7 @@
 
 | 内容 | パス |
 |------|------|
-| 契約台帳（正） | **`cursor/data/contracts/CTR-*.yaml`** |
+| 契約台帳（正） | **`data/contracts/CTR-*.yaml`** |
 | 契約書 MD | **`docs/contracts/CTR-*/`** |
 | 契約計画群 | **`docs/plans/contracts/`** |
 
@@ -71,7 +71,7 @@
 |------|------|
 | 賃貸 9 モジュール計画 | **`docs/plans/rental/`** |
 | 番町運用 | **`docs/operations/rental/bancho/`** |
-| エージェント | **`11_agents/property_rental_agent.md`** |
+| エージェント | **`steward/agents/property_rental_agent.md`** |
 
 ---
 
@@ -80,9 +80,9 @@
 | 計画 | パス |
 |------|------|
 | 旅館 10 モジュール計画 | **`docs/plans/hospitality/`** |
-| 亀沢運用 | **`docs/operations/lodging/`** |
-| 公開情報 | **`cursor/data/operations/kamezawa-public.yaml`** |
-| エージェント | **`11_agents/hospitality_agent.md`** |
+| 亀沢運用 | **`docs/properties/PROP-002-kamezawa/operations/`** |
+| 公開情報 | **`data/operations/kamezawa-public.yaml`** |
+| エージェント | **`steward/agents/hospitality_agent.md`** |
 
 ---
 
@@ -90,10 +90,10 @@
 
 | 計画 | パス |
 |------|------|
-| 規程 | **`docs/corporate/regulations/`** |
-| 許認可・保険 | **`docs/corporate/licenses/`** |
-| ISO・監査 | **`docs/iso/`** |
-| 個情 | **`docs/operations/privacy/`** |
+| 規程 | **`docs/company/regulations/`** |
+| 許認可・保険 | **`docs/company/licenses/`** |
+| ISO・監査 | **`docs/compliance/iso/`** |
+| 個情 | **`docs/compliance/privacy/`** |
 | コンプライアンス計画 | **`docs/plans/compliance/`** |
 
 ---
@@ -103,9 +103,9 @@
 | 計画 | パス |
 |------|------|
 | 外部委託 9 計画 | **`docs/plans/outsourcing/`** |
-| inbox/outbox | **`docs/inbox/`** · **`docs/outbox/`** |
-| 書類 I/O 台帳 | **`cursor/data/document-io.yaml`** |
-| 経理テンプレ | **`docs/operations/accounting/`** |
+| inbox/outbox | **`docs/io/inbox/`** · **`docs/io/outbox/`** |
+| 書類 I/O 台帳 | **`data/document-io.yaml`** |
+| 経理テンプレ | **`docs/finance/accounting/`** |
 
 ---
 
@@ -123,19 +123,19 @@
 
 | 内容 | パス |
 |------|------|
-| 取締役会議事録 | **`docs/corporate/`** |
+| 取締役会議事録 | **`docs/company/`** |
 | 計画差異・判断 | **`docs/plans/variance/`** |
-| P0 残タスク | **`docs/corporate/executive-remaining-tasks.md`** |
+| P0 残タスク | **`docs/company/executive-remaining-tasks.md`** |
 
 ---
 
-## 11_agents/ — エージェント
+## steward/agents/ — エージェント
 
 | 内容 | パス |
 |------|------|
-| **8 Agent 定義** | **`11_agents/*.md`** · [00-このフォルダについて.md](../../../11_agents/00-このフォルダについて.md) |
-| 事業計画分解 Orchestrator | **`14_prompts/business_plan_decomposition.md`** |
-| アーキテクチャ | **`13_rules/agent_skill_architecture.md`** · **`docs/agent_architecture.md`** |
+| **8 Agent 定義** | **`steward/agents/*.md`** · [00-このフォルダについて.md](../../../steward/agents/00-このフォルダについて.md) |
+| 事業計画分解 Orchestrator | **`steward/orchestrators/business_plan_decomposition.md`** |
+| アーキテクチャ | **`steward/rules/agent_skill_architecture.md`** · **`docs/agent_architecture.md`** |
 
 **レガシー:** `prompts/*.md` は deprecated スタブ。
 
@@ -153,5 +153,5 @@
 
 1. **既存パスを維持** — 大規模リネームは行わない
 2. **新規計画 MD** は `docs/plans/{category}/` に追加
-3. **数値の正** は引き続き `cursor/data/` YAML
-4. **`steward sync all`** で YAML → `docs/data/*.csv` 同期
+3. **数値の正** は引き続き `data/` YAML
+4. **`steward sync all`** で YAML → `docs/exports/*.csv` 同期

@@ -3,7 +3,7 @@
 > **契約ID:** CTR-009 / **LOAN-002**  
 > **版:** v1.0（executed）  
 > **貸付開始:** 2025年6月1日  
-> **利益相反承認:** 2026年6月6日 取締役会 — [議事録](../../corporate/fy2026-torishimari-gijiroku-yakuin-kashitsuke.md)
+> **利益相反承認:** 2026年6月6日 取締役会 — [議事録](../../company/fy2026-torishimari-gijiroku-yakuin-kashitsuke.md)
 
 ---
 

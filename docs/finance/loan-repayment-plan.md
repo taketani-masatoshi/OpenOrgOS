@@ -1,6 +1,6 @@
 # 返済計画
 
-**版:** 2026-06-07 · **正データ:** [`cursor/data/plans/debt-plan.yaml`](../../../cursor/data/plans/debt-plan.yaml)
+**版:** 2026-06-07 · **正データ:** [`data/plans/debt-plan.yaml`](../../../data/plans/debt-plan.yaml)
 
 ## 目的
 
@@ -13,7 +13,7 @@ LOAN-001/002 の返済シミュレーション（基本・保守シナリオ）�
 | 借入総額 | 112,600,000 円 |
 | 金利 | 0%（元本返済のみ） |
 | 契約返済 MD | [CTR-008](../../../docs/contracts/CTR-008/repayment-schedule.md) · [CTR-009](../../../docs/contracts/CTR-009/repayment-schedule.md) |
-| CF 参照 | FY2027 月次 [`2027-01.yaml`](../../../cursor/data/finances/monthly/2027-01.yaml) — 売上115万・利益約62万/月 |
+| CF 参照 | FY2027 月次 [`2027-01.yaml`](../../../data/finance/monthly/2027-01.yaml) — 売上115万・利益約62万/月 |
 
 ## 返済方針（契約・台帳より）
 
@@ -61,7 +61,7 @@ LOAN-001/002 の返済シミュレーション（基本・保守シナリオ）�
 |------|------|-------:|-----:|------|
 | — | — | — | 112,600,000 | — |
 
-※ 初回返済実行時に追記。[`loans.yaml`](../../../cursor/data/finances/loans.yaml) と同期。
+※ 初回返済実行時に追記。[`loans.yaml`](../../../data/finance/loans.yaml) と同期。
 
 ## TBD
 
@@ -75,7 +75,7 @@ LOAN-001/002 の返済シミュレーション（基本・保守シナリオ）�
 
 - [借入計画](borrowing-plan.md)
 - [DSCR 管理計画](dscr-plan.md)
-- Skill: [cashflow_forecast.md](../../../12_skills/cashflow_forecast.md)
+- Skill: [cashflow_forecast.md](../../../steward/skills/cashflow_forecast.md)
 
 ## 担当 · 更新頻度
 

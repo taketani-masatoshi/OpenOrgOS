@@ -68,11 +68,11 @@
 | 年間保険料 | |
 | 借家人賠償限度額 | |
 
-**保管:** [`docs/corporate/licenses/insurance/`](../../corporate/licenses/insurance/)
+**保管:** [`docs/company/licenses/insurance/`](../../company/licenses/insurance/)
 
 ---
 
 ## 関連
 
 - [CTR-014 亀沢](../CTR-014/02-enrollment-packet.md) — 宿泊施設は施設賠償・休業損害も検討
-- [旅館業許可保管](../../corporate/licenses/ryokan/00-このフォルダについて.md)
+- [旅館業許可保管](../../company/licenses/ryokan/00-このフォルダについて.md)

@@ -9,4 +9,4 @@
 | 賃料 | 100,000円/月 |
 | 期間 | 2025-03-01 〜 2027-02-28 |
 
-**税務:** 本社兼用按分 — [tax-advisor-checklist](../../corporate/fy2026-tax-advisor-checklist.md) 項目7
+**税務:** 本社兼用按分 — [tax-advisor-checklist](../../company/fy2026-tax-advisor-checklist.md) 項目7

@@ -24,8 +24,8 @@
 |------|------|
 | 表示住所 | 東京都墨田区亀沢1丁目 |
 | 定員 | 7名 |
-| 許可番号 | [licenses/ryokan/](../../corporate/licenses/ryokan/) 参照 |
-| ハウスルール | [house-rules.md](../../operations/lodging/templates/guest-facing/house-rules.md) |
+| 許可番号 | [licenses/ryokan/](../../company/licenses/ryokan/) 参照 |
+| ハウスルール | [house-rules.md](../../properties/PROP-002-kamezawa/operations/templates/guest-facing/house-rules.md) |
 
 ---
 

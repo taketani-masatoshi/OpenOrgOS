@@ -12,7 +12,7 @@
 # 現預金入力後
 npm run validate
 npm run steward -- dashboard
-npm run steward -- deps check --file cursor/data/finances/cash-balance.yaml
+npm run steward -- deps check --file data/finance/cash-balance.yaml
 ```
 
 - `cash-balance.yaml` 確定 → **資金繰り計画** · **DSCR** · **月次経営レポート** が有効化
@@ -20,7 +20,7 @@ npm run steward -- deps check --file cursor/data/finances/cash-balance.yaml
 
 ### 2. Phase 1 MD 生成（Cursor Agent）
 
-プロンプト: `@14_prompts/business_plan_decomposition.md` · Agent: `@11_agents/`
+プロンプト: `@steward/orchestrators/business_plan_decomposition.md` · Agent: `@steward/agents/`
 
 以下を **正データから自動起稿**（1 セッション 5–10 ファイル）:
 
@@ -29,7 +29,7 @@ npm run steward -- deps check --file cursor/data/finances/cash-balance.yaml
 - [ ] `docs/plans/properties/PROP-001/risk-plan.md`
 - [ ] `docs/plans/properties/PROP-002/risk-plan.md`
 - [ ] `docs/plans/contracts/insurance-contract-plan.md`
-- [ ] `docs/plans/finance/liquidity-crisis-plan.md`
+- [ ] `docs/finance/liquidity-crisis-plan.md`
 
 ### 3. 亀沢開業計画（2026-08）
 
@@ -87,13 +87,13 @@ npm run steward -- finances
 
 | シーン | 参照 | コマンド/参照 |
 |--------|------|--------------|
-| 計画分解・起稿 | 14_prompts | `@14_prompts/business_plan_decomposition.md` |
-| 数値更新 | Finance Agent | `@11_agents/finance_agent.md` + `steward sync` |
-| 契約 draft→executed | Contract + Operations | `@11_agents/contract_agent.md` |
-| 番町運用 | Property Rental | `@11_agents/property_rental_agent.md` |
-| 亀沢運用 | Hospitality | `@11_agents/hospitality_agent.md` |
-| 経営判断 | Executive | `@11_agents/executive_steward_agent.md` + dashboard |
-| 社長スケジュール・1-on-1 | Secretary | `@11_agents/secretary_agent.md` |
+| 計画分解・起稿 | 14_prompts | `@steward/orchestrators/business_plan_decomposition.md` |
+| 数値更新 | Finance Agent | `@steward/agents/finance_agent.md` + `steward sync` |
+| 契約 draft→executed | Contract + Operations | `@steward/agents/contract_agent.md` |
+| 番町運用 | Property Rental | `@steward/agents/property_rental_agent.md` |
+| 亀沢運用 | Hospitality | `@steward/agents/hospitality_agent.md` |
+| 経営判断 | Executive | `@steward/agents/executive_steward_agent.md` + dashboard |
+| 社長スケジュール・1-on-1 | Secretary | `@steward/agents/secretary_agent.md` |
 
 ---
 
@@ -111,4 +111,4 @@ npm run steward -- finances
 
 - [00-INDEX.md](00-INDEX.md)
 - [docs/agent_architecture.md](../agent_architecture.md)
-- [docs/corporate/executive-remaining-tasks.md](../corporate/executive-remaining-tasks.md)
+- [docs/company/executive-remaining-tasks.md](../company/executive-remaining-tasks.md)

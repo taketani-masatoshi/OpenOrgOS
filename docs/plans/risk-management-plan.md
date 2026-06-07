@@ -13,9 +13,9 @@
 
 ## 必要な入力情報
 
-- `docs/corporate/executive-remaining-tasks.md`
+- `docs/company/executive-remaining-tasks.md`
 - 各下位計画のリスク欄
-- `cursor/data/contracts/`（draft 一覧）
+- `data/contracts/`（draft 一覧）
 - `npm run steward -- alerts`
 
 ## 出力すべき情報
@@ -37,7 +37,7 @@
 
 - `docs/plans/risk-management-plan.md`
 - `docs/plans/properties/*/risk-plan.md`
-- `docs/corporate/executive-remaining-tasks.md`
+- `docs/company/executive-remaining-tasks.md`
 
 ## 担当エージェント
 
@@ -80,9 +80,9 @@
 
 ## 正データ参照
 
-- `cursor/data/contracts/CTR-013.yaml` · `CTR-014.yaml`（status: draft）
-- `cursor/data/finances/cash-balance.yaml`
-- `cursor/data/finances/loans.yaml`
+- `data/contracts/CTR-013.yaml` · `CTR-014.yaml`（status: draft）
+- `data/finance/cash-balance.yaml`
+- `data/finance/loans.yaml`
 
 ## 更新履歴
 

@@ -9,4 +9,4 @@
 | 宮城万貴子 | 50% | 8,300,000 |
 | **合計** | 100% | **16,600,000** |
 
-※ 振込は各貸主口座から乙口座へ、又は代表者口座経由で実行。振込記録を [`docs/operations/accounting/records/`](../../operations/accounting/records/) に保管（Git 非追跡）。
+※ 振込は各貸主口座から乙口座へ、又は代表者口座経由で実行。振込記録を [`docs/finance/accounting/records/`](../../operations/accounting/records/) に保管（Git 非追跡）。

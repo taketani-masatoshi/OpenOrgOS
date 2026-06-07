@@ -1,8 +1,8 @@
 # 2026年度 予実管理表 — 株式会社MAL
 
 > **このファイルが予実計画の「読み物」本体です。**  
-> 数値の正（Source of Truth）は [`cursor/data/plans/yojitsu-2026.yaml`](../../cursor/data/plans/yojitsu-2026.yaml) です。  
-> 年度サマリーは [`cursor/data/plans/business-plan.yaml`](../../cursor/data/plans/business-plan.yaml) を参照。
+> 数値の正（Source of Truth）は [`data/plans/yojitsu-2026.yaml`](../../data/plans/yojitsu-2026.yaml) です。  
+> 年度サマリーは [`data/plans/business-plan.yaml`](../../data/plans/business-plan.yaml) を参照。
 
 最終更新: 2026-06-06
 
@@ -13,9 +13,9 @@
 | 用途 | ファイル | 説明 |
 |------|---------|------|
 | **予実計画書（Markdown）** | `docs/plans/2026-yojitsu.md` | ← **今読んでいるファイル**。Cursor で閲覧・議論用 |
-| **月次予実データ（YAML）** | `cursor/data/plans/yojitsu-2026.yaml` | 計画数値・実績入力の正。CLI が検証 |
-| **中期・年度計画** | `cursor/data/plans/business-plan.yaml` | 2026〜2028 の年度KPI・売上/利益/投資 |
-| **月次実績** | `cursor/data/finances/monthly/{YYYY-MM}.yaml` | 実績が発生したらここに入力 |
+| **月次予実データ（YAML）** | `data/plans/yojitsu-2026.yaml` | 計画数値・実績入力の正。CLI が検証 |
+| **中期・年度計画** | `data/plans/business-plan.yaml` | 2026〜2028 の年度KPI・売上/利益/投資 |
+| **月次実績** | `data/finance/monthly/{YYYY-MM}.yaml` | 実績が発生したらここに入力 |
 | **自動レポート** | `docs/reports/monthly/` | `npm run steward -- report monthly` の出力 |
 
 ---
@@ -41,7 +41,7 @@
 
 ## 月次予実表（2026年）
 
-実績列は `cursor/data/finances/monthly/` にデータが入ると更新します（現時点は空）。
+実績列は `data/finance/monthly/` にデータが入ると更新します（現時点は空）。
 
 | 月 | 売上計画 | 　内訳（番町/亀沢） | 費用計画 | 利益計画 | 売上実績 | 利益実績 | 差異 |
 |----|--------:|-------------------|--------:|--------:|--------:|--------:|-----:|
@@ -89,9 +89,9 @@
 
 ## 次のアクション
 
-1. **実績入力** — 毎月末に `cursor/data/finances/monthly/2026-XX.yaml` を作成
+1. **実績入力** — 毎月末に `data/finance/monthly/2026-XX.yaml` を作成
 2. **サービス事業** — 翻訳・DX収益が見えたら `revenue_services` に追加
-3. **本社固定費** — `cursor/data/finances/fixed-costs.yaml` に入力し `expense_company` に反映
+3. **本社固定費** — `data/finance/fixed-costs.yaml` に入力し `expense_company` に反映
 4. **予実更新** — 実績確定後、この MD の実績列を Cursor に更新依頼
 
 ---

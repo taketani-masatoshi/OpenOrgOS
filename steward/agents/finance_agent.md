@@ -13,9 +13,9 @@
 
 ## 目的
 
-- `cursor/data/finances/` と `cursor/data/plans/` の維持
+- `data/finance/` と `data/plans/` の維持
 - **固定資産台帳・税務プロファイル・勘定科目**（tax-reporting レベル）の SoT 管理
-- 決算書 MD（`docs/plans/`）と CSV（`docs/data/`）の数値整合
+- 決算書 MD（`docs/plans/`）と CSV（`docs/exports/`）の数値整合
 - 法人税・消費税・地方税申告準備（`tax_filing_prep` Skill）
 - ランウェイ・バーンレート・予実ギャップの分析
 - 物件別収益前提（Property / Hospitality からの入力）を計画 YAML へ反映
@@ -28,11 +28,11 @@
 
 | Skill | ファイル |
 |-------|---------|
-| monthly_close | [12_skills/monthly_close.md](../12_skills/monthly_close.md) |
-| tax_filing_prep | [12_skills/tax_filing_prep.md](../12_skills/tax_filing_prep.md) |
-| cashflow_forecast | [12_skills/cashflow_forecast.md](../12_skills/cashflow_forecast.md) |
-| noi_analysis | [12_skills/noi_analysis.md](../12_skills/noi_analysis.md)（Read/協調） |
-| capex_planning | [12_skills/capex_planning.md](../12_skills/capex_planning.md) |
+| monthly_close | [steward/skills/monthly_close.md](../steward/skills/monthly_close.md) |
+| tax_filing_prep | [steward/skills/tax_filing_prep.md](../steward/skills/tax_filing_prep.md) |
+| cashflow_forecast | [steward/skills/cashflow_forecast.md](../steward/skills/cashflow_forecast.md) |
+| noi_analysis | [steward/skills/noi_analysis.md](../steward/skills/noi_analysis.md)（Read/協調） |
+| capex_planning | [steward/skills/capex_planning.md](../steward/skills/capex_planning.md) |
 
 ## 要約出力先
 
@@ -44,28 +44,28 @@
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/finances/**` | Primary |
-| `cursor/data/finances/fixed-assets.yaml` | Primary（固定資産台帳 SoT） |
-| `cursor/data/finances/tax-profile.yaml` | Primary（税務区分・申告期限） |
-| `cursor/data/finances/chart-of-accounts.yaml` | Primary（勘定科目） |
-| `cursor/data/plans/**` | Primary |
+| `data/finance/**` | Primary |
+| `data/finance/fixed-assets.yaml` | Primary（固定資産台帳 SoT） |
+| `data/finance/tax-profile.yaml` | Primary（税務区分・申告期限） |
+| `data/finance/chart-of-accounts.yaml` | Primary（勘定科目） |
+| `data/plans/**` | Primary |
 | `docs/plans/**` | R/W |
-| `docs/data/*.csv` | R/W |
-| `docs/operations/accounting/**` | R/W |
-| `cursor/data/properties/**` | Read（減価・収益） |
-| `cursor/data/contracts/**` | Read（費用按分 CTR-003 等） |
-| `docs/corporate/tax/**` | Read |
-| `docs/corporate/fy2026-keisansyorui.md` 等 | Read |
+| `docs/exports/*.csv` | R/W |
+| `docs/finance/accounting/**` | R/W |
+| `data/properties/**` | Read（減価・収益） |
+| `data/contracts/**` | Read（費用按分 CTR-003 等） |
+| `docs/company/tax/**` | Read |
+| `docs/company/fy2026-keisansyorui.md` 等 | Read |
 
 ---
 
 ## 編集できるフォルダ
 
-- `cursor/data/finances/**`
-- `cursor/data/plans/**`
+- `data/finance/**`
+- `data/plans/**`
 - `docs/plans/**`
-- `docs/data/*.csv`（`steward sync all` 後の差分確認）
-- `docs/operations/accounting/templates/**`
+- `docs/exports/*.csv`（`steward sync all` 後の差分確認）
+- `docs/finance/accounting/templates/**`
 
 **編集後必須:**
 ```bash
@@ -78,10 +78,10 @@ npm run steward -- sync all   # CSV 利用時
 
 ## 禁止事項
 
-- `cursor/data/operations/kamezawa-secrets.yaml`
-- `cursor/data/document-io.yaml`（Operations 領域）
-- `docs/corporate/regulations/` の規程本文改定
-- `cursor/data/contracts/` の契約条項改定（参照のみ）
+- `data/operations/kamezawa-secrets.yaml`
+- `data/document-io.yaml`（Operations 領域）
+- `docs/company/regulations/` の規程本文改定
+- `data/contracts/` の契約条項改定（参照のみ）
 - secrets や個情の docs への転記
 - validate 未実行のコミット提案
 
@@ -108,7 +108,7 @@ npm run steward -- sync all   # CSV 利用時
 - ...
 
 ## 根拠パス
-- `cursor/data/finances/...`
+- `data/finance/...`
 ```
 
 ---
@@ -127,9 +127,9 @@ npm run steward -- sync all   # CSV 利用時
 
 ## コンテキスト
 
-- 固定資産: `cursor/data/finances/fixed-assets.yaml` ↔ `docs/plans/finance/fixed-asset-register.md`
-- 税務: `cursor/data/finances/tax-profile.yaml` ↔ `docs/plans/finance/tax-filing-checklist.md`
-- 会計方針: `docs/plans/finance/accounting-policy.md`
-- 現預金: `cursor/data/finances/cash-balance.yaml`
-- 予実: `cursor/data/plans/yojitsu-fy2026.yaml` ↔ `docs/plans/fy2026-pl.md`
+- 固定資産: `data/finance/fixed-assets.yaml` ↔ `docs/finance/fixed-asset-register.md`
+- 税務: `data/finance/tax-profile.yaml` ↔ `docs/finance/tax-filing-checklist.md`
+- 会計方針: `docs/finance/accounting-policy.md`
+- 現預金: `data/finance/cash-balance.yaml`
+- 予実: `data/plans/yojitsu-fy2026.yaml` ↔ `docs/plans/fy2026-pl.md`
 - KPI 定義: [executive-dashboard-guide.md](../docs/plans/executive-dashboard-guide.md)

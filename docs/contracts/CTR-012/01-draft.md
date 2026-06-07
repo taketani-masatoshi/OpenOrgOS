@@ -119,7 +119,7 @@
 
 ## 関連
 
-- [`PROP-002`](../../../cursor/data/properties/PROP-002.yaml) — `cleaning_per_stay: 12000`
+- [`PROP-002`](../../../data/properties/PROP-002.yaml) — `cleaning_per_stay: 12000`
 - [CTR-010 Airbnb](../CTR-010/01-draft.md)
 
 **※ 最終版は弁護士・行政書士確認を推奨。**

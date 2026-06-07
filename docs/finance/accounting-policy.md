@@ -1,7 +1,7 @@
 # 会計方針 — 株式会社MAL
 
 **適用期間:** 第9期（2026/2/1〜2027/1/31）以降  
-**正データ:** `cursor/data/finances/` · `cursor/data/plans/`
+**正データ:** `data/finance/` · `data/plans/`
 
 ---
 
@@ -80,7 +80,7 @@ OTA 経由の宿泊収入は **売上総額認識**（OTA 手数料は運営費�
 |------|:--------:|-------------|
 | 仕訳帳・総勘定元帳 | 10年 | 会計ソフト（TBD） |
 | 固定資産台帳 | 10年 | fixed-assets.yaml + 本 MD |
-| 領収書・請求書 | 7〜10年 | docs/inbox · operations/accounting |
+| 領収書・請求書 | 7〜10年 | docs/io/inbox · operations/accounting |
 
 ---
 
@@ -88,4 +88,4 @@ OTA 経由の宿泊収入は **売上総額認識**（OTA 手数料は運営費�
 
 - [fixed-asset-register.md](fixed-asset-register.md)
 - [tax-filing-checklist.md](tax-filing-checklist.md)
-- [docs/corporate/tax/fy2026/07-accounting-minimum-ledger.md](../../corporate/tax/fy2026/07-accounting-minimum-ledger.md)
+- [docs/company/tax/fy2026/07-accounting-minimum-ledger.md](../../company/tax/fy2026/07-accounting-minimum-ledger.md)

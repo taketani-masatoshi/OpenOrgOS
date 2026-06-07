@@ -18,7 +18,7 @@
 
 ### 第1号議案　ISOマネジメントシステムに基づく社内規程の制定
 
-議長は、[`docs/iso/steward-assessment.md`](../../iso/steward-assessment.md) 及び各ISO規格のギャップ分析に基づき、マネジメントシステム運用に必要な社内規程8件を制定することを提案した。
+議長は、[`docs/compliance/iso/steward-assessment.md`](../../compliance/iso/steward-assessment.md) 及び各ISO規格のギャップ分析に基づき、マネジメントシステム運用に必要な社内規程8件を制定することを提案した。
 
 #### 制定理由（要旨）
 
@@ -33,14 +33,14 @@
 | 安全衛生管理規程 | REG-015 | ISO 45001 — 委託清掃・現場 |
 | 内部監査規程 | REG-016 | 全MS共通 — 相互監査・マネジメントレビュー |
 
-各規程のドラフトは [`docs/corporate/regulations/`](../regulations/) に置き、版 **v1.0** として **2026年6月6日** 付で施行する。
+各規程のドラフトは [`docs/company/regulations/`](../regulations/) に置き、版 **v1.0** として **2026年6月6日** 付で施行する。
 
 #### 決議事項
 
 1. 上記 **REG-009 〜 REG-016** を制定する。
 2. 代表取締役2名を、各規程の **運用責任者** とする（個別の担当分担は各規程に記載）。
 3. **REG-016** に基づき、2026年度の内部監査計画を **2026年7月末** までに作成する。
-4. ISO各フォルダ（[`docs/iso/`](../../iso/)）のチェックリスト・記録様式を、本規程に沿って整備する。
+4. ISO各フォルダ（[`docs/compliance/iso/`](../../compliance/iso/)）のチェックリスト・記録様式を、本規程に沿って整備する。
 
 **結果:** 出席取締役全員の同意により、原案どおり可決した。
 
@@ -86,5 +86,5 @@
 |---------|------|
 | [regulations/00-このフォルダについて.md](../regulations/00-このフォルダについて.md) | 規程一覧 |
 | [REG-009 〜 REG-016](../regulations/) | 本日制定規程 |
-| [iso/steward-assessment.md](../../iso/steward-assessment.md) | 現状評価 |
+| [iso/steward-assessment.md](../../compliance/iso/steward-assessment.md) | 現状評価 |
 | [fy2026-torishimari-gijiroku.md](fy2026-torishimari-gijiroku.md) | 第9期決算確認（2027/2） |

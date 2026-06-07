@@ -7,22 +7,24 @@ import type { ZodSchema } from "zod";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT_DIR = join(__dirname, "..", "..");
 export const DOCS_DIR = join(ROOT_DIR, "docs");
-export const CURSOR_DIR = join(ROOT_DIR, "cursor");
-export const DATA_DIR = join(CURSOR_DIR, "data");
-export const SCRATCH_DIR = join(CURSOR_DIR, "scratch");
+export const DATA_DIR = join(ROOT_DIR, "data");
+export const SCRATCH_DIR = join(ROOT_DIR, "scratch");
 export const ASSETS_DIR = join(ROOT_DIR, "assets");
 export const DOCS_REPORTS_DIR = join(DOCS_DIR, "reports");
 
+/** @deprecated cursor/ zone removed — use DATA_DIR / SCRATCH_DIR */
+export const CURSOR_DIR = join(ROOT_DIR, "cursor");
+
 /** 受信トレイ — スキャン・申請書・契約原本など（未処理） */
-export const DOCS_INBOX_DIR = join(DOCS_DIR, "inbox");
+export const DOCS_INBOX_DIR = join(DOCS_DIR, "io", "inbox");
 
 /** 出力トレイ — 印刷・提出用 PDF（処理済み） */
-export const DOCS_OUTBOX_DIR = join(DOCS_DIR, "outbox");
+export const DOCS_OUTBOX_DIR = join(DOCS_DIR, "io", "outbox");
 
-/** 法人書類 PDF → outbox/corporate */
+/** 法人書類 PDF → io/outbox/corporate */
 export const DOCS_CORPORATE_PDF_DIR = join(DOCS_OUTBOX_DIR, "corporate");
 
-/** 亀沢ゲスト掲示 PDF → outbox/lodging */
+/** 亀沢ゲスト掲示 PDF → io/outbox/lodging */
 export const DOCS_LODGING_PDF_DIR = join(DOCS_OUTBOX_DIR, "lodging");
 
 /** @deprecated use DOCS_CORPORATE_PDF_DIR */
@@ -142,7 +144,7 @@ export function writeMarkdownReport(
   return path;
 }
 
-/** @deprecated use writeMarkdownReport for .md; PDF goes to docs/corporate/pdf/ */
+/** @deprecated use writeMarkdownReport for .md; PDF goes to docs/company/pdf/ */
 export function writeReport(subdir: string, filename: string, content: string): string {
   return writeMarkdownReport(subdir, filename, content);
 }

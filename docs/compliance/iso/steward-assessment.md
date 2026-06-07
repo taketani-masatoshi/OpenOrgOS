@@ -88,7 +88,7 @@
 
 ## 計算書類・税務
 
-[`fy2026-keisansyorui.md`](../corporate/fy2026-keisansyorui.md):
+[`fy2026-keisansyorui.md`](../../company/fy2026-keisansyorui.md):
 
 | 項目 | 状態 |
 |------|------|
@@ -98,7 +98,7 @@
 | 資本金 | **入力待ち** — 登記簿 |
 | 繰越利益剰余金 | **入力待ち** — 前期決算 |
 
-税務パック: [`tax/fy2026/07-accounting-minimum-ledger.md`](../corporate/tax/fy2026/07-accounting-minimum-ledger.md) 追加。
+税務パック: [`tax/fy2026/07-accounting-minimum-ledger.md`](../../company/tax/fy2026/07-accounting-minimum-ledger.md) 追加。
 
 ---
 
@@ -106,7 +106,7 @@
 
 | 項目 | 状態 |
 |------|------|
-| 開業前チェックリスト | ✅ [pre-opening-checklist.md](../operations/lodging/pre-opening-checklist.md) — 準備82% |
+| 開業前チェックリスト | ✅ [pre-opening-checklist.md](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md) — 準備82% |
 | secrets example | ✅ 全フィールド + validate 警告 |
 | 保険・清掃 | 🟡 パケット完備 · 実締結待ち |
 
@@ -133,7 +133,7 @@ npm run daily   # validate + dashboard + io status + deps stale check
 ## 関連
 
 - [ISO 一覧](00-このフォルダについて.md)
-- [税務 readiness](../corporate/tax/fy2026-tax-readiness-assessment.md)
-- [開業前チェックリスト](../operations/lodging/pre-opening-checklist.md)
+- [税務 readiness](../../company/tax/fy2026-tax-readiness-assessment.md)
+- [開業前チェックリスト](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)
 
 *重大変更時・四半期ごとに見直す。*

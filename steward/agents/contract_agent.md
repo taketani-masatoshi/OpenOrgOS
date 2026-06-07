@@ -13,8 +13,8 @@
 
 ## 目的
 
-- `cursor/data/contracts/` と `docs/contracts/` の双方向整合
-- `docs/data/契約管理表.csv` の最新化（`steward sync all`）
+- `data/contracts/` と `docs/contracts/` の双方向整合
+- `docs/exports/契約管理表.csv` の最新化（`steward sync all`）
 - 期限アラート（`steward alerts`）の確認と対応案提示
 - LOAN↔CTR↔PROP 参照整合性の維持
 - P0: CTR-013（番町火災）· CTR-014（旅館保険）の executed 化支援
@@ -26,8 +26,8 @@
 
 | Skill | ファイル |
 |-------|---------|
-| contract_register | [12_skills/contract_register.md](../12_skills/contract_register.md) |
-| contract_expiry_check | [12_skills/contract_expiry_check.md](../12_skills/contract_expiry_check.md) |
+| contract_register | [steward/skills/contract_register.md](../steward/skills/contract_register.md) |
+| contract_expiry_check | [steward/skills/contract_expiry_check.md](../steward/skills/contract_expiry_check.md) |
 
 ## 要約出力先
 
@@ -39,24 +39,24 @@
 
 | パス | 権限 |
 |------|------|
-| `cursor/data/contracts/CTR-*.yaml` | Primary |
+| `data/contracts/CTR-*.yaml` | Primary |
 | `docs/contracts/CTR-*/**` | Primary |
-| `docs/data/契約管理表.csv` | R/W |
-| `cursor/data/properties/**` | Read |
-| `cursor/data/finances/loans.yaml` | Read |
-| `docs/inbox/**` | Read（原本受信確認） |
+| `docs/exports/契約管理表.csv` | R/W |
+| `data/properties/**` | Read |
+| `data/finance/loans.yaml` | Read |
+| `docs/io/inbox/**` | Read（原本受信確認） |
 
 ---
 
 ## 編集できるフォルダ
 
-- `cursor/data/contracts/**`
+- `data/contracts/**`
 - `docs/contracts/**`
-- `docs/data/契約管理表.csv`（sync 後）
+- `docs/exports/契約管理表.csv`（sync 後）
 
 **編集後:**
 ```bash
-npm run steward -- deps check --file cursor/data/contracts/CTR-XXX.yaml
+npm run steward -- deps check --file data/contracts/CTR-XXX.yaml
 npm run validate
 npm run steward -- contracts show CTR-XXX
 npm run steward -- alerts
@@ -66,8 +66,8 @@ npm run steward -- alerts
 
 ## 禁止事項
 
-- `cursor/data/finances/monthly/**` の編集
-- 規程（`docs/corporate/regulations/`）の改定
+- `data/finance/monthly/**` の編集
+- 規程（`docs/company/regulations/`）の改定
 - secrets へのアクセス
 - inbox 原本の **归档先決定**（Operations と協調 · Operations が io done）
 - 契約 fee を独断で expense-plan へ反映（Finance へ照会）
@@ -101,7 +101,7 @@ npm run steward -- alerts
 |------|------|
 
 ## 参照
-- `cursor/data/contracts/CTR-XXX.yaml`
+- `data/contracts/CTR-XXX.yaml`
 - `docs/contracts/CTR-XXX/`
 ```
 
@@ -122,5 +122,5 @@ npm run steward -- alerts
 ## コンテキスト
 
 - 参照整合: LOAN.contract_id → CTR · CTR.property_id → PROP
-- 依存: [dependency-graph.yaml](../cursor/data/dependency-graph.yaml)
+- 依存: [dependency-graph.yaml](../data/dependency-graph.yaml)
 - 契約索引: [docs/contracts/00-このフォルダについて.md](../docs/contracts/00-このフォルダについて.md)
