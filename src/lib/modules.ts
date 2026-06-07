@@ -33,11 +33,33 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   hospitality: "hospitality",
   professional_services: "operations",
   venture_capital: "finance",
+  saas_subscription: "finance",
+  event_space: "operations",
+  ecommerce: "finance",
+  restaurant: "operations",
+  retail_store: "finance",
+  clinic: "operations",
+  logistics: "operations",
+  staffing: "operations",
+  construction: "operations",
+  education: "operations",
+  membership: "finance",
 };
 
 const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "professional_services",
   "venture_capital",
+  "saas_subscription",
+  "event_space",
+  "ecommerce",
+  "restaurant",
+  "retail_store",
+  "clinic",
+  "logistics",
+  "staffing",
+  "construction",
+  "education",
+  "membership",
 ];
 
 export function modulesFilePath(): string {

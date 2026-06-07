@@ -23,10 +23,22 @@ describe("modules.yaml", () => {
   });
 
   it("lists catalog modules", () => {
-    expect(listCatalogModuleIds()).toEqual([
+    const ids = listCatalogModuleIds();
+    expect(ids).toEqual([
+      "clinic",
+      "construction",
+      "ecommerce",
+      "education",
+      "event_space",
       "hospitality",
+      "logistics",
+      "membership",
       "professional_services",
       "rental",
+      "restaurant",
+      "retail_store",
+      "saas_subscription",
+      "staffing",
       "venture_capital",
     ]);
   });

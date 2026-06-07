@@ -34,3 +34,80 @@ modules:
     docs_root: docs/venture-capital/
     summary_dir: agent-summaries/venture-capital/
     notes: VC ファンド · ポートフォリオ（MAL では未使用）
+
+  - id: saas_subscription
+    enabled: false
+    agent: saas_subscription
+    data_root: data/saas/
+    summary_dir: agent-summaries/saas/
+    notes: SaaS サブスク（MAL では未使用）
+
+  - id: event_space
+    enabled: false
+    agent: event_space
+    data_root: data/event-space/
+    summary_dir: agent-summaries/event-space/
+    notes: イベントスペース（MAL では未使用）
+
+  - id: ecommerce
+    enabled: false
+    agent: ecommerce
+    data_root: data/ecommerce/
+    summary_dir: agent-summaries/ecommerce/
+    notes: EC（MAL では未使用）
+
+  - id: restaurant
+    enabled: false
+    agent: restaurant
+    data_root: data/restaurant/
+    summary_dir: agent-summaries/restaurant/
+    notes: 飲食店（MAL では未使用）
+
+  - id: retail_store
+    enabled: false
+    agent: retail_store
+    data_root: data/retail-store/
+    summary_dir: agent-summaries/retail-store/
+    notes: 実店舗小売（MAL では未使用）
+
+  - id: clinic
+    enabled: false
+    agent: clinic
+    data_root: data/clinic/
+    summary_dir: agent-summaries/clinic/
+    notes: クリニック（MAL では未使用）
+
+  - id: logistics
+    enabled: false
+    agent: logistics
+    data_root: data/logistics/
+    summary_dir: agent-summaries/logistics/
+    notes: 物流（MAL では未使用）
+
+  - id: staffing
+    enabled: false
+    agent: staffing
+    data_root: data/staffing/
+    summary_dir: agent-summaries/staffing/
+    notes: 人材派遣（MAL では未使用）
+
+  - id: construction
+    enabled: false
+    agent: construction
+    data_root: data/construction/
+    summary_dir: agent-summaries/construction/
+    notes: 建設（MAL では未使用）
+
+  - id: education
+    enabled: false
+    agent: education
+    data_root: data/education/
+    summary_dir: agent-summaries/education/
+    notes: 教育（MAL では未使用）
+
+  - id: membership
+    enabled: false
+    agent: membership
+    data_root: data/membership/
+    summary_dir: agent-summaries/membership/
+    notes: 会員制（MAL では未使用）

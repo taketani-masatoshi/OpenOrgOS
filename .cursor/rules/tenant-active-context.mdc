@@ -1,0 +1,32 @@
+---
+description: Active tenant modules and ISO — load only these paths (token saving)
+alwaysApply: true
+---
+
+# テナント `mal` — アクティブコンテキストのみ読取
+
+**生成:** `npm run steward -- modules sync-context` · 正本: `tenants/mal/rules/active_context.md`
+
+## 禁止（トークン節約）
+
+- `steward/modules/{id}/` のうち **下表にない id** の agent.md · skills · seed
+- `steward/standards/iso/ISO-*` のうち **下表にない規格**
+- 無効 `modules.yaml` エントリの `data_root` · `docs_root`
+- `@folder` で `steward/modules/` 全体を指定しない
+
+## 有効業務モジュール
+
+- **rental:** `steward/modules/rental/agent.md`（Skill は必要時のみ同 `skills/`）
+- **hospitality:** `steward/modules/hospitality/agent.md`（Skill は必要時のみ同 `skills/`）
+
+## 有効 ISO
+
+- **ISO-21401:** テンプレ `steward/standards/iso/ISO-21401/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-21401/`
+- **ISO-27001:** テンプレ `steward/standards/iso/ISO-27001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-27001/`
+- **ISO-9001:** テンプレ `steward/standards/iso/ISO-9001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-9001/`
+
+## コア Agent（常時）
+
+Executive · Secretary · Finance · Contract · Compliance · Operations — `steward/agents/`
+
+業務モジュール作業時のみ、上記 **有効業務モジュール** の agent.md を @ 参照する。

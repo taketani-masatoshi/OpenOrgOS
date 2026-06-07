@@ -1,0 +1,9 @@
+orders:
+  - id: ORD-001
+    customer_id: CUST-001
+    lines:
+      - sku_id: SKU-001
+        qty: 2
+        unit_price_yen: 3980
+    status: fulfilled
+    ordered_on: "2026-05-01"

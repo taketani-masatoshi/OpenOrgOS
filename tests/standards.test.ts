@@ -10,10 +10,14 @@ describe("steward/standards/iso", () => {
   it("lists ISO standard folders", () => {
     const ids = listIsoStandardIds();
     expect(ids).toEqual([
+      "ISO-13485",
       "ISO-14001",
+      "ISO-20000",
       "ISO-21401",
+      "ISO-22000",
       "ISO-22301",
       "ISO-27001",
+      "ISO-37001",
       "ISO-45001",
       "ISO-50001",
       "ISO-9001",

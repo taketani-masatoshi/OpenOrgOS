@@ -1,0 +1,14 @@
+entity: "サンプル建設株式会社"
+as_of: "2026-06-01"
+phases:
+  - id: PH-001
+    site_id: SITE-001
+    name: "基礎工事"
+    planned_end: "2026-04-30"
+    actual_end: "2026-05-02"
+    status: complete
+  - id: PH-002
+    site_id: SITE-001
+    name: "内装工事"
+    planned_end: "2026-07-31"
+    status: in_progress

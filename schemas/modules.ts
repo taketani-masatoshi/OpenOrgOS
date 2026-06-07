@@ -6,6 +6,17 @@ export const moduleAgentId = z.enum([
   "hospitality",
   "professional_services",
   "venture_capital",
+  "saas_subscription",
+  "event_space",
+  "ecommerce",
+  "restaurant",
+  "retail_store",
+  "clinic",
+  "logistics",
+  "staffing",
+  "construction",
+  "education",
+  "membership",
 ]);
 
 export const tenantModuleSchema = z.object({

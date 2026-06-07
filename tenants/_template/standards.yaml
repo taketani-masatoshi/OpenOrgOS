@@ -1,0 +1,43 @@
+# ISO 標準 — 雛形
+# enabled: true の規格のみ Agent が steward/standards/iso/{id}/ を読む
+
+iso:
+  - id: ISO-9001
+    enabled: false
+    notes: 品質マネジメント
+
+  - id: ISO-27001
+    enabled: false
+    notes: 情報セキュリティ
+
+  - id: ISO-21401
+    enabled: false
+    notes: サステナブル宿泊
+
+  - id: ISO-22301
+    enabled: false
+
+  - id: ISO-45001
+    enabled: false
+
+  - id: ISO-14001
+    enabled: false
+
+  - id: ISO-50001
+    enabled: false
+
+  - id: ISO-13485
+    enabled: false
+    notes: 医療機器 QMS
+
+  - id: ISO-22000
+    enabled: false
+    notes: 食品安全
+
+  - id: ISO-37001
+    enabled: false
+    notes: 贈収賄防止
+
+  - id: ISO-20000
+    enabled: false
+    notes: IT サービス管理

@@ -1,4 +1,5 @@
 import { validateAll } from "../lib/data.js";
+import { syncActiveContext } from "../lib/context-manifest.js";
 import { runIntegrityChecks, integrityErrorsOnly, type IntegrityIssue } from "../lib/integrity.js";
 import { printStaleDependencyWarnings } from "./deps.js";
 
@@ -18,6 +19,8 @@ export function runValidate(opts: ValidateOptions = {}): void {
 
   if (allErrors.length === 0) {
     console.log("✓ All data files are valid.");
+    const { contextPath } = syncActiveContext();
+    console.log(`✓ Active context synced (${contextPath}).`);
     if (opts.warnings || opts.strict) {
       printWarnings(runIntegrityChecks());
     }

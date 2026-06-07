@@ -5,3 +5,8 @@ docs/io/**
 node_modules/**
 dist/**
 scratch/**
+# 業務モジュール · ISO カタログ（tenant-active-context.mdc で有効分のみ指示）
+steward/modules/*/agent.md
+steward/modules/*/skills/**
+steward/modules/*/seed/**
+steward/standards/iso/ISO-*/

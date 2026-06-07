@@ -12,3 +12,4 @@ export * from "./executive.js";
 export * from "./classification.js";
 export * from "./modules.js";
 export * from "./venture-capital.js";
+export * from "./tenant-standards.js";

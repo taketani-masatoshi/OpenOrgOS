@@ -90,7 +90,7 @@ Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（t
 
 ## Agent / Skill 参照
 
-**8 Agent:** [steward/agents/00-このフォルダについて.md](../../steward/agents/00-このフォルダについて.md)
+**6 コア Agent:** [steward/agents/00-このフォルダについて.md](../../steward/agents/00-このフォルダについて.md)
 
 | Agent | 用途 |
 |-------|------|
@@ -98,10 +98,14 @@ Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（t
 | Secretary | 社長スケジュール · 1-on-1 · 社外窓口 |
 | Finance | 月次収支 · 税務 · 固定資産 |
 | Contract | 契約台帳 · 期限 |
-| Property Rental | 番町 PROP-001 |
-| Hospitality | 亀沢 PROP-002 |
 | Compliance | 規程 · 許認可 · ISO |
 | Operations | inbox · outbox |
+
+**業務モジュール**（テナント `modules.yaml` で ON/OFF）: [steward/modules/](../../steward/modules/00-このフォルダについて.md)
+
+- **有効モジュールのみ** `agent.md` を @ 参照（`tenants/{id}/rules/active_context.md` 正本）
+- **無効モジュール** · 未バインドカタログ · 無効 ISO は **読まない**（トークン節約）
+- 生成: `npm run steward -- modules sync-context` · validate 成功時も自動 sync
 
 - Skill: [steward/skills/](../../steward/skills/00-このフォルダについて.md)
 - ルール: [steward/rules/](../../steward/rules/steward_os_principles.md)

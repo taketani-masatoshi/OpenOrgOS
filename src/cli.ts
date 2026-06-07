@@ -48,7 +48,7 @@ import {
 } from "./commands/io.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "./commands/deps.js";
 import { runInvoiceBancho } from "./commands/invoice.js";
-import { runModulesList } from "./commands/modules.js";
+import { runModulesList, runModulesSyncContext } from "./commands/modules.js";
 
 const program = new Command();
 
@@ -79,6 +79,11 @@ modulesCmd
   .command("list")
   .description("List steward/modules catalog vs tenant modules.yaml")
   .action(runModulesList);
+
+modulesCmd
+  .command("sync-context")
+  .description("Regenerate active_context.md and tenant-active-context.mdc")
+  .action(runModulesSyncContext);
 
 program
   .command("status")

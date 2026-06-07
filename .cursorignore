@@ -15,3 +15,11 @@ node_modules/**
 dist/**
 
 # bank-accounts.yaml / stakeholders.yaml / *-secrets.yaml は意図的に除外しない
+
+# 業務モジュールカタログ — active_context 列挙分のみ @file 参照（token saving）
+steward/modules/*/agent.md
+steward/modules/*/skills/**
+steward/modules/*/seed/**
+
+# ISO テンプレカタログ — standards.yaml 有効分のみ参照
+steward/standards/iso/ISO-*/

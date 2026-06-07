@@ -33,3 +33,69 @@ modules:
     docs_root: docs/venture-capital/
     summary_dir: agent-summaries/venture-capital/
     notes: サンプル・キャピタル（例 · `.example` をコピーして有効化）
+
+  - id: saas_subscription
+    enabled: false
+    agent: saas_subscription
+    data_root: data/saas/
+    summary_dir: agent-summaries/saas/
+
+  - id: event_space
+    enabled: false
+    agent: event_space
+    data_root: data/event-space/
+    summary_dir: agent-summaries/event-space/
+
+  - id: ecommerce
+    enabled: false
+    agent: ecommerce
+    data_root: data/ecommerce/
+    summary_dir: agent-summaries/ecommerce/
+
+  - id: restaurant
+    enabled: false
+    agent: restaurant
+    data_root: data/restaurant/
+    summary_dir: agent-summaries/restaurant/
+
+  - id: retail_store
+    enabled: false
+    agent: retail_store
+    data_root: data/retail-store/
+    summary_dir: agent-summaries/retail-store/
+
+  - id: clinic
+    enabled: false
+    agent: clinic
+    data_root: data/clinic/
+    summary_dir: agent-summaries/clinic/
+
+  - id: logistics
+    enabled: false
+    agent: logistics
+    data_root: data/logistics/
+    summary_dir: agent-summaries/logistics/
+
+  - id: staffing
+    enabled: false
+    agent: staffing
+    data_root: data/staffing/
+    summary_dir: agent-summaries/staffing/
+
+  - id: construction
+    enabled: false
+    agent: construction
+    data_root: data/construction/
+    summary_dir: agent-summaries/construction/
+
+  - id: education
+    enabled: false
+    agent: education
+    data_root: data/education/
+    summary_dir: agent-summaries/education/
+
+  - id: membership
+    enabled: false
+    agent: membership
+    data_root: data/membership/
+    summary_dir: agent-summaries/membership/

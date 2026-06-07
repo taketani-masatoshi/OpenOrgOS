@@ -1,0 +1,6 @@
+products:
+  - id: SKU-001
+    name: サンプル商品A
+    price_yen: 3980
+    cost_yen: 2000
+    status: active
