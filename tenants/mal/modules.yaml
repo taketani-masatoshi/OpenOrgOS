@@ -25,4 +25,12 @@ modules:
     enabled: false
     agent: professional_services
     data_root: data/services/
-    notes: 受託開発 · コンサル等（Phase C で Agent 追加）
+    notes: 受託開発 · コンサル等
+
+  - id: venture_capital
+    enabled: false
+    agent: venture_capital
+    data_root: data/venture-capital/
+    docs_root: docs/venture-capital/
+    summary_dir: agent-summaries/venture-capital/
+    notes: VC ファンド · ポートフォリオ（MAL では未使用）

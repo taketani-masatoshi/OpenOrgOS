@@ -10,7 +10,7 @@
 
 | ゾーン | パス | 中身 | 索引 |
 |--------|------|------|------|
-| **フレームワーク** | `steward/` · `src/` · `schemas/` · ルート `docs/` | コア Agent · modules · CLI | [README.md](../../README.md) |
+| **フレームワーク** | `steward/` · `src/` · `schemas/` · ルート `docs/` | コア Agent · modules · standards · CLI | [README.md](../../README.md) |
 | **テナント正データ** | `tenants/{id}/data/` | YAML 正本 | [tenants/00-README.md](../../tenants/00-README.md) |
 | **テナント人向け** | `tenants/{id}/docs/` | MD · CSV · PDF 索引 | 各 `tenants/{id}/docs/00-このフォルダについて.md` |
 | **テナントルール** | `tenants/{id}/rules/` | 会社固有コンテキスト | `company_context.md` |
@@ -42,7 +42,7 @@ docs/
 ├── company/             法人 · 規程 · HR · 許認可
 ├── finance/             経理 · 税務
 ├── properties/          PROP-001 · PROP-002
-├── compliance/          ISO · 個情
+├── compliance/          テナント ISO 記録 · 個情（標準は steward/standards/iso/）
 ├── contracts/           契約書 MD
 ├── exports/             CSV
 ├── plans/               決算 · 予実
@@ -71,7 +71,8 @@ docs/
 | パス | 内容 |
 |------|------|
 | [agents/](../agents/00-このフォルダについて.md) | 6 コア Agent 定義 |
-| [modules/](../modules/00-このフォルダについて.md) | 業務モジュールカタログ |
+| [modules/](../modules/00-このフォルダについて.md) | 業務モジュールカタログ · `{id}/seed/` 雛形 |
+| [standards/iso/](../standards/iso/00-このフォルダについて.md) | ISO 標準テンプレート（汎用） |
 | [skills/](../skills/00-このフォルダについて.md) | Skill 定義 |
 | [rules/](00-このフォルダについて.md) | 原則 · ポリシー · **本書** |
 | [orchestrators/](../orchestrators/00-このフォルダについて.md) | 横断ワークフロー |

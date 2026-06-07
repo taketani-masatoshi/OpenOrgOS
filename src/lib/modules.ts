@@ -13,13 +13,32 @@ import { listYamlFiles, readYamlFile } from "./utils.js";
 
 export const MODULES_FILE = "modules.yaml";
 export const STEWARD_MODULES_DIR = join(ROOT_DIR, "steward", "modules");
+export const MODULE_SEED_SUBDIR = "seed";
+
+export function getModuleSeedDir(catalogId: string): string {
+  return join(STEWARD_MODULES_DIR, catalogId, MODULE_SEED_SUBDIR);
+}
+
+export function listModuleSeedFiles(catalogId: string): string[] {
+  const seedDir = getModuleSeedDir(catalogId);
+  if (!existsSync(seedDir)) return [];
+  return readdirSync(seedDir)
+    .filter((f) => !f.startsWith(".") && f !== "00-README.md")
+    .sort();
+}
 
 /** Classification registry agent ids (core + legacy module names). */
 export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   rental: "property_rental",
   hospitality: "hospitality",
   professional_services: "operations",
+  venture_capital: "finance",
 };
+
+const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
+  "professional_services",
+  "venture_capital",
+];
 
 export function modulesFilePath(): string {
   return join(getTenantDir(), MODULES_FILE);
@@ -140,11 +159,11 @@ export function validateModules(): ModuleValidationIssue[] {
       }
     }
 
-    if (mod.agent === "professional_services" && mod.enabled) {
+    if (NON_PROPERTY_AGENTS.includes(mod.agent) && mod.enabled) {
       if (!mod.data_root) {
         issues.push({
           file: logicalFile,
-          message: `module "${mod.id}" (professional_services) requires data_root when enabled`,
+          message: `module "${mod.id}" (${mod.agent}) requires data_root when enabled`,
         });
       }
     }
@@ -165,10 +184,13 @@ export function validateModules(): ModuleValidationIssue[] {
       const abs = mod.data_root.startsWith("data/")
         ? tenantDataPath(...mod.data_root.replace(/^data\//, "").split("/"))
         : join(getTenantDir(), mod.data_root);
-      if (!existsSync(abs)) {
+      const seedDir = getModuleSeedDir(mod.agent);
+      const hasSeed =
+        existsSync(seedDir) && listModuleSeedFiles(mod.agent).length > 0;
+      if (!existsSync(abs) && !hasSeed) {
         issues.push({
           file: logicalFile,
-          message: `module "${mod.id}" data_root not found: ${mod.data_root} (create directory or set enabled: false)`,
+          message: `module "${mod.id}" data_root not found: ${mod.data_root} (copy from steward/modules/${mod.agent}/seed/ or set enabled: false)`,
         });
       }
     }
@@ -179,10 +201,30 @@ export function validateModules(): ModuleValidationIssue[] {
         ? tenantDataPath(...rel.replace(/^data\//, "").split("/"))
         : join(getTenantDir(), rel);
       const exampleAbs = `${abs}.example`;
-      if (!existsSync(abs) && !existsSync(exampleAbs)) {
+      const seedExample = join(
+        getModuleSeedDir(mod.agent),
+        `${abs.split("/").pop()}.example`
+      );
+      const seedFallback = existsSync(getModuleSeedDir(mod.agent))
+        ? readdirSync(getModuleSeedDir(mod.agent)).find(
+            (f) =>
+              f.endsWith(".example") &&
+              (rel.includes("public")
+                ? f.includes("public")
+                : f.includes("secret"))
+          )
+        : undefined;
+      const seedAbs = seedFallback
+        ? join(getModuleSeedDir(mod.agent), seedFallback)
+        : seedExample;
+      if (
+        !existsSync(abs) &&
+        !existsSync(exampleAbs) &&
+        !existsSync(seedAbs)
+      ) {
         issues.push({
           file: logicalFile,
-          message: `module "${mod.id}" path not found: ${rel} (or ${rel}.example)`,
+          message: `module "${mod.id}" path not found: ${rel} (tenant .example or steward/modules/${mod.agent}/seed/)`,
         });
       }
     }

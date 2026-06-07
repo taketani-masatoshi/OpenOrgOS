@@ -24,4 +24,12 @@ modules:
     enabled: false
     agent: professional_services
     data_root: data/services/
-    notes: 非物件型モジュール（Phase C）
+    notes: 受託・サービス
+
+  - id: venture_capital
+    enabled: false
+    agent: venture_capital
+    data_root: data/venture-capital/
+    docs_root: docs/venture-capital/
+    summary_dir: agent-summaries/venture-capital/
+    notes: サンプル・キャピタル（例 · `.example` をコピーして有効化）

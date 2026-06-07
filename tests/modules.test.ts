@@ -1,5 +1,12 @@
+import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { loadModulesFile, validateModules } from "../src/lib/modules.js";
+import {
+  getModuleSeedDir,
+  listCatalogModuleIds,
+  listModuleSeedFiles,
+  loadModulesFile,
+  validateModules,
+} from "../src/lib/modules.js";
 
 describe("modules.yaml", () => {
   it("loads mal tenant modules", () => {
@@ -15,12 +22,20 @@ describe("modules.yaml", () => {
     expect(issues).toEqual([]);
   });
 
-  it("lists catalog modules", async () => {
-    const { listCatalogModuleIds } = await import("../src/lib/modules.js");
+  it("lists catalog modules", () => {
     expect(listCatalogModuleIds()).toEqual([
       "hospitality",
       "professional_services",
       "rental",
+      "venture_capital",
     ]);
+  });
+
+  it("has seed data for catalog modules", () => {
+    for (const id of listCatalogModuleIds()) {
+      const seedDir = getModuleSeedDir(id);
+      expect(existsSync(seedDir)).toBe(true);
+      expect(listModuleSeedFiles(id).length).toBeGreaterThan(0);
+    }
   });
 });

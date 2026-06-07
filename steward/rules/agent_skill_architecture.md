@@ -68,7 +68,7 @@ flowchart TB
 | 04 | contracts | `data/contracts/` · `docs/contracts/` |
 | 05 | rental | `modules.yaml` · `docs/plans/rental/` |
 | 06 | hospitality | `modules.yaml` · `docs/properties/*/operations/` |
-| 07 | compliance | `docs/company/regulations/` · `docs/compliance/iso/` |
+| 07 | compliance | `steward/standards/iso/`（Read）· `docs/compliance/iso/`（テナント記録） |
 | 08 | operations | `docs/io/inbox/` · `docs/io/outbox/` |
 | 09 | reports | `docs/reports/` |
 | 10 | decisions | `docs/company/*gijiroku*` · `executive-remaining-tasks.md` |

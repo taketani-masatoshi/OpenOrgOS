@@ -43,6 +43,8 @@ import {
   externalContactsFileSchema,
   stakeholdersFileSchema,
   classificationRegistrySchema,
+  fundsFileSchema,
+  portfolioFileSchema,
   type CalendarFile,
   type TasksFile,
   type OneOnOnesFile,
@@ -437,6 +439,19 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     readYamlFile(join(DATA_DIR, "document-io.yaml"), documentIoSchema)
   );
 
+  const vcFundsPath = join(DATA_DIR, "venture-capital", "funds.yaml");
+  const vcPortfolioPath = join(DATA_DIR, "venture-capital", "portfolio.yaml");
+  if (existsSync(vcFundsPath)) {
+    tryLoad("data/venture-capital/funds.yaml", () =>
+      readYamlFile(vcFundsPath, fundsFileSchema)
+    );
+  }
+  if (existsSync(vcPortfolioPath)) {
+    tryLoad("data/venture-capital/portfolio.yaml", () =>
+      readYamlFile(vcPortfolioPath, portfolioFileSchema)
+    );
+  }
+
   // Cross-reference validation (legacy inline checks)
   if (errors.length === 0) {
     try {
@@ -475,6 +490,20 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
           file: "data/finance/fixed-assets.yaml",
           message: issue.message,
         });
+      }
+
+      if (existsSync(vcFundsPath) && existsSync(vcPortfolioPath)) {
+        const funds = readYamlFile(vcFundsPath, fundsFileSchema);
+        const portfolio = readYamlFile(vcPortfolioPath, portfolioFileSchema);
+        const fundIds = new Set(funds.funds.map((f) => f.id));
+        for (const pc of portfolio.companies) {
+          if (!fundIds.has(pc.fund_id)) {
+            errors.push({
+              file: "data/venture-capital/portfolio.yaml",
+              message: `${pc.id} references unknown fund ${pc.fund_id}`,
+            });
+          }
+        }
       }
     } catch (e) {
       errors.push({

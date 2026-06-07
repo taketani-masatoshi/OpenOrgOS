@@ -59,6 +59,8 @@ function formatModuleSummaryContent(
       return formatHospitalityModuleSummary(data, report, mod.property_ids);
     case "professional_services":
       return formatProfessionalServicesSummary(report, mod);
+    case "venture_capital":
+      return formatVentureCapitalSummary(report, mod);
     default:
       return `# Module ${mod.id} 要約 ${report.reportDate}\n`;
   }
@@ -266,6 +268,29 @@ export function formatProfessionalServicesSummary(
   ].join("\n");
 }
 
+export function formatVentureCapitalSummary(
+  report: DashboardReport,
+  mod: TenantModule
+): string {
+  return [
+    `# Venture Capital Module 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- モジュール **${mod.id}** · data_root: \`${mod.data_root ?? "—"}\``,
+    "- ファンド · ポートフォリオは `funds.yaml` · `portfolio.yaml`（`.example` 参照）",
+    "",
+    "## 推奨アクション",
+    "",
+    "1. `portfolio_review` Skill で四半期レビュー",
+    "2. LP 報告前に Finance · Compliance と整合",
+    "",
+    "- Skill: [steward/modules/venture_capital/skills/portfolio_review.md](../../../steward/modules/venture_capital/skills/portfolio_review.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
 export function formatComplianceSummary(data: StewardData, report: DashboardReport): string {
   const insuranceDrafts = data.contracts.filter(
     (c) => c.status === "draft" && c.type === "insurance"
@@ -300,7 +325,8 @@ export function formatComplianceSummary(data: StewardData, report: DashboardRepo
     "",
     "## 根拠",
     "",
-    "- `docs/company/regulations/` · `docs/compliance/iso/`",
+    "- `docs/company/regulations/` · `docs/compliance/iso/`（テナント記録）",
+    "- ISO 標準: `steward/standards/iso/`",
     "- Skill: [steward/skills/permit_expiry_check.md](../../../steward/skills/permit_expiry_check.md)",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,

@@ -175,7 +175,8 @@ npm run steward -- alerts
 |------|------|
 | `docs/company/regulations/**` | R/W |
 | `docs/company/licenses/**` | R/W |
-| `docs/compliance/iso/**` | R/W |
+| `steward/standards/iso/**` | R（標準テンプレート） |
+| `docs/compliance/iso/**` | R/W（テナント固有記録） |
 | `docs/compliance/privacy/**` | R/W |
 | `docs/company/tax/**` | R |
 | `data/company.yaml` | R |

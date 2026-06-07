@@ -5,6 +5,7 @@ export const moduleAgentId = z.enum([
   "rental",
   "hospitality",
   "professional_services",
+  "venture_capital",
 ]);
 
 export const tenantModuleSchema = z.object({

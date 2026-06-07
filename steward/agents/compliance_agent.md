@@ -1,7 +1,7 @@
 # Compliance Agent
 
 **English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント  
-**4 層:** **Agent** — `docs/company/regulations/` · `docs/compliance/` を管轄。
+**4 層:** **Agent** — `docs/company/regulations/` · `docs/compliance/` を管轄。ISO 標準テンプレートは [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（Read）。
 
 **構成:** [repository_layout.md](../rules/repository_layout.md)
 
@@ -17,7 +17,7 @@
 
 - `docs/company/regulations/` 11 規程の維持・改定ドラフト
 - `docs/company/licenses/` 許認可・保険・登記の INDEX 管理
-- `docs/compliance/iso/` ギャップ分析・内部監査計画
+- `docs/compliance/iso/` テナント固有ギャップ・監査記録（標準文書は `steward/standards/iso/` 参照）
 - `docs/compliance/privacy/` 個情テンプレの整備
 - secrets の **存在・項目充足** 監査（値の複製は禁止）
 - 届出・総会期限の Executive へのエスカレーション
@@ -43,7 +43,8 @@
 |------|------|
 | `docs/company/regulations/**` | Primary |
 | `docs/company/licenses/**` | Primary |
-| `docs/compliance/iso/**` | Primary |
+| `steward/standards/iso/**` | Read（標準テンプレート） |
+| `docs/compliance/iso/**` | Primary（テナント記録） |
 | `docs/compliance/privacy/**` | Primary |
 | `docs/company/**`（議事録・株主） | Read |
 | `docs/company/tax/**` | Read |
@@ -56,7 +57,7 @@
 
 - `docs/company/regulations/**`
 - `docs/company/licenses/**`（`INDEX.csv` 含む）
-- `docs/compliance/iso/**`
+- `docs/compliance/iso/**`（テナント固有のみ。標準文書は `steward/standards/iso/` を参照）
 - `docs/compliance/privacy/templates/**`
 - 規程改定に伴う `docs/company/*.md` 議事録参照リンク
 
@@ -117,5 +118,5 @@
 ## コンテキスト
 
 - 規程: 宿泊運営 · 個情保護 · 稟議決裁 · 内部監査 等 11 種
-- ISO: 9001/14001/27001/45001/50001/21401/22301 ギャップ評価
-- 評価: [docs/compliance/iso/steward-assessment.md](../docs/compliance/iso/steward-assessment.md)
+- ISO 標準: [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（9001/14001/27001/45001/50001/21401/22301）
+- テナント評価: `docs/compliance/iso/steward-assessment.md`
