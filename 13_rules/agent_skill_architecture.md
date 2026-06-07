@@ -1,6 +1,6 @@
 # Steward OS — Agent / Skill アーキテクチャ
 
-**版:** 2026-06-07 · **上位:** [steward_os_principles.md](steward_os_principles.md)
+**版:** 2026-06-08 · **上位:** [steward_os_principles.md](steward_os_principles.md)
 
 ---
 
@@ -25,6 +25,12 @@ flowchart TB
     CON[Contract]
     HOS[Hospitality]
     EXE[Executive Steward]
+    SEC[Secretary]
+  end
+
+  subgraph ExecutiveData["cursor/data/executive/"]
+    CAL[calendar.yaml]
+    TASK[tasks.yaml]
   end
 
   subgraph StewardRead["Steward 読取面"]
@@ -44,6 +50,9 @@ flowchart TB
   S4 --> SUM
   SUM --> EXE
   DASH --> EXE
+  CAL --> SEC
+  TASK --> SEC
+  SEC -.->|業務ルート| EXE
 ```
 
 ---
@@ -63,6 +72,7 @@ flowchart TB
 | 08 | operations | `docs/inbox/` · `docs/outbox/` |
 | 09 | reports | `docs/reports/` |
 | 10 | decisions | `docs/corporate/*gijiroku*` · `executive-remaining-tasks.md` |
+| 10b | executive | `cursor/data/executive/` · `docs/executive/`（Secretary SoT） |
 | 11 | agents | `11_agents/` |
 | 12 | skills | `12_skills/` |
 | 13 | rules | `13_rules/` |
@@ -75,15 +85,18 @@ flowchart TB
 
 ## Agent 一覧
 
-| Agent | 定義 | 要約出力先 |
-|-------|------|-----------|
-| Executive Steward | [11_agents/executive_steward_agent.md](../11_agents/executive_steward_agent.md) | `docs/reports/` · `executive-notes/` |
-| Finance | [11_agents/finance_agent.md](../11_agents/finance_agent.md) | `agent-summaries/finance/` |
-| Contract | [11_agents/contract_agent.md](../11_agents/contract_agent.md) | `agent-summaries/contract/` |
-| Property Rental | [11_agents/property_rental_agent.md](../11_agents/property_rental_agent.md) | `agent-summaries/prop-001/` |
-| Hospitality | [11_agents/hospitality_agent.md](../11_agents/hospitality_agent.md) | `agent-summaries/prop-002/` |
-| Compliance | [11_agents/compliance_agent.md](../11_agents/compliance_agent.md) | `agent-summaries/compliance/` |
-| Operations | [11_agents/operations_agent.md](../11_agents/operations_agent.md) | `agent-summaries/operations/` |
+| Agent | 日本語 | 定義 | 要約出力先 |
+|-------|--------|------|-----------|
+| Executive Steward | 経営統括 | [11_agents/executive_steward_agent.md](../11_agents/executive_steward_agent.md) | `docs/reports/` · `executive-notes/` |
+| Secretary | 秘書 | [11_agents/secretary_agent.md](../11_agents/secretary_agent.md) | `docs/executive/` |
+| Finance | 財務・計画 | [11_agents/finance_agent.md](../11_agents/finance_agent.md) | `agent-summaries/finance/` |
+| Contract | 契約管理 | [11_agents/contract_agent.md](../11_agents/contract_agent.md) | `agent-summaries/contract/` |
+| Property Rental | 番町賃貸 | [11_agents/property_rental_agent.md](../11_agents/property_rental_agent.md) | `agent-summaries/prop-001/` |
+| Hospitality | 亀沢旅館 | [11_agents/hospitality_agent.md](../11_agents/hospitality_agent.md) | `agent-summaries/prop-002/` |
+| Compliance | コンプライアンス | [11_agents/compliance_agent.md](../11_agents/compliance_agent.md) | `agent-summaries/compliance/` |
+| Operations | 業務運用 | [11_agents/operations_agent.md](../11_agents/operations_agent.md) | `agent-summaries/operations/` |
+
+索引: [11_agents/00-このフォルダについて.md](../11_agents/00-このフォルダについて.md)
 
 ---
 
@@ -92,6 +105,9 @@ flowchart TB
 | Skill | 定義 | 主 Agent |
 |-------|------|---------|
 | executive_dashboard | [12_skills/executive_dashboard.md](../12_skills/executive_dashboard.md) | Executive Steward |
+| schedule_management | [12_skills/schedule_management.md](../12_skills/schedule_management.md) | Secretary |
+| one_on_one_prep | [12_skills/one_on_one_prep.md](../12_skills/one_on_one_prep.md) | Secretary |
+| external_correspondence | [12_skills/external_correspondence.md](../12_skills/external_correspondence.md) | Secretary |
 | monthly_close | [12_skills/monthly_close.md](../12_skills/monthly_close.md) | Finance |
 | cashflow_forecast | [12_skills/cashflow_forecast.md](../12_skills/cashflow_forecast.md) | Finance |
 | contract_register | [12_skills/contract_register.md](../12_skills/contract_register.md) | Contract · Operations |
@@ -123,6 +139,12 @@ flowchart TB
 ## 横断タスク
 
 事業計画分解等の **Orchestrator プロンプト** は Agent ではなく [14_prompts/](../14_prompts/00-このフォルダについて.md)。Executive が委譲する。
+
+---
+
+## Secretary ↔ Steward 境界
+
+[secretary_steward_boundary.md](secretary_steward_boundary.md) — 社内経営 OS と社長オペ・社外窓口の分離。
 
 ---
 

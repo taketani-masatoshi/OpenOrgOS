@@ -1,0 +1,43 @@
+# 社長タスク（dashboard P0 とは別管理）
+# 経営判断タスクは executive-remaining-tasks.md、日常・対外はここ
+
+tasks:
+  - id: TASK-001
+    title: 亀沢旅館 開業前最終チェックリストの確認
+    due: "2026-07-15"
+    priority: p0
+    status: open
+    category: business
+    delegated_to: null
+    source: executive-remaining-tasks 参照
+
+  - id: TASK-002
+    title: 会食候補日の確定（6月下旬）
+    due: "2026-06-15"
+    priority: p1
+    status: open
+    category: dining
+    delegated_to: Secretary Agent
+    source: calendar EVT-002
+
+  - id: TASK-003
+    title: 税理士・顧問先への四半期報告メール下書き確認
+    due: "2026-06-30"
+    priority: p2
+    status: open
+    category: external
+    delegated_to: Secretary Agent
+    source: external-contacts EXT-001
+
+  - id: TASK-004
+    title: 宮城万貴子との経営方針 1-on-1 議題整理
+    due: "2026-06-11"
+    priority: p1
+    status: in_progress
+    category: hr
+    delegated_to: Secretary Agent
+    source: one-on-ones OOO-001
+
+notes: |
+  P0 経営残タスクは docs/corporate/executive-remaining-tasks.md が正。
+  本ファイルは社長の行動・対外・準備タスクを Secretary が管理する。

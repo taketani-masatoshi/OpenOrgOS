@@ -1,0 +1,73 @@
+# 固定資産台帳（Source of Truth）
+# 人向け: docs/plans/finance/fixed-asset-register.md
+# 基準日: 第9期期末（2027-01-31）
+
+as_of: "2027-01-31"
+fiscal_year: FY2026
+currency: JPY
+
+assets:
+  - id: ASSET-001
+    property_id: PROP-001
+    loan_id: LOAN-001
+    contract_id: CTR-002
+    name: 番町ハイム312（建物）
+    category: 建物
+    acquisition_date: "2025-02-10"
+    acquisition_cost: 16600000
+    useful_life_years: 47
+    depreciation_method: 定額法
+    annual_depreciation: 353191
+    accumulated_depreciation: 706382
+    book_value: 15893618
+    expense_plan_line_id: depreciation
+    tax_notes: |
+      RC建物想定・定額法47年。PROP-001.depreciation と expense-plan FY2026 行（353,191円）と一致。
+      取得価額の土地/建物区分は税理士確認後に按分調整の可能性あり。
+
+  - id: ASSET-002
+    property_id: PROP-002
+    loan_id: LOAN-002
+    contract_id: CTR-006
+    name: 亀沢土地
+    category: 土地
+    acquisition_date: "2025-06-01"
+    acquisition_cost: 70000000
+    useful_life_years: null
+    depreciation_method: 非償却
+    annual_depreciation: 0
+    accumulated_depreciation: 0
+    book_value: 70000000
+    tax_notes: |
+      償却対象外。取得原価7,000万円は PROP-002 notes・LOAN-002 と一致。
+      固定資産税評価額は区役所通知書で別途管理（TBD）。
+
+  - id: ASSET-003
+    property_id: PROP-002
+    loan_id: LOAN-002
+    contract_id: CTR-007
+    name: 亀沢建物（上置き）
+    category: 建物
+    acquisition_date: "2026-04-01"
+    acquisition_cost: 26000000
+    useful_life_years: null
+    depreciation_method: 定額法
+    annual_depreciation: 0
+    accumulated_depreciation: 0
+    book_value: 26000000
+    expense_plan_line_id: null
+    tax_notes: |
+      耐用年数 TBD（税理士・構造確認後）。第9期 P/L には減価償却未計上（開業2026/8）。
+      investment-plan（2,600万・2026-03/04）と LOAN-002 建築部分と一致。
+      償却開始月・中古割増等は税理士確定後に annual_depreciation を更新。
+
+summary:
+  total_acquisition_cost: 112600000
+  total_accumulated_depreciation: 706382
+  total_book_value: 111893618
+  annual_depreciation_fy_current: 353191
+
+notes: |
+  取得原価合計 1.126億円 ＝ LOAN-001（1,660万）＋ LOAN-002（9,600万）。
+  第9期の expense-plan 減価償却 353,191円は ASSET-001 のみ。亀沢建物は第10期以降見込み。
+  税理士帳簿・別表16確定後に accumulated / book_value を同期。

@@ -93,6 +93,7 @@ npm run steward -- finances
 | 番町運用 | Property Rental | `@11_agents/property_rental_agent.md` |
 | 亀沢運用 | Hospitality | `@11_agents/hospitality_agent.md` |
 | 経営判断 | Executive | `@11_agents/executive_steward_agent.md` + dashboard |
+| 社長スケジュール・1-on-1 | Secretary | `@11_agents/secretary_agent.md` |
 
 ---
 

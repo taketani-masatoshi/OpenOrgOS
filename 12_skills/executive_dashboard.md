@@ -62,7 +62,7 @@ npm run steward -- dashboard
 
 | セクション | 内容 | データソース |
 |-----------|------|-------------|
-| Agent 要約 | 7 Agent の同日要約リンク | `agent-summaries.ts` |
+| Agent 要約 | 7 件（6 部門 + Executive）の同日要約リンク ※Secretary は別系統 | `agent-summaries.ts` |
 | サマリー | 資金見通し/ランウェイ · 月次キャッシュ増/ネットバーン · 月次売上/利益 · 固定/変動費 · 損益分岐 | `cash-balance.yaml` · 月次/予実 · `fixed-costs` · `loans` |
 | **次の支払い** | 90 日以内の固定費/給与 · 当年度借入返済（base） · 契約期限 | `fixed-costs.yaml` · `payroll.yaml` · `debt-plan.yaml` · `alerts.ts` |
 | 重要タスク | importance=high | 保険 draft · 契約 high · TBD |

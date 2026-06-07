@@ -7,6 +7,8 @@
 ## 入力
 
 - `cursor/data/finances/monthly/{YYYY-MM}.yaml`
+- `cursor/data/finances/fixed-assets.yaml`（減価償却整理仕訳）
+- `cursor/data/finances/chart-of-accounts.yaml`（科目マッピング）
 - 領収書・経費データ（`docs/operations/accounting/`）
 - 物件 Agent からの収益前提（番町賃料 · 亀沢宿泊）
 

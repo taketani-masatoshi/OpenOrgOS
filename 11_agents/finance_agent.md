@@ -14,7 +14,9 @@
 ## 目的
 
 - `cursor/data/finances/` と `cursor/data/plans/` の維持
+- **固定資産台帳・税務プロファイル・勘定科目**（tax-reporting レベル）の SoT 管理
 - 決算書 MD（`docs/plans/`）と CSV（`docs/data/`）の数値整合
+- 法人税・消費税・地方税申告準備（`tax_filing_prep` Skill）
 - ランウェイ・バーンレート・予実ギャップの分析
 - 物件別収益前提（Property / Hospitality からの入力）を計画 YAML へ反映
 - 編集後の `validate` と `sync all` の実行
@@ -27,6 +29,7 @@
 | Skill | ファイル |
 |-------|---------|
 | monthly_close | [12_skills/monthly_close.md](../12_skills/monthly_close.md) |
+| tax_filing_prep | [12_skills/tax_filing_prep.md](../12_skills/tax_filing_prep.md) |
 | cashflow_forecast | [12_skills/cashflow_forecast.md](../12_skills/cashflow_forecast.md) |
 | noi_analysis | [12_skills/noi_analysis.md](../12_skills/noi_analysis.md)（Read/協調） |
 | capex_planning | [12_skills/capex_planning.md](../12_skills/capex_planning.md) |
@@ -42,6 +45,9 @@
 | パス | 権限 |
 |------|------|
 | `cursor/data/finances/**` | Primary |
+| `cursor/data/finances/fixed-assets.yaml` | Primary（固定資産台帳 SoT） |
+| `cursor/data/finances/tax-profile.yaml` | Primary（税務区分・申告期限） |
+| `cursor/data/finances/chart-of-accounts.yaml` | Primary（勘定科目） |
 | `cursor/data/plans/**` | Primary |
 | `docs/plans/**` | R/W |
 | `docs/data/*.csv` | R/W |
@@ -121,6 +127,9 @@ npm run steward -- sync all   # CSV 利用時
 
 ## コンテキスト
 
+- 固定資産: `cursor/data/finances/fixed-assets.yaml` ↔ `docs/plans/finance/fixed-asset-register.md`
+- 税務: `cursor/data/finances/tax-profile.yaml` ↔ `docs/plans/finance/tax-filing-checklist.md`
+- 会計方針: `docs/plans/finance/accounting-policy.md`
 - 現預金: `cursor/data/finances/cash-balance.yaml`
 - 予実: `cursor/data/plans/yojitsu-fy2026.yaml` ↔ `docs/plans/fy2026-pl.md`
 - KPI 定義: [executive-dashboard-guide.md](../docs/plans/executive-dashboard-guide.md)

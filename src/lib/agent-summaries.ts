@@ -506,6 +506,10 @@ export function formatAgentSummariesSection(paths: AgentSummaryPaths): string {
       return `| ${name} | [${rel.split("/").pop()}](${reportsRelLink(p)}) |`;
     }),
     "",
+    "**Secretary（秘書）** は Steward 読取面外。予定・1-on-1 → [docs/executive/](../../executive/00-このフォルダについて.md) · `@11_agents/secretary_agent.md`",
+    "",
+    "Agent 一覧（8）: [11_agents/00-このフォルダについて.md](../../11_agents/00-このフォルダについて.md)",
+    "",
     "索引: [agent-summaries/00-このフォルダについて.md](../agent-summaries/00-このフォルダについて.md)",
     "",
   ];

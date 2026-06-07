@@ -1,5 +1,22 @@
 officer_compensation_annual: 0
+officers:
+  - name: 段燕燕
+    role: 代表取締役
+    monthly: 0
+    annual: 0
+  - name: 宮城万貴子
+    role: 代表取締役
+    monthly: 0
+    annual: 0
+tax_treatment:
+  withholding: 該当なし
+  social_insurance: 該当なし
+  deductible_expense: true
+  notes: |
+    役員報酬0円の場合、法人税上の損金算入額も0。役員貸付返済・配当等は別科目。
+    報酬を設定する場合は定時株主総会決議・就業規則・源泉徴収義務が発生（tax-profile 参照）。
+account_code: "5300"
 notes: |
   FY2026決算: 0円で確定（予想ベース）。
   税理士と確定後、必要に応じて遡及修正。
-  従業員なし。
+  従業員なし。chart-of-accounts 5300 にマッピング。

@@ -11,7 +11,13 @@ import {
   yojitsuPlanSchema,
   payrollSchema,
   cashBalanceSchema,
+  fixedAssetsSchema,
+  taxProfileSchema,
+  chartOfAccountsSchema,
   type CashBalance,
+  type FixedAssets,
+  type TaxProfile,
+  type ChartOfAccounts,
   revenuePlanSchema,
   profitPlanSchema,
   expensePlanSchema,
@@ -30,6 +36,14 @@ import {
   type PropertyRevenuePlan,
   type FacilityPublic,
   type EmployeesFile,
+  calendarFileSchema,
+  tasksFileSchema,
+  oneOnOnesFileSchema,
+  externalContactsFileSchema,
+  type CalendarFile,
+  type TasksFile,
+  type OneOnOnesFile,
+  type ExternalContactsFile,
 } from "../../schemas/index.js";
 import {
   DATA_DIR,
@@ -130,6 +144,116 @@ export function loadLoans(): Loans {
   return readYamlFile(join(DATA_DIR, "finances", "loans.yaml"), loansSchema);
 }
 
+export function loadFixedAssets(): FixedAssets {
+  return readYamlFile(join(DATA_DIR, "finances", "fixed-assets.yaml"), fixedAssetsSchema);
+}
+
+export function loadTaxProfile(): TaxProfile {
+  return readYamlFile(join(DATA_DIR, "finances", "tax-profile.yaml"), taxProfileSchema);
+}
+
+export function loadChartOfAccounts(): ChartOfAccounts {
+  return readYamlFile(
+    join(DATA_DIR, "finances", "chart-of-accounts.yaml"),
+    chartOfAccountsSchema
+  );
+}
+
+export interface FixedAssetConsistencyIssue {
+  message: string;
+}
+
+export function validateFixedAssetConsistency(): FixedAssetConsistencyIssue[] {
+  const issues: FixedAssetConsistencyIssue[] = [];
+  const fixedAssets = loadFixedAssets();
+  const expensePlan = loadExpensePlan();
+  const properties = loadProperties();
+  const loans = loadLoans();
+
+  const propertyById = new Map(properties.map((p) => [p.id, p]));
+  const loanById = new Map(loans.loans.map((l) => [l.id, l]));
+  const assetIds = new Set(fixedAssets.assets.map((a) => a.id));
+
+  for (const asset of fixedAssets.assets) {
+    if (!propertyById.has(asset.property_id)) {
+      issues.push({ message: `${asset.id}: property_id ${asset.property_id} not found` });
+    }
+    if (asset.loan_id && !loanById.has(asset.loan_id)) {
+      issues.push({ message: `${asset.id}: loan_id ${asset.loan_id} not found` });
+    }
+    const expectedBook = asset.acquisition_cost - asset.accumulated_depreciation;
+    if (asset.book_value !== expectedBook) {
+      issues.push({
+        message: `${asset.id}: book_value ${asset.book_value} ≠ acquisition_cost - accumulated (${expectedBook})`,
+      });
+    }
+  }
+
+  const loanAssetTotal = loans.loans.reduce((s, l) => s + l.balance, 0);
+  if (fixedAssets.summary?.total_acquisition_cost != null) {
+    if (fixedAssets.summary.total_acquisition_cost !== loanAssetTotal) {
+      issues.push({
+        message: `fixed-assets summary total_acquisition_cost (${fixedAssets.summary.total_acquisition_cost}) ≠ loans total balance (${loanAssetTotal})`,
+      });
+    }
+  }
+
+  for (const loan of loans.loans) {
+    if (loan.fixed_asset_ids) {
+      for (const aid of loan.fixed_asset_ids) {
+        if (!assetIds.has(aid)) {
+          issues.push({ message: `${loan.id}: fixed_asset_id ${aid} not in fixed-assets.yaml` });
+        }
+      }
+    }
+  }
+
+  const prop001 = propertyById.get("PROP-001");
+  if (prop001?.depreciation) {
+    const asset001 = fixedAssets.assets.find((a) => a.id === "ASSET-001");
+    if (asset001) {
+      if (asset001.annual_depreciation !== prop001.depreciation.annual_amount) {
+        issues.push({
+          message: `ASSET-001 annual_depreciation (${asset001.annual_depreciation}) ≠ PROP-001.depreciation.annual_amount (${prop001.depreciation.annual_amount})`,
+        });
+      }
+    }
+  }
+
+  const fy2026 = expensePlan.years.find((y) => y.fiscal_year === "FY2026");
+  const depLine = fy2026?.lines.find((l) => l.id === "depreciation");
+  if (depLine && fixedAssets.summary?.annual_depreciation_fy_current != null) {
+    if (depLine.amount !== fixedAssets.summary.annual_depreciation_fy_current) {
+      issues.push({
+        message: `expense-plan FY2026 depreciation (${depLine.amount}) ≠ fixed-assets annual_depreciation_fy_current (${fixedAssets.summary.annual_depreciation_fy_current})`,
+      });
+    }
+  }
+
+  if (fixedAssets.summary) {
+    const calcCost = fixedAssets.assets.reduce((s, a) => s + a.acquisition_cost, 0);
+    const calcAccum = fixedAssets.assets.reduce((s, a) => s + a.accumulated_depreciation, 0);
+    const calcBook = fixedAssets.assets.reduce((s, a) => s + a.book_value, 0);
+    if (fixedAssets.summary.total_acquisition_cost !== calcCost) {
+      issues.push({
+        message: `summary total_acquisition_cost (${fixedAssets.summary.total_acquisition_cost}) ≠ sum of assets (${calcCost})`,
+      });
+    }
+    if (fixedAssets.summary.total_accumulated_depreciation !== calcAccum) {
+      issues.push({
+        message: `summary total_accumulated_depreciation (${fixedAssets.summary.total_accumulated_depreciation}) ≠ sum of assets (${calcAccum})`,
+      });
+    }
+    if (fixedAssets.summary.total_book_value !== calcBook) {
+      issues.push({
+        message: `summary total_book_value (${fixedAssets.summary.total_book_value}) ≠ sum of assets (${calcBook})`,
+      });
+    }
+  }
+
+  return issues;
+}
+
 export function loadBusinessPlan(): BusinessPlan {
   return readYamlFile(join(DATA_DIR, "plans", "business-plan.yaml"), businessPlanSchema);
 }
@@ -193,6 +317,25 @@ export function loadEmployees(): EmployeesFile {
   return readYamlFile(join(DATA_DIR, "hr", "employees.yaml"), employeesFileSchema);
 }
 
+export function loadExecutiveCalendar(): CalendarFile {
+  return readYamlFile(join(DATA_DIR, "executive", "calendar.yaml"), calendarFileSchema);
+}
+
+export function loadExecutiveTasks(): TasksFile {
+  return readYamlFile(join(DATA_DIR, "executive", "tasks.yaml"), tasksFileSchema);
+}
+
+export function loadOneOnOnes(): OneOnOnesFile {
+  return readYamlFile(join(DATA_DIR, "executive", "one-on-ones.yaml"), oneOnOnesFileSchema);
+}
+
+export function loadExternalContacts(): ExternalContactsFile {
+  return readYamlFile(
+    join(DATA_DIR, "executive", "external-contacts.yaml"),
+    externalContactsFileSchema
+  );
+}
+
 export function loadAllData(): StewardData {
   return {
     company: loadCompany(),
@@ -244,6 +387,9 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("cursor/data/finances/payroll.yaml", () => loadPayroll());
   tryLoad("cursor/data/finances/cash-balance.yaml", () => loadCashBalance());
   tryLoad("cursor/data/finances/loans.yaml", () => loadLoans());
+  tryLoad("cursor/data/finances/fixed-assets.yaml", () => loadFixedAssets());
+  tryLoad("cursor/data/finances/tax-profile.yaml", () => loadTaxProfile());
+  tryLoad("cursor/data/finances/chart-of-accounts.yaml", () => loadChartOfAccounts());
   tryLoad("cursor/data/plans/business-plan.yaml", () => loadBusinessPlan());
   tryLoad("cursor/data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());
   tryLoad("cursor/data/plans/revenue-plan.yaml", () => loadRevenuePlan());
@@ -261,6 +407,10 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
 
   tryLoad("cursor/data/operations/kamezawa-public.yaml", () => loadOperationsPublic());
   tryLoad("cursor/data/hr/employees.yaml", () => loadEmployees());
+  tryLoad("cursor/data/executive/calendar.yaml", () => loadExecutiveCalendar());
+  tryLoad("cursor/data/executive/tasks.yaml", () => loadExecutiveTasks());
+  tryLoad("cursor/data/executive/one-on-ones.yaml", () => loadOneOnOnes());
+  tryLoad("cursor/data/executive/external-contacts.yaml", () => loadExternalContacts());
   tryLoad("cursor/data/document-io.yaml", () =>
     readYamlFile(join(DATA_DIR, "document-io.yaml"), documentIoSchema)
   );
@@ -296,6 +446,13 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
             message: `hotel plan references unknown property ${plan.property_id}`,
           });
         }
+      }
+
+      for (const issue of validateFixedAssetConsistency()) {
+        errors.push({
+          file: "cursor/data/finances/fixed-assets.yaml",
+          message: issue.message,
+        });
       }
     } catch (e) {
       errors.push({

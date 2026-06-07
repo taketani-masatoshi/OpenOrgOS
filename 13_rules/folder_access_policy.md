@@ -2,7 +2,7 @@
 
 **版:** 2026-06-08 · **正本:** 本ファイル（`13_rules/`） · **上位:** [agent_skill_architecture.md](agent_skill_architecture.md)
 
-本書は 7 エージェント間の **読取・編集・禁止** を運用レベルで定義する。Steward OS は経営支援 OS であり、エージェントは **提案と下書き** を行い、**最終判断は人間（段100%株主）** が行う。
+本書は 8 エージェント間の **読取・編集・禁止** を運用レベルで定義する。Steward OS は経営支援 OS であり、エージェントは **提案と下書き** を行い、**最終判断は人間（段100%株主）** が行う。
 
 **4 層:** Steward → Agent → Skill → Data。Steward は [agent-summaries](../docs/reports/agent-summaries/) の要約を原則読取する。
 
@@ -36,6 +36,21 @@
 ---
 
 ## 2. エージェント別詳細ポリシー
+
+| # | Agent | 日本語 | 節 |
+|---|-------|--------|-----|
+| 1 | Executive Steward | 経営統括 | §2.1 |
+| 2 | Secretary | 秘書 | §2.8 |
+| 3 | Finance | 財務・計画 | §2.2 |
+| 4 | Contract | 契約管理 | §2.3 |
+| 5 | Property Rental | 番町賃貸 | §2.4 |
+| 6 | Hospitality | 亀沢旅館 | §2.5 |
+| 7 | Compliance | コンプライアンス | §2.6 |
+| 8 | Operations | 業務運用 | §2.7 |
+
+索引: [11_agents/00-このフォルダについて.md](../11_agents/00-このフォルダについて.md)
+
+---
 
 ### 2.1 Executive Steward Agent
 
@@ -188,6 +203,36 @@ npm run steward -- io status
 
 ---
 
+### 2.8 Secretary Agent
+
+**目的:** 社長のスケジュール・タスク・1-on-1・社外連絡の一次受けと調整下書き。社外の主インターフェース（財務・契約は扱わない）。
+
+| パス | 権限 |
+|------|------|
+| `cursor/data/executive/**` | R/W（Primary · SoT） |
+| `docs/executive/**` | R/W |
+| `docs/reports/dashboard/` | R（**要約行のみ**） |
+| `docs/reports/executive-notes/` | R（サニタイズ済みのみ） |
+| `docs/corporate/executive-remaining-tasks.md` | R |
+| `cursor/data/hr/employees.yaml` | R |
+| `cursor/data/company.yaml` | R |
+| `cursor/data/finances/**` `contracts/**` `plans/**` | **禁止** |
+| `kamezawa-secrets.yaml` · `**/records/**` | **禁止** |
+
+**境界:** [secretary_steward_boundary.md](secretary_steward_boundary.md)
+
+**編集後チェックリスト:**
+1. `npm run validate`
+2. 社外下書きは人間承認前に送信しない
+3. `external_visible: false` 予定を社外出力に含めない
+
+**Executive へルートする例:**
+- ランウェイ・予実 → Executive → Finance
+- 契約更新・保険 → Executive → Contract
+- 許認可 → Executive → Compliance
+
+---
+
 ## 3. エスカレーション経路
 
 ```
@@ -252,6 +297,9 @@ npm run steward -- io status
 | 税務申告期限・按分 | Compliance ← Finance |
 | 物件別収益前提 | Finance ← Property Rental / Hospitality |
 | 経営優先度判断 | Executive ← 任意 |
+| 社長スケジュール・会食調整 | Secretary |
+| 社外からの財務要求 | Secretary → 人間（断る） |
+| 1-on-1 準備 | Secretary |
 
 ### 4.3 回答フォーマット
 

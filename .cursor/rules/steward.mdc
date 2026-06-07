@@ -82,6 +82,19 @@ Steward → Agent（11_agents/）→ Skill（12_skills/）→ Data（cursor/data
 
 ## Agent / Skill 参照
 
-- Agent: [11_agents/](../../11_agents/00-このフォルダについて.md)
+**8 Agent:** [11_agents/00-このフォルダについて.md](../../11_agents/00-このフォルダについて.md)
+
+| Agent | 用途 |
+|-------|------|
+| Executive Steward | 日次経営 · dashboard |
+| Secretary | 社長スケジュール · 1-on-1 · 社外窓口 |
+| Finance | 月次収支 · 税務 · 固定資産 |
+| Contract | 契約台帳 · 期限 |
+| Property Rental | 番町 PROP-001 |
+| Hospitality | 亀沢 PROP-002 |
+| Compliance | 規程 · 許認可 · ISO |
+| Operations | inbox · outbox |
+
 - Skill: [12_skills/](../../12_skills/00-このフォルダについて.md)
 - ルール: [13_rules/](../../13_rules/steward_os_principles.md)
+- Steward ↔ Secretary 境界: [secretary_steward_boundary.md](../../13_rules/secretary_steward_boundary.md)

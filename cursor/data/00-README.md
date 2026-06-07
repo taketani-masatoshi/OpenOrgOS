@@ -28,6 +28,10 @@
 | `document-io.yaml` | documentIo | **受信/出力トレイ台帳** |
 | `dependency-graph.yaml` | dependencyGraph | **パラメータ依存関係マップ** |
 | `hr/employees.yaml` | employeesFile | 従業員マスタ |
+| `executive/calendar.yaml` | calendarFile | 社長カレンダー（Secretary） |
+| `executive/tasks.yaml` | tasksFile | 社長タスク |
+| `executive/one-on-ones.yaml` | oneOnOnesFile | 1-on-1 レジストリ |
+| `executive/external-contacts.yaml` | externalContactsFile | 社外連絡先 |
 
 ---
 

@@ -71,7 +71,7 @@
 |------|------|
 | 賃貸 9 モジュール計画 | **`docs/plans/rental/`** |
 | 番町運用 | **`docs/operations/rental/bancho/`** |
-| エージェント | **`prompts/property_rental_agent.md`** |
+| エージェント | **`11_agents/property_rental_agent.md`** |
 
 ---
 
@@ -82,7 +82,7 @@
 | 旅館 10 モジュール計画 | **`docs/plans/hospitality/`** |
 | 亀沢運用 | **`docs/operations/lodging/`** |
 | 公開情報 | **`cursor/data/operations/kamezawa-public.yaml`** |
-| エージェント | **`prompts/hospitality_agent.md`** |
+| エージェント | **`11_agents/hospitality_agent.md`** |
 
 ---
 
@@ -129,13 +129,15 @@
 
 ---
 
-## 11_prompts/ — エージェント
+## 11_agents/ — エージェント
 
 | 内容 | パス |
 |------|------|
-| 7 エージェント | **`prompts/*.md`** |
-| 事業計画分解 | **`prompts/business_plan_decomposition_agent.md`** |
-| アーキテクチャ | **`docs/agent_architecture.md`** |
+| **8 Agent 定義** | **`11_agents/*.md`** · [00-このフォルダについて.md](../../../11_agents/00-このフォルダについて.md) |
+| 事業計画分解 Orchestrator | **`14_prompts/business_plan_decomposition.md`** |
+| アーキテクチャ | **`13_rules/agent_skill_architecture.md`** · **`docs/agent_architecture.md`** |
+
+**レガシー:** `prompts/*.md` は deprecated スタブ。
 
 ---
 

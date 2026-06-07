@@ -1,0 +1,28 @@
+# 主要社外連絡先（最小限・PII 過多禁止）
+# 個人の連絡先詳細は docs/operations/hr/records/ 等（Git 非追跡）
+
+contacts:
+  - id: EXT-001
+    name: 顧問税理士事務所（担当 TBD）
+    org: TBD
+    relationship: 税務顧問
+    preferred_channel: メール
+    notes: 四半期報告・申告スケジュール調整は Secretary が下書き、社長が承認。
+
+  - id: EXT-002
+    name: 番町テナント代表（TBD）
+    org: TBD
+    relationship: 賃貸借・本社兼用
+    preferred_channel: メール
+    notes: 日程調整・来客案内は Secretary が一次対応。契約条件は Contract Agent へ委譲。
+
+  - id: EXT-003
+    name: 亀沢旅館 清掃委託先（TBD）
+    org: TBD
+    relationship: 運用パートナー
+    preferred_channel: LINE / メール
+    notes: 清掃スケジュール調整は Hospitality Agent と協調。Secretary は日程のみ。
+
+notes: |
+  社外からの財務・契約情報要求は Secretary が断り、人間へエスカレーション。
+  連絡先の個人情報（電話・住所）は本ファイルに書かない。

@@ -80,6 +80,15 @@ nodes:
   - id: cursor/data/finances/payroll.yaml
     label: 役員報酬
     category: file
+  - id: cursor/data/finances/fixed-assets.yaml
+    label: 固定資産台帳
+    category: file
+  - id: cursor/data/finances/tax-profile.yaml
+    label: 税務プロファイル
+    category: file
+  - id: cursor/data/finances/chart-of-accounts.yaml
+    label: 勘定科目
+    category: file
   - id: finances-monthly
     label: 月次収支（全月）
     category: file
@@ -122,9 +131,12 @@ nodes:
     label: 亀沢機密（鍵・Wi-Fi）
     category: file
 
-  # --- 法人 ---
+  # --- 法人・人事 ---
   - id: cursor/data/company.yaml
     label: 法人基本情報
+    category: file
+  - id: cursor/data/hr/employees.yaml
+    label: 従業員マスタ
     category: file
 
   # --- I/O ---
@@ -171,6 +183,15 @@ nodes:
   - id: docs/plans/finance/dscr-plan.md
     label: DSCR 管理計画 MD
     category: file
+  - id: docs/plans/finance/fixed-asset-register.md
+    label: 固定資産台帳 MD
+    category: file
+  - id: docs/plans/finance/tax-filing-checklist.md
+    label: 税務申告チェックリスト MD
+    category: file
+  - id: docs/plans/finance/accounting-policy.md
+    label: 会計方針 MD
+    category: file
 
   # --- レポート ---
   - id: report-dashboard
@@ -195,6 +216,28 @@ nodes:
   - id: docs/outbox/lodging
     label: 亀沢掲示 PDF（outbox/lodging）
     category: file
+
+  # --- 社長オペ（Secretary Agent） ---
+  - id: cursor/data/executive/calendar.yaml
+    label: 社長カレンダー
+    category: file
+    aliases: [executive-calendar]
+  - id: cursor/data/executive/tasks.yaml
+    label: 社長タスク
+    category: file
+    aliases: [executive-tasks]
+  - id: cursor/data/executive/one-on-ones.yaml
+    label: 1-on-1 レジストリ
+    category: file
+    aliases: [executive-one-on-ones]
+  - id: cursor/data/executive/external-contacts.yaml
+    label: 社外連絡先（最小限）
+    category: file
+    aliases: [executive-external-contacts]
+  - id: docs/executive
+    label: 社長オペレーション MD
+    category: file
+    path: docs/executive
 
 edges:
   # --- 契約 ↔ 借入 ↔ 物件 ---
@@ -238,6 +281,48 @@ edges:
     category: property→plan
     reason: financing フィールド（LOAN-001）と loans.yaml を整合
     action: review
+
+  # --- 固定資産 ↔ 物件・借入・費用計画 ---
+  - from: cursor/data/properties/PROP-001.yaml
+    to: cursor/data/finances/fixed-assets.yaml
+    category: property→plan
+    reason: 減価償却前提（depreciation）は ASSET-001 と expense-plan と一致させる
+    action: update
+  - from: cursor/data/properties/PROP-002.yaml
+    to: cursor/data/finances/fixed-assets.yaml
+    category: property→plan
+    reason: 土地7,000万・建物2,600万の区分は ASSET-002/003 と LOAN-002 と一致
+    action: update
+  - from: cursor/data/finances/fixed-assets.yaml
+    to: cursor/data/plans/expense-plan.yaml
+    category: data→data
+    reason: 年間減価償却額（番町353,191円）は expense-plan depreciation 行と一致
+    action: update
+  - from: cursor/data/finances/fixed-assets.yaml
+    to: cursor/data/finances/loans.yaml
+    category: data→data
+    reason: fixed_asset_ids と取得原価合計は借入残高（1.126億）と一致
+    action: review
+  - from: cursor/data/finances/fixed-assets.yaml
+    to: docs/plans/finance/fixed-asset-register.md
+    category: data→docs
+    reason: 固定資産台帳 MD は YAML 更新後に同期
+    action: review
+  - from: cursor/data/finances/tax-profile.yaml
+    to: docs/plans/finance/tax-filing-checklist.md
+    category: data→docs
+    reason: 申告期限・TBD 項目はチェックリスト MD と一致
+    action: review
+  - from: cursor/data/finances/chart-of-accounts.yaml
+    to: cursor/data/finances/monthly
+    category: data→data
+    reason: 月次 category_mapping 変更時は月次 YAML 科目整合を確認
+    action: review
+  - from: cursor/data/plans/investment-plan.yaml
+    to: cursor/data/finances/fixed-assets.yaml
+    category: data→data
+    reason: CAPEX 確定時は fixed-assets に資産登録
+    action: update
 
   # --- 契約 → CSV ---
   - from: contracts-all
@@ -506,3 +591,30 @@ edges:
     category: data→docs
     reason: オーナー名変更時は契約台帳の owner 列を確認
     action: review
+
+  # --- 社長オペ（Secretary） ---
+  - from: cursor/data/company.yaml
+    to: cursor/data/executive/one-on-ones.yaml
+    category: data→executive
+    reason: 役員・代表者変更時は 1-on-1 レジストリの person/role を確認
+    action: review
+  - from: cursor/data/hr/employees.yaml
+    to: cursor/data/executive/one-on-ones.yaml
+    category: data→executive
+    reason: 従業員雇用時は 1-on-1 エントリと EMP ID を紐付け
+    action: review
+  - from: cursor/data/executive/calendar.yaml
+    to: docs/executive
+    category: executive→docs
+    reason: 週次ブリーフ・1-on-1 準備 MD はカレンダーと整合させる
+    action: regenerate
+  - from: cursor/data/executive/tasks.yaml
+    to: docs/executive
+    category: executive→docs
+    reason: 週次ブリーフのタスク表は tasks.yaml と一致させる
+    action: regenerate
+  - from: cursor/data/executive/one-on-ones.yaml
+    to: docs/executive
+    category: executive→docs
+    reason: 1-on-1 準備 MD はレジストリの action_items と同期
+    action: regenerate

@@ -1,0 +1,38 @@
+# 1-on-1 レジストリ（社内役員・顧問・主要パートナー）
+# employees.yaml に未登録の役員は company.yaml directors を参照
+
+one_on_ones:
+  - id: OOO-001
+    person: 宮城万貴子
+    role: 代表取締役（共同代表）
+    cadence: monthly
+    last_date: "2026-05-08"
+    next_date: "2026-06-12"
+    topics:
+      - 亀沢開業準備の進捗
+      - 番町賃貸・本社兼用の運用
+      - 今四半期の優先事項
+    action_items:
+      - text: 開業準備ミーティングの議題ドラフトを共有
+        owner: Secretary Agent
+        due: "2026-06-10"
+        status: open
+      - text: 前回の宿題（保険 draft 確認）のフォロー
+        owner: 段燕燕
+        due: null
+        status: open
+
+  - id: OOO-002
+    person: 顧問税理士（TBD）
+    role: 税務顧問
+    cadence: quarterly
+    last_date: null
+    next_date: null
+    topics:
+      - FY2026 中間申告スケジュール
+      - 固定資産・減価償却の確認
+    action_items: []
+
+notes: |
+  従業員雇用開始時は hr/employees.yaml と ID を紐付ける。
+  財務数値の詳細は Finance Agent 経由。1-on-1 では要約のみ扱う。

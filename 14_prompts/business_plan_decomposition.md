@@ -111,6 +111,7 @@ docs/operations/rental/                   # 番町運用 SOP（新設）
 | 亀沢運用・許認可 | [11_agents/hospitality_agent.md](../11_agents/hospitality_agent.md) |
 | 規程・個情 | [11_agents/compliance_agent.md](../11_agents/compliance_agent.md) |
 | inbox 証憑 | [11_agents/operations_agent.md](../11_agents/operations_agent.md) |
+| 社長スケジュール・1-on-1・社外調整 | [11_agents/secretary_agent.md](../11_agents/secretary_agent.md) |
 | 経営判断・優先度 | [11_agents/executive_steward_agent.md](../11_agents/executive_steward_agent.md) |
 
 ---

@@ -5,7 +5,7 @@
 
 **版:** 2026-06-08 · **対象:** 株式会社MAL（段100%株主 · 番町賃貸 PROP-001 · 亀沢旅館 PROP-002）
 
-Steward OS は **経営支援 OS**（DMS ではない）。正データは `cursor/data/`、人が読む書類は `docs/`。7 Agent が役割分担し、Executive Steward が **Agent 要約** 経由で統合判断を支援する。
+Steward OS は **経営支援 OS**（DMS ではない）。正データは `cursor/data/`、人が読む書類は `docs/`。**8 Agent**（7 部門 + 秘書）が役割分担し、Executive Steward が **Agent 要約** 経由で統合判断を支援する。社長のスケジュール・社外窓口は **Secretary Agent** が担う（[secretary_steward_boundary.md](../13_rules/secretary_steward_boundary.md)）。
 
 ---
 
@@ -90,7 +90,7 @@ Steward/
 
 ---
 
-## Step 2: 7 エージェント設計（実パスマッピング）
+## Step 2: 8 エージェント設計（実パスマッピング）
 
 ### 1. Executive Steward Agent（経営統括）
 
@@ -100,10 +100,25 @@ Steward/
 |------|--------|
 | 読取 | `docs/reports/`（特に `dashboard/`）· `docs/plans/` · `cursor/data/plans/` · `docs/corporate/executive-remaining-tasks.md` |
 | CLI | `steward dashboard` · `steward status` · `steward alerts` · `steward forecast` · `steward scenario` |
-| 委譲 | 下記 6 専門エージェントへ照会・タスク割当 |
+| 委譲 | Secretary + 下記 6 部門 Agent へ照会・タスク割当 |
 | 禁止 | 正データ YAML の直接編集 · 機密 secrets · 契約本文の改定 |
 
 **プロンプト:** [`11_agents/executive_steward_agent.md`](../11_agents/executive_steward_agent.md)
+
+---
+
+### 1b. Secretary Agent（秘書 · 社長オペ・社外窓口）
+
+**役割:** 社長のタスク・予定・会食・1-on-1・社外連絡の一次受け。財務・契約は扱わず Executive へルート。
+
+| 区分 | 実パス |
+|------|--------|
+| Primary | `cursor/data/executive/` · `docs/executive/` |
+| Read（制限） | `docs/reports/dashboard/` 要約行 · `executive-remaining-tasks.md` |
+| 禁止 | `cursor/data/finances/**` · `contracts/**` · secrets |
+| 委譲 | 経営・財務・契約 → Executive Steward |
+
+**プロンプト:** [`11_agents/secretary_agent.md`](../11_agents/secretary_agent.md)
 
 ---
 
@@ -208,7 +223,8 @@ Steward/
 
 | Agent | Primary（読書） | Read Only | Write | Forbidden | Notes |
 |-------|------------------|-----------|-------|-----------|-------|
-| **Executive Steward** | `docs/reports/` · `docs/plans/` · `cursor/data/plans/` | 全 specialist 領域の要約・CLI 出力 | `docs/reports/` への手動追記のみ | 全 YAML 正データ編集 · secrets · `src/` | 判断は人間。エージェントは提案のみ |
+| **Executive Steward** | `docs/reports/` · `docs/plans/` · `cursor/data/plans/` | 全 specialist 領域の要約・CLI 出力 | `docs/reports/` への手動追記のみ | 全 YAML 正データ編集 · secrets · `src/` · `executive/` | 判断は人間。エージェントは提案のみ |
+| **Secretary** | `cursor/data/executive/` · `docs/executive/` | dashboard 要約行 · `executive-remaining-tasks.md` | 上 Primary + `docs/executive/` | finances · contracts · secrets · 財務要約の開示 | 社外窓口。経営数値は Executive へルート |
 | **Finance** | `cursor/data/finances/` · `cursor/data/plans/` | `properties/` · `contracts/` · `docs/corporate/tax/` | 上 Primary + `docs/plans/` · `docs/data/*.csv` · `docs/operations/accounting/` | secrets · `document-io.yaml` · 規程本文 | 編集後 `validate` + `sync all` 必須 |
 | **Contract** | `cursor/data/contracts/` · `docs/contracts/` | `properties/` · `loans.yaml` · `docs/inbox/` | CTR YAML/MD · `契約管理表.csv` | secrets · 財務月次 · ISO 規程 | draft→executed は Operations と連携 |
 | **Property Rental** | `PROP-001.yaml` | 番町関連 CTR · 財務 · 決算 MD | `PROP-001.yaml` | PROP-002 · lodging/ · secrets | 本社兼用按分は Finance/Compliance と協議 |
@@ -271,8 +287,8 @@ Steward/
 | 1 | `13_rules/steward_os_principles.md` | 4 層原則 |
 | 2 | `13_rules/agent_skill_architecture.md` | アーキテクチャ正本 |
 | 3 | `13_rules/folder_access_policy.md` | アクセスポリシー |
-| 4 | `11_agents/*.md` | Agent 定義 ×7 |
-| 5 | `12_skills/*.md` | Skill 定義 ×8 |
+| 4 | `11_agents/*.md` | Agent 定義 ×8 |
+| 5 | `12_skills/*.md` | Skill 定義 ×13 |
 | 6 | `docs/agent_architecture.md` | 現行パス索引（本書） |
 | 7 | `docs/reports/agent-summaries/` | Steward 読取面 |
 

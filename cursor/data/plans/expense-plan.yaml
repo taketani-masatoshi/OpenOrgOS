@@ -14,7 +14,7 @@ years:
         name: 減価償却費（番町ハイム）
         property_id: PROP-001
         amount: 353191
-        notes: 1,660万÷47年
+        notes: 1,660万÷47年。fixed-assets ASSET-001 と一致
       - id: officer_compensation
         name: 役員報酬
         amount: 0

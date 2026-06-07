@@ -4,6 +4,8 @@ export const edgeCategory = z.enum([
   "data→data",
   "data→docs",
   "data→reports",
+  "data→executive",
+  "executive→docs",
   "contract→loan",
   "property→plan",
   "parameter→plan",
