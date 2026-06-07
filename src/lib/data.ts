@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { validateModules } from "./modules.js";
 import {
   companySchema,
   propertySchema,
@@ -54,6 +55,7 @@ import {
   readYamlFile,
   listYamlFiles,
   STAKEHOLDERS_YAML,
+  toLogicalPath,
 } from "./utils.js";
 
 export interface StewardData {
@@ -375,19 +377,19 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("data/company.yaml", () => loadCompany());
 
   for (const f of listYamlFiles(join(DATA_DIR, "properties"))) {
-    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
+    tryLoad(toLogicalPath(f), () =>
       readYamlFile(f, propertySchema)
     );
   }
 
   for (const f of listYamlFiles(join(DATA_DIR, "contracts"))) {
-    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
+    tryLoad(toLogicalPath(f), () =>
       readYamlFile(f, contractSchema)
     );
   }
 
   for (const f of listYamlFiles(join(DATA_DIR, "finance", "monthly"))) {
-    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
+    tryLoad(toLogicalPath(f), () =>
       readYamlFile(f, monthlyFinanceSchema)
     );
   }
@@ -409,7 +411,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   for (const f of listYamlFiles(join(DATA_DIR, "plans")).filter((p) =>
     p.includes("yojitsu-")
   )) {
-    tryLoad(f.replace(DATA_DIR + "/", "data/"), () =>
+    tryLoad(toLogicalPath(f), () =>
       readYamlFile(f, yojitsuPlanSchema)
     );
   }
@@ -426,6 +428,11 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("data/classification-registry.yaml", () =>
     readYamlFile(join(DATA_DIR, "classification-registry.yaml"), classificationRegistrySchema)
   );
+
+  for (const issue of validateModules()) {
+    errors.push({ file: issue.file, message: issue.message });
+  }
+
   tryLoad("data/document-io.yaml", () =>
     readYamlFile(join(DATA_DIR, "document-io.yaml"), documentIoSchema)
   );

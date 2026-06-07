@@ -1,0 +1,28 @@
+# 業務モジュール — 株式会社MAL
+# 正本: tenants/mal/modules.yaml · Agent ルーティング · validate 参照
+
+modules:
+  - id: rental
+    enabled: true
+    agent: rental
+    property_ids: [PROP-001]
+    docs_root: docs/properties/PROP-001-bancho/operations/
+    summary_dir: agent-summaries/prop-001/
+    notes: 番町ハイム312 賃貸 · 本社兼用
+
+  - id: hospitality
+    enabled: true
+    agent: hospitality
+    property_ids: [PROP-002]
+    docs_root: docs/properties/PROP-002-kamezawa/operations/
+    operations_public: data/operations/kamezawa-public.yaml
+    operations_secrets: data/operations/kamezawa-secrets.yaml
+    summary_dir: agent-summaries/prop-002/
+    notes: 亀沢旅館 · 1棟貸し
+
+  # 将来例（無効）
+  - id: professional_services
+    enabled: false
+    agent: professional_services
+    data_root: data/services/
+    notes: 受託開発 · コンサル等（Phase C で Agent 追加）

@@ -1,7 +1,12 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { stakeholdersFileSchema, type Stakeholder } from "../../schemas/executive.js";
-import { ROOT_DIR, STAKEHOLDERS_DOCS_DIR, STAKEHOLDERS_YAML, readYamlFile } from "./utils.js";
+import {
+  STAKEHOLDERS_DOCS_DIR,
+  STAKEHOLDERS_YAML,
+  readYamlFile,
+  resolveTenantPath,
+} from "./utils.js";
 
 export function stakeholdersFileExists(): boolean {
   return existsSync(STAKEHOLDERS_YAML);
@@ -29,7 +34,7 @@ export function getStakeholderById(id: string): Stakeholder | undefined {
 
 export function resolveStakeholderProfilePath(stakeholder: Stakeholder): string | null {
   if (!stakeholder.profile_md) return null;
-  const abs = join(ROOT_DIR, stakeholder.profile_md);
+  const abs = resolveTenantPath(stakeholder.profile_md);
   return existsSync(abs) ? abs : null;
 }
 

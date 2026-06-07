@@ -10,7 +10,7 @@
 - `data/finance/fixed-assets.yaml`（減価償却整理仕訳）
 - `data/finance/chart-of-accounts.yaml`（科目マッピング）
 - 領収書・経費データ（`docs/finance/accounting/`）
-- 物件 Agent からの収益前提（番町賃料 · 亀沢宿泊）
+- 物件 Agent からの収益前提（賃貸 · 宿泊モジュール）
 
 ## 出力
 

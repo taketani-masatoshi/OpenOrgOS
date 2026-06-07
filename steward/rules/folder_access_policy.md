@@ -2,7 +2,7 @@
 
 **版:** 2026-06-08 · **正本:** 本ファイル（`steward/rules/`） · **上位:** [agent_skill_architecture.md](agent_skill_architecture.md) · **構成:** [repository_layout.md](repository_layout.md)
 
-本書は 8 エージェント間の **読取・編集・禁止** を運用レベルで定義する。Steward OS は経営支援 OS であり、エージェントは **提案と下書き** を行い、**最終判断は人間（段100%株主）** が行う。
+本書は 8 エージェント間の **読取・編集・禁止** を運用レベルで定義する。業務モジュールの ON/OFF は **`tenants/{id}/modules.yaml`** が正本（例示物件名は架空のサンプル商事）。
 
 **4 層:** Steward → Agent → Skill → Data。Steward は [agent-summaries](../docs/reports/agent-summaries/) の要約を原則読取する。
 
@@ -12,12 +12,15 @@
 
 ### 1.1 ゾーン分離
 
+**テナント:** 下表の `data/` · `docs/` は **論理パス**（物理: `tenants/{id}/data/` · `tenants/{id}/docs/`）。切替: `STEWARD_TENANT` または `--tenant`。正本: [repository_layout.md](repository_layout.md) · [tenants/00-README.md](../../tenants/00-README.md)
+
 | ゾーン | パス | ルール |
 |--------|------|--------|
 | 正データ | `data/**/*.yaml` | 編集後 **必ず** `npm run validate` |
 | 人向け | `docs/**` | MD/CSV/PDF。YAML から `steward sync all` で CSV 再生成 |
+| テナントルール | `tenants/{id}/rules/` | 会社固有コンテキスト（`company_context.md`） |
 | 試行 | `scratch/` | gitignore。確定後 Primary へ移動 |
-| プログラム | `src/` `schemas/` | エージェントは原則触らない（開発タスク除く） |
+| プログラム | `src/` `schemas/` `steward/` | エージェントは原則触らない（開発タスク除く） |
 
 ### 1.2 正データ優先
 
@@ -28,7 +31,7 @@
 
 | レベル | 例 | Git | AI 自動 | AI @file |
 |--------|-----|-----|---------|----------|
-| L0 公開 | `kamezawa-public.yaml` | 追跡 | ○ | ○ |
+| L0 公開 | `*-public.yaml`（施設公開情報） | 追跡 | ○ | ○ |
 | L1 社内 | 財務 YAML · 契約 MD | 追跡 | ○ | ○ |
 | L2 機密 | `bank-accounts.yaml` · secrets | **gitignore** | △ on_demand | ○ |
 | L2 vault | `**/records/**` 個情 | **gitignore** | **× blocked** | 明示のみ |
@@ -48,8 +51,8 @@
 | 2 | Secretary | 秘書 | §2.8 |
 | 3 | Finance | 財務・計画 | §2.2 |
 | 4 | Contract | 契約管理 | §2.3 |
-| 5 | Property Rental | 番町賃貸 | §2.4 |
-| 6 | Hospitality | 亀沢旅館 | §2.5 |
+| 5 | Property Rental | 賃貸モジュール | §2.4 |
+| 6 | Hospitality | 宿泊モジュール | §2.5 |
 | 7 | Compliance | コンプライアンス | §2.6 |
 | 8 | Operations | 業務運用 | §2.7 |
 
@@ -125,19 +128,17 @@ npm run steward -- alerts
 
 ---
 
-### 2.4 Property Rental Agent（PROP-001 · 番町）
+### 2.4 Property Rental Agent（賃貸モジュール · 例: PROP-001）
 
-**目的:** 番町ハイム312 賃貸・本社兼用・火災保険（CTR-013）。
+**目的:** `modules.yaml` で `agent: rental` · `enabled: true` の物件運用（例: みなとビル501）。
 
 | パス | 権限 |
 |------|------|
-| `data/properties/PROP-001.yaml` | R/W |
-| `docs/contracts/CTR-001/` `CTR-003/` `CTR-013/` | R/W（契約 Agent と協調） |
+| モジュール対象 `data/properties/PROP-*.yaml` | R/W |
+| 賃貸関連 `docs/contracts/CTR-*/**` | R/W（Contract と協調） |
 | `data/finance/**` | R |
-| `docs/properties/PROP-001-bancho/operations/**` | R/W |
-| `docs/finance/accounting/invoices/bancho/**` | R |
-| `docs/plans/fy2026-pl.md` 等 | R |
-| `PROP-002` · `PROP-002-kamezawa/` · secrets | **禁止** |
+| `modules.yaml` の `docs_root/**` | R/W |
+| **他モジュール**の物件 · operations · secrets | **禁止** |
 
 **協調必須事項:**
 - CTR-003 本社兼用按分 → Finance + Compliance
@@ -145,21 +146,22 @@ npm run steward -- alerts
 
 ---
 
-### 2.5 Hospitality Agent（PROP-002 · 亀沢）
+### 2.5 Hospitality Agent（宿泊モジュール · 例: PROP-002）
 
-**目的:** 旅館開業・日次運用・ゲスト向けテンプレ・運用機密。
+**目的:** `modules.yaml` で `agent: hospitality` · `enabled: true` の施設運用（例: 緑丘ゲストハウス）。
 
 | パス | 権限 |
 |------|------|
-| `data/properties/PROP-002.yaml` | R/W |
-| `data/operations/kamezawa-public.yaml` | R/W |
-| `data/operations/kamezawa-secrets.yaml` | **R/W（唯一）** |
-| `docs/properties/PROP-002-kamezawa/operations/**` | R/W |
+| モジュール対象 `data/properties/PROP-*.yaml` | R/W |
+| `operations_public` · `operations_secrets`（modules.yaml） | R/W（secrets は **唯一**） |
+| `docs_root/**` | R/W |
+| `docs/contracts/CTR-*/**`（宿泊関連） | R |
+| **他モジュール**の物件 · 契約 | **禁止** |
 | `data/plans/property-revenue.yaml` | R |
 | secrets → docs/ 転記 | **禁止** |
 
 **secrets 運用:**
-- リポジトリには `kamezawa-secrets.yaml.example` のみコミット
+- リポジトリには `{facility}-secrets.yaml.example` のみコミット
 - 実値は `cp example secrets` → ローカル/gitignore
 - チャットで鍵番号・Wi-Fi パスワードを出力しない（「secrets ファイルを更新済」と報告のみ）
 
@@ -177,7 +179,7 @@ npm run steward -- alerts
 | `docs/compliance/privacy/**` | R/W |
 | `docs/company/tax/**` | R |
 | `data/company.yaml` | R |
-| `kamezawa-secrets.yaml` | R（存在・項目充足監査のみ。値の複製禁止） |
+| `*-secrets.yaml` | R（存在・項目充足監査のみ。値の複製禁止） |
 | 財務 YAML · 契約 fee | **禁止** |
 
 **エスカレーション（→ Executive）:**
@@ -198,7 +200,7 @@ npm run steward -- alerts
 | `data/document-io.yaml` | R/W |
 | `docs/company/hr/**` | R/W |
 | `docs/finance/accounting/templates/**` | R/W（Finance と協調） |
-| `docs/properties/PROP-002-kamezawa/operations/**` | R（実運用記録は Hospitality が主） |
+| 宿泊モジュール `docs/properties/*/operations/**` | R（実運用記録は Hospitality が主） |
 | `data/finance/**` `contracts/**` `properties/**` | **禁止** |
 | secrets | **禁止** |
 
@@ -230,7 +232,7 @@ npm run steward -- io status
 | `data/hr/employees.yaml` | R |
 | `data/company.yaml` | R |
 | `data/finance/**` `contracts/**` `plans/**` | **禁止** |
-| `kamezawa-secrets.yaml` · `**/records/**` | **禁止** |
+| `*-secrets.yaml` · `**/records/**` | **禁止** |
 
 **境界:** [secretary_steward_boundary.md](secretary_steward_boundary.md)
 
@@ -301,8 +303,8 @@ npm run steward -- io status
 | 状況 | 照会先 |
 |------|--------|
 | 契約費用を予実へ反映 | Finance ← Contract |
-| 番町保険加入状況 | Contract ← Property Rental |
-| 亀沢清掃単価変更 | Contract ← Hospitality |
+| 賃貸モジュール保険加入状況 | Contract ← Property Rental |
+| 宿泊モジュール清掃単価変更 | Contract ← Hospitality |
 | 減価償却・固定資産 | Finance ← Property Rental |
 | 旅館約款と規程の整合 | Compliance ← Hospitality |
 | 許可証スキャンの归档先 | Operations ← Compliance |

@@ -40,6 +40,23 @@ events:
     notes: |
       業務委託（Steward OS 保守）の顔合わせ・打合せ。STK-001 / EXT-004。
       店舗・予約は Secretary が下書き調整。経費は事後 接待交際費として精算（区分 A 想定）。
+      同日午後 MTG（EVT-004）の後。
+    external_visible: false
+
+  - id: EVT-004
+    title: Steward OS 保守キックオフ MTG — 竹谷昌敏（KLab · CTR-001）
+    type: meeting
+    start: "2026-06-07T14:00"
+    end: "2026-06-07T15:30"
+    location: オンライン（Meet / Zoom · URL TBD）
+    attendees:
+      - 段燕燕
+      - 竹谷昌敏
+    status: tentative
+    notes: |
+      CTR-001 業務委託のキックオフ。SOW 確認 · 連絡手段 · 初回保守範囲 · リポジトリアクセス手順。
+      STK-001 / EXT-004。招待下書き: docs/executive/correspondence-drafts/2026-06-07-taketani-mtg-invite.md
+      19:00 会食（EVT-003）と同日。報酬・契約条件の変更は Contract へ委譲。
     external_visible: false
 
 notes: |

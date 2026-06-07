@@ -1,0 +1,27 @@
+# 業務モジュール — 雛形（架空: 株式会社サンプル商事）
+# enabled: true のモジュールのみ Agent が有効化される
+
+modules:
+  - id: rental
+    enabled: true
+    agent: rental
+    property_ids: [PROP-001]
+    docs_root: docs/properties/PROP-001-minato/operations/
+    summary_dir: agent-summaries/rental/
+    notes: みなとビル501 賃貸（例）
+
+  - id: hospitality
+    enabled: false
+    agent: hospitality
+    property_ids: [PROP-002]
+    docs_root: docs/properties/PROP-002-midori/operations/
+    operations_public: data/operations/midori-public.yaml
+    operations_secrets: data/operations/midori-secrets.yaml
+    summary_dir: agent-summaries/hospitality/
+    notes: 緑丘ゲストハウス（例 · 未開業なら enabled: false）
+
+  - id: professional_services
+    enabled: false
+    agent: professional_services
+    data_root: data/services/
+    notes: 非物件型モジュール（Phase C）

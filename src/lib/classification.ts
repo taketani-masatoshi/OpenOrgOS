@@ -128,7 +128,14 @@ export function validateGitignoreCoverage(): ClassificationIssue[] {
   for (const resource of registry.resources) {
     if (resource.git !== "ignore") continue;
     const bare = resource.path.split("*")[0]?.replace(/\/$/, "") ?? resource.path;
-    if (!gitignoreContent.includes(bare) && !gitignoreContent.includes(resource.path)) {
+    const tenantGlob = `tenants/*/${resource.path}`;
+    const tenantBare = `tenants/*/${bare}`;
+    if (
+      !gitignoreContent.includes(bare) &&
+      !gitignoreContent.includes(resource.path) &&
+      !gitignoreContent.includes(tenantGlob) &&
+      !gitignoreContent.includes(tenantBare)
+    ) {
       issues.push({
         severity: "warning",
         message: `L2 リソース ${resource.id} (${resource.path}) が .gitignore に未登録の可能性`,

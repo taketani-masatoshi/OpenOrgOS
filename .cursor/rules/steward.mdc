@@ -1,7 +1,7 @@
 ---
 description: Steward OS data conventions and operational rules
 globs:
-  - data/**/*
+  - tenants/**/*
   - scratch/**/*
   - steward/**/*
   - docs/**/*
@@ -15,8 +15,10 @@ alwaysApply: false
 Steward OS は **1 体 AI が全情報を読む設計にしない**。
 
 ```
-Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（data/ · docs/）
+Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（tenants/{id}/data/ · docs/）
 ```
+
+**テナント:** 会社データは `tenants/{id}/`（既定: `mal`）。論理パス `data/` · `docs/` はアクティブテナント内。
 
 - **Steward:** `docs/reports/agent-summaries/` + dashboard のみ原則読取
 - **Agent:** 部門フォルダを読み Skill を呼ぶ
@@ -29,8 +31,8 @@ Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（d
 
 | ゾーン | パス | 中身 |
 |--------|------|------|
-| **人** | `docs/` | MD・CSV・**PDF**（読む・印刷・提出） |
-| **データ** | `data/` `scratch/` | **YAML 正データ** + 試行（scratch は gitignore） |
+| **データ** | `tenants/{id}/data/` `scratch/` | **YAML 正データ** + 試行 |
+| **人** | `tenants/{id}/docs/` · ルート `docs/` | 会社書類 MD · フレームワーク仕様 |
 | **定義** | `steward/` | Agent · Skill · Rules · Orchestrators |
 | **プログラム** | `src/` `schemas/` `assets/` | TS・フォント等 |
 

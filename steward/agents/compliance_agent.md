@@ -48,7 +48,7 @@
 | `docs/company/**`（議事録・株主） | Read |
 | `docs/company/tax/**` | Read |
 | `data/company.yaml` | Read |
-| `data/operations/kamezawa-secrets.yaml` | Read（監査のみ · 非複製） |
+| `data/operations/*-secrets.yaml` | Read（監査のみ · 非複製） |
 
 ---
 
@@ -109,7 +109,7 @@
 | 旅館約款・ハウスルール整合 | **Hospitality Agent** |
 | 税務申告・按分の数値 | **Finance Agent** |
 | 許可証スキャンの归档 | **Operations Agent** |
-| 番町固定資産・本社兼用 | **Property Rental Agent** |
+| 賃貸モジュールの固定資産・兼用按分 | **Property Rental Agent** |
 | 総会・届出の経営判断 | **Executive Steward Agent** |
 
 ---

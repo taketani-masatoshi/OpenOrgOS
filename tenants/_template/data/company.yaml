@@ -1,0 +1,11 @@
+name: "株式会社サンプル"
+corporate_number: "REPLACE_ME"
+established_date: "YYYY-MM-DD"
+representative: "代表者名"
+directors:
+  - name: "代表者名"
+    role: "代表取締役"
+address: "〒000-0000 都道府県市区町村"
+fiscal_year_end_month: 12
+business_description: |
+  事業概要を記載。

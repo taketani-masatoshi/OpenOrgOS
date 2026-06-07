@@ -9,7 +9,7 @@ import {
   validateAll,
 } from "../src/lib/data.js";
 import { stakeholdersFileExists } from "../src/lib/stakeholders.js";
-import { readYamlFile, ROOT_DIR } from "../src/lib/utils.js";
+import { readYamlFile, DATA_DIR } from "../src/lib/utils.js";
 import { stakeholdersFileSchema } from "../schemas/executive.js";
 
 describe("executive data (Secretary Agent SoT)", () => {
@@ -70,7 +70,7 @@ describe("executive data (Secretary Agent SoT)", () => {
 
   it("validates stakeholders.yaml.example in repo", () => {
     const example = readYamlFile(
-      join(ROOT_DIR, "data/executive/stakeholders.yaml.example"),
+      join(DATA_DIR, "executive/stakeholders.yaml.example"),
       stakeholdersFileSchema
     );
     expect(example.stakeholders.some((s) => s.id === "STK-001")).toBe(true);

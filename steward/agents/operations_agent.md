@@ -74,10 +74,10 @@ npm run steward -- io outbox list
 ## 禁止事項
 
 - `data/finance/**` · `contracts/**` · `properties/**` の編集
-- `kamezawa-secrets.yaml`
+- `*-secrets.yaml`（宿泊モジュール機密）
 - 契約条項・規程本文の改定
 - inbox 書類の **内容判断**（路由のみ · 専門エージェントが内容確認）
-- `docs/properties/PROP-002-kamezawa/operations/` の実運用記録の主編集（Hospitality 主導）
+- 宿泊モジュール `docs/properties/*/operations/` の実運用記録の主編集（Hospitality 主導）
 
 ---
 

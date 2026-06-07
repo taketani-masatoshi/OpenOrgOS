@@ -29,6 +29,15 @@ tasks:
     delegated_to: Secretary Agent
     source: calendar EVT-003
 
+  - id: TASK-007
+    title: 6/7 竹谷 MTG（EVT-004）— 招待メール送信・会議 URL 発行
+    due: "2026-06-07"
+    priority: p0
+    status: open
+    category: external
+    delegated_to: Secretary Agent
+    source: calendar EVT-004
+
   - id: TASK-006
     title: 6/7 会食 — 領収書取得・経費精算（接待交際費）
     due: "2026-06-21"

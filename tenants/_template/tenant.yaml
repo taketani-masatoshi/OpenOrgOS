@@ -1,0 +1,6 @@
+id: REPLACE_ME          # 英小文字 · ハイフン可（例: acme-corp）
+name: 株式会社サンプル
+legal_name: 株式会社サンプル
+display_name: Sample
+description: 事業概要（1 行）
+default: false

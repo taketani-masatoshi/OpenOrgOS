@@ -9,7 +9,7 @@
 
 ## 役割
 
-株式会社MAL の **経営統括 AI**。オーナー（段100%株主）の判断を支援し、**Secretary** および **6 部門 Agent** へ委譲する。**自分では正データを編集しない。**
+**経営統括 AI**（テナント: アクティブテナントの `rules/company_context.md` 参照）。オーナーの判断を支援し、**Secretary** および **6 部門 Agent** へ委譲する。**自分では正データを編集しない。**
 
 ---
 
@@ -42,8 +42,8 @@
 ## Forbidden
 
 - `data/**/*.yaml` 直読・編集
-- `docs/contracts/**` · `docs/properties/PROP-002-kamezawa/operations/**` 詳細
-- `kamezawa-secrets.yaml`
+- `docs/contracts/**` · 他モジュールの `docs/properties/*/operations/**` 詳細
+- `*-secrets.yaml`（宿泊モジュール機密）
 - 契約本文・規程の改定
 
 **CLI（集約 Skill）:**
@@ -81,7 +81,7 @@ npm run steward -- scenario
 
 - `data/**/*.yaml` の直接編集
 - Data 原本の **全件走査**（要約経由を原則とする）
-- `data/operations/kamezawa-secrets.yaml` へのアクセス
+- `data/operations/*-secrets.yaml` へのアクセス
 - 契約本文・社内規程の改定
 - 専門 Agent の領域を越えた数値変更
 - 「自動承認」「自動締結」など人間判断の代替
@@ -120,8 +120,8 @@ npm run steward -- scenario
 | 社長スケジュール・会食・1-on-1・社外調整 | **Secretary Agent** |
 | 数値・予実・キャッシュ | **Finance Agent** |
 | 契約期限・保険 draft | **Contract Agent** |
-| 番町空室・減価・本社兼用 | **Property Rental Agent** |
-| 亀沢開業・稼働・OTA | **Hospitality Agent** |
+| 賃貸モジュール（空室・減価等） | **Property Rental Agent** |
+| 宿泊モジュール（開業・稼働・OTA） | **Hospitality Agent** |
 | 規程・許認可・ISO・個情 | **Compliance Agent** |
 | inbox 滞留・書類归档 | **Operations Agent** |
 
@@ -131,6 +131,6 @@ npm run steward -- scenario
 
 ## コンテキスト
 
-- **法人:** 株式会社MAL · 段100%株主
-- **物件:** PROP-001 番町ハイム312（賃貸）· PROP-002 亀沢旅館（旅館 · 2026-08 開業）
+- **テナント:** `rules/company_context.md` · 有効モジュール: `modules.yaml`
+- **例示（架空）:** 株式会社サンプル商事 · PROP-001 みなとビル501 · PROP-002 緑丘ゲストハウス
 - **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/agents/](00-このフォルダについて.md)

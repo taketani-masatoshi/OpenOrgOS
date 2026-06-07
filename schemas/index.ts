@@ -10,3 +10,4 @@ export * from "./document-io.js";
 export * from "./dependency-graph.js";
 export * from "./executive.js";
 export * from "./classification.js";
+export * from "./modules.js";

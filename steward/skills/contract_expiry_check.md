@@ -17,7 +17,7 @@
 
 ## 使用 Agent
 
-Contract Agent · Property Rental Agent（番町 CTR）
+Property Rental Agent（賃貸モジュール CTR）
 
 ## 保存先
 

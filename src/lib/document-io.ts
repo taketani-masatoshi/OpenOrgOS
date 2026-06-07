@@ -18,13 +18,18 @@ import {
   DATA_DIR,
   DOCS_INBOX_DIR,
   DOCS_OUTBOX_DIR,
-  ROOT_DIR,
   currentDate,
   readYamlFile,
   writeYamlFile,
+  resolveTenantPath,
+  toLogicalPath,
 } from "./utils.js";
 
 const IO_PATH = join(DATA_DIR, "document-io.yaml");
+
+function resolveIoPath(relOrAbs: string): string {
+  return isAbsolute(relOrAbs) ? relOrAbs : resolveTenantPath(relOrAbs);
+}
 
 export const INBOX_CATEGORIES: InboxCategory[] = [
   "contracts",
@@ -94,7 +99,7 @@ export interface AddInboxOptions {
 }
 
 export function addInboxItem(opts: AddInboxOptions): InboxItem {
-  const src = isAbsolute(opts.from) ? opts.from : join(ROOT_DIR, opts.from);
+  const src = resolveIoPath(opts.from);
   if (!existsSync(src)) {
     throw new Error(`Source file not found: ${opts.from}`);
   }
@@ -106,7 +111,7 @@ export function addInboxItem(opts: AddInboxOptions): InboxItem {
   const destPath = join(destDir, destName);
   copyFileSync(src, destPath);
 
-  const relPath = destPath.replace(ROOT_DIR + "/", "");
+  const relPath = toLogicalPath(destPath);
   const data = loadDocumentIo();
   const item: InboxItem = {
     id: nextId("INB", data.inbox_items),
@@ -137,23 +142,23 @@ export function completeInboxItem(opts: CompleteInboxOptions): InboxItem {
   const item = data.inbox_items.find((i) => i.id === opts.id);
   if (!item) throw new Error(`Inbox item not found: ${opts.id}`);
 
-  const srcAbs = join(ROOT_DIR, item.path);
+  const srcAbs = resolveIoPath(item.path);
   if (!existsSync(srcAbs)) {
     throw new Error(`Inbox file missing: ${item.path}`);
   }
 
   if (opts.archiveTo) {
-    const archiveAbs = join(ROOT_DIR, opts.archiveTo);
+    const archiveAbs = resolveIoPath(opts.archiveTo);
     mkdirSync(join(archiveAbs, ".."), { recursive: true });
     copyFileSync(srcAbs, archiveAbs);
-    item.archive_path = archiveAbs.replace(ROOT_DIR + "/", "");
+    item.archive_path = toLogicalPath(archiveAbs);
   }
 
   if (opts.outputTo) {
-    const outAbs = join(ROOT_DIR, opts.outputTo);
+    const outAbs = resolveIoPath(opts.outputTo);
     mkdirSync(join(outAbs, ".."), { recursive: true });
     copyFileSync(srcAbs, outAbs);
-    item.output_path = outAbs.replace(ROOT_DIR + "/", "");
+    item.output_path = toLogicalPath(outAbs);
     registerOutboxItem({
       from: item.output_path,
       category: inferOutboxCategory(opts.outputTo),
@@ -198,7 +203,7 @@ export interface RegisterOutboxOptions {
 }
 
 export function registerOutboxItem(opts: RegisterOutboxOptions): OutboxItem {
-  const srcAbs = join(ROOT_DIR, opts.from);
+  const srcAbs = resolveIoPath(opts.from);
   if (!existsSync(srcAbs)) {
     throw new Error(`File not found: ${opts.from}`);
   }
@@ -215,7 +220,7 @@ export function registerOutboxItem(opts: RegisterOutboxOptions): OutboxItem {
     renameSync(srcAbs, destAbs);
   }
 
-  const relPath = destAbs.replace(ROOT_DIR + "/", "");
+  const relPath = toLogicalPath(destAbs);
   const data = loadDocumentIo();
 
   const existing = data.outbox_items.find((o) => o.path === relPath);
@@ -268,7 +273,7 @@ export function scanOutboxFiles(): string[] {
       if (entry.isDirectory()) {
         walk(full);
       } else if (/\.pdf$/i.test(entry.name)) {
-        files.push(full.replace(ROOT_DIR + "/", ""));
+        files.push(toLogicalPath(full));
       }
     }
   };
@@ -326,7 +331,7 @@ export function registerGeneratedPdf(
   sourceRef: string,
   subdir?: string
 ): OutboxItem {
-  const rel = absPath.replace(ROOT_DIR + "/", "");
+  const rel = toLogicalPath(absPath);
   return registerOutboxItem({
     from: rel,
     category,

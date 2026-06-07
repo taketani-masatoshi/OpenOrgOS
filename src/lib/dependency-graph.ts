@@ -1,5 +1,5 @@
 import { existsSync, statSync } from "node:fs";
-import { join, relative, resolve, basename } from "node:path";
+import { join, basename } from "node:path";
 import {
   dependencyGraphSchema,
   type DependencyGraph,
@@ -8,7 +8,7 @@ import {
   type EdgeCategory,
   type DependencyAction,
 } from "../../schemas/dependency-graph.js";
-import { ROOT_DIR, DATA_DIR, readYamlFile } from "./utils.js";
+import { DATA_DIR, readYamlFile, resolveTenantPath, toLogicalPath } from "./utils.js";
 
 export const DEPENDENCY_GRAPH_PATH = join(DATA_DIR, "dependency-graph.yaml");
 
@@ -36,8 +36,8 @@ export function loadDependencyGraph(): DependencyGraph {
 }
 
 function normalizePath(input: string): string {
-  const abs = resolve(ROOT_DIR, input);
-  return relative(ROOT_DIR, abs).replace(/\\/g, "/");
+  const abs = resolveTenantPath(input);
+  return toLogicalPath(abs);
 }
 
 function nodePaths(node: DependencyNode): string[] {
@@ -198,8 +198,8 @@ export function findStaleDependencies(graph: DependencyGraph): StaleItem[] {
     const targetPath = resolveFilePath(edge.to, nodeIndex);
     if (!sourcePath || !targetPath) continue;
 
-    const sourceAbs = join(ROOT_DIR, sourcePath);
-    const targetAbs = join(ROOT_DIR, targetPath);
+    const sourceAbs = resolveTenantPath(sourcePath);
+    const targetAbs = resolveTenantPath(targetPath);
     if (!existsSync(sourceAbs) || !existsSync(targetAbs)) continue;
 
     const sourceMtime = statSync(sourceAbs).mtime;

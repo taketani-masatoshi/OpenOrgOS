@@ -6,11 +6,11 @@
 
 ## 設計推奨（採用モデル）
 
-株式会社MAL の AI 支援は **2 つの窓口** に分離する。
+テナント（例: 株式会社サンプル商事）の AI 支援は **2 つの窓口** に分離する。
 
 | 役割 | エージェント | 対象 | 主な読取面 |
 |------|-------------|------|-----------|
-| **社内経営 OS** | Executive Steward | オーナー（段）の経営判断 | dashboard · agent-summaries · executive-remaining-tasks |
+| **社内経営 OS** | Executive Steward | オーナーの経営判断 | dashboard · agent-summaries · executive-remaining-tasks |
 | **社長の行動・時間・対外窓口** | Secretary Agent | スケジュール・タスク・1-on-1・社外調整 | `data/executive/` · `docs/executive/` |
 
 **結論:** Steward は **社内向け**、社外の日程調整・連絡の一次受けは **Secretary が主インターフェース**。財務・契約・コンプライアンスの質問は Secretary が受け、**Executive Steward または専門 Agent へルーティング**する。
@@ -84,7 +84,7 @@ flowchart LR
 |------|------|
 | `data/finance/**` | 財務機密 |
 | `data/contracts/**` | 契約条件・金額 |
-| `data/operations/kamezawa-secrets.yaml` | L2 機密 |
+| `data/operations/*-secrets.yaml` | L2 機密 |
 | `docs/contracts/**` 本文 | 契約詳細 |
 | ゲスト PII · `**/records/**` | 個情 |
 
@@ -132,7 +132,7 @@ flowchart LR
 | 社外「売上を教えて」 | Secretary | 丁寧に断り、人間または Steward へ誘導 |
 | 社長「ランウェイは？」 | Steward | `steward dashboard` · Finance 要約を読む |
 | 保険 draft 期限 P0 | Steward | Contract 要約 → executive-remaining-tasks と統合 |
-| 亀沢清掃日程変更 | Secretary + Hospitality | Secretary が日程、Hospitality が運用詳細 |
+| 宿泊モジュール清掃日程変更 | Secretary + Hospitality | Secretary が日程、Hospitality が運用詳細 |
 
 ---
 

@@ -1,6 +1,8 @@
-# data/ — 正データカタログ
+# data/ — 正データカタログ（テナント: mal）
 
 **Source of Truth:** このディレクトリの YAML のみ。人向け表は `docs/exports/*.csv`（`steward sync all` で生成）。
+
+**物理パス:** `tenants/mal/data/` · **論理パス:** CLI · Agent では `data/` と表記。
 
 ---
 

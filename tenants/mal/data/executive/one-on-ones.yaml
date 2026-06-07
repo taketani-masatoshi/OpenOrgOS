@@ -22,6 +22,26 @@ one_on_ones:
         due: null
         status: open
 
+  - id: OOO-003
+    person: 竹谷昌敏
+    role: Steward OS 保守 · KLab（CTR-001）
+    cadence: ad_hoc
+    last_date: null
+    next_date: "2026-06-07"
+    topics:
+      - CTR-001 SOW · 連絡手段（Chat / メール）
+      - リポジトリアクセス · 初回保守範囲
+      - 初動 5 営業日 SLA の運用確認
+    action_items:
+      - text: MTG 招待メール送信（下書き承認後）
+        owner: 段燕燕
+        due: "2026-06-07"
+        status: open
+      - text: 会議 URL を calendar EVT-004 に追記
+        owner: Secretary Agent
+        due: "2026-06-07"
+        status: open
+
   - id: OOO-002
     person: 顧問税理士（TBD）
     role: 税務顧問

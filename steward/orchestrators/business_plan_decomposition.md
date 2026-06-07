@@ -16,11 +16,13 @@
 
 ## 対象事業
 
-| 事業 | 物件 | 正データ |
+`modules.yaml` で有効なモジュールを正とする。例示（架空 · サンプル商事）:
+
+| モジュール | 物件 / 法人 | 正データ |
 |------|------|---------|
-| 不動産賃貸 | 番町ハイム312 | `data/properties/PROP-001.yaml` |
-| 旅館業（1 棟貸し） | 亀沢旅館 | `data/properties/PROP-002.yaml` |
-| 混在法人 | 株式会社 MAL | `data/company.yaml` |
+| rental | みなとビル501 | `data/properties/PROP-001.yaml` |
+| hospitality | 緑丘ゲストハウス | `data/properties/PROP-002.yaml` |
+| （全社） | 株式会社サンプル商事 | `data/company.yaml` |
 
 ---
 
@@ -45,8 +47,8 @@ steward/rules/
 
 ```
 docs/plans/                               # 全社・財務・モジュール計画 MD
-docs/plans/properties/PROP-001/           # 番町物件計画
-docs/plans/properties/PROP-002/           # 亀沢物件計画
+docs/plans/properties/PROP-001/           # 賃貸物件計画（例）
+docs/plans/properties/PROP-002/           # 宿泊物件計画（例）
 docs/plans/rental/                        # 賃貸モジュール
 docs/plans/hospitality/                   # 旅館モジュール
 docs/plans/contracts/                     # 契約計画
@@ -54,7 +56,7 @@ docs/plans/outsourcing/                   # 外部委託
 docs/plans/compliance/                    # 法令許認可
 docs/plans/reports/                       # レポート仕様
 docs/plans/variance/                      # 差異分析
-docs/properties/PROP-001-bancho/operations/   # 番町運用 SOP
+docs/properties/PROP-001-minato/operations/   # 賃貸運用 SOP（例）
 ```
 
 **正データ YAML:** 数値変更は **Finance Agent に委譲**。本エージェントは MD 起稿と `dependency-graph.yaml` へのノード追加提案のみ。
@@ -63,7 +65,7 @@ docs/properties/PROP-001-bancho/operations/   # 番町運用 SOP
 
 ## 禁止
 
-- `data/operations/kamezawa-secrets.yaml` の編集・転記
+- `data/operations/*-secrets.yaml` の編集・転記
 - 契約本文（executed）の改定 — Contract Agent へ
 - 未確認数値の invent — TBD 明示
 
@@ -107,8 +109,8 @@ docs/properties/PROP-001-bancho/operations/   # 番町運用 SOP
 |--------|--------|
 | 数値・YAML 更新 | [steward/agents/finance_agent.md](../steward/agents/finance_agent.md) |
 | CTR draft/executed | [steward/agents/contract_agent.md](../steward/agents/contract_agent.md) |
-| 番町運用詳細 | [steward/agents/property_rental_agent.md](../steward/agents/property_rental_agent.md) |
-| 亀沢運用・許認可 | [steward/agents/hospitality_agent.md](../steward/agents/hospitality_agent.md) |
+| 賃貸モジュール運用 | [steward/modules/rental/agent.md](../modules/rental/agent.md) |
+| 宿泊モジュール運用 | [steward/modules/hospitality/agent.md](../modules/hospitality/agent.md) |
 | 規程・個情 | [steward/agents/compliance_agent.md](../steward/agents/compliance_agent.md) |
 | inbox 証憑 | [steward/agents/operations_agent.md](../steward/agents/operations_agent.md) |
 | 社長スケジュール・1-on-1・社外調整 | [steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md) |

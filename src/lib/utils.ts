@@ -1,14 +1,23 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import type { ZodSchema } from "zod";
 import { sanitizeForTrackedOutput } from "./sanitize-output.js";
+import {
+  ROOT_DIR,
+  FRAMEWORK_DOCS_DIR,
+  getTenantDir,
+  resolveTenantPath,
+  toLogicalPath,
+} from "./tenant.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-export const ROOT_DIR = join(__dirname, "..", "..");
-export const DOCS_DIR = join(ROOT_DIR, "docs");
-export const DATA_DIR = join(ROOT_DIR, "data");
+export { ROOT_DIR, FRAMEWORK_DOCS_DIR, resolveTenantPath, toLogicalPath, getTenantDir };
+export { getTenantId, setTenantId, loadTenantConfig, listTenantIds } from "./tenant.js";
+
+/** Active tenant human/docs zone (company-specific). */
+export const DOCS_DIR = join(getTenantDir(), "docs");
+/** Active tenant source-of-truth YAML. */
+export const DATA_DIR = join(getTenantDir(), "data");
 export const SCRATCH_DIR = join(ROOT_DIR, "scratch");
 
 /** 利害関係者レジストリ（gitignore — GitHub に push しない） */

@@ -8,7 +8,7 @@
 
 - `data/plans/investment-plan.yaml`
 - 工事見積 · 物件 CAPEX 計画 MD
-- `data/properties/PROP-002.yaml`（亀沢上置き等）
+- モジュール対象 `data/properties/PROP-*.yaml`（宿泊 CAPEX 等）
 
 ## 出力
 
@@ -18,7 +18,7 @@
 
 ## 使用 Agent
 
-Finance Agent · Hospitality Agent（亀沢 CAPEX 入力）
+Finance Agent · Hospitality Agent（宿泊モジュール CAPEX 入力）
 
 ## 保存先
 

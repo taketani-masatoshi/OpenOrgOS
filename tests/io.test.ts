@@ -12,7 +12,9 @@ import {
 } from "../src/lib/document-io.js";
 import { documentIoSchema } from "../schemas/document-io.js";
 
-const IO_PATH = join(process.cwd(), "data/document-io.yaml");
+import { DATA_DIR, DOCS_OUTBOX_DIR, resolveTenantPath } from "../src/lib/utils.js";
+
+const IO_PATH = join(DATA_DIR, "document-io.yaml");
 const IO_BACKUP = join(tmpdir(), "steward-document-io-backup.yaml");
 
 describe("document-io", () => {
@@ -57,7 +59,7 @@ describe("document-io", () => {
     createdPaths.push(item.path);
     expect(item.id).toMatch(/^INB-\d{3}$/);
     expect(item.status).toBe("pending");
-    expect(existsSync(join(process.cwd(), item.path))).toBe(true);
+    expect(existsSync(resolveTenantPath(item.path))).toBe(true);
     expect(loadDocumentIo().inbox_items.some((i) => i.id === item.id)).toBe(true);
   });
 
@@ -77,12 +79,12 @@ describe("document-io", () => {
     });
     expect(done.status).toBe("done");
     expect(done.archive_path).toBe(archiveRel);
-    expect(existsSync(join(process.cwd(), archiveRel))).toBe(true);
+    expect(existsSync(resolveTenantPath(archiveRel))).toBe(true);
   });
 
   it("registers outbox item without duplicate", () => {
     const outRel = `docs/io/outbox/lodging/test-out-${Date.now()}.pdf`;
-    const outAbs = join(process.cwd(), outRel);
+    const outAbs = resolveTenantPath(outRel);
     mkdirSync(join(outAbs, ".."), { recursive: true });
     writeFileSync(outAbs, "%PDF out");
     createdPaths.push(outRel);

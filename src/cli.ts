@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "./bootstrap-tenant.js";
 import { Command } from "commander";
 import { runValidate } from "./commands/validate.js";
 import {
@@ -47,13 +48,15 @@ import {
 } from "./commands/io.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "./commands/deps.js";
 import { runInvoiceBancho } from "./commands/invoice.js";
+import { runModulesList } from "./commands/modules.js";
 
 const program = new Command();
 
 program
   .name("steward")
   .description("Steward OS - Property Business Edition CLI")
-  .version("0.2.0");
+  .version("0.2.0")
+  .option("--tenant <id>", "Tenant instance (env: STEWARD_TENANT; default from tenant.yaml)");
 
 program
   .command("validate")
@@ -67,6 +70,15 @@ program
       deps: opts.deps,
     })
   );
+
+const modulesCmd = program
+  .command("modules")
+  .description("Business module catalog and tenant bindings");
+
+modulesCmd
+  .command("list")
+  .description("List steward/modules catalog vs tenant modules.yaml")
+  .action(runModulesList);
 
 program
   .command("status")

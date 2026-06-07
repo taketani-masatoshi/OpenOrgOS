@@ -15,7 +15,7 @@ import {
 import { facilitySecretsSchema } from "../../schemas/operations.js";
 import { classificationRegistrySchema } from "../../schemas/classification.js";
 import { runClassificationChecks } from "./classification.js";
-import { DATA_DIR, readYamlFile, ROOT_DIR, CLASSIFICATION_REGISTRY_YAML } from "./utils.js";
+import { DATA_DIR, readYamlFile, CLASSIFICATION_REGISTRY_YAML, resolveTenantPath } from "./utils.js";
 
 export interface IntegrityIssue {
   level: "error" | "warning";
@@ -25,7 +25,7 @@ export interface IntegrityIssue {
 
 function docExists(relPath: string | undefined): boolean {
   if (!relPath) return false;
-  return existsSync(join(ROOT_DIR, relPath));
+  return existsSync(resolveTenantPath(relPath));
 }
 
 export function runIntegrityChecks(): IntegrityIssue[] {

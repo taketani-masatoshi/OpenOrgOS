@@ -80,7 +80,7 @@ npm run steward -- sync all   # CSV 利用時
 
 ## 禁止事項
 
-- `data/operations/kamezawa-secrets.yaml`
+- `data/operations/*-secrets.yaml`
 - `data/document-io.yaml`（Operations 領域）
 - `docs/company/regulations/` の規程本文改定
 - `data/contracts/` の契約条項改定（参照のみ）
@@ -120,8 +120,8 @@ npm run steward -- sync all   # CSV 利用時
 | 状況 | 照会先 |
 |------|--------|
 | 契約に紐づく固定費・更新料 | **Contract Agent** |
-| 番町賃料・空室・減価前提 | **Property Rental Agent** |
-| 亀沢 ADR・稼働率・運営費 | **Hospitality Agent** |
+| 賃貸モジュールの賃料・空室・減価前提 | **Property Rental Agent** |
+| 宿泊モジュールの ADR・稼働率・運営費 | **Hospitality Agent** |
 | 税務申告期限・按分の合规 | **Compliance Agent** |
 | 経営優先度（投資 vs 返済） | **Executive Steward Agent** |
 

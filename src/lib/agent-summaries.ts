@@ -15,6 +15,7 @@ import {
   formatPercent,
   writeMarkdownReport,
 } from "./utils.js";
+import { loadEnabledModules, type TenantModule } from "./modules.js";
 import { join } from "node:path";
 import { readdirSync, existsSync } from "node:fs";
 
@@ -44,6 +45,27 @@ function reportsRelLink(absPath: string): string {
 
 function relDocsPath(absPath: string): string {
   return absPath.replace(`${DOCS_DIR}/`, "docs/");
+}
+
+function formatModuleSummaryContent(
+  mod: TenantModule,
+  data: StewardData,
+  report: DashboardReport
+): string {
+  switch (mod.agent) {
+    case "rental":
+      return formatRentalModuleSummary(data, report, mod.property_ids);
+    case "hospitality":
+      return formatHospitalityModuleSummary(data, report, mod.property_ids);
+    case "professional_services":
+      return formatProfessionalServicesSummary(report, mod);
+    default:
+      return `# Module ${mod.id} 要約 ${report.reportDate}\n`;
+  }
+}
+
+function moduleSummarySubdir(mod: TenantModule): string {
+  return mod.summary_dir ?? `agent-summaries/${mod.id}`;
 }
 
 function draftContracts(contracts: Contract[]): Contract[] {
@@ -141,23 +163,27 @@ export function formatContractSummary(data: StewardData, report: DashboardReport
   ].join("\n");
 }
 
-export function formatProp001Summary(data: StewardData, report: DashboardReport): string {
-  const p = data.properties.find((x) => x.id === "PROP-001");
+export function formatRentalModuleSummary(
+  data: StewardData,
+  report: DashboardReport,
+  propertyIds: string[] = ["PROP-001"]
+): string {
+  const propId = propertyIds[0] ?? "PROP-001";
+  const p = data.properties.find((x) => x.id === propId);
   if (!p || p.type !== "rental") {
-    return `# Property Rental 要約 ${report.reportDate}\n\nPROP-001 未找到。\n`;
+    return `# Rental Module 要約 ${report.reportDate}\n\n${propId} 未找到または type≠rental。\n`;
   }
   const rental = p.rental!;
   const annualRent = rental.monthly_rent * 12 * (1 - rental.vacancy_rate);
   const noiApprox = annualRent - (p.depreciation?.annual_amount ?? 0);
 
   return [
-    `# Property Rental Agent 要約 ${report.reportDate}`,
+    `# Rental Module Agent 要約 ${report.reportDate}`,
     "",
     "## 結論",
     "",
-    `- **${p.name}** 月額賃料 ${formatCurrency(rental.monthly_rent)} · 空室率 ${formatPercent(rental.vacancy_rate)}`,
+    `- **${p.name}**（${propId}）月額賃料 ${formatCurrency(rental.monthly_rent)} · 空室率 ${formatPercent(rental.vacancy_rate)}`,
     `- 年間賃料収入（概算）${formatCurrency(annualRent)} · NOI 近似 ${formatCurrency(noiApprox)}（減価除く前）`,
-    `- 関連 draft: CTR-011（賃貸借）· CTR-013（火災保険）`,
     "",
     "## KPI / 状態",
     "",
@@ -165,31 +191,30 @@ export function formatProp001Summary(data: StewardData, report: DashboardReport)
     "|------|---:|",
     `| 取得価格 | ${formatCurrency(p.acquisition_price)} |`,
     `| 減価償却/年 | ${formatCurrency(p.depreciation?.annual_amount ?? 0)} |`,
-    `| 管理費 | ${formatCurrency(rental.management_fee)}/月 |`,
-    "",
-    "## リスク・P0",
-    "",
-    "- CTR-013 火災保険 draft",
-    "- CTR-011 借主 TBD",
-    "",
-    "## 推奨アクション",
-    "",
-    "1. 保険加入（Contract 連携）",
-    "2. 賃貸借 executed 化",
     "",
     "## 根拠",
     "",
-    "- `data/properties/PROP-001.yaml`",
-    "- Skill: [steward/skills/noi_analysis.md](../../../steward/skills/noi_analysis.md)",
+    `- data/properties/${propId}.yaml`,
+    "- Skill: [steward/modules/rental/skills/noi_analysis.md](../../../steward/modules/rental/skills/noi_analysis.md)",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,
   ].join("\n");
 }
 
-export function formatProp002Summary(data: StewardData, report: DashboardReport): string {
-  const p = data.properties.find((x) => x.id === "PROP-002");
+/** @deprecated use formatRentalModuleSummary */
+export function formatProp001Summary(data: StewardData, report: DashboardReport): string {
+  return formatRentalModuleSummary(data, report, ["PROP-001"]);
+}
+
+export function formatHospitalityModuleSummary(
+  data: StewardData,
+  report: DashboardReport,
+  propertyIds: string[] = ["PROP-002"]
+): string {
+  const propId = propertyIds[0] ?? "PROP-002";
+  const p = data.properties.find((x) => x.id === propId);
   if (!p || p.type !== "hotel") {
-    return `# Hospitality Agent 要約 ${report.reportDate}\n\nPROP-002 未找到。\n`;
+    return `# Hospitality Module 要約 ${report.reportDate}\n\n${propId} 未找到または type≠hotel。\n`;
   }
   const h = p.hotel!;
   const oc = p.operating_costs;
@@ -198,38 +223,44 @@ export function formatProp002Summary(data: StewardData, report: DashboardReport)
   const revpar = h.adr * h.occupancy_rate;
 
   return [
-    `# Hospitality Agent 要約 ${report.reportDate}`,
+    `# Hospitality Module Agent 要約 ${report.reportDate}`,
     "",
     "## 結論",
     "",
-    `- **${p.name}** 開業予定 ${h.opened_date ?? "TBD"}`,
+    `- **${p.name}**（${propId}）開業予定 ${h.opened_date ?? "TBD"}`,
     `- 計画 ADR ${formatCurrency(h.adr)} · 稼働率 ${formatPercent(h.occupancy_rate)} · RevPAR ${formatCurrency(revpar)}`,
-    `- 月次売上見込（稼働のみ）${formatCurrency(monthlyGross)}`,
-    `- 関連 draft: CTR-012（清掃）· CTR-014（火災保険）`,
-    "",
-    "## KPI / 状態",
-    "",
-    "| 項目 | 値 |",
-    "|------|---:|",
-    `| 清掃/回 | ${formatCurrency(oc?.cleaning_per_stay ?? 0)} |`,
-    `| OTA 手数料 | ${formatPercent(oc?.ota_commission_rate ?? 0)} |`,
-    `| 光熱費/月 | ${formatCurrency(oc?.utilities_monthly ?? 0)} |`,
-    "",
-    "## リスク・P0",
-    "",
-    "- CTR-014 旅館火災保険 draft",
-    "- CTR-012 清掃委託 draft",
-    "- 開業前 secrets · 許認可確認",
-    "",
-    "## 推奨アクション",
-    "",
-    "1. pre-opening-checklist 残項目",
-    "2. OTA 掲載 · 清掃 CTR executed",
+    `- 月次売上見込 ${formatCurrency(monthlyGross)}`,
     "",
     "## 根拠",
     "",
-    "- `data/properties/PROP-002.yaml`",
-    "- Skill: [steward/skills/revpar_analysis.md](../../../steward/skills/revpar_analysis.md)",
+    `- data/properties/${propId}.yaml`,
+    "- Skill: [steward/modules/hospitality/skills/revpar_analysis.md](../../../steward/modules/hospitality/skills/revpar_analysis.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+/** @deprecated use formatHospitalityModuleSummary */
+export function formatProp002Summary(data: StewardData, report: DashboardReport): string {
+  return formatHospitalityModuleSummary(data, report, ["PROP-002"]);
+}
+
+export function formatProfessionalServicesSummary(
+  report: DashboardReport,
+  mod: TenantModule
+): string {
+  return [
+    `# Professional Services Module 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- モジュール **${mod.id}** · data_root: \`${mod.data_root ?? "—"}\``,
+    "- 案件 YAML は Phase C 雛形（`data/services/` 等を整備）",
+    "",
+    "## 推奨アクション",
+    "",
+    "1. `data_root` 配下に案件 SoT を整備",
+    "2. 業務委託 CTR と STK 索引を Contract Agent と整合",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,
   ].join("\n");
@@ -394,16 +425,35 @@ export function writeAgentSummaries(
     filename,
     formatContractSummary(d, r)
   );
-  const prop001Path = writeMarkdownReport(
-    `${AGENT_SUMMARIES_SUBDIR}/prop-001`,
-    filename,
-    formatProp001Summary(d, r)
-  );
-  const prop002Path = writeMarkdownReport(
-    `${AGENT_SUMMARIES_SUBDIR}/prop-002`,
-    filename,
-    formatProp002Summary(d, r)
-  );
+
+  let prop001Path = "";
+  let prop002Path = "";
+  const enabledModules = loadEnabledModules();
+  for (const mod of enabledModules) {
+    const path = writeMarkdownReport(
+      moduleSummarySubdir(mod),
+      filename,
+      formatModuleSummaryContent(mod, d, r)
+    );
+    if (mod.agent === "rental") prop001Path = path;
+    if (mod.agent === "hospitality") prop002Path = path;
+  }
+
+  if (!prop001Path) {
+    prop001Path = writeMarkdownReport(
+      `${AGENT_SUMMARIES_SUBDIR}/prop-001`,
+      filename,
+      formatRentalModuleSummary(d, r, ["PROP-001"])
+    );
+  }
+  if (!prop002Path) {
+    prop002Path = writeMarkdownReport(
+      `${AGENT_SUMMARIES_SUBDIR}/prop-002`,
+      filename,
+      formatHospitalityModuleSummary(d, r, ["PROP-002"])
+    );
+  }
+
   const compliancePath = writeMarkdownReport(
     `${AGENT_SUMMARIES_SUBDIR}/compliance`,
     filename,
@@ -487,8 +537,8 @@ export function formatAgentSummariesSection(paths: AgentSummaryPaths): string {
   const rows = [
     ["Finance", paths.finance],
     ["Contract", paths.contract],
-    ["Property Rental", paths.prop001],
-    ["Hospitality", paths.prop002],
+    ["Rental Module", paths.prop001],
+    ["Hospitality Module", paths.prop002],
     ["Compliance", paths.compliance],
     ["Operations", paths.operations],
     ["Executive", paths.executive],
@@ -508,7 +558,7 @@ export function formatAgentSummariesSection(paths: AgentSummaryPaths): string {
     "",
     "**Secretary（秘書）** は Steward 読取面外。予定・1-on-1 → [docs/executive/](../../executive/00-このフォルダについて.md) · `@steward/agents/secretary_agent.md`",
     "",
-    "Agent 一覧（8）: [steward/agents/00-このフォルダについて.md](../../steward/agents/00-このフォルダについて.md)",
+    "Agent 一覧: [steward/agents/](../agents/00-このフォルダについて.md) · 業務モジュール: [steward/modules/](../modules/00-このフォルダについて.md)",
     "",
     "索引: [agent-summaries/00-このフォルダについて.md](../agent-summaries/00-このフォルダについて.md)",
     "",

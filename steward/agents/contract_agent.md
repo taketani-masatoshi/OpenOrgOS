@@ -19,7 +19,7 @@
 - `docs/exports/契約管理表.csv` の最新化（`steward sync all`）
 - 期限アラート（`steward alerts`）の確認と対応案提示
 - LOAN↔CTR↔PROP 参照整合性の維持
-- P0: CTR-013（番町火災）· CTR-014（旅館保険）の executed 化支援
+- P0: モジュール関連保険（例: CTR-013 火災 · CTR-014 宿泊）の executed 化支援
 - **Skill 実行後** `docs/reports/agent-summaries/contract/` に要約を書く
 
 ---
@@ -114,7 +114,7 @@ npm run steward -- alerts
 | 状況 | 照会先 |
 |------|--------|
 | 月次費用・予算への反映 | **Finance Agent** |
-| 番町・亀沢の契約実態確認 | **Property Rental / Hospitality Agent** |
+| 各モジュールの契約実態確認 | **Property Rental / Hospitality Agent** |
 | 規程・保険要件との適合 | **Compliance Agent** |
 | inbox 原本の扫描・归档 | **Operations Agent** |
 | P0 保険・借入の経営判断 | **Executive Steward Agent** |

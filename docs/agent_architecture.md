@@ -1,12 +1,29 @@
 # Steward OS — マルチエージェントアーキテクチャ
 
 > **正本（4 層）:** [steward/rules/agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/agents/](../steward/agents/) · [steward/skills/](../steward/skills/)  
-> **物理パス正本:** [steward/rules/repository_layout.md](../steward/rules/repository_layout.md)（2026-06 再編 · レガシースタブ削除済み）  
+> **物理パス正本:** [steward/rules/repository_layout.md](../steward/rules/repository_layout.md)（2026-06 テナント分離）  
 > 本書は **現行パス詳細索引** として維持する。
 
-**版:** 2026-06-08 · **対象:** 株式会社MAL（段100%株主 · 番町賃貸 PROP-001 · 亀沢旅館 PROP-002）
+**版:** 2026-06-08 · **対象:** Steward OS フレームワーク（会社データはテナント分離）
 
-Steward OS は **経営支援 OS**（DMS ではない）。正データは `data/`、人が読む書類は `docs/`。**8 Agent**（7 部門 + 秘書）が役割分担し、Executive Steward が **Agent 要約** 経由で統合判断を支援する。社長のスケジュール・社外窓口は **Secretary Agent** が担う（[secretary_steward_boundary.md](../steward/rules/secretary_steward_boundary.md)）。
+Steward OS は **経営支援 OS**（DMS ではない）。**8 Agent**（7 部門 + 秘書）が役割分担し、Executive Steward が **Agent 要約** 経由で統合判断を支援する。会社固有の法人・顧客・委託先・規程は **テナント**（`tenants/{id}/`）に置き、フレームワーク（`steward/` · `src/`）は転用可能。
+
+---
+
+## テナントモデル
+
+| 層 | パス | 内容 |
+|----|------|------|
+| **フレームワーク** | `steward/` · `src/` · `schemas/` · ルート `docs/` | Agent · Skill · CLI · 仕様 |
+| **テナント** | `tenants/{id}/` | 会社インスタンス |
+| └ 正データ | `tenants/{id}/data/` | YAML SoT（論理: `data/`） |
+| └ 人向け | `tenants/{id}/docs/` | MD · CSV · PDF（論理: `docs/`） |
+| └ 会社ルール | `tenants/{id}/rules/` | `company_context.md` — 法人 · 事業 · STK 索引 |
+
+**切替:** `export STEWARD_TENANT=mal` または `npm run steward -- --tenant mal …`  
+**雛形:** [tenants/_template/](../tenants/_template/) · **実例:** [tenants/mal/](../tenants/mal/)
+
+Agent 定義（`steward/agents/`）は汎用。物件 ID（PROP-xxx）・固有名はテナントの `company_context.md` を正とする。
 
 ---
 
@@ -16,22 +33,24 @@ Steward OS は **経営支援 OS**（DMS ではない）。正データは `data
 
 ```
 Steward/
-├── docs/                      【人】MD・CSV・PDF（読む・印刷・提出）
-├── data/                      【正データ】YAML のみ
+├── steward/                   【汎用】Agent · Skill · Rules
+├── src/                       CLI + テナント解決
+├── schemas/                   Zod 検証
+├── docs/                      【汎用】spec · agent_architecture
+├── tenants/
+│   ├── _template/             新規テナント雛形
+│   └── mal/                   株式会社MAL インスタンス
+│       ├── tenant.yaml
+│       ├── data/              正データ（論理 data/）
+│       ├── docs/              人向け（論理 docs/）
+│       └── rules/company_context.md
 ├── scratch/                   試行（gitignore）
-├── steward/
-│   ├── agents/                Agent 定義
-│   ├── skills/                Skill 定義
-│   ├── rules/                 原則・アクセスポリシー
-│   └── orchestrators/         横断 Orchestrator
-├── src/                       CLI
-├── schemas/                   Zod 検証定義
-├── assets/                    PDF フォント等
+├── assets/
 ├── tests/
 └── package.json
 ```
 
-### `docs/` — 人向けゾーン
+### `tenants/{id}/docs/` — 人向けゾーン（論理 `docs/`）
 
 | パス | 内容 | 主な利用者 |
 |------|------|-----------|
@@ -52,7 +71,7 @@ Steward/
 | `docs/io/outbox/` | 出力トレイ（印刷・提出 PDF） | Operations · Executive |
 | `docs/reports/` | CLI 自動生成 MD（`dashboard/` 日次） | Executive |
 
-### `data/` — 正データ（Source of Truth）
+### `tenants/{id}/data/` — 正データ（論理 `data/` · Source of Truth）
 
 | パス | スキーマ | 説明 |
 |------|---------|------|

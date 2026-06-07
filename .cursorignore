@@ -5,12 +5,12 @@
 # 試行・一時
 scratch/**
 
-# 受信/出力トレイ（スキャン・PDF）
-docs/io/inbox/**
-docs/io/outbox/**
+# 受信/出力トレイ（スキャン・PDF）— テナント docs
+tenants/*/docs/io/inbox/**
+tenants/*/docs/io/outbox/**
 
 # 大容量生成物
-docs/**/*.pdf
+tenants/*/docs/**/*.pdf
 node_modules/**
 dist/**
 

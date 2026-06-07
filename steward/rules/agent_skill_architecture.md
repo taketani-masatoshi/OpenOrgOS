@@ -66,8 +66,8 @@ flowchart TB
 | 02 | properties | `data/properties/` |
 | 03 | finance | `data/finance/` · `docs/company/tax/` |
 | 04 | contracts | `data/contracts/` · `docs/contracts/` |
-| 05 | rental | `docs/plans/rental/`（新設予定） |
-| 06 | hospitality | `docs/properties/PROP-002-kamezawa/operations/` |
+| 05 | rental | `modules.yaml` · `docs/plans/rental/` |
+| 06 | hospitality | `modules.yaml` · `docs/properties/*/operations/` |
 | 07 | compliance | `docs/company/regulations/` · `docs/compliance/iso/` |
 | 08 | operations | `docs/io/inbox/` · `docs/io/outbox/` |
 | 09 | reports | `docs/reports/` |
@@ -91,8 +91,8 @@ flowchart TB
 | Secretary | 秘書 | [steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md) | `docs/executive/` |
 | Finance | 財務・計画 | [steward/agents/finance_agent.md](../steward/agents/finance_agent.md) | `agent-summaries/finance/` |
 | Contract | 契約管理 | [steward/agents/contract_agent.md](../steward/agents/contract_agent.md) | `agent-summaries/contract/` |
-| Property Rental | 番町賃貸 | [steward/agents/property_rental_agent.md](../steward/agents/property_rental_agent.md) | `agent-summaries/prop-001/` |
-| Hospitality | 亀沢旅館 | [steward/agents/hospitality_agent.md](../steward/agents/hospitality_agent.md) | `agent-summaries/prop-002/` |
+| Property Rental | 賃貸モジュール | [steward/modules/rental/agent.md](../modules/rental/agent.md) | `modules.yaml` → summary_dir |
+| Hospitality | 宿泊モジュール | [steward/modules/hospitality/agent.md](../modules/hospitality/agent.md) | `modules.yaml` → summary_dir |
 | Compliance | コンプライアンス | [steward/agents/compliance_agent.md](../steward/agents/compliance_agent.md) | `agent-summaries/compliance/` |
 | Operations | 業務運用 | [steward/agents/operations_agent.md](../steward/agents/operations_agent.md) | `agent-summaries/operations/` |
 
@@ -112,8 +112,8 @@ flowchart TB
 | cashflow_forecast | [steward/skills/cashflow_forecast.md](../steward/skills/cashflow_forecast.md) | Finance |
 | contract_register | [steward/skills/contract_register.md](../steward/skills/contract_register.md) | Contract · Operations |
 | contract_expiry_check | [steward/skills/contract_expiry_check.md](../steward/skills/contract_expiry_check.md) | Contract |
-| noi_analysis | [steward/skills/noi_analysis.md](../steward/skills/noi_analysis.md) | Property Rental |
-| revpar_analysis | [steward/skills/revpar_analysis.md](../steward/skills/revpar_analysis.md) | Hospitality |
+| noi_analysis | [steward/modules/rental/skills/noi_analysis.md](../modules/rental/skills/noi_analysis.md) | Rental Module |
+| revpar_analysis | [steward/modules/hospitality/skills/revpar_analysis.md](../modules/hospitality/skills/revpar_analysis.md) | Hospitality Module |
 | capex_planning | [steward/skills/capex_planning.md](../steward/skills/capex_planning.md) | Finance |
 | permit_expiry_check | [steward/skills/permit_expiry_check.md](../steward/skills/permit_expiry_check.md) | Compliance |
 

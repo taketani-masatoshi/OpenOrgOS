@@ -30,7 +30,7 @@ Stewardは蓄積された情報を利用して、
 
 ## データ構造
 
-**正データは `data/` 配下の YAML のみ。** 人向けの読み物は `docs/`（Markdown / CSV）。
+**正データはテナント配下 `data/`（物理: `tenants/{id}/data/`）の YAML のみ。** 人向けの読み物はテナント内 `docs/`。
 
 - **Company**: `data/company.yaml`
 - **Property**: `data/properties/{id}.yaml`

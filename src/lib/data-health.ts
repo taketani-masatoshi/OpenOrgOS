@@ -8,7 +8,7 @@ import {
   validateAll,
 } from "./data.js";
 import { runIntegrityChecks, summarizeIntegrity } from "./integrity.js";
-import { DATA_DIR, ROOT_DIR, STAKEHOLDERS_YAML } from "./utils.js";
+import { DATA_DIR, STAKEHOLDERS_YAML, resolveTenantPath, toLogicalPath } from "./utils.js";
 
 export interface HealthMetric {
   id: string;
@@ -200,7 +200,7 @@ export function formatHealthReport(report: DataHealthReport, markdown = false): 
 export function dataCatalogPaths(): string[] {
   const paths: string[] = [];
   const walk = (rel: string) => {
-    const full = join(ROOT_DIR, rel);
+    const full = resolveTenantPath(rel);
     if (existsSync(full)) paths.push(rel);
   };
   walk("data/company.yaml");

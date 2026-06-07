@@ -1,82 +1,43 @@
-# Steward OS — 株式会社MAL
+# Steward OS
 
-不動産・旅館経営の Steward OS。
+不動産・旅館・サービス事業向け **経営支援 OS フレームワーク**。会社ごとの正データ・書類は **テナント**（`tenants/`）に分離する。
 
-**分け方の原則:** 「誰が読むか」でフォルダを決める。生成元（CLI / Cursor）では決めない。
-
-**フォルダ索引:** サブフォルダの説明は `docs/` → `00-このフォルダについて.md`、`data/`・`scratch/`・`assets/` → `00-README.md`（エクスプローラ先頭）。全体地図: [steward/rules/repository_layout.md](steward/rules/repository_layout.md)
+**物理構成正本:** [steward/rules/repository_layout.md](steward/rules/repository_layout.md)
 
 ---
 
-## 人はどこを見る？
-
-**→ [`docs/`](docs/00-このフォルダについて.md) だけ**
-
-| 見たいもの | 場所 |
-|-----------|------|
-| 決算書・予実 | [`docs/plans/`](docs/plans/) |
-| 法人書類（議事録・PDF） | [`docs/company/`](docs/company/) |
-| 契約書 | [`docs/contracts/`](docs/contracts/) |
-| 計画表（CSV） | [`docs/exports/`](docs/exports/) |
-| 業務台帳・名簿 | [`docs/finance/accounting/`](docs/finance/accounting/) · [`docs/company/hr/`](docs/company/hr/) · [`docs/properties/`](docs/properties/) |
-| 自動レポート（MD） | [`docs/reports/`](docs/reports/) |
-| ISO・現状評価 | [`docs/compliance/iso/`](docs/compliance/iso/) |
-
-PDF（決算報告書・事業報告書）は **`docs/io/outbox/corporate/`** に出力されます。
-
-**書類の受け渡し:** スキャン等 → [`docs/io/inbox/`](docs/io/inbox/) · 印刷用 → [`docs/io/outbox/`](docs/io/outbox/) · `npm run steward -- io status`
-
----
-
-## Cursor はどこを触る？
-
-**→ [`data/`](data/) と [`scratch/`](scratch/) のみ**
-
-| 用途 | 場所 |
-|------|------|
-| 正データ（YAML） | [`data/`](data/) |
-| 中間試行 | [`scratch/`](scratch/) |
-
-`data/` に PDF や生成物は置きません（人向けは `docs/`）。
-
----
-
-## プログラム（通常は触らない）
-
-| パス | 説明 |
-|------|------|
-| `src/` | CLI |
-| `schemas/` | データ検証定義 |
-| `assets/` | PDF 用フォント等 |
-| `package.json` `tsconfig.json` | 開発設定 |
-
----
-
-## フォルダ全体図
+## このリポジトリの構成
 
 ```
 Steward/
-│
-├── docs/                      【人】読む・印刷・提出
-│   ├── plans/                 決算・予実 MD
-│   ├── company/               法人書類 MD
-│   ├── finance/               経理・会計
-│   ├── compliance/            ISO・プライバシー
-│   ├── properties/            物件別運用（PROP-001/002）
-│   ├── io/inbox|outbox/       受信・出力トレイ
-│   ├── contracts/             契約書
-│   ├── exports/               表 CSV
-│   └── reports/               CLI 生成 MD
-│
-├── data/                      【正データ】YAML
-├── scratch/                   試行（gitignore）
-├── steward/                   Agent · Skill · Rules · Orchestrators
-│
-├── assets/                    【プログラム】フォント等
-├── src/                       CLI
-├── schemas/                   検証定義
-└── tests/
+├── steward/          Agent · Skill · Rules（汎用フレームワーク）
+├── src/              CLI · 検証
+├── schemas/          データスキーマ
+├── docs/             フレームワーク文書（spec · agent_architecture）
+├── tenants/          会社別インスタンス
+│   └── mal/          株式会社MAL（既定テナント）
+│       ├── tenant.yaml
+│       ├── data/     正データ YAML
+│       ├── docs/     人向け MD · CSV · PDF 索引
+│       └── rules/    会社固有コンテキスト
+├── scratch/          試行（gitignore）
+└── assets/           PDF フォント等
 ```
+
+---
+
+## テナント（会社）データ
+
+| テナント | 法人 | パス |
+|---------|------|------|
+| **mal**（既定） | 株式会社MAL | [`tenants/mal/`](tenants/mal/) |
+
+```bash
+export STEWARD_TENANT=mal
+npm run steward -- --tenant mal validate
+```
+
+論理パス `data/` · `docs/` は **アクティブテナント内**を指す（CLI · Agent 共通）。
 
 ---
 
@@ -91,16 +52,27 @@ npm run validate
 
 ```bash
 npm run validate
-npm run validate -- --warnings   # 参照警告も表示
-npm run steward -- status        # データ成熟度
-npm run steward -- sync all      # CSV ← YAML
-npm run steward -- contracts list
-npm run steward -- io status       # 受信/出力トレイ
-npm run steward -- io guide        # I/O フロー
-npm run steward -- dashboard       # 経営ダッシュボード（日次）→ docs/reports/dashboard/
-npm run steward -- deps check --file data/...  # 編集後の影響チェック
-npm run steward -- deps graph      # 依存関係マップ
-npm run steward -- report annual --fy FY2026   # → docs/io/outbox/corporate/
+npm run steward -- status
+npm run steward -- sync all
+npm run steward -- dashboard
+npm run steward -- io status
+npm run steward -- classification check
 ```
 
-詳細: [docs/spec-v0.2.md](docs/spec-v0.2.md)
+詳細: [docs/spec-v0.2.md](docs/spec-v0.2.md) · テナント索引: [tenants/00-README.md](tenants/00-README.md)
+
+---
+
+## 人はどこを見る？
+
+**→ アクティブテナントの [`tenants/{id}/docs/`](tenants/mal/docs/00-このフォルダについて.md)**
+
+MAL の場合: 決算 · 契約 · 物件運用 · レポートはすべて `tenants/mal/docs/` 配下。
+
+---
+
+## Cursor / Agent
+
+**8 Agent:** [steward/agents/00-このフォルダについて.md](steward/agents/00-このフォルダについて.md)
+
+会社固有情報: 各テナントの `rules/company_context.md`（例: [tenants/mal/rules/company_context.md](tenants/mal/rules/company_context.md)）
