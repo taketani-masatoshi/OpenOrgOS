@@ -18,6 +18,8 @@ docs/operations/lodging/pdf/*
 cursor/data/operations/kamezawa-secrets.yaml
 docs/operations/**/records/**
 !docs/operations/**/records/00-このフォルダについて.md
+docs/operations/accounting/invoices/**/output/**
+!docs/operations/accounting/invoices/**/output/00-このフォルダについて.md
 docs/operations/accounting/records/receipts/**
 *.log
 .DS_Store

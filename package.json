@@ -14,6 +14,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@independentsoft/msg": "^1.0.2",
     "commander": "^13.1.0",
     "pdfkit": "^0.18.0",
     "yaml": "^2.7.0",

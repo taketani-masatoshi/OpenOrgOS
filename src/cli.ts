@@ -37,6 +37,7 @@ import {
   runIoGuide,
 } from "./commands/io.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "./commands/deps.js";
+import { runInvoiceBancho } from "./commands/invoice.js";
 
 const program = new Command();
 
@@ -354,6 +355,28 @@ program
       file: path,
       markdown: opts.markdown,
       output: opts.output,
+    })
+  );
+
+const invoice = program.command("invoice").description("Tenant invoice generation");
+
+invoice
+  .command("bancho")
+  .description("Generate 番町ハイム312 rent invoices (PDF + email + MSG/EML)")
+  .requiredOption("--from <month>", "Start billing month (YYYY-MM)")
+  .requiredOption("--to <month>", "End billing month (YYYY-MM)")
+  .option("--fy <fiscalYear>", "Fiscal year folder (e.g. FY2026)", "FY2026")
+  .option("--tenant-name <name>", "Tenant name (default: placeholder)")
+  .option("--tenant-email <email>", "Tenant email (default: placeholder)")
+  .option("--bank-account <text>", "Bank transfer details (default: placeholder)")
+  .action((opts) =>
+    runInvoiceBancho({
+      from: opts.from,
+      to: opts.to,
+      fy: opts.fy,
+      tenantName: opts.tenantName,
+      tenantEmail: opts.tenantEmail,
+      bankAccount: opts.bankAccount,
     })
   );
 
