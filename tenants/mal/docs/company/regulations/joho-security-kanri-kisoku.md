@@ -51,9 +51,11 @@
 
 ## 第7条（バックアップ・復旧）
 
-1. 正データ（YAML）・契約・議事録は **Git リポジトリ** を主たるバックアップとする。
-2. OTA・PMS の予約データは **月1回以上** エクスポートし、安全な場所に保管する。
-3. 復旧目標: 経営データ **RPO 24時間**、亀沢予約対応 **RTO 4時間**（[REG-013](jigyo-keizoku-kisoku.md) と整合）。
+1. **Git 追跡対象:** フレームワーク（`src/` · `schemas/` · `steward/`）、テナント骨格（規程 · `modules.yaml` · `*.example.yaml`）、L0 公開情報。
+2. **Git 非追跡（ローカル正本）:** 個人名・予定を含む `data/executive/calendar.yaml` · `tasks.yaml` · `one-on-ones.yaml` · `external-contacts.yaml` · `stakeholders.yaml`、口座・secrets・記入済 records。`.gitignore` で除外する。
+3. 上記ローカル正本の **第2バックアップ** は、代表端末の Time Machine 等（暗号化推奨）とし、**RPO 24時間**（[REG-013](jigyo-keizoku-kisoku.md)）を満たす。
+4. OTA・PMS の予約データは **月1回以上** エクスポートし、安全な場所に保管する。
+5. 復旧目標: 経営データ **RPO 24時間**、亀沢予約対応 **RTO 4時間**（REG-013 と整合）。
 
 ## 第8条（委託先管理）
 

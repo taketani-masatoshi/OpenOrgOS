@@ -1,45 +1,39 @@
-# 利害関係者レジストリ（テンプレート — Git 追跡）
+# 利害関係者レジストリ（テンプレート — Git 追跡 · 氏名は示例のみ）
 # 実データ: cp stakeholders.yaml.example stakeholders.yaml（gitignore）
 
 stakeholders:
   - id: STK-001
-    name: "竹谷昌敏"
-    name_en: "Masatoshi Taketani"
-    org: "KLab"
+    name: "示例太郎"
+    name_en: "Example Taro"
+    org: "示例事業者"
     website: null
     relationship:
       - outsourcing
-      - steward_maintenance
       - contractor
     primary_agent: Contract Agent
     secondary_agents:
       - Secretary Agent
-      - Operations Agent
     contract_ids:
       - CTR-001
     pii_level: L1
-    preferred_channel: "メール / Chat（甲指定）"
-    profile_md: docs/executive/stakeholders/STK-001-taketani.md
+    preferred_channel: メール
+    profile_md: docs/executive/stakeholders/STK-001-taketani.example.md
     contact:
       email: null
       phone: null
       chat: null
     background_summary: |
-      KLab（個人事業主）。MAL とは CTR-001 で Steward OS 保守委託（個人契約）。
-    notes: |
-      連絡先（email/phone/chat）は profile MD または contact に記入。いずれも gitignore 配下。
-      住所は契約書 SoT（CTR-001）— 本ファイルには書かない。
-      サウスウッド（STK-003）とは別人格 — 混同しない。
+      テンプレート — 実プロフィールは gitignore の stakeholders.yaml / profile MD。
+    notes: 連絡先はローカル正本のみ。Git には示例 ID のみ。
 
   - id: STK-003
-    name: "株式会社サウスウッド"
-    name_en: "Southwood Inc."
-    org: "株式会社サウスウッド"
-    website: "https://www.southwood.co.jp"
+    name: "示例株式会社"
+    name_en: "Example Corp."
+    org: "示例株式会社"
+    website: null
     relationship:
       - tenant
       - rental
-      - medical_ai
     primary_agent: Property Rental Agent
     secondary_agents:
       - Secretary Agent
@@ -47,53 +41,35 @@ stakeholders:
     contract_ids:
       - CTR-003
     pii_level: L0
-    preferred_channel: "メール"
-    profile_md: docs/executive/stakeholders/STK-003-southwood.md
+    preferred_channel: メール
+    profile_md: docs/executive/stakeholders/STK-003-southwood.example.md
     contact:
       email: null
       phone: null
       chat: null
-    background_summary: |
-      PROP-001（番町ハイム312）のテナント。超音波診断支援 AI 事業。
-    notes: |
-      請求メール・担当者名は profile MD / contact に記入（gitignore 配下）。
-      公開会社概要: southwood.co.jp/about-us
+    background_summary: テンプレート — 賃貸借・取引先の示例。
+    notes: 実データは gitignore。
 
   - id: STK-004
-    name: "株式会社日本住宅"
-    name_en: "Nihon Jutaku Inc."
-    org: "株式会社日本住宅"
-    website: "https://nihonjyuutaku.co.jp"
+    name: "示例不動産株式会社"
+    name_en: "Example Realty Inc."
+    org: "示例不動産株式会社"
+    website: null
     relationship:
-      - seller
-      - vendor
-      - construction
-    primary_agent: Hospitality Agent
+      - contractor
+      - property_management
+    primary_agent: Contract Agent
     secondary_agents:
-      - Contract Agent
-      - Secretary Agent
+      - Property Rental Agent
     contract_ids:
       - CTR-006
       - CTR-007
-    pii_level: L0
-    preferred_channel: "メール / 電話（営業窓口）"
-    profile_md: docs/executive/stakeholders/STK-004-nihon-jutaku.md
+    pii_level: L1
+    preferred_channel: メール
+    profile_md: docs/executive/stakeholders/STK-004-nihon-jutaku.example.md
     contact:
       email: null
       phone: null
       chat: null
-    background_summary: |
-      錦糸町付近に本社を置く住宅建設・不動産会社。
-      PROP-002（亀沢）の土地売主（CTR-006）および上置き建築請負（CTR-007）。
-    notes: |
-      営業窓口: 佐々木氏（氏名・連絡先は profile MD に記入）。
-      同名の「日本住宅株式会社」（岩手・賃貸住宅）とは別法人 — 混同しない。
-      公開情報ソース: nihonjyuutaku.co.jp/会社概要（2026-06-07 確認）。
-
-notes: |
-  初回セットアップ:
-    cp data/executive/stakeholders.yaml.example data/executive/stakeholders.yaml
-    cp docs/executive/stakeholders/STK-001-taketani.example.md docs/executive/stakeholders/STK-001-taketani.md
-    cp docs/executive/stakeholders/STK-003-southwood.example.md docs/executive/stakeholders/STK-003-southwood.md
-    cp docs/executive/stakeholders/STK-004-nihon-jutaku.example.md docs/executive/stakeholders/STK-004-nihon-jutaku.md
-  編集後: npm run validate
+    background_summary: テンプレート — 管理委託の示例。
+    notes: 実データは gitignore。

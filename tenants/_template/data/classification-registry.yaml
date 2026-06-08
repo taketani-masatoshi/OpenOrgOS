@@ -1,18 +1,21 @@
+# データ分類レジストリ — テナント雛形（Git 追跡）
+# 実装: src/lib/classification.ts · フル例: tenants/mal/data/classification-registry.yaml
+
 version: "1"
-as_of: "2026-06-08"
+as_of: "2026-06-09"
 
 levels:
   L0:
     label: 公開
-    description: 公開情報
+    description: 公開情報。Git 追跡可。
     export_allowed: true
   L1:
     label: 社内
-    description: 社内情報
+    description: 社内情報。個人名・予定を含む executive データは Git 非追跡（example のみ）。
     export_allowed: conditional
   L2:
     label: 機密
-    description: 機密情報
+    description: 口座番号・個情。Git 非追跡（gitignore）。
     export_allowed: false
   L3:
     label: 禁止出力
@@ -24,6 +27,10 @@ agents:
     label: Executive Steward
     max_level: L2
     output_max_level: L1
+  secretary:
+    label: Secretary
+    max_level: L2
+    output_max_level: L1
   finance:
     label: Finance
     max_level: L2
@@ -32,5 +39,72 @@ agents:
     label: Contract
     max_level: L1
     output_max_level: L1
+  compliance:
+    label: Compliance
+    max_level: L2
+    output_max_level: L1
 
-resources: []
+resources:
+  - id: RES-BANK-ACCOUNTS
+    path: data/finance/bank-accounts.yaml
+    example_path: data/finance/bank-accounts.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 銀行口座
+    read_agents: [finance, compliance, secretary]
+    write_agents: [finance]
+
+  - id: RES-EXEC-CALENDAR
+    path: data/executive/calendar.yaml
+    example_path: data/executive/calendar.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社長カレンダー
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
+
+  - id: RES-EXEC-TASKS
+    path: data/executive/tasks.yaml
+    example_path: data/executive/tasks.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社長タスク
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
+
+  - id: RES-EXEC-ONE-ON-ONES
+    path: data/executive/one-on-ones.yaml
+    example_path: data/executive/one-on-ones.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 1-on-1 レジストリ
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
+
+  - id: RES-EXEC-EXTERNAL-CONTACTS
+    path: data/executive/external-contacts.yaml
+    example_path: data/executive/external-contacts.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社外連絡先
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
+
+  - id: RES-STAKEHOLDERS
+    path: data/executive/stakeholders.yaml
+    example_path: data/executive/stakeholders.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 利害関係者
+    read_agents: [secretary, contract, compliance]
+    write_agents: [secretary, contract]
+
+rules:
+  - id: RULE-GITIGNORE
+    text: git:ignore の resource は .gitignore にパターン登録必須。

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   loadExecutiveCalendar,
@@ -10,67 +11,89 @@ import {
 } from "../src/lib/data.js";
 import { stakeholdersFileExists } from "../src/lib/stakeholders.js";
 import { readYamlFile, DATA_DIR } from "../src/lib/utils.js";
-import { stakeholdersFileSchema } from "../schemas/executive.js";
+import {
+  calendarFileSchema,
+  tasksFileSchema,
+  oneOnOnesFileSchema,
+  externalContactsFileSchema,
+  stakeholdersFileSchema,
+} from "../schemas/executive.js";
+
+const execDir = join(DATA_DIR, "executive");
+
+function localExecutiveFile(name: string): string {
+  return join(execDir, name);
+}
 
 describe("executive data (Secretary Agent SoT)", () => {
-  it("loads calendar.yaml with valid schema", () => {
-    const cal = loadExecutiveCalendar();
-    expect(cal.events.length).toBeGreaterThanOrEqual(2);
-    const evt = cal.events.find((e) => e.id === "EVT-001");
-    expect(evt?.type).toBe("meeting");
-    expect(evt?.external_visible).toBe(false);
-    const tbd = cal.events.find((e) => e.id === "EVT-002");
-    expect(tbd?.status).toBe("tbd");
+  it("validates calendar.yaml.example in repo", () => {
+    const cal = readYamlFile(
+      join(execDir, "calendar.yaml.example"),
+      calendarFileSchema
+    );
+    expect(cal.events.length).toBeGreaterThanOrEqual(0);
+    const withEvents = readYamlFile(
+      join(execDir, "calendar.yaml.example"),
+      calendarFileSchema
+    );
+    if (withEvents.events.length > 0) {
+      expect(withEvents.events[0].id).toMatch(/^EVT-\d{3,}$/);
+    }
   });
 
-  it("loads tasks.yaml with CEO tasks distinct from dashboard P0", () => {
-    const tasks = loadExecutiveTasks();
-    expect(tasks.tasks.length).toBeGreaterThanOrEqual(3);
-    const p0 = tasks.tasks.find((t) => t.id === "TASK-001");
-    expect(p0?.priority).toBe("p0");
-    expect(p0?.category).toBe("business");
+  it("validates tasks.yaml.example in repo", () => {
+    const tasks = readYamlFile(join(execDir, "tasks.yaml.example"), tasksFileSchema);
+    expect(Array.isArray(tasks.tasks)).toBe(true);
   });
 
-  it("loads one-on-ones.yaml with co-director entry", () => {
-    const ooo = loadOneOnOnes();
-    const entry = ooo.one_on_ones.find((o) => o.id === "OOO-001");
-    expect(entry?.person).toBe("宮城万貴子");
-    expect(entry?.cadence).toBe("monthly");
-    expect(entry?.action_items.length).toBeGreaterThanOrEqual(1);
+  it("validates one-on-ones.yaml.example in repo", () => {
+    const ooo = readYamlFile(join(execDir, "one-on-ones.yaml.example"), oneOnOnesFileSchema);
+    expect(Array.isArray(ooo.one_on_ones)).toBe(true);
   });
 
-  it("loads external-contacts.yaml with optional stakeholder_id", () => {
-    const ext = loadExternalContacts();
-    expect(ext.contacts.length).toBeGreaterThanOrEqual(2);
+  it("validates external-contacts.yaml.example in repo", () => {
+    const ext = readYamlFile(
+      join(execDir, "external-contacts.yaml.example"),
+      externalContactsFileSchema
+    );
     for (const c of ext.contacts) {
       expect(c.id).toMatch(/^EXT-\d{3,}$/);
-      expect(c.name.length).toBeGreaterThan(0);
     }
-    const taketani = ext.contacts.find((c) => c.id === "EXT-004");
-    expect(taketani?.stakeholder_id).toBe("STK-001");
-    const southwood = ext.contacts.find((c) => c.id === "EXT-002");
-    expect(southwood?.stakeholder_id).toBe("STK-003");
-    const nihonJutaku = ext.contacts.find((c) => c.id === "EXT-005");
-    expect(nihonJutaku?.stakeholder_id).toBe("STK-004");
-    expect(nihonJutaku?.org).toBe("株式会社日本住宅");
+  });
+
+  it("loads local calendar.yaml when present (gitignore)", () => {
+    if (!existsSync(localExecutiveFile("calendar.yaml"))) return;
+    const cal = loadExecutiveCalendar();
+    expect(cal.events.length).toBeGreaterThanOrEqual(0);
+  });
+
+  it("loads local tasks.yaml when present (gitignore)", () => {
+    if (!existsSync(localExecutiveFile("tasks.yaml"))) return;
+    const tasks = loadExecutiveTasks();
+    expect(Array.isArray(tasks.tasks)).toBe(true);
+  });
+
+  it("loads local one-on-ones.yaml when present (gitignore)", () => {
+    if (!existsSync(localExecutiveFile("one-on-ones.yaml"))) return;
+    const ooo = loadOneOnOnes();
+    expect(Array.isArray(ooo.one_on_ones)).toBe(true);
+  });
+
+  it("loads local external-contacts.yaml when present (gitignore)", () => {
+    if (!existsSync(localExecutiveFile("external-contacts.yaml"))) return;
+    const ext = loadExternalContacts();
+    expect(Array.isArray(ext.contacts)).toBe(true);
   });
 
   it("loads stakeholders.yaml when present (local gitignore file)", () => {
     if (!stakeholdersFileExists()) return;
     const reg = loadStakeholders();
-    const stk = reg.stakeholders.find((s) => s.id === "STK-001");
-    expect(stk?.name).toBe("竹谷昌敏");
-    expect(stk?.contract_ids).toContain("CTR-001");
-    const stk004 = reg.stakeholders.find((s) => s.id === "STK-004");
-    expect(stk004?.org).toBe("株式会社日本住宅");
-    expect(stk004?.contract_ids).toEqual(
-      expect.arrayContaining(["CTR-006", "CTR-007"])
-    );
+    expect(reg.stakeholders.length).toBeGreaterThan(0);
   });
 
   it("validates stakeholders.yaml.example in repo", () => {
     const example = readYamlFile(
-      join(DATA_DIR, "executive/stakeholders.yaml.example"),
+      join(execDir, "stakeholders.yaml.example"),
       stakeholdersFileSchema
     );
     expect(example.stakeholders.some((s) => s.id === "STK-001")).toBe(true);
@@ -81,7 +104,7 @@ describe("executive data (Secretary Agent SoT)", () => {
     expect(stk004?.contract_ids).toContain("CTR-007");
   });
 
-  it("passes validateAll including executive files", () => {
+  it("passes validateAll (executive yaml optional when absent)", () => {
     const result = validateAll();
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);

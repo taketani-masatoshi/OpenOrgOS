@@ -5,16 +5,39 @@
 
 ---
 
+## Git 追跡とローカル正本
+
+| パス | Git | 説明 |
+|------|-----|------|
+| `*.yaml.example` | **追跡** | スキーマ・構造のテンプレート（個人名は示例のみ） |
+| `calendar.yaml` 等 4 ファイル | **非追跡** | ローカル正本（社外氏名・予定 · gitignore） |
+| `stakeholders.yaml` | **非追跡** | 利害関係者レジストリ（同上） |
+| `00-README.md` | 追跡 | 本ファイル |
+
+**初回セットアップ（新 clone 後）:**
+
+```bash
+cd tenants/{id}/data/executive
+for f in calendar tasks one-on-ones external-contacts; do
+  cp "${f}.yaml.example" "${f}.yaml"
+done
+cp stakeholders.yaml.example stakeholders.yaml   # 未作成の場合
+```
+
+**バックアップ（Git 以外）:** Time Machine 等で `tenants/{id}/data/executive/` を日次含める。REG-009 第7条参照。
+
+---
+
 ## ファイル一覧
 
 | パス | スキーマ | 説明 |
 |------|---------|------|
-| `calendar.yaml` | calendarFile | 予定（会議・会食・移動・ブロック） |
-| `tasks.yaml` | tasksFile | 社長タスク（dashboard P0 とは別） |
-| `one-on-ones.yaml` | oneOnOnesFile | 1-on-1 レジストリと次回準備 |
-| `external-contacts.yaml` | externalContactsFile | 主要社外連絡先（最小限） |
-| `stakeholders.yaml` | stakeholdersFile | **利害関係者レジストリ（gitignore · ローカル正本）** |
-| `stakeholders.yaml.example` | stakeholdersFile | テンプレート（Git 追跡） |
+| `calendar.yaml` | calendarFile | 予定（会議・会食・移動 · **gitignore**） |
+| `tasks.yaml` | tasksFile | 社長タスク（**gitignore**） |
+| `one-on-ones.yaml` | oneOnOnesFile | 1-on-1 レジストリ（**gitignore**） |
+| `external-contacts.yaml` | externalContactsFile | 社外連絡先（**gitignore**） |
+| `stakeholders.yaml` | stakeholdersFile | 利害関係者（**gitignore**） |
+| `*.yaml.example` | 各スキーマ | テンプレート（Git 追跡） |
 
 プロフィール MD: [`docs/executive/stakeholders/`](../../docs/executive/stakeholders/00-このフォルダについて.md)（実体は gitignore）
 
@@ -30,7 +53,7 @@
 
 ## 更新手順
 
-1. YAML を編集
+1. ローカル `*.yaml` を編集（Git には載らない）
 2. `npm run validate`
 3. 週次ブリーフは `docs/executive/` テンプレに沿って Secretary が生成
 

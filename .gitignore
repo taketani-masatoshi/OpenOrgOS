@@ -19,6 +19,12 @@ tenants/*/data/operations/kamezawa-secrets.yaml
 tenants/*/data/operations/*-secrets.yaml
 tenants/*/data/finance/bank-accounts.yaml
 tenants/*/data/executive/stakeholders.yaml
+tenants/*/data/executive/calendar.yaml
+tenants/*/data/executive/tasks.yaml
+tenants/*/data/executive/one-on-ones.yaml
+tenants/*/data/executive/external-contacts.yaml
+!tenants/*/data/executive/*.example.yaml
+!tenants/*/data/executive/00-README.md
 tenants/*/docs/executive/stakeholders/**
 !tenants/*/docs/executive/stakeholders/00-このフォルダについて.md
 !tenants/*/docs/executive/stakeholders/*.example.md

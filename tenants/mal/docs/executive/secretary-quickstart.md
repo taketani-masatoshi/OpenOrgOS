@@ -1,6 +1,6 @@
 # Secretary — 使い方クイックスタート
 
-社長（段）向け。**YAML を直接触らなくてよい**運用を目指す。
+社長（段）向け。**YAML を直接触らなくてよい**運用を目指す。秘書の話し方・長さは [`rules/secretary_behavior.md`](../../rules/secretary_behavior.md) でカスタム可。
 
 ---
 
@@ -8,12 +8,13 @@
 
 | やりたいこと | やり方 |
 |-------------|--------|
-| 予定を確認 | Cursor で「今週の予定を見せて」→ `data/executive/calendar.yaml` を要約 |
+| 予定を確認 | Cursor で「今週の予定を見せて」→ **ローカル** `data/executive/calendar.yaml` を要約（Git 非追跡） |
 | MTG を設定 | 「@secretary_agent 〇〇との mtg を設定して」→ **アクションカード**が `correspondence-drafts/` にできる |
-| 招待を送る | 下書き MD の **3ステップ**（カレンダー追加 → Gmail → YAML 更新） |
+| 招待を送る | 下書き MD の **3ステップ**（カレンダー追加 → Gmail → **ローカル YAML** 更新） |
 | 1-on-1 準備 | `one-on-one-prep-*.md` を開く |
+| 新 clone 後 | `data/executive/` で `cp *.yaml.example *.yaml`（[00-README](../../../data/executive/00-README.md)） |
 
-正データは引き続き `data/executive/*.yaml`。人が触るのは **下書き MD のリンク** が中心。
+正データは **ローカル** `data/executive/*.yaml`（gitignore）。Git には `*.example.yaml` のみ。人が触るのは **下書き MD のリンク** が中心。
 
 ---
 
@@ -58,9 +59,11 @@ docs/executive/
 └── weekly-brief-template.md
 
 data/executive/
-├── calendar.yaml    ← 予定 SoT
-├── tasks.yaml       ← 社長タスク
-└── one-on-ones.yaml
+├── calendar.yaml           ← 予定 SoT（gitignore · ローカル正本）
+├── calendar.yaml.example   ← Git 追跡テンプレ
+├── tasks.yaml              ← 社長タスク（gitignore）
+├── one-on-ones.yaml        ← gitignore
+└── external-contacts.yaml  ← gitignore
 ```
 
 ---

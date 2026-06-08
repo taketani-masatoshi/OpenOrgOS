@@ -432,10 +432,22 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     }
   }
   tryLoad("data/hr/employees.yaml", () => loadEmployees());
-  tryLoad("data/executive/calendar.yaml", () => loadExecutiveCalendar());
-  tryLoad("data/executive/tasks.yaml", () => loadExecutiveTasks());
-  tryLoad("data/executive/one-on-ones.yaml", () => loadOneOnOnes());
-  tryLoad("data/executive/external-contacts.yaml", () => loadExternalContacts());
+  const executiveCalendar = join(DATA_DIR, "executive", "calendar.yaml");
+  if (existsSync(executiveCalendar)) {
+    tryLoad("data/executive/calendar.yaml", () => loadExecutiveCalendar());
+  }
+  const executiveTasks = join(DATA_DIR, "executive", "tasks.yaml");
+  if (existsSync(executiveTasks)) {
+    tryLoad("data/executive/tasks.yaml", () => loadExecutiveTasks());
+  }
+  const executiveOoo = join(DATA_DIR, "executive", "one-on-ones.yaml");
+  if (existsSync(executiveOoo)) {
+    tryLoad("data/executive/one-on-ones.yaml", () => loadOneOnOnes());
+  }
+  const executiveExt = join(DATA_DIR, "executive", "external-contacts.yaml");
+  if (existsSync(executiveExt)) {
+    tryLoad("data/executive/external-contacts.yaml", () => loadExternalContacts());
+  }
   if (existsSync(STAKEHOLDERS_YAML)) {
     tryLoad("data/executive/stakeholders.yaml", () => loadStakeholders());
   }
