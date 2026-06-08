@@ -178,6 +178,22 @@ export function validateModules(): ModuleValidationIssue[] {
             message: `module "${mod.id}" (${mod.agent}) incompatible with ${propId} type "${pType}"`,
           });
         }
+        if (mod.billing?.[propId] && !mod.billing[propId].docs_base) {
+          issues.push({
+            file: logicalFile,
+            message: `module "${mod.id}" billing.${propId} requires docs_base`,
+          });
+        }
+      }
+      if (mod.billing) {
+        for (const propId of Object.keys(mod.billing)) {
+          if (!mod.property_ids?.includes(propId)) {
+            issues.push({
+              file: logicalFile,
+              message: `module "${mod.id}" billing.${propId} not in property_ids`,
+            });
+          }
+        }
       }
     }
 

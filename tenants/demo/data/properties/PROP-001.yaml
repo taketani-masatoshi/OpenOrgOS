@@ -1,0 +1,21 @@
+id: PROP-001
+name: "番町ハイム312"
+location: "東京都千代田区二番町 番町ハイム312号室"
+type: rental
+acquired_date: "2025-02-10"
+acquisition_price: 16600000
+financing: LOAN-001
+rental:
+  monthly_rent: 100000
+  vacancy_rate: 0
+  management_fee: 0
+depreciation:
+  acquisition_cost: 16600000
+  useful_life_years: 47
+  method: straight_line
+  annual_amount: 353191
+  notes: "RC建物想定・定額法47年。税理士確認後に調整"
+notes: |
+  満室・稼働率100%。月額賃料10万円。
+  本社事務所を同物件内に置く（本社固定費・事務所家賃なし）。
+  購入価格1,660万円＝役員貸付全額。

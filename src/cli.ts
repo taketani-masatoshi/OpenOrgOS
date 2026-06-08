@@ -26,8 +26,9 @@ import {
   runFinancesAdd,
   runFinancesList,
   runFinancesShow,
+  runFinancesVariance,
 } from "./commands/finances.js";
-import { runForecast } from "./commands/forecast.js";
+import { runMigrateYojitsu } from "./commands/migrate.js";
 import { runAnalyzeProperty } from "./commands/analyze.js";
 import { runScenarioCommand } from "./commands/scenario.js";
 import { runAlerts } from "./commands/alerts.js";
@@ -47,8 +48,10 @@ import {
   runIoGuide,
 } from "./commands/io.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "./commands/deps.js";
-import { runInvoiceBancho } from "./commands/invoice.js";
+import { runInvoiceBancho, runInvoiceGenerateCommand } from "./commands/invoice.js";
 import { runModulesList, runModulesSyncContext } from "./commands/modules.js";
+import { runOpsDaily, runOpsP0 } from "./commands/ops.js";
+import { runSkillsList, runSkill } from "./commands/skills.js";
 
 const program = new Command();
 
@@ -85,16 +88,44 @@ modulesCmd
   .description("Regenerate active_context.md and tenant-active-context.mdc")
   .action(runModulesSyncContext);
 
+const opsCmd = program.command("ops").description("Operational daily checks (P0 · contracts · maturity)");
+
+opsCmd.command("daily").description("Daily ops summary (maturity + P0 + contract alerts)").action(runOpsDaily);
+
+opsCmd.command("p0").description("P0 closing blockers only (exit 1 if open)").action(runOpsP0);
+
+const skillsCmd = program.command("skills").description("Run Agent Skills from CLI (no Cursor)");
+
+skillsCmd.command("list").description("List skill CLI commands").action(runSkillsList);
+
+skillsCmd
+  .command("run <id>")
+  .description("Run skill: contract-expiry | permit-expiry | monthly-close | variance | records-check | p0 | daily")
+  .option("-d, --days <number>", "Days ahead (contract-expiry)", "90")
+  .option("-m, --month <YYYY-MM>", "Target month (monthly-close)")
+  .option("--markdown", "Markdown output where supported")
+  .option("-o, --output <filename>", "Save report under docs/reports/")
+  .action((id, opts) =>
+    runSkill(id, {
+      days: opts.days ? parseInt(opts.days, 10) : undefined,
+      month: opts.month,
+      markdown: opts.markdown,
+      output: opts.output,
+    })
+  );
+
 program
   .command("status")
-  .description("Data maturity health report")
+  .description("Maturity report (preparedness / operational / automation)")
   .option("--markdown", "Markdown output")
   .option("--verbose", "Include integrity warnings")
+  .option("--legacy", "Append legacy data-health breakdown")
   .option("-o, --output <filename>", "Save to docs/reports/status/")
   .action((opts) =>
     runStatus({
       markdown: opts.markdown,
       verbose: opts.verbose,
+      legacy: opts.legacy,
       output: opts.output,
     })
   );
@@ -163,6 +194,27 @@ finances
   .command("show <month>")
   .description("Show monthly finance details")
   .action(runFinancesShow);
+
+finances
+  .command("variance")
+  .description("FY plan vs monthly YAML revenue variance")
+  .option("-o, --output <filename>", "Save to docs/plans/variance/")
+  .action((opts) => runFinancesVariance({ output: opts.output }));
+
+const migrate = program.command("migrate").description("Data migrations");
+migrate
+  .command("yojitsu")
+  .description("Convert yojitsu v1 columns to v2 lines[]")
+  .requiredOption("--fy <fiscalYear>", "Fiscal year id (e.g. FY2026)")
+  .option("--dry-run", "Print v2 YAML without writing")
+  .option("--write", "Overwrite data/plans/yojitsu-{fy}.yaml")
+  .action((opts) =>
+    runMigrateYojitsu({
+      fiscalYear: opts.fy,
+      dryRun: opts.dryRun,
+      write: opts.write,
+    })
+  );
 
 program
   .command("forecast")
@@ -387,8 +439,34 @@ program
 const invoice = program.command("invoice").description("Tenant invoice generation");
 
 invoice
+  .command("generate")
+  .description("Generate rent invoices from module billing config (PDF + email + MSG/EML)")
+  .requiredOption("--module <id>", "Module id (e.g. rental)")
+  .requiredOption("--property <id>", "Property id (e.g. PROP-001)")
+  .requiredOption("--from <month>", "Start billing month (YYYY-MM)")
+  .requiredOption("--to <month>", "End billing month (YYYY-MM)")
+  .option("--fy <fiscalYear>", "Fiscal year folder (e.g. FY2026)", "FY2026")
+  .option("--tenant-name <name>", "Tenant name (default: modules.yaml or template)")
+  .option("--tenant-email <email>", "Tenant email")
+  .option("--bank-account <text>", "Bank transfer details")
+  .option("--sender-email <email>", "Sender From address")
+  .action((opts) =>
+    runInvoiceGenerateCommand({
+      module: opts.module,
+      property: opts.property,
+      from: opts.from,
+      to: opts.to,
+      fy: opts.fy,
+      tenantName: opts.tenantName,
+      tenantEmail: opts.tenantEmail,
+      bankAccount: opts.bankAccount,
+      senderEmail: opts.senderEmail,
+    })
+  );
+
+invoice
   .command("bancho")
-  .description("Generate 番町ハイム312 rent invoices (PDF + email + MSG/EML)")
+  .description("(deprecated) Alias for generate --module rental --property PROP-001")
   .requiredOption("--from <month>", "Start billing month (YYYY-MM)")
   .requiredOption("--to <month>", "End billing month (YYYY-MM)")
   .option("--fy <fiscalYear>", "Fiscal year folder (e.g. FY2026)", "FY2026")

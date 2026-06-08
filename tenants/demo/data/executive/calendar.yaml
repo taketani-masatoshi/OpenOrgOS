@@ -1,0 +1,64 @@
+# 社長カレンダー（Secretary Agent SoT）
+# 外部共有可否は external_visible で制御。未確定は status: tbd
+
+events:
+  - id: EVT-001
+    title: 亀沢旅館 開業準備ミーティング
+    type: meeting
+    start: "2026-06-12T14:00"
+    end: "2026-06-12T15:30"
+    location: 本社（番町）またはオンライン
+    attendees:
+      - 段燕燕
+      - 宮城万貴子
+    status: tentative
+    notes: 開業スケジュール・許認可残タスクの確認。詳細日程は調整中。
+    external_visible: false
+
+  - id: EVT-002
+    title: 会食（取引先・TBD）
+    type: dining
+    start: "2026-06-20T18:00"
+    end: "2026-06-20T21:00"
+    location: TBD
+    attendees:
+      - 段燕燕
+    status: tbd
+    notes: 候補日・店舗・相手先は未確定。秘書が下書き調整メールを準備。
+    external_visible: true
+
+  - id: EVT-003
+    title: 会食 — 竹谷昌敏（KLab · CTR-001）
+    type: dining
+    start: "2026-06-07T19:00"
+    end: "2026-06-07T20:00"
+    location: 銀座（店舗 TBD）
+    attendees:
+      - 段燕燕
+      - 竹谷昌敏
+    status: confirmed
+    notes: |
+      業務委託（Steward OS 保守）の顔合わせ・打合せ。STK-001 / EXT-004。
+      店舗・予約は Secretary が下書き調整。経費は事後 接待交際費として精算（区分 A 想定）。
+      同日午後 MTG（EVT-004）の後。
+    external_visible: false
+
+  - id: EVT-004
+    title: Steward OS 保守キックオフ MTG — 竹谷昌敏（KLab · CTR-001）
+    type: meeting
+    start: "2026-06-07T14:00"
+    end: "2026-06-07T15:30"
+    location: オンライン（Meet / Zoom · URL TBD）
+    attendees:
+      - 段燕燕
+      - 竹谷昌敏
+    status: tentative
+    notes: |
+      CTR-001 業務委託のキックオフ。SOW 確認 · 連絡手段 · 初回保守範囲 · リポジトリアクセス手順。
+      STK-001 / EXT-004。招待下書き: docs/executive/correspondence-drafts/2026-06-07-taketani-mtg-invite.md
+      19:00 会食（EVT-003）と同日。報酬・契約条件の変更は Contract へ委譲。
+    external_visible: false
+
+notes: |
+  Google Calendar 連携は将来 steward executive CLI で検討。
+  社外に見せる予定のみ external_visible: true とする。

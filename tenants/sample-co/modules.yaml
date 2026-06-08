@@ -1,0 +1,11 @@
+modules:
+  - id: rental
+    enabled: true
+    agent: rental
+    property_ids: [PROP-001]
+    docs_root: docs/properties/PROP-001-minato/operations/
+    summary_dir: agent-summaries/rental/
+
+  - id: hospitality
+    enabled: false
+    agent: hospitality

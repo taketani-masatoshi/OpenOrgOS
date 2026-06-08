@@ -2,6 +2,12 @@ import { join } from "node:path";
 import type { YojitsuPlan } from "../../schemas/finance.js";
 import type { Company } from "../../schemas/company.js";
 import {
+  aggregateBySegment,
+  lineDisplayLabel,
+  resolveYojitsuMonthSide,
+  sumOperatingExpenses,
+} from "./yojitsu-normalize.js";
+import {
   createPdfWriter,
   fiscalPeriodLabel,
   fiscalYearNumber,
@@ -27,39 +33,26 @@ export interface KessanReportInput {
   fiscalYear: string;
 }
 
-function sumActual(
-  yojitsu: YojitsuPlan,
-  key:
-    | "revenue_bancho"
-    | "revenue_kamezawa"
-    | "revenue_translation"
-    | "revenue_services"
-    | "expense_bancho"
-    | "expense_kamezawa"
-    | "expense_officer"
-    | "expense_company"
-    | "depreciation"
-): number {
-  return yojitsu.months.reduce((sum, m) => {
-    const v = m.actual?.[key] ?? m.plan[key];
-    return sum + (v ?? 0);
-  }, 0);
-}
-
 export function buildKessanPlRows(yojitsu: YojitsuPlan): PdfTableRow[] {
-  const revenueBancho = sumActual(yojitsu, "revenue_bancho");
-  const revenueKamezawa = sumActual(yojitsu, "revenue_kamezawa");
-  const revenueTranslation = sumActual(yojitsu, "revenue_translation");
-  const revenueServices = sumActual(yojitsu, "revenue_services");
+  const revenueBySegment = aggregateBySegment(yojitsu, "revenue", true);
   const revenueTotal =
     yojitsu.summary?.revenue_total ??
-    revenueBancho + revenueKamezawa + revenueTranslation + revenueServices;
+    [...revenueBySegment.values()].reduce((a, b) => a + b, 0);
 
-  const expenseKamezawa = sumActual(yojitsu, "expense_kamezawa");
-  const expenseOfficer = sumActual(yojitsu, "expense_officer");
-  const expenseCompany = sumActual(yojitsu, "expense_company");
-  const depreciation = sumActual(yojitsu, "depreciation");
-  const sgaTotal = expenseKamezawa + expenseOfficer + expenseCompany + depreciation;
+  const expenseByLabel = new Map<string, number>();
+  for (const month of yojitsu.months) {
+    const side = resolveYojitsuMonthSide(month);
+    for (const line of side.lines) {
+      if (line.kind === "expense" || line.kind === "depreciation") {
+        const label = lineDisplayLabel(line);
+        expenseByLabel.set(label, (expenseByLabel.get(label) ?? 0) + line.amount);
+      }
+    }
+  }
+
+  const sgaTotal =
+    [...expenseByLabel.values()].reduce((a, b) => a + b, 0) ||
+    yojitsu.months.reduce((s, m) => s + sumOperatingExpenses(resolveYojitsuMonthSide(m)), 0);
 
   const operatingProfit =
     yojitsu.summary?.operating_profit ?? revenueTotal - sgaTotal;
@@ -70,15 +63,14 @@ export function buildKessanPlRows(yojitsu: YojitsuPlan): PdfTableRow[] {
   const rows: PdfTableRow[] = [
     { label: "【損益計算書】", amount: "", bold: true },
     { label: "Ⅰ. 売上高", amount: "", bold: true },
-    { label: "賃貸収益（番町ハイム312）", amount: revenueBancho, indent: 1 },
-    { label: "宿泊収益（亀沢旅館）", amount: revenueKamezawa, indent: 1 },
   ];
 
-  if (revenueTranslation > 0) {
-    rows.push({ label: "翻訳収益", amount: revenueTranslation, indent: 1 });
-  }
-  if (revenueServices > 0) {
-    rows.push({ label: "サービス収益", amount: revenueServices, indent: 1 });
+  for (const [segment, amount] of [...revenueBySegment.entries()].sort((a, b) =>
+    a[0].localeCompare(b[0], "ja")
+  )) {
+    if (amount > 0) {
+      rows.push({ label: segment, amount, indent: 1 });
+    }
   }
 
   rows.push(
@@ -88,21 +80,12 @@ export function buildKessanPlRows(yojitsu: YojitsuPlan): PdfTableRow[] {
     { label: "Ⅲ. 販売費及び一般管理費", amount: "", bold: true }
   );
 
-  if (expenseKamezawa > 0) {
-    rows.push({ label: "亀沢旅館 運営費", amount: expenseKamezawa, indent: 1 });
-  }
-  if (expenseOfficer > 0) {
-    rows.push({ label: "役員報酬", amount: expenseOfficer, indent: 1 });
-  }
-  if (depreciation > 0) {
-    rows.push({
-      label: "減価償却費（番町ハイム）",
-      amount: depreciation,
-      indent: 1,
-    });
-  }
-  if (expenseCompany > 0) {
-    rows.push({ label: "本社固定費", amount: expenseCompany, indent: 1 });
+  for (const [label, amount] of [...expenseByLabel.entries()].sort((a, b) =>
+    a[0].localeCompare(b[0], "ja")
+  )) {
+    if (amount > 0) {
+      rows.push({ label, amount, indent: 1 });
+    }
   }
 
   rows.push(

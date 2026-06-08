@@ -1,0 +1,102 @@
+# 税務プロファイル — 申告区分・期限・担当（TBD 明示）
+# 人向け: docs/finance/tax-filing-checklist.md
+
+entity:
+  name: 株式会社MAL
+  type: 株式会社
+  corporate_number: "4010001189530"
+  address: "〒102-0084 東京都千代田区二番町1"
+
+fiscal_year:
+  end_month: 1
+  label: 第9期
+  period_from: "2026-02-01"
+  period_to: "2027-01-31"
+  calendar_note: 決算月1月。申告期限は原則決算日の翌日から2ヶ月以内
+
+consumption_tax:
+  status: TBD
+  options:
+    - 課税事業者（本則）
+    - 課税事業者（簡易課税）
+    - 免税事業者
+  invoice_registration_number: "T4010001189530"
+  invoice_registered: true
+  base_period_sales_threshold: 10000000
+  notes: |
+    インボイス登録番号は company.yaml に記載済み。
+    第9期売上高750万円（予想）— 基準期間・2割特例・簡易課税選択可否は税理士確認。
+    宿泊・賃貸の課税/非課税区分・仕入控除の按分も要整理。
+
+corporate_tax:
+  category: 中小法人
+  applicable_rates:
+    note: 資本金・所得規模により軽減税率（15%/19%/23.2%）の適用可否を税理士が判定
+  capital_stock: TBD
+  prior_retained_earnings: TBD
+  estimated_tax_fy2026: 775000
+  estimated_tax_status: 暫定
+  notes: |
+    第8期決算書（期首繰越利益剰余金）・資本金額が B/S 確定に必須。
+    役員貸付無利息（LOAN-001/002）— みなし利息・貸付金科目の税務処理は税理士確認。
+
+local_tax:
+  prefecture: 東京都
+  municipalities:
+    - name: 千代田区
+      assets: [ASSET-001]
+      taxes: [法人住民税, 固定資産税]
+    - name: 墨田区
+      assets: [ASSET-002, ASSET-003]
+      taxes: [法人住民税, 固定資産税, 事業所税]
+  notes: 法人住民税・事業税は法人税確定後に連動。均等割・法人税割は資本金等で変動
+
+filing_calendar:
+  - id: hojinzei-kokuzei
+    tax: 法人税（国税）
+    authority: 国税庁（e-Tax）
+    deadline: "2027-03-31"
+    status: TBD
+    attachments: [別表16, 別表4, 勘定科目内訳明細書]
+  - id: shohizei
+    tax: 消費税
+    authority: 国税庁（e-Tax）
+    deadline: "2027-03-31"
+    status: TBD
+    note: 課税区分確定後に申告要否を決定
+  - id: hojin-juminzei
+    tax: 法人住民税・法人都民税
+    authority: 東京都（eLTAX）
+    deadline: "2027-03-31"
+    status: TBD
+  - id: jigyozei
+    tax: 法人事業税
+    authority: 東京都（eLTAX）
+    deadline: "2027-03-31"
+    status: TBD
+  - id: kotei-shisanzei
+    tax: 固定資産税（償却資産申告）
+    authority: 千代田区・墨田区
+    deadline: "2027-01-31"
+    status: TBD
+    note: 毎年1/31申告（前年度取得分等）。評価額は区通知書
+  - id: gensen-choutei
+    tax: 源泉所得税・法定調書
+    authority: 税務署
+    deadline: "2027-01-31"
+    status: 該当なし見込み
+    note: 従業員0・役員報酬0。業務委託180,000円は支払調書要否を税理士確認
+
+contacts:
+  tax_advisor:
+    name: TBD
+    firm: TBD
+    email: TBD
+  accounting_software: TBD
+  notes: 税理士契約・会計ソフト選定は executive-remaining-tasks 参照
+
+related_docs:
+  - docs/company/tax/fy2026-tax-readiness-assessment.md
+  - docs/company/tax/fy2026/01-hojinzei-shinkoku-yoko.md
+  - docs/company/fy2026-tax-advisor-checklist.md
+  - docs/finance/tax-filing-checklist.md

@@ -32,6 +32,7 @@ Finance Agent
 ## CLI
 
 ```bash
+npm run steward -- skills run monthly-close --month YYYY-MM
 npm run steward -- finances add --month YYYY-MM
 npm run steward -- deps check --file data/finance/monthly/YYYY-MM.yaml
 npm run validate

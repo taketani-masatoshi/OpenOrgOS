@@ -10,6 +10,10 @@ export const TENANT_NAME_PLACEHOLDER = "[借主名 TBD]";
 export const TENANT_EMAIL_PLACEHOLDER = "[送付先メール TBD]";
 export const BANK_ACCOUNT_PLACEHOLDER = "[振込先口座 TBD]";
 
+import type { InvoiceTemplate } from "../../schemas/invoice-template.js";
+import type { TemplateVars } from "./invoice-config.js";
+import { interpolateTemplate } from "./invoice-config.js";
+
 export interface RentInvoiceEmailInput {
   billingMonth: string;
   propertyName: string;
@@ -18,13 +22,22 @@ export interface RentInvoiceEmailInput {
   companyName: string;
   senderEmail: string;
   monthlyRent: number;
+  template?: InvoiceTemplate;
+  bodyTemplateText?: string;
+  templateVars?: TemplateVars;
 }
 
 export function buildInvoiceEmailSubject(input: RentInvoiceEmailInput): string {
+  if (input.template?.email.subject && input.templateVars) {
+    return interpolateTemplate(input.template.email.subject, input.templateVars);
+  }
   return `【ご請求】${input.propertyName} ${formatJapaneseYearMonth(input.billingMonth)}分賃料`;
 }
 
 export function buildInvoiceEmailBody(input: RentInvoiceEmailInput): string {
+  if (input.bodyTemplateText && input.templateVars) {
+    return interpolateTemplate(input.bodyTemplateText, input.templateVars);
+  }
   const due = formatJapaneseDate(paymentDueDate(input.billingMonth));
   const rent = new Intl.NumberFormat("ja-JP").format(input.monthlyRent);
 

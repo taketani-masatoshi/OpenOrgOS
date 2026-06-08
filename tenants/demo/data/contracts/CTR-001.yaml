@@ -1,0 +1,33 @@
+id: CTR-001
+name: "業務委託契約（竹谷昌敏）"
+counterparty: "竹谷昌敏"
+counterparty_type: individual
+counterparty_address: "〒STK-001 参照（gitignore 正本）"
+type: outsourcing
+status: executed
+start_date: "2026-08-06"
+end_date: "2027-01-31"
+executed_date: "2026-08-06"
+auto_renewal: false
+owner: "段燕燕"
+scope_summary: |
+  Steward OS の完成・提供後の保守（バグ修正、軽微な改修、運用サポート等）。準委任。
+compensation:
+  type: monthly
+  amount: 30000
+  tax_included: true
+  payment_terms: "月額3万円×6ヶ月分を2027年1月31日に一括振込。請求書不要。振込口座は別途乙が甲に通知。"
+  invoice_registration: "なし（適格請求書発行事業者の登録なし）"
+documents:
+  draft: "docs/contracts/CTR-001/01-draft.md"
+  executed: "docs/contracts/CTR-001/02-executed.md"
+monthly_cost: 30000
+risk:
+  renewal_deadline: "2027-01-01"
+  termination_deadline: "2027-01-31"
+  risk_level: low
+  notes: "契約期間6ヶ月・一括払い。Steward保守特化。"
+notes: |
+  契約期間: 2026年8月6日〜2027年1月31日。
+  報酬総額: 180,000円（3万×6ヶ月）。2027/1/31一括支払い。
+  振込口座: 未記載（乙から別途通知）。

@@ -22,6 +22,6 @@ export function formatJapaneseYearMonth(billingMonth: string): string {
   return `${year}年${month}月`;
 }
 
-export function invoiceNumber(billingMonth: string): string {
-  return `INV-BANCHO-${billingMonth}`;
+export function invoiceNumber(billingMonth: string, prefix = "RENT"): string {
+  return `INV-${prefix}-${billingMonth}`;
 }

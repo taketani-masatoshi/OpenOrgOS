@@ -8,6 +8,12 @@ modules:
     property_ids: [PROP-001]
     docs_root: docs/properties/PROP-001-bancho/operations/
     summary_dir: agent-summaries/prop-001/
+    billing:
+      PROP-001:
+        docs_base: docs/finance/accounting/invoices/bancho
+        invoice_number_prefix: BANCHO
+        template_id: rent-monthly
+        sender_email: info@malkk.com
     notes: 番町ハイム312 賃貸 · 本社兼用
 
   - id: hospitality

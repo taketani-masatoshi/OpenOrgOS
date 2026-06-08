@@ -11,6 +11,8 @@ import {
   financesSummary,
   formatFinancesSummaryMarkdown,
 } from "../lib/report.js";
+import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
+import { writeMarkdownReport } from "../lib/utils.js";
 
 export function runFinancesSummary(options: {
   from: string;
@@ -65,4 +67,15 @@ export function runFinancesShow(month: string): void {
     process.exit(1);
   }
   console.log(JSON.stringify(finance, null, 2));
+}
+
+export function runFinancesVariance(opts: { output?: string }): void {
+  const report = computeVarianceReport("FY2026");
+  const md = formatVarianceMarkdown(report);
+  if (opts.output) {
+    const path = writeMarkdownReport("plans/variance", opts.output, md);
+    console.log(`✓ ${path}`);
+  } else {
+    console.log(md);
+  }
 }

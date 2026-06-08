@@ -1,0 +1,37 @@
+# 業務モジュール readiness tier — 転用期待値
+# production_ready: 本番テナントで運用可 · seed_only: カタログ/seed のみ
+
+modules:
+  rental:
+    tier: production_ready
+    notes: PROP バインド · 運用 templates 完備
+  hospitality:
+    tier: production_ready
+    notes: public YAML · operations docs · REG-012 連動
+
+  professional_services:
+    tier: seed_only
+  venture_capital:
+    tier: seed_only
+  saas_subscription:
+    tier: seed_only
+  event_space:
+    tier: seed_only
+  ecommerce:
+    tier: seed_only
+  restaurant:
+    tier: seed_only
+  retail_store:
+    tier: seed_only
+  clinic:
+    tier: seed_only
+  logistics:
+    tier: seed_only
+  staffing:
+    tier: seed_only
+  construction:
+    tier: seed_only
+  education:
+    tier: seed_only
+  membership:
+    tier: seed_only

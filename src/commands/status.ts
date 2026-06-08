@@ -1,3 +1,4 @@
+import { computeMaturityReport, formatMaturityReport } from "../lib/maturity.js";
 import { computeDataHealth, formatHealthReport } from "../lib/data-health.js";
 import { runIntegrityChecks } from "../lib/integrity.js";
 import { writeMarkdownReport } from "../lib/utils.js";
@@ -6,11 +7,19 @@ export interface StatusOptions {
   markdown?: boolean;
   output?: string;
   verbose?: boolean;
+  legacy?: boolean;
 }
 
 export function runStatus(opts: StatusOptions): void {
-  const report = computeDataHealth();
-  let text = formatHealthReport(report, opts.markdown);
+  const report = computeMaturityReport();
+  let text = formatMaturityReport(report, opts.markdown);
+
+  if (opts.legacy) {
+    const legacy = computeDataHealth();
+    text += opts.markdown
+      ? `\n\n## データ成熟度（legacy）\n\n${formatHealthReport(legacy, true).split("\n").slice(2).join("\n")}`
+      : `\n\n--- legacy ---\n${formatHealthReport(legacy)}`;
+  }
 
   if (opts.verbose) {
     const issues = runIntegrityChecks();

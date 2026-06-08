@@ -1,0 +1,48 @@
+# 運用設定 — P0 判定 · 会計年度 · 記録プローブ
+# 施設 operations パスは modules.yaml（hospitality.operations_*）が正本
+
+fiscal_year:
+  id: FY2026
+  plan_file: data/plans/yojitsu-fy2026.yaml
+  from: "2026-02"
+  to: "2027-01"
+
+p0:
+  contracts:
+    - id: CTR-013
+      blocker: true
+    - id: CTR-014
+      blocker: true
+    - id: CTR-012
+      blocker: true
+
+  secrets:
+    - module_id: hospitality
+      item_id: secrets-kamezawa
+      label: kamezawa-secrets.yaml 実値
+      blocker: true
+      missing_detail: example からコピー · gitignore
+      done_detail: 作成済
+
+  cash_balance:
+    enabled: true
+    item_id: cash-balance
+    label: cash-balance.yaml 確定
+    blocker: true
+
+  records:
+    - module_id: hospitality
+      item_id: ops-records
+      label: operations/records 運用開始
+      probe_file: records/2026/08/宿泊者名簿.csv
+      blocker: false
+      in_progress_detail: 最小ログ開始
+      open_detail: 未作成
+
+  audits:
+    - id: audit-01
+      label: 第1回内部監査報告
+      path: docs/compliance/iso/audit-records/fy2026/audit-01-report.md
+      blocker: false
+      done_detail: audit-01-report.md
+      open_detail: "2026-08-18 予定"

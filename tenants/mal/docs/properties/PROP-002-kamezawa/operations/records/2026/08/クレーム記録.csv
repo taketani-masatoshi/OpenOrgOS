@@ -1,0 +1,2 @@
+complaint_id,date,guest_ref,channel,summary,response_deadline,status,resolution,notes
+CMP-20260819-001,2026-08-19,STY-20260818-001,Airbnb,Wi-Fi接続不安定,2026-08-20,closed,ルータ再起動で解決,REG-012第5条に記録

@@ -1,0 +1,2 @@
+clean_id,date,property_id,room,checkout_time,cleaning_start,cleaning_end,vendor,amount_yen,inspector,notes
+CLN-20260820-001,2026-08-20,PROP-002,全体,11:00,13:00,15:30,TBD清掃,12000,段燕燕,CTR-012締結前の暫定手配

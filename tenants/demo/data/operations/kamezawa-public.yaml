@@ -1,0 +1,39 @@
+# 亀沢旅館 — 施設公開情報（ゲスト・OTA用）
+
+# 機密（鍵コード・Wi-Fi PW・代表携帯）は kamezawa-secrets.yaml（gitignore）に記載。
+
+property_id: PROP-002
+name: "亀沢旅館（Kamezawa House）"
+
+address:
+  prefecture: "東京都"
+  city: "墨田区"
+  chome: "亀沢1丁目"
+  display_ja: "東京都墨田区亀沢1丁目"
+  display_en: "Kamezawa 1-chome, Sumida-ku, Tokyo"
+  landmark_ja: "両国駅A3/A4出口より北斎通り沿い徒歩1分（両国湯屋江戸遊付近）"
+  map_url: "https://maps.google.com/?q=Ryogoku+Station+Tokyo"
+
+access:
+  station_ja: "都営大江戸線 両国駅"
+  station_en: "Ryogoku Station (Toei Oedo Line)"
+  exit: "A3 or A4"
+  walk_minutes: 1
+
+check_in: "15:00"
+check_out: "10:00"
+max_guests: 7
+
+contact:
+  email: "info@malkk.com"
+  ota: "Booking platform message (preferred)"
+  emergency_note: "119/110 for fire/ambulance/police. Property urgent: see kamezawa-secrets.yaml"
+
+guest_docs:
+  house_rules_en: "docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/house-rules.md"
+  local_guide_en: "docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/local-guide-en.md"
+  welcome_sheet: "docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/welcome-sheet.md"
+
+notes: |
+  番地・スマートロック・Wi-Fiは secrets ファイルで管理。
+  ゲスト MD 更新時は本 YAML と secrets を同期。

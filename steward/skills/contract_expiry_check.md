@@ -26,8 +26,8 @@ Property Rental Agent（賃貸モジュール CTR）
 ## CLI
 
 ```bash
-npm run steward -- alerts
-npm run steward -- contracts list
+npm run steward -- skills run contract-expiry
+npm run steward -- alerts   # 同上（legacy）
 ```
 
 ## 禁止

@@ -12,6 +12,7 @@ import {
   loadEnabledRegulationIds,
 } from "../lib/regulations.js";
 import { getTenantId } from "../lib/tenant.js";
+import { getModuleTier } from "../lib/module-readiness.js";
 
 export function runModulesList(): void {
   const tenantId = getTenantId();
@@ -26,12 +27,13 @@ export function runModulesList(): void {
   console.log(`Enabled ISO: ${iso.length}`);
   console.log(`Effective regulations: ${regs.length}\n`);
 
-  console.log("| Catalog | Tenant id | Enabled | Properties | summary_dir |");
-  console.log("|---------|-----------|---------|------------|-------------|");
+  console.log("| Catalog | Tenant id | Enabled | Tier | Properties | summary_dir |");
+  console.log("|---------|-----------|---------|------|------------|-------------|");
   for (const r of rows) {
     const props = r.propertyIds?.join(", ") ?? "—";
+    const tier = getModuleTier(r.catalogId);
     console.log(
-      `| ${r.catalogId} | ${r.tenantId} | ${r.enabled ? "yes" : "no"} | ${props} | ${r.summaryDir ?? "—"} |`
+      `| ${r.catalogId} | ${r.tenantId} | ${r.enabled ? "yes" : "no"} | ${tier} | ${props} | ${r.summaryDir ?? "—"} |`
     );
   }
 

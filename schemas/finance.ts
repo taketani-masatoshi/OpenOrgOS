@@ -157,7 +157,22 @@ export const payrollSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const yojitsuMonthPlan = z.object({
+export const yojitsuLineKind = z.enum(["revenue", "expense", "depreciation", "capex"]);
+
+/** yojitsu v2 — business-plan segments[].name と kind で計画・実績行を表現 */
+export const yojitsuLineSchema = z.object({
+  segment: z.string().min(1),
+  kind: yojitsuLineKind,
+  amount: z.number().nonnegative(),
+  label: z.string().optional(),
+});
+
+export const yojitsuMonthSideSchema = z.object({
+  lines: z.array(yojitsuLineSchema).default([]),
+});
+
+/** @deprecated v1 — MAL 固定列。読込時に v2 lines[] へ正規化（互換レイヤ） */
+export const yojitsuLegacyMonthPlan = z.object({
   revenue_bancho: z.number().nonnegative().default(0),
   revenue_kamezawa: z.number().nonnegative().default(0),
   revenue_translation: z.number().nonnegative().default(0),
@@ -170,14 +185,34 @@ export const yojitsuMonthPlan = z.object({
   capex: z.number().nonnegative().default(0),
 });
 
-export const yojitsuMonthActual = yojitsuMonthPlan.partial();
+export const yojitsuLegacyMonthActual = yojitsuLegacyMonthPlan.partial();
 
-export const yojitsuMonth = z.object({
+/** plan / actual — v2（lines 必須）または v1 固定列 */
+export const yojitsuMonthSideV2RawSchema = z.object({
+  lines: z.array(yojitsuLineSchema),
+});
+
+export const yojitsuMonthSideRawSchema = z.union([
+  yojitsuMonthSideV2RawSchema,
+  yojitsuLegacyMonthPlan,
+]);
+
+export const yojitsuMonthSideActualRawSchema = z.union([
+  yojitsuMonthSideV2RawSchema.partial(),
+  yojitsuLegacyMonthActual,
+]);
+
+export const yojitsuMonthSchema = z.object({
   month: monthString,
-  plan: yojitsuMonthPlan,
-  actual: yojitsuMonthActual.optional(),
+  plan: yojitsuMonthSideRawSchema,
+  actual: yojitsuMonthSideActualRawSchema.optional(),
   notes: z.string().optional(),
 });
+
+/** @deprecated alias — v1 月次計画フィールド名 */
+export const yojitsuMonthPlan = yojitsuLegacyMonthPlan;
+export const yojitsuMonthActual = yojitsuLegacyMonthActual;
+export const yojitsuMonth = yojitsuMonthSchema;
 
 export const yojitsuClosingSchema = z.object({
   status: z.enum(["open", "closed"]),
@@ -202,7 +237,8 @@ export const yojitsuPlanSchema = z.object({
   assumptions: z.string().optional(),
   closing: yojitsuClosingSchema.optional(),
   summary: yojitsuSummarySchema.optional(),
-  months: z.array(yojitsuMonth).default([]),
+  months: z.array(yojitsuMonthSchema).default([]),
+  schema_version: z.literal(2).optional(),
 });
 
 export const cashBalanceAccountSchema = z.object({
@@ -376,7 +412,23 @@ export type FixedAsset = z.infer<typeof fixedAssetSchema>;
 export type TaxProfile = z.infer<typeof taxProfileSchema>;
 export type ChartOfAccounts = z.infer<typeof chartOfAccountsSchema>;
 
-export type YojitsuPlan = z.infer<typeof yojitsuPlanSchema>;
+export type YojitsuLineKind = z.infer<typeof yojitsuLineKind>;
+export type YojitsuLine = z.infer<typeof yojitsuLineSchema>;
+export type YojitsuMonthSide = z.infer<typeof yojitsuMonthSideSchema>;
+export type YojitsuPlanRaw = z.infer<typeof yojitsuPlanSchema>;
+export type YojitsuMonthRaw = z.infer<typeof yojitsuMonthSchema>;
+
+/** 正規化後（months[].plan/actual は常に lines[]） */
+export interface YojitsuMonth {
+  month: string;
+  plan: YojitsuMonthSide;
+  actual?: YojitsuMonthSide;
+  notes?: string;
+}
+
+export type YojitsuPlan = Omit<YojitsuPlanRaw, "months"> & {
+  months: YojitsuMonth[];
+};
 
 export type MonthlyFinance = z.infer<typeof monthlyFinanceSchema>;
 export type FixedCosts = z.infer<typeof fixedCostsSchema>;

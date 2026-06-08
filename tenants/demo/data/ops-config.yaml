@@ -1,0 +1,18 @@
+# 運用設定 — デモ（P0 未設定 · MAL パス非参照）
+
+fiscal_year:
+  id: FY2026
+  plan_file: data/plans/yojitsu-fy2026.yaml
+  from: "2026-02"
+  to: "2027-01"
+
+p0:
+  contracts: []
+  secrets: []
+  cash_balance:
+    enabled: true
+    item_id: cash-balance
+    label: cash-balance.yaml 確定
+    blocker: true
+  records: []
+  audits: []

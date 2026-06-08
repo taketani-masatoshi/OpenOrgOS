@@ -1,0 +1,148 @@
+# 勘定科目（最小セット）— 複式簿記・申告書対応の科目コード
+# 会計方針: docs/finance/accounting-policy.md
+
+version: "1"
+currency: JPY
+
+accounts:
+  # 資産
+  - code: "1100"
+    name: 現金及び預金
+    type: asset
+    normal_balance: debit
+    data_source: data/finance/cash-balance.yaml
+  - code: "1200"
+    name: 建物
+    type: asset
+    normal_balance: debit
+    data_source: data/finance/fixed-assets.yaml
+    filter: category=建物
+  - code: "1210"
+    name: 土地
+    type: asset
+    normal_balance: debit
+    data_source: data/finance/fixed-assets.yaml
+    filter: category=土地
+  - code: "1290"
+    name: 減価償却累計額
+    type: asset_contra
+    normal_balance: credit
+    data_source: data/finance/fixed-assets.yaml
+    field: accumulated_depreciation
+  - code: "1300"
+    name: 役員貸付金
+    type: asset
+    normal_balance: debit
+    data_source: data/finance/loans.yaml
+    note: 貸付対象者は負債科目（役員借入金）と相殺せず別管理（税理士確認）
+
+  # 負債
+  - code: "2100"
+    name: 役員借入金
+    type: liability
+    normal_balance: credit
+    data_source: data/finance/loans.yaml
+    note: 無利息役員貸付 LOAN-001/002。みなし利息調整は tax-profile 参照
+
+  # 純資産
+  - code: "3100"
+    name: 資本金
+    type: equity
+    normal_balance: credit
+    data_source: TBD
+  - code: "3200"
+    name: 繰越利益剰余金
+    type: equity
+    normal_balance: credit
+    data_source: TBD
+
+  # 収益
+  - code: "4100"
+    name: 賃貸料収入
+    type: revenue
+    normal_balance: credit
+    property_ids: [PROP-001]
+  - code: "4200"
+    name: 宿泊収入
+    type: revenue
+    normal_balance: credit
+    property_ids: [PROP-002]
+  - code: "4900"
+    name: 雑収入
+    type: revenue
+    normal_balance: credit
+
+  # 費用
+  - code: "5100"
+    name: 減価償却費
+    type: expense
+    normal_balance: debit
+    data_source: data/plans/expense-plan.yaml
+    line_id: depreciation
+  - code: "5200"
+    name: 旅館運営費
+    type: expense
+    normal_balance: debit
+    property_ids: [PROP-002]
+  - code: "5300"
+    name: 役員報酬
+    type: expense
+    normal_balance: debit
+    data_source: data/finance/payroll.yaml
+  - code: "5400"
+    name: 業務委託費
+    type: expense
+    normal_balance: debit
+    contract_ids: [CTR-001]
+  - code: "5500"
+    name: 支払利息
+    type: expense
+    normal_balance: debit
+    note: 現状 LOAN-001/002 は利率0%
+  - code: "5600"
+    name: 修繕費
+    type: expense
+    normal_balance: debit
+  - code: "5700"
+    name: 通信費
+    type: expense
+    normal_balance: debit
+  - code: "5800"
+    name: 保険料
+    type: expense
+    normal_balance: debit
+  - code: "5900"
+    name: 雑費
+    type: expense
+    normal_balance: debit
+
+category_mapping:
+  revenue:
+    rent: "4100"
+    hotel_revenue: "4200"
+    other_revenue: "4900"
+  expense:
+    repair: "5600"
+    cleaning: "5200"
+    management_fee: "5200"
+    utilities: "5200"
+    other_property: "5200"
+    fixed_rent: "5200"
+    communication: "5700"
+    insurance: "5800"
+    advisory: "5400"
+    system: "5400"
+    loan_payment: "2100"
+    capex: "1200"
+    other: "5900"
+
+monthly_close_adjustments:
+  - trigger: 減価償却費（番町ハイム）
+    debit: "5100"
+    credit: "1290"
+    amount_source: fixed-assets ASSET-001 annual_depreciation
+    note: 月次 YAML の other カテゴリ行と整合
+
+notes: |
+  本ファイルは Steward 正データの科目マッピング。実際の仕訳・総勘定元帳は会計ソフト（TBD）で管理。
+  capex 発生時は investment-plan と fixed-assets を同時更新。

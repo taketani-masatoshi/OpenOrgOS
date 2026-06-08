@@ -1,5 +1,7 @@
 # Steward OS - Property Business Edition v0.2
 
+> **後継:** [spec-v0.3.md](spec-v0.3.md) が正本。本書は v0.2 時点の履歴。
+
 ## 基本方針
 
 Steward OSは不動産賃貸業および旅館業を営む法人向けの経営OSである。
@@ -36,7 +38,7 @@ Stewardは蓄積された情報を利用して、
 - **Property**: `data/properties/{id}.yaml`
 - **Contract**: `data/contracts/{id}.yaml`
 - **Monthly Finance**: `data/finance/monthly/{YYYY-MM}.yaml`
-- **Plans**: `data/plans/*.yaml`
+- **Plans**: `data/plans/*.yaml`（予実 yojitsu は [spec/yojitsu-v2.md](spec/yojitsu-v2.md) 参照）
 - **決算書・PL**: `docs/plans/*.md`
 - **計画 CSV**: `docs/exports/*.csv`
 
@@ -54,6 +56,7 @@ Stewardは蓄積された情報を利用して、
 10. **書類 I/O** — `steward io`（inbox 受信 / outbox 印刷）
 11. **経営ダッシュボード** — `steward dashboard` / `steward report dashboard`（日次 MD → `docs/reports/dashboard/`）
 12. **依存影響チェック** — `steward deps check` / `steward impact`（`data/dependency-graph.yaml`）
+13. **賃料請求書** — `steward invoice generate`（[spec/invoice.md](spec/invoice.md) · `modules.yaml` billing · `steward/modules/rental/seed/`）
 
 ## パラメータ依存関係
 

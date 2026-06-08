@@ -1,0 +1,439 @@
+# 借入・返済・DSCR 統合計画
+# 正データ: data/plans/debt-plan.yaml
+# 人向け: docs/finance/borrowing-plan.md · loan-repayment-plan.md · dscr-plan.md
+
+currency: JPY
+as_of: "2026-06-07"
+status: draft
+
+summary:
+  total_debt: 112600000
+  loan_count: 2
+  interest_bearing_debt: 0
+  bank_borrowing: 0
+  notes: |
+    全額役員貸付（無利息）。銀行借入予定なし（business-plan.yaml borrowing_plan: 0 と整合）。
+    返済開始時期・年次返済額は契約上「協議」のため、本計画は目安シナリオ。確定後 loans.yaml と CTR 返済 MD を更新。
+
+policies:
+  - id: POL-DEBT-001
+    title: 調達方針
+    description: 物件取得資金は役員貸付（段燕燕）で調達。銀行借入は計画しない。
+  - id: POL-DEBT-002
+    title: 金利条件
+    description: 現行 LOAN-001/002 は無利息（年0%）。利息支払は debt service に含めない。
+  - id: POL-DEBT-003
+    title: 返済方針
+    description: 亀沢開業・運転資金優先。営業CF・稼働状況を勘案し代表取締役2名で協議の上、任意返済。
+  - id: POL-DEBT-004
+    title: DSCR 管理
+    description: 内部目標 DSCR ≥ 1.2。1.0 未満は返済ペース見直し（保守シナリオへ切替）を検討。銀行 covenant なし。
+
+loans:
+  - loan_id: LOAN-001
+    contract_id: CTR-008
+    property_id: PROP-001
+    property_name: 番町ハイム312
+    lender: 役員貸付（段燕燕）
+    balance: 16600000
+    interest_rate: 0
+    executed_date: "2025-02-10"
+    maturity_date: "2035-01-31"
+    repayment_start: FY2028
+    documents:
+      executed: docs/contracts/CTR-008/02-executed.md
+      repayment: docs/contracts/CTR-008/repayment-schedule.md
+    notes: 2028年度以降 CF に応じ任意返済。2035/1/31 全額返済期限。
+
+  - loan_id: LOAN-002
+    contract_id: CTR-009
+    property_id: PROP-002
+    property_name: 亀沢旅館
+    lender: 役員貸付（段燕燕）
+    balance: 96000000
+    interest_rate: 0
+    executed_date: "2025-06-01"
+    maturity_date: "2040-01-31"
+    repayment_start: FY2030
+    use_of_funds:
+      land: 70000000
+      construction: 26000000
+    documents:
+      executed: docs/contracts/CTR-009/02-executed.md
+      repayment: docs/contracts/CTR-009/repayment-schedule.md
+    notes: 2030年度以降段階返済。2040/1/31 全額返済期限。
+
+future_bank_borrowing:
+  planned: false
+  amount: 0
+  notes: "中期事業計画（2026-2028）では borrowing_plan: 0。追加調達が必要な場合は Executive Steward 承認後に本計画を改定。"
+
+scenarios:
+  - id: base
+    name: 基本シナリオ
+    description: CTR 返済 MD の目安上限内。営業CF安定後に段階返済を開始。
+    repayments:
+      # LOAN-001 — 2028〜2034 年200万/年、2035-01 残額260万
+      - fiscal_year: FY2026
+        loan_id: LOAN-001
+        principal: 0
+        balance_after: 16600000
+        status: confirmed
+      - fiscal_year: FY2027
+        loan_id: LOAN-001
+        principal: 0
+        balance_after: 16600000
+        status: confirmed
+      - fiscal_year: FY2028
+        loan_id: LOAN-001
+        principal: 2000000
+        balance_after: 14600000
+        status: planned
+      - fiscal_year: FY2029
+        loan_id: LOAN-001
+        principal: 2000000
+        balance_after: 12600000
+        status: planned
+      - fiscal_year: FY2030
+        loan_id: LOAN-001
+        principal: 2000000
+        balance_after: 10600000
+        status: planned
+      - fiscal_year: FY2031
+        loan_id: LOAN-001
+        principal: 2000000
+        balance_after: 8600000
+        status: planned
+      - fiscal_year: FY2032
+        loan_id: LOAN-001
+        principal: 2000000
+        balance_after: 6600000
+        status: planned
+      - fiscal_year: FY2033
+        loan_id: LOAN-001
+        principal: 2000000
+        balance_after: 4600000
+        status: planned
+      - fiscal_year: FY2034
+        loan_id: LOAN-001
+        principal: 2000000
+        balance_after: 2600000
+        status: planned
+      - fiscal_year: FY2035
+        loan_id: LOAN-001
+        principal: 2600000
+        balance_after: 0
+        status: planned
+        notes: 2035-01 期限一括（残元本）
+      # LOAN-002 — 2030〜2039 年800万/年、2040-01 残額1600万
+      - fiscal_year: FY2026
+        loan_id: LOAN-002
+        principal: 0
+        balance_after: 96000000
+        status: confirmed
+      - fiscal_year: FY2027
+        loan_id: LOAN-002
+        principal: 0
+        balance_after: 96000000
+        status: confirmed
+      - fiscal_year: FY2028
+        loan_id: LOAN-002
+        principal: 0
+        balance_after: 96000000
+        status: confirmed
+      - fiscal_year: FY2029
+        loan_id: LOAN-002
+        principal: 0
+        balance_after: 96000000
+        status: confirmed
+      - fiscal_year: FY2030
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 88000000
+        status: planned
+      - fiscal_year: FY2031
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 80000000
+        status: planned
+      - fiscal_year: FY2032
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 72000000
+        status: planned
+      - fiscal_year: FY2033
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 64000000
+        status: planned
+      - fiscal_year: FY2034
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 56000000
+        status: planned
+      - fiscal_year: FY2035
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 48000000
+        status: planned
+      - fiscal_year: FY2036
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 40000000
+        status: planned
+      - fiscal_year: FY2037
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 32000000
+        status: planned
+      - fiscal_year: FY2038
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 24000000
+        status: planned
+      - fiscal_year: FY2039
+        loan_id: LOAN-002
+        principal: 8000000
+        balance_after: 16000000
+        status: planned
+      - fiscal_year: FY2040
+        loan_id: LOAN-002
+        principal: 16000000
+        balance_after: 0
+        status: planned
+        notes: 2040-01 期限一括（残元本）
+
+  - id: conservative
+    name: 保守シナリオ
+    description: 低稼働・CF悪化時。返済ペースを緩め、期限前に残高集中リスクを管理。
+    repayments:
+      - fiscal_year: FY2028
+        loan_id: LOAN-001
+        principal: 1000000
+        balance_after: 15600000
+        status: planned
+      - fiscal_year: FY2029
+        loan_id: LOAN-001
+        principal: 1000000
+        balance_after: 14600000
+        status: planned
+      - fiscal_year: FY2030
+        loan_id: LOAN-001
+        principal: 1000000
+        balance_after: 13600000
+        status: planned
+      - fiscal_year: FY2031
+        loan_id: LOAN-001
+        principal: 1000000
+        balance_after: 12600000
+        status: planned
+      - fiscal_year: FY2032
+        loan_id: LOAN-001
+        principal: 1000000
+        balance_after: 11600000
+        status: planned
+      - fiscal_year: FY2033
+        loan_id: LOAN-001
+        principal: 1000000
+        balance_after: 10600000
+        status: planned
+      - fiscal_year: FY2034
+        loan_id: LOAN-001
+        principal: 3000000
+        balance_after: 7600000
+        status: planned
+      - fiscal_year: FY2035
+        loan_id: LOAN-001
+        principal: 7600000
+        balance_after: 0
+        status: planned
+      - fiscal_year: FY2030
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 91000000
+        status: planned
+      - fiscal_year: FY2031
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 86000000
+        status: planned
+      - fiscal_year: FY2032
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 81000000
+        status: planned
+      - fiscal_year: FY2033
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 76000000
+        status: planned
+      - fiscal_year: FY2034
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 71000000
+        status: planned
+      - fiscal_year: FY2035
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 66000000
+        status: planned
+      - fiscal_year: FY2036
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 61000000
+        status: planned
+      - fiscal_year: FY2037
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 56000000
+        status: planned
+      - fiscal_year: FY2038
+        loan_id: LOAN-002
+        principal: 5000000
+        balance_after: 51000000
+        status: planned
+      - fiscal_year: FY2039
+        loan_id: LOAN-002
+        principal: 10000000
+        balance_after: 41000000
+        status: planned
+      - fiscal_year: FY2040
+        loan_id: LOAN-002
+        principal: 41000000
+        balance_after: 0
+        status: planned
+
+annual_schedule:
+  description: 基本シナリオの全社合算（元本返済のみ）
+  rows:
+    - fiscal_year: FY2026
+      loan_001: 0
+      loan_002: 0
+      total_repayment: 0
+      total_balance: 112600000
+      milestone: 返済猶予（投資回収期）
+    - fiscal_year: FY2027
+      loan_001: 0
+      loan_002: 0
+      total_repayment: 0
+      total_balance: 112600000
+      milestone: 亀沢フル稼働・CF安定化
+    - fiscal_year: FY2028
+      loan_001: 2000000
+      loan_002: 0
+      total_repayment: 2000000
+      total_balance: 110600000
+      milestone: LOAN-001 任意返済開始（目安）
+    - fiscal_year: FY2029
+      loan_001: 2000000
+      loan_002: 0
+      total_repayment: 2000000
+      total_balance: 108600000
+    - fiscal_year: FY2030
+      loan_001: 2000000
+      loan_002: 8000000
+      total_repayment: 10000000
+      total_balance: 98600000
+      milestone: LOAN-002 返済開始（目安）· DSCR 要監視
+    - fiscal_year: FY2031
+      loan_001: 2000000
+      loan_002: 8000000
+      total_repayment: 10000000
+      total_balance: 88600000
+    - fiscal_year: FY2034
+      loan_001: 2000000
+      loan_002: 8000000
+      total_repayment: 10000000
+      total_balance: 58600000
+    - fiscal_year: FY2035
+      loan_001: 2600000
+      loan_002: 8000000
+      total_repayment: 10600000
+      total_balance: 48000000
+      milestone: LOAN-001 完済
+    - fiscal_year: FY2039
+      loan_001: 0
+      loan_002: 8000000
+      total_repayment: 8000000
+      total_balance: 16000000
+    - fiscal_year: FY2040
+      loan_001: 0
+      loan_002: 16000000
+      total_repayment: 16000000
+      total_balance: 0
+      milestone: LOAN-002 完済・全借入清算
+
+dscr:
+  targets:
+    minimum: 1.2
+    warning: 1.0
+    notes: 内部管理目標。銀行借入なしのため covenant ではない。
+  assumptions: |
+    NOI 代理指標: profit-plan.yaml の operating_profit（全社営業利益）。
+    FY2029 以降は FY2028 計画値（817万/年）を横ばい前提（TBD: 中期計画更新で再算定）。
+    debt service = 元本返済のみ（無利息）。返済ゼロ年は DSCR = N/A。
+    参考月次CF: data/finance/monthly/2027-01.yaml（売上115万・利益約62万/月）。
+  projections:
+    - fiscal_year: FY2027
+      scenario_id: base
+      noi_proxy: 7839000
+      debt_service: 0
+      dscr: null
+      status: n_a
+      notes: 返済猶予期
+    - fiscal_year: FY2028
+      scenario_id: base
+      noi_proxy: 8170950
+      debt_service: 2000000
+      dscr: 4.09
+      status: ok
+    - fiscal_year: FY2030
+      scenario_id: base
+      noi_proxy: 8170950
+      debt_service: 10000000
+      dscr: 0.82
+      status: critical
+      notes: 目標1.2未達。返済ペース見直しまたは保守シナリオ採用を協議（TBD）
+    - fiscal_year: FY2030
+      scenario_id: conservative
+      noi_proxy: 8170950
+      debt_service: 6000000
+      dscr: 1.36
+      status: ok
+      notes: LOAN-001 100万 + LOAN-002 500万
+    - fiscal_year: FY2035
+      scenario_id: base
+      noi_proxy: 8170950
+      debt_service: 10600000
+      dscr: 0.77
+      status: critical
+      notes: LOAN-001 期限一括含む。期限前に前倒し返済で平準化を検討（TBD）
+
+documents:
+  borrowing: docs/finance/borrowing-plan.md
+  repayment: docs/finance/loan-repayment-plan.md
+  dscr: docs/finance/dscr-plan.md
+  source_loans: data/finance/loans.yaml
+  source_business_plan: data/plans/business-plan.yaml
+
+tbd:
+  - item: 返済スケジュールの契約確定
+    status: pending_contract_confirmation
+    owner: Finance · Contract
+    notes: CTR-008/009 返済 MD は目安。代表2名協議の具体ルールは TBD。
+  - item: FY2029 以降の営業利益前提
+    status: pending_mid_term_update
+    owner: Finance
+    notes: profit-plan は FY2028 まで。DSCR 再算定には中期計画延長が必要。
+  - item: 返済実行記録
+    status: pending_first_repayment
+    owner: Finance
+    notes: 返済実行時 loans.yaml balance 更新 · CTR repayment-schedule.md 追記。
+  - item: FY2030 基本シナリオ DSCR 1.2 未達
+    status: requires_scenario_review
+    owner: Finance · Executive
+    notes: 保守シナリオ採用、または基本シナリオの年次返済額見直し。
+
+notes: |
+  関連: data/finance/loans.yaml · investment-plan.yaml · profit-plan.yaml
+  依存: npm run steward -- deps check --file data/plans/debt-plan.yaml

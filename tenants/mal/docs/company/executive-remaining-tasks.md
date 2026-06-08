@@ -1,26 +1,30 @@
 # 経営者 残タスク一覧
 
 **株式会社MAL · 段燕燕（代表取締役）向け**  
-**基準日:** 2026年6月7日（commit `ae0b0a4` 時点）  
-**完成度:** リポジトリ準備 **約96%** — 残りは **実手続・実データ入力** で 100% へ
+**基準日:** 2026年6月8日  
+**成熟度（3次元）:** `npm run steward -- status` · **P0:** `npm run steward -- ops p0`
 
-> 本ファイルは [steward-assessment.md](../compliance/iso/steward-assessment.md) の「100% ユーザー・外部アクション」、 [pre-opening-checklist.md](../properties/PROP-002-kamezawa/operations/pre-opening-checklist.md)、 [fy2026-tax-readiness-assessment.md](tax/fy2026-tax-readiness-assessment.md)、 [fy2026-tax-advisor-checklist.md](fy2026-tax-advisor-checklist.md)、 [executive-dashboard-guide.md](../plans/executive-dashboard-guide.md) を **経営者視点で1枚に集約** したものです。
+| 次元 | 意味 | 現状 |
+|------|------|------|
+| **準備度** | 規程 · 予実 · リポジトリ整備 | ~96% |
+| **運用度** | 実手続 · 記録 · secrets · 残高 | P0 未了（下表） |
+| **自動化度** | validate · daily · skills CLI | daily + `skills run` 利用可 |
 
----
-
-## 凡例
-
-| 優先度 | 意味 |
-|:------:|------|
-| **P0** | 今週中。稼働リスク・決算ブロッカー |
-| **P1** | 1〜4週間。開業・決算準備の要 |
-| **P2** | 計画的に。定期運用・改善 |
-
-**工数目安:** 15分 / 30分 / 1時間 / 半日 / 1日+（外部待ち除く）
+> 正本: [steward-assessment.md](../compliance/iso/steward-assessment.md) · [p0-closing-register.md](p0-closing-register.md)
 
 ---
 
-## 今すぐ（P0）
+## 完了済み（直近）
+
+- [x] **第1回内部監査（2026-08-18）** — [audit-01-report.md](../compliance/iso/audit-records/fy2026/audit-01-report.md)
+- [x] **operations/records 最小ログ開始** — [2026/08/](../properties/PROP-002-kamezawa/operations/records/2026/08/)
+- [x] **監査計画 REG-013 除外** — ISO-22301 無効のまま第2回から外す
+
+---
+
+## 今すぐ（P0 — 実務優先）
+
+**進捗確認:** `npm run steward -- ops p0` · 詳細: [p0-closing-register.md](p0-closing-register.md)
 
 - [ ] **[P0] CTR-014 亀沢旅館 火災保険に加入する**
   - **やること:** 加入パケットに沿い保険会社へ申込 → 証券 PDF 取得 → `docs/io/inbox/` 保管 → CTR-014 を executed 化

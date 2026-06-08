@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { loadBankAccounts } from "./classification.js";
-import { DATA_DIR } from "./utils.js";
+import { listOperationsModules, resolveModuleSecretsPath } from "./ops-config.js";
 
 /** L2 相当のパターン — tracked MD 出力前に redact */
 const STATIC_PATTERNS: RegExp[] = [
@@ -30,8 +29,10 @@ export function collectDynamicSecrets(): string[] {
       }
     }
   }
-  const secretsPath = join(DATA_DIR, "operations", "kamezawa-secrets.yaml");
-  if (existsSync(secretsPath)) {
+  for (const mod of listOperationsModules()) {
+    if (!mod.operationsSecrets) continue;
+    const secretsPath = resolveModuleSecretsPath(mod.moduleId);
+    if (!secretsPath || !existsSync(secretsPath)) continue;
     try {
       const raw = readFileSync(secretsPath, "utf-8");
       for (const line of raw.split("\n")) {

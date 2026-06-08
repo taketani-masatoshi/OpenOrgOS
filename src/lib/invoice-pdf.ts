@@ -9,6 +9,7 @@ import {
   type PdfTableRow,
 } from "./pdf.js";
 import { formatCurrency } from "./utils.js";
+import type { InvoiceTemplate } from "../../schemas/invoice-template.js";
 import {
   billingMonthEndDate,
   formatJapaneseDate,
@@ -27,6 +28,8 @@ export interface RentInvoiceInput {
   companyAddress: string;
   invoiceRegistrationNumber: string;
   bankAccount: string;
+  invoiceNumberPrefix?: string;
+  template?: InvoiceTemplate;
 }
 
 export function companyInvoiceRegistrationNumber(corporateNumber?: string): string {
@@ -35,14 +38,26 @@ export function companyInvoiceRegistrationNumber(corporateNumber?: string): stri
 }
 
 export function buildRentInvoiceRows(input: RentInvoiceInput): PdfTableRow[] {
+  const tpl = input.template?.pdf;
+  const lineLabel =
+    tpl?.line_label
+      ?.replace("{year_month}", formatJapaneseYearMonth(input.billingMonth))
+      .replace("{property_name}", input.propertyName) ??
+    `${formatJapaneseYearMonth(input.billingMonth)}分 賃料（${input.propertyName}）`;
+  const lineNote =
+    tpl?.line_note ??
+    "貸付用家屋の賃貸料（消費税非課税の可能性あり・要税理士確認）";
+  const taxLabel = tpl?.tax_label ?? "消費税（10%）";
+  const taxNote = tpl?.tax_note ?? "貸付用家屋の賃貸料は原則非課税";
+
   return [
     {
-      label: `${formatJapaneseYearMonth(input.billingMonth)}分 賃料（${input.propertyName}）`,
+      label: lineLabel,
       amount: input.monthlyRent,
-      note: "貸付用家屋の賃貸料（消費税非課税の可能性あり・要税理士確認）",
+      note: lineNote,
     },
     { label: "小計", amount: input.monthlyRent, bold: true },
-    { label: "消費税（10%）", amount: "非課税", note: "貸付用家屋の賃貸料は原則非課税" },
+    { label: taxLabel, amount: "非課税", note: taxNote },
     { label: "請求合計", amount: input.monthlyRent, bold: true },
   ];
 }
@@ -54,9 +69,9 @@ export async function generateRentInvoicePdf(
   const w = createPdfWriter();
   const issueDate = billingMonthEndDate(input.billingMonth);
   const dueDate = paymentDueDate(input.billingMonth);
-  const invNo = invoiceNumber(input.billingMonth);
+  const invNo = invoiceNumber(input.billingMonth, input.invoiceNumberPrefix ?? "RENT");
 
-  pdfTitle(w, "請 求 書", 20);
+  pdfTitle(w, input.template?.pdf.title ?? "請 求 書", 20);
   w.doc.moveDown(0.5);
 
   pdfMetaBlock(w, [
@@ -91,13 +106,12 @@ export async function generateRentInvoicePdf(
   w.doc.moveDown(0.5);
 
   pdfSection(w, "備考");
-  pdfParagraph(
-    w,
+  const footerNotes =
+    input.template?.pdf.footer_notes?.trim() ??
     "・振込手数料は貴社にてご負担ください。\n" +
       "・ご入金確認後、領収書が必要な場合はお申し付けください。\n" +
-      "・消費税の課税区分は税理士確認中です。",
-    9
-  );
+      "・消費税の課税区分は税理士確認中です。";
+  pdfParagraph(w, footerNotes, 9);
 
   await writePdfToFile(w.doc, outputPath);
   return outputPath;

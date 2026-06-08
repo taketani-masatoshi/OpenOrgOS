@@ -66,13 +66,19 @@ npm run validate
 ```bash
 npm run validate
 npm run steward -- modules list
+npm run steward -- ops p0
+npm run steward -- skills list
+npm run steward -- skills run daily
 npm run steward -- status
 npm run steward -- sync all
 npm run steward -- dashboard
 npm run steward -- classification check
+npm run steward -- invoice generate --module rental --property PROP-001 --from 2026-02 --to 2026-02 --fy FY2026
 ```
 
-詳細: [docs/spec-v0.2.md](docs/spec-v0.2.md) · [tenants/00-README.md](tenants/00-README.md) · [steward/modules/](steward/modules/00-このフォルダについて.md) · [steward/standards/iso/](steward/standards/iso/00-このフォルダについて.md)
+請求書: [docs/spec/invoice.md](docs/spec/invoice.md)
+
+詳細: [docs/spec-v0.3.md](docs/spec-v0.3.md)（**正本**） · [docs/framework-assessment.md](docs/framework-assessment.md) · [tenants/00-README.md](tenants/00-README.md) · [steward/modules/](steward/modules/00-このフォルダについて.md)
 
 ---
 

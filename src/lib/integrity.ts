@@ -1,21 +1,23 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 import type { Contract, Property, Loan } from "../../schemas/index.js";
 import {
   loadAllData,
   loadContracts,
   loadLoans,
   loadProperties,
-  loadOperationsPublic,
   loadEmployees,
   loadYojitsuPlan,
   loadCashBalance,
   resolveCashBalanceTotal,
 } from "./data.js";
-import { facilitySecretsSchema } from "../../schemas/operations.js";
+import { facilityPublicSchema, facilitySecretsSchema } from "../../schemas/operations.js";
 import { classificationRegistrySchema } from "../../schemas/classification.js";
 import { runClassificationChecks } from "./classification.js";
 import { DATA_DIR, readYamlFile, CLASSIFICATION_REGISTRY_YAML, resolveTenantPath } from "./utils.js";
+import {
+  listOperationsModules,
+  resolveModuleSecretsPath,
+} from "./ops-config.js";
 
 export interface IntegrityIssue {
   level: "error" | "warning";
@@ -101,43 +103,47 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     push("warning", "data/plans/yojitsu-2026.yaml", `expected 12 months, got ${yojitsu2026.months.length}`);
   }
 
-  try {
-    const ops = loadOperationsPublic();
-    if (ops.property_id && !propertyIds.has(ops.property_id)) {
-      push("error", "data/operations/kamezawa-public.yaml", `property_id ${ops.property_id} not found`);
-    }
-    for (const [, path] of Object.entries(ops.guest_docs ?? {})) {
-      if (path && !docExists(path)) {
-        push("warning", "data/operations/kamezawa-public.yaml", `guest doc missing: ${path}`);
+  for (const mod of listOperationsModules()) {
+    const publicRel = mod.operationsPublic;
+    const publicFile = publicRel ?? `module:${mod.moduleId}:operations_public`;
+    if (publicRel) {
+      try {
+        const ops = readYamlFile(resolveTenantPath(publicRel), facilityPublicSchema);
+        if (ops.property_id && !propertyIds.has(ops.property_id)) {
+          push("error", publicRel, `property_id ${ops.property_id} not found`);
+        }
+        for (const [, path] of Object.entries(ops.guest_docs ?? {})) {
+          if (path && !docExists(path)) {
+            push("warning", publicRel, `guest doc missing: ${path}`);
+          }
+        }
+      } catch (e) {
+        push("warning", publicRel, e instanceof Error ? e.message : String(e));
       }
     }
-  } catch (e) {
-    push("warning", "data/operations/kamezawa-public.yaml", e instanceof Error ? e.message : String(e));
-  }
 
-  const secretsPath = join(DATA_DIR, "operations", "kamezawa-secrets.yaml");
-  if (existsSync(secretsPath)) {
-    try {
-      const secrets = readYamlFile(secretsPath, facilitySecretsSchema);
-      const placeholders = Object.entries(secrets).filter(
-        ([, v]) => typeof v === "string" && (v === "REPLACE_ME" || v === "TBD" || v.startsWith("TBD"))
-      );
-      if (placeholders.length) {
-        push(
-          "warning",
-          "data/operations/kamezawa-secrets.yaml",
-          `${placeholders.length} 項目が未入力（REPLACE_ME / TBD）`
+    const secretsRel = mod.operationsSecrets;
+    if (!secretsRel) continue;
+    const secretsPath = resolveModuleSecretsPath(mod.moduleId);
+    if (secretsPath && existsSync(secretsPath)) {
+      try {
+        const secrets = readYamlFile(secretsPath, facilitySecretsSchema);
+        const placeholders = Object.entries(secrets).filter(
+          ([, v]) => typeof v === "string" && (v === "REPLACE_ME" || v === "TBD" || v.startsWith("TBD"))
         );
+        if (placeholders.length) {
+          push(
+            "warning",
+            secretsRel,
+            `${placeholders.length} 項目が未入力（REPLACE_ME / TBD）`
+          );
+        }
+      } catch (e) {
+        push("warning", secretsRel, e instanceof Error ? e.message : String(e));
       }
-    } catch (e) {
-      push("warning", "data/operations/kamezawa-secrets.yaml", e instanceof Error ? e.message : String(e));
+    } else {
+      push("warning", secretsRel, "未作成 — example をコピーして実値を記入");
     }
-  } else {
-    push(
-      "warning",
-      "data/operations/kamezawa-secrets.yaml",
-      "未作成 — example をコピーして実値を記入"
-    );
   }
 
   try {

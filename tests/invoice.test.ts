@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { existsSync, rmSync } from "node:fs";
 import {
   billingMonthEndDate,
   formatJapaneseYearMonth,
@@ -14,6 +15,12 @@ import {
   buildRentInvoiceRows,
   companyInvoiceRegistrationNumber,
 } from "../src/lib/invoice-pdf.js";
+import {
+  invoiceOutputDir,
+  loadInvoiceTemplate,
+  resolveBillingConfig,
+} from "../src/lib/invoice-config.js";
+import { runInvoiceGenerate } from "../src/lib/invoice-generate.js";
 
 describe("invoice dates", () => {
   it("computes month-end issue date", () => {
@@ -26,8 +33,9 @@ describe("invoice dates", () => {
     expect(paymentDueDate("2027-01")).toBe("2027-02-28");
   });
 
-  it("formats invoice number", () => {
-    expect(invoiceNumber("2026-06")).toBe("INV-BANCHO-2026-06");
+  it("formats invoice number with configurable prefix", () => {
+    expect(invoiceNumber("2026-06")).toBe("INV-RENT-2026-06");
+    expect(invoiceNumber("2026-06", "BANCHO")).toBe("INV-BANCHO-2026-06");
   });
 });
 
@@ -48,6 +56,7 @@ describe("invoice content", () => {
       companyAddress: "〒102-0084",
       invoiceRegistrationNumber: "T4010001189530",
       bankAccount: "[振込先口座 TBD]",
+      invoiceNumberPrefix: "BANCHO",
     });
     expect(rows[0].label).toContain(formatJapaneseYearMonth("2026-02"));
     expect(rows[0].amount).toBe(100_000);
@@ -70,5 +79,38 @@ describe("invoice content", () => {
     const body = buildInvoiceEmailBody(input);
     expect(body).toContain("100,000円");
     expect(body).toContain("2026年3月31日");
+  });
+
+  it("loads rental invoice template from module seed", () => {
+    const tpl = loadInvoiceTemplate("rental", "rent-monthly");
+    expect(tpl.id).toBe("rent-monthly");
+    expect(tpl.email.subject).toContain("{property_name}");
+  });
+});
+
+describe("invoice generate (MAL bancho)", () => {
+  it("resolves FY2026 bancho output path from modules.yaml billing", () => {
+    const billing = resolveBillingConfig("rental", "PROP-001");
+    expect(billing.docs_base).toBe("docs/finance/accounting/invoices/bancho");
+    expect(billing.invoice_number_prefix).toBe("BANCHO");
+    const out = invoiceOutputDir(billing.docs_base, "FY2026");
+    expect(out).toContain("finance/accounting/invoices/bancho/FY2026/output");
+  });
+
+  it("E2E generates single-month invoice to bancho FY path", async () => {
+    const billing = resolveBillingConfig("rental", "PROP-001");
+    const outDir = invoiceOutputDir(billing.docs_base, "FY2099");
+    const result = await runInvoiceGenerate({
+      moduleId: "rental",
+      propertyId: "PROP-001",
+      from: "2099-01",
+      to: "2099-01",
+      fiscalYear: "FY2099",
+    });
+    expect(result.files).toHaveLength(1);
+    expect(result.files[0].pdf).toContain("bancho/FY2099/output/2099-01-invoice.pdf");
+    expect(existsSync(result.files[0].pdf)).toBe(true);
+    expect(existsSync(result.files[0].eml)).toBe(true);
+    rmSync(outDir, { recursive: true, force: true });
   });
 });

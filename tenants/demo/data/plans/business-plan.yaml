@@ -1,0 +1,26 @@
+# デモ株式会社 事業計画（最小）
+
+period: "2026-2028"
+
+vision: |
+  フレームワーク検証用テナント — 賃貸1物件
+
+segments:
+  - name: "港湾マンション501（賃貸）"
+    description: "港区デモ物件 · 月8万円"
+    revenue_driver: "月額賃料"
+
+kpi:
+  - name: "FY2026 売上"
+    target: "96"
+    unit: "万円"
+
+years:
+  - year: 2026
+    revenue_plan: 960000
+    operating_profit_plan: 660000
+    investment_plan: 0
+    borrowing_plan: 0
+
+notes: |
+  yojitsu v2: data/plans/yojitsu-fy2026.yaml（lines[] · segments 連動）

@@ -1,0 +1,24 @@
+id: rent-monthly
+module: rental
+description: 月次賃料請求（PDF + メール文案 + EML/MSG）
+
+pdf:
+  title: "請 求 書"
+  line_label: "{year_month}分 賃料（{property_name}）"
+  line_note: "貸付用家屋の賃貸料（消費税非課税の可能性あり・要税理士確認）"
+  tax_label: "消費税（10%）"
+  tax_note: "貸付用家屋の賃貸料は原則非課税"
+  footer_notes: |
+    ・振込手数料は貴社にてご負担ください。
+    ・ご入金確認後、領収書が必要な場合はお申し付けください。
+    ・消費税の課税区分は税理士確認中です。
+
+email:
+  subject: "【ご請求】{property_name} {year_month}分賃料"
+  body_template: invoice-rent-monthly-body.txt
+
+defaults:
+  sender_email: info@example.com
+  tenant_name: "[借主名 TBD]"
+  tenant_email: "[送付先メール TBD]"
+  bank_account: "[振込先口座 TBD]"

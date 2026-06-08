@@ -1,14 +1,19 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 import {
   loadAllData,
   loadEmployees,
-  loadOperationsPublic,
   loadYojitsuFyPlan,
   validateAll,
 } from "./data.js";
 import { runIntegrityChecks, summarizeIntegrity } from "./integrity.js";
-import { DATA_DIR, STAKEHOLDERS_YAML, resolveTenantPath, toLogicalPath } from "./utils.js";
+import {
+  getFiscalYearRange,
+  listOperationsCatalogPaths,
+  listOperationsModules,
+  resolveModuleSecretsPath,
+} from "./ops-config.js";
+import { DATA_DIR, STAKEHOLDERS_YAML, resolveTenantPath, readYamlFile } from "./utils.js";
+import { facilityPublicSchema } from "../../schemas/operations.js";
 
 export interface HealthMetric {
   id: string;
@@ -80,20 +85,19 @@ export function computeDataHealth(): DataHealthReport {
     recommendations.push(`優先: ${draftHighRisk.map((c) => c.id).join(", ")} の手続完了`);
   }
 
+  const fy = getFiscalYearRange();
   const fyMonths = 12;
-  const fyFrom = "2026-02";
-  const fyTo = "2027-01";
-  const fyFinance = data.monthlyFinances.filter((m) => m.month >= fyFrom && m.month <= fyTo);
+  const fyFinance = data.monthlyFinances.filter((m) => m.month >= fy.from && m.month <= fy.to);
   const financeScore = Math.round((fyFinance.length / fyMonths) * 15);
   metrics.push({
     id: "finances",
-    label: "月次収支 (FY2026)",
+    label: `月次収支 (${fy.id})`,
     score: financeScore,
     max: 15,
     detail: `${fyFinance.length}/${fyMonths} ヶ月`,
   });
   if (fyFinance.length < fyMonths) {
-    recommendations.push(`FY2026 月次 YAML を ${fyMonths} ヶ月分そろえる`);
+    recommendations.push(`${fy.id} 月次 YAML を ${fyMonths} ヶ月分そろえる`);
   }
 
   const fixedScore = data.fixedCosts.items.length > 0 ? 5 : 0;
@@ -105,7 +109,7 @@ export function computeDataHealth(): DataHealthReport {
     detail: data.fixedCosts.items.length ? `${data.fixedCosts.items.length} 項目` : "未登録",
   });
 
-  const yojitsu = loadYojitsuFyPlan("FY2026");
+  const yojitsu = loadYojitsuFyPlan(fy.id);
   const yojitsuScore = yojitsu?.months.length === 12 && yojitsu.summary ? 10 : yojitsu ? 5 : 0;
   metrics.push({
     id: "yojitsu",
@@ -115,17 +119,30 @@ export function computeDataHealth(): DataHealthReport {
     detail: yojitsu ? `${yojitsu.months.length} ヶ月${yojitsu.summary ? " · summary あり" : ""}` : "未作成",
   });
 
+  const opsModules = listOperationsModules();
   let opsScore = 0;
-  try {
-    loadOperationsPublic();
-    opsScore = 5;
-    if (!existsSync(join(DATA_DIR, "operations", "kamezawa-secrets.yaml"))) {
-      recommendations.push("kamezawa-secrets.yaml を作成（Wi-Fi・緊急連絡）");
-    } else {
-      opsScore = 10;
+  let publicOk = false;
+  let secretsOk = true;
+  for (const mod of opsModules) {
+    if (mod.operationsPublic) {
+      try {
+        readYamlFile(resolveTenantPath(mod.operationsPublic), facilityPublicSchema);
+        publicOk = true;
+      } catch {
+        recommendations.push(`${mod.operationsPublic} を整備`);
+      }
     }
-  } catch {
-    recommendations.push("operations/kamezawa-public.yaml を整備");
+    if (mod.operationsSecrets) {
+      const secretsPath = resolveModuleSecretsPath(mod.moduleId);
+      if (!secretsPath || !existsSync(secretsPath)) {
+        secretsOk = false;
+        recommendations.push(`${mod.operationsSecrets} を作成（Wi-Fi・緊急連絡）`);
+      }
+    }
+  }
+  if (publicOk) opsScore = 5;
+  if (publicOk && secretsOk && opsModules.some((m) => m.operationsSecrets)) {
+    opsScore = 10;
   }
   metrics.push({
     id: "operations",
@@ -204,7 +221,9 @@ export function dataCatalogPaths(): string[] {
     if (existsSync(full)) paths.push(rel);
   };
   walk("data/company.yaml");
-  walk("data/operations/kamezawa-public.yaml");
+  for (const rel of listOperationsCatalogPaths()) {
+    walk(rel);
+  }
   walk("data/hr/employees.yaml");
   walk("data/finance/loans.yaml");
   walk("data/finance/fixed-costs.yaml");

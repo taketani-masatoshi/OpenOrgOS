@@ -1,0 +1,27 @@
+# Document I/O 台帳 — inbox（受信）/ outbox（印刷・提出）
+# 操作: npm run steward -- io status
+
+inbox_items: []
+outbox_items:
+  - id: OUT-001
+    filename: FY2026-kessan-hokoku.pdf
+    path: docs/io/outbox/corporate/kessan/FY2026-kessan-hokoku.pdf
+    category: corporate
+    purpose: print
+    generated_at: "2026-06-07"
+    source: manual
+    title: 第9期 決算報告書（簡易版）
+    related_id: FY2026
+    notes: steward report kessan 出力
+  - id: OUT-002
+    filename: test-out-1780757901304.pdf
+    path: docs/io/outbox/lodging/test-out-1780757901304.pdf
+    category: lodging
+    purpose: display
+    generated_at: "2026-06-06"
+    source: cli
+    title: ゲスト向け PDF テスト出力
+    notes: I/O テスト用 — 本番掲示前に差し替え
+notes: |
+  紙・スキャン・申請書 → docs/io/inbox/ に置き `io inbox add` で登録。
+  処理後 → 保管先（records/）+ outbox/。CLI 生成 PDF は自動登録。

@@ -1,0 +1,97 @@
+# 業務モジュール — デモテナント（賃貸のみ · hospitality 無効）
+
+modules:
+  - id: rental
+    enabled: true
+    agent: rental
+    property_ids: [PROP-001]
+    docs_root: docs/properties/PROP-D01-harbor/operations/
+    summary_dir: agent-summaries/rental/
+    notes: デモ物件 · 港湾マンション
+
+  - id: hospitality
+    enabled: false
+    agent: hospitality
+    property_ids: [PROP-002]
+    docs_root: docs/properties/PROP-D02-guest/operations/
+    operations_public: data/operations/guest-public.yaml
+    operations_secrets: data/operations/guest-secrets.yaml
+    summary_dir: agent-summaries/hospitality/
+
+  - id: professional_services
+    enabled: false
+    agent: professional_services
+    data_root: data/services/
+
+  - id: venture_capital
+    enabled: false
+    agent: venture_capital
+    data_root: data/venture-capital/
+    docs_root: docs/venture-capital/
+    summary_dir: agent-summaries/venture-capital/
+
+  - id: saas_subscription
+    enabled: false
+    agent: saas_subscription
+    data_root: data/saas/
+    summary_dir: agent-summaries/saas/
+
+  - id: event_space
+    enabled: false
+    agent: event_space
+    data_root: data/event-space/
+    summary_dir: agent-summaries/event-space/
+
+  - id: ecommerce
+    enabled: false
+    agent: ecommerce
+    data_root: data/ecommerce/
+    summary_dir: agent-summaries/ecommerce/
+
+  - id: restaurant
+    enabled: false
+    agent: restaurant
+    data_root: data/restaurant/
+    summary_dir: agent-summaries/restaurant/
+
+  - id: retail_store
+    enabled: false
+    agent: retail_store
+    data_root: data/retail-store/
+    summary_dir: agent-summaries/retail-store/
+
+  - id: clinic
+    enabled: false
+    agent: clinic
+    data_root: data/clinic/
+    summary_dir: agent-summaries/clinic/
+
+  - id: logistics
+    enabled: false
+    agent: logistics
+    data_root: data/logistics/
+    summary_dir: agent-summaries/logistics/
+
+  - id: staffing
+    enabled: false
+    agent: staffing
+    data_root: data/staffing/
+    summary_dir: agent-summaries/staffing/
+
+  - id: construction
+    enabled: false
+    agent: construction
+    data_root: data/construction/
+    summary_dir: agent-summaries/construction/
+
+  - id: education
+    enabled: false
+    agent: education
+    data_root: data/education/
+    summary_dir: agent-summaries/education/
+
+  - id: membership
+    enabled: false
+    agent: membership
+    data_root: data/membership/
+    summary_dir: agent-summaries/membership/

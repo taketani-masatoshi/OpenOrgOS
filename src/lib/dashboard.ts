@@ -9,6 +9,12 @@ import {
   loadPayroll,
   resolveCashBalanceTotal,
 } from "./data.js";
+import {
+  resolveYojitsuMonthSide,
+  sumAllOutflows,
+  sumOperatingExpenses,
+  sumRevenue as sumYojitsuRevenue,
+} from "./yojitsu-normalize.js";
 import { scanContractAlerts, type ContractAlert } from "./alerts.js";
 import {
   plannedMonthlyRevenue,
@@ -286,19 +292,14 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
   const yojitsu = loadYojitsuFyPlan(fiscalYear);
   if (yojitsu?.months.length) {
     const operatingMonths = yojitsu.months.filter((m) => {
-      const rev = sumYojitsuRevenue(m.actual ?? m.plan);
+      const rev = sumYojitsuRevenue(resolveYojitsuMonthSide(m));
       return rev > 0;
     });
     if (operatingMonths.length && source === "actual" && monthlyRevenue < plannedRevenue * 0.5) {
       const last = operatingMonths[operatingMonths.length - 1];
-      const row = last.actual ?? last.plan;
-      monthlyRevenue = sumYojitsuRevenue(row);
-      monthlyExpenses =
-        (row.expense_bancho ?? 0) +
-        (row.expense_kamezawa ?? 0) +
-        (row.expense_officer ?? 0) +
-        (row.expense_company ?? 0) +
-        (row.depreciation ?? 0);
+      const side = resolveYojitsuMonthSide(last);
+      monthlyRevenue = sumYojitsuRevenue(side);
+      monthlyExpenses = sumOperatingExpenses(side);
       monthlyLoan = loanPayments;
       source = "yojitsu";
       basisMonth = last.month;
@@ -396,20 +397,6 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
     basisMonth,
     notes,
   };
-}
-
-function sumYojitsuRevenue(row: {
-  revenue_bancho?: number;
-  revenue_kamezawa?: number;
-  revenue_translation?: number;
-  revenue_services?: number;
-}): number {
-  return (
-    (row.revenue_bancho ?? 0) +
-    (row.revenue_kamezawa ?? 0) +
-    (row.revenue_translation ?? 0) +
-    (row.revenue_services ?? 0)
-  );
 }
 
 function draftInsuranceTasks(contracts: Contract[]): DashboardTask[] {
@@ -515,15 +502,9 @@ function buildMonthlyTrend(fiscalYear: string): MonthlyTrendPoint[] {
   if (!yojitsu) return [];
 
   return yojitsu.months.map((m) => {
-    const row = m.actual ?? m.plan;
-    const revenue = sumYojitsuRevenue(row);
-    const expenses =
-      (row.expense_bancho ?? 0) +
-      (row.expense_kamezawa ?? 0) +
-      (row.expense_officer ?? 0) +
-      (row.expense_company ?? 0) +
-      (row.depreciation ?? 0) +
-      (row.capex ?? 0);
+    const side = resolveYojitsuMonthSide(m);
+    const revenue = sumYojitsuRevenue(side);
+    const expenses = sumAllOutflows(side);
     return {
       month: m.month,
       revenue,

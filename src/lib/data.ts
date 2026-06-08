@@ -53,12 +53,16 @@ import {
   type StakeholdersFile,
 } from "../../schemas/index.js";
 import { existsSync } from "node:fs";
+import { loadEnabledModules } from "./modules.js";
+import { normalizeYojitsuPlan } from "./yojitsu-normalize.js";
+import { getPrimaryOperationsPublicRel } from "./ops-config.js";
 import {
   DATA_DIR,
   readYamlFile,
   listYamlFiles,
   STAKEHOLDERS_YAML,
   toLogicalPath,
+  resolveTenantPath,
 } from "./utils.js";
 
 export interface StewardData {
@@ -278,7 +282,7 @@ export function loadPropertyRevenuePlan(): PropertyRevenuePlan {
 export function loadYojitsuPlan(year: number): import("../../schemas/finance.js").YojitsuPlan | undefined {
   const path = join(DATA_DIR, "plans", `yojitsu-${year}.yaml`);
   try {
-    return readYamlFile(path, yojitsuPlanSchema);
+    return normalizeYojitsuPlan(readYamlFile(path, yojitsuPlanSchema));
   } catch {
     return undefined;
   }
@@ -290,7 +294,7 @@ export function loadYojitsuFyPlan(
   const id = fiscalYear.toLowerCase().replace(/^fy/, "fy");
   const path = join(DATA_DIR, "plans", `yojitsu-${id}.yaml`);
   try {
-    return readYamlFile(path, yojitsuPlanSchema);
+    return normalizeYojitsuPlan(readYamlFile(path, yojitsuPlanSchema));
   } catch {
     return undefined;
   }
@@ -317,10 +321,11 @@ export function loadDebtPlan() {
 }
 
 export function loadOperationsPublic(): FacilityPublic {
-  return readYamlFile(
-    join(DATA_DIR, "operations", "kamezawa-public.yaml"),
-    facilityPublicSchema
-  );
+  const rel = getPrimaryOperationsPublicRel();
+  if (!rel) {
+    throw new Error("No enabled module with operations_public in modules.yaml");
+  }
+  return readYamlFile(resolveTenantPath(rel), facilityPublicSchema);
 }
 
 export function loadEmployees(): EmployeesFile {
@@ -419,7 +424,13 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     );
   }
 
-  tryLoad("data/operations/kamezawa-public.yaml", () => loadOperationsPublic());
+  for (const mod of loadEnabledModules()) {
+    if (mod.operations_public) {
+      tryLoad(mod.operations_public, () =>
+        readYamlFile(resolveTenantPath(mod.operations_public!), facilityPublicSchema)
+      );
+    }
+  }
   tryLoad("data/hr/employees.yaml", () => loadEmployees());
   tryLoad("data/executive/calendar.yaml", () => loadExecutiveCalendar());
   tryLoad("data/executive/tasks.yaml", () => loadExecutiveTasks());
