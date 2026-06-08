@@ -1,0 +1,7 @@
+id: rental
+required_seeds:
+  - invoice-rent-monthly.yaml
+  - invoice-rent-monthly-body.txt
+optional_regulations:
+  - REG-001
+notes: production_ready — billing via modules.yaml

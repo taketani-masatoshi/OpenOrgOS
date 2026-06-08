@@ -31,6 +31,25 @@ export function resolveBillingConfig(moduleId: string, propertyId: string): Reso
   return { ...billing, moduleId, propertyId };
 }
 
+/** Dry-run skeleton paths when billing block is unset */
+export function resolveBillingConfigDryRun(
+  moduleId: string,
+  propertyId: string
+): ResolvedBilling {
+  try {
+    return resolveBillingConfig(moduleId, propertyId);
+  } catch {
+    const slug = propertyId.toLowerCase().replace(/_/g, "-");
+    return {
+      moduleId,
+      propertyId,
+      docs_base: `docs/finance/accounting/invoices/${slug}`,
+      invoice_number_prefix: propertyId.replace("-", ""),
+      template_id: "rent-monthly",
+    };
+  }
+}
+
 export function invoiceFiscalYearDir(docsBase: string, fiscalYear: string): string {
   return resolveTenantPath(`${docsBase.replace(/\/$/, "")}/${fiscalYear.toUpperCase()}`);
 }

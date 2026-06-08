@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import {
@@ -10,6 +10,8 @@ import {
 import { propertySchema } from "../../schemas/property.js";
 import { getTenantDir, ROOT_DIR, tenantDataPath, tenantDocsPath } from "./tenant.js";
 import { listYamlFiles, readYamlFile } from "./utils.js";
+import YAML from "yaml";
+import { z } from "zod";
 
 export const MODULES_FILE = "modules.yaml";
 export const STEWARD_MODULES_DIR = join(ROOT_DIR, "steward", "modules");
@@ -296,4 +298,56 @@ export function listTenantModules(): ModuleListRow[] {
       summaryDir: tm?.summary_dir,
     };
   });
+}
+
+const moduleManifestSchema = z.object({
+  id: z.string(),
+  required_seeds: z.array(z.string()).default([]),
+  optional_regulations: z.array(z.string()).optional(),
+  notes: z.string().optional(),
+});
+
+export function loadModuleManifest(catalogId: string) {
+  const path = join(STEWARD_MODULES_DIR, catalogId, "module.manifest.yaml");
+  if (!existsSync(path)) return null;
+  return moduleManifestSchema.parse(YAML.parse(readFileSync(path, "utf-8")));
+}
+
+export interface ModuleCheckIssue {
+  moduleId: string;
+  message: string;
+}
+
+export function checkModule(catalogId: string): ModuleCheckIssue[] {
+  const issues: ModuleCheckIssue[] = [];
+  const manifest = loadModuleManifest(catalogId);
+  if (!manifest) {
+    issues.push({ moduleId: catalogId, message: "missing module.manifest.yaml" });
+    return issues;
+  }
+
+  const seedDir = getModuleSeedDir(catalogId);
+  if (!existsSync(seedDir)) {
+    issues.push({ moduleId: catalogId, message: `missing seed directory: steward/modules/${catalogId}/seed/` });
+    return issues;
+  }
+
+  for (const seed of manifest.required_seeds) {
+    const seedPath = join(seedDir, seed);
+    if (!existsSync(seedPath)) {
+      issues.push({
+        moduleId: catalogId,
+        message: `missing required seed: steward/modules/${catalogId}/seed/${seed}`,
+      });
+    }
+  }
+
+  if (!existsSync(getModuleAgentDocPath(catalogId))) {
+    issues.push({
+      moduleId: catalogId,
+      message: `missing agent.md: steward/modules/${catalogId}/agent.md`,
+    });
+  }
+
+  return issues;
 }

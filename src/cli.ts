@@ -49,9 +49,16 @@ import {
 } from "./commands/io.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "./commands/deps.js";
 import { runInvoiceBancho, runInvoiceGenerateCommand } from "./commands/invoice.js";
-import { runModulesList, runModulesSyncContext } from "./commands/modules.js";
+import { runModulesList, runModulesSyncContext, runModulesCheck } from "./commands/modules.js";
 import { runOpsDaily, runOpsP0 } from "./commands/ops.js";
 import { runSkillsList, runSkill } from "./commands/skills.js";
+import { runTenantInitCommand } from "./commands/tenant.js";
+import {
+  runRegulationsList,
+  runRegulationsEffective,
+  runRegulationsSeed,
+} from "./commands/regulations.js";
+import { runStandardsList, runStandardsEnabled } from "./commands/standards.js";
 
 const program = new Command();
 
@@ -87,6 +94,57 @@ modulesCmd
   .command("sync-context")
   .description("Regenerate active_context.md and tenant-active-context.mdc")
   .action(runModulesSyncContext);
+
+modulesCmd
+  .command("check <id>")
+  .description("Verify module manifest seeds exist (no tenant data required)")
+  .action(runModulesCheck);
+
+const tenantCmd = program.command("tenant").description("Tenant instance management");
+
+tenantCmd
+  .command("init <id>")
+  .description("Initialize tenant from _template with skeleton data")
+  .option("--name <name>", "Display / legal name")
+  .option("--from <modules...>", "Enable only these modules (e.g. rental)")
+  .option("--force", "Overwrite existing tenant directory")
+  .option("--no-validate", "Skip validate after init")
+  .action((id, opts) =>
+    runTenantInitCommand(id, {
+      name: opts.name,
+      from: opts.from,
+      force: opts.force,
+      validate: opts.validate,
+    })
+  );
+
+const regulationsCmd = program
+  .command("regulations")
+  .description("Regulation catalog and tenant effective docs");
+
+regulationsCmd.command("list").description("List catalog vs tenant regulations").action(runRegulationsList);
+
+regulationsCmd.command("effective").description("List effective regulation IDs").action(runRegulationsEffective);
+
+regulationsCmd
+  .command("seed")
+  .description("Copy effective regulation templates to docs/company/regulations/")
+  .option("--force", "Overwrite existing tenant docs")
+  .option("--dry-run", "Print what would be seeded")
+  .option("--id <regId>", "Seed single regulation (repeatable)", (v: string, prev: string[]) => [...prev, v], [])
+  .action((opts) =>
+    runRegulationsSeed({
+      force: opts.force,
+      dryRun: opts.dryRun,
+      ids: opts.id?.length ? opts.id : undefined,
+    })
+  );
+
+const standardsCmd = program.command("standards").description("ISO standards catalog");
+
+standardsCmd.command("list").description("List ISO catalog vs tenant standards.yaml").action(runStandardsList);
+
+standardsCmd.command("enabled").description("List enabled ISO standard IDs").action(runStandardsEnabled);
 
 const opsCmd = program.command("ops").description("Operational daily checks (P0 · contracts · maturity)");
 
@@ -446,6 +504,7 @@ invoice
   .requiredOption("--from <month>", "Start billing month (YYYY-MM)")
   .requiredOption("--to <month>", "End billing month (YYYY-MM)")
   .option("--fy <fiscalYear>", "Fiscal year folder (e.g. FY2026)", "FY2026")
+  .option("--dry-run", "Print output paths only (no PDF/email files)")
   .option("--tenant-name <name>", "Tenant name (default: modules.yaml or template)")
   .option("--tenant-email <email>", "Tenant email")
   .option("--bank-account <text>", "Bank transfer details")
@@ -461,6 +520,7 @@ invoice
       tenantEmail: opts.tenantEmail,
       bankAccount: opts.bankAccount,
       senderEmail: opts.senderEmail,
+      dryRun: opts.dryRun,
     })
   );
 

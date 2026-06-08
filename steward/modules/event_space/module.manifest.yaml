@@ -1,0 +1,3 @@
+id: event_space
+required_seeds: []
+notes: seed_only — extend required_seeds when production_ready

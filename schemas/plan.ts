@@ -145,7 +145,7 @@ export const debtPlanSchema = z.object({
   status: z.enum(["draft", "active", "superseded"]).default("draft"),
   summary: z.object({
     total_debt: z.number().nonnegative(),
-    loan_count: z.number().int().positive(),
+    loan_count: z.number().int().nonnegative(),
     interest_bearing_debt: z.number().nonnegative().default(0),
     bank_borrowing: z.number().nonnegative().default(0),
     notes: z.string().optional(),
@@ -159,7 +159,7 @@ export const debtPlanSchema = z.object({
       })
     )
     .default([]),
-  loans: z.array(debtPlanLoanSchema).min(1),
+  loans: z.array(debtPlanLoanSchema).default([]),
   future_bank_borrowing: z.object({
     planned: z.boolean(),
     amount: z.number().nonnegative().default(0),

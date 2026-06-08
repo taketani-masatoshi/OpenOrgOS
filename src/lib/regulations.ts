@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   regulationsCatalogSchema,
@@ -11,7 +11,7 @@ import {
 } from "../../schemas/tenant-regulations.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
 import { loadModulesFile } from "./modules.js";
-import { getTenantDir, ROOT_DIR, tenantDocsPath } from "./tenant.js";
+import { getTenantDir, ROOT_DIR, tenantDocsPath, loadTenantConfig } from "./tenant.js";
 import { readYamlFile } from "./utils.js";
 
 export const REGULATIONS_CATALOG_PATH = join(
@@ -205,4 +205,66 @@ export function listCatalogRegulationIds(): string[] {
   return loadRegulationsCatalog()
     .regulations.map((r) => r.id)
     .sort();
+}
+
+export interface SeedRegulationsOptions {
+  ids?: string[];
+  force?: boolean;
+  dryRun?: boolean;
+}
+
+export interface SeedRegulationsResult {
+  seeded: string[];
+  skipped: string[];
+  missing: string[];
+}
+
+function applyRegulationPlaceholders(content: string, companyName: string): string {
+  return content
+    .replace(/株式会社サンプル商事/g, companyName)
+    .replace(/株式会社サンプル/g, companyName)
+    .replace(/例示:.*/g, `例示: ${companyName}`)
+    .concat("\n\n---\n\n> [TBD] 施行日・条項詳細はテナント側で確定してください。\n");
+}
+
+export function seedRegulationDocs(
+  options: SeedRegulationsOptions = {}
+): SeedRegulationsResult {
+  const companyName = loadTenantConfig().legal_name ?? loadTenantConfig().name;
+  const effective = listEffectiveRegulations().filter((r) => r.effective);
+  const targetIds = options.ids?.length
+    ? new Set(options.ids)
+    : new Set(effective.map((r) => r.id));
+
+  const result: SeedRegulationsResult = { seeded: [], skipped: [], missing: [] };
+
+  for (const reg of effective) {
+    if (!targetIds.has(reg.id)) continue;
+    const cat = reg.catalog;
+    const templateAbs = join(STEWARD_REGULATIONS_DIR, cat.template);
+    const docAbs = tenantDocsPath(TENANT_REGULATIONS_SUBDIR, cat.tenant_doc);
+
+    if (!existsSync(templateAbs)) {
+      result.missing.push(reg.id);
+      continue;
+    }
+    if (existsSync(docAbs) && !options.force) {
+      result.skipped.push(reg.id);
+      continue;
+    }
+
+    const template = readFileSync(templateAbs, "utf-8");
+    const body = applyRegulationPlaceholders(template, companyName);
+
+    if (options.dryRun) {
+      result.seeded.push(reg.id);
+      continue;
+    }
+
+    mkdirSync(join(docAbs, ".."), { recursive: true });
+    writeFileSync(docAbs, body, "utf-8");
+    result.seeded.push(reg.id);
+  }
+
+  return result;
 }

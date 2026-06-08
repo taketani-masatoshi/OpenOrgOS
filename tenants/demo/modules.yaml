@@ -7,7 +7,7 @@ modules:
     property_ids: [PROP-001]
     docs_root: docs/properties/PROP-D01-harbor/operations/
     summary_dir: agent-summaries/rental/
-    notes: デモ物件 · 港湾マンション
+    notes: デモ物件 · 港湾マンション501
 
   - id: hospitality
     enabled: false

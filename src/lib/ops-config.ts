@@ -10,6 +10,7 @@ import {
 } from "../../schemas/ops-config.js";
 import { loadEnabledModules, loadModulesFile } from "./modules.js";
 import type { TenantModule } from "../../schemas/modules.js";
+import { loadTenantConfig } from "./tenant.js";
 import { DATA_DIR, readYamlFile, resolveTenantPath } from "./utils.js";
 
 export const OPS_CONFIG_REL = "data/ops-config.yaml";
@@ -110,4 +111,11 @@ export function listOperationsCatalogPaths(): string[] {
     if (mod.operationsSecrets) paths.push(mod.operationsSecrets);
   }
   return paths;
+}
+
+export function isSkeletonTenant(): boolean {
+  const cfg = loadTenantConfig();
+  if (cfg.lifecycle === "skeleton") return true;
+  if (cfg.lifecycle === "operational") return false;
+  return loadOpsConfig()?.skeleton === true;
 }

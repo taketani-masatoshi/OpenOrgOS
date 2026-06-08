@@ -4,10 +4,7 @@ fiscal_year: "FY2026"
 period_from: "2026-02"
 period_to: "2027-01"
 assumptions: |
-  デモテナント — yojitsu v2 lines[] · business-plan segments 連動
-summary:
-  revenue_total: 960000
-  operating_profit: 660000
+  デモ骨格 — yojitsu v2 lines[] · business-plan segments 連動
 months:
   - month: "2026-02"
     plan:
@@ -15,113 +12,71 @@ months:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
     actual:
-      lines:
-        - segment: "港湾マンション501（賃貸）"
-          kind: revenue
-          amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
+      lines: []
   - month: "2026-03"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-04"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-05"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-06"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-07"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-08"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-09"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-10"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-11"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2026-12"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000
   - month: "2027-01"
     plan:
       lines:
         - segment: "港湾マンション501（賃貸）"
           kind: revenue
           amount: 80000
-        - segment: "港湾マンション501（賃貸）"
-          kind: depreciation
-          amount: 25000

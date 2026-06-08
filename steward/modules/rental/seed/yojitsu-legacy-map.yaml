@@ -1,0 +1,38 @@
+# MAL 互換 — yojitsu v1 固定列 → v2 lines[] マッピング
+# 読込: src/lib/yojitsu-legacy-adapter.ts · 新規テナントは v2 lines[] のみ使用
+
+fields:
+  revenue_bancho:
+    segment: "番町ハイム312（賃貸）"
+    kind: revenue
+  revenue_kamezawa:
+    segment: "亀沢旅館（1棟貸し）"
+    kind: revenue
+  revenue_translation:
+    segment: "翻訳・通訳（不動産）"
+    kind: revenue
+  revenue_services:
+    segment: "DX・ソフトウェア"
+    kind: revenue
+  expense_bancho:
+    segment: "番町ハイム312（賃貸）"
+    kind: expense
+  expense_kamezawa:
+    segment: "亀沢旅館（1棟貸し）"
+    kind: expense
+  expense_officer:
+    segment: "_corporate"
+    kind: expense
+    label: "役員報酬"
+  expense_company:
+    segment: "_corporate"
+    kind: expense
+    label: "本社固定費"
+  depreciation:
+    segment: "番町ハイム312（賃貸）"
+    kind: depreciation
+    label: "減価償却費"
+  capex:
+    segment: "_investment"
+    kind: capex
+    label: "設備投資"

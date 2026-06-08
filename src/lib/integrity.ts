@@ -17,6 +17,7 @@ import { DATA_DIR, readYamlFile, CLASSIFICATION_REGISTRY_YAML, resolveTenantPath
 import {
   listOperationsModules,
   resolveModuleSecretsPath,
+  isSkeletonTenant,
 } from "./ops-config.js";
 
 export interface IntegrityIssue {
@@ -32,6 +33,7 @@ function docExists(relPath: string | undefined): boolean {
 
 export function runIntegrityChecks(): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
+  const skeleton = isSkeletonTenant();
   const push = (level: IntegrityIssue["level"], file: string, message: string) =>
     issues.push({ level, file, message });
 
@@ -141,7 +143,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       } catch (e) {
         push("warning", secretsRel, e instanceof Error ? e.message : String(e));
       }
-    } else {
+    } else if (!skeleton) {
       push("warning", secretsRel, "未作成 — example をコピーして実値を記入");
     }
   }
@@ -150,7 +152,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     const cash = loadCashBalance();
     if (cash) {
       const total = resolveCashBalanceTotal(cash);
-      if (cash.status === "template" && total == null) {
+      if (cash.status === "template" && total == null && !skeleton) {
         push(
           "warning",
           "data/finance/cash-balance.yaml",

@@ -50,11 +50,23 @@ npm run steward -- validate
 
 | ファイル | 役割 |
 |---------|------|
-| `tenant.yaml` | id · 法人名 · default フラグ |
+| `tenant.yaml` | id · 法人名 · default フラグ · **`lifecycle: skeleton \| operational`** |
 | `modules.yaml` | 有効モジュール · `property_ids` · `docs_root` · `operations_*` · **`billing`** |
 | `standards.yaml` | 有効 ISO 標準（`steward/standards/iso/` 参照） |
 | `regulations.yaml` | 有効社内規程（catalog id → テナント施行 MD） |
-| `data/ops-config.yaml` | P0 判定 · 会計年度 · records プローブ · 監査パス |
+| `data/ops-config.yaml` | P0 判定 · 会計年度 · records プローブ · 監査パス · **`skeleton: true`** で P0 ブロッカー抑制 |
+
+**骨格生成:**
+
+```bash
+npm run steward -- tenant init acme --name "株式会社ACME" --from rental
+npm run steward -- regulations seed          # effective REG の template → docs/company/regulations/
+npm run steward -- --tenant acme validate
+```
+
+`regulations.yaml` で `enabled: true` かつ bind 充足（effective）の規程は、テナント側 `docs/company/regulations/{tenant_doc}` が必須。骨格では `regulations seed` で `[TBD]` プレースホルダ付き MD を生成する。
+
+**参照テナント:** `tenants/demo/` — 賃貸1物件 · ガバナンス REG のみ · 契約0 · 残高未入力で validate 通過。
 
 **Agent トークン節約:** `enabled: false` のモジュールの `agent.md` / `seed/` は読まない。有効範囲は `rules/active_context.md` に同期（`steward modules sync-context`）。
 

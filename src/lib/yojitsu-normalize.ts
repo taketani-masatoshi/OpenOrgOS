@@ -1,5 +1,4 @@
 import {
-  yojitsuLineSchema,
   yojitsuLegacyMonthPlan,
   yojitsuMonthSideSchema,
   type YojitsuLine,
@@ -9,35 +8,16 @@ import {
   type YojitsuPlan,
   type YojitsuPlanRaw,
 } from "../../schemas/finance.js";
-
-/** v1 固定列 → business-plan segments 名（MAL 互換） */
-export const LEGACY_YOJITSU_FIELD_MAP: Record<
-  string,
-  { segment: string; kind: YojitsuLineKind; label?: string }
-> = {
-  revenue_bancho: { segment: "番町ハイム312（賃貸）", kind: "revenue" },
-  revenue_kamezawa: { segment: "亀沢旅館（1棟貸し）", kind: "revenue" },
-  revenue_translation: { segment: "翻訳・通訳（不動産）", kind: "revenue" },
-  revenue_services: { segment: "DX・ソフトウェア", kind: "revenue" },
-  expense_bancho: { segment: "番町ハイム312（賃貸）", kind: "expense" },
-  expense_kamezawa: { segment: "亀沢旅館（1棟貸し）", kind: "expense" },
-  expense_officer: { segment: "_corporate", kind: "expense", label: "役員報酬" },
-  expense_company: { segment: "_corporate", kind: "expense", label: "本社固定費" },
-  depreciation: {
-    segment: "番町ハイム312（賃貸）",
-    kind: "depreciation",
-    label: "減価償却費",
-  },
-  capex: { segment: "_investment", kind: "capex", label: "設備投資" },
-};
+import { loadLegacyYojitsuFieldMap } from "./yojitsu-legacy-adapter.js";
 
 export function isLegacyYojitsuSide(raw: unknown): boolean {
   if (!raw || typeof raw !== "object") return false;
   if ("lines" in raw && Array.isArray((raw as { lines?: unknown }).lines)) {
     return false;
   }
+  const map = loadLegacyYojitsuFieldMap();
   const keys = Object.keys(raw as object);
-  return keys.some((k) => k in LEGACY_YOJITSU_FIELD_MAP);
+  return keys.some((k) => k in map);
 }
 
 export function normalizeYojitsuSide(raw: unknown): YojitsuMonthSide {
@@ -49,10 +29,11 @@ export function normalizeYojitsuSide(raw: unknown): YojitsuMonthSide {
   }
   if (isLegacyYojitsuSide(raw)) {
     const legacy = yojitsuLegacyMonthPlan.parse(raw);
+    const fieldMap = loadLegacyYojitsuFieldMap();
     const lines: YojitsuLine[] = [];
     for (const [field, amount] of Object.entries(legacy)) {
       if (typeof amount !== "number" || amount === 0) continue;
-      const map = LEGACY_YOJITSU_FIELD_MAP[field];
+      const map = fieldMap[field];
       if (!map) continue;
       lines.push({
         segment: map.segment,

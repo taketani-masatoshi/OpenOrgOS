@@ -9,6 +9,12 @@ modules:
     docs_root: docs/properties/PROP-001-minato/operations/
     summary_dir: agent-summaries/rental/
     notes: みなとビル501 賃貸（例）
+    # billing skeleton（請求書生成前にコメント解除）:
+    # billing:
+    #   PROP-001:
+    #     docs_base: docs/finance/accounting/invoices/sample
+    #     invoice_number_prefix: RENT
+    #     template_id: rent-monthly
 
   - id: hospitality
     enabled: false
@@ -18,7 +24,7 @@ modules:
     operations_public: data/operations/midori-public.yaml
     operations_secrets: data/operations/midori-secrets.yaml
     summary_dir: agent-summaries/hospitality/
-    notes: 緑丘ゲストハウス（例 · 未開業なら enabled: false）
+    notes: "緑丘ゲストハウス（例 · 未開業なら enabled false）"
 
   - id: professional_services
     enabled: false

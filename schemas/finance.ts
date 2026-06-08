@@ -296,7 +296,7 @@ export const fixedAssetsSchema = z.object({
   as_of: dateString,
   fiscal_year: z.string().optional(),
   currency: z.literal("JPY").default("JPY"),
-  assets: z.array(fixedAssetSchema).min(1),
+  assets: z.array(fixedAssetSchema).default([]),
   summary: fixedAssetsSummarySchema.optional(),
   notes: z.string().optional(),
 });

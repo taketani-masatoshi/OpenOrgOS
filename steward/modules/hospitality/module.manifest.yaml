@@ -1,0 +1,7 @@
+id: hospitality
+required_seeds:
+  - operations-public.yaml.example
+  - operations-secrets.yaml.example
+optional_regulations:
+  - REG-012
+notes: seed_only

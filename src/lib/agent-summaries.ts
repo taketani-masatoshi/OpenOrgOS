@@ -467,21 +467,6 @@ export function writeAgentSummaries(
     if (mod.agent === "hospitality") prop002Path = path;
   }
 
-  if (!prop001Path) {
-    prop001Path = writeMarkdownReport(
-      `${AGENT_SUMMARIES_SUBDIR}/prop-001`,
-      filename,
-      formatRentalModuleSummary(d, r, ["PROP-001"])
-    );
-  }
-  if (!prop002Path) {
-    prop002Path = writeMarkdownReport(
-      `${AGENT_SUMMARIES_SUBDIR}/prop-002`,
-      filename,
-      formatHospitalityModuleSummary(d, r, ["PROP-002"])
-    );
-  }
-
   const compliancePath = writeMarkdownReport(
     `${AGENT_SUMMARIES_SUBDIR}/compliance`,
     filename,
@@ -513,28 +498,11 @@ export function writeAgentSummaries(
 
 /** 最新の dashboard-sync 要約パス（存在しなければ undefined） */
 export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
-  const domains: (keyof Omit<AgentSummaryPaths, "executive">)[] = [
-    "finance",
-    "contract",
-    "prop001",
-    "prop002",
-    "compliance",
-    "operations",
-  ];
-  const folderMap: Record<(typeof domains)[number], string> = {
-    finance: "finance",
-    contract: "contract",
-    prop001: "prop-001",
-    prop002: "prop-002",
-    compliance: "compliance",
-    operations: "operations",
-  };
-
   const result: Partial<AgentSummaryPaths> = {};
   let any = false;
 
-  for (const key of domains) {
-    const dir = join(DOCS_DIR, "reports", AGENT_SUMMARIES_SUBDIR, folderMap[key]);
+  for (const key of ["finance", "contract", "compliance", "operations"] as const) {
+    const dir = join(DOCS_DIR, "reports", AGENT_SUMMARIES_SUBDIR, key);
     if (!existsSync(dir)) continue;
     const files = readdirSync(dir)
       .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))
@@ -544,6 +512,20 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
       result[key] = join(dir, files[0]);
       any = true;
     }
+  }
+
+  for (const mod of loadEnabledModules()) {
+    const sub = mod.summary_dir ?? `agent-summaries/${mod.id}`;
+    const dir = join(DOCS_DIR, "reports", sub);
+    if (!existsSync(dir)) continue;
+    const files = readdirSync(dir)
+      .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))
+      .sort()
+      .reverse();
+    if (!files[0]) continue;
+    if (mod.agent === "rental") result.prop001 = join(dir, files[0]);
+    if (mod.agent === "hospitality") result.prop002 = join(dir, files[0]);
+    any = true;
   }
 
   const execDir = join(DOCS_DIR, "reports", "executive-notes");
@@ -561,8 +543,8 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
   return any ? result : null;
 }
 
-export function formatAgentSummariesSection(paths: AgentSummaryPaths): string {
-  const rows = [
+export function formatAgentSummariesSection(paths: Partial<AgentSummaryPaths>): string {
+  const rows: [string, string | undefined][] = [
     ["Finance", paths.finance],
     ["Contract", paths.contract],
     ["Rental Module", paths.prop001],
@@ -570,7 +552,7 @@ export function formatAgentSummariesSection(paths: AgentSummaryPaths): string {
     ["Compliance", paths.compliance],
     ["Operations", paths.operations],
     ["Executive", paths.executive],
-  ];
+  ].filter(([, p]) => p) as [string, string][];
 
   const lines = [
     "## Agent 要約（Steward 読取面）",

@@ -62,6 +62,12 @@
 
 **注意:** 準備度の規程スコアは「有効規程数 / 期待カタログ数」の比率で算出。期待数はテナントの `regulations.yaml` 次第であり、フレームワーク文書に固定件数（例: 16 件）を書かない。
 
+**スケルトンモード:** `tenant.yaml` の `lifecycle: skeleton` または `ops-config.yaml` の `skeleton: true` のテナントでは、運用度は **N/A（—）** とし、P0 ブロッカー・secrets 未作成警告を抑制する。`steward status` の総合スコアは準備度+自動化度の平均。スケルトン評価 ≠ 運用テナント（mal 等）の成熟度。
+
+### 骨格評価 ≠ 運用度
+
+`tenant.yaml` の `lifecycle: skeleton`（または `ops-config.yaml` の `skeleton: true`）では、P0 ブロッカー · secrets 未作成 · cash-balance 未確定を **警告に留め**、運用度は `N/A` または低スコア表示とする。骨格テナント（`tenants/demo/`）の validate 通過は **準備度** の目安であり、運用就绪を意味しない。
+
 ### テナント水準（インスタンス側の目安）
 
 | 水準 | 準備度 | 運用度 | 自動化度 |

@@ -34,6 +34,7 @@ export const opsConfigP0AuditSchema = z.object({
 });
 
 export const opsConfigSchema = z.object({
+  skeleton: z.boolean().optional(),
   fiscal_year: z
     .object({
       id: z.string().optional(),

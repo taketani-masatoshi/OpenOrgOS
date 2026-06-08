@@ -16,6 +16,7 @@ const tenantConfigSchema = z.object({
   display_name: z.string().optional(),
   description: z.string().optional(),
   default: z.boolean().optional(),
+  lifecycle: z.enum(["skeleton", "operational"]).optional(),
 });
 
 export type TenantConfig = z.infer<typeof tenantConfigSchema>;

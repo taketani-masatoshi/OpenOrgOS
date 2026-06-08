@@ -25,6 +25,7 @@ import {
   loadInvoiceBodyTemplate,
   loadInvoiceTemplate,
   resolveBillingConfig,
+  resolveBillingConfigDryRun,
   type TemplateVars,
 } from "./invoice-config.js";
 
@@ -38,6 +39,7 @@ export interface InvoiceGenerateOptions {
   tenantEmail?: string;
   bankAccount?: string;
   senderEmail?: string;
+  dryRun?: boolean;
 }
 
 export interface InvoiceGenerateResult {
@@ -63,11 +65,35 @@ function resolveFy(from: string, fiscalYear?: string): string {
 export async function runInvoiceGenerate(
   options: InvoiceGenerateOptions
 ): Promise<InvoiceGenerateResult> {
-  const billing = resolveBillingConfig(options.moduleId, options.propertyId);
+  const billing = options.dryRun
+    ? resolveBillingConfigDryRun(options.moduleId, options.propertyId)
+    : resolveBillingConfig(options.moduleId, options.propertyId);
   const fiscalYear = resolveFy(options.from, options.fiscalYear);
   const months = monthRange(options.from, options.to);
   if (months.length === 0) {
     throw new Error(`Invalid month range: ${options.from} .. ${options.to}`);
+  }
+
+  const outputDir = invoiceOutputDir(billing.docs_base, fiscalYear);
+  const emailsDir = invoiceEmailsDir(billing.docs_base, fiscalYear);
+
+  if (options.dryRun) {
+    const files = months.map((billingMonth) => ({
+      month: billingMonth,
+      pdf: join(outputDir, `${billingMonth}-invoice.pdf`),
+      emailMd: join(emailsDir, `${billingMonth}-email.md`),
+      eml: join(outputDir, `${billingMonth}-invoice.eml`),
+      msg: join(outputDir, `${billingMonth}-invoice.msg`),
+    }));
+    return {
+      moduleId: options.moduleId,
+      propertyId: options.propertyId,
+      fiscalYear,
+      months,
+      outputDir,
+      emailsDir,
+      files,
+    };
   }
 
   const company = loadCompany();
@@ -99,8 +125,6 @@ export async function runInvoiceGenerate(
     template.defaults?.sender_email ??
     "info@malkk.com";
 
-  const outputDir = invoiceOutputDir(billing.docs_base, fiscalYear);
-  const emailsDir = invoiceEmailsDir(billing.docs_base, fiscalYear);
   mkdirSync(outputDir, { recursive: true });
   mkdirSync(emailsDir, { recursive: true });
 

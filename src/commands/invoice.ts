@@ -10,6 +10,7 @@ export async function runInvoiceGenerateCommand(options: {
   tenantEmail?: string;
   bankAccount?: string;
   senderEmail?: string;
+  dryRun?: boolean;
 }): Promise<void> {
   const result = await runInvoiceGenerate({
     moduleId: options.module,
@@ -21,10 +22,12 @@ export async function runInvoiceGenerateCommand(options: {
     tenantEmail: options.tenantEmail,
     bankAccount: options.bankAccount,
     senderEmail: options.senderEmail,
+    dryRun: options.dryRun,
   });
 
+  const mode = options.dryRun ? " (dry-run)" : "";
   console.log(
-    `✓ ${result.propertyId} 請求書 ${result.months.length} 件 (${result.fiscalYear}) · module ${result.moduleId}`
+    `✓ ${result.propertyId} 請求書 ${result.months.length} 件 (${result.fiscalYear}) · module ${result.moduleId}${mode}`
   );
   for (const f of result.files) {
     console.log(`  ${f.month}:`);
@@ -34,7 +37,11 @@ export async function runInvoiceGenerateCommand(options: {
     console.log(`    MSG:  ${f.msg}`);
   }
   console.log("");
-  console.log("要記入: 借主名・送付先メール・振込先口座（プレースホルダのまま）");
+  if (options.dryRun) {
+    console.log("dry-run: ファイルは生成していません。billing 設定後に --dry-run なしで実行してください。");
+  } else {
+    console.log("要記入: 借主名・送付先メール・振込先口座（プレースホルダのまま）");
+  }
 }
 
 /** @deprecated alias — use `invoice generate --module rental --property PROP-001` */

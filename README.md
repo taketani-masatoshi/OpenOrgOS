@@ -41,13 +41,18 @@ npm run steward -- modules list
 
 ## テナント（会社）データ
 
-| テナント | 法人 | パス |
-|---------|------|------|
-| **mal**（既定） | 株式会社MAL | [`tenants/mal/`](tenants/mal/) |
+| テナント | 法人 | パス | 用途 |
+|---------|------|------|------|
+| **mal**（既定） | 株式会社MAL | [`tenants/mal/`](tenants/mal/) | 本番運用参照 |
+| **demo** | デモ株式会社 | [`tenants/demo/`](tenants/demo/) | **スケルトン参照実装**（validate 必須） |
 
 ```bash
+# 新規テナント（スケルトン）
+npm run steward -- tenant init acme --name "ACME Corp" --from rental
+
 export STEWARD_TENANT=mal
 npm run steward -- --tenant mal validate
+npm run steward -- --tenant demo validate   # CI ゲート
 ```
 
 論理パス `data/` · `docs/` は **アクティブテナント内**を指す。
@@ -65,6 +70,9 @@ npm run validate
 
 ```bash
 npm run validate
+npm run steward -- --tenant demo validate   # 骨格参照テナント
+npm run steward -- tenant init acme --name "株式会社ACME" --from rental
+npm run steward -- regulations seed
 npm run steward -- modules list
 npm run steward -- ops p0
 npm run steward -- skills list
@@ -73,7 +81,9 @@ npm run steward -- status
 npm run steward -- sync all
 npm run steward -- dashboard
 npm run steward -- classification check
-npm run steward -- invoice generate --module rental --property PROP-001 --from 2026-02 --to 2026-02 --fy FY2026
+npm run steward -- invoice generate --module rental --property PROP-001 --from 2026-02 --to 2026-02 --fy FY2026 --dry-run
+npm run steward -- standards list
+npm run steward -- modules check rental
 ```
 
 請求書: [docs/spec/invoice.md](docs/spec/invoice.md)

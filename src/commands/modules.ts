@@ -13,6 +13,20 @@ import {
 } from "../lib/regulations.js";
 import { getTenantId } from "../lib/tenant.js";
 import { getModuleTier } from "../lib/module-readiness.js";
+import { checkModule } from "../lib/modules.js";
+
+export function runModulesCheck(catalogId: string): void {
+  const issues = checkModule(catalogId);
+  if (issues.length === 0) {
+    console.log(`✓ Module "${catalogId}" manifest OK (tier: ${getModuleTier(catalogId)})`);
+    process.exit(0);
+  }
+  console.error(`✗ Module "${catalogId}" check failed:`);
+  for (const i of issues) {
+    console.error(`  ${i.message}`);
+  }
+  process.exit(1);
+}
 
 export function runModulesList(): void {
   const tenantId = getTenantId();

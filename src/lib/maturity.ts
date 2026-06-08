@@ -14,6 +14,7 @@ import {
   resolveModuleSecretsPath,
   resolveRecordsProbePath,
   resolveTenantDocPath,
+  isSkeletonTenant,
 } from "./ops-config.js";
 
 export interface MaturityDimension {
@@ -21,8 +22,9 @@ export interface MaturityDimension {
   label: string;
   score: number;
   max: number;
-  pct: number;
+  pct: number | null;
   detail: string;
+  na?: boolean;
 }
 
 export interface MaturityReport {
@@ -47,21 +49,24 @@ function dim(
   label: string,
   score: number,
   max: number,
-  detail: string
+  detail: string,
+  na = false
 ): MaturityDimension {
   return {
     id,
     label,
     score,
     max,
-    pct: max ? Math.round((score / max) * 100) : 0,
+    pct: na ? null : max ? Math.round((score / max) * 100) : 0,
     detail,
+    na,
   };
 }
 
 /** 準備度 / 運用度 / 自動化度 — steward status と assessment の共通定義 */
 export function computeMaturityReport(): MaturityReport {
   const recommendations: string[] = [];
+  const skeleton = isSkeletonTenant();
   const validation = validateAll();
   const integrity = summarizeIntegrity(runIntegrityChecks());
   const data = loadAllData();
@@ -92,6 +97,17 @@ export function computeMaturityReport(): MaturityReport {
   );
 
   let ops = 0;
+  let opsDim: MaturityDimension;
+  if (skeleton) {
+    opsDim = dim(
+      "operational",
+      "運用度",
+      0,
+      100,
+      "スケルトンモード — 運用評価対象外",
+      true
+    );
+  } else {
   const executed = data.contracts.filter((c) => c.status === "executed");
   ops += Math.round((executed.length / Math.max(data.contracts.length, 1)) * 20);
   const draftP0 = data.contracts.filter(
@@ -129,7 +145,7 @@ export function computeMaturityReport(): MaturityReport {
     const secretsPath = resolveModuleSecretsPath(mod.moduleId);
     if (secretsPath && existsSync(secretsPath)) {
       ops += 20;
-    } else {
+    } else if (!skeleton) {
       recommendations.push(`${mod.operationsSecrets} を example から作成`);
     }
   }
@@ -139,13 +155,14 @@ export function computeMaturityReport(): MaturityReport {
     ops += 20;
   }
 
-  const opsDim = dim(
-    "operational",
-    "運用度",
-    Math.min(100, ops),
-    100,
-    `${executed.length}/${data.contracts.length} executed · 月次 ${fyFinance.length}/12 · records ${hasRecords ? "開始" : "未"}`
-  );
+    opsDim = dim(
+      "operational",
+      "運用度",
+      Math.min(100, ops),
+      100,
+      `${executed.length}/${data.contracts.length} executed · 月次 ${fyFinance.length}/12 · records ${hasRecords ? "開始" : "未"}`
+    );
+  }
 
   let auto = 0;
   auto += validation.ok ? 30 : 0;
@@ -162,7 +179,9 @@ export function computeMaturityReport(): MaturityReport {
     "validate · classification · daily · deps"
   );
 
-  const overall = Math.round((prepDim.pct + opsDim.pct + autoDim.pct) / 3);
+  const overall = skeleton
+    ? Math.round(((prepDim.pct ?? 0) + (autoDim.pct ?? 0)) / 2)
+    : Math.round(((prepDim.pct ?? 0) + (opsDim.pct ?? 0) + (autoDim.pct ?? 0)) / 3);
 
   return {
     preparedness: prepDim,
@@ -176,11 +195,12 @@ export function computeMaturityReport(): MaturityReport {
 
 export function formatMaturityReport(report: MaturityReport, markdown = false): string {
   const dims = [report.preparedness, report.operational, report.automation];
+  const pctLabel = (d: MaturityDimension) => (d.pct == null ? "—" : `${d.pct}%`);
   if (!markdown) {
     const lines = [
       `Steward OS 成熟度: ${report.overall}% (${report.grade})`,
       "",
-      ...dims.map((d) => `  ${d.label}: ${d.pct}% — ${d.detail}`),
+      ...dims.map((d) => `  ${d.label}: ${pctLabel(d)} — ${d.detail}`),
     ];
     if (report.recommendations.length) {
       lines.push("", "推奨:");
@@ -195,9 +215,11 @@ export function formatMaturityReport(report: MaturityReport, markdown = false): 
     "",
     "| 次元 | スコア | 詳細 |",
     "|------|-------:|------|",
-    ...dims.map((d) => `| ${d.label} | ${d.pct}% | ${d.detail} |`),
+    ...dims.map((d) => `| ${d.label} | ${pctLabel(d)} | ${d.detail} |`),
     "",
     "> **準備度** = リポジトリ・規程・計画 / **運用度** = 実データ・記録・手続 / **自動化度** = CLI・検証・daily",
+    "",
+    "> スケルトンテナント（`lifecycle: skeleton`）では運用度は N/A。成熟度は準備度+自動化度の平均。",
   ];
   if (report.recommendations.length) {
     lines.push("", "## 推奨アクション", "");
