@@ -1,0 +1,220 @@
+# Agent ルーティングレジストリ — Phase 1 静的マッチ
+# 実装: src/lib/routing.ts · CLI: steward route list
+
+version: "1"
+as_of: "2026-06-08"
+
+routes:
+  - id: contract-expiry
+    description: 契約期限・更新アラート
+    agent: contract
+    skill: contract_expiry_check
+    priority: 80
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 契約期限
+        - 契約更新
+        - 期限切れ
+        - 契約アラート
+      paths:
+        - data/contracts/
+        - docs/contracts/
+
+  - id: monthly-close
+    description: 月次締め・月次収支
+    agent: finance
+    skill: monthly_close
+    priority: 70
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - 月次締め
+        - 月次収支
+        - 締め処理
+        - monthly close
+      paths:
+        - data/finance/monthly/
+
+  - id: finance-variance
+    description: 予実差異・FY 計画 vs 実績
+    agent: finance
+    skill: variance_analysis
+    priority: 65
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - 予実
+        - 差異分析
+        - variance
+        - 計画対実績
+      paths:
+        - data/plans/
+
+  - id: inbox-routing
+    description: 受信トレイ・未処理書類
+    agent: operations
+    priority: 60
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - inbox
+        - 受信トレイ
+        - 未処理書類
+        - スキャン
+      paths:
+        - docs/io/inbox/
+        - data/document-io.yaml
+
+  - id: outbox-routing
+    description: 出力トレイ・印刷待ち PDF
+    agent: operations
+    priority: 55
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - outbox
+        - 出力トレイ
+        - 印刷待ち
+      paths:
+        - docs/io/outbox/
+
+  - id: secretary-schedule
+    description: 社長スケジュール・予定調整
+    agent: secretary
+    skill: schedule_management
+    boundary: executive_data
+    priority: 90
+    resource_paths:
+      - data/executive/calendar.yaml
+    match:
+      keywords:
+        - スケジュール
+        - 予定
+        - カレンダー
+        - 会食
+        - 来客
+      paths:
+        - data/executive/calendar.yaml
+        - docs/executive/
+
+  - id: secretary-tasks
+    description: 社長タスク・ToDo
+    agent: secretary
+    boundary: executive_data
+    priority: 85
+    resource_paths:
+      - data/executive/tasks.yaml
+    match:
+      keywords:
+        - タスク
+        - ToDo
+        - 社長タスク
+      paths:
+        - data/executive/tasks.yaml
+
+  - id: secretary-one-on-one
+    description: 1-on-1 準備・議題
+    agent: secretary
+    skill: one_on_one_prep
+    boundary: executive_data
+    priority: 85
+    resource_paths:
+      - data/executive/one-on-ones.yaml
+    match:
+      keywords:
+        - 1-on-1
+        - one on one
+        - 面談準備
+      paths:
+        - data/executive/one-on-ones.yaml
+
+  - id: secretary-correspondence
+    description: 社外連絡・メール下書き
+    agent: secretary
+    skill: external_correspondence
+    boundary: executive_data
+    priority: 75
+    resource_paths:
+      - data/executive/external-contacts.yaml
+    match:
+      keywords:
+        - 社外連絡
+        - メール下書き
+        - 返信下書き
+      paths:
+        - data/executive/external-contacts.yaml
+
+  - id: executive-kpi
+    description: 経営 KPI・ダッシュボード要約（サマリのみ）
+    agent: executive_steward
+    boundary: executive_summaries
+    priority: 70
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - KPI
+        - 経営ダッシュボード
+        - ランウェイ
+        - P0
+        - 経営サマリ
+      paths:
+        - docs/reports/dashboard/
+        - docs/reports/agent-summaries/
+
+  - id: executive-daily
+    description: 日次運用チェック
+    agent: executive_steward
+    skill: daily_ops
+    boundary: executive_summaries
+    priority: 60
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - 日次運用
+        - daily ops
+        - 朝会
+
+  - id: compliance-permit
+    description: 許認可 · 保険 · ISO コンプライアンス
+    agent: compliance
+    skill: permit_expiry_check
+    priority: 75
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 許認可
+        - ISO
+        - コンプライアンス
+        - 個情
+        - 個人情報
+        - privacy
+        - gitignore
+        - classification-registry
+      paths:
+        - docs/compliance/
+        - data/classification-registry.yaml
+
+  - id: rental-operations
+    description: 賃貸物件運用（有効モジュールのみ）
+    agent: property_rental
+    module_agent: true
+    priority: 50
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 賃貸
+        - 入居者
+        - 家賃回収
+      paths:
+        - docs/properties/
+        - data/properties/

@@ -1,3 +1,6 @@
 id: logistics
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — shipments.yaml, warehouses.yaml
+activation_seeds:
+- shipments.yaml
+- warehouses.yaml

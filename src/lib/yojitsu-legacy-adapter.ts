@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import type { YojitsuLineKind } from "../../schemas/finance.js";
-import { getModuleSeedDir } from "./modules.js";
 import { getTenantDir } from "./tenant.js";
 
 export interface LegacyYojitsuFieldMap {
@@ -27,12 +26,6 @@ export function loadLegacyYojitsuFieldMap(): Record<string, LegacyYojitsuFieldMa
   const tenantPath = join(getTenantDir(), TENANT_LEGACY_MAP);
   if (existsSync(tenantPath)) {
     _cachedMap = parseLegacyMap(YAML.parse(readFileSync(tenantPath, "utf-8")));
-    return _cachedMap;
-  }
-
-  const rentalSeed = join(getModuleSeedDir("rental"), "yojitsu-legacy-map.yaml");
-  if (existsSync(rentalSeed)) {
-    _cachedMap = parseLegacyMap(YAML.parse(readFileSync(rentalSeed, "utf-8")));
     return _cachedMap;
   }
 

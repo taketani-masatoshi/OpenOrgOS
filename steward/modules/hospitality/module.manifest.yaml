@@ -1,7 +1,11 @@
 id: hospitality
 required_seeds:
-  - operations-public.yaml.example
-  - operations-secrets.yaml.example
+- invoice-hospitality-monthly.yaml
+- invoice-hospitality-monthly-body.txt
+- operations-public.yaml.example
+- operations-secrets.yaml.example
 optional_regulations:
-  - REG-012
-notes: seed_only
+- REG-012
+notes: production_ready — billing via modules.yaml
+activation_seeds:
+- operations-public.yaml

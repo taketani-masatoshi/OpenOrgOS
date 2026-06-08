@@ -48,10 +48,26 @@ import {
   runIoGuide,
 } from "./commands/io.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "./commands/deps.js";
-import { runInvoiceBancho, runInvoiceGenerateCommand } from "./commands/invoice.js";
-import { runModulesList, runModulesSyncContext, runModulesCheck } from "./commands/modules.js";
+import { runInvoiceGenerateCommand } from "./commands/invoice.js";
+import { runModulesList, runModulesSyncContext, runModulesCheck, runModulesCheckAll } from "./commands/modules.js";
 import { runOpsDaily, runOpsP0 } from "./commands/ops.js";
 import { runSkillsList, runSkill } from "./commands/skills.js";
+import {
+  runRouteList,
+  runRouteMatch,
+  runRouteSuggest,
+  runRouteHandoff,
+  runRouteDispatch,
+} from "./commands/route.js";
+import {
+  runEscalatePlan,
+  runEscalateRun,
+  runEscalateStatus,
+  runEscalateComplete,
+} from "./commands/escalate.js";
+import { runClassificationAccess } from "./commands/classification.js";
+import { runMapList, runMapResolve, runMapTree } from "./commands/map.js";
+import { runPipelineDaily, runPipelineList } from "./commands/pipeline.js";
 import { runTenantInitCommand } from "./commands/tenant.js";
 import {
   runRegulationsList,
@@ -96,9 +112,58 @@ modulesCmd
   .action(runModulesSyncContext);
 
 modulesCmd
-  .command("check <id>")
+  .command("check [id]")
   .description("Verify module manifest seeds exist (no tenant data required)")
-  .action(runModulesCheck);
+  .option("--all", "Check all catalog modules (production_ready: full · seed_only: skeleton)")
+  .action((id: string | undefined, opts: { all?: boolean }) => {
+    if (opts.all) {
+      runModulesCheckAll();
+      return;
+    }
+    if (!id) {
+      console.error("Provide a module id or use --all");
+      process.exit(1);
+    }
+    runModulesCheck(id);
+  });
+
+const mapCmd = program.command("map").description("Logical → physical path map (tenant · framework)");
+
+mapCmd
+  .command("list")
+  .description("List common logical paths for active tenant")
+  .action(runMapList);
+
+mapCmd
+  .command("resolve <path>")
+  .description("Resolve one logical path (e.g. data/company.yaml)")
+  .action(runMapResolve);
+
+mapCmd
+  .command("tree")
+  .description("Tenant map tree (enabled modules · dependency-graph nodes)")
+  .action(runMapTree);
+
+const pipelineCmd = program.command("pipeline").description("Automation pipelines (Cursor-external)");
+
+pipelineCmd
+  .command("list")
+  .description("List available pipelines")
+  .action(runPipelineList);
+
+pipelineCmd
+  .command("run <name>")
+  .description("Run a pipeline (daily: validate → ops daily → dashboard)")
+  .option("--tenant <id>", "Tenant id")
+  .option("--skip-validate", "Skip validate step")
+  .action((name, opts) => {
+    if (name === "daily") {
+      runPipelineDaily({ tenant: opts.tenant, skipValidate: opts.skipValidate });
+      return;
+    }
+    console.error(`Unknown pipeline: ${name}`);
+    process.exit(1);
+  });
 
 const tenantCmd = program.command("tenant").description("Tenant instance management");
 
@@ -151,6 +216,160 @@ const opsCmd = program.command("ops").description("Operational daily checks (P0 
 opsCmd.command("daily").description("Daily ops summary (maturity + P0 + contract alerts)").action(runOpsDaily);
 
 opsCmd.command("p0").description("P0 closing blockers only (exit 1 if open)").action(runOpsP0);
+
+const routeCmd = program.command("route").description("Agent inter-routing (registry · access · handoff)");
+
+routeCmd.command("list").description("List static route registry").action(runRouteList);
+
+routeCmd
+  .command("match")
+  .description("Match routes by --text and/or --path")
+  .option("--text <text>", "User intent or message text")
+  .option("--path <path>", "Resource path (logical)")
+  .option("--json", "JSON output")
+  .action((opts) => runRouteMatch({ text: opts.text, path: opts.path, json: opts.json }));
+
+routeCmd
+  .command("access")
+  .description("Check agent access via classification-registry")
+  .requiredOption("--agent <id>", "Agent id (e.g. secretary)")
+  .requiredOption("--path <path>", "Resource path")
+  .option("--operation <op>", "read | write | export", "read")
+  .action((opts) => runClassificationAccess(opts.agent, opts.path, opts.operation));
+
+routeCmd
+  .command("suggest")
+  .description("Suggest handoff card (console)")
+  .option("--from <agent>", "Source agent", "steward")
+  .option("--to <agent>", "Target agent (override match)")
+  .option("--skill <id>", "Skill id (override match)")
+  .option("--text <text>", "Intent text for match")
+  .option("--path <path>", "Path for match")
+  .option("--route-id <id>", "Force route id from registry")
+  .option("--mode <mode>", "suggest | auto", "suggest")
+  .option("--json", "JSON output")
+  .action((opts) =>
+    runRouteSuggest({
+      from: opts.from,
+      to: opts.to,
+      skill: opts.skill,
+      text: opts.text,
+      path: opts.path,
+      routeId: opts.routeId,
+      mode: opts.mode,
+      json: opts.json,
+    })
+  );
+
+routeCmd
+  .command("handoff")
+  .description("Write handoff YAML/MD to docs/reports/routing-queue/")
+  .option("--from <agent>", "Source agent", "steward")
+  .option("--to <agent>", "Target agent (override match)")
+  .option("--skill <id>", "Skill id")
+  .option("--text <text>", "Intent text for match")
+  .option("--path <path>", "Path for match")
+  .option("--route-id <id>", "Force route id")
+  .option("--mode <mode>", "suggest | auto", "suggest")
+  .option("--notes <text>", "Optional notes")
+  .action((opts) =>
+    runRouteHandoff({
+      from: opts.from,
+      to: opts.to,
+      skill: opts.skill,
+      text: opts.text,
+      path: opts.path,
+      routeId: opts.routeId,
+      mode: opts.mode,
+      notes: opts.notes,
+    })
+  );
+
+routeCmd
+  .command("dispatch")
+  .description("Dispatch handoff by id (suggest default; auto runs skills CLI)")
+  .requiredOption("--id <id>", "Handoff id (HO-... or IMP-...)")
+  .option("--mode <mode>", "suggest | auto | implement")
+  .action((opts) => runRouteDispatch({ id: opts.id, mode: opts.mode }));
+
+const escalateCmd = program
+  .command("escalate")
+  .description("Delegation / work orders (implement task routing)");
+
+escalateCmd
+  .command("plan")
+  .description("Plan work orders from request text (dry-run default)")
+  .option("--text <text>", "Request or structured escalation input")
+  .option("--path <path>", "Resource path for route match")
+  .option("--subject <text>", "Work order subject")
+  .option("--background <text>", "Background context")
+  .option("--requirements <text>", "Implementation requirements")
+  .option("--deliverable <d>", "Deliverable (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+  .option("--acceptance <c>", "Acceptance criterion (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+  .option("--priority <p>", "P0 | P1 | P2 | P3")
+  .option("--tenant <id>", "Tenant id")
+  .option("--dry-run", "Plan only (default)", true)
+  .option("--json", "JSON output")
+  .action((opts) =>
+    runEscalatePlan({
+      text: opts.text,
+      path: opts.path,
+      subject: opts.subject,
+      background: opts.background,
+      requirements: opts.requirements,
+      deliverables: opts.deliverable,
+      acceptance: opts.acceptance,
+      priority: opts.priority,
+      tenant: opts.tenant,
+      dryRun: opts.dryRun,
+      json: opts.json,
+    })
+  );
+
+escalateCmd
+  .command("run")
+  .description("Generate work orders + agent implementation prompt MD")
+  .option("--text <text>", "Request text")
+  .option("--path <path>", "Resource path")
+  .option("--subject <text>", "Subject")
+  .option("--background <text>", "Background")
+  .option("--requirements <text>", "Requirements")
+  .option("--deliverable <d>", "Deliverable", (v: string, prev: string[]) => [...prev, v], [] as string[])
+  .option("--acceptance <c>", "Acceptance criterion", (v: string, prev: string[]) => [...prev, v], [] as string[])
+  .option("--priority <p>", "P0 | P1 | P2 | P3")
+  .option("--from <agent>", "Source agent", "executive_steward")
+  .option("--tenant <id>", "Tenant id")
+  .option("--id <id>", "Regenerate prompts from existing HO-/IMP- id")
+  .action((opts) =>
+    runEscalateRun({
+      text: opts.text,
+      path: opts.path,
+      subject: opts.subject,
+      background: opts.background,
+      requirements: opts.requirements,
+      deliverables: opts.deliverable,
+      acceptance: opts.acceptance,
+      priority: opts.priority,
+      from: opts.from,
+      tenant: opts.tenant,
+      id: opts.id,
+    })
+  );
+
+escalateCmd
+  .command("status")
+  .description("List work orders in routing-queue")
+  .option("--pending", "Pending only")
+  .option("--blocked", "Blocked only")
+  .option("--json", "JSON output")
+  .action((opts) => runEscalateStatus({ pending: opts.pending, blocked: opts.blocked, json: opts.json }));
+
+escalateCmd
+  .command("complete")
+  .description("Mark work order completed")
+  .requiredOption("--id <id>", "Work order id (IMP-...)")
+  .option("--notes <text>", "Completion notes")
+  .action((opts) => runEscalateComplete({ id: opts.id, notes: opts.notes }));
 
 const skillsCmd = program.command("skills").description("Run Agent Skills from CLI (no Cursor)");
 
@@ -521,26 +740,6 @@ invoice
       bankAccount: opts.bankAccount,
       senderEmail: opts.senderEmail,
       dryRun: opts.dryRun,
-    })
-  );
-
-invoice
-  .command("bancho")
-  .description("(deprecated) Alias for generate --module rental --property PROP-001")
-  .requiredOption("--from <month>", "Start billing month (YYYY-MM)")
-  .requiredOption("--to <month>", "End billing month (YYYY-MM)")
-  .option("--fy <fiscalYear>", "Fiscal year folder (e.g. FY2026)", "FY2026")
-  .option("--tenant-name <name>", "Tenant name (default: placeholder)")
-  .option("--tenant-email <email>", "Tenant email (default: placeholder)")
-  .option("--bank-account <text>", "Bank transfer details (default: placeholder)")
-  .action((opts) =>
-    runInvoiceBancho({
-      from: opts.from,
-      to: opts.to,
-      fy: opts.fy,
-      tenantName: opts.tenantName,
-      tenantEmail: opts.tenantEmail,
-      bankAccount: opts.bankAccount,
     })
   );
 

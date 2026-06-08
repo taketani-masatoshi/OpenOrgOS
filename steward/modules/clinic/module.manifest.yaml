@@ -1,3 +1,6 @@
 id: clinic
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — appointments.yaml, departments.yaml
+activation_seeds:
+- appointments.yaml
+- departments.yaml

@@ -1,3 +1,6 @@
 id: venture_capital
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — funds.yaml, portfolio.yaml
+activation_seeds:
+- funds.yaml
+- portfolio.yaml

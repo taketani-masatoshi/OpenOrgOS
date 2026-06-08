@@ -13,7 +13,20 @@ import {
 } from "../lib/regulations.js";
 import { getTenantId } from "../lib/tenant.js";
 import { getModuleTier } from "../lib/module-readiness.js";
-import { checkModule } from "../lib/modules.js";
+import { checkAllModules, checkModule, listCatalogModuleIds } from "../lib/modules.js";
+import { getModuleTier, type ReadinessTier } from "../lib/module-readiness.js";
+
+function countTiers(): Record<ReadinessTier, number> {
+  const counts: Record<ReadinessTier, number> = {
+    skeleton: 0,
+    activation_ready: 0,
+    production_ready: 0,
+  };
+  for (const id of listCatalogModuleIds()) {
+    counts[getModuleTier(id)]++;
+  }
+  return counts;
+}
 
 export function runModulesCheck(catalogId: string): void {
   const issues = checkModule(catalogId);
@@ -24,6 +37,25 @@ export function runModulesCheck(catalogId: string): void {
   console.error(`✗ Module "${catalogId}" check failed:`);
   for (const i of issues) {
     console.error(`  ${i.message}`);
+  }
+  process.exit(1);
+}
+
+export function runModulesCheckAll(): void {
+  const catalogIds = listCatalogModuleIds();
+  const issues = checkAllModules();
+
+  if (issues.length === 0) {
+    const c = countTiers();
+    console.log(
+      `✓ All ${catalogIds.length} catalog modules OK (${c.production_ready} production_ready · ${c.activation_ready} activation_ready · ${c.skeleton} skeleton)`
+    );
+    process.exit(0);
+  }
+
+  console.error(`✗ modules check --all failed (${issues.length} issue(s)):`);
+  for (const i of issues) {
+    console.error(`  [${i.moduleId}] ${i.message}`);
   }
   process.exit(1);
 }

@@ -12,6 +12,10 @@ import { getTenantDir, ROOT_DIR, tenantDataPath, tenantDocsPath } from "./tenant
 import { listYamlFiles, readYamlFile } from "./utils.js";
 import YAML from "yaml";
 import { z } from "zod";
+import { loadRegulationsCatalog } from "./regulations.js";
+import { loadTenantRegulationsFile } from "./regulations.js";
+import { isSkeletonTenant } from "./ops-config.js";
+import { getModuleTier, type ReadinessTier } from "./module-readiness.js";
 
 export const MODULES_FILE = "modules.yaml";
 export const STEWARD_MODULES_DIR = join(ROOT_DIR, "steward", "modules");
@@ -303,6 +307,7 @@ export function listTenantModules(): ModuleListRow[] {
 const moduleManifestSchema = z.object({
   id: z.string(),
   required_seeds: z.array(z.string()).default([]),
+  activation_seeds: z.array(z.string()).default([]),
   optional_regulations: z.array(z.string()).optional(),
   notes: z.string().optional(),
 });
@@ -318,7 +323,26 @@ export interface ModuleCheckIssue {
   message: string;
 }
 
-export function checkModule(catalogId: string): ModuleCheckIssue[] {
+function checkSeedFiles(
+  catalogId: string,
+  seeds: string[],
+  label: string
+): ModuleCheckIssue[] {
+  const issues: ModuleCheckIssue[] = [];
+  const seedDir = getModuleSeedDir(catalogId);
+  for (const seed of seeds) {
+    const seedPath = join(seedDir, seed);
+    if (!existsSync(seedPath)) {
+      issues.push({
+        moduleId: catalogId,
+        message: `missing ${label} seed: steward/modules/${catalogId}/seed/${seed}`,
+      });
+    }
+  }
+  return issues;
+}
+
+function checkModuleSkeleton(catalogId: string): ModuleCheckIssue[] {
   const issues: ModuleCheckIssue[] = [];
   const manifest = loadModuleManifest(catalogId);
   if (!manifest) {
@@ -328,18 +352,10 @@ export function checkModule(catalogId: string): ModuleCheckIssue[] {
 
   const seedDir = getModuleSeedDir(catalogId);
   if (!existsSync(seedDir)) {
-    issues.push({ moduleId: catalogId, message: `missing seed directory: steward/modules/${catalogId}/seed/` });
-    return issues;
-  }
-
-  for (const seed of manifest.required_seeds) {
-    const seedPath = join(seedDir, seed);
-    if (!existsSync(seedPath)) {
-      issues.push({
-        moduleId: catalogId,
-        message: `missing required seed: steward/modules/${catalogId}/seed/${seed}`,
-      });
-    }
+    issues.push({
+      moduleId: catalogId,
+      message: `missing seed directory: steward/modules/${catalogId}/seed/`,
+    });
   }
 
   if (!existsSync(getModuleAgentDocPath(catalogId))) {
@@ -347,6 +363,98 @@ export function checkModule(catalogId: string): ModuleCheckIssue[] {
       moduleId: catalogId,
       message: `missing agent.md: steward/modules/${catalogId}/agent.md`,
     });
+  }
+
+  return issues;
+}
+
+export function checkModuleCatalogOnly(catalogId: string, tier: ReadinessTier): ModuleCheckIssue[] {
+  const issues = checkModuleSkeleton(catalogId);
+  const manifest = loadModuleManifest(catalogId);
+  if (!manifest) return issues;
+  if (tier === "activation_ready" || tier === "production_ready") {
+    issues.push(...checkSeedFiles(catalogId, manifest.activation_seeds, "activation"));
+  }
+  if (tier === "production_ready") {
+    issues.push(...checkSeedFiles(catalogId, manifest.required_seeds, "production"));
+  }
+  return issues;
+}
+
+export function checkModuleByTier(catalogId: string, tier?: ReadinessTier): ModuleCheckIssue[] {
+  const t = tier ?? getModuleTier(catalogId);
+  const catalogIssues = checkModuleCatalogOnly(catalogId, t);
+  if (t === "skeleton") return catalogIssues;
+  const manifest = loadModuleManifest(catalogId);
+  if (!manifest) return catalogIssues;
+  return [...catalogIssues, ...checkModuleTenantBinds(catalogId, manifest)];
+}
+
+export function checkModule(catalogId: string): ModuleCheckIssue[] {
+  return checkModuleByTier(catalogId);
+}
+
+/** Tier-aware catalog sweep for `modules check --all` (tenant binds excluded). */
+export function checkAllModules(): ModuleCheckIssue[] {
+  const issues: ModuleCheckIssue[] = [];
+  for (const id of listCatalogModuleIds()) {
+    issues.push(...checkModuleCatalogOnly(id, getModuleTier(id)));
+  }
+  return issues;
+}
+
+function checkModuleTenantBinds(
+  catalogId: string,
+  manifest: z.infer<typeof moduleManifestSchema>
+): ModuleCheckIssue[] {
+  const issues: ModuleCheckIssue[] = [];
+  let modulesFile: ModulesFile;
+  try {
+    modulesFile = loadModulesFile();
+  } catch {
+    return issues;
+  }
+
+  const tenantMod = modulesFile.modules.find((m) => m.id === catalogId);
+  if (!tenantMod) return issues;
+
+  const catalog = loadRegulationsCatalog();
+  const tenantRegs = loadTenantRegulationsFile();
+  for (const entry of tenantRegs.regulations) {
+    if (!entry.enabled) continue;
+    const cat = catalog.regulations.find((r) => r.id === entry.id);
+    if (
+      cat?.binds_to.type === "module" &&
+      cat.binds_to.module_id === catalogId &&
+      !tenantMod.enabled
+    ) {
+      issues.push({
+        moduleId: catalogId,
+        message: `bind conflict: ${entry.id} enabled in regulations.yaml but module "${catalogId}" is disabled`,
+      });
+    }
+  }
+
+  if (tenantMod.enabled) {
+    const needsProperties = catalogId === "rental" || catalogId === "hospitality";
+    if (needsProperties && (!tenantMod.property_ids || tenantMod.property_ids.length === 0)) {
+      issues.push({
+        moduleId: catalogId,
+        message: `enabled module "${catalogId}" missing property_ids in modules.yaml`,
+      });
+    }
+
+    const needsBilling = manifest.required_seeds.some((s) => s.startsWith("invoice-"));
+    if (needsBilling && tenantMod.property_ids?.length && !isSkeletonTenant()) {
+      for (const propId of tenantMod.property_ids) {
+        if (!tenantMod.billing?.[propId]) {
+          issues.push({
+            moduleId: catalogId,
+            message: `billing.${propId} unset — invoice generate requires modules.yaml billing block`,
+          });
+        }
+      }
+    }
   }
 
   return issues;

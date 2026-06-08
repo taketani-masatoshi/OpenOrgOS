@@ -38,7 +38,10 @@ export function runTenantInit(options: TenantInitOptions): void {
   }
 
   mkdirSync(dest, { recursive: true });
-  cpSync(TEMPLATE_DIR, dest, { recursive: true, filter: (src) => !src.endsWith(".example") });
+  cpSync(TEMPLATE_DIR, dest, {
+    recursive: true,
+    filter: (src) => shouldCopyTemplateEntry(src),
+  });
 
   const displayName = options.name ?? id;
   writeTenantYaml(dest, id, displayName);
@@ -102,10 +105,7 @@ function writeSkeletonData(
   writeFile(join(dataDir, "document-io.yaml"), "inbox_items: []\noutbox_items: []\n");
   writeFile(join(dataDir, "dependency-graph.yaml"), skeletonDependencyGraph(id));
   writeFile(join(dataDir, "hr", "employees.yaml"), "employees: []\n");
-  writeFile(join(dataDir, "executive", "calendar.yaml"), "events: []\n");
-  writeFile(join(dataDir, "executive", "tasks.yaml"), "tasks: []\n");
-  writeFile(join(dataDir, "executive", "one-on-ones.yaml"), "meetings: []\n");
-  writeFile(join(dataDir, "executive", "external-contacts.yaml"), "contacts: []\n");
+  seedExecutiveFromExamples(dataDir);
 
   writeFile(join(dataDir, "finance", "fixed-costs.yaml"), "items: []\n");
   writeFile(join(dataDir, "finance", "payroll.yaml"), "officer_compensation_annual: 0\n");
@@ -158,6 +158,36 @@ function writeSkeletonData(
   writeFile(join(dataDir, "plans", "yojitsu-fy2026.yaml"), skeletonYojitsu(name));
 
   copyModuleSeeds(dest, fromModules);
+}
+
+function shouldCopyTemplateEntry(src: string): boolean {
+  const base = src.split(/[/\\]/).pop() ?? "";
+  if (base.endsWith(".yaml.example")) return true;
+  if (base.endsWith(".example.md")) return true;
+  if (base.endsWith(".example")) return false;
+  return true;
+}
+
+function seedExecutiveFromExamples(dataDir: string): void {
+  const execDir = join(dataDir, "executive");
+  mkdirSync(execDir, { recursive: true });
+  const bases = ["calendar", "tasks", "one-on-ones", "external-contacts", "stakeholders"];
+  for (const base of bases) {
+    const example = join(execDir, `${base}.yaml.example`);
+    const target = join(execDir, `${base}.yaml`);
+    if (existsSync(example)) {
+      cpSync(example, target);
+      continue;
+    }
+    const empty: Record<string, string> = {
+      calendar: "events: []\n",
+      tasks: "tasks: []\n",
+      "one-on-ones": "one_on_ones: []\n",
+      "external-contacts": "contacts: []\n",
+      stakeholders: "stakeholders: []\n",
+    };
+    writeFile(target, empty[base] ?? "notes: |\n  skeleton\n");
+  }
 }
 
 function writeFile(path: string, content: string): void {

@@ -64,19 +64,16 @@ months:
 2. yojitsu の `lines[].segment` は上記 `name` と **完全一致** を推奨（CLI `finances variance` がセグメント名を表示）。
 3. 新規テナントは v2 のみ作成。MAL 既存ファイルは v1 のまま置ける。
 
-## v1 互換（MAL レガシー）
+## v1 互換（テナント専用アダプタ）
 
-v1 固定列は **読込時のみ** `src/lib/yojitsu-normalize.ts` が v2 `lines[]` に変換する。ファイル自体は移行不要。
+v1 固定列は **読込時のみ** `yojitsu-legacy-adapter.ts` + テナント `data/yojitsu-legacy-map.yaml` が v2 `lines[]` に変換する。フレームワーク `src/` に MAL セグメント名は保持しない。
 
-| v1 フィールド | 変換先 segment（MAL） |
-|--------------|----------------------|
-| `revenue_bancho` | 番町ハイム312（賃貸） |
-| `revenue_kamezawa` | 亀沢旅館（1棟貸し） |
-| `revenue_translation` | 翻訳・通訳（不動産） |
-| `revenue_services` | DX・ソフトウェア |
-| `expense_*` / `depreciation` / `capex` | 同上マッピング表参照 |
+| 配置 | 用途 |
+|------|------|
+| `tenants/mal/data/yojitsu-legacy-map.yaml` | MAL v1 列マップ（インスタンス） |
+| `steward/modules/rental/seed/yojitsu-legacy-map.yaml.example` | 移行時のコピー例 |
 
-Zod: `schemas/finance.ts` の `yojitsuMonthSideRawSchema` が v1 / v2 両方を受理。
+Zod: `schemas/finance.ts` の legacy パース用フィールド名定義のみ（実行時マップはテナント YAML）。
 
 ## 移行スクリプト
 

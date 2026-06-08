@@ -1,0 +1,7 @@
+id: acme
+name: ACME Corp
+legal_name: ACME Corp
+display_name: ACME Corp
+description: 第3参照テナント — tenant init 生成 · 賃貸1物件 · MAL 非依存
+default: false
+lifecycle: skeleton

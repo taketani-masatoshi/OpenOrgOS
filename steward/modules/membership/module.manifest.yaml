@@ -1,3 +1,6 @@
 id: membership
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — members.yaml, plans.yaml
+activation_seeds:
+- members.yaml
+- plans.yaml

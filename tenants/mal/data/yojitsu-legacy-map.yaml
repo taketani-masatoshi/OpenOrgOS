@@ -1,5 +1,6 @@
-# MAL 互換 — yojitsu v1 固定列 → v2 lines[] マッピング
-# 読込: src/lib/yojitsu-legacy-adapter.ts · 新規テナントは v2 lines[] のみ使用
+# MAL 専用 — yojitsu v1 固定列 → v2 lines[] マッピング
+# 読込: src/lib/yojitsu-legacy-adapter.ts
+# 新規テナントは v2 lines[] のみ（本ファイル不要）
 
 fields:
   revenue_bancho:

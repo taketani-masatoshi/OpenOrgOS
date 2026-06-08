@@ -1,3 +1,6 @@
 id: retail_store
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — skus.yaml, stores.yaml
+activation_seeds:
+- skus.yaml
+- stores.yaml

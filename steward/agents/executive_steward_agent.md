@@ -127,6 +127,8 @@ npm run steward -- scenario
 
 照会時は [folder_access_policy.md](../steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
 
+**Secretary からの横断依頼:** [secretary_escalation.md](../orchestrators/secretary_escalation.md)（consult）· [delegate_implementation.md](../orchestrators/delegate_implementation.md)（implement / Work Order）を実行。
+
 ---
 
 ## コンテキスト

@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { isSkeletonTenant } from "../src/lib/ops-config.js";
 import { computeMaturityReport } from "../src/lib/maturity.js";
-import { checkModule } from "../src/lib/modules.js";
 
 const root = join(import.meta.dirname, "..");
 
@@ -19,21 +18,36 @@ function steward(args: string[], tenant?: string): string {
 }
 
 describe("skeleton CLI", () => {
-  it("modules check restaurant exits 1 on missing seeds", () => {
-    expect(() => {
-      execFileSync("npm", ["run", "steward", "--", "modules", "check", "restaurant"], {
-        cwd: root,
-        encoding: "utf-8",
-        stdio: "pipe",
-      });
-    }).toThrow();
-    const issues = checkModule("restaurant");
-    expect(issues.length).toBeGreaterThan(0);
+  it("modules check restaurant passes with skeleton seeds", () => {
+    const out = steward(["modules", "check", "restaurant"]);
+    expect(out).toContain("manifest OK");
   });
 
   it("modules check rental passes", () => {
     const out = steward(["modules", "check", "rental"]);
     expect(out).toContain("manifest OK");
+  });
+
+  it("modules check --all passes for full catalog", () => {
+    const out = steward(["modules", "check", "--all"]);
+    expect(out).toContain("catalog modules OK");
+    expect(out).toMatch(/production_ready/);
+    expect(out).toMatch(/activation_ready/);
+  });
+
+  it("invoice bancho command is removed", () => {
+    const help = execFileSync("npm", ["run", "steward", "--", "invoice", "--help"], {
+      cwd: root,
+      encoding: "utf-8",
+    });
+    expect(help).not.toContain("bancho");
+    expect(() => {
+      execFileSync("npm", ["run", "steward", "--", "invoice", "bancho", "--from", "2026-02", "--to", "2026-02"], {
+        cwd: root,
+        encoding: "utf-8",
+        stdio: "pipe",
+      });
+    }).toThrow();
   });
 
   it("regulations and standards CLI are registered", () => {
@@ -79,6 +93,16 @@ describe("skeleton CLI", () => {
     const text = steward(["status"], "demo");
     expect(text).toContain("—");
     expect(text).not.toContain("84%");
+  });
+
+  it("demo dashboard skips hospitality module summary", () => {
+    const out = steward(["dashboard"], "demo");
+    expect(out).not.toContain("agent-summaries/hospitality");
+  });
+
+  it("demo modules check has no bind conflicts", () => {
+    const out = steward(["modules", "check", "rental"], "demo");
+    expect(out).toContain("manifest OK");
   });
 });
 

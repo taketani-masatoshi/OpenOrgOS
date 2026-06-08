@@ -44,7 +44,8 @@ npm run steward -- modules list
 | テナント | 法人 | パス | 用途 |
 |---------|------|------|------|
 | **mal**（既定） | 株式会社MAL | [`tenants/mal/`](tenants/mal/) | 本番運用参照 |
-| **demo** | デモ株式会社 | [`tenants/demo/`](tenants/demo/) | **スケルトン参照実装**（validate 必須） |
+| **acme** | ACME Corp | [`tenants/acme/`](tenants/acme/) | **第3参照**（tenant init · validate） |
+| **demo** | デモ株式会社 | [`tenants/demo/`](tenants/demo/) | **スケルトン参照**（validate 必須） |
 
 ```bash
 # 新規テナント（スケルトン）
@@ -53,6 +54,8 @@ npm run steward -- tenant init acme --name "ACME Corp" --from rental
 export STEWARD_TENANT=mal
 npm run steward -- --tenant mal validate
 npm run steward -- --tenant demo validate   # CI ゲート
+npm run steward -- --tenant acme validate   # CI ゲート（第3テナント）
+npm run check                               # validate · demo · acme · modules · classification
 ```
 
 論理パス `data/` · `docs/` は **アクティブテナント内**を指す。
@@ -84,11 +87,12 @@ npm run steward -- classification check
 npm run steward -- invoice generate --module rental --property PROP-001 --from 2026-02 --to 2026-02 --fy FY2026 --dry-run
 npm run steward -- standards list
 npm run steward -- modules check rental
+npm run steward -- modules check --all
+npm run steward -- map list
+npm run check
 ```
 
-請求書: [docs/spec/invoice.md](docs/spec/invoice.md)
-
-詳細: [docs/spec-v0.3.md](docs/spec-v0.3.md)（**正本**） · [docs/framework-assessment.md](docs/framework-assessment.md) · [tenants/00-README.md](tenants/00-README.md) · [steward/modules/](steward/modules/00-このフォルダについて.md)
+詳細: [docs/spec-v0.4.md](docs/spec-v0.4.md)（**正本**） · [docs/framework-assessment.md](docs/framework-assessment.md) · [docs/framework-backlog.md](docs/framework-backlog.md)
 
 ---
 

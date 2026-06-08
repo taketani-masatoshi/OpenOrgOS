@@ -1,0 +1,13 @@
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    revenue: 0
+    gross_profit: 0
+    sga: 0
+    operating_profit: 0
+    non_operating_net: 0
+    pretax_profit: 0
+    status: plan
+notes: profit plan skeleton

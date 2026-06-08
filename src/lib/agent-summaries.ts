@@ -22,14 +22,24 @@ import { readdirSync, existsSync } from "node:fs";
 
 export const AGENT_SUMMARIES_SUBDIR = "agent-summaries";
 
+export interface ModuleSummaryPath {
+  moduleId: string;
+  agent: string;
+  path: string;
+}
+
 export interface AgentSummaryPaths {
   finance: string;
   contract: string;
-  prop001: string;
-  prop002: string;
   compliance: string;
   operations: string;
   executive: string;
+  /** 有効モジュールのみ（summary_dir 配下） */
+  modules: ModuleSummaryPath[];
+  /** @deprecated use modules[] */
+  prop001?: string;
+  /** @deprecated use modules[] */
+  prop002?: string;
 }
 
 function summaryFilename(suffix = "dashboard-sync"): string {
@@ -55,9 +65,9 @@ function formatModuleSummaryContent(
 ): string {
   switch (mod.agent) {
     case "rental":
-      return formatRentalModuleSummary(data, report, mod.property_ids);
+      return formatRentalModuleSummary(data, report, mod.property_ids ?? []);
     case "hospitality":
-      return formatHospitalityModuleSummary(data, report, mod.property_ids);
+      return formatHospitalityModuleSummary(data, report, mod.property_ids ?? []);
     case "professional_services":
       return formatProfessionalServicesSummary(report, mod);
     case "venture_capital":
@@ -153,9 +163,8 @@ export function formatContractSummary(data: StewardData, report: DashboardReport
     "",
     "## 推奨アクション",
     "",
-    "1. CTR-013/014 火災保険 — inbox 証券 → executed",
-    "2. CTR-011 賃貸借 · CTR-012 清掃 — 締結",
-    "3. `npm run steward -- alerts` で期限確認",
+    "1. draft 契約の締結 · 証券 inbox 归档",
+    "2. `npm run steward -- alerts` で期限確認",
     "",
     "## 根拠",
     "",
@@ -169,9 +178,12 @@ export function formatContractSummary(data: StewardData, report: DashboardReport
 export function formatRentalModuleSummary(
   data: StewardData,
   report: DashboardReport,
-  propertyIds: string[] = ["PROP-001"]
+  propertyIds: string[]
 ): string {
-  const propId = propertyIds[0] ?? "PROP-001";
+  const propId = propertyIds[0];
+  if (!propId) {
+    return `# Rental Module 要約 ${report.reportDate}\n\nproperty_ids 未設定。\n`;
+  }
   const p = data.properties.find((x) => x.id === propId);
   if (!p || p.type !== "rental") {
     return `# Rental Module 要約 ${report.reportDate}\n\n${propId} 未找到または type≠rental。\n`;
@@ -204,17 +216,21 @@ export function formatRentalModuleSummary(
   ].join("\n");
 }
 
-/** @deprecated use formatRentalModuleSummary */
+/** @deprecated use formatRentalModuleSummary with module.property_ids */
 export function formatProp001Summary(data: StewardData, report: DashboardReport): string {
-  return formatRentalModuleSummary(data, report, ["PROP-001"]);
+  const mod = loadEnabledModules().find((m) => m.agent === "rental");
+  return formatRentalModuleSummary(data, report, mod?.property_ids ?? []);
 }
 
 export function formatHospitalityModuleSummary(
   data: StewardData,
   report: DashboardReport,
-  propertyIds: string[] = ["PROP-002"]
+  propertyIds: string[]
 ): string {
-  const propId = propertyIds[0] ?? "PROP-002";
+  const propId = propertyIds[0];
+  if (!propId) {
+    return `# Hospitality Module 要約 ${report.reportDate}\n\nproperty_ids 未設定。\n`;
+  }
   const p = data.properties.find((x) => x.id === propId);
   if (!p || p.type !== "hotel") {
     return `# Hospitality Module 要約 ${report.reportDate}\n\n${propId} 未找到または type≠hotel。\n`;
@@ -243,9 +259,10 @@ export function formatHospitalityModuleSummary(
   ].join("\n");
 }
 
-/** @deprecated use formatHospitalityModuleSummary */
+/** @deprecated use formatHospitalityModuleSummary with module.property_ids */
 export function formatProp002Summary(data: StewardData, report: DashboardReport): string {
-  return formatHospitalityModuleSummary(data, report, ["PROP-002"]);
+  const mod = loadEnabledModules().find((m) => m.agent === "hospitality");
+  return formatHospitalityModuleSummary(data, report, mod?.property_ids ?? []);
 }
 
 export function formatProfessionalServicesSummary(
@@ -394,7 +411,7 @@ export function formatExecutiveSummary(
     "",
     `- **${report.companyName}** ${report.fiscalYear} — 経営判断材料を Agent 要約から統合`,
     `- ${liquidity.primaryLabel} ${liquidity.primaryValue} · 月次利益 ${formatCurrency(cf.monthlyProfit)}`,
-    `- P0 集中: 火災保険 draft · 現預金未入力 · 契約 draft 4 件`,
+    `- P0 / 高優先タスク **${p0Tasks.length} 件**`,
     "",
     "## KPI スナップショット",
     "",
@@ -414,8 +431,10 @@ export function formatExecutiveSummary(
     "|-------|---------|",
     `| Finance | [${relDocsPath(paths.finance).split("/").pop()}](${reportsRelLink(paths.finance)}) |`,
     `| Contract | [${relDocsPath(paths.contract).split("/").pop()}](${reportsRelLink(paths.contract)}) |`,
-    `| Property Rental | [${relDocsPath(paths.prop001).split("/").pop()}](${reportsRelLink(paths.prop001)}) |`,
-    `| Hospitality | [${relDocsPath(paths.prop002).split("/").pop()}](${reportsRelLink(paths.prop002)}) |`,
+    ...paths.modules.map((m) => {
+      const label = m.agent.replace(/_/g, " ");
+      return `| ${label} (${m.moduleId}) | [${relDocsPath(m.path).split("/").pop()}](${reportsRelLink(m.path)}) |`;
+    }),
     `| Compliance | [${relDocsPath(paths.compliance).split("/").pop()}](${reportsRelLink(paths.compliance)}) |`,
     `| Operations | [${relDocsPath(paths.operations).split("/").pop()}](${reportsRelLink(paths.operations)}) |`,
     "",
@@ -454,8 +473,7 @@ export function writeAgentSummaries(
     formatContractSummary(d, r)
   );
 
-  let prop001Path = "";
-  let prop002Path = "";
+  const modulePaths: ModuleSummaryPath[] = [];
   const enabledModules = loadEnabledModules();
   for (const mod of enabledModules) {
     const path = writeMarkdownReport(
@@ -463,8 +481,7 @@ export function writeAgentSummaries(
       filename,
       formatModuleSummaryContent(mod, d, r)
     );
-    if (mod.agent === "rental") prop001Path = path;
-    if (mod.agent === "hospitality") prop002Path = path;
+    modulePaths.push({ moduleId: mod.id, agent: mod.agent, path });
   }
 
   const compliancePath = writeMarkdownReport(
@@ -481,8 +498,9 @@ export function writeAgentSummaries(
   const partialPaths = {
     finance: financePath,
     contract: contractPath,
-    prop001: prop001Path,
-    prop002: prop002Path,
+    modules: modulePaths,
+    prop001: modulePaths.find((m) => m.agent === "rental")?.path,
+    prop002: modulePaths.find((m) => m.agent === "hospitality")?.path,
     compliance: compliancePath,
     operations: operationsPath,
   };
@@ -523,8 +541,15 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
       .sort()
       .reverse();
     if (!files[0]) continue;
-    if (mod.agent === "rental") result.prop001 = join(dir, files[0]);
-    if (mod.agent === "hospitality") result.prop002 = join(dir, files[0]);
+    const entry: ModuleSummaryPath = {
+      moduleId: mod.id,
+      agent: mod.agent,
+      path: join(dir, files[0]),
+    };
+    if (!result.modules) result.modules = [];
+    result.modules.push(entry);
+    if (mod.agent === "rental") result.prop001 = entry.path;
+    if (mod.agent === "hospitality") result.prop002 = entry.path;
     any = true;
   }
 
@@ -544,11 +569,14 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
 }
 
 export function formatAgentSummariesSection(paths: Partial<AgentSummaryPaths>): string {
+  const moduleRows: [string, string][] = (paths.modules ?? []).map((m) => [
+    `${m.agent} (${m.moduleId})`,
+    m.path,
+  ]);
   const rows: [string, string | undefined][] = [
     ["Finance", paths.finance],
     ["Contract", paths.contract],
-    ["Rental Module", paths.prop001],
-    ["Hospitality Module", paths.prop002],
+    ...moduleRows,
     ["Compliance", paths.compliance],
     ["Operations", paths.operations],
     ["Executive", paths.executive],

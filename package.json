@@ -10,8 +10,8 @@
     "steward": "node --import tsx src/cli.ts",
     "validate": "node --import tsx src/cli.ts validate",
     "validate:demo": "node --import tsx src/cli.ts --tenant demo validate",
-    "check": "npm run validate && npm run steward -- classification check",
-    "daily": "npm run check && npm run steward -- ops daily && npm run steward -- dashboard && npm run steward -- io status && npm run validate -- --deps",
+    "check": "npm run validate && npm run steward -- --tenant demo validate && npm run steward -- --tenant acme validate && npm run steward -- modules check --all && npm run steward -- classification check",
+    "daily": "npm run check && npm run steward -- pipeline run daily",
     "test": "vitest run",
     "test:watch": "vitest"
   },

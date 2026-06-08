@@ -1,3 +1,6 @@
 id: construction
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — phases.yaml, sites.yaml
+activation_seeds:
+- phases.yaml
+- sites.yaml

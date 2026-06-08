@@ -40,19 +40,18 @@ npm run steward -- --tenant acme validate
 
 手動コピー: `cp -R tenants/_template tenants/{id}` 後、`tenant.yaml` 編集 · `steward regulations seed`
 
-## 参照実装: `demo/`
+## 参照実装
 
-**理想形の骨格テナント** — データ投入なしで validate 通過:
-
-- 賃貸1物件（`rental` のみ有効 · hospitality OFF）
-- ガバナンス REG のみ（REG-001–008 · REG-010）
-- 契約0 · cash-balance 未確定 · secrets 未作成
-- `lifecycle: skeleton` · `ops-config.skeleton: true`
+| テナント | 用途 |
+|---------|------|
+| [`demo/`](demo/) | 最小骨格 · 賃貸1物件 · MAL 非依存 |
+| [`acme/`](acme/) | 第3転用性 · `tenant init` 生成参照 |
+| [`mal/`](../mal/) | 本番運用データ例（フレームワーク評価スコープ外） |
 
 ```bash
-npm run steward -- --tenant demo validate   # CI / テスト必須
+npm run steward -- --tenant demo validate
+npm run steward -- --tenant acme validate
+npm run check
 ```
-
-本番運用データの参照例: [mal/](../mal/)
 
 パス表記: Agent · CLI ログでは **`data/` · `docs/` はアクティブテナント内**を指す（論理パス）。

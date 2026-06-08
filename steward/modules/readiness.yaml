@@ -1,37 +1,40 @@
-# 業務モジュール readiness tier — 転用期待値
-# production_ready: 本番テナントで運用可 · seed_only: カタログ/seed のみ
+# 業務モジュール readiness tier — 3 段階
+# skeleton: カタログ骨格（manifest · agent · seed/）
+# activation_ready: テナント有効化 seed 一式
+# production_ready: activation + billing/invoice CLI 連携
 
 modules:
   rental:
     tier: production_ready
-    notes: PROP バインド · 運用 templates 完備
+    notes: PROP バインド · invoice generate · billing
   hospitality:
     tier: production_ready
-    notes: public YAML · operations docs · REG-012 連動
+    notes: operations seed · invoice generate · REG-012
 
-  professional_services:
-    tier: seed_only
-  venture_capital:
-    tier: seed_only
-  saas_subscription:
-    tier: seed_only
-  event_space:
-    tier: seed_only
-  ecommerce:
-    tier: seed_only
   restaurant:
-    tier: seed_only
+    tier: activation_ready
+    notes: menu · tables 骨格 seed
+  professional_services:
+    tier: activation_ready
+  venture_capital:
+    tier: activation_ready
+  saas_subscription:
+    tier: activation_ready
+  event_space:
+    tier: activation_ready
+  ecommerce:
+    tier: activation_ready
   retail_store:
-    tier: seed_only
+    tier: activation_ready
   clinic:
-    tier: seed_only
+    tier: activation_ready
   logistics:
-    tier: seed_only
+    tier: activation_ready
   staffing:
-    tier: seed_only
+    tier: activation_ready
   construction:
-    tier: seed_only
+    tier: activation_ready
   education:
-    tier: seed_only
+    tier: activation_ready
   membership:
-    tier: seed_only
+    tier: activation_ready

@@ -1,3 +1,6 @@
 id: staffing
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — assignments.yaml, staff.yaml
+activation_seeds:
+- assignments.yaml
+- staff.yaml

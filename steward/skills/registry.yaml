@@ -1,0 +1,112 @@
+# Skill レジストリ — runtime: cli | cursor-only
+# 実装: src/lib/skill-registry.ts · steward skills list
+
+skills:
+  - id: contract_expiry_check
+    file: contract_expiry_check.md
+    runtime: cli
+    cli_command: contract-expiry
+    agent: Contract
+    description: 契約期限アラート（90日）
+
+  - id: permit_expiry_check
+    file: permit_expiry_check.md
+    runtime: cli
+    cli_command: permit-expiry
+    agent: Compliance
+    description: 許認可 · 保険 INDEX · draft CTR
+
+  - id: monthly_close
+    file: monthly_close.md
+    runtime: cli
+    cli_command: monthly-close
+    agent: Finance
+    description: 月次締めサマリ
+
+  - id: variance_analysis
+    file: variance_analysis.md
+    runtime: cli
+    cli_command: variance
+    agent: Finance
+    description: 予実 vs 月次 YAML 差異
+
+  - id: operations_records
+    file: operations_records.md
+    runtime: cli
+    cli_command: records-check
+    agent: Operations
+    description: 宿泊 · 清掃 · クレーム記録
+
+  - id: p0_closing
+    file: p0_closing.md
+    runtime: cli
+    cli_command: p0
+    agent: Executive
+    description: P0 決算前ブロッカー
+
+  - id: daily_ops
+    file: daily_ops.md
+    runtime: cli
+    cli_command: daily
+    agent: Executive
+    description: 日次運用（成熟度 + P0 + 契約）
+
+  - id: executive_dashboard
+    file: executive_dashboard.md
+    runtime: cursor-only
+    agent: Executive Steward
+    description: 経営ダッシュボード — pipeline/dashboard CLI で代替
+
+  - id: tax_filing_prep
+    file: tax_filing_prep.md
+    runtime: cursor-only
+    agent: Finance
+    description: 税務申告準備
+
+  - id: cashflow_forecast
+    file: cashflow_forecast.md
+    runtime: cursor-only
+    agent: Finance
+    description: CF 予測
+
+  - id: contract_register
+    file: contract_register.md
+    runtime: cursor-only
+    agent: Contract
+    description: 契約台帳整備
+
+  - id: noi_analysis
+    file: noi_analysis.md
+    runtime: cursor-only
+    agent: Property Rental
+    description: NOI 分析
+
+  - id: revpar_analysis
+    file: revpar_analysis.md
+    runtime: cursor-only
+    agent: Hospitality
+    description: RevPAR 分析
+
+  - id: capex_planning
+    file: capex_planning.md
+    runtime: cursor-only
+    agent: Finance
+    description: CAPEX 計画
+
+  - id: schedule_management
+    file: schedule_management.md
+    runtime: cursor-only
+    agent: Secretary
+    description: スケジュール管理
+
+  - id: one_on_one_prep
+    file: one_on_one_prep.md
+    runtime: cursor-only
+    agent: Secretary
+    description: 1-on-1 準備
+
+  - id: external_correspondence
+    file: external_correspondence.md
+    runtime: cursor-only
+    agent: Secretary
+    description: 社外連絡下書き

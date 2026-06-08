@@ -1,3 +1,9 @@
+import {
+  getCliSkills,
+  getCursorOnlySkills,
+  loadSkillRegistry,
+  validateSkillRegistryFiles,
+} from "../lib/skill-registry.js";
 import { runAlerts } from "./alerts.js";
 import { runOpsP0, runOpsDaily } from "./ops.js";
 import { runPermitExpiryCheck, formatPermitCheckReport } from "../lib/permit-check.js";
@@ -52,13 +58,24 @@ export const SKILL_COMMANDS = [
 ] as const;
 
 export function runSkillsList(): void {
-  console.log("Skill CLI（Cursor 外実行）:\n");
-  console.log("| command | Skill | Agent |");
-  console.log("|---------|-------|-------|");
-  for (const s of SKILL_COMMANDS) {
-    console.log(`| skills run ${s.id} | ${s.skill} | ${s.agent} |`);
+  const issues = validateSkillRegistryFiles();
+  if (issues.length) {
+    console.warn("Skill registry warnings:");
+    for (const i of issues) console.warn(`  ${i}`);
   }
+
+  console.log("Skill registry（steward/skills/registry.yaml）:\n");
+  console.log("| runtime | id | cli | Agent |");
+  console.log("|---------|-----|-----|-------|");
+  for (const s of loadSkillRegistry()) {
+    const cli = s.cli_command ? `skills run ${s.cli_command}` : "—";
+    console.log(`| ${s.runtime} | ${s.id} | ${cli} | ${s.agent} |`);
+  }
+
+  console.log(`\nCLI: ${getCliSkills().length} · cursor-only: ${getCursorOnlySkills().length}`);
   console.log("\n例: npm run steward -- skills run contract-expiry");
+  console.log("     npm run steward -- pipeline run daily");
+  console.log("     npm run steward -- route list");
 }
 
 export interface SkillRunOptions {

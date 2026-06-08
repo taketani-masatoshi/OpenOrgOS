@@ -3,7 +3,7 @@
 **スコープ:** リポジトリの **フレームワーク層**（`src/` · `schemas/` · `steward/` · `docs/spec*`）。  
 **スコープ外:** 特定法人の規程件数 · 契約 ID · 物件名 · P0 残タスク → 各テナント `docs/compliance/iso/steward-assessment.md`
 
-**仕様正本:** [spec-v0.3.md](spec-v0.3.md)
+**仕様正本:** [spec-v0.4.md](spec-v0.4.md) · [framework-backlog.md](framework-backlog.md)
 
 ---
 
@@ -102,8 +102,46 @@
 
 ---
 
-## 7. 関連
+## 7. 骨格 v2 達成度（フレームワーク · 2026-06）
 
+**総合: 100%（L2+ 骨格 v2 完成）** — DoD D1–D10 すべて ✓。タスク正本: [framework-backlog.md](framework-backlog.md)
+
+| DoD | 定義 | 状態 | 確認 |
+|-----|------|:----:|------|
+| D1 | framework-backlog · DoD 表 | ✓ | `tests/framework-backlog.test.ts` |
+| D2 | `npm run check` 統合 | ✓ | CI · `package.json` |
+| D3 | `tenants/acme/` validate | ✓ | `tests/acme-validate.test.ts` |
+| D4 | demo + acme 双参照 | ✓ | `tests/demo-status.test.ts` · acme status |
+| D5 | `_template` classification · executive example | ✓ | `classification check` |
+| D6 | `tenant init` example コピー | ✓ | `tests/skeleton.test.ts` |
+| D7 | spec-v0.4.md | ✓ | [spec-v0.4.md](spec-v0.4.md) |
+| D8 | `steward map list` · `resolve` | ✓ | `tests/map.test.ts` |
+| D9 | 全 module seed/00-README · restaurant 骨格 seed | ✓ | `modules check --all` · `modules check restaurant` |
+| D10 | 本 § = 100% | ✓ | 本表 |
+
+| チェック | 状態 | 確認 |
+|---------|:----:|------|
+| `steward tenant init` + `regulations seed` | ✓ | `npm test` · `tests/skeleton.test.ts` |
+| `steward modules check --all` | ✓ | `npm run check` |
+| demo · acme 骨格 validate | ✓ | `npm run check` |
+| yojitsu v2 · invoice generate · dashboard モジュール駆動 | ✓ | v0.3 維持 |
+| executive gitignore + example パターン | ✓ | `.gitignore` · RES-EXEC-* |
+| テスト | ✓ | `npm test` 全 pass |
+
+### v3 以降（スコープ外）
+
+| 項目 | 備考 |
+|------|------|
+| Cursor 外 Skill パイプライン | inbox → validate → dashboard |
+| production_ready 全モジュール billing | rental 以外 |
+| MAL 実データ Git 外化（finance/contracts 全体） | 別 Epic |
+
+---
+
+## 8. 関連
+
+- [framework-backlog.md](framework-backlog.md)
+- [spec-v0.4.md](spec-v0.4.md)
 - [spec-v0.3.md](spec-v0.3.md)
 - [spec/yojitsu-v2.md](spec/yojitsu-v2.md)
 - [spec/invoice.md](spec/invoice.md)

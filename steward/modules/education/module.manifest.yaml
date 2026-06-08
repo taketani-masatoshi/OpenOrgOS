@@ -1,3 +1,6 @@
 id: education
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — classes.yaml, courses.yaml
+activation_seeds:
+- classes.yaml
+- courses.yaml

@@ -30,17 +30,19 @@ describe("agent-summaries", () => {
     expect(md).toContain("draft");
   });
 
-  it("writes all agent summary files", () => {
+  it("writes agent summary files for enabled modules only", () => {
     const report = computeDashboard();
     const paths = writeAgentSummaries(report);
     expect(existsSync(paths.finance)).toBe(true);
     expect(existsSync(paths.contract)).toBe(true);
-    expect(existsSync(paths.prop001)).toBe(true);
-    expect(existsSync(paths.prop002)).toBe(true);
+    expect(paths.modules.length).toBeGreaterThan(0);
     expect(existsSync(paths.compliance)).toBe(true);
     expect(existsSync(paths.operations)).toBe(true);
     expect(existsSync(paths.executive)).toBe(true);
     expect(paths.finance).toContain("dashboard-sync.md");
+    const rental = paths.modules.find((m) => m.agent === "rental");
+    expect(rental).toBeDefined();
+    expect(existsSync(rental!.path)).toBe(true);
   });
 
   it("embeds agent summaries section in dashboard markdown", () => {

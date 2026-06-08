@@ -1,3 +1,6 @@
 id: event_space
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — bookings.yaml, spaces.yaml
+activation_seeds:
+- bookings.yaml
+- spaces.yaml

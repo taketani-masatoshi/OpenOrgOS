@@ -20,8 +20,10 @@ describe("maturity", () => {
 });
 
 describe("module readiness", () => {
-  it("marks rental as production_ready", () => {
+  it("uses 3-tier readiness", () => {
     expect(getModuleTier("rental")).toBe("production_ready");
-    expect(getModuleTier("restaurant")).toBe("seed_only");
+    expect(getModuleTier("hospitality")).toBe("production_ready");
+    expect(getModuleTier("restaurant")).toBe("activation_ready");
+    expect(getModuleTier("clinic")).toBe("activation_ready");
   });
 });

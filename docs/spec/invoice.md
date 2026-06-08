@@ -5,16 +5,13 @@
 ## コマンド
 
 ```bash
-# 汎用（推奨）
+# 汎用
 npm run steward -- invoice generate \
   --module rental \
   --property PROP-001 \
   --from 2026-02 \
   --to 2027-01 \
   --fy FY2026
-
-# 従来 alias（rental · PROP-001 想定 · 非推奨）
-npm run steward -- invoice bancho --from 2026-02 --to 2027-01 --fy FY2026
 ```
 
 ## modules.yaml billing

@@ -91,6 +91,14 @@
 
 ---
 
+## 応答スタイル（テナント別カスタム）
+
+トーン・長さ・敬語は **`tenants/{id}/rules/secretary_behavior.md`** を参照。ファイルが存在する場合、本 Agent 定義より **優先** する。
+
+例: [`tenants/mal/rules/secretary_behavior.md`](../../tenants/mal/rules/secretary_behavior.md)
+
+---
+
 ## 出力形式
 
 ### 週次ブリーフ
@@ -146,7 +154,7 @@
 | 宿泊モジュール運用（清掃単価等） | Hospitality（日程は Secretary） |
 | inbox 書類 | Operations |
 
-照会時は [folder_access_policy.md](../steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
+管轄外（経営 · 財務 · 契約 · **実装依頼** · コンプライアンス · ISO · Git 機密）は **Orchestrator 経由** で Executive Steward へエスカレーションする。**照会**は [secretary_escalation.md](../orchestrators/secretary_escalation.md) · **実装**は [delegate_implementation.md](../orchestrators/delegate_implementation.md) または `npm run steward -- escalate run`。依頼文の手動コピーは不要。
 
 ---
 

@@ -1,7 +1,8 @@
 id: restaurant
-required_seeds:
-  - menu.yaml
-  - tables.yaml
+required_seeds: []
 optional_regulations:
-  - REG-017
-notes: seed_only — menu.yaml / tables.yaml required (not .example)
+- REG-017
+notes: activation_ready — menu/tables seed
+activation_seeds:
+- menu.yaml
+- tables.yaml

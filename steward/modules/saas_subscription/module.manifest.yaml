@@ -1,3 +1,6 @@
 id: saas_subscription
 required_seeds: []
-notes: seed_only — extend required_seeds when production_ready
+notes: activation_ready — plans.yaml, subscriptions.yaml
+activation_seeds:
+- plans.yaml
+- subscriptions.yaml
