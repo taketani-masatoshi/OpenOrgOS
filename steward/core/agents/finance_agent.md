@@ -30,11 +30,11 @@
 
 | Skill | ファイル |
 |-------|---------|
-| monthly_close | [steward/skills/monthly_close.md](../steward/skills/monthly_close.md) |
-| tax_filing_prep | [steward/skills/tax_filing_prep.md](../steward/skills/tax_filing_prep.md) |
-| cashflow_forecast | [steward/skills/cashflow_forecast.md](../steward/skills/cashflow_forecast.md) |
-| noi_analysis | [steward/skills/noi_analysis.md](../steward/skills/noi_analysis.md)（Read/協調） |
-| capex_planning | [steward/skills/capex_planning.md](../steward/skills/capex_planning.md) |
+| monthly_close | [steward/core/skills/monthly_close.md](../steward/core/skills/monthly_close.md) |
+| tax_filing_prep | [steward/core/skills/tax_filing_prep.md](../steward/core/skills/tax_filing_prep.md) |
+| cashflow_forecast | [steward/core/skills/cashflow_forecast.md](../steward/core/skills/cashflow_forecast.md) |
+| noi_analysis | [steward/core/skills/noi_analysis.md](../steward/core/skills/noi_analysis.md)（Read/協調） |
+| capex_planning | [steward/core/skills/capex_planning.md](../steward/core/skills/capex_planning.md) |
 
 ## 要約出力先
 

@@ -138,6 +138,6 @@ flowchart LR
 
 ## 関連
 
-- [steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md)
-- [steward/agents/executive_steward_agent.md](../steward/agents/executive_steward_agent.md)
+- [steward/core/agents/secretary_agent.md](../steward/core/agents/secretary_agent.md)
+- [steward/core/agents/executive_steward_agent.md](../steward/core/agents/executive_steward_agent.md)
 - [data/executive/00-README.md](../data/executive/00-README.md)

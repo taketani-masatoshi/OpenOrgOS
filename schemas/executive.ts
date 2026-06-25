@@ -36,6 +36,8 @@ export const calendarEventSchema = z.object({
   status: calendarEventStatus.default("tentative"),
   notes: z.string().optional(),
   external_visible: z.boolean().default(false),
+  /** Google Calendar event id（push 後 · gitignore 正本のみ） */
+  google_event_id: z.string().optional(),
 });
 
 export const calendarFileSchema = z.object({
@@ -50,6 +52,7 @@ export const taskStatus = z.enum([
   "done",
   "cancelled",
   "deferred",
+  "archived",
 ]);
 export const taskCategory = z.enum([
   "personal",
@@ -156,13 +159,13 @@ export const externalContactsFileSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type CalendarEvent = z.infer<typeof calendarEventSchema>;
-export type CalendarFile = z.infer<typeof calendarFileSchema>;
-export type ExecutiveTask = z.infer<typeof executiveTaskSchema>;
-export type TasksFile = z.infer<typeof tasksFileSchema>;
-export type OneOnOne = z.infer<typeof oneOnOneSchema>;
-export type OneOnOnesFile = z.infer<typeof oneOnOnesFileSchema>;
-export type ExternalContact = z.infer<typeof externalContactSchema>;
-export type ExternalContactsFile = z.infer<typeof externalContactsFileSchema>;
-export type Stakeholder = z.infer<typeof stakeholderSchema>;
-export type StakeholdersFile = z.infer<typeof stakeholdersFileSchema>;
+export type CalendarEvent = z.output<typeof calendarEventSchema>;
+export type CalendarFile = z.output<typeof calendarFileSchema>;
+export type ExecutiveTask = z.output<typeof executiveTaskSchema>;
+export type TasksFile = z.output<typeof tasksFileSchema>;
+export type OneOnOne = z.output<typeof oneOnOneSchema>;
+export type OneOnOnesFile = z.output<typeof oneOnOnesFileSchema>;
+export type ExternalContact = z.output<typeof externalContactSchema>;
+export type ExternalContactsFile = z.output<typeof externalContactsFileSchema>;
+export type Stakeholder = z.output<typeof stakeholderSchema>;
+export type StakeholdersFile = z.output<typeof stakeholdersFileSchema>;

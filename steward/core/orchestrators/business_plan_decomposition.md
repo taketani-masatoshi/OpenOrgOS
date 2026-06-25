@@ -36,8 +36,8 @@ data/finance/                     # 借入・CF・固定費
 data/contracts/                    # 契約台帳
 data/dependency-graph.yaml         # 依存関係
 docs/plans/business-plan-decomposition/   # 本分解設計
-steward/agents/                                # 委譲先 Agent
-steward/skills/                                # 委譲先 Skill
+steward/core/agents/                                # 委譲先 Agent
+steward/core/skills/                                # 委譲先 Skill
 steward/rules/
 ```
 
@@ -107,14 +107,14 @@ docs/properties/PROP-001-minato/operations/   # 賃貸運用 SOP（例）
 
 | タスク | 委譲先 |
 |--------|--------|
-| 数値・YAML 更新 | [steward/agents/finance_agent.md](../steward/agents/finance_agent.md) |
-| CTR draft/executed | [steward/agents/contract_agent.md](../steward/agents/contract_agent.md) |
+| 数値・YAML 更新 | [steward/core/agents/finance_agent.md](../steward/core/agents/finance_agent.md) |
+| CTR draft/executed | [steward/core/agents/contract_agent.md](../steward/core/agents/contract_agent.md) |
 | 賃貸モジュール運用 | [steward/modules/rental/agent.md](../modules/rental/agent.md) |
 | 宿泊モジュール運用 | [steward/modules/hospitality/agent.md](../modules/hospitality/agent.md) |
-| 規程・個情 | [steward/agents/compliance_agent.md](../steward/agents/compliance_agent.md) |
-| inbox 証憑 | [steward/agents/operations_agent.md](../steward/agents/operations_agent.md) |
-| 社長スケジュール・1-on-1・社外調整 | [steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md) |
-| 経営判断・優先度 | [steward/agents/executive_steward_agent.md](../steward/agents/executive_steward_agent.md) |
+| 規程・個情 | [steward/core/agents/compliance_agent.md](../steward/core/agents/compliance_agent.md) |
+| inbox 証憑 | [steward/core/agents/operations_agent.md](../steward/core/agents/operations_agent.md) |
+| 社長スケジュール・1-on-1・社外調整 | [steward/core/agents/secretary_agent.md](../steward/core/agents/secretary_agent.md) |
+| 経営判断・優先度 | [steward/core/agents/executive_steward_agent.md](../steward/core/agents/executive_steward_agent.md) |
 
 ---
 
@@ -133,7 +133,7 @@ npm run steward -- dashboard
 ## 起動例
 
 ```
-@steward/orchestrators/business_plan_decomposition.md
+@steward/core/orchestrators/business_plan_decomposition.md
 
 Phase 1 の risk-management-plan.md を起稿してください。
 ```

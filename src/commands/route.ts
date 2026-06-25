@@ -13,6 +13,7 @@ import {
 } from "../lib/routing.js";
 import { runSkill } from "./skills.js";
 import { formatWorkOrderMarkdown } from "../lib/escalate.js";
+import { appendAuditEvent } from "../lib/audit-log.js";
 
 export function runRouteList(): void {
   const issues = validateRoutingRegistry();
@@ -30,7 +31,7 @@ export function runRouteList(): void {
       `| ${route.id} | ${route.agent} | ${route.skill ?? "—"} | ${route.priority} | ${route.boundary} |`
     );
   }
-  console.log(`\n${registry.routes.length} routes · steward/routing/registry.yaml`);
+  console.log(`\n${registry.routes.length} routes · steward/core/routing/registry.yaml`);
   console.log("例: npm run steward -- route match --text \"契約期限\"");
 }
 
@@ -210,6 +211,7 @@ export function runRouteDispatch(opts: RouteDispatchOptions): void {
 
   console.log(`→ skills run ${cliCommand}`);
   runSkill(cliCommand);
+  appendAuditEvent({ event: "route_dispatch", ref: handoff.id, detail: cliCommand });
 
   const updated = { ...handoff, mode: "auto" as const, status: "dispatched" as const };
   writeHandoffFiles(updated);

@@ -20,7 +20,7 @@ export const regulationBindSchema = z.discriminatedUnion("type", [
 ]);
 
 export const catalogRegulationSchema = z.object({
-  id: z.string().regex(/^REG-\d{3}$/),
+  id: z.string().regex(/^REG-[A-Z0-9-]+$/),
   name: z.string(),
   template: z.string(),
   tenant_doc: z.string(),
@@ -33,6 +33,6 @@ export const regulationsCatalogSchema = z.object({
   regulations: z.array(catalogRegulationSchema),
 });
 
-export type RegulationBind = z.infer<typeof regulationBindSchema>;
-export type CatalogRegulation = z.infer<typeof catalogRegulationSchema>;
-export type RegulationsCatalog = z.infer<typeof regulationsCatalogSchema>;
+export type RegulationBind = z.output<typeof regulationBindSchema>;
+export type CatalogRegulation = z.output<typeof catalogRegulationSchema>;
+export type RegulationsCatalog = z.output<typeof regulationsCatalogSchema>;

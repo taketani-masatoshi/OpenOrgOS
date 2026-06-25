@@ -5,3 +5,7 @@ display_name: Demo
 description: フレームワーク骨格参照 — 賃貸1物件 · MAL パス非依存
 default: false
 lifecycle: skeleton
+jurisdiction: JP
+entity_form: kk
+locale: ja-JP
+default_currency: JPY

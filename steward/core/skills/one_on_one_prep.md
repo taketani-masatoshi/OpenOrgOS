@@ -38,7 +38,7 @@
 
 ## 出力テンプレート
 
-[steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md) の「1-on-1 準備」形式。  
+[steward/core/agents/secretary_agent.md](../steward/core/agents/secretary_agent.md) の「1-on-1 準備」形式。  
 運用詳細: [docs/executive/one-on-one-guide.md](../docs/executive/one-on-one-guide.md)
 
 ## 禁止

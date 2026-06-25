@@ -1,0 +1,12 @@
+id: eu-demo
+name: Sample EU GmbH
+legal_name: Sample EU GmbH
+display_name: EU Demo
+description: EU jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: EU
+legal_subdivision: DE
+entity_form: gmbh
+locale: en-EU
+default_currency: EUR

@@ -1,3 +1,5 @@
+> **履歴アーカイブ — 正本は [docs/spec.md](../../spec.md)。** 本書は凍結コピー。
+
 # Steward OS - Property Business Edition v0.2
 
 > **後継:** [spec-v0.3.md](spec-v0.3.md) が正本。本書は v0.2 時点の履歴。

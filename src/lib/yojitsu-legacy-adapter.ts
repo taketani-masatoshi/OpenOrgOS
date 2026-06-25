@@ -32,7 +32,3 @@ export function loadLegacyYojitsuFieldMap(): Record<string, LegacyYojitsuFieldMa
   _cachedMap = {};
   return _cachedMap;
 }
-
-export function resetLegacyYojitsuFieldMapCache(): void {
-  _cachedMap = null;
-}

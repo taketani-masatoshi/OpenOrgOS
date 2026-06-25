@@ -45,7 +45,7 @@ function contractRow(c: Contract): (string | number | undefined | null)[] {
     comp?.type ?? "",
     comp?.amount ?? "",
     comp?.payment_terms ?? "",
-    c.auto_renewal,
+    c.auto_renewal ? "true" : "false",
     c.owner ?? "",
     c.risk?.risk_level ?? "",
     c.documents?.draft ?? "",

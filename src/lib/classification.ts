@@ -8,6 +8,8 @@ import {
   type ClassificationRegistry,
   type BankAccountsFile,
 } from "../../schemas/classification.js";
+
+export type { AgentId, ClassificationLevel, ClassificationRegistry, BankAccountsFile };
 import { cashBalanceSchema } from "../../schemas/finance.js";
 import {
   ROOT_DIR,
@@ -59,6 +61,29 @@ export function findResourceByPath(registry: ClassificationRegistry, resourcePat
   });
 }
 
+/**
+ * Write-time gate: a git-tracked write to a path matching a `git: ignore`
+ * (L2/secret) resource is a leak. Returns the offending resource id, or
+ * undefined when the path is safe to track.
+ */
+export function unsafeTrackedResource(
+  registry: ClassificationRegistry,
+  logicalPath: string
+): string | undefined {
+  const resource = findResourceByPath(registry, logicalPath);
+  if (resource && resource.git === "ignore") return resource.id;
+  return undefined;
+}
+
+export function assertSafeTrackedPath(logicalPath: string): void {
+  const offender = unsafeTrackedResource(loadClassificationRegistry(), logicalPath);
+  if (offender) {
+    throw new Error(
+      `git 追跡パスへの書込み拒否: ${logicalPath} は ${offender}（git: ignore / L2）に一致 — gitignore 側へ書くこと`
+    );
+  }
+}
+
 export type AccessOperation = "read" | "write" | "export";
 
 export interface AccessCheckResult {
@@ -92,7 +117,7 @@ export function checkAgentAccess(
 
   if (operation === "export") {
     const levelDef = registry.levels[resource.level];
-    if (levelDef.export_allowed === false) {
+    if (levelDef?.export_allowed === false) {
       return {
         allowed: false,
         reason: `${resource.id} は export 不可（${resource.level}）`,
@@ -127,18 +152,21 @@ export function validateGitignoreCoverage(): ClassificationIssue[] {
 
   for (const resource of registry.resources) {
     if (resource.git !== "ignore") continue;
-    const bare = resource.path.split("*")[0]?.replace(/\/$/, "") ?? resource.path;
+    // Strip a leading "**/" (global glob) before deriving the literal prefix so
+    // patterns like "**/records/**" reduce to a meaningful "records" needle.
+    const cleaned = resource.path.replace(/^\*\*\//, "");
+    const bare = cleaned.split("*")[0]?.replace(/\/$/, "") ?? cleaned;
     const tenantGlob = `tenants/*/${resource.path}`;
     const tenantBare = `tenants/*/${bare}`;
-    if (
-      !gitignoreContent.includes(bare) &&
-      !gitignoreContent.includes(resource.path) &&
-      !gitignoreContent.includes(tenantGlob) &&
-      !gitignoreContent.includes(tenantBare)
-    ) {
+    const covered =
+      (bare.length > 0 && gitignoreContent.includes(bare)) ||
+      gitignoreContent.includes(resource.path) ||
+      gitignoreContent.includes(tenantGlob) ||
+      gitignoreContent.includes(tenantBare);
+    if (!covered) {
       issues.push({
-        severity: "warning",
-        message: `L2 リソース ${resource.id} (${resource.path}) が .gitignore に未登録の可能性`,
+        severity: "error",
+        message: `L2/個情リソース ${resource.id} (${resource.path}) が .gitignore に未登録 — Git 漏洩リスク`,
       });
     }
   }
@@ -173,45 +201,70 @@ export function validateBankAccountLinksSync(): ClassificationIssue[] {
   return issues;
 }
 
-export function validateCursorignoreCoverage(): ClassificationIssue[] {
+/**
+ * Reduce a registry resource path glob to a literal "needle" usable for
+ * substring matching against ignore files. `**​/records/**` → `records`.
+ */
+export function boundaryNeedle(resourcePath: string): string {
+  const withoutGlobalGlob = resourcePath.replace(/^\*\*\//, "");
+  return (withoutGlobalGlob.split("*")[0] ?? withoutGlobalGlob).replace(/\/$/, "");
+}
+
+export interface BoundaryPattern {
+  id: string;
+  path: string;
+  needle: string;
+  level: ClassificationLevel;
+}
+
+/**
+ * Resources that must be kept out of AI context/index: ai_context=blocked or an
+ * explicit cursorignore flag. This is the single registry-driven source for the
+ * `.cursorignore` / `.cursorindexingignore` boundaries.
+ */
+export function aiBoundaryPatterns(registry: ClassificationRegistry): BoundaryPattern[] {
+  return registry.resources
+    .filter((r) => r.ai_context === "blocked" || r.cursorignore)
+    .map((r) => ({ id: r.id, path: r.path, needle: boundaryNeedle(r.path), level: r.level }));
+}
+
+function validateBoundaryFile(fileName: string): ClassificationIssue[] {
   const issues: ClassificationIssue[] = [];
   const registry = loadClassificationRegistry();
-  const cursorignorePath = join(ROOT_DIR, ".cursorignore");
-  if (!existsSync(cursorignorePath)) {
+  const filePath = join(ROOT_DIR, fileName);
+  if (!existsSync(filePath)) {
     issues.push({
       severity: "warning",
-      message: ".cursorignore が未作成 — ai_context:blocked リソースが AI 自動コンテキストに載る可能性",
+      message: `${fileName} が未作成 — ai_context:blocked リソースが AI に載る可能性`,
     });
     return issues;
   }
-  const content = readFileSync(cursorignorePath, "utf-8");
-
-  for (const resource of registry.resources) {
-    if (resource.ai_context !== "blocked" && !resource.cursorignore) continue;
-    const needle = resource.path.replace(/\*\*/g, "").replace(/\*/g, "");
-    if (needle && !content.includes("records") && resource.path.includes("records")) {
+  const content = readFileSync(filePath, "utf-8");
+  for (const pattern of aiBoundaryPatterns(registry)) {
+    if (!pattern.needle) continue;
+    if (!content.includes(pattern.needle)) {
       issues.push({
         severity: "warning",
-        message: `${resource.id} (${resource.path}) が .cursorignore に未登録の可能性`,
+        message: `${pattern.id} (${pattern.path}) が ${fileName} に未登録の可能性`,
       });
-    } else if (needle && !content.includes(needle.split("/")[0] ?? needle)) {
-      const bare = resource.path.split("*")[0]?.replace(/\/$/, "") ?? "";
-      if (bare && !content.includes(bare)) {
-        issues.push({
-          severity: "warning",
-          message: `${resource.id} (${resource.path}) が .cursorignore に未登録の可能性`,
-        });
-      }
     }
   }
-
   return issues;
+}
+
+export function validateCursorignoreCoverage(): ClassificationIssue[] {
+  return validateBoundaryFile(".cursorignore");
+}
+
+export function validateCursorindexingignoreCoverage(): ClassificationIssue[] {
+  return validateBoundaryFile(".cursorindexingignore");
 }
 
 export function runClassificationChecks(): ClassificationIssue[] {
   const issues: ClassificationIssue[] = [];
   issues.push(...validateGitignoreCoverage());
   issues.push(...validateCursorignoreCoverage());
+  issues.push(...validateCursorindexingignoreCoverage());
   issues.push(...validateBankAccountLinksSync());
 
   try {

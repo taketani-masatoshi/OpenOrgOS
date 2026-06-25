@@ -27,7 +27,3 @@ export function loadModuleReadiness(): Map<string, { tier: ReadinessTier; notes?
 export function getModuleTier(catalogId: string): ReadinessTier {
   return loadModuleReadiness().get(catalogId)?.tier ?? "skeleton";
 }
-
-export function tierLabel(tier: ReadinessTier): string {
-  return tier;
-}

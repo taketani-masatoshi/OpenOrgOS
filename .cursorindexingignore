@@ -1,13 +1,23 @@
 # コードベース索引から除外（@file 明示参照は可）
+# AI 出力境界の一部 — 正本: 各テナント data/classification-registry.yaml
+# 同期確認: npm run steward -- classification boundaries --check
+
+# L2 個情 vault（records）— 索引にも載せない
+**/records/**
+
+# 受信/出力トレイ・大容量生成物（テナント docs）
+tenants/*/docs/io/**
+tenants/*/docs/**/*.pdf
 docs/exports/**
-docs/**/*.pdf
-docs/io/**
+
+# ビルド・一時
 node_modules/**
 dist/**
 scratch/**
+
 # 業務モジュール · ISO カタログ（tenant-active-context.mdc で有効分のみ指示）
 steward/modules/*/agent.md
 steward/modules/*/skills/**
 steward/modules/*/seed/**
 steward/standards/iso/ISO-*/
-steward/standards/regulations/**/template.md
+steward/jurisdictions/**/regulations/templates/**/template.md

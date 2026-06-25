@@ -2,6 +2,8 @@ import {
   listCatalogModuleIds,
   listTenantModules,
   loadEnabledModules,
+  checkAllModules,
+  checkModule,
 } from "../lib/modules.js";
 import {
   syncActiveContext,
@@ -12,8 +14,6 @@ import {
   loadEnabledRegulationIds,
 } from "../lib/regulations.js";
 import { getTenantId } from "../lib/tenant.js";
-import { getModuleTier } from "../lib/module-readiness.js";
-import { checkAllModules, checkModule, listCatalogModuleIds } from "../lib/modules.js";
 import { getModuleTier, type ReadinessTier } from "../lib/module-readiness.js";
 
 function countTiers(): Record<ReadinessTier, number> {

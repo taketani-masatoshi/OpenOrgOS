@@ -10,4 +10,4 @@ export const monthString = z
 
 export const riskLevel = z.enum(["low", "medium", "high"]);
 
-export type RiskLevel = z.infer<typeof riskLevel>;
+export type RiskLevel = z.output<typeof riskLevel>;

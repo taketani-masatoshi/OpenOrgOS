@@ -101,6 +101,7 @@ export function formatP0Report(): string {
   ];
   if (open.length) {
     lines.push("", `ブロッカー ${open.length} 件: ${open.map((i) => i.id).join(", ")}`);
+    lines.push("", "クローズ手順: docs/company/p0-closing-register.md");
   }
   return lines.join("\n");
 }

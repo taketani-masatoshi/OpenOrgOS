@@ -1,0 +1,1269 @@
+# Jurisdiction countries — ISO 3166-1 alpha-2 (ccTLD 相当)
+# Generated: 2026-06-25 · Re-run: node scripts/generate-countries-registry.mjs
+
+version: 1
+description: "ISO 3166-1 alpha-2 法域一覧 · tier full=実装 pack · stub=共有 _stub · 正本:
+  scripts/generate-countries-registry.mjs"
+countries:
+  AD:
+    name: Andorra
+    name_ja: アンドラ
+    default_currency: USD
+    tier: stub
+  AE:
+    name: United Arab Emirates
+    name_ja: アラブ首長国連邦
+    default_currency: AED
+    tier: full
+    pack_root: steward/jurisdiction-packs/AE
+  AF:
+    name: Afghanistan
+    name_ja: アフガニスタン
+    default_currency: USD
+    tier: stub
+  AG:
+    name: Antigua & Barbuda
+    name_ja: アンティグア・バーブーダ
+    default_currency: USD
+    tier: stub
+  AI:
+    name: Anguilla
+    name_ja: アンギラ
+    default_currency: USD
+    tier: stub
+  AL:
+    name: Albania
+    name_ja: アルバニア
+    default_currency: USD
+    tier: stub
+  AM:
+    name: Armenia
+    name_ja: アルメニア
+    default_currency: USD
+    tier: stub
+  AO:
+    name: Angola
+    name_ja: アンゴラ
+    default_currency: USD
+    tier: stub
+  AQ:
+    name: Antarctica
+    name_ja: 南極
+    default_currency: USD
+    tier: stub
+  AR:
+    name: Argentina
+    name_ja: アルゼンチン
+    default_currency: ARS
+    tier: stub
+  AS:
+    name: American Samoa
+    name_ja: 米領サモア
+    default_currency: USD
+    tier: stub
+  AT:
+    name: Austria
+    name_ja: オーストリア
+    default_currency: EUR
+    tier: stub
+  AU:
+    name: Australia
+    name_ja: オーストラリア
+    default_currency: AUD
+    tier: full
+    pack_root: steward/jurisdiction-packs/AU
+  AW:
+    name: Aruba
+    name_ja: アルバ
+    default_currency: USD
+    tier: stub
+  AX:
+    name: Åland Islands
+    name_ja: オーランド諸島
+    default_currency: USD
+    tier: stub
+  AZ:
+    name: Azerbaijan
+    name_ja: アゼルバイジャン
+    default_currency: USD
+    tier: stub
+  BA:
+    name: Bosnia & Herzegovina
+    name_ja: ボスニア・ヘルツェゴビナ
+    default_currency: USD
+    tier: stub
+  BB:
+    name: Barbados
+    name_ja: バルバドス
+    default_currency: USD
+    tier: stub
+  BD:
+    name: Bangladesh
+    name_ja: バングラデシュ
+    default_currency: BDT
+    tier: stub
+  BE:
+    name: Belgium
+    name_ja: ベルギー
+    default_currency: EUR
+    tier: stub
+  BF:
+    name: Burkina Faso
+    name_ja: ブルキナファソ
+    default_currency: USD
+    tier: stub
+  BG:
+    name: Bulgaria
+    name_ja: ブルガリア
+    default_currency: USD
+    tier: stub
+  BH:
+    name: Bahrain
+    name_ja: バーレーン
+    default_currency: USD
+    tier: stub
+  BI:
+    name: Burundi
+    name_ja: ブルンジ
+    default_currency: USD
+    tier: stub
+  BJ:
+    name: Benin
+    name_ja: ベナン
+    default_currency: USD
+    tier: stub
+  BL:
+    name: St. Barthélemy
+    name_ja: サン・バルテルミー
+    default_currency: USD
+    tier: stub
+  BM:
+    name: Bermuda
+    name_ja: バミューダ
+    default_currency: USD
+    tier: stub
+  BN:
+    name: Brunei
+    name_ja: ブルネイ
+    default_currency: USD
+    tier: stub
+  BO:
+    name: Bolivia
+    name_ja: ボリビア
+    default_currency: USD
+    tier: stub
+  BQ:
+    name: Caribbean Netherlands
+    name_ja: オランダ領カリブ
+    default_currency: USD
+    tier: stub
+  BR:
+    name: Brazil
+    name_ja: ブラジル
+    default_currency: BRL
+    tier: stub
+  BS:
+    name: Bahamas
+    name_ja: バハマ
+    default_currency: USD
+    tier: stub
+  BT:
+    name: Bhutan
+    name_ja: ブータン
+    default_currency: USD
+    tier: stub
+  BV:
+    name: Bouvet Island
+    name_ja: ブーベ島
+    default_currency: USD
+    tier: stub
+  BW:
+    name: Botswana
+    name_ja: ボツワナ
+    default_currency: USD
+    tier: stub
+  BY:
+    name: Belarus
+    name_ja: ベラルーシ
+    default_currency: USD
+    tier: stub
+  BZ:
+    name: Belize
+    name_ja: ベリーズ
+    default_currency: USD
+    tier: stub
+  CA:
+    name: Canada
+    name_ja: カナダ
+    default_currency: CAD
+    tier: stub
+  CC:
+    name: Cocos (Keeling) Islands
+    name_ja: ココス(キーリング)諸島
+    default_currency: USD
+    tier: stub
+  CD:
+    name: Congo - Kinshasa
+    name_ja: コンゴ民主共和国(キンシャサ)
+    default_currency: USD
+    tier: stub
+  CF:
+    name: Central African Republic
+    name_ja: 中央アフリカ共和国
+    default_currency: USD
+    tier: stub
+  CG:
+    name: Congo - Brazzaville
+    name_ja: コンゴ共和国(ブラザビル)
+    default_currency: USD
+    tier: stub
+  CH:
+    name: Switzerland
+    name_ja: スイス
+    default_currency: CHF
+    tier: stub
+  CI:
+    name: Côte d’Ivoire
+    name_ja: コートジボワール
+    default_currency: USD
+    tier: stub
+  CK:
+    name: Cook Islands
+    name_ja: クック諸島
+    default_currency: USD
+    tier: stub
+  CL:
+    name: Chile
+    name_ja: チリ
+    default_currency: CLP
+    tier: stub
+  CM:
+    name: Cameroon
+    name_ja: カメルーン
+    default_currency: USD
+    tier: stub
+  CN:
+    name: China
+    name_ja: 中国
+    default_currency: CNY
+    tier: full
+    pack_root: steward/jurisdiction-packs/CN
+  CO:
+    name: Colombia
+    name_ja: コロンビア
+    default_currency: COP
+    tier: stub
+  CR:
+    name: Costa Rica
+    name_ja: コスタリカ
+    default_currency: USD
+    tier: stub
+  CU:
+    name: Cuba
+    name_ja: キューバ
+    default_currency: USD
+    tier: stub
+  CV:
+    name: Cape Verde
+    name_ja: カーボベルデ
+    default_currency: USD
+    tier: stub
+  CW:
+    name: Curaçao
+    name_ja: キュラソー
+    default_currency: USD
+    tier: stub
+  CX:
+    name: Christmas Island
+    name_ja: クリスマス島
+    default_currency: USD
+    tier: stub
+  CY:
+    name: Cyprus
+    name_ja: キプロス
+    default_currency: USD
+    tier: stub
+  CZ:
+    name: Czechia
+    name_ja: チェコ
+    default_currency: CZK
+    tier: stub
+  DE:
+    name: Germany
+    name_ja: ドイツ
+    default_currency: EUR
+    tier: stub
+  DJ:
+    name: Djibouti
+    name_ja: ジブチ
+    default_currency: USD
+    tier: stub
+  DK:
+    name: Denmark
+    name_ja: デンマーク
+    default_currency: DKK
+    tier: stub
+  DM:
+    name: Dominica
+    name_ja: ドミニカ国
+    default_currency: USD
+    tier: stub
+  DO:
+    name: Dominican Republic
+    name_ja: ドミニカ共和国
+    default_currency: USD
+    tier: stub
+  DZ:
+    name: Algeria
+    name_ja: アルジェリア
+    default_currency: USD
+    tier: stub
+  EC:
+    name: Ecuador
+    name_ja: エクアドル
+    default_currency: USD
+    tier: stub
+  EE:
+    name: Estonia
+    name_ja: エストニア
+    default_currency: EUR
+    tier: full
+    pack_root: steward/jurisdiction-packs/EE
+  EG:
+    name: Egypt
+    name_ja: エジプト
+    default_currency: EGP
+    tier: stub
+  EH:
+    name: Western Sahara
+    name_ja: 西サハラ
+    default_currency: USD
+    tier: stub
+  ER:
+    name: Eritrea
+    name_ja: エリトリア
+    default_currency: USD
+    tier: stub
+  ES:
+    name: Spain
+    name_ja: スペイン
+    default_currency: EUR
+    tier: stub
+  ET:
+    name: Ethiopia
+    name_ja: エチオピア
+    default_currency: USD
+    tier: stub
+  EU:
+    name: European Union
+    name_ja: 欧州連合（TJS メタ）
+    default_currency: EUR
+    tier: full
+    pack_root: steward/jurisdiction-packs/EU
+  FI:
+    name: Finland
+    name_ja: フィンランド
+    default_currency: EUR
+    tier: stub
+  FJ:
+    name: Fiji
+    name_ja: フィジー
+    default_currency: USD
+    tier: stub
+  FK:
+    name: Falkland Islands
+    name_ja: フォークランド諸島
+    default_currency: USD
+    tier: stub
+  FM:
+    name: Micronesia
+    name_ja: ミクロネシア連邦
+    default_currency: USD
+    tier: stub
+  FO:
+    name: Faroe Islands
+    name_ja: フェロー諸島
+    default_currency: USD
+    tier: stub
+  FR:
+    name: France
+    name_ja: フランス
+    default_currency: EUR
+    tier: stub
+  GA:
+    name: Gabon
+    name_ja: ガボン
+    default_currency: USD
+    tier: stub
+  GB:
+    name: United Kingdom
+    name_ja: イギリス
+    default_currency: GBP
+    tier: stub
+  GD:
+    name: Grenada
+    name_ja: グレナダ
+    default_currency: USD
+    tier: stub
+  GE:
+    name: Georgia
+    name_ja: ジョージア
+    default_currency: USD
+    tier: stub
+  GF:
+    name: French Guiana
+    name_ja: 仏領ギアナ
+    default_currency: USD
+    tier: stub
+  GG:
+    name: Guernsey
+    name_ja: ガーンジー
+    default_currency: USD
+    tier: stub
+  GH:
+    name: Ghana
+    name_ja: ガーナ
+    default_currency: USD
+    tier: stub
+  GI:
+    name: Gibraltar
+    name_ja: ジブラルタル
+    default_currency: USD
+    tier: stub
+  GL:
+    name: Greenland
+    name_ja: グリーンランド
+    default_currency: USD
+    tier: stub
+  GM:
+    name: Gambia
+    name_ja: ガンビア
+    default_currency: USD
+    tier: stub
+  GN:
+    name: Guinea
+    name_ja: ギニア
+    default_currency: USD
+    tier: stub
+  GP:
+    name: Guadeloupe
+    name_ja: グアドループ
+    default_currency: USD
+    tier: stub
+  GQ:
+    name: Equatorial Guinea
+    name_ja: 赤道ギニア
+    default_currency: USD
+    tier: stub
+  GR:
+    name: Greece
+    name_ja: ギリシャ
+    default_currency: EUR
+    tier: stub
+  GS:
+    name: South Georgia & South Sandwich Islands
+    name_ja: サウスジョージア・サウスサンドウィッチ諸島
+    default_currency: USD
+    tier: stub
+  GT:
+    name: Guatemala
+    name_ja: グアテマラ
+    default_currency: USD
+    tier: stub
+  GU:
+    name: Guam
+    name_ja: グアム
+    default_currency: USD
+    tier: stub
+  GW:
+    name: Guinea-Bissau
+    name_ja: ギニアビサウ
+    default_currency: USD
+    tier: stub
+  GY:
+    name: Guyana
+    name_ja: ガイアナ
+    default_currency: USD
+    tier: stub
+  HK:
+    name: Hong Kong SAR China
+    name_ja: 中華人民共和国香港特別行政区
+    default_currency: HKD
+    tier: full
+    pack_root: steward/jurisdiction-packs/HK
+  HM:
+    name: Heard & McDonald Islands
+    name_ja: ハード島・マクドナルド諸島
+    default_currency: USD
+    tier: stub
+  HN:
+    name: Honduras
+    name_ja: ホンジュラス
+    default_currency: USD
+    tier: stub
+  HR:
+    name: Croatia
+    name_ja: クロアチア
+    default_currency: USD
+    tier: stub
+  HT:
+    name: Haiti
+    name_ja: ハイチ
+    default_currency: USD
+    tier: stub
+  HU:
+    name: Hungary
+    name_ja: ハンガリー
+    default_currency: HUF
+    tier: stub
+  ID:
+    name: Indonesia
+    name_ja: インドネシア
+    default_currency: IDR
+    tier: stub
+  IE:
+    name: Ireland
+    name_ja: アイルランド
+    default_currency: EUR
+    tier: stub
+  IL:
+    name: Israel
+    name_ja: イスラエル
+    default_currency: ILS
+    tier: stub
+  IM:
+    name: Isle of Man
+    name_ja: マン島
+    default_currency: USD
+    tier: stub
+  IN:
+    name: India
+    name_ja: インド
+    default_currency: INR
+    tier: stub
+  IO:
+    name: British Indian Ocean Territory
+    name_ja: 英領インド洋地域
+    default_currency: USD
+    tier: stub
+  IQ:
+    name: Iraq
+    name_ja: イラク
+    default_currency: USD
+    tier: stub
+  IR:
+    name: Iran
+    name_ja: イラン
+    default_currency: USD
+    tier: stub
+  IS:
+    name: Iceland
+    name_ja: アイスランド
+    default_currency: USD
+    tier: stub
+  IT:
+    name: Italy
+    name_ja: イタリア
+    default_currency: EUR
+    tier: stub
+  JE:
+    name: Jersey
+    name_ja: ジャージー
+    default_currency: USD
+    tier: stub
+  JM:
+    name: Jamaica
+    name_ja: ジャマイカ
+    default_currency: USD
+    tier: stub
+  JO:
+    name: Jordan
+    name_ja: ヨルダン
+    default_currency: USD
+    tier: stub
+  JP:
+    name: Japan
+    name_ja: 日本
+    default_currency: JPY
+    tier: full
+    pack_root: steward/jurisdiction-packs/JP
+  KE:
+    name: Kenya
+    name_ja: ケニア
+    default_currency: KES
+    tier: stub
+  KG:
+    name: Kyrgyzstan
+    name_ja: キルギス
+    default_currency: USD
+    tier: stub
+  KH:
+    name: Cambodia
+    name_ja: カンボジア
+    default_currency: USD
+    tier: stub
+  KI:
+    name: Kiribati
+    name_ja: キリバス
+    default_currency: USD
+    tier: stub
+  KM:
+    name: Comoros
+    name_ja: コモロ
+    default_currency: USD
+    tier: stub
+  KN:
+    name: St. Kitts & Nevis
+    name_ja: セントクリストファー・ネーヴィス
+    default_currency: USD
+    tier: stub
+  KP:
+    name: North Korea
+    name_ja: 北朝鮮
+    default_currency: USD
+    tier: stub
+  KR:
+    name: South Korea
+    name_ja: 韓国
+    default_currency: KRW
+    tier: stub
+  KW:
+    name: Kuwait
+    name_ja: クウェート
+    default_currency: USD
+    tier: stub
+  KY:
+    name: Cayman Islands
+    name_ja: ケイマン諸島
+    default_currency: USD
+    tier: stub
+  KZ:
+    name: Kazakhstan
+    name_ja: カザフスタン
+    default_currency: USD
+    tier: stub
+  LA:
+    name: Laos
+    name_ja: ラオス
+    default_currency: USD
+    tier: stub
+  LB:
+    name: Lebanon
+    name_ja: レバノン
+    default_currency: USD
+    tier: stub
+  LC:
+    name: St. Lucia
+    name_ja: セントルシア
+    default_currency: USD
+    tier: stub
+  LI:
+    name: Liechtenstein
+    name_ja: リヒテンシュタイン
+    default_currency: USD
+    tier: stub
+  LK:
+    name: Sri Lanka
+    name_ja: スリランカ
+    default_currency: USD
+    tier: stub
+  LR:
+    name: Liberia
+    name_ja: リベリア
+    default_currency: USD
+    tier: stub
+  LS:
+    name: Lesotho
+    name_ja: レソト
+    default_currency: USD
+    tier: stub
+  LT:
+    name: Lithuania
+    name_ja: リトアニア
+    default_currency: USD
+    tier: stub
+  LU:
+    name: Luxembourg
+    name_ja: ルクセンブルク
+    default_currency: USD
+    tier: stub
+  LV:
+    name: Latvia
+    name_ja: ラトビア
+    default_currency: USD
+    tier: stub
+  LY:
+    name: Libya
+    name_ja: リビア
+    default_currency: USD
+    tier: stub
+  MA:
+    name: Morocco
+    name_ja: モロッコ
+    default_currency: USD
+    tier: stub
+  MC:
+    name: Monaco
+    name_ja: モナコ
+    default_currency: USD
+    tier: stub
+  MD:
+    name: Moldova
+    name_ja: モルドバ
+    default_currency: USD
+    tier: stub
+  ME:
+    name: Montenegro
+    name_ja: モンテネグロ
+    default_currency: USD
+    tier: stub
+  MF:
+    name: St. Martin
+    name_ja: サン・マルタン
+    default_currency: USD
+    tier: stub
+  MG:
+    name: Madagascar
+    name_ja: マダガスカル
+    default_currency: USD
+    tier: stub
+  MH:
+    name: Marshall Islands
+    name_ja: マーシャル諸島
+    default_currency: USD
+    tier: stub
+  MK:
+    name: North Macedonia
+    name_ja: 北マケドニア
+    default_currency: USD
+    tier: stub
+  ML:
+    name: Mali
+    name_ja: マリ
+    default_currency: USD
+    tier: stub
+  MM:
+    name: Myanmar (Burma)
+    name_ja: ミャンマー (ビルマ)
+    default_currency: USD
+    tier: stub
+  MN:
+    name: Mongolia
+    name_ja: モンゴル
+    default_currency: USD
+    tier: stub
+  MO:
+    name: Macao SAR China
+    name_ja: 中華人民共和国マカオ特別行政区
+    default_currency: USD
+    tier: stub
+  MP:
+    name: Northern Mariana Islands
+    name_ja: 北マリアナ諸島
+    default_currency: USD
+    tier: stub
+  MQ:
+    name: Martinique
+    name_ja: マルティニーク
+    default_currency: USD
+    tier: stub
+  MR:
+    name: Mauritania
+    name_ja: モーリタニア
+    default_currency: USD
+    tier: stub
+  MS:
+    name: Montserrat
+    name_ja: モントセラト
+    default_currency: USD
+    tier: stub
+  MT:
+    name: Malta
+    name_ja: マルタ
+    default_currency: USD
+    tier: stub
+  MU:
+    name: Mauritius
+    name_ja: モーリシャス
+    default_currency: USD
+    tier: stub
+  MV:
+    name: Maldives
+    name_ja: モルディブ
+    default_currency: USD
+    tier: stub
+  MW:
+    name: Malawi
+    name_ja: マラウイ
+    default_currency: USD
+    tier: stub
+  MX:
+    name: Mexico
+    name_ja: メキシコ
+    default_currency: MXN
+    tier: stub
+  MY:
+    name: Malaysia
+    name_ja: マレーシア
+    default_currency: MYR
+    tier: full
+    pack_root: steward/jurisdiction-packs/MY
+  MZ:
+    name: Mozambique
+    name_ja: モザンビーク
+    default_currency: USD
+    tier: stub
+  NA:
+    name: Namibia
+    name_ja: ナミビア
+    default_currency: USD
+    tier: stub
+  NC:
+    name: New Caledonia
+    name_ja: ニューカレドニア
+    default_currency: USD
+    tier: stub
+  NE:
+    name: Niger
+    name_ja: ニジェール
+    default_currency: USD
+    tier: stub
+  NF:
+    name: Norfolk Island
+    name_ja: ノーフォーク島
+    default_currency: USD
+    tier: stub
+  NG:
+    name: Nigeria
+    name_ja: ナイジェリア
+    default_currency: NGN
+    tier: stub
+  NI:
+    name: Nicaragua
+    name_ja: ニカラグア
+    default_currency: USD
+    tier: stub
+  NL:
+    name: Netherlands
+    name_ja: オランダ
+    default_currency: EUR
+    tier: stub
+  NO:
+    name: Norway
+    name_ja: ノルウェー
+    default_currency: NOK
+    tier: stub
+  NP:
+    name: Nepal
+    name_ja: ネパール
+    default_currency: USD
+    tier: stub
+  NR:
+    name: Nauru
+    name_ja: ナウル
+    default_currency: USD
+    tier: stub
+  NU:
+    name: Niue
+    name_ja: ニウエ
+    default_currency: USD
+    tier: stub
+  NZ:
+    name: New Zealand
+    name_ja: ニュージーランド
+    default_currency: NZD
+    tier: stub
+  OM:
+    name: Oman
+    name_ja: オマーン
+    default_currency: USD
+    tier: stub
+  PA:
+    name: Panama
+    name_ja: パナマ
+    default_currency: USD
+    tier: stub
+  PE:
+    name: Peru
+    name_ja: ペルー
+    default_currency: USD
+    tier: stub
+  PF:
+    name: French Polynesia
+    name_ja: 仏領ポリネシア
+    default_currency: USD
+    tier: stub
+  PG:
+    name: Papua New Guinea
+    name_ja: パプアニューギニア
+    default_currency: USD
+    tier: stub
+  PH:
+    name: Philippines
+    name_ja: フィリピン
+    default_currency: PHP
+    tier: stub
+  PK:
+    name: Pakistan
+    name_ja: パキスタン
+    default_currency: PKR
+    tier: stub
+  PL:
+    name: Poland
+    name_ja: ポーランド
+    default_currency: PLN
+    tier: stub
+  PM:
+    name: St. Pierre & Miquelon
+    name_ja: サンピエール島・ミクロン島
+    default_currency: USD
+    tier: stub
+  PN:
+    name: Pitcairn Islands
+    name_ja: ピトケアン諸島
+    default_currency: USD
+    tier: stub
+  PR:
+    name: Puerto Rico
+    name_ja: プエルトリコ
+    default_currency: USD
+    tier: stub
+  PS:
+    name: Palestinian Territories
+    name_ja: パレスチナ自治区
+    default_currency: USD
+    tier: stub
+  PT:
+    name: Portugal
+    name_ja: ポルトガル
+    default_currency: EUR
+    tier: stub
+  PW:
+    name: Palau
+    name_ja: パラオ
+    default_currency: USD
+    tier: stub
+  PY:
+    name: Paraguay
+    name_ja: パラグアイ
+    default_currency: USD
+    tier: stub
+  QA:
+    name: Qatar
+    name_ja: カタール
+    default_currency: USD
+    tier: stub
+  RE:
+    name: Réunion
+    name_ja: レユニオン
+    default_currency: USD
+    tier: stub
+  RO:
+    name: Romania
+    name_ja: ルーマニア
+    default_currency: RON
+    tier: stub
+  RS:
+    name: Serbia
+    name_ja: セルビア
+    default_currency: USD
+    tier: stub
+  RU:
+    name: Russia
+    name_ja: ロシア
+    default_currency: RUB
+    tier: full
+    pack_root: steward/jurisdiction-packs/RU
+  RW:
+    name: Rwanda
+    name_ja: ルワンダ
+    default_currency: USD
+    tier: stub
+  SA:
+    name: Saudi Arabia
+    name_ja: サウジアラビア
+    default_currency: SAR
+    tier: stub
+  SB:
+    name: Solomon Islands
+    name_ja: ソロモン諸島
+    default_currency: USD
+    tier: stub
+  SC:
+    name: Seychelles
+    name_ja: セーシェル
+    default_currency: USD
+    tier: stub
+  SD:
+    name: Sudan
+    name_ja: スーダン
+    default_currency: USD
+    tier: stub
+  SE:
+    name: Sweden
+    name_ja: スウェーデン
+    default_currency: SEK
+    tier: stub
+  SG:
+    name: Singapore
+    name_ja: シンガポール
+    default_currency: SGD
+    tier: full
+    pack_root: steward/jurisdiction-packs/SG
+  SH:
+    name: St. Helena
+    name_ja: セントヘレナ
+    default_currency: USD
+    tier: stub
+  SI:
+    name: Slovenia
+    name_ja: スロベニア
+    default_currency: USD
+    tier: stub
+  SJ:
+    name: Svalbard & Jan Mayen
+    name_ja: スバールバル諸島・ヤンマイエン島
+    default_currency: USD
+    tier: stub
+  SK:
+    name: Slovakia
+    name_ja: スロバキア
+    default_currency: USD
+    tier: stub
+  SL:
+    name: Sierra Leone
+    name_ja: シエラレオネ
+    default_currency: USD
+    tier: stub
+  SM:
+    name: San Marino
+    name_ja: サンマリノ
+    default_currency: USD
+    tier: stub
+  SN:
+    name: Senegal
+    name_ja: セネガル
+    default_currency: USD
+    tier: stub
+  SO:
+    name: Somalia
+    name_ja: ソマリア
+    default_currency: USD
+    tier: stub
+  SR:
+    name: Suriname
+    name_ja: スリナム
+    default_currency: USD
+    tier: stub
+  SS:
+    name: South Sudan
+    name_ja: 南スーダン
+    default_currency: USD
+    tier: stub
+  ST:
+    name: São Tomé & Príncipe
+    name_ja: サントメ・プリンシペ
+    default_currency: USD
+    tier: stub
+  SV:
+    name: El Salvador
+    name_ja: エルサルバドル
+    default_currency: USD
+    tier: stub
+  SX:
+    name: Sint Maarten
+    name_ja: シント・マールテン
+    default_currency: USD
+    tier: stub
+  SY:
+    name: Syria
+    name_ja: シリア
+    default_currency: USD
+    tier: stub
+  SZ:
+    name: Eswatini
+    name_ja: エスワティニ
+    default_currency: USD
+    tier: stub
+  TC:
+    name: Turks & Caicos Islands
+    name_ja: タークス・カイコス諸島
+    default_currency: USD
+    tier: stub
+  TD:
+    name: Chad
+    name_ja: チャド
+    default_currency: USD
+    tier: stub
+  TF:
+    name: French Southern Territories
+    name_ja: 仏領極南諸島
+    default_currency: USD
+    tier: stub
+  TG:
+    name: Togo
+    name_ja: トーゴ
+    default_currency: USD
+    tier: stub
+  TH:
+    name: Thailand
+    name_ja: タイ
+    default_currency: THB
+    tier: stub
+  TJ:
+    name: Tajikistan
+    name_ja: タジキスタン
+    default_currency: USD
+    tier: stub
+  TK:
+    name: Tokelau
+    name_ja: トケラウ
+    default_currency: USD
+    tier: stub
+  TL:
+    name: Timor-Leste
+    name_ja: 東ティモール
+    default_currency: USD
+    tier: stub
+  TM:
+    name: Turkmenistan
+    name_ja: トルクメニスタン
+    default_currency: USD
+    tier: stub
+  TN:
+    name: Tunisia
+    name_ja: チュニジア
+    default_currency: USD
+    tier: stub
+  TO:
+    name: Tonga
+    name_ja: トンガ
+    default_currency: USD
+    tier: stub
+  TR:
+    name: Türkiye
+    name_ja: トルコ
+    default_currency: TRY
+    tier: stub
+  TT:
+    name: Trinidad & Tobago
+    name_ja: トリニダード・トバゴ
+    default_currency: USD
+    tier: stub
+  TV:
+    name: Tuvalu
+    name_ja: ツバル
+    default_currency: USD
+    tier: stub
+  TW:
+    name: Taiwan
+    name_ja: 台湾
+    default_currency: TWD
+    tier: full
+    pack_root: steward/jurisdiction-packs/TW
+  TZ:
+    name: Tanzania
+    name_ja: タンザニア
+    default_currency: USD
+    tier: stub
+  UA:
+    name: Ukraine
+    name_ja: ウクライナ
+    default_currency: UAH
+    tier: stub
+  UG:
+    name: Uganda
+    name_ja: ウガンダ
+    default_currency: USD
+    tier: stub
+  UM:
+    name: U.S. Outlying Islands
+    name_ja: 合衆国領有小離島
+    default_currency: USD
+    tier: stub
+  US:
+    name: United States
+    name_ja: アメリカ合衆国
+    default_currency: USD
+    tier: full
+    pack_root: steward/jurisdiction-packs/US
+  UY:
+    name: Uruguay
+    name_ja: ウルグアイ
+    default_currency: USD
+    tier: stub
+  UZ:
+    name: Uzbekistan
+    name_ja: ウズベキスタン
+    default_currency: USD
+    tier: stub
+  VA:
+    name: Vatican City
+    name_ja: バチカン市国
+    default_currency: USD
+    tier: stub
+  VC:
+    name: St. Vincent & Grenadines
+    name_ja: セントビンセント及びグレナディーン諸島
+    default_currency: USD
+    tier: stub
+  VE:
+    name: Venezuela
+    name_ja: ベネズエラ
+    default_currency: USD
+    tier: stub
+  VG:
+    name: British Virgin Islands
+    name_ja: 英領ヴァージン諸島
+    default_currency: USD
+    tier: stub
+  VI:
+    name: U.S. Virgin Islands
+    name_ja: 米領ヴァージン諸島
+    default_currency: USD
+    tier: stub
+  VN:
+    name: Vietnam
+    name_ja: ベトナム
+    default_currency: VND
+    tier: stub
+  VU:
+    name: Vanuatu
+    name_ja: バヌアツ
+    default_currency: USD
+    tier: stub
+  WF:
+    name: Wallis & Futuna
+    name_ja: ウォリス・フツナ
+    default_currency: USD
+    tier: stub
+  WS:
+    name: Samoa
+    name_ja: サモア
+    default_currency: USD
+    tier: stub
+  YE:
+    name: Yemen
+    name_ja: イエメン
+    default_currency: USD
+    tier: stub
+  YT:
+    name: Mayotte
+    name_ja: マヨット
+    default_currency: USD
+    tier: stub
+  ZA:
+    name: South Africa
+    name_ja: 南アフリカ
+    default_currency: ZAR
+    tier: stub
+  ZM:
+    name: Zambia
+    name_ja: ザンビア
+    default_currency: USD
+    tier: stub
+  ZW:
+    name: Zimbabwe
+    name_ja: ジンバブエ
+    default_currency: USD
+    tier: stub

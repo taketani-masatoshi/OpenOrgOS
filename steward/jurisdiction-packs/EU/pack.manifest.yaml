@@ -1,0 +1,35 @@
+id: EU
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/eu-maintainers
+repository: https://github.com/steward-os/jurisdiction-eu
+license: MIT
+
+name: European Union
+default_entity_form: se
+default_currency: EUR
+locale: en-EU
+default_display_language: en
+default_legal_subdivision: DE
+legal_system:
+  ja: EU法（メタ pack · 分国 DE FR GB）
+  en: European Union law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-EU-001
+  board: REG-EU-002
+  shareholder: REG-EU-003
+  approval: REG-EU-004
+  expense: REG-EU-005
+  conflict: REG-EU-006
+  document: REG-EU-007
+  travel: REG-EU-008
+
+notes: TJS-EU Option A · eu-demo · subdivisions DE FR GB

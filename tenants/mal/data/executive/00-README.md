@@ -24,7 +24,9 @@ done
 cp stakeholders.yaml.example stakeholders.yaml   # 未作成の場合
 ```
 
-**バックアップ（Git 以外）:** Time Machine 等で `tenants/{id}/data/executive/` を日次含める。REG-009 第7条参照。
+**バックアップ（Git 以外）:** [docs/executive/backup-procedure.md](../../docs/executive/backup-procedure.md)（Time Machine + 週次暗号化 SSD 推奨 · REG-009 第7条参照）。
+
+**validate:** `npm run validate` — executive YAML 未作成時に **警告** を表示。
 
 ---
 

@@ -3,22 +3,22 @@ description: Active tenant modules, ISO, and regulations — token saving
 alwaysApply: true
 ---
 
-# テナント `acme` — アクティブコンテキストのみ読取
+# テナント `eu-demo` — アクティブコンテキストのみ読取
 
-**生成:** `npm run steward -- modules sync-context` · 正本: `tenants/acme/rules/active_context.md`
+**生成:** `npm run steward -- modules sync-context` · 正本: `tenants/eu-demo/rules/active_context.md`
 
 ## 禁止（トークン節約）
 
 - `steward/modules/{id}/` のうち **下表にない id** の agent.md · skills · seed
 - `steward/standards/iso/ISO-*` のうち **下表にない規格**
-- `steward/standards/regulations/**/template.md` のうち **下表にない REG**
+- `steward/jurisdiction-packs/EU/regulations/templates/**/template.md` のうち **下表にない REG**
 - `docs/company/regulations/*.md` のうち **下表にない REG** 施行文
 - 無効 `modules.yaml` エントリの `data_root` · `docs_root`
 - `@folder` で `steward/modules/` · `regulations/` 全体を指定しない
 
 ## 有効業務モジュール
 
-- **rental:** `steward/modules/rental/agent.md`（Skill は必要時のみ同 `skills/`）
+（なし）
 
 ## 有効 ISO
 
@@ -26,18 +26,17 @@ alwaysApply: true
 
 ## 有効社内規程
 
-- **REG-001** 役員報酬規程: 施行 `docs/company/regulations/yakuin-hoshu-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-001-yakuin-hoshu/template.md` は改定時のみ）
-- **REG-002** 取締役会議事規則: 施行 `docs/company/regulations/torishimari-kai-gijisho-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-002-torishimari-kai/template.md` は改定時のみ）
-- **REG-003** 株主総会議事規則: 施行 `docs/company/regulations/shukai-gijisho-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-003-shukai-gijisho/template.md` は改定時のみ）
-- **REG-004** 稟議・決裁規程: 施行 `docs/company/regulations/ringi-kessai-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-004-ringi-kessai/template.md` は改定時のみ）
-- **REG-005** 経費精算規程: 施行 `docs/company/regulations/keihi-seisan-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-005-keihi-seisan/template.md` は改定時のみ）
-- **REG-006** 利益相反取引規程: 施行 `docs/company/regulations/riekisohan-torihiki-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-006-riekisohan/template.md` は改定時のみ）
-- **REG-007** 文書管理規程: 施行 `docs/company/regulations/bunsho-kanri-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-007-bunsho-kanri/template.md` は改定時のみ）
-- **REG-008** 旅費規程: 施行 `docs/company/regulations/ryohi-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-008-ryohi/template.md` は改定時のみ）
-- **REG-010** 個人情報保護規程: 施行 `docs/company/regulations/kojin-joho-hogo-kisoku.md`（テンプレ `steward/standards/regulations/core/REG-010-kojin-joho/template.md` は改定時のみ）
+- **REG-EU-001** Officer Compensation Policy: 施行 `docs/company/regulations/officer-compensation-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-001-officer-comp/template.md` は改定時のみ）
+- **REG-EU-002** Board Meeting Procedures: 施行 `docs/company/regulations/board-meeting-procedures.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-002-board-meetings/template.md` は改定時のみ）
+- **REG-EU-003** Shareholder Meeting Procedures: 施行 `docs/company/regulations/shareholder-meeting-procedures.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-003-shareholder-meetings/template.md` は改定時のみ）
+- **REG-EU-004** Approval Authority Policy: 施行 `docs/company/regulations/approval-authority-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-004-approval-authority/template.md` は改定時のみ）
+- **REG-EU-005** Expense Reimbursement Policy: 施行 `docs/company/regulations/expense-reimbursement-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-005-expense-reimbursement/template.md` は改定時のみ）
+- **REG-EU-006** Conflict of Interest Policy: 施行 `docs/company/regulations/conflict-of-interest-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-006-conflict-of-interest/template.md` は改定時のみ）
+- **REG-EU-007** Document Retention Policy: 施行 `docs/company/regulations/document-retention-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-007-document-retention/template.md` は改定時のみ）
+- **REG-EU-008** Travel and Business Expense Policy: 施行 `docs/company/regulations/travel-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-008-travel/template.md` は改定時のみ）
 
 ## コア Agent（常時）
 
-Executive · Secretary · Finance · Contract · Compliance · Operations — `steward/agents/`
+Executive · Secretary · Finance · Contract · Compliance · Operations — `steward/core/agents/`
 
 業務モジュール · 規程作業時のみ、上記 **有効** の agent.md / 施行文を @ 参照する。

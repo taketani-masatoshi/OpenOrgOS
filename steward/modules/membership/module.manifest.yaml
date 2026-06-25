@@ -1,6 +1,8 @@
 id: membership
-required_seeds: []
-notes: activation_ready — members.yaml, plans.yaml
+required_seeds:
+  - invoice-membership-monthly.yaml
+  - invoice-membership-monthly-body.txt
+notes: production_ready — members/plans + invoice seed · operations membership CLI
 activation_seeds:
 - members.yaml
 - plans.yaml

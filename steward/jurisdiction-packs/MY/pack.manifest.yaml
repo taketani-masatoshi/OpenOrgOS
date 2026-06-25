@@ -1,0 +1,34 @@
+id: MY
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/my-maintainers
+repository: https://github.com/steward-os/jurisdiction-my
+license: MIT
+
+name: Malaysia
+default_entity_form: sdn_bhd
+default_currency: MYR
+locale: en-MY
+default_display_language: en
+legal_system:
+  ja: マレーシア法
+  en: Malaysia law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-MY-001
+  board: REG-MY-002
+  shareholder: REG-MY-003
+  approval: REG-MY-004
+  expense: REG-MY-005
+  conflict: REG-MY-006
+  document: REG-MY-007
+  travel: REG-MY-008
+
+notes: Sdn Bhd skeleton · my-demo tenant · ms locale registry

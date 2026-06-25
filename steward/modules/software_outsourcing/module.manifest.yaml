@@ -1,0 +1,10 @@
+id: software_outsourcing
+required_seeds: []
+notes: activation_ready — SOW · milestones · timesheets · deliverables（professional_services との境界は agent.md）
+activation_seeds:
+- sow-contracts.yaml
+- milestones.yaml
+- timesheets.yaml
+- deliverables.yaml
+optional_regulations:
+- REG-007

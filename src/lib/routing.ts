@@ -13,11 +13,13 @@ import {
   loadClassificationRegistry,
   type AccessCheckResult,
 } from "./classification.js";
+import { ROUTING_REGISTRY_PATH } from "./steward-paths.js";
 import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModules } from "./modules.js";
-import { loadSkillRegistry } from "./skill-registry.js";
-import { ROOT_DIR, currentDate, ensureDocsReportsDir, readYamlFile, writeYamlFile } from "./utils.js";
+import { loadSkillRegistry, resolveSkillFilePath } from "./skill-registry.js";
+import { appendAuditEvent } from "./audit-log.js";
+import { currentDate, ensureDocsReportsDir, readYamlFile, writeYamlFile } from "./utils.js";
 
-export const ROUTING_REGISTRY_PATH = join(ROOT_DIR, "steward", "routing", "registry.yaml");
+export { ROUTING_REGISTRY_PATH };
 export const ROUTING_QUEUE_SUBDIR = "routing-queue";
 
 const CORE_AGENTS = new Set<AgentId>([
@@ -258,7 +260,7 @@ export function formatHandoffMarkdown(handoff: Handoff, matched?: MatchedRoute):
     if (skill?.runtime === "cli" && skill.cli_command) {
       lines.push("## Dispatch", "", `\`npm run steward -- skills run ${skill.cli_command}\``, "");
     } else if (skill?.runtime === "cursor-only") {
-      lines.push("## Dispatch", "", `Cursor-only skill: steward/skills/${skill.file}`, "");
+      lines.push("## Dispatch", "", `Cursor-only skill: ${skill.skillDirRel}/${skill.file}`, "");
     }
   }
 
@@ -287,6 +289,12 @@ export function writeHandoffFiles(handoff: Handoff, matched?: MatchedRoute): { y
   const mdPath = join(dir, `${handoff.id}.md`);
   writeYamlFile(yamlPath, handoff);
   writeFileSync(mdPath, formatHandoffMarkdown(handoff, matched), "utf-8");
+  appendAuditEvent({
+    event: handoff.task_type === "implement" ? "escalate" : "handoff",
+    ref: handoff.id,
+    actor: handoff.from_agent,
+    detail: `${handoff.from_agent} → ${handoff.to_agent}`,
+  });
   return { yamlPath, mdPath };
 }
 
@@ -296,6 +304,11 @@ export function loadHandoff(id: string): Handoff {
     throw new Error(`Handoff not found: ${id} (${yamlPath})`);
   }
   return readYamlFile(yamlPath, handoffSchema);
+}
+
+/** Load every child work order of a handoff (empty when it has none). */
+export function loadHandoffChildren(handoff: Handoff): Handoff[] {
+  return (handoff.child_ids ?? []).map((cid) => loadHandoff(cid));
 }
 
 export function listHandoffs(): Handoff[] {

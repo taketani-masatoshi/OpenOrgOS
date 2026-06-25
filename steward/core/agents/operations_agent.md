@@ -21,6 +21,7 @@
 - `docs/company/hr/` テンプレ整備
 - `docs/finance/accounting/templates/` の Finance との協調
 - `steward io` CLI による I/O 自動化
+- **旅行手配**（出張 · 宿泊）— **ヒアリング →** browser MCP · 決済直前まで（[travel_booking](../core/skills/travel_booking.md)）
 - **Skill 実行後** `docs/reports/agent-summaries/operations/` に要約を書く
 
 ---
@@ -29,7 +30,8 @@
 
 | Skill | ファイル |
 |-------|---------|
-| contract_register | [steward/skills/contract_register.md](../steward/skills/contract_register.md)（inbox→归档） |
+| contract_register | [steward/core/skills/contract_register.md](../steward/core/skills/contract_register.md)（inbox→归档） |
+| travel_booking | [steward/core/skills/travel_booking.md](../steward/core/skills/travel_booking.md)（秘書ヒアリング → 旅行サイト手配 · 決済直前停止） |
 
 ## 要約出力先
 
@@ -47,6 +49,10 @@
 | `docs/company/hr/**` | Primary |
 | `docs/finance/accounting/templates/**` | R/W（Finance 協調） |
 | `docs/finance/accounting/**` · `docs/company/hr/**` | Read/Write（横断業務台帳） |
+| `docs/operations/travel-draft-template.md` | Read |
+| `docs/operations/travel-drafts/**` | Primary（gitignore 実ドラフト） |
+| `data/operations/travel-portals.yaml` | Read（L2 · gitignore · login_id のみ） |
+| `docs/company/regulations/ryohi-kisoku.md` | Read（REG-008） |
 | `docs/contracts/**` | Read（归档参照） |
 | `docs/company/licenses/**/records/` | Write（归档先） |
 
@@ -59,6 +65,7 @@
 - `data/document-io.yaml`
 - `docs/company/hr/**`
 - `docs/finance/accounting/templates/**`
+- `docs/operations/travel-drafts/**`（手配ドラフト · L2 値禁止）
 - 归档先 `docs/**/records/`（Compliance 指示に従う）
 
 **CLI:**
@@ -78,6 +85,7 @@ npm run steward -- io outbox list
 - 契約条項・規程本文の改定
 - inbox 書類の **内容判断**（路由のみ · 専門エージェントが内容確認）
 - 宿泊モジュール `docs/properties/*/operations/` の実運用記録の主編集（Hospitality 主導）
+- **旅行サイトの決済ボタン押下** · カード情報のチャット出力（travel_booking 停止条件）
 
 ---
 
@@ -118,6 +126,7 @@ npm run steward -- io outbox list
 | 許可証・保険証券の归档先 | **Compliance Agent** |
 | ゲスト関連書類 | **Hospitality Agent** |
 | 経費領収書・経理台帳 | **Finance Agent** |
+| 決済後の社長カレンダー登録 | **Secretary Agent** |
 | inbox 滞留 P0 | **Executive Steward Agent** |
 
 ---

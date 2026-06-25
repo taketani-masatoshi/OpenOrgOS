@@ -1,0 +1,11 @@
+forms:
+  - id: private_ltd
+    name: Private Company Limited by Shares
+    name_local: 股份有限公司
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Corporate registry · Taiwan

@@ -71,7 +71,7 @@
 |------|------|
 | 賃貸 9 モジュール計画 | **`docs/plans/rental/`** |
 | 番町運用 | **`docs/properties/PROP-001-bancho/operations/`** |
-| エージェント | **`steward/agents/property_rental_agent.md`** |
+| エージェント | **`steward/core/agents/property_rental_agent.md`** |
 
 ---
 
@@ -82,7 +82,7 @@
 | 旅館 10 モジュール計画 | **`docs/plans/hospitality/`** |
 | 亀沢運用 | **`docs/properties/PROP-002-kamezawa/operations/`** |
 | 公開情報 | **`data/operations/kamezawa-public.yaml`** |
-| エージェント | **`steward/agents/hospitality_agent.md`** |
+| エージェント | **`steward/core/agents/hospitality_agent.md`** |
 
 ---
 
@@ -129,12 +129,12 @@
 
 ---
 
-## steward/agents/ — エージェント
+## steward/core/agents/ — エージェント
 
 | 内容 | パス |
 |------|------|
-| **8 Agent 定義** | **`steward/agents/*.md`** · [00-このフォルダについて.md](../../../steward/agents/00-このフォルダについて.md) |
-| 事業計画分解 Orchestrator | **`steward/orchestrators/business_plan_decomposition.md`** |
+| **8 Agent 定義** | **`steward/core/agents/*.md`** · [00-このフォルダについて.md](../../../steward/core/agents/00-このフォルダについて.md) |
+| 事業計画分解 Orchestrator | **`steward/core/orchestrators/business_plan_decomposition.md`** |
 | アーキテクチャ | **`steward/rules/agent_skill_architecture.md`** · **`docs/agent_architecture.md`** |
 
 **レガシー:** `prompts/*.md` は deprecated スタブ。

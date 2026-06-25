@@ -1,0 +1,7 @@
+pm_properties:
+  - id: PMP-001
+    property_id: PROP-001
+    owner_stakeholder_id: STK-040
+    management_start: "2026-04-01"
+    scope: "賃貸管理 · 修繕手配"
+    status: active

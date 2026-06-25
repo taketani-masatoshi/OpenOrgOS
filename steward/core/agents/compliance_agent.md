@@ -29,7 +29,7 @@
 
 | Skill | ファイル |
 |-------|---------|
-| permit_expiry_check | [steward/skills/permit_expiry_check.md](../steward/skills/permit_expiry_check.md) |
+| permit_expiry_check | [steward/core/skills/permit_expiry_check.md](../steward/core/skills/permit_expiry_check.md) |
 
 ## 要約出力先
 

@@ -1,0 +1,9 @@
+id: travel_booking
+required_seeds:
+  - travel-portals.yaml.example
+  - travel-draft-template.md.example
+optional_regulations:
+  - REG-008
+activation_seeds:
+  - travel-request.yaml.example
+notes: activation_ready — operations travel CLI · browser Phase 0 cursor-only

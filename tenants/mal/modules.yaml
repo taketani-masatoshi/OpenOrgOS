@@ -111,6 +111,21 @@ modules:
     summary_dir: agent-summaries/education/
     notes: 教育（MAL では未使用）
 
+  - id: property_management
+    enabled: false
+    agent: property_management
+    data_root: data/property-management/
+    summary_dir: agent-summaries/property-management/
+    notes: PM（MAL では未使用）
+
+  - id: travel_booking
+    enabled: true
+    agent: travel_booking
+    data_root: data/operations/
+    docs_root: docs/operations/
+    summary_dir: agent-summaries/operations/
+    notes: 旅費・旅行手配 · REG-008 · operations travel CLI
+
   - id: membership
     enabled: false
     agent: membership

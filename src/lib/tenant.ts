@@ -17,14 +17,52 @@ const tenantConfigSchema = z.object({
   description: z.string().optional(),
   default: z.boolean().optional(),
   lifecycle: z.enum(["skeleton", "operational"]).optional(),
+  jurisdiction: z
+    .string()
+    .regex(/^[A-Z]{2}$/, "ISO 3166-1 alpha-2 jurisdiction code")
+    .optional(),
+  entity_form: z
+    .string()
+    .regex(/^[a-z][a-z0-9_]*$/, "entity form id from jurisdiction entity-forms.yaml")
+    .optional(),
+  /** Display language (ja · en · …) — independent from jurisdiction */
+  display_language: z.enum(["ja", "en", "zh-Hant", "zh-Hans", "et", "ms", "ar", "ru", "de"]).optional(),
+  /** Legal subdivision (e.g. DE for Delaware under US pack) */
+  legal_subdivision: z.string().optional(),
+  /** Legacy BCP 47 display tag; use display_language when possible */
+  locale: z.string().optional(),
+  default_currency: z.string().regex(/^[A-Z]{3}$/).optional(),
 });
 
 export type TenantConfig = z.infer<typeof tenantConfigSchema>;
 
 let _tenantId: string | null = null;
 
+const TENANT_ID_PATTERN = /^[a-z0-9_-]+$/;
+
+/**
+ * Validate a tenant id and confirm it resolves to a real tenant directory
+ * inside `tenants/`. Rejects path traversal (`../`, absolute paths, separators)
+ * and unknown tenants before any path is derived from it.
+ */
+function assertValidTenantId(id: string): string {
+  const trimmed = id.trim();
+  if (!TENANT_ID_PATTERN.test(trimmed)) {
+    throw new Error(`Invalid tenant id "${id}" (allowed characters: a-z 0-9 _ -)`);
+  }
+  const dir = resolve(TENANTS_DIR, trimmed);
+  const rel = relative(TENANTS_DIR, dir);
+  if (rel === "" || rel.startsWith("..") || rel.includes("/") || rel.includes("\\")) {
+    throw new Error(`Tenant id "${id}" escapes tenants/`);
+  }
+  if (!existsSync(join(dir, "tenant.yaml"))) {
+    throw new Error(`Unknown tenant "${trimmed}": tenants/${trimmed}/tenant.yaml not found`);
+  }
+  return trimmed;
+}
+
 export function setTenantId(id: string): void {
-  _tenantId = id;
+  _tenantId = assertValidTenantId(id);
 }
 
 export function listTenantIds(): string[] {
@@ -50,7 +88,7 @@ export function getTenantId(): string {
 
   const fromEnv = process.env.STEWARD_TENANT?.trim();
   if (fromEnv) {
-    _tenantId = fromEnv;
+    _tenantId = assertValidTenantId(fromEnv);
     return _tenantId;
   }
 

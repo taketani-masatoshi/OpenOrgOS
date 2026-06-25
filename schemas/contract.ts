@@ -72,5 +72,5 @@ export const contractSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type Contract = z.infer<typeof contractSchema>;
-export type ContractType = z.infer<typeof contractType>;
+export type Contract = z.output<typeof contractSchema>;
+export type ContractType = z.output<typeof contractType>;

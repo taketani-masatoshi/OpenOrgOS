@@ -47,7 +47,7 @@ export const portfolioFileSchema = z.object({
   companies: z.array(portfolioCompanySchema).default([]),
 });
 
-export type Fund = z.infer<typeof fundSchema>;
-export type PortfolioCompany = z.infer<typeof portfolioCompanySchema>;
-export type FundsFile = z.infer<typeof fundsFileSchema>;
-export type PortfolioFile = z.infer<typeof portfolioFileSchema>;
+export type Fund = z.output<typeof fundSchema>;
+export type PortfolioCompany = z.output<typeof portfolioCompanySchema>;
+export type FundsFile = z.output<typeof fundsFileSchema>;
+export type PortfolioFile = z.output<typeof portfolioFileSchema>;

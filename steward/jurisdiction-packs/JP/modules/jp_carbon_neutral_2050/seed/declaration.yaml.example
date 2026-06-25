@@ -1,0 +1,20 @@
+schema_version: 1
+module_id: jp_carbon_neutral_2050
+status: draft
+signed_at: null
+published_url: null
+review_cycle: annual
+next_review: null
+baseline_year: 2020
+net_zero_year: 2050
+interim_targets:
+  - year: 2030
+    scope: "Scope1+2"
+    reduction_pct: 46
+    notes: "政府目標に準拠 · 自社算定後に更新"
+scopes_in_scope:
+  - scope1
+  - scope2
+scope3_notes: "主要サプライチェーンは Phase 2 で追加"
+signatory_role: 代表取締役
+notes: "declaration-template.md と同期 · REG-014 参照"

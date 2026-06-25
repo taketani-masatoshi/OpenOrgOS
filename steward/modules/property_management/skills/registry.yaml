@@ -1,0 +1,6 @@
+skills:
+  - id: property_management_ops
+    file: property_management_ops.md
+    runtime: cursor-only
+    agent: Operations
+    description: property_management module operations checklist

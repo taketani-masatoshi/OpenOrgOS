@@ -1,0 +1,12 @@
+id: membership-monthly
+module: membership
+description: 会員制月次会費請求
+pdf:
+  title: 請 求 書
+  line_label: 月会費
+  line_note: "{year_month} 分"
+  tax_label: 消費税（10%）
+  footer_notes: お振込手数料は貴社にてご負担ください。
+email:
+  subject: "【請求】{year_month} 会員月会費 — {company_name}"
+  body_template: invoice-membership-monthly-body.txt

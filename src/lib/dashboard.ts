@@ -720,7 +720,7 @@ export function collectUpcomingPayments(
 ): UpcomingPayment[] {
   const windowEnd = addDays(reportDate, horizonDays);
   const payments: UpcomingPayment[] = [];
-  const fiscalEndMonth = data.company.fiscal_year_end_month;
+  const fiscalEndMonth = data.company.fiscal_year_end_month ?? 3;
 
   const months = monthRange(reportDate.slice(0, 7), windowEnd.slice(0, 7));
   for (const month of months) {
@@ -868,7 +868,7 @@ export function collectUpcomingPayments(
 
 export function computeDashboard(data?: StewardData): DashboardReport {
   const d = data ?? loadAllData();
-  const fiscalYear = resolveFiscalYear(d.company.fiscal_year_end_month);
+  const fiscalYear = resolveFiscalYear(d.company.fiscal_year_end_month ?? 3);
   const cashFlow = computeCashFlowMetrics(d, fiscalYear);
   const allTasks = collectTasks(d);
   const highImportanceTasks = allTasks.filter((t) => t.importance === "high");

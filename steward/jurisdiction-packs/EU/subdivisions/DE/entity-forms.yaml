@@ -1,0 +1,32 @@
+jurisdiction: EU
+legal_subdivision: DE
+
+forms:
+  - id: gmbh
+    name: GmbH
+    name_local: Gesellschaft mit beschränkter Haftung
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Managing Directors
+    identifiers:
+      - company_number
+    notes: Handelsregister · eu-demo default
+
+  - id: ag
+    name: AG
+    name_local: Aktiengesellschaft
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Listed companies
+
+  - id: ug
+    name: UG (haftungsbeschränkt)
+    name_local: Unternehmergesellschaft
+    liability: limited
+    status: active
+    notes: Mini-GmbH · startups

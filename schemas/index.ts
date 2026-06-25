@@ -17,3 +17,8 @@ export * from "./regulations-catalog.js";
 export * from "./tenant-regulations.js";
 export * from "./ops-config.js";
 export * from "./routing.js";
+export * from "./audit-log.js";
+export * from "./queue.js";
+export * from "./webhook.js";
+export * from "./cloud-agent.js";
+export * from "./invoice-template.js";

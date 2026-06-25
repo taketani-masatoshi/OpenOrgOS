@@ -2,49 +2,55 @@
 
 社長（段）向け。**YAML を直接触らなくてよい**運用を目指す。秘書の話し方・長さは [`rules/secretary_behavior.md`](../../rules/secretary_behavior.md) でカスタム可。
 
+**初回 10 分:** [backup-first-run.md](backup-first-run.md) · Google 連携: [google-calendar-setup.md](google-calendar-setup.md)
+
 ---
 
-## いまの Phase 0（今日から）
+## いまの運用（Phase 1 完了）
 
 | やりたいこと | やり方 |
 |-------------|--------|
-| 予定を確認 | Cursor で「今週の予定を見せて」→ **ローカル** `data/executive/calendar.yaml` を要約（Git 非追跡） |
-| MTG を設定 | 「@secretary_agent 〇〇との mtg を設定して」→ **アクションカード**が `correspondence-drafts/` にできる |
-| 招待を送る | 下書き MD の **3ステップ**（カレンダー追加 → Gmail → **ローカル YAML** 更新） |
-| 1-on-1 準備 | `one-on-one-prep-*.md` を開く |
-| 新 clone 後 | `data/executive/` で `cp *.yaml.example *.yaml`（[00-README](../../../data/executive/00-README.md)） |
+| 予定を確認 | `npm run steward -- executive calendar list` |
+| 競合チェック | `npm run steward -- executive calendar conflicts` |
+| 週次ブリーフ | `npm run steward -- executive brief --week` |
+| YAML → Google | `executive calendar push`（[google-calendar-setup.md](google-calendar-setup.md)） |
+| Google → YAML 差分 | `executive calendar pull --since YYYY-MM-DD` · `--apply` で ID リンク |
+| 管轄外 consult | **`secretary escalate --dispatch --subject "…" --q "質問"`**（1 コマンド · スレッド不要） |
+| MTG を設定 | 「@secretary_agent 〇〇との mtg を設定して」→ correspondence-drafts |
+| 新 clone 後 | `cp *.yaml.example *.yaml` → [backup-first-run.md](backup-first-run.md) |
+| 週次バックアップ | SSD コピー → `echo $(date +%Y-%m-%d) > scratch/executive-backup-last.txt` |
 
-正データは **ローカル** `data/executive/*.yaml`（gitignore）。Git には `*.example.yaml` のみ。人が触るのは **下書き MD のリンク** が中心。
+正データは **ローカル** `data/executive/*.yaml`（gitignore）。
 
----
+### カレンダー運用（正規 · 3 行）
 
-## Google 連携 — 何を使うべきか
+1. **SoT は `calendar.yaml`** — 変更は YAML 先 · `push` で Google 反映
+2. **スマホのみ変更** — 週 1 回 `pull --apply` · 新規は Secretary が YAML へ（例外）
+3. **Meet** — push で自動 · 手動時は YAML `location`
 
-| サービス | 優先度 | 用途 | Steward との関係 |
-|---------|--------|------|-----------------|
-| **Google Calendar** | ★★★ 最優先 | 予定・リマインド・Meet URL | YAML → カレンダーへ **書き出し**（Phase 1） |
-| **Gmail** | ★★☆ | 招待メール送信 | 下書き MD から compose リンクで開く（Phase 0 で可） |
-| **Google Meet** | ★★☆ | オンライン MTG | Calendar 予定に付与（手動 or Calendar API） |
-| **Google Drive** | ★☆☆ 後回し | 資料共有・PDF 保管 | **予定管理には向かない**。契約 PDF 等は `docs/` + Drive ミラーが現実的 |
-
-### 結論
-
-- **日程調整には Google Drive ではなく Google Calendar。**
-- Drive は「議事録・契約 PDF を相手と共有したい」ときの補助。
-- Steward の SoT は YAML のまま。Calendar は **表示・通知用のミラー** にする（双方向同期は Phase 2 以降で検討）。
+**エスカレ:** `--dispatch` を優先。`MAL · Steward エスカレ` スレッドは **回答待ち** のみ（ピン留め optional）。
 
 ---
 
-## ロードマップ
+## Google 連携
 
-| Phase | 内容 | 体験 |
-|-------|------|------|
-| **0（今）** | YAML + アクションカード MD + Calendar/Gmail リンク | 3クリックで招待 |
-| **1** | `steward executive calendar push` — YAML → Google Calendar API | Agent が予定登録、Meet 自動付与 |
-| **1** | `steward executive brief` — 週次ブリーフ自動生成 | 月曜朝に今日やることが1枚 |
-| **2** | Calendar → YAML 差分取込（変更検知） | スマホで動かした予定も SoT に反映 |
+| サービス | 用途 | CLI |
+|---------|------|-----|
+| **Google Calendar** | 表示 · 通知 · Meet | `push` / `pull` |
+| **Gmail** | 招待送信 | 下書き MD → compose リンク |
+| **Google Drive** | 資料共有（補助） | 予定管理には使わない |
 
-OAuth・サービスアカウントは Phase 1 で `.env` 管理（gitignore）。
+詳細: [google-calendar-setup.md](google-calendar-setup.md)
+
+---
+
+## ロードマップ（残）
+
+| Phase | 内容 | 状態 |
+|-------|------|:----:|
+| **1** | push · brief · escalate CLI | [x] |
+| **2** | pull 差分 · dispatch · validate 未同期 warning | [x] |
+| **3** | refresh token 自動 · Calendar 双方向完全同期 | [ ] |
 
 ---
 
@@ -53,23 +59,20 @@ OAuth・サービスアカウントは Phase 1 で `.env` 管理（gitignore）�
 ```
 docs/executive/
 ├── secretary-quickstart.md          ← 本ファイル
-├── correspondence-draft-template.md ← Agent が下書きを作る型
-├── correspondence-drafts/           ← 承認待ち（★ ここを開く）
-├── one-on-one-prep-*.md             ← MTG 前の議題
+├── backup-first-run.md              ← 初回 10 分
+├── google-calendar-setup.md
+├── correspondence-drafts/           ← 承認待ち
 └── weekly-brief-template.md
 
 data/executive/
-├── calendar.yaml           ← 予定 SoT（gitignore · ローカル正本）
-├── calendar.yaml.example   ← Git 追跡テンプレ
-├── tasks.yaml              ← 社長タスク（gitignore）
-├── one-on-ones.yaml        ← gitignore
-└── external-contacts.yaml  ← gitignore
+├── calendar.yaml           ← 予定 SoT（gitignore）
+└── *.yaml.example          ← Git 追跡テンプレ
 ```
 
 ---
 
 ## 関連
 
-- [secretary_agent.md](../../steward/agents/secretary_agent.md)
-- [one-on-one-guide.md](one-on-one-guide.md)
+- [secretary_agent.md](../../steward/core/agents/secretary_agent.md)
+- [backup-procedure.md](backup-procedure.md)
 - [secretary_steward_boundary.md](../../steward/rules/secretary_steward_boundary.md)

@@ -40,14 +40,14 @@
 - `block` タイプは移動・準備時間として他予定と重複不可
 - `travel` は前後 30 分バッファを推奨（警告のみ）
 
-## 将来 CLI
+## CLI
 
 ```bash
-# npm run steward -- executive calendar list --from 2026-06-01 --to 2026-06-30
-# npm run steward -- executive calendar conflicts
+npm run steward -- executive calendar list --from 2026-06-01 --to 2026-06-30
+npm run steward -- executive calendar conflicts
 ```
 
-Phase 0 では手動 YAML 編集 + 本 Skill の手順に従う。
+YAML 全文を @file せず期間要約できる。更新は引き続き `calendar.yaml` 編集 + `npm run validate`。
 
 ## 禁止
 

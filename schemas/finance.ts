@@ -255,13 +255,13 @@ export const cashBalanceAccountSchema = z.object({
 export const cashBalanceSchema = z.object({
   as_of: dateString,
   status: z.enum(["template", "confirmed"]),
-  currency: z.literal("JPY").default("JPY"),
+  currency: z.enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"]).default("JPY"),
   accounts: z.array(cashBalanceAccountSchema).default([]),
   total: z.number().nonnegative().nullable().optional(),
   notes: z.string().optional(),
 });
 
-export type CashBalance = z.infer<typeof cashBalanceSchema>;
+export type CashBalance = z.output<typeof cashBalanceSchema>;
 
 export const assetCategory = z.enum(["土地", "建物", "構築物", "器具備品", "その他"]);
 
@@ -295,7 +295,7 @@ export const fixedAssetsSummarySchema = z.object({
 export const fixedAssetsSchema = z.object({
   as_of: dateString,
   fiscal_year: z.string().optional(),
-  currency: z.literal("JPY").default("JPY"),
+  currency: z.enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"]).default("JPY"),
   assets: z.array(fixedAssetSchema).default([]),
   summary: fixedAssetsSummarySchema.optional(),
   notes: z.string().optional(),
@@ -371,6 +371,73 @@ export const taxProfileSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const taxProfileUsFederalSchema = z.object({
+  corporate_rate: z.string().optional(),
+  estimated_payments: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const taxProfileUsStateSchema = z.object({
+  state_of_incorporation: z.string().optional(),
+  franchise_tax: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const taxProfileUsEntitySchema = z.object({
+  name: z.string().min(1),
+  type: z.string().min(1),
+  ein: z.string().optional(),
+  state_of_incorporation: z.string().optional(),
+  registered_office: z.string().optional(),
+});
+
+export const taxProfileUsSchema = z.object({
+  entity: taxProfileUsEntitySchema,
+  fiscal_year: taxProfileFiscalYearSchema,
+  federal_tax: taxProfileUsFederalSchema,
+  state_tax: taxProfileUsStateSchema,
+  sales_tax: z
+    .object({
+      nexus_states: z.array(z.string()).optional(),
+      notes: z.string().optional(),
+    })
+    .optional(),
+  filing_calendar: z.array(taxProfileFilingCalendarItemSchema).default([]),
+  contacts: z.record(z.union([z.string(), z.record(z.string())])).optional(),
+  related_docs: z.array(z.string()).optional(),
+  notes: z.string().optional(),
+});
+
+export const taxProfileCorporateEntitySchema = z.object({
+  name: z.string().min(1),
+  type: z.string().min(1),
+  registration_id: z.string().optional(),
+  registered_office: z.string().optional(),
+});
+
+export const taxProfileCorporateSchema = z.object({
+  entity: taxProfileCorporateEntitySchema,
+  fiscal_year: taxProfileFiscalYearSchema,
+  corporate_tax: z
+    .object({
+      headline_rate: z.string().optional(),
+      notes: z.string().optional(),
+    })
+    .optional(),
+  indirect_tax: z
+    .object({
+      type: z.string().optional(),
+      rate: z.string().optional(),
+      registration_id: z.string().optional(),
+      notes: z.string().optional(),
+    })
+    .optional(),
+  filing_calendar: z.array(taxProfileFilingCalendarItemSchema).default([]),
+  contacts: z.record(z.union([z.string(), z.record(z.string())])).optional(),
+  related_docs: z.array(z.string()).optional(),
+  notes: z.string().optional(),
+});
+
 export const chartAccountSchema = z.object({
   code: z.string().regex(/^\d{4}$/),
   name: z.string().min(1),
@@ -387,7 +454,7 @@ export const chartAccountSchema = z.object({
 
 export const chartOfAccountsSchema = z.object({
   version: z.string().optional(),
-  currency: z.literal("JPY").default("JPY"),
+  currency: z.enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"]).default("JPY"),
   accounts: z.array(chartAccountSchema).min(1),
   category_mapping: z.object({
     revenue: z.record(revenueCategory, z.string()),
@@ -407,16 +474,18 @@ export const chartOfAccountsSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type FixedAssets = z.infer<typeof fixedAssetsSchema>;
-export type FixedAsset = z.infer<typeof fixedAssetSchema>;
-export type TaxProfile = z.infer<typeof taxProfileSchema>;
-export type ChartOfAccounts = z.infer<typeof chartOfAccountsSchema>;
+export type FixedAssets = z.output<typeof fixedAssetsSchema>;
+export type FixedAsset = z.output<typeof fixedAssetSchema>;
+export type TaxProfile = z.output<typeof taxProfileSchema>;
+export type TaxProfileUs = z.output<typeof taxProfileUsSchema>;
+export type TaxProfileCorporate = z.output<typeof taxProfileCorporateSchema>;
+export type ChartOfAccounts = z.output<typeof chartOfAccountsSchema>;
 
-export type YojitsuLineKind = z.infer<typeof yojitsuLineKind>;
-export type YojitsuLine = z.infer<typeof yojitsuLineSchema>;
-export type YojitsuMonthSide = z.infer<typeof yojitsuMonthSideSchema>;
-export type YojitsuPlanRaw = z.infer<typeof yojitsuPlanSchema>;
-export type YojitsuMonthRaw = z.infer<typeof yojitsuMonthSchema>;
+export type YojitsuLineKind = z.output<typeof yojitsuLineKind>;
+export type YojitsuLine = z.output<typeof yojitsuLineSchema>;
+export type YojitsuMonthSide = z.output<typeof yojitsuMonthSideSchema>;
+export type YojitsuPlanRaw = z.output<typeof yojitsuPlanSchema>;
+export type YojitsuMonthRaw = z.output<typeof yojitsuMonthSchema>;
 
 /** 正規化後（months[].plan/actual は常に lines[]） */
 export interface YojitsuMonth {
@@ -430,9 +499,9 @@ export type YojitsuPlan = Omit<YojitsuPlanRaw, "months"> & {
   months: YojitsuMonth[];
 };
 
-export type MonthlyFinance = z.infer<typeof monthlyFinanceSchema>;
-export type FixedCosts = z.infer<typeof fixedCostsSchema>;
-export type Loans = z.infer<typeof loansSchema>;
-export type BusinessPlan = z.infer<typeof businessPlanSchema>;
-export type PropertyRevenuePlan = z.infer<typeof propertyRevenuePlanSchema>;
-export type Loan = z.infer<typeof loanSchema>;
+export type MonthlyFinance = z.output<typeof monthlyFinanceSchema>;
+export type FixedCosts = z.output<typeof fixedCostsSchema>;
+export type Loans = z.output<typeof loansSchema>;
+export type BusinessPlan = z.output<typeof businessPlanSchema>;
+export type PropertyRevenuePlan = z.output<typeof propertyRevenuePlanSchema>;
+export type Loan = z.output<typeof loanSchema>;

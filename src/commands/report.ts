@@ -10,7 +10,7 @@ import {
 import { generateKessanPdf } from "../lib/kessan-pdf.js";
 import { generateJigyoPdf } from "../lib/jigyo-pdf.js";
 import { generateMonthlyReport } from "../lib/report.js";
-import { writeMarkdownReport, currentMonth, ensureReportsDir } from "../lib/utils.js";
+import { writeMarkdownReport, currentMonth, ensurePdfOutputDir } from "../lib/utils.js";
 import { initDocumentIoFile, registerGeneratedPdf } from "../lib/document-io.js";
 
 function resolveFiscalYear(fy?: string): string {
@@ -45,7 +45,7 @@ export async function runReportKessan(options: {
   const filename = options.output ?? `${fiscalYear}-kessan-hokoku.pdf`;
   const outputPath = filename.includes("/")
     ? filename
-    : join(ensureReportsDir("kessan"), filename);
+    : join(ensurePdfOutputDir("kessan"), filename);
 
   const path = await generateKessanPdf(
     { ...data, fiscalYear },
@@ -65,7 +65,7 @@ export async function runReportJigyo(options: {
   const filename = options.output ?? `${fiscalYear}-jigyo-hokoku.pdf`;
   const outputPath = filename.includes("/")
     ? filename
-    : join(ensureReportsDir("jigyo"), filename);
+    : join(ensurePdfOutputDir("jigyo"), filename);
 
   const path = await generateJigyoPdf(
     { ...data, fiscalYear },

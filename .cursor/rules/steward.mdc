@@ -15,14 +15,14 @@ alwaysApply: false
 Steward OS は **1 体 AI が全情報を読む設計にしない**。
 
 ```
-Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（tenants/{id}/data/ · docs/）
+Steward → Agent（steward/core/agents/）→ Skill（steward/core/skills/）→ Data（tenants/{id}/data/ · docs/）
 ```
 
 **テナント:** 会社データは `tenants/{id}/`（既定: `mal`）。論理パス `data/` · `docs/` はアクティブテナント内。
 
 - **Steward:** `docs/reports/agent-summaries/` + dashboard のみ原則読取
 - **Agent:** 部門フォルダを読み Skill を呼ぶ
-- **Skill:** 限定入出力（[steward/skills/](../../steward/skills/)）
+- **Skill:** 限定入出力（[steward/core/skills/](../../steward/core/skills/)）
 - **原則:** [steward/rules/steward_os_principles.md](../../steward/rules/steward_os_principles.md)
 
 ## 分け方の原則
@@ -90,7 +90,7 @@ Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（t
 
 ## Agent / Skill 参照
 
-**6 コア Agent:** [steward/agents/00-このフォルダについて.md](../../steward/agents/00-このフォルダについて.md)
+**6 コア Agent:** [steward/core/agents/00-このフォルダについて.md](../../steward/core/agents/00-このフォルダについて.md)
 
 | Agent | 用途 |
 |-------|------|
@@ -108,6 +108,6 @@ Steward → Agent（steward/agents/）→ Skill（steward/skills/）→ Data（t
 - **無効モジュール** · 未バインドカタログ · 無効 ISO · 無効規程は **読まない**（トークン節約）
 - 生成: `npm run steward -- modules sync-context` · validate 成功時も自動 sync
 
-- Skill: [steward/skills/](../../steward/skills/00-このフォルダについて.md)
+- Skill: [steward/core/skills/](../../steward/core/skills/00-このフォルダについて.md)
 - ルール: [steward/rules/](../../steward/rules/steward_os_principles.md)
 - Steward ↔ Secretary 境界: [secretary_steward_boundary.md](../../steward/rules/secretary_steward_boundary.md)

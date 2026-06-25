@@ -1,0 +1,11 @@
+id: ecommerce-monthly
+module: ecommerce
+description: EC 月次プラットフォーム利用料請求
+pdf:
+  title: 請 求 書
+  line_label: EC プラットフォーム利用料
+  line_note: "{year_month} 分"
+  tax_label: 消費税（10%）
+email:
+  subject: "【請求】{year_month} EC 利用料 — {company_name}"
+  body_template: invoice-ecommerce-monthly-body.txt

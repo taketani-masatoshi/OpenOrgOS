@@ -5,3 +5,14 @@ display_name: Sample
 description: 事業概要（1 行）
 default: false
 lifecycle: skeleton
+
+# ── 法域（legal）— 規程カタログ · 税 · 法人形態 ──
+jurisdiction: JP
+entity_form: kk
+# legal_subdivision: DE   # US pack のみ（デラウェア州法など）
+
+# ── 表示言語（display）— UI · Agent 要約 · 規程 MD の起草言語（法域と独立）──
+display_language: ja
+# locale: ja-JP            # レガシー BCP 47（display_language 省略時）
+
+default_currency: JPY

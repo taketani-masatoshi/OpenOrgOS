@@ -125,7 +125,7 @@ export function formatFinanceSummary(report: DashboardReport): string {
     "## 根拠",
     "",
     "- `data/finance/` · `data/plans/`",
-    "- Skill: [steward/skills/cashflow_forecast.md](../../../steward/skills/cashflow_forecast.md)",
+    "- Skill: [steward/core/skills/cashflow_forecast.md](../../../steward/core/skills/cashflow_forecast.md)",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,
   ].join("\n");
@@ -169,7 +169,7 @@ export function formatContractSummary(data: StewardData, report: DashboardReport
     "## 根拠",
     "",
     "- `data/contracts/`",
-    "- Skill: [steward/skills/contract_expiry_check.md](../../../steward/skills/contract_expiry_check.md)",
+    "- Skill: [steward/core/skills/contract_expiry_check.md](../../../steward/core/skills/contract_expiry_check.md)",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,
   ].join("\n");
@@ -204,7 +204,7 @@ export function formatRentalModuleSummary(
     "",
     "| 項目 | 値 |",
     "|------|---:|",
-    `| 取得価格 | ${formatCurrency(p.acquisition_price)} |`,
+    `| 取得価格 | ${formatCurrency(p.acquisition_price ?? 0)} |`,
     `| 減価償却/年 | ${formatCurrency(p.depreciation?.annual_amount ?? 0)} |`,
     "",
     "## 根拠",
@@ -346,7 +346,7 @@ export function formatComplianceSummary(data: StewardData, report: DashboardRepo
     "",
     "- `regulations.yaml` · `docs/company/regulations/`（有効 REG のみ）",
     "- `docs/compliance/iso/` · `steward/standards/iso/`",
-    "- Skill: [steward/skills/permit_expiry_check.md](../../../steward/skills/permit_expiry_check.md)",
+    "- Skill: [steward/core/skills/permit_expiry_check.md](../../../steward/core/skills/permit_expiry_check.md)",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,
   ].join("\n");
@@ -573,14 +573,15 @@ export function formatAgentSummariesSection(paths: Partial<AgentSummaryPaths>): 
     `${m.agent} (${m.moduleId})`,
     m.path,
   ]);
-  const rows: [string, string | undefined][] = [
+  const candidateRows: [string, string | undefined][] = [
     ["Finance", paths.finance],
     ["Contract", paths.contract],
     ...moduleRows,
     ["Compliance", paths.compliance],
     ["Operations", paths.operations],
     ["Executive", paths.executive],
-  ].filter(([, p]) => p) as [string, string][];
+  ];
+  const rows = candidateRows.filter((entry): entry is [string, string] => entry[1] != null);
 
   const lines = [
     "## Agent 要約（Steward 読取面）",
@@ -594,9 +595,9 @@ export function formatAgentSummariesSection(paths: Partial<AgentSummaryPaths>): 
       return `| ${name} | [${rel.split("/").pop()}](${reportsRelLink(p)}) |`;
     }),
     "",
-    "**Secretary（秘書）** は Steward 読取面外。予定・1-on-1 → [docs/executive/](../../executive/00-このフォルダについて.md) · `@steward/agents/secretary_agent.md`",
+    "**Secretary（秘書）** は Steward 読取面外。予定・1-on-1 → [docs/executive/](../../executive/00-このフォルダについて.md) · `@steward/core/agents/secretary_agent.md`",
     "",
-    "Agent 一覧: [steward/agents/](../agents/00-このフォルダについて.md) · 業務モジュール: [steward/modules/](../modules/00-このフォルダについて.md)",
+    "Agent 一覧: [steward/core/agents/](../core/agents/00-このフォルダについて.md) · 業務モジュール: [steward/modules/](../modules/00-このフォルダについて.md)",
     "",
     "索引: [agent-summaries/00-このフォルダについて.md](../agent-summaries/00-このフォルダについて.md)",
     "",

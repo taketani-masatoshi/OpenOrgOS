@@ -1,0 +1,6 @@
+skills:
+  - id: venture_capital_ops
+    file: venture_capital_ops.md
+    runtime: cursor-only
+    agent: Operations
+    description: venture_capital module operations checklist

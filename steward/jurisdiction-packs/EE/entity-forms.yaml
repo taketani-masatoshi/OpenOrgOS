@@ -1,0 +1,11 @@
+forms:
+  - id: ou
+    name: Private Limited Company
+    name_local: Osaühing (OÜ)
+    liability: limited
+    governance:
+      supreme_body: Shareholders meeting
+      board: Management board / Supervisory board (if applicable)
+    identifiers:
+      - registry_code
+    notes: e-Business Register · Estonia

@@ -1,3 +1,5 @@
+> **履歴アーカイブ — 正本は [docs/spec.md](../../spec.md)。** 本書は凍結コピー。
+
 # Steward OS — Specification v0.3
 
 > **正本:** 本ドキュメント。v0.2 は [spec-v0.2.md](spec-v0.2.md)（履歴）· 詳細サブ仕様は [spec/](spec/) 配下。
@@ -21,7 +23,7 @@ Steward OS は **テナント分離型の経営支援フレームワーク** で
 ├── steward/modules/{id}/     業務モジュール Agent · skills · seed/
 ├── steward/standards/iso/    ISO 標準方針 · 記録様式
 ├── steward/standards/regulations/  社内規程 catalog · テンプレ
-├── steward/agents/           6 コア Agent
+├── steward/core/agents/           6 コア Agent
 ├── src/ · schemas/ · docs/
 
 テナント（接続）
@@ -110,7 +112,7 @@ npm run steward -- status --legacy    # 旧データ成熟度メトリクス併�
 
 ## 6. Skills CLI
 
-Cursor 外で Skill 相当のチェックを実行。定義: [steward/skills/](../steward/skills/00-このフォルダについて.md) · 実装: `src/commands/skills.ts`
+Cursor 外で Skill 相当のチェックを実行。定義: [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md) · 実装: `src/commands/skills.ts`
 
 ```bash
 npm run steward -- skills list

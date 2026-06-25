@@ -1,0 +1,9 @@
+id: jp_carbon_neutral_2050
+required_seeds: []
+activation_seeds:
+  - declaration.yaml.example
+  - declaration-template.md.example
+  - action-plan.yaml.example
+optional_regulations:
+  - REG-014
+notes: activation_ready — 2050年カーボンニュートラル宣言 · REG-014 環境エネルギー連携

@@ -1,0 +1,10 @@
+entity:
+  name: 株式会社サンプル
+  type: 株式会社
+fiscal_year:
+  end_month: 1
+consumption_tax:
+  status: TBD
+corporate_tax:
+  category: TBD
+  capital_stock: TBD

@@ -32,6 +32,7 @@
 | `plans/property-revenue.yaml` | propertyRevenuePlan | 物件別収益前提 |
 | `operations/kamezawa-public.yaml` | facilityPublic | 亀沢公開情報 |
 | `operations/kamezawa-secrets.yaml` | — | 鍵・Wi-Fi（**gitignore**） |
+| `operations/travel-portals.yaml` | — | 旅行サイト login_id（**gitignore** · [example](operations/travel-portals.yaml.example)） |
 | `document-io.yaml` | documentIo | **受信/出力トレイ台帳** |
 | `dependency-graph.yaml` | dependencyGraph | **パラメータ依存関係マップ** |
 | `hr/employees.yaml` | employeesFile | 従業員マスタ |

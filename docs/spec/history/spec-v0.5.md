@@ -1,3 +1,5 @@
+> **履歴アーカイブ — 正本は [docs/spec.md](../../spec.md)。** 本書は凍結コピー。
+
 # Steward OS — Specification v0.5
 
 > **正本:** L3 製品深度 · 自動化骨格。v0.4 は [spec-v0.4.md](spec-v0.4.md)。
@@ -9,12 +11,12 @@
 | **Readiness 3 tier** | skeleton · activation_ready · production_ready · `modules check` tier 別 |
 | **activation_ready** | 13 モジュール activation seed 一式 |
 | **hospitality billing** | invoice generate  parity · [hospitality-invoice.md](spec/hospitality-invoice.md) |
-| **Skill registry** | [steward/skills/registry.yaml](../steward/skills/registry.yaml) · cli \| cursor-only |
+| **Skill registry** | [steward/core/skills/registry.yaml](../steward/core/skills/registry.yaml) · cli \| cursor-only |
 | **Pipeline** | `steward pipeline run daily` = validate → ops daily → dashboard |
 | **npm run daily** | check + pipeline run daily |
 | **map tree** | `steward map tree` · dependency-graph · enabled modules |
-| **Agent routing (Phase 1)** | [steward/routing/registry.yaml](../steward/routing/registry.yaml) · `steward route` · classification access gate |
-| **Delegation / Work Order** | `steward escalate` · [delegate_implementation.md](../steward/orchestrators/delegate_implementation.md) · `task_type: implement` |
+| **Agent routing (Phase 1)** | [steward/core/routing/registry.yaml](../steward/core/routing/registry.yaml) · `steward route` · classification access gate |
+| **Delegation / Work Order** | `steward escalate` · [delegate_implementation.md](../steward/core/orchestrators/delegate_implementation.md) · `task_type: implement` |
 
 ## L3 達成 DoD（v0.5）
 

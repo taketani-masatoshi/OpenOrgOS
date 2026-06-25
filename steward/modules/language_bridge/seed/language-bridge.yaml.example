@@ -1,0 +1,14 @@
+record_strategy: explicit
+system_language: zh-Hant
+layout: system_primary
+document_types:
+  board_minutes:
+    primary: system
+    secondary: user
+  shareholder_minutes:
+    primary: system
+    secondary: none
+  executive_summary:
+    primary: user
+    secondary: none
+notes: Sample — English UI, Traditional Chinese official minutes

@@ -1,0 +1,17 @@
+version: "1"
+
+# Outbound webhook — work order / merge events
+# Set url to enable steward webhook send
+outbound:
+  # url: https://example.com/steward/hook
+  # secret: change-me
+  events:
+    - work_order_complete
+    - merge_complete
+    - dispatch_complete
+
+inbound:
+  enabled: true
+  path: /steward/webhook
+  host: 127.0.0.1
+  port: 9473

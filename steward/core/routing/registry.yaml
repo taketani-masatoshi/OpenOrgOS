@@ -70,6 +70,28 @@ routes:
         - docs/io/inbox/
         - data/document-io.yaml
 
+  - id: travel-booking
+    description: 旅行手配・出張宿泊予約（総務）
+    agent: operations
+    skill: travel_booking
+    priority: 62
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 旅行手配
+        - 出張
+        - ホテル予約
+        - 航空券
+        - 新幹線予約
+        - 楽天トラベル
+        - Booking
+        - Trip.com
+        - travel booking
+      paths:
+        - docs/operations/
+        - data/operations/travel-portals.yaml
+
   - id: outbox-routing
     description: 出力トレイ・印刷待ち PDF
     agent: operations

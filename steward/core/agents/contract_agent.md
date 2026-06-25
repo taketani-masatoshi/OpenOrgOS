@@ -28,8 +28,8 @@
 
 | Skill | ファイル |
 |-------|---------|
-| contract_register | [steward/skills/contract_register.md](../steward/skills/contract_register.md) |
-| contract_expiry_check | [steward/skills/contract_expiry_check.md](../steward/skills/contract_expiry_check.md) |
+| contract_register | [steward/core/skills/contract_register.md](../steward/core/skills/contract_register.md) |
+| contract_expiry_check | [steward/core/skills/contract_expiry_check.md](../steward/core/skills/contract_expiry_check.md) |
 
 ## 要約出力先
 

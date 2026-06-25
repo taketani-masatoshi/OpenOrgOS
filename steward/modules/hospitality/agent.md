@@ -6,7 +6,7 @@
 **テナント:** `modules.yaml` で `agent: hospitality` · `enabled: true`  
 **例示（架空）:** 株式会社サンプル商事 · PROP-002 緑丘ゲストハウス
 
-**コア Agent 索引:** [steward/agents/00-このフォルダについて.md](../agents/00-このフォルダについて.md)
+**コア Agent 索引:** [steward/core/agents/00-このフォルダについて.md](../core/agents/00-このフォルダについて.md)
 
 ---
 
@@ -21,7 +21,7 @@
 | Skill | ファイル |
 |-------|---------|
 | revpar_analysis | [skills/revpar_analysis.md](skills/revpar_analysis.md) |
-| capex_planning | [../skills/capex_planning.md](../skills/capex_planning.md)（協調） |
+| capex_planning | [../core/skills/capex_planning.md](../core/skills/capex_planning.md)（協調） |
 
 ## 要約出力先
 

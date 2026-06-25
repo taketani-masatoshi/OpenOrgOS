@@ -1,0 +1,98 @@
+# Core Agent レジストリ — 選択的拡張
+# テナントは agents.yaml で ON/OFF（将来）· 現状は全コア有効
+
+version: 1
+
+agents:
+  executive_steward:
+    id: executive_steward
+    name: Executive Steward
+    name_ja: 経営統括
+    path: steward/core/agents/executive_steward_agent.md
+    tier: core
+    required: true
+    scope: 経営判断 · KPI · ダッシュボード · 要約統合
+
+  secretary:
+    id: secretary
+    name: Secretary
+    name_ja: 秘書
+    path: steward/core/agents/secretary_agent.md
+    tier: core
+    required: true
+    scope: スケジュール · タスク · 1-on-1 · 対外下書き
+
+  finance:
+    id: finance
+    name: Finance
+    name_ja: 財務・計画
+    path: steward/core/agents/finance_agent.md
+    tier: core
+    required: true
+    scope: 予実 · 資金 · 税務データ · 決算（JP kessan）
+
+  contract:
+    id: contract
+    name: Contract
+    name_ja: 契約管理
+    path: steward/core/agents/contract_agent.md
+    tier: core
+    required: true
+    scope: 契約台帳 · 更新 · 紐づけ
+
+  compliance:
+    id: compliance
+    name: Compliance
+    name_ja: コンプライアンス
+    path: steward/core/agents/compliance_agent.md
+    tier: core
+    required: true
+    scope: 規程 · ISO · 法域 pack 連動
+
+  operations:
+    id: operations
+    name: Operations
+    name_ja: 業務運用
+    path: steward/core/agents/operations_agent.md
+    tier: core
+    required: true
+    scope: 日次運用 · travel · モジュール横断オペ
+
+# 将来拡張候補（コミュニティ / 専門家）
+extensions:
+  human_resources:
+    id: human_resources
+    name: Human Resources
+    name_ja: 人事・労務
+    tier: extension
+    status: planned
+    scope: 給与 · 社保 · 就業規則 · 採用
+    notes: payroll モジュールと連動予定
+
+  procurement:
+    id: procurement
+    name: Procurement
+    name_ja: 購買・調達
+    tier: extension
+    status: planned
+    scope: ベンダー · 発注 · 稟議連動
+
+  risk_insurance:
+    id: risk_insurance
+    name: Risk & Insurance
+    name_ja: リスク・保険
+    tier: extension
+    status: planned
+
+  investor_relations:
+    id: investor_relations
+    name: Investor Relations
+    name_ja: IR
+    tier: extension
+    status: planned
+    binds_modules: [venture_capital]
+
+gaps:
+  - 人事給与の実装 depth（Finance と分担未整理）
+  - 多法人・連結（グループ本社）
+  - 法域横断データ保護（GDPR 等）専用 Agent

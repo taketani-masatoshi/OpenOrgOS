@@ -6,7 +6,7 @@
 **テナント:** `modules.yaml` で `agent: event_space` · `property_ids` または `data_root` を指定。  
 **例示（架空）:** イベントスペース渋谷 · SPACE-001 · 予約 BK-xxx
 
-**コア Agent 索引:** [steward/agents/00-このフォルダについて.md](../agents/00-このフォルダについて.md)
+**コア Agent 索引:** [steward/core/agents/00-このフォルダについて.md](../core/agents/00-このフォルダについて.md)
 
 ---
 

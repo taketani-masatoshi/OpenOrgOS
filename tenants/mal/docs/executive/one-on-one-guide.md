@@ -69,5 +69,5 @@
 ## 関連
 
 - [weekly-brief-template.md](weekly-brief-template.md)
-- [steward/skills/one_on_one_prep.md](../../steward/skills/one_on_one_prep.md)
+- [steward/core/skills/one_on_one_prep.md](../../steward/core/skills/one_on_one_prep.md)
 - [data/executive/one-on-ones.yaml](../../data/executive/one-on-ones.yaml)

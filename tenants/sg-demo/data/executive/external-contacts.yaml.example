@@ -1,0 +1,18 @@
+# 主要社外連絡先（テンプレート — Git 追跡）
+# 実データ: cp external-contacts.yaml.example external-contacts.yaml（gitignore）
+
+contacts:
+  - id: EXT-001
+    name: 示例顧問（担当 TBD）
+    org: 示例税理士法人
+    relationship: 税務顧問
+    preferred_channel: メール
+    notes: テンプレート — 実連絡先は gitignore
+
+  - id: EXT-002
+    name: 示例担当者
+    org: 示例株式会社
+    relationship: 取引先
+    stakeholder_id: STK-003
+    preferred_channel: メール
+    notes: 詳細は stakeholders.yaml（gitignore）へリンク

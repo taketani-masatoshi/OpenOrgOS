@@ -61,8 +61,8 @@ export const opsConfigSchema = z.object({
     .optional(),
 });
 
-export type OpsConfig = z.infer<typeof opsConfigSchema>;
-export type OpsConfigP0Contract = z.infer<typeof opsConfigP0ContractSchema>;
-export type OpsConfigP0Secrets = z.infer<typeof opsConfigP0SecretsSchema>;
-export type OpsConfigP0Records = z.infer<typeof opsConfigP0RecordsSchema>;
-export type OpsConfigP0Audit = z.infer<typeof opsConfigP0AuditSchema>;
+export type OpsConfig = z.output<typeof opsConfigSchema>;
+export type OpsConfigP0Contract = z.output<typeof opsConfigP0ContractSchema>;
+export type OpsConfigP0Secrets = z.output<typeof opsConfigP0SecretsSchema>;
+export type OpsConfigP0Records = z.output<typeof opsConfigP0RecordsSchema>;
+export type OpsConfigP0Audit = z.output<typeof opsConfigP0AuditSchema>;

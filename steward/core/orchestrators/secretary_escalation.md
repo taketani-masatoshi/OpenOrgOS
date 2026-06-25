@@ -15,7 +15,7 @@
 ```
 段 → Secretary（一次受け）
        ↓ 管轄外
-     @steward/orchestrators/secretary_escalation.md（Steward スレッド 1 本）
+     @steward/core/orchestrators/secretary_escalation.md（Steward スレッド 1 本）
        ↓
      Executive Steward（本 Orchestrator を実行）
        ↓ §4.2 照会マトリクス
@@ -34,7 +34,7 @@
 
 | 経路 | 操作 |
 |------|------|
-| **推奨** | Steward 用 Cursor スレッドを **1 本** 用意し、Secretary がエスカレーション時に `@steward/orchestrators/secretary_escalation.md` を **1 回** 付与 |
+| **推奨** | Steward 用 Cursor スレッドを **1 本** 用意し、Secretary がエスカレーション時に `@steward/core/orchestrators/secretary_escalation.md` を **1 回** 付与 |
 | 代替 | Secretary スレッド内でユーザーが `@orchestrator` 相当として上記を 1 回起動（同一スレッドで Executive 役を実行） |
 
 Secretary は **依頼文を手書きコピーしない**。本 Orchestrator が §4.1 照会フォーマットを **自動生成** する。
@@ -66,7 +66,7 @@ Secretary は起動時に以下を埋める（不足は Orchestrator が TBD と
 ### Step 1 — 受理・正規化
 
 - 入力を §4.1 **照会フォーマット** に正規化（FROM: Secretary → TO: 各 Agent）
-- `steward route match --text "..."` または `--path ...` で [routing/registry.yaml](../routing/registry.yaml) を参照（任意 · 補助）
+- `steward route match --text "..."` または `--path ...` で [routing/registry.yaml](../core/routing/registry.yaml) を参照（任意 · 補助）
 - **classification:** L2/L3 リソースの **値** は照会文・統合回答に含めない
 
 ### Step 2 — 照会マトリクス（§4.2）で Agent 割当
@@ -110,16 +110,22 @@ Secretary は起動時に以下を埋める（不足は Orchestrator が TBD と
 - **L2 具体値禁止**（口座残高 · secrets · stakeholders 実名 · 配偶者 PII）
 - 統合ブロックを下記テンプレに記載
 
-### Step 5 — 出力
+### Step 5 — 出力（固定パス）
+
+**統合回答の正本パス（固定）:** `docs/reports/executive-notes/YYYY-MM-DD-escalation-{slug}.md`
 
 | 先 | パス | 用途 |
 |----|------|------|
-| 監査・履歴 | `docs/reports/executive-notes/YYYY-MM-DD-escalation-{slug}.md` | 統合回答全文（L2 除外） |
-| Secretary 返却 | 同一ファイル末尾 **または** チャット内ブロック | 下記「Secretary 返却形式」 |
+| 監査・履歴 | `docs/reports/executive-notes/YYYY-MM-DD-escalation-{slug}.md` | 統合回答全文（L2 除外）· **必ずここに保存** |
+| Secretary 返却 | 上記ファイルを読み、チャットで短縮 relay | 下記 Step 6 |
 
-### Step 6 — Secretary へ返却
+チャットのみに統合回答を残さない。Secretary relay の根拠は **executive-notes MD のみ**。
 
-Secretary は **統合回答ブロック** のみを読み、段向けに短縮する（秘書検定: 結論先）。
+### Step 6 — Secretary へ返却（relay 手順 · 3 行）
+
+1. `docs/reports/executive-notes/YYYY-MM-DD-escalation-{slug}.md` を開く（L2 値は転記しない）
+2. 「統合結論」「Q1/Q2/Q3 一行回答」「段のアクション最大 3 件」を抽出し、段向けに **2–6 行** に短縮
+3. 段へ relay。**数値は MD 記載値のみ**（再計算禁止）· 原文 MD へのリンクまたはファイル名のみ提示可
 
 ---
 
@@ -177,9 +183,9 @@ docs/reports/dashboard/                # KPI 行のみ
 docs/company/executive-remaining-tasks.md
 data/classification-registry.yaml      # RES-* · 機密階層
 steward/rules/folder_access_policy.md  # §4 プロトコル
-steward/routing/registry.yaml          # ルート補助（任意）
+steward/core/routing/registry.yaml          # ルート補助（任意）
 tenants/{id}/docs/compliance/          # 個情 · ISO 記録（Compliance）
-steward/agents/                        # 委譲先 Agent MD
+steward/core/agents/                        # 委譲先 Agent MD
 ```
 
 **Forbidden（Executive）:** `data/executive/**` 直読 · L2 secrets 値 · stakeholders 実データ
@@ -201,12 +207,12 @@ docs/reports/routing-queue/            # handoff 履歴（任意 · route handof
 
 | タスク | 委譲先 |
 |--------|--------|
-| 個情法 · ISO · Git 機密範囲 | [compliance_agent.md](../agents/compliance_agent.md) |
-| inbox · 归档 | [operations_agent.md](../agents/operations_agent.md) |
-| 契約 · 保険 | [contract_agent.md](../agents/contract_agent.md) |
-| 予実 · CF | [finance_agent.md](../agents/finance_agent.md) |
-| 社長予定 · 返却 | [secretary_agent.md](../agents/secretary_agent.md) |
-| 経営優先度 | [executive_steward_agent.md](../agents/executive_steward_agent.md) |
+| 個情法 · ISO · Git 機密範囲 | [compliance_agent.md](../core/agents/compliance_agent.md) |
+| inbox · 归档 | [operations_agent.md](../core/agents/operations_agent.md) |
+| 契約 · 保険 | [contract_agent.md](../core/agents/contract_agent.md) |
+| 予実 · CF | [finance_agent.md](../core/agents/finance_agent.md) |
+| 社長予定 · 返却 | [secretary_agent.md](../core/agents/secretary_agent.md) |
+| 経営優先度 | [executive_steward_agent.md](../core/agents/executive_steward_agent.md) |
 
 ---
 
@@ -262,21 +268,33 @@ docs/reports/routing-queue/            # handoff 履歴（任意 · route handof
 
 ---
 
-## CLI（補助 · 自動起動は Phase 1 候補）
+## CLI（実装済 · SEC-3/4）
 
 ```bash
-npm run steward -- route match --text "個情 Git"
-npm run steward -- route handoff --text "配偶者データ Git" --from secretary --to compliance
-npm run steward -- dashboard
-npm run steward -- classification access --agent compliance --path data/executive/stakeholders.yaml
+# 1 コマンド dispatch（Secretary 優先）
+npm run steward -- secretary escalate --dispatch --subject "件名" --q "質問1"
+
+# カレンダー
+npm run steward -- executive calendar push --dry-run
+npm run steward -- executive calendar pull --since 2026-06-01
+
+# merge 完了時 Secretary relay ブロックが stdout に出力
+npm run steward -- escalate merge --id IMP-...
 ```
 
 ---
 
-## 起動例
+## 将来 Phase 2+（backlog · SEC4-*）
 
-```
-@steward/orchestrators/secretary_escalation.md
+- **SEC4-7** tasks `archived` ステータス — schema + 移行 CLI
+- **SEC4-8** `npm run daily` / weekly に brief オプトイン
+- **SEC4-9** launchd リマインド — [launchd テンプレ](../../tenants/mal/docs/executive/launchd-com.steward.executive-backup-reminder.plist.example) 作成済 · 段 load 要
+- Cursor SDK 完全自動 POST — dispatch + webhook 基盤済
+
+### consult サンプル — 配偶者・家族（P2-2）
+
+```markdown
+@steward/core/orchestrators/secretary_escalation.md
 
 ## エスカレーション入力 2026-06-09
 
@@ -292,12 +310,12 @@ npm run steward -- classification access --agent compliance --path data/executiv
 
 ---
 
-## 将来 Phase 1 候補（スコープ外）
+## 起動例
 
-- CLI から Orchestrator 起動（`steward escalate run`）
-- Cursor Task API / Cloud Agent による Agent 並列照会
-- 照会キュー DB · `routing-queue/` 自動消化
-- Secretary スレッド → Steward スレッドの webhook 連携
+段から「配偶者を stakeholders に載せるか」と聞かれた場合の照会例。本 Orchestrator を起動し Compliance + Secretary へ §4.2 照会。
+
+**Q 例:** 家族情報は `records/`（L2 vault）か `stakeholders.yaml`（L1 · gitignore）か STK プロフィール MD か？  
+**原則（Compliance 視点）:** 業務上必要な最小限のみ L1 executive に。住所・個人携帯の詳細は `records/` + id リンク。Git 追跡は example のみ。
 
 ---
 
@@ -305,5 +323,5 @@ npm run steward -- classification access --agent compliance --path data/executiv
 
 - [folder_access_policy.md](../rules/folder_access_policy.md) §3–§4
 - [secretary_steward_boundary.md](../rules/secretary_steward_boundary.md)
-- [executive_steward_agent.md](../agents/executive_steward_agent.md)
-- [routing/README.md](../routing/README.md)
+- [executive_steward_agent.md](../core/agents/executive_steward_agent.md)
+- [routing/README.md](../core/routing/README.md)

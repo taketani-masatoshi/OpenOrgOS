@@ -61,12 +61,12 @@ npm run steward -- scenario
 
 | Skill | 用途 |
 |-------|------|
-| [executive_dashboard](../steward/skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
+| [executive_dashboard](../steward/core/skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
 | `steward dashboard` | 上記 Skill の CLI 実装 |
 | `steward alerts` | P0 契約・許認可 |
 | `steward forecast` / `scenario` | CF 要約（Finance 要約と併用） |
 
-各 Agent の Skill 出力: [steward/skills/](../steward/skills/00-このフォルダについて.md)
+各 Agent の Skill 出力: [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md)
 
 ---
 
@@ -127,7 +127,9 @@ npm run steward -- scenario
 
 照会時は [folder_access_policy.md](../steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
 
-**Secretary からの横断依頼:** [secretary_escalation.md](../orchestrators/secretary_escalation.md)（consult）· [delegate_implementation.md](../orchestrators/delegate_implementation.md)（implement / Work Order）を実行。
+**Secretary リダイレクト（1 行 · 段向け）:** 「予定・社外・1-on-1 は Secretary へ — `@secretary_agent` または Secretary スレッドで `data/executive/calendar.yaml` を参照してください（Executive は dashboard 経由のみ）。」
+
+**Secretary からの横断依頼:** [secretary_escalation.md](../core/orchestrators/secretary_escalation.md)（consult）· [delegate_implementation.md](../core/orchestrators/delegate_implementation.md)（implement / Work Order）を実行。
 
 ---
 
@@ -135,4 +137,4 @@ npm run steward -- scenario
 
 - **テナント:** `rules/company_context.md` · 有効モジュール: `modules.yaml`
 - **例示（架空）:** 株式会社サンプル商事 · PROP-001 みなとビル501 · PROP-002 緑丘ゲストハウス
-- **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/agents/](00-このフォルダについて.md)
+- **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/core/agents/](00-このフォルダについて.md)

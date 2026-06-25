@@ -1,0 +1,34 @@
+id: CN
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/cn-maintainers
+repository: https://github.com/steward-os/jurisdiction-cn
+license: MIT
+
+name: China
+default_entity_form: llc
+default_currency: CNY
+locale: zh-CN
+default_display_language: zh-Hans
+legal_system:
+  ja: 中国法
+  en: China law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-CN-001
+  board: REG-CN-002
+  shareholder: REG-CN-003
+  approval: REG-CN-004
+  expense: REG-CN-005
+  conflict: REG-CN-006
+  document: REG-CN-007
+  travel: REG-CN-008
+
+notes: LLC skeleton · cn-demo tenant

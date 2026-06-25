@@ -1,0 +1,8 @@
+id: jp_women_empowerment
+required_seeds: []
+activation_seeds:
+  - declaration.yaml.example
+  - declaration-template.md.example
+  - action-plan.yaml.example
+optional_regulations: []
+notes: activation_ready — 女性活躍推進法 · 一般事業主行動計画 · 応援宣言

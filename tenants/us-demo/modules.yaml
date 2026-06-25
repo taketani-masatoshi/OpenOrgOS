@@ -1,0 +1,13 @@
+# Business modules — US demo (all disabled · jurisdiction reference only)
+modules:
+  - id: rental
+    enabled: false
+    agent: rental
+    notes: Enable to test cross-jurisdiction billing
+
+  - id: travel_booking
+    enabled: false
+    agent: travel_booking
+    data_root: data/operations/
+    docs_root: docs/operations/
+    notes: US travel policy REG-US-008 when enabled

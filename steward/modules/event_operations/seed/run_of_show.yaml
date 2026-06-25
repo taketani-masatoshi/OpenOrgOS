@@ -1,0 +1,10 @@
+run_of_show:
+  - id: ROS-001
+    event_id: EVT-001
+    items:
+      - time: "18:00"
+        activity: "受付開始"
+        owner: staff
+      - time: "19:00"
+        activity: "開宴"
+        owner: mc

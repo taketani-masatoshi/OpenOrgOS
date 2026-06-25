@@ -6,7 +6,7 @@
 **テナント:** `modules.yaml` で `agent: venture_capital` · `data_root` · 任意 `docs_root`。  
 **例示（架空）:** サンプル・キャピタル株式会社 · FUND-001 · 投資先 PC-001〜
 
-**コア Agent 索引:** [steward/agents/00-このフォルダについて.md](../agents/00-このフォルダについて.md)
+**コア Agent 索引:** [steward/core/agents/00-このフォルダについて.md](../core/agents/00-このフォルダについて.md)
 
 ---
 
@@ -40,7 +40,7 @@ VC / 投資事業の **ファンド · 投資先 · LP · キャピタルコー�
 |-------|---------|
 | portfolio_review | [skills/portfolio_review.md](skills/portfolio_review.md) |
 | lp_reporting | [skills/lp_reporting.md](skills/lp_reporting.md) |
-| contract_expiry_check | [../skills/contract_expiry_check.md](../skills/contract_expiry_check.md)（LP 契約 · 投資契約） |
+| contract_expiry_check | [../core/skills/contract_expiry_check.md](../core/skills/contract_expiry_check.md)（LP 契約 · 投資契約） |
 
 ## 要約出力先
 

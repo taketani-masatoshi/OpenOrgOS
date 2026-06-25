@@ -4,6 +4,8 @@ import type {
   MonthlyFinance,
 } from "../../schemas/index.js";
 import { formatCurrency, formatPercent } from "./utils.js";
+import { computeRentalPlanMetrics } from "../../steward/modules/rental/cli/plan-metrics.js";
+import { computeHotelPlanMetrics } from "../../steward/modules/hospitality/cli/plan-metrics.js";
 
 export interface PropertyAnalysis {
   propertyId: string;
@@ -49,24 +51,24 @@ export function analyzeProperty(
 ): PropertyAnalysis {
   const filtered = filterByPropertyAndMonths(finances, property.id, fromMonth, toMonth);
 
-  const rentalPlan = plan.rental.find((r) => r.property_id === property.id);
-  const hotelPlan = plan.hotel.find((h) => h.property_id === property.id);
+  const rental = computeRentalPlanMetrics(plan, property.id);
+  const hotel = computeHotelPlanMetrics(plan, property.id);
 
   let plannedMonthlyRevenue = 0;
   let plannedAnnualRevenue = 0;
   let noi: number | undefined;
   let revpar: number | undefined;
 
-  if (rentalPlan) {
-    plannedMonthlyRevenue = rentalPlan.monthly_rent * (1 - rentalPlan.vacancy_rate);
-    plannedAnnualRevenue = plannedMonthlyRevenue * 12;
-    noi = plannedAnnualRevenue - rentalPlan.management_fee * 12;
+  if (rental) {
+    plannedMonthlyRevenue = rental.monthlyRevenue;
+    plannedAnnualRevenue = rental.annualRevenue;
+    noi = rental.noi;
   }
 
-  if (hotelPlan) {
-    plannedMonthlyRevenue = hotelPlan.room_count * hotelPlan.occupancy_rate * hotelPlan.adr * 30;
-    plannedAnnualRevenue = hotelPlan.room_count * hotelPlan.occupancy_rate * hotelPlan.adr * 365;
-    revpar = hotelPlan.occupancy_rate * hotelPlan.adr;
+  if (hotel) {
+    plannedMonthlyRevenue = hotel.monthlyRevenue;
+    plannedAnnualRevenue = hotel.annualRevenue;
+    revpar = hotel.revpar;
   }
 
   let totalRevenue = 0;

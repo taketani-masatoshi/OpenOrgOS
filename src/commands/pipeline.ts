@@ -2,8 +2,12 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { runDashboard } from "./dashboard.js";
 import { runOpsDaily } from "./ops.js";
+import { runExecutiveBrief } from "./executive.js";
 import { getTenantId } from "../lib/tenant.js";
 import { ROOT_DIR } from "../lib/tenant.js";
+import { listWorkOrders } from "../lib/escalate.js";
+import { listAuditEvents } from "../lib/audit-log.js";
+import { checkExecutiveBackupForWeekly } from "../lib/executive-backup.js";
 
 export interface PipelineRunOptions {
   tenant?: string;
@@ -15,8 +19,9 @@ export function runPipelineList(): void {
   console.log("| name | steps |");
   console.log("|------|-------|");
   console.log("| daily | validate → ops daily → dashboard (+ agent summaries) |");
+  console.log("| weekly | daily + routing-queue pending + audit log summary |");
   console.log("\n例: npm run steward -- pipeline run daily");
-  console.log("     npm run steward -- --tenant demo pipeline run daily");
+  console.log("     npm run steward -- pipeline run weekly");
 }
 
 export function runPipelineDaily(options: PipelineRunOptions = {}): void {
@@ -41,4 +46,45 @@ export function runPipelineDaily(options: PipelineRunOptions = {}): void {
   runDashboard({ markdown: true });
 
   console.log("\n✓ Pipeline daily complete");
+}
+
+export function runPipelineWeekly(options: PipelineRunOptions = {}): void {
+  runPipelineDaily(options);
+
+  const pending = listWorkOrders("pending");
+  const blocked = listWorkOrders("blocked");
+  const audit = listAuditEvents({ tenant: options.tenant ?? getTenantId() }).slice(-10);
+
+  console.log("\n=== Weekly routing-queue ===");
+  if (pending.length === 0 && blocked.length === 0) {
+    console.log("✓ No pending/blocked work orders");
+  } else {
+    for (const w of [...pending, ...blocked]) {
+      console.log(`  ${w.id} · ${w.to_agent} · ${w.status} · ${w.subject ?? "—"}`);
+    }
+  }
+
+  console.log("\n=== Recent audit events ===");
+  if (audit.length === 0) {
+    console.log("(none)");
+  } else {
+    for (const e of audit) {
+      console.log(`  ${e.timestamp.slice(0, 10)} ${e.event} ${e.ref}`);
+    }
+  }
+
+  console.log("\n=== Executive backup (weekly) ===");
+  const backup = checkExecutiveBackupForWeekly();
+  console.log(backup.ok ? `✓ ${backup.message}` : `⚠ ${backup.message}`);
+  if (!backup.ok) {
+    console.error("\n✗ Weekly pipeline: executive backup overdue or missing stamp");
+    process.exit(1);
+  }
+
+  if (process.env.STEWARD_WEEKLY_BRIEF !== "0") {
+    console.log("\n→ executive brief --week");
+    runExecutiveBrief({ markdown: true });
+  }
+
+  console.log("\n✓ Pipeline weekly complete");
 }

@@ -64,5 +64,5 @@ docs/finance/accounting/invoices/bancho/FY2026/
 
 ## 関連
 
-- [spec-v0.3.md](../spec-v0.3.md)
+- [spec.md](../spec.md)（仕様正本）
 - [yojitsu-v2.md](yojitsu-v2.md)

@@ -1,0 +1,8 @@
+service_requests:
+  - id: SR-001
+    pm_property_id: PMP-001
+    type: repair
+    title: "キッチン水漏れ"
+    reported_date: "2026-06-05"
+    status: open
+    sla_due: "2026-06-08"

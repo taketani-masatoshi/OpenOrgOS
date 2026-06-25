@@ -27,10 +27,10 @@ export const routingRegistrySchema = z.object({
   routes: z.array(routeDefinitionSchema).min(1),
 });
 
-export type RouteBoundary = z.infer<typeof routeBoundarySchema>;
-export type RouteMatch = z.infer<typeof routeMatchSchema>;
-export type RouteDefinition = z.infer<typeof routeDefinitionSchema>;
-export type RoutingRegistry = z.infer<typeof routingRegistrySchema>;
+export type RouteBoundary = z.output<typeof routeBoundarySchema>;
+export type RouteMatch = z.output<typeof routeMatchSchema>;
+export type RouteDefinition = z.output<typeof routeDefinitionSchema>;
+export type RoutingRegistry = z.output<typeof routingRegistrySchema>;
 
 export const taskTypeSchema = z.enum(["consult", "implement"]);
 export const handoffPrioritySchema = z.enum(["P0", "P1", "P2", "P3"]);
@@ -69,9 +69,9 @@ export const handoffSchema = z.object({
   completion_notes: z.string().optional(),
 });
 
-export type TaskType = z.infer<typeof taskTypeSchema>;
-export type HandoffMode = z.infer<typeof handoffModeSchema>;
-export type Handoff = z.infer<typeof handoffSchema>;
+export type TaskType = z.output<typeof taskTypeSchema>;
+export type HandoffMode = z.output<typeof handoffModeSchema>;
+export type Handoff = z.output<typeof handoffSchema>;
 
 export interface EscalationInput {
   subject?: string;
@@ -81,7 +81,7 @@ export interface EscalationInput {
   acceptance_criteria?: string[];
   text?: string;
   path?: string;
-  priority?: z.infer<typeof handoffPrioritySchema>;
+  priority?: z.output<typeof handoffPrioritySchema>;
   tenant?: string;
 }
 
@@ -89,11 +89,11 @@ export interface WorkOrderPlan {
   input: EscalationInput;
   matches: Array<{
     routeId: string;
-    agent: z.infer<typeof agentId>;
+    agent: z.output<typeof agentId>;
     skill?: string;
     score: number;
     eligible: boolean;
   }>;
-  agents: z.infer<typeof agentId>[];
+  agents: z.output<typeof agentId>[];
   multiAgent: boolean;
 }

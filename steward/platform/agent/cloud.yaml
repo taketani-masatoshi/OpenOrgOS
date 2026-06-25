@@ -1,0 +1,11 @@
+version: "1"
+runtime: auto  # local | cloud | auto
+
+cloud:
+  # repository: https://github.com/org/steward
+  ref: main
+  model: composer-2.5
+
+watch:
+  enabled: true
+  interval_ms: 30000

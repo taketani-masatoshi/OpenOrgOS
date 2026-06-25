@@ -1,0 +1,12 @@
+name: Sample Corp Inc.
+representative: Jane Doe, CEO
+directors:
+  - name: Jane Doe
+    role: CEO and Director
+  - name: John Smith
+    role: Director
+address: "1209 Orange Street, Wilmington, DE 19801"
+fiscal_year_end_month: 12
+business_description: |
+  US jurisdiction pack reference tenant — C-Corporation skeleton.
+  Not legal or tax advice. Customize with counsel.

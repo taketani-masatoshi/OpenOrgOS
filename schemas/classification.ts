@@ -87,7 +87,7 @@ export const bankAccountsFileSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type ClassificationLevel = z.infer<typeof classificationLevel>;
-export type AgentId = z.infer<typeof agentId>;
-export type ClassificationRegistry = z.infer<typeof classificationRegistrySchema>;
-export type BankAccountsFile = z.infer<typeof bankAccountsFileSchema>;
+export type ClassificationLevel = z.output<typeof classificationLevel>;
+export type AgentId = z.output<typeof agentId>;
+export type ClassificationRegistry = z.output<typeof classificationRegistrySchema>;
+export type BankAccountsFile = z.output<typeof bankAccountsFileSchema>;

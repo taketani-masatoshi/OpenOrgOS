@@ -6,7 +6,7 @@
 **テナント:** `modules.yaml` で `agent: restaurant` · `data_root` を指定。  
 **例示（架空）:** サンプル食堂株式会社
 
-**コア Agent 索引:** [steward/agents/00-このフォルダについて.md](../agents/00-このフォルダについて.md)
+**コア Agent 索引:** [steward/core/agents/00-このフォルダについて.md](../core/agents/00-このフォルダについて.md)
 
 ---
 

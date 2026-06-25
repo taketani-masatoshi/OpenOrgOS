@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { validateModules } from "./modules.js";
+import { getResolvedJurisdiction } from "./jurisdiction.js";
 import { validateRegulations } from "./regulations.js";
 import {
   companySchema,
@@ -15,6 +16,8 @@ import {
   cashBalanceSchema,
   fixedAssetsSchema,
   taxProfileSchema,
+  taxProfileUsSchema,
+  taxProfileCorporateSchema,
   chartOfAccountsSchema,
   type CashBalance,
   type FixedAssets,
@@ -162,8 +165,20 @@ export function loadFixedAssets(): FixedAssets {
   return readYamlFile(join(DATA_DIR, "finance", "fixed-assets.yaml"), fixedAssetsSchema);
 }
 
-export function loadTaxProfile(): TaxProfile {
-  return readYamlFile(join(DATA_DIR, "finance", "tax-profile.yaml"), taxProfileSchema);
+export function loadTaxProfile():
+  | TaxProfile
+  | import("../../schemas/finance.js").TaxProfileUs
+  | import("../../schemas/finance.js").TaxProfileCorporate {
+  const path = join(DATA_DIR, "finance", "tax-profile.yaml");
+  const { pack } = getResolvedJurisdiction();
+  switch (pack.tax_profile_schema) {
+    case "us":
+      return readYamlFile(path, taxProfileUsSchema);
+    case "jp":
+      return readYamlFile(path, taxProfileSchema);
+    case "corporate":
+      return readYamlFile(path, taxProfileCorporateSchema);
+  }
 }
 
 export function loadChartOfAccounts(): ChartOfAccounts {

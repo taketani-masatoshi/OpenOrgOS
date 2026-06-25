@@ -1,0 +1,14 @@
+# 旅行手配依頼 — example（CLI / Agent intake）
+# 用法: npm run steward -- operations travel intake --file data/operations/travel-request.yaml
+
+portal_id: rakuten-travel
+trip_type: hotel
+destination: 大阪
+destination_area: 新大阪駅周辺
+check_in: "2026-06-23"
+check_out: "2026-06-24"
+guests: 1
+budget_max: 15000
+trip_purpose: 業務打合せ
+room_preference: 禁煙シングル
+traveler_role: executive

@@ -1,4 +1,6 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { join } from "node:path";
 import type { Contract, Property, Loan } from "../../schemas/index.js";
 import {
   loadAllData,
@@ -13,7 +15,9 @@ import {
 import { facilityPublicSchema, facilitySecretsSchema } from "../../schemas/operations.js";
 import { classificationRegistrySchema } from "../../schemas/classification.js";
 import { runClassificationChecks } from "./classification.js";
-import { DATA_DIR, readYamlFile, CLASSIFICATION_REGISTRY_YAML, resolveTenantPath } from "./utils.js";
+import { loadExecutiveCalendar } from "./data.js";
+import { detectUnsyncedCalendarEvents } from "./executive-calendar-sync.js";
+import { DATA_DIR, readYamlFile, CLASSIFICATION_REGISTRY_YAML, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
   resolveModuleSecretsPath,
@@ -185,6 +189,89 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       "data/classification-registry.yaml",
       e instanceof Error ? e.message : String(e)
     );
+  }
+
+  const executiveYaml = [
+    "calendar.yaml",
+    "tasks.yaml",
+    "one-on-ones.yaml",
+    "external-contacts.yaml",
+    "stakeholders.yaml",
+  ] as const;
+  for (const name of executiveYaml) {
+    const rel = `data/executive/${name}`;
+    const abs = resolveTenantPath(rel);
+    if (!existsSync(abs)) {
+      push(
+        "warning",
+        rel,
+        `未作成 — \`cp ${name.replace(".yaml", ".yaml.example")} ${name}\`（[data/executive/00-README.md](data/executive/00-README.md)）`
+      );
+    }
+  }
+
+  const hasExecutiveData = executiveYaml.some((name) =>
+    existsSync(resolveTenantPath(`data/executive/${name}`))
+  );
+  if (hasExecutiveData) {
+    const stampPath = join(SCRATCH_DIR, "executive-backup-last.txt");
+    if (!existsSync(stampPath)) {
+      push(
+        "warning",
+        "scratch/executive-backup-last.txt",
+        "executive 週次バックアップ未記録 — 初回: echo $(date +%Y-%m-%d) > scratch/executive-backup-last.txt（[backup-procedure.md](docs/executive/backup-procedure.md)）"
+      );
+    } else {
+      const last = readFileSync(stampPath, "utf-8").trim().slice(0, 10);
+      const lastMs = Date.parse(last + "T12:00:00");
+      const ageDays = Math.floor((Date.now() - lastMs) / 86_400_000);
+      if (!Number.isNaN(lastMs) && ageDays > 7) {
+        push(
+          "warning",
+          "scratch/executive-backup-last.txt",
+          `最終バックアップ ${last}（${ageDays} 日前）— 7 日超 · 週次 SSD バックアップを実施`
+        );
+      }
+    }
+
+    const calPath = resolveTenantPath("data/executive/calendar.yaml");
+    if (existsSync(calPath)) {
+      try {
+        const unsynced = detectUnsyncedCalendarEvents(loadExecutiveCalendar().events);
+        if (unsynced.length > 0) {
+          push(
+            "warning",
+            "data/executive/calendar.yaml",
+            `${unsynced.length} 件が google_event_id 未同期 — \`steward executive calendar push\` または pull --apply`
+          );
+        }
+      } catch (e) {
+        push("warning", "data/executive/calendar.yaml", e instanceof Error ? e.message : String(e));
+      }
+    }
+  }
+
+  if (process.platform === "darwin") {
+    try {
+      const out = execFileSync("tmutil", ["latestbackup"], { encoding: "utf-8" }).trim();
+      if (out) {
+        const m = out.match(/(\d{4}-\d{2}-\d{2})/);
+        if (m?.[1]) {
+          const ageDays = Math.floor(
+            (Date.now() - Date.parse(m[1] + "T12:00:00")) / 86_400_000
+          );
+          if (ageDays > 7) {
+            push(
+              "warning",
+              "system:Time Machine",
+              `最終バックアップ ${m[1]}（${ageDays} 日前）— executive SSD 週次と併用推奨`
+            );
+          }
+        }
+      }
+    } catch {
+      // tmutil unavailable — skip
+    }
   }
 
   for (const ci of runClassificationChecks()) {

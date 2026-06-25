@@ -23,7 +23,7 @@ describe("module readiness", () => {
   it("uses 3-tier readiness", () => {
     expect(getModuleTier("rental")).toBe("production_ready");
     expect(getModuleTier("hospitality")).toBe("production_ready");
-    expect(getModuleTier("restaurant")).toBe("activation_ready");
+    expect(getModuleTier("restaurant")).toBe("production_ready");
     expect(getModuleTier("clinic")).toBe("activation_ready");
   });
 });

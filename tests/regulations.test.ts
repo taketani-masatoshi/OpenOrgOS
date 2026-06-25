@@ -1,16 +1,20 @@
+import { describe, it, expect, beforeEach } from "vitest";
 import { existsSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { join } from "node:path";
+import { setTenantId } from "../src/lib/tenant.js";
 import {
   listEffectiveRegulations,
   loadEnabledRegulationIds,
   loadRegulationsCatalog,
-  STEWARD_REGULATIONS_DIR,
   validateRegulations,
 } from "../src/lib/regulations.js";
-import { join } from "node:path";
 import { buildActiveContextMarkdown } from "../src/lib/context-manifest.js";
+import { getRegulationsTemplatesDir } from "../src/lib/jurisdiction.js";
 
 describe("regulations", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
   it("loads catalog with 24 regulations", () => {
     const catalog = loadRegulationsCatalog();
     expect(catalog.regulations.length).toBe(24);
@@ -35,19 +39,24 @@ describe("regulations", () => {
     expect(reg13?.effective).toBe(false);
   });
 
-  it("active context includes regulations section", () => {
+  it("active context includes legal jurisdiction and display language", () => {
     const md = buildActiveContextMarkdown();
+    expect(md).toContain("**法域（legal）:**");
+    expect(md).toContain("**表示言語（display）:**");
+    expect(md).toContain("`JP`");
     expect(md).toContain("## 有効社内規程");
     expect(md).toContain("REG-012");
-    expect(md).toContain("## 無効社内規程（読取禁止）");
-    expect(md).toContain("REG-013");
   });
 });
 
 describe("regulation templates", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("has template for each catalog entry", () => {
     for (const reg of loadRegulationsCatalog().regulations) {
-      expect(existsSync(join(STEWARD_REGULATIONS_DIR, reg.template))).toBe(true);
+      expect(existsSync(join(getRegulationsTemplatesDir(), reg.template))).toBe(true);
     }
   });
 });

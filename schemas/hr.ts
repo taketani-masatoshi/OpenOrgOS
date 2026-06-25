@@ -17,5 +17,5 @@ export const employeesFileSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type Employee = z.infer<typeof employeeSchema>;
-export type EmployeesFile = z.infer<typeof employeesFileSchema>;
+export type Employee = z.output<typeof employeeSchema>;
+export type EmployeesFile = z.output<typeof employeesFileSchema>;

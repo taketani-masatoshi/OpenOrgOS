@@ -6,30 +6,32 @@
 
 ---
 
-## 3 層構成
+## 組織 OS 4 層 + テナント
 
 ```
-フレームワーク（汎用 · MAL 非依存）
-├── steward/modules/{id}/     Agent · skills · seed/（雛形データ）
-├── steward/standards/iso/    ISO 標準方針・記録様式
-├── steward/standards/regulations/  社内規程テンプレ · catalog.yaml
-├── steward/agents/           6 コア Agent
-├── src/ · schemas/ · docs/
+steward/
+├── core/                   常時 — agents/ · skills/ · routing/ · orchestrators/
+├── modules/{id}/           業務モジュール — agent.md · seed/ · skills/
+├── jurisdiction-packs/{code}/  法域 — 規程 · 税 seed · 法域 modules/
+├── jurisdictions/          索引のみ — registry.yaml · packs.lock.yaml
+├── platform/               Phase 2/3 — webhook · cloud agent
+├── standards/iso/          ISO 標準
+└── rules/                  原則 · ポリシー
 
-テナント（接続・バインド）
-├── tenants/{id}/modules.yaml   モジュール ON/OFF · パス参照
-├── tenants/{id}/standards.yaml ISO ON/OFF
-├── tenants/{id}/regulations.yaml  社内規程 ON/OFF
-├── tenants/{id}/data/          正データ
-├── tenants/{id}/docs/          人向け書類（ISO ギャップ・監査等はここ）
-└── tenants/{id}/rules/         会社コンテキスト
+src/ · schemas/ · docs/     CLI · 検証 · 仕様
+
+テナント（接続）
+├── tenant.yaml             jurisdiction · locale
+├── modules.yaml            業務 ON/OFF · パスバインド
+├── standards.yaml / regulations.yaml
+├── data/ · docs/ · rules/
 ```
 
 | 層 | 例 |
 |----|-----|
 | モジュール seed | `steward/modules/rental/seed/` |
 | ISO 標準文 | `steward/standards/iso/ISO-9001/` |
-| 規程テンプレ | `steward/standards/regulations/catalog.yaml` |
+| 規程テンプレ | `steward/jurisdiction-packs/JP/regulations/`（法域 pack） |
 | テナント ISO 記録 | `tenants/mal/docs/compliance/iso/` |
 | テナント規程施行文 | `tenants/mal/docs/company/regulations/` |
 
@@ -90,14 +92,16 @@ npm run steward -- modules check rental
 npm run steward -- modules check --all
 npm run steward -- map list
 npm run check
+npm run daily      # check + pipeline run daily
+npm run weekly     # check + pipeline run weekly
 ```
 
-詳細: [docs/spec-v0.4.md](docs/spec-v0.4.md)（**正本**） · [docs/framework-assessment.md](docs/framework-assessment.md) · [docs/framework-backlog.md](docs/framework-backlog.md)
+詳細: [docs/spec.md](docs/spec.md)（**仕様正本**） · [docs/framework-assessment.md](docs/framework-assessment.md) · [docs/framework-backlog.md](docs/framework-backlog.md) · 旧版: [docs/spec/history/](docs/spec/history/)
 
 ---
 
 ## Cursor / Agent
 
-**コア Agent + 業務モジュール:** [steward/agents/00-このフォルダについて.md](steward/agents/00-このフォルダについて.md)
+**コア Agent + 業務モジュール:** [steward/core/agents/00-このフォルダについて.md](steward/core/agents/00-このフォルダについて.md)
 
 会社固有情報: `tenants/{id}/rules/company_context.md`

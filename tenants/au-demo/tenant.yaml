@@ -1,0 +1,11 @@
+id: au-demo
+name: Sample Australia Pty Ltd
+legal_name: Sample Australia Pty Ltd
+display_name: AU Demo
+description: AU jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: AU
+entity_form: proprietary_ltd
+locale: en-AU
+default_currency: AUD

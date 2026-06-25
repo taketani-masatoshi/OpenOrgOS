@@ -1,0 +1,35 @@
+id: US
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/us-maintainers
+repository: https://github.com/steward-os/jurisdiction-us
+license: MIT
+
+name: United States
+default_entity_form: c_corp
+default_currency: USD
+locale: en-US
+default_display_language: en
+default_legal_subdivision: DE
+legal_system:
+  ja: 米国法（デラウェア州 DGCL）
+  en: US law (Delaware DGCL)
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: us
+
+corporate_core:
+  officer_comp: REG-US-001
+  board: REG-US-002
+  shareholder: REG-US-003
+  approval: REG-US-004
+  expense: REG-US-005
+  conflict: REG-US-006
+  document: REG-US-007
+  travel: REG-US-008
+
+notes: C-Corp · LLC · Partnership 等 — subdivisions/DE/ 等 · us-demo テナント

@@ -1,0 +1,7 @@
+id: real_estate_brokerage
+required_seeds: []
+notes: activation_ready — listings · deals · commissions（仲介 · PROP 任意 bind）
+activation_seeds:
+- listings.yaml
+- deals.yaml
+- commissions.yaml

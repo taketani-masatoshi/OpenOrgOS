@@ -1,7 +1,8 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import YAML from "yaml";
-import type { ZodSchema } from "zod";
+import type { ZodTypeAny } from "zod";
+import { z } from "zod";
 import { sanitizeForTrackedOutput } from "./sanitize-output.js";
 import {
   ROOT_DIR,
@@ -43,13 +44,7 @@ export const DOCS_CORPORATE_PDF_DIR = join(DOCS_OUTBOX_DIR, "corporate");
 /** 亀沢ゲスト掲示 PDF → io/outbox/lodging */
 export const DOCS_LODGING_PDF_DIR = join(DOCS_OUTBOX_DIR, "lodging");
 
-/** @deprecated use DOCS_CORPORATE_PDF_DIR */
-export const OUTPUT_PDF_DIR = DOCS_CORPORATE_PDF_DIR;
-
-/** @deprecated use DOCS_CORPORATE_PDF_DIR */
-export const REPORTS_DIR = DOCS_CORPORATE_PDF_DIR;
-
-export function readYamlFile<T>(path: string, schema: ZodSchema<T>): T {
+export function readYamlFile<S extends ZodTypeAny>(path: string, schema: S): z.output<S> {
   const raw = readFileSync(path, "utf-8");
   const parsed = YAML.parse(raw);
   return schema.parse(parsed);
@@ -58,6 +53,21 @@ export function readYamlFile<T>(path: string, schema: ZodSchema<T>): T {
 export function readYamlFileRaw(path: string): unknown {
   const raw = readFileSync(path, "utf-8");
   return YAML.parse(raw);
+}
+
+/**
+ * Load a framework registry YAML, falling back to `fallback()` when the file is
+ * absent. Shared by routing / webhook / cloud-agent / skill registries.
+ */
+export function loadRegistryFile<S extends ZodTypeAny>(path: string, schema: S, fallback: () => z.output<S>): z.output<S> {
+  if (!existsSync(path)) return fallback();
+  return readYamlFile(path, schema);
+}
+
+/** Format an ISO date (YYYY-MM-DD) as Japanese `YYYY年M月D日`. */
+export function formatJapaneseDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${y}年${m}月${d}日`;
 }
 
 export function writeYamlFile(path: string, data: unknown): void {
@@ -137,15 +147,21 @@ export function ensurePdfOutputDir(subdir?: string): string {
   return dir;
 }
 
-/** @deprecated use ensurePdfOutputDir */
-export function ensureReportsDir(subdir?: string): string {
-  return ensurePdfOutputDir(subdir);
-}
-
 export function ensureDocsReportsDir(subdir?: string): string {
   const dir = subdir ? join(DOCS_REPORTS_DIR, subdir) : DOCS_REPORTS_DIR;
   mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+/**
+ * Single entry point for writing a git-tracked file. Applies L2 → tracked-output
+ * sanitization so secret values never reach a tracked file. All tracked MD/text
+ * writers should route through this rather than calling writeFileSync directly.
+ */
+export function writeTrackedFile(path: string, content: string): string {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, sanitizeForTrackedOutput(content), "utf-8");
+  return path;
 }
 
 /** CLI が生成する Markdown レポート（人向け → docs/reports/ · L1 サニタイズ） */
@@ -154,13 +170,5 @@ export function writeMarkdownReport(
   filename: string,
   content: string
 ): string {
-  const dir = ensureDocsReportsDir(subdir);
-  const path = join(dir, filename);
-  writeFileSync(path, sanitizeForTrackedOutput(content), "utf-8");
-  return path;
-}
-
-/** @deprecated use writeMarkdownReport for .md; PDF goes to docs/company/pdf/ */
-export function writeReport(subdir: string, filename: string, content: string): string {
-  return writeMarkdownReport(subdir, filename, content);
+  return writeTrackedFile(join(ensureDocsReportsDir(subdir), filename), content);
 }

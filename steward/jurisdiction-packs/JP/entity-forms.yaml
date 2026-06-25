@@ -1,0 +1,172 @@
+# 日本 — 組織形態（法域 JP で選択可能）
+# status: active=運用想定 · stub=ダミー骨格 · legacy=法改正等で新設不可 · planned=将来
+jurisdiction: JP
+
+forms:
+  # ── 会社法 ──
+  - id: kk
+    name: 株式会社
+    name_en: Kabushiki Kaisha (KK)
+    liability: limited
+    governance:
+      supreme_body: 株主総会
+      board: 取締役会
+    identifiers: [corporate_number]
+    status: active
+    notes: Steward 参照実装 · tenants/mal
+
+  - id: gk
+    name: 合同会社
+    name_en: Godo Kaisha (GK)
+    liability: limited
+    governance:
+      supreme_body: 社員
+      representative: 代表社員
+    identifiers: [corporate_number]
+    status: active
+    notes: パススルー税務 · Operating Agreement 相当は定款
+
+  - id: yugen_kaisha
+    name: 有限会社
+    name_en: Yugen Kaisha
+    liability: limited
+    status: legacy
+    notes: 2006年法改正で新設不可 · 存続会社のみ
+
+  - id: goshi_kaisha
+    name: 合資会社
+    name_en: Goshi Kaisha
+    liability: mixed
+    status: active
+    notes: 無限責任社員 + 有限責任社員
+
+  - id: gomei_kaisha
+    name: 合名会社
+    name_en: Gomei Kaisha
+    liability: unlimited
+    status: active
+    notes: 全社員無限責任
+
+  # ── 組合・共同事業 ──
+  - id: civil_law_partnership
+    name: 民法上の組合（任意組合）
+    name_en: Civil Law Partnership (Voluntary Partnership)
+    liability: unlimited
+    status: active
+    notes: 組合財産 · 内部関係は民法667条以下
+
+  - id: commercial_law_partnership
+    name: 商法上の組合（匿名組合）
+    name_en: Silent Partnership (Tokumei Kumiai)
+    liability: limited
+    status: active
+    notes: 営業者に対する出資 · 有限責任
+
+  - id: investment_lps
+    name: 投資事業有限責任組合（LPS）
+    name_en: Investment Limited Partnership
+    liability: limited
+    status: active
+    notes: ファンド · VC 向け
+
+  - id: limited_liability_partnership
+    name: 有限責任事業組合（LLP）
+    name_en: Limited Liability Partnership
+    liability: limited
+    status: active
+    notes: 士業等 · 相互監視義務
+
+  - id: tech_research_combination
+    name: 技術研究組合
+    name_en: Technical Research Combination
+    liability: limited
+    status: active
+    notes: 技術研究組合法 · 共同研究
+
+  - id: business_combination
+    name: 事業協同組合
+    name_en: Business Cooperative Association
+    liability: limited
+    status: stub
+    notes: 中小企業等協同組合法
+
+  - id: cooperative
+    name: 協同組合
+    name_en: Cooperative
+    liability: limited
+    status: stub
+    notes: 消費生活・農業・信用等 · 業種別法
+
+  # ── 一般法人・NPO ──
+  - id: general_incorporated_association
+    name: 一般社団法人
+    name_en: General Incorporated Association
+    liability: limited
+    status: active
+    notes: 一般法人法
+
+  - id: general_incorporated_foundation
+    name: 一般財団法人
+    name_en: General Incorporated Foundation
+    liability: limited
+    status: active
+
+  - id: public_interest_association
+    name: 公益社団法人
+    name_en: Public Interest Incorporated Association
+    liability: limited
+    status: active
+    notes: 認定・監督庁
+
+  - id: public_interest_foundation
+    name: 公益財団法人
+    name_en: Public Interest Incorporated Foundation
+    liability: limited
+    status: active
+
+  - id: specified_nonprofit
+    name: 特定非営利活動法人（NPO法人）
+    name_en: Specified Nonprofit Corporation (NPO)
+    liability: limited
+    status: active
+    notes: NPO法 · 認定・特例認定
+
+  # ── その他 ──
+  - id: school_corporation
+    name: 学校法人
+    name_en: School Corporation
+    liability: limited
+    status: stub
+    notes: 私立学校法
+
+  - id: religious_corporation
+    name: 宗教法人
+    name_en: Religious Corporation
+    liability: limited
+    status: stub
+
+  - id: medical_corporation
+    name: 医療法人
+    name_en: Medical Corporation
+    liability: limited
+    status: stub
+
+  - id: social_welfare_corporation
+    name: 社会福祉法人
+    name_en: Social Welfare Corporation
+    liability: limited
+    status: stub
+
+  - id: management_association
+    name: 管理組合
+    name_en: Management Association (Condominium)
+    liability: limited
+    status: stub
+    notes: 区分所有法 · マンション等
+
+  - id: sole_proprietorship
+    name: 個人事業主
+    name_en: Sole Proprietorship
+    liability: unlimited
+    status: active
+    notes: 法人格なし · 開業届

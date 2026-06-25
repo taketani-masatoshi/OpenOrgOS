@@ -18,16 +18,18 @@ import {
 import { loadSkillRegistry } from "./skill-registry.js";
 import { getTenantId, setTenantId } from "./tenant.js";
 import { currentDate, writeYamlFile } from "./utils.js";
+import { appendAuditEvent } from "./audit-log.js";
+import { pushQueueEvent } from "./queue-db.js";
 
 export const AGENT_PROMPT_PATHS: Record<AgentId, string> = {
-  executive_steward: "steward/agents/executive_steward_agent.md",
-  secretary: "steward/agents/secretary_agent.md",
-  finance: "steward/agents/finance_agent.md",
-  contract: "steward/agents/contract_agent.md",
-  compliance: "steward/agents/compliance_agent.md",
-  operations: "steward/agents/operations_agent.md",
-  property_rental: "steward/agents/property_rental_agent.md",
-  hospitality: "steward/agents/hospitality_agent.md",
+  executive_steward: "steward/core/agents/executive_steward_agent.md",
+  secretary: "steward/core/agents/secretary_agent.md",
+  finance: "steward/core/agents/finance_agent.md",
+  contract: "steward/core/agents/contract_agent.md",
+  compliance: "steward/core/agents/compliance_agent.md",
+  operations: "steward/core/agents/operations_agent.md",
+  property_rental: "steward/core/agents/property_rental_agent.md",
+  hospitality: "steward/core/agents/hospitality_agent.md",
 };
 
 const PROMPTS_SUBDIR = "prompts";
@@ -228,7 +230,7 @@ export function formatAgentImplementationPrompt(handoff: Handoff): string {
     skill?.runtime === "cli" && skill.cli_command
       ? `\`npm run steward -- skills run ${skill.cli_command}\``
       : skill?.runtime === "cursor-only"
-        ? `Cursor-only skill: \`steward/skills/${skill.file}\``
+        ? `Cursor-only skill: \`${skill.skillDirRel}/${skill.file}\``
         : null;
 
   const lines = [
@@ -310,6 +312,20 @@ export function writeWorkOrderFiles(handoff: Handoff, matched?: MatchedRoute): {
   const mdPath = join(dir, `${handoff.id}.md`);
   writeYamlFile(yamlPath, handoff);
   writeFileSync(mdPath, formatWorkOrderMarkdown(handoff, matched), "utf-8");
+
+  if (handoff.task_type === "implement") {
+    appendAuditEvent({
+      event: "escalate",
+      ref: handoff.id,
+      actor: handoff.from_agent,
+      detail: handoff.subject ?? handoff.requirements?.slice(0, 80),
+    });
+    pushQueueEvent({
+      type: "work_order_created",
+      ref: handoff.id,
+      payload: { agent: handoff.to_agent, parent_id: handoff.parent_id },
+    });
+  }
 
   let promptPath: string | undefined;
   if (handoff.task_type === "implement" && handoff.agent_prompt_path) {

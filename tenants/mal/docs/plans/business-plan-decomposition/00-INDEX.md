@@ -1,7 +1,7 @@
 # Steward OS — 事業計画分解（マスター索引）
 
 **版:** 2026-06-07 · **対象:** 株式会社MAL（不動産賃貸 + 旅館業 + サービス事業）  
-**正データ:** `data/plans/business-plan.yaml` · **エージェント:** [steward/orchestrators/business_plan_decomposition.md](../../../steward/orchestrators/business_plan_decomposition.md)
+**正データ:** `data/plans/business-plan.yaml` · **エージェント:** [steward/core/orchestrators/business_plan_decomposition.md](../../../steward/core/orchestrators/business_plan_decomposition.md)
 
 ---
 

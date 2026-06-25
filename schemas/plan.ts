@@ -203,8 +203,8 @@ export const debtPlanSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type RevenuePlan = z.infer<typeof revenuePlanSchema>;
-export type ProfitPlan = z.infer<typeof profitPlanSchema>;
-export type ExpensePlan = z.infer<typeof expensePlanSchema>;
-export type InvestmentPlan = z.infer<typeof investmentPlanSchema>;
-export type DebtPlan = z.infer<typeof debtPlanSchema>;
+export type RevenuePlan = z.output<typeof revenuePlanSchema>;
+export type ProfitPlan = z.output<typeof profitPlanSchema>;
+export type ExpensePlan = z.output<typeof expensePlanSchema>;
+export type InvestmentPlan = z.output<typeof investmentPlanSchema>;
+export type DebtPlan = z.output<typeof debtPlanSchema>;

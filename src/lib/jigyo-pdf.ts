@@ -18,7 +18,7 @@ import {
   pdfTitle,
   writePdfToFile,
 } from "./pdf.js";
-import { ensureReportsDir, formatCurrency } from "./utils.js";
+import { ensurePdfOutputDir, formatCurrency, formatJapaneseDate } from "./utils.js";
 
 export interface JigyoReportInput {
   company: Company;
@@ -27,11 +27,6 @@ export interface JigyoReportInput {
   properties: Property[];
   loans: Loans;
   fiscalYear: string;
-}
-
-function formatJapaneseDate(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return `${y}年${m}月${d}日`;
 }
 
 export async function generateJigyoPdf(
@@ -54,7 +49,7 @@ export async function generateJigyoPdf(
 
   const path =
     outputPath ??
-    join(ensureReportsDir("jigyo"), `${fiscalYear}-jigyo-hokoku.pdf`);
+    join(ensurePdfOutputDir("jigyo"), `${fiscalYear}-jigyo-hokoku.pdf`);
 
   const w = createPdfWriter();
 
@@ -62,8 +57,8 @@ export async function generateJigyoPdf(
   pdfSubtitle(w, company.name);
   pdfMetaBlock(w, [
     { label: "事業年度", value: `第${termNumber}期（${periodLabel}）` },
-    { label: "本店所在地", value: company.address },
-    { label: "代表者", value: company.representative },
+    { label: "本店所在地", value: company.address ?? "" },
+    { label: "代表者", value: company.representative ?? "" },
   ]);
 
   pdfSection(w, "1. 事業の経過及びその成果");

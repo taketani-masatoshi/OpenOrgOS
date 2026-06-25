@@ -75,7 +75,7 @@ LOAN-001/002 の返済シミュレーション（基本・保守シナリオ）�
 
 - [借入計画](borrowing-plan.md)
 - [DSCR 管理計画](dscr-plan.md)
-- Skill: [cashflow_forecast.md](../../../steward/skills/cashflow_forecast.md)
+- Skill: [cashflow_forecast.md](../../../steward/core/skills/cashflow_forecast.md)
 
 ## 担当 · 更新頻度
 

@@ -144,6 +144,12 @@ describe("analyze", () => {
 });
 
 describe("alerts", () => {
+  function offsetDate(daysFromToday: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + daysFromToday);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
   const contracts: Contract[] = [
     {
       id: "CTR-001",
@@ -151,10 +157,10 @@ describe("alerts", () => {
       counterparty: "Partner",
       type: "management",
       start_date: "2024-01-01",
-      end_date: "2026-06-15",
+      end_date: offsetDate(14),
       auto_renewal: false,
       risk: {
-        renewal_deadline: "2026-05-01",
+        renewal_deadline: offsetDate(7),
         risk_level: "high",
         notes: "Urgent",
       },

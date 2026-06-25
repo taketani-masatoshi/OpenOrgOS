@@ -52,5 +52,5 @@ export const propertySchema = z.object({
     .optional(),
 });
 
-export type Property = z.infer<typeof propertySchema>;
-export type PropertyType = z.infer<typeof propertyType>;
+export type Property = z.output<typeof propertySchema>;
+export type PropertyType = z.output<typeof propertyType>;

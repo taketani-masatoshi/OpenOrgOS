@@ -1,8 +1,10 @@
 # Steward OS — マルチエージェントアーキテクチャ
 
-> **正本（4 層）:** [steward/rules/agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/agents/](../steward/agents/) · [steward/skills/](../steward/skills/)  
+> **正本（4 層）:** [steward/rules/agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/core/agents/](../steward/core/agents/) · [steward/core/skills/](../steward/core/skills/)  
 > **物理パス正本:** [steward/rules/repository_layout.md](../steward/rules/repository_layout.md)（2026-06 テナント分離）  
-> 本書は **現行パス詳細索引** として維持する。
+> 本書は **現行パス詳細索引** として維持する。仕様正本は [docs/spec.md](spec.md)。
+> 以下の具体パス（`PROP-001` · `CTR-*` · 番町 · 亀沢 等）は **テナント `mal` の実例**。汎用定義は各 `steward/core/agents/*.md` を正とする。
+> Step 4 の将来フォルダ構造は構想であり、物理パス正本は [repository_layout.md](../steward/rules/repository_layout.md) に委譲する。
 
 **版:** 2026-06-08 · **対象:** Steward OS フレームワーク（会社データはテナント分離）
 
@@ -23,7 +25,7 @@ Steward OS は **経営支援 OS**（DMS ではない）。**8 Agent**（7 部�
 **切替:** `export STEWARD_TENANT=mal` または `npm run steward -- --tenant mal …`  
 **雛形:** [tenants/_template/](../tenants/_template/) · **実例:** [tenants/mal/](../tenants/mal/)
 
-Agent 定義（`steward/agents/`）は汎用。物件 ID（PROP-xxx）・固有名はテナントの `company_context.md` を正とする。
+Agent 定義（`steward/core/agents/`）は汎用。物件 ID（PROP-xxx）・固有名はテナントの `company_context.md` を正とする。
 
 ---
 
@@ -122,7 +124,7 @@ Steward/
 | 委譲 | Secretary + 下記 6 部門 Agent へ照会・タスク割当 |
 | 禁止 | 正データ YAML の直接編集 · 機密 secrets · 契約本文の改定 |
 
-**プロンプト:** [`steward/agents/executive_steward_agent.md`](../steward/agents/executive_steward_agent.md)
+**プロンプト:** [`steward/core/agents/executive_steward_agent.md`](../steward/core/agents/executive_steward_agent.md)
 
 ---
 
@@ -137,7 +139,7 @@ Steward/
 | 禁止 | `data/finance/**` · `contracts/**` · secrets |
 | 委譲 | 経営・財務・契約 → Executive Steward |
 
-**プロンプト:** [`steward/agents/secretary_agent.md`](../steward/agents/secretary_agent.md)
+**プロンプト:** [`steward/core/agents/secretary_agent.md`](../steward/core/agents/secretary_agent.md)
 
 ---
 
@@ -153,7 +155,7 @@ Steward/
 | CLI | `steward finances` · `steward forecast` · `steward sync all` · `npm run validate` |
 | 照会先 | Contract（契約費用）· Property Rental / Hospitality（物件収益）· Compliance（税務申告期限） |
 
-**プロンプト:** [`steward/agents/finance_agent.md`](../steward/agents/finance_agent.md)
+**プロンプト:** [`steward/core/agents/finance_agent.md`](../steward/core/agents/finance_agent.md)
 
 ---
 
@@ -169,7 +171,7 @@ Steward/
 | CLI | `steward contracts list/show` · `steward alerts` · `steward deps check` |
 | 照会先 | Finance（費用計画への反映）· Compliance（規程適合）· Operations（inbox 原本処理） |
 
-**プロンプト:** [`steward/agents/contract_agent.md`](../steward/agents/contract_agent.md)
+**プロンプト:** [`steward/core/agents/contract_agent.md`](../steward/core/agents/contract_agent.md)
 
 ---
 
@@ -185,7 +187,7 @@ Steward/
 | Write | PROP-001 YAML · [`docs/properties/PROP-001-bancho/operations/`](../properties/PROP-001-bancho/operations/) |
 | 照会先 | Contract（保険・賃貸契約）· Finance（賃料収入・減価償却）· Compliance（固定資産・税務） |
 
-**プロンプト:** [`steward/agents/property_rental_agent.md`](../steward/agents/property_rental_agent.md)
+**プロンプト:** [`steward/core/agents/property_rental_agent.md`](../steward/core/agents/property_rental_agent.md)
 
 ---
 
@@ -202,7 +204,7 @@ Steward/
 | 禁止 | secrets を docs/ や CSV に転記 · 他エージェントへの secrets 内容開示 |
 | 照会先 | Operations（inbox ゲスト書類）· Compliance（旅館業法・宿泊約款）· Finance（運営費・ADR 前提） |
 
-**プロンプト:** [`steward/agents/hospitality_agent.md`](../steward/agents/hospitality_agent.md)
+**プロンプト:** [`steward/core/agents/hospitality_agent.md`](../steward/core/agents/hospitality_agent.md)
 
 ---
 
@@ -218,7 +220,7 @@ Steward/
 | 禁止 | secrets の複製・平文ログ · 財務数値の改ざん |
 | 照会先 | Contract（保険・委託契約）· Hospitality（運用規程整合）· Executive（総会・届出期限） |
 
-**プロンプト:** [`steward/agents/compliance_agent.md`](../steward/agents/compliance_agent.md)
+**プロンプト:** [`steward/core/agents/compliance_agent.md`](../steward/core/agents/compliance_agent.md)
 
 ---
 
@@ -234,7 +236,7 @@ Steward/
 | CLI | `steward io inbox add/done` · `steward io outbox list` · `steward io status` |
 | 照会先 | Contract（契約原本の確定先）· Compliance（許可証归档）· Hospitality（lodging 記録） |
 
-**プロンプト:** [`steward/agents/operations_agent.md`](../steward/agents/operations_agent.md)
+**プロンプト:** [`steward/core/agents/operations_agent.md`](../steward/core/agents/operations_agent.md)
 
 ---
 
@@ -295,7 +297,7 @@ Steward/
 | `docs/compliance/iso/` + `docs/compliance/privacy/` | `04_compliance/` | Phase 3 |
 | `docs/io/inbox/` · `outbox/` | `05_operations/io/` | Phase 2: `document-io.yaml` パスは CLI で抽象化 |
 
-**原則:** YAML 正データは `data/` に残し、進化先は **論理ビュー** として `steward map` CLI（未実装）で提供するのが安全。
+**原則:** YAML 正データは `data/` に残し、進化先は **論理ビュー** として `steward map` CLI（`map list` · `map resolve` · `map tree` 実装済）で提供するのが安全。
 
 ---
 
@@ -306,8 +308,8 @@ Steward/
 | 1 | `steward/rules/steward_os_principles.md` | 4 層原則 |
 | 2 | `steward/rules/agent_skill_architecture.md` | アーキテクチャ正本 |
 | 3 | `steward/rules/folder_access_policy.md` | アクセスポリシー |
-| 4 | `steward/agents/*.md` | Agent 定義 ×8 |
-| 5 | `steward/skills/*.md` | Skill 定義 ×13 |
+| 4 | `steward/core/agents/*.md` | Agent 定義 ×8 |
+| 5 | `steward/core/skills/*.md` | Skill 定義 ×13 |
 | 6 | `docs/agent_architecture.md` | 現行パス索引（本書） |
 | 7 | `docs/reports/agent-summaries/` | Steward 読取面 |
 
@@ -331,7 +333,7 @@ Steward/
 
 ### P2 — 中期（進化準備）
 
-- [ ] `steward map` CLI — 論理フォルダ `00_company/` ビュー（移行なし）
+- [x] `steward map` CLI — 論理フォルダビュー（`map list` · `map resolve` · `map tree`）
 - [ ] エージェント別 `validate` プリセット（触ったパスのみ検証）
 - [ ] dashboard KPI に物件別エージェント担当列を追加
 - [ ] ISO 内部監査チェックリストと Compliance Agent プロンプトの同期
@@ -347,6 +349,6 @@ Steward/
 ## 関連ドキュメント
 
 - [steward/rules/folder_access_policy.md](../steward/rules/folder_access_policy.md) — アクセスポリシー（正本）
-- [steward/agents/](../steward/agents/00-このフォルダについて.md) — Agent 定義
-- [steward/skills/](../steward/skills/00-このフォルダについて.md) — Skill 定義
+- [steward/core/agents/](../steward/core/agents/00-このフォルダについて.md) — Agent 定義
+- [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md) — Skill 定義
 - [.cursor/rules/steward.mdc](../.cursor/rules/steward.mdc)

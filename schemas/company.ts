@@ -21,5 +21,5 @@ export const companySchema = z.object({
   legal_advisor: z.string().optional(),
 });
 
-export type Director = z.infer<typeof directorSchema>;
-export type Company = z.infer<typeof companySchema>;
+export type Director = z.output<typeof directorSchema>;
+export type Company = z.output<typeof companySchema>;

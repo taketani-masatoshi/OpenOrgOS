@@ -1,0 +1,34 @@
+id: AU
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/au-maintainers
+repository: https://github.com/steward-os/jurisdiction-au
+license: MIT
+
+name: Australia
+default_entity_form: proprietary_ltd
+default_currency: AUD
+locale: en-AU
+default_display_language: en
+legal_system:
+  ja: オーストラリア法
+  en: Australia law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-AU-001
+  board: REG-AU-002
+  shareholder: REG-AU-003
+  approval: REG-AU-004
+  expense: REG-AU-005
+  conflict: REG-AU-006
+  document: REG-AU-007
+  travel: REG-AU-008
+
+notes: Pty Ltd skeleton · ASIC · au-demo tenant

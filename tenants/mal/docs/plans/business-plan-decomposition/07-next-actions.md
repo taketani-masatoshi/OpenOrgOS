@@ -20,7 +20,7 @@ npm run steward -- deps check --file data/finance/cash-balance.yaml
 
 ### 2. Phase 1 MD 生成（Cursor Agent）
 
-プロンプト: `@steward/orchestrators/business_plan_decomposition.md` · Agent: `@steward/agents/`
+プロンプト: `@steward/core/orchestrators/business_plan_decomposition.md` · Agent: `@steward/core/agents/`
 
 以下を **正データから自動起稿**（1 セッション 5–10 ファイル）:
 
@@ -87,13 +87,13 @@ npm run steward -- finances
 
 | シーン | 参照 | コマンド/参照 |
 |--------|------|--------------|
-| 計画分解・起稿 | 14_prompts | `@steward/orchestrators/business_plan_decomposition.md` |
-| 数値更新 | Finance Agent | `@steward/agents/finance_agent.md` + `steward sync` |
-| 契約 draft→executed | Contract + Operations | `@steward/agents/contract_agent.md` |
-| 番町運用 | Property Rental | `@steward/agents/property_rental_agent.md` |
-| 亀沢運用 | Hospitality | `@steward/agents/hospitality_agent.md` |
-| 経営判断 | Executive | `@steward/agents/executive_steward_agent.md` + dashboard |
-| 社長スケジュール・1-on-1 | Secretary | `@steward/agents/secretary_agent.md` |
+| 計画分解・起稿 | 14_prompts | `@steward/core/orchestrators/business_plan_decomposition.md` |
+| 数値更新 | Finance Agent | `@steward/core/agents/finance_agent.md` + `steward sync` |
+| 契約 draft→executed | Contract + Operations | `@steward/core/agents/contract_agent.md` |
+| 番町運用 | Property Rental | `@steward/core/agents/property_rental_agent.md` |
+| 亀沢運用 | Hospitality | `@steward/core/agents/hospitality_agent.md` |
+| 経営判断 | Executive | `@steward/core/agents/executive_steward_agent.md` + dashboard |
+| 社長スケジュール・1-on-1 | Secretary | `@steward/core/agents/secretary_agent.md` |
 
 ---
 

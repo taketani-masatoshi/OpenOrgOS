@@ -26,6 +26,14 @@ describe("context-manifest", () => {
     expect(md).toContain("**読まない**");
   });
 
+  it("active context includes Secretary executive read surface", () => {
+    const md = buildActiveContextMarkdown();
+    expect(md).toContain("## Secretary 読取面");
+    expect(md).toContain("data/executive/calendar.yaml");
+    expect(md).toContain("correspondence-drafts");
+    expect(md).toContain("Executive Steward は **読まない**");
+  });
+
   it("sync writes active_context and cursor rule", () => {
     const { contextPath, cursorRulePath } = syncActiveContext();
     expect(existsSync(contextPath)).toBe(true);

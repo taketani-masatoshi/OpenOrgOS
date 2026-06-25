@@ -1,0 +1,17 @@
+regulations:
+  - id: REG-TW-001
+    enabled: true
+  - id: REG-TW-002
+    enabled: true
+  - id: REG-TW-003
+    enabled: true
+  - id: REG-TW-004
+    enabled: true
+  - id: REG-TW-005
+    enabled: true
+  - id: REG-TW-006
+    enabled: true
+  - id: REG-TW-007
+    enabled: true
+  - id: REG-TW-008
+    enabled: true

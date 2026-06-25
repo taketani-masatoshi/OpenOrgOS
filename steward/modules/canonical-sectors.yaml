@@ -1,0 +1,75 @@
+# 正規業種セクター — 国横断で重複カスタムを抑止
+# カタログ modules/ に存在する id は canonical · それ以外は tenant custom（将来 agents.yaml custom_modules）
+
+version: 1
+
+policy:
+  canonical: steward/modules/ または jurisdiction-packs/{code}/modules/ に登録 — コミュニティ共有
+  custom: tenants/{id}/modules/custom/ — 1 テナント専用 · canonical と同名禁止
+  collision: canonical-sectors と同名 id の custom 申請は validate で拒否
+
+sectors:
+  - id: real_estate_sale
+    name: Real Estate Sale & Brokerage
+    name_ja: 不動産売買・仲介
+    canonical_module: real_estate_brokerage
+    notes: 国差は法域 pack · 業務はモジュール共有
+
+  - id: real_estate_rental
+    name: Real Estate Rental
+    name_ja: 不動産賃貸
+    canonical_module: rental
+
+  - id: real_estate_pm
+    name: Property Management
+    name_ja: 不動産管理
+    canonical_module: property_management
+
+  - id: hospitality_lodging
+    name: Hospitality & Lodging
+    name_ja: 宿泊
+    canonical_module: hospitality
+
+  - id: electric_utility
+    name: Electric Utility
+    name_ja: 電力・公益事業
+    canonical_module: null
+    status: planned
+    notes: 規制・ライセンスが国横断で類似 — 専門家モジュール候補
+
+  - id: water_utility
+    name: Water Utility
+    name_ja: 水道・公益
+    canonical_module: null
+    status: planned
+
+  - id: telecommunications
+    name: Telecommunications
+    name_ja: 通信キャリア
+    canonical_module: null
+    status: planned
+
+  - id: banking
+    name: Banking
+    name_ja: 銀行
+    canonical_module: null
+    status: planned
+
+  - id: insurance
+    name: Insurance
+    name_ja: 保険
+    canonical_module: null
+    status: planned
+
+  - id: manufacturing
+    name: Manufacturing
+    name_ja: 製造
+    canonical_module: null
+    status: planned
+
+  - id: nursing_care
+    name: Nursing & Long-term Care
+    name_ja: 介護
+    canonical_module: null
+    status: planned
+    notes: clinic とは別 — 法域 pack JP 優先候補

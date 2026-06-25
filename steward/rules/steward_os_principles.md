@@ -60,5 +60,5 @@ Data / File（事実）
 
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [folder_access_policy.md](folder_access_policy.md)
-- [steward/agents/](../steward/agents/00-このフォルダについて.md)
-- [steward/skills/](../steward/skills/00-このフォルダについて.md)
+- [steward/core/agents/](../steward/core/agents/00-このフォルダについて.md)
+- [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md)

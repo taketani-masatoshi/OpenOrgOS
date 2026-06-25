@@ -44,9 +44,9 @@ export const dependencyGraphSchema = z.object({
   edges: z.array(dependencyEdgeSchema),
 });
 
-export type EdgeCategory = z.infer<typeof edgeCategory>;
-export type NodeCategory = z.infer<typeof nodeCategory>;
-export type DependencyAction = z.infer<typeof dependencyAction>;
-export type DependencyNode = z.infer<typeof dependencyNodeSchema>;
-export type DependencyEdge = z.infer<typeof dependencyEdgeSchema>;
-export type DependencyGraph = z.infer<typeof dependencyGraphSchema>;
+export type EdgeCategory = z.output<typeof edgeCategory>;
+export type NodeCategory = z.output<typeof nodeCategory>;
+export type DependencyAction = z.output<typeof dependencyAction>;
+export type DependencyNode = z.output<typeof dependencyNodeSchema>;
+export type DependencyEdge = z.output<typeof dependencyEdgeSchema>;
+export type DependencyGraph = z.output<typeof dependencyGraphSchema>;

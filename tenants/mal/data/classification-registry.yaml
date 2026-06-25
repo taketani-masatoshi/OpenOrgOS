@@ -55,7 +55,7 @@ agents:
     output_max_level: L1
   operations:
     label: Operations
-    max_level: L1
+    max_level: L2
     output_max_level: L1
 
 resources:
@@ -92,6 +92,25 @@ resources:
     read_agents: [hospitality, compliance]
     write_agents: [hospitality]
 
+  - id: RES-TRAVEL-PORTALS
+    path: data/operations/travel-portals.yaml
+    example_path: data/operations/travel-portals.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 旅行ポータル login_id（パスワードはセッション入力 · YAML 禁止）
+    read_agents: [operations, compliance]
+    write_agents: [operations]
+
+  - id: RES-TRAVEL-DRAFTS
+    path: docs/operations/travel-drafts/**
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 旅行手配ドラフト MD（手配内容 · Operations 生成）
+    read_agents: [operations, secretary, compliance]
+    write_agents: [operations]
+
   - id: RES-STAKEHOLDERS
     path: data/executive/stakeholders.yaml
     example_path: data/executive/stakeholders.yaml.example
@@ -99,8 +118,26 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 利害関係者連絡先（L1 メール · L2 は records/）
-    read_agents: [secretary, contract, property_rental, hospitality, finance, compliance, executive_steward]
+    read_agents: [secretary, contract, property_rental, hospitality, finance, compliance]
     write_agents: [secretary, contract]
+
+  - id: RES-EXEC-CORRESPONDENCE-DRAFTS
+    path: docs/executive/correspondence-drafts/**
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社外招待・調整下書き MD（氏名・メール文面 · Secretary 生成 · gitignore）
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
+
+  - id: RES-EXEC-ONE-ON-ONE-PREP
+    path: docs/executive/one-on-one-prep-*.md
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 1-on-1 準備 MD（個人名・議題 · Secretary 生成 · gitignore）
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
 
   - id: RES-EXEC-CALENDAR
     path: data/executive/calendar.yaml

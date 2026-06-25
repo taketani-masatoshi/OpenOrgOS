@@ -7,8 +7,11 @@ import {
   type ModulesFile,
   type ModuleAgentId,
 } from "../../schemas/modules.js";
+
+export type { TenantModule, ModulesFile, ModuleAgentId };
 import { propertySchema } from "../../schemas/property.js";
 import { getTenantDir, ROOT_DIR, tenantDataPath, tenantDocsPath } from "./tenant.js";
+import { STEWARD_MODULES_DIR } from "./steward-paths.js";
 import { listYamlFiles, readYamlFile } from "./utils.js";
 import YAML from "yaml";
 import { z } from "zod";
@@ -16,13 +19,101 @@ import { loadRegulationsCatalog } from "./regulations.js";
 import { loadTenantRegulationsFile } from "./regulations.js";
 import { isSkeletonTenant } from "./ops-config.js";
 import { getModuleTier, type ReadinessTier } from "./module-readiness.js";
+import {
+  getJurisdictionPackRoot,
+  listJurisdictionCodes,
+  type JurisdictionCode,
+} from "./jurisdiction.js";
+import { getResolvedJurisdiction } from "./jurisdiction.js";
 
 export const MODULES_FILE = "modules.yaml";
-export const STEWARD_MODULES_DIR = join(ROOT_DIR, "steward", "modules");
+export { STEWARD_MODULES_DIR } from "./steward-paths.js";
 export const MODULE_SEED_SUBDIR = "seed";
+export const PACK_MODULES_SUBDIR = "modules";
+
+export interface ModuleLocation {
+  catalogId: string;
+  rootDir: string;
+  rootRel: string;
+  jurisdictionPack?: JurisdictionCode;
+}
+
+function listCoreCatalogModuleIds(): string[] {
+  if (!existsSync(STEWARD_MODULES_DIR)) return [];
+  return readdirSync(STEWARD_MODULES_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith(".") && !d.name.startsWith("_"))
+    .filter((d) => existsSync(join(STEWARD_MODULES_DIR, d.name, "agent.md")))
+    .map((d) => d.name)
+    .sort();
+}
+
+function listPackCatalogModuleIds(code: JurisdictionCode): string[] {
+  const modulesDir = join(getJurisdictionPackRoot(code), PACK_MODULES_SUBDIR);
+  if (!existsSync(modulesDir)) return [];
+  return readdirSync(modulesDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith("."))
+    .filter((d) => existsSync(join(modulesDir, d.name, "agent.md")))
+    .map((d) => d.name)
+    .sort();
+}
+
+/** Core + 全インストール済み pack のモジュール id */
+export function listCatalogModuleIds(): string[] {
+  const ids = new Set<string>(listCoreCatalogModuleIds());
+  for (const code of listJurisdictionCodes()) {
+    for (const id of listPackCatalogModuleIds(code)) {
+      ids.add(id);
+    }
+  }
+  return [...ids].sort();
+}
+
+/** テナント法域に関係するカタログ id（他法域 pack モジュールを除外） */
+export function listTenantScopeCatalogModuleIds(): string[] {
+  const jurisdiction = getResolvedJurisdiction();
+  return listCatalogModuleIds().filter((id) => {
+    const loc = resolveModuleLocation(id);
+    if (!loc) return false;
+    if (!loc.jurisdictionPack) return true;
+    return loc.jurisdictionPack === jurisdiction.code;
+  });
+}
+
+export function resolveModuleLocation(catalogId: string): ModuleLocation | null {
+  const coreDir = join(STEWARD_MODULES_DIR, catalogId);
+  if (existsSync(join(coreDir, "agent.md"))) {
+    return {
+      catalogId,
+      rootDir: coreDir,
+      rootRel: `steward/modules/${catalogId}`,
+    };
+  }
+  for (const code of listJurisdictionCodes()) {
+    const packRoot = getJurisdictionPackRoot(code);
+    const packModDir = join(packRoot, PACK_MODULES_SUBDIR, catalogId);
+    if (existsSync(join(packModDir, "agent.md"))) {
+      const packRootRel = packRoot.replace(ROOT_DIR + "/", "").replace(/\\/g, "/");
+      return {
+        catalogId,
+        rootDir: packModDir,
+        rootRel: `${packRootRel}/${PACK_MODULES_SUBDIR}/${catalogId}`,
+        jurisdictionPack: code,
+      };
+    }
+  }
+  return null;
+}
+
+export function getModuleRootDir(catalogId: string): string {
+  const loc = resolveModuleLocation(catalogId);
+  if (!loc) {
+    throw new Error(`Unknown module "${catalogId}" — not in steward/modules or jurisdiction-packs`);
+  }
+  return loc.rootDir;
+}
 
 export function getModuleSeedDir(catalogId: string): string {
-  return join(STEWARD_MODULES_DIR, catalogId, MODULE_SEED_SUBDIR);
+  return join(getModuleRootDir(catalogId), MODULE_SEED_SUBDIR);
 }
 
 export function listModuleSeedFiles(catalogId: string): string[] {
@@ -41,6 +132,7 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   venture_capital: "finance",
   saas_subscription: "finance",
   event_space: "operations",
+  event_operations: "operations",
   ecommerce: "finance",
   restaurant: "operations",
   retail_store: "finance",
@@ -50,6 +142,15 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   construction: "operations",
   education: "operations",
   membership: "finance",
+  software_outsourcing: "operations",
+  real_estate_brokerage: "contract",
+  property_management: "property_rental",
+  travel_booking: "operations",
+  language_bridge: "secretary",
+  jp_carbon_neutral_2050: "compliance",
+  jp_women_empowerment: "compliance",
+  jp_privacy_policy: "compliance",
+  jp_subsidy_application: "finance",
 };
 
 const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
@@ -57,6 +158,7 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "venture_capital",
   "saas_subscription",
   "event_space",
+  "event_operations",
   "ecommerce",
   "restaurant",
   "retail_store",
@@ -66,23 +168,22 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "construction",
   "education",
   "membership",
+  "software_outsourcing",
+  "real_estate_brokerage",
+  "travel_booking",
+  "language_bridge",
+  "jp_carbon_neutral_2050",
+  "jp_women_empowerment",
+  "jp_privacy_policy",
+  "jp_subsidy_application",
 ];
 
 export function modulesFilePath(): string {
   return join(getTenantDir(), MODULES_FILE);
 }
 
-export function listCatalogModuleIds(): string[] {
-  if (!existsSync(STEWARD_MODULES_DIR)) return [];
-  return readdirSync(STEWARD_MODULES_DIR, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && !d.name.startsWith(".") && !d.name.startsWith("_"))
-    .filter((d) => existsSync(join(STEWARD_MODULES_DIR, d.name, "agent.md")))
-    .map((d) => d.name)
-    .sort();
-}
-
 export function getModuleAgentDocPath(catalogId: string): string {
-  return join(STEWARD_MODULES_DIR, catalogId, "agent.md");
+  return join(getModuleRootDir(catalogId), "agent.md");
 }
 
 export function loadModulesFile(): ModulesFile {
@@ -150,12 +251,12 @@ export function validateModules(): ModuleValidationIssue[] {
     if (!catalogIds.has(mod.agent)) {
       issues.push({
         file: logicalFile,
-        message: `module "${mod.id}" agent "${mod.agent}" not in catalog (steward/modules/)`,
+        message: `module "${mod.id}" agent "${mod.agent}" not in catalog`,
       });
-    } else if (!existsSync(getModuleAgentDocPath(mod.agent))) {
+    } else if (!resolveModuleLocation(mod.agent)) {
       issues.push({
         file: logicalFile,
-        message: `catalog agent missing: steward/modules/${mod.agent}/agent.md`,
+        message: `catalog agent missing: ${mod.agent}`,
       });
     }
 
@@ -313,7 +414,9 @@ const moduleManifestSchema = z.object({
 });
 
 export function loadModuleManifest(catalogId: string) {
-  const path = join(STEWARD_MODULES_DIR, catalogId, "module.manifest.yaml");
+  const loc = resolveModuleLocation(catalogId);
+  if (!loc) return null;
+  const path = join(loc.rootDir, "module.manifest.yaml");
   if (!existsSync(path)) return null;
   return moduleManifestSchema.parse(YAML.parse(readFileSync(path, "utf-8")));
 }
@@ -329,13 +432,14 @@ function checkSeedFiles(
   label: string
 ): ModuleCheckIssue[] {
   const issues: ModuleCheckIssue[] = [];
+  const loc = resolveModuleLocation(catalogId);
   const seedDir = getModuleSeedDir(catalogId);
   for (const seed of seeds) {
     const seedPath = join(seedDir, seed);
     if (!existsSync(seedPath)) {
       issues.push({
         moduleId: catalogId,
-        message: `missing ${label} seed: steward/modules/${catalogId}/seed/${seed}`,
+        message: `missing ${label} seed: ${loc?.rootRel ?? catalogId}/seed/${seed}`,
       });
     }
   }
@@ -352,16 +456,17 @@ function checkModuleSkeleton(catalogId: string): ModuleCheckIssue[] {
 
   const seedDir = getModuleSeedDir(catalogId);
   if (!existsSync(seedDir)) {
+    const loc = resolveModuleLocation(catalogId);
     issues.push({
       moduleId: catalogId,
-      message: `missing seed directory: steward/modules/${catalogId}/seed/`,
+      message: `missing seed directory: ${loc?.rootRel ?? catalogId}/seed/`,
     });
   }
 
-  if (!existsSync(getModuleAgentDocPath(catalogId))) {
+  if (!resolveModuleLocation(catalogId)) {
     issues.push({
       moduleId: catalogId,
-      message: `missing agent.md: steward/modules/${catalogId}/agent.md`,
+      message: `missing agent.md for module "${catalogId}"`,
     });
   }
 

@@ -4,8 +4,11 @@ import {
   listCatalogModuleIds,
   loadEnabledModules,
   loadModulesFile,
+  listTenantScopeCatalogModuleIds,
+  resolveModuleLocation,
 } from "./modules.js";
 import { listEffectiveRegulations } from "./regulations.js";
+import { getResolvedJurisdiction } from "./jurisdiction.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
 import { listIsoStandardIds } from "./standards.js";
 import { getTenantDir, getTenantId, ROOT_DIR } from "./tenant.js";
@@ -27,11 +30,16 @@ export function buildActiveContextMarkdown(): string {
   const disabledIso = allIso.filter((id) => !enabledIso.includes(id));
   const effectiveRegs = listEffectiveRegulations().filter((r) => r.effective);
   const inactiveRegs = listEffectiveRegulations().filter((r) => !r.effective);
+  const jurisdiction = getResolvedJurisdiction();
 
   const lines: string[] = [
     `# アクティブコンテキスト — テナント \`${tenantId}\``,
     "",
     "**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run steward -- modules sync-context`",
+    "",
+    `**法域（legal）:** \`${jurisdiction.code}\`${jurisdiction.legalSubdivision ? ` · subdivision \`${jurisdiction.legalSubdivision}\`` : ""}${jurisdiction.legalSystemLabel ? ` · ${jurisdiction.legalSystemLabel}` : ""}`,
+    `**表示言語（display）:** \`${jurisdiction.display.code}\` · BCP 47 \`${jurisdiction.display.bcp47}\` · ${jurisdiction.display.label}`,
+    `**entity:** \`${jurisdiction.entityForm}\` — ${jurisdiction.entityFormEntry.name} · **currency:** \`${jurisdiction.defaultCurrency}\` · **pack tier:** \`${jurisdiction.packTier}\``,
     "",
     "> **トークン節約:** 本ファイルに列挙されたパスのみ Agent が読む。無効モジュール · 無効 ISO · 無効規程 · カタログ seed/テンプレは **@file 明示時以外読まない。**",
     "",
@@ -47,7 +55,8 @@ export function buildActiveContextMarkdown(): string {
     for (const mod of enabledModules) {
       lines.push(`### \`${mod.id}\` (\`${mod.agent}\`)`);
       lines.push("");
-      lines.push(`- Agent: \`steward/modules/${mod.agent}/agent.md\``);
+      const agentPath = resolveModuleLocation(mod.agent)?.rootRel ?? `steward/modules/${mod.agent}`;
+      lines.push(`- Agent: \`${agentPath}/agent.md\``);
       if (mod.property_ids?.length) {
         lines.push(`- 物件: ${mod.property_ids.map((p) => `\`${p}\``).join(", ")}`);
       }
@@ -110,7 +119,7 @@ export function buildActiveContextMarkdown(): string {
     }
   }
 
-  const catalogOnly = listCatalogModuleIds().filter(
+  const catalogOnly = listTenantScopeCatalogModuleIds().filter(
     (id) => !allModules.some((m) => m.agent === id)
   );
   if (catalogOnly.length) {
@@ -122,12 +131,32 @@ export function buildActiveContextMarkdown(): string {
 
   lines.push(
     "",
+    "## Secretary 読取面（on_demand · @file 明示）",
+    "",
+    "Secretary Agent が管轄する executive SoT。Git 追跡は `*.example.*` のみ · 実データは gitignore。",
+    "",
+    "| 論理パス | 用途 | ai_context |",
+    "|---------|------|------------|",
+    "| `data/executive/calendar.yaml` | 予定 SoT | on_demand |",
+    "| `data/executive/tasks.yaml` | 社長タスク | on_demand |",
+    "| `data/executive/one-on-ones.yaml` | 1-on-1 レジストリ | on_demand |",
+    "| `data/executive/external-contacts.yaml` | 社外連絡先 | on_demand |",
+    "| `data/executive/stakeholders.yaml` | 利害関係者（Executive Steward は **読まない**） | on_demand |",
+    "| `docs/executive/correspondence-drafts/` | 承認待ち下書き MD | on_demand |",
+    "| `docs/executive/one-on-one-prep-*.md` | MTG 準備 MD | on_demand |",
+    "| `docs/executive/stakeholders/*.md` | プロフィール MD（`*.example.md` のみ Git） | on_demand |",
+    "",
+    "初回セットアップ: [data/executive/00-README.md](data/executive/00-README.md) · バックアップ: [docs/executive/backup-procedure.md](docs/executive/backup-procedure.md)",
+    "",
     "## Steward / Executive",
     "",
-    "- コア Agent のみ常時: `steward/agents/`",
+    "- コア Agent のみ常時: `steward/core/agents/`",
+    "- Executive Steward は **dashboard / agent-summaries / executive-notes** 経由（`data/executive/` 直読禁止）",
     "- 規程索引のみ: `docs/company/regulations/00-このフォルダについて.md`（本文は有効 REG のみ）",
     "- 要約: 有効モジュールの `summary_dir` のみ",
-    "- カタログ: `steward/modules/00-このフォルダについて.md` · `steward/standards/regulations/00-このフォルダについて.md`",
+    "- カタログ: `steward/modules/00-このフォルダについて.md` · `" +
+      jurisdiction.pack.regulations_catalog +
+      "`",
     ""
   );
 
@@ -139,12 +168,13 @@ export function buildCursorActiveRuleMdc(): string {
   const enabledModules = loadEnabledModules();
   const enabledIso = loadEnabledIsoIds();
   const effectiveRegs = listEffectiveRegulations().filter((r) => r.effective);
+  const jurisdiction = getResolvedJurisdiction();
 
   const moduleRefs = enabledModules
-    .map(
-      (m) =>
-        `- **${m.id}:** \`steward/modules/${m.agent}/agent.md\`（Skill は必要時のみ同 \`skills/\`）`
-    )
+    .map((m) => {
+      const agentPath = resolveModuleLocation(m.agent)?.rootRel ?? `steward/modules/${m.agent}`;
+      return `- **${m.id}:** \`${agentPath}/agent.md\`（Skill は必要時のみ同 \`skills/\`）`;
+    })
     .join("\n");
 
   const isoRefs = enabledIso
@@ -174,7 +204,7 @@ alwaysApply: true
 
 - \`steward/modules/{id}/\` のうち **下表にない id** の agent.md · skills · seed
 - \`steward/standards/iso/ISO-*\` のうち **下表にない規格**
-- \`steward/standards/regulations/**/template.md\` のうち **下表にない REG**
+- \`${jurisdiction.pack.regulations_templates_dir}/**/template.md\` のうち **下表にない REG**
 - \`docs/company/regulations/*.md\` のうち **下表にない REG** 施行文
 - 無効 \`modules.yaml\` エントリの \`data_root\` · \`docs_root\`
 - \`@folder\` で \`steward/modules/\` · \`regulations/\` 全体を指定しない
@@ -193,7 +223,7 @@ ${regRefs || "（なし — regulations.yaml で有効化）"}
 
 ## コア Agent（常時）
 
-Executive · Secretary · Finance · Contract · Compliance · Operations — \`steward/agents/\`
+Executive · Secretary · Finance · Contract · Compliance · Operations — \`steward/core/agents/\`
 
 業務モジュール · 規程作業時のみ、上記 **有効** の agent.md / 施行文を @ 参照する。
 `;

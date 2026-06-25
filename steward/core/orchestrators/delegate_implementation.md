@@ -13,7 +13,7 @@
 ```
 段 / ユーザー → Secretary（一次受け · 実装依頼）
        ↓
-     @steward/orchestrators/delegate_implementation.md
+     @steward/core/orchestrators/delegate_implementation.md
        ↓
      Executive Steward（分解 · 割当 · 統合サマリ）
        ↓ route match + task_type=implement
@@ -32,7 +32,7 @@
 
 | 経路 | 操作 |
 |------|------|
-| **推奨** | Steward スレッド 1 本で `@steward/orchestrators/delegate_implementation.md` + 入力テンプレ |
+| **推奨** | Steward スレッド 1 本で `@steward/core/orchestrators/delegate_implementation.md` + 入力テンプレ |
 | **CLI** | `npm run steward -- escalate plan --text "..."` → `escalate run --text "..."` |
 
 ---
@@ -72,7 +72,7 @@ npm run steward -- escalate plan --text "..." [--path ...] [--dry-run]
 npm run steward -- route match --text "..."
 ```
 
-- [routing/registry.yaml](../routing/registry.yaml) で担当 Agent 候補を決定
+- [routing/registry.yaml](../core/routing/registry.yaml) で担当 Agent 候補を決定
 - classification アクセス不可 · モジュール無効 · Executive 境界違反は **blocked**
 
 ### Step 3 — Agent 割当
@@ -99,7 +99,7 @@ npm run steward -- escalate run --text "..." --from executive_steward [--tenant 
 |---------|------|
 | `docs/reports/routing-queue/IMP-YYYYMMDD-NNN.yaml` | Work Order マニフェスト |
 | `docs/reports/routing-queue/IMP-YYYYMMDD-NNN.md` | 人間可読サマリ |
-| `docs/reports/routing-queue/prompts/IMP-*_{agent}.md` | Agent 専用実装プロンプト（`@steward/agents/*_agent.md` 参照付き） |
+| `docs/reports/routing-queue/prompts/IMP-*_{agent}.md` | Agent 専用実装プロンプト（`@steward/core/agents/*_agent.md` 参照付き） |
 | `docs/reports/routing-queue/YYYY-MM-DD-escalate-{slug}.md` | Executive 統合サマリ |
 
 `task_type: implement` · `mode: implement`（consult の HO-* とは `task_type` で区別）
@@ -185,7 +185,7 @@ npm run steward -- route dispatch --id IMP-... --mode auto   # CLI skill
 ## 起動例
 
 ```
-@steward/orchestrators/delegate_implementation.md
+@steward/core/orchestrators/delegate_implementation.md
 
 ## 実装委譲入力 2026-06-09
 
@@ -199,17 +199,17 @@ npm run steward -- route dispatch --id IMP-... --mode auto   # CLI skill
 
 ---
 
-## 将来 Phase 2（スコープ外）
+## 将来 Phase 3（スコープ外）
 
-- Cursor Task API / Cloud Agent プログラム並列起動
-- webhook · 外部キュー DB
-- Agent 実行結果の自動マージ
+- 本番 HTTP webhook サーバー常駐
+- Cloud Agent VM 常時接続
+- git 自動マージ（PR 生成）
 
 ---
 
 ## 関連
 
 - [secretary_escalation.md](secretary_escalation.md) — consult
-- [routing/README.md](../routing/README.md) — route · handoff · escalate
+- [routing/README.md](../core/routing/README.md) — route · handoff · escalate
 - [folder_access_policy.md](../rules/folder_access_policy.md) §4
-- [executive_steward_agent.md](../agents/executive_steward_agent.md)
+- [executive_steward_agent.md](../core/agents/executive_steward_agent.md)

@@ -20,6 +20,10 @@ export interface TenantInitOptions {
   name?: string;
   fromModules?: string[];
   force?: boolean;
+  jurisdiction?: string;
+  entityForm?: string;
+  displayLanguage?: string;
+  legalSubdivision?: string;
 }
 
 export function runTenantInit(options: TenantInitOptions): void {
@@ -44,7 +48,7 @@ export function runTenantInit(options: TenantInitOptions): void {
   });
 
   const displayName = options.name ?? id;
-  writeTenantYaml(dest, id, displayName);
+  writeTenantYaml(dest, id, displayName, options);
   applyModuleBindings(dest, options.fromModules);
   writeSkeletonData(dest, id, displayName, options.fromModules);
 
@@ -57,7 +61,7 @@ export function runTenantInit(options: TenantInitOptions): void {
   }
 }
 
-function writeTenantYaml(dest: string, id: string, name: string): void {
+function writeTenantYaml(dest: string, id: string, name: string, options: TenantInitOptions): void {
   const path = join(dest, "tenant.yaml");
   let raw = readFileSync(path, "utf-8");
   raw = raw
@@ -68,6 +72,51 @@ function writeTenantYaml(dest: string, id: string, name: string): void {
     .replace(/^description:.*$/m, `description: ${name} — Steward OS スケルトン`);
   if (!raw.includes("lifecycle:")) {
     raw += "\nlifecycle: skeleton\n";
+  }
+  const jurisdiction = options.jurisdiction ?? "JP";
+  if (/^jurisdiction:.*$/m.test(raw)) {
+    raw = raw.replace(/^jurisdiction:.*$/m, `jurisdiction: ${jurisdiction}`);
+  } else {
+    raw += `jurisdiction: ${jurisdiction}\n`;
+  }
+  if (options.entityForm) {
+    if (/^entity_form:.*$/m.test(raw)) {
+      raw = raw.replace(/^entity_form:.*$/m, `entity_form: ${options.entityForm}`);
+    } else {
+      raw += `entity_form: ${options.entityForm}\n`;
+    }
+  }
+  if (jurisdiction === "US") {
+    if (!/^locale:.*$/m.test(raw)) raw += "locale: en-US\n";
+    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: USD\n";
+  }
+  if (jurisdiction === "SG") {
+    if (!/^locale:.*$/m.test(raw)) raw += "locale: en-SG\n";
+    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: SGD\n";
+  }
+  if (jurisdiction === "EE") {
+    if (!/^locale:.*$/m.test(raw)) raw += "locale: et-EE\n";
+    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: EUR\n";
+  }
+  if (jurisdiction === "HK") {
+    if (!/^locale:.*$/m.test(raw)) raw += "locale: en-HK\n";
+    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: HKD\n";
+  }
+  if (options.displayLanguage) {
+    if (/^display_language:.*$/m.test(raw)) {
+      raw = raw.replace(/^display_language:.*$/m, `display_language: ${options.displayLanguage}`);
+    } else {
+      raw += `display_language: ${options.displayLanguage}\n`;
+    }
+  }
+  if (options.legalSubdivision) {
+    if (/^legal_subdivision:.*$/m.test(raw)) {
+      raw = raw.replace(/^legal_subdivision:.*$/m, `legal_subdivision: ${options.legalSubdivision}`);
+    } else {
+      raw += `legal_subdivision: ${options.legalSubdivision}\n`;
+    }
+  } else if (jurisdiction === "US") {
+    if (!/^legal_subdivision:.*$/m.test(raw)) raw += "legal_subdivision: DE\n";
   }
   writeFileSync(path, raw, "utf-8");
 }

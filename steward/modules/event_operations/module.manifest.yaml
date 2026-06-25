@@ -1,0 +1,8 @@
+id: event_operations
+required_seeds: []
+notes: activation_ready — events · run_of_show · vendors · staff_shifts（event_space との境界は agent.md）
+activation_seeds:
+- events.yaml
+- run_of_show.yaml
+- vendors.yaml
+- staff_shifts.yaml

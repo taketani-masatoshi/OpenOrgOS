@@ -1,0 +1,32 @@
+program_id: SUB-2026-001
+source_url: "https://example.go.jp/subsidy/sustainability"
+extracted_on: "2026-06-01"
+title: "小規模事業者持続化補助金 公募要領（例示 · 架空）"
+requirements:
+  - id: req-jp
+    label: "国内事業者"
+    rule: requires_jurisdiction_jp
+  - id: req-corp-no
+    label: "法人番号記載可能"
+    rule: requires_corporate_number
+  - id: req-sme-size
+    label: "常時使用する従業員数 20 人以下"
+    rule: max_employees
+    max_value: 20
+bibliographic_fields:
+  - id: applicant_name
+    label: "申請者名称（法人名）"
+    required: true
+  - id: corporate_number
+    label: "法人番号"
+    required: true
+  - id: representative
+    label: "代表者氏名"
+    required: true
+  - id: address
+    label: "本店所在地"
+    required: true
+  - id: business_description
+    label: "事業概要"
+    required: true
+notes: "Agent が URL/PDF 読取後に更新 · L2 値は field-map 経由のみ"

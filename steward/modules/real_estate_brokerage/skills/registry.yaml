@@ -1,0 +1,6 @@
+skills:
+  - id: real_estate_brokerage_ops
+    file: real_estate_brokerage_ops.md
+    runtime: cursor-only
+    agent: Operations
+    description: real_estate_brokerage module operations checklist

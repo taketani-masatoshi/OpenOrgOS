@@ -56,7 +56,7 @@
 | 7 | Compliance | コンプライアンス | §2.6 |
 | 8 | Operations | 業務運用 | §2.7 |
 
-索引: [steward/agents/00-このフォルダについて.md](../steward/agents/00-このフォルダについて.md)
+索引: [steward/core/agents/00-このフォルダについて.md](../steward/core/agents/00-このフォルダについて.md)
 
 ---
 
@@ -368,6 +368,6 @@ npm run steward -- io status
 - [repository_layout.md](repository_layout.md)
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
-- [steward/agents/](../steward/agents/00-このフォルダについて.md)
-- [steward/skills/](../steward/skills/00-このフォルダについて.md)
+- [steward/core/agents/](../steward/core/agents/00-このフォルダについて.md)
+- [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md)
 - [data/00-README.md](../data/00-README.md)

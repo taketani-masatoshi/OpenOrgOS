@@ -13,14 +13,14 @@ flowchart TB
     DOCS[docs/]
   end
 
-  subgraph Skills["steward/skills/"]
+  subgraph Skills["steward/core/skills/"]
     S1[monthly_close]
     S2[cashflow_forecast]
     S3[contract_expiry_check]
     S4[revpar_analysis]
   end
 
-  subgraph Agents["steward/agents/"]
+  subgraph Agents["steward/core/agents/"]
     FIN[Finance]
     CON[Contract]
     HOS[Hospitality]
@@ -73,10 +73,10 @@ flowchart TB
 | 09 | reports | `docs/reports/` |
 | 10 | decisions | `docs/company/*gijiroku*` · `executive-remaining-tasks.md` |
 | 10b | executive | `data/executive/` · `docs/executive/`（Secretary SoT） |
-| 11 | agents | `steward/agents/` |
-| 12 | skills | `steward/skills/` |
+| 11 | agents | `steward/core/agents/` |
+| 12 | skills | `steward/core/skills/` |
 | 13 | rules | `steward/rules/` |
-| 14 | prompts | `steward/orchestrators/` |
+| 14 | prompts | `steward/core/orchestrators/` |
 | 99 | archive | `docs/plans/archive/` |
 
 **Phase 0:** 物理移行なし。`data/` と `src/` は維持。
@@ -87,16 +87,16 @@ flowchart TB
 
 | Agent | 日本語 | 定義 | 要約出力先 |
 |-------|--------|------|-----------|
-| Executive Steward | 経営統括 | [steward/agents/executive_steward_agent.md](../steward/agents/executive_steward_agent.md) | `docs/reports/` · `executive-notes/` |
-| Secretary | 秘書 | [steward/agents/secretary_agent.md](../steward/agents/secretary_agent.md) | `docs/executive/` |
-| Finance | 財務・計画 | [steward/agents/finance_agent.md](../steward/agents/finance_agent.md) | `agent-summaries/finance/` |
-| Contract | 契約管理 | [steward/agents/contract_agent.md](../steward/agents/contract_agent.md) | `agent-summaries/contract/` |
+| Executive Steward | 経営統括 | [steward/core/agents/executive_steward_agent.md](../steward/core/agents/executive_steward_agent.md) | `docs/reports/` · `executive-notes/` |
+| Secretary | 秘書 | [steward/core/agents/secretary_agent.md](../steward/core/agents/secretary_agent.md) | `docs/executive/` |
+| Finance | 財務・計画 | [steward/core/agents/finance_agent.md](../steward/core/agents/finance_agent.md) | `agent-summaries/finance/` |
+| Contract | 契約管理 | [steward/core/agents/contract_agent.md](../steward/core/agents/contract_agent.md) | `agent-summaries/contract/` |
 | Property Rental | 賃貸モジュール | [steward/modules/rental/agent.md](../modules/rental/agent.md) | `modules.yaml` → summary_dir |
 | Hospitality | 宿泊モジュール | [steward/modules/hospitality/agent.md](../modules/hospitality/agent.md) | `modules.yaml` → summary_dir |
-| Compliance | コンプライアンス | [steward/agents/compliance_agent.md](../steward/agents/compliance_agent.md) | `agent-summaries/compliance/` |
-| Operations | 業務運用 | [steward/agents/operations_agent.md](../steward/agents/operations_agent.md) | `agent-summaries/operations/` |
+| Compliance | コンプライアンス | [steward/core/agents/compliance_agent.md](../steward/core/agents/compliance_agent.md) | `agent-summaries/compliance/` |
+| Operations | 業務運用 | [steward/core/agents/operations_agent.md](../steward/core/agents/operations_agent.md) | `agent-summaries/operations/` |
 
-索引: [steward/agents/00-このフォルダについて.md](../steward/agents/00-このフォルダについて.md)
+索引: [steward/core/agents/00-このフォルダについて.md](../steward/core/agents/00-このフォルダについて.md)
 
 ---
 
@@ -104,20 +104,21 @@ flowchart TB
 
 | Skill | 定義 | 主 Agent |
 |-------|------|---------|
-| executive_dashboard | [steward/skills/executive_dashboard.md](../steward/skills/executive_dashboard.md) | Executive Steward |
-| schedule_management | [steward/skills/schedule_management.md](../steward/skills/schedule_management.md) | Secretary |
-| one_on_one_prep | [steward/skills/one_on_one_prep.md](../steward/skills/one_on_one_prep.md) | Secretary |
-| external_correspondence | [steward/skills/external_correspondence.md](../steward/skills/external_correspondence.md) | Secretary |
-| monthly_close | [steward/skills/monthly_close.md](../steward/skills/monthly_close.md) | Finance |
-| cashflow_forecast | [steward/skills/cashflow_forecast.md](../steward/skills/cashflow_forecast.md) | Finance |
-| contract_register | [steward/skills/contract_register.md](../steward/skills/contract_register.md) | Contract · Operations |
-| contract_expiry_check | [steward/skills/contract_expiry_check.md](../steward/skills/contract_expiry_check.md) | Contract |
+| executive_dashboard | [steward/core/skills/executive_dashboard.md](../steward/core/skills/executive_dashboard.md) | Executive Steward |
+| schedule_management | [steward/core/skills/schedule_management.md](../steward/core/skills/schedule_management.md) | Secretary |
+| one_on_one_prep | [steward/core/skills/one_on_one_prep.md](../steward/core/skills/one_on_one_prep.md) | Secretary |
+| external_correspondence | [steward/core/skills/external_correspondence.md](../steward/core/skills/external_correspondence.md) | Secretary |
+| travel_booking | [steward/core/skills/travel_booking.md](../steward/core/skills/travel_booking.md) | Operations |
+| monthly_close | [steward/core/skills/monthly_close.md](../steward/core/skills/monthly_close.md) | Finance |
+| cashflow_forecast | [steward/core/skills/cashflow_forecast.md](../steward/core/skills/cashflow_forecast.md) | Finance |
+| contract_register | [steward/core/skills/contract_register.md](../steward/core/skills/contract_register.md) | Contract · Operations |
+| contract_expiry_check | [steward/core/skills/contract_expiry_check.md](../steward/core/skills/contract_expiry_check.md) | Contract |
 | noi_analysis | [steward/modules/rental/skills/noi_analysis.md](../modules/rental/skills/noi_analysis.md) | Rental Module |
 | revpar_analysis | [steward/modules/hospitality/skills/revpar_analysis.md](../modules/hospitality/skills/revpar_analysis.md) | Hospitality Module |
-| capex_planning | [steward/skills/capex_planning.md](../steward/skills/capex_planning.md) | Finance |
-| permit_expiry_check | [steward/skills/permit_expiry_check.md](../steward/skills/permit_expiry_check.md) | Compliance |
+| capex_planning | [steward/core/skills/capex_planning.md](../steward/core/skills/capex_planning.md) | Finance |
+| permit_expiry_check | [steward/core/skills/permit_expiry_check.md](../steward/core/skills/permit_expiry_check.md) | Compliance |
 
-追加 Skill は [steward/skills/](../steward/skills/00-このフォルダについて.md) に随時追加。
+追加 Skill は [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md) に随時追加。
 
 ---
 
@@ -132,13 +133,13 @@ flowchart TB
 | `steward alerts` | contract_expiry_check · permit_expiry_check |
 | `steward io *` | contract_register（归档） |
 
-実装: `src/commands/` · 定義: `steward/skills/`
+実装: `src/commands/` · 定義: `steward/core/skills/`
 
 ---
 
 ## 横断タスク
 
-事業計画分解等の **Orchestrator プロンプト** は Agent ではなく [steward/orchestrators/](../steward/orchestrators/00-このフォルダについて.md)。Executive が委譲する。
+事業計画分解等の **Orchestrator プロンプト** は Agent ではなく [steward/core/orchestrators/](../steward/core/orchestrators/00-このフォルダについて.md)。Executive が委譲する。
 
 ---
 

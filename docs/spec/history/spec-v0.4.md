@@ -1,3 +1,5 @@
+> **履歴アーカイブ — 正本は [docs/spec.md](../../spec.md)。** 本書は凍結コピー。
+
 # Steward OS — Specification v0.4
 
 > **正本:** 本ドキュメント（骨格 v2 · 100%）。v0.3 は [spec-v0.3.md](spec-v0.3.md)（履歴）。

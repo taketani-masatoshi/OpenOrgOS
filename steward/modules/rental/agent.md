@@ -6,7 +6,7 @@
 **テナント:** `modules.yaml` で `agent: rental` · `enabled: true` · 物件名は `rules/company_context.md` を正とする。  
 **例示（架空）:** 株式会社サンプル商事 · PROP-001 みなとビル501
 
-**コア Agent 索引:** [steward/agents/00-このフォルダについて.md](../agents/00-このフォルダについて.md)
+**コア Agent 索引:** [steward/core/agents/00-このフォルダについて.md](../core/agents/00-このフォルダについて.md)
 
 ---
 
@@ -31,7 +31,7 @@
 | Skill | ファイル |
 |-------|---------|
 | noi_analysis | [skills/noi_analysis.md](skills/noi_analysis.md) |
-| contract_expiry_check | [../skills/contract_expiry_check.md](../skills/contract_expiry_check.md) |
+| contract_expiry_check | [../core/skills/contract_expiry_check.md](../core/skills/contract_expiry_check.md) |
 
 ## 要約出力先
 

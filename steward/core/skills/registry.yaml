@@ -30,13 +30,6 @@ skills:
     agent: Finance
     description: 予実 vs 月次 YAML 差異
 
-  - id: operations_records
-    file: operations_records.md
-    runtime: cli
-    cli_command: records-check
-    agent: Operations
-    description: 宿泊 · 清掃 · クレーム記録
-
   - id: p0_closing
     file: p0_closing.md
     runtime: cli
@@ -53,9 +46,10 @@ skills:
 
   - id: executive_dashboard
     file: executive_dashboard.md
-    runtime: cursor-only
+    runtime: cli
+    cli_command: dashboard
     agent: Executive Steward
-    description: 経営ダッシュボード — pipeline/dashboard CLI で代替
+    description: 経営ダッシュボード — pipeline/dashboard CLI
 
   - id: tax_filing_prep
     file: tax_filing_prep.md
@@ -65,7 +59,8 @@ skills:
 
   - id: cashflow_forecast
     file: cashflow_forecast.md
-    runtime: cursor-only
+    runtime: cli
+    cli_command: forecast
     agent: Finance
     description: CF 予測
 
@@ -75,18 +70,6 @@ skills:
     agent: Contract
     description: 契約台帳整備
 
-  - id: noi_analysis
-    file: noi_analysis.md
-    runtime: cursor-only
-    agent: Property Rental
-    description: NOI 分析
-
-  - id: revpar_analysis
-    file: revpar_analysis.md
-    runtime: cursor-only
-    agent: Hospitality
-    description: RevPAR 分析
-
   - id: capex_planning
     file: capex_planning.md
     runtime: cursor-only
@@ -95,13 +78,15 @@ skills:
 
   - id: schedule_management
     file: schedule_management.md
-    runtime: cursor-only
+    runtime: cli
+    cli_command: schedule
     agent: Secretary
     description: スケジュール管理
 
   - id: one_on_one_prep
     file: one_on_one_prep.md
-    runtime: cursor-only
+    runtime: cli
+    cli_command: one-on-one
     agent: Secretary
     description: 1-on-1 準備
 

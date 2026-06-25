@@ -1,0 +1,35 @@
+id: ZZ
+version: "0.0.1"
+contract_version: 1
+tier: stub
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/community
+repository: https://github.com/steward-os/jurisdiction-stub
+license: MIT
+
+name: Stub Jurisdiction
+default_entity_form: corporation
+default_currency: USD
+locale: en-US
+default_display_language: en
+legal_system:
+  ja: スタブ法域（コミュニティ拡張待ち）
+  en: Stub jurisdiction (community pack pending)
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-ZZ-001
+  board: REG-ZZ-002
+  shareholder: REG-ZZ-003
+  approval: REG-ZZ-004
+  expense: REG-ZZ-005
+  conflict: REG-ZZ-006
+  document: REG-ZZ-007
+  travel: REG-ZZ-008
+
+notes: 共有スタブ — tier stub の全法域が参照 · 専門家 pack で置換

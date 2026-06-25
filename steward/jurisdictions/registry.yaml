@@ -1,0 +1,28 @@
+# Jurisdiction Pack 索引 — 正本は countries.yaml
+# ISO 3166-1 alpha-2 · tier full の pack_root のみ列挙（stub は _stub 共有）
+
+packs:
+  JP:
+    pack_root: steward/jurisdiction-packs/JP
+  US:
+    pack_root: steward/jurisdiction-packs/US
+  SG:
+    pack_root: steward/jurisdiction-packs/SG
+  EE:
+    pack_root: steward/jurisdiction-packs/EE
+  HK:
+    pack_root: steward/jurisdiction-packs/HK
+  AU:
+    pack_root: steward/jurisdiction-packs/AU
+  TW:
+    pack_root: steward/jurisdiction-packs/TW
+  MY:
+    pack_root: steward/jurisdiction-packs/MY
+  CN:
+    pack_root: steward/jurisdiction-packs/CN
+  AE:
+    pack_root: steward/jurisdiction-packs/AE
+  RU:
+    pack_root: steward/jurisdiction-packs/RU
+  EU:
+    pack_root: steward/jurisdiction-packs/EU

@@ -1,23 +1,14 @@
 import { z } from "zod";
+import { CORE_BUSINESS_MODULE_IDS } from "./modules/core-ids.js";
+import { JP_PACK_MODULE_IDS } from "./modules/pack-ids.js";
 
-/** Catalog ids under steward/modules/{id}/ — extend when adding modules. */
-export const moduleAgentId = z.enum([
-  "rental",
-  "hospitality",
-  "professional_services",
-  "venture_capital",
-  "saas_subscription",
-  "event_space",
-  "ecommerce",
-  "restaurant",
-  "retail_store",
-  "clinic",
-  "logistics",
-  "staffing",
-  "construction",
-  "education",
-  "membership",
-]);
+export { CORE_BUSINESS_MODULE_IDS, type CoreBusinessModuleId } from "./modules/core-ids.js";
+export { JP_PACK_MODULE_IDS, type JpPackModuleId } from "./modules/pack-ids.js";
+
+const ALL_MODULE_IDS = [...CORE_BUSINESS_MODULE_IDS, ...JP_PACK_MODULE_IDS] as const;
+
+/** Catalog ids under steward/modules/{id}/ or jurisdiction-packs/.../modules/{id}/ */
+export const moduleAgentId = z.enum(ALL_MODULE_IDS);
 
 export const moduleBillingSchema = z.object({
   docs_base: z.string(),
@@ -47,7 +38,7 @@ export const modulesFileSchema = z.object({
   modules: z.array(tenantModuleSchema).min(1),
 });
 
-export type ModuleBilling = z.infer<typeof moduleBillingSchema>;
-export type ModuleAgentId = z.infer<typeof moduleAgentId>;
-export type TenantModule = z.infer<typeof tenantModuleSchema>;
-export type ModulesFile = z.infer<typeof modulesFileSchema>;
+export type ModuleBilling = z.output<typeof moduleBillingSchema>;
+export type ModuleAgentId = z.output<typeof moduleAgentId>;
+export type TenantModule = z.output<typeof tenantModuleSchema>;
+export type ModulesFile = z.output<typeof modulesFileSchema>;

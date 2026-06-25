@@ -98,5 +98,5 @@ npm run steward -- migrate yojitsu --fy FY2026 --write
 ## 関連スキーマ
 
 - `schemas/finance.ts` — `yojitsuLineSchema`, `yojitsuPlanSchema`
-- [spec-v0.3.md](../spec-v0.3.md) — Steward OS 全体仕様（正本）
+- [spec.md](../spec.md) — Steward OS 全体仕様（正本）
 - [yojitsu v2](spec/yojitsu-v2.md) — 予実 `lines[]` スキーマ

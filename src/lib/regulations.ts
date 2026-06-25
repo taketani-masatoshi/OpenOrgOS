@@ -9,24 +9,16 @@ import {
   tenantRegulationsFileSchema,
   type TenantRegulationEntry,
 } from "../../schemas/tenant-regulations.js";
+import {
+  getRegulationsCatalogPath,
+  getRegulationTemplateAbsPath,
+  getRegulationTemplateRelPath,
+} from "./jurisdiction.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
 import { loadModulesFile } from "./modules.js";
-import { getTenantDir, ROOT_DIR, tenantDocsPath, loadTenantConfig } from "./tenant.js";
+import { getTenantDir, tenantDocsPath, loadTenantConfig } from "./tenant.js";
 import { readYamlFile } from "./utils.js";
 
-export const REGULATIONS_CATALOG_PATH = join(
-  ROOT_DIR,
-  "steward",
-  "standards",
-  "regulations",
-  "catalog.yaml"
-);
-export const STEWARD_REGULATIONS_DIR = join(
-  ROOT_DIR,
-  "steward",
-  "standards",
-  "regulations"
-);
 export const REGULATIONS_FILE = "regulations.yaml";
 export const TENANT_REGULATIONS_SUBDIR = "company/regulations";
 
@@ -35,10 +27,11 @@ export function regulationsFilePath(): string {
 }
 
 export function loadRegulationsCatalog() {
-  if (!existsSync(REGULATIONS_CATALOG_PATH)) {
+  const path = getRegulationsCatalogPath();
+  if (!existsSync(path)) {
     return { regulations: [] as CatalogRegulation[] };
   }
-  return readYamlFile(REGULATIONS_CATALOG_PATH, regulationsCatalogSchema);
+  return readYamlFile(path, regulationsCatalogSchema);
 }
 
 export function loadTenantRegulationsFile() {
@@ -110,7 +103,7 @@ export function listEffectiveRegulations(): EffectiveRegulation[] {
       effective,
       catalog: cat,
       tenantDocPath: `docs/company/regulations/${cat.tenant_doc}`,
-      templatePath: join("steward/standards/regulations", cat.template),
+      templatePath: getRegulationTemplateRelPath(cat.template),
       blockReason,
     };
   });
@@ -162,17 +155,17 @@ export function validateRegulations(): RegulationValidationIssue[] {
     if (!catalogIds.has(entry.id)) {
       issues.push({
         file: logicalFile,
-        message: `regulation "${entry.id}" not in catalog (steward/standards/regulations/catalog.yaml)`,
+        message: `regulation "${entry.id}" not in catalog (${getRegulationsCatalogPath()})`,
       });
       continue;
     }
 
     const cat = getCatalogRegulation(entry.id)!;
-    const templateAbs = join(STEWARD_REGULATIONS_DIR, cat.template);
+    const templateAbs = getRegulationTemplateAbsPath(cat.template);
     if (!existsSync(templateAbs)) {
       issues.push({
         file: logicalFile,
-        message: `missing template: steward/standards/regulations/${cat.template}`,
+        message: `missing template: ${getRegulationTemplateRelPath(cat.template)}`,
       });
     }
 
@@ -241,7 +234,7 @@ export function seedRegulationDocs(
   for (const reg of effective) {
     if (!targetIds.has(reg.id)) continue;
     const cat = reg.catalog;
-    const templateAbs = join(STEWARD_REGULATIONS_DIR, cat.template);
+    const templateAbs = getRegulationTemplateAbsPath(cat.template);
     const docAbs = tenantDocsPath(TENANT_REGULATIONS_SUBDIR, cat.tenant_doc);
 
     if (!existsSync(templateAbs)) {

@@ -9,6 +9,8 @@ import {
   regenerateWorkOrderPrompts,
   runEscalation,
 } from "../lib/escalate.js";
+import { mergeWorkOrderResults, registerWorkOrderResult } from "../lib/work-order-merge.js";
+import { formatSecretaryRelayBlock } from "../lib/secretary-relay.js";
 import { loadHandoff } from "../lib/routing.js";
 import { setTenantId } from "../lib/tenant.js";
 
@@ -146,7 +148,28 @@ export interface EscalateCompleteOptions {
 }
 
 export function runEscalateComplete(opts: EscalateCompleteOptions): void {
-  const updated = completeWorkOrder(opts.id, opts.notes);
+  if (opts.notes) {
+    registerWorkOrderResult(opts.id, opts.notes, opts.notes);
+  } else {
+    completeWorkOrder(opts.id);
+  }
   console.log(`✓ ${opts.id} → completed`);
-  if (updated.completion_notes) console.log(`  notes: ${updated.completion_notes}`);
+  if (opts.notes) console.log(`  notes: ${opts.notes}`);
+}
+
+export interface EscalateMergeOptions {
+  id: string;
+  output?: string;
+  autoComplete?: boolean;
+}
+
+export function runEscalateMerge(opts: EscalateMergeOptions): void {
+  const { path, content } = mergeWorkOrderResults({
+    id: opts.id,
+    output: opts.output,
+    autoCompleteParent: opts.autoComplete,
+  });
+  console.log(`✓ ${path}`);
+  console.log("\n" + content.split("\n").slice(0, 15).join("\n") + "\n…");
+  console.log("\n" + formatSecretaryRelayBlock(content, path));
 }

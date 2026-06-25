@@ -1,4 +1,6 @@
-import { addMonths, parseMonth } from "./utils.js";
+import { addMonths, parseMonth, formatJapaneseDate } from "./utils.js";
+
+export { formatJapaneseDate };
 
 /** ISO date (YYYY-MM-DD) for the last calendar day of a billing month. */
 export function billingMonthEndDate(billingMonth: string): string {
@@ -10,11 +12,6 @@ export function billingMonthEndDate(billingMonth: string): string {
 /** Payment due: last day of the month after the billing month (翌月末). */
 export function paymentDueDate(billingMonth: string): string {
   return billingMonthEndDate(addMonths(billingMonth, 1));
-}
-
-export function formatJapaneseDate(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return `${y}年${m}月${d}日`;
 }
 
 export function formatJapaneseYearMonth(billingMonth: string): string {

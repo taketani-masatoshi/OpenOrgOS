@@ -1,0 +1,6 @@
+skills:
+  - id: saas_subscription_ops
+    file: saas_subscription_ops.md
+    runtime: cursor-only
+    agent: Operations
+    description: saas_subscription module operations checklist

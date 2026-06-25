@@ -53,6 +53,6 @@
 
 - [annual-checklist.md](annual-checklist.md)
 - [operations/00-このフォルダについて.md](00-このフォルダについて.md)
-- [`property_rental_agent.md`](../../../../steward/agents/property_rental_agent.md)
+- [`property_rental_agent.md`](../../../../steward/core/agents/property_rental_agent.md)
 
 *最終更新: 2026年6月*

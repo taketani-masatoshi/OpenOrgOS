@@ -46,4 +46,4 @@ readiness: **production_ready** · `modules check hospitality` で production se
 ## 関連
 
 - [invoice.md](invoice.md)
-- [spec-v0.5.md](../spec-v0.5.md)
+- [spec.md](../spec.md)（仕様正本）

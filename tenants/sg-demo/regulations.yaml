@@ -1,0 +1,17 @@
+regulations:
+  - id: REG-SG-001
+    enabled: true
+  - id: REG-SG-002
+    enabled: true
+  - id: REG-SG-003
+    enabled: true
+  - id: REG-SG-004
+    enabled: true
+  - id: REG-SG-005
+    enabled: true
+  - id: REG-SG-006
+    enabled: true
+  - id: REG-SG-007
+    enabled: true
+  - id: REG-SG-008
+    enabled: true

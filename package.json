@@ -1,7 +1,7 @@
 {
   "name": "steward-os",
-  "version": "0.2.0",
-  "description": "Steward OS - Property Business Edition",
+  "version": "0.8.0",
+  "description": "Steward OS - tenant-separated management support framework",
   "type": "module",
   "bin": {
     "steward": "./src/cli.ts"
@@ -10,8 +10,9 @@
     "steward": "node --import tsx src/cli.ts",
     "validate": "node --import tsx src/cli.ts validate",
     "validate:demo": "node --import tsx src/cli.ts --tenant demo validate",
-    "check": "npm run validate && npm run steward -- --tenant demo validate && npm run steward -- --tenant acme validate && npm run steward -- modules check --all && npm run steward -- classification check",
+    "check": "npm run validate && npm run steward -- --tenant demo validate && npm run steward -- --tenant acme validate && npm run steward -- --tenant us-demo validate && npm run steward -- --tenant sg-demo validate && npm run steward -- --tenant ee-demo validate && npm run steward -- --tenant hk-demo validate && npm run steward -- --tenant au-demo validate && npm run steward -- --tenant tw-demo validate && npm run steward -- --tenant my-demo validate && npm run steward -- --tenant cn-demo validate && npm run steward -- --tenant ae-demo validate && npm run steward -- --tenant ru-demo validate && npm run steward -- --tenant eu-demo validate && npm run steward -- modules check --all && npm run steward -- classification check",
     "daily": "npm run check && npm run steward -- pipeline run daily",
+    "weekly": "npm run check && npm run steward -- pipeline run weekly",
     "test": "vitest run",
     "test:watch": "vitest"
   },

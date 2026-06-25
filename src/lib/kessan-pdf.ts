@@ -20,12 +20,7 @@ import {
   writePdfToFile,
   type PdfTableRow,
 } from "./pdf.js";
-import { ensureReportsDir } from "./utils.js";
-
-function formatJapaneseDate(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return `${y}年${m}月${d}日`;
-}
+import { ensurePdfOutputDir, formatJapaneseDate } from "./utils.js";
 
 export interface KessanReportInput {
   company: Company;
@@ -123,7 +118,7 @@ export async function generateKessanPdf(
   const path =
     outputPath ??
     join(
-      ensureReportsDir("kessan"),
+      ensurePdfOutputDir("kessan"),
       `${fiscalYear}-kessan-hokoku.pdf`
     );
 
@@ -132,7 +127,7 @@ export async function generateKessanPdf(
   pdfTitle(w, "決　算　報　告　書");
   pdfMetaBlock(w, [
     { label: "商号", value: company.name },
-    { label: "本店", value: company.address },
+    { label: "本店", value: company.address ?? "" },
     { label: "事業年度", value: `第${termNumber}期（${periodLabel}）` },
   ]);
 

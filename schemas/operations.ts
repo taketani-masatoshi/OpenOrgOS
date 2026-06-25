@@ -42,7 +42,7 @@ export const facilityPublicSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type FacilityPublic = z.infer<typeof facilityPublicSchema>;
+export type FacilityPublic = z.output<typeof facilityPublicSchema>;
 
 export const facilitySecretsSchema = z.object({
   smart_lock_code: z.string().min(1),
@@ -62,4 +62,4 @@ export const facilitySecretsSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type FacilitySecrets = z.infer<typeof facilitySecretsSchema>;
+export type FacilitySecrets = z.output<typeof facilitySecretsSchema>;

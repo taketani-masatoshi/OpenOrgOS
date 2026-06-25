@@ -47,6 +47,15 @@ modules:
     agent: ecommerce
     data_root: data/ecommerce/
     summary_dir: agent-summaries/ecommerce/
+    billing:
+      PROP-901:
+        docs_base: docs/finance/accounting/invoices/ecommerce-demo
+        invoice_number_prefix: ECDEMO
+        template_id: ecommerce-monthly
+        sender_email: billing@example.com
+        tenant_name: "[EC 顧客名 TBD]"
+        tenant_email: "[送付先メール TBD]"
+        bank_account: "[振込先口座 TBD]"
 
   - id: restaurant
     enabled: false

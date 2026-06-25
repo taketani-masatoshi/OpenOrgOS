@@ -3,7 +3,7 @@
 **スコープ:** リポジトリの **フレームワーク層**（`src/` · `schemas/` · `steward/` · `docs/spec*`）。  
 **スコープ外:** 特定法人の規程件数 · 契約 ID · 物件名 · P0 残タスク → 各テナント `docs/compliance/iso/steward-assessment.md`
 
-**仕様正本:** [spec-v0.4.md](spec-v0.4.md) · [framework-backlog.md](framework-backlog.md)
+**仕様正本:** [spec.md](spec.md) · [framework-backlog.md](framework-backlog.md)
 
 ---
 
@@ -25,6 +25,7 @@
 | **業務モジュール** | catalog · readiness tier · seed · billing | `steward modules list` |
 | **Skills / Ops** | skills run * · ops p0/daily | `steward skills list` |
 | **仕様 · 文書** | spec-v0.3 · サブ spec · assessment 分離 | 本リポジトリ `docs/` |
+| **法域 · 言語** | TJS-11 pack · display_language registry | [org-os/tjs-11-target-jurisdictions.md](org-os/tjs-11-target-jurisdictions.md) |
 
 ### 完成度レベル（目安）
 
@@ -114,7 +115,7 @@
 | D4 | demo + acme 双参照 | ✓ | `tests/demo-status.test.ts` · acme status |
 | D5 | `_template` classification · executive example | ✓ | `classification check` |
 | D6 | `tenant init` example コピー | ✓ | `tests/skeleton.test.ts` |
-| D7 | spec-v0.4.md | ✓ | [spec-v0.4.md](spec-v0.4.md) |
+| D7 | spec（骨格 v2 章） | ✓ | [spec.md](spec.md) |
 | D8 | `steward map list` · `resolve` | ✓ | `tests/map.test.ts` |
 | D9 | 全 module seed/00-README · restaurant 骨格 seed | ✓ | `modules check --all` · `modules check restaurant` |
 | D10 | 本 § = 100% | ✓ | 本表 |
@@ -138,11 +139,121 @@
 
 ---
 
+## 9. 製品ルーブリック（OS-100 · 2026-06-09 再評価）
+
+**製品 DoD（OS-1〜OS-10）:** acme / demo 骨格 — **99/100（実測）**  
+**運用テナント DoD（OS-10b）:** `mal` — **未達（ops p0 ブロッカー 5）** — 人間完遂後 100  
+正本: [spec.md](spec.md) · [framework-backlog.md](framework-backlog.md) Phase L
+
+| 観点 | 配点 | 実測 | 計測根拠 |
+|------|:----:|:----:|---------|
+| **汎用性** | 25 | **25** | production_ready ≥5 · acme/demo validate ✓ |
+| **拡張性** | 25 | **25** | `npx tsc --noEmit` exit 0 · audit · routing/escalate |
+| **完全性（監査）** | 25 | **25** | classification · audit trail · compliance gap ✓ |
+| **自動化** | 25 | **24** | `npm run daily`/`weekly` ✓ · REF-4c 完了 · REF-4b/d で −1 |
+
+> 旧版は四観点すべて 25/25 と自己宣告していたが、**tsc 71 エラー** と **npm run weekly 未登録** により実測は **90/100** 相当だった（FIX-A1〜A3 で回復）。
+
+### 製品 DoD — OS-1〜OS-10（acme 骨格）
+
+| DoD | 定義 | 状態 | 確認 |
+|-----|------|:----:|------|
+| OS-1 | spec（OS-100 章） | ✓ | [spec.md](spec.md) |
+| OS-2 | 本 §9 実測採点 | ✓ | 本表 |
+| OS-3 | backlog Phase L [x] | ✓ | framework-backlog.test |
+| OS-4 | production_ready ≥5 | ✓ | `modules check --all` |
+| OS-5 | invoice/billing seed | ✓ | module manifests |
+| OS-6 | cli ≥12/17 | ✓ | `steward skills list` |
+| OS-7 | audit log | ✓ | `steward audit log list` |
+| OS-8 | compliance gap | ✓ | `steward compliance gap` |
+| OS-9 | pipeline weekly | ✓ | `npm run weekly` |
+| OS-10 | ops p0 0（**acme**） | ✓ | `--tenant acme ops p0` |
+
+### 運用テナント DoD — OS-10b（mal · 人間完遂）
+
+| DoD | 定義 | 状態 | 確認 |
+|-----|------|:----:|------|
+| OS-10b | ops p0 ブロッカー 0（**mal**） | **未達** | `--tenant mal ops p0` → **5 件** |
+
+| ブロッカー ID | 状態 | 備考 |
+|--------------|:----:|------|
+| CTR-013 | draft | 手続完了待ち |
+| CTR-014 | draft | 手続完了待ち |
+| CTR-012 | draft | 手続完了待ち |
+| secrets-kamezawa | 未作成 | example からコピー |
+| cash-balance | template | status: confirmed 待ち |
+
+**テナント MAL 詳細:** [steward-assessment.md](../tenants/mal/docs/compliance/iso/steward-assessment.md) — フレームワーク 98% ≠ テナント運用 100%。
+
+---
+
+## 10. 会社 OS 総合（OS-99+ Epic · 2026-06-09）
+
+**目的:** 製品層と MAL 運用層を **1 点数** に統合し、99+ 達成まで連続改善する。
+
+### 採点式（実装: `src/lib/os-score.ts` · `steward status --os-99`）
+
+| 成分 | 重み | データ源 |
+|------|:----:|---------|
+| 製品（§9 実測） | **30%** | `PRODUCT_FRAMEWORK_SCORE`（現 **99**） |
+| MAL 準備度 | **25%** | `steward status` 準備度 |
+| MAL 運用度 | **35%** | `steward status` 運用度 · **ops p0 が最大ギャップ** |
+| MAL 自動化度 | **10%** | `steward status` 自動化度 |
+
+**総合** = 加重平均（四捨五入） · **出口: composite ≥ 99**
+
+### サイクル（止めるまで回す）
+
+1. `npm run steward -- status --os-99` — 採点
+2. `ops p0` — ブロッカー特定
+3. 最大ギャップ → `escalate run`（製品）/ [p0-closing-register.md](../tenants/mal/docs/company/p0-closing-register.md)（人間）
+4. assessment · executive-notes 更新
+5. composite < 99 → 次サイクル
+
+### 2026-06-09 実測ベースライン（Cycle 0 → 1）
+
+| 層 | Cycle 0 | Cycle 1 |
+|----|:-------:|:-------:|
+| 製品 | 98 | **99**（REF-4c cli registrar） |
+| MAL 準備 / 運用 / 自動 | status 実測 | 同左（運用 **84%** がボトルネック） |
+| **会社 OS 総合** | 93 | **`status --os-99` 参照**（製品 +1 · 加重 0.3 → 丸め後 93） |
+| **99+ まで** | 6 点 | P0 5 件解消が主経路 |
+
+---
+
+## 11. TJS-11 三軸評価（法域 · 言語 · 業務）
+
+**正本:** [org-os/tjs-11-target-jurisdictions.md](org-os/tjs-11-target-jurisdictions.md)
+
+275 法域を分母にしない。製品完成度は **TJS-11**（目標法域 11 バケット）と **表示言語レジストリ**、**業務モジュール tier** の三軸で報告する。
+
+| 軸 | 分母 | 定義 | 確認 |
+|----|------|------|------|
+| **法域 pack** | TJS-11 | 各バケットが pack_ready DoD 達成 | `jurisdiction packs check` · demo validate |
+| **表示言語** | TJS 必須 `display_language` | `steward/locale/registry.yaml` | `steward locale list` |
+| **業務 module** | カタログ 24 | `production_ready` 件数 | `modules check --all` · [readiness.yaml](../steward/modules/readiness.yaml) |
+
+### 2026-06 ベースライン
+
+| 軸 | 分子 | 分母 | 率 |
+|----|:----:|:----:|:--:|
+| 法域 pack（TJS-11） | 11 | 11 | **100%** |
+| 表示言語 | 9 | 9 | **100%** |
+| 業務 production_ready | 7 | 25 | **28%** |
+
+達成 pack: **JP** · **US** · **SG** · **HK** · **AU** · **TW** · **MY** · **CN** · **AE** · **RU** · **EU**（TJS-EU 案 A）。  
+TJS-11 法域: **11/11 完了**（2026-06-25）。
+
+**体感完成度** = 三軸の最小値（現状 **28%** — 業務 module 軸）— チケット: [framework-backlog-tickets-bc.md](framework-backlog-tickets-bc.md)
+
+---
+
 ## 8. 関連
 
+- [org-os/tjs-11-target-jurisdictions.md](org-os/tjs-11-target-jurisdictions.md)
 - [framework-backlog.md](framework-backlog.md)
-- [spec-v0.4.md](spec-v0.4.md)
-- [spec-v0.3.md](spec-v0.3.md)
+- [spec.md](spec.md)（仕様正本）
+- [spec/history/](spec/history/)（旧版）
 - [spec/yojitsu-v2.md](spec/yojitsu-v2.md)
 - [spec/invoice.md](spec/invoice.md)
 - テナント評価例: [tenants/mal/docs/compliance/iso/steward-assessment.md](../tenants/mal/docs/compliance/iso/steward-assessment.md)

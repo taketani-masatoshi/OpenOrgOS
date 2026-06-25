@@ -8,9 +8,14 @@ import { runAlerts } from "./alerts.js";
 import { runOpsP0, runOpsDaily } from "./ops.js";
 import { runPermitExpiryCheck, formatPermitCheckReport } from "../lib/permit-check.js";
 import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
-import { checkOperationsRecords, formatRecordsCheck } from "../lib/records-check.js";
+import { resolveModuleSkillHandler } from "../lib/module-cli.js";
 import { loadMonthlyFinance } from "../lib/data.js";
-import { currentDate, writeMarkdownReport } from "../lib/utils.js";
+import { runDashboard } from "./dashboard.js";
+import { runForecast } from "./forecast.js";
+import { currentDate, readYamlFile, writeMarkdownReport, EXECUTIVE_DIR } from "../lib/utils.js";
+import { join } from "node:path";
+import { existsSync } from "node:fs";
+import { calendarFileSchema, oneOnOnesFileSchema } from "../../schemas/executive.js";
 
 export const SKILL_COMMANDS = [
   {
@@ -55,6 +60,36 @@ export const SKILL_COMMANDS = [
     agent: "Executive",
     description: "日次運用（成熟度 + P0 + 契約）",
   },
+  {
+    id: "dashboard",
+    skill: "executive_dashboard",
+    agent: "Executive Steward",
+    description: "経営ダッシュボード + Agent 要約",
+  },
+  {
+    id: "forecast",
+    skill: "cashflow_forecast",
+    agent: "Finance",
+    description: "キャッシュフロー予測",
+  },
+  {
+    id: "revpar",
+    skill: "revpar_analysis",
+    agent: "Hospitality",
+    description: "宿泊 RevPAR 要約（hospitality モジュール）",
+  },
+  {
+    id: "schedule",
+    skill: "schedule_management",
+    agent: "Secretary",
+    description: "社長カレンダー件数サマリ",
+  },
+  {
+    id: "one-on-one",
+    skill: "one_on_one_prep",
+    agent: "Secretary",
+    description: "1-on-1 レジストリサマリ",
+  },
 ] as const;
 
 export function runSkillsList(): void {
@@ -64,7 +99,7 @@ export function runSkillsList(): void {
     for (const i of issues) console.warn(`  ${i}`);
   }
 
-  console.log("Skill registry（steward/skills/registry.yaml）:\n");
+  console.log("Skill registry（steward/core/skills/registry.yaml + modules/*/skills/registry.yaml）:\n");
   console.log("| runtime | id | cli | Agent |");
   console.log("|---------|-----|-----|-------|");
   for (const s of loadSkillRegistry()) {
@@ -86,6 +121,12 @@ export interface SkillRunOptions {
 }
 
 export function runSkill(id: string, opts: SkillRunOptions = {}): void {
+  const moduleHandler = resolveModuleSkillHandler(id);
+  if (moduleHandler) {
+    moduleHandler(opts);
+    return;
+  }
+
   const skill = SKILL_COMMANDS.find((s) => s.id === id);
   if (!skill) {
     console.error(`Unknown skill command: ${id}`);
@@ -144,22 +185,38 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
       }
       break;
     }
-    case "records-check": {
-      const r = checkOperationsRecords();
-      const md = formatRecordsCheck(r);
-      if (opts.output) {
-        writeMarkdownReport("agent-summaries/operations", opts.output ?? `records-${currentDate()}.md`, md);
-      } else {
-        console.log(md);
-      }
-      break;
-    }
     case "p0":
       runOpsP0();
       break;
     case "daily":
       runOpsDaily();
       break;
+    case "dashboard":
+      runDashboard({ markdown: opts.markdown ?? true, output: opts.output });
+      break;
+    case "forecast":
+      runForecast({ months: 12, format: opts.markdown ? "markdown" : "text", output: opts.output });
+      break;
+    case "schedule": {
+      const calPath = join(EXECUTIVE_DIR, "calendar.yaml");
+      if (!existsSync(calPath)) {
+        console.log("calendar.yaml なし — example を tenant init でコピー");
+        break;
+      }
+      const cal = readYamlFile(calPath, calendarFileSchema);
+      console.log(`予定 ${cal.events?.length ?? 0} 件 · ${currentDate()}`);
+      break;
+    }
+    case "one-on-one": {
+      const oooPath = join(EXECUTIVE_DIR, "one-on-ones.yaml");
+      if (!existsSync(oooPath)) {
+        console.log("one-on-ones.yaml なし");
+        break;
+      }
+      const ooo = readYamlFile(oooPath, oneOnOnesFileSchema);
+      console.log(`1-on-1 登録 ${ooo.one_on_ones?.length ?? 0} 件`);
+      break;
+    }
     default:
       process.exit(1);
   }

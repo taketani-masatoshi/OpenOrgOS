@@ -26,4 +26,4 @@ export const invoiceTemplateSchema = z.object({
     .optional(),
 });
 
-export type InvoiceTemplate = z.infer<typeof invoiceTemplateSchema>;
+export type InvoiceTemplate = z.output<typeof invoiceTemplateSchema>;

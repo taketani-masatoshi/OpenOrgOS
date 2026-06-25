@@ -65,8 +65,8 @@ export const documentIoSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type InboxItem = z.infer<typeof inboxItemSchema>;
-export type OutboxItem = z.infer<typeof outboxItemSchema>;
-export type DocumentIo = z.infer<typeof documentIoSchema>;
-export type InboxCategory = z.infer<typeof inboxCategory>;
-export type OutboxCategory = z.infer<typeof outboxCategory>;
+export type InboxItem = z.output<typeof inboxItemSchema>;
+export type OutboxItem = z.output<typeof outboxItemSchema>;
+export type DocumentIo = z.output<typeof documentIoSchema>;
+export type InboxCategory = z.output<typeof inboxCategory>;
+export type OutboxCategory = z.output<typeof outboxCategory>;

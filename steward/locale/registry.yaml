@@ -1,0 +1,66 @@
+# 表示言語レジストリ — 法域（jurisdiction）とは独立
+# 正本: steward/locale/registry.yaml · 実装: src/lib/locale.ts
+
+languages:
+  ja:
+    bcp47: ja-JP
+    label:
+      ja: 日本語
+      en: Japanese
+    notes: 既定 · 日本語 UI · Agent 要約
+
+  en:
+    bcp47: en-US
+    label:
+      ja: 英語
+      en: English
+    notes: 国際 · 規程 MD を英語で起草する場合も可
+
+  zh-Hant:
+    bcp47: zh-HK
+    label:
+      ja: 繁体字中国語
+      en: Traditional Chinese
+    notes: 香港 · 台湾向け表示
+
+  zh-Hans:
+    bcp47: zh-CN
+    label:
+      ja: 簡体字中国語
+      en: Simplified Chinese
+    notes: 大陸向け表示
+
+  et:
+    bcp47: et-EE
+    label:
+      ja: エストニア語
+      en: Estonian
+    notes: EE 法域テナント向け
+
+  ms:
+    bcp47: ms-MY
+    label:
+      ja: マレー語
+      en: Malay
+    notes: MY 法域テナント向け · TJS-11 必須
+
+  ar:
+    bcp47: ar-AE
+    label:
+      ja: アラビア語
+      en: Arabic
+    notes: AE 法域テナント向け · TJS-11 必須
+
+  ru:
+    bcp47: ru-RU
+    label:
+      ja: ロシア語
+      en: Russian
+    notes: RU 法域テナント向け · TJS-11 必須
+
+  de:
+    bcp47: de-DE
+    label:
+      ja: ドイツ語
+      en: German
+    notes: TJS-EU Option A · EU subdivisions

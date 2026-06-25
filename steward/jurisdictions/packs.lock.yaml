@@ -1,0 +1,53 @@
+# インストール済み法域パックの pin — tenant / CI が参照
+# 外部化時: source を github:org/repo@tag に差し替え · pack_root を vendor/packs/{code} 等に変更
+version: 1
+
+packs:
+  JP:
+    version: "1.0.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/JP
+  US:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/US
+  SG:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/SG
+  EE:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/EE
+  HK:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/HK
+  AU:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/AU
+  TW:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/TW
+  MY:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/MY
+  CN:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/CN
+  AE:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/AE
+  RU:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/RU
+  EU:
+    version: "0.1.0"
+    source: bundled
+    pack_root: steward/jurisdiction-packs/EU
