@@ -114,7 +114,7 @@ npm run steward -- jurisdiction packs list
 npm run steward -- jurisdiction packs check [JP]
 ```
 
-将来: `jurisdiction packs pin JP --source github:org/repo@v1.2.3`
+将来: `jurisdiction packs pin JP --source github:org/repo@v1.2.3` · `--dry-run`
 
 ---
 

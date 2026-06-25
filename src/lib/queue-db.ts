@@ -7,7 +7,7 @@ import {
   type QueueEventStatus,
 } from "../../schemas/queue.js";
 import { getTenantId } from "./tenant.js";
-import { DOCS_REPORTS_DIR } from "./utils.js";
+import { getDocsReportsDir } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { appendJsonl, loadJsonl, updateJsonlLine } from "./jsonl-store.js";
 
@@ -16,13 +16,13 @@ export const QUEUE_EVENTS_FILE = "events.jsonl";
 export const RESULTS_SUBDIR = "results";
 
 export function queueDir(): string {
-  const dir = join(DOCS_REPORTS_DIR, QUEUE_SUBDIR);
+  const dir = join(getDocsReportsDir(), QUEUE_SUBDIR);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
 export function resultsDir(): string {
-  const dir = join(DOCS_REPORTS_DIR, "routing-queue", RESULTS_SUBDIR);
+  const dir = join(getDocsReportsDir(), "routing-queue", RESULTS_SUBDIR);
   mkdirSync(dir, { recursive: true });
   return dir;
 }

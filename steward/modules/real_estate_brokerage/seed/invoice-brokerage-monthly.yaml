@@ -1,0 +1,12 @@
+id: brokerage-monthly
+module: real_estate_brokerage
+description: 仲介手数料月次請求
+pdf:
+  title: 請 求 書
+  line_label: 仲介手数料
+  line_note: "{year_month} 分"
+  tax_label: 消費税（10%）
+  footer_notes: お振込手数料は貴社にてご負担ください。
+email:
+  subject: "【請求】{year_month} 仲介手数料 — {company_name}"
+  body_template: invoice-brokerage-monthly-body.txt

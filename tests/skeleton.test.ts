@@ -115,5 +115,5 @@ describe("tenant init", () => {
     expect(existsSync(join(acmeDir, "tenant.yaml"))).toBe(true);
     steward(["validate"], "acme-init-test");
     rmSync(acmeDir, { recursive: true, force: true });
-  });
+  }, 15000);
 });

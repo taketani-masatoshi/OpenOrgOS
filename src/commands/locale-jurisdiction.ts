@@ -1,5 +1,6 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 import {
   getCountryEntry,
   getJurisdictionPack,
@@ -168,4 +169,56 @@ export function runJurisdictionPacksCheck(codeArg?: string): void {
   }
 
   if (failed) process.exit(1);
+}
+
+const GITHUB_SOURCE_RE = /^github:([^/]+\/[^@#]+)(?:@([^#]+)|#(.+))?$/;
+
+export function parsePackPinSource(source: string): { source: string; version: string } {
+  if (source === "bundled") {
+    return { source: "bundled", version: "0.1.0" };
+  }
+  const m = source.match(GITHUB_SOURCE_RE);
+  if (!m) {
+    throw new Error(`Invalid --source "${source}" — use bundled or github:org/repo@version`);
+  }
+  const version = m[2] ?? m[3];
+  if (!version) {
+    throw new Error(`GitHub source requires @version or #tag — e.g. github:steward-os/jurisdiction-jp@1.0.0`);
+  }
+  return { source: `github:${m[1]}`, version };
+}
+
+export function runJurisdictionPacksPin(
+  codeArg: string,
+  sourceArg: string,
+  opts: { packRoot?: string; dryRun?: boolean } = {}
+): void {
+  const code = resolveJurisdictionCode(codeArg);
+  getCountryEntry(code);
+  const parsed = parsePackPinSource(sourceArg);
+  const lock = existsSync(JURISDICTION_PACKS_LOCK_PATH)
+    ? readYamlFile(JURISDICTION_PACKS_LOCK_PATH, jurisdictionPacksLockSchema)
+    : { version: 1, packs: {} };
+
+  const prev = lock.packs[code];
+  const packRoot =
+    opts.packRoot ??
+    prev?.pack_root ??
+    getCountryEntry(code).pack_root ??
+    `steward/jurisdiction-packs/${code}`;
+
+  const entry = {
+    version: sourceArg === "bundled" ? (prev?.version ?? parsed.version) : parsed.version,
+    source: parsed.source,
+    pack_root: packRoot,
+  };
+
+  if (opts.dryRun) {
+    console.log(`Would pin ${code}:`, entry);
+    return;
+  }
+
+  lock.packs[code] = entry;
+  writeFileSync(JURISDICTION_PACKS_LOCK_PATH, YAML.stringify(lock));
+  console.log(`✓ Pinned ${code} v${entry.version} · ${entry.source} · ${entry.pack_root}`);
 }

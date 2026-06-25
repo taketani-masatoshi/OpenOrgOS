@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXECUTIVE_DIR, SCRATCH_DIR } from "./utils.js";
+import { getExecutiveDir, SCRATCH_DIR } from "./utils.js";
 
 export const EXECUTIVE_BACKUP_STAMP = join(SCRATCH_DIR, "executive-backup-last.txt");
 
@@ -14,7 +14,7 @@ export function executiveBackupStampAgeDays(): number | null {
 
 export function hasExecutiveLocalData(): boolean {
   return ["calendar.yaml", "tasks.yaml"].some((name) =>
-    existsSync(join(EXECUTIVE_DIR, name))
+    existsSync(join(getExecutiveDir(), name))
   );
 }
 

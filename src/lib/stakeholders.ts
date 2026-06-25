@@ -1,25 +1,20 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { stakeholdersFileSchema, type Stakeholder } from "../../schemas/executive.js";
-import {
-  STAKEHOLDERS_DOCS_DIR,
-  STAKEHOLDERS_YAML,
-  readYamlFile,
-  resolveTenantPath,
-} from "./utils.js";
+import { getStakeholdersDocsDir, getStakeholdersYaml, readYamlFile, resolveTenantPath } from "./utils.js";
 
 export function stakeholdersFileExists(): boolean {
-  return existsSync(STAKEHOLDERS_YAML);
+  return existsSync(getStakeholdersYaml());
 }
 
 export function loadStakeholders() {
   if (!stakeholdersFileExists()) {
     throw new Error(
-      `Stakeholders registry missing: ${STAKEHOLDERS_YAML}. ` +
+      `Stakeholders registry missing: ${getStakeholdersYaml()}. ` +
         "Run: cp data/executive/stakeholders.yaml.example data/executive/stakeholders.yaml"
     );
   }
-  return readYamlFile(STAKEHOLDERS_YAML, stakeholdersFileSchema);
+  return readYamlFile(getStakeholdersYaml(), stakeholdersFileSchema);
 }
 
 export function loadStakeholdersIfExists() {
@@ -45,5 +40,5 @@ export function readStakeholderProfile(stakeholder: Stakeholder): string | null 
 }
 
 export function listStakeholderProfileDir(): string {
-  return STAKEHOLDERS_DOCS_DIR;
+  return getStakeholdersDocsDir();
 }

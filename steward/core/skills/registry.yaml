@@ -53,7 +53,8 @@ skills:
 
   - id: tax_filing_prep
     file: tax_filing_prep.md
-    runtime: cursor-only
+    runtime: cli
+    cli_command: tax-filing-prep
     agent: Finance
     description: 税務申告準備
 
@@ -66,13 +67,15 @@ skills:
 
   - id: contract_register
     file: contract_register.md
-    runtime: cursor-only
+    runtime: cli
+    cli_command: contract-register
     agent: Contract
     description: 契約台帳整備
 
   - id: capex_planning
     file: capex_planning.md
-    runtime: cursor-only
+    runtime: cli
+    cli_command: capex-planning
     agent: Finance
     description: CAPEX 計画
 

@@ -1,6 +1,8 @@
 id: logistics
-required_seeds: []
-notes: activation_ready — shipments.yaml, warehouses.yaml
+required_seeds:
+  - invoice-logistics-monthly.yaml
+  - invoice-logistics-monthly-body.txt
+notes: production_ready — shipments + invoice seed
 activation_seeds:
 - shipments.yaml
 - warehouses.yaml

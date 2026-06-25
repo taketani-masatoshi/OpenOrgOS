@@ -12,9 +12,9 @@ import {
 } from "../src/lib/document-io.js";
 import { documentIoSchema } from "../schemas/document-io.js";
 
-import { DATA_DIR, DOCS_OUTBOX_DIR, resolveTenantPath } from "../src/lib/utils.js";
+import { getDataDir, getDocsOutboxDir, resolveTenantPath } from "../src/lib/utils.js";
 
-const IO_PATH = join(DATA_DIR, "document-io.yaml");
+const IO_PATH = join(getDataDir(), "document-io.yaml");
 const IO_BACKUP = join(tmpdir(), "steward-document-io-backup.yaml");
 
 describe("document-io", () => {

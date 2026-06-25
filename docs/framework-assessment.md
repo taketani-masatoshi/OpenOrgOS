@@ -239,12 +239,12 @@
 |----|:----:|:----:|:--:|
 | 法域 pack（TJS-11） | 11 | 11 | **100%** |
 | 表示言語 | 9 | 9 | **100%** |
-| 業務 production_ready | 7 | 25 | **28%** |
+| 業務 production_ready | 19 | 25 | **76%** |
 
 達成 pack: **JP** · **US** · **SG** · **HK** · **AU** · **TW** · **MY** · **CN** · **AE** · **RU** · **EU**（TJS-EU 案 A）。  
 TJS-11 法域: **11/11 完了**（2026-06-25）。
 
-**体感完成度** = 三軸の最小値（現状 **28%** — 業務 module 軸）— チケット: [framework-backlog-tickets-bc.md](framework-backlog-tickets-bc.md)
+**体感完成度** = 三軸の最小値（現状 **76%** — 業務 module 軸）— チケット: [framework-backlog-tickets-bc.md](framework-backlog-tickets-bc.md)
 
 ---
 

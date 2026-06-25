@@ -4,7 +4,7 @@ import { loadAllData, loadYojitsuFyPlan, validateAll, loadCashBalance } from "./
 import { listEffectiveRegulations } from "./regulations.js";
 import { runIntegrityChecks, summarizeIntegrity } from "./integrity.js";
 import { scanContractAlerts } from "./alerts.js";
-import { DATA_DIR, resolveTenantPath } from "./utils.js";
+import { getDataDir, resolveTenantPath } from "./utils.js";
 import {
   getFiscalYearRange,
   getP0Contracts,
@@ -83,7 +83,7 @@ export function computeMaturityReport(): MaturityReport {
   prep += data.contracts.length ? 15 : 0;
   const planPath = fy.planFile
     ? resolveTenantPath(fy.planFile)
-    : join(DATA_DIR, "plans", `yojitsu-${fy.id.toLowerCase()}.yaml`);
+    : join(getDataDir(), "plans", `yojitsu-${fy.id.toLowerCase()}.yaml`);
   prep += existsSync(planPath) ? 10 : 0;
   if (!validation.ok) recommendations.push("npm run validate でスキーマエラーを解消");
   const prepDim = dim(
@@ -167,8 +167,8 @@ export function computeMaturityReport(): MaturityReport {
   let auto = 0;
   auto += validation.ok ? 30 : 0;
   auto += integrity.errors === 0 ? 25 : 0;
-  auto += existsSync(join(DATA_DIR, "document-io.yaml")) ? 15 : 0;
-  auto += existsSync(join(DATA_DIR, "classification-registry.yaml")) ? 15 : 0;
+  auto += existsSync(join(getDataDir(), "document-io.yaml")) ? 15 : 0;
+  auto += existsSync(join(getDataDir(), "classification-registry.yaml")) ? 15 : 0;
   auto += scanContractAlerts(data.contracts, 90).length >= 0 ? 15 : 0;
   auto += 15;
   const autoDim = dim(

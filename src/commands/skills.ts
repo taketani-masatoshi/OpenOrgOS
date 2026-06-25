@@ -12,7 +12,12 @@ import { resolveModuleSkillHandler } from "../lib/module-cli.js";
 import { loadMonthlyFinance } from "../lib/data.js";
 import { runDashboard } from "./dashboard.js";
 import { runForecast } from "./forecast.js";
-import { currentDate, readYamlFile, writeMarkdownReport, EXECUTIVE_DIR } from "../lib/utils.js";
+import { currentDate, readYamlFile, writeMarkdownReport, getExecutiveDir } from "../lib/utils.js";
+import {
+  runCapexPlanningSkill,
+  runContractRegisterSkill,
+  runTaxFilingPrepSkill,
+} from "../lib/core-skill-runners.js";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { calendarFileSchema, oneOnOnesFileSchema } from "../../schemas/executive.js";
@@ -89,6 +94,24 @@ export const SKILL_COMMANDS = [
     skill: "one_on_one_prep",
     agent: "Secretary",
     description: "1-on-1 レジストリサマリ",
+  },
+  {
+    id: "tax-filing-prep",
+    skill: "tax_filing_prep",
+    agent: "Finance",
+    description: "税務申告準備 — 正データ存在チェック",
+  },
+  {
+    id: "contract-register",
+    skill: "contract_register",
+    agent: "Contract",
+    description: "契約台帳サマリ",
+  },
+  {
+    id: "capex-planning",
+    skill: "capex_planning",
+    agent: "Finance",
+    description: "CAPEX 計画サマリ",
   },
 ] as const;
 
@@ -198,7 +221,7 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
       runForecast({ months: 12, format: opts.markdown ? "markdown" : "text", output: opts.output });
       break;
     case "schedule": {
-      const calPath = join(EXECUTIVE_DIR, "calendar.yaml");
+      const calPath = join(getExecutiveDir(), "calendar.yaml");
       if (!existsSync(calPath)) {
         console.log("calendar.yaml なし — example を tenant init でコピー");
         break;
@@ -208,7 +231,7 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
       break;
     }
     case "one-on-one": {
-      const oooPath = join(EXECUTIVE_DIR, "one-on-ones.yaml");
+      const oooPath = join(getExecutiveDir(), "one-on-ones.yaml");
       if (!existsSync(oooPath)) {
         console.log("one-on-ones.yaml なし");
         break;
@@ -217,6 +240,15 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
       console.log(`1-on-1 登録 ${ooo.one_on_ones?.length ?? 0} 件`);
       break;
     }
+    case "tax-filing-prep":
+      runTaxFilingPrepSkill(opts);
+      break;
+    case "contract-register":
+      runContractRegisterSkill(opts);
+      break;
+    case "capex-planning":
+      runCapexPlanningSkill(opts);
+      break;
     default:
       process.exit(1);
   }

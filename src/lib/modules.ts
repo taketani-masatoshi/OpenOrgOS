@@ -151,6 +151,7 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_women_empowerment: "compliance",
   jp_privacy_policy: "compliance",
   jp_subsidy_application: "finance",
+  jp_trademark_application: "compliance",
 };
 
 const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
@@ -176,6 +177,7 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_women_empowerment",
   "jp_privacy_policy",
   "jp_subsidy_application",
+  "jp_trademark_application",
 ];
 
 export function modulesFilePath(): string {

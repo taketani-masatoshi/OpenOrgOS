@@ -15,34 +15,59 @@ import {
 export { ROOT_DIR, FRAMEWORK_DOCS_DIR, resolveTenantPath, toLogicalPath, getTenantDir };
 export { getTenantId, setTenantId, loadTenantConfig, listTenantIds } from "./tenant.js";
 
-/** Active tenant human/docs zone (company-specific). */
-export const DOCS_DIR = join(getTenantDir(), "docs");
-/** Active tenant source-of-truth YAML. */
-export const DATA_DIR = join(getTenantDir(), "data");
+/** Active tenant human/docs zone (lazy — safe after setTenantId). */
+export function getDocsDir(): string {
+  return join(getTenantDir(), "docs");
+}
+
+/** Active tenant source-of-truth YAML (lazy). */
+export function getDataDir(): string {
+  return join(getTenantDir(), "data");
+}
+
 export const SCRATCH_DIR = join(ROOT_DIR, "scratch");
 
-/** 利害関係者レジストリ（gitignore — GitHub に push しない） */
-export const EXECUTIVE_DIR = join(DATA_DIR, "executive");
-export const STAKEHOLDERS_YAML = join(EXECUTIVE_DIR, "stakeholders.yaml");
-export const STAKEHOLDERS_DOCS_DIR = join(DOCS_DIR, "executive", "stakeholders");
+export function getExecutiveDir(): string {
+  return join(getDataDir(), "executive");
+}
 
-/** 法人銀行口座（gitignore — 口座番号等 L2） */
-export const BANK_ACCOUNTS_YAML = join(DATA_DIR, "finance", "bank-accounts.yaml");
-export const CLASSIFICATION_REGISTRY_YAML = join(DATA_DIR, "classification-registry.yaml");
+export function getStakeholdersYaml(): string {
+  return join(getExecutiveDir(), "stakeholders.yaml");
+}
+
+export function getStakeholdersDocsDir(): string {
+  return join(getDocsDir(), "executive", "stakeholders");
+}
+
+export function getBankAccountsYaml(): string {
+  return join(getDataDir(), "finance", "bank-accounts.yaml");
+}
+
+export function getClassificationRegistryYaml(): string {
+  return join(getDataDir(), "classification-registry.yaml");
+}
+
+export function getDocsReportsDir(): string {
+  return join(getDocsDir(), "reports");
+}
+
+export function getDocsInboxDir(): string {
+  return join(getDocsDir(), "io", "inbox");
+}
+
+export function getDocsOutboxDir(): string {
+  return join(getDocsDir(), "io", "outbox");
+}
+
+export function getDocsCorporatePdfDir(): string {
+  return join(getDocsOutboxDir(), "corporate");
+}
+
+export function getDocsLodgingPdfDir(): string {
+  return join(getDocsOutboxDir(), "lodging");
+}
+
 export const ASSETS_DIR = join(ROOT_DIR, "assets");
-export const DOCS_REPORTS_DIR = join(DOCS_DIR, "reports");
-
-/** 受信トレイ — スキャン・申請書・契約原本など（未処理） */
-export const DOCS_INBOX_DIR = join(DOCS_DIR, "io", "inbox");
-
-/** 出力トレイ — 印刷・提出用 PDF（処理済み） */
-export const DOCS_OUTBOX_DIR = join(DOCS_DIR, "io", "outbox");
-
-/** 法人書類 PDF → io/outbox/corporate */
-export const DOCS_CORPORATE_PDF_DIR = join(DOCS_OUTBOX_DIR, "corporate");
-
-/** 亀沢ゲスト掲示 PDF → io/outbox/lodging */
-export const DOCS_LODGING_PDF_DIR = join(DOCS_OUTBOX_DIR, "lodging");
 
 export function readYamlFile<S extends ZodTypeAny>(path: string, schema: S): z.output<S> {
   const raw = readFileSync(path, "utf-8");
@@ -142,13 +167,13 @@ export function parsePercentChange(value: string): number {
 }
 
 export function ensurePdfOutputDir(subdir?: string): string {
-  const dir = subdir ? join(DOCS_CORPORATE_PDF_DIR, subdir) : DOCS_CORPORATE_PDF_DIR;
+  const dir = subdir ? join(getDocsCorporatePdfDir(), subdir) : getDocsCorporatePdfDir();
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
 export function ensureDocsReportsDir(subdir?: string): string {
-  const dir = subdir ? join(DOCS_REPORTS_DIR, subdir) : DOCS_REPORTS_DIR;
+  const dir = subdir ? join(getDocsReportsDir(), subdir) : getDocsReportsDir();
   mkdirSync(dir, { recursive: true });
   return dir;
 }

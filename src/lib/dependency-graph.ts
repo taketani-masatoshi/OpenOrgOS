@@ -8,9 +8,9 @@ import {
   type EdgeCategory,
   type DependencyAction,
 } from "../../schemas/dependency-graph.js";
-import { DATA_DIR, readYamlFile, resolveTenantPath, toLogicalPath } from "./utils.js";
+import { getDataDir, readYamlFile, resolveTenantPath, toLogicalPath } from "./utils.js";
 
-export const DEPENDENCY_GRAPH_PATH = join(DATA_DIR, "dependency-graph.yaml");
+export const DEPENDENCY_GRAPH_PATH = join(getDataDir(), "dependency-graph.yaml");
 
 export interface ImpactItem {
   nodeId: string;

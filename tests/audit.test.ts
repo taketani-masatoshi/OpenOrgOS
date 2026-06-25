@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
-import { DOCS_DIR } from "../src/lib/utils.js";
+import { getDocsDir } from "../src/lib/utils.js";
 import { appendAuditEvent, listAuditEvents, auditLogPath } from "../src/lib/audit-log.js";
 
 describe("audit log", () => {
@@ -24,7 +24,7 @@ describe("audit log", () => {
     expect(events.length).toBe(2);
     expect(events[0]?.id).toBe(e1.id);
     expect(events[1]?.event).toBe("handoff");
-    expect(existsSync(join(DOCS_DIR, "reports", "audit-log", "audit.jsonl"))).toBe(true);
+    expect(existsSync(join(getDocsDir(), "reports", "audit-log", "audit.jsonl"))).toBe(true);
   });
 
   it("filters by event type", () => {

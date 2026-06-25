@@ -6,7 +6,7 @@ import { collectWorkOrdersForMerge, mergeWorkOrderResults } from "./work-order-m
 import { pushQueueEvent } from "./queue-db.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { routingQueueDir } from "./routing.js";
-import { DOCS_REPORTS_DIR, ROOT_DIR, currentDate, ensureDocsReportsDir } from "./utils.js";
+import { getDocsReportsDir, ROOT_DIR, currentDate, ensureDocsReportsDir } from "./utils.js";
 
 export function branchNameForWorkOrder(id: string): string {
   return `steward/${id.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`;
@@ -15,7 +15,7 @@ export function branchNameForWorkOrder(id: string): string {
 export function findLatestMergeDoc(workOrderId: string): string | undefined {
   const slug = workOrderId.replace(/[^A-Z0-9-]/gi, "");
   const mergePattern = `-merge-${slug}`;
-  const dir = join(DOCS_REPORTS_DIR, "executive-notes");
+  const dir = join(getDocsReportsDir(), "executive-notes");
   if (!existsSync(dir)) return undefined;
   const files = readdirSync(dir)
     .filter((f) => f.includes(mergePattern) && f.endsWith(".md"))

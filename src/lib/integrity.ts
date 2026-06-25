@@ -17,7 +17,7 @@ import { classificationRegistrySchema } from "../../schemas/classification.js";
 import { runClassificationChecks } from "./classification.js";
 import { loadExecutiveCalendar } from "./data.js";
 import { detectUnsyncedCalendarEvents } from "./executive-calendar-sync.js";
-import { DATA_DIR, readYamlFile, CLASSIFICATION_REGISTRY_YAML, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
+import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
   resolveModuleSecretsPath,
@@ -182,7 +182,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   }
 
   try {
-    readYamlFile(CLASSIFICATION_REGISTRY_YAML, classificationRegistrySchema);
+    readYamlFile(getClassificationRegistryYaml(), classificationRegistrySchema);
   } catch (e) {
     push(
       "error",

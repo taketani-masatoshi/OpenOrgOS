@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
-import { DOCS_DIR } from "../src/lib/utils.js";
+import { getDocsDir } from "../src/lib/utils.js";
 import {
   agentPromptRef,
   completeWorkOrder,
@@ -53,7 +53,7 @@ describe("escalate plan", () => {
 });
 
 describe("escalate run", () => {
-  const queueDir = join(DOCS_DIR, "reports", "routing-queue");
+  const queueDir = join(getDocsDir(), "reports", "routing-queue");
   const created: string[] = [];
 
   beforeEach(() => {

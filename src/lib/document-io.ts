@@ -14,18 +14,9 @@ import {
   type OutboxCategory,
   type OutboxItem,
 } from "../../schemas/document-io.js";
-import {
-  DATA_DIR,
-  DOCS_INBOX_DIR,
-  DOCS_OUTBOX_DIR,
-  currentDate,
-  readYamlFile,
-  writeYamlFile,
-  resolveTenantPath,
-  toLogicalPath,
-} from "./utils.js";
+import { getDataDir, getDocsInboxDir, getDocsOutboxDir, currentDate, readYamlFile, writeYamlFile, resolveTenantPath, toLogicalPath } from "./utils.js";
 
-const IO_PATH = join(DATA_DIR, "document-io.yaml");
+const IO_PATH = join(getDataDir(), "document-io.yaml");
 
 function resolveIoPath(relOrAbs: string): string {
   return isAbsolute(relOrAbs) ? relOrAbs : resolveTenantPath(relOrAbs);
@@ -78,13 +69,13 @@ function slugify(text: string): string {
 }
 
 export function ensureInboxCategoryDir(category: InboxCategory): string {
-  const dir = join(DOCS_INBOX_DIR, category);
+  const dir = join(getDocsInboxDir(), category);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
 export function ensureOutboxCategoryDir(category: OutboxCategory, subdir?: string): string {
-  const dir = subdir ? join(DOCS_OUTBOX_DIR, category, subdir) : join(DOCS_OUTBOX_DIR, category);
+  const dir = subdir ? join(getDocsOutboxDir(), category, subdir) : join(getDocsOutboxDir(), category);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -265,7 +256,7 @@ export function listOutboxReady(): OutboxItem[] {
 
 export function scanOutboxFiles(): string[] {
   const files: string[] = [];
-  if (!existsSync(DOCS_OUTBOX_DIR)) return files;
+  if (!existsSync(getDocsOutboxDir())) return files;
 
   const walk = (dir: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -277,7 +268,7 @@ export function scanOutboxFiles(): string[] {
       }
     }
   };
-  walk(DOCS_OUTBOX_DIR);
+  walk(getDocsOutboxDir());
   return files.sort();
 }
 

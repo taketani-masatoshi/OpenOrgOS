@@ -11,7 +11,7 @@ import { planPullRequest, formatPrPlan } from "../src/lib/git-pr.js";
 import { runEscalation } from "../src/lib/escalate.js";
 import { registerWorkOrderResult } from "../src/lib/work-order-merge.js";
 import { runMergePrCreate } from "../src/commands/merge-pr.js";
-import { DOCS_DIR } from "../src/lib/utils.js";
+import { getDocsDir } from "../src/lib/utils.js";
 
 describe("Phase 3 webhook server", () => {
   it("responds to GET /health", async () => {
@@ -65,7 +65,7 @@ describe("Phase 3 queue processor", () => {
 });
 
 describe("Phase 3 merge pr", () => {
-  const queueDir = join(DOCS_DIR, "reports", "routing-queue");
+  const queueDir = join(getDocsDir(), "reports", "routing-queue");
   const created: string[] = [];
 
   beforeEach(() => {

@@ -2,14 +2,14 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { auditEventSchema, type AuditEvent, type AuditEventType } from "../../schemas/audit-log.js";
 import { getTenantId } from "./tenant.js";
-import { DOCS_REPORTS_DIR } from "./utils.js";
+import { getDocsReportsDir } from "./utils.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 
 export const AUDIT_LOG_SUBDIR = "audit-log";
 export const AUDIT_LOG_FILE = "audit.jsonl";
 
 export function auditLogPath(): string {
-  const dir = join(DOCS_REPORTS_DIR, AUDIT_LOG_SUBDIR);
+  const dir = join(getDocsReportsDir(), AUDIT_LOG_SUBDIR);
   mkdirSync(dir, { recursive: true });
   return join(dir, AUDIT_LOG_FILE);
 }

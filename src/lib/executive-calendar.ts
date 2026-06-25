@@ -6,7 +6,7 @@ import {
   loadExecutiveTasks,
   loadOneOnOnes,
 } from "./data.js";
-import { EXECUTIVE_DIR, currentDate } from "./utils.js";
+import { getExecutiveDir, currentDate } from "./utils.js";
 
 export function parseExecutiveDateTime(iso: string): Date {
   if (iso.length <= 10) return new Date(`${iso}T00:00:00`);
@@ -77,7 +77,7 @@ export function formatEventLine(event: CalendarEvent): string {
 }
 
 export function requireExecutiveCalendar(): CalendarEvent[] {
-  const path = join(EXECUTIVE_DIR, "calendar.yaml");
+  const path = join(getExecutiveDir(), "calendar.yaml");
   if (!existsSync(path)) {
     throw new Error(
       "data/executive/calendar.yaml 未作成 — cp calendar.yaml.example calendar.yaml"

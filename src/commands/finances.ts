@@ -6,7 +6,7 @@ import {
   loadMonthlyFinance,
 } from "../lib/data.js";
 import { monthlyFinanceSchema } from "../../schemas/index.js";
-import { DATA_DIR, writeYamlFile } from "../lib/utils.js";
+import { getDataDir, writeYamlFile } from "../lib/utils.js";
 import {
   financesSummary,
   formatFinancesSummaryMarkdown,
@@ -32,7 +32,7 @@ export function runFinancesAdd(options: {
   const parsed = YAML.parse(raw);
   const entry = monthlyFinanceSchema.parse({ ...parsed, month: options.month });
 
-  const path = join(DATA_DIR, "finance", "monthly", `${options.month}.yaml`);
+  const path = join(getDataDir(), "finance", "monthly", `${options.month}.yaml`);
   writeYamlFile(path, entry);
   console.log(`✓ Saved ${path}`);
 }

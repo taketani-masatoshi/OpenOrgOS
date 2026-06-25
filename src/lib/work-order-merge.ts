@@ -8,7 +8,7 @@ import {
   writeWorkOrderResult,
 } from "./queue-db.js";
 import { appendAuditEvent } from "./audit-log.js";
-import { DOCS_REPORTS_DIR, currentDate, ensureDocsReportsDir } from "./utils.js";
+import { getDocsReportsDir, currentDate, ensureDocsReportsDir } from "./utils.js";
 import { sendWebhook } from "./webhook.js";
 
 export interface MergeOptions {

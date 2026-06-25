@@ -12,7 +12,7 @@ import {
   listOperationsModules,
   resolveModuleSecretsPath,
 } from "./ops-config.js";
-import { DATA_DIR, STAKEHOLDERS_YAML, resolveTenantPath, readYamlFile } from "./utils.js";
+import { getDataDir, getStakeholdersYaml, resolveTenantPath, readYamlFile } from "./utils.js";
 import { facilityPublicSchema } from "../../schemas/operations.js";
 
 export interface HealthMetric {
@@ -165,7 +165,7 @@ export function computeDataHealth(): DataHealthReport {
     metrics.push({ id: "hr", label: "HR マスタ", score: 0, max: 5, detail: "要修正" });
   }
 
-  if (!existsSync(STAKEHOLDERS_YAML)) {
+  if (!existsSync(getStakeholdersYaml())) {
     recommendations.push(
       "stakeholders.yaml を example からコピー（利害関係者 · GitHub 非公開）"
     );

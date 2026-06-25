@@ -8,7 +8,7 @@ import {
   loadProfitPlan,
   loadInvestmentPlan,
 } from "./data.js";
-import { DOCS_DIR } from "./utils.js";
+import { getDocsDir } from "./utils.js";
 
 function csvEscape(value: string | number | undefined | null): string {
   if (value === undefined || value === null) return "";
@@ -56,7 +56,7 @@ function contractRow(c: Contract): (string | number | undefined | null)[] {
 
 export function syncContractsCsv(): string {
   const contracts = loadContracts().sort((a, b) => a.id.localeCompare(b.id));
-  const path = join(DOCS_DIR, "data", "契約管理表.csv");
+  const path = join(getDocsDir(), "data", "契約管理表.csv");
   return writeCsv(
     path,
     [
@@ -102,7 +102,7 @@ export function syncRevenueCsv(): string {
     }
   }
   return writeCsv(
-    join(DOCS_DIR, "data", "売上計画.csv"),
+    join(getDocsDir(), "data", "売上計画.csv"),
     ["fiscal_year", "period_from", "period_to", "line_id", "line_name", "property_id", "amount_jpy", "notes"],
     rows
   );
@@ -126,7 +126,7 @@ export function syncExpenseCsv(): string {
     }
   }
   return writeCsv(
-    join(DOCS_DIR, "data", "費用計画.csv"),
+    join(getDocsDir(), "data", "費用計画.csv"),
     ["fiscal_year", "period_from", "period_to", "line_id", "line_name", "property_id", "amount_jpy", "notes"],
     rows
   );
@@ -149,7 +149,7 @@ export function syncProfitCsv(): string {
     y.notes ?? "",
   ]);
   return writeCsv(
-    join(DOCS_DIR, "data", "利益計画.csv"),
+    join(getDocsDir(), "data", "利益計画.csv"),
     [
       "fiscal_year",
       "period_from",
@@ -187,7 +187,7 @@ export function syncInvestmentCsv(): string {
     }
   }
   return writeCsv(
-    join(DOCS_DIR, "data", "投資計画.csv"),
+    join(getDocsDir(), "data", "投資計画.csv"),
     ["fiscal_year", "period_from", "period_to", "item_id", "item_name", "property_id", "month", "amount_jpy", "notes"],
     rows
   );

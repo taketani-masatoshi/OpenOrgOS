@@ -8,7 +8,7 @@ import { ingestWebhook, formatWebhookConfig } from "../src/lib/webhook.js";
 import { runEscalation } from "../src/lib/escalate.js";
 import { mergeWorkOrderResults, registerWorkOrderResult } from "../src/lib/work-order-merge.js";
 import { loadHandoff } from "../src/lib/routing.js";
-import { DOCS_DIR } from "../src/lib/utils.js";
+import { getDocsDir } from "../src/lib/utils.js";
 
 describe("Phase 2 queue", () => {
   beforeEach(() => {
@@ -35,7 +35,7 @@ describe("Phase 2 queue", () => {
 });
 
 describe("Phase 2 dispatch + merge", () => {
-  const queueDir = join(DOCS_DIR, "reports", "routing-queue");
+  const queueDir = join(getDocsDir(), "reports", "routing-queue");
   const created: string[] = [];
 
   beforeEach(() => {

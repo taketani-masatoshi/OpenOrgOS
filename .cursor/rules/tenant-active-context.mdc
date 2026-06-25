@@ -3,37 +3,47 @@ description: Active tenant modules, ISO, and regulations — token saving
 alwaysApply: true
 ---
 
-# テナント `eu-demo` — アクティブコンテキストのみ読取
+# テナント `mal` — アクティブコンテキストのみ読取
 
-**生成:** `npm run steward -- modules sync-context` · 正本: `tenants/eu-demo/rules/active_context.md`
+**生成:** `npm run steward -- modules sync-context` · 正本: `tenants/mal/rules/active_context.md`
 
 ## 禁止（トークン節約）
 
 - `steward/modules/{id}/` のうち **下表にない id** の agent.md · skills · seed
 - `steward/standards/iso/ISO-*` のうち **下表にない規格**
-- `steward/jurisdiction-packs/EU/regulations/templates/**/template.md` のうち **下表にない REG**
+- `steward/jurisdiction-packs/JP/regulations/templates/**/template.md` のうち **下表にない REG**
 - `docs/company/regulations/*.md` のうち **下表にない REG** 施行文
 - 無効 `modules.yaml` エントリの `data_root` · `docs_root`
 - `@folder` で `steward/modules/` · `regulations/` 全体を指定しない
 
 ## 有効業務モジュール
 
-（なし）
+- **rental:** `steward/modules/rental/agent.md`（Skill は必要時のみ同 `skills/`）
+- **hospitality:** `steward/modules/hospitality/agent.md`（Skill は必要時のみ同 `skills/`）
+- **travel_booking:** `steward/modules/travel_booking/agent.md`（Skill は必要時のみ同 `skills/`）
 
 ## 有効 ISO
 
-（なし — standards.yaml で有効化）
+- **ISO-21401:** テンプレ `steward/standards/iso/ISO-21401/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-21401/`
+- **ISO-27001:** テンプレ `steward/standards/iso/ISO-27001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-27001/`
+- **ISO-9001:** テンプレ `steward/standards/iso/ISO-9001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-9001/`
 
 ## 有効社内規程
 
-- **REG-EU-001** Officer Compensation Policy: 施行 `docs/company/regulations/officer-compensation-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-001-officer-comp/template.md` は改定時のみ）
-- **REG-EU-002** Board Meeting Procedures: 施行 `docs/company/regulations/board-meeting-procedures.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-002-board-meetings/template.md` は改定時のみ）
-- **REG-EU-003** Shareholder Meeting Procedures: 施行 `docs/company/regulations/shareholder-meeting-procedures.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-003-shareholder-meetings/template.md` は改定時のみ）
-- **REG-EU-004** Approval Authority Policy: 施行 `docs/company/regulations/approval-authority-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-004-approval-authority/template.md` は改定時のみ）
-- **REG-EU-005** Expense Reimbursement Policy: 施行 `docs/company/regulations/expense-reimbursement-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-005-expense-reimbursement/template.md` は改定時のみ）
-- **REG-EU-006** Conflict of Interest Policy: 施行 `docs/company/regulations/conflict-of-interest-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-006-conflict-of-interest/template.md` は改定時のみ）
-- **REG-EU-007** Document Retention Policy: 施行 `docs/company/regulations/document-retention-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-007-document-retention/template.md` は改定時のみ）
-- **REG-EU-008** Travel and Business Expense Policy: 施行 `docs/company/regulations/travel-policy.md`（テンプレ `steward/jurisdiction-packs/EU/regulations/templates/core/REG-EU-008-travel/template.md` は改定時のみ）
+- **REG-001** 役員報酬規程: 施行 `docs/company/regulations/yakuin-hoshu-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-001-yakuin-hoshu/template.md` は改定時のみ）
+- **REG-002** 取締役会議事規則: 施行 `docs/company/regulations/torishimari-kai-gijisho-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-002-torishimari-kai/template.md` は改定時のみ）
+- **REG-003** 株主総会議事規則: 施行 `docs/company/regulations/shukai-gijisho-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-003-shukai-gijisho/template.md` は改定時のみ）
+- **REG-004** 稟議・決裁規程: 施行 `docs/company/regulations/ringi-kessai-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-004-ringi-kessai/template.md` は改定時のみ）
+- **REG-005** 経費精算規程: 施行 `docs/company/regulations/keihi-seisan-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-005-keihi-seisan/template.md` は改定時のみ）
+- **REG-006** 利益相反取引規程: 施行 `docs/company/regulations/riekisohan-torihiki-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-006-riekisohan/template.md` は改定時のみ）
+- **REG-007** 文書管理規程: 施行 `docs/company/regulations/bunsho-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-007-bunsho-kanri/template.md` は改定時のみ）
+- **REG-008** 旅費規程: 施行 `docs/company/regulations/ryohi-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-008-ryohi/template.md` は改定時のみ）
+- **REG-009** 情報セキュリティ管理規程: 施行 `docs/company/regulations/joho-security-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-009-joho-security/template.md` は改定時のみ）
+- **REG-010** 個人情報保護規程: 施行 `docs/company/regulations/kojin-joho-hogo-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-010-kojin-joho/template.md` は改定時のみ）
+- **REG-011** 品質管理規程: 施行 `docs/company/regulations/hinshitsu-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-011-hinshitsu/template.md` は改定時のみ）
+- **REG-014** 環境・エネルギー管理規程: 施行 `docs/company/regulations/kankyo-energy-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-014-kankyo-energy/template.md` は改定時のみ）
+- **REG-016** 内部監査規程: 施行 `docs/company/regulations/naibu-kansa-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-016-naibu-kansa/template.md` は改定時のみ）
+- **REG-012** 宿泊運営・サステナビリティ規程: 施行 `docs/company/regulations/shukuhaku-unyo-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/hospitality/REG-012-shukuhaku-unyo/template.md` は改定時のみ）
 
 ## コア Agent（常時）
 

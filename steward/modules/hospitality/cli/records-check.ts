@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { DOCS_DIR, currentDate, writeMarkdownReport } from "../../../../src/lib/utils.js";
+import { getDocsDir, currentDate, writeMarkdownReport } from "../../../../src/lib/utils.js";
 import { getP0Records, getModuleById } from "../../../../src/lib/ops-config.js";
 
 export interface RecordsCheckResult {
@@ -24,7 +24,7 @@ export function checkOperationsRecords(propertyRel?: string): RecordsCheckResult
   if (!rel) {
     return { baseDir: "", months: [], files: [], totalRows: 0 };
   }
-  const baseDir = join(DOCS_DIR, rel);
+  const baseDir = join(getDocsDir(), rel);
   const files: { path: string; rows: number }[] = [];
   let totalRows = 0;
   const months = new Set<string>();

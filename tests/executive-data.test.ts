@@ -10,7 +10,7 @@ import {
   validateAll,
 } from "../src/lib/data.js";
 import { stakeholdersFileExists } from "../src/lib/stakeholders.js";
-import { readYamlFile, DATA_DIR } from "../src/lib/utils.js";
+import { readYamlFile, getDataDir } from "../src/lib/utils.js";
 import {
   calendarFileSchema,
   tasksFileSchema,
@@ -19,7 +19,7 @@ import {
   stakeholdersFileSchema,
 } from "../schemas/executive.js";
 
-const execDir = join(DATA_DIR, "executive");
+const execDir = join(getDataDir(), "executive");
 
 function localExecutiveFile(name: string): string {
   return join(execDir, name);

@@ -1,8 +1,3 @@
-# 業務モジュール readiness tier — 3 段階
-# skeleton: カタログ骨格（manifest · agent · seed/）
-# activation_ready: テナント有効化 seed 一式
-# production_ready: activation + billing/invoice CLI 連携
-
 modules:
   rental:
     tier: production_ready
@@ -10,7 +5,6 @@ modules:
   hospitality:
     tier: production_ready
     notes: operations seed · invoice generate · REG-012
-
   restaurant:
     tier: production_ready
     notes: menu · tables · invoice seed
@@ -18,52 +12,58 @@ modules:
     tier: production_ready
     notes: projects + invoice seed · operations ps show|validate|project-billing CLI
   venture_capital:
-    tier: activation_ready
-    notes: funds/portfolio seed · operations vc show|validate|ic-summary CLI
+    tier: production_ready
+    notes: funds/portfolio + invoice seed
   saas_subscription:
     tier: production_ready
     notes: plans/subscriptions + invoice · operations saas show|validate|renewals CLI
   event_space:
-    tier: activation_ready
+    tier: production_ready
+    notes: bookings/spaces + invoice seed
   ecommerce:
     tier: production_ready
-    notes: orders/products seed · invoice · operations ecommerce show|validate|fulfillment CLI
+    notes: orders/products seed · invoice · operations ecommerce
+      show|validate|fulfillment CLI
   retail_store:
-    tier: activation_ready
+    tier: production_ready
+    notes: inventory/sales + invoice seed
   clinic:
-    tier: activation_ready
+    tier: production_ready
+    notes: patients/appointments + invoice seed
   logistics:
-    tier: activation_ready
+    tier: production_ready
+    notes: shipments + invoice seed
   staffing:
-    tier: activation_ready
-    notes: assignments/staff seed · operations staffing show|validate|assignments CLI
+    tier: production_ready
+    notes: assignments/staff + invoice · operations staffing CLI
   construction:
-    tier: activation_ready
+    tier: production_ready
+    notes: projects + invoice seed
   education:
-    tier: activation_ready
+    tier: production_ready
+    notes: courses/enrollments + invoice seed
   membership:
     tier: production_ready
-    notes: members/plans seed · invoice · operations membership show|validate|renewals CLI
+    notes: members/plans seed · invoice · operations membership
+      show|validate|renewals CLI
   software_outsourcing:
-    tier: activation_ready
-    notes: SOW · milestones · timesheets · deliverables · operations software-out CLI
+    tier: production_ready
+    notes: SOW/milestones + invoice seed
   event_operations:
-    tier: activation_ready
-    notes: events · run_of_show · vendors · staff_shifts · operations events runbook CLI
+    tier: production_ready
+    notes: events/run_of_show + invoice seed
   real_estate_brokerage:
-    tier: activation_ready
-    notes: listings · deals · commissions · operations brokerage pipeline CLI
+    tier: production_ready
+    notes: listings/deals + invoice seed
   property_management:
-    tier: activation_ready
-    notes: pm-properties · management-contracts · fee-schedules · service-requests · operations property-mgmt CLI
+    tier: production_ready
+    notes: pm-properties/contracts + invoice seed
   travel_booking:
     tier: activation_ready
     notes: operations travel CLI · REG-008 · browser Phase 0 cursor-only
   language_bridge:
     tier: activation_ready
     notes: user vs system record language · bilingual minutes · Secretary/Compliance
-
-  # 宣言系（JP · Compliance 連携）
   jp_carbon_neutral_2050:
     tier: activation_ready
     notes: 2050 CN 宣言 · action-plan · REG-014
@@ -76,3 +76,6 @@ modules:
   jp_subsidy_application:
     tier: activation_ready
     notes: 補助金募集要項 · 適格性 · 人件費算定 · operations subsidy CLI
+  jp_trademark_application:
+    tier: activation_ready
+    notes: 商標登録願ひな形 · 指定商品役務 · operations trademark CLI

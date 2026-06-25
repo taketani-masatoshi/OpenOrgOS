@@ -7,7 +7,7 @@ import {
   checkAgentAccess,
 } from "./classification.js";
 import { loadStakeholders } from "./data.js";
-import { STAKEHOLDERS_YAML, SCRATCH_DIR, formatCurrency } from "./utils.js";
+import { getStakeholdersYaml, SCRATCH_DIR, formatCurrency } from "./utils.js";
 
 export type BrokerDisplayMode = "redacted" | "full";
 
@@ -95,7 +95,7 @@ export function buildTransferInstruction(opts: TransferOptions): TransferInstruc
 
   let payeeBankHint: string | undefined;
   let payeeEmailHint: string | undefined;
-  if (opts.stakeholderId && existsSync(STAKEHOLDERS_YAML)) {
+  if (opts.stakeholderId && existsSync(getStakeholdersYaml())) {
     try {
       const stk = loadStakeholders();
       const entry = stk.stakeholders.find((s) => s.id === opts.stakeholderId);

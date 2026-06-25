@@ -25,6 +25,7 @@ import {
   runJurisdictionShow,
   runJurisdictionPacksCheck,
   runJurisdictionPacksList,
+  runJurisdictionPacksPin,
   runLocaleList,
   runLocaleShow,
 } from "../../commands/locale-jurisdiction.js";
@@ -135,6 +136,15 @@ export function registerPlatformCommands(program: Command): void {
     .command("check [code]")
     .description("Verify pack manifest, templates, and pack modules")
     .action((code: string | undefined) => runJurisdictionPacksCheck(code));
+  packsCmd
+    .command("pin <code>")
+    .description("Pin pack source in packs.lock.yaml (bundled or github:org/repo@version)")
+    .requiredOption("--source <source>", "bundled · github:org/repo@1.0.0")
+    .option("--pack-root <path>", "Override pack_root in lock entry")
+    .option("--dry-run", "Print pin without writing lock file")
+    .action((code: string, opts: { source: string; packRoot?: string; dryRun?: boolean }) =>
+      runJurisdictionPacksPin(code, opts.source, { packRoot: opts.packRoot, dryRun: opts.dryRun })
+    );
 
   const regulationsCmd = program.command("regulations").description("Regulation catalog and tenant effective docs");
   regulationsCmd.command("list").description("List catalog vs tenant regulations").action(runRegulationsList);

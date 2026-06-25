@@ -38,7 +38,7 @@
 | ORG-J6-2 | `packs.lock.yaml` pin · registry 索引化 | [x] |
 | ORG-J6-3 | pack 内 `modules/` 解決 · `jurisdiction packs check` | [x] |
 | ORG-J6-4 | `jurisdiction-oss-governance.md` · pack_contract.md | [x] |
-| ORG-J6-5 | GitHub 独立リポジトリ公開 · `packs pin --source github:` | [ ] |
+| ORG-J6-5 | GitHub 独立リポジトリ公開 · `packs pin --source github:` | [x] |
 
 ---
 
@@ -100,7 +100,7 @@
 | FIX-B3 | framework-executive-notes.md ギャップ 5 行 | [x] |
 | FIX-B4 | 本 Phase L 登録 | [x] |
 | FIX-C1 | ecommerce → production_ready + seed | [x] |
-| FIX-C2 | cursor-only Skill 3 本 CLI 化 | [ ] |
+| FIX-C2 | cursor-only Skill 3 本 CLI 化 | [x] |
 | FIX-C3 | SEC-P2-1 executive calendar CLI | [x] |
 
 > REF-4b/c/d は L1（tsc ゲート）完了後に着手。SEC-P2-1 は L3 相当だが先行完了。
@@ -118,9 +118,9 @@
 | REF-2 | dead code 削除 · JSONL 共通化（`jsonl-store.ts`） · `formatJapaneseDate`/registry loader 共通化 · 重複 CLI 削除 · `parseAsync` error handler · schema barrel（webhook 分離） | [x] |
 | REF-3 | `writeTrackedFile` sanitize 統一 · `assertSafeTrackedPath` 書込 gate · `.cursorindexingignore` に records 追加 · registry 駆動 `classification boundaries` CLI | [x] |
 | REF-4a | `module_contract.md` 形式化 + 契約 CI テスト | [x] |
-| REF-4b | **テナント context lazy getter 化**（`DATA_DIR`/`DOCS_DIR` 等の import 時凍結を解消） | [ ] |
+| REF-4b | **テナント context lazy getter 化**（`DATA_DIR`/`DOCS_DIR` 等の import 時凍結を解消） | [x] |
 | REF-4c | `cli.ts`（~1000 行）をドメイン別 registrar へ分割 | [x] |
-| REF-4d | `finance.ts` 分割 · routing 命名整理 | [ ] |
+| REF-4d | `finance.ts` 分割 · routing 命名整理 | [x] |
 | REF-PRE | **前提:** `tsc --noEmit` エラー解消 + CI ゲート化 → REF-4b/c/d を安全に実施可能にする | [x] |
 
 > REF-4b/c/d は大規模構造変更。クリーンな `tsc` ゲート（REF-PRE）確立後に、レビュー付きで実施することを推奨。

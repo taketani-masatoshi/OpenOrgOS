@@ -103,6 +103,7 @@
 - `jp_carbon_neutral_2050` — `modules.yaml` 未登録 · **読まない**
 - `jp_privacy_policy` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
+- `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**
 - `jp_women_empowerment` — `modules.yaml` 未登録 · **読まない**
 - `language_bridge` — `modules.yaml` 未登録 · **読まない**
 - `real_estate_brokerage` — `modules.yaml` 未登録 · **読まない**

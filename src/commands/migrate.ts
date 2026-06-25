@@ -3,7 +3,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { loadYojitsuFyPlan } from "../lib/data.js";
 import { serializeYojitsuPlanV2 } from "../lib/yojitsu-normalize.js";
-import { DATA_DIR } from "../lib/utils.js";
+import { getDataDir } from "../lib/utils.js";
 
 export interface MigrateYojitsuOptions {
   fiscalYear: string;
@@ -32,7 +32,7 @@ export function runMigrateYojitsu(opts: MigrateYojitsuOptions): void {
     return;
   }
 
-  const path = join(DATA_DIR, "plans", `yojitsu-${id}.yaml`);
+  const path = join(getDataDir(), "plans", `yojitsu-${id}.yaml`);
   writeFileSync(path, yaml, "utf-8");
   console.log(`✓ Wrote v2 yojitsu to ${path}`);
 }

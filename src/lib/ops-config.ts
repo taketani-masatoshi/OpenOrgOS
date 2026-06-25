@@ -11,12 +11,12 @@ import {
 import { loadEnabledModules, loadModulesFile } from "./modules.js";
 import type { TenantModule } from "../../schemas/modules.js";
 import { loadTenantConfig } from "./tenant.js";
-import { DATA_DIR, readYamlFile, resolveTenantPath } from "./utils.js";
+import { getDataDir, readYamlFile, resolveTenantPath } from "./utils.js";
 
 export const OPS_CONFIG_REL = "data/ops-config.yaml";
 
 export function opsConfigPath(): string {
-  return join(DATA_DIR, "ops-config.yaml");
+  return join(getDataDir(), "ops-config.yaml");
 }
 
 export function loadOpsConfig(): OpsConfig | null {

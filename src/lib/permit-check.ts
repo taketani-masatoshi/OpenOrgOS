@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { loadContracts } from "./data.js";
 import { loadYojitsuFyPlan } from "./data.js";
 import { loadMonthlyFinances } from "./data.js";
-import { DOCS_DIR } from "./utils.js";
+import { getDocsDir } from "./utils.js";
 
 export interface PermitRow {
   docId: string;
@@ -23,7 +23,7 @@ export interface PermitCheckResult {
 }
 
 export function loadPermitIndex(): PermitRow[] {
-  const path = join(DOCS_DIR, "company", "licenses", "INDEX.csv");
+  const path = join(getDocsDir(), "company", "licenses", "INDEX.csv");
   if (!existsSync(path)) return [];
   const text = readFileSync(path, "utf-8");
   const lines = text.trim().split("\n");

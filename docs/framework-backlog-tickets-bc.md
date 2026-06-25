@@ -29,6 +29,8 @@
 | **C-TKT-4** | membership → production（invoice 設計） | [x] | `module-production-tier.test.ts` |
 | **C-TKT-5** | demo で EC billing バインド例 | [x] | `module-production-tier.test.ts` |
 
+**Wave 2（2026-06-26）:** 12 モジュール → production_ready（staffing · event_space · retail · logistics · clinic · construction · education · VC · software_out · event_ops · brokerage · PM）— **19/25 (76%)**
+
 **昇格 DoD:** `required_seeds` invoice-* · `readiness.yaml` production_ready · `modules check {id}` 0 件
 
 ---

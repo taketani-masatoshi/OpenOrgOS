@@ -1,6 +1,8 @@
 id: property_management
-required_seeds: []
-notes: activation_ready — pm-properties · management-contracts · fee-schedules · service-requests（PROP bind 必須）
+required_seeds:
+  - invoice-pm-monthly.yaml
+  - invoice-pm-monthly-body.txt
+notes: production_ready — pm-properties/contracts + invoice seed
 activation_seeds:
 - pm-properties.yaml
 - management-contracts.yaml

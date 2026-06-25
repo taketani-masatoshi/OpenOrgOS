@@ -9,13 +9,7 @@ import {
   type DashboardReport,
 } from "./dashboard.js";
 import { loadEnabledRegulationIds } from "./regulations.js";
-import {
-  currentDate,
-  DOCS_DIR,
-  formatCurrency,
-  formatPercent,
-  writeMarkdownReport,
-} from "./utils.js";
+import { currentDate, getDocsDir, formatCurrency, formatPercent, writeMarkdownReport } from "./utils.js";
 import { loadEnabledModules, type TenantModule } from "./modules.js";
 import { join } from "node:path";
 import { readdirSync, existsSync } from "node:fs";
@@ -47,7 +41,7 @@ function summaryFilename(suffix = "dashboard-sync"): string {
 }
 
 function reportsRelLink(absPath: string): string {
-  const marker = `${DOCS_DIR}/reports/`;
+  const marker = `${getDocsDir()}/reports/`;
   if (absPath.startsWith(marker)) {
     return `../${absPath.slice(marker.length)}`;
   }
@@ -55,7 +49,7 @@ function reportsRelLink(absPath: string): string {
 }
 
 function relDocsPath(absPath: string): string {
-  return absPath.replace(`${DOCS_DIR}/`, "docs/");
+  return absPath.replace(`${getDocsDir()}/`, "docs/");
 }
 
 function formatModuleSummaryContent(
@@ -520,7 +514,7 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
   let any = false;
 
   for (const key of ["finance", "contract", "compliance", "operations"] as const) {
-    const dir = join(DOCS_DIR, "reports", AGENT_SUMMARIES_SUBDIR, key);
+    const dir = join(getDocsDir(), "reports", AGENT_SUMMARIES_SUBDIR, key);
     if (!existsSync(dir)) continue;
     const files = readdirSync(dir)
       .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))
@@ -534,7 +528,7 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
 
   for (const mod of loadEnabledModules()) {
     const sub = mod.summary_dir ?? `agent-summaries/${mod.id}`;
-    const dir = join(DOCS_DIR, "reports", sub);
+    const dir = join(getDocsDir(), "reports", sub);
     if (!existsSync(dir)) continue;
     const files = readdirSync(dir)
       .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))
@@ -553,7 +547,7 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
     any = true;
   }
 
-  const execDir = join(DOCS_DIR, "reports", "executive-notes");
+  const execDir = join(getDocsDir(), "reports", "executive-notes");
   if (existsSync(execDir)) {
     const execFiles = readdirSync(execDir)
       .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))

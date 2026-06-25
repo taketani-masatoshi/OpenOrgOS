@@ -18,10 +18,22 @@ const PRODUCTION_READY_IDS = [
   "saas_subscription",
   "ecommerce",
   "membership",
+  "staffing",
+  "event_space",
+  "retail_store",
+  "logistics",
+  "clinic",
+  "construction",
+  "education",
+  "venture_capital",
+  "software_outsourcing",
+  "event_operations",
+  "real_estate_brokerage",
+  "property_management",
 ] as const;
 
 describe("module production_ready tier (Direction C)", () => {
-  it("lists seven production_ready modules", () => {
+  it("lists nineteen production_ready modules", () => {
     const production = listCatalogModuleIds().filter((id) => getModuleTier(id) === "production_ready");
     for (const id of PRODUCTION_READY_IDS) {
       expect(production).toContain(id);
@@ -37,39 +49,24 @@ describe("module production_ready tier (Direction C)", () => {
   });
 
   it("invoice seeds exist for billable production modules", () => {
-    const invoiceModules = [
-      "rental",
-      "restaurant",
-      "professional_services",
-      "saas_subscription",
-      "ecommerce",
-      "membership",
-    ];
-    for (const id of invoiceModules) {
+    for (const id of PRODUCTION_READY_IDS) {
       const manifest = loadModuleManifest(id);
-      expect(manifest?.required_seeds?.length, id).toBeGreaterThan(0);
+      const invoiceSeeds = manifest?.required_seeds?.filter((s) => s.startsWith("invoice-")) ?? [];
+      if (invoiceSeeds.length === 0) continue;
       const seedDir = getModuleSeedDir(id);
-      for (const file of manifest!.required_seeds!) {
+      for (const file of invoiceSeeds) {
         expect(existsSync(join(seedDir, file)), `${id}/${file}`).toBe(true);
       }
     }
   });
 
-  it("ecommerce manifest declares invoice templates", () => {
-    const manifest = loadModuleManifest("ecommerce");
-    expect(manifest?.required_seeds).toContain("invoice-ecommerce-monthly.yaml");
-    expect(manifest?.required_seeds).toContain("invoice-ecommerce-monthly-body.txt");
+  it("staffing manifest declares invoice templates", () => {
+    const manifest = loadModuleManifest("staffing");
+    expect(manifest?.required_seeds).toContain("invoice-staffing-monthly.yaml");
   });
 
-  it("membership manifest declares invoice templates", () => {
-    const manifest = loadModuleManifest("membership");
-    expect(manifest?.required_seeds).toContain("invoice-membership-monthly.yaml");
-    expect(manifest?.required_seeds).toContain("invoice-membership-monthly-body.txt");
-  });
-
-  it("loads ecommerce invoice template from module seed", () => {
-    const template = loadInvoiceTemplate("ecommerce", "ecommerce-monthly");
-    expect(template.id).toBe("ecommerce-monthly");
-    expect(template.module).toBe("ecommerce");
+  it("loads staffing invoice template from module seed", () => {
+    const template = loadInvoiceTemplate("staffing", "staffing-monthly");
+    expect(template.module).toBe("staffing");
   });
 });

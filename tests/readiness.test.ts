@@ -13,9 +13,9 @@ describe("readiness 3 tier", () => {
     expect(getModuleTier("hospitality")).toBe("production_ready");
   });
 
-  it("clinic is activation_ready with activation seeds", () => {
-    expect(getModuleTier("clinic")).toBe("activation_ready");
-    const issues = checkModuleCatalogOnly("clinic", "activation_ready");
+  it("clinic is production_ready with invoice seeds", () => {
+    expect(getModuleTier("clinic")).toBe("production_ready");
+    const issues = checkModuleCatalogOnly("clinic", "production_ready");
     expect(issues).toHaveLength(0);
   });
 

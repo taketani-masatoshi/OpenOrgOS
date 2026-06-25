@@ -13,7 +13,7 @@ import {
 import { loadExecutiveCalendar, loadExecutiveTasks, loadOneOnOnes } from "../lib/data.js";
 import { pushCalendarToGoogle } from "../lib/google-calendar-push.js";
 import { pullCalendarFromGoogle, yamlOnlyFutureEvents } from "../lib/google-calendar-pull.js";
-import { currentDate, writeMarkdownReport, writeYamlFile, EXECUTIVE_DIR } from "../lib/utils.js";
+import { currentDate, writeMarkdownReport, writeYamlFile, getExecutiveDir } from "../lib/utils.js";
 
 export async function runExecutiveCalendarPush(opts: {
   from?: string;
@@ -22,7 +22,7 @@ export async function runExecutiveCalendarPush(opts: {
   meet?: boolean;
   json?: boolean;
 }): Promise<void> {
-  const calPath = join(EXECUTIVE_DIR, "calendar.yaml");
+  const calPath = join(getExecutiveDir(), "calendar.yaml");
   if (!existsSync(calPath)) {
     console.error("data/executive/calendar.yaml 未作成");
     process.exit(1);
@@ -64,7 +64,7 @@ export async function runExecutiveCalendarPull(opts: {
   apply?: boolean;
   json?: boolean;
 }): Promise<void> {
-  const calPath = join(EXECUTIVE_DIR, "calendar.yaml");
+  const calPath = join(getExecutiveDir(), "calendar.yaml");
   if (!existsSync(calPath)) {
     console.error("data/executive/calendar.yaml 未作成");
     process.exit(1);
@@ -167,7 +167,7 @@ export function buildExecutiveBriefMarkdown(referenceDate = currentDate()): stri
     "",
   ];
 
-  const calPath = join(EXECUTIVE_DIR, "calendar.yaml");
+  const calPath = join(getExecutiveDir(), "calendar.yaml");
   if (existsSync(calPath)) {
     const events = filterEventsInRange(requireExecutiveCalendar(), from, to);
     if (events.length === 0) {
@@ -188,7 +188,7 @@ export function buildExecutiveBriefMarkdown(referenceDate = currentDate()): stri
   }
 
   lines.push("", "## 要対応タスク（open / in_progress）", "");
-  const tasksPath = join(EXECUTIVE_DIR, "tasks.yaml");
+  const tasksPath = join(getExecutiveDir(), "tasks.yaml");
   if (existsSync(tasksPath)) {
     const tasks = openTasks(loadExecutiveTasks().tasks).slice(0, 10);
     if (tasks.length === 0) {
@@ -207,7 +207,7 @@ export function buildExecutiveBriefMarkdown(referenceDate = currentDate()): stri
   }
 
   lines.push("", "## 1-on-1（14 日以内）", "");
-  const oooPath = join(EXECUTIVE_DIR, "one-on-ones.yaml");
+  const oooPath = join(getExecutiveDir(), "one-on-ones.yaml");
   if (existsSync(oooPath)) {
     const upcoming = upcomingOneOnOnes(loadOneOnOnes().one_on_ones);
     if (upcoming.length === 0) {
@@ -235,7 +235,7 @@ export function buildExecutiveBriefMarkdown(referenceDate = currentDate()): stri
 }
 
 export function runExecutiveTasksArchive(opts: { dryRun?: boolean }): void {
-  const tasksPath = join(EXECUTIVE_DIR, "tasks.yaml");
+  const tasksPath = join(getExecutiveDir(), "tasks.yaml");
   if (!existsSync(tasksPath)) {
     console.error("data/executive/tasks.yaml 未作成");
     process.exit(1);

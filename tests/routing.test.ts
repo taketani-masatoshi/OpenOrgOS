@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
-import { DOCS_DIR } from "../src/lib/utils.js";
+import { getDocsDir } from "../src/lib/utils.js";
 import {
   loadRoutingRegistry,
   matchRoutes,
@@ -68,7 +68,7 @@ describe("route matching", () => {
   });
 
   it("respects module enablement for rental agent", () => {
-    setTenantId("demo");
+    setTenantId("mal");
     const matches = matchRoutes({ text: "賃貸の入居者" });
     const rental = matches.find((m) => m.route.id === "rental-operations");
     expect(rental?.moduleEnabled).toBe(true);
@@ -82,7 +82,7 @@ describe("route matching", () => {
 });
 
 describe("handoff", () => {
-  const queueDir = join(DOCS_DIR, "reports", "routing-queue");
+  const queueDir = join(getDocsDir(), "reports", "routing-queue");
   const created: string[] = [];
 
   beforeEach(() => {

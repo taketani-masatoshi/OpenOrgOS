@@ -11,13 +11,7 @@ import {
 
 export type { AgentId, ClassificationLevel, ClassificationRegistry, BankAccountsFile };
 import { cashBalanceSchema } from "../../schemas/finance.js";
-import {
-  ROOT_DIR,
-  DATA_DIR,
-  readYamlFile,
-  BANK_ACCOUNTS_YAML,
-  CLASSIFICATION_REGISTRY_YAML,
-} from "./utils.js";
+import { ROOT_DIR, getDataDir, readYamlFile, getBankAccountsYaml, getClassificationRegistryYaml } from "./utils.js";
 
 const LEVEL_ORDER: Record<ClassificationLevel, number> = {
   L0: 0,
@@ -27,12 +21,12 @@ const LEVEL_ORDER: Record<ClassificationLevel, number> = {
 };
 
 export function loadClassificationRegistry(): ClassificationRegistry {
-  return readYamlFile(CLASSIFICATION_REGISTRY_YAML, classificationRegistrySchema);
+  return readYamlFile(getClassificationRegistryYaml(), classificationRegistrySchema);
 }
 
 export function loadBankAccounts(): BankAccountsFile | undefined {
-  if (!existsSync(BANK_ACCOUNTS_YAML)) return undefined;
-  return readYamlFile(BANK_ACCOUNTS_YAML, bankAccountsFileSchema);
+  if (!existsSync(getBankAccountsYaml())) return undefined;
+  return readYamlFile(getBankAccountsYaml(), bankAccountsFileSchema);
 }
 
 export function levelAtMost(a: ClassificationLevel, b: ClassificationLevel): boolean {
@@ -177,7 +171,7 @@ export function validateGitignoreCoverage(): ClassificationIssue[] {
 export function validateBankAccountLinksSync(): ClassificationIssue[] {
   const issues: ClassificationIssue[] = [];
   const bankAccounts = loadBankAccounts();
-  const cashPath = join(DATA_DIR, "finance", "cash-balance.yaml");
+  const cashPath = join(getDataDir(), "finance", "cash-balance.yaml");
   if (!existsSync(cashPath)) return issues;
 
   const cash = readYamlFile(cashPath, cashBalanceSchema);
@@ -276,7 +270,7 @@ export function runClassificationChecks(): ClassificationIssue[] {
     });
   }
 
-  if (existsSync(BANK_ACCOUNTS_YAML)) {
+  if (existsSync(getBankAccountsYaml())) {
     try {
       loadBankAccounts();
     } catch (e) {

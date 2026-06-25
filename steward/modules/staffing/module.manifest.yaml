@@ -1,6 +1,8 @@
 id: staffing
-required_seeds: []
-notes: activation_ready — assignments.yaml, staff.yaml
+required_seeds:
+  - invoice-staffing-monthly.yaml
+  - invoice-staffing-monthly-body.txt
+notes: production_ready — assignments/staff + invoice · operations staffing CLI
 activation_seeds:
 - assignments.yaml
 - staff.yaml

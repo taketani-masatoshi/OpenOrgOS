@@ -131,7 +131,7 @@ pack.manifest.yaml @steward-os/core-reviewers
 | `packs.lock.yaml` pin | ✓ bundled |
 | pack 内モジュール解決 | ✓ `modules.ts` |
 | GitHub 独立リポジトリ公開 | 未 — monorepo bundled |
-| `jurisdiction packs pin --source github:…` | 未 — lock 手動更新 |
+| `jurisdiction packs pin --source github:…` | ✓ — `packs.lock.yaml` 更新 |
 
 **次の一手:** `jurisdiction-jp` を GitHub に mirror 抽出し、JP メンテナ team を作成 → `packs.lock` の `source` を `github:…` に切替。
 
