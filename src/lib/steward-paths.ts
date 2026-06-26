@@ -16,6 +16,7 @@ export const JURISDICTION_PACKS_DIR = join(ROOT_DIR, "steward", "jurisdiction-pa
 export const STEWARD_PLATFORM_DIR = join(ROOT_DIR, "steward", "platform");
 export const WEBHOOK_REGISTRY_PATH = join(STEWARD_PLATFORM_DIR, "webhook", "registry.yaml");
 export const CLOUD_AGENT_CONFIG_PATH = join(STEWARD_PLATFORM_DIR, "agent", "cloud.yaml");
+export const PROTOCOL_REGISTRY_PATH = join(STEWARD_PLATFORM_DIR, "protocol", "registry.yaml");
 
 /** Index only — pack pin · country list */
 export const JURISDICTIONS_DIR = join(ROOT_DIR, "steward", "jurisdictions");

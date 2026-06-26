@@ -16,6 +16,8 @@ export const auditEventSchema = z.object({
   ref: z.string(),
   actor: z.string().optional(),
   detail: z.string().optional(),
+  event_id: z.string().uuid().optional(),
+  transaction_id: z.string().optional(),
 });
 
 export type AuditEventType = z.output<typeof auditEventTypeSchema>;

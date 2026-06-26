@@ -13,7 +13,7 @@
 | **Strategic Official Communities** | Japanese · Portuguese · Spanish · Chinese · Estonian | 公式コミュニティ · 法域 pack · 優先翻訳 · レビュー付き |
 | **Community-supported** | French · German · Russian | コミュニティ維持 · ベストエフォート · 公式 SLA 外 |
 
-**原則:** ガバナンスは English · 実行（テナント MD · 規程施行文 · Agent 要約）はローカル言語。
+**原則:** ガバナンスは English · 実行（テナント MD · 規程施行文 · Agent 要約）はローカル言語。Core は組織**間**通信プロトコルの意味論（英語正本）· 内部管理は Implementation 層。
 
 ---
 
@@ -21,7 +21,8 @@
 
 **Govern in English. Execute locally.**
 
-One governance language. Many execution languages.
+**Protocol (Core)** defines cross-organizational exchange semantics in English.  
+**Execution (Implementations)** uses local languages for internal management artifacts.
 
 ---
 

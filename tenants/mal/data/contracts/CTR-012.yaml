@@ -1,27 +1,30 @@
 id: CTR-012
-name: "清掃業務委託契約（亀沢旅館）"
-counterparty: "TBD（清掃業者）"
+name: オフィス賃貸借契約（本社区画 · サウスウッド）
+counterparty: 株式会社サウスウッド
 counterparty_type: company
-type: cleaning
-status: draft
-start_date: "2026-08-01"
+type: rental
+status: executed
+start_date: 2026-04-01
+end_date: 2027-03-31
 auto_renewal: true
-owner: "段燕燕"
-property_id: PROP-002
+owner: 段燕燕
+monthly_cost: 85000
 compensation:
-  type: fixed
-  amount: 12000
+  type: monthly
+  amount: 85000
   tax_included: false
-  payment_terms: "1回12,000円/回（チェックアウト後清掃）。翌月末振込想定。"
+  payment_terms: 毎月末締め・翌月25日振込。敷金2ヶ月・礼金1ヶ月相当は別途。
 scope_summary: |
-  亀沢旅館（1棟貸し）のチェックアウト後清掃・リネン交換・消耗品補充・完了写真報告。
-  チェックアウト〜チェックイン間（4〜6時間）での対応。
+  株式会社MAL 本社ビル（東京都千代田区二番町1）内オフィス区画約15㎡を
+  株式会社サウスウッドに賃貸。共用部（会議室・受付）利用ルールは別紙。
 documents:
-  draft: "docs/contracts/CTR-012/01-draft.md"
-monthly_cost: 0
+  draft: docs/contracts/CTR-012/01-draft.md
+  executed: docs/contracts/CTR-012/02-executed.md
+executed_date: 2026-06-25
 risk:
   risk_level: low
-  notes: "業者未選定。鍵管理・秘密保持・破損賠償を明記。"
-notes: |
-  費用計画: cleaning_per_stay 12,000円。
-  参考: 国土交通省 住宅宿泊管理受託標準契約書、民泊清掃委託の実務慣行。
+  notes: 更新時の賃料改定条項・原状回復範囲を明記。
+notes: |-
+  Inter-org protocol デモ契約。MAL＝貸主、サウスウッド＝借主。
+  旅館清掃（PROP-002）は別途業者選定（CTR-012 とは無関係）。
+  [protocol demo] executed for inter-org demo · peer southwood

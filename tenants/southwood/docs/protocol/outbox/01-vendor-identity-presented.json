@@ -1,0 +1,36 @@
+{
+  "protocol_version": "1",
+  "event_id": "18b5d311-26f2-44ec-99d7-34c97d5503b9",
+  "occurred_at": "2026-06-26T11:57:01.291Z",
+  "origin": {
+    "org_id": "southwood",
+    "org_uri": "steward://tenant/southwood"
+  },
+  "destination": {
+    "org_id": "PEER-002",
+    "org_uri": "steward://tenant/mal"
+  },
+  "identity": {
+    "org_ref": {
+      "org_id": "southwood",
+      "org_uri": "steward://tenant/southwood"
+    },
+    "document_version": "2026-06-26T11:57:01.291Z"
+  },
+  "event": {
+    "type": "org.identity.presented",
+    "payload": {
+      "identity": {
+        "org_ref": {
+          "org_id": "southwood",
+          "org_uri": "steward://tenant/southwood"
+        },
+        "jurisdiction": "JP",
+        "display_name": "株式会社サウスウッド",
+        "protocol_public_key": "MCowBQYDK2VwAyEA4x2/yap4ZUKw+BioPwobhQ3TWgakVvMOnlgeoMj0rFE=",
+        "issued_at": "2026-06-26T11:57:01.291Z"
+      }
+    }
+  },
+  "signature": null
+}

@@ -1,0 +1,51 @@
+{
+  "protocol_version": "1",
+  "event_id": "c80de607-7dc2-44fe-a3e9-a3c2993fc7be",
+  "occurred_at": "2026-06-26T11:57:01.267Z",
+  "origin": {
+    "org_id": "mal",
+    "org_uri": "steward://tenant/mal"
+  },
+  "destination": {
+    "org_id": "PEER-001",
+    "org_uri": "steward://tenant/southwood"
+  },
+  "identity": {
+    "org_ref": {
+      "org_id": "mal",
+      "org_uri": "steward://tenant/mal"
+    }
+  },
+  "delegation": {
+    "grant_id": "GRANT-contract-contract-sign"
+  },
+  "event": {
+    "type": "org.authority.delegated",
+    "payload": {
+      "proof": {
+        "grant": {
+          "grant_id": "GRANT-contract-contract-sign",
+          "grantor": {
+            "org_id": "mal",
+            "org_uri": "steward://tenant/mal"
+          },
+          "grantee": {
+            "actor_id": "contract",
+            "role": "contract",
+            "org_ref": {
+              "org_id": "mal",
+              "org_uri": "steward://tenant/mal"
+            }
+          },
+          "scope": [
+            "contract.sign"
+          ],
+          "valid_from": "2026-06-26T11:57:01.264Z"
+        },
+        "basis_ref": "REG-004",
+        "issued_at": "2026-06-26T11:57:01.264Z"
+      }
+    }
+  },
+  "signature": null
+}

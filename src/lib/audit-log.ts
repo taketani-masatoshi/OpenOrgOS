@@ -25,6 +25,8 @@ export interface AppendAuditOptions {
   actor?: string;
   detail?: string;
   tenant?: string;
+  event_id?: string;
+  transaction_id?: string;
 }
 
 export function appendAuditEvent(options: AppendAuditOptions): AuditEvent {
@@ -36,6 +38,8 @@ export function appendAuditEvent(options: AppendAuditOptions): AuditEvent {
     ref: options.ref,
     actor: options.actor,
     detail: options.detail,
+    event_id: options.event_id,
+    transaction_id: options.transaction_id,
   });
   appendJsonl(auditLogPath(), event);
   return event;

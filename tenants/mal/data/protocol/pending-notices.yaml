@@ -1,0 +1,19 @@
+as_of: 2026-06-26
+notices:
+  - notice_id: NOTICE-20260626-001
+    status: transmitted
+    proposed_at: 2026-06-26T11:57:01.268Z
+    proposed_by: 秘書オペレータ
+    peer_id: PEER-001
+    transaction_type: contract.execution.notice
+    contract_id: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: CTR-012 オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approver_id: 段燕燕
+    approval_tier: A
+    approved_at: 2026-06-26T11:57:01.270Z
+    transaction_id: TX-20260626-001
+    event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde

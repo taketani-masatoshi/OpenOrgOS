@@ -1,0 +1,5 @@
+# standalone demo — witness off
+enabled: false
+quorum:
+  mode: any_of_n
+hubs: []

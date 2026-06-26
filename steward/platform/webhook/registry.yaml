@@ -12,6 +12,7 @@ outbound:
 
 inbound:
   enabled: true
+  strict_verification: true
   path: /steward/webhook
   host: 127.0.0.1
   port: 9473

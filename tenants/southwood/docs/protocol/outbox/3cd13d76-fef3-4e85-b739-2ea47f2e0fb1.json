@@ -1,0 +1,44 @@
+{
+  "protocol_version": "1",
+  "event_id": "3cd13d76-fef3-4e85-b739-2ea47f2e0fb1",
+  "occurred_at": "2026-06-26T11:57:01.303Z",
+  "origin": {
+    "org_id": "southwood",
+    "org_uri": "steward://tenant/southwood"
+  },
+  "destination": {
+    "org_id": "PEER-002",
+    "org_uri": "steward://tenant/mal"
+  },
+  "correlation_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+  "identity": {
+    "org_ref": {
+      "org_id": "southwood",
+      "org_uri": "steward://tenant/southwood"
+    }
+  },
+  "event": {
+    "type": "org.transaction.recorded",
+    "payload": {
+      "transaction_id": "TX-20260626-002",
+      "direction": "outbound",
+      "transaction_type": "obligation.acknowledged",
+      "counterparty": "PEER-002",
+      "refs": {
+        "contract_id": "CTR-012"
+      },
+      "notes": "契約範囲内の運用を確認",
+      "operator_attestation": {
+        "operator_id": "秘書オペレータ",
+        "approver_id": "南木健一",
+        "approved_at": "2026-06-26T11:57:01.303Z",
+        "basis": "existing_contract",
+        "basis_ref": "CTR-012",
+        "notice_id": "NOTICE-20260626-001",
+        "approval_tier": "A",
+        "approval_policy_ref": "REG-004"
+      }
+    }
+  },
+  "signature": "Gwhm3m1xoOtWMXL55Dn1nvtNkSFZUWc8ICueGSKvrofHNxzbpzqrqhQn43egvlnNLhQRCe66jyVHYPwhh1ZYAQ=="
+}

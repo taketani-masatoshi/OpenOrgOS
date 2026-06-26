@@ -1,10 +1,11 @@
 import {
+  checkAllModules,
+  checkModule,
   listCatalogModuleIds,
   listTenantModules,
   loadEnabledModules,
-  checkAllModules,
-  checkModule,
 } from "../lib/modules.js";
+import { validateExtensibilityContracts } from "../lib/extensibility-contract.js";
 import {
   syncActiveContext,
 } from "../lib/context-manifest.js";
@@ -44,8 +45,9 @@ export function runModulesCheck(catalogId: string): void {
 export function runModulesCheckAll(): void {
   const catalogIds = listCatalogModuleIds();
   const issues = checkAllModules();
+  const extIssues = validateExtensibilityContracts();
 
-  if (issues.length === 0) {
+  if (issues.length === 0 && extIssues.length === 0) {
     const c = countTiers();
     console.log(
       `✓ All ${catalogIds.length} catalog modules OK (${c.production_ready} production_ready · ${c.activation_ready} activation_ready · ${c.skeleton} skeleton)`
@@ -53,9 +55,12 @@ export function runModulesCheckAll(): void {
     process.exit(0);
   }
 
-  console.error(`✗ modules check --all failed (${issues.length} issue(s)):`);
+  console.error(`✗ modules check --all failed (${issues.length + extIssues.length} issue(s)):`);
   for (const i of issues) {
     console.error(`  [${i.moduleId}] ${i.message}`);
+  }
+  for (const i of extIssues) {
+    console.error(`  [${i.code}] ${i.message}`);
   }
   process.exit(1);
 }

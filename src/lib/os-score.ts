@@ -6,9 +6,10 @@
 
 import type { MaturityReport } from "./maturity.js";
 import { listP0Items } from "./p0-status.js";
+import { computeModuleAxisStats } from "./extensibility-contract.js";
 
-/** framework-assessment §9 実測（更新時は §10 と同期） */
-export const PRODUCT_FRAMEWORK_SCORE = 99;
+/** framework-assessment §9 実測（REF-4b/d 完了 · 2026-06-25） */
+export const PRODUCT_FRAMEWORK_SCORE = 100;
 
 export interface Os99Score {
   product: number;
@@ -49,7 +50,13 @@ export function computeOs99Score(maturity: MaturityReport): Os99Score {
     gaps.push(`ops p0 ブロッカー ${blockers.length} 件（最大ギャップ）`);
   }
   if (product < 100) {
-    gaps.push(`製品 ${product}/100 — REF-4b/d 未了`);
+    gaps.push(`製品 ${product}/100 — framework-assessment §9 未達`);
+  }
+  const moduleAxis = computeModuleAxisStats();
+  if (moduleAxis.activationReady > 0) {
+    gaps.push(
+      `業務 module ${moduleAxis.productionPct}% production_ready (${moduleAxis.activationReady} activation_ready)`
+    );
   }
   if (ops < 95) {
     gaps.push(`運用度 ${ops}% — P0 実手続未完了`);

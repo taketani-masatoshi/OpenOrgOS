@@ -1,0 +1,23 @@
+version: "1"
+
+# Jurisdiction-trusted Witness Hub registry (national committee template).
+# Orgs may pin hubs from this list into data/protocol/witness-pool.yaml.
+
+jurisdictions:
+  - jurisdiction: JP
+    notes: Reference demo hubs for mal / southwood inter-org demo
+    hubs:
+      - hub_id: HUB-A
+        hub_url: http://127.0.0.1:9474
+        hub_public_key: ""
+        priority: 1
+      - hub_id: HUB-B
+        hub_url: http://127.0.0.1:9475
+        hub_public_key: ""
+        priority: 2
+  - jurisdiction: HK
+    notes: Placeholder — populate hub_public_key when operators publish
+    hubs: []
+  - jurisdiction: US
+    notes: Placeholder
+    hubs: []

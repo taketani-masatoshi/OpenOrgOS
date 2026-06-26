@@ -1,0 +1,53 @@
+{
+  "receipt_id": "WRCPT-1782475021306-g8tdlk",
+  "event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+  "envelope_digest": "0cb57f43d1ec72b049b193be772c58cf75f77b3695373a42e3515167cef4e24f",
+  "status": "mutually_confirmed",
+  "attestations": [
+    {
+      "event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+      "envelope_digest": "0cb57f43d1ec72b049b193be772c58cf75f77b3695373a42e3515167cef4e24f",
+      "side": "sent",
+      "origin": {
+        "org_id": "mal",
+        "org_uri": "steward://tenant/mal"
+      },
+      "destination": {
+        "org_id": "PEER-001",
+        "org_uri": "steward://tenant/southwood"
+      },
+      "transaction_type": "contract.execution.notice",
+      "attested_at": "2026-06-26T11:57:01.273Z",
+      "org_ref": {
+        "org_id": "mal",
+        "org_uri": "steward://tenant/mal"
+      },
+      "org_public_key": "MCowBQYDK2VwAyEAzVKCrKJLKsoTmTlfWuj5ss3NgOGCIPf4YYDzIRSlRts=",
+      "org_signature": "pRY60clcLHDUbKHWyor0JausrwMiNnHNBY+BhwGbz+59VfCwNhbhxjHMeJyN/hb+HTKjKCs+fGKvgbVDNH+uAg=="
+    },
+    {
+      "event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+      "envelope_digest": "0cb57f43d1ec72b049b193be772c58cf75f77b3695373a42e3515167cef4e24f",
+      "side": "received",
+      "origin": {
+        "org_id": "mal",
+        "org_uri": "steward://tenant/mal"
+      },
+      "destination": {
+        "org_id": "PEER-001",
+        "org_uri": "steward://tenant/southwood"
+      },
+      "transaction_type": "contract.execution.notice",
+      "attested_at": "2026-06-26T11:57:01.295Z",
+      "org_ref": {
+        "org_id": "PEER-001",
+        "org_uri": "steward://tenant/southwood"
+      },
+      "org_public_key": "MCowBQYDK2VwAyEA4x2/yap4ZUKw+BioPwobhQ3TWgakVvMOnlgeoMj0rFE=",
+      "org_signature": "llTaeyhETYoGsbjOnD3CLxXLi2WoOd6Z2veTH5PQSIsMRKRbOStZeD3GQ6UvYPnsNCvuQUc7KIxdquF2Tg81DA=="
+    }
+  ],
+  "issued_at": "2026-06-26T11:57:01.306Z",
+  "hub_id": "HUB-B",
+  "hub_signature": "tH8ZtXe9U2GLNdNRCS0KWSCgdXf1yZkfKvbPIYpmTEswginivVwImSFzPwaIYEe4GKxtLnG/75Kx9nPsTDW/CQ=="
+}

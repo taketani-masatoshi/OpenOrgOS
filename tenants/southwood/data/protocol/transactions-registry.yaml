@@ -1,0 +1,33 @@
+as_of: 2026-06-26
+transactions:
+  - transaction_id: TX-20260626-001
+    direction: inbound
+    our_org:
+      org_id: southwood
+      org_uri: steward://tenant/southwood
+    counterparty:
+      org_id: PEER-002
+      org_uri: steward://tenant/mal
+    transaction_type: contract.execution.notice
+    amount:
+      value: 85000
+      currency: JPY
+    refs:
+      contract_id: CTR-012
+    event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+    recorded_at: 2026-06-26T11:57:01.293Z
+    notes: inbound webhook · attested by 段燕燕
+  - transaction_id: TX-20260626-002
+    direction: outbound
+    our_org:
+      org_id: southwood
+      org_uri: steward://tenant/southwood
+    counterparty:
+      org_id: PEER-002
+      org_uri: steward://tenant/mal
+    transaction_type: obligation.acknowledged
+    refs:
+      contract_id: CTR-012
+    event_id: 3cd13d76-fef3-4e85-b739-2ea47f2e0fb1
+    recorded_at: 2026-06-26T11:57:01.303Z
+    notes: 契約範囲内の運用を確認

@@ -1,0 +1,9 @@
+hub_id: HUB-A
+gossip:
+  enabled: true
+  interval_sec: 300
+hub_peers:
+  - hub_id: HUB-B
+    hub_url: http://127.0.0.1:9475
+    hub_public_key: REPLACE_AFTER_hub_export_public_key
+    priority: 1

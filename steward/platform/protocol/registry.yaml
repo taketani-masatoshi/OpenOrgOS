@@ -1,0 +1,17 @@
+protocol_version: "1"
+
+core_event_types:
+  - org.identity.presented
+  - org.authority.delegated
+  - org.transaction.recorded
+  - org.audit.attested
+  - org.witness.attestation.registered
+  - org.witness.receipt.issued
+
+payload_namespaces:
+  - steward.contract
+  - steward.payment
+  - steward.invoice
+
+outbound:
+  format: legacy

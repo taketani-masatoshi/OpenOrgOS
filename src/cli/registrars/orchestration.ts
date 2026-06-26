@@ -24,6 +24,49 @@ import { runWebhookConfig, runWebhookSend, runWebhookIngest, runWebhookServe } f
 import { runMergePrPlan, runMergePrCreate } from "../../commands/merge-pr.js";
 import { runAuditLogAppend, runAuditLogList } from "../../commands/audit.js";
 import { runComplianceGap } from "../../commands/compliance.js";
+import {
+  runProtocolValidate,
+  runProtocolIdentityExport,
+  runProtocolIdentityValidate,
+  runProtocolPeerRegister,
+  runProtocolDelegationExport,
+  runProtocolDelegationValidate,
+  runProtocolTransactionRecord,
+  runProtocolTransactionList,
+  runProtocolTransactionShow,
+  runProtocolAuditVerify,
+  runProtocolEnvelopeValidate,
+  runProtocolNoticePropose,
+  runProtocolNoticeList,
+  runProtocolNoticeApprove,
+  runProtocolNoticeReject,
+  runProtocolNoticeShow,
+  runProtocolSigningExportPublic,
+  runProtocolDeliver,
+  runProtocolDeliverFlushPending,
+  runProtocolNoticeDraft,
+  runProtocolApproversList,
+  runProtocolWitnessRegister,
+  runProtocolWitnessFlushPending,
+  runProtocolWitnessVerify,
+  runProtocolWitnessReconcile,
+  runProtocolWitnessPoolStatus,
+  runProtocolTrustedHubsList,
+  runProtocolWitnessPoolInitTrusted,
+} from "../../commands/protocol.js";
+import {
+  runHubServe,
+  runHubExportPublicKey,
+  runHubVerify,
+  runHubAnchorExport,
+  runHubAnchorShow,
+  runHubAnchorVerify,
+  runHubGossipExport,
+  runHubGossipAttestationExport,
+  runHubFederationShow,
+  runHubFederationAddPeer,
+  runHubGossipSync,
+} from "../../commands/hub.js";
 
 export function registerOrchestrationCommands(program: Command): void {
   const routeCmd = program.command("route").description("Agent inter-routing (registry · access · handoff)");
@@ -343,4 +386,561 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runComplianceGap({ tenant: opts.tenant, json: opts.json }));
+
+  const protocolCmd = program.command("protocol").description("Inter-org protocol (OpenOrgOS Core wire)");
+  protocolCmd
+    .command("validate")
+    .description("Validate protocol registry · peers · transactions · audit chain")
+    .option("--tenant <id>", "Tenant id")
+    .option("--standalone", "Peer-less OrgOS mode (no peers · witness disabled)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolValidate({ tenant: opts.tenant, json: opts.json, standalone: opts.standalone })
+    );
+
+  const protocolIdentityCmd = protocolCmd.command("identity").description("Identity exchange");
+  protocolIdentityCmd
+    .command("export")
+    .description("Export OrgIdentity as EventEnvelope")
+    .option("--peer <id>", "Destination peer id")
+    .option("--stakeholder <id>", "Link stakeholder_id (STK-*)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolIdentityExport({
+        peer: opts.peer,
+        stakeholder: opts.stakeholder,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolIdentityCmd
+    .command("validate")
+    .description("Validate identity envelope or document JSON file")
+    .requiredOption("--file <path>", "JSON file")
+    .action((opts) => runProtocolIdentityValidate({ file: opts.file }));
+
+  const protocolPeerCmd = protocolCmd.command("peer").description("External org peer registry");
+  protocolPeerCmd
+    .command("register")
+    .description("Register peer in data/protocol/peers.yaml")
+    .requiredOption("--name <text>", "Display name")
+    .requiredOption("--jurisdiction <code>", "Jurisdiction (JP | HK | …)")
+    .option("--stakeholder <id>", "STK-* link")
+    .option("--peer-id <id>", "Override peer id (PEER-NNN)")
+    .option("--org-uri <uri>", "steward://tenant/...")
+    .option("--public-key <b64>", "Base64 SPKI public key")
+    .option("--identity-file <path>", "Identity JSON with protocol_public_key")
+    .option("--webhook-url <url>", "Peer inbound webhook URL")
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) =>
+      runProtocolPeerRegister({
+        name: opts.name,
+        jurisdiction: opts.jurisdiction,
+        stakeholder: opts.stakeholder,
+        peerId: opts.peerId,
+        orgUri: opts.orgUri,
+        publicKey: opts.publicKey,
+        identityFile: opts.identityFile,
+        webhookUrl: opts.webhookUrl,
+        tenant: opts.tenant,
+      })
+    );
+
+  const protocolDelegationCmd = protocolCmd.command("delegation").description("Authority delegation");
+  protocolDelegationCmd
+    .command("export")
+    .description("Export DelegationProof as EventEnvelope")
+    .requiredOption("--scope <scope>", "e.g. contract.sign")
+    .requiredOption("--grantee-agent <id>", "Agent id (contract · finance · …)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolDelegationExport({
+        scope: opts.scope,
+        granteeAgent: opts.granteeAgent,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolDelegationCmd
+    .command("validate")
+    .description("Validate delegation proof JSON file")
+    .requiredOption("--file <path>", "JSON file")
+    .action((opts) => runProtocolDelegationValidate({ file: opts.file }));
+
+  const protocolTxCmd = protocolCmd.command("transaction").description("Inter-org transaction ledger");
+  protocolTxCmd
+    .command("record")
+    .description("Record inbound transaction (outbound requires notice approve)")
+    .requiredOption("--type <type>", "obligation.acknowledged | invoice.issued | …")
+    .requiredOption("--peer <id>", "Peer id (PEER-*)")
+    .option("--contract <id>", "CTR-*")
+    .option("--invoice <id>", "Invoice id")
+    .option("--broker-instruction <path>", "Broker instruction scratch path id")
+    .option("--amount <n>", "Amount", parseFloat)
+    .option("--currency <code>", "Currency", "JPY")
+    .option("--stakeholder <id>", "STK-*")
+    .option("--notes <text>", "Notes")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTransactionRecord({
+        type: opts.type,
+        peer: opts.peer,
+        contract: opts.contract,
+        invoice: opts.invoice,
+        brokerInstruction: opts.brokerInstruction,
+        amount: opts.amount,
+        currency: opts.currency,
+        stakeholder: opts.stakeholder,
+        notes: opts.notes,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolTxCmd
+    .command("list")
+    .description("List transactions")
+    .option("--peer <id>", "Filter by peer")
+    .option("--since <date>", "YYYY-MM-DD")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTransactionList({
+        peer: opts.peer,
+        since: opts.since,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolTxCmd
+    .command("show")
+    .description("Show transaction by id")
+    .argument("<id>", "TX-YYYYMMDD-NNN")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((id, opts) => runProtocolTransactionShow({ id, tenant: opts.tenant, json: opts.json }));
+
+  const protocolNoticeCmd = protocolCmd
+    .command("notice")
+    .description("Operator-proposed inter-org wire (REG-004 approval)");
+  protocolNoticeCmd
+    .command("draft")
+    .description("Secretary: draft notice (default operator 秘書オペレータ)")
+    .requiredOption("--peer <id>", "PEER-*")
+    .option("--type <type>", "Wire type")
+    .option("--contract <id>", "CTR-*")
+    .option("--correlation-event <uuid>", "For ack")
+    .option("--operator <name>", "Override operator")
+    .option("--message <text>", "Notice body")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolNoticeDraft({
+        peer: opts.peer,
+        type: opts.type,
+        contract: opts.contract,
+        correlationEvent: opts.correlationEvent,
+        operator: opts.operator,
+        message: opts.message,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolNoticeCmd
+    .command("propose")
+    .description("Operator drafts notice — does not transmit")
+    .requiredOption("--peer <id>", "PEER-*")
+    .requiredOption("--operator <name>", "Org operator (human)")
+    .option("--type <type>", "Wire type (default contract.execution.notice)")
+    .option("--contract <id>", "CTR-* (execution notice / contract.executed)")
+    .option("--correlation-event <uuid>", "Inbound event_id (obligation.acknowledged)")
+    .option("--invoice <id>", "Invoice id (invoice.issued)")
+    .option("--broker-instruction <id>", "Broker instruction (payment.instructed)")
+    .option("--amount <n>", "Amount (payment.instructed)", parseFloat)
+    .option("--currency <code>", "ISO currency", "JPY")
+    .option("--stakeholder <id>", "STK-*")
+    .option("--message <text>", "Notice body (L1)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolNoticePropose({
+        peer: opts.peer,
+        operator: opts.operator,
+        type: opts.type,
+        contract: opts.contract,
+        correlationEvent: opts.correlationEvent,
+        invoice: opts.invoice,
+        brokerInstruction: opts.brokerInstruction,
+        amount: opts.amount,
+        currency: opts.currency,
+        stakeholder: opts.stakeholder,
+        message: opts.message,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolNoticeCmd
+    .command("list")
+    .description("List pending / historical notices")
+    .option("--status <status>", "pending_approval | transmitted | rejected")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolNoticeList({ status: opts.status, tenant: opts.tenant, json: opts.json })
+    );
+  protocolNoticeCmd
+    .command("approve")
+    .description("Approver (CEO etc.) authorizes transmission to peer org")
+    .requiredOption("--id <id>", "NOTICE-*")
+    .requiredOption("--approver <name>", "Approver name (L1)")
+    .option("--co-approver <name>", "Second approver (REG-004 tier B)")
+    .option("--operator <name>", "Override operator id")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolNoticeApprove({
+        id: opts.id,
+        approver: opts.approver,
+        coApprover: opts.coApprover,
+        operator: opts.operator,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolNoticeCmd
+    .command("reject")
+    .description("Reject pending notice")
+    .requiredOption("--id <id>", "NOTICE-*")
+    .requiredOption("--approver <name>", "Approver name")
+    .option("--reason <text>", "Rejection reason")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolNoticeReject({
+        id: opts.id,
+        approver: opts.approver,
+        reason: opts.reason,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolNoticeCmd
+    .command("show")
+    .description("Show notice by id")
+    .argument("<id>", "NOTICE-*")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((id, opts) => runProtocolNoticeShow({ id, tenant: opts.tenant, json: opts.json }));
+
+  const protocolAuditCmd = protocolCmd.command("audit").description("Protocol audit chain");
+  protocolAuditCmd
+    .command("verify")
+    .description("Verify hash chain integrity")
+    .option("--since <date>", "YYYY-MM-DD")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolAuditVerify({ since: opts.since, tenant: opts.tenant, json: opts.json })
+    );
+
+  const protocolSigningCmd = protocolCmd.command("signing").description("Protocol envelope signing");
+  protocolSigningCmd
+    .command("export-public")
+    .description("Export base64 protocol public key for peer registration")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolSigningExportPublic({ tenant: opts.tenant, json: opts.json }));
+
+  protocolCmd
+    .command("deliver")
+    .description("POST envelope JSON to peer inbound_webhook_url (store-and-forward on failure)")
+    .requiredOption("--peer <id>", "PEER-*")
+    .requiredOption("--file <path>", "Envelope JSON file")
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) => runProtocolDeliver({ peer: opts.peer, file: opts.file, tenant: opts.tenant }));
+
+  protocolCmd
+    .command("deliver-flush-pending")
+    .description("Retry wire deliveries queued in data/protocol/wire-pending.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolDeliverFlushPending({ tenant: opts.tenant, json: opts.json })
+    );
+
+  protocolCmd
+    .command("trusted-hubs")
+    .description("List jurisdiction-trusted witness hubs from platform registry")
+    .option("--jurisdiction <code>", "ISO jurisdiction code")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTrustedHubsList({
+        jurisdiction: opts.jurisdiction,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+
+  protocolCmd
+    .command("approvers")
+    .description("List REG-004 authorized approvers from company.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolApproversList({ tenant: opts.tenant, json: opts.json }));
+
+  const protocolWitnessCmd = protocolCmd.command("witness").description("Distributed witness pool");
+  protocolWitnessCmd
+    .command("register")
+    .description("Register attestation to witness pool for event_id")
+    .requiredOption("--event-id <uuid>", "Envelope event_id")
+    .requiredOption("--side <side>", "sent | received")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessRegister({
+        eventId: opts.eventId,
+        side: opts.side,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolWitnessCmd
+    .command("flush-pending")
+    .description("Retry failed witness attestations in pending queue")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolWitnessFlushPending({ tenant: opts.tenant, json: opts.json }));
+  protocolWitnessCmd
+    .command("verify")
+    .description("Verify cached witness receipts and quorum for event_id")
+    .requiredOption("--event-id <uuid>", "Envelope event_id")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessVerify({ eventId: opts.eventId, tenant: opts.tenant, json: opts.json })
+    );
+  protocolWitnessCmd
+    .command("reconcile")
+    .description("Cross-check local wire · witness · audit with peer outbound txs")
+    .requiredOption("--peer <id>", "PEER-*")
+    .option("--since <date>", "ISO date YYYY-MM-DD")
+    .option("--event-id <uuid>", "Single event_id")
+    .option("--cross-hub", "Also compare attestation status across all pool hubs")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessReconcile({
+        peer: opts.peer,
+        since: opts.since,
+        eventId: opts.eventId,
+        crossHub: opts.crossHub,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  const protocolWitnessPoolCmd = protocolWitnessCmd.command("pool").description("Witness pool");
+  protocolWitnessPoolCmd
+    .command("init-trusted")
+    .description("Initialize witness-pool.yaml from jurisdiction trusted_hubs registry")
+    .option("--jurisdiction <code>", "ISO jurisdiction code")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runProtocolWitnessPoolInitTrusted({
+        jurisdiction: opts.jurisdiction,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolWitnessPoolCmd
+    .command("status")
+    .description("Check health of configured witness hubs")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolWitnessPoolStatus({ tenant: opts.tenant, json: opts.json }));
+
+  const hubCmd = program.command("hub").description("Witness Hub node (reference implementation)");
+  hubCmd
+    .command("serve")
+    .description("Start witness hub HTTP server")
+    .requiredOption("--hub-id <id>", "Hub node id (e.g. HUB-A)")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--host <host>", "Bind host", "127.0.0.1")
+    .option("--port <n>", "Bind port", "9474")
+    .option("--gossip-interval <sec>", "Background gossip sync interval (requires hub-federation.yaml)")
+    .action((opts) =>
+      runHubServe({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        host: opts.host,
+        port: Number(opts.port),
+        gossipIntervalSec: opts.gossipInterval ? Number(opts.gossipInterval) : undefined,
+      })
+    );
+  const hubFederationCmd = hubCmd.command("federation").description("Hub peer federation");
+  hubFederationCmd
+    .command("show")
+    .description("Show hub-federation.yaml")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runHubFederationShow({ hubId: opts.hubId, dataDir: opts.dataDir, json: opts.json })
+    );
+  hubFederationCmd
+    .command("add-peer")
+    .description("Add peer hub to hub-federation.yaml")
+    .requiredOption("--hub-id <id>", "Local hub node id")
+    .requiredOption("--peer-id <id>", "Peer hub id")
+    .requiredOption("--peer-url <url>", "Peer hub base URL")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--public-key <b64>", "Peer hub public key (fetched if omitted)")
+    .option("--priority <n>", "Peer priority", "1")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runHubFederationAddPeer({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        peerId: opts.peerId,
+        peerUrl: opts.peerUrl,
+        publicKey: opts.publicKey,
+        priority: Number(opts.priority),
+        json: opts.json,
+      })
+    );
+  const hubGossipCmd = hubCmd.command("gossip").description("Hub gossip sync");
+  hubGossipCmd
+    .command("sync")
+    .description("Pull attestations from federation peer(s)")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--peer <id>", "Single peer hub id (default: all peers)")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runHubGossipSync({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        peer: opts.peer,
+        json: opts.json,
+      })
+    );
+  hubGossipCmd
+    .command("sync-all")
+    .description("Pull attestations from all federation peers")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runHubGossipSync({ hubId: opts.hubId, dataDir: opts.dataDir, json: opts.json })
+    );
+  hubCmd
+    .command("export-public-key")
+    .description("Export hub Ed25519 public key (base64 SPKI)")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runHubExportPublicKey({ hubId: opts.hubId, dataDir: opts.dataDir, json: opts.json })
+    );
+  hubCmd
+    .command("verify")
+    .description("Verify hub receipt for event_id (local data-dir or remote hub-url)")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .requiredOption("--event-id <uuid>", "Event id")
+    .option("--data-dir <path>", "Hub data directory (local mode)")
+    .option("--hub-url <url>", "Remote hub base URL")
+    .option("--public-key <b64>", "Override hub public key")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runHubVerify({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        hubUrl: opts.hubUrl,
+        eventId: opts.eventId,
+        hubPublicKey: opts.publicKey,
+        json: opts.json,
+      })
+    );
+  hubCmd
+    .command("anchor-show")
+    .description("Show Merkle anchor for hub receipts on date")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--date <YYYY-MM-DD>", "Anchor date")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runHubAnchorShow({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        date: opts.date,
+        json: opts.json,
+      })
+    );
+  hubCmd
+    .command("anchor-export")
+    .description("Compute and save signed Merkle anchor for receipt digests on date")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--date <YYYY-MM-DD>", "Anchor date")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runHubAnchorExport({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        date: opts.date,
+        json: opts.json,
+      })
+    );
+  hubCmd
+    .command("anchor-verify")
+    .description("Verify signed Merkle anchor (local or remote)")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory")
+    .option("--hub-url <url>", "Remote hub base URL")
+    .option("--date <YYYY-MM-DD>", "Anchor date")
+    .option("--public-key <b64>", "Override hub public key")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runHubAnchorVerify({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        hubUrl: opts.hubUrl,
+        date: opts.date,
+        hubPublicKey: opts.publicKey,
+        json: opts.json,
+      })
+    );
+  hubCmd
+    .command("gossip-export")
+    .description("Export gossip snapshot of hub receipts (audit read-only)")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--since <iso>", "Filter receipts since ISO timestamp")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runHubGossipExport({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        since: opts.since,
+        json: opts.json,
+      })
+    );
+  hubCmd
+    .command("gossip-attestation-export")
+    .description("Export attestations for gossip sync")
+    .requiredOption("--hub-id <id>", "Hub node id")
+    .option("--data-dir <path>", "Hub data directory", "./data/hub")
+    .option("--since <iso>", "Filter since ISO timestamp")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runHubGossipAttestationExport({
+        hubId: opts.hubId,
+        dataDir: opts.dataDir,
+        since: opts.since,
+        json: opts.json,
+      })
+    );
 }

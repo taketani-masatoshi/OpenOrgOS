@@ -1,0 +1,12 @@
+id: southwood
+name: 株式会社サウスウッド
+legal_name: 株式会社サウスウッド
+display_name: Southwood
+description: Inter-org protocol デモ — MAL 本社オフィス区画の借主（相手先組織）
+default: false
+lifecycle: skeleton
+jurisdiction: JP
+entity_form: kk
+display_language: ja
+locale: ja-JP
+default_currency: JPY

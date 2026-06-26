@@ -136,7 +136,7 @@ pack 内 `modules/`（宣言系等）は **pack_ready 必須ではない**。JP 
 |----|------|----------------------|-----|
 | 法域 pack | TJS-11 | **11**（全バケット） | **100%** |
 | 表示言語 | 9（§5 · fr 除く） | **9** | **100%** |
-| 業務 module production_ready | 24 | **19** | **76%** |
+| 業務 module production_ready | 26 | **19** | **73%** |
 
 欧州: TJS-EU **100%**（案 A · `EU` pack + subdivisions DE FR GB）。
 

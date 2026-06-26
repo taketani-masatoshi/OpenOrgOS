@@ -86,20 +86,19 @@ export function runWebhookIngest(opts: WebhookIngestOptions): void {
     console.error(`File not found: ${opts.file}`);
     process.exit(1);
   }
-  const data = JSON.parse(readFileSync(opts.file, "utf-8")) as {
-    event: string;
-    ref?: string;
-    payload?: Record<string, unknown>;
-    secret?: string;
-  };
+  const data = JSON.parse(readFileSync(opts.file, "utf-8")) as Record<string, unknown>;
   const result = ingestWebhook({
-    event: data.event,
-    ref: data.ref,
-    payload: data.payload,
-    secret: opts.secret ?? data.secret,
+    event: typeof data.event === "string" ? data.event : undefined,
+    ref: typeof data.ref === "string" ? data.ref : undefined,
+    payload: (data.payload as Record<string, unknown>) ?? undefined,
+    secret: opts.secret ?? (typeof data.secret === "string" ? data.secret : undefined),
+    raw: data,
   });
   if (result.ok) {
-    console.log(`✓ ingested · queue ${result.queueId}`);
+    const idem = result.idempotent ? " · idempotent" : "";
+    console.log(
+      `✓ ingested · queue ${result.queueId}${result.transactionId ? ` · tx ${result.transactionId}` : ""}${result.inboxPath ? ` · inbox ${result.inboxPath}` : ""}${idem}`
+    );
   } else {
     console.error(result.reason);
     process.exit(1);

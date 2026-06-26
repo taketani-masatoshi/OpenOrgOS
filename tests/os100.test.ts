@@ -17,7 +17,7 @@ describe("OS-100 framework", () => {
     expect(text).toContain("## 9. 製品ルーブリック");
     expect(text).toContain("OS-1");
     expect(text).toContain("OS-10b");
-    expect(text).toMatch(/99\/100/);
+    expect(text).toMatch(/100\/100/);
   });
 
   it("framework-backlog Phase E-H complete", () => {

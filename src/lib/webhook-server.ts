@@ -1,6 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { loadWebhookRegistry } from "./webhook.js";
-import { ingestWebhook } from "./webhook.js";
+import { loadWebhookRegistry, ingestWebhook } from "./webhook.js";
 import { runQueueDrainInternal } from "./queue-processor.js";
 
 export interface WebhookServerOptions {
@@ -63,26 +62,28 @@ async function handleRequest(
   }
 
   try {
-    const raw = await readBody(req);
-    const data = JSON.parse(raw) as {
-      event: string;
-      ref?: string;
-      payload?: Record<string, unknown>;
-      secret?: string;
-    };
+    const rawText = await readBody(req);
+    const data = JSON.parse(rawText) as Record<string, unknown>;
     const headerSecret = req.headers["x-steward-secret"];
     const secret =
-      typeof headerSecret === "string" ? headerSecret : data.secret;
+      typeof headerSecret === "string"
+        ? headerSecret
+        : typeof data.secret === "string"
+          ? data.secret
+          : undefined;
 
     const result = ingestWebhook({
-      event: data.event,
-      ref: data.ref,
-      payload: data.payload,
+      event: typeof data.event === "string" ? data.event : undefined,
+      ref: typeof data.ref === "string" ? data.ref : undefined,
+      payload: (data.payload as Record<string, unknown>) ?? undefined,
       secret,
+      raw: JSON.parse(rawText),
     });
 
     if (!result.ok) {
-      res.writeHead(401, { "Content-Type": "application/json" });
+      res.writeHead(result.reason === "invalid secret" ? 401 : 422, {
+        "Content-Type": "application/json",
+      });
       res.end(JSON.stringify(result));
       return;
     }
@@ -92,7 +93,14 @@ async function handleRequest(
     }
 
     res.writeHead(202, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, queue_id: result.queueId }));
+    res.end(
+      JSON.stringify({
+        ok: true,
+        queue_id: result.queueId,
+        transaction_id: result.transactionId,
+        inbox_path: result.inboxPath,
+      })
+    );
   } catch (err) {
     res.writeHead(400, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));

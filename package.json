@@ -14,7 +14,9 @@
     "daily": "npm run check && npm run steward -- pipeline run daily",
     "weekly": "npm run check && npm run steward -- pipeline run weekly",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "demo:inter-org": "node --import tsx scripts/seed-inter-org-demo.ts",
+    "demo:standalone-org": "node --import tsx scripts/seed-standalone-org-demo.ts"
   },
   "dependencies": {
     "@independentsoft/msg": "^1.0.2",
