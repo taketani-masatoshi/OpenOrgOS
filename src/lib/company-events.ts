@@ -117,7 +117,25 @@ export interface EnsureMonthResult {
   artifactsDirRel: string;
 }
 
-export function ensureCompanyEventMonth(monthInput?: string): EnsureMonthResult {
+export function refreshCompanyEventMonthIndex(month: string): void {
+  initCompanyEventsFile();
+  refreshMonthIndex(month, loadCompanyEvents().events);
+}
+
+export function refreshAllCompanyEventIndexes(): string[] {
+  initCompanyEventsFile();
+  const registry = loadCompanyEvents();
+  const months = [...new Set(registry.events.map((e) => e.month))];
+  for (const month of months) {
+    refreshMonthIndex(month, registry.events);
+  }
+  return months;
+}
+
+export function ensureCompanyEventMonth(
+  monthInput?: string,
+  opts?: { refreshIndex?: boolean }
+): EnsureMonthResult {
   const month = parseMonth(monthInput);
   const eventsDir = join(getDocsCompanyEventsDir(), month);
   const artifactsDir = join(getDocsCompanyArtifactsDir(), month);
@@ -131,6 +149,8 @@ export function ensureCompanyEventMonth(monthInput?: string): EnsureMonthResult 
       `# 会社イベント — ${month}\n\n| Event ID | 日付 | kind | タイトル | 状態 |\n|----------|------|------|----------|------|\n`,
       "utf8"
     );
+  } else if (opts?.refreshIndex) {
+    refreshCompanyEventMonthIndex(month);
   }
 
   return {

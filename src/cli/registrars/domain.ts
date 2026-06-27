@@ -49,8 +49,10 @@ import {
   runEventsArchive,
   runEventsClose,
   runEventsEnsureMonth,
+  runEventsLinkOutbox,
   runEventsList,
   runEventsNew,
+  runEventsRegisterArtifact,
   runEventsStatus,
   runEventsValidate,
 } from "../../commands/company-events.js";
@@ -292,7 +294,8 @@ export function registerDomainCommands(program: Command): void {
     .command("ensure-month")
     .description("Create YYYY-MM folders under docs/company/events and artifacts")
     .option("--month <month>", "YYYY-MM (default: current month)")
-    .action((opts) => runEventsEnsureMonth({ month: opts.month }));
+    .option("--refresh-index", "Regenerate _INDEX.md from registry")
+    .action((opts) => runEventsEnsureMonth({ month: opts.month, refreshIndex: opts.refreshIndex }));
   events
     .command("new")
     .description("Create event record + artifact folder")
@@ -338,6 +341,20 @@ export function registerDomainCommands(program: Command): void {
     .description("Validate registry vs event MD and artifact folders")
     .option("--json", "JSON output")
     .action((opts) => runEventsValidate({ json: opts.json }));
+  events
+    .command("register-artifact <id>")
+    .description("Register files in artifact index for event")
+    .requiredOption("--files <names>", "Comma-separated filenames in artifact dir")
+    .option("--kind <kind>", "Artifact kind label (default: generated-md)")
+    .action((id, opts) =>
+      runEventsRegisterArtifact({ id, files: opts.files, kind: opts.kind })
+    );
+  events
+    .command("link-outbox")
+    .description("Link document-io outbox item to company event")
+    .requiredOption("--event-id <id>", "EVT-*")
+    .requiredOption("--outbox-id <id>", "OUT-*")
+    .action((opts) => runEventsLinkOutbox({ eventId: opts.eventId, outboxId: opts.outboxId }));
 
   const deps = program.command("deps").description("Parameter dependency / impact propagation");
   deps

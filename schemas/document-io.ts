@@ -54,6 +54,8 @@ export const outboxItemSchema = z.object({
   source_ref: z.string().optional(),
   title: z.string().optional(),
   related_id: z.string().optional(),
+  /** Company event link (FR-14). */
+  event_id: z.string().regex(/^EVT-/).optional(),
   printed_at: dateString.optional(),
   submitted_at: dateString.optional(),
   notes: z.string().optional(),

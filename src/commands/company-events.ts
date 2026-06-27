@@ -4,13 +4,17 @@ import {
   closeCompanyEvent,
   createCompanyEvent,
   ensureCompanyEventMonth,
+  findCompanyEventById,
   initCompanyEventsFile,
   listCompanyEvents,
   loadCompanyEvents,
   parseMonth,
+  refreshAllCompanyEventIndexes,
+  registerArtifactFiles,
   validateCompanyEvents,
   type CreateCompanyEventOptions,
 } from "../lib/company-events.js";
+import { linkOutboxItemToEvent } from "../lib/document-io.js";
 import type { CompanyEventKind } from "../../schemas/company-events.js";
 
 function parseRelated(raw?: string): CreateCompanyEventOptions["related"] | undefined {
@@ -26,12 +30,20 @@ function parseRelated(raw?: string): CreateCompanyEventOptions["related"] | unde
   return Object.keys(related).length ? related : undefined;
 }
 
-export function runEventsEnsureMonth(opts: { month?: string }): void {
+export function runEventsEnsureMonth(opts: { month?: string; refreshIndex?: boolean }): void {
   initCompanyEventsFile();
-  const result = ensureCompanyEventMonth(opts.month);
+  if (opts.refreshIndex && !opts.month) {
+    const months = refreshAllCompanyEventIndexes();
+    console.log(`✓ Company event indexes refreshed (${months.length} month(s))`);
+    return;
+  }
+  const result = ensureCompanyEventMonth(opts.month, { refreshIndex: opts.refreshIndex });
   console.log(`✓ Company event month ready: ${result.month}`);
   console.log(`  events:    ${result.eventsDirRel}`);
   console.log(`  artifacts: ${result.artifactsDirRel}`);
+  if (opts.refreshIndex) {
+    console.log(`  index:     refreshed _INDEX.md`);
+  }
 }
 
 export function runEventsNew(opts: {
@@ -124,4 +136,31 @@ export function runEventsValidate(opts: { json?: boolean }): void {
     console.log(`  [warn] ${warning.code}: ${warning.message}`);
   }
   if (!result.ok) process.exit(1);
+}
+
+export function runEventsRegisterArtifact(opts: {
+  id: string;
+  files: string;
+  kind?: string;
+}): void {
+  initCompanyEventsFile();
+  const names = opts.files.split(",").map((f) => f.trim()).filter(Boolean);
+  if (!names.length) {
+    throw new Error("Specify --files as comma-separated filenames");
+  }
+  const event = registerArtifactFiles(opts.id, names, { kind: opts.kind });
+  console.log(`✓ Artifact index updated: ${event.id}`);
+  console.log(`  index: ${event.artifact_dir}00-artifact-index.md`);
+  console.log(`  files: ${names.join(", ")}`);
+}
+
+export function runEventsLinkOutbox(opts: { eventId: string; outboxId: string }): void {
+  initCompanyEventsFile();
+  const event = findCompanyEventById(opts.eventId);
+  if (!event) {
+    throw new Error(`Event not found: ${opts.eventId}`);
+  }
+  const item = linkOutboxItemToEvent(opts.outboxId, opts.eventId);
+  console.log(`✓ Outbox ${item.id} linked to event ${opts.eventId}`);
+  console.log(`  path: ${item.path}`);
 }

@@ -244,6 +244,15 @@ export function markOutboxPrinted(id: string): OutboxItem {
   return item;
 }
 
+export function linkOutboxItemToEvent(outboxId: string, eventId: string): OutboxItem {
+  const data = loadDocumentIo();
+  const item = data.outbox_items.find((o) => o.id === outboxId);
+  if (!item) throw new Error(`Outbox item not found: ${outboxId}`);
+  item.event_id = eventId;
+  saveDocumentIo(data);
+  return item;
+}
+
 export function listPendingInbox(): InboxItem[] {
   return loadDocumentIo().inbox_items.filter(
     (i) => i.status === "pending" || i.status === "processing"
