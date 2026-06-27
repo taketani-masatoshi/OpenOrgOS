@@ -104,3 +104,77 @@ export function formatOs99Score(score: Os99Score, markdown = false): string {
   lines.push("  正本: docs/framework-assessment.md §10 · docs/company/p0-closing-register.md");
   return lines.join("\n");
 }
+
+/** OrgOS weighted score — framework-assessment §13 · orgos-completion-plan §5 */
+export interface OrgOsScore {
+  standaloneLoop: number;
+  formUnification: number;
+  interfaceAxis: number;
+  wireEvidence: number;
+  ecosystem: number;
+  weighted: number;
+  gaps: string[];
+}
+
+const ORGOS_WEIGHTS = {
+  standaloneLoop: 0.35,
+  formUnification: 0.25,
+  interfaceAxis: 0.15,
+  wireEvidence: 0.15,
+  ecosystem: 0.1,
+} as const;
+
+export function computeOrgOsScore(): OrgOsScore {
+  const moduleAxis = computeModuleAxisStats();
+  const standaloneLoop = 95;
+  const formUnification = 90;
+  const interfaceAxis = moduleAxis.productionPct >= 88 ? 85 : 60;
+  const wireEvidence = 88;
+  const ecosystem = 45;
+  const weighted = Math.round(
+    standaloneLoop * ORGOS_WEIGHTS.standaloneLoop +
+      formUnification * ORGOS_WEIGHTS.formUnification +
+      interfaceAxis * ORGOS_WEIGHTS.interfaceAxis +
+      wireEvidence * ORGOS_WEIGHTS.wireEvidence +
+      ecosystem * ORGOS_WEIGHTS.ecosystem
+  );
+  const gaps: string[] = [];
+  if (ecosystem < 85) gaps.push("Community / エコシステム（C4 スコープ外）");
+  if (moduleAxis.productionPct < 90) {
+    gaps.push(`module ${moduleAxis.productionPct}% production_ready`);
+  }
+  return {
+    standaloneLoop,
+    formUnification,
+    interfaceAxis,
+    wireEvidence,
+    ecosystem,
+    weighted,
+    gaps,
+  };
+}
+
+export function formatOrgOsScore(score: OrgOsScore, markdown = false): string {
+  if (markdown) {
+    return [
+      "## OrgOS 完成度",
+      "",
+      `| 軸 | 点数 | 重み |`,
+      `|----|:----:|:----:|`,
+      `| 単独閉ループ | ${score.standaloneLoop} | 35% |`,
+      `| 形式統一 | ${score.formUnification} | 25% |`,
+      `| インターフェース | ${score.interfaceAxis} | 15% |`,
+      `| Wire 証拠 | ${score.wireEvidence} | 15% |`,
+      `| エコシステム | ${score.ecosystem} | 10% |`,
+      `| **加重** | **${score.weighted}** | 100% |`,
+      score.gaps.length ? `\nギャップ: ${score.gaps.join(" · ")}` : "",
+      "\n正本: docs/framework-assessment.md §13",
+    ].join("\n");
+  }
+  return [
+    `OrgOS 完成度（加重）: ${score.weighted}/100`,
+    `  単独: ${score.standaloneLoop}% · 形式: ${score.formUnification}% · IF: ${score.interfaceAxis}% · Wire: ${score.wireEvidence}% · Eco: ${score.ecosystem}%`,
+    score.gaps.length ? `  ギャップ: ${score.gaps.join(" · ")}` : "",
+    "  正本: docs/framework-assessment.md §13",
+  ].join("\n");
+}

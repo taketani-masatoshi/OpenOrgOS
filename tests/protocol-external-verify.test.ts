@@ -56,6 +56,20 @@ describe("protocol external verify", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("strict mode rejects bare proof JSON", () => {
+    const proof = exportDelegationProof({
+      scope: "contract.sign",
+      granteeAgent: "contract",
+      basisRef: "REG-004",
+    });
+    const path = join(getDocsDir(), "protocol", "proof-bare.json");
+    mkdirSync(join(path, ".."), { recursive: true });
+    writeFileSync(path, JSON.stringify(proof), "utf-8");
+    const result = verifyDelegationProofExternal(path, { strict: true });
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.code === "strict-bare-proof")).toBe(true);
+  });
+
   it("verifies audit chain digests against outbox envelopes", () => {
     const tx = recordProtocolTransaction({
       transactionType: "obligation.acknowledged",

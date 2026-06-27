@@ -21,3 +21,24 @@ export const orgAuthorizedPersonsSchema = z.object({
 export type OrgIdentityProfile = z.output<typeof orgIdentityProfileSchema>;
 export type OrgAuthorizedPerson = z.output<typeof orgAuthorizedPersonSchema>;
 export type OrgAuthorizedPersons = z.output<typeof orgAuthorizedPersonsSchema>;
+
+/** Company fields for billing / PDF reports (tenant Implementation adapter). */
+export const orgCompanyBillingSchema = z.object({
+  name: z.string().min(1),
+  address: z.string().optional(),
+  corporate_number: z.string().optional(),
+});
+
+export type OrgCompanyBilling = z.output<typeof orgCompanyBillingSchema>;
+
+/** Company fields for statutory / management PDF reports. */
+export const orgCompanyReportSchema = z.object({
+  name: z.string().min(1),
+  corporate_number: z.string().optional(),
+  established_date: z.string().optional(),
+  representative: z.string().optional(),
+  directors: z.array(orgAuthorizedPersonSchema).optional(),
+  address: z.string().optional(),
+});
+
+export type OrgCompanyReport = z.output<typeof orgCompanyReportSchema>;

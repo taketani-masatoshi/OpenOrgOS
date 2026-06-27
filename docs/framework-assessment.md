@@ -269,20 +269,26 @@ TJS-11 法域: **11/11 完了**（2026-06-25）。
 
 ## 13. OrgOS 完成度（C1–C3）
 
-**正本:** [org-os/orgos-completion-plan.md](org-os/orgos-completion-plan.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C  
-**Org 根幹（P0–P4）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–18 · **~95/100**（2026-06-26 · 391 tests）
+**正本:** [org-os/orgos-completion-plan.md](org-os/orgos-completion-plan.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C · 運用: [runbook-orgos.md](runbook-orgos.md)  
+**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-06-26 · 411 tests）
 
-| 軸 | 重み | 現状（推定） | v1 目標 |
-|----|------|-------------|---------|
-| 単独閉ループ（C1） | 35% | ~50% | standalone validate · demo |
-| 形式統一（C3） | 25% | ~40% | 内部 envelope · witness emit |
-| インターフェース（C2） | 15% | ~60% | interface spec · tenant-adapters 契約 |
-| Wire 証拠 | 15% | ~60% | reconcile · §14 ギャップ解消 |
-| エコシステム（Community） | 10% | ~45% | 委任承認 · SLA |
+| 軸 | 重み | 現状 | 根拠 |
+|----|------|:----:|------|
+| 単独閉ループ（C1） | 35% | **95%** | [demo:standalone-org](../package.json) · internal approve · [standalone-org-demo.test.ts](../tests/standalone-org-demo.test.ts) · `protocol validate --standalone` |
+| 形式統一 | 25% | **90%** | witness emit → audit chain · [protocol-witness-integration.test.ts](../tests/protocol-witness-integration.test.ts) |
+| インターフェース（C2） | 15% | **85%** | tenant-data adapter · JP pack.manifest I1 · extensibility-contract · module 23/26 production_ready |
+| Wire 証拠 | 15% | **88%** | inter-org demo · hub verify remote · warn_only strict · [witness-hub-requirements.md](org-os/witness-hub-requirements.md) §14 更新 |
+| エコシステム（Community） | 10% | **45%** | C4 据置 |
 
-**OrgOS 完成度（加重）:** **~52%** → 目標 **≥85%**（ORG-C5 受入時）
+**OrgOS 完成度（加重）:** **~86%**（`steward status --orgos` · ORG-C5 受入 2026-06-26）
 
-P0–P4 で Org 承認根幹（wire 分離 · audit bridge 冪等 · delegation 署名 · tenant adapter · deprecated 掃除）は完了。残りは ORG-C1 単独デモ · C2 witness emit · C3 module/drift · C5 受入。
+```bash
+npm run steward -- status --orgos
+npm run demo:standalone-org
+npm run demo:inter-org
+```
+
+P0–P5 で Org 承認根幹完了。ORG-C1–C3/C5 で standalone デモ · witness E2E · module promotion · runbook · CI デモ job を完了。C4 Community は backlog 据置。
 
 ---
 

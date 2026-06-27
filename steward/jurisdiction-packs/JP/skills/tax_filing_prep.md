@@ -1,5 +1,7 @@
 # Skill: tax_filing_prep（税務申告準備）
 
+**Layer:** JP jurisdiction adapter — 正本は法域 pack 内。Core `steward/core/skills/` には置かない。
+
 ## 目的
 
 決算期（1月決算）の **法人税・消費税・地方税** 申告に必要な正データを整備し、税理士への引き渡しパッケージを揃える。
@@ -40,7 +42,7 @@ Finance Agent（Compliance Agent と申告期限・区分を照合）
 2. `npm run steward -- deps check --file data/finance/fixed-assets.yaml`
 3. TBD 項目（現預金・資本金・消費税区分）を tax-profile に明示
 4. 税理士チェックリストと照合（`docs/company/fy2026-tax-advisor-checklist.md`）
-5. 確定後 `npm run steward -- report kessan`（任意）
+5. 確定後 `npm run steward -- report kessan`（任意 · JP pack 手順）
 
 ## 禁止
 

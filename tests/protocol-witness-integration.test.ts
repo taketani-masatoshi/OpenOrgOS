@@ -12,6 +12,9 @@ import { registerPeer } from "../src/lib/protocol/peers.js";
 import { proposeInterOrgNotice, approveInterOrgNotice } from "../src/lib/wire/index.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 import { registerWitnessAttestationFanOut, verifyCachedReceiptsForEvent } from "../src/lib/protocol/witness-client.js";
+import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
+import { loadEnvelopesFromDirectories } from "../src/lib/protocol/external-verify.js";
+import { getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
 
 const HUB_A_DIR = join(ROOT_DIR, "scratch", "witness-int-hub-a");
 const HUB_B_DIR = join(ROOT_DIR, "scratch", "witness-int-hub-b");
@@ -114,5 +117,13 @@ monthly_cost: 85000
     const verify = verifyCachedReceiptsForEvent(transmission.envelope.event_id);
     expect(verify.quorum.satisfied).toBe(true);
     expect(verify.receipts.some((r) => r.status === "mutually_confirmed")).toBe(true);
+
+    const chain = loadProtocolAuditChain();
+    const outbox = loadEnvelopesFromDirectories([getProtocolOutboxDir()]);
+    const witnessTypes = chain
+      .map((r) => outbox.get(r.event_id)?.event.type)
+      .filter((t): t is string => !!t && t.startsWith("org.witness."));
+    expect(witnessTypes).toContain("org.witness.attestation.registered");
+    expect(witnessTypes).toContain("org.witness.receipt.issued");
   });
 });

@@ -46,7 +46,7 @@ npm run steward -- ops p0   # exit 1 · 5 ブロッカー
 |----|:----:|------|
 | CTR-013 | draft | 手続完了待ち |
 | CTR-014 | draft | 手続完了待ち |
-| CTR-012 | draft | 手続完了待ち |
+| CTR-012 | executed | 本社オフィス賃貸 · サウスウッド |
 | secrets-kamezawa | 未作成 | `kamezawa-secrets.yaml` — example からコピー |
 | cash-balance | template | `status: confirmed` + 残高入力待ち |
 
@@ -84,7 +84,8 @@ npm run steward -- --tenant mal ops p0
 | 領域 | 残タスク | 担当 |
 |------|---------|------|
 | 保険 | CTR-013/014 加入 · 証券 PDF · executed 化 | 段燕燕 |
-| 清掃 | CTR-012 業者1社と締結 | 段燕燕 |
+| オフィス借主 | CTR-012 サウスウッドと締結済 | 段燕燕 |
+| 清掃（亀沢） | 業者 TBD（CTR-012 とは別） | 段燕燕 |
 | 運用機密 | `kamezawa-secrets.yaml` 実値 | 運用担当 |
 | 財務 | `cash-balance.yaml` confirmed | 経理 |
 | B/S | 資本金 · 繰越剰余金（登記簿 · 前期決算） | 税理士連携 |
@@ -102,11 +103,21 @@ npm run steward -- --tenant mal ops p0
 
 ---
 
-## Top 3 推奨（MAL）
+## OrgOS プロトコル（2026-06-26）
+
+| シナリオ | コマンド | 結果 |
+|---------|---------|------|
+| 単独閉ループ | `npm run demo:mal-standalone` | identity · internal approve · `protocol validate --standalone` |
+| Wire + witness | mal ↔ southwood · `npm run demo:inter-org` | witness chain events · audit verify |
+| 採点 | `npm run steward -- status --orgos` | OrgOS 加重 ~86%（framework-assessment §13） |
+
+正本: [runbook-orgos.md](../../../../../docs/runbook-orgos.md) · [framework-assessment.md §13](../../../../../docs/framework-assessment.md)
+
+---
 
 1. **CTR-014 火災保険加入**（稼働中）
 2. **cash-balance.yaml + B/S 3項目** 入力
-3. **kamezawa-secrets.yaml** 作成 · **CTR-012** 締結
+3. **kamezawa-secrets.yaml** 作成 · **亀沢清掃業者** 選定（CTR-012 とは別）
 
 ---
 

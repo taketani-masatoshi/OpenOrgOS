@@ -16,3 +16,7 @@ export function getOrgAuditBridgeConfigPath(): string {
 export function getOrgAuditBridgeStatePath(): string {
   return join(getOrgDataDir(), "audit-bridge-state.yaml");
 }
+
+export function getOrgAuditBridgeErrorsPath(): string {
+  return join(getOrgDataDir(), "audit-bridge-errors.yaml");
+}

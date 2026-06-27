@@ -5,6 +5,7 @@ import { getTenantId } from "./tenant.js";
 import { getDocsReportsDir } from "./utils.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { bridgeAuditEventToProtocolChain, ensureOrgAuditBridgeConfig } from "./org/audit-bridge.js";
+import { recordAuditBridgeFailure } from "./org/audit-bridge-errors.js";
 
 export const AUDIT_LOG_SUBDIR = "audit-log";
 export const AUDIT_LOG_FILE = "audit.jsonl";
@@ -46,8 +47,12 @@ export function appendAuditEvent(options: AppendAuditOptions): AuditEvent {
   try {
     ensureOrgAuditBridgeConfig();
     bridgeAuditEventToProtocolChain(event);
-  } catch {
-    // Operational audit must not fail when protocol bridge is misconfigured.
+  } catch (e) {
+    recordAuditBridgeFailure({
+      auditId: event.id,
+      auditEvent: event.event,
+      message: e instanceof Error ? e.message : String(e),
+    });
   }
   return event;
 }

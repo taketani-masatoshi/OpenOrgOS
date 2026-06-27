@@ -1,12 +1,13 @@
 import { join } from "node:path";
 import {
-  loadCompany,
   loadBusinessPlan,
   loadProperties,
   loadLoans,
   loadYojitsuFyPlan,
   loadAllData,
 } from "../lib/data.js";
+import { loadOrgCompanyReport } from "../lib/org/tenant-data.js";
+import type { Company } from "../../schemas/company.js";
 import { generateKessanPdf } from "../lib/kessan-pdf.js";
 import { generateJigyoPdf } from "../lib/jigyo-pdf.js";
 import { generateMonthlyReport } from "../lib/report.js";
@@ -28,7 +29,7 @@ function loadReportData(fiscalYear: string) {
     console.warn(`⚠ ${fiscalYear} is not marked as closed in yojitsu plan.`);
   }
   return {
-    company: loadCompany(),
+    company: loadOrgCompanyReport() as Company,
     yojitsu,
     businessPlan: loadBusinessPlan(),
     properties: loadProperties(),

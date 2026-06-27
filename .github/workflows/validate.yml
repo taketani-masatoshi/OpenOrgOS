@@ -18,3 +18,15 @@ jobs:
       - run: npm run check
       - run: npx tsc --noEmit
       - run: npm test
+  orgos-demos:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run demo:standalone-org
+      - run: npm run demo:mal-standalone

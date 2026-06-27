@@ -52,11 +52,11 @@ skills:
     description: 経営ダッシュボード — pipeline/dashboard CLI
 
   - id: tax_filing_prep
-    file: tax_filing_prep.md
+    file: ../../jurisdiction-packs/JP/skills/tax_filing_prep.md
     runtime: cli
     cli_command: tax-filing-prep
     agent: Finance
-    description: 税務申告準備
+    description: 税務申告準備（JP 法域 adapter）
 
   - id: cashflow_forecast
     file: cashflow_forecast.md

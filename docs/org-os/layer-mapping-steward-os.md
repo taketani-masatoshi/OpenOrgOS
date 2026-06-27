@@ -91,9 +91,9 @@ Items that violate “local belongs in Adapters” but exist today:
 
 | Item | Current location | Target layer |
 |------|------------------|--------------|
-| `tax_filing_prep` skill | `steward/core/skills/` | Country adapter module (e.g. `jp_tax_corporate`) |
+| `tax_filing_prep` skill | ~~`steward/core/skills/`~~ → `steward/jurisdiction-packs/JP/skills/` | ✓ moved |
 | Finance agent “JP kessan” wording | `steward/core/agents/finance_agent.md` | JP adapter docs only |
-| `hospitality_agent` · `property_rental_agent` | `steward/core/agents/` | Industry module proxy only (already partially true) |
+| `hospitality_agent` · `property_rental_agent` | ~~`steward/core/agents/`~~ | ✓ module proxy only — [hospitality_agent.md](../../steward/core/agents/hospitality_agent.md) · [property_rental_agent.md](../../steward/core/agents/property_rental_agent.md) |
 | JP-specific finance schema fields | `schemas/finance/` | Split universal vs `schemas/jp-*` adapter |
 
 **Rule:** New country-only or industry-only features must not expand `steward/core/`.

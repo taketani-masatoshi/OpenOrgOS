@@ -1,7 +1,7 @@
 import { computeMaturityReport, formatMaturityReport } from "../lib/maturity.js";
 import { computeDataHealth, formatHealthReport } from "../lib/data-health.js";
 import { runIntegrityChecks } from "../lib/integrity.js";
-import { computeOs99Score, formatOs99Score } from "../lib/os-score.js";
+import { computeOs99Score, computeOrgOsScore, formatOs99Score, formatOrgOsScore } from "../lib/os-score.js";
 import { writeMarkdownReport } from "../lib/utils.js";
 
 export interface StatusOptions {
@@ -10,6 +10,7 @@ export interface StatusOptions {
   verbose?: boolean;
   legacy?: boolean;
   os99?: boolean;
+  orgos?: boolean;
 }
 
 export function runStatus(opts: StatusOptions): void {
@@ -21,6 +22,13 @@ export function runStatus(opts: StatusOptions): void {
     text += opts.markdown
       ? `\n\n${formatOs99Score(os, true)}`
       : `\n\n${formatOs99Score(os)}`;
+  }
+
+  if (opts.orgos) {
+    const orgOs = computeOrgOsScore();
+    text += opts.markdown
+      ? `\n\n${formatOrgOsScore(orgOs, true)}`
+      : `\n\n${formatOrgOsScore(orgOs)}`;
   }
 
   if (opts.legacy) {

@@ -18,7 +18,7 @@
 - `data/finance/` と `data/plans/` の維持
 - **固定資産台帳・税務プロファイル・勘定科目**（tax-reporting レベル）の SoT 管理
 - 決算書 MD（`docs/plans/`）と CSV（`docs/exports/`）の数値整合
-- 法人税・消費税・地方税申告準備（`tax_filing_prep` Skill）
+- 法人税・消費税・地方税申告準備（JP 法域 `tax_filing_prep` Skill — [jurisdiction-packs/JP/skills/tax_filing_prep.md](../../jurisdiction-packs/JP/skills/tax_filing_prep.md)）
 - ランウェイ・バーンレート・予実ギャップの分析
 - 物件別収益前提（Property / Hospitality からの入力）を計画 YAML へ反映
 - 編集後の `validate` と `sync all` の実行
@@ -31,7 +31,7 @@
 | Skill | ファイル |
 |-------|---------|
 | monthly_close | [steward/core/skills/monthly_close.md](../steward/core/skills/monthly_close.md) |
-| tax_filing_prep | [steward/core/skills/tax_filing_prep.md](../steward/core/skills/tax_filing_prep.md) |
+| tax_filing_prep | [steward/jurisdiction-packs/JP/skills/tax_filing_prep.md](../../jurisdiction-packs/JP/skills/tax_filing_prep.md) |
 | cashflow_forecast | [steward/core/skills/cashflow_forecast.md](../steward/core/skills/cashflow_forecast.md) |
 | noi_analysis | [steward/core/skills/noi_analysis.md](../steward/core/skills/noi_analysis.md)（Read/協調） |
 | capex_planning | [steward/core/skills/capex_planning.md](../steward/core/skills/capex_planning.md) |

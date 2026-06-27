@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadCompany, loadProperties } from "./data.js";
+import { loadOrgCompanyBilling } from "./org/tenant-data.js";
 import { monthRange } from "./utils.js";
 import {
   BANK_ACCOUNT_PLACEHOLDER,
@@ -96,7 +97,7 @@ export async function runInvoiceGenerate(
     };
   }
 
-  const company = loadCompany();
+  const company = loadOrgCompanyBilling();
   const properties = loadProperties();
   const prop = properties.find((p) => p.id === options.propertyId);
   if (!prop) {

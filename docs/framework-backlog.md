@@ -82,7 +82,7 @@
 | ORG-P2 | identity adapter · delegation manifest · 法域 pack · external verify | [x] |
 | ORG-P3 | wire-governance 命名統一 | [x] |
 | ORG-P4 | audit 冪等 · delegation 署名 · tenant adapter 契約 · deprecated 掃除 | [x] |
-| ORG-P5 | tenant adapter 拡張 · legacy doc · audit SoT 方針 | [ ] |
+| ORG-P5 | tenant adapter 拡張 · legacy doc · audit SoT 方針 | [x] |
 
 ---
 
@@ -93,11 +93,11 @@
 | ID | 内容 | 状態 |
 |----|------|:----:|
 | ORG-C0 | 境界固定 — interface spec · assessment §13 · 本 Phase 登録 | [x] |
-| ORG-C1 | 単独 OrgOS 閉ループ — standalone validate · 内部 envelope · demo | [~] |
-| ORG-C2 | Wire 証拠 — witness emit · reconcile · hub verify remote | [~] |
-| ORG-C3 | Adapter 契約 — Core drift · module 76→90% | [ ] |
+| ORG-C1 | 単独 OrgOS 閉ループ — standalone validate · 内部 envelope · demo | [x] |
+| ORG-C2 | Wire 証拠 — witness emit · reconcile · hub verify remote | [x] |
+| ORG-C3 | Adapter 契約 — Core drift · module 76→90% | [x] |
 | ORG-C4 | Community 整合 — 委任承認 · 語彙 · SLA | [ ] |
-| ORG-C5 | 受入 — 2 デモ · runbook · OrgOS 完成度 ≥85% | [ ] |
+| ORG-C5 | 受入 — 2 デモ · runbook · OrgOS 完成度 ≥85% | [x] |
 
 ---
 

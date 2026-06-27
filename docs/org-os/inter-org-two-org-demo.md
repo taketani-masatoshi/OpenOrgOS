@@ -48,8 +48,8 @@ npm run demo:inter-org
 
 | 組織 | 生成物 |
 |------|--------|
-| **mal** | `pending-notices.yaml` · approved notice · `transactions-registry.yaml` · outbox |
-| **southwood** | webhook inbound · ack `pending-notices` · outbox |
+| **mal** | `pending-approvals.yaml` · approved notice · `transactions-registry.yaml` · outbox |
+| **southwood** | webhook inbound · ack `pending-approvals` · outbox |
 | **共有** | execution notice の `event_id` で inbound をリンク · ack は `correlation_event_id` |
 
 あわせて `tenants/mal/data/contracts/CTR-012.yaml` を `status: executed` に更新。
@@ -120,7 +120,7 @@ npm run steward -- --tenant mal protocol notice approve \
 |----|-----|-----------|
 | Peer 台帳 | `data/protocol/peers.yaml` | `data/protocol/peers.yaml` |
 | 取引台帳 | `data/protocol/transactions-registry.yaml` | 同左 |
-| 承認待ち | `data/protocol/pending-notices.yaml` | `pending-notices.yaml`（ack 含む） |
+| 承認待ち | `data/org/pending-approvals.yaml` | `data/org/pending-approvals.yaml`（ack 含む） |
 | Audit chain | `data/protocol/audit-chain.jsonl` | 同左 |
 | Witness プール | `data/protocol/witness-pool.yaml` | 同左 |
 | Wire 出力 | `docs/protocol/outbox/*.json` | 同左 |

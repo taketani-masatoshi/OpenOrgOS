@@ -28,14 +28,42 @@ export interface ExtensibilityIssue {
 
 const PACK_MANIFEST = "pack.manifest.yaml";
 
-const packManifestSchema = z.object({
-  declaration_modules: z.array(z.string()).optional(),
+const jpPackManifestSchema = z
+  .object({
+    declaration_modules: z.array(z.string()).optional(),
+  })
+  .passthrough();
+
+const packManifestI1Schema = z.object({
+  id: z.string().min(1),
+  owner: z.object({ org: z.string().min(1) }).passthrough(),
+  repository: z.string().min(1),
+  capability_catalog: z.string().optional(),
 });
 
-function loadJpPackManifest(): z.infer<typeof packManifestSchema> | null {
+function loadJpPackManifest(): z.infer<typeof jpPackManifestSchema> | null {
   const path = join(getJurisdictionPackRoot("JP"), PACK_MANIFEST);
   if (!existsSync(path)) return null;
-  return readYamlFile(path, packManifestSchema);
+  return readYamlFile(path, jpPackManifestSchema);
+}
+
+/** JP pack.manifest.yaml I1 required fields (id · owner.org · repository) */
+export function checkJpPackManifestFields(): ExtensibilityIssue[] {
+  const path = join(getJurisdictionPackRoot("JP"), PACK_MANIFEST);
+  if (!existsSync(path)) {
+    return [{ code: "jp-pack-manifest-missing", message: "JP pack.manifest.yaml not found" }];
+  }
+  try {
+    readYamlFile(path, packManifestI1Schema);
+  } catch (e) {
+    return [
+      {
+        code: "jp-pack-manifest-invalid",
+        message: e instanceof Error ? e.message : String(e),
+      },
+    ];
+  }
+  return [];
 }
 
 /** JP pack-ids.ts matches filesystem catalog under jurisdiction-packs/JP/modules/ */
@@ -182,14 +210,25 @@ export function checkPackManifestsExist(): ExtensibilityIssue[] {
   const issues: ExtensibilityIssue[] = [];
   for (const code of listJurisdictionCodes()) {
     const root = getJurisdictionPackRoot(code);
-    const modulesDir = join(root, "modules");
-    if (!existsSync(modulesDir)) continue;
     const manifestPath = join(root, PACK_MANIFEST);
     if (!existsSync(manifestPath)) {
-      issues.push({
-        code: "pack-manifest-missing",
-        message: `jurisdiction ${code} has modules/ but no pack.manifest.yaml`,
-      });
+      if (existsSync(join(root, "modules"))) {
+        issues.push({
+          code: "pack-manifest-missing",
+          message: `jurisdiction ${code} has modules/ but no pack.manifest.yaml`,
+        });
+      }
+      continue;
+    }
+    if (code === "JP") {
+      try {
+        readYamlFile(manifestPath, packManifestI1Schema);
+      } catch (e) {
+        issues.push({
+          code: "pack-manifest-invalid",
+          message: `JP: ${e instanceof Error ? e.message : String(e)}`,
+        });
+      }
     }
   }
   return issues;
@@ -215,6 +254,12 @@ export function checkProtocolRegistry(): ExtensibilityIssue[] {
           message: `registry.yaml missing core event type ${t}`,
         });
       }
+      if (registry.core_event_scopes && !registry.core_event_scopes[t]) {
+        issues.push({
+          code: "protocol-event-scope-missing",
+          message: `registry.yaml missing core_event_scopes for ${t}`,
+        });
+      }
     }
   } catch (e) {
     issues.push({
@@ -227,6 +272,7 @@ export function checkProtocolRegistry(): ExtensibilityIssue[] {
 
 export function validateExtensibilityContracts(): ExtensibilityIssue[] {
   return [
+    ...checkJpPackManifestFields(),
     ...checkJpPackModuleIdsSync(),
     ...checkJpDeclarationModulesSync(),
     ...checkReadinessCatalogSync(),

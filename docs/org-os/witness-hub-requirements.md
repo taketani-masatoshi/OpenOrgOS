@@ -374,9 +374,10 @@ sequenceDiagram
 |------|------|------|
 | 法域別 trusted_hub 事業者レジストリ | 未 | committee 管轄 · `trusted-hubs.yaml` はテンプレ |
 | peer outbox リモート export API | 未 | reconcile はローカル台帳 + Hub GET 中心 |
-| wire-governance `warn_only: false` 本番運用 | 未 | 参照実装は warn のみ |
-| Hub 鍵ローテーション自動化 | 未 | ops 手順のみ |
-| gossip import 冪等カウント | 部分 | `skipped` に再同期分が含まれる · 終状態は正 |
+| wire-governance `warn_only: false` 本番運用 | **Steward 実装済** | `validate.ts` — `warn_only: false` 時 `witness-receipt-missing` を **issue** 化 · runbook: [runbook-orgos.md](../runbook-orgos.md) §3 |
+| trusted_hub テンプレ pin | **手順化** | `steward/platform/protocol/seed/witness-pool.yaml.example` · テナント `witness-pool.yaml` で `hub_public_key` を固定 |
+| gossip import `skipped` | **説明済** | 再同期分は `skipped` に含まれる · 終状態（receipt 存在）は正 · [runbook-orgos.md](../runbook-orgos.md) §4 |
+| Hub 鍵ローテーション自動化 | 未 | ops 手順のみ · [witness-hub-operations.md](witness-hub-operations.md) |
 | 本番 webhook / relay 常駐 | 未 | backlog スコープ外 |
 
 ---

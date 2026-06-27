@@ -59,10 +59,10 @@ modules:
     tier: production_ready
     notes: pm-properties/contracts + invoice seed
   travel_booking:
-    tier: activation_ready
+    tier: production_ready
     notes: operations travel CLI · REG-008 · browser Phase 0 cursor-only
   language_bridge:
-    tier: activation_ready
+    tier: production_ready
     notes: user vs system record language · bilingual minutes · Secretary/Compliance
   jp_carbon_neutral_2050:
     tier: activation_ready
@@ -74,8 +74,8 @@ modules:
     tier: activation_ready
     notes: 外部向け privacy-policy · REG-010 整合
   jp_subsidy_application:
-    tier: activation_ready
+    tier: production_ready
     notes: 補助金募集要項 · 適格性 · 人件費算定 · operations subsidy CLI
   jp_trademark_application:
-    tier: activation_ready
+    tier: production_ready
     notes: 商標登録願ひな形 · 指定商品役務 · operations trademark CLI

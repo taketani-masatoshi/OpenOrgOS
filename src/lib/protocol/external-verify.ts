@@ -39,6 +39,8 @@ export interface ExternalAuditChainVerifyResult {
 export interface VerifyDelegationProofExternalOptions {
   /** Override grantor protocol public key (base64 SPKI DER). */
   grantorPublicKey?: string;
+  /** Require signed envelope; bare proof JSON fails verification. */
+  strict?: boolean;
 }
 
 interface ParsedDelegationFile {
@@ -120,7 +122,17 @@ export function verifyDelegationProofExternal(
         code: "unsigned-envelope",
         message: "Signed grantor key is available but envelope has no signature",
       });
+    } else if (options?.strict) {
+      issues.push({
+        code: "missing-grantor-key",
+        message: "strict mode requires grantor protocol_public_key for signature verification",
+      });
     }
+  } else if (options?.strict) {
+    issues.push({
+      code: "strict-bare-proof",
+      message: "strict mode requires signed delegation envelope JSON",
+    });
   }
 
   if (proof.grant.revoked_at) {

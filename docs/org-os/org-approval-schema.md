@@ -304,3 +304,28 @@ approvals:
 ---
 
 **版:** v1.5-p4（2026-06-26）
+
+---
+
+## 19. P5 DoD（監査運用 · tenant adapter 拡張）
+
+### 19.1 監査 SoT 方針
+
+| 系統 | 正本 | 用途 |
+|------|------|------|
+| **Operational** | `docs/reports/audit-log/audit.jsonl` | 秘書 · queue · handoff 等の運用記録 |
+| **Protocol chain** | `data/protocol/audit-chain.jsonl` | 署名 EventEnvelope · wire 証拠 · 外部 verify |
+| **Bridge** | `data/org/audit-bridge.yaml` + `audit-bridge-state.yaml` | operational → chain **mirror**（冪等 · 失敗は `audit-bridge-errors.yaml`） |
+
+Org 決裁（`approval.granted` / `approval.rejected`）と wire 完了 audit は **直接 chain に emit**。bridge は operational 種別のみ。
+
+### 19.2 P5 チェックリスト
+
+- [x] `loadOrgCompanyBilling` / `loadOrgCompanyReport` — invoice · report 経由
+- [x] `audit-bridge-state` — `max_bridged_ids` ローテーション
+- [x] bridge 失敗 — `audit-bridge-errors.yaml` · `protocol validate` warning
+- [x] legacy doc — `pending-approvals.yaml` 表記統一
+
+---
+
+**版:** v1.6-p5（2026-06-26）

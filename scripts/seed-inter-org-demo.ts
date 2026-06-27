@@ -18,7 +18,8 @@ import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protoco
 import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/delegation.js";
 import { resolveJurisdictionApprovalPolicy } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { validateProtocolState } from "../src/lib/protocol/validate.js";
-import { verifyProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
+import { verifyProtocolAuditChain, loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
+import { loadEnvelopesFromDirectories } from "../src/lib/protocol/external-verify.js";
 import { serializeEventEnvelope } from "../src/lib/protocol/envelope.js";
 import { getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
 import { loadCompany } from "../src/lib/data.js";
@@ -366,6 +367,22 @@ async function main(): Promise<void> {
     console.log("\n--- Summary ---");
     console.log("Flow: operator propose → CEO approve → webhook ingest → ack · witness fan-out · gossip sync");
     console.log(`Shared event_id: ${DEMO_EVENT_ID}`);
+    setTenantId(MAL_TENANT);
+    const malChain = loadProtocolAuditChain();
+    const malOutbox = loadEnvelopesFromDirectories([getProtocolOutboxDir()]);
+    const witnessOnChain = malChain.filter((r) => {
+      const t = malOutbox.get(r.event_id)?.event.type;
+      return t?.startsWith("org.witness.");
+    }).length;
+    const auditVerify = verifyProtocolAuditChain({
+      envelopesByEventId: malOutbox,
+    });
+    console.log(
+      `[mal] audit-chain verify: ${auditVerify.ok ? "ok" : "FAIL"} · records=${auditVerify.checked} · witness envelopes=${witnessOnChain}`
+    );
+    if (!auditVerify.ok) {
+      throw new Error(`inter-org audit verify failed: ${auditVerify.issues.map((i) => i.message).join("; ")}`);
+    }
     console.log("\nTry:");
     console.log("  npm run steward -- --tenant mal protocol witness verify --event-id", DEMO_EVENT_ID);
     console.log("  npm run steward -- --tenant mal protocol witness pool status");

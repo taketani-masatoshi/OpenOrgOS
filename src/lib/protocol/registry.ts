@@ -21,6 +21,11 @@ export function loadProtocolRegistry(): ProtocolRegistry {
   );
 }
 
+export function resolveCoreEventScope(eventType: string): "internal" | "wire" | "both" | undefined {
+  const registry = loadProtocolRegistry();
+  return registry.core_event_scopes?.[eventType];
+}
+
 export function validateEnvelopeAgainstRegistry(eventType: string): string | null {
   const registry = loadProtocolRegistry();
   if (registry.core_event_types.includes(eventType)) return null;

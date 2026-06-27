@@ -10,12 +10,14 @@ import { getStakeholdersYaml, readYamlFile } from "../utils.js";
 import { verifyProtocolAuditChain } from "./audit-chain.js";
 import { validateEnvelopeAgainstRegistry, loadProtocolRegistry } from "./registry.js";
 import { getPeersYamlPath, getTransactionsRegistryPath } from "./paths.js";
+import { resolveWitnessWireGovernancePolicy } from "../../../schemas/protocol/witness-pool.js";
 import { isWitnessEnabled, loadWitnessPoolConfig } from "./witness-pool.js";
 import { listWitnessPending } from "./witness-queue.js";
 import { listTransactions } from "./transactions.js";
 import { verifyCachedReceiptsForEvent } from "./witness-client.js";
 import { evaluateWitnessWireGovernancePolicy } from "./witness-policy.js";
 import { loadOrgAuditBridgeConfig } from "../org/audit-bridge.js";
+import { listRecentAuditBridgeFailures } from "../org/audit-bridge-errors.js";
 import { getOrgAuditBridgeConfigPath } from "../org/paths.js";
 
 export interface ProtocolValidationIssue {
@@ -65,8 +67,23 @@ export function validateProtocolState(
     }
   }
 
+  for (const failure of listRecentAuditBridgeFailures()) {
+    warnings.push({
+      code: "audit-bridge-failed",
+      message: `${failure.audit_id} (${failure.audit_event}): ${failure.message}`,
+    });
+  }
+
   try {
-    loadProtocolRegistry();
+    const registry = loadProtocolRegistry();
+    for (const eventType of registry.core_event_types) {
+      if (!registry.core_event_scopes?.[eventType]) {
+        warnings.push({
+          code: "event-scope-unknown",
+          message: `Registry event ${eventType} missing core_event_scopes entry`,
+        });
+      }
+    }
   } catch (e) {
     issues.push({
       code: "registry-invalid",
@@ -159,10 +176,16 @@ export function validateProtocolState(
       if (tx.direction !== "outbound") continue;
       const { receipts, quorum } = verifyCachedReceiptsForEvent(tx.event_id, pool);
       if (receipts.length === 0) {
-        warnings.push({
+        const entry = {
           code: "witness-receipt-missing",
           message: `No cached witness receipts for outbound event ${tx.event_id}`,
-        });
+        };
+        const warnOnly = resolveWitnessWireGovernancePolicy(pool)?.warn_only ?? true;
+        if (!warnOnly) {
+          issues.push(entry);
+        } else {
+          warnings.push(entry);
+        }
         continue;
       }
       if (!quorum.satisfied) {

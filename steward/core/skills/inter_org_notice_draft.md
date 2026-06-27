@@ -11,7 +11,7 @@
 |----|------|
 | `protocol notice draft` で起案 | `notice approve`（承認者のみ） |
 | peer · contract **ID** の参照 | 契約本文 · 口座 · L2 値の wire |
-| `pending-notices.yaml` 確認 | Steward Agent による cross-org 送信 |
+| `data/org/pending-approvals.yaml` 確認 | Steward Agent による cross-org 送信 |
 
 **Parent:** [inter-org-operator-model.md](../../../docs/org-os/inter-org-operator-model.md)
 
