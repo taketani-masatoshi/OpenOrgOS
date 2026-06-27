@@ -12,14 +12,14 @@ describe("org identity profile adapter", () => {
 
   it("loads tenant display name via org adapter", () => {
     const profile = loadOrgIdentityProfile();
-    expect(profile.displayName.length).toBeGreaterThan(0);
+    expect(profile.display_name.length).toBeGreaterThan(0);
     expect(profile.jurisdiction).toBe("JP");
   });
 
   it("buildIdentityDocument uses adapter not direct company import in protocol", () => {
     const profile = loadOrgIdentityProfile();
     const doc = buildIdentityDocument({ omitCorporateNumber: true });
-    expect(doc.display_name).toBe(profile.displayName);
+    expect(doc.display_name).toBe(profile.display_name);
     expect(doc.jurisdiction).toBe(profile.jurisdiction);
   });
 });

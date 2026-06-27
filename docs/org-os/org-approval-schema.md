@@ -282,3 +282,25 @@ approvals:
 ---
 
 **版:** v1.4-p3（2026-06-26）
+
+---
+
+## 18. P4 DoD（監査統合 · 署名 · 契約 · 掃除）
+
+| ギャップ | 対処 |
+|---------|------|
+| **C1** 監査 SoT | audit-bridge デフォルト有効 · `audit-bridge-state.yaml` 冪等 · queue→chain 連携（P1 bridge 継続） |
+| **C2** 署名 | `buildDelegationEnvelope` → `maybeSignEnvelope` · `verifyDelegationProofExternal` grantor 鍵 binding |
+| **C3** tenant adapter | `schemas/org/tenant-adapters.ts` · `src/lib/org/tenant-data.ts` 唯一入口 |
+| **C4** deprecated | `assertWireApproval` · `evaluateWitnessReg004Policy` alias 削除 |
+| **C5** Core 外 | Transport · Federation · Witness 本番運用は参照実装止まり — `validateProtocolState` で audit-bridge 無効 warning |
+
+- [x] `schemas/org/` — `audit-bridge-state` · `tenant-adapters` export
+- [x] `authorized-approvers.ts` — company.yaml 直読を tenant-data 経由に集約
+- [x] bridge 冪等テスト · audit.test 副作用 cleanup
+- [x] delegation envelope 署名検証テスト
+- [x] 全テスト green
+
+---
+
+**版:** v1.5-p4（2026-06-26）

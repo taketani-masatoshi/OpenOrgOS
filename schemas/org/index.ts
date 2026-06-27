@@ -1,4 +1,6 @@
 export * from "./audit-bridge.js";
+export * from "./audit-bridge-state.js";
+export * from "./tenant-adapters.js";
 export * from "./scope.js";
 export * from "./tier.js";
 export * from "./operator-attestation.js";

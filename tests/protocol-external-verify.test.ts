@@ -6,8 +6,9 @@ import { getDataDir, getDocsDir } from "../src/lib/utils.js";
 import { registerPeer } from "../src/lib/protocol/peers.js";
 import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
 import { verifyAuditChainExternal, verifyDelegationProofExternal } from "../src/lib/protocol/external-verify.js";
-import { exportDelegationProof } from "../src/lib/protocol/delegation.js";
+import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/delegation.js";
 import { getProtocolAuditChainPath } from "../src/lib/protocol/paths.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 
 function cleanup(): void {
@@ -35,6 +36,22 @@ describe("protocol external verify", () => {
     const path = join(getDocsDir(), "protocol", "proof.json");
     mkdirSync(join(path, ".."), { recursive: true });
     writeFileSync(path, JSON.stringify(proof), "utf-8");
+    const result = verifyDelegationProofExternal(path);
+    expect(result.ok).toBe(true);
+  });
+
+  it("verifies signed delegation envelope with grantor key binding", () => {
+    ensureProtocolSigningKey();
+    const proof = exportDelegationProof({
+      scope: "contract.sign",
+      granteeAgent: "contract",
+      basisRef: "REG-004",
+    });
+    const envelope = buildDelegationEnvelope(proof);
+    expect(envelope.signature).toBeTruthy();
+    const path = join(getDocsDir(), "protocol", "delegation-envelope.json");
+    mkdirSync(join(path, ".."), { recursive: true });
+    writeFileSync(path, JSON.stringify(envelope), "utf-8");
     const result = verifyDelegationProofExternal(path);
     expect(result.ok).toBe(true);
   });

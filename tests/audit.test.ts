@@ -2,19 +2,32 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
-import { getDocsDir } from "../src/lib/utils.js";
+import { getDataDir, getDocsDir } from "../src/lib/utils.js";
 import { appendAuditEvent, listAuditEvents, auditLogPath } from "../src/lib/audit-log.js";
+import { clearOrgAuditBridgeStateForTests } from "../src/lib/org/audit-bridge-state.js";
+
+function cleanupAuditSideEffects(): void {
+  for (const p of [
+    join(getDataDir(), "org"),
+    join(getDataDir(), "protocol"),
+  ]) {
+    if (existsSync(p)) rmSync(p, { recursive: true, force: true });
+  }
+}
 
 describe("audit log", () => {
   beforeEach(() => {
     setTenantId("demo");
     const p = auditLogPath();
     if (existsSync(p)) rmSync(p);
+    cleanupAuditSideEffects();
   });
 
   afterEach(() => {
     const p = auditLogPath();
     if (existsSync(p)) rmSync(p);
+    cleanupAuditSideEffects();
+    clearOrgAuditBridgeStateForTests();
   });
 
   it("appends and lists events", () => {

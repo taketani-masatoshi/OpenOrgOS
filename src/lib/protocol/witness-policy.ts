@@ -59,10 +59,3 @@ export function formatWitnessWireGovernancePolicySummary(
   const mode = result.warnOnly ? "warning" : "BLOCKED";
   return `wire-governance/witness ${mode}: ${result.violations.map((v) => v.message).join("; ")}`;
 }
-
-/** @deprecated Use evaluateWitnessWireGovernancePolicy */
-export type WitnessReg004PolicyInput = WitnessWireGovernancePolicyInput;
-/** @deprecated */
-export type WitnessReg004PolicyResult = WitnessWireGovernancePolicyResult;
-export const evaluateWitnessReg004Policy = evaluateWitnessWireGovernancePolicy;
-export const formatWitnessReg004PolicySummary = formatWitnessWireGovernancePolicySummary;

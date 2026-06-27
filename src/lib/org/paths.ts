@@ -12,3 +12,7 @@ export function getPendingApprovalsPath(): string {
 export function getOrgAuditBridgeConfigPath(): string {
   return join(getOrgDataDir(), "audit-bridge.yaml");
 }
+
+export function getOrgAuditBridgeStatePath(): string {
+  return join(getOrgDataDir(), "audit-bridge-state.yaml");
+}

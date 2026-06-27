@@ -19,11 +19,11 @@ export function buildIdentityDocument(options?: {
   const doc: OrgIdentityDocument = {
     org_ref: ourOrgRef(),
     jurisdiction: profile.jurisdiction,
-    display_name: profile.displayName,
+    display_name: profile.display_name,
     issued_at: new Date().toISOString(),
   };
-  if (!options?.omitCorporateNumber && profile.corporateNumber) {
-    doc.public_ids = { corporate_number: profile.corporateNumber };
+  if (!options?.omitCorporateNumber && profile.corporate_number) {
+    doc.public_ids = { corporate_number: profile.corporate_number };
   }
   if (options?.stakeholderId) {
     doc.stakeholder_id = options.stakeholderId;

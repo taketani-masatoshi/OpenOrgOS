@@ -17,9 +17,3 @@ export function assertOrgApprovalGate(input: WireApprovalGateInput): WireApprova
 export function resolveOrgApprovalTier(amount: number, currency: string): WireApprovalTier {
   return resolveWireGovernanceTier(amount, currency);
 }
-
-/** @deprecated Use assertOrgApprovalGate */
-export const assertWireApproval = assertOrgApprovalGate;
-
-/** @deprecated Use resolveOrgApprovalTier */
-export const resolveWireApprovalTier = resolveOrgApprovalTier;

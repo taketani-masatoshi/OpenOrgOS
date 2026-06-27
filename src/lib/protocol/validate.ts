@@ -15,6 +15,8 @@ import { listWitnessPending } from "./witness-queue.js";
 import { listTransactions } from "./transactions.js";
 import { verifyCachedReceiptsForEvent } from "./witness-client.js";
 import { evaluateWitnessWireGovernancePolicy } from "./witness-policy.js";
+import { loadOrgAuditBridgeConfig } from "../org/audit-bridge.js";
+import { getOrgAuditBridgeConfigPath } from "../org/paths.js";
 
 export interface ProtocolValidationIssue {
   code: string;
@@ -51,6 +53,17 @@ export function validateProtocolState(
   const issues: ProtocolValidationIssue[] = [];
   const warnings: ProtocolValidationIssue[] = [];
   const standalone = options?.standalone === true;
+
+  if (existsSync(getOrgAuditBridgeConfigPath())) {
+    const bridge = loadOrgAuditBridgeConfig();
+    if (!bridge.enabled) {
+      warnings.push({
+        code: "audit-bridge-disabled",
+        message:
+          "Operational audit mirror to protocol chain is disabled (data/org/audit-bridge.yaml)",
+      });
+    }
+  }
 
   try {
     loadProtocolRegistry();

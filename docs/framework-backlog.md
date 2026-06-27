@@ -71,6 +71,36 @@
 
 ---
 
+## Phase ORG-P — Org 承認根幹（2026-06）
+
+**正本:** [org-os/org-approval-schema.md](org-os/org-approval-schema.md)
+
+| ID | 内容 | 状態 |
+|----|------|:----:|
+| ORG-P0 | wire 分離 · gate 純化 · reject audit · kind 統一 | [x] |
+| ORG-P1 | audit bridge · queue マッピング · 二重書き除去 | [x] |
+| ORG-P2 | identity adapter · delegation manifest · 法域 pack · external verify | [x] |
+| ORG-P3 | wire-governance 命名統一 | [x] |
+| ORG-P4 | audit 冪等 · delegation 署名 · tenant adapter 契約 · deprecated 掃除 | [x] |
+| ORG-P5 | tenant adapter 拡張 · legacy doc · audit SoT 方針 | [ ] |
+
+---
+
+## Phase ORG-C — OrgOS 完成度向上（2026-06）
+
+**正本:** [org-os/orgos-completion-plan.md](org-os/orgos-completion-plan.md) · interface spec: [orgos-interface-spec.md](org-os/orgos-interface-spec.md)
+
+| ID | 内容 | 状態 |
+|----|------|:----:|
+| ORG-C0 | 境界固定 — interface spec · assessment §13 · 本 Phase 登録 | [x] |
+| ORG-C1 | 単独 OrgOS 閉ループ — standalone validate · 内部 envelope · demo | [~] |
+| ORG-C2 | Wire 証拠 — witness emit · reconcile · hub verify remote | [~] |
+| ORG-C3 | Adapter 契約 — Core drift · module 76→90% | [ ] |
+| ORG-C4 | Community 整合 — 委任承認 · 語彙 · SLA | [ ] |
+| ORG-C5 | 受入 — 2 デモ · runbook · OrgOS 完成度 ≥85% | [ ] |
+
+---
+
 ## Phase OS-99 — 会社 OS 99+ 連続改善
 
 **ミッション:** 会社 OS composite **≥ 99** まで採点 → 修正 → 再採点を繰り返す。正本: [framework-assessment.md](framework-assessment.md) §10

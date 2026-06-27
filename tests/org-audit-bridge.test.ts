@@ -8,6 +8,7 @@ import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 import { getOrgAuditBridgeConfigPath } from "../src/lib/org/paths.js";
 import { bridgeAuditEventToProtocolChain } from "../src/lib/org/audit-bridge.js";
+import { clearOrgAuditBridgeStateForTests } from "../src/lib/org/audit-bridge-state.js";
 import { ORG_AUDIT_BRIDGE_EVENT_TYPES } from "../schemas/org/audit-bridge.js";
 import { auditEventSchema, type AuditEventType } from "../schemas/audit-log.js";
 
@@ -30,7 +31,10 @@ describe("org audit bridge", () => {
     writeFileSync(getOrgAuditBridgeConfigPath(), "enabled: true\nevents: []\n", "utf-8");
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    clearOrgAuditBridgeStateForTests();
+  });
 
   it("bridges all operational audit event types with operational.recorded payload", () => {
     for (const eventType of ORG_AUDIT_BRIDGE_EVENT_TYPES as AuditEventType[]) {
@@ -55,6 +59,23 @@ describe("org audit bridge", () => {
 
   it("appendAuditEvent mirrors to audit-chain when enabled", () => {
     appendAuditEvent({ event: "escalate", ref: "WO-001", actor: "secretary", detail: "test bridge" });
+    expect(loadProtocolAuditChain().length).toBe(1);
+  });
+
+  it("does not duplicate bridge records for the same audit id", () => {
+    const audit = auditEventSchema.parse({
+      id: "AUD-idempotent-bridge",
+      timestamp: new Date().toISOString(),
+      tenant: "demo",
+      event: "escalate",
+      ref: "WO-IDEM",
+      actor: "secretary",
+      detail: "idempotency test",
+    });
+    const first = bridgeAuditEventToProtocolChain(audit);
+    const second = bridgeAuditEventToProtocolChain(audit);
+    expect(first?.event_id).toBeTruthy();
+    expect(second).toBeNull();
     expect(loadProtocolAuditChain().length).toBe(1);
   });
 

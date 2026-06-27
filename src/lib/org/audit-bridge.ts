@@ -1,21 +1,34 @@
 import { randomUUID } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import type { AuditEvent } from "../../../schemas/audit-log.js";
-import { orgAuditBridgeConfigSchema } from "../../../schemas/org/audit-bridge.js";
+import {
+  orgAuditBridgeConfigSchema,
+  orgAuditBridgeRecommendedConfig,
+} from "../../../schemas/org/audit-bridge.js";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import { appendProtocolAuditRecord } from "../protocol/audit-chain.js";
 import { ourOrgRef } from "../protocol/identity.js";
 import { validateEnvelopeAgainstRegistry } from "../protocol/registry.js";
 import { maybeSignEnvelope } from "../protocol/signing.js";
+import { isAuditEventBridged, markAuditEventBridged } from "./audit-bridge-state.js";
 import { getOrgAuditBridgeConfigPath } from "./paths.js";
-import { readYamlFile } from "../utils.js";
+import { readYamlFile, writeYamlFile } from "../utils.js";
 
 export function loadOrgAuditBridgeConfig() {
   const path = getOrgAuditBridgeConfigPath();
   if (!existsSync(path)) {
-    return orgAuditBridgeConfigSchema.parse({ enabled: false, events: [] });
+    return orgAuditBridgeConfigSchema.parse(orgAuditBridgeRecommendedConfig);
   }
   return readYamlFile(path, orgAuditBridgeConfigSchema);
+}
+
+/** Write recommended config when missing — enables operational → protocol audit mirror. */
+export function ensureOrgAuditBridgeConfig(): void {
+  const path = getOrgAuditBridgeConfigPath();
+  if (existsSync(path)) return;
+  mkdirSync(dirname(path), { recursive: true });
+  writeYamlFile(path, orgAuditBridgeRecommendedConfig);
 }
 
 export function shouldBridgeAuditEvent(event: AuditEvent): boolean {
@@ -27,6 +40,7 @@ export function shouldBridgeAuditEvent(event: AuditEvent): boolean {
 
 export function bridgeAuditEventToProtocolChain(event: AuditEvent): EventEnvelope | null {
   if (!shouldBridgeAuditEvent(event)) return null;
+  if (isAuditEventBridged(event.id)) return null;
 
   const now = new Date().toISOString();
   let envelope: EventEnvelope = {
@@ -68,5 +82,6 @@ export function bridgeAuditEventToProtocolChain(event: AuditEvent): EventEnvelop
     envelope,
     transactionId: event.transaction_id,
   });
+  markAuditEventBridged(event.id);
   return envelope;
 }

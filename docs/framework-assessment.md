@@ -141,7 +141,7 @@
 
 ## 9. 製品ルーブリック（OS-100 · 2026-06-09 再評価）
 
-**製品 DoD（OS-1〜OS-10）:** acme / demo 骨格 — **99/100（実測）**  
+**製品 DoD（OS-1〜OS-10）:** acme / demo 骨格 — **100/100（実測 · 2026-06-25）**  
 **運用テナント DoD（OS-10b）:** `mal` — **未達（ops p0 ブロッカー 5）** — 人間完遂後 100  
 正本: [spec.md](spec.md) · [framework-backlog.md](framework-backlog.md) Phase L
 
@@ -150,7 +150,7 @@
 | **汎用性** | 25 | **25** | production_ready ≥5 · acme/demo validate ✓ |
 | **拡張性** | 25 | **25** | `npx tsc --noEmit` exit 0 · audit · routing/escalate |
 | **完全性（監査）** | 25 | **25** | classification · audit trail · compliance gap ✓ |
-| **自動化** | 25 | **24** | `npm run daily`/`weekly` ✓ · REF-4c 完了 · REF-4b/d で −1 |
+| **自動化** | 25 | **25** | `npm run daily`/`weekly` ✓ · REF-4b/d 完了 |
 
 > 旧版は四観点すべて 25/25 と自己宣告していたが、**tsc 71 エラー** と **npm run weekly 未登録** により実測は **90/100** 相当だった（FIX-A1〜A3 で回復）。
 
@@ -179,7 +179,7 @@
 |--------------|:----:|------|
 | CTR-013 | draft | 手続完了待ち |
 | CTR-014 | draft | 手続完了待ち |
-| CTR-012 | draft | 手続完了待ち |
+| CTR-012 | executed | 本社オフィス賃貸 · サウスウッド |
 | secrets-kamezawa | 未作成 | example からコピー |
 | cash-balance | template | status: confirmed 待ち |
 
@@ -195,7 +195,7 @@
 
 | 成分 | 重み | データ源 |
 |------|:----:|---------|
-| 製品（§9 実測） | **30%** | `PRODUCT_FRAMEWORK_SCORE`（現 **99**） |
+| 製品（§9 実測） | **30%** | `PRODUCT_FRAMEWORK_SCORE`（**100**） |
 | MAL 準備度 | **25%** | `steward status` 準備度 |
 | MAL 運用度 | **35%** | `steward status` 運用度 · **ops p0 が最大ギャップ** |
 | MAL 自動化度 | **10%** | `steward status` 自動化度 |
@@ -231,7 +231,7 @@
 |----|------|------|------|
 | **法域 pack** | TJS-11 | 各バケットが pack_ready DoD 達成 | `jurisdiction packs check` · demo validate |
 | **表示言語** | TJS 必須 `display_language` | `steward/locale/registry.yaml` | `steward locale list` |
-| **業務 module** | カタログ 24 | `production_ready` 件数 | `modules check --all` · [readiness.yaml](../steward/modules/readiness.yaml) |
+| **業務 module** | カタログ 26 | `production_ready` 件数 | `modules check --all` · [readiness.yaml](../steward/modules/readiness.yaml) |
 
 ### 2026-06 ベースライン
 
@@ -245,6 +245,44 @@
 TJS-11 法域: **11/11 完了**（2026-06-25）。
 
 **体感完成度** = 三軸の最小値（現状 **76%** — 業務 module 軸）— チケット: [framework-backlog-tickets-bc.md](framework-backlog-tickets-bc.md)
+
+---
+
+## 12. Inter-org Protocol（OpenOrgOS Core wire）
+
+**正本:** [org-os/inter-org-operator-model.md](org-os/inter-org-operator-model.md) · デモ: `npm run demo:inter-org`
+
+| 次元 | 評価 | 根拠 |
+|------|------|------|
+| 設計思想（Steward 非送信 · 人間 approve） | **高** | outbound ガード · notice 統一ワークフロー |
+| 2 Org デモ E2E | **高** | mal ↔ southwood · execution notice + ack |
+| Transport | **良** | HTTP webhook server · `protocol deliver` · inbox mirror |
+| 信頼（Ed25519 · strict verify） | **良** | 署名 · peer `protocol_public_key` · ingest 拒否 |
+| REG-004 | **良** | 法域別閾値 YAML · `company.yaml` 役員照合 |
+| Agent UX | **良** | `protocol notice draft` · Secretary Skill |
+| Witness Hub | **良** | 分散プール · fan-out · quorum · `hub serve` |
+| 法域一般化 | **良** | JP/HK/US 閾値 · tenant `jurisdiction` 連動 |
+
+確認: `npm test -- protocol` · `steward protocol validate` · `steward protocol approvers`
+
+---
+
+## 13. OrgOS 完成度（C1–C3）
+
+**正本:** [org-os/orgos-completion-plan.md](org-os/orgos-completion-plan.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C  
+**Org 根幹（P0–P4）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–18 · **~95/100**（2026-06-26 · 391 tests）
+
+| 軸 | 重み | 現状（推定） | v1 目標 |
+|----|------|-------------|---------|
+| 単独閉ループ（C1） | 35% | ~50% | standalone validate · demo |
+| 形式統一（C3） | 25% | ~40% | 内部 envelope · witness emit |
+| インターフェース（C2） | 15% | ~60% | interface spec · tenant-adapters 契約 |
+| Wire 証拠 | 15% | ~60% | reconcile · §14 ギャップ解消 |
+| エコシステム（Community） | 10% | ~45% | 委任承認 · SLA |
+
+**OrgOS 完成度（加重）:** **~52%** → 目標 **≥85%**（ORG-C5 受入時）
+
+P0–P4 で Org 承認根幹（wire 分離 · audit bridge 冪等 · delegation 署名 · tenant adapter · deprecated 掃除）は完了。残りは ORG-C1 単独デモ · C2 witness emit · C3 module/drift · C5 受入。
 
 ---
 

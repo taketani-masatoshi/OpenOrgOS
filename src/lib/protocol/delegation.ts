@@ -8,6 +8,7 @@ import { actorIdentitySchema } from "../../../schemas/protocol/identity-exchange
 import { STEWARD_AGENTS_DIR } from "../steward-paths.js";
 import { scopesForAgent } from "../org/delegation-scopes.js";
 import { ourOrgRef } from "./identity.js";
+import { maybeSignEnvelope } from "./signing.js";
 
 interface AgentRegistryEntry {
   id: string;
@@ -64,7 +65,7 @@ export function exportDelegationProof(options: {
 
 export function buildDelegationEnvelope(proof: DelegationProof, destination?: OrgRef): EventEnvelope {
   const now = new Date().toISOString();
-  return {
+  let envelope: EventEnvelope = {
     protocol_version: "1",
     event_id: randomUUID(),
     occurred_at: now,
@@ -78,4 +79,5 @@ export function buildDelegationEnvelope(proof: DelegationProof, destination?: Or
     },
     signature: null,
   };
+  return maybeSignEnvelope(envelope);
 }

@@ -2,9 +2,11 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DelegationProof } from "../../../schemas/protocol/authority-delegation.js";
 import { delegationProofSchema } from "../../../schemas/protocol/authority-delegation.js";
-import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
+import type { EventEnvelope, OrgRef } from "../../../schemas/protocol/org-event.js";
 import { eventEnvelopeSchema } from "../../../schemas/protocol/org-event.js";
 import { verifyProtocolAuditChain, type AuditVerifyIssue } from "./audit-chain.js";
+import { findPeerByOrgRef } from "./inbound-verify.js";
+import { ourOrgRef } from "./identity.js";
 import { validateProtocolFile } from "./validate.js";
 import { loadJsonl } from "../jsonl-store.js";
 import { protocolAuditRecordSchema } from "../../../schemas/protocol/audit-record.js";
@@ -13,6 +15,7 @@ import {
   getProtocolInboxDir,
   getProtocolOutboxDir,
 } from "./paths.js";
+import { exportProtocolPublicKeyBase64, verifyEventEnvelopeSignature } from "./signing.js";
 
 export interface ExternalVerifyIssue {
   code: string;
@@ -33,7 +36,32 @@ export interface ExternalAuditChainVerifyResult {
   envelopesLoaded: number;
 }
 
-function parseDelegationProofFromFile(filePath: string): DelegationProof {
+export interface VerifyDelegationProofExternalOptions {
+  /** Override grantor protocol public key (base64 SPKI DER). */
+  grantorPublicKey?: string;
+}
+
+interface ParsedDelegationFile {
+  proof: DelegationProof;
+  envelope?: EventEnvelope;
+}
+
+function resolveGrantorProtocolPublicKey(
+  grantor: OrgRef,
+  override?: string
+): string | undefined {
+  if (override) return override;
+  const ours = ourOrgRef();
+  if (
+    grantor.org_id === ours.org_id ||
+    (grantor.org_uri && grantor.org_uri === ours.org_uri)
+  ) {
+    return exportProtocolPublicKeyBase64();
+  }
+  return findPeerByOrgRef(grantor)?.protocol_public_key;
+}
+
+function parseDelegationProofFromFile(filePath: string): ParsedDelegationFile {
   const structural = validateProtocolFile(filePath, "delegation");
   if (!structural.ok) {
     throw new Error(structural.error ?? "invalid delegation file");
@@ -41,21 +69,58 @@ function parseDelegationProofFromFile(filePath: string): DelegationProof {
   const parsed = JSON.parse(readFileSync(filePath, "utf-8")) as unknown;
   const envelope = eventEnvelopeSchema.safeParse(parsed);
   if (envelope.success) {
-    return delegationProofSchema.parse(envelope.data.event.payload.proof);
+    return {
+      envelope: envelope.data,
+      proof: delegationProofSchema.parse(envelope.data.event.payload.proof),
+    };
   }
-  return delegationProofSchema.parse(parsed);
+  return { proof: delegationProofSchema.parse(parsed) };
 }
 
-export function verifyDelegationProofExternal(filePath: string): ExternalDelegationVerifyResult {
+export function verifyDelegationProofExternal(
+  filePath: string,
+  options?: VerifyDelegationProofExternalOptions
+): ExternalDelegationVerifyResult {
   const issues: ExternalVerifyIssue[] = [];
-  let proof: DelegationProof;
+  let parsed: ParsedDelegationFile;
   try {
-    proof = parseDelegationProofFromFile(filePath);
+    parsed = parseDelegationProofFromFile(filePath);
   } catch (e) {
     return {
       ok: false,
       issues: [{ code: "invalid-schema", message: e instanceof Error ? e.message : String(e) }],
     };
+  }
+
+  const { proof, envelope } = parsed;
+
+  if (envelope && envelope.event.type !== "org.authority.delegated") {
+    issues.push({
+      code: "invalid-event-type",
+      message: `expected org.authority.delegated, got ${envelope.event.type}`,
+    });
+  }
+
+  if (envelope) {
+    const publicKey = resolveGrantorProtocolPublicKey(proof.grant.grantor, options?.grantorPublicKey);
+    if (envelope.signature) {
+      if (!publicKey) {
+        issues.push({
+          code: "missing-grantor-key",
+          message: `Cannot verify signature — no protocol_public_key for grantor ${proof.grant.grantor.org_id}`,
+        });
+      } else if (!verifyEventEnvelopeSignature(envelope, publicKey)) {
+        issues.push({
+          code: "invalid-signature",
+          message: "Delegation envelope signature verification failed",
+        });
+      }
+    } else if (publicKey) {
+      issues.push({
+        code: "unsigned-envelope",
+        message: "Signed grantor key is available but envelope has no signature",
+      });
+    }
   }
 
   if (proof.grant.revoked_at) {
