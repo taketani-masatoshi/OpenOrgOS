@@ -30,10 +30,15 @@ const PRODUCTION_READY_IDS = [
   "event_operations",
   "real_estate_brokerage",
   "property_management",
+  "travel_booking",
+  "language_bridge",
+  "jp_subsidy_application",
+  "jp_trademark_application",
+  "jp_corporate_registration",
 ] as const;
 
 describe("module production_ready tier (Direction C)", () => {
-  it("lists nineteen production_ready modules", () => {
+  it("lists production_ready modules including jp_corporate_registration", () => {
     const production = listCatalogModuleIds().filter((id) => getModuleTier(id) === "production_ready");
     for (const id of PRODUCTION_READY_IDS) {
       expect(production).toContain(id);

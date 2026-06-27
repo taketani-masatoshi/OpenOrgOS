@@ -435,7 +435,7 @@ modules:
   - id: jp_corporate_registration
     name_ja: 法人設立・変更登記
     status: partial
-    tier: activation_ready
+    tier: production_ready
     pack: jurisdiction-packs/JP
     agent_proxy: secretary
     categories: [corporate_governance]
