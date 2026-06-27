@@ -96,7 +96,7 @@
 | ORG-C1 | 単独 OrgOS 閉ループ — standalone validate · 内部 envelope · demo | [x] |
 | ORG-C2 | Wire 証拠 — witness emit · reconcile · hub verify remote | [x] |
 | ORG-C3 | Adapter 契約 — Core drift · module 76→90% | [x] |
-| ORG-C4 | Community 整合 — 委任承認 · 語彙 · SLA | [ ] |
+| ORG-C4 | Community 整合 — operators · revocation SLA · governance CLI | [x] |
 | ORG-C5 | 受入 — 2 デモ · runbook · OrgOS 完成度 ≥85% | [x] |
 
 ---

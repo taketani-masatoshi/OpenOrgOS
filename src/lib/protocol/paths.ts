@@ -84,3 +84,11 @@ export function getMeshRoutesYamlPath(): string {
 export function getSigningKeyMetaPath(): string {
   return join(getProtocolDataDir(), "signing-key-meta.yaml");
 }
+
+export function getReconcileAlertsYamlPath(): string {
+  return join(getProtocolDataDir(), "reconcile-alerts.yaml");
+}
+
+export function getWitnessTrustRevocationsPath(): string {
+  return join(getWitnessTrustDir(), "revocations.json");
+}

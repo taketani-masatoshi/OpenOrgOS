@@ -278,11 +278,11 @@ TJS-11 法域: **11/11 完了**（2026-06-25）。
 | 形式統一 | 25% | **90%** | witness emit → audit chain · [protocol-witness-integration.test.ts](../tests/protocol-witness-integration.test.ts) |
 | インターフェース（C2） | 15% | **85%** | module production_ready **89%** ≥ 88% 閾値 · `jp_corporate_registration` 昇格 |
 | Wire 証拠 | 15% | **88%** | inter-org demo · deliver-pull · **mesh deliver E2E** · hub verify remote |
-| エコシステム（Community） | 10% | **45%** | [C4 backlog](org-os/c4-community-backlog.md) 据置 |
+| エコシステム（Community） | 10% | **80%** | [trusted-operators.yaml](../steward/platform/protocol/trusted-operators.yaml) · `protocol community *` · revocation SLA |
 
-**OrgOS 完成度（加重）:** **86/100**（`npm run steward -- status --orgos` · 2026-06-27）
+**OrgOS 完成度（加重）:** **90/100**（`npm run steward -- status --orgos` · 2026-06-27）
 
-> **注:** Eco 45% 据置。IF 85% · module 89% で加重 **~86/100**。
+> **注:** Eco **80%** = Steward-side C4 完了（operators · SLA · governance）。OS_Community アプリで 85+。
 
 ```bash
 npm run steward -- status --orgos
@@ -292,7 +292,7 @@ npm run demo:deliver-pull
 npm run demo:mesh-deliver
 ```
 
-P0–P5 で Org 承認根幹完了。ORG-C1–C3/C5 で standalone デモ · witness E2E · module promotion · runbook · mesh v1 を完了。[C4 Community backlog](org-os/c4-community-backlog.md) は据置。
+P0–P5 で Org 承認根幹完了。ORG-C1–C3/C5 完了 · **Steward-side C4**（operators · SLA · governance）完了 · OS_Community UI は [c4-community-backlog.md](org-os/c4-community-backlog.md) backlog。
 
 ---
 

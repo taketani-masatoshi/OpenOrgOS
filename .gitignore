@@ -25,6 +25,14 @@ tenants/*/data/protocol/signing-key.pem
 tenants/*/data/protocol/signing-key.pem.bak-*
 data/hub-*/signing-key.pem
 data/hub-*/witness-*.jsonl
+# Protocol runtime state (relay · wire queues · reconcile — see docs/org-os/tenant-runtime-artifacts.md)
+tenants/*/data/protocol/relay-state.yaml
+tenants/*/data/protocol/wire-delivered.yaml
+tenants/*/data/protocol/wire-pending.yaml
+tenants/*/data/protocol/wire-relay-queue.yaml
+tenants/*/data/protocol/signing-key-meta.yaml
+tenants/*/data/protocol/reconcile-alerts.yaml
+tenants/*/data/org/audit-bridge-state.yaml
 tenants/*/data/executive/stakeholders.yaml
 tenants/*/data/executive/calendar.yaml
 tenants/*/data/executive/tasks.yaml

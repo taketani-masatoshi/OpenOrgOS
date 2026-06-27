@@ -7,8 +7,9 @@ import { listWirePending } from "./wire-queue.js";
 import { verifyCachedReceiptsForEvent, fetchReceiptsFromPool } from "./witness-client.js";
 import { findEnvelopeFileForWitness } from "./witness-client.js";
 import { verifyProtocolAuditChain } from "./audit-chain.js";
+import { persistAndEscalateAlerts } from "./reconcile-alerts-store.js";
 
-export type ReconcileSeverity = "error" | "warning" | "info";
+export type ReconcileSeverity = "error" | "warning" | "info" | "critical";
 
 export interface ReconcileAlert {
   severity: ReconcileSeverity;
@@ -247,4 +248,108 @@ export function summarizeQuorum(results: WitnessQuorumResult[]): { ok: number; f
     },
     { ok: 0, fail: 0 }
   );
+}
+
+export interface RemoteLedgerEntry {
+  event_id: string;
+  transaction_id?: string;
+  recorded_at?: string;
+}
+
+export async function fetchRemotePeerLedger(
+  ledgerApiUrl: string
+): Promise<RemoteLedgerEntry[]> {
+  const base = ledgerApiUrl.replace(/\/$/, "");
+  const url = base.endsWith("/protocol/v1/ledger") ? base : `${base}/protocol/v1/ledger`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Remote ledger fetch failed: HTTP ${res.status}`);
+  }
+  const body = (await res.json()) as { entries?: RemoteLedgerEntry[] };
+  return body.entries ?? [];
+}
+
+export function comparePeerLedgers(
+  localEventIds: string[],
+  remoteEntries: RemoteLedgerEntry[]
+): ReconcileAlert[] {
+  const alerts: ReconcileAlert[] = [];
+  const remoteIds = new Set(remoteEntries.map((e) => e.event_id));
+  const localIds = new Set(localEventIds);
+
+  for (const eventId of localEventIds) {
+    if (!remoteIds.has(eventId)) {
+      alerts.push({
+        severity: "warning",
+        code: "ledger-remote-missing",
+        message: `Local outbound event ${eventId} absent from peer ledger`,
+        event_id: eventId,
+      });
+    }
+  }
+
+  for (const remote of remoteEntries) {
+    if (!localIds.has(remote.event_id)) {
+      alerts.push({
+        severity: "warning",
+        code: "ledger-local-missing",
+        message: `Peer ledger event ${remote.event_id} absent locally`,
+        event_id: remote.event_id,
+      });
+    }
+  }
+
+  return alerts;
+}
+
+export async function reconcileRemotePeerLedger(opts: {
+  peerId: string;
+  since?: string;
+}): Promise<{ checked: number; alerts: ReconcileAlert[] }> {
+  const peer = findPeer(opts.peerId);
+  if (!peer) throw new Error(`Peer ${opts.peerId} not found`);
+  if (!peer.ledger_api_url) {
+    return {
+      checked: 0,
+      alerts: [{ severity: "info", code: "ledger-api-unconfigured", message: "peer.ledger_api_url not set" }],
+    };
+  }
+
+  const localTxs = listTransactions({ peerId: opts.peerId, since: opts.since }).filter(
+    (t) => t.direction === "outbound"
+  );
+  const remoteEntries = await fetchRemotePeerLedger(peer.ledger_api_url);
+  const alerts = comparePeerLedgers(
+    localTxs.map((t) => t.event_id),
+    remoteEntries
+  );
+  return { checked: localTxs.length, alerts };
+}
+
+export async function reconcileWitnessWithPeerAndPersist(opts: {
+  peerId: string;
+  since?: string;
+  eventId?: string;
+  remoteLedger?: boolean;
+}): Promise<ReconcileResult & { escalated: number; ledger_alerts: number }> {
+  const result = await reconcileWitnessWithPeer(opts);
+  let ledgerAlerts = 0;
+
+  if (opts.remoteLedger !== false) {
+    try {
+      const ledger = await reconcileRemotePeerLedger({ peerId: opts.peerId, since: opts.since });
+      ledgerAlerts = ledger.alerts.length;
+      result.alerts.push(...ledger.alerts);
+    } catch (e) {
+      result.alerts.push({
+        severity: "warning",
+        code: "ledger-fetch-failed",
+        message: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  const escalated = persistAndEscalateAlerts(result.alerts, opts.peerId).filter((a) => a.escalated)
+    .length;
+  return { ...result, escalated, ledger_alerts: ledgerAlerts };
 }

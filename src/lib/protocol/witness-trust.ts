@@ -5,9 +5,11 @@ import {
   witnessTrustAuthoritySchema,
   witnessHubCertificateSchema,
   witnessTrustBundleSchema,
+  witnessTrustRevocationSchema,
   type WitnessTrustAuthority,
   type WitnessHubCertificate,
   type WitnessTrustBundle,
+  type WitnessTrustRevocation,
 } from "../../../schemas/protocol/witness-trust.js";
 import { canonicalJson } from "./canonical.js";
 import {
@@ -15,6 +17,7 @@ import {
   getWitnessTrustAuthorityYamlPath,
   getWitnessTrustBundlePath,
   getWitnessTrustDir,
+  getWitnessTrustRevocationsPath,
 } from "./paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 import { generateHubKeyPair } from "../hub/signing.js";
@@ -56,6 +59,11 @@ export function witnessTrustBundleDigest(bundle: UnsignedWitnessTrustBundle): st
     version: bundle.version,
     authority_id: bundle.authority.authority_id,
     certificates: bundle.certificates.map((c) => witnessHubCertificateDigest(c)),
+    revocations: (bundle.revocations ?? []).map((r) => ({
+      cert_id: r.cert_id,
+      hub_id: r.hub_id,
+      revoked_at: r.revoked_at,
+    })),
     published_at: bundle.published_at,
   };
   return createHash("sha256").update(canonicalJson(payload)).digest("hex");
@@ -97,6 +105,10 @@ export function verifyWitnessTrustBundle(bundle: WitnessTrustBundle): {
     }
     if (cert.expires_at && cert.expires_at < new Date().toISOString()) {
       issues.push(`${cert.hub_id}: certificate expired`);
+    }
+    const revoked = (bundle.revocations ?? []).some((r) => r.cert_id === cert.cert_id || r.hub_id === cert.hub_id);
+    if (revoked) {
+      issues.push(`${cert.hub_id}: certificate revoked`);
     }
   }
 
@@ -183,10 +195,12 @@ export function publishWitnessTrustBundle(): WitnessTrustBundle {
   }
   const privateKeyPem = ensureWitnessTrustAuthorityKey();
   const existing = loadWitnessTrustBundle();
+  const revocations = loadWitnessTrustRevocations();
   const unsigned: UnsignedWitnessTrustBundle = {
     version: "1",
     authority,
     certificates: existing?.certificates ?? [],
+    revocations,
     published_at: new Date().toISOString(),
   };
   const bundle = signWitnessTrustBundle(unsigned, privateKeyPem);
@@ -213,6 +227,7 @@ export function addCertificateToBundle(cert: WitnessHubCertificate): WitnessTrus
       version: "1",
       authority,
       certificates: certs,
+      revocations: loadWitnessTrustRevocations(),
       published_at: new Date().toISOString(),
     },
     privateKeyPem
@@ -241,5 +256,41 @@ export function verifiedHubsFromBundle(bundle: WitnessTrustBundle): WitnessHubCe
   if (!ok) {
     throw new Error(`Trust bundle verification failed: ${issues.join("; ")}`);
   }
-  return bundle.certificates;
+  const revokedHubIds = new Set((bundle.revocations ?? []).map((r) => r.hub_id));
+  return bundle.certificates.filter((c) => !revokedHubIds.has(c.hub_id));
+}
+
+export function loadWitnessTrustRevocations(): WitnessTrustRevocation[] {
+  const path = getWitnessTrustRevocationsPath();
+  if (!existsSync(path)) return [];
+  const raw = JSON.parse(readFileSync(path, "utf-8")) as unknown[];
+  return raw.map((r) => witnessTrustRevocationSchema.parse(r));
+}
+
+export function saveWitnessTrustRevocations(revocations: WitnessTrustRevocation[]): void {
+  mkdirSync(getWitnessTrustDir(), { recursive: true });
+  writeFileSync(getWitnessTrustRevocationsPath(), JSON.stringify(revocations, null, 2), "utf-8");
+}
+
+export function revokeWitnessHubCertificate(opts: {
+  certId: string;
+  hubId: string;
+  reason?: string;
+  operatorId?: string;
+}): WitnessTrustRevocation {
+  const revocations = loadWitnessTrustRevocations();
+  if (revocations.some((r) => r.cert_id === opts.certId || r.hub_id === opts.hubId)) {
+    throw new Error(`Certificate ${opts.certId} / hub ${opts.hubId} already revoked`);
+  }
+  const entry = witnessTrustRevocationSchema.parse({
+    cert_id: opts.certId,
+    hub_id: opts.hubId,
+    revoked_at: new Date().toISOString(),
+    reason: opts.reason,
+    operator_id: opts.operatorId,
+  });
+  revocations.push(entry);
+  saveWitnessTrustRevocations(revocations);
+  publishWitnessTrustBundle();
+  return entry;
 }

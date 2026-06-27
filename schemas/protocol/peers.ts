@@ -13,6 +13,8 @@ export const peerProfileSchema = z.object({
   inbound_webhook_url: z.string().url().optional(),
   /** Multipath delivery endpoints (push · relay · pull fallback). */
   inbound_endpoints: z.array(peerEndpointSchema).optional(),
+  /** Remote transaction ledger for reconcile (GET …/protocol/v1/ledger). */
+  ledger_api_url: z.string().url().optional(),
 });
 
 export const peersRegistrySchema = z.object({

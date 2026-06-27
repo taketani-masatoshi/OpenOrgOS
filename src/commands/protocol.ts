@@ -62,6 +62,20 @@ import {
 } from "../lib/protocol/witness-trust.js";
 import { getWitnessTrustBundlePath } from "../lib/protocol/paths.js";
 import { evaluateTransactionSla } from "../lib/protocol/resilience-sla.js";
+import {
+  listActiveOperators,
+  loadTrustedOperatorsRegistry,
+  validateTrustedOperatorsRegistry,
+  checkRevocationSla,
+  revokeTrustedOperator,
+  submitGovernanceRequest,
+  decideGovernanceRequest,
+} from "../lib/protocol/trusted-operators.js";
+import { computeCommunityReadiness } from "../lib/protocol/community-readiness.js";
+import { revokeWitnessHubCertificate } from "../lib/protocol/witness-trust.js";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { getProtocolDataDir } from "../lib/protocol/paths.js";
 import { findPeer, registerPeer, nextPeerId, resolvePeerOutboxBaseUrl } from "../lib/protocol/peers.js";
 import { readFileSync } from "node:fs";
 import { orgIdentityDocumentSchema } from "../../schemas/protocol/identity-exchange.js";
@@ -983,15 +997,20 @@ export async function runProtocolWitnessReconcile(
   opts: ProtocolWitnessReconcileOptions
 ): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const { reconcileWitnessWithPeer, reconcileCrossHub } = await import("../lib/protocol/witness-reconcile.js");
+  const { reconcileWitnessWithPeerAndPersist, reconcileCrossHub } = await import(
+    "../lib/protocol/witness-reconcile.js"
+  );
+  const { persistAndEscalateAlerts } = await import("../lib/protocol/reconcile-alerts-store.js");
 
   if (opts.crossHub) {
     const cross = await reconcileCrossHub({ since: opts.since, eventId: opts.eventId });
-    const peer = await reconcileWitnessWithPeer({
+    const peer = await reconcileWitnessWithPeerAndPersist({
       peerId: opts.peer,
       since: opts.since,
       eventId: opts.eventId,
+      remoteLedger: true,
     });
+    persistAndEscalateAlerts(cross.alerts);
     const result = { peer, cross_hub: cross };
     if (opts.json) {
       console.log(JSON.stringify(result, null, 2));
@@ -1006,10 +1025,11 @@ export async function runProtocolWitnessReconcile(
     return;
   }
 
-  const result = await reconcileWitnessWithPeer({
+  const result = await reconcileWitnessWithPeerAndPersist({
     peerId: opts.peer,
     since: opts.since,
     eventId: opts.eventId,
+    remoteLedger: true,
   });
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -1353,7 +1373,7 @@ export async function runProtocolApiServe(opts: ProtocolApiServeOptions): Promis
   if (config.mtls_required) {
     console.log(`  mTLS: required on relay/inbox/outbox · allowed: ${config.mtls_allowed_org_uris.join(", ") || "(any authorized client)"}`);
   }
-  console.log("  GET /protocol/v1/trust/bundle · /inbox · /outbox · POST /protocol/v1/relay/enqueue");
+  console.log("  GET /protocol/v1/trust/bundle · /inbox · /outbox · /ledger · /metrics · POST /protocol/v1/relay/enqueue");
   await new Promise<void>(() => {
     /* keep alive until SIGINT */
   });
@@ -1393,4 +1413,208 @@ export function runProtocolSlaCheck(opts: ProtocolSlaCheckOptions): void {
     console.log(`  ✗ ${f.event_id} missing ${f.missing.join(", ")}`);
   }
   if (failed.length) process.exit(1);
+}
+
+export interface ProtocolCommunityOperatorsListOptions {
+  jurisdiction?: string;
+  json?: boolean;
+}
+
+export function runProtocolCommunityOperatorsList(opts: ProtocolCommunityOperatorsListOptions): void {
+  const ops = opts.jurisdiction
+    ? listActiveOperators(opts.jurisdiction)
+    : loadTrustedOperatorsRegistry().operators;
+  if (opts.json) {
+    console.log(JSON.stringify(ops, null, 2));
+    return;
+  }
+  console.log(`trusted operators: ${ops.length}`);
+  for (const op of ops) {
+    console.log(`  · ${op.operator_id} (${op.status}) · ${op.org_name} · hubs: ${op.hub_ids.join(", ")}`);
+  }
+}
+
+export interface ProtocolCommunityOperatorsValidateOptions {
+  json?: boolean;
+}
+
+export function runProtocolCommunityOperatorsValidate(opts: ProtocolCommunityOperatorsValidateOptions): void {
+  const result = validateTrustedOperatorsRegistry();
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+  if (result.ok) {
+    console.log("✓ Trusted operators registry OK");
+    return;
+  }
+  for (const issue of result.issues) {
+    console.error(`  [${issue.code}] ${issue.message}`);
+  }
+  process.exit(1);
+}
+
+export interface ProtocolCommunityCheckSlaOptions {
+  json?: boolean;
+}
+
+export function runProtocolCommunityCheckSla(opts: ProtocolCommunityCheckSlaOptions): void {
+  const result = checkRevocationSla();
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+  if (result.ok) {
+    console.log("✓ Revocation SLA: no overdue revocations");
+    return;
+  }
+  for (const o of result.overdue) {
+    console.error(`  ✗ ${o.operator_id}: ${o.hours_since_revoke.toFixed(1)}h > SLA ${o.sla_hours}h`);
+  }
+  process.exit(1);
+}
+
+export interface ProtocolCommunityRevokeOptions {
+  operatorId: string;
+  reason?: string;
+  json?: boolean;
+}
+
+export function runProtocolCommunityRevoke(opts: ProtocolCommunityRevokeOptions): void {
+  const op = revokeTrustedOperator({ operatorId: opts.operatorId, reason: opts.reason });
+  if (opts.json) {
+    console.log(JSON.stringify(op, null, 2));
+    return;
+  }
+  console.log(`✓ revoked operator ${op.operator_id} at ${op.revoked_at}`);
+}
+
+export interface ProtocolCommunityGovernanceSubmitOptions {
+  operatorId: string;
+  orgName: string;
+  jurisdiction: string;
+  hubIds: string[];
+  requestedBy: string;
+  json?: boolean;
+}
+
+export function runProtocolCommunityGovernanceSubmit(
+  opts: ProtocolCommunityGovernanceSubmitOptions
+): void {
+  const req = submitGovernanceRequest({
+    operatorId: opts.operatorId,
+    orgName: opts.orgName,
+    jurisdiction: opts.jurisdiction,
+    hubIds: opts.hubIds,
+    requestedBy: opts.requestedBy,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(req, null, 2));
+    return;
+  }
+  console.log(`✓ governance request ${req.request_id} · ${req.operator_id} pending`);
+}
+
+export interface ProtocolCommunityGovernanceDecideOptions {
+  requestId: string;
+  approve: boolean;
+  decidedBy: string;
+  note?: string;
+  authorityId?: string;
+  json?: boolean;
+}
+
+export function runProtocolCommunityGovernanceDecide(
+  opts: ProtocolCommunityGovernanceDecideOptions
+): void {
+  const { request, operator } = decideGovernanceRequest({
+    requestId: opts.requestId,
+    approve: opts.approve,
+    decidedBy: opts.decidedBy,
+    note: opts.note,
+    authorityId: opts.authorityId,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ request, operator }, null, 2));
+    return;
+  }
+  console.log(`✓ governance ${request.status}: ${request.operator_id}`);
+  if (operator) console.log(`  operator certified · hubs: ${operator.hub_ids.join(", ")}`);
+}
+
+export interface ProtocolCommunityReadinessOptions {
+  json?: boolean;
+}
+
+export function runProtocolCommunityReadiness(opts: ProtocolCommunityReadinessOptions): void {
+  const result = computeCommunityReadiness();
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`Community readiness (Steward-side): ${result.score}/80`);
+  for (const check of result.checks) {
+    console.log(`  ${check.ok ? "✓" : "✗"} ${check.id}: ${check.detail}`);
+  }
+}
+
+export interface ProtocolWitnessTrustRevokeOptions {
+  certId: string;
+  hubId: string;
+  reason?: string;
+  operatorId?: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolWitnessTrustRevoke(opts: ProtocolWitnessTrustRevokeOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const entry = revokeWitnessHubCertificate({
+    certId: opts.certId,
+    hubId: opts.hubId,
+    reason: opts.reason,
+    operatorId: opts.operatorId,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(entry, null, 2));
+    return;
+  }
+  console.log(`✓ revoked hub cert ${opts.hubId} · bundle republished`);
+}
+
+export interface ProtocolTlsRotateOptions {
+  tenant?: string;
+  certPath?: string;
+  keyPath?: string;
+  json?: boolean;
+}
+
+export function runProtocolTlsRotate(opts: ProtocolTlsRotateOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const tlsDir = join(getProtocolDataDir(), "tls");
+  mkdirSync(tlsDir, { recursive: true });
+  const certPath = opts.certPath ?? join(tlsDir, "server.crt");
+  const keyPath = opts.keyPath ?? join(tlsDir, "server.key");
+  const meta = {
+    rotated_at: new Date().toISOString(),
+    cert_path: certPath,
+    key_path: keyPath,
+    checklist: [
+      "Issue new X.509 cert (ACME / internal CA) to cert_path",
+      "Update protocol-api-client.yaml tls cert_path/key_path/ca_path",
+      "Restart protocol api-serve and relay daemon",
+      "Verify GET /protocol/v1/metrics and mTLS peers",
+    ],
+    previous_cert_exists: existsSync(certPath),
+    previous_key_exists: existsSync(keyPath),
+  };
+  writeFileSync(join(tlsDir, "rotation-meta.json"), JSON.stringify(meta, null, 2));
+  if (opts.json) {
+    console.log(JSON.stringify(meta, null, 2));
+    return;
+  }
+  console.log(`✓ TLS rotation checklist written · ${join(tlsDir, "rotation-meta.json")}`);
+  for (const step of meta.checklist) console.log(`  · ${step}`);
 }

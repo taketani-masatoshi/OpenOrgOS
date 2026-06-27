@@ -121,3 +121,84 @@ npm run steward -- --tenant mal protocol peer discover --suggest --json
 - [ ] `modules check --all` · production_ready ≥ 24/27
 
 *改定: 2026-06-27 · ORG-C5 · mesh v1 · signing checklist*
+
+---
+
+## 11. 本番デーモン（relay · protocol API）
+
+**systemd テンプレ:**
+
+- `deploy/protocol-relay/systemd/steward-protocol-relay@.service`
+- `deploy/protocol-api/systemd/steward-protocol-api@.service`
+
+```bash
+# 例: mal テナント
+sudo systemctl enable steward-protocol-relay@mal steward-protocol-api@mal
+sudo systemctl start steward-protocol-relay@mal steward-protocol-api@mal
+```
+
+**メトリクス:** `GET /protocol/v1/metrics`（api-serve 稼働時）
+
+```bash
+curl -s http://127.0.0.1:9476/protocol/v1/metrics | jq
+# wire_pending · witness_pending · reconcile_alerts_open · relay_cycles
+```
+
+**本番 warn_only:**
+
+```yaml
+# data/protocol/witness-pool.yaml
+wire_governance_policy:
+  warn_only: false
+```
+
+---
+
+## 12. TLS 証明書ローテーション
+
+```bash
+npm run steward -- --tenant mal protocol tls rotate
+# → data/protocol/tls/rotation-meta.json（チェックリスト）
+# ACME / 内部 CA で server.crt / server.key を更新後:
+npm run steward -- --tenant mal protocol api-serve --tls-cert ... --tls-key ...
+```
+
+---
+
+## 13. C4 Community（Steward 側）
+
+```bash
+npm run steward -- protocol community operators
+npm run steward -- protocol community operators-validate
+npm run steward -- protocol community check-sla
+npm run steward -- protocol community readiness
+npm run steward -- protocol witness trust revoke --cert-id UUID --hub-id HUB-A
+```
+
+**リモート ledger reconcile:** peer に `ledger_api_url` を設定 · API は `GET /protocol/v1/ledger`
+
+```bash
+npm run steward -- --tenant mal protocol witness reconcile --peer PEER-001 --cross-hub
+# reconcile-alerts.yaml に alert 蓄積 · 3 回で自動エスカレーション
+```
+
+---
+
+## 14. 契約 protocol ブロック
+
+Inter-org 契約に `protocol:` を付与（テンプレ: `steward/platform/contracts/inter-org-protocol-block.yaml.example`）
+
+- mal: `tenants/mal/data/contracts/CTR-012.yaml`
+- southwood: `tenants/southwood/data/contracts/CTR-012.yaml`
+
+approve 時に `maybeBindWitnessPoolFromContract()` が witness pool をバインド。
+
+---
+
+## 15. テナント実行痕跡
+
+ランタイム生成ファイルは `.gitignore` 対象 — 正本: [tenant-runtime-artifacts.md](org-os/tenant-runtime-artifacts.md)
+
+```bash
+git checkout -- tenants/mal/data/protocol/   # 追跡済み seed に戻す
+```

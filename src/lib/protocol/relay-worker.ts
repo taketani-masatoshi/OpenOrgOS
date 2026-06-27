@@ -1,33 +1,21 @@
-import { existsSync } from "node:fs";
-import { relayStateSchema, type RelayCycleMetrics, type RelayState } from "../../../schemas/protocol/relay-state.js";
-import { getRelayStateYamlPath } from "./paths.js";
-import { readYamlFile, writeYamlFile } from "../utils.js";
+import { type RelayCycleMetrics } from "../../../schemas/protocol/relay-state.js";
+import { loadRelayState, saveRelayState } from "./relay-state.js";
 import { flushWirePending, deliverProtocolEnvelopeWithRelay } from "./transport.js";
 import { flushWitnessPending } from "./witness-client.js";
 import { listWirePending } from "./wire-queue.js";
 import { listWitnessPending } from "./witness-queue.js";
 import { loadPeersRegistry } from "./peers.js";
-import { reconcileWitnessWithPeer, reconcileCrossHub } from "./witness-reconcile.js";
+import { reconcileWitnessWithPeer, reconcileCrossHub, reconcileWitnessWithPeerAndPersist } from "./witness-reconcile.js";
 import { evaluateTransactionSla } from "./resilience-sla.js";
 import { listTransactions } from "./transactions.js";
 import { loadContractById } from "./contract-witness-pool.js";
 import type { ResilienceSlaTier } from "../../../schemas/protocol/resilience-sla.js";
 
-export function loadRelayState(): RelayState {
-  const path = getRelayStateYamlPath();
-  if (!existsSync(path)) {
-    return relayStateSchema.parse({ cycles: 0, history: [] });
-  }
-  return readYamlFile(path, relayStateSchema);
-}
-
-export function saveRelayState(state: RelayState): void {
-  writeYamlFile(getRelayStateYamlPath(), state);
-}
-
 export interface RelayCycleResult extends RelayCycleMetrics {
   reconcile_alerts_detail: Array<{ peer_id?: string; code: string; message: string }>;
 }
+
+export { loadRelayState, saveRelayState } from "./relay-state.js";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -44,7 +32,10 @@ export async function runRelayCycle(opts?: {
   if (opts?.reconcile !== false) {
     for (const peer of loadPeersRegistry().peers) {
       try {
-        const result = await reconcileWitnessWithPeer({ peerId: peer.peer_id });
+        const result = await reconcileWitnessWithPeerAndPersist({
+          peerId: peer.peer_id,
+          remoteLedger: true,
+        });
         for (const alert of result.alerts) {
           reconcileAlerts.push({
             peer_id: peer.peer_id,

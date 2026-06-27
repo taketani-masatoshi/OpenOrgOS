@@ -21,10 +21,19 @@ export const witnessHubCertificateSchema = z.object({
   authority_signature: z.string().min(1),
 });
 
+export const witnessTrustRevocationSchema = z.object({
+  cert_id: z.string().uuid(),
+  hub_id: z.string().min(1),
+  revoked_at: z.string().min(1),
+  reason: z.string().optional(),
+  operator_id: z.string().optional(),
+});
+
 export const witnessTrustBundleSchema = z.object({
   version: z.literal("1"),
   authority: witnessTrustAuthoritySchema,
   certificates: z.array(witnessHubCertificateSchema).default([]),
+  revocations: z.array(witnessTrustRevocationSchema).default([]),
   published_at: z.string().min(1),
   bundle_signature: z.string().min(1),
 });

@@ -78,6 +78,15 @@ import {
   runProtocolWitnessPoolInitFromContract,
   runProtocolApiServe,
   runProtocolSlaCheck,
+  runProtocolCommunityOperatorsList,
+  runProtocolCommunityOperatorsValidate,
+  runProtocolCommunityCheckSla,
+  runProtocolCommunityRevoke,
+  runProtocolCommunityGovernanceSubmit,
+  runProtocolCommunityGovernanceDecide,
+  runProtocolCommunityReadiness,
+  runProtocolWitnessTrustRevoke,
+  runProtocolTlsRotate,
 } from "../../commands/protocol.js";
 import {
   runHubServe,
@@ -821,6 +830,88 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) => runProtocolTrustedHubsValidate({ tenant: opts.tenant, json: opts.json }));
 
+  const protocolCommunityCmd = protocolCmd
+    .command("community")
+    .description("C4 trusted operators · revocation SLA · governance");
+  protocolCommunityCmd
+    .command("operators")
+    .description("List trusted witness operators")
+    .option("--jurisdiction <code>", "Filter by jurisdiction")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolCommunityOperatorsList({ jurisdiction: opts.jurisdiction, json: opts.json })
+    );
+  protocolCommunityCmd
+    .command("operators-validate")
+    .description("Validate steward/platform/protocol/trusted-operators.yaml")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolCommunityOperatorsValidate({ json: opts.json }));
+  protocolCommunityCmd
+    .command("check-sla")
+    .description("Check revocation SLA for revoked operators")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolCommunityCheckSla({ json: opts.json }));
+  protocolCommunityCmd
+    .command("revoke")
+    .description("Revoke a trusted operator (governance)")
+    .requiredOption("--operator-id <id>", "OP-*")
+    .option("--reason <text>", "Revocation reason")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolCommunityRevoke({ operatorId: opts.operatorId, reason: opts.reason, json: opts.json })
+    );
+  const protocolCommunityGovCmd = protocolCommunityCmd
+    .command("governance")
+    .description("Committee operator certification workflow");
+  protocolCommunityGovCmd
+    .command("submit")
+    .description("Submit operator certification request")
+    .requiredOption("--operator-id <id>", "OP-*")
+    .requiredOption("--org-name <name>", "Operator org name")
+    .requiredOption("--jurisdiction <code>", "ISO jurisdiction")
+    .requiredOption("--requested-by <id>", "Requester id")
+    .option("--hub-id <id>", "Hub id (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolCommunityGovernanceSubmit({
+        operatorId: opts.operatorId,
+        orgName: opts.orgName,
+        jurisdiction: opts.jurisdiction,
+        hubIds: opts.hubId,
+        requestedBy: opts.requestedBy,
+        json: opts.json,
+      })
+    );
+  protocolCommunityGovCmd
+    .command("decide")
+    .description("Approve or reject governance request")
+    .requiredOption("--request-id <uuid>", "Request id")
+    .requiredOption("--decided-by <id>", "Committee chair id")
+    .option("--approve", "Approve request")
+    .option("--reject", "Reject request")
+    .option("--note <text>", "Decision note")
+    .option("--authority-id <id>", "WTA-* for certified operator")
+    .option("--json", "JSON output")
+    .action((opts) => {
+      if (!opts.approve && !opts.reject) {
+        console.error("Specify --approve or --reject");
+        process.exit(1);
+      }
+      runProtocolCommunityGovernanceDecide({
+        requestId: opts.requestId,
+        approve: !!opts.approve,
+        decidedBy: opts.decidedBy,
+        note: opts.note,
+        authorityId: opts.authorityId,
+        json: opts.json,
+      });
+    });
+  protocolCommunityCmd
+    .command("readiness")
+    .description("Steward-side C4 readiness score (max 80)")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolCommunityReadiness({ json: opts.json }));
+
   protocolCmd
     .command("approvers")
     .description("List wire-governance authorized approvers from company.yaml")
@@ -987,6 +1078,25 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       })
     );
+  protocolWitnessTrustCmd
+    .command("revoke")
+    .description("Revoke hub certificate and republish trust bundle")
+    .requiredOption("--cert-id <uuid>", "Certificate id")
+    .requiredOption("--hub-id <id>", "Hub id")
+    .option("--reason <text>", "Revocation reason")
+    .option("--operator-id <id>", "OP-* operator")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessTrustRevoke({
+        certId: opts.certId,
+        hubId: opts.hubId,
+        reason: opts.reason,
+        operatorId: opts.operatorId,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
 
   const protocolRelayCmd = protocolCmd.command("relay").description("Wire + witness relay worker (R1–R4)");
   protocolRelayCmd
@@ -1061,6 +1171,23 @@ export function registerOrchestrationCommands(program: Command): void {
         tlsCa: opts.tlsCa,
         mtlsRequired: opts.mtlsRequired,
         mtlsAllowedOrg: opts.mtlsAllowedOrg,
+      })
+    );
+
+  const protocolTlsCmd = protocolCmd.command("tls").description("Protocol API TLS lifecycle");
+  protocolTlsCmd
+    .command("rotate")
+    .description("Write TLS cert rotation checklist (production)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--cert-path <path>", "Target server cert PEM path")
+    .option("--key-path <path>", "Target server key PEM path")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTlsRotate({
+        tenant: opts.tenant,
+        certPath: opts.certPath,
+        keyPath: opts.keyPath,
+        json: opts.json,
       })
     );
 

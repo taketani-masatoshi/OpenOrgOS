@@ -1,0 +1,16 @@
+[Unit]
+Description=Steward Protocol Relay (%i)
+After=network.target
+
+[Service]
+Type=simple
+User=steward
+WorkingDirectory=/opt/steward-os
+Environment=STEWARD_TENANT=%i
+Environment=RELAY_INTERVAL_SEC=30
+ExecStart=/usr/bin/npm run steward -- --tenant ${STEWARD_TENANT} protocol relay run --interval-sec ${RELAY_INTERVAL_SEC}
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

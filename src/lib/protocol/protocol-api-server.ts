@@ -5,6 +5,11 @@ import type { TLSSocket } from "node:tls";
 import { exportInboxEntries, exportOutboxEntries } from "./inbox-export.js";
 import { listWireRelayPending, markWireRelayDelivered } from "./wire-relay-store.js";
 import { getWitnessTrustBundlePath } from "./paths.js";
+import { loadTransactionsRegistry } from "./transactions.js";
+import { loadRelayState } from "./relay-state.js";
+import { listWirePending } from "./wire-queue.js";
+import { listWitnessPending } from "./witness-queue.js";
+import { countOpenReconcileAlerts } from "./reconcile-alerts-store.js";
 import { ingestWebhook } from "../webhook.js";
 import { getTenantId, setTenantId } from "../tenant.js";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
@@ -81,6 +86,42 @@ async function handleProtocolApiRequest(
       tls: !!config.tls,
       mtls_required: config.mtls_required,
     });
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/protocol/v1/metrics") {
+    const relayState = loadRelayState();
+    json(res, 200, {
+      ok: true,
+      service: "protocol-api",
+      wire_pending: listWirePending().length,
+      witness_pending: listWitnessPending().length,
+      reconcile_alerts_open: countOpenReconcileAlerts(),
+      relay_cycles: relayState.cycles ?? 0,
+      relay_last_run_at: relayState.last_run_at ?? null,
+    });
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/protocol/v1/ledger") {
+    const since = url.searchParams.get("since") ?? undefined;
+    const peerId = url.searchParams.get("peer_id") ?? undefined;
+    const registry = loadTransactionsRegistry();
+    const entries = registry.transactions
+      .filter((t) => {
+        if (since && t.recorded_at.slice(0, 10) < since) return false;
+        if (peerId && t.counterparty.org_id !== peerId) return false;
+        return true;
+      })
+      .map((t) => ({
+        event_id: t.event_id,
+        transaction_id: t.transaction_id,
+        recorded_at: t.recorded_at,
+        direction: t.direction,
+        peer_id: t.counterparty.org_id,
+        contract_id: t.refs.contract_id,
+      }));
+    json(res, 200, { ok: true, entries });
     return;
   }
 

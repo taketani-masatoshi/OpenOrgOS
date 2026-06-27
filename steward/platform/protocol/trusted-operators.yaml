@@ -1,0 +1,27 @@
+version: "1"
+revocation_sla:
+  max_hours: 24
+  escalation_hours: 4
+committee_id: ORGOS-JP-COMMITTEE
+operators:
+  - operator_id: OP-JP-HUB-A
+    org_name: Steward Demo Hub Operator A
+    org_uri: http://127.0.0.1:9474
+    jurisdiction: JP
+    hub_ids:
+      - HUB-A
+    status: active
+    certified_at: 2026-06-01T00:00:00.000Z
+    certified_by: WTA-JP-DEMO
+    revocation_sla_hours: 24
+  - operator_id: OP-JP-HUB-B
+    org_name: Steward Demo Hub Operator B
+    org_uri: http://127.0.0.1:9475
+    jurisdiction: JP
+    hub_ids:
+      - HUB-B
+    status: active
+    certified_at: 2026-06-01T00:00:00.000Z
+    certified_by: WTA-JP-DEMO
+    revocation_sla_hours: 24
+governance_requests: []

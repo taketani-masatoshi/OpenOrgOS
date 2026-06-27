@@ -7,6 +7,7 @@
 import type { MaturityReport } from "./maturity.js";
 import { listP0Items } from "./p0-status.js";
 import { computeModuleAxisStats } from "./extensibility-contract.js";
+import { computeCommunityReadiness } from "./protocol/community-readiness.js";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
@@ -158,7 +159,7 @@ export function computeOrgOsScore(): OrgOsScore {
       ? baseline.interface_axis_high
       : baseline.interface_axis_low;
   const wireEvidence = baseline.wire_evidence;
-  const ecosystem = baseline.ecosystem;
+  const ecosystem = computeCommunityReadiness().score;
   const weighted = Math.round(
     standaloneLoop * ORGOS_WEIGHTS.standaloneLoop +
       formUnification * ORGOS_WEIGHTS.formUnification +
@@ -167,7 +168,7 @@ export function computeOrgOsScore(): OrgOsScore {
       ecosystem * ORGOS_WEIGHTS.ecosystem
   );
   const gaps: string[] = [];
-  if (ecosystem < 85) gaps.push("Community / エコシステム（C4 スコープ外）");
+  if (ecosystem < 85) gaps.push("Community / エコシステム（Steward-side C4 完了 · OS_Community で 85+）");
   if (moduleAxis.productionPct < 90) {
     gaps.push(`module ${moduleAxis.productionPct}% production_ready`);
   }
