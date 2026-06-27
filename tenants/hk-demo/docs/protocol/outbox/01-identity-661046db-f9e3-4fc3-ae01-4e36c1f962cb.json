@@ -1,0 +1,32 @@
+{
+  "protocol_version": "1",
+  "event_id": "661046db-f9e3-4fc3-ae01-4e36c1f962cb",
+  "occurred_at": "2026-06-27T10:56:44.364Z",
+  "origin": {
+    "org_id": "hk-demo",
+    "org_uri": "steward://tenant/hk-demo"
+  },
+  "identity": {
+    "org_ref": {
+      "org_id": "hk-demo",
+      "org_uri": "steward://tenant/hk-demo"
+    },
+    "document_version": "2026-06-27T10:56:44.363Z"
+  },
+  "event": {
+    "type": "org.identity.presented",
+    "payload": {
+      "identity": {
+        "org_ref": {
+          "org_id": "hk-demo",
+          "org_uri": "steward://tenant/hk-demo"
+        },
+        "jurisdiction": "HK",
+        "display_name": "Sample HK Limited",
+        "protocol_public_key": "MCowBQYDK2VwAyEAvOYgxMOW1RpZHMWQ3Kq/O+dk3tkKmtmSm3D7SjZFJGw=",
+        "issued_at": "2026-06-27T10:56:44.363Z"
+      }
+    }
+  },
+  "signature": "pS0IvxVZSIF1hTOan3cVB9m6C7e67avuUguQ+VN1MjpYEDtXRqrI0S5RHDm56LhMURkD8TaGSNypi9MA8umVDA=="
+}

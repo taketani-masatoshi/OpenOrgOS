@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { rmSync, mkdirSync } from "node:fs";
+import { rmSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT_DIR, writeYamlFile } from "../src/lib/utils.js";
 import { configureHubRuntime } from "../src/lib/hub/runtime.js";
 import { startHubServer } from "../src/lib/hub-server.js";
 import { exportHubPublicKeyBase64 } from "../src/lib/hub/signing.js";
 import { registerHubAttestation } from "../src/lib/hub/receipt.js";
-import { syncFromPeer } from "../src/lib/hub/gossip-sync.js";
+import { syncFromPeer, syncAllPeers } from "../src/lib/hub/gossip-sync.js";
 import { loadGossipCursor } from "../src/lib/hub/federation.js";
+import { findHubReceiptByEventId } from "../src/lib/hub/receipt.js";
+import { loadHubAttestations } from "../src/lib/hub/registry.js";
 import { witnessAttestationSchema } from "../schemas/protocol/witness-attestation.js";
 import { hubFederationSchema } from "../schemas/protocol/hub-federation.js";
 import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
@@ -61,6 +63,15 @@ describe("hub gossip sync", () => {
     const att = signWitnessAttestation(unsigned, privateKeyPem);
     witnessAttestationSchema.parse(att);
     registerHubAttestation(att);
+
+    const receivedUnsigned = {
+      ...unsigned,
+      side: "received" as const,
+      org_ref: { org_id: "southwood" },
+      attested_at: new Date().toISOString(),
+    };
+    const receivedAtt = signWitnessAttestation(receivedUnsigned, privateKeyPem);
+    registerHubAttestation(receivedAtt);
   });
 
   afterEach(() => {
@@ -76,5 +87,22 @@ describe("hub gossip sync", () => {
     expect(result.imported).toBeGreaterThanOrEqual(1);
     const cursor = loadGossipCursor("HUB-A");
     expect(cursor?.last_recorded_at).toBeTruthy();
+  });
+
+  it("syncAllPeers restores partition-wiped hub B with local hub_id receipt", async () => {
+    configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B });
+    for (const file of ["witness-attestations.jsonl", "witness-receipts.jsonl"]) {
+      const p = join(HUB_B, file);
+      if (existsSync(p)) rmSync(p);
+    }
+    const cursorDir = join(HUB_B, "gossip-cursor");
+    if (existsSync(cursorDir)) rmSync(cursorDir, { recursive: true, force: true });
+
+    const results = await syncAllPeers();
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(loadHubAttestations().length).toBeGreaterThanOrEqual(2);
+    const receipt = findHubReceiptByEventId("e1e2f3a4-b5c6-4789-a012-3456789abcde");
+    expect(receipt?.hub_id).toBe("HUB-B");
+    expect(receipt?.status).toBe("mutually_confirmed");
   });
 });

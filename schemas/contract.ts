@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { dateString, riskLevel } from "./common.js";
+import { contractProtocolConfigSchema } from "./protocol/contract-protocol.js";
 
 export const contractType = z.enum([
   "rental",
@@ -70,6 +71,7 @@ export const contractSchema = z.object({
   conflict_approval_date: dateString.optional(),
   risk: contractRiskSchema.optional(),
   notes: z.string().optional(),
+  protocol: contractProtocolConfigSchema.optional(),
 });
 
 export type Contract = z.output<typeof contractSchema>;

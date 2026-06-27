@@ -72,6 +72,8 @@ tenants/mal/
 docs/
 ├── io/inbox|outbox/     受信 · 出力トレイ
 ├── company/             法人 · 規程 · HR · 許認可
+│   ├── events/{YYYY-MM}/     会社イベント記録（経緯 · EVT-*.md）
+│   └── artifacts/{YYYY-MM}/  イベント紐づき出力書類 · records/（L2）
 ├── finance/             経理 · 税務
 ├── properties/          PROP-001 · PROP-002
 ├── compliance/          テナント ISO 記録 · 個情（標準は steward/standards/iso/）
@@ -95,6 +97,7 @@ docs/
 | `plans/**` | 計画 YAML |
 | `executive/**` | 秘書 SoT |
 | `classification-registry.yaml` | L0–L3 分類 |
+| `company-events.yaml` | 会社イベント台帳（events · artifacts パス） |
 
 ---
 

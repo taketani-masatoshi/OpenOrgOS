@@ -30,7 +30,11 @@ export async function fetchAttestationsFromPeer(
   if (!res.ok) {
     throw new Error(`gossip fetch failed: HTTP ${res.status}`);
   }
-  return (await res.json()) as AttestationGossipExport;
+  const body = (await res.json()) as AttestationGossipExport & { ok?: boolean };
+  if (!Array.isArray(body.attestations)) {
+    throw new Error("gossip fetch: attestations array missing in response");
+  }
+  return body;
 }
 
 export async function syncFromPeer(peerId: string): Promise<GossipSyncResult> {

@@ -1,0 +1,18 @@
+as_of: 2026-06-27
+approvals:
+  - approval_id: APR-20260627-001
+    scope: internal
+    status: approved
+    proposed_at: 2026-06-27T07:20:45.793Z
+    proposed_by: secretary
+    subject_type: regulation.amendment
+    subject_ref: REG-004
+    amount:
+      value: 50000
+      currency: JPY
+    message: Standalone internal approval demo
+    approval_policy_ref: REG-004
+    approver_id: 段燕燕
+    approval_tier: A
+    approved_at: 2026-06-27T07:20:45.799Z
+    audit_event_id: 9b6674d8-656b-4747-844a-55d778c93109

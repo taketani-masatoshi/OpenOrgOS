@@ -1,7 +1,0 @@
-peers:
-  - peer_id: PEER-001
-    display_name: 株式会社サウスウッド
-    jurisdiction: JP
-    stakeholder_id: STK-001
-    org_uri: steward://tenant/southwood
-as_of: 2026-06-26

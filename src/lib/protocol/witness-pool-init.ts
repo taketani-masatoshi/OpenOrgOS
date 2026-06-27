@@ -1,8 +1,6 @@
-import { writeYamlFile } from "../utils.js";
-import { getWitnessPoolYamlPath } from "./paths.js";
-import { witnessPoolConfigSchema } from "../../schemas/protocol/witness-pool.js";
+import { writeWitnessPoolConfig } from "./witness-pool-persist.js";
 import { findTrustedHubsForJurisdiction } from "./trusted-hubs.js";
-import type { WitnessHubEntry } from "../../schemas/protocol/witness-pool.js";
+import type { WitnessHubEntry } from "../../../schemas/protocol/witness-pool.js";
 
 export async function initWitnessPoolFromTrusted(jurisdiction: string): Promise<{
   path: string;
@@ -31,18 +29,11 @@ export async function initWitnessPoolFromTrusted(jurisdiction: string): Promise<
     hubs.push({ ...hub, hub_public_key: hubPublicKey });
   }
 
-  const config = witnessPoolConfigSchema.parse({
-    enabled: true,
-    quorum: { mode: "any_of_n" },
-    register_on: "both",
+  return writeWitnessPoolConfig({
     hubs,
     wire_governance_policy: {
       require_quorum_for_tiers: ["B", "C"],
       warn_only: true,
     },
   });
-
-  const path = getWitnessPoolYamlPath();
-  writeYamlFile(path, config);
-  return { path, hubs };
 }

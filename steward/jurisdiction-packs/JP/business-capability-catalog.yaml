@@ -434,15 +434,15 @@ modules:
   # ── JP 法域 pack（計画 · 日本ビジネス推進で必要） ──
   - id: jp_corporate_registration
     name_ja: 法人設立・変更登記
-    status: planned
-    tier: skeleton
+    status: partial
+    tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: secretary
     categories: [corporate_governance]
     priority: P0
     official_urls:
-      - https://www.houjin-bangou.nta.go.jp/
       - https://www.touki.or.jp/
+      - https://www.moj.go.jp/homu/homu_06.html
 
   - id: jp_statutory_meetings
     name_ja: 株主総会・取締役会手続
@@ -804,21 +804,23 @@ skills:
   # ── 計画 skill（日本ビジネス推進） ──
   - id: jp_company_incorporation
     name_ja: 株式会社設立手続ガイド
-    status: planned
+    status: partial
     runtime: cli
     agent_id: secretary
     module_id: jp_corporate_registration
     categories: [corporate_governance]
     priority: P0
+    cli_command: operations corporate draft
 
   - id: jp_registry_change
     name_ja: 登記変更（本店移転・役員変更）
-    status: planned
+    status: partial
     runtime: cli
     agent_id: secretary
     module_id: jp_corporate_registration
     categories: [corporate_governance]
     priority: P1
+    cli_command: operations corporate draft
 
   - id: jp_shareholder_meeting_pack
     name_ja: 株主総会招集・議事録パック
@@ -1071,6 +1073,6 @@ summary:
     total: 47
   p0_gaps:
     - human_resources Agent 未実装（就業規則 · 社保 · 給与）
-    - jp_corporate_registration / jp_statutory_meetings モジュール未実装
+    - jp_statutory_meetings モジュール未実装
     - jp_tax_corporate · jp_tax_consumption · jp_invoice_qualified モジュール未実装
     - jp_social_insurance · jp_payroll モジュール未実装

@@ -16,6 +16,7 @@ Steward OS の **法域（jurisdiction）· 表示言語（locale）· 法人形
 | [org-approval-schema.md](org-approval-schema.md) | **Org 承認根幹** — `scope: internal \| wire` · pending-approvals SoT |
 | [inter-org-operator-model.md](inter-org-operator-model.md) | **Operator + CEO 承認ゲート** — Steward は組織間送信しない |
 | [inter-org-two-org-demo.md](inter-org-two-org-demo.md) | **2 組織デモ** — mal ↔ southwood · `npm run demo:inter-org` |
+| [resilience-stack.md](resilience-stack.md) | **Resilience R1–R4** — relay worker · multipath · Org C trust PKI · SLA |
 
 ## 読む順
 

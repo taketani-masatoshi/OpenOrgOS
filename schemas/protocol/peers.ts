@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { peerEndpointSchema } from "./peer-endpoint.js";
 
 export const peerProfileSchema = z.object({
   peer_id: z.string().regex(/^PEER-\d{3}$/),
@@ -8,8 +9,10 @@ export const peerProfileSchema = z.object({
   org_uri: z.string().optional(),
   /** Base64 SPKI DER — verifies inbound envelope signatures from this peer. */
   protocol_public_key: z.string().optional(),
-  /** Peer org webhook URL for protocol envelope delivery. */
+  /** @deprecated Prefer inbound_endpoints — kept for backward compatibility. */
   inbound_webhook_url: z.string().url().optional(),
+  /** Multipath delivery endpoints (push · relay · pull fallback). */
+  inbound_endpoints: z.array(peerEndpointSchema).optional(),
 });
 
 export const peersRegistrySchema = z.object({

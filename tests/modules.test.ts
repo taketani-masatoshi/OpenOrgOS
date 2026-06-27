@@ -38,6 +38,7 @@ describe("modules.yaml", () => {
       "event_space",
       "hospitality",
       "jp_carbon_neutral_2050",
+      "jp_corporate_registration",
       "jp_privacy_policy",
       "jp_subsidy_application",
       "jp_trademark_application",

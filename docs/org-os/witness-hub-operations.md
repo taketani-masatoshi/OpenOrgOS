@@ -37,7 +37,12 @@ curl http://127.0.0.1:9475/hub/v1/health
 | hub-a | 9474 | `./data/hub-a` |
 | hub-b | 9475 | `./data/hub-b` |
 
-起動後、`hub-federation.yaml` で相互 peer 登録済み · `--gossip-interval 300` で 5 分ごとに attestation 同期。
+起動後、`hub-init` サービスが **相互 federation** を自動 seed します（`deploy/witness-hub/seed-federation.ts`）。`--gossip-interval 300` で 5 分ごとに attestation 同期。
+
+```bash
+# federation 手動再 seed（Hub 再起動後など）
+node --import tsx deploy/witness-hub/seed-federation.ts
+```
 
 ---
 

@@ -1,0 +1,47 @@
+{
+  "protocol_version": "1",
+  "event_id": "f40cf87f-b1ae-4047-b0cd-d396ea5e6548",
+  "occurred_at": "2026-06-27T10:56:44.370Z",
+  "origin": {
+    "org_id": "hk-demo",
+    "org_uri": "steward://tenant/hk-demo"
+  },
+  "identity": {
+    "org_ref": {
+      "org_id": "hk-demo",
+      "org_uri": "steward://tenant/hk-demo"
+    }
+  },
+  "delegation": {
+    "grant_id": "GRANT-contract-contract-sign"
+  },
+  "event": {
+    "type": "org.authority.delegated",
+    "payload": {
+      "proof": {
+        "grant": {
+          "grant_id": "GRANT-contract-contract-sign",
+          "grantor": {
+            "org_id": "hk-demo",
+            "org_uri": "steward://tenant/hk-demo"
+          },
+          "grantee": {
+            "actor_id": "contract",
+            "role": "contract",
+            "org_ref": {
+              "org_id": "hk-demo",
+              "org_uri": "steward://tenant/hk-demo"
+            }
+          },
+          "scope": [
+            "contract.sign"
+          ],
+          "valid_from": "2026-06-27T10:56:44.368Z"
+        },
+        "basis_ref": "REG-HK-004",
+        "issued_at": "2026-06-27T10:56:44.368Z"
+      }
+    }
+  },
+  "signature": "6PusVlB366HqPfoLmQ+K63/1v4B0wMusZW6d3jPOx79lRoFoQ6OSJSJajkYa4qmA+CcBuYjxPp8C0AeOeYEkBA=="
+}

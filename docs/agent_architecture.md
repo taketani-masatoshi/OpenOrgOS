@@ -199,7 +199,7 @@ Steward/
 |------|--------|
 | Primary | `data/properties/PROP-002.yaml` · `data/operations/kamezawa-public.yaml` · **`data/operations/kamezawa-secrets.yaml`**（唯一の secrets 編集権） |
 | docs | `docs/properties/PROP-002-kamezawa/operations/`（全テンプレ・ガイド・checklist） |
-| Related contracts | `CTR-012`（清掃）· `CTR-014`（旅館保険 draft）· `CTR-002` 等 |
+| Related contracts | `CTR-012`（本社オフィス賃貸 · サウスウッド）· `CTR-014`（旅館保険 draft）· `CTR-002` 等 |
 | Read only | `data/finance/` · `data/plans/property-revenue.yaml` |
 | 禁止 | secrets を docs/ や CSV に転記 · 他エージェントへの secrets 内容開示 |
 | 照会先 | Operations（inbox ゲスト書類）· Compliance（旅館業法・宿泊約款）· Finance（運営費・ADR 前提） |

@@ -53,6 +53,8 @@ Steward → Agent（steward/core/agents/）→ Skill（steward/core/skills/）�
 |---------|------|
 | `docs/plans/` | 決算書・予実 MD |
 | `docs/company/` | 法人書類 MD |
+| `docs/company/events/{YYYY-MM}/` | **会社イベント記録**（経緯 · EVT-*.md） |
+| `docs/company/artifacts/{YYYY-MM}/` | イベント紐づき **出力書類**（MD · records/ PDF） |
 | `docs/io/inbox/` | **受信トレイ**（スキャン・申請書・未処理） |
 | `docs/io/outbox/` | **出力トレイ**（印刷・提出・掲示 PDF） |
 | `docs/contracts/` | 契約書 MD |
@@ -73,6 +75,7 @@ Steward → Agent（steward/core/agents/）→ Skill（steward/core/skills/）�
 - 月次: `finance/monthly/{YYYY-MM}.yaml`
 - 計画: `plans/*.yaml`
 - I/O 台帳: `document-io.yaml`（inbox/outbox キュー）
+- イベント台帳: `company-events.yaml`（events · artifacts パス）— 詳細 `.cursor/rules/company-events.mdc`
 
 ## レポート生成
 

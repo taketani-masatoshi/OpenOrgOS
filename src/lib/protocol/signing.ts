@@ -61,3 +61,17 @@ export function maybeSignEnvelope(envelope: EventEnvelope): EventEnvelope {
   if (!privateKeyPem) return envelope;
   return signEventEnvelope(envelope, privateKeyPem);
 }
+
+export function rotateProtocolSigningKey(): { publicKey: string; backupPath?: string } {
+  const path = getProtocolSigningKeyPath();
+  const existing = loadProtocolSigningKeyPem();
+  let backupPath: string | undefined;
+  if (existing) {
+    backupPath = `${path}.bak-${Date.now()}`;
+    writeFileSync(backupPath, existing, { mode: 0o600 });
+  }
+  const { privateKeyPem, publicKey } = generateProtocolKeyPair();
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, privateKeyPem, { mode: 0o600 });
+  return { publicKey, backupPath };
+}

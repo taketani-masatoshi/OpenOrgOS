@@ -19,6 +19,7 @@ import { ecommerceCli } from "../../steward/modules/ecommerce/cli/register.js";
 import { event_operationsCli } from "../../steward/modules/event_operations/cli/register.js";
 import { jp_subsidy_applicationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_subsidy_application/cli/register.js";
 import { jp_trademark_applicationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_trademark_application/cli/register.js";
+import { jp_corporate_registrationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_corporate_registration/cli/register.js";
 
 const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   travelBookingCli,
@@ -36,6 +37,7 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   event_operationsCli,
   jp_subsidy_applicationCli,
   jp_trademark_applicationCli,
+  jp_corporate_registrationCli,
 ];
 
 export function listModuleCliBundles(): ModuleCliBundle[] {

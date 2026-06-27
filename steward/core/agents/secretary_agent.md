@@ -70,6 +70,7 @@ npm run steward -- executive brief --week
 | [schedule_management](../steward/core/skills/schedule_management.md) | カレンダー確認・競合チェック |
 | [one_on_one_prep](../steward/core/skills/one_on_one_prep.md) | 1-on-1 前ブリーフ |
 | [external_correspondence](../steward/core/skills/external_correspondence.md) | 社外メール下書き・ルーティング |
+| [inter_org_notice_draft](../steward/core/skills/inter_org_notice_draft.md) | **組織間 wire 起案**（draft のみ · approve は CEO） |
 
 ---
 

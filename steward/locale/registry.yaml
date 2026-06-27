@@ -1,9 +1,11 @@
 # 表示言語レジストリ — 法域（jurisdiction）とは独立
 # 正本: steward/locale/registry.yaml · 実装: src/lib/locale.ts
+# policy_tier: docs/org-os/language-policy.md
 
 languages:
   ja:
     bcp47: ja-JP
+    policy_tier: strategic_official
     label:
       ja: 日本語
       en: Japanese
@@ -11,13 +13,15 @@ languages:
 
   en:
     bcp47: en-US
+    policy_tier: core
     label:
       ja: 英語
       en: English
-    notes: 国際 · 規程 MD を英語で起草する場合も可
+    notes: 国際 · 規程 MD を英語で起草する場合も可 · Core authoritative
 
   zh-Hant:
     bcp47: zh-HK
+    policy_tier: strategic_official
     label:
       ja: 繁体字中国語
       en: Traditional Chinese
@@ -25,6 +29,7 @@ languages:
 
   zh-Hans:
     bcp47: zh-CN
+    policy_tier: strategic_official
     label:
       ja: 簡体字中国語
       en: Simplified Chinese
@@ -32,6 +37,7 @@ languages:
 
   et:
     bcp47: et-EE
+    policy_tier: strategic_official
     label:
       ja: エストニア語
       en: Estonian
@@ -39,6 +45,7 @@ languages:
 
   ms:
     bcp47: ms-MY
+    policy_tier: jurisdiction_required
     label:
       ja: マレー語
       en: Malay
@@ -46,6 +53,7 @@ languages:
 
   ar:
     bcp47: ar-AE
+    policy_tier: jurisdiction_required
     label:
       ja: アラビア語
       en: Arabic
@@ -53,6 +61,7 @@ languages:
 
   ru:
     bcp47: ru-RU
+    policy_tier: community_supported
     label:
       ja: ロシア語
       en: Russian
@@ -60,6 +69,7 @@ languages:
 
   de:
     bcp47: de-DE
+    policy_tier: community_supported
     label:
       ja: ドイツ語
       en: German

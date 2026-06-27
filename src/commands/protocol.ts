@@ -1,4 +1,5 @@
 import { setTenantId, loadTenantConfig } from "../lib/tenant.js";
+import { applyProtocolTenant } from "./protocol-helpers.js";
 import {
   buildIdentityDocument,
   buildIdentityEnvelope,
@@ -38,20 +39,29 @@ import {
 import { resolveJurisdictionApprovalPolicy } from "../lib/jurisdiction/wire-governance/index.js";
 import { eventEnvelopeSchema } from "../../schemas/protocol/org-event.js";
 import { loadQueueEvents } from "../lib/queue-db.js";
-import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey } from "../lib/protocol/signing.js";
+import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey, rotateProtocolSigningKey } from "../lib/protocol/signing.js";
 import {
   deliverProtocolEnvelope,
   deliverProtocolEnvelopeWithRelay,
   flushWirePending,
+  pullDeliverFromPeerOutbox,
 } from "../lib/protocol/transport.js";
 import {
-  evaluateWitnessWireGovernancePolicy,
-  formatWitnessWireGovernancePolicySummary,
-} from "../lib/protocol/witness-policy.js";
+  formatNoticeTransmitConsole,
+  transmitApprovedNotice,
+} from "../lib/protocol/notice-transmit.js";
 import {
   findTrustedHubsForJurisdiction,
+  validateTrustedHubsRegistry,
 } from "../lib/protocol/trusted-hubs.js";
-import { findPeer, registerPeer, nextPeerId } from "../lib/protocol/peers.js";
+import { listDiscoverablePeers } from "../lib/protocol/peer-discovery.js";
+import {
+  initWitnessTrustAuthority,
+  publishWitnessTrustBundle,
+} from "../lib/protocol/witness-trust.js";
+import { getWitnessTrustBundlePath } from "../lib/protocol/paths.js";
+import { evaluateTransactionSla } from "../lib/protocol/resilience-sla.js";
+import { findPeer, registerPeer, nextPeerId, resolvePeerOutboxBaseUrl } from "../lib/protocol/peers.js";
 import { readFileSync } from "node:fs";
 import { orgIdentityDocumentSchema } from "../../schemas/protocol/identity-exchange.js";
 
@@ -62,7 +72,7 @@ export interface ProtocolValidateOptions {
 }
 
 export function runProtocolValidate(opts: ProtocolValidateOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const result = validateProtocolState({ standalone: opts.standalone });
   if (opts.json) {
     console.log(JSON.stringify({ ...result, mode: opts.standalone ? "standalone" : "full" }, null, 2));
@@ -96,7 +106,7 @@ export interface ProtocolIdentityExportOptions {
 }
 
 export function runProtocolIdentityExport(opts: ProtocolIdentityExportOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const doc = buildIdentityDocument({ stakeholderId: opts.stakeholder });
   let destination;
   if (opts.peer) {
@@ -142,7 +152,7 @@ export interface ProtocolPeerRegisterOptions {
 }
 
 export function runProtocolPeerRegister(opts: ProtocolPeerRegisterOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const peerId = opts.peerId ?? nextPeerId();
   let protocolPublicKey = opts.publicKey;
   if (opts.identityFile) {
@@ -173,6 +183,29 @@ export function runProtocolPeerRegister(opts: ProtocolPeerRegisterOptions): void
   if (profile.inbound_webhook_url) console.log(`  inbound_webhook_url: ${profile.inbound_webhook_url}`);
 }
 
+export interface ProtocolPeerDiscoverOptions {
+  jurisdiction?: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolPeerDiscover(opts: ProtocolPeerDiscoverOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const jurisdiction = opts.jurisdiction ?? loadTenantConfig().jurisdiction ?? "JP";
+  const entries = listDiscoverablePeers({ jurisdiction });
+  if (opts.json) {
+    console.log(JSON.stringify({ jurisdiction, count: entries.length, entries }, null, 2));
+    return;
+  }
+  console.log(`Discoverable peers/hubs (${jurisdiction}): ${entries.length}`);
+  for (const entry of entries) {
+    const id = entry.peer_id ?? entry.hub_id ?? "?";
+    console.log(
+      `  · [${entry.source}] ${id} — ${entry.display_name} (${entry.registered ? "registered" : "catalog"})`
+    );
+  }
+}
+
 export interface ProtocolDelegationExportOptions {
   scope: string;
   granteeAgent: string;
@@ -182,7 +215,7 @@ export interface ProtocolDelegationExportOptions {
 }
 
 export function runProtocolDelegationExport(opts: ProtocolDelegationExportOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   try {
     const basisRef =
       opts.basisRef ?? resolveJurisdictionApprovalPolicy().policy_ref;
@@ -229,7 +262,7 @@ export interface ProtocolVerifyAuditChainOptions {
 }
 
 export function runProtocolVerifyAuditChain(opts: ProtocolVerifyAuditChainOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   runProtocolAuditVerify({
     since: opts.since,
     json: opts.json,
@@ -276,7 +309,7 @@ export interface ProtocolTransactionRecordOptions {
 }
 
 export function runProtocolTransactionRecord(opts: ProtocolTransactionRecordOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const parsedType = transactionTypeSchema.safeParse(opts.type);
   if (!parsedType.success) {
     console.error(`Invalid transaction type: ${opts.type}`);
@@ -345,7 +378,7 @@ export interface ProtocolTransactionListOptions {
 }
 
 export function runProtocolTransactionList(opts: ProtocolTransactionListOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const rows = listTransactions({ peerId: opts.peer, since: opts.since });
   if (opts.json) {
     console.log(JSON.stringify(rows, null, 2));
@@ -371,7 +404,7 @@ export interface ProtocolTransactionShowOptions {
 }
 
 export function runProtocolTransactionShow(opts: ProtocolTransactionShowOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const tx = findTransaction(opts.id);
   if (!tx) {
     console.error(`Transaction ${opts.id} not found`);
@@ -402,7 +435,7 @@ export function runProtocolAuditVerify(opts: ProtocolAuditVerifyOptions & {
   chainPath?: string;
   envelopeDir?: string[];
 }): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
 
   if (opts.withEnvelopes || opts.requireEnvelopes || opts.chainPath || opts.envelopeDir?.length) {
     const result = verifyAuditChainExternal({
@@ -457,7 +490,7 @@ export interface ProtocolMapInternalOptions {
 }
 
 export function runProtocolMapInternal(opts: ProtocolMapInternalOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const events = loadQueueEvents();
   const target = opts.queueId
     ? events.find((e) => e.id === opts.queueId)
@@ -504,7 +537,7 @@ export interface ProtocolNoticeProposeOptions {
 }
 
 export function runProtocolNoticePropose(opts: ProtocolNoticeProposeOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const txType = opts.type ?? "contract.execution.notice";
   try {
     const notice = proposeInterOrgWire({
@@ -545,7 +578,7 @@ export interface ProtocolNoticeListOptions {
 }
 
 export function runProtocolNoticeList(opts: ProtocolNoticeListOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const rows = listPendingNotices(
     opts.status ? { status: opts.status as "pending_approval" } : undefined
   );
@@ -576,7 +609,7 @@ export interface ProtocolNoticeApproveOptions {
 }
 
 export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOptions): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   try {
     const result = approveInterOrgNotice({
       noticeId: opts.id,
@@ -584,33 +617,17 @@ export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOption
       coApproverId: opts.coApprover,
       operatorId: opts.operator,
     });
-    const delivery = await deliverProtocolEnvelopeWithRelay(
-      result.transmission.envelope,
-      result.notice.peer_id
-    );
-    const { maybeRegisterWitnessAfterWire, formatWitnessFanOutSummary } = await import(
-      "../lib/protocol/witness-hook.js"
-    );
-    const witness = await maybeRegisterWitnessAfterWire(result.transmission.envelope, "sent");
-    const witnessSummary = formatWitnessFanOutSummary(witness);
-    const wireGovernanceWitness =
-      witness && result.notice.approval_tier
-        ? evaluateWitnessWireGovernancePolicy({
-            tier: result.notice.approval_tier,
-            quorum: witness.quorum,
-          })
-        : undefined;
-    const wireGovernanceSummary = wireGovernanceWitness
-      ? formatWitnessWireGovernancePolicySummary(wireGovernanceWitness)
-      : undefined;
+    const transmit = await transmitApprovedNotice(result);
+
     if (opts.json) {
       console.log(
         JSON.stringify(
           {
             ...result,
-            delivery,
-            witness,
-            wire_governance_witness: wireGovernanceWitness,
+            pool_bind: transmit.poolBind,
+            delivery: transmit.delivery,
+            witness: transmit.witness,
+            wire_governance_witness: transmit.wireGovernanceWitness,
           },
           null,
           2
@@ -618,24 +635,8 @@ export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOption
       );
       return;
     }
-    console.log(`✓ transmitted ${result.transmission.transaction.transaction_id}`);
-    console.log(`  notice: ${result.notice.notice_id} · approver: ${opts.approver}`);
-    console.log(`  tier: ${result.notice.approval_tier ?? "—"} · event_id: ${result.transmission.envelope.event_id}`);
-    if (result.transmission.outboxPath) {
-      console.log(`  outbox: ${result.transmission.outboxPath}`);
-    }
-    if (delivery.delivered) {
-      console.log(`  delivered: ${delivery.reason} (HTTP ${delivery.httpStatus})`);
-    } else if (delivery.queued) {
-      console.log(`  deliver: queued (${delivery.reason}) — run protocol deliver flush-pending`);
-    } else {
-      console.log(`  deliver: skipped (${delivery.reason})`);
-    }
-    if (witnessSummary) {
-      console.log(`  ${witnessSummary}`);
-    }
-    if (wireGovernanceSummary) {
-      console.log(`  ${wireGovernanceSummary}`);
+    for (const line of formatNoticeTransmitConsole(result, transmit, opts.approver)) {
+      console.log(line);
     }
   } catch (e) {
     console.error(e instanceof Error ? e.message : String(e));
@@ -652,7 +653,7 @@ export interface ProtocolNoticeRejectOptions {
 }
 
 export function runProtocolNoticeReject(opts: ProtocolNoticeRejectOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   try {
     const notice = rejectInterOrgNotice({
       noticeId: opts.id,
@@ -677,7 +678,7 @@ export interface ProtocolNoticeShowOptions {
 }
 
 export function runProtocolNoticeShow(opts: ProtocolNoticeShowOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const notice = findPendingNotice(opts.id);
   if (!notice) {
     console.error(`Notice ${opts.id} not found`);
@@ -703,7 +704,7 @@ export interface ProtocolSigningExportOptions {
 }
 
 export function runProtocolSigningExportPublic(opts: ProtocolSigningExportOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   ensureProtocolSigningKey();
   const publicKey = exportProtocolPublicKeyBase64();
   if (!publicKey) {
@@ -717,6 +718,26 @@ export function runProtocolSigningExportPublic(opts: ProtocolSigningExportOption
   console.log(publicKey);
 }
 
+export interface ProtocolSigningRotateOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolSigningRotate(opts: ProtocolSigningRotateOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const result = rotateProtocolSigningKey();
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log("✓ Protocol signing key rotated");
+  console.log(`  protocol_public_key: ${result.publicKey}`);
+  if (result.backupPath) {
+    console.log(`  backup: ${result.backupPath}`);
+  }
+  console.log("  Re-share public key with peers after rotation.");
+}
+
 export interface ProtocolDeliverOptions {
   peer: string;
   file: string;
@@ -724,7 +745,7 @@ export interface ProtocolDeliverOptions {
 }
 
 export async function runProtocolDeliver(opts: ProtocolDeliverOptions): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const envelope = JSON.parse(readFileSync(opts.file, "utf-8"));
   const parsed = eventEnvelopeSchema.parse(envelope);
   const delivery = await deliverProtocolEnvelopeWithRelay(parsed, opts.peer);
@@ -747,13 +768,47 @@ export interface ProtocolDeliverFlushPendingOptions {
 export async function runProtocolDeliverFlushPending(
   opts: ProtocolDeliverFlushPendingOptions
 ): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const flushed = await flushWirePending();
   if (opts.json) {
     console.log(JSON.stringify({ flushed }, null, 2));
     return;
   }
   console.log(`✓ flushed ${flushed} pending wire delivery(ies)`);
+}
+
+export interface ProtocolDeliverPullOptions {
+  peer: string;
+  eventId: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolDeliverPull(opts: ProtocolDeliverPullOptions): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const peer = findPeer(opts.peer);
+  if (!peer) {
+    console.error(`Peer ${opts.peer} not found`);
+    process.exit(1);
+  }
+  const outboxBase = resolvePeerOutboxBaseUrl(peer);
+  if (!outboxBase) {
+    console.error(`Peer ${opts.peer} has no outbox base URL (add pull endpoint or webhook URL)`);
+    process.exit(1);
+  }
+  const result = await pullDeliverFromPeerOutbox(outboxBase, opts.eventId);
+  if (!result.delivered) {
+    console.error(`Pull failed: ${result.reason}`);
+    process.exit(1);
+  }
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`✓ pulled envelope ${opts.eventId} from ${opts.peer}`);
+  if (result.inboxPath) {
+    console.log(`  inbox: ${result.inboxPath}`);
+  }
 }
 
 export interface ProtocolNoticeDraftOptions extends ProtocolNoticeProposeOptions {
@@ -774,7 +829,7 @@ export interface ProtocolApproversListOptions {
 }
 
 export function runProtocolApproversList(opts: ProtocolApproversListOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const approvers = loadAuthorizedApprovers();
   if (opts.json) {
     console.log(JSON.stringify(approvers, null, 2));
@@ -796,8 +851,8 @@ export interface ProtocolWitnessRegisterOptions {
 }
 
 export async function runProtocolWitnessRegister(opts: ProtocolWitnessRegisterOptions): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
-  const { findEnvelopeFileForWitness } = await import("../lib/protocol/witness-envelope.js");
+  applyProtocolTenant(opts.tenant);
+  const { findEnvelopeFileForWitness } = await import("../lib/protocol/witness-client.js");
   const { registerWitnessAttestationFanOut } = await import("../lib/protocol/witness-client.js");
   const envelope = findEnvelopeFileForWitness(opts.eventId);
   if (!envelope) {
@@ -823,7 +878,7 @@ export interface ProtocolWitnessFlushPendingOptions {
 }
 
 export async function runProtocolWitnessFlushPending(opts: ProtocolWitnessFlushPendingOptions): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const { flushWitnessPending } = await import("../lib/protocol/witness-client.js");
   const flushed = await flushWitnessPending();
   if (opts.json) {
@@ -840,7 +895,7 @@ export interface ProtocolWitnessVerifyOptions {
 }
 
 export async function runProtocolWitnessVerify(opts: ProtocolWitnessVerifyOptions): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const { verifyCachedReceiptsForEvent, fetchReceiptsFromPool } = await import("../lib/protocol/witness-client.js");
   await fetchReceiptsFromPool(opts.eventId);
   const result = verifyCachedReceiptsForEvent(opts.eventId);
@@ -859,7 +914,7 @@ export interface ProtocolWitnessPoolStatusOptions {
 }
 
 export async function runProtocolWitnessPoolStatus(opts: ProtocolWitnessPoolStatusOptions): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const { loadWitnessPoolConfig } = await import("../lib/protocol/witness-pool.js");
   const { checkWitnessPoolHealth } = await import("../lib/protocol/witness-client.js");
   const pool = loadWitnessPoolConfig();
@@ -886,7 +941,7 @@ export interface ProtocolWitnessReconcileOptions {
 export async function runProtocolWitnessReconcile(
   opts: ProtocolWitnessReconcileOptions
 ): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const { reconcileWitnessWithPeer, reconcileCrossHub } = await import("../lib/protocol/witness-reconcile.js");
 
   if (opts.crossHub) {
@@ -935,7 +990,7 @@ export interface ProtocolTrustedHubsListOptions {
 }
 
 export function runProtocolTrustedHubsList(opts: ProtocolTrustedHubsListOptions): void {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const jurisdiction = opts.jurisdiction ?? loadTenantConfig().jurisdiction ?? "JP";
   const entry = findTrustedHubsForJurisdiction(jurisdiction);
   if (opts.json) {
@@ -948,6 +1003,33 @@ export function runProtocolTrustedHubsList(opts: ProtocolTrustedHubsListOptions)
   }
 }
 
+export interface ProtocolTrustedHubsValidateOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolTrustedHubsValidate(opts: ProtocolTrustedHubsValidateOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const result = validateTrustedHubsRegistry();
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+  if (result.ok) {
+    console.log("✓ Trusted hubs registry OK");
+    for (const w of result.warnings) {
+      console.log(`  [warn] ${w.code}: ${w.message}`);
+    }
+    return;
+  }
+  console.error("✗ Trusted hubs validation failed:");
+  for (const issue of result.issues) {
+    console.error(`  [${issue.code}] ${issue.message}`);
+  }
+  process.exit(1);
+}
+
 export interface ProtocolWitnessPoolInitTrustedOptions {
   jurisdiction?: string;
   tenant?: string;
@@ -957,7 +1039,7 @@ export interface ProtocolWitnessPoolInitTrustedOptions {
 export async function runProtocolWitnessPoolInitTrusted(
   opts: ProtocolWitnessPoolInitTrustedOptions
 ): Promise<void> {
-  if (opts.tenant) setTenantId(opts.tenant);
+  applyProtocolTenant(opts.tenant);
   const jurisdiction = opts.jurisdiction ?? loadTenantConfig().jurisdiction ?? "JP";
   const { initWitnessPoolFromTrusted } = await import("../lib/protocol/witness-pool-init.js");
   const result = await initWitnessPoolFromTrusted(jurisdiction);
@@ -967,4 +1049,307 @@ export async function runProtocolWitnessPoolInitTrusted(
   }
   console.log(`✓ witness-pool.yaml initialized from trusted hubs (${jurisdiction})`);
   console.log(`  path: ${result.path} · hubs: ${result.hubs.length}`);
+}
+
+export interface ProtocolRelayOnceOptions {
+  tenant?: string;
+  json?: boolean;
+  noReconcile?: boolean;
+}
+
+export async function runProtocolRelayOnce(opts: ProtocolRelayOnceOptions): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { runRelayCycle } = await import("../lib/protocol/relay-worker.js");
+  const result = await runRelayCycle({ reconcile: !opts.noReconcile });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(
+    `✓ relay cycle · wire +${result.wire_flushed} witness +${result.witness_flushed} · pending w=${result.wire_pending} v=${result.witness_pending} · sla_fail=${result.sla_failures}`
+  );
+}
+
+export interface ProtocolRelayRunOptions {
+  tenant?: string;
+  intervalSec?: number;
+  maxCycles?: number;
+  noReconcile?: boolean;
+}
+
+export async function runProtocolRelayRun(opts: ProtocolRelayRunOptions): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { runRelayDaemon } = await import("../lib/protocol/relay-worker.js");
+  await runRelayDaemon({
+    intervalMs: (opts.intervalSec ?? 30) * 1000,
+    maxCycles: opts.maxCycles,
+    reconcile: !opts.noReconcile,
+  });
+}
+
+export interface ProtocolRelayStatusOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolRelayStatus(opts: ProtocolRelayStatusOptions): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { loadRelayState } = await import("../lib/protocol/relay-worker.js");
+  const { listWirePending } = await import("../lib/protocol/wire-queue.js");
+  const { listWitnessPending } = await import("../lib/protocol/witness-queue.js");
+  const state = loadRelayState();
+  const body = {
+    cycles: state.cycles,
+    last_run_at: state.last_run_at,
+    last_metrics: state.last_metrics,
+    wire_pending: listWirePending().length,
+    witness_pending: listWitnessPending().length,
+  };
+  if (opts.json) {
+    console.log(JSON.stringify(body, null, 2));
+    return;
+  }
+  console.log(
+    `relay status · cycles=${body.cycles} · wire_pending=${body.wire_pending} · witness_pending=${body.witness_pending}`
+  );
+  if (body.last_run_at) console.log(`  last run: ${body.last_run_at}`);
+}
+
+export interface ProtocolWitnessTrustInitAuthorityOptions {
+  authorityId: string;
+  orgName: string;
+  jurisdiction?: string;
+  orgUri?: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolWitnessTrustInitAuthority(
+  opts: ProtocolWitnessTrustInitAuthorityOptions
+): void {
+  applyProtocolTenant(opts.tenant);
+  const jurisdiction = opts.jurisdiction ?? loadTenantConfig().jurisdiction ?? "JP";
+  const authority = initWitnessTrustAuthority({
+    authorityId: opts.authorityId,
+    orgName: opts.orgName,
+    jurisdiction,
+    orgUri: opts.orgUri,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(authority, null, 2));
+    return;
+  }
+  console.log(`✓ witness trust authority ${authority.authority_id} · ${authority.org_name}`);
+}
+
+export interface ProtocolWitnessTrustCertifyOptions {
+  hubId: string;
+  hubUrl: string;
+  hubPublicKey?: string;
+  expiresAt?: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolWitnessTrustCertify(
+  opts: ProtocolWitnessTrustCertifyOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { certifyWitnessHub, addCertificateToBundle, exportWitnessTrustAuthorityPublicKey } =
+    await import("../lib/protocol/witness-trust.js");
+  let hubPublicKey = opts.hubPublicKey;
+  if (!hubPublicKey) {
+    const base = opts.hubUrl.replace(/\/$/, "");
+    const res = await fetch(`${base}/hub/v1/public-key`);
+    if (!res.ok) {
+      console.error(`Failed to fetch hub public key: HTTP ${res.status}`);
+      process.exit(1);
+    }
+    const body = (await res.json()) as { public_key?: string };
+    hubPublicKey = body.public_key;
+  }
+  if (!hubPublicKey) {
+    console.error("hub public key required (--hub-public-key or fetch from hub)");
+    process.exit(1);
+  }
+  const cert = certifyWitnessHub({
+    hubId: opts.hubId,
+    hubUrl: opts.hubUrl,
+    hubPublicKey,
+    expiresAt: opts.expiresAt,
+  });
+  const bundle = addCertificateToBundle(cert);
+  if (opts.json) {
+    console.log(JSON.stringify({ cert, bundle_certificates: bundle.certificates.length }, null, 2));
+    return;
+  }
+  console.log(`✓ certified hub ${cert.hub_id} · cert_id=${cert.cert_id}`);
+  console.log(`  authority pubkey: ${exportWitnessTrustAuthorityPublicKey().slice(0, 16)}…`);
+}
+
+export interface ProtocolWitnessTrustPublishOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolWitnessTrustPublish(opts: ProtocolWitnessTrustPublishOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const bundle = publishWitnessTrustBundle();
+  if (opts.json) {
+    console.log(JSON.stringify(bundle, null, 2));
+    return;
+  }
+  console.log(`✓ trust bundle published · ${bundle.certificates.length} certificate(s)`);
+  console.log(`  path: ${getWitnessTrustBundlePath()}`);
+}
+
+export interface ProtocolWitnessTrustVerifyOptions {
+  bundleUrl?: string;
+  bundleFile?: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolWitnessTrustVerify(
+  opts: ProtocolWitnessTrustVerifyOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { fetchWitnessTrustBundle, verifyWitnessTrustBundle, loadWitnessTrustBundle } =
+    await import("../lib/protocol/witness-trust.js");
+  const { readFileSync } = await import("node:fs");
+  const { witnessTrustBundleSchema } = await import("../../schemas/protocol/witness-trust.js");
+  let bundle;
+  if (opts.bundleUrl) {
+    bundle = await fetchWitnessTrustBundle(opts.bundleUrl);
+  } else if (opts.bundleFile) {
+    bundle = witnessTrustBundleSchema.parse(JSON.parse(readFileSync(opts.bundleFile, "utf-8")));
+  } else {
+    bundle = loadWitnessTrustBundle();
+  }
+  if (!bundle) {
+    console.error("No trust bundle — use --bundle-url or --bundle-file");
+    process.exit(1);
+  }
+  const result = verifyWitnessTrustBundle(bundle);
+  if (opts.json) {
+    console.log(JSON.stringify({ ...result, authority_id: bundle.authority.authority_id, certs: bundle.certificates.length }, null, 2));
+    return;
+  }
+  if (result.ok) {
+    console.log(`✓ trust bundle valid · authority=${bundle.authority.authority_id} · certs=${bundle.certificates.length}`);
+  } else {
+    console.error(`✗ trust bundle invalid:`);
+    for (const issue of result.issues) console.error(`  · ${issue}`);
+    process.exit(1);
+  }
+}
+
+export interface ProtocolWitnessPoolInitFromTrustOptions {
+  bundleUrl: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolWitnessPoolInitFromTrust(
+  opts: ProtocolWitnessPoolInitFromTrustOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { initWitnessPoolFromTrustBundle } = await import("../lib/protocol/contract-witness-pool.js");
+  const result = await initWitnessPoolFromTrustBundle(opts.bundleUrl);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`✓ witness-pool.yaml from trust bundle · hubs: ${result.hubs.length}`);
+}
+
+export interface ProtocolWitnessPoolInitFromContractOptions {
+  contract: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolWitnessPoolInitFromContract(
+  opts: ProtocolWitnessPoolInitFromContractOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { initWitnessPoolFromContract } = await import("../lib/protocol/contract-witness-pool.js");
+  const result = await initWitnessPoolFromContract(opts.contract);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`✓ witness-pool.yaml from ${opts.contract} · sla=${result.sla} · hubs: ${result.hubs.length}`);
+}
+
+export interface ProtocolApiServeOptions {
+  host?: string;
+  port?: number;
+  tenant?: string;
+  tlsCert?: string;
+  tlsKey?: string;
+  tlsCa?: string;
+  mtlsRequired?: boolean;
+  mtlsAllowedOrg?: string[];
+}
+
+export async function runProtocolApiServe(opts: ProtocolApiServeOptions): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { startProtocolApiServer } = await import("../lib/protocol/protocol-api-server.js");
+  const { buildProtocolApiServerConfig } = await import("../lib/protocol/protocol-api-config.js");
+  const config = buildProtocolApiServerConfig({
+    host: opts.host,
+    port: opts.port,
+    tlsCert: opts.tlsCert,
+    tlsKey: opts.tlsKey,
+    tlsCa: opts.tlsCa,
+    mtlsRequired: opts.mtlsRequired,
+    mtlsAllowedOrgUris: opts.mtlsAllowedOrg,
+  });
+  const server = await startProtocolApiServer({ config });
+  console.log(`✓ Protocol API ${server.url}`);
+  if (config.tls) console.log("  TLS: enabled · trust bundle over HTTPS");
+  if (config.mtls_required) {
+    console.log(`  mTLS: required on relay/inbox/outbox · allowed: ${config.mtls_allowed_org_uris.join(", ") || "(any authorized client)"}`);
+  }
+  console.log("  GET /protocol/v1/trust/bundle · /inbox · /outbox · POST /protocol/v1/relay/enqueue");
+  await new Promise<void>(() => {
+    /* keep alive until SIGINT */
+  });
+}
+
+export interface ProtocolSlaCheckOptions {
+  eventId?: string;
+  tier?: "bronze" | "silver" | "gold";
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolSlaCheck(opts: ProtocolSlaCheckOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const tier = opts.tier ?? "silver";
+  if (opts.eventId) {
+    const evaluation = evaluateTransactionSla(opts.eventId, tier);
+    if (opts.json) {
+      console.log(JSON.stringify(evaluation, null, 2));
+      return;
+    }
+    console.log(`SLA ${tier} · ${evaluation.event_id}: ${evaluation.satisfied ? "OK" : "FAIL"} (${evaluation.state})`);
+    if (evaluation.missing.length) console.log(`  missing: ${evaluation.missing.join(", ")}`);
+    if (!evaluation.satisfied) process.exit(1);
+    return;
+  }
+  const evaluations = listTransactions()
+    .filter((t) => t.direction === "outbound")
+    .map((t) => evaluateTransactionSla(t.event_id, tier));
+  if (opts.json) {
+    console.log(JSON.stringify(evaluations, null, 2));
+    return;
+  }
+  const failed = evaluations.filter((e) => !e.satisfied);
+  console.log(`SLA ${tier}: ${evaluations.length - failed.length}/${evaluations.length} satisfied`);
+  for (const f of failed) {
+    console.log(`  ✗ ${f.event_id} missing ${f.missing.join(", ")}`);
+  }
+  if (failed.length) process.exit(1);
 }

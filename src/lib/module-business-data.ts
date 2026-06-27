@@ -19,6 +19,7 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
   event_operations: "data/event-operations",
   jp_subsidy_application: "data/subsidy",
   jp_trademark_application: "data/trademark",
+  jp_corporate_registration: "data/corporate-registration",
 };
 
 export function isModuleEnabled(moduleId: string): boolean {

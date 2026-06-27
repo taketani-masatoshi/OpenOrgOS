@@ -52,3 +52,27 @@ export function getWitnessReceiptPath(eventId: string, hubId: string): string {
 export function getWirePendingYamlPath(): string {
   return join(getProtocolDataDir(), "wire-pending.yaml");
 }
+
+export function getRelayStateYamlPath(): string {
+  return join(getProtocolDataDir(), "relay-state.yaml");
+}
+
+export function getWireRelayYamlPath(): string {
+  return join(getProtocolDataDir(), "wire-relay-queue.yaml");
+}
+
+export function getWitnessTrustDir(): string {
+  return join(getProtocolDataDir(), "witness-trust");
+}
+
+export function getWitnessTrustAuthorityYamlPath(): string {
+  return join(getWitnessTrustDir(), "authority.yaml");
+}
+
+export function getWitnessTrustAuthorityKeyPath(): string {
+  return join(getWitnessTrustDir(), "authority-key.pem");
+}
+
+export function getWitnessTrustBundlePath(): string {
+  return join(getWitnessTrustDir(), "bundle.json");
+}

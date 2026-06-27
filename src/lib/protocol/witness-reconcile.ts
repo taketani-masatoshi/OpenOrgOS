@@ -5,7 +5,7 @@ import { loadWitnessPoolConfig, isWitnessEnabled } from "./witness-pool.js";
 import { listWitnessPending } from "./witness-queue.js";
 import { listWirePending } from "./wire-queue.js";
 import { verifyCachedReceiptsForEvent, fetchReceiptsFromPool } from "./witness-client.js";
-import { findEnvelopeFileForWitness } from "./witness-envelope.js";
+import { findEnvelopeFileForWitness } from "./witness-client.js";
 import { verifyProtocolAuditChain } from "./audit-chain.js";
 
 export type ReconcileSeverity = "error" | "warning" | "info";

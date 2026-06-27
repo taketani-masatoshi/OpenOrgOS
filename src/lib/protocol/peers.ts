@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { peersRegistrySchema, type PeerProfile, type PeersRegistry } from "../../../schemas/protocol/peers.js";
+import type { PeerEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
 import { getPeersYamlPath } from "./paths.js";
 import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
 
@@ -39,4 +40,32 @@ export function nextPeerId(): string {
     if (!Number.isNaN(n) && n > max) max = n;
   }
   return `PEER-${String(max + 1).padStart(3, "0")}`;
+}
+
+/** Resolve delivery endpoints: explicit list or legacy single webhook URL. */
+export function resolvePeerInboundEndpoints(peer: PeerProfile): PeerEndpoint[] {
+  if (peer.inbound_endpoints?.length) {
+    return [...peer.inbound_endpoints].sort((a, b) => a.priority - b.priority);
+  }
+  if (peer.inbound_webhook_url) {
+    return [{ url: peer.inbound_webhook_url, priority: 1, mode: "push" }];
+  }
+  return [];
+}
+
+export function peerHasDeliveryPath(peer: PeerProfile): boolean {
+  return resolvePeerInboundEndpoints(peer).length > 0;
+}
+
+/** Base URL for peer outbox pull API (`/protocol/v1/outbox/{eventId}`). */
+export function resolvePeerOutboxBaseUrl(peer: PeerProfile): string | undefined {
+  const endpoints = resolvePeerInboundEndpoints(peer);
+  const pull = endpoints.find((ep) => ep.mode === "pull");
+  if (pull) {
+    return pull.url.replace(/\/$/, "");
+  }
+  const fallback = endpoints[0]?.url ?? peer.inbound_webhook_url;
+  if (!fallback) return undefined;
+  const parsed = new URL(fallback);
+  return `${parsed.protocol}//${parsed.host}`;
 }

@@ -1,7 +1,0 @@
-peers:
-  - peer_id: PEER-002
-    display_name: 株式会社MAL
-    jurisdiction: JP
-    org_uri: steward://tenant/mal
-    protocol_public_key: MCowBQYDK2VwAyEAzVKCrKJLKsoTmTlfWuj5ss3NgOGCIPf4YYDzIRSlRts=
-as_of: 2026-06-26

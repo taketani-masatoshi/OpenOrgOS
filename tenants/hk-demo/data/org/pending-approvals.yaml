@@ -1,0 +1,18 @@
+as_of: 2026-06-27
+approvals:
+  - approval_id: APR-20260627-001
+    scope: internal
+    status: approved
+    proposed_at: 2026-06-27T10:56:44.371Z
+    proposed_by: secretary
+    subject_type: regulation.amendment
+    subject_ref: REG-HK-004
+    amount:
+      value: 50000
+      currency: HKD
+    message: Standalone internal approval demo
+    approval_policy_ref: REG-HK-004
+    approver_id: Chan Wei
+    approval_tier: A
+    approved_at: 2026-06-27T10:56:44.375Z
+    audit_event_id: a0c4f479-a363-4525-a2d2-40d60c4c7eea

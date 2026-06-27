@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { mkdirSync } from "node:fs";
 import { witnessAttestationSchema } from "../../schemas/protocol/witness-attestation.js";
 import type { WitnessAttestation } from "../../schemas/protocol/witness-attestation.js";
-import { configureHubRuntime } from "./hub/runtime.js";
+import { configureHubRuntime, runWithHubRuntimeAsync } from "./hub/runtime.js";
 import { ensureHubSigningKey, exportHubPublicKeyBase64 } from "./hub/signing.js";
 import { registerHubAttestation, findHubReceiptByEventId } from "./hub/receipt.js";
 import { getAttestationStatus } from "./hub/registry.js";
@@ -37,7 +37,8 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
 }
 
 export function startHubServer(options: HubServerOptions): Promise<{ close: () => void }> {
-  configureHubRuntime({ hubId: options.hubId, dataDir: options.dataDir });
+  const hubConfig = { hubId: options.hubId, dataDir: options.dataDir };
+  configureHubRuntime(hubConfig);
   mkdirSync(getHubDataDir(), { recursive: true });
   ensureHubSigningKey();
 
@@ -45,9 +46,10 @@ export function startHubServer(options: HubServerOptions): Promise<{ close: () =
   const port = options.port ?? 9474;
 
   const server = createServer(async (req, res) => {
-    configureHubRuntime({ hubId: options.hubId, dataDir: options.dataDir });
     try {
-      await handleHubRequest(req, res);
+      await runWithHubRuntimeAsync(hubConfig, async () => {
+        await handleHubRequest(req, res);
+      });
     } catch (err) {
       sendJson(res, 500, { ok: false, error: err instanceof Error ? err.message : String(err) });
     }

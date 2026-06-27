@@ -121,6 +121,7 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--verbose", "Include integrity warnings")
     .option("--legacy", "Append legacy data-health breakdown")
     .option("--os-99", "Append company OS composite score (OS-99+ Epic)")
+    .option("--orgos", "Append OrgOS weighted completion score (§13)")
     .option("-o, --output <filename>", "Save to docs/reports/status/")
     .action((opts) =>
       runStatus({
@@ -128,6 +129,7 @@ export function registerExecutiveCommands(program: Command): void {
         verbose: opts.verbose,
         legacy: opts.legacy,
         os99: opts.os99,
+        orgos: opts.orgos,
         output: opts.output,
       })
     );

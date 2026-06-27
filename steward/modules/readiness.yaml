@@ -79,3 +79,6 @@ modules:
   jp_trademark_application:
     tier: production_ready
     notes: 商標登録願ひな形 · 指定商品役務 · operations trademark CLI
+  jp_corporate_registration:
+    tier: activation_ready
+    notes: 法務局登記18手続 · 定款 · 登記申請書 · operations corporate CLI

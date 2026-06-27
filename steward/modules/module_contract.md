@@ -48,7 +48,7 @@ steward/modules/{id}/
 | **activation_ready** | 上記 + `activation_seeds` の各ファイルが `seed/` に実在 |
 | **production_ready** | 上記 + `required_seeds` の各ファイルが実在。`invoice-*` seed があれば billing 連携（テナント `modules.yaml` の `billing`）が必要 |
 
-`modules check` は manifest 欠落・seed 欠落・tenant bind 不整合を検出する。
+`modules check` は manifest 欠落・seed 欠落・tenant bind 不整合を検出する。`modules check --all` は加えて `src/lib/extensibility-contract.ts`（pack-ids · CLI 登録 · capability catalog · readiness 同期 · protocol registry）を検証する。
 
 ## 4. classification / routing への接続
 

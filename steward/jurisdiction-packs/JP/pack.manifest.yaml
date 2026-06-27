@@ -37,6 +37,7 @@ declaration_modules:
   - jp_privacy_policy
   - jp_subsidy_application
   - jp_trademark_application
+  - jp_corporate_registration
 
 notes: 参照実装 — tenants/mal · 組織形態は entity-forms.yaml（株式会社以外含む）
 capability_catalog: business-capability-catalog.yaml

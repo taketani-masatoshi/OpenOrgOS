@@ -22,6 +22,7 @@ tenants/*/data/operations/*-secrets.yaml
 tenants/*/data/operations/travel-portals.yaml
 tenants/*/data/finance/bank-accounts.yaml
 tenants/*/data/protocol/signing-key.pem
+tenants/*/data/protocol/signing-key.pem.bak-*
 data/hub-*/signing-key.pem
 data/hub-*/witness-*.jsonl
 tenants/*/data/executive/stakeholders.yaml

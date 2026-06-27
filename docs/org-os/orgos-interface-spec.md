@@ -68,6 +68,10 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 | `steward protocol audit verify` | audit-chain 検証 |
 | `npm run demo:standalone-org` | 単独 Org デモ（identity · delegation · validate） |
 | `npm run demo:inter-org` | 2-org + Witness デモ |
+| `npm run demo:resilience` | Resilience R1–R4 + Org C trust PKI デモ |
+| `steward protocol relay run` | Wire/witness 自動 flush + reconcile daemon |
+| `steward protocol witness trust publish` | Org C 署名 trust bundle 公開 |
+| `steward protocol sla --tier silver` | 取引 SLA tier 検証 |
 | `steward org audit bridge [--enable]` | operational audit.jsonl → audit-chain バックフィル |
 | `steward protocol verify audit-chain` | 第三者向け audit-chain + envelope digest 検証 |
 | `steward protocol verify delegation --file` | DelegationProof 構造・有効期限検証 |

@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "demo:inter-org": "node --import tsx scripts/seed-inter-org-demo.ts",
+    "demo:deliver-pull": "node --import tsx scripts/demo-deliver-pull.ts",
     "demo:standalone-org": "node --import tsx scripts/seed-standalone-org-demo.ts",
     "demo:mal-standalone": "node --import tsx scripts/seed-mal-standalone-demo.ts"
   },

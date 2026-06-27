@@ -36,6 +36,7 @@ import {
   runProtocolIdentityExport,
   runProtocolIdentityValidate,
   runProtocolPeerRegister,
+  runProtocolPeerDiscover,
   runProtocolDelegationExport,
   runProtocolDelegationValidate,
   runProtocolTransactionRecord,
@@ -51,8 +52,10 @@ import {
   runProtocolNoticeReject,
   runProtocolNoticeShow,
   runProtocolSigningExportPublic,
+  runProtocolSigningRotate,
   runProtocolDeliver,
   runProtocolDeliverFlushPending,
+  runProtocolDeliverPull,
   runProtocolNoticeDraft,
   runProtocolApproversList,
   runProtocolWitnessRegister,
@@ -61,7 +64,19 @@ import {
   runProtocolWitnessReconcile,
   runProtocolWitnessPoolStatus,
   runProtocolTrustedHubsList,
+  runProtocolTrustedHubsValidate,
   runProtocolWitnessPoolInitTrusted,
+  runProtocolRelayOnce,
+  runProtocolRelayRun,
+  runProtocolRelayStatus,
+  runProtocolWitnessTrustInitAuthority,
+  runProtocolWitnessTrustCertify,
+  runProtocolWitnessTrustPublish,
+  runProtocolWitnessTrustVerify,
+  runProtocolWitnessPoolInitFromTrust,
+  runProtocolWitnessPoolInitFromContract,
+  runProtocolApiServe,
+  runProtocolSlaCheck,
 } from "../../commands/protocol.js";
 import {
   runHubServe,
@@ -455,6 +470,19 @@ export function registerOrchestrationCommands(program: Command): void {
         tenant: opts.tenant,
       })
     );
+  protocolPeerCmd
+    .command("discover")
+    .description("List registered peers and jurisdiction trusted-hub catalog entries")
+    .option("--jurisdiction <code>", "ISO jurisdiction code")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolPeerDiscover({
+        jurisdiction: opts.jurisdiction,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
 
   const protocolDelegationCmd = protocolCmd.command("delegation").description("Authority delegation");
   protocolDelegationCmd
@@ -712,6 +740,12 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runProtocolSigningExportPublic({ tenant: opts.tenant, json: opts.json }));
+  protocolSigningCmd
+    .command("rotate")
+    .description("Rotate protocol signing key (backs up previous key)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolSigningRotate({ tenant: opts.tenant, json: opts.json }));
 
   protocolCmd
     .command("deliver")
@@ -731,6 +765,22 @@ export function registerOrchestrationCommands(program: Command): void {
     );
 
   protocolCmd
+    .command("deliver-pull")
+    .description("Pull envelope from peer outbox API into local protocol inbox")
+    .requiredOption("--peer <id>", "PEER-*")
+    .requiredOption("--event-id <uuid>", "Envelope event_id")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolDeliverPull({
+        peer: opts.peer,
+        eventId: opts.eventId,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+
+  protocolCmd
     .command("trusted-hubs")
     .description("List jurisdiction-trusted witness hubs from platform registry")
     .option("--jurisdiction <code>", "ISO jurisdiction code")
@@ -743,6 +793,13 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       })
     );
+
+  protocolCmd
+    .command("trusted-hubs-validate")
+    .description("Validate platform trusted-hubs.yaml committee registry")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolTrustedHubsValidate({ tenant: opts.tenant, json: opts.json }));
 
   protocolCmd
     .command("approvers")
@@ -821,6 +878,171 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runProtocolWitnessPoolStatus({ tenant: opts.tenant, json: opts.json }));
+  protocolWitnessPoolCmd
+    .command("init-from-trust")
+    .description("Initialize witness-pool.yaml from signed witness trust bundle URL")
+    .requiredOption("--bundle-url <url>", "Witness trust bundle URL (Org C PKI)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessPoolInitFromTrust({
+        bundleUrl: opts.bundleUrl,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolWitnessPoolCmd
+    .command("init-from-contract")
+    .description("Initialize witness-pool.yaml from contract protocol.witness_hubs + trust bundle")
+    .requiredOption("--contract <id>", "CTR-*")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessPoolInitFromContract({
+        contract: opts.contract,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+
+  const protocolWitnessTrustCmd = protocolWitnessCmd
+    .command("trust")
+    .description("Witness trust network (Org C PKI-style hub certification)");
+  protocolWitnessTrustCmd
+    .command("init-authority")
+    .description("Initialize witness trust authority (Org C)")
+    .requiredOption("--authority-id <id>", "WTA-*")
+    .requiredOption("--org-name <name>", "Authority org display name")
+    .option("--jurisdiction <code>", "ISO jurisdiction")
+    .option("--org-uri <uri>", "Org URI")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessTrustInitAuthority({
+        authorityId: opts.authorityId,
+        orgName: opts.orgName,
+        jurisdiction: opts.jurisdiction,
+        orgUri: opts.orgUri,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolWitnessTrustCmd
+    .command("certify")
+    .description("Certify a witness hub (sign hub public key)")
+    .requiredOption("--hub-id <id>", "Hub id")
+    .requiredOption("--hub-url <url>", "Hub base URL")
+    .option("--hub-public-key <b64>", "Hub SPKI base64 (default: fetch from hub)")
+    .option("--expires-at <iso>", "Certificate expiry")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessTrustCertify({
+        hubId: opts.hubId,
+        hubUrl: opts.hubUrl,
+        hubPublicKey: opts.hubPublicKey,
+        expiresAt: opts.expiresAt,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolWitnessTrustCmd
+    .command("publish")
+    .description("Publish signed witness trust bundle JSON")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolWitnessTrustPublish({ tenant: opts.tenant, json: opts.json }));
+  protocolWitnessTrustCmd
+    .command("verify")
+    .description("Verify witness trust bundle signatures")
+    .option("--bundle-url <url>", "Remote bundle URL")
+    .option("--bundle-file <path>", "Local bundle JSON")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessTrustVerify({
+        bundleUrl: opts.bundleUrl,
+        bundleFile: opts.bundleFile,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+
+  const protocolRelayCmd = protocolCmd.command("relay").description("Wire + witness relay worker (R1–R4)");
+  protocolRelayCmd
+    .command("once")
+    .description("Run one relay cycle (flush wire/witness pending + reconcile)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--no-reconcile", "Skip reconcile step")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolRelayOnce({
+        tenant: opts.tenant,
+        json: opts.json,
+        noReconcile: opts.noReconcile,
+      })
+    );
+  protocolRelayCmd
+    .command("run")
+    .description("Run relay daemon until interrupted")
+    .option("--tenant <id>", "Tenant id")
+    .option("--interval-sec <n>", "Cycle interval seconds", (v: string) => parseInt(v, 10), 30)
+    .option("--max-cycles <n>", "Stop after N cycles")
+    .option("--no-reconcile", "Skip reconcile step")
+    .action((opts) =>
+      runProtocolRelayRun({
+        tenant: opts.tenant,
+        intervalSec: opts.intervalSec,
+        maxCycles: opts.maxCycles,
+        noReconcile: opts.noReconcile,
+      })
+    );
+  protocolRelayCmd
+    .command("status")
+    .description("Show relay worker state and pending counts")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolRelayStatus({ tenant: opts.tenant, json: opts.json }));
+
+  protocolCmd
+    .command("sla")
+    .description("Check resilience SLA tier for outbound transactions")
+    .option("--event-id <uuid>", "Single event")
+    .option("--tier <tier>", "bronze | silver | gold", "silver")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolSlaCheck({
+        eventId: opts.eventId,
+        tier: opts.tier,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+
+  protocolCmd
+    .command("api-serve")
+    .description("Protocol pull inbox · outbox · trust bundle (HTTPS) · relay API (mTLS)")
+    .option("--host <host>", "Bind host", "127.0.0.1")
+    .option("--port <n>", "Port", (v: string) => parseInt(v, 10), 9476)
+    .option("--tls-cert <path>", "Server TLS certificate (PEM)")
+    .option("--tls-key <path>", "Server TLS private key (PEM)")
+    .option("--tls-ca <path>", "Client CA for mTLS verification (PEM)")
+    .option("--mtls-required", "Require client cert on relay/inbox/outbox")
+    .option("--mtls-allowed-org <uri>", "Allowed client org_uri (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) =>
+      runProtocolApiServe({
+        host: opts.host,
+        port: opts.port,
+        tenant: opts.tenant,
+        tlsCert: opts.tlsCert,
+        tlsKey: opts.tlsKey,
+        tlsCa: opts.tlsCa,
+        mtlsRequired: opts.mtlsRequired,
+        mtlsAllowedOrg: opts.mtlsAllowedOrg,
+      })
+    );
 
   const orgCmd = program.command("org").description("Universal org activity root (approval · audit bridge)");
   const orgApprovalCmd = orgCmd.command("approval").description("Internal human approval (scope: internal)");

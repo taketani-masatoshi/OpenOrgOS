@@ -101,6 +101,7 @@
 
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_carbon_neutral_2050` — `modules.yaml` 未登録 · **読まない**
+- `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
 - `jp_privacy_policy` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
 - `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**

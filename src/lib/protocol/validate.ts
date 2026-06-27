@@ -19,6 +19,7 @@ import { evaluateWitnessWireGovernancePolicy } from "./witness-policy.js";
 import { loadOrgAuditBridgeConfig } from "../org/audit-bridge.js";
 import { listRecentAuditBridgeFailures } from "../org/audit-bridge-errors.js";
 import { getOrgAuditBridgeConfigPath } from "../org/paths.js";
+import { validateTrustedHubsRegistry } from "./trusted-hubs.js";
 
 export interface ProtocolValidationIssue {
   code: string;
@@ -206,6 +207,14 @@ export function validateProtocolState(
         }
       }
     }
+  }
+
+  const trustedHubs = validateTrustedHubsRegistry();
+  for (const issue of trustedHubs.issues) {
+    issues.push(issue);
+  }
+  for (const warning of trustedHubs.warnings) {
+    warnings.push(warning);
   }
 
   return { ok: issues.length === 0, issues, warnings };
