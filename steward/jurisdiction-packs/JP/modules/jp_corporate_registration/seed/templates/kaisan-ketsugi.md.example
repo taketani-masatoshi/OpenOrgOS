@@ -1,0 +1,28 @@
+---
+title: 解散に関する株主総会議事録
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+> **注意** — 解散後は清算手続 · 税務申告 · 社保廃止等が必要。本書類は解散登記用。
+
+# 株主総会議事録（解散）
+
+| 日時 | {{resolution_date_reiwa}} |
+| 会社 | {{company_name}} |
+
+## 第1号議案　解散及び清算人選任
+
+1. 当会社を解散すること
+2. 清算人として **{{liquidator_name}}** を選任すること
+
+を、出席株主全員の同意により可決した。
+
+解散理由: {{dissolution_reason}}
+
+---
+
+{{resolution_date_reiwa}}
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

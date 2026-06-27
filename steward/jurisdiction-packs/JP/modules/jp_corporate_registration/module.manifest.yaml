@@ -1,0 +1,14 @@
+id: jp_corporate_registration
+required_seeds: []
+activation_seeds:
+  - procedures-catalog.yaml.example
+  - case-registry.yaml.example
+  - field-map.yaml.example
+  - sources.yaml.example
+  - templates/teikan-kk.md.example
+  - templates/touki-shinseisho.md.example
+optional_regulations:
+  - REG-002
+  - REG-003
+  - REG-004
+notes: activation_ready — 法務局登記手続カタログ · 定款 · 登記申請書等ドラフト（JP 法域のみ）

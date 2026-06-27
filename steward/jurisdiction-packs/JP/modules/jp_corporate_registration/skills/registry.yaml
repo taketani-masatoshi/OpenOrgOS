@@ -1,0 +1,14 @@
+skills:
+  - id: jp_company_incorporation
+    file: jp_corporate_registration_ops.md
+    runtime: cli
+    cli_command: operations corporate
+    agent: Secretary
+    description: 株式会社設立登記 — 定款 · 創立総会 · 登記申請書
+
+  - id: jp_registry_change
+    file: jp_corporate_registration_ops.md
+    runtime: cli
+    cli_command: operations corporate
+    agent: Secretary
+    description: 変更登記 — 本店移転 · 役員 · 商号 · 目的 · 資本

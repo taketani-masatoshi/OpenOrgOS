@@ -1,0 +1,219 @@
+# 法務局登記手続カタログ — 株式会社中心
+# 正本: 会社法 · 商業登記法 · 法務局公表様式
+# 用途: operations corporate procedures / checklist / draft
+
+jurisdiction: JP
+updated: "2026-06-26"
+
+procedures:
+  # ── 設立 ──
+  - id: incorporation
+    name_ja: 株式会社設立登記
+    name_en: Incorporation of Kabushiki Kaisha
+    category: establishment
+    legal_basis: 会社法第911条 · 商業登記法第15条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-teikan-kk
+      - form-sosen-gijiroku
+      - form-yakuin-sennin-ketsugi
+      - form-shussho-dojisho
+      - form-inkan-todoke
+      - form-touki-shinseisho
+    fee_note: 定款認証手数料 · 登録免許税（資本金の0.7% · 最低15万円）· 印紙
+    official_urls:
+      - https://www.touki.or.jp/
+      - https://www.moj.go.jp/homu/homu_06.html
+    notes: 電子定款 · オンライン申請（登記ねっと）可
+
+  # ── 本店・支店 ──
+  - id: head_office_relocation_same_bureau
+    name_ja: 本店移転登記（同一法務局管轄内）
+    category: change
+    legal_basis: 会社法第915条 · 商業登記法第15条
+    registry_office: 管轄法務局（移転後本店所在地）
+    form_ids:
+      - form-honsha-iten-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円（非公開会社）/ 6万円（公開会社）
+    official_urls:
+      - https://www.touki.or.jp/
+
+  - id: head_office_relocation_cross_bureau
+    name_ja: 本店移転登記（管轄法務局の変更）
+    category: change
+    legal_basis: 会社法第915条
+    registry_office: 移転後本店を管轄する法務局
+    form_ids:
+      - form-honsha-iten-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円〜 · 旧管轄への移転登記も必要
+    notes: 管轄外移転 — 旧本店所在地法務局への本店移転登記 + 新管轄への本店移転登記
+
+  - id: branch_establishment
+    name_ja: 支店設置登記
+    category: change
+    legal_basis: 商業登記法第15条
+    registry_office: 支店所在地を管轄する法務局
+    form_ids:
+      - form-shiten-setchi-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円（非公開会社）
+
+  - id: branch_abolition
+    name_ja: 支店廃止登記
+    category: change
+    legal_basis: 商業登記法第15条
+    registry_office: 支店所在地を管轄する法務局
+    form_ids:
+      - form-shiten-haishi-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 1万円（非公開会社）
+
+  # ── 役員・機関 ──
+  - id: officer_appointment_resignation
+    name_ja: 役員就任・退任登記
+    category: change
+    legal_basis: 会社法第915条 · 第931条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-yakuin-henko-ketsugi
+      - form-shussho-dojisho
+      - form-touki-shinseisho
+    fee_note: 登録免許税 1万円/件（非公開会社 · 同一申請内複数可）
+    notes: 取締役 · 監査役 · 代表取締役の就任・退任
+
+  - id: representative_director_change
+    name_ja: 代表取締役の変更登記
+    category: change
+    legal_basis: 会社法第915条 · 第931条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-yakuin-henko-ketsugi
+      - form-shussho-dojisho
+      - form-touki-shinseisho
+    fee_note: 登録免許税 1万円
+
+  - id: board_establishment
+    name_ja: 取締役会設置登記
+    category: change
+    legal_basis: 会社法第915条 · 第327条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-kikan-henko-ketsugi
+      - form-teikan-kaitei
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円
+
+  - id: auditor_appointment
+    name_ja: 監査役設置・解任登記
+    category: change
+    legal_basis: 会社法第915条 · 第404条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-yakuin-henko-ketsugi
+      - form-shussho-dojisho
+      - form-touki-shinseisho
+    fee_note: 登録免許税 1万円
+
+  # ── 商号・目的・資本 ──
+  - id: trade_name_change
+    name_ja: 商号変更登記
+    category: change
+    legal_basis: 会社法第915条 · 第6条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-shogo-henko-ketsugi
+      - form-teikan-kaitei
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円 · 定款変更（株主総会特別決議）
+
+  - id: purpose_change
+    name_ja: 目的変更登記
+    category: change
+    legal_basis: 会社法第915条 · 第107条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-mokuteki-henko-ketsugi
+      - form-teikan-kaitei
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円 · 株主総会特別決議
+
+  - id: capital_increase
+    name_ja: 資本金の増加登記
+    category: change
+    legal_basis: 会社法第915条 · 第445条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-shihon-henko-ketsugi
+      - form-teikan-kaitei
+      - form-touki-shinseisho
+    fee_note: 登録免許税 増加額の0.7% · 最低15万円
+
+  - id: capital_decrease
+    name_ja: 資本金の減少登記
+    category: change
+    legal_basis: 会社法第915条 · 第447条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-shihon-henko-ketsugi
+      - form-teikan-kaitei
+      - form-touki-shinseisho
+    fee_note: 登録免許税 · 債権者保護手続が必要な場合あり
+
+  - id: stock_transfer_restriction
+    name_ja: 株式譲渡制限変更登記
+    category: change
+    legal_basis: 会社法第915条 · 第136条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-kabushiki-joto-ketsugi
+      - form-teikan-kaitei
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円
+
+  # ── 組織再編 ──
+  - id: merger
+    name_ja: 合併登記
+    category: corporate_reorg
+    legal_basis: 会社法第915条 · 第783条以下
+    registry_office: 存続会社・消滅会社それぞれの本店管轄法務局
+    form_ids:
+      - form-gappei-keikaku
+      - form-gappei-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 · 合併契約 · 債権者保護手続
+    notes: 消滅会社の解散登記を含む
+
+  - id: company_split
+    name_ja: 会社分割登記
+    category: corporate_reorg
+    legal_basis: 会社法第915条 · 第748条以下
+    registry_office: 分割会社 · 承継会社の本店管轄法務局
+    form_ids:
+      - form-bunkatsu-keikaku
+      - form-bunkatsu-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 · 分割計画 · 債権者保護手続
+
+  # ── 解散・清算 ──
+  - id: dissolution
+    name_ja: 解散登記
+    category: termination
+    legal_basis: 会社法第915条 · 第471条 · 第478条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-kaisan-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 3万円 · 清算人選任
+    notes: 株主総会決議または破産等による解散
+
+  - id: liquidation_completion
+    name_ja: 清算結了登記
+    category: termination
+    legal_basis: 会社法第915条 · 第508条
+    registry_office: 本店所在地を管轄する法務局
+    form_ids:
+      - form-seisan-ketsuryo-ketsugi
+      - form-touki-shinseisho
+    fee_note: 登録免許税 2万円 · 法人格消滅

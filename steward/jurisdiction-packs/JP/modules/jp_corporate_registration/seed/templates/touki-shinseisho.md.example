@@ -1,0 +1,47 @@
+---
+title: 登記申請書
+case_id: {{case_id}}
+procedure: {{procedure_name}}
+generated: {{generated_iso}}
+sources:
+  - {{source_touki_url}}
+  - {{source_moj_url}}
+---
+
+> **ひな形（非提出稿）** — 商業登記法に基づく登記申請書のたたき台。[登記ねっと]({{source_touki_url}}) オンライン申請時は所定項目を転記すること。
+
+【書 類 名】　登記申請書
+
+【申 請 人】
+
+| 項目 | 内容 |
+|------|------|
+| 商号 | {{company_name}} |
+| 本店 | {{head_office}} |
+| 法人番号 | {{corporate_number}} |
+
+【登 記 の 目 的】
+
+{{registration_purpose_block}}
+
+【添 付 書 類】
+
+{{attachments_block}}
+
+【登録免許税】
+
+{{fee_note}}
+
+【申請日】　{{filing_date_reiwa}}
+
+【管轄登記所】　{{registry_office}}
+
+{{agent_block}}
+
+---
+
+## 内部メモ（提出書類に含めない）
+
+- case_id: {{case_id}}
+- procedure_id: {{procedure_id}}
+- 司法書士確認: 必須

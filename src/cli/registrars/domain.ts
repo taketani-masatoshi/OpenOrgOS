@@ -45,6 +45,16 @@ import {
   runIoOutboxScan,
   runIoGuide,
 } from "../../commands/io.js";
+import {
+  runEventsArchive,
+  runEventsClose,
+  runEventsEnsureMonth,
+  runEventsList,
+  runEventsNew,
+  runEventsStatus,
+  runEventsValidate,
+} from "../../commands/company-events.js";
+import { COMPANY_EVENT_KINDS } from "../../lib/company-events.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "../../commands/deps.js";
 import { runInvoiceGenerateCommand } from "../../commands/invoice.js";
 import { runForecast } from "../../commands/forecast.js";
@@ -273,6 +283,61 @@ export function registerDomainCommands(program: Command): void {
     );
   outbox.command("scan").description("Register unlisted PDFs in outbox/").action(runIoOutboxScan);
   outbox.command("printed <id>").description("Mark outbox item as printed").action(runIoOutboxPrinted);
+
+  const events = program
+    .command("events")
+    .description("Company event records (events/ vs artifacts/)");
+  events.command("status").description("Registry summary").action(runEventsStatus);
+  events
+    .command("ensure-month")
+    .description("Create YYYY-MM folders under docs/company/events and artifacts")
+    .option("--month <month>", "YYYY-MM (default: current month)")
+    .action((opts) => runEventsEnsureMonth({ month: opts.month }));
+  events
+    .command("new")
+    .description("Create event record + artifact folder")
+    .requiredOption("--kind <kind>", COMPANY_EVENT_KINDS.join("|"))
+    .requiredOption("--title <title>", "Event title")
+    .option("--date <date>", "Occurred date YYYY-MM-DD (default: today)")
+    .option("--slug <slug>", "Latin slug (a-z0-9-, min 3 chars)")
+    .option("--related <pairs>", "key:value,key:value (e.g. registration_case_id:INC-2026-001)")
+    .option("--notes <notes>", "Registry notes")
+    .action((opts) =>
+      runEventsNew({
+        kind: opts.kind,
+        title: opts.title,
+        date: opts.date,
+        slug: opts.slug,
+        related: opts.related,
+        notes: opts.notes,
+      })
+    );
+  events
+    .command("list")
+    .description("List company events")
+    .option("--month <month>", "Filter YYYY-MM")
+    .option("--status <status>", "open|closed|archived")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runEventsList({
+        month: opts.month,
+        status: opts.status,
+        json: opts.json,
+      })
+    );
+  events
+    .command("close <id>")
+    .description("Close company event (open → closed)")
+    .action((id) => runEventsClose({ id }));
+  events
+    .command("archive <id>")
+    .description("Archive company event (closed → archived, or open → archived)")
+    .action((id) => runEventsArchive({ id }));
+  events
+    .command("validate")
+    .description("Validate registry vs event MD and artifact folders")
+    .option("--json", "JSON output")
+    .action((opts) => runEventsValidate({ json: opts.json }));
 
   const deps = program.command("deps").description("Parameter dependency / impact propagation");
   deps

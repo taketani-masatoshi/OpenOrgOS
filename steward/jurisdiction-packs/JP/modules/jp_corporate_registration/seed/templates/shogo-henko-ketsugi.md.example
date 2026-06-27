@@ -1,0 +1,25 @@
+---
+title: 商号変更に関する株主総会議事録
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# 株主総会議事録（商号変更）
+
+| 項目 | 内容 |
+|------|------|
+| 日時 | {{resolution_date_reiwa}} |
+| 会社 | {{old_name}} |
+
+## 第1号議案　商号の変更
+
+商号を **{{old_name}}** から **{{new_name}}** に変更することを、出席株主全員の同意により可決した。
+
+定款第1条を別紙のとおり変更する。
+
+---
+
+{{resolution_date_reiwa}}
+
+{{new_name}}
+代表取締役　{{representative_primary}}　㊞

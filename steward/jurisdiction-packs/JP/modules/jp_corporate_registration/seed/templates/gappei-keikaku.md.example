@@ -1,0 +1,19 @@
+---
+title: 合併契約書
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+> **ひな形** — 合併契約の詳細は税理士 · 司法書士と協議。
+
+# 合併契約書
+
+{{company_name}}（存続会社）と {{counterparty_name}}（消滅会社）は、{{resolution_date_reiwa}}、次のとおり合併する。
+
+1. {{counterparty_name}}は{{company_name}}に合併し、合併により消滅する。
+2. 合併効力発生日: {{effective_date_reiwa}}
+3. その他の条件は別紙合併契約詳細に定める。
+
+---
+
+{{company_name}}　{{counterparty_name}}

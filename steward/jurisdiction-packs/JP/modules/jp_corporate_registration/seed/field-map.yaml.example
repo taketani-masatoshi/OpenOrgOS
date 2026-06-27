@@ -1,0 +1,15 @@
+mappings:
+  - form_field: company_name
+    source: company.name
+    notes: 既存法人の変更登記
+  - form_field: corporate_number
+    source: company.corporate_number
+  - form_field: head_office
+    source: company.address
+  - form_field: representative
+    source: company.representative
+  - form_field: filing_date
+    source: case.filing_date
+    format: reiwa
+  - form_field: registry_office
+    source: case.registry_office

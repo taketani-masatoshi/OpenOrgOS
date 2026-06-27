@@ -1,0 +1,25 @@
+---
+title: 目的変更に関する株主総会議事録
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# 株主総会議事録（目的変更）
+
+| 日時 | {{resolution_date_reiwa}} |
+| 会社 | {{company_name}} |
+
+## 決議
+
+定款の目的を次のとおり変更することを特別決議により可決した。
+
+### 変更後の目的
+
+{{purposes_block}}
+
+---
+
+{{resolution_date_reiwa}}
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

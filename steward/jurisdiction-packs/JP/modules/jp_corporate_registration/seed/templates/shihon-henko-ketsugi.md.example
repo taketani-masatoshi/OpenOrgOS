@@ -1,0 +1,21 @@
+---
+title: 資本金変更に関する株主総会議事録
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# 株主総会議事録（資本金{{capital_change_label}}）
+
+| 日時 | {{resolution_date_reiwa}} |
+| 会社 | {{company_name}} |
+
+## 決議
+
+資本金を **{{old_capital_yen_formatted}}円** から **{{new_capital_yen_formatted}}円** に{{capital_change_label}}することを可決した。
+
+---
+
+{{resolution_date_reiwa}}
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

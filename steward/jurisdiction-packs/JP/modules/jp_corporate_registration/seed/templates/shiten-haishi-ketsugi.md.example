@@ -1,0 +1,14 @@
+---
+title: 支店廃止に関する決議書
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# {{resolution_body_label}}議事録（支店廃止）
+
+{{company_name}}は、{{resolution_date_reiwa}}、{{branch_name}}（{{branch_address}}）を廃止することを決議した。
+
+---
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞
