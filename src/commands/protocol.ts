@@ -54,7 +54,8 @@ import {
   findTrustedHubsForJurisdiction,
   validateTrustedHubsRegistry,
 } from "../lib/protocol/trusted-hubs.js";
-import { listDiscoverablePeers } from "../lib/protocol/peer-discovery.js";
+import { listDiscoverablePeers, listPeerRegistrationSuggestions } from "../lib/protocol/peer-discovery.js";
+import { deliverEnvelopeViaMesh } from "../lib/protocol/peer-mesh.js";
 import {
   initWitnessTrustAuthority,
   publishWitnessTrustBundle,
@@ -187,11 +188,25 @@ export interface ProtocolPeerDiscoverOptions {
   jurisdiction?: string;
   tenant?: string;
   json?: boolean;
+  suggest?: boolean;
 }
 
 export function runProtocolPeerDiscover(opts: ProtocolPeerDiscoverOptions): void {
   applyProtocolTenant(opts.tenant);
   const jurisdiction = opts.jurisdiction ?? loadTenantConfig().jurisdiction ?? "JP";
+  if (opts.suggest) {
+    const suggestions = listPeerRegistrationSuggestions(jurisdiction);
+    if (opts.json) {
+      console.log(JSON.stringify({ jurisdiction, count: suggestions.length, suggestions }, null, 2));
+      return;
+    }
+    console.log(`Peer registration suggestions (${jurisdiction}): ${suggestions.length}`);
+    for (const s of suggestions) {
+      const id = s.entry.peer_id ?? s.entry.hub_id ?? "?";
+      console.log(`  · ${id}: ${s.register_command}`);
+    }
+    return;
+  }
   const entries = listDiscoverablePeers({ jurisdiction });
   if (opts.json) {
     console.log(JSON.stringify({ jurisdiction, count: entries.length, entries }, null, 2));
@@ -808,6 +823,32 @@ export async function runProtocolDeliverPull(opts: ProtocolDeliverPullOptions): 
   console.log(`✓ pulled envelope ${opts.eventId} from ${opts.peer}`);
   if (result.inboxPath) {
     console.log(`  inbox: ${result.inboxPath}`);
+  }
+}
+
+export interface ProtocolMeshDeliverOptions {
+  peer: string;
+  file: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolMeshDeliver(opts: ProtocolMeshDeliverOptions): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const envelope = JSON.parse(readFileSync(opts.file, "utf-8"));
+  const parsed = eventEnvelopeSchema.parse(envelope);
+  const result = await deliverEnvelopeViaMesh(parsed, opts.peer);
+  if (!result.delivered && !result.queued) {
+    console.error(`Mesh deliver failed: ${result.reason}`);
+    process.exit(1);
+  }
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`✓ mesh delivered to ${opts.peer} via ${result.hops?.join(" → ") ?? opts.peer}`);
+  if (result.queued) {
+    console.log(`  queued: ${result.reason}`);
   }
 }
 

@@ -32,6 +32,17 @@ describe("protocol gap closure", () => {
     expect(Array.isArray(data.entries)).toBe(true);
   });
 
+  it("runProtocolPeerDiscover --suggest outputs register commands", () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    runProtocolPeerDiscover({ jurisdiction: "JP", suggest: true });
+    const output = spy.mock.calls.map((c) => String(c[0])).join("\n");
+    spy.mockRestore();
+    expect(output).toContain("Peer registration suggestions");
+    expect(output.includes("steward protocol peer register") || output.includes("init-trusted")).toBe(
+      true
+    );
+  });
+
   it("validates trusted hubs registry on platform catalog", () => {
     const result = validateTrustedHubsRegistry();
     expect(result.ok).toBe(true);

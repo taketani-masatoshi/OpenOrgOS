@@ -76,3 +76,11 @@ export function getWitnessTrustAuthorityKeyPath(): string {
 export function getWitnessTrustBundlePath(): string {
   return join(getWitnessTrustDir(), "bundle.json");
 }
+
+export function getMeshRoutesYamlPath(): string {
+  return join(getProtocolDataDir(), "mesh-routes.yaml");
+}
+
+export function getSigningKeyMetaPath(): string {
+  return join(getProtocolDataDir(), "signing-key-meta.yaml");
+}

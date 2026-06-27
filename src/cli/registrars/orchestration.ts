@@ -56,6 +56,7 @@ import {
   runProtocolDeliver,
   runProtocolDeliverFlushPending,
   runProtocolDeliverPull,
+  runProtocolMeshDeliver,
   runProtocolNoticeDraft,
   runProtocolApproversList,
   runProtocolWitnessRegister,
@@ -476,9 +477,28 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--jurisdiction <code>", "ISO jurisdiction code")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
+    .option("--suggest", "Print suggested peer register commands for unregistered entries")
     .action((opts) =>
       runProtocolPeerDiscover({
         jurisdiction: opts.jurisdiction,
+        tenant: opts.tenant,
+        json: opts.json,
+        suggest: opts.suggest,
+      })
+    );
+
+  const protocolMeshCmd = protocolCmd.command("mesh").description("Multi-hop peer mesh delivery (FR-EM-07)");
+  protocolMeshCmd
+    .command("deliver")
+    .description("Deliver envelope via configured mesh route (via chain)")
+    .requiredOption("--peer <id>", "Final destination PEER-*")
+    .requiredOption("--file <path>", "Envelope JSON file")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolMeshDeliver({
+        peer: opts.peer,
+        file: opts.file,
         tenant: opts.tenant,
         json: opts.json,
       })

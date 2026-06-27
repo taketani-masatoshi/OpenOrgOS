@@ -24,3 +24,4 @@ export * from "./relay-state.js";
 export * from "./wire-relay.js";
 export * from "./contract-protocol.js";
 export * from "./protocol-api-config.js";
+export * from "./mesh-routes.js";

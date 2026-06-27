@@ -3,7 +3,9 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import { envelopeDigest } from "./canonical.js";
-import { getProtocolSigningKeyPath } from "./paths.js";
+import { getProtocolSigningKeyPath, getSigningKeyMetaPath } from "./paths.js";
+import { signingKeyMetaSchema, type SigningKeyMeta } from "../../../schemas/protocol/signing-key-meta.js";
+import { readYamlFile, writeYamlFile } from "../utils.js";
 
 export function generateProtocolKeyPair(): { publicKey: string; privateKeyPem: string } {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
@@ -62,6 +64,21 @@ export function maybeSignEnvelope(envelope: EventEnvelope): EventEnvelope {
   return signEventEnvelope(envelope, privateKeyPem);
 }
 
+export function loadSigningKeyMeta(): SigningKeyMeta | undefined {
+  const path = getSigningKeyMetaPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, signingKeyMetaSchema);
+}
+
+export function saveSigningKeyMeta(publicKey: string): SigningKeyMeta {
+  const meta = signingKeyMetaSchema.parse({
+    rotated_at: new Date().toISOString(),
+    public_key: publicKey,
+  });
+  writeYamlFile(getSigningKeyMetaPath(), meta);
+  return meta;
+}
+
 export function rotateProtocolSigningKey(): { publicKey: string; backupPath?: string } {
   const path = getProtocolSigningKeyPath();
   const existing = loadProtocolSigningKeyPem();
@@ -73,5 +90,6 @@ export function rotateProtocolSigningKey(): { publicKey: string; backupPath?: st
   const { privateKeyPem, publicKey } = generateProtocolKeyPair();
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, privateKeyPem, { mode: 0o600 });
+  saveSigningKeyMeta(publicKey);
   return { publicKey, backupPath };
 }

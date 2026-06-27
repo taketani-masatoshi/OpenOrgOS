@@ -1,0 +1,9 @@
+# mal tenant mesh routes — FR-EM-07
+routes:
+  - destination_peer_id: PEER-002
+    via: []
+    notes: Direct delivery to southwood (southwood tenant)
+  - destination_peer_id: PEER-003
+    via:
+      - PEER-002
+    notes: mal → southwood relay → third org (demo / hk-demo)

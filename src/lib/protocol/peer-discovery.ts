@@ -64,3 +64,29 @@ export function summarizeTrustedHubCatalog(): Array<{ jurisdiction: string; hub_
     hub_count: j.hubs.length,
   }));
 }
+
+export interface PeerRegistrationSuggestion {
+  entry: DiscoverablePeerEntry;
+  register_command: string;
+}
+
+export function suggestPeerRegistration(entry: DiscoverablePeerEntry): PeerRegistrationSuggestion {
+  if (entry.source === "trusted-hub-catalog") {
+    return {
+      entry,
+      register_command: `# Hub ${entry.hub_id} is not a peer — pin via: steward protocol witness pool init-trusted`,
+    };
+  }
+  const parts = [
+    "steward protocol peer register",
+    `--name "${entry.display_name}"`,
+    `--jurisdiction ${entry.jurisdiction}`,
+  ];
+  if (entry.org_uri) parts.push(`--org-uri ${entry.org_uri}`);
+  if (entry.peer_id) parts.push(`--peer-id ${entry.peer_id}`);
+  return { entry, register_command: parts.join(" ") };
+}
+
+export function listPeerRegistrationSuggestions(jurisdiction?: string): PeerRegistrationSuggestion[] {
+  return listUnregisteredPeerCandidates(jurisdiction).map(suggestPeerRegistration);
+}

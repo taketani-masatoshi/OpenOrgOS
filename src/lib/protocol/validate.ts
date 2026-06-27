@@ -20,6 +20,8 @@ import { loadOrgAuditBridgeConfig } from "../org/audit-bridge.js";
 import { listRecentAuditBridgeFailures } from "../org/audit-bridge-errors.js";
 import { getOrgAuditBridgeConfigPath } from "../org/paths.js";
 import { validateTrustedHubsRegistry } from "./trusted-hubs.js";
+import { loadSigningKeyMeta } from "./signing.js";
+import { loadPeersRegistry } from "./peers.js";
 
 export interface ProtocolValidationIssue {
   code: string;
@@ -215,6 +217,18 @@ export function validateProtocolState(
   }
   for (const warning of trustedHubs.warnings) {
     warnings.push(warning);
+  }
+
+  const keyMeta = loadSigningKeyMeta();
+  if (keyMeta) {
+    for (const peer of loadPeersRegistry().peers) {
+      if (peer.protocol_public_key && peer.protocol_public_key !== keyMeta.public_key) {
+        warnings.push({
+          code: "signing-key-peer-pin-stale",
+          message: `${peer.peer_id} protocol_public_key does not match signing-key-meta (rotated ${keyMeta.rotated_at})`,
+        });
+      }
+    }
   }
 
   return { ok: issues.length === 0, issues, warnings };
