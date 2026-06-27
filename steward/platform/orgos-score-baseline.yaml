@@ -1,0 +1,10 @@
+# OrgOS score baseline — framework-assessment §13
+# Sync with docs/framework-assessment.md when intentionally updating scores.
+
+standalone_loop: 95
+form_unification: 90
+wire_evidence: 88
+ecosystem: 45
+interface_axis_high: 85
+interface_axis_low: 60
+interface_module_pct_threshold: 88

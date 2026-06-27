@@ -7,6 +7,30 @@
 import type { MaturityReport } from "./maturity.js";
 import { listP0Items } from "./p0-status.js";
 import { computeModuleAxisStats } from "./extensibility-contract.js";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { z } from "zod";
+import { ROOT_DIR } from "./tenant.js";
+import { readYamlFile } from "./utils.js";
+
+const ORGOS_BASELINE_PATH = join(ROOT_DIR, "steward/platform/orgos-score-baseline.yaml");
+
+const orgOsBaselineSchema = z.object({
+  standalone_loop: z.number().default(95),
+  form_unification: z.number().default(90),
+  wire_evidence: z.number().default(88),
+  ecosystem: z.number().default(45),
+  interface_axis_high: z.number().default(85),
+  interface_axis_low: z.number().default(60),
+  interface_module_pct_threshold: z.number().default(88),
+});
+
+function loadOrgOsBaseline() {
+  if (!existsSync(ORGOS_BASELINE_PATH)) {
+    return orgOsBaselineSchema.parse({});
+  }
+  return readYamlFile(ORGOS_BASELINE_PATH, orgOsBaselineSchema);
+}
 
 /** framework-assessment §9 実測（REF-4b/d 完了 · 2026-06-25） */
 export const PRODUCT_FRAMEWORK_SCORE = 100;
@@ -126,11 +150,15 @@ const ORGOS_WEIGHTS = {
 
 export function computeOrgOsScore(): OrgOsScore {
   const moduleAxis = computeModuleAxisStats();
-  const standaloneLoop = 95;
-  const formUnification = 90;
-  const interfaceAxis = moduleAxis.productionPct >= 88 ? 85 : 60;
-  const wireEvidence = 88;
-  const ecosystem = 45;
+  const baseline = loadOrgOsBaseline();
+  const standaloneLoop = baseline.standalone_loop;
+  const formUnification = baseline.form_unification;
+  const interfaceAxis =
+    moduleAxis.productionPct >= baseline.interface_module_pct_threshold
+      ? baseline.interface_axis_high
+      : baseline.interface_axis_low;
+  const wireEvidence = baseline.wire_evidence;
+  const ecosystem = baseline.ecosystem;
   const weighted = Math.round(
     standaloneLoop * ORGOS_WEIGHTS.standaloneLoop +
       formUnification * ORGOS_WEIGHTS.formUnification +

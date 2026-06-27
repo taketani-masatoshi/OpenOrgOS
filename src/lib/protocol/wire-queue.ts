@@ -4,19 +4,24 @@ import {
   type WirePendingRegistry,
 } from "../../../schemas/protocol/wire-pending.js";
 import { getWirePendingYamlPath } from "./paths.js";
-import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
-import { existsSync } from "node:fs";
+import { createYamlPendingQueueStore } from "./yaml-pending-queue.js";
+
+const store = createYamlPendingQueueStore<
+  WirePendingEntry,
+  WirePendingRegistry
+>({
+  getPath: getWirePendingYamlPath,
+  schema: wirePendingRegistrySchema,
+  emptyRegistry: () => ({ pending: [] }),
+  entryKey: (entry) => `${entry.peer_id}:${entry.event_id}`,
+});
 
 export function loadWirePending(): WirePendingRegistry {
-  const path = getWirePendingYamlPath();
-  if (!existsSync(path)) {
-    return { pending: [] };
-  }
-  return readYamlFile(path, wirePendingRegistrySchema);
+  return store.load();
 }
 
 export function saveWirePending(registry: WirePendingRegistry): void {
-  writeYamlFile(getWirePendingYamlPath(), { ...registry, as_of: currentDate() });
+  store.save(registry);
 }
 
 export function enqueueWirePending(
@@ -25,37 +30,13 @@ export function enqueueWirePending(
     created_at?: string;
   }
 ): WirePendingEntry {
-  const registry = loadWirePending();
-  const key = `${entry.peer_id}:${entry.event_id}`;
-  const existingIdx = registry.pending.findIndex(
-    (p) => `${p.peer_id}:${p.event_id}` === key
-  );
-  const record: WirePendingEntry = {
-    ...entry,
-    attempts: entry.attempts ?? 0,
-    created_at: entry.created_at ?? new Date().toISOString(),
-  };
-  if (existingIdx >= 0) {
-    registry.pending[existingIdx] = {
-      ...registry.pending[existingIdx]!,
-      ...record,
-      attempts: (registry.pending[existingIdx]!.attempts ?? 0) + 1,
-    };
-  } else {
-    registry.pending.push(record);
-  }
-  saveWirePending(registry);
-  return existingIdx >= 0 ? registry.pending[existingIdx]! : record;
+  return store.enqueue(entry);
 }
 
 export function removeWirePending(peerId: string, eventId: string): void {
-  const registry = loadWirePending();
-  registry.pending = registry.pending.filter(
-    (p) => !(p.peer_id === peerId && p.event_id === eventId)
-  );
-  saveWirePending(registry);
+  store.remove((p) => p.peer_id === peerId && p.event_id === eventId);
 }
 
 export function listWirePending(): WirePendingEntry[] {
-  return loadWirePending().pending;
+  return store.list();
 }
