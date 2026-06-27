@@ -10,7 +10,7 @@ import {
   approveInterOrgNotice,
   rejectInterOrgNotice,
   listPendingNotices,
-} from "../src/lib/protocol/notice-workflow.js";
+} from "../src/lib/wire/index.js";
 import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
 
 function cleanup(): void {
@@ -75,7 +75,7 @@ monthly_cost: 85000
 
     expect(done.status).toBe("transmitted");
     expect(done.approval_tier).toBe("A");
-    expect(transmission.transaction.transaction_type).toBe("contract.execution.notice");
+    expect(transmission.transaction.transaction_type).toBe("steward.contract.execution.notice");
     const payload = transmission.envelope.event.payload;
     expect(payload.notice_kind).toBe("per_existing_contract");
     expect(payload.operator_attestation).toMatchObject({
@@ -98,7 +98,7 @@ monthly_cost: 85000
       noticeId: ackDraft.notice_id,
       approverId: "CEO Sample",
     });
-    expect(transmission.transaction.transaction_type).toBe("obligation.acknowledged");
+    expect(transmission.transaction.transaction_type).toBe("steward.obligation.acknowledged");
   });
 
   it("rejects pending notice", () => {

@@ -18,7 +18,19 @@ export const jurisdictionApprovalPolicySchema = z.object({
   }),
 });
 
+export const jurisdictionWireGovernancePackEntrySchema = z.object({
+  path: z.string().min(1),
+  /** sha256 hex of pack file — optional in dev, enforced when set */
+  pin: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+});
+
 export const jurisdictionWireGovernanceRegistrySchema = z.object({
+  version: z.string(),
+  packs: z.record(z.string(), jurisdictionWireGovernancePackEntrySchema),
+});
+
+/** @deprecated Monolithic registry — use packs + per-jurisdiction files */
+export const jurisdictionWireGovernanceLegacyRegistrySchema = z.object({
   version: z.string(),
   jurisdictions: z.record(z.string(), jurisdictionApprovalPolicySchema),
 });

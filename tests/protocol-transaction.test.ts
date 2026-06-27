@@ -58,6 +58,7 @@ compensation:
     });
 
     expect(result.transaction.transaction_id).toMatch(/^TX-\d{8}-\d{3}$/);
+    expect(result.transaction.transaction_type).toBe("steward.contract.executed");
     expect(result.envelope.event.type).toBe("org.transaction.recorded");
     expect(result.outboxPath).toBeTruthy();
     expect(existsSync(result.outboxPath!)).toBe(true);
@@ -97,9 +98,18 @@ compensation:
     const proof = exportDelegationProof({
       scope: "contract.sign",
       granteeAgent: "contract",
+      basisRef: "REG-004",
     });
     expect(proof.grant.scope).toContain("contract.sign");
     expect(proof.grant.grantor.org_id).toBe("demo");
     expect(proof.basis_ref).toBe("REG-004");
+  });
+
+  it("omits basis_ref when not supplied", () => {
+    const proof = exportDelegationProof({
+      scope: "contract.sign",
+      granteeAgent: "contract",
+    });
+    expect(proof.basis_ref).toBeUndefined();
   });
 });

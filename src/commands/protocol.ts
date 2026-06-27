@@ -13,8 +13,8 @@ import {
   rejectInterOrgNotice,
   listPendingNotices,
   findPendingNotice,
-} from "../lib/protocol/notice-workflow.js";
-import { findPeer, registerPeer, nextPeerId } from "../lib/protocol/peers.js";
+} from "../lib/wire/index.js";
+import { loadAuthorizedApprovers } from "../lib/jurisdiction/wire-governance/index.js";
 import {
   findTransaction,
   listTransactions,
@@ -24,10 +24,18 @@ import {
 } from "../lib/protocol/record-transaction.js";
 import { validateProtocolState, validateProtocolFile } from "../lib/protocol/validate.js";
 import { verifyProtocolAuditChain } from "../lib/protocol/audit-chain.js";
+import {
+  verifyAuditChainExternal,
+  verifyDelegationProofExternal,
+} from "../lib/protocol/external-verify.js";
 import { mapQueueEventToOrgEvent } from "../lib/protocol/map-internal.js";
 import { loadProtocolRegistry } from "../lib/protocol/registry.js";
 import type { TransactionType } from "../../schemas/protocol/transaction-record.js";
-import { transactionTypeSchema } from "../../schemas/protocol/transaction-record.js";
+import {
+  normalizeTransactionType,
+  transactionTypeSchema,
+} from "../../schemas/protocol/transaction-record.js";
+import { resolveJurisdictionApprovalPolicy } from "../lib/jurisdiction/wire-governance/index.js";
 import { eventEnvelopeSchema } from "../../schemas/protocol/org-event.js";
 import { loadQueueEvents } from "../lib/queue-db.js";
 import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey } from "../lib/protocol/signing.js";
@@ -43,7 +51,7 @@ import {
 import {
   findTrustedHubsForJurisdiction,
 } from "../lib/protocol/trusted-hubs.js";
-import { loadAuthorizedApprovers } from "../lib/protocol/wire-approval-gate.js";
+import { findPeer, registerPeer, nextPeerId } from "../lib/protocol/peers.js";
 import { readFileSync } from "node:fs";
 import { orgIdentityDocumentSchema } from "../../schemas/protocol/identity-exchange.js";
 
@@ -168,6 +176,7 @@ export function runProtocolPeerRegister(opts: ProtocolPeerRegisterOptions): void
 export interface ProtocolDelegationExportOptions {
   scope: string;
   granteeAgent: string;
+  basisRef?: string;
   json?: boolean;
   tenant?: string;
 }
@@ -175,9 +184,12 @@ export interface ProtocolDelegationExportOptions {
 export function runProtocolDelegationExport(opts: ProtocolDelegationExportOptions): void {
   if (opts.tenant) setTenantId(opts.tenant);
   try {
+    const basisRef =
+      opts.basisRef ?? resolveJurisdictionApprovalPolicy().policy_ref;
     const proof = exportDelegationProof({
       scope: opts.scope,
       granteeAgent: opts.granteeAgent,
+      basisRef,
     });
     const envelope = buildDelegationEnvelope(proof);
     if (opts.json) {
@@ -197,12 +209,56 @@ export interface ProtocolDelegationValidateOptions {
 }
 
 export function runProtocolDelegationValidate(opts: ProtocolDelegationValidateOptions): void {
-  const result = validateProtocolFile(opts.file, "delegation");
+  const result = verifyDelegationProofExternal(opts.file);
   if (!result.ok) {
-    console.error(result.error);
+    for (const issue of result.issues) {
+      console.error(`${issue.code}: ${issue.message}`);
+    }
     process.exit(1);
   }
-  console.log("✓ Delegation proof valid");
+  console.log(`✓ Delegation proof valid · ${result.proof?.grant.grant_id ?? ""}`);
+}
+
+export interface ProtocolVerifyAuditChainOptions {
+  chain?: string;
+  envelopeDir?: string[];
+  since?: string;
+  requireEnvelopes?: boolean;
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolVerifyAuditChain(opts: ProtocolVerifyAuditChainOptions): void {
+  if (opts.tenant) setTenantId(opts.tenant);
+  runProtocolAuditVerify({
+    since: opts.since,
+    json: opts.json,
+    tenant: opts.tenant,
+    withEnvelopes: true,
+    requireEnvelopes: opts.requireEnvelopes,
+    chainPath: opts.chain,
+    envelopeDir: opts.envelopeDir,
+  });
+}
+
+export interface ProtocolVerifyDelegationOptions {
+  file: string;
+  json?: boolean;
+}
+
+export function runProtocolVerifyDelegation(opts: ProtocolVerifyDelegationOptions): void {
+  const result = verifyDelegationProofExternal(opts.file);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  if (!result.ok) {
+    for (const issue of result.issues) {
+      console.error(`${issue.code}: ${issue.message}`);
+    }
+    process.exit(1);
+  }
+  console.log(`✓ Delegation proof verified · ${result.proof?.grant.grant_id ?? ""}`);
 }
 
 export interface ProtocolTransactionRecordOptions {
@@ -226,30 +282,32 @@ export function runProtocolTransactionRecord(opts: ProtocolTransactionRecordOpti
     console.error(`Invalid transaction type: ${opts.type}`);
     process.exit(1);
   }
+  const transactionType = parsedType.data;
 
-  if (parsedType.data === "contract.execution.notice") {
+  if (transactionType === "steward.contract.execution.notice") {
     console.error(
       "Use `steward protocol notice propose` + `notice approve` for execution notices (operator + approver required)"
     );
     process.exit(1);
   }
 
-  const outboundWireTypes = [
-    "contract.executed",
-    "invoice.issued",
-    "payment.instructed",
-    "obligation.acknowledged",
-  ] as const;
-  if (outboundWireTypes.includes(parsedType.data as (typeof outboundWireTypes)[number])) {
+  const outboundWireTypes: TransactionType[] = [
+    "steward.contract.executed",
+    "steward.invoice.issued",
+    "steward.payment.instructed",
+    "steward.obligation.acknowledged",
+  ];
+  if (outboundWireTypes.includes(transactionType)) {
+    const legacy = opts.type;
     console.error(
-      `Use \`steward protocol notice propose --type ${parsedType.data}\` + \`notice approve\` for outbound wire`
+      `Use \`steward protocol notice propose --type ${legacy}\` + \`notice approve\` for outbound wire`
     );
     process.exit(1);
   }
 
   try {
     const result = recordProtocolTransaction({
-      transactionType: parsedType.data as TransactionType,
+      transactionType,
       peerId: opts.peer,
       direction: "inbound",
       contractId: opts.contract,
@@ -338,8 +396,44 @@ export interface ProtocolAuditVerifyOptions {
   tenant?: string;
 }
 
-export function runProtocolAuditVerify(opts: ProtocolAuditVerifyOptions): void {
+export function runProtocolAuditVerify(opts: ProtocolAuditVerifyOptions & {
+  withEnvelopes?: boolean;
+  requireEnvelopes?: boolean;
+  chainPath?: string;
+  envelopeDir?: string[];
+}): void {
   if (opts.tenant) setTenantId(opts.tenant);
+
+  if (opts.withEnvelopes || opts.requireEnvelopes || opts.chainPath || opts.envelopeDir?.length) {
+    const result = verifyAuditChainExternal({
+      chainPath: opts.chainPath,
+      envelopeDirs: opts.envelopeDir,
+      since: opts.since,
+      requireEnvelopes: opts.requireEnvelopes,
+    });
+    if (opts.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    if (result.ok) {
+      console.log(
+        `✓ Audit chain OK (${result.checked} records · ${result.envelopesLoaded} envelope(s))`
+      );
+      for (const warning of result.warnings) {
+        console.log(`  warn: ${warning.message}`);
+      }
+      return;
+    }
+    console.error("✗ Audit chain issues:");
+    for (const issue of result.issues) {
+      console.error(`  ${issue.audit_id}: ${issue.message}`);
+    }
+    for (const warning of result.warnings) {
+      console.error(`  warn: ${warning.message}`);
+    }
+    process.exit(1);
+  }
+
   const result = verifyProtocolAuditChain({ since: opts.since });
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -517,7 +611,6 @@ export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOption
             delivery,
             witness,
             wire_governance_witness: wireGovernanceWitness,
-            reg004_witness: wireGovernanceWitness,
           },
           null,
           2

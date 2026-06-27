@@ -1,6 +1,6 @@
-# Witness Hub — 要件定義（実装準拠 v1）
+# Witness Hub — 要件定義（実装準拠 v1.2）
 
-**Status:** Steward OS v0.8 · 参照実装済み  
+**Status:** Steward OS v0.8 · v1 + v2 参照実装  
 **Parent:** [inter-org-operator-model.md](inter-org-operator-model.md) · [openorgos-core-philosophy.md](openorgos-core-philosophy.md)  
 **関連:** [inter-org-two-org-demo.md](inter-org-two-org-demo.md) · [layer-mapping-steward-os.md](layer-mapping-steward-os.md)
 
@@ -20,11 +20,11 @@
 |----|--------|------|
 | N-01 | **単一中央 Hub 必須** | Federation 原則 · 可用性 |
 | N-02 | Wire 配送の正本化 | P2P + 各 Org ローカル台帳が正本 |
-| N-03 | 承認権限の Hub 委譲 | REG-004 approve は Org 内のみ |
+| N-03 | 承認権限の Hub 委譲 | wire-governance approve は Org 内のみ |
 | N-04 | envelope 全文の Hub 保管 | L2 リスク |
-| N-05 | store-and-forward relay | 未実装 · 別レイヤー |
-| N-06 | Hub 間リアルタイムレプリケーション | 未実装 |
-| N-07 | Merkle 公開アンカー | 未実装 |
+| N-05 | store-and-forward relay | 参照実装済（`wire-pending` · `deliver-flush-pending`）· 本番 relay worker は別 |
+| N-06 | Hub 間リアルタイムレプリケーション | gossip による eventual sync · CRDT なし |
+| N-07 | Merkle 公開アンカー（第三者配布） | Hub 署名付き日次 anchor 実装済 · 外部公開 CDN は運用委任 |
 | N-08 | 法域別 trusted_hub 事業者レジストリ | national committee 管轄 |
 
 ### 1.3 OpenOrgOS 層での位置づけ
@@ -97,7 +97,8 @@ Layer 3 Reconcile: ローカル台帳 · Hub receipt 照合（部分実装）
 | FR-P06 | `verify` でキャッシュ + Hub GET · 署名 + quorum 判定 | ✓ | `protocol witness verify` |
 | FR-P07 | `pool status` で各 Hub health 表示 | ✓ | GET `/hub/v1/health` |
 | FR-P08 | 手動 `register --event-id --side` | ✓ | envelope は outbox/inbox から解決 |
-| FR-P09 | **`protocol witness reconcile --peer`** | ✗ | 計画のみ · 未実装 |
+| FR-P09 | **`protocol witness reconcile --peer`** | ✓ | local · peer · `--cross-hub` |
+| FR-P10 | **`protocol witness pool init-trusted`** | ✓ | `trusted-hubs.yaml` → pool 生成 · 公開鍵 pin |
 
 ### 4.3 Hub ノード
 
@@ -143,7 +144,7 @@ Core event 型（registry 登録済み）:
 - `org.witness.attestation.registered`
 - `org.witness.receipt.issued`
 
-（現状は **スキーマ定義のみ** — signed envelope としての自動 emit は未実装）
+（`witness-client.ts` から fan-out 成功時に **audit-chain + outbox** へ emit）
 
 ### 5.2 永続化パス
 
@@ -157,6 +158,9 @@ Core event 型（registry 登録済み）:
 | Hub · attestations | `{data_dir}/witness-attestations.jsonl` | **gitignore** |
 | Hub · receipts | `{data_dir}/witness-receipts.jsonl` | **gitignore** |
 | Hub · registered orgs | `{data_dir}/registered-orgs.yaml` | ローカル |
+
+| Hub · federation | `{data_dir}/hub-federation.yaml` | **gitignore** 推奨 |
+| Hub · gossip cursor | `{data_dir}/gossip-cursor/{peer_id}.json` | **gitignore** |
 
 ### 5.3 データ分類（L0–L3）
 
@@ -203,6 +207,11 @@ Core event 型（registry 登録済み）:
 | GET | `/hub/v1/attestations/{event_id}` | 200 | `{ ok, event_id, sent?, received?, digest_match }` |
 | GET | `/hub/v1/receipts/{event_id}` | 200 | `{ ok, receipt }` |
 | GET | `/hub/v1/receipts/{event_id}` | 404 | `{ ok: false, error }` |
+| GET | `/hub/v1/gossip/attestations?since=&cursor=&limit=` | 200 | attestation ページ export |
+| POST | `/hub/v1/gossip/attestations/import` | 200 | batch import · 自 Hub receipt 再生成 |
+| GET | `/hub/v1/gossip/anchors?since=` | 200 | signed Merkle anchor メタ |
+| GET | `/hub/v1/anchor?date=` | 200 | `{ ok, anchor }`（Hub 署名付き） |
+| GET | `/hub/v1/gossip/snapshot` | 200 | **deprecated** — receipt export |
 
 POST ボディ: `WitnessAttestation` JSON（Content-Type: `application/json`）
 
@@ -213,9 +222,13 @@ POST ボディ: `WitnessAttestation` JSON（Content-Type: `application/json`）
 ### 8.1 Hub ノード
 
 ```bash
-npm run steward -- hub serve --hub-id HUB-A --port 9474 --data-dir ./data/hub-a
+npm run steward -- hub serve --hub-id HUB-A --port 9474 --data-dir ./data/hub-a [--gossip-interval 300]
 npm run steward -- hub export-public-key --hub-id HUB-A --data-dir ./data/hub-a
 npm run steward -- hub verify --hub-id HUB-A --data-dir ./data/hub-a --event-id <uuid>
+npm run steward -- hub verify --hub-url http://127.0.0.1:9474 --event-id <uuid>
+npm run steward -- hub federation show --hub-id HUB-A --data-dir ./data/hub-a
+npm run steward -- hub gossip sync-all --hub-id HUB-B --data-dir ./data/hub-b
+npm run steward -- hub anchor-verify --hub-url http://127.0.0.1:9474 --date 2026-06-26
 ```
 
 ### 8.2 Org · Witness プール
@@ -225,6 +238,8 @@ npm run steward -- --tenant mal protocol witness register --event-id <uuid> --si
 npm run steward -- --tenant mal protocol witness flush-pending
 npm run steward -- --tenant mal protocol witness verify --event-id <uuid>
 npm run steward -- --tenant mal protocol witness pool status
+npm run steward -- --tenant mal protocol witness reconcile --peer PEER-001 --cross-hub
+npm run steward -- --tenant mal protocol witness pool init-trusted --jurisdiction JP
 ```
 
 ### 8.3 設定例
@@ -276,7 +291,7 @@ sequenceDiagram
   MAL->>MAL: quorum verify · cache receipts
 ```
 
-デモ: `npm run demo:inter-org` — HUB-A/B をプロセス内起動 · 両テナントに `witness-pool.yaml` 生成。
+デモ: `npm run demo:inter-org` — HUB-A/B をプロセス内起動 · gossip partition recovery · 両テナント `witness-pool.yaml`。
 
 ### 9.2 自動フック条件
 
@@ -329,9 +344,10 @@ sequenceDiagram
 |--------|------|
 | `tests/hub-registry.test.ts` | 冪等 · mutually_confirmed · unilateral |
 | `tests/hub-server.test.ts` | HTTP health · POST attestation |
-| `tests/protocol-witness-pool.test.ts` | fan-out · partial Hub down · quorum |
-| `tests/protocol-witness-integration.test.ts` | sent + received → quorum |
-| `npm run demo:inter-org` | mal/southwood · 2 Hub · witness ok |
+| `tests/hub-gossip-sync.test.ts` | cursor · syncFromPeer |
+| `tests/hub-merkle-signed.test.ts` | signed anchor · verify |
+| `tests/protocol-cross-hub-reconcile.test.ts` | cross-hub drift |
+| `npm run demo:inter-org` | mal/southwood · 2 Hub · gossip backfill |
 
 **受入基準（v1 達成）:**
 
@@ -339,21 +355,29 @@ sequenceDiagram
 - [x] `any_of_n` / `k_of_n` / `all_of_n` quorum  evaluator
 - [x] approve / ingest 非ブロッキングフック
 - [x] 2 Hub デモ · mutually_confirmed
-- [x] 345 tests green（2026-06 時点）
+- [x] 366 tests green（2026-06 時点）
+
+**受入基準（v2 達成）:**
+
+- [x] attestation gossip で peer Hub が backfill 可能（`demo:inter-org` partition recovery）
+- [x] import 先 receipt の `hub_id` = import 先 Hub
+- [x] signed Merkle anchor を第三者が verify 可能（`hub anchor-verify`）
+- [x] `protocol witness reconcile --cross-hub` が drift を検出
+- [x] Docker Compose · systemd 例 · [witness-hub-operations.md](witness-hub-operations.md)
+- [ ] 本番 mTLS / 監視 exporter（運用ガイド推奨のみ）
 
 ---
 
-## 14. 既知ギャップ（計画対 未実装）
+## 14. 既知ギャップ（v2 以降）
 
 | 項目 | 状態 | 備考 |
 |------|------|------|
-| `protocol witness reconcile --peer` | 未実装 | ローカル · peer · Hub 横断照合 |
-| `org.witness.*` signed envelope emit | 未実装 | Core 型のみ registry 登録 |
-| Hub 間 gossip / レプリケーション | 未実装 | eventual consistency は運用委任 |
-| Merkle アンカー | 未実装 | |
-| 法域別 trusted_hub レジストリ | 未実装 | committee 管轄 |
-| `hub verify --hub-url`（リモート） | 未実装 | ローカル data-dir のみ |
-| REG-004 / witness 連動ポリシー | 未実装 | Wire 承認と Witness は独立 |
+| 法域別 trusted_hub 事業者レジストリ | 未 | committee 管轄 · `trusted-hubs.yaml` はテンプレ |
+| peer outbox リモート export API | 未 | reconcile はローカル台帳 + Hub GET 中心 |
+| wire-governance `warn_only: false` 本番運用 | 未 | 参照実装は warn のみ |
+| Hub 鍵ローテーション自動化 | 未 | ops 手順のみ |
+| gossip import 冪等カウント | 部分 | `skipped` に再同期分が含まれる · 終状態は正 |
+| 本番 webhook / relay 常駐 | 未 | backlog スコープ外 |
 
 ---
 
@@ -372,4 +396,4 @@ sequenceDiagram
 | 日付 | 版 | 内容 |
 |------|-----|------|
 | 2026-06 | v1.0-draft | 分散モデル · API 概要 |
-| 2026-06 | **v1.1-impl** | **実装準拠** — FR 表 · CLI · ギャップ · 受入 · フロー図 |
+| 2026-06 | **v1.2-impl** | **v2 分散 Hub** — gossip · signed anchor · cross-hub reconcile · ops ガイド · ALS runtime |

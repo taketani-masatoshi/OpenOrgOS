@@ -1,14 +1,27 @@
 import { z } from "zod";
 import { orgRefSchema } from "./org-event.js";
+import {
+  committeeTransactionTypeSchema,
+  legacyTransactionTypeSchema,
+  normalizeTransactionType,
+  type CommitteeTransactionType,
+} from "./committee-transaction.js";
 
-export const transactionTypeSchema = z.enum([
-  "contract.executed",
-  "contract.amended",
-  "contract.execution.notice",
-  "invoice.issued",
-  "payment.instructed",
-  "obligation.acknowledged",
-]);
+export {
+  committeeTransactionTypeSchema,
+  legacyTransactionTypeSchema,
+  normalizeTransactionType,
+  type CommitteeTransactionType,
+  type LegacyTransactionType,
+  LEGACY_TRANSACTION_TYPE_MAP,
+  isContractExecutionNoticeType,
+  isContractExecutedType,
+} from "./committee-transaction.js";
+
+/** Stored ledger rows — accept legacy types and normalize to committee namespace. */
+export const storedTransactionTypeSchema = z
+  .union([committeeTransactionTypeSchema, legacyTransactionTypeSchema])
+  .transform((value) => normalizeTransactionType(value));
 
 export const transactionAmountSchema = z.object({
   value: z.number(),
@@ -22,12 +35,15 @@ export const transactionRefsSchema = z.object({
   broker_instruction: z.string().optional(),
 });
 
+/** Accept legacy or committee types; stored form is always committee namespace. */
+export const transactionTypeSchema = storedTransactionTypeSchema;
+
 export const transactionRecordSchema = z.object({
   transaction_id: z.string().regex(/^TX-\d{8}-\d{3}$/),
   direction: z.enum(["outbound", "inbound"]),
   our_org: orgRefSchema,
   counterparty: orgRefSchema,
-  transaction_type: transactionTypeSchema,
+  transaction_type: storedTransactionTypeSchema,
   amount: transactionAmountSchema.optional(),
   refs: transactionRefsSchema,
   event_id: z.string().uuid(),
@@ -40,6 +56,6 @@ export const transactionsRegistrySchema = z.object({
   transactions: z.array(transactionRecordSchema).default([]),
 });
 
-export type TransactionType = z.output<typeof transactionTypeSchema>;
+export type TransactionType = CommitteeTransactionType;
 export type TransactionRecord = z.output<typeof transactionRecordSchema>;
 export type TransactionsRegistry = z.output<typeof transactionsRegistrySchema>;

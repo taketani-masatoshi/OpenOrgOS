@@ -9,7 +9,7 @@ import { exportHubPublicKeyBase64 } from "../src/lib/hub/signing.js";
 import { getWitnessPoolYamlPath } from "../src/lib/protocol/paths.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 import { registerPeer } from "../src/lib/protocol/peers.js";
-import { proposeInterOrgNotice, approveInterOrgNotice } from "../src/lib/protocol/notice-workflow.js";
+import { proposeInterOrgNotice, approveInterOrgNotice } from "../src/lib/wire/index.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 import { registerWitnessAttestationFanOut, verifyCachedReceiptsForEvent } from "../src/lib/protocol/witness-client.js";
 

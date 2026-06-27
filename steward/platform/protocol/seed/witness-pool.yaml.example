@@ -2,6 +2,10 @@ enabled: true
 quorum:
   mode: any_of_n
 register_on: both
+# Optional: tie witness quorum to wire-governance tiers B/C
+# wire_governance_policy:
+#   require_quorum_for_tiers: [B, C]
+#   warn_only: true
 hubs:
   - hub_id: HUB-A
     hub_url: http://127.0.0.1:9474

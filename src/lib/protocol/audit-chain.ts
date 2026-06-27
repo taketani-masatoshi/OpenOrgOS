@@ -44,11 +44,13 @@ export interface AuditVerifyIssue {
   message: string;
 }
 
-export function verifyProtocolAuditChain(options?: {
-  since?: string;
-  envelopesByEventId?: Map<string, EventEnvelope>;
-}): { ok: boolean; issues: AuditVerifyIssue[]; checked: number } {
-  const chain = loadProtocolAuditChain();
+export function verifyProtocolAuditChainRecords(
+  chain: ProtocolAuditRecord[],
+  options?: {
+    since?: string;
+    envelopesByEventId?: Map<string, EventEnvelope>;
+  }
+): { ok: boolean; issues: AuditVerifyIssue[]; checked: number } {
   const issues: AuditVerifyIssue[] = [];
   let prevId: string | undefined;
   let checked = 0;
@@ -79,6 +81,17 @@ export function verifyProtocolAuditChain(options?: {
   }
 
   return { ok: issues.length === 0, issues, checked };
+}
+
+export function verifyProtocolAuditChain(options?: {
+  since?: string;
+  envelopesByEventId?: Map<string, EventEnvelope>;
+  chainPath?: string;
+}): { ok: boolean; issues: AuditVerifyIssue[]; checked: number } {
+  const chain = options?.chainPath
+    ? loadJsonl(options.chainPath, (raw) => protocolAuditRecordSchema.parse(raw))
+    : loadProtocolAuditChain();
+  return verifyProtocolAuditChainRecords(chain, options);
 }
 
 export function writeOutboxEnvelope(envelope: EventEnvelope, outboxDir: string): string {

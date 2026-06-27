@@ -1,3 +1,4 @@
+export * from "./audit-bridge.js";
 export * from "./scope.js";
 export * from "./tier.js";
 export * from "./operator-attestation.js";

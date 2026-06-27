@@ -1,0 +1,7 @@
+# Fallback when tenant jurisdiction is unknown
+policy_ref: REG-004
+currency: JPY
+tiers:
+  A: { max_amount: 100000, approvers: 1, roles: [] }
+  B: { max_amount: 1000000, approvers: 2, roles: [] }
+  C: { board_required: true, roles: [] }

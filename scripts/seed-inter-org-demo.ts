@@ -13,9 +13,10 @@ import {
   proposeInterOrgNotice,
   proposeInterOrgAck,
   approveInterOrgNotice,
-} from "../src/lib/protocol/notice-workflow.js";
+} from "../src/lib/wire/index.js";
 import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
 import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/delegation.js";
+import { resolveJurisdictionApprovalPolicy } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { validateProtocolState } from "../src/lib/protocol/validate.js";
 import { verifyProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
 import { serializeEventEnvelope } from "../src/lib/protocol/envelope.js";
@@ -32,6 +33,7 @@ import { registerWitnessAttestationFanOut } from "../src/lib/protocol/witness-cl
 import { hubFederationSchema } from "../schemas/protocol/hub-federation.js";
 import { syncFromPeer } from "../src/lib/hub/gossip-sync.js";
 import { findHubReceiptByEventId } from "../src/lib/hub/receipt.js";
+import { loadHubAttestations } from "../src/lib/hub/registry.js";
 import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 
 const HUB_A_DIR = join(ROOT_DIR, "data", "hub-a");
@@ -186,6 +188,7 @@ async function seedMalSide(
   const delegationProof = exportDelegationProof({
     scope: "contract.sign",
     granteeAgent: "contract",
+    basisRef: resolveJurisdictionApprovalPolicy().policy_ref,
   });
   writeOutboxCopy(
     "02-mal-delegation-contract-sign.json",
@@ -339,13 +342,26 @@ async function main(): Promise<void> {
     const mal = await seedMalSide(DEMO_EVENT_ID, hubs.hubAKey, hubs.hubBKey);
     await seedVendorSide(DEMO_EVENT_ID, mal.path, hubs.hubAKey, hubs.hubBKey, mal.envelope);
 
-    // v2: gossip backfill — sync attestations HUB-A → HUB-B (idempotent if already present)
+    // v2: simulate HUB-B partition — wipe local SoT, backfill via gossip from HUB-A
     configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B_DIR });
+    for (const file of ["witness-attestations.jsonl", "witness-receipts.jsonl"]) {
+      const p = join(HUB_B_DIR, file);
+      if (existsSync(p)) rmSync(p);
+    }
+    const cursorDir = join(HUB_B_DIR, "gossip-cursor");
+    if (existsSync(cursorDir)) rmSync(cursorDir, { recursive: true, force: true });
+
     const gossipResult = await syncFromPeer("HUB-A");
     const receiptB = findHubReceiptByEventId(DEMO_EVENT_ID);
+    const attCount = loadHubAttestations().length;
     console.log(
-      `\n[v2 gossip] HUB-B sync from HUB-A: imported=${gossipResult.imported} skipped=${gossipResult.skipped} · receipt=${receiptB?.status ?? "none"} hub_id=${receiptB?.hub_id ?? "—"}`
+      `\n[v2 gossip] HUB-B partition recovery: imported=${gossipResult.imported} skipped=${gossipResult.skipped} attestations=${attCount} · receipt=${receiptB?.status ?? "none"} hub_id=${receiptB?.hub_id ?? "—"}`
     );
+    if (attCount < 2 || receiptB?.hub_id !== "HUB-B" || receiptB?.status !== "mutually_confirmed") {
+      throw new Error(
+        `gossip backfill failed: attestations=${attCount} imported=${gossipResult.imported} hub_id=${receiptB?.hub_id} status=${receiptB?.status} issues=${gossipResult.issues.join("; ")}`
+      );
+    }
 
     console.log("\n--- Summary ---");
     console.log("Flow: operator propose → CEO approve → webhook ingest → ack · witness fan-out · gossip sync");

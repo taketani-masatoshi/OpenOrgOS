@@ -7,7 +7,7 @@ import { registerPeer } from "../src/lib/protocol/peers.js";
 import {
   proposeInterOrgNotice,
   approveInterOrgNotice,
-} from "../src/lib/protocol/notice-workflow.js";
+} from "../src/lib/wire/index.js";
 import { ingestWebhook } from "../src/lib/webhook.js";
 import {
   exportProtocolPublicKeyBase64,

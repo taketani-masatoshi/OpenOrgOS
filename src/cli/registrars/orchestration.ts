@@ -23,7 +23,14 @@ import { runQueuePush, runQueueList, runQueueDrain } from "../../commands/queue.
 import { runWebhookConfig, runWebhookSend, runWebhookIngest, runWebhookServe } from "../../commands/webhook.js";
 import { runMergePrPlan, runMergePrCreate } from "../../commands/merge-pr.js";
 import { runAuditLogAppend, runAuditLogList } from "../../commands/audit.js";
-import { runComplianceGap } from "../../commands/compliance.js";
+import {
+  runOrgApprovalPropose,
+  runOrgApprovalApprove,
+  runOrgApprovalReject,
+  runOrgApprovalList,
+  runOrgApprovalShow,
+  runOrgAuditBridge,
+} from "../../commands/org.js";
 import {
   runProtocolValidate,
   runProtocolIdentityExport,
@@ -35,6 +42,8 @@ import {
   runProtocolTransactionList,
   runProtocolTransactionShow,
   runProtocolAuditVerify,
+  runProtocolVerifyAuditChain,
+  runProtocolVerifyDelegation,
   runProtocolEnvelopeValidate,
   runProtocolNoticePropose,
   runProtocolNoticeList,
@@ -453,12 +462,14 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Export DelegationProof as EventEnvelope")
     .requiredOption("--scope <scope>", "e.g. contract.sign")
     .requiredOption("--grantee-agent <id>", "Agent id (contract · finance · …)")
+    .option("--basis-ref <ref>", "Policy basis (jurisdiction policy_ref, e.g. from wire-governance pack)")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) =>
       runProtocolDelegationExport({
         scope: opts.scope,
         granteeAgent: opts.granteeAgent,
+        basisRef: opts.basisRef,
         tenant: opts.tenant,
         json: opts.json,
       })
@@ -524,7 +535,7 @@ export function registerOrchestrationCommands(program: Command): void {
 
   const protocolNoticeCmd = protocolCmd
     .command("notice")
-    .description("Operator-proposed inter-org wire (REG-004 approval)");
+    .description("Operator-proposed inter-org wire (wire-governance approval gate)");
   protocolNoticeCmd
     .command("draft")
     .description("Secretary: draft notice (default operator 秘書オペレータ)")
@@ -595,7 +606,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Approver (CEO etc.) authorizes transmission to peer org")
     .requiredOption("--id <id>", "NOTICE-*")
     .requiredOption("--approver <name>", "Approver name (L1)")
-    .option("--co-approver <name>", "Second approver (REG-004 tier B)")
+    .option("--co-approver <name>", "Second approver (wire-governance tier B)")
     .option("--operator <name>", "Override operator id")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
@@ -639,11 +650,60 @@ export function registerOrchestrationCommands(program: Command): void {
     .command("verify")
     .description("Verify hash chain integrity")
     .option("--since <date>", "YYYY-MM-DD")
+    .option("--with-envelopes", "Verify digests using outbox/inbox envelope files")
+    .option("--require-envelopes", "Fail when chain entries lack envelope files")
+    .option("--chain <path>", "Audit chain JSONL path (third-party verify)")
+    .option(
+      "--envelope-dir <path>",
+      "Envelope directory (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) =>
-      runProtocolAuditVerify({ since: opts.since, tenant: opts.tenant, json: opts.json })
+      runProtocolAuditVerify({
+        since: opts.since,
+        tenant: opts.tenant,
+        json: opts.json,
+        withEnvelopes: opts.withEnvelopes,
+        requireEnvelopes: opts.requireEnvelopes,
+        chainPath: opts.chain,
+        envelopeDir: opts.envelopeDir,
+      })
     );
+
+  const protocolVerifyCmd = protocolCmd.command("verify").description("Third-party protocol verification");
+  protocolVerifyCmd
+    .command("audit-chain")
+    .description("Verify audit-chain with optional envelope digest checks")
+    .option("--chain <path>", "Audit chain JSONL path")
+    .option(
+      "--envelope-dir <path>",
+      "Envelope directory (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
+    .option("--since <date>", "YYYY-MM-DD")
+    .option("--require-envelopes", "Fail when envelope files are missing")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolVerifyAuditChain({
+        chain: opts.chain,
+        envelopeDir: opts.envelopeDir,
+        since: opts.since,
+        requireEnvelopes: opts.requireEnvelopes,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolVerifyCmd
+    .command("delegation")
+    .description("Verify exported DelegationProof JSON (structure + grant validity)")
+    .requiredOption("--file <path>", "JSON file")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolVerifyDelegation({ file: opts.file, json: opts.json }));
 
   const protocolSigningCmd = protocolCmd.command("signing").description("Protocol envelope signing");
   protocolSigningCmd
@@ -686,7 +746,7 @@ export function registerOrchestrationCommands(program: Command): void {
 
   protocolCmd
     .command("approvers")
-    .description("List REG-004 authorized approvers from company.yaml")
+    .description("List wire-governance authorized approvers from company.yaml")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runProtocolApproversList({ tenant: opts.tenant, json: opts.json }));
@@ -761,6 +821,103 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runProtocolWitnessPoolStatus({ tenant: opts.tenant, json: opts.json }));
+
+  const orgCmd = program.command("org").description("Universal org activity root (approval · audit bridge)");
+  const orgApprovalCmd = orgCmd.command("approval").description("Internal human approval (scope: internal)");
+  orgApprovalCmd
+    .command("propose")
+    .description("Propose internal approval (Secretary / operator)")
+    .requiredOption("--subject-type <type>", "e.g. regulation.amendment")
+    .requiredOption("--operator <name>", "Proposer")
+    .option("--subject-ref <ref>", "Subject reference (REG-* · CTR-*)")
+    .option("--message <text>", "Summary")
+    .option("--amount <n>", "Amount for tier gate", parseFloat)
+    .option("--currency <code>", "ISO currency", "JPY")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runOrgApprovalPropose({
+        subjectType: opts.subjectType,
+        operator: opts.operator,
+        subjectRef: opts.subjectRef,
+        message: opts.message,
+        amount: opts.amount,
+        currency: opts.currency,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  orgApprovalCmd
+    .command("approve")
+    .description("Approve internal pending request")
+    .requiredOption("--id <id>", "APR-*")
+    .requiredOption("--approver <name>", "Approver")
+    .option("--co-approver <name>", "Second approver (tier B)")
+    .option("--operator <name>", "Override operator id")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runOrgApprovalApprove({
+        id: opts.id,
+        approver: opts.approver,
+        coApprover: opts.coApprover,
+        operator: opts.operator,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  orgApprovalCmd
+    .command("reject")
+    .description("Reject internal pending request")
+    .requiredOption("--id <id>", "APR-*")
+    .requiredOption("--approver <name>", "Approver")
+    .option("--reason <text>", "Reason")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runOrgApprovalReject({
+        id: opts.id,
+        approver: opts.approver,
+        reason: opts.reason,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  orgApprovalCmd
+    .command("list")
+    .description("List internal approvals")
+    .option("--status <status>", "pending_approval | approved | rejected")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runOrgApprovalList({ status: opts.status, tenant: opts.tenant, json: opts.json })
+    );
+  orgApprovalCmd
+    .command("show")
+    .description("Show internal approval by id")
+    .argument("<id>", "APR-*")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((id, opts) => runOrgApprovalShow({ id, tenant: opts.tenant, json: opts.json }));
+
+  const orgAuditCmd = orgCmd.command("audit").description("Org audit bridge");
+  orgAuditCmd
+    .command("bridge")
+    .description("Mirror operational audit.jsonl entries to protocol audit-chain")
+    .option("--since <date>", "YYYY-MM-DD")
+    .option("--enable", "Enable bridge in data/org/audit-bridge.yaml")
+    .option("--disable", "Disable bridge")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runOrgAuditBridge({
+        since: opts.since,
+        enable: opts.enable,
+        disable: opts.disable,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
 
   const hubCmd = program.command("hub").description("Witness Hub node (reference implementation)");
   hubCmd

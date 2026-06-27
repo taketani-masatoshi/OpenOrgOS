@@ -3,9 +3,9 @@ import { setTenantId } from "../src/lib/tenant.js";
 import {
   assertWireApproval,
   resolveWireApprovalTier,
-} from "../src/lib/protocol/wire-approval-gate.js";
+} from "../src/lib/org/approval-gate.js";
 
-describe("wire approval gate (core → jurisdiction)", () => {
+describe("org approval gate (core → jurisdiction)", () => {
   beforeEach(() => setTenantId("demo"));
 
   it("delegates tier resolution to jurisdiction module", () => {

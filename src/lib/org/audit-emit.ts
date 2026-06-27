@@ -15,6 +15,7 @@ export function emitOrgAuditAttested(opts: {
   kind: OrgAuditAttestationKind;
   transactionId?: string;
   wireEventId?: string;
+  rejectReason?: string;
 }): EventEnvelope {
   const payload = orgAuditAttestationPayloadSchema.parse({
     scope: opts.approval.scope,
@@ -24,6 +25,7 @@ export function emitOrgAuditAttested(opts: {
     subject_type: opts.approval.subject_type,
     subject_ref: opts.approval.subject_ref,
     operator_attestation: opts.attestation,
+    reject_reason: opts.rejectReason,
     transaction_id: opts.transactionId ?? opts.approval.wire?.transaction_id,
     transaction_type: opts.approval.wire?.transaction_type,
     wire_event_id: opts.wireEventId ?? opts.approval.wire?.wire_event_id,
@@ -57,20 +59,4 @@ export function emitOrgAuditAttested(opts: {
     transactionId: opts.transactionId ?? opts.approval.wire?.transaction_id,
   });
   return envelope;
-}
-
-/** Wire adapter helper — emits legacy kind for backward-compatible consumers. */
-export function emitWireApprovalEnvelope(opts: {
-  approval: OrgApprovalRequest;
-  attestation: OperatorAttestation;
-  wireEventId: string;
-  transactionId: string;
-}): EventEnvelope {
-  return emitOrgAuditAttested({
-    approval: opts.approval,
-    attestation: opts.attestation,
-    kind: "wire.approved",
-    transactionId: opts.transactionId,
-    wireEventId: opts.wireEventId,
-  });
 }

@@ -1,4 +1,4 @@
-import type { AuditEvent } from "../../../schemas/audit-log.js";
+import type { AuditEvent, AuditEventType } from "../../../schemas/audit-log.js";
 import type { QueueEvent, QueueEventType } from "../../../schemas/queue.js";
 import type { OrgEvent } from "../../../schemas/protocol/org-event.js";
 
@@ -27,18 +27,40 @@ export function mapQueueEventToOrgEvent(event: QueueEvent): OrgEvent {
   };
 }
 
+const QUEUE_TO_AUDIT_EVENT: Partial<Record<QueueEventType, AuditEventType>> = {
+  work_order_created: "handoff",
+  work_order_complete: "handoff",
+  dispatch_requested: "route_dispatch",
+  dispatch_complete: "route_dispatch",
+  webhook_received: "validate",
+  merge_complete: "handoff",
+  pr_requested: "handoff",
+  pr_created: "handoff",
+  secretary_consult: "escalate",
+};
+
+export function auditEventTypeForQueueEvent(type: QueueEventType): AuditEventType {
+  return QUEUE_TO_AUDIT_EVENT[type] ?? "escalate";
+}
+
 export function mapAuditEventToOrgPayload(event: AuditEvent): OrgEvent {
   return {
     type: "org.audit.attested",
     payload: {
-      audit_id: event.id,
-      audit_event: event.event,
-      ref: event.ref,
-      actor: event.actor,
-      detail: event.detail,
-      timestamp: event.timestamp,
-      event_id: event.event_id,
-      transaction_id: event.transaction_id,
+      scope: "internal",
+      kind: "operational.recorded",
+      approval_id: event.id,
+      subject_type: `operational.${event.event}`,
+      subject_ref: event.ref,
+      operational: {
+        audit_id: event.id,
+        audit_event: event.event,
+        actor: event.actor,
+        detail: event.detail,
+        timestamp: event.timestamp,
+        event_id: event.event_id,
+        transaction_id: event.transaction_id,
+      },
     },
   };
 }

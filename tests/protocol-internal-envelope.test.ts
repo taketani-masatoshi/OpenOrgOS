@@ -7,7 +7,7 @@ import { registerPeer } from "../src/lib/protocol/peers.js";
 import {
   proposeInterOrgNotice,
   approveInterOrgNotice,
-} from "../src/lib/protocol/notice-workflow.js";
+} from "../src/lib/wire/index.js";
 import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 
@@ -21,7 +21,7 @@ function cleanup(): void {
   }
 }
 
-describe("REG-004 internal approval envelope", () => {
+describe("wire governance internal approval envelope", () => {
   beforeEach(() => {
     setTenantId("demo");
     cleanup();
@@ -45,20 +45,25 @@ monthly_cost: 85000
 
   afterEach(() => cleanup());
 
-  it("appends org.audit.attested for reg004 wire approve", () => {
+  it("appends org.audit.attested with approval.granted and scope wire on wire approve", () => {
     const notice = proposeInterOrgNotice({
       peerId: "PEER-001",
       contractId: "CTR-099",
       proposedBy: "ops",
     });
-    approveInterOrgNotice({
+    const { auditEnvelope } = approveInterOrgNotice({
       noticeId: notice.notice_id,
       approverId: "CEO",
     });
 
+    expect(auditEnvelope?.event.type).toBe("org.audit.attested");
+    expect(auditEnvelope?.event.payload).toMatchObject({
+      scope: "wire",
+      kind: "approval.granted",
+      approval_id: notice.notice_id,
+    });
+
     const chain = loadProtocolAuditChain();
-    expect(chain.length).toBeGreaterThanOrEqual(2);
-    const internal = chain.find((r) => r.event_id !== chain[0]?.event_id);
-    expect(internal).toBeDefined();
+    expect(chain.some((r) => r.event_id === auditEnvelope?.event_id)).toBe(true);
   });
 });

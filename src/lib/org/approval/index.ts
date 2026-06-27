@@ -21,4 +21,5 @@ export {
   rejectOrgApproval,
   listOrgApprovals,
   type RejectOrgApprovalOptions,
+  type RejectOrgApprovalResult,
 } from "./reject.js";

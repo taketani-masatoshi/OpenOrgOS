@@ -9,6 +9,7 @@ import {
 import { getTenantId } from "./tenant.js";
 import { getDocsReportsDir } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
+import { auditEventTypeForQueueEvent } from "./protocol/map-internal.js";
 import { appendJsonl, loadJsonl, updateJsonlLine } from "./jsonl-store.js";
 
 export const QUEUE_SUBDIR = join("routing-queue", "queue");
@@ -55,7 +56,7 @@ export function pushQueueEvent(options: PushQueueOptions): QueueEvent {
   });
   appendJsonl(queueEventsPath(), event);
   appendAuditEvent({
-    event: "escalate",
+    event: auditEventTypeForQueueEvent(event.type),
     ref: event.id,
     detail: `queue:${event.type}:${event.ref}`,
   });

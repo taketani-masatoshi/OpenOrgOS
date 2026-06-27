@@ -28,7 +28,7 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 |------|------|------|
 | **内部決裁** | `org approval`（library · Phase 2） | `org.audit.attested`（`kind: approval.granted` · `scope: internal`）→ audit-chain |
 | Wire 起案 | `protocol notice draft` | `PendingNotice` projection · SoT `data/org/pending-approvals.yaml` |
-| Wire 送信 | `protocol notice approve` | `EventEnvelope` → outbox + `wire.approved` audit |
+| Wire 送信 | `protocol notice approve` | `EventEnvelope` → outbox + `approval.granted`（`scope: wire`）→ audit-chain |
 | 検証 | `protocol validate` | exit code · issues[] |
 
 **Schema 正本:** [org-approval-schema.md](org-approval-schema.md)
@@ -53,6 +53,7 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 |------|----------|:--------:|:----:|
 | EventEnvelope | `schemas/protocol/org-event.ts` | audit 内部 | outbox/inbox |
 | audit-chain | `data/protocol/audit-chain.jsonl` | SoT | + witness 参照 |
+| audit bridge | `data/org/audit-bridge.yaml` | operational → chain mirror | N/A |
 | org approvals | `data/org/pending-approvals.yaml` | SoT | wire projection |
 | classification | `data/classification-registry.yaml` | 全層 | envelope に L2 載せ禁止 |
 | 署名 | Ed25519 · canonical JSON | 内部 event | attestation |
@@ -67,10 +68,13 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 | `steward protocol audit verify` | audit-chain 検証 |
 | `npm run demo:standalone-org` | 単独 Org デモ（identity · delegation · validate） |
 | `npm run demo:inter-org` | 2-org + Witness デモ |
+| `steward org audit bridge [--enable]` | operational audit.jsonl → audit-chain バックフィル |
+| `steward protocol verify audit-chain` | 第三者向け audit-chain + envelope digest 検証 |
+| `steward protocol verify delegation --file` | DelegationProof 構造・有効期限検証 |
 
 **`--standalone` 条件:** `peers.yaml` 空または未作成 · `witness-pool.yaml` で `enabled: false` または `hubs: []`
 
-**内部 envelope（S2）:** `approveInterOrgNotice` 成功時に `org.audit.attested`（`kind: wire.approved`）を audit-chain に追加 — [`internal-envelope-emit.ts`](../../src/lib/protocol/internal-envelope-emit.ts)
+**内部 envelope（S2）:** `approveInterOrgNotice` 成功時に `org.audit.attested`（`kind: approval.granted` · `scope: wire`）を audit-chain に追加 — [`audit-emit.ts`](../../src/lib/org/audit-emit.ts)
 
 ---
 
@@ -79,8 +83,8 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 - [x] `@scope internal | wire` — `schemas/org/scope.ts` · [org-approval-schema.md](org-approval-schema.md)
 - [ ] manifest check enforce（I1）
 - [ ] Community ↔ Steward 語彙表（ORG-C4-3）
-- [ ] 運用 `audit.jsonl` → audit-chain optional bridge
+- [x] 運用 `audit.jsonl` → audit-chain bridge（`data/org/audit-bridge.yaml` · P1）
 
 ---
 
-**版:** v0.1-s1s2（2026-06）
+**版:** v0.2-p1（2026-06）

@@ -1,0 +1,7 @@
+# JP wire governance — REG-004 family
+policy_ref: REG-004
+currency: JPY
+tiers:
+  A: { max_amount: 100000, approvers: 1, roles: ["代表取締役"] }
+  B: { max_amount: 1000000, approvers: 2, roles: ["代表取締役"] }
+  C: { board_required: true, roles: ["取締役会"] }

@@ -1,9 +1,13 @@
 import { randomUUID } from "node:crypto";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
-import type { TransactionRecord, TransactionType } from "../../../schemas/protocol/transaction-record.js";
-import { transactionRecordSchema } from "../../../schemas/protocol/transaction-record.js";
+import type { TransactionRecord } from "../../../schemas/protocol/transaction-record.js";
+import {
+  isContractExecutedType,
+  isContractExecutionNoticeType,
+  normalizeTransactionType,
+  transactionRecordSchema,
+} from "../../../schemas/protocol/transaction-record.js";
 import { loadContract } from "../data.js";
-import { appendAuditEvent } from "../audit-log.js";
 import { appendProtocolAuditRecord, writeOutboxEnvelope } from "./audit-chain.js";
 import { ourOrgRef } from "./identity.js";
 import { findPeer } from "./peers.js";
@@ -15,7 +19,8 @@ import { operatorAttestationSchema } from "../../../schemas/protocol/operator-at
 import { maybeSignEnvelope } from "./signing.js";
 
 export interface RecordTransactionOptions {
-  transactionType: TransactionType;
+  /** Legacy or committee type — normalized to steward.* on record. */
+  transactionType: string;
   peerId: string;
   direction?: "outbound" | "inbound";
   contractId?: string;
@@ -64,19 +69,21 @@ export function recordProtocolTransaction(opts: RecordTransactionOptions): Recor
 
   const direction = opts.direction ?? "outbound";
 
+  const transactionType = normalizeTransactionType(opts.transactionType);
+
   if (opts.contractId && direction === "outbound") {
     const requiresLocalContract =
-      opts.transactionType === "contract.executed" ||
-      opts.transactionType === "contract.execution.notice";
+      isContractExecutedType(transactionType) ||
+      isContractExecutionNoticeType(transactionType);
     if (requiresLocalContract) {
       const contract = loadContract(opts.contractId);
       if (!contract) {
         throw new Error(`Contract ${opts.contractId} not found`);
       }
-      if (opts.transactionType === "contract.executed" && contract.status !== "executed") {
+      if (isContractExecutedType(transactionType) && contract.status !== "executed") {
         throw new Error(`Contract ${opts.contractId} status is ${contract.status}, expected executed`);
       }
-      if (opts.transactionType === "contract.execution.notice" && contract.status !== "executed") {
+      if (isContractExecutionNoticeType(transactionType) && contract.status !== "executed") {
         throw new Error(
           `Execution notice requires executed contract ${opts.contractId} (status: ${contract.status})`
         );
@@ -114,7 +121,7 @@ export function recordProtocolTransaction(opts: RecordTransactionOptions): Recor
   const payload: Record<string, unknown> = {
     transaction_id: transactionId,
     direction,
-    transaction_type: opts.transactionType,
+    transaction_type: transactionType,
     counterparty: counterparty.org_id,
     refs,
   };
@@ -122,7 +129,7 @@ export function recordProtocolTransaction(opts: RecordTransactionOptions): Recor
   if (opts.notes) payload.notes = opts.notes;
   if (opts.operatorAttestation) {
     payload.operator_attestation = operatorAttestationSchema.parse(opts.operatorAttestation);
-    if (opts.transactionType === "contract.execution.notice") {
+    if (isContractExecutionNoticeType(transactionType)) {
       payload.notice_kind = "per_existing_contract";
     }
   }
@@ -156,7 +163,7 @@ export function recordProtocolTransaction(opts: RecordTransactionOptions): Recor
     direction,
     our_org: ourOrg,
     counterparty,
-    transaction_type: opts.transactionType,
+    transaction_type: transactionType,
     amount,
     refs,
     event_id: eventId,
@@ -166,13 +173,6 @@ export function recordProtocolTransaction(opts: RecordTransactionOptions): Recor
 
   appendTransaction(transaction);
   const protocolAudit = appendProtocolAuditRecord({ envelope, transactionId });
-  appendAuditEvent({
-    event: "validate",
-    ref: transactionId,
-    detail: `protocol transaction ${opts.transactionType}`,
-    event_id: eventId,
-    transaction_id: transactionId,
-  });
 
   let outboxPath: string | undefined;
   if (opts.writeOutbox !== false) {
@@ -191,4 +191,4 @@ export {
   bridgeProposeContractExecuted as bridgeContractExecuted,
   bridgeProposeInvoiceIssued as bridgeInvoiceIssued,
   bridgeProposePaymentInstructed as bridgePaymentInstructed,
-} from "./notice-workflow.js";
+} from "../wire/index.js";

@@ -28,7 +28,7 @@ npm run steward -- --tenant <id> protocol notice draft \
   --message "契約通りの運用を開始します（L1）"
 ```
 
-3. 承認者一覧（REG-004）:
+3. 承認者一覧（wire-governance · `protocol approvers`）:
 
 ```bash
 npm run steward -- --tenant <id> protocol approvers

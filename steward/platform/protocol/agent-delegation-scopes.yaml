@@ -1,0 +1,21 @@
+# Core agent delegation scopes — Implementation layer (not Core protocol)
+version: "1"
+
+agents:
+  contract:
+    - contract.sign
+    - contract.review
+    - contract.amend
+  finance:
+    - payment.authorize
+    - invoice.issue
+  compliance:
+    - audit.export
+    - regulation.verify
+  executive_steward:
+    - work_order.execute
+    - approval.authorize
+  secretary:
+    - correspondence.draft
+  operations:
+    - operations.execute

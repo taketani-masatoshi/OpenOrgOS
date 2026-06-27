@@ -8,7 +8,7 @@
 |------|------|-------------|
 | **Steward Agent** | **自組織内**の SoT · 下書き · 整合チェック | **送らない** |
 | **Org オペレータ / Secretary** | 通知案の作成 · `notice draft` | propose のみ |
-| **承認者（CEO 等）** | REG-004 に基づく送信許可 | approve で初めて outbox へ |
+| **承認者（CEO 等）** | wire-governance 承認（JP は `policy_ref: REG-004`） | approve で初めて outbox へ |
 | **相手 Org オペレータ** | 受信記録 · 受諾確認 | inbound / ack |
 
 ## Notice ワークフロー（全 outbound wire 共通）
@@ -48,8 +48,9 @@ npm run steward -- --tenant southwood protocol peer register \
 
 | 層 | 正本 | 役割 |
 |----|------|------|
-| **Core** | `schemas/protocol/wire-approval.ts` · `src/lib/protocol/wire-approval-gate.ts` | Tier A/B/C 型 · notice 金額解決 · jurisdiction へ委譲 |
-| **National (JP 等)** | `steward/jurisdiction-packs/wire-governance/approval-thresholds.yaml` | 金額閾値 · `policy_ref` (REG-004 族) · 承認者 registry |
+| **Core** | `schemas/protocol/wire-approval.ts` · `src/lib/org/approval-gate.ts` | Tier A/B/C 型 · jurisdiction へ委譲（契約読込なし） |
+| **Wire adapter** | `src/lib/wire/` | notice 金額解決 · org root への projection |
+| **National (JP 等)** | `steward/jurisdiction-packs/{JP,US,HK}/wire-governance/` · `wire-governance/registry.yaml` | 金額閾値 · `policy_ref` · pin |
 | **承認者 SoT** | `data/company.yaml` 代表取締役 / directors | |
 
 | Tier (JP) | 金額 | approve |
@@ -70,7 +71,8 @@ npm run steward -- --tenant southwood protocol peer register \
 
 ## 実装
 
-- **Core:** `wire-approval-gate.ts` · `notice-workflow.ts`
-- **National:** `src/lib/jurisdiction/wire-governance/`（旧 `approval-policy.ts` · `approver-registry.ts` は deprecated re-export）
+- **Core:** `src/lib/org/approval-gate.ts` · `src/lib/org/`
+- **Wire adapter:** `src/lib/wire/notice-workflow.ts` · `src/lib/wire/amount.ts`
+- **National:** `src/lib/jurisdiction/wire-governance/`
 - `signing.ts` · `inbound-verify.ts` · `transport.ts`
 - Skill: `steward/core/skills/inter_org_notice_draft.md`

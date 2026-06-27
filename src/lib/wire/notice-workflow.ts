@@ -1,17 +1,15 @@
-import { existsSync } from "node:fs";
-import {
-  pendingNoticeSchema,
-  type NoticeWireType,
-  type PendingNotice,
-  type PendingNoticesRegistry,
-} from "../../../schemas/protocol/pending-notice.js";
+import type {
+  NoticeWireType,
+  PendingNotice,
+  PendingNoticesRegistry,
+} from "../../schemas/protocol/pending-notice.js";
 import { loadContract } from "../data.js";
-import { resolveNoticeAmountForWire } from "./wire-approval-gate.js";
-import { findPeer } from "./peers.js";
+import { findPeer } from "../protocol/peers.js";
 import {
   recordProtocolTransaction,
   type RecordTransactionResult,
-} from "./record-transaction.js";
+} from "../protocol/record-transaction.js";
+import { getPendingNoticesPath } from "../protocol/paths.js";
 import {
   approveOrgApproval,
   completeOrgApprovalWire,
@@ -22,7 +20,7 @@ import {
   proposeOrgApproval,
   rejectOrgApproval,
 } from "../org/approval/index.js";
-import { getPendingNoticesPath } from "./paths.js";
+import { resolveNoticeAmountForWire } from "./amount.js";
 
 export function loadPendingNotices(): PendingNoticesRegistry {
   const notices = listOrgApprovals({ scope: "wire" }).map(orgApprovalToPendingNotice);
@@ -30,7 +28,9 @@ export function loadPendingNotices(): PendingNoticesRegistry {
 }
 
 export function savePendingNotices(_registry: PendingNoticesRegistry): void {
-  throw new Error("savePendingNotices is deprecated — org approval registry is SoT at data/org/pending-approvals.yaml");
+  throw new Error(
+    "savePendingNotices is deprecated — org approval registry is SoT at data/org/pending-approvals.yaml"
+  );
 }
 
 export function findPendingNotice(noticeId: string): PendingNotice | undefined {
@@ -201,6 +201,7 @@ export interface ApproveInterOrgNoticeOptions {
 export interface ApproveInterOrgNoticeResult {
   notice: PendingNotice;
   transmission: RecordTransactionResult;
+  auditEnvelope: ReturnType<typeof completeOrgApprovalWire>["auditEnvelope"];
 }
 
 function attestationBasis(notice: PendingNotice): "existing_contract" | "new_contract_instrument" {
@@ -245,7 +246,7 @@ export function approveInterOrgNotice(
     operatorAttestation: attestation,
   });
 
-  const completed = completeOrgApprovalWire({
+  const { approval: completed, auditEnvelope } = completeOrgApprovalWire({
     approvalId: opts.noticeId,
     transactionId: transmission.transaction.transaction_id,
     wireEventId: transmission.envelope.event_id,
@@ -255,6 +256,7 @@ export function approveInterOrgNotice(
   return {
     notice: orgApprovalToPendingNotice(completed),
     transmission,
+    auditEnvelope,
   };
 }
 
@@ -265,7 +267,7 @@ export interface RejectInterOrgNoticeOptions {
 }
 
 export function rejectInterOrgNotice(opts: RejectInterOrgNoticeOptions): PendingNotice {
-  const rejected = rejectOrgApproval({
+  const { approval: rejected } = rejectOrgApproval({
     approvalId: opts.noticeId,
     approverId: opts.approverId,
     reason: opts.reason,
@@ -276,7 +278,10 @@ export function rejectInterOrgNotice(opts: RejectInterOrgNoticeOptions): Pending
 export function listPendingNotices(filter?: {
   status?: PendingNotice["status"];
 }): PendingNotice[] {
-  const statusMap: Record<PendingNotice["status"], import("../../../schemas/org/approval.js").OrgApprovalStatus | undefined> = {
+  const statusMap: Record<
+    PendingNotice["status"],
+    import("../../schemas/org/approval.js").OrgApprovalStatus | undefined
+  > = {
     pending_approval: "pending_approval",
     approved: "approved",
     rejected: "rejected",
@@ -288,7 +293,6 @@ export function listPendingNotices(filter?: {
     .sort((a, b) => a.proposed_at.localeCompare(b.proposed_at));
 }
 
-/** Bridge helpers — propose only; human approve required before wire. */
 export function bridgeProposeContractExecuted(
   contractId: string,
   peerId: string,
@@ -338,5 +342,4 @@ export function bridgeProposePaymentInstructed(options: {
   });
 }
 
-/** Legacy path accessor for migration tests. */
 export { getPendingNoticesPath };

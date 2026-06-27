@@ -58,19 +58,28 @@ describe("org approval root (internal scope)", () => {
     expect(chain.some((r) => r.event_id === auditEnvelope?.event_id)).toBe(true);
   });
 
-  it("rejects pending internal approval", () => {
+  it("rejects pending internal approval and emits approval.rejected to audit-chain", () => {
     const request = proposeOrgApproval({
       scope: "internal",
       subjectType: "expenditure.capex",
       proposedBy: "ops",
       amount: { value: 50_000, currency: "JPY" },
     });
-    const rejected = rejectOrgApproval({
+    const { approval: rejected, auditEnvelope } = rejectOrgApproval({
       approvalId: request.approval_id,
       approverId: "段燕燕",
       reason: "defer",
     });
     expect(rejected.status).toBe("rejected");
     expect(listOrgApprovals({ status: "pending_approval" }).length).toBe(0);
+    expect(auditEnvelope?.event.type).toBe("org.audit.attested");
+    expect(auditEnvelope?.event.payload).toMatchObject({
+      scope: "internal",
+      kind: "approval.rejected",
+      approval_id: request.approval_id,
+      reject_reason: "defer",
+    });
+    const chain = loadProtocolAuditChain();
+    expect(chain.some((r) => r.event_id === auditEnvelope?.event_id)).toBe(true);
   });
 });

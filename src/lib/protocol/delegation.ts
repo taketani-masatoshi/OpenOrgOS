@@ -6,17 +6,8 @@ import { delegationProofSchema } from "../../../schemas/protocol/authority-deleg
 import type { EventEnvelope, OrgRef } from "../../../schemas/protocol/org-event.js";
 import { actorIdentitySchema } from "../../../schemas/protocol/identity-exchange.js";
 import { STEWARD_AGENTS_DIR } from "../steward-paths.js";
+import { scopesForAgent } from "../org/delegation-scopes.js";
 import { ourOrgRef } from "./identity.js";
-import { resolveJurisdictionApprovalPolicy } from "../jurisdiction/wire-governance/index.js";
-
-const AGENT_SCOPE_MAP: Record<string, string[]> = {
-  contract: ["contract.sign", "contract.review", "contract.amend"],
-  finance: ["payment.authorize", "invoice.issue"],
-  compliance: ["audit.export", "regulation.verify"],
-  executive_steward: ["work_order.execute", "approval.authorize"],
-  secretary: ["correspondence.draft"],
-  operations: ["operations.execute"],
-};
 
 interface AgentRegistryEntry {
   id: string;
@@ -29,15 +20,14 @@ function loadAgentRegistry(): AgentRegistryEntry[] {
   return Object.values(doc.agents ?? {});
 }
 
-export function scopesForAgent(agentId: string): string[] {
-  if (AGENT_SCOPE_MAP[agentId]) return AGENT_SCOPE_MAP[agentId];
-  return [`agent.${agentId}`];
-}
+export { scopesForAgent } from "../org/delegation-scopes.js";
 
 export function exportDelegationProof(options: {
   scope: string;
   granteeAgent: string;
   granteeOrg?: OrgRef;
+  /** Legal/policy basis for the delegation (jurisdiction policy_ref). Caller must supply explicitly. */
+  basisRef?: string;
 }): DelegationProof {
   const granteeScopes = scopesForAgent(options.granteeAgent);
   if (!granteeScopes.includes(options.scope)) {
@@ -67,7 +57,7 @@ export function exportDelegationProof(options: {
       scope: [options.scope],
       valid_from: now,
     },
-    basis_ref: resolveJurisdictionApprovalPolicy().policy_ref,
+    ...(options.basisRef ? { basis_ref: options.basisRef } : {}),
     issued_at: now,
   });
 }

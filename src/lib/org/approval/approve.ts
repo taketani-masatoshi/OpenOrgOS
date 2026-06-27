@@ -10,7 +10,7 @@ import {
   loadOrgApprovalRegistry,
   saveOrgApprovalRegistry,
 } from "./registry.js";
-import { emitOrgAuditAttested, emitWireApprovalEnvelope } from "../audit-emit.js";
+import { emitOrgAuditAttested } from "../audit-emit.js";
 
 export interface ApproveOrgApprovalOptions {
   approvalId: string;
@@ -120,7 +120,7 @@ export function completeOrgApprovalWire(opts: {
   transactionId: string;
   wireEventId: string;
   attestation: OperatorAttestation;
-}): OrgApprovalRequest {
+}): { approval: OrgApprovalRequest; auditEnvelope: ReturnType<typeof emitOrgAuditAttested> } {
   const registry = loadOrgApprovalRegistry();
   const idx = registry.approvals.findIndex((a) => a.approval_id === opts.approvalId);
   if (idx < 0) {
@@ -131,11 +131,12 @@ export function completeOrgApprovalWire(opts: {
     throw new Error(`Approval ${opts.approvalId} has no wire details`);
   }
 
-  const auditEnvelope = emitWireApprovalEnvelope({
+  const auditEnvelope = emitOrgAuditAttested({
     approval,
     attestation: opts.attestation,
-    wireEventId: opts.wireEventId,
+    kind: "approval.granted",
     transactionId: opts.transactionId,
+    wireEventId: opts.wireEventId,
   });
 
   registry.approvals[idx] = {
@@ -149,7 +150,7 @@ export function completeOrgApprovalWire(opts: {
     },
   };
   saveOrgApprovalRegistry(registry);
-  return registry.approvals[idx]!;
+  return { approval: registry.approvals[idx]!, auditEnvelope };
 }
 
 export { findOrgApproval };

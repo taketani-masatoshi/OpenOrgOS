@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { EventEnvelope, OrgRef } from "../../../schemas/protocol/org-event.js";
 import type { OrgIdentityDocument } from "../../../schemas/protocol/identity-exchange.js";
 import { orgIdentityDocumentSchema } from "../../../schemas/protocol/identity-exchange.js";
-import { loadCompany } from "../data.js";
-import { getTenantId, loadTenantConfig } from "../tenant.js";
+import { loadOrgIdentityProfile } from "../org/identity-profile.js";
+import { loadTenantConfig } from "../tenant.js";
 import { exportProtocolPublicKeyBase64 } from "./signing.js";
 
 export function ourOrgRef(): OrgRef {
@@ -15,16 +15,15 @@ export function buildIdentityDocument(options?: {
   stakeholderId?: string;
   omitCorporateNumber?: boolean;
 }): OrgIdentityDocument {
-  const tenant = loadTenantConfig();
-  const company = loadCompany();
+  const profile = loadOrgIdentityProfile();
   const doc: OrgIdentityDocument = {
     org_ref: ourOrgRef(),
-    jurisdiction: tenant.jurisdiction ?? "JP",
-    display_name: company.name,
+    jurisdiction: profile.jurisdiction,
+    display_name: profile.displayName,
     issued_at: new Date().toISOString(),
   };
-  if (!options?.omitCorporateNumber && company.corporate_number) {
-    doc.public_ids = { corporate_number: company.corporate_number };
+  if (!options?.omitCorporateNumber && profile.corporateNumber) {
+    doc.public_ids = { corporate_number: profile.corporateNumber };
   }
   if (options?.stakeholderId) {
     doc.stakeholder_id = options.stakeholderId;

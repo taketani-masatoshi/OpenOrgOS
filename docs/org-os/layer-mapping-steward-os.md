@@ -32,7 +32,7 @@ Internal ops belong in Implementation or Adapters — not Core protocol expansio
 | **Org Event Model** | `schemas/protocol/org-event.ts` · EventEnvelope · queue map | Federation mesh · multi-hop routing |
 | **Identity exchange** | `protocol identity export` · `peers.yaml` · `protocol_public_key` in identity | Automated peer discovery |
 | **Authority delegation** | `protocol delegation export` · wire-governance tier gate · org approval root | External verifier tooling |
-| **Auditability** | `data/protocol/audit-chain.jsonl` · `data/org/pending-approvals.yaml` · Witness Hub プール | 運用 audit.jsonl との optional bridge |
+| **Auditability** | `data/protocol/audit-chain.jsonl` · `data/org/pending-approvals.yaml` · `data/org/audit-bridge.yaml` | 運用 audit.jsonl との bridge（P1） |
 
 Decisions · obligations · policies in tenant data are **committee/implementation concerns** until encoded as Org Events.
 
@@ -69,7 +69,21 @@ Decisions · obligations · policies in tenant data are **committee/implementati
 | 宿泊 PMS | Industry | `steward/modules/hospitality/` |
 | MAL 会社データ | Organization | `tenants/mal/data/company.yaml` |
 | Org 承認 pending | Organization · universal root | `tenants/{id}/data/org/pending-approvals.yaml` |
-| Wire 承認（adapter） | Wire → org root | `src/lib/protocol/notice-workflow.ts` |
+| Wire 承認（adapter） | Wire → org root | `src/lib/wire/notice-workflow.ts` |
+| Wire-governance 閾値 | National | `jurisdiction-packs/{JP,US,HK}/wire-governance/` · `registry.yaml` |
+| Identity profile | Org · tenant adapter | `src/lib/org/identity-profile.ts` |
+| Delegation scopes | Implementation manifest | `steward/platform/protocol/agent-delegation-scopes.yaml` |
+| Audit bridge | Org root | `data/org/audit-bridge.yaml` |
+
+## Core root status (P0–P3 · 2026-06)
+
+| 能力 | 層 | 正本 |
+|------|-----|------|
+| Universal approval SoT | Org root | `data/org/pending-approvals.yaml` |
+| Approval gate (tier only) | Core | `src/lib/org/approval-gate.ts` |
+| Wire notice adapter | Wire | `src/lib/wire/` |
+| Operational → chain bridge | Org root | `src/lib/org/audit-bridge.ts` |
+| External verify | Core CLI | `protocol verify *` |
 
 ## Known Core drift (refactor candidates)
 

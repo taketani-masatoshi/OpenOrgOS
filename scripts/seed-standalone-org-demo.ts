@@ -10,6 +10,7 @@ import { setTenantId, getTenantDir } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
 import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protocol/identity.js";
 import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/delegation.js";
+import { resolveJurisdictionApprovalPolicy } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { validateProtocolState } from "../src/lib/protocol/validate.js";
 import { verifyProtocolAuditChain, appendProtocolAuditRecord } from "../src/lib/protocol/audit-chain.js";
 import { ensureProtocolSigningKey, maybeSignEnvelope } from "../src/lib/protocol/signing.js";
@@ -68,6 +69,7 @@ function main(): void {
   const delegationProof = exportDelegationProof({
     scope: "contract.sign",
     granteeAgent: "contract",
+    basisRef: resolveJurisdictionApprovalPolicy().policy_ref,
   });
   const delegationEnvelope = maybeSignEnvelope(buildDelegationEnvelope(delegationProof));
   appendProtocolAuditRecord({ envelope: delegationEnvelope });

@@ -11,7 +11,7 @@
 | **Core** | EventEnvelope · `org.audit.attested` · 署名 | `schemas/protocol/` |
 | **Org root** | pending approval · attestation · scope | `schemas/org/` · `src/lib/org/` |
 | **National** | Tier 閾値 · `policy_ref` | `schemas/jurisdiction/wire-governance.ts` |
-| **Wire adapter** | peer · transaction_type · outbox | `src/lib/protocol/notice-workflow.ts` |
+| **Wire adapter** | peer · transaction_type · outbox | `src/lib/wire/` |
 
 Wire は Org root の **adapter** — 承認 SoT は `data/org/pending-approvals.yaml` のみ。
 
@@ -156,8 +156,8 @@ orgAuditAttestationPayloadSchema = {
 | kind | scope | 用途 |
 |------|-------|------|
 | `approval.granted` | internal · wire | **正規** — 承認決裁 |
-| `approval.rejected` | internal · wire | 却下記録（Phase 2 optional emit） |
-| `wire.approved` | wire | **deprecated alias** — 既存テスト互換 |
+| `approval.rejected` | internal · wire | 却下記録 |
+| `wire.approved` | wire | **deprecated** — 新規 emit 禁止 |
 
 ---
 
@@ -214,10 +214,71 @@ approvals:
 - [x] `data/org/pending-approvals.yaml` SoT
 - [x] legacy `pending-notices.yaml` 自動 migrate
 - [x] internal scope propose/approve library API
-- [x] `wire.approved` + `approval.granted` emit
+- [x] `approval.granted` / `approval.rejected` emit（wire は `scope: wire`）
+- [x] `wire.approved` 新規 emit 廃止 · legacy chain のみ許容
 - [x] `approval_policy_ref` default 削除
 - [x] 全テスト green
 
 ---
 
-**版:** v1.0-phase2（2026-06-26）
+## 13. P0 DoD（根幹分離）
+
+- [x] `notice-workflow` → `src/lib/wire/`（`protocol/` から除去）
+- [x] `approval-gate` → `src/lib/org/approval-gate.ts`（`loadContract` なし · pure tier gate）
+- [x] `rejectOrgApproval` → `approval.rejected` を audit-chain に emit
+- [x] wire 完了時 audit → `approval.granted` + `scope: wire`（`wire.approved` 新規 emit 廃止）
+- [x] 全テスト green（375）
+
+---
+
+## 14. P1 DoD（監査・運用）
+
+- [x] `audit-bridge.yaml` 方針固定 — `steward/platform/org/audit-bridge.yaml.example` · テナント雛形
+- [x] 全 operational audit 種別 bridge（`events: []` = 5 種すべて）
+- [x] queue → audit 種別マッピング（dispatch → `route_dispatch` · work_order → `handoff` 等）
+- [x] `recordProtocolTransaction` — audit-chain のみ · `audit.jsonl` 二重書き廃止
+- [x] `mapAuditEventToOrgPayload` — `operational.recorded` 形式に統一
+
+---
+
+**版:** v1.2-p1（2026-06-26）
+
+---
+
+## 15. P2 DoD（Core 純化）
+
+- [x] `identity.ts` → `src/lib/org/identity-profile.ts`（tenant adapter · company.yaml 直結除去）
+- [x] `AGENT_SCOPE_MAP` → `steward/platform/protocol/agent-delegation-scopes.yaml` + `org/delegation-scopes.ts`
+- [x] wire-governance YAML 法域分割 + `registry.yaml` sha256 pin
+- [x] 外部 verifier — `protocol verify audit-chain` · `protocol verify delegation` · `protocol audit verify --with-envelopes`
+
+---
+
+**版:** v1.3-p2（2026-06-26）
+
+---
+
+## 16. 命名方針（P3）
+
+| 文脈 | 正しい用語 | 例 |
+|------|-----------|-----|
+| Core / CLI / JSON キー | **wire-governance** | `wire_governance_policy` · `wire_governance_witness` |
+| 法域 pack の regulation ID | **policy_ref**（データ値） | JP: `REG-004` · US: `REG-US-004` |
+| 非推奨（読込のみ） | `reg004_policy` · `reg004_witness` | YAML preprocess · 新規 emit 禁止 |
+
+根幹コードに **REG-004 を識別子として埋め込まない**。規程 ID は jurisdiction pack の `policy_ref` フィールドにのみ存在する。
+
+---
+
+## 17. P3 DoD（命名掃除）
+
+- [x] CLI help — wire-governance 表記（`notice` · `approvers` · `delegation --basis-ref`）
+- [x] `validate.ts` — `evaluateWitnessWireGovernancePolicy` に統一
+- [x] JSON emit — `wire_governance_witness` のみ（`reg004_witness` 廃止）
+- [x] witness pool — `wire_governance_policy` 正規 · `reg004_policy` 読込互換
+- [x] `layer-mapping` · operator-model · skill 同期
+- [x] 全テスト green
+
+---
+
+**版:** v1.4-p3（2026-06-26）

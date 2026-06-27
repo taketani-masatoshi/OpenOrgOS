@@ -11,10 +11,20 @@ import { verifyProtocolAuditChain } from "./audit-chain.js";
 import { validateEnvelopeAgainstRegistry, loadProtocolRegistry } from "./registry.js";
 import { getPeersYamlPath, getTransactionsRegistryPath } from "./paths.js";
 import { isWitnessEnabled, loadWitnessPoolConfig } from "./witness-pool.js";
+import { listWitnessPending } from "./witness-queue.js";
+import { listTransactions } from "./transactions.js";
+import { verifyCachedReceiptsForEvent } from "./witness-client.js";
+import { evaluateWitnessWireGovernancePolicy } from "./witness-policy.js";
 
 export interface ProtocolValidationIssue {
   code: string;
   message: string;
+}
+
+export interface ValidateProtocolStateResult {
+  ok: boolean;
+  issues: ProtocolValidationIssue[];
+  warnings: ProtocolValidationIssue[];
 }
 
 export interface ValidateProtocolStateOptions {
@@ -37,8 +47,9 @@ function isWitnessPoolActive(): boolean {
 
 export function validateProtocolState(
   options?: ValidateProtocolStateOptions
-): { ok: boolean; issues: ProtocolValidationIssue[] } {
+): ValidateProtocolStateResult {
   const issues: ProtocolValidationIssue[] = [];
+  const warnings: ProtocolValidationIssue[] = [];
   const standalone = options?.standalone === true;
 
   try {
@@ -122,7 +133,46 @@ export function validateProtocolState(
     }
   }
 
-  return { ok: issues.length === 0, issues };
+  if (!standalone && isWitnessPoolActive()) {
+    const pool = loadWitnessPoolConfig();
+    for (const pending of listWitnessPending()) {
+      warnings.push({
+        code: "witness-pending",
+        message: `Witness pending ${pending.side} on ${pending.hub_id} for ${pending.event_id}`,
+      });
+    }
+
+    for (const tx of listTransactions()) {
+      if (tx.direction !== "outbound") continue;
+      const { receipts, quorum } = verifyCachedReceiptsForEvent(tx.event_id, pool);
+      if (receipts.length === 0) {
+        warnings.push({
+          code: "witness-receipt-missing",
+          message: `No cached witness receipts for outbound event ${tx.event_id}`,
+        });
+        continue;
+      }
+      if (!quorum.satisfied) {
+        const tier = (tx as { approval_tier?: string }).approval_tier ?? "C";
+        const wireGovernance = evaluateWitnessWireGovernancePolicy({
+          tier: tier as "A" | "B" | "C",
+          quorum,
+          pool,
+        });
+        const entry = {
+          code: "witness-quorum-pending",
+          message: `Witness quorum not satisfied for ${tx.event_id} (${quorum.matched}/${quorum.required})`,
+        };
+        if (wireGovernance.required && !wireGovernance.warnOnly) {
+          issues.push(entry);
+        } else {
+          warnings.push(entry);
+        }
+      }
+    }
+  }
+
+  return { ok: issues.length === 0, issues, warnings };
 }
 
 export function validateProtocolFile(
