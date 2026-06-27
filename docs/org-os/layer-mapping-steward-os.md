@@ -31,8 +31,8 @@ Internal ops belong in Implementation or Adapters — not Core protocol expansio
 |---------------|----------------------------|-----|
 | **Org Event Model** | `schemas/protocol/org-event.ts` · EventEnvelope · queue map | Federation mesh · multi-hop routing |
 | **Identity exchange** | `protocol identity export` · `peers.yaml` · `protocol_public_key` in identity | Automated peer discovery |
-| **Authority delegation** | `protocol delegation export` · REG-004 scope map · approver registry | External verifier tooling |
-| **Auditability** | `data/protocol/audit-chain.jsonl` · `protocol audit verify` · inbox mirror | ~~Third-party witness network~~ → **Witness Hub プール**（部分実装） |
+| **Authority delegation** | `protocol delegation export` · wire-governance tier gate · org approval root | External verifier tooling |
+| **Auditability** | `data/protocol/audit-chain.jsonl` · `data/org/pending-approvals.yaml` · Witness Hub プール | 運用 audit.jsonl との optional bridge |
 
 Decisions · obligations · policies in tenant data are **committee/implementation concerns** until encoded as Org Events.
 
@@ -50,7 +50,7 @@ Decisions · obligations · policies in tenant data are **committee/implementati
 | Concept | Steward artifact |
 |---------|------------------|
 | Organization | `tenants/{id}/tenant.yaml` · `data/company.yaml` |
-| Role / Authority | `steward/core/agents/registry.yaml` · REG-004 approval authority |
+| Role / Authority | `steward/core/agents/registry.yaml` · `schemas/org/approval.ts` · jurisdiction wire-governance |
 | Delegation | `steward/core/orchestrators/` · work orders |
 | Policy | regulations catalog framework · `regulations.yaml` bind |
 | Capability | `business-capability-catalog.yaml` (JP adapter) · module manifests |
@@ -68,6 +68,8 @@ Decisions · obligations · policies in tenant data are **committee/implementati
 | クリニック受付 | Industry | `steward/modules/clinic/` |
 | 宿泊 PMS | Industry | `steward/modules/hospitality/` |
 | MAL 会社データ | Organization | `tenants/mal/data/company.yaml` |
+| Org 承認 pending | Organization · universal root | `tenants/{id}/data/org/pending-approvals.yaml` |
+| Wire 承認（adapter） | Wire → org root | `src/lib/protocol/notice-workflow.ts` |
 
 ## Known Core drift (refactor candidates)
 

@@ -26,10 +26,12 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 
 | 操作 | 入口 | 出力 |
 |------|------|------|
-| 内部決裁 | REG-004 approve · module ops | signed event → `audit-chain.jsonl` |
-| Wire 起案 | `protocol notice draft` | `PendingNotice` |
-| Wire 送信 | `protocol notice approve` | `EventEnvelope` → outbox |
+| **内部決裁** | `org approval`（library · Phase 2） | `org.audit.attested`（`kind: approval.granted` · `scope: internal`）→ audit-chain |
+| Wire 起案 | `protocol notice draft` | `PendingNotice` projection · SoT `data/org/pending-approvals.yaml` |
+| Wire 送信 | `protocol notice approve` | `EventEnvelope` → outbox + `wire.approved` audit |
 | 検証 | `protocol validate` | exit code · issues[] |
+
+**Schema 正本:** [org-approval-schema.md](org-approval-schema.md)
 
 **不変条件:** approve 前に outbox へ載せない · Witness 失敗で Wire をロールバックしない。
 
@@ -51,6 +53,7 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 |------|----------|:--------:|:----:|
 | EventEnvelope | `schemas/protocol/org-event.ts` | audit 内部 | outbox/inbox |
 | audit-chain | `data/protocol/audit-chain.jsonl` | SoT | + witness 参照 |
+| org approvals | `data/org/pending-approvals.yaml` | SoT | wire projection |
 | classification | `data/classification-registry.yaml` | 全層 | envelope に L2 載せ禁止 |
 | 署名 | Ed25519 · canonical JSON | 内部 event | attestation |
 
@@ -67,15 +70,16 @@ Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の
 
 **`--standalone` 条件:** `peers.yaml` 空または未作成 · `witness-pool.yaml` で `enabled: false` または `hubs: []`
 
-**内部 envelope（S2）:** `approveInterOrgNotice` 成功時に `org.audit.attested`（`kind: reg004.wire.approved`）を audit-chain に追加 — [`internal-envelope-emit.ts`](../../src/lib/protocol/internal-envelope-emit.ts)
+**内部 envelope（S2）:** `approveInterOrgNotice` 成功時に `org.audit.attested`（`kind: wire.approved`）を audit-chain に追加 — [`internal-envelope-emit.ts`](../../src/lib/protocol/internal-envelope-emit.ts)
 
 ---
 
 ## 7. 拡充予定（ORG-C3 以降）
 
-- [ ] `@scope internal | wire` event 型一覧
+- [x] `@scope internal | wire` — `schemas/org/scope.ts` · [org-approval-schema.md](org-approval-schema.md)
 - [ ] manifest check enforce（I1）
 - [ ] Community ↔ Steward 語彙表（ORG-C4-3）
+- [ ] 運用 `audit.jsonl` → audit-chain optional bridge
 
 ---
 

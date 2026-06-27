@@ -13,6 +13,7 @@ Steward OS の **法域（jurisdiction）· 表示言語（locale）· 法人形
 | [layer-mapping-steward-os.md](layer-mapping-steward-os.md) | 本リポジトリの 4 層対応 · Core drift 一覧 |
 | [orgos-completion-plan.md](orgos-completion-plan.md) | **OrgOS 完成度向上計画** — ORG-C0–C5 |
 | [orgos-interface-spec.md](orgos-interface-spec.md) | Implementation / Adapter / Wire 境界（草案） |
+| [org-approval-schema.md](org-approval-schema.md) | **Org 承認根幹** — `scope: internal \| wire` · pending-approvals SoT |
 | [inter-org-operator-model.md](inter-org-operator-model.md) | **Operator + CEO 承認ゲート** — Steward は組織間送信しない |
 | [inter-org-two-org-demo.md](inter-org-two-org-demo.md) | **2 組織デモ** — mal ↔ southwood · `npm run demo:inter-org` |
 

@@ -1,54 +1,46 @@
 import { existsSync } from "node:fs";
 import {
   pendingNoticeSchema,
-  pendingNoticesRegistrySchema,
   type NoticeWireType,
   type PendingNotice,
   type PendingNoticesRegistry,
 } from "../../../schemas/protocol/pending-notice.js";
-import type { OperatorAttestation } from "../../../schemas/protocol/operator-attestation.js";
 import { loadContract } from "../data.js";
-import {
-  assertReg004Approval,
-  resolveNoticeAmount,
-  type Reg004Tier,
-} from "./approval-policy.js";
-import { getPendingNoticesPath } from "./paths.js";
+import { resolveNoticeAmountForWire } from "./wire-approval-gate.js";
 import { findPeer } from "./peers.js";
 import {
   recordProtocolTransaction,
   type RecordTransactionResult,
 } from "./record-transaction.js";
-import { emitReg004WireApprovalEnvelope } from "./internal-envelope-emit.js";
-import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
+import {
+  approveOrgApproval,
+  completeOrgApprovalWire,
+  findOrgApproval,
+  listOrgApprovals,
+  nextWireNoticeId,
+  orgApprovalToPendingNotice,
+  proposeOrgApproval,
+  rejectOrgApproval,
+} from "../org/approval/index.js";
+import { getPendingNoticesPath } from "./paths.js";
 
 export function loadPendingNotices(): PendingNoticesRegistry {
-  const path = getPendingNoticesPath();
-  if (!existsSync(path)) {
-    return { notices: [] };
-  }
-  return readYamlFile(path, pendingNoticesRegistrySchema);
+  const notices = listOrgApprovals({ scope: "wire" }).map(orgApprovalToPendingNotice);
+  return { notices };
 }
 
-export function savePendingNotices(registry: PendingNoticesRegistry): void {
-  writeYamlFile(getPendingNoticesPath(), { ...registry, as_of: currentDate() });
+export function savePendingNotices(_registry: PendingNoticesRegistry): void {
+  throw new Error("savePendingNotices is deprecated — org approval registry is SoT at data/org/pending-approvals.yaml");
 }
 
 export function findPendingNotice(noticeId: string): PendingNotice | undefined {
-  return loadPendingNotices().notices.find((n) => n.notice_id === noticeId);
+  const approval = findOrgApproval(noticeId);
+  if (!approval || approval.scope !== "wire") return undefined;
+  return orgApprovalToPendingNotice(approval);
 }
 
 export function nextNoticeId(date = new Date()): string {
-  const ymd = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
-  const prefix = `NOTICE-${ymd}-`;
-  let max = 0;
-  for (const n of loadPendingNotices().notices) {
-    if (n.notice_id.startsWith(prefix)) {
-      const num = Number(n.notice_id.slice(prefix.length));
-      if (!Number.isNaN(num) && num > max) max = num;
-    }
-  }
-  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+  return nextWireNoticeId(date);
 }
 
 export interface ProposeInterOrgWireOptions {
@@ -140,26 +132,26 @@ function defaultMessage(opts: ProposeInterOrgWireOptions): string {
 export function proposeInterOrgWire(opts: ProposeInterOrgWireOptions): PendingNotice {
   validateProposeOptions(opts);
 
-  const notice = pendingNoticeSchema.parse({
-    notice_id: nextNoticeId(),
-    status: "pending_approval",
-    proposed_at: new Date().toISOString(),
-    proposed_by: opts.proposedBy,
-    peer_id: opts.peerId,
-    transaction_type: opts.transactionType,
-    contract_id: opts.contractId,
-    invoice_id: opts.invoiceId,
-    broker_instruction: opts.brokerInstruction,
-    stakeholder_id: opts.stakeholderId,
-    amount: opts.amount ?? (opts.contractId ? contractMonthlyAmount(opts.contractId) : undefined),
-    correlation_event_id: opts.correlationEventId,
+  const approval = proposeOrgApproval({
+    scope: "wire",
+    subjectType: "wire.outbound",
+    subjectRef: opts.contractId ?? opts.invoiceId ?? opts.correlationEventId,
+    proposedBy: opts.proposedBy,
     message: opts.message ?? defaultMessage(opts),
+    amount: opts.amount ?? (opts.contractId ? contractMonthlyAmount(opts.contractId) : undefined),
+    useNoticeId: true,
+    wire: {
+      peerId: opts.peerId,
+      transactionType: opts.transactionType,
+      contractId: opts.contractId,
+      invoiceId: opts.invoiceId,
+      brokerInstruction: opts.brokerInstruction,
+      stakeholderId: opts.stakeholderId,
+      correlationEventId: opts.correlationEventId,
+    },
   });
 
-  const registry = loadPendingNotices();
-  registry.notices.push(notice);
-  savePendingNotices(registry);
-  return notice;
+  return orgApprovalToPendingNotice(approval);
 }
 
 export interface ProposeInterOrgNoticeOptions {
@@ -211,11 +203,7 @@ export interface ApproveInterOrgNoticeResult {
   transmission: RecordTransactionResult;
 }
 
-function noticeAmountForReg004(notice: PendingNotice): { value: number; currency: string } {
-  return resolveNoticeAmount(notice);
-}
-
-function attestationBasis(notice: PendingNotice): OperatorAttestation["basis"] {
+function attestationBasis(notice: PendingNotice): "existing_contract" | "new_contract_instrument" {
   if (notice.transaction_type === "contract.executed") {
     return "new_contract_instrument";
   }
@@ -225,37 +213,22 @@ function attestationBasis(notice: PendingNotice): OperatorAttestation["basis"] {
 export function approveInterOrgNotice(
   opts: ApproveInterOrgNoticeOptions
 ): ApproveInterOrgNoticeResult {
-  const registry = loadPendingNotices();
-  const idx = registry.notices.findIndex((n) => n.notice_id === opts.noticeId);
-  if (idx < 0) {
+  const pending = listOrgApprovals({ scope: "wire" }).find((a) => a.approval_id === opts.noticeId);
+  if (!pending) {
     throw new Error(`Notice ${opts.noticeId} not found`);
   }
-  const notice = registry.notices[idx]!;
-  if (notice.status !== "pending_approval") {
-    throw new Error(`Notice ${opts.noticeId} status is ${notice.status}, expected pending_approval`);
-  }
+  const notice = orgApprovalToPendingNotice(pending);
+  const amount = resolveNoticeAmountForWire(notice);
 
-  const amount = noticeAmountForReg004(notice);
-  const reg004 = assertReg004Approval({
-    amount: amount.value,
-    currency: amount.currency,
+  const { attestation } = approveOrgApproval({
+    approvalId: opts.noticeId,
     approverId: opts.approverId,
     coApproverId: opts.coApproverId,
-    policyRef: notice.approval_policy_ref,
-  });
-
-  const approvedAt = new Date().toISOString();
-  const attestation: OperatorAttestation = {
-    operator_id: opts.operatorId ?? notice.proposed_by,
-    approver_id: opts.approverId,
-    co_approver_id: opts.coApproverId,
-    approval_tier: reg004.tier as Reg004Tier,
-    approved_at: approvedAt,
+    operatorId: opts.operatorId,
     basis: attestationBasis(notice),
-    basis_ref: notice.contract_id ?? notice.invoice_id ?? notice.correlation_event_id,
-    notice_id: notice.notice_id,
-    approval_policy_ref: reg004.policyRef,
-  };
+    basisRef: notice.contract_id ?? notice.invoice_id ?? notice.correlation_event_id,
+    emitAudit: false,
+  });
 
   const transmission = recordProtocolTransaction({
     transactionType: notice.transaction_type,
@@ -264,7 +237,7 @@ export function approveInterOrgNotice(
     invoiceId: notice.invoice_id,
     brokerInstruction: notice.broker_instruction,
     stakeholderId: notice.stakeholder_id,
-    amount: notice.amount,
+    amount: notice.amount ?? amount,
     direction: "outbound",
     notes: notice.message,
     eventId: opts.eventId,
@@ -272,27 +245,17 @@ export function approveInterOrgNotice(
     operatorAttestation: attestation,
   });
 
-  registry.notices[idx] = {
-    ...notice,
-    status: "transmitted",
-    approver_id: opts.approverId,
-    co_approver_id: opts.coApproverId,
-    approval_tier: reg004.tier,
-    approved_at: approvedAt,
-    transaction_id: transmission.transaction.transaction_id,
-    event_id: transmission.envelope.event_id,
-  };
-  savePendingNotices(registry);
-
-  emitReg004WireApprovalEnvelope({
-    noticeId: notice.notice_id,
-    attestation,
-    wireEventId: transmission.envelope.event_id,
+  const completed = completeOrgApprovalWire({
+    approvalId: opts.noticeId,
     transactionId: transmission.transaction.transaction_id,
-    transactionType: notice.transaction_type,
+    wireEventId: transmission.envelope.event_id,
+    attestation,
   });
 
-  return { notice: registry.notices[idx]!, transmission };
+  return {
+    notice: orgApprovalToPendingNotice(completed),
+    transmission,
+  };
 }
 
 export interface RejectInterOrgNoticeOptions {
@@ -302,31 +265,26 @@ export interface RejectInterOrgNoticeOptions {
 }
 
 export function rejectInterOrgNotice(opts: RejectInterOrgNoticeOptions): PendingNotice {
-  const registry = loadPendingNotices();
-  const idx = registry.notices.findIndex((n) => n.notice_id === opts.noticeId);
-  if (idx < 0) {
-    throw new Error(`Notice ${opts.noticeId} not found`);
-  }
-  const notice = registry.notices[idx]!;
-  if (notice.status !== "pending_approval") {
-    throw new Error(`Notice ${opts.noticeId} is not pending approval`);
-  }
-  registry.notices[idx] = {
-    ...notice,
-    status: "rejected",
-    approver_id: opts.approverId,
-    rejected_at: new Date().toISOString(),
-    reject_reason: opts.reason,
-  };
-  savePendingNotices(registry);
-  return registry.notices[idx]!;
+  const rejected = rejectOrgApproval({
+    approvalId: opts.noticeId,
+    approverId: opts.approverId,
+    reason: opts.reason,
+  });
+  return orgApprovalToPendingNotice(rejected);
 }
 
 export function listPendingNotices(filter?: {
   status?: PendingNotice["status"];
 }): PendingNotice[] {
-  return loadPendingNotices()
-    .notices.filter((n) => (filter?.status ? n.status === filter.status : true))
+  const statusMap: Record<PendingNotice["status"], import("../../../schemas/org/approval.js").OrgApprovalStatus | undefined> = {
+    pending_approval: "pending_approval",
+    approved: "approved",
+    rejected: "rejected",
+    transmitted: "completed",
+  };
+  const orgStatus = filter?.status ? statusMap[filter.status] : undefined;
+  return listOrgApprovals({ scope: "wire", status: orgStatus })
+    .map(orgApprovalToPendingNotice)
     .sort((a, b) => a.proposed_at.localeCompare(b.proposed_at));
 }
 
@@ -379,3 +337,6 @@ export function bridgeProposePaymentInstructed(options: {
     message: options.message,
   });
 }
+
+/** Legacy path accessor for migration tests. */
+export { getPendingNoticesPath };

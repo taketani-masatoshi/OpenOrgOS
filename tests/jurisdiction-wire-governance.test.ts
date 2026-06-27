@@ -1,35 +1,36 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
 import {
-  assertReg004Approval,
-  resolveReg004Tier,
+  assertWireGovernanceApproval,
+  resolveWireGovernanceTier,
   loadAuthorizedApprovers,
-} from "../src/lib/protocol/approval-policy.js";
+} from "../src/lib/jurisdiction/wire-governance/index.js";
 
-describe("REG-004 approval policy", () => {
+describe("jurisdiction wire governance", () => {
   beforeEach(() => setTenantId("demo"));
 
   it("resolves tiers by JPY amount (JP jurisdiction)", () => {
-    expect(resolveReg004Tier(50_000, "JPY")).toBe("A");
-    expect(resolveReg004Tier(500_000, "JPY")).toBe("B");
-    expect(resolveReg004Tier(2_000_000, "JPY")).toBe("C");
+    expect(resolveWireGovernanceTier(50_000, "JPY")).toBe("A");
+    expect(resolveWireGovernanceTier(500_000, "JPY")).toBe("B");
+    expect(resolveWireGovernanceTier(2_000_000, "JPY")).toBe("C");
   });
 
   it("tier A accepts single approver when company list empty (demo skeleton)", () => {
-    const result = assertReg004Approval({
+    const result = assertWireGovernanceApproval({
       amount: 85_000,
       currency: "JPY",
       approverId: "段燕燕",
     });
     expect(result.tier).toBe("A");
+    expect(result.policyRef).toBe("REG-004");
   });
 
   it("tier B requires co-approver", () => {
     expect(() =>
-      assertReg004Approval({ amount: 500_000, currency: "JPY", approverId: "段燕燕" })
+      assertWireGovernanceApproval({ amount: 500_000, currency: "JPY", approverId: "段燕燕" })
     ).toThrow(/co-approver/);
 
-    const result = assertReg004Approval({
+    const result = assertWireGovernanceApproval({
       amount: 500_000,
       currency: "JPY",
       approverId: "段燕燕",
@@ -40,7 +41,7 @@ describe("REG-004 approval policy", () => {
 
   it("tier C rejects CLI approval", () => {
     expect(() =>
-      assertReg004Approval({
+      assertWireGovernanceApproval({
         amount: 2_000_000,
         currency: "JPY",
         approverId: "段燕燕",

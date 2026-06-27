@@ -14,7 +14,11 @@ import {
 import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
 
 function cleanup(): void {
-  for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {
+  for (const p of [
+    join(getDataDir(), "protocol"),
+    join(getDataDir(), "org"),
+    join(getDocsDir(), "protocol"),
+  ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
 }

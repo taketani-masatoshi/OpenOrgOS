@@ -15,3 +15,4 @@ export * from "./witness-pending.js";
 export * from "./wire-pending.js";
 export * from "./trusted-hubs.js";
 export * from "./hub-federation.js";
+export * from "./wire-approval.js";

@@ -37,13 +37,13 @@ import {
   flushWirePending,
 } from "../lib/protocol/transport.js";
 import {
-  evaluateWitnessReg004Policy,
-  formatWitnessReg004PolicySummary,
+  evaluateWitnessWireGovernancePolicy,
+  formatWitnessWireGovernancePolicySummary,
 } from "../lib/protocol/witness-policy.js";
 import {
   findTrustedHubsForJurisdiction,
 } from "../lib/protocol/trusted-hubs.js";
-import { loadAuthorizedApprovers } from "../lib/protocol/approval-policy.js";
+import { loadAuthorizedApprovers } from "../lib/protocol/wire-approval-gate.js";
 import { readFileSync } from "node:fs";
 import { orgIdentityDocumentSchema } from "../../schemas/protocol/identity-exchange.js";
 
@@ -62,6 +62,12 @@ export function runProtocolValidate(opts: ProtocolValidateOptions): void {
   }
   if (result.ok) {
     console.log(`✓ Protocol state OK${opts.standalone ? " (standalone)" : ""}`);
+    if (result.warnings.length) {
+      console.log(`  warnings (${result.warnings.length}):`);
+      for (const w of result.warnings) {
+        console.log(`    [${w.code}] ${w.message}`);
+      }
+    }
     const registry = loadProtocolRegistry();
     console.log(`  protocol_version: ${registry.protocol_version}`);
     console.log(`  core_event_types: ${registry.core_event_types.length}`);
@@ -493,18 +499,30 @@ export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOption
     );
     const witness = await maybeRegisterWitnessAfterWire(result.transmission.envelope, "sent");
     const witnessSummary = formatWitnessFanOutSummary(witness);
-    const reg004Witness =
+    const wireGovernanceWitness =
       witness && result.notice.approval_tier
-        ? evaluateWitnessReg004Policy({
+        ? evaluateWitnessWireGovernancePolicy({
             tier: result.notice.approval_tier,
             quorum: witness.quorum,
           })
         : undefined;
-    const reg004Summary = reg004Witness
-      ? formatWitnessReg004PolicySummary(reg004Witness)
+    const wireGovernanceSummary = wireGovernanceWitness
+      ? formatWitnessWireGovernancePolicySummary(wireGovernanceWitness)
       : undefined;
     if (opts.json) {
-      console.log(JSON.stringify({ ...result, delivery, witness, reg004_witness: reg004Witness }, null, 2));
+      console.log(
+        JSON.stringify(
+          {
+            ...result,
+            delivery,
+            witness,
+            wire_governance_witness: wireGovernanceWitness,
+            reg004_witness: wireGovernanceWitness,
+          },
+          null,
+          2
+        )
+      );
       return;
     }
     console.log(`✓ transmitted ${result.transmission.transaction.transaction_id}`);
@@ -523,8 +541,8 @@ export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOption
     if (witnessSummary) {
       console.log(`  ${witnessSummary}`);
     }
-    if (reg004Summary) {
-      console.log(`  ${reg004Summary}`);
+    if (wireGovernanceSummary) {
+      console.log(`  ${wireGovernanceSummary}`);
     }
   } catch (e) {
     console.error(e instanceof Error ? e.message : String(e));

@@ -1,32 +1,6 @@
-version: "1"
-
-# Inter-org wire approval tiers — jurisdiction-specific (REG-004 family)
-jurisdictions:
-  JP:
-    policy_ref: REG-004
-    currency: JPY
-    tiers:
-      A: { max_amount: 100000, approvers: 1, roles: ["代表取締役"] }
-      B: { max_amount: 1000000, approvers: 2, roles: ["代表取締役"] }
-      C: { board_required: true, roles: ["取締役会"] }
-  HK:
-    policy_ref: REG-HK-004
-    currency: HKD
-    tiers:
-      A: { max_amount: 100000, approvers: 1, roles: ["Director", "CEO"] }
-      B: { max_amount: 1000000, approvers: 2, roles: ["Director"] }
-      C: { board_required: true, roles: ["Board"] }
-  US:
-    policy_ref: REG-US-004
-    currency: USD
-    tiers:
-      A: { max_amount: 10000, approvers: 1, roles: ["CEO", "Officer"] }
-      B: { max_amount: 100000, approvers: 2, roles: ["Officer"] }
-      C: { board_required: true, roles: ["Board"] }
-  default:
-    policy_ref: REG-004
-    currency: JPY
-    tiers:
-      A: { max_amount: 100000, approvers: 1, roles: [] }
-      B: { max_amount: 1000000, approvers: 2, roles: [] }
-      C: { board_required: true, roles: [] }
+# Moved — National layer wire governance thresholds
+#
+# Canonical path:
+#   steward/jurisdiction-packs/wire-governance/approval-thresholds.yaml
+#
+# Runtime: src/lib/jurisdiction/wire-governance/

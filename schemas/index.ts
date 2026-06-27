@@ -23,3 +23,5 @@ export * from "./webhook.js";
 export * from "./cloud-agent.js";
 export * from "./invoice-template.js";
 export * from "./protocol/index.js";
+export * from "./org/index.js";
+export * from "./jurisdiction/index.js";

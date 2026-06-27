@@ -36,7 +36,7 @@ export async function initWitnessPoolFromTrusted(jurisdiction: string): Promise<
     quorum: { mode: "any_of_n" },
     register_on: "both",
     hubs,
-    reg004_policy: {
+    wire_governance_policy: {
       require_quorum_for_tiers: ["B", "C"],
       warn_only: true,
     },

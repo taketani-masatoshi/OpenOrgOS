@@ -44,9 +44,13 @@ npm run steward -- --tenant southwood protocol peer register \
   --webhook-url http://127.0.0.1:9473/steward/webhook
 ```
 
-## REG-004（法域別）
+## Wire approval（Core + National）
 
-正本: `steward/platform/protocol/approval-thresholds.yaml` · 承認者: `data/company.yaml` 代表取締役 / directors
+| 層 | 正本 | 役割 |
+|----|------|------|
+| **Core** | `schemas/protocol/wire-approval.ts` · `src/lib/protocol/wire-approval-gate.ts` | Tier A/B/C 型 · notice 金額解決 · jurisdiction へ委譲 |
+| **National (JP 等)** | `steward/jurisdiction-packs/wire-governance/approval-thresholds.yaml` | 金額閾値 · `policy_ref` (REG-004 族) · 承認者 registry |
+| **承認者 SoT** | `data/company.yaml` 代表取締役 / directors | |
 
 | Tier (JP) | 金額 | approve |
 |-----------|------|---------|
@@ -66,6 +70,7 @@ npm run steward -- --tenant southwood protocol peer register \
 
 ## 実装
 
-- `notice-workflow.ts` · `approval-policy.ts` · `approver-registry.ts`
+- **Core:** `wire-approval-gate.ts` · `notice-workflow.ts`
+- **National:** `src/lib/jurisdiction/wire-governance/`（旧 `approval-policy.ts` · `approver-registry.ts` は deprecated re-export）
 - `signing.ts` · `inbound-verify.ts` · `transport.ts`
 - Skill: `steward/core/skills/inter_org_notice_draft.md`

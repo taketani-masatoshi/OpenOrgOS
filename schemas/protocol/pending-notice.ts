@@ -37,7 +37,7 @@ export const pendingNoticeSchema = z.object({
   approver_id: z.string().optional(),
   co_approver_id: z.string().optional(),
   approved_at: z.string().optional(),
-  approval_policy_ref: z.string().default("REG-004"),
+  approval_policy_ref: z.string().optional(),
   approval_tier: z.enum(["A", "B", "C"]).optional(),
   transaction_id: z.string().optional(),
   event_id: z.string().optional(),

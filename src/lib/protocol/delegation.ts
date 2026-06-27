@@ -7,7 +7,7 @@ import type { EventEnvelope, OrgRef } from "../../../schemas/protocol/org-event.
 import { actorIdentitySchema } from "../../../schemas/protocol/identity-exchange.js";
 import { STEWARD_AGENTS_DIR } from "../steward-paths.js";
 import { ourOrgRef } from "./identity.js";
-import { resolveJurisdictionApprovalPolicy } from "./approver-registry.js";
+import { resolveJurisdictionApprovalPolicy } from "../jurisdiction/wire-governance/index.js";
 
 const AGENT_SCOPE_MAP: Record<string, string[]> = {
   contract: ["contract.sign", "contract.review", "contract.amend"],

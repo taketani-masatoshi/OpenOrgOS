@@ -13,6 +13,8 @@ export function loadProtocolRegistry(): ProtocolRegistry {
         "org.authority.delegated",
         "org.transaction.recorded",
         "org.audit.attested",
+        "org.witness.attestation.registered",
+        "org.witness.receipt.issued",
       ],
       payload_namespaces: ["steward.contract", "steward.payment", "steward.invoice"],
     })
