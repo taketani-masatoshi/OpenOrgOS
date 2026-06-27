@@ -101,7 +101,7 @@ flowchart TB
 | FR-EM-04 | canonical JSON digest · Ed25519 署名 | ✓ |
 | FR-EM-05 | 内部 queue → org event マップ（`map-internal`） | ✓ |
 | FR-EM-06 | outbox/inbox JSON 永続化 | ✓ |
-| FR-EM-07 | outbox pull · federation mesh | △ **`protocol deliver-pull`** · E2E test · mesh 未 |
+| FR-EM-07 | outbox pull · federation mesh | ✓ **`protocol deliver-pull`** · **`protocol mesh deliver`** · 2-hop E2E |
 
 **Core event types（`steward/platform/protocol/registry.yaml`）**
 
@@ -267,7 +267,7 @@ flowchart TB
 |------|----------|------|
 | 単独 OrgOS（C1） | `npm run demo:standalone-org` | peer/witness なし · validate · internal/wire envelope |
 | Inter-org + Witness（C2） | `npm run demo:inter-org` | 2 tenant · execution notice + ack · witness chain |
-| Outbox pull（FR-EM-07 部分） | `npm run demo:deliver-pull` | southwood outbox API → mal inbox |
+| Outbox pull · mesh（FR-EM-07） | `npm run demo:deliver-pull` · `npm run demo:mesh-deliver` | pull + 2-hop via chain |
 | mal standalone | `npm run demo:mal-standalone` | 運用テナント · standalone validate |
 
 ---
@@ -275,7 +275,7 @@ flowchart TB
 ## 9. 正常系 — 実装・テスト状況
 
 **テスト正本:** `tests/protocol-*.ts` · `tests/org-*.ts` · `tests/hub-*.ts` · `tests/standalone-org-demo.test.ts`  
-**関連 112 tests green（2026-06-27 · P1–P5 · deliver-pull +1）**
+**関連 115+ tests green（2026-06-27 · mesh v1 · gap-closure --suggest）**
 
 ### 9.1 Core 四要素
 
@@ -324,7 +324,8 @@ flowchart TB
 | ファイル | 件数 | 主眼 |
 |---------|:----:|------|
 | `protocol-deliver-pull.test.ts` | 1 | 2-tenant outbox pull E2E |
-| `protocol-gap-closure.test.ts` | 5 | P3–P5 CLI |
+| `protocol-mesh-deliver.test.ts` | 1 | 2-hop mesh route E2E |
+| `protocol-gap-closure.test.ts` | 6 | P3–P5 CLI · discover --suggest |
 | `protocol-validate-abnormal.test.ts` | 9 | validate issue fixtures（P1–P2） |
 | `protocol-org-event.test.ts` | 6 | EventEnvelope · identity |
 | `protocol-notice-workflow.test.ts` | 5 | Operator approve フロー |
@@ -413,3 +414,4 @@ flowchart TB
 | 1.2 | 2026-06-27 | P2 — registry-invalid · envelope validate +2 |
 | 1.3 | 2026-06-27 | P3–P5 — peer discover · signing rotate · deliver-pull · trusted-hubs validate |
 | 1.4 | 2026-06-27 | deliver-pull E2E · スコア同期（82/100 · 452 tests · Core ~88%） |
+| 1.5 | 2026-06-27 | FR-EM-07 mesh v1 · `protocol mesh deliver` · 2-hop E2E · peer discover --suggest |

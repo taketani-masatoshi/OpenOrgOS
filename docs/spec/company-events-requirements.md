@@ -1,7 +1,7 @@
 # 会社イベント記録 — 要件定義書
 
-**版:** 1.0 · **日付:** 2026-06-27  
-**ステータス:** 実装済み（v1 · 作成・一覧・月次フォルダ）  
+**版:** 1.3 · **日付:** 2026-06-27  
+**ステータス:** 実装済み（v1 · 作成・一覧・月次フォルダ · close/archive/validate · FR-11/14）  
 **設計正本:** [steward/rules/company-events-layout.md](../../steward/rules/company-events-layout.md)  
 **スキーマ:** [schemas/company-events.ts](../../schemas/company-events.ts)  
 **実装:** [src/lib/company-events.ts](../../src/lib/company-events.ts) · [src/commands/company-events.ts](../../src/commands/company-events.ts)
@@ -30,18 +30,19 @@
 | FR-02 | イベント新規作成（台帳 + MD + artifact 索引 + records/） |
 | FR-03 | イベント一覧・台帳サマリ |
 | FR-04 | 命名規則（EVT ID · kind · slug） |
-| FR-05 | 当月 `_INDEX.md` 自動更新 |
+| FR-05 | 当月 `_INDEX.md` 自動更新（close/archive · `--refresh-index`） |
 | FR-06 | テナント雛形 · Cursor ルール · repository_layout 連携 |
+| FR-10 | イベント close / archive（`events close` · `events archive`） |
+| FR-11 | 書類索引へのファイル登録（`events register-artifact`） |
+| FR-12 | `events validate` — 台帳 vs 実ファイル整合 |
+| FR-13 | `jp_corporate_registration prepare` → artifacts（`--event-id` + `--write`） |
+| FR-14 | document-io outbox リンク（`events link-outbox`） |
 
-### 2.2 Out of scope（v1 未実装 · 将来）
+### 2.2 Out of scope（将来）
 
 | ID | 機能 | 備考 |
 |----|------|------|
-| FR-10 | イベント close / archive | ✓ `events close` · `events archive` |
-| FR-11 | イベント更新 · 書類索引へのファイル登録 | 手動 MD 編集 · `registerArtifactFiles`（module 連携） |
-| FR-12 | `events validate` | ✓ 台帳 vs 実ファイル整合 |
-| FR-13 | `jp_corporate_registration prepare` → artifacts 自動出力 | ✓ `--event-id` + `--write` |
-| FR-14 | document-io / outbox との自動連携 | 手動運用 |
+| FR-15 | outbox 自動イベント作成 | 手動 `events new` + link-outbox |
 
 ---
 
@@ -192,7 +193,7 @@ npm run steward -- events status
 | 正常系（lib） | 4 tests | **コア路径はカバー** |
 | 異常系 | 8 tests | **E-01〜E-08 カバー** |
 | lifecycle | 3 tests | close · archive · validate |
-| CLI 結合 | 0 tests | `runEventsNew` 等の smoke 未 |
+| CLI 結合 | 4 tests | `company-events-cli` — close · validate · register-artifact · _INDEX |
 | E2E（登記 module 連携） | 1 | FR-13 `--event-id` テスト済 |
 
 ---
@@ -215,3 +216,4 @@ npm run steward -- events status
 | 1.0 | 2026-06-27 | 初版 — v1 実装ベース · テスト状況付記 |
 | 1.1 | 2026-06-27 | 異常系 E-01〜E-06 テスト · `parseMonth` 月範囲検証 |
 | 1.2 | 2026-06-27 | FR-10/12/13 — close · archive · validate · jp prepare `--event-id` |
+| 1.3 | 2026-06-27 | FR-11/14 — register-artifact · link-outbox · ensure-month --refresh-index · CLI smoke |

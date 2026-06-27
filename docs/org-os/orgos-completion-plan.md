@@ -33,13 +33,13 @@ OpenOrgOS Core は四要素（Org Event Model · identity · authority · audita
 | 製品フレームワーク | **99/100** | [framework-assessment.md](../framework-assessment.md) §9 |
 | 会社 OS composite | **93/100** | `steward status --os-99` |
 | TJS-11 法域 pack | **11/11** | pack_ready |
-| 業務 module（production_ready） | **76%**（19/25） | 三軸のボトルネック |
-| Inter-org wire | **高** | 2-org デモ · notice · deliver · ingest |
+| 業務 module（production_ready） | **89%**（24/27） | `jp_corporate_registration` 昇格 · IF 85% 閾値達成 |
+| Inter-org wire | **高** | 2-org デモ · notice · deliver · **mesh** · deliver-pull |
 | Witness Hub | **v1 実装済** | fan-out · quorum · Hub ノード · §14 ギャップ残 |
 | 内部 ↔ wire 形式統一 | **低** | 内部 YAML 中心 · `org.witness.*` emit 未 |
 | Community ガバナンス | **部分** | 申請 API あり · 委任承認 · 本番 SLA 不足 |
 
-**体感完成度** = 三軸最小値（現 **76%**）— wire/witness の技術完成と **単独 OrgOS 統合** は別軸。
+**体感完成度** = 三軸最小値（現 **89%** — 業務 module 軸）— wire/mesh · witness · 単独 OrgOS 統合は別軸。
 
 ---
 
@@ -148,7 +148,7 @@ flowchart TB
 
 ### ORG-C3 — Adapter 契約（Week 11–16）
 
-**ゴール:** 業務 module 軸 76% → **≥90%** · Core drift 解消。
+**ゴール:** 業務 module 軸 89% → **≥90%** · Core drift 解消。
 
 | ID | タスク | 成果物 | DoD |
 |----|--------|--------|-----|

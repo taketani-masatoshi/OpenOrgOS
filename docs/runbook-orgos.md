@@ -70,11 +70,54 @@ npm run steward -- --tenant mal protocol witness reconcile --cross-hub
 
 ---
 
-## 6. 受入チェック（ORG-C5）
+## 7. deliver-pull · mesh deliver
 
-- [ ] `npm test` ≥ 400 green
-- [ ] `demo:standalone-org` · `demo:inter-org` exit 0
-- [ ] `steward status --orgos` 加重 ≥ 85
-- [ ] `modules check --all` · production_ready ≥ 23/26
+```bash
+npm run demo:deliver-pull          # southwood outbox API → mal inbox (FR-EM-07 pull)
+npm run demo:mesh-deliver          # 2-hop mesh: PEER-002 relay → PEER-003 push → inbox
+npm run steward -- --tenant mal protocol mesh deliver --peer PEER-003 --file docs/protocol/outbox/ENVELOPE.json
+```
 
-*改定: 2026-06-26 · ORG-C5*
+**mesh routes:** `data/protocol/mesh-routes.yaml` — `via` チェーンで多ホップ配送。Hub gossip（Witness）とは別 — Org Event peer mesh。
+
+---
+
+## 8. 鍵ローテーション後チェックリスト（P4）
+
+```bash
+# 1. ローテーション + meta 更新
+npm run steward -- --tenant mal protocol signing rotate
+
+# 2. 新公開鍵の確認
+npm run steward -- --tenant mal protocol signing export-public
+
+# 3. 各 peer の protocol_public_key を再 pin
+npm run steward -- --tenant mal protocol peer register --peer-id PEER-002 --public-key BASE64...
+
+# 4. validate — stale pin は warning signing-key-peer-pin-stale
+npm run steward -- --tenant mal protocol validate
+```
+
+**据置（v2）:** 自動 peer への鍵配布 · 定期ローテーション — [c4-community-backlog.md](org-os/c4-community-backlog.md) 外。
+
+---
+
+## 9. peer discover --suggest
+
+```bash
+npm run steward -- --tenant mal protocol peer discover --suggest
+npm run steward -- --tenant mal protocol peer discover --suggest --json
+```
+
+未登録 trusted-hub / org_uri 向けに `protocol peer register` コマンド例を出力。
+
+---
+
+## 10. 受入チェック（ORG-C5）
+
+- [ ] `npm test` ≥ 460 green
+- [ ] `demo:standalone-org` · `demo:inter-org` · `demo:deliver-pull` · `demo:mesh-deliver` exit 0
+- [ ] `steward status --orgos` 加重 ≥ 86
+- [ ] `modules check --all` · production_ready ≥ 24/27
+
+*改定: 2026-06-27 · ORG-C5 · mesh v1 · signing checklist*

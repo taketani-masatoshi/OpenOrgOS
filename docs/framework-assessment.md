@@ -231,7 +231,7 @@
 |----|------|------|------|
 | **法域 pack** | TJS-11 | 各バケットが pack_ready DoD 達成 | `jurisdiction packs check` · demo validate |
 | **表示言語** | TJS 必須 `display_language` | `steward/locale/registry.yaml` | `steward locale list` |
-| **業務 module** | カタログ 26 | `production_ready` 件数 | `modules check --all` · [readiness.yaml](../steward/modules/readiness.yaml) |
+| **業務 module** | カタログ 27 | `production_ready` 件数 | `modules check --all` · [readiness.yaml](../steward/modules/readiness.yaml) |
 
 ### 2026-06 ベースライン
 
@@ -239,12 +239,12 @@
 |----|:----:|:----:|:--:|
 | 法域 pack（TJS-11） | 11 | 11 | **100%** |
 | 表示言語 | 9 | 9 | **100%** |
-| 業務 production_ready | 19 | 25 | **76%** |
+| 業務 production_ready | 24 | 27 | **89%** |
 
 達成 pack: **JP** · **US** · **SG** · **HK** · **AU** · **TW** · **MY** · **CN** · **AE** · **RU** · **EU**（TJS-EU 案 A）。  
 TJS-11 法域: **11/11 完了**（2026-06-25）。
 
-**体感完成度** = 三軸の最小値（現状 **76%** — 業務 module 軸）— チケット: [framework-backlog-tickets-bc.md](framework-backlog-tickets-bc.md)
+**体感完成度** = 三軸の最小値（現状 **89%** — 業務 module 軸）— チケット: [framework-backlog-tickets-bc.md](framework-backlog-tickets-bc.md)
 
 ---
 
@@ -270,28 +270,29 @@ TJS-11 法域: **11/11 完了**（2026-06-25）。
 ## 13. OrgOS 完成度（C1–C3）
 
 **正本:** [org-os/orgos-completion-plan.md](org-os/orgos-completion-plan.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C · 運用: [runbook-orgos.md](runbook-orgos.md)  
-**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-06-27 · **452 tests**）
+**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-06-27 · **459 tests**）
 
 | 軸 | 重み | 現状 | 根拠 |
 |----|------|:----:|------|
 | 単独閉ループ（C1） | 35% | **95%** | [demo:standalone-org](../package.json) · internal approve · [standalone-org-demo.test.ts](../tests/standalone-org-demo.test.ts) · `protocol validate --standalone` |
 | 形式統一 | 25% | **90%** | witness emit → audit chain · [protocol-witness-integration.test.ts](../tests/protocol-witness-integration.test.ts) |
-| インターフェース（C2） | 15% | **60%** | module production_ready **85%** 閾値未達 · `steward status --orgos` IF 軸 |
-| Wire 証拠 | 15% | **88%** | inter-org demo · **deliver-pull E2E** · hub verify remote · warn_only strict |
-| エコシステム（Community） | 10% | **45%** | C4 据置 |
+| インターフェース（C2） | 15% | **85%** | module production_ready **89%** ≥ 88% 閾値 · `jp_corporate_registration` 昇格 |
+| Wire 証拠 | 15% | **88%** | inter-org demo · deliver-pull · **mesh deliver E2E** · hub verify remote |
+| エコシステム（Community） | 10% | **45%** | [C4 backlog](org-os/c4-community-backlog.md) 据置 |
 
-**OrgOS 完成度（加重）:** **82/100**（`npm run steward -- status --orgos` · 2026-06-27）
+**OrgOS 完成度（加重）:** **86/100**（`npm run steward -- status --orgos` · 2026-06-27）
 
-> **注:** 旧表記 ~86% は IF 軸 85% 前提の概算。正本は CLI 実測 **82/100**（IF 60% · Eco 45% で加重）。
+> **注:** Eco 45% 据置。IF 85% · module 89% で加重 **~86/100**。
 
 ```bash
 npm run steward -- status --orgos
 npm run demo:standalone-org
 npm run demo:inter-org
 npm run demo:deliver-pull
+npm run demo:mesh-deliver
 ```
 
-P0–P5 で Org 承認根幹完了。ORG-C1–C3/C5 で standalone デモ · witness E2E · module promotion · runbook · CI デモ job を完了。C4 Community は backlog 据置。
+P0–P5 で Org 承認根幹完了。ORG-C1–C3/C5 で standalone デモ · witness E2E · module promotion · runbook · mesh v1 を完了。[C4 Community backlog](org-os/c4-community-backlog.md) は据置。
 
 ---
 
