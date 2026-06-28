@@ -204,7 +204,7 @@
 
 ### サイクル（止めるまで回す）
 
-1. `npm run steward -- status --os-99` — 採点
+1. `npm run orgos -- status --os-99` — 採点
 2. `ops p0` — ブロッカー特定
 3. 最大ギャップ → `escalate run`（製品）/ [p0-closing-register.md](../tenants/mal/docs/company/p0-closing-register.md)（人間）
 4. assessment · executive-notes 更新
@@ -269,30 +269,33 @@ TJS-11 法域: **11/11 完了**（2026-06-25）。
 
 ## 13. OrgOS 完成度（C1–C3）
 
-**正本:** [org-os/orgos-completion-plan.md](org-os/orgos-completion-plan.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C · 運用: [runbook-orgos.md](runbook-orgos.md)  
-**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-06-27 · **459 tests**）
+**用語:** [orgos-vocabulary.md](org-os/orgos-vocabulary.md) · **採点:** [orgos-scoring-methodology.md](org-os/orgos-scoring-methodology.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C · 運用: [runbook-orgos.md](runbook-orgos.md)  
+**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-06-28 · **484 tests**）
 
-| 軸 | 重み | 現状 | 根拠 |
-|----|------|:----:|------|
-| 単独閉ループ（C1） | 35% | **95%** | [demo:standalone-org](../package.json) · internal approve · [standalone-org-demo.test.ts](../tests/standalone-org-demo.test.ts) · `protocol validate --standalone` |
-| 形式統一 | 25% | **90%** | witness emit → audit chain · [protocol-witness-integration.test.ts](../tests/protocol-witness-integration.test.ts) |
-| インターフェース（C2） | 15% | **85%** | module production_ready **89%** ≥ 88% 閾値 · `jp_corporate_registration` 昇格 |
-| Wire 証拠 | 15% | **88%** | inter-org demo · deliver-pull · **mesh deliver E2E** · hub verify remote |
-| エコシステム（Community） | 10% | **80%** | [trusted-operators.yaml](../steward/platform/protocol/trusted-operators.yaml) · `protocol community *` · revocation SLA |
+### 二重採点（矛盾解消）
 
-**OrgOS 完成度（加重）:** **90/100**（`npm run steward -- status --orgos` · 2026-06-27）
+| 方式 | OrgOS | OpenOrgOS Core | 用途 |
+|------|:-----:|:----------------:|------|
+| **チェックリスト** | **99/100** | **100/100** | artifact · CI · テストファイル存在 — 回帰ゲート |
+| **厳格（対外）** | **~91/100** | **92–100/100** | 本番運用 · Community · **`npm test` 連動** — [orgos-strict-99-roadmap.md](org-os/orgos-strict-99-roadmap.md) |
 
-> **注:** Eco **80%** = Steward-side C4 完了（operators · SLA · governance）。OS_Community アプリで 85+。
+> チェックリストのみを「OS 完成」と宣言しない。`steward status --orgos` は **両方** を表示する。
+
+| 軸 | 重み | チェックリスト | 厳格 |
+|----|:--:|:--:|:--:|
+| 単独閉ループ（C1） | 35% | 100 | 97 |
+| 形式統一 | 25% | 100 | 90 |
+| インターフェース | 15% | 95（換算） | **89（module 実測）** |
+| Wire 証拠 | 15% | 100 | 91 |
+| エコシステム | 10% | 93 | **80（Steward-side cap）** |
 
 ```bash
-npm run steward -- status --orgos
-npm run demo:standalone-org
-npm run demo:inter-org
-npm run demo:deliver-pull
-npm run demo:mesh-deliver
+npm run orgos -- status --orgos   # チェックリスト + 厳格 + Core 両方
+npm run validate:protocol:tenants
+npm test -- orgos-readiness
 ```
 
-P0–P5 で Org 承認根幹完了。ORG-C1–C3/C5 完了 · **Steward-side C4**（operators · SLA · governance）完了 · OS_Community UI は [c4-community-backlog.md](org-os/c4-community-backlog.md) backlog。
+P0–P5 で Org 承認根幹完了。ORG-C1–C5 完了 · OS_Community UI は [c4-community-backlog.md](org-os/c4-community-backlog.md) backlog。
 
 ---
 

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.orgos-ci/
 scratch/*
 !scratch/00-README.md
 tenants/*/docs/reports/*

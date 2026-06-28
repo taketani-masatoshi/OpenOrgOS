@@ -1,10 +1,7 @@
-# OrgOS score baseline — framework-assessment §13
-# Sync with docs/framework-assessment.md when intentionally updating scores.
+# DEPRECATED — do not use for reporting.
+# Live scores: `npm run orgos -- status --orgos`
+# Methodology: docs/org-os/orgos-scoring-methodology.md
+# Implementation: src/lib/protocol/orgos-readiness.ts · orgos-readiness-strict.ts
 
-standalone_loop: 95
-form_unification: 90
-wire_evidence: 88
-ecosystem: 80
-interface_axis_high: 85
-interface_axis_low: 60
-interface_module_pct_threshold: 88
+deprecated: true
+note: "Checklist and strict scores are computed in TypeScript, not this file."

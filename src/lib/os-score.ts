@@ -7,31 +7,13 @@
 import type { MaturityReport } from "./maturity.js";
 import { listP0Items } from "./p0-status.js";
 import { computeModuleAxisStats } from "./extensibility-contract.js";
-import { computeCommunityReadiness } from "./protocol/community-readiness.js";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { z } from "zod";
-import { ROOT_DIR } from "./tenant.js";
-import { readYamlFile } from "./utils.js";
-
-const ORGOS_BASELINE_PATH = join(ROOT_DIR, "steward/platform/orgos-score-baseline.yaml");
-
-const orgOsBaselineSchema = z.object({
-  standalone_loop: z.number().default(95),
-  form_unification: z.number().default(90),
-  wire_evidence: z.number().default(88),
-  ecosystem: z.number().default(45),
-  interface_axis_high: z.number().default(85),
-  interface_axis_low: z.number().default(60),
-  interface_module_pct_threshold: z.number().default(88),
-});
-
-function loadOrgOsBaseline() {
-  if (!existsSync(ORGOS_BASELINE_PATH)) {
-    return orgOsBaselineSchema.parse({});
-  }
-  return readYamlFile(ORGOS_BASELINE_PATH, orgOsBaselineSchema);
-}
+import { computeOrgOsReadiness } from "./protocol/orgos-readiness.js";
+import { computeOrgOsStrictReadiness } from "./protocol/orgos-readiness-strict.js";
+import {
+  computeOpenOrgOsCoreReadiness,
+  computeOpenOrgOsCoreStrictReadiness,
+  type OpenOrgOsCoreReadiness,
+} from "./protocol/openorgos-core-readiness.js";
 
 /** framework-assessment §9 実測（REF-4b/d 完了 · 2026-06-25） */
 export const PRODUCT_FRAMEWORK_SCORE = 100;
@@ -130,8 +112,8 @@ export function formatOs99Score(score: Os99Score, markdown = false): string {
   return lines.join("\n");
 }
 
-/** OrgOS weighted score — framework-assessment §13 · orgos-completion-plan §5 */
-export interface OrgOsScore {
+/** OrgOS weighted score — framework-assessment §13 · orgos-scoring-methodology.md */
+export interface OrgOsScoreSnapshot {
   standaloneLoop: number;
   formUnification: number;
   interfaceAxis: number;
@@ -141,52 +123,46 @@ export interface OrgOsScore {
   gaps: string[];
 }
 
-const ORGOS_WEIGHTS = {
-  standaloneLoop: 0.35,
-  formUnification: 0.25,
-  interfaceAxis: 0.15,
-  wireEvidence: 0.15,
-  ecosystem: 0.1,
-} as const;
+export interface OrgOsScore {
+  checklist: OrgOsScoreSnapshot;
+  strict: OrgOsScoreSnapshot;
+}
 
-export function computeOrgOsScore(): OrgOsScore {
-  const moduleAxis = computeModuleAxisStats();
-  const baseline = loadOrgOsBaseline();
-  const standaloneLoop = baseline.standalone_loop;
-  const formUnification = baseline.form_unification;
-  const interfaceAxis =
-    moduleAxis.productionPct >= baseline.interface_module_pct_threshold
-      ? baseline.interface_axis_high
-      : baseline.interface_axis_low;
-  const wireEvidence = baseline.wire_evidence;
-  const ecosystem = computeCommunityReadiness().score;
-  const weighted = Math.round(
-    standaloneLoop * ORGOS_WEIGHTS.standaloneLoop +
-      formUnification * ORGOS_WEIGHTS.formUnification +
-      interfaceAxis * ORGOS_WEIGHTS.interfaceAxis +
-      wireEvidence * ORGOS_WEIGHTS.wireEvidence +
-      ecosystem * ORGOS_WEIGHTS.ecosystem
-  );
-  const gaps: string[] = [];
-  if (ecosystem < 85) gaps.push("Community / エコシステム（Steward-side C4 完了 · OS_Community で 85+）");
-  if (moduleAxis.productionPct < 90) {
-    gaps.push(`module ${moduleAxis.productionPct}% production_ready`);
-  }
+export interface OpenOrgOsCoreScore {
+  checklist: OpenOrgOsCoreReadiness;
+  strict: OpenOrgOsCoreReadiness;
+}
+
+function snapshotFromReadiness(readiness: ReturnType<typeof computeOrgOsReadiness>): OrgOsScoreSnapshot {
   return {
-    standaloneLoop,
-    formUnification,
-    interfaceAxis,
-    wireEvidence,
-    ecosystem,
-    weighted,
-    gaps,
+    standaloneLoop: readiness.standaloneLoop.score,
+    formUnification: readiness.formUnification.score,
+    interfaceAxis: readiness.interfaceAxis.score,
+    wireEvidence: readiness.wireEvidence.score,
+    ecosystem: readiness.ecosystem.score,
+    weighted: readiness.weighted,
+    gaps: readiness.gaps,
   };
 }
 
-export function formatOrgOsScore(score: OrgOsScore, markdown = false): string {
+export function computeOrgOsScore(): OrgOsScore {
+  return {
+    checklist: snapshotFromReadiness(computeOrgOsReadiness()),
+    strict: snapshotFromReadiness(computeOrgOsStrictReadiness()),
+  };
+}
+
+export function computeOpenOrgOsCoreScore(): OpenOrgOsCoreScore {
+  return {
+    checklist: computeOpenOrgOsCoreReadiness(),
+    strict: computeOpenOrgOsCoreStrictReadiness(),
+  };
+}
+
+function formatOrgOsSnapshot(label: string, score: OrgOsScoreSnapshot, markdown: boolean): string {
   if (markdown) {
     return [
-      "## OrgOS 完成度",
+      `### ${label}`,
       "",
       `| 軸 | 点数 | 重み |`,
       `|----|:----:|:----:|`,
@@ -197,13 +173,71 @@ export function formatOrgOsScore(score: OrgOsScore, markdown = false): string {
       `| エコシステム | ${score.ecosystem} | 10% |`,
       `| **加重** | **${score.weighted}** | 100% |`,
       score.gaps.length ? `\nギャップ: ${score.gaps.join(" · ")}` : "",
-      "\n正本: docs/framework-assessment.md §13",
     ].join("\n");
   }
   return [
-    `OrgOS 完成度（加重）: ${score.weighted}/100`,
+    `${label}: ${score.weighted}/100`,
     `  単独: ${score.standaloneLoop}% · 形式: ${score.formUnification}% · IF: ${score.interfaceAxis}% · Wire: ${score.wireEvidence}% · Eco: ${score.ecosystem}%`,
     score.gaps.length ? `  ギャップ: ${score.gaps.join(" · ")}` : "",
-    "  正本: docs/framework-assessment.md §13",
+  ].join("\n");
+}
+
+export function formatOpenOrgOsCoreScore(score: OpenOrgOsCoreScore, markdown = false): string {
+  const render = (label: string, s: OpenOrgOsCoreReadiness) => {
+    if (markdown) {
+      return [
+        `### ${label}`,
+        "",
+        `| 要素 | 点数 |`,
+        `|----|:----:|`,
+        `| Event Model | ${s.eventModel.score} |`,
+        `| Identity | ${s.identity.score} |`,
+        `| Authority | ${s.authority.score} |`,
+        `| Auditability | ${s.auditability.score} |`,
+        `| **加重** | **${s.weighted}** |`,
+        s.gaps.length ? `\nギャップ: ${s.gaps.join(" · ")}` : "",
+      ].join("\n");
+    }
+    return [
+      `${label}: ${s.weighted}/100`,
+      `  Event: ${s.eventModel.score}% · Identity: ${s.identity.score}% · Authority: ${s.authority.score}% · Audit: ${s.auditability.score}%`,
+      s.gaps.length ? `  ギャップ: ${s.gaps.join(" · ")}` : "",
+    ].join("\n");
+  };
+
+  if (markdown) {
+    return [
+      "## OpenOrgOS Core（LLM 不要）",
+      "",
+      render("チェックリスト採点（artifact）", score.checklist),
+      "",
+      render("厳格採点（運用 cap）", score.strict),
+      "",
+      "正本: docs/org-os/orgos-scoring-methodology.md",
+    ].join("\n");
+  }
+  return [
+    render("OpenOrgOS Core · チェックリスト", score.checklist),
+    render("OpenOrgOS Core · 厳格", score.strict),
+    "  正本: docs/org-os/orgos-scoring-methodology.md",
+  ].join("\n");
+}
+
+export function formatOrgOsScore(score: OrgOsScore, markdown = false): string {
+  if (markdown) {
+    return [
+      "## OrgOS 完成度",
+      "",
+      formatOrgOsSnapshot("チェックリスト採点（artifact · CI）", score.checklist, true),
+      "",
+      formatOrgOsSnapshot("厳格採点（運用 · 対外）", score.strict, true),
+      "",
+      "正本: docs/org-os/orgos-scoring-methodology.md · framework-assessment §13",
+    ].join("\n");
+  }
+  return [
+    formatOrgOsSnapshot("OrgOS · チェックリスト", score.checklist, false),
+    formatOrgOsSnapshot("OrgOS · 厳格", score.strict, false),
+    "  正本: docs/org-os/orgos-scoring-methodology.md",
   ].join("\n");
 }
