@@ -4,9 +4,9 @@
  */
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT_DIR } from "../tenant.js";
+import { getWorkspaceRoot } from "../orgos-paths.js";
 
-export const TEST_SUITE_STATUS_DIR = join(ROOT_DIR, ".orgos-ci");
+export const TEST_SUITE_STATUS_DIR = join(getWorkspaceRoot(), ".orgos-ci");
 export const TEST_SUITE_STATUS_PATH = join(TEST_SUITE_STATUS_DIR, "test-suite.json");
 
 export interface TestSuiteStatus {

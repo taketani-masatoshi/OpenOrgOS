@@ -68,8 +68,11 @@ npm run check                               # validate · demo · acme · module
 
 ## セットアップ
 
+**製品 Quickstart（Core / workspace 分離）:** [docs/quickstart.md](docs/quickstart.md)
+
 ```bash
 npm install
+npm run orgos -- doctor
 npm run validate
 ```
 

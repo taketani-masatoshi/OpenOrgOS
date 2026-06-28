@@ -1,11 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT_DIR, setTenantId } from "../tenant.js";
-import { writeProtocolApiClientConfig } from "./protocol-api-config.js";
+import { getWorkspaceRoot, getDeployDir } from "../orgos-paths.js";
 import { getProtocolDataDir } from "./paths.js";
+import { writeProtocolApiClientConfig } from "./protocol-api-config.js";
+import { setTenantId } from "../tenant.js";
 
-export const PROPOSAL3_PKI_DIR = join(ROOT_DIR, "data", "proposal3-pki");
+export function getProposal3PkiDir(): string {
+  return join(getWorkspaceRoot(), "data", "proposal3-pki");
+}
 
 export interface Proposal3PkiMaterial {
   dir: string;
@@ -96,7 +99,7 @@ export function ensureProposal3Pki(opts?: {
   outputDir?: string;
 }): Proposal3PkiMaterial {
   const clients = opts?.clients ?? ["mal", "southwood"];
-  const dir = opts?.outputDir ?? PROPOSAL3_PKI_DIR;
+  const dir = opts?.outputDir ?? getProposal3PkiDir();
   mkdirSync(join(dir, "clients"), { recursive: true });
 
   const caCertPath = join(dir, "ca.pem");
@@ -242,7 +245,7 @@ export function proposal3OrgCApiEnv(orgCTenantId: string, pki: Proposal3PkiMater
 }
 
 export function writeProposal3DeployEnv(orgCTenantId: string, pki: Proposal3PkiMaterial): string {
-  const envDir = join(ROOT_DIR, "deploy", "proposal3", "env");
+  const envDir = join(getDeployDir(), "proposal3", "env");
   mkdirSync(envDir, { recursive: true });
   const envPath = join(envDir, "org-c-api.generated.env");
   const lines = Object.entries(proposal3OrgCApiEnv(orgCTenantId, pki)).map(

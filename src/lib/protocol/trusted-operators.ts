@@ -7,10 +7,10 @@ import {
   type TrustedOperatorEntry,
   type TrustedOperatorsRegistry,
 } from "../../../schemas/protocol/trusted-operators.js";
-import { ROOT_DIR } from "../tenant.js";
+import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 
-const TRUSTED_OPERATORS_PATH = join(ROOT_DIR, "steward/platform/protocol/trusted-operators.yaml");
+const TRUSTED_OPERATORS_PATH = join(STEWARD_PLATFORM_DIR, "protocol", "trusted-operators.yaml");
 
 export function getTrustedOperatorsRegistryPath(): string {
   return TRUSTED_OPERATORS_PATH;

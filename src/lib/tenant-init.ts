@@ -11,9 +11,8 @@ import YAML from "yaml";
 import { modulesFileSchema } from "../../schemas/modules.js";
 import { seedRegulationDocs } from "./regulations.js";
 import { getModuleSeedDir, listModuleSeedFiles } from "./modules.js";
-import { setTenantId, TENANTS_DIR, loadTenantConfig } from "./tenant.js";
-
-const TEMPLATE_DIR = join(TENANTS_DIR, "_template");
+import { getTenantsDir } from "./orgos-paths.js";
+import { setTenantId, loadTenantConfig, getTenantTemplateDir } from "./tenant.js";
 
 export interface TenantInitOptions {
   id: string;
@@ -33,17 +32,18 @@ export function runTenantInit(options: TenantInitOptions): void {
     throw new Error(`Invalid tenant id "${id}" — use lowercase letters, digits, hyphens`);
   }
 
-  const dest = join(TENANTS_DIR, id);
+  const dest = join(getTenantsDir(), id);
   if (existsSync(dest) && !options.force) {
     throw new Error(`Tenant "${id}" already exists at ${dest} (use --force to overwrite)`);
   }
 
-  if (!existsSync(TEMPLATE_DIR)) {
-    throw new Error(`Missing template: ${TEMPLATE_DIR}`);
+  const templateDir = getTenantTemplateDir();
+  if (!existsSync(templateDir)) {
+    throw new Error(`Missing template: ${templateDir}`);
   }
 
   mkdirSync(dest, { recursive: true });
-  cpSync(TEMPLATE_DIR, dest, {
+  cpSync(templateDir, dest, {
     recursive: true,
     filter: (src) => shouldCopyTemplateEntry(src),
   });
@@ -507,5 +507,5 @@ function copyModuleSeeds(dest: string, fromModules?: string[]): void {
 export function validateTenantInit(id: string): boolean {
   setTenantId(id);
   loadTenantConfig();
-  return existsSync(join(TENANTS_DIR, id, "tenant.yaml"));
+  return existsSync(join(getTenantsDir(), id, "tenant.yaml"));
 }

@@ -5,7 +5,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { ROOT_DIR } from "../tenant.js";
+import { getInstallRoot, getDeployDir, getSchemasDir } from "../orgos-paths.js";
+import { JURISDICTION_PACKS_DIR } from "../steward-paths.js";
 import { computeModuleAxisStats } from "../extensibility-contract.js";
 import { computeCommunityReadiness } from "./community-readiness.js";
 
@@ -37,12 +38,12 @@ function bucketScore(checks: ReadinessCheck[]): OrgOsAxisReadiness {
 }
 
 function fileOk(relativePath: string, detail = "present"): ReadinessCheck {
-  const path = join(ROOT_DIR, relativePath);
+  const path = join(getInstallRoot(), relativePath);
   return { id: relativePath, ok: existsSync(path), detail: existsSync(path) ? detail : "missing" };
 }
 
 function ciValidateTenantCount(): number {
-  const path = join(ROOT_DIR, "steward/platform/protocol/ci-validate-tenants.yaml");
+  const path = join(getInstallRoot(), "steward/platform/protocol/ci-validate-tenants.yaml");
   if (!existsSync(path)) return 0;
   const doc = YAML.parse(readFileSync(path, "utf-8")) as { tenants?: string[] };
   return doc.tenants?.length ?? 0;
@@ -66,8 +67,8 @@ function computeStandaloneLoopChecks(): ReadinessCheck[] {
     c.id === "package.json"
       ? {
           ...c,
-          ok: existsSync(join(ROOT_DIR, "package.json")) &&
-            readFileSync(join(ROOT_DIR, "package.json"), "utf-8").includes("demo:mal-standalone"),
+          ok: existsSync(join(getInstallRoot(), "package.json")) &&
+            readFileSync(join(getInstallRoot(), "package.json"), "utf-8").includes("demo:mal-standalone"),
         }
       : c
   );
@@ -110,7 +111,7 @@ function computeInterfaceAxisChecks(): ReadinessCheck[] {
     fileOk("src/lib/extensibility-contract.ts", "manifest / pack contract check"),
     {
       id: "jurisdiction-packs",
-      ok: existsSync(join(ROOT_DIR, "steward/jurisdiction-packs/JP/pack.manifest.yaml")),
+      ok: existsSync(join(JURISDICTION_PACKS_DIR, "JP/pack.manifest.yaml")),
       detail: "JP pack.manifest.yaml",
     },
   ];

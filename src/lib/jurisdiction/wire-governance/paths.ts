@@ -1,7 +1,7 @@
 import { join, resolve } from "node:path";
-import { ROOT_DIR } from "../../tenant.js";
+import { JURISDICTION_PACKS_DIR } from "../../steward-paths.js";
 
-const WIRE_GOVERNANCE_DIR = join(ROOT_DIR, "steward", "jurisdiction-packs", "wire-governance");
+const WIRE_GOVERNANCE_DIR = join(JURISDICTION_PACKS_DIR, "wire-governance");
 
 /** National layer registry — maps jurisdiction code → pack file + pin. */
 export function getWireGovernanceRegistryPath(): string {

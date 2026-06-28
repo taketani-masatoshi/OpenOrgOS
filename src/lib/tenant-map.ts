@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { getTenantDir, getTenantId, resolveTenantPath, ROOT_DIR } from "./tenant.js";
+import { getTenantDir, getTenantId, resolveTenantPath } from "./tenant.js";
+import { getInstallRoot, getSchemasDir } from "./orgos-paths.js";
 import { loadEnabledModules, listCatalogModuleIds, STEWARD_MODULES_DIR } from "./modules.js";
 import { readYamlFile } from "./utils.js";
 
@@ -32,8 +33,8 @@ export function listTenantPathMappings(): PathMapping[] {
   }
 
   rows.push(
-    { logical: "src/", absolute: join(ROOT_DIR, "src"), scope: "framework" },
-    { logical: "schemas/", absolute: join(ROOT_DIR, "schemas"), scope: "framework" }
+    { logical: "src/", absolute: join(getInstallRoot(), "src"), scope: "framework" },
+    { logical: "schemas/", absolute: getSchemasDir(), scope: "framework" }
   );
 
   return rows;
@@ -66,7 +67,7 @@ export function resolveLogicalPath(logical: string): PathMapping {
   }
   return {
     logical: normalized,
-    absolute: join(ROOT_DIR, normalized),
+    absolute: join(getInstallRoot(), normalized),
     scope: "framework",
   };
 }

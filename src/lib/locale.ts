@@ -7,10 +7,11 @@ import {
   type DisplayLanguageEntry,
   type DisplayLanguageRegistry,
 } from "../../schemas/locale.js";
-import { loadTenantConfig, ROOT_DIR } from "./tenant.js";
+import { getInstallRoot } from "./orgos-paths.js";
+import { loadTenantConfig } from "./tenant.js";
 import { readYamlFile } from "./utils.js";
 
-export const LOCALE_REGISTRY_PATH = join(ROOT_DIR, "steward", "locale", "registry.yaml");
+export const LOCALE_REGISTRY_PATH = join(getInstallRoot(), "steward", "locale", "registry.yaml");
 
 export interface ResolvedDisplayLocale {
   code: DisplayLanguageCode;

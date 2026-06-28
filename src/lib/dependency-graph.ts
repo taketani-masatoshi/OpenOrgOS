@@ -10,7 +10,13 @@ import {
 } from "../../schemas/dependency-graph.js";
 import { getDataDir, readYamlFile, resolveTenantPath, toLogicalPath } from "./utils.js";
 
-export const DEPENDENCY_GRAPH_PATH = join(getDataDir(), "dependency-graph.yaml");
+function dependencyGraphPath(): string {
+  return join(getDataDir(), "dependency-graph.yaml");
+}
+
+export function loadDependencyGraph(): DependencyGraph {
+  return readYamlFile(dependencyGraphPath(), dependencyGraphSchema);
+}
 
 export interface ImpactItem {
   nodeId: string;
@@ -29,10 +35,6 @@ export interface StaleItem {
   reason: string;
   sourceMtime: Date;
   targetMtime: Date;
-}
-
-export function loadDependencyGraph(): DependencyGraph {
-  return readYamlFile(DEPENDENCY_GRAPH_PATH, dependencyGraphSchema);
 }
 
 function normalizePath(input: string): string {

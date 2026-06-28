@@ -16,7 +16,9 @@ import {
 } from "../../schemas/document-io.js";
 import { getDataDir, getDocsInboxDir, getDocsOutboxDir, currentDate, readYamlFile, writeYamlFile, resolveTenantPath, toLogicalPath } from "./utils.js";
 
-const IO_PATH = join(getDataDir(), "document-io.yaml");
+function ioPath(): string {
+  return join(getDataDir(), "document-io.yaml");
+}
 
 function resolveIoPath(relOrAbs: string): string {
   return isAbsolute(relOrAbs) ? relOrAbs : resolveTenantPath(relOrAbs);
@@ -41,14 +43,15 @@ export const OUTBOX_CATEGORIES: OutboxCategory[] = [
 ];
 
 export function loadDocumentIo(): DocumentIo {
-  if (!existsSync(IO_PATH)) {
+  const path = ioPath();
+  if (!existsSync(path)) {
     return { inbox_items: [], outbox_items: [] };
   }
-  return readYamlFile(IO_PATH, documentIoSchema);
+  return readYamlFile(path, documentIoSchema);
 }
 
 export function saveDocumentIo(data: DocumentIo): void {
-  writeYamlFile(IO_PATH, data);
+  writeYamlFile(ioPath(), data);
 }
 
 function nextId(prefix: "INB" | "OUT", items: { id: string }[]): string {
@@ -359,7 +362,7 @@ export function syncOutboxFromDisk(): OutboxItem[] {
 }
 
 export function initDocumentIoFile(): void {
-  if (!existsSync(IO_PATH)) {
+  if (!existsSync(ioPath())) {
     saveDocumentIo({
       inbox_items: [],
       outbox_items: [],

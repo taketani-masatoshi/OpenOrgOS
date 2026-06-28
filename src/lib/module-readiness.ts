@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { ROOT_DIR } from "./tenant.js";
+import { STEWARD_MODULES_DIR } from "./steward-paths.js";
 import { readYamlFile } from "./utils.js";
 
 export const READINESS_TIERS = ["skeleton", "activation_ready", "production_ready"] as const;
@@ -16,7 +16,7 @@ const readinessSchema = z.object({
   ),
 });
 
-const READINESS_PATH = join(ROOT_DIR, "steward", "modules", "readiness.yaml");
+const READINESS_PATH = join(STEWARD_MODULES_DIR, "readiness.yaml");
 
 export function loadModuleReadiness(): Map<string, { tier: ReadinessTier; notes?: string }> {
   if (!existsSync(READINESS_PATH)) return new Map();

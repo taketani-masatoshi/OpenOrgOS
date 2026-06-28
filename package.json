@@ -4,7 +4,8 @@
   "description": "OrgOS — Organizational OS reference implementation (tenant-separated management framework)",
   "type": "module",
   "workspaces": [
-    "apps/wire-console"
+    "apps/wire-console",
+    "packages/*"
   ],
   "bin": {
     "orgos": "./src/cli.ts",
@@ -40,7 +41,9 @@
     "wire-console:build": "npm run build -w @orgos/wire-console",
     "wire-console:smoke": "npm run wire-console:build && playwright test e2e/wire-console.smoke.spec.ts && playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts",
     "wire-console:release-check": "npm run wire-console:test && npm run wire-console:smoke",
-    "wire-console:test": "vitest run tests/wire-console-server.test.ts tests/wire-console-human-mail.test.ts tests/wire-console-redact.test.ts tests/wire-console-webauthn-verify.test.ts tests/wire-console-webauthn-register.test.ts"
+    "wire-console:test": "vitest run tests/wire-console-server.test.ts tests/wire-console-human-mail.test.ts tests/wire-console-redact.test.ts tests/wire-console-webauthn-verify.test.ts tests/wire-console-webauthn-register.test.ts",
+    "build:package": "node scripts/build-orgos-package.mjs",
+    "package:pack": "npm run build:package && npm pack -w @orgos/cli"
   },
   "dependencies": {
     "@independentsoft/msg": "^1.0.2",

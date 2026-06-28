@@ -4,7 +4,7 @@
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT_DIR } from "../tenant.js";
+import { getInstallRoot } from "../orgos-paths.js";
 import { resolveTestSuiteVerification } from "./test-suite-status.js";
 
 export interface CoreReadinessCheck {
@@ -23,7 +23,7 @@ export interface OpenOrgOsCoreReadiness {
 }
 
 function fileOk(relativePath: string, detail = "present"): CoreReadinessCheck {
-  const path = join(ROOT_DIR, relativePath);
+  const path = join(getInstallRoot(), relativePath);
   return { id: relativePath, ok: existsSync(path), detail: existsSync(path) ? detail : "missing" };
 }
 

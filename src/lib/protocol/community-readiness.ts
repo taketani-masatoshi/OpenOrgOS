@@ -6,7 +6,8 @@ import {
 } from "./trusted-operators.js";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT_DIR } from "../tenant.js";
+import { getInstallRoot, getDeployDir, getSchemasDir } from "../orgos-paths.js";
+import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
 
 export interface CommunityReadiness {
   score: number;
@@ -61,7 +62,7 @@ export function computeCommunityReadiness(): CommunityReadiness {
   });
   if (hubs.ok) score += 5;
 
-  const bundleSchemaPath = join(ROOT_DIR, "schemas/protocol/witness-trust.ts");
+  const bundleSchemaPath = join(getSchemasDir(), "protocol/witness-trust.ts");
   const hasRevocations = existsSync(bundleSchemaPath);
   checks.push({
     id: "witness-trust-revocations",
@@ -70,7 +71,7 @@ export function computeCommunityReadiness(): CommunityReadiness {
   });
   if (hasRevocations) score += 5;
 
-  const ciList = join(ROOT_DIR, "steward/platform/protocol/ci-validate-tenants.yaml");
+  const ciList = join(STEWARD_PLATFORM_DIR, "protocol", "ci-validate-tenants.yaml");
   checks.push({
     id: "ci-protocol-validate-tenants",
     ok: existsSync(ciList),
@@ -78,7 +79,7 @@ export function computeCommunityReadiness(): CommunityReadiness {
   });
   if (existsSync(ciList)) score += 3;
 
-  const deployPerms = join(ROOT_DIR, "deploy/protocol-outbox/apply-permissions.sh");
+  const deployPerms = join(getDeployDir(), "protocol-outbox/apply-permissions.sh");
   checks.push({
     id: "deploy-outbox-permissions",
     ok: existsSync(deployPerms),
@@ -88,31 +89,31 @@ export function computeCommunityReadiness(): CommunityReadiness {
 
   checks.push({
     id: "peer-protocol-policy",
-    ok: existsSync(join(ROOT_DIR, "src/lib/protocol/peer-protocol-policy.ts")),
+    ok: existsSync(join(getInstallRoot(), "src/lib/protocol/peer-protocol-policy.ts")),
     detail: "contract protocol: peer whitelist",
   });
-  if (existsSync(join(ROOT_DIR, "src/lib/protocol/peer-protocol-policy.ts"))) score += 2;
+  if (existsSync(join(getInstallRoot(), "src/lib/protocol/peer-protocol-policy.ts"))) score += 2;
 
   checks.push({
     id: "orgos-readiness-engine",
-    ok: existsSync(join(ROOT_DIR, "src/lib/protocol/orgos-readiness.ts")),
+    ok: existsSync(join(getInstallRoot(), "src/lib/protocol/orgos-readiness.ts")),
     detail: "dynamic OrgOS scoring",
   });
-  if (existsSync(join(ROOT_DIR, "src/lib/protocol/orgos-readiness.ts"))) score += 2;
+  if (existsSync(join(getInstallRoot(), "src/lib/protocol/orgos-readiness.ts"))) score += 2;
 
   checks.push({
     id: "openorgos-core-readiness",
-    ok: existsSync(join(ROOT_DIR, "src/lib/protocol/openorgos-core-readiness.ts")),
+    ok: existsSync(join(getInstallRoot(), "src/lib/protocol/openorgos-core-readiness.ts")),
     detail: "Core four-element scoring",
   });
-  if (existsSync(join(ROOT_DIR, "src/lib/protocol/openorgos-core-readiness.ts"))) score += 2;
+  if (existsSync(join(getInstallRoot(), "src/lib/protocol/openorgos-core-readiness.ts"))) score += 2;
 
   checks.push({
     id: "orgos-99-plan",
-    ok: existsSync(join(ROOT_DIR, "docs/org-os/orgos-99-plan.md")),
+    ok: existsSync(join(getInstallRoot(), "docs/org-os/orgos-99-plan.md")),
     detail: "99-point improvement plan published",
   });
-  if (existsSync(join(ROOT_DIR, "docs/org-os/orgos-99-plan.md"))) score += 1;
+  if (existsSync(join(getInstallRoot(), "docs/org-os/orgos-99-plan.md"))) score += 1;
 
   return { score: Math.min(score, 95), checks };
 }

@@ -31,6 +31,68 @@ import {
 } from "../../commands/locale-jurisdiction.js";
 
 export function registerPlatformCommands(program: Command): void {
+  program
+    .command("doctor")
+    .description("Check install · workspace · OpenSSL · Wire Console build")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runDoctor } = await import("../../commands/doctor.js");
+      runDoctor({ json: opts.json });
+    });
+
+  const workspaceCmd = program.command("workspace").description("OrgOS company workspace (tenants/)");
+  workspaceCmd
+    .command("init")
+    .description("Initialize orgos.yaml + tenants/ in current or target directory")
+    .option("--dir <path>", "Workspace directory")
+    .option("--name <name>", "Workspace label in orgos.yaml")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkspaceInit } = await import("../../commands/workspace.js");
+      runWorkspaceInit({ dir: opts.dir, name: opts.name, json: opts.json });
+    });
+  workspaceCmd
+    .command("show")
+    .description("Show resolved workspace paths")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkspaceShow } = await import("../../commands/workspace.js");
+      runWorkspaceShow({ json: opts.json });
+    });
+
+  program
+    .command("init <tenant-id>")
+    .description("Workspace init (if needed) + tenant init from _template")
+    .option("--name <name>", "Company display / legal name")
+    .option("--from <modules...>", "Enable modules (e.g. rental)")
+    .option("--jurisdiction <code>", "JP | US | …")
+    .option("--wire-console", "Enable wire_console in tenant.yaml")
+    .option("--workspace-dir <path>", "Workspace directory")
+    .option("--no-validate", "Skip validate after tenant init")
+    .action(async (tenantId: string, opts) => {
+      const { runWorkspaceInit } = await import("../../commands/workspace.js");
+      const { runTenantInitCommand } = await import("../../commands/tenant.js");
+      const { existsSync } = await import("node:fs");
+      const { resolve } = await import("node:path");
+      const { workspaceConfigPath, refreshOrgOsPaths } = await import("../../lib/orgos-paths.js");
+      const workspaceDir = resolve(
+        opts.workspaceDir ?? process.env.ORGOS_WORKSPACE?.trim() ?? process.cwd()
+      );
+      if (!existsSync(workspaceConfigPath())) {
+        runWorkspaceInit({ dir: workspaceDir, name: opts.name ?? tenantId });
+      } else {
+        process.env.ORGOS_WORKSPACE = workspaceDir;
+        refreshOrgOsPaths();
+      }
+      runTenantInitCommand(tenantId, {
+        name: opts.name,
+        from: opts.from,
+        jurisdiction: opts.jurisdiction,
+        wireConsole: opts.wireConsole,
+        validate: opts.validate,
+      });
+    });
+
   const modulesCmd = program
     .command("modules")
     .description("Business module catalog and tenant bindings");
@@ -109,9 +171,28 @@ export function registerPlatformCommands(program: Command): void {
     );
 
   const wireCmd = program.command("wire").description("Inter-org Wire operator tools");
+
+  wireCmd
+    .command("setup")
+    .description("Proposal 3 — PKI · client yaml · relay deploy env")
+    .option("--force", "Regenerate dev PKI")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWireSetup } = await import("../../commands/wire-setup.js");
+      await runWireSetup({ force: opts.force, json: opts.json });
+    });
+
   const wireConsoleCmd = wireCmd
     .command("console")
     .description("Wire Console — localhost SPA + BFF for outbox/inbox");
+
+  wireConsoleCmd
+    .command("build")
+    .description("Build Wire Console SPA (required before start)")
+    .action(async () => {
+      const { runWireConsoleBuild } = await import("../../commands/wire-setup.js");
+      await runWireConsoleBuild();
+    });
 
   wireConsoleCmd
     .command("start")

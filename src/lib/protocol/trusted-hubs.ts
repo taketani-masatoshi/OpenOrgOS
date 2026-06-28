@@ -6,10 +6,11 @@ import {
   type TrustedHubsJurisdiction,
 } from "../../../schemas/protocol/trusted-hubs.js";
 import type { WitnessHubEntry } from "../../../schemas/protocol/witness-pool.js";
-import { ROOT_DIR, loadTenantConfig } from "../tenant.js";
+import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
+import { loadTenantConfig } from "../tenant.js";
 import { readYamlFile } from "../utils.js";
 
-const TRUSTED_HUBS_PATH = join(ROOT_DIR, "steward/platform/protocol/trusted-hubs.yaml");
+const TRUSTED_HUBS_PATH = join(STEWARD_PLATFORM_DIR, "protocol", "trusted-hubs.yaml");
 
 export function loadTrustedHubsRegistry(): TrustedHubsRegistry {
   if (!existsSync(TRUSTED_HUBS_PATH)) {

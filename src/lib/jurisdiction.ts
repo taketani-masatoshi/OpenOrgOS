@@ -14,12 +14,14 @@ import {
   type CountriesRegistry,
   type PackTier,
 } from "../../schemas/jurisdiction.js";
+import { getInstallRoot } from "./orgos-paths.js";
+import { getInstallRoot } from "./orgos-paths.js";
+import { JURISDICTIONS_DIR, JURISDICTION_PACKS_DIR } from "./steward-paths.js";
 import { getResolvedDisplayLocale } from "./locale.js";
-import { loadTenantConfig, getTenantDir, ROOT_DIR, getTenantId } from "./tenant.js";
+import { loadTenantConfig, getTenantDir, getTenantId } from "./tenant.js";
 import { readYamlFile, readYamlFileRaw } from "./utils.js";
 
-export const JURISDICTIONS_DIR = join(ROOT_DIR, "steward", "jurisdictions");
-export const JURISDICTION_PACKS_DIR = join(ROOT_DIR, "steward", "jurisdiction-packs");
+export { JURISDICTIONS_DIR, JURISDICTION_PACKS_DIR } from "./steward-paths.js";
 export const STUB_PACK_ROOT_REL = "steward/jurisdiction-packs/_stub";
 export const COUNTRIES_REGISTRY_PATH = join(JURISDICTIONS_DIR, "countries.yaml");
 export const JURISDICTION_REGISTRY_PATH = join(JURISDICTIONS_DIR, "registry.yaml");
@@ -47,7 +49,7 @@ export function resetJurisdictionRegistryCache(): void {
 }
 
 function repoRelative(absPath: string): string {
-  return relative(ROOT_DIR, absPath).replace(/\\/g, "/");
+  return relative(getInstallRoot(), absPath).replace(/\\/g, "/");
 }
 
 export function loadCountriesRegistry(): CountriesRegistry {
@@ -88,7 +90,7 @@ function loadPackEntry(code: JurisdictionCode): JurisdictionPackEntry {
 
   const country = getCountryEntry(code);
   const packRootRel = resolvePackRootRel(code);
-  const packRootAbs = join(ROOT_DIR, packRootRel);
+  const packRootAbs = join(getInstallRoot(), packRootRel);
   const isStub = country.tier === "stub" && packRootRel === STUB_PACK_ROOT_REL;
 
   const manifestPath = join(packRootAbs, PACK_MANIFEST_FILE);
@@ -147,7 +149,7 @@ export function getJurisdictionPack(code: JurisdictionCode): JurisdictionPackEnt
 }
 
 export function getJurisdictionPackRoot(code: JurisdictionCode): string {
-  return join(ROOT_DIR, resolvePackRootRel(code));
+  return join(getInstallRoot(), resolvePackRootRel(code));
 }
 
 export function loadEntityFormsFile(
@@ -167,7 +169,7 @@ export function loadEntityFormsFile(
   }
   if (getCountryEntry(code).tier === "stub") {
     return readYamlFile(
-      join(ROOT_DIR, STUB_PACK_ROOT_REL, "entity-forms.yaml"),
+      join(getInstallRoot(), STUB_PACK_ROOT_REL, "entity-forms.yaml"),
       entityFormsFileSchema
     );
   }
@@ -237,7 +239,7 @@ export function getResolvedJurisdiction(): ResolvedJurisdiction {
 
 export function getRegulationsCatalogPath(): string {
   const { pack } = getResolvedJurisdiction();
-  const path = join(ROOT_DIR, pack.regulations_catalog);
+  const path = join(getInstallRoot(), pack.regulations_catalog);
   if (!existsSync(path)) {
     throw new Error(`Regulations catalog not found for pack: ${pack.regulations_catalog}`);
   }
@@ -246,7 +248,7 @@ export function getRegulationsCatalogPath(): string {
 
 export function getRegulationsTemplatesDir(): string {
   const { pack } = getResolvedJurisdiction();
-  return join(ROOT_DIR, pack.regulations_templates_dir);
+  return join(getInstallRoot(), pack.regulations_templates_dir);
 }
 
 export function getRegulationTemplateAbsPath(templateRel: string): string {

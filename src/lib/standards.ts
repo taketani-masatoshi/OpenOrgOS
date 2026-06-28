@@ -1,8 +1,8 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT_DIR } from "./tenant.js";
+import { getInstallRoot } from "./orgos-paths.js";
 
-export const STEWARD_STANDARDS_DIR = join(ROOT_DIR, "steward", "standards");
+export const STEWARD_STANDARDS_DIR = join(getInstallRoot(), "steward", "standards");
 export const STEWARD_ISO_DIR = join(STEWARD_STANDARDS_DIR, "iso");
 
 /** ISO standard folder ids under steward/standards/iso/ (e.g. ISO-9001). */
