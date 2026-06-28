@@ -1,0 +1,27 @@
+{
+  "protocol_version": "1",
+  "event_id": "110a8995-2dbf-4102-bd78-a5221855d39f",
+  "occurred_at": "2026-06-28T01:59:04.623Z",
+  "origin": {
+    "org_id": "mal",
+    "org_uri": "steward://tenant/mal"
+  },
+  "correlation_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+  "identity": {
+    "org_ref": {
+      "org_id": "mal",
+      "org_uri": "steward://tenant/mal"
+    }
+  },
+  "event": {
+    "type": "org.witness.attestation.registered",
+    "payload": {
+      "witness_event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+      "envelope_digest": "764a5875fd8b7dde5627810b6800b74e90295afb72e67b35af0689c720038da9",
+      "side": "sent",
+      "hub_id": "HUB-B",
+      "attested_at": "2026-06-28T01:59:04.576Z"
+    }
+  },
+  "signature": "mLxfXWwQumG0Y/87Y775Ru//Ch7bXzo56gmjddcY5GAQRxYERbI+GE5zLqVQM1feALjynOggTFwidj5LxlH8CQ=="
+}

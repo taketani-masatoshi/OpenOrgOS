@@ -103,6 +103,19 @@
 
 ---
 
+## Phase ORG-WC — Wire Console（2026-06）
+
+**正本:** [org-os/wire-console-plan.md](org-os/wire-console-plan.md) · SPA `apps/wire-console/` · BFF `:9470`
+
+| チケット | 内容 | 状態 |
+|---------|------|:----:|
+| **WC-TKT-0.1–0.6** | 基盤 — schema · SPA · BFF · auth dev · CLI · init | [x] |
+| **WC-TKT-1.1–1.5** | P0 read — outbox/inbox · ledger · event detail · tenant tabs | [x] |
+| **WC-TKT-2.1–2.5** | P1 operate — propose/approve · deliver/witness 並行 · step UI | [x] |
+| **WC-TKT-3.1–3.4** | 仕上げ — prod auth · SSE · runbook · E2E | [x] |
+
+---
+
 ## Phase OS-99 — 会社 OS 99+ 連続改善
 
 **ミッション:** 会社 OS composite **≥ 99** まで採点 → 修正 → 再採点を繰り返す。正本: [framework-assessment.md](framework-assessment.md) §10

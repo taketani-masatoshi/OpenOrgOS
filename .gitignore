@@ -1,6 +1,9 @@
 node_modules/
 dist/
 .orgos-ci/
+.orgos/
+# Wire Console build output
+apps/wire-console/dist/
 scratch/*
 !scratch/00-README.md
 tenants/*/docs/reports/*

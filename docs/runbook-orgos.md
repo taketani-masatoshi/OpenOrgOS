@@ -241,3 +241,64 @@ deploy/protocol-relay/systemd/steward-protocol-relay@.service  # ExecStartPre �
 CI: `npm run validate:protocol:tenants` — 正本 `steward/platform/protocol/ci-validate-tenants.yaml`（15 テナント）
 
 **採点:** [orgos-scoring-methodology.md](org-os/orgos-scoring-methodology.md) — チェックリスト 99 / 厳格 ~91 · Core 100 / 92
+
+---
+
+## 18. Wire Console（localhost BFF · :9470）
+
+**正本:** [org-os/wire-console-plan.md](org-os/wire-console-plan.md) · 3-org 手順: [inter-org-three-org-demo.md](org-os/inter-org-three-org-demo.md)
+
+### ポート表
+
+| サービス | ポート | 用途 |
+|----------|--------|------|
+| **Wire Console BFF** | **9470** | 人間オペレータ · propose/approve · 可視化 |
+| Protocol API | 9476 | peer 自動 ingest · metrics · deliver |
+
+### 起動 · 停止
+
+```bash
+npm run wire-console:build
+npm run orgos -- wire console start          # バックグラウンド · .orgos/wire-console.json
+npm run orgos -- wire console status
+npm run orgos -- wire console stop
+
+# tenant init 時に wire_console: true + 起動試行
+npm run orgos -- tenant init southwood --name Southwood --wire-console
+```
+
+**有効条件:** いずれかの `tenants/*/tenant.yaml` で `wire_console: true`（例: southwood · aiac）
+
+### 認証
+
+| モード | 設定 | ログイン |
+|--------|------|----------|
+| dev（デフォルト） | — | passkey `orgos-dev`（`WIRE_CONSOLE_DEV_PASSKEY` で上書き可） |
+| prod | `WIRE_CONSOLE_AUTH=prod` + `WIRE_CONSOLE_PROD_TOKEN` | prod token + operator_id + approver_id · **dev passkey 拒否** |
+
+```bash
+# 本番相当プロファイル例
+export WIRE_CONSOLE_AUTH=prod
+export WIRE_CONSOLE_PROD_TOKEN='…'
+npm run orgos -- wire console start
+```
+
+### Operator フロー（Console UI）
+
+1. ログイン → テナントタブ（southwood / aiac）
+2. **Propose notice** → **Approve** → outbox 確認
+3. **Delivery** / flush-pending · **Witness** register/verify
+4. Event **Workflow** タブで 4 ステップ追跡
+
+### ライブ更新
+
+- SSE: `GET /console/v1/events/stream`（要 session）
+- SPA: fingerprint 変更時 auto-refresh · 切断時 5s ポーリング
+
+### テスト
+
+```bash
+npm test -- tests/wire-console-server.test.ts
+```
+
+*改定: 2026-06-28 · Wire Console Wave 3*

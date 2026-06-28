@@ -36,7 +36,13 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-export function startHubServer(options: HubServerOptions): Promise<{ close: () => void }> {
+export interface HubServerHandle {
+  close: () => void;
+  port: number;
+  url: string;
+}
+
+export function startHubServer(options: HubServerOptions): Promise<HubServerHandle> {
   const hubConfig = { hubId: options.hubId, dataDir: options.dataDir };
   configureHubRuntime(hubConfig);
   mkdirSync(getHubDataDir(), { recursive: true });
@@ -67,8 +73,14 @@ export function startHubServer(options: HubServerOptions): Promise<{ close: () =
 
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
-      console.log(`✓ Witness Hub ${options.hubId} http://${host}:${port}`);
+      const addr = server.address();
+      const actualPort =
+        typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+      const url = `http://${host}:${actualPort}`;
+      console.log(`✓ Witness Hub ${options.hubId} ${url}`);
       resolve({
+        port: actualPort,
+        url,
         close: () => {
           stopGossip?.();
           server.close();

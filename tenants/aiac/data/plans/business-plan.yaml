@@ -1,0 +1,18 @@
+period: "2026-2028"
+
+vision: |
+  AIAC — スケルトン事業計画
+
+segments:
+  - name: "サンプル物件（賃貸）"
+    description: "[TBD]"
+    revenue_driver: "月額賃料"
+
+kpi: []
+
+years:
+  - year: 2026
+    revenue_plan: 0
+    operating_profit_plan: 0
+    investment_plan: 0
+    borrowing_plan: 0

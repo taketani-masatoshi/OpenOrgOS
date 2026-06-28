@@ -19,6 +19,8 @@
 | [org-approval-schema.md](org-approval-schema.md) | **Org 承認根幹** — `scope: internal \| wire` · pending-approvals SoT |
 | [inter-org-operator-model.md](inter-org-operator-model.md) | **Operator + CEO 承認ゲート** — Steward は組織間送信しない |
 | [inter-org-two-org-demo.md](inter-org-two-org-demo.md) | **2 組織デモ** — mal ↔ southwood · `npm run demo:inter-org` |
+| [wire-console-plan.md](wire-console-plan.md) | **Wire Console** — SPA + localhost BFF · outbox/inbox 可視化 · 運用 UI チケット |
+| [inter-org-three-org-demo.md](inter-org-three-org-demo.md) | **3-org Wire デモ** — CLI + Console 手順 |
 | [resilience-stack.md](resilience-stack.md) | **Resilience R1–R4** — relay worker · multipath · Org C trust PKI · SLA |
 
 ## 読む順

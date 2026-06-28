@@ -5,6 +5,7 @@
 
 import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { setTenantId, ROOT_DIR, getTenantDir } from "../src/lib/tenant.js";
 import { readYamlFile, writeYamlFile } from "../src/lib/utils.js";
 import { contractSchema } from "../schemas/contract.js";
@@ -42,10 +43,13 @@ import { loadHubAttestations } from "../src/lib/hub/registry.js";
 
 const HUB_A_DIR = join(ROOT_DIR, "data", "hub-a");
 const HUB_B_DIR = join(ROOT_DIR, "data", "hub-b");
+/** Default 0 = OS-assigned (avoids EADDRINUSE in parallel tests). Override via DEMO_HUB_*_PORT. */
+const HUB_A_PORT = Number(process.env.DEMO_HUB_A_PORT ?? 0);
+const HUB_B_PORT = Number(process.env.DEMO_HUB_B_PORT ?? 0);
 
-const DEMO_EVENT_ID = "a1b2c3d4-e5f6-4789-a012-3456789abcde";
-const MAL_TENANT = "mal";
-const VENDOR_TENANT = "southwood";
+export const DEMO_EVENT_ID = "a1b2c3d4-e5f6-4789-a012-3456789abcde";
+export const MAL_TENANT = "mal";
+export const VENDOR_TENANT = "southwood";
 const VENDOR_LEGAL_NAME = "株式会社サウスウッド";
 
 function protocolDir(tenantId: string): string {
@@ -94,7 +98,13 @@ function writeOutboxCopy(filename: string, envelope: unknown): string {
   });
 }
 
-function writeWitnessPool(tenantId: string, hubAKey: string, hubBKey: string): void {
+function writeWitnessPool(
+  tenantId: string,
+  hubAKey: string,
+  hubBKey: string,
+  hubAPort: number,
+  hubBPort: number
+): void {
   setTenantId(tenantId);
   writeYamlFile(
     getWitnessPoolYamlPath(),
@@ -105,13 +115,13 @@ function writeWitnessPool(tenantId: string, hubAKey: string, hubBKey: string): v
       hubs: [
         {
           hub_id: "HUB-A",
-          hub_url: "http://127.0.0.1:9474",
+          hub_url: `http://127.0.0.1:${hubAPort}`,
           hub_public_key: hubAKey,
           priority: 1,
         },
         {
           hub_id: "HUB-B",
-          hub_url: "http://127.0.0.1:9475",
+          hub_url: `http://127.0.0.1:${hubBPort}`,
           hub_public_key: hubBKey,
           priority: 2,
         },
@@ -139,6 +149,8 @@ function writeHubFederation(
 async function startDemoWitnessHubs(): Promise<{
   hubAKey: string;
   hubBKey: string;
+  hubAPort: number;
+  hubBPort: number;
   close: () => void;
 }> {
   for (const d of [HUB_A_DIR, HUB_B_DIR]) {
@@ -149,17 +161,19 @@ async function startDemoWitnessHubs(): Promise<{
   const hubAKey = exportHubPublicKeyBase64();
   configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B_DIR });
   const hubBKey = exportHubPublicKeyBase64();
-  const hubA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A_DIR, port: 9474 });
-  const hubB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B_DIR, port: 9475 });
+  const hubA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A_DIR, port: HUB_A_PORT });
+  const hubB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B_DIR, port: HUB_B_PORT });
   writeHubFederation(HUB_A_DIR, "HUB-A", [
-    { hub_id: "HUB-B", hub_url: "http://127.0.0.1:9475", hub_public_key: hubBKey },
+    { hub_id: "HUB-B", hub_url: hubB.url, hub_public_key: hubBKey },
   ]);
   writeHubFederation(HUB_B_DIR, "HUB-B", [
-    { hub_id: "HUB-A", hub_url: "http://127.0.0.1:9474", hub_public_key: hubAKey },
+    { hub_id: "HUB-A", hub_url: hubA.url, hub_public_key: hubAKey },
   ]);
   return {
     hubAKey,
     hubBKey,
+    hubAPort: hubA.port,
+    hubBPort: hubB.port,
     close: () => {
       hubA.close();
       hubB.close();
@@ -170,7 +184,9 @@ async function startDemoWitnessHubs(): Promise<{
 async function seedMalSide(
   sharedEventId: string,
   hubAKey: string,
-  hubBKey: string
+  hubBKey: string,
+  hubAPort: number,
+  hubBPort: number
 ): Promise<{ path: string; envelope: EventEnvelope }> {
   setTenantId(MAL_TENANT);
   resetProtocolState(MAL_TENANT);
@@ -222,7 +238,7 @@ async function seedMalSide(
 
   writeOutboxCopy("03-mal-execution-notice.json", transmission.envelope);
 
-  writeWitnessPool(MAL_TENANT, hubAKey, hubBKey);
+  writeWitnessPool(MAL_TENANT, hubAKey, hubBKey, hubAPort, hubBPort);
   const witnessSent = await registerWitnessAttestationFanOut({
     envelope: transmission.envelope,
     side: "sent",
@@ -258,6 +274,8 @@ async function seedVendorSide(
   malNoticePath: string,
   hubAKey: string,
   hubBKey: string,
+  hubAPort: number,
+  hubBPort: number,
   malEnvelope: unknown
 ): Promise<void> {
   setTenantId(VENDOR_TENANT);
@@ -299,7 +317,7 @@ async function seedVendorSide(
     console.log(`[${VENDOR_TENANT}] ⚠ verification: ${ingest.verificationIssues.join("; ")}`);
   }
 
-  writeWitnessPool(VENDOR_TENANT, hubAKey, hubBKey);
+  writeWitnessPool(VENDOR_TENANT, hubAKey, hubBKey, hubAPort, hubBPort);
   const witnessReceived = await registerWitnessAttestationFanOut({
     envelope: malEnvelope as Parameters<typeof registerWitnessAttestationFanOut>[0]["envelope"],
     side: "received",
@@ -336,19 +354,32 @@ async function seedVendorSide(
   );
 }
 
-async function main(): Promise<void> {
+export async function runInterOrgDemo(): Promise<void> {
   console.log(`Inter-org demo — operator approval + witness pool (${MAL_TENANT} ↔ ${VENDOR_TENANT})\n`);
 
   if (!existsSync(join(ROOT_DIR, "tenants", VENDOR_TENANT, "tenant.yaml"))) {
-    console.error(`Tenant ${VENDOR_TENANT} not found`);
-    process.exit(1);
+    throw new Error(`Tenant ${VENDOR_TENANT} not found`);
   }
 
   const hubs = await startDemoWitnessHubs();
   try {
     ensureCtr012Executed();
-    const mal = await seedMalSide(DEMO_EVENT_ID, hubs.hubAKey, hubs.hubBKey);
-    await seedVendorSide(DEMO_EVENT_ID, mal.path, hubs.hubAKey, hubs.hubBKey, mal.envelope);
+    const mal = await seedMalSide(
+      DEMO_EVENT_ID,
+      hubs.hubAKey,
+      hubs.hubBKey,
+      hubs.hubAPort,
+      hubs.hubBPort
+    );
+    await seedVendorSide(
+      DEMO_EVENT_ID,
+      mal.path,
+      hubs.hubAKey,
+      hubs.hubBKey,
+      hubs.hubAPort,
+      hubs.hubBPort,
+      mal.envelope
+    );
 
     // v2: simulate HUB-B partition — wipe local SoT, backfill via gossip from HUB-A
     configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B_DIR });
@@ -399,7 +430,15 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
-  process.exit(1);
-});
+async function main(): Promise<void> {
+  try {
+    await runInterOrgDemo();
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  }
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  main();
+}

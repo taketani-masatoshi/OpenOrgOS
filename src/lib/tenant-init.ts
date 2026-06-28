@@ -24,6 +24,7 @@ export interface TenantInitOptions {
   entityForm?: string;
   displayLanguage?: string;
   legalSubdivision?: string;
+  wireConsole?: boolean;
 }
 
 export function runTenantInit(options: TenantInitOptions): void {
@@ -58,6 +59,13 @@ export function runTenantInit(options: TenantInitOptions): void {
   console.log(`  Regulations seeded: ${seedResult.seeded.join(", ") || "(none)"}`);
   if (seedResult.skipped.length) {
     console.log(`  Skipped (exists): ${seedResult.skipped.join(", ")}`);
+  }
+
+  if (options.wireConsole) {
+    void import("./wire-console/process.js").then(async ({ tryStartWireConsoleAfterInit }) => {
+      const manifest = await tryStartWireConsoleAfterInit();
+      if (manifest) console.log(`  Wire Console: ${manifest.url}`);
+    });
   }
 }
 
@@ -117,6 +125,13 @@ function writeTenantYaml(dest: string, id: string, name: string, options: Tenant
     }
   } else if (jurisdiction === "US") {
     if (!/^legal_subdivision:.*$/m.test(raw)) raw += "legal_subdivision: DE\n";
+  }
+  if (options.wireConsole) {
+    if (/^wire_console:.*$/m.test(raw)) {
+      raw = raw.replace(/^wire_console:.*$/m, "wire_console: true");
+    } else {
+      raw += "wire_console: true\n";
+    }
   }
   writeFileSync(path, raw, "utf-8");
 }

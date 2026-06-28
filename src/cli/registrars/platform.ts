@@ -91,6 +91,7 @@ export function registerPlatformCommands(program: Command): void {
     .option("--entity-form <form>", "Entity form (kk | c_corp)")
     .option("--display-language <code>", "Display language (ja | en | zh-Hant | zh-Hans | et)")
     .option("--legal-subdivision <code>", "Legal subdivision (e.g. DE for Delaware under US)")
+    .option("--wire-console", "Enable wire_console in tenant.yaml and start Wire Console")
     .option("--force", "Overwrite existing tenant directory")
     .option("--no-validate", "Skip validate after init")
     .action((id, opts) =>
@@ -103,8 +104,45 @@ export function registerPlatformCommands(program: Command): void {
         entityForm: opts.entityForm,
         displayLanguage: opts.displayLanguage,
         legalSubdivision: opts.legalSubdivision,
+        wireConsole: opts.wireConsole,
       })
     );
+
+  const wireCmd = program.command("wire").description("Inter-org Wire operator tools");
+  const wireConsoleCmd = wireCmd
+    .command("console")
+    .description("Wire Console — localhost SPA + BFF for outbox/inbox");
+
+  wireConsoleCmd
+    .command("start")
+    .description("Start Wire Console daemon")
+    .option("--port <n>", "Port", (v: string) => parseInt(v, 10))
+    .option("--host <host>", "Bind host", "127.0.0.1")
+    .option("--foreground", "Run in foreground (no daemon)")
+    .action(async (opts) => {
+      const { runWireConsoleStart } = await import("../../commands/wire-console.js");
+      await runWireConsoleStart({
+        port: opts.port,
+        host: opts.host,
+        foreground: opts.foreground,
+      });
+    });
+
+  wireConsoleCmd
+    .command("stop")
+    .description("Stop Wire Console daemon")
+    .action(async () => {
+      const { runWireConsoleStop } = await import("../../commands/wire-console.js");
+      runWireConsoleStop();
+    });
+
+  wireConsoleCmd
+    .command("status")
+    .description("Wire Console daemon status")
+    .action(async () => {
+      const { runWireConsoleStatus } = await import("../../commands/wire-console.js");
+      runWireConsoleStatus();
+    });
 
   const localeCmd = program.command("locale").description("Display language (independent from legal jurisdiction)");
   localeCmd.command("list").description("List supported display languages").action(runLocaleList);

@@ -102,7 +102,7 @@ describe("protocol mesh deliver E2E", () => {
         event_id: eventId,
         occurred_at: "2026-06-27T12:00:00.000Z",
         origin: { org_id: "PEER-001", org_uri: "steward://tenant/mal" },
-        destination: { org_id: "PEER-003", org_uri: "steward://tenant/hk-demo" },
+        destination: { org_id: "PEER-003", org_uri: "steward://tenant/aiac" },
         identity: { org_ref: { org_id: "PEER-001", org_uri: "steward://tenant/mal" } },
         event: {
           type: "org.transaction.recorded",

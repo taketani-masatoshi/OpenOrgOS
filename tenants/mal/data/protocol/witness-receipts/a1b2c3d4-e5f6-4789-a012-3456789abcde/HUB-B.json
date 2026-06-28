@@ -1,0 +1,32 @@
+{
+  "receipt_id": "WRCPT-1782611944694-2toqhc",
+  "event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+  "envelope_digest": "764a5875fd8b7dde5627810b6800b74e90295afb72e67b35af0689c720038da9",
+  "status": "unilateral",
+  "attestations": [
+    {
+      "event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+      "envelope_digest": "764a5875fd8b7dde5627810b6800b74e90295afb72e67b35af0689c720038da9",
+      "side": "received",
+      "origin": {
+        "org_id": "mal",
+        "org_uri": "steward://tenant/mal"
+      },
+      "destination": {
+        "org_id": "PEER-001",
+        "org_uri": "steward://tenant/southwood"
+      },
+      "transaction_type": "steward.contract.execution.notice",
+      "attested_at": "2026-06-28T01:59:04.691Z",
+      "org_ref": {
+        "org_id": "PEER-001",
+        "org_uri": "steward://tenant/southwood"
+      },
+      "org_public_key": "MCowBQYDK2VwAyEA99fQiKeKrh3eYacqsTOz30jEPcVfWNuif3JGmAg00So=",
+      "org_signature": "5gHqxGdkqHYeltkFwgKm8fswveTnbalg5QQpYqzFcKARc7Uafup9Heg2/VPniO6gtRMdb9vTSPbKkOllSQepCQ=="
+    }
+  ],
+  "issued_at": "2026-06-28T01:59:04.694Z",
+  "hub_id": "HUB-B",
+  "hub_signature": "/zcFf9VTiI1PV2BjutoTFyYuHGqFmwNzYqTyR+khgsQ6cnreGM3o2ZHD8PTFkaQjhhR4529zdduQQ3PUf6O6Cg=="
+}

@@ -1,0 +1,50 @@
+{
+  "protocol_version": "1",
+  "event_id": "1abafb38-5b63-4261-8933-0a94f3d4e2f6",
+  "occurred_at": "2026-06-28T03:07:14.050Z",
+  "origin": {
+    "org_id": "southwood",
+    "org_uri": "steward://tenant/southwood"
+  },
+  "destination": {
+    "org_id": "PEER-002",
+    "org_uri": "steward://tenant/mal"
+  },
+  "correlation_id": "NOTICE-20260628-010",
+  "identity": {
+    "org_ref": {
+      "org_id": "southwood",
+      "org_uri": "steward://tenant/southwood"
+    }
+  },
+  "event": {
+    "type": "org.transaction.recorded",
+    "payload": {
+      "transaction_id": "TX-20260628-004",
+      "direction": "outbound",
+      "transaction_type": "steward.contract.execution.notice",
+      "counterparty": "PEER-002",
+      "refs": {
+        "contract_id": "CTR-012"
+      },
+      "amount": {
+        "value": 85000,
+        "currency": "JPY"
+      },
+      "notes": "Wire Console Wave 2 test notice",
+      "operator_attestation": {
+        "operator_id": "wire-console-test",
+        "approver_id": "南木健一",
+        "approved_at": "2026-06-28T03:07:14.047Z",
+        "basis": "existing_contract",
+        "basis_ref": "CTR-012",
+        "approval_id": "NOTICE-20260628-010",
+        "notice_id": "NOTICE-20260628-010",
+        "approval_tier": "A",
+        "approval_policy_ref": "REG-004"
+      },
+      "notice_kind": "per_existing_contract"
+    }
+  },
+  "signature": "Nm+j0udcOZO5iHI1DBF6PGPaNI8RuoWbzgG32Ngw6DXslIslo7mvG1OS3R1NdDNlm832obINdBI0v5UcJe+ZAw=="
+}

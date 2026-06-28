@@ -1,0 +1,51 @@
+{
+  "protocol_version": "1",
+  "event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+  "occurred_at": "2026-06-28T01:59:04.559Z",
+  "origin": {
+    "org_id": "mal",
+    "org_uri": "steward://tenant/mal"
+  },
+  "destination": {
+    "org_id": "PEER-001",
+    "org_uri": "steward://tenant/southwood"
+  },
+  "correlation_id": "NOTICE-20260628-009",
+  "identity": {
+    "org_ref": {
+      "org_id": "mal",
+      "org_uri": "steward://tenant/mal"
+    }
+  },
+  "event": {
+    "type": "org.transaction.recorded",
+    "payload": {
+      "transaction_id": "TX-20260628-001",
+      "direction": "outbound",
+      "transaction_type": "steward.contract.execution.notice",
+      "counterparty": "PEER-001",
+      "refs": {
+        "contract_id": "CTR-012",
+        "stakeholder_id": "STK-001"
+      },
+      "amount": {
+        "value": 85000,
+        "currency": "JPY"
+      },
+      "notes": "CTR-012 オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。",
+      "operator_attestation": {
+        "operator_id": "秘書オペレータ",
+        "approver_id": "段燕燕",
+        "approved_at": "2026-06-28T01:59:04.546Z",
+        "basis": "existing_contract",
+        "basis_ref": "CTR-012",
+        "approval_id": "NOTICE-20260628-009",
+        "notice_id": "NOTICE-20260628-009",
+        "approval_tier": "A",
+        "approval_policy_ref": "REG-004"
+      },
+      "notice_kind": "per_existing_contract"
+    }
+  },
+  "signature": "8eRAJxeALNwUXBPsDn8n6+hLgEpj7sYiSBu+4eIBjXGpzG3BPlE4yB60nSuuuzbWy34NhNbhYVKABT8JQPq3AQ=="
+}

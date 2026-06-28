@@ -46,6 +46,8 @@ npm run orgos -- --tenant acme validate
 |---------|------|
 | [`demo/`](demo/) | 最小骨格 · 賃貸1物件 · MAL 非依存 |
 | [`acme/`](acme/) | 第3転用性 · `tenant init` 生成参照 |
+| [`southwood/`](southwood/) | Inter-org デモ借主（mal 相手先） |
+| [`aiac/`](aiac/) | Inter-org 第3組織（mesh · 多当事者 wire） |
 | [`mal/`](../mal/) | 本番運用データ例（フレームワーク評価スコープ外） |
 
 ```bash

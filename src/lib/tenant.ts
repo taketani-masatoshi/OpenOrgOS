@@ -33,6 +33,8 @@ const tenantConfigSchema = z.object({
   /** Legacy BCP 47 display tag; use display_language when possible */
   locale: z.string().optional(),
   default_currency: z.string().regex(/^[A-Z]{3}$/).optional(),
+  /** Opt-in localhost Wire Console (default false). */
+  wire_console: z.boolean().optional(),
 });
 
 export type TenantConfig = z.infer<typeof tenantConfigSchema>;

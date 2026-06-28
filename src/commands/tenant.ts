@@ -13,6 +13,7 @@ export function runTenantInitCommand(
     entityForm?: string;
     displayLanguage?: string;
     legalSubdivision?: string;
+    wireConsole?: boolean;
   }
 ): void {
   const options: TenantInitOptions = {
@@ -24,6 +25,7 @@ export function runTenantInitCommand(
     entityForm: opts.entityForm,
     displayLanguage: opts.displayLanguage,
     legalSubdivision: opts.legalSubdivision,
+    wireConsole: opts.wireConsole,
   };
   runTenantInit(options);
   if (opts.validate !== false) {

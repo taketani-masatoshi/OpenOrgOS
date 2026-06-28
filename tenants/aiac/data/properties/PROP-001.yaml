@@ -1,0 +1,10 @@
+id: PROP-001
+name: "サンプル物件"
+location: "[TBD]"
+type: rental
+rental:
+  monthly_rent: 0
+  vacancy_rate: 0
+  management_fee: 0
+notes: |
+  スケルトン — AIAC

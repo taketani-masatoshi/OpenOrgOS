@@ -82,7 +82,7 @@ async function main(): Promise<void> {
         event_id: eventId,
         occurred_at: new Date().toISOString(),
         origin: { org_id: "PEER-001", org_uri: "steward://tenant/mal" },
-        destination: { org_id: "PEER-003", org_uri: "steward://tenant/hk-demo" },
+        destination: { org_id: "PEER-003", org_uri: "steward://tenant/aiac" },
         identity: { org_ref: { org_id: "PEER-001", org_uri: "steward://tenant/mal" } },
         event: {
           type: "org.transaction.recorded",
