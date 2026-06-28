@@ -40,9 +40,9 @@ cp tenants/mal/docs/executive/google-calendar.env.example .env
 ## 5. 動作確認
 
 ```bash
-npm run steward -- executive calendar push --dry-run
-npm run steward -- executive calendar push          # 本番 · google_event_id 書戻し
-npm run steward -- executive calendar pull --since 2026-06-01
+npm run orgos -- executive calendar push --dry-run
+npm run orgos -- executive calendar push          # 本番 · google_event_id 書戻し
+npm run orgos -- executive calendar pull --since 2026-06-01
 npm run validate   # 未同期 warning 確認
 ```
 

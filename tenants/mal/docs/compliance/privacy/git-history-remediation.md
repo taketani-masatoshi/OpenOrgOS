@@ -38,7 +38,7 @@ executive 正本（予定 · タスク · 1-on-1 · 社外連絡 · 利害関係
 | 項目 | 状態 |
 |------|------|
 | index（現 HEAD） | executive 実 YAML · 下書き MD · STK 実プロフィールは **非追跡** |
-| `.gitignore` | RES-EXEC-* 整合 · `npm run steward -- classification check` ✓ |
+| `.gitignore` | RES-EXEC-* 整合 · `npm run orgos -- classification check` ✓ |
 | **リモート履歴 blob** | **残存** — 下記 path が過去 commit に存在（実測） |
 
 ---

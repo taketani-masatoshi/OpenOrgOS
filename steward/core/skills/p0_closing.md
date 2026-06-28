@@ -2,7 +2,7 @@
 
 ## Runtime
 
-**cli** — `npm run steward -- skills run p0`
+**cli** — `npm run orgos -- skills run p0`
 
 ## 目的
 

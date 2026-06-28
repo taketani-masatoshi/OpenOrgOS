@@ -26,7 +26,7 @@
 | **KPI** | レポート生成日 · 閲覧 |
 | **関連フォルダ** | `docs/reports/dashboard/` |
 | **担当** | Executive Steward |
-| **更新頻度** | 月次（`npm run steward -- dashboard`） |
+| **更新頻度** | 月次（`npm run orgos -- dashboard`） |
 | **リスク** | 入力データ TBD |
 
 ---

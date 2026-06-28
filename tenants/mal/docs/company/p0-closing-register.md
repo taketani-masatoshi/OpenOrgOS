@@ -1,7 +1,7 @@
 # P0 決算前クロージングレジスタ — 株式会社MAL
 
 **更新:** 2026-06-09（OS-99+ Cycle 0）  
-**正本:** 本ファイル · 進捗確認: `npm run steward -- ops p0` · 採点: `steward status --os-99`
+**正本:** 本ファイル · 進捗確認: `npm run orgos -- ops p0` · 採点: `steward status --os-99`
 
 | ID | 項目 | 状態 | 次のアクション | 担当 |
 |----|------|------|---------------|------|
@@ -22,7 +22,7 @@
 1. 加入パケット記入 · 保険会社提出
 2. 証券 PDF → `docs/io/inbox/` → `licenses/insurance/`
 3. `data/contracts/CTR-0XX.yaml` を `status: executed` · 保険料記入
-4. `npm run steward -- sync contracts` · `npm run validate`
+4. `npm run orgos -- sync contracts` · `npm run validate`
 
 ### secrets
 
@@ -40,7 +40,7 @@ npm run validate
 # as_of · accounts[].amount を入力
 # status: confirmed
 npm run validate
-npm run steward -- dashboard  # ランウェイ反映
+npm run orgos -- dashboard  # ランウェイ反映
 ```
 
 ---

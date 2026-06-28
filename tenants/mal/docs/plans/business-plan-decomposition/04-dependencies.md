@@ -1,6 +1,6 @@
 # Step 4 — 計画間依存関係
 
-**機械可読版:** `data/dependency-graph.yaml` · CLI: `npm run steward -- deps graph`
+**機械可読版:** `data/dependency-graph.yaml` · CLI: `npm run orgos -- deps graph`
 
 ---
 
@@ -139,4 +139,4 @@ PROP-002.hotel.* → 旅館業稼働率レポート
 | `loans.yaml` 返済条件 | 借入返済・DSCR・CF |
 | `expense-plan.yaml` | 費用・損益・CF |
 
-CLI: `npm run steward -- deps check --file <path>`
+CLI: `npm run orgos -- deps check --file <path>`

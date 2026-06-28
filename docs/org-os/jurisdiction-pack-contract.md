@@ -50,10 +50,10 @@ default_currency: JPY
 CLI:
 
 ```bash
-npm run steward -- jurisdiction list
-npm run steward -- jurisdiction show
-npm run steward -- locale list
-npm run steward -- locale show
+npm run orgos -- jurisdiction list
+npm run orgos -- jurisdiction show
+npm run orgos -- locale list
+npm run orgos -- locale show
 ```
 
 ```yaml
@@ -99,7 +99,7 @@ pack: US
 | `seed/tax-profile.yaml.example` | ✓ | ✓ |
 | `seed/chart-of-accounts.yaml.example` | ✓ | ✓ |
 
-CLI: `npm run steward -- jurisdiction check [JP|US]`（将来） · 現状は `tests/jurisdiction.test.ts`
+CLI: `npm run orgos -- jurisdiction check [JP|US]`（将来） · 現状は `tests/jurisdiction.test.ts`
 
 ---
 

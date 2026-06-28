@@ -142,7 +142,7 @@ describe("us-demo validate", () => {
   it("passes steward validate", () => {
     execFileSync(
       "npm",
-      ["run", "steward", "--", "--tenant", "us-demo", "validate"],
+      ["run", "orgos", "--", "--tenant", "us-demo", "validate"],
       { cwd: join(import.meta.dirname, ".."), encoding: "utf-8", stdio: "pipe" }
     );
   });
@@ -178,7 +178,7 @@ describe.each([
   it("passes steward validate", () => {
     execFileSync(
       "npm",
-      ["run", "steward", "--", "--tenant", tenantId, "validate"],
+      ["run", "orgos", "--", "--tenant", tenantId, "validate"],
       { cwd: join(import.meta.dirname, ".."), encoding: "utf-8", stdio: "pipe" }
     );
   });

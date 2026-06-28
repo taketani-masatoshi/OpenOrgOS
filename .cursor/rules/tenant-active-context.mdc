@@ -5,7 +5,7 @@ alwaysApply: true
 
 # テナント `mal` — アクティブコンテキストのみ読取
 
-**生成:** `npm run steward -- modules sync-context` · 正本: `tenants/mal/rules/active_context.md`
+**生成:** `npm run orgos -- modules sync-context` · 正本: `tenants/mal/rules/active_context.md`
 
 ## 禁止（トークン節約）
 

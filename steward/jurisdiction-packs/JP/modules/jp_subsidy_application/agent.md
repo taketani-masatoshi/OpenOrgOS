@@ -28,11 +28,11 @@
 ## CLI
 
 ```bash
-npm run steward -- --tenant mal operations subsidy show
-npm run steward -- --tenant mal operations subsidy validate
-npm run steward -- --tenant mal operations subsidy eligibility --program SUB-2026-001
-npm run steward -- --tenant mal operations subsidy labor-cost --program SUB-2026-001
-npm run steward -- --tenant mal operations subsidy draft --program SUB-2026-001
+npm run orgos -- --tenant mal operations subsidy show
+npm run orgos -- --tenant mal operations subsidy validate
+npm run orgos -- --tenant mal operations subsidy eligibility --program SUB-2026-001
+npm run orgos -- --tenant mal operations subsidy labor-cost --program SUB-2026-001
+npm run orgos -- --tenant mal operations subsidy draft --program SUB-2026-001
 ```
 
 ## ワークフロー（Phase 0）

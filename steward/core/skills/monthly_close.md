@@ -32,11 +32,11 @@ Finance Agent
 ## CLI
 
 ```bash
-npm run steward -- skills run monthly-close --month YYYY-MM
-npm run steward -- finances add --month YYYY-MM
-npm run steward -- deps check --file data/finance/monthly/YYYY-MM.yaml
+npm run orgos -- skills run monthly-close --month YYYY-MM
+npm run orgos -- finances add --month YYYY-MM
+npm run orgos -- deps check --file data/finance/monthly/YYYY-MM.yaml
 npm run validate
-npm run steward -- sync all
+npm run orgos -- sync all
 ```
 
 ## 禁止

@@ -1,17 +1,20 @@
 # docs/org-os — 組織 OS · 法域拡張
 
-Steward OS の **法域（jurisdiction）· 表示言語（locale）· 法人形態** に関する設計文書。
+**用語正本:** [orgos-vocabulary.md](orgos-vocabulary.md) — **OrgOS = 製品** · **Steward Agent = 経営統括 Agent** · Core · Wire · Witness
 
-**OpenOrgOS の位置づけ:** 組織**内部**管理 OS ではなく、組織**間**通信の **global protocol**。Core は **Org Event Model · identity exchange · authority delegation · auditability** の四つのみ。ビジネスロジック · 法解釈 · 組織行動は **national / domain committees**（法域 · 業種 adapter）に委譲。
+**OrgOS（組織 OS）** = 製品全体（旧ドキュメントの「Steward OS 製品」に相当）。  
+本リポジトリ `OS_Steward` / npm `orgos-reference` は **OrgOS の参照実装** — CLI **`orgos`**（旧 `steward` 非推奨 · [cli-migration.md](cli-migration.md)）。
 
 ## 設計原則（英語正本）
 
 | 文書 | 内容 |
 |------|------|
+| [orgos-vocabulary.md](orgos-vocabulary.md) | **用語正本** — OrgOS · Core · Wire · Witness · Agent |
 | [openorgos-core-philosophy.md](openorgos-core-philosophy.md) | **OpenOrgOS Core Philosophy** — inter-org protocol · kernel · adapters |
 | [language-policy.md](language-policy.md) | **Language tiers** — Core EN · Strategic · Community-supported |
 | [layer-mapping-steward-os.md](layer-mapping-steward-os.md) | 本リポジトリの 4 層対応 · Core drift 一覧 |
 | [orgos-completion-plan.md](orgos-completion-plan.md) | **OrgOS 完成度向上計画** — ORG-C0–C5 |
+| [orgos-scoring-methodology.md](orgos-scoring-methodology.md) | **採点正本** — チェックリスト vs 厳格 · 批判対応マップ |
 | [orgos-interface-spec.md](orgos-interface-spec.md) | Implementation / Adapter / Wire 境界（草案） |
 | [org-approval-schema.md](org-approval-schema.md) | **Org 承認根幹** — `scope: internal \| wire` · pending-approvals SoT |
 | [inter-org-operator-model.md](inter-org-operator-model.md) | **Operator + CEO 承認ゲート** — Steward は組織間送信しない |
@@ -40,4 +43,4 @@ Steward OS の **法域（jurisdiction）· 表示言語（locale）· 法人形
 
 ## 評価
 
-完成度は [framework-assessment.md](../framework-assessment.md) §11 · バックログは [framework-backlog.md](../framework-backlog.md) Phase ORG-J8。
+完成度は [framework-assessment.md](../framework-assessment.md) §13 · 採点正本 [orgos-scoring-methodology.md](orgos-scoring-methodology.md) · バックログ [framework-backlog.md](../framework-backlog.md) Phase ORG-C。

@@ -14,7 +14,7 @@
 
 ```bash
 # 蓄積確認（CLI）
-npm run steward -- skills run records-check
+npm run orgos -- skills run records-check
 ```
 
 ---

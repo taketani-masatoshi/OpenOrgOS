@@ -7,7 +7,9 @@
 
 ## 1. 目的
 
-Organization Implementation · Adapter · Wire の **3 境界（I1–I3）** の入出力を固定し、単独 OrgOS と組織間通信が **同じデータ形式** を共有するための契約。
+Organization Implementation · Adapter · Wire · Witness の **境界（I1–I3）** の入出力を固定し、単独 OrgOS と組織間通信が **同じデータ形式** を共有するための契約。
+
+**用語:** [orgos-vocabulary.md](orgos-vocabulary.md) — OrgOS 四構成 · Wire vs Witness
 
 ---
 

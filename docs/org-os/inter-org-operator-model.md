@@ -26,18 +26,18 @@
 
 ```bash
 # Secretary 起案
-npm run steward -- --tenant mal protocol notice draft \
+npm run orgos -- --tenant mal protocol notice draft \
   --peer PEER-001 --contract CTR-012
 
 # 承認者確認
-npm run steward -- --tenant mal protocol approvers
+npm run orgos -- --tenant mal protocol approvers
 
 # CEO 承認 → 署名付き outbox · peer へ deliver（webhook URL 設定時）
-npm run steward -- --tenant mal protocol notice approve \
+npm run orgos -- --tenant mal protocol notice approve \
   --id NOTICE-* --approver "段燕燕"
 
 # 相手 peer 登録（identity から公開鍵）
-npm run steward -- --tenant southwood protocol peer register \
+npm run orgos -- --tenant southwood protocol peer register \
   --name "株式会社MAL" --jurisdiction JP \
   --org-uri steward://tenant/mal \
   --identity-file tenants/mal/docs/protocol/outbox/01-mal-identity-presented.json \

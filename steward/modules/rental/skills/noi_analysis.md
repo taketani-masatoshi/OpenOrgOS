@@ -22,8 +22,8 @@ Rental Module Agent · Finance Agent（Read）
 ## CLI
 
 ```bash
-npm run steward -- properties show PROP-001
-npm run steward -- analyze property PROP-001
+npm run orgos -- properties show PROP-001
+npm run orgos -- analyze property PROP-001
 ```
 
 ## 禁止

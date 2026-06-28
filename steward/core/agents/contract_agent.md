@@ -58,10 +58,10 @@
 
 **編集後:**
 ```bash
-npm run steward -- deps check --file data/contracts/CTR-XXX.yaml
+npm run orgos -- deps check --file data/contracts/CTR-XXX.yaml
 npm run validate
-npm run steward -- contracts show CTR-XXX
-npm run steward -- alerts
+npm run orgos -- contracts show CTR-XXX
+npm run orgos -- alerts
 ```
 
 ---

@@ -6,7 +6,7 @@
 
 ```bash
 # 汎用
-npm run steward -- invoice generate \
+npm run orgos -- invoice generate \
   --module rental \
   --property PROP-001 \
   --from 2026-02 \

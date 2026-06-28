@@ -5,7 +5,7 @@ rental と同型の **`steward invoice generate`** · `modules.yaml` **`billing`
 ## コマンド
 
 ```bash
-npm run steward -- invoice generate \
+npm run orgos -- invoice generate \
   --module hospitality \
   --property PROP-002 \
   --from 2026-02 \

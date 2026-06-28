@@ -1,6 +1,6 @@
 # 社内規程 — テナント有効化
 # 正本: tenants/{id}/regulations.yaml · カタログ: steward/standards/regulations/catalog.yaml
-# 生成: npm run steward -- modules sync-context
+# 生成: npm run orgos -- modules sync-context
 
 regulations:
   # ガバナンス（常時）

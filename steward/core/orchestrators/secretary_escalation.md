@@ -272,14 +272,14 @@ docs/reports/routing-queue/            # handoff 履歴（任意 · route handof
 
 ```bash
 # 1 コマンド dispatch（Secretary 優先）
-npm run steward -- secretary escalate --dispatch --subject "件名" --q "質問1"
+npm run orgos -- secretary escalate --dispatch --subject "件名" --q "質問1"
 
 # カレンダー
-npm run steward -- executive calendar push --dry-run
-npm run steward -- executive calendar pull --since 2026-06-01
+npm run orgos -- executive calendar push --dry-run
+npm run orgos -- executive calendar pull --since 2026-06-01
 
 # merge 完了時 Secretary relay ブロックが stdout に出力
-npm run steward -- escalate merge --id IMP-...
+npm run orgos -- escalate merge --id IMP-...
 ```
 
 ---

@@ -15,7 +15,7 @@ export interface InboxExportEntry {
 function readEnvelopesFromDir(dir: string): InboxExportEntry[] {
   let files: string[];
   try {
-    files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+    files = readdirSync(dir).filter((f) => f.endsWith(".json") && !f.endsWith(".steward-provenance.json"));
   } catch {
     return [];
   }

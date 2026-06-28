@@ -64,8 +64,8 @@
 ## 12ヶ月フォワード予測
 
 ```bash
-npm run steward -- forecast
-npm run steward -- forecast -o 2026-06-06.md
+npm run orgos -- forecast
+npm run orgos -- forecast -o 2026-06-06.md
 ```
 
 実績月は `finances/monthly/`、未到来月は `property-revenue.yaml` + `fixed-costs.yaml` + `loans.yaml` から計画値を使用。
@@ -77,6 +77,6 @@ npm run steward -- forecast -o 2026-06-06.md
 1. 月次実績 → `data/finance/monthly/{YYYY-MM}.yaml`
 2. 予実修正 → `data/plans/yojitsu-fy*.yaml`
 3. `npm run validate`
-4. `npm run steward -- dashboard`
+4. `npm run orgos -- dashboard`
 
 *本表は参照用。最新数値はダッシュボード出力を正とする。*

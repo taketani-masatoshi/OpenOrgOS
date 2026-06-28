@@ -30,9 +30,9 @@ Finance Agent · Hospitality Agent（宿泊モジュール CAPEX 入力）
 ## CLI
 
 ```bash
-npm run steward -- deps check --file data/plans/investment-plan.yaml
+npm run orgos -- deps check --file data/plans/investment-plan.yaml
 npm run validate
-npm run steward -- sync all
+npm run orgos -- sync all
 ```
 
 ## 禁止

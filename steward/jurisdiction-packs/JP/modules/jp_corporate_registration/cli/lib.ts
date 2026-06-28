@@ -722,9 +722,9 @@ export function runJpCorporateShow(opts: { json?: boolean }): void {
   console.log(`# jp_corporate_registration\n`);
   console.log(`法域: ${jurisdiction.code} · 手続 ${summary.procedures} · 案件 ${summary.cases} · 書式 ${summary.forms}\n`);
   console.log("```bash");
-  console.log("npm run steward -- operations corporate procedures");
-  console.log("npm run steward -- operations corporate prepare --case INC-2026-001 --write");
-  console.log("npm run steward -- operations corporate prepare --procedure dissolution --write");
+  console.log("npm run orgos -- operations corporate procedures");
+  console.log("npm run orgos -- operations corporate prepare --case INC-2026-001 --write");
+  console.log("npm run orgos -- operations corporate prepare --procedure dissolution --write");
   console.log("```\n");
   if (registry?.data.cases.length) {
     console.log("## 案件\n");

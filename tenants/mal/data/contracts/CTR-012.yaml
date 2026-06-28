@@ -29,6 +29,7 @@ notes: |-
   旅館清掃（PROP-002）は別途業者選定（CTR-012 とは無関係）。
   [protocol demo] executed for inter-org demo · peer southwood
 protocol:
+  peer_id: PEER-001
   resilience_sla: silver
   witness_hubs:
     - hub_id: HUB-A
@@ -36,3 +37,13 @@ protocol:
     - hub_id: HUB-B
       hub_url: http://127.0.0.1:9475
   relay_org_uri: org:mal:relay
+  allowed_event_types:
+    - org.transaction.recorded
+    - org.identity.presented
+    - org.authority.delegated
+  allowed_transaction_types:
+    - steward.contract.executed
+    - steward.contract.execution.notice
+    - steward.obligation.acknowledged
+  allowed_payload_namespaces:
+    - steward.contract

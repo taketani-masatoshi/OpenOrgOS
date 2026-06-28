@@ -2,7 +2,7 @@
 
 ## Runtime
 
-**cli** — `npm run steward -- skills run records-check`
+**cli** — `npm run orgos -- skills run records-check`
 
 ## 目的
 

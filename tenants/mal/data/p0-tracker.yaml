@@ -1,6 +1,6 @@
 # P0 実手続トラッカー — データ正本
 # 人向け手順: docs/company/p0-closing-register.md
-# CLI: npm run steward -- ops p0
+# CLI: npm run orgos -- ops p0
 
 items:
   - id: P0-01

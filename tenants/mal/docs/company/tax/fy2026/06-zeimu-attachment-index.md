@@ -103,9 +103,9 @@
 
 | 書類 | コマンド | 出力先 |
 |------|---------|--------|
-| 決算報告書 | `npm run steward -- report kessan --fy FY2026` | [`pdf/kessan/`](../../pdf/kessan/) |
-| 事業報告書 | `npm run steward -- report jigyo --fy FY2026` | [`pdf/jigyo/`](../../pdf/jigyo/) |
-| 年次一括 | `npm run steward -- report annual --fy FY2026` | 上記 |
+| 決算報告書 | `npm run orgos -- report kessan --fy FY2026` | [`pdf/kessan/`](../../pdf/kessan/) |
+| 事業報告書 | `npm run orgos -- report jigyo --fy FY2026` | [`pdf/jigyo/`](../../pdf/jigyo/) |
+| 年次一括 | `npm run orgos -- report annual --fy FY2026` | 上記 |
 
 ---
 

@@ -32,10 +32,10 @@
 ## 3. CLI 早見
 
 ```bash
-npm run steward -- protocol community operators-validate
-npm run steward -- protocol community check-sla
-npm run steward -- protocol community readiness
-npm run steward -- status --orgos
+npm run orgos -- protocol community operators-validate
+npm run orgos -- protocol community check-sla
+npm run orgos -- protocol community readiness
+npm run orgos -- status --orgos
 ```
 
 *改定: 2026-06-27 · Steward-side C4 完了*

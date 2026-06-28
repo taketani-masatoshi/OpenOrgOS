@@ -49,7 +49,7 @@
 **優先 CLI（1 コマンド）:**
 
 ```bash
-npm run steward -- secretary escalate --dispatch --subject "件名" --q "質問1"
+npm run orgos -- secretary escalate --dispatch --subject "件名" --q "質問1"
 ```
 
 `--dispatch` = CONSULT MD + routing-queue handoff + webhook（Steward スレッドを開かなくてよい）。
@@ -61,7 +61,7 @@ npm run steward -- secretary escalate --dispatch --subject "件名" --q "質問1
 **エスカレコピー 1 ブロック**（フォールバック）— **または webhook のみ CLI:**
 
 ```bash
-npm run steward -- secretary escalate --subject "件名" --q "質問1" [--webhook]
+npm run orgos -- secretary escalate --subject "件名" --q "質問1" [--webhook]
 ```
 
 手動ブロック:
@@ -132,8 +132,8 @@ launchctl load ~/Library/LaunchAgents/com.steward.executive-backup-reminder.plis
 `cancelled` は Secretary 一覧に出さない。週次または月次で:
 
 ```bash
-npm run steward -- executive tasks archive --dry-run
-npm run steward -- executive tasks archive
+npm run orgos -- executive tasks archive --dry-run
+npm run orgos -- executive tasks archive
 ```
 
 `archived` は tasks.yaml に残るが openTasks / brief から除外。

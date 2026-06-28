@@ -10,9 +10,9 @@
 ```bash
 npm run demo:standalone-org          # hk-demo · identity · delegation · internal approve · validate
 npm run demo:mal-standalone          # mal · peers/witness off · standalone validate
-npm run steward -- --tenant mal protocol validate --standalone
-npm run steward -- --tenant mal protocol audit verify
-npm run steward -- status --orgos
+npm run orgos -- --tenant mal protocol validate --standalone
+npm run orgos -- --tenant mal protocol audit verify
+npm run orgos -- status --orgos
 ```
 
 **期待:** exit 0 · audit chain に `org.approval.granted` · validate warnings のみ（witness 無効時）
@@ -41,7 +41,7 @@ wire_governance_policy:
   warn_only: false
 ```
 
-**確認:** `npm run steward -- --tenant mal protocol validate` · `protocol witness pending list`
+**確認:** `npm run orgos -- --tenant mal protocol validate` · `protocol witness pending list`
 
 ---
 
@@ -49,8 +49,8 @@ wire_governance_policy:
 
 ```bash
 npm run demo:inter-org                    # mal ↔ southwood · 2 Hub · witness chain events
-npm run steward -- hub verify --hub-url http://127.0.0.1:PORT --event-id UUID
-npm run steward -- --tenant mal protocol witness reconcile --cross-hub
+npm run orgos -- hub verify --hub-url http://127.0.0.1:PORT --event-id UUID
+npm run orgos -- --tenant mal protocol witness reconcile --cross-hub
 ```
 
 **gossip `skipped`:** 再 import は `skipped` カウントに含まれる · receipt の終状態は idempotent で正。
@@ -75,7 +75,7 @@ npm run steward -- --tenant mal protocol witness reconcile --cross-hub
 ```bash
 npm run demo:deliver-pull          # southwood outbox API → mal inbox (FR-EM-07 pull)
 npm run demo:mesh-deliver          # 2-hop mesh: PEER-002 relay → PEER-003 push → inbox
-npm run steward -- --tenant mal protocol mesh deliver --peer PEER-003 --file docs/protocol/outbox/ENVELOPE.json
+npm run orgos -- --tenant mal protocol mesh deliver --peer PEER-003 --file docs/protocol/outbox/ENVELOPE.json
 ```
 
 **mesh routes:** `data/protocol/mesh-routes.yaml` — `via` チェーンで多ホップ配送。Hub gossip（Witness）とは別 — Org Event peer mesh。
@@ -86,16 +86,16 @@ npm run steward -- --tenant mal protocol mesh deliver --peer PEER-003 --file doc
 
 ```bash
 # 1. ローテーション + meta 更新
-npm run steward -- --tenant mal protocol signing rotate
+npm run orgos -- --tenant mal protocol signing rotate
 
 # 2. 新公開鍵の確認
-npm run steward -- --tenant mal protocol signing export-public
+npm run orgos -- --tenant mal protocol signing export-public
 
 # 3. 各 peer の protocol_public_key を再 pin
-npm run steward -- --tenant mal protocol peer register --peer-id PEER-002 --public-key BASE64...
+npm run orgos -- --tenant mal protocol peer register --peer-id PEER-002 --public-key BASE64...
 
 # 4. validate — stale pin は warning signing-key-peer-pin-stale
-npm run steward -- --tenant mal protocol validate
+npm run orgos -- --tenant mal protocol validate
 ```
 
 **据置（v2）:** 自動 peer への鍵配布 · 定期ローテーション — [c4-community-backlog.md](org-os/c4-community-backlog.md) 外。
@@ -105,8 +105,8 @@ npm run steward -- --tenant mal protocol validate
 ## 9. peer discover --suggest
 
 ```bash
-npm run steward -- --tenant mal protocol peer discover --suggest
-npm run steward -- --tenant mal protocol peer discover --suggest --json
+npm run orgos -- --tenant mal protocol peer discover --suggest
+npm run orgos -- --tenant mal protocol peer discover --suggest --json
 ```
 
 未登録 trusted-hub / org_uri 向けに `protocol peer register` コマンド例を出力。
@@ -157,10 +157,10 @@ wire_governance_policy:
 ## 12. TLS 証明書ローテーション
 
 ```bash
-npm run steward -- --tenant mal protocol tls rotate
+npm run orgos -- --tenant mal protocol tls rotate
 # → data/protocol/tls/rotation-meta.json（チェックリスト）
 # ACME / 内部 CA で server.crt / server.key を更新後:
-npm run steward -- --tenant mal protocol api-serve --tls-cert ... --tls-key ...
+npm run orgos -- --tenant mal protocol api-serve --tls-cert ... --tls-key ...
 ```
 
 ---
@@ -168,17 +168,17 @@ npm run steward -- --tenant mal protocol api-serve --tls-cert ... --tls-key ...
 ## 13. C4 Community（Steward 側）
 
 ```bash
-npm run steward -- protocol community operators
-npm run steward -- protocol community operators-validate
-npm run steward -- protocol community check-sla
-npm run steward -- protocol community readiness
-npm run steward -- protocol witness trust revoke --cert-id UUID --hub-id HUB-A
+npm run orgos -- protocol community operators
+npm run orgos -- protocol community operators-validate
+npm run orgos -- protocol community check-sla
+npm run orgos -- protocol community readiness
+npm run orgos -- protocol witness trust revoke --cert-id UUID --hub-id HUB-A
 ```
 
 **リモート ledger reconcile:** peer に `ledger_api_url` を設定 · API は `GET /protocol/v1/ledger`
 
 ```bash
-npm run steward -- --tenant mal protocol witness reconcile --peer PEER-001 --cross-hub
+npm run orgos -- --tenant mal protocol witness reconcile --peer PEER-001 --cross-hub
 # reconcile-alerts.yaml に alert 蓄積 · 3 回で自動エスカレーション
 ```
 
@@ -199,6 +199,45 @@ approve 時に `maybeBindWitnessPoolFromContract()` が witness pool をバイ�
 
 ランタイム生成ファイルは `.gitignore` 対象 — 正本: [tenant-runtime-artifacts.md](org-os/tenant-runtime-artifacts.md)
 
+## 16. フォーマットガードレール（2026-06-27）
+
+| ガード | 内容 |
+|--------|------|
+| **outbox 直書き拒否** | `writeOutboxEnvelope` は `steward protocol` 経路のみ · `{event_id}.steward-provenance.json` 必須 |
+| **pre-deliver validate** | `protocol deliver` / relay flush 前に `protocol validate` 相当を強制（`STEWARD_SKIP_DELIVER_VALIDATE=1` でテストのみ解除） |
+| **peer ホワイトリスト** | 契約 `protocol.peer_id` + `allowed_transaction_types` / `allowed_payload_namespaces` |
+| **会社イベント MD lint** | `events validate` — frontmatter · 必須見出し（概要/経緯/関連 ID/出力書類） |
+
 ```bash
-git checkout -- tenants/mal/data/protocol/   # 追跡済み seed に戻す
+npm run orgos -- --tenant mal protocol validate
+npm run orgos -- --tenant mal events validate
+npm run validate:protocol:tenants
 ```
+
+## 17. outbox ディレクトリ権限（deploy テンプレ）
+
+アプリ層ガードに加え、本番では **OS 権限** で outbox 直書きを拒否する。
+
+| パス | モード | 所有者 |
+|------|--------|--------|
+| `docs/protocol/outbox` | **750** | `steward:steward` |
+| `docs/protocol/inbox` | **750** | 同上 |
+| `data/protocol` | **700** | 同上 |
+| envelope JSON | **640** | 同上 |
+
+```bash
+# 手動（本番は root）
+sudo STEWARD_ROOT=/opt/orgos-reference deploy/protocol-outbox/apply-permissions.sh mal
+
+# CLI 同等
+npm run orgos -- --tenant mal protocol outbox apply-permissions --user steward --group steward
+
+# systemd（api / relay の ExecStartPre · または oneshot）
+deploy/protocol-outbox/systemd/steward-protocol-outbox-perms@.service
+deploy/protocol-api/systemd/steward-protocol-api@.service      # ExecStartPre 付き
+deploy/protocol-relay/systemd/steward-protocol-relay@.service  # ExecStartPre 付き
+```
+
+CI: `npm run validate:protocol:tenants` — 正本 `steward/platform/protocol/ci-validate-tenants.yaml`（15 テナント）
+
+**採点:** [orgos-scoring-methodology.md](org-os/orgos-scoring-methodology.md) — チェックリスト 99 / 厳格 ~91 · Core 100 / 92

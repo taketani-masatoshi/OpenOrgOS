@@ -6,7 +6,7 @@
 
 ## 更新頻度
 
-- **1日1回** — `npm run steward -- dashboard` を実行
+- **1日1回** — `npm run orgos -- dashboard` を実行
 - 出力: `docs/reports/dashboard/YYYY-MM-DD.md`（日付ファイルで上書き防止）
 
 ---
@@ -106,11 +106,11 @@
 ## 関連コマンド
 
 ```bash
-npm run steward -- dashboard          # 本ダッシュボード
-npm run steward -- report dashboard   # 同上（report 配下）
-npm run steward -- forecast           # 12ヶ月 CF 予測
-npm run steward -- alerts             # 契約期限
-npm run steward -- status             # データ成熟度
+npm run orgos -- dashboard          # 本ダッシュボード
+npm run orgos -- report dashboard   # 同上（report 配下）
+npm run orgos -- forecast           # 12ヶ月 CF 予測
+npm run orgos -- alerts             # 契約期限
+npm run orgos -- status             # データ成熟度
 ```
 
 詳細キャッシュフロー表: [cashflow-detail.md](cashflow-detail.md)

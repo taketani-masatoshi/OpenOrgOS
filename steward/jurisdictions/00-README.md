@@ -25,9 +25,9 @@
 | EU | steward-os/jurisdiction-eu | `eu-demo`（TJS メタ · subdivisions DE FR GB） |
 
 ```bash
-npm run steward -- jurisdiction list
-npm run steward -- jurisdiction packs list
-npm run steward -- jurisdiction packs check
+npm run orgos -- jurisdiction list
+npm run orgos -- jurisdiction packs list
+npm run orgos -- jurisdiction packs check
 ```
 
 契約: [../jurisdiction-packs/pack_contract.md](../jurisdiction-packs/pack_contract.md) · [../../docs/org-os/jurisdiction-oss-governance.md](../../docs/org-os/jurisdiction-oss-governance.md) · [../../docs/org-os/tjs-11-target-jurisdictions.md](../../docs/org-os/tjs-11-target-jurisdictions.md)

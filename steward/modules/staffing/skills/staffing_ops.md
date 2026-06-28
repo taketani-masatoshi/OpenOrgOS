@@ -3,7 +3,7 @@
 ## CLI
 
 ```bash
-npm run steward -- operations staffing show
-npm run steward -- operations staffing validate
-npm run steward -- operations staffing assignments
+npm run orgos -- operations staffing show
+npm run orgos -- operations staffing validate
+npm run orgos -- operations staffing assignments
 ```

@@ -14,9 +14,9 @@
 - **tier stub** — 残り 244 法域 · 共有 `steward/jurisdiction-packs/_stub/`
 
 ```bash
-npm run steward -- jurisdiction countries
-npm run steward -- jurisdiction entity-forms JP
-npm run steward -- jurisdiction entity-forms US --subdivision DE
+npm run orgos -- jurisdiction countries
+npm run orgos -- jurisdiction entity-forms JP
+npm run orgos -- jurisdiction entity-forms US --subdivision DE
 ```
 
 ---

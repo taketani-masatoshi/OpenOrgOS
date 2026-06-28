@@ -3,7 +3,7 @@
 ## CLI
 
 ```bash
-npm run steward -- operations saas show
-npm run steward -- operations saas validate
-npm run steward -- operations saas renewals
+npm run orgos -- operations saas show
+npm run orgos -- operations saas validate
+npm run orgos -- operations saas renewals
 ```

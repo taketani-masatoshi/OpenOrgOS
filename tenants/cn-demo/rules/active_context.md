@@ -1,6 +1,6 @@
 # アクティブコンテキスト — テナント `cn-demo`
 
-**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run steward -- modules sync-context`
+**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run orgos -- modules sync-context`
 
 **法域（legal）:** `CN` · China law
 **表示言語（display）:** `en` · BCP 47 `en-CN` · English

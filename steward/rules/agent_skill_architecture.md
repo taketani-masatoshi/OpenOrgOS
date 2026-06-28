@@ -1,6 +1,9 @@
 # Steward OS — Agent / Skill アーキテクチャ
 
-**版:** 2026-06-08 · **上位:** [steward_os_principles.md](steward_os_principles.md)
+> **用語（2026-06-28）:** 製品名は **OrgOS** · **Steward** は **Steward Agent**（経営統括 · Secretary と同列）。本書の「Steward OS」は **OrgOS 参照実装** のレガシー表記 — [orgos-vocabulary.md](../../docs/org-os/orgos-vocabulary.md)
+
+**版:** 2026-06-08 · **上位:** [steward_os_principles.md](steward_os_principles.md)  
+**用語:** [docs/org-os/orgos-vocabulary.md](../../docs/org-os/orgos-vocabulary.md) §3–5
 
 ---
 
@@ -87,8 +90,8 @@ flowchart TB
 
 | Agent | 日本語 | 定義 | 要約出力先 |
 |-------|--------|------|-----------|
-| Executive Steward | 経営統括 | [steward/core/agents/executive_steward_agent.md](../steward/core/agents/executive_steward_agent.md) | `docs/reports/` · `executive-notes/` |
-| Secretary | 秘書 | [steward/core/agents/secretary_agent.md](../steward/core/agents/secretary_agent.md) | `docs/executive/` |
+| **Steward Agent** | 経営統括 | [steward/core/agents/executive_steward_agent.md](../steward/core/agents/executive_steward_agent.md) | `docs/reports/` · `executive-notes/` |
+| **Secretary Agent** | 秘書 | [steward/core/agents/secretary_agent.md](../steward/core/agents/secretary_agent.md) | `docs/executive/` |
 | Finance | 財務・計画 | [steward/core/agents/finance_agent.md](../steward/core/agents/finance_agent.md) | `agent-summaries/finance/` |
 | Contract | 契約管理 | [steward/core/agents/contract_agent.md](../steward/core/agents/contract_agent.md) | `agent-summaries/contract/` |
 | Property Rental | 賃貸モジュール | [steward/modules/rental/agent.md](../modules/rental/agent.md) | `modules.yaml` → summary_dir |

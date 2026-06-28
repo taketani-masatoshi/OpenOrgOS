@@ -25,8 +25,8 @@ npx --yes md-to-pdf docs/properties/PROP-002-kamezawa/operations/templates/guest
 4. 生成 PDF は **`docs/io/outbox/lodging/`**（gitignore）— USB 又は現地 PC にコピー
 
 ```bash
-npm run steward -- io outbox scan    # 台帳に登録
-npm run steward -- io outbox list    # 印刷待ち確認
+npm run orgos -- io outbox scan    # 台帳に登録
+npm run orgos -- io outbox list    # 印刷待ち確認
 ```
 
 ## 掲示セット

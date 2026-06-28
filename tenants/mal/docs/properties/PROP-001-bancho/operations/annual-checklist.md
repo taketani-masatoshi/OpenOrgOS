@@ -37,7 +37,7 @@
 ## D. 完了後
 
 ```bash
-npm run steward -- deps check --file data/properties/PROP-001.yaml
+npm run orgos -- deps check --file data/properties/PROP-001.yaml
 npm run validate
 ```
 

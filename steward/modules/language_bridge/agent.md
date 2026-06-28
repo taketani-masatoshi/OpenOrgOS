@@ -14,10 +14,10 @@
 ## CLI
 
 ```bash
-npm run steward -- operations locale-bridge show
-npm run steward -- operations locale-bridge validate
-npm run steward -- operations locale-bridge header --doc board_minutes
-npm run steward -- operations locale-bridge draft --type board_minutes --title "Q1 Board" --write
+npm run orgos -- operations locale-bridge show
+npm run orgos -- operations locale-bridge validate
+npm run orgos -- operations locale-bridge header --doc board_minutes
+npm run orgos -- operations locale-bridge draft --type board_minutes --title "Q1 Board" --write
 ```
 
 ## Agent ルール

@@ -31,10 +31,10 @@ Contract Agent · Operations Agent（inbox→归档）
 ## CLI
 
 ```bash
-npm run steward -- contracts show CTR-XXX
-npm run steward -- sync contracts
+npm run orgos -- contracts show CTR-XXX
+npm run orgos -- sync contracts
 npm run validate
-npm run steward -- deps check --file data/contracts/CTR-XXX.yaml
+npm run orgos -- deps check --file data/contracts/CTR-XXX.yaml
 ```
 
 ## 禁止

@@ -122,10 +122,10 @@ docs/properties/PROP-001-minato/operations/   # 賃貸運用 SOP（例）
 
 ```bash
 npm run validate
-npm run steward -- deps check --file data/plans/business-plan.yaml
-npm run steward -- deps graph
-npm run steward -- sync all
-npm run steward -- dashboard
+npm run orgos -- deps check --file data/plans/business-plan.yaml
+npm run orgos -- deps graph
+npm run orgos -- sync all
+npm run orgos -- dashboard
 ```
 
 ---

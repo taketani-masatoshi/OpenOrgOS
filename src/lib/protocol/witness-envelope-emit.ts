@@ -3,6 +3,7 @@ import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import type { WitnessAttestation } from "../../../schemas/protocol/witness-attestation.js";
 import type { WitnessReceipt } from "../../../schemas/protocol/witness-receipt.js";
 import { appendProtocolAuditRecord, writeOutboxEnvelope } from "./audit-chain.js";
+import { runWithProtocolWriteGuard } from "./protocol-write-guard.js";
 import { ourOrgRef } from "./identity.js";
 import { getProtocolOutboxDir } from "./paths.js";
 import { validateEnvelopeAgainstRegistry } from "./registry.js";
@@ -32,7 +33,9 @@ function buildWitnessEnvelope(
 
   envelope = maybeSignEnvelope(envelope);
   appendProtocolAuditRecord({ envelope });
-  writeOutboxEnvelope(envelope, getProtocolOutboxDir());
+  runWithProtocolWriteGuard("witness-envelope-emit", () => {
+    writeOutboxEnvelope(envelope, getProtocolOutboxDir());
+  });
   return envelope;
 }
 

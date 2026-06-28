@@ -22,12 +22,12 @@
 ## CLI
 
 ```bash
-npm run steward -- --tenant mal operations corporate procedures
-npm run steward -- --tenant mal operations corporate show
-npm run steward -- --tenant mal operations corporate validate
-npm run steward -- --tenant mal operations corporate checklist --case INC-2026-001
-npm run steward -- --tenant mal operations corporate draft --case INC-2026-001 --write
-npm run steward -- --tenant mal operations corporate draft --case CHG-2026-001 --form form-shogo-henko-ketsugi
+npm run orgos -- --tenant mal operations corporate procedures
+npm run orgos -- --tenant mal operations corporate show
+npm run orgos -- --tenant mal operations corporate validate
+npm run orgos -- --tenant mal operations corporate checklist --case INC-2026-001
+npm run orgos -- --tenant mal operations corporate draft --case INC-2026-001 --write
+npm run orgos -- --tenant mal operations corporate draft --case CHG-2026-001 --form form-shogo-henko-ketsugi
 ```
 
 ## 禁止

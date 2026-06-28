@@ -64,16 +64,16 @@ sudo systemctl start steward-hub@HUB-A
 
 ```bash
 # 1. Hub 起動 · 公開鍵取得
-npm run steward -- hub serve --hub-id HUB-A --port 9474 --data-dir ./data/hub-a
-npm run steward -- hub export-public-key --hub-id HUB-A --data-dir ./data/hub-a
+npm run orgos -- hub serve --hub-id HUB-A --port 9474 --data-dir ./data/hub-a
+npm run orgos -- hub export-public-key --hub-id HUB-A --data-dir ./data/hub-a
 
 # 2. Federation peer 登録
-npm run steward -- hub federation add-peer \
+npm run orgos -- hub federation add-peer \
   --hub-id HUB-A --data-dir ./data/hub-a \
   --peer-id HUB-B --peer-url http://127.0.0.1:9475
 
 # 3. Org witness pool（trusted_hubs から bootstrap）
-npm run steward -- --tenant mal protocol witness pool init-trusted --jurisdiction JP
+npm run orgos -- --tenant mal protocol witness pool init-trusted --jurisdiction JP
 ```
 
 ---

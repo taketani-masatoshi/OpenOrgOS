@@ -27,8 +27,8 @@ Compliance Agent · Contract Agent（保険 CTR）
 ## CLI
 
 ```bash
-npm run steward -- skills run permit-expiry
-npm run steward -- skills run contract-expiry   # 保険 CTR draft 含む
+npm run orgos -- skills run permit-expiry
+npm run orgos -- skills run contract-expiry   # 保険 CTR draft 含む
 ```
 
 ## 禁止

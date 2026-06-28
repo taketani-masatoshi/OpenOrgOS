@@ -16,7 +16,7 @@
 - `docs/company/executive-remaining-tasks.md`
 - 各下位計画のリスク欄
 - `data/contracts/`（draft 一覧）
-- `npm run steward -- alerts`
+- `npm run orgos -- alerts`
 
 ## 出力すべき情報
 

@@ -107,11 +107,11 @@ packs:
 ## 6. CLI
 
 ```bash
-npm run steward -- jurisdiction list
-npm run steward -- jurisdiction show
-npm run steward -- jurisdiction check [JP]
-npm run steward -- jurisdiction packs list
-npm run steward -- jurisdiction packs check [JP]
+npm run orgos -- jurisdiction list
+npm run orgos -- jurisdiction show
+npm run orgos -- jurisdiction check [JP]
+npm run orgos -- jurisdiction packs list
+npm run orgos -- jurisdiction packs check [JP]
 ```
 
 将来: `jurisdiction packs pin JP --source github:org/repo@v1.2.3` · `--dry-run`

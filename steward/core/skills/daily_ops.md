@@ -2,7 +2,7 @@
 
 ## Runtime
 
-**cli** — `npm run steward -- skills run daily`
+**cli** — `npm run orgos -- skills run daily`
 
 ## 目的
 

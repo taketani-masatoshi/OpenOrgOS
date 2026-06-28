@@ -44,12 +44,12 @@
 ## CLI
 
 ```bash
-npm run steward -- dashboard
+npm run orgos -- dashboard
 ```
 
 ## ワークフロー
 
-1. **CLI 実行** — `npm run steward -- dashboard` で MD + Agent 要約 7 件を生成
+1. **CLI 実行** — `npm run orgos -- dashboard` で MD + Agent 要約 7 件を生成
 2. **ダッシュボード Read** — `docs/reports/dashboard/YYYY-MM-DD.md` を開く
 3. **Agent 要約確認** — 各 `agent-summaries/` 配下の同日ファイルを必要に応じ参照
 4. **Executive 合成** — 以下を踏まえ経営サマリ MD を作成（`docs/reports/executive-notes/` 等）

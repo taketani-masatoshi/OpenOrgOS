@@ -159,7 +159,7 @@ export function loadEnvelopesFromDirectories(dirs: string[]): Map<string, EventE
   for (const dir of dirs) {
     if (!existsSync(dir)) continue;
     for (const name of readdirSync(dir)) {
-      if (!name.endsWith(".json")) continue;
+      if (!name.endsWith(".json") || name.endsWith(".steward-provenance.json")) continue;
       const raw = JSON.parse(readFileSync(join(dir, name), "utf-8")) as unknown;
       const parsed = eventEnvelopeSchema.parse(raw);
       map.set(parsed.event_id, parsed);

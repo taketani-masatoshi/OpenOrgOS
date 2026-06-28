@@ -27,22 +27,22 @@
 ## CLI — route
 
 ```bash
-npm run steward -- route list
-npm run steward -- route match --text "契約期限"
-npm run steward -- classification access --agent secretary --path data/executive/calendar.yaml
-npm run steward -- route handoff --text "契約期限" --from steward
-npm run steward -- route dispatch --id HO-... --mode auto
-npm run steward -- route dispatch --id IMP-... --mode implement
+npm run orgos -- route list
+npm run orgos -- route match --text "契約期限"
+npm run orgos -- classification access --agent secretary --path data/executive/calendar.yaml
+npm run orgos -- route handoff --text "契約期限" --from steward
+npm run orgos -- route dispatch --id HO-... --mode auto
+npm run orgos -- route dispatch --id IMP-... --mode implement
 ```
 
 ## CLI — escalate（実装委譲）
 
 ```bash
-npm run steward -- escalate plan --text "..." [--dry-run]
-npm run steward -- escalate run --text "..." --from executive_steward
-npm run steward -- escalate run --id IMP-...     # プロンプト再生成
-npm run steward -- escalate status [--pending|--blocked]
-npm run steward -- escalate complete --id IMP-... --notes "..."
+npm run orgos -- escalate plan --text "..." [--dry-run]
+npm run orgos -- escalate run --text "..." --from executive_steward
+npm run orgos -- escalate run --id IMP-...     # プロンプト再生成
+npm run orgos -- escalate status [--pending|--blocked]
+npm run orgos -- escalate complete --id IMP-... --notes "..."
 ```
 
 **出力:** `docs/reports/routing-queue/IMP-*.{yaml,md}` · `prompts/IMP-*_{agent}.md`
@@ -56,13 +56,13 @@ npm run steward -- escalate complete --id IMP-... --notes "..."
 ## Phase 2 — Agent 自動化（v0.7 · 実装済）
 
 ```bash
-npm run steward -- agent dispatch plan --id IMP-...
-npm run steward -- agent dispatch run --id IMP-... [--dry-run]
-npm run steward -- queue list
-npm run steward -- queue drain
-npm run steward -- webhook config
-npm run steward -- webhook ingest --file payload.json
-npm run steward -- escalate merge --id IMP-...
+npm run orgos -- agent dispatch plan --id IMP-...
+npm run orgos -- agent dispatch run --id IMP-... [--dry-run]
+npm run orgos -- queue list
+npm run orgos -- queue drain
+npm run orgos -- webhook config
+npm run orgos -- webhook ingest --file payload.json
+npm run orgos -- escalate merge --id IMP-...
 ```
 
 | 機能 | 正本 |
@@ -78,12 +78,12 @@ npm run steward -- escalate merge --id IMP-...
 ## Phase 3 — Cloud Agent · Webhook · PR（v0.8 · 実装済）
 
 ```bash
-npm run steward -- webhook serve [--once]
-npm run steward -- agent cloud config
-npm run steward -- agent cloud watch [--once]
-npm run steward -- agent dispatch run --id IMP-... --runtime cloud
-npm run steward -- merge pr plan --id IMP-...
-npm run steward -- merge pr create --id IMP-... [--dry-run]
+npm run orgos -- webhook serve [--once]
+npm run orgos -- agent cloud config
+npm run orgos -- agent cloud watch [--once]
+npm run orgos -- agent dispatch run --id IMP-... --runtime cloud
+npm run orgos -- merge pr plan --id IMP-...
+npm run orgos -- merge pr create --id IMP-... [--dry-run]
 ```
 
 | 機能 | 正本 |
@@ -98,8 +98,8 @@ npm run steward -- merge pr create --id IMP-... [--dry-run]
 ## CLI — audit · compliance
 
 ```bash
-npm run steward -- audit log append --event handoff --ref HO-...
-npm run steward -- audit log list [--since YYYY-MM-DD]
-npm run steward -- compliance gap [--tenant mal]
-npm run steward -- pipeline run weekly
+npm run orgos -- audit log append --event handoff --ref HO-...
+npm run orgos -- audit log list [--since YYYY-MM-DD]
+npm run orgos -- compliance gap [--tenant mal]
+npm run orgos -- pipeline run weekly
 ```

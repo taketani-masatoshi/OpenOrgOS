@@ -3,7 +3,7 @@
 **評価日:** 2026年6月9日（第4回 — **OS-99+ Cycle 1**）  
 **対象:** テナント `mal` · FY2026 · **会社 OS 総合採点**
 
-> **会社 OS 採点:** [framework-assessment.md §10](../../../../../docs/framework-assessment.md) · `npm run steward -- status --os-99`
+> **会社 OS 採点:** [framework-assessment.md §10](../../../../../docs/framework-assessment.md) · `npm run orgos -- status --os-99`
 
 ---
 
@@ -18,8 +18,8 @@
 | **総合（加重）** | **`status --os-99` で確認** | 出口 **≥ 99** |
 
 ```bash
-npm run steward -- status --os-99
-npm run steward -- ops p0   # exit 1 · 5 ブロッカー
+npm run orgos -- status --os-99
+npm run orgos -- ops p0   # exit 1 · 5 ブロッカー
 ```
 
 **99+ 経路:** P0 5 件クローズ（運用 84→95+）→ 総合 **~97+** · 製品 99 到達済 · REF-4b/d で製品 100 可
@@ -51,7 +51,7 @@ npm run steward -- ops p0   # exit 1 · 5 ブロッカー
 | cash-balance | template | `status: confirmed` + 残高入力待ち |
 
 ```bash
-npm run steward -- --tenant mal ops p0
+npm run orgos -- --tenant mal ops p0
 # → ブロッカー 5 件
 ```
 
@@ -109,7 +109,7 @@ npm run steward -- --tenant mal ops p0
 |---------|---------|------|
 | 単独閉ループ | `npm run demo:mal-standalone` | identity · internal approve · `protocol validate --standalone` |
 | Wire + witness | mal ↔ southwood · `npm run demo:inter-org` | witness chain events · audit verify |
-| 採点 | `npm run steward -- status --orgos` | OrgOS 加重 ~86%（framework-assessment §13） |
+| 採点 | `npm run orgos -- status --orgos` | OrgOS 加重 ~86%（framework-assessment §13） |
 
 正本: [runbook-orgos.md](../../../../../docs/runbook-orgos.md) · [framework-assessment.md §13](../../../../../docs/framework-assessment.md)
 

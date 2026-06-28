@@ -41,7 +41,7 @@ cp -a tenants/mal/data/executive tenants/mal/docs/executive \
 ## 4. 週次ゲート確認（1 分）
 
 ```bash
-npm run steward -- pipeline run weekly --skip-validate
+npm run orgos -- pipeline run weekly --skip-validate
 # stamp 7 日超で exit 1 — 月曜 SSD 後に stamp 更新が必要
 ```
 

@@ -17,7 +17,7 @@ function runRecordsCheckSkill(opts: SkillRunOptions): void {
 
 function runRevparSkill(_opts: SkillRunOptions): void {
   console.log("RevPAR skill — hospitality モジュール有効時は dashboard 宿泊セクションを参照");
-  console.log("次: npm run steward -- skills run dashboard");
+  console.log("次: npm run orgos -- skills run dashboard");
 }
 
 export const hospitalityCli: ModuleCliBundle = {

@@ -3,7 +3,7 @@
 ## CLI
 
 ```bash
-npm run steward -- operations events show
-npm run steward -- operations events validate
-npm run steward -- operations events runbook
+npm run orgos -- operations events show
+npm run orgos -- operations events validate
+npm run orgos -- operations events runbook
 ```

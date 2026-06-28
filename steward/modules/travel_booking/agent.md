@@ -27,12 +27,12 @@ cp data/operations/travel-portals.yaml.example data/operations/travel-portals.ya
 ## CLI（Phase 1）
 
 ```bash
-npm run steward -- operations travel portals
-npm run steward -- operations travel intake \
+npm run orgos -- operations travel portals
+npm run orgos -- operations travel intake \
   --portal rakuten-travel --destination 大阪 --area 新大阪駅周辺 \
   --check-in 2026-06-23 --check-out 2026-06-24 --guests 1
-npm run steward -- operations travel check --budget 12000
-npm run steward -- operations travel draft ... --write
+npm run orgos -- operations travel check --budget 12000
+npm run orgos -- operations travel draft ... --write
 ```
 
 browser 手順は **cursor-only**（`steward/core/skills/travel_booking.md`）。CLI は intake 検証と draft 骨格生成。

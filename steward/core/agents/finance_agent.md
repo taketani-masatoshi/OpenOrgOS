@@ -71,9 +71,9 @@
 
 **編集後必須:**
 ```bash
-npm run steward -- deps check --file <編集ファイル>
+npm run orgos -- deps check --file <編集ファイル>
 npm run validate
-npm run steward -- sync all   # CSV 利用時
+npm run orgos -- sync all   # CSV 利用時
 ```
 
 ---

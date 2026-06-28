@@ -98,6 +98,8 @@
 | ORG-C3 | Adapter 契約 — Core drift · module 76→90% | [x] |
 | ORG-C4 | Community 整合 — operators · revocation SLA · governance CLI | [x] |
 | ORG-C5 | 受入 — 2 デモ · runbook · OrgOS 完成度 ≥85% | [x] |
+| **ORG-99** | **採点改善** — チェックリスト + **厳格** 二重採点 · 文書矛盾解消 | [x] · [orgos-scoring-methodology.md](org-os/orgos-scoring-methodology.md) |
+| **ORG-VOC** | **用語集** — OrgOS · Core · Wire · Witness · Agent | [x] · [orgos-vocabulary.md](org-os/orgos-vocabulary.md) |
 
 ---
 

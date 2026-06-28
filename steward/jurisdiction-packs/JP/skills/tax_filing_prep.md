@@ -39,10 +39,10 @@ Finance Agent（Compliance Agent と申告期限・区分を照合）
 ## 手順
 
 1. `npm run validate` — fixed-assets ↔ expense-plan 整合確認
-2. `npm run steward -- deps check --file data/finance/fixed-assets.yaml`
+2. `npm run orgos -- deps check --file data/finance/fixed-assets.yaml`
 3. TBD 項目（現預金・資本金・消費税区分）を tax-profile に明示
 4. 税理士チェックリストと照合（`docs/company/fy2026-tax-advisor-checklist.md`）
-5. 確定後 `npm run steward -- report kessan`（任意 · JP pack 手順）
+5. 確定後 `npm run orgos -- report kessan`（任意 · JP pack 手順）
 
 ## 禁止
 

@@ -9,10 +9,12 @@ import {
 } from "../../../schemas/protocol/transaction-record.js";
 import { loadContract } from "../data.js";
 import { appendProtocolAuditRecord, writeOutboxEnvelope } from "./audit-chain.js";
+import { runWithProtocolWriteGuard } from "./protocol-write-guard.js";
 import { ourOrgRef } from "./identity.js";
 import { findPeer } from "./peers.js";
 import { getProtocolOutboxDir } from "./paths.js";
 import { validateEnvelopeAgainstRegistry } from "./registry.js";
+import { assertTransactionPayloadAllowedForPeer } from "./peer-protocol-policy.js";
 import { appendTransaction, nextTransactionId } from "./transactions.js";
 import type { OperatorAttestation } from "../../../schemas/protocol/operator-attestation.js";
 import { operatorAttestationSchema } from "../../../schemas/protocol/operator-attestation.js";
@@ -62,6 +64,10 @@ function resolveAmountFromContract(contractId: string): { value: number; currenc
 }
 
 export function recordProtocolTransaction(opts: RecordTransactionOptions): RecordTransactionResult {
+  return runWithProtocolWriteGuard("record-transaction", () => recordProtocolTransactionInner(opts));
+}
+
+function recordProtocolTransactionInner(opts: RecordTransactionOptions): RecordTransactionResult {
   const peer = findPeer(opts.peerId);
   if (!peer) {
     throw new Error(`Peer ${opts.peerId} not found`);
@@ -70,6 +76,7 @@ export function recordProtocolTransaction(opts: RecordTransactionOptions): Recor
   const direction = opts.direction ?? "outbound";
 
   const transactionType = normalizeTransactionType(opts.transactionType);
+  assertTransactionPayloadAllowedForPeer(opts.peerId, transactionType);
 
   if (opts.contractId && direction === "outbound") {
     const requiresLocalContract =

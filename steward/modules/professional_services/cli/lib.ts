@@ -68,5 +68,5 @@ export function runProfessionalServicesAction(_opts: Record<string, unknown>): v
   for (const p of rows) {
     console.log(`- ${p.id} ${p.name} · ${p.client ?? "—"} · ${p.contract_id}`);
   }
-  console.log("\n次: npm run steward -- invoice generate (billing in modules.yaml)");
+  console.log("\n次: npm run orgos -- invoice generate (billing in modules.yaml)");
 }

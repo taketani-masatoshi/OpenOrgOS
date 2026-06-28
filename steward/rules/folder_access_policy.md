@@ -12,7 +12,7 @@
 
 ### 1.1 ゾーン分離
 
-**テナント:** 下表の `data/` · `docs/` は **論理パス**（物理: `tenants/{id}/data/` · `tenants/{id}/docs/`）。切替: `STEWARD_TENANT` または `--tenant`。正本: [repository_layout.md](repository_layout.md) · [tenants/00-README.md](../../tenants/00-README.md)
+**テナント:** 下表の `data/` · `docs/` は **論理パス**（物理: `tenants/{id}/data/` · `tenants/{id}/docs/`）。切替: `ORGOS_TENANT` または `--tenant`。正本: [repository_layout.md](repository_layout.md) · [tenants/00-README.md](../../tenants/00-README.md)
 
 | ゾーン | パス | ルール |
 |--------|------|--------|
@@ -73,9 +73,9 @@
 
 **CLI 必須セット（日次）:**
 ```bash
-npm run steward -- dashboard
-npm run steward -- status
-npm run steward -- alerts
+npm run orgos -- dashboard
+npm run orgos -- status
+npm run orgos -- alerts
 ```
 
 ---
@@ -99,9 +99,9 @@ npm run steward -- alerts
 | `document-io.yaml` | **禁止** |
 
 **編集後チェックリスト:**
-1. `npm run steward -- deps check --file <編集ファイル>`
+1. `npm run orgos -- deps check --file <編集ファイル>`
 2. `npm run validate`
-3. `npm run steward -- sync all`（CSV 利用時）
+3. `npm run orgos -- sync all`（CSV 利用時）
 4. 関連 MD（`fy2026-pl.md` 等）の数値整合
 
 ---
@@ -210,11 +210,11 @@ npm run steward -- alerts
 **I/O フロー:**
 ```bash
 # 受信
-npm run steward -- io inbox add --from ./scan.pdf --category licenses --title "許可証"
+npm run orgos -- io inbox add --from ./scan.pdf --category licenses --title "許可証"
 # 処理完了 → 归档
-npm run steward -- io inbox done INB-001 --archive docs/company/licenses/ryokan/records/x.pdf
+npm run orgos -- io inbox done INB-001 --archive docs/company/licenses/ryokan/records/x.pdf
 # 状態確認
-npm run steward -- io status
+npm run orgos -- io status
 ```
 
 ---

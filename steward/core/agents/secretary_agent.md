@@ -55,9 +55,9 @@
 
 **CLI（Phase 0 · SEC-P2-1）:**
 ```bash
-npm run steward -- executive calendar list [--from YYYY-MM-DD --to YYYY-MM-DD]
-npm run steward -- executive calendar conflicts
-npm run steward -- executive brief --week
+npm run orgos -- executive calendar list [--from YYYY-MM-DD --to YYYY-MM-DD]
+npm run orgos -- executive calendar conflicts
+npm run orgos -- executive brief --week
 # Phase 1: executive calendar push  # Google Calendar 同期
 ```
 
@@ -157,7 +157,7 @@ npm run steward -- executive brief --week
 | 宿泊モジュール運用（清掃単価等） | Hospitality（日程は Secretary） |
 | inbox 書類 | Operations |
 
-管轄外（経営 · 財務 · 契約 · **実装依頼** · コンプライアンス · ISO · Git 機密）は **Orchestrator 経由** で Executive Steward へエスカレーションする。**照会**は [secretary_escalation.md](../core/orchestrators/secretary_escalation.md) · **実装**は [delegate_implementation.md](../core/orchestrators/delegate_implementation.md) または `npm run steward -- escalate run`。依頼文の手動コピーは不要。
+管轄外（経営 · 財務 · 契約 · **実装依頼** · コンプライアンス · ISO · Git 機密）は **Orchestrator 経由** で Executive Steward へエスカレーションする。**照会**は [secretary_escalation.md](../core/orchestrators/secretary_escalation.md) · **実装**は [delegate_implementation.md](../core/orchestrators/delegate_implementation.md) または `npm run orgos -- escalate run`。依頼文の手動コピーは不要。
 
 ---
 

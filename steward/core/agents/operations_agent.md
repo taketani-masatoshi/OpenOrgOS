@@ -70,10 +70,10 @@
 
 **CLI:**
 ```bash
-npm run steward -- io status
-npm run steward -- io inbox add --from ./file.pdf --category ... --title "..."
-npm run steward -- io inbox done INB-XXX --archive docs/...
-npm run steward -- io outbox list
+npm run orgos -- io status
+npm run orgos -- io inbox add --from ./file.pdf --category ... --title "..."
+npm run orgos -- io inbox done INB-XXX --archive docs/...
+npm run orgos -- io outbox list
 ```
 
 ---
@@ -133,6 +133,6 @@ npm run steward -- io outbox list
 
 ## コンテキスト
 
-- I/O ガイド: `npm run steward -- io guide`
+- I/O ガイド: `npm run orgos -- io guide`
 - inbox/outbox 説明: [docs/io/inbox/](../docs/io/inbox/00-このフォルダについて.md) · [docs/io/outbox/](../docs/io/outbox/00-このフォルダについて.md)
 - 台帳: [document-io.yaml](../data/document-io.yaml)

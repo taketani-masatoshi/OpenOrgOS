@@ -2,7 +2,7 @@
 
 **株式会社MAL · 段燕燕（代表取締役）向け**  
 **基準日:** 2026年6月8日  
-**成熟度（3次元）:** `npm run steward -- status` · **P0:** `npm run steward -- ops p0`
+**成熟度（3次元）:** `npm run orgos -- status` · **P0:** `npm run orgos -- ops p0`
 
 | 次元 | 意味 | 現状 |
 |------|------|------|
@@ -24,7 +24,7 @@
 
 ## 今すぐ（P0 — 実務優先）
 
-**進捗確認:** `npm run steward -- ops p0` · 詳細: [p0-closing-register.md](p0-closing-register.md)
+**進捗確認:** `npm run orgos -- ops p0` · 詳細: [p0-closing-register.md](p0-closing-register.md)
 
 - [ ] **[P0] CTR-014 亀沢旅館 火災保険に加入する**
   - **やること:** 加入パケットに沿い保険会社へ申込 → 証券 PDF 取得 → `docs/io/inbox/` 保管 → CTR-014 を executed 化

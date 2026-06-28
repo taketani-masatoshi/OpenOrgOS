@@ -10,6 +10,8 @@ import { appendJsonl, loadJsonl } from "../jsonl-store.js";
 import { envelopeDigest } from "./canonical.js";
 import { getProtocolAuditChainPath } from "./paths.js";
 import { serializeEventEnvelope } from "./envelope.js";
+import { assertProtocolWriteAuthorized, currentProtocolWriteSource } from "./protocol-write-guard.js";
+import { writeOutboxProvenance } from "./outbox-provenance.js";
 
 function generateAuditId(): string {
   const suffix = Math.random().toString(36).slice(2, 10);
@@ -95,8 +97,10 @@ export function verifyProtocolAuditChain(options?: {
 }
 
 export function writeOutboxEnvelope(envelope: EventEnvelope, outboxDir: string): string {
+  assertProtocolWriteAuthorized();
   mkdirSync(outboxDir, { recursive: true });
   const path = join(outboxDir, `${envelope.event_id}.json`);
   writeFileSync(path, serializeEventEnvelope(envelope), "utf-8");
+  writeOutboxProvenance(outboxDir, envelope, currentProtocolWriteSource() || "protocol");
   return path;
 }

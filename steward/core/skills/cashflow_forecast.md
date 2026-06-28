@@ -31,8 +31,8 @@ Finance Agent（Executive Steward は要約のみ Read）
 ## CLI
 
 ```bash
-npm run steward -- forecast
-npm run steward -- scenario
+npm run orgos -- forecast
+npm run orgos -- scenario
 ```
 
 ## 禁止

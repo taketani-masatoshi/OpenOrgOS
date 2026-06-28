@@ -10,9 +10,9 @@
 
 | やりたいこと | やり方 |
 |-------------|--------|
-| 予定を確認 | `npm run steward -- executive calendar list` |
-| 競合チェック | `npm run steward -- executive calendar conflicts` |
-| 週次ブリーフ | `npm run steward -- executive brief --week` |
+| 予定を確認 | `npm run orgos -- executive calendar list` |
+| 競合チェック | `npm run orgos -- executive calendar conflicts` |
+| 週次ブリーフ | `npm run orgos -- executive brief --week` |
 | YAML → Google | `executive calendar push`（[google-calendar-setup.md](google-calendar-setup.md)） |
 | Google → YAML 差分 | `executive calendar pull --since YYYY-MM-DD` · `--apply` で ID リンク |
 | 管轄外 consult | **`secretary escalate --dispatch --subject "…" --q "質問"`**（1 コマンド · スレッド不要） |

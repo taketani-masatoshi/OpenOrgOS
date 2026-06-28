@@ -33,7 +33,7 @@ alwaysApply: true
 1. **L2/L3 を tracked ファイル（`docs/` の git 追跡 MD、`data/` の非 gitignore YAML）に書かない**
 2. 口座・個人住所は **`bank_account_id` / `stakeholder_id` リンクのみ** — 値は gitignore 側
 3. Agent 要約（`docs/reports/`）は **L1 以下** — 口座番号・個人携帯・Wi-Fi パスワード禁止
-4. 振込・請求の実行指示は **`npm run steward -- broker transfer`** — チャットに口座番号を出力しない
+4. 振込・請求の実行指示は **`npm run orgos -- broker transfer`** — チャットに口座番号を出力しない
 5. Zone C（`**/records/**`）は `.cursorignore` — 秘書タスク時のみ `@file` で明示参照
 
 ## Privacy Mode

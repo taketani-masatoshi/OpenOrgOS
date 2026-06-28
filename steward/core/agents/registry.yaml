@@ -6,8 +6,9 @@ version: 1
 agents:
   executive_steward:
     id: executive_steward
-    name: Executive Steward
-    name_ja: 経営統括
+    name: Steward Agent
+    name_ja: ステュワード（経営統括）
+    # Legacy English role label: Executive Steward
     path: steward/core/agents/executive_steward_agent.md
     tier: core
     required: true
@@ -15,7 +16,7 @@ agents:
 
   secretary:
     id: secretary
-    name: Secretary
+    name: Secretary Agent
     name_ja: 秘書
     path: steward/core/agents/secretary_agent.md
     tier: core

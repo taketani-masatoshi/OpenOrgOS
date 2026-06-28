@@ -25,17 +25,17 @@
 # 1. YAML / docs を編集
 
 # 2. 影響範囲を確認（チェックリスト）
-npm run steward -- deps check --file data/contracts/CTR-008.yaml
+npm run orgos -- deps check --file data/contracts/CTR-008.yaml
 # または
-npm run steward -- impact data/properties/PROP-002.yaml
+npm run orgos -- impact data/properties/PROP-002.yaml
 
 # 3. スキーマ検証 + 依存鮮度警告
 npm run validate
 npm run validate -- --deps    # ソースより古い下流 CSV/MD を警告
 
 # 4. 下流を更新
-npm run steward -- sync all   # docs/exports/*.csv
-npm run steward -- dashboard  # 経営ダッシュボード再生成
+npm run orgos -- sync all   # docs/exports/*.csv
+npm run orgos -- dashboard  # 経営ダッシュボード再生成
 
 # 5. 再検証
 npm run validate
@@ -44,7 +44,7 @@ npm run validate
 Markdown で保存する場合:
 
 ```bash
-npm run steward -- deps check --file data/plans/yojitsu-fy2026.yaml --markdown -o impact-yojitsu.md
+npm run orgos -- deps check --file data/plans/yojitsu-fy2026.yaml --markdown -o impact-yojitsu.md
 ```
 
 ---
@@ -93,8 +93,8 @@ kamezawa-public.yaml ──→ docs/properties/PROP-002-kamezawa/operations/temp
 ## 依存マップ全体を見る
 
 ```bash
-npm run steward -- deps graph
-npm run steward -- deps graph -o dependency-map.md
+npm run orgos -- deps graph
+npm run orgos -- deps graph -o dependency-map.md
 ```
 
 ---

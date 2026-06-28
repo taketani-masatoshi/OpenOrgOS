@@ -4,9 +4,9 @@
 #       確認・同期が必要な下流項目を機械的に列挙する。
 #
 # 使い方:
-#   npm run steward -- deps check --file data/contracts/CTR-008.yaml
-#   npm run steward -- impact data/properties/PROP-002.yaml
-#   npm run steward -- deps graph
+#   npm run orgos -- deps check --file data/contracts/CTR-008.yaml
+#   npm run orgos -- impact data/properties/PROP-002.yaml
+#   npm run orgos -- deps graph
 #   npm run validate -- --deps   # ソースより古い下流ファイルを警告
 #
 # ノード id:

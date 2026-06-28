@@ -222,24 +222,24 @@ POST ボディ: `WitnessAttestation` JSON（Content-Type: `application/json`）
 ### 8.1 Hub ノード
 
 ```bash
-npm run steward -- hub serve --hub-id HUB-A --port 9474 --data-dir ./data/hub-a [--gossip-interval 300]
-npm run steward -- hub export-public-key --hub-id HUB-A --data-dir ./data/hub-a
-npm run steward -- hub verify --hub-id HUB-A --data-dir ./data/hub-a --event-id <uuid>
-npm run steward -- hub verify --hub-url http://127.0.0.1:9474 --event-id <uuid>
-npm run steward -- hub federation show --hub-id HUB-A --data-dir ./data/hub-a
-npm run steward -- hub gossip sync-all --hub-id HUB-B --data-dir ./data/hub-b
-npm run steward -- hub anchor-verify --hub-url http://127.0.0.1:9474 --date 2026-06-26
+npm run orgos -- hub serve --hub-id HUB-A --port 9474 --data-dir ./data/hub-a [--gossip-interval 300]
+npm run orgos -- hub export-public-key --hub-id HUB-A --data-dir ./data/hub-a
+npm run orgos -- hub verify --hub-id HUB-A --data-dir ./data/hub-a --event-id <uuid>
+npm run orgos -- hub verify --hub-url http://127.0.0.1:9474 --event-id <uuid>
+npm run orgos -- hub federation show --hub-id HUB-A --data-dir ./data/hub-a
+npm run orgos -- hub gossip sync-all --hub-id HUB-B --data-dir ./data/hub-b
+npm run orgos -- hub anchor-verify --hub-url http://127.0.0.1:9474 --date 2026-06-26
 ```
 
 ### 8.2 Org · Witness プール
 
 ```bash
-npm run steward -- --tenant mal protocol witness register --event-id <uuid> --side sent
-npm run steward -- --tenant mal protocol witness flush-pending
-npm run steward -- --tenant mal protocol witness verify --event-id <uuid>
-npm run steward -- --tenant mal protocol witness pool status
-npm run steward -- --tenant mal protocol witness reconcile --peer PEER-001 --cross-hub
-npm run steward -- --tenant mal protocol witness pool init-trusted --jurisdiction JP
+npm run orgos -- --tenant mal protocol witness register --event-id <uuid> --side sent
+npm run orgos -- --tenant mal protocol witness flush-pending
+npm run orgos -- --tenant mal protocol witness verify --event-id <uuid>
+npm run orgos -- --tenant mal protocol witness pool status
+npm run orgos -- --tenant mal protocol witness reconcile --peer PEER-001 --cross-hub
+npm run orgos -- --tenant mal protocol witness pool init-trusted --jurisdiction JP
 ```
 
 ### 8.3 設定例
@@ -373,7 +373,7 @@ sequenceDiagram
 | 項目 | 状態 | 備考 |
 |------|------|------|
 | 法域別 trusted_hub 事業者レジストリ | 未 | committee 管轄 · `trusted-hubs.yaml` はテンプレ |
-| peer outbox リモート export API | 未 | reconcile はローカル台帳 + Hub GET 中心 |
+| peer outbox リモート export API | **実装済** | `protocol-api-server` · `GET /protocol/v1/outbox` · deliver-pull E2E |
 | wire-governance `warn_only: false` 本番運用 | **Steward 実装済** | `validate.ts` — `warn_only: false` 時 `witness-receipt-missing` を **issue** 化 · runbook: [runbook-orgos.md](../runbook-orgos.md) §3 |
 | trusted_hub テンプレ pin | **手順化** | `steward/platform/protocol/seed/witness-pool.yaml.example` · テナント `witness-pool.yaml` で `hub_public_key` を固定 |
 | gossip import `skipped` | **説明済** | 再同期分は `skipped` に含まれる · 終状態（receipt 存在）は正 · [runbook-orgos.md](../runbook-orgos.md) §4 |

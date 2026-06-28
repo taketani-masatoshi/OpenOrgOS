@@ -183,7 +183,7 @@ flowchart TB
 | FR-WT-04 | multipath endpoints（push · relay · pull） | ✓ |
 | FR-WT-05 | store-and-forward relay キュー | ✓ |
 | FR-WT-06 | HTTPS + mTLS（protocol API） | ✓ |
-| FR-WT-07 | peer outbox リモート export API | — 未 |
+| FR-WT-07 | peer outbox リモート export API | ✓ | `GET /protocol/v1/outbox` · `{eventId}` · deliver-pull |
 
 ---
 
@@ -237,14 +237,15 @@ flowchart TB
 
 ### 6.2 完成度スコア（参考）
 
-| 指標 | 値（2026-06-27） |
-|------|------------------|
-| OrgOS 加重（`steward status --orgos`） | **82/100** |
-| Core 四要素均等（評価） | **~88%** |
-| protocol + org + hub 関連 tests | **~112** |
-| 全体 `npm test` | **452 green** |
+**正本:** [orgos-scoring-methodology.md](../org-os/orgos-scoring-methodology.md) · `steward status --orgos`
 
-正本: [framework-assessment.md](../framework-assessment.md) §12–13 · `steward/platform/orgos-score-baseline.yaml`
+| 指標 | チェックリスト | 厳格（対外） |
+|------|:--:|:--:|
+| OrgOS 加重 | **99/100** | **~91/100** |
+| OpenOrgOS Core 四要素 | **100/100** | **92/100** |
+| 全体 `npm test` | **480+ green** | （採点未連動） |
+
+> 2026-06-27 以前の **82/100 · Core ~88%** は obsolete（静的 baseline 時代）。改定履歴 1.4 参照。
 
 ---
 
@@ -415,3 +416,4 @@ flowchart TB
 | 1.3 | 2026-06-27 | P3–P5 — peer discover · signing rotate · deliver-pull · trusted-hubs validate |
 | 1.4 | 2026-06-27 | deliver-pull E2E · スコア同期（82/100 · 452 tests · Core ~88%） |
 | 1.5 | 2026-06-27 | FR-EM-07 mesh v1 · `protocol mesh deliver` · 2-hop E2E · peer discover --suggest |
+| 1.6 | 2026-06-28 | 二重採点（チェックリスト/厳格）· [orgos-scoring-methodology.md](../org-os/orgos-scoring-methodology.md) · §6.2 更新 |

@@ -37,11 +37,11 @@
 ## CLI
 
 ```bash
-npm run steward -- --tenant mal operations trademark show
-npm run steward -- --tenant mal operations trademark validate
-npm run steward -- --tenant mal operations trademark checklist --application TM-2026-001
-npm run steward -- --tenant mal operations trademark draft --application TM-2026-001
-npm run steward -- --tenant mal operations trademark draft --application TM-2026-001 --write
+npm run orgos -- --tenant mal operations trademark show
+npm run orgos -- --tenant mal operations trademark validate
+npm run orgos -- --tenant mal operations trademark checklist --application TM-2026-001
+npm run orgos -- --tenant mal operations trademark draft --application TM-2026-001
+npm run orgos -- --tenant mal operations trademark draft --application TM-2026-001 --write
 ```
 
 ## ワークフロー（Phase 0）

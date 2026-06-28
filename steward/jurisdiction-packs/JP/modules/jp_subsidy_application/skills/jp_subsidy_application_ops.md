@@ -10,10 +10,10 @@
 
 1. `programs.yaml` に補助金 ID · `source_url` を登録
 2. URL / 募集要項 PDF を読み、要件を `briefs/{program-id}.yaml` に反映
-3. `npm run steward -- operations subsidy eligibility --program {id}`
+3. `npm run orgos -- operations subsidy eligibility --program {id}`
 4. `personnel-cost-basis.yaml` を HR `employee_id` と突合
-5. `npm run steward -- operations subsidy labor-cost --program {id}`
-6. `npm run steward -- operations subsidy draft --program {id}` → `docs/subsidy/{id}/` へ人間が清書
+5. `npm run orgos -- operations subsidy labor-cost --program {id}`
+6. `npm run orgos -- operations subsidy draft --program {id}` → `docs/subsidy/{id}/` へ人間が清書
 
 ## データ境界
 

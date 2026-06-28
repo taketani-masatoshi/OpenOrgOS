@@ -10,8 +10,8 @@
 ## 有効化
 
 ```bash
-STEWARD_TENANT=sample-co npm run steward -- modules list
-STEWARD_TENANT=sample-co npm run validate
+ORGOS_TENANT=sample-co npm run orgos -- modules list
+ORGOS_TENANT=sample-co npm run validate
 ```
 
 ## 規程

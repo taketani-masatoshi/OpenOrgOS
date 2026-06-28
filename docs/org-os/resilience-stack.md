@@ -24,17 +24,17 @@
 
 ```bash
 # Org C
-npm run steward -- --tenant trust-c protocol witness trust init-authority \
+npm run orgos -- --tenant trust-c protocol witness trust init-authority \
   --authority-id WTA-C-001 --org-name "Neutral Witness Co"
-npm run steward -- --tenant trust-c protocol witness trust certify \
+npm run orgos -- --tenant trust-c protocol witness trust certify \
   --hub-id HUB-C --hub-url https://hub-c.example
-npm run steward -- --tenant trust-c protocol witness trust publish
-npm run steward -- --tenant trust-c protocol api-serve --port 9476
+npm run orgos -- --tenant trust-c protocol witness trust publish
+npm run orgos -- --tenant trust-c protocol api-serve --port 9476
 
 # Org A / B — bundle を pin して pool 生成
-npm run steward -- --tenant mal protocol witness trust verify \
+npm run orgos -- --tenant mal protocol witness trust verify \
   --bundle-url http://trust-c.example:9476/protocol/v1/trust/bundle
-npm run steward -- --tenant mal protocol witness pool init-from-trust \
+npm run orgos -- --tenant mal protocol witness pool init-from-trust \
   --bundle-url http://trust-c.example:9476/protocol/v1/trust/bundle
 ```
 
@@ -55,7 +55,7 @@ protocol:
 ```
 
 ```bash
-npm run steward -- --tenant mal protocol witness pool init-from-contract --contract CTR-012
+npm run orgos -- --tenant mal protocol witness pool init-from-contract --contract CTR-012
 ```
 
 ---
@@ -69,7 +69,7 @@ npm run steward -- --tenant mal protocol witness pool init-from-contract --contr
 | gold | + attested（witness quorum 充足） |
 
 ```bash
-npm run steward -- --tenant mal protocol sla --tier silver
+npm run orgos -- --tenant mal protocol sla --tier silver
 ```
 
 ---
@@ -80,7 +80,7 @@ npm run steward -- --tenant mal protocol sla --tier silver
 
 ```bash
 # サーバー（Org C）
-npm run steward -- --tenant trust-c protocol api-serve \
+npm run orgos -- --tenant trust-c protocol api-serve \
   --host 0.0.0.0 --port 9476 \
   --tls-cert /etc/steward/protocol/server-cert.pem \
   --tls-key /etc/steward/protocol/server-key.pem \

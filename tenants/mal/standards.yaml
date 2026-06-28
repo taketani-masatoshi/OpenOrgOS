@@ -1,5 +1,5 @@
 # ISO 標準 — テナント有効化
-# 正本: tenants/{id}/standards.yaml · 生成: npm run steward -- modules sync-context
+# 正本: tenants/{id}/standards.yaml · 生成: npm run orgos -- modules sync-context
 
 iso:
   - id: ISO-9001

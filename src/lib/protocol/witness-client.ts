@@ -30,7 +30,7 @@ export function findEnvelopeFileForWitness(eventId: string): EventEnvelope | und
     }
     if (existsSync(dir)) {
       for (const file of readdirSync(dir)) {
-        if (!file.endsWith(".json")) continue;
+        if (!file.endsWith(".json") || file.endsWith(".steward-provenance.json")) continue;
         const env = parseEventEnvelope(JSON.parse(readFileSync(join(dir, file), "utf-8")));
         if (env.event_id === eventId) return env;
       }

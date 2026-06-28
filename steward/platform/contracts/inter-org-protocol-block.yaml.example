@@ -11,3 +11,7 @@ protocol:
   # witness_trust_bundle_url: https://trust.example.org/protocol/v1/trust/bundle
   # witness_trust_authority_url: https://trust.example.org
   # relay_org_uri: org:mal:relay
+  # peer_id: PEER-001
+  # allowed_event_types: [org.transaction.recorded, org.identity.presented]
+  # allowed_transaction_types: [committee.contract.execution.notice]
+  # allowed_payload_namespaces: [steward.contract]

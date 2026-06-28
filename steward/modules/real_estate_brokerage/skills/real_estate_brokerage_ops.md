@@ -3,7 +3,7 @@
 ## CLI
 
 ```bash
-npm run steward -- operations brokerage show
-npm run steward -- operations brokerage validate
-npm run steward -- operations brokerage pipeline
+npm run orgos -- operations brokerage show
+npm run orgos -- operations brokerage validate
+npm run orgos -- operations brokerage pipeline
 ```

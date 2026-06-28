@@ -9,7 +9,7 @@ describe("demo tenant validate", () => {
     const root = join(import.meta.dirname, "..");
     execFileSync(
       "npm",
-      ["run", "steward", "--", "--tenant", "demo", "validate"],
+      ["run", "orgos", "--", "--tenant", "demo", "validate"],
       { cwd: root, encoding: "utf-8", stdio: "pipe" }
     );
   });

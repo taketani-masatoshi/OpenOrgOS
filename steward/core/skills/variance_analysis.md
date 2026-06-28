@@ -2,7 +2,7 @@
 
 ## Runtime
 
-**cli** — `npm run steward -- skills run variance`
+**cli** — `npm run orgos -- skills run variance`
 
 ## 目的
 

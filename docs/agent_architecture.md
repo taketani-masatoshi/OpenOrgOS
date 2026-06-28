@@ -1,6 +1,7 @@
 # Steward OS — マルチエージェントアーキテクチャ
 
-> **正本（4 層）:** [steward/rules/agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/core/agents/](../steward/core/agents/) · [steward/core/skills/](../steward/core/skills/)  
+> **用語（2026-06-28）:** 製品名 **OrgOS** · **Steward Agent** = 経営統括（Secretary Agent と同列）。「Steward OS」= 本リポジトリ参照実装のレガシー表記 — [org-os/orgos-vocabulary.md](org-os/orgos-vocabulary.md)  
+> **正本（4 層）:** [steward/rules/agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md)  
 > **物理パス正本:** [steward/rules/repository_layout.md](../steward/rules/repository_layout.md)（2026-06 テナント分離）  
 > 本書は **現行パス詳細索引** として維持する。仕様正本は [docs/spec.md](spec.md)。
 > 以下の具体パス（`PROP-001` · `CTR-*` · 番町 · 亀沢 等）は **テナント `mal` の実例**。汎用定義は各 `steward/core/agents/*.md` を正とする。
@@ -8,7 +9,7 @@
 
 **版:** 2026-06-08 · **対象:** Steward OS フレームワーク（会社データはテナント分離）
 
-Steward OS は **経営支援 OS**（DMS ではない）。**8 Agent**（7 部門 + 秘書）が役割分担し、Executive Steward が **Agent 要約** 経由で統合判断を支援する。会社固有の法人・顧客・委託先・規程は **テナント**（`tenants/{id}/`）に置き、フレームワーク（`steward/` · `src/`）は転用可能。
+Steward OS は **経営支援 OS**（DMS ではない）— **製品名は OrgOS**（[用語集](org-os/orgos-vocabulary.md)）。**Steward Agent** · **Secretary Agent** 等が役割分担し、Steward Agent が **Agent 要約** 経由で統合判断を支援する。
 
 ---
 
@@ -22,7 +23,7 @@ Steward OS は **経営支援 OS**（DMS ではない）。**8 Agent**（7 部�
 | └ 人向け | `tenants/{id}/docs/` | MD · CSV · PDF（論理: `docs/`） |
 | └ 会社ルール | `tenants/{id}/rules/` | `company_context.md` — 法人 · 事業 · STK 索引 |
 
-**切替:** `export STEWARD_TENANT=mal` または `npm run steward -- --tenant mal …`  
+**切替:** `export ORGOS_TENANT=mal` または `npm run orgos -- --tenant mal …`  
 **雛形:** [tenants/_template/](../tenants/_template/) · **実例:** [tenants/mal/](../tenants/mal/)
 
 Agent 定義（`steward/core/agents/`）は汎用。物件 ID（PROP-xxx）・固有名はテナントの `company_context.md` を正とする。

@@ -1,16 +1,17 @@
-# Steward OS — Specification（正本）
+# OrgOS — Specification（正本）
 
 > **本ドキュメントが唯一の仕様正本。** v0.2–v0.8 の各版は [spec/history/](spec/history/) に履歴として保存。
 > 機能差分（Phase 別）は本書末尾の [変更履歴](#15-変更履歴phase-changelog) を参照。
+> **製品名:** OrgOS（参照実装 npm: `orgos-reference` · CLI: `orgos`）— 旧称 Steward OS は [org-os/orgos-vocabulary.md](org-os/orgos-vocabulary.md) · [cli-migration.md](org-os/cli-migration.md)
 > 物理レイアウト正本: [steward/rules/repository_layout.md](../steward/rules/repository_layout.md) · アクセス正本: [steward/rules/folder_access_policy.md](../steward/rules/folder_access_policy.md)
 
-**版:** 統合（〜v0.8 / Phase 3）· **対象:** Steward OS フレームワーク（会社データはテナント分離）
+**版:** 統合（〜v0.8 / Phase 3）· **対象:** OrgOS 参照実装（会社データはテナント分離）
 
 ---
 
 ## 1. 目的
 
-Steward OS は **テナント分離型の経営支援フレームワーク**（DMS ではない）。不動産賃貸・宿泊・受託等の業務モジュールを ON/OFF し、会社データを YAML 正本で蓄積し、CLI · Agent · Skill で運用する。
+OrgOS は **テナント分離型の組織 OS 参照実装**（DMS ではない）。不動産賃貸・宿泊・受託等の業務モジュールを ON/OFF し、会社データを YAML 正本で蓄積し、CLI · Agent · Skill で運用する。
 
 - **フレームワーク**（`src/` · `schemas/` · `steward/` · `docs/`）は法人非依存
 - **テナント**（`tenants/{id}/`）が法人データ · 規程 · パスをバインド
@@ -56,8 +57,8 @@ Data / File（事実）
 | `docs/...` | `tenants/{active}/docs/...` |
 
 ```bash
-export STEWARD_TENANT=mal          # または --tenant mal
-npm run steward -- validate
+export ORGOS_TENANT=mal          # または --tenant mal
+npm run orgos -- validate
 ```
 
 ---
@@ -76,9 +77,9 @@ npm run steward -- validate
 **骨格生成:**
 
 ```bash
-npm run steward -- tenant init acme --name "株式会社ACME" --from rental
-npm run steward -- regulations seed          # effective REG の template → docs/company/regulations/
-npm run steward -- --tenant acme validate
+npm run orgos -- tenant init acme --name "株式会社ACME" --from rental
+npm run orgos -- regulations seed          # effective REG の template → docs/company/regulations/
+npm run orgos -- --tenant acme validate
 ```
 
 `regulations.yaml` で `enabled: true` かつ bind 充足（effective）の規程は、テナント側 `docs/company/regulations/{tenant_doc}` が必須。骨格では `regulations seed` で `[TBD]` プレースホルダ付き MD を生成する。
@@ -109,9 +110,9 @@ npm run steward -- --tenant acme validate
 | **skeleton** | カタログ · 最小 example のみ。有効化前に seed 展開が必要 |
 
 ```bash
-npm run steward -- modules list          # Tier 列を表示
-npm run steward -- modules check --all    # catalog 全件（tier aware）
-npm run steward -- modules check rental
+npm run orgos -- modules list          # Tier 列を表示
+npm run orgos -- modules check --all    # catalog 全件（tier aware）
+npm run orgos -- modules check rental
 ```
 
 モジュール契約（manifest スキーマ · tier 要件 · 追加手順）: [steward/modules/module_contract.md](../steward/modules/module_contract.md) · 一覧: [steward/modules/00-このフォルダについて.md](../steward/modules/00-このフォルダについて.md)
@@ -129,8 +130,8 @@ npm run steward -- modules check rental
 | **自動化度** | automation | classification · document-io · integrity · daily/deps |
 
 ```bash
-npm run steward -- status
-npm run steward -- status --legacy    # 旧データ成熟度メトリクス併記
+npm run orgos -- status
+npm run orgos -- status --legacy    # 旧データ成熟度メトリクス併記
 ```
 
 `skeleton` テナントでは運用度 = N/A（P0 ブロッカー抑制）。テナント固有スコアは各テナント `docs/compliance/iso/steward-assessment.md`（法人名・件数はフレームワーク文書に書かない）。
@@ -158,9 +159,9 @@ npm run steward -- status --legacy    # 旧データ成熟度メトリクス併�
 - `classification-registry.yaml` の `git: ignore` と `.gitignore` の整合は `steward classification check` が検証（未登録は **error → CI fail**）
 
 ```bash
-npm run steward -- classification check
-npm run steward -- classification access --agent finance --path data/finance/bank-accounts.yaml --operation read
-npm run steward -- classification boundaries --check   # registry 駆動で .cursorignore/.cursorindexingignore のドリフト検出
+npm run orgos -- classification check
+npm run orgos -- classification access --agent finance --path data/finance/bank-accounts.yaml --operation read
+npm run orgos -- classification boundaries --check   # registry 駆動で .cursorignore/.cursorindexingignore のドリフト検出
 ```
 
 - `**/records/**`（L2 個情 vault）は `.cursorignore`（AI 自動）と `.cursorindexingignore`（索引）の双方で除外。境界パターンは registry の `ai_context: blocked` / `cursorignore` リソースから導出（`classification boundaries`）
@@ -173,17 +174,17 @@ npm run steward -- classification boundaries --check   # registry 駆動で .cur
 registry: [steward/core/routing/registry.yaml](../steward/core/routing/registry.yaml) · 解説: [steward/core/routing/README.md](../steward/core/routing/README.md)
 
 ```bash
-npm run steward -- route list
-npm run steward -- route match --text "契約更新の相談"       # keyword/path → agent
-npm run steward -- route handoff --to finance --subject "..."  # handoff 生成
-npm run steward -- route dispatch --to finance --subject "..."
+npm run orgos -- route list
+npm run orgos -- route match --text "契約更新の相談"       # keyword/path → agent
+npm run orgos -- route handoff --to finance --subject "..."  # handoff 生成
+npm run orgos -- route dispatch --to finance --subject "..."
 
 # 秘書エスカレーション / 実装委譲（Work Order）
-npm run steward -- escalate plan --subject "..." --requirements "..."
-npm run steward -- escalate run --id IMP-...
-npm run steward -- escalate status --id IMP-...
-npm run steward -- escalate complete --id IMP-...
-npm run steward -- escalate merge --id IMP-...        # 全子 WO 完了で自動統合
+npm run orgos -- escalate plan --subject "..." --requirements "..."
+npm run orgos -- escalate run --id IMP-...
+npm run orgos -- escalate status --id IMP-...
+npm run orgos -- escalate complete --id IMP-...
+npm run orgos -- escalate merge --id IMP-...        # 全子 WO 完了で自動統合
 ```
 
 - consult 系: [secretary_escalation.md](../steward/core/orchestrators/secretary_escalation.md)
@@ -195,27 +196,27 @@ npm run steward -- escalate merge --id IMP-...        # 全子 WO 完了で自�
 
 ```bash
 # 並列ディスパッチ（manifest / Cursor SDK local|cloud）
-npm run steward -- agent dispatch plan --id IMP-... [--runtime local|cloud|manifest]
-npm run steward -- agent dispatch run  --id IMP-... [--dry-run] [--runtime cloud]
+npm run orgos -- agent dispatch plan --id IMP-... [--runtime local|cloud|manifest]
+npm run orgos -- agent dispatch run  --id IMP-... [--dry-run] [--runtime cloud]
 
 # Cloud Agent 常駐 watch
-npm run steward -- agent cloud config
-npm run steward -- agent cloud watch [--once] [--interval 30000]
+npm run orgos -- agent cloud config
+npm run orgos -- agent cloud watch [--once] [--interval 30000]
 
 # Queue（JSONL: routing-queue/queue/events.jsonl）
-npm run steward -- queue push --event ... --ref ...
-npm run steward -- queue list
-npm run steward -- queue drain
+npm run orgos -- queue push --event ... --ref ...
+npm run orgos -- queue list
+npm run orgos -- queue drain
 
 # Webhook（registry: steward/platform/webhook/registry.yaml）
-npm run steward -- webhook config
-npm run steward -- webhook send   --event ... --ref ...
-npm run steward -- webhook ingest --file payload.json
-npm run steward -- webhook serve  [--once] [--host ...] [--port ...]   # inbound HTTP
+npm run orgos -- webhook config
+npm run orgos -- webhook send   --event ... --ref ...
+npm run orgos -- webhook ingest --file payload.json
+npm run orgos -- webhook serve  [--once] [--host ...] [--port ...]   # inbound HTTP
 
 # Work order → PR
-npm run steward -- merge pr plan   --id IMP-...
-npm run steward -- merge pr create --id IMP-... [--dry-run]
+npm run orgos -- merge pr plan   --id IMP-...
+npm run orgos -- merge pr create --id IMP-... [--dry-run]
 ```
 
 | runtime | 動作 |
@@ -235,9 +236,9 @@ Cursor SDK は任意（`npm install @cursor/sdk` + `CURSOR_API_KEY`）。未導�
 Cursor 外で Skill 相当のチェックを実行。定義: [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md) · registry: [steward/core/skills/registry.yaml](../steward/core/skills/registry.yaml) · 実装: `src/commands/skills.ts`
 
 ```bash
-npm run steward -- skills list
-npm run steward -- skills run daily
-npm run steward -- skills run <id>
+npm run orgos -- skills list
+npm run orgos -- skills run daily
+npm run orgos -- skills run <id>
 ```
 
 | command | Skill id | 担当 Agent |
@@ -257,11 +258,11 @@ npm run steward -- skills run <id>
 ## 10. 運用 CLI（P0 · 請求 · 予実 · パイプライン）
 
 ```bash
-npm run steward -- ops p0                 # ops-config 駆動 P0 サマリ
-npm run steward -- ops daily              # 成熟度 + P0 + 契約アラート
+npm run orgos -- ops p0                 # ops-config 駆動 P0 サマリ
+npm run orgos -- ops daily              # 成熟度 + P0 + 契約アラート
 
-npm run steward -- pipeline run daily     # validate → ops daily → dashboard
-npm run steward -- pipeline run weekly    # daily + compliance gap + audit 要約
+npm run orgos -- pipeline run daily     # validate → ops daily → dashboard
+npm run orgos -- pipeline run weekly    # daily + compliance gap + audit 要約
 ```
 
 | npm script | 内容 |
@@ -270,7 +271,7 @@ npm run steward -- pipeline run weekly    # daily + compliance gap + audit 要�
 | `npm run weekly` | `npm run check` + `pipeline run weekly` |
 
 ```bash
-npm run steward -- invoice generate \
+npm run orgos -- invoice generate \
   --module rental --property PROP-001 \
   --from 2026-02 --to 2027-01 --fy FY2026 [--dry-run]
 ```
@@ -283,9 +284,9 @@ npm run steward -- invoice generate \
 ## 11. 監査・コンプライアンス
 
 ```bash
-npm run steward -- audit log append --event handoff --ref IMP-... --detail "..."
-npm run steward -- audit log list
-npm run steward -- compliance gap [--tenant mal]   # ISO / REG ギャップ
+npm run orgos -- audit log append --event handoff --ref IMP-... --detail "..."
+npm run orgos -- audit log list
+npm run orgos -- compliance gap [--tenant mal]   # ISO / REG ギャップ
 ```
 
 監査証跡は append-only JSONL（`docs/reports/audit-log/audit.jsonl` · gitignore）。

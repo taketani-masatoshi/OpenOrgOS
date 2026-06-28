@@ -1,6 +1,6 @@
 # アクティブコンテキスト — テナント `us-demo`
 
-**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run steward -- modules sync-context`
+**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run orgos -- modules sync-context`
 
 **法域（legal）:** `US` · subdivision `DE` · US law (Delaware DGCL)
 **表示言語（display）:** `en` · BCP 47 `en-US` · English

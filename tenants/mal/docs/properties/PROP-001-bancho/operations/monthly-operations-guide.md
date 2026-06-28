@@ -9,7 +9,7 @@
 
 | # | タスク | 担当 | 成果物 |
 |---|--------|------|--------|
-| 1 | 賃料請求書生成 | Finance / Property Rental | `npm run steward -- invoice bancho --from YYYY-MM --to YYYY-MM` |
+| 1 | 賃料請求書生成 | Finance / Property Rental | `npm run orgos -- invoice bancho --from YYYY-MM --to YYYY-MM` |
 | 2 | PDF/EML 確認・送付 | 代表 | [`invoices/bancho/`](../../../finance/accounting/invoices/bancho/FY2026/) `output/` |
 | 3 | 入金確認 | 代表 | [賃料入金確認.csv](templates/rental/賃料入金確認.csv) → `records/` |
 | 4 | 月次収支反映 | Finance | `data/finance/monthly/{YYYY-MM}.yaml` の `revenue_bancho` |
@@ -44,7 +44,7 @@
 - [ ] 請求書送付済（または送付予定日確定）
 - [ ] 入金記録 CSV 更新
 - [ ] `revenue_bancho` が予実と一致（`npm run validate`）
-- [ ] 契約・保険の期限アラートなし（`npm run steward -- alerts`）
+- [ ] 契約・保険の期限アラートなし（`npm run orgos -- alerts`）
 - [ ] 必要なら Property Rental 要約を `docs/reports/agent-summaries/prop-001/` に出力
 
 ---

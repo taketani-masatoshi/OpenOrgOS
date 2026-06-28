@@ -1,7 +1,8 @@
 # OpenOrgOS Core Philosophy
 
 **Status:** canonical doctrine · **Language:** English (authoritative)  
-**Scope:** OpenOrgOS Core design — not application features
+**Scope:** OpenOrgOS Core design — not application features  
+**Terminology (JP):** [orgos-vocabulary.md](orgos-vocabulary.md) — **OrgOS = product** · **Steward Agent** = executive core agent (not the product name)
 
 You are developing the OpenOrgOS Core.
 

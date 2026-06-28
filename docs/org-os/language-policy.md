@@ -7,6 +7,8 @@
 
 ## 日本語要約
 
+**用語:** [orgos-vocabulary.md](orgos-vocabulary.md) — OrgOS（組織 OS）· OpenOrgOS Core · Wire · Witness · Agent
+
 | 層 | 言語 | 役割 |
 |----|------|------|
 | **Core** | English | プロトコル · 型 · API · 設計文書の正本 |

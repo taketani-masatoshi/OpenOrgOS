@@ -48,11 +48,11 @@
 
 **CLI（集約 Skill）:**
 ```bash
-npm run steward -- dashboard   # ダッシュボード + Agent 要約 7 件を同時生成
-npm run steward -- status
-npm run steward -- alerts
-npm run steward -- forecast
-npm run steward -- scenario
+npm run orgos -- dashboard   # ダッシュボード + Agent 要約 7 件を同時生成
+npm run orgos -- status
+npm run orgos -- alerts
+npm run orgos -- forecast
+npm run orgos -- scenario
 ```
 
 ---

@@ -60,21 +60,21 @@ npm run demo:inter-org
 npm run demo:inter-org
 
 # MAL — 起案・承認・送信記録
-npm run steward -- --tenant mal protocol notice list
-npm run steward -- --tenant mal protocol transaction list
-npm run steward -- --tenant mal protocol audit verify
+npm run orgos -- --tenant mal protocol notice list
+npm run orgos -- --tenant mal protocol transaction list
+npm run orgos -- --tenant mal protocol audit verify
 
 # サウスウッド — 借主側 inbound + ack
-npm run steward -- --tenant southwood protocol transaction list
-npm run steward -- --tenant southwood protocol audit verify
+npm run orgos -- --tenant southwood protocol transaction list
+npm run orgos -- --tenant southwood protocol audit verify
 ```
 
 手動で同じ流れ:
 
 ```bash
-npm run steward -- --tenant mal protocol notice propose \
+npm run orgos -- --tenant mal protocol notice propose \
   --peer PEER-001 --contract CTR-012 --operator "秘書オペレータ"
-npm run steward -- --tenant mal protocol notice approve \
+npm run orgos -- --tenant mal protocol notice approve \
   --id NOTICE-YYYYMMDD-001 --approver "段燕燕"
 ```
 
@@ -93,7 +93,7 @@ npm run steward -- --tenant mal protocol notice approve \
 ## 4. Webhook で inbound をシミュレート（任意）
 
 ```bash
-npm run steward -- --tenant southwood webhook ingest \
+npm run orgos -- --tenant southwood webhook ingest \
   --file tenants/mal/docs/protocol/outbox/03-mal-execution-notice.json
 ```
 
@@ -102,13 +102,13 @@ npm run steward -- --tenant southwood webhook ingest \
 Outbound は **notice フロー必須**（Steward Agent は cross-org 送信しない）:
 
 ```bash
-npm run steward -- --tenant mal protocol peer register \
+npm run orgos -- --tenant mal protocol peer register \
   --name "株式会社サウスウッド" --jurisdiction JP --stakeholder STK-001
 
-npm run steward -- --tenant mal protocol notice propose \
+npm run orgos -- --tenant mal protocol notice propose \
   --peer PEER-001 --contract CTR-012 --operator "秘書オペレータ"
 
-npm run steward -- --tenant mal protocol notice approve \
+npm run orgos -- --tenant mal protocol notice approve \
   --id NOTICE-YYYYMMDD-001 --approver "段燕燕"
 ```
 

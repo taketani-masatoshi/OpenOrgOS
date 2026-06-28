@@ -84,7 +84,7 @@
 2. **`regulations/templates/core/`** — officer_comp · board · shareholder · approval · expense · conflict · document · travel の **8 REG テンプレ実体**
 3. **`seed/`** — `tax-profile.yaml.example` · `chart-of-accounts.yaml.example`
 4. **`entity-forms.yaml`** — 当法域のデフォルト法人形態 + 主要形態 3 件以上
-5. **demo テナント** — `tenants/{code}-demo/` · `jurisdiction: {code}` · `npm run steward -- --tenant {code}-demo validate` **エラー 0**
+5. **demo テナント** — `tenants/{code}-demo/` · `jurisdiction: {code}` · `npm run orgos -- --tenant {code}-demo validate` **エラー 0**
 6. **`countries.yaml`** — 当該 ISO の `tier: full` · `pack_root` 設定
 7. **`registry.yaml` + `packs.lock.yaml`** — 索引 · pin 更新
 8. **テスト** — `jurisdiction packs check {code}` を CI / `npm run check` に含む
@@ -168,10 +168,10 @@ pack 内 `modules/`（宣言系等）は **pack_ready 必須ではない**。JP 
 ### CLI 確認
 
 ```bash
-npm run steward -- jurisdiction list
-npm run steward -- jurisdiction packs check
-npm run steward -- --tenant hk-demo validate
-npm run steward -- locale list
+npm run orgos -- jurisdiction list
+npm run orgos -- jurisdiction packs check
+npm run orgos -- --tenant hk-demo validate
+npm run orgos -- locale list
 ```
 
 ---

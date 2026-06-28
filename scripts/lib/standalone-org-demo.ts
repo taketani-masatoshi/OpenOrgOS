@@ -18,6 +18,8 @@ import { getWitnessPoolYamlPath } from "../../src/lib/protocol/paths.js";
 import { witnessPoolConfigSchema } from "../../schemas/protocol/witness-pool.js";
 import { serializeEventEnvelope } from "../../src/lib/protocol/envelope.js";
 import { getProtocolOutboxDir } from "../../src/lib/protocol/paths.js";
+import { runWithProtocolWriteGuard } from "../../src/lib/protocol/protocol-write-guard.js";
+import { writeOutboxProvenance } from "../../src/lib/protocol/outbox-provenance.js";
 import { proposeOrgApproval, approveOrgApproval } from "../../src/lib/org/approval/index.js";
 import { loadOrgAuthorizedPersons } from "../../src/lib/org/tenant-data.js";
 
@@ -55,9 +57,12 @@ function ensureWitnessDisabled(): void {
 function archiveEnvelope(envelope: ReturnType<typeof buildIdentityEnvelope>, label: string): void {
   const signed = maybeSignEnvelope(envelope);
   appendProtocolAuditRecord({ envelope: signed });
-  const dir = getProtocolOutboxDir();
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `${label}-${signed.event_id}.json`), serializeEventEnvelope(signed), "utf-8");
+  runWithProtocolWriteGuard("standalone-org-demo", () => {
+    const dir = getProtocolOutboxDir();
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, `${label}-${signed.event_id}.json`), serializeEventEnvelope(signed), "utf-8");
+    writeOutboxProvenance(dir, signed, "standalone-org-demo");
+  });
 }
 
 export function runStandaloneOrgDemo(tenant: string): StandaloneOrgDemoResult {
@@ -77,12 +82,15 @@ export function runStandaloneOrgDemo(tenant: string): StandaloneOrgDemoResult {
   });
   const delegationEnvelope = maybeSignEnvelope(buildDelegationEnvelope(delegationProof));
   appendProtocolAuditRecord({ envelope: delegationEnvelope });
-  mkdirSync(getProtocolOutboxDir(), { recursive: true });
-  writeFileSync(
-    join(getProtocolOutboxDir(), `02-delegation-${delegationEnvelope.event_id}.json`),
-    serializeEventEnvelope(delegationEnvelope),
-    "utf-8"
-  );
+  runWithProtocolWriteGuard("standalone-org-demo", () => {
+    mkdirSync(getProtocolOutboxDir(), { recursive: true });
+    writeFileSync(
+      join(getProtocolOutboxDir(), `02-delegation-${delegationEnvelope.event_id}.json`),
+      serializeEventEnvelope(delegationEnvelope),
+      "utf-8"
+    );
+    writeOutboxProvenance(getProtocolOutboxDir(), delegationEnvelope, "standalone-org-demo");
+  });
 
   const persons = loadOrgAuthorizedPersons();
   const approver =

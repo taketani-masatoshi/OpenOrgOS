@@ -33,7 +33,7 @@
 | 経路 | 操作 |
 |------|------|
 | **推奨** | Steward スレッド 1 本で `@steward/core/orchestrators/delegate_implementation.md` + 入力テンプレ |
-| **CLI** | `npm run steward -- escalate plan --text "..."` → `escalate run --text "..."` |
+| **CLI** | `npm run orgos -- escalate plan --text "..."` → `escalate run --text "..."` |
 
 ---
 
@@ -52,7 +52,7 @@
 - npm run check 通過
 - …
 **優先度:** P0 | P1 | P2 | P3
-**テナント:** mal（任意 · デフォルト STEWARD_TENANT）
+**テナント:** mal（任意 · デフォルト ORGOS_TENANT）
 **参照パス:** `src/...` または `docs/...`（route match 用 · 任意）
 ```
 
@@ -68,8 +68,8 @@
 ### Step 2 — ルートマッチ
 
 ```bash
-npm run steward -- escalate plan --text "..." [--path ...] [--dry-run]
-npm run steward -- route match --text "..."
+npm run orgos -- escalate plan --text "..." [--path ...] [--dry-run]
+npm run orgos -- route match --text "..."
 ```
 
 - [routing/registry.yaml](../core/routing/registry.yaml) で担当 Agent 候補を決定
@@ -90,7 +90,7 @@ npm run steward -- route match --text "..."
 ### Step 4 — Work Order 生成
 
 ```bash
-npm run steward -- escalate run --text "..." --from executive_steward [--tenant mal]
+npm run orgos -- escalate run --text "..." --from executive_steward [--tenant mal]
 ```
 
 **出力:**
@@ -108,9 +108,9 @@ npm run steward -- escalate run --text "..." --from executive_steward [--tenant 
 
 | 種別 | 起動 |
 |------|------|
-| **CLI Skill あり** | `npm run steward -- route dispatch --id IMP-... --mode auto` |
+| **CLI Skill あり** | `npm run orgos -- route dispatch --id IMP-... --mode auto` |
 | **Cursor-only Agent** | 並列チャットで `@docs/reports/routing-queue/prompts/IMP-*_{agent}.md` を起動 |
-| **完了** | `npm run steward -- escalate complete --id IMP-... --notes "..."` |
+| **完了** | `npm run orgos -- escalate complete --id IMP-... --notes "..."` |
 
 ### Step 6 — Executive 統合サマリ
 
@@ -172,12 +172,12 @@ status: pending
 ## CLI 一覧
 
 ```bash
-npm run steward -- escalate plan --text "..." [--dry-run]
-npm run steward -- escalate run --text "..." --from secretary
-npm run steward -- escalate run --id IMP-...          # プロンプト再生成
-npm run steward -- escalate status [--pending|--blocked]
-npm run steward -- escalate complete --id IMP-... --notes "..."
-npm run steward -- route dispatch --id IMP-... --mode auto   # CLI skill
+npm run orgos -- escalate plan --text "..." [--dry-run]
+npm run orgos -- escalate run --text "..." --from secretary
+npm run orgos -- escalate run --id IMP-...          # プロンプト再生成
+npm run orgos -- escalate status [--pending|--blocked]
+npm run orgos -- escalate complete --id IMP-... --notes "..."
+npm run orgos -- route dispatch --id IMP-... --mode auto   # CLI skill
 ```
 
 ---

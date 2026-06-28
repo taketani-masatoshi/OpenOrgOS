@@ -24,8 +24,8 @@ tenants/
 ## テナント切替
 
 ```bash
-export STEWARD_TENANT=mal          # シェル
-npm run steward -- --tenant mal validate
+export ORGOS_TENANT=mal          # シェル
+npm run orgos -- --tenant mal validate
 ```
 
 `tenant.yaml` で `default: true` のテナントが、環境変数未指定時の既定。
@@ -33,9 +33,9 @@ npm run steward -- --tenant mal validate
 ## 新規テナント（推奨）
 
 ```bash
-npm run steward -- tenant init acme --name "株式会社ACME" --from rental
+npm run orgos -- tenant init acme --name "株式会社ACME" --from rental
 # tenant init 内で regulations seed を自動実行
-npm run steward -- --tenant acme validate
+npm run orgos -- --tenant acme validate
 ```
 
 手動コピー: `cp -R tenants/_template tenants/{id}` 後、`tenant.yaml` 編集 · `steward regulations seed`
@@ -49,8 +49,8 @@ npm run steward -- --tenant acme validate
 | [`mal/`](../mal/) | 本番運用データ例（フレームワーク評価スコープ外） |
 
 ```bash
-npm run steward -- --tenant demo validate
-npm run steward -- --tenant acme validate
+npm run orgos -- --tenant demo validate
+npm run orgos -- --tenant acme validate
 npm run check
 ```
 

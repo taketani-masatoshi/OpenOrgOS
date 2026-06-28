@@ -22,6 +22,10 @@ import { getOrgAuditBridgeConfigPath } from "../org/paths.js";
 import { validateTrustedHubsRegistry } from "./trusted-hubs.js";
 import { loadSigningKeyMeta } from "./signing.js";
 import { loadPeersRegistry } from "./peers.js";
+import { getProtocolOutboxDir } from "./paths.js";
+import { listOutboxEventIdsWithoutProvenance } from "./outbox-provenance.js";
+import { isProtocolWriteGuardDisabled } from "./protocol-write-guard.js";
+import { checkProtocolOutboxPermissionsLoose } from "./outbox-permissions.js";
 
 export interface ProtocolValidationIssue {
   code: string;
@@ -229,6 +233,24 @@ export function validateProtocolState(
         });
       }
     }
+  }
+
+  if (!isProtocolWriteGuardDisabled()) {
+    const unprovenanced = listOutboxEventIdsWithoutProvenance(getProtocolOutboxDir());
+    for (const eventId of unprovenanced) {
+      issues.push({
+        code: "outbox-provenance-missing",
+        message: `Outbox ${eventId}.json lacks steward-provenance (direct write blocked)`,
+      });
+    }
+  }
+
+  for (const perm of checkProtocolOutboxPermissionsLoose()) {
+    const asIssue = process.env.STEWARD_ENFORCE_OUTBOX_PERMISSIONS === "1";
+    (asIssue ? issues : warnings).push({
+      code: perm.code,
+      message: perm.message,
+    });
   }
 
   return { ok: issues.length === 0, issues, warnings };

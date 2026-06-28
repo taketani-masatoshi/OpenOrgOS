@@ -90,6 +90,6 @@
 
 ```bash
 npm run validate
-npm run steward -- deps check --file data/finance/fixed-assets.yaml
-npm run steward -- report kessan   # 決算 MD/PDF 生成（データ確定後）
+npm run orgos -- deps check --file data/finance/fixed-assets.yaml
+npm run orgos -- report kessan   # 決算 MD/PDF 生成（データ確定後）
 ```

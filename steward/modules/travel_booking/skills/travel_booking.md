@@ -139,9 +139,9 @@ Caster 代替: 指定サイト（楽天トラベル · Booking.com · Trip.com�
 段が決済完了を伝えたら:
 
 ```bash
-npm run steward -- executive calendar conflicts
+npm run orgos -- executive calendar conflicts
 # calendar.yaml に type: travel · status: confirmed を追加
-npm run steward -- executive calendar push   # .env 設定済み時
+npm run orgos -- executive calendar push   # .env 設定済み時
 ```
 
 `schedule_management`: `travel` イベントは前後 30 分バッファ推奨。
@@ -152,17 +152,17 @@ Phase 0 browser 手順は **cursor-only**。Phase 1 CLI（`travel_booking` モ�
 
 ```bash
 # Step 0 — 必須項目が揃うまで exit 1（browser 禁止）
-npm run steward -- operations travel intake \
+npm run orgos -- operations travel intake \
   --portal rakuten-travel --destination 大阪 --area 新大阪駅周辺 \
   --check-in 2026-06-23 --check-out 2026-06-24 --guests 1
 
 # REG-008 上限チェック
-npm run steward -- operations travel check --budget 12000
+npm run orgos -- operations travel check --budget 12000
 
 # ドラフト骨格（候補表は browser 後に追記 · --write で gitignore 保存）
-npm run steward -- operations travel draft ... --write
+npm run orgos -- operations travel draft ... --write
 
-npm run steward -- operations travel portals
+npm run orgos -- operations travel portals
 ```
 
 YAML 一括: `--file data/operations/travel-request.yaml`（[seed](../../steward/modules/travel_booking/seed/travel-request.yaml.example) 参照）

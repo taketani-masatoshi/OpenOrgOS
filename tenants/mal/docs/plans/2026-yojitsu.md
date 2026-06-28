@@ -16,7 +16,7 @@
 | **月次予実データ（YAML）** | `data/plans/yojitsu-2026.yaml` | 計画数値・実績入力の正。CLI が検証 |
 | **中期・年度計画** | `data/plans/business-plan.yaml` | 2026〜2028 の年度KPI・売上/利益/投資 |
 | **月次実績** | `data/finance/monthly/{YYYY-MM}.yaml` | 実績が発生したらここに入力 |
-| **自動レポート** | `docs/reports/monthly/` | `npm run steward -- report monthly` の出力 |
+| **自動レポート** | `docs/reports/monthly/` | `npm run orgos -- report monthly` の出力 |
 
 ---
 

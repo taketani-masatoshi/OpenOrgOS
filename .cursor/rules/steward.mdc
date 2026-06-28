@@ -80,15 +80,15 @@ Steward → Agent（steward/core/agents/）→ Skill（steward/core/skills/）�
 ## レポート生成
 
 - MD → `docs/reports/`
-- PDF → `docs/io/outbox/corporate/`（`npm run steward -- report kessan|jigyo`）
+- PDF → `docs/io/outbox/corporate/`（`npm run orgos -- report kessan|jigyo`）
 - フォント → `assets/fonts/`
 
 ## データ入力
 
 1. `data/` YAML 更新 → `npm run validate`
 2. スキャン受信 → `docs/io/inbox/` または `steward io inbox add`
-3. `npm run steward -- sync all`（CSV 利用時）
-4. `npm run steward -- io status`（受信/出力確認）
+3. `npm run orgos -- sync all`（CSV 利用時）
+4. `npm run orgos -- io status`（受信/出力確認）
 5. 試行は `scratch/` → 確定後 `docs/` または `data/` へ
 
 ## Agent / Skill 参照
@@ -109,7 +109,7 @@ Steward → Agent（steward/core/agents/）→ Skill（steward/core/skills/）�
 - **有効モジュールのみ** `agent.md` を @ 参照（`tenants/{id}/rules/active_context.md` 正本）
 - **有効社内規程のみ** `docs/company/regulations/` 施行文を参照（`regulations.yaml` 正本）
 - **無効モジュール** · 未バインドカタログ · 無効 ISO · 無効規程は **読まない**（トークン節約）
-- 生成: `npm run steward -- modules sync-context` · validate 成功時も自動 sync
+- 生成: `npm run orgos -- modules sync-context` · validate 成功時も自動 sync
 
 - Skill: [steward/core/skills/](../../steward/core/skills/00-このフォルダについて.md)
 - ルール: [steward/rules/](../../steward/rules/steward_os_principles.md)

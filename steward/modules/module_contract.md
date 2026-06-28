@@ -1,6 +1,6 @@
 # 業務モジュール契約（Module Contract）
 
-> 業務モジュールを追加・改修する際に**満たすべき契約**。検証: `npm run steward -- modules check <id>` / `modules check --all`。
+> 業務モジュールを追加・改修する際に**満たすべき契約**。検証: `npm run orgos -- modules check <id>` / `modules check --all`。
 > 一覧・トークン方針: [00-このフォルダについて.md](00-このフォルダについて.md) · readiness 正本: [readiness.yaml](readiness.yaml)
 
 Steward OS の業務モジュールは「フレームワーク側の再利用可能な部品」である。テナントは `modules.yaml` で **ON/OFF とパスバインドのみ** を行い、モジュール本体は法人非依存に保つ。
@@ -62,6 +62,6 @@ steward/modules/{id}/
 3. 必要に応じ `{id}/skills/` · `{id}/seed/`（`*.example`）を追加
 4. `schemas/modules.ts` の `moduleAgentId` に id を追加（必要なら proxy マップ）
 5. `readiness.yaml` に tier を登録
-6. `npm run steward -- modules check {id}` で契約検証 → `npm run check`
+6. `npm run orgos -- modules check {id}` で契約検証 → `npm run check`
 7. テナントで使う場合のみ `tenants/{id}/modules.yaml` にエントリ追加（パスバインドのみ）
 8. CLI がある場合 `{id}/cli/register.ts` で `ModuleCliBundle` を export し `src/lib/module-cli.ts` の `MODULE_CLI_BUNDLES` に追加

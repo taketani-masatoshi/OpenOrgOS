@@ -1,0 +1,29 @@
+{
+  "receipt_id": "WRCPT-1782610226295-28ffth",
+  "event_id": "55555555-5555-4555-8555-555555555555",
+  "envelope_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "status": "unilateral",
+  "attestations": [
+    {
+      "event_id": "55555555-5555-4555-8555-555555555555",
+      "envelope_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "side": "sent",
+      "origin": {
+        "org_id": "mal"
+      },
+      "destination": {
+        "org_id": "southwood"
+      },
+      "transaction_type": "contract.execution.notice",
+      "attested_at": "2026-06-28T01:30:26.269Z",
+      "org_ref": {
+        "org_id": "mal"
+      },
+      "org_public_key": "MCowBQYDK2VwAyEA6aDy/GA8oPqmjXqe10jwfNGKUYFmGTRNWW/OesTLZ/M=",
+      "org_signature": "pAR1Vd37luE8iy91maesODBekfUBSbv3f635UTiZaJHZeyjjZ12ZG6TBwKZdQxM/qVx63wkgbhiQnkvsCUWbDg=="
+    }
+  ],
+  "issued_at": "2026-06-28T01:30:26.295Z",
+  "hub_id": "HUB-A",
+  "hub_signature": "IQRU02xlwg6EMpxLvTfHBdAwRz4i+1N1CsQX+/Dg75D1M1+5zYon8kVpyVHxhtHRuUTuLSTTGE/32qtCDIqOAg=="
+}

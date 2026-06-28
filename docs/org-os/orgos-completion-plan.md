@@ -26,20 +26,23 @@ OpenOrgOS Core は四要素（Org Event Model · identity · authority · audita
 
 ---
 
-## 2. 現状スナップショット（2026-06）
+## 2. 現状スナップショット（2026-06-28 更新）
 
 | 次元 | 完成度 | 根拠 |
 |------|--------|------|
 | 製品フレームワーク | **99/100** | [framework-assessment.md](../framework-assessment.md) §9 |
 | 会社 OS composite | **93/100** | `steward status --os-99` |
 | TJS-11 法域 pack | **11/11** | pack_ready |
-| 業務 module（production_ready） | **89%**（24/27） | `jp_corporate_registration` 昇格 · IF 85% 閾値達成 |
-| Inter-org wire | **高** | 2-org デモ · notice · deliver · **mesh** · deliver-pull |
-| Witness Hub | **v1 実装済** | fan-out · quorum · Hub ノード · §14 ギャップ残 |
-| 内部 ↔ wire 形式統一 | **低** | 内部 YAML 中心 · `org.witness.*` emit 未 |
-| Community ガバナンス | **部分** | 申請 API あり · 委任承認 · 本番 SLA 不足 |
+| 業務 module（production_ready） | **89%**（24/27） | `modules check --all` |
+| Inter-org wire | **高** | 2-org デモ · notice · deliver · mesh · deliver-pull |
+| Witness Hub | **v1 実装済** | fan-out · quorum · Hub · [witness §14 残](witness-hub-requirements.md#14-既知ギャップv2-以降) |
+| 内部 ↔ wire 形式統一 | **中〜高** | witness emit · provenance · audit bridge **実装済** · **社内 MD 二層は意図的**（[company-events-requirements](../spec/company-events-requirements.md)） |
+| Community ガバナンス | **Steward-side 部分** | operators · SLA · governance CLI — **OS_Community UI 未** |
+| **OrgOS 採点** | **99（CL）/ ~91（厳格）** | [orgos-scoring-methodology.md](orgos-scoring-methodology.md) |
 
-**体感完成度** = 三軸最小値（現 **89%** — 業務 module 軸）— wire/mesh · witness · 単独 OrgOS 統合は別軸。
+**体感完成度** = 三軸最小値（**89%** — 業務 module 軸）· **対外 OrgOS は厳格 ~91** を参照。
+
+> **2026-06 旧記載「形式統一 低 · witness emit 未」は obsolete** — C2 完了後も社内 Implementation 層（MD）と wire envelope は分離する設計。
 
 ---
 
@@ -206,7 +209,7 @@ flowchart TB
 | **Wire 証拠（C2）** | 15% | §14 ギャップクローズ数 / 総数 |
 | **エコシステム（C4）** | 10% | Community SLA checklist · 語彙表 |
 
-**v1 目標:** **≥85%**（現推定 **~55%** — 単独統合と witness emit が主な欠損）
+**v1 目標:** **≥85%** — **2026-06-28 達成**（チェックリスト **99** · 厳格 **~91** · [orgos-scoring-methodology.md](orgos-scoring-methodology.md)）
 
 ---
 

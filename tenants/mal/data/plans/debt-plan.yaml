@@ -436,4 +436,4 @@ tbd:
 
 notes: |
   関連: data/finance/loans.yaml · investment-plan.yaml · profit-plan.yaml
-  依存: npm run steward -- deps check --file data/plans/debt-plan.yaml
+  依存: npm run orgos -- deps check --file data/plans/debt-plan.yaml

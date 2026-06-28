@@ -3,7 +3,7 @@
 ## CLI
 
 ```bash
-npm run steward -- operations ecommerce show
-npm run steward -- operations ecommerce validate
-npm run steward -- operations ecommerce fulfillment
+npm run orgos -- operations ecommerce show
+npm run orgos -- operations ecommerce validate
+npm run orgos -- operations ecommerce fulfillment
 ```

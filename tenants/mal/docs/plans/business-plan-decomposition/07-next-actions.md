@@ -11,8 +11,8 @@
 ```bash
 # 現預金入力後
 npm run validate
-npm run steward -- dashboard
-npm run steward -- deps check --file data/finance/cash-balance.yaml
+npm run orgos -- dashboard
+npm run orgos -- deps check --file data/finance/cash-balance.yaml
 ```
 
 - `cash-balance.yaml` 確定 → **資金繰り計画** · **DSCR** · **月次経営レポート** が有効化
@@ -44,9 +44,9 @@ npm run steward -- deps check --file data/finance/cash-balance.yaml
 ### 4. 物件別計画インスタンス完成
 
 ```bash
-npm run steward -- sync all
-npm run steward -- properties
-npm run steward -- finances
+npm run orgos -- sync all
+npm run orgos -- properties
+npm run orgos -- finances
 ```
 
 - PROP-001/002 各 11 ファイル（`06-file-manifest.md` 参照）

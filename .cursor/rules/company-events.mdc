@@ -30,9 +30,9 @@ alwaysApply: false
 ## 操作
 
 ```bash
-npm run steward -- events ensure-month
-npm run steward -- events new --kind registration --title "…" [--slug …]
-npm run steward -- events list
+npm run orgos -- events ensure-month
+npm run orgos -- events new --kind registration --title "…" [--slug …]
+npm run orgos -- events list
 ```
 
 新規イベント前に `ensure-month`。書類生成後は event MD の **出力書類** 節に artifact_dir をリンク。

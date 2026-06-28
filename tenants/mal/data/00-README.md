@@ -64,12 +64,12 @@ operations.property_id ──→ PROP.id
 ```bash
 npm run validate              # スキーマ + 参照エラー
 npm run validate -- --warnings  # 警告も表示
-npm run steward -- status     # データ成熟度レポート
-npm run steward -- sync all   # docs/exports CSV を YAML から再生成
-npm run steward -- io status  # 受信/出力トレイ
-npm run steward -- io guide   # I/O フロー
-npm run steward -- deps check --file data/...  # 依存影響チェック
-npm run steward -- deps graph # 依存関係マップ
+npm run orgos -- status     # データ成熟度レポート
+npm run orgos -- sync all   # docs/exports CSV を YAML から再生成
+npm run orgos -- io status  # 受信/出力トレイ
+npm run orgos -- io guide   # I/O フロー
+npm run orgos -- deps check --file data/...  # 依存影響チェック
+npm run orgos -- deps graph # 依存関係マップ
 ```
 
 ---
@@ -77,9 +77,9 @@ npm run steward -- deps graph # 依存関係マップ
 ## 更新手順
 
 1. YAML を編集
-2. `npm run steward -- deps check --file <編集したファイル>` — 下流の確認リスト
+2. `npm run orgos -- deps check --file <編集したファイル>` — 下流の確認リスト
 3. `npm run validate`（必要なら `--deps` で鮮度警告）
-4. `npm run steward -- sync all`（CSV 利用時）
+4. `npm run orgos -- sync all`（CSV 利用時）
 5. 必要なら `docs/` の MD を同期
 
 詳細: [docs/plans/dependency-update-guide.md](../docs/plans/dependency-update-guide.md)
@@ -88,5 +88,5 @@ npm run steward -- deps graph # 依存関係マップ
 
 **口座セットアップ:** `cp data/finance/bank-accounts.yaml.example data/finance/bank-accounts.yaml` → 三井住友・GMOあおぞらの口座番号を入力。
 
-**分類チェック:** `npm run steward -- classification check`  
-**振込 Broker:** `npm run steward -- broker transfer --from BANK-001 --amount 100000 --payee "..." --reference "..." --write`
+**分類チェック:** `npm run orgos -- classification check`  
+**振込 Broker:** `npm run orgos -- broker transfer --from BANK-001 --amount 100000 --payee "..." --reference "..." --write`

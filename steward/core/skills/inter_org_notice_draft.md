@@ -23,7 +23,7 @@
 2. Secretary が下書き:
 
 ```bash
-npm run steward -- --tenant <id> protocol notice draft \
+npm run orgos -- --tenant <id> protocol notice draft \
   --peer PEER-001 --contract CTR-012 \
   --message "契約通りの運用を開始します（L1）"
 ```
@@ -31,13 +31,13 @@ npm run steward -- --tenant <id> protocol notice draft \
 3. 承認者一覧（wire-governance · `protocol approvers`）:
 
 ```bash
-npm run steward -- --tenant <id> protocol approvers
+npm run orgos -- --tenant <id> protocol approvers
 ```
 
 4. CEO / 代表取締役が approve（Secretary は実行しない）:
 
 ```bash
-npm run steward -- --tenant <id> protocol notice approve \
+npm run orgos -- --tenant <id> protocol notice approve \
   --id NOTICE-* --approver "段燕燕"
 ```
 
@@ -48,7 +48,7 @@ npm run steward -- --tenant <id> protocol notice approve \
 ## ack（受諾）起案
 
 ```bash
-npm run steward -- --tenant <id> protocol notice draft \
+npm run orgos -- --tenant <id> protocol notice draft \
   --type obligation.acknowledged \
   --peer PEER-002 \
   --correlation-event <inbound-event-id>

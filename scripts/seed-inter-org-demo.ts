@@ -22,6 +22,10 @@ import { verifyProtocolAuditChain, loadProtocolAuditChain } from "../src/lib/pro
 import { loadEnvelopesFromDirectories } from "../src/lib/protocol/external-verify.js";
 import { serializeEventEnvelope } from "../src/lib/protocol/envelope.js";
 import { getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
+import { writeOutboxEnvelope } from "../src/lib/protocol/audit-chain.js";
+import { runWithProtocolWriteGuard } from "../src/lib/protocol/protocol-write-guard.js";
+import { writeOutboxProvenance } from "../src/lib/protocol/outbox-provenance.js";
+import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 import { loadCompany } from "../src/lib/data.js";
 import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
 import { ingestWebhook } from "../src/lib/webhook.js";
@@ -35,7 +39,6 @@ import { hubFederationSchema } from "../schemas/protocol/hub-federation.js";
 import { syncFromPeer } from "../src/lib/hub/gossip-sync.js";
 import { findHubReceiptByEventId } from "../src/lib/hub/receipt.js";
 import { loadHubAttestations } from "../src/lib/hub/registry.js";
-import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 
 const HUB_A_DIR = join(ROOT_DIR, "data", "hub-a");
 const HUB_B_DIR = join(ROOT_DIR, "data", "hub-b");
@@ -80,11 +83,15 @@ function ensureCtr012Executed(): void {
 }
 
 function writeOutboxCopy(filename: string, envelope: unknown): string {
-  const dir = getProtocolOutboxDir();
-  mkdirSync(dir, { recursive: true });
-  const path = join(dir, filename);
-  writeFileSync(path, serializeEventEnvelope(envelope as Parameters<typeof serializeEventEnvelope>[0]), "utf-8");
-  return path;
+  return runWithProtocolWriteGuard("seed-inter-org", () => {
+    const dir = getProtocolOutboxDir();
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, filename);
+    const parsed = envelope as EventEnvelope;
+    writeFileSync(path, serializeEventEnvelope(parsed), "utf-8");
+    writeOutboxProvenance(dir, parsed, "seed-inter-org");
+    return path;
+  });
 }
 
 function writeWitnessPool(tenantId: string, hubAKey: string, hubBKey: string): void {
@@ -384,8 +391,8 @@ async function main(): Promise<void> {
       throw new Error(`inter-org audit verify failed: ${auditVerify.issues.map((i) => i.message).join("; ")}`);
     }
     console.log("\nTry:");
-    console.log("  npm run steward -- --tenant mal protocol witness verify --event-id", DEMO_EVENT_ID);
-    console.log("  npm run steward -- --tenant mal protocol witness pool status");
+    console.log("  npm run orgos -- --tenant mal protocol witness verify --event-id", DEMO_EVENT_ID);
+    console.log("  npm run orgos -- --tenant mal protocol witness pool status");
     console.log("  docs/org-os/witness-hub-requirements.md");
   } finally {
     hubs.close();

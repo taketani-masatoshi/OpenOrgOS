@@ -169,7 +169,7 @@ export function formatLanguageBridgeReport(resolved = resolveLanguageBridge()): 
       "",
       "- Agent 対話 · 要約 → **ユーザー言語**",
       "- 議事録 · 決議 · 登記提出 MD → **システム言語**（正本）",
-      "- `npm run steward -- operations locale-bridge draft --type board_minutes --write`",
+      "- `npm run orgos -- operations locale-bridge draft --type board_minutes --write`",
       ""
     );
   }

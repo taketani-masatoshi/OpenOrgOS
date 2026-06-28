@@ -3,7 +3,7 @@
 ## CLI
 
 ```bash
-npm run steward -- operations vc show
-npm run steward -- operations vc validate
-npm run steward -- operations vc ic-summary
+npm run orgos -- operations vc show
+npm run orgos -- operations vc validate
+npm run orgos -- operations vc ic-summary
 ```

@@ -35,7 +35,7 @@
 ```
 1. OTA / 銀行明細 → scratch/ または inbox
 2. Finance Agent: data/finance/monthly/{YYYY-MM}.yaml 更新
-3. npm run steward -- finances summary --month YYYY-MM
+3. npm run orgos -- finances summary --month YYYY-MM
 4. 本ファイル · yojitsu-fy2026.yaml の actual 列を同期（手動 or 将来 sync）
 5. npm run validate
 ```
@@ -43,9 +43,9 @@
 **CLI:**
 
 ```bash
-npm run steward -- finances summary --from 2026-08 --to 2027-01
-npm run steward -- finances variance
-npm run steward -- skills run variance -o fy2026-variance-auto.md
+npm run orgos -- finances summary --from 2026-08 --to 2027-01
+npm run orgos -- finances variance
+npm run orgos -- skills run variance -o fy2026-variance-auto.md
 ```
 
 ---

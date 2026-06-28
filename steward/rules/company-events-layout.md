@@ -47,10 +47,10 @@ docs/company/
 **正本台帳:** `data/company-events.yaml` — event id · paths · related IDs
 
 ```bash
-npm run steward -- events ensure-month              # 今月
-npm run steward -- events ensure-month --month 2026-07
-npm run steward -- events new --kind registration --title "商号変更登記準備"
-npm run steward -- events list --month 2026-06
+npm run orgos -- events ensure-month              # 今月
+npm run orgos -- events ensure-month --month 2026-07
+npm run orgos -- events new --kind registration --title "商号変更登記準備"
+npm run orgos -- events list --month 2026-06
 ```
 
 ---

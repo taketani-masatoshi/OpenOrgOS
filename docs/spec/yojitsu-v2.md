@@ -80,8 +80,8 @@ Zod: `schemas/finance.ts` の legacy パース用フィールド名定義のみ�
 v1 YAML を v2 ファイルに書き出す場合:
 
 ```bash
-npm run steward -- migrate yojitsu --fy FY2026 --dry-run
-npm run steward -- migrate yojitsu --fy FY2026 --write
+npm run orgos -- migrate yojitsu --fy FY2026 --dry-run
+npm run orgos -- migrate yojitsu --fy FY2026 --write
 ```
 
 実装: `src/lib/yojitsu-normalize.ts` の `serializeYojitsuPlanV2()`。

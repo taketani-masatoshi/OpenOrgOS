@@ -7,15 +7,15 @@
 ## Step 0 — 解決確認
 
 ```bash
-npm run steward -- operations locale-bridge show
-npm run steward -- operations locale-bridge validate
+npm run orgos -- operations locale-bridge show
+npm run orgos -- operations locale-bridge validate
 ```
 
 ## Step 1 — 起草
 
 - `layout: system_primary` → `[SYSTEM]` セクションを先に system language で埋める
 - `layout: bilingual` → 両セクション必須
-- frontmatter: `npm run steward -- operations locale-bridge header --doc board_minutes`
+- frontmatter: `npm run orgos -- operations locale-bridge header --doc board_minutes`
 
 ## 禁止
 

@@ -3,7 +3,7 @@
 ## CLI
 
 ```bash
-npm run steward -- operations property-mgmt show
-npm run steward -- operations property-mgmt validate
-npm run steward -- operations property-mgmt open-requests
+npm run orgos -- operations property-mgmt show
+npm run orgos -- operations property-mgmt validate
+npm run orgos -- operations property-mgmt open-requests
 ```

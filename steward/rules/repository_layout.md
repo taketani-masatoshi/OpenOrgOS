@@ -16,7 +16,7 @@
 | **テナントルール** | `tenants/{id}/rules/` | 会社固有コンテキスト | `company_context.md` · `active_context.md` |
 | **試行** | `scratch/` | gitignore 試行 | [scratch/00-README.md](../../scratch/00-README.md) |
 
-**論理パス:** Agent · CLI ログの `data/` · `docs/` は **アクティブテナント**（`STEWARD_TENANT` または `default: true`）内を指す。
+**論理パス:** Agent · CLI ログの `data/` · `docs/` は **アクティブテナント**（`ORGOS_TENANT` または `default: true`）内を指す。
 
 ---
 

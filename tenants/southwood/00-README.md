@@ -13,8 +13,8 @@
 ```bash
 npm run demo:inter-org
 
-npm run steward -- --tenant southwood protocol transaction list
-npm run steward -- --tenant southwood protocol audit verify
+npm run orgos -- --tenant southwood protocol transaction list
+npm run orgos -- --tenant southwood protocol audit verify
 ```
 
 正本ウォークスルー: [docs/org-os/inter-org-two-org-demo.md](../../docs/org-os/inter-org-two-org-demo.md)

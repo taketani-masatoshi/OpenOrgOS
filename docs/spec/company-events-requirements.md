@@ -136,10 +136,10 @@
 ### 5.1 CLI
 
 ```bash
-npm run steward -- events ensure-month [--month 2026-06]
-npm run steward -- events new --kind registration --title "商号変更登記準備"
-npm run steward -- events list [--month 2026-06] [--status open] [--json]
-npm run steward -- events status
+npm run orgos -- events ensure-month [--month 2026-06]
+npm run orgos -- events new --kind registration --title "商号変更登記準備"
+npm run orgos -- events list [--month 2026-06] [--status open] [--json]
+npm run orgos -- events status
 ```
 
 ### 5.2 ライブラリ API（主要）
