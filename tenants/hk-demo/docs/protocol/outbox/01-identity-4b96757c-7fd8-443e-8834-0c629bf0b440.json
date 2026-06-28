@@ -1,7 +1,7 @@
 {
   "protocol_version": "1",
-  "event_id": "661046db-f9e3-4fc3-ae01-4e36c1f962cb",
-  "occurred_at": "2026-06-27T10:56:44.364Z",
+  "event_id": "4b96757c-7fd8-443e-8834-0c629bf0b440",
+  "occurred_at": "2026-06-28T01:30:11.413Z",
   "origin": {
     "org_id": "hk-demo",
     "org_uri": "steward://tenant/hk-demo"
@@ -11,7 +11,7 @@
       "org_id": "hk-demo",
       "org_uri": "steward://tenant/hk-demo"
     },
-    "document_version": "2026-06-27T10:56:44.363Z"
+    "document_version": "2026-06-28T01:30:11.411Z"
   },
   "event": {
     "type": "org.identity.presented",
@@ -23,10 +23,10 @@
         },
         "jurisdiction": "HK",
         "display_name": "Sample HK Limited",
-        "protocol_public_key": "MCowBQYDK2VwAyEAvOYgxMOW1RpZHMWQ3Kq/O+dk3tkKmtmSm3D7SjZFJGw=",
-        "issued_at": "2026-06-27T10:56:44.363Z"
+        "protocol_public_key": "MCowBQYDK2VwAyEATbOeR4KeceOFlUgZ0z51hEJvKbgY7icTYN2mjf+Y7Dk=",
+        "issued_at": "2026-06-28T01:30:11.411Z"
       }
     }
   },
-  "signature": "pS0IvxVZSIF1hTOan3cVB9m6C7e67avuUguQ+VN1MjpYEDtXRqrI0S5RHDm56LhMURkD8TaGSNypi9MA8umVDA=="
+  "signature": "196M4RVL4U6osGVbSb+cJYi3RfTcU7WPIXIunIU0LTQah24wvgmq3cHWulyCLu2zXX7XiN4qlcBbPG9rADY7Dg=="
 }

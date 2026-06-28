@@ -24,6 +24,10 @@ import {
   recordProtocolTransaction,
 } from "../lib/protocol/record-transaction.js";
 import { validateProtocolState, validateProtocolFile } from "../lib/protocol/validate.js";
+import {
+  applyProtocolOutboxPermissions,
+  checkProtocolOutboxPermissionsLoose,
+} from "../lib/protocol/outbox-permissions.js";
 import { verifyProtocolAuditChain } from "../lib/protocol/audit-chain.js";
 import {
   verifyAuditChainExternal,
@@ -109,6 +113,55 @@ export function runProtocolValidate(opts: ProtocolValidateOptions): void {
   console.error("✗ Protocol validation failed:");
   for (const issue of result.issues) {
     console.error(`  [${issue.code}] ${issue.message}`);
+  }
+  process.exit(1);
+}
+
+export interface ProtocolOutboxApplyPermissionsOptions {
+  tenant?: string;
+  user?: string;
+  group?: string;
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+export function runProtocolOutboxApplyPermissions(opts: ProtocolOutboxApplyPermissionsOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const result = applyProtocolOutboxPermissions({
+    user: opts.user,
+    group: opts.group,
+    dryRun: opts.dryRun,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log("✓ Protocol outbox permissions applied");
+  for (const path of result.applied) {
+    console.log(`  ${path}`);
+  }
+  if (result.skippedChown) {
+    console.log("  chown skipped (run as root or via deploy/protocol-outbox/apply-permissions.sh with sudo)");
+  }
+}
+
+export function runProtocolOutboxCheckPermissions(opts: {
+  tenant?: string;
+  json?: boolean;
+}): void {
+  applyProtocolTenant(opts.tenant);
+  const issues = checkProtocolOutboxPermissionsLoose();
+  if (opts.json) {
+    console.log(JSON.stringify({ ok: issues.length === 0, issues }, null, 2));
+    return;
+  }
+  if (issues.length === 0) {
+    console.log("✓ Protocol outbox/inbox permissions OK");
+    return;
+  }
+  console.error("✗ Protocol directory permissions:");
+  for (const issue of issues) {
+    console.error(`  [${issue.code}] ${issue.message} (${issue.path})`);
   }
   process.exit(1);
 }

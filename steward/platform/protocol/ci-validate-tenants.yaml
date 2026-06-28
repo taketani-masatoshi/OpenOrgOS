@@ -1,0 +1,19 @@
+# Tenants that must pass `steward protocol validate` in CI and `npm run check`.
+# Excludes `_template` · `sample-co` (skeleton-only).
+
+tenants:
+  - demo
+  - acme
+  - us-demo
+  - sg-demo
+  - ee-demo
+  - hk-demo
+  - au-demo
+  - tw-demo
+  - my-demo
+  - cn-demo
+  - ae-demo
+  - ru-demo
+  - eu-demo
+  - mal
+  - southwood

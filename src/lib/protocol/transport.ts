@@ -10,6 +10,10 @@ import { loadTenantConfig } from "../tenant.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProtocolInboxDir } from "./paths.js";
+import {
+  assertProtocolDeliverGate,
+  assertEnvelopeDeliverAuthorized,
+} from "./pre-deliver-gate.js";
 
 export interface DeliverEnvelopeResult {
   delivered: boolean;
@@ -59,6 +63,9 @@ export async function deliverProtocolEnvelope(
   envelope: EventEnvelope,
   peerId: string
 ): Promise<DeliverEnvelopeResult> {
+  assertProtocolDeliverGate();
+  assertEnvelopeDeliverAuthorized(envelope, peerId);
+
   const peer = findPeer(peerId);
   if (!peer) {
     return { delivered: false, reason: "peer not found" };

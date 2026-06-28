@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   companyEventsRegistrySchema,
@@ -17,6 +17,7 @@ import {
   toLogicalPath,
   writeYamlFile,
 } from "./utils.js";
+import { lintCompanyEventMarkdown } from "./company-events-lint.js";
 
 export const COMPANY_EVENT_KINDS = companyEventKind.options;
 
@@ -389,6 +390,12 @@ export function validateCompanyEvents(): {
         message: `Missing event record: ${event.event_path}`,
         event_id: event.id,
       });
+    } else {
+      const content = readFileSync(eventAbs, "utf-8");
+      for (const lint of lintCompanyEventMarkdown(event, content)) {
+        if (lint.severity === "error") issues.push(lint);
+        else warnings.push(lint);
+      }
     }
     const indexAbs = resolveTenantPath(`${event.artifact_dir}00-artifact-index.md`);
     if (!existsSync(indexAbs)) {

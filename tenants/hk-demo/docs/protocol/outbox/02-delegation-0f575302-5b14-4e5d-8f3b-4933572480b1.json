@@ -1,7 +1,7 @@
 {
   "protocol_version": "1",
-  "event_id": "f40cf87f-b1ae-4047-b0cd-d396ea5e6548",
-  "occurred_at": "2026-06-27T10:56:44.370Z",
+  "event_id": "0f575302-5b14-4e5d-8f3b-4933572480b1",
+  "occurred_at": "2026-06-28T01:30:11.424Z",
   "origin": {
     "org_id": "hk-demo",
     "org_uri": "steward://tenant/hk-demo"
@@ -36,12 +36,12 @@
           "scope": [
             "contract.sign"
           ],
-          "valid_from": "2026-06-27T10:56:44.368Z"
+          "valid_from": "2026-06-28T01:30:11.423Z"
         },
         "basis_ref": "REG-HK-004",
-        "issued_at": "2026-06-27T10:56:44.368Z"
+        "issued_at": "2026-06-28T01:30:11.423Z"
       }
     }
   },
-  "signature": "6PusVlB366HqPfoLmQ+K63/1v4B0wMusZW6d3jPOx79lRoFoQ6OSJSJajkYa4qmA+CcBuYjxPp8C0AeOeYEkBA=="
+  "signature": "pNGDp2umZJbREaHJNX/W/KHQMwi8BJGysNpNnoBTBu+eJj27KlyysB5KGYYiqETlrsRO3ux/VF+rVCmvl+20Ag=="
 }

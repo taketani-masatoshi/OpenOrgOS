@@ -30,3 +30,4 @@ jobs:
       - run: npm ci
       - run: npm run demo:standalone-org
       - run: npm run demo:mal-standalone
+      - run: npm run validate:protocol:tenants
