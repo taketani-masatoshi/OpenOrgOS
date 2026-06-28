@@ -1,19 +1,22 @@
 {
-  "name": "steward-os",
+  "name": "orgos-reference",
   "version": "0.8.0",
-  "description": "Steward OS - tenant-separated management support framework",
+  "description": "OrgOS — Organizational OS reference implementation (tenant-separated management framework)",
   "type": "module",
   "bin": {
+    "orgos": "./src/cli.ts",
     "steward": "./src/cli.ts"
   },
   "scripts": {
+    "orgos": "node --import tsx src/cli.ts",
     "steward": "node --import tsx src/cli.ts",
     "validate": "node --import tsx src/cli.ts validate",
     "validate:demo": "node --import tsx src/cli.ts --tenant demo validate",
-    "check": "npm run validate && npm run steward -- --tenant demo validate && npm run steward -- --tenant acme validate && npm run steward -- --tenant us-demo validate && npm run steward -- --tenant sg-demo validate && npm run steward -- --tenant ee-demo validate && npm run steward -- --tenant hk-demo validate && npm run steward -- --tenant au-demo validate && npm run steward -- --tenant tw-demo validate && npm run steward -- --tenant my-demo validate && npm run steward -- --tenant cn-demo validate && npm run steward -- --tenant ae-demo validate && npm run steward -- --tenant ru-demo validate && npm run steward -- --tenant eu-demo validate && npm run steward -- modules check --all && npm run steward -- classification check",
-    "daily": "npm run check && npm run steward -- pipeline run daily",
-    "weekly": "npm run check && npm run steward -- pipeline run weekly",
-    "test": "vitest run",
+    "check": "npm run validate && npm run orgos -- --tenant demo validate && npm run orgos -- --tenant demo events validate && npm run orgos -- --tenant acme validate && npm run orgos -- --tenant us-demo validate && npm run orgos -- --tenant sg-demo validate && npm run orgos -- --tenant ee-demo validate && npm run orgos -- --tenant hk-demo validate && npm run orgos -- --tenant au-demo validate && npm run orgos -- --tenant tw-demo validate && npm run orgos -- --tenant my-demo validate && npm run orgos -- --tenant cn-demo validate && npm run orgos -- --tenant ae-demo validate && npm run orgos -- --tenant ru-demo validate && npm run orgos -- --tenant eu-demo validate && npm run validate:protocol:tenants && npm run orgos -- modules check --all && npm run orgos -- classification check",
+    "validate:protocol:tenants": "node --import tsx scripts/validate-protocol-tenants.ts",
+    "daily": "npm run check && npm run orgos -- pipeline run daily",
+    "weekly": "npm run check && npm run orgos -- pipeline run weekly",
+    "test": "node --import tsx scripts/run-tests.ts",
     "test:watch": "vitest",
     "demo:inter-org": "node --import tsx scripts/seed-inter-org-demo.ts",
     "demo:deliver-pull": "node --import tsx scripts/demo-deliver-pull.ts",

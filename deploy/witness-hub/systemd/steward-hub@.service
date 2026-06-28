@@ -5,12 +5,12 @@ After=network.target
 [Service]
 Type=simple
 User=steward
-WorkingDirectory=/opt/steward-os
+WorkingDirectory=/opt/orgos-reference
 Environment=HUB_ID=%i
 Environment=HUB_DATA_DIR=/var/lib/steward-hub/%i
 Environment=HUB_PORT=9474
 Environment=GOSSIP_INTERVAL_SEC=300
-ExecStart=/usr/bin/npm run steward -- hub serve \
+ExecStart=/usr/bin/npm run orgos -- hub serve \
   --hub-id ${HUB_ID} \
   --host 127.0.0.1 \
   --port ${HUB_PORT} \

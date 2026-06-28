@@ -228,7 +228,7 @@ export function formatAgentImplementationPrompt(handoff: Handoff): string {
   const skill = handoff.skill ? loadSkillRegistry().find((s) => s.id === handoff.skill) : undefined;
   const cliHint =
     skill?.runtime === "cli" && skill.cli_command
-      ? `\`npm run steward -- skills run ${skill.cli_command}\``
+      ? `\`npm run orgos -- skills run ${skill.cli_command}\``
       : skill?.runtime === "cursor-only"
         ? `Cursor-only skill: \`${skill.skillDirRel}/${skill.file}\``
         : null;
@@ -294,7 +294,7 @@ export function formatAgentImplementationPrompt(handoff: Handoff): string {
     "実装完了後:",
     "",
     "```bash",
-    `npm run steward -- escalate complete --id ${handoff.id} --notes "完了概要"`,
+    `npm run orgos -- escalate complete --id ${handoff.id} --notes "完了概要"`,
     "```",
     ""
   );
@@ -478,8 +478,8 @@ function writeExecutiveSummary(
     "## 起動手順（Phase 1）",
     "",
     "1. 各 Agent 用 `prompts/{id}_{agent}.md` を **並列 Cursor チャット** で `@` 起動",
-    "2. CLI Skill がある場合: `npm run steward -- route dispatch --id {id} --mode auto`",
-    "3. 完了後: `npm run steward -- escalate complete --id {id}`",
+    "2. CLI Skill がある場合: `npm run orgos -- route dispatch --id {id} --mode auto`",
+    "3. 完了後: `npm run orgos -- escalate complete --id {id}`",
     ""
   );
 

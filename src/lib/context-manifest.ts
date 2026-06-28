@@ -35,7 +35,7 @@ export function buildActiveContextMarkdown(): string {
   const lines: string[] = [
     `# アクティブコンテキスト — テナント \`${tenantId}\``,
     "",
-    "**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run steward -- modules sync-context`",
+    "**正本:** `modules.yaml` · `standards.yaml` · `regulations.yaml` · **生成:** `npm run orgos -- modules sync-context`",
     "",
     `**法域（legal）:** \`${jurisdiction.code}\`${jurisdiction.legalSubdivision ? ` · subdivision \`${jurisdiction.legalSubdivision}\`` : ""}${jurisdiction.legalSystemLabel ? ` · ${jurisdiction.legalSystemLabel}` : ""}`,
     `**表示言語（display）:** \`${jurisdiction.display.code}\` · BCP 47 \`${jurisdiction.display.bcp47}\` · ${jurisdiction.display.label}`,
@@ -198,7 +198,7 @@ alwaysApply: true
 
 # テナント \`${tenantId}\` — アクティブコンテキストのみ読取
 
-**生成:** \`npm run steward -- modules sync-context\` · 正本: \`tenants/${tenantId}/rules/active_context.md\`
+**生成:** \`npm run orgos -- modules sync-context\` · 正本: \`tenants/${tenantId}/rules/active_context.md\`
 
 ## 禁止（トークン節約）
 

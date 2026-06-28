@@ -69,7 +69,7 @@ function writeTenantYaml(dest: string, id: string, name: string, options: Tenant
     .replace(/^name:.*$/m, `name: ${name}`)
     .replace(/^legal_name:.*$/m, `legal_name: ${name}`)
     .replace(/^display_name:.*$/m, `display_name: ${name}`)
-    .replace(/^description:.*$/m, `description: ${name} — Steward OS スケルトン`);
+    .replace(/^description:.*$/m, `description: ${name} — OrgOS スケルトン`);
   if (!raw.includes("lifecycle:")) {
     raw += "\nlifecycle: skeleton\n";
   }

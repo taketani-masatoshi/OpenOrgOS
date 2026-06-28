@@ -3,6 +3,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import { z } from "zod";
+import { resolveTenantFromEnv, ORGOS_TENANT_ENV, LEGACY_TENANT_ENV } from "./orgos-cli.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT_DIR = join(__dirname, "..", "..");
@@ -86,7 +87,7 @@ function readTenantConfig(tenantId: string): TenantConfig {
 export function getTenantId(): string {
   if (_tenantId) return _tenantId;
 
-  const fromEnv = process.env.STEWARD_TENANT?.trim();
+  const fromEnv = resolveTenantFromEnv();
   if (fromEnv) {
     _tenantId = assertValidTenantId(fromEnv);
     return _tenantId;
@@ -106,7 +107,7 @@ export function getTenantId(): string {
   }
 
   throw new Error(
-    "No tenant configured. Set STEWARD_TENANT or create tenants/{id}/tenant.yaml"
+    `No tenant configured. Set ${ORGOS_TENANT_ENV} (or ${LEGACY_TENANT_ENV}) or create tenants/{id}/tenant.yaml`
   );
 }
 

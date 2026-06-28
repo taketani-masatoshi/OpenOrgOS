@@ -32,7 +32,7 @@ export function runRouteList(): void {
     );
   }
   console.log(`\n${registry.routes.length} routes · steward/core/routing/registry.yaml`);
-  console.log("例: npm run steward -- route match --text \"契約期限\"");
+  console.log("例: npm run orgos -- route match --text \"契約期限\"");
 }
 
 export interface RouteMatchOptions {

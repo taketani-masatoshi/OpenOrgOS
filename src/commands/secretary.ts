@@ -53,7 +53,7 @@ export async function runSecretaryEscalate(opts: SecretaryEscalateCliOptions): P
       console.log("\nSteward スレッド不要 — Executive Steward handoff 投入済み");
       if (result.handoffPath) console.log(`  handoff: ${result.handoffPath}`);
     } else {
-      console.log("\n次: npm run steward -- secretary escalate --dispatch … で handoff 自動投入");
+      console.log("\n次: npm run orgos -- secretary escalate --dispatch … で handoff 自動投入");
       console.log("  または Cursor Steward スレッドで CONSULT MD を @ 参照");
     }
     if (result.webhook) {

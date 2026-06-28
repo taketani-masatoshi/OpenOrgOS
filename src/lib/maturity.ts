@@ -198,7 +198,7 @@ export function formatMaturityReport(report: MaturityReport, markdown = false): 
   const pctLabel = (d: MaturityDimension) => (d.pct == null ? "—" : `${d.pct}%`);
   if (!markdown) {
     const lines = [
-      `Steward OS 成熟度: ${report.overall}% (${report.grade})`,
+      `OrgOS 成熟度: ${report.overall}% (${report.grade})`,
       "",
       ...dims.map((d) => `  ${d.label}: ${pctLabel(d)} — ${d.detail}`),
     ];
@@ -209,7 +209,7 @@ export function formatMaturityReport(report: MaturityReport, markdown = false): 
     return lines.join("\n");
   }
   const lines = [
-    `# Steward OS 成熟度`,
+    `# OrgOS 成熟度`,
     "",
     `**総合:** ${report.overall}% · **${report.grade}**`,
     "",

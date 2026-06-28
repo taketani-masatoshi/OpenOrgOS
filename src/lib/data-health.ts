@@ -186,7 +186,7 @@ export function computeDataHealth(): DataHealthReport {
 export function formatHealthReport(report: DataHealthReport, markdown = false): string {
   if (!markdown) {
     const lines = [
-      `Steward OS データ成熟度: ${report.overall}% (${report.grade})`,
+      `OrgOS データ成熟度: ${report.overall}% (${report.grade})`,
       "",
       ...report.metrics.map((m) => `  ${m.label}: ${m.score}/${m.max} — ${m.detail}`),
     ];
@@ -198,7 +198,7 @@ export function formatHealthReport(report: DataHealthReport, markdown = false): 
   }
 
   const lines = [
-    `# Steward OS データ成熟度`,
+    `# OrgOS データ成熟度`,
     "",
     `**総合:** ${report.overall}% · グレード **${report.grade}**`,
     "",

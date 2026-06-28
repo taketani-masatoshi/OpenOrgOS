@@ -108,7 +108,7 @@ describe("escalate run", () => {
 
     const prompt = formatAgentImplementationPrompt(wo);
     expect(prompt).toContain(agentPromptRef(wo.to_agent));
-    expect(prompt).toContain("npm run steward -- escalate complete");
+    expect(prompt).toContain("npm run orgos -- escalate complete");
   });
 
   it("completes work order and loads extended schema", () => {

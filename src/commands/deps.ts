@@ -64,10 +64,10 @@ export function runDepsCheck(opts: DepsCheckOptions = {}): void {
   console.log("\n推奨:");
   console.log("  npm run validate");
   if (impacts.some((i) => i.action === "sync")) {
-    console.log("  npm run steward -- sync all");
+    console.log("  npm run orgos -- sync all");
   }
   if (impacts.some((i) => i.nodeId.includes("dashboard"))) {
-    console.log("  npm run steward -- dashboard");
+    console.log("  npm run orgos -- dashboard");
   }
 }
 

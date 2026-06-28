@@ -7,8 +7,8 @@ describe("demo tenant status", () => {
     const root = join(import.meta.dirname, "..");
     const out = execFileSync(
       "npm",
-      ["run", "steward", "--", "--tenant", "demo", "status"],
-      { cwd: root, encoding: "utf-8", env: { ...process.env, STEWARD_TENANT: "demo" } }
+      ["run", "orgos", "--", "--tenant", "demo", "status"],
+      { cwd: root, encoding: "utf-8", env: { ...process.env, ORGOS_TENANT: "demo" } }
     );
     const forbidden = ["kamezawa", "PROP-002-kamezawa", "bancho", "CTR-012", "CTR-013", "CTR-014"];
     for (const token of forbidden) {

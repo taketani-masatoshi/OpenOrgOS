@@ -51,7 +51,7 @@ export function runTaxFilingPrepSkill(opts: { output?: string; markdown?: boolea
     "",
     `固定資産: ${assetsCount} 件 · 申告カレンダー: ${filingItems} 件`,
     "",
-    "次: `npm run validate` · `npm run steward -- deps check --file data/finance/fixed-assets.yaml`",
+    "次: `npm run validate` · `npm run orgos -- deps check --file data/finance/fixed-assets.yaml`",
   ];
 
   const md = lines.join("\n");
@@ -80,7 +80,7 @@ export function runContractRegisterSkill(opts: { output?: string; markdown?: boo
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([status, n]) => `- ${status}: ${n}`),
     "",
-    "次: `npm run steward -- sync contracts` · `npm run validate`",
+    "次: `npm run orgos -- sync contracts` · `npm run validate`",
   ];
 
   const md = lines.join("\n");
@@ -110,7 +110,7 @@ export function runCapexPlanningSkill(opts: { output?: string; markdown?: boolea
     "",
     "正本: data/plans/investment-plan.yaml",
     "",
-    "次: `npm run steward -- deps check --file data/plans/investment-plan.yaml` · `npm run validate`",
+    "次: `npm run orgos -- deps check --file data/plans/investment-plan.yaml` · `npm run validate`",
   ];
 
   const md = lines.join("\n");

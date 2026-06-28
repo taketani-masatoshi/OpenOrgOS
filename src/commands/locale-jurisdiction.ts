@@ -60,7 +60,7 @@ export function runJurisdictionCountries(all?: boolean): void {
     console.log(`| ${code} | ${c.tier} | ${c.default_currency} | ${c.name} |`);
   }
   if (!all) {
-    console.log(`\n全 ${codes.length} 法域: npm run steward -- jurisdiction countries --all`);
+    console.log(`\n全 ${codes.length} 法域: npm run orgos -- jurisdiction countries --all`);
   }
 }
 

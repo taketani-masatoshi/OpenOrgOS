@@ -6,7 +6,7 @@ services:
       - ../..:/app
       - hub-a-data:/app/deploy/witness-hub/data/hub-a
     command: >
-      sh -c "npm run steward -- hub serve
+      sh -c "npm run orgos -- hub serve
       --hub-id HUB-A
       --host 0.0.0.0
       --port 9474
@@ -27,7 +27,7 @@ services:
       - ../..:/app
       - hub-b-data:/app/deploy/witness-hub/data/hub-b
     command: >
-      sh -c "npm run steward -- hub serve
+      sh -c "npm run orgos -- hub serve
       --hub-id HUB-B
       --host 0.0.0.0
       --port 9475

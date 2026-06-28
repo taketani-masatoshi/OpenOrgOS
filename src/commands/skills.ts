@@ -131,9 +131,9 @@ export function runSkillsList(): void {
   }
 
   console.log(`\nCLI: ${getCliSkills().length} · cursor-only: ${getCursorOnlySkills().length}`);
-  console.log("\n例: npm run steward -- skills run contract-expiry");
-  console.log("     npm run steward -- pipeline run daily");
-  console.log("     npm run steward -- route list");
+  console.log("\n例: npm run orgos -- skills run contract-expiry");
+  console.log("     npm run orgos -- pipeline run daily");
+  console.log("     npm run orgos -- route list");
 }
 
 export interface SkillRunOptions {
@@ -193,7 +193,7 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
       console.log(
         `月次締め ${month}: 売上 ${rev.toLocaleString()} · 費用 ${exp.toLocaleString()} · 純 ${(rev - exp).toLocaleString()}`
       );
-      console.log(`\n次: npm run steward -- deps check --file data/finance/monthly/${month}.yaml`);
+      console.log(`\n次: npm run orgos -- deps check --file data/finance/monthly/${month}.yaml`);
       console.log("     npm run validate");
       break;
     }

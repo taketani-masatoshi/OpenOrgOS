@@ -1,6 +1,8 @@
-# Steward OS
+# OrgOS（参照実装）
 
-**経営支援 OS フレームワーク**。業務モジュール・ISO 標準はフレームワーク側に初期定義し、会社データは **テナント**（`tenants/`）で接続・分離する。
+**Organizational OS — 組織 OS 参照実装**。業務モジュール・ISO 標準はフレームワーク側（`steward/`）に初期定義し、会社データは **テナント**（`tenants/`）で接続・分離する。
+
+**製品名:** OrgOS · **npm:** `orgos-reference` · **CLI:** `orgos`（旧 `steward` は非推奨 · [docs/org-os/cli-migration.md](docs/org-os/cli-migration.md)）
 
 **物理構成正本:** [steward/rules/repository_layout.md](steward/rules/repository_layout.md)
 
@@ -9,7 +11,7 @@
 ## 組織 OS 4 層 + テナント
 
 ```
-steward/
+steward/                    実装詳細（ディレクトリ名は据え置き）
 ├── core/                   常時 — agents/ · skills/ · routing/ · orchestrators/
 ├── modules/{id}/           業務モジュール — agent.md · seed/ · skills/
 ├── jurisdiction-packs/{code}/  法域 — 規程 · 税 seed · 法域 modules/
@@ -36,7 +38,7 @@ src/ · schemas/ · docs/     CLI · 検証 · 仕様
 | テナント規程施行文 | `tenants/mal/docs/company/regulations/` |
 
 ```bash
-npm run steward -- modules list
+npm run orgos -- modules list
 ```
 
 ---
@@ -51,12 +53,12 @@ npm run steward -- modules list
 
 ```bash
 # 新規テナント（スケルトン）
-npm run steward -- tenant init acme --name "ACME Corp" --from rental
+npm run orgos -- tenant init acme --name "ACME Corp" --from rental
 
-export STEWARD_TENANT=mal
-npm run steward -- --tenant mal validate
-npm run steward -- --tenant demo validate   # CI ゲート
-npm run steward -- --tenant acme validate   # CI ゲート（第3テナント）
+export ORGOS_TENANT=mal
+npm run orgos -- --tenant mal validate
+npm run orgos -- --tenant demo validate   # CI ゲート
+npm run orgos -- --tenant acme validate   # CI ゲート（第3テナント）
 npm run check                               # validate · demo · acme · modules · classification
 ```
 
@@ -75,28 +77,29 @@ npm run validate
 
 ```bash
 npm run validate
-npm run steward -- --tenant demo validate   # 骨格参照テナント
-npm run steward -- tenant init acme --name "株式会社ACME" --from rental
-npm run steward -- regulations seed
-npm run steward -- modules list
-npm run steward -- ops p0
-npm run steward -- skills list
-npm run steward -- skills run daily
-npm run steward -- status
-npm run steward -- sync all
-npm run steward -- dashboard
-npm run steward -- classification check
-npm run steward -- invoice generate --module rental --property PROP-001 --from 2026-02 --to 2026-02 --fy FY2026 --dry-run
-npm run steward -- standards list
-npm run steward -- modules check rental
-npm run steward -- modules check --all
-npm run steward -- map list
+npm run orgos -- --tenant demo validate   # 骨格参照テナント
+npm run orgos -- tenant init acme --name "株式会社ACME" --from rental
+npm run orgos -- regulations seed
+npm run orgos -- modules list
+npm run orgos -- ops p0
+npm run orgos -- skills list
+npm run orgos -- skills run daily
+npm run orgos -- status
+npm run orgos -- status --orgos          # OrgOS 完成度
+npm run orgos -- sync all
+npm run orgos -- dashboard
+npm run orgos -- classification check
+npm run orgos -- invoice generate --module rental --property PROP-001 --from 2026-02 --to 2026-02 --fy FY2026 --dry-run
+npm run orgos -- standards list
+npm run orgos -- modules check rental
+npm run orgos -- modules check --all
+npm run orgos -- map list
 npm run check
 npm run daily      # check + pipeline run daily
 npm run weekly     # check + pipeline run weekly
 ```
 
-詳細: [docs/spec.md](docs/spec.md)（**仕様正本**） · [docs/framework-assessment.md](docs/framework-assessment.md) · [docs/framework-backlog.md](docs/framework-backlog.md) · 旧版: [docs/spec/history/](docs/spec/history/)
+詳細: [docs/spec.md](docs/spec.md)（**仕様正本**） · [docs/org-os/orgos-vocabulary.md](docs/org-os/orgos-vocabulary.md) · [docs/framework-assessment.md](docs/framework-assessment.md) · [docs/framework-backlog.md](docs/framework-backlog.md)
 
 ---
 

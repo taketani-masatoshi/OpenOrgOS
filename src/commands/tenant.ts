@@ -1,4 +1,5 @@
 import { runTenantInit, type TenantInitOptions } from "../lib/tenant-init.js";
+import { setTenantEnv } from "../lib/orgos-cli.js";
 import { runValidate } from "./validate.js";
 
 export function runTenantInitCommand(
@@ -26,7 +27,7 @@ export function runTenantInitCommand(
   };
   runTenantInit(options);
   if (opts.validate !== false) {
-    process.env.STEWARD_TENANT = id;
+    setTenantEnv(id);
     runValidate({});
   }
 }

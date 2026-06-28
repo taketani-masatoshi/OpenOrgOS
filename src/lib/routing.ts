@@ -258,7 +258,7 @@ export function formatHandoffMarkdown(handoff: Handoff, matched?: MatchedRoute):
   if (handoff.skill) {
     const skill = loadSkillRegistry().find((s) => s.id === handoff.skill);
     if (skill?.runtime === "cli" && skill.cli_command) {
-      lines.push("## Dispatch", "", `\`npm run steward -- skills run ${skill.cli_command}\``, "");
+      lines.push("## Dispatch", "", `\`npm run orgos -- skills run ${skill.cli_command}\``, "");
     } else if (skill?.runtime === "cursor-only") {
       lines.push("## Dispatch", "", `Cursor-only skill: ${skill.skillDirRel}/${skill.file}`, "");
     }

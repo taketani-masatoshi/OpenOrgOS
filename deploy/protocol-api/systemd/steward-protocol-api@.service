@@ -5,11 +5,13 @@ After=network.target
 [Service]
 Type=simple
 User=steward
-WorkingDirectory=/opt/steward-os
+WorkingDirectory=/opt/orgos-reference
+Environment=ORGOS_TENANT=%i
 Environment=STEWARD_TENANT=%i
 Environment=PROTOCOL_API_HOST=127.0.0.1
 Environment=PROTOCOL_API_PORT=9476
-ExecStart=/usr/bin/npm run steward -- --tenant ${STEWARD_TENANT} protocol api-serve --host ${PROTOCOL_API_HOST} --port ${PROTOCOL_API_PORT}
+ExecStartPre=/opt/orgos-reference/deploy/protocol-outbox/apply-permissions.sh %i
+ExecStart=/usr/bin/npm run orgos -- --tenant ${ORGOS_TENANT} protocol api-serve --host ${PROTOCOL_API_HOST} --port ${PROTOCOL_API_PORT}
 Restart=on-failure
 RestartSec=10
 

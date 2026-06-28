@@ -46,7 +46,7 @@ export function buildGoogleCalendarEventBody(
     extendedProperties: {
       private: {
         stewardEventId: event.id,
-        stewardSource: "steward-os",
+        stewardSource: "orgos-reference",
       },
     },
   };

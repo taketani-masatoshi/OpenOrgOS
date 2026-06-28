@@ -267,10 +267,10 @@ export function formatImpactMarkdown(
   lines.push("```bash");
   lines.push("npm run validate");
   if (impacts.some((i) => i.action === "sync" || i.path?.startsWith("docs/exports/"))) {
-    lines.push("npm run steward -- sync all");
+    lines.push("npm run orgos -- sync all");
   }
   if (impacts.some((i) => i.nodeId.includes("dashboard") || i.path?.includes("reports/dashboard"))) {
-    lines.push("npm run steward -- dashboard");
+    lines.push("npm run orgos -- dashboard");
   }
   lines.push("```");
 

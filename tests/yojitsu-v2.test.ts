@@ -22,8 +22,8 @@ describe("yojitsu v2", () => {
     const root = join(import.meta.dirname, "..");
     const out = execFileSync(
       "npm",
-      ["run", "steward", "--", "--tenant", "demo", "finances", "variance"],
-      { cwd: root, encoding: "utf-8", env: { ...process.env, STEWARD_TENANT: "demo" } }
+      ["run", "orgos", "--", "--tenant", "demo", "finances", "variance"],
+      { cwd: root, encoding: "utf-8", env: { ...process.env, ORGOS_TENANT: "demo" } }
     );
     expect(out).toContain("港湾マンション501（賃貸）");
     expect(out).toContain("セグメント別");
@@ -33,8 +33,8 @@ describe("yojitsu v2", () => {
     const root = join(import.meta.dirname, "..");
     const out = execFileSync(
       "npm",
-      ["run", "steward", "--", "--tenant", "demo", "finances", "variance"],
-      { cwd: root, encoding: "utf-8", env: { ...process.env, STEWARD_TENANT: "demo" } }
+      ["run", "orgos", "--", "--tenant", "demo", "finances", "variance"],
+      { cwd: root, encoding: "utf-8", env: { ...process.env, ORGOS_TENANT: "demo" } }
     );
     expect(out).toContain("港湾マンション501（賃貸）");
   });

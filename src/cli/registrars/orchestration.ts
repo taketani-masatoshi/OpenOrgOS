@@ -33,6 +33,8 @@ import {
 } from "../../commands/org.js";
 import {
   runProtocolValidate,
+  runProtocolOutboxApplyPermissions,
+  runProtocolOutboxCheckPermissions,
   runProtocolIdentityExport,
   runProtocolIdentityValidate,
   runProtocolPeerRegister,
@@ -430,6 +432,33 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) =>
       runProtocolValidate({ tenant: opts.tenant, json: opts.json, standalone: opts.standalone })
+    );
+
+  const protocolOutboxCmd = protocolCmd.command("outbox").description("Protocol outbox directory hardening");
+  protocolOutboxCmd
+    .command("apply-permissions")
+    .description("Set outbox/inbox 750 · protocol data 700 · envelope files 640 (deploy template)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--user <name>", "Owner user for chown (requires root)")
+    .option("--group <name>", "Owner group for chown")
+    .option("--dry-run", "Print paths only")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolOutboxApplyPermissions({
+        tenant: opts.tenant,
+        user: opts.user,
+        group: opts.group,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
+  protocolOutboxCmd
+    .command("check-permissions")
+    .description("Verify outbox/inbox are not world-writable (production hardening)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolOutboxCheckPermissions({ tenant: opts.tenant, json: opts.json })
     );
 
   const protocolIdentityCmd = protocolCmd.command("identity").description("Identity exchange");

@@ -44,7 +44,7 @@ export function createPdfWriter(): PdfWriter {
   const doc = new PDFDocument({
     size: "A4",
     margins: { top: 56, bottom: 56, left: 56, right: 56 },
-    info: { Producer: "Steward OS" },
+    info: { Producer: "OrgOS" },
   });
   const left = doc.page.margins.left;
   const right = doc.page.width - doc.page.margins.right;

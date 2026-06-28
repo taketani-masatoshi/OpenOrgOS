@@ -141,16 +141,16 @@ export function runIoGuide(opts: { output?: string }): void {
 | \`misc/\` | その他 |
 
 \`\`\`bash
-npm run steward -- io inbox add --from ~/Downloads/scan.pdf --category licenses --title "旅館業許可証"
-npm run steward -- io inbox done INB-001 --archive docs/company/licenses/ryokan/records/permit.pdf
+npm run orgos -- io inbox add --from ~/Downloads/scan.pdf --category licenses --title "旅館業許可証"
+npm run orgos -- io inbox done INB-001 --archive docs/company/licenses/ryokan/records/permit.pdf
 \`\`\`
 
 ## 出力（Output）→ \`docs/io/outbox/\`
 
 \`\`\`bash
-npm run steward -- report annual --fy FY2026
-npm run steward -- io outbox list
-npm run steward -- io outbox printed OUT-001
+npm run orgos -- report annual --fy FY2026
+npm run orgos -- io outbox list
+npm run orgos -- io outbox printed OUT-001
 \`\`\`
 
 台帳: \`data/document-io.yaml\`

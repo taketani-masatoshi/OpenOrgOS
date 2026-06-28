@@ -8,6 +8,7 @@ import { ROOT_DIR } from "../lib/tenant.js";
 import { listWorkOrders } from "../lib/escalate.js";
 import { listAuditEvents } from "../lib/audit-log.js";
 import { checkExecutiveBackupForWeekly } from "../lib/executive-backup.js";
+import { ORGOS_TENANT_ENV, LEGACY_TENANT_ENV } from "../lib/orgos-cli.js";
 
 export interface PipelineRunOptions {
   tenant?: string;
@@ -20,13 +21,13 @@ export function runPipelineList(): void {
   console.log("|------|-------|");
   console.log("| daily | validate → ops daily → dashboard (+ agent summaries) |");
   console.log("| weekly | daily + routing-queue pending + audit log summary |");
-  console.log("\n例: npm run steward -- pipeline run daily");
-  console.log("     npm run steward -- pipeline run weekly");
+  console.log("\n例: npm run orgos -- pipeline run daily");
+  console.log("     npm run orgos -- pipeline run weekly");
 }
 
 export function runPipelineDaily(options: PipelineRunOptions = {}): void {
   const tenant = options.tenant ?? getTenantId();
-  const env = { ...process.env, STEWARD_TENANT: tenant };
+  const env = { ...process.env, [ORGOS_TENANT_ENV]: tenant, [LEGACY_TENANT_ENV]: tenant };
 
   console.log(`Pipeline daily · tenant=${tenant}\n`);
 
