@@ -3,9 +3,15 @@ import {
   createPublicKey,
   createSign,
   generateKeyPairSync,
+  randomBytes,
   type KeyObject,
   verify,
 } from "node:crypto";
+import {
+  buildCoseEc2PublicKey,
+  buildRegistrationAuthData,
+  encodeCbor,
+} from "./webauthn-cbor.js";
 
 /** Verify WebAuthn assertion signature (ES256 / RS256 over authData || SHA256(clientDataJSON)). */
 export function verifyWebAuthnAssertionSignature(opts: {
@@ -111,5 +117,63 @@ export function mintTestWebAuthnAssertion(opts: {
     authenticator_data_base64: authData.toString("base64url"),
     signature_base64: signature.toString("base64url"),
     public_key_spki_base64: publicKeySpki.toString("base64"),
+  };
+}
+
+/** Mint attestation for vitest registration (none · ES256 P-256). */
+export function mintTestWebAuthnRegistration(opts: {
+  rpId: string;
+  challenge: string;
+  origin?: string;
+  operator_id?: string;
+  approver_id?: string;
+  privateKey?: KeyObject;
+}): {
+  credential_id: string;
+  client_data_json: string;
+  attestation_object_base64: string;
+  public_key_spki_base64: string;
+  operator_id: string;
+  approver_id: string;
+} {
+  let privateKey: KeyObject;
+  let publicKeySpki: Buffer;
+  if (opts.privateKey) {
+    privateKey = opts.privateKey;
+    publicKeySpki = createPublicKey(privateKey).export({ type: "spki", format: "der" }) as Buffer;
+  } else {
+    const generated = generateKeyPairSync("ec", { namedCurve: "P-256" });
+    privateKey = generated.privateKey;
+    publicKeySpki = generated.publicKey.export({ type: "spki", format: "der" }) as Buffer;
+  }
+
+  const rawId = randomBytes(16);
+  const credentialId = rawId.toString("base64url");
+  const coseKey = buildCoseEc2PublicKey(publicKeySpki);
+  const authData = buildRegistrationAuthData(opts.rpId, rawId, coseKey);
+  const attestationObject = encodeCbor(
+    new Map<string, unknown>([
+      ["fmt", "none"],
+      ["authData", authData],
+      ["attStmt", new Map()],
+    ])
+  );
+
+  const clientDataJson = Buffer.from(
+    JSON.stringify({
+      type: "webauthn.create",
+      challenge: opts.challenge,
+      origin: opts.origin ?? `https://${opts.rpId}`,
+    }),
+    "utf-8"
+  ).toString("base64url");
+
+  return {
+    credential_id: credentialId,
+    client_data_json: clientDataJson,
+    attestation_object_base64: attestationObject.toString("base64url"),
+    public_key_spki_base64: publicKeySpki.toString("base64"),
+    operator_id: opts.operator_id ?? "Passkey Ops",
+    approver_id: opts.approver_id ?? "テスト承認者",
   };
 }

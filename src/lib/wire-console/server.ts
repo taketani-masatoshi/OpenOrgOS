@@ -10,6 +10,11 @@ import {
 } from "./auth/session.js";
 import { authenticateWireConsoleLogin, createWebAuthnLoginOptions, getWireConsoleAuthConfigResponse } from "./auth/login.js";
 import { completeWebAuthnE2eLogin, isWebAuthnE2eLoginEnabled } from "./auth/webauthn-e2e.js";
+import {
+  createWebAuthnRegisterOptions,
+  isWebAuthnRegistrationAllowed,
+  verifyWebAuthnRegistration,
+} from "./auth/webauthn-register.js";
 import { WIRE_CONSOLE_SPA_DIST } from "./paths.js";
 import { handleConsoleApi } from "./routes/console-api.js";
 import { handleEventsStream } from "./routes/events-stream.js";
@@ -46,6 +51,8 @@ function isPublicPath(pathname: string): boolean {
     pathname === "/console/v1/auth/login" ||
     pathname === "/console/v1/auth/config" ||
     pathname === "/console/v1/auth/webauthn/options" ||
+    pathname === "/console/v1/auth/webauthn/register/options" ||
+    pathname === "/console/v1/auth/webauthn/register" ||
     (isWebAuthnE2eLoginEnabled() && pathname === "/console/v1/auth/webauthn/e2e-complete") ||
     pathname.startsWith("/assets/") ||
     (!pathname.startsWith("/console/") && pathname !== "/favicon.ico")
@@ -67,6 +74,52 @@ async function handleApi(
   if (method === "GET" && pathname === "/console/v1/auth/config") {
     json(res, 200, { ok: true, ...getWireConsoleAuthConfigResponse() });
     return true;
+  }
+
+  if (method === "POST" && pathname === "/console/v1/auth/webauthn/register/options") {
+    if (!isWebAuthnRegistrationAllowed()) {
+      json(res, 403, { ok: false, error: "webauthn registration disabled" });
+      return true;
+    }
+    try {
+      const raw = await readBody(req);
+      const body = JSON.parse(raw || "{}") as { operator_id?: string; approver_id?: string };
+      const result = createWebAuthnRegisterOptions({
+        operator_id: body.operator_id ?? "",
+        approver_id: body.approver_id ?? "",
+      });
+      if ("error" in result) {
+        json(res, 422, { ok: false, error: result.error });
+        return true;
+      }
+      json(res, 200, { ok: true, ...result });
+      return true;
+    } catch (e) {
+      json(res, 400, { ok: false, error: e instanceof Error ? e.message : String(e) });
+      return true;
+    }
+  }
+
+  if (method === "POST" && pathname === "/console/v1/auth/webauthn/register") {
+    if (!isWebAuthnRegistrationAllowed()) {
+      json(res, 403, { ok: false, error: "webauthn registration disabled" });
+      return true;
+    }
+    try {
+      const raw = await readBody(req);
+      const body = JSON.parse(raw || "{}") as Parameters<typeof verifyWebAuthnRegistration>[0];
+      const result = verifyWebAuthnRegistration(body);
+      if ("error" in result) {
+        json(res, 401, { ok: false, error: result.error });
+        return true;
+      }
+      setSessionCookie(res, result.token);
+      json(res, 200, { ok: true, user: result.user });
+      return true;
+    } catch (e) {
+      json(res, 400, { ok: false, error: e instanceof Error ? e.message : String(e) });
+      return true;
+    }
   }
 
   if (method === "POST" && pathname === "/console/v1/auth/webauthn/options") {

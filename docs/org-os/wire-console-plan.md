@@ -81,6 +81,8 @@ schemas/org/tenant-wire-console.ts  # wire_console flag（tenant.yaml 拡張）
 | POST | `/console/v1/auth/login` | dev passkey / prod OIDC · WebAuthn | `wire-console/auth` |
 | GET | `/console/v1/auth/config` | mode · adapter · OIDC/WebAuthn メタ | `wire-console/auth` |
 | POST | `/console/v1/auth/webauthn/options` | WebAuthn challenge（prod adapter=webauthn） | `webauthn.ts` |
+| POST | `/console/v1/auth/webauthn/register/options` | passkey 登録 challenge（bootstrap / ALLOW_REGISTER） | `webauthn-register.ts` |
+| POST | `/console/v1/auth/webauthn/register` | passkey 登録完了 · `.orgos` 永続化 | `webauthn-register.ts` |
 | POST | `/console/v1/auth/webauthn/e2e-complete` | vitest 専用 · `WIRE_CONSOLE_E2E_WEBAUTHN=1` のみ | `webauthn-e2e.ts` |
 | POST | `/console/v1/auth/logout` | セッション破棄 | — |
 | GET | `/console/v1/auth/me` | 操作者 identity（→ attestation 用） | `authorized-approvers` |
@@ -145,7 +147,7 @@ npm run orgos -- tenant init aiac --name AIAC --wire-console
 | **WC-TKT-0.5** | CLI start/stop/status | `wire console *` · PID ファイル · `.orgos/wire-console.json` | start → status OK → stop | 0.3 |
 | **WC-TKT-0.6** | init フック | `tenant init --wire-console` · 該当 tenant で start 試行 | init ログに Console URL | 0.1 · 0.5 |
 
-**Wave 0 ゲート:** `npm run wire-console:test`（現 22 件 · server 18 + redact 2 + webauthn-verify 2）
+**Wave 0 ゲート:** `npm run wire-console:test`（現 25 件 · server 19 + redact 2 + webauthn-verify 2 + register 2）
 
 ---
 
@@ -269,7 +271,7 @@ wire_console: true   # 未指定 = false
 | 項目 | 状態 | 備考 |
 |------|:----:|------|
 | OIDC RS256 + JWKS | [x] | `JWKS_URL` / `JWKS_JSON` · prod+JWKS 時 HS256 は `ALLOW_HS256=1` のみ |
-| WebAuthn SPA | [x] | passkey ボタン · SPKI 公開鍵で assertion 検証 |
+| WebAuthn SPA | [x] | passkey 登録（bootstrap）· ログイン · SPKI 検証 · `.orgos` 永続化 |
 | WebAuthn test secret | [x] | vitest のみ · `WEBAUTHN_ALLOW_TEST_SECRET=1` |
 | prod デフォルト OIDC | [x] | WebAuthn は明示 env のみ |
 | snapshot L2 redact | [x] | `getTenantSnapshot` + event detail |
@@ -299,7 +301,7 @@ npm run wire-console:build           # SPA 単体（release-check に含む）
 
 | # | 確認 | 期待 |
 |---|------|------|
-| 1 | `npm run wire-console:test` | vitest **22/22** green |
+| 1 | `npm run wire-console:test` | vitest **25/25** green |
 | 2 | `npm run wire-console:smoke` | Playwright **3/3** green（:9472/:9473/:9474） |
 | 3 | `npm test`（リポジトリ全体） | wire-console 含む CI validate green |
 | 4 | git push 後 CI | `wire-console-smoke` job green |
@@ -320,7 +322,9 @@ npm run wire-console:build           # SPA 単体（release-check に含む）
 | `WIRE_CONSOLE_OIDC_ALLOW_HS256` | JWKS あり HS256 許可 | — | 移行期間のみ `1` |
 | `WIRE_CONSOLE_WEBAUTHN_RP_ID` | WebAuthn rpId | smoke: `localhost` | 本番ホスト名 |
 | `WIRE_CONSOLE_WEBAUTHN_ORIGIN` | origin 検証 | smoke: `http://localhost:9473` | 本番 URL |
-| `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` | JSON 配列 · credential + SPKI | smoke fixture 自動 | 本番 passkey 登録 |
+| `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` | JSON 配列 · credential + SPKI | smoke fixture 自動 | 移行/上書き用（ファイルとマージ） |
+| `WIRE_CONSOLE_WEBAUTHN_ALLOW_REGISTER` | 追加 passkey 登録を常時許可 | — | 運用で `1` |
+| `WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER` | 登録禁止（bootstrap 含む） | — | 本番 hardening で `1` |
 | `WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET` | テスト secret ログイン | vitest のみ `1` | **禁止** |
 | `WIRE_CONSOLE_E2E_WEBAUTHN` | `/webauthn/e2e-complete` 有効 | vitest のみ `1` | **禁止** |
 | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN` | `prod_token` 許可 | — | 移行期間のみ `1` |

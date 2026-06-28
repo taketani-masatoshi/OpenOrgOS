@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, type AuthConfig, type TenantSummary, type User } from "./api";
 import { TenantDashboard } from "./TenantDashboard";
 import { loginWithWebAuthn } from "./webauthn-login";
+import { registerWithWebAuthn } from "./webauthn-register";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -73,6 +74,24 @@ export function App() {
     }
   }
 
+  async function registerWebAuthn() {
+    setWebAuthnBusy(true);
+    setError(null);
+    try {
+      await registerWithWebAuthn(api, {
+        operator_id: operatorId.trim(),
+        approver_id: approverId.trim(),
+      });
+      await loadSession();
+      const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
+      setAuthConfig(cfg);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setWebAuthnBusy(false);
+    }
+  }
+
   async function loginWebAuthn() {
     setWebAuthnBusy(true);
     setError(null);
@@ -100,6 +119,12 @@ export function App() {
     const prodMode = authConfig?.mode === "prod";
     const oidcMode = prodMode && authConfig?.prod_adapter === "oidc";
     const webAuthnMode = prodMode && authConfig?.prod_adapter === "webauthn";
+    const showRegister =
+      webAuthnMode &&
+      authConfig?.webauthn?.registration_allowed &&
+      (authConfig.webauthn.credential_count ?? 0) === 0;
+    const showSignIn =
+      webAuthnMode && !showRegister && (authConfig?.webauthn?.credential_count ?? 0) > 0;
     return (
       <div className="shell login">
         <h1>OrgOS Wire Console</h1>
@@ -112,12 +137,35 @@ export function App() {
         {webAuthnMode ? (
           <>
             <p className="hint">
-              WebAuthn prod login (Wave 4) — register credentials via{" "}
-              <code>WIRE_CONSOLE_WEBAUTHN_CREDENTIALS</code>
+              WebAuthn prod — passkeys stored in{" "}
+              <code>.orgos/wire-console-webauthn-credentials.json</code>
             </p>
-            <button type="button" disabled={webAuthnBusy} onClick={() => void loginWebAuthn()}>
-              {webAuthnBusy ? "Signing in…" : "Sign in with passkey"}
-            </button>
+            <label>
+              Operator
+              <input value={operatorId} onChange={(e) => setOperatorId(e.target.value)} autoComplete="off" />
+            </label>
+            <label>
+              Approver
+              <input
+                value={approverId}
+                onChange={(e) => setApproverId(e.target.value)}
+                autoComplete="off"
+                placeholder="南木健一"
+              />
+            </label>
+            {showRegister ? (
+              <button type="button" disabled={webAuthnBusy} onClick={() => void registerWebAuthn()}>
+                {webAuthnBusy ? "Registering…" : "Register passkey"}
+              </button>
+            ) : null}
+            {showSignIn ? (
+              <button type="button" disabled={webAuthnBusy} onClick={() => void loginWebAuthn()}>
+                {webAuthnBusy ? "Signing in…" : "Sign in with passkey"}
+              </button>
+            ) : null}
+            {webAuthnMode && !showRegister && !showSignIn ? (
+              <p className="hint">No passkeys registered and bootstrap registration is disabled.</p>
+            ) : null}
           </>
         ) : (
           <form onSubmit={login}>

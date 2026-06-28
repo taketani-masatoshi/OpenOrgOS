@@ -18,7 +18,7 @@ export interface AuthConfig {
     jwks_configured?: boolean;
     hs256_configured?: boolean;
   };
-  webauthn?: { rp_id: string; credential_count: number };
+  webauthn?: { rp_id: string; credential_count: number; registration_allowed?: boolean };
   webauthn_e2e_login?: boolean;
 }
 

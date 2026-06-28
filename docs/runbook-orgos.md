@@ -280,7 +280,7 @@ npm run orgos -- tenant init southwood --name Southwood --wire-console
 |--------|------|----------|
 | dev（デフォルト） | — | passkey `orgos-dev`（`WIRE_CONSOLE_DEV_PASSKEY` で上書き可） |
 | prod OIDC | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_ADAPTER=oidc` · OIDC env | POST login `{ id_token, approver_id }` |
-| prod WebAuthn（Wave 4） | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` · `WEBAUTHN_RP_ID` · `WEBAUTHN_ORIGIN` | SPA「Sign in with passkey」· `POST /auth/webauthn/options` → `navigator.credentials.get` → login |
+| prod WebAuthn（Wave 4） | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WEBAUTHN_RP_ID` · `WEBAUTHN_ORIGIN` | 初回 **Register passkey**（bootstrap）→ 以降 **Sign in with passkey** · 正本 `.orgos/wire-console-webauthn-credentials.json` |
 | legacy token（非推奨） | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1` | `prod_token` — 移行期間のみ |
 
 ```bash
@@ -291,12 +291,16 @@ export WIRE_CONSOLE_OIDC_ISSUER='https://idp.example.com'
 export WIRE_CONSOLE_OIDC_AUDIENCE='wire-console'
 export WIRE_CONSOLE_OIDC_HS256_SECRET='…'          # HS256 移行用
 export WIRE_CONSOLE_OIDC_JWKS_URL='https://…/jwks' # RS256 本番
-# WebAuthn 本番
+# WebAuthn 本番 — 初回 bootstrap（passkey 未登録時）
 export WIRE_CONSOLE_PROD_ADAPTER=webauthn
 export WIRE_CONSOLE_WEBAUTHN_RP_ID='console.example.com'
 export WIRE_CONSOLE_WEBAUTHN_ORIGIN='https://console.example.com'
-export WIRE_CONSOLE_WEBAUTHN_CREDENTIALS='[{"credential_id":"…","public_key_spki_base64":"…","operator_id":"…","approver_id":"…"}]'
 npm run orgos -- wire console start
+# UI: Operator / Approver を入力 → Register passkey
+# 以降: Sign in with passkey（`.orgos/wire-console-webauthn-credentials.json` に保存）
+
+# 追加 passkey を常時許可する場合
+export WIRE_CONSOLE_WEBAUTHN_ALLOW_REGISTER=1
 ```
 
 ### Operator フロー（Console UI）
@@ -314,7 +318,7 @@ npm run orgos -- wire console start
 ### テスト
 
 ```bash
-npm run wire-console:test          # vitest 22 件（server · redact · webauthn-verify）
+npm run wire-console:test          # vitest 25 件（server · redact · webauthn-verify · register）
 npm run wire-console:smoke         # Playwright 3 本（:9472 operator+witness · :9473 WebAuthn · :9474 OIDC）
 npm run wire-console:release-check # 上記一括（Wave 4 リリースゲート）
 ```

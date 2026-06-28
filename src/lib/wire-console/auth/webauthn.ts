@@ -5,37 +5,23 @@ import {
   isWebAuthnTestSecretAllowed,
   verifyWebAuthnAssertionSignature,
 } from "./webauthn-verify.js";
+import {
+  findWebAuthnCredential,
+  listWebAuthnCredentials,
+  updateWebAuthnSignCount,
+} from "./webauthn-store.js";
+import { isWebAuthnRegistrationAllowed } from "./webauthn-register.js";
+import { rpId } from "./webauthn-shared.js";
 
-interface WebAuthnCredential {
-  credential_id: string;
-  /** SPKI DER base64 (preferred). */
-  public_key_spki_base64?: string;
-  /** Legacy alias — treated as SPKI DER base64. */
-  public_key_base64?: string;
-  operator_id: string;
-  approver_id: string;
-}
+export { rpId };
 
 const pendingChallenges = new Map<string, { challenge: string; expires_at: number }>();
-
-function rpId(): string {
-  return process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID ?? "127.0.0.1";
-}
-
-function loadCredentials(): WebAuthnCredential[] {
-  const raw = process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as WebAuthnCredential[];
-  } catch {
-    return [];
-  }
-}
 
 export function getWebAuthnConfig() {
   return {
     rp_id: rpId(),
-    credential_count: loadCredentials().length,
+    credential_count: listWebAuthnCredentials().length,
+    registration_allowed: isWebAuthnRegistrationAllowed(),
   };
 }
 
@@ -54,7 +40,7 @@ export function createWebAuthnLoginOptions(): {
     challenge,
     rp_id: rpId(),
     timeout: 300_000,
-    allow_credentials: loadCredentials().map((c) => ({
+    allow_credentials: listWebAuthnCredentials().map((c) => ({
       id: c.credential_id,
       type: "public-key" as const,
     })),
@@ -88,12 +74,12 @@ export function verifyWebAuthnLogin(body: {
     return { error: "webauthn origin mismatch" };
   }
 
-  const cred = loadCredentials().find((c) => c.credential_id === body.credential_id);
+  const cred = findWebAuthnCredential(body.credential_id);
   if (!cred) {
     return { error: "unknown webauthn credential" };
   }
 
-  const publicKeySpki = cred.public_key_spki_base64 ?? cred.public_key_base64;
+  const publicKeySpki = cred.public_key_spki_base64;
   const testSecret = process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
 
   if (testSecret && isWebAuthnTestSecretAllowed() && body.signature_base64) {
@@ -117,6 +103,17 @@ export function verifyWebAuthnLogin(body: {
     });
     if (!ok) {
       return { error: "invalid webauthn assertion signature" };
+    }
+
+    try {
+      const authData = Buffer.from(body.authenticator_data_base64, "base64url");
+      const signCount = authData.readUInt32BE(33);
+      if (cred.sign_count !== undefined && signCount > 0 && signCount <= cred.sign_count) {
+        return { error: "webauthn sign count replay" };
+      }
+      updateWebAuthnSignCount(body.credential_id, signCount);
+    } catch {
+      /* sign count best-effort */
     }
   }
 

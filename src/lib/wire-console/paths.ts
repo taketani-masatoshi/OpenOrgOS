@@ -13,6 +13,10 @@ export const WIRE_CONSOLE_OIDC_SMOKE_FIXTURE = join(
   ORGOS_STATE_DIR,
   "wire-console-oidc-smoke.json"
 );
+export const WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH = join(
+  ORGOS_STATE_DIR,
+  "wire-console-webauthn-credentials.json"
+);
 export const WIRE_CONSOLE_SPA_DIST = join(ROOT_DIR, "apps", "wire-console", "dist");
 
 export function ensureOrgOsStateDir(): void {

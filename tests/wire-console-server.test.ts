@@ -3,12 +3,16 @@ import { generateKeyPairSync } from "node:crypto";
 import { startWireConsoleServer } from "../src/lib/wire-console/server.js";
 import { mintTestOidcIdToken, mintTestOidcIdTokenRs256, preloadOidcJwks } from "../src/lib/wire-console/auth/oidc.js";
 import { resetOidcJwksForTests } from "../src/lib/wire-console/auth/oidc-jwks.js";
-import { mintTestWebAuthnAssertion } from "../src/lib/wire-console/auth/webauthn-verify.js";
+import { mintTestWebAuthnAssertion, mintTestWebAuthnRegistration } from "../src/lib/wire-console/auth/webauthn-verify.js";
 import {
   resetSessionsForTests,
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
 import { resetWebAuthnChallengesForTests } from "../src/lib/wire-console/auth/webauthn.js";
+import { resetWebAuthnRegisterChallengesForTests } from "../src/lib/wire-console/auth/webauthn-register.js";
+import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
+import { resetWebAuthnRegisterChallengesForTests } from "../src/lib/wire-console/auth/webauthn-register.js";
+import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
 import { listWireConsoleTenants } from "../src/lib/wire-console/tenant-registry.js";
 import {
   resetWireConsoleTestTenant,
@@ -63,6 +67,8 @@ describe("wire console server", () => {
     close = undefined;
     resetSessionsForTests();
     resetWebAuthnChallengesForTests();
+    resetWebAuthnRegisterChallengesForTests();
+    resetWebAuthnCredentialsForTests();
     resetOidcJwksForTests();
     const restore: Record<string, string | undefined> = {
       WIRE_CONSOLE_AUTH: envSnapshot.auth,
@@ -442,6 +448,86 @@ describe("wire console server", () => {
     const body = (await complete.json()) as { user: { operator_id: string; approver_id: string } };
     expect(body.user.operator_id).toBe(fixture.operator_id);
     expect(body.user.approver_id).toBe(fixture.approver_id);
+  });
+
+  it("registers passkey via API and logs in with cryptographic assertion", async () => {
+    resetWebAuthnChallengesForTests();
+    resetWebAuthnRegisterChallengesForTests();
+    resetWebAuthnCredentialsForTests();
+    process.env.WIRE_CONSOLE_AUTH = "prod";
+    process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "127.0.0.1";
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
+    delete process.env.WIRE_CONSOLE_E2E_WEBAUTHN;
+
+    const server = await startWireConsoleServer({ port: 0 });
+    close = server.close;
+
+    const config = await fetch(`${server.url}/console/v1/auth/config`);
+    const cfg = (await config.json()) as {
+      webauthn?: { credential_count: number; registration_allowed?: boolean };
+    };
+    expect(cfg.webauthn?.registration_allowed).toBe(true);
+    expect(cfg.webauthn?.credential_count).toBe(0);
+
+    const regOptions = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operator_id: "Passkey Ops", approver_id: "テスト承認者" }),
+    });
+    const regOpts = (await regOptions.json()) as { challenge: string };
+    const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+    const registration = mintTestWebAuthnRegistration({
+      rpId: "127.0.0.1",
+      challenge: regOpts.challenge,
+      operator_id: "Passkey Ops",
+      approver_id: "テスト承認者",
+      privateKey,
+    });
+
+    const register = await fetch(`${server.url}/console/v1/auth/webauthn/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        challenge: regOpts.challenge,
+        credential_id: registration.credential_id,
+        client_data_json: registration.client_data_json,
+        attestation_object_base64: registration.attestation_object_base64,
+        operator_id: "Passkey Ops",
+        approver_id: "テスト承認者",
+      }),
+    });
+    expect(register.status).toBe(200);
+
+    const loginOptions = await fetch(`${server.url}/console/v1/auth/webauthn/options`, {
+      method: "POST",
+    });
+    const loginOpts = (await loginOptions.json()) as { challenge: string };
+    const assertion = mintTestWebAuthnAssertion({
+      rpId: "127.0.0.1",
+      challenge: loginOpts.challenge,
+      credentialId: registration.credential_id,
+      privateKey,
+    });
+
+    const login = await fetch(`${server.url}/console/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        webauthn: {
+          credential_id: registration.credential_id,
+          challenge: loginOpts.challenge,
+          client_data_json: assertion.client_data_json,
+          authenticator_data_base64: assertion.authenticator_data_base64,
+          signature_base64: assertion.signature_base64,
+        },
+      }),
+    });
+    expect(login.status).toBe(200);
+    const body = (await login.json()) as { user: { operator_id: string } };
+    expect(body.user.operator_id).toBe("Passkey Ops");
   });
 
   it("registers and verifies witness attestation via console API", async () => {
