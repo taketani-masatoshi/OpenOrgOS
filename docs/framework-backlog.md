@@ -113,6 +113,7 @@
 | **WC-TKT-1.1–1.5** | P0 read — outbox/inbox · ledger · event detail · tenant tabs | [x] |
 | **WC-TKT-2.1–2.5** | P1 operate — propose/approve · deliver/witness 並行 · step UI | [x] |
 | **WC-TKT-3.1–3.4** | 仕上げ — prod auth · SSE · runbook · E2E | [x] |
+| **WC-Wave-4** | prod hardening — OIDC JWKS · WebAuthn · L2 redact · smoke 9472/9473/9474 · release-check | [x] · [wire-console-plan.md §11–12](org-os/wire-console-plan.md) |
 
 ---
 

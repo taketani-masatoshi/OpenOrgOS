@@ -253,8 +253,12 @@ CI: `npm run validate:protocol:tenants` — 正本 `steward/platform/protocol/ci
 | サービス | ポート | 用途 |
 |----------|--------|------|
 | **Wire Console BFF** | **9470** | 人間オペレータ · propose/approve · 可視化 |
-| Wire Console smoke | **9472** | Playwright / CI のみ（dev :9470 と分離） |
+| Wire Console smoke（operator） | **9472** | Playwright / CI · dev フロー + witness |
+| Wire Console smoke（WebAuthn） | **9473** | Playwright / CI · prod passkey · CDP 仮想 authenticator |
+| Wire Console smoke（OIDC） | **9474** | Playwright / CI · prod OIDC id_token · RS256 + JWKS |
 | Protocol API | 9476 | peer 自動 ingest · metrics · deliver |
+
+> Witness Hub デモは **19482/19483**（smoke fixture）— 本番 Hub デプロイは [witness-hub-operations.md](org-os/witness-hub-operations.md) を参照（ポート 9474 は Hub 例とも衝突しうるため smoke OIDC は localhost のみ）。
 
 ### 起動 · 停止
 
@@ -276,7 +280,7 @@ npm run orgos -- tenant init southwood --name Southwood --wire-console
 |--------|------|----------|
 | dev（デフォルト） | — | passkey `orgos-dev`（`WIRE_CONSOLE_DEV_PASSKEY` で上書き可） |
 | prod OIDC | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_ADAPTER=oidc` · OIDC env | POST login `{ id_token, approver_id }` |
-| prod WebAuthn（Wave 4） | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` | SPA「Sign in with passkey」· `/auth/webauthn/options` |
+| prod WebAuthn（Wave 4） | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` · `WEBAUTHN_RP_ID` · `WEBAUTHN_ORIGIN` | SPA「Sign in with passkey」· `POST /auth/webauthn/options` → `navigator.credentials.get` → login |
 | legacy token（非推奨） | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1` | `prod_token` — 移行期間のみ |
 
 ```bash
@@ -287,6 +291,11 @@ export WIRE_CONSOLE_OIDC_ISSUER='https://idp.example.com'
 export WIRE_CONSOLE_OIDC_AUDIENCE='wire-console'
 export WIRE_CONSOLE_OIDC_HS256_SECRET='…'          # HS256 移行用
 export WIRE_CONSOLE_OIDC_JWKS_URL='https://…/jwks' # RS256 本番
+# WebAuthn 本番
+export WIRE_CONSOLE_PROD_ADAPTER=webauthn
+export WIRE_CONSOLE_WEBAUTHN_RP_ID='console.example.com'
+export WIRE_CONSOLE_WEBAUTHN_ORIGIN='https://console.example.com'
+export WIRE_CONSOLE_WEBAUTHN_CREDENTIALS='[{"credential_id":"…","public_key_spki_base64":"…","operator_id":"…","approver_id":"…"}]'
 npm run orgos -- wire console start
 ```
 
@@ -305,12 +314,15 @@ npm run orgos -- wire console start
 ### テスト
 
 ```bash
-npm test -- tests/wire-console-server.test.ts tests/wire-console-redact.test.ts
-npm run wire-console:smoke   # Playwright · dev flow + witness · WebAuthn CDP passkey (:9472/:9473) · OIDC RS256 (:9474)
+npm run wire-console:test          # vitest 22 件（server · redact · webauthn-verify）
+npm run wire-console:smoke         # Playwright 3 本（:9472 operator+witness · :9473 WebAuthn · :9474 OIDC）
+npm run wire-console:release-check # 上記一括（Wave 4 リリースゲート）
 ```
 
-**CI:** `validate.yml` の `wire-console-smoke` job（Chromium + `wire-console:smoke`）。
+**CI:** `validate.yml` — `validate` job（`npm test` に wire-console vitest 含む）+ `wire-console-smoke` job（Chromium · 3 Playwright spec）。
 
-**テスト tenant:** `tenants/wire-console-test/`（`lifecycle: test`）— Console タブには出さない。Vitest/Playwright は `WIRE_CONSOLE_INCLUDE_TEST_TENANTS=1`（smoke サーバーが自動設定）。
+**テスト tenant:** `tenants/wire-console-test/`（`lifecycle: test`）— Console タブには出さない。Vitest/Playwright は `WIRE_CONSOLE_INCLUDE_TEST_TENANTS=1`（smoke `:9472` サーバーのみ自動設定）。
 
-*改定: 2026-06-28 · Wire Console Wave 3–4 hardening*
+**正本:** 環境変数一覧 · 採点 · チェックリスト — [wire-console-plan.md §12](org-os/wire-console-plan.md)
+
+*改定: 2026-06-27 · Wave 4 リリースゲート · ポート 9473/9474*

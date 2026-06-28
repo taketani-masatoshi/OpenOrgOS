@@ -30,6 +30,7 @@
     "wire-console:dev": "npm run dev -w @orgos/wire-console",
     "wire-console:build": "npm run build -w @orgos/wire-console",
     "wire-console:smoke": "npm run wire-console:build && playwright test e2e/wire-console.smoke.spec.ts && playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts",
+    "wire-console:release-check": "npm run wire-console:test && npm run wire-console:smoke",
     "wire-console:test": "vitest run tests/wire-console-server.test.ts tests/wire-console-redact.test.ts tests/wire-console-webauthn-verify.test.ts"
   },
   "dependencies": {

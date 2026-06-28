@@ -360,6 +360,7 @@ npm run orgos -- compliance gap [--tenant mal]   # ISO / REG ギャップ
 | v0.6 | OS-100 | audit log · compliance gap · pipeline weekly · production_ready ×5 |
 | v0.7 | Phase 2 | agent dispatch · queue DB · webhook send/ingest · escalate merge |
 | v0.8 | Phase 3 | webhook serve · cloud agent watch · merge pr · queue processor |
+| — | **ORG-WC Wave 4** | Wire Console prod hardening — OIDC JWKS RS256 · WebAuthn SPKI · L2 redact · Playwright smoke `:9472/:9473/:9474` · `wire-console:release-check`（[wire-console-plan.md §12](org-os/wire-console-plan.md)） |
 
 ---
 

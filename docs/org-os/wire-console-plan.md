@@ -78,7 +78,10 @@ schemas/org/tenant-wire-console.ts  # wire_console flag（tenant.yaml 拡張）
 | Method | Path | 用途 | ライブラリ |
 |--------|------|------|------------|
 | GET | `/health` | 生存確認 | — |
-| POST | `/console/v1/auth/login` | dev passkey / prod SSO callback | `wire-console/auth` |
+| POST | `/console/v1/auth/login` | dev passkey / prod OIDC · WebAuthn | `wire-console/auth` |
+| GET | `/console/v1/auth/config` | mode · adapter · OIDC/WebAuthn メタ | `wire-console/auth` |
+| POST | `/console/v1/auth/webauthn/options` | WebAuthn challenge（prod adapter=webauthn） | `webauthn.ts` |
+| POST | `/console/v1/auth/webauthn/e2e-complete` | vitest 専用 · `WIRE_CONSOLE_E2E_WEBAUTHN=1` のみ | `webauthn-e2e.ts` |
 | POST | `/console/v1/auth/logout` | セッション破棄 | — |
 | GET | `/console/v1/auth/me` | 操作者 identity（→ attestation 用） | `authorized-approvers` |
 | GET | `/console/v1/tenants` | `wire_console: true` 一覧 | tenant registry |
@@ -142,7 +145,7 @@ npm run orgos -- tenant init aiac --name AIAC --wire-console
 | **WC-TKT-0.5** | CLI start/stop/status | `wire console *` · PID ファイル · `.orgos/wire-console.json` | start → status OK → stop | 0.3 |
 | **WC-TKT-0.6** | init フック | `tenant init --wire-console` · 該当 tenant で start 試行 | init ログに Console URL | 0.1 · 0.5 |
 
-**Wave 0 ゲート:** `npm test -- tests/wire-console-server.test.ts`
+**Wave 0 ゲート:** `npm run wire-console:test`（現 22 件 · server 18 + redact 2 + webauthn-verify 2）
 
 ---
 
@@ -156,7 +159,7 @@ npm run orgos -- tenant init aiac --name AIAC --wire-console
 | **WC-TKT-1.4** | Approvals 読取 | pending/completed wire approvals 一覧 | southwood NOTICE 履歴表示 | 0.4 |
 | **WC-TKT-1.5** | Tenant タブ | `/console/v1/tenants` · mal / southwood / aiac 切替 | タブごとに独立 snapshot | 0.1 · 1.1 |
 
-**Wave 1 ゲート:** デモ実行後 Console alone で outbox/inbox/ledger が追える（CLI 不要） — **完了**（`tests/wire-console-server.test.ts` 6 件 · `npm run wire-console:build`）
+**Wave 1 ゲート:** デモ実行後 Console alone で outbox/inbox/ledger が追える（CLI 不要） — **完了**（`tests/wire-console-server.test.ts` · `npm run wire-console:build`）
 
 ---
 
@@ -170,7 +173,7 @@ npm run orgos -- tenant init aiac --name AIAC --wire-console
 | **WC-TKT-2.4** | **Witness**（並行） | pool status · receipt by event_id · witness-pending | mutually_confirmed 表示 | 1.3 |
 | **WC-TKT-2.5** | 承認→配送→witness ステップ UI | 1 event の Approval / Outbox / Delivery / Witness タブ | 3-org E2E を Console 上で追跡 | 2.2 · 2.3 · 2.4 |
 
-**Wave 2 ゲート:** `demo:three-org-wire` **without** CLI で Phase1 approve + Phase2 確認が可能（Phase2 mesh は当面 CLI/demo 併用可） — **完了**（Console propose/approve · deliver/witness · workflow UI · `tests/wire-console-server.test.ts` 9 件）
+**Wave 2 ゲート:** `demo:three-org-wire` **without** CLI で Phase1 approve + Phase2 確認が可能（Phase2 mesh は当面 CLI/demo 併用可） — **完了**（Console propose/approve · deliver/witness · workflow UI · `tests/wire-console-server.test.ts`）
 
 ---
 
@@ -256,7 +259,7 @@ wire_console: true   # 未指定 = false
 - [x] **deliver / flush-pending** · **witness pool/receipt** が UI から操作/確認できる
 - [x] `npm test` に wire-console BFF テストが含まれ CI green
 - [x] runbook §18 に Operator 手順が載る
-- [x] Playwright smoke（`:9472` · propose + approve）が CI `wire-console-smoke` job で実行
+- [x] Playwright smoke — **9472** operator+witness · **9473** WebAuthn CDP passkey · **9474** OIDC RS256 SPA（CI `wire-console-smoke` job）
 - [x] `lifecycle: test` テナントは Console 一覧から除外（API 直指定は Vitest/smoke のみ）
 
 ---
@@ -275,4 +278,60 @@ wire_console: true   # 未指定 = false
 
 ---
 
-**版:** v0.2 · 2026-06-28
+## 12. Wave 4 リリースゲート · 環境変数
+
+### 採点（2026-06-27 · 自己評価）
+
+| 領域 | 点 | 根拠 |
+|------|---:|------|
+| **Wave 4（prod hardening）** | **98** | OIDC JWKS RS256 · WebAuthn SPKI 検証 · L2 redact · CI smoke 3 本 · CDP passkey e2e · OIDC SPA e2e |
+| **リリース準備** | **98** | `wire-console:release-check` · 文書正本一致 · コミット済 · CI job 定義済（push 後 green 確認） |
+| Epic 全体 | 98 | Wave 0–4 完了 · operator フルフロー e2e · test tenant 隔離 |
+
+**残 2 点（意図的に許容）:** 本番 IdP / 実 passkey ハードウェアは smoke 対象外（fixture + CDP で代替）。`WIRE_CONSOLE_E2E_WEBAUTHN` は vitest API のみ。
+
+### リリース前チェックリスト
+
+```bash
+npm run wire-console:release-check   # vitest 22 件 + Playwright 3 本
+npm run wire-console:build           # SPA 単体（release-check に含む）
+```
+
+| # | 確認 | 期待 |
+|---|------|------|
+| 1 | `npm run wire-console:test` | vitest **22/22** green |
+| 2 | `npm run wire-console:smoke` | Playwright **3/3** green（:9472/:9473/:9474） |
+| 3 | `npm test`（リポジトリ全体） | wire-console 含む CI validate green |
+| 4 | git push 後 CI | `wire-console-smoke` job green |
+| 5 | prod デプロイ前 | 下表 env を本番 IdP / passkey に差し替え（fixture 禁止） |
+
+### 環境変数（正本）
+
+| 変数 | 用途 | dev / smoke | prod |
+|------|------|-------------|------|
+| `WIRE_CONSOLE_AUTH` | `dev` \| `prod` | dev（smoke 9472）· prod（9473/9474） | `prod` |
+| `WIRE_CONSOLE_PROD_ADAPTER` | `oidc` \| `webauthn` \| `legacy_token` | smoke 9473=webauthn · 9474=oidc | 通常 `oidc` |
+| `WIRE_CONSOLE_DEV_PASSKEY` | dev ログイン | 省略時 `orgos-dev` | — |
+| `WIRE_CONSOLE_INCLUDE_TEST_TENANTS` | `lifecycle: test` を Console 一覧に含める | smoke `:9472` のみ `1` | 未設定 |
+| `WIRE_CONSOLE_OIDC_ISSUER` | OIDC issuer | smoke fixture 自動 | 本番 IdP |
+| `WIRE_CONSOLE_OIDC_AUDIENCE` | OIDC audience | `wire-console` | 本番 |
+| `WIRE_CONSOLE_OIDC_JWKS_URL` / `JWKS_JSON` | RS256 公開鍵 | smoke: JSON inline | 本番 JWKS |
+| `WIRE_CONSOLE_OIDC_HS256_SECRET` | HS256 移行用 | vitest のみ | JWKS 設定時は原則禁止（`ALLOW_HS256=1` で例外） |
+| `WIRE_CONSOLE_OIDC_ALLOW_HS256` | JWKS あり HS256 許可 | — | 移行期間のみ `1` |
+| `WIRE_CONSOLE_WEBAUTHN_RP_ID` | WebAuthn rpId | smoke: `localhost` | 本番ホスト名 |
+| `WIRE_CONSOLE_WEBAUTHN_ORIGIN` | origin 検証 | smoke: `http://localhost:9473` | 本番 URL |
+| `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` | JSON 配列 · credential + SPKI | smoke fixture 自動 | 本番 passkey 登録 |
+| `WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET` | テスト secret ログイン | vitest のみ `1` | **禁止** |
+| `WIRE_CONSOLE_E2E_WEBAUTHN` | `/webauthn/e2e-complete` 有効 | vitest のみ `1` | **禁止** |
+| `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN` | `prod_token` 許可 | — | 移行期間のみ `1` |
+| `WIRE_CONSOLE_SMOKE_PORT` | operator smoke | `9472` | — |
+| `WIRE_CONSOLE_WEBAUTHN_SMOKE_PORT` | WebAuthn smoke | `9473` | — |
+| `WIRE_CONSOLE_OIDC_SMOKE_PORT` | OIDC smoke | `9474` | — |
+
+**Smoke fixture（gitignore）:** `.orgos/wire-console-webauthn-smoke.json` · `.orgos/wire-console-oidc-smoke.json` — 各 smoke サーバー起動時に生成。
+
+**Operator 手順:** [runbook-orgos.md §18](../runbook-orgos.md#18-wire-consolelocalhost-bff--9470)
+
+---
+
+**版:** v0.3 · 2026-06-27 · Wave 4 リリースゲート追加
