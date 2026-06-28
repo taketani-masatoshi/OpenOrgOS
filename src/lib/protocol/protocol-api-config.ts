@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   protocolApiClientConfigSchema,
@@ -8,10 +8,16 @@ import {
   type ProtocolTlsCredentials,
 } from "../../../schemas/protocol/protocol-api-config.js";
 import { getProtocolDataDir } from "./paths.js";
-import { readYamlFile } from "../utils.js";
+import { readYamlFile, writeYamlFile } from "../utils.js";
 
 export function getProtocolApiClientConfigPath(): string {
   return join(getProtocolDataDir(), "protocol-api-client.yaml");
+}
+
+export function writeProtocolApiClientConfig(config: ProtocolApiClientConfig): void {
+  const path = getProtocolApiClientConfigPath();
+  mkdirSync(join(path, ".."), { recursive: true });
+  writeYamlFile(path, protocolApiClientConfigSchema.parse(config));
 }
 
 export function loadProtocolApiClientConfig(): ProtocolApiClientConfig {

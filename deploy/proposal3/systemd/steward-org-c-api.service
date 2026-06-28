@@ -1,0 +1,16 @@
+[Unit]
+Description=Steward Org C Protocol API (Proposal 3 · HTTPS + mTLS)
+After=network.target
+
+[Service]
+Type=simple
+User=steward
+WorkingDirectory=/opt/orgos-reference
+EnvironmentFile=/etc/steward/org-c-api.env
+ExecStartPre=/opt/orgos-reference/deploy/protocol-outbox/apply-permissions.sh ${ORGOS_TENANT}
+ExecStart=/usr/bin/npm run proposal3:org-c-api
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

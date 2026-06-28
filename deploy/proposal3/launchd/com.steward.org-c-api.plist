@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.steward.org-c-api</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/npm</string>
+    <string>run</string>
+    <string>proposal3:org-c-api</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/opt/orgos-reference</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>ORGOS_ORG_C_TENANT</key>
+    <string>aiac</string>
+    <key>PROTOCOL_API_PORT</key>
+    <string>9486</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/steward-org-c-api.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/steward-org-c-api.err</string>
+</dict>
+</plist>

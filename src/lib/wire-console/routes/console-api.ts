@@ -23,7 +23,14 @@ import {
   getTenantPeers,
   getTenantSnapshot,
   getTenantWitnessStatus,
+  getTenantWireConsoleScenario,
 } from "../tenant-data.js";
+import {
+  getTenantMailMessageBody,
+  getTenantMailMessages,
+  getTenantMailThreads,
+  type MailFolder,
+} from "../human-mail.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -158,6 +165,16 @@ function handleTenantGet(
     return true;
   }
 
+  if (section === "scenario") {
+    const scenario = getTenantWireConsoleScenario(tenantId);
+    if (!scenario) {
+      json(res, 404, { ok: false, error: "scenario not found" });
+      return true;
+    }
+    json(res, 200, { ok: true, scenario });
+    return true;
+  }
+
   if (section === "outbox") {
     const limit = searchParams.get("limit");
     json(res, 200, {
@@ -202,6 +219,29 @@ function handleTenantGet(
 
   if (section === "witness/status") {
     json(res, 200, { ok: true, ...getTenantWitnessStatus(tenantId) });
+    return true;
+  }
+
+  if (section === "messages") {
+    const folder = (searchParams.get("folder") ?? "all") as MailFolder;
+    json(res, 200, { ok: true, messages: getTenantMailMessages(tenantId, folder) });
+    return true;
+  }
+
+  if (section.startsWith("messages/")) {
+    const messageId = section.slice("messages/".length);
+    const body = getTenantMailMessageBody(tenantId, messageId);
+    if (!body) {
+      json(res, 404, { ok: false, error: "message not found" });
+      return true;
+    }
+    json(res, 200, { ok: true, ...body });
+    return true;
+  }
+
+  if (section === "threads") {
+    const folder = (searchParams.get("folder") ?? "all") as MailFolder;
+    json(res, 200, { ok: true, threads: getTenantMailThreads(tenantId, folder) });
     return true;
   }
 

@@ -142,12 +142,96 @@ export interface NoticeWireTypeOption {
 }
 
 export const NOTICE_TYPES: NoticeWireTypeOption[] = [
-  { value: "contract.execution.notice", label: "contract.execution.notice" },
-  { value: "obligation.acknowledged", label: "obligation.acknowledged" },
-  { value: "invoice.issued", label: "invoice.issued" },
-  { value: "payment.instructed", label: "payment.instructed" },
-  { value: "contract.executed", label: "contract.executed" },
+  { value: "contract.execution.notice", label: "契約履行の通知" },
+  { value: "obligation.acknowledged", label: "義務の受理" },
+  { value: "invoice.issued", label: "請求書の発行" },
+  { value: "payment.instructed", label: "支払いの指示" },
+  { value: "contract.executed", label: "契約の締結" },
 ];
+
+export type MailFolder = "inbox" | "outbox" | "pending" | "witness" | "all" | "threads";
+
+export interface HumanMessageSummary {
+  id: string;
+  folder: "inbox" | "outbox" | "pending" | "witness" | "all";
+  kind: "envelope" | "approval" | "witness";
+  thread_id: string;
+  subject: string;
+  preview: string;
+  counterparty: string;
+  counterparty_id?: string;
+  recorded_at: string;
+  status_label: string;
+  status_tone: "neutral" | "pending" | "success" | "warning" | "error";
+  event_id?: string;
+  approval_id?: string;
+  contract_id?: string;
+  transaction_id?: string;
+  wire_event_id?: string;
+  can_approve?: boolean;
+  can_send?: boolean;
+}
+
+export interface MailThreadSummary {
+  thread_id: string;
+  title: string;
+  counterparty: string;
+  message_count: number;
+  last_at: string;
+  status_label: string;
+  status_tone: HumanMessageSummary["status_tone"];
+  contract_id?: string;
+  transaction_id?: string;
+  messages: HumanMessageSummary[];
+}
+
+export interface HumanMessageBody {
+  id: string;
+  subject: string;
+  from_label: string;
+  to_label: string;
+  recorded_at: string;
+  body_text: string;
+  status_label: string;
+  status_tone: HumanMessageSummary["status_tone"];
+  workflow_summary: string[];
+  event_id?: string;
+  approval_id?: string;
+  wire_event_id?: string;
+  peer_id?: string;
+  contract_id?: string;
+  can_approve?: boolean;
+  can_send?: boolean;
+  can_witness?: boolean;
+}
+
+export interface WireConsoleScenario {
+  as_of: string;
+  scenario_id: string;
+  title: string;
+  org_role: "sender" | "receiver" | "witness";
+  org_role_ja: string;
+  counterparty_label: string;
+  contract_id?: string;
+  flow_steps: string[];
+  anchors: {
+    inter_org_event_id: string;
+    ack_event_id?: string;
+  };
+  mail_hints: {
+    inbox?: string;
+    outbox?: string;
+    pending?: string;
+    witness?: string;
+    threads?: string;
+  };
+  witness?: {
+    anchor_event_id: string;
+    hub_ids: string[];
+    this_org_side?: "sent" | "received" | "none";
+    note?: string;
+  };
+}
 
 export function formatWireApprovalStatus(status: string, scope?: string): string {
   if (scope === "wire" && status === "completed") return "transmitted";

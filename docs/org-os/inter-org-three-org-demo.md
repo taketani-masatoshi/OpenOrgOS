@@ -1,8 +1,8 @@
-# 3-org Wire デモ — CLI · Wire Console 手順
+# Proposal 3 — 3-org Wire デモ — Proposal 3（Org C relay + trust bundle + mTLS）
 
-**対象:** mal ↔ southwood（inter-org Phase 1）+ mal → southwood relay → aiac（mesh Phase 2）  
-**正本スクリプト:** `scripts/demo-three-org-wire.ts` · `npm run demo:three-org-wire`  
-**Wire Console 計画:** [wire-console-plan.md](wire-console-plan.md)
+**対象:** MAL **送信** · southwood **受信** · AIAC **Org C（中立 relay + WTA）** — 履行通知 **1通のみ**  
+**正本スクリプト:** `scripts/seed-wire-console-three-org-demo.ts` · `npm run demo:wire-console-three-org`  
+**CLI フルデモ（ack 返信あり）:** `npm run demo:inter-org` · [inter-org-two-org-demo.md](inter-org-two-org-demo.md)
 
 ---
 
@@ -10,78 +10,57 @@
 
 | 項目 | 値 |
 |------|-----|
-| Wire Console | `http://127.0.0.1:9470`（BFF · 人間向け UI） |
-| Protocol API | `http://127.0.0.1:9476`（peer 自動配送 · metrics） |
-| 有効テナント | `southwood` · `aiac`（`wire_console: true`） |
-| デモ seed | `npm run demo:three-org-wire` で Hub · peer · mesh 起動 |
+| Wire Console | `http://127.0.0.1:9470` |
+| Org C Protocol API | `https://127.0.0.1:9486`（trust bundle + relay · **mTLS 必須**） |
+| 有効テナント | **mal** · **southwood** · **aiac**（`wire_console: true`） |
+| デモ seed | `npm run demo:wire-console-three-org` |
 
 ```bash
+npm run demo:wire-console-three-org
 npm run wire-console:build
 npm run orgos -- wire console start
-# 別ターミナル
-npm run demo:three-org-wire
 ```
 
----
+### 3 社の役割（Proposal 3）
 
-## Phase 1 — inter-org（Console のみ）
+| タブ | 役割 | Wire Console で見るもの |
+|------|------|-------------------------|
+| **mal** | **送信当事者** | **送信** 1件 — Org C relay へ POST（mTLS） |
+| **southwood** | **受信当事者** | **受信** 1件 — Org C relay から pull（mTLS） |
+| **aiac** | **Org C（中立）** | **確認待ち** 1件 · trust bundle 運用 |
 
-**southwood タブ** で以下を実行:
-
-1. **ログイン** — passkey `orgos-dev` · approver `南木健一`（southwood 代表）
-2. **Propose notice** — peer `PEER-002` · type `contract.execution.notice` · contract `CTR-012`
-3. **Wire approvals** — 作成された NOTICE を **Approve**
-4. **Outbox** — provenance 付き envelope が追加されることを確認
-5. **Event detail → Workflow** — Approval → Outbox → Delivery → Witness ステップを追跡
-6. **Delivery** — 未配送なら peer + event_id で Deliver、または **Flush pending**
-7. **Witness** — event_id を指定して Register attestation · Verify
-
-Phase 1 完了条件: southwood outbox に event · mal inbox に同一 event_id（Protocol API / webhook 稼働時）
+共有 **event_id:** `a1b2c3d4-e5f6-4789-a012-3456789abcde`  
+契約: **CTR-012**（`protocol.witness_trust_bundle_url` · `resilience_sla: gold`）
 
 ---
 
-## Phase 2 — mesh → aiac
+## 流れ（1通 · Proposal 3）
 
-Phase 2 は **mesh relay** 経路のため、現状は CLI デモと併用:
+1. **AIAC（Org C）** — dev PKI 生成 · WTA 初期化 · HUB-A/B certify · `protocol api-serve :9486`（HTTPS + mTLS）
+2. **MAL / southwood** — `protocol-api-client.yaml` に client cert · `flushWireRelayInbox` / relay POST は mTLS
+3. **MAL** — 起案 → 承認 → outbox → **Org C `/relay/enqueue` へ配送**
+4. **southwood** — **`flushWireRelayInbox`** で Org C から受信 · witness pool は trust bundle から pin
+5. **AIAC** — 第三者として **確認待ち**（公証登録）
+
+Mac mini 側は **アウトバウンド**（relay POST / pull）のみ。配送正本は各 Org の `tenants/`、relay キューは Org C の `wire-relay-queue.yaml`。
+
+---
+
+## 常駐デーモン（本番 / Mac mini）
 
 ```bash
-npm run demo:three-org-wire   # Phase 2 まで一括
+npm run proposal3:setup          # PKI + client yaml + env 生成
+npm run proposal3:org-c-api      # Org C API（別ホストでも可）
+npm run proposal3:party-relay -- mal
+npm run proposal3:party-relay -- southwood
 ```
 
-Console では **aiac タブ** で inbox 到着を確認。mesh 配送自体は `demo:three-org-wire` が relay + webhook を起動。
+systemd / launchd 手順: [deploy/proposal3/README.md](../../deploy/proposal3/README.md)
 
 ---
 
-## 認証モード
+## 認証 · SSE · トラブルシュート
 
-| モード | 環境変数 | ログイン |
-|--------|----------|----------|
-| **dev**（デフォルト） | — | POST `/console/v1/auth/login` `{ passkey, approver_id }` |
-| **prod** | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_ADAPTER=oidc` | `{ id_token, approver_id }` — **passkey 不可** |
-| legacy | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1` | `prod_token`（非推奨） |
+[runbook-orgos.md §18 Wire Console](../runbook-orgos.md) · [resilience-stack.md](resilience-stack.md)（Org C PKI · mTLS 本番）
 
-```bash
-WIRE_CONSOLE_AUTH=prod WIRE_CONSOLE_PROD_TOKEN='your-token' \
-  npm run orgos -- wire console start
-```
-
----
-
-## ライブ更新（SSE）
-
-ログイン後、SPA は `GET /console/v1/events/stream`（SSE）を購読。snapshot fingerprint 変更時にテナントデータを自動 refresh。SSE 切断時は 5 秒ポーリングにフォールバック。
-
----
-
-## トラブルシュート
-
-| 症状 | 確認 |
-|------|------|
-| Console 401 | セッション cookie · 再ログイン |
-| Approve 403 | approver が `company.yaml`  authorized と一致するか |
-| Deliver queued | peer inbound URL · Protocol API 稼働 · Flush pending |
-| Witness FAIL | Hub 起動 · `witness-pool.yaml` · flush witness pending |
-
-詳細: [runbook-orgos.md](../runbook-orgos.md) §18
-
-*版: 2026-06-28 · Wire Console Wave 3*
+*版: 2026-06-28 · Proposal 3（Org C relay + trust bundle + mTLS）*

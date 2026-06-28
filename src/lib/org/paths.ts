@@ -20,3 +20,7 @@ export function getOrgAuditBridgeStatePath(): string {
 export function getOrgAuditBridgeErrorsPath(): string {
   return join(getOrgDataDir(), "audit-bridge-errors.yaml");
 }
+
+export function getWireConsoleScenarioPath(): string {
+  return join(getOrgDataDir(), "wire-console-scenario.yaml");
+}

@@ -1,9 +1,9 @@
 orgs:
   - org_id: mal
     org_uri: steward://tenant/mal
-    protocol_public_key: MCowBQYDK2VwAyEA/375lxPTzLyMMxUJ+TPTQu36ujPUlGnAwM/dFel+0N0=
-    registered_at: 2026-06-26T23:11:43.304Z
+    protocol_public_key: MCowBQYDK2VwAyEAVY/xx8JLtDbHsHQP6MqBtqBVjHnUxtpj1SGiOQftrng=
+    registered_at: 2026-06-28T09:17:04.128Z
   - org_id: PEER-001
     org_uri: steward://tenant/southwood
-    protocol_public_key: MCowBQYDK2VwAyEAGnTdQyNdbTgZWOH1XIBTx3tds2bhQLSo3Q6BH9tQ/Mo=
-    registered_at: 2026-06-26T23:11:43.377Z
+    protocol_public_key: MCowBQYDK2VwAyEAcoAU5bEx/cOLiCYxFUaRjh5qSNlLsImAP+QPb7JMzeA=
+    registered_at: 2026-06-28T09:17:04.175Z

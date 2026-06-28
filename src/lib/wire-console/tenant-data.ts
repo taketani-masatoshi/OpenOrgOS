@@ -1,5 +1,9 @@
+import { existsSync } from "node:fs";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
+import { wireConsoleScenarioSchema } from "../../../schemas/org/wire-console-scenario.js";
+import { getWireConsoleScenarioPath } from "../org/paths.js";
+import { readYamlFile } from "../utils.js";
 import { exportInboxEntries, exportOutboxEntries } from "../protocol/inbox-export.js";
 import { loadOutboxProvenance } from "../protocol/outbox-provenance.js";
 import { getProtocolOutboxDir } from "../protocol/paths.js";
@@ -112,6 +116,14 @@ export function getTenantSnapshot(tenantId: string) {
       },
       witness_pool: witnessPool,
     });
+  });
+}
+
+export function getTenantWireConsoleScenario(tenantId: string) {
+  return withWireConsoleTenant(tenantId, () => {
+    const path = getWireConsoleScenarioPath();
+    if (!existsSync(path)) return undefined;
+    return readYamlFile(path, wireConsoleScenarioSchema);
   });
 }
 

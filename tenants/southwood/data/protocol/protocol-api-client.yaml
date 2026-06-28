@@ -1,0 +1,5 @@
+tls:
+  cert_path: /tmp/steward-p3-pki-Me2IKA/clients/southwood-client.pem
+  key_path: /tmp/steward-p3-pki-Me2IKA/clients/southwood-client.key
+  ca_path: /tmp/steward-p3-pki-Me2IKA/ca.pem
+  reject_unauthorized: false

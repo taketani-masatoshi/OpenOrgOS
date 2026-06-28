@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.steward.party-relay</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/npm</string>
+    <string>run</string>
+    <string>proposal3:party-relay</string>
+    <string>--</string>
+    <string>mal</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/opt/orgos-reference</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>ORGOS_TENANT</key>
+    <string>mal</string>
+    <key>RELAY_INTERVAL_SEC</key>
+    <string>30</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/steward-party-relay.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/steward-party-relay.err</string>
+</dict>
+</plist>

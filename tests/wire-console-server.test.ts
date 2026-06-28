@@ -11,8 +11,6 @@ import {
 import { resetWebAuthnChallengesForTests } from "../src/lib/wire-console/auth/webauthn.js";
 import { resetWebAuthnRegisterChallengesForTests } from "../src/lib/wire-console/auth/webauthn-register.js";
 import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
-import { resetWebAuthnRegisterChallengesForTests } from "../src/lib/wire-console/auth/webauthn-register.js";
-import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
 import { listWireConsoleTenants } from "../src/lib/wire-console/tenant-registry.js";
 import {
   resetWireConsoleTestTenant,
@@ -148,6 +146,41 @@ describe("wire console server", () => {
     const snapBody = (await snapshot.json()) as { counts: { outbox: number; inbox: number } };
     expect(snapBody.counts.inbox).toBeGreaterThan(0);
     expect(snapBody.counts.outbox).toBeGreaterThan(0);
+  });
+
+  it("returns human mail messages and threads for test tenant", async () => {
+    const server = await startWireConsoleServer({ port: 0 });
+    close = server.close;
+    const cookie = await loginDevCookie(server.url);
+
+    const messages = await fetch(
+      `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/messages?folder=all`,
+      { headers: { cookie } }
+    );
+    expect(messages.status).toBe(200);
+    const msgBody = (await messages.json()) as {
+      messages: { id: string; subject: string; folder: string }[];
+    };
+    expect(msgBody.messages.length).toBeGreaterThan(0);
+    expect(msgBody.messages.some((m) => m.folder === "inbox")).toBe(true);
+
+    const threads = await fetch(
+      `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/threads?folder=all`,
+      { headers: { cookie } }
+    );
+    expect(threads.status).toBe(200);
+    const threadBody = (await threads.json()) as { threads: { thread_id: string; messages: unknown[] }[] };
+    expect(threadBody.threads.length).toBeGreaterThan(0);
+
+    const firstId = msgBody.messages.find((m) => m.folder === "outbox")!.id;
+    const detail = await fetch(
+      `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/messages/${firstId}`,
+      { headers: { cookie } }
+    );
+    expect(detail.status).toBe(200);
+    const detailBody = (await detail.json()) as { subject: string; body_text: string };
+    expect(detailBody.subject.length).toBeGreaterThan(0);
+    expect(detailBody.body_text.length).toBeGreaterThan(0);
   });
 
   it("propose and approve wire notice on isolated test tenant", async () => {

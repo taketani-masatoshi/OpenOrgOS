@@ -1,0 +1,15 @@
+as_of: 2026-06-28
+scenario_id: three-org-one-message
+title: オフィス賃貸借 — 履行通知を送信
+org_role: sender
+org_role_ja: 送信側
+counterparty_label: 株式会社サウスウッド
+contract_id: CTR-012
+flow_steps:
+  - ① 本社から履行通知を Org C relay 経由で 1 通送信
+  - ② 相手（サウスウッド）が relay から受信 · 公証は AIAC（Org C）
+anchors:
+  inter_org_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+mail_hints:
+  outbox: 「履行通知（オフィス賃貸借）」— この組織の唯一の送信
+  inbox: （送信側 — 受信はサウスウッドのタブ）

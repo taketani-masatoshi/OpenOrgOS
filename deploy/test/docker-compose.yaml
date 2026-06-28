@@ -1,0 +1,38 @@
+# OrgOS test suite in Docker
+#
+#   npm run test:docker              # Vitest (full suite)
+#   npm run test:docker -- tests/foo.test.ts
+#   npm run test:docker:smoke        # Playwright Wire Console smoke (profile)
+
+services:
+  test:
+    build:
+      context: ../..
+      dockerfile: deploy/test/Dockerfile
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - orgos-test-node-modules:/app/node_modules
+    environment:
+      CI: "true"
+    command: ["npm", "test"]
+
+  smoke:
+    profiles: [smoke]
+    build:
+      context: ../..
+      dockerfile: deploy/test/Dockerfile
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - orgos-test-node-modules:/app/node_modules
+    environment:
+      CI: "true"
+      ORGOS_DOCKER_INSTALL_PLAYWRIGHT: "1"
+      WIRE_CONSOLE_SMOKE_PORT: "9472"
+      WIRE_CONSOLE_WEBAUTHN_SMOKE_PORT: "9473"
+      WIRE_CONSOLE_OIDC_SMOKE_PORT: "9474"
+    command: ["npm", "run", "wire-console:smoke"]
+
+volumes:
+  orgos-test-node-modules:

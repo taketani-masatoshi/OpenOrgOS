@@ -1,0 +1,11 @@
+node_modules
+.git
+.orgos
+.orgos-ci
+test-results
+playwright-report
+apps/wire-console/dist
+data/proposal3-pki
+**/records/**
+scratch/*
+!scratch/00-README.md

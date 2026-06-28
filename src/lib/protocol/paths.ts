@@ -61,6 +61,11 @@ export function getWireRelayYamlPath(): string {
   return join(getProtocolDataDir(), "wire-relay-queue.yaml");
 }
 
+/** Org C relay — envelope blobs referenced by wire-relay-queue entries. */
+export function getProtocolRelayStoreDir(): string {
+  return join(getProtocolDataDir(), "relay-store");
+}
+
 export function getWitnessTrustDir(): string {
   return join(getProtocolDataDir(), "witness-trust");
 }

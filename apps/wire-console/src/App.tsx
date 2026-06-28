@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type AuthConfig, type TenantSummary, type User } from "./api";
-import { TenantDashboard } from "./TenantDashboard";
+import { MailWorkbench } from "./MailWorkbench";
 import { loginWithWebAuthn } from "./webauthn-login";
 import { registerWithWebAuthn } from "./webauthn-register";
 
@@ -230,7 +230,7 @@ export function App() {
           Sign out
         </button>
       </header>
-      <TenantDashboard tenants={tenants} />
+      <MailWorkbench tenants={tenants} />
     </div>
   );
 }

@@ -11,26 +11,30 @@ test.describe("wire console smoke", () => {
 
     await expect(page.getByRole("heading", { name: "Wire Console" })).toBeVisible();
     await page.getByRole("button", { name: "wire-console-test" }).click();
-    await expect(page.getByText("Propose notice")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: "新規作成" })).toBeVisible({ timeout: 15_000 });
 
-    const proposePanel = page.locator("section.panel").filter({ hasText: "Propose notice" });
-    await proposePanel.locator("label").filter({ hasText: "peer" }).locator("select").selectOption("PEER-001");
-    await proposePanel.getByPlaceholder("CTR-012").fill("CTR-099");
-    await proposePanel.getByRole("button", { name: "Propose" }).click();
+    await page.getByRole("button", { name: "新規作成" }).click();
+    const composeDialog = page.getByRole("dialog", { name: "新規作成" });
+    await composeDialog.getByLabel("宛先").selectOption("PEER-001");
+    await composeDialog.getByLabel("契約 ID").fill("CTR-099");
+    await composeDialog.getByRole("button", { name: "送信申請" }).click();
 
-    await expect(proposePanel.getByText(/Created NOTICE-/)).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "送信待ち" }).click();
+    await expect(page.getByText("承認待ち").first()).toBeVisible({ timeout: 10_000 });
 
-    const approvalsPanel = page.locator("section.panel").filter({ hasText: "Wire approvals" });
-    await expect(approvalsPanel.getByText("pending_approval")).toBeVisible({ timeout: 10_000 });
-    await approvalsPanel.getByRole("button", { name: "Approve" }).first().click();
-    await expect(approvalsPanel.getByText("pending_approval")).not.toBeVisible({ timeout: 15_000 });
-    await expect(approvalsPanel.getByText("transmitted")).toBeVisible({ timeout: 15_000 });
+    const pendingRow = page.locator(".message-row").filter({ hasText: "承認待ち" }).first();
+    await pendingRow.click();
+    await page.getByRole("button", { name: "承認" }).click();
+    await expect(page.getByText("承認しました").or(page.getByText("送信済み"))).toBeVisible({
+      timeout: 15_000,
+    });
 
-    const wireEventId = await approvalsPanel.locator("[data-wire-event-id]").getAttribute("data-wire-event-id");
+    const wireEventId = await page.locator("[data-wire-event-id]").first().getAttribute("data-wire-event-id");
     expect(wireEventId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     );
 
+    await page.getByText("配送・第三者証明（詳細）").click();
     const deliveryPanel = page.locator("section.panel").filter({ hasText: "Delivery" });
     await expect(deliveryPanel.getByText(/pending [1-9]/)).toBeVisible({ timeout: 15_000 });
     await deliveryPanel.getByRole("button", { name: "Flush pending" }).click();

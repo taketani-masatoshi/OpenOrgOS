@@ -2,7 +2,7 @@ id: aiac
 name: AIAC
 legal_name: AIAC
 display_name: AIAC
-description: Inter-org protocol デモ — 第3組織（mesh relay · 多当事者 wire 用 L1 ダミー）
+description: Inter-org protocol デモ — **第三者証人（Witness）** · Wire Console 3 社デモでは HUB 運用視点
 default: false
 lifecycle: skeleton
 wire_console: true

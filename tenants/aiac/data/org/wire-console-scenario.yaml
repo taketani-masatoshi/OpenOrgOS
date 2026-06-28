@@ -1,0 +1,25 @@
+as_of: 2026-06-28
+scenario_id: three-org-one-message
+title: Org C — 中立 relay · trust bundle · 公証
+org_role: witness
+org_role_ja: Org C（中立）
+counterparty_label: MAL ↔ サウスウッド（当事者外 · relay 運用）
+contract_id: CTR-012
+flow_steps:
+  - ① trust bundle で HUB-A/B を認定
+  - ② relay API で MAL → southwood 配送
+  - ③ 確認待ち 1 件 — 公証機関 A へ登録
+anchors:
+  inter_org_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+mail_hints:
+  witness: 確認待ち 1 件 — trust bundle 経由の Hub 公証
+  inbox: （当事者ではない — 受信は空）
+  outbox: （当事者ではない — 送信は空）
+  threads: 同一の取引で mal / southwood と対応
+witness:
+  anchor_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  hub_ids:
+    - HUB-A
+    - HUB-B
+  this_org_side: none
+  note: Org C relay + trust bundle 正本 · メッセージから公証を登録

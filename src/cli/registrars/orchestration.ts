@@ -89,6 +89,8 @@ import {
   runProtocolCommunityReadiness,
   runProtocolWitnessTrustRevoke,
   runProtocolTlsRotate,
+  runProtocolTlsInitProposal3,
+  runProtocolTlsVerify,
 } from "../../commands/protocol.js";
 import {
   runHubServe,
@@ -1204,6 +1206,34 @@ export function registerOrchestrationCommands(program: Command): void {
     );
 
   const protocolTlsCmd = protocolCmd.command("tls").description("Protocol API TLS lifecycle");
+  protocolTlsCmd
+    .command("verify")
+    .description("Verify HTTPS trust bundle (+ mTLS metrics when client cert configured)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--url <url>", "Trust bundle URL (default: contract or https://127.0.0.1:9486/...)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTlsVerify({
+        tenant: opts.tenant,
+        url: opts.url,
+        json: opts.json,
+      })
+    );
+  protocolTlsCmd
+    .command("init-proposal3")
+    .description("Generate dev PKI + protocol-api-client.yaml for Proposal 3 (Org C mTLS)")
+    .option("--org-c <tenant>", "Org C tenant id", "aiac")
+    .option("--client <id>", "Party tenant with client cert (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--force", "Regenerate existing PKI material")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTlsInitProposal3({
+        orgCTenant: opts.orgC,
+        clients: opts.client.length ? opts.client : undefined,
+        force: opts.force,
+        json: opts.json,
+      })
+    );
   protocolTlsCmd
     .command("rotate")
     .description("Write TLS cert rotation checklist (production)")

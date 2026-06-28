@@ -2,8 +2,9 @@ id: mal
 name: 株式会社MAL
 legal_name: 株式会社MAL
 display_name: MAL
-description: 不動産賃貸（番町 PROP-001）· 旅館業（亀沢 PROP-002）· サービス事業
+description: 不動産賃貸（番町 PROP-001）· 旅館業（亀沢 PROP-002）· サービス事業 · inter-org デモでは **貸主**
 default: true
+wire_console: true
 jurisdiction: JP
 entity_form: kk
 display_language: ja

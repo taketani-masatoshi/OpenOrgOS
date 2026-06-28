@@ -1,23 +1,10 @@
-as_of: 2026-06-28
 peers:
   - peer_id: PEER-001
-    display_name: 株式会社サウスウッド
-    jurisdiction: JP
-    stakeholder_id: STK-001
-    org_uri: steward://tenant/southwood
-  - peer_id: PEER-004
-    display_name: Southwood mesh relay
+    display_name: Southwood
     jurisdiction: JP
     org_uri: steward://tenant/southwood
     inbound_endpoints:
-      - url: http://127.0.0.1:52141/relay
+      - url: https://127.0.0.1:46115/protocol/v1/relay/enqueue
         priority: 1
         mode: relay
-  - peer_id: PEER-003
-    display_name: AIAC株式会社
-    jurisdiction: JP
-    org_uri: steward://tenant/aiac
-    inbound_endpoints:
-      - url: http://127.0.0.1:52142/webhook
-        priority: 1
-        mode: push
+as_of: 2026-06-28

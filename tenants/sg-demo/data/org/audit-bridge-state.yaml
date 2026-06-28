@@ -39,4 +39,6 @@ bridged_audit_ids:
   - AUD-1782608648909-urao7slw
   - AUD-1782608808359-ge1bvdtx
   - AUD-1782610140557-ensonhsg
+  - AUD-1782638131772-cub5u9v5
+  - AUD-1782639040251-2zsbfbzl
 max_bridged_ids: 5000

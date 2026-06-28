@@ -3,9 +3,9 @@ description: Active tenant modules, ISO, and regulations — token saving
 alwaysApply: true
 ---
 
-# テナント `mal` — アクティブコンテキストのみ読取
+# テナント `demo` — アクティブコンテキストのみ読取
 
-**生成:** `npm run orgos -- modules sync-context` · 正本: `tenants/mal/rules/active_context.md`
+**生成:** `npm run orgos -- modules sync-context` · 正本: `tenants/demo/rules/active_context.md`
 
 ## 禁止（トークン節約）
 
@@ -19,14 +19,10 @@ alwaysApply: true
 ## 有効業務モジュール
 
 - **rental:** `steward/modules/rental/agent.md`（Skill は必要時のみ同 `skills/`）
-- **hospitality:** `steward/modules/hospitality/agent.md`（Skill は必要時のみ同 `skills/`）
-- **travel_booking:** `steward/modules/travel_booking/agent.md`（Skill は必要時のみ同 `skills/`）
 
 ## 有効 ISO
 
-- **ISO-21401:** テンプレ `steward/standards/iso/ISO-21401/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-21401/`
-- **ISO-27001:** テンプレ `steward/standards/iso/ISO-27001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-27001/`
-- **ISO-9001:** テンプレ `steward/standards/iso/ISO-9001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-9001/`
+（なし — standards.yaml で有効化）
 
 ## 有効社内規程
 
@@ -38,12 +34,7 @@ alwaysApply: true
 - **REG-006** 利益相反取引規程: 施行 `docs/company/regulations/riekisohan-torihiki-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-006-riekisohan/template.md` は改定時のみ）
 - **REG-007** 文書管理規程: 施行 `docs/company/regulations/bunsho-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-007-bunsho-kanri/template.md` は改定時のみ）
 - **REG-008** 旅費規程: 施行 `docs/company/regulations/ryohi-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-008-ryohi/template.md` は改定時のみ）
-- **REG-009** 情報セキュリティ管理規程: 施行 `docs/company/regulations/joho-security-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-009-joho-security/template.md` は改定時のみ）
 - **REG-010** 個人情報保護規程: 施行 `docs/company/regulations/kojin-joho-hogo-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-010-kojin-joho/template.md` は改定時のみ）
-- **REG-011** 品質管理規程: 施行 `docs/company/regulations/hinshitsu-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-011-hinshitsu/template.md` は改定時のみ）
-- **REG-014** 環境・エネルギー管理規程: 施行 `docs/company/regulations/kankyo-energy-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-014-kankyo-energy/template.md` は改定時のみ）
-- **REG-016** 内部監査規程: 施行 `docs/company/regulations/naibu-kansa-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-016-naibu-kansa/template.md` は改定時のみ）
-- **REG-012** 宿泊運営・サステナビリティ規程: 施行 `docs/company/regulations/shukuhaku-unyo-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/hospitality/REG-012-shukuhaku-unyo/template.md` は改定時のみ）
 
 ## コア Agent（常時）
 

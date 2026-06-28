@@ -1,48 +1,10 @@
 id: CTR-012
-name: オフィス賃貸借契約（本社区画 · MAL）
-counterparty: 株式会社MAL
-counterparty_type: company
+name: Test
+counterparty: Peer
 type: rental
 status: executed
-start_date: 2026-04-01
-end_date: 2027-03-31
-auto_renewal: true
-owner: 段燕燕
-monthly_cost: 85000
-compensation:
-  type: monthly
-  amount: 85000
-  tax_included: false
-  payment_terms: 毎月末締め・翌月25日振込。
-scope_summary: |
-  株式会社MAL 本社ビル内オフィス区画約15㎡を借受。
-  共用部（会議室・受付）利用ルールは別紙。
-documents:
-  draft: docs/contracts/CTR-012/01-draft.md
-  executed: docs/contracts/CTR-012/02-executed.md
-executed_date: 2026-06-25
-risk:
-  risk_level: low
-  notes: 更新時の賃料改定条項・原状回復範囲を明記。
-notes: |-
-  Inter-org protocol デモ契約。サウスウッド＝借主、MAL＝貸主。
-  [protocol demo] executed for inter-org demo · peer mal
+start_date: "2026-01-01"
+executed_date: "2026-01-15"
+monthly_cost: 50000
 protocol:
-  peer_id: PEER-001
-  resilience_sla: silver
-  witness_hubs:
-    - hub_id: HUB-A
-      hub_url: http://127.0.0.1:9474
-    - hub_id: HUB-B
-      hub_url: http://127.0.0.1:9475
-  relay_org_uri: org:southwood:relay
-  allowed_event_types:
-    - org.transaction.recorded
-    - org.identity.presented
-    - org.authority.delegated
-  allowed_transaction_types:
-    - steward.contract.executed
-    - steward.contract.execution.notice
-    - steward.obligation.acknowledged
-  allowed_payload_namespaces:
-    - steward.contract
+  witness_trust_bundle_url: https://127.0.0.1:46115/protocol/v1/trust/bundle

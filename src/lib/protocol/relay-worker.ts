@@ -1,6 +1,6 @@
 import { type RelayCycleMetrics } from "../../../schemas/protocol/relay-state.js";
 import { loadRelayState, saveRelayState } from "./relay-state.js";
-import { flushWirePending, deliverProtocolEnvelopeWithRelay } from "./transport.js";
+import { flushWirePending, deliverProtocolEnvelopeWithRelay, pullOrgCRelayInboxIfConfigured } from "./transport.js";
 import { flushWitnessPending } from "./witness-client.js";
 import { listWirePending } from "./wire-queue.js";
 import { listWitnessPending } from "./witness-queue.js";
@@ -26,6 +26,7 @@ export async function runRelayCycle(opts?: {
   defaultSlaTier?: ResilienceSlaTier;
 }): Promise<RelayCycleResult> {
   const wireFlushed = await flushWirePending();
+  const relayPulled = await pullOrgCRelayInboxIfConfigured();
   const witnessFlushed = await flushWitnessPending();
 
   const reconcileAlerts: RelayCycleResult["reconcile_alerts_detail"] = [];
@@ -83,6 +84,7 @@ export async function runRelayCycle(opts?: {
     witness_pending: listWitnessPending().length,
     sla_failures: slaFailures,
     reconcile_alerts: reconcileAlerts.length,
+    relay_pulled: relayPulled,
   };
 
   const state = loadRelayState();
@@ -109,7 +111,7 @@ export async function runRelayDaemon(opts: RelayDaemonOptions = {}): Promise<voi
   while (cycles < maxCycles) {
     const result = await runRelayCycle({ reconcile: opts.reconcile });
     console.log(
-      `[relay] wire +${result.wire_flushed} witness +${result.witness_flushed} · pending w=${result.wire_pending} v=${result.witness_pending} · sla_fail=${result.sla_failures}`
+      `[relay] wire +${result.wire_flushed} witness +${result.witness_flushed} relay_pull +${result.relay_pulled} · pending w=${result.wire_pending} v=${result.witness_pending} · sla_fail=${result.sla_failures}`
     );
     cycles++;
     if (cycles >= maxCycles) break;

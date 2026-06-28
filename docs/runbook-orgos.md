@@ -154,14 +154,61 @@ wire_governance_policy:
 
 ---
 
-## 12. TLS 証明書ローテーション
+## 12. TLS 証明書ローテーション（本番）
+
+**Proposal 3 正本:** [resilience-stack.md](org-os/resilience-stack.md) · [deploy/proposal3/README.md](../deploy/proposal3/README.md)
 
 ```bash
-npm run orgos -- --tenant mal protocol tls rotate
-# → data/protocol/tls/rotation-meta.json（チェックリスト）
-# ACME / 内部 CA で server.crt / server.key を更新後:
-npm run orgos -- --tenant mal protocol api-serve --tls-cert ... --tls-key ...
+# ローテーション計画（チェックリスト JSON）
+npm run orgos -- --tenant aiac protocol tls rotate   # Org C
+npm run orgos -- --tenant mal protocol tls rotate    # 当事者 client
+
+# dev PKI 再生成（本番禁止）
+npm run orgos -- protocol tls init-proposal3 --force
+
+# 検証（Org C API 起動中）
+npm run orgos -- --tenant mal protocol tls verify
+npm run proposal3:daemon-smoke
 ```
+
+`rotation-meta.json` → `tenants/{id}/data/protocol/tls/`  
+本番: ACME / 内部 CA で PEM を更新 → systemd / launchd 再起動 → `tls verify` → `daemon-smoke`
+
+---
+
+## 19. Proposal 3 常駐（Org C · Mac mini relay）
+
+| サービス | ポート | テナント |
+|----------|--------|----------|
+| Org C Protocol API | **9486** (HTTPS + mTLS) | **aiac** |
+| Wire Console BFF | 9470 | mal / southwood / aiac |
+
+```bash
+npm run proposal3:setup
+npm run proposal3:org-c-api              # ターミナル 1
+npm run proposal3:party-relay -- mal     # ターミナル 2
+npm run proposal3:party-relay -- southwood
+
+# macOS launchd（24h 試験前ゲート）
+npm run proposal3:daemon-smoke
+bash deploy/proposal3/launchd/install-macos.sh mal
+bash deploy/proposal3/launchd/install-macos.sh aiac   # Org C API
+```
+
+24h 試験: launchd ロード後 · `launchctl list | grep steward` · ログ `/tmp/steward-*.log` · 翌日 `protocol tls verify`
+
+---
+
+## 20. Docker テスト
+
+```bash
+npm run test:docker                                          # Vitest 全件
+npm run test:docker -- tests/protocol-relay-org-c.test.ts  # 特定ファイル
+npm run test:docker:smoke                                    # Playwright
+```
+
+CI: `.github/workflows/validate.yml` · job `test-docker`（mTLS 関連 subset）  
+正本: [deploy/test/docker-compose.yaml](../deploy/test/docker-compose.yaml)
 
 ---
 
@@ -256,7 +303,8 @@ CI: `npm run validate:protocol:tenants` — 正本 `steward/platform/protocol/ci
 | Wire Console smoke（operator） | **9472** | Playwright / CI · dev フロー + witness |
 | Wire Console smoke（WebAuthn） | **9473** | Playwright / CI · prod passkey · CDP 仮想 authenticator |
 | Wire Console smoke（OIDC） | **9474** | Playwright / CI · prod OIDC id_token · RS256 + JWKS |
-| Protocol API | 9476 | peer 自動 ingest · metrics · deliver |
+| **Org C Protocol API（Proposal 3）** | **9486** | aiac · HTTPS trust bundle + mTLS relay |
+| Protocol API（peer 汎用） | 9476 | peer 自動 ingest · metrics · deliver |
 
 > Witness Hub デモは **19482/19483**（smoke fixture）— 本番 Hub デプロイは [witness-hub-operations.md](org-os/witness-hub-operations.md) を参照（ポート 9474 は Hub 例とも衝突しうるため smoke OIDC は localhost のみ）。
 

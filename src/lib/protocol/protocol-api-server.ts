@@ -1,18 +1,20 @@
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createServer as createHttpsServer, type ServerOptions } from "node:https";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type { TLSSocket } from "node:tls";
 import { exportInboxEntries, exportOutboxEntries } from "./inbox-export.js";
-import { listWireRelayPending, markWireRelayDelivered } from "./wire-relay-store.js";
-import { getWitnessTrustBundlePath } from "./paths.js";
+import { listWireRelayPending, markWireRelayDelivered, enqueueWireRelay } from "./wire-relay-store.js";
+import { getWitnessTrustBundlePath, getProtocolRelayStoreDir } from "./paths.js";
 import { loadTransactionsRegistry } from "./transactions.js";
 import { loadRelayState } from "./relay-state.js";
 import { listWirePending } from "./wire-queue.js";
 import { listWitnessPending } from "./witness-queue.js";
 import { countOpenReconcileAlerts } from "./reconcile-alerts-store.js";
-import { ingestWebhook } from "../webhook.js";
 import { getTenantId, setTenantId } from "../tenant.js";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
+import { serializeEventEnvelope } from "./envelope.js";
+import { envelopeDigest } from "./canonical.js";
 import type { ProtocolApiServerConfig } from "../../../schemas/protocol/protocol-api-config.js";
 import {
   buildTlsConnectOptions,
@@ -193,7 +195,16 @@ async function handleProtocolApiRequest(
   if (req.method === "GET" && url.pathname === "/protocol/v1/relay/inbox") {
     const destination = url.searchParams.get("destination_org_uri") ?? undefined;
     const pending = listWireRelayPending(destination ?? undefined);
-    json(res, 200, { ok: true, queue: pending });
+    json(res, 200, {
+      ok: true,
+      queue: pending.map((q) => ({
+        ...q,
+        envelope:
+          q.envelope_path && existsSync(q.envelope_path)
+            ? JSON.parse(readFileSync(q.envelope_path, "utf-8"))
+            : undefined,
+      })),
+    });
     return;
   }
 
@@ -201,16 +212,27 @@ async function handleProtocolApiRequest(
     try {
       const raw = await readBody(req);
       const data = JSON.parse(raw) as { envelope?: EventEnvelope; destination_org_uri?: string };
-      if (!data.envelope) {
-        json(res, 422, { ok: false, error: "envelope required" });
+      if (!data.envelope || !data.destination_org_uri) {
+        json(res, 422, { ok: false, error: "envelope and destination_org_uri required" });
         return;
       }
-      const ingest = ingestWebhook({ raw: data.envelope });
-      if (!ingest.ok && ingest.reason !== "idempotent") {
-        json(res, 422, { ok: false, ...ingest });
-        return;
-      }
-      json(res, 202, { ok: true, event_id: data.envelope.event_id, ingest });
+      const storeDir = getProtocolRelayStoreDir();
+      mkdirSync(storeDir, { recursive: true });
+      const envPath = join(storeDir, `${data.envelope.event_id}.json`);
+      writeFileSync(envPath, serializeEventEnvelope(data.envelope), "utf-8");
+      const originOrgUri =
+        data.envelope.origin.org_uri ??
+        (data.envelope.origin.org_id.startsWith("PEER-")
+          ? data.envelope.origin.org_id
+          : `steward://tenant/${data.envelope.origin.org_id}`);
+      const record = enqueueWireRelay({
+        origin_org_uri: originOrgUri,
+        destination_org_uri: data.destination_org_uri,
+        event_id: data.envelope.event_id,
+        envelope_digest: envelopeDigest(data.envelope),
+        envelope_path: envPath,
+      });
+      json(res, 202, { ok: true, relay_id: record.relay_id, event_id: data.envelope.event_id });
       return;
     } catch (e) {
       json(res, 400, { ok: false, error: e instanceof Error ? e.message : String(e) });

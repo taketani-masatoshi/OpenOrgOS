@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "node
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTenantId, ROOT_DIR, getTenantDir } from "../src/lib/tenant.js";
-import { readYamlFile, writeYamlFile } from "../src/lib/utils.js";
+import { currentDate, readYamlFile, writeYamlFile } from "../src/lib/utils.js";
 import { contractSchema } from "../schemas/contract.js";
 import { registerPeer } from "../src/lib/protocol/peers.js";
 import {
@@ -28,6 +28,10 @@ import { runWithProtocolWriteGuard } from "../src/lib/protocol/protocol-write-gu
 import { writeOutboxProvenance } from "../src/lib/protocol/outbox-provenance.js";
 import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 import { loadCompany } from "../src/lib/data.js";
+import { orgApprovalRegistrySchema } from "../schemas/org/approval.js";
+import { getPendingApprovalsPath } from "../src/lib/org/paths.js";
+import { enqueueWitnessPending } from "../src/lib/protocol/witness-queue.js";
+import { envelopeDigest } from "../src/lib/protocol/canonical.js";
 import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
 import { ingestWebhook } from "../src/lib/webhook.js";
 import { configureHubRuntime } from "../src/lib/hub/runtime.js";
@@ -40,6 +44,15 @@ import { hubFederationSchema } from "../schemas/protocol/hub-federation.js";
 import { syncFromPeer } from "../src/lib/hub/gossip-sync.js";
 import { findHubReceiptByEventId } from "../src/lib/hub/receipt.js";
 import { loadHubAttestations } from "../src/lib/hub/registry.js";
+import {
+  deliverProtocolEnvelopeWithRelay,
+  flushWireRelayInbox,
+} from "../src/lib/protocol/transport.js";
+import {
+  configurePartyForProposal3,
+  patchContractForProposal3,
+  startOrgCInfrastructure,
+} from "./lib/proposal3-org-c.js";
 
 const HUB_A_DIR = join(ROOT_DIR, "data", "hub-a");
 const HUB_B_DIR = join(ROOT_DIR, "data", "hub-b");
@@ -181,6 +194,63 @@ async function startDemoWitnessHubs(): Promise<{
   };
 }
 
+export const AIAC_TENANT = "aiac";
+
+async function seedMalSendOnly(
+  sharedEventId: string,
+  orgC: { relayEnqueueUrl: string; bundleUrl: string; pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial }
+): Promise<{ path: string; envelope: EventEnvelope }> {
+  setTenantId(MAL_TENANT);
+  resetProtocolState(MAL_TENANT);
+  ensureProtocolSigningKey();
+
+  patchContractForProposal3(MAL_TENANT, "CTR-012", orgC.bundleUrl, AIAC_TENANT);
+  await configurePartyForProposal3({
+    tenantId: MAL_TENANT,
+    peerId: "PEER-001",
+    peerDisplayName: VENDOR_LEGAL_NAME,
+    peerOrgUri: `steward://tenant/${VENDOR_TENANT}`,
+    relayEnqueueUrl: orgC.relayEnqueueUrl,
+    bundleUrl: orgC.bundleUrl,
+    orgCTenantId: AIAC_TENANT,
+    pki: orgC.pki,
+  });
+
+  const company = loadCompany();
+  const notice = proposeInterOrgNotice({
+    peerId: "PEER-001",
+    contractId: "CTR-012",
+    proposedBy: "秘書オペレータ",
+    message: "オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。",
+  });
+
+  const { transmission } = approveInterOrgNotice({
+    noticeId: notice.notice_id,
+    approverId: company.representative?.split("、")[0] ?? "段燕燕",
+    eventId: sharedEventId,
+  });
+
+  writeOutboxCopy(`${sharedEventId}.json`, transmission.envelope);
+
+  const delivery = await deliverProtocolEnvelopeWithRelay(transmission.envelope, "PEER-001");
+  if (!delivery.delivered) {
+    throw new Error(`mal relay deliver failed: ${delivery.reason}`);
+  }
+
+  const v = validateProtocolState();
+  if (!v.ok) {
+    throw new Error(`mal protocol validate failed: ${v.issues.map((i) => i.message).join("; ")}`);
+  }
+
+  console.log(
+    `[mal] ✓ 送信 1通 · ${transmission.transaction.transaction_id} · Org C relay · event ${sharedEventId.slice(0, 8)}…`
+  );
+  return {
+    path: join(getProtocolOutboxDir(), `${sharedEventId}.json`),
+    envelope: transmission.envelope,
+  };
+}
+
 async function seedMalSide(
   sharedEventId: string,
   hubAKey: string,
@@ -227,7 +297,7 @@ async function seedMalSide(
     peerId: "PEER-001",
     contractId: "CTR-012",
     proposedBy: "秘書オペレータ",
-    message: "CTR-012 オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。",
+    message: "オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。",
   });
 
   const { transmission } = approveInterOrgNotice({
@@ -352,6 +422,122 @@ async function seedVendorSide(
   console.log(
     `[${VENDOR_TENANT}] ✓ inbound ${ingest.transactionId} · ack ${ackNotice.notice_id} → ${ackTx.transaction.transaction_id}`
   );
+}
+
+async function seedVendorReceiveOnly(
+  orgC: { bundleUrl: string; apiUrl: string; pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial }
+): Promise<void> {
+  setTenantId(VENDOR_TENANT);
+  resetProtocolState(VENDOR_TENANT);
+  ensureProtocolSigningKey();
+
+  setTenantId(MAL_TENANT);
+  ensureProtocolSigningKey();
+  const malPublicKey = exportProtocolPublicKeyBase64();
+  setTenantId(VENDOR_TENANT);
+  if (!malPublicKey) {
+    throw new Error("mal protocol public key not available");
+  }
+
+  patchContractForProposal3(VENDOR_TENANT, "CTR-012", orgC.bundleUrl, AIAC_TENANT);
+  await configurePartyForProposal3({
+    tenantId: VENDOR_TENANT,
+    peerId: "PEER-002",
+    peerDisplayName: "株式会社MAL",
+    peerOrgUri: `steward://tenant/${MAL_TENANT}`,
+    relayEnqueueUrl: `${orgC.apiUrl}/protocol/v1/relay/enqueue`,
+    bundleUrl: orgC.bundleUrl,
+    orgCTenantId: AIAC_TENANT,
+    pki: orgC.pki,
+    protocolPublicKey: malPublicKey,
+  });
+
+  const pulled = await flushWireRelayInbox(orgC.apiUrl);
+  if (pulled < 1) {
+    throw new Error(`southwood relay pull failed: pulled=${pulled}`);
+  }
+
+  const v = validateProtocolState();
+  if (!v.ok) {
+    throw new Error(`${VENDOR_TENANT} protocol validate failed: ${v.issues.map((i) => i.message).join("; ")}`);
+  }
+
+  console.log(`[${VENDOR_TENANT}] ✓ 受信 1通 · Org C relay pull (${pulled})`);
+}
+
+function seedAiacWitnessRole(
+  eventId: string,
+  envelope: EventEnvelope,
+  bundleUrl: string
+): void {
+  setTenantId(AIAC_TENANT);
+  for (const p of [
+    join(getTenantDir(AIAC_TENANT), "docs", "protocol", "outbox"),
+    join(getTenantDir(AIAC_TENANT), "docs", "protocol", "inbox"),
+  ]) {
+    if (existsSync(p)) rmSync(p, { recursive: true, force: true });
+  }
+
+  setTenantId(AIAC_TENANT);
+  const pendingPath = join(getTenantDir(AIAC_TENANT), "data", "protocol", "witness-pending.yaml");
+  if (existsSync(pendingPath)) rmSync(pendingPath);
+  enqueueWitnessPending({
+    hub_id: "HUB-A",
+    event_id: eventId,
+    side: "sent",
+    envelope_digest: envelopeDigest(envelope),
+    last_error: "Proposal 3 — 公証担当（Org C trust bundle 経由）",
+  });
+
+  console.log(
+    `[${AIAC_TENANT}] ✓ 確認待ち 1件 · trust ${bundleUrl.replace(/^https?:\/\//, "").slice(0, 40)}…`
+  );
+}
+
+function pruneWireApprovalsForDemo(tenantId: string, eventId: string): void {
+  setTenantId(tenantId);
+  const path = getPendingApprovalsPath();
+  if (!existsSync(path)) return;
+  const registry = readYamlFile(path, orgApprovalRegistrySchema);
+  const keepInternal = registry.approvals.filter((a) => a.scope !== "wire");
+  const wireForEvent = registry.approvals.filter(
+    (a) => a.scope === "wire" && a.wire?.wire_event_id === eventId && a.status === "completed"
+  );
+  const latestWire = wireForEvent.length ? [wireForEvent[wireForEvent.length - 1]!] : [];
+  writeYamlFile(path, {
+    ...registry,
+    as_of: currentDate(),
+    approvals: [...keepInternal, ...latestWire],
+  });
+}
+
+export async function runWireConsoleThreeRoleDemo(): Promise<void> {
+  console.log("Wire Console — Proposal 3 · MAL 送信 · southwood 受信 · AIAC Org C（1通）\n");
+
+  if (!existsSync(join(ROOT_DIR, "tenants", AIAC_TENANT, "tenant.yaml"))) {
+    throw new Error(`Tenant ${AIAC_TENANT} not found`);
+  }
+
+  const hubs = await startDemoWitnessHubs();
+  const orgC = await startOrgCInfrastructure(AIAC_TENANT, {
+    hubAKey: hubs.hubAKey,
+    hubBKey: hubs.hubBKey,
+    hubAPort: hubs.hubAPort,
+    hubBPort: hubs.hubBPort,
+  });
+  try {
+    ensureCtr012Executed();
+    const mal = await seedMalSendOnly(DEMO_EVENT_ID, orgC);
+    await seedVendorReceiveOnly(orgC);
+    seedAiacWitnessRole(DEMO_EVENT_ID, mal.envelope, orgC.bundleUrl);
+    pruneWireApprovalsForDemo(MAL_TENANT, DEMO_EVENT_ID);
+    pruneWireApprovalsForDemo(VENDOR_TENANT, DEMO_EVENT_ID);
+    console.log(`\nShared event_id: ${DEMO_EVENT_ID}`);
+    console.log(`Org C relay: ${orgC.apiUrl} · bundle: ${orgC.bundleUrl}`);
+  } finally {
+    orgC.close();
+    hubs.close();
+  }
 }
 
 export async function runInterOrgDemo(): Promise<void> {
