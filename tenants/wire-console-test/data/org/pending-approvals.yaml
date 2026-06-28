@@ -1,0 +1,18 @@
+approvals:
+  - approval_id: NOTICE-20260628-001
+    scope: wire
+    status: pending_approval
+    proposed_at: 2026-06-28T04:14:40.493Z
+    proposed_by: Wire Console
+    subject_type: wire.outbound
+    subject_ref: CTR-099
+    amount:
+      value: 85000
+      currency: JPY
+    message: 契約 CTR-099 に基づく実行・運用通知（既締結契約の範囲内）
+    approval_policy_ref: REG-004
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+as_of: 2026-06-28

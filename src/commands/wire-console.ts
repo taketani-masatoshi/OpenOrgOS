@@ -1,5 +1,5 @@
 import { startWireConsoleServer } from "../lib/wire-console/server.js";
-import { getWireConsoleAuthConfig } from "../lib/wire-console/auth/login.js";
+import { getWireConsoleAuthConfigResponse } from "../lib/wire-console/auth/login.js";
 import {
   getWireConsoleStatus,
   spawnWireConsoleServer,
@@ -23,10 +23,10 @@ export async function runWireConsoleStart(opts: WireConsoleStartOptions): Promis
   const tenants = listWireConsoleTenants();
   console.log(`Wire Console tenants: ${tenants.map((t) => t.id).join(", ")}`);
 
-  const auth = getWireConsoleAuthConfig();
+  const auth = getWireConsoleAuthConfigResponse();
   const authHint =
     auth.mode === "prod"
-      ? "Prod auth (WIRE_CONSOLE_PROD_TOKEN required)"
+      ? `Prod auth · adapter=${auth.prod_adapter}${auth.legacy_token_deprecated ? " (legacy token deprecated)" : ""}`
       : `Dev login passkey: ${process.env.WIRE_CONSOLE_DEV_PASSKEY ?? "orgos-dev"}`;
 
   if (opts.foreground) {

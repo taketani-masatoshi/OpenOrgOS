@@ -57,7 +57,8 @@ Console では **aiac タブ** で inbox 到着を確認。mesh 配送自体は 
 | モード | 環境変数 | ログイン |
 |--------|----------|----------|
 | **dev**（デフォルト） | — | POST `/console/v1/auth/login` `{ passkey, approver_id }` |
-| **prod** | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_TOKEN=…` | `{ prod_token, operator_id, approver_id }` — **passkey 不可** |
+| **prod** | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_ADAPTER=oidc` | `{ id_token, approver_id }` — **passkey 不可** |
+| legacy | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1` | `prod_token`（非推奨） |
 
 ```bash
 WIRE_CONSOLE_AUTH=prod WIRE_CONSOLE_PROD_TOKEN='your-token' \

@@ -1,0 +1,8 @@
+id: CTR-099
+name: Test contract
+counterparty: Peer Co
+type: rental
+status: executed
+start_date: "2026-01-01"
+executed_date: "2026-01-15"
+monthly_cost: 85000

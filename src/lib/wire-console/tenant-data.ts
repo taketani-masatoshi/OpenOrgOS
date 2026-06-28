@@ -14,6 +14,7 @@ import { listWitnessPending } from "../protocol/witness-queue.js";
 import { verifyCachedReceiptsForEvent } from "../protocol/witness-client.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { withWireConsoleTenant } from "./tenant-context.js";
+import { redactWireConsoleValue } from "./redact.js";
 
 export interface EnvelopeListItem {
   event_id: string;
@@ -168,7 +169,7 @@ export function getTenantEventDetail(
       envelope_digest: entry.envelope_digest,
       recorded_at: entry.recorded_at,
       location,
-      envelope: entry.envelope,
+      envelope: redactWireConsoleValue(entry.envelope),
       provenance: provenanceRaw
         ? {
             source: provenanceRaw.source,

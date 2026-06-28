@@ -7,7 +7,11 @@ export interface User {
 export interface AuthConfig {
   mode: "dev" | "prod";
   dev_login_allowed: boolean;
-  prod_token_required: boolean;
+  prod_adapter?: "oidc" | "webauthn" | "legacy_token";
+  legacy_token_allowed?: boolean;
+  legacy_token_deprecated?: boolean;
+  oidc?: { issuer: string; audience: string; client_id: string };
+  webauthn?: { rp_id: string; credential_count: number };
 }
 
 export interface TenantSummary {

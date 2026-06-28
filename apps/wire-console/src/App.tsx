@@ -8,6 +8,7 @@ export function App() {
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [passkey, setPasskey] = useState("orgos-dev");
   const [prodToken, setProdToken] = useState("");
+  const [idToken, setIdToken] = useState("");
   const [operatorId, setOperatorId] = useState("Wire Console");
   const [approverId, setApproverId] = useState("南木健一");
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,12 @@ export function App() {
   useEffect(() => {
     void api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config")
       .then(setAuthConfig)
-      .catch(() => setAuthConfig({ mode: "dev", dev_login_allowed: true, prod_token_required: false }));
+      .catch(() =>
+        setAuthConfig({
+          mode: "dev",
+          dev_login_allowed: true,
+        })
+      );
     void loadSession();
   }, [loadSession]);
 
@@ -41,11 +47,15 @@ export function App() {
     try {
       const body =
         authConfig?.mode === "prod"
-          ? {
-              prod_token: prodToken,
-              operator_id: operatorId,
-              approver_id: approverId,
-            }
+          ? authConfig.prod_adapter === "oidc"
+            ? { id_token: idToken, approver_id: approverId, operator_id: operatorId }
+            : authConfig.prod_adapter === "webauthn"
+              ? { prod_token: prodToken, operator_id: operatorId, approver_id: approverId }
+              : {
+                  prod_token: prodToken,
+                  operator_id: operatorId,
+                  approver_id: approverId,
+                }
           : {
               passkey,
               approver_id: approverId,
@@ -74,15 +84,29 @@ export function App() {
 
   if (!user) {
     const prodMode = authConfig?.mode === "prod";
+    const oidcMode = prodMode && authConfig?.prod_adapter === "oidc";
     return (
       <div className="shell login">
         <h1>OrgOS Wire Console</h1>
         <p>Inter-org outbox / inbox · operator UI</p>
-        <p className="hint">Auth mode: {authConfig?.mode ?? "dev"}</p>
+        <p className="hint">
+          Auth: {authConfig?.mode ?? "dev"}
+          {prodMode ? ` · ${authConfig?.prod_adapter ?? "oidc"}` : ""}
+        </p>
         <form onSubmit={login}>
-          {prodMode ? (
+          {oidcMode ? (
             <label>
-              Prod token
+              OIDC id_token
+              <input
+                type="password"
+                value={idToken}
+                onChange={(e) => setIdToken(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+          ) : prodMode ? (
+            <label>
+              Prod token (legacy)
               <input
                 type="password"
                 value={prodToken}

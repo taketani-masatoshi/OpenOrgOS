@@ -1,0 +1,8 @@
+id: wire-console-test
+name: Wire Console Test Org
+legal_name: Wire Console Test Org
+display_name: WC Test
+description: Isolated tenant for Wire Console vitest/playwright — do not use in demos
+lifecycle: skeleton
+jurisdiction: JP
+wire_console: true

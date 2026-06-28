@@ -8,7 +8,7 @@ import {
   sessionTokenFromRequest,
   setSessionCookie,
 } from "./auth/session.js";
-import { authenticateWireConsoleLogin, getWireConsoleAuthConfig } from "./auth/login.js";
+import { authenticateWireConsoleLogin, createWebAuthnLoginOptions, getWireConsoleAuthConfigResponse } from "./auth/login.js";
 import { WIRE_CONSOLE_SPA_DIST } from "./paths.js";
 import { handleConsoleApi } from "./routes/console-api.js";
 import { handleEventsStream } from "./routes/events-stream.js";
@@ -43,6 +43,7 @@ function isPublicPath(pathname: string): boolean {
     pathname === "/health" ||
     pathname === "/console/v1/auth/login" ||
     pathname === "/console/v1/auth/config" ||
+    pathname === "/console/v1/auth/webauthn/options" ||
     pathname.startsWith("/assets/") ||
     (!pathname.startsWith("/console/") && pathname !== "/favicon.ico")
   );
@@ -61,26 +62,30 @@ async function handleApi(
   }
 
   if (method === "GET" && pathname === "/console/v1/auth/config") {
-    json(res, 200, { ok: true, ...getWireConsoleAuthConfig() });
+    json(res, 200, { ok: true, ...getWireConsoleAuthConfigResponse() });
+    return true;
+  }
+
+  if (method === "POST" && pathname === "/console/v1/auth/webauthn/options") {
+    json(res, 200, { ok: true, ...createWebAuthnLoginOptions() });
     return true;
   }
 
   if (method === "POST" && pathname === "/console/v1/auth/login") {
     try {
       const raw = await readBody(req);
-      const body = JSON.parse(raw || "{}") as {
-        passkey?: string;
-        prod_token?: string;
-        operator_id?: string;
-        approver_id?: string;
-      };
+      const body = JSON.parse(raw || "{}") as Parameters<typeof authenticateWireConsoleLogin>[0];
       const result = authenticateWireConsoleLogin(body);
       if ("error" in result) {
         json(res, result.status, { ok: false, error: result.error });
         return true;
       }
+      if (result.deprecated) {
+        res.setHeader("Deprecation", "true");
+        res.setHeader("Warning", '299 - "prod_token login deprecated"');
+      }
       setSessionCookie(res, result.token);
-      json(res, 200, { ok: true, user: result.user });
+      json(res, 200, { ok: true, user: result.user, deprecated: result.deprecated });
       return true;
     } catch (e) {
       json(res, 400, { ok: false, error: e instanceof Error ? e.message : String(e) });

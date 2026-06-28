@@ -274,12 +274,17 @@ npm run orgos -- tenant init southwood --name Southwood --wire-console
 | モード | 設定 | ログイン |
 |--------|------|----------|
 | dev（デフォルト） | — | passkey `orgos-dev`（`WIRE_CONSOLE_DEV_PASSKEY` で上書き可） |
-| prod | `WIRE_CONSOLE_AUTH=prod` + `WIRE_CONSOLE_PROD_TOKEN` | prod token + operator_id + approver_id · **dev passkey 拒否** |
+| prod OIDC | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_ADAPTER=oidc` · OIDC env | POST login `{ id_token, approver_id }` |
+| prod WebAuthn | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` | `/auth/webauthn/options` → login `{ webauthn: … }` |
+| legacy token（非推奨） | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1` | `prod_token` — 移行期間のみ |
 
 ```bash
-# 本番相当プロファイル例
+# OIDC 本番相当（HS256 検証 · 本番は JWKS 拡張予定）
 export WIRE_CONSOLE_AUTH=prod
-export WIRE_CONSOLE_PROD_TOKEN='…'
+export WIRE_CONSOLE_PROD_ADAPTER=oidc
+export WIRE_CONSOLE_OIDC_ISSUER='https://idp.example.com'
+export WIRE_CONSOLE_OIDC_AUDIENCE='wire-console'
+export WIRE_CONSOLE_OIDC_HS256_SECRET='…'
 npm run orgos -- wire console start
 ```
 

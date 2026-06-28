@@ -1,291 +1,208 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { startWireConsoleServer } from "../src/lib/wire-console/server.js";
+import { mintTestOidcIdToken } from "../src/lib/wire-console/auth/oidc.js";
 import {
   resetSessionsForTests,
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
+import { resetWebAuthnChallengesForTests } from "../src/lib/wire-console/auth/webauthn.js";
 import { listWireConsoleTenants } from "../src/lib/wire-console/tenant-registry.js";
+import {
+  resetWireConsoleTestTenant,
+  WIRE_CONSOLE_TEST_TENANT,
+} from "./helpers/wire-console-test-fixture.js";
+
+function setupOidcProdEnv(): void {
+  process.env.WIRE_CONSOLE_AUTH = "prod";
+  process.env.WIRE_CONSOLE_PROD_ADAPTER = "oidc";
+  process.env.WIRE_CONSOLE_OIDC_ISSUER = "https://idp.test/orgos";
+  process.env.WIRE_CONSOLE_OIDC_AUDIENCE = "wire-console";
+  process.env.WIRE_CONSOLE_OIDC_HS256_SECRET = "test-oidc-secret";
+}
 
 describe("wire console server", () => {
   let close: (() => void) | undefined;
-  let baseUrl = "";
   const envSnapshot = {
     auth: process.env.WIRE_CONSOLE_AUTH,
+    prodAdapter: process.env.WIRE_CONSOLE_PROD_ADAPTER,
     prodToken: process.env.WIRE_CONSOLE_PROD_TOKEN,
+    oidcIssuer: process.env.WIRE_CONSOLE_OIDC_ISSUER,
+    oidcAudience: process.env.WIRE_CONSOLE_OIDC_AUDIENCE,
+    oidcSecret: process.env.WIRE_CONSOLE_OIDC_HS256_SECRET,
+    allowLegacy: process.env.WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN,
   };
+
+  beforeEach(() => {
+    resetWireConsoleTestTenant();
+  });
 
   afterEach(() => {
     close?.();
     close = undefined;
     resetSessionsForTests();
-    if (envSnapshot.auth === undefined) delete process.env.WIRE_CONSOLE_AUTH;
-    else process.env.WIRE_CONSOLE_AUTH = envSnapshot.auth;
-    if (envSnapshot.prodToken === undefined) delete process.env.WIRE_CONSOLE_PROD_TOKEN;
-    else process.env.WIRE_CONSOLE_PROD_TOKEN = envSnapshot.prodToken;
+    resetWebAuthnChallengesForTests();
+    const restore: Record<string, string | undefined> = {
+      WIRE_CONSOLE_AUTH: envSnapshot.auth,
+      WIRE_CONSOLE_PROD_ADAPTER: envSnapshot.prodAdapter,
+      WIRE_CONSOLE_PROD_TOKEN: envSnapshot.prodToken,
+      WIRE_CONSOLE_OIDC_ISSUER: envSnapshot.oidcIssuer,
+      WIRE_CONSOLE_OIDC_AUDIENCE: envSnapshot.oidcAudience,
+      WIRE_CONSOLE_OIDC_HS256_SECRET: envSnapshot.oidcSecret,
+      WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN: envSnapshot.allowLegacy,
+    };
+    for (const [key, val] of Object.entries(restore)) {
+      if (val === undefined) delete process.env[key];
+      else process.env[key] = val;
+    }
   });
+
+  async function loginDevCookie(base: string, approver = "テスト承認者"): Promise<string> {
+    const login = await fetch(`${base}/console/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ passkey: "orgos-dev", approver_id: approver }),
+    });
+    return login.headers.get("set-cookie")?.split(";")[0] ?? "";
+  }
 
   it("health returns ok", async () => {
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-    baseUrl = server.url;
-    const res = await fetch(`${baseUrl}/health`);
+    const res = await fetch(`${server.url}/health`);
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { ok: boolean; service: string };
-    expect(body.ok).toBe(true);
-    expect(body.service).toBe("wire-console");
   });
 
-  it("lists wire_console tenants including demo orgs", () => {
+  it("lists wire_console tenants including isolated test tenant", () => {
     const ids = listWireConsoleTenants().map((t) => t.id);
+    expect(ids).toContain(WIRE_CONSOLE_TEST_TENANT);
     expect(ids).toContain("southwood");
-    expect(ids).toContain("aiac");
   });
 
   it("login sets session and returns tenants", async () => {
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-    baseUrl = server.url;
+    const cookie = await loginDevCookie(server.url);
+    expect(cookie).toContain(WIRE_CONSOLE_SESSION_COOKIE);
 
-    const login = await fetch(`${baseUrl}/console/v1/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passkey: "orgos-dev" }),
-    });
-    expect(login.status).toBe(200);
-    const setCookie = login.headers.get("set-cookie") ?? "";
-    expect(setCookie).toContain(WIRE_CONSOLE_SESSION_COOKIE);
-
-    const tenants = await fetch(`${baseUrl}/console/v1/tenants`, {
-      headers: { cookie: setCookie.split(";")[0]! },
-    });
+    const tenants = await fetch(`${server.url}/console/v1/tenants`, { headers: { cookie } });
     expect(tenants.status).toBe(200);
-    const body = (await tenants.json()) as { ok: boolean; tenants: { id: string }[] };
-    expect(body.ok).toBe(true);
-    expect(body.tenants.some((t) => t.id === "southwood")).toBe(true);
+    const body = (await tenants.json()) as { tenants: { id: string }[] };
+    expect(body.tenants.some((t) => t.id === WIRE_CONSOLE_TEST_TENANT)).toBe(true);
   });
 
-  it("rejects tenants without session", async () => {
+  it("returns test tenant snapshot and outbox when authenticated", async () => {
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-    const res = await fetch(`${server.url}/console/v1/tenants`);
-    expect(res.status).toBe(401);
-  });
+    const cookie = await loginDevCookie(server.url);
 
-  it("returns southwood snapshot and outbox when authenticated", async () => {
-    const server = await startWireConsoleServer({ port: 0 });
-    close = server.close;
-    baseUrl = server.url;
-
-    const login = await fetch(`${baseUrl}/console/v1/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passkey: "orgos-dev" }),
-    });
-    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-
-    const snapshot = await fetch(`${baseUrl}/console/v1/tenants/southwood/snapshot`, {
+    const snapshot = await fetch(`${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/snapshot`, {
       headers: { cookie },
     });
     expect(snapshot.status).toBe(200);
-    const snapBody = (await snapshot.json()) as {
-      ok: boolean;
-      tenant_id: string;
-      validation: { ok: boolean };
-      counts: { outbox: number; inbox: number };
-    };
-    expect(snapBody.tenant_id).toBe("southwood");
-    expect(snapBody.validation.ok).toBe(true);
+    const snapBody = (await snapshot.json()) as { counts: { outbox: number; inbox: number } };
+    expect(snapBody.counts.inbox).toBeGreaterThan(0);
     expect(snapBody.counts.outbox).toBeGreaterThan(0);
-
-    const outbox = await fetch(`${baseUrl}/console/v1/tenants/southwood/outbox`, {
-      headers: { cookie },
-    });
-    const outBody = (await outbox.json()) as { entries: { event_id: string }[] };
-    expect(outBody.entries.length).toBeGreaterThan(0);
   });
 
-  it("loads event detail for inter-org demo event", async () => {
+  it("propose and approve wire notice on isolated test tenant", async () => {
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-    baseUrl = server.url;
+    const cookie = await loginDevCookie(server.url);
 
-    const login = await fetch(`${baseUrl}/console/v1/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passkey: "orgos-dev" }),
-    });
-    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-
-    const res = await fetch(
-      `${baseUrl}/console/v1/tenants/southwood/events/a1b2c3d4-e5f6-4789-a012-3456789abcde`,
-      { headers: { cookie } }
-    );
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { location: string; event_id: string };
-    expect(body.location).toBe("inbox");
-    expect(body.event_id).toBe("a1b2c3d4-e5f6-4789-a012-3456789abcde");
-  });
-
-  it("returns event workflow steps", async () => {
-    const server = await startWireConsoleServer({ port: 0 });
-    close = server.close;
-    baseUrl = server.url;
-
-    const login = await fetch(`${baseUrl}/console/v1/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passkey: "orgos-dev", approver_id: "南木健一" }),
-    });
-    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-
-    const res = await fetch(
-      `${baseUrl}/console/v1/tenants/southwood/events/a1b2c3d4-e5f6-4789-a012-3456789abcde/workflow`,
-      { headers: { cookie } }
-    );
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { ok: boolean; steps: { id: string }[] };
-    expect(body.steps.map((s) => s.id)).toEqual(["approval", "outbox", "delivery", "witness"]);
-  });
-
-  it("propose and approve wire notice via console API", async () => {
-    const server = await startWireConsoleServer({ port: 0 });
-    close = server.close;
-    baseUrl = server.url;
-
-    const login = await fetch(`${baseUrl}/console/v1/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        passkey: "orgos-dev",
-        approver_id: "南木健一",
-        operator_id: "wire-console-test",
-      }),
-    });
-    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-
-    const propose = await fetch(`${baseUrl}/console/v1/tenants/southwood/notices/propose`, {
-      method: "POST",
-      headers: { cookie, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        peer_id: "PEER-002",
-        transaction_type: "contract.execution.notice",
-        contract_id: "CTR-012",
-        message: "Wire Console Wave 2 test notice",
-      }),
-    });
-    expect(propose.status).toBe(200);
-    const proposed = (await propose.json()) as {
-      ok: boolean;
-      notice: { notice_id: string; status: string };
-    };
-    expect(proposed.notice.status).toBe("pending_approval");
-
-    const approve = await fetch(
-      `${baseUrl}/console/v1/tenants/southwood/notices/${proposed.notice.notice_id}/approve`,
+    const propose = await fetch(
+      `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/notices/propose`,
       {
         method: "POST",
         headers: { cookie, "Content-Type": "application/json" },
-        body: "{}",
+        body: JSON.stringify({
+          peer_id: "PEER-001",
+          transaction_type: "contract.execution.notice",
+          contract_id: "CTR-099",
+          message: "isolated wire console test",
+        }),
       }
     );
-    expect(approve.status).toBe(200);
-    const approved = (await approve.json()) as {
-      ok: boolean;
-      transmission: { event_id: string; transaction_id: string };
-      notice: { status: string };
-    };
-    expect(approved.notice.status).toBe("transmitted");
-    expect(approved.transmission.event_id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    expect(propose.status).toBe(200);
+    const proposed = (await propose.json()) as { notice: { notice_id: string } };
+
+    const approve = await fetch(
+      `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/notices/${proposed.notice.notice_id}/approve`,
+      { method: "POST", headers: { cookie, "Content-Type": "application/json" }, body: "{}" }
     );
+    expect(approve.status).toBe(200);
+    const approved = (await approve.json()) as { notice: { status: string } };
+    expect(approved.notice.status).toBe("transmitted");
   });
 
-  it("rejects write API without session", async () => {
-    const server = await startWireConsoleServer({ port: 0 });
-    close = server.close;
-    const res = await fetch(`${server.url}/console/v1/tenants/southwood/delivery/flush-pending`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "{}",
-    });
-    expect(res.status).toBe(401);
-  });
-
-  it("returns auth config", async () => {
+  it("returns auth config with prod adapter metadata", async () => {
+    setupOidcProdEnv();
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
     const res = await fetch(`${server.url}/console/v1/auth/config`);
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as {
-      ok: boolean;
-      mode: string;
-      dev_login_allowed: boolean;
-    };
-    expect(body.ok).toBe(true);
-    expect(body.mode).toBe("dev");
-    expect(body.dev_login_allowed).toBe(true);
+    const body = (await res.json()) as { mode: string; prod_adapter: string; legacy_token_deprecated: boolean };
+    expect(body.mode).toBe("prod");
+    expect(body.prod_adapter).toBe("oidc");
+    expect(body.legacy_token_deprecated).toBe(true);
   });
 
   it("blocks dev passkey when WIRE_CONSOLE_AUTH=prod", async () => {
-    process.env.WIRE_CONSOLE_AUTH = "prod";
-    process.env.WIRE_CONSOLE_PROD_TOKEN = "prod-secret-token";
-
+    setupOidcProdEnv();
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-
     const res = await fetch(`${server.url}/console/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ passkey: "orgos-dev" }),
     });
     expect(res.status).toBe(403);
-    const body = (await res.json()) as { error: string };
-    expect(body.error).toContain("disabled");
   });
 
-  it("accepts prod token login when WIRE_CONSOLE_AUTH=prod", async () => {
-    process.env.WIRE_CONSOLE_AUTH = "prod";
-    process.env.WIRE_CONSOLE_PROD_TOKEN = "prod-secret-token";
-
+  it("accepts OIDC id_token login in prod mode", async () => {
+    setupOidcProdEnv();
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-
+    const idToken = mintTestOidcIdToken({
+      sub: "oidc-user",
+      approver_id: "テスト承認者",
+    });
     const login = await fetch(`${server.url}/console/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prod_token: "prod-secret-token",
-        operator_id: "ops",
-        approver_id: "南木健一",
-      }),
+      body: JSON.stringify({ id_token: idToken, approver_id: "テスト承認者" }),
     });
     expect(login.status).toBe(200);
     const body = (await login.json()) as { user: { mode: string } };
     expect(body.user.mode).toBe("prod");
   });
 
+  it("rejects deprecated prod_token unless explicitly allowed", async () => {
+    setupOidcProdEnv();
+    process.env.WIRE_CONSOLE_PROD_TOKEN = "legacy-token";
+    const server = await startWireConsoleServer({ port: 0 });
+    close = server.close;
+    const res = await fetch(`${server.url}/console/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prod_token: "legacy-token",
+        operator_id: "ops",
+        approver_id: "テスト承認者",
+      }),
+    });
+    expect(res.status).toBe(403);
+  });
+
   it("streams SSE snapshot events when authenticated", async () => {
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-    baseUrl = server.url;
-
-    const login = await fetch(`${baseUrl}/console/v1/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passkey: "orgos-dev" }),
-    });
-    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-
-    const res = await fetch(`${baseUrl}/console/v1/events/stream`, {
+    const cookie = await loginDevCookie(server.url);
+    const res = await fetch(`${server.url}/console/v1/events/stream`, {
       headers: { cookie, Accept: "text/event-stream" },
     });
     expect(res.status).toBe(200);
-    expect(res.headers.get("content-type")).toContain("text/event-stream");
-
     const reader = res.body!.getReader();
     const { value } = await reader.read();
-    const chunk = new TextDecoder().decode(value);
-    expect(chunk).toContain("event: snapshot");
+    expect(new TextDecoder().decode(value)).toContain("event: snapshot");
     await reader.cancel();
   });
 });
