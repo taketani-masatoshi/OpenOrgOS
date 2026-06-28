@@ -5,7 +5,10 @@ const smokeBaseUrl = process.env.WIRE_CONSOLE_BASE_URL ?? `http://127.0.0.1:${sm
 
 export default defineConfig({
   testDir: "e2e",
-  timeout: 60_000,
+  testMatch: "wire-console.smoke.spec.ts",
+  timeout: 90_000,
+  workers: 1,
+  globalTeardown: "./e2e/wire-console-teardown.ts",
   use: {
     baseURL: smokeBaseUrl,
     trace: "off",

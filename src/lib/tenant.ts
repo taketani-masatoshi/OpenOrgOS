@@ -17,7 +17,7 @@ const tenantConfigSchema = z.object({
   display_name: z.string().optional(),
   description: z.string().optional(),
   default: z.boolean().optional(),
-  lifecycle: z.enum(["skeleton", "operational"]).optional(),
+  lifecycle: z.enum(["skeleton", "operational", "test"]).optional(),
   jurisdiction: z
     .string()
     .regex(/^[A-Z]{2}$/, "ISO 3166-1 alpha-2 jurisdiction code")

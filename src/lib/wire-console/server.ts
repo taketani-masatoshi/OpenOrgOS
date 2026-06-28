@@ -9,9 +9,11 @@ import {
   setSessionCookie,
 } from "./auth/session.js";
 import { authenticateWireConsoleLogin, createWebAuthnLoginOptions, getWireConsoleAuthConfigResponse } from "./auth/login.js";
+import { completeWebAuthnE2eLogin, isWebAuthnE2eLoginEnabled } from "./auth/webauthn-e2e.js";
 import { WIRE_CONSOLE_SPA_DIST } from "./paths.js";
 import { handleConsoleApi } from "./routes/console-api.js";
 import { handleEventsStream } from "./routes/events-stream.js";
+import { preloadOidcJwks } from "./auth/oidc.js";
 
 export interface WireConsoleServerOptions {
   host?: string;
@@ -44,6 +46,7 @@ function isPublicPath(pathname: string): boolean {
     pathname === "/console/v1/auth/login" ||
     pathname === "/console/v1/auth/config" ||
     pathname === "/console/v1/auth/webauthn/options" ||
+    (isWebAuthnE2eLoginEnabled() && pathname === "/console/v1/auth/webauthn/e2e-complete") ||
     pathname.startsWith("/assets/") ||
     (!pathname.startsWith("/console/") && pathname !== "/favicon.ico")
   );
@@ -69,6 +72,32 @@ async function handleApi(
   if (method === "POST" && pathname === "/console/v1/auth/webauthn/options") {
     json(res, 200, { ok: true, ...createWebAuthnLoginOptions() });
     return true;
+  }
+
+  if (method === "POST" && pathname === "/console/v1/auth/webauthn/e2e-complete") {
+    if (!isWebAuthnE2eLoginEnabled()) {
+      json(res, 404, { ok: false, error: "not found" });
+      return true;
+    }
+    try {
+      const raw = await readBody(req);
+      const body = JSON.parse(raw || "{}") as { challenge?: string };
+      if (!body.challenge) {
+        json(res, 422, { ok: false, error: "challenge required" });
+        return true;
+      }
+      const result = completeWebAuthnE2eLogin(body.challenge);
+      if ("error" in result) {
+        json(res, 401, { ok: false, error: result.error });
+        return true;
+      }
+      setSessionCookie(res, result.token);
+      json(res, 200, { ok: true, user: result.user });
+      return true;
+    } catch (e) {
+      json(res, 400, { ok: false, error: e instanceof Error ? e.message : String(e) });
+      return true;
+    }
   }
 
   if (method === "POST" && pathname === "/console/v1/auth/login") {
@@ -179,44 +208,47 @@ export function startWireConsoleServer(
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 0;
 
-  const server = createServer(async (req, res) => {
-    try {
-      const url = new URL(req.url ?? "/", `http://${host}`);
-      const pathname = url.pathname;
-      const method = req.method ?? "GET";
+  return preloadOidcJwks().then(
+    () =>
+      new Promise<WireConsoleServerHandle>((resolve, reject) => {
+        const server = createServer(async (req, res) => {
+          try {
+            const url = new URL(req.url ?? "/", `http://${host}`);
+            const pathname = url.pathname;
+            const method = req.method ?? "GET";
 
-      if (await handleApi(req, res, pathname, method, url.searchParams)) return;
+            if (await handleApi(req, res, pathname, method, url.searchParams)) return;
 
-      if (!isPublicPath(pathname)) {
-        const user = getSessionUser(sessionTokenFromRequest(req));
-        if (!user) {
-          json(res, 401, { ok: false, error: "unauthorized" });
-          return;
-        }
-      }
+            if (!isPublicPath(pathname)) {
+              const user = getSessionUser(sessionTokenFromRequest(req));
+              if (!user) {
+                json(res, 401, { ok: false, error: "unauthorized" });
+                return;
+              }
+            }
 
-      if (pathname.startsWith("/console/")) {
-        json(res, 404, { ok: false, error: "not found" });
-        return;
-      }
+            if (pathname.startsWith("/console/")) {
+              json(res, 404, { ok: false, error: "not found" });
+              return;
+            }
 
-      serveSpa(req, res, pathname);
-    } catch (e) {
-      json(res, 500, { ok: false, error: e instanceof Error ? e.message : String(e) });
-    }
-  });
+            serveSpa(req, res, pathname);
+          } catch (e) {
+            json(res, 500, { ok: false, error: e instanceof Error ? e.message : String(e) });
+          }
+        });
 
-  return new Promise((resolve, reject) => {
-    server.listen(port, host, () => {
-      const addr = server.address();
-      const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
-      const url = `http://${host}:${actualPort}`;
-      resolve({
-        url,
-        port: actualPort,
-        close: () => server.close(),
-      });
-    });
-    server.on("error", reject);
-  });
+        server.listen(port, host, () => {
+          const addr = server.address();
+          const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+          const url = `http://${host}:${actualPort}`;
+          resolve({
+            url,
+            port: actualPort,
+            close: () => server.close(),
+          });
+        });
+        server.on("error", reject);
+      })
+  );
 }

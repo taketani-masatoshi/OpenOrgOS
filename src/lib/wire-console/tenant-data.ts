@@ -100,7 +100,7 @@ export function getTenantSnapshot(tenantId: string) {
     } catch {
       witnessPool = { enabled: false, hub_count: 0 };
     }
-    return {
+    return redactWireConsoleValue({
       tenant_id: tenantId,
       validation,
       counts: {
@@ -111,7 +111,7 @@ export function getTenantSnapshot(tenantId: string) {
         witness_pending: listWitnessPending().length,
       },
       witness_pool: witnessPool,
-    };
+    });
   });
 }
 
@@ -127,17 +127,19 @@ export function getTenantInbox(tenantId: string, limit?: number): EnvelopeListIt
   );
 }
 
-export function getTenantLedger(tenantId: string) {
-  return withWireConsoleTenant(tenantId, () => loadTransactionsRegistry().transactions);
-}
-
 export function getTenantPeers(tenantId: string) {
   return withWireConsoleTenant(tenantId, () => loadPeersRegistry().peers);
 }
 
 export function getTenantApprovals(tenantId: string, scope?: OrgApprovalRequest["scope"]) {
   return withWireConsoleTenant(tenantId, () =>
-    listOrgApprovals(scope ? { scope } : undefined)
+    redactWireConsoleValue(listOrgApprovals(scope ? { scope } : undefined))
+  );
+}
+
+export function getTenantLedger(tenantId: string) {
+  return withWireConsoleTenant(tenantId, () =>
+    redactWireConsoleValue(loadTransactionsRegistry().transactions)
   );
 }
 

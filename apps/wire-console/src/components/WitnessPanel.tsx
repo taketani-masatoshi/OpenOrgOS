@@ -120,7 +120,11 @@ export function WitnessPanel({ tenantId, selectedEventId, onDone }: Props) {
         </label>
         <label>
           side
-          <select value={side} onChange={(e) => setSide(e.target.value as "sent" | "received")}>
+          <select
+            value={side}
+            onChange={(e) => setSide(e.target.value as "sent" | "received")}
+            aria-label="side"
+          >
             <option value="sent">sent</option>
             <option value="received">received</option>
           </select>

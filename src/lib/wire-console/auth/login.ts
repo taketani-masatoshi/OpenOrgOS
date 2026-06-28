@@ -7,6 +7,7 @@ import {
   getWebAuthnConfig,
   verifyWebAuthnLogin,
 } from "./webauthn.js";
+import { isWebAuthnE2eLoginEnabled } from "./webauthn-e2e.js";
 
 export interface WireConsoleLoginBody {
   passkey?: string;
@@ -113,6 +114,7 @@ export function getWireConsoleAuthConfigResponse() {
     ...base,
     oidc: base.mode === "prod" ? oidc : undefined,
     webauthn: base.mode === "prod" ? webauthn : undefined,
+    webauthn_e2e_login: base.mode === "prod" && isWebAuthnE2eLoginEnabled(),
   };
 }
 

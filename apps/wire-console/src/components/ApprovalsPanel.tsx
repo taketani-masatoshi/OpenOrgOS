@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, type WireApproval } from "../api";
+import { api, formatWireApprovalStatus, shortId, type WireApproval } from "../api";
 
 interface Props {
   tenantId: string;
@@ -68,10 +68,16 @@ export function ApprovalsPanel({ tenantId, approvals, onDone }: Props) {
             {[...approvals].reverse().slice(0, 20).map((a) => (
               <tr key={a.approval_id}>
                 <td>{a.approval_id}</td>
-                <td>{a.status}</td>
+                <td>{formatWireApprovalStatus(a.status, a.scope)}</td>
                 <td>{a.wire?.peer_id ?? "—"}</td>
                 <td>{a.wire?.contract_id ?? a.subject_ref ?? "—"}</td>
-                <td className="mono">{a.wire?.wire_event_id?.slice(0, 8) ?? "—"}</td>
+                <td
+                  className="mono"
+                  data-wire-event-id={a.wire?.wire_event_id ?? ""}
+                  title={a.wire?.wire_event_id}
+                >
+                  {a.wire?.wire_event_id ? shortId(a.wire.wire_event_id) : "—"}
+                </td>
                 <td className="actions">
                   {a.status === "pending_approval" ? (
                     <>

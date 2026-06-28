@@ -67,7 +67,7 @@ npm run orgos -- validate
 
 | ファイル | 役割 |
 |---------|------|
-| `tenant.yaml` | id · 法人名 · default フラグ · `lifecycle: skeleton \| operational` |
+| `tenant.yaml` | id · 法人名 · default フラグ · `lifecycle: skeleton \| operational \| test`（`test` = 自動テスト専用 · Console タブ非表示） |
 | `modules.yaml` | 有効モジュール · `property_ids` · `docs_root` · `operations_*` · `billing` |
 | `standards.yaml` | 有効 ISO 標準（`steward/standards/iso/` 参照） |
 | `regulations.yaml` | 有効社内規程（catalog id → テナント施行 MD） |

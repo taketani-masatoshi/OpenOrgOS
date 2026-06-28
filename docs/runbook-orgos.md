@@ -253,6 +253,7 @@ CI: `npm run validate:protocol:tenants` — 正本 `steward/platform/protocol/ci
 | サービス | ポート | 用途 |
 |----------|--------|------|
 | **Wire Console BFF** | **9470** | 人間オペレータ · propose/approve · 可視化 |
+| Wire Console smoke | **9472** | Playwright / CI のみ（dev :9470 と分離） |
 | Protocol API | 9476 | peer 自動 ingest · metrics · deliver |
 
 ### 起動 · 停止
@@ -275,16 +276,17 @@ npm run orgos -- tenant init southwood --name Southwood --wire-console
 |--------|------|----------|
 | dev（デフォルト） | — | passkey `orgos-dev`（`WIRE_CONSOLE_DEV_PASSKEY` で上書き可） |
 | prod OIDC | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_ADAPTER=oidc` · OIDC env | POST login `{ id_token, approver_id }` |
-| prod WebAuthn | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` | `/auth/webauthn/options` → login `{ webauthn: … }` |
+| prod WebAuthn（Wave 4） | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WIRE_CONSOLE_WEBAUTHN_CREDENTIALS` | SPA「Sign in with passkey」· `/auth/webauthn/options` |
 | legacy token（非推奨） | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1` | `prod_token` — 移行期間のみ |
 
 ```bash
-# OIDC 本番相当（HS256 検証 · 本番は JWKS 拡張予定）
+# OIDC 本番相当 — HS256（スタブ/移行）または RS256 + JWKS
 export WIRE_CONSOLE_AUTH=prod
-export WIRE_CONSOLE_PROD_ADAPTER=oidc
+export WIRE_CONSOLE_PROD_ADAPTER=oidc   # prod デフォルト（WebAuthn は明示指定のみ）
 export WIRE_CONSOLE_OIDC_ISSUER='https://idp.example.com'
 export WIRE_CONSOLE_OIDC_AUDIENCE='wire-console'
-export WIRE_CONSOLE_OIDC_HS256_SECRET='…'
+export WIRE_CONSOLE_OIDC_HS256_SECRET='…'          # HS256 移行用
+export WIRE_CONSOLE_OIDC_JWKS_URL='https://…/jwks' # RS256 本番
 npm run orgos -- wire console start
 ```
 
@@ -303,7 +305,12 @@ npm run orgos -- wire console start
 ### テスト
 
 ```bash
-npm test -- tests/wire-console-server.test.ts
+npm test -- tests/wire-console-server.test.ts tests/wire-console-redact.test.ts
+npm run wire-console:smoke   # Playwright · dev flow + witness · WebAuthn CDP passkey (:9472/:9473) · OIDC RS256 (:9474)
 ```
 
-*改定: 2026-06-28 · Wire Console Wave 3*
+**CI:** `validate.yml` の `wire-console-smoke` job（Chromium + `wire-console:smoke`）。
+
+**テスト tenant:** `tenants/wire-console-test/`（`lifecycle: test`）— Console タブには出さない。Vitest/Playwright は `WIRE_CONSOLE_INCLUDE_TEST_TENANTS=1`（smoke サーバーが自動設定）。
+
+*改定: 2026-06-28 · Wire Console Wave 3–4 hardening*

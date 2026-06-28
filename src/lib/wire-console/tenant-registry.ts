@@ -20,9 +20,18 @@ export interface WireConsoleTenantSummary {
   lifecycle?: string;
 }
 
+function includeTestLifecycleTenants(): boolean {
+  return process.env.WIRE_CONSOLE_INCLUDE_TEST_TENANTS === "1";
+}
+
 export function listWireConsoleTenants(): WireConsoleTenantSummary[] {
   return listTenantIds()
-    .filter(isWireConsoleEnabled)
+    .filter((id) => {
+      if (!isWireConsoleEnabled(id)) return false;
+      const cfg = readTenantConfigById(id);
+      if (cfg.lifecycle === "test" && !includeTestLifecycleTenants()) return false;
+      return true;
+    })
     .map((id) => {
       const cfg = readTenantConfigById(id);
       return {

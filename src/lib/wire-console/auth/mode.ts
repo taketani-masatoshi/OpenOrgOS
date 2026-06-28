@@ -28,6 +28,8 @@ export interface WireConsoleAuthConfig {
   prod_adapter: WireConsoleProdAdapter;
   legacy_token_allowed: boolean;
   legacy_token_deprecated: boolean;
+  /** Prod default is OIDC; WebAuthn requires explicit WIRE_CONSOLE_PROD_ADAPTER=webauthn (Wave 4). */
+  prod_default_adapter: "oidc";
   oidc?: { issuer: string; audience: string; client_id: string };
   webauthn?: { rp_id: string; credential_count: number };
 }
@@ -40,6 +42,7 @@ export function getWireConsoleAuthConfig(): WireConsoleAuthConfig {
     mode,
     dev_login_allowed: mode === "dev",
     prod_adapter: mode === "prod" ? prodAdapter : "oidc",
+    prod_default_adapter: "oidc",
     legacy_token_allowed: mode === "prod" && legacyAllowed,
     legacy_token_deprecated: mode === "prod" && prodAdapter !== "legacy_token",
   };

@@ -61,6 +61,24 @@ export function sanitizeForTrackedOutput(content: string): string {
   return out;
 }
 
+/** Wire Console JSON — static L2 patterns; dynamic secrets when tenant ops config is available. */
+export function sanitizeForWireConsoleOutput(content: string): string {
+  let out = content;
+  for (const re of STATIC_PATTERNS) {
+    out = out.replace(re, REDACT);
+  }
+  try {
+    for (const secret of collectDynamicSecrets()) {
+      if (secret.length >= 4) {
+        out = out.split(secret).join(REDACT);
+      }
+    }
+  } catch {
+    /* test / skeleton tenants may lack modules.yaml */
+  }
+  return out;
+}
+
 export function assertSafeForTrackedOutput(content: string): { ok: boolean; hits: string[] } {
   const sanitized = sanitizeForTrackedOutput(content);
   const hits: string[] = [];

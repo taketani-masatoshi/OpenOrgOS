@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type AuthConfig, type TenantSummary, type User } from "./api";
 import { TenantDashboard } from "./TenantDashboard";
+import { loginWithWebAuthn } from "./webauthn-login";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,6 +14,7 @@ export function App() {
   const [approverId, setApproverId] = useState("南木健一");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [webAuthnBusy, setWebAuthnBusy] = useState(false);
 
   const loadSession = useCallback(async () => {
     try {
@@ -36,6 +38,7 @@ export function App() {
         setAuthConfig({
           mode: "dev",
           dev_login_allowed: true,
+          prod_default_adapter: "oidc",
         })
       );
     void loadSession();
@@ -49,13 +52,11 @@ export function App() {
         authConfig?.mode === "prod"
           ? authConfig.prod_adapter === "oidc"
             ? { id_token: idToken, approver_id: approverId, operator_id: operatorId }
-            : authConfig.prod_adapter === "webauthn"
-              ? { prod_token: prodToken, operator_id: operatorId, approver_id: approverId }
-              : {
-                  prod_token: prodToken,
-                  operator_id: operatorId,
-                  approver_id: approverId,
-                }
+            : {
+                prod_token: prodToken,
+                operator_id: operatorId,
+                approver_id: approverId,
+              }
           : {
               passkey,
               approver_id: approverId,
@@ -72,6 +73,19 @@ export function App() {
     }
   }
 
+  async function loginWebAuthn() {
+    setWebAuthnBusy(true);
+    setError(null);
+    try {
+      await loginWithWebAuthn(api, { e2e: authConfig?.webauthn_e2e_login });
+      await loadSession();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setWebAuthnBusy(false);
+    }
+  }
+
   async function logout() {
     await api("/console/v1/auth/logout", { method: "POST" });
     setUser(null);
@@ -85,6 +99,7 @@ export function App() {
   if (!user) {
     const prodMode = authConfig?.mode === "prod";
     const oidcMode = prodMode && authConfig?.prod_adapter === "oidc";
+    const webAuthnMode = prodMode && authConfig?.prod_adapter === "webauthn";
     return (
       <div className="shell login">
         <h1>OrgOS Wire Console</h1>
@@ -92,49 +107,62 @@ export function App() {
         <p className="hint">
           Auth: {authConfig?.mode ?? "dev"}
           {prodMode ? ` · ${authConfig?.prod_adapter ?? "oidc"}` : ""}
+          {prodMode && authConfig?.prod_default_adapter === "oidc" ? " · prod default OIDC" : ""}
         </p>
-        <form onSubmit={login}>
-          {oidcMode ? (
+        {webAuthnMode ? (
+          <>
+            <p className="hint">
+              WebAuthn prod login (Wave 4) — register credentials via{" "}
+              <code>WIRE_CONSOLE_WEBAUTHN_CREDENTIALS</code>
+            </p>
+            <button type="button" disabled={webAuthnBusy} onClick={() => void loginWebAuthn()}>
+              {webAuthnBusy ? "Signing in…" : "Sign in with passkey"}
+            </button>
+          </>
+        ) : (
+          <form onSubmit={login}>
+            {oidcMode ? (
+              <label>
+                OIDC id_token
+                <input
+                  type="password"
+                  value={idToken}
+                  onChange={(e) => setIdToken(e.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+            ) : prodMode ? (
+              <label>
+                Prod token (legacy)
+                <input
+                  type="password"
+                  value={prodToken}
+                  onChange={(e) => setProdToken(e.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+            ) : (
+              <label>
+                Dev passkey
+                <input value={passkey} onChange={(e) => setPasskey(e.target.value)} autoComplete="off" />
+              </label>
+            )}
             <label>
-              OIDC id_token
+              Operator
+              <input value={operatorId} onChange={(e) => setOperatorId(e.target.value)} autoComplete="off" />
+            </label>
+            <label>
+              Approver
               <input
-                type="password"
-                value={idToken}
-                onChange={(e) => setIdToken(e.target.value)}
+                value={approverId}
+                onChange={(e) => setApproverId(e.target.value)}
                 autoComplete="off"
+                placeholder="南木健一"
               />
             </label>
-          ) : prodMode ? (
-            <label>
-              Prod token (legacy)
-              <input
-                type="password"
-                value={prodToken}
-                onChange={(e) => setProdToken(e.target.value)}
-                autoComplete="off"
-              />
-            </label>
-          ) : (
-            <label>
-              Dev passkey
-              <input value={passkey} onChange={(e) => setPasskey(e.target.value)} autoComplete="off" />
-            </label>
-          )}
-          <label>
-            Operator
-            <input value={operatorId} onChange={(e) => setOperatorId(e.target.value)} autoComplete="off" />
-          </label>
-          <label>
-            Approver
-            <input
-              value={approverId}
-              onChange={(e) => setApproverId(e.target.value)}
-              autoComplete="off"
-              placeholder="南木健一"
-            />
-          </label>
-          <button type="submit">Sign in</button>
-        </form>
+            <button type="submit">Sign in</button>
+          </form>
+        )}
         {error ? <p className="error">{error}</p> : null}
       </div>
     );

@@ -8,10 +8,18 @@ export interface AuthConfig {
   mode: "dev" | "prod";
   dev_login_allowed: boolean;
   prod_adapter?: "oidc" | "webauthn" | "legacy_token";
+  prod_default_adapter?: "oidc";
   legacy_token_allowed?: boolean;
   legacy_token_deprecated?: boolean;
-  oidc?: { issuer: string; audience: string; client_id: string };
+  oidc?: {
+    issuer: string;
+    audience: string;
+    client_id: string;
+    jwks_configured?: boolean;
+    hs256_configured?: boolean;
+  };
   webauthn?: { rp_id: string; credential_count: number };
+  webauthn_e2e_login?: boolean;
 }
 
 export interface TenantSummary {
@@ -140,6 +148,11 @@ export const NOTICE_TYPES: NoticeWireTypeOption[] = [
   { value: "payment.instructed", label: "payment.instructed" },
   { value: "contract.executed", label: "contract.executed" },
 ];
+
+export function formatWireApprovalStatus(status: string, scope?: string): string {
+  if (scope === "wire" && status === "completed") return "transmitted";
+  return status;
+}
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {

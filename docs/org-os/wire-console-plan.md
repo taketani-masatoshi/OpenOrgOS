@@ -256,7 +256,23 @@ wire_console: true   # 未指定 = false
 - [x] **deliver / flush-pending** · **witness pool/receipt** が UI から操作/確認できる
 - [x] `npm test` に wire-console BFF テストが含まれ CI green
 - [x] runbook §18 に Operator 手順が載る
+- [x] Playwright smoke（`:9472` · propose + approve）が CI `wire-console-smoke` job で実行
+- [x] `lifecycle: test` テナントは Console 一覧から除外（API 直指定は Vitest/smoke のみ）
 
 ---
 
-**版:** v0.1 · 2026-06-28
+## 11. Wave 4（prod hardening · 任意）
+
+| 項目 | 状態 | 備考 |
+|------|:----:|------|
+| OIDC RS256 + JWKS | [x] | `JWKS_URL` / `JWKS_JSON` · prod+JWKS 時 HS256 は `ALLOW_HS256=1` のみ |
+| WebAuthn SPA | [x] | passkey ボタン · SPKI 公開鍵で assertion 検証 |
+| WebAuthn test secret | [x] | vitest のみ · `WEBAUTHN_ALLOW_TEST_SECRET=1` |
+| prod デフォルト OIDC | [x] | WebAuthn は明示 env のみ |
+| snapshot L2 redact | [x] | `getTenantSnapshot` + event detail |
+| CI smoke | [x] | `wire-console*.smoke.spec.ts` · witness hubs · WebAuthn CDP passkey · OIDC RS256 SPA |
+| WebAuthn e2e-complete API | [x] | vitest のみ · `WIRE_CONSOLE_E2E_WEBAUTHN=1` · Playwright smoke では未使用 |
+
+---
+
+**版:** v0.2 · 2026-06-28

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+test-results/
+playwright-report/
 .orgos-ci/
 .orgos/
 # Wire Console build output

@@ -26,6 +26,7 @@ export function resetWireConsoleTestTenant(): void {
     "data/protocol/wire-pending.yaml",
     "data/protocol/wire-delivered.yaml",
     "data/protocol/witness-pending.yaml",
+    "data/protocol/witness-pool.yaml",
   ]) {
     const p = join(tenantRoot, rel);
     if (existsSync(p)) rmSync(p, { force: true });
@@ -56,6 +57,9 @@ export function resetWireConsoleTestTenant(): void {
     "utf-8"
   );
   rmSync(join(tenantRoot, "docs/protocol/inbox/seed-inbox.json"), { force: true });
+
+  const receiptsDir = join(tenantRoot, "data/protocol/witness-receipts");
+  if (existsSync(receiptsDir)) rmSync(receiptsDir, { recursive: true, force: true });
 
   setTenantId(WIRE_CONSOLE_TEST_TENANT);
   ensureProtocolSigningKey();
