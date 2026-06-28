@@ -2,7 +2,7 @@ id: CTR-001
 name: "業務委託契約（竹谷昌敏）"
 counterparty: "竹谷昌敏"
 counterparty_type: individual
-counterparty_address: "〒STK-001 参照（gitignore 正本）"
+counterparty_stakeholder_id: STK-001
 type: outsourcing
 status: executed
 start_date: "2026-08-06"
@@ -31,3 +31,4 @@ notes: |
   契約期間: 2026年8月6日〜2027年1月31日。
   報酬総額: 180,000円（3万×6ヶ月）。2027/1/31一括支払い。
   振込口座: 未記載（乙から別途通知）。
+  乙の住所（L2）: data/executive/stakeholders.yaml · STK-001（gitignore 正本）。

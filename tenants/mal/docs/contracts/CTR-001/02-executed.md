@@ -14,7 +14,7 @@
 | 締結日      | **2026年8月6日**               |
 | 甲        | 株式会社MAL                     |
 | 乙        | 竹谷昌敏                        |
-| 乙の住所     | 〒STK-001 参照（gitignore 正本） |
+| 乙の住所     | STK-001 参照（`data/executive/stakeholders.yaml` · gitignore） |
 | 契約期間     | 2026年8月6日 〜 2027年1月31日      |
 | 業務内容     | Steward OS 完成・提供後の保守        |
 | 月額報酬     | 30,000円                     |
@@ -74,7 +74,7 @@
 | 項目  | 内容                          |
 | --- | --------------------------- |
 | 氏名  | 竹谷昌敏                        |
-| 住所  | 〒STK-001 参照（gitignore 正本） |
+| 住所  | STK-001 参照（`data/executive/stakeholders.yaml` · gitignore） |
 
 
 　　________________　㊞

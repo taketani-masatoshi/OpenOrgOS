@@ -32,6 +32,13 @@ tenants/*/data/protocol/signing-key.pem.bak-*
 data/hub-*/signing-key.pem
 data/hub-*/witness-*.jsonl
 data/proposal3-pki/
+# Proposal 3 generated env (machine-local paths — template: *.env.example)
+deploy/proposal3/env/*.generated.env
+packages/orgos-cli/deploy/proposal3/env/*.generated.env
+# Protocol mTLS client (generated — template: protocol-api-client.yaml.example)
+tenants/*/data/protocol/protocol-api-client.yaml
+tenants/*/data/protocol/tls/*.json
+!tenants/*/data/protocol/tls/*.json.example
 # Protocol runtime state (relay · wire queues · reconcile — see docs/org-os/tenant-runtime-artifacts.md)
 tenants/*/data/protocol/relay-state.yaml
 tenants/*/data/protocol/wire-delivered.yaml

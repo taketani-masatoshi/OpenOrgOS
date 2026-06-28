@@ -55,6 +55,7 @@ export const contractSchema = z.object({
   name: z.string().min(1),
   counterparty: z.string().min(1),
   counterparty_type: counterpartyType.optional(),
+  counterparty_stakeholder_id: z.string().optional(),
   counterparty_address: z.string().optional(),
   type: contractType,
   status: contractStatus.default("draft"),
