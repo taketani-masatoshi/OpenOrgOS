@@ -1,5 +1,12 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import {
+  loadPersistedSessions,
+  savePersistedSessions,
+  sessionPersistenceEnabled,
+  sessionTtlMs,
+  type PersistedSessionRecord,
+} from "../../console-auth/session-store.js";
 
 export interface WireConsoleUser {
   operator_id: string;
@@ -14,6 +21,25 @@ interface SessionRecord {
 
 const sessions = new Map<string, SessionRecord>();
 
+function hydrateSessionsFromDisk(): void {
+  if (!sessionPersistenceEnabled()) return;
+  for (const [token, record] of loadPersistedSessions()) {
+    sessions.set(token, { user: record.user, created_at: record.created_at });
+  }
+}
+
+function persistSessionsToDisk(): void {
+  if (!sessionPersistenceEnabled()) return;
+  const out = new Map<string, PersistedSessionRecord>();
+  const expiresAt = new Date(Date.now() + sessionTtlMs()).toISOString();
+  for (const [token, record] of sessions) {
+    out.set(token, { user: record.user, created_at: record.created_at, expires_at: expiresAt });
+  }
+  savePersistedSessions(out);
+}
+
+hydrateSessionsFromDisk();
+
 export const WIRE_CONSOLE_SESSION_COOKIE = "orgos_wire_session";
 
 function devPasskeyExpected(): string {
@@ -23,6 +49,7 @@ function devPasskeyExpected(): string {
 export function registerSession(user: WireConsoleUser): { token: string; user: WireConsoleUser } {
   const token = randomBytes(24).toString("hex");
   sessions.set(token, { user, created_at: new Date().toISOString() });
+  persistSessionsToDisk();
   return { token, user };
 }
 
@@ -46,6 +73,7 @@ export function createDevSession(login: {
 
 export function destroySession(token: string | undefined): void {
   if (token) sessions.delete(token);
+  persistSessionsToDisk();
 }
 
 export function getSessionUser(token: string | undefined): WireConsoleUser | undefined {

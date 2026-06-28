@@ -1,0 +1,6 @@
+routes:
+  - destination_peer_id: PEER-003
+    via:
+      - PEER-004
+      - PEER-003
+    notes: 3-org demo mal → southwood relay → aiac

@@ -1,0 +1,49 @@
+{
+  "protocol_version": "1",
+  "event_id": "d0097065-0a6b-47da-bcea-29959491d9ee",
+  "occurred_at": "2026-06-28T14:05:25.827Z",
+  "origin": {
+    "org_id": "demo",
+    "org_uri": "steward://tenant/demo"
+  },
+  "destination": {
+    "org_id": "PEER-001"
+  },
+  "correlation_id": "NOTICE-20260628-025",
+  "identity": {
+    "org_ref": {
+      "org_id": "demo",
+      "org_uri": "steward://tenant/demo"
+    }
+  },
+  "event": {
+    "type": "org.transaction.recorded",
+    "payload": {
+      "transaction_id": "TX-20260628-025",
+      "direction": "outbound",
+      "transaction_type": "steward.contract.execution.notice",
+      "counterparty": "PEER-001",
+      "refs": {
+        "contract_id": "CTR-099"
+      },
+      "amount": {
+        "value": 50000,
+        "currency": "JPY"
+      },
+      "notes": "デモ用 — 履行通知の送信承認依頼（CTR-099）",
+      "operator_attestation": {
+        "operator_id": "CEO",
+        "approver_id": "CEO",
+        "approved_at": "2026-06-28T14:05:25.823Z",
+        "basis": "existing_contract",
+        "basis_ref": "CTR-099",
+        "approval_id": "NOTICE-20260628-025",
+        "notice_id": "NOTICE-20260628-025",
+        "approval_tier": "A",
+        "approval_policy_ref": "REG-004"
+      },
+      "notice_kind": "per_existing_contract"
+    }
+  },
+  "signature": "gjR4ONvxG/dgNI/4/DiEHoeJbVsKOzf8z8rJJ8a/A8O+yh7leGUS/806jYeUBzXj0V8PtrqrVZEKxoNEhUf+BQ=="
+}

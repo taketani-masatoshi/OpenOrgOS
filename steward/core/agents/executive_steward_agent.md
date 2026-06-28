@@ -115,15 +115,38 @@ npm run orgos -- scenario
 
 ## 他エージェントへ照会すべき場合
 
+**全 Agent 特性（委譲 · 禁止 · 承認ゲート）:** [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+
 | 状況 | 照会先 |
 |------|--------|
 | 社長スケジュール・会食・1-on-1・社外調整 | **Secretary Agent** |
+| 日次オペ · Work Order · 担当割当 | **COO Agent** |
 | 数値・予実・キャッシュ | **Finance Agent** |
+| オーナー個人資産（法人と分離） | **Personal Finance Agent** |
 | 契約期限・保険 draft | **Contract Agent** |
+| 定款 · 登記 · 法務レビュー | **Legal Agent** |
+| 税務申告 · 添付 | **Tax Agent** |
+| 請求 · 支払 · 仕訳 | **Accounting Agent** |
+| 株総 · 取締役会 · 議事録 | **Corporate Governance Agent** |
+| 人事 · 社保 · 就業規則 | **Human Resources Agent** |
+| 補助金 · 行政手続 | **Government Affairs Agent** |
+| 商標 · 知財 | **Intellectual Property Agent** |
+| 購買 · 発注 · 稟議 | **Procurement Agent** |
+| 案件進捗 · PMO | **Project Management Agent** |
 | 賃貸モジュール（空室・減価等） | **Property Rental Agent** |
 | 宿泊モジュール（開業・稼働・OTA） | **Hospitality Agent** |
 | 規程・許認可・ISO・個情 | **Compliance Agent** |
+| セキュリティ · 分類境界 | **Security Agent** |
 | inbox 滞留・書類归档 | **Operations Agent** |
+| 営業 · パイプライン | **Sales Lead** |
+| 新規開拓（アウト/インバ） | **Sales Outbound / Inbound** |
+| 既存顧客 | **Customer Success** |
+| マーケ · コンテンツ | **Marketing Lead** |
+| SNS 投稿下書き | **Social Media** |
+| 技術方針 · 実装 | **CTO / Engineering** |
+| デザイン | **Design Lead / Design** |
+
+組織図: [org-chart.md](org-chart.md) · COO 委譲: [delegate_growth_team.md](../orchestrators/delegate_growth_team.md)
 
 照会時は [folder_access_policy.md](../steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
 

@@ -31,6 +31,48 @@ const CORE_AGENTS = new Set<AgentId>([
   "operations",
 ]);
 
+/** AI カンパニー拡張 — 常時ルーティング可（modules.yaml 不要） */
+const EXTENSION_AGENTS = new Set<AgentId>([
+  "coo",
+  "cto",
+  "engineering",
+  "design_lead",
+  "design",
+  "sales_lead",
+  "sales_outbound",
+  "sales_inbound",
+  "customer_success",
+  "marketing_lead",
+  "social_media",
+  "personal_finance",
+  "legal",
+  "security",
+  "human_resources",
+  "corporate_governance",
+  "accounting",
+  "tax",
+  "procurement",
+  "government_affairs",
+  "intellectual_property",
+  "general_affairs",
+  "project_management",
+  "product_management",
+  "recruiting",
+  "risk_insurance",
+  "data_analytics",
+  "devops",
+  "investor_relations",
+  "esg_sustainability",
+  "internal_audit",
+  "privacy_officer",
+  "treasury",
+  "customer_support",
+  "pr_communications",
+  "learning_development",
+  "corporate_development",
+  "quality_assurance",
+]);
+
 const EXECUTIVE_DATA_PREFIXES = ["data/executive/", "docs/executive/"];
 
 export interface RouteMatchInput {
@@ -82,7 +124,7 @@ function textMatchesKeyword(text: string, keyword: string): boolean {
 }
 
 function isModuleAgentEnabled(agent: AgentId): boolean {
-  if (CORE_AGENTS.has(agent)) return true;
+  if (CORE_AGENTS.has(agent) || EXTENSION_AGENTS.has(agent)) return true;
   const enabled = loadEnabledModules();
   return enabled.some((mod) => MODULE_TO_CLASSIFICATION_AGENT[mod.agent] === agent);
 }

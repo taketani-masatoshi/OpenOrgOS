@@ -4,6 +4,7 @@ test-results/
 playwright-report/
 .orgos-ci/
 .orgos/
+data/.orgos/
 # Wire Console build output
 apps/wire-console/dist/
 scratch/*
@@ -69,6 +70,15 @@ tenants/*/docs/finance/accounting/invoices/**/output/**
 !tenants/*/docs/finance/accounting/invoices/**/output/00-このフォルダについて.md
 *.log
 .DS_Store
+*.tgz
+apps/wire-console/dist-combined/
+packages/orgos-cli/dist/
+packages/orgos-cli/steward/
+packages/orgos-cli/schemas/
+packages/orgos-cli/docs/
+packages/orgos-cli/tenants/
+packages/orgos-cli/deploy/
+packages/orgos-cli/apps/
 .env
 .env.*
 !.env.example

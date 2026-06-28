@@ -4,6 +4,7 @@
   "description": "OrgOS — Organizational OS reference implementation (tenant-separated management framework)",
   "type": "module",
   "workspaces": [
+    "apps/steward-chat",
     "apps/wire-console",
     "packages/*"
   ],
@@ -42,11 +43,22 @@
     "wire-console:smoke": "npm run wire-console:build && playwright test e2e/wire-console.smoke.spec.ts && playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts",
     "wire-console:release-check": "npm run wire-console:test && npm run wire-console:smoke",
     "wire-console:test": "vitest run tests/wire-console-server.test.ts tests/wire-console-human-mail.test.ts tests/wire-console-redact.test.ts tests/wire-console-webauthn-verify.test.ts tests/wire-console-webauthn-register.test.ts",
+    "steward-chat:dev": "npm run dev -w @orgos/steward-chat",
+    "steward-chat:build": "npm run build -w @orgos/steward-chat",
+    "steward-chat:smoke": "vitest run tests/steward-chat-today.test.ts tests/steward-chat-auth.test.ts tests/steward-chat-stream.test.ts tests/steward-chat-events-stream.test.ts tests/steward-chat-flush.test.ts tests/chat-thread.test.ts tests/session-persist.test.ts tests/operator-dispatch-unified.test.ts tests/operator-runtime-shell.test.ts tests/operator-runtime-llm.test.ts tests/operator-runtime-tools.test.ts tests/operator-runtime-structured.test.ts tests/operator-runtime-telemetry.test.ts tests/mcp-auth-audit.test.ts tests/mcp-steward.test.ts tests/mcp-http.test.ts tests/mcp-abnormal.test.ts tests/rate-limit.test.ts tests/prod-auth-checklist.test.ts tests/prod-startup.test.ts tests/notifications-push.test.ts tests/csrf-guard.test.ts tests/chat-audit.test.ts tests/chat-rbac.test.ts tests/steward-chat-witness.test.ts tests/steward-chat-operator-stats.test.ts tests/steward-chat-abnormal.test.ts tests/package-release.test.ts",
+    "steward-chat:release-check": "npm run steward-chat:smoke && npm run steward-chat:e2e && npm run steward-chat:webauthn-e2e && npm run operator-console:e2e",
+    "steward-chat:e2e": "npm run steward-chat:build && playwright test --config=playwright.steward-chat.config.ts",
+    "steward-chat:webauthn-e2e": "npm run steward-chat:build && playwright test --config=playwright.steward-chat-webauthn.config.ts",
+    "operator-console:e2e": "npm run operator-console:build && playwright test --config=playwright.operator-console.config.ts",
+    "operator-console:build": "npm run steward-chat:build && VITE_BASE=/wire/ VITE_OUT_DIR=dist-combined npm run build -w @orgos/wire-console",
+    "prod:verify": "node --import tsx scripts/prod-verify-operator-console.ts",
+    "package:publish-check": "node scripts/package-publish-check.mjs",
     "build:package": "node scripts/build-orgos-package.mjs",
     "package:pack": "npm run build:package && npm pack -w @orgos/cli"
   },
   "dependencies": {
     "@independentsoft/msg": "^1.0.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^13.1.0",
     "pdfkit": "^0.18.0",
     "yaml": "^2.7.0",

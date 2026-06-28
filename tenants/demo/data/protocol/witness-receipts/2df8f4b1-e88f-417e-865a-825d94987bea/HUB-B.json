@@ -1,0 +1,31 @@
+{
+  "receipt_id": "WRCPT-1782654048642-9nv51a",
+  "event_id": "2df8f4b1-e88f-417e-865a-825d94987bea",
+  "envelope_digest": "f0119573c458f644f90a456b42ab84e49d663cedc92294e3768b62439109bac7",
+  "status": "unilateral",
+  "attestations": [
+    {
+      "event_id": "2df8f4b1-e88f-417e-865a-825d94987bea",
+      "envelope_digest": "f0119573c458f644f90a456b42ab84e49d663cedc92294e3768b62439109bac7",
+      "side": "sent",
+      "origin": {
+        "org_id": "demo",
+        "org_uri": "steward://tenant/demo"
+      },
+      "destination": {
+        "org_id": "PEER-001"
+      },
+      "transaction_type": "steward.contract.execution.notice",
+      "attested_at": "2026-06-28T13:40:48.634Z",
+      "org_ref": {
+        "org_id": "demo",
+        "org_uri": "steward://tenant/demo"
+      },
+      "org_public_key": "MCowBQYDK2VwAyEAb1D4lhI0+iWDMz/oGPNur6M8abIEliPgGTi1WL/Ht1k=",
+      "org_signature": "r2EkE5uVgffHc7fMv2XtRnYA1Xh5jfuLyMyBDCnmAs9JyCbGtiYf1R+MIU3+eGCeYmBP0HdmvPO62QmpqJrLAw=="
+    }
+  ],
+  "issued_at": "2026-06-28T13:40:48.642Z",
+  "hub_id": "HUB-B",
+  "hub_signature": "e4ePDr5WcnhEiWHrMEpaxNaBXeGSpTK1LmjMk+1StiORjhQFplYQoD4PocemGogrxDsMW9EVJG6GOfTexjjMDg=="
+}

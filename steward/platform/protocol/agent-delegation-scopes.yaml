@@ -19,3 +19,40 @@ agents:
     - correspondence.draft
   operations:
     - operations.execute
+  coo:
+    - work_order.route
+    - work_order.track
+  cto:
+    - engineering.review
+  engineering:
+    - code.implement
+  sales_lead:
+    - sales.pipeline
+  marketing_lead:
+    - marketing.plan
+  legal:
+    - legal.review
+    - registration.draft
+  security:
+    - security.audit
+  human_resources:
+    - hr.policy
+    - hr.payroll.coord
+  corporate_governance:
+    - governance.meeting
+    - governance.resolution
+  accounting:
+    - accounting.invoice
+    - accounting.payment
+  tax:
+    - tax.filing.prep
+  procurement:
+    - procurement.order
+  government_affairs:
+    - subsidy.draft
+  intellectual_property:
+    - ip.filing.draft
+  project_management:
+    - project.status
+  devops:
+    - infra.deploy.prep

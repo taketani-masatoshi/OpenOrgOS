@@ -216,6 +216,17 @@ async function handleApi(
   return false;
 }
 
+/** Combined Operator Console — reuse Wire BFF routes on shared origin. */
+export async function handleWireConsoleApi(
+  req: IncomingMessage,
+  res: ServerResponse,
+  pathname: string,
+  method: string,
+  searchParams: URLSearchParams
+): Promise<boolean> {
+  return handleApi(req, res, pathname, method, searchParams);
+}
+
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",

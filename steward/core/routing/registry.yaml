@@ -240,3 +240,403 @@ routes:
       paths:
         - docs/properties/
         - data/properties/
+
+  - id: coo-work-order
+    description: Work Order · 進捗 · 担当割当
+    agent: coo
+    priority: 88
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - Work Order
+        - 担当割当
+        - 進捗追跡
+        - COO
+        - 委譲
+      paths:
+        - docs/reports/routing-queue/
+
+  - id: sales-pipeline
+    description: 営業 · 見積 · パイプライン
+    agent: sales_lead
+    priority: 72
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 営業
+        - 見積
+        - パイプライン
+        - 商談
+        - 受注
+      paths:
+        - docs/sales/
+        - data/sales/
+
+  - id: sales-outbound
+    description: 新規開拓 · アウトバウンド
+    agent: sales_outbound
+    priority: 68
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - アウトバウンド
+        - コールド
+        - リスト
+        - 新規開拓
+      paths:
+        - docs/sales/outbound/
+
+  - id: marketing-content
+    description: マーケ · コンテンツ · 施策
+    agent: marketing_lead
+    priority: 66
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - マーケ
+        - コンテンツ
+        - LP
+        - 記事企画
+      paths:
+        - docs/marketing/
+
+  - id: social-post
+    description: SNS · 投稿下書き
+    agent: social_media
+    priority: 64
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - SNS
+        - 投稿
+        - X
+        - LinkedIn
+        - ソーシャル
+      paths:
+        - docs/marketing/social/
+
+  - id: customer-success
+    description: 既存顧客 · CS · 解約防止
+    agent: customer_success
+    priority: 70
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - CS
+        - カスタマーサクセス
+        - 既存顧客
+        - 解約
+        - オンボーディング
+      paths:
+        - docs/customer-success/
+
+  - id: legal-teikan
+    description: 法務 · 定款 · 登記ドラフト
+    agent: legal
+    priority: 74
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 定款
+        - 登記
+        - 法務
+        - 条文
+        - 商号変更
+        - 目的変更
+      paths:
+        - docs/corporate-registration/
+        - docs/company/teikan-summary.md
+
+  - id: engineering-code
+    description: 実装 · バグ · PR
+    agent: engineering
+    priority: 58
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 実装
+        - バグ
+        - PR
+        - リファクタ
+        - エンジニア
+      paths:
+        - src/
+        - tests/
+
+  - id: security-audit
+    description: セキュリティ · 分類 · アクセス境界
+    agent: security
+    priority: 76
+    resource_paths:
+      - data/classification-registry.yaml
+    match:
+      keywords:
+        - セキュリティ
+        - 情報漏洩
+        - classification
+        - gitignore
+        - アクセス境界
+      paths:
+        - data/classification-registry.yaml
+
+  - id: hr-labor
+    description: 人事 · 労務 · 社保
+    agent: human_resources
+    priority: 78
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 人事
+        - 労務
+        - 社保
+        - 就業規則
+        - 36協定
+      paths:
+        - data/hr/
+        - docs/company/hr/
+
+  - id: corporate-meetings
+    description: 株主総会 · 取締役会 · 議事録
+    agent: corporate_governance
+    priority: 77
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 株主総会
+        - 取締役会
+        - 議事録
+        - 招集
+        - 決議
+      paths:
+        - docs/company/
+
+  - id: accounting-ops
+    description: 経理 · 請求 · 支払
+    agent: accounting
+    priority: 71
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 請求書
+        - 支払
+        - 仕訳
+        - 経理
+        - インボイス
+      paths:
+        - docs/finance/accounting/
+
+  - id: tax-filing
+    description: 税務 · 申告
+    agent: tax
+    skill: tax_filing_prep
+    priority: 73
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 法人税
+        - 消費税
+        - 税務申告
+        - 確定申告
+        - e-Tax
+      paths:
+        - docs/company/tax/
+
+  - id: procurement-order
+    description: 購買 · 調達 · 稟議
+    agent: procurement
+    priority: 67
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 購買
+        - 調達
+        - 発注
+        - ベンダー
+        - 稟議
+      paths:
+        - docs/procurement/
+
+  - id: subsidy-government
+    description: 補助金 · 行政手続
+    agent: government_affairs
+    priority: 69
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 補助金
+        - 交付金
+        - 認定
+        - 行政
+      paths:
+        - docs/government/
+
+  - id: ip-trademark
+    description: 知財 · 商標
+    agent: intellectual_property
+    priority: 68
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 商標
+        - 特許
+        - 知財
+        - ライセンス
+      paths:
+        - docs/ip/
+
+  - id: pmo-project
+    description: PMO · 案件進捗
+    agent: project_management
+    priority: 63
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - PMO
+        - 案件
+        - WBS
+        - 進捗報告
+      paths:
+        - docs/projects/
+
+  - id: hr-labor
+    description: 人事 · 労務 · 社保
+    agent: human_resources
+    priority: 78
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 人事
+        - 労務
+        - 社保
+        - 就業規則
+        - 36協定
+      paths:
+        - data/hr/
+        - docs/company/hr/
+
+  - id: corporate-meetings
+    description: 株主総会 · 取締役会 · 議事録
+    agent: corporate_governance
+    priority: 77
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 株主総会
+        - 取締役会
+        - 議事録
+        - 招集
+        - 決議
+      paths:
+        - docs/company/
+
+  - id: accounting-ops
+    description: 経理 · 請求 · 支払
+    agent: accounting
+    priority: 71
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 請求書
+        - 支払
+        - 仕訳
+        - 経理
+        - インボイス
+      paths:
+        - docs/finance/accounting/
+
+  - id: tax-filing
+    description: 税務 · 申告
+    agent: tax
+    skill: tax_filing_prep
+    priority: 73
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 法人税
+        - 消費税
+        - 税務申告
+        - 確定申告
+        - e-Tax
+      paths:
+        - docs/company/tax/
+
+  - id: procurement-order
+    description: 購買 · 調達 · 稟議
+    agent: procurement
+    priority: 67
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 購買
+        - 調達
+        - 発注
+        - ベンダー
+        - 稟議
+      paths:
+        - docs/procurement/
+
+  - id: subsidy-government
+    description: 補助金 · 行政手続
+    agent: government_affairs
+    priority: 69
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 補助金
+        - 交付金
+        - 認定
+        - 行政
+      paths:
+        - docs/government/
+
+  - id: ip-trademark
+    description: 知財 · 商標
+    agent: intellectual_property
+    priority: 68
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 商標
+        - 特許
+        - 知財
+        - ライセンス
+      paths:
+        - docs/ip/
+
+  - id: pmo-project
+    description: PMO · 案件進捗
+    agent: project_management
+    priority: 63
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - PMO
+        - 案件
+        - WBS
+        - 進捗報告
+      paths:
+        - docs/projects/

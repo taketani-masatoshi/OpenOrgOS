@@ -1,0 +1,28 @@
+{
+  "protocol_version": "1",
+  "event_id": "fd1a18a1-edda-4457-b61a-b78d3b901d6c",
+  "occurred_at": "2026-06-28T13:40:48.648Z",
+  "origin": {
+    "org_id": "demo",
+    "org_uri": "steward://tenant/demo"
+  },
+  "correlation_id": "2df8f4b1-e88f-417e-865a-825d94987bea",
+  "identity": {
+    "org_ref": {
+      "org_id": "demo",
+      "org_uri": "steward://tenant/demo"
+    }
+  },
+  "event": {
+    "type": "org.witness.receipt.issued",
+    "payload": {
+      "witness_event_id": "2df8f4b1-e88f-417e-865a-825d94987bea",
+      "receipt_id": "WRCPT-1782654048642-9nv51a",
+      "envelope_digest": "f0119573c458f644f90a456b42ab84e49d663cedc92294e3768b62439109bac7",
+      "status": "unilateral",
+      "hub_id": "HUB-B",
+      "issued_at": "2026-06-28T13:40:48.642Z"
+    }
+  },
+  "signature": "Elq27+QGNW03yL6ZGM8MumuvGnHtSQojiyMDXpOvJ6x+k0IU3ompAMP3H8Y0pHOu5JiHo3VbMppCGlHxUP2oCA=="
+}

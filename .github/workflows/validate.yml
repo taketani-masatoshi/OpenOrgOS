@@ -52,6 +52,50 @@ jobs:
       - run: playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts
         env:
           WIRE_CONSOLE_OIDC_SMOKE_PORT: "9474"
+  steward-chat-smoke:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run steward-chat:smoke
+      - run: npx playwright install --with-deps chromium
+      - run: npm run steward-chat:build
+      - run: npm run steward-chat:e2e
+        env:
+          STEWARD_CHAT_SMOKE_PORT: "9475"
+      - run: npm run steward-chat:webauthn-e2e
+        env:
+          STEWARD_CHAT_WEBAUTHN_SMOKE_PORT: "9477"
+  package-publish-check:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run package:publish-check
+  operator-console-e2e:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run operator-console:e2e
+        env:
+          OPERATOR_CONSOLE_SMOKE_PORT: "9476"
   test-docker:
     runs-on: ubuntu-latest
     needs: validate

@@ -1,0 +1,41 @@
+{
+  "protocol_version": "1",
+  "event_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "occurred_at": "2026-06-28T12:00:01.000Z",
+  "origin": {
+    "org_id": "demo",
+    "org_uri": "steward://tenant/demo"
+  },
+  "destination": {
+    "org_id": "PEER-001",
+    "org_uri": "steward://tenant/peer"
+  },
+  "correlation_id": "DEMO-WITNESS-001",
+  "identity": {
+    "org_ref": {
+      "org_id": "demo",
+      "org_uri": "steward://tenant/demo"
+    }
+  },
+  "event": {
+    "type": "org.transaction.recorded",
+    "payload": {
+      "transaction_id": "TX-DEMO-WITNESS-001",
+      "direction": "outbound",
+      "transaction_type": "steward.contract.execution.notice",
+      "counterparty": "PEER-001",
+      "refs": {
+        "contract_id": "CTR-099"
+      },
+      "notes": "demo witness envelope",
+      "operator_attestation": {
+        "operator_id": "demo-seed",
+        "approver_id": "CEO",
+        "approved_at": "2026-06-28T12:00:01.000Z",
+        "basis": "existing_contract",
+        "basis_ref": "CTR-099",
+        "approval_tier": "A"
+      }
+    }
+  }
+}

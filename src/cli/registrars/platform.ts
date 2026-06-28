@@ -309,4 +309,107 @@ export function registerPlatformCommands(program: Command): void {
         output: opts.output,
       })
     );
+
+  const chatCmd = program.command("chat").description("Steward Chat BFF + Operator ask");
+  chatCmd
+    .command("start")
+    .description("Start Steward Chat BFF (dev)")
+    .option("--host <host>", "Bind host")
+    .option("--port <port>", "Bind port", (v: string) => parseInt(v, 10))
+    .option("--tenant <id>", "Tenant id")
+    .action(async (opts) => {
+      const { runChatStart } = await import("../../commands/chat.js");
+      await runChatStart(opts);
+    });
+  chatCmd
+    .command("today")
+    .description("Print Today context (L1)")
+    .option("--json", "JSON output")
+    .option("--refresh", "Run pipeline daily before building context")
+    .action(async (opts) => {
+      const { runChatToday } = await import("../../commands/chat.js");
+      await runChatToday(opts);
+    });
+  chatCmd
+    .command("ask <message>")
+    .description("Operator ask (CLI thread)")
+    .option("--refresh", "Run pipeline daily before ask")
+    .action(async (message: string, opts) => {
+      const { runChatAsk } = await import("../../commands/chat.js");
+      await runChatAsk(message, opts);
+    });
+
+  const operatorCmd = program.command("operator").description("CEO operator layer");
+  operatorCmd
+    .command("sync-policy")
+    .description("Sync operator-policy.md to Cursor rule / AGENTS.md")
+    .option("--emit <target>", "cursor | agents-md | all", "all")
+    .action(async (opts) => {
+      const { runOperatorSyncPolicy } = await import("../../commands/operator.js");
+      runOperatorSyncPolicy({ emit: opts.emit as "cursor" | "agents-md" | "all" });
+    });
+
+  const operatorRuntimeCmd = operatorCmd.command("runtime").description("Operator runtime adapters");
+  operatorRuntimeCmd.command("show").description("Show runtime.yaml config").action(async () => {
+    const { runOperatorRuntimeShow } = await import("../../commands/operator.js");
+    runOperatorRuntimeShow();
+  });
+  operatorRuntimeCmd.command("test").description("Test shell adapter").action(async () => {
+    const { runOperatorRuntimeTest } = await import("../../commands/operator.js");
+    await runOperatorRuntimeTest();
+  });
+  operatorRuntimeCmd
+    .command("stats")
+    .description("LLM telemetry summary")
+    .option("--limit <n>", "Sample window", (v: string) => parseInt(v, 10))
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorRuntimeStats } = await import("../../commands/operator.js");
+      runOperatorRuntimeStats({ limit: opts.limit, json: opts.json });
+    });
+
+  const operatorConsoleCmd = operatorCmd.command("console").description("Combined Operator Console");
+  operatorConsoleCmd
+    .command("start")
+    .description("Start Chat + Wire on one origin (:9470)")
+    .option("--host <host>", "Bind host", "127.0.0.1")
+    .option("--port <port>", "Bind port", (v: string) => parseInt(v, 10))
+    .option("--tenant <id>", "Tenant id")
+    .action(async (opts) => {
+      const { runOperatorConsoleStart } = await import("../../commands/operator-console.js");
+      await runOperatorConsoleStart(opts);
+    });
+
+  const mcpCmd = program.command("mcp").description("Steward MCP tools (stdio / HTTP)");
+  mcpCmd.command("start").description("MCP stdio server").action(async () => {
+    const { runMcpStart } = await import("../../commands/mcp.js");
+    await runMcpStart();
+  });
+  mcpCmd
+    .command("serve-http")
+    .description("MCP HTTP/SSE server (Bearer ORGOS_MCP_TOKEN)")
+    .option("--host <host>", "Bind host", process.env.ORGOS_MCP_HTTP_HOST ?? "127.0.0.1")
+    .option("--port <port>", "Bind port", process.env.ORGOS_MCP_HTTP_PORT ?? "9478")
+    .action(async (opts) => {
+      const { runMcpServeHttp } = await import("../../commands/mcp.js");
+      await runMcpServeHttp({
+        host: opts.host,
+        port: opts.port ? parseInt(String(opts.port), 10) : undefined,
+      });
+    });
+  mcpCmd.command("rotate-token").description("Generate new ORGOS_MCP_TOKEN").action(async () => {
+    const { runMcpRotateToken } = await import("../../commands/mcp.js");
+    runMcpRotateToken();
+  });
+
+  const notificationsCmd = program.command("notifications").description("Push notifications (tenant registry)");
+  notificationsCmd
+    .command("test")
+    .description("Send test notification payload")
+    .option("--dry-run", "Print payload without POST")
+    .option("--event <name>", "Event id", "pipeline_daily_complete")
+    .action(async (opts) => {
+      const { runNotificationsTest } = await import("../../commands/notifications.js");
+      await runNotificationsTest({ dryRun: opts.dryRun, event: opts.event });
+    });
 }

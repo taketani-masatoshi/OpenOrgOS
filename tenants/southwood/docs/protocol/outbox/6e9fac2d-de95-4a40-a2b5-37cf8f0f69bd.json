@@ -1,0 +1,27 @@
+{
+  "protocol_version": "1",
+  "event_id": "6e9fac2d-de95-4a40-a2b5-37cf8f0f69bd",
+  "occurred_at": "2026-06-28T10:31:25.706Z",
+  "origin": {
+    "org_id": "southwood",
+    "org_uri": "steward://tenant/southwood"
+  },
+  "correlation_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+  "identity": {
+    "org_ref": {
+      "org_id": "southwood",
+      "org_uri": "steward://tenant/southwood"
+    }
+  },
+  "event": {
+    "type": "org.witness.attestation.registered",
+    "payload": {
+      "witness_event_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+      "envelope_digest": "c3debe5316679b7e1890f7db5134bd53416f923b6c9eeb877a3e7ac5e40bbeed",
+      "side": "received",
+      "hub_id": "HUB-A",
+      "attested_at": "2026-06-28T10:31:25.701Z"
+    }
+  },
+  "signature": "xQePHLG+/JZ4omtgjKgRF+GolHwyNO7nuy81u9P4ZvQrAs1vZo+oR+UMZB6txz8uzi0C65mJvypGDt/e/vT9CQ=="
+}

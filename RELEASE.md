@@ -4,8 +4,8 @@
 
 ## 段階 0 チェックリスト
 
-1. `main` で CI green（`validate` · `test-docker` · `wire-console-smoke`）
-2. `npm test` · `npm run build:package` · `npm run orgos -- doctor`
+1. `main` で CI green（`validate` · `steward-chat-smoke` · `operator-console-e2e` · `test-docker` · `wire-console-smoke`）
+2. `npm test` · `npm run steward-chat:release-check` · `npm run package:publish-check` · `npm run build:package` · `npm run orgos -- doctor`
 3. 変更内容を `CHANGELOG` 相当（PR 本文）に記載
 4. タグ付け:
 

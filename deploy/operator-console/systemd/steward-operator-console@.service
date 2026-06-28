@@ -1,0 +1,22 @@
+[Unit]
+Description=OrgOS Operator Console (combined Chat + Wire) — %i
+After=network.target
+
+[Service]
+Type=simple
+User=steward
+Group=steward
+WorkingDirectory=/opt/orgos-reference
+Environment=ORGOS_TENANT=%i
+Environment=ORGOS_ENV=production
+Environment=STEWARD_CHAT_AUTH=1
+Environment=ORGOS_COOKIE_SECURE=1
+Environment=ORGOS_SESSION_PERSIST=1
+Environment=OPERATOR_CONSOLE_PORT=9470
+Environment=OPERATOR_CONSOLE_HOST=127.0.0.1
+ExecStart=/usr/bin/node --import tsx /opt/orgos-reference/src/cli.ts operator console start --host 127.0.0.1 --port 9470
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
