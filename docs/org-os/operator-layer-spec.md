@@ -34,7 +34,9 @@
 ## 3. CLI
 
 ```bash
-orgos operator sync-policy [--emit cursor|agents-md|all]
+orgos operator sync-policy [--emit cursor|agents-md|dev-guide|all]
+orgos operator export [--agent finance] [--all] [--emit packs|index|mcp|all]
+orgos operator portability [--json] [--write]
 orgos operator runtime show|test
 orgos operator console start [--host 0.0.0.0 --port 9470]
 orgos chat start|today|ask
@@ -52,6 +54,7 @@ orgos mcp rotate-token
 | Adapter | 設定 | 用途 |
 |---------|------|------|
 | **shell** | `runtime.yaml` · profiles | aider / cline / openhands（default） |
+| **portable** | `orgos agent implement` · dispatch fallback | LLM API · shell · manifest（Cursor 不要） |
 | **cursor** | `@cursor/sdk` + `CURSOR_API_KEY` | Cursor SDK |
 | **manifest** | fallback | プロンプト MD のみ |
 | **mcp stdio** | `orgos mcp start` | Cursor / Continue · `ORGOS_MCP_TOKEN` |
@@ -124,7 +127,7 @@ Today コンテキストは **human-mail 承認待ち** と **wire delivery 配�
 | `cli` | LLM 不要 · `orgos skills run` |
 | `agent` | LLM + workspace · shell adapter |
 
-`cursor-only` は **非推奨 alias**（読取時 `agent` に正規化）。
+| `cursor-only` | **非推奨 alias** — 読取時 `agent` と同義（LLM + 定義添付） |
 
 ---
 

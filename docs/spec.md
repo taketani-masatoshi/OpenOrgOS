@@ -251,7 +251,7 @@ npm run orgos -- skills run <id>
 | `p0` | p0_closing | Executive |
 | `daily` | daily_ops | Executive |
 
-`registry.yaml` の `runtime: cli | cursor-only` で実行面を区別（cursor-only は Cursor チャット専用）。
+`registry.yaml` の `runtime: cli | agent | cursor-only` で実行面を区別（`cursor-only` は `agent` の legacy alias）。
 
 ---
 
@@ -286,8 +286,23 @@ npm run orgos -- invoice generate \
 ```bash
 npm run orgos -- audit log append --event handoff --ref IMP-... --detail "..."
 npm run orgos -- audit log list
-npm run orgos -- compliance gap [--tenant mal]   # ISO / REG ギャップ
+npm run orgos -- compliance gap [--tenant mal]   # ISO / REG ギャップ + 統制ギャップ
+npm run orgos -- controls list [--iso ISO-9001] [--agent compliance]
+npm run orgos -- controls status
+npm run orgos -- controls gap
+npm run orgos -- controls for-agent compliance
+npm run orgos -- controls init
+npm run orgos -- controls set --id CTL-9001-4.3 --maturity L2
+npm run orgos -- agent readiness [--agent finance] [--min 80]
+npm run orgos -- agent pulse --agent finance
+npm run orgos -- agent pulse --all
+npm run orgos -- agent pulse --extensions
+npm run orgos -- operations medical-device show
+npm run orgos -- operations medical-device qms draft --doc QMS-MAN-001 --write
+npm run orgos -- operations medical-device gvp draft --doc GVP-001 --write
 ```
+
+正本: `steward/core/agents/agent-capability-manifest.yaml` · 7 軸（定義 / Skill·CLI / データ SoT / routing / dashboard 要約 / test / テナント seed）で 80% を実務利用下限とする。
 
 監査証跡は append-only JSONL（`docs/reports/audit-log/audit.jsonl` · gitignore）。
 
@@ -328,7 +343,7 @@ npm run orgos -- compliance gap [--tenant mal]   # ISO / REG ギャップ
 | 13 | ルーティング · 委譲 | `route` · `escalate` |
 | 14 | ディスパッチ · キュー · webhook | `agent dispatch` · `agent cloud` · `queue` · `webhook` |
 | 15 | PR 統合 | `merge pr` |
-| 16 | 監査 · コンプライアンス | `audit log` · `compliance gap` |
+| 16 | 監査 · コンプライアンス | `audit log` · `compliance gap` · `controls` |
 | 17 | テナント · 移行 · 振込 | `tenant init` · `migrate` · `broker` |
 | 18 | Secretary executive | `executive calendar list` · `conflicts` · `push` · `brief` · `secretary escalate` |
 

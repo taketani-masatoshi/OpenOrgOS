@@ -15,7 +15,7 @@ const skillRegistrySchema = z.object({
     z.object({
       id: z.string(),
       file: z.string(),
-      runtime: z.enum(["cli", "cursor-only"]),
+      runtime: z.enum(["cli", "cursor-only", "agent"]),
       cli_command: z.string().optional(),
       agent: z.string(),
       description: z.string(),
@@ -31,8 +31,15 @@ export interface ResolvedSkillEntry extends SkillRegistryEntry {
   moduleId?: string;
 }
 
+function normalizeSkillRuntime(runtime: SkillRegistryEntry["runtime"]): SkillRegistryEntry["runtime"] {
+  return runtime === "cursor-only" ? "agent" : runtime;
+}
+
 function loadRegistryAt(path: string): SkillRegistryEntry[] {
-  return loadRegistryFile(path, skillRegistrySchema, () => ({ skills: [] })).skills;
+  return loadRegistryFile(path, skillRegistrySchema, () => ({ skills: [] })).skills.map((skill) => ({
+    ...skill,
+    runtime: normalizeSkillRuntime(skill.runtime),
+  }));
 }
 
 function moduleSkillDirRel(moduleRoot: string, moduleId: string): string {
@@ -85,8 +92,13 @@ export function getCliSkills(scopeToTenant = false): ResolvedSkillEntry[] {
   return loadSkillRegistry(scopeToTenant).filter((s) => s.runtime === "cli");
 }
 
+export function getAgentInteractiveSkills(scopeToTenant = false): ResolvedSkillEntry[] {
+  return loadSkillRegistry(scopeToTenant).filter((s) => s.runtime === "cursor-only" || s.runtime === "agent");
+}
+
+/** @deprecated use getAgentInteractiveSkills — cursor-only is legacy alias for agent runtime */
 export function getCursorOnlySkills(scopeToTenant = false): ResolvedSkillEntry[] {
-  return loadSkillRegistry(scopeToTenant).filter((s) => s.runtime === "cursor-only");
+  return getAgentInteractiveSkills(scopeToTenant);
 }
 
 export function resolveSkillFilePath(skill: ResolvedSkillEntry): string {

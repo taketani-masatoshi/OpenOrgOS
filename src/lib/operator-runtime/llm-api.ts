@@ -1,4 +1,7 @@
+export type LlmProvider = "openai-compatible" | "anthropic";
+
 export interface LlmApiConfig {
+  provider: LlmProvider;
   baseUrl: string;
   apiKey: string;
   model: string;
@@ -27,9 +30,52 @@ export function isLlmMockEnabled(): boolean {
   return process.env.ORGOS_LLM_MOCK === "1";
 }
 
+export function resolveLlmProvider(): LlmProvider {
+  const explicit = process.env.ORGOS_LLM_PROVIDER?.trim().toLowerCase();
+  if (explicit === "anthropic" || explicit === "claude") return "anthropic";
+  if (explicit === "openai" || explicit === "openai-compatible") return "openai-compatible";
+
+  const anthropicKey =
+    process.env.ANTHROPIC_API_KEY?.trim() || process.env.ORGOS_ANTHROPIC_API_KEY?.trim();
+  const openaiKey =
+    process.env.ORGOS_LLM_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+
+  if (anthropicKey && !openaiKey) return "anthropic";
+  return "openai-compatible";
+}
+
 export function getLlmApiConfig(): LlmApiConfig | null {
   if (isLlmMockEnabled()) {
-    return { baseUrl: "mock://local", apiKey: "mock", model: "mock-ceo" };
+    return {
+      provider: resolveLlmProvider(),
+      baseUrl: "mock://local",
+      apiKey: "mock",
+      model: "mock-ceo",
+    };
+  }
+
+  const provider = resolveLlmProvider();
+
+  if (provider === "anthropic") {
+    const apiKey =
+      process.env.ANTHROPIC_API_KEY?.trim() ||
+      process.env.ORGOS_ANTHROPIC_API_KEY?.trim() ||
+      process.env.ORGOS_LLM_API_KEY?.trim() ||
+      "";
+    if (!apiKey) return null;
+    return {
+      provider: "anthropic",
+      baseUrl: (
+        process.env.ORGOS_LLM_API_URL?.trim() ||
+        process.env.ANTHROPIC_BASE_URL?.trim() ||
+        "https://api.anthropic.com"
+      ).replace(/\/$/, ""),
+      apiKey,
+      model:
+        process.env.ORGOS_LLM_MODEL?.trim() ||
+        process.env.ANTHROPIC_MODEL?.trim() ||
+        "claude-sonnet-4-20250514",
+    };
   }
 
   const apiKey =
@@ -49,7 +95,7 @@ export function getLlmApiConfig(): LlmApiConfig | null {
     process.env.OPENAI_MODEL?.trim() ||
     "gpt-4o-mini";
 
-  return { baseUrl, apiKey, model };
+  return { provider: "openai-compatible", baseUrl, apiKey, model };
 }
 
 export function isLlmApiConfigured(): boolean {
@@ -62,23 +108,8 @@ function mockReply(userMessage: string): string {
     "",
     `ご質問「${userMessage.slice(0, 120)}」を受け付けました。`,
     "Today コンテキストに基づき、承認待ち・Wire・inbox を確認してから回答します。",
-    "本番では OPENAI_API_KEY または aider を設定してください。",
+    "本番では OPENAI_API_KEY / ANTHROPIC_API_KEY または aider を設定してください。",
   ].join("\n");
-}
-
-function buildChatMessages(
-  systemContext: string,
-  userMessage: string,
-  history?: LlmHistoryTurn[]
-): Array<{ role: "system" | "user" | "assistant"; content: string }> {
-  const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    { role: "system", content: systemContext },
-  ];
-  for (const turn of history ?? []) {
-    messages.push({ role: turn.role, content: turn.content });
-  }
-  messages.push({ role: "user", content: userMessage });
-  return messages;
 }
 
 export async function runLlmAsk(
@@ -91,7 +122,7 @@ export async function runLlmAsk(
     return {
       ok: false,
       content: "",
-      detail: "LLM API not configured — set ORGOS_LLM_API_KEY or OPENAI_API_KEY",
+      detail: "LLM API not configured — set OPENAI_API_KEY or ANTHROPIC_API_KEY",
       model: "",
     };
   }
@@ -101,53 +132,30 @@ export async function runLlmAsk(
     return { ok: true, content, detail: content, model: cfg.model };
   }
 
-  const url = `${cfg.baseUrl}/chat/completions`;
-  const body = {
-    model: cfg.model,
-    messages: buildChatMessages(systemContext, userMessage, history),
-    temperature: 0.3,
-  };
+  const { postLlmChat, historyToMessages } = await import("./llm-chat.js");
+  const result = await postLlmChat(historyToMessages(systemContext, userMessage, history));
+  const content =
+    result.message && "content" in result.message && typeof result.message.content === "string"
+      ? result.message.content.trim()
+      : "";
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    const raw = await res.text();
-    if (!res.ok) {
-      return {
-        ok: false,
-        content: "",
-        detail: `LLM API ${res.status}: ${raw.slice(0, 500)}`,
-        model: cfg.model,
-      };
-    }
-
-    const parsed = JSON.parse(raw) as {
-      choices?: Array<{ message?: { content?: string } }>;
-      usage?: LlmUsage;
+  if (!result.ok || !content) {
+    return {
+      ok: false,
+      content: "",
+      detail: result.detail || "LLM API returned empty response",
+      model: result.model || cfg.model,
+      usage: result.usage as LlmUsage | undefined,
     };
-    const content = parsed.choices?.[0]?.message?.content?.trim() ?? "";
-    if (!content) {
-      return {
-        ok: false,
-        content: "",
-        detail: "LLM API returned empty response",
-        model: cfg.model,
-        usage: parsed.usage,
-      };
-    }
-
-    return { ok: true, content, detail: content, model: cfg.model, usage: parsed.usage };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { ok: false, content: "", detail: `LLM API error: ${message}`, model: cfg.model };
   }
+
+  return {
+    ok: true,
+    content,
+    detail: content,
+    model: result.model || cfg.model,
+    usage: result.usage as LlmUsage | undefined,
+  };
 }
 
 export async function* streamLlmAsk(
@@ -173,73 +181,10 @@ export async function* streamLlmAsk(
     return { ok: true, content, detail: content, model: cfg.model };
   }
 
-  const url = `${cfg.baseUrl}/chat/completions`;
-  const body = {
-    model: cfg.model,
-    messages: buildChatMessages(systemContext, userMessage, history),
-    temperature: 0.3,
-    stream: true,
-  };
-
-  let full = "";
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok || !res.body) {
-      const raw = await res.text().catch(() => "");
-      return {
-        ok: false,
-        content: "",
-        detail: `LLM API ${res.status}: ${raw.slice(0, 500)}`,
-        model: cfg.model,
-      };
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-        const payload = trimmed.slice(5).trim();
-        if (payload === "[DONE]") continue;
-        try {
-          const chunk = JSON.parse(payload) as {
-            choices?: Array<{ delta?: { content?: string } }>;
-          };
-          const delta = chunk.choices?.[0]?.delta?.content;
-          if (delta) {
-            full += delta;
-            yield delta;
-          }
-        } catch {
-          /* skip malformed chunk */
-        }
-      }
-    }
-
-    const content = full.trim();
-    if (!content) {
-      return { ok: false, content: "", detail: "LLM API returned empty stream", model: cfg.model };
-    }
-    return { ok: true, content, detail: content, model: cfg.model };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { ok: false, content: full, detail: `LLM API stream error: ${message}`, model: cfg.model };
+  // Non-streaming fallback for anthropic / unified path
+  const result = await runLlmAsk(systemContext, userMessage, history);
+  if (result.ok && result.content) {
+    yield result.content;
   }
+  return result;
 }

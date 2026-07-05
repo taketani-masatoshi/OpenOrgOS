@@ -123,6 +123,8 @@ flowchart TB
 
 追加 Skill は [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md) に随時追加。
 
+**新規 Skill:** [tool-neutral-development.md](tool-neutral-development.md) §2.3 — `runtime: cli` 優先 · `cursor-only` 新規禁止。
+
 ---
 
 ## CLI = Skill 実装
@@ -154,5 +156,6 @@ flowchart TB
 
 ## 関連
 
+- [tool-neutral-development.md](tool-neutral-development.md) — **Cursor 非依存開発（必読）**
 - [docs/agent_architecture.md](../docs/agent_architecture.md) — 現行パス詳細（レガシー索引）
 - [folder_access_policy.md](folder_access_policy.md)

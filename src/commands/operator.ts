@@ -1,5 +1,14 @@
 import { syncOperatorPolicy, type OperatorPolicyEmit } from "../lib/operator-policy.js";
+import {
+  computePortabilityAssessment,
+  exportPortableAgents,
+  formatPortabilityAssessment,
+  type OperatorExportEmit,
+} from "../lib/agent-portability.js";
 import { formatOperatorRuntimeConfig } from "../lib/operator-runtime/index.js";
+import { writeFileSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { ROOT_DIR } from "../lib/tenant.js";
 import {
   readRecentLlmTelemetry,
   summarizeLlmTelemetry,
@@ -8,9 +17,44 @@ import {
 export function runOperatorSyncPolicy(opts: { emit?: OperatorPolicyEmit }): void {
   const emit = opts.emit ?? "all";
   const paths = syncOperatorPolicy(emit);
+  if (emit === "all") {
+    exportPortableAgents({ all: true, emit: "all" });
+    console.log("✓ Portable agent packs refreshed");
+  }
   console.log("✓ Operator policy synced");
   if (paths.cursorRulePath) console.log(`  ${paths.cursorRulePath}`);
   if (paths.agentsMdPath) console.log(`  ${paths.agentsMdPath}`);
+  if (paths.devGuideRulePath) console.log(`  ${paths.devGuideRulePath}`);
+}
+
+export function runOperatorExport(opts: {
+  agent?: string;
+  all?: boolean;
+  emit?: OperatorExportEmit;
+  fullPolicy?: boolean;
+}): void {
+  const result = exportPortableAgents(opts);
+  console.log("✓ Portable agent export");
+  if (result.indexPath) console.log(`  ${result.indexPath}`);
+  for (const p of result.packs) console.log(`  ${p}`);
+  for (const p of result.mcpPaths) console.log(`  ${p}`);
+}
+
+export function runOperatorPortability(opts: { json?: boolean; write?: boolean } = {}): void {
+  const report = computePortabilityAssessment();
+  if (opts.json) {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    console.log(formatPortabilityAssessment(report));
+  }
+  if (opts.write) {
+    const dir = join(ROOT_DIR, "steward", "platform", "agent");
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, "PORTABILITY-ASSESSMENT.md");
+    writeFileSync(path, formatPortabilityAssessment(report), "utf-8");
+    console.log(`\n✓ ${path}`);
+  }
+  if (!report.target_met) process.exit(1);
 }
 
 export function runOperatorRuntimeShow(): void {

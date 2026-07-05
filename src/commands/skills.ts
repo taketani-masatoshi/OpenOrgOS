@@ -13,11 +13,15 @@ import { loadMonthlyFinance } from "../lib/data.js";
 import { runDashboard } from "./dashboard.js";
 import { runForecast } from "./forecast.js";
 import { currentDate, readYamlFile, writeMarkdownReport, getExecutiveDir } from "../lib/utils.js";
-import {
-  runCapexPlanningSkill,
+import { runCapexPlanningSkill,
   runContractRegisterSkill,
   runTaxFilingPrepSkill,
 } from "../lib/core-skill-runners.js";
+import {
+  formatControlStatusReport,
+  computeControlGaps,
+  controlsForAgent,
+} from "../lib/control-framework.js";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { calendarFileSchema, oneOnOnesFileSchema } from "../../schemas/executive.js";
@@ -34,6 +38,18 @@ export const SKILL_COMMANDS = [
     skill: "permit_expiry_check",
     agent: "Compliance",
     description: "許認可 · 保険 INDEX · draft CTR",
+  },
+  {
+    id: "iso-control-review",
+    skill: "iso_control_review",
+    agent: "Compliance",
+    description: "ISO × REG 統制ギャップ · 成熟度",
+  },
+  {
+    id: "internal-audit-scope",
+    skill: "internal_audit_scope",
+    agent: "Internal Audit",
+    description: "CTL ベース内部監査スコープ",
   },
   {
     id: "monthly-close",
@@ -130,7 +146,7 @@ export function runSkillsList(): void {
     console.log(`| ${s.runtime} | ${s.id} | ${cli} | ${s.agent} |`);
   }
 
-  console.log(`\nCLI: ${getCliSkills().length} · cursor-only: ${getCursorOnlySkills().length}`);
+  console.log(`\nCLI: ${getCliSkills().length} · agent-interactive: ${getCursorOnlySkills().length}`);
   console.log("\n例: npm run orgos -- skills run contract-expiry");
   console.log("     npm run orgos -- pipeline run daily");
   console.log("     npm run orgos -- route list");
@@ -249,6 +265,38 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
     case "capex-planning":
       runCapexPlanningSkill(opts);
       break;
+    case "iso-control-review": {
+      const md = formatControlStatusReport();
+      const path = writeMarkdownReport(
+        "agent-summaries/compliance",
+        opts.output ?? `controls-${currentDate()}.md`,
+        md
+      );
+      console.log(`✓ ${path}`);
+      if (computeControlGaps().length) process.exit(1);
+      break;
+    }
+    case "internal-audit-scope": {
+      const ctrls = controlsForAgent("internal_audit");
+      const lines = [
+        "# Internal Audit Scope — CTL",
+        "",
+        `**Date:** ${currentDate()}`,
+        `**Controls:** ${ctrls.length}`,
+        "",
+      ];
+      for (const c of ctrls) {
+        lines.push(`- ${c.id} (${c.tenant_maturity}/${c.target_maturity}) — ${c.title}`);
+      }
+      lines.push("");
+      const path = writeMarkdownReport(
+        "agent-summaries/internal-audit",
+        opts.output ?? `controls-${currentDate()}.md`,
+        lines.join("\n")
+      );
+      console.log(`✓ ${path}`);
+      break;
+    }
     default:
       process.exit(1);
   }

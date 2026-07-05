@@ -2,7 +2,7 @@
 
 > **Phase C:** 業務モジュールは [steward/modules/rental/agent.md](../modules/rental/agent.md) に移行しました。
 
-Cursor 参照: `@steward/modules/rental/agent.md` + テナント `modules.yaml`
+**Path:** `steward/modules/rental/agent.md` · Cursor: `@steward/modules/rental/agent.md` · テナント `modules.yaml`
 
 | 項目 | パス |
 |------|------|

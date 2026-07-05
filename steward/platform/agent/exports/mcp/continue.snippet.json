@@ -1,0 +1,21 @@
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "name": "orgos-steward",
+        "command": "npm",
+        "args": [
+          "run",
+          "orgos",
+          "--",
+          "mcp",
+          "start"
+        ],
+        "env": {
+          "ORGOS_TENANT": "mal",
+          "ORGOS_MCP_TOKEN": "<generate: orgos mcp rotate-token>"
+        }
+      }
+    ]
+  }
+}

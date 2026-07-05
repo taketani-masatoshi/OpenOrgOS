@@ -4,6 +4,7 @@ import {
   runModulesSyncContext,
   runModulesCheck,
   runModulesCheckAll,
+  runModulesActivate,
 } from "../../commands/modules.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
 import { runPipelineDaily, runPipelineList, runPipelineWeekly } from "../../commands/pipeline.js";
@@ -117,6 +118,23 @@ export function registerPlatformCommands(program: Command): void {
       }
       runModulesCheck(id);
     });
+  modulesCmd
+    .command("activate <id>")
+    .description("Enable module · copy activation seeds · init agent workspace folders")
+    .option("--tenant <id>", "Tenant id")
+    .option("--skip-regs", "Do not enable optional regulations")
+    .option("--skip-iso", "Do not enable related ISO standards")
+    .option("--skip-controls", "Do not merge controls.yaml")
+    .option("--json", "JSON output")
+    .action((id: string, opts) =>
+      runModulesActivate(id, {
+        tenant: opts.tenant,
+        skipRegs: opts.skipRegs,
+        skipIso: opts.skipIso,
+        skipControls: opts.skipControls,
+        json: opts.json,
+      })
+    );
 
   const mapCmd = program.command("map").description("Logical → physical path map (tenant · framework)");
   mapCmd.command("list").description("List common logical paths for active tenant").action(runMapList);
@@ -343,10 +361,35 @@ export function registerPlatformCommands(program: Command): void {
   operatorCmd
     .command("sync-policy")
     .description("Sync operator-policy.md to Cursor rule / AGENTS.md")
-    .option("--emit <target>", "cursor | agents-md | all", "all")
+    .option("--emit <target>", "cursor | agents-md | dev-guide | all", "all")
     .action(async (opts) => {
       const { runOperatorSyncPolicy } = await import("../../commands/operator.js");
-      runOperatorSyncPolicy({ emit: opts.emit as "cursor" | "agents-md" | "all" });
+      runOperatorSyncPolicy({ emit: opts.emit as "cursor" | "agents-md" | "dev-guide" | "all" });
+    });
+  operatorCmd
+    .command("export")
+    .description("Export tool-neutral agent packs + MCP snippets")
+    .option("--agent <id>", "Single agent id (e.g. finance)")
+    .option("--all", "All agents in registry.yaml")
+    .option("--emit <target>", "packs | index | mcp | all", "all")
+    .option("--full-policy", "Include full operator policy in each pack")
+    .action(async (opts) => {
+      const { runOperatorExport } = await import("../../commands/operator.js");
+      runOperatorExport({
+        agent: opts.agent,
+        all: opts.all,
+        emit: opts.emit as OperatorExportEmit,
+        fullPolicy: opts.fullPolicy,
+      });
+    });
+  operatorCmd
+    .command("portability")
+    .description("Agent portability score (target: all dimensions ≥90%)")
+    .option("--json", "JSON output")
+    .option("--write", "Write steward/platform/agent/PORTABILITY-ASSESSMENT.md")
+    .action(async (opts) => {
+      const { runOperatorPortability } = await import("../../commands/operator.js");
+      runOperatorPortability({ json: opts.json, write: opts.write });
     });
 
   const operatorRuntimeCmd = operatorCmd.command("runtime").description("Operator runtime adapters");

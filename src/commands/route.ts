@@ -205,7 +205,7 @@ export function runRouteDispatch(opts: RouteDispatchOptions): void {
 
   const cliCommand = resolveSkillCliCommand(handoff.skill);
   if (!cliCommand) {
-    console.error(`Skill ${handoff.skill} is cursor-only or missing CLI — use suggest mode`);
+    console.error(`Skill ${handoff.skill} requires agent LLM or CLI — use suggest mode`);
     process.exit(1);
   }
 

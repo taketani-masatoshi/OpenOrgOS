@@ -18,7 +18,17 @@ import {
   runAgentDispatchRun,
   runAgentCloudConfig,
   runAgentCloudWatch,
+  runAgentReadiness,
+  runAgentPulseCommand,
 } from "../../commands/agent.js";
+import {
+  runAgentMissionList,
+  runAgentOrder,
+  runAgentRelayAck,
+  runAgentRelayList,
+  runAgentRelaySummary,
+  runAgentReport,
+} from "../../commands/agent-reporting.js";
 import { runQueuePush, runQueueList, runQueueDrain } from "../../commands/queue.js";
 import { runWebhookConfig, runWebhookSend, runWebhookIngest, runWebhookServe } from "../../commands/webhook.js";
 import { runMergePrPlan, runMergePrCreate } from "../../commands/merge-pr.js";
@@ -105,6 +115,15 @@ import {
   runHubFederationAddPeer,
   runHubGossipSync,
 } from "../../commands/hub.js";
+import { runComplianceGap } from "../../commands/compliance.js";
+import {
+  runControlsList,
+  runControlsStatus,
+  runControlsGap,
+  runControlsForAgent,
+  runControlsSet,
+  runControlsInit,
+} from "../../commands/controls.js";
 
 export function registerOrchestrationCommands(program: Command): void {
   const routeCmd = program.command("route").description("Agent inter-routing (registry · access · handoff)");
@@ -285,6 +304,16 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       })
     );
+  agentCmd
+    .command("implement")
+    .description("Execute work order via portable runtime (LLM / shell / manifest)")
+    .requiredOption("--id <id>", "Work order id (IMP-...)")
+    .option("--profile <name>", "Shell profile (aider | cline | openhands)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runAgentImplement } = await import("../../commands/agent.js");
+      await runAgentImplement({ id: opts.id, profile: opts.profile, json: opts.json });
+    });
 
   const agentCloudCmd = agentCmd.command("cloud").description("Cloud Agent runtime (Phase 3)");
   agentCloudCmd.command("config").description("Show cloud agent config").action(runAgentCloudConfig);
@@ -301,6 +330,122 @@ export function registerOrchestrationCommands(program: Command): void {
         parallel: Number(opts.parallel),
       })
     );
+
+  agentCmd
+    .command("readiness")
+    .description("Agent completion score (7 axes · target 80%+)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--agent <id>", "Single agent id")
+    .option("--min <n>", "Exit 1 if any agent below n%")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentReadiness({
+        tenant: opts.tenant,
+        agent: opts.agent,
+        json: opts.json,
+        min: opts.min ? Number(opts.min) : undefined,
+      })
+    );
+  agentCmd
+    .command("pulse")
+    .description("Write agent readiness summary to agent-summaries/")
+    .option("--tenant <id>", "Tenant id")
+    .option("--agent <id>", "Single agent id")
+    .option("--all", "All registry agents")
+    .option("--extensions", "Extension agents only (dashboard sync)")
+    .option("--suffix <text>", "Filename suffix", "pulse")
+    .action((opts) =>
+      runAgentPulseCommand({
+        tenant: opts.tenant,
+        agent: opts.agent,
+        all: opts.all,
+        extensions: opts.extensions,
+        suffix: opts.suffix,
+      })
+    );
+
+  agentCmd
+    .command("order")
+    .description("Issue field-agent mission (COO → Steward reporting chain)")
+    .requiredOption("--to <agent>", "Target field agent id")
+    .requiredOption("--subject <text>", "Mission subject")
+    .option("--from <actor>", "Ordering actor", "executive_steward")
+    .option("--requirements <text>", "Requirements / context")
+    .option("--work-order <id>", "Linked IMP work order id")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentOrder({
+        tenant: opts.tenant,
+        to: opts.to,
+        subject: opts.subject,
+        from: opts.from,
+        requirements: opts.requirements,
+        workOrder: opts.workOrder,
+        json: opts.json,
+      })
+    );
+
+  agentCmd
+    .command("report")
+    .description("Submit field-agent execution report (relays via COO)")
+    .requiredOption("--agent <id>", "Reporting field agent id")
+    .requiredOption("--summary <text>", "Report summary")
+    .option("--mission <id>", "Existing MS mission id")
+    .option("--path <file>", "Summary artifact path")
+    .option("--subject <text>", "Subject when creating ad-hoc mission")
+    .option("--no-auto-forward", "Keep COO relay pending (no auto-forward)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentReport({
+        tenant: opts.tenant,
+        agent: opts.agent,
+        summary: opts.summary,
+        mission: opts.mission,
+        path: opts.path,
+        subject: opts.subject,
+        noAutoForward: opts.noAutoForward,
+        json: opts.json,
+      })
+    );
+
+  const agentRelayCmd = agentCmd.command("relay").description("COO / Steward reporting inbox");
+  agentRelayCmd
+    .command("list")
+    .description("List pending relay items")
+    .requiredOption("--role <role>", "coo | steward")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runAgentRelayList({ tenant: opts.tenant, role: opts.role, json: opts.json }));
+  agentRelayCmd
+    .command("ack")
+    .description("Acknowledge relay leg")
+    .requiredOption("--mission <id>", "MS mission id")
+    .requiredOption("--role <role>", "coo | steward")
+    .option("--notes <text>", "Ack notes")
+    .option("--no-forward", "COO ack without forwarding to Steward")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentRelayAck({
+        tenant: opts.tenant,
+        mission: opts.mission,
+        role: opts.role,
+        notes: opts.notes,
+        noForward: opts.noForward,
+        json: opts.json,
+      })
+    );
+  agentRelayCmd.command("summary").description("Markdown inbox summary").action(() => runAgentRelaySummary());
+
+  agentCmd
+    .command("missions")
+    .description("List agent missions (MS-*)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--agent <id>", "Filter by field agent")
+    .option("--json", "JSON output")
+    .action((opts) => runAgentMissionList({ tenant: opts.tenant, agent: opts.agent, json: opts.json }));
 
   const queueCmd = program.command("queue").description("Work order event queue (JSONL DB)");
   queueCmd
@@ -424,6 +569,71 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runComplianceGap({ tenant: opts.tenant, json: opts.json }));
+
+  const controlsCmd = program.command("controls").description("ISO × REG control framework");
+  controlsCmd
+    .command("list")
+    .description("List in-scope controls for active tenant")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Filter by ISO standard (e.g. ISO-9001)")
+    .option("--agent <id>", "Filter by agent id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runControlsList({
+        tenant: opts.tenant,
+        iso: opts.iso,
+        agent: opts.agent,
+        json: opts.json,
+      })
+    );
+  controlsCmd
+    .command("status")
+    .description("Control maturity summary")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runControlsStatus({ tenant: opts.tenant, json: opts.json }));
+  controlsCmd
+    .command("gap")
+    .description("Control gaps (maturity · evidence · REG)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .option("--no-strict", "Do not exit 1 when gaps exist")
+    .action((opts) =>
+      runControlsGap({
+        tenant: opts.tenant,
+        json: opts.json,
+        strict: opts.strict !== false,
+      })
+    );
+  controlsCmd
+    .command("for-agent <agentId>")
+    .description("Controls owned by an agent (delegation)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((agentId, opts) =>
+      runControlsForAgent(agentId, { tenant: opts.tenant, json: opts.json })
+    );
+  controlsCmd
+    .command("set")
+    .description("Set control maturity for tenant")
+    .requiredOption("--id <controlId>", "Control id (CTL-...)")
+    .requiredOption("--maturity <level>", "L0–L4")
+    .option("--notes <text>", "Review notes")
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) =>
+      runControlsSet({
+        tenant: opts.tenant,
+        id: opts.id,
+        maturity: opts.maturity,
+        notes: opts.notes,
+      })
+    );
+  controlsCmd
+    .command("init")
+    .description("Initialize tenant controls.yaml from enabled ISO maps")
+    .option("--tenant <id>", "Tenant id")
+    .option("--dry-run", "Print path only")
+    .action((opts) => runControlsInit({ tenant: opts.tenant, dryRun: opts.dryRun }));
 
   const protocolCmd = program.command("protocol").description("Inter-org protocol (OpenOrgOS Core wire)");
   protocolCmd

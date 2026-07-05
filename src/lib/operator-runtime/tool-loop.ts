@@ -10,6 +10,7 @@ import {
   type LlmHistoryTurn,
   type LlmUsage,
 } from "./llm-api.js";
+import { postLlmChat, type LlmChatMessage } from "./llm-chat.js";
 import {
   executeOperatorTool,
   isOperatorToolsEnabled,
@@ -36,18 +37,7 @@ export interface ToolLoopResult {
   telemetry?: Omit<LlmTelemetryEntry, "at">;
 }
 
-type ChatMessage =
-  | { role: "system" | "user" | "assistant"; content: string }
-  | {
-      role: "assistant";
-      content: string | null;
-      tool_calls?: Array<{
-        id: string;
-        type: "function";
-        function: { name: string; arguments: string };
-      }>;
-    }
-  | { role: "tool"; tool_call_id: string; content: string };
+type ChatMessage = LlmChatMessage;
 
 function maxToolRounds(): number {
   const raw = Number(process.env.ORGOS_LLM_TOOLS_MAX_ROUNDS ?? "5");
@@ -95,48 +85,18 @@ async function chatCompletion(
     return { ok: false, usage: {}, detail: "LLM API not configured", model: "" };
   }
 
-  const body: Record<string, unknown> = {
-    model: cfg.model,
-    messages,
-    temperature: 0.3,
-  };
-  if (opts?.tools?.length) {
-    body.tools = opts.tools;
-    body.tool_choice = "auto";
-  }
-  if (opts?.responseFormat) {
-    body.response_format = opts.responseFormat;
-  }
-
-  const url = `${cfg.baseUrl}/chat/completions`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${cfg.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+  const result = await postLlmChat(messages, {
+    tools: opts?.tools,
+    responseFormat: opts?.responseFormat,
   });
 
-  const raw = await res.text();
-  if (!res.ok) {
-    return {
-      ok: false,
-      usage: {},
-      detail: `LLM API ${res.status}: ${raw.slice(0, 500)}`,
-      model: cfg.model,
-    };
-  }
-
-  const parsed = JSON.parse(raw) as {
-    choices?: Array<{ message?: ChatMessage & { role: "assistant" } }>;
-    usage?: unknown;
+  return {
+    ok: result.ok,
+    message: result.message as (ChatMessage & { role: "assistant" }) | undefined,
+    usage: result.usage,
+    detail: result.detail,
+    model: result.model,
   };
-  const message = parsed.choices?.[0]?.message;
-  if (!message) {
-    return { ok: false, usage: parseUsage(parsed.usage), detail: "Empty LLM response", model: cfg.model };
-  }
-  return { ok: true, message, usage: parseUsage(parsed.usage), detail: "", model: cfg.model };
 }
 
 async function runMockToolLoop(

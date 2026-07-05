@@ -745,7 +745,7 @@ skills:
   - id: external_correspondence
     name_ja: 社外連絡下書き
     status: partial
-    runtime: cursor-only
+    runtime: agent
     agent_id: secretary
     categories: [cross_border]
     priority: P1

@@ -15,60 +15,16 @@ import {
   writeHandoffFiles,
   type MatchedRoute,
 } from "./routing.js";
+import { formatAgentPromptRef, formatSkillReference, isAgentInteractiveSkill, readAgentDefinition } from "./agent-portability.js";
+import { AGENT_PROMPT_PATHS } from "./agent-portability.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { getTenantId, setTenantId } from "./tenant.js";
 import { currentDate, writeYamlFile } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
+import { createMissionFromWorkOrder, relayWorkOrderComplete } from "./agent-reporting.js";
 import { pushQueueEvent } from "./queue-db.js";
 
-export const AGENT_PROMPT_PATHS: Record<AgentId, string> = {
-  executive_steward: "steward/core/agents/executive_steward_agent.md",
-  secretary: "steward/core/agents/secretary_agent.md",
-  finance: "steward/core/agents/finance_agent.md",
-  contract: "steward/core/agents/contract_agent.md",
-  compliance: "steward/core/agents/compliance_agent.md",
-  operations: "steward/core/agents/operations_agent.md",
-  property_rental: "steward/core/agents/property_rental_agent.md",
-  hospitality: "steward/core/agents/hospitality_agent.md",
-  coo: "steward/core/agents/coo_agent.md",
-  cto: "steward/core/agents/cto_agent.md",
-  engineering: "steward/core/agents/engineering_agent.md",
-  design_lead: "steward/core/agents/design_lead_agent.md",
-  design: "steward/core/agents/design_agent.md",
-  sales_lead: "steward/core/agents/sales_lead_agent.md",
-  sales_outbound: "steward/core/agents/sales_outbound_agent.md",
-  sales_inbound: "steward/core/agents/sales_inbound_agent.md",
-  customer_success: "steward/core/agents/customer_success_agent.md",
-  marketing_lead: "steward/core/agents/marketing_lead_agent.md",
-  social_media: "steward/core/agents/social_media_agent.md",
-  personal_finance: "steward/core/agents/personal_finance_agent.md",
-  legal: "steward/core/agents/legal_agent.md",
-  security: "steward/core/agents/security_agent.md",
-  human_resources: "steward/core/agents/human_resources_agent.md",
-  corporate_governance: "steward/core/agents/corporate_governance_agent.md",
-  accounting: "steward/core/agents/accounting_agent.md",
-  tax: "steward/core/agents/tax_agent.md",
-  procurement: "steward/core/agents/procurement_agent.md",
-  government_affairs: "steward/core/agents/government_affairs_agent.md",
-  intellectual_property: "steward/core/agents/intellectual_property_agent.md",
-  general_affairs: "steward/core/agents/general_affairs_agent.md",
-  project_management: "steward/core/agents/project_management_agent.md",
-  product_management: "steward/core/agents/product_management_agent.md",
-  recruiting: "steward/core/agents/recruiting_agent.md",
-  risk_insurance: "steward/core/agents/risk_insurance_agent.md",
-  data_analytics: "steward/core/agents/data_analytics_agent.md",
-  devops: "steward/core/agents/devops_agent.md",
-  investor_relations: "steward/core/agents/investor_relations_agent.md",
-  esg_sustainability: "steward/core/agents/esg_sustainability_agent.md",
-  internal_audit: "steward/core/agents/internal_audit_agent.md",
-  privacy_officer: "steward/core/agents/privacy_officer_agent.md",
-  treasury: "steward/core/agents/treasury_agent.md",
-  customer_support: "steward/core/agents/customer_support_agent.md",
-  pr_communications: "steward/core/agents/pr_communications_agent.md",
-  learning_development: "steward/core/agents/learning_development_agent.md",
-  corporate_development: "steward/core/agents/corporate_development_agent.md",
-  quality_assurance: "steward/core/agents/quality_assurance_agent.md",
-};
+export { AGENT_PROMPT_PATHS } from "./agent-portability.js";
 
 const PROMPTS_SUBDIR = "prompts";
 
@@ -262,19 +218,25 @@ export function formatWorkOrderMarkdown(handoff: Handoff, matched?: MatchedRoute
 
 export function formatAgentImplementationPrompt(handoff: Handoff): string {
   const agent = handoff.to_agent;
-  const ref = agentPromptRef(agent);
+  const ref = formatAgentPromptRef(agent, "portable");
   const skill = handoff.skill ? loadSkillRegistry().find((s) => s.id === handoff.skill) : undefined;
   const cliHint =
     skill?.runtime === "cli" && skill.cli_command
       ? `\`npm run orgos -- skills run ${skill.cli_command}\``
-      : skill?.runtime === "cursor-only"
-        ? `Cursor-only skill: \`${skill.skillDirRel}/${skill.file}\``
+      : skill && isAgentInteractiveSkill(skill)
+        ? formatSkillReference(skill, "portable")
         : null;
 
   const lines = [
     `# Work Order Implementation · ${handoff.id} · ${agent}`,
     "",
+    "## Agent 定義",
+    "",
     ref,
+    "",
+    "### Agent 定義（本文 · ツール非依存）",
+    "",
+    readAgentDefinition(agent),
     "",
     "## Work Order 参照",
     "",
@@ -363,6 +325,7 @@ export function writeWorkOrderFiles(handoff: Handoff, matched?: MatchedRoute): {
       ref: handoff.id,
       payload: { agent: handoff.to_agent, parent_id: handoff.parent_id },
     });
+    createMissionFromWorkOrder(handoff);
   }
 
   let promptPath: string | undefined;
@@ -561,6 +524,12 @@ export function completeWorkOrder(id: string, notes?: string): Handoff {
     completion_notes: notes,
   });
   writeWorkOrderFiles(updated);
+  pushQueueEvent({
+    type: "work_order_complete",
+    ref: updated.id,
+    payload: { agent: updated.to_agent },
+  });
+  relayWorkOrderComplete(updated, notes);
   return updated;
 }
 

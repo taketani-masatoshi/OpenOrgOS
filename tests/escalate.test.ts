@@ -107,7 +107,8 @@ describe("escalate run", () => {
     expect(existsSync(join(queueDir, `${wo.id}.md`))).toBe(true);
 
     const prompt = formatAgentImplementationPrompt(wo);
-    expect(prompt).toContain(agentPromptRef(wo.to_agent));
+    expect(prompt).toContain("## Agent 定義");
+    expect(prompt).toContain(`steward/core/agents/`);
     expect(prompt).toContain("npm run orgos -- escalate complete");
   });
 

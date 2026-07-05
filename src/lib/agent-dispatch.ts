@@ -12,6 +12,8 @@ import { currentDate, writeYamlFile } from "./utils.js";
 import { pushQueueEvent } from "./queue-db.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { loadCloudAgentConfig, resolveDispatchRuntime } from "./cloud-agent.js";
+import { isLlmApiConfigured } from "./operator-runtime/llm-api.js";
+import { runOperatorDispatch } from "./operator-runtime/ask.js";
 
 export type DispatchRuntime = "local" | "cloud" | "manifest";
 
@@ -102,7 +104,7 @@ export function writeDispatchManifest(manifest: DispatchManifest): string {
 export interface DispatchRunResult {
   manifest: DispatchManifest;
   manifestPath: string;
-  mode: "cursor_sdk" | "cursor_cloud" | "manifest";
+  mode: "cursor_sdk" | "cursor_cloud" | "manifest" | "portable_llm" | "portable_shell";
   results: Array<{ work_order_id: string; ok: boolean; detail: string }>;
 }
 
@@ -125,15 +127,47 @@ export async function runDispatch(
 
   const hasRunnableTask = manifest.tasks.some((t) => t.mode !== "manifest");
   if (!manifest.cursor_sdk_available || !hasRunnableTask) {
+    const portableResults: DispatchRunResult["results"] = [];
+    let portableMode: DispatchRunResult["mode"] = "manifest";
+
+    for (const task of manifest.tasks) {
+      const promptText = readPromptText(task.prompt_relative ?? "");
+      if (!promptText) {
+        portableResults.push({
+          work_order_id: task.work_order_id,
+          ok: true,
+          detail: `manifest · ${task.prompt_relative ?? task.prompt_path}`,
+        });
+        continue;
+      }
+
+      if (isLlmApiConfigured() || process.env.ORGOS_SHELL_PROFILE) {
+        const dispatched = await runOperatorDispatch(promptText, {
+          workOrderId: task.work_order_id,
+          agent: task.agent,
+          profile: process.env.ORGOS_SHELL_PROFILE,
+        });
+        portableMode = dispatched.runtime === "shell" ? "portable_shell" : "portable_llm";
+        portableResults.push({
+          work_order_id: task.work_order_id,
+          ok: dispatched.ok,
+          detail: dispatched.detail.slice(0, 300),
+        });
+        continue;
+      }
+
+      portableResults.push({
+        work_order_id: task.work_order_id,
+        ok: true,
+        detail: `manifest · ${task.prompt_relative ?? task.prompt_path}`,
+      });
+    }
+
     return {
       manifest,
       manifestPath,
-      mode: "manifest",
-      results: manifest.tasks.map((t) => ({
-        work_order_id: t.work_order_id,
-        ok: true,
-        detail: `manifest · ${t.prompt_relative ?? t.prompt_path}`,
-      })),
+      mode: portableMode,
+      results: portableResults,
     };
   }
 
@@ -233,11 +267,13 @@ export function formatDispatchPlan(manifest: DispatchManifest): string {
   ];
   if (!manifest.cursor_sdk_available) {
     lines.push(
-      "## Phase 1 fallback",
+      "## Portable dispatch (no Cursor SDK)",
       "",
-      "Parallel Cursor chats: `@` + each prompt MD above",
+      "1. `orgos agent implement --id <IMP-...>` — LLM API / Aider / shell",
+      "2. `orgos agent dispatch run --id <IMP-...>` — auto portable fallback",
+      "3. Prompt MD includes full agent definition (tool-neutral)",
       "",
-      "Or install SDK: `npm install @cursor/sdk` + `CURSOR_API_KEY`",
+      "Optional Cursor: `npm install @cursor/sdk` + `CURSOR_API_KEY`",
       ""
     );
   }

@@ -28,6 +28,20 @@ profiles:
     env:
       ORGOS_TENANT: "{tenant}"
     timeout_ms: 600000
+  cline:
+    # Cline CLI bridge — adjust command to your install; prompt file at {prompt}
+    command: ["cat", "{prompt}"]
+    cwd: "{workspace}"
+    env:
+      ORGOS_TENANT: "{tenant}"
+    timeout_ms: 600000
+  openhands:
+    # OpenHands — paste {prompt} into task UI or wire local CLI if installed
+    command: ["cat", "{prompt}"]
+    cwd: "{workspace}"
+    env:
+      ORGOS_TENANT: "{tenant}"
+    timeout_ms: 600000
   manifest:
     command: []
     timeout_ms: 0

@@ -85,8 +85,27 @@ orgos dashboard
 
 ---
 
-## 6. 関連
+## 7. マルチツール互換（Cursor 以外）
 
+Agent 定義（`steward/core/agents/*.md`）は **Markdown 正本** — Claude · ChatGPT · Cline · Aider · Continue 等でも利用可。
+
+| 手段 | コマンド / パス |
+|------|----------------|
+| Agent パック出力 | `orgos operator export --agent finance` / `--all` |
+| AGENTS.md 同期 | `orgos operator sync-policy --emit agents-md` |
+| MCP（Today · 承認） | `orgos mcp start` · snippet: `steward/platform/agent/exports/mcp/` |
+| Shell 実行 | `ORGOS_SHELL_PROFILE=aider` · `orgos agent dispatch run --runtime shell` |
+| OpenAI 互換 API | `OPENAI_API_KEY` / `ORGOS_LLM_API_URL` · `orgos chat ask` |
+
+Work Order プロンプトは **Path + Cursor @ 参照** を併記（ツール中立）。
+
+Skill `runtime`: `cli`（LLM 不要）· `agent`（LLM + 定義添付 · 旧 `cursor-only` と同義）。
+
+---
+
+## 8. 関連
+
+- [tool-neutral-development.md](tool-neutral-development.md) — **今後の開発ガイド（Cursor 非依存）**
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [secretary_steward_boundary.md](secretary_steward_boundary.md)

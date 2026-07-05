@@ -87,12 +87,58 @@ orgos dashboard
 
 ---
 
-## 6. 関連
+## 7. マルチツール互換（Cursor 以外）
 
+Agent 定義（`steward/core/agents/*.md`）は **Markdown 正本** — Claude · ChatGPT · Cline · Aider · Continue 等でも利用可。
+
+| 手段 | コマンド / パス |
+|------|----------------|
+| Agent パック出力 | `orgos operator export --agent finance` / `--all` |
+| AGENTS.md 同期 | `orgos operator sync-policy --emit agents-md` |
+| MCP（Today · 承認） | `orgos mcp start` · snippet: `steward/platform/agent/exports/mcp/` |
+| Shell 実行 | `ORGOS_SHELL_PROFILE=aider` · `orgos agent dispatch run --runtime shell` |
+| OpenAI 互換 API | `OPENAI_API_KEY` / `ORGOS_LLM_API_URL` · `orgos chat ask` |
+
+Work Order プロンプトは **Path + Cursor @ 参照** を併記（ツール中立）。
+
+Skill `runtime`: `cli`（LLM 不要）· `agent`（LLM + 定義添付 · 旧 `cursor-only` と同義）。
+
+---
+
+## 8. 関連
+
+- [tool-neutral-development.md](tool-neutral-development.md) — **今後の開発ガイド（Cursor 非依存）**
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [secretary_steward_boundary.md](secretary_steward_boundary.md)
 
+
+## Multi-tool portability
+
+Agent 定義は **Markdown（ツール非依存）**。Cursor 以外でも利用できます。
+
+| ツール | 使い方 |
+|--------|--------|
+| **Claude / ChatGPT** | `orgos operator export --agent <id>` の pack を system / project に貼付 |
+| **Aider / Cline** | `ORGOS_SHELL_PROFILE=aider` · Work Order プロンプト MD |
+| **Continue / Claude Desktop** | `orgos mcp start` — snippet: `steward/platform/agent/exports/mcp/` |
+| **Steward Chat** | OpenAI 互換 API · `orgos chat ask` |
+| **Cursor** | `@steward/core/agents/*_agent.md` · `.cursor/rules/operator-policy.mdc` |
+
+```bash
+orgos operator export --all
+orgos operator sync-policy --emit all
+```
+
+正本 Agent: `steward/core/agents/` · Export index: `steward/platform/agent/exports/INDEX.md`
+
+## Development guide（Cursor 非依存）
+
+**今後の開発は Cursor を前提にしない。** 正本: [steward/rules/tool-neutral-development.md](steward/rules/tool-neutral-development.md)
+
+- 正本は `steward/rules/` · `src/` · テスト — `.cursor/` はミラーのみ
+- 新 Skill は `runtime: cli` 優先 · `cursor-only` 新規禁止
+- Agent 参照は **Path 第一** · 変更後 `orgos operator export`
 
 ## Quick commands
 
@@ -100,6 +146,7 @@ orgos dashboard
 orgos chat today
 orgos validate
 orgos dashboard
+orgos operator export --agent finance
 ```
 
 Canonical: `steward/rules/operator-policy.md`

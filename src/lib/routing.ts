@@ -16,6 +16,7 @@ import {
 import { ROUTING_REGISTRY_PATH } from "./steward-paths.js";
 import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModules } from "./modules.js";
 import { loadSkillRegistry, resolveSkillFilePath } from "./skill-registry.js";
+import { formatSkillReference, isAgentInteractiveSkill } from "./agent-portability.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { currentDate, ensureDocsReportsDir, readYamlFile, writeYamlFile } from "./utils.js";
 
@@ -71,6 +72,7 @@ const EXTENSION_AGENTS = new Set<AgentId>([
   "learning_development",
   "corporate_development",
   "quality_assurance",
+  "medical_device_regulatory",
 ]);
 
 const EXECUTIVE_DATA_PREFIXES = ["data/executive/", "docs/executive/"];
@@ -301,8 +303,8 @@ export function formatHandoffMarkdown(handoff: Handoff, matched?: MatchedRoute):
     const skill = loadSkillRegistry().find((s) => s.id === handoff.skill);
     if (skill?.runtime === "cli" && skill.cli_command) {
       lines.push("## Dispatch", "", `\`npm run orgos -- skills run ${skill.cli_command}\``, "");
-    } else if (skill?.runtime === "cursor-only") {
-      lines.push("## Dispatch", "", `Cursor-only skill: ${skill.skillDirRel}/${skill.file}`, "");
+    } else if (skill && isAgentInteractiveSkill(skill)) {
+      lines.push("## Dispatch", "", formatSkillReference(skill, "portable"), "");
     }
   }
 
