@@ -11,10 +11,22 @@ import {
   parseMonth,
   refreshAllCompanyEventIndexes,
   registerArtifactFiles,
+  saveCompanyEvents,
   validateCompanyEvents,
   type CreateCompanyEventOptions,
 } from "../lib/company-events.js";
 import { linkOutboxItemToEvent } from "../lib/document-io.js";
+import {
+  backfillCompanyEventChain,
+  companyEventChainPath,
+  getCompanyEventChainTail,
+  validateCompanyEventChainWithRegistry,
+  verifyCompanyEventChain,
+} from "../lib/company-events-chain.js";
+import {
+  runMonthlyCompanyEventsAudit,
+  runWeeklyCompanyEventsAttestation,
+} from "../lib/company-events-attestation.js";
 import type { CompanyEventKind } from "../../schemas/company-events.js";
 
 function parseRelated(raw?: string): CreateCompanyEventOptions["related"] | undefined {
@@ -163,4 +175,109 @@ export function runEventsLinkOutbox(opts: { eventId: string; outboxId: string })
   const item = linkOutboxItemToEvent(opts.outboxId, opts.eventId);
   console.log(`✓ Outbox ${item.id} linked to event ${opts.eventId}`);
   console.log(`  path: ${item.path}`);
+}
+
+export async function runEventsAuditMonthly(opts: {
+  month?: string;
+  notify?: boolean;
+  output?: string;
+  json?: boolean;
+}): Promise<void> {
+  initCompanyEventsFile();
+  const result = await runMonthlyCompanyEventsAudit({
+    month: opts.month,
+    notify: opts.notify !== false,
+    output: opts.output,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+  console.log(result.ok ? "✓ Monthly company events audit PASS" : "✗ Monthly audit FAILED");
+  console.log(`  month: ${result.month}`);
+  console.log(`  chain_checked: ${result.chain_checked}`);
+  console.log(`  attestations: ${result.attestations_in_period.length}`);
+  console.log(`  report: ${result.report_path}`);
+  console.log(`  notified: ${result.notification_sent}`);
+  for (const f of result.findings) {
+    console.log(`  [${f.severity}] ${f.code}: ${f.message}`);
+  }
+  if (!result.ok) process.exit(1);
+}
+
+export function runEventsChainAttest(opts: { force?: boolean; json?: boolean }): void {
+  initCompanyEventsFile();
+  const result = runWeeklyCompanyEventsAttestation({ force: opts.force });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  if (result.skipped) {
+    console.log(`✓ Weekly attestation already exists: ${result.attestation.attestation_id}`);
+    return;
+  }
+  console.log(`✓ Weekly company events attestation signed: ${result.attestation.attestation_id}`);
+  console.log(`  chain_tail: ${result.attestation.chain_tail_link_id ?? "—"} seq ${result.attestation.chain_tail_seq ?? 0}`);
+  console.log(`  links_since_prev: ${result.attestation.links_since_prev}`);
+  console.log(`  → ${result.path}`);
+}
+
+export function runEventsChainVerify(opts: { json?: boolean }): void {
+  initCompanyEventsFile();
+  const registry = loadCompanyEvents();
+  const chain = verifyCompanyEventChain();
+  const cross = validateCompanyEventChainWithRegistry(registry);
+  const issues = [...chain.issues, ...cross.issues];
+  const ok = chain.ok && cross.ok;
+
+  if (opts.json) {
+    console.log(
+      JSON.stringify(
+        {
+          ok,
+          chain_checked: chain.checked,
+          issues,
+        },
+        null,
+        2
+      )
+    );
+    if (!ok) process.exit(1);
+    return;
+  }
+
+  console.log(ok ? "✓ Company event chain OK" : "✗ Company event chain verification failed");
+  for (const issue of issues) {
+    console.log(`  [error] ${issue.code}: ${issue.message}`);
+  }
+  if (!ok) process.exit(1);
+  console.log(`  registry_events: ${registry.events.length}`);
+  console.log(`  chain_links: ${chain.checked}`);
+}
+
+export function runEventsChainBackfill(opts: { force?: boolean }): void {
+  initCompanyEventsFile();
+  const registry = loadCompanyEvents();
+  const result = backfillCompanyEventChain(registry, { force: opts.force });
+  saveCompanyEvents(result.registry);
+  console.log(`✓ Company event chain backfilled`);
+  console.log(`  events: ${result.events}`);
+  console.log(`  links: ${result.links}`);
+  console.log(`  → ${companyEventChainPath()}`);
+}
+
+export function runEventsChainTail(): void {
+  initCompanyEventsFile();
+  const tail = getCompanyEventChainTail();
+  if (!tail) {
+    console.log("Company event chain: empty");
+    return;
+  }
+  console.log(`Company event chain tail: ${tail.link_id}`);
+  console.log(`  seq: ${tail.seq}`);
+  console.log(`  action: ${tail.action}`);
+  console.log(`  event_id: ${tail.event_id}`);
+  console.log(`  digest: ${tail.digest}`);
+  console.log(`  → ${companyEventChainPath()}`);
 }

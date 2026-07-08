@@ -20,7 +20,10 @@ import {
 } from "../lib/hub/federation.js";
 import { fetchReceiptFromHub } from "../lib/protocol/witness-attestation-build.js";
 import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import type { WitnessHubEntry } from "../../schemas/protocol/witness-pool.js";
+import { ensureDevServerTls } from "../lib/protocol/dev-server-tls.js";
+import { getDeployDir } from "../lib/orgos-paths.js";
 
 export interface HubServeOptions {
   hubId: string;
@@ -330,4 +333,34 @@ export async function runHubGossipSync(opts: HubGossipSyncOptions): Promise<void
     console.log(`✓ sync ${r.peer_id}: imported=${r.imported} skipped=${r.skipped} receipts=${r.receipts_rebuilt}`);
     for (const issue of r.issues) console.log(`  ! ${issue}`);
   }
+}
+
+export interface HubTlsInitOptions {
+  outputDir?: string;
+  force?: boolean;
+  json?: boolean;
+}
+
+export function runHubTlsInit(opts: HubTlsInitOptions = {}): void {
+  const tlsDir = opts.outputDir ?? join(getDeployDir(), "witness-hub", "tls");
+  const pki = ensureDevServerTls({
+    outputDir: tlsDir,
+    commonName: "witness-hub.local",
+    dnsNames: ["localhost", "127.0.0.1", "witness-hub.local"],
+    force: opts.force,
+  });
+  const summary = {
+    tls_dir: pki.dir,
+    ca_cert: pki.caCertPath,
+    server_cert: pki.serverCertPath,
+    server_key: pki.serverKeyPath,
+    compose: "docker compose -f docker-compose.yaml -f docker-compose.tls.yaml up",
+    serve_example: `orgos hub serve --tls-cert ${pki.serverCertPath} --tls-key ${pki.serverKeyPath}`,
+  };
+  if (opts.json) {
+    console.log(JSON.stringify(summary, null, 2));
+    return;
+  }
+  console.log(`✓ Witness Hub dev TLS · ${pki.dir}`);
+  console.log(`  Next: cd deploy/witness-hub && ${summary.compose}`);
 }
