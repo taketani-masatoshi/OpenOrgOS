@@ -1,0 +1,8 @@
+deals:
+  - id: DEAL-001
+    listing_id: LST-001
+    mediation_type: tenant_side
+    status: negotiating
+    important_matters_id: IM-001
+    contract_id: null
+    notes: "媒介 · 重要事項説明前（例示）"

@@ -1,0 +1,49 @@
+# 内部監査計画 — FY2026
+
+**規程:** [REG-016 内部監査規程](../../company/regulations/naibu-kansa-kisoku.md)  
+**年度:** 2026年6月 〜 2027年5月  
+**作成:** 2026年6月6日（取締役会決議第1号に基づく）
+
+---
+
+## 監査体制
+
+| 監査 | 対象規程 | 実施者 | 被監査側 |
+|------|---------|--------|---------|
+| 第1回 | REG-009, REG-010, REG-012 | 宮城万貴子 | 段燕燕担当業務 |
+| 第2回 | REG-004, REG-005, REG-007 | 段燕燕 | 宮城万貴子担当業務 |
+
+> **REG-013 除外:** ISO-22301 · REG-013 は `standards.yaml` / `regulations.yaml` で **無効**。BCP 監査は 22301 再有効化まで第2回から外す（[audit-01-report.md](audit-records/fy2026/audit-01-report.md) 参照）。
+
+---
+
+## スケジュール
+
+| 日付（予定） | 内容 | 成果物 |
+|-------------|------|--------|
+| **2026-08-18**（月） | 第1回内部監査 — 亀沢開業後 · 宿泊者名簿・個情・OTA | `audit-records/fy2026/audit-01-report.md` |
+| **2026-11-15**（土） | 第2回内部監査 — 経費・BCP・文書管理 | `audit-records/fy2026/audit-02-report.md` |
+| **2027-02-15**（月） | **マネジメントレビュー**（第9期決算取締役会と同時） | [MRテンプレート](management-review-fy2026-template.md) |
+
+> 日付は **予定プレースホルダー**。実施後に議事録へ確定日を記録すること。
+
+---
+
+## チェック観点（共通）
+
+- [ ] 規程 v1.0 が `docs/company/regulations/` に存在
+- [ ] `operations/records/` に記録が開始されている
+- [ ] 契約 executed / 手続パケットが最新
+- [ ] 前回指摘の是正完了
+
+---
+
+## 記録保管
+
+`docs/compliance/iso/audit-records/fy2026/`（監査報告・是正記録）
+
+---
+
+## 関連
+
+- [2026/6/6 取締役会議事録](../../company/fy2026-torishimari-gijiroku-regulations-iso.md)

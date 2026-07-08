@@ -1,0 +1,5 @@
+{tenant_name} 御中
+
+{year_month} 分の会員月会費をご請求申し上げます。
+
+{company_name}

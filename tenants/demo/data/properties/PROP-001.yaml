@@ -1,0 +1,10 @@
+id: PROP-001
+name: "港湾マンション501"
+location: "[TBD]"
+type: rental
+rental:
+  monthly_rent: 0
+  vacancy_rate: 0
+  management_fee: 0
+notes: |
+  デモ骨格 — 賃貸1物件

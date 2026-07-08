@@ -1,0 +1,22 @@
+# Board Meeting Procedures
+
+**Sample Entity** · **Regulation ID:** REG-HK-002-board-meetings  
+**Jurisdiction:** HK · Corporate governance skeleton
+
+---
+
+## 1. Purpose
+
+Internal rules for Board Meeting Procedures. Customize for local law and counsel review.
+
+## 2. Scope
+
+Directors, officers, and employees.
+
+## 3. Policy
+
+[TBD] — Tenant to complete upon seed.
+
+---
+
+*Template: Steward OS HK Jurisdiction Pack · Not legal advice*

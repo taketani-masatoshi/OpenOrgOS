@@ -1,0 +1,27 @@
+---
+title: 役員変更に関する決議書
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# {{resolution_body_label}}議事録（役員変更）
+
+| 項目 | 内容 |
+|------|------|
+| 日時 | {{resolution_date_reiwa}} |
+| 会社 | {{company_name}} |
+
+## 退任
+
+{{resigning_block}}
+
+## 就任
+
+{{appointing_block}}
+
+---
+
+{{resolution_date_reiwa}}
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

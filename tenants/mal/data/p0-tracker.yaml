@@ -1,0 +1,54 @@
+# P0 実手続トラッカー — データ正本
+# 人向け手順: docs/company/p0-closing-register.md
+# CLI: npm run orgos -- ops p0
+
+items:
+  - id: P0-01
+    contract_id: CTR-013
+    title: 火災保険（番町）
+    status: open
+    steps:
+      - { id: s1, label: 02-enrollment-packet 記入, done: false }
+      - { id: s2, label: 保険会社申込, done: false }
+      - { id: s3, label: 証券 PDF → docs/io/inbox/, done: false }
+      - { id: s4, label: CTR-013 executed 化 · LIC-004 更新, done: false }
+
+  - id: P0-02
+    contract_id: CTR-014
+    title: 火災保険（亀沢）
+    status: open
+    steps:
+      - { id: s1, label: 02-enrollment-packet 記入, done: false }
+      - { id: s2, label: 保険会社申込, done: false }
+      - { id: s3, label: 証券 PDF → inbox · licenses/insurance/, done: false }
+      - { id: s4, label: CTR-014 executed 化 · LIC-005 更新, done: false }
+
+  - id: P0-03
+    contract_id: CTR-012
+    title: 清掃業務委託
+    status: open
+    steps:
+      - { id: s1, label: 02-vendor-selection から1社選定, done: false }
+      - { id: s2, label: 契約締結, done: false }
+      - { id: s3, label: CTR-012 executed 化, done: false }
+
+  - id: P0-04
+    title: kamezawa-secrets.yaml
+    status: open
+    steps:
+      - { id: s1, label: example からコピー, done: false }
+      - { id: s2, label: Wi-Fi · 鍵 · 緊急連絡 実値, done: false }
+
+  - id: P0-05
+    title: cash-balance.yaml + B/S 3項目
+    status: open
+    steps:
+      - { id: s1, label: 全口座残高入力, done: false }
+      - { id: s2, label: status confirmed, done: false }
+      - { id: s3, label: 税理士と B/S 3項目確定, done: false }
+
+  - id: P0-06
+    title: 第1回内部監査
+    status: done
+    completed_on: "2026-08-18"
+    artifact: docs/compliance/iso/audit-records/fy2026/audit-01-report.md

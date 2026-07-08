@@ -1,0 +1,17 @@
+regulations:
+  - id: REG-MY-001
+    enabled: true
+  - id: REG-MY-002
+    enabled: true
+  - id: REG-MY-003
+    enabled: true
+  - id: REG-MY-004
+    enabled: true
+  - id: REG-MY-005
+    enabled: true
+  - id: REG-MY-006
+    enabled: true
+  - id: REG-MY-007
+    enabled: true
+  - id: REG-MY-008
+    enabled: true

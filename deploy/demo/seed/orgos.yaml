@@ -1,0 +1,3 @@
+# OrgOS workspace — demo Docker seed (do not use in production)
+version: "1"
+name: orgos-demo

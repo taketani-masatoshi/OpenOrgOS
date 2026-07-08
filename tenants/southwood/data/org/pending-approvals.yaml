@@ -1,0 +1,25 @@
+as_of: 2026-06-28
+approvals:
+  - approval_id: NOTICE-20260628-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T09:17:04.191Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 南木健一
+    approved_at: 2026-06-28T09:17:04.193Z
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260628-002
+      wire_event_id: 6286c618-cc7d-47f9-92f9-20754f41b421
+    audit_event_id: ffdd732c-4dc5-4958-9eaf-8aa32d940c53

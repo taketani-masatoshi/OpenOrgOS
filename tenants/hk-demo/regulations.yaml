@@ -1,0 +1,17 @@
+regulations:
+  - id: REG-HK-001
+    enabled: true
+  - id: REG-HK-002
+    enabled: true
+  - id: REG-HK-003
+    enabled: true
+  - id: REG-HK-004
+    enabled: true
+  - id: REG-HK-005
+    enabled: true
+  - id: REG-HK-006
+    enabled: true
+  - id: REG-HK-007
+    enabled: true
+  - id: REG-HK-008
+    enabled: true

@@ -1,0 +1,37 @@
+# 法人銀行口座 — 機密（Git にコミットしない）
+# セットアップ: cp bank-accounts.yaml.example bank-accounts.yaml
+# 分類: L2 · data/classification-registry.yaml 参照
+# 口座番号・支店コードは REPLACE_ME を実値に置換後、`npm run validate -- --warnings` で確認。
+
+entity: 株式会社MAL
+as_of: "2026-06-07"
+status: template
+
+accounts:
+  - id: BANK-001
+    bank: 三井住友銀行
+    bank_code: "0009"
+    branch: "REPLACE_ME（支店名）"
+    branch_code: "REPLACE_ME"
+    account_type: 普通
+    account_number: "REPLACE_ME"
+    holder: 株式会社MAL
+    purpose: 法人メイン口座
+    ib_enabled: true
+    notes: null
+
+  - id: BANK-002
+    bank: GMOあおぞらネット銀行
+    bank_code: "0310"
+    branch: 法人営業部
+    branch_code: "101"
+    account_type: 普通
+    account_number: "REPLACE_ME"
+    holder: 株式会社MAL
+    purpose: サブ口座・振替用
+    ib_enabled: true
+    notes: null
+
+notes: |
+  残高集計は data/finance/cash-balance.yaml（L1 · Git 追跡可）で bank_account_id を参照。
+  口座番号を docs/ やチャットへ転記しない（L3 禁止出力）。

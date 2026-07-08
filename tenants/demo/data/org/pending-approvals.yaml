@@ -1,0 +1,585 @@
+as_of: 2026-06-29
+approvals:
+  - approval_id: NOTICE-20260628-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:01:26.941Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:01:27.231Z
+    audit_event_id: b8c752ba-9f4b-4739-966e-eea44538a6e4
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-001
+      wire_event_id: 95f445df-f615-4add-8c1f-7afda23185f3
+  - approval_id: NOTICE-20260628-002
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:01:29.009Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:01:30.310Z
+    audit_event_id: a0ce14ba-f78b-4e1e-9f58-36c3c2a828d8
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-002
+      wire_event_id: 2130e3ab-c77a-43bd-bfaf-d8db8863cb07
+  - approval_id: NOTICE-20260628-003
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:07:21.398Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:07:22.940Z
+    audit_event_id: 61843016-5c76-4f73-bb55-37a51a0135ea
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-003
+      wire_event_id: 647c52e0-f52e-471d-a7b0-a0134d1323f8
+  - approval_id: NOTICE-20260628-004
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:15:54.908Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:15:56.430Z
+    audit_event_id: 1701a8b7-be0d-4cfb-8a78-e2addbc87f7d
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-004
+      wire_event_id: 08e076d2-8cac-4246-b2d3-efbe74a9929e
+  - approval_id: NOTICE-20260628-005
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:18:30.463Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:18:31.282Z
+    audit_event_id: 7c590d7e-2f8e-4b4e-a4a7-b4ac85ee5c33
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-005
+      wire_event_id: a454d51c-62ad-4e57-ab9a-4e3ca5960e42
+  - approval_id: NOTICE-20260628-006
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:21:55.499Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:21:56.848Z
+    audit_event_id: 4d22bd7c-5878-493c-b23c-a30a3145e28a
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-006
+      wire_event_id: ca8d792f-b2ab-4c09-821a-ed7a5ac92e87
+  - approval_id: NOTICE-20260628-007
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:24:12.110Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:24:13.497Z
+    audit_event_id: 477c8780-bd66-4d05-9ae9-d943eae253ad
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-007
+      wire_event_id: 75a82c7b-f85c-4476-859d-50a492387563
+  - approval_id: NOTICE-20260628-008
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:25:32.091Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:25:33.497Z
+    audit_event_id: 49a56eb1-b177-4497-a23a-e82ca10984a5
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-008
+      wire_event_id: 4c5b7379-6690-402b-a870-37763ff9aa13
+  - approval_id: NOTICE-20260628-009
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:27:14.137Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:27:15.546Z
+    audit_event_id: 8579df2c-a35c-4b54-a0f0-21e1662d9f2d
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-009
+      wire_event_id: 1141cfd2-fe42-4ab9-8e8e-ceba4d79eef5
+  - approval_id: NOTICE-20260628-010
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:27:56.436Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:27:57.833Z
+    audit_event_id: cc3df82c-b67c-4116-a03d-e05cdeabbbdf
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-010
+      wire_event_id: b0097eab-b980-4c54-bcf7-17a774843f71
+  - approval_id: NOTICE-20260628-011
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:30:12.558Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:30:13.879Z
+    audit_event_id: e9d08191-8676-44be-ae81-a62f45110fee
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-011
+      wire_event_id: c4cd9368-d452-4f94-b81f-58a7caa3be55
+  - approval_id: NOTICE-20260628-012
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:30:39.425Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:30:40.764Z
+    audit_event_id: 1117b7b6-beae-4439-844e-702d630509ae
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-012
+      wire_event_id: 87273f06-6c28-4862-b116-4c123205b4b8
+  - approval_id: NOTICE-20260628-013
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:37:47.448Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:37:49.245Z
+    audit_event_id: 187f4d26-8c9f-448f-9595-8e5e0c6e7f00
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-013
+      wire_event_id: 656d36d0-0693-4280-bda8-7a7a8a3c7752
+  - approval_id: NOTICE-20260628-014
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:39:56.074Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:39:58.112Z
+    audit_event_id: f0b63c49-5d3f-4a06-87a0-c11bd0500319
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-014
+      wire_event_id: 5121b492-dae5-4aad-accb-d412d49fa124
+  - approval_id: NOTICE-20260628-015
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:40:46.806Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:40:48.615Z
+    audit_event_id: 68080db9-cd1c-4021-b54f-95662052003e
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-015
+      wire_event_id: 2df8f4b1-e88f-417e-865a-825d94987bea
+  - approval_id: NOTICE-20260628-016
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:40:51.585Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:40:53.102Z
+    audit_event_id: 949b490a-931d-4998-8415-663882ee78e3
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-016
+      wire_event_id: 43b9c53e-6afd-48c0-869f-92ab5142d1c1
+  - approval_id: NOTICE-20260628-017
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:53:52.767Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:54:00.493Z
+    audit_event_id: 3b1bcb93-6c2f-4051-a8f2-f1087c16c2a1
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-017
+      wire_event_id: 01ce1e60-9d82-4af3-9429-2d94c3c442a5
+  - approval_id: NOTICE-20260628-018
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:55:03.448Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:55:05.009Z
+    audit_event_id: 08e566c5-bf88-47d0-a83a-c7df4617b52f
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-018
+      wire_event_id: 845304a3-1cc9-420b-a88c-215bbb9f6a9b
+  - approval_id: NOTICE-20260628-019
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:55:53.814Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:55:55.592Z
+    audit_event_id: c4222d3a-3635-4ab6-a67f-1d633867f578
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-019
+      wire_event_id: 89342cec-8edf-4048-aea0-94f1e0e62337
+  - approval_id: NOTICE-20260628-020
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:56:00.779Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:56:02.309Z
+    audit_event_id: 9cc93039-8021-488a-8480-1076b02c8780
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-020
+      wire_event_id: 46c72059-42d1-4e5d-b8ab-326d584decc3
+  - approval_id: NOTICE-20260628-021
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T13:58:23.939Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T13:58:25.975Z
+    audit_event_id: 599fef27-28d3-4ddb-b39f-34ca838b698d
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-021
+      wire_event_id: c0bc5ad3-9fea-430a-84eb-d4608d7291ef
+  - approval_id: NOTICE-20260628-022
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T14:00:31.860Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T14:00:34.042Z
+    audit_event_id: 2f8cf2c9-55e0-4288-a829-5a59865c9ecc
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-022
+      wire_event_id: e73dcee2-355f-4543-a736-28fc891b8aa7
+  - approval_id: NOTICE-20260628-023
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T14:00:39.743Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T14:00:41.225Z
+    audit_event_id: 66459389-a839-41f9-9d0e-6686e165848f
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-023
+      wire_event_id: b4da15d1-110b-45a7-b0ca-8a618631f6a8
+  - approval_id: NOTICE-20260628-024
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T14:01:13.306Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T14:01:15.291Z
+    audit_event_id: 481ca742-4f36-47ea-b137-5b66071caafe
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-024
+      wire_event_id: 0255671f-bbaa-4e27-9caf-756ae39c1994
+  - approval_id: NOTICE-20260628-025
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T14:05:24.108Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T14:05:25.823Z
+    audit_event_id: 8d105bfb-4f84-4eaf-8e81-6c861276c345
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-025
+      wire_event_id: d0097065-0a6b-47da-bcea-29959491d9ee
+  - approval_id: NOTICE-20260628-026
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T14:12:37.637Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T14:12:40.153Z
+    audit_event_id: c8a6e280-c575-448e-9008-ef1111dadb84
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-026
+      wire_event_id: d4415f8e-0eb1-4633-875e-df0b9b0d4ad5
+  - approval_id: NOTICE-20260628-027
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T14:12:45.657Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T14:12:47.640Z
+    audit_event_id: 19cf6bbe-1b79-4ec4-a41c-37e3afd4e52d
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-027
+      wire_event_id: 82f584eb-604c-453e-844a-643f4d401f93
+  - approval_id: NOTICE-20260628-028
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T14:13:09.995Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T14:13:12.306Z
+    audit_event_id: bd4a5c03-a425-42d5-80a4-5a4a86fe6a1a
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260628-028
+      wire_event_id: d802777b-eade-487f-9ceb-50853d182c66
+  - approval_id: NOTICE-20260629-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T21:17:01.334Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T21:17:04.615Z
+    audit_event_id: 8c024a23-3e38-4cbb-9e45-67d3f490bd58
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260629-001
+      wire_event_id: 7fce9a83-d8a0-4cc0-b007-4432bbce348e
+  - approval_id: NOTICE-20260629-002
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T21:17:10.078Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-06-28T21:17:11.651Z
+    audit_event_id: 87a8d9fe-3dfa-4f23-89a6-778ceb9c205d
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260629-002
+      wire_event_id: 91c3ba53-c400-4f6b-b38b-a6fbf2f96df6
+  - approval_id: NOTICE-20260629-003
+    scope: wire
+    status: pending_approval
+    proposed_at: 2026-06-28T21:41:44.927Z
+    proposed_by: demo-seed
+    subject_type: wire.notice
+    subject_ref: CTR-099
+    message: デモ用 — 履行通知の送信承認依頼（CTR-099）
+    approval_policy_ref: REG-004
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099

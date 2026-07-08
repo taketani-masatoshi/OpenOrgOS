@@ -1,0 +1,16 @@
+version: "1"
+
+# Per-jurisdiction wire governance packs — paths relative to this directory.
+packs:
+  JP:
+    path: ../JP/wire-governance/approval-thresholds.yaml
+    pin: 06863201184155e05cb14b39ac4e55f14baaaf86d0994d42505c820fba230fd4
+  US:
+    path: ../US/wire-governance/approval-thresholds.yaml
+    pin: 5ca5d2cfeae482b5943dda9aa655435c4baed96b7a88ebaf8e8b669865cc592e
+  HK:
+    path: ../HK/wire-governance/approval-thresholds.yaml
+    pin: 7d052dd17b9450f82a820079294c7cf05d80ec86e23225ba2657fa7b25c690dc
+  default:
+    path: ../_default/wire-governance/approval-thresholds.yaml
+    pin: 52658176a257a4932c7128a28805d0bae0a6571168ba74c5c647c7b91e3604e7

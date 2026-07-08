@@ -1,0 +1,84 @@
+modules:
+  rental:
+    tier: production_ready
+    notes: PROP バインド · invoice generate · billing
+  hospitality:
+    tier: production_ready
+    notes: operations seed · invoice generate · REG-012
+  restaurant:
+    tier: production_ready
+    notes: menu · tables · invoice seed
+  professional_services:
+    tier: production_ready
+    notes: projects + invoice seed · operations ps show|validate|project-billing CLI
+  venture_capital:
+    tier: production_ready
+    notes: funds/portfolio + invoice seed
+  saas_subscription:
+    tier: production_ready
+    notes: plans/subscriptions + invoice · operations saas show|validate|renewals CLI
+  event_space:
+    tier: production_ready
+    notes: bookings/spaces + invoice seed
+  ecommerce:
+    tier: production_ready
+    notes: orders/products seed · invoice · operations ecommerce
+      show|validate|fulfillment CLI
+  retail_store:
+    tier: production_ready
+    notes: inventory/sales + invoice seed
+  clinic:
+    tier: production_ready
+    notes: patients/appointments + invoice seed
+  logistics:
+    tier: production_ready
+    notes: shipments + invoice seed
+  staffing:
+    tier: production_ready
+    notes: assignments/staff + invoice · operations staffing CLI
+  construction:
+    tier: production_ready
+    notes: projects + invoice seed
+  education:
+    tier: production_ready
+    notes: courses/enrollments + invoice seed
+  membership:
+    tier: production_ready
+    notes: members/plans seed · invoice · operations membership
+      show|validate|renewals CLI
+  software_outsourcing:
+    tier: production_ready
+    notes: SOW/milestones + invoice seed
+  event_operations:
+    tier: production_ready
+    notes: events/run_of_show + invoice seed
+  real_estate_brokerage:
+    tier: production_ready
+    notes: listings/deals + invoice seed
+  property_management:
+    tier: production_ready
+    notes: pm-properties/contracts + invoice seed
+  travel_booking:
+    tier: production_ready
+    notes: operations travel CLI · REG-008 · browser Phase 0 cursor-only
+  language_bridge:
+    tier: production_ready
+    notes: user vs system record language · bilingual minutes · Secretary/Compliance
+  jp_carbon_neutral_2050:
+    tier: activation_ready
+    notes: 2050 CN 宣言 · action-plan · REG-014
+  jp_women_empowerment:
+    tier: activation_ready
+    notes: 女性活躍行動計画 · 応援宣言
+  jp_privacy_policy:
+    tier: activation_ready
+    notes: 外部向け privacy-policy · REG-010 整合
+  jp_subsidy_application:
+    tier: production_ready
+    notes: 補助金募集要項 · 適格性 · 人件費算定 · operations subsidy CLI
+  jp_trademark_application:
+    tier: production_ready
+    notes: 商標登録願ひな形 · 指定商品役務 · operations trademark CLI
+  jp_corporate_registration:
+    tier: production_ready
+    notes: 法務局登記18手続 · 定款 · 登記申請書 · operations corporate CLI · jp-corporate-registration.test

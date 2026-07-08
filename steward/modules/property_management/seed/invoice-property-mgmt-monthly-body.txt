@@ -1,0 +1,5 @@
+{tenant_name} 御中
+
+{year_month} 分の管理委託料をご請求申し上げます。
+
+{company_name}

@@ -1,0 +1,34 @@
+id: TW
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/tw-maintainers
+repository: https://github.com/steward-os/jurisdiction-tw
+license: MIT
+
+name: Taiwan
+default_entity_form: private_ltd
+default_currency: TWD
+locale: zh-TW
+default_display_language: zh-Hant
+legal_system:
+  ja: 台湾法
+  en: Taiwan law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-TW-001
+  board: REG-TW-002
+  shareholder: REG-TW-003
+  approval: REG-TW-004
+  expense: REG-TW-005
+  conflict: REG-TW-006
+  document: REG-TW-007
+  travel: REG-TW-008
+
+notes: Company Ltd skeleton · tw-demo tenant

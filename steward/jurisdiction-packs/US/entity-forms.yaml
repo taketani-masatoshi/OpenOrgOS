@@ -1,0 +1,65 @@
+# United States — 連邦デフォルト組織形態（法域 US）
+jurisdiction: US
+
+forms:
+  - id: c_corp
+    name: C-Corporation
+    liability: limited
+    governance:
+      supreme_body: Shareholders
+      board: Board of Directors
+    identifiers: [ein]
+    status: active
+
+  - id: s_corp
+    name: S-Corporation
+    liability: limited
+    status: active
+    notes: パススルー税務 · 株主数・種類制限
+
+  - id: llc
+    name: Limited Liability Company (LLC)
+    liability: limited
+    governance:
+      operating_agreement: true
+    status: active
+    notes: 州法依存 · 最も一般的な中小形態
+
+  - id: lp
+    name: Limited Partnership (LP)
+    liability: mixed
+    status: active
+
+  - id: llp
+    name: Limited Liability Partnership (LLP)
+    liability: limited
+    status: active
+    notes: 士業等
+
+  - id: gp
+    name: General Partnership (GP)
+    liability: unlimited
+    status: active
+
+  - id: nonprofit_corp
+    name: Nonprofit Corporation
+    liability: limited
+    status: active
+    notes: 501(c) 等は税務ステータス
+
+  - id: benefit_corp
+    name: Benefit Corporation (B-Corp)
+    liability: limited
+    status: stub
+    notes: 州により導入状況異なる
+
+  - id: sole_proprietorship
+    name: Sole Proprietorship
+    liability: unlimited
+    status: active
+
+  - id: series_llc
+    name: Series LLC
+    liability: limited
+    status: stub
+    notes: 州法限定（DE · NV 等）

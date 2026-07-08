@@ -1,0 +1,52 @@
+# TW Internal Regulations Catalog — corporate governance skeleton
+# Templates: steward/jurisdiction-packs/TW/regulations/templates/
+
+regulations:
+  - id: REG-TW-001
+    name: Officer Compensation Policy
+    template: core/REG-TW-001-officer-comp/template.md
+    tenant_doc: officer-compensation-policy.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-TW-002
+    name: Board Meeting Procedures
+    template: core/REG-TW-002-board-meetings/template.md
+    tenant_doc: board-meeting-procedures.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-TW-003
+    name: Shareholder Meeting Procedures
+    template: core/REG-TW-003-shareholder-meetings/template.md
+    tenant_doc: shareholder-meeting-procedures.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-TW-004
+    name: Approval Authority Policy
+    template: core/REG-TW-004-approval-authority/template.md
+    tenant_doc: approval-authority-policy.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-TW-005
+    name: Expense Reimbursement Policy
+    template: core/REG-TW-005-expense-reimbursement/template.md
+    tenant_doc: expense-reimbursement-policy.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-TW-006
+    name: Conflict of Interest Policy
+    template: core/REG-TW-006-conflict-of-interest/template.md
+    tenant_doc: conflict-of-interest-policy.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-TW-007
+    name: Document Retention Policy
+    template: core/REG-TW-007-document-retention/template.md
+    tenant_doc: document-retention-policy.md
+    binds_to: { type: core, group: governance }
+    iso_ids: [ISO-9001, ISO-27001]
+
+  - id: REG-TW-008
+    name: Travel and Business Expense Policy
+    template: core/REG-TW-008-travel/template.md
+    tenant_doc: travel-policy.md
+    binds_to: { type: core, group: governance }

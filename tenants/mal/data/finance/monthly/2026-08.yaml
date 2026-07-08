@@ -1,0 +1,18 @@
+month: 2026-08
+revenue:
+  - property_id: PROP-001
+    category: rent
+    amount: 100000
+  - property_id: PROP-002
+    category: hotel_revenue
+    amount: 1050000
+expenses:
+  - property_id: PROP-001
+    category: other
+    amount: 29433
+    notes: 減価償却費（番町ハイム）
+  - property_id: PROP-002
+    category: other_property
+    amount: 496750
+    notes: 運営費（OTA・清掃・光熱費等）
+notes: 亀沢旅館 開業 / 予想ベース決算

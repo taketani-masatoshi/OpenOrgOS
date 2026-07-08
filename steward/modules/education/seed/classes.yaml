@@ -1,0 +1,10 @@
+entity: "サンプルアカデミー株式会社"
+as_of: "2026-06-01"
+classes:
+  - id: CLS-001
+    course_id: CRS-001
+    name: "2026春Aクラス"
+    capacity: 20
+    enrolled: 16
+    start_date: "2026-04-07"
+    status: active

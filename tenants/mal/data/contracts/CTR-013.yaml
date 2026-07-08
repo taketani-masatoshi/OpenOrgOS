@@ -1,0 +1,24 @@
+id: CTR-013
+name: "火災保険（番町ハイム312）"
+counterparty: "TBD（保険会社）"
+counterparty_type: company
+type: insurance
+status: draft
+start_date: "2026-06-01"
+auto_renewal: true
+owner: "段燕燕"
+property_id: PROP-001
+compensation:
+  type: fixed
+  amount: 0
+  payment_terms: "年払保険料（見積後記入）"
+scope_summary: |
+  借家人賠償・什器備品等。加入手続中。
+documents:
+  draft: "docs/contracts/CTR-013/01-draft.md"
+  enrollment: "docs/contracts/CTR-013/02-enrollment-packet.md"
+risk:
+  risk_level: high
+  notes: "証券未保管。優先加入。"
+notes: |
+  02-enrollment-packet.md のチェックリストを完了すること。

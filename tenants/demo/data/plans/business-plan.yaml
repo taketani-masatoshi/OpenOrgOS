@@ -1,0 +1,21 @@
+period: "2026-2028"
+
+vision: |
+  フレームワーク骨格参照 — 賃貸1物件
+
+segments:
+  - name: "港湾マンション501（賃貸）"
+    description: "[TBD]"
+    revenue_driver: "月額賃料"
+
+kpi: []
+
+years:
+  - year: 2026
+    revenue_plan: 0
+    operating_profit_plan: 0
+    investment_plan: 0
+    borrowing_plan: 0
+
+notes: |
+  yojitsu v2: data/plans/yojitsu-fy2026.yaml（lines[] · segments 連動）

@@ -1,0 +1,17 @@
+# 現預金残高 — ランウェイ算出用（L1 · 口座番号は bank-accounts.yaml へ）
+# bank_account_id は data/finance/bank-accounts.yaml（L2 · gitignore）を参照。
+
+as_of: "2027-01-31"
+status: template
+currency: JPY
+accounts:
+  - bank_account_id: BANK-001
+    amount: null
+  - bank_account_id: BANK-002
+    amount: null
+total: null
+notes: |
+  三井住友銀行（BANK-001）· GMOあおぞらネット銀行（BANK-002）の2口座。
+  残高入力後 status: confirmed · `npm run validate`。
+  手順: [p0-closing-register.md](../../docs/company/p0-closing-register.md) P0-05
+  口座番号 · 支店コードは bank-accounts.yaml のみ（GitHub 非公開）。

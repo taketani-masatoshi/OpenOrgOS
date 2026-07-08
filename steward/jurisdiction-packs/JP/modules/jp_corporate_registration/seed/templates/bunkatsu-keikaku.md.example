@@ -1,0 +1,18 @@
+---
+title: 分割計画書
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# 会社分割計画書
+
+{{company_name}}は、{{resolution_date_reiwa}}、次のとおり会社分割を行う。
+
+1. 承継会社: {{counterparty_name}}
+2. 分割効力発生日: {{effective_date_reiwa}}
+3. 詳細は別紙分割計画に定める。
+
+---
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

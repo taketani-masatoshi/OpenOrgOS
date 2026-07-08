@@ -1,0 +1,1 @@
+reservation_id,channel,booked_at,guest_name,guest_count,check_in,check_out,nights,gross_amount,commission,net_amount,status,payment_status,stay_id,notes

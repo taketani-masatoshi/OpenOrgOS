@@ -1,0 +1,11 @@
+forms:
+  - id: llc
+    name: Limited Liability Company
+    name_local: 有限责任公司
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Corporate registry · China

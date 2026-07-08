@@ -1,0 +1,23 @@
+---
+title: 就任承諾書
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+> 役員ごとに個別作成。以下は {{officer_name}} 分。
+
+# 就任承諾書
+
+{{registry_office}}　御中
+
+私は、{{resolution_date_reiwa}}付 {{company_name}} {{resolution_body_label}}の決議により、{{officer_role}}に選任されたので、その就任を承諾します。
+
+| 項目 | 内容 |
+|------|------|
+| 氏名 | {{officer_name}} |
+| 住所 | {{officer_address}} |
+| 役職 | {{officer_role}} |
+
+{{generated_iso}}
+
+{{officer_name}}　㊞

@@ -1,0 +1,10 @@
+version: "1"
+currency: SGD
+accounts:
+  - code: "1100"
+    name: Cash and cash equivalents
+    type: asset
+    normal_balance: debit
+category_mapping:
+  revenue: {}
+  expense: {}

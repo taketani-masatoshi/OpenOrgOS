@@ -1,0 +1,26 @@
+entity: "サンプル商事株式会社"
+as_of: "2026-06-01"
+programs:
+  - id: SUB-2026-001
+    name: "小規模事業者持続化補助金（例示 · 架空）"
+    source_url: "https://example.go.jp/subsidy/sustainability"
+    brief_path: briefs/SUB-2026-001.yaml
+    managing_body: "中小企業庁（例示）"
+    application_deadline: "2026-09-30"
+    status: tracking
+    requirements:
+      - id: req-jp
+        label: "日本国内の事業者であること"
+        rule: requires_jurisdiction_jp
+      - id: req-corp-no
+        label: "法人番号を有すること"
+        rule: requires_corporate_number
+      - id: req-sme-size
+        label: "小規模事業者（従業員20人以下等 · 例示）"
+        rule: max_employees
+        max_value: 20
+      - id: req-capital
+        label: "資本金1億円以下（例示）"
+        rule: max_capital_yen
+        max_value: 100000000
+    notes: "例示 · 実際の募集要項は briefs/ に構造化して上書き"

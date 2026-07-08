@@ -1,0 +1,4 @@
+peers:
+  - peer_id: PEER-001
+    display_name: Peer Co
+    jurisdiction: JP

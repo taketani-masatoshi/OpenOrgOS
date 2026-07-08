@@ -1,0 +1,11 @@
+entity: "株式会社サンプル商事"
+as_of: "2026-06-01"
+projects:
+  - id: PRJ-001
+    name: "業務システム刷新"
+    client: "取引先A株式会社"
+    status: active
+    start_date: "2026-04-01"
+    end_date: "2026-09-30"
+    contract_id: CTR-010
+    notes: "例示 · PMO"

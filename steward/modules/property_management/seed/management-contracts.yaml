@@ -1,0 +1,7 @@
+management_contracts:
+  - id: PMC-001
+    pm_property_id: PMP-001
+    contract_id: CTR-021
+    fee_type: percentage
+    fee_rate_pct: 5
+    status: executed

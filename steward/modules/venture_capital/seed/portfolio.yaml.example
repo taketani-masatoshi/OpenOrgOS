@@ -1,0 +1,25 @@
+entity: "株式会社サンプル・キャピタル"
+as_of: "2026-06-01"
+companies:
+  - id: PC-001
+    name: "テックスタート株式会社"
+    fund_id: FUND-001
+    stage: seed
+    sector: "SaaS"
+    invested_jpy: 50000000
+    fair_value_jpy: 55000000
+    ownership_pct: 8.5
+    status: active
+    stakeholder_id: STK-020
+    notes: "例示 · シリーズシード"
+
+  - id: PC-002
+    name: "グリーンエナジー・ラボ株式会社"
+    fund_id: FUND-001
+    stage: early
+    sector: "Climate"
+    invested_jpy: 80000000
+    fair_value_jpy: 90000000
+    ownership_pct: 12.0
+    status: active
+    notes: "例示"

@@ -1,0 +1,11 @@
+# Peer mesh routes — multi-hop org event delivery (FR-EM-07)
+# Each route lists intermediate peers in order; final hop is destination_peer_id.
+
+routes:
+  - destination_peer_id: PEER-002
+    via: []
+    notes: Direct delivery to southwood
+  - destination_peer_id: PEER-003
+    via:
+      - PEER-002
+    notes: mal → southwood relay → third org (demo)

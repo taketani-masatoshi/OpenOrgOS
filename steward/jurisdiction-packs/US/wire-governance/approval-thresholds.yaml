@@ -1,0 +1,7 @@
+# US wire governance — REG-US-004 family
+policy_ref: REG-US-004
+currency: USD
+tiers:
+  A: { max_amount: 10000, approvers: 1, roles: ["CEO", "Officer"] }
+  B: { max_amount: 100000, approvers: 2, roles: ["Officer"] }
+  C: { board_required: true, roles: ["Board"] }

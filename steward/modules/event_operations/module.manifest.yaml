@@ -1,0 +1,10 @@
+id: event_operations
+required_seeds:
+  - invoice-event-ops-monthly.yaml
+  - invoice-event-ops-monthly-body.txt
+notes: production_ready — events/run_of_show + invoice seed
+activation_seeds:
+- events.yaml
+- run_of_show.yaml
+- vendors.yaml
+- staff_shifts.yaml

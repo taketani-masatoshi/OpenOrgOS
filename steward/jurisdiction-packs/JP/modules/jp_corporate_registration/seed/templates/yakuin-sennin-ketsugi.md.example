@@ -1,0 +1,19 @@
+---
+title: 設立時役員選任決議
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# 設立時役員選任決議書
+
+{{company_name}}の発起人は、{{filing_date_reiwa}}、次のとおり設立時役員を選任することを決議した。
+
+## 選任役員
+
+{{directors_block}}
+
+---
+
+{{filing_date_reiwa}}
+
+発起人代表　{{promoter_name}}　㊞

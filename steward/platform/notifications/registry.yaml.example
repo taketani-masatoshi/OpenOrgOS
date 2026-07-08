@@ -1,0 +1,16 @@
+version: "1"
+
+# Copy to steward/platform/notifications/registry.yaml and uncomment URLs.
+# Doctor: orgos doctor (checks webhook / openwebui ingest)
+
+channels:
+  webhook:
+    url: https://example.com/orgos/hook
+    # secret: change-me
+    events:
+      - pipeline_daily_complete
+      - approval_pending
+  openwebui:
+    ingest_url: http://127.0.0.1:3000/api/v1/ingest
+    events:
+      - pipeline_daily_complete

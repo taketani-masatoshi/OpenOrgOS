@@ -1,0 +1,642 @@
+# Agent ルーティングレジストリ — Phase 1 静的マッチ
+# 実装: src/lib/routing.ts · CLI: steward route list
+
+version: "1"
+as_of: "2026-06-08"
+
+routes:
+  - id: contract-expiry
+    description: 契約期限・更新アラート
+    agent: contract
+    skill: contract_expiry_check
+    priority: 80
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 契約期限
+        - 契約更新
+        - 期限切れ
+        - 契約アラート
+      paths:
+        - data/contracts/
+        - docs/contracts/
+
+  - id: monthly-close
+    description: 月次締め・月次収支
+    agent: finance
+    skill: monthly_close
+    priority: 70
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - 月次締め
+        - 月次収支
+        - 締め処理
+        - monthly close
+      paths:
+        - data/finance/monthly/
+
+  - id: finance-variance
+    description: 予実差異・FY 計画 vs 実績
+    agent: finance
+    skill: variance_analysis
+    priority: 65
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - 予実
+        - 差異分析
+        - variance
+        - 計画対実績
+      paths:
+        - data/plans/
+
+  - id: inbox-routing
+    description: 受信トレイ・未処理書類
+    agent: operations
+    priority: 60
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - inbox
+        - 受信トレイ
+        - 未処理書類
+        - スキャン
+      paths:
+        - docs/io/inbox/
+        - data/document-io.yaml
+
+  - id: travel-booking
+    description: 旅行手配・出張宿泊予約（総務）
+    agent: operations
+    skill: travel_booking
+    priority: 62
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 旅行手配
+        - 出張
+        - ホテル予約
+        - 航空券
+        - 新幹線予約
+        - 楽天トラベル
+        - Booking
+        - Trip.com
+        - travel booking
+      paths:
+        - docs/operations/
+        - data/operations/travel-portals.yaml
+
+  - id: outbox-routing
+    description: 出力トレイ・印刷待ち PDF
+    agent: operations
+    priority: 55
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - outbox
+        - 出力トレイ
+        - 印刷待ち
+      paths:
+        - docs/io/outbox/
+
+  - id: secretary-schedule
+    description: 社長スケジュール・予定調整
+    agent: secretary
+    skill: schedule_management
+    boundary: executive_data
+    priority: 90
+    resource_paths:
+      - data/executive/calendar.yaml
+    match:
+      keywords:
+        - スケジュール
+        - 予定
+        - カレンダー
+        - 会食
+        - 来客
+      paths:
+        - data/executive/calendar.yaml
+        - docs/executive/
+
+  - id: secretary-tasks
+    description: 社長タスク・ToDo
+    agent: secretary
+    boundary: executive_data
+    priority: 85
+    resource_paths:
+      - data/executive/tasks.yaml
+    match:
+      keywords:
+        - タスク
+        - ToDo
+        - 社長タスク
+      paths:
+        - data/executive/tasks.yaml
+
+  - id: secretary-one-on-one
+    description: 1-on-1 準備・議題
+    agent: secretary
+    skill: one_on_one_prep
+    boundary: executive_data
+    priority: 85
+    resource_paths:
+      - data/executive/one-on-ones.yaml
+    match:
+      keywords:
+        - 1-on-1
+        - one on one
+        - 面談準備
+      paths:
+        - data/executive/one-on-ones.yaml
+
+  - id: secretary-correspondence
+    description: 社外連絡・メール下書き
+    agent: secretary
+    skill: external_correspondence
+    boundary: executive_data
+    priority: 75
+    resource_paths:
+      - data/executive/external-contacts.yaml
+    match:
+      keywords:
+        - 社外連絡
+        - メール下書き
+        - 返信下書き
+      paths:
+        - data/executive/external-contacts.yaml
+
+  - id: executive-kpi
+    description: 経営 KPI・ダッシュボード要約（サマリのみ）
+    agent: executive_steward
+    boundary: executive_summaries
+    priority: 70
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - KPI
+        - 経営ダッシュボード
+        - ランウェイ
+        - P0
+        - 経営サマリ
+      paths:
+        - docs/reports/dashboard/
+        - docs/reports/agent-summaries/
+
+  - id: executive-daily
+    description: 日次運用チェック
+    agent: executive_steward
+    skill: daily_ops
+    boundary: executive_summaries
+    priority: 60
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - 日次運用
+        - daily ops
+        - 朝会
+
+  - id: compliance-permit
+    description: 許認可 · 保険 · ISO コンプライアンス
+    agent: compliance
+    skill: permit_expiry_check
+    priority: 75
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 許認可
+        - ISO
+        - コンプライアンス
+        - 個情
+        - 個人情報
+        - privacy
+        - gitignore
+        - classification-registry
+      paths:
+        - docs/compliance/
+        - data/classification-registry.yaml
+
+  - id: rental-operations
+    description: 賃貸物件運用（有効モジュールのみ）
+    agent: property_rental
+    module_agent: true
+    priority: 50
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 賃貸
+        - 入居者
+        - 家賃回収
+      paths:
+        - docs/properties/
+        - data/properties/
+
+  - id: coo-work-order
+    description: Work Order · 進捗 · 担当割当
+    agent: coo
+    priority: 88
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - Work Order
+        - 担当割当
+        - 進捗追跡
+        - COO
+        - 委譲
+      paths:
+        - docs/reports/routing-queue/
+
+  - id: sales-pipeline
+    description: 営業 · 見積 · パイプライン
+    agent: sales_lead
+    priority: 72
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 営業
+        - 見積
+        - パイプライン
+        - 商談
+        - 受注
+      paths:
+        - docs/sales/
+        - data/sales/
+
+  - id: sales-outbound
+    description: 新規開拓 · アウトバウンド
+    agent: sales_outbound
+    priority: 68
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - アウトバウンド
+        - コールド
+        - リスト
+        - 新規開拓
+      paths:
+        - docs/sales/outbound/
+
+  - id: marketing-content
+    description: マーケ · コンテンツ · 施策
+    agent: marketing_lead
+    priority: 66
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - マーケ
+        - コンテンツ
+        - LP
+        - 記事企画
+      paths:
+        - docs/marketing/
+
+  - id: social-post
+    description: SNS · 投稿下書き
+    agent: social_media
+    priority: 64
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - SNS
+        - 投稿
+        - X
+        - LinkedIn
+        - ソーシャル
+      paths:
+        - docs/marketing/social/
+
+  - id: customer-success
+    description: 既存顧客 · CS · 解約防止
+    agent: customer_success
+    priority: 70
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - CS
+        - カスタマーサクセス
+        - 既存顧客
+        - 解約
+        - オンボーディング
+      paths:
+        - docs/customer-success/
+
+  - id: legal-teikan
+    description: 法務 · 定款 · 登記ドラフト
+    agent: legal
+    priority: 74
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 定款
+        - 登記
+        - 法務
+        - 条文
+        - 商号変更
+        - 目的変更
+      paths:
+        - docs/corporate-registration/
+        - docs/company/teikan-summary.md
+
+  - id: engineering-code
+    description: 実装 · バグ · PR
+    agent: engineering
+    priority: 58
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 実装
+        - バグ
+        - PR
+        - リファクタ
+        - エンジニア
+      paths:
+        - src/
+        - tests/
+
+  - id: security-audit
+    description: セキュリティ · 分類 · アクセス境界
+    agent: security
+    priority: 76
+    resource_paths:
+      - data/classification-registry.yaml
+    match:
+      keywords:
+        - セキュリティ
+        - 情報漏洩
+        - classification
+        - gitignore
+        - アクセス境界
+      paths:
+        - data/classification-registry.yaml
+
+  - id: hr-labor
+    description: 人事 · 労務 · 社保
+    agent: human_resources
+    priority: 78
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 人事
+        - 労務
+        - 社保
+        - 就業規則
+        - 36協定
+      paths:
+        - data/hr/
+        - docs/company/hr/
+
+  - id: corporate-meetings
+    description: 株主総会 · 取締役会 · 議事録
+    agent: corporate_governance
+    priority: 77
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 株主総会
+        - 取締役会
+        - 議事録
+        - 招集
+        - 決議
+      paths:
+        - docs/company/
+
+  - id: accounting-ops
+    description: 経理 · 請求 · 支払
+    agent: accounting
+    priority: 71
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 請求書
+        - 支払
+        - 仕訳
+        - 経理
+        - インボイス
+      paths:
+        - docs/finance/accounting/
+
+  - id: tax-filing
+    description: 税務 · 申告
+    agent: tax
+    skill: tax_filing_prep
+    priority: 73
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 法人税
+        - 消費税
+        - 税務申告
+        - 確定申告
+        - e-Tax
+      paths:
+        - docs/company/tax/
+
+  - id: procurement-order
+    description: 購買 · 調達 · 稟議
+    agent: procurement
+    priority: 67
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 購買
+        - 調達
+        - 発注
+        - ベンダー
+        - 稟議
+      paths:
+        - docs/procurement/
+
+  - id: subsidy-government
+    description: 補助金 · 行政手続
+    agent: government_affairs
+    priority: 69
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 補助金
+        - 交付金
+        - 認定
+        - 行政
+      paths:
+        - docs/government/
+
+  - id: ip-trademark
+    description: 知財 · 商標
+    agent: intellectual_property
+    priority: 68
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 商標
+        - 特許
+        - 知財
+        - ライセンス
+      paths:
+        - docs/ip/
+
+  - id: pmo-project
+    description: PMO · 案件進捗
+    agent: project_management
+    priority: 63
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - PMO
+        - 案件
+        - WBS
+        - 進捗報告
+      paths:
+        - docs/projects/
+
+  - id: hr-labor
+    description: 人事 · 労務 · 社保
+    agent: human_resources
+    priority: 78
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 人事
+        - 労務
+        - 社保
+        - 就業規則
+        - 36協定
+      paths:
+        - data/hr/
+        - docs/company/hr/
+
+  - id: corporate-meetings
+    description: 株主総会 · 取締役会 · 議事録
+    agent: corporate_governance
+    priority: 77
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 株主総会
+        - 取締役会
+        - 議事録
+        - 招集
+        - 決議
+      paths:
+        - docs/company/
+
+  - id: accounting-ops
+    description: 経理 · 請求 · 支払
+    agent: accounting
+    priority: 71
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 請求書
+        - 支払
+        - 仕訳
+        - 経理
+        - インボイス
+      paths:
+        - docs/finance/accounting/
+
+  - id: tax-filing
+    description: 税務 · 申告
+    agent: tax
+    skill: tax_filing_prep
+    priority: 73
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 法人税
+        - 消費税
+        - 税務申告
+        - 確定申告
+        - e-Tax
+      paths:
+        - docs/company/tax/
+
+  - id: procurement-order
+    description: 購買 · 調達 · 稟議
+    agent: procurement
+    priority: 67
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 購買
+        - 調達
+        - 発注
+        - ベンダー
+        - 稟議
+      paths:
+        - docs/procurement/
+
+  - id: subsidy-government
+    description: 補助金 · 行政手続
+    agent: government_affairs
+    priority: 69
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 補助金
+        - 交付金
+        - 認定
+        - 行政
+      paths:
+        - docs/government/
+
+  - id: ip-trademark
+    description: 知財 · 商標
+    agent: intellectual_property
+    priority: 68
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 商標
+        - 特許
+        - 知財
+        - ライセンス
+      paths:
+        - docs/ip/
+
+  - id: pmo-project
+    description: PMO · 案件進捗
+    agent: project_management
+    priority: 63
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - PMO
+        - 案件
+        - WBS
+        - 進捗報告
+      paths:
+        - docs/projects/

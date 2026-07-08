@@ -1,0 +1,43 @@
+id: JP
+version: "1.0.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/jp-maintainers
+repository: https://github.com/steward-os/jurisdiction-jp
+license: MIT
+
+name: Japan
+default_entity_form: kk
+default_currency: JPY
+locale: ja-JP
+default_display_language: ja
+legal_system:
+  ja: 日本法
+  en: Japan law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: jp
+
+corporate_core:
+  officer_comp: REG-001
+  board: REG-002
+  shareholder: REG-003
+  approval: REG-004
+  expense: REG-005
+  conflict: REG-006
+  document: REG-007
+  travel: REG-008
+
+declaration_modules:
+  - jp_carbon_neutral_2050
+  - jp_women_empowerment
+  - jp_privacy_policy
+  - jp_subsidy_application
+  - jp_trademark_application
+  - jp_corporate_registration
+
+notes: 参照実装 — tenants/mal · 組織形態は entity-forms.yaml（株式会社以外含む）
+capability_catalog: business-capability-catalog.yaml

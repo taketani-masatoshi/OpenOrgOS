@@ -1,0 +1,36 @@
+jurisdiction: EU
+legal_subdivision: FR
+
+forms:
+  - id: sarl
+    name: SARL
+    name_local: Société à responsabilité limitée
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Gérant
+    identifiers:
+      - company_number
+    notes: RCS · SMEs
+
+  - id: sas
+    name: SAS
+    name_local: Société par actions simplifiée
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Président
+    identifiers:
+      - company_number
+    notes: Flexible governance
+
+  - id: sa
+    name: SA
+    name_local: Société anonyme
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Listed companies

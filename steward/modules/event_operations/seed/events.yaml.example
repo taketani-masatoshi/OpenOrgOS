@@ -1,0 +1,8 @@
+events:
+  - id: EVT-001
+    name: "サンプル商事 周年パーティ"
+    client: "取引先B株式会社"
+    date: "2026-07-20"
+    budget_yen: 2500000
+    status: planning
+    venue_ref: "外部会場（例示）"

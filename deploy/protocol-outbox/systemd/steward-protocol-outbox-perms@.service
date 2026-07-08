@@ -1,0 +1,17 @@
+[Unit]
+Description=Steward protocol outbox permissions (%i)
+Before=steward-protocol-api@%i.service steward-protocol-relay@%i.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+WorkingDirectory=/opt/orgos-reference
+Environment=ORGOS_ROOT=/opt/orgos-reference
+Environment=STEWARD_ROOT=/opt/orgos-reference
+Environment=STEWARD_USER=steward
+Environment=STEWARD_GROUP=steward
+ExecStart=/opt/orgos-reference/deploy/protocol-outbox/apply-permissions.sh %i
+
+[Install]
+WantedBy=multi-user.target

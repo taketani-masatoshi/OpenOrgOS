@@ -1,0 +1,23 @@
+---
+title: 印鑑届出書
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+> **ひな形** — 法務局公表様式に準拠。代表者印の届出。
+
+# 印鑑届出書
+
+{{registry_office}}　御中
+
+| 項目 | 内容 |
+|------|------|
+| 商号 | {{company_name}} |
+| 本店 | {{head_office}} |
+| 代表者 | {{representative_names}} |
+| 届出印 | （別紙 · records/corporate-registration/ に押印見本） |
+
+{{filing_date_reiwa}}
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

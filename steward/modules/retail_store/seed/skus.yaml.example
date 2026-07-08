@@ -1,0 +1,10 @@
+entity: "サンプルストア株式会社"
+as_of: "2026-06-01"
+skus:
+  - id: SKU-101
+    name: "コットンTシャツ"
+    price_yen: 3980
+    cost_yen: 1800
+    store_id: STORE-001
+    stock_qty: 42
+    status: active

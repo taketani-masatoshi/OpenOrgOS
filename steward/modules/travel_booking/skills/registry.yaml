@@ -1,0 +1,9 @@
+# Skill レジストリ — travel_booking モジュール
+# 正本: steward/modules/travel_booking/skills/ · 集約: src/lib/skill-registry.ts
+
+skills:
+  - id: travel_booking
+    file: travel_booking.md
+    runtime: cursor-only
+    agent: Operations
+    description: 旅行サイト手配（browser · 決済直前停止）

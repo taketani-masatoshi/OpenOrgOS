@@ -1,0 +1,6 @@
+skills:
+  - id: membership_ops
+    file: membership_ops.md
+    runtime: cursor-only
+    agent: Operations
+    description: membership module operations checklist

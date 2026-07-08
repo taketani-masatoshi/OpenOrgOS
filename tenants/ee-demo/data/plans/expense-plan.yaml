@@ -1,0 +1,11 @@
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    lines:
+      - id: placeholder
+        name: "[TBD]"
+        amount: 0
+    total: 0
+notes: expense plan skeleton

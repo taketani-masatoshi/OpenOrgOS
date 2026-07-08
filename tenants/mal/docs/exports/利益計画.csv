@@ -1,0 +1,4 @@
+fiscal_year,period_from,period_to,revenue_jpy,gross_profit_jpy,sga_jpy,operating_profit_jpy,pretax_profit_jpy,tax_jpy,net_profit_jpy,status,notes
+FY2026,2026-02,2027-01,7500000,7500000,3333691,4166309,4166309,775000,3391309,closed,決算確定（予想ベース）
+FY2027,2027-02,2028-01,13800000,13800000,5961000,7839000,7839000,,,plan,亀沢フル12ヶ月。減価償却・役員報酬は利益計画外積み上げで未反映の場合あり
+FY2028,2028-02,2029-01,14430000,14430000,6259050,8170950,8170950,,,plan,亀沢+5%成長想定

@@ -1,0 +1,6 @@
+peers:
+  - peer_id: PEER-002
+    display_name: MAL
+    jurisdiction: JP
+    org_uri: steward://tenant/mal
+as_of: 2026-06-28

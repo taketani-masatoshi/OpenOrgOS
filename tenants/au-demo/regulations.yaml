@@ -1,0 +1,17 @@
+regulations:
+  - id: REG-AU-001
+    enabled: true
+  - id: REG-AU-002
+    enabled: true
+  - id: REG-AU-003
+    enabled: true
+  - id: REG-AU-004
+    enabled: true
+  - id: REG-AU-005
+    enabled: true
+  - id: REG-AU-006
+    enabled: true
+  - id: REG-AU-007
+    enabled: true
+  - id: REG-AU-008
+    enabled: true

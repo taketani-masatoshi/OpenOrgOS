@@ -1,0 +1,4 @@
+asset_id,name,property_id,acquisition_date,acquisition_cost,depreciation_method,useful_life_years,annual_depreciation,accumulated_depreciation,book_value,location,notes
+ASSET-001,番町ハイム312（建物）,PROP-001,2025-02-10,16600000,定額法,47,353191,706382,15893618,東京都千代田区二番町,fixed-assets.yaml SoT
+ASSET-002,亀沢土地,PROP-002,2025-06-01,70000000,非償却,,0,0,70000000,東京都墨田区亀沢,償却対象外
+ASSET-003,亀沢建物（上置き）,PROP-002,2026-04-01,26000000,定額法,TBD,0,0,26000000,東京都墨田区亀沢,耐用年数TBD・第9期償却0

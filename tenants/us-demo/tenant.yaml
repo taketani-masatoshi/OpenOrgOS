@@ -1,0 +1,11 @@
+id: us-demo
+name: Sample Corp Inc.
+legal_name: Sample Corp Inc.
+display_name: US Demo
+description: US C-Corp skeleton — jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: US
+entity_form: c_corp
+locale: en-US
+default_currency: USD

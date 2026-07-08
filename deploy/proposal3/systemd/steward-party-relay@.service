@@ -1,0 +1,19 @@
+[Unit]
+Description=Steward Proposal 3 Party Relay (%i)
+After=network.target
+
+[Service]
+Type=simple
+User=steward
+WorkingDirectory=/opt/orgos-reference
+EnvironmentFile=-/etc/steward/party-relay-%i.env
+Environment=ORGOS_TENANT=%i
+Environment=STEWARD_TENANT=%i
+Environment=RELAY_INTERVAL_SEC=30
+ExecStartPre=/opt/orgos-reference/deploy/protocol-outbox/apply-permissions.sh %i
+ExecStart=/usr/bin/npm run proposal3:party-relay -- %i
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

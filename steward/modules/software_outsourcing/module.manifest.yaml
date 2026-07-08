@@ -1,0 +1,12 @@
+id: software_outsourcing
+required_seeds:
+  - invoice-software-out-monthly.yaml
+  - invoice-software-out-monthly-body.txt
+notes: production_ready — SOW/milestones + invoice seed
+activation_seeds:
+- sow-contracts.yaml
+- milestones.yaml
+- timesheets.yaml
+- deliverables.yaml
+optional_regulations:
+- REG-007

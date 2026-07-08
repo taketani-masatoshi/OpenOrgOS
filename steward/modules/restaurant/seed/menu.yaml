@@ -1,0 +1,8 @@
+# レストラン — メニュー骨格（seed_only · Git 追跡）
+
+items:
+  - id: MENU-001
+    name: 示例セット
+    price: 1000
+    category: main
+    available: true

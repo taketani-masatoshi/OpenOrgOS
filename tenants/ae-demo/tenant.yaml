@@ -1,0 +1,11 @@
+id: ae-demo
+name: Sample UAE LLC
+legal_name: Sample UAE LLC
+display_name: AE Demo
+description: AE jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: AE
+entity_form: llc
+locale: en-AE
+default_currency: AED

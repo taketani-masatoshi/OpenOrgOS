@@ -1,0 +1,11 @@
+entity: "サンプル内科クリニック"
+as_of: "2026-06-01"
+departments:
+  - id: DEPT-001
+    name: "内科"
+    slots_per_day: 24
+    status: active
+  - id: DEPT-002
+    name: "皮膚科"
+    slots_per_day: 16
+    status: active

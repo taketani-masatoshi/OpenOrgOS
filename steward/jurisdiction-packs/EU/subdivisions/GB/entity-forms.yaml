@@ -1,0 +1,35 @@
+jurisdiction: EU
+legal_subdivision: GB
+
+forms:
+  - id: ltd
+    name: Private Limited Company
+    name_local: Private Limited Company
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Companies House · SMEs
+
+  - id: plc
+    name: Public Limited Company
+    name_local: Public Limited Company
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Listed companies
+
+  - id: llp
+    name: Limited Liability Partnership
+    name_local: Limited Liability Partnership
+    liability: limited
+    governance:
+      supreme_body: Partners
+    identifiers:
+      - company_number
+    notes: Professional services

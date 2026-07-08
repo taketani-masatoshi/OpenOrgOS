@@ -1,0 +1,15 @@
+entity: "サンプル食堂株式会社"
+as_of: "2026-06-01"
+items:
+  - id: MENU-001
+    name: "日替わり定食"
+    price_yen: 980
+    cost_yen: 320
+    category: lunch
+    status: active
+  - id: MENU-002
+    name: "自家製プリン"
+    price_yen: 450
+    cost_yen: 120
+    category: dessert
+    status: active

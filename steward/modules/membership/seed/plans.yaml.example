@@ -1,0 +1,13 @@
+entity: "サンプルフィットネス株式会社"
+as_of: "2026-06-01"
+plans:
+  - id: PLN-001
+    name: "スタンダード"
+    monthly_yen: 8800
+    checkin_limit: unlimited
+    status: active
+  - id: PLN-002
+    name: "デイタイム"
+    monthly_yen: 5500
+    checkin_limit: unlimited
+    status: active

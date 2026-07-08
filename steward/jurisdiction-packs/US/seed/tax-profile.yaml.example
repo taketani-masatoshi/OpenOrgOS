@@ -1,0 +1,14 @@
+entity:
+  name: Sample Corp Inc.
+  type: C-Corporation
+  ein: REPLACE_ME
+  state_of_incorporation: Delaware
+fiscal_year:
+  end_month: 12
+federal_tax:
+  corporate_rate: "21%"
+  notes: Consult CPA
+state_tax:
+  state_of_incorporation: Delaware
+  franchise_tax: TBD
+filing_calendar: []

@@ -1,0 +1,161 @@
+---
+description: OrgOS tool-neutral development — do not assume Cursor (canonical mirror)
+alwaysApply: true
+---
+
+# OrgOS ツール中立開発ガイド
+
+**版:** 1.0 · **日付:** 2026-07-05  
+**正本:** 本書 · **対象:** OrgOS 参照実装の **今後のすべての開発**（Core · テナント · Agent · Skill · CLI）
+
+> **原則:** Cursor は **利用可能な IDE の一つ** であり、正本でも実行必須条件でもない。  
+> 正本は **Markdown + YAML + `orgos` CLI + テスト** に置く。
+
+---
+
+## 1. なぜ Cursor 非依存か
+
+| 理由 | 説明 |
+|------|------|
+| **CEO 利用面** | Steward Chat · Claude · ChatGPT · Aider 等で Operator が動く |
+| **CI / 再現性** | 判断は LLM ではなく `validate` · テスト · Skill CLI |
+| **移植性** | テナント workspace は IDE を選べる |
+| **Mirror 分離** | `.cursor/` は同期ミラー — 正本は `steward/rules/` |
+
+---
+
+## 2. 開発時の必須ルール
+
+### 2.1 正本の置き場所
+
+| 種別 | 正本 | 禁止 |
+|------|------|------|
+| Operator / Agent ポリシー | `steward/rules/` | `.cursor/rules/` のみに書く |
+| Agent 定義 | `steward/core/agents/*.md` · `steward/modules/*/agent.md` | Cursor `@` だけの参照 |
+| Skill 定義 | `steward/core/skills/` · `steward/modules/*/skills/` | チャット手順のみ |
+| 決定論処理 | `src/commands/` · `src/lib/` | LLM プロンプトのみ |
+| テナントデータ | `tenants/{id}/data/` · `docs/` | — |
+
+`.cursor/rules/*.mdc` は **`orgos operator sync-policy --emit all`** で再生成する。
+
+### 2.2 参照の書き方（Agent · Skill · ドキュメント）
+
+**DO — ツール中立（Path 第一）:**
+
+```markdown
+**Path:** `steward/core/agents/finance_agent.md`
+**Cursor（任意）:** `@steward/core/agents/finance_agent.md`
+```
+
+Work Order · Orchestrator · 社内 MD では `formatAgentPromptRef(..., "portable")` と同様に **Path + 任意で @** を併記する。
+
+**DON'T:**
+
+```markdown
+Cursor 参照: `@steward/...` のみ
+```
+
+### 2.3 Skill runtime（新規・改修）
+
+| runtime | 用途 | 新規 Skill の推奨 |
+|---------|------|-------------------|
+| **`cli`** | LLM 不要 · `orgos skills run` | **最優先** — 集計・validate・生成 |
+| **`agent`** | LLM + Skill MD 添付 | 対話が必要な手順 |
+| ~~`cursor-only`~~ | legacy alias | **新規禁止** — `agent` を使う |
+
+決定論で済む処理を `agent` / `cursor-only` にしない。
+
+### 2.4 LLM 実行パス（優先順）
+
+実装・Work Order 実行は次の順で設計する:
+
+1. **`orgos` CLI + テスト**（LLM 不要）
+2. **`orgos skills run`**（Skill CLI）
+3. **Shell runtime** — `ORGOS_SHELL_PROFILE=aider` 等（`runtime.yaml`）
+4. **MCP** — `orgos mcp start`（Continue · Claude Desktop）
+5. **OpenAI 互換 API** — `orgos chat ask` · Steward Chat
+6. **Cursor SDK** — 任意 · 未導入時は **manifest**（プロンプト MD のみ）にフォールバック
+
+`@cursor/sdk` だけに依存するフローを **唯一の経路** にしない。
+
+### 2.5 Agent 定義の変更後
+
+Agent MD を追加・改修したら:
+
+```bash
+orgos operator export --agent <id>   # または --all
+orgos operator sync-policy --emit all
+orgos validate
+npm test
+```
+
+Export 先: `steward/platform/agent/exports/agents/<id>.pack.md`
+
+---
+
+## 3. 機能追加チェックリスト
+
+PR · Work Order 完了前に確認:
+
+- [ ] コアロジックは `src/` にあり、LLM なしで `npm test` が通る
+- [ ] データ変更後 `orgos validate` が通る
+- [ ] Agent / Skill 参照は **repo 相対 Path** を含む
+- [ ] 新 Skill は `runtime: cli` または `agent`（`cursor-only` 不使用）
+- [ ] ドキュメント正本は `steward/rules/` または `docs/`（`.cursor/` 単独正本なし）
+- [ ] Work Order プロンプトが portable 形式（Path + @ 併記）
+- [ ] Agent 変更時 `orgos operator export` を実行済み
+- [ ] L2/L3 を tracked MD · テスト fixture に書いていない
+
+---
+
+## 4. アンチパターン
+
+| アンチパターン | 代替 |
+|----------------|------|
+| 「Cursor で @file して実行」とだけ書く | Path 明記 + `orgos skills run` / export pack |
+| 集計・validate を LLM Skill のみで実装 | `src/commands/` + `runtime: cli` |
+| `.cursor/rules/` にだけポリシーを追加 | `steward/rules/` 正本 → `sync-policy` |
+| dispatch が Cursor SDK 必須 | manifest + shell フォールバックを残す |
+| `@cursor/sdk` 前提の E2E | `orgos validate` · unit test を正とする |
+| IDE 固有設定を workspace 正本に | `steward/platform/agent/runtime.yaml` |
+
+---
+
+## 5. ツール別クイックリファレンス
+
+| ツール | 開発者の使い方 |
+|--------|----------------|
+| **任意 IDE + ターミナル** | `npm test` · `orgos validate` · `orgos skills run` |
+| **Aider** | `ORGOS_SHELL_PROFILE=aider orgos operator runtime test` |
+| **Claude / ChatGPT** | `orgos operator export --agent <id>` → pack を instructions に |
+| **Continue / Claude Desktop** | `exports/mcp/*.snippet.json` + `orgos mcp start` |
+| **Cursor** | `@` 参照 · sync-policy ミラー · SDK は任意 |
+
+詳細: [steward/platform/agent/README.md](../platform/agent/README.md) · [operator-layer-spec.md](../../docs/org-os/operator-layer-spec.md)
+
+---
+
+## 6. コード上のヘルパー
+
+| API | 用途 |
+|-----|------|
+| `formatAgentPromptRef(agent, "portable")` | Work Order · ドキュメント用参照 |
+| `formatSkillReference(skill, "portable")` | Skill 添付指示 |
+| `exportPortableAgents()` | Agent pack 生成 |
+| `syncOperatorPolicy()` | AGENTS.md · Cursor rule ミラー |
+
+実装: `src/lib/agent-portability.ts` · `src/lib/operator-policy.ts`
+
+---
+
+## 7. 関連
+
+- [operator-policy.md](operator-policy.md) — Operator 境界 · L0–L3
+- [agent_skill_architecture.md](agent_skill_architecture.md) — 4 層 · Skill 一覧
+- [steward_os_principles.md](steward_os_principles.md) — 基本原則
+- [folder_access_policy.md](folder_access_policy.md) — Primary Folders
+
+**Mirror:** `.cursor/rules/tool-neutral-development.mdc` — `orgos operator sync-policy --emit all`
+
+
+> **Mirror only.** Canonical: `steward/rules/tool-neutral-development.md` · Regenerate: `orgos operator sync-policy --emit all`

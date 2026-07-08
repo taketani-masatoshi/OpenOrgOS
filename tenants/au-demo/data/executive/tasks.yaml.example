@@ -1,0 +1,12 @@
+# 社長タスク（テンプレート — Git 追跡）
+# 実データ: cp tasks.yaml.example tasks.yaml（gitignore）
+
+tasks:
+  - id: TASK-001
+    title: 示例タスク（経営判断）
+    due: "2026-07-15"
+    priority: p1
+    status: open
+    category: business
+    delegated_to: null
+    source: template

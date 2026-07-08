@@ -1,0 +1,15 @@
+as_of: 2026-06-28
+scenario_id: three-org-one-message
+title: オフィス賃貸借 — 履行通知を受信
+org_role: receiver
+org_role_ja: 受信側
+counterparty_label: 株式会社MAL
+contract_id: CTR-012
+flow_steps:
+  - ① MAL から Org C relay 経由で 1 通届く
+  - ② 返信なし · trust bundle で Hub を pin
+anchors:
+  inter_org_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+mail_hints:
+  inbox: 「履行通知（オフィス賃貸借）」— この組織の唯一の受信
+  outbox: （本デモでは返信なし）

@@ -1,0 +1,8 @@
+name: Sample China Co., Ltd.
+representative: Jane Tan, Director
+directors:
+  - name: Jane Tan
+    role: Director
+address: "1 Raffles Place, Singapore"
+fiscal_year_end_month: 12
+business_description: Singapore Pte Ltd jurisdiction pack reference tenant.

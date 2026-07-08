@@ -1,0 +1,9 @@
+id: "001"
+name: 株式会社サンプル商事
+name_en: Sample Co., Ltd.
+founded: "2020-04-01"
+fiscal_year_end: "01-31"
+address: 東京都港区みなと1-1-1
+representatives:
+  - name: サンプル 太郎
+    role: 代表取締役

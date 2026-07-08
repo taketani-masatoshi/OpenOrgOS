@@ -1,0 +1,9 @@
+# 宿泊施設 — 公開運用情報（例示）
+property_id: PROP-002
+facility_name: "緑丘ゲストハウス"
+check_in_time: "15:00"
+check_out_time: "10:00"
+max_guests: 4
+parking: "なし（近隣コインパーキング案内）"
+house_rules_url: "docs/properties/PROP-002-midori/operations/templates/guest-facing/house-rules.md"
+notes: "公開情報のみ。機密は operations-secrets.yaml"

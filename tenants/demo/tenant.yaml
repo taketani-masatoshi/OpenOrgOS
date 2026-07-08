@@ -1,0 +1,12 @@
+id: demo
+name: デモ株式会社
+legal_name: デモ株式会社
+display_name: Demo
+description: フレームワーク骨格参照 — 賃貸1物件 · MAL パス非依存
+default: false
+wire_console: true
+lifecycle: skeleton
+jurisdiction: JP
+entity_form: kk
+locale: ja-JP
+default_currency: JPY

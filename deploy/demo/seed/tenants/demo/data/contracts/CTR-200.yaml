@@ -1,0 +1,8 @@
+id: CTR-200
+name: Wire-linked service
+counterparty: Peer Co
+type: outsourcing
+status: executed
+start_date: "2026-07-01"
+executed_date: "2026-07-01"
+monthly_cost: 50000

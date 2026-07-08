@@ -1,0 +1,21 @@
+mappings:
+  - form_field: "申請者名称"
+    source: company.name
+  - form_field: "法人番号"
+    source: company.corporate_number
+  - form_field: "代表者氏名"
+    source: company.representative
+  - form_field: "本店所在地"
+    source: company.address
+  - form_field: "設立年月日"
+    source: company.established_date
+  - form_field: "事業概要"
+    source: company.business_description
+  - form_field: "従業員数"
+    source: hr.active_employee_count
+  - form_field: "資本金"
+    source: company.public_disclosure.capital_yen
+    format: "¥{value:,}"
+  - form_field: "インボイス登録番号"
+    source: company.invoice_registration
+    notes: "company.yaml に項目がある場合のみ"

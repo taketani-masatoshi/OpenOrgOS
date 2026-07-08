@@ -1,0 +1,7 @@
+regulations:
+  - id: REG-001
+    enabled: true
+  - id: REG-004
+    enabled: true
+  - id: REG-010
+    enabled: true

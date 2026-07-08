@@ -1,0 +1,34 @@
+id: RU
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/ru-maintainers
+repository: https://github.com/steward-os/jurisdiction-ru
+license: MIT
+
+name: Russia
+default_entity_form: ooo
+default_currency: RUB
+locale: ru-RU
+default_display_language: ru
+legal_system:
+  ja: ロシア法
+  en: Russia law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-RU-001
+  board: REG-RU-002
+  shareholder: REG-RU-003
+  approval: REG-RU-004
+  expense: REG-RU-005
+  conflict: REG-RU-006
+  document: REG-RU-007
+  travel: REG-RU-008
+
+notes: OOO skeleton · ru-demo tenant · data residency notes

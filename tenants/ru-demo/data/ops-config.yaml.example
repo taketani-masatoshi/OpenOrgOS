@@ -1,0 +1,39 @@
+# 運用設定 — P0 判定 · 会計年度 · 記録プローブ
+# operations_public / operations_secrets は modules.yaml が正本
+
+fiscal_year:
+  id: FY2026
+  plan_file: data/plans/yojitsu-fy2026.yaml
+  from: "2026-02"
+  to: "2027-01"
+
+p0:
+  contracts: []
+  # - id: CTR-001
+  #   blocker: true
+
+  secrets: []
+  # - module_id: hospitality
+  #   item_id: secrets-midori
+  #   label: midori-secrets.yaml 実値
+  #   blocker: true
+  #   missing_detail: example からコピー · gitignore
+
+  cash_balance:
+    enabled: true
+    item_id: cash-balance
+    label: cash-balance.yaml 確定
+    blocker: true
+
+  records: []
+  # - module_id: hospitality
+  #   item_id: ops-records
+  #   label: operations/records 運用開始
+  #   probe_file: records/2026/01/guest-log.csv
+  #   blocker: false
+
+  audits: []
+  # - id: audit-01
+  #   label: 第1回内部監査報告
+  #   path: docs/compliance/iso/audit-records/fy2026/audit-01-report.md
+  #   blocker: false

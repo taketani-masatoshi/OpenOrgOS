@@ -1,0 +1,20 @@
+# スタブ法域 — 組織形態プレースホルダ（各国 pack で上書き）
+forms:
+  - id: corporation
+    name: Corporation (placeholder)
+    name_en: Corporation
+  - id: partnership
+    name: Partnership (placeholder)
+    name_en: Partnership
+    liability: unlimited
+    status: stub
+    notes: 法域 pack の entity-forms.yaml で置換
+  - id: llc
+    name: LLC (placeholder)
+    name_en: Limited Liability Company
+    liability: limited
+    status: stub
+  - id: nonprofit
+    name: Nonprofit (placeholder)
+    name_en: Nonprofit Organization
+    status: stub

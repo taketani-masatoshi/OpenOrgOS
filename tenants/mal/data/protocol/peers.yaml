@@ -1,0 +1,10 @@
+peers:
+  - peer_id: PEER-001
+    display_name: Southwood
+    jurisdiction: JP
+    org_uri: steward://tenant/southwood
+    inbound_endpoints:
+      - url: https://127.0.0.1:46115/protocol/v1/relay/enqueue
+        priority: 1
+        mode: relay
+as_of: 2026-06-28

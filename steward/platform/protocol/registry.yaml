@@ -1,0 +1,25 @@
+protocol_version: "1"
+
+core_event_types:
+  - org.identity.presented
+  - org.authority.delegated
+  - org.transaction.recorded
+  - org.audit.attested
+  - org.witness.attestation.registered
+  - org.witness.receipt.issued
+
+core_event_scopes:
+  org.identity.presented: both
+  org.authority.delegated: internal
+  org.transaction.recorded: wire
+  org.audit.attested: both
+  org.witness.attestation.registered: wire
+  org.witness.receipt.issued: wire
+
+payload_namespaces:
+  - steward.contract
+  - steward.payment
+  - steward.invoice
+
+outbound:
+  format: legacy

@@ -1,0 +1,6 @@
+spaces:
+  - id: SPACE-001
+    name: 会議室A
+    capacity: 12
+    hourly_rate_yen: 5000
+    status: active

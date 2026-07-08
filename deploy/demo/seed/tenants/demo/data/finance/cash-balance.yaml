@@ -1,0 +1,7 @@
+as_of: "2027-01-31"
+status: template
+currency: JPY
+accounts: []
+total: null
+notes: |
+  スケルトン — 残高入力後 status: confirmed

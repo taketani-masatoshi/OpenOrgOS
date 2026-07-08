@@ -1,0 +1,11 @@
+id: jp_subsidy_application
+required_seeds: []
+activation_seeds:
+  - programs.yaml.example
+  - personnel-cost-basis.yaml.example
+  - field-map.yaml.example
+  - application-registry.yaml.example
+optional_regulations:
+  - REG-004
+  - REG-005
+notes: activation_ready — 補助金募集要項 · 適格性 · 人件費算定 · 申請書ドラフト（JP 法域のみ）

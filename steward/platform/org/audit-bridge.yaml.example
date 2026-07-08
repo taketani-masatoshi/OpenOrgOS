@@ -1,0 +1,9 @@
+# Operational audit.jsonl → protocol audit-chain bridge
+# Copy to tenants/{id}/data/org/audit-bridge.yaml
+#
+# enabled: true  — appendAuditEvent() mirrors matching rows to audit-chain
+# events: []     — bridge ALL types (handoff · validate · classification_block · escalate · route_dispatch)
+# events: [escalate] — bridge only listed types
+
+enabled: true
+events: []

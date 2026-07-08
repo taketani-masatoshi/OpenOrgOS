@@ -1,0 +1,49 @@
+id: CTR-012
+name: オフィス賃貸借契約（本社区画 · サウスウッド）
+counterparty: 株式会社サウスウッド
+counterparty_type: company
+type: rental
+status: executed
+start_date: 2026-04-01
+end_date: 2027-03-31
+auto_renewal: true
+owner: 段燕燕
+monthly_cost: 85000
+compensation:
+  type: monthly
+  amount: 85000
+  tax_included: false
+  payment_terms: 毎月末締め・翌月25日振込。敷金2ヶ月・礼金1ヶ月相当は別途。
+scope_summary: |
+  株式会社MAL 本社ビル（東京都千代田区二番町1）内オフィス区画約15㎡を
+  株式会社サウスウッドに賃貸。共用部（会議室・受付）利用ルールは別紙。
+documents:
+  draft: docs/contracts/CTR-012/01-draft.md
+  executed: docs/contracts/CTR-012/02-executed.md
+executed_date: 2026-06-25
+risk:
+  risk_level: low
+  notes: 更新時の賃料改定条項・原状回復範囲を明記。
+notes: |-
+  Inter-org protocol デモ契約。MAL＝貸主、サウスウッド＝借主。
+  旅館清掃（PROP-002）は別途業者選定（CTR-012 とは無関係）。
+  [protocol demo] executed for inter-org demo · peer southwood
+protocol:
+  peer_id: PEER-001
+  resilience_sla: gold
+  witness_hubs:
+    - hub_id: HUB-A
+    - hub_id: HUB-B
+  witness_trust_authority_url: https://127.0.0.1:9486
+  witness_trust_bundle_url: https://127.0.0.1:9486/protocol/v1/trust/bundle
+  relay_org_uri: steward://tenant/aiac
+  allowed_event_types:
+    - org.transaction.recorded
+    - org.identity.presented
+    - org.authority.delegated
+  allowed_transaction_types:
+    - steward.contract.executed
+    - steward.contract.execution.notice
+    - steward.obligation.acknowledged
+  allowed_payload_namespaces:
+    - steward.contract

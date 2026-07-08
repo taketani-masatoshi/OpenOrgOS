@@ -1,0 +1,7 @@
+# HK wire governance — REG-HK-004 family
+policy_ref: REG-HK-004
+currency: HKD
+tiers:
+  A: { max_amount: 100000, approvers: 1, roles: ["Director", "CEO"] }
+  B: { max_amount: 1000000, approvers: 2, roles: ["Director"] }
+  C: { board_required: true, roles: ["Board"] }

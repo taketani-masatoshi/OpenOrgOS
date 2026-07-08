@@ -1,0 +1,21 @@
+# Business modules — HK demo
+modules:
+  - id: language_bridge
+    enabled: true
+    agent: language_bridge
+    data_root: data/locale/
+    docs_root: docs/company/minutes/
+    summary_dir: agent-summaries/language-bridge/
+    notes: English UI · Traditional Chinese official minutes
+
+  - id: rental
+    enabled: false
+    agent: rental
+    notes: Optional cross-jurisdiction test
+
+  - id: travel_booking
+    enabled: false
+    agent: travel_booking
+    data_root: data/operations/
+    docs_root: docs/operations/
+    notes: REG-HK-008 travel when enabled

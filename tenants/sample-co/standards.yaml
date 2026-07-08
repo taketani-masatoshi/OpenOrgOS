@@ -1,0 +1,5 @@
+iso:
+  - id: ISO-9001
+    enabled: false
+  - id: ISO-27001
+    enabled: false

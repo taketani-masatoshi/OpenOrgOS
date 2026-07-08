@@ -1,0 +1,7 @@
+entity: "サンプルロジスティクス株式会社"
+as_of: "2026-06-01"
+warehouses:
+  - id: WH-001
+    name: "川崎DC"
+    capacity_pallets: 1200
+    status: active

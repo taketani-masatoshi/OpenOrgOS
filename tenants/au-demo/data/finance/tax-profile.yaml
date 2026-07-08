@@ -1,0 +1,16 @@
+entity:
+  name: Sample Australia Pty Ltd
+  type: Private Company Limited by Shares
+  registration_id: REPLACE_ME
+  registered_office: "1 Raffles Place, Singapore"
+fiscal_year:
+  end_month: 12
+corporate_tax:
+  headline_rate: "17%"
+  notes: Partial tax exemption may apply — consult tax advisor
+indirect_tax:
+  type: GST
+  rate: "9%"
+  registration_id: TBD
+  notes: GST registration when taxable turnover exceeds threshold
+filing_calendar: []

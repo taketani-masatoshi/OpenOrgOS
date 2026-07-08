@@ -1,0 +1,66 @@
+services:
+  hub-a:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - hub-a-data:/app/deploy/witness-hub/data/hub-a
+    command: >
+      sh -c "npm run orgos -- hub serve
+      --hub-id HUB-A
+      --host 0.0.0.0
+      --port 9474
+      --data-dir /app/deploy/witness-hub/data/hub-a
+      --gossip-interval 300"
+    ports:
+      - "9474:9474"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9474/hub/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hub-b:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - hub-b-data:/app/deploy/witness-hub/data/hub-b
+    command: >
+      sh -c "npm run orgos -- hub serve
+      --hub-id HUB-B
+      --host 0.0.0.0
+      --port 9475
+      --data-dir /app/deploy/witness-hub/data/hub-b
+      --gossip-interval 300"
+    ports:
+      - "9475:9475"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9475/hub/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hub-init:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - hub-a-data:/app/deploy/witness-hub/data/hub-a
+      - hub-b-data:/app/deploy/witness-hub/data/hub-b
+    depends_on:
+      hub-a:
+        condition: service_healthy
+      hub-b:
+        condition: service_healthy
+    environment:
+      HUB_A_URL: http://hub-a:9474
+      HUB_B_URL: http://hub-b:9475
+      HUB_A_DATA_DIR: /app/deploy/witness-hub/data/hub-a
+      HUB_B_DATA_DIR: /app/deploy/witness-hub/data/hub-b
+    command: node --import tsx deploy/witness-hub/seed-federation.ts
+    restart: "no"
+
+volumes:
+  hub-a-data:
+  hub-b-data:

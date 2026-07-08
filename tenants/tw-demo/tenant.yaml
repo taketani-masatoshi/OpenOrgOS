@@ -1,0 +1,11 @@
+id: tw-demo
+name: Sample Taiwan Co., Ltd.
+legal_name: Sample Taiwan Co., Ltd.
+display_name: TW Demo
+description: TW jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: TW
+entity_form: private_ltd
+locale: en-TW
+default_currency: TWD

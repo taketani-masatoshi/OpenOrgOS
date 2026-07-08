@@ -1,0 +1,132 @@
+# 業務モジュール — 雛形（架空: 株式会社サンプル商事）
+# enabled: true のモジュールのみ Agent が有効化される
+
+modules:
+  - id: rental
+    enabled: true
+    agent: rental
+    property_ids: [PROP-001]
+    docs_root: docs/properties/PROP-001-minato/operations/
+    summary_dir: agent-summaries/rental/
+    notes: みなとビル501 賃貸（例）
+    # billing skeleton（請求書生成前にコメント解除）:
+    # billing:
+    #   PROP-001:
+    #     docs_base: docs/finance/accounting/invoices/sample
+    #     invoice_number_prefix: RENT
+    #     template_id: rent-monthly
+
+  - id: hospitality
+    enabled: false
+    agent: hospitality
+    property_ids: [PROP-002]
+    docs_root: docs/properties/PROP-002-midori/operations/
+    operations_public: data/operations/midori-public.yaml
+    operations_secrets: data/operations/midori-secrets.yaml
+    summary_dir: agent-summaries/hospitality/
+    notes: "緑丘ゲストハウス（例 · 未開業なら enabled false）"
+
+  - id: professional_services
+    enabled: false
+    agent: professional_services
+    data_root: data/services/
+    notes: 受託・サービス
+
+  - id: venture_capital
+    enabled: false
+    agent: venture_capital
+    data_root: data/venture-capital/
+    docs_root: docs/venture-capital/
+    summary_dir: agent-summaries/venture-capital/
+    notes: "サンプル・キャピタル（例 · `.example` をコピーして有効化）"
+
+  # 宣言系（JP · 必要時に enabled）
+  - id: jp_carbon_neutral_2050
+    enabled: false
+    agent: jp_carbon_neutral_2050
+    data_root: data/declarations/jp-carbon-neutral/
+    docs_root: docs/compliance/declarations/
+    summary_dir: agent-summaries/declarations/carbon-neutral/
+    notes: 2050年カーボンニュートラル宣言
+
+  - id: jp_women_empowerment
+    enabled: false
+    agent: jp_women_empowerment
+    data_root: data/declarations/jp-women-empowerment/
+    docs_root: docs/compliance/declarations/
+    summary_dir: agent-summaries/declarations/women-empowerment/
+    notes: 女性活躍推進 · 応援宣言
+
+  - id: jp_privacy_policy
+    enabled: false
+    agent: jp_privacy_policy
+    data_root: data/declarations/jp-privacy-policy/
+    docs_root: docs/compliance/privacy/
+    summary_dir: agent-summaries/declarations/privacy/
+    notes: 外部向けプライバシーポリシー · REG-010 整合
+
+  - id: saas_subscription
+    enabled: false
+    agent: saas_subscription
+    data_root: data/saas/
+    summary_dir: agent-summaries/saas/
+
+  - id: event_space
+    enabled: false
+    agent: event_space
+    data_root: data/event-space/
+    summary_dir: agent-summaries/event-space/
+
+  - id: ecommerce
+    enabled: false
+    agent: ecommerce
+    data_root: data/ecommerce/
+    summary_dir: agent-summaries/ecommerce/
+
+  - id: restaurant
+    enabled: false
+    agent: restaurant
+    data_root: data/restaurant/
+    summary_dir: agent-summaries/restaurant/
+
+  - id: retail_store
+    enabled: false
+    agent: retail_store
+    data_root: data/retail-store/
+    summary_dir: agent-summaries/retail-store/
+
+  - id: clinic
+    enabled: false
+    agent: clinic
+    data_root: data/clinic/
+    summary_dir: agent-summaries/clinic/
+
+  - id: logistics
+    enabled: false
+    agent: logistics
+    data_root: data/logistics/
+    summary_dir: agent-summaries/logistics/
+
+  - id: staffing
+    enabled: false
+    agent: staffing
+    data_root: data/staffing/
+    summary_dir: agent-summaries/staffing/
+
+  - id: construction
+    enabled: false
+    agent: construction
+    data_root: data/construction/
+    summary_dir: agent-summaries/construction/
+
+  - id: education
+    enabled: false
+    agent: education
+    data_root: data/education/
+    summary_dir: agent-summaries/education/
+
+  - id: membership
+    enabled: false
+    agent: membership
+    data_root: data/membership/
+    summary_dir: agent-summaries/membership/

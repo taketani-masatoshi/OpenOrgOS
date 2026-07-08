@@ -1,0 +1,14 @@
+entity:
+  name: Sample TW Ltd
+  type: Private Company Limited by Shares
+  registration_id: REPLACE_ME
+  registered_office: "Hong Kong"
+fiscal_year:
+  end_month: 3
+corporate_tax:
+  headline_rate: "16.5% (first HKD 2M 8.25%)"
+  notes: Two-tier profits tax · consult tax advisor
+indirect_tax:
+  type: None
+  notes: No VAT/GST in Hong Kong
+filing_calendar: []

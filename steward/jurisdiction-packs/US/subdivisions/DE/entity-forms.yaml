@@ -1,0 +1,58 @@
+# Delaware — 法域 US + legal_subdivision DE
+jurisdiction: US
+legal_subdivision: DE
+
+forms:
+  - id: llc
+    name: Delaware LLC
+    name_en: Delaware Limited Liability Company
+    liability: limited
+    governance:
+      operating_agreement: true
+    identifiers: [ein, delaware_file_number]
+    status: active
+    notes: DGCL · スタートアップで最多
+
+  - id: c_corp
+    name: Delaware C-Corporation
+    liability: limited
+    governance:
+      supreme_body: Shareholders
+      board: Board of Directors
+    identifiers: [ein, delaware_file_number]
+    status: active
+    notes: DGCL · VC 向け標準
+
+  - id: s_corp
+    name: Delaware S-Corporation
+    liability: limited
+    status: active
+
+  - id: lp
+    name: Delaware Limited Partnership
+    liability: mixed
+    status: active
+    notes: ファンド · carried interest
+
+  - id: llp
+    name: Delaware Limited Liability Partnership
+    liability: limited
+    status: active
+
+  - id: statutory_trust
+    name: Delaware Statutory Trust (DST)
+    liability: limited
+    status: stub
+    notes: REIT · 証券化
+
+  - id: public_benefit_corp
+    name: Delaware Public Benefit Corporation
+    liability: limited
+    status: active
+    notes: DGCL §365
+
+  - id: series_llc
+    name: Delaware Series LLC
+    liability: limited
+    status: active
+    notes: DGCL §18-215

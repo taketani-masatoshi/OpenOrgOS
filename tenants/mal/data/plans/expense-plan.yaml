@@ -1,0 +1,73 @@
+# 費用計画（販管費・年度別）
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    lines:
+      - id: kamezawa_operations
+        name: 亀沢旅館 運営費
+        property_id: PROP-002
+        amount: 2980500
+        notes: 49.7万×6ヶ月
+      - id: depreciation
+        name: 減価償却費（番町ハイム）
+        property_id: PROP-001
+        amount: 353191
+        notes: 1,660万÷47年。fixed-assets ASSET-001 と一致
+      - id: officer_compensation
+        name: 役員報酬
+        amount: 0
+      - id: company_fixed
+        name: 本社固定費
+        amount: 0
+        notes: 番町ハイム312に本社兼置
+      - id: steward_outsourcing
+        name: 業務委託（竹谷・Steward保守）
+        contract_id: CTR-001
+        amount: 180000
+        notes: 2027-01-31一括支払（FY2026計上）
+    total: 3513691
+    notes: 決算確定（予想ベース）
+
+  - fiscal_year: FY2027
+    period_from: "2027-02"
+    period_to: "2028-01"
+    lines:
+      - id: kamezawa_operations
+        name: 亀沢旅館 運営費
+        property_id: PROP-002
+        amount: 5961000
+        notes: 49.7万×12ヶ月
+      - id: depreciation
+        name: 減価償却費（番町ハイム）
+        property_id: PROP-001
+        amount: 353191
+      - id: officer_compensation
+        name: 役員報酬
+        amount: 0
+      - id: company_fixed
+        name: 本社固定費
+        amount: 0
+    total: 6314191
+
+  - fiscal_year: FY2028
+    period_from: "2028-02"
+    period_to: "2029-01"
+    lines:
+      - id: kamezawa_operations
+        name: 亀沢旅館 運営費
+        property_id: PROP-002
+        amount: 6259050
+        notes: 前年度比+5%
+      - id: depreciation
+        name: 減価償却費（番町ハイム）
+        property_id: PROP-001
+        amount: 353191
+      - id: officer_compensation
+        name: 役員報酬
+        amount: 0
+      - id: company_fixed
+        name: 本社固定費
+        amount: 0
+    total: 6612241

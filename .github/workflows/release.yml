@@ -1,0 +1,105 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run wire-console:build
+      - run: npm run steward-chat:build
+      - run: npm run build:package
+      - run: npm pack -w @orgos/cli
+      - run: npm pack -w @orgos/wire
+      - name: Upload npm pack artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: orgos-npm-packs
+          path: |
+            packages/orgos-cli/orgos-cli-*.tgz
+            packages/orgos-wire/orgos-wire-*.tgz
+      - name: Demo image tag note
+        id: demo
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "ver=${VER}" >> "$GITHUB_OUTPUT"
+          echo "pull=ghcr.io/${OWNER_LC}/orgos-demo:${VER}" >> "$GITHUB_OUTPUT"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Demo Docker（試用 · 本番禁止）
+
+            Tag `v*` プッシュで workflow `demo-docker` が GHCR に公開します（`smoke` 成功後）。
+
+            ```bash
+            docker pull ${{ steps.demo.outputs.pull }}
+            docker run --rm -p 127.0.0.1:9470:9470 ${{ steps.demo.outputs.pull }}
+            # Chat http://127.0.0.1:9470/ · Wire http://127.0.0.1:9470/wire/
+            ```
+
+            入口: [docs/quickstart.md](docs/quickstart.md) · 設計: [docs/org-os/demo-docker.md](docs/org-os/demo-docker.md)
+          files: |
+            packages/orgos-cli/orgos-cli-*.tgz
+            packages/orgos-wire/orgos-wire-*.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run steward-chat:release-check
+
+  publish-npm:
+    needs: [build-package, release-check]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run wire-console:build
+      - run: npm run steward-chat:build
+      - run: npm run build:package
+      - name: Publish @orgos/cli
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "NPM_TOKEN not set — skipping npm publish"
+            exit 0
+          fi
+          npm publish -w @orgos/cli --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @orgos/wire
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "NPM_TOKEN not set — skipping npm publish"
+            exit 0
+          fi
+          npm publish -w @orgos/wire --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,11 @@
+id: sg-demo
+name: Sample Pte. Ltd.
+legal_name: Sample Pte. Ltd.
+display_name: SG Demo
+description: SG jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: SG
+entity_form: pte_ltd
+locale: en-SG
+default_currency: SGD

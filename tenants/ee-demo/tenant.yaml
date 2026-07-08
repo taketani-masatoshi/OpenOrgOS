@@ -1,0 +1,11 @@
+id: ee-demo
+name: Sample OÜ
+legal_name: Sample OÜ
+display_name: EE Demo
+description: EE jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: EE
+entity_form: ou
+locale: et-EE
+default_currency: EUR

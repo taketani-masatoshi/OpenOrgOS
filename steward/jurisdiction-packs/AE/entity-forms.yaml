@@ -1,0 +1,32 @@
+forms:
+  - id: llc
+    name: Limited Liability Company (LLC)
+    name_local: Limited Liability Company
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Mainland · ae-demo default
+
+  - id: free_zone_llc
+    name: Free Zone LLC
+    name_local: Free Zone Limited Liability Company
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: DIFC · ADGM · other free zones
+
+  - id: branch
+    name: Branch of Foreign Company
+    name_local: Branch Office
+    liability: unlimited
+    governance:
+      supreme_body: Parent company
+    identifiers:
+      - company_number
+    notes: Foreign entity branch registration

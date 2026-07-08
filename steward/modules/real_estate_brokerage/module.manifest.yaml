@@ -1,0 +1,9 @@
+id: real_estate_brokerage
+required_seeds:
+  - invoice-brokerage-monthly.yaml
+  - invoice-brokerage-monthly-body.txt
+notes: production_ready — listings/deals + invoice seed
+activation_seeds:
+- listings.yaml
+- deals.yaml
+- commissions.yaml

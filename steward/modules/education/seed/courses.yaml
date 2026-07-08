@@ -1,0 +1,8 @@
+entity: "サンプルアカデミー株式会社"
+as_of: "2026-06-01"
+courses:
+  - id: CRS-001
+    name: "ビジネス英語初級"
+    duration_weeks: 12
+    price_yen: 88000
+    status: active

@@ -1,0 +1,7 @@
+item_id,item_name,unit,min_stock,current_stock,last_restock_date,supplier,reorder_point,notes
+
+ITEM-001,トイレットペーパー,ロール,6,,,,
+ITEM-002,バスタオル,枚,10,,,,
+ITEM-003,シャンプー（詰替）,袋,2,,,,
+ITEM-004,ゴミ袋45L,枚,10,,,,
+ITEM-005,アメニティセット,セット,5,,,,

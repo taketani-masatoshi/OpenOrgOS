@@ -1,0 +1,6 @@
+# 業務モジュール — protocol デモ用（無効エントリのみ · schema min 1）
+modules:
+  - id: rental
+    enabled: false
+    agent: rental
+    notes: Inter-org demo — no operational modules

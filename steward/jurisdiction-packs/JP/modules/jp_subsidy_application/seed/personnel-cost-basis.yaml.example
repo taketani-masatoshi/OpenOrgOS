@@ -1,0 +1,16 @@
+entity: "サンプル商事株式会社"
+as_of: "2026-06-01"
+standard_hours_per_month: 160
+overhead_rate_pct: 15
+entries:
+  - employee_id: EMP-001
+    role_label: "代表取締役（開発兼務）"
+    monthly_salary_yen: 450000
+    subsidy_eligible: true
+    allocation_pct: 40
+    notes: "例示単価 · 本番は gitignore 側 YAML 推奨"
+  - employee_id: EMP-002
+    role_label: "エンジニア"
+    monthly_salary_yen: 380000
+    subsidy_eligible: true
+    allocation_pct: 100
