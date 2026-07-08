@@ -1,0 +1,25 @@
+# ISO 標準 — 雛形（骨格 · すべて無効）
+
+iso:
+  - id: ISO-9001
+    enabled: false
+  - id: ISO-27001
+    enabled: false
+  - id: ISO-21401
+    enabled: false
+  - id: ISO-22301
+    enabled: false
+  - id: ISO-45001
+    enabled: false
+  - id: ISO-14001
+    enabled: false
+  - id: ISO-50001
+    enabled: false
+  - id: ISO-13485
+    enabled: false
+  - id: ISO-22000
+    enabled: false
+  - id: ISO-37001
+    enabled: false
+  - id: ISO-20000
+    enabled: false

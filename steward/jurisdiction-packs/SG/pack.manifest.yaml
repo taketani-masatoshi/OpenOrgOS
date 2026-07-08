@@ -1,0 +1,34 @@
+id: SG
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/sg-maintainers
+repository: https://github.com/steward-os/jurisdiction-sg
+license: MIT
+
+name: Singapore
+default_entity_form: pte_ltd
+default_currency: SGD
+locale: en-SG
+default_display_language: en
+legal_system:
+  ja: シンガポール法
+  en: Singapore law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-SG-001
+  board: REG-SG-002
+  shareholder: REG-SG-003
+  approval: REG-SG-004
+  expense: REG-SG-005
+  conflict: REG-SG-006
+  document: REG-SG-007
+  travel: REG-SG-008
+
+notes: Pte Ltd skeleton · ACRA · sg-demo テナント

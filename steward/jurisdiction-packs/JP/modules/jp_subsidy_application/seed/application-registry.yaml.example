@@ -1,0 +1,7 @@
+applications:
+  - id: APP-2026-001
+    program_id: SUB-2026-001
+    status: draft
+    docs_root: docs/subsidy/SUB-2026-001/
+    updated_on: "2026-06-01"
+    notes: "例示 · 執筆中"

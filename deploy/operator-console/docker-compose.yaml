@@ -1,0 +1,56 @@
+services:
+  operator-console:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - operator-data:/app/data
+    env_file:
+      - path: ./env/production.env
+        required: false
+    environment:
+      ORGOS_ENV: production
+      OPERATOR_CONSOLE_HOST: 0.0.0.0
+      OPERATOR_CONSOLE_PORT: "9470"
+    command: >
+      sh -c "npm ci &&
+      npm run operator-console:build &&
+      node --import tsx src/cli.ts operator console start --host 0.0.0.0 --port 9470"
+    ports:
+      # Bind app to localhost — expose via nginx (443) on the host
+      - "127.0.0.1:9470:9470"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:9470/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/operator.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      operator-console:
+        condition: service_healthy
+    restart: unless-stopped
+
+  witness-hub-a:
+    extends:
+      file: ../witness-hub/docker-compose.yaml
+      service: hub-a
+    restart: unless-stopped
+
+  witness-hub-b:
+    extends:
+      file: ../witness-hub/docker-compose.yaml
+      service: hub-b
+    restart: unless-stopped
+
+volumes:
+  operator-data:

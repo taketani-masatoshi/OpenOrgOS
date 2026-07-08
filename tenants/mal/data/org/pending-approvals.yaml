@@ -1,0 +1,62 @@
+as_of: 2026-06-28
+approvals:
+  - approval_id: APR-20260627-001
+    scope: internal
+    status: approved
+    proposed_at: 2026-06-27T07:20:45.793Z
+    proposed_by: secretary
+    subject_type: regulation.amendment
+    subject_ref: REG-004
+    amount:
+      value: 50000
+      currency: JPY
+    message: Standalone internal approval demo
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-27T07:20:45.799Z
+    audit_event_id: 9b6674d8-656b-4747-844a-55d778c93109
+  - approval_id: NOTICE-20260628-010
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T09:01:56.061Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T09:01:56.072Z
+    audit_event_id: fc4f0603-594c-497d-8ac1-697e31bae40d
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260628-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260628-011
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T09:17:04.083Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T09:17:04.095Z
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260628-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+    audit_event_id: 37a185e7-bb08-453e-9742-c9a712b222a7

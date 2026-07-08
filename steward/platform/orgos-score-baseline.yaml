@@ -1,0 +1,7 @@
+# DEPRECATED — do not use for reporting.
+# Live scores: `npm run orgos -- status --orgos`
+# Methodology: docs/org-os/orgos-scoring-methodology.md
+# Implementation: src/lib/protocol/orgos-readiness.ts · orgos-readiness-strict.ts
+
+deprecated: true
+note: "Checklist and strict scores are computed in TypeScript, not this file."

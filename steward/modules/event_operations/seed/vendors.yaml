@@ -1,0 +1,6 @@
+vendors:
+  - id: VND-001
+    name: "サンプルケータリング"
+    category: catering
+    contact_stakeholder_id: STK-030
+    status: active

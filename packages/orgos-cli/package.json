@@ -1,0 +1,39 @@
+{
+  "name": "@orgos/cli",
+  "version": "0.8.0",
+  "description": "OrgOS Core CLI — Organizational OS reference implementation",
+  "type": "module",
+  "bin": {
+    "orgos": "./bin/orgos.js",
+    "steward": "./bin/orgos.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "steward",
+    "schemas",
+    "docs",
+    "tenants",
+    "deploy",
+    "apps"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@independentsoft/msg": "^1.0.2",
+    "commander": "^13.1.0",
+    "pdfkit": "^0.18.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2"
+  },
+  "keywords": ["orgos", "organizational-os", "cli"],
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orgos-reference/orgos.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

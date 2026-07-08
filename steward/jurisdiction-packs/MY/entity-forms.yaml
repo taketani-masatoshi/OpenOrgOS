@@ -1,0 +1,11 @@
+forms:
+  - id: sdn_bhd
+    name: Sendirian Berhad (Sdn Bhd)
+    name_local: Sendirian Berhad
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Corporate registry · Malaysia

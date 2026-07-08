@@ -1,0 +1,8 @@
+name: Sample OÜ
+representative: Mari Kask, Management board member
+directors:
+  - name: Mari Kask
+    role: Management board member
+address: "Tallinn, Estonia"
+fiscal_year_end_month: 12
+business_description: Estonia OÜ jurisdiction pack reference tenant.

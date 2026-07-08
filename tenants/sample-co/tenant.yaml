@@ -1,0 +1,10 @@
+id: sample-co
+name: 株式会社サンプル商事
+legal_name: 株式会社サンプル商事
+display_name: Sample Co
+description: 転用性実証用テナント — 賃貸1物件 · 最小規程
+default: false
+jurisdiction: JP
+entity_form: kk
+locale: ja-JP
+default_currency: JPY

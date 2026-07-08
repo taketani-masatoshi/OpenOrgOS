@@ -1,0 +1,10 @@
+entity: "サンプルスタッフィング株式会社"
+as_of: "2026-06-01"
+assignments:
+  - id: ASS-001
+    staff_id: STF-001
+    client_id: CLT-001
+    start_date: "2026-04-01"
+    end_date: "2026-09-30"
+    bill_rate_yen: 2800
+    status: active

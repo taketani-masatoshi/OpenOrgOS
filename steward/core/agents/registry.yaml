@@ -1,0 +1,526 @@
+# Core Agent レジストリ — 選択的拡張
+# テナントは agents.yaml で ON/OFF（将来）· 現状は全コア + 拡張有効
+
+version: 2
+
+agents:
+  executive_steward:
+    id: executive_steward
+    name: Steward Agent
+    name_ja: ステュワード（経営統括）
+    path: steward/core/agents/executive_steward_agent.md
+    tier: core
+    required: true
+    scope: 経営判断 · KPI · ダッシュボード · 要約統合
+
+  secretary:
+    id: secretary
+    name: Secretary Agent
+    name_ja: 秘書
+    path: steward/core/agents/secretary_agent.md
+    tier: core
+    required: true
+    scope: スケジュール · タスク · 1-on-1 · 対外下書き
+
+  finance:
+    id: finance
+    name: Finance
+    name_ja: 財務・計画
+    path: steward/core/agents/finance_agent.md
+    tier: core
+    required: true
+    scope: 予実 · 資金 · 税務データ · 決算（JP kessan）
+
+  contract:
+    id: contract
+    name: Contract
+    name_ja: 契約管理
+    path: steward/core/agents/contract_agent.md
+    tier: core
+    required: true
+    scope: 契約台帳 · 更新 · 紐づけ
+
+  compliance:
+    id: compliance
+    name: Compliance
+    name_ja: コンプライアンス
+    path: steward/core/agents/compliance_agent.md
+    tier: core
+    required: true
+    scope: 規程 · ISO · 法域 pack 連動
+
+  operations:
+    id: operations
+    name: Operations
+    name_ja: 業務運用
+    path: steward/core/agents/operations_agent.md
+    tier: core
+    required: true
+    scope: 日次運用 · travel · モジュール横断オペ
+
+  # --- AI カンパニー拡張（16 役割 · org-chart.md）---
+
+  coo:
+    id: coo
+    name: COO
+    name_ja: 統括執行
+    path: steward/core/agents/coo_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: Work Order · 進捗 · 担当割当 · 日次オペ統括
+
+  cto:
+    id: cto
+    name: CTO
+    name_ja: 技術統括
+    path: steward/core/agents/cto_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: coo
+    scope: 技術方針 · アーキテクチャ · エンジニアリング統括
+
+  engineering:
+    id: engineering
+    name: Engineering
+    name_ja: エンジニア
+    path: steward/core/agents/engineering_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: cto
+    scope: 実装 · コード · CI · 技術調査
+
+  design_lead:
+    id: design_lead
+    name: Design Lead
+    name_ja: デザイン統括
+    path: steward/core/agents/design_lead_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: cto
+    scope: デザイン方針 · ブランド一貫性 · レビュー
+
+  design:
+    id: design
+    name: Design
+    name_ja: デザイナー
+    path: steward/core/agents/design_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: design_lead
+    scope: UI · ビジュアル · 素材制作
+
+  sales_lead:
+    id: sales_lead
+    name: Sales Lead
+    name_ja: 営業統括
+    path: steward/core/agents/sales_lead_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: coo
+    scope: パイプライン · 見積方針 · 営業 KPI
+
+  sales_outbound:
+    id: sales_outbound
+    name: Sales Outbound
+    name_ja: 新規開拓（アウトバウンド）
+    path: steward/core/agents/sales_outbound_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: sales_lead
+    scope: コールド outreach · リスト · 初回アプローチ下書き
+
+  sales_inbound:
+    id: sales_inbound
+    name: Sales Inbound
+    name_ja: 新規開拓（インバウンド）
+    path: steward/core/agents/sales_inbound_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: sales_lead
+    scope: 問い合わせ · 提携 · 紹介案件
+
+  customer_success:
+    id: customer_success
+    name: Customer Success
+    name_ja: カスタマーサクセス
+    path: steward/core/agents/customer_success_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: coo
+    scope: 既存顧客フォロー · 解約防止 · 利用支援
+
+  marketing_lead:
+    id: marketing_lead
+    name: Marketing Lead
+    name_ja: マーケティング統括
+    path: steward/core/agents/marketing_lead_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: coo
+    scope: 施策 · コンテンツ計画 · ファネル
+
+  social_media:
+    id: social_media
+    name: Social Media
+    name_ja: SNS 担当
+    path: steward/core/agents/social_media_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: marketing_lead
+    scope: 投稿下書き · スケジュール · エンゲージメント要約
+
+  personal_finance:
+    id: personal_finance
+    name: Personal Finance
+    name_ja: 個人財務
+    path: steward/core/agents/personal_finance_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: オーナー個人の資産・税務メモ（法人 Finance と分離）
+
+  legal:
+    id: legal
+    name: Legal
+    name_ja: 法務
+    path: steward/core/agents/legal_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 契約レビュー支援 · 定款 · 登記ドラフト · リスク整理
+    binds_modules: [jp_corporate_registration]
+
+  security:
+    id: security
+    name: Security
+    name_ja: セキュリティ統括
+    path: steward/core/agents/security_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: アクセス境界 · 秘匿 · インシデント初動
+
+
+  # --- 一般企業拡張 P0–P2（2026-06）---
+
+  human_resources:
+    id: human_resources
+    name: Human Resources
+    name_ja: 人事・労務
+    path: steward/core/agents/human_resources_agent.md
+    tier: extension
+    priority: P0
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 採用 · 社保 · 就業規則 · 給与連携
+
+  corporate_governance:
+    id: corporate_governance
+    name: Corporate Governance
+    name_ja: コーポレートガバナンス
+    path: steward/core/agents/corporate_governance_agent.md
+    tier: extension
+    priority: P0
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 株主総会 · 取締役会 · 議事録 · 招集
+
+  accounting:
+    id: accounting
+    name: Accounting
+    name_ja: 経理実務
+    path: steward/core/agents/accounting_agent.md
+    tier: extension
+    priority: P0
+    required: false
+    status: active
+    reports_to: finance
+    scope: 請求 · 支払 · 仕訳 · インボイス
+
+  tax:
+    id: tax
+    name: Tax
+    name_ja: 税務
+    path: steward/core/agents/tax_agent.md
+    tier: extension
+    priority: P0
+    required: false
+    status: active
+    reports_to: finance
+    scope: 法人税 · 消費税 · 申告準備
+
+  procurement:
+    id: procurement
+    name: Procurement
+    name_ja: 購買・調達
+    path: steward/core/agents/procurement_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: coo
+    scope: ベンダー · 発注 · 稟議 REG-004
+
+  government_affairs:
+    id: government_affairs
+    name: Government Affairs
+    name_ja: 行政・公的制度
+    path: steward/core/agents/government_affairs_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 補助金 · 認定 · 交付金
+    binds_modules: [jp_subsidy_application]
+
+  intellectual_property:
+    id: intellectual_property
+    name: Intellectual Property
+    name_ja: 知財
+    path: steward/core/agents/intellectual_property_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: legal
+    scope: 商標 · 特許 · ライセンス
+    binds_modules: [jp_trademark_application]
+
+  general_affairs:
+    id: general_affairs
+    name: General Affairs
+    name_ja: 総務
+    path: steward/core/agents/general_affairs_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: coo
+    scope: 備品 · 社内環境 · 庶務
+
+  project_management:
+    id: project_management
+    name: Project Management
+    name_ja: PMO
+    path: steward/core/agents/project_management_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: coo
+    scope: 案件 WBS · 進捗 · 報告
+
+  product_management:
+    id: product_management
+    name: Product Management
+    name_ja: プロダクト
+    path: steward/core/agents/product_management_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: cto
+    scope: 要件 · ロードマップ · PRD
+
+  recruiting:
+    id: recruiting
+    name: Recruiting
+    name_ja: 採用
+    path: steward/core/agents/recruiting_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: human_resources
+    scope: JD · 候補者パイプライン
+
+  risk_insurance:
+    id: risk_insurance
+    name: Risk & Insurance
+    name_ja: リスク・保険
+    path: steward/core/agents/risk_insurance_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 損保 · BCP · 更新
+
+  data_analytics:
+    id: data_analytics
+    name: Data & Analytics
+    name_ja: データ分析
+    path: steward/core/agents/data_analytics_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 経営分析 · KPI 深掘り
+
+  devops:
+    id: devops
+    name: DevOps
+    name_ja: DevOps
+    path: steward/core/agents/devops_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: cto
+    scope: CI/CD · インフラ · 監視
+
+  investor_relations:
+    id: investor_relations
+    name: Investor Relations
+    name_ja: IR
+    path: steward/core/agents/investor_relations_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 株主 · 投資家向け資料
+    binds_modules: [venture_capital]
+
+  esg_sustainability:
+    id: esg_sustainability
+    name: ESG
+    name_ja: ESG
+    path: steward/core/agents/esg_sustainability_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: compliance
+    scope: 非財務開示 · カーボン
+    binds_modules: [jp_carbon_neutral_2050]
+
+  internal_audit:
+    id: internal_audit
+    name: Internal Audit
+    name_ja: 内部監査
+    path: steward/core/agents/internal_audit_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: プロセス監査 · 改善提案
+
+  privacy_officer:
+    id: privacy_officer
+    name: Privacy Officer
+    name_ja: 個情管理責任者
+    path: steward/core/agents/privacy_officer_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: compliance
+    scope: 個情 · DPIA · 越境
+
+  treasury:
+    id: treasury
+    name: Treasury
+    name_ja: 資金・FX
+    path: steward/core/agents/treasury_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: finance
+    scope: 資金繰り · 多口座 · FX
+
+  customer_support:
+    id: customer_support
+    name: Customer Support
+    name_ja: サポート
+    path: steward/core/agents/customer_support_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: customer_success
+    scope: 問合せ · FAQ · チケット
+
+  pr_communications:
+    id: pr_communications
+    name: PR
+    name_ja: 広報
+    path: steward/core/agents/pr_communications_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: marketing_lead
+    scope: プレス · 危機広報
+
+  learning_development:
+    id: learning_development
+    name: L&D
+    name_ja: 研修
+    path: steward/core/agents/learning_development_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: human_resources
+    scope: 研修 · オンボーディング
+
+  corporate_development:
+    id: corporate_development
+    name: Corp Dev
+    name_ja: 経企
+    path: steward/core/agents/corporate_development_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 提携 · M&A メモ
+
+  quality_assurance:
+    id: quality_assurance
+    name: QA
+    name_ja: 品質保証
+    path: steward/core/agents/quality_assurance_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: coo
+    scope: 品質基準 · 不適合
+
+# 将来拡張候補
+extensions:
+  group_consolidation:
+    id: group_consolidation
+    name: Group Consolidation
+    name_ja: 連結・グループ本社
+    tier: extension
+    status: planned
+    scope: 多法人 · 連結決算 · 移転価格
+
+gaps:
+  - 一般企業 Agent の dashboard 要約自動生成
+  - Growth Agent の Skill 自動要約（dashboard 連携）は Phase 2
+  - 多法人・連結（グループ本社）

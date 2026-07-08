@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "declaration": true
+  },
+  "include": ["src/**/*", "schemas/**/*", "types/**/*", "steward/modules/**/cli/**/*.ts", "steward/jurisdiction-packs/**/modules/**/cli/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

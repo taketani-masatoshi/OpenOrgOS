@@ -1,0 +1,15 @@
+# 社長カレンダー（テンプレート — Git 追跡）
+# 実データ: cp calendar.yaml.example calendar.yaml（gitignore）
+
+events:
+  - id: EVT-001
+    title: 示例ミーティング
+    type: meeting
+    start: "2026-06-12T14:00"
+    end: "2026-06-12T15:30"
+    location: 本社またはオンライン
+    attendees:
+      - 示例太郎
+    status: tentative
+    notes: テンプレート — 実予定は gitignore の calendar.yaml
+    external_visible: false

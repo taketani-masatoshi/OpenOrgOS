@@ -1,0 +1,5 @@
+# Copy to data/org/audit-bridge.yaml when enabling operational → protocol audit mirror.
+# Canonical spec: steward/platform/org/audit-bridge.yaml.example
+
+enabled: true
+events: []

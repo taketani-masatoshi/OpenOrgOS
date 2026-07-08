@@ -1,0 +1,15 @@
+entity:
+  name: Sample OÜ
+  type: Osaühing (OÜ)
+  registration_id: REPLACE_ME
+  registered_office: "Tallinn, Estonia"
+fiscal_year:
+  end_month: 12
+corporate_tax:
+  headline_rate: "22%"
+  notes: Standard corporate income tax · consult local advisor
+indirect_tax:
+  type: VAT
+  rate: "22%"
+  notes: VAT registration rules apply by turnover
+filing_calendar: []

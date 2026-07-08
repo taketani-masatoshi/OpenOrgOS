@@ -1,0 +1,11 @@
+id: my-demo
+name: Sample Malaysia Sdn Bhd
+legal_name: Sample Malaysia Sdn Bhd
+display_name: MY Demo
+description: MY jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: MY
+entity_form: sdn_bhd
+locale: en-MY
+default_currency: MYR

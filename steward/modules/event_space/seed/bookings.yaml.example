@@ -1,0 +1,7 @@
+bookings:
+  - id: BK-001
+    space_id: SPACE-001
+    date: "2026-06-10"
+    start_time: "10:00"
+    end_time: "12:00"
+    status: confirmed

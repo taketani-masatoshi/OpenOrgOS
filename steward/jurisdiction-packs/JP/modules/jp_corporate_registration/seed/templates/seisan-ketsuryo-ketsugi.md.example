@@ -1,0 +1,21 @@
+---
+title: 清算結了に関する株主総会議事録
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# 株主総会議事録（清算結了）
+
+| 日時 | {{resolution_date_reiwa}} |
+| 会社 | {{company_name}}（清算中） |
+
+## 決議
+
+清算が結了したので、清算結了の登記をすることを可決した。
+
+---
+
+{{resolution_date_reiwa}}
+
+{{company_name}}（清算中）
+清算人　{{liquidator_name}}　㊞

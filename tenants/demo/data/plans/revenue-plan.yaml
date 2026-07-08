@@ -1,0 +1,12 @@
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    lines:
+      - id: rental
+        name: 港湾マンション501（賃貸）
+        property_id: PROP-001
+        amount: 0
+    total: 0
+notes: revenue plan skeleton

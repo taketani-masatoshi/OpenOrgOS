@@ -1,0 +1,11 @@
+id: hk-demo
+name: Sample HK Limited
+legal_name: Sample HK Limited
+display_name: HK Demo
+description: HK jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: HK
+entity_form: private_ltd
+locale: en-HK
+default_currency: HKD

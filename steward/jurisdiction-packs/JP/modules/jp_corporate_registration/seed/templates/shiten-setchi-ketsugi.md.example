@@ -1,0 +1,17 @@
+---
+title: 支店設置に関する決議書
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# {{resolution_body_label}}議事録（支店設置）
+
+{{company_name}}は、{{resolution_date_reiwa}}、次の支店を設置することを決議した。
+
+| 支店名称 | {{branch_name}} |
+| 所在地 | {{branch_address}} |
+
+---
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

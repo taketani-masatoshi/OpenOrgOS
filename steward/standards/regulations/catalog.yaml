@@ -1,0 +1,6 @@
+# DEPRECATED — 非正本
+# 正本: steward/jurisdiction-packs/JP/regulations/catalog.yaml
+# テンプレ: steward/jurisdiction-packs/JP/regulations/templates/
+# 読取: loadRegulationsCatalog() → getRegulationsCatalogPath()（tenant jurisdiction 経由）
+
+regulations: []

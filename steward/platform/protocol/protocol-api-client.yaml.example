@@ -1,0 +1,11 @@
+# Client TLS/mTLS for outbound protocol calls (relay · trust bundle fetch).
+# Paths relative to tenant root or absolute.
+
+tls:
+  cert_path: records/protocol/client-cert.pem
+  key_path: records/protocol/client-key.pem
+  ca_path: records/protocol/trust-ca.pem
+  reject_unauthorized: true
+
+allowed_relay_org_uris:
+  - steward://tenant/trust-c

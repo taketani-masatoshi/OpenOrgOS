@@ -1,0 +1,8 @@
+entity: "サンプルストア株式会社"
+as_of: "2026-06-01"
+stores:
+  - id: STORE-001
+    name: "青山本店"
+    address: "東京都港区（例示）"
+    pos_terminals: 2
+    status: open

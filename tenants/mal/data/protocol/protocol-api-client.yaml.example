@@ -1,0 +1,12 @@
+# mTLS client for MAL → Org C API (Proposal 3 demo).
+# Copy: cp protocol-api-client.yaml.example protocol-api-client.yaml
+# Real paths/certs: orgos protocol proposal3:tls-init · gitignore 正本
+
+tls:
+  cert_path: records/protocol/mal-client.pem
+  key_path: records/protocol/mal-client.key
+  ca_path: records/protocol/trust-ca.pem
+  reject_unauthorized: true
+
+allowed_relay_org_uris:
+  - steward://tenant/aiac

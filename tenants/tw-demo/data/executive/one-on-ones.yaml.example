@@ -1,0 +1,17 @@
+# 1-on-1 レジストリ（テンプレート — Git 追跡）
+# 実データ: cp one-on-ones.yaml.example one-on-ones.yaml（gitignore）
+
+one_on_ones:
+  - id: OOO-001
+    person: 示例花子
+    role: 共同代表（示例）
+    cadence: monthly
+    last_date: null
+    next_date: "2026-06-12"
+    topics:
+      - 四半期優先事項
+    action_items:
+      - text: 議題ドラフトを共有
+        owner: Secretary Agent
+        due: "2026-06-10"
+        status: open

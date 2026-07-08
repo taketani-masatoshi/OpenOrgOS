@@ -1,0 +1,9 @@
+# Skill レジストリ — rental モジュール
+# 正本: steward/modules/rental/skills/ · 集約: src/lib/skill-registry.ts
+
+skills:
+  - id: noi_analysis
+    file: noi_analysis.md
+    runtime: cursor-only
+    agent: Property Rental
+    description: NOI 分析

@@ -1,0 +1,8 @@
+entity: "サンプルスタッフィング株式会社"
+as_of: "2026-06-01"
+staff:
+  - id: STF-001
+    name: "山田（例示）"
+    skills: [office, excel]
+    status: assigned
+    client_id: CLT-001

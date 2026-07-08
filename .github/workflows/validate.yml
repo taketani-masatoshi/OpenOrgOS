@@ -1,0 +1,127 @@
+name: validate
+
+on:
+  push:
+    branches: [main, master, "cursor/**"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx tsc --noEmit
+      - run: npm test
+  security-rbac:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: >
+          npm test --
+          tests/operator-rbac.test.ts
+          tests/cli-operator-auth.test.ts
+          tests/mcp-rbac.test.ts
+          tests/org-boundary.test.ts
+          tests/shell-sandbox.test.ts
+          tests/prod-auth-checklist.test.ts
+          tests/security-validate.test.ts
+          tests/cli-data-write-auth.test.ts
+          tests/tenant-registry-coverage.test.ts
+          tests/shell-profile-integrity.test.ts
+  orgos-demos:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run demo:standalone-org
+      - run: npm run demo:mal-standalone
+      - run: npm run validate:protocol:tenants
+  wire-console-smoke:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run wire-console:build
+      - run: playwright test e2e/wire-console.smoke.spec.ts
+        env:
+          WIRE_CONSOLE_SMOKE_PORT: "9472"
+      - run: playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts
+        env:
+          WIRE_CONSOLE_WEBAUTHN_SMOKE_PORT: "9473"
+      - run: playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts
+        env:
+          WIRE_CONSOLE_OIDC_SMOKE_PORT: "9474"
+  steward-chat-smoke:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run steward-chat:smoke
+      - run: npx playwright install --with-deps chromium
+      - run: npm run steward-chat:build
+      - run: npm run steward-chat:e2e
+        env:
+          STEWARD_CHAT_SMOKE_PORT: "9475"
+      - run: npm run steward-chat:webauthn-e2e
+        env:
+          STEWARD_CHAT_WEBAUTHN_SMOKE_PORT: "9477"
+  package-publish-check:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run package:publish-check
+  operator-console-e2e:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run operator-console:e2e
+        env:
+          OPERATOR_CONSOLE_SMOKE_PORT: "9476"
+  test-docker:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f deploy/test/docker-compose.yaml build test
+      - run: docker compose -f deploy/test/docker-compose.yaml run --rm test npm test -- tests/protocol-relay-org-c.test.ts tests/protocol-api-tls.test.ts

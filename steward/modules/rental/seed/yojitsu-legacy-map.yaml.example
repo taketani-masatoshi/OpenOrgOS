@@ -1,0 +1,10 @@
+# 例: tenants/{id}/data/yojitsu-legacy-map.yaml へコピー（v1 列互換のみ）
+# 新規テナントは v2 lines[] のみ
+
+fields:
+  revenue_example:
+    segment: "サンプル物件（賃貸）"
+    kind: revenue
+  depreciation:
+    segment: "サンプル物件（賃貸）"
+    kind: depreciation

@@ -1,0 +1,11 @@
+id: ru-demo
+name: Sample Russia OOO
+legal_name: Sample Russia OOO
+display_name: RU Demo
+description: RU jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: RU
+entity_form: ooo
+locale: en-RU
+default_currency: RUB

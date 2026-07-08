@@ -1,0 +1,7 @@
+listings:
+  - id: LST-001
+    property_id: PROP-010
+    address_summary: "東京都（例示）"
+    listing_type: rent
+    status: active
+    listed_date: "2026-06-01"

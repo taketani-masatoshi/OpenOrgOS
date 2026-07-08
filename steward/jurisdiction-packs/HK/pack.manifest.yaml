@@ -1,0 +1,34 @@
+id: HK
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/hk-maintainers
+repository: https://github.com/steward-os/jurisdiction-hk
+license: MIT
+
+name: Hong Kong
+default_entity_form: private_ltd
+default_currency: HKD
+locale: en-HK
+default_display_language: en
+legal_system:
+  ja: 香港法
+  en: Hong Kong law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-HK-001
+  board: REG-HK-002
+  shareholder: REG-HK-003
+  approval: REG-HK-004
+  expense: REG-HK-005
+  conflict: REG-HK-006
+  document: REG-HK-007
+  travel: REG-HK-008
+
+notes: Private Ltd skeleton · Companies Registry · hk-demo テナント

@@ -1,0 +1,8 @@
+commissions:
+  - id: COM-001
+    deal_id: DEAL-001
+    side: landlord
+    rate_pct: 50
+    amount_yen: null
+    status: pending
+    expected_close: "2026-07-31"

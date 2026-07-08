@@ -1,0 +1,34 @@
+id: AE
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/ae-maintainers
+repository: https://github.com/steward-os/jurisdiction-ae
+license: MIT
+
+name: United Arab Emirates
+default_entity_form: llc
+default_currency: AED
+locale: en-AE
+default_display_language: en
+legal_system:
+  ja: UAE法
+  en: United Arab Emirates law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-AE-001
+  board: REG-AE-002
+  shareholder: REG-AE-003
+  approval: REG-AE-004
+  expense: REG-AE-005
+  conflict: REG-AE-006
+  document: REG-AE-007
+  travel: REG-AE-008
+
+notes: LLC skeleton · ae-demo tenant · ar locale registry

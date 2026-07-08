@@ -1,0 +1,30 @@
+# 旅行ポータル — アカウント索引（Git 追跡 · パスワード禁止）
+# 実運用: cp travel-portals.yaml.example travel-portals.yaml
+# login_id のみ実ファイルに記入 · パスワードはブラウザセッションで段が入力
+
+portals:
+  - id: rakuten-travel
+    name: 楽天トラベル
+    url: https://travel.rakuten.co.jp/
+    login_url: https://travel.rakuten.co.jp/rrs/?f_mem=1
+    login_id: REPLACE_ME
+    supported_trip_types: [hotel, package]
+    notes: 国内宿泊中心 · 楽天ID
+
+  - id: booking-com
+    name: Booking.com
+    url: https://www.booking.com/
+    login_url: https://account.booking.com/sign-in
+    login_id: REPLACE_ME
+    supported_trip_types: [hotel]
+    notes: 海外含む · 通貨表示を JPY に
+
+  - id: trip-com
+    name: Trip.com（トリップドットコム）
+    url: https://jp.trip.com/
+    login_url: https://jp.trip.com/account/signin
+    login_id: REPLACE_ME
+    supported_trip_types: [hotel, flight, package]
+    notes: 航空+ホテル · 中国系OTA
+
+default_portal: rakuten-travel

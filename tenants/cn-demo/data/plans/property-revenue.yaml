@@ -1,0 +1,7 @@
+rental:
+  - property_id: PROP-001
+    monthly_rent: 0
+    annual_rent: 0
+    vacancy_rate: 0
+    management_fee: 0
+hotel: []

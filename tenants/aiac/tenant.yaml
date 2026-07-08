@@ -1,0 +1,19 @@
+id: aiac
+name: AIAC
+legal_name: AIAC
+display_name: AIAC
+description: Inter-org protocol デモ — **第三者証人（Witness）** · Wire Console 3 社デモでは HUB 運用視点
+default: false
+lifecycle: skeleton
+wire_console: true
+
+# ── 法域（legal）— 規程カタログ · 税 · 法人形態 ──
+jurisdiction: JP
+entity_form: kk
+# legal_subdivision: DE   # US pack のみ（デラウェア州法など）
+
+# ── 表示言語（display）— UI · Agent 要約 · 規程 MD の起草言語（法域と独立）──
+display_language: ja
+# locale: ja-JP            # レガシー BCP 47（display_language 省略時）
+
+default_currency: JPY

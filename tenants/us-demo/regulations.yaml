@@ -1,0 +1,20 @@
+# Internal policies — US C-Corp skeleton
+# Catalog: steward/jurisdiction-packs/US/regulations/catalog.yaml
+
+regulations:
+  - id: REG-US-001
+    enabled: true
+  - id: REG-US-002
+    enabled: true
+  - id: REG-US-003
+    enabled: true
+  - id: REG-US-004
+    enabled: true
+  - id: REG-US-005
+    enabled: true
+  - id: REG-US-006
+    enabled: true
+  - id: REG-US-007
+    enabled: true
+  - id: REG-US-008
+    enabled: true

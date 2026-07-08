@@ -1,0 +1,13 @@
+enabled: true
+quorum:
+  mode: any_of_n
+hubs:
+  - hub_id: HUB-A
+    hub_url: http://127.0.0.1:62935
+    hub_public_key: MCowBQYDK2VwAyEAz9D92vylLllyfCd7vDKqPDMSh4dVHRk6/BYzGT3/q0g=
+    priority: 1
+  - hub_id: HUB-B
+    hub_url: http://127.0.0.1:62936
+    hub_public_key: MCowBQYDK2VwAyEAy8eyVUJdKVW4fp/MA1QHGsLTwiSSeGrkPmVezrxiL/s=
+    priority: 2
+register_on: both

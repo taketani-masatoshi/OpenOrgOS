@@ -1,0 +1,43 @@
+# ISO 標準 — テナント有効化
+# 正本: tenants/{id}/standards.yaml · 生成: npm run orgos -- modules sync-context
+
+iso:
+  - id: ISO-9001
+    enabled: true
+    notes: 品質マネジメント
+
+  - id: ISO-27001
+    enabled: true
+    notes: 情報セキュリティ
+
+  - id: ISO-21401
+    enabled: true
+    notes: サステナブル宿泊（亀沢関連）
+
+  - id: ISO-22301
+    enabled: false
+
+  - id: ISO-45001
+    enabled: false
+
+  - id: ISO-14001
+    enabled: false
+
+  - id: ISO-50001
+    enabled: false
+
+  - id: ISO-13485
+    enabled: false
+    notes: 医療機器 QMS
+
+  - id: ISO-22000
+    enabled: false
+    notes: 食品安全
+
+  - id: ISO-37001
+    enabled: false
+    notes: 贈収賄防止
+
+  - id: ISO-20000
+    enabled: false
+    notes: IT サービス管理

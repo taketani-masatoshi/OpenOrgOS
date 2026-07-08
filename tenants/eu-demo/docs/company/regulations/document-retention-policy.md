@@ -1,0 +1,6 @@
+# document retention policy — Sample EU GmbH
+
+[TBD] EU jurisdiction pack skeleton.
+
+*Steward OS eu-demo tenant*
+

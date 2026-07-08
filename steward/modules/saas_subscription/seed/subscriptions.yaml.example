@@ -1,0 +1,7 @@
+subscriptions:
+  - id: SUB-001
+    account_id: ACCT-001
+    plan_id: PLAN-BASIC
+    status: active
+    started_on: "2025-01-01"
+    renews_on: "2026-01-01"

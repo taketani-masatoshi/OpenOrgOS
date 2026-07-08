@@ -1,0 +1,8 @@
+deliverables:
+  - id: DEL-001
+    sow_id: SOW-001
+    milestone_id: MS-001
+    name: "要件定義書 v1.0"
+    delivery_date: "2026-05-14"
+    status: accepted
+    artifact_ref: "docs/deliverables/SOW-001-req-v1.pdf"

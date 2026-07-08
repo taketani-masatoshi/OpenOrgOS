@@ -1,0 +1,21 @@
+---
+title: 定款変更（条文差替）
+case_id: {{case_id}}
+generated: {{generated_iso}}
+---
+
+# 定款変更（{{change_subject}}）
+
+{{company_name}}は、{{resolution_date_reiwa}}付 {{resolution_body_label}}の決議により、定款を次のとおり変更する。
+
+{{articles_amendment_block}}
+
+---
+
+附則
+この定款変更は、登記の日から効力を生ずる。
+
+{{resolution_date_reiwa}}
+
+{{company_name}}
+代表取締役　{{representative_primary}}　㊞

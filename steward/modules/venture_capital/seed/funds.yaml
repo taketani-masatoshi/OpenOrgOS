@@ -1,0 +1,11 @@
+entity: "株式会社サンプル・キャピタル"
+as_of: "2026-06-01"
+funds:
+  - id: FUND-001
+    name: "サンプル・キャピタル1号投資事業有限 Partnership"
+    vintage_year: 2024
+    target_size_jpy: 3000000000
+    committed_jpy: 2500000000
+    called_jpy: 1200000000
+    status: investing
+    notes: "例示 · LP 5 社"

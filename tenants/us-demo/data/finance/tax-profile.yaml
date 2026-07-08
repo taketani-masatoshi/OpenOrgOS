@@ -1,0 +1,30 @@
+entity:
+  name: Sample Corp Inc.
+  type: C-Corporation
+  ein: "12-3456789"
+  state_of_incorporation: Delaware
+  registered_office: "1209 Orange Street, Wilmington, DE 19801"
+fiscal_year:
+  end_month: 12
+  label: Calendar FY
+federal_tax:
+  corporate_rate: "21%"
+  estimated_payments: Quarterly Form 1120-W
+  notes: Consult CPA for actual filings
+state_tax:
+  state_of_incorporation: Delaware
+  franchise_tax: Annual report · minimum tax applies
+  notes: Nexus in other states may require additional filings
+sales_tax:
+  nexus_states: []
+  notes: Evaluate state nexus for sales tax separately
+filing_calendar:
+  - id: US-FED-1120
+    tax: Federal corporate income tax (Form 1120)
+    authority: IRS
+    status: TBD
+  - id: US-DE-FRANCHISE
+    tax: Delaware franchise tax
+    authority: Delaware Division of Corporations
+    status: TBD
+notes: US jurisdiction pack skeleton — verify with qualified tax advisor

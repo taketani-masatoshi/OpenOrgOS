@@ -1,0 +1,26 @@
+id: CTR-008
+name: "金銭消費貸借契約（番町ハイム312・LOAN-001）"
+counterparty: "段燕燕"
+counterparty_type: individual
+type: loan
+status: executed
+start_date: "2025-02-10"
+executed_date: "2025-02-10"
+conflict_approval_date: "2026-06-06"
+auto_renewal: false
+owner: "段燕燕"
+property_id: PROP-001
+compensation:
+  type: fixed
+  amount: 16600000
+  payment_terms: "無利息。返済期限2035-01-31。返済計画は docs/contracts/CTR-008/repayment-schedule.md"
+scope_summary: |
+  役員からの金銭消費貸借。利益相反取引承認済（2026-06-06取締役会）。
+documents:
+  draft: "docs/contracts/CTR-008/01-draft.md"
+  executed: "docs/contracts/CTR-008/02-executed.md"
+risk:
+  risk_level: low
+  notes: "返済計画・振込記録を保管。税理士確認推奨。"
+notes: |
+  LOAN-001。貸主=段燕燕100%（2026-06 経営確認）。draft 議事録の50/50表記は obsolete — lender-split.md 参照。

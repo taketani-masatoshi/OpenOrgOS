@@ -1,0 +1,8 @@
+timesheets:
+  - id: TS-001
+    sow_id: SOW-001
+    month: "2026-05"
+    engineer: "ENG-001"
+    hours: 120
+    billable: true
+    status: submitted

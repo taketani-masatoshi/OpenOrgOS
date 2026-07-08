@@ -1,0 +1,13 @@
+entity: "サンプル食堂株式会社"
+as_of: "2026-06-01"
+tables:
+  - id: TBL-001
+    name: "カウンター1"
+    seats: 2
+    zone: counter
+    status: available
+  - id: TBL-010
+    name: "テーブル10"
+    seats: 4
+    zone: hall
+    status: available

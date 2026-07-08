@@ -1,0 +1,12 @@
+entity: "株式会社サンプル・テック"
+as_of: "2026-06-01"
+sow_contracts:
+  - id: SOW-001
+    title: "業務システム刷新 Phase 1"
+    client: "取引先A株式会社"
+    contract_id: CTR-020
+    status: active
+    start_date: "2026-04-01"
+    end_date: "2026-09-30"
+    stack: "TypeScript · PostgreSQL"
+    notes: "例示 · 秘密保持 Contract 参照"

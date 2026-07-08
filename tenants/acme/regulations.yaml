@@ -1,0 +1,31 @@
+# 社内規程 — 雛形
+# enabled: true の規程のみ Agent が docs/company/regulations/ を読む
+# カタログ: steward/standards/regulations/catalog.yaml
+
+regulations:
+  - id: REG-001
+    enabled: true
+  - id: REG-002
+    enabled: true
+  - id: REG-003
+    enabled: true
+  - id: REG-004
+    enabled: true
+  - id: REG-005
+    enabled: true
+  - id: REG-006
+    enabled: true
+  - id: REG-007
+    enabled: true
+  - id: REG-008
+    enabled: true
+  - id: REG-009
+    enabled: false
+  - id: REG-010
+    enabled: true
+  - id: REG-011
+    enabled: false
+  - id: REG-012
+    enabled: false
+  - id: REG-016
+    enabled: false

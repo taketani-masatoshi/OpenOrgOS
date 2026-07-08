@@ -1,0 +1,32 @@
+forms:
+  - id: ooo
+    name: Obshchestvo s ogranichennoy otvetstvennostyu (OOO)
+    name_local: Общество с ограниченной ответственностью
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: General Director
+    identifiers:
+      - company_number
+    notes: ru-demo default · data residency notes in pack
+
+  - id: ao
+    name: Aktsionernoe obshchestvo (AO)
+    name_local: Акционерное общество
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Joint-stock company
+
+  - id: ip
+    name: Individual Entrepreneur (IP)
+    name_local: Индивидуальный предприниматель
+    liability: unlimited
+    governance:
+      supreme_body: Sole proprietor
+    identifiers:
+      - company_number
+    notes: Sole trader · simplified registration

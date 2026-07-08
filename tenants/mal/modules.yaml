@@ -1,0 +1,134 @@
+# 業務モジュール — 株式会社MAL
+# 正本: tenants/mal/modules.yaml · Agent ルーティング · validate 参照
+
+modules:
+  - id: rental
+    enabled: true
+    agent: rental
+    property_ids: [PROP-001]
+    docs_root: docs/properties/PROP-001-bancho/operations/
+    summary_dir: agent-summaries/prop-001/
+    billing:
+      PROP-001:
+        docs_base: docs/finance/accounting/invoices/bancho
+        invoice_number_prefix: BANCHO
+        template_id: rent-monthly
+        sender_email: info@malkk.com
+    notes: 番町ハイム312 賃貸 · 本社兼用
+
+  - id: hospitality
+    enabled: true
+    agent: hospitality
+    property_ids: [PROP-002]
+    docs_root: docs/properties/PROP-002-kamezawa/operations/
+    operations_public: data/operations/kamezawa-public.yaml
+    operations_secrets: data/operations/kamezawa-secrets.yaml
+    summary_dir: agent-summaries/prop-002/
+    notes: 亀沢旅館 · 1棟貸し
+
+  # 将来例（無効）
+  - id: professional_services
+    enabled: false
+    agent: professional_services
+    data_root: data/services/
+    notes: 受託開発 · コンサル等
+
+  - id: venture_capital
+    enabled: false
+    agent: venture_capital
+    data_root: data/venture-capital/
+    docs_root: docs/venture-capital/
+    summary_dir: agent-summaries/venture-capital/
+    notes: VC ファンド · ポートフォリオ（MAL では未使用）
+
+  - id: saas_subscription
+    enabled: false
+    agent: saas_subscription
+    data_root: data/saas/
+    summary_dir: agent-summaries/saas/
+    notes: SaaS サブスク（MAL では未使用）
+
+  - id: event_space
+    enabled: false
+    agent: event_space
+    data_root: data/event-space/
+    summary_dir: agent-summaries/event-space/
+    notes: イベントスペース（MAL では未使用）
+
+  - id: ecommerce
+    enabled: false
+    agent: ecommerce
+    data_root: data/ecommerce/
+    summary_dir: agent-summaries/ecommerce/
+    notes: EC（MAL では未使用）
+
+  - id: restaurant
+    enabled: false
+    agent: restaurant
+    data_root: data/restaurant/
+    summary_dir: agent-summaries/restaurant/
+    notes: 飲食店（MAL では未使用）
+
+  - id: retail_store
+    enabled: false
+    agent: retail_store
+    data_root: data/retail-store/
+    summary_dir: agent-summaries/retail-store/
+    notes: 実店舗小売（MAL では未使用）
+
+  - id: clinic
+    enabled: false
+    agent: clinic
+    data_root: data/clinic/
+    summary_dir: agent-summaries/clinic/
+    notes: クリニック（MAL では未使用）
+
+  - id: logistics
+    enabled: false
+    agent: logistics
+    data_root: data/logistics/
+    summary_dir: agent-summaries/logistics/
+    notes: 物流（MAL では未使用）
+
+  - id: staffing
+    enabled: false
+    agent: staffing
+    data_root: data/staffing/
+    summary_dir: agent-summaries/staffing/
+    notes: 人材派遣（MAL では未使用）
+
+  - id: construction
+    enabled: false
+    agent: construction
+    data_root: data/construction/
+    summary_dir: agent-summaries/construction/
+    notes: 建設（MAL では未使用）
+
+  - id: education
+    enabled: false
+    agent: education
+    data_root: data/education/
+    summary_dir: agent-summaries/education/
+    notes: 教育（MAL では未使用）
+
+  - id: property_management
+    enabled: false
+    agent: property_management
+    data_root: data/property-management/
+    summary_dir: agent-summaries/property-management/
+    notes: PM（MAL では未使用）
+
+  - id: travel_booking
+    enabled: true
+    agent: travel_booking
+    data_root: data/operations/
+    docs_root: docs/operations/
+    summary_dir: agent-summaries/operations/
+    notes: 旅費・旅行手配 · REG-008 · operations travel CLI
+
+  - id: membership
+    enabled: false
+    agent: membership
+    data_root: data/membership/
+    summary_dir: agent-summaries/membership/
+    notes: 会員制（MAL では未使用）

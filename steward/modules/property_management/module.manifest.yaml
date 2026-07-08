@@ -1,0 +1,10 @@
+id: property_management
+required_seeds:
+  - invoice-pm-monthly.yaml
+  - invoice-pm-monthly-body.txt
+notes: production_ready — pm-properties/contracts + invoice seed
+activation_seeds:
+- pm-properties.yaml
+- management-contracts.yaml
+- fee-schedules.yaml
+- service-requests.yaml

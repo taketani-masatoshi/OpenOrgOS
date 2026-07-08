@@ -1,0 +1,12 @@
+name: "株式会社サウスウッド"
+corporate_number: "4010001199999"
+established_date: "2019-04-01"
+representative: "南木 健一"
+directors:
+  - name: "南木 健一"
+    role: "代表取締役"
+address: "〒102-0084 東京都千代田区二番町1"
+business_description: |
+  事業開発・軽量 SaaS 運営（デモ用 L1）。
+  本店登記地は別途。実務拠点は MAL 本社ビル内賃借区画（CTR-012）。
+  Inter-org protocol デモの借主組織 Southwood として使用。

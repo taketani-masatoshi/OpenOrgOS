@@ -1,0 +1,8 @@
+id: jp_privacy_policy
+required_seeds: []
+activation_seeds:
+  - policy-meta.yaml.example
+  - privacy-policy-template.md.example
+optional_regulations:
+  - REG-010
+notes: activation_ready — 外部向け個人情報保護方針 · REG-010 社内規程と整合

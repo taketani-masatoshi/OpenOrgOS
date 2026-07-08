@@ -1,0 +1,11 @@
+forms:
+  - id: proprietary_ltd
+    name: Proprietary Limited (Pty Ltd)
+    name_local: Proprietary Limited
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: Corporate registry · Australia

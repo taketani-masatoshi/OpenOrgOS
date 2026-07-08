@@ -1,0 +1,147 @@
+sources:
+  - id: touki-portal
+    title: 登記情報提供サービス（登記ねっと）
+    url: "https://www.touki.or.jp/"
+    type: portal
+    notes: オンライン申請 · 登記簿閲覧 · 印紙購入
+  - id: moj-registry-guide
+    title: 法務省 — 商業・法人登記
+    url: "https://www.moj.go.jp/homu/homu_06.html"
+    type: guide
+  - id: moj-online-filing
+    title: オンライン登記申請の手引き
+    url: "https://www.touki.or.jp/tebiki/index.html"
+    type: guide
+  - id: moj-fees
+    title: 登録免許税額表
+    url: "https://www.moj.go.jp/homu/homu_06.html"
+    type: fee
+    notes: 手数料は手続・資本金等により変動 — 申請前に最新表を確認
+
+forms:
+  - id: form-teikan-kk
+    name: 定款（株式会社）
+    template: templates/teikan-kk.md.example
+    procedure_ids: [incorporation]
+    legal_basis: 会社法第27条
+    when_required: 株式会社設立登記
+  - id: form-sosen-gijiroku
+    name: 創立総会議事録
+    template: templates/sosen-gijiroku.md.example
+    procedure_ids: [incorporation]
+    when_required: 設立時（発起設立）
+  - id: form-yakuin-sennin-ketsugi
+    name: 設立時役員選任決議
+    template: templates/yakuin-sennin-ketsugi.md.example
+    procedure_ids: [incorporation]
+  - id: form-yakuin-henko-ketsugi
+    name: 役員変更に関する決議書
+    template: templates/yakuin-henko-ketsugi.md.example
+    procedure_ids:
+      - officer_appointment_resignation
+      - representative_director_change
+      - auditor_appointment
+  - id: form-shussho-dojisho
+    name: 就任承諾書
+    template: templates/shussho-dojisho.md.example
+    procedure_ids:
+      - incorporation
+      - officer_appointment_resignation
+      - representative_director_change
+      - auditor_appointment
+  - id: form-inkan-todoke
+    name: 印鑑届出書
+    template: templates/inkan-todoke.md.example
+    procedure_ids: [incorporation]
+    when_required: 設立登記と同時
+  - id: form-touki-shinseisho
+    name: 登記申請書
+    template: templates/touki-shinseisho.md.example
+    procedure_ids:
+      - incorporation
+      - head_office_relocation_same_bureau
+      - head_office_relocation_cross_bureau
+      - branch_establishment
+      - branch_abolition
+      - officer_appointment_resignation
+      - representative_director_change
+      - board_establishment
+      - auditor_appointment
+      - trade_name_change
+      - purpose_change
+      - capital_increase
+      - capital_decrease
+      - stock_transfer_restriction
+      - merger
+      - company_split
+      - dissolution
+      - liquidation_completion
+    legal_basis: 商業登記法第15条 · 登記簿様式第6号
+  - id: form-honsha-iten-ketsugi
+    name: 本店移転に関する決議書・議事録
+    template: templates/honsha-iten-ketsugi.md.example
+    procedure_ids:
+      - head_office_relocation_same_bureau
+      - head_office_relocation_cross_bureau
+  - id: form-shiten-setchi-ketsugi
+    name: 支店設置に関する決議書
+    template: templates/shiten-setchi-ketsugi.md.example
+    procedure_ids: [branch_establishment]
+  - id: form-shiten-haishi-ketsugi
+    name: 支店廃止に関する決議書
+    template: templates/shiten-haishi-ketsugi.md.example
+    procedure_ids: [branch_abolition]
+  - id: form-kikan-henko-ketsugi
+    name: 機関変更（取締役会設置等）決議
+    template: templates/kikan-henko-ketsugi.md.example
+    procedure_ids: [board_establishment]
+  - id: form-teikan-kaitei
+    name: 定款変更（条文差替）
+    template: templates/teikan-kaitei.md.example
+    procedure_ids:
+      - trade_name_change
+      - purpose_change
+      - capital_increase
+      - capital_decrease
+      - stock_transfer_restriction
+      - board_establishment
+  - id: form-shogo-henko-ketsugi
+    name: 商号変更に関する株主総会議事録
+    template: templates/shogo-henko-ketsugi.md.example
+    procedure_ids: [trade_name_change]
+  - id: form-mokuteki-henko-ketsugi
+    name: 目的変更に関する株主総会議事録
+    template: templates/mokuteki-henko-ketsugi.md.example
+    procedure_ids: [purpose_change]
+  - id: form-shihon-henko-ketsugi
+    name: 資本金変更に関する株主総会議事録
+    template: templates/shihon-henko-ketsugi.md.example
+    procedure_ids: [capital_increase, capital_decrease]
+  - id: form-kabushiki-joto-ketsugi
+    name: 株式譲渡制限変更に関する決議
+    template: templates/kabushiki-joto-ketsugi.md.example
+    procedure_ids: [stock_transfer_restriction]
+  - id: form-gappei-keikaku
+    name: 合併契約書
+    template: templates/gappei-keikaku.md.example
+    procedure_ids: [merger]
+  - id: form-gappei-ketsugi
+    name: 合併に関する株主総会議事録
+    template: templates/gappei-ketsugi.md.example
+    procedure_ids: [merger]
+  - id: form-bunkatsu-keikaku
+    name: 分割計画書
+    template: templates/bunkatsu-keikaku.md.example
+    procedure_ids: [company_split]
+  - id: form-bunkatsu-ketsugi
+    name: 会社分割に関する株主総会議事録
+    template: templates/bunkatsu-ketsugi.md.example
+    procedure_ids: [company_split]
+  - id: form-kaisan-ketsugi
+    name: 解散に関する株主総会議事録
+    template: templates/kaisan-ketsugi.md.example
+    procedure_ids: [dissolution]
+  - id: form-seisan-ketsuryo-ketsugi
+    name: 清算結了に関する株主総会議事録
+    template: templates/seisan-ketsuryo-ketsugi.md.example
+    procedure_ids: [liquidation_completion]

@@ -1,0 +1,44 @@
+forms:
+  - id: se
+    name: Societas Europaea (SE)
+    name_local: Societas Europaea
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: EU-wide corporate form · TJS-EU meta pack
+
+  - id: gmbh
+    name: GmbH (Germany reference)
+    name_local: Gesellschaft mit beschränkter Haftung
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Managing Directors
+    identifiers:
+      - company_number
+    notes: DE subdivision default · Handelsregister
+
+  - id: sarl
+    name: SARL (France reference)
+    name_local: Société à responsabilité limitée
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Gérant
+    identifiers:
+      - company_number
+    notes: FR subdivision · RCS
+
+  - id: ltd
+    name: Private Limited Company (UK reference)
+    name_local: Private Limited Company
+    liability: limited
+    governance:
+      supreme_body: General Meeting
+      board: Board of Directors
+    identifiers:
+      - company_number
+    notes: GB subdivision · Companies House

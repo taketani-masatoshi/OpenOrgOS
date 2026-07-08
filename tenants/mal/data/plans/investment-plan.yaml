@@ -1,0 +1,37 @@
+# 投資計画（設備投資・年度別）
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    items:
+      - id: kamezawa_capex_q1
+        name: 亀沢旅館 上置き建築費
+        property_id: PROP-002
+        amount: 13000000
+        month: "2026-03"
+        notes: 半期分・概算
+      - id: kamezawa_capex_q2
+        name: 亀沢旅館 上置き建築費
+        property_id: PROP-002
+        amount: 13000000
+        month: "2026-04"
+        notes: 半期分・概算
+    total: 26000000
+
+  - fiscal_year: FY2027
+    period_from: "2027-02"
+    period_to: "2028-01"
+    items: []
+    total: 0
+
+  - fiscal_year: FY2028
+    period_from: "2028-02"
+    period_to: "2029-01"
+    items:
+      - id: kamezawa_maintenance
+        name: 亀沢旅館 保守改修
+        property_id: PROP-002
+        amount: 5000000
+        notes: 中期計画より
+    total: 5000000

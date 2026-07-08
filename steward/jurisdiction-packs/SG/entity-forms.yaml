@@ -1,0 +1,11 @@
+forms:
+  - id: pte_ltd
+    name: Private Company Limited by Shares
+    name_local: Pte. Ltd.
+    liability: limited
+    governance:
+      supreme_body: Annual General Meeting
+      board: Board of Directors
+    identifiers:
+      - uen
+    notes: ACRA · Singapore

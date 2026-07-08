@@ -1,0 +1,6 @@
+skills:
+  - id: language_bridge
+    file: language_bridge.md
+    runtime: cursor-only
+    agent: Secretary
+    description: ユーザー言語 vs システム言語 — 議事録起草チェックリスト

@@ -1,0 +1,7 @@
+fee_schedules:
+  - id: FEE-001
+    pm_property_id: PMP-001
+    month: "2026-06"
+    collected_rent_yen: 150000
+    management_fee_yen: 7500
+    status: invoiced

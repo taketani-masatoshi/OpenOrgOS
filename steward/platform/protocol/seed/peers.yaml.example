@@ -1,0 +1,7 @@
+as_of: "2026-06-01"
+peers:
+  - peer_id: PEER-001
+    display_name: "サンプル清掃株式会社"
+    jurisdiction: JP
+    stakeholder_id: STK-001
+    org_uri: steward://peer/PEER-001

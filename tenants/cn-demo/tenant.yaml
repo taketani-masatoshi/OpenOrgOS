@@ -1,0 +1,11 @@
+id: cn-demo
+name: Sample China Co., Ltd.
+legal_name: Sample China Co., Ltd.
+display_name: CN Demo
+description: CN jurisdiction pack reference tenant
+default: false
+lifecycle: skeleton
+jurisdiction: CN
+entity_form: llc
+locale: en-CN
+default_currency: CNY

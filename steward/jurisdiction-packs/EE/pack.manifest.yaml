@@ -1,0 +1,34 @@
+id: EE
+version: "0.1.0"
+contract_version: 1
+owner:
+  org: steward-os
+  maintainers:
+    - steward-os/ee-maintainers
+repository: https://github.com/steward-os/jurisdiction-ee
+license: MIT
+
+name: Estonia
+default_entity_form: ou
+default_currency: EUR
+locale: et-EE
+default_display_language: et
+legal_system:
+  ja: エストニア法
+  en: Estonia law
+
+regulations_catalog: regulations/catalog.yaml
+regulations_templates_dir: regulations/templates
+tax_profile_schema: corporate
+
+corporate_core:
+  officer_comp: REG-EE-001
+  board: REG-EE-002
+  shareholder: REG-EE-003
+  approval: REG-EE-004
+  expense: REG-EE-005
+  conflict: REG-EE-006
+  document: REG-EE-007
+  travel: REG-EE-008
+
+notes: OÜ skeleton · e-Business Register · ee-demo テナント

@@ -1,0 +1,362 @@
+# 日本 — 組織形態（法域 JP で選択可能）
+# status: active=運用想定 · stub=ダミー骨格 · legacy=法改正等で新設不可 · planned=将来
+# category: 他法域 pack との区別 · jurisdiction_exclusive: [JP] は日本法専用形態
+jurisdiction: JP
+
+forms:
+  # ── 会社法 ──
+  - id: kk
+    name: 株式会社
+    name_en: Kabushiki Kaisha (KK)
+    category: companies_act
+    liability: limited
+    governance:
+      supreme_body: 株主総会
+      board: 取締役会
+    identifiers: [corporate_number]
+    governing_law_ja: 会社法
+    status: active
+    notes: Steward 参照実装 · tenants/mal
+
+  - id: gk
+    name: 合同会社
+    name_en: Godo Kaisha (GK)
+    category: companies_act
+    liability: limited
+    governance:
+      supreme_body: 社員
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 会社法
+    status: active
+    notes: パススルー税務 · Operating Agreement 相当は定款
+
+  - id: yugen_kaisha
+    name: 有限会社
+    name_en: Yugen Kaisha
+    category: companies_act
+    liability: limited
+    governing_law_ja: 会社法
+    status: legacy
+    notes: 2006年法改正で新設不可 · 存続会社のみ
+
+  - id: goshi_kaisha
+    name: 合資会社
+    name_en: Goshi Kaisha
+    category: companies_act
+    liability: mixed
+    governing_law_ja: 会社法
+    status: active
+    notes: 無限責任社員 + 有限責任社員
+
+  - id: gomei_kaisha
+    name: 合名会社
+    name_en: Gomei Kaisha
+    category: companies_act
+    liability: unlimited
+    governing_law_ja: 会社法
+    status: active
+    notes: 全社員無限責任
+
+  # ── 組合・共同事業 ──
+  - id: civil_law_partnership
+    name: 民法上の組合（任意組合）
+    name_en: Civil Law Partnership (Voluntary Partnership)
+    category: partnership
+    liability: unlimited
+    governing_law_ja: 民法
+    status: active
+    notes: 組合財産 · 内部関係は民法667条以下
+
+  - id: commercial_law_partnership
+    name: 商法上の組合（匿名組合）
+    name_en: Silent Partnership (Tokumei Kumiai)
+    category: partnership
+    liability: limited
+    governing_law_ja: 商法
+    status: active
+    notes: 営業者に対する出資 · 有限責任
+
+  - id: investment_lps
+    name: 投資事業有限責任組合（LPS）
+    name_en: Investment Limited Partnership
+    category: partnership
+    liability: limited
+    governing_law_ja: 有限責任組合契約に関する法律
+    status: active
+    notes: ファンド · VC 向け
+
+  - id: limited_liability_partnership
+    name: 有限責任事業組合（LLP）
+    name_en: Limited Liability Partnership
+    category: partnership
+    liability: limited
+    governing_law_ja: 有限責任事業組合契約に関する法律
+    status: active
+    notes: 複数資格者の共同事業所 · 専門職法人（弁護士法人等）とは別制度
+
+  - id: tech_research_combination
+    name: 技術研究組合
+    name_en: Technical Research Combination
+    category: partnership
+    liability: limited
+    governing_law_ja: 技術研究組合法
+    status: active
+    notes: 共同研究
+
+  - id: business_combination
+    name: 事業協同組合
+    name_en: Business Cooperative Association
+    category: partnership
+    liability: limited
+    governing_law_ja: 中小企業等協同組合法
+    status: stub
+
+  - id: cooperative
+    name: 協同組合
+    name_en: Cooperative
+    category: partnership
+    liability: limited
+    status: stub
+    notes: 消費生活 · 農業 · 信用等 · 業種別法
+
+  # ── 一般法人・NPO ──
+  - id: general_incorporated_association
+    name: 一般社団法人
+    name_en: General Incorporated Association
+    category: general_incorporated
+    liability: limited
+    governing_law_ja: 一般法人法
+    status: active
+
+  - id: general_incorporated_foundation
+    name: 一般財団法人
+    name_en: General Incorporated Foundation
+    category: general_incorporated
+    liability: limited
+    governing_law_ja: 一般法人法
+    status: active
+
+  - id: public_interest_association
+    name: 公益社団法人
+    name_en: Public Interest Incorporated Association
+    category: nonprofit
+    liability: limited
+    governing_law_ja: 一般法人法
+    status: active
+    notes: 認定 · 監督庁
+
+  - id: public_interest_foundation
+    name: 公益財団法人
+    name_en: Public Interest Incorporated Foundation
+    category: nonprofit
+    liability: limited
+    governing_law_ja: 一般法人法
+    status: active
+
+  - id: specified_nonprofit
+    name: 特定非営利活動法人（NPO法人）
+    name_en: Specified Nonprofit Corporation (NPO)
+    category: nonprofit
+    liability: limited
+    governing_law_ja: NPO法
+    status: active
+    notes: 認定 · 特例認定
+
+  # ── 専門職法人（日本法専用 · jurisdiction_exclusive: JP）──
+  - id: attorney_corporation
+    name: 弁護士法人
+    name_en: Attorney Corporation (Bengoshi Hojin)
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 弁護士法
+    status: stub
+    notes: 定款 · 社員は弁護士 · みなし個人 taxation 等は pack 拡張対象
+
+  - id: tax_accountant_corporation
+    name: 税理士法人
+    name_en: Tax Accountant Corporation (Zeirishi Hojin)
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 税理士法
+    status: stub
+
+  - id: certified_public_accountant_corporation
+    name: 公認会計士法人
+    name_en: Certified Public Accountant Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 公認会計士法
+    status: stub
+
+  - id: judicial_scrivener_corporation
+    name: 司法書士法人
+    name_en: Judicial Scrivener Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 司法書士法
+    status: stub
+
+  - id: administrative_scrivener_corporation
+    name: 行政書士法人
+    name_en: Administrative Scrivener Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 行政書士法
+    status: stub
+
+  - id: labor_and_social_security_attorney_corporation
+    name: 社会保険労務士法人
+    name_en: Labor and Social Security Attorney Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 社会保険労務士法
+    status: stub
+
+  - id: patent_attorney_corporation
+    name: 弁理士法人
+    name_en: Patent Attorney Corporation (Benrishi Hojin)
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 弁理士法
+    status: stub
+
+  - id: land_and_building_investigator_corporation
+    name: 土地家屋調査士法人
+    name_en: Land and Building Investigator Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governance:
+      supreme_body: 社員総会
+      representative: 代表社員
+    identifiers: [corporate_number]
+    governing_law_ja: 土地家屋調査士法
+    status: stub
+
+  - id: maritime_procedure_agent_corporation
+    name: 海難処理士法人
+    name_en: Maritime Procedure Agent Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 海難処理士法
+    status: stub
+
+  - id: small_business_consultant_corporation
+    name: 中小企業診断士法人
+    name_en: Small Business Consultant Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 中小企業支援法
+    status: stub
+
+  - id: customs_broker_corporation
+    name: 通関士法人
+    name_en: Customs Broker Corporation
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 通関士法
+    status: stub
+
+  - id: foreign_law_joint_venture_law_firm
+    name: 外国法事務弁護士法人
+    name_en: Foreign Law Joint Venture Law Firm
+    category: professional_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 弁護士法
+    status: stub
+    notes: 外国法共同事業 · 特殊形態
+
+  # ── その他特殊法人 ──
+  - id: school_corporation
+    name: 学校法人
+    name_en: School Corporation
+    category: special_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 私立学校法
+    status: stub
+
+  - id: religious_corporation
+    name: 宗教法人
+    name_en: Religious Corporation
+    category: special_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 宗教法人法
+    status: stub
+
+  - id: medical_corporation
+    name: 医療法人
+    name_en: Medical Corporation
+    category: special_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 医療法
+    status: stub
+
+  - id: social_welfare_corporation
+    name: 社会福祉法人
+    name_en: Social Welfare Corporation
+    category: special_corporation
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 社会福祉法
+    status: stub
+
+  - id: management_association
+    name: 管理組合
+    name_en: Management Association (Condominium)
+    category: condominium
+    jurisdiction_exclusive: [JP]
+    liability: limited
+    governing_law_ja: 区分所有法
+    status: stub
+    notes: マンション等
+
+  - id: sole_proprietorship
+    name: 個人事業主
+    name_en: Sole Proprietorship
+    category: unincorporated
+    liability: unlimited
+    status: active
+    notes: 法人格なし · 開業届

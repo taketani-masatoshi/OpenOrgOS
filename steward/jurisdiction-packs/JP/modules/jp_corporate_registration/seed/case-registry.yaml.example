@@ -1,0 +1,216 @@
+entity: "株式会社MAL"
+as_of: "2026-06-26"
+cases:
+  - id: INC-2026-001
+    procedure_id: incorporation
+    status: draft
+    simplified: true
+    filing_date: "2026-07-01"
+    docs_root: docs/corporate-registration/INC-2026-001
+    registry_office: 東京法務局
+    incorporation:
+      company_name: 株式会社サンプル
+      capital_yen: 1000000
+      head_office: 東京都千代田区丸の内一丁目1番1号
+      purposes:
+        - ソフトウェアの企画、開発、販売及び保守
+        - 経営コンサルティング業
+      promoters:
+        - name: 山田太郎
+          address: 東京都千代田区丸の内一丁目1番1号
+          shares: 100
+      directors:
+        - name: 山田太郎
+          address: 東京都千代田区丸の内一丁目1番1号
+          role: 代表取締役
+      has_board: true
+      fiscal_year_end: "1月31日"
+
+  - id: CHG-2026-001
+    procedure_id: trade_name_change
+    simplified: true
+    filing_date: "2026-07-15"
+    docs_root: docs/corporate-registration/CHG-2026-001
+    registry_office: 東京法務局
+    trade_name_change:
+      resolution_date: "2026-06-20"
+      old_name: 株式会社ほんとのあなた
+      new_name: 株式会社MAL
+
+  - id: CHG-2026-002
+    procedure_id: head_office_relocation_same_bureau
+    simplified: true
+    filing_date: "2026-07-15"
+    docs_root: docs/corporate-registration/CHG-2026-002
+    registry_office: 東京法務局
+    head_office_change:
+      resolution_date: "2026-06-18"
+      old_address: 東京都文京区小石川3丁目28番13号
+      new_address: 東京都千代田区二番町1
+      cross_bureau: false
+
+  - id: CHG-2026-003
+    procedure_id: officer_appointment_resignation
+    simplified: true
+    filing_date: "2026-08-01"
+    docs_root: docs/corporate-registration/CHG-2026-003
+    registry_office: 東京法務局
+    officer_change:
+      resolution_date: "2026-07-01"
+      resolution_body: shareholders
+      appointing:
+        - name: 段燕燕
+          address: 東京都千代田区二番町1
+          role: 代表取締役
+        - name: 宮城万貴子
+          address: 東京都千代田区二番町1
+          role: 代表取締役
+
+  - id: CHG-2026-004
+    procedure_id: representative_director_change
+    simplified: true
+    filing_date: "2026-08-01"
+    docs_root: docs/corporate-registration/CHG-2026-004
+    registry_office: 東京法務局
+    officer_change:
+      resolution_date: "2026-07-01"
+      appointing:
+        - name: 段燕燕
+          role: 代表取締役
+          address: 東京都千代田区二番町1
+
+  - id: CHG-2026-005
+    procedure_id: purpose_change
+    simplified: true
+    filing_date: "2026-08-15"
+    docs_root: docs/corporate-registration/CHG-2026-005
+    purpose_change:
+      resolution_date: "2026-07-10"
+      new_purposes:
+        - 不動産オーナー向け翻訳・通訳サービス
+        - 旅館運営及びイベントスペース貸出
+
+  - id: CHG-2026-006
+    procedure_id: capital_increase
+    simplified: true
+    filing_date: "2026-09-01"
+    docs_root: docs/corporate-registration/CHG-2026-006
+    capital_change:
+      resolution_date: "2026-08-01"
+      old_capital_yen: 1000000
+      new_capital_yen: 8500000
+      method: cash
+
+  - id: CHG-2026-007
+    procedure_id: capital_decrease
+    simplified: true
+    filing_date: "2026-09-01"
+    docs_root: docs/corporate-registration/CHG-2026-007
+    capital_change:
+      resolution_date: "2026-08-01"
+      old_capital_yen: 8500000
+      new_capital_yen: 5000000
+      method: surplus
+
+  - id: CHG-2026-008
+    procedure_id: branch_establishment
+    simplified: true
+    filing_date: "2026-09-15"
+    docs_root: docs/corporate-registration/CHG-2026-008
+    branch_change:
+      resolution_date: "2026-08-20"
+      branch_name: 亀沢支店
+      branch_address: 東京都墨田区亀沢（要確定）
+      action: establish
+
+  - id: CHG-2026-009
+    procedure_id: branch_abolition
+    simplified: true
+    filing_date: "2026-09-15"
+    docs_root: docs/corporate-registration/CHG-2026-009
+    branch_change:
+      resolution_date: "2026-08-20"
+      branch_name: 亀沢支店
+      branch_address: 東京都墨田区亀沢（要確定）
+      action: abolish
+
+  - id: CHG-2026-010
+    procedure_id: board_establishment
+    simplified: true
+    filing_date: "2026-10-01"
+    docs_root: docs/corporate-registration/CHG-2026-010
+
+  - id: CHG-2026-011
+    procedure_id: auditor_appointment
+    simplified: true
+    filing_date: "2026-10-01"
+    docs_root: docs/corporate-registration/CHG-2026-011
+    officer_change:
+      resolution_date: "2026-09-01"
+      appointing:
+        - name: 監査役氏名
+          role: 監査役
+          address: 東京都千代田区二番町1
+
+  - id: CHG-2026-012
+    procedure_id: stock_transfer_restriction
+    simplified: true
+    filing_date: "2026-10-01"
+    docs_root: docs/corporate-registration/CHG-2026-012
+
+  - id: REORG-2026-001
+    procedure_id: merger
+    simplified: true
+    filing_date: "2026-11-01"
+    docs_root: docs/corporate-registration/REORG-2026-001
+    corporate_reorg:
+      resolution_date: "2026-10-01"
+      reorg_type: merger
+      counterparty_name: 株式会社相手方
+      surviving_entity: 株式会社MAL
+
+  - id: REORG-2026-002
+    procedure_id: company_split
+    simplified: true
+    filing_date: "2026-11-01"
+    docs_root: docs/corporate-registration/REORG-2026-002
+    corporate_reorg:
+      resolution_date: "2026-10-01"
+      reorg_type: split
+      counterparty_name: 株式会社承継子会社
+
+  - id: TERM-2026-001
+    procedure_id: dissolution
+    simplified: true
+    filing_date: "2026-12-01"
+    docs_root: docs/corporate-registration/TERM-2026-001
+    dissolution:
+      resolution_date: "2026-11-15"
+      liquidator:
+        name: 段燕燕
+        address: 東京都千代田区二番町1
+        role: 清算人
+      reason: 株主総会の決議による解散
+
+  - id: TERM-2026-002
+    procedure_id: liquidation_completion
+    simplified: true
+    filing_date: "2027-06-01"
+    docs_root: docs/corporate-registration/TERM-2026-002
+    liquidation_completion:
+      resolution_date: "2027-05-15"
+      liquidator:
+        name: 段燕燕
+        address: 東京都千代田区二番町1
+        role: 清算人
+
+  - id: CHG-2026-013
+    procedure_id: head_office_relocation_cross_bureau
+    simplified: true
+    filing_date: "2026-10-15"
+    docs_root: docs/corporate-registration/CHG-2026-013
+    head_office_change:
+      resolution_date: "2026-09-01"
+      old_address: 東京都千代田区二番町1
+      new_address: 大阪府大阪市北区（例示 · 管轄変更）
+      cross_bureau: true

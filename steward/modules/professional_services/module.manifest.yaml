@@ -1,0 +1,7 @@
+id: professional_services
+required_seeds:
+- invoice-ps-monthly.yaml
+- invoice-ps-monthly-body.txt
+notes: production_ready — projects + invoice seed
+activation_seeds:
+- projects.yaml

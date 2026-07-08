@@ -1,0 +1,9 @@
+hub_id: HUB-B
+hub_peers:
+  - hub_id: HUB-A
+    hub_url: http://127.0.0.1:45161
+    hub_public_key: MCowBQYDK2VwAyEAXhbn3pYoSqD2JRM6AEb87S26LWYrfgAzRfJ7zp/8dhQ=
+    priority: 1
+gossip:
+  enabled: true
+  interval_sec: 300

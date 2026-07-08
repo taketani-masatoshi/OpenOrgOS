@@ -1,0 +1,12 @@
+# Org C — Protocol API server (production)
+host: 0.0.0.0
+port: 9476
+mtls_required: true
+trust_bundle_public: true
+mtls_allowed_org_uris:
+  - steward://tenant/mal
+  - steward://tenant/southwood
+tls:
+  cert_path: /etc/steward/protocol/server-cert.pem
+  key_path: /etc/steward/protocol/server-key.pem
+  ca_path: /etc/steward/protocol/client-ca.pem

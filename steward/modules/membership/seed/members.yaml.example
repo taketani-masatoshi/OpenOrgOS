@@ -1,0 +1,9 @@
+entity: "サンプルフィットネス株式会社"
+as_of: "2026-06-01"
+members:
+  - id: MEM-001
+    plan_id: PLN-001
+    join_date: "2025-11-01"
+    status: active
+    last_checkin: "2026-06-07"
+    notes: "例示 · 個人名は gitignore 側"

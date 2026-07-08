@@ -1,0 +1,14 @@
+id: jp_trademark_application
+required_seeds: []
+activation_seeds:
+  - trademark-registry.yaml.example
+  - marks.yaml.example
+  - goods-services.yaml.example
+  - field-map.yaml.example
+  - sources.yaml.example
+  - templates/shohyo-toroku-gen.md.example
+  - templates/shohyo-kenben-shiji.md.example
+  - templates/dairi-ininjo.md.example
+optional_regulations:
+  - REG-004
+notes: activation_ready — 商標登録願ひな形 · 指定商品役務 · 出願書類ドラフト（JP 法域のみ）

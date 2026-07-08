@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "orgos-steward": {
+      "command": "npx",
+      "args": [
+        "--yes",
+        "tsx",
+        "src/cli.ts",
+        "mcp",
+        "start"
+      ],
+      "env": {
+        "ORGOS_TENANT": "mal",
+        "ORGOS_MCP_TOKEN": "<generate: orgos mcp rotate-token>"
+      }
+    }
+  }
+}

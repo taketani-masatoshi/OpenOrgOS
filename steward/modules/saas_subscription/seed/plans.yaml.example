@@ -1,0 +1,13 @@
+plans:
+  - id: PLAN-BASIC
+    name: Basic
+    billing_cycle: monthly
+    price_yen: 9800
+    trial_days: 14
+    status: active
+  - id: PLAN-PRO
+    name: Pro
+    billing_cycle: monthly
+    price_yen: 29800
+    trial_days: 14
+    status: active

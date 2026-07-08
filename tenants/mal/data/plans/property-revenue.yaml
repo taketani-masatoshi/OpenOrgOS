@@ -1,0 +1,11 @@
+rental:
+  - property_id: PROP-001
+    monthly_rent: 100000
+    annual_rent: 1200000
+    vacancy_rate: 0
+    management_fee: 0
+hotel:
+  - property_id: PROP-002
+    room_count: 1
+    occupancy_rate: 0.70
+    adr: 50000

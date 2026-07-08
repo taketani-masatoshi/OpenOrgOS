@@ -1,0 +1,12 @@
+schema_version: 1
+module_id: jp_privacy_policy
+status: draft
+version: "1.0.0"
+published_at: null
+published_url: null
+contact_email: privacy@example.co.jp
+dpo_role: 個人情報保護管理者
+regulation_ref: REG-010
+review_cycle: annual
+next_review: null
+notes: "Web 掲載 · REG-010 と整合"

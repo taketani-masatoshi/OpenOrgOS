@@ -1,0 +1,7 @@
+# レストラン — テーブル骨格（seed_only · Git 追跡）
+
+tables:
+  - id: TBL-001
+    name: 示例テーブル1
+    seats: 4
+    zone: main

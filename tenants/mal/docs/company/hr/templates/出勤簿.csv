@@ -1,0 +1,1 @@
+date,employee_id,employee_name,scheduled_start,clock_in,clock_out,break_minutes,actual_work_hours,late_early_note,approved_by,notes

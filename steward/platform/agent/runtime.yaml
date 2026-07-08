@@ -1,0 +1,59 @@
+version: "1"
+default_runtime: shell
+fallback_runtime: manifest
+
+# LLM 優先順: ORGOS_LLM_API_KEY / OPENAI_API_KEY → profiles.aider (PATH) → shell.command
+# 環境変数: ORGOS_LLM_API_URL, ORGOS_LLM_MODEL, ORGOS_SHELL_PROFILE
+# Operator LLM 拡張:
+#   ORGOS_LLM_TOOLS=1          — tool calling (Today · approvals · wire)
+#   ORGOS_LLM_TOOLS_WRITE=1    — operator_approve ツール
+#   ORGOS_LLM_STRUCTURED=1      — JSON schema CEO 回答
+#   ORGOS_LLM_TELEMETRY=1       — data/.orgos/llm-telemetry.jsonl
+#   ORGOS_LLM_PRICE_INPUT/OUTPUT — USD per 1M tokens (cost estimate)
+
+shell:
+  command:
+    - echo
+    - "OrgOS: set OPENAI_API_KEY or install aider — see docs/quickstart.md §3"
+    - "{prompt}"
+  cwd: "{tenant_root}"
+  env:
+    ORGOS_TENANT: "{tenant}"
+  timeout_ms: 600000
+
+profiles:
+  aider:
+    command: ["aider", "--message-file", "{prompt}"]
+    cwd: "{tenant_root}"
+    env:
+      ORGOS_TENANT: "{tenant}"
+    timeout_ms: 600000
+  cline:
+    # Cline CLI bridge — adjust command to your install; prompt file at {prompt}
+    command: ["cat", "{prompt}"]
+    cwd: "{workspace}"
+    env:
+      ORGOS_TENANT: "{tenant}"
+    timeout_ms: 600000
+  openhands:
+    # OpenHands — paste {prompt} into task UI or wire local CLI if installed
+    command: ["cat", "{prompt}"]
+    cwd: "{workspace}"
+    env:
+      ORGOS_TENANT: "{tenant}"
+    timeout_ms: 600000
+  manifest:
+    command: []
+    timeout_ms: 0
+
+cursor:
+  enabled: true
+
+# SHA256 of canonical profile JSON — verified when ORGOS_RUNTIME_INTEGRITY=1 or production
+profile_integrity:
+  shell: sha256:deb4d80200b94b41d5b62742d8582949e641d91efca3e8cefab890bf99b2bee2
+  profiles:
+    aider: sha256:90775cf548331aed70a6d2af7a887ca31175b0073190ef78a673f2afe6a1f9ba
+    cline: sha256:22f6ad2df01373c80e97febe66aca87f9fd44ebd78b4da0c931b46a4677c8690
+    openhands: sha256:22f6ad2df01373c80e97febe66aca87f9fd44ebd78b4da0c931b46a4677c8690
+    manifest: sha256:d595e79262b4e61cf1dd67588bc9cba0cf20cd25fba71ae88f2409f174130c8e

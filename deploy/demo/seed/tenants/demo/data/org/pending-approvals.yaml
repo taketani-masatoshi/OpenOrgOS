@@ -1,0 +1,90 @@
+as_of: 2026-07-08
+approvals:
+  - approval_id: NOTICE-20260708-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-08T09:20:43.735Z
+    proposed_by: ops
+    subject_type: wire.outbound
+    subject_ref: CTR-099
+    amount:
+      value: 85000
+      currency: JPY
+    message: 契約 CTR-099 に基づく実行・運用通知（既締結契約の範囲内）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-07-08T09:20:43.740Z
+    audit_event_id: e41c6e4a-d185-4b20-ab5d-5ac9d5abfc94
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260708-001
+      wire_event_id: 22222222-2222-4222-8222-222222222222
+  - approval_id: NOTICE-20260708-002
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-08T09:20:43.753Z
+    proposed_by: ops
+    subject_type: wire.outbound
+    subject_ref: CTR-099
+    amount:
+      value: 85000
+      currency: JPY
+    message: 契約 CTR-099 に基づく実行・運用通知（既締結契約の範囲内）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-07-08T09:20:43.759Z
+    audit_event_id: c3c70c08-da88-40d4-bc88-a2f6785aa1aa
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260708-001
+      wire_event_id: 33333333-3333-4333-8333-333333333333
+  - approval_id: NOTICE-20260708-003
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-08T09:23:15.501Z
+    proposed_by: ops
+    subject_type: wire.outbound
+    subject_ref: CTR-099
+    amount:
+      value: 85000
+      currency: JPY
+    message: 契約 CTR-099 に基づく実行・運用通知（既締結契約の範囲内）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-07-08T09:23:15.515Z
+    audit_event_id: 64dcdd5a-4dd4-404c-ada4-350bc4be57f8
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260708-001
+      wire_event_id: 22222222-2222-4222-8222-222222222222
+  - approval_id: NOTICE-20260708-004
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-08T09:23:15.527Z
+    proposed_by: ops
+    subject_type: wire.outbound
+    subject_ref: CTR-099
+    amount:
+      value: 85000
+      currency: JPY
+    message: 契約 CTR-099 に基づく実行・運用通知（既締結契約の範囲内）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-07-08T09:23:15.532Z
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260708-001
+      wire_event_id: 33333333-3333-4333-8333-333333333333
+    audit_event_id: 21bbb737-6ec7-4c74-b9d3-b619cdab650c

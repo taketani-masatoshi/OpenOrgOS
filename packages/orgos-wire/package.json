@@ -1,0 +1,17 @@
+{
+  "name": "@orgos/wire",
+  "version": "0.8.0",
+  "description": "OrgOS Wire — Proposal 3 relay · Wire Console SPA overlay (requires @orgos/cli)",
+  "type": "module",
+  "peerDependencies": {
+    "@orgos/cli": "0.8.0"
+  },
+  "files": ["README.md", "postinstall.mjs"],
+  "scripts": {
+    "postinstall": "node postinstall.mjs"
+  },
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  }
+}

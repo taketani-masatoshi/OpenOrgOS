@@ -1,0 +1,44 @@
+loans:
+  - id: LOAN-001
+    lender: "役員貸付（段燕燕）"
+    property_id: PROP-001
+    contract_id: CTR-008
+    balance: 16600000
+    interest_rate: 0
+    monthly_payment: 0
+    maturity_date: "2035-01-31"
+    executed_date: "2025-02-10"
+    conflict_approval: "2026-06-06 取締役会（fy2026-torishimari-gijiroku-yakuin-kashitsuke.md）"
+    documents:
+      executed: "docs/contracts/CTR-008/02-executed.md"
+      repayment: "docs/contracts/CTR-008/repayment-schedule.md"
+    fixed_asset_ids: [ASSET-001]
+    account_code_liability: "2100"
+    tax_notes: |
+      無利息役員貸付。法人税法上のみなし利息・貸付金・借入金科目区分は税理士確認（tax-profile）。
+      貸付原資＝ASSET-001 取得原価1,660万円（PROP-001・CTR-008）。
+    notes: |
+      番町ハイム312。無利息。2035/1/31まで全額返済。
+      2028年度以降、CFに応じ任意返済。
+      返済計画: data/plans/debt-plan.yaml · docs/finance/loan-repayment-plan.md
+  - id: LOAN-002
+    lender: "役員貸付（段燕燕）"
+    property_id: PROP-002
+    contract_id: CTR-009
+    balance: 96000000
+    interest_rate: 0
+    monthly_payment: 0
+    maturity_date: "2040-01-31"
+    executed_date: "2025-06-01"
+    conflict_approval: "2026-06-06 取締役会"
+    documents:
+      executed: "docs/contracts/CTR-009/02-executed.md"
+      repayment: "docs/contracts/CTR-009/repayment-schedule.md"
+    fixed_asset_ids: [ASSET-002, ASSET-003]
+    account_code_liability: "2100"
+    tax_notes: |
+      無利息役員貸付。貸付総額9,600万＝土地7,000万（ASSET-002）＋建物2,600万（ASSET-003）。
+      みなし利息・資金調達コストの税務処理は tax-profile 参照。
+    notes: |
+      亀沢。土地7,000万+建築2,600万。2030年度以降段階返済、2040/1/31期限。
+      返済計画: data/plans/debt-plan.yaml · docs/finance/loan-repayment-plan.md

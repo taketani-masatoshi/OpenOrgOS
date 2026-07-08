@@ -1,0 +1,10 @@
+id: restaurant
+required_seeds:
+- invoice-restaurant-monthly.yaml
+- invoice-restaurant-monthly-body.txt
+optional_regulations:
+- REG-017
+notes: production_ready — menu/tables + invoice seed
+activation_seeds:
+- menu.yaml
+- tables.yaml

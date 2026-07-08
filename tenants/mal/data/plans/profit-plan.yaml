@@ -1,0 +1,40 @@
+# 利益計画（年度別）
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    revenue: 7500000
+    gross_profit: 7500000
+    sga: 3333691
+    operating_profit: 4166309
+    non_operating_net: 0
+    pretax_profit: 4166309
+    tax: 775000
+    net_profit: 3391309
+    status: closed
+    notes: 決算確定（予想ベース）
+
+  - fiscal_year: FY2027
+    period_from: "2027-02"
+    period_to: "2028-01"
+    revenue: 13800000
+    gross_profit: 13800000
+    sga: 5961000
+    operating_profit: 7839000
+    non_operating_net: 0
+    pretax_profit: 7839000
+    status: plan
+    notes: 亀沢フル12ヶ月。減価償却・役員報酬は利益計画外積み上げで未反映の場合あり
+
+  - fiscal_year: FY2028
+    period_from: "2028-02"
+    period_to: "2029-01"
+    revenue: 14430000
+    gross_profit: 14430000
+    sga: 6259050
+    operating_profit: 8170950
+    non_operating_net: 0
+    pretax_profit: 8170950
+    status: plan
+    notes: 亀沢+5%成長想定
