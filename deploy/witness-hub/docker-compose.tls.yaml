@@ -1,0 +1,52 @@
+# TLS overlay — run after: ./scripts/gen-dev-tls.sh
+#   docker compose -f docker-compose.yaml -f docker-compose.tls.yaml up
+
+x-hub-tls: &hub-tls
+  volumes:
+    - ./tls:/tls:ro
+  command: >
+    sh -c "cd /app && npm ci && npm run orgos -- hub serve
+    --hub-id $${HUB_ID}
+    --host 0.0.0.0
+    --port $${HUB_PORT}
+    --data-dir $${HUB_DATA_DIR}
+    --gossip-interval 300
+    --tls-cert /tls/server.pem
+    --tls-key /tls/server.key"
+
+services:
+  hub-a:
+    <<: *hub-tls
+    environment:
+      HUB_ID: HUB-A
+      HUB_PORT: "9474"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-a
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://127.0.0.1:9474/hub/v1/health"]
+
+  hub-b:
+    <<: *hub-tls
+    environment:
+      HUB_ID: HUB-B
+      HUB_PORT: "9475"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-b
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://127.0.0.1:9475/hub/v1/health"]
+
+  hub-c:
+    <<: *hub-tls
+    environment:
+      HUB_ID: HUB-C
+      HUB_PORT: "9476"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-c
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://127.0.0.1:9476/hub/v1/health"]
+
+  hub-d:
+    <<: *hub-tls
+    environment:
+      HUB_ID: HUB-D
+      HUB_PORT: "9477"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-d
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://127.0.0.1:9477/hub/v1/health"]

@@ -48,6 +48,7 @@ import {
   runProtocolIdentityExport,
   runProtocolIdentityValidate,
   runProtocolPeerRegister,
+  runProtocolPeersMigrateLegacy,
   runProtocolPeerDiscover,
   runProtocolDelegationExport,
   runProtocolDelegationValidate,
@@ -110,6 +111,8 @@ import {
   runProtocolTrustRegistryValidate,
   runProtocolTrustRegistryList,
   runProtocolTrustRegistryResolve,
+  runProtocolTrustRegistrySyncKeys,
+  runProtocolTrustRegistryPinLocal,
 } from "../../commands/protocol.js";
 import {
   runHubServe,
@@ -755,6 +758,25 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
+  const protocolPeersCmd = protocolCmd
+    .command("peers")
+    .description("Peer registry maintenance (legacy migration)");
+  protocolPeersCmd
+    .command("migrate-legacy")
+    .description("Migrate inbound_webhook_url → inbound_endpoints (legacy_webhook or wire_v1)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--apply", "Write peers.yaml (default: dry-run)")
+    .option("--to-wire-url <url>", "Rewrite to wire_v1 at this Gateway URL")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolPeersMigrateLegacy({
+        tenant: opts.tenant,
+        apply: opts.apply,
+        toWireUrl: opts.toWireUrl,
+        json: opts.json,
+      })
+    );
+
   const protocolMeshCmd = protocolCmd.command("mesh").description("Multi-hop peer mesh delivery (FR-EM-07)");
   protocolMeshCmd
     .command("deliver")
@@ -1195,6 +1217,40 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--id <identifier>", "Node identifier")
     .option("--json", "JSON output")
     .action((opts) => runProtocolTrustRegistryResolve({ id: opts.id, json: opts.json }));
+  protocolTrustRegistryCmd
+    .command("sync-keys")
+    .description("Fetch protocol_public_key from Gateway /.well-known/wire-node.json")
+    .option("--node-id <id>", "Limit to node_id")
+    .option("--wire-url <url>", "Override wire_url for fetch")
+    .option("--force", "Re-fetch even when protocol_public_key is set")
+    .option("--dry-run", "Report without writing YAML")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTrustRegistrySyncKeys({
+        nodeId: opts.nodeId,
+        wireUrl: opts.wireUrl,
+        force: opts.force,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
+  protocolTrustRegistryCmd
+    .command("pin-local")
+    .description("Pin local tenant signing public key into wire-trust-registry.yaml")
+    .requiredOption("--tenant <id>", "Tenant id")
+    .option("--node-id <id>", "Limit to node_id")
+    .option("--force", "Overwrite existing protocol_public_key")
+    .option("--dry-run", "Report without writing YAML")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTrustRegistryPinLocal({
+        tenant: opts.tenant,
+        nodeId: opts.nodeId,
+        force: opts.force,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
 
   const protocolCommunityCmd = protocolCmd
     .command("community")

@@ -1,0 +1,41 @@
+ledgers:
+  - id: distribution
+    type: distribution
+    title: 出荷・販売記録台帳
+    data_file: ledgers/distribution-records.yaml
+    retention_years: 5
+    role_ids: [mah, distribution]
+
+  - id: manufacturing_batch
+    type: manufacturing_batch
+    title: 製造ロット記録台帳
+    data_file: ledgers/manufacturing-batch-records.yaml
+    retention_years: 5
+    role_ids: [manufacturing]
+
+  - id: complaint
+    type: complaint
+    title: 苦情受付台帳
+    data_file: ledgers/complaint-records.yaml
+    retention_years: 5
+    role_ids: [mah, distribution]
+
+  - id: adverse_event
+    type: adverse_event
+    title: 有害事象台帳
+    data_file: ledgers/adverse-event-records.yaml
+    retention_years: 5
+    role_ids: [mah]
+
+  - id: training
+    type: training
+    title: 教育訓練記録台帳
+    data_file: ledgers/training-records.yaml
+    retention_years: 5
+    role_ids: [manufacturing, mah, distribution]
+
+  - id: document_control
+    type: document_control
+    title: 文書管理台帳
+    data_file: ledgers/document-control-records.yaml
+    retention_years: 5

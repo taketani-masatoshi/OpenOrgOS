@@ -3,5 +3,5 @@ peers:
     display_name: 株式会社MAL
     jurisdiction: JP
     org_uri: steward://tenant/mal
-    protocol_public_key: MCowBQYDK2VwAyEAxM84oNcN3kHiPuga+WPwYGY06wa+lfkL6G9J26omlO4=
-as_of: 2026-06-28
+    protocol_public_key: MCowBQYDK2VwAyEA8EE2UGtpd036aADPD+pAisZjD9oqH5nAEUgJC+DsBWw=
+as_of: 2026-06-29

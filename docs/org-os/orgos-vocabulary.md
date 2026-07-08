@@ -1,7 +1,8 @@
 # OrgOS · OpenOrgOS · Agent — 用語集
 
-**版:** 1.2 · **日付:** 2026-06-28  
-**正本:** 本書（日本語）· Core 概念の英語正本: [openorgos-core-philosophy.md](openorgos-core-philosophy.md) · [language-policy.md](language-policy.md)
+**版:** 1.3 · **日付:** 2026-07-07  
+**正本:** 本書（日本語）· Core 概念の英語正本: [openorgos-core-philosophy.md](openorgos-core-philosophy.md) · [language-policy.md](language-policy.md)  
+**概念整理（JP）:** [openorg-ooo-basic-philosophy.md](openorg-ooo-basic-philosophy.md) — OpenOrg · OOO · State/Event モデル
 
 ---
 
@@ -101,6 +102,28 @@ Org Event Model · Identity exchange · Authority delegation · Auditability —
 | 役割 | envelope **配送** | 取引 **証明** |
 | Agent | 非関与 | 非関与 |
 
+### Wire Gateway（I3-a エッジ · v0.1）
+
+| | Wire Gateway | Wire（Core） | Witness |
+|---|--------------|--------------|---------|
+| 層 | I3-a 外部公開 | I2–I3 正本 | I3-c 証明 |
+| 役割 | **配送のみ** · payload 非解釈 | `EventEnvelope` | digest |
+| 正本 | [wire-gateway-requirements.md](wire-gateway-requirements.md) | [wire-gateway-wire-protocol.md](wire-gateway-wire-protocol.md) | org-event schema | witness-pool |
+
+**会話での統一:** 組織間配送エッジ = **Wire Gateway** · 意味論正本 = **Wire** · 拠点証明 = **Hub** · 国家インフラ = **Gov Gateway**。
+
+### 4.1 Gov Gateway Adapter（国家規格ラップ）
+
+| | Gov Gateway Adapter | Wire | Hub |
+|---|---------------------|------|-----|
+| 層 | I3-b 輸送・プロファイル | I2–I3 OpenOrgOS 正本 | Witness 証明 |
+| 例 | X-Road · e-Gov · Georgia 3G | `EventEnvelope` | `hub_id` digest |
+| 正本 | [gov-gateway-adapter-spec.md](gov-gateway-adapter-spec.md) · [gov-gateway-adapters.md](gov-gateway-adapters.md) | org-event schema | witness-pool |
+
+**Wire 緩衝層:** OpenOrgOS 正本は常に `EventEnvelope`。国家形式は `GovGatewayAdapter`（`xroad_v7` · `jp_egov_central` · `ge_gov_gateway_3g`）がラップする。メモ: [memos/00-wire-buffer-layer.md](memos/00-wire-buffer-layer.md)。
+
+**会話での統一:** 組織間 = **Wire** · 拠点証明 = **Hub** · 国家インフラ接続 = **Gov Gateway**（Wire のラッパー）。
+
 ---
 
 ## 5. Agent 三層（Implementation 内）
@@ -164,3 +187,5 @@ Org Event Model · Identity exchange · Authority delegation · Auditability —
 | 2026-06-28 | 1.0 | 初版 |
 | 2026-06-28 | **1.1** | **OrgOS = 製品** · **Steward = Agent** · Steward OS を実装ブランドに降格 |
 | 2026-06-28 | **1.2** | npm **`orgos-reference`** · CLI **`orgos`** · [cli-migration.md](cli-migration.md) |
+| 2026-07-06 | **1.3** | [openorg-ooo-basic-philosophy.md](openorg-ooo-basic-philosophy.md) への索引追加 |
+| 2026-07-07 | **1.4** | Gov Gateway Adapter（X-Road · e-Gov · Georgia 3G）索引 |

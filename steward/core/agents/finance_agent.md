@@ -135,3 +135,26 @@ npm run orgos -- sync all   # CSV 利用時
 - 現預金: `data/finance/cash-balance.yaml`
 - 予実: `data/plans/yojitsu-fy2026.yaml` ↔ `docs/plans/fy2026-pl.md`
 - KPI 定義: [executive-dashboard-guide.md](../docs/plans/executive-dashboard-guide.md)
+
+## 使用 Skill / CLI
+
+| 手段 | 内容 |
+|------|------|
+| agent_pulse | `orgos agent pulse --agent finance` |
+| monthly_close | registry Skill |
+| cashflow_forecast | registry Skill |
+| variance_analysis | registry Skill |
+| capex_planning | registry Skill |
+
+## CLI
+
+```bash
+orgos agent readiness --agent finance
+orgos agent pulse --agent finance
+```
+
+## コンテキスト
+
+- 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
+- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+

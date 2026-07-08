@@ -35,6 +35,7 @@ const PRODUCTION_READY_IDS = [
   "jp_subsidy_application",
   "jp_trademark_application",
   "jp_corporate_registration",
+  "jp_medical_device",
 ] as const;
 
 describe("module production_ready tier (Direction C)", () => {

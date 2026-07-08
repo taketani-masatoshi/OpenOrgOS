@@ -42,6 +42,7 @@ OpenOrgOS Core は **組織間（inter-org）通信のグローバルプロト�
 |------|---------|------|
 | P2P 配送 · multipath · relay | FR-WT-* | `transport.ts` · `wire-pending.yaml` |
 | Witness Hub · quorum | FR-WH-* | [witness-hub-requirements.md](../org-os/witness-hub-requirements.md) |
+| **Wire Gateway（組織エッジ）** | FR-WG-* | [wire-gateway-requirements.md](../org-os/wire-gateway-requirements.md) v0.2 · WG-0 完了 |
 | Org 承認根幹（internal + wire） | FR-AP-* | `data/org/pending-approvals.yaml` |
 | Resilience R1–R4 · Org C trust PKI | FR-RS-* | relay worker · witness-trust · SLA |
 | Protocol API（HTTPS/mTLS pull） | FR-API-* | `protocol-api-server.ts` |

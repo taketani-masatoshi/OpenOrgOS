@@ -22,6 +22,20 @@ outbox_items:
     source: cli
     title: ゲスト向け PDF テスト出力
     notes: I/O テスト用 — 本番掲示前に差し替え
+  - id: OUT-003
+    filename: miyagi-resignation-packet-2026-07.pdf
+    path: docs/io/outbox/corporate/governance/miyagi-resignation-packet-2026-07.pdf
+    category: corporate
+    purpose: submit
+    generated_at: "2026-07-02"
+    source: manual
+    title: 宮城万貴子 取締役退任 — 送付パケット（案内+辞任届）
+    related_id: miyagi-resignation-2026-07
+    notes: |
+      正本 MD: docs/company/governance/miyagi-resignation-2026-07/
+      01-signature-guide + 02-jinin-todoke を PDF 化して送付。
+      返送: docs/io/inbox/corporate/governance/ へ保管。
+      送付日・返送日は CEO が記録。
 notes: |
   紙・スキャン・申請書 → docs/io/inbox/ に置き `io inbox add` で登録。
   処理後 → 保管先（records/）+ outbox/。CLI 生成 PDF は自動登録。

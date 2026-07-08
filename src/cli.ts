@@ -28,12 +28,27 @@ program
   .option(
     "--tenant <id>",
     `Tenant instance (env: ${ORGOS_TENANT_ENV} or ${LEGACY_TENANT_ENV}; default from tenant.yaml)`
-  );
+  )
+  .option("--operator-id <id>", "Authenticated operator ID (required for mutation commands in prod)")
+  .option("--operator-key <key>", "Operator API key (or set ORGOS_OPERATOR_KEY env)");
 
 registerDomainCommands(program);
 registerPlatformCommands(program);
 registerOrchestrationCommands(program);
 registerExecutiveCommands(program);
+
+program.hook("preAction", (thisCommand) => {
+  const opts = thisCommand.optsWithGlobals() as {
+    operatorId?: string;
+    operatorKey?: string;
+  };
+  if (opts.operatorId) {
+    process.env.ORGOS_CLI_OPERATOR_ID = opts.operatorId;
+  }
+  if (opts.operatorKey) {
+    process.env.ORGOS_OPERATOR_KEY = opts.operatorKey;
+  }
+});
 
 program.parseAsync(process.argv).catch((err) => {
   console.error(err instanceof Error ? err.message : String(err));

@@ -1,17 +1,26 @@
 # 従業員マスタ（非個情メタデータ）
-
 # 個人の住所・生年月日・給与詳細は docs/company/hr/records/ に保管（Git 非追跡）。
-# 雇用開始時に employee_id を付与し、ここに勤務形態・部署等のみ記録可。
 
-employees: []
-# 例:
-#   - id: EMP-001
-#     name: "（records/ 参照）"
-#     hired_date: null
-#     job_type: null
-#     status: inactive
+employees:
+  - id: EMP-001
+    name: "段燕燕"
+    hired_date: "2018-02-09"
+    job_type: "代表取締役"
+    status: active
+
+  - id: EMP-002
+    name: "宮城万貴子"
+    hired_date: "2018-02-09"
+    job_type: "代表取締役"
+    status: active
+
+  - id: EMP-003
+    name: "三塚"
+    hired_date: "2026-04-01"
+    job_type: "翻訳・通訳 / 業務DX支援"
+    status: active
 
 notes: |
-  現状従業員0名。
-  雇用時: docs/company/hr/templates/従業員名簿.csv へ記入。
+  ダミーデータ（2026-07 時点）— 従業員3名（取締役2名 + 正社員1名）。
+  三塚の氏名詳細・給与明細は docs/company/hr/records/（gitignore）。
   マイナンバーは本リポジトリに保存しない。

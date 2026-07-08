@@ -1,0 +1,17 @@
+version: "1"
+levels:
+  - level: L0
+    label: 未検討
+    meaning: 統制未着手 · テナント controls.yaml 未登録または L0
+  - level: L1
+    label: 方針ドラフト
+    meaning: 規程ドラフトまたは ISO 方針テンプレ作成中
+  - level: L2
+    label: 方針承認・記録運用開始
+    meaning: 施行規程あり · 必須記録様式整備済み · 運用証拠は部分可
+  - level: L3
+    label: 内部監査・MR 実施
+    meaning: 内部監査記録 · マネジメントレビュー入力あり
+  - level: L4
+    label: 認証・登録
+    meaning: 認証機関審査合格または登録完了

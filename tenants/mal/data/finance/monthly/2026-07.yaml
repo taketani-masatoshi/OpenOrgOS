@@ -3,9 +3,24 @@ revenue:
   - property_id: PROP-001
     category: rent
     amount: 100000
+  - property_id: PROP-002
+    category: hotel_revenue
+    amount: 980000
 expenses:
   - property_id: PROP-001
     category: other
     amount: 29433
     notes: 減価償却費（番町ハイム）
-notes: 予想ベース決算
+  - property_id: PROP-002
+    category: other_property
+    amount: 462000
+    notes: 運営費（OTA・清掃 · 7月分 · ダミー）
+  - category: other
+    amount: 320000
+    notes: 三塚給与（EMP-003 · 人件費 · ダミー）
+  - category: communication
+    amount: 3000
+    notes: 通信費
+notes: |
+  ダミーデータ — 2026年7月（第10期第1月 · 途中経過想定）。
+  亀沢は夏季需要をやや反映（105万→98万）。

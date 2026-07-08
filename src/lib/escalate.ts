@@ -23,6 +23,8 @@ import { currentDate, writeYamlFile } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { createMissionFromWorkOrder, relayWorkOrderComplete } from "./agent-reporting.js";
 import { pushQueueEvent } from "./queue-db.js";
+import { assertActiveTenant, assertIntraOrgAgentTarget, assertIntraOrgText } from "./org-boundary.js";
+import { scopesForAgent } from "./org/delegation-scopes.js";
 
 export { AGENT_PROMPT_PATHS } from "./agent-portability.js";
 
@@ -77,7 +79,14 @@ export function parseEscalationText(text: string): EscalationInput {
 }
 
 function isEligible(m: MatchedRoute): boolean {
-  return m.access.allowed && m.moduleEnabled && m.boundaryOk;
+  if (!m.access.allowed || !m.moduleEnabled || !m.boundaryOk) return false;
+  try {
+    assertIntraOrgAgentTarget(m.route.agent, "escalate route");
+    scopesForAgent(m.route.agent);
+  } catch {
+    return false;
+  }
+  return true;
 }
 
 function uniqueAgents(matches: MatchedRoute[]): AgentId[] {
@@ -96,6 +105,11 @@ export function planWorkOrders(
   input: EscalationInput,
   opts?: { maxAgents?: number }
 ): WorkOrderPlan {
+  assertIntraOrgText(
+    [input.subject, input.background, input.requirements, input.text].filter(Boolean).join(" "),
+    "escalate plan"
+  );
+  if (input.tenant) assertActiveTenant(input.tenant, "escalate plan");
   const maxAgents = opts?.maxAgents ?? 3;
   const matchText = [input.subject, input.background, input.requirements, input.text]
     .filter(Boolean)

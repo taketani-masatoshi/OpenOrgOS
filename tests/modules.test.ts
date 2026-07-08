@@ -39,6 +39,7 @@ describe("modules.yaml", () => {
       "hospitality",
       "jp_carbon_neutral_2050",
       "jp_corporate_registration",
+      "jp_medical_device",
       "jp_privacy_policy",
       "jp_subsidy_application",
       "jp_trademark_application",

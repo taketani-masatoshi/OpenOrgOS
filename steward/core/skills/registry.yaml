@@ -23,6 +23,24 @@ skills:
     cli_command: internal-audit-scope
     agent: Internal Audit
     description: CTL ベース内部監査スコープ
+  - id: company_events_chain_verify
+    file: company_events_chain_verify.md
+    runtime: cli
+    cli_command: company-events-chain-verify
+    agent: Records Audit
+    description: 会社イベントハッシュチェーン整合検証
+  - id: company_events_weekly_attest
+    file: company_events_weekly_attest.md
+    runtime: cli
+    cli_command: company-events-weekly-attest
+    agent: Records Audit
+    description: 週次チェーン検証後バッチ電子署名
+  - id: company_events_monthly_audit
+    file: company_events_monthly_audit.md
+    runtime: cli
+    cli_command: company-events-monthly-audit
+    agent: Records Audit
+    description: 月次監査レポート + 人間通知
   - id: monthly_close
     file: monthly_close.md
     runtime: cli

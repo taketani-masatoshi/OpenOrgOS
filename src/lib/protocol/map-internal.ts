@@ -12,6 +12,10 @@ const QUEUE_TO_ORG_EVENT: Partial<Record<QueueEventType, string>> = {
   pr_requested: "committee.pr.requested",
   pr_created: "committee.pr.created",
   secretary_consult: "committee.secretary.consult",
+  agent_mission_created: "committee.agent.mission.created",
+  agent_report_submitted: "committee.agent.report.submitted",
+  agent_relay_coo: "committee.agent.relay.coo",
+  agent_relay_steward: "committee.agent.relay.steward",
 };
 
 export function mapQueueEventToOrgEvent(event: QueueEvent): OrgEvent {
@@ -37,6 +41,10 @@ const QUEUE_TO_AUDIT_EVENT: Partial<Record<QueueEventType, AuditEventType>> = {
   pr_requested: "handoff",
   pr_created: "handoff",
   secretary_consult: "escalate",
+  agent_mission_created: "escalate",
+  agent_report_submitted: "escalate",
+  agent_relay_coo: "escalate",
+  agent_relay_steward: "escalate",
 };
 
 export function auditEventTypeForQueueEvent(type: QueueEventType): AuditEventType {

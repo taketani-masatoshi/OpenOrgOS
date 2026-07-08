@@ -19,6 +19,13 @@
 - docs: `docs/properties/PROP-001-minato/operations/`
 - 要約: `docs/reports/agent-summaries/rental/`
 
+### `jp_medical_device` (`jp_medical_device`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_medical_device/agent.md`
+- data: `data/medical-device/`
+- docs: `docs/medical-device/`
+- 要約: `docs/reports/agent-summaries/medical-device-regulatory/`
+
 ## 無効業務モジュール（読取禁止）
 
 - `hospitality` / `hospitality` — `steward/modules/hospitality/` **読まない**
@@ -83,6 +90,8 @@
 - `REG-022` EC取引規程 — `docs/company/regulations/ec-torihiki-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-023` 配送・倉庫管理規程 — `docs/company/regulations/haiso-soko-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-024` 会員管理規程 — `docs/company/regulations/kaiin-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-025` 医療機器QMS規程 — `docs/company/regulations/iryo-kiki-qms-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-026` 医療機器GVP規程 — `docs/company/regulations/iryo-kiki-gvp-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 
 ## 未バインドカタログ（読取禁止）
 

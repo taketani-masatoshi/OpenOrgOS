@@ -1,0 +1,100 @@
+version: "1"
+standard: ISO-21401
+controls:
+  - id: CTL-21401-4.1
+    title: 宿泊事業の状況理解
+    domain: environment
+    iso_refs:
+      - { standard: ISO-21401, clause: "4.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第2条"] }
+    primary_agent: esg_sustainability
+    secondary_agents: [operations]
+    evidence_paths:
+      - docs/company/regulations/shukuhaku-unyo-kisoku.md
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-21401-5.2
+    title: サステナビリティ方針
+    domain: environment
+    iso_refs:
+      - { standard: ISO-21401, clause: "5.2" }
+    reg_refs:
+      - { reg_id: REG-014, articles: ["第3条"] }
+      - { reg_id: REG-012, articles: ["第3条"] }
+    primary_agent: esg_sustainability
+    secondary_agents: [compliance]
+    evidence_paths:
+      - docs/company/regulations/kankyo-energy-kanri-kisoku.md
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-21401-6.2
+    title: サステナビリティ目標
+    domain: environment
+    iso_refs:
+      - { standard: ISO-21401, clause: "6.2" }
+    reg_refs:
+      - { reg_id: REG-014, articles: ["第4条"] }
+    primary_agent: esg_sustainability
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-21401-7.2
+    title: 力量 · 宿泊オペレーション
+    domain: operations
+    iso_refs:
+      - { standard: ISO-21401, clause: "7.2" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第4条"] }
+    primary_agent: operations
+    secondary_agents: [learning_development]
+    evidence_paths:
+      - docs/company/regulations/shukuhaku-unyo-kisoku.md
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-21401-8.1
+    title: 運用計画 · ゲスト体験
+    domain: operations
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第5条"] }
+    primary_agent: operations
+    secondary_agents: [quality_assurance]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/
+    check_type: operation
+    target_maturity: L2
+
+  - id: CTL-21401-9.1
+    title: 監視 · 測定 · エネルギー
+    domain: environment
+    iso_refs:
+      - { standard: ISO-21401, clause: "9.1" }
+    reg_refs:
+      - { reg_id: REG-014, articles: ["第5条"] }
+    primary_agent: esg_sustainability
+    secondary_agents: [operations]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-21401-9.2
+    title: 内部監査（宿泊 SMS）
+    domain: audit
+    iso_refs:
+      - { standard: ISO-21401, clause: "9.2" }
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第4条"] }
+    primary_agent: internal_audit
+    secondary_agents: [esg_sustainability]
+    evidence_paths:
+      - docs/compliance/iso/internal-audit-plan-fy2026.md
+    check_type: record
+    target_maturity: L3

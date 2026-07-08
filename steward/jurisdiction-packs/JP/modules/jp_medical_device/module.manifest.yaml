@@ -1,0 +1,20 @@
+id: jp_medical_device
+required_seeds: []
+activation_seeds:
+  - obligations-catalog.yaml.example
+  - sources.yaml.example
+  - qms-catalog.yaml.example
+  - gvp-catalog.yaml.example
+  - license-registry.yaml.example
+  - device-master.yaml.example
+  - ledger-registry.yaml.example
+  - ledgers/distribution-records.yaml.example
+  - ledgers/complaint-records.yaml.example
+  - ledgers/adverse-event-records.yaml.example
+  - ledgers/training-records.yaml.example
+  - ledgers/document-control-records.yaml.example
+optional_regulations:
+  - REG-011
+  - REG-025
+  - REG-026
+notes: production_ready — 医療機器 製造 · 製造販売 · 販売 · QMS 4階層 · GVP · 台帳（JP 法域のみ）

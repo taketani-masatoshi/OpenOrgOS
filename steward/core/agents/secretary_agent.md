@@ -167,3 +167,25 @@ npm run orgos -- executive brief --week
 - **例示（架空）:** 株式会社サンプル商事 · 代表 山田 太郎
 - **境界:** [secretary_steward_boundary.md](../steward/rules/secretary_steward_boundary.md)
 - **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md)
+
+## 使用 Skill / CLI
+
+| 手段 | 内容 |
+|------|------|
+| agent_pulse | `orgos agent pulse --agent secretary` |
+| schedule_management | registry Skill |
+| one_on_one_prep | registry Skill |
+| external_correspondence | registry Skill |
+
+## CLI
+
+```bash
+orgos agent readiness --agent secretary
+orgos agent pulse --agent secretary
+```
+
+## コンテキスト
+
+- 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
+- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+

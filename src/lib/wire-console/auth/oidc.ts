@@ -60,16 +60,42 @@ export function getOidcConfig() {
   };
 }
 
+import { findOperatorByEmail, findOperatorById } from "../../org/operators.js";
+import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
+
 function resolveIdentity(
   payload: OidcClaims,
   opts?: { approver_id?: string }
 ): { operator_id: string; approver_id: string } | { error: string } {
+  const byEmail = payload.email ? findOperatorByEmail(payload.email) : undefined;
+  const bySub = findOperatorById(payload.sub);
+  const registryOp = byEmail ?? bySub;
+
+  if (registryOp) {
+    return {
+      operator_id: registryOp.operator_id,
+      approver_id:
+        registryOp.approver_name ??
+        (registryOp.role === "ceo" || registryOp.role === "approver"
+          ? registryOp.display_name
+          : registryOp.display_name),
+    };
+  }
+
   const operatorId =
-    payload.operator_id ??
-    payload.email ??
-    payload.name ??
-    payload.sub;
-  const approverId = opts?.approver_id ?? payload.approver_id ?? operatorId;
+    payload.operator_id ?? payload.email ?? payload.name ?? payload.sub;
+
+  if (isProdSecurityMode()) {
+    return {
+      error:
+        "OIDC identity not mapped to data/org/operators.yaml — register operator with matching email or sub",
+    };
+  }
+
+  const approverId =
+    isProdSecurityMode() || !opts?.approver_id
+      ? payload.approver_id ?? operatorId
+      : opts.approver_id;
   if (!operatorId || !approverId) {
     return { error: "operator_id and approver_id required (token claims or login body)" };
   }

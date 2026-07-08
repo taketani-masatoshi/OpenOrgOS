@@ -3,9 +3,23 @@ revenue:
   - property_id: PROP-001
     category: rent
     amount: 100000
+  - property_id: PROP-002
+    category: hotel_revenue
+    amount: 1050000
 expenses:
   - property_id: PROP-001
     category: other
     amount: 29433
     notes: 減価償却費（番町ハイム）
-notes: 予想ベース決算
+  - property_id: PROP-002
+    category: other_property
+    amount: 485000
+    notes: 運営費（6月 · ダミー）
+  - category: other
+    amount: 320000
+    notes: 三塚給与（EMP-003 · 人件費 · ダミー）
+  - category: communication
+    amount: 3000
+    notes: 通信費
+notes: |
+  ダミーデータ — 第9期末前月。取締役会（6/25）で現預金1,000万円を報告済み想定。

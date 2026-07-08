@@ -26,6 +26,7 @@ export interface ProposeOrgApprovalOptions {
     brokerInstruction?: string;
     stakeholderId?: string;
     correlationEventId?: string;
+    companyEventId?: string;
   };
   /** Wire notices keep NOTICE-* ids for backward compatibility. */
   useNoticeId?: boolean;
@@ -59,6 +60,7 @@ export function proposeOrgApproval(opts: ProposeOrgApprovalOptions): OrgApproval
             broker_instruction: opts.wire.brokerInstruction,
             stakeholder_id: opts.wire.stakeholderId,
             correlation_event_id: opts.wire.correlationEventId,
+            company_event_id: opts.wire.companyEventId,
           }
         : undefined,
   });

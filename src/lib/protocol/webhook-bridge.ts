@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import { eventEnvelopeSchema } from "../../../schemas/protocol/org-event.js";
 import { ourOrgRef } from "./identity.js";
+import { getTenantId } from "../tenant.js";
+import { decodeGovGatewayInboundSync } from "../wire/gov-gateway/ingest.js";
 
 export function buildCommitteeEnvelope(
   eventName: string,
@@ -57,6 +59,24 @@ export function parseInboundWebhookBody(raw: unknown): {
   if (typeof raw !== "object" || raw === null) return {};
 
   const obj = raw as Record<string, unknown>;
+
+  if (obj.format === "gov_gateway") {
+    const decoded = decodeGovGatewayInboundSync(raw, getTenantId());
+    if (decoded.ok && decoded.envelope) {
+      return {
+        envelope: decoded.envelope,
+        legacy: {
+          event: "gov_gateway_inbound",
+          ref: decoded.envelope.event_id,
+          payload: {
+            profile_id: decoded.profile_id,
+            native_message_id: decoded.native_message_id,
+          },
+        },
+      };
+    }
+    return {};
+  }
 
   if (obj.legacy && typeof obj.legacy === "object") {
     const legacy = obj.legacy as Record<string, unknown>;

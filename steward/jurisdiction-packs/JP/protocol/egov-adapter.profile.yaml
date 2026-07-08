@@ -1,0 +1,52 @@
+jurisdiction: JP
+native_standard: e-Gov（中央 · LGWAN · Gビズ）
+
+profiles:
+  - profile_id: jp_egov_central
+    display_name: e-Gov 中央府省 API
+    transport:
+      protocol: https_rest
+      closed_network: false
+    auth:
+      methods: [gpki, jpki, api_key, oauth2]
+      notes: 府省・サービスごとに接続仕様が異なる — 運用で上書き
+    message_format:
+      openorgos_envelope:
+        mime: application/vnd.openorgos.envelope+json
+      ministry_schema:
+        mime: application/json
+        mapping: openorgos_to_ministry_schema
+    signature:
+      required: true
+      standards: [電子署名法, GPKI, JPKI]
+    audit:
+      native_receipt_fields: [受付番号, 到達確認ID]
+      map_to: correlation_id
+
+  - profile_id: jp_lgwan
+    display_name: LGWAN（地方公共団体）
+    transport:
+      protocol: lgwan
+      closed_network: true
+    notes: |
+      自治体 pack または テナント gov-gateway.yaml で接続先を注入。
+      東京 Hub は APAC Witness — LGWAN substance は別届出単位。
+    auth:
+      methods: [lgwan_vpn, org_cert]
+
+  - profile_id: jp_gbiz
+    display_name: Gビズ · 法人番号
+    transport:
+      protocol: https_rest
+    services:
+      - corporate_number_lookup
+      - invoice_registration_verify
+    message_format:
+      openorgos_envelope:
+        mime: application/vnd.openorgos.envelope+json
+    identity_mapping:
+      org_uri_to: houjin_bangou
+
+witness:
+  recommended_mode: orgos_hub
+  tokyo_hub: HUB-APAC-JP

@@ -1,0 +1,38 @@
+profile_id: ge_gov_gateway_3g
+jurisdiction: GE
+native_standard: Georgian Government Gateway (3G)
+
+authority:
+  agency: DGA
+  former: DEA
+  gateway_name: Georgia_Government_Gateway_3G
+
+transport:
+  protocol: https
+  interoperability_framework: ge_3g
+
+message_format:
+  openorgos_envelope:
+    mime: application/vnd.openorgos.envelope+json
+    canonical: schemas/protocol/org-event.ts#eventEnvelopeSchema
+  fallback:
+    mime: application/json
+
+gateway_3g:
+  participant_types: [mda, private_sector]
+  service_registration_required: true
+  digital_signature_infrastructure: true
+  correlation:
+    transaction_id: correlation_id
+
+identity_mapping:
+  org_id_to: participant_id
+  org_uri_to: business_registry_id
+
+witness:
+  recommended_mode: both
+  native_audit_log: gateway_3g_transaction_id
+  notes: ジョージア Hub 未配置時は native · Hub 開設後 both
+
+substance:
+  notes: 現地最小法人 or タリン/ドバイ委託 — witness-hub-governance.md AF/拡張 Hub と独立

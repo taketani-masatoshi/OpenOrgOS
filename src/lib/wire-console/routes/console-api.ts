@@ -1,6 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { NoticeWireType } from "../../../schemas/protocol/pending-notice.js";
 import { getSessionUser, sessionTokenFromRequest } from "../auth/session.js";
+import type { WireConsoleUser } from "../auth/session.js";
+import {
+  requireWireConsolePermission,
+  wirePermissionForAction,
+} from "../../console-auth/operator-rbac.js";
 import { listWireConsoleTenants } from "../tenant-registry.js";
 import {
   approveTenantNotice,
@@ -120,7 +125,7 @@ export async function handleConsoleApi(
     if (!user) return true;
     try {
       const body = await parseJsonBody(req);
-      return await handleTenantPost(res, tenantId, section, body, user);
+      return await handleTenantPost(req, res, tenantId, section, body, user);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       json(res, actionErrorStatus(message), { ok: false, error: message });
@@ -250,12 +255,16 @@ function handleTenantGet(
 }
 
 async function handleTenantPost(
+  req: IncomingMessage,
   res: ServerResponse,
   tenantId: string,
   section: string,
   body: Record<string, unknown>,
-  user: NonNullable<ReturnType<typeof requireUser>>
+  user: WireConsoleUser
 ): Promise<boolean> {
+  const perm = wirePermissionForAction(section);
+  if (!requireWireConsolePermission(user, perm, res)) return true;
+
   if (section === "notices/propose") {
     const peerId = body.peer_id;
     const txType = body.transaction_type;

@@ -84,3 +84,10 @@ modules:
     agent: membership
     data_root: data/membership/
     summary_dir: agent-summaries/membership/
+  - id: jp_medical_device
+    enabled: true
+    agent: jp_medical_device
+    data_root: data/medical-device/
+    docs_root: docs/medical-device/
+    summary_dir: agent-summaries/medical-device-regulatory/
+    notes: 医療機器 QMS · GVP · REG-025/026

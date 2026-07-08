@@ -18,6 +18,7 @@ export const noticeWireTypeSchema = z.enum([
   "invoice.issued",
   "payment.instructed",
   "contract.executed",
+  "contract.void.requested",
 ]);
 
 export const pendingNoticeSchema = z.object({

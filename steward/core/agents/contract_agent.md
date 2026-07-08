@@ -126,3 +126,24 @@ npm run orgos -- alerts
 - 参照整合: LOAN.contract_id → CTR · CTR.property_id → PROP
 - 依存: [dependency-graph.yaml](../data/dependency-graph.yaml)
 - 契約索引: [docs/contracts/00-このフォルダについて.md](../docs/contracts/00-このフォルダについて.md)
+
+## 使用 Skill / CLI
+
+| 手段 | 内容 |
+|------|------|
+| agent_pulse | `orgos agent pulse --agent contract` |
+| contract_expiry_check | registry Skill |
+| contract_register | registry Skill |
+
+## CLI
+
+```bash
+orgos agent readiness --agent contract
+orgos agent pulse --agent contract
+```
+
+## コンテキスト
+
+- 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
+- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+

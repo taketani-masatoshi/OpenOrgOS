@@ -311,7 +311,7 @@ edges:
   - from: data/finance/tax-profile.yaml
     to: docs/finance/tax-filing-checklist.md
     category: data→docs
-    reason: 申告期限・TBD 項目はチェックリスト MD と一致
+    reason: 申告期限・確定項目はチェックリスト MD と一致
     action: review
   - from: data/finance/chart-of-accounts.yaml
     to: data/finance/monthly

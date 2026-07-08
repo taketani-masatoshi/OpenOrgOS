@@ -1,0 +1,28 @@
+{
+  "thread_id": "31c87e88885aa0ea7884c44e",
+  "tenant": "demo",
+  "created_at": "2026-07-08T10:20:23.098Z",
+  "updated_at": "2026-07-08T10:20:23.114Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "ping 0",
+      "at": "2026-07-08T10:20:23.098Z"
+    },
+    {
+      "role": "assistant",
+      "content": "【OrgOS モック LLM + ツール】\n\nツール `operator_today` を実行しました。\n\n# Today — デモ株式会社\n\n**Date:** 2026-07-08 · **Tenant:** demo\n\n## 今日の判断（最大 3 件）\n\n1. P0 タスクなし — 計画通り\n\n## 承認待ち\n\n（なし）\n\n## Wire 送信待ち\n\n（件数 0 — 詳細なし）\n\n## Wire 配送待ち\n\n（0 件 — 詳細なし）\n\n## Witness 確認待ち\n\n（なし）\n\n## Agent 報告チェーン\n\n- COO 中継待ち: 0 件\n- Steward inbox: 0 件\n\n\n## その他\n\n- Wire 送信待ち: 0 件\n- Wire 配送待ち: 0 件\n- Witness 確認待ち: 0 件\n- inbox 未処理: 0 件\n- escalate pending: 0 件\n- COO relay: 0 件 · Steward inbox: 0 件\n\n## KPI\n\n- ランウェイ: TBD\n- ネットバーン: ￥50,000\n- 月次売上: ￥0\n- 月次利益（営業近似）: -￥50,000\n- 月次固定費: ￥0\n- 月次変動費: ￥50,000\n\nご質問「ping 0」への回答です。\n\n_信頼度: medium_",
+      "at": "2026-07-08T10:20:23.098Z"
+    },
+    {
+      "role": "user",
+      "content": "ping 1",
+      "at": "2026-07-08T10:20:23.114Z"
+    },
+    {
+      "role": "assistant",
+      "content": "【OrgOS モック LLM + ツール】\n\nツール `operator_today` を実行しました。\n\n# Today — デモ株式会社\n\n**Date:** 2026-07-08 · **Tenant:** demo\n\n## 今日の判断（最大 3 件）\n\n1. P0 タスクなし — 計画通り\n\n## 承認待ち\n\n（なし）\n\n## Wire 送信待ち\n\n（件数 0 — 詳細なし）\n\n## Wire 配送待ち\n\n（0 件 — 詳細なし）\n\n## Witness 確認待ち\n\n（なし）\n\n## Agent 報告チェーン\n\n- COO 中継待ち: 0 件\n- Steward inbox: 0 件\n\n\n## その他\n\n- Wire 送信待ち: 0 件\n- Wire 配送待ち: 0 件\n- Witness 確認待ち: 0 件\n- inbox 未処理: 0 件\n- escalate pending: 0 件\n- COO relay: 0 件 · Steward inbox: 0 件\n\n## KPI\n\n- ランウェイ: TBD\n- ネットバーン: ￥50,000\n- 月次売上: ￥0\n- 月次利益（営業近似）: -￥50,000\n- 月次固定費: ￥0\n- 月次変動費: ￥50,000\n\nご質問「ping 1」への回答です。\n\n_信頼度: medium_",
+      "at": "2026-07-08T10:20:23.114Z"
+    }
+  ]
+}

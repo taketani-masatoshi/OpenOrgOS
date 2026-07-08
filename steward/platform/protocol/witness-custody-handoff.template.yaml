@@ -1,0 +1,93 @@
+# Witness custody handoff manifest — Org 解散時の託し先テンプレ
+# Copy to: tenants/<id>/exports/dissolution-<date>/custody-handoff.yaml
+# Schema: informal v1 (Steward platform template — not validated by CLI yet)
+
+version: "1"
+
+dissolution:
+  org_id: ORG-REPLACE
+  org_uri: org:openorgos:example
+  tenant_id: example
+  jurisdiction: JP
+  dissolved_at: "2026-06-25T00:00:00Z"
+  resolution_ref: board-minutes-YYYY-MM-DD
+  resolution_sha256: REPLACE_SHA256_OF_BOARD_MINUTES_PDF
+
+custodian:
+  type: successor_org # successor_org | peer_org | legal_custodian | self_custody
+  name: 株式会社後継示例
+  org_id: PEER-SUCCESSOR
+  org_uri: org:openorgos:successor
+  contact:
+    name: 担当者名
+    email: custody@example.com
+  acceptance:
+    accepted_at: null # ISO8601 when custodian confirms receipt
+    accepted_by: null
+    note: sha256 verified on receipt
+
+witness_pool_at_dissolution:
+  enabled: true
+  quorum:
+    mode: k_of_n
+    k: 3
+  hubs:
+    - hub_id: HUB-OPENORGOS-JP
+      hub_url: https://hub.openorgos.org
+      hub_public_key: REPLACE_FROM_witness-pool.yaml
+    - hub_id: HUB-COMMUNITY-JP-01
+      hub_url: https://witness-01.openorgos.org
+      hub_public_key: REPLACE_FROM_witness-pool.yaml
+
+packages:
+  - id: org-protocol
+    description: outbox · inbox · audit-chain · witness-receipts · peers
+    path: ./org-protocol.tar.gz
+    sha256: REPLACE_SHA256
+    created_at: "2026-06-25T12:00:00Z"
+    created_by: operator-name
+
+  - id: witness-verify-snapshot
+    description: protocol witness verify --json per material event_id
+    path: ./witness-verify/
+    sha256: REPLACE_DIR_MANIFEST_OR_TAR_SHA256
+    created_at: "2026-06-25T12:30:00Z"
+    created_by: operator-name
+
+  - id: hub-digest-ledger
+    description: Optional — only if this org operated a witness hub node
+    path: ./hub-digest-ledger.tar.gz
+    sha256: REPLACE_SHA256
+    hub_id: HUB-OPENORGOS-JP
+    created_at: "2026-06-25T13:00:00Z"
+    created_by: operator-name
+
+material_events:
+  # Mutually confirmed wire events to preserve for disputes
+  - event_id: 00000000-0000-4000-8000-000000000001
+    peer_id: PEER-001
+    transaction_type: contract.execution.notice
+    envelope_digest: REPLACE_DIGEST
+    witness_verify_path: ./witness-verify/00000000-0000-4000-8000-000000000001.json
+
+peers_notified:
+  - peer_id: PEER-001
+    notified_at: null
+    channel: wire.notice # wire | email | registered_mail
+    reference_event_id: null
+
+verification:
+  commands:
+    - shasum -a 256 -c org-protocol.tar.gz.sha256
+    - npm run orgos -- --tenant example protocol witness verify --event-id <uuid>
+    - npm run orgos -- hub anchor-verify --hub-url https://hub.openorgos.org --hub-id HUB-OPENORGOS-JP --date 2026-06-25
+
+retention:
+  years: 10
+  legal_basis: JP-commercial-books # jurisdiction pack ref
+  destroy_after: "2036-06-25"
+
+operator_signoff:
+  name: null
+  role: CEO
+  signed_at: null

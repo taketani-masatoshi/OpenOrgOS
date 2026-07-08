@@ -1,0 +1,21 @@
+# TLS overlay — run after: ./scripts/gen-dev-tls.sh
+#   docker compose -f docker-compose.yaml -f docker-compose.tls.yaml up
+
+services:
+  wire-gateway:
+    volumes:
+      - ./tls:/tls:ro
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://127.0.0.1:8443}
+    command: >
+      sh -c "cd /app && npm ci &&
+      cp -n /config/wire-gateway.yaml /app/tenants/$${ORGOS_TENANT}/data/protocol/wire-gateway.yaml 2>/dev/null || true &&
+      npm run orgos -- wire-gateway serve
+      --tenant $${ORGOS_TENANT}
+      --host 0.0.0.0
+      --port 8443
+      --tls-cert /tls/server.pem
+      --tls-key /tls/server.key
+      --public-base-url $${PUBLIC_BASE_URL:-https://127.0.0.1:8443}"
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://127.0.0.1:8443/wire/v1/health"]

@@ -14,6 +14,9 @@ import { appendAuditEvent } from "./audit-log.js";
 import { loadCloudAgentConfig, resolveDispatchRuntime } from "./cloud-agent.js";
 import { isLlmApiConfigured } from "./operator-runtime/llm-api.js";
 import { runOperatorDispatch } from "./operator-runtime/ask.js";
+import { assertActiveTenant, assertIntraOrgAgentTarget, tenantDispatchRoot } from "./org-boundary.js";
+import { scopesForAgent } from "./org/delegation-scopes.js";
+import { checkAgentAccess, loadClassificationRegistry } from "./classification.js";
 
 export type DispatchRuntime = "local" | "cloud" | "manifest";
 
@@ -50,6 +53,21 @@ export function buildDispatchManifest(
   runtimePref?: DispatchRuntime
 ): DispatchManifest {
   const workOrders = resolveWorkOrdersForDispatch(id);
+  for (const w of workOrders) {
+    assertActiveTenant(w.tenant, `dispatch work order ${w.id}`);
+    assertIntraOrgAgentTarget(w.to_agent, `dispatch work order ${w.id}`);
+    const scopes = scopesForAgent(w.to_agent);
+    if (!scopes.length) {
+      throw new Error(`Agent ${w.to_agent} has no delegation scopes`);
+    }
+    if (w.path) {
+      const reg = loadClassificationRegistry();
+      const access = checkAgentAccess(reg, w.to_agent, w.path, "write");
+      if (!access.allowed) {
+        throw new Error(`Dispatch blocked: ${access.reason}`);
+      }
+    }
+  }
   const parent = workOrders[0]?.parent_id ? loadHandoff(workOrders[0].parent_id) : undefined;
   const runtime = resolveDispatchRuntime(runtimePref);
   const sdk = isCursorSdkAvailable();

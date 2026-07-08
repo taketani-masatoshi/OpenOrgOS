@@ -1,0 +1,194 @@
+version: "1"
+
+# OpenOrgOS Gov Gateway Adapter registry
+# Spec: docs/org-os/gov-gateway-adapters.md
+# Tenant config: tenants/{id}/data/protocol/gov-gateway.yaml
+# Schema: schemas/protocol/gov-gateway-adapter.ts
+
+adapters:
+  - profile_id: xroad_v7
+    jurisdiction: EE
+    display_name: Estonia X-Road v7
+    native_standard: X-Road Security Server (REST/SOAP)
+    profile_ref: steward/jurisdiction-packs/EE/protocol/xroad-adapter.profile.yaml
+    status: draft
+
+  - profile_id: xroad_v6
+    jurisdiction: EE
+    display_name: Estonia X-Road v6 (legacy)
+    native_standard: X-Road v6 Security Server
+    profile_ref: steward/jurisdiction-packs/EE/protocol/xroad-adapter.profile.yaml
+    status: draft
+
+  - profile_id: jp_egov_central
+    jurisdiction: JP
+    display_name: Japan e-Gov Central API
+    native_standard: e-Gov インフラ · 府省 API · 電子申請連携
+    profile_ref: steward/jurisdiction-packs/JP/protocol/egov-adapter.profile.yaml
+    status: draft
+
+  - profile_id: jp_lgwan
+    jurisdiction: JP
+    display_name: Japan LGWAN
+    native_standard: 地方公共団体専用ネットワーク（LGWAN）
+    profile_ref: steward/jurisdiction-packs/JP/protocol/egov-adapter.profile.yaml
+    status: draft
+
+  - profile_id: jp_gbiz
+    jurisdiction: JP
+    display_name: Japan Gビズ / 法人番号 API
+    native_standard: 法人番号公表 · Gビズ情報提供サービス
+    profile_ref: steward/jurisdiction-packs/JP/protocol/egov-adapter.profile.yaml
+    status: draft
+
+  - profile_id: ge_gov_gateway_3g
+    jurisdiction: GE
+    display_name: Georgia Government Gateway (3G)
+    native_standard: DGA · Georgian Government Gateway · 相互運用フレームワーク
+    profile_ref: steward/jurisdiction-packs/GE/protocol/georgia-3g-adapter.profile.yaml
+    status: draft
+
+  # Hub Wave 1–2 (survey: docs/org-os/gov-gateway-adapters-survey.md)
+  - profile_id: ae_uae_api
+    jurisdiction: AE
+    display_name: UAE API Marketplace · UAEPASS
+    native_standard: TDRA API Marketplace · API-First Policy
+    profile_ref: steward/jurisdiction-packs/AE/protocol/uae-api-adapter.profile.yaml
+    status: draft
+
+  - profile_id: ae_open_finance
+    jurisdiction: AE
+    display_name: UAE Open Finance API Hub
+    native_standard: CBUAE Open Finance · Trust Framework
+    profile_ref: steward/jurisdiction-packs/AE/protocol/uae-open-finance-adapter.profile.yaml
+    status: draft
+
+  - profile_id: ie_psb_api
+    jurisdiction: IE
+    display_name: Ireland PSB API Catalogue
+    native_standard: Data Sharing Act 2019 · REST · OpenAPI · EIF
+    profile_ref: steward/jurisdiction-packs/IE/protocol/psb-api-adapter.profile.yaml
+    status: draft
+
+  - profile_id: nz_api_standard
+    jurisdiction: NZ
+    display_name: New Zealand API Standard (GCDO)
+    native_standard: NZ API Standard · REST · OAuth2/mTLS
+    profile_ref: steward/jurisdiction-packs/NZ/protocol/nz-api-adapter.profile.yaml
+    status: draft
+
+  # Hub Wave 3
+  - profile_id: tr_edevelop
+    jurisdiction: TR
+    display_name: Turkey e-Devlet Kapısı · KamuNET
+    native_standard: e-Devlet G2G Web Services · ESB
+    profile_ref: steward/jurisdiction-packs/TR/protocol/edevelop-adapter.profile.yaml
+    status: draft
+
+  - profile_id: us_fed_api
+    jurisdiction: US
+    display_name: US Federal Agency APIs
+    native_standard: Agency REST · OAuth2 · Login.gov
+    profile_ref: steward/jurisdiction-packs/US/protocol/fed-api-adapter.profile.yaml
+    status: draft
+
+  - profile_id: us_oscal
+    jurisdiction: US
+    display_name: US FedRAMP / OSCAL
+    native_standard: NIST OSCAL · FedRAMP authorization artifacts
+    profile_ref: steward/jurisdiction-packs/US/protocol/oscal-adapter.profile.yaml
+    status: draft
+
+  - profile_id: cl_pisee
+    jurisdiction: CL
+    display_name: Chile PISEE 2
+    native_standard: PISEE Nodo · G2G P2P · digital signature
+    profile_ref: steward/jurisdiction-packs/CL/protocol/pisee-adapter.profile.yaml
+    status: draft
+
+  - profile_id: cl_chileatiende
+    jurisdiction: CL
+    display_name: ChileAtiende Public API
+    native_standard: ChileAtiende REST/JSON · citizen services
+    profile_ref: steward/jurisdiction-packs/CL/protocol/chileatiende-adapter.profile.yaml
+    status: draft
+
+  # Hub Wave 4 (Africa)
+  - profile_id: eg_digital_egypt
+    jurisdiction: EG
+    display_name: Egypt Digital Egypt Platform
+    native_standard: Digital Egypt · G2G API integration
+    profile_ref: steward/jurisdiction-packs/EG/protocol/digital-egypt-adapter.profile.yaml
+    status: draft
+
+  - profile_id: xroad_v7_dj
+    jurisdiction: DJ
+    display_name: Djibouti X-Road (ANSIE)
+    native_standard: X-Road Security Server · eGA GovStack · reuses xroad_v7 core
+    profile_ref: steward/jurisdiction-packs/DJ/protocol/xroad-adapter.profile.yaml
+    status: draft
+
+  - profile_id: za_sita_mios
+    jurisdiction: ZA
+    display_name: South Africa SITA MIOS
+    native_standard: SITA · Minimum Interoperability Standards · G2G
+    profile_ref: steward/jurisdiction-packs/ZA/protocol/sita-mios-adapter.profile.yaml
+    status: draft
+
+  # EU cross-border (Hub: EE + IE)
+  - profile_id: eu_edelivery_as4
+    jurisdiction: EU
+    display_name: EU CEF eDelivery AS4
+    native_standard: EIF · CEF eDelivery · 4-corner Access Point
+    profile_ref: steward/jurisdiction-packs/EU/protocol/edelivery-as4-adapter.profile.yaml
+    status: draft
+
+  # Major countries (no Hub · future wrap)
+  - profile_id: cn_gov_data_exchange
+    jurisdiction: CN
+    display_name: China GB/T 45800 Gov Data Exchange
+    native_standard: 全国一体化政务大数据 · 数据共享交换
+    profile_ref: steward/jurisdiction-packs/CN/protocol/gov-data-exchange-adapter.profile.yaml
+    status: draft
+
+  - profile_id: hk_iam_smart
+    jurisdiction: HK
+    display_name: Hong Kong iAM Smart
+    native_standard: iAM Smart OAuth2 · e-signature · e-ME
+    profile_ref: steward/jurisdiction-packs/HK/protocol/iam-smart-adapter.profile.yaml
+    status: draft
+
+  - profile_id: sg_apex
+    jurisdiction: SG
+    display_name: Singapore APEX · Singpass
+    native_standard: APEX API Exchange · FAPI 2.0 · CorpPass
+    profile_ref: steward/jurisdiction-packs/SG/protocol/apex-adapter.profile.yaml
+    status: draft
+
+  - profile_id: au_apigovau
+    jurisdiction: AU
+    display_name: Australia api.gov.au
+    native_standard: WoG API Design Standard · REST
+    profile_ref: steward/jurisdiction-packs/AU/protocol/apigovau-adapter.profile.yaml
+    status: draft
+
+  - profile_id: au_agdis
+    jurisdiction: AU
+    display_name: Australia AGDIS Digital ID
+    native_standard: Digital ID Act 2024 · OIDC Schedule 2
+    profile_ref: steward/jurisdiction-packs/AU/protocol/agdis-adapter.profile.yaml
+    status: draft
+
+  - profile_id: ru_smev4
+    jurisdiction: RU
+    display_name: Russia SMEV 4
+    native_standard: СМЭВ4 REST/JSON · ESIA · SKZI network
+    profile_ref: steward/jurisdiction-packs/RU/protocol/smev4-adapter.profile.yaml
+    status: draft
+
+  - profile_id: in_api_setu
+    jurisdiction: IN
+    display_name: India API Setu
+    native_standard: MeitY API Setu · DigiLocker · MeriPehchaan
+    profile_ref: steward/jurisdiction-packs/IN/protocol/api-setu-adapter.profile.yaml
+    status: draft

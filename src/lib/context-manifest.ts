@@ -11,6 +11,8 @@ import { listEffectiveRegulations } from "./regulations.js";
 import { getResolvedJurisdiction } from "./jurisdiction.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
 import { listIsoStandardIds } from "./standards.js";
+import { controlsForAgent } from "./control-framework.js";
+import type { AgentId } from "../../schemas/classification.js";
 import { getTenantDir, getTenantId, ROOT_DIR } from "./tenant.js";
 
 export { loadEnabledIsoIds } from "./tenant-standards.js";
@@ -127,6 +129,35 @@ export function buildActiveContextMarkdown(): string {
     for (const id of catalogOnly) {
       lines.push(`- \`${id}\` — \`modules.yaml\` 未登録 · **読まない**`);
     }
+  }
+
+  if (enabledIso.length > 0) {
+    lines.push("", "## 統制マトリクス（有効 ISO のみ）", "");
+    lines.push(
+      "**正本:** `data/compliance/controls.yaml` · **フレームワーク:** `steward/standards/control-framework/` · **CLI:** `orgos controls for-agent <id>`",
+      ""
+    );
+    const matrixAgents: AgentId[] = [
+      "compliance",
+      "internal_audit",
+      "quality_assurance",
+      "medical_device_regulatory",
+      "security",
+      "privacy_officer",
+      "esg_sustainability",
+    ];
+    const maxList = 12;
+    for (const agent of matrixAgents) {
+      const ctrls = controlsForAgent(agent);
+      if (ctrls.length === 0) continue;
+      const ids = ctrls.map((c) => c.id);
+      const shown = ids.slice(0, maxList);
+      const rest = ids.length - shown.length;
+      lines.push(
+        `- **${agent}** — ${shown.map((id) => `\`${id}\``).join(", ")}${rest > 0 ? ` · 他 ${rest} 件は \`orgos controls for-agent ${agent}\`` : ""}`
+      );
+    }
+    lines.push("");
   }
 
   lines.push(

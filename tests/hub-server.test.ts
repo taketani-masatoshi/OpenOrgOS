@@ -60,4 +60,27 @@ describe("hub server", () => {
 
     server.close();
   });
+
+  it("serves /hub/v1/metrics", async () => {
+    const server = await startHubServer({
+      hubId: "HUB-A",
+      dataDir: HUB_DIR,
+      host: "127.0.0.1",
+      port: 19475,
+    });
+    try {
+      const res = await fetch("http://127.0.0.1:19475/hub/v1/metrics");
+      expect(res.ok).toBe(true);
+      const body = (await res.json()) as {
+        service: string;
+        hub_id: string;
+        receipts: number;
+      };
+      expect(body.service).toBe("witness-hub");
+      expect(body.hub_id).toBe("HUB-A");
+      expect(typeof body.receipts).toBe("number");
+    } finally {
+      server.close();
+    }
+  });
 });

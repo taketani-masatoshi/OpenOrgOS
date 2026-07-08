@@ -1,5 +1,8 @@
 import { listEffectiveRegulations, loadEnabledRegulationIds } from "./regulations.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
+import { computeControlGaps, type ControlGapRow } from "./control-framework.js";
+
+export type { ControlGapRow };
 
 export interface ComplianceGapRow {
   id: string;
@@ -13,6 +16,7 @@ export function computeComplianceGap(): {
   enabledIso: string[];
   effectiveRegs: string[];
   gaps: ComplianceGapRow[];
+  control_gaps: ControlGapRow[];
 } {
   const enabledIso = loadEnabledIsoIds();
   const effective = listEffectiveRegulations();
@@ -57,11 +61,11 @@ export function computeComplianceGap(): {
     }
   }
 
-  return { enabledIso, effectiveRegs: effectiveIds, gaps };
+  return { enabledIso, effectiveRegs: effectiveIds, gaps, control_gaps: computeControlGaps() };
 }
 
 export function formatComplianceGapReport(): string {
-  const { enabledIso, effectiveRegs, gaps } = computeComplianceGap();
+  const { enabledIso, effectiveRegs, gaps, control_gaps } = computeComplianceGap();
   const lines = [
     "# Compliance Gap — ISO × REG",
     "",
@@ -74,13 +78,29 @@ export function formatComplianceGapReport(): string {
 
   if (gaps.length === 0) {
     lines.push("ギャップなし ✓", "");
-    return lines.join("\n");
+  } else {
+    lines.push("| ID | 種別 | 規程 | 詳細 |", "|----|------|------|------|");
+    for (const g of gaps) {
+      lines.push(`| ${g.id} | ${g.gap_type} | ${g.name} | ${g.detail} |`);
+    }
+    lines.push("");
   }
 
-  lines.push("| ID | 種別 | 規程 | 詳細 |", "|----|------|------|------|");
-  for (const g of gaps) {
-    lines.push(`| ${g.id} | ${g.gap_type} | ${g.name} | ${g.detail} |`);
+  lines.push("## 統制ギャップ", "");
+  if (control_gaps.length === 0) {
+    lines.push("統制ギャップなし ✓", "");
+  } else {
+    lines.push(
+      "| CTL | 種別 | 統制 | 詳細 | Agent |",
+      "|-----|------|------|------|-------|"
+    );
+    for (const g of control_gaps) {
+      lines.push(
+        `| ${g.control_id} | ${g.gap_type} | ${g.title} | ${g.detail} | ${g.primary_agent} |`
+      );
+    }
+    lines.push("");
   }
-  lines.push("");
+
   return lines.join("\n");
 }

@@ -1,0 +1,29 @@
+version: "1"
+roles:
+  - agent: compliance
+    domains: [governance, audit]
+    description: 横断統制 · REG 施行 · ISO ギャップ監視
+  - agent: internal_audit
+    domains: [audit]
+    description: 監査計画スコープ · CTL ベース監査
+  - agent: quality_assurance
+    domains: [quality]
+    description: ISO 9001 品質統制 · 不適合初動
+  - agent: medical_device_regulatory
+    domains: [quality]
+    description: ISO 13485 · 医療機器 QMS/GVP · 薬事台帳
+  - agent: security
+    domains: [security]
+    description: ISO 27001 ISMS 統制
+  - agent: privacy_officer
+    domains: [privacy]
+    description: 個情保護 · REG-010 · 27001 プライバシー
+  - agent: esg_sustainability
+    domains: [environment]
+    description: ISO 21401 サステナビリティ
+  - agent: operations
+    domains: [operations, continuity]
+    description: 運用記録 · 宿泊オペレーション証拠
+  - agent: corporate_governance
+    domains: [governance]
+    description: 取締役会 · 株主総会ガバナンス

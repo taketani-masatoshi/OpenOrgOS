@@ -1,0 +1,29 @@
+sources:
+  - id: SRC-TMIPH-QMS
+    title: 東京都 医療機器 QMS チェックリスト
+    url: https://www.tmiph.metro.tokyo.lg.jp/k_iryou/k-kanshi/k_tejyuncheck/
+    type: guidance
+    notes: QMS 省令 · 手順書構成の参考
+
+  - id: SRC-TMIPH-GVP
+    title: 東京都 医療機器 GVP チェック
+    url: https://www.tmiph.metro.tokyo.lg.jp/k_yakuji/i-kanshi/uid_53cdb07594df2/
+    type: guidance
+    notes: GVP 手順書 · 記録の参考
+
+  - id: SRC-JIRA-GVP
+    title: JIRA GVP 手順書（2005）
+    url: https://www.jira-net.or.jp/archives/information/file/200503_gvp-tejyunsyo.pdf
+    type: template
+    notes: 安全管理手順書の章立て参考
+
+  - id: SRC-PMDA
+    title: PMDA 医療機器
+    url: https://www.pmda.go.jp/review-services/medical-devices/0002.html
+    type: law
+    notes: 届出 · 許可 · 安全情報
+
+  - id: SRC-ISO-13485
+    title: ISO 13485:2016
+    url: https://www.iso.org/standard/59752
+    type: standard

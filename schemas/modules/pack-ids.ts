@@ -6,6 +6,7 @@ export const JP_PACK_MODULE_IDS = [
   "jp_subsidy_application",
   "jp_trademark_application",
   "jp_corporate_registration",
+  "jp_medical_device",
 ] as const;
 
 export type JpPackModuleId = (typeof JP_PACK_MODULE_IDS)[number];

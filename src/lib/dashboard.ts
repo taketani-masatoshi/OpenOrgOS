@@ -866,6 +866,24 @@ export function collectUpcomingPayments(
   });
 }
 
+function buildTbdItems(cashFlow: ReturnType<typeof computeCashFlowMetrics>, data: StewardData): string[] {
+  const items: string[] = [];
+  const cashData = loadCashBalance();
+  const cashOk =
+    cashData?.status === "confirmed" && resolveCashBalanceTotal(cashData) != null;
+  if (!cashOk) {
+    items.push("現預金残高（cash-balance.yaml — 金額入力待ち）");
+  }
+  items.push("翻訳・サービス事業の月次収支（計画未含 · デモ）");
+  const insuranceDrafts = data.contracts.filter(
+    (c) => c.type === "insurance" && c.status === "draft"
+  );
+  if (insuranceDrafts.length) {
+    items.push(`保険証券 ${insuranceDrafts.map((c) => c.id).join(" / ")}（draft · 実加入待ち）`);
+  }
+  return items;
+}
+
 export function computeDashboard(data?: StewardData): DashboardReport {
   const d = data ?? loadAllData();
   const fiscalYear = resolveFiscalYear(d.company.fiscal_year_end_month ?? 3);
@@ -877,12 +895,7 @@ export function computeDashboard(data?: StewardData): DashboardReport {
   const reportDate = currentDate();
   const upcomingPayments = collectUpcomingPayments(d, fiscalYear, reportDate, allTasks);
 
-  const tbdItems = [
-    "現預金残高（cash-balance.yaml — 金額入力待ち）",
-    "役員貸付返済スケジュール詳細（business-plan TBD）",
-    "翻訳・サービス事業の月次収支（計画未含）",
-    "保険証券 CTR-013 / CTR-014（draft）",
-  ];
+  const tbdItems = buildTbdItems(cashFlow, d);
 
   return {
     generatedAt: new Date().toISOString(),

@@ -83,12 +83,15 @@
 - `REG-022` EC取引規程 — `docs/company/regulations/ec-torihiki-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-023` 配送・倉庫管理規程 — `docs/company/regulations/haiso-soko-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-024` 会員管理規程 — `docs/company/regulations/kaiin-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-025` 医療機器QMS規程 — `docs/company/regulations/iryo-kiki-qms-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-026` 医療機器GVP規程 — `docs/company/regulations/iryo-kiki-gvp-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 
 ## 未バインドカタログ（読取禁止）
 
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_carbon_neutral_2050` — `modules.yaml` 未登録 · **読まない**
 - `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
+- `jp_medical_device` — `modules.yaml` 未登録 · **読まない**
 - `jp_privacy_policy` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
 - `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**

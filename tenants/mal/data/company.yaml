@@ -9,6 +9,20 @@ directors:
     role: "代表取締役"
 address: "〒102-0084 東京都千代田区二番町1"
 fiscal_year_end_month: 1
+governance_status:
+  director_resignation:
+    person: 宮城万貴子
+    notice_sent: "2026-07-02"
+    effective_date: "2026-07-31"
+    registration_planned: "2026-08"
+    status: pending_registration
+    note: 辞任届送付済 · 登記前。company.yaml の取締役欄は登記完了まで現状維持。
+share_capital:
+  amount_yen: 8500000
+  issued_shares: 100
+  par_value_yen: 85000
+  sole_shareholder: 段燕燕
+  demo_confirmed_at: "2026-07-05"
 business_description: |
   不動産オーナー向け翻訳・通訳サービス、イベントスペース貸出、旅館運営、
   業務DX化支援、ソフトウェア開発。自社物件を保有。
@@ -18,7 +32,6 @@ business_description: |
   インボイス登録番号: T4010001189530
   旧商号: 株式会社ほんとのあなた（2024-12-27にMALへ変更）
   旧本店: 東京都文京区小石川3丁目28番13号（2024-12-18に現住所へ移転）
-# 公式サイト公開値（登記・税務 SoT は tax-profile / 登記簿で要確定）
 public_disclosure:
   website: "https://malkk.com/property/"
   about_url: "http://malkk.com/property/about-us"
@@ -27,4 +40,4 @@ public_disclosure:
   capital_as_of: "2025-09"
   employees: 3
   source: "公式 About us ページ"
-  note: "tax-profile.capital_stock は TBD — 登記簿と照合後に確定"
+  note: "tax-profile.capital_stock=850万円 · デモ用確定（2026-07-05）"

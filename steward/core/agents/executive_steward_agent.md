@@ -115,7 +115,8 @@ npm run orgos -- scenario
 
 ## 他エージェントへ照会すべき場合
 
-**全 Agent 特性（委譲 · 禁止 · 承認ゲート）:** [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+**全 Agent 特性（委譲 · 禁止 · 承認ゲート）:** [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)  
+**Skill 指定時の実行 Agent:** [skill_delegation_map.md](../orchestrators/skill_delegation_map.md)
 
 | 状況 | 照会先 |
 |------|--------|
@@ -161,3 +162,25 @@ npm run orgos -- scenario
 - **テナント:** `rules/company_context.md` · 有効モジュール: `modules.yaml`
 - **例示（架空）:** 株式会社サンプル商事 · PROP-001 みなとビル501 · PROP-002 緑丘ゲストハウス
 - **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/core/agents/](00-このフォルダについて.md)
+
+## 使用 Skill / CLI
+
+| 手段 | 内容 |
+|------|------|
+| agent_pulse | `orgos agent pulse --agent executive_steward` |
+| executive_dashboard | registry Skill |
+| daily_ops | registry Skill |
+| p0_closing | registry Skill |
+
+## CLI
+
+```bash
+orgos agent readiness --agent executive_steward
+orgos agent pulse --agent executive_steward
+```
+
+## コンテキスト
+
+- 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
+- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+

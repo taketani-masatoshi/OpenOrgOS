@@ -1,0 +1,32 @@
+version: "1"
+
+# Wire Trust Registry — platform reference for Node ID / DID resolution (WG-4)
+# Publish target: https://openorgos.org/protocol/wire-trust-registry.yaml
+# Mirror: steward/platform/protocol/wire-trust-registry.yaml
+# Witness hubs: steward/platform/protocol/trusted-hubs.yaml (separate layer)
+
+publish_url: https://openorgos.org/protocol/wire-trust-registry.yaml
+
+nodes:
+  - node_id: org.example.co.jp
+    did: did:ooo:org:demo
+    node_uri: steward://tenant/demo
+    display_name: Example Corp (demo)
+    protocol_public_key: ""
+    wire_url: https://127.0.0.1:8443
+    witness_jurisdiction: JP
+    notes: Replace protocol_public_key after orgos wire-gateway did init
+
+  - node_id: mal
+    did: did:ooo:org:mal
+    node_uri: steward://tenant/mal
+    display_name: MAL Co
+    protocol_public_key: ""
+    witness_jurisdiction: JP
+
+  - node_id: southwood
+    did: did:ooo:org:southwood
+    node_uri: steward://tenant/southwood
+    display_name: Southwood Inc
+    protocol_public_key: ""
+    witness_jurisdiction: JP

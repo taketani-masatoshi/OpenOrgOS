@@ -1,0 +1,25 @@
+# Gov Gateway live pilot log (template)
+
+Copy to a private operator notes area (not git) for each run.
+
+| Field | Value |
+|-------|--------|
+| Date (UTC) | YYYY-MM-DD |
+| Operator | |
+| Tenant | |
+| Profile | xroad_v7 / jp_egov_central / ge_gov_gateway_3g |
+| Phase reached (0–4) | |
+| Sandbox URL (no credentials) | https://… |
+| Auth used | none / Bearer (token **not** recorded) |
+| `health --live` HTTP status | |
+| Method (HEAD/GET) | |
+| Latency ms | |
+| Encode event_id | |
+| Deliver peer_id | |
+| Native / correlation_id | |
+| Result | pass / fail |
+| Notes (no secrets) | |
+
+## Triage notes
+
+-

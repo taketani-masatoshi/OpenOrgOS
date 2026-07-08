@@ -23,6 +23,7 @@ describe("prod startup", () => {
   function setProdEnv(): void {
     process.env.ORGOS_ENV = "production";
     process.env.STEWARD_CHAT_AUTH = "1";
+    process.env.WIRE_CONSOLE_AUTH = "prod";
     process.env.ORGOS_MCP_TOKEN = "test-mcp-token-for-prod-startup";
     delete process.env.WIRE_CONSOLE_DEV_PASSKEY;
     delete process.env.ORGOS_SESSION_PERSIST;

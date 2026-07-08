@@ -82,3 +82,6 @@ modules:
   jp_corporate_registration:
     tier: production_ready
     notes: 法務局登記18手続 · 定款 · 登記申請書 · operations corporate CLI · jp-corporate-registration.test
+  jp_medical_device:
+    tier: production_ready
+    notes: 医療機器 QMS 4階層 · GVP · 台帳 · ISO-13485 control-map · operations medical-device CLI

@@ -13,6 +13,7 @@ Steward Agent は **正データを編集せず**、本カタログに従い **�
 |------|------|
 | **要約経由** | Steward は `agent-summaries/` · dashboard のみ原則読取 |
 | **一本化** | 日次実務指揮は **COO** → Growth/PM/総務 |
+| **報告チェーン** | **全現場 Agent**（コア 5 + 拡張）→ **COO 中継** → **Executive Steward** · 正本: [chain-policy.yaml](../reporting/chain-policy.yaml) · CLI: `orgos agent order` · `report` · `relay` |
 | **財務三角** | **Finance**（予実/計画）→ **Accounting**（実務）→ **Tax**（申告） |
 | **法務三角** | **Legal**（レビュー）→ **Contract**（台帳 SoT）→ **Compliance**（規程/ISO） |
 | **人間ゲート** | 契約締結 · 振込 · 登記提出 · 採用決定 · 公開投稿 · 開示 |
@@ -99,6 +100,7 @@ Steward Agent は **正データを編集せず**、本カタログに従い **�
 | **learning_development** | 研修 · オンボ教材 | human_resources | — |
 | **corporate_development** | M&A · 提携 DD メモ | executive_steward | 買収 · 提携 |
 | **quality_assurance** | ISO 9001 運用 · 不適合 | coo | 出荷停止 |
+| **medical_device_regulatory** | ISO 13485 · QMS · GVP · 薬事台帳 | compliance | PMDA 届出 |
 
 ---
 

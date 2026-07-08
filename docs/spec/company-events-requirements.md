@@ -1,10 +1,10 @@
 # 会社イベント記録 — 要件定義書
 
-**版:** 1.3 · **日付:** 2026-06-27  
-**ステータス:** 実装済み（v1 · 作成・一覧・月次フォルダ · close/archive/validate · FR-11/14）  
+**版:** 1.5 · **日付:** 2026-07-08  
+**ステータス:** 実装済み（v2 · ハッシュチェーン · void · Wire void ゲート · chain verify/backfill）  
 **設計正本:** [steward/rules/company-events-layout.md](../../steward/rules/company-events-layout.md)  
-**スキーマ:** [schemas/company-events.ts](../../schemas/company-events.ts)  
-**実装:** [src/lib/company-events.ts](../../src/lib/company-events.ts) · [src/commands/company-events.ts](../../src/commands/company-events.ts)
+**スキーマ:** [schemas/company-events.ts](../../schemas/company-events.ts) · [schemas/company-events-chain.ts](../../schemas/company-events-chain.ts)  
+**実装:** [src/lib/company-events.ts](../../src/lib/company-events.ts) · [src/lib/company-events-chain.ts](../../src/lib/company-events-chain.ts) · [src/lib/company-events-wire.ts](../../src/lib/company-events-wire.ts) · [src/commands/company-events.ts](../../src/commands/company-events.ts)
 
 ---
 
@@ -37,6 +37,16 @@
 | FR-12 | `events validate` — 台帳 vs 実ファイル整合 |
 | FR-13 | `jp_corporate_registration prepare` → artifacts（`--event-id` + `--write`） |
 | FR-14 | document-io outbox リンク（`events link-outbox`） |
+| FR-20 | append-only ハッシュチェーン（`data/company-events-chain.jsonl`） |
+| FR-21 | `events void` — 無効化 EVT + void チェーンリンク（物理削除禁止） |
+| FR-22 | `events chain verify` — seq · digest · 台帳クロスチェック |
+| FR-23 | `events chain backfill` — 既存台帳から create リンク再構築 |
+| FR-24 | `events validate` にチェーン整合を統合 |
+| FR-25 | Wire 送信済み EVT の void ゲート — 相手 void ack まで `events void` 拒否 |
+| FR-26 | `events void-request` — `contract.void.requested` 取消 Wire 起案 |
+| FR-27 | `events void-ack` — 相手からの void 許可 Wire 登録後に void 可能 |
+| FR-28 | `events wire-status` · `protocol notice propose --company-event` — EVT ↔ Wire 紐づけ |
+| FR-29 | `records_audit` Agent — 週次 `events chain attest` · 月次 `events audit monthly` + 通知 |
 
 ### 2.2 Out of scope（将来）
 
@@ -204,7 +214,7 @@ npm run orgos -- events status
 |------|------|
 | REG-007 文書管理 | events/artifacts は docs ゾーン |
 | document-io | 独立（inbox/outbox は物理トレイ） |
-| OpenOrgOS protocol | 独立（組織間 wire とは別） |
+| OpenOrgOS protocol | EVT は社内正本 · Wire 配送済みは `wire_binding` + void ゲート連携 |
 | jp_corporate_registration | 将来 artifacts 出力先として統合予定 |
 
 ---
@@ -217,3 +227,29 @@ npm run orgos -- events status
 | 1.1 | 2026-06-27 | 異常系 E-01〜E-06 テスト · `parseMonth` 月範囲検証 |
 | 1.2 | 2026-06-27 | FR-10/12/13 — close · archive · validate · jp prepare `--event-id` |
 | 1.3 | 2026-06-27 | FR-11/14 — register-artifact · link-outbox · ensure-month --refresh-index · CLI smoke |
+| 1.4 | 2026-07-07 | FR-20〜24 — hash chain · void · chain verify/backfill · schema v2 |
+| 1.5 | 2026-07-08 | FR-25〜28 — Wire 配送済み void ゲート · void-request/void-ack · wire_binding |
+
+### Wire 配送済み void ゲート（FR-25〜28）
+
+社外へ Wire 送信済みの会社イベントは、**相手組織から void 許可（`steward.contract.void.acknowledged`）を受け取るまで** 社内 `events void` を拒否する。
+
+| 手順 | CLI |
+|------|-----|
+| 1. Wire 紐づけ（送信時） | `protocol notice propose --company-event EVT-*` → `notice approve` |
+| 2. 状態確認 | `events wire-status EVT-*` |
+| 3. 取消依頼 Wire | `events void-request EVT-* --operator <id>` → `notice approve` |
+| 4. 相手 ack 登録 | `events void-ack EVT-* --wire-event <inbound-uuid>` |
+| 5. 社内 void | `events void EVT-* --reason "…"` |
+
+台帳フィールド `wire_binding`（`peer_id` · `wire_event_id` · `void_request_notice_id` · `void_ack_wire_event_id`）がゲート判定の正本。
+
+---
+
+## 9. マイグレーション（既存テナント）
+
+1. コード更新後: `npm run orgos -- events chain backfill`
+2. 整合確認: `npm run orgos -- events validate` · `events chain verify`
+3. 以降の「削除」: `npm run orgos -- events void <EVT-id> --reason "…"`
+
+チェーンが既にある場合の再構築は `events chain backfill --force`（通常は不要）。

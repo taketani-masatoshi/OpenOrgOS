@@ -20,6 +20,7 @@ agents:
     path: steward/core/agents/secretary_agent.md
     tier: core
     required: true
+    reports_to: coo
     scope: スケジュール · タスク · 1-on-1 · 対外下書き
 
   finance:
@@ -29,6 +30,7 @@ agents:
     path: steward/core/agents/finance_agent.md
     tier: core
     required: true
+    reports_to: coo
     scope: 予実 · 資金 · 税務データ · 決算（JP kessan）
 
   contract:
@@ -38,6 +40,7 @@ agents:
     path: steward/core/agents/contract_agent.md
     tier: core
     required: true
+    reports_to: coo
     scope: 契約台帳 · 更新 · 紐づけ
 
   compliance:
@@ -47,6 +50,7 @@ agents:
     path: steward/core/agents/compliance_agent.md
     tier: core
     required: true
+    reports_to: coo
     scope: 規程 · ISO · 法域 pack 連動
 
   operations:
@@ -56,6 +60,7 @@ agents:
     path: steward/core/agents/operations_agent.md
     tier: core
     required: true
+    reports_to: coo
     scope: 日次運用 · travel · モジュール横断オペ
 
   # --- AI カンパニー拡張（16 役割 · org-chart.md）---
@@ -426,6 +431,18 @@ agents:
     reports_to: executive_steward
     scope: プロセス監査 · 改善提案
 
+  records_audit:
+    id: records_audit
+    name: Records Audit
+    name_ja: 記録監査
+    path: steward/core/agents/records_audit_agent.md
+    tier: extension
+    priority: P2
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 会社イベントチェーン · 週次署名 · 月次監査通知
+
   privacy_officer:
     id: privacy_officer
     name: Privacy Officer
@@ -509,6 +526,19 @@ agents:
     status: active
     reports_to: coo
     scope: 品質基準 · 不適合
+
+  medical_device_regulatory:
+    id: medical_device_regulatory
+    name: Med Device Regulatory
+    name_ja: 医療機器薬事
+    path: steward/core/agents/medical_device_regulatory_agent.md
+    tier: extension
+    priority: P1
+    required: false
+    status: active
+    reports_to: compliance
+    scope: ISO 13485 · QMS · GVP · 薬事台帳
+    binds_modules: [jp_medical_device]
 
 # 将来拡張候補
 extensions:

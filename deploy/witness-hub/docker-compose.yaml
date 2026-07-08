@@ -6,7 +6,7 @@ services:
       - ../..:/app
       - hub-a-data:/app/deploy/witness-hub/data/hub-a
     command: >
-      sh -c "npm run orgos -- hub serve
+      sh -c "cd /app && npm ci && npm run orgos -- hub serve
       --hub-id HUB-A
       --host 0.0.0.0
       --port 9474
@@ -27,7 +27,7 @@ services:
       - ../..:/app
       - hub-b-data:/app/deploy/witness-hub/data/hub-b
     command: >
-      sh -c "npm run orgos -- hub serve
+      sh -c "cd /app && npm ci && npm run orgos -- hub serve
       --hub-id HUB-B
       --host 0.0.0.0
       --port 9475
@@ -41,6 +41,48 @@ services:
       timeout: 5s
       retries: 5
 
+  hub-c:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - hub-c-data:/app/deploy/witness-hub/data/hub-c
+    command: >
+      sh -c "cd /app && npm ci && npm run orgos -- hub serve
+      --hub-id HUB-C
+      --host 0.0.0.0
+      --port 9476
+      --data-dir /app/deploy/witness-hub/data/hub-c
+      --gossip-interval 300"
+    ports:
+      - "9476:9476"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9476/hub/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hub-d:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - hub-d-data:/app/deploy/witness-hub/data/hub-d
+    command: >
+      sh -c "cd /app && npm ci && npm run orgos -- hub serve
+      --hub-id HUB-D
+      --host 0.0.0.0
+      --port 9477
+      --data-dir /app/deploy/witness-hub/data/hub-d
+      --gossip-interval 300"
+    ports:
+      - "9477:9477"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9477/hub/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   hub-init:
     image: node:22-bookworm
     working_dir: /app
@@ -48,19 +90,31 @@ services:
       - ../..:/app
       - hub-a-data:/app/deploy/witness-hub/data/hub-a
       - hub-b-data:/app/deploy/witness-hub/data/hub-b
+      - hub-c-data:/app/deploy/witness-hub/data/hub-c
+      - hub-d-data:/app/deploy/witness-hub/data/hub-d
     depends_on:
       hub-a:
         condition: service_healthy
       hub-b:
         condition: service_healthy
+      hub-c:
+        condition: service_healthy
+      hub-d:
+        condition: service_healthy
     environment:
       HUB_A_URL: http://hub-a:9474
       HUB_B_URL: http://hub-b:9475
+      HUB_C_URL: http://hub-c:9476
+      HUB_D_URL: http://hub-d:9477
       HUB_A_DATA_DIR: /app/deploy/witness-hub/data/hub-a
       HUB_B_DATA_DIR: /app/deploy/witness-hub/data/hub-b
+      HUB_C_DATA_DIR: /app/deploy/witness-hub/data/hub-c
+      HUB_D_DATA_DIR: /app/deploy/witness-hub/data/hub-d
     command: node --import tsx deploy/witness-hub/seed-federation.ts
     restart: "no"
 
 volumes:
   hub-a-data:
   hub-b-data:
+  hub-c-data:
+  hub-d-data:

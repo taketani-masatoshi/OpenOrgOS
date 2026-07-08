@@ -41,10 +41,10 @@ items:
 
   - id: P0-05
     title: cash-balance.yaml + B/S 3項目
-    status: open
+    status: in_progress
     steps:
-      - { id: s1, label: 全口座残高入力, done: false }
-      - { id: s2, label: status confirmed, done: false }
+      - { id: s1, label: 全口座残高入力, done: true }
+      - { id: s2, label: status confirmed, done: true }
       - { id: s3, label: 税理士と B/S 3項目確定, done: false }
 
   - id: P0-06

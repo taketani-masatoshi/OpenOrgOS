@@ -1,13 +1,30 @@
+# Witness Hub pool — southwood · MAL と同一プール（peer デモ）
+# 正本同期: deploy/witness-hub/seed-federation.ts
+
 enabled: true
 quorum:
-  mode: any_of_n
+  mode: k_of_n
+  k: 3
+register_on: both
+wire_governance_policy:
+  require_quorum_for_tiers: [A, B]
+  warn_only: true
 hubs:
   - hub_id: HUB-A
-    hub_url: http://127.0.0.1:62935
-    hub_public_key: MCowBQYDK2VwAyEAz9D92vylLllyfCd7vDKqPDMSh4dVHRk6/BYzGT3/q0g=
+    hub_url: http://127.0.0.1:9474
+    hub_public_key: MCowBQYDK2VwAyEApTW9nJfTcO/Emiv1oPy+ri1c/+AKsSXrkWhkVNU61ko=
     priority: 1
   - hub_id: HUB-B
-    hub_url: http://127.0.0.1:62936
-    hub_public_key: MCowBQYDK2VwAyEAy8eyVUJdKVW4fp/MA1QHGsLTwiSSeGrkPmVezrxiL/s=
+    hub_url: http://127.0.0.1:9475
+    hub_public_key: MCowBQYDK2VwAyEApTW9nJfTcO/Emiv1oPy+ri1c/+AKsSXrkWhkVNU61ko=
     priority: 2
-register_on: both
+  - hub_id: HUB-C
+    hub_url: http://127.0.0.1:9476
+    hub_public_key: MCowBQYDK2VwAyEA8EE2UGtpd036aADPD+pAisZjD9oqH5nAEUgJC+DsBWw=
+    priority: 3
+  - hub_id: HUB-D
+    hub_url: http://127.0.0.1:9477
+    hub_public_key: MCowBQYDK2VwAyEARBSHvRQUcPC4SJAurr2zmYQOI6XdcO4CYH+8LVUiCCw=
+    priority: 4
+
+demo_note: mal witness-pool と同一（inter-org wire デモ）

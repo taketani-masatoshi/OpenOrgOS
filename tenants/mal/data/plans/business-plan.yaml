@@ -69,7 +69,7 @@ funding_plan: |
   借入総額 1億1,260万円。無利息。銀行借入予定なし（borrowing_plan: 0）。
   返済・DSCR: data/plans/debt-plan.yaml
   人向け: docs/finance/borrowing-plan.md · loan-repayment-plan.md · dscr-plan.md
-  契約確定スケジュール: TBD（協議条項 · CTR-008/009 返済 MD は目安）
+  契約確定スケジュール: FY2028 返済開始（CTR-008/009 · デモ確定 2026-07-05）
 
 notes: |
   会計年度: 2月始まり1月決算（fiscal_year_end_month: 1）。

@@ -18,8 +18,16 @@ import {
   writeYamlFile,
 } from "./utils.js";
 import { lintCompanyEventMarkdown } from "./company-events-lint.js";
+import {
+  appendChainLink,
+  backfillCompanyEventChain,
+  getCompanyEventChainTail,
+  loadCompanyEventChain,
+  validateCompanyEventChainWithRegistry,
+  verifyCompanyEventChain,
+} from "./company-events-chain.js";
 
-export const COMPANY_EVENT_KINDS = companyEventKind.options;
+export const COMPANY_EVENT_KINDS = companyEventKind.options.filter((k) => k !== "void");
 
 const REGISTRY_PATH = () => join(getDataDir(), "company-events.yaml");
 
@@ -69,7 +77,7 @@ export function saveCompanyEvents(data: CompanyEventsRegistry): void {
 export function initCompanyEventsFile(): void {
   const path = REGISTRY_PATH();
   if (!existsSync(path)) {
-    saveCompanyEvents({ schema_version: 1, events: [] });
+    saveCompanyEvents({ schema_version: 2, events: [] });
   }
 }
 
@@ -171,6 +179,13 @@ function renderEventMarkdown(event: CompanyEvent): string {
         .join("\n")
     : "- （なし）";
 
+  const voidLines =
+    event.kind === "void" && event.target_event_id
+      ? `\n## 無効化対象\n\n- target_event_id: ${event.target_event_id}\n- reason: ${event.void_reason ?? "（なし）"}\n`
+      : event.status === "voided"
+        ? `\n## 無効化\n\n- voided_by: ${event.voided_by ?? "（なし）"}\n- voided_at: ${event.voided_at ?? "（なし）"}\n- reason: ${event.void_reason ?? "（なし）"}\n`
+        : "";
+
   return `---
 event_id: ${event.id}
 occurred_at: ${event.occurred_at}
@@ -192,7 +207,7 @@ artifact_dir: ${event.artifact_dir}
 ## 関連 ID
 
 ${relatedLines}
-
+${voidLines}
 ## 出力書類
 
 書類はイベント記録と分離して保管します。
@@ -249,9 +264,43 @@ export interface CreateCompanyEventOptions {
   slug?: string;
   related?: CompanyEvent["related"];
   notes?: string;
+  targetEventId?: string;
+  voidReason?: string;
+  skipChain?: boolean;
+}
+
+function insertCompanyEventRecord(event: CompanyEvent): CompanyEvent {
+  const artifactDirAbs = resolveTenantPath(event.artifact_dir);
+  mkdirSync(join(artifactDirAbs, "records"), { recursive: true });
+  writeFileSync(
+    resolveTenantPath(event.event_path),
+    renderEventMarkdown(event),
+    "utf8"
+  );
+  writeFileSync(
+    join(artifactDirAbs, "00-artifact-index.md"),
+    renderArtifactIndex(event),
+    "utf8"
+  );
+
+  const registry = loadCompanyEvents();
+  registry.events.push(event);
+  if (registry.schema_version !== 2) {
+    registry.schema_version = 2;
+  }
+  saveCompanyEvents(registry);
+  refreshMonthIndex(event.month, registry.events);
+  return event;
 }
 
 export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEvent {
+  if (opts.kind === "void" && !opts.targetEventId) {
+    throw new Error("void kind events require targetEventId");
+  }
+  if (opts.kind === "void" && !opts.voidReason) {
+    throw new Error("void kind events require voidReason");
+  }
+
   initCompanyEventsFile();
   const occurredAt = opts.occurredAt ?? currentDate();
   const month = monthFromDate(occurredAt);
@@ -277,6 +326,11 @@ export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEven
   const eventPathRel = toLogicalPath(join(getDocsCompanyEventsDir(), month, `${id}.md`));
   const artifactDirRel = toLogicalPath(join(getDocsCompanyArtifactsDir(), month, id)) + "/";
 
+  const related =
+    opts.kind === "void" && opts.targetEventId
+      ? { ...(opts.related ?? {}), target_event_id: opts.targetEventId }
+      : opts.related;
+
   const event: CompanyEvent = companyEventSchema.parse({
     id,
     occurred_at: occurredAt,
@@ -286,26 +340,54 @@ export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEven
     status: "open",
     event_path: eventPathRel,
     artifact_dir: artifactDirRel,
-    related: opts.related,
+    related,
     notes: opts.notes,
     created_at: currentDate(),
+    target_event_id: opts.targetEventId,
+    void_reason: opts.voidReason,
   });
 
-  const artifactDirAbs = join(getDocsCompanyArtifactsDir(), month, id);
-  mkdirSync(join(artifactDirAbs, "records"), { recursive: true });
-  writeFileSync(join(getDocsCompanyEventsDir(), month, `${id}.md`), renderEventMarkdown(event), "utf8");
-  writeFileSync(join(artifactDirAbs, "00-artifact-index.md"), renderArtifactIndex(event), "utf8");
+  insertCompanyEventRecord(event);
 
-  registry.events.push(event);
-  saveCompanyEvents(registry);
-  refreshMonthIndex(month, registry.events);
+  if (opts.skipChain) {
+    return event;
+  }
 
-  return event;
+  const link = appendChainLink({
+    action: "create",
+    event: {
+      id: event.id,
+      occurred_at: event.occurred_at,
+      kind: event.kind,
+      title: event.title,
+      status: event.status,
+    },
+  });
+
+  const updatedRegistry = loadCompanyEvents();
+  const idx = updatedRegistry.events.findIndex((e) => e.id === event.id);
+  if (idx >= 0) {
+    updatedRegistry.events[idx] = companyEventSchema.parse({
+      ...updatedRegistry.events[idx],
+      chain_seq: link.seq,
+    });
+    saveCompanyEvents(updatedRegistry);
+    return updatedRegistry.events[idx]!;
+  }
+
+  return { ...event, chain_seq: link.seq };
 }
 
-export function listCompanyEvents(filter?: { month?: string; status?: CompanyEvent["status"] }): CompanyEvent[] {
+export function listCompanyEvents(filter?: {
+  month?: string;
+  status?: CompanyEvent["status"];
+  includeVoided?: boolean;
+}): CompanyEvent[] {
   initCompanyEventsFile();
   let events = loadCompanyEvents().events;
+  if (!filter?.includeVoided) {
+    events = events.filter((e) => e.status !== "voided");
+  }
   if (filter?.month) {
     events = events.filter((e) => e.month === filter.month);
   }
@@ -332,6 +414,7 @@ const STATUS_TRANSITIONS: Record<CompanyEvent["status"], CompanyEvent["status"][
   open: ["closed", "archived"],
   closed: ["archived"],
   archived: [],
+  voided: [],
 };
 
 export function updateCompanyEventStatus(
@@ -345,6 +428,9 @@ export function updateCompanyEventStatus(
     throw new Error(`Event not found: ${id}`);
   }
   const current = registry.events[idx]!;
+  if (current.status === "voided") {
+    throw new Error(`Cannot transition voided event: ${id}`);
+  }
   const allowed = STATUS_TRANSITIONS[current.status];
   if (!allowed.includes(status)) {
     throw new Error(`Cannot transition ${current.status} → ${status} for ${id}`);
@@ -441,6 +527,15 @@ export function validateCompanyEvents(): {
     }
   }
 
+  const chainResult = validateCompanyEventChainWithRegistry(registry);
+  for (const issue of chainResult.issues) {
+    issues.push({
+      code: issue.code,
+      message: issue.message,
+      event_id: issue.event_id,
+    });
+  }
+
   return { ok: issues.length === 0, issues, warnings };
 }
 
@@ -485,3 +580,99 @@ export function closeCompanyEvent(id: string): CompanyEvent {
 export function archiveCompanyEvent(id: string): CompanyEvent {
   return updateCompanyEventStatus(id, "archived");
 }
+
+export function voidCompanyEvent(targetId: string, reason: string): {
+  voidEvent: CompanyEvent;
+  target: CompanyEvent;
+} {
+  if (!reason.trim()) {
+    throw new Error("void reason is required");
+  }
+
+  initCompanyEventsFile();
+  const registry = loadCompanyEvents();
+  const targetIdx = registry.events.findIndex((e) => e.id === targetId);
+  if (targetIdx < 0) {
+    throw new Error(`Event not found: ${targetId}`);
+  }
+
+  const target = registry.events[targetIdx]!;
+  if (target.kind === "void") {
+    throw new Error(`Cannot void a void event: ${targetId}`);
+  }
+  if (target.status === "voided") {
+    throw new Error(`Event already voided: ${targetId}`);
+  }
+
+  const voidEvent = createCompanyEvent({
+    kind: "void",
+    title: `Void: ${target.title}`,
+    slug: `void-${target.id.replace(/^EVT-/, "").slice(0, 24)}`,
+    targetEventId: targetId,
+    voidReason: reason.trim(),
+    skipChain: true,
+  });
+
+  const createLink = appendChainLink({
+    action: "create",
+    event: {
+      id: voidEvent.id,
+      occurred_at: voidEvent.occurred_at,
+      kind: voidEvent.kind,
+      title: voidEvent.title,
+      status: voidEvent.status,
+    },
+  });
+
+  appendChainLink({
+    action: "void",
+    eventId: voidEvent.id,
+    targetEventId: targetId,
+    reason: reason.trim(),
+  });
+
+  const voidedAt = currentDate();
+  const updatedTarget: CompanyEvent = companyEventSchema.parse({
+    ...target,
+    status: "voided",
+    voided_by: voidEvent.id,
+    voided_at: voidedAt,
+    void_reason: reason.trim(),
+  });
+
+  const updatedVoidEvent: CompanyEvent = companyEventSchema.parse({
+    ...voidEvent,
+    chain_seq: createLink.seq,
+  });
+
+  const eventAbs = join(getDocsCompanyEventsDir(), updatedTarget.month, `${updatedTarget.id}.md`);
+  writeFileSync(eventAbs, renderEventMarkdown(updatedTarget), "utf8");
+
+  const voidEventAbs = join(
+    getDocsCompanyEventsDir(),
+    updatedVoidEvent.month,
+    `${updatedVoidEvent.id}.md`
+  );
+  writeFileSync(voidEventAbs, renderEventMarkdown(updatedVoidEvent), "utf8");
+
+  const freshRegistry = loadCompanyEvents();
+  const tIdx = freshRegistry.events.findIndex((e) => e.id === targetId);
+  const vIdx = freshRegistry.events.findIndex((e) => e.id === voidEvent.id);
+  if (tIdx >= 0) freshRegistry.events[tIdx] = updatedTarget;
+  if (vIdx >= 0) freshRegistry.events[vIdx] = updatedVoidEvent;
+  saveCompanyEvents(freshRegistry);
+  refreshMonthIndex(updatedTarget.month, freshRegistry.events);
+  if (updatedVoidEvent.month !== updatedTarget.month) {
+    refreshMonthIndex(updatedVoidEvent.month, freshRegistry.events);
+  }
+
+  return { voidEvent: updatedVoidEvent, target: updatedTarget };
+}
+
+export {
+  backfillCompanyEventChain,
+  getCompanyEventChainTail,
+  loadCompanyEventChain,
+  verifyCompanyEventChain,
+  companyEventChainPath,
+} from "./company-events-chain.js";

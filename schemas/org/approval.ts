@@ -21,6 +21,7 @@ export const orgWireOutboundDetailsSchema = z.object({
   broker_instruction: z.string().optional(),
   stakeholder_id: z.string().optional(),
   correlation_event_id: z.string().uuid().optional(),
+  company_event_id: z.string().regex(/^EVT-\d{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
   transaction_id: z.string().optional(),
   wire_event_id: z.string().uuid().optional(),
 });

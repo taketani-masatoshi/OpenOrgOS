@@ -88,6 +88,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProtocolDataDir } from "../lib/protocol/paths.js";
 import { findPeer, registerPeer, nextPeerId, resolvePeerOutboxBaseUrl } from "../lib/protocol/peers.js";
+import { migrateLegacyWebhookPeers } from "../lib/protocol/peers-migrate-legacy.js";
 import { readFileSync } from "node:fs";
 import { orgIdentityDocumentSchema } from "../../schemas/protocol/identity-exchange.js";
 
@@ -256,6 +257,29 @@ export function runProtocolPeerRegister(opts: ProtocolPeerRegisterOptions): void
   console.log(`✓ Registered peer ${profile.peer_id} · ${profile.display_name}`);
   if (profile.protocol_public_key) console.log(`  protocol_public_key: set`);
   if (profile.inbound_webhook_url) console.log(`  inbound_webhook_url: ${profile.inbound_webhook_url}`);
+}
+
+export interface ProtocolPeersMigrateLegacyOptions {
+  tenant?: string;
+  apply?: boolean;
+  toWireUrl?: string;
+  json?: boolean;
+}
+
+export function runProtocolPeersMigrateLegacy(opts: ProtocolPeersMigrateLegacyOptions = {}): void {
+  applyProtocolTenant(opts.tenant);
+  const { results, apply } = migrateLegacyWebhookPeers({
+    apply: opts.apply,
+    toWireUrl: opts.toWireUrl,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ apply, results }, null, 2));
+    return;
+  }
+  console.log(`peers migrate-legacy · ${apply ? "apply" : "dry-run"}`);
+  for (const r of results) {
+    console.log(`  [${r.status}] ${r.peer_id}${r.detail ? ` · ${r.detail}` : ""}`);
+  }
 }
 
 export interface ProtocolPeerDiscoverOptions {
@@ -2068,4 +2092,138 @@ export async function runProtocolTrustRegistryResolve(opts: ProtocolTrustRegistr
   if (resolved.node.did) console.log(`  did: ${resolved.node.did}`);
   if (resolved.node.node_uri) console.log(`  node_uri: ${resolved.node.node_uri}`);
   if (resolved.node.wire_url) console.log(`  wire_url: ${resolved.node.wire_url}`);
+}
+
+export interface ProtocolTrustRegistrySyncKeysOptions {
+  nodeId?: string;
+  wireUrl?: string;
+  force?: boolean;
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistrySyncKeys(
+  opts: ProtocolTrustRegistrySyncKeysOptions = {}
+): Promise<void> {
+  const { syncWireTrustRegistryPublicKeys } = await import(
+    "../lib/protocol/wire-trust-registry-sync.js"
+  );
+  const { results } = await syncWireTrustRegistryPublicKeys({
+    nodeId: opts.nodeId,
+    wireUrl: opts.wireUrl,
+    force: opts.force,
+    dryRun: opts.dryRun,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ results }, null, 2));
+    if (results.some((r) => r.status === "error")) process.exit(1);
+    return;
+  }
+  for (const r of results) {
+    console.log(
+      `  [${r.status}] ${r.node_id}${r.wire_url ? ` @ ${r.wire_url}` : ""}${r.detail ? ` · ${r.detail}` : ""}`
+    );
+  }
+  if (results.some((r) => r.status === "error")) process.exit(1);
+  console.log(`✓ trust-registry sync-keys (${results.length} node(s))`);
+}
+
+export interface ProtocolTrustRegistryPinLocalOptions {
+  tenant: string;
+  nodeId?: string;
+  force?: boolean;
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistryPinLocal(
+  opts: ProtocolTrustRegistryPinLocalOptions
+): Promise<void> {
+  const { pinLocalWireTrustRegistryKeys } = await import(
+    "../lib/protocol/wire-trust-registry-sync.js"
+  );
+  const { results } = pinLocalWireTrustRegistryKeys({
+    tenant: opts.tenant,
+    nodeId: opts.nodeId,
+    force: opts.force,
+    dryRun: opts.dryRun,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ results }, null, 2));
+    if (results.some((r) => r.status === "error")) process.exit(1);
+    return;
+  }
+  for (const r of results) {
+    console.log(`  [${r.status}] ${r.node_id}${r.detail ? ` · ${r.detail}` : ""}`);
+  }
+  if (results.some((r) => r.status === "error")) process.exit(1);
+  console.log("✓ trust-registry pin-local");
+  console.log("  Next: orgos protocol trusted-hubs-sync-keys --jurisdiction JP --force");
+}
+
+export interface ProtocolTrustRegistrySyncKeysOptions {
+  nodeId?: string;
+  wireUrl?: string;
+  force?: boolean;
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistrySyncKeys(
+  opts: ProtocolTrustRegistrySyncKeysOptions = {}
+): Promise<void> {
+  const { syncWireTrustRegistryPublicKeys } = await import(
+    "../lib/protocol/wire-trust-registry-sync.js"
+  );
+  const { results } = await syncWireTrustRegistryPublicKeys({
+    nodeId: opts.nodeId,
+    wireUrl: opts.wireUrl,
+    force: opts.force,
+    dryRun: opts.dryRun,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ results }, null, 2));
+    if (results.some((r) => r.status === "error")) process.exit(1);
+    return;
+  }
+  for (const r of results) {
+    console.log(
+      `  [${r.status}] ${r.node_id}${r.wire_url ? ` @ ${r.wire_url}` : ""}${r.detail ? ` · ${r.detail}` : ""}`
+    );
+  }
+  if (results.some((r) => r.status === "error")) process.exit(1);
+  console.log(`✓ trust-registry sync-keys (${results.length} node(s))`);
+}
+
+export interface ProtocolTrustRegistryPinLocalOptions {
+  tenant: string;
+  nodeId?: string;
+  force?: boolean;
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistryPinLocal(
+  opts: ProtocolTrustRegistryPinLocalOptions
+): Promise<void> {
+  const { pinLocalWireTrustRegistryKeys } = await import(
+    "../lib/protocol/wire-trust-registry-sync.js"
+  );
+  const { results } = pinLocalWireTrustRegistryKeys({
+    tenant: opts.tenant,
+    nodeId: opts.nodeId,
+    force: opts.force,
+    dryRun: opts.dryRun,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ results }, null, 2));
+    if (results.some((r) => r.status === "error")) process.exit(1);
+    return;
+  }
+  for (const r of results) {
+    console.log(`  [${r.status}] ${r.node_id}${r.detail ? ` · ${r.detail}` : ""}`);
+  }
+  if (results.some((r) => r.status === "error")) process.exit(1);
+  console.log("✓ trust-registry pin-local");
+  console.log("  Next: orgos protocol trusted-hubs-sync-keys --jurisdiction JP --force");
 }

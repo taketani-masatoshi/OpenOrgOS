@@ -1,0 +1,44 @@
+documents:
+  - id: GVP-001
+    title: 医療機器安全管理手順書（GVP マニュアル）
+    doc_number: GVP-001
+    template: templates/gvp/gvp-manual.md
+    gvp_chapter: "全体"
+    role_ids: [mah, distribution]
+    reg_refs: [REG-026]
+
+  - id: GVP-002
+    title: 苦情・有害事象等の収集手順
+    doc_number: GVP-002
+    template: templates/gvp/gvp-collection-procedure.md
+    gvp_chapter: "第2章 収集"
+    role_ids: [mah, distribution]
+
+  - id: GVP-003
+    title: 苦情・有害事象等の評価手順
+    doc_number: GVP-003
+    template: templates/gvp/gvp-evaluation-procedure.md
+    gvp_chapter: "第3章 評価"
+
+  - id: GVP-004
+    title: 苦情・有害事象等の報告手順
+    doc_number: GVP-004
+    template: templates/gvp/gvp-reporting-procedure.md
+    gvp_chapter: "第4章 報告"
+    role_ids: [mah]
+
+  - id: GVP-005
+    title: 安全管理に関する文書・記録管理手順
+    doc_number: GVP-005
+    template: templates/gvp/gvp-document-control-procedure.md
+    gvp_chapter: "第5章 文書管理"
+
+  - id: GVP-FRM-001
+    title: 苦情受付記録様式
+    doc_number: GVP-FRM-001
+    template: templates/gvp/gvp-complaint-form.md
+
+  - id: GVP-FRM-002
+    title: 有害事象報告記録様式
+    doc_number: GVP-FRM-002
+    template: templates/gvp/gvp-adverse-event-form.md

@@ -25,6 +25,7 @@ export * from "./wire-relay.js";
 export * from "./contract-protocol.js";
 export * from "./protocol-api-config.js";
 export * from "./mesh-routes.js";
+<<<<<<< HEAD
 export * from "./openorg-did.js";
 export * from "./wire-export-policy.js";
 export * from "./wire-gateway-audit.js";
@@ -32,3 +33,12 @@ export * from "./wire-gateway-config.js";
 export * from "./wire-gateway-internal.js";
 export * from "./wire-message.js";
 export * from "./wire-trust-registry.js";
+=======
+export * from "./gov-gateway-adapter.js";
+export * from "./gov-gateway-profile.js";
+export * from "./wire-message.js";
+export * from "./wire-gateway-internal.js";
+export * from "./wire-gateway-config.js";
+export * from "./wire-gateway-audit.js";
+export * from "./wire-export-policy.js";
+>>>>>>> wip/steward-remaining-2026-07-08

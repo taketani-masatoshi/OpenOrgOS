@@ -1,0 +1,29 @@
+# Compose seed — copy into tenants/{id}/data/protocol/wire-gateway.yaml
+# docker compose sets internal_api.base_url to the Docker service name.
+
+wire_version: "0.1"
+node_id: org.example.co.jp
+node_uri: steward://tenant/demo
+display_name: Example Corp
+
+listen:
+  host: 0.0.0.0
+  port: 8443
+
+internal_api:
+  base_url: http://wire-internal-api:8080/internal/v1/wire
+  bearer_token: dev-change-me
+
+security:
+  timestamp_skew_sec: 300
+  nonce_ttl_sec: 604800
+  rate_limit_per_min: 120
+
+outbound:
+  poll_interval_ms: 5000
+
+audit:
+  path: data/protocol/wire-gateway-audit.jsonl
+
+legacy:
+  enabled: false

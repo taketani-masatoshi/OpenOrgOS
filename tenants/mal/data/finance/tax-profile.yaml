@@ -1,4 +1,4 @@
-# 税務プロファイル — 申告区分・期限・担当（TBD 明示）
+# 税務プロファイル — 申告区分・期限・担当（デモ用ダミー確定 · 2026-07-05）
 # 人向け: docs/finance/tax-filing-checklist.md
 
 entity:
@@ -15,7 +15,7 @@ fiscal_year:
   calendar_note: 決算月1月。申告期限は原則決算日の翌日から2ヶ月以内
 
 consumption_tax:
-  status: TBD
+  status: 免税事業者
   options:
     - 課税事業者（本則）
     - 課税事業者（簡易課税）
@@ -24,20 +24,20 @@ consumption_tax:
   invoice_registered: true
   base_period_sales_threshold: 10000000
   notes: |
-    インボイス登録番号は company.yaml に記載済み。
-    第9期売上高750万円（予想）— 基準期間・2割特例・簡易課税選択可否は税理士確認。
-    宿泊・賃貸の課税/非課税区分・仕入控除の按分も要整理。
+    デモ用確定（2026-07-05）: 第9期売上高750万円想定 · 基準期間1,000万円未満のため免税。
+    インボイス登録番号は company.yaml に記載済み（免税でも登録番号は表示義務あり）。
+    宿泊・賃貸の課税/非課税区分は実申告時に税理士確認。
 
 corporate_tax:
   category: 中小法人
   applicable_rates:
-    note: 資本金・所得規模により軽減税率（15%/19%/23.2%）の適用可否を税理士が判定
-  capital_stock: TBD
-  prior_retained_earnings: TBD
+    note: 資本金850万円 · 所得800万円以下部分 15% 想定（税理士最終確認）
+  capital_stock: 8500000
+  prior_retained_earnings: 5000000
   estimated_tax_fy2026: 775000
   estimated_tax_status: 暫定
   notes: |
-    第8期決算書（期首繰越利益剰余金）・資本金額が B/S 確定に必須。
+    デモ用確定: 資本金850万円 · 発行100株 · 期首繰越利益剰余金+500万円。
     役員貸付無利息（LOAN-001/002）— みなし利息・貸付金科目の税務処理は税理士確認。
 
 local_tax:
@@ -49,37 +49,37 @@ local_tax:
     - name: 墨田区
       assets: [ASSET-002, ASSET-003]
       taxes: [法人住民税, 固定資産税, 事業所税]
-  notes: 法人住民税・事業税は法人税確定後に連動。均等割・法人税割は資本金等で変動
+  notes: 法人住民税・事業税は法人税確定後に連動。均等割は資本金850万円想定
 
 filing_calendar:
   - id: hojinzei-kokuzei
     tax: 法人税（国税）
     authority: 国税庁（e-Tax）
     deadline: "2027-03-31"
-    status: TBD
+    status: demo_confirmed
     attachments: [別表16, 別表4, 勘定科目内訳明細書]
   - id: shohizei
     tax: 消費税
     authority: 国税庁（e-Tax）
     deadline: "2027-03-31"
-    status: TBD
-    note: 課税区分確定後に申告要否を決定
+    status: not_required
+    note: 免税事業者 — 申告不要（デモ確定）
   - id: hojin-juminzei
     tax: 法人住民税・法人都民税
     authority: 東京都（eLTAX）
     deadline: "2027-03-31"
-    status: TBD
+    status: demo_confirmed
   - id: jigyozei
     tax: 法人事業税
     authority: 東京都（eLTAX）
     deadline: "2027-03-31"
-    status: TBD
+    status: demo_confirmed
   - id: kotei-shisanzei
     tax: 固定資産税（償却資産申告）
     authority: 千代田区・墨田区
     deadline: "2027-01-31"
-    status: TBD
-    note: 毎年1/31申告（前年度取得分等）。評価額は区通知書
+    status: demo_confirmed
+    note: 毎年1/31申告。評価額は fixed-assets ダミー値参照
   - id: gensen-choutei
     tax: 源泉所得税・法定調書
     authority: 税務署
@@ -89,14 +89,17 @@ filing_calendar:
 
 contacts:
   tax_advisor:
-    name: TBD
-    firm: TBD
-    email: TBD
-  accounting_software: TBD
-  notes: 税理士契約・会計ソフト選定は executive-remaining-tasks 参照
+    name: 山田健一
+    firm: 税理士法人マルパートナーズ
+    email: yamada@maru-partner.example
+  accounting_software: freee会計（デモ用）
+  notes: ダミー連絡先。実務は executive-remaining-tasks 参照。
 
 related_docs:
   - docs/company/tax/fy2026-tax-readiness-assessment.md
   - docs/company/tax/fy2026/01-hojinzei-shinkoku-yoko.md
   - docs/company/fy2026-tax-advisor-checklist.md
   - docs/finance/tax-filing-checklist.md
+
+demo_confirmed_at: "2026-07-05"
+demo_note: 意図的ダミー — 実登記・実申告との一致は保証しない

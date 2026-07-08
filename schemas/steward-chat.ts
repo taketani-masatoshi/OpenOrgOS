@@ -21,6 +21,14 @@ export const todayInboxItemSchema = z.object({
   title: z.string(),
 });
 
+export const todayAgentRelayItemSchema = z.object({
+  id: z.string(),
+  field_agent: z.string(),
+  subject: z.string(),
+  type: z.string().optional(),
+  has_report: z.boolean().optional(),
+});
+
 export const todayKpiSchema = z.object({
   label: z.string(),
   value: z.string(),
@@ -67,6 +75,10 @@ export const todayContextSchema = z.object({
   witness_pending_count: z.number().int().nonnegative().default(0),
   inbox_pending: z.array(todayInboxItemSchema),
   escalate_pending_count: z.number().int().nonnegative(),
+  agent_coo_relay_count: z.number().int().nonnegative().default(0),
+  agent_coo_relay: z.array(todayAgentRelayItemSchema).default([]),
+  agent_steward_inbox_count: z.number().int().nonnegative().default(0),
+  agent_steward_inbox: z.array(todayAgentRelayItemSchema).default([]),
   kpis: z.array(todayKpiSchema).max(6),
   executive_summary_path: z.string().optional(),
   dashboard_path: z.string().optional(),
