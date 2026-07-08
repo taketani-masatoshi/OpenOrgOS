@@ -93,8 +93,10 @@ export async function pingSandboxEndpoint(
 
   try {
     const head = await attempt("HEAD");
-    if (head.ok || (head.httpStatus && head.httpStatus < 400)) return head;
-    // Some sandboxes reject HEAD — fall back to GET
+    // Fall back on method rejection or server error; 2xx/3xx HEAD is enough
+    if (head.httpStatus != null && head.httpStatus >= 200 && head.httpStatus < 400) {
+      return head;
+    }
     return await attempt("GET");
   } catch {
     try {
