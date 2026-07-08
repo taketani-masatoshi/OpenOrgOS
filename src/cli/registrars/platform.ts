@@ -259,8 +259,12 @@ export function registerPlatformCommands(program: Command): void {
     .command("entity-forms <code>")
     .description("List selectable entity forms for a jurisdiction")
     .option("--subdivision <code>", "Legal subdivision (e.g. DE for Delaware)")
-    .action((code: string, opts: { subdivision?: string }) =>
-      runJurisdictionEntityForms(code, opts.subdivision)
+    .option(
+      "--category <id>",
+      "Filter by category (e.g. professional_corporation — JP only)"
+    )
+    .action((code: string, opts: { subdivision?: string; category?: string }) =>
+      runJurisdictionEntityForms(code, opts.subdivision, { category: opts.category })
     );
   jurisdictionCmd
     .command("check [code]")

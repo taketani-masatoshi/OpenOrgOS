@@ -195,6 +195,14 @@ export function resolveEntityForm(
       `Unknown entity_form "${formId}" for jurisdiction ${scope} — run: steward jurisdiction entity-forms ${code}`
     );
   }
+  if (
+    form.jurisdiction_exclusive?.length &&
+    !form.jurisdiction_exclusive.includes(code)
+  ) {
+    throw new Error(
+      `entity_form "${formId}" is exclusive to ${form.jurisdiction_exclusive.join(", ")} — not valid for ${code}`
+    );
+  }
   return form;
 }
 

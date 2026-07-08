@@ -70,16 +70,26 @@ export function runJurisdictionList(): void {
   console.log("組織形態: `jurisdiction entity-forms JP` · `jurisdiction entity-forms US --subdivision DE`");
 }
 
-export function runJurisdictionEntityForms(codeArg: string, subdivision?: string): void {
+export function runJurisdictionEntityForms(
+  codeArg: string,
+  subdivision?: string,
+  opts?: { category?: string }
+): void {
   const code = resolveJurisdictionCode(codeArg);
-  const forms = listEntityForms(code, subdivision ?? null);
+  let forms = listEntityForms(code, subdivision ?? null);
+  if (opts?.category) {
+    forms = forms.filter((f) => f.category === opts.category);
+  }
   const subdivisions = listLegalSubdivisions(code);
   const scope = subdivision ? `${code} · subdivision ${subdivision}` : code;
-  console.log(`Entity forms — ${scope} (${forms.length}):\n`);
-  console.log("| id | name | status |");
-  console.log("|----|------|--------|");
+  const catNote = opts?.category ? ` · category ${opts.category}` : "";
+  console.log(`Entity forms — ${scope}${catNote} (${forms.length}):\n`);
+  console.log("| id | name | category | status |");
+  console.log("|----|------|----------|--------|");
   for (const f of forms) {
-    console.log(`| ${f.id} | ${f.name} | ${f.status ?? "active"} |`);
+    console.log(
+      `| ${f.id} | ${f.name} | ${f.category ?? "—"} | ${f.status ?? "active"} |`
+    );
   }
   if (subdivisions.length && !subdivision) {
     console.log(`\nSubdivisions: ${subdivisions.join(", ")}`);

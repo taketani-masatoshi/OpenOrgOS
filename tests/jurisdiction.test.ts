@@ -12,6 +12,7 @@ import {
   listJurisdictionCodes,
   loadCountriesRegistry,
   resolveCorporateCoreReg,
+  resolveEntityForm,
   resolveJurisdictionCode,
 } from "../src/lib/jurisdiction.js";
 import { loadRegulationsCatalog } from "../src/lib/regulations.js";
@@ -62,7 +63,36 @@ describe("jurisdiction registry", () => {
     expect(ids).toContain("gk");
     expect(ids).toContain("tech_research_combination");
     expect(ids).toContain("civil_law_partnership");
-    expect(ids.length).toBeGreaterThanOrEqual(20);
+    expect(ids.length).toBeGreaterThanOrEqual(30);
+  });
+
+  it("lists JP professional corporations with category and jurisdiction_exclusive", () => {
+    const forms = listEntityForms("JP");
+    const professionalIds = [
+      "attorney_corporation",
+      "tax_accountant_corporation",
+      "certified_public_accountant_corporation",
+      "judicial_scrivener_corporation",
+      "administrative_scrivener_corporation",
+      "labor_and_social_security_attorney_corporation",
+      "patent_attorney_corporation",
+    ];
+    for (const id of professionalIds) {
+      const entry = forms.find((f) => f.id === id);
+      expect(entry, id).toBeDefined();
+      expect(entry?.category).toBe("professional_corporation");
+      expect(entry?.jurisdiction_exclusive).toEqual(["JP"]);
+      expect(entry?.governing_law_ja).toBeTruthy();
+    }
+    const usForms = listEntityForms("US");
+    expect(usForms.some((f) => f.category === "professional_corporation")).toBe(false);
+  });
+
+  it("resolves JP professional corporation entity form", () => {
+    const form = resolveEntityForm("JP", "attorney_corporation");
+    expect(form.category).toBe("professional_corporation");
+    expect(form.jurisdiction_exclusive).toEqual(["JP"]);
+    expect(form.governing_law_ja).toBe("弁護士法");
   });
 
   it("lists Delaware entity forms under US subdivision", () => {
@@ -96,9 +126,9 @@ describe("jurisdiction catalogs", () => {
     setTenantId("mal");
   });
 
-  it("loads JP catalog with 24 regulations", () => {
+  it("loads JP catalog with 26 regulations", () => {
     const catalog = loadRegulationsCatalog();
-    expect(catalog.regulations.length).toBe(24);
+    expect(catalog.regulations.length).toBe(26);
     expect(existsSync(getRegulationsCatalogPath())).toBe(true);
   });
 
