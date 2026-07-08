@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { assertMcpAuthConfigured, isMcpAuthDisabled, requiredMcpToken } from "./auth.js";
+import { findOperatorByKey, verifyOperatorKey } from "../org/operators.js";
 import { createStewardMcpServer } from "./steward-server.js";
 
 export interface McpHttpServerOptions {
@@ -21,12 +22,20 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
+function extractBearer(req: IncomingMessage): string | undefined {
+  const header = req.headers.authorization?.trim();
+  if (!header?.startsWith("Bearer ")) return undefined;
+  return header.slice("Bearer ".length).trim();
+}
+
 function validateBearer(req: IncomingMessage): boolean {
   if (isMcpAuthDisabled()) return true;
+  const token = extractBearer(req);
+  if (!token) return false;
   const expected = requiredMcpToken();
-  if (!expected) return false;
-  const header = req.headers.authorization?.trim();
-  return header === `Bearer ${expected}`;
+  if (expected && token === expected) return true;
+  const op = findOperatorByKey(token);
+  return Boolean(op && verifyOperatorKey(op.key_hash, token));
 }
 
 function unauthorized(res: ServerResponse): void {

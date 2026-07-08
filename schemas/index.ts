@@ -26,3 +26,9 @@ export * from "./invoice-template.js";
 export * from "./protocol/index.js";
 export * from "./org/index.js";
 export * from "./jurisdiction/index.js";
+
+export * from "./agent-capability.js";
+export * from "./agent-reporting.js";
+export * from "./company-events-attestation.js";
+export * from "./company-events-chain.js";
+export * from "./control-framework.js";

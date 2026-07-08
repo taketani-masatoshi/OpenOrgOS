@@ -5,11 +5,14 @@ import { approveFromStewardChat } from "../steward-chat/wire-approve.js";
 import {
   flushWitnessPendingFromChat,
   flushWireFromChat,
+  mcpOperatorPermissions,
   mcpOperatorUser,
   registerWitnessFromChat,
   verifyWitnessFromChat,
 } from "../steward-chat/wire-witness.js";
 import type { WitnessAttestationSide } from "../../../schemas/protocol/witness-attestation.js";
+import { mcpToolPermission } from "../console-auth/operator-rbac.js";
+import type { OperatorPermission } from "../../../schemas/org/operator.js";
 
 export interface McpToolDefinition {
   name: string;
@@ -132,7 +135,8 @@ function checkMcpRateLimit(tool: string): boolean {
 
 export async function callStewardMcpTool(
   tool: string,
-  args: Record<string, unknown> = {}
+  args: Record<string, unknown> = {},
+  opts?: { token?: string }
 ): Promise<McpToolResult> {
   if (!checkMcpRateLimit(tool)) {
     return {
@@ -141,7 +145,24 @@ export async function callStewardMcpTool(
     };
   }
 
-  const user = mcpOperatorUser();
+  const token = opts?.token;
+  const requiredPerm = mcpToolPermission(tool);
+  if (requiredPerm) {
+    const perms = mcpOperatorPermissions(token) as OperatorPermission[];
+    if (!perms.includes(requiredPerm)) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `forbidden: operator lacks permission ${requiredPerm} for tool ${tool}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+
+  const user = mcpOperatorUser(token);
 
   if (tool === "steward_today") {
     const ctx = buildTodayContext();

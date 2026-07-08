@@ -1,0 +1,759 @@
+version: "1"
+agents:
+  - id: executive_steward
+    summary_slug: executive-steward
+    data_paths: []
+    docs_paths:
+      - docs/reports/dashboard/
+      - docs/reports/executive-notes/
+    route_ids:
+      - executive-daily
+    skills:
+      - executive_dashboard
+      - daily_ops
+      - p0_closing
+    pulse_checks:
+      - type: path_exists
+        path: docs/reports/dashboard/
+      - type: path_exists
+        path: docs/reports/executive-notes/
+  - id: secretary
+    summary_slug: secretary
+    data_paths:
+      - data/executive/
+    docs_paths:
+      - docs/executive/
+    route_ids:
+      - secretary-schedule
+      - secretary-one-on-one
+      - secretary-correspondence
+    skills:
+      - schedule_management
+      - one_on_one_prep
+      - external_correspondence
+    pulse_checks:
+      - type: path_exists
+        path: data/executive/
+      - type: path_exists
+        path: docs/executive/
+  - id: finance
+    summary_slug: finance
+    data_paths:
+      - data/finance/
+      - data/plans/
+    docs_paths:
+      - docs/plans/
+      - docs/finance/
+    route_ids:
+      - monthly-close
+      - finance-variance
+    skills:
+      - monthly_close
+      - cashflow_forecast
+      - variance_analysis
+      - capex_planning
+    pulse_checks:
+      - type: path_exists
+        path: data/finance/
+      - type: path_exists
+        path: data/plans/
+      - type: path_exists
+        path: docs/plans/
+      - type: path_exists
+        path: docs/finance/
+  - id: contract
+    summary_slug: contract
+    data_paths:
+      - data/contracts/
+    docs_paths:
+      - docs/contracts/
+    route_ids:
+      - contract-expiry
+    skills:
+      - contract_expiry_check
+      - contract_register
+    pulse_checks:
+      - type: path_exists
+        path: data/contracts/
+      - type: path_exists
+        path: docs/contracts/
+  - id: compliance
+    summary_slug: compliance
+    data_paths:
+      - data/compliance/
+    docs_paths:
+      - docs/compliance/
+      - docs/company/regulations/
+      - docs/company/licenses/
+    route_ids:
+      - compliance-permit
+      - compliance-controls
+    skills:
+      - permit_expiry_check
+      - iso_control_review
+    pulse_checks:
+      - type: path_exists
+        path: data/compliance/
+      - type: path_exists
+        path: docs/compliance/
+      - type: path_exists
+        path: docs/company/regulations/
+      - type: path_exists
+        path: docs/company/licenses/
+  - id: operations
+    summary_slug: operations
+    data_paths:
+      - data/document-io.yaml
+    docs_paths:
+      - docs/io/
+    route_ids:
+      - travel-booking
+    skills:
+      - operations_records_review
+      - operations_travel_booking
+    pulse_checks:
+      - type: path_exists
+        path: data/document-io.yaml
+      - type: path_exists
+        path: docs/io/
+  - id: coo
+    summary_slug: coo
+    data_paths: []
+    docs_paths:
+      - docs/reports/routing-queue/
+      - docs/reports/agent-summaries/
+    route_ids:
+      - coo-work-order
+    skills:
+      - coo_work_order_triage
+      - coo_routing_review
+    pulse_checks:
+      - type: path_exists
+        path: docs/reports/routing-queue/
+      - type: path_exists
+        path: docs/reports/agent-summaries/
+  - id: cto
+    summary_slug: cto
+    data_paths: []
+    docs_paths:
+      - docs/engineering/
+    route_ids:
+      - cto-architecture
+    skills:
+      - cto_architecture_review
+      - cto_tech_radar
+    pulse_checks:
+      - type: path_exists
+        path: docs/engineering/
+  - id: engineering
+    summary_slug: engineering
+    data_paths: []
+    docs_paths:
+      - docs/engineering/
+    route_ids:
+      - engineering-code
+    skills:
+      - engineering_code_review
+      - engineering_standards_check
+    pulse_checks:
+      - type: path_exists
+        path: docs/engineering/
+  - id: design_lead
+    summary_slug: design-lead
+    data_paths: []
+    docs_paths:
+      - docs/design/
+    route_ids:
+      - design-lead-review
+    skills:
+      - design_lead_review
+      - design_system_audit
+    pulse_checks:
+      - type: path_exists
+        path: docs/design/
+  - id: design
+    summary_slug: design
+    data_paths: []
+    docs_paths:
+      - docs/design/assets/
+    route_ids:
+      - design-assets
+    skills:
+      - design_asset_inventory
+      - design_ui_spec_draft
+    pulse_checks:
+      - type: path_exists
+        path: docs/design/assets/
+  - id: sales_lead
+    summary_slug: sales-lead
+    data_paths:
+      - data/sales/
+    docs_paths:
+      - docs/sales/
+    route_ids:
+      - sales-pipeline
+    skills:
+      - sales_pipeline_review
+      - sales_forecast_prep
+    pulse_checks:
+      - type: path_exists
+        path: data/sales/
+      - type: path_exists
+        path: docs/sales/
+  - id: sales_outbound
+    summary_slug: sales-outbound
+    data_paths:
+      - data/sales/outbound/
+    docs_paths:
+      - docs/sales/outbound/
+    route_ids:
+      - sales-outbound
+    skills:
+      - sales_outbound_list_review
+      - sales_outreach_draft
+    pulse_checks:
+      - type: path_exists
+        path: data/sales/outbound/
+      - type: path_exists
+        path: docs/sales/outbound/
+  - id: sales_inbound
+    summary_slug: sales-inbound
+    data_paths:
+      - data/sales/inbound/
+    docs_paths:
+      - docs/sales/inbound/
+    route_ids:
+      - sales-inbound
+    skills:
+      - sales_inbound_triage
+      - sales_inquiry_response
+    pulse_checks:
+      - type: path_exists
+        path: data/sales/inbound/
+      - type: path_exists
+        path: docs/sales/inbound/
+  - id: customer_success
+    summary_slug: customer-success
+    data_paths:
+      - data/customers/
+    docs_paths:
+      - docs/customers/
+    route_ids:
+      - customer-success
+    skills:
+      - cs_health_check
+      - cs_renewal_risk
+    pulse_checks:
+      - type: path_exists
+        path: data/customers/
+      - type: path_exists
+        path: docs/customers/
+  - id: marketing_lead
+    summary_slug: marketing-lead
+    data_paths:
+      - data/marketing/
+    docs_paths:
+      - docs/marketing/
+    route_ids:
+      - marketing-content
+    skills:
+      - marketing_content_calendar
+      - marketing_campaign_brief
+    pulse_checks:
+      - type: path_exists
+        path: data/marketing/
+      - type: path_exists
+        path: docs/marketing/
+  - id: social_media
+    summary_slug: social-media
+    data_paths:
+      - data/marketing/social/
+    docs_paths:
+      - docs/marketing/social/
+    route_ids:
+      - social-post
+    skills:
+      - social_calendar
+      - social_post_draft
+    pulse_checks:
+      - type: path_exists
+        path: data/marketing/social/
+      - type: path_exists
+        path: docs/marketing/social/
+  - id: personal_finance
+    summary_slug: personal-finance
+    data_paths:
+      - data/personal-finance/
+    docs_paths:
+      - docs/personal-finance/
+    route_ids:
+      - personal-finance
+    skills:
+      - personal_budget_review
+      - personal_expense_categorize
+    pulse_checks:
+      - type: path_exists
+        path: data/personal-finance/
+      - type: path_exists
+        path: docs/personal-finance/
+  - id: legal
+    summary_slug: legal
+    data_paths:
+      - data/legal/
+    docs_paths:
+      - docs/legal/
+    route_ids:
+      - legal-teikan
+    skills:
+      - legal_register_review
+      - legal_clause_check
+    pulse_checks:
+      - type: path_exists
+        path: data/legal/
+      - type: path_exists
+        path: docs/legal/
+  - id: security
+    summary_slug: security
+    data_paths:
+      - data/classification-registry.yaml
+    docs_paths:
+      - docs/compliance/privacy/
+    route_ids:
+      - security-audit
+    skills:
+      - security_control_review
+      - security_classification_audit
+    pulse_checks:
+      - type: path_exists
+        path: data/classification-registry.yaml
+      - type: path_exists
+        path: docs/compliance/privacy/
+  - id: human_resources
+    summary_slug: human-resources
+    data_paths:
+      - data/hr/
+    docs_paths:
+      - docs/company/hr/
+    route_ids:
+      - hr-labor
+    skills:
+      - hr_policy_review
+      - hr_labor_compliance
+    pulse_checks:
+      - type: path_exists
+        path: data/hr/
+      - type: path_exists
+        path: docs/company/hr/
+  - id: corporate_governance
+    summary_slug: corporate-governance
+    data_paths:
+      - data/governance/
+    docs_paths:
+      - docs/company/governance/
+    route_ids:
+      - corporate-meetings
+    skills:
+      - governance_meeting_prep
+      - governance_register_review
+    pulse_checks:
+      - type: path_exists
+        path: data/governance/
+      - type: path_exists
+        path: docs/company/governance/
+  - id: accounting
+    summary_slug: accounting
+    data_paths:
+      - data/finance/invoices/
+    docs_paths:
+      - docs/finance/accounting/
+    route_ids:
+      - accounting-ops
+    skills:
+      - monthly_close
+    pulse_checks:
+      - type: path_exists
+        path: data/finance/invoices/
+      - type: path_exists
+        path: docs/finance/accounting/
+  - id: tax
+    summary_slug: tax
+    data_paths:
+      - data/finance/tax/
+    docs_paths:
+      - docs/company/tax/
+    route_ids:
+      - tax-filing
+    skills:
+      - tax_filing_prep
+    pulse_checks:
+      - type: path_exists
+        path: data/finance/tax/
+      - type: path_exists
+        path: docs/company/tax/
+  - id: procurement
+    summary_slug: procurement
+    data_paths:
+      - data/procurement/
+    docs_paths:
+      - docs/procurement/
+    route_ids:
+      - procurement-order
+    skills:
+      - procurement_order_review
+      - procurement_vendor_eval
+    pulse_checks:
+      - type: path_exists
+        path: data/procurement/
+      - type: path_exists
+        path: docs/procurement/
+  - id: government_affairs
+    summary_slug: government-affairs
+    data_paths:
+      - data/government/
+    docs_paths:
+      - docs/government/
+    route_ids:
+      - subsidy-government
+    skills:
+      - gov_subsidy_eligibility
+      - gov_regulatory_watch
+    pulse_checks:
+      - type: path_exists
+        path: data/government/
+      - type: path_exists
+        path: docs/government/
+  - id: intellectual_property
+    summary_slug: intellectual-property
+    data_paths:
+      - data/ip/
+    docs_paths:
+      - docs/ip/
+    route_ids:
+      - ip-trademark
+    skills:
+      - ip_portfolio_review
+      - ip_trademark_status
+    pulse_checks:
+      - type: path_exists
+        path: data/ip/
+      - type: path_exists
+        path: docs/ip/
+  - id: general_affairs
+    summary_slug: general-affairs
+    data_paths:
+      - data/general-affairs/
+    docs_paths:
+      - docs/general-affairs/
+    route_ids:
+      - general-affairs
+    skills:
+      - ga_office_ops_check
+      - ga_vendor_contract_review
+    pulse_checks:
+      - type: path_exists
+        path: data/general-affairs/
+      - type: path_exists
+        path: docs/general-affairs/
+  - id: project_management
+    summary_slug: project-management
+    data_paths:
+      - data/projects/
+    docs_paths:
+      - docs/projects/
+    route_ids:
+      - pmo-project
+    skills:
+      - pm_status_review
+      - pm_milestone_tracking
+    pulse_checks:
+      - type: path_exists
+        path: data/projects/
+      - type: path_exists
+        path: docs/projects/
+  - id: product_management
+    summary_slug: product-management
+    data_paths:
+      - data/product/
+    docs_paths:
+      - docs/product/
+    route_ids:
+      - product-roadmap
+    skills:
+      - pm_roadmap_review
+      - pm_feature_prioritization
+    pulse_checks:
+      - type: path_exists
+        path: data/product/
+      - type: path_exists
+        path: docs/product/
+  - id: recruiting
+    summary_slug: recruiting
+    data_paths:
+      - data/recruiting/
+    docs_paths:
+      - docs/recruiting/
+    route_ids:
+      - recruiting-pipeline
+    skills:
+      - recruiting_pipeline_review
+      - recruiting_interview_prep
+    pulse_checks:
+      - type: path_exists
+        path: data/recruiting/
+      - type: path_exists
+        path: docs/recruiting/
+  - id: risk_insurance
+    summary_slug: risk-insurance
+    data_paths:
+      - data/risk/
+    docs_paths:
+      - docs/risk/
+    route_ids:
+      - risk-insurance
+    skills:
+      - risk_register_review
+      - risk_insurance_renewal
+    pulse_checks:
+      - type: path_exists
+        path: data/risk/
+      - type: path_exists
+        path: docs/risk/
+  - id: data_analytics
+    summary_slug: data-analytics
+    data_paths:
+      - data/analytics/
+    docs_paths:
+      - docs/analytics/
+    route_ids:
+      - data-analytics
+    skills:
+      - analytics_metrics_review
+      - analytics_data_quality
+    pulse_checks:
+      - type: path_exists
+        path: data/analytics/
+      - type: path_exists
+        path: docs/analytics/
+  - id: devops
+    summary_slug: devops
+    data_paths:
+      - data/devops/
+    docs_paths:
+      - docs/devops/
+    route_ids:
+      - devops-ops
+    skills:
+      - devops_infra_health
+      - devops_deploy_checklist
+    pulse_checks:
+      - type: path_exists
+        path: data/devops/
+      - type: path_exists
+        path: docs/devops/
+  - id: investor_relations
+    summary_slug: investor-relations
+    data_paths:
+      - data/investor-relations/
+    docs_paths:
+      - docs/investor-relations/
+    route_ids:
+      - investor-relations
+    skills:
+      - ir_materials_prep
+      - ir_shareholder_comm
+    pulse_checks:
+      - type: path_exists
+        path: data/investor-relations/
+      - type: path_exists
+        path: docs/investor-relations/
+  - id: esg_sustainability
+    summary_slug: esg-sustainability
+    data_paths:
+      - data/esg/
+    docs_paths:
+      - docs/esg/
+    route_ids:
+      - esg-sustainability
+    skills:
+      - esg_metrics_review
+      - esg_report_prep
+    pulse_checks:
+      - type: path_exists
+        path: data/esg/
+      - type: path_exists
+        path: docs/esg/
+  - id: internal_audit
+    summary_slug: internal-audit
+    data_paths:
+      - data/compliance/
+    docs_paths:
+      - docs/audit/internal/
+      - docs/compliance/
+    route_ids:
+      - internal-audit-scope
+    skills:
+      - internal_audit_scope
+    pulse_checks:
+      - type: path_exists
+        path: data/compliance/
+      - type: path_exists
+        path: docs/audit/internal/
+      - type: path_exists
+        path: docs/compliance/
+  - id: records_audit
+    summary_slug: records-audit
+    data_paths:
+      - data/company-events.yaml
+      - data/company-events-chain.jsonl
+      - data/company-events-attestations.jsonl
+    docs_paths:
+      - docs/company/events/
+      - docs/audit/records/
+      - docs/reports/agent-summaries/records-audit/
+    route_ids:
+      - company-events-chain-audit
+      - company-events-monthly-audit
+    skills:
+      - company_events_chain_verify
+      - company_events_weekly_attest
+      - company_events_monthly_audit
+    pulse_checks:
+      - type: path_exists
+        path: data/company-events.yaml
+      - type: path_exists
+        path: data/company-events-chain.jsonl
+  - id: privacy_officer
+    summary_slug: privacy-officer
+    data_paths:
+      - data/classification-registry.yaml
+    docs_paths:
+      - docs/compliance/privacy/
+    route_ids:
+      - privacy-officer
+    skills:
+      - privacy_impact_review
+      - privacy_data_inventory
+    pulse_checks:
+      - type: path_exists
+        path: data/classification-registry.yaml
+      - type: path_exists
+        path: docs/compliance/privacy/
+  - id: treasury
+    summary_slug: treasury
+    data_paths:
+      - data/treasury/
+    docs_paths:
+      - docs/treasury/
+    route_ids:
+      - treasury-cash
+    skills:
+      - treasury_cash_position
+      - treasury_liquidity_forecast
+    pulse_checks:
+      - type: path_exists
+        path: data/treasury/
+      - type: path_exists
+        path: docs/treasury/
+  - id: customer_support
+    summary_slug: customer-support
+    data_paths:
+      - data/support/
+    docs_paths:
+      - docs/support/
+    route_ids:
+      - customer-support
+    skills:
+      - support_ticket_triage
+      - support_sla_check
+    pulse_checks:
+      - type: path_exists
+        path: data/support/
+      - type: path_exists
+        path: docs/support/
+  - id: pr_communications
+    summary_slug: pr-communications
+    data_paths:
+      - data/pr/
+    docs_paths:
+      - docs/pr/
+    route_ids:
+      - pr-communications
+    skills:
+      - pr_press_release_draft
+      - pr_media_monitoring
+    pulse_checks:
+      - type: path_exists
+        path: data/pr/
+      - type: path_exists
+        path: docs/pr/
+  - id: learning_development
+    summary_slug: learning-development
+    data_paths:
+      - data/learning/
+    docs_paths:
+      - docs/learning/
+    route_ids:
+      - learning-development
+    skills:
+      - ld_training_plan
+      - ld_competency_gap
+    pulse_checks:
+      - type: path_exists
+        path: data/learning/
+      - type: path_exists
+        path: docs/learning/
+  - id: corporate_development
+    summary_slug: corporate-development
+    data_paths:
+      - data/corp-dev/
+    docs_paths:
+      - docs/corp-dev/
+    route_ids:
+      - corporate-development
+    skills:
+      - corpdev_ma_screen
+      - corpdev_partnership_brief
+    pulse_checks:
+      - type: path_exists
+        path: data/corp-dev/
+      - type: path_exists
+        path: docs/corp-dev/
+  - id: quality_assurance
+    summary_slug: quality-assurance
+    data_paths:
+      - data/quality/
+    docs_paths:
+      - docs/quality/
+      - docs/compliance/iso/
+    route_ids:
+      - quality-assurance
+    skills:
+      - qa_nonconformance_triage
+      - qa_iso9001_controls
+    pulse_checks:
+      - type: path_exists
+        path: data/quality/
+      - type: path_exists
+        path: docs/quality/
+      - type: path_exists
+        path: docs/compliance/iso/
+  - id: medical_device_regulatory
+    summary_slug: medical-device-regulatory
+    data_paths:
+      - data/medical-device/
+    docs_paths:
+      - docs/medical-device/
+      - docs/quality/
+    route_ids:
+      - medical-device-regulatory
+    skills:
+      - jp_medical_device_qms
+      - jp_medical_device_gvp
+      - jp_medical_device_ledgers
+    pulse_checks:
+      - type: path_exists
+        path: data/medical-device/
+      - type: path_exists
+        path: docs/medical-device/
+      - type: path_exists
+        path: docs/quality/
