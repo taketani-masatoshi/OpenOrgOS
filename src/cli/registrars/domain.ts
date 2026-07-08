@@ -58,10 +58,6 @@ import {
   runEventsRegisterArtifact,
   runEventsStatus,
   runEventsValidate,
-  runEventsVoid,
-  runEventsVoidAck,
-  runEventsVoidRequest,
-  runEventsWireStatus,
   runEventsChainAttest,
   runEventsAuditMonthly,
 } from "../../commands/company-events.js";
@@ -331,57 +327,14 @@ export function registerDomainCommands(program: Command): void {
     .description("List company events")
     .option("--month <month>", "Filter YYYY-MM")
     .option("--status <status>", "open|closed|archived|voided")
-    .option("--include-voided", "Include voided events in default list")
     .option("--json", "JSON output")
     .action((opts) =>
       runEventsList({
         month: opts.month,
         status: opts.status,
         json: opts.json,
-        includeVoided: opts.includeVoided,
       })
     );
-  events
-    .command("void <id>")
-    .description("Void company event (append-only — creates void EVT + chain link)")
-    .requiredOption("--reason <reason>", "Reason for voiding")
-    .action((id, opts) => runEventsVoid({ id, reason: opts.reason }));
-  events
-    .command("void-request <id>")
-    .description("Propose outbound wire void.requested for wire-delivered company event")
-    .requiredOption("--operator <id>", "Operator proposing void request")
-    .option("--peer <peer>", "Target PEER-* (default: primary exposure)")
-    .option("--message <message>", "Wire notice message")
-    .action((id, opts) =>
-      runEventsVoidRequest({
-        id,
-        operator: opts.operator,
-        peer: opts.peer,
-        message: opts.message,
-      })
-    );
-  events
-    .command("void-ack <id>")
-    .description("Register inbound peer void acknowledgment before local void")
-    .option("--wire-event <uuid>", "Inbound void.acknowledged wire event_id")
-    .option("--peer <peer>", "PEER-* that sent acknowledgment")
-    .option("--auto", "Scan inbound ledger for matching void.acknowledged")
-    .action((id, opts) => {
-      if (!opts.auto && !opts.wireEvent) {
-        throw new Error("Specify --wire-event <uuid> or --auto");
-      }
-      runEventsVoidAck({
-        id,
-        wireEvent: opts.wireEvent,
-        peer: opts.peer,
-        auto: opts.auto,
-      });
-    });
-  events
-    .command("wire-status <id>")
-    .description("Show wire binding and void gate status for company event")
-    .option("--json", "JSON output")
-    .action((id, opts) => runEventsWireStatus({ id, json: opts.json }));
   const eventsChain = events.command("chain").description("Company event hash chain");
   eventsChain
     .command("verify")

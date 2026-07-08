@@ -60,7 +60,11 @@ export function isOpenOrgOsP2pEndpoint(ep: PeerEndpoint): boolean {
 }
 
 /** Prefer wire_v1 URL detection when transport omitted on legacy peers. */
-export function inferPeerTransport(ep: Pick<PeerEndpoint, "url" | "transport" | "mode">): PeerTransport {
+export function inferPeerTransport(ep: {
+  url: string;
+  transport?: PeerTransport;
+  mode?: PeerEndpointMode;
+}): PeerTransport {
   if (ep.transport && ep.transport !== "openorgos_p2p") return ep.transport;
   if (ep.url.includes("/wire/v1/events")) return "wire_v1";
   if (ep.url.includes("/protocol/v1/relay/")) return "relay";
