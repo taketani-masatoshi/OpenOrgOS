@@ -11,6 +11,10 @@ export const queueEventTypeSchema = z.enum([
   "pr_created",
   "secretary_consult",
   "pipeline_daily_complete",
+  "agent_mission_created",
+  "agent_report_submitted",
+  "agent_relay_coo",
+  "agent_relay_steward",
 ]);
 
 export const queueEventStatusSchema = z.enum(["pending", "processing", "done", "failed"]);

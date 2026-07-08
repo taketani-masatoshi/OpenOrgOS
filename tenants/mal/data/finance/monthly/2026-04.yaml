@@ -3,13 +3,19 @@ revenue:
   - property_id: PROP-001
     category: rent
     amount: 100000
+  - property_id: PROP-002
+    category: hotel_revenue
+    amount: 0
 expenses:
   - property_id: PROP-001
     category: other
     amount: 29433
     notes: 減価償却費（番町ハイム）
-  - property_id: PROP-002
-    category: capex
-    amount: 13000000
-    notes: 上置き建築費（半期分・概算）
-notes: 予想ベース決算
+  - category: other
+    amount: 160000
+    notes: 三塚給与（4/15入社 · 日割 · ダミー）
+  - category: other
+    amount: 88000
+    notes: 三塚採用費（求人媒体 · ダミー）
+notes: |
+  ダミーデータ — 三塚（EMP-003）入社月。亀沢は5月プレオープン準備中。

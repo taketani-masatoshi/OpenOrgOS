@@ -1,6 +1,8 @@
 import { buildTodayContext, formatTodayContextMarkdown } from "../steward-chat/today-context.js";
 import { approveFromStewardChat } from "../steward-chat/wire-approve.js";
 import { mcpOperatorUser } from "../steward-chat/wire-witness.js";
+import { findOperatorById } from "../org/operators.js";
+import { resolveOperatorPermissions } from "../console-auth/operator-rbac.js";
 
 export interface OperatorToolDefinition {
   type: "function";
@@ -76,8 +78,13 @@ export function isOperatorToolsEnabled(): boolean {
   return true;
 }
 
-export function isOperatorToolsWriteEnabled(): boolean {
-  return process.env.ORGOS_LLM_TOOLS_WRITE === "1";
+export function isOperatorToolsWriteEnabled(ctx?: { operatorId?: string }): boolean {
+  if (process.env.ORGOS_LLM_TOOLS_WRITE !== "1") return false;
+  if (ctx?.operatorId) {
+    const op = findOperatorById(ctx.operatorId);
+    if (op && !resolveOperatorPermissions(op).includes("chat:approve")) return false;
+  }
+  return true;
 }
 
 export function listOperatorToolDefinitions(): OperatorToolDefinition[] {
@@ -160,8 +167,8 @@ export async function executeOperatorTool(
     case "operator_list_wire_pending":
       return execOperatorListWirePending();
     case "operator_approve":
-      if (!isOperatorToolsWriteEnabled()) {
-        return { ok: false, content: "Write tools disabled — set ORGOS_LLM_TOOLS_WRITE=1" };
+      if (!isOperatorToolsWriteEnabled(ctx)) {
+        return { ok: false, content: "Write tools disabled or operator lacks chat:approve" };
       }
       return execOperatorApprove(args, ctx);
     default:

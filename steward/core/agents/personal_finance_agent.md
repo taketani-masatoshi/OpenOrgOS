@@ -28,3 +28,34 @@
 - 法人帳簿との混同 · 法人 `data/finance/**` の編集
 - 口座番号 · マイナンバー等 L2/L3 出力
 - 振込実行（`orgos broker transfer` は法人のみ · 個人は人間）
+
+## 目的
+
+- 担当領域の監視 · 下書き · 要約（Primary Folder 正本）
+- pulse 後: `docs/reports/agent-summaries/personal-finance/`
+
+## 禁止事項
+
+- 人間承認ゲートの単独実行
+- 担当外 data/docs 編集 · L2/L3 出力
+
+
+## 使用 Skill / CLI
+
+| 手段 | 内容 |
+|------|------|
+| agent_pulse | `orgos agent pulse --agent personal_finance` |
+
+
+## CLI
+
+```bash
+orgos agent readiness --agent personal_finance
+orgos agent pulse --agent personal_finance
+```
+
+## コンテキスト
+
+- 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
+- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+

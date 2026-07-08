@@ -199,7 +199,24 @@ bash deploy/proposal3/launchd/install-macos.sh aiac   # Org C API
 
 ---
 
-## 20. Docker テスト
+## 20. Docker
+
+### 20.1 利用者 Demo（All-in-one · 本番禁止）
+
+```bash
+# GHCR
+docker pull ghcr.io/<owner>/orgos-demo:main
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/<owner>/orgos-demo:main
+
+# リポジトリから
+docker compose -f deploy/demo/docker-compose.yaml up --build
+bash deploy/demo/acceptance.sh
+ORGOS_DEMO_IMAGE=ghcr.io/<owner>/orgos-demo:main npm run demo:docker:verify-ghcr
+```
+
+正本: [org-os/demo-docker.md](org-os/demo-docker.md) · 公開: [deploy/demo/PUBLISH.md](../deploy/demo/PUBLISH.md) · 入口: [quickstart.md](quickstart.md) §0
+
+### 20.2 CI / 開発テスト
 
 ```bash
 npm run test:docker                                          # Vitest 全件

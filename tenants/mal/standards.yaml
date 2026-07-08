@@ -28,7 +28,7 @@ iso:
 
   - id: ISO-13485
     enabled: false
-    notes: 医療機器 QMS
+    notes: jp_medical_device 無効 · REG-025/026 未施行
 
   - id: ISO-22000
     enabled: false

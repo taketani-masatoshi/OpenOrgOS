@@ -15,6 +15,6 @@ export function runComplianceGap(opts: ComplianceGapOptions = {}): void {
   }
 
   console.log(formatComplianceGapReport());
-  const { gaps } = computeComplianceGap();
-  if (gaps.length) process.exit(1);
+  const { gaps, control_gaps } = computeComplianceGap();
+  if (gaps.length || control_gaps.length) process.exit(1);
 }

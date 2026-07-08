@@ -1,0 +1,62 @@
+# Wire Gateway stack (I3-a)
+# External: gateway :8443 · Internal: Core Internal API :8080 (Docker network only)
+# Spec: docs/org-os/wire-gateway-requirements.md
+
+services:
+  wire-internal-api:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+    environment:
+      ORGOS_TENANT: ${ORGOS_TENANT:-demo}
+      WIRE_INTERNAL_BEARER: ${WIRE_INTERNAL_BEARER:-dev-change-me}
+    command: >
+      sh -c "cd /app && npm ci && npm run orgos -- wire-gateway internal-api serve
+      --tenant $${ORGOS_TENANT}
+      --host 0.0.0.0
+      --port 8080
+      --bearer-token $${WIRE_INTERNAL_BEARER}"
+    expose:
+      - "8080"
+    networks:
+      - wire-internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/internal/v1/wire/node"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  wire-gateway:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - ./config:/config:ro
+    environment:
+      ORGOS_TENANT: ${ORGOS_TENANT:-demo}
+    command: >
+      sh -c "cd /app && npm ci &&
+      cp -n /config/wire-gateway.yaml /app/tenants/$${ORGOS_TENANT}/data/protocol/wire-gateway.yaml 2>/dev/null || true &&
+      npm run orgos -- wire-gateway serve
+      --tenant $${ORGOS_TENANT}
+      --host 0.0.0.0
+      --port 8443
+      --public-base-url $${PUBLIC_BASE_URL:-http://127.0.0.1:8443}"
+    ports:
+      - "8443:8443"
+    depends_on:
+      - wire-internal-api
+    networks:
+      - wire-internal
+      - wire-public
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8443/wire/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+networks:
+  wire-internal:
+    internal: true
+  wire-public:

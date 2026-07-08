@@ -48,6 +48,7 @@
 - `construction` / `construction` — `steward/modules/construction/` **読まない**
 - `education` / `education` — `steward/modules/education/` **読まない**
 - `property_management` / `property_management` — `steward/modules/property_management/` **読まない**
+- `jp_medical_device` / `jp_medical_device` — `steward/modules/jp_medical_device/` **読まない**
 - `membership` / `membership` — `steward/modules/membership/` **読まない**
 
 ## 有効 ISO 標準
@@ -96,6 +97,8 @@
 - `REG-022` EC取引規程 — `docs/company/regulations/ec-torihiki-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-023` 配送・倉庫管理規程 — `docs/company/regulations/haiso-soko-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-024` 会員管理規程 — `docs/company/regulations/kaiin-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-025` 医療機器QMS規程 — `docs/company/regulations/iryo-kiki-qms-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-026` 医療機器GVP規程 — `docs/company/regulations/iryo-kiki-gvp-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 
 ## 未バインドカタログ（読取禁止）
 
@@ -109,6 +112,18 @@
 - `language_bridge` — `modules.yaml` 未登録 · **読まない**
 - `real_estate_brokerage` — `modules.yaml` 未登録 · **読まない**
 - `software_outsourcing` — `modules.yaml` 未登録 · **読まない**
+
+## 統制マトリクス（有効 ISO のみ）
+
+**正本:** `data/compliance/controls.yaml` · **フレームワーク:** `steward/standards/control-framework/` · **CLI:** `orgos controls for-agent <id>`
+
+- **compliance** — `CTL-21401-5.2`, `CTL-27001-4.1`, `CTL-27001-5.2`, `CTL-27001-A.5.1`, `CTL-27001-A.5.10`, `CTL-CORE-privacy`, `CTL-27001-9.2`, `CTL-27001-9.3`, `CTL-9001-4.3`, `CTL-9001-5.2`, `CTL-9001-6.1`, `CTL-CORE-doc-control` · 他 2 件は `orgos controls for-agent compliance`
+- **internal_audit** — `CTL-21401-9.2`, `CTL-27001-9.2`, `CTL-9001-9.2`, `CTL-9001-10.2`
+- **quality_assurance** — `CTL-21401-8.1`, `CTL-9001-4.3`, `CTL-9001-4.4`, `CTL-9001-5.2`, `CTL-9001-6.1`, `CTL-9001-6.2`, `CTL-9001-7.2`, `CTL-CORE-doc-control`, `CTL-9001-8.7`, `CTL-9001-9.1`, `CTL-9001-10.2`
+- **security** — `CTL-27001-4.1`, `CTL-27001-5.2`, `CTL-27001-6.1`, `CTL-27001-6.2`, `CTL-27001-A.5.1`, `CTL-27001-A.5.10`, `CTL-27001-A.8.1`, `CTL-CORE-privacy`, `CTL-27001-9.2`, `CTL-27001-9.3`
+- **privacy_officer** — `CTL-CORE-privacy`
+- **esg_sustainability** — `CTL-21401-4.1`, `CTL-21401-5.2`, `CTL-21401-6.2`, `CTL-21401-9.1`, `CTL-21401-9.2`
+
 
 ## Secretary 読取面（on_demand · @file 明示）
 

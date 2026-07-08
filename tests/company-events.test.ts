@@ -6,6 +6,7 @@ import {
   readFileSync,
   rmSync,
   unlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -21,7 +22,9 @@ import { companyEventsRegistrySchema } from "../schemas/company-events.js";
 import { getDataDir, resolveTenantPath } from "../src/lib/utils.js";
 
 const REGISTRY_PATH = () => join(getDataDir(), "company-events.yaml");
+const CHAIN_PATH = () => join(getDataDir(), "company-events-chain.jsonl");
 const REGISTRY_BACKUP = join(tmpdir(), "steward-company-events-backup.yaml");
+const CHAIN_BACKUP = join(tmpdir(), "steward-company-events-chain-backup.jsonl");
 
 describe("company-events", () => {
   const created: string[] = [];
@@ -31,6 +34,15 @@ describe("company-events", () => {
     initCompanyEventsFile();
     if (existsSync(REGISTRY_PATH())) {
       copyFileSync(REGISTRY_PATH(), REGISTRY_BACKUP);
+    }
+    if (existsSync(CHAIN_PATH())) {
+      copyFileSync(CHAIN_PATH(), CHAIN_BACKUP);
+    } else if (existsSync(CHAIN_BACKUP)) {
+      unlinkSync(CHAIN_BACKUP);
+    }
+    writeFileSync(REGISTRY_PATH(), "schema_version: 2\nevents: []\n", "utf8");
+    if (existsSync(CHAIN_PATH())) {
+      unlinkSync(CHAIN_PATH());
     }
     created.length = 0;
   });
@@ -45,6 +57,12 @@ describe("company-events", () => {
     if (existsSync(REGISTRY_BACKUP)) {
       copyFileSync(REGISTRY_BACKUP, REGISTRY_PATH());
       unlinkSync(REGISTRY_BACKUP);
+    }
+    if (existsSync(CHAIN_BACKUP)) {
+      copyFileSync(CHAIN_BACKUP, CHAIN_PATH());
+      unlinkSync(CHAIN_BACKUP);
+    } else if (existsSync(CHAIN_PATH())) {
+      unlinkSync(CHAIN_PATH());
     }
   });
 

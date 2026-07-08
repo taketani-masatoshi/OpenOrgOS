@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { peersRegistrySchema, type PeerProfile, type PeersRegistry } from "../../../schemas/protocol/peers.js";
 import type { PeerEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
+import { inferPeerTransport } from "../../../schemas/protocol/peer-endpoint.js";
 import { getPeersYamlPath } from "./paths.js";
 import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
 
@@ -44,13 +45,23 @@ export function nextPeerId(): string {
 
 /** Resolve delivery endpoints: explicit list or legacy single webhook URL. */
 export function resolvePeerInboundEndpoints(peer: PeerProfile): PeerEndpoint[] {
+  const raw: PeerEndpoint[] = [];
   if (peer.inbound_endpoints?.length) {
-    return [...peer.inbound_endpoints].sort((a, b) => a.priority - b.priority);
+    raw.push(...peer.inbound_endpoints);
+  } else if (peer.inbound_webhook_url) {
+    raw.push({
+      url: peer.inbound_webhook_url,
+      priority: 1,
+      mode: "push",
+      transport: "legacy_webhook",
+    });
   }
-  if (peer.inbound_webhook_url) {
-    return [{ url: peer.inbound_webhook_url, priority: 1, mode: "push" }];
-  }
-  return [];
+  return raw
+    .map((ep) => ({
+      ...ep,
+      transport: inferPeerTransport(ep),
+    }))
+    .sort((a, b) => a.priority - b.priority);
 }
 
 export function peerHasDeliveryPath(peer: PeerProfile): boolean {

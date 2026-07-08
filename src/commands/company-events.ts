@@ -1,21 +1,39 @@
 import {
   COMPANY_EVENT_KINDS,
   archiveCompanyEvent,
+  backfillCompanyEventChain,
   closeCompanyEvent,
+  companyEventChainPath,
   createCompanyEvent,
   ensureCompanyEventMonth,
   findCompanyEventById,
+  getCompanyEventChainTail,
   initCompanyEventsFile,
   listCompanyEvents,
   loadCompanyEvents,
   parseMonth,
   refreshAllCompanyEventIndexes,
   registerArtifactFiles,
+  saveCompanyEvents,
   validateCompanyEvents,
+  verifyCompanyEventChain,
+  voidCompanyEvent,
   type CreateCompanyEventOptions,
 } from "../lib/company-events.js";
 import { linkOutboxItemToEvent } from "../lib/document-io.js";
+import { validateCompanyEventChainWithRegistry } from "../lib/company-events-chain.js";
 import type { CompanyEventKind } from "../../schemas/company-events.js";
+import {
+  assertCanVoidCompanyEvent,
+  getCompanyEventWireStatus,
+  proposeVoidWireForCompanyEvent,
+  registerCompanyEventVoidAck,
+  tryAutoRegisterVoidAckFromInbound,
+} from "../lib/company-events-wire.js";
+import {
+  runMonthlyCompanyEventsAudit,
+  runWeeklyCompanyEventsAttestation,
+} from "../lib/company-events-attestation.js";
 
 function parseRelated(raw?: string): CreateCompanyEventOptions["related"] | undefined {
   if (!raw) return undefined;
@@ -74,11 +92,17 @@ export function runEventsNew(opts: {
   console.log(`  artifacts: ${event.artifact_dir}`);
 }
 
-export function runEventsList(opts: { month?: string; status?: string; json?: boolean }): void {
+export function runEventsList(opts: {
+  month?: string;
+  status?: string;
+  json?: boolean;
+  includeVoided?: boolean;
+}): void {
   initCompanyEventsFile();
   const events = listCompanyEvents({
     month: opts.month,
     status: opts.status as ReturnType<typeof listCompanyEvents>[number]["status"] | undefined,
+    includeVoided: opts.includeVoided,
   });
 
   if (opts.json) {
@@ -163,4 +187,191 @@ export function runEventsLinkOutbox(opts: { eventId: string; outboxId: string })
   const item = linkOutboxItemToEvent(opts.outboxId, opts.eventId);
   console.log(`✓ Outbox ${item.id} linked to event ${opts.eventId}`);
   console.log(`  path: ${item.path}`);
+}
+
+export function runEventsVoid(opts: { id: string; reason: string }): void {
+  initCompanyEventsFile();
+  const target = findCompanyEventById(opts.id);
+  if (!target) {
+    throw new Error(`Event not found: ${opts.id}`);
+  }
+  assertCanVoidCompanyEvent(target);
+  const { voidEvent, target: voided } = voidCompanyEvent(opts.id, opts.reason);
+  console.log(`✓ Company event voided: ${voided.id}`);
+  console.log(`  void_event: ${voidEvent.id}`);
+  console.log(`  reason: ${opts.reason}`);
+}
+
+export function runEventsVoidRequest(opts: {
+  id: string;
+  operator: string;
+  peer?: string;
+  message?: string;
+}): void {
+  initCompanyEventsFile();
+  const notice = proposeVoidWireForCompanyEvent({
+    companyEventId: opts.id,
+    proposedBy: opts.operator,
+    peerId: opts.peer,
+    message: opts.message,
+  });
+  console.log(`✓ Void request wire proposed: ${notice.notice_id}`);
+  console.log(`  company_event: ${opts.id}`);
+  console.log(`  peer: ${notice.peer_id}`);
+  console.log(`  correlation: ${notice.correlation_event_id}`);
+  console.log(`  Next: orgos protocol notice approve --id ${notice.notice_id} --approver <CEO>`);
+}
+
+export function runEventsVoidAck(opts: {
+  id: string;
+  wireEvent: string;
+  peer?: string;
+  auto?: boolean;
+}): void {
+  initCompanyEventsFile();
+  if (opts.auto) {
+    const updated = tryAutoRegisterVoidAckFromInbound(opts.id);
+    if (!updated) {
+      throw new Error(`No inbound void acknowledgment found for ${opts.id}`);
+    }
+    console.log(`✓ Void acknowledgment auto-registered: ${opts.id}`);
+    console.log(`  void_ack_wire_event_id: ${updated.wire_binding?.void_ack_wire_event_id}`);
+    return;
+  }
+  const updated = registerCompanyEventVoidAck({
+    companyEventId: opts.id,
+    wireEventId: opts.wireEvent,
+    peerId: opts.peer,
+  });
+  console.log(`✓ Void acknowledgment registered: ${opts.id}`);
+  console.log(`  void_ack_wire_event_id: ${updated.wire_binding?.void_ack_wire_event_id}`);
+  console.log(`  void_ack_at: ${updated.wire_binding?.void_ack_at}`);
+}
+
+export async function runEventsAuditMonthly(opts: {
+  month?: string;
+  notify?: boolean;
+  output?: string;
+  json?: boolean;
+}): Promise<void> {
+  initCompanyEventsFile();
+  const result = await runMonthlyCompanyEventsAudit({
+    month: opts.month,
+    notify: opts.notify !== false,
+    output: opts.output,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+  console.log(result.ok ? "✓ Monthly company events audit PASS" : "✗ Monthly audit FAILED");
+  console.log(`  month: ${result.month}`);
+  console.log(`  chain_checked: ${result.chain_checked}`);
+  console.log(`  attestations: ${result.attestations_in_period.length}`);
+  console.log(`  report: ${result.report_path}`);
+  console.log(`  notified: ${result.notification_sent}`);
+  for (const f of result.findings) {
+    console.log(`  [${f.severity}] ${f.code}: ${f.message}`);
+  }
+  if (!result.ok) process.exit(1);
+}
+
+export function runEventsChainAttest(opts: { force?: boolean; json?: boolean }): void {
+  initCompanyEventsFile();
+  const result = runWeeklyCompanyEventsAttestation({ force: opts.force });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  if (result.skipped) {
+    console.log(`✓ Weekly attestation already exists: ${result.attestation.attestation_id}`);
+    return;
+  }
+  console.log(`✓ Weekly company events attestation signed: ${result.attestation.attestation_id}`);
+  console.log(`  chain_tail: ${result.attestation.chain_tail_link_id ?? "—"} seq ${result.attestation.chain_tail_seq ?? 0}`);
+  console.log(`  links_since_prev: ${result.attestation.links_since_prev}`);
+  console.log(`  → ${result.path}`);
+}
+
+export function runEventsWireStatus(opts: { id: string; json?: boolean }): void {
+  initCompanyEventsFile();
+  const status = getCompanyEventWireStatus(opts.id);
+  if (opts.json) {
+    console.log(JSON.stringify(status, null, 2));
+    return;
+  }
+  console.log(`Wire status: ${status.event_id}`);
+  console.log(`  void_blocked: ${status.void_blocked}`);
+  if (status.pending_void_request_notice_id) {
+    console.log(`  void_request_notice: ${status.pending_void_request_notice_id}`);
+  }
+  for (const exp of status.exposures) {
+    console.log(`  exposure: peer=${exp.peer_id} wire=${exp.wire_event_id}`);
+    if (exp.void_ack_wire_event_id) {
+      console.log(`    void_ack: ${exp.void_ack_wire_event_id}`);
+    }
+  }
+  if (status.void_block_reason) {
+    console.log(status.void_block_reason);
+  }
+}
+
+export function runEventsChainVerify(opts: { json?: boolean }): void {
+  initCompanyEventsFile();
+  const registry = loadCompanyEvents();
+  const chain = verifyCompanyEventChain();
+  const cross = validateCompanyEventChainWithRegistry(registry);
+  const issues = [...chain.issues, ...cross.issues];
+  const ok = chain.ok && cross.ok;
+
+  if (opts.json) {
+    console.log(
+      JSON.stringify(
+        {
+          ok,
+          chain_checked: chain.checked,
+          issues,
+        },
+        null,
+        2
+      )
+    );
+    if (!ok) process.exit(1);
+    return;
+  }
+
+  console.log(ok ? "✓ Company event chain OK" : "✗ Company event chain verification failed");
+  for (const issue of issues) {
+    console.log(`  [error] ${issue.code}: ${issue.message}`);
+  }
+  if (!ok) process.exit(1);
+  console.log(`  registry_events: ${registry.events.length}`);
+  console.log(`  chain_links: ${chain.checked}`);
+}
+
+export function runEventsChainBackfill(opts: { force?: boolean }): void {
+  initCompanyEventsFile();
+  const registry = loadCompanyEvents();
+  const result = backfillCompanyEventChain(registry, { force: opts.force });
+  saveCompanyEvents(result.registry);
+  console.log(`✓ Company event chain backfilled`);
+  console.log(`  events: ${result.events}`);
+  console.log(`  links: ${result.links}`);
+  console.log(`  → ${companyEventChainPath()}`);
+}
+
+export function runEventsChainTail(): void {
+  initCompanyEventsFile();
+  const tail = getCompanyEventChainTail();
+  if (!tail) {
+    console.log("Company event chain: empty");
+    return;
+  }
+  console.log(`Company event chain tail: ${tail.link_id}`);
+  console.log(`  seq: ${tail.seq}`);
+  console.log(`  action: ${tail.action}`);
+  console.log(`  event_id: ${tail.event_id}`);
+  console.log(`  digest: ${tail.digest}`);
+  console.log(`  → ${companyEventChainPath()}`);
 }

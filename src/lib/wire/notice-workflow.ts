@@ -21,6 +21,7 @@ import {
   rejectOrgApproval,
 } from "../org/approval/index.js";
 import { resolveNoticeAmountForWire } from "./amount.js";
+import { syncCompanyEventWireBindingAfterApprove } from "../company-events-wire.js";
 
 export function loadPendingNotices(): PendingNoticesRegistry {
   const notices = listOrgApprovals({ scope: "wire" }).map(orgApprovalToPendingNotice);
@@ -54,6 +55,7 @@ export interface ProposeInterOrgWireOptions {
   stakeholderId?: string;
   amount?: { value: number; currency: string };
   correlationEventId?: string;
+  companyEventId?: string;
 }
 
 function contractMonthlyAmount(contractId: string): { value: number; currency: string } | undefined {
@@ -107,6 +109,15 @@ function validateProposeOptions(opts: ProposeInterOrgWireOptions): void {
       }
       break;
     }
+    case "contract.void.requested": {
+      if (!opts.correlationEventId) {
+        throw new Error("correlation_event_id required for contract.void.requested");
+      }
+      if (!opts.companyEventId) {
+        throw new Error("company_event_id required for contract.void.requested");
+      }
+      break;
+    }
     default:
       break;
   }
@@ -124,6 +135,8 @@ function defaultMessage(opts: ProposeInterOrgWireOptions): string {
       return `支払指示 ${opts.brokerInstruction}`;
     case "contract.executed":
       return `契約 ${opts.contractId} 締結の実行通知`;
+    case "contract.void.requested":
+      return `会社イベント ${opts.companyEventId} の void 許可依頼（元 Wire: ${opts.correlationEventId}）`;
     default:
       return "Inter-org wire notice";
   }
@@ -134,8 +147,12 @@ export function proposeInterOrgWire(opts: ProposeInterOrgWireOptions): PendingNo
 
   const approval = proposeOrgApproval({
     scope: "wire",
-    subjectType: "wire.outbound",
-    subjectRef: opts.contractId ?? opts.invoiceId ?? opts.correlationEventId,
+    subjectType: opts.companyEventId ? "company.event" : "wire.outbound",
+    subjectRef:
+      opts.companyEventId ??
+      opts.contractId ??
+      opts.invoiceId ??
+      opts.correlationEventId,
     proposedBy: opts.proposedBy,
     message: opts.message ?? defaultMessage(opts),
     amount: opts.amount ?? (opts.contractId ? contractMonthlyAmount(opts.contractId) : undefined),
@@ -148,6 +165,7 @@ export function proposeInterOrgWire(opts: ProposeInterOrgWireOptions): PendingNo
       brokerInstruction: opts.brokerInstruction,
       stakeholderId: opts.stakeholderId,
       correlationEventId: opts.correlationEventId,
+      companyEventId: opts.companyEventId,
     },
   });
 
@@ -252,6 +270,8 @@ export function approveInterOrgNotice(
     wireEventId: transmission.envelope.event_id,
     attestation,
   });
+
+  syncCompanyEventWireBindingAfterApprove(completed, transmission);
 
   return {
     notice: orgApprovalToPendingNotice(completed),

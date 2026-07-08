@@ -97,3 +97,11 @@ export function getReconcileAlertsYamlPath(): string {
 export function getWitnessTrustRevocationsPath(): string {
   return join(getWitnessTrustDir(), "revocations.json");
 }
+
+export function getGovGatewayYamlPath(): string {
+  return join(getProtocolDataDir(), "gov-gateway.yaml");
+}
+
+export function getGovGatewayAuditPath(): string {
+  return join(getProtocolDataDir(), "gov-gateway-audit.jsonl");
+}

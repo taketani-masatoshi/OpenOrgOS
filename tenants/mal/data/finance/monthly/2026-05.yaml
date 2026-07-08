@@ -3,9 +3,20 @@ revenue:
   - property_id: PROP-001
     category: rent
     amount: 100000
+  - property_id: PROP-002
+    category: hotel_revenue
+    amount: 420000
 expenses:
   - property_id: PROP-001
     category: other
     amount: 29433
     notes: 減価償却費（番町ハイム）
-notes: 予想ベース決算
+  - property_id: PROP-002
+    category: other_property
+    amount: 185000
+    notes: プレオープン準備・清掃（ダミー）
+  - category: other
+    amount: 320000
+    notes: 三塚給与（EMP-003 · 人件費 · ダミー）
+notes: |
+  ダミーデータ — 亀沢ソフトオープン月。

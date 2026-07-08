@@ -1,6 +1,6 @@
 id: CTR-013
 name: "火災保険（番町ハイム312）"
-counterparty: "TBD（保険会社）"
+counterparty: "東京海上ダミー火災保険株式会社"
 counterparty_type: company
 type: insurance
 status: draft

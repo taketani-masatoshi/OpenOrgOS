@@ -71,6 +71,10 @@ regulations:
   - id: REG-023
     enabled: false
     notes: logistics
-  - id: REG-024
+  # 医療機器（jp_medical_device モジュール — MAL では無効）
+  - id: REG-025
     enabled: false
-    notes: membership
+    notes: jp_medical_device OFF · 参照のみ
+  - id: REG-026
+    enabled: false
+    notes: jp_medical_device OFF · 参照のみ

@@ -1,0 +1,52 @@
+# Example tenant gov-gateway config
+# Copy: tenants/{id}/data/protocol/gov-gateway.yaml
+# Schema: schemas/protocol/gov-gateway-adapter.ts
+# Spec: docs/org-os/gov-gateway-adapter-spec.md
+
+enabled: false
+default_profile: xroad_v7
+witness_mode: orgos_hub
+hub_pool_ref: data/protocol/witness-pool.yaml
+
+audit_bridge:
+  map_native_id_to: correlation_id
+  append_to: data/protocol/audit-chain.jsonl
+
+profiles:
+  - profile_id: xroad_v7
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/EE/protocol/xroad-adapter.profile.yaml
+    member_code: EE/COM/OPENORGOS
+    subsystem_code: wire
+    security_server_url: https://ss.example.ee
+
+  - profile_id: jp_egov_central
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/JP/protocol/egov-adapter.profile.yaml
+    api_base_url: https://api.example.go.jp
+    notes: 府省 API 登録後に接続情報を注入
+
+  - profile_id: jp_gbiz
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/JP/protocol/egov-adapter.profile.yaml
+
+  - profile_id: ge_gov_gateway_3g
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/GE/protocol/georgia-3g-adapter.profile.yaml
+    api_base_url: https://gateway.example.ge
+
+# peers.yaml endpoint example (transport: gov_gateway):
+#
+# peers:
+#   - peer_id: PEER-001
+#     display_name: Partner
+#     jurisdiction: EE
+#     inbound_endpoints:
+#       - url: https://ss.example.ee/r1/EE/COM/PARTNER/wire/notice-deliver
+#         mode: push
+#         transport: gov_gateway
+#         gov_gateway:
+#           profile_id: xroad_v7
+#           service_code: EE/COM/PARTNER/wire/notice-deliver
+#           member_code: EE/COM/PARTNER
+#           subsystem_code: wire

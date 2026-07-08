@@ -1,0 +1,26 @@
+{
+  "protocol_version": "1",
+  "event_id": "550e8400-e29b-41d4-a716-446655440000",
+  "occurred_at": "2026-07-08T00:00:00.000Z",
+  "origin": {
+    "org_id": "demo",
+    "org_uri": "steward://tenant/demo"
+  },
+  "destination": {
+    "org_id": "partner",
+    "org_uri": "steward://tenant/partner"
+  },
+  "identity": {
+    "org_ref": {
+      "org_id": "demo",
+      "org_uri": "steward://tenant/demo"
+    }
+  },
+  "event": {
+    "type": "org.identity.presented",
+    "payload": {
+      "note": "gov-gateway fixture"
+    }
+  },
+  "signature": null
+}

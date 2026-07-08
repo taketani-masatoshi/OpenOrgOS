@@ -1,6 +1,6 @@
 # OrgOS Agent Export Index
 
-Generated: 2026-07-05 · Tenant: mal
+Generated: 2026-07-08 · Tenant: mal
 
 Regenerate all packs:
 
@@ -55,6 +55,7 @@ orgos operator sync-policy --emit all
 | investor_relations | IR | `steward/core/agents/investor_relations_agent.md` | `exports/agents/investor_relations.pack.md` |
 | esg_sustainability | ESG | `steward/core/agents/esg_sustainability_agent.md` | `exports/agents/esg_sustainability.pack.md` |
 | internal_audit | 内部監査 | `steward/core/agents/internal_audit_agent.md` | `exports/agents/internal_audit.pack.md` |
+| records_audit | 記録監査 | `steward/core/agents/records_audit_agent.md` | `exports/agents/records_audit.pack.md` |
 | privacy_officer | 個情管理責任者 | `steward/core/agents/privacy_officer_agent.md` | `exports/agents/privacy_officer.pack.md` |
 | treasury | 資金・FX | `steward/core/agents/treasury_agent.md` | `exports/agents/treasury.pack.md` |
 | customer_support | サポート | `steward/core/agents/customer_support_agent.md` | `exports/agents/customer_support.pack.md` |

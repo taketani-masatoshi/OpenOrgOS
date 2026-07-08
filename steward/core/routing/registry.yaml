@@ -280,6 +280,7 @@ routes:
     priority: 68
     resource_paths:
       - data/company.yaml
+      - data/sales/outbound/
     match:
       keywords:
         - アウトバウンド
@@ -387,132 +388,77 @@ routes:
       paths:
         - data/classification-registry.yaml
 
-  - id: hr-labor
-    description: 人事 · 労務 · 社保
-    agent: human_resources
-    priority: 78
+  - id: compliance-controls
+    description: ISO × REG 統制 · 成熟度 · ギャップ
+    agent: compliance
+    skill: iso_control_review
+    priority: 82
     resource_paths:
-      - data/company.yaml
+      - data/compliance/controls.yaml
     match:
       keywords:
-        - 人事
-        - 労務
-        - 社保
-        - 就業規則
-        - 36協定
+        - 統制
+        - control
+        - ISO ギャップ
+        - 成熟度
+        - コンプライアンスギャップ
       paths:
-        - data/hr/
-        - docs/company/hr/
+        - data/compliance/controls.yaml
+        - docs/compliance/iso/
 
-  - id: corporate-meetings
-    description: 株主総会 · 取締役会 · 議事録
-    agent: corporate_governance
-    priority: 77
+  - id: internal-audit-scope
+    description: 内部監査スコープ · CTL ベース監査計画
+    agent: internal_audit
+    skill: internal_audit_scope
+    priority: 81
     resource_paths:
-      - data/company.yaml
+      - docs/compliance/iso/
     match:
       keywords:
-        - 株主総会
-        - 取締役会
-        - 議事録
-        - 招集
-        - 決議
+        - 内部監査
+        - 監査スコープ
+        - 監査計画
+        - CTL
       paths:
-        - docs/company/
+        - docs/compliance/iso/internal-audit-plan-fy2026.md
+        - docs/audit/internal/
 
-  - id: accounting-ops
-    description: 経理 · 請求 · 支払
-    agent: accounting
-    priority: 71
+  - id: company-events-chain-audit
+    description: 会社イベントハッシュチェーン · 改竄検知
+    agent: records_audit
+    skill: company_events_chain_verify
+    priority: 82
     resource_paths:
-      - data/company.yaml
+      - data/company-events-chain.jsonl
+      - data/company-events.yaml
     match:
       keywords:
-        - 請求書
-        - 支払
-        - 仕訳
-        - 経理
-        - インボイス
+        - 会社イベント
+        - ハッシュチェーン
+        - 改竄
+        - EVT
+        - 記録監査
       paths:
-        - docs/finance/accounting/
+        - data/company-events-chain.jsonl
+        - data/company-events.yaml
+        - docs/company/events/
 
-  - id: tax-filing
-    description: 税務 · 申告
-    agent: tax
-    skill: tax_filing_prep
-    priority: 73
+  - id: company-events-monthly-audit
+    description: 会社イベント月次監査 · 週次署名確認
+    agent: records_audit
+    skill: company_events_monthly_audit
+    priority: 83
     resource_paths:
-      - data/company.yaml
+      - data/company-events-attestations.jsonl
     match:
       keywords:
-        - 法人税
-        - 消費税
-        - 税務申告
-        - 確定申告
-        - e-Tax
+        - 月次監査
+        - 週次署名
+        - 記録監査
+        - company events audit
       paths:
-        - docs/company/tax/
-
-  - id: procurement-order
-    description: 購買 · 調達 · 稟議
-    agent: procurement
-    priority: 67
-    resource_paths:
-      - data/company.yaml
-    match:
-      keywords:
-        - 購買
-        - 調達
-        - 発注
-        - ベンダー
-        - 稟議
-      paths:
-        - docs/procurement/
-
-  - id: subsidy-government
-    description: 補助金 · 行政手続
-    agent: government_affairs
-    priority: 69
-    resource_paths:
-      - data/company.yaml
-    match:
-      keywords:
-        - 補助金
-        - 交付金
-        - 認定
-        - 行政
-      paths:
-        - docs/government/
-
-  - id: ip-trademark
-    description: 知財 · 商標
-    agent: intellectual_property
-    priority: 68
-    resource_paths:
-      - data/company.yaml
-    match:
-      keywords:
-        - 商標
-        - 特許
-        - 知財
-        - ライセンス
-      paths:
-        - docs/ip/
-
-  - id: pmo-project
-    description: PMO · 案件進捗
-    agent: project_management
-    priority: 63
-    resource_paths:
-      - data/company.yaml
-    match:
-      keywords:
-        - PMO
-        - 案件
-        - WBS
-        - 進捗報告
-      paths:
-        - docs/projects/
+        - data/company-events-attestations.jsonl
+        - docs/reports/agent-summaries/records-audit/
 
   - id: hr-labor
     description: 人事 · 労務 · 社保
@@ -640,3 +586,214 @@ routes:
         - 進捗報告
       paths:
         - docs/projects/
+
+  - id: cto-architecture
+    description: 技術方針 · アーキテクチャ
+    agent: cto
+    priority: 74
+    resource_paths:
+      - docs/engineering/
+    match:
+      keywords: [CTO, アーキテクチャ, 技術方針, 技術選定]
+      paths: [docs/engineering/]
+
+  - id: design-lead-review
+    description: デザイン統括 · レビュー
+    agent: design_lead
+    priority: 68
+    resource_paths:
+      - docs/design/
+    match:
+      keywords: [デザイン統括, ブランド, UI 方針]
+      paths: [docs/design/]
+
+  - id: design-assets
+    description: デザイン素材 · モック
+    agent: design
+    priority: 65
+    resource_paths:
+      - docs/design/assets/
+    match:
+      keywords: [モック, 素材, ビジュアル]
+      paths: [docs/design/]
+
+  - id: sales-inbound
+    description: 新規開拓 · インバウンド
+    agent: sales_inbound
+    priority: 66
+    resource_paths:
+      - data/sales/inbound/
+    match:
+      keywords: [インバウンド, 問合せ, 提携]
+      paths: [docs/sales/inbound/]
+
+  - id: personal-finance
+    description: オーナー個人財務
+    agent: personal_finance
+    priority: 55
+    resource_paths:
+      - data/personal-finance/
+    match:
+      keywords: [個人財務, 個人資産, 個人税務]
+      paths: [docs/personal-finance/]
+
+  - id: general-affairs
+    description: 総務 · 庶務
+    agent: general_affairs
+    priority: 64
+    resource_paths:
+      - data/general-affairs/
+    match:
+      keywords: [総務, 庶務, 備品]
+      paths: [docs/general-affairs/]
+
+  - id: product-roadmap
+    description: プロダクト · PRD · ロードマップ
+    agent: product_management
+    priority: 67
+    resource_paths:
+      - data/product/
+    match:
+      keywords: [PRD, ロードマップ, プロダクト]
+      paths: [docs/product/]
+
+  - id: recruiting-pipeline
+    description: 採用 · JD · パイプライン
+    agent: recruiting
+    priority: 69
+    resource_paths:
+      - data/recruiting/
+    match:
+      keywords: [採用, JD, 候補者]
+      paths: [docs/recruiting/]
+
+  - id: risk-insurance
+    description: リスク · 保険 · BCP
+    agent: risk_insurance
+    priority: 70
+    resource_paths:
+      - data/risk/
+    match:
+      keywords: [保険, BCP, リスク]
+      paths: [docs/risk/]
+
+  - id: data-analytics
+    description: データ分析 · KPI 深掘り
+    agent: data_analytics
+    priority: 62
+    resource_paths:
+      - data/analytics/
+    match:
+      keywords: [分析, KPI, ダッシュボード]
+      paths: [docs/analytics/]
+
+  - id: devops-ops
+    description: DevOps · CI/CD · 監視
+    agent: devops
+    priority: 71
+    resource_paths:
+      - data/devops/
+    match:
+      keywords: [DevOps, CI/CD, デプロイ, 監視]
+      paths: [docs/devops/]
+
+  - id: investor-relations
+    description: IR · 株主向け資料
+    agent: investor_relations
+    priority: 58
+    resource_paths:
+      - data/investor-relations/
+    match:
+      keywords: [IR, 投資家, 株主向け]
+      paths: [docs/investor-relations/]
+
+  - id: esg-sustainability
+    description: ESG · サステナビリティ
+    agent: esg_sustainability
+    priority: 72
+    resource_paths:
+      - data/esg/
+    match:
+      keywords: [ESG, サステナ, カーボン, 非財務]
+      paths: [docs/esg/]
+
+  - id: privacy-officer
+    description: 個情 · DPIA · 越境
+    agent: privacy_officer
+    priority: 79
+    resource_paths:
+      - docs/compliance/privacy/
+    match:
+      keywords: [個情, DPIA, プライバシー, REG-010]
+      paths: [docs/compliance/privacy/]
+
+  - id: treasury-cash
+    description: 資金繰り · FX · 多口座
+    agent: treasury
+    priority: 73
+    resource_paths:
+      - data/treasury/
+    match:
+      keywords: [資金繰り, FX, 多口座, トレジャリー]
+      paths: [docs/treasury/]
+
+  - id: customer-support
+    description: サポート · FAQ · チケット
+    agent: customer_support
+    priority: 61
+    resource_paths:
+      - data/support/
+    match:
+      keywords: [サポート, FAQ, チケット]
+      paths: [docs/support/]
+
+  - id: pr-communications
+    description: 広報 · プレス · 危機広報
+    agent: pr_communications
+    priority: 60
+    resource_paths:
+      - data/pr/
+    match:
+      keywords: [広報, プレス, 危機広報]
+      paths: [docs/pr/]
+
+  - id: learning-development
+    description: 研修 · オンボーディング
+    agent: learning_development
+    priority: 59
+    resource_paths:
+      - data/learning/
+    match:
+      keywords: [研修, オンボ, L&D]
+      paths: [docs/learning/]
+
+  - id: corporate-development
+    description: 経企 · M&A · 提携
+    agent: corporate_development
+    priority: 57
+    resource_paths:
+      - data/corp-dev/
+    match:
+      keywords: [M&A, 提携, 経企, DD]
+      paths: [docs/corp-dev/]
+
+  - id: quality-assurance
+    description: 品質保証 · ISO 9001 運用
+    agent: quality_assurance
+    priority: 75
+    resource_paths:
+      - docs/quality/
+    match:
+      keywords: [品質, 不適合, QA, ISO 9001]
+      paths: [docs/quality/, docs/compliance/iso/]
+
+  - id: medical-device-regulatory
+    description: 医療機器 · QMS · GVP · 薬事
+    agent: medical_device_regulatory
+    priority: 78
+    resource_paths:
+      - data/medical-device/
+      - docs/medical-device/
+    match:
+      keywords: [医療機器, QMS, GVP, 薬事, 製造販売, 有害事象, ISO 13485]
+      paths: [docs/medical-device/, data/medical-device/]

@@ -1,0 +1,63 @@
+version: "1"
+jurisdiction: JP
+bindings:
+  - reg_id: REG-007
+    control_ids: [CTL-CORE-doc-control]
+    articles: ["第4条の2", "第5条"]
+  - reg_id: REG-009
+    control_ids:
+      - CTL-27001-4.1
+      - CTL-27001-5.2
+      - CTL-27001-6.1
+      - CTL-27001-6.2
+      - CTL-27001-A.5.1
+      - CTL-27001-A.8.1
+  - reg_id: REG-010
+    control_ids: [CTL-CORE-privacy]
+    articles: ["第3条", "第4条"]
+  - reg_id: REG-011
+    control_ids:
+      - CTL-9001-4.3
+      - CTL-9001-4.4
+      - CTL-9001-5.2
+      - CTL-9001-6.1
+      - CTL-9001-6.2
+      - CTL-9001-7.2
+      - CTL-9001-8.7
+      - CTL-9001-9.1
+      - CTL-9001-10.2
+  - reg_id: REG-012
+    control_ids:
+      - CTL-21401-4.1
+      - CTL-21401-7.2
+      - CTL-21401-8.1
+  - reg_id: REG-014
+    control_ids:
+      - CTL-21401-5.2
+      - CTL-21401-6.2
+      - CTL-21401-9.1
+  - reg_id: REG-016
+    control_ids:
+      - CTL-9001-9.2
+      - CTL-9001-9.3
+      - CTL-27001-9.2
+      - CTL-27001-9.3
+      - CTL-21401-9.2
+    articles: ["第4条", "第5条", "第6条", "第7条"]
+  - reg_id: REG-025
+    control_ids:
+      - CTL-13485-4.1
+      - CTL-13485-4.2.2
+      - CTL-13485-4.2.4
+      - CTL-13485-5.3
+      - CTL-13485-6.2
+      - CTL-13485-7.1
+      - CTL-13485-7.4
+      - CTL-13485-7.5
+      - CTL-13485-7.5.9
+    articles: ["第1条", "第2条", "第3条", "第4条"]
+  - reg_id: REG-026
+    control_ids:
+      - CTL-13485-8.2.2
+      - CTL-13485-8.2.3
+    articles: ["第2条", "第3条", "第4条", "第5条"]

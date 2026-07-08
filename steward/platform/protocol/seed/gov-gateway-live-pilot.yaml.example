@@ -1,0 +1,53 @@
+# Gov Gateway live / sandbox pilot wiring
+# Spec: docs/org-os/gov-gateway-adapter-spec.md
+#
+# Copy to tenants/{id}/data/protocol/gov-gateway.yaml and set:
+#   export GOV_GATEWAY_TRANSPORT=live   # HttpGovGatewayTransport (default)
+#   export GOV_GATEWAY_TRANSPORT=mock   # MockGovGatewayTransport (CI)
+#
+# Fill security_server_url / api_base_url from operator sandbox credentials.
+# Do not commit real tokens.
+
+enabled: true
+default_profile: xroad_v7
+witness_mode: orgos_hub
+
+audit_bridge:
+  map_native_id_to: correlation_id
+
+profiles:
+  - profile_id: xroad_v7
+    enabled: true
+    adapter_ref: steward/jurisdiction-packs/EE/protocol/xroad-adapter.profile.yaml
+    member_code: EE/DEV/OPENORGOS
+    subsystem_code: wire
+    service_code: EE/DEV/OPENORGOS/wire/notice-deliver
+    # Sandbox Security Server (replace):
+    security_server_url: https://ss-sandbox.example.ee
+    notes: X-Road v7 REST pilot — POST {security_server_url}/r1/{service}
+
+  - profile_id: jp_egov_central
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/JP/protocol/egov-adapter.profile.yaml
+    api_base_url: https://api-sandbox.example.go.jp
+    notes: OpenOrgOS MIME notice-deliver pilot path
+
+  - profile_id: ge_gov_gateway_3g
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/GE/protocol/georgia-3g-adapter.profile.yaml
+    api_base_url: https://gateway-sandbox.example.ge
+    member_code: DEMO-PARTICIPANT
+    service_code: wire.notice-deliver
+    notes: 3G sandbox participant registration required
+
+# peers.yaml endpoint example for pilot peer:
+#
+# inbound_endpoints:
+#   - url: https://ss-sandbox.example.ee/r1/EE/COM/PARTNER/wire/notice-deliver
+#     mode: push
+#     transport: gov_gateway
+#     gov_gateway:
+#       profile_id: xroad_v7
+#       service_code: EE/COM/PARTNER/wire/notice-deliver
+#       member_code: EE/COM/PARTNER
+#       subsystem_code: wire

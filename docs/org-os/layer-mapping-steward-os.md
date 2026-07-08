@@ -1,6 +1,6 @@
 # Steward OS ↔ OpenOrgOS Layer Mapping
 
-**Parent:** [openorgos-core-philosophy.md](openorgos-core-philosophy.md)  
+**Parent:** [openorgos-core-philosophy.md](openorgos-core-philosophy.md) · [openorg-ooo-basic-philosophy.md](openorg-ooo-basic-philosophy.md)  
 **Purpose:** Map this repository to the four-layer model. Use before adding Core code.
 
 ## Protocol vs this repository

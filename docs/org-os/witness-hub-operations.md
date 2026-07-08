@@ -112,11 +112,41 @@ tar czf hub-a-backup-$(date +%Y%m%d).tar.gz -C data/hub-a .
 | チェック | コマンド / URL |
 |---------|----------------|
 | Hub health | `GET /hub/v1/health` |
+| Hub metrics | `GET /hub/v1/metrics` — receipts / attestations / anchors / federation_peers |
 | Gossip lag | `hub federation show` · cursor ファイルの `updated_at` |
 | Org pending | `protocol witness flush-pending` |
 | Quorum | `protocol witness verify --event-id <uuid>` |
 | Cross-hub drift | `protocol witness reconcile --peer PEER-001 --cross-hub` |
 | Merkle anchor | `hub anchor-verify --hub-url http://...` |
+| Trusted hubs | `protocol trusted-hubs` · `protocol trusted-hubs-validate` · `protocol trusted-hubs-sync-keys` |
+
+### TLS / mTLS
+
+Dev TLS (compose):
+
+```bash
+cd deploy/witness-hub
+./scripts/gen-dev-tls.sh
+docker compose -f docker-compose.yaml -f docker-compose.tls.yaml up
+```
+
+Pin public keys from running demo hubs:
+
+```bash
+orgos protocol trusted-hubs-sync-keys --jurisdiction JP --force
+```
+
+Production serve:
+
+```bash
+orgos hub serve --hub-id HUB-A --data-dir ./data/hub-a \
+  --tls-cert /run/secrets/hub.crt --tls-key /run/secrets/hub.key \
+  --tls-ca /run/secrets/clients-ca.crt --mtls-required
+```
+
+本番はリバースプロキシ + TLS（mTLS 推奨）。Hub 本体でも `--tls-*` で直接 HTTPS 可。`orgos hub tls-init` は **dev 用自己署名 CA のみ**。
+
+**本番手順の正本:** [production-tls-runbook.md](production-tls-runbook.md)（Mode A proxy / Mode B process TLS · secrets · rotation）。
 
 ---
 
@@ -169,3 +199,10 @@ steward protocol witness reconcile --peer PEER-001 --cross-hub
 - 本番: リバースプロキシ + TLS（mTLS 推奨）
 - `registered-orgs.yaml` の org 公開鍵 pin を維持
 - envelope 全文は Hub に載せない（digest のみ · N-04）
+
+---
+
+## 11. Org 解散 · 託し先
+
+組織解散時の export · custodian 引渡: [org-dissolution-witness-checklist.md](org-dissolution-witness-checklist.md)  
+ガバナンス（Model Y · 運営 Org の Hub 位置づけ）: [witness-hub-governance.md](witness-hub-governance.md)

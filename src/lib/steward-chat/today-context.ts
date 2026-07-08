@@ -1,4 +1,5 @@
 import { computeDashboard } from "../dashboard.js";
+import { listCooRelayInbox, listStewardInbox } from "../agent-reporting.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { listPendingInbox } from "../document-io.js";
 import { listWorkOrders } from "../escalate.js";
@@ -114,6 +115,8 @@ export function buildTodayContext(): TodayContext {
   }));
 
   const escalatePending = listWorkOrders("pending").length;
+  const cooRelay = listCooRelayInbox();
+  const stewardInbox = listStewardInbox();
 
   const kpis = report.kpis.slice(0, 6).map((k) => ({
     label: k.label,
@@ -141,6 +144,22 @@ export function buildTodayContext(): TodayContext {
     witness_pending_count: witnessPending.length,
     inbox_pending: inbox,
     escalate_pending_count: escalatePending,
+    agent_coo_relay_count: cooRelay.length,
+    agent_coo_relay: cooRelay.slice(0, 8).map((m) => ({
+      id: m.id,
+      field_agent: m.field_agent,
+      subject: m.subject,
+      type: m.type,
+      has_report: Boolean(m.report),
+    })),
+    agent_steward_inbox_count: stewardInbox.length,
+    agent_steward_inbox: stewardInbox.slice(0, 8).map((m) => ({
+      id: m.id,
+      field_agent: m.field_agent,
+      subject: m.subject,
+      type: m.type,
+      has_report: true,
+    })),
     kpis,
     executive_summary_path: existsSync(executivePath) ? executivePath : undefined,
     dashboard_path: existsSync(dashboardPath) ? dashboardPath : undefined,
@@ -223,6 +242,23 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
 
   lines.push(
     "",
+    "## Agent 報告チェーン",
+    "",
+    `- COO 中継待ち: ${ctx.agent_coo_relay_count} 件`,
+    `- Steward inbox: ${ctx.agent_steward_inbox_count} 件`,
+    ""
+  );
+
+  if (ctx.agent_steward_inbox.length > 0) {
+    lines.push("### Steward inbox（抜粋）", "");
+    for (const m of ctx.agent_steward_inbox) {
+      lines.push(`- **${m.id}** · ${m.field_agent} · ${m.subject}`);
+    }
+    lines.push("");
+  }
+
+  lines.push(
+    "",
     "## その他",
     "",
     `- Wire 送信待ち: ${ctx.wire_pending_count} 件`,
@@ -230,6 +266,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
     `- Witness 確認待ち: ${ctx.witness_pending_count} 件`,
     `- inbox 未処理: ${ctx.inbox_pending.length} 件`,
     `- escalate pending: ${ctx.escalate_pending_count} 件`,
+    `- COO relay: ${ctx.agent_coo_relay_count} 件 · Steward inbox: ${ctx.agent_steward_inbox_count} 件`,
     "",
     "## KPI",
     ""

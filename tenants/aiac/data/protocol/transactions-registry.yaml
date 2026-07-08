@@ -1,5 +1,5 @@
 transactions:
-  - transaction_id: TX-20260628-001
+  - transaction_id: TX-20260629-001
     direction: inbound
     our_org:
       org_id: aiac
@@ -13,7 +13,7 @@ transactions:
       currency: JPY
     refs:
       contract_id: CTR-012
-    event_id: f829baa9-e482-4855-8654-158ece4f0b72
-    recorded_at: 2026-06-28T10:31:25.758Z
+    event_id: 2e9e2bb0-dee9-4b3a-938e-7b9f4692b0a2
+    recorded_at: 2026-06-28T22:19:48.245Z
     notes: inbound webhook · attested by 段燕燕
-as_of: 2026-06-28
+as_of: 2026-06-29

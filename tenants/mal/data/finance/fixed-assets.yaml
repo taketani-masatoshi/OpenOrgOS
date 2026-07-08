@@ -40,7 +40,7 @@ assets:
     book_value: 70000000
     tax_notes: |
       償却対象外。取得原価7,000万円は PROP-002 notes・LOAN-002 と一致。
-      固定資産税評価額は区役所通知書で別途管理（TBD）。
+      固定資産税評価額 55,000,000円（デモ · 墨田区通知書想定 · 2026年度）。
 
   - id: ASSET-003
     property_id: PROP-002
@@ -50,14 +50,14 @@ assets:
     category: 建物
     acquisition_date: "2026-04-01"
     acquisition_cost: 26000000
-    useful_life_years: null
+    useful_life_years: 34
     depreciation_method: 定額法
-    annual_depreciation: 0
+    annual_depreciation: 764706
     accumulated_depreciation: 0
     book_value: 26000000
     expense_plan_line_id: null
     tax_notes: |
-      耐用年数 TBD（税理士・構造確認後）。第9期 P/L には減価償却未計上（開業2026/8）。
+      耐用年数34年（木造旅館 · デモ確定）。第9期 P/L には減価償却未計上（開業2026/8 · 償却開始第10期想定）。
       investment-plan（2,600万・2026-03/04）と LOAN-002 建築部分と一致。
       償却開始月・中古割増等は税理士確定後に annual_depreciation を更新。
 

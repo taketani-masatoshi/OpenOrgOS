@@ -52,6 +52,7 @@ export function validateTrustedHubsRegistry(): {
 
   try {
     const reg = loadTrustedHubsRegistry();
+    const strict = process.env.ORGOS_STRICT_TRUST === "1";
     const seenJurisdictions = new Set<string>();
     for (const entry of reg.jurisdictions) {
       if (seenJurisdictions.has(entry.jurisdiction)) {
@@ -77,11 +78,13 @@ export function validateTrustedHubsRegistry(): {
             message: `${entry.jurisdiction}/${hub.hub_id}: hub_url missing`,
           });
         }
-        if (!hub.hub_public_key) {
-          warnings.push({
+        if (!hub.hub_public_key?.trim()) {
+          const item = {
             code: "trusted-hub-missing-key",
             message: `${entry.jurisdiction}/${hub.hub_id}: hub_public_key empty (pin before production)`,
-          });
+          };
+          if (strict) issues.push(item);
+          else warnings.push(item);
         }
       }
     }

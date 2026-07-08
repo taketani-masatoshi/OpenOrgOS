@@ -9,14 +9,11 @@ officers:
     monthly: 0
     annual: 0
 tax_treatment:
-  withholding: 該当なし
-  social_insurance: 該当なし
+  withholding: 三塚（EMP-003）分は源泉徴収対象 — 月次経費で計上（ダミー）
+  social_insurance: 三塚分は社保加入想定（ダミー）
   deductible_expense: true
   notes: |
-    役員報酬0円の場合、法人税上の損金算入額も0。役員貸付返済・配当等は別科目。
-    報酬を設定する場合は定時株主総会決議・就業規則・源泉徴収義務が発生（tax-profile 参照）。
+    役員報酬0円のまま。従業員三塚の給与は monthly/2026-04〜 に personnel 科目で計上（月32万 · ダミー）。
 account_code: "5300"
 notes: |
-  FY2026決算: 0円で確定（予想ベース）。
-  税理士と確定後、必要に応じて遡及修正。
-  従業員なし。chart-of-accounts 5300 にマッピング。
+  ダミーデータ — FY2026 人件費試算。三塚入社 2026-04-01。

@@ -165,3 +165,17 @@ regulations:
     template: by-module/membership/REG-024-kaiin-kanri/template.md
     tenant_doc: kaiin-kanri-kisoku.md
     binds_to: { type: module, module_id: membership }
+
+  - id: REG-025
+    name: 医療機器QMS規程
+    template: by-module/jp_medical_device/REG-025-iryo-kiki-qms/template.md
+    tenant_doc: iryo-kiki-qms-kisoku.md
+    binds_to: { type: module, module_id: jp_medical_device }
+    iso_ids: [ISO-13485]
+
+  - id: REG-026
+    name: 医療機器GVP規程
+    template: by-module/jp_medical_device/REG-026-iryo-kiki-gvp/template.md
+    tenant_doc: iryo-kiki-gvp-kisoku.md
+    binds_to: { type: module, module_id: jp_medical_device }
+    iso_ids: [ISO-13485]

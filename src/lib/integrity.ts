@@ -15,6 +15,7 @@ import {
 import { facilityPublicSchema, facilitySecretsSchema } from "../../schemas/operations.js";
 import { classificationRegistrySchema } from "../../schemas/classification.js";
 import { runClassificationChecks } from "./classification.js";
+import { computeControlGaps } from "./control-framework.js";
 import { loadExecutiveCalendar } from "./data.js";
 import { detectUnsyncedCalendarEvents } from "./executive-calendar-sync.js";
 import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
@@ -276,6 +277,20 @@ export function runIntegrityChecks(): IntegrityIssue[] {
 
   for (const ci of runClassificationChecks()) {
     push(ci.severity, "data/classification-registry.yaml", ci.message);
+  }
+
+  try {
+    for (const gap of computeControlGaps()) {
+      if (gap.gap_type === "maturity_below_target") {
+        push(
+          "warning",
+          "data/compliance/controls.yaml",
+          `${gap.control_id}: ${gap.detail} (${gap.primary_agent})`
+        );
+      }
+    }
+  } catch {
+    // tenant or jurisdiction not configured — skip control checks
   }
 
   return issues;

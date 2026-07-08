@@ -1,17 +1,17 @@
 # 現預金残高 — ランウェイ算出用（L1 · 口座番号は bank-accounts.yaml へ）
 # bank_account_id は data/finance/bank-accounts.yaml（L2 · gitignore）を参照。
 
-as_of: "2027-01-31"
-status: template
+as_of: "2026-07-01"
+status: confirmed
 currency: JPY
 accounts:
   - bank_account_id: BANK-001
-    amount: null
+    amount: 6500000
   - bank_account_id: BANK-002
-    amount: null
-total: null
+    amount: 3500000
+total: 10000000
 notes: |
-  三井住友銀行（BANK-001）· GMOあおぞらネット銀行（BANK-002）の2口座。
-  残高入力後 status: confirmed · `npm run validate`。
-  手順: [p0-closing-register.md](../../docs/company/p0-closing-register.md) P0-05
+  ダミーデータ（デモ用 · 2026-07-01 時点）。
+  三井住友銀行（BANK-001）運転資金 650万 · GMOあおぞらネット銀行（BANK-002）予備 350万。
+  亀沢旅館開業後の宿泊入金・番町賃料を反映した想定残高（税理士確定前）。
   口座番号 · 支店コードは bank-accounts.yaml のみ（GitHub 非公開）。

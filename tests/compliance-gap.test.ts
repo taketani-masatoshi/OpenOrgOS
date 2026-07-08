@@ -18,5 +18,6 @@ describe("compliance gap", () => {
     setTenantId("mal");
     const result = computeComplianceGap();
     expect(result.effectiveRegs.length).toBeGreaterThan(10);
+    expect(result.control_gaps).toBeDefined();
   });
 });

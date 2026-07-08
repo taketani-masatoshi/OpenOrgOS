@@ -49,12 +49,14 @@ accounts:
     name: 資本金
     type: equity
     normal_balance: credit
-    data_source: TBD
+    data_source: data/finance/tax-profile.yaml
+    field: corporate_tax.capital_stock
   - code: "3200"
     name: 繰越利益剰余金
     type: equity
     normal_balance: credit
-    data_source: TBD
+    data_source: data/finance/tax-profile.yaml
+    field: corporate_tax.prior_retained_earnings
 
   # 収益
   - code: "4100"
@@ -144,5 +146,5 @@ monthly_close_adjustments:
     note: 月次 YAML の other カテゴリ行と整合
 
 notes: |
-  本ファイルは Steward 正データの科目マッピング。実際の仕訳・総勘定元帳は会計ソフト（TBD）で管理。
+  本ファイルは Steward 正データの科目マッピング。実際の仕訳・総勘定元帳は freee会計（デモ用）で管理。
   capex 発生時は investment-plan と fixed-assets を同時更新。

@@ -1,6 +1,6 @@
 # Steward 現状評価 — 株式会社MAL（テナントインスタンス）
 
-**評価日:** 2026年6月9日（第4回 — **OS-99+ Cycle 1**）  
+**評価日:** 2026年7月5日（Phase B — モジュール · Agent 最小化）  
 **対象:** テナント `mal` · FY2026 · **会社 OS 総合採点**
 
 > **会社 OS 採点:** [framework-assessment.md §10](../../../../../docs/framework-assessment.md) · `npm run orgos -- status --os-99`
@@ -11,86 +11,57 @@
 
 | 成分 | 点数 | 備考 |
 |------|:----:|------|
-| 製品（フレームワーク） | 99 | §9 実測 · REF-4c 完了 · REF-4b/d −1 |
+| 製品（フレームワーク） | 99 | §9 実測 |
 | MAL 準備度 | **97%** | `steward status` |
-| MAL 運用度 | **84%** | **ops p0 ブロッカー 5 — 最大ギャップ** |
+| MAL 運用度 | **~90%** | Phase A ダミー確定 · secrets ローカルのみ |
 | MAL 自動化度 | **100%** | daily/weekly · classification |
-| **総合（加重）** | **`status --os-99` で確認** | 出口 **≥ 99** |
-
-```bash
-npm run orgos -- status --os-99
-npm run orgos -- ops p0   # exit 1 · 5 ブロッカー
-```
-
-**99+ 経路:** P0 5 件クローズ（運用 84→95+）→ 総合 **~97+** · 製品 99 到達済 · REF-4b/d で製品 100 可
+| **総合（加重）** | **`status --os-99` で確認** | Phase C Hub 完了で Wire 軸向上 |
 
 ---
 
-## 総合所見（MAL · 三次元）
+## 有効モジュール · Agent（2026-07-05）
 
-| 次元 | スコア | 根拠 |
-|------|:------:|------|
-| **準備度** | **95%** | validate ✓ · tsc ✓ · compliance gap ✓ · 有効規程 14件 · 契約パケット整備 |
-| **運用度** | **88%** | ops p0 ブロッカー **5 件**（契約3 · secrets · cash-balance） |
-| **自動化度** | **96%** | `npm run daily`/`weekly` · pipeline · classification boundaries |
-
-**総合: 準備 95% / 運用 88%** — 実手続・実データ完遂で運用 100%。
-
-`steward status` 三次元の定義: [framework-assessment.md §4](../../../../../docs/framework-assessment.md#4-テナント成熟度三次元)
+| 種別 | 有効 ID |
+|------|---------|
+| **ビジネスモジュール** | rental · hospitality · travel_booking |
+| **OFF** | jp_medical_device（REG-025/026 未施行 · ISO-13485 OFF） |
+| **コア Agent** | executive · secretary · finance · operations |
+| **モジュール Agent** | rental · hospitality · travel_booking |
+| **マニフェスト** | [`data/operator/agents-enabled.yaml`](../../data/operator/agents-enabled.yaml) |
 
 ---
 
-## ops p0 ブロッカー（2026-06-09 実測）
+## ops p0（デモ確定後 · 2026-07-05）
 
 | ID | 状態 | 備考 |
 |----|:----:|------|
-| CTR-013 | draft | 手続完了待ち |
-| CTR-014 | draft | 手続完了待ち |
+| CTR-013/014 | draft | counterparty ダミー確定 · 証券 PDF は実務 |
 | CTR-012 | executed | 本社オフィス賃貸 · サウスウッド |
-| secrets-kamezawa | 未作成 | `kamezawa-secrets.yaml` — example からコピー |
-| cash-balance | template | `status: confirmed` + 残高入力待ち |
-
-```bash
-npm run orgos -- --tenant mal ops p0
-# → ブロッカー 5 件
-```
+| 亀沢清掃 | ダミー | 墨田クリーンサービス（EXT-003） |
+| secrets-kamezawa | example | ローカル gitignore のみ |
+| cash-balance | **confirmed** | 1,000万円（2026-07-01） |
+| B/S 3項目 | **demo_confirmed** | tax-profile · 株主名簿同期済 |
 
 ---
 
-## コマンド結果（2026-06-09）
+## ISO · コンプライアンス
 
-| コマンド | 結果 |
-|---------|------|
-| `npm run validate` | ✓ 全 YAML 有効（warnings: secrets · cash-balance · backup stamp） |
-| `npm run check` | ✓ mal · demo · acme · modules · classification |
-| `npx tsc --noEmit` | ✓ exit 0（FIX-A1） |
-| `steward compliance gap` | ✓ |
-| `steward ops p0` | ブロッカー **5 件** |
-
----
-
-## ガバナンス
-
-| 項目 | 状態 |
+| 標準 | 状態 |
 |------|------|
-| 有効規程 | **14 件**（`regulations.yaml` enabled · REG-001〜016 + REG-012 宿泊） |
-| ISO-27001 運用記録 | executive バックアップ週次ログテンプレ追加 |
-| Git 履歴 R-001 | mitigated — filter-repo は段承認待ち |
+| ISO-9001 / 27001 / 21401 | 有効 · controls L2+ |
+| **ISO-13485** | **無効** — jp_medical_device OFF · validate 警告解消 |
+| REG-025 / REG-026 | **未施行** — 参照 MD のみ |
 
 ---
 
-## 100% に必要なアクション（MAL · 人間完遂）
+## 100% に必要なアクション（実務 · 人間完遂）
 
 | 領域 | 残タスク | 担当 |
 |------|---------|------|
-| 保険 | CTR-013/014 加入 · 証券 PDF · executed 化 | 段燕燕 |
-| オフィス借主 | CTR-012 サウスウッドと締結済 | 段燕燕 |
-| 清掃（亀沢） | 業者 TBD（CTR-012 とは別） | 段燕燕 |
-| 運用機密 | `kamezawa-secrets.yaml` 実値 | 運用担当 |
-| 財務 | `cash-balance.yaml` confirmed | 経理 |
-| B/S | 資本金 · 繰越剰余金（登記簿 · 前期決算） | 税理士連携 |
-| 税務 | 会計ソフト仕訳 · e-Tax · 法人税確定 | 税理士 |
-| 許認可 | 営業許可証掲示 · inbox 登録 | 運用担当 |
+| 保険 | CTR-013/014 実加入 · 証券 PDF | 段燕燕 |
+| 運用機密 | `kamezawa-secrets.yaml` 実値（ローカル） | 運用担当 |
+| 税務 | 実申告 · e-Tax（ダミー SoT とは別） | 税理士 |
+| 登記 | 宮城退任登記（2026-08 予定） | 司法書士 |
 
 ---
 
@@ -98,26 +69,19 @@ npm run orgos -- --tenant mal ops p0
 
 | ステータス | 件数 | 備考 |
 |-----------|:----:|------|
-| executed | 10 | CTR-001〜010 |
-| draft | 4 | CTR-011, 012, 013, 014 — 手続パケット整備済み |
+| executed | 10+ | CTR-001〜010 等 |
+| draft | 2 | CTR-013/014 火災保険 — counterparty ダミー済 |
 
 ---
 
-## OrgOS プロトコル（2026-06-26）
+## OrgOS プロトコル
 
-| シナリオ | コマンド | 結果 |
-|---------|---------|------|
-| 単独閉ループ | `npm run demo:mal-standalone` | identity · internal approve · `protocol validate --standalone` |
-| Wire + witness | mal ↔ southwood · `npm run demo:inter-org` | witness chain events · audit verify |
-| 採点 | `npm run orgos -- status --orgos` | OrgOS 加重 ~86%（framework-assessment §13） |
+| シナリオ | 状態 |
+|---------|------|
+| Witness Hub | Phase C — n=4 · k=3 · docker-compose 拡張 |
+| Wire demo | mal ↔ southwood |
 
-正本: [runbook-orgos.md](../../../../../docs/runbook-orgos.md) · [framework-assessment.md §13](../../../../../docs/framework-assessment.md)
-
----
-
-1. **CTR-014 火災保険加入**（稼働中）
-2. **cash-balance.yaml + B/S 3項目** 入力
-3. **kamezawa-secrets.yaml** 作成 · **亀沢清掃業者** 選定（CTR-012 とは別）
+正本: [runbook-orgos.md](../../../../../docs/runbook-orgos.md) · [score-90-correction-plan.md](../../plans/score-90-correction-plan.md)
 
 ---
 
@@ -125,7 +89,6 @@ npm run orgos -- --tenant mal ops p0
 
 - [ISO 一覧](00-このフォルダについて.md)
 - [フレームワーク評価](../../../../../docs/framework-assessment.md)
-- [spec.md](../../../../../docs/spec.md)
 - [税務 readiness](../../company/tax/fy2026-tax-readiness-assessment.md)
 
 *重大変更時 · 四半期ごとに見直す。*

@@ -298,12 +298,42 @@ Executive · Secretary 評価に基づく executive SoT 境界・運用品質。
 | OS-100-F1 | production_ready ×5（+ ps · saas · restaurant） | [x] |
 | OS-100-F2 | Skill cli ≥12（dashboard · forecast · revpar · schedule · one-on-one） | [x] |
 
+## Phase DIST-DEMO — All-in-one Demo Docker（利用者獲得 · 2026-07）
+
+| ID | タスク | 状態 |
+|----|--------|:----:|
+| DIST-DEMO-0 | 設計正本 · `deploy/demo/` 骨格 · seed 準備 | [x] |
+| DIST-DEMO-1 | Dockerfile 実働 · compose · A1–A4 | [x] |
+| DIST-DEMO-2 | GHCR publish · CI スモーク · B1–B2 | [x] |
+| DIST-DEMO-3 | README / quickstart 第一入口 | [x] |
+| DIST-DEMO-4 | multi-arch · イメージサイズ | [x] |
+
+正本: [org-os/demo-docker.md](org-os/demo-docker.md) · [deploy/demo/](../deploy/demo/)
+
 ## Phase G — コンプライアンス · パイプライン
 
 | ID | タスク | 状態 |
 |----|--------|:----:|
 | OS-100-G1 | `steward compliance gap` | [x] |
 | OS-100-G2 | `pipeline run weekly` + routing-queue サマリ | [x] |
+
+## Phase CTL-FW — ISO × REG 統制フレームワーク（2026-06）
+
+| ID | タスク | 状態 |
+|----|--------|:----:|
+| CTL-FW-1 | schemas · control-framework YAML · control-map（9001/27001/21401） | [x] |
+| CTL-FW-2 | `orgos controls *` · compliance gap 統合 · active_context | [x] |
+| CTL-FW-3 | Agent/Skill/Routing · mal controls.yaml seed | [x] |
+| CTL-FW-4 | ISO-13485 control-map · jp_medical_device · REG-025/026 · medical_device_regulatory Agent | [x] |
+| CTL-FW-5 | 残 ISO control-map · 非 JP reg-bindings | [ ] |
+
+## Phase AGENT-R — Agent 完成度 80%（2026-06）
+
+| ID | タスク | 状態 |
+|----|--------|:----:|
+| AGENT-R1 | agent-capability-manifest · readiness/pulse CLI | [x] |
+| AGENT-R2 | _template + acme seed · routing 補完 | [x] |
+| AGENT-R3 | 全44 agent.md pulse 統合 · dashboard 拡張要約 | [x] |
 
 ## Phase H — 100% クローズ
 

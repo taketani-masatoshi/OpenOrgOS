@@ -19,6 +19,9 @@ import { WIRE_CONSOLE_SPA_DIST } from "./paths.js";
 import { handleConsoleApi } from "./routes/console-api.js";
 import { handleEventsStream } from "./routes/events-stream.js";
 import { preloadOidcJwks } from "./auth/oidc.js";
+import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
+import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
+import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
 
 export interface WireConsoleServerOptions {
   host?: string;
@@ -273,13 +276,23 @@ export function startWireConsoleServer(
   const port = options.port ?? 0;
 
   return preloadOidcJwks().then(
-    () =>
-      new Promise<WireConsoleServerHandle>((resolve, reject) => {
+    () => {
+      assertProdAuthReady("wire");
+      return new Promise<WireConsoleServerHandle>((resolve, reject) => {
         const server = createServer(async (req, res) => {
           try {
             const url = new URL(req.url ?? "/", `http://${host}`);
             const pathname = url.pathname;
             const method = req.method ?? "GET";
+
+            if (
+              method === "POST" &&
+              pathname.startsWith("/console/v1/") &&
+              !pathname.startsWith("/console/v1/auth/")
+            ) {
+              if (rejectCsrfOriginMismatch(req, res)) return;
+              if (rejectRateLimitExceeded(req, res, pathname)) return;
+            }
 
             if (await handleApi(req, res, pathname, method, url.searchParams)) return;
 
@@ -313,6 +326,7 @@ export function startWireConsoleServer(
           });
         });
         server.on("error", reject);
-      })
+      });
+    }
   );
 }

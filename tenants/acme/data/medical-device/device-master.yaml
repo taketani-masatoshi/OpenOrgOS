@@ -1,0 +1,12 @@
+devices:
+  - id: DEV-001
+    name: （医療機器名称）
+    class: II
+    jmdn_code: （JMDN コード）
+    approval_number: （承認番号 / 認証番号）
+    udi_di: （UDI-DI）
+    manufacturer_ref: LIC-MFG-001
+    mah_ref: LIC-MAH-001
+    storage_conditions: 室温保存 · 直射日光を避ける
+    shelf_life_months: 24
+    status: active

@@ -1,0 +1,11 @@
+# 現場 Agent → COO → Executive Steward 報告線
+# CLI: orgos agent order | report | relay
+
+version: "1.0"
+hub_agent: coo
+executive_agent: executive_steward
+excluded_from_field:
+  - executive_steward
+  - coo
+auto_forward_pulse: true
+auto_forward_work_order_complete: true

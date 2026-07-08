@@ -22,6 +22,8 @@ import { getOrgAuditBridgeConfigPath } from "../org/paths.js";
 import { validateTrustedHubsRegistry } from "./trusted-hubs.js";
 import { loadSigningKeyMeta } from "./signing.js";
 import { loadPeersRegistry } from "./peers.js";
+import { resolvePeerInboundEndpoints } from "./peers.js";
+import { isLegacyWebhookEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
 import { getProtocolOutboxDir } from "./paths.js";
 import { listOutboxEventIdsWithoutProvenance } from "./outbox-provenance.js";
 import { isProtocolWriteGuardDisabled } from "./protocol-write-guard.js";
@@ -251,6 +253,20 @@ export function validateProtocolState(
       code: perm.code,
       message: perm.message,
     });
+  }
+
+  const strictTransport = process.env.ORGOS_STRICT_TRANSPORT === "1";
+  for (const peer of loadPeersRegistry().peers) {
+    const legacy =
+      Boolean(peer.inbound_webhook_url) ||
+      resolvePeerInboundEndpoints(peer).some((ep) => isLegacyWebhookEndpoint(ep));
+    if (!legacy) continue;
+    const entry = {
+      code: "legacy-webhook-transport",
+      message: `${peer.peer_id}: legacy_webhook / inbound_webhook_url in use (sunset 2026-10-01; migrate to wire_v1)`,
+    };
+    if (strictTransport) issues.push(entry);
+    else warnings.push(entry);
   }
 
   return { ok: issues.length === 0, issues, warnings };

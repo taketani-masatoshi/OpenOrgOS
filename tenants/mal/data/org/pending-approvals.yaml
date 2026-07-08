@@ -1,4 +1,4 @@
-as_of: 2026-06-28
+as_of: 2026-06-29
 approvals:
   - approval_id: APR-20260627-001
     scope: internal
@@ -53,10 +53,186 @@ approvals:
     approval_tier: A
     approver_id: 段燕燕
     approved_at: 2026-06-28T09:17:04.095Z
+    audit_event_id: 37a185e7-bb08-453e-9742-c9a712b222a7
     wire:
       peer_id: PEER-001
       transaction_type: contract.execution.notice
       contract_id: CTR-012
       transaction_id: TX-20260628-001
       wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
-    audit_event_id: 37a185e7-bb08-453e-9742-c9a712b222a7
+  - approval_id: NOTICE-20260629-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T21:49:00.137Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T21:49:00.145Z
+    audit_event_id: 8b257f22-095f-4bcd-83b2-d5d46720ff42
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260629-002
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T21:55:25.936Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T21:55:25.946Z
+    audit_event_id: 08509341-4e5e-4769-92f6-62a674464aa9
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260629-003
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T21:57:29.145Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T21:57:29.158Z
+    audit_event_id: 57a3d6d6-e907-445b-af07-ef24a834aa1b
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260629-004
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T21:58:21.368Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T21:58:21.377Z
+    audit_event_id: 695f61bc-ecbf-4c43-a1a4-e032a9c6ec62
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260629-005
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T22:03:05.095Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T22:03:05.109Z
+    audit_event_id: 2ba96c46-b5e5-423a-bc19-2fbb05e9cc49
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260629-006
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T22:05:21.228Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T22:05:21.241Z
+    audit_event_id: 0f2bb001-cead-402c-8447-593370817831
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260629-007
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T22:07:50.992Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T22:07:51.006Z
+    audit_event_id: 23787ad0-3039-4021-b0ab-344f193926a6
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+  - approval_id: NOTICE-20260629-008
+    scope: wire
+    status: completed
+    proposed_at: 2026-06-28T22:19:48.128Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 85000
+      currency: JPY
+    message: オフィス賃貸借に基づき、契約通りの運用・請求サイクルを開始します。
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 段燕燕
+    approved_at: 2026-06-28T22:19:48.140Z
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-012
+      transaction_id: TX-20260629-001
+      wire_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+    audit_event_id: 78973f82-5d34-460e-9165-f7ca515e16f0

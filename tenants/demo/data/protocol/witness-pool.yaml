@@ -1,5 +1,0 @@
-enabled: true
-quorum:
-  mode: any_of_n
-hubs: []
-register_on: both

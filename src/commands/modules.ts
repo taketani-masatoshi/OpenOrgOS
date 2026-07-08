@@ -5,6 +5,10 @@ import {
   listTenantModules,
   loadEnabledModules,
 } from "../lib/modules.js";
+import {
+  activateTenantModule,
+  formatActivateModuleResult,
+} from "../lib/agent-workspace.js";
 import { validateExtensibilityContracts } from "../lib/extensibility-contract.js";
 import {
   syncActiveContext,
@@ -14,7 +18,7 @@ import {
   listEffectiveRegulations,
   loadEnabledRegulationIds,
 } from "../lib/regulations.js";
-import { getTenantId } from "../lib/tenant.js";
+import { getTenantId, setTenantId } from "../lib/tenant.js";
 import { getModuleTier, type ReadinessTier } from "../lib/module-readiness.js";
 
 function countTiers(): Record<ReadinessTier, number> {
@@ -104,4 +108,26 @@ export function runModulesSyncContext(): void {
   console.log("✓ Active context synced.");
   console.log(`  ${contextPath}`);
   console.log(`  ${cursorRulePath}`);
+}
+
+export interface ModulesActivateOptions {
+  tenant?: string;
+  skipRegs?: boolean;
+  skipIso?: boolean;
+  skipControls?: boolean;
+  json?: boolean;
+}
+
+export function runModulesActivate(moduleId: string, opts: ModulesActivateOptions = {}): void {
+  if (opts.tenant) setTenantId(opts.tenant);
+  const result = activateTenantModule(moduleId, {
+    skipRegs: opts.skipRegs,
+    skipIso: opts.skipIso,
+    skipControls: opts.skipControls,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(formatActivateModuleResult(result));
 }

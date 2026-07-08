@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { peerEndpointSchema } from "./peer-endpoint.js";
+import { openOrgDidSchema } from "./openorg-did.js";
 
 export const peerProfileSchema = z.object({
   peer_id: z.string().regex(/^PEER-\d{3}$/),
@@ -7,6 +8,8 @@ export const peerProfileSchema = z.object({
   jurisdiction: z.string().min(2),
   stakeholder_id: z.string().optional(),
   org_uri: z.string().optional(),
+  /** OpenOrg DID for Wire Node resolution (WG-4). */
+  did: openOrgDidSchema.optional(),
   /** Base64 SPKI DER — verifies inbound envelope signatures from this peer. */
   protocol_public_key: z.string().optional(),
   /** @deprecated Prefer inbound_endpoints — kept for backward compatibility. */

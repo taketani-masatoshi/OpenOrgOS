@@ -34,9 +34,15 @@ export function runWireGatewayValidate(opts: WireGatewayValidateOptions = {}): v
   }
   if (result.ok) {
     console.log("✓ wire-gateway config valid");
+    for (const w of result.warnings) {
+      console.log(`  [warn] [${w.code}] ${w.message}`);
+    }
   } else {
     for (const issue of result.issues) {
       console.log(`✗ [${issue.code}] ${issue.message}`);
+    }
+    for (const w of result.warnings) {
+      console.log(`  [warn] [${w.code}] ${w.message}`);
     }
     process.exitCode = 1;
   }

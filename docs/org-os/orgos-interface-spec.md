@@ -43,9 +43,34 @@ Organization Implementation · Adapter · Wire · Witness の **境界（I1–I3
 
 | 操作 | プロトコル | 正本 |
 |------|------------|------|
+| **Wire Gateway（組織エッジ）** | HTTPS · Wire JSON · 唯一外部公開 | [wire-gateway-requirements.md](wire-gateway-requirements.md) |
 | P2P 配送 | HTTP webhook · `protocol deliver` | [inter-org-operator-model.md](inter-org-operator-model.md) |
 | 第三者証人 | Witness attestation / receipt | [witness-hub-requirements.md](witness-hub-requirements.md) |
+| **国家ゲートウェイ** | X-Road · e-Gov · Georgia 3G ラップ | [gov-gateway-adapters.md](gov-gateway-adapters.md) |
 | Peer 定義 | `peers.yaml` · identity export | `data/protocol/` |
+
+### 4.0 境界 I3-a — Wire Gateway（v0.1 目標）
+
+| 操作 | 形式 | 正本 |
+|------|------|------|
+| 外部 Wire JSON | §5.1 flat JSON | [wire-gateway-wire-protocol.md](wire-gateway-wire-protocol.md) |
+| 内部正本 | `EventEnvelope` | `schemas/protocol/org-event.ts` |
+| Gateway ↔ 本体 | Internal API | [wire-gateway-internal-api.md](wire-gateway-internal-api.md) |
+| Codec | encode/decode | [`src/lib/wire-gateway/codec.ts`](../../src/lib/wire-gateway/codec.ts) |
+
+**不変条件:** Gateway は payload 非解釈 · Event 本文非保持 · DB 非接触。参照実装は [§21 ギャップ](wire-gateway-requirements.md#21-参照実装ギャップos_steward--2026-07-07) を参照。
+
+---
+
+## 4.1 境界 I3-b — Wire ↔ 国家ゲートウェイ（Gov Gateway Adapter）
+
+| 操作 | プロトコル | 正本 |
+|------|------------|------|
+| encode / decode | `EventEnvelope` ↔ 国家形式 | [gov-gateway-adapters.md](gov-gateway-adapters.md) |
+| テナント設定 | `gov-gateway.yaml` | `tenants/{id}/data/protocol/` |
+| Profile | EE X-Road · JP e-Gov · GE 3G | `steward/jurisdiction-packs/*/protocol/*.profile.yaml` |
+
+**不変条件:** 国家ゲートウェイ失敗で Wire 承認をロールバックしない · OpenOrgOS 正本は `EventEnvelope`。
 
 ---
 

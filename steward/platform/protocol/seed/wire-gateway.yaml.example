@@ -1,0 +1,38 @@
+# Wire Gateway — テナント / Gateway インスタンス設定（例）
+# Copy: tenants/{id}/data/protocol/wire-gateway.yaml
+# Spec: docs/org-os/wire-gateway-internal-api.md §7
+
+wire_version: "0.1"
+
+# Node ID — Wire 上の組織識別（DNS 風推奨）
+node_id: org.example.co.jp
+node_uri: steward://tenant/demo
+display_name: Example Corp
+
+listen:
+  host: 0.0.0.0
+  port: 8443
+  # tls_cert: /run/secrets/wire-tls.crt
+  # tls_key: /run/secrets/wire-tls.key
+
+internal_api:
+  base_url: http://127.0.0.1:8080/internal/v1/wire
+  # bearer_token_file: /run/secrets/wire-internal.token
+  # 開発のみ — 本番は file 参照
+  # bearer_token: dev-only-change-me
+
+security:
+  timestamp_skew_sec: 300
+  nonce_ttl_sec: 604800
+  rate_limit_per_min: 120
+  # mtls_required: true
+
+outbound:
+  poll_interval_ms: 5000
+
+audit:
+  path: data/protocol/wire-gateway-audit.jsonl
+
+# 移行期 — legacy webhook peer
+legacy:
+  enabled: false

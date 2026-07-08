@@ -2,7 +2,8 @@
 
 **Status:** canonical doctrine · **Language:** English (authoritative)  
 **Scope:** OpenOrgOS Core design — not application features  
-**Terminology (JP):** [orgos-vocabulary.md](orgos-vocabulary.md) — **OrgOS = product** · **Steward Agent** = executive core agent (not the product name)
+**Terminology (JP):** [orgos-vocabulary.md](orgos-vocabulary.md) — **OrgOS = product** · **Steward Agent** = executive core agent (not the product name)  
+**Conceptual overview (JP):** [openorg-ooo-basic-philosophy.md](openorg-ooo-basic-philosophy.md) — State · Event · Organizational Context · OOO execution model
 
 You are developing the OpenOrgOS Core.
 

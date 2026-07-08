@@ -22,6 +22,7 @@
 - secrets の **存在・項目充足** 監査（値の複製は禁止）
 - 届出・総会期限の Executive へのエスカレーション
 - **Skill 実行後** `docs/reports/agent-summaries/compliance/` に要約を書く
+- **統制フレームワーク** — `orgos controls gap` · `data/compliance/controls.yaml` で ISO×REG 成熟度を監視
 
 ---
 
@@ -29,7 +30,15 @@
 
 | Skill | ファイル |
 |-------|---------|
-| permit_expiry_check | [steward/core/skills/permit_expiry_check.md](../steward/core/skills/permit_expiry_check.md) |
+| permit_expiry_check | [steward/core/skills/permit_expiry_check.md](../skills/permit_expiry_check.md) |
+| iso_control_review | [steward/core/skills/iso_control_review.md](../skills/iso_control_review.md) |
+
+## 統制オーナーシップ
+
+| ドメイン | 役割 |
+|---------|------|
+| governance · audit（横断） | Compliance が REG 施行 · CTL 成熟度を監視 |
+| 担当 CTL 一覧 | `orgos controls for-agent compliance` · active_context 統制マトリクス |
 
 ## 要約出力先
 
@@ -45,6 +54,8 @@
 | `docs/company/licenses/**` | Primary |
 | `steward/standards/regulations/**` | Read（有効 REG テンプレのみ） |
 | `steward/standards/iso/**` | Read（有効 ISO テンプレのみ） |
+| `steward/standards/control-framework/**` | Read |
+| `data/compliance/controls.yaml` | Read/Write |
 | `docs/compliance/iso/**` | Primary（テナント記録） |
 | `docs/compliance/privacy/**` | Primary |
 | `docs/company/**`（議事録・株主） | Read |
@@ -121,5 +132,27 @@
 
 - 規程: `regulations.yaml` で有効化 · カタログ [steward/standards/regulations/catalog.yaml](../standards/regulations/catalog.yaml)
 - ISO 標準: [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)
+- 統制フレームワーク: [steward/standards/control-framework/](../standards/control-framework/00-README.md)
 - テナント評価: `docs/compliance/iso/steward-assessment.md`
 - アクティブ一覧: `tenants/{id}/rules/active_context.md`
+
+## 使用 Skill / CLI
+
+| 手段 | 内容 |
+|------|------|
+| agent_pulse | `orgos agent pulse --agent compliance` |
+| permit_expiry_check | registry Skill |
+| iso_control_review | registry Skill |
+
+## CLI
+
+```bash
+orgos agent readiness --agent compliance
+orgos agent pulse --agent compliance
+```
+
+## コンテキスト
+
+- 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
+- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+

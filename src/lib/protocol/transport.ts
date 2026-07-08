@@ -6,7 +6,7 @@ import { enqueueWirePending, removeWirePending, listWirePending } from "./wire-q
 import { markWireDelivered } from "./wire-delivered.js";
 import { listWireRelayPending } from "./wire-relay-store.js";
 import { findEnvelopeFileForWitness } from "./witness-client.js";
-import { loadTenantConfig } from "../tenant.js";
+import { loadTenantConfig, getTenantId } from "../tenant.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProtocolInboxDir } from "./paths.js";
@@ -14,6 +14,13 @@ import {
   assertProtocolDeliverGate,
   assertEnvelopeDeliverAuthorized,
 } from "./pre-deliver-gate.js";
+import {
+  isGovGatewayEndpoint,
+  isWireV1Endpoint,
+  type PeerEndpoint,
+} from "../../../schemas/protocol/peer-endpoint.js";
+import { deliverEnvelopeViaGovGateway } from "../wire/gov-gateway/deliver.js";
+import { envelopeToWireMessage } from "../wire-gateway/codec.js";
 
 export interface DeliverEnvelopeResult {
   delivered: boolean;
@@ -28,24 +35,11 @@ function isRelayEnqueueUrl(url: string): boolean {
   return url.includes("/protocol/v1/relay/enqueue");
 }
 
-async function postEnvelopeToUrl(
-  envelope: EventEnvelope,
+async function postJsonToUrl(
   url: string,
-  opts?: { destinationOrgUri?: string }
+  body: string,
+  headers: Record<string, string>
 ): Promise<{ ok: boolean; reason: string; httpStatus?: number }> {
-  const relay = isRelayEnqueueUrl(url);
-  const body = relay
-    ? JSON.stringify({
-        envelope,
-        destination_org_uri:
-          opts?.destinationOrgUri ?? envelope.destination?.org_uri ?? envelope.destination?.org_id,
-      })
-    : serializeEventEnvelope(envelope);
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "User-Agent": "Steward-OS/0.8",
-    ...(relay ? {} : { "X-Steward-Format": "envelope" }),
-  };
   try {
     const parsed = new URL(url);
     let res: Response;
@@ -71,6 +65,47 @@ async function postEnvelopeToUrl(
   }
 }
 
+async function postEnvelopeToUrl(
+  envelope: EventEnvelope,
+  url: string,
+  opts?: { destinationOrgUri?: string }
+): Promise<{ ok: boolean; reason: string; httpStatus?: number }> {
+  const relay = isRelayEnqueueUrl(url);
+  const body = relay
+    ? JSON.stringify({
+        envelope,
+        destination_org_uri:
+          opts?.destinationOrgUri ?? envelope.destination?.org_uri ?? envelope.destination?.org_id,
+      })
+    : serializeEventEnvelope(envelope);
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "User-Agent": "Steward-OS/0.8",
+    ...(relay ? {} : { "X-Steward-Format": "envelope" }),
+  };
+  return postJsonToUrl(url, body, headers);
+}
+
+/** Primary path: Wire Gateway wire_v1 — POST WireMessage. */
+async function postWireMessageToUrl(
+  envelope: EventEnvelope,
+  url: string
+): Promise<{ ok: boolean; reason: string; httpStatus?: number }> {
+  if (!envelope.signature) {
+    return { ok: false, reason: "envelope must be signed for wire_v1" };
+  }
+  const wire = envelopeToWireMessage(envelope);
+  const result = await postJsonToUrl(url, JSON.stringify(wire), {
+    "Content-Type": "application/json",
+    "User-Agent": "Steward-OS/0.8",
+    "X-OpenOrgOS-Wire-Version": "0.1",
+  });
+  if (result.ok || result.httpStatus === 202 || result.httpStatus === 409) {
+    return { ok: true, reason: result.reason, httpStatus: result.httpStatus ?? 202 };
+  }
+  return result;
+}
+
 export async function deliverProtocolEnvelope(
   envelope: EventEnvelope,
   peerId: string
@@ -93,9 +128,18 @@ export async function deliverProtocolEnvelope(
     if (ep.mode === "pull") {
       continue;
     }
-    const result = await postEnvelopeToUrl(envelope, ep.url, {
-      destinationOrgUri: peer.org_uri,
-    });
+
+    let result: { ok: boolean; reason: string; httpStatus?: number };
+    if (isGovGatewayEndpoint(ep)) {
+      result = await deliverViaGovGatewayEndpoint(envelope, peerId, ep);
+    } else if (isWireV1Endpoint(ep)) {
+      result = await postWireMessageToUrl(envelope, ep.url);
+    } else {
+      result = await postEnvelopeToUrl(envelope, ep.url, {
+        destinationOrgUri: peer.org_uri,
+      });
+    }
+
     if (result.ok) {
       markWireDelivered(peerId, envelope.event_id, ep.url);
       return {
@@ -105,12 +149,30 @@ export async function deliverProtocolEnvelope(
         httpStatus: result.httpStatus,
       };
     }
-    errors.push(`${ep.mode}@${ep.url}: ${result.reason}`);
+    errors.push(`${ep.transport}@${ep.url}: ${result.reason}`);
   }
 
   return {
     delivered: false,
     reason: errors.join("; ") || "all endpoints failed",
+  };
+}
+
+async function deliverViaGovGatewayEndpoint(
+  envelope: EventEnvelope,
+  peerId: string,
+  endpoint: PeerEndpoint
+): Promise<{ ok: boolean; reason: string; httpStatus?: number }> {
+  const result = await deliverEnvelopeViaGovGateway({
+    envelope,
+    peerId,
+    endpoint,
+    tenantId: getTenantId(),
+  });
+  return {
+    ok: result.ok,
+    reason: result.reason,
+    httpStatus: result.httpStatus,
   };
 }
 
