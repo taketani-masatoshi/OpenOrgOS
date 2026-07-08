@@ -3,19 +3,25 @@ import { syncActiveContext } from "../lib/context-manifest.js";
 import { runIntegrityChecks, integrityErrorsOnly, type IntegrityIssue } from "../lib/integrity.js";
 import { appendAuditEvent } from "../lib/audit-log.js";
 import { printStaleDependencyWarnings } from "./deps.js";
+import { runSecurityChecks } from "../lib/security-validate.js";
 
 export interface ValidateOptions {
   warnings?: boolean;
   strict?: boolean;
   deps?: boolean;
+  security?: boolean;
 }
 
 export function runValidate(opts: ValidateOptions = {}): void {
   const result = validateAll();
   const integrityErrors = result.ok ? integrityErrorsOnly(runIntegrityChecks()) : [];
+  const securityIssues = opts.security
+    ? runSecurityChecks().filter((i) => i.level === "error")
+    : [];
   const allErrors = [
     ...result.errors,
     ...integrityErrors.map((i) => ({ file: i.file, message: i.message })),
+    ...securityIssues.map((i) => ({ file: i.file, message: i.message })),
   ];
 
   if (allErrors.length === 0) {
@@ -24,6 +30,15 @@ export function runValidate(opts: ValidateOptions = {}): void {
     console.log(`✓ Active context synced (${contextPath}).`);
     appendAuditEvent({ event: "validate", ref: "ok", detail: contextPath });
     printWarnings(runIntegrityChecks());
+    if (opts.security) {
+      const sec = runSecurityChecks();
+      const warnings = sec.filter((i) => i.level === "warning");
+      if (warnings.length) {
+        console.log(`\n⚠ Security ${warnings.length} warning(s):`);
+        for (const w of warnings) console.log(`  ${w.file}: ${w.message}`);
+      }
+      console.log("✓ Security checks passed.");
+    }
     if (opts.deps) {
       printStaleDependencyWarnings();
     }

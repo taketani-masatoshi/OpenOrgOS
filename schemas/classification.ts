@@ -51,6 +51,8 @@ export const agentId = z.enum([
   "learning_development",
   "corporate_development",
   "quality_assurance",
+  "medical_device_regulatory",
+  "records_audit",
 ]);
 
 export const aiContextMode = z.enum(["auto", "on_demand", "blocked"]);

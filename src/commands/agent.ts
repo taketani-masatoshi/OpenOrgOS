@@ -17,6 +17,7 @@ import {
 } from "../lib/agent-readiness.js";
 import { runAgentPulse, runAllAgentPulses, runExtensionAgentPulses } from "../lib/agent-pulse.js";
 import { setTenantId } from "../lib/tenant.js";
+import { requireCliOperator, auditCliMutation } from "../lib/console-auth/cli-operator.js";
 
 export interface AgentDispatchPlanOptions {
   id: string;
@@ -43,6 +44,7 @@ export interface AgentDispatchRunOptions {
 }
 
 export async function runAgentDispatchRun(opts: AgentDispatchRunOptions): Promise<void> {
+  requireCliOperator({ permission: "agent:dispatch", command: "agent dispatch run" });
   if (opts.dryRun) {
     const manifest = buildDispatchManifest(opts.id, opts.parallel ?? 3, opts.runtime);
     const path = writeDispatchManifest(manifest);
@@ -73,6 +75,7 @@ export interface AgentImplementOptions {
 
 /** Tool-neutral work order execution — LLM API · shell · manifest */
 export async function runAgentImplement(opts: AgentImplementOptions): Promise<void> {
+  requireCliOperator({ permission: "agent:dispatch", command: "agent implement" });
   regenerateWorkOrderPrompts(opts.id);
   const handoff = loadHandoff(opts.id);
   const prompt = formatAgentImplementationPrompt(handoff);

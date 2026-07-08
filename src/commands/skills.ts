@@ -22,9 +22,40 @@ import {
   computeControlGaps,
   controlsForAgent,
 } from "../lib/control-framework.js";
+import {
+  formatChainVerifyReport,
+  runMonthlyCompanyEventsAudit,
+  runWeeklyCompanyEventsAttestation,
+} from "../lib/company-events-attestation.js";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { calendarFileSchema, oneOnOnesFileSchema } from "../../schemas/executive.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+
+const SKILLS_ALWAYS_WRITE = new Set([
+  "dashboard",
+  "iso-control-review",
+  "internal-audit-scope",
+  "company-events-chain-verify",
+  "company-events-weekly-attest",
+  "company-events-monthly-audit",
+]);
+
+const SKILLS_OUTPUT_WRITE = new Set([
+  "contract-expiry",
+  "permit-expiry",
+  "variance",
+  "forecast",
+  "tax-filing-prep",
+  "contract-register",
+  "capex-planning",
+]);
+
+function ensureSkillWriteAuth(id: string, opts: SkillRunOptions): void {
+  if (SKILLS_ALWAYS_WRITE.has(id) || (SKILLS_OUTPUT_WRITE.has(id) && opts.output)) {
+    requireCliReportWrite(`skills run ${id}`);
+  }
+}
 
 export const SKILL_COMMANDS = [
   {
@@ -50,6 +81,24 @@ export const SKILL_COMMANDS = [
     skill: "internal_audit_scope",
     agent: "Internal Audit",
     description: "CTL ベース内部監査スコープ",
+  },
+  {
+    id: "company-events-chain-verify",
+    skill: "company_events_chain_verify",
+    agent: "Records Audit",
+    description: "会社イベントハッシュチェーン整合検証",
+  },
+  {
+    id: "company-events-weekly-attest",
+    skill: "company_events_weekly_attest",
+    agent: "Records Audit",
+    description: "週次 — チェーン検証後バッチ電子署名",
+  },
+  {
+    id: "company-events-monthly-audit",
+    skill: "company_events_monthly_audit",
+    agent: "Records Audit",
+    description: "月次監査レポート + 人間通知",
   },
   {
     id: "monthly-close",
@@ -159,7 +208,7 @@ export interface SkillRunOptions {
   markdown?: boolean;
 }
 
-export function runSkill(id: string, opts: SkillRunOptions = {}): void {
+export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<void> {
   const moduleHandler = resolveModuleSkillHandler(id);
   if (moduleHandler) {
     moduleHandler(opts);
@@ -172,6 +221,8 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
     console.error("Run: steward skills list");
     process.exit(1);
   }
+
+  ensureSkillWriteAuth(id, opts);
 
   switch (id) {
     case "contract-expiry":
@@ -295,6 +346,39 @@ export function runSkill(id: string, opts: SkillRunOptions = {}): void {
         lines.join("\n")
       );
       console.log(`✓ ${path}`);
+      break;
+    }
+    case "company-events-chain-verify": {
+      const md = formatChainVerifyReport();
+      const path = writeMarkdownReport(
+        "agent-summaries/records-audit",
+        opts.output ?? `chain-verify-${currentDate()}.md`,
+        md
+      );
+      console.log(`✓ ${path}`);
+      const fail = md.includes("**Result:** FAIL");
+      if (fail) process.exit(1);
+      break;
+    }
+    case "company-events-weekly-attest": {
+      const result = runWeeklyCompanyEventsAttestation();
+      if (result.skipped) {
+        console.log(`✓ Weekly attestation exists: ${result.attestation.attestation_id}`);
+        break;
+      }
+      console.log(`✓ Weekly attestation signed: ${result.attestation.attestation_id}`);
+      console.log(`  → ${result.path}`);
+      break;
+    }
+    case "company-events-monthly-audit": {
+      const result = await runMonthlyCompanyEventsAudit({
+        output: opts.output,
+        notify: true,
+      });
+      console.log(result.ok ? "✓ Monthly audit PASS" : "✗ Monthly audit FAIL");
+      console.log(`  report: ${result.report_path}`);
+      console.log(`  notified: ${result.notification_sent}`);
+      if (!result.ok) process.exit(1);
       break;
     }
     default:

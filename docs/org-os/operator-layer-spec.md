@@ -6,6 +6,16 @@
 
 ## 1. 境界 I4 — CEO ↔ Operator ↔ Implementation
 
+| 層 | 主体 | 認証 · 権限 |
+|----|------|-------------|
+| CEO | 人間 | WebAuthn / OIDC（Wire）· session cookie |
+| Operator | LLM + 人間オペレータ | `operators.yaml` RBAC · Chat/Wire/MCP/CLI 統一 enforce |
+| Implementation | Agent + Skill + CLI | tenant jail · delegation scopes · folder policy |
+
+**組織間:** Agent cross-org dispatch 禁止 — `protocol notice` + 人間 approve のみ（`src/lib/org-boundary.ts`）。
+
+**CLI mutation:** `orgos --operator-id OP-xxx` + operator key（`broker transfer` · `escalate` · `protocol approve` 等）。
+
 | 方向 | 形式 | 正本 |
 |------|------|------|
 | CEO → Operator | 自然言語 · Steward Chat BFF | `POST /chat/v1/message` · `/message/stream` |
@@ -95,6 +105,8 @@ Today コンテキストは **human-mail 承認待ち** と **wire delivery 配�
 | チェック | 本番要件 |
 |---------|---------|
 | Auth | `STEWARD_CHAT_AUTH=1` |
+| Wire auth | `WIRE_CONSOLE_AUTH=prod` |
+| Operator registry | `data/org/operators.yaml` + ceo/approver |
 | Dev passkey | 未設定 |
 | Secure cookie | 公開 host では `ORGOS_COOKIE_SECURE=1` |
 | CSRF | `ORGOS_CSRF=0` 禁止 |

@@ -13,6 +13,7 @@ import { mergeWorkOrderResults, registerWorkOrderResult } from "../lib/work-orde
 import { formatSecretaryRelayBlock } from "../lib/secretary-relay.js";
 import { loadHandoff } from "../lib/routing.js";
 import { setTenantId } from "../lib/tenant.js";
+import { requireCliOperator, auditCliMutation } from "../lib/console-auth/cli-operator.js";
 
 export interface EscalatePlanOptions {
   text?: string;
@@ -54,6 +55,7 @@ function buildInput(opts: EscalatePlanOptions): EscalationInput {
 
 export function runEscalatePlan(opts: EscalatePlanOptions): void {
   if (opts.tenant) setTenantId(opts.tenant);
+  requireCliOperator({ permission: "escalate:plan", command: "escalate plan" });
   if (!opts.text && !opts.requirements && !opts.subject) {
     console.error("Provide --text and/or --subject / --requirements");
     process.exit(1);
@@ -78,6 +80,7 @@ export interface EscalateRunCliOptions extends EscalatePlanOptions {
 
 export function runEscalateRun(opts: EscalateRunCliOptions): void {
   if (opts.tenant) setTenantId(opts.tenant);
+  requireCliOperator({ permission: "escalate:run", command: "escalate run" });
 
   if (opts.id) {
     const paths = regenerateWorkOrderPrompts(opts.id);
@@ -148,6 +151,7 @@ export interface EscalateCompleteOptions {
 }
 
 export function runEscalateComplete(opts: EscalateCompleteOptions): void {
+  requireCliOperator({ permission: "escalate:complete", command: "escalate complete" });
   if (opts.notes) {
     registerWorkOrderResult(opts.id, opts.notes, opts.notes);
   } else {

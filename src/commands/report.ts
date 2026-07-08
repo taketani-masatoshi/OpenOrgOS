@@ -13,6 +13,7 @@ import { generateJigyoPdf } from "../lib/jigyo-pdf.js";
 import { generateMonthlyReport } from "../lib/report.js";
 import { writeMarkdownReport, currentMonth, ensurePdfOutputDir } from "../lib/utils.js";
 import { initDocumentIoFile, registerGeneratedPdf } from "../lib/document-io.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
 function resolveFiscalYear(fy?: string): string {
   return (fy ?? "FY2026").toUpperCase();
@@ -41,6 +42,7 @@ export async function runReportKessan(options: {
   fy?: string;
   output?: string;
 }): Promise<void> {
+  requireCliReportWrite("report kessan");
   const fiscalYear = resolveFiscalYear(options.fy);
   const data = loadReportData(fiscalYear);
   const filename = options.output ?? `${fiscalYear}-kessan-hokoku.pdf`;
@@ -61,6 +63,7 @@ export async function runReportJigyo(options: {
   fy?: string;
   output?: string;
 }): Promise<void> {
+  requireCliReportWrite("report jigyo");
   const fiscalYear = resolveFiscalYear(options.fy);
   const data = loadReportData(fiscalYear);
   const filename = options.output ?? `${fiscalYear}-jigyo-hokoku.pdf`;
@@ -88,6 +91,7 @@ export function runReportMonthly(options: {
   month?: string;
   output?: string;
 }): void {
+  requireCliReportWrite("report monthly");
   const data = loadAllData();
   const month = options.month ?? currentMonth();
   const report = generateMonthlyReport(data, month);

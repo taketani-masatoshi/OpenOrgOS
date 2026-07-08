@@ -7,6 +7,7 @@ import {
 } from "../lib/broker.js";
 import { loadBankAccounts } from "../lib/classification.js";
 import type { BrokerDisplayMode } from "../lib/broker.js";
+import { auditCliMutation, requireCliOperator } from "../lib/console-auth/cli-operator.js";
 
 export function runBrokerBankList(opts: { mode: BrokerDisplayMode }): void {
   console.log(formatBankList(opts.mode));
@@ -38,6 +39,7 @@ export function runBrokerTransfer(opts: {
   dryRun: boolean;
   write: boolean;
 }): void {
+  requireCliOperator({ permission: "broker:transfer", command: "broker transfer" });
   const instr = buildTransferInstruction({
     from: opts.from,
     amount: opts.amount,
@@ -52,6 +54,7 @@ export function runBrokerTransfer(opts: {
   if (opts.write) {
     const path = writeTransferInstructionFile(instr);
     console.log(`\n✓ 指示書（L1 · scratch/gitignore）: ${path}`);
+    auditCliMutation("broker transfer", `write:${path}`);
   }
 
   console.log("\n次: ネットバンキングで口座番号を bank-accounts.yaml から手入力");

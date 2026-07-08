@@ -13,6 +13,7 @@ import {
 } from "../lib/report.js";
 import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
 import { writeMarkdownReport } from "../lib/utils.js";
+import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 
 export function runFinancesSummary(options: {
   from: string;
@@ -28,12 +29,14 @@ export function runFinancesAdd(options: {
   month: string;
   file: string;
 }): void {
+  requireCliDataWrite({ command: "finances add", permission: "escalate:plan" });
   const raw = readFileSync(options.file, "utf-8");
   const parsed = YAML.parse(raw);
   const entry = monthlyFinanceSchema.parse({ ...parsed, month: options.month });
 
   const path = join(getDataDir(), "finance", "monthly", `${options.month}.yaml`);
   writeYamlFile(path, entry);
+  auditCliMutation("finances add", options.month);
   console.log(`✓ Saved ${path}`);
 }
 
@@ -73,7 +76,9 @@ export function runFinancesVariance(opts: { output?: string }): void {
   const report = computeVarianceReport("FY2026");
   const md = formatVarianceMarkdown(report);
   if (opts.output) {
+    requireCliDataWrite({ command: "finances variance", permission: "escalate:plan" });
     const path = writeMarkdownReport("plans/variance", opts.output, md);
+    auditCliMutation("finances variance", opts.output);
     console.log(`✓ ${path}`);
   } else {
     console.log(md);

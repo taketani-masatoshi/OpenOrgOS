@@ -30,6 +30,7 @@ import {
   runLocaleList,
   runLocaleShow,
 } from "../../commands/locale-jurisdiction.js";
+import type { OperatorExportEmit } from "../../lib/agent-portability.js";
 
 export function registerPlatformCommands(program: Command): void {
   program
@@ -362,6 +363,42 @@ export function registerPlatformCommands(program: Command): void {
     });
 
   const operatorCmd = program.command("operator").description("CEO operator layer");
+  const operatorRegistryCmd = operatorCmd.command("registry").description("Operator ID registry (data/org/operators.yaml)");
+  operatorRegistryCmd
+    .command("init")
+    .description("Initialize operator registry from company.yaml approvers")
+    .option("--no-write-keys", "Do not write ~/.orgos/operators/*.key")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorInitRegistry } = await import("../../commands/operator-registry.js");
+      runOperatorInitRegistry({ writeKeys: opts.writeKeys !== false, json: opts.json });
+    });
+  operatorRegistryCmd
+    .command("list")
+    .description("List operators in registry")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorRegistryList } = await import("../../commands/operator-registry.js");
+      runOperatorRegistryList({ json: opts.json });
+    });
+  operatorRegistryCmd
+    .command("rotate-key")
+    .description("Rotate operator API key")
+    .requiredOption("--operator-id <id>", "Operator ID")
+    .option("--no-write-key", "Do not write key file")
+    .action(async (opts) => {
+      const { runOperatorRotateKey } = await import("../../commands/operator-registry.js");
+      runOperatorRotateKey({ operatorId: opts.operatorId, writeKey: opts.writeKey !== false });
+    });
+  operatorCmd
+    .command("init-registry")
+    .description("Alias for operator registry init")
+    .option("--no-write-keys", "Do not write ~/.orgos/operators/*.key")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorInitRegistry } = await import("../../commands/operator-registry.js");
+      runOperatorInitRegistry({ writeKeys: opts.writeKeys !== false, json: opts.json });
+    });
   operatorCmd
     .command("sync-policy")
     .description("Sync operator-policy.md to Cursor rule / AGENTS.md")

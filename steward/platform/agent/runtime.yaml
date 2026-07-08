@@ -16,15 +16,15 @@ shell:
     - echo
     - "OrgOS: set OPENAI_API_KEY or install aider — see docs/quickstart.md §3"
     - "{prompt}"
-  cwd: "{workspace}"
+  cwd: "{tenant_root}"
   env:
     ORGOS_TENANT: "{tenant}"
   timeout_ms: 600000
 
 profiles:
   aider:
-    command: ["aider", "--message-file", "{prompt}", "--yes"]
-    cwd: "{workspace}"
+    command: ["aider", "--message-file", "{prompt}"]
+    cwd: "{tenant_root}"
     env:
       ORGOS_TENANT: "{tenant}"
     timeout_ms: 600000
@@ -48,3 +48,12 @@ profiles:
 
 cursor:
   enabled: true
+
+# SHA256 of canonical profile JSON — verified when ORGOS_RUNTIME_INTEGRITY=1 or production
+profile_integrity:
+  shell: sha256:deb4d80200b94b41d5b62742d8582949e641d91efca3e8cefab890bf99b2bee2
+  profiles:
+    aider: sha256:90775cf548331aed70a6d2af7a887ca31175b0073190ef78a673f2afe6a1f9ba
+    cline: sha256:22f6ad2df01373c80e97febe66aca87f9fd44ebd78b4da0c931b46a4677c8690
+    openhands: sha256:22f6ad2df01373c80e97febe66aca87f9fd44ebd78b4da0c931b46a4677c8690
+    manifest: sha256:d595e79262b4e61cf1dd67588bc9cba0cf20cd25fba71ae88f2409f174130c8e

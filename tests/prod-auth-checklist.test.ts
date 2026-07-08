@@ -57,4 +57,15 @@ describe("prod auth checklist", () => {
     process.env.ORGOS_RATE_LIMIT = "0";
     expect(() => assertProdAuthReady("chat")).toThrow(/ORGOS_RATE_LIMIT=0/);
   });
+
+  it("blocks startup when Wire Console auth is not prod", () => {
+    process.env.ORGOS_ENV = "production";
+    process.env.STEWARD_CHAT_AUTH = "1";
+    process.env.WIRE_CONSOLE_AUTH = "dev";
+    delete process.env.ORGOS_CSRF;
+    delete process.env.WIRE_CONSOLE_DEV_PASSKEY;
+    delete process.env.ORGOS_SESSION_PERSIST;
+    delete process.env.ORGOS_LLM_MOCK;
+    expect(() => assertProdAuthReady("wire")).toThrow(/WIRE_CONSOLE_AUTH must be prod/);
+  });
 });

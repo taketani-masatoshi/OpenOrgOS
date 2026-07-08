@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { operatorsRegistryPath, registryHasApprovers } from "../org/operators.js";
+
 export interface ProdAuthCheck {
   id: string;
   ok: boolean;
@@ -108,6 +111,39 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
             : mcpToken
               ? "MCP token configured"
               : "ORGOS_MCP_TOKEN unset — set before exposing MCP in production",
+    });
+  }
+
+  if ((scope === "wire" || scope === "all") && prod) {
+    const wireDev = process.env.WIRE_CONSOLE_AUTH !== "prod";
+    checks.push({
+      id: "wire_console_auth_prod",
+      ok: !wireDev,
+      detail: wireDev
+        ? "WIRE_CONSOLE_AUTH must be prod in production — dev passkey login is not allowed"
+        : "Wire Console production auth enabled",
+    });
+  }
+
+  if (prod) {
+    const hasRegistry = existsSync(operatorsRegistryPath());
+    checks.push({
+      id: "operator_registry",
+      ok: hasRegistry && registryHasApprovers(),
+      detail: hasRegistry
+        ? registryHasApprovers()
+          ? "Operator registry with approver role configured"
+          : "operators.yaml exists but no ceo/approver — add at least one approver"
+        : "data/org/operators.yaml missing — run: orgos operator init-registry",
+    });
+
+    checks.push({
+      id: "operator_auth_cli",
+      ok: process.env.STEWARD_OPERATOR_AUTH !== "0",
+      detail:
+        process.env.STEWARD_OPERATOR_AUTH === "0"
+          ? "STEWARD_OPERATOR_AUTH=0 in production — CLI mutations unauthenticated"
+          : "CLI operator auth enabled (default)",
     });
   }
 

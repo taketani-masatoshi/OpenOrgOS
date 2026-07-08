@@ -16,6 +16,7 @@ import { getOrgAuditBridgeConfigPath } from "../lib/org/paths.js";
 import { listAuditEvents } from "../lib/audit-log.js";
 import { orgAuditBridgeConfigSchema, orgAuditBridgeRecommendedConfig } from "../../schemas/org/audit-bridge.js";
 import { writeYamlFile } from "../lib/utils.js";
+import { requireCliOperator, requireCliConfigWrite } from "../lib/console-auth/cli-operator.js";
 
 export interface OrgApprovalProposeOptions {
   subjectType: string;
@@ -60,12 +61,13 @@ export interface OrgApprovalApproveOptions {
 
 export function runOrgApprovalApprove(opts: OrgApprovalApproveOptions): void {
   if (opts.tenant) setTenantId(opts.tenant);
+  const auth = requireCliOperator({ permission: "chat:approve", command: "org approval approve" });
   try {
     const result = approveOrgApproval({
       approvalId: opts.id,
-      approverId: opts.approver,
+      approverId: opts.approver || auth.record.approver_name || auth.record.display_name,
       coApproverId: opts.coApprover,
-      operatorId: opts.operator,
+      operatorId: opts.operator || auth.record.operator_id,
     });
     if (opts.json) {
       console.log(JSON.stringify(result, null, 2));
@@ -165,6 +167,7 @@ export function runOrgAuditBridge(opts: OrgAuditBridgeOptions): void {
   if (opts.tenant) setTenantId(opts.tenant);
 
   if (opts.enable || opts.disable) {
+    requireCliConfigWrite("org audit-bridge");
     const existing = existsSync(getOrgAuditBridgeConfigPath())
       ? loadOrgAuditBridgeConfig()
       : orgAuditBridgeRecommendedConfig;

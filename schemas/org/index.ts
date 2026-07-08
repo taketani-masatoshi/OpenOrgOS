@@ -8,3 +8,4 @@ export * from "./operator-attestation.js";
 export * from "./audit-attestation.js";
 export * from "./approval.js";
 export * from "./wire-console-scenario.js";
+export * from "./operator.js";

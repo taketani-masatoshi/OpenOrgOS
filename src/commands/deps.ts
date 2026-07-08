@@ -6,6 +6,7 @@ import {
   formatGraphSummaryMarkdown,
 } from "../lib/dependency-graph.js";
 import { writeMarkdownReport } from "../lib/utils.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
 export interface DepsCheckOptions {
   file?: string;
@@ -27,6 +28,7 @@ export function runDepsCheck(opts: DepsCheckOptions = {}): void {
   if (opts.markdown || opts.output) {
     const md = formatImpactMarkdown(opts.file, sources, impacts);
     if (opts.output) {
+      requireCliReportWrite("deps check");
       const path = writeMarkdownReport("deps", opts.output, md);
       console.log(`Saved: ${path}`);
     } else {
@@ -76,6 +78,7 @@ export function runDepsGraph(opts: { output?: string } = {}): void {
   const md = formatGraphSummaryMarkdown(graph);
 
   if (opts.output) {
+    requireCliReportWrite("deps graph");
     const path = writeMarkdownReport("deps", opts.output, md);
     console.log(`Saved: ${path}`);
   } else {

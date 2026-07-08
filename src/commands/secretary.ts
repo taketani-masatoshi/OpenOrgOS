@@ -4,6 +4,7 @@ import {
   dispatchSecretaryEscalation,
   type SecretaryEscalateInput,
 } from "../lib/secretary-consult.js";
+import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 
 export interface SecretaryEscalateCliOptions {
   subject: string;
@@ -33,6 +34,13 @@ export async function runSecretaryEscalate(opts: SecretaryEscalateCliOptions): P
     memo: opts.memo,
   };
 
+  if (!opts.dryRun) {
+    requireCliDataWrite({
+      command: "secretary escalate",
+      permission: opts.dispatch ? "agent:dispatch" : "escalate:plan",
+    });
+  }
+
   const runner = opts.dispatch ? dispatchSecretaryEscalation : opts.webhook ? runSecretaryEscalateAsync : null;
   const result = runner
     ? await runner(input, {
@@ -48,6 +56,7 @@ export async function runSecretaryEscalate(opts: SecretaryEscalateCliOptions): P
 
   if (!opts.dryRun) {
     console.log(`✓ ${result.consultPath}`);
+    auditCliMutation("secretary escalate", opts.dispatch ? "dispatch" : "consult");
     if (opts.dispatch && result.handoffId) {
       console.log(`✓ routing-queue ${result.handoffId}`);
       console.log("\nSteward スレッド不要 — Executive Steward handoff 投入済み");

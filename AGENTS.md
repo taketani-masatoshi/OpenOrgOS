@@ -76,6 +76,24 @@ orgos dashboard
 
 ---
 
+## 4.1 Operator RBAC（registry 正本）
+
+正本: `tenants/{id}/data/org/operators.yaml` · 実装: `src/lib/console-auth/operator-rbac.ts`
+
+| Role | 主な permission |
+|------|-----------------|
+| `ceo` / `approver` | `chat:approve` · `chat:wire` · `protocol:approve` · `broker:transfer` |
+| `operator` | `chat:ask` · `escalate:*` · `agent:dispatch` · `agent:order` |
+| `readonly` | `chat:read` のみ |
+| `mcp_service` | 明示 tool のみ（既定 read + ask） |
+
+- **HTTP（Chat / Wire BFF）** — session user → registry で permission 解決
+- **MCP** — Bearer token → `key_hash` 照合（本番は operator 別 key）
+- **CLI mutation** — `--operator-id` + `ORGOS_OPERATOR_KEY`（prod 必須 · `orgos operator init-registry`）
+- **本番** — registry 空 · auth off · Wire dev passkey は起動拒否（`orgos doctor` / prod-checklist）
+
+---
+
 ## 5. 生成物
 
 | 種別 | パス |

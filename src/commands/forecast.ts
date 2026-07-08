@@ -5,6 +5,7 @@ import {
   formatForecastJson,
 } from "../lib/forecast.js";
 import { writeMarkdownReport, currentMonth } from "../lib/utils.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
 export function runForecast(options: {
   months: number;
@@ -29,6 +30,7 @@ export function runForecast(options: {
   }
 
   if (options.output) {
+    requireCliReportWrite("forecast");
     const path = writeMarkdownReport("forecast", options.output, output);
     console.log(`✓ Report saved to ${path}`);
   } else {

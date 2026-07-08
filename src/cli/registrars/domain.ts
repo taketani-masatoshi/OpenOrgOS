@@ -47,6 +47,9 @@ import {
 } from "../../commands/io.js";
 import {
   runEventsArchive,
+  runEventsChainBackfill,
+  runEventsChainTail,
+  runEventsChainVerify,
   runEventsClose,
   runEventsEnsureMonth,
   runEventsLinkOutbox,
@@ -55,6 +58,12 @@ import {
   runEventsRegisterArtifact,
   runEventsStatus,
   runEventsValidate,
+  runEventsVoid,
+  runEventsVoidAck,
+  runEventsVoidRequest,
+  runEventsWireStatus,
+  runEventsChainAttest,
+  runEventsAuditMonthly,
 } from "../../commands/company-events.js";
 import { COMPANY_EVENT_KINDS } from "../../lib/company-events.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "../../commands/deps.js";
@@ -68,10 +77,12 @@ export function registerDomainCommands(program: Command): void {
     .option("--warnings", "Show integrity warnings (non-fatal)")
     .option("--strict", "Alias for --warnings")
     .option("--deps", "Warn when downstream files are older than sources (dependency graph)")
+    .option("--security", "Run operator registry and auth security checks")
     .action((opts) =>
       runValidate({
         warnings: opts.warnings || opts.strict,
         deps: opts.deps,
+        security: opts.security,
       })
     );
 
@@ -319,12 +330,89 @@ export function registerDomainCommands(program: Command): void {
     .command("list")
     .description("List company events")
     .option("--month <month>", "Filter YYYY-MM")
-    .option("--status <status>", "open|closed|archived")
+    .option("--status <status>", "open|closed|archived|voided")
+    .option("--include-voided", "Include voided events in default list")
     .option("--json", "JSON output")
     .action((opts) =>
       runEventsList({
         month: opts.month,
         status: opts.status,
+        json: opts.json,
+        includeVoided: opts.includeVoided,
+      })
+    );
+  events
+    .command("void <id>")
+    .description("Void company event (append-only — creates void EVT + chain link)")
+    .requiredOption("--reason <reason>", "Reason for voiding")
+    .action((id, opts) => runEventsVoid({ id, reason: opts.reason }));
+  events
+    .command("void-request <id>")
+    .description("Propose outbound wire void.requested for wire-delivered company event")
+    .requiredOption("--operator <id>", "Operator proposing void request")
+    .option("--peer <peer>", "Target PEER-* (default: primary exposure)")
+    .option("--message <message>", "Wire notice message")
+    .action((id, opts) =>
+      runEventsVoidRequest({
+        id,
+        operator: opts.operator,
+        peer: opts.peer,
+        message: opts.message,
+      })
+    );
+  events
+    .command("void-ack <id>")
+    .description("Register inbound peer void acknowledgment before local void")
+    .option("--wire-event <uuid>", "Inbound void.acknowledged wire event_id")
+    .option("--peer <peer>", "PEER-* that sent acknowledgment")
+    .option("--auto", "Scan inbound ledger for matching void.acknowledged")
+    .action((id, opts) => {
+      if (!opts.auto && !opts.wireEvent) {
+        throw new Error("Specify --wire-event <uuid> or --auto");
+      }
+      runEventsVoidAck({
+        id,
+        wireEvent: opts.wireEvent,
+        peer: opts.peer,
+        auto: opts.auto,
+      });
+    });
+  events
+    .command("wire-status <id>")
+    .description("Show wire binding and void gate status for company event")
+    .option("--json", "JSON output")
+    .action((id, opts) => runEventsWireStatus({ id, json: opts.json }));
+  const eventsChain = events.command("chain").description("Company event hash chain");
+  eventsChain
+    .command("verify")
+    .description("Verify hash chain integrity and registry cross-check")
+    .option("--json", "JSON output")
+    .action((opts) => runEventsChainVerify({ json: opts.json }));
+  eventsChain
+    .command("backfill")
+    .description("Rebuild create links from registry (existing chain requires --force)")
+    .option("--force", "Overwrite existing chain file")
+    .action((opts) => runEventsChainBackfill({ force: opts.force }));
+  eventsChain
+    .command("attest")
+    .description("Verify hash chain then sign weekly batch attestation (Ed25519)")
+    .option("--force", "Re-sign current ISO week even if attestation exists")
+    .option("--json", "JSON output")
+    .action((opts) => runEventsChainAttest({ force: opts.force, json: opts.json }));
+  eventsChain.command("tail").description("Show chain tail link").action(() => runEventsChainTail());
+  const eventsAudit = events.command("audit").description("Company events periodic audit");
+  eventsAudit
+    .command("monthly")
+    .description("Monthly audit report + human notification (records_audit)")
+    .option("--month <month>", "YYYY-MM (default: current month)")
+    .option("--no-notify", "Skip webhook / OpenWebUI notification")
+    .option("-o, --output <filename>", "Report filename under agent-summaries/records-audit/")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runEventsAuditMonthly({
+        month: opts.month,
+        notify: !opts.noNotify,
+        output: opts.output,
         json: opts.json,
       })
     );

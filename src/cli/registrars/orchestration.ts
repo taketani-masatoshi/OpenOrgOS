@@ -101,6 +101,15 @@ import {
   runProtocolTlsRotate,
   runProtocolTlsInitProposal3,
   runProtocolTlsVerify,
+  runProtocolGovGatewayValidate,
+  runProtocolGovGatewayEncode,
+  runProtocolGovGatewayDecode,
+  runProtocolGovGatewayHealth,
+  runProtocolGovGatewaySandboxInit,
+  runProtocolTrustedHubsSyncKeys,
+  runProtocolTrustRegistryValidate,
+  runProtocolTrustRegistryList,
+  runProtocolTrustRegistryResolve,
 } from "../../commands/protocol.js";
 import {
   runHubServe,
@@ -114,7 +123,16 @@ import {
   runHubFederationShow,
   runHubFederationAddPeer,
   runHubGossipSync,
+  runHubTlsInit,
 } from "../../commands/hub.js";
+import {
+  runWireGatewayServe,
+  runWireGatewayValidate,
+  runWireGatewayTlsInit,
+  runWireGatewayDidShow,
+  runWireGatewayDidInit,
+  runWireInternalApiServe,
+} from "../../commands/wire-gateway.js";
 import { runComplianceGap } from "../../commands/compliance.js";
 import {
   runControlsList,
@@ -840,7 +858,8 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--peer <id>", "PEER-*")
     .option("--type <type>", "Wire type")
     .option("--contract <id>", "CTR-*")
-    .option("--correlation-event <uuid>", "For ack")
+    .option("--correlation-event <uuid>", "Inbound event_id (obligation.acknowledged)")
+    .option("--company-event <id>", "EVT-* (link outbound wire to company event)")
     .option("--operator <name>", "Override operator")
     .option("--message <text>", "Notice body")
     .option("--tenant <id>", "Tenant id")
@@ -851,6 +870,7 @@ export function registerOrchestrationCommands(program: Command): void {
         type: opts.type,
         contract: opts.contract,
         correlationEvent: opts.correlationEvent,
+        companyEvent: opts.companyEvent,
         operator: opts.operator,
         message: opts.message,
         tenant: opts.tenant,
@@ -865,6 +885,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--type <type>", "Wire type (default contract.execution.notice)")
     .option("--contract <id>", "CTR-* (execution notice / contract.executed)")
     .option("--correlation-event <uuid>", "Inbound event_id (obligation.acknowledged)")
+    .option("--company-event <id>", "EVT-* (link outbound wire to company event)")
     .option("--invoice <id>", "Invoice id (invoice.issued)")
     .option("--broker-instruction <id>", "Broker instruction (payment.instructed)")
     .option("--amount <n>", "Amount (payment.instructed)", parseFloat)
@@ -880,6 +901,7 @@ export function registerOrchestrationCommands(program: Command): void {
         type: opts.type,
         contract: opts.contract,
         correlationEvent: opts.correlationEvent,
+        companyEvent: opts.companyEvent,
         invoice: opts.invoice,
         brokerInstruction: opts.brokerInstruction,
         amount: opts.amount,
@@ -1019,11 +1041,76 @@ export function registerOrchestrationCommands(program: Command): void {
 
   protocolCmd
     .command("deliver")
-    .description("POST envelope JSON to peer inbound_webhook_url (store-and-forward on failure)")
+    .description("POST envelope JSON to peer inbound endpoints (gov_gateway or openorgos_p2p; store-and-forward on failure)")
     .requiredOption("--peer <id>", "PEER-*")
     .requiredOption("--file <path>", "Envelope JSON file")
     .option("--tenant <id>", "Tenant id")
     .action((opts) => runProtocolDeliver({ peer: opts.peer, file: opts.file, tenant: opts.tenant }));
+
+  const protocolGovGatewayCmd = protocolCmd
+    .command("gov-gateway")
+    .description("National Gov Gateway adapters (I3-b Wire buffer)");
+  protocolGovGatewayCmd
+    .command("validate")
+    .description("Validate registry + profile YAML + optional tenant gov-gateway.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolGovGatewayValidate({ tenant: opts.tenant, json: opts.json }));
+  protocolGovGatewayCmd
+    .command("encode")
+    .description("Encode outbox/inbox EventEnvelope to native Gov Gateway message")
+    .requiredOption("--event-id <uuid>", "Envelope event_id")
+    .requiredOption("--profile <id>", "Profile id (e.g. xroad_v7)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolGovGatewayEncode({
+        eventId: opts.eventId,
+        profile: opts.profile,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
+  protocolGovGatewayCmd
+    .command("decode")
+    .description("Decode native Gov Gateway JSON file to EventEnvelope")
+    .requiredOption("--file <path>", "Native JSON file")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolGovGatewayDecode({ file: opts.file, tenant: opts.tenant, json: opts.json })
+    );
+  protocolGovGatewayCmd
+    .command("health")
+    .description("Adapter health; --live pings sandbox URL from env or gov-gateway.yaml")
+    .requiredOption("--profile <id>", "Profile id")
+    .option("--tenant <id>", "Tenant id")
+    .option("--live", "Ping sandbox endpoint (GOV_*_URL env or binding URL)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolGovGatewayHealth({
+        profile: opts.profile,
+        tenant: opts.tenant,
+        live: opts.live,
+        json: opts.json,
+      })
+    );
+  const protocolGovGatewaySandboxCmd = protocolGovGatewayCmd
+    .command("sandbox")
+    .description("Gov Gateway sandbox pilot wiring");
+  protocolGovGatewaySandboxCmd
+    .command("init")
+    .description("Copy gov-gateway-live-pilot.yaml.example → tenant gov-gateway.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--force", "Overwrite existing gov-gateway.yaml")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolGovGatewaySandboxInit({
+        tenant: opts.tenant,
+        force: opts.force,
+        json: opts.json,
+      })
+    );
 
   protocolCmd
     .command("deliver-flush-pending")
@@ -1070,6 +1157,44 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runProtocolTrustedHubsValidate({ tenant: opts.tenant, json: opts.json }));
+
+  protocolCmd
+    .command("trusted-hubs-sync-keys")
+    .description("Fetch hub_public_key from running hubs and update trusted-hubs.yaml")
+    .option("--jurisdiction <code>", "Limit to jurisdiction (e.g. JP)")
+    .option("--hub-url <url>", "Sync single hub by URL")
+    .option("--force", "Re-fetch even when hub_public_key is set")
+    .option("--dry-run", "Report changes without writing YAML")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTrustedHubsSyncKeys({
+        jurisdiction: opts.jurisdiction,
+        hubUrl: opts.hubUrl,
+        force: opts.force,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
+
+  const protocolTrustRegistryCmd = protocolCmd
+    .command("trust-registry")
+    .description("Wire Trust Registry — Node ID / DID resolution (WG-4)");
+  protocolTrustRegistryCmd
+    .command("validate")
+    .description("Validate steward/platform/protocol/wire-trust-registry.yaml")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolTrustRegistryValidate({ json: opts.json }));
+  protocolTrustRegistryCmd
+    .command("list")
+    .description("List registered Wire nodes")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolTrustRegistryList({ json: opts.json }));
+  protocolTrustRegistryCmd
+    .command("resolve")
+    .description("Resolve node by node_id, did:ooo:…, or steward:// URI")
+    .requiredOption("--id <identifier>", "Node identifier")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolTrustRegistryResolve({ id: opts.id, json: opts.json }));
 
   const protocolCommunityCmd = protocolCmd
     .command("community")
@@ -1560,12 +1685,16 @@ export function registerOrchestrationCommands(program: Command): void {
   const hubCmd = program.command("hub").description("Witness Hub node (reference implementation)");
   hubCmd
     .command("serve")
-    .description("Start witness hub HTTP server")
+    .description("Start witness hub HTTP/HTTPS server")
     .requiredOption("--hub-id <id>", "Hub node id (e.g. HUB-A)")
     .option("--data-dir <path>", "Hub data directory", "./data/hub")
     .option("--host <host>", "Bind host", "127.0.0.1")
     .option("--port <n>", "Bind port", "9474")
     .option("--gossip-interval <sec>", "Background gossip sync interval (requires hub-federation.yaml)")
+    .option("--tls-cert <path>", "TLS certificate PEM (enables HTTPS)")
+    .option("--tls-key <path>", "TLS private key PEM")
+    .option("--tls-ca <path>", "CA bundle for mTLS client verification")
+    .option("--mtls-required", "Require client certificate")
     .action((opts) =>
       runHubServe({
         hubId: opts.hubId,
@@ -1573,6 +1702,103 @@ export function registerOrchestrationCommands(program: Command): void {
         host: opts.host,
         port: Number(opts.port),
         gossipIntervalSec: opts.gossipInterval ? Number(opts.gossipInterval) : undefined,
+        tlsCert: opts.tlsCert,
+        tlsKey: opts.tlsKey,
+        tlsCa: opts.tlsCa,
+        mtlsRequired: opts.mtlsRequired,
+      })
+    );
+  hubCmd
+    .command("tls-init")
+    .description("Generate dev TLS certs for witness hub (deploy/witness-hub/tls)")
+    .option("--output-dir <path>", "TLS output directory")
+    .option("--force", "Regenerate existing material")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runHubTlsInit({
+        outputDir: opts.outputDir,
+        force: opts.force,
+        json: opts.json,
+      })
+    );
+
+  const wireGatewayCmd = program
+    .command("wire-gateway")
+    .description("Wire Gateway (I3-a) — external P2P boundary");
+  wireGatewayCmd
+    .command("serve")
+    .description("Start Wire Gateway HTTP/HTTPS server")
+    .option("--tenant <id>", "Tenant id")
+    .option("--host <host>", "Override listen host")
+    .option("--port <n>", "Override listen port")
+    .option("--public-base-url <url>", "Public URL for well-known (behind reverse proxy)")
+    .option("--tls-cert <path>", "TLS certificate PEM (HTTPS)")
+    .option("--tls-key <path>", "TLS private key PEM")
+    .option("--no-outbound", "Disable outbox polling worker")
+    .action(async (opts) =>
+      runWireGatewayServe({
+        tenant: opts.tenant,
+        host: opts.host,
+        port: opts.port ? Number(opts.port) : undefined,
+        publicBaseUrl: opts.publicBaseUrl,
+        tlsCert: opts.tlsCert,
+        tlsKey: opts.tlsKey,
+        noOutbound: opts.noOutbound,
+      })
+    );
+  wireGatewayCmd
+    .command("tls-init")
+    .description("Generate dev TLS certs and patch tenant wire-gateway.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--output-dir <path>", "TLS output directory")
+    .option("--force", "Regenerate existing material")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runWireGatewayTlsInit({
+        tenant: opts.tenant,
+        outputDir: opts.outputDir,
+        force: opts.force,
+        json: opts.json,
+      })
+    );
+  const wireGatewayDidCmd = wireGatewayCmd.command("did").description("OpenOrg DID (WG-4)");
+  wireGatewayDidCmd
+    .command("show")
+    .description("Show derived/configured DID for tenant Wire node")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runWireGatewayDidShow({ tenant: opts.tenant, json: opts.json }));
+  wireGatewayDidCmd
+    .command("init")
+    .description("Write did + trust_registry_url into wire-gateway.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--force", "Overwrite existing did")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runWireGatewayDidInit({ tenant: opts.tenant, force: opts.force, json: opts.json })
+    );
+  wireGatewayCmd
+    .command("validate")
+    .description("Validate wire-gateway.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runWireGatewayValidate({ tenant: opts.tenant, json: opts.json }));
+  const wireInternalApiCmd = wireGatewayCmd
+    .command("internal-api")
+    .description("Core-side Internal API (dev / WG-2 bridge)");
+  wireInternalApiCmd
+    .command("serve")
+    .description("Start Internal API server on /internal/v1/wire")
+    .option("--tenant <id>", "Tenant id")
+    .option("--host <host>", "Bind host", "127.0.0.1")
+    .option("--port <n>", "Bind port", "8080")
+    .option("--bearer-token <token>", "Bearer token for gateway auth")
+    .action(async (opts) =>
+      runWireInternalApiServe({
+        tenant: opts.tenant,
+        host: opts.host,
+        port: Number(opts.port),
+        bearerToken: opts.bearerToken,
       })
     );
   const hubFederationCmd = hubCmd.command("federation").description("Hub peer federation");

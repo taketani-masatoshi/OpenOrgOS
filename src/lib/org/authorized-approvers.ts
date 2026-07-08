@@ -1,14 +1,23 @@
 import type { WireApprovalTier } from "../../../schemas/protocol/wire-approval.js";
 import { loadOrgAuthorizedPersons } from "./tenant-data.js";
 import { resolveJurisdictionApprovalPolicy } from "../jurisdiction/wire-governance/policy.js";
+import { listActiveOperators } from "./operators.js";
 
 export function normalizePersonName(name: string): string {
   return name.replace(/\s+/g, "").trim();
 }
 
 export function loadAuthorizedApprovers(): string[] {
-  const persons = loadOrgAuthorizedPersons();
   const names = new Set<string>();
+
+  for (const op of listActiveOperators()) {
+    if (op.role === "ceo" || op.role === "approver") {
+      if (op.approver_name) names.add(normalizePersonName(op.approver_name));
+      names.add(normalizePersonName(op.display_name));
+    }
+  }
+
+  const persons = loadOrgAuthorizedPersons();
 
   if (persons.representative) {
     for (const part of persons.representative.split(/[、,]/)) {
@@ -33,7 +42,19 @@ export function loadAuthorizedApprovers(): string[] {
 
 export function assertApproverAuthorized(approverId: string, tier: WireApprovalTier): void {
   const authorized = loadAuthorizedApprovers();
-  if (authorized.length === 0) return;
+  const prod =
+    process.env.ORGOS_ENV === "production" ||
+    process.env.ORGOS_PROD === "1" ||
+    process.env.NODE_ENV === "production";
+
+  if (authorized.length === 0) {
+    if (prod) {
+      throw new Error(
+        `No authorized approvers configured — populate data/org/operators.yaml or company.yaml directors (${tier} tier)`
+      );
+    }
+    return;
+  }
 
   const norm = normalizePersonName(approverId);
   const ok = authorized.some((a) => a === norm || a.includes(norm) || norm.includes(a));

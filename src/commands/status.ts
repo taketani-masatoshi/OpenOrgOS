@@ -3,6 +3,7 @@ import { computeDataHealth, formatHealthReport } from "../lib/data-health.js";
 import { runIntegrityChecks } from "../lib/integrity.js";
 import { computeOs99Score, computeOrgOsScore, computeOpenOrgOsCoreScore, formatOs99Score, formatOrgOsScore, formatOpenOrgOsCoreScore } from "../lib/os-score.js";
 import { writeMarkdownReport } from "../lib/utils.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
 export interface StatusOptions {
   markdown?: boolean;
@@ -50,6 +51,7 @@ export function runStatus(opts: StatusOptions): void {
   }
 
   if (opts.output) {
+    requireCliReportWrite("status");
     const path = writeMarkdownReport("status", opts.output, text);
     console.log(`✓ Status report written to ${path}`);
   } else {

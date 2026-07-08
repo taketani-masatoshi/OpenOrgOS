@@ -14,6 +14,7 @@ import { loadExecutiveCalendar, loadExecutiveTasks, loadOneOnOnes } from "../lib
 import { pushCalendarToGoogle } from "../lib/google-calendar-push.js";
 import { pullCalendarFromGoogle, yamlOnlyFutureEvents } from "../lib/google-calendar-pull.js";
 import { currentDate, writeMarkdownReport, writeYamlFile, getExecutiveDir } from "../lib/utils.js";
+import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 
 export async function runExecutiveCalendarPush(opts: {
   from?: string;
@@ -38,7 +39,9 @@ export async function runExecutiveCalendarPush(opts: {
   });
 
   if (!opts.dryRun && (result.created > 0 || result.updated > 0)) {
+    requireCliDataWrite({ command: "executive calendar push", permission: "escalate:plan" });
     writeYamlFile(calPath, calendarFileSchema.parse({ ...file, events }));
+    auditCliMutation("executive calendar push", `${result.created}+${result.updated}`);
   }
 
   if (opts.json) {
@@ -77,7 +80,9 @@ export async function runExecutiveCalendarPull(opts: {
   const yamlOnly = yamlOnlyFutureEvents(file.events, since);
 
   if (!dryRun && result.linked > 0) {
+    requireCliDataWrite({ command: "executive calendar pull", permission: "escalate:plan" });
     writeYamlFile(calPath, calendarFileSchema.parse({ ...file, events }));
+    auditCliMutation("executive calendar pull", String(result.linked));
   }
 
   if (opts.json) {
@@ -257,7 +262,9 @@ export function runExecutiveTasksArchive(opts: { dryRun?: boolean }): void {
     console.log(`(dry-run) ${count} 件 cancelled → archived`);
     return;
   }
+  requireCliDataWrite({ command: "executive tasks archive", permission: "escalate:plan" });
   writeYamlFile(tasksPath, tasksFileSchema.parse({ ...file, tasks }));
+  auditCliMutation("executive tasks archive", String(count));
   console.log(`✓ ${count} 件を archived に移行（Secretary 一覧から非表示）`);
 }
 
@@ -269,8 +276,10 @@ export function runExecutiveBrief(opts: {
   const content = buildExecutiveBriefMarkdown(opts.referenceDate ?? currentDate());
   const save = opts.markdown !== false;
   if (save) {
+    requireCliDataWrite({ command: "executive brief", permission: "agent:report" });
     const filename = opts.output ?? `weekly-brief-${currentDate()}.md`;
     const path = writeMarkdownReport("executive-brief", filename, content);
+    auditCliMutation("executive brief", filename);
     console.log(`✓ ${path}`);
   } else {
     console.log(content);

@@ -1,4 +1,5 @@
 import { setTenantId, loadTenantConfig } from "../lib/tenant.js";
+import { requireCliOperator } from "../lib/console-auth/cli-operator.js";
 import { applyProtocolTenant } from "./protocol-helpers.js";
 import {
   buildIdentityDocument,
@@ -614,6 +615,7 @@ export interface ProtocolNoticeProposeOptions {
   type?: string;
   contract?: string;
   correlationEvent?: string;
+  companyEvent?: string;
   invoice?: string;
   brokerInstruction?: string;
   amount?: number;
@@ -626,6 +628,7 @@ export interface ProtocolNoticeProposeOptions {
 
 export function runProtocolNoticePropose(opts: ProtocolNoticeProposeOptions): void {
   applyProtocolTenant(opts.tenant);
+  requireCliOperator({ permission: "protocol:draft", command: "protocol notice propose" });
   const txType = opts.type ?? "contract.execution.notice";
   try {
     const notice = proposeInterOrgWire({
@@ -634,6 +637,7 @@ export function runProtocolNoticePropose(opts: ProtocolNoticeProposeOptions): vo
       proposedBy: opts.operator,
       contractId: opts.contract,
       correlationEventId: opts.correlationEvent,
+      companyEventId: opts.companyEvent,
       invoiceId: opts.invoice,
       brokerInstruction: opts.brokerInstruction,
       stakeholderId: opts.stakeholder,
@@ -651,6 +655,7 @@ export function runProtocolNoticePropose(opts: ProtocolNoticeProposeOptions): vo
     console.log(`  type: ${notice.transaction_type} · peer: ${notice.peer_id}`);
     if (notice.contract_id) console.log(`  contract: ${notice.contract_id}`);
     if (notice.correlation_event_id) console.log(`  correlation: ${notice.correlation_event_id}`);
+    if (opts.companyEvent) console.log(`  company_event: ${opts.companyEvent}`);
     console.log(`  operator: ${notice.proposed_by}`);
     console.log(`  Next: steward protocol notice approve --id ${notice.notice_id} --approver <CEO>`);
   } catch (e) {
@@ -698,12 +703,13 @@ export interface ProtocolNoticeApproveOptions {
 
 export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOptions): Promise<void> {
   applyProtocolTenant(opts.tenant);
+  const auth = requireCliOperator({ permission: "protocol:approve", command: "protocol notice approve" });
   try {
     const result = approveInterOrgNotice({
       noticeId: opts.id,
-      approverId: opts.approver,
+      approverId: opts.approver || auth.record.approver_name || auth.record.display_name,
       coApproverId: opts.coApprover,
-      operatorId: opts.operator,
+      operatorId: opts.operator || auth.record.operator_id,
     });
     const transmit = await transmitApprovedNotice(result);
 
@@ -1806,4 +1812,260 @@ export async function runProtocolTlsVerify(opts: ProtocolTlsVerifyOptions): Prom
     if (!report.metrics_ok) process.exit(1);
   }
   if (!bundleRes.ok) process.exit(1);
+}
+
+export interface ProtocolGovGatewayValidateOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolGovGatewayValidate(
+  opts: ProtocolGovGatewayValidateOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { validateGovGatewaySetup } = await import("../lib/wire/gov-gateway/config.js");
+  const result = validateGovGatewaySetup();
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+  } else if (result.ok) {
+    console.log("✓ gov-gateway setup valid");
+  } else {
+    for (const issue of result.issues) {
+      console.log(`✗ [${issue.code}] ${issue.message}${issue.path ? ` · ${issue.path}` : ""}`);
+    }
+  }
+  if (!result.ok) process.exit(1);
+}
+
+export interface ProtocolGovGatewayEncodeOptions {
+  eventId: string;
+  profile: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolGovGatewayEncode(
+  opts: ProtocolGovGatewayEncodeOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { findEnvelopeFileForWitness } = await import("../lib/protocol/witness-client.js");
+  const { resolveAdapter } = await import("../lib/wire/gov-gateway/config.js");
+  const { govGatewayProfileIdSchema } = await import("../../schemas/protocol/gov-gateway-adapter.js");
+  const { getTenantId } = await import("../lib/tenant.js");
+
+  const profileId = govGatewayProfileIdSchema.parse(opts.profile);
+  const envelope = findEnvelopeFileForWitness(opts.eventId);
+  if (!envelope) {
+    console.error(`Envelope not found for event_id ${opts.eventId}`);
+    process.exit(1);
+  }
+  const adapter = resolveAdapter(profileId);
+  const native = await adapter.encode(envelope, {
+    tenant_id: getTenantId(),
+    peer_org_id: envelope.destination?.org_id,
+  });
+  if (opts.json) {
+    console.log(
+      JSON.stringify(
+        {
+          ...native,
+          body: typeof native.body === "string" ? native.body : Buffer.from(native.body).toString("utf-8"),
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+  console.log(`profile: ${native.profile_id}`);
+  console.log(`mime: ${native.mime}`);
+  console.log(`headers: ${JSON.stringify(native.headers)}`);
+  console.log(typeof native.body === "string" ? native.body : Buffer.from(native.body).toString("utf-8"));
+}
+
+export interface ProtocolGovGatewayDecodeOptions {
+  file: string;
+  tenant?: string;
+  json?: boolean;
+}
+
+export async function runProtocolGovGatewayDecode(
+  opts: ProtocolGovGatewayDecodeOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { readFileSync, existsSync } = await import("node:fs");
+  const { decodeGovGatewayInbound } = await import("../lib/wire/gov-gateway/ingest.js");
+  const { getTenantId } = await import("../lib/tenant.js");
+
+  if (!existsSync(opts.file)) {
+    console.error(`File not found: ${opts.file}`);
+    process.exit(1);
+  }
+  const raw = JSON.parse(readFileSync(opts.file, "utf-8"));
+  const result = await decodeGovGatewayInbound(raw, getTenantId());
+  if (!result.ok || !result.envelope) {
+    console.error(result.reason ?? "decode failed");
+    process.exit(1);
+  }
+  if (opts.json) {
+    console.log(JSON.stringify(result.envelope, null, 2));
+    return;
+  }
+  console.log(`✓ decoded · event_id ${result.envelope.event_id}${result.profile_id ? ` · ${result.profile_id}` : ""}`);
+}
+
+export interface ProtocolGovGatewayHealthOptions {
+  profile: string;
+  tenant?: string;
+  live?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolGovGatewayHealth(
+  opts: ProtocolGovGatewayHealthOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { govGatewaySandboxHealth } = await import("../lib/wire/gov-gateway/sandbox.js");
+  const { govGatewayProfileIdSchema } = await import("../../schemas/protocol/gov-gateway-adapter.js");
+  const profileId = govGatewayProfileIdSchema.parse(opts.profile);
+  const health = await govGatewaySandboxHealth(profileId, { live: opts.live });
+  if (opts.json) {
+    console.log(JSON.stringify(health, null, 2));
+  } else if (health.ok) {
+    const liveTag = health.live ? " · live" : "";
+    const pingTag = health.ping_ms != null ? ` · ${health.ping_ms}ms` : "";
+    console.log(`✓ ${health.profile_id}${liveTag} · ${health.detail ?? "ok"}${pingTag}`);
+  } else {
+    console.log(`✗ ${health.profile_id} · ${health.detail ?? "unhealthy"}`);
+  }
+  if (!health.ok) process.exit(1);
+}
+
+export interface ProtocolGovGatewaySandboxInitOptions {
+  tenant?: string;
+  force?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolGovGatewaySandboxInit(
+  opts: ProtocolGovGatewaySandboxInitOptions = {}
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { initGovGatewaySandboxConfig } = await import("../lib/wire/gov-gateway/sandbox.js");
+  const path = initGovGatewaySandboxConfig({ force: opts.force });
+  if (opts.json) {
+    console.log(JSON.stringify({ ok: true, path }, null, 2));
+    return;
+  }
+  console.log(`✓ gov-gateway sandbox config · ${path}`);
+  console.log("  Set GOV_XROAD_SECURITY_SERVER_URL / GOV_EGOV_API_BASE_URL / GOV_GE_API_BASE_URL");
+  console.log("  Validate: orgos protocol gov-gateway validate");
+  console.log("  Live ping: orgos protocol gov-gateway health --profile xroad_v7 --live");
+}
+
+export interface ProtocolTrustedHubsSyncKeysOptions {
+  jurisdiction?: string;
+  hubUrl?: string;
+  force?: boolean;
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolTrustedHubsSyncKeys(
+  opts: ProtocolTrustedHubsSyncKeysOptions = {}
+): Promise<void> {
+  const { syncTrustedHubPublicKeys } = await import("../lib/protocol/trusted-hubs-sync.js");
+  const { results } = await syncTrustedHubPublicKeys({
+    jurisdiction: opts.jurisdiction,
+    hubUrl: opts.hubUrl,
+    force: opts.force,
+    dryRun: opts.dryRun,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ results }, null, 2));
+    const failed = results.some((r) => r.status === "error");
+    if (failed) process.exit(1);
+    return;
+  }
+  for (const r of results) {
+    const keyPreview = r.public_key ? `${r.public_key.slice(0, 12)}…` : "";
+    console.log(
+      `  [${r.status}] ${r.jurisdiction}/${r.hub_id} @ ${r.hub_url}${keyPreview ? ` · ${keyPreview}` : ""}${r.detail ? ` · ${r.detail}` : ""}`
+    );
+  }
+  const failed = results.some((r) => r.status === "error");
+  if (failed) process.exit(1);
+  if (!results.length) {
+    console.log("No hubs matched (check jurisdiction / hub-url filters)");
+  } else {
+    console.log(`✓ trusted-hubs sync complete (${results.length} hub(s))`);
+  }
+}
+
+export interface ProtocolTrustRegistryValidateOptions {
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistryValidate(
+  opts: ProtocolTrustRegistryValidateOptions = {}
+): Promise<void> {
+  const { validateWireTrustRegistry } = await import("../lib/protocol/wire-trust-registry.js");
+  const result = validateWireTrustRegistry();
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+  if (result.ok) {
+    console.log("✓ Wire trust registry OK");
+    for (const w of result.warnings) {
+      console.log(`  [warn] ${w.code}: ${w.message}`);
+    }
+    return;
+  }
+  console.error("✗ Wire trust registry validation failed:");
+  for (const issue of result.issues) {
+    console.error(`  [${issue.code}] ${issue.message}`);
+  }
+  process.exit(1);
+}
+
+export interface ProtocolTrustRegistryListOptions {
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistryList(opts: ProtocolTrustRegistryListOptions = {}): Promise<void> {
+  const { loadWireTrustRegistry } = await import("../lib/protocol/wire-trust-registry.js");
+  const registry = loadWireTrustRegistry();
+  if (opts.json) {
+    console.log(JSON.stringify(registry, null, 2));
+    return;
+  }
+  console.log(`wire trust registry: ${registry.nodes.length} node(s)`);
+  for (const node of registry.nodes) {
+    console.log(`  · ${node.node_id}${node.did ? ` · ${node.did}` : ""}`);
+  }
+}
+
+export interface ProtocolTrustRegistryResolveOptions {
+  id: string;
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistryResolve(opts: ProtocolTrustRegistryResolveOptions): Promise<void> {
+  const { resolveWireTrustNode } = await import("../lib/protocol/wire-trust-registry.js");
+  const resolved = resolveWireTrustNode(opts.id);
+  if (opts.json) {
+    console.log(JSON.stringify(resolved ?? { found: false }, null, 2));
+    if (!resolved) process.exit(1);
+    return;
+  }
+  if (!resolved) {
+    console.error(`✗ not found: ${opts.id}`);
+    process.exit(1);
+  }
+  console.log(`✓ ${resolved.node.node_id} (matched by ${resolved.matched_by})`);
+  if (resolved.node.did) console.log(`  did: ${resolved.node.did}`);
+  if (resolved.node.node_uri) console.log(`  node_uri: ${resolved.node.node_uri}`);
+  if (resolved.node.wire_url) console.log(`  wire_url: ${resolved.node.wire_url}`);
 }

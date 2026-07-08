@@ -5,6 +5,7 @@ import {
   formatAlertsTable,
 } from "../lib/alerts.js";
 import { writeMarkdownReport, currentDate } from "../lib/utils.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
 export function runAlerts(options: {
   days: number;
@@ -16,6 +17,7 @@ export function runAlerts(options: {
   const alerts = scanContractAlerts(contracts, options.days, options.riskLevel);
 
   if (options.output) {
+    requireCliReportWrite("alerts");
     const content = formatAlertsMarkdown(alerts, options.days);
     const path = writeMarkdownReport("alerts", options.output, content);
     console.log(`✓ Report saved to ${path}`);

@@ -14,6 +14,7 @@ import {
 } from "../lib/document-io.js";
 import type { InboxCategory, OutboxCategory } from "../../schemas/document-io.js";
 import { writeMarkdownReport } from "../lib/utils.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
 export function runIoStatus(): void {
   initDocumentIoFile();
@@ -156,6 +157,7 @@ npm run orgos -- io outbox printed OUT-001
 台帳: \`data/document-io.yaml\`
 `;
   if (opts.output) {
+    requireCliReportWrite("io guide");
     console.log(`✓ Guide: ${writeMarkdownReport("io", opts.output, md)}`);
   } else {
     console.log(md);

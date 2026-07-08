@@ -2,6 +2,9 @@
 
 Steward Chat · Wire Console · MCP の本番 checklist。
 
+> **Demo イメージは本番に使わない。**  
+> `ghcr.io/orgos-reference/orgos-demo` / `deploy/demo/` は利用者試用用（auth 緩和 · mock LLM）。手元試用は [quickstart.md](quickstart.md) §0 · 設計は [org-os/demo-docker.md](org-os/demo-docker.md)。
+
 ---
 
 ## 1. 同一 origin デプロイ（推奨）
@@ -58,6 +61,7 @@ server {
 | 変数 | 本番 | 説明 |
 |------|------|------|
 | `STEWARD_CHAT_AUTH` | `1`（デフォルト） | `0` は dev のみ |
+| `WIRE_CONSOLE_AUTH` | **`prod`** | `dev` / 未設定は dev passkey — 本番では起動拒否 |
 | `WIRE_CONSOLE_DEV_PASSKEY` | **未設定** | WebAuthn / OIDC を使用 |
 | `ORGOS_COOKIE_SECURE` | `1` | HTTPS 必須 |
 | `ORGOS_SESSION_PERSIST` | `1`（デフォルト） | `data/.orgos/sessions.json` |
@@ -74,7 +78,9 @@ server {
 
 mutating API（`POST /chat/v1/*` · `POST /console/v1/*`）は **Origin または Referer** が許可 origin と一致することを要求します。ログイン系（`/auth/login` 等）は除外。SameSite=Strict cookie と併用。
 
-### RBAC（Chat BFF）
+### RBAC（Operator Registry + Chat / Wire / MCP）
+
+正本: `tenants/{id}/data/org/operators.yaml`
 
 | Permission | 操作 |
 |------------|------|
@@ -82,8 +88,26 @@ mutating API（`POST /chat/v1/*` · `POST /console/v1/*`）は **Origin また�
 | `chat:ask` | Operator 質問 |
 | `chat:approve` | 承認実行 |
 | `chat:wire` | wire flush · witness |
+| `protocol:draft` | Wire Console propose |
+| `protocol:approve` | Wire Console approve |
+| `agent:dispatch` | CLI agent dispatch / implement |
+| `agent:shell` | Shell runtime（aider 等） |
+| `broker:transfer` | `orgos broker transfer` |
+| `escalate:plan` | `finances add` · `executive calendar` 書込 · `secretary escalate`（consult） |
 
-prod セッションでは `company.yaml` の authorized approvers（代表者・取締役）に `approver_id` が一致する場合のみ approve/wire を許可。`/chat/v1/auth/me` が `permissions` を返します。
+**CLI data 書込**（`STEWARD_OPERATOR_AUTH=1` または prod）: `finances add` · `executive calendar push/pull` · `executive tasks archive` · `executive brief` · `secretary escalate` · `broker transfer` は `requireCliOperator` 必須。read-only（`validate` · `finances list`）は key 不要。
+
+**Shell 本番:** `ORGOS_SHELL_AUTO_YES=1` 未設定時は `--yes` 付き shell 拒否。未知の `ORGOS_SHELL_PROFILE` は拒否。git コマンドは `git:write` permission 必須。
+
+初期化:
+
+```bash
+orgos operator init-registry --tenant mal
+export ORGOS_OPERATOR_KEY="$(cat ~/.orgos/operators/OP-001.key)"
+orgos --operator-id OP-001 --tenant mal protocol notice list
+```
+
+prod では `data/org/operators.yaml` に ceo/approver が必須。MCP Bearer は operator ごとの `key_hash` と照合（共有 `ORGOS_MCP_TOKEN` は dev 向けレガシー）。`/chat/v1/auth/me` が `permissions` を返します。
 
 ### Chat 監査ログ
 

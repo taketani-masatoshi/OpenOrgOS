@@ -17,7 +17,8 @@ services:
       npm run operator-console:build &&
       node --import tsx src/cli.ts operator console start --host 0.0.0.0 --port 9470"
     ports:
-      - "9470:9470"
+      # Bind app to localhost — expose via nginx (443) on the host
+      - "127.0.0.1:9470:9470"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:9470/health"]
       interval: 15s

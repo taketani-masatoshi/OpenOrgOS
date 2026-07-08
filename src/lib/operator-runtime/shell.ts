@@ -3,7 +3,13 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildShellCommand, type ResolvedShellCommand } from "./config.js";
-import { ROOT_DIR, getTenantId } from "../tenant.js";
+import { getTenantId } from "../tenant.js";
+import { tenantDispatchRoot, assertDispatchCwdWithinTenant } from "../org-boundary.js";
+import { getCliOperatorContext } from "../console-auth/cli-operator.js";
+import {
+  isProdSecurityMode,
+  operatorHasPermission,
+} from "../console-auth/operator-rbac.js";
 
 export interface ShellDispatchResult {
   ok: boolean;
@@ -61,10 +67,42 @@ function runCommand(resolved: ResolvedShellCommand): Promise<ShellDispatchResult
   });
 }
 
+function assertShellDispatchAllowed(profile?: string): void {
+  const ctx = getCliOperatorContext();
+  if (!ctx) return;
+  if (profile === "aider" || profile?.includes("shell")) {
+    if (!operatorHasPermission(ctx.record, "agent:shell")) {
+      throw new Error(
+        `Operator ${ctx.record.operator_id} lacks agent:shell permission for shell profile "${profile ?? "default"}"`
+      );
+    }
+  }
+}
+
+export function assertResolvedShellCommandSafe(resolved: ResolvedShellCommand): void {
+  const joined = resolved.command.join(" ");
+  const hasYesFlag =
+    resolved.command.includes("--yes") || /(?:^|\s)--yes(?:\s|$)/.test(joined);
+  if (hasYesFlag && isProdSecurityMode() && process.env.ORGOS_SHELL_AUTO_YES !== "1") {
+    throw new Error(
+      "Shell --yes is blocked in production — set ORGOS_SHELL_AUTO_YES=1 to allow non-interactive shell"
+    );
+  }
+  if (/\bgit\b/.test(joined)) {
+    const op = getCliOperatorContext();
+    if (op && !operatorHasPermission(op.record, "git:write")) {
+      throw new Error(
+        `Operator ${op.record.operator_id} lacks git:write for shell git command`
+      );
+    }
+  }
+}
+
 export async function runShellDispatch(
   promptText: string,
   opts?: { profile?: string; workOrderId?: string }
 ): Promise<ShellDispatchResult> {
+  assertShellDispatchAllowed(opts?.profile);
   const dir = mkdtempSync(join(tmpdir(), "orgos-shell-"));
   const promptPath = join(dir, `${opts?.workOrderId ?? "prompt"}.md`);
   const footer = [
@@ -82,8 +120,9 @@ export async function runShellDispatch(
 
   const ctx = {
     promptPath,
-    workspace: ROOT_DIR,
+    workspace: tenantDispatchRoot(),
     tenant: getTenantId(),
+    tenantRoot: tenantDispatchRoot(),
   };
   const resolved = buildShellCommand(ctx, opts?.profile);
   if (!resolved) {
@@ -97,6 +136,8 @@ export async function runShellDispatch(
     };
   }
 
+  assertDispatchCwdWithinTenant(resolved.cwd);
+  assertResolvedShellCommandSafe(resolved);
   const result = await runCommand(resolved);
   return { ...result, promptPath };
 }

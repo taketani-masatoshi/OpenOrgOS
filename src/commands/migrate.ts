@@ -4,6 +4,7 @@ import YAML from "yaml";
 import { loadYojitsuFyPlan } from "../lib/data.js";
 import { serializeYojitsuPlanV2 } from "../lib/yojitsu-normalize.js";
 import { getDataDir } from "../lib/utils.js";
+import { requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 
 export interface MigrateYojitsuOptions {
   fiscalYear: string;
@@ -33,6 +34,7 @@ export function runMigrateYojitsu(opts: MigrateYojitsuOptions): void {
   }
 
   const path = join(getDataDir(), "plans", `yojitsu-${id}.yaml`);
+  requireCliDataWrite({ command: "migrate yojitsu" });
   writeFileSync(path, yaml, "utf-8");
   console.log(`✓ Wrote v2 yojitsu to ${path}`);
 }

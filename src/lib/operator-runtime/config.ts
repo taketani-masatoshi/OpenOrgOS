@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import {
   operatorRuntimeConfigSchema,
@@ -11,6 +12,7 @@ import {
 import { OPERATOR_RUNTIME_CONFIG_PATH } from "../steward-paths.js";
 import { loadRegistryFile } from "../utils.js";
 import { ROOT_DIR } from "../tenant.js";
+import { isProdSecurityMode } from "../console-auth/operator-rbac.js";
 
 export { OPERATOR_RUNTIME_CONFIG_PATH };
 
@@ -24,17 +26,54 @@ function isCursorSdkAvailable(): boolean {
   }
 }
 
+export function shellProfileIntegrityHash(profile: ShellProfile): string {
+  const obj: Record<string, unknown> = { command: profile.command };
+  if (profile.cwd !== undefined) obj.cwd = profile.cwd;
+  if (profile.env !== undefined) obj.env = profile.env;
+  if (profile.timeout_ms !== undefined) obj.timeout_ms = profile.timeout_ms;
+  return `sha256:${createHash("sha256").update(JSON.stringify(obj)).digest("hex")}`;
+}
+
+export function verifyOperatorRuntimeIntegrity(cfg: OperatorRuntimeConfig): void {
+  const integrity = cfg.profile_integrity;
+  if (!integrity) return;
+  if (!isProdSecurityMode() && process.env.ORGOS_RUNTIME_INTEGRITY !== "1") return;
+
+  if (cfg.shell && integrity.shell) {
+    const actual = shellProfileIntegrityHash(cfg.shell);
+    if (actual !== integrity.shell) {
+      throw new Error(
+        `Runtime shell profile integrity mismatch: expected ${integrity.shell}, got ${actual}`
+      );
+    }
+  }
+
+  for (const [name, profile] of Object.entries(cfg.profiles ?? {})) {
+    const expected = integrity.profiles?.[name];
+    if (!expected) continue;
+    const actual = shellProfileIntegrityHash(profile);
+    if (actual !== expected) {
+      throw new Error(
+        `Runtime profile "${name}" integrity mismatch: expected ${expected}, got ${actual}`
+      );
+    }
+  }
+}
+
 export function loadOperatorRuntimeConfig(): OperatorRuntimeConfig {
-  return loadRegistryFile(OPERATOR_RUNTIME_CONFIG_PATH, operatorRuntimeConfigSchema, () =>
+  const cfg = loadRegistryFile(OPERATOR_RUNTIME_CONFIG_PATH, operatorRuntimeConfigSchema, () =>
     operatorRuntimeConfigSchema.parse({ version: "1" })
   );
+  verifyOperatorRuntimeIntegrity(cfg);
+  return cfg;
 }
 
 function substitute(template: string, ctx: ShellCommandContext): string {
   return template
     .replaceAll("{prompt}", ctx.promptPath)
     .replaceAll("{workspace}", ctx.workspace)
-    .replaceAll("{tenant}", ctx.tenant);
+    .replaceAll("{tenant}", ctx.tenant)
+    .replaceAll("{tenant_root}", ctx.tenantRoot ?? ctx.workspace);
 }
 
 function expandProfile(profile: ShellProfile, ctx: ShellCommandContext): ResolvedShellCommand {
@@ -54,6 +93,10 @@ export function buildShellCommand(
   profileName?: string
 ): ResolvedShellCommand | null {
   const cfg = loadOperatorRuntimeConfig();
+  if (profileName && !cfg.profiles?.[profileName]) {
+    const allowed = Object.keys(cfg.profiles ?? {}).join(", ") || "(none)";
+    throw new Error(`Unknown shell profile "${profileName}" — allowed: ${allowed}`);
+  }
   const profile =
     (profileName && cfg.profiles?.[profileName]) ??
     cfg.shell ??

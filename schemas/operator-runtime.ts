@@ -17,12 +17,18 @@ export const shellProfileSchema = z.object({
   timeout_ms: z.number().int().nonnegative().optional(),
 });
 
+export const profileIntegritySchema = z.object({
+  shell: z.string().optional(),
+  profiles: z.record(z.string()).optional(),
+});
+
 export const operatorRuntimeConfigSchema = z.object({
   version: z.string(),
   default_runtime: z.enum(["shell", "cursor", "manifest"]).default("shell"),
   fallback_runtime: z.enum(["shell", "cursor", "manifest"]).default("manifest"),
   shell: shellProfileSchema.optional(),
   profiles: z.record(shellProfileSchema).optional(),
+  profile_integrity: profileIntegritySchema.optional(),
   cursor: z
     .object({
       enabled: z.boolean().default(true),
@@ -37,6 +43,7 @@ export interface ShellCommandContext {
   promptPath: string;
   workspace: string;
   tenant: string;
+  tenantRoot?: string;
 }
 
 export interface ResolvedShellCommand {

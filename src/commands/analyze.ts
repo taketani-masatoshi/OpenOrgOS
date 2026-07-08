@@ -5,6 +5,7 @@ import {
   parsePeriod,
 } from "../lib/analyze.js";
 import { writeMarkdownReport } from "../lib/utils.js";
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
 export function runAnalyzeProperty(options: {
   id?: string;
@@ -26,6 +27,7 @@ export function runAnalyzeProperty(options: {
   const output = formatPropertyAnalysisMarkdown(analyses);
 
   if (options.output) {
+    requireCliReportWrite("analyze");
     const path = writeMarkdownReport("analyze", options.output, output);
     console.log(`✓ Report saved to ${path}`);
   } else {
