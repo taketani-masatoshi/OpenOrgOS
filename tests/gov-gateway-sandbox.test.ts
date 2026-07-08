@@ -55,6 +55,29 @@ describe("gov-gateway sandbox", () => {
     }
   });
 
+  it("pingSandboxEndpoint falls back to GET when HEAD fails", async () => {
+    const server = createServer((req, res) => {
+      if (req.method === "HEAD") {
+        res.writeHead(405);
+        res.end();
+        return;
+      }
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("ok");
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const addr = server.address();
+    if (!addr || typeof addr === "string") throw new Error("no port");
+    const url = `http://127.0.0.1:${addr.port}`;
+    try {
+      const ping = await pingSandboxEndpoint(url);
+      expect(ping.ok).toBe(true);
+      expect(ping.method).toBe("GET");
+    } finally {
+      server.close();
+    }
+  });
+
   it("govGatewaySandboxHealth --live fails without sandbox URL", async () => {
     writeFileSync(
       join(getDataDir(), "protocol", "gov-gateway.yaml"),

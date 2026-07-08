@@ -1,13 +1,27 @@
 # Gov Gateway live pilot checklist
 
-1. Init sandbox config: `orgos protocol gov-gateway sandbox init --tenant {id}`
-2. Copy env template: `steward/platform/protocol/seed/gov-gateway-sandbox.env.example`
-3. Set sandbox URLs / member codes from EE / JP / GE operators (`GOV_*_URL` env vars)
-4. Env: `GOV_GATEWAY_TRANSPORT=live` (default) or `mock` for offline CI
-5. Peer `transport: gov_gateway` + `gov_gateway.profile_id`
-6. Validate: `orgos protocol gov-gateway validate --tenant {id}`
-7. Live reachability: `orgos protocol gov-gateway health --profile xroad_v7 --live --tenant {id}`
-8. Dry-run encode: `orgos protocol gov-gateway encode --event-id … --profile xroad_v7`
-9. Deliver: `orgos protocol deliver --peer PEER-* --file envelope.json`
+Operator-owned credentials · do not commit tokens. CI uses `GOV_GATEWAY_TRANSPORT=mock`.
 
-Live SS integration remains operator-owned; mock path stays test default when `GOV_GATEWAY_TRANSPORT=mock`.
+## Phases
+
+| Phase | Gate | Command / action | Failure triage |
+|-------|------|------------------|----------------|
+| **0 Mock** | Adapter unit tests green | `GOV_GATEWAY_TRANSPORT=mock` · `gov-gateway validate` | Fix registry / profile YAML |
+| **1 Reachability** | HTTP status under 500 on sandbox base URL | `gov-gateway health --profile … --live` | DNS · firewall · wrong `GOV_*_URL` |
+| **2 Authenticated health** | Same + `GOV_*_TOKEN` accepted (not 401) | set token env · `--live --json` | Rotate token · check Authorization scheme |
+| **3 Encode dry-run** | Native message encodes | `gov-gateway encode --event-id … --profile …` | Envelope missing · profile binding |
+| **4 Deliver** | HTTP 2xx / correlation id | `protocol deliver --peer … --file …` | Peer `transport: gov_gateway` · SS routing |
+
+## Setup steps
+
+1. `orgos protocol gov-gateway sandbox init --tenant {id}`
+2. Copy `steward/platform/protocol/seed/gov-gateway-sandbox.env.example` → shell env
+3. Set `GOV_XROAD_SECURITY_SERVER_URL` / `GOV_EGOV_API_BASE_URL` / `GOV_GE_API_BASE_URL`
+4. Optional auth: `GOV_XROAD_TOKEN` · `GOV_EGOV_TOKEN` · `GOV_GE_TOKEN` (Bearer)
+5. `GOV_GATEWAY_TRANSPORT=live`
+6. Peer: `transport: gov_gateway` + `gov_gateway.profile_id`
+7. Validate → health `--live` → encode → deliver
+
+## Recording
+
+Copy [gov-gateway-live-pilot-log.md.example](gov-gateway-live-pilot-log.md.example) per pilot run. **Never** paste secrets or full tokens into the log.

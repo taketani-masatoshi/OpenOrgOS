@@ -38,33 +38,74 @@ export function resolveSandboxUrl(
   return binding?.security_server_url ?? binding?.api_base_url;
 }
 
-export async function pingSandboxEndpoint(url: string): Promise<{
+const AUTH_TOKEN_ENV: Partial<Record<GovGatewayProfileId, string>> = {
+  xroad_v7: "GOV_XROAD_TOKEN",
+  xroad_v6: "GOV_XROAD_TOKEN",
+  xroad_v7_dj: "GOV_XROAD_TOKEN",
+  jp_egov_central: "GOV_EGOV_TOKEN",
+  ge_gov_gateway_3g: "GOV_GE_TOKEN",
+};
+
+function authHeaders(profileId: GovGatewayProfileId): Record<string, string> {
+  const envKey = AUTH_TOKEN_ENV[profileId];
+  const token = envKey ? process.env[envKey]?.trim() : undefined;
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function pingSandboxEndpoint(
+  url: string,
+  opts?: { headers?: Record<string, string> }
+): Promise<{
   ok: boolean;
   detail: string;
   latencyMs: number;
   httpStatus?: number;
+  method?: "HEAD" | "GET";
+  body_preview?: string;
 }> {
+  const headers = opts?.headers ?? {};
   const start = Date.now();
-  try {
+
+  async function attempt(method: "HEAD" | "GET") {
     const res = await fetch(url, {
-      method: "HEAD",
+      method,
+      headers,
       signal: AbortSignal.timeout(8000),
       redirect: "follow",
     });
     const latencyMs = Date.now() - start;
+    let body_preview: string | undefined;
+    if (method === "GET") {
+      const text = await res.text().catch(() => "");
+      body_preview = text.slice(0, 200);
+    }
     const ok = res.status < 500;
     return {
       ok,
-      detail: ok ? `reachable HTTP ${res.status}` : `HTTP ${res.status}`,
+      detail: ok ? `reachable HTTP ${res.status} via ${method}` : `HTTP ${res.status} via ${method}`,
       latencyMs,
       httpStatus: res.status,
+      method,
+      body_preview,
     };
-  } catch (e) {
-    return {
-      ok: false,
-      detail: e instanceof Error ? e.message : String(e),
-      latencyMs: Date.now() - start,
-    };
+  }
+
+  try {
+    const head = await attempt("HEAD");
+    if (head.ok || (head.httpStatus && head.httpStatus < 400)) return head;
+    // Some sandboxes reject HEAD — fall back to GET
+    return await attempt("GET");
+  } catch {
+    try {
+      return await attempt("GET");
+    } catch (e) {
+      return {
+        ok: false,
+        detail: e instanceof Error ? e.message : String(e),
+        latencyMs: Date.now() - start,
+      };
+    }
   }
 }
 
@@ -72,6 +113,10 @@ export interface GovGatewaySandboxHealth extends AdapterHealth {
   sandbox_url?: string;
   ping_ms?: number;
   live?: boolean;
+  http_status?: number;
+  method?: "HEAD" | "GET";
+  body_preview?: string;
+  auth?: boolean;
 }
 
 export async function govGatewaySandboxHealth(
@@ -97,7 +142,8 @@ export async function govGatewaySandboxHealth(
     };
   }
 
-  const ping = await pingSandboxEndpoint(sandboxUrl);
+  const headers = authHeaders(profileId);
+  const ping = await pingSandboxEndpoint(sandboxUrl, { headers });
   return {
     ...base,
     ok: base.ok && ping.ok,
@@ -105,6 +151,10 @@ export async function govGatewaySandboxHealth(
     sandbox_url: sandboxUrl,
     ping_ms: ping.latencyMs,
     detail: ping.detail,
+    http_status: ping.httpStatus,
+    method: ping.method,
+    body_preview: ping.body_preview,
+    auth: Object.keys(headers).length > 0,
   };
 }
 

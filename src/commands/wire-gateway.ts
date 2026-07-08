@@ -30,6 +30,7 @@ export function runWireGatewayValidate(opts: WireGatewayValidateOptions = {}): v
   const result = validateWireGatewayConfig(config);
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exitCode = 1;
     return;
   }
   if (result.ok) {
