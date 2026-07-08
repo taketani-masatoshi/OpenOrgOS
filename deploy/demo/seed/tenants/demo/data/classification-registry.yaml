@@ -1,0 +1,36 @@
+version: "1"
+as_of: "2026-06-08"
+
+levels:
+  L0:
+    label: 公開
+    description: 公開情報
+    export_allowed: true
+  L1:
+    label: 社内
+    description: 社内情報
+    export_allowed: conditional
+  L2:
+    label: 機密
+    description: 機密情報
+    export_allowed: false
+  L3:
+    label: 禁止出力
+    description: L2 転記禁止
+    export_allowed: false
+
+agents:
+  executive_steward:
+    label: Executive Steward
+    max_level: L2
+    output_max_level: L1
+  finance:
+    label: Finance
+    max_level: L2
+    output_max_level: L1
+  contract:
+    label: Contract
+    max_level: L1
+    output_max_level: L1
+
+resources: []

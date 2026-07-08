@@ -30,10 +30,29 @@ jobs:
           path: |
             packages/orgos-cli/orgos-cli-*.tgz
             packages/orgos-wire/orgos-wire-*.tgz
+      - name: Demo image tag note
+        id: demo
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "ver=${VER}" >> "$GITHUB_OUTPUT"
+          echo "pull=ghcr.io/${OWNER_LC}/orgos-demo:${VER}" >> "$GITHUB_OUTPUT"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          body: |
+            ## Demo Docker（試用 · 本番禁止）
+
+            Tag `v*` プッシュで workflow `demo-docker` が GHCR に公開します（`smoke` 成功後）。
+
+            ```bash
+            docker pull ${{ steps.demo.outputs.pull }}
+            docker run --rm -p 127.0.0.1:9470:9470 ${{ steps.demo.outputs.pull }}
+            # Chat http://127.0.0.1:9470/ · Wire http://127.0.0.1:9470/wire/
+            ```
+
+            入口: [docs/quickstart.md](docs/quickstart.md) · 設計: [docs/org-os/demo-docker.md](docs/org-os/demo-docker.md)
           files: |
             packages/orgos-cli/orgos-cli-*.tgz
             packages/orgos-wire/orgos-wire-*.tgz

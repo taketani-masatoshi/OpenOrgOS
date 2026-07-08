@@ -66,15 +66,35 @@ npm run check                               # validate · demo · acme · module
 
 ---
 
-## セットアップ
+## セットアップ（いちばん早い試し方）
 
-**製品 Quickstart（Core / workspace 分離）:** [docs/quickstart.md](docs/quickstart.md)
+**Docker（推奨 · 手元で UI を試す）— 本番禁止**
+
+```bash
+# GHCR（main / タグ後）— localhost のみバインド
+docker pull ghcr.io/orgos-reference/orgos-demo:main   # owner は org に合わせる
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/orgos-reference/orgos-demo:main
+
+# またはリポジトリから build
+docker compose -f deploy/demo/docker-compose.yaml up --build
+bash deploy/demo/acceptance.sh   # 任意スモーク
+# Chat http://127.0.0.1:9470/ · Wire http://127.0.0.1:9470/wire/
+```
+
+公開・検証: [deploy/demo/PUBLISH.md](deploy/demo/PUBLISH.md) · `npm run demo:docker:verify-ghcr`
+
+詳細: [docs/quickstart.md](docs/quickstart.md) · [docs/org-os/demo-docker.md](docs/org-os/demo-docker.md) · [deploy/demo/README.md](deploy/demo/README.md)
+
+**開発リポジトリ（CLI · テスト · カスタム）**
 
 ```bash
 npm install
 npm run orgos -- doctor
 npm run validate
 ```
+
+**自社 workspace（Core インストール後）:** `orgos init …` — [docs/quickstart.md](docs/quickstart.md) §1–2  
+**本番常駐:** [docs/operator-production.md](docs/operator-production.md)（Demo イメージは使わない）
 
 ## よく使うコマンド
 

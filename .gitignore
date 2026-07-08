@@ -33,9 +33,14 @@ tenants/*/data/protocol/signing-key.pem.bak-*
 data/hub-*/signing-key.pem
 data/hub-*/witness-*.jsonl
 data/proposal3-pki/
+# Dev TLS material (orgos wire-gateway tls-init · hub tls-init — never commit private keys)
+deploy/wire-gateway/tls/
+deploy/witness-hub/tls/
 # Proposal 3 generated env (machine-local paths — template: *.env.example)
 deploy/proposal3/env/*.generated.env
 packages/orgos-cli/deploy/proposal3/env/*.generated.env
+# Demo Docker local overrides (template: deploy/demo/env/demo.env.example)
+deploy/demo/env/demo.env
 # Protocol mTLS client (generated — template: protocol-api-client.yaml.example)
 tenants/*/data/protocol/protocol-api-client.yaml
 tenants/*/data/protocol/tls/*.json
@@ -47,7 +52,17 @@ tenants/*/data/protocol/wire-pending.yaml
 tenants/*/data/protocol/wire-relay-queue.yaml
 tenants/*/data/protocol/signing-key-meta.yaml
 tenants/*/data/protocol/reconcile-alerts.yaml
+tenants/*/data/protocol/audit-chain.jsonl
+tenants/*/data/protocol/witness-receipts/
+tenants/*/data/protocol/relay-store/
+tenants/*/docs/protocol/outbox/**
+!tenants/*/docs/protocol/outbox/00-このフォルダについて.md
+!tenants/*/docs/protocol/outbox/**/00-このフォルダについて.md
+tenants/*/docs/protocol/inbox/**
+!tenants/*/docs/protocol/inbox/00-このフォルダについて.md
+!tenants/*/docs/protocol/inbox/**/00-このフォルダについて.md
 tenants/*/data/org/audit-bridge-state.yaml
+data/hub-*/gossip-cursor/
 tenants/*/data/executive/stakeholders.yaml
 tenants/*/data/executive/calendar.yaml
 tenants/*/data/executive/tasks.yaml

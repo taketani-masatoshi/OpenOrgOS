@@ -17,6 +17,17 @@ import { WIRE_CONSOLE_SPA_DIST } from "../wire-console/paths.js";
 import { preloadOidcJwks } from "../wire-console/auth/oidc.js";
 import { sessionTokenFromRequest } from "../wire-console/auth/session.js";
 
+function logDemoSecurityBanner(): void {
+  const demoEnv = process.env.ORGOS_ENV === "demo";
+  const chatAuthOff = process.env.STEWARD_CHAT_AUTH === "0";
+  const wireDev = process.env.WIRE_CONSOLE_AUTH !== "prod";
+  if (!demoEnv && !chatAuthOff && !wireDev) return;
+  console.warn(
+    "[orgos-demo] WARNING: Demo/dev security — authentication disabled or relaxed. " +
+      "Bind host to 127.0.0.1 only. Do NOT use in production."
+  );
+}
+
 export interface OperatorConsoleServerOptions {
   host?: string;
   port?: number;
@@ -93,6 +104,7 @@ export async function startOperatorConsoleServer(
   opts: OperatorConsoleServerOptions = {}
 ): Promise<OperatorConsoleServerHandle> {
   assertProdAuthReady("all");
+  logDemoSecurityBanner();
   await preloadOidcJwks();
 
   const host = opts.host ?? process.env.OPERATOR_CONSOLE_HOST?.trim() ?? "127.0.0.1";

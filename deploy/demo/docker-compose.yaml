@@ -1,0 +1,56 @@
+# OrgOS Demo All-in-one — Phase 0 skeleton · Phase 1 implements image build
+# Design: docs/org-os/demo-docker.md
+#
+# Usage (after Phase 1):
+#   docker compose up --build
+#
+# Acceptance:
+#   curl -sf http://127.0.0.1:9470/health
+
+name: orgos-demo
+
+services:
+  orgos-demo:
+    build:
+      context: ../..
+      dockerfile: deploy/demo/Dockerfile
+    image: ghcr.io/orgos-reference/orgos-demo:0.8.0
+    ports:
+      # localhost only — do not bind 0.0.0.0 on the host (demo auth off)
+      - "127.0.0.1:9470:9470"
+    env_file:
+      - path: ./env/demo.env
+        required: false
+      - path: ./env/demo.env.example
+        required: false
+    environment:
+      ORGOS_ENV: demo
+      ORGOS_TENANT: demo
+      ORGOS_WORKSPACE: /workspace
+      ORGOS_HOME: /opt/orgos
+      OPERATOR_CONSOLE_HOST: 0.0.0.0
+      OPERATOR_CONSOLE_PORT: "9470"
+      STEWARD_CHAT_AUTH: "0"
+      WIRE_CONSOLE_AUTH: "dev"
+      ORGOS_MCP_AUTH: "0"
+      ORGOS_LLM_MOCK: "1"
+      ORGOS_CSRF: "0"
+      ORGOS_RATE_LIMIT: "0"
+    volumes:
+      - orgos-demo-workspace:/workspace
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:9470/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+    restart: unless-stopped
+
+volumes:
+  orgos-demo-workspace:

@@ -1,0 +1,148 @@
+# OrgOS Demo Docker — build · smoke · GHCR publish
+# Design: docs/org-os/demo-docker.md · Phase 2–4 (B1–B2 · multi-arch)
+
+name: demo-docker
+
+on:
+  push:
+    branches: [main, master, "cursor/**"]
+    tags: ["v*"]
+    paths:
+      - "deploy/demo/**"
+      - "apps/steward-chat/**"
+      - "apps/wire-console/**"
+      - "packages/orgos-cli/**"
+      - "src/**"
+      - "schemas/**"
+      - "steward/**"
+      - "tenants/demo/**"
+      - "tenants/_template/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "scripts/build-orgos-package.mjs"
+      - ".github/workflows/demo-docker.yml"
+      - ".dockerignore"
+  pull_request:
+    paths:
+      - "deploy/demo/**"
+      - "apps/steward-chat/**"
+      - "apps/wire-console/**"
+      - "packages/orgos-cli/**"
+      - "src/**"
+      - "schemas/**"
+      - "steward/**"
+      - "tenants/demo/**"
+      - "tenants/_template/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "scripts/build-orgos-package.mjs"
+      - ".github/workflows/demo-docker.yml"
+      - ".dockerignore"
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: orgos-demo
+
+jobs:
+  # A1–A4: build from Dockerfile + acceptance (native arch · no registry)
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build demo image
+        run: docker compose -f deploy/demo/docker-compose.yaml build
+      - name: Start demo stack
+        run: docker compose -f deploy/demo/docker-compose.yaml up -d
+      - name: Acceptance (A1–A3)
+        run: bash deploy/demo/acceptance.sh
+        env:
+          ORGOS_DEMO_WAIT_SEC: "120"
+      - name: Image size report
+        run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep orgos-demo || true
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f deploy/demo/docker-compose.yaml logs --tail 200
+      - name: Tear down
+        if: always()
+        run: docker compose -f deploy/demo/docker-compose.yaml down -v
+
+  # B1–B2: multi-arch push to GHCR on main / tags (not on pull_request)
+  publish:
+    needs: smoke
+    if: >
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' ||
+       github.ref == 'refs/heads/master' ||
+       startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image coordinates
+        id: meta
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          OWNER_LC="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          IMAGE="ghcr.io/${OWNER_LC}/${{ env.IMAGE_NAME }}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VER="${GITHUB_REF_NAME#v}"
+            echo "tags=${IMAGE}:${VER},${IMAGE}:latest" >> "$GITHUB_OUTPUT"
+            echo "primary=${IMAGE}:${VER}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tags=${IMAGE}:main" >> "$GITHUB_OUTPUT"
+            echo "primary=${IMAGE}:main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push (linux/amd64 · linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/demo/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      - name: B2 — pull published image and re-accept
+        run: |
+          set -euo pipefail
+          PRIMARY="${{ steps.meta.outputs.primary }}"
+          docker pull "$PRIMARY"
+          docker rm -f orgos-demo-b2 2>/dev/null || true
+          docker run -d --name orgos-demo-b2 -p 127.0.0.1:9470:9470 "$PRIMARY"
+          bash deploy/demo/acceptance.sh
+          docker rm -f orgos-demo-b2
+        env:
+          ORGOS_DEMO_WAIT_SEC: "120"
+
+      - name: Publish summary
+        run: |
+          echo "### Demo Docker published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`${{ steps.meta.outputs.primary }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Platforms: linux/amd64, linux/arm64" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verify locally: \`ORGOS_DEMO_IMAGE=${{ steps.meta.outputs.primary }} npm run demo:docker:verify-ghcr\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Set Package visibility to **Public** for anonymous pull (see deploy/demo/PUBLISH.md)" >> "$GITHUB_STEP_SUMMARY"
