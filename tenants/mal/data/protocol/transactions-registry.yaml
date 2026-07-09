@@ -1,0 +1,66 @@
+as_of: 2026-07-10
+transactions:
+  - transaction_id: TX-20260710-001
+    direction: outbound
+    our_org:
+      org_id: mal
+      org_uri: steward://tenant/mal
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/southwood
+    transaction_type: steward.contract.execution.notice
+    amount:
+      value: 85000
+      currency: JPY
+    refs:
+      contract_id: CTR-012
+    event_id: f01b63a7-9148-4254-9824-8c6ca5ad913f
+    recorded_at: 2026-07-09T22:59:43.163Z
+  - transaction_id: TX-20260710-002
+    direction: outbound
+    our_org:
+      org_id: mal
+      org_uri: steward://tenant/mal
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/southwood
+    transaction_type: steward.contract.execution.notice
+    amount:
+      value: 85000
+      currency: JPY
+    refs:
+      contract_id: CTR-012
+    event_id: 24413b17-4a5d-4f4c-abc0-fa483fb9df66
+    recorded_at: 2026-07-09T23:00:03.822Z
+  - transaction_id: TX-20260710-003
+    direction: outbound
+    our_org:
+      org_id: mal
+      org_uri: steward://tenant/mal
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/southwood
+    transaction_type: steward.contract.execution.notice
+    amount:
+      value: 85000
+      currency: JPY
+    refs:
+      contract_id: CTR-012
+    event_id: 8f853661-20dc-4c0d-b395-2b66b036f63e
+    recorded_at: 2026-07-09T23:00:09.768Z
+  - transaction_id: TX-20260710-004
+    direction: outbound
+    our_org:
+      org_id: mal
+      org_uri: steward://tenant/mal
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/southwood
+    transaction_type: steward.contract.execution.notice
+    amount:
+      value: 85000
+      currency: JPY
+    refs:
+      contract_id: CTR-012
+    event_id: 93a94fd0-337a-47d7-919b-e4b385bc7cf3
+    recorded_at: 2026-07-09T23:00:30.236Z
