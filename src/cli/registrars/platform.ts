@@ -10,7 +10,7 @@ import {
 import { runTenantScaffoldDocs } from "../../commands/tenant-scaffold-docs.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
 import { runPipelineDaily, runPipelineList, runPipelineWeekly } from "../../commands/pipeline.js";
-import { runTenantInitCommand, runTenantScaffoldData } from "../../commands/tenant.js";
+import { runTenantInitCommand, runTenantScaffoldData, runTenantAlignClassification } from "../../commands/tenant.js";
 import {
   runRegulationsList,
   runRegulationsEffective,
@@ -244,6 +244,17 @@ export function registerPlatformCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts: { tenant?: string; json?: boolean }) => runTenantScaffoldData(opts));
+
+  tenantCmd
+    .command("align-classification")
+    .description("Merge _template classification-registry resources/agents into tenant(s)")
+    .option("--tenant <id>", "Single tenant (default: ORGOS_TENANT)")
+    .option("--all", "All tenants with tenant.yaml")
+    .option("--dry-run", "Preview without writing")
+    .option("--json", "JSON output")
+    .action((opts: { tenant?: string; all?: boolean; dryRun?: boolean; json?: boolean }) =>
+      runTenantAlignClassification(opts)
+    );
 
   tenantCmd
     .command("scaffold-docs")
