@@ -10,7 +10,8 @@ import {
   workspaceConfigPath,
   isExternalWorkspace,
 } from "../lib/orgos-paths.js";
-import { listTenantIds, setTenantId } from "../lib/tenant.js";
+import { computeIntegrationsStatus } from "../lib/integrations-status.js";
+import { getTenantId, listTenantIds, setTenantId } from "../lib/tenant.js";
 import { STEWARD_CORE_DIR } from "../lib/steward-paths.js";
 import { runProdWireGate } from "../lib/protocol/prod-wire-gate.js";
 
@@ -78,6 +79,18 @@ function checkTenantTemplate(): DoctorCheck {
   };
 }
 
+function checkIntegrationsSetup(): DoctorCheck {
+  const tenant = getTenantId();
+  const report = computeIntegrationsStatus(tenant);
+  return {
+    id: "integrations_setup",
+    ok: true,
+    detail: report.setup_completed
+      ? `completed ${report.setup_completed_at ?? ""} · score ${report.score_pct}%`
+      : `WARN: not completed — run orgos tenant setup (score ${report.score_pct}%)`,
+  };
+}
+
 function checkWireConsoleDist(): DoctorCheck {
   const dist = join(getAppsDir(), "wire-console", "dist", "index.html");
   const ok = existsSync(dist);
@@ -133,6 +146,7 @@ export function runDoctor(opts: DoctorOptions = {}): void {
     checkWorkspace(),
     checkTenantTemplate(),
     checkWireConsoleDist(),
+    checkIntegrationsSetup(),
   ];
   const failed = checks.filter((c) => !c.ok);
 

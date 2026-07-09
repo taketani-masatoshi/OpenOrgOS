@@ -7,6 +7,19 @@
 
 ---
 
+## Phase TI-1 — テナント統合 · Secretary メール（2026-07）
+
+**正本:** [spec/tenant-integrations-requirements.md](spec/tenant-integrations-requirements.md)
+
+| ID | 内容 | 状態 |
+|----|------|:----:|
+| TI-1-1 | integrations schema · gitignore · classification | [x] |
+| TI-1-2 | `tenant setup` wizard · `integrations status` · doctor | [x] |
+| TI-1-3 | Setup Agent · correspondence send · Secretary 文書 | [x] |
+| TI-1-4 | テスト · validate · operator export | [x] |
+
+---
+
 ## Phase ORG-J — 組織 OS · 法域パック（2026-06）
 
 | ID | 内容 | 状態 |

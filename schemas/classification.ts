@@ -5,6 +5,7 @@ export const classificationLevel = z.enum(["L0", "L1", "L2", "L3"]);
 export const agentId = z.enum([
   "executive_steward",
   "secretary",
+  "setup",
   "finance",
   "contract",
   "property_rental",

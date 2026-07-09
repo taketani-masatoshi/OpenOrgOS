@@ -56,6 +56,12 @@ OpenOrgOS Core は **組織間（inter-org）通信のグローバルプロト�
 | Community ガバナンス · SaaS hosting | OS_Community · 各社 Implementation |
 | Hub 間リアルタイムレplication · Merkle 公開アンカー本番 | v2 backlog |
 
+### 2.4 OrgOS Implementation 付帯（Core 外 · 参照実装）
+
+| 領域 | 要件 ID | 備考 |
+|------|---------|------|
+| テナント統合（Secretary メール · setup · webhook） | FR-TI-* | [tenant-integrations-requirements.md](tenant-integrations-requirements.md) v1.0 |
+
 ---
 
 ## 3. アーキテクチャ — 3 境界（I1–I3）
@@ -400,6 +406,7 @@ flowchart TB
 | 文書 | 内容 |
 |------|------|
 | [company-events-requirements.md](company-events-requirements.md) | 組織**内部**イベント（Core 外） |
+| [tenant-integrations-requirements.md](tenant-integrations-requirements.md) | テナント統合 · Secretary メール · setup wizard |
 | [orgos-completion-plan.md](../org-os/orgos-completion-plan.md) | C1–C5 完成定義 |
 | [inter-org-operator-model.md](../org-os/inter-org-operator-model.md) | Operator モデル |
 | [witness-hub-requirements.md](../org-os/witness-hub-requirements.md) | Witness FR 一覧 |
@@ -418,3 +425,4 @@ flowchart TB
 | 1.4 | 2026-06-27 | deliver-pull E2E · スコア同期（82/100 · 452 tests · Core ~88%） |
 | 1.5 | 2026-06-27 | FR-EM-07 mesh v1 · `protocol mesh deliver` · 2-hop E2E · peer discover --suggest |
 | 1.6 | 2026-06-28 | 二重採点（チェックリスト/厳格）· [orgos-scoring-methodology.md](../org-os/orgos-scoring-methodology.md) · §6.2 更新 |
+| 1.7 | 2026-07-09 | §2.4 OrgOS Implementation 付帯 — [tenant-integrations-requirements.md](tenant-integrations-requirements.md) |

@@ -203,6 +203,8 @@ function writeSkeletonData(
   put("data/dependency-graph.yaml", skeletonDependencyGraph(id));
   put("data/hr/employees.yaml", "employees: []\n");
   seedExecutiveFromExamples(dataDir, options?.skipExisting, result);
+  seedIntegrationsFromExample(dest, options?.skipExisting, result);
+  seedExecutiveRecordsFromExample(dest, options?.skipExisting, result);
 
   put("data/finance/fixed-costs.yaml", "items: []\n");
   put("data/finance/payroll.yaml", "officer_compensation_annual: 0\n");
@@ -293,6 +295,46 @@ function seedExecutiveFromExamples(
       stakeholders: "stakeholders: []\n",
     };
     writeFile(target, empty[base] ?? "notes: |\n  skeleton\n");
+    result?.created.push(rel);
+  }
+}
+
+function seedIntegrationsFromExample(
+  dest: string,
+  skipExisting?: boolean,
+  result?: ScaffoldTenantDataResult
+): void {
+  const intDir = join(dest, "data", "integrations");
+  mkdirSync(intDir, { recursive: true });
+  const example = join(intDir, "integrations.yaml.example");
+  const target = join(intDir, "integrations.yaml");
+  const rel = "data/integrations/integrations.yaml";
+  if (skipExisting && existsSync(target)) {
+    result?.skipped.push(rel);
+    return;
+  }
+  if (existsSync(example)) {
+    cpSync(example, target);
+    result?.created.push(rel);
+  }
+}
+
+function seedExecutiveRecordsFromExample(
+  dest: string,
+  skipExisting?: boolean,
+  result?: ScaffoldTenantDataResult
+): void {
+  const recDir = join(dest, "records", "executive");
+  mkdirSync(recDir, { recursive: true });
+  const example = join(recDir, "mail-config.yaml.example");
+  const target = join(recDir, "mail-config.yaml");
+  const rel = "records/executive/mail-config.yaml";
+  if (skipExisting && existsSync(target)) {
+    result?.skipped.push(rel);
+    return;
+  }
+  if (existsSync(example)) {
+    cpSync(example, target);
     result?.created.push(rel);
   }
 }

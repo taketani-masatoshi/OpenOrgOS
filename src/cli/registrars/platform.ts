@@ -47,6 +47,18 @@ export function registerPlatformCommands(program: Command): void {
       runDoctor({ json: opts.json, wireProd: opts.wireProd, tenant: opts.tenant });
     });
 
+  const integrationsCmd = program
+    .command("integrations")
+    .description("Tenant integrations status (mail · webhooks · setup)");
+  integrationsCmd
+    .command("status")
+    .description("Show integrations readiness")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runIntegrationsStatus } = await import("../../commands/integrations.js");
+      runIntegrationsStatus({ json: opts.json });
+    });
+
   const workspaceCmd = program.command("workspace").description("OrgOS company workspace (tenants/)");
   workspaceCmd
     .command("init")
@@ -206,6 +218,25 @@ export function registerPlatformCommands(program: Command): void {
         wireConsole: opts.wireConsole,
       })
     );
+
+  tenantCmd
+    .command("setup")
+    .description("Interactive tenant integrations setup (mail · webhooks · executive YAML)")
+    .option("--answers <jsonPath>", "Non-interactive answers JSON file")
+    .option("--non-interactive", "Skip prompts (requires --answers)")
+    .option("--operator <id>", "Operator id for setup.completed_by")
+    .option("--skip-validate", "Skip validate after setup")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runTenantSetupCommand } = await import("../../commands/tenant-setup.js");
+      await runTenantSetupCommand({
+        answers: opts.answers,
+        nonInteractive: opts.nonInteractive,
+        operator: opts.operator,
+        skipValidate: opts.skipValidate,
+        json: opts.json,
+      });
+    });
 
   tenantCmd
     .command("scaffold-data")
@@ -388,12 +419,28 @@ export function registerPlatformCommands(program: Command): void {
     .option("-m, --month <YYYY-MM>", "Target month (monthly-close)")
     .option("--markdown", "Markdown output where supported")
     .option("-o, --output <filename>", "Save report under docs/reports/")
+    .option("--id <draftId>", "Draft ID (correspondence-send · slack-notify)")
+    .option("--dry-run", "Dry run (correspondence send skills)")
+    .option("--to <email>", "Recipient (correspondence-draft skill)")
+    .option("--subject <text>", "Subject (correspondence-draft skill)")
+    .option("--body <text>", "Body (correspondence-draft skill)")
+    .option("--channel <email|slack>", "Channel (correspondence-draft skill)")
+    .option("--slack-channel <name>", "Slack channel (correspondence-draft skill)")
+    .option("--answers <jsonPath>", "Answers JSON (tenant-integrations-setup skill)")
     .action((id, opts) =>
       runSkill(id, {
         days: opts.days ? parseInt(opts.days, 10) : undefined,
         month: opts.month,
         markdown: opts.markdown,
         output: opts.output,
+        id: opts.id,
+        dryRun: opts.dryRun,
+        to: opts.to,
+        subject: opts.subject,
+        body: opts.body,
+        channel: opts.channel,
+        slackChannel: opts.slackChannel,
+        answers: opts.answers,
       })
     );
 

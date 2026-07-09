@@ -121,6 +121,26 @@ resources:
     read_agents: [secretary, contract, property_rental, hospitality, finance, compliance]
     write_agents: [secretary, contract]
 
+  - id: RES-INTEGRATIONS
+    path: data/integrations/integrations.yaml
+    example_path: data/integrations/integrations.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: テナント統合 · webhook · setup 完了 stamp
+    read_agents: [secretary, operations, compliance]
+    write_agents: [operations]
+
+  - id: RES-EXEC-MAIL-CONFIG
+    path: records/executive/mail-config.yaml
+    example_path: records/executive/mail-config.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: Secretary メール SMTP（パスワードは env）
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
+
   - id: RES-EXEC-CORRESPONDENCE-DRAFTS
     path: docs/executive/correspondence-drafts/**
     level: L1

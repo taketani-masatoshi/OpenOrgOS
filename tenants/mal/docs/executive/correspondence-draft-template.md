@@ -10,7 +10,7 @@
 | # | やること | 状態 |
 |---|---------|------|
 | 1 | [Googleカレンダーに追加](#googleカレンダー) | ☐ |
-| 2 | [Gmail で下書きを開く](#gmail) → 確認して送信 | ☐ |
+| 2 | [Gmail で下書きを開く](#gmail) → 確認して送信 **または** `orgos secretary correspondence send`（承認後） | ☐ |
 | 3 | 送信後 `calendar.yaml` の `{EVT-ID}` を `confirmed` に更新 | ☐ |
 
 ---

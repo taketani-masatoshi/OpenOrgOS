@@ -1,0 +1,11 @@
+# Tenant integrations (L2 — copy to integrations.yaml)
+# Mail SMTP config: records/executive/mail-config.yaml · secrets via env
+#
+version: "1"
+setup:
+  completed_at: null
+  completed_by: null
+webhooks: []
+notes: |
+  Run: orgos tenant setup
+  Status: orgos integrations status

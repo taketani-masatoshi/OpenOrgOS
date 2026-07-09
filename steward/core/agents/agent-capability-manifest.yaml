@@ -31,11 +31,26 @@ agents:
       - schedule_management
       - one_on_one_prep
       - external_correspondence
+      - correspondence_draft
+      - correspondence_send
+      - slack_notify
     pulse_checks:
       - type: path_exists
         path: data/executive/
       - type: path_exists
         path: docs/executive/
+  - id: setup
+    summary_slug: setup
+    data_paths:
+      - data/integrations/
+    docs_paths: []
+    route_ids:
+      - tenant-setup
+    skills:
+      - tenant_integrations_setup
+    pulse_checks:
+      - type: path_exists
+        path: data/integrations/integrations.yaml.example
   - id: finance
     summary_slug: finance
     data_paths:

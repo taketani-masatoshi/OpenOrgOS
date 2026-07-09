@@ -50,7 +50,17 @@
 1. 連絡元を `external-contacts.yaml` と照合（`stakeholder_id` があれば `stakeholders.yaml` + プロフィール MD を参照）
 2. 依頼タイプを分類（日程 / 情報 / 業務 / 拒否）
 3. 拒否・ルート対象は [照会フォーマット](../steward/rules/folder_access_policy.md) で Executive へ
-4. 下書きを出力（自動送信しない）
+4. 下書きを出力（**自動送信しない**）
+5. CLI 送信が必要な場合は [correspondence_draft](correspondence_draft.md) → 人間 `org approval approve` → [correspondence_send](correspondence_send.md)
+
+```bash
+npm run orgos -- secretary correspondence draft --to "..." --subject "..." --body "..."
+npm run orgos -- org approval list --status pending_approval
+npm run orgos -- org approval approve --id APR-... --approver "CEO"
+npm run orgos -- secretary correspondence send --id DRAFT-...
+# gmail_compose モードのみ: compose URL 生成（送信は人間クリック）
+npm run orgos -- secretary mail compose-url --to "..." --subject "..." --body "..."
+```
 
 ## 禁止
 
