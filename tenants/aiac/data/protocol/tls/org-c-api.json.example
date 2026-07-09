@@ -1,9 +1,0 @@
-{
-  "ca_path": "records/protocol/trust-ca.pem",
-  "server_cert_path": "records/protocol/server.pem",
-  "server_key_path": "records/protocol/server.key",
-  "mtls_allowed_org_uris": [
-    "steward://tenant/mal",
-    "steward://tenant/southwood"
-  ]
-}
