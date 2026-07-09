@@ -110,6 +110,8 @@ npm run orgos -- alerts
 
 **目的:** 契約ライフサイクル（draft → executed → 更新・終了）。
 
+**組織間契約:** [inter-org-contract-workflow.md](inter-org-contract-workflow.md) — P2 まで相手テナントに `01-draft.md` を複製しない。
+
 | パス | 権限 |
 |------|------|
 | `data/contracts/CTR-*.yaml` | R/W |

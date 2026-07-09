@@ -11,6 +11,8 @@
 
 契約台帳（CTR-001〜014）のライフサイクル管理。**draft → executed → 更新/終了** を YAML と MD で追跡する。
 
+**組織間契約:** 起票〜すり合わせ（P0〜P2）は起票側テナントのみにドラフトを置く。相手側は `docs/io/inbox/`。正本: [steward/rules/inter-org-contract-workflow.md](../../rules/inter-org-contract-workflow.md)
+
 ---
 
 ## 目的

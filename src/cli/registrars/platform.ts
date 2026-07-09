@@ -5,14 +5,17 @@ import {
   runModulesCheck,
   runModulesCheckAll,
   runModulesActivate,
+  runModulesScaffoldDocs,
 } from "../../commands/modules.js";
+import { runTenantScaffoldDocs } from "../../commands/tenant-scaffold-docs.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
 import { runPipelineDaily, runPipelineList, runPipelineWeekly } from "../../commands/pipeline.js";
-import { runTenantInitCommand } from "../../commands/tenant.js";
+import { runTenantInitCommand, runTenantScaffoldData } from "../../commands/tenant.js";
 import {
   runRegulationsList,
   runRegulationsEffective,
   runRegulationsSeed,
+  runRegulationsInit,
 } from "../../commands/regulations.js";
 import { runStandardsList, runStandardsEnabled } from "../../commands/standards.js";
 import { runOpsDaily, runOpsP0 } from "../../commands/ops.js";
@@ -138,6 +141,19 @@ export function registerPlatformCommands(program: Command): void {
         json: opts.json,
       })
     );
+  modulesCmd
+    .command("scaffold-docs")
+    .description("Scaffold Zone B docs folders for enabled modules (modules.yaml)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--module <id>", "Single module id")
+    .option("--json", "JSON output")
+    .action((opts: { tenant?: string; module?: string; json?: boolean }) =>
+      runModulesScaffoldDocs({
+        tenant: opts.tenant,
+        moduleId: opts.module,
+        json: opts.json,
+      })
+    );
 
   const mapCmd = program.command("map").description("Logical → physical path map (tenant · framework)");
   mapCmd.command("list").description("List common logical paths for active tenant").action(runMapList);
@@ -188,6 +204,37 @@ export function registerPlatformCommands(program: Command): void {
         displayLanguage: opts.displayLanguage,
         legalSubdivision: opts.legalSubdivision,
         wireConsole: opts.wireConsole,
+      })
+    );
+
+  tenantCmd
+    .command("scaffold-data")
+    .description("Fill missing skeleton data/ YAML without overwriting existing files")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts: { tenant?: string; json?: boolean }) => runTenantScaffoldData(opts));
+
+  tenantCmd
+    .command("scaffold-docs")
+    .description("Scaffold document folders — Zone A (core) + Zone B (enabled modules)")
+    .option("--core-only", "Zone A only (all tenants)")
+    .option("--modules-only", "Zone B only (enabled modules)")
+    .option("--module <id>", "Single module for Zone B")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts: {
+      coreOnly?: boolean;
+      modulesOnly?: boolean;
+      module?: string;
+      tenant?: string;
+      json?: boolean;
+    }) =>
+      runTenantScaffoldDocs({
+        tenant: opts.tenant,
+        coreOnly: opts.coreOnly,
+        modulesOnly: opts.modulesOnly,
+        moduleId: opts.module,
+        json: opts.json,
       })
     );
 
@@ -294,15 +341,30 @@ export function registerPlatformCommands(program: Command): void {
   regulationsCmd.command("list").description("List catalog vs tenant regulations").action(runRegulationsList);
   regulationsCmd.command("effective").description("List effective regulation IDs").action(runRegulationsEffective);
   regulationsCmd
+    .command("init")
+    .description("Register all JP catalog regulations in regulations.yaml (default: disabled) and seed docs")
+    .option("--enable", "Set enabled: true (default: all disabled)")
+    .option("--no-seed", "Skip seeding docs/company/regulations/")
+    .option("--force", "Overwrite existing regulation MD files when seeding")
+    .action((opts) =>
+      runRegulationsInit({
+        enabled: opts.enable ?? false,
+        seed: opts.seed !== false,
+        force: opts.force,
+      })
+    );
+  regulationsCmd
     .command("seed")
-    .description("Copy effective regulation templates to docs/company/regulations/")
+    .description("Copy regulation templates to docs/company/regulations/")
     .option("--force", "Overwrite existing tenant docs")
     .option("--dry-run", "Print what would be seeded")
+    .option("--include-disabled", "Seed all tenant-listed regulations (including enabled: false)")
     .option("--id <regId>", "Seed single regulation (repeatable)", (v: string, prev: string[]) => [...prev, v], [])
     .action((opts) =>
       runRegulationsSeed({
         force: opts.force,
         dryRun: opts.dryRun,
+        includeDisabled: opts.includeDisabled,
         ids: opts.id?.length ? opts.id : undefined,
       })
     );

@@ -2,7 +2,7 @@
 
 **規程ID:** REG-006  
 **版:** v1.0（テンプレート）  
-**例示: 株式会社サンプル
+**例示: AIAC株式会社
 
 ---
 
@@ -21,7 +21,6 @@
 ---
 
 *テンプレ正本: steward/standards/regulations/ · 施行文: tenants/{id}/docs/company/regulations/*
-
 
 ---
 

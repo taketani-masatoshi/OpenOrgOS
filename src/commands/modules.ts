@@ -9,6 +9,7 @@ import {
   activateTenantModule,
   formatActivateModuleResult,
 } from "../lib/agent-workspace.js";
+import { scaffoldModuleExtensionDocs } from "../lib/tenant-document-zones.js";
 import { validateExtensibilityContracts } from "../lib/extensibility-contract.js";
 import {
   syncActiveContext,
@@ -118,6 +119,28 @@ export interface ModulesActivateOptions {
   json?: boolean;
 }
 
+export interface ModulesScaffoldDocsOptions {
+  tenant?: string;
+  moduleId?: string;
+  json?: boolean;
+}
+
+export function runModulesScaffoldDocs(opts: ModulesScaffoldDocsOptions = {}): void {
+  if (opts.tenant) setTenantId(opts.tenant);
+  const modules = scaffoldModuleExtensionDocs(opts.moduleId);
+  if (opts.json) {
+    console.log(JSON.stringify({ modules }, null, 2));
+    return;
+  }
+  console.log("✓ Module extension docs scaffolded (Zone B)");
+  if (modules.created.length) {
+    console.log(`  created: ${modules.created.length}`);
+    for (const p of modules.created) console.log(`    + ${p}`);
+  } else {
+    console.log("  (no new paths — enable modules in modules.yaml or pass module id)");
+  }
+}
+
 export function runModulesActivate(moduleId: string, opts: ModulesActivateOptions = {}): void {
   if (opts.tenant) setTenantId(opts.tenant);
   const result = activateTenantModule(moduleId, {
@@ -125,9 +148,13 @@ export function runModulesActivate(moduleId: string, opts: ModulesActivateOption
     skipIso: opts.skipIso,
     skipControls: opts.skipControls,
   });
+  const docs = scaffoldModuleExtensionDocs(moduleId);
   if (opts.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify({ ...result, docsScaffold: docs }, null, 2));
     return;
   }
   console.log(formatActivateModuleResult(result));
+  if (docs.created.length) {
+    console.log(`  extension docs created: ${docs.created.join(", ")}`);
+  }
 }

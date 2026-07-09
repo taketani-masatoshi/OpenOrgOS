@@ -1,0 +1,30 @@
+id: CTR-015
+name: "業務委託契約（AIAC・ソフトウェア開発）"
+counterparty: "AIAC株式会社"
+counterparty_type: company
+type: outsourcing
+status: draft
+start_date: "2026-07-09"
+auto_renewal: false
+owner: "竹谷昌敏"
+scope_summary: |
+  ソフトウェア開発（設計・実装・テスト）。準委任。
+  委託者=当社（Southwood）、受託者=AIAC株式会社。
+compensation:
+  type: fixed
+  amount: 100000
+  tax_included: false
+  payment_terms: "検収完了後30日以内に銀行振込。適格請求書提出。※税抜/税込はCEO確認。"
+documents:
+  draft: "docs/contracts/CTR-015/01-draft.md"
+monthly_cost: 0
+risk:
+  risk_level: high
+  notes: |
+    利益相反: 甲乙代表取締役が同一（竹谷昌敏）。REG-006 手続要。
+    報酬10万円と開発スコープの妥当性要確認。SOW-015 未確定。
+notes: |
+  組織間契約。起票側=southwood（委託者）。workflow phase=P0 drafting。
+  相手 aiac には P2 まで docs/contracts を作らない（inbox のみ）。
+  ガイドレール: steward/rules/inter-org-contract-workflow.md
+  Legal Mission: MS-20260709-001。締結前に CEO 確認・利益相反承認要。

@@ -3,7 +3,7 @@
  * Standalone OrgOS demo steps — shared by hk-demo and mal scripts.
  */
 
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../../src/lib/utils.js";
@@ -30,12 +30,23 @@ export interface StandaloneOrgDemoResult {
 }
 
 export function resetStandaloneScratch(): void {
+  const orgDir = join(getDataDir(), "org");
+  const operatorsPath = join(orgDir, "operators.yaml");
+  const operatorsBackup = existsSync(operatorsPath)
+    ? readFileSync(operatorsPath, "utf-8")
+    : undefined;
+
   for (const base of [
     join(getDataDir(), "protocol"),
     join(getDataDir(), "org"),
     join(getDocsDir(), "protocol"),
   ]) {
     if (existsSync(base)) rmSync(base, { recursive: true, force: true });
+  }
+
+  if (operatorsBackup) {
+    mkdirSync(orgDir, { recursive: true });
+    writeFileSync(operatorsPath, operatorsBackup, "utf-8");
   }
 }
 

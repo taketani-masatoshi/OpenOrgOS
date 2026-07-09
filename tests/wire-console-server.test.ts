@@ -52,10 +52,12 @@ describe("wire console server", () => {
     webauthnOrigin: process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN,
     oidcJwksUrl: process.env.WIRE_CONSOLE_OIDC_JWKS_URL,
     oidcAllowHs256: process.env.WIRE_CONSOLE_OIDC_ALLOW_HS256,
+    orgosCsrf: process.env.ORGOS_CSRF,
   };
 
   beforeEach(() => {
     delete process.env.WIRE_CONSOLE_INCLUDE_TEST_TENANTS;
+    process.env.ORGOS_CSRF = "0";
     resetWireConsoleTestTenant();
     resetOidcJwksForTests();
   });
@@ -86,6 +88,7 @@ describe("wire console server", () => {
       WIRE_CONSOLE_WEBAUTHN_ORIGIN: envSnapshot.webauthnOrigin,
       WIRE_CONSOLE_OIDC_JWKS_URL: envSnapshot.oidcJwksUrl,
       WIRE_CONSOLE_OIDC_ALLOW_HS256: envSnapshot.oidcAllowHs256,
+      ORGOS_CSRF: envSnapshot.orgosCsrf,
     };
     for (const [key, val] of Object.entries(restore)) {
       if (val === undefined) delete process.env[key];
