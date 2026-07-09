@@ -15,7 +15,9 @@ import {
   runCorrespondenceSend,
   runSecretaryMailList,
   runSecretaryMailConfig,
+  runSecretaryMailSetupGuide,
 } from "../../commands/secretary-correspondence.js";
+import { runContactsResolve, runContactsRegister } from "../../commands/secretary-contacts.js";
 import { buildGmailComposeUrl } from "../../lib/mail-compose-url.js";
 import { runStatus } from "../../commands/status.js";
 
@@ -187,6 +189,68 @@ export function registerExecutiveCommands(program: Command): void {
     .description("Show mail config status (L2 secrets via env)")
     .option("--json", "JSON output")
     .action((opts) => runSecretaryMailConfig(opts));
+
+  mailCmd
+    .command("setup-guide")
+    .description("Mail/Slack setup checklist — blocks send until resolved")
+    .option("--json", "JSON output")
+    .action((opts) => runSecretaryMailSetupGuide(opts));
+
+  const contactsCmd = secretaryCmd
+    .command("contacts")
+    .description("Contact registry lookup and update (Secretary · no guessing)");
+
+  contactsCmd
+    .command("resolve")
+    .description("Resolve person/org/department against self + counterparty + peer tenant DBs")
+    .option("--name <text>", "Person name (partial match)")
+    .option("--org <text>", "Organization name (partial match)")
+    .option("--department <text>", "Department or role (partial match)")
+    .option("--ext-id <id>", "external-contacts id (EXT-...)")
+    .option("--stakeholder-id <id>", "stakeholder id (STK-...)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runContactsResolve({
+        name: opts.name,
+        org: opts.org,
+        department: opts.department,
+        extId: opts.extId,
+        stakeholderId: opts.stakeholderId,
+        json: opts.json,
+      })
+    );
+
+  contactsCmd
+    .command("register")
+    .description("Register or update contact after human disclosure (external-contacts + stakeholders)")
+    .requiredOption("--name <text>", "Contact person name")
+    .option("--email <email>", "Email address")
+    .option("--org <text>", "Organization")
+    .option("--department <text>", "Department")
+    .option("--role <text>", "Role / title")
+    .option("--relationship <text>", "Relationship label")
+    .option("--ext-id <id>", "Update existing EXT-* (optional)")
+    .option("--stakeholder-id <id>", "Link STK-* and sync representative_contact")
+    .option("--notes <text>", "Notes")
+    .option("--source <text>", "Registration source tag", "human_disclosure")
+    .option("--dry-run", "Preview existing matches without writing")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runContactsRegister({
+        name: opts.name,
+        email: opts.email,
+        org: opts.org,
+        department: opts.department,
+        role: opts.role,
+        relationship: opts.relationship,
+        extId: opts.extId,
+        stakeholderId: opts.stakeholderId,
+        notes: opts.notes,
+        source: opts.source,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
 
   mailCmd
     .command("compose-url")

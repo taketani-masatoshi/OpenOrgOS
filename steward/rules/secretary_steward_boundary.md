@@ -77,6 +77,10 @@ flowchart LR
 | `docs/reports/executive-notes/` | **サニタイズ済みメモのみ**（財務詳細・契約金額なし） |
 | `docs/company/executive-remaining-tasks.md` | Read（重複管理しない） |
 | `data/hr/employees.yaml` | Read（1-on-1 紐付け） |
+| `data/company.yaml` | Read（自社代表・役員） |
+| `data/protocol/peers.yaml` | Read（peer 台帳 · 照合入口） |
+| `tenants/{peer}/data/company.yaml` | Read（**L1 のみ** · peers 登録相手 · [secretary-contact-registry.md](secretary-contact-registry.md)） |
+| `tenants/{peer}/data/executive/external-contacts.yaml` | Read（**L1 のみ** · 同上） |
 
 ### Secretary が読めないもの
 
@@ -87,6 +91,9 @@ flowchart LR
 | `data/operations/*-secrets.yaml` | L2 機密 |
 | `docs/contracts/**` 本文 | 契約詳細 |
 | ゲスト PII · `**/records/**` | 個情 |
+| 相手 tenant の `stakeholders.yaml` · `finance/**` · `contracts/**` | peer 横断でも **L2/L1 契約詳細は不可** |
+| peer 未登録の `tenants/{id}/**` | 横断読取 **禁止** |
+| `ORGOS_TENANT` を相手 ID に切替えた総参照 | Secretary 権限外（Operator 別枠 · 秘書業務では使わない） |
 
 ### Executive Steward が読めないもの
 
@@ -104,6 +111,7 @@ flowchart LR
 3. **日程調整メール** → Secretary が下書き。契約条件の交渉は Contract へ委譲。
 4. **L2 秘密・ゲスト PII** → いかなる出力にも含めない。
 5. **external_visible: false** の予定は社外チャットに露出しない。
+6. **peer 横断** — `peers.yaml` 登録相手の L1 連絡先のみ。相手 tenant を `ORGOS_TENANT` 切替で総参照しない。日常は自社 `external-contacts.yaml` を優先。
 
 ---
 

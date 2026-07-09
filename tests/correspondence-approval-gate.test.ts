@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
+import { getExecutiveRecordsDir, getMailConfigPath } from "../src/lib/correspondence/paths.js";
 import {
   createCorrespondenceDraft,
   loadCorrespondenceDraft,
@@ -12,10 +14,34 @@ import {
   sendApprovedCorrespondence,
   CorrespondenceApprovalGateError,
 } from "../src/lib/correspondence/send-gate.js";
+import { CorrespondenceMailSetupError } from "../src/lib/correspondence/mail-setup-readiness.js";
 import {
   approveOrgApproval,
 } from "../src/lib/org/approval/index.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+
+function seedMailSetupForTests(): void {
+  const companyPath = join(getDataDir(), "company.yaml");
+  const company = existsSync(companyPath)
+    ? (YAML.parse(readFileSync(companyPath, "utf-8")) as Record<string, unknown>)
+    : { name: "Test Co" };
+  company.public_disclosure = { representative_email: "rep@test.co.jp" };
+  writeFileSync(companyPath, YAML.stringify(company), "utf-8");
+
+  mkdirSync(getExecutiveRecordsDir(), { recursive: true });
+  writeFileSync(
+    getMailConfigPath(),
+    YAML.stringify({
+      provider: "smtp",
+      from: { name: "Test Co", email: "rep@test.co.jp" },
+      smtp: { host: "smtp.test.local", port: 587, secure: false },
+      inbox: { sync: "stub" },
+    }),
+    "utf-8"
+  );
+  process.env.ORGOS_SMTP_USER = "test-user";
+  process.env.ORGOS_SMTP_PASSWORD = "test-pass";
+}
 
 function cleanup(): void {
   for (const p of [
@@ -25,9 +51,12 @@ function cleanup(): void {
     join(getDocsDir(), "executive", "correspondence-drafts"),
     join(getDocsDir(), "company", "events"),
     join(getDocsDir(), "company", "artifacts"),
+    getExecutiveRecordsDir(),
   ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
+  delete process.env.ORGOS_SMTP_USER;
+  delete process.env.ORGOS_SMTP_PASSWORD;
 }
 
 describe("correspondence approval gate", () => {
@@ -56,7 +85,26 @@ describe("correspondence approval gate", () => {
     ).rejects.toThrow(/not approved|human approval required/i);
   });
 
-  it("allows send after org approval approve", async () => {
+  it("blocks send without mail setup even when approved", async () => {
+    const { draft, approvalId } = createCorrespondenceDraft({
+      channel: "email",
+      to: "partner@example.com",
+      subject: "Setup gate",
+      body: "Body",
+      createdBy: "secretary",
+    });
+    approveOrgApproval({
+      approvalId: approvalId!,
+      approverId: "段燕燕",
+      operatorId: "ceo",
+    });
+    await expect(
+      sendApprovedCorrespondence({ draftId: draft.draft_id, operatorId: "ceo" })
+    ).rejects.toThrow(CorrespondenceMailSetupError);
+  });
+
+  it("allows send after org approval approve and mail setup", async () => {
+    seedMailSetupForTests();
     const { draft, approvalId } = createCorrespondenceDraft({
       channel: "email",
       to: "partner@example.com",

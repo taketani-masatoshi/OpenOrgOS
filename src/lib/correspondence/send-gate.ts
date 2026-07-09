@@ -7,6 +7,7 @@ import {
 } from "./draft.js";
 import { sendCorrespondenceEmail } from "./mail-send.js";
 import { sendSlackNotification } from "./slack-send.js";
+import { assertCorrespondenceMailSetupReady } from "./mail-setup-readiness.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
 import { currentDate } from "../utils.js";
 
@@ -88,6 +89,10 @@ export async function sendApprovedCorrespondence(opts: {
 }): Promise<SendApprovedCorrespondenceResult> {
   let draft = syncDraftApprovedFromRegistry(opts.draftId);
   assertCorrespondenceApproved(draft);
+
+  if (!opts.dryRun) {
+    assertCorrespondenceMailSetupReady(draft.channel);
+  }
 
   let sendResult: SendApprovedCorrespondenceResult["sendResult"];
   if (draft.channel === "email") {

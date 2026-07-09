@@ -38,11 +38,15 @@ npm run orgos -- skills run correspondence-draft \
 
 ## ワークフロー
 
-1. Secretary が下書き + `proposeOrgApproval`（`pending_approval`）
-2. 人間が `org approval approve --id APR-... --approver "CEO"`
-3. `correspondence_send` / `slack_notify` で送信（Secretary CLI · 承認済みのみ）
+1. **宛先照合** — `external-contacts.yaml` / `stakeholders.yaml`。未登録なら下書きを作らず「把握していません」と報告
+2. Secretary が下書き + `proposeOrgApproval`（`pending_approval`）
+3. 人間が `org approval approve --id APR-... --approver "CEO"`
+4. `correspondence_send` / `slack_notify` で送信（Secretary CLI · 承認済みのみ）
+
+`--contact-ref EXT-...` 使用時は正本の `email` を `--to` に反映する。人間が新アドレスを開示した場合は **先に正本を更新** してから下書きを作成する。
 
 ## 禁止
 
 - 承認前の `correspondence send`
+- **正本にないメールアドレスへの宛先設定**（推測・捏造）
 - 財務 YAML 参照 · L2 値の tracked MD 転記
