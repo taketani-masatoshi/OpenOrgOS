@@ -34,17 +34,17 @@
 |----|-------|---------|:----:|-----|
 | **O1-1** | O1 | JP module tier 昇格 | ○ | 3 module → production_ready · 28/28 |
 | **O1-2** | O1 | `modules check --all` green | ○ | validate CI |
-| **O1-3** | O1 | IF 軸 98+ 確認 | ○ | `status --orgos` IF ≥ 98 |
+| **O1-3** | O1 | IF 軸 98+ 確認 | ✅ | `status --orgos` IF ≥ 98 · 100% production → 99 |
 | **O2-1** | O2 | standalone 本番証跡 script | ○ | `scripts/standalone-prod-evidence.sh` |
 | **O2-2** | O2 | outbox permissions 本番ゲート | ○ | `STEWARD_ENFORCE_OUTBOX_PERMISSIONS` test |
 | **O2-3** | O2 | standalone strict cap 準備 | △ | runbook · 7日 uptime 後 cap PR |
 | **O3-1** | O3 | audit-bridge readiness check | ○ | orgos-readiness チェック追加 |
 | **O3-2** | O3 | witness emit 率チェック | △ | strict form 準備 |
 | **O3-3** | O3 | form cap governance doc | △ | steering 判断待ち |
-| **O4-1** | O4 | community readiness 拡張 | ○ | wire pilot checks + score |
-| **O4-2** | O4 | community check-sla CI | ○ | validate.yml 日次相当 |
-| **O4-3** | O4 | OS_Community C4 backlog | ○ | [c4-community-epic-2026.md](c4-community-epic-2026.md) Epic 起票 |
-| **O4-4** | O4 | committee 法域レジストリ UI | ○ | OS_Community · 別 WO |
+| **O4-1** | O4 | community readiness 拡張 | ✅ | dynamic cap 95/98/99 · integration flags |
+| **O4-2** | O4 | community check-sla CI | ✅ | validate.yml community-protocol job |
+| **O4-3** | O4 | OS_Community C4 backlog | ✅ | [c4-community-epic-2026.md](c4-community-epic-2026.md) Epic 起票 |
+| **O4-4** | O4 | committee 法域レジストリ UI | ✅ | OS_Community `/protocol/jurisdiction` · discover API |
 
 ---
 

@@ -19,6 +19,8 @@ const MAL_PROTOCOL_FILES = [
 const PRODUCTION_ARTIFACTS = [
   "deploy/mal-pilot/systemd/steward-protocol-relay@.service",
   "deploy/mal-pilot/systemd/steward-wire-gateway@.service",
+  "deploy/mal-pilot/systemd/steward-hub-signing-rotate@.timer",
+  "deploy/mal-pilot/systemd/steward-hub-signing-rotate@.service",
   "deploy/mal-pilot/env/wire-gateway-mal.env.example",
   "scripts/install-mal-wire-systemd.sh",
   "scripts/setup-mal-wire-operator.sh",

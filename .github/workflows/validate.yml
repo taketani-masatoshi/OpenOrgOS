@@ -164,3 +164,21 @@ jobs:
           tests/protocol-witness-integration.test.ts
       - run: docker compose -f deploy/wire-gateway/docker-compose.yaml config
       - run: ORGOS_STRICT_TRANSPORT=1 npm run validate:protocol:tenants
+  community-protocol:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run orgos -- protocol community operators-validate
+      - run: npm run orgos -- protocol community check-sla
+      - run: npm run orgos -- protocol community export
+      - run: >
+          npm test --
+          tests/trusted-operators.test.ts
+          tests/community-readiness.test.ts
+          tests/eco-production-evidence.test.ts

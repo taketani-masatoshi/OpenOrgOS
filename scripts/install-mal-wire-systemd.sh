@@ -18,11 +18,15 @@ fi
 
 cp "$ROOT/deploy/mal-pilot/systemd/steward-wire-gateway@.service" /etc/systemd/system/
 cp "$ROOT/deploy/mal-pilot/systemd/steward-protocol-relay@.service" /etc/systemd/system/
+cp "$ROOT/deploy/mal-pilot/systemd/steward-hub-signing-rotate@.service" /etc/systemd/system/
+cp "$ROOT/deploy/mal-pilot/systemd/steward-hub-signing-rotate@.timer" /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable "steward-wire-gateway@${TENANT}"
 systemctl enable "steward-protocol-relay@${TENANT}"
+systemctl enable "steward-hub-signing-rotate@${TENANT}.timer"
+systemctl start "steward-hub-signing-rotate@${TENANT}.timer" || true
 systemctl restart "steward-wire-gateway@${TENANT}"
 systemctl restart "steward-protocol-relay@${TENANT}"
 
-echo "✓ systemd enabled: steward-wire-gateway@${TENANT}, steward-protocol-relay@${TENANT}"
+echo "✓ systemd enabled: steward-wire-gateway@${TENANT}, steward-protocol-relay@${TENANT}, steward-hub-signing-rotate@${TENANT}.timer"
 systemctl --no-pager status "steward-wire-gateway@${TENANT}" || true

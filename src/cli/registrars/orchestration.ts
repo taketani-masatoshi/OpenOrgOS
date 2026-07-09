@@ -98,6 +98,7 @@ import {
   runProtocolCommunityGovernanceSubmit,
   runProtocolCommunityGovernanceDecide,
   runProtocolCommunityReadiness,
+  runProtocolCommunityExport,
   runProtocolWitnessTrustRevoke,
   runProtocolTlsRotate,
   runProtocolTlsInitProposal3,
@@ -1330,9 +1331,14 @@ export function registerOrchestrationCommands(program: Command): void {
     });
   protocolCommunityCmd
     .command("readiness")
-    .description("Steward-side C4 readiness score (max 80)")
+    .description("Steward-side C4 readiness score")
     .option("--json", "JSON output")
     .action((opts) => runProtocolCommunityReadiness({ json: opts.json }));
+  protocolCommunityCmd
+    .command("export")
+    .description("Export community read bundle to publish/protocol/")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolCommunityExport({ json: opts.json }));
 
   protocolCmd
     .command("approvers")

@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-07-09T23:25:51.099Z",
+  "ok": true,
+  "policy": {
+    "max_hours": 24,
+    "escalation_hours": 4
+  },
+  "overdue": [],
+  "active_operators": 2,
+  "pending_governance": 0
+}

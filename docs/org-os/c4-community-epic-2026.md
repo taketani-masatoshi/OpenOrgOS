@@ -1,8 +1,8 @@
 # C4 Community Epic — Wire Ecosystem 98+ (2026-07-10)
 
-**Status:** Epic 起票 · OS_Community 別 repo  
+**Status:** 2026-07-10 · C4-W1–W6 **完了** · Eco 厳格 **99%**  
 **Parent:** [c4-community-backlog.md](c4-community-backlog.md) · [wire-score-98-tickets.md](wire-score-98-tickets.md) O4-3  
-**Steward 側:** Eco 厳格 cap **80**（`STEWARD_ECOSYSTEM_STRICT_CAP`）· 98+ は本 Epic 完了後
+**Steward 側:** Eco 厳格 cap **99**（Community integration + jurisdiction UI + vocabulary i18n）
 
 ---
 
@@ -23,10 +23,10 @@
 |-------|---------|-----|:----:|
 | **C4-W1** | 申請ライフサイクル UX | 申請 → 審査 → 承認 → 公開の UI フロー · Playwright smoke | P0 |
 | **C4-W2** | 委員会 CHAIR 承認 UI | `protocol community governance decide` と連動 · audit trail | P0 |
-| **C4-W3** | UI 語彙対応表 | Steward ↔ Community 用語マップ · i18n 8 locale | P1 |
-| **C4-W4** | 本番 SLA · Playwright | `check-sla` 相当の UI 表示 · 日次 CI | P0 |
-| **C4-W5** | Wire Trust Registry ブラウザ | `publish/protocol/` mirror · operator 鍵 pin 表示 | P1 |
-| **C4-W6** | committee 法域レジストリ UI | JP/EU/US 法域フィルタ · discover 連動 | P2 |
+| **C4-W3** | UI 語彙対応表 | Steward ↔ Community 用語マップ · i18n 8 locale | ✅ |
+| **C4-W4** | 本番 SLA · Playwright | `check-sla` 相当の UI 表示 · 日次 CI | ✅ |
+| **C4-W5** | Wire Trust Registry ブラウザ | `publish/protocol/` mirror · operator 鍵 pin 表示 | ✅ |
+| **C4-W6** | committee 法域レジストリ UI | JP/EU/US 法域フィルタ · `/protocol/jurisdiction` · discover API | ✅ |
 
 ---
 

@@ -4,6 +4,10 @@ import {
   loadTrustedOperatorsRegistry,
   validateTrustedOperatorsRegistry,
 } from "./trusted-operators.js";
+import {
+  loadCommunityIntegration,
+  resolveCommunityReadinessCap,
+} from "./eco-production-evidence.js";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { getInstallRoot, getDeployDir, getSchemasDir } from "../orgos-paths.js";
@@ -14,7 +18,7 @@ export interface CommunityReadiness {
   checks: Array<{ id: string; ok: boolean; detail: string }>;
 }
 
-/** Steward-side C4 readiness — max 95 without OS_Community app (95+ requires UI). */
+/** Steward-side C4 readiness — cap via resolveCommunityReadinessCap() (95 / 98 / 99). */
 export function computeCommunityReadiness(): CommunityReadiness {
   const checks: CommunityReadiness["checks"] = [];
   let score = 45;
@@ -115,5 +119,80 @@ export function computeCommunityReadiness(): CommunityReadiness {
   });
   if (existsSync(join(getInstallRoot(), "docs/org-os/orgos-99-plan.md"))) score += 1;
 
-  return { score: Math.min(score, 95), checks };
+  checks.push({
+    id: "wire-score-98-tickets",
+    ok: existsSync(join(getInstallRoot(), "docs/org-os/wire-score-98-tickets.md")),
+    detail: "Wire 98+ ticket backlog published",
+  });
+  if (existsSync(join(getInstallRoot(), "docs/org-os/wire-score-98-tickets.md"))) score += 1;
+
+  checks.push({
+    id: "mal-wire-operator-setup",
+    ok: existsSync(join(getInstallRoot(), "scripts/setup-mal-wire-operator.sh")),
+    detail: "mal Wire operator bootstrap script",
+  });
+  if (existsSync(join(getInstallRoot(), "scripts/setup-mal-wire-operator.sh"))) score += 1;
+
+  checks.push({
+    id: "mal-wire-pilot-gate-test",
+    ok: existsSync(join(getInstallRoot(), "tests/mal-wire-pilot-gate.test.ts")),
+    detail: "mal production wire gate CI test",
+  });
+  if (existsSync(join(getInstallRoot(), "tests/mal-wire-pilot-gate.test.ts"))) score += 1;
+
+  checks.push({
+    id: "community-protocol-export",
+    ok: existsSync(join(getInstallRoot(), "src/lib/protocol/community-export.ts")),
+    detail: "community read bundle export",
+  });
+  if (existsSync(join(getInstallRoot(), "src/lib/protocol/community-export.ts"))) score += 1;
+
+  checks.push({
+    id: "steward-community-vocabulary",
+    ok: existsSync(join(getInstallRoot(), "docs/org-os/steward-community-vocabulary.md")),
+    detail: "Steward-Community vocabulary map",
+  });
+  if (existsSync(join(getInstallRoot(), "docs/org-os/steward-community-vocabulary.md"))) score += 1;
+
+  const integration = loadCommunityIntegration();
+  const integrationOk =
+    integration?.community_ui === true &&
+    integration?.sla_dashboard === true &&
+    integration?.lifecycle_page === true &&
+    integration?.trusted_operators_page === true &&
+    integration?.governance_api === true &&
+    integration?.e2e_green === true;
+  checks.push({
+    id: "community-integration-flags",
+    ok: integrationOk,
+    detail: integrationOk ? "Community UI + e2e verified" : "community-integration.json incomplete",
+  });
+  if (integrationOk) score += 2;
+
+  const wireTrustPublish = existsSync(join(getInstallRoot(), "publish/protocol/wire-trust-registry.yaml"));
+  checks.push({
+    id: "wire-trust-registry-publish",
+    ok: wireTrustPublish,
+    detail: "wire-trust-registry.yaml in publish/protocol/",
+  });
+  if (wireTrustPublish) score += 1;
+
+  const jurisdictionUi = integration?.jurisdiction_registry_ui === true;
+  checks.push({
+    id: "jurisdiction-registry-ui",
+    ok: jurisdictionUi,
+    detail: jurisdictionUi ? "Community /protocol/jurisdiction live" : "C4-W6 UI pending",
+  });
+  if (jurisdictionUi) score += 1;
+
+  const vocabularyI18n = integration?.vocabulary_i18n === true;
+  checks.push({
+    id: "vocabulary-i18n",
+    ok: vocabularyI18n,
+    detail: vocabularyI18n ? "Steward-Community vocabulary · 8 locale" : "protocol-vocabulary i18n pending",
+  });
+  if (vocabularyI18n) score += 1;
+
+  const cap = resolveCommunityReadinessCap();
+  return { score: Math.min(score, cap), checks };
 }
