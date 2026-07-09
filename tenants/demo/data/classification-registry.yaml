@@ -1,27 +1,13 @@
 version: "1"
-as_of: "2026-06-08"
-
-levels:
-  L0:
-    label: 公開
-    description: 公開情報
-    export_allowed: true
-  L1:
-    label: 社内
-    description: 社内情報
-    export_allowed: conditional
-  L2:
-    label: 機密
-    description: 機密情報
-    export_allowed: false
-  L3:
-    label: 禁止出力
-    description: L2 転記禁止
-    export_allowed: false
-
+as_of: 2026-07-10
+levels: {}
 agents:
   executive_steward:
     label: Executive Steward
+    max_level: L2
+    output_max_level: L1
+  secretary:
+    label: Secretary
     max_level: L2
     output_max_level: L1
   finance:
@@ -32,5 +18,124 @@ agents:
     label: Contract
     max_level: L1
     output_max_level: L1
-
-resources: []
+  compliance:
+    label: Compliance
+    max_level: L2
+    output_max_level: L1
+resources:
+  - id: RES-BANK-ACCOUNTS
+    path: data/finance/bank-accounts.yaml
+    example_path: data/finance/bank-accounts.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 銀行口座
+    read_agents:
+      - finance
+      - compliance
+      - secretary
+    write_agents:
+      - finance
+  - id: RES-EXEC-CALENDAR
+    path: data/executive/calendar.yaml
+    example_path: data/executive/calendar.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社長カレンダー
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
+  - id: RES-EXEC-TASKS
+    path: data/executive/tasks.yaml
+    example_path: data/executive/tasks.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社長タスク
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
+  - id: RES-EXEC-ONE-ON-ONES
+    path: data/executive/one-on-ones.yaml
+    example_path: data/executive/one-on-ones.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 1-on-1 レジストリ
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
+  - id: RES-EXEC-EXTERNAL-CONTACTS
+    path: data/executive/external-contacts.yaml
+    example_path: data/executive/external-contacts.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社外連絡先
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
+  - id: RES-STAKEHOLDERS
+    path: data/executive/stakeholders.yaml
+    example_path: data/executive/stakeholders.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 利害関係者
+    read_agents:
+      - secretary
+      - contract
+      - compliance
+    write_agents:
+      - secretary
+      - contract
+  - id: RES-INTEGRATIONS
+    path: data/integrations/integrations.yaml
+    example_path: data/integrations/integrations.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: テナント統合設定 · webhook · setup 完了 stamp
+    read_agents:
+      - secretary
+      - operations
+      - compliance
+    write_agents:
+      - operations
+  - id: RES-EXEC-MAIL-CONFIG
+    path: records/executive/mail-config.yaml
+    example_path: records/executive/mail-config.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: Secretary メール SMTP 設定（パスワードは env）
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
+  - id: RES-PROTOCOL-PEERS
+    path: data/protocol/peers.yaml
+    example_path: data/protocol/peers.yaml.example
+    level: L1
+    git: track
+    ai_context: on_demand
+    description: protocol peer 台帳（Secretary 照合 org_uri gate）
+    read_agents:
+      - secretary
+      - compliance
+      - contract
+    write_agents:
+      - compliance
+rules:
+  - id: RULE-GITIGNORE
+    text: git:ignore の resource は .gitignore にパターン登録必須。
