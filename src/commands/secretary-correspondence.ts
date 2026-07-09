@@ -11,8 +11,13 @@ import {
   loadMailConfig,
   resolveMailConfig,
 } from "../lib/correspondence/mail-config.js";
+import {
+  assessMailSetupReadiness,
+  CorrespondenceMailSetupError,
+} from "../lib/correspondence/mail-setup-readiness.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 import { getCliOperatorContext } from "../lib/console-auth/cli-operator.js";
+import { resolveContactRefForDraft } from "./secretary-contacts.js";
 
 export interface CorrespondenceDraftCliOptions {
   channel?: string;
@@ -45,11 +50,19 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
   const operator =
     opts.operator ?? getCliOperatorContext()?.record.operator_id ?? "secretary";
 
+  const { to: resolvedTo, warnings } = resolveContactRefForDraft({
+    contactRef: opts.contactRef,
+    to: opts.to,
+  });
+  for (const w of warnings) {
+    console.warn(`⚠ ${w}`);
+  }
+
   const { draft, approvalId } = createCorrespondenceDraft({
     channel,
     body,
     createdBy: operator,
-    to: opts.to,
+    to: resolvedTo,
     cc: opts.cc,
     subject: opts.subject,
     slackChannel: opts.slackChannel,
@@ -71,6 +84,15 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
     console.log(`  next: org approval approve --id ${approvalId} --approver "<name>"`);
   }
   console.log(`  path: docs/executive/correspondence-drafts/${draft.draft_id}.yaml`);
+
+  if (channel === "email") {
+    const readiness = assessMailSetupReadiness("email");
+    if (!readiness.ready) {
+      console.log("");
+      console.log("⚠ メール初期設定が未完了です。実送信前に:");
+      console.log("  orgos secretary mail setup-guide");
+    }
+  }
 }
 
 export interface CorrespondenceListCliOptions {
@@ -156,6 +178,12 @@ export async function runCorrespondenceSend(opts: CorrespondenceSendCliOptions):
       console.log(`  artifact: ${result.sendResult.artifactPath}`);
     }
   } catch (e) {
+    if (e instanceof CorrespondenceMailSetupError) {
+      console.error(e.message);
+      console.error("");
+      console.error(e.guide);
+      process.exit(1);
+    }
     console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);
   }
@@ -193,6 +221,7 @@ export function runSecretaryMailConfig(opts: { json?: boolean }): void {
   ensureMailConfigExample();
   const fileConfig = loadMailConfig();
   const resolved = resolveMailConfig();
+  const readiness = assessMailSetupReadiness("email");
   const out = {
     config_path: "records/executive/mail-config.yaml",
     example_path: "records/executive/mail-config.yaml.example",
@@ -200,6 +229,8 @@ export function runSecretaryMailConfig(opts: { json?: boolean }): void {
     resolved_provider: resolved.provider,
     from: resolved.from,
     inbox_sync: resolved.inbox?.sync ?? "stub",
+    mail_setup_ready: readiness.ready,
+    setup_issues: readiness.issues.map((i) => i.id),
     env: {
       ORGOS_SMTP_HOST: Boolean(process.env.ORGOS_SMTP_HOST),
       ORGOS_SMTP_USER: Boolean(process.env.ORGOS_SMTP_USER),
@@ -211,6 +242,22 @@ export function runSecretaryMailConfig(opts: { json?: boolean }): void {
     return;
   }
   console.log(JSON.stringify(out, null, 2));
+  if (!readiness.ready) {
+    console.error("");
+    console.error("⚠ 実送信不可 — orgos secretary mail setup-guide");
+  }
+}
+
+export function runSecretaryMailSetupGuide(opts: { json?: boolean }): void {
+  const readiness = assessMailSetupReadiness("email");
+  if (opts.json) {
+    console.log(JSON.stringify(readiness, null, 2));
+    return;
+  }
+  console.log(readiness.guide);
+  if (!readiness.ready) {
+    process.exitCode = 1;
+  }
 }
 
 /** Skill runner: correspondence-send */

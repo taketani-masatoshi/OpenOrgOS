@@ -47,14 +47,29 @@
 
 ## ワークフロー
 
-1. 連絡元を `external-contacts.yaml` と照合（`stakeholder_id` があれば `stakeholders.yaml` + プロフィール MD を参照）
+1. 連絡先を **社外連絡先正本** と照合（下記「連絡先照合」）
 2. 依頼タイプを分類（日程 / 情報 / 業務 / 拒否）
 3. 拒否・ルート対象は [照会フォーマット](../steward/rules/folder_access_policy.md) で Executive へ
 4. 下書きを出力（**自動送信しない**）
 5. CLI 送信が必要な場合は [correspondence_draft](correspondence_draft.md) → 人間 `org approval approve` → [correspondence_send](correspondence_send.md)
 
+## 連絡先照合（必須）
+
+| 状況 | 動作 |
+|------|------|
+| 宛先が正本に **ある** | `external-contacts` / `stakeholders` の `email` を使用 · `--contact-ref` 推奨 |
+| 宛先が正本に **ない** | **把握していない** と回答。推測・invoice@ 等の別窓口へのすり替えをしない |
+| 人間が **新アドレスを開示** | `external-contacts.yaml` + `stakeholders.yaml`（+ 相手 `company.yaml`）を更新 → `validate` |
+| 代表者 vs 経理窓口 | 用途で分離（例: Southwood 代表 `m.taketani@southwood.co.jp` · 経理 `invoice@southwood.co.jp`） |
+
+正本パス: `data/executive/external-contacts.yaml` · `data/executive/stakeholders.yaml` · `data/protocol/peers.yaml`（peer テナント · L1 のみ）
+
+Peer 横断の権限: [folder_access_policy.md §2.8.1](../steward/rules/folder_access_policy.md) · Secretary は `ORGOS_TENANT` 切替禁止。
+
 ```bash
-npm run orgos -- secretary correspondence draft --to "..." --subject "..." --body "..."
+npm run orgos -- secretary contacts resolve --name "..." --org "..." --department "..."
+npm run orgos -- secretary contacts register --name "..." --email "..." --stakeholder-id STK-...
+npm run orgos -- secretary correspondence draft --contact-ref EXT-... --subject "..." --body "..."
 npm run orgos -- org approval list --status pending_approval
 npm run orgos -- org approval approve --id APR-... --approver "CEO"
 npm run orgos -- secretary correspondence send --id DRAFT-...

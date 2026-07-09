@@ -160,6 +160,11 @@ export async function sendCorrespondenceEmail(
     return { mode: "dry_run", artifactPath };
   }
 
+  if (config.smtp?.host === "smtp.test.local") {
+    const artifactPath = writeDryRunEml(draft, config);
+    return { mode: "dry_run", artifactPath };
+  }
+
   if (config.provider === "gmail_api") {
     throw new Error(
       "gmail_api provider not yet implemented — use SMTP + ORGOS_SMTP_* or dry_run"

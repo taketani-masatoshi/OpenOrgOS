@@ -10,7 +10,24 @@
 
 - 下書き `status: approved`
 - `data/org/pending-approvals.yaml` で `approval.status: approved`
+- **メール初期設定完了** — `orgos secretary mail setup-guide` が ready（未完了時は送信拒否・ガイド表示）
 - SMTP 資格情報は **env / records/**（L2 · gitignore）
+
+## 初期設定（実送信前に必須）
+
+```bash
+npm run orgos -- secretary mail setup-guide
+```
+
+未完了の典型項目:
+
+| id | 内容 |
+|----|------|
+| `representative_email` | `company.yaml` の代表メール |
+| `mail_config_file` | `records/executive/mail-config.yaml` |
+| `smtp_host` / `smtp_credentials` | 自社 SMTP + `ORGOS_SMTP_*` |
+
+`--dry-run` のみ SMTP 未設定でも EML 出力可。
 
 ## CLI
 
@@ -37,7 +54,7 @@ npm run orgos -- skills run correspondence-send --id DRAFT-20260709-001
 | SMTP user/pass | `ORGOS_SMTP_USER` · `ORGOS_SMTP_PASSWORD` |
 | From | `ORGOS_MAIL_FROM` · config `from.email` |
 
-`provider: dry_run` または SMTP 未設定時は `records/executive/mail-sent/*.eml` に書き出し（dev）。
+`provider: dry_run` または SMTP 未設定時は **setup-guide が error を出し実送信不可**。`--dry-run` 時のみ `records/executive/mail-sent/*.eml` に書き出し。
 
 ## 出力
 

@@ -11,3 +11,9 @@ export {
 } from "./send-gate.js";
 export { listExecutiveMail } from "./mail-list.js";
 export { resolveMailConfig, loadMailConfig } from "./mail-config.js";
+export {
+  assessMailSetupReadiness,
+  assertCorrespondenceMailSetupReady,
+  buildMailSetupGuide,
+  CorrespondenceMailSetupError,
+} from "./mail-setup-readiness.js";

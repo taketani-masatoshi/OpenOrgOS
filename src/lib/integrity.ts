@@ -18,6 +18,7 @@ import { runClassificationChecks } from "./classification.js";
 import { computeControlGaps } from "./control-framework.js";
 import { loadExecutiveCalendar } from "./data.js";
 import { detectUnsyncedCalendarEvents } from "./executive-calendar-sync.js";
+import { validatePeerContactRegistry } from "./secretary/validate-peer-contact-registry.js";
 import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
@@ -277,6 +278,10 @@ export function runIntegrityChecks(): IntegrityIssue[] {
 
   for (const ci of runClassificationChecks()) {
     push(ci.severity, "data/classification-registry.yaml", ci.message);
+  }
+
+  for (const pci of validatePeerContactRegistry()) {
+    push(pci.level, pci.file, pci.message);
   }
 
   try {

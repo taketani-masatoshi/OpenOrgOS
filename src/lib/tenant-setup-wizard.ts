@@ -17,6 +17,10 @@ import { ensureIntegrationsExample, saveIntegrations } from "./integrations.js";
 import { loadOperatorRegistry } from "./org/operators.js";
 import { runOperatorInitRegistry } from "../commands/operator-registry.js";
 import { getDataDir, currentDate } from "./utils.js";
+import {
+  seedExecutiveYamlFromExamples,
+  seedProtocolYamlFromExamples,
+} from "./tenant-scaffold.js";
 
 export interface TenantSetupWizardOptions {
   answers?: TenantSetupAnswers;
@@ -49,19 +53,11 @@ async function prompt(
 
 function seedExecutiveYaml(skip: boolean): boolean {
   if (skip) return false;
-  const execDir = join(getDataDir(), "executive");
-  mkdirSync(execDir, { recursive: true });
-  let seeded = false;
-  for (const base of ["calendar", "tasks", "one-on-ones", "external-contacts", "stakeholders"]) {
-    const example = join(execDir, `${base}.yaml.example`);
-    const target = join(execDir, `${base}.yaml`);
-    if (existsSync(target)) continue;
-    if (existsSync(example)) {
-      cpSync(example, target);
-      seeded = true;
-    }
-  }
-  return seeded;
+  const dataDir = getDataDir();
+  const result = { created: [] as string[], skipped: [] as string[] };
+  seedExecutiveYamlFromExamples(dataDir, true, result);
+  seedProtocolYamlFromExamples(dataDir, true, result);
+  return result.created.length > 0;
 }
 
 function writeMailConfig(answers: TenantSetupAnswers): string | undefined {

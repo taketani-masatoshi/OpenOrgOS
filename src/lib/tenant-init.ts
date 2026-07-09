@@ -13,6 +13,10 @@ import { seedRegulationDocs } from "./regulations.js";
 import { getModuleSeedDir, listModuleSeedFiles, loadModulesFile } from "./modules.js";
 import { getTenantsDir } from "./orgos-paths.js";
 import { setTenantId, loadTenantConfig, getTenantTemplateDir, getTenantDir } from "./tenant.js";
+import {
+  seedExecutiveYamlFromExamples,
+  seedProtocolYamlFromExamples,
+} from "./tenant-scaffold.js";
 
 export interface TenantInitOptions {
   id: string;
@@ -202,7 +206,8 @@ function writeSkeletonData(
   put("data/document-io.yaml", "inbox_items: []\noutbox_items: []\n");
   put("data/dependency-graph.yaml", skeletonDependencyGraph(id));
   put("data/hr/employees.yaml", "employees: []\n");
-  seedExecutiveFromExamples(dataDir, options?.skipExisting, result);
+  seedExecutiveYamlFromExamples(dataDir, options?.skipExisting, result);
+  seedProtocolYamlFromExamples(dataDir, options?.skipExisting, result);
   seedIntegrationsFromExample(dest, options?.skipExisting, result);
   seedExecutiveRecordsFromExample(dest, options?.skipExisting, result);
 
@@ -264,39 +269,6 @@ function shouldCopyTemplateEntry(src: string): boolean {
   if (base.endsWith(".example.md")) return true;
   if (base.endsWith(".example")) return false;
   return true;
-}
-
-function seedExecutiveFromExamples(
-  dataDir: string,
-  skipExisting?: boolean,
-  result?: ScaffoldTenantDataResult
-): void {
-  const execDir = join(dataDir, "executive");
-  mkdirSync(execDir, { recursive: true });
-  const bases = ["calendar", "tasks", "one-on-ones", "external-contacts", "stakeholders"];
-  for (const base of bases) {
-    const example = join(execDir, `${base}.yaml.example`);
-    const target = join(execDir, `${base}.yaml`);
-    const rel = `data/executive/${base}.yaml`;
-    if (skipExisting && existsSync(target)) {
-      result?.skipped.push(rel);
-      continue;
-    }
-    if (existsSync(example)) {
-      cpSync(example, target);
-      result?.created.push(rel);
-      continue;
-    }
-    const empty: Record<string, string> = {
-      calendar: "events: []\n",
-      tasks: "tasks: []\n",
-      "one-on-ones": "one_on_ones: []\n",
-      "external-contacts": "contacts: []\n",
-      stakeholders: "stakeholders: []\n",
-    };
-    writeFile(target, empty[base] ?? "notes: |\n  skeleton\n");
-    result?.created.push(rel);
-  }
 }
 
 function seedIntegrationsFromExample(
@@ -375,6 +347,10 @@ p0:
 }
 
 function skeletonClassificationRegistry(): string {
+  const templatePath = join(getTenantTemplateDir(), "data", "classification-registry.yaml");
+  if (existsSync(templatePath)) {
+    return readFileSync(templatePath, "utf-8");
+  }
   return `version: "1"
 as_of: "2026-06-08"
 
