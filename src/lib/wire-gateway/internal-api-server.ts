@@ -321,8 +321,11 @@ export function startWireInternalApiServer(
   const server = createHttpServer(handler);
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
+      const addr = server.address();
+      const boundPort =
+        addr && typeof addr === "object" ? addr.port : port;
       resolve({
-        url: `http://${host}:${port}/internal/v1/wire`,
+        url: `http://${host}:${boundPort}/internal/v1/wire`,
         close: () => server.close(),
       });
     });

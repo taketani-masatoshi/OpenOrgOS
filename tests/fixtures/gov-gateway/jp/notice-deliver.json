@@ -1,0 +1,5 @@
+{
+  "profile_id": "jp_egov_central",
+  "api_path": "/wire/notice-deliver",
+  "envelope_ref": "../shared-envelope.json"
+}

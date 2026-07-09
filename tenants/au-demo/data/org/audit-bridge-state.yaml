@@ -50,4 +50,6 @@ bridged_audit_ids:
   - AUD-1782684384503-ve335qv4
   - AUD-1782685121875-5wcspplv
   - AUD-1783240241283-25jgfojp
+  - AUD-1783553929033-yxkszijh
+  - AUD-1783565563906-vm42sqgn
 max_bridged_ids: 5000

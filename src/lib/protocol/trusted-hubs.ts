@@ -53,8 +53,14 @@ export function validateTrustedHubsRegistry(): {
   try {
     const reg = loadTrustedHubsRegistry();
     const strict = process.env.ORGOS_STRICT_TRUST === "1";
+    const jurisdictionFilter = process.env.ORGOS_STRICT_TRUST_JURISDICTIONS?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
     const seenJurisdictions = new Set<string>();
     for (const entry of reg.jurisdictions) {
+      if (jurisdictionFilter?.length && !jurisdictionFilter.includes(entry.jurisdiction)) {
+        continue;
+      }
       if (seenJurisdictions.has(entry.jurisdiction)) {
         issues.push({
           code: "trusted-hub-duplicate-jurisdiction",

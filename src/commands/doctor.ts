@@ -10,11 +10,14 @@ import {
   workspaceConfigPath,
   isExternalWorkspace,
 } from "../lib/orgos-paths.js";
-import { listTenantIds } from "../lib/tenant.js";
+import { listTenantIds, setTenantId } from "../lib/tenant.js";
 import { STEWARD_CORE_DIR } from "../lib/steward-paths.js";
+import { runProdWireGate } from "../lib/protocol/prod-wire-gate.js";
 
 export interface DoctorOptions {
   json?: boolean;
+  wireProd?: boolean;
+  tenant?: string;
 }
 
 interface DoctorCheck {
@@ -88,6 +91,41 @@ function checkWireConsoleDist(): DoctorCheck {
 }
 
 export function runDoctor(opts: DoctorOptions = {}): void {
+    if (opts.wireProd) {
+    const tenant = opts.tenant ?? process.env.ORGOS_TENANT ?? "mal";
+    setTenantId(tenant);
+    process.env.WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY ??= "1";
+    process.env.ORGOS_STRICT_TRUST_JURISDICTIONS ??= "JP";
+    const gate = runProdWireGate({
+      tenantId: tenant,
+      strictTrust: true,
+      strictTls: true,
+      strictTransport: true,
+      govLive: true,
+      publicBaseUrl: process.env.PUBLIC_BASE_URL ?? `https://wire.${tenant}.example`,
+    });
+    if (opts.json) {
+      console.log(JSON.stringify({ tenant, ...gate }, null, 2));
+      if (!gate.ok) process.exit(1);
+      return;
+    }
+    console.log(`OrgOS doctor — wire production gate (${tenant})\n`);
+    for (const c of gate.checks) {
+      console.log(`  ${c.ok ? "✓" : "✗"} ${c.id}: ${c.detail}`);
+      if (!c.ok && c.issues?.length) {
+        for (const issue of c.issues.slice(0, 5)) {
+          console.log(`      ${issue}`);
+        }
+      }
+    }
+    if (!gate.ok) {
+      console.log("\nWire production gate failed");
+      process.exit(1);
+    }
+    console.log("\n✓ Wire production gate passed");
+    return;
+  }
+
   const checks: DoctorCheck[] = [
     checkNode(),
     checkOpenSsl(),

@@ -13,10 +13,11 @@ describe("wire-trust-registry", () => {
     expect(reg.publish_url).toContain("wire-trust-registry");
   });
 
-  it("validates with warnings for empty public keys", () => {
+  it("validates pinned public keys without missing-key warnings", () => {
     const result = validateWireTrustRegistry();
     expect(result.ok).toBe(true);
-    expect(result.warnings.some((w) => w.code === "missing-public-key")).toBe(true);
+    expect(result.warnings.some((w) => w.code === "missing-public-key")).toBe(false);
+    expect(result.issues.some((i) => i.code === "missing-public-key")).toBe(false);
   });
 
   it("resolves by node_id, did, and steward URI", () => {

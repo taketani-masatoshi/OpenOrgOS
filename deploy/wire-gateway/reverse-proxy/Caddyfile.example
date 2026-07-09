@@ -1,0 +1,6 @@
+# Mode A — Caddy reverse proxy (TLS terminate → Gateway HTTP :8443)
+# Replace wire.mal.example with operator domain.
+
+wire.mal.example {
+  reverse_proxy 127.0.0.1:8443
+}

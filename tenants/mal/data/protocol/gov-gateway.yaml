@@ -1,0 +1,30 @@
+# Gov Gateway — mal live pilot reference
+# Spec: docs/org-os/gov-gateway-live-pilot.md
+
+enabled: true
+default_profile: xroad_v7
+witness_mode: orgos_hub
+
+audit_bridge:
+  map_native_id_to: correlation_id
+
+profiles:
+  - profile_id: xroad_v7
+    enabled: true
+    adapter_ref: steward/jurisdiction-packs/EE/protocol/xroad-adapter.profile.yaml
+    member_code: EE/DEV/MAL
+    subsystem_code: wire
+    service_code: EE/COM/MAL/wire/notice-deliver
+    security_server_url: https://ss-sandbox.example.ee
+
+  - profile_id: jp_egov_central
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/JP/protocol/egov-adapter.profile.yaml
+    api_base_url: https://api-sandbox.example.go.jp
+
+  - profile_id: ge_gov_gateway_3g
+    enabled: false
+    adapter_ref: steward/jurisdiction-packs/GE/protocol/georgia-3g-adapter.profile.yaml
+    api_base_url: https://gateway-sandbox.example.ge
+    member_code: MAL-DEMO-PARTICIPANT
+    service_code: wire.notice-deliver

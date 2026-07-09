@@ -1237,7 +1237,7 @@ export function registerOrchestrationCommands(program: Command): void {
   protocolTrustRegistryCmd
     .command("pin-local")
     .description("Pin local tenant signing public key into wire-trust-registry.yaml")
-    .requiredOption("--tenant <id>", "Tenant id")
+    .option("--tenant <id>", "Tenant id (default: global --tenant / ORGOS_TENANT)")
     .option("--node-id <id>", "Limit to node_id")
     .option("--force", "Overwrite existing protocol_public_key")
     .option("--dry-run", "Report without writing YAML")

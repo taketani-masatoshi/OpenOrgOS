@@ -26,7 +26,23 @@ ORGOS_TENANT=demo WIRE_INTERNAL_BEARER=dev-change-me \
 
 Use Mode A (reverse proxy + ACME) or Mode B (`--tls-cert/--tls-key` + secrets). Full runbook: [production-tls-runbook.md](../../docs/org-os/production-tls-runbook.md).
 
-## Notes
+## mal production pilot (Mode A)
+
+```bash
+# 1. Copy env and set operator domain
+cp deploy/wire-gateway/env/production.env.example /etc/steward/wire-gateway-mal.env
+
+# 2. Validate gates (STRICT)
+./scripts/prod-validate-wire.sh mal
+
+# 3. systemd (optional)
+sudo cp deploy/wire-gateway/systemd/steward-wire-gateway@.service /etc/systemd/system/
+sudo systemctl enable steward-wire-gateway@mal
+```
+
+Registry publish mirror: `./scripts/publish-protocol-registry.sh` → `publish/protocol/` → `https://openorgos.org/protocol/`
+
+See [wire-gateway-requirements.md](../../docs/org-os/wire-gateway-requirements.md).
 
 - Mounts repo root; uses `npm run orgos -- wire-gateway …`
 - Seed config: `config/wire-gateway.yaml` → points gateway at `http://wire-internal-api:8080/internal/v1/wire`

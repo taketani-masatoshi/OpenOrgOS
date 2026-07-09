@@ -1,0 +1,10 @@
+{
+  "profile_id": "xroad_v7",
+  "headers": {
+    "X-Road-Client": "EE/DEV/OPENORGOS/wire",
+    "X-Road-Service": "EE/COM/PARTNER/wire/notice-deliver",
+    "X-Request-Id": "550e8400-e29b-41d4-a716-446655440000",
+    "Content-Type": "application/vnd.openorgos.envelope+json"
+  },
+  "envelope_ref": "../shared-envelope.json"
+}

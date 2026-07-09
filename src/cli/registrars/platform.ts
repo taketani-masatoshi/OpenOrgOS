@@ -37,9 +37,11 @@ export function registerPlatformCommands(program: Command): void {
     .command("doctor")
     .description("Check install · workspace · OpenSSL · Wire Console build")
     .option("--json", "JSON output")
+    .option("--wire-prod", "Run Wire/Gov/Trust production gate (STRICT)")
+    .option("--tenant <id>", "Tenant for --wire-prod (default: mal)")
     .action(async (opts) => {
       const { runDoctor } = await import("../../commands/doctor.js");
-      runDoctor({ json: opts.json });
+      runDoctor({ json: opts.json, wireProd: opts.wireProd, tenant: opts.tenant });
     });
 
   const workspaceCmd = program.command("workspace").description("OrgOS company workspace (tenants/)");

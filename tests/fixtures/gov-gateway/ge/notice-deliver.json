@@ -1,0 +1,6 @@
+{
+  "profile_id": "ge_gov_gateway_3g",
+  "service_id": "wire.notice-deliver",
+  "participant_id": "DEMO-PARTICIPANT",
+  "envelope_ref": "../shared-envelope.json"
+}

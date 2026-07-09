@@ -1,0 +1,32 @@
+# mal Wire Gateway — production reference (Mode A reverse proxy)
+# Spec: docs/org-os/production-tls-runbook.md
+
+wire_version: "0.1"
+node_id: mal
+node_uri: steward://tenant/mal
+display_name: MAL Co
+did: did:ooo:org:mal
+
+listen:
+  host: 0.0.0.0
+  port: 8443
+
+internal_api:
+  base_url: http://127.0.0.1:8080/internal/v1/wire
+  bearer_token_file: data/protocol/wire-internal.token
+
+security:
+  timestamp_skew_sec: 300
+  nonce_ttl_sec: 604800
+  rate_limit_per_min: 120
+
+outbound:
+  poll_interval_ms: 5000
+
+audit:
+  path: data/protocol/wire-gateway-audit.jsonl
+
+trust_registry_url: https://openorgos.org/protocol/wire-trust-registry.yaml
+
+legacy:
+  enabled: false

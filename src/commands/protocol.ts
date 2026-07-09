@@ -2129,7 +2129,7 @@ export async function runProtocolTrustRegistrySyncKeys(
 }
 
 export interface ProtocolTrustRegistryPinLocalOptions {
-  tenant: string;
+  tenant?: string;
   nodeId?: string;
   force?: boolean;
   dryRun?: boolean;
@@ -2139,11 +2139,13 @@ export interface ProtocolTrustRegistryPinLocalOptions {
 export async function runProtocolTrustRegistryPinLocal(
   opts: ProtocolTrustRegistryPinLocalOptions
 ): Promise<void> {
+  const { getTenantId } = await import("../lib/tenant.js");
+  const tenant = opts.tenant ?? getTenantId();
   const { pinLocalWireTrustRegistryKeys } = await import(
     "../lib/protocol/wire-trust-registry-sync.js"
   );
   const { results } = pinLocalWireTrustRegistryKeys({
-    tenant: opts.tenant,
+    tenant,
     nodeId: opts.nodeId,
     force: opts.force,
     dryRun: opts.dryRun,

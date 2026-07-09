@@ -1,7 +1,7 @@
 # OpenOrgOS Wire Gateway — 要件定義
 
-**Version:** 0.4（WG-0〜4 反映）  
-**Status:** WG-0〜4 正本 · 2026-07-08  
+**Version:** 0.5（mal 本番パイロット参照）  
+**Status:** WG-0〜4 正本 · mal 本番準備 · 2026-07-09  
 **Parent:** [orgos-interface-spec.md](orgos-interface-spec.md) · [openorgos-protocol-requirements.md](../spec/openorgos-protocol-requirements.md)  
 **Related:** [wire-gateway-wire-protocol.md](wire-gateway-wire-protocol.md) · [wire-gateway-internal-api.md](wire-gateway-internal-api.md) · [wire-gateway-export-policy.md](wire-gateway-export-policy.md) · [wire-trust-registry.md](wire-trust-registry.md) · [wire-legacy-webhook-deprecation.md](wire-legacy-webhook-deprecation.md) · [witness-hub-requirements.md](witness-hub-requirements.md) · [gov-gateway-adapters.md](gov-gateway-adapters.md)
 
@@ -440,22 +440,22 @@ TCP/IP ルータや SMTP サーバに近い役割を担う。業務ロジック�
 
 ---
 
-## 21. 参照実装ギャップ（OS_Steward · 2026-07-08）
+## 21. 参照実装ギャップ（OS_Steward · 2026-07-09）
 
-実装は **WG-0〜WG-4 のコアを達成**。残ギャップは本番トポロジ（オペレータ CA · 実鍵 pin）と Gov live 本接続。
+**mal テナント本番パイロット参照実装完了**（Mode A TLS · 鍵 pin · STRICT ゲート · Gov mock/live 手順）。
 
-| 領域 | v0.1 要求 | 現状（2026-07-08） | ギャップ |
+| 領域 | v0.1 要求 | 現状（2026-07-09） | ギャップ |
 |------|-----------|-------------------|----------|
-| **プロセス** | 単一 Wire Gateway | `wire-gateway serve` + Internal API · **deploy/wire-gateway compose** | 移行期: webhook / protocol-api 並存（legacy 明示） |
-| **境界** | Internal API 経由のみ | Internal API 7 endpoints 実装 · CLI deliver は peers transport を尊重 | deliver 直結は Gateway 委譲へ寄せ済み（`wire_v1`） |
-| **TLS** | 全経路必須 | Gateway: 設定可 · protocol-api: mTLS 可 · webhook: HTTP（legacy） | webhook TLS は廃止予定 |
-| **データ** | Gateway は Event 本文非保持 | Gateway は WireMessage 通過のみ · relay-store は Org C 経路 | relay 方針は別途 |
-| **プロトコル** | 単一 Wire JSON | `wire_v1` 正 · `legacy_webhook` / `openorgos_p2p` 移行タグ | peers の transport 明示を推奨 |
-| **セキュリティ** | replay/nonce/timestamp | Gateway: **実装済**（nonce 台帳 · ±300s · rate 120/min） | legacy webhook 経路は event_id 冪等のみ |
+| **プロセス** | 単一 Wire Gateway | `wire-gateway serve` + Internal API · **deploy/wire-gateway compose** | legacy webhook 縮退済（`legacy.enabled: false`） |
+| **境界** | Internal API 経由のみ | Internal API 7 endpoints + E2E テスト | — |
+| **TLS** | 全経路必須 | Mode A runbook · `ORGOS_STRICT_TLS` · mal `wire.mal.example` | オペレータ ACME/CA 適用 |
+| **データ** | Gateway は Event 本文非保持 | WireMessage 通過のみ | relay 方針は別途 |
+| **プロトコル** | 単一 Wire JSON | `wire_v1` 正 · migrate-legacy CLI | demo peers 移行は任意 |
+| **セキュリティ** | replay/nonce/timestamp | Gateway 実装済 · STRICT ゲート CLI | — |
 | **Rate limit** | Gateway 入口 | **実装済** | — |
-| **Docker** | gateway 独立 compose | **[`deploy/wire-gateway/`](../../deploy/wire-gateway/)** | 本番 TLS シークレット注入 |
-| **Node ID** | DNS/DID | tenant id / steward URI / DNS 風 + **`did:ooo:org:*`** | Trust Registry CLI · well-known DID |
-| **Gov Gateway** | Wire 下流 | P0 mock + transport 統合 | live SS はパイロット配線 |
+| **Docker** | gateway 独立 compose | compose + CI smoke | — |
+| **Node ID** | DNS/DID | **`did:ooo:org:*`** · Trust Registry pin 済 | openorgos.org 配信は operator |
+| **Gov Gateway** | Wire 下流 | P0 `production` · mal pilot config · mock E2E | 実 SS token は operator |
 
 **Witness Hub:** v0.1 スコープ外。digest 証明は [witness-hub-requirements.md](witness-hub-requirements.md) を正とする。
 
@@ -510,3 +510,4 @@ TCP/IP ルータや SMTP サーバに近い役割を担う。業務ロジック�
 | 0.2.1 | 2026-07-08 | WG-0 詰め — config/audit/export Zod · validate · export policy |
 | 0.3 | 2026-07-08 | **WG-1〜3 実装反映** — Gateway/Internal API · nonce/rate · compose · wire_v1 経路 |
 | 0.4 | 2026-07-08 | **WG-4** — `did:ooo:org:*` · wire-trust-registry · well-known DID |
+| 0.5 | 2026-07-09 | **mal 本番パイロット** — Mode A TLS · 鍵 pin · STRICT ゲート · Gov P0 production |

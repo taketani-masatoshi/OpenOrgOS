@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, rmSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -195,6 +195,82 @@ monthly_cost: 50000
     expect(received.length).toBe(1);
     expect(wireMessageSchema.parse(received[0]).eventId).toBe(envelope.event_id);
     peerServer.close();
+  });
+
+  it("legacy_webhook delivery appends wire.legacy_deprecated audit", async () => {
+    const auditPath = join(getDataDir(), "protocol", "wire-gateway-audit.jsonl");
+    const peerServer = createServer((req, res) => {
+      if (req.method === "POST") {
+        res.writeHead(202, { "Content-Type": "application/json" });
+        res.end("{}");
+        return;
+      }
+      res.writeHead(404);
+      res.end();
+    });
+    await new Promise<void>((r) => peerServer.listen(0, "127.0.0.1", () => r()));
+    const peerPort = (peerServer.address() as { port: number }).port;
+
+    registerPeer({
+      peer_id: "PEER-072",
+      display_name: "Legacy Peer",
+      jurisdiction: "JP",
+      org_uri: "steward://tenant/legacy",
+      inbound_endpoints: [
+        {
+          url: `http://127.0.0.1:${peerPort}/steward/webhook`,
+          mode: "push",
+          priority: 1,
+          transport: "legacy_webhook",
+        },
+      ],
+    });
+
+    const attestation = operatorAttestationSchema.parse({
+      operator_id: "op",
+      approver_id: "ceo",
+      approval_tier: "A",
+      approved_at: new Date().toISOString(),
+      basis: "existing_contract",
+      notice_id: "NOTICE-LEG",
+      approval_policy_ref: "REG-004",
+    });
+    recordProtocolTransaction({
+      transactionType: "contract.execution.notice",
+      peerId: "PEER-072",
+      contractId: "CTR-099",
+      operatorAttestation: attestation,
+    });
+
+    const config = wireGatewayConfigSchema.parse({
+      node_id: "demo",
+      listen: { host: "127.0.0.1", port: GATEWAY_PORT + 2 },
+      internal_api: {
+        base_url: `http://127.0.0.1:${INTERNAL_PORT + 2}/internal/v1/wire`,
+        bearer_token: BEARER,
+      },
+      outbound: { poll_interval_ms: 60_000 },
+      audit: { path: auditPath },
+    });
+
+    const internal = await startWireInternalApiServer({
+      host: "127.0.0.1",
+      port: INTERNAL_PORT + 2,
+      bearerToken: BEARER,
+      tenantId: "demo",
+    });
+    const client = new WireInternalClient(config);
+    const poller = createOutboundPoller(config, client);
+
+    try {
+      await poller.pollOnce();
+      const auditText = existsSync(auditPath) ? readFileSync(auditPath, "utf-8") : "";
+      expect(auditText).toContain("wire.legacy_deprecated");
+    } finally {
+      poller.stop();
+      internal.close();
+      peerServer.close();
+    }
   });
 
   it("gateway inbound health stays up beside poller client", async () => {
