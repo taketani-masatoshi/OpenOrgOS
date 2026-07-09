@@ -236,8 +236,28 @@ npm run orgos -- io status
 | `docs/company/executive-remaining-tasks.md` | R |
 | `data/hr/employees.yaml` | R |
 | `data/company.yaml` | R |
+| `data/protocol/peers.yaml` | R（**peer 照合の入口**） |
+| `tenants/{peer}/data/company.yaml` | R（**L1 のみ** · 下記 §2.8.1） |
+| `tenants/{peer}/data/executive/external-contacts.yaml` | R（**L1 のみ** · 下記 §2.8.1） |
 | `data/finance/**` `contracts/**` `plans/**` | **禁止** |
 | `*-secrets.yaml` · `**/records/**` | **禁止** |
+
+#### §2.8.1 Peer テナント横断読取（Secretary · L1 限定）
+
+社外連絡先照合のため、**自テナント `data/protocol/peers.yaml` に登録された相手**に限り、相手テナントの **L1 公開連絡先** を読める。
+
+| 条件 | 内容 |
+|------|------|
+| **入口** | 自社 `peers.yaml` の `org_uri: steward://tenant/{id}` |
+| **読めるファイル** | 相手 `data/company.yaml`（代表者名 · `public_disclosure`）· 相手 `data/executive/external-contacts.yaml` |
+| **読めない** | 相手 `finance/` · `contracts/` · `stakeholders.yaml` · `hr/` · `**/records/**` · peer 未登録テナント |
+| **編集** | 相手テナントの YAML は **編集禁止**（更新は相手 Secretary または人間開示 → 自社 `external-contacts` へミラー） |
+| **CLI** | `orgos secretary contacts resolve` · `register` — 実装: `src/lib/secretary/contact-registry.ts` |
+| **運用優先** | 日常は **自社** `external-contacts.yaml` を正とし、peer 横断は自社正本不足時の fallback |
+
+正本: [secretary-contact-registry.md](secretary-contact-registry.md) · [tenant-executive-scaffold.md](tenant-executive-scaffold.md)
+
+**Secretary 禁止（Operator 混同防止）:** `ORGOS_TENANT` を相手 ID に切替えて相手テナントを総参照すること。Southwood 秘書が MAL を見る場合は **`ORGOS_TENANT=southwood` のまま** peer 経由の L1 のみ。
 
 **境界:** [secretary_steward_boundary.md](secretary_steward_boundary.md)
 

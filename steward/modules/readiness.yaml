@@ -65,14 +65,14 @@ modules:
     tier: production_ready
     notes: user vs system record language · bilingual minutes · Secretary/Compliance
   jp_carbon_neutral_2050:
-    tier: activation_ready
-    notes: 2050 CN 宣言 · action-plan · REG-014
+    tier: production_ready
+    notes: 2050 CN 宣言 · action-plan · REG-014 · activation seeds 完備
   jp_women_empowerment:
-    tier: activation_ready
-    notes: 女性活躍行動計画 · 応援宣言
+    tier: production_ready
+    notes: 女性活躍行動計画 · 応援宣言 · activation seeds 完備
   jp_privacy_policy:
-    tier: activation_ready
-    notes: 外部向け privacy-policy · REG-010 整合
+    tier: production_ready
+    notes: 外部向け privacy-policy · REG-010 整合 · activation seeds 完備
   jp_subsidy_application:
     tier: production_ready
     notes: 補助金募集要項 · 適格性 · 人件費算定 · operations subsidy CLI

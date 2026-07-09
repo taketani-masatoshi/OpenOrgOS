@@ -73,7 +73,7 @@ names = {
 buckets = defaultdict(list)
 for line in lines:
     status = line[:2].strip() or "M"
-    path = line[3:].strip()
+    path = line[2:].lstrip().strip('"')
     buckets[classify(path)].append({"status": status, "path": path})
 
 if "--json" in sys.argv:
