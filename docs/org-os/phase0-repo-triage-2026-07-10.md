@@ -1,7 +1,8 @@
 # Phase 0 — リポジトリ棚卸し（2026-07-10）
 
 **Branch:** `feat/tenant-integrations-secretary-mail`（main より +4 commits）  
-**未コミット:** **197 paths**（Phase 0 実施時点 · `./scripts/phase0-repo-triage.sh` で再生成可）
+**未コミット:** **145 paths**（#1–3 クリーンアップ後 · `./scripts/phase0-repo-triage.sh` で再生成可）  
+**参照:** クリーンアップ前 197 paths（Agent export 46 · 生成物 4 を除去）
 
 ---
 
