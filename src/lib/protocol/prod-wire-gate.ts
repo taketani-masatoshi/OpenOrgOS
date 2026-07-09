@@ -19,6 +19,8 @@ export interface ProdWireGateOptions {
   strictTransport?: boolean;
   govLive?: boolean;
   publicBaseUrl?: string;
+  /** Peer-less tenant only — mal production pilot uses witness pool. */
+  standalone?: boolean;
 }
 
 export interface ProdWireGateResult {
@@ -75,7 +77,7 @@ export function runProdWireGate(opts: ProdWireGateOptions): ProdWireGateResult {
       issues: formatIssues([...gateway.issues, ...gateway.warnings]),
     });
 
-    const protocol = validateProtocolState({ standalone: true });
+    const protocol = validateProtocolState({ standalone: opts.standalone === true });
     checks.push({
       id: "protocol_transport",
       ok: protocol.ok,
