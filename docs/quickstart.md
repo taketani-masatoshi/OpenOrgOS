@@ -34,7 +34,7 @@
 メンテナ: GitHub → **Packages** → `orgos-demo` → **Public**（手順 [deploy/demo/PUBLISH.md](../deploy/demo/PUBLISH.md)）
 
 ```bash
-export ORGOS_DEMO_IMAGE=ghcr.io/orgos-reference/orgos-demo:main
+export ORGOS_DEMO_IMAGE=ghcr.io/taketani-masatoshi/orgos-demo:main
 docker pull "$ORGOS_DEMO_IMAGE"
 docker run --rm -p 127.0.0.1:9470:9470 "$ORGOS_DEMO_IMAGE"
 ```
@@ -44,7 +44,7 @@ docker run --rm -p 127.0.0.1:9470:9470 "$ORGOS_DEMO_IMAGE"
 ```bash
 # PAT に read:packages が必要
 echo "$GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
-export ORGOS_DEMO_IMAGE=ghcr.io/orgos-reference/orgos-demo:main
+export ORGOS_DEMO_IMAGE=ghcr.io/taketani-masatoshi/orgos-demo:main
 docker pull "$ORGOS_DEMO_IMAGE"
 docker run --rm -p 127.0.0.1:9470:9470 "$ORGOS_DEMO_IMAGE"
 ```
@@ -56,7 +56,7 @@ docker volume create orgos-demo-workspace
 docker run -d --name orgos-demo \
   -p 127.0.0.1:9470:9470 \
   -v orgos-demo-workspace:/workspace \
-  ghcr.io/orgos-reference/orgos-demo:main
+  ghcr.io/taketani-masatoshi/orgos-demo:main
 # 停止: docker stop orgos-demo && docker rm orgos-demo
 # データ削除: docker volume rm orgos-demo-workspace
 ```
@@ -65,7 +65,7 @@ docker run -d --name orgos-demo \
 
 ```bash
 # Actions の publish 成功後、手元で同じ確認
-ORGOS_DEMO_IMAGE=ghcr.io/orgos-reference/orgos-demo:main npm run demo:docker:verify-ghcr
+ORGOS_DEMO_IMAGE=ghcr.io/taketani-masatoshi/orgos-demo:main npm run demo:docker:verify-ghcr
 ```
 
 `main` マージ直後は Actions → **demo-docker** → **publish** が green であることを確認してください。

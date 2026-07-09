@@ -14,7 +14,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/demo/Dockerfile
-    image: ghcr.io/orgos-reference/orgos-demo:0.8.0
+    image: ghcr.io/taketani-masatoshi/orgos-demo:main
     ports:
       # localhost only — do not bind 0.0.0.0 on the host (demo auth off)
       - "127.0.0.1:9470:9470"

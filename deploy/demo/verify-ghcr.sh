@@ -9,7 +9,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-IMAGE="${1:-${ORGOS_DEMO_IMAGE:-ghcr.io/orgos-reference/orgos-demo:main}}"
+IMAGE="${1:-${ORGOS_DEMO_IMAGE:-ghcr.io/taketani-masatoshi/orgos-demo:main}}"
 CONTAINER_NAME="${ORGOS_DEMO_VERIFY_CONTAINER:-orgos-demo-verify}"
 VOLUME_NAME="${ORGOS_DEMO_VERIFY_VOLUME:-orgos-demo-workspace-verify}"
 HOST_BIND="${ORGOS_DEMO_HOST_BIND:-127.0.0.1:9470:9470}"

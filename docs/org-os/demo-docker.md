@@ -12,7 +12,7 @@
 
 | 項目 | 決定 |
 |------|------|
-| **イメージ名** | `ghcr.io/orgos-reference/orgos-demo` |
+| **イメージ名** | `ghcr.io/taketani-masatoshi/orgos-demo`（fork では `<owner>` を小文字 GitHub 名に置換） |
 | **タグ** | semver（`0.8.0`）· `latest`（最新安定）· `main`（任意・CI） |
 | **同梱サービス（v1）** | **Operator Console のみ**（Chat + Wire SPA · `:9470`） |
 | **同梱しない（v1）** | Witness Hub · Protocol API/Relay · nginx TLS · Proposal 3 mTLS |
@@ -101,8 +101,8 @@ CI 正本: [.github/workflows/demo-docker.yml](../../.github/workflows/demo-dock
 
 ```bash
 # 公開イメージ（main マージ / v* タグ後 · owner は GitHub org/user）
-docker pull ghcr.io/orgos-reference/orgos-demo:0.8.0
-docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/orgos-reference/orgos-demo:0.8.0
+docker pull ghcr.io/taketani-masatoshi/orgos-demo:0.8.0
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.8.0
 
 # リポジトリから（常に可）
 git clone <repo-url> orgos-reference && cd orgos-reference

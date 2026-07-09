@@ -29,10 +29,13 @@ ORGOS_DEMO_IMAGE=ghcr.io/<owner>/orgos-demo:0.8.0 npm run demo:docker:verify-ghc
 
 ## 2. Package visibility（Public 推奨）
 
-匿名 `docker pull` には **Public** が必要です。
+匿名 `docker pull` には **Public** が必要です。REST API では変更できないため **GitHub UI** で一度だけ実施します。
 
-1. GitHub → **Packages** → **orgos-demo**
-2. **Package settings** → **Change visibility** → **Public**
+1. 開く: **https://github.com/users/taketani-masatoshi/packages/container/package/orgos-demo/settings**
+2. ページ下部 **Danger Zone** → **Change package visibility** → **Public**
+3. 確認入力: `orgos-demo` → **I understand the consequences, change package visibility**
+
+補助: `bash deploy/demo/make-package-public.sh`（URL を開く）
 
 Private のままにする場合は利用者に **認証付き pull** を案内（[quickstart.md](../../docs/quickstart.md) §0a）。
 
