@@ -74,6 +74,7 @@ jobs:
       - run: playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts
         env:
           WIRE_CONSOLE_OIDC_SMOKE_PORT: "9474"
+      - run: npm run wire-console:release-check
   steward-chat-smoke:
     runs-on: ubuntu-latest
     needs: validate
@@ -155,6 +156,10 @@ jobs:
           tests/prod-wire-gate.test.ts
           tests/mal-wire-pilot-gate.test.ts
           tests/mal-wire-peer-deliver.test.ts
+          tests/mal-peers-trust-registry.test.ts
+          tests/wire-relay-e2e.test.ts
+          tests/wire-gateway-federation-sync.test.ts
+          tests/relay-sla-alert.test.ts
           tests/protocol-relay-worker.test.ts
           tests/protocol-witness-integration.test.ts
       - run: docker compose -f deploy/wire-gateway/docker-compose.yaml config

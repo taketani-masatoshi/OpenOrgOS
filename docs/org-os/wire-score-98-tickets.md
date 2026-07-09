@@ -1,6 +1,6 @@
 # Wire / OrgOS スコア 98+ — チケット正本
 
-**Status:** 2026-07-10 発行 · 並行開発  
+**Status:** 2026-07-10 · W1–W4 **完了** · W5 完了  
 **Parent:** [wire-hub-stack-pilot.md](wire-hub-stack-pilot.md) · [orgos-scoring-methodology.md](orgos-scoring-methodology.md)
 
 ---
@@ -9,22 +9,22 @@
 
 | ID | Phase | タイトル | 状態 | DoD |
 |----|-------|---------|:----:|-----|
-| **W1-1** | W1 | mal protocol init 再現 | ○ | `init-tenant-wire-pilot.sh mal` · `mal-wire-pilot-gate` PASS |
-| **W1-2** | W1 | mal peers wire_v1（southwood） | ○ | `peers.yaml` · trust-registry 鍵 pin |
-| **W1-3** | W1 | TLS Mode A runbook 連動 | ○ | `setup-mal-wire-operator.sh` · `deploy/mal-pilot/caddy/` |
+| **W1-1** | W1 | mal protocol init 再現 | ✅ | `init-tenant-wire-pilot.sh mal` · `mal-wire-pilot-gate` PASS |
+| **W1-2** | W1 | mal peers wire_v1（southwood） | ✅ | `peers.yaml` · `mal-peers-trust-registry.test.ts` |
+| **W1-3** | W1 | TLS Mode A runbook 連動 | ✅ | `production-tls-runbook.md` · `deploy/mal-pilot/caddy/` |
 | **W1-4** | W1 | Trust Registry publish | ✅ | `publish-protocol-registry.sh` · mal peers seed |
-| **W2-1** | W2 | relay systemd / Docker 常駐 | ○ | `deploy/mal-pilot/systemd/` · `install-mal-wire-systemd.sh` |
-| **W2-2** | W2 | Wire Gateway systemd | ○ | `steward-wire-gateway@` · env example |
-| **W2-3** | W2 | relay E2E CI | ○ | `tests/wire-relay-e2e.test.ts` |
-| **W2-4** | W2 | Hub 鍵ローテ半自動 | ○ | `scripts/hub-signing-rotate.sh` · timer unit |
-| **W3-1** | W3 | Wire Console staging IdP | △ | `wire-console-staging-checklist.md` |
-| **W3-2** | W3 | WebAuthn 実 passkey checklist | △ | runbook §18 追記 |
-| **W3-3** | W3 | release-check CI green | ○ | validate.yml wire-console-smoke |
-| **W4-1** | W4 | `wire-gateway discover --apply` | ○ | dry-run + apply · test |
-| **W4-2** | W4 | `wire-gateway federation sync` | ○ | trust-registry key sync wrapper |
-| **W4-3** | W4 | discover apply E2E | ○ | `wire-gateway-discover-apply.test.ts` |
-| **W4-4** | W4 | relay SLA alert | △ | relay-worker metrics · runbook |
-| **W5-1** | W5 | strict cap wireEvidence 99 | ○ | `wire-production-evidence.ts` · mal deliver test |
+| **W2-1** | W2 | relay systemd / Docker 常駐 | ✅ | `deploy/mal-pilot/systemd/` · `install-mal-wire-systemd.sh` |
+| **W2-2** | W2 | Wire Gateway systemd | ✅ | `steward-wire-gateway@` · env example |
+| **W2-3** | W2 | relay E2E CI | ✅ | `tests/wire-relay-e2e.test.ts` |
+| **W2-4** | W2 | Hub 鍵ローテ半自動 | ✅ | `scripts/hub-signing-rotate.sh` · timer unit |
+| **W3-1** | W3 | Wire Console staging IdP | ✅ | `wire-console-staging-checklist.md` |
+| **W3-2** | W3 | WebAuthn 実 passkey checklist | ✅ | runbook §18 · staging checklist |
+| **W3-3** | W3 | release-check CI green | ✅ | validate.yml · `wire-console:release-check` |
+| **W4-1** | W4 | `wire-gateway discover --apply` | ✅ | dry-run + apply · test |
+| **W4-2** | W4 | `wire-gateway federation sync` | ✅ | `wire-gateway-federation-sync.test.ts` |
+| **W4-3** | W4 | discover apply E2E | ✅ | `wire-gateway-discover-apply.test.ts` |
+| **W4-4** | W4 | relay SLA alert | ✅ | `relay-sla-alert.ts` · `relay-sla-runbook.md` |
+| **W5-1** | W5 | strict cap wireEvidence 99 | ✅ | `wire-production-evidence.ts` · mal deliver test |
 
 ---
 
@@ -53,10 +53,10 @@
 ```bash
 ./scripts/init-tenant-wire-pilot.sh mal
 ./scripts/setup-mal-wire-operator.sh
-npm test -- tests/wire*.test.ts tests/mal-wire*.test.ts tests/wire-relay-e2e.test.ts
-npm run wire-console:test
+npm test -- tests/wire*.test.ts tests/mal-wire*.test.ts tests/wire-relay-e2e.test.ts tests/relay-sla-alert.test.ts
+npm run wire-console:release-check
 npm run orgos -- status --orgos
 npm run orgos -- modules check --all
 ```
 
-**Epic Done:** Wire ドメイン ~98 · OrgOS チェックリスト IF/Eco 98+ · 厳格 Wire 99（W5 cap PR 後）
+**Wire W1–W5 Done:** 厳格 Wire 99 · チェックリスト Wire 100%

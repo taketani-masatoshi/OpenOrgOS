@@ -103,6 +103,15 @@ function computeWireEvidenceChecks(): ReadinessCheck[] {
     fileOk("tests/mal-wire-peer-deliver.test.ts", "mal peer deliver E2E"),
     fileOk("scripts/install-mal-wire-systemd.sh", "mal wire systemd installer"),
     fileOk("tests/wire-gateway-discover.test.ts", "wire-gateway discover v2"),
+    fileOk("tests/wire-gateway-discover-apply.test.ts", "discover apply E2E"),
+    fileOk("tests/wire-gateway-federation-sync.test.ts", "federation sync wrapper"),
+    fileOk("tests/wire-relay-e2e.test.ts", "relay E2E CI"),
+    fileOk("tests/mal-peers-trust-registry.test.ts", "mal peers trust-registry pin"),
+    fileOk("tests/relay-sla-alert.test.ts", "relay SLA alert"),
+    fileOk("scripts/hub-signing-rotate.sh", "Hub signing rotate"),
+    fileOk("docs/org-os/relay-sla-runbook.md", "relay SLA runbook"),
+    fileOk("docs/org-os/wire-console-staging-checklist.md", "Wire Console staging"),
+    fileOk("docs/org-os/production-tls-runbook.md", "TLS Mode A runbook"),
     fileOk("scripts/init-tenant-wire-pilot.sh", "wire pilot bootstrap"),
   ];
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createServer, type Server } from "node:http";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -20,6 +20,13 @@ describe("mal wire peer deliver (Top5 W-5)", () => {
   beforeEach(() => {
     setTenantId("mal");
     const peersPath = join(getDataDir(), "protocol", "peers.yaml");
+    const seedPath = join(
+      getInstallRoot(),
+      "steward/platform/protocol/seed/mal-peers-pilot.yaml.example"
+    );
+    if (!existsSync(peersPath) || !readFileSync(peersPath, "utf-8").includes("wire_v1")) {
+      writeFileSync(peersPath, readFileSync(seedPath, "utf-8"), "utf-8");
+    }
     peersBackup = readFileSync(peersPath, "utf-8");
   });
 

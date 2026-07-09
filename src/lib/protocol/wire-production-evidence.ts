@@ -22,8 +22,18 @@ const PRODUCTION_ARTIFACTS = [
   "deploy/mal-pilot/env/wire-gateway-mal.env.example",
   "scripts/install-mal-wire-systemd.sh",
   "scripts/setup-mal-wire-operator.sh",
+  "scripts/hub-signing-rotate.sh",
+  "src/lib/wire-gateway/discover.ts",
+  "src/lib/protocol/relay-sla-alert.ts",
   "tests/mal-wire-pilot-gate.test.ts",
   "tests/mal-wire-peer-deliver.test.ts",
+  "tests/mal-peers-trust-registry.test.ts",
+  "tests/wire-relay-e2e.test.ts",
+  "tests/wire-gateway-discover-apply.test.ts",
+  "tests/wire-gateway-federation-sync.test.ts",
+  "tests/relay-sla-alert.test.ts",
+  "docs/org-os/relay-sla-runbook.md",
+  "docs/org-os/wire-console-staging-checklist.md",
 ] as const;
 
 export type WireProductionEvidence = {

@@ -3,6 +3,15 @@
 # Usage: ./scripts/init-tenant-wire-pilot.sh [tenant]
 set -euo pipefail
 TENANT="${1:-mal}"
+REFRESH_PEERS=0
+for arg in "$@"; do
+  case "$arg" in
+    --refresh-peers) REFRESH_PEERS=1 ;;
+    --) break ;;
+    -*) ;;
+    *) TENANT="$arg" ;;
+  esac
+done
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 PROTO_DIR="$ROOT/tenants/$TENANT/data/protocol"
@@ -32,14 +41,16 @@ else
   echo "· wire-export-policy.yaml exists (skip)"
 fi
 
-if [[ ! -f "$PROTO_DIR/peers.yaml" ]]; then
+if [[ ! -f "$PROTO_DIR/peers.yaml" ]] || [[ "$REFRESH_PEERS" -eq 1 ]]; then
   if [[ -f "$SEED/mal-peers-pilot.yaml.example" ]] && [[ "$TENANT" == "mal" ]]; then
     cp "$SEED/mal-peers-pilot.yaml.example" "$PROTO_DIR/peers.yaml"
     echo "✓ copied peers.yaml from mal pilot seed"
-  else
+  elif [[ ! -f "$PROTO_DIR/peers.yaml" ]]; then
     echo 'as_of: "2026-07-10"' > "$PROTO_DIR/peers.yaml"
     echo "peers: []" >> "$PROTO_DIR/peers.yaml"
     echo "✓ created peers.yaml (empty registry)"
+  else
+    echo "· peers.yaml exists (skip refresh)"
   fi
 else
   echo "· peers.yaml exists (skip)"

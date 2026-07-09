@@ -64,9 +64,9 @@ export function computeOrgOsStrictReadiness(): OrgOsReadinessReport {
     `厳格: Eco ${ecosystemScore}% cap ${STEWARD_ECOSYSTEM_STRICT_CAP}（OS_Community 未実装）`,
     `厳格: IF ${interfaceAxis.score}% = module production_ready 実測（換算なし）`,
     wireCap >= 99
-      ? "厳格: Wire 本番証跡 OK（mal pilot · relay/Gateway systemd · peer deliver）"
+      ? "厳格: Wire 本番証跡 OK（mal pilot · relay/Gateway systemd · peer deliver · W1–W4）"
       : "厳格: Wire 本番証跡不足 — mal protocol · systemd · peer deliver テスト未完了",
-    "厳格: Hub 鍵自動ローテ本番常駐 · committee 法域レジストリ UI — 未",
+    "厳格: Hub 鍵ローテ timer 本番 enable · committee 法域レジストリ UI — 未",
   ];
 
   return {
