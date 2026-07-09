@@ -51,6 +51,7 @@ tenants/*/data/protocol/wire-delivered.yaml
 tenants/*/data/protocol/wire-pending.yaml
 tenants/*/data/protocol/wire-relay-queue.yaml
 tenants/*/data/protocol/signing-key-meta.yaml
+tenants/*/data/protocol/wire-internal.token
 tenants/*/data/protocol/reconcile-alerts.yaml
 tenants/*/data/protocol/audit-chain.jsonl
 tenants/*/data/protocol/witness-receipts/
