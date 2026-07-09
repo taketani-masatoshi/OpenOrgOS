@@ -75,6 +75,9 @@
 
 ## 無効社内規程（読取禁止）
 
+- `REG-027` 経理規程 — `docs/company/regulations/keiri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-028` クレジットカード規程 — `docs/company/regulations/credit-card-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-029` 役員退職金規程 — `docs/company/regulations/yakuin-taishoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-009` 情報セキュリティ管理規程 — `docs/company/regulations/joho-security-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-011` 品質管理規程 — `docs/company/regulations/hinshitsu-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-013` 事業継続・危機管理規程 — `docs/company/regulations/jigyo-keizoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
