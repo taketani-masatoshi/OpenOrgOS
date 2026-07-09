@@ -28,6 +28,7 @@
     "demo:docker:down": "docker compose -f deploy/demo/docker-compose.yaml down",
     "demo:docker:accept": "bash deploy/demo/acceptance.sh",
     "demo:docker:verify-ghcr": "bash deploy/demo/verify-ghcr.sh",
+    "demo:docker:make-public": "bash deploy/demo/make-package-public.sh",
     "proposal3:daemon-smoke": "node --import tsx scripts/proposal3-daemon-smoke.ts",
     "test:watch": "vitest",
     "demo:inter-org": "node --import tsx scripts/seed-inter-org-demo.ts",

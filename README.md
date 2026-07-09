@@ -72,8 +72,8 @@ npm run check                               # validate · demo · acme · module
 
 ```bash
 # GHCR（main / タグ後）— localhost のみバインド
-docker pull ghcr.io/orgos-reference/orgos-demo:main   # owner は org に合わせる
-docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/orgos-reference/orgos-demo:main
+docker pull ghcr.io/taketani-masatoshi/orgos-demo:main
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:main
 
 # またはリポジトリから build
 docker compose -f deploy/demo/docker-compose.yaml up --build

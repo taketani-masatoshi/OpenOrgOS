@@ -3,7 +3,7 @@
 Steward Chat · Wire Console · MCP の本番 checklist。
 
 > **Demo イメージは本番に使わない。**  
-> `ghcr.io/orgos-reference/orgos-demo` / `deploy/demo/` は利用者試用用（auth 緩和 · mock LLM）。手元試用は [quickstart.md](quickstart.md) §0 · 設計は [org-os/demo-docker.md](org-os/demo-docker.md)。
+> `ghcr.io/taketani-masatoshi/orgos-demo` / `deploy/demo/` は利用者試用用（auth 緩和 · mock LLM）。手元試用は [quickstart.md](quickstart.md) §0 · 設計は [org-os/demo-docker.md](org-os/demo-docker.md)。
 
 ---
 

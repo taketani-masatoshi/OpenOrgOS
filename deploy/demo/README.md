@@ -9,14 +9,14 @@
 
 ```bash
 # GHCR（Public パッケージ · main マージ後）
-docker pull ghcr.io/orgos-reference/orgos-demo:main
-docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/orgos-reference/orgos-demo:main
+docker pull ghcr.io/taketani-masatoshi/orgos-demo:main
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:main
 
 # 永続 workspace
 docker volume create orgos-demo-workspace
 docker run -d --name orgos-demo -p 127.0.0.1:9470:9470 \
   -v orgos-demo-workspace:/workspace \
-  ghcr.io/orgos-reference/orgos-demo:main
+  ghcr.io/taketani-masatoshi/orgos-demo:main
 
 # リポジトリルートから build
 docker compose -f deploy/demo/docker-compose.yaml up --build
@@ -28,7 +28,7 @@ Private パッケージ: `docker login ghcr.io` — [quickstart.md](../../docs/q
 ## 検証・公開（メンテナ）
 
 ```bash
-ORGOS_DEMO_IMAGE=ghcr.io/orgos-reference/orgos-demo:main npm run demo:docker:verify-ghcr
+ORGOS_DEMO_IMAGE=ghcr.io/taketani-masatoshi/orgos-demo:main npm run demo:docker:verify-ghcr
 ```
 
 手順: [PUBLISH.md](PUBLISH.md) · CI: `.github/workflows/demo-docker.yml`
