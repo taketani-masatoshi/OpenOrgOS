@@ -1,0 +1,19 @@
+transactions:
+  - transaction_id: TX-20260710-001
+    direction: inbound
+    our_org:
+      org_id: southwood
+      org_uri: steward://tenant/southwood
+    counterparty:
+      org_id: PEER-002
+      org_uri: steward://tenant/mal
+    transaction_type: steward.contract.execution.notice
+    amount:
+      value: 50000
+      currency: JPY
+    refs:
+      contract_id: CTR-012
+    event_id: 2879cd1e-76b4-4f33-9fba-7ebdb51624ce
+    recorded_at: 2026-07-09T22:59:40.580Z
+    notes: inbound webhook · attested by ceo
+as_of: 2026-07-10
