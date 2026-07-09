@@ -172,6 +172,22 @@ routes:
       paths:
         - data/executive/external-contacts.yaml
 
+  - id: tenant-setup
+    description: テナント初回設定 · integrations
+    agent: setup
+    skill: tenant_integrations_setup
+    boundary: default
+    priority: 90
+    resource_paths:
+      - data/integrations/integrations.yaml
+    match:
+      keywords:
+        - 初期設定
+        - セットアップ
+        - tenant setup
+        - integrations
+        - メール設定
+
   - id: executive-kpi
     description: 経営 KPI・ダッシュボード要約（サマリのみ）
     agent: executive_steward

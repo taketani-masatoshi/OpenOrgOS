@@ -1,0 +1,113 @@
+{
+  "generated_at": "2026-07-09T23:25:51.097Z",
+  "score": 99,
+  "steward_side_cap": 99,
+  "strict_cap_base": 80,
+  "checks": [
+    {
+      "id": "trusted-operators-registry",
+      "ok": true,
+      "detail": "registry valid"
+    },
+    {
+      "id": "revocation-sla-configured",
+      "ok": true,
+      "detail": "max 24h · escalate 4h"
+    },
+    {
+      "id": "revocation-sla-current",
+      "ok": true,
+      "detail": "no overdue revocations"
+    },
+    {
+      "id": "governance-operators",
+      "ok": true,
+      "detail": "2 active operator(s) · committee ORGOS-JP-COMMITTEE"
+    },
+    {
+      "id": "trusted-hubs-registry",
+      "ok": true,
+      "detail": "trusted-hubs OK"
+    },
+    {
+      "id": "witness-trust-revocations",
+      "ok": true,
+      "detail": "revocation list in trust bundle schema"
+    },
+    {
+      "id": "ci-protocol-validate-tenants",
+      "ok": true,
+      "detail": "all demo tenants protocol validate in CI"
+    },
+    {
+      "id": "deploy-outbox-permissions",
+      "ok": true,
+      "detail": "OS-level outbox hardening template"
+    },
+    {
+      "id": "peer-protocol-policy",
+      "ok": true,
+      "detail": "contract protocol: peer whitelist"
+    },
+    {
+      "id": "orgos-readiness-engine",
+      "ok": true,
+      "detail": "dynamic OrgOS scoring"
+    },
+    {
+      "id": "openorgos-core-readiness",
+      "ok": true,
+      "detail": "Core four-element scoring"
+    },
+    {
+      "id": "orgos-99-plan",
+      "ok": true,
+      "detail": "99-point improvement plan published"
+    },
+    {
+      "id": "wire-score-98-tickets",
+      "ok": true,
+      "detail": "Wire 98+ ticket backlog published"
+    },
+    {
+      "id": "mal-wire-operator-setup",
+      "ok": true,
+      "detail": "mal Wire operator bootstrap script"
+    },
+    {
+      "id": "mal-wire-pilot-gate-test",
+      "ok": true,
+      "detail": "mal production wire gate CI test"
+    },
+    {
+      "id": "community-protocol-export",
+      "ok": true,
+      "detail": "community read bundle export"
+    },
+    {
+      "id": "steward-community-vocabulary",
+      "ok": true,
+      "detail": "Steward-Community vocabulary map"
+    },
+    {
+      "id": "community-integration-flags",
+      "ok": true,
+      "detail": "Community UI + e2e verified"
+    },
+    {
+      "id": "wire-trust-registry-publish",
+      "ok": true,
+      "detail": "wire-trust-registry.yaml in publish/protocol/"
+    },
+    {
+      "id": "jurisdiction-registry-ui",
+      "ok": true,
+      "detail": "Community /protocol/jurisdiction live"
+    },
+    {
+      "id": "vocabulary-i18n",
+      "ok": true,
+      "detail": "Steward-Community vocabulary · 8 locale"
+    }
+  ]
+}

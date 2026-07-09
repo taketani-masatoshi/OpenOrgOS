@@ -47,8 +47,8 @@
 | 単独 | 97 — standalone E2E 済 · 本番常駐 systemd は任意 |
 | 形式 | 90 — witness emit 済 · **社内 MD 二層は意図的に残る** |
 | IF | module **実測 %**（89% 等） |
-| Wire | 91 — デモ E2E 済 · mTLS 常駐 · Hub 鍵自動ローテ未 |
-| Eco | 80 — OS_Community · committee 法域レジストリ未 |
+| Wire | 91 base · **99** when mal pilot production evidence OK (`wire-production-evidence.ts`) |
+| Eco | 80 base · **92** Steward publish · **98** Community integration OK (`eco-production-evidence.ts`) |
 
 ---
 

@@ -64,4 +64,6 @@ steward/modules/{id}/
 5. `readiness.yaml` に tier を登録
 6. `npm run orgos -- modules check {id}` で契約検証 → `npm run check`
 7. テナントで使う場合のみ `tenants/{id}/modules.yaml` にエントリ追加（パスバインドのみ）
-8. CLI がある場合 `{id}/cli/register.ts` で `ModuleCliBundle` を export し `src/lib/module-cli.ts` の `MODULE_CLI_BUNDLES` に追加
+8. `MODULE_DEFAULT_DOCS_ROOT` / `PROPERTY_OPERATIONS_SUBDIRS` を `src/lib/tenant-document-zones.ts` に登録（docs_root 既定値）
+9. `orgos modules activate {id}` または `orgos modules scaffold-docs` で **Zone B** フォルダ展開
+10. CLI がある場合 `{id}/cli/register.ts` で `ModuleCliBundle` を export し `src/lib/module-cli.ts` の `MODULE_CLI_BUNDLES` に追加

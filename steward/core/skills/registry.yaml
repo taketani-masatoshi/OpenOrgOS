@@ -112,6 +112,30 @@ skills:
     runtime: agent
     agent: Secretary
     description: 社外連絡下書き
+  - id: correspondence_draft
+    file: correspondence_draft.md
+    runtime: cli
+    cli_command: correspondence-draft
+    agent: Secretary
+    description: 対外連絡下書き + 承認起案
+  - id: correspondence_send
+    file: correspondence_send.md
+    runtime: cli
+    cli_command: correspondence-send
+    agent: Secretary
+    description: 承認済みメール送信（SMTP）
+  - id: slack_notify
+    file: slack_notify.md
+    runtime: cli
+    cli_command: slack-notify
+    agent: Secretary
+    description: 承認済み Slack 通知
+  - id: tenant_integrations_setup
+    file: tenant_integrations_setup.md
+    runtime: cli
+    cli_command: tenant-integrations-setup
+    agent: Setup
+    description: テナント integrations 初回設定ウィザード
   - id: coo_work_order_triage
     file: extension/coo_work_order_triage.md
     runtime: cli

@@ -9,6 +9,7 @@ import { getInstallRoot, getDeployDir, getSchemasDir } from "../orgos-paths.js";
 import { JURISDICTION_PACKS_DIR } from "../steward-paths.js";
 import { computeModuleAxisStats } from "../extensibility-contract.js";
 import { computeCommunityReadiness } from "./community-readiness.js";
+import { computeEcoProductionEvidence } from "./eco-production-evidence.js";
 
 export interface ReadinessCheck {
   id: string;
@@ -82,6 +83,9 @@ function computeFormUnificationChecks(): ReadinessCheck[] {
     fileOk("src/lib/company-events-lint.ts", "company event MD lint"),
     fileOk("tests/org-audit-bridge.test.ts", "audit bridge tests"),
     fileOk("tests/protocol-external-verify.test.ts", "external verify"),
+    fileOk("src/lib/company-events-wire.ts", "company-events wire linkage"),
+    fileOk("tests/company-events-wire-void.test.ts", "company-events wire void"),
+    fileOk("tenants/mal/data/org/audit-bridge-state.yaml", "audit-bridge state (mal)"),
     fileOk("docs/org-os/orgos-interface-spec.md", "I1/I2/I3 interface spec"),
   ];
 }
@@ -96,6 +100,22 @@ function computeWireEvidenceChecks(): ReadinessCheck[] {
     fileOk("src/lib/protocol/peer-protocol-policy.ts", "contract peer whitelist"),
     fileOk("tests/protocol-peer-policy.test.ts", "peer policy tests"),
     fileOk("docs/runbook-orgos.md", "runbook §16–17 guardrails"),
+    fileOk("tests/mal-wire-pilot-gate.test.ts", "mal wire production gate"),
+    fileOk("tests/mal-wire-peer-deliver.test.ts", "mal peer deliver E2E"),
+    fileOk("scripts/install-mal-wire-systemd.sh", "mal wire systemd installer"),
+    fileOk("tests/wire-gateway-discover.test.ts", "wire-gateway discover v2"),
+    fileOk("tests/wire-gateway-discover-apply.test.ts", "discover apply E2E"),
+    fileOk("tests/wire-gateway-federation-sync.test.ts", "federation sync wrapper"),
+    fileOk("tests/wire-relay-e2e.test.ts", "relay E2E CI"),
+    fileOk("tests/mal-peers-trust-registry.test.ts", "mal peers trust-registry pin"),
+    fileOk("tests/relay-sla-alert.test.ts", "relay SLA alert"),
+    fileOk("scripts/hub-signing-rotate.sh", "Hub signing rotate"),
+    fileOk("docs/org-os/relay-sla-runbook.md", "relay SLA runbook"),
+    fileOk("docs/org-os/wire-console-staging-checklist.md", "Wire Console staging"),
+    fileOk("docs/org-os/steward-community-vocabulary.md", "Steward-Community vocabulary"),
+    fileOk("src/lib/protocol/community-export.ts", "community protocol export"),
+    fileOk("src/lib/protocol/eco-production-evidence.ts", "eco production evidence"),
+    fileOk("scripts/init-tenant-wire-pilot.sh", "wire pilot bootstrap"),
   ];
 }
 
@@ -120,13 +140,15 @@ function computeInterfaceAxisChecks(): ReadinessCheck[] {
 function interfaceAxisScore(checks: ReadinessCheck[]): number {
   const moduleAxis = computeModuleAxisStats();
   let base =
-    moduleAxis.productionPct >= 93
-      ? 98
-      : moduleAxis.productionPct >= 89
-        ? 95
-        : moduleAxis.productionPct >= 88
-          ? 92
-          : 60;
+    moduleAxis.productionPct >= 100
+      ? 99
+      : moduleAxis.productionPct >= 93
+        ? 98
+        : moduleAxis.productionPct >= 89
+          ? 95
+          : moduleAxis.productionPct >= 88
+            ? 92
+            : 60;
   const passed = checks.filter((c) => c.ok).length;
   const ratio = checks.length ? passed / checks.length : 0;
   if (ratio < 1) base = Math.min(base, Math.round(base * ratio));
@@ -170,10 +192,19 @@ export function computeOrgOsReadiness(): OrgOsReadinessReport {
     if (failed.length) gaps.push(`${label}: ${failed.map((f) => f.id).join(", ")}`);
   }
   if (interfaceAxis.score < 98) {
-    gaps.push(`インターフェース ${interfaceAxis.score}% — module production_ready 93%+ で 98`);
+    gaps.push(`インターフェース ${interfaceAxis.score}% — module production_ready 93%+ で 98 · 100% で 99`);
   }
   if (ecosystem.score < 99) {
-    gaps.push(`エコシステム ${ecosystem.score}% — OS_Community UI で 99+（Steward-side cap 95）`);
+    const eco = computeEcoProductionEvidence();
+    if (eco.cap >= 99) {
+      gaps.push(`エコシステム ${ecosystem.score}% — 99 は vocabulary i18n + jurisdiction UI 統合済み · 残チェック確認`);
+    } else if (eco.cap >= 98) {
+      gaps.push(`エコシステム ${ecosystem.score}% — Community 統合 OK（cap 98）· 99+ は jurisdiction UI + i18n`);
+    } else if (eco.cap >= 92) {
+      gaps.push(`エコシステム ${ecosystem.score}% — Community UI 統合で 98+`);
+    } else {
+      gaps.push(`エコシステム ${ecosystem.score}% — Steward publish + Community UI で 98+`);
+    }
   }
 
   return {

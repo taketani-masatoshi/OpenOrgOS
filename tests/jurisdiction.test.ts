@@ -126,9 +126,9 @@ describe("jurisdiction catalogs", () => {
     setTenantId("mal");
   });
 
-  it("loads JP catalog with 26 regulations", () => {
+  it("loads JP catalog with 29 regulations", () => {
     const catalog = loadRegulationsCatalog();
-    expect(catalog.regulations.length).toBe(26);
+    expect(catalog.regulations.length).toBe(29);
     expect(existsSync(getRegulationsCatalogPath())).toBe(true);
   });
 

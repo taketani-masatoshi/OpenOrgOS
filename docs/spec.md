@@ -346,6 +346,7 @@ npm run orgos -- operations medical-device gvp draft --doc GVP-001 --write
 | 16 | 監査 · コンプライアンス | `audit log` · `compliance gap` · `controls` |
 | 17 | テナント · 移行 · 振込 | `tenant init` · `migrate` · `broker` |
 | 18 | Secretary executive | `executive calendar list` · `conflicts` · `push` · `brief` · `secretary escalate` |
+| 19 | テナント統合 · メール | `tenant setup` · `integrations status` · `mail send` · `mail compose-url` |
 
 品質ゲート: `npm run check` = validate · demo · acme · modules --all · classification
 
@@ -355,6 +356,8 @@ npm run orgos -- operations medical-device gvp draft --doc GVP-001 --write
 
 | 文書 | スコープ |
 |------|---------|
+| [spec/tenant-integrations-requirements.md](spec/tenant-integrations-requirements.md) | テナント統合 · Secretary メール · setup wizard |
+| [spec/company-events-requirements.md](spec/company-events-requirements.md) | 会社イベント記録（OpenOrgOS Core 外） |
 | [framework-assessment.md](framework-assessment.md) | **フレームワーク**完成度ルーブリック（§7 骨格 v2 · §9 OS-100） |
 | [framework-backlog.md](framework-backlog.md) | フレームワークタスク台帳（Phase E–J） |
 | [framework-executive-notes.md](framework-executive-notes.md) | ブロッカー（5 行以内） |

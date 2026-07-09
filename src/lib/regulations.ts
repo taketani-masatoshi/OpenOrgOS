@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 import {
   regulationsCatalogSchema,
   type CatalogRegulation,
@@ -204,6 +205,8 @@ export interface SeedRegulationsOptions {
   ids?: string[];
   force?: boolean;
   dryRun?: boolean;
+  /** Seed all tenant-listed catalog regs, including enabled: false */
+  includeDisabled?: boolean;
 }
 
 export interface SeedRegulationsResult {
@@ -224,25 +227,33 @@ export function seedRegulationDocs(
   options: SeedRegulationsOptions = {}
 ): SeedRegulationsResult {
   const companyName = loadTenantConfig().legal_name ?? loadTenantConfig().name;
-  const effective = listEffectiveRegulations().filter((r) => r.effective);
-  const targetIds = options.ids?.length
-    ? new Set(options.ids)
-    : new Set(effective.map((r) => r.id));
-
   const result: SeedRegulationsResult = { seeded: [], skipped: [], missing: [] };
 
-  for (const reg of effective) {
-    if (!targetIds.has(reg.id)) continue;
-    const cat = reg.catalog;
+  const idsToSeed = new Set<string>();
+  if (options.includeDisabled) {
+    for (const entry of loadTenantRegulationsFile().regulations) {
+      if (getCatalogRegulation(entry.id)) idsToSeed.add(entry.id);
+    }
+  } else {
+    const effective = listEffectiveRegulations().filter((r) => r.effective);
+    for (const reg of effective) idsToSeed.add(reg.id);
+  }
+  if (options.ids?.length) {
+    for (const id of options.ids) idsToSeed.add(id);
+  }
+
+  for (const id of [...idsToSeed].sort()) {
+    const cat = getCatalogRegulation(id);
+    if (!cat) continue;
     const templateAbs = getRegulationTemplateAbsPath(cat.template);
     const docAbs = tenantDocsPath(TENANT_REGULATIONS_SUBDIR, cat.tenant_doc);
 
     if (!existsSync(templateAbs)) {
-      result.missing.push(reg.id);
+      result.missing.push(id);
       continue;
     }
     if (existsSync(docAbs) && !options.force) {
-      result.skipped.push(reg.id);
+      result.skipped.push(id);
       continue;
     }
 
@@ -250,14 +261,37 @@ export function seedRegulationDocs(
     const body = applyRegulationPlaceholders(template, companyName);
 
     if (options.dryRun) {
-      result.seeded.push(reg.id);
+      result.seeded.push(id);
       continue;
     }
 
     mkdirSync(join(docAbs, ".."), { recursive: true });
     writeFileSync(docAbs, body, "utf-8");
-    result.seeded.push(reg.id);
+    result.seeded.push(id);
   }
 
   return result;
+}
+
+export interface InitRegulationsRegistryOptions {
+  enabled?: boolean;
+  notes?: string;
+}
+
+/** Register all catalog regulations in regulations.yaml (default: enabled false). */
+export function initTenantRegulationsRegistry(
+  options: InitRegulationsRegistryOptions = {}
+): string[] {
+  const enabled = options.enabled ?? false;
+  const catalog = loadRegulationsCatalog().regulations;
+  const file = tenantRegulationsFileSchema.parse({
+    regulations: catalog.map((r) => ({ id: r.id, enabled })),
+  });
+  const header =
+    "# 社内規程 — JP カタログ全件\n" +
+    "# enabled: true の規程のみ Agent が施行文を参照\n" +
+    (options.notes ? `# ${options.notes}\n` : "") +
+    "\n";
+  writeFileSync(regulationsFilePath(), header + YAML.stringify(file), "utf-8");
+  return catalog.map((r) => r.id);
 }

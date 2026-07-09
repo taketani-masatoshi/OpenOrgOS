@@ -1,0 +1,14 @@
+# Wire export policy — example
+# Copy: tenants/{id}/data/protocol/wire-export-policy.yaml
+# Spec: docs/org-os/wire-gateway-export-policy.md
+
+version: "1"
+default_allowed: false
+
+rules:
+  - peer_node_id: org.partner.example
+    allowed: true
+    event_types:
+      - org.transaction.recorded
+      - org.identity.presented
+    notes: Active contract peer — pull allowed for wire events

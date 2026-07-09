@@ -1,0 +1,9 @@
+# Tenant integrations（L2 — cp integrations.yaml.example integrations.yaml）
+version: "1"
+setup:
+  completed_at: null
+  completed_by: null
+webhooks: []
+notes: |
+  メール SMTP: records/executive/mail-config.yaml + ORGOS_SMTP_*
+  完了後 orgos tenant setup で setup.completed_at を記録

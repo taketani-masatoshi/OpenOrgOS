@@ -1,9 +1,6 @@
-# {法人名} — テナントコンテキスト
+# AIAC株式会社 — テナントコンテキスト
 
-**正本:** `tenants/{tenant-id}/tenant.yaml` · **モジュール:** `modules.yaml` · **Agent 参照用**（L1 以下）
-
-> 新規テナントは本ファイルと `modules.yaml` を編集する。  
-> 雛形: [tenants/_template/](../_template/) · 実テナント例: [tenants/mal/rules/company_context.md](../mal/rules/company_context.md)
+**正本:** `tenants/aiac/tenant.yaml` · **`modules.yaml`** · **Agent 参照用**（L1 以下）
 
 ---
 
@@ -11,32 +8,27 @@
 
 | 項目 | 値 |
 |------|-----|
-| 法人名 | （記入） |
-| 代表 | （記入） |
-| 公開メール | （記入） |
-
-## 事業モジュール
-
-有効モジュールは **`modules.yaml`** が正本。下表は人間向け索引。
-
-| モジュール id | 区分 | 正データ |
-|------|------|---------|
-| rental | 賃貸（例: みなとビル501） | `data/properties/PROP-001.yaml` |
-| hospitality | 宿泊（例: 緑丘ゲストハウス） | `data/properties/PROP-002.yaml` |
+| 法人名 | AIAC株式会社 |
+| 代表 | 竹谷昌敏 |
+| 代表メール | taketnai@aiac.co.jp |
+| 事業 | AI 活用型コンサルティング（デモ） |
 
 ## 主要利害関係者（索引）
 
-詳細は `data/executive/stakeholders.yaml`（gitignore）· `docs/executive/stakeholders/`。
-
 | ID | 概要 | 関係 |
 |----|------|------|
-| STK-001 | （記入） | （記入） |
+| STK-003 | 株式会社サウスウッド | グループ関連 · 代表 m.taketani@southwood.co.jp |
+
+## 秘書メール（送信前必須）
+
+実送信前に `orgos secretary mail setup-guide` が **ready** であること。
+
+1. `data/company.yaml` — `public_disclosure.representative_email` ✓
+2. `records/executive/mail-config.yaml` — 自社 SMTP（example からコピー）
+3. `ORGOS_SMTP_*` 環境変数 — 認証情報
 
 ## Agent 向け注意
 
-- パス表記 `data/` · `docs/` は **本テナント内**を指す
+- 未登録の宛先メールは **把握していない** と回答し、推測しない
+- 人間が新アドレスを開示したら `external-contacts.yaml` / `stakeholders.yaml` を更新
 - 財務数値の社外開示は Executive Steward 経由
-
-## 会社固有規程
-
-`docs/company/regulations/` — Compliance Agent（`regulations.yaml` で有効化）

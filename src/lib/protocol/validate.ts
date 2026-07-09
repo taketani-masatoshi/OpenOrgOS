@@ -5,8 +5,12 @@ import { delegationProofSchema } from "../../../schemas/protocol/authority-deleg
 import { orgIdentityDocumentSchema } from "../../../schemas/protocol/identity-exchange.js";
 import { peersRegistrySchema } from "../../../schemas/protocol/peers.js";
 import { transactionsRegistrySchema } from "../../../schemas/protocol/transaction-record.js";
-import { loadStakeholders } from "../data.js";
-import { getStakeholdersYaml, readYamlFile } from "../utils.js";
+import { getTenantsDir } from "../orgos-paths.js";
+import {
+  peerTenantContactL1Available,
+  peerTenantExists,
+  tenantIdFromPeerOrgUri,
+} from "../secretary/peer-contact-policy.js";
 import { verifyProtocolAuditChain } from "./audit-chain.js";
 import { validateEnvelopeAgainstRegistry, loadProtocolRegistry } from "./registry.js";
 import { getPeersYamlPath, getTransactionsRegistryPath } from "./paths.js";
@@ -132,6 +136,30 @@ export function validateProtocolState(
             issues.push({
               code: "peer-stakeholder-orphan",
               message: `${peer.peer_id} references unknown stakeholder ${peer.stakeholder_id}`,
+            });
+          }
+          const tenantId = tenantIdFromPeerOrgUri(peer.org_uri);
+          if (peer.org_uri?.startsWith("steward://tenant/")) {
+            if (!tenantId) {
+              warnings.push({
+                code: "peer-org-uri-invalid",
+                message: `${peer.peer_id}: invalid steward://tenant/{id} in org_uri`,
+              });
+            } else if (!peerTenantExists(tenantId)) {
+              issues.push({
+                code: "peer-tenant-missing",
+                message: `${peer.peer_id} → tenants/${tenantId} not found (Secretary contact gate broken)`,
+              });
+            } else if (!peerTenantContactL1Available(tenantId)) {
+              warnings.push({
+                code: "peer-tenant-l1-contacts-missing",
+                message: `${peer.peer_id} → tenant/${tenantId} lacks company.yaml and external-contacts.yaml`,
+              });
+            }
+          } else if (!peer.org_uri) {
+            warnings.push({
+              code: "peer-org-uri-missing",
+              message: `${peer.peer_id} (${peer.display_name}): no org_uri — Secretary peer contact resolve disabled`,
             });
           }
         }

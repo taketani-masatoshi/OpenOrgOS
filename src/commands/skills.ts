@@ -13,10 +13,11 @@ import { loadMonthlyFinance } from "../lib/data.js";
 import { runDashboard } from "./dashboard.js";
 import { runForecast } from "./forecast.js";
 import { currentDate, readYamlFile, writeMarkdownReport, getExecutiveDir } from "../lib/utils.js";
-import { runCapexPlanningSkill,
-  runContractRegisterSkill,
-  runTaxFilingPrepSkill,
-} from "../lib/core-skill-runners.js";
+import {
+  runCorrespondenceSendSkill,
+  runSlackNotifySkill,
+  runCorrespondenceDraft,
+} from "./secretary-correspondence.js";
 import {
   formatControlStatusReport,
   computeControlGaps,
@@ -178,6 +179,30 @@ export const SKILL_COMMANDS = [
     agent: "Finance",
     description: "CAPEX 計画サマリ",
   },
+  {
+    id: "correspondence-send",
+    skill: "correspondence_send",
+    agent: "Secretary",
+    description: "承認済み対外メール送信（SMTP）",
+  },
+  {
+    id: "slack-notify",
+    skill: "slack_notify",
+    agent: "Secretary",
+    description: "承認済み Slack 通知（webhook）",
+  },
+  {
+    id: "correspondence-draft",
+    skill: "correspondence_draft",
+    agent: "Secretary",
+    description: "対外連絡下書き + 承認起案",
+  },
+  {
+    id: "tenant-integrations-setup",
+    skill: "tenant_integrations_setup",
+    agent: "Setup",
+    description: "テナント integrations 初回設定",
+  },
 ] as const;
 
 export function runSkillsList(): void {
@@ -206,6 +231,14 @@ export interface SkillRunOptions {
   month?: string;
   output?: string;
   markdown?: boolean;
+  id?: string;
+  dryRun?: boolean;
+  to?: string;
+  subject?: string;
+  body?: string;
+  channel?: string;
+  slackChannel?: string;
+  answers?: string;
 }
 
 export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<void> {
@@ -379,6 +412,34 @@ export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<
       console.log(`  report: ${result.report_path}`);
       console.log(`  notified: ${result.notification_sent}`);
       if (!result.ok) process.exit(1);
+      break;
+    }
+    case "correspondence-send":
+      await runCorrespondenceSendSkill({ id: opts.id, dryRun: opts.dryRun });
+      break;
+    case "slack-notify":
+      await runSlackNotifySkill({ id: opts.id, dryRun: opts.dryRun });
+      break;
+    case "correspondence-draft":
+      runCorrespondenceDraft({
+        channel: opts.channel,
+        to: opts.to,
+        subject: opts.subject,
+        body: opts.body,
+        slackChannel: opts.slackChannel,
+      });
+      break;
+    case "tenant-integrations-setup": {
+      const { runTenantSetupCommand } = await import("./tenant-setup.js");
+      if (!opts.answers) {
+        console.error("tenant-integrations-setup requires --answers <jsonPath>");
+        process.exit(1);
+      }
+      await runTenantSetupCommand({
+        answers: opts.answers,
+        nonInteractive: true,
+        skipValidate: true,
+      });
       break;
     }
     default:

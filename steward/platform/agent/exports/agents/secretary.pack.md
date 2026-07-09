@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · secretary
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-08 · **Tenant:** mal
+> **Generated:** 2026-07-10 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent secretary`
 
 ---
@@ -145,6 +145,9 @@ npm run orgos -- executive brief --week
 | [schedule_management](../steward/core/skills/schedule_management.md) | カレンダー確認・競合チェック |
 | [one_on_one_prep](../steward/core/skills/one_on_one_prep.md) | 1-on-1 前ブリーフ |
 | [external_correspondence](../steward/core/skills/external_correspondence.md) | 社外メール下書き・ルーティング |
+| [correspondence_draft](../steward/core/skills/correspondence_draft.md) | 下書き + **org approval 起案**（送信しない） |
+| [correspondence_send](../steward/core/skills/correspondence_send.md) | **承認済み** メール送信（SMTP · cli） |
+| [slack_notify](../steward/core/skills/slack_notify.md) | **承認済み** Slack webhook（cli） |
 | [inter_org_notice_draft](../steward/core/skills/inter_org_notice_draft.md) | **組織間 wire 起案**（draft のみ · approve は CEO） |
 
 ---
@@ -166,6 +169,37 @@ npm run orgos -- executive brief --week
 - `executive-remaining-tasks.md` の直接編集（経営 P0 は Steward 領域）
 - `external_visible: false` 予定の社外共有
 - 自動送信（メール・LINE 等）— 常に人間承認
+- **`secretary correspondence send` / `skills run correspondence-send` は `org approval approve` 後のみ**
+
+### 対外送信ワークフロー（承認ゲート）
+
+```
+Secretary draft → org approval propose (pending)
+       ↓
+人間 approve (CEO / approver)
+       ↓
+secretary correspondence send  → SMTP / Slack webhook
+       ↓
+company event 記録（Wire 配送ではない）
+```
+
+```bash
+# 1. 下書き + 承認起案
+npm run orgos -- secretary correspondence draft --to "..." --subject "..." --body "..."
+
+# 2. 人間承認
+npm run orgos -- org approval approve --id APR-... --approver "CEO"
+
+# 3. 送信（approver 権限 · operator-id ログ）
+npm run orgos -- secretary correspondence send --id DRAFT-...
+
+# メール一覧（読取専用）
+npm run orgos -- secretary mail list
+```
+
+Mail 設定: `records/executive/mail-config.yaml`（L2）· `ORGOS_SMTP_*` · `ORGOS_SLACK_WEBHOOK_URL`
+
+テナント統合メタ: `data/integrations/integrations.yaml`（L2 · gitignore）· 充足確認 `orgos integrations status`
 
 ---
 
@@ -251,6 +285,9 @@ npm run orgos -- executive brief --week
 | schedule_management | registry Skill |
 | one_on_one_prep | registry Skill |
 | external_correspondence | registry Skill |
+| correspondence_draft | registry Skill · cli |
+| correspondence_send | registry Skill · cli（承認後のみ） |
+| slack_notify | registry Skill · cli（承認後のみ） |
 
 ## CLI
 

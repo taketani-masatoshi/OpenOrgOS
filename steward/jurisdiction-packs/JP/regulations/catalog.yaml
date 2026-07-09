@@ -54,6 +54,24 @@ regulations:
     tenant_doc: ryohi-kisoku.md
     binds_to: { type: core, group: governance }
 
+  - id: REG-027
+    name: 経理規程
+    template: core/REG-027-keiri/template.md
+    tenant_doc: keiri-kisoku.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-028
+    name: クレジットカード規程
+    template: core/REG-028-credit-card/template.md
+    tenant_doc: credit-card-kisoku.md
+    binds_to: { type: core, group: governance }
+
+  - id: REG-029
+    name: 役員退職金規程
+    template: core/REG-029-yakuin-taishoku/template.md
+    tenant_doc: yakuin-taishoku-kisoku.md
+    binds_to: { type: core, group: governance }
+
   # ── MS / ISO 連動 ──
   - id: REG-009
     name: 情報セキュリティ管理規程

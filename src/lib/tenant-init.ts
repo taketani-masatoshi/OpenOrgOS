@@ -6,13 +6,17 @@ import {
   readdirSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 import YAML from "yaml";
 import { modulesFileSchema } from "../../schemas/modules.js";
 import { seedRegulationDocs } from "./regulations.js";
-import { getModuleSeedDir, listModuleSeedFiles } from "./modules.js";
+import { getModuleSeedDir, listModuleSeedFiles, loadModulesFile } from "./modules.js";
 import { getTenantsDir } from "./orgos-paths.js";
-import { setTenantId, loadTenantConfig, getTenantTemplateDir } from "./tenant.js";
+import { setTenantId, loadTenantConfig, getTenantTemplateDir, getTenantDir } from "./tenant.js";
+import {
+  seedExecutiveYamlFromExamples,
+  seedProtocolYamlFromExamples,
+} from "./tenant-scaffold.js";
 
 export interface TenantInitOptions {
   id: string;
@@ -154,74 +158,109 @@ function readYamlFileRaw(path: string): string {
   return readFileSync(path, "utf-8");
 }
 
+export interface ScaffoldTenantDataResult {
+  created: string[];
+  skipped: string[];
+}
+
+/** Fill missing skeleton data/ files without overwriting existing tenant SoT. */
+export function scaffoldMissingTenantData(): ScaffoldTenantDataResult {
+  const dest = getTenantDir();
+  const cfg = loadTenantConfig();
+  const name = cfg.legal_name ?? cfg.name ?? basename(dest);
+  const id = basename(dest);
+  const enabledModules = loadModulesFile()
+    .modules.filter((m) => m.enabled)
+    .map((m) => m.id);
+  return writeSkeletonData(dest, id, name, enabledModules, { skipExisting: true });
+}
+
+interface WriteSkeletonOptions {
+  skipExisting?: boolean;
+}
+
 function writeSkeletonData(
   dest: string,
   id: string,
   name: string,
-  fromModules?: string[]
-): void {
+  fromModules?: string[],
+  options?: WriteSkeletonOptions
+): ScaffoldTenantDataResult {
   const dataDir = join(dest, "data");
   const docsDir = join(dest, "docs");
+  const result: ScaffoldTenantDataResult = { created: [], skipped: [] };
 
-  writeFile(join(dataDir, "company.yaml"), skeletonCompany(name));
-  writeFile(join(dataDir, "ops-config.yaml"), skeletonOpsConfig());
-  writeFile(join(dataDir, "classification-registry.yaml"), skeletonClassificationRegistry());
-  writeFile(join(dataDir, "document-io.yaml"), "inbox_items: []\noutbox_items: []\n");
-  writeFile(join(dataDir, "dependency-graph.yaml"), skeletonDependencyGraph(id));
-  writeFile(join(dataDir, "hr", "employees.yaml"), "employees: []\n");
-  seedExecutiveFromExamples(dataDir);
+  const put = (rel: string, content: string) => {
+    const abs = join(dest, rel);
+    if (options?.skipExisting && existsSync(abs)) {
+      result.skipped.push(rel);
+      return;
+    }
+    writeFile(abs, content);
+    result.created.push(rel);
+  };
 
-  writeFile(join(dataDir, "finance", "fixed-costs.yaml"), "items: []\n");
-  writeFile(join(dataDir, "finance", "payroll.yaml"), "officer_compensation_annual: 0\n");
-  writeFile(
-    join(dataDir, "finance", "cash-balance.yaml"),
+  put("data/company.yaml", skeletonCompany(name));
+  put("data/ops-config.yaml", skeletonOpsConfig());
+  put("data/classification-registry.yaml", skeletonClassificationRegistry());
+  put("data/document-io.yaml", "inbox_items: []\noutbox_items: []\n");
+  put("data/dependency-graph.yaml", skeletonDependencyGraph(id));
+  put("data/hr/employees.yaml", "employees: []\n");
+  seedExecutiveYamlFromExamples(dataDir, options?.skipExisting, result);
+  seedProtocolYamlFromExamples(dataDir, options?.skipExisting, result);
+  seedIntegrationsFromExample(dest, options?.skipExisting, result);
+  seedExecutiveRecordsFromExample(dest, options?.skipExisting, result);
+
+  put("data/finance/fixed-costs.yaml", "items: []\n");
+  put("data/finance/payroll.yaml", "officer_compensation_annual: 0\n");
+  put(
+    "data/finance/cash-balance.yaml",
     `as_of: "2027-01-31"\nstatus: template\ncurrency: JPY\naccounts: []\ntotal: null\nnotes: |\n  スケルトン — 残高入力後 status: confirmed\n`
   );
-  writeFile(join(dataDir, "finance", "loans.yaml"), "loans: []\n");
-  writeFile(
-    join(dataDir, "finance", "fixed-assets.yaml"),
+  put("data/finance/loans.yaml", "loans: []\n");
+  put(
+    "data/finance/fixed-assets.yaml",
     `as_of: "2027-01-31"\nfiscal_year: FY2026\ncurrency: JPY\nassets: []\nsummary:\n  total_acquisition_cost: 0\n  total_accumulated_depreciation: 0\n  total_book_value: 0\n  annual_depreciation_fy_current: 0\n`
   );
-  writeFile(
-    join(dataDir, "finance", "tax-profile.yaml"),
+  put(
+    "data/finance/tax-profile.yaml",
     `entity:\n  name: "${name}"\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: TBD\ncorporate_tax:\n  category: TBD\n  capital_stock: TBD\n`
   );
-  writeFile(
-    join(dataDir, "finance", "chart-of-accounts.yaml"),
+  put(
+    "data/finance/chart-of-accounts.yaml",
     `version: "1"\ncurrency: JPY\naccounts:\n  - code: "1100"\n    name: 現金及び預金\n    type: asset\n    normal_balance: debit\ncategory_mapping:\n  revenue: {}\n  expense: {}\n`
   );
 
   mkdirSync(join(dataDir, "finance", "monthly"), { recursive: true });
   mkdirSync(join(dataDir, "contracts"), { recursive: true });
 
-  const rentalEnabled = !fromModules?.length || fromModules.includes("rental");
+  const rentalEnabled =
+    fromModules === undefined ? true : fromModules.includes("rental");
   if (rentalEnabled) {
     mkdirSync(join(dataDir, "properties"), { recursive: true });
-    writeFile(
-      join(dataDir, "properties", "PROP-001.yaml"),
-      skeletonProperty(name)
-    );
-    writeFile(
-      join(docsDir, "properties", "PROP-001-minato", "operations", "00-README.md"),
+    put("data/properties/PROP-001.yaml", skeletonProperty(name));
+    put(
+      "docs/properties/PROP-001-minato/operations/00-README.md",
       `# PROP-001 運用\n\nスケルトン — 運用手順を追加してください。\n`
     );
   }
 
-  writeFile(join(dataDir, "plans", "business-plan.yaml"), skeletonBusinessPlan(name));
-  writeFile(
-    join(dataDir, "plans", "property-revenue.yaml"),
+  put("data/plans/business-plan.yaml", skeletonBusinessPlan(name));
+  put(
+    "data/plans/property-revenue.yaml",
     rentalEnabled
       ? "rental:\n  - property_id: PROP-001\n    monthly_rent: 0\n    annual_rent: 0\n    vacancy_rate: 0\n    management_fee: 0\nhotel: []\n"
       : "rental: []\nhotel: []\n"
   );
-  writeFile(join(dataDir, "plans", "revenue-plan.yaml"), skeletonYearPlan("revenue"));
-  writeFile(join(dataDir, "plans", "profit-plan.yaml"), skeletonYearPlan("profit"));
-  writeFile(join(dataDir, "plans", "expense-plan.yaml"), skeletonExpensePlan());
-  writeFile(join(dataDir, "plans", "investment-plan.yaml"), skeletonYearPlan("investment"));
-  writeFile(join(dataDir, "plans", "debt-plan.yaml"), skeletonDebtPlan());
-  writeFile(join(dataDir, "plans", "yojitsu-fy2026.yaml"), skeletonYojitsu(name));
+  put("data/plans/revenue-plan.yaml", skeletonYearPlan("revenue"));
+  put("data/plans/profit-plan.yaml", skeletonYearPlan("profit"));
+  put("data/plans/expense-plan.yaml", skeletonExpensePlan());
+  put("data/plans/investment-plan.yaml", skeletonYearPlan("investment"));
+  put("data/plans/debt-plan.yaml", skeletonDebtPlan());
+  put("data/plans/yojitsu-fy2026.yaml", skeletonYojitsu(name));
 
   copyModuleSeeds(dest, fromModules);
+  return result;
 }
 
 function shouldCopyTemplateEntry(src: string): boolean {
@@ -232,25 +271,43 @@ function shouldCopyTemplateEntry(src: string): boolean {
   return true;
 }
 
-function seedExecutiveFromExamples(dataDir: string): void {
-  const execDir = join(dataDir, "executive");
-  mkdirSync(execDir, { recursive: true });
-  const bases = ["calendar", "tasks", "one-on-ones", "external-contacts", "stakeholders"];
-  for (const base of bases) {
-    const example = join(execDir, `${base}.yaml.example`);
-    const target = join(execDir, `${base}.yaml`);
-    if (existsSync(example)) {
-      cpSync(example, target);
-      continue;
-    }
-    const empty: Record<string, string> = {
-      calendar: "events: []\n",
-      tasks: "tasks: []\n",
-      "one-on-ones": "one_on_ones: []\n",
-      "external-contacts": "contacts: []\n",
-      stakeholders: "stakeholders: []\n",
-    };
-    writeFile(target, empty[base] ?? "notes: |\n  skeleton\n");
+function seedIntegrationsFromExample(
+  dest: string,
+  skipExisting?: boolean,
+  result?: ScaffoldTenantDataResult
+): void {
+  const intDir = join(dest, "data", "integrations");
+  mkdirSync(intDir, { recursive: true });
+  const example = join(intDir, "integrations.yaml.example");
+  const target = join(intDir, "integrations.yaml");
+  const rel = "data/integrations/integrations.yaml";
+  if (skipExisting && existsSync(target)) {
+    result?.skipped.push(rel);
+    return;
+  }
+  if (existsSync(example)) {
+    cpSync(example, target);
+    result?.created.push(rel);
+  }
+}
+
+function seedExecutiveRecordsFromExample(
+  dest: string,
+  skipExisting?: boolean,
+  result?: ScaffoldTenantDataResult
+): void {
+  const recDir = join(dest, "records", "executive");
+  mkdirSync(recDir, { recursive: true });
+  const example = join(recDir, "mail-config.yaml.example");
+  const target = join(recDir, "mail-config.yaml");
+  const rel = "records/executive/mail-config.yaml";
+  if (skipExisting && existsSync(target)) {
+    result?.skipped.push(rel);
+    return;
+  }
+  if (existsSync(example)) {
+    cpSync(example, target);
+    result?.created.push(rel);
   }
 }
 
@@ -290,6 +347,10 @@ p0:
 }
 
 function skeletonClassificationRegistry(): string {
+  const templatePath = join(getTenantTemplateDir(), "data", "classification-registry.yaml");
+  if (existsSync(templatePath)) {
+    return readFileSync(templatePath, "utf-8");
+  }
   return `version: "1"
 as_of: "2026-06-08"
 

@@ -28,6 +28,7 @@ tenants/*/data/operations/kamezawa-secrets.yaml
 tenants/*/data/operations/*-secrets.yaml
 tenants/*/data/operations/travel-portals.yaml
 tenants/*/data/finance/bank-accounts.yaml
+tenants/*/data/integrations/integrations.yaml
 tenants/*/data/protocol/signing-key.pem
 tenants/*/data/protocol/signing-key.pem.bak-*
 data/hub-*/signing-key.pem
@@ -79,6 +80,13 @@ tenants/*/docs/executive/correspondence-drafts/**
 !tenants/*/docs/executive/correspondence-drafts/*.example.md
 tenants/*/docs/executive/one-on-one-prep-*.md
 !tenants/*/docs/executive/one-on-one-prep-*.example.md
+# Secretary mail / Slack secrets (L2 — records/executive/)
+tenants/*/records/executive/mail-config.yaml
+tenants/*/records/executive/slack-webhook.yaml
+tenants/*/records/executive/mail-sent/**
+tenants/*/records/executive/mail-inbox/**
+!tenants/*/records/executive/mail-config.yaml.example
+!tenants/*/records/executive/00-このフォルダについて.md
 tenants/*/docs/operations/travel-drafts/**
 !tenants/*/docs/operations/travel-draft-template.md
 !tenants/*/docs/operations/00-このフォルダについて.md

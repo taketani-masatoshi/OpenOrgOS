@@ -1,0 +1,6 @@
+# Mode A — TLS termination at reverse proxy (ACME)
+# Replace wire.mal.example with production hostname.
+
+wire.mal.example {
+  reverse_proxy 127.0.0.1:8443
+}

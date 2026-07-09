@@ -23,6 +23,15 @@ agents:
     reports_to: coo
     scope: スケジュール · タスク · 1-on-1 · 対外下書き
 
+  setup:
+    id: setup
+    name: Setup Agent
+    name_ja: 初期設定
+    path: steward/core/agents/setup_agent.md
+    tier: core
+    required: false
+    scope: テナント integrations 初回設定 · tenant setup ウィザード
+
   finance:
     id: finance
     name: Finance

@@ -7,6 +7,7 @@ import { listWitnessPending } from "./witness-queue.js";
 import { loadPeersRegistry } from "./peers.js";
 import { reconcileWitnessWithPeer, reconcileCrossHub, reconcileWitnessWithPeerAndPersist } from "./witness-reconcile.js";
 import { evaluateTransactionSla } from "./resilience-sla.js";
+import { evaluateRelaySlaAlerts } from "./relay-sla-alert.js";
 import { listTransactions } from "./transactions.js";
 import { loadContractById } from "./contract-witness-pool.js";
 import type { ResilienceSlaTier } from "../../../schemas/protocol/resilience-sla.js";
@@ -93,6 +94,16 @@ export async function runRelayCycle(opts?: {
   state.last_metrics = metrics;
   state.history = [...(state.history ?? []), metrics].slice(-48);
   saveRelayState(state);
+
+  const slaAlerts = evaluateRelaySlaAlerts(state);
+  if (slaAlerts.length > 0) {
+    for (const alert of slaAlerts) {
+      reconcileAlerts.push({
+        code: alert.code,
+        message: `[relay-sla] ${alert.message}`,
+      });
+    }
+  }
 
   return { ...metrics, reconcile_alerts_detail: reconcileAlerts };
 }

@@ -15,9 +15,9 @@ describe("regulations", () => {
   beforeEach(() => {
     setTenantId("mal");
   });
-  it("loads catalog with 26 regulations", () => {
+  it("loads catalog with 29 regulations", () => {
     const catalog = loadRegulationsCatalog();
-    expect(catalog.regulations.length).toBe(26);
+    expect(catalog.regulations.length).toBe(29);
   });
 
   it("mal effective regulations exclude disabled ISO/module binds", () => {

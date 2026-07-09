@@ -115,8 +115,11 @@ export const externalContactSchema = z.object({
   id: z.string().regex(/^EXT-\d{3,}$/),
   name: z.string().min(1),
   org: z.string().optional(),
+  department: z.string().optional(),
   relationship: z.string().optional(),
+  role: z.string().optional(),
   preferred_channel: z.string().optional(),
+  email: z.string().email().optional(),
   /** 詳細は gitignore の stakeholders.yaml へ */
   stakeholder_id: z.string().regex(/^STK-\d{3,}$/).optional(),
   notes: z.string().optional(),
@@ -128,6 +131,15 @@ export const stakeholderContactSchema = z.object({
   email: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
   chat: z.string().nullable().optional(),
+});
+
+export const representativeContactSchema = z.object({
+  name: z.string().min(1),
+  role: z.string().optional(),
+  department: z.string().optional(),
+  email: z.string().email().optional(),
+  registered_at: z.string().optional(),
+  source: z.string().optional(),
 });
 
 export const stakeholderSchema = z.object({
@@ -145,6 +157,7 @@ export const stakeholderSchema = z.object({
   /** リポジトリルートからの相対パス（gitignore 想定） */
   profile_md: z.string().optional(),
   contact: stakeholderContactSchema.optional(),
+  representative_contact: representativeContactSchema.optional(),
   background_summary: z.string().optional(),
   notes: z.string().optional(),
 });

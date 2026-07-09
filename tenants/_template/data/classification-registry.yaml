@@ -105,6 +105,36 @@ resources:
     read_agents: [secretary, contract, compliance]
     write_agents: [secretary, contract]
 
+  - id: RES-INTEGRATIONS
+    path: data/integrations/integrations.yaml
+    example_path: data/integrations/integrations.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: テナント統合設定 · webhook · setup 完了 stamp
+    read_agents: [secretary, operations, compliance]
+    write_agents: [operations]
+
+  - id: RES-EXEC-MAIL-CONFIG
+    path: records/executive/mail-config.yaml
+    example_path: records/executive/mail-config.yaml.example
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: Secretary メール SMTP 設定（パスワードは env）
+    read_agents: [secretary, compliance]
+    write_agents: [secretary]
+
+  - id: RES-PROTOCOL-PEERS
+    path: data/protocol/peers.yaml
+    example_path: data/protocol/peers.yaml.example
+    level: L1
+    git: track
+    ai_context: on_demand
+    description: protocol peer 台帳（Secretary 照合 org_uri gate）
+    read_agents: [secretary, compliance, contract]
+    write_agents: [compliance]
+
 rules:
   - id: RULE-GITIGNORE
     text: git:ignore の resource は .gitignore にパターン登録必須。

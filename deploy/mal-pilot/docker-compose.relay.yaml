@@ -1,0 +1,19 @@
+# mal pilot — protocol relay daemon (requires witness-hub stack running)
+# Usage:
+#   docker compose -f deploy/witness-hub/docker-compose.yaml up -d hub-a hub-b
+#   docker compose -f deploy/witness-hub/docker-compose.yaml \
+#     -f deploy/mal-pilot/docker-compose.relay.yaml --profile relay up -d
+
+services:
+  relay-mal:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+    environment:
+      ORGOS_TENANT: mal
+      STEWARD_TENANT: mal
+    command: >
+      sh -c "cd /app && npm ci && npm run orgos -- --tenant mal protocol relay run --interval-sec 30"
+    profiles:
+      - relay

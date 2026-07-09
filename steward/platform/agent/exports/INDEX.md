@@ -1,6 +1,6 @@
 # OrgOS Agent Export Index
 
-Generated: 2026-07-08 · Tenant: mal
+Generated: 2026-07-10 · Tenant: mal
 
 Regenerate all packs:
 
@@ -15,6 +15,7 @@ orgos operator sync-policy --emit all
 |----|------|-----------|-------------|
 | executive_steward | ステュワード（経営統括） | `steward/core/agents/executive_steward_agent.md` | `exports/agents/executive_steward.pack.md` |
 | secretary | 秘書 | `steward/core/agents/secretary_agent.md` | `exports/agents/secretary.pack.md` |
+| setup | 初期設定 | `steward/core/agents/setup_agent.md` | `exports/agents/setup.pack.md` |
 | finance | 財務・計画 | `steward/core/agents/finance_agent.md` | `exports/agents/finance.pack.md` |
 | contract | 契約管理 | `steward/core/agents/contract_agent.md` | `exports/agents/contract.pack.md` |
 | compliance | コンプライアンス | `steward/core/agents/compliance_agent.md` | `exports/agents/compliance.pack.md` |

@@ -1,0 +1,44 @@
+schema_version: 2
+year: 2026
+fiscal_year: "FY2026"
+period_from: "2026-02"
+period_to: "2027-01"
+assumptions: |
+  株式会社サウスウッド — yojitsu v2 スケルトン（segments 連動）
+months:
+  - month: "2026-02"
+    plan:
+      lines: []
+  - month: "2026-03"
+    plan:
+      lines: []
+  - month: "2026-04"
+    plan:
+      lines: []
+  - month: "2026-05"
+    plan:
+      lines: []
+  - month: "2026-06"
+    plan:
+      lines: []
+  - month: "2026-07"
+    plan:
+      lines: []
+  - month: "2026-08"
+    plan:
+      lines: []
+  - month: "2026-09"
+    plan:
+      lines: []
+  - month: "2026-10"
+    plan:
+      lines: []
+  - month: "2026-11"
+    plan:
+      lines: []
+  - month: "2026-12"
+    plan:
+      lines: []
+  - month: "2027-01"
+    plan:
+      lines: []

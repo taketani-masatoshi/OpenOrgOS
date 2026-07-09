@@ -1,0 +1,54 @@
+# City-named Witness Hub pool — local Docker (witness-hub-governance.md §7.B)
+# Minimum production quorum: k=3 · n=4 (Tokyo · Dubai · Tallinn · Dublin)
+# Full global pool (n=8): use profile `global` in docker-compose.cities.yaml
+
+version: "1"
+quorum:
+  mode: k_of_n
+  k: 3
+
+# Core pool (always started)
+core:
+  - hub_id: HUB-APAC-JP
+    city: Tokyo
+    wave: 1
+    port: 9474
+    data_dir: hub-apac-jp
+  - hub_id: HUB-ME
+    city: Dubai
+    wave: 1
+    port: 9475
+    data_dir: hub-me
+  - hub_id: HUB-EU-EE
+    city: Tallinn
+    wave: 1
+    port: 9476
+    data_dir: hub-eu-ee
+  - hub_id: HUB-EU-IE
+    city: Dublin
+    wave: 2
+    port: 9477
+    data_dir: hub-eu-ie
+
+# Extended pool (docker compose --profile global)
+global:
+  - hub_id: HUB-TR-IST
+    city: Istanbul
+    wave: 3
+    port: 9478
+    data_dir: hub-tr-ist
+  - hub_id: HUB-US
+    city: New York
+    wave: 3
+    port: 9479
+    data_dir: hub-us
+  - hub_id: HUB-SA
+    city: Santiago
+    wave: 3
+    port: 9480
+    data_dir: hub-sa
+  - hub_id: HUB-OCEANIA-NZ
+    city: Auckland
+    wave: 5
+    port: 9481
+    data_dir: hub-oceania-nz

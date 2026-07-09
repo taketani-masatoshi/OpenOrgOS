@@ -8,6 +8,17 @@ import {
   runExecutiveTasksArchive,
 } from "../../commands/executive.js";
 import { runSecretaryEscalate } from "../../commands/secretary.js";
+import {
+  runCorrespondenceDraft,
+  runCorrespondenceList,
+  runCorrespondenceShow,
+  runCorrespondenceSend,
+  runSecretaryMailList,
+  runSecretaryMailConfig,
+  runSecretaryMailSetupGuide,
+} from "../../commands/secretary-correspondence.js";
+import { runContactsResolve, runContactsRegister } from "../../commands/secretary-contacts.js";
+import { buildGmailComposeUrl } from "../../lib/mail-compose-url.js";
 import { runStatus } from "../../commands/status.js";
 
 export function registerExecutiveCommands(program: Command): void {
@@ -113,6 +124,150 @@ export function registerExecutiveCommands(program: Command): void {
         print: opts.print,
       })
     );
+
+  const correspondenceCmd = secretaryCmd
+    .command("correspondence")
+    .description("Approval-gated outbound email/Slack (Secretary)");
+
+  correspondenceCmd
+    .command("draft")
+    .description("Create correspondence draft + propose org approval")
+    .option("--channel <email|slack>", "Delivery channel", "email")
+    .option("--to <email>", "Recipient (email channel)")
+    .option("--cc <email>", "CC (email channel)")
+    .option("--subject <text>", "Email subject")
+    .option("--body <text>", "Message body")
+    .option("--body-file <path>", "Message body from file")
+    .option("--slack-channel <name>", "Slack channel (slack channel)")
+    .option("--contact-ref <id>", "external-contacts ref")
+    .option("--notes <text>", "Internal notes")
+    .option("--operator <id>", "Proposed-by operator id")
+    .option("--no-approval", "Skip approval proposal (testing only)")
+    .option("--json", "JSON output")
+    .action((opts) => runCorrespondenceDraft(opts));
+
+  correspondenceCmd
+    .command("list")
+    .description("List correspondence drafts")
+    .option("--status <status>", "Filter by status")
+    .option("--channel <email|slack>", "Filter by channel")
+    .option("--json", "JSON output")
+    .action((opts) => runCorrespondenceList(opts));
+
+  correspondenceCmd
+    .command("show")
+    .description("Show draft metadata")
+    .argument("<id>", "Draft ID")
+    .option("--json", "JSON output")
+    .action((id, opts) => runCorrespondenceShow({ id, ...opts }));
+
+  correspondenceCmd
+    .command("send")
+    .description("Send approved draft (SMTP / Slack webhook · records company event)")
+    .requiredOption("--id <draftId>", "Draft ID")
+    .option("--operator <id>", "Sending operator id")
+    .option("--dry-run", "Validate gate without delivery")
+    .option("--json", "JSON output")
+    .action(async (opts) => runCorrespondenceSend(opts));
+
+  const mailCmd = secretaryCmd.command("mail").description("Executive mail access (read-only list · config)");
+  mailCmd
+    .command("list")
+    .description("List sent/received mail (local index · inbox sync stub)")
+    .option("--direction <sent|received|all>", "Filter direction", "all")
+    .option("--limit <n>", "Max entries", "50")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSecretaryMailList({
+        direction: opts.direction,
+        limit: opts.limit ? parseInt(opts.limit, 10) : undefined,
+        json: opts.json,
+      })
+    );
+  mailCmd
+    .command("config")
+    .description("Show mail config status (L2 secrets via env)")
+    .option("--json", "JSON output")
+    .action((opts) => runSecretaryMailConfig(opts));
+
+  mailCmd
+    .command("setup-guide")
+    .description("Mail/Slack setup checklist — blocks send until resolved")
+    .option("--json", "JSON output")
+    .action((opts) => runSecretaryMailSetupGuide(opts));
+
+  const contactsCmd = secretaryCmd
+    .command("contacts")
+    .description("Contact registry lookup and update (Secretary · no guessing)");
+
+  contactsCmd
+    .command("resolve")
+    .description("Resolve person/org/department against self + counterparty + peer tenant DBs")
+    .option("--name <text>", "Person name (partial match)")
+    .option("--org <text>", "Organization name (partial match)")
+    .option("--department <text>", "Department or role (partial match)")
+    .option("--ext-id <id>", "external-contacts id (EXT-...)")
+    .option("--stakeholder-id <id>", "stakeholder id (STK-...)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runContactsResolve({
+        name: opts.name,
+        org: opts.org,
+        department: opts.department,
+        extId: opts.extId,
+        stakeholderId: opts.stakeholderId,
+        json: opts.json,
+      })
+    );
+
+  contactsCmd
+    .command("register")
+    .description("Register or update contact after human disclosure (external-contacts + stakeholders)")
+    .requiredOption("--name <text>", "Contact person name")
+    .option("--email <email>", "Email address")
+    .option("--org <text>", "Organization")
+    .option("--department <text>", "Department")
+    .option("--role <text>", "Role / title")
+    .option("--relationship <text>", "Relationship label")
+    .option("--ext-id <id>", "Update existing EXT-* (optional)")
+    .option("--stakeholder-id <id>", "Link STK-* and sync representative_contact")
+    .option("--notes <text>", "Notes")
+    .option("--source <text>", "Registration source tag", "human_disclosure")
+    .option("--dry-run", "Preview existing matches without writing")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runContactsRegister({
+        name: opts.name,
+        email: opts.email,
+        org: opts.org,
+        department: opts.department,
+        role: opts.role,
+        relationship: opts.relationship,
+        extId: opts.extId,
+        stakeholderId: opts.stakeholderId,
+        notes: opts.notes,
+        source: opts.source,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
+
+  mailCmd
+    .command("compose-url")
+    .description("Build Gmail compose URL (no API send · human clicks to send)")
+    .requiredOption("--to <email>", "Recipient")
+    .requiredOption("--subject <text>", "Subject")
+    .requiredOption("--body <text>", "Body")
+    .option("--cc <email>", "CC")
+    .action((opts) => {
+      const url = buildGmailComposeUrl({
+        to: opts.to,
+        subject: opts.subject,
+        body: opts.body,
+        cc: opts.cc,
+      });
+      console.log(url);
+    });
 
   program
     .command("status")

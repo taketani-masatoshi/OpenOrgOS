@@ -59,19 +59,23 @@
 
 ## 有効社内規程
 
-- **REG-001** 役員報酬規程 — 施行: `docs/company/regulations/yakuin-hoshu-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-001-yakuin-hoshu/template.md`
-- **REG-002** 取締役会議事規則 — 施行: `docs/company/regulations/torishimari-kai-gijisho-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-002-torishimari-kai/template.md`
-- **REG-003** 株主総会議事規則 — 施行: `docs/company/regulations/shukai-gijisho-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-003-shukai-gijisho/template.md`
-- **REG-004** 稟議・決裁規程 — 施行: `docs/company/regulations/ringi-kessai-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-004-ringi-kessai/template.md`
-- **REG-005** 経費精算規程 — 施行: `docs/company/regulations/keihi-seisan-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-005-keihi-seisan/template.md`
-- **REG-006** 利益相反取引規程 — 施行: `docs/company/regulations/riekisohan-torihiki-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-006-riekisohan/template.md`
-- **REG-007** 文書管理規程 — 施行: `docs/company/regulations/bunsho-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-007-bunsho-kanri/template.md`
-- **REG-008** 旅費規程 — 施行: `docs/company/regulations/ryohi-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-008-ryohi/template.md`
-- **REG-010** 個人情報保護規程 — 施行: `docs/company/regulations/kojin-joho-hogo-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-010-kojin-joho/template.md`
+（なし — `regulations.yaml` で有効化）
 
 ## 無効社内規程（読取禁止）
 
+- `REG-001` 役員報酬規程 — `docs/company/regulations/yakuin-hoshu-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-002` 取締役会議事規則 — `docs/company/regulations/torishimari-kai-gijisho-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-003` 株主総会議事規則 — `docs/company/regulations/shukai-gijisho-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-004` 稟議・決裁規程 — `docs/company/regulations/ringi-kessai-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-005` 経費精算規程 — `docs/company/regulations/keihi-seisan-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-006` 利益相反取引規程 — `docs/company/regulations/riekisohan-torihiki-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-007` 文書管理規程 — `docs/company/regulations/bunsho-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-008` 旅費規程 — `docs/company/regulations/ryohi-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-027` 経理規程 — `docs/company/regulations/keiri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-028` クレジットカード規程 — `docs/company/regulations/credit-card-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-029` 役員退職金規程 — `docs/company/regulations/yakuin-taishoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-009` 情報セキュリティ管理規程 — `docs/company/regulations/joho-security-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-010` 個人情報保護規程 — `docs/company/regulations/kojin-joho-hogo-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-011` 品質管理規程 — `docs/company/regulations/hinshitsu-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-013` 事業継続・危機管理規程 — `docs/company/regulations/jigyo-keizoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-014` 環境・エネルギー管理規程 — `docs/company/regulations/kankyo-energy-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
@@ -86,11 +90,14 @@
 - `REG-022` EC取引規程 — `docs/company/regulations/ec-torihiki-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-023` 配送・倉庫管理規程 — `docs/company/regulations/haiso-soko-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-024` 会員管理規程 — `docs/company/regulations/kaiin-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-025` 医療機器QMS規程 — `docs/company/regulations/iryo-kiki-qms-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-026` 医療機器GVP規程 — `docs/company/regulations/iryo-kiki-gvp-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 
 ## 未バインドカタログ（読取禁止）
 
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
+- `jp_medical_device` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
 - `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**
 - `language_bridge` — `modules.yaml` 未登録 · **読まない**

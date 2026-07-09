@@ -1,11 +1,19 @@
 name: "AIAC株式会社"
 corporate_number: "4010001188888"
 established_date: "2020-10-01"
-representative: "アイアック 太郎"
+representative: "竹谷昌敏"
 directors:
-  - name: "アイアック 太郎"
+  - name: "竹谷昌敏"
     role: "代表取締役"
+    appointed_at: "2026-07-09"
+    officer_compensation_annual_yen: 120000
 address: "〒100-0005 東京都千代田区丸の内1-1-1"
 business_description: |
   AI 活用型コンサルティング（デモ用 L1）。
   Inter-org protocol デモの第3組織 — mal · southwood に加え mesh relay / 多当事者 wire 検証用。
+governance_note: |
+  2026-07-09: 竹谷昌敏 代表取締役就任（EVT-20260709-governance-taketani-ceo-appointment）。
+  前代表取締役 アイアック 太郎 からの交代（デモ）。
+public_disclosure:
+  representative_email: taketnai@aiac.co.jp
+  contact_email: taketnai@aiac.co.jp

@@ -388,7 +388,19 @@ npm run wire-console:smoke         # Playwright 3 本（:9472 operator+witness �
 npm run wire-console:release-check # 上記一括（Wave 4 リリースゲート）
 ```
 
-**CI:** `validate.yml` — `validate` job（`npm test` に wire-console vitest 含む）+ `wire-console-smoke` job（Chromium · 3 Playwright spec）。
+**CI:** `validate.yml` — `validate` job（`npm test` に wire-console vitest 含む）+ `wire-console-smoke` job（Chromium · 3 Playwright spec · **`wire-console:release-check`**）。
+
+**ステージング / 本番 IdP · passkey チェックリスト:** [wire-console-staging-checklist.md](org-os/wire-console-staging-checklist.md)（W3-1 · W3-2）
+
+### W3-2 実 passkey 週次確認（本番）
+
+| # | 確認 | 設定 |
+|---|------|------|
+| 1 | RP ID = 本番ホスト | `WIRE_CONSOLE_WEBAUTHN_RP_ID` |
+| 2 | Origin = 本番 URL | `WIRE_CONSOLE_WEBAUTHN_ORIGIN` |
+| 3 | ハードウェア passkey で login → approve 1 件 | 手動 smoke |
+| 4 | 本番は register 禁止 | `WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER=1`（未設定時は bootstrap のみ） |
+| 5 | Playwright WebAuthn smoke green | `playwright test e2e/wire-console-webauthn.smoke.spec.ts` |
 
 **テスト tenant:** `tenants/wire-console-test/`（`lifecycle: test`）— Console タブには出さない。Vitest/Playwright は `WIRE_CONSOLE_INCLUDE_TEST_TENANTS=1`（smoke `:9472` サーバーのみ自動設定）。
 

@@ -44,6 +44,9 @@
 | `docs/company/executive-remaining-tasks.md` | P0 参照（重複編集しない） |
 | `data/hr/employees.yaml` | 1-on-1 紐付け |
 | `data/company.yaml` | 役員名・代表者（Read） |
+| `data/protocol/peers.yaml` | peer 台帳（Read · 照合入口） |
+
+**Peer 横断（L1 限定）:** [folder_access_policy.md §2.8.1](../steward/rules/folder_access_policy.md) — `peers.yaml` 登録相手の `company.yaml` · `external-contacts.yaml` のみ。`ORGOS_TENANT` を相手 ID に切替えない。
 
 ## Forbidden
 
@@ -52,6 +55,7 @@
 - `docs/contracts/**` 本文
 - ゲスト PII · `**/records/**`
 - dashboard / agent-summaries の **財務詳細の社外転記**
+- **相手 tenant の `ORGOS_TENANT` 切替総参照**（peer 未登録 · L1 以外 · finance/contracts/stakeholders）
 
 **CLI（Phase 0 · SEC-P2-1）:**
 ```bash
@@ -70,6 +74,9 @@ npm run orgos -- executive brief --week
 | [schedule_management](../steward/core/skills/schedule_management.md) | カレンダー確認・競合チェック |
 | [one_on_one_prep](../steward/core/skills/one_on_one_prep.md) | 1-on-1 前ブリーフ |
 | [external_correspondence](../steward/core/skills/external_correspondence.md) | 社外メール下書き・ルーティング |
+| [correspondence_draft](../steward/core/skills/correspondence_draft.md) | 下書き + **org approval 起案**（送信しない） |
+| [correspondence_send](../steward/core/skills/correspondence_send.md) | **承認済み** メール送信（SMTP · cli） |
+| [slack_notify](../steward/core/skills/slack_notify.md) | **承認済み** Slack webhook（cli） |
 | [inter_org_notice_draft](../steward/core/skills/inter_org_notice_draft.md) | **組織間 wire 起案**（draft のみ · approve は CEO） |
 
 ---
@@ -91,6 +98,90 @@ npm run orgos -- executive brief --week
 - `executive-remaining-tasks.md` の直接編集（経営 P0 は Steward 領域）
 - `external_visible: false` 予定の社外共有
 - 自動送信（メール・LINE 等）— 常に人間承認
+- **`secretary correspondence send` / `skills run correspondence-send` は `org approval approve` 後のみ**
+
+## 社外連絡先の照合と更新
+
+Secretary はメール下書き・送信前に **必ず正本を照合** する。推測で宛先を設定しない。
+
+### 照合順（宛先決定）
+
+1. `orgos secretary contacts resolve` — 自社 + 他社 peer + stakeholders を一括照合
+2. `data/executive/external-contacts.yaml` — `id` · `email` · `department` · `stakeholder_id`
+3. `data/executive/stakeholders.yaml`（gitignore）— `contact.email` · `representative_contact`
+4. `data/protocol/peers.yaml` → 相手テナント `data/company.yaml` · `external-contacts.yaml`（L1）
+5. `data/hr/employees.yaml` · `data/executive/one-on-ones.yaml`（自社の人物・役職）
+6. 契約 YAML の相手方メール（L1 記載がある場合のみ）
+
+正本ルール: [secretary-contact-registry.md](../steward/rules/secretary-contact-registry.md)
+
+### 未登録のメールアドレス
+
+| 状況 | Secretary の動作 |
+|------|------------------|
+| 人間が **知らない宛先** の設定を依頼 | **「正本に未登録のため把握していません」** と回答。推測・捏造しない |
+| 人間が **新しいメールアドレスを開示** | 上記正本を **更新** し、更新内容を報告する |
+| 経理窓口と代表者の区別が不明 | 用途（請求 / 代表業務 / 個人契約）を確認してから登録 |
+| 同一人物の複数人格（例: STK-001 個人 vs STK-003 法人代表） | **別 contact として分離** — 混同禁止 |
+
+### 更新手順（人間開示時）
+
+```bash
+# 照合
+npm run orgos -- secretary contacts resolve --name "..." --org "..." --department "..."
+
+# 登録（external-contacts + stakeholders 同期）
+npm run orgos -- secretary contacts register --name "..." --email "..." --org "..." \
+  --department "..." --stakeholder-id STK-...
+
+npm run orgos -- validate
+```
+
+更新後、既存の `pending_approval` 下書きの宛先が誤っていれば **人間確認のうえ** YAML を修正する。
+
+### 下書き作成時
+
+- `--contact-ref EXT-...` を優先（正本の `email` を `--to` に反映）
+- `--to` を手入力する場合も、正本と一致するか確認する
+- 正本にない `--to` は **警告** を出し、送信前に人間が正本登録を完了していること
+- **実送信前** `orgos secretary mail setup-guide` が ready でない場合は、送信ではなく **初期設定ガイドを先に提示** する
+
+---
+
+### 対外送信ワークフロー（承認ゲート）
+
+```
+Secretary draft → org approval propose (pending)
+       ↓
+人間 approve (CEO / approver)
+       ↓
+secretary correspondence send  → SMTP / Slack webhook
+       ↓
+company event 記録（Wire 配送ではない）
+```
+
+```bash
+# 1. 下書き + 承認起案
+npm run orgos -- secretary correspondence draft --to "..." --subject "..." --body "..."
+
+# 2. 人間承認
+npm run orgos -- org approval approve --id APR-... --approver "CEO"
+
+# 3. 送信（approver 権限 · operator-id ログ）
+npm run orgos -- secretary correspondence send --id DRAFT-...
+
+# 送信前チェック（未設定ならガイド表示 · exit 1）
+npm run orgos -- secretary mail setup-guide
+
+# メール一覧（読取専用）
+npm run orgos -- secretary mail list
+```
+
+**送信ブロック:** 代表メール未登録 · `mail-config.yaml` 未作成 · SMTP 認証未設定のときは `correspondence send` を拒否し、`setup-guide` を表示する。`--dry-run` は EML 出力のみ許可。
+
+Mail 設定: `records/executive/mail-config.yaml`（L2）· `ORGOS_SMTP_*` · `ORGOS_SLACK_WEBHOOK_URL`
+
+テナント統合メタ: `data/integrations/integrations.yaml`（L2 · gitignore）· 充足確認 `orgos integrations status`
 
 ---
 
@@ -176,12 +267,18 @@ npm run orgos -- executive brief --week
 | schedule_management | registry Skill |
 | one_on_one_prep | registry Skill |
 | external_correspondence | registry Skill |
+| correspondence_draft | registry Skill · cli |
+| correspondence_send | registry Skill · cli（承認後のみ） |
+| slack_notify | registry Skill · cli（承認後のみ） |
+| contacts resolve / register | CLI · [secretary-contact-registry.md](../steward/rules/secretary-contact-registry.md) |
 
 ## CLI
 
 ```bash
 orgos agent readiness --agent secretary
 orgos agent pulse --agent secretary
+orgos secretary contacts resolve --name "..." --org "..."
+orgos secretary contacts register --name "..." --email "..."
 ```
 
 ## コンテキスト

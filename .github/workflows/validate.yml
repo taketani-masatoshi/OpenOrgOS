@@ -74,6 +74,7 @@ jobs:
       - run: playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts
         env:
           WIRE_CONSOLE_OIDC_SMOKE_PORT: "9474"
+      - run: npm run wire-console:release-check
   steward-chat-smoke:
     runs-on: ubuntu-latest
     needs: validate
@@ -142,6 +143,10 @@ jobs:
           tests/wire-gateway-outbound-e2e.test.ts
           tests/wire-gateway-validate.test.ts
           tests/wire-gateway-internal-api.test.ts
+          tests/wire-gateway-init.test.ts
+          tests/wire-gateway-discover.test.ts
+          tests/wire-gateway-discover-apply.test.ts
+          tests/outbox-permissions-gate.test.ts
           tests/wire-trust-registry.test.ts
           tests/wire-trust-registry-sync.test.ts
           tests/peers-migrate-legacy.test.ts
@@ -149,5 +154,31 @@ jobs:
           tests/gov-gateway-sandbox.test.ts
           tests/gov-gateway-live.test.ts
           tests/prod-wire-gate.test.ts
+          tests/mal-wire-pilot-gate.test.ts
+          tests/mal-wire-peer-deliver.test.ts
+          tests/mal-peers-trust-registry.test.ts
+          tests/wire-relay-e2e.test.ts
+          tests/wire-gateway-federation-sync.test.ts
+          tests/relay-sla-alert.test.ts
+          tests/protocol-relay-worker.test.ts
+          tests/protocol-witness-integration.test.ts
       - run: docker compose -f deploy/wire-gateway/docker-compose.yaml config
       - run: ORGOS_STRICT_TRANSPORT=1 npm run validate:protocol:tenants
+  community-protocol:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run orgos -- protocol community operators-validate
+      - run: npm run orgos -- protocol community check-sla
+      - run: npm run orgos -- protocol community export
+      - run: >
+          npm test --
+          tests/trusted-operators.test.ts
+          tests/community-readiness.test.ts
+          tests/eco-production-evidence.test.ts

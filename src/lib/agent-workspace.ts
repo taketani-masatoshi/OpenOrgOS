@@ -17,6 +17,7 @@ import { REGULATIONS_FILE } from "./regulations.js";
 import { getTenantDir, getTenantTemplateDir } from "./tenant.js";
 import { loadTenantStandards, STANDARDS_FILE } from "./tenant-standards.js";
 import { resolveTenantPath, writeYamlFile } from "./utils.js";
+import { scaffoldModuleExtensionDocs } from "./tenant-document-zones.js";
 import { tenantRegulationsFileSchema } from "../../schemas/tenant-regulations.js";
 import { tenantStandardsFileSchema } from "../../schemas/tenant-standards.js";
 
@@ -200,23 +201,7 @@ export function activateTenantModule(
     }
   }
 
-  if (mod.docs_root && moduleId === "jp_medical_device") {
-    const docsAbs = resolveTenantPath(mod.docs_root.replace(/\/$/, ""));
-    if (!existsSync(docsAbs)) {
-      mkdirSync(docsAbs, { recursive: true });
-      seedReadmeForPath(docsAbs, normalizeDir(mod.docs_root));
-    }
-    for (const sub of ["qms", "gvp"]) {
-      const subAbs = join(docsAbs, sub);
-      if (!existsSync(subAbs)) {
-        mkdirSync(subAbs, { recursive: true });
-        writeFileSync(
-          join(subAbs, "00-README.md"),
-          `# docs/medical-device/${sub}/\n\n${sub === "qms" ? "QMS" : "GVP"} 生成文書（Agent ドラフト出力先）\n`
-        );
-      }
-    }
-  }
+  scaffoldModuleExtensionDocs(moduleId);
 
   const agentId = MODULE_AGENT[moduleId];
   const workspace = agentId ? ensureAgentWorkspace(agentId) : { created: [], skipped: [] };

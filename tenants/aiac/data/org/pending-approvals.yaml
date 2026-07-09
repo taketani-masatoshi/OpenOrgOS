@@ -1,0 +1,11 @@
+approvals:
+  - approval_id: APR-20260710-001
+    scope: internal
+    status: pending_approval
+    proposed_at: 2026-07-09T22:55:28.511Z
+    proposed_by: taketani
+    subject_type: correspondence.email
+    subject_ref: DRAFT-20260710-001-aiac-orgos
+    message: 【AIAC】OrgOS テストメールのご連絡
+    approval_policy_ref: REG-004
+as_of: 2026-07-10

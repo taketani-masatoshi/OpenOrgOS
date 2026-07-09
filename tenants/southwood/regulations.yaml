@@ -1,1 +1,62 @@
-regulations: []
+# 社内規程 — JP カタログ全件
+# enabled: true の規程のみ Agent が施行文を参照
+
+regulations:
+  - id: REG-001
+    enabled: false
+  - id: REG-002
+    enabled: false
+  - id: REG-003
+    enabled: false
+  - id: REG-004
+    enabled: false
+  - id: REG-005
+    enabled: false
+  - id: REG-006
+    enabled: false
+  - id: REG-007
+    enabled: false
+  - id: REG-008
+    enabled: false
+  - id: REG-009
+    enabled: false
+  - id: REG-010
+    enabled: false
+  - id: REG-011
+    enabled: false
+  - id: REG-012
+    enabled: false
+  - id: REG-013
+    enabled: false
+  - id: REG-014
+    enabled: false
+  - id: REG-015
+    enabled: false
+  - id: REG-016
+    enabled: false
+  - id: REG-017
+    enabled: false
+  - id: REG-018
+    enabled: false
+  - id: REG-019
+    enabled: false
+  - id: REG-020
+    enabled: false
+  - id: REG-021
+    enabled: false
+  - id: REG-022
+    enabled: false
+  - id: REG-023
+    enabled: false
+  - id: REG-024
+    enabled: false
+  - id: REG-025
+    enabled: false
+  - id: REG-026
+    enabled: false
+  - id: REG-027
+    enabled: false
+  - id: REG-028
+    enabled: false
+  - id: REG-029
+    enabled: false

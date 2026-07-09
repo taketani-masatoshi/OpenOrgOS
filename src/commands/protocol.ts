@@ -77,6 +77,8 @@ import {
   decideGovernanceRequest,
 } from "../lib/protocol/trusted-operators.js";
 import { computeCommunityReadiness } from "../lib/protocol/community-readiness.js";
+import { exportCommunityProtocolBundle } from "../lib/protocol/community-export.js";
+import { resolveEcoStrictCap } from "../lib/protocol/eco-production-evidence.js";
 import { revokeWitnessHubCertificate } from "../lib/protocol/witness-trust.js";
 import {
   ensureProposal3Pki,
@@ -1639,13 +1641,30 @@ export interface ProtocolCommunityReadinessOptions {
 
 export function runProtocolCommunityReadiness(opts: ProtocolCommunityReadinessOptions): void {
   const result = computeCommunityReadiness();
+  const ecoCap = resolveEcoStrictCap();
+  if (opts.json) {
+    console.log(JSON.stringify({ ...result, strict_cap: ecoCap }, null, 2));
+    return;
+  }
+  console.log(`Community readiness (Steward-side): ${result.score}/${ecoCap}`);
+  for (const check of result.checks) {
+    console.log(`  ${check.ok ? "✓" : "✗"} ${check.id}: ${check.detail}`);
+  }
+}
+
+export interface ProtocolCommunityExportOptions {
+  json?: boolean;
+}
+
+export function runProtocolCommunityExport(opts: ProtocolCommunityExportOptions = {}): void {
+  const result = exportCommunityProtocolBundle();
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
-  console.log(`Community readiness (Steward-side): ${result.score}/80`);
-  for (const check of result.checks) {
-    console.log(`  ${check.ok ? "✓" : "✗"} ${check.id}: ${check.detail}`);
+  console.log(`✓ Community protocol export → ${result.dest}`);
+  for (const f of result.files) {
+    console.log(`  · ${f}`);
   }
 }
 

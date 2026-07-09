@@ -1,2 +1,31 @@
-schema_version: 1
-events: []
+events:
+  - id: EVT-20260709-finance-capital-mal-5m
+    occurred_at: 2026-07-09
+    month: 2026-07
+    kind: finance
+    title: MALより資本出資受入500万円
+    status: open
+    event_path: docs/company/events/2026-07/EVT-20260709-finance-capital-mal-5m.md
+    artifact_dir: docs/company/artifacts/2026-07/EVT-20260709-finance-capital-mal-5m/
+    related:
+      investor_tenant: mal
+      amount_yen: "5000000"
+      counterparty: 株式会社MAL
+    notes: グループ出資受入
+    created_at: 2026-07-09
+    chain_seq: 1
+  - id: EVT-20260709-governance-taketani-ceo-appointment
+    occurred_at: 2026-07-09
+    month: 2026-07
+    kind: governance
+    title: 竹谷昌敏 代表取締役就任・役員報酬決定
+    status: open
+    event_path: docs/company/events/2026-07/EVT-20260709-governance-taketani-ceo-appointment.md
+    artifact_dir: docs/company/artifacts/2026-07/EVT-20260709-governance-taketani-ceo-appointment/
+    related:
+      person_name: 竹谷昌敏
+      role: 代表取締役
+      officer_compensation_annual_yen: "120000"
+    created_at: 2026-07-09
+    chain_seq: 2
+schema_version: 2
