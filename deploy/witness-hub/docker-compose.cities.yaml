@@ -1,0 +1,210 @@
+# City-named Witness Hub stack — k=3 · n=4 core (Wave 1 + Dublin)
+# Usage:
+#   docker compose -f deploy/witness-hub/docker-compose.cities.yaml up -d
+#   docker compose -f deploy/witness-hub/docker-compose.cities.yaml --profile global up -d
+#   ./scripts/deploy-city-hubs.sh
+
+x-hub-volumes: &hub-volumes
+  - ../..:/app
+  - hub-node-modules:/app/node_modules
+
+x-hub-service: &hub-service
+  image: node:22-bookworm
+  working_dir: /app
+  volumes: *hub-volumes
+  depends_on:
+    hub-deps:
+      condition: service_completed_successfully
+  command: >
+    sh -c "npm run orgos -- hub serve
+    --hub-id $${HUB_ID}
+    --host 0.0.0.0
+    --port $${HUB_PORT}
+    --data-dir $${HUB_DATA_DIR}
+    --gossip-interval 300"
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://127.0.0.1:9474/hub/v1/health"]
+    interval: 10s
+    timeout: 5s
+    retries: 8
+    start_period: 60s
+
+services:
+  hub-deps:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes: *hub-volumes
+    command: sh -c "npm ci"
+    restart: "no"
+
+  hub-tokyo:
+    <<: *hub-service
+    environment:
+      HUB_ID: HUB-APAC-JP
+      HUB_PORT: "9474"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-apac-jp
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-apac-jp-data:/app/deploy/witness-hub/data/hub-apac-jp
+    ports:
+      - "9474:9474"
+
+  hub-dubai:
+    <<: *hub-service
+    environment:
+      HUB_ID: HUB-ME
+      HUB_PORT: "9475"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-me
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9475/hub/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-me-data:/app/deploy/witness-hub/data/hub-me
+    ports:
+      - "9475:9475"
+
+  hub-tallinn:
+    <<: *hub-service
+    environment:
+      HUB_ID: HUB-EU-EE
+      HUB_PORT: "9476"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-eu-ee
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9476/hub/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-eu-ee-data:/app/deploy/witness-hub/data/hub-eu-ee
+    ports:
+      - "9476:9476"
+
+  hub-dublin:
+    <<: *hub-service
+    environment:
+      HUB_ID: HUB-EU-IE
+      HUB_PORT: "9477"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-eu-ie
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9477/hub/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-eu-ie-data:/app/deploy/witness-hub/data/hub-eu-ie
+    ports:
+      - "9477:9477"
+
+  hub-istanbul:
+    <<: *hub-service
+    profiles: [global]
+    environment:
+      HUB_ID: HUB-TR-IST
+      HUB_PORT: "9478"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-tr-ist
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9478/hub/v1/health"]
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-tr-ist-data:/app/deploy/witness-hub/data/hub-tr-ist
+    ports:
+      - "9478:9478"
+
+  hub-nyc:
+    <<: *hub-service
+    profiles: [global]
+    environment:
+      HUB_ID: HUB-US
+      HUB_PORT: "9479"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-us
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9479/hub/v1/health"]
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-us-data:/app/deploy/witness-hub/data/hub-us
+    ports:
+      - "9479:9479"
+
+  hub-santiago:
+    <<: *hub-service
+    profiles: [global]
+    environment:
+      HUB_ID: HUB-SA
+      HUB_PORT: "9480"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-sa
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9480/hub/v1/health"]
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-sa-data:/app/deploy/witness-hub/data/hub-sa
+    ports:
+      - "9480:9480"
+
+  hub-auckland:
+    <<: *hub-service
+    profiles: [global]
+    environment:
+      HUB_ID: HUB-OCEANIA-NZ
+      HUB_PORT: "9481"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-oceania-nz
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9481/hub/v1/health"]
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-oceania-nz-data:/app/deploy/witness-hub/data/hub-oceania-nz
+    ports:
+      - "9481:9481"
+
+  hub-init:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - ../..:/app
+      - hub-node-modules:/app/node_modules
+      - hub-apac-jp-data:/app/deploy/witness-hub/data/hub-apac-jp
+      - hub-me-data:/app/deploy/witness-hub/data/hub-me
+      - hub-eu-ee-data:/app/deploy/witness-hub/data/hub-eu-ee
+      - hub-eu-ie-data:/app/deploy/witness-hub/data/hub-eu-ie
+    depends_on:
+      hub-deps:
+        condition: service_completed_successfully
+      hub-tokyo:
+        condition: service_healthy
+      hub-dubai:
+        condition: service_healthy
+      hub-tallinn:
+        condition: service_healthy
+      hub-dublin:
+        condition: service_healthy
+    environment:
+      HUB_POOL: core
+      HUB_DOCKER_NETWORK: "1"
+    command: node --import tsx deploy/witness-hub/seed-federation.ts
+    restart: "no"
+
+volumes:
+  hub-node-modules:
+  hub-apac-jp-data:
+  hub-me-data:
+  hub-eu-ee-data:
+  hub-eu-ie-data:
+  hub-tr-ist-data:
+  hub-us-data:
+  hub-sa-data:
+  hub-oceania-nz-data:

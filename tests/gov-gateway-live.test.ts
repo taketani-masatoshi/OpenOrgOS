@@ -39,7 +39,7 @@ profiles:
 
 describe("gov-gateway live deliver (mock transport Phase 4)", () => {
   beforeEach(() => {
-    setTenantId("mal");
+    setTenantId("demo");
     cleanup();
     mkdirSync(join(getDataDir(), "protocol"), { recursive: true });
     mkdirSync(join(getDataDir(), "contracts"), { recursive: true });
@@ -110,7 +110,7 @@ monthly_cost: 50000
       envelope,
       peerId: "PEER-080",
       endpoint,
-      tenantId: "mal",
+      tenantId: "demo",
     });
 
     expect(result.ok).toBe(true);

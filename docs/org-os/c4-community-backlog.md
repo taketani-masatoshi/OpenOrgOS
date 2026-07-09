@@ -2,7 +2,7 @@
 
 **Status:** Steward-side **完了** · OS_Community **Epic C4-WIRE-2026** 起票  
 **Epic:** [c4-community-epic-2026.md](c4-community-epic-2026.md)  
-**Ecosystem スコア:** **80%**（Steward 実装）· 85+ は OS_Community  
+**Ecosystem スコア:** **95%** チェックリスト · **92–98%** 厳格（`eco-production-evidence.ts`）  
 **Parent:** [orgos-completion-plan.md](orgos-completion-plan.md) ORG-C4 · [framework-assessment.md](../framework-assessment.md) §13
 
 ---

@@ -1,3 +1,5 @@
+# Generic protocol seed — external wire peer (NOT Secretary tenant gate)
+# For OrgOS tenant peers use org_uri: steward://tenant/{id} in tenant data/protocol/peers.yaml
 as_of: "2026-06-01"
 peers:
   - peer_id: PEER-001

@@ -409,11 +409,11 @@ Gateway は **独立コンテナ** とする。
 
 | 項目 | 参照実装での先行度 |
 |------|-------------------|
-| Gateway Federation | Hub federation と概念近接 · Wire 側は未 |
+| Gateway Federation | **v2 catalog** · `wire-gateway federation list`（trust-registry 読取）· gossip は v2 backlog |
 | Store & Forward | `wire-pending` · relay **部分実装** |
 | Offline Queue | 同上 |
 | Message Retry | relay-worker **部分実装** |
-| Peer Discovery | peers.yaml + discover **基本のみ** |
+| Peer Discovery | **`wire-gateway discover`** · `protocol peer discover` · trust-registry |
 | Trust Registry | **wire-trust-registry.yaml** + **trusted-hubs.yaml** · CLI validate/sync · 鍵 pin 運用中 |
 | OpenOrg DNS | 未 |
 | OpenOrg DID | **`did:ooo:org:*` 実装済（WG-4）** · well-known / Internal API |
@@ -442,20 +442,17 @@ TCP/IP ルータや SMTP サーバに近い役割を担う。業務ロジック�
 
 ## 21. 参照実装ギャップ（OS_Steward · 2026-07-09）
 
-**mal テナント本番パイロット参照実装完了**（Mode A TLS · 鍵 pin · STRICT ゲート · Gov mock/live 手順）。
+**mal テナント本番パイロット参照実装完了**（Mode A TLS · 鍵 pin · STRICT ゲート · Gov mock/live 手順 · committed `tenants/mal/data/protocol/*`）。
 
 | 領域 | v0.1 要求 | 現状（2026-07-09） | ギャップ |
 |------|-----------|-------------------|----------|
-| **プロセス** | 単一 Wire Gateway | `wire-gateway serve` + Internal API · **deploy/wire-gateway compose** | legacy webhook 縮退済（`legacy.enabled: false`） |
+| **プロセス** | 単一 Wire Gateway | `wire-gateway serve` + Internal API · **deploy/wire-gateway compose** | — |
 | **境界** | Internal API 経由のみ | Internal API 7 endpoints + E2E テスト | — |
 | **TLS** | 全経路必須 | Mode A runbook · `ORGOS_STRICT_TLS` · mal `wire.mal.example` | オペレータ ACME/CA 適用 |
-| **データ** | Gateway は Event 本文非保持 | WireMessage 通過のみ | relay 方針は別途 |
-| **プロトコル** | 単一 Wire JSON | `wire_v1` 正 · migrate-legacy CLI | demo peers 移行は任意 |
-| **セキュリティ** | replay/nonce/timestamp | Gateway 実装済 · STRICT ゲート CLI | — |
-| **Rate limit** | Gateway 入口 | **実装済** | — |
-| **Docker** | gateway 独立 compose | compose + CI smoke | — |
+| **mal 設定** | wire-gateway.yaml 等 | **committed** · `orgos wire-gateway init` · `init-tenant-wire-pilot.sh` | — |
+| **Hub スタック** | witness pool + relay | JP HUB-A/B pin · `wire-hub-stack-smoke.sh` · relay systemd | 法域別 Hub 本番鍵 |
 | **Node ID** | DNS/DID | **`did:ooo:org:*`** · Trust Registry pin 済 | openorgos.org 配信は operator |
-| **Gov Gateway** | Wire 下流 | P0 `production` · mal pilot config · mock E2E | 実 SS token は operator |
+| **Gov Gateway** | Wire 下流 | P0 `production` · mal pilot config · live Playground Phase 4 | 実 SS token は operator |
 
 **Witness Hub:** v0.1 スコープ外。digest 証明は [witness-hub-requirements.md](witness-hub-requirements.md) を正とする。
 

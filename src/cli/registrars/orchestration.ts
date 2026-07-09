@@ -135,6 +135,11 @@ import {
   runWireGatewayTlsInit,
   runWireGatewayDidShow,
   runWireGatewayDidInit,
+  runWireGatewayInit,
+  runWireGatewayDiscover,
+  runWireGatewayFederationList,
+  runWireGatewayDiscoverApply,
+  runWireGatewayFederationSync,
   runWireInternalApiServe,
 } from "../../commands/wire-gateway.js";
 import { runComplianceGap } from "../../commands/compliance.js";
@@ -1809,6 +1814,15 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
   wireGatewayCmd
+    .command("init")
+    .description("Initialize wire-gateway.yaml from trust registry (tenant pilot)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--force", "Overwrite existing config")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runWireGatewayInit({ tenant: opts.tenant, force: opts.force, json: opts.json })
+    );
+  wireGatewayCmd
     .command("tls-init")
     .description("Generate dev TLS certs and patch tenant wire-gateway.yaml")
     .option("--tenant <id>", "Tenant id")
@@ -1845,6 +1859,57 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runWireGatewayValidate({ tenant: opts.tenant, json: opts.json }));
+  wireGatewayCmd
+    .command("discover")
+    .description("List trust-registry Wire nodes and peer registration suggestions (WG v2)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--jurisdiction <code>", "Filter by witness_jurisdiction")
+    .option("--suggest", "Print suggested peer register commands for unregistered nodes")
+    .option("--apply", "Register unregistered nodes into peers.yaml")
+    .option("--dry-run", "With --apply: preview without writing peers.yaml")
+    .option("--node-id <id>", "Limit --apply to node_id (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--json", "JSON output")
+    .action((opts) => {
+      if (opts.apply) {
+        runWireGatewayDiscoverApply({
+          tenant: opts.tenant,
+          jurisdiction: opts.jurisdiction,
+          dryRun: opts.dryRun,
+          nodeId: opts.nodeId?.length ? opts.nodeId : undefined,
+          json: opts.json,
+        });
+        return;
+      }
+      runWireGatewayDiscover({
+        tenant: opts.tenant,
+        jurisdiction: opts.jurisdiction,
+        suggest: opts.suggest,
+        json: opts.json,
+      });
+    });
+  const wireGatewayFederationCmd = wireGatewayCmd
+    .command("federation")
+    .description("Wire Gateway federation catalog (trust-registry read model · WG v2)");
+  wireGatewayFederationCmd
+    .command("list")
+    .description("List all Wire nodes in platform trust registry")
+    .option("--json", "JSON output")
+    .action((opts) => runWireGatewayFederationList({ json: opts.json }));
+  wireGatewayFederationCmd
+    .command("sync")
+    .description("Sync protocol_public_key from remote well-known into trust registry")
+    .option("--node-id <id>", "Limit to one registry node_id")
+    .option("--dry-run", "Preview without writing registry")
+    .option("--force", "Overwrite pinned keys")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runWireGatewayFederationSync({
+        nodeId: opts.nodeId,
+        dryRun: opts.dryRun,
+        force: opts.force,
+        json: opts.json,
+      })
+    );
   const wireInternalApiCmd = wireGatewayCmd
     .command("internal-api")
     .description("Core-side Internal API (dev / WG-2 bridge)");
