@@ -1,0 +1,16 @@
+[Unit]
+Description=Steward Wire Gateway (%i) — mal pilot
+After=network.target
+
+[Service]
+Type=simple
+User=steward
+WorkingDirectory=/opt/orgos-reference
+EnvironmentFile=-/etc/steward/wire-gateway-%i.env
+Environment=ORGOS_TENANT=%i
+ExecStart=/usr/bin/npm run orgos -- wire-gateway serve --tenant %i
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

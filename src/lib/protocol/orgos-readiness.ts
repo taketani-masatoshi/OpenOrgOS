@@ -82,6 +82,9 @@ function computeFormUnificationChecks(): ReadinessCheck[] {
     fileOk("src/lib/company-events-lint.ts", "company event MD lint"),
     fileOk("tests/org-audit-bridge.test.ts", "audit bridge tests"),
     fileOk("tests/protocol-external-verify.test.ts", "external verify"),
+    fileOk("src/lib/company-events-wire.ts", "company-events wire linkage"),
+    fileOk("tests/company-events-wire-void.test.ts", "company-events wire void"),
+    fileOk("tenants/mal/data/org/audit-bridge-state.yaml", "audit-bridge state (mal)"),
     fileOk("docs/org-os/orgos-interface-spec.md", "I1/I2/I3 interface spec"),
   ];
 }
@@ -96,6 +99,11 @@ function computeWireEvidenceChecks(): ReadinessCheck[] {
     fileOk("src/lib/protocol/peer-protocol-policy.ts", "contract peer whitelist"),
     fileOk("tests/protocol-peer-policy.test.ts", "peer policy tests"),
     fileOk("docs/runbook-orgos.md", "runbook §16–17 guardrails"),
+    fileOk("tests/mal-wire-pilot-gate.test.ts", "mal wire production gate"),
+    fileOk("tests/mal-wire-peer-deliver.test.ts", "mal peer deliver E2E"),
+    fileOk("scripts/install-mal-wire-systemd.sh", "mal wire systemd installer"),
+    fileOk("tests/wire-gateway-discover.test.ts", "wire-gateway discover v2"),
+    fileOk("scripts/init-tenant-wire-pilot.sh", "wire pilot bootstrap"),
   ];
 }
 

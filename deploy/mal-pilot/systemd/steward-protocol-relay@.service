@@ -1,0 +1,20 @@
+[Unit]
+Description=Steward Protocol Relay (%i) — mal pilot
+After=network.target steward-wire-gateway@%i.service
+Wants=steward-wire-gateway@%i.service
+
+[Service]
+Type=simple
+User=steward
+WorkingDirectory=/opt/orgos-reference
+EnvironmentFile=-/etc/steward/wire-gateway-%i.env
+Environment=ORGOS_TENANT=%i
+Environment=STEWARD_TENANT=%i
+Environment=RELAY_INTERVAL_SEC=30
+ExecStartPre=/opt/orgos-reference/deploy/protocol-outbox/apply-permissions.sh %i
+ExecStart=/usr/bin/npm run orgos -- --tenant ${ORGOS_TENANT} protocol relay run --interval-sec ${RELAY_INTERVAL_SEC}
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

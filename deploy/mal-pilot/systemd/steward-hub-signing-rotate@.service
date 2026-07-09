@@ -1,0 +1,8 @@
+[Unit]
+Description=Hub/Wire signing rotate for tenant %i
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/orgos-reference
+Environment=ORGOS_TENANT=%i
+ExecStart=/opt/orgos-reference/scripts/hub-signing-rotate.sh %i

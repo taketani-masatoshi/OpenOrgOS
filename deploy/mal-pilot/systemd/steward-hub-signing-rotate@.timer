@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly Hub/Wire signing key rotation check (%i)
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

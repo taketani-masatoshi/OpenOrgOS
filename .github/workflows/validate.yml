@@ -142,6 +142,10 @@ jobs:
           tests/wire-gateway-outbound-e2e.test.ts
           tests/wire-gateway-validate.test.ts
           tests/wire-gateway-internal-api.test.ts
+          tests/wire-gateway-init.test.ts
+          tests/wire-gateway-discover.test.ts
+          tests/wire-gateway-discover-apply.test.ts
+          tests/outbox-permissions-gate.test.ts
           tests/wire-trust-registry.test.ts
           tests/wire-trust-registry-sync.test.ts
           tests/peers-migrate-legacy.test.ts
@@ -149,5 +153,9 @@ jobs:
           tests/gov-gateway-sandbox.test.ts
           tests/gov-gateway-live.test.ts
           tests/prod-wire-gate.test.ts
+          tests/mal-wire-pilot-gate.test.ts
+          tests/mal-wire-peer-deliver.test.ts
+          tests/protocol-relay-worker.test.ts
+          tests/protocol-witness-integration.test.ts
       - run: docker compose -f deploy/wire-gateway/docker-compose.yaml config
       - run: ORGOS_STRICT_TRANSPORT=1 npm run validate:protocol:tenants
