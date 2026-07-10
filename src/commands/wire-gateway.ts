@@ -38,7 +38,7 @@ export function runWireGatewayValidate(opts: WireGatewayValidateOptions = {}): v
   const result = validateWireGatewayConfig(config);
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
-    if (!result.ok) process.exitCode = 1;
+    if (!result.ok) process.exit(1);
     return;
   }
   if (result.ok) {
@@ -53,7 +53,7 @@ export function runWireGatewayValidate(opts: WireGatewayValidateOptions = {}): v
     for (const w of result.warnings) {
       console.log(`  [warn] [${w.code}] ${w.message}`);
     }
-    process.exitCode = 1;
+    process.exit(1);
   }
 }
 

@@ -6,7 +6,7 @@ import { ROOT_DIR, setTenantId } from "../src/lib/tenant.js";
 const OPERATIONAL_PROTOCOL_TENANTS = ["mal", "southwood", "aiac"] as const;
 
 const GIT_RESTORE_PATHS = [
-  "tenants/demo/data",
+  "tenants/demo/data/protocol",
   ...OPERATIONAL_PROTOCOL_TENANTS.flatMap((id) => [
     `tenants/${id}/data/protocol`,
     `tenants/${id}/docs/protocol`,

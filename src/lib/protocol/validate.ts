@@ -257,13 +257,17 @@ export function validateProtocolState(
 
   const keyMeta = loadSigningKeyMeta();
   if (keyMeta) {
-    for (const peer of loadPeersRegistry().peers) {
-      if (peer.protocol_public_key && peer.protocol_public_key !== keyMeta.public_key) {
-        warnings.push({
-          code: "signing-key-peer-pin-stale",
-          message: `${peer.peer_id} protocol_public_key does not match signing-key-meta (rotated ${keyMeta.rotated_at})`,
-        });
+    try {
+      for (const peer of loadPeersRegistry().peers) {
+        if (peer.protocol_public_key && peer.protocol_public_key !== keyMeta.public_key) {
+          warnings.push({
+            code: "signing-key-peer-pin-stale",
+            message: `${peer.peer_id} protocol_public_key does not match signing-key-meta (rotated ${keyMeta.rotated_at})`,
+          });
+        }
       }
+    } catch {
+      /* peers-invalid reported above */
     }
   }
 
@@ -286,17 +290,21 @@ export function validateProtocolState(
   }
 
   const strictTransport = process.env.ORGOS_STRICT_TRANSPORT === "1";
-  for (const peer of loadPeersRegistry().peers) {
-    const legacy =
-      Boolean(peer.inbound_webhook_url) ||
-      resolvePeerInboundEndpoints(peer).some((ep) => isLegacyWebhookEndpoint(ep));
-    if (!legacy) continue;
-    const entry = {
-      code: "legacy-webhook-transport",
-      message: `${peer.peer_id}: legacy_webhook / inbound_webhook_url in use (sunset 2026-10-01; migrate to wire_v1)`,
-    };
-    if (strictTransport) issues.push(entry);
-    else warnings.push(entry);
+  try {
+    for (const peer of loadPeersRegistry().peers) {
+      const legacy =
+        Boolean(peer.inbound_webhook_url) ||
+        resolvePeerInboundEndpoints(peer).some((ep) => isLegacyWebhookEndpoint(ep));
+      if (!legacy) continue;
+      const entry = {
+        code: "legacy-webhook-transport",
+        message: `${peer.peer_id}: legacy_webhook / inbound_webhook_url in use (sunset 2026-10-01; migrate to wire_v1)`,
+      };
+      if (strictTransport) issues.push(entry);
+      else warnings.push(entry);
+    }
+  } catch {
+    /* peers-invalid reported above */
   }
 
   return { ok: issues.length === 0, issues, warnings };

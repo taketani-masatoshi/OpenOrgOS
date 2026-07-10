@@ -13,12 +13,17 @@ export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-https://wire.${TENANT}.example}"
 
 echo "=== Wire production gate (${TENANT}) ==="
 
-ORGOS_STRICT_TRUST=1 npm run orgos -- protocol trust-registry validate
-ORGOS_STRICT_TRUST=1 npm run orgos -- protocol trusted-hubs-validate
-ORGOS_STRICT_TLS=1 npm run orgos -- wire-gateway validate --tenant "$TENANT"
-ORGOS_STRICT_TRANSPORT=1 npm run orgos -- protocol validate --tenant "$TENANT"
-GOV_GATEWAY_TRANSPORT="${GOV_GATEWAY_TRANSPORT:-live}" npm run orgos -- protocol gov-gateway validate --tenant "$TENANT"
+fail() {
+  echo "✗ Wire production gate failed: $*" >&2
+  exit 1
+}
 
-npm run orgos -- doctor --wire-prod --tenant "$TENANT"
+ORGOS_STRICT_TRUST=1 npm run orgos -- protocol trust-registry validate || fail "protocol trust-registry validate"
+ORGOS_STRICT_TRUST=1 npm run orgos -- protocol trusted-hubs-validate || fail "protocol trusted-hubs-validate"
+ORGOS_STRICT_TLS=1 npm run orgos -- wire-gateway validate --tenant "$TENANT" || fail "wire-gateway validate"
+ORGOS_STRICT_TRANSPORT=1 npm run orgos -- protocol validate --tenant "$TENANT" || fail "protocol validate"
+GOV_GATEWAY_TRANSPORT="${GOV_GATEWAY_TRANSPORT:-live}" npm run orgos -- protocol gov-gateway validate --tenant "$TENANT" || fail "protocol gov-gateway validate"
+
+npm run orgos -- doctor --wire-prod --tenant "$TENANT" || fail "doctor --wire-prod"
 
 echo "✓ All wire production gates passed"

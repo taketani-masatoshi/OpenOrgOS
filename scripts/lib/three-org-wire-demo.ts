@@ -43,11 +43,32 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
+const AIAC_DEMO_RUNTIME_FILES = [
+  "audit-chain.jsonl",
+  "witness-pending.yaml",
+  "wire-pending.yaml",
+  "signing-key.pem",
+  "transactions-registry.yaml",
+  "witness-pool.yaml",
+  "peers.yaml",
+] as const;
+
+const AIAC_DEMO_RUNTIME_DIRS = ["witness-receipts", "relay-store"] as const;
+
 function resetAiacProtocolScratch(): void {
   const base = join(getTenantDir(AIAC_TENANT), "data", "protocol");
-  const outbox = join(getTenantDir(AIAC_TENANT), "docs", "protocol", "outbox");
-  const inbox = join(getTenantDir(AIAC_TENANT), "docs", "protocol", "inbox");
-  for (const p of [base, outbox, inbox]) {
+  const docsProtocol = join(getTenantDir(AIAC_TENANT), "docs", "protocol");
+  for (const sub of ["outbox", "inbox"]) {
+    const p = join(docsProtocol, sub);
+    if (existsSync(p)) rmSync(p, { recursive: true, force: true });
+  }
+  if (!existsSync(base)) return;
+  for (const name of AIAC_DEMO_RUNTIME_FILES) {
+    const p = join(base, name);
+    if (existsSync(p)) rmSync(p, { force: true });
+  }
+  for (const name of AIAC_DEMO_RUNTIME_DIRS) {
+    const p = join(base, name);
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
 }

@@ -7,13 +7,8 @@ import { runTenantSetupWizard } from "../src/lib/tenant-setup-wizard.js";
 import { loadIntegrations } from "../src/lib/integrations.js";
 
 function cleanup(): void {
-  const paths = [
-    join(getDataDir(), "integrations"),
-    join(getDataDir(), "executive"),
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) rmSync(p, { recursive: true, force: true });
-  }
+  const integrations = join(getDataDir(), "integrations");
+  if (existsSync(integrations)) rmSync(integrations, { recursive: true, force: true });
 }
 
 describe("tenant setup wizard", () => {
