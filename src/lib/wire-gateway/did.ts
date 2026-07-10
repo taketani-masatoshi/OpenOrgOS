@@ -3,6 +3,7 @@ import {
   deriveOpenOrgDidFromTenant,
   isOpenOrgDid,
   resolveOpenOrgDid,
+  resolveWireNodeDid,
   type OpenOrgDid,
 } from "../../../schemas/protocol/openorg-did.js";
 import { exportProtocolPublicKeyBase64 } from "../protocol/signing.js";
@@ -20,10 +21,14 @@ export {
 export function resolveWireGatewayDid(config?: Pick<WireGatewayConfig, "did">): OpenOrgDid | undefined {
   const tenantId = loadTenantConfig().id;
   const publicKey = exportProtocolPublicKeyBase64();
-  return resolveOpenOrgDid({
+  if (!publicKey) {
+    return config?.did && isOpenOrgDid(config.did) ? config.did : undefined;
+  }
+  return resolveWireNodeDid({
     configured: config?.did,
-    tenantId,
     publicKeyBase64: publicKey,
+    tenantId,
+    requirePk: !config?.did,
   });
 }
 
@@ -42,10 +47,11 @@ export function buildWireNodeIdentityFields(
   protocolPublicKey: string,
   trustRegistryUrl?: string
 ): WireNodeIdentityFields {
-  const did = resolveOpenOrgDid({
+  const did = resolveWireNodeDid({
     configured: config.did,
     tenantId: loadTenantConfig().id,
     publicKeyBase64: protocolPublicKey,
+    requirePk: !config.did,
   });
   return {
     node_id: config.node_id,

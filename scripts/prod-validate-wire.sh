@@ -7,6 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 export ORGOS_TENANT="$TENANT"
+export ORGOS_REQUIRE_PK_DID=1
 export WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY="${WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY:-1}"
 export ORGOS_STRICT_TRUST_JURISDICTIONS="${ORGOS_STRICT_TRUST_JURISDICTIONS:-JP}"
 export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-https://wire.${TENANT}.example}"
@@ -18,11 +19,13 @@ fail() {
   exit 1
 }
 
-ORGOS_STRICT_TRUST=1 npm run orgos -- protocol trust-registry validate || fail "protocol trust-registry validate"
+ORGOS_STRICT_TRUST=1 ORGOS_REQUIRE_PK_DID=1 npm run orgos -- protocol trust-registry validate || fail "protocol trust-registry validate"
 ORGOS_STRICT_TRUST=1 npm run orgos -- protocol trusted-hubs-validate || fail "protocol trusted-hubs-validate"
 ORGOS_STRICT_TLS=1 npm run orgos -- wire-gateway validate --tenant "$TENANT" || fail "wire-gateway validate"
 ORGOS_STRICT_TRANSPORT=1 npm run orgos -- protocol validate --tenant "$TENANT" || fail "protocol validate"
 GOV_GATEWAY_TRANSPORT="${GOV_GATEWAY_TRANSPORT:-live}" npm run orgos -- protocol gov-gateway validate --tenant "$TENANT" || fail "protocol gov-gateway validate"
+
+# pk-DID enforced via ORGOS_REQUIRE_PK_DID=1 (all registry nodes migrated 2026-07-10)
 
 npm run orgos -- doctor --wire-prod --tenant "$TENANT" || fail "doctor --wire-prod"
 

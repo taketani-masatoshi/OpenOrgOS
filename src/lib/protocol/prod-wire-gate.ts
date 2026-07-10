@@ -40,9 +40,13 @@ export function runProdWireGate(opts: ProdWireGateOptions): ProdWireGateResult {
   const prevGovTransport = process.env.GOV_GATEWAY_TRANSPORT;
   const prevExternalTls = process.env.WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY;
   const prevPublic = process.env.PUBLIC_BASE_URL;
+  const prevRequirePk = process.env.ORGOS_REQUIRE_PK_DID;
 
   setTenantId(opts.tenantId);
-  if (opts.strictTrust) process.env.ORGOS_STRICT_TRUST = "1";
+  if (opts.strictTrust) {
+    process.env.ORGOS_STRICT_TRUST = "1";
+    process.env.ORGOS_REQUIRE_PK_DID = "1";
+  }
   if (opts.strictTls) process.env.ORGOS_STRICT_TLS = "1";
   if (opts.strictTransport) process.env.ORGOS_STRICT_TRANSPORT = "1";
   if (opts.govLive) process.env.GOV_GATEWAY_TRANSPORT = "live";
@@ -106,6 +110,8 @@ export function runProdWireGate(opts: ProdWireGateOptions): ProdWireGateResult {
     else process.env.WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY = prevExternalTls;
     if (prevPublic === undefined) delete process.env.PUBLIC_BASE_URL;
     else process.env.PUBLIC_BASE_URL = prevPublic;
+    if (prevRequirePk === undefined) delete process.env.ORGOS_REQUIRE_PK_DID;
+    else process.env.ORGOS_REQUIRE_PK_DID = prevRequirePk;
   }
 
   const ok = checks.every((c) => c.ok);

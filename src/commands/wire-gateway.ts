@@ -16,6 +16,7 @@ import { writeYamlFile } from "../lib/utils.js";
 import { requireCliConfigWrite } from "../lib/console-auth/cli-operator.js";
 import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../lib/protocol/signing.js";
 import { resolveWireGatewayDid } from "../lib/wire-gateway/did.js";
+import { resolveWireNodeDid } from "../../schemas/protocol/openorg-did.js";
 import { loadWireTrustRegistry } from "../lib/protocol/wire-trust-registry.js";
 import {
   listWireGatewayDiscoverEntries,
@@ -217,10 +218,12 @@ export function runWireGatewayDidInit(opts: WireGatewayDidInitOptions = {}): voi
     throw new Error(`did already set (${config.did}) — use --force`);
   }
 
-  const did = resolveWireGatewayDid(config);
-  if (!did) {
-    throw new Error("Could not derive DID");
-  }
+  const did = resolveWireNodeDid({
+    publicKeyBase64: publicKey,
+    configured: opts.force ? undefined : config.did,
+    tenantId: loadTenantConfig().id,
+    requirePk: true,
+  });
   config.did = did;
   if (!config.trust_registry_url) {
     config.trust_registry_url = loadWireTrustRegistry().publish_url;

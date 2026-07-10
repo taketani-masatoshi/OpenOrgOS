@@ -68,7 +68,7 @@ describe("mal wire peer deliver (Top5 W-5)", () => {
       display_name: "Southwood Inc",
       jurisdiction: "JP",
       org_uri: "steward://tenant/southwood",
-      did: "did:ooo:org:southwood",
+      did: "did:ooo:org:pk-f5c38734d6a8a462",
       protocol_public_key: "MCowBQYDK2VwAyEA5/aLrlreTf6lNGa+V+m9ToGEfBF71iaW3Lo5R4PGsmU=",
       inbound_endpoints: [
         {

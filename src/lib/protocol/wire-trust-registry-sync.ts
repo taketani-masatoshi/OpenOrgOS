@@ -8,7 +8,8 @@ import { getWireTrustRegistryPath } from "./wire-trust-registry.js";
 import { readYamlFile } from "../utils.js";
 import { setTenantId } from "../tenant.js";
 import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "./signing.js";
-import { resolveOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
+import { resolveWireNodeDid } from "../../../schemas/protocol/openorg-did.js";
+import { assertPinLocalGovernanceApproved } from "./wire-node-governance-gate.js";
 
 export interface WireNodeWellKnownFetch {
   node_id: string;
@@ -197,6 +198,7 @@ export interface PinLocalWireTrustOptions {
   force?: boolean;
   dryRun?: boolean;
   registryPath?: string;
+  bypassGovernance?: boolean;
 }
 
 /** Pin local tenant signing public key into platform wire-trust-registry.yaml. */
@@ -204,6 +206,7 @@ export function pinLocalWireTrustRegistryKeys(
   opts: PinLocalWireTrustOptions
 ): { results: WireTrustSyncResult[]; registry: WireTrustRegistry } {
   setTenantId(opts.tenant);
+  assertPinLocalGovernanceApproved(opts.tenant, { bypass: opts.bypassGovernance });
   ensureProtocolSigningKey();
   const publicKey = exportProtocolPublicKeyBase64();
   if (!publicKey) {
@@ -215,7 +218,11 @@ export function pinLocalWireTrustRegistryKeys(
   const results: WireTrustSyncResult[] = [];
   let yamlText = readFileSync(registryPath, "utf-8");
 
-  const did = resolveOpenOrgDid({ tenantId: opts.tenant, publicKeyBase64: publicKey });
+  const did = resolveWireNodeDid({
+    publicKeyBase64: publicKey,
+    tenantId: opts.tenant,
+    requirePk: true,
+  });
   const candidates = registry.nodes.filter((n) => {
     if (opts.nodeId) return n.node_id === opts.nodeId;
     const tenantFromUri = n.node_uri?.match(/^steward:\/\/tenant\/([^/]+)$/)?.[1];
@@ -253,12 +260,12 @@ export function pinLocalWireTrustRegistryKeys(
     if (!opts.dryRun) {
       yamlText = patchNodeFieldInYaml(yamlText, node.node_id, "protocol_public_key", publicKey);
       node.protocol_public_key = publicKey;
-      if (did && !node.did) {
+      if (did && (opts.force || !node.did || node.did !== did)) {
         try {
           yamlText = patchNodeFieldInYaml(yamlText, node.node_id, "did", did);
           node.did = did;
         } catch {
-          /* optional */
+          /* optional did field may be absent in legacy yaml */
         }
       }
     }

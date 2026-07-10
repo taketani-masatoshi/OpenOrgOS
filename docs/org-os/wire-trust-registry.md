@@ -15,8 +15,8 @@ Format: `did:ooo:org:{identifier}`
 
 | Derivation | Example |
 |------------|---------|
-| Tenant (default) | `did:ooo:org:demo` |
-| Public key fingerprint | `did:ooo:org:pk-{sha256-prefix}` |
+| Tenant (legacy slug) | `did:ooo:org:demo` — **deprecated**; use pk-DID in production |
+| Public key fingerprint (production) | `did:ooo:org:pk-2da32dcd88900ba3` |
 
 Schema: [`schemas/protocol/openorg-did.ts`](../../schemas/protocol/openorg-did.ts)
 
@@ -37,11 +37,13 @@ orgos wire-gateway did show --tenant demo
 # Platform registry
 orgos protocol trust-registry validate
 orgos protocol trust-registry list
-orgos protocol trust-registry resolve --id did:ooo:org:demo
+orgos protocol trust-registry resolve --id did:ooo:org:pk-2da32dcd88900ba3
 
 # Pin keys
 orgos protocol trust-registry pin-local --tenant demo --force
 orgos protocol trust-registry sync-keys --node-id org.example.co.jp --force
+# Production: pk-DID required (registry migrated 2026-07-10):
+ORGOS_REQUIRE_PK_DID=1 orgos protocol trust-registry validate
 # Strict mode (empty keys = error):
 ORGOS_STRICT_TRUST=1 orgos protocol trust-registry validate
 ```
@@ -60,6 +62,6 @@ Gateway matches against Internal API `/peers` (`peer_did` · `peer_node_id` · `
 ## Publish
 
 Mirror: `steward/platform/protocol/wire-trust-registry.yaml`  
-Target: `https://openorgos.org/protocol/wire-trust-registry.yaml`
+Target: `https://oorgos.org/protocol/wire-trust-registry.yaml`
 
 Pin `protocol_public_key` before production (warnings on validate when empty).

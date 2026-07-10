@@ -5,9 +5,9 @@ import {
   type WireTrustRegistry,
   type WireTrustRegistryNode,
 } from "../../../schemas/protocol/wire-trust-registry.js";
-import { isOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
+import { isOpenOrgDid, isPkPrefixedOpenOrgDid, isPkDidRequired } from "../../../schemas/protocol/openorg-did.js";
 import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
-import { readYamlFile } from "../utils.js";
+import { writeYamlFile, readYamlFile } from "../utils.js";
 
 const REGISTRY_PATH = join(STEWARD_PLATFORM_DIR, "protocol", "wire-trust-registry.yaml");
 
@@ -20,6 +20,10 @@ export function loadWireTrustRegistry(): WireTrustRegistry {
     return wireTrustRegistrySchema.parse({ version: "1", nodes: [] });
   }
   return readYamlFile(REGISTRY_PATH, wireTrustRegistrySchema);
+}
+
+export function saveWireTrustRegistry(registry: WireTrustRegistry): void {
+  writeYamlFile(REGISTRY_PATH, registry);
 }
 
 export interface WireTrustRegistryIssue {
@@ -37,6 +41,7 @@ export function validateWireTrustRegistry(registry?: WireTrustRegistry): {
   const warnings: WireTrustRegistryIssue[] = [];
   const seenNodeIds = new Set<string>();
   const seenDids = new Set<string>();
+  const seenCorporateNumbers = new Set<string>();
   const strict = process.env.ORGOS_STRICT_TRUST === "1";
 
   for (const node of reg.nodes) {
@@ -55,6 +60,28 @@ export function validateWireTrustRegistry(registry?: WireTrustRegistry): {
         issues.push({ code: "duplicate-did", message: `Duplicate DID: ${node.did}` });
       }
       seenDids.add(node.did);
+
+      if (isPkDidRequired() && !isPkPrefixedOpenOrgDid(node.did)) {
+        issues.push({
+          code: "slug-did-disallowed",
+          message: `${node.node_id}: pk-DID required (ORGOS_REQUIRE_PK_DID / ORGOS_STRICT_TRUST) — run wire-gateway did init --force`,
+        });
+      } else if (!isPkPrefixedOpenOrgDid(node.did)) {
+        warnings.push({
+          code: "slug-did-legacy",
+          message: `${node.node_id}: slug DID ${node.did} — migrate to pk-DID via governance submit + wire-gateway did init --force`,
+        });
+      }
+    }
+
+    if (node.corporate_number) {
+      if (seenCorporateNumbers.has(node.corporate_number)) {
+        issues.push({
+          code: "duplicate-corporate-number",
+          message: `Duplicate corporate_number: ${node.corporate_number}`,
+        });
+      }
+      seenCorporateNumbers.add(node.corporate_number);
     }
 
     if (!node.protocol_public_key?.trim()) {

@@ -21,16 +21,16 @@ describe("wire-trust-registry", () => {
   });
 
   it("resolves by node_id, did, and steward URI", () => {
-    expect(resolveWireTrustNode("did:ooo:org:demo")?.matched_by).toBe("did");
+    expect(resolveWireTrustNode("did:ooo:org:pk-2da32dcd88900ba3")?.matched_by).toBe("did");
     expect(resolveWireTrustNode("steward://tenant/mal")?.matched_by).toBe("node_uri");
     expect(resolveWireTrustNode("mal")?.matched_by).toBe("node_id");
   });
 
   it("matches sender DID against peer entry", () => {
-    const ok = nodeIdentifierMatches("did:ooo:org:mal", {
+    const ok = nodeIdentifierMatches("did:ooo:org:pk-a1f974540eea4f7b", {
       peer_node_id: "mal",
       peer_node_uri: "steward://tenant/mal",
-      peer_did: "did:ooo:org:mal",
+      peer_did: "did:ooo:org:pk-a1f974540eea4f7b",
     });
     expect(ok).toBe(true);
   });

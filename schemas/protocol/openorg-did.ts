@@ -34,6 +34,54 @@ export function isOpenOrgDid(value: string): value is OpenOrgDid {
   return openOrgDidSchema.safeParse(value).success;
 }
 
+/** pk-{sha256-prefix} — globally unique per signing key (WG-4 production DID). */
+export function isPkPrefixedOpenOrgDid(value: string): boolean {
+  const parsed = parseOpenOrgDid(value);
+  return parsed?.namespace === "org" && parsed.identifier.startsWith("pk-");
+}
+
+/** True when pk-DID is mandatory (production / strict trust). */
+export function isPkDidRequired(): boolean {
+  return (
+    process.env.ORGOS_REQUIRE_PK_DID === "1" ||
+    process.env.ORGOS_STRICT_TRUST === "1"
+  );
+}
+
+/** True when pin-local / registry mutation requires committee-approved governance. */
+export function isWireNodeGovernanceRequired(): boolean {
+  return (
+    process.env.ORGOS_REQUIRE_GOVERNANCE_PIN === "1" ||
+    process.env.ORGOS_STRICT_TRUST === "1"
+  );
+}
+
+/**
+ * Wire Node DID for onboarding / init — prefers pk-DID from public key.
+ * Legacy slug DID only when pk not required and tenantId provided.
+ */
+export function resolveWireNodeDid(opts: {
+  publicKeyBase64: string;
+  configured?: string;
+  tenantId?: string;
+  requirePk?: boolean;
+}): OpenOrgDid {
+  const requirePk = opts.requirePk ?? isPkDidRequired();
+  if (opts.configured && isOpenOrgDid(opts.configured)) {
+    if (requirePk && !isPkPrefixedOpenOrgDid(opts.configured)) {
+      throw new Error(
+        `configured DID must be pk-prefixed when ORGOS_REQUIRE_PK_DID / ORGOS_STRICT_TRUST is set (${opts.configured})`
+      );
+    }
+    return opts.configured;
+  }
+  const pkDid = deriveOpenOrgDidFromPublicKey(opts.publicKeyBase64);
+  if (requirePk || !opts.tenantId) {
+    return pkDid;
+  }
+  return deriveOpenOrgDidFromTenant(opts.tenantId);
+}
+
 /** Tenant-scoped DID — human-readable default for WG-4. */
 export function deriveOpenOrgDidFromTenant(tenantId: string): OpenOrgDid {
   return formatOpenOrgDid(tenantId.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
