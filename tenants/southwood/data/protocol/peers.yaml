@@ -4,6 +4,7 @@ peers:
     display_name: 株式会社MAL
     jurisdiction: JP
     org_uri: steward://tenant/mal
+    did: did:ooo:org:pk-a1f974540eea4f7b
   - peer_id: PEER-003
     display_name: AIAC株式会社
     jurisdiction: JP
