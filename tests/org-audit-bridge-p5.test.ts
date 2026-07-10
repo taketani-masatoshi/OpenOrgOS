@@ -27,6 +27,9 @@ function cleanup(): void {
 
 describe("org audit bridge P5", () => {
   beforeEach(() => {
+    delete process.env.ORGOS_AUDIT_BRIDGE_DISABLED;
+    delete process.env.ORGOS_AUDIT_TENANT;
+    delete process.env.ORGOS_AUDIT_LOG;
     setTenantId("demo");
     cleanup();
   });

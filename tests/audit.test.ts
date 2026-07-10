@@ -17,6 +17,8 @@ function cleanupAuditSideEffects(): void {
 
 describe("audit log", () => {
   beforeEach(() => {
+    delete process.env.ORGOS_AUDIT_LOG;
+    delete process.env.ORGOS_AUDIT_TENANT;
     setTenantId("demo");
     const p = auditLogPath();
     if (existsSync(p)) rmSync(p);
@@ -44,5 +46,11 @@ describe("audit log", () => {
     appendAuditEvent({ event: "escalate", ref: "IMP-1" });
     appendAuditEvent({ event: "validate", ref: "ok" });
     expect(listAuditEvents({ event: "escalate" }).length).toBe(1);
+  });
+
+  it("tags vitest audit events with ORGOS_AUDIT_TENANT when set", () => {
+    process.env.ORGOS_AUDIT_TENANT = "_orgos_test";
+    const event = appendAuditEvent({ event: "validate", ref: "tenant-tag" });
+    expect(event.tenant).toBe("_orgos_test");
   });
 });

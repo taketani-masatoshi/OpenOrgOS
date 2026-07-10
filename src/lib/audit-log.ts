@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { auditEventSchema, type AuditEvent, type AuditEventType } from "../../schemas/audit-log.js";
 import { getTenantId } from "./tenant.js";
 import { getDocsReportsDir } from "./utils.js";
@@ -10,10 +10,31 @@ import { recordAuditBridgeFailure } from "./org/audit-bridge-errors.js";
 export const AUDIT_LOG_SUBDIR = "audit-log";
 export const AUDIT_LOG_FILE = "audit.jsonl";
 
+function auditLogDisabled(): boolean {
+  return process.env.ORGOS_AUDIT_LOG_DISABLED === "1";
+}
+
+function auditBridgeDisabled(): boolean {
+  return process.env.ORGOS_AUDIT_BRIDGE_DISABLED === "1";
+}
+
+/** Override path (tests · automation). Default: tenant `docs/reports/audit-log/audit.jsonl`. */
 export function auditLogPath(): string {
+  const fromEnv = process.env.ORGOS_AUDIT_LOG?.trim();
+  if (fromEnv) {
+    mkdirSync(dirname(fromEnv), { recursive: true });
+    return fromEnv;
+  }
   const dir = join(getDocsReportsDir(), AUDIT_LOG_SUBDIR);
   mkdirSync(dir, { recursive: true });
   return join(dir, AUDIT_LOG_FILE);
+}
+
+function resolveAuditTenant(explicit?: string): string {
+  if (explicit) return explicit;
+  const fromEnv = process.env.ORGOS_AUDIT_TENANT?.trim();
+  if (fromEnv) return fromEnv;
+  return getTenantId();
 }
 
 function generateAuditId(): string {
@@ -35,7 +56,7 @@ export function appendAuditEvent(options: AppendAuditOptions): AuditEvent {
   const event = auditEventSchema.parse({
     id: generateAuditId(),
     timestamp: new Date().toISOString(),
-    tenant: options.tenant ?? getTenantId(),
+    tenant: resolveAuditTenant(options.tenant),
     event: options.event,
     ref: options.ref,
     actor: options.actor,
@@ -43,7 +64,13 @@ export function appendAuditEvent(options: AppendAuditOptions): AuditEvent {
     event_id: options.event_id,
     transaction_id: options.transaction_id,
   });
+  if (auditLogDisabled()) {
+    return event;
+  }
   appendJsonl(auditLogPath(), event);
+  if (auditBridgeDisabled()) {
+    return event;
+  }
   try {
     ensureOrgAuditBridgeConfig();
     bridgeAuditEventToProtocolChain(event);

@@ -24,6 +24,9 @@ function cleanup(): void {
 
 describe("org audit bridge", () => {
   beforeEach(() => {
+    delete process.env.ORGOS_AUDIT_BRIDGE_DISABLED;
+    delete process.env.ORGOS_AUDIT_TENANT;
+    delete process.env.ORGOS_AUDIT_LOG;
     setTenantId("demo");
     cleanup();
     ensureProtocolSigningKey();
