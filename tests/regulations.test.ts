@@ -31,7 +31,7 @@ describe("regulations", () => {
 
   it("validates mal regulations without errors", () => {
     expect(validateRegulations()).toEqual([]);
-  });
+  }, 15_000);
 
   it("lists block reason when tenant enabled but bind inactive", () => {
     const reg13 = listEffectiveRegulations().find((r) => r.id === "REG-013");

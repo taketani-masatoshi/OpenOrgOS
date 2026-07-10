@@ -59,7 +59,7 @@ export function generateMissionId(): string {
   if (existsSync(dir)) {
     const existing = readdirSync(dir)
       .filter((f) => f.startsWith(prefix) && f.endsWith(".yaml"))
-      .map((f) => parseInt(f.slice(prefix.length, prefix.length + 3), 10))
+      .map((f) => parseInt(f.slice(prefix.length, f.length - ".yaml".length), 10))
       .filter((n) => !Number.isNaN(n));
     max = existing.length ? Math.max(...existing) : 0;
   }

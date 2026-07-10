@@ -2,6 +2,7 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+tests/.fixture-snapshot/
 .orgos-ci/
 .orgos/
 data/.orgos/
