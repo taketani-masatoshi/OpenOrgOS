@@ -6,7 +6,7 @@ describe("skill registry", () => {
     const skills = loadSkillRegistry();
     expect(skills.length).toBeGreaterThanOrEqual(14);
     expect(getCliSkills().length).toBeGreaterThanOrEqual(7);
-    expect(skills.some((s) => s.runtime === "cursor-only")).toBe(true);
+    expect(skills.some((s) => s.runtime === "agent")).toBe(true);
   });
 
   it("registry files exist on disk", () => {

@@ -1,0 +1,46 @@
+as_of: 2026-07-10
+approvals:
+  - approval_id: NOTICE-20260710-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T03:14:13.856Z
+    proposed_by: ops
+    subject_type: wire.outbound
+    subject_ref: CTR-099
+    amount:
+      value: 85000
+      currency: JPY
+    message: 契約 CTR-099 に基づく実行・運用通知（既締結契約の範囲内）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO
+    approved_at: 2026-07-10T03:14:13.870Z
+    audit_event_id: 3ec211cd-0f61-47a0-b45a-edfbe55b2711
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260710-001
+      wire_event_id: e51bd03f-1e56-466b-b7cd-4190e921ffc6
+  - approval_id: NOTICE-20260710-002
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T03:14:14.898Z
+    proposed_by: ops
+    subject_type: wire.outbound
+    subject_ref: CTR-099
+    amount:
+      value: 85000
+      currency: JPY
+    message: 契約 CTR-099 に基づく実行・運用通知（既締結契約の範囲内）
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: CEO Sample
+    approved_at: 2026-07-10T03:14:14.924Z
+    wire:
+      peer_id: PEER-001
+      transaction_type: contract.execution.notice
+      contract_id: CTR-099
+      transaction_id: TX-20260710-001
+      wire_event_id: 310f2ac6-4dd1-404a-af92-70870a9747e9
+    audit_event_id: e961fcc8-08bd-48ae-a2b3-0f44996de8ce

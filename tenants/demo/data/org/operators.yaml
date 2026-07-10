@@ -1,0 +1,14 @@
+# Demo tenant operator registry (L1 — test fixture keys only)
+version: "1"
+operators:
+  - operator_id: OP-001
+    display_name: Demo CEO
+    role: ceo
+    status: active
+    approver_name: Demo CEO
+    key_hash: sha256:4a7c449d22a99026fac16a47621ff68792ff589f72334ea3950ce186a5615e9a
+  - operator_id: OP-002
+    display_name: 秘書オペレータ
+    role: operator
+    status: active
+    key_hash: sha256:3208155dec05b6b2f99cae407527ad4926b0bd4f5bdae38cd28bc5e7c26559ff

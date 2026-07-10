@@ -13,13 +13,13 @@ describe("agent readiness", () => {
     }
   }, 120_000);
 
-  it("manifest lists 45 core agents", () => {
-    expect(listAgentCapabilities().length).toBe(45);
+  it("manifest lists 47 core agents", () => {
+    expect(listAgentCapabilities().length).toBe(47);
   });
 
   it("all agents score at least 90% on acme after pulse", () => {
     const results = computeAllAgentReadiness();
-    expect(results.length).toBe(45);
+    expect(results.length).toBe(47);
     const below = results.filter((r) => r.pct < 90);
     if (below.length) {
       console.log(below.map((b) => `${b.agent_id}: ${b.pct}%`).join("\n"));
