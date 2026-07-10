@@ -1,0 +1,14 @@
+skills:
+  - id: jp_permit_gap
+    file: jp_permit_registry_ops.md
+    runtime: cli
+    cli_command: permit gap
+    agent: Compliance
+    description: 許認可種別カタログと保有台帳の gap 分析
+
+  - id: jp_permit_obligations
+    file: jp_permit_registry_ops.md
+    runtime: cli
+    cli_command: permit obligations
+    agent: Compliance
+    description: 義務台帳インスタンスの期限 · 超過チェック

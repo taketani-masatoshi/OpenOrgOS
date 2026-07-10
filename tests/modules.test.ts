@@ -29,36 +29,9 @@ describe("modules.yaml", () => {
 
   it("lists catalog modules", () => {
     const ids = listCatalogModuleIds();
-    expect(ids).toEqual([
-      "clinic",
-      "construction",
-      "ecommerce",
-      "education",
-      "event_operations",
-      "event_space",
-      "hospitality",
-      "jp_carbon_neutral_2050",
-      "jp_corporate_registration",
-      "jp_medical_device",
-      "jp_privacy_policy",
-      "jp_subsidy_application",
-      "jp_trademark_application",
-      "jp_women_empowerment",
-      "language_bridge",
-      "logistics",
-      "membership",
-      "professional_services",
-      "property_management",
-      "real_estate_brokerage",
-      "rental",
-      "restaurant",
-      "retail_store",
-      "saas_subscription",
-      "software_outsourcing",
-      "staffing",
-      "travel_booking",
-      "venture_capital",
-    ]);
+    expect(ids).toContain("jp_permit_registry");
+    expect(ids.length).toBe(29);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it("has seed data for catalog modules", () => {

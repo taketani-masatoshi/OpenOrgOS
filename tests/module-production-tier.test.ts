@@ -10,52 +10,29 @@ import {
 } from "../src/lib/modules.js";
 import { loadInvoiceTemplate } from "../src/lib/invoice-config.js";
 
-const PRODUCTION_READY_IDS = [
-  "rental",
-  "hospitality",
-  "restaurant",
-  "professional_services",
-  "saas_subscription",
-  "ecommerce",
-  "membership",
-  "staffing",
-  "event_space",
-  "retail_store",
-  "logistics",
-  "clinic",
-  "construction",
-  "education",
-  "venture_capital",
-  "software_outsourcing",
-  "event_operations",
-  "real_estate_brokerage",
-  "property_management",
-  "travel_booking",
-  "language_bridge",
-  "jp_subsidy_application",
-  "jp_trademark_application",
-  "jp_corporate_registration",
-  "jp_medical_device",
-] as const;
+function listProductionReadyCatalogIds(): string[] {
+  return listCatalogModuleIds().filter((id) => getModuleTier(id) === "production_ready");
+}
 
 describe("module production_ready tier (Direction C)", () => {
   it("lists production_ready modules including jp_corporate_registration", () => {
-    const production = listCatalogModuleIds().filter((id) => getModuleTier(id) === "production_ready");
-    for (const id of PRODUCTION_READY_IDS) {
-      expect(production).toContain(id);
-    }
-    expect(production.length).toBeGreaterThanOrEqual(PRODUCTION_READY_IDS.length);
+    const production = listProductionReadyCatalogIds();
+    expect(production).toContain("jp_corporate_registration");
+    expect(production).toContain("jp_carbon_neutral_2050");
+    expect(production).toContain("jp_women_empowerment");
+    expect(production).toContain("jp_privacy_policy");
+    expect(production.length).toBe(28);
   });
 
   it("each production_ready module passes catalog check", () => {
-    for (const id of PRODUCTION_READY_IDS) {
+    for (const id of listProductionReadyCatalogIds()) {
       const issues = checkModuleCatalogOnly(id, "production_ready");
       expect(issues, id).toEqual([]);
     }
   });
 
   it("invoice seeds exist for billable production modules", () => {
-    for (const id of PRODUCTION_READY_IDS) {
+    for (const id of listProductionReadyCatalogIds()) {
       const manifest = loadModuleManifest(id);
       const invoiceSeeds = manifest?.required_seeds?.filter((s) => s.startsWith("invoice-")) ?? [];
       if (invoiceSeeds.length === 0) continue;

@@ -126,6 +126,7 @@ Skill `runtime`: `cli`（LLM 不要）· `agent`（LLM + 定義添付 · 旧 `cu
 ## 8. 関連
 
 - [tool-neutral-development.md](tool-neutral-development.md) — **今後の開発ガイド（Cursor 非依存）**
+- [testing-modules.md](steward/rules/testing-modules.md) — Vitest 3 軸 taxonomy · 段階実行
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [secretary_steward_boundary.md](secretary_steward_boundary.md)

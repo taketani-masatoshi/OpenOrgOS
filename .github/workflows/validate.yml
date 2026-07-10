@@ -149,6 +149,8 @@ jobs:
           tests/outbox-permissions-gate.test.ts
           tests/wire-trust-registry.test.ts
           tests/wire-trust-registry-sync.test.ts
+          tests/wire-trust-registry-governance.test.ts
+          tests/wire-node-pk-did-governance.test.ts
           tests/peers-migrate-legacy.test.ts
           tests/gov-gateway-adapter.test.ts
           tests/gov-gateway-sandbox.test.ts
