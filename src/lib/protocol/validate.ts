@@ -6,6 +6,8 @@ import { orgIdentityDocumentSchema } from "../../../schemas/protocol/identity-ex
 import { peersRegistrySchema } from "../../../schemas/protocol/peers.js";
 import { transactionsRegistrySchema } from "../../../schemas/protocol/transaction-record.js";
 import { getTenantsDir } from "../orgos-paths.js";
+import { readYamlFile, getStakeholdersYaml } from "../utils.js";
+import { loadStakeholders } from "../data.js";
 import {
   peerTenantContactL1Available,
   peerTenantExists,
