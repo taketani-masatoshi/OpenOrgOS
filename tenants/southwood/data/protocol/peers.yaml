@@ -1,6 +1,10 @@
+as_of: "2026-07-10"
 peers:
   - peer_id: PEER-002
-    display_name: MAL
+    display_name: 株式会社MAL
     jurisdiction: JP
     org_uri: steward://tenant/mal
-as_of: 2026-07-10
+  - peer_id: PEER-003
+    display_name: AIAC株式会社
+    jurisdiction: JP
+    org_uri: steward://tenant/aiac

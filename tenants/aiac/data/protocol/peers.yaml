@@ -1,14 +1,10 @@
-# Protocol peer 台帳（テンプレート — Git 追跡）
-# 実データ: cp peers.yaml.example peers.yaml（新規 tenant init 時は自動 seed）
-#
-# Secretary contacts resolve（§2.8.1）が peer 横断するのは org_uri: steward://tenant/{id} のみ。
-# steward://peer/PEER-* は Wire 外部ノード用 — Secretary 照合 gate 対象外。
-
 as_of: "2026-07-10"
-peers: []
-# 例（OrgOS テナント peer）:
-#   - peer_id: PEER-001
-#     display_name: 示例株式会社
-#     jurisdiction: JP
-#     org_uri: steward://tenant/acme
-#     stakeholder_id: STK-001
+peers:
+  - peer_id: PEER-001
+    display_name: 株式会社MAL
+    jurisdiction: JP
+    org_uri: steward://tenant/mal
+  - peer_id: PEER-002
+    display_name: 株式会社サウスウッド
+    jurisdiction: JP
+    org_uri: steward://tenant/southwood
