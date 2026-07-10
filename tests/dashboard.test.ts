@@ -23,9 +23,10 @@ describe("dashboard", () => {
     const report = computeDashboard();
     expect(report.companyName).toBeTruthy();
     expect(report.cashFlow.monthlyRevenue).toBeGreaterThanOrEqual(0);
-    expect(report.cashFlow.cashBalance).toBeNull();
-    expect(report.cashFlow.runwayMonths).toBeNull();
+    expect(report.cashFlow.cashBalance).toBe(10_000_000);
     expect(report.cashFlow.cashFlowMode).toBe("surplus");
+    expect(report.cashFlow.runwayMonths).toBeNull();
+    expect(report.cashFlow.monthsToCashTarget).not.toBeNull();
     expect(report.cashFlow.monthlyCashSurplus).toBeGreaterThan(0);
     expect(report.kpis.length).toBeGreaterThan(5);
   });
@@ -96,9 +97,9 @@ describe("dashboard", () => {
     expect(insurance.every((t) => t.importance === "high")).toBe(true);
   });
 
-  it("lists TBD items including cash balance", () => {
+  it("lists TBD items excluding confirmed cash balance", () => {
     const report = computeDashboard();
-    expect(report.tbdItems.some((t) => t.includes("現預金"))).toBe(true);
+    expect(report.tbdItems.some((t) => t.includes("現預金"))).toBe(false);
   });
 
   it("builds monthly trend from yojitsu", () => {

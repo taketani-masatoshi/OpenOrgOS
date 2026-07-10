@@ -17,7 +17,7 @@ describe("org approval gate (core → jurisdiction)", () => {
     const result = assertOrgApprovalGate({
       amount: 85_000,
       currency: "JPY",
-      approverId: "段燕燕",
+      approverId: "DemoCEO",
     });
     expect(result.tier).toBe("A");
     expect(result.policyRef).toMatch(/^REG-/);
