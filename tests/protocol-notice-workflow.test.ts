@@ -16,7 +16,7 @@ import { recordProtocolTransaction } from "../src/lib/protocol/record-transactio
 function cleanup(): void {
   for (const p of [
     join(getDataDir(), "protocol"),
-    join(getDataDir(), "org"),
+    join(getDataDir(), "org", "pending-approvals.yaml"),
     join(getDocsDir(), "protocol"),
   ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
@@ -70,7 +70,7 @@ monthly_cost: 85000
 
     const { transmission, notice: done } = approveInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "CEO Sample",
+      approverId: "Demo CEO",
     });
 
     expect(done.status).toBe("transmitted");
@@ -79,7 +79,7 @@ monthly_cost: 85000
     const payload = transmission.envelope.event.payload;
     expect(payload.notice_kind).toBe("per_existing_contract");
     expect(payload.operator_attestation).toMatchObject({
-      approver_id: "CEO Sample",
+      approver_id: "Demo CEO",
       basis: "existing_contract",
       approval_tier: "A",
     });
@@ -96,7 +96,7 @@ monthly_cost: 85000
 
     const { transmission } = approveInterOrgNotice({
       noticeId: ackDraft.notice_id,
-      approverId: "CEO Sample",
+      approverId: "Demo CEO",
     });
     expect(transmission.transaction.transaction_type).toBe("steward.obligation.acknowledged");
   });
@@ -109,7 +109,7 @@ monthly_cost: 85000
     });
     const rejected = rejectInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "CEO Sample",
+      approverId: "Demo CEO",
       reason: "timing",
     });
     expect(rejected.status).toBe("rejected");

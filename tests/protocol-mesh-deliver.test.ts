@@ -30,6 +30,9 @@ describe("protocol mesh deliver E2E", () => {
   beforeEach(() => {
     postOrder.length = 0;
     setTenantId("mal");
+    delete process.env.ORGOS_STRICT_TRANSPORT;
+    delete process.env.ORGOS_STRICT_TLS;
+    delete process.env.ORGOS_STRICT_TRUST;
     cleanup();
     ensureProtocolSigningKey();
   });
@@ -118,6 +121,7 @@ describe("protocol mesh deliver E2E", () => {
 
     const result = await deliverEnvelopeViaMesh(envelope, "PEER-003");
     expect(result.delivered).toBe(true);
+    expect(result.queued).toBeFalsy();
     expect(result.hops).toEqual(["PEER-002", "PEER-003"]);
     expect(postOrder).toEqual(["PEER-002", "PEER-003"]);
 

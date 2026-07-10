@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { describe, expect, it, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { runThreeOrgWireDemo } from "../scripts/lib/three-org-wire-demo.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
@@ -19,6 +19,10 @@ function restoreDemoProtocolDirs(): void {
 }
 
 describe("three-org wire demo", () => {
+  beforeEach(() => {
+    restoreDemoProtocolDirs();
+  });
+
   afterEach(() => {
     restoreDemoProtocolDirs();
   });

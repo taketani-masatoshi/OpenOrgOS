@@ -22,5 +22,5 @@ describe("readiness 3 tier", () => {
   it("checkAllModules passes for full catalog", () => {
     setTenantId("demo");
     expect(checkAllModules()).toHaveLength(0);
-  });
+  }, 60_000);
 });

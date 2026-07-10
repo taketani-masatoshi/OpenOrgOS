@@ -18,8 +18,6 @@ export const DEMO_WITNESS_TENANT = "demo";
 
 const HUB_A_DIR = join(ROOT_DIR, "scratch", "demo-witness-hub-a");
 const HUB_B_DIR = join(ROOT_DIR, "scratch", "demo-witness-hub-b");
-const HUB_A_PORT = 19490;
-const HUB_B_PORT = 19491;
 
 export function buildDemoWitnessEnvelope(tenantId: string): EventEnvelope {
   return {
@@ -113,14 +111,16 @@ export async function startDemoWitnessHubs(
     hubId: "HUB-A",
     dataDir: HUB_A_DIR,
     host: "127.0.0.1",
-    port: HUB_A_PORT,
+    port: 0,
   });
   const hubB = await startHubServer({
     hubId: "HUB-B",
     dataDir: HUB_B_DIR,
     host: "127.0.0.1",
-    port: HUB_B_PORT,
+    port: 0,
   });
+  const hubAPort = hubA.port;
+  const hubBPort = hubB.port;
 
   writeYamlFile(
     getWitnessPoolYamlPath(),
@@ -131,13 +131,13 @@ export async function startDemoWitnessHubs(
       hubs: [
         {
           hub_id: "HUB-A",
-          hub_url: `http://127.0.0.1:${HUB_A_PORT}`,
+          hub_url: `http://127.0.0.1:${hubAPort}`,
           hub_public_key: hubAKey,
           priority: 1,
         },
         {
           hub_id: "HUB-B",
-          hub_url: `http://127.0.0.1:${HUB_B_PORT}`,
+          hub_url: `http://127.0.0.1:${hubBPort}`,
           hub_public_key: hubBKey,
           priority: 2,
         },

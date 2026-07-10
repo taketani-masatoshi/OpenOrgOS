@@ -9,6 +9,7 @@ import { getInstallRoot } from "../src/lib/orgos-paths.js";
 import { registerPeer } from "../src/lib/protocol/peers.js";
 import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
 import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
+import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
 import { peersRegistrySchema } from "../schemas/protocol/peers.js";
 import { wireMessageSchema } from "../schemas/protocol/wire-message.js";
@@ -19,6 +20,7 @@ describe("mal wire peer deliver (Top5 W-5)", () => {
 
   beforeEach(() => {
     setTenantId("mal");
+    ensureProtocolSigningKey();
     const peersPath = join(getDataDir(), "protocol", "peers.yaml");
     const seedPath = join(
       getInstallRoot(),

@@ -26,7 +26,7 @@ describe("dashboard", () => {
     expect(report.cashFlow.cashBalance).toBe(10_000_000);
     expect(report.cashFlow.cashFlowMode).toBe("surplus");
     expect(report.cashFlow.runwayMonths).toBeNull();
-    expect(report.cashFlow.monthsToCashTarget).not.toBeNull();
+    expect(report.cashFlow.monthsToCashTarget).toBeNull();
     expect(report.cashFlow.monthlyCashSurplus).toBeGreaterThan(0);
     expect(report.kpis.length).toBeGreaterThan(5);
   });

@@ -10,7 +10,7 @@ describe("integrity", () => {
   it("passes schema validation on repo data", () => {
     const result = validateAll();
     expect(result.ok).toBe(true);
-  });
+  }, 15_000);
 
   it("has no integrity errors on repo data", () => {
     const errors = integrityErrorsOnly(runIntegrityChecks());

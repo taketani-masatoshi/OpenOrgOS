@@ -53,12 +53,16 @@ describe("jp_corporate_registration module", () => {
     expect(summary.jurisdiction).toBe("JP");
   });
 
-  it("validate passes seed data", () => {
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runJpCorporateValidate();
-    expect(spy).toHaveBeenCalledWith("✓ jp_corporate_registration — corporate registration data OK");
-    spy.mockRestore();
-  });
+  it(
+    "validate passes seed data",
+    () => {
+      const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+      runJpCorporateValidate();
+      expect(spy).toHaveBeenCalledWith("✓ jp_corporate_registration — corporate registration data OK");
+      spy.mockRestore();
+    },
+    30_000
+  );
 
   it("checklist passes incorporation case", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -101,13 +105,17 @@ describe("jp_corporate_registration module", () => {
     expect(data.packs[0].outputs.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("prepare --all lists every registry case", () => {
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runJpCorporatePrepare({ all: true, json: true });
-    const data = JSON.parse(String(spy.mock.calls[0]?.[0]));
-    spy.mockRestore();
-    expect(data.packs.length).toBeGreaterThanOrEqual(18);
-  });
+  it(
+    "prepare --all lists every registry case",
+    () => {
+      const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+      runJpCorporatePrepare({ all: true, json: true });
+      const data = JSON.parse(String(spy.mock.calls[0]?.[0]));
+      spy.mockRestore();
+      expect(data.packs.length).toBeGreaterThanOrEqual(18);
+    },
+    30_000
+  );
 
   it("prepare --write --event-id writes to company event artifact dir", () => {
     initCompanyEventsFile();

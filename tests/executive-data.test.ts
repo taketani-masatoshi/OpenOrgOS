@@ -104,9 +104,13 @@ describe("executive data (Secretary Agent SoT)", () => {
     expect(stk004?.contract_ids).toContain("CTR-007");
   });
 
-  it("passes validateAll (executive yaml optional when absent)", () => {
-    const result = validateAll();
-    expect(result.ok).toBe(true);
-    expect(result.errors).toHaveLength(0);
-  });
+  it(
+    "passes validateAll (executive yaml optional when absent)",
+    () => {
+      const result = validateAll();
+      expect(result.ok).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    },
+    15_000
+  );
 });

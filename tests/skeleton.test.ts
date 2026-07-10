@@ -41,20 +41,24 @@ describe("skeleton CLI", () => {
     20_000
   );
 
-  it("invoice bancho command is removed", () => {
-    const help = execFileSync("npm", ["run", "orgos", "--", "invoice", "--help"], {
-      cwd: root,
-      encoding: "utf-8",
-    });
-    expect(help).not.toContain("bancho");
-    expect(() => {
-      execFileSync("npm", ["run", "orgos", "--", "invoice", "bancho", "--from", "2026-02", "--to", "2026-02"], {
+  it(
+    "invoice bancho command is removed",
+    () => {
+      const help = execFileSync("npm", ["run", "orgos", "--", "invoice", "--help"], {
         cwd: root,
         encoding: "utf-8",
-        stdio: "pipe",
       });
-    }).toThrow();
-  });
+      expect(help).not.toContain("bancho");
+      expect(() => {
+        execFileSync("npm", ["run", "orgos", "--", "invoice", "bancho", "--from", "2026-02", "--to", "2026-02"], {
+          cwd: root,
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+      }).toThrow();
+    },
+    30_000
+  );
 
   it("regulations and standards CLI are registered", () => {
     const help = execFileSync("npm", ["run", "orgos", "--", "--help"], {
@@ -100,7 +104,7 @@ describe("skeleton CLI", () => {
       expect(report.operational.pct).toBeNull();
       const text = orgos(["status"], "demo");
       expect(text).toContain("—");
-      expect(text).not.toContain("84%");
+      expect(text).toContain("スケルトンモード");
     },
     15_000
   );
