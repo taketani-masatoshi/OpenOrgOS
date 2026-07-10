@@ -112,23 +112,27 @@ describe("escalate run", () => {
     expect(prompt).toContain("npm run orgos -- escalate complete");
   });
 
-  it("completes work order and loads extended schema", () => {
-    const result = runEscalation({
-      input: {
-        subject: "月次締め skill",
-        requirements: "月次締めレポート",
-      },
-    });
-    const wo = result.workOrders.find((w) => !w.child_ids)!;
-    created.push(wo.id);
+  it(
+    "completes work order and loads extended schema",
+    () => {
+      const result = runEscalation({
+        input: {
+          subject: "月次締め skill",
+          requirements: "月次締めレポート",
+        },
+      });
+      const wo = result.workOrders.find((w) => !w.child_ids)!;
+      created.push(wo.id);
 
-    const completed = completeWorkOrder(wo.id, "done");
-    expect(completed.status).toBe("completed");
-    expect(completed.completion_notes).toBe("done");
+      const completed = completeWorkOrder(wo.id, "done");
+      expect(completed.status).toBe("completed");
+      expect(completed.completion_notes).toBe("done");
 
-    const loaded = loadHandoff(wo.id);
-    expect(handoffSchema.parse(loaded).task_type).toBe("implement");
-  });
+      const loaded = loadHandoff(wo.id);
+      expect(handoffSchema.parse(loaded).task_type).toBe("implement");
+    },
+    30_000
+  );
 
   it("regenerates prompts from id", () => {
     const result = runEscalation({

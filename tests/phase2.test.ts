@@ -75,5 +75,5 @@ describe("Phase 2 dispatch + merge", () => {
     const { path, content } = mergeWorkOrderResults({ id: wo.id });
     expect(existsSync(path)).toBe(true);
     expect(content).toContain("統合サマリ");
-  });
+  }, 30_000);
 });

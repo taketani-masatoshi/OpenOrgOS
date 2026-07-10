@@ -1,0 +1,6 @@
+id: CTR-100
+name: Plain
+counterparty: Peer
+type: rental
+status: executed
+start_date: "2026-01-01"

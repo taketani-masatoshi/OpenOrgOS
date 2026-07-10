@@ -69,10 +69,36 @@ function protocolDir(tenantId: string): string {
   return join(getTenantDir(tenantId), "data", "protocol");
 }
 
+/** Runtime scratch only — preserve committed wire/gov gateway config. */
+const PROTOCOL_DEMO_RUNTIME_FILES = [
+  "audit-chain.jsonl",
+  "witness-pending.yaml",
+  "wire-pending.yaml",
+  "wire-gateway-audit.jsonl",
+  "mesh-routes.yaml",
+  "signing-key-meta.yaml",
+  "signing-key.pem",
+  "transactions-registry.yaml",
+  "witness-pool.yaml",
+  "peers.yaml",
+] as const;
+
+const PROTOCOL_DEMO_RUNTIME_DIRS = ["witness-receipts", "relay-store"] as const;
+
 function resetProtocolState(tenantId: string): void {
   const base = protocolDir(tenantId);
-  const outbox = join(getTenantDir(tenantId), "docs", "protocol", "outbox");
-  for (const p of [base, outbox]) {
+  const docsProtocol = join(getTenantDir(tenantId), "docs", "protocol");
+  for (const sub of ["outbox", "inbox"]) {
+    const p = join(docsProtocol, sub);
+    if (existsSync(p)) rmSync(p, { recursive: true, force: true });
+  }
+  if (!existsSync(base)) return;
+  for (const name of PROTOCOL_DEMO_RUNTIME_FILES) {
+    const p = join(base, name);
+    if (existsSync(p)) rmSync(p, { force: true });
+  }
+  for (const name of PROTOCOL_DEMO_RUNTIME_DIRS) {
+    const p = join(base, name);
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
 }

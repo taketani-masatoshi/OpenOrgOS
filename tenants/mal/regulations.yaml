@@ -1,9 +1,4 @@
-# 社内規程 — テナント有効化
-# 正本: tenants/{id}/regulations.yaml · カタログ: steward/standards/regulations/catalog.yaml
-# 生成: npm run orgos -- modules sync-context
-
 regulations:
-  # ガバナンス（常時）
   - id: REG-001
     enabled: true
   - id: REG-002
@@ -20,8 +15,6 @@ regulations:
     enabled: true
   - id: REG-008
     enabled: true
-
-  # MS / ISO 連動
   - id: REG-009
     enabled: true
     notes: ISO-27001
@@ -43,13 +36,9 @@ regulations:
   - id: REG-016
     enabled: true
     notes: 有効 ISO あり
-
-  # 事業モジュール連動
   - id: REG-012
     enabled: true
     notes: hospitality
-
-  # 将来モジュール（無効）
   - id: REG-017
     enabled: false
     notes: restaurant
@@ -71,7 +60,6 @@ regulations:
   - id: REG-023
     enabled: false
     notes: logistics
-  # 医療機器（jp_medical_device モジュール — MAL では無効）
   - id: REG-025
     enabled: false
     notes: jp_medical_device OFF · 参照のみ

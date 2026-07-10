@@ -6,10 +6,11 @@ import {
   type OperatorRecord,
   type OperatorRegistry,
 } from "../../../schemas/org/operator.js";
-import { tenantDataPath } from "../tenant.js";
+import { tenantDataPath, getTenantId } from "../tenant.js";
 
 export const OPERATORS_REGISTRY_REL = "org/operators.yaml";
 
+let cachedRegistryTenant: string | undefined;
 let cachedRegistry: OperatorRegistry | undefined;
 
 export function operatorsRegistryPath(): string {
@@ -17,6 +18,7 @@ export function operatorsRegistryPath(): string {
 }
 
 export function clearOperatorsRegistryCacheForTests(): void {
+  cachedRegistryTenant = undefined;
   cachedRegistry = undefined;
 }
 
@@ -34,9 +36,16 @@ export function verifyOperatorKey(storedHash: string | undefined, key: string): 
 }
 
 export function loadOperatorRegistry(): OperatorRegistry | undefined {
-  if (cachedRegistry) return cachedRegistry;
+  const tenantId = getTenantId();
+  if (cachedRegistry && cachedRegistryTenant === tenantId) return cachedRegistry;
   const path = operatorsRegistryPath();
-  if (!existsSync(path)) return undefined;
+  if (!existsSync(path)) {
+    if (cachedRegistryTenant === tenantId) {
+      cachedRegistry = undefined;
+    }
+    return undefined;
+  }
+  cachedRegistryTenant = tenantId;
   cachedRegistry = operatorRegistrySchema.parse(YAML.parse(readFileSync(path, "utf-8")));
   return cachedRegistry;
 }
@@ -44,6 +53,7 @@ export function loadOperatorRegistry(): OperatorRegistry | undefined {
 export function saveOperatorRegistry(registry: OperatorRegistry): string {
   const path = operatorsRegistryPath();
   writeFileSync(path, YAML.stringify(registry), "utf-8");
+  cachedRegistryTenant = getTenantId();
   cachedRegistry = registry;
   return path;
 }

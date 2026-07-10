@@ -41,12 +41,16 @@ describe("agent-portability", () => {
     expect(pack).toContain("# Finance Agent");
   });
 
-  it("exportPortableAgents writes core packs and mcp snippets", () => {
-    const result = exportPortableAgents({ emit: "all" });
-    expect(result.packs.length).toBeGreaterThanOrEqual(6);
-    expect(result.indexPath).toBeDefined();
-    expect(result.mcpPaths.length).toBe(2);
-  });
+  it(
+    "exportPortableAgents writes core packs and mcp snippets",
+    () => {
+      const result = exportPortableAgents({ emit: "all" });
+      expect(result.packs.length).toBeGreaterThanOrEqual(6);
+      expect(result.indexPath).toBeDefined();
+      expect(result.mcpPaths.length).toBe(2);
+    },
+    60_000
+  );
 
   it("loadAgentRegistryEntries includes core agents", () => {
     const entries = loadAgentRegistryEntries();

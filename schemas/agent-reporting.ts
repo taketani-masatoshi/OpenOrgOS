@@ -35,7 +35,7 @@ export const agentMissionReportSchema = z.object({
 
 export const agentMissionSchema = z.object({
   version: z.literal(1),
-  id: z.string().regex(/^MS-\d{8}-\d{3}$/),
+  id: z.string().regex(/^MS-\d{8}-\d{3,6}$/),
   created_at: z.string(),
   tenant: z.string(),
   type: missionTypeSchema,

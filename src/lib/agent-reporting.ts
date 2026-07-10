@@ -59,7 +59,7 @@ export function generateMissionId(): string {
   if (existsSync(dir)) {
     const existing = readdirSync(dir)
       .filter((f) => f.startsWith(prefix) && f.endsWith(".yaml"))
-      .map((f) => parseInt(f.slice(prefix.length, prefix.length + 3), 10))
+      .map((f) => parseInt(f.slice(prefix.length, f.length - ".yaml".length), 10))
       .filter((n) => !Number.isNaN(n));
     max = existing.length ? Math.max(...existing) : 0;
   }
@@ -182,6 +182,7 @@ export interface SubmitAgentReportOptions {
   type?: MissionType;
   autoForward?: boolean;
   tenant?: string;
+  linkedWorkOrderId?: string;
 }
 
 function forwardCooToSteward(mission: AgentMission, notes?: string): AgentMission {
@@ -245,6 +246,15 @@ export function submitAgentReport(opts: SubmitAgentReportOptions): AgentMission 
       status: "completed",
       field_agent: opts.agentId,
       subject: opts.missionSubject ?? opts.summary.slice(0, 80),
+      ...(opts.linkedWorkOrderId
+        ? {
+            order: {
+              from_actor: "work_order",
+              source: "work_order" as const,
+              linked_work_order_id: opts.linkedWorkOrderId,
+            },
+          }
+        : {}),
       report: {
         summary: opts.summary,
         summary_path: opts.summaryPath,
@@ -370,7 +380,10 @@ export function createMissionFromWorkOrder(handoff: Handoff): AgentMission | nul
 export function relayWorkOrderComplete(handoff: Handoff, notes?: string): AgentMission | null {
   if (!isFieldAgent(handoff.to_agent as AgentId)) return null;
   const policy = loadChainPolicy();
-  const linked = findMissionByWorkOrder(handoff.id);
+  let linked = findMissionByWorkOrder(handoff.id);
+  if (!linked) {
+    linked = createMissionFromWorkOrder(handoff) ?? undefined;
+  }
   const missionId =
     linked && linked.field_agent === handoff.to_agent ? linked.id : undefined;
 
@@ -382,6 +395,7 @@ export function relayWorkOrderComplete(handoff: Handoff, notes?: string): AgentM
     type: "work_order_complete",
     autoForward: policy.auto_forward_work_order_complete,
     tenant: handoff.tenant,
+    linkedWorkOrderId: handoff.id,
   });
 }
 

@@ -15,11 +15,11 @@ describe("jurisdiction wire governance", () => {
     expect(resolveWireGovernanceTier(2_000_000, "JPY")).toBe("C");
   });
 
-  it("tier A accepts single approver when company list empty (demo skeleton)", () => {
+  it("tier A accepts demo CEO operator as approver", () => {
     const result = assertWireGovernanceApproval({
       amount: 85_000,
       currency: "JPY",
-      approverId: "段燕燕",
+      approverId: "DemoCEO",
     });
     expect(result.tier).toBe("A");
     expect(result.policyRef).toBe("REG-004");
@@ -27,14 +27,14 @@ describe("jurisdiction wire governance", () => {
 
   it("tier B requires co-approver", () => {
     expect(() =>
-      assertWireGovernanceApproval({ amount: 500_000, currency: "JPY", approverId: "段燕燕" })
+      assertWireGovernanceApproval({ amount: 500_000, currency: "JPY", approverId: "DemoCEO" })
     ).toThrow(/co-approver/);
 
     const result = assertWireGovernanceApproval({
       amount: 500_000,
       currency: "JPY",
-      approverId: "段燕燕",
-      coApproverId: "宮城万貴子",
+      approverId: "DemoCEO",
+      coApproverId: "CoCEO",
     });
     expect(result.tier).toBe("B");
   });
@@ -44,13 +44,13 @@ describe("jurisdiction wire governance", () => {
       assertWireGovernanceApproval({
         amount: 2_000_000,
         currency: "JPY",
-        approverId: "段燕燕",
-        coApproverId: "宮城万貴子",
+        approverId: "DemoCEO",
+        coApproverId: "CoCEO",
       })
     ).toThrow(/board resolution/);
   });
 
-  it("loadAuthorizedApprovers returns empty for demo skeleton company", () => {
-    expect(loadAuthorizedApprovers()).toEqual([]);
+  it("loadAuthorizedApprovers includes demo CEO from operators registry", () => {
+    expect(loadAuthorizedApprovers()).toContain("DemoCEO");
   });
 });

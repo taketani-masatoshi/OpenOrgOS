@@ -21,11 +21,11 @@ import { loadModuleManifest } from "../src/lib/modules.js";
 import type { TravelBookingRequest } from "../schemas/travel-booking.js";
 
 describe("travel_booking skill registry", () => {
-  it("registers travel_booking as cursor-only Operations skill", () => {
+  it("registers travel_booking as agent Operations skill", () => {
     const skills = loadSkillRegistry();
     const skill = skills.find((s) => s.id === "travel_booking");
     expect(skill).toBeDefined();
-    expect(skill?.runtime).toBe("cursor-only");
+    expect(skill?.runtime).toBe("agent");
     expect(skill?.agent).toBe("Operations");
     expect(validateSkillRegistryFiles()).toEqual([]);
   });

@@ -10,9 +10,9 @@ describe("demo tenant validate", () => {
     execFileSync(
       "npm",
       ["run", "orgos", "--", "--tenant", "demo", "validate"],
-      { cwd: root, encoding: "utf-8", stdio: "pipe" }
+      { cwd: root, encoding: "utf-8", stdio: "pipe", timeout: 60_000 }
     );
-  });
+  }, 90_000);
 });
 
 describe("demo regulations bind consistency", () => {

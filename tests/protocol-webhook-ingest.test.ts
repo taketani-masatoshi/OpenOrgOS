@@ -66,7 +66,7 @@ monthly_cost: 85000
     });
     const { transmission } = approveInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "CEO",
+      approverId: "Demo CEO",
       eventId: "22222222-2222-4222-8222-222222222222",
     });
 
@@ -92,7 +92,7 @@ monthly_cost: 85000
     });
     const { transmission } = approveInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "CEO",
+      approverId: "Demo CEO",
       eventId: "33333333-3333-4333-8333-333333333333",
     });
 

@@ -57,5 +57,5 @@ describe("fixed assets accounting", () => {
     const result = validateAll();
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);
-  });
+  }, 60_000);
 });

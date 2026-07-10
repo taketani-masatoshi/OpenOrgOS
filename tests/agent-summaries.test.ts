@@ -13,12 +13,12 @@ import { loadAllData } from "../src/lib/data.js";
 import { existsSync } from "node:fs";
 
 describe("agent-summaries", () => {
-  it("formats finance summary with runway TBD when cash unset", () => {
+  it("formats finance summary with confirmed cash balance", () => {
     const report = computeDashboard();
     const md = formatFinanceSummary(report);
     expect(md).toContain("Finance Agent 要約");
-    expect(md).toContain("TBD");
     expect(md).toContain("cash-balance.yaml");
+    expect(md).not.toContain("cash-balance.yaml 未確定");
   });
 
   it("formats contract summary with draft CTRs", () => {
