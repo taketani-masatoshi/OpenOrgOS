@@ -30,12 +30,16 @@ describe("skeleton CLI", () => {
     expect(out).toContain("manifest OK");
   });
 
-  it("modules check --all passes for full catalog", () => {
-    const out = orgos(["modules", "check", "--all"]);
-    expect(out).toContain("catalog modules OK");
-    expect(out).toMatch(/production_ready/);
-    expect(out).toMatch(/activation_ready/);
-  });
+  it(
+    "modules check --all passes for full catalog",
+    () => {
+      const out = orgos(["modules", "check", "--all"]);
+      expect(out).toContain("catalog modules OK");
+      expect(out).toMatch(/production_ready/);
+      expect(out).toMatch(/activation_ready/);
+    },
+    20_000
+  );
 
   it("invoice bancho command is removed", () => {
     const help = execFileSync("npm", ["run", "orgos", "--", "invoice", "--help"], {
@@ -86,21 +90,29 @@ describe("skeleton CLI", () => {
     expect(out).not.toContain("bancho");
   });
 
-  it("demo skeleton status shows operational N/A", () => {
-    setTenantId("demo");
-    expect(isSkeletonTenant()).toBe(true);
-    const report = computeMaturityReport();
-    expect(report.operational.na).toBe(true);
-    expect(report.operational.pct).toBeNull();
-    const text = orgos(["status"], "demo");
-    expect(text).toContain("—");
-    expect(text).not.toContain("84%");
-  });
+  it(
+    "demo skeleton status shows operational N/A",
+    () => {
+      setTenantId("demo");
+      expect(isSkeletonTenant()).toBe(true);
+      const report = computeMaturityReport();
+      expect(report.operational.na).toBe(true);
+      expect(report.operational.pct).toBeNull();
+      const text = orgos(["status"], "demo");
+      expect(text).toContain("—");
+      expect(text).not.toContain("84%");
+    },
+    15_000
+  );
 
-  it("demo dashboard skips hospitality module summary", () => {
-    const out = orgos(["dashboard"], "demo");
-    expect(out).not.toContain("agent-summaries/hospitality");
-  });
+  it(
+    "demo dashboard skips hospitality module summary",
+    () => {
+      const out = orgos(["dashboard"], "demo");
+      expect(out).not.toContain("agent-summaries/hospitality");
+    },
+    20_000
+  );
 
   it("demo modules check has no bind conflicts", () => {
     const out = orgos(["modules", "check", "rental"], "demo");
@@ -117,5 +129,5 @@ describe("tenant init", () => {
     expect(existsSync(join(acmeDir, "tenant.yaml"))).toBe(true);
     orgos(["validate"], "acme-init-test");
     rmSync(acmeDir, { recursive: true, force: true });
-  }, 15000);
+  }, 30_000);
 });

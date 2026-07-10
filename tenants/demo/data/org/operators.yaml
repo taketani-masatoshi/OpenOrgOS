@@ -1,5 +1,5 @@
 # Demo tenant operator registry (L1 — test fixture keys only; hashes not secrets)
-# Keys: demo-operator-key (OP-001) · demo-operator-key-2 (OP-002) — tests/cli only
+# Keys: demo-operator-key (OP-001) · demo-operator-key-2 (OP-002) · demo-operator-key-3 (OP-003) — tests/cli only
 version: "1"
 operators:
   - operator_id: OP-001
@@ -13,3 +13,9 @@ operators:
     role: operator
     status: active
     key_hash: sha256:3208155dec05b6b2f99cae407527ad4926b0bd4f5bdae38cd28bc5e7c26559ff
+  - operator_id: OP-003
+    display_name: CoCEO
+    role: approver
+    status: active
+    approver_name: CoCEO
+    key_hash: sha256:076dd038ca475ec3ace5f2b7786304386af7985e7328964c3960b312c577b517
