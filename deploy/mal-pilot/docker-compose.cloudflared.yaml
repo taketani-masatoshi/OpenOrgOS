@@ -1,0 +1,26 @@
+# mal Wire — Cloudflare Tunnel (token-managed · remote ingress in Zero Trust)
+# Prerequisite: Zero Trust → tunnel 9b5ebf8d… → Public Hostname
+#   wire.oorgos.org → http://host.docker.internal:8443
+# DNS (oorgos.org): CNAME wire → 9b5ebf8d-01c3-4772-ae4a-f7596c7ebe63.cfargotunnel.com
+#
+# Setup:
+#   cp deploy/mal-pilot/env/cloudflared-wire.env.example deploy/mal-pilot/env/.env.cloudflared
+#   # paste CLOUDFLARE_TUNNEL_TOKEN into .env.cloudflared
+#   docker compose --env-file env/.env.cloudflared -f deploy/mal-pilot/docker-compose.cloudflared.yaml up -d
+#
+# Wire Gateway must listen on host :8443 (./scripts/phase2-mal-wire-live.sh mal)
+
+services:
+  cloudflared-wire:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    env_file:
+      - env/.env.cloudflared
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token
+      - ${CLOUDFLARE_TUNNEL_TOKEN}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

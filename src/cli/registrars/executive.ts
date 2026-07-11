@@ -708,6 +708,7 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--operator <id>", "Answering operator id")
     .option("--json", "JSON output")
     .allowUnknownOption()
+    .allowExcessArguments(true)
     .action(async (opts) =>
       await runMailIntakeCeoAnswer({
         id: opts.id,

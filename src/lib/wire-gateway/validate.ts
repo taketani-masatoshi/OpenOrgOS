@@ -17,7 +17,7 @@ import {
   isPkDidRequired,
   isPkPrefixedOpenOrgDid,
 } from "../../../schemas/protocol/openorg-did.js";
-import { readYamlFile } from "../utils.js";
+import { readYamlFile, resolveTenantPath } from "../utils.js";
 import { getProtocolDataDir } from "../protocol/paths.js";
 import { assertWireHashMatchesEnvelope } from "./codec.js";
 import { buildWireNodeIdentityFields } from "./did.js";
@@ -27,10 +27,20 @@ export function getWireGatewayYamlPath(): string {
   return join(getProtocolDataDir(), "wire-gateway.yaml");
 }
 
+export function resolveWireGatewayAuditPath(config: WireGatewayConfig): string {
+  const raw = config.audit.path;
+  if (raw.startsWith("/") || raw.includes("/tenants/")) return raw;
+  return resolveTenantPath(raw);
+}
+
 export function loadWireGatewayConfig(): WireGatewayConfig | null {
   const path = getWireGatewayYamlPath();
   if (!existsSync(path)) return null;
-  return readYamlFile(path, wireGatewayConfigSchema);
+  const config = readYamlFile(path, wireGatewayConfigSchema);
+  return {
+    ...config,
+    audit: { path: resolveWireGatewayAuditPath(config) },
+  };
 }
 
 export interface WireGatewayValidateIssue {

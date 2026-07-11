@@ -1,10 +1,10 @@
 import type { IncomingMessage } from "node:http";
 import { setTenantId } from "../tenant.js";
 import { gmailOAuthTokenSchema } from "../../../schemas/correspondence/gmail-oauth.js";
-import { saveGmailOAuthToken } from "../correspondence/gmail-oauth.js";
+import { saveGmailOAuthToken, ensureGmailOAuthClientForCommunity } from "../correspondence/gmail-oauth.js";
 import { writeGmailApiMailConfig } from "../correspondence/gmail-setup-wizard.js";
 import {
-  consumeCommunityGmailBind,
+  claimCommunityGmailBind,
   createCommunityGmailBind,
   verifyCommunityGmailBind,
 } from "./community-gmail-bind.js";
@@ -14,6 +14,8 @@ export interface CommunityGmailTokenBody {
   tenant_id: string;
   nonce: string;
   community_user_id?: string;
+  community_user_email?: string;
+  oauth_client_id?: string;
   from_name?: string;
   token: unknown;
 }
@@ -21,6 +23,7 @@ export interface CommunityGmailTokenBody {
 export interface CommunityGmailBindCreateBody {
   tenant_id: string;
   ttl_minutes?: number;
+  issued_for_emails?: string[];
 }
 
 function parseJsonBody<T>(raw: string): T {
@@ -65,6 +68,11 @@ export function handleCommunityTenantMailGmailToken(
     return { ok: false, error: verified.error, status: 422 };
   }
 
+  const clientCheck = ensureGmailOAuthClientForCommunity(body.oauth_client_id?.trim());
+  if (!clientCheck.ok) {
+    return { ok: false, error: clientCheck.error, status: 422 };
+  }
+
   let token;
   try {
     token = gmailOAuthTokenSchema.parse({
@@ -90,14 +98,19 @@ export function handleCommunityTenantMailGmailToken(
   const previousTenant = process.env.ORGOS_TENANT;
   setTenantId(tenantId);
   try {
+    const claimed = claimCommunityGmailBind(tenantId, nonce, {
+      communityUserId: body.community_user_id,
+      communityUserEmail: body.community_user_email,
+    });
+    if (!claimed.ok) {
+      return { ok: false, error: claimed.error, status: 422 };
+    }
+
     saveGmailOAuthToken(token);
     writeGmailApiMailConfig({
       fromEmail: token.email,
       fromName: body.from_name?.trim() || "OrgOS Secretary",
     });
-    if (!consumeCommunityGmailBind(tenantId, nonce, body.community_user_id)) {
-      return { ok: false, error: "bind consume failed", status: 422 };
-    }
   } finally {
     if (previousTenant) setTenantId(previousTenant);
   }
@@ -127,7 +140,9 @@ export function handleCommunityTenantMailBindCreate(
   if (!tenantId) {
     return { ok: false, error: "tenant_id required", status: 422 };
   }
-  const entry = createCommunityGmailBind(tenantId, body.ttl_minutes ?? 30);
+  const entry = createCommunityGmailBind(tenantId, body.ttl_minutes ?? 30, {
+    issuedForEmails: body.issued_for_emails,
+  });
   return {
     ok: true,
     tenant_id: entry.tenant_id,

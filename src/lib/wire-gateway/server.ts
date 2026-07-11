@@ -5,6 +5,7 @@ import {
 } from "node:http";
 import { createServer as createHttpsServer, type ServerOptions } from "node:https";
 import { readFileSync } from "node:fs";
+import type { TLSSocket } from "node:tls";
 import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-config.js";
 import type { WireMessage } from "../../../schemas/protocol/wire-message.js";
 import { WireInternalClient } from "./internal-client.js";
@@ -18,17 +19,24 @@ import {
 } from "./validate.js";
 import {
   checkTimestampSkew,
+  findPeerForSender,
   verifyInboundWireMessage,
+  wireReceiverIsLocal,
 } from "./security.js";
 import { envelopeToWireMessage, wireMessageToEnvelope } from "./codec.js";
+import { exportWireFederationGossipCatalog, validateWireFederationGossipPost } from "./federation-gossip.js";
+import { applyIncomingWireFederationGossip, listWireFederationCatalogWithGossip } from "./federation-gossip-store.js";
 import { join } from "node:path";
 import { getProtocolDataDir } from "../protocol/paths.js";
+import { verifyMtlsClient } from "../protocol/protocol-tls.js";
 
 export interface WireGatewayServerOptions {
   config: WireGatewayConfig;
   publicBaseUrl?: string;
   enableOutbound?: boolean;
   internalClient?: WireInternalClient;
+  /** Test/embedded override; production defaults to the tenant protocol data dir. */
+  nonceLedgerPath?: string;
 }
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -45,30 +53,51 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-function clientIp(req: IncomingMessage): string {
+function normalizeIp(ip: string): string {
+  const unwrapped = ip.startsWith("[") && ip.endsWith("]") ? ip.slice(1, -1) : ip;
+  return unwrapped.startsWith("::ffff:") ? unwrapped.slice(7) : unwrapped;
+}
+
+function clientIp(req: IncomingMessage, trustedProxies: string[]): string {
+  const remote = normalizeIp(req.socket.remoteAddress ?? "unknown");
+  if (!trustedProxies.map(normalizeIp).includes(remote)) return remote;
+
   const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string") {
-    return forwarded.split(",")[0]!.trim();
+  if (typeof forwarded !== "string") return remote;
+  const chain = forwarded
+    .split(",")
+    .map((ip) => normalizeIp(ip.trim()))
+    .filter(Boolean);
+  const trusted = new Set(trustedProxies.map(normalizeIp));
+  for (let i = chain.length - 1; i >= 0; i--) {
+    if (!trusted.has(chain[i]!)) return chain[i]!;
   }
-  return req.socket.remoteAddress ?? "unknown";
+  return chain[0] ?? remote;
 }
 
 function isIpAllowed(ip: string, allowlist?: string[]): boolean {
   if (!allowlist?.length) return true;
-  return allowlist.includes(ip);
+  return allowlist.map(normalizeIp).includes(normalizeIp(ip));
 }
 
 export function startWireGatewayServer(
   options: WireGatewayServerOptions
 ): Promise<{ close: () => void; url: string }> {
   const config = options.config;
+  if (
+    config.security.mtls_required &&
+    (!config.listen.tls_cert || !config.listen.tls_key || !config.listen.tls_ca)
+  ) {
+    throw new Error("mtls_required requires listen.tls_cert, listen.tls_key, and listen.tls_ca");
+  }
   const host = config.listen.host;
   const port = config.listen.port;
   const scheme = config.listen.tls_cert && config.listen.tls_key ? "https" : "http";
   const publicBaseUrl = options.publicBaseUrl ?? `${scheme}://${host}:${port}`;
   const client = options.internalClient ?? new WireInternalClient(config);
   const nonceLedger = new NonceLedger(
-    join(getProtocolDataDir(), "wire-gateway-nonce-ledger.json")
+    options.nonceLedgerPath ??
+      join(getProtocolDataDir(), "wire-gateway-nonce-ledger.json")
   );
   const rateLimiter = new RateLimiter(config.security.rate_limit_per_min);
   const poller = createOutboundPoller(config, client);
@@ -86,12 +115,11 @@ export function startWireGatewayServer(
     }
   }
 
-  async function handleInboundWire(
+  function authorizeProtectedRequest(
     req: IncomingMessage,
-    res: ServerResponse,
-    wire: WireMessage
-  ): Promise<void> {
-    const ip = clientIp(req);
+    res: ServerResponse
+  ): { ok: true; ip: string; clientOrgUri?: string } | { ok: false } {
+    const ip = clientIp(req, config.security.trusted_proxies);
     if (!isIpAllowed(ip, config.security.ip_allowlist)) {
       appendWireGatewayAudit(config.audit.path, {
         recorded_at: new Date().toISOString(),
@@ -100,7 +128,7 @@ export function startWireGatewayServer(
         gateway_id: config.node_id,
       });
       json(res, 403, { ok: false, error: "ip_denied" });
-      return;
+      return { ok: false };
     }
 
     const rate = rateLimiter.check(ip);
@@ -110,9 +138,33 @@ export function startWireGatewayServer(
         "Retry-After": String(rate.retryAfterSec ?? 60),
       });
       res.end(JSON.stringify({ ok: false, error: "rate_limited" }));
-      return;
+      return { ok: false };
     }
 
+    const mtls = verifyMtlsClient({
+      socket: req.socket as TLSSocket,
+      required: config.security.mtls_required,
+      allowedOrgUris: config.security.mtls_allowed_org_uris,
+    });
+    if (!mtls.ok) {
+      appendWireGatewayAudit(config.audit.path, {
+        recorded_at: new Date().toISOString(),
+        action: "wire.auth_fail",
+        reason: mtls.reason ?? "mtls_required",
+        gateway_id: config.node_id,
+      });
+      json(res, 401, { ok: false, error: "mtls_required" });
+      return { ok: false };
+    }
+
+    return { ok: true, ip, clientOrgUri: mtls.client_org_uri };
+  }
+
+  async function handleInboundWire(
+    res: ServerResponse,
+    wire: WireMessage,
+    clientOrgUri?: string
+  ): Promise<void> {
     if (!checkTimestampSkew(wire.timestamp, config.security.timestamp_skew_sec)) {
       appendWireGatewayAudit(config.audit.path, {
         recorded_at: new Date().toISOString(),
@@ -123,6 +175,11 @@ export function startWireGatewayServer(
         gateway_id: config.node_id,
       });
       json(res, 403, { ok: false, error: "timestamp_skew" });
+      return;
+    }
+
+    if (!wireReceiverIsLocal(wire, config)) {
+      json(res, 403, { ok: false, error: "receiver_mismatch" });
       return;
     }
 
@@ -144,7 +201,7 @@ export function startWireGatewayServer(
       return;
     }
 
-    const sig = verifyInboundWireMessage(wire, peersCache);
+    const sig = verifyInboundWireMessage(wire, peersCache, clientOrgUri);
     if (!sig.ok) {
       appendWireGatewayAudit(config.audit.path, {
         recorded_at: new Date().toISOString(),
@@ -221,7 +278,60 @@ export function startWireGatewayServer(
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/wire/v1/federation/catalog") {
+      const catalog = exportWireFederationGossipCatalog(config.node_id);
+      catalog.nodes = listWireFederationCatalogWithGossip();
+      json(res, 200, catalog);
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/wire/v1/federation/gossip") {
+      const access = authorizeProtectedRequest(req, res);
+      if (!access.ok) return;
+      try {
+        const raw = await readBody(req);
+        const remote = validateWireFederationGossipPost(JSON.parse(raw));
+        if (!remote) {
+          json(res, 400, { ok: false, error: "invalid_gossip_catalog" });
+          return;
+        }
+        const publisherPeer = findPeerForSender(peersCache, remote.publisher_node_id);
+        if (!publisherPeer) {
+          json(res, 403, { ok: false, error: "gossip_peer_unknown" });
+          return;
+        }
+        if (
+          access.clientOrgUri &&
+          findPeerForSender(peersCache, access.clientOrgUri)?.peer_node_id !==
+            publisherPeer.peer_node_id
+        ) {
+          json(res, 403, { ok: false, error: "mtls_sender_mismatch" });
+          return;
+        }
+        const store = applyIncomingWireFederationGossip(remote);
+        appendWireGatewayAudit(config.audit.path, {
+          recorded_at: new Date().toISOString(),
+          action: "wire.receive",
+          peer_node_id: remote.publisher_node_id,
+          reason: `federation_gossip:${remote.nodes.length} nodes merged`,
+          gateway_id: config.node_id,
+        });
+        json(res, 202, {
+          ok: true,
+          accepted: true,
+          remote_nodes: remote.nodes.length,
+          publisher: remote.publisher_node_id,
+          merged_nodes: store.catalog.nodes.length,
+        });
+      } catch {
+        json(res, 400, { ok: false, error: "invalid_json" });
+      }
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/wire/v1/events") {
+      const access = authorizeProtectedRequest(req, res);
+      if (!access.ok) return;
       try {
         const raw = await readBody(req);
         const parsed = validateWireMessage(JSON.parse(raw), { verifyHash: true });
@@ -232,7 +342,7 @@ export function startWireGatewayServer(
           });
           return;
         }
-        await handleInboundWire(req, res, parsed.message);
+        await handleInboundWire(res, parsed.message, access.clientOrgUri);
       } catch (e) {
         json(res, 400, {
           ok: false,
@@ -244,6 +354,8 @@ export function startWireGatewayServer(
 
     const pullMatch = url.pathname.match(/^\/wire\/v1\/events\/([0-9a-f-]{36})$/);
     if (req.method === "GET" && pullMatch) {
+      const access = authorizeProtectedRequest(req, res);
+      if (!access.ok) return;
       const eventId = pullMatch[1]!;
       const peerHeader = req.headers["x-wire-peer-id"];
       const peerNodeId = typeof peerHeader === "string" ? peerHeader : undefined;
@@ -272,7 +384,12 @@ export function startWireGatewayServer(
     const httpsOptions: ServerOptions = {
       cert: readFileSync(config.listen.tls_cert, "utf-8"),
       key: readFileSync(config.listen.tls_key, "utf-8"),
+      ca: config.listen.tls_ca
+        ? readFileSync(config.listen.tls_ca, "utf-8")
+        : undefined,
       requestCert: config.security.mtls_required,
+      // Keep the TLS connection open so the application can return an auditable
+      // 401; verifyMtlsClient still requires TLSSocket.authorized (CA verified).
       rejectUnauthorized: false,
     };
     server = createHttpsServer(httpsOptions, (req, res) => {

@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { existsSync, rmSync } from "node:fs";
 import { runProdWireGate } from "../src/lib/protocol/prod-wire-gate.js";
+import { getMailConfigPath } from "../src/lib/correspondence/paths.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
 describe("mal wire pilot gate", () => {
@@ -16,6 +18,8 @@ describe("mal wire pilot gate", () => {
 
   beforeEach(() => {
     setTenantId("mal");
+    const mailConfig = getMailConfigPath();
+    if (existsSync(mailConfig)) rmSync(mailConfig);
     for (const key of envKeys) {
       saved[key] = process.env[key];
     }
@@ -32,7 +36,7 @@ describe("mal wire pilot gate", () => {
     }
   });
 
-  it("passes production wire gate with committed mal tenant config", () => {
+  it("reports unresolved production blockers in committed mal tenant config", () => {
     const result = runProdWireGate({
       tenantId: "mal",
       strictTrust: true,
@@ -40,9 +44,9 @@ describe("mal wire pilot gate", () => {
       strictTransport: true,
       publicBaseUrl: "https://wire.mal.example",
     });
-    expect(result.ok).toBe(true);
-    for (const check of result.checks) {
-      expect(check.ok, `${check.id}: ${check.issues?.join("; ")}`).toBe(true);
-    }
+    expect(result.ok).toBe(false);
+    const failed = result.checks.filter((check) => !check.ok);
+    expect(failed.map((check) => check.id)).toEqual(["email_wire"]);
+    expect(failed[0]?.issues).toContain("mail-config.yaml not present");
   });
 });

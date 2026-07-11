@@ -34,6 +34,7 @@ import { getProtocolOutboxDir } from "./paths.js";
 import { listOutboxEventIdsWithoutProvenance } from "./outbox-provenance.js";
 import { isProtocolWriteGuardDisabled } from "./protocol-write-guard.js";
 import { checkProtocolOutboxPermissionsLoose } from "./outbox-permissions.js";
+import { isPkDidRequired, isPkPrefixedOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
 
 export interface ProtocolValidationIssue {
   code: string;
@@ -162,6 +163,12 @@ export function validateProtocolState(
             warnings.push({
               code: "peer-org-uri-missing",
               message: `${peer.peer_id} (${peer.display_name}): no org_uri — Secretary peer contact resolve disabled`,
+            });
+          }
+          if (peer.did && isPkDidRequired() && !isPkPrefixedOpenOrgDid(peer.did)) {
+            issues.push({
+              code: "peer-slug-did-disallowed",
+              message: `${peer.peer_id}: peer did must be pk-prefixed when ORGOS_REQUIRE_PK_DID / ORGOS_STRICT_TRUST`,
             });
           }
         }

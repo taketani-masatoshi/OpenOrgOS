@@ -112,6 +112,44 @@ export function saveGmailOAuthClientConfig(client: GmailOAuthClient): void {
   writeFileSync(path, JSON.stringify(gmailOAuthClientSchema.parse(client), null, 2), "utf-8");
 }
 
+export function ensureGmailOAuthClientForCommunity(expectedClientId?: string): {
+  ok: boolean;
+  error?: string;
+} {
+  const existing = getGmailOAuthClientConfig();
+  if (existing) {
+    if (expectedClientId && existing.clientId !== expectedClientId) {
+      return {
+        ok: false,
+        error: `oauth client id mismatch — Community used ${expectedClientId}, Steward has ${existing.clientId}. Use the same Google OAuth client on both sides.`,
+      };
+    }
+    return { ok: true };
+  }
+
+  const envId = process.env.ORGOS_GMAIL_CLIENT_ID?.trim();
+  const envSecret = process.env.ORGOS_GMAIL_CLIENT_SECRET?.trim();
+  if (!envId || !envSecret) {
+    return {
+      ok: false,
+      error:
+        "ORGOS_GMAIL_CLIENT_ID and ORGOS_GMAIL_CLIENT_SECRET required on Steward (must match Community AUTH_GOOGLE_* / ORGOS_GMAIL_*)",
+    };
+  }
+  if (expectedClientId && expectedClientId !== envId) {
+    return {
+      ok: false,
+      error: `oauth client id mismatch — Community used ${expectedClientId}, Steward env has ${envId}`,
+    };
+  }
+  saveGmailOAuthClientConfig({
+    version: 1,
+    client_id: envId,
+    client_secret: envSecret,
+  });
+  return { ok: true };
+}
+
 export function getGmailOAuthClientConfig(): { clientId: string; clientSecret: string } | null {
   const envId = process.env.ORGOS_GMAIL_CLIENT_ID?.trim();
   const envSecret = process.env.ORGOS_GMAIL_CLIENT_SECRET?.trim();

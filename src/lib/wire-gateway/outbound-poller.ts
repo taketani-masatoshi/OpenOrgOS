@@ -2,6 +2,7 @@ import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-c
 import { WireInternalClient } from "./internal-client.js";
 import { envelopeToWireMessage } from "./codec.js";
 import { appendWireGatewayAudit } from "./audit.js";
+import { strictPkDidError } from "./security.js";
 
 export interface OutboundPollerHandle {
   start(): void;
@@ -61,6 +62,10 @@ export function createOutboundPoller(
           };
           if (peer.transport === "wire_v1") {
             const wire = envelopeToWireMessage(envelope);
+            const trustError =
+              strictPkDidError(wire.sender, "sender") ??
+              strictPkDidError(wire.receiver, "receiver");
+            if (trustError) throw new Error(trustError);
             wireHash = wire.hash;
             body = JSON.stringify(wire);
             headers["X-OpenOrgOS-Wire-Version"] = "0.1";

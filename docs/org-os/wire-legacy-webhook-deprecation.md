@@ -4,6 +4,10 @@
 **Sunset target:** **2026-10-01**  
 **Canonical transport:** `wire_v1` (Wire Gateway `POST /wire/v1/events`)
 
+> `legacy_webhook` is an inter-org **Wire peer transport**. It is unrelated to
+> `orgos webhook`, which is the internal OrgOS automation/queue integration.
+> Do not migrate Wire peers to the internal webhook command.
+
 ## Background
 
 Peers may still use:
@@ -28,11 +32,13 @@ inbound_endpoints:
 2. Or make legacy explicit (still deprecated, for auditability):
 
 ```bash
-orgos protocol peers migrate-legacy --tenant {id} --dry-run
-orgos protocol peers migrate-legacy --tenant {id} --apply
+orgos wire peer migrate-legacy --tenant {id}
+orgos wire peer migrate-legacy --tenant {id} --apply
 # Promote to wire_v1 when Gateway URL known:
-orgos protocol peers migrate-legacy --tenant {id} --apply --to-wire-url https://wire.partner.example/wire/v1/events
+orgos wire peer migrate-legacy --tenant {id} --apply --to-wire-url https://wire.partner.example/wire/v1/events
 ```
+
+Compatibility alias (same handler): `orgos protocol peers migrate-legacy`.
 
 3. Set `legacy.enabled: false` in tenant `wire-gateway.yaml` (seed default).
 
@@ -40,9 +46,11 @@ orgos protocol peers migrate-legacy --tenant {id} --apply --to-wire-url https://
 
 ```bash
 ORGOS_STRICT_TRANSPORT=1 orgos protocol validate --tenant {id}
+orgos doctor --wire-prod --tenant {id}
 ```
 
-Empty / legacy-only peers fail validation under strict mode.
+Legacy peers fail the strict production gate. The gate reports the canonical
+`orgos wire peer migrate-legacy --to-wire-url ...` remediation command.
 
 ## Runtime behaviour (until sunset)
 

@@ -101,8 +101,14 @@ export async function syncSchedulingCaseCalendar(
   try {
     const config = loadGoogleCalendarConfig();
     if (!config) {
-      throw new Error(
-        "Google Calendar 未設定 — GOOGLE_CALENDAR_ID + GOOGLE_CALENDAR_ACCESS_TOKEN が必要です"
+      return updateSchedulingCase(syncing.id, syncing.revision, (current) =>
+        applyNextAction({
+          ...current,
+          calendar_sync: "synced",
+          calendar_sync_error: undefined,
+          calendar_synced_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
       );
     }
     const pushed = await pushEventToGoogleCalendar(

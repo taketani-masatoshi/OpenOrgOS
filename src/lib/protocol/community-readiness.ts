@@ -193,6 +193,16 @@ export function computeCommunityReadiness(): CommunityReadiness {
   });
   if (vocabularyI18n) score += 1;
 
+  const tenantMailApi = integration?.tenant_mail_connect_api === true;
+  checks.push({
+    id: "tenant-mail-connect-api",
+    ok: tenantMailApi,
+    detail: tenantMailApi
+      ? "Community tenant-mail API export + Steward push route"
+      : "tenant-mail connect API pending",
+  });
+  if (tenantMailApi) score += 1;
+
   const cap = resolveCommunityReadinessCap();
   return { score: Math.min(score, cap), checks };
 }

@@ -98,7 +98,7 @@ export function buildWireMimeMessage(
       ? `X-OpenOrgOS-Wire-Part: ${opts.partIndex}/${opts.partTotal}`
       : undefined;
 
-  return [
+  const headers = [
     `From: ${from}`,
     `To: ${opts.to}`,
     `Subject: [OpenOrgOS] ${subjectTag}`,
@@ -109,6 +109,10 @@ export function buildWireMimeMessage(
     "X-OpenOrgOS-Transport: email_wire",
     partHeader,
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
+  ].filter((line): line is string => Boolean(line));
+
+  return [
+    ...headers,
     "",
     `--${boundary}`,
     'Content-Type: text/plain; charset="UTF-8"',

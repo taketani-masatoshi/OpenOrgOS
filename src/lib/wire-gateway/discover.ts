@@ -4,6 +4,11 @@ import { loadWireTrustRegistry } from "../protocol/wire-trust-registry.js";
 import type { WireTrustRegistryNode } from "../../../schemas/protocol/wire-trust-registry.js";
 import type { PeerProfile } from "../../../schemas/protocol/peers.js";
 import { syncWireTrustRegistryPublicKeys } from "../protocol/wire-trust-registry-sync.js";
+import {
+  resolveOpenOrgWireUrl,
+  isDnsStyleNodeId,
+  type OpenOrgDnsResolver,
+} from "./openorg-dns.js";
 
 export interface WireGatewayDiscoverEntry {
   source: "trust-registry";
@@ -164,12 +169,36 @@ export interface ApplyWireGatewayDiscoverOptions {
   jurisdiction?: string;
   dryRun?: boolean;
   nodeIds?: string[];
+  /** Resolve DNS-style node_id via OpenOrg DNS when trust registry lacks wire_url. */
+  resolveDns?: boolean;
+  /** Resolver injection for deterministic DNS discovery tests and embedded runtimes. */
+  dnsResolver?: OpenOrgDnsResolver;
 }
 
 export interface ApplyWireGatewayDiscoverResult {
   dry_run: boolean;
   applied: PeerProfile[];
   skipped: Array<{ node_id: string; reason: string }>;
+}
+
+export async function resolveWireGatewayDiscoverEntry(
+  entry: WireGatewayDiscoverEntry,
+  resolver?: OpenOrgDnsResolver
+): Promise<{ profile?: PeerProfile; reason?: string }> {
+  let wireUrl = entry.wire_url;
+  if (!wireUrl && isDnsStyleNodeId(entry.node_id)) {
+    const resolved = await resolveOpenOrgWireUrl(entry.node_id, { resolver });
+    wireUrl = resolved.wire_url;
+    if (!wireUrl) {
+      return { reason: resolved.detail ?? "OpenOrg DNS unresolved" };
+    }
+  }
+  if (!wireUrl) {
+    return { reason: "no wire_url in trust registry" };
+  }
+  return {
+    profile: buildPeerProfileFromDiscoverEntry({ ...entry, wire_url: wireUrl }),
+  };
 }
 
 export function applyWireGatewayDiscover(
@@ -191,6 +220,46 @@ export function applyWireGatewayDiscover(
       continue;
     }
     const profile = buildPeerProfileFromDiscoverEntry(entry);
+    if (opts.dryRun) {
+      applied.push(profile);
+    } else {
+      registerPeer(profile);
+      applied.push(profile);
+    }
+  }
+
+  return { dry_run: opts.dryRun === true, applied, skipped };
+}
+
+/** Apply discover with OpenOrg DNS resolution for DNS-style node_id lacking wire_url. */
+export async function applyWireGatewayDiscoverAsync(
+  opts: ApplyWireGatewayDiscoverOptions = {}
+): Promise<ApplyWireGatewayDiscoverResult> {
+  const tenantId = opts.tenantId ?? getTenantId();
+  let candidates = listUnregisteredWireGatewayPeers({ tenantId, jurisdiction: opts.jurisdiction });
+  if (opts.nodeIds?.length) {
+    const allow = new Set(opts.nodeIds);
+    candidates = candidates.filter((c) => allow.has(c.node_id));
+  }
+
+  const applied: PeerProfile[] = [];
+  const skipped: Array<{ node_id: string; reason: string }> = [];
+
+  for (const entry of candidates) {
+    const resolved =
+      opts.resolveDns === false
+        ? {
+            profile: entry.wire_url
+              ? buildPeerProfileFromDiscoverEntry(entry)
+              : undefined,
+            reason: entry.wire_url ? undefined : "no wire_url in trust registry",
+          }
+        : await resolveWireGatewayDiscoverEntry(entry, opts.dnsResolver);
+    if (!resolved.profile) {
+      skipped.push({ node_id: entry.node_id, reason: resolved.reason ?? "OpenOrg DNS unresolved" });
+      continue;
+    }
+    const profile = resolved.profile;
     if (opts.dryRun) {
       applied.push(profile);
     } else {

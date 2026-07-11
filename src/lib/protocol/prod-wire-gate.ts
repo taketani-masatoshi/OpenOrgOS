@@ -4,6 +4,14 @@ import { validateWireGatewayConfig, loadWireGatewayConfig } from "../wire-gatewa
 import { validateProtocolState } from "./validate.js";
 import { validateGovGatewaySetup, loadGovGatewayConfig } from "../wire/gov-gateway/config.js";
 import { setTenantId } from "../tenant.js";
+import { existsSync } from "node:fs";
+import {
+  loadMailConfig,
+  resolveWireSmtpCredentials,
+  shouldAutoWireScan,
+} from "../correspondence/mail-config.js";
+import { getMailConfigPath } from "../correspondence/paths.js";
+import { listLegacyTransportPeers } from "./peers-migrate-legacy.js";
 
 export interface ProdWireGateCheck {
   id: string;
@@ -89,12 +97,39 @@ export function runProdWireGate(opts: ProdWireGateOptions): ProdWireGateResult {
       issues: formatIssues(protocol.issues),
     });
 
+    const legacyPeers = listLegacyTransportPeers();
+    const legacyBlocked = opts.strictTransport === true && legacyPeers.length > 0;
+    checks.push({
+      id: "legacy_webhook_sunset",
+      ok: !legacyBlocked,
+      detail:
+        legacyPeers.length === 0
+          ? "no legacy_webhook Wire peers"
+          : legacyBlocked
+            ? `legacy_webhook blocked in strict production mode (${legacyPeers.length} peer(s))`
+            : `legacy_webhook deprecated until 2026-10-01 (${legacyPeers.length} peer(s))`,
+      issues: legacyPeers.length
+        ? legacyPeers.map(
+            (peer) =>
+              `${peer.peer_id}: migrate with orgos wire peer migrate-legacy --to-wire-url <gateway>/wire/v1/events`
+          )
+        : undefined,
+    });
+
     const gov = validateGovGatewaySetup(loadGovGatewayConfig());
     checks.push({
       id: "gov_gateway",
       ok: gov.ok,
       detail: gov.ok ? "gov gateway config OK" : "gov gateway config failed",
       issues: formatIssues(gov.issues),
+    });
+
+    const emailWireReady = evaluateEmailWireReadiness(opts.tenantId);
+    checks.push({
+      id: "email_wire",
+      ok: emailWireReady.ok,
+      detail: emailWireReady.detail,
+      issues: emailWireReady.issues,
     });
   } finally {
     if (previousTenant) setTenantId(previousTenant);
@@ -116,4 +151,59 @@ export function runProdWireGate(opts: ProdWireGateOptions): ProdWireGateResult {
 
   const ok = checks.every((c) => c.ok);
   return { ok, checks };
+}
+
+export function evaluateEmailWireReadiness(tenantId: string): {
+  ok: boolean;
+  detail: string;
+  issues?: string[];
+} {
+  const issues: string[] = [];
+  const mailConfigPath = getMailConfigPath();
+  if (!existsSync(mailConfigPath)) {
+    issues.push("mail-config.yaml not present");
+    return {
+      ok: false,
+      detail: "email_wire not ready",
+      issues,
+    };
+  }
+
+  let config: ReturnType<typeof loadMailConfig>;
+  try {
+    config = loadMailConfig();
+  } catch (error) {
+    issues.push(
+      `mail-config.yaml invalid: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return { ok: false, detail: "email_wire not ready", issues };
+  }
+
+  if (!config?.wire_outbound?.enabled) {
+    issues.push("wire_outbound.enabled must be true");
+  }
+
+  const dryRun =
+    config?.provider === "dry_run" ||
+    config?.wire_outbound?.smtp?.host === "smtp.test.local";
+  if (!dryRun) {
+    if (!config?.wire_outbound?.smtp?.host) {
+      issues.push("wire_outbound.smtp is required outside dry_run");
+    }
+    if (!resolveWireSmtpCredentials()) {
+      issues.push("wire SMTP credentials are missing");
+    }
+  }
+
+  if (!config || !shouldAutoWireScan(config)) {
+    issues.push(
+      "receive sync must be imap/gmail_api with auto_wire_scan enabled for inbound ingest"
+    );
+  }
+
+  return {
+    ok: issues.length === 0,
+    detail: issues.length === 0 ? `email_wire ready (${tenantId})` : "email_wire not ready",
+    issues: issues.length ? issues : undefined,
+  };
 }

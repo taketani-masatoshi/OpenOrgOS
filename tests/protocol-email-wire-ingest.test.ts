@@ -124,6 +124,28 @@ monthly_cost: 50000
     expect(result.skipped).toBe(1);
   });
 
+  it("ingests wire payload when MTA folded long JSON lines", async () => {
+    const envelope = sampleEnvelope("77777777-7777-4777-8777-777777777777");
+    const mime = buildWireMimeMessage(envelope, {
+      to: "wire@demo.example",
+      fromName: "Wire",
+      fromEmail: "wire@demo.example",
+    });
+    const folded = mime.replace(
+      /("approval_policy_ref":"REG-004")/,
+      '"approval_po\r\n licy_ref":"REG-004"'
+    );
+    const emlPath = join(getMailReceivedDir(), "wire-folded.eml");
+    writeFileSync(emlPath, folded, "utf-8");
+
+    const parsed = await parseWireEml(emlPath);
+    expect(parsed).not.toBeNull();
+
+    const result = await scanMailReceivedForWire();
+    expect(result.ingested).toBe(1);
+    expect(result.errors).toHaveLength(0);
+  });
+
   it("rejects invalid wire signature hash", async () => {
     const envelope = sampleEnvelope("66666666-6666-4666-8666-666666666666");
     const mime = buildWireMimeMessage(envelope, {

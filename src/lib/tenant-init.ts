@@ -13,6 +13,7 @@ import { seedRegulationDocs } from "./regulations.js";
 import { getModuleSeedDir, listModuleSeedFiles, loadModulesFile } from "./modules.js";
 import { getTenantsDir } from "./orgos-paths.js";
 import { setTenantId, loadTenantConfig, getTenantTemplateDir, getTenantDir } from "./tenant.js";
+import { ensureExecutiveMailConfig } from "./correspondence/ensure-mail-config.js";
 import {
   seedExecutiveYamlFromExamples,
   seedProtocolYamlFromExamples,
@@ -307,6 +308,16 @@ function seedExecutiveRecordsFromExample(
   }
   if (existsSync(example)) {
     cpSync(example, target);
+    result?.created.push(rel);
+    return;
+  }
+  const tenantId = basename(dest);
+  const prevTenant = process.env.ORGOS_TENANT;
+  process.env.ORGOS_TENANT = tenantId;
+  setTenantId(tenantId);
+  ensureExecutiveMailConfig({ dryRunSmtp: true });
+  if (prevTenant) process.env.ORGOS_TENANT = prevTenant;
+  if (existsSync(target)) {
     result?.created.push(rel);
   }
 }

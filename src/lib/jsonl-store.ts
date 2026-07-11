@@ -1,4 +1,5 @@
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 /**
  * Shared append-only JSONL store helpers used by the audit log and queue DB.
@@ -6,6 +7,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
  */
 
 export function appendJsonl<T>(path: string, record: T): void {
+  mkdirSync(dirname(path), { recursive: true });
   appendFileSync(path, JSON.stringify(record) + "\n", "utf-8");
 }
 

@@ -9,6 +9,11 @@ export function loadMailConfig(): MailConfig | null {
   return parseMailConfigFile(readFileSync(path, "utf-8"));
 }
 
+/** Test / CI SMTP host — writes EML only; no live delivery or credentials. */
+export function isDryRunSmtpHost(host?: string): boolean {
+  return host === "smtp.test.local";
+}
+
 export function resolveMailConfig(): MailConfig {
   const config = loadMailConfig();
   if (config) return config;
@@ -65,6 +70,7 @@ receive:
   # ceo_question_mode: inline
   # interpret_ensemble: true
   # interpret_models: []
+  # scheduling_reminder_after_hours: 72
   # gmail_label: INBOX
 notes: |
   receive = Secretary メール受信同期（IMAP 将来）

@@ -94,6 +94,12 @@ describe("wire-gateway server (WG-1)", () => {
       expect(wkBody.protocol_public_key).toBe(exportProtocolPublicKeyBase64());
       expect(wkBody.endpoints.events_push).toContain("/wire/v1/events");
 
+      const catalog = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/federation/catalog`);
+      expect(catalog.ok).toBe(true);
+      const catBody = (await catalog.json()) as { version: string; nodes: unknown[] };
+      expect(catBody.version).toBe("1");
+      expect(catBody.nodes.length).toBeGreaterThan(0);
+
       const res = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,6 +122,33 @@ describe("wire-gateway server (WG-1)", () => {
       expect(replay.status).toBe(403);
       const replayBody = (await replay.json()) as { error: string };
       expect(replayBody.error).toBe("replay");
+
+      const remoteCatalog = {
+        version: "1" as const,
+        gossip_at: new Date().toISOString(),
+        publisher_node_id: "steward://tenant/sender",
+        nodes: [
+          {
+            node_id: "remote-node",
+            display_name: "Remote Node",
+            protocol_public_key_pinned: true,
+            wire_url: "https://wire.remote.example",
+          },
+        ],
+      };
+      const gossipPost = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/federation/gossip`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(remoteCatalog),
+      });
+      expect(gossipPost.status).toBe(202);
+      const gossipBody = (await gossipPost.json()) as { ok: boolean; merged_nodes: number };
+      expect(gossipBody.ok).toBe(true);
+      expect(gossipBody.merged_nodes).toBeGreaterThan(0);
+
+      const catalogAfter = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/federation/catalog`);
+      const catAfterBody = (await catalogAfter.json()) as { nodes: Array<{ node_id: string }> };
+      expect(catAfterBody.nodes.some((n) => n.node_id === "remote-node")).toBe(true);
     } finally {
       gateway.close();
       internal.close();

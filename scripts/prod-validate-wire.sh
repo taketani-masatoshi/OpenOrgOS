@@ -10,7 +10,7 @@ export ORGOS_TENANT="$TENANT"
 export ORGOS_REQUIRE_PK_DID=1
 export WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY="${WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY:-1}"
 export ORGOS_STRICT_TRUST_JURISDICTIONS="${ORGOS_STRICT_TRUST_JURISDICTIONS:-JP}"
-export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-https://wire.${TENANT}.example}"
+export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-$([ "$TENANT" = mal ] && echo https://wire.oorgos.org || echo "https://wire.${TENANT}.example")}"
 
 echo "=== Wire production gate (${TENANT}) ==="
 

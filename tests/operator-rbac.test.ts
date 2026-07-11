@@ -7,6 +7,7 @@ import {
   resolveOperatorPermissions,
 } from "../src/lib/console-auth/operator-rbac.js";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
+import { requireCliSchedulingApproval } from "../src/lib/console-auth/cli-operator.js";
 
 describe("operator rbac", () => {
   const env = { ...process.env };
@@ -32,6 +33,8 @@ describe("operator rbac", () => {
       status: "active",
     });
     expect(perms).toContain("chat:approve");
+    expect(perms).toContain("scheduling:approve");
+    expect(perms).toContain("scheduling:write");
     expect(perms).toContain("agent:dispatch");
   });
 
@@ -45,6 +48,8 @@ describe("operator rbac", () => {
     if (!("error" in auth)) {
       expect(auth.record.operator_id).toBe("OP-002");
       expect(auth.permissions).toContain("agent:dispatch");
+      expect(auth.permissions).toContain("scheduling:write");
+      expect(auth.permissions).not.toContain("scheduling:approve");
       expect(auth.permissions).not.toContain("chat:approve");
     }
   });
@@ -64,5 +69,12 @@ describe("operator rbac", () => {
   it("resolves operator by bearer key", () => {
     const auth = authenticateOperatorByKey("demo-operator-key");
     expect(auth?.record.operator_id).toBe("OP-001");
+  });
+
+  it("does not allow dev bypass for final scheduling confirmation", () => {
+    process.env.STEWARD_OPERATOR_AUTH = "0";
+    expect(() => requireCliSchedulingApproval("executive scheduling confirm")).toThrow(
+      /Dev bypass is not allowed/
+    );
   });
 });

@@ -23,8 +23,19 @@ import {
   listWireGatewayFederationCatalog,
   listWireGatewayPeerSuggestions,
   applyWireGatewayDiscover,
+  applyWireGatewayDiscoverAsync,
   syncWireGatewayFederation,
 } from "../lib/wire-gateway/discover.js";
+import {
+  resolveOpenOrgWireUrl,
+  formatOpenOrgWireDnsTxt,
+  isDnsStyleNodeId,
+} from "../lib/wire-gateway/openorg-dns.js";
+import { syncWireFederationGossipFromRegistry } from "../lib/wire-gateway/federation-gossip.js";
+import {
+  evaluateWireImplementationChecklist,
+  runStrictWireImplementationScore,
+} from "../lib/protocol/wire-implementation-score.js";
 import type { WireGatewayConfig } from "../../schemas/protocol/wire-gateway-config.js";
 import { wireGatewayConfigSchema } from "../../schemas/protocol/wire-gateway-config.js";
 
@@ -368,14 +379,15 @@ export interface WireGatewayDiscoverApplyOptions {
   json?: boolean;
 }
 
-export function runWireGatewayDiscoverApply(opts: WireGatewayDiscoverApplyOptions = {}): void {
+export async function runWireGatewayDiscoverApply(opts: WireGatewayDiscoverApplyOptions = {}): Promise<void> {
   if (opts.tenant) setTenantId(opts.tenant);
   requireCliConfigWrite("wire-gateway discover --apply");
-  const result = applyWireGatewayDiscover({
+  const result = await applyWireGatewayDiscoverAsync({
     tenantId: getTenantId(),
     jurisdiction: opts.jurisdiction,
     dryRun: opts.dryRun,
     nodeIds: opts.nodeId,
+    resolveDns: true,
   });
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -414,6 +426,95 @@ export async function runWireGatewayFederationSync(
   for (const r of results) {
     console.log(`  · ${r.node_id}: ${r.status}${r.detail ? ` — ${r.detail}` : ""}`);
   }
+}
+
+export interface WireGatewayDnsResolveOptions {
+  nodeId: string;
+  json?: boolean;
+}
+
+export async function runWireGatewayDnsResolve(opts: WireGatewayDnsResolveOptions): Promise<void> {
+  const result = await resolveOpenOrgWireUrl(opts.nodeId);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`OpenOrg DNS: ${result.node_id}`);
+  console.log(`  source: ${result.source}`);
+  if (result.wire_url) console.log(`  wire_url: ${result.wire_url}`);
+  if (result.detail) console.log(`  detail: ${result.detail}`);
+  if (result.wire_url) {
+    console.log(`  dns-txt-hint: ${formatOpenOrgWireDnsTxt(result.wire_url)}`);
+  }
+}
+
+export interface WireGatewayDnsHintsOptions {
+  wireUrl: string;
+  json?: boolean;
+}
+
+export function runWireGatewayDnsHints(opts: WireGatewayDnsHintsOptions): void {
+  const txt = formatOpenOrgWireDnsTxt(opts.wireUrl);
+  const payload = {
+    srv_service: "_openorgos-wire._tcp",
+    txt_record: txt,
+    well_known: `${opts.wireUrl.replace(/\/$/, "")}/.well-known/wire-node.json`,
+  };
+  if (opts.json) {
+    console.log(JSON.stringify(payload, null, 2));
+    return;
+  }
+  console.log("OpenOrg DNS publish hints:");
+  console.log(`  SRV: _openorgos-wire._tcp.<domain>`);
+  console.log(`  TXT: _openorgos-wire.<domain> → ${txt}`);
+  console.log(`  well-known: ${payload.well_known}`);
+}
+
+export interface WireGatewayFederationGossipOptions {
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+export async function runWireGatewayFederationGossip(
+  opts: WireGatewayFederationGossipOptions = {}
+): Promise<void> {
+  const { local, results } = await syncWireFederationGossipFromRegistry({ dryRun: opts.dryRun });
+  if (opts.json) {
+    console.log(JSON.stringify({ catalog: local, results }, null, 2));
+    return;
+  }
+  console.log(`✓ wire-gateway federation gossip · merged ${local.nodes.length} node(s)`);
+  for (const r of results) {
+    console.log(`  · ${r.peer_wire_url}: ${r.status}${r.remote_nodes != null ? ` (${r.remote_nodes} nodes)` : ""}`);
+  }
+}
+
+export interface WireGatewayScoreOptions {
+  json?: boolean;
+  strict?: boolean;
+}
+
+export function runWireGatewayScore(opts: WireGatewayScoreOptions = {}): void {
+  const score = opts.strict
+    ? runStrictWireImplementationScore()
+    : evaluateWireImplementationChecklist();
+  if (opts.json) {
+    console.log(JSON.stringify(score, null, 2));
+    return;
+  }
+  console.log(`${score.label}: ${score.total}/${score.max} (${score.grade})`);
+  if (!opts.strict) {
+    console.log("  Note: this checklist is static and does not prove runtime behavior; use --strict.");
+  }
+  for (const i of score.items) {
+    const mark = i.ok ? "✓" : "✗";
+    console.log(`  ${mark} ${i.label}: ${i.points}/${i.max_points}`);
+    if (i.detail) console.log(`    ${i.detail}`);
+  }
+}
+
+export function runWireGatewayDnsCheck(nodeId: string): boolean {
+  return isDnsStyleNodeId(nodeId);
 }
 
 export async function runWireInternalApiServe(

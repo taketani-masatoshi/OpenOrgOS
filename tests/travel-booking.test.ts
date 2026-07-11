@@ -26,7 +26,7 @@ describe("travel_booking skill registry", () => {
     const skill = skills.find((s) => s.id === "travel_booking");
     expect(skill).toBeDefined();
     expect(skill?.runtime).toBe("agent");
-    expect(skill?.agent).toBe("Operations");
+    expect(skill?.agent_id).toBe("operations");
     expect(validateSkillRegistryFiles()).toEqual([]);
   });
 });

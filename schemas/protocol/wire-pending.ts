@@ -6,6 +6,7 @@ export const wirePendingEntrySchema = z.object({
   envelope_digest: z.string().regex(/^[a-f0-9]{64}$/),
   attempts: z.number().int().nonnegative().default(0),
   last_error: z.string().optional(),
+  next_retry_at: z.string().optional(),
   created_at: z.string().min(1),
 });
 

@@ -57,6 +57,8 @@ export function requireCliOperator(opts: {
         "protocol:approve",
         "protocol:draft",
         "broker:transfer",
+        "scheduling:write",
+        "scheduling:approve",
         "escalate:plan",
         "escalate:run",
         "escalate:complete",
@@ -127,6 +129,23 @@ export function requireCliHumanApproval(command: string): AuthenticatedOperator 
   if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
     throw new Error(
       `${command} requires ceo or approver role (got ${auth.record.role}). Agents cannot approve.`
+    );
+  }
+  return auth;
+}
+
+/** Final scheduling confirmation — dedicated human permission; no dev bypass. */
+export function requireCliSchedulingApproval(command: string): AuthenticatedOperator {
+  if (isOperatorAuthBypassed()) {
+    throw new Error(
+      `${command} requires operator authentication (STEWARD_OPERATOR_AUTH=1). ` +
+        "Dev bypass is not allowed for final scheduling confirmation."
+    );
+  }
+  const auth = requireCliOperator({ permission: "scheduling:approve", command });
+  if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
+    throw new Error(
+      `${command} requires ceo or approver role (got ${auth.record.role}).`
     );
   }
   return auth;

@@ -1,6 +1,7 @@
 # Mode A — TLS termination at reverse proxy (ACME)
-# Replace wire.mal.example with production hostname.
+# MAL Wire Gateway — production (oorgos.org single CNAME)
+# Replace wire.oorgos.org if using a dedicated org domain.
 
-wire.mal.example {
+wire.oorgos.org {
   reverse_proxy 127.0.0.1:8443
 }

@@ -409,15 +409,15 @@ Gateway は **独立コンテナ** とする。
 
 | 項目 | 参照実装での先行度 |
 |------|-------------------|
-| Gateway Federation | **v2 catalog** · `wire-gateway federation list`（trust-registry 読取）· gossip は v2 backlog |
-| Store & Forward | `wire-pending` · relay **部分実装** |
+| Gateway Federation | **v2 catalog + gossip** · `wire-gateway federation list|gossip` · well-known sync |
+| Store & Forward | `wire-pending` · relay · **exponential backoff + max attempts** |
 | Offline Queue | 同上 |
-| Message Retry | relay-worker **部分実装** |
+| Message Retry | relay-worker · **next_retry_at backoff** |
 | Peer Discovery | **`wire-gateway discover`** · `protocol peer discover` · trust-registry |
 | Trust Registry | **wire-trust-registry.yaml** + **trusted-hubs.yaml** · CLI validate/sync · 鍵 pin 運用中 |
-| OpenOrg DNS | 未 |
-| OpenOrg DID | **`did:ooo:org:*` 実装済（WG-4）** · well-known / Internal API |
-| Organization Certificate | witness-trust **部分** |
+| OpenOrg DNS | **`wire-gateway dns resolve`** · SRV `_openorgos-wire._tcp` · TXT `wire-url=` · well-known fallback |
+| OpenOrg DID | **`did:ooo:org:*` 実装済（WG-4）** · well-known / Internal API · **organization_certificate_spki_sha256** |
+| Organization Certificate | **SPKI SHA-256 in well-known**（protocol signing key fingerprint） |
 
 ---
 

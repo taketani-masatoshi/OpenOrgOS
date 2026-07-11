@@ -325,6 +325,10 @@ export function buildTodayContext(): TodayContext {
     dashboard_path: existsSync(dashboardPath) ? dashboardPath : undefined,
     agent_summary_paths: agentSummaryPaths,
     cashflow_schedule_path: cashflowMeta.schedule_path,
+    cashflow_detail_schedule_path: cashflowMeta.detail_schedule_path,
+    cashflow_generated_at: cashflowMeta.generated_at,
+    cashflow_age_days: cashflowMeta.age_days,
+    cashflow_stale: cashflowMeta.stale,
     cashflow_shortfall_date: cashflowMeta.shortfall_date,
     cashflow_runway_days: cashflowMeta.runway_days,
     cashflow_required_funding_amount: cashflowMeta.required_funding_amount,
@@ -450,6 +454,11 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
 
   if (ctx.cashflow_schedule_path) {
     lines.push("", "## 資金繰り", "");
+    if (ctx.cashflow_stale) {
+      lines.push(`- ⚠ 生成物が ${ctx.cashflow_age_days ?? "?"} 日経過 — 再生成を検討`);
+    } else if (ctx.cashflow_generated_at) {
+      lines.push(`- 最終生成: ${ctx.cashflow_generated_at.slice(0, 10)}`);
+    }
     if ((ctx.cashflow_required_funding_amount ?? 0) > 0) {
       lines.push(
         `- 必要調達額: ${ctx.cashflow_required_funding_amount?.toLocaleString("ja-JP")}円` +
@@ -461,6 +470,9 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       lines.push("- 必要調達額: 0円");
     }
     lines.push(`  参照: ${ctx.cashflow_schedule_path}`);
+    if (ctx.cashflow_detail_schedule_path) {
+      lines.push(`  明細: ${ctx.cashflow_detail_schedule_path}`);
+    }
   }
 
   return `${lines.join("\n")}\n`;

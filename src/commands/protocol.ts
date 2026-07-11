@@ -275,12 +275,36 @@ export function runProtocolPeersMigrateLegacy(opts: ProtocolPeersMigrateLegacyOp
     toWireUrl: opts.toWireUrl,
   });
   if (opts.json) {
-    console.log(JSON.stringify({ apply, results }, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          apply,
+          results,
+          sunset: "2026-10-01",
+          canonical_transport: "wire_v1",
+          internal_webhook_note:
+            "`orgos webhook` is an internal automation queue integration and is not this Wire transport",
+        },
+        null,
+        2
+      )
+    );
     return;
   }
+  console.warn(
+    "WARNING: legacy_webhook is deprecated and retained only until 2026-10-01."
+  );
+  console.warn(
+    "This is Wire peer transport, not the internal `orgos webhook` automation command."
+  );
   console.log(`peers migrate-legacy · ${apply ? "apply" : "dry-run"}`);
   for (const r of results) {
     console.log(`  [${r.status}] ${r.peer_id}${r.detail ? ` · ${r.detail}` : ""}`);
+  }
+  if (!opts.toWireUrl) {
+    console.log(
+      "  Migration remains legacy. Re-run with --to-wire-url https://<gateway>/wire/v1/events to move to wire_v1."
+    );
   }
 }
 
@@ -2283,4 +2307,31 @@ export async function runProtocolDeliverStatus(opts: ProtocolDeliverStatusOption
     eventId: opts.eventId,
     peerId: opts.peerId,
   }));
+}
+
+export interface ProtocolMailWireScanOptions {
+  tenant?: string;
+  sinceDays?: number;
+  dryRun?: boolean;
+  json?: boolean;
+}
+
+/** R5 Phase 2 — scan received mail for Wire MIME envelopes (protocol path). */
+export async function runProtocolMailWireScan(opts: ProtocolMailWireScanOptions = {}): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { scanMailReceivedForWire } = await import("../lib/protocol/email-wire-ingest.js");
+  const result = await scanMailReceivedForWire({
+    sinceDays: opts.sinceDays,
+    dryRun: opts.dryRun,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(
+    `Wire scan: scanned ${result.scanned} · ingested ${result.ingested} · skipped ${result.skipped}`
+  );
+  for (const err of result.errors) {
+    console.log(`  ✗ ${err.file}: ${err.reason}`);
+  }
 }

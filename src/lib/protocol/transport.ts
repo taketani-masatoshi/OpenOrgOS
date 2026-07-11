@@ -2,12 +2,19 @@ import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import { serializeEventEnvelope } from "./envelope.js";
 import { envelopeDigest } from "./canonical.js";
 import { findPeer, resolvePeerInboundEndpoints } from "./peers.js";
+import { resolveOpenOrgWireUrl, isDnsStyleNodeId } from "../wire-gateway/openorg-dns.js";
 import { enqueueWirePending, removeWirePending, listWirePending } from "./wire-queue.js";
 import { markWireDelivered, isWireDelivered } from "./wire-delivered.js";
 import { recordDeliveryAttempt } from "./delivery-ledger.js";
 import { deliverEnvelopeViaEmailWire } from "./email-wire-deliver.js";
 import { listWireRelayPending } from "./wire-relay-store.js";
 import { findEnvelopeFileForWitness } from "./witness-client.js";
+import {
+  computeNextRetryAt,
+  isWirePendingDeadLetter,
+  isWirePendingReadyForRetry,
+} from "./wire-pending-retry.js";
+import { appendWireDeadLetterAudit } from "./wire-dead-letter-audit.js";
 import { loadTenantConfig, getTenantId } from "../tenant.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -24,6 +31,11 @@ import {
 } from "../../../schemas/protocol/peer-endpoint.js";
 import { deliverEnvelopeViaGovGateway } from "../wire/gov-gateway/deliver.js";
 import { envelopeToWireMessage } from "../wire-gateway/codec.js";
+import type { OpenOrgDnsResolver } from "../wire-gateway/openorg-dns.js";
+import {
+  isPkDidRequired,
+  isPkPrefixedOpenOrgDid,
+} from "../../../schemas/protocol/openorg-did.js";
 
 export interface DeliverEnvelopeResult {
   delivered: boolean;
@@ -36,6 +48,30 @@ export interface DeliverEnvelopeResult {
 
 function isRelayEnqueueUrl(url: string): boolean {
   return url.includes("/protocol/v1/relay/enqueue");
+}
+
+/** Augment peer endpoints with OpenOrg DNS resolution when peer has DNS-style node_id. */
+export async function resolvePeerInboundEndpointsWithDns(
+  peer: NonNullable<ReturnType<typeof findPeer>>,
+  opts?: { dnsResolver?: OpenOrgDnsResolver }
+): Promise<ReturnType<typeof resolvePeerInboundEndpoints>> {
+  const endpoints = resolvePeerInboundEndpoints(peer);
+  if (endpoints.length > 0) return endpoints;
+
+  const nodeId = peer.did?.replace(/^did:ooo:org:/, "") ?? peer.org_uri?.replace(/^steward:\/\/tenant\//, "");
+  if (!nodeId || !isDnsStyleNodeId(nodeId)) return endpoints;
+
+  const resolved = await resolveOpenOrgWireUrl(nodeId, { resolver: opts?.dnsResolver });
+  if (!resolved.wire_url) return endpoints;
+
+  return [
+    {
+      url: `${resolved.wire_url.replace(/\/$/, "")}/wire/v1/events`,
+      transport: "wire_v1" as const,
+      mode: "push" as const,
+      priority: 1,
+    },
+  ];
 }
 
 async function postJsonToUrl(
@@ -111,7 +147,8 @@ async function postWireMessageToUrl(
 
 export async function deliverProtocolEnvelope(
   envelope: EventEnvelope,
-  peerId: string
+  peerId: string,
+  opts?: { dnsResolver?: OpenOrgDnsResolver }
 ): Promise<DeliverEnvelopeResult> {
   assertProtocolDeliverGate();
   assertEnvelopeDeliverAuthorized(envelope, peerId);
@@ -132,7 +169,19 @@ export async function deliverProtocolEnvelope(
     return { delivered: false, reason: "peer not found" };
   }
 
-  const endpoints = resolvePeerInboundEndpoints(peer);
+  if (isPkDidRequired()) {
+    if (!peer.did || !isPkPrefixedOpenOrgDid(peer.did)) {
+      return { delivered: false, reason: "receiver_pk_did_required" };
+    }
+    const originHasPkDid = [envelope.origin.org_id, envelope.origin.org_uri].some(
+      (identifier) => !!identifier && isPkPrefixedOpenOrgDid(identifier)
+    );
+    if (!originHasPkDid) {
+      return { delivered: false, reason: "sender_pk_did_required" };
+    }
+  }
+
+  const endpoints = await resolvePeerInboundEndpointsWithDns(peer, opts);
   if (endpoints.length === 0) {
     return { delivered: false, reason: "peer has no inbound endpoints" };
   }
@@ -247,9 +296,10 @@ export async function deliverViaRelayStore(
 /** Multipath deliver with store-and-forward on failure. */
 export async function deliverProtocolEnvelopeWithRelay(
   envelope: EventEnvelope,
-  peerId: string
+  peerId: string,
+  opts?: { dnsResolver?: OpenOrgDnsResolver }
 ): Promise<DeliverEnvelopeResult> {
-  const result = await deliverProtocolEnvelope(envelope, peerId);
+  const result = await deliverProtocolEnvelope(envelope, peerId, opts);
   if (result.delivered) {
     removeWirePending(peerId, envelope.event_id);
     markWireDelivered(peerId, envelope.event_id, result.endpoint);
@@ -274,6 +324,7 @@ export async function deliverProtocolEnvelopeWithRelay(
     event_id: envelope.event_id,
     envelope_digest: envelopeDigest(envelope),
     last_error: result.reason,
+    next_retry_at: computeNextRetryAt(0),
   });
   return { ...result, queued: true, reason: `queued: ${result.reason}` };
 }
@@ -281,6 +332,13 @@ export async function deliverProtocolEnvelopeWithRelay(
 export async function flushWirePending(): Promise<number> {
   let flushed = 0;
   for (const entry of listWirePending()) {
+    if (isWirePendingDeadLetter(entry)) {
+      appendWireDeadLetterAudit(entry);
+      removeWirePending(entry.peer_id, entry.event_id);
+      continue;
+    }
+    if (!isWirePendingReadyForRetry(entry)) continue;
+
     const envelope = findEnvelopeFileForWitness(entry.event_id);
     if (!envelope) continue;
 
@@ -289,9 +347,12 @@ export async function flushWirePending(): Promise<number> {
       removeWirePending(entry.peer_id, entry.event_id);
       flushed++;
     } else if (!result.queued) {
+      const attempts = (entry.attempts ?? 0) + 1;
       enqueueWirePending({
         ...entry,
+        attempts,
         last_error: result.reason,
+        next_retry_at: computeNextRetryAt(attempts),
       });
     }
   }

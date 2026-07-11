@@ -20,6 +20,22 @@ Format: `did:ooo:org:{identifier}`
 
 Schema: [`schemas/protocol/openorg-did.ts`](../../schemas/protocol/openorg-did.ts)
 
+## OpenOrg DNS
+
+DNS-style `node_id` (FQDN) resolves to wire base URL:
+
+1. **trust-registry** `wire_url`
+2. **DNS SRV** `_openorgos-wire._tcp.<domain>`
+3. **DNS TXT** `_openorgos-wire.<domain>` → `wire-url=https://…`
+4. **HTTPS well-known** `https://wire.<domain>/.well-known/wire-node.json`
+
+```bash
+orgos wire-gateway dns resolve --node-id org.example.co.jp
+orgos wire-gateway dns hints --wire-url https://wire.example.co.jp
+```
+
+Schema: [`schemas/protocol/openorg-dns.ts`](../../schemas/protocol/openorg-dns.ts)
+
 ## Well-known document
 
 `GET /.well-known/wire-node.json` includes optional fields:

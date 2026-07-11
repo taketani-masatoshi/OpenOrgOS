@@ -44,7 +44,7 @@
 ## 3. CLI
 
 ```bash
-orgos operator sync-policy [--emit cursor|agents-md|dev-guide|all]
+orgos operator sync-policy [--emit cursor|agents-md|dev-guide|engineering|all]
 orgos operator export [--agent finance] [--all] [--emit packs|index|mcp|all]
 orgos operator portability [--json] [--write]
 orgos operator runtime show|test

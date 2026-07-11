@@ -41,7 +41,10 @@ describe("agent workspace init", () => {
     );
 
     const readiness = computeAgentReadiness("medical_device_regulatory");
-    expect(readiness.pct).toBe(100);
+    // During `test:tiered`, the execution-evidence marker is intentionally
+    // cleared until every tier passes, so activation itself must not assume
+    // the final 4 evidence points are already available.
+    expect(readiness.pct).toBeGreaterThanOrEqual(96);
     expect(readiness.axes.find((a) => a.id === "data_sot")?.score).toBe(15);
 
     const controls = controlsForAgent("medical_device_regulatory");

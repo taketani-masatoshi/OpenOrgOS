@@ -63,6 +63,76 @@ export function hasSuccessfulEmailWireIngest(withinDays = 90): boolean {
   );
 }
 
+export type EmailWireEventConfirmationState =
+  | "not_sent"
+  | "awaiting_inbound_confirmation"
+  | "confirmed";
+
+export interface EmailWireEventConfirmation {
+  event_id: string;
+  state: EmailWireEventConfirmationState;
+  outbound?: DeliveryAttempt;
+  inbound?: DeliveryAttempt;
+  confirmed_at?: string;
+}
+
+export function getEmailWireEventConfirmation(
+  eventId: string
+): EmailWireEventConfirmation {
+  const attempts = listDeliveryAttempts({
+    eventId,
+    channel: "email_wire",
+  });
+  const outbound = attempts
+    .filter(
+      (attempt) =>
+        attempt.status === "success" &&
+        (attempt.direction === undefined || attempt.direction === "outbound")
+    )
+    .at(-1);
+  const inbound = attempts
+    .filter(
+      (attempt) =>
+        attempt.status === "success" && attempt.direction === "inbound"
+    )
+    .at(-1);
+  if (!outbound) return { event_id: eventId, state: "not_sent", inbound };
+  if (!inbound) {
+    return {
+      event_id: eventId,
+      state: "awaiting_inbound_confirmation",
+      outbound,
+    };
+  }
+  return {
+    event_id: eventId,
+    state: "confirmed",
+    outbound,
+    inbound,
+    confirmed_at: inbound.at,
+  };
+}
+
+export function listUnconfirmedEmailWireEvents(
+  withinDays = 90
+): EmailWireEventConfirmation[] {
+  const cutoff = Date.now() - withinDays * 86_400_000;
+  const eventIds = new Set(
+    loadDeliveryAttemptsRegistry().attempts
+      .filter(
+        (attempt) =>
+          attempt.channel === "email_wire" &&
+          attempt.status === "success" &&
+          (attempt.direction === undefined || attempt.direction === "outbound") &&
+          new Date(attempt.at).getTime() >= cutoff
+      )
+      .map((attempt) => attempt.event_id)
+  );
+  return [...eventIds]
+    .map(getEmailWireEventConfirmation)
+    .filter((confirmation) => confirmation.state === "awaiting_inbound_confirmation");
+}
+
 export function countEmailWireAttemptsSince(sinceMs: number): number {
   return loadDeliveryAttemptsRegistry().attempts.filter(
     (a) =>

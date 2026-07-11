@@ -59,3 +59,11 @@ export * from "./wire-export-policy.js";
 export * from "./wire-trust-registry.js";
 export * from "./delivery-attempt.js";
 export * from "./wire-node-governance.js";
+export * from "./org-certificate-attestation.js";
+
+// Logical public boundaries. Direct exports above are retained for compatibility.
+export * as protocolCore from "./core/index.js";
+export * as protocolTransport from "./transport/index.js";
+export * as protocolDistribution from "./distribution/index.js";
+export * as protocolAdapters from "./adapters/index.js";
+export * as protocolCompatibility from "./compatibility.js";

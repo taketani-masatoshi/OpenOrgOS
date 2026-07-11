@@ -5,9 +5,11 @@ import { z } from "zod";
 import type { Contract, Property, Loan } from "../../schemas/index.js";
 import {
   arApLedgerFileSchema,
+  bankStatementFileSchema,
   collectionTermsFileSchema,
   paymentCalendarFileSchema,
   type ArApLedgerFile,
+  type BankStatementFile,
   type CollectionTermsFile,
   type PaymentCalendarFile,
 } from "../../schemas/jp-bank-corporate.js";
@@ -46,6 +48,7 @@ import { AGENT_CATALOG_PATH, validateAgentCatalog } from "./agent-catalog.js";
 import { validateCapabilityManifestDrift } from "./agent-capability-sync.js";
 import { AGENT_CAPABILITY_MANIFEST_PATH } from "./agent-capability.js";
 import { validateAgentAlignment } from "./agent-alignment.js";
+import { validateArApPaidAmount } from "../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/ar-ap-amounts.js";
 import { validatePolicyMirrors } from "./operator-policy.js";
 
 export interface IntegrityIssue {
@@ -58,6 +61,7 @@ interface JpBankIntegrityInput {
   paymentCalendar?: unknown;
   arApLedger?: unknown;
   collectionTerms?: unknown;
+  bankStatements?: unknown;
   chartOfAccounts?: ChartOfAccounts;
 }
 
@@ -65,6 +69,7 @@ const JP_BANK_FILES = {
   paymentCalendar: "data/finance/payment-calendar.yaml",
   arApLedger: "data/finance/ar-ap-ledger.yaml",
   collectionTerms: "data/finance/collection-terms.yaml",
+  bankStatements: "data/finance/bank-statements.yaml",
   chartOfAccounts: "data/finance/chart-of-accounts.yaml",
 } as const;
 
@@ -162,6 +167,11 @@ export function validateJpBankCorporateIntegrity(
     input.collectionTerms,
     JP_BANK_FILES.collectionTerms
   );
+  const bankStatements = parse<BankStatementFile>(
+    bankStatementFileSchema,
+    input.bankStatements,
+    JP_BANK_FILES.bankStatements
+  );
 
   if (calendar) {
     issues.push(
@@ -225,6 +235,13 @@ export function validateJpBankCorporateIntegrity(
           message: `${entry.id}: due_date precedes booked_date`,
         });
       }
+      for (const message of validateArApPaidAmount(entry)) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.arApLedger,
+          message,
+        });
+      }
       if (!entry.collection_term_id) continue;
       const term = termsById.get(entry.collection_term_id);
       if (!term) {
@@ -255,6 +272,25 @@ export function validateJpBankCorporateIntegrity(
     }
   }
 
+  if (bankStatements) {
+    issues.push(
+      ...duplicateIdIssues(
+        bankStatements.entries,
+        JP_BANK_FILES.bankStatements,
+        "bank statement"
+      )
+    );
+    for (const entry of bankStatements.entries) {
+      if (!validCalendarDate(entry.date)) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.bankStatements,
+          message: `${entry.id}: date is not a real calendar date`,
+        });
+      }
+    }
+  }
+
   const chartIds = new Set(input.chartOfAccounts?.accounts.map((account) => account.code) ?? []);
   if (input.chartOfAccounts) {
     const checkChartRef = (
@@ -274,6 +310,7 @@ export function validateJpBankCorporateIntegrity(
     checkChartRef(calendar?.entries ?? [], JP_BANK_FILES.paymentCalendar);
     checkChartRef(ledger?.entries ?? [], JP_BANK_FILES.arApLedger);
     checkChartRef(terms?.rules ?? [], JP_BANK_FILES.collectionTerms);
+    checkChartRef(bankStatements?.entries ?? [], JP_BANK_FILES.bankStatements);
   }
 
   return issues;
@@ -320,6 +357,23 @@ function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
       issues.push({
         level: "error",
         file,
+        message:
+          error instanceof z.ZodError
+            ? zodMessage(error)
+            : error instanceof Error
+              ? error.message
+              : String(error),
+      });
+    }
+  }
+  const bankPath = resolveTenantPath(JP_BANK_FILES.bankStatements);
+  if (existsSync(bankPath)) {
+    try {
+      values.bankStatements = readYamlFile(bankPath, bankStatementFileSchema);
+    } catch (error) {
+      issues.push({
+        level: "error",
+        file: JP_BANK_FILES.bankStatements,
         message:
           error instanceof z.ZodError
             ? zodMessage(error)

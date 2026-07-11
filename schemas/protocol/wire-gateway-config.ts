@@ -7,6 +7,8 @@ export const wireGatewayListenSchema = z.object({
   port: z.number().int().positive().default(8443),
   tls_cert: z.string().optional(),
   tls_key: z.string().optional(),
+  /** CA bundle used to authenticate inbound mTLS client certificates. */
+  tls_ca: z.string().optional(),
 });
 
 export const wireGatewayInternalApiSchema = z.object({
@@ -23,6 +25,9 @@ export const wireGatewaySecuritySchema = z.object({
   nonce_ttl_sec: z.number().int().positive().default(604_800),
   rate_limit_per_min: z.number().int().positive().default(120),
   mtls_required: z.boolean().default(false),
+  mtls_allowed_org_uris: z.array(z.string().min(1)).default([]),
+  /** Immediate reverse proxies whose X-Forwarded-For value may be trusted. */
+  trusted_proxies: z.array(z.string().min(1)).default([]),
   ip_allowlist: z.array(z.string()).optional(),
 });
 

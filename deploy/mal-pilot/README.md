@@ -29,14 +29,29 @@ docker compose -f deploy/witness-hub/docker-compose.yaml \
 |---------|-----|
 | HUB-A | http://127.0.0.1:9474 |
 | HUB-B | http://127.0.0.1:9475 |
-| Wire Gateway (別途) | https://wire.mal.example (Mode A) · local 8443 |
+| Wire Gateway (別途) | https://wire.oorgos.org (Mode A) · local 8443 |
 
 ## Production gates
 
 ```bash
-WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1 PUBLIC_BASE_URL=https://wire.mal.example \
+WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1 PUBLIC_BASE_URL=https://wire.oorgos.org \
   ./scripts/prod-validate-wire.sh mal
 ```
+
+## Cloudflare Tunnel (Docker · token)
+
+```bash
+cp deploy/mal-pilot/env/cloudflared-wire.env.example deploy/mal-pilot/env/.env.cloudflared
+# CLOUDFLARE_TUNNEL_TOKEN を .env.cloudflared に設定
+docker compose --env-file deploy/mal-pilot/env/.env.cloudflared \
+  -f deploy/mal-pilot/docker-compose.cloudflared.yaml up -d
+```
+
+**Zero Trust（必須）:** トンネル `9b5ebf8d-…` → Public Hostname `wire.oorgos.org` → `http://host.docker.internal:8443`
+
+**DNS（oorgos.org）:** `CNAME wire` → `9b5ebf8d-01c3-4772-ae4a-f7596c7ebe63.cfargotunnel.com`（proxied）
+
+Wire Gateway はホスト `:8443` で常駐（`./scripts/phase2-mal-wire-live.sh mal`）。
 
 ## systemd（本番常駐 · Top5）
 
@@ -54,11 +69,31 @@ Env: `deploy/mal-pilot/env/wire-gateway-mal.env.example` → `/etc/steward/wire-
 ## TLS Mode A (ACME)
 
 Caddy example: `deploy/mal-pilot/caddy/Caddyfile.example`  
-Set `WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1` and `PUBLIC_BASE_URL=https://wire.mal.example`
+Set `WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1` and `PUBLIC_BASE_URL=https://wire.oorgos.org`
 
 ## Legacy paths
 
 - Wire Gateway: `deploy/wire-gateway/systemd/steward-wire-gateway@.service`
 - Protocol relay: `deploy/protocol-relay/systemd/steward-protocol-relay@.service`
+
+## Phase 4 — email_wire live (SMTP/IMAP)
+
+```bash
+# 1. L2 credentials (gitignore)
+cp deploy/mal-pilot/env/mail-wire-mal.env.example deploy/mal-pilot/env/.env.mail-wire
+# ORGOS_SMTP_USER=ai@malkk.com · App Password を設定
+
+# 2. mail-config（script が example から自動作成可）
+cp tenants/mal/records/executive/mail-config.yaml.example \
+   tenants/mal/records/executive/mail-config.yaml
+
+# 3. readiness + doctor
+./scripts/phase4-mal-email-wire-live.sh mal check
+
+# 4. live roundtrip（ai@malkk.com → info@malkk.com → IMAP → wire-scan）
+./scripts/phase4-mal-email-wire-live.sh mal live
+```
+
+**前提:** Wire Gateway 起動中（`./scripts/phase2-mal-wire-live.sh mal`）· Vitest 停止。
 
 See [wire-hub-stack-pilot.md](../../docs/org-os/wire-hub-stack-pilot.md).

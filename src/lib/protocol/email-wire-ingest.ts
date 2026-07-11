@@ -85,12 +85,16 @@ function storeWirePart(eventId: string, index: number, total: number, payload: s
   return ordered;
 }
 
+function unfoldMimeBody(text: string): string {
+  return text.replace(/\r?\n[ \t]+/g, "");
+}
+
 function extractWirePayloadFromRaw(raw: string): string | null {
   const re =
     /Content-Type:\s*application\/vnd\.openorgos\.wire\+json[^\r\n]*(?:\r?\n[^\r\n]+)*\r?\n\r?\n([\s\S]*?)(?:\r?\n--|$)/i;
   const m = raw.match(re);
   if (!m?.[1]) return null;
-  const payload = m[1].trim();
+  const payload = unfoldMimeBody(m[1].trim());
   return payload.startsWith("{") ? payload : null;
 }
 
@@ -120,8 +124,11 @@ export async function parseWireEml(emlPath: string): Promise<ParsedWireEmail | n
       a.contentType?.includes(WIRE_MIME_TYPE) ||
       a.filename === "wire-message.json"
   );
-  const payload =
+  let payload =
     attachment?.content?.toString("utf-8") ?? extractWirePayloadFromRaw(raw) ?? "";
+  if (payload && !attachment) {
+    payload = unfoldMimeBody(payload);
+  }
 
   if (!payload) return null;
 

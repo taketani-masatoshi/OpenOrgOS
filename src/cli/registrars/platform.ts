@@ -41,10 +41,11 @@ export function registerPlatformCommands(program: Command): void {
     .description("Check install · workspace · OpenSSL · Wire Console build")
     .option("--json", "JSON output")
     .option("--wire-prod", "Run Wire/Gov/Trust production gate (STRICT)")
-    .option("--tenant <id>", "Tenant for --wire-prod (default: mal)")
+    .option("--tenant <id>", "Tenant for operational readiness (mail · operator · scheduling)")
+    .option("--repair", "Auto-repair mail-config and orphan draft approvals (with --tenant)")
     .action(async (opts) => {
       const { runDoctor } = await import("../../commands/doctor.js");
-      runDoctor({ json: opts.json, wireProd: opts.wireProd, tenant: opts.tenant });
+      runDoctor({ json: opts.json, wireProd: opts.wireProd, tenant: opts.tenant, repair: opts.repair });
     });
 
   const integrationsCmd = program
@@ -551,11 +552,18 @@ export function registerPlatformCommands(program: Command): void {
   operatorRegistryCmd
     .command("rotate-key")
     .description("Rotate operator API key")
-    .requiredOption("--operator-id <id>", "Operator ID")
+    .option("--id <id>", "Operator ID (or global --operator-id / ORGOS_CLI_OPERATOR_ID)")
     .option("--no-write-key", "Do not write key file")
-    .action(async (opts) => {
+    .action(async (opts, command) => {
+      const globals = command.optsWithGlobals() as { operatorId?: string };
+      const operatorId = opts.id ?? globals.operatorId ?? process.env.ORGOS_CLI_OPERATOR_ID?.trim();
+      if (!operatorId) {
+        throw new Error(
+          "Operator ID required — pass --id <OP-*> or global --operator-id (root --operator-id conflicts with subcommand flags in some shells)"
+        );
+      }
       const { runOperatorRotateKey } = await import("../../commands/operator-registry.js");
-      runOperatorRotateKey({ operatorId: opts.operatorId, writeKey: opts.writeKey !== false });
+      runOperatorRotateKey({ operatorId, writeKey: opts.writeKey !== false });
     });
   operatorCmd
     .command("init-registry")
@@ -568,7 +576,7 @@ export function registerPlatformCommands(program: Command): void {
     });
   operatorCmd
     .command("sync-policy")
-    .description("Sync operator-policy.md to Cursor rule / AGENTS.md")
+    .description("Sync steward/rules to Cursor mirrors, AGENTS.md, and engineering 00–09")
     .option("--emit <target>", "cursor | agents-md | dev-guide | engineering | all", "all")
     .action(async (opts) => {
       const { runOperatorSyncPolicy } = await import("../../commands/operator.js");

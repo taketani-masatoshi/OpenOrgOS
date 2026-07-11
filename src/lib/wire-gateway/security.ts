@@ -1,5 +1,10 @@
 import type { WireMessage } from "../../../schemas/protocol/wire-message.js";
 import type { InternalWirePeerEntry } from "../../../schemas/protocol/wire-gateway-internal.js";
+import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-config.js";
+import {
+  isPkDidRequired,
+  isPkPrefixedOpenOrgDid,
+} from "../../../schemas/protocol/openorg-did.js";
 import { nodeIdentifierMatches } from "../protocol/wire-trust-registry.js";
 import { verifyEventEnvelopeSignature } from "../protocol/signing.js";
 import {
@@ -35,10 +40,33 @@ export interface InboundWireVerification {
   peerNodeId?: string;
 }
 
+export function strictPkDidError(identifier: string, role: "sender" | "receiver"): string | undefined {
+  if (!isPkDidRequired()) return undefined;
+  if (isPkPrefixedOpenOrgDid(identifier)) return undefined;
+  return `${role}_pk_did_required`;
+}
+
+export function wireReceiverIsLocal(wire: WireMessage, config: WireGatewayConfig): boolean {
+  return (
+    wire.receiver === `steward://tenant/${config.node_id}` ||
+    nodeIdentifierMatches(wire.receiver, {
+      peer_node_id: config.node_id,
+      peer_node_uri: config.node_uri,
+      peer_did: config.did,
+    })
+  );
+}
+
 export function verifyInboundWireMessage(
   wire: WireMessage,
-  peers: InternalWirePeerEntry[]
+  peers: InternalWirePeerEntry[],
+  authenticatedOrgUri?: string
 ): InboundWireVerification {
+  const senderDidError = strictPkDidError(wire.sender, "sender");
+  if (senderDidError) {
+    return { ok: false, reason: senderDidError };
+  }
+
   try {
     assertWireHashMatchesEnvelope(wire);
   } catch (e) {
@@ -51,6 +79,17 @@ export function verifyInboundWireMessage(
   const peer = findPeerForSender(peers, wire.sender);
   if (!peer) {
     return { ok: false, reason: "peer_unknown" };
+  }
+
+  if (
+    isPkDidRequired() &&
+    (!peer.peer_did || !isPkPrefixedOpenOrgDid(peer.peer_did))
+  ) {
+    return { ok: false, reason: "peer_pk_did_required", peerNodeId: peer.peer_node_id };
+  }
+
+  if (authenticatedOrgUri && !peerMatchesSender(peer, authenticatedOrgUri)) {
+    return { ok: false, reason: "mtls_sender_mismatch", peerNodeId: peer.peer_node_id };
   }
 
   if (!peer.protocol_public_key) {

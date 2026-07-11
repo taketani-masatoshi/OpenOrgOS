@@ -170,7 +170,7 @@ describe("scheduling state reliability", () => {
     expect((await processScheduleMailEntry(entry)).reason).toBe("awaiting manual review");
   });
 
-  it("persists a retryable calendar failure without duplicating the local event", async () => {
+  it("falls back to the local calendar without duplicating the event when Google is unset", async () => {
     const initial = upsertSchedulingCase({
       ...applyNextAction(baseCase()),
       pending_slot_id: "SLOT-001",
@@ -188,15 +188,11 @@ describe("scheduling state reliability", () => {
       answers: { schedule_confirm: "はい" },
     };
 
-    await expect(applyCeoInlineAnswerSideEffects(question)).rejects.toThrow(
-      "Google Calendar 未設定"
-    );
-    expect(findSchedulingCase(initial.id)?.calendar_sync).toBe("failed");
+    await applyCeoInlineAnswerSideEffects(question);
+    expect(findSchedulingCase(initial.id)?.calendar_sync).toBe("synced");
     expect(loadExecutiveCalendar().events).toHaveLength(1);
 
-    await expect(applyCeoInlineAnswerSideEffects(question)).rejects.toThrow(
-      "Google Calendar 未設定"
-    );
+    await applyCeoInlineAnswerSideEffects(question);
     expect(loadExecutiveCalendar().events).toHaveLength(1);
   });
 

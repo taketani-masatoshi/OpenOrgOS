@@ -13,6 +13,7 @@ const bindEntrySchema = z.object({
   expires_at: z.string(),
   consumed_at: z.string().optional(),
   community_user_id: z.string().optional(),
+  issued_for_emails: z.array(z.string().email()).optional(),
 });
 
 const bindRegistrySchema = z.object({
@@ -41,15 +42,23 @@ function saveBindRegistry(registry: z.output<typeof bindRegistrySchema>): void {
   writeFileSync(path, YAML.stringify(registry), "utf-8");
 }
 
-export function createCommunityGmailBind(tenantId: string, ttlMinutes = 30): CommunityGmailBindEntry {
+export function createCommunityGmailBind(
+  tenantId: string,
+  ttlMinutes = 30,
+  options?: { issuedForEmails?: string[] }
+): CommunityGmailBindEntry {
   const registry = loadBindRegistry();
   const now = Date.now();
+  const issuedForEmails = options?.issuedForEmails
+    ?.map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
   const entry = bindEntrySchema.parse({
     bind_id: randomUUID(),
     tenant_id: tenantId.trim(),
     nonce: randomBytes(24).toString("hex"),
     created_at: new Date(now).toISOString(),
     expires_at: new Date(now + ttlMinutes * 60_000).toISOString(),
+    ...(issuedForEmails?.length ? { issued_for_emails: issuedForEmails } : {}),
   });
   registry.bindings.push(entry);
   saveBindRegistry(registry);
@@ -94,7 +103,7 @@ export function buildCommunityMailConnectUrl(
 export async function createCommunityGmailBindRemote(
   stewardUrl: string,
   tenantId: string,
-  options?: { ttlMinutes?: number; governanceToken?: string }
+  options?: { ttlMinutes?: number; governanceToken?: string; issuedForEmails?: string[] }
 ): Promise<{ tenant_id: string; nonce: string; expires_at: string }> {
   const token = options?.governanceToken ?? process.env.ORGOS_COMMUNITY_GOVERNANCE_TOKEN?.trim();
   if (!token) {
@@ -112,6 +121,7 @@ export async function createCommunityGmailBindRemote(
     body: JSON.stringify({
       tenant_id: tenantId,
       ttl_minutes: options?.ttlMinutes ?? 30,
+      issued_for_emails: options?.issuedForEmails,
     }),
   });
   const body = (await res.json()) as {
@@ -133,14 +143,16 @@ export async function createCommunityGmailBindRemote(
 
 export async function resolveCommunityGmailBindForCli(
   tenantId: string,
-  options?: { ttlMinutes?: number }
+  options?: { ttlMinutes?: number; issuedForEmails?: string[] }
 ): Promise<{ tenant_id: string; nonce: string; expires_at: string; remote: boolean }> {
   const stewardUrl = process.env.ORGOS_STEWARD_PROTOCOL_URL?.trim();
   if (stewardUrl) {
     const remote = await createCommunityGmailBindRemote(stewardUrl, tenantId, options);
     return { ...remote, remote: true };
   }
-  const entry = createCommunityGmailBind(tenantId, options?.ttlMinutes ?? 30);
+  const entry = createCommunityGmailBind(tenantId, options?.ttlMinutes ?? 30, {
+    issuedForEmails: options?.issuedForEmails,
+  });
   return {
     tenant_id: entry.tenant_id,
     nonce: entry.nonce,
@@ -154,18 +166,40 @@ export function consumeCommunityGmailBind(
   nonce: string,
   communityUserId?: string
 ): boolean {
+  return claimCommunityGmailBind(tenantId, nonce, { communityUserId }).ok;
+}
+
+/** Atomically verify and consume a bind nonce (single-use). */
+export function claimCommunityGmailBind(
+  tenantId: string,
+  nonce: string,
+  options?: { communityUserId?: string; communityUserEmail?: string }
+): { ok: true; entry: CommunityGmailBindEntry } | { ok: false; error: string } {
   const registry = loadBindRegistry();
   const idx = registry.bindings.findIndex(
     (b) => b.tenant_id === tenantId.trim() && b.nonce === nonce.trim() && !b.consumed_at
   );
-  if (idx < 0) return false;
+  if (idx < 0) {
+    return { ok: false, error: "bind not found or already used" };
+  }
   const entry = registry.bindings[idx]!;
-  if (Date.now() > Date.parse(entry.expires_at)) return false;
+  if (Date.now() > Date.parse(entry.expires_at)) {
+    return { ok: false, error: "bind expired — re-run orgos mail setup gmail --community-link" };
+  }
+  const email = options?.communityUserEmail?.trim().toLowerCase();
+  if (entry.issued_for_emails?.length) {
+    if (!email || !entry.issued_for_emails.includes(email)) {
+      return {
+        ok: false,
+        error: "community user email not authorized for this tenant bind",
+      };
+    }
+  }
   registry.bindings[idx] = {
     ...entry,
     consumed_at: new Date().toISOString(),
-    community_user_id: communityUserId ?? entry.community_user_id,
+    community_user_id: options?.communityUserId ?? entry.community_user_id,
   };
   saveBindRegistry(registry);
-  return true;
+  return { ok: true, entry: registry.bindings[idx]! };
 }

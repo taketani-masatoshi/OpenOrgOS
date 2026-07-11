@@ -7,6 +7,7 @@ import { getDataDir } from "../utils.js";
 import {
   ensureMailConfigExample,
   loadMailConfig,
+  isDryRunSmtpHost,
   resolveMailConfig,
   resolveSmtpCredentials,
   resolveSlackWebhookUrl,
@@ -121,7 +122,7 @@ export function collectMailSetupIssues(channel: CorrespondenceChannel): MailSetu
           fix: "mail-config.yaml の smtp.host に自社 SMTP サーバを記入",
         });
       }
-      if (!creds) {
+      if (!creds && !isDryRunSmtpHost(config.smtp?.host)) {
         issues.push({
           id: "smtp_credentials",
           severity: "error",

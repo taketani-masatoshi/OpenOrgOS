@@ -1,6 +1,6 @@
 import { listSchedulingCases } from "./store.js";
 import { processAllScheduleMails, type ProcessScheduleMailResult } from "./process-mail.js";
-import { advanceSchedulingWorkflow } from "./workflow.js";
+import { advanceSchedulingWorkflow, refreshSchedulingReminder } from "./workflow.js";
 import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
 import { listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import {

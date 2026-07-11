@@ -37,6 +37,11 @@ export const wireNodeIdentitySchema = z.object({
   wire_version: wireVersionSchema.default("0.1"),
   did: openOrgDidSchema.optional(),
   trust_registry_url: z.string().url().optional(),
+  /** SHA-256 hex of SPKI DER (organization signing key attestation). */
+  organization_certificate_spki_sha256: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
 });
 
 export type WireNodeIdentity = z.output<typeof wireNodeIdentitySchema>;

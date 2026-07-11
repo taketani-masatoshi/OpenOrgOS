@@ -18,7 +18,7 @@ describe("language_bridge module", () => {
     const manifest = loadModuleManifest("language_bridge");
     expect(manifest?.id).toBe("language_bridge");
     const skill = loadSkillRegistry().find((s) => s.id === "language_bridge");
-    expect(skill?.agent).toBe("Secretary");
+    expect(skill?.agent_id).toBe("secretary");
     expect(validateSkillRegistryFiles()).toEqual([]);
   });
 

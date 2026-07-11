@@ -10,13 +10,17 @@ import {
   listHandoffs,
   matchRoutes,
   pickBestRoute,
-  resolveSkillCliCommand,
   routingQueueDir,
   writeHandoffFiles,
   type MatchedRoute,
 } from "./routing.js";
-import { formatAgentPromptRef, formatSkillReference, isAgentInteractiveSkill, readAgentDefinition } from "./agent-portability.js";
-import { AGENT_PROMPT_PATHS } from "./agent-portability.js";
+import {
+  agentPromptPath,
+  formatAgentPromptRef,
+  formatSkillReference,
+  isAgentInteractiveSkill,
+  readAgentDefinition,
+} from "./agent-portability.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { getTenantId, setTenantId } from "./tenant.js";
 import { currentDate, writeYamlFile } from "./utils.js";
@@ -26,12 +30,10 @@ import { pushQueueEvent } from "./queue-db.js";
 import { assertActiveTenant, assertIntraOrgAgentTarget, assertIntraOrgText } from "./org-boundary.js";
 import { scopesForAgent } from "./org/delegation-scopes.js";
 
-export { AGENT_PROMPT_PATHS } from "./agent-portability.js";
-
 const PROMPTS_SUBDIR = "prompts";
 
 export function agentPromptRef(agent: AgentId): string {
-  return `@${AGENT_PROMPT_PATHS[agent]}`;
+  return `@${agentPromptPath(agent)}`;
 }
 
 export function promptsDir(): string {

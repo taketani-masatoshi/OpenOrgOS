@@ -8,6 +8,7 @@ import {
 import { sendCorrespondenceEmail } from "./mail-send.js";
 import { sendSlackNotification } from "./slack-send.js";
 import { assertCorrespondenceMailSetupReady } from "./mail-setup-readiness.js";
+import { repairMissingApprovalForDraft } from "./approval-registry-repair.js";
 import { assertHumanCorrespondenceApproval, isHumanApproverOperatorId } from "./human-approval.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
 import { currentDate } from "../utils.js";
@@ -43,6 +44,7 @@ export function assertCorrespondenceApproved(draft: CorrespondenceDraft): void {
       `Draft ${draft.draft_id} has no approval_id — propose approval first`
     );
   }
+  repairMissingApprovalForDraft(draft);
   const approval = findOrgApproval(draft.approval_id);
   if (!approval) {
     throw new CorrespondenceApprovalGateError(

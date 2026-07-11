@@ -115,14 +115,16 @@ describe("steward chat today", () => {
     );
 
     const summary = getCashflowTodaySummary();
-    expect(summary).toEqual({
-      schedule_path:
-        "tenants/demo/docs/finance/treasury/cashflow-schedule/9999-12-31-weekly.json",
-      shortfall_date: "9999-12-31",
-      runway_days: 3,
-      required_funding_amount: 500,
-      required_funding_by_date: "9999-12-31",
-    });
+    expect(summary.schedule_path).toBe(
+      "tenants/demo/docs/finance/treasury/cashflow-schedule/9999-12-31-weekly.json"
+    );
+    expect(summary.shortfall_date).toBe("9999-12-31");
+    expect(summary.runway_days).toBe(3);
+    expect(summary.required_funding_amount).toBe(500);
+    expect(summary.required_funding_by_date).toBe("9999-12-31");
+    expect(summary.generated_at).toBe("9999-12-31T00:00:00.000Z");
+    expect(summary.age_days).toBeGreaterThanOrEqual(0);
+    expect(summary.stale).toBe(true);
     const ctx = buildTodayContext();
     expect(ctx.cashflow_required_funding_amount).toBe(500);
     expect(ctx.cashflow_required_funding_by_date).toBe("9999-12-31");

@@ -8,6 +8,7 @@ import { getExecutiveRecordsDir, getMailConfigPath } from "../src/lib/correspond
 import {
   createCommunityGmailBind,
   verifyCommunityGmailBind,
+  claimCommunityGmailBind,
 } from "../src/lib/protocol/community-gmail-bind.js";
 import {
   communityTenantMailApiCatalog,
@@ -17,7 +18,7 @@ import {
 } from "../src/lib/protocol/community-tenant-mail-api.js";
 import { verifyCommunityGovernanceAuth } from "../src/lib/protocol/community-wire-node-api.js";
 import { startProtocolApiServer } from "../src/lib/protocol/protocol-api-server.js";
-import { loadGmailOAuthToken } from "../src/lib/correspondence/gmail-oauth.js";
+import { loadGmailOAuthToken, saveGmailOAuthClientConfig } from "../src/lib/correspondence/gmail-oauth.js";
 import { gmailOAuthTokenSchema } from "../schemas/correspondence/gmail-oauth.js";
 
 function mockReq(authHeader?: string): IncomingMessage {
@@ -93,6 +94,8 @@ describe("community tenant-mail API", () => {
 
   it("pushes gmail token and consumes bind", () => {
     process.env.ORGOS_COMMUNITY_GOVERNANCE_TOKEN = "gov-test-token";
+    process.env.ORGOS_GMAIL_CLIENT_ID = "community-client";
+    process.env.ORGOS_GMAIL_CLIENT_SECRET = "secret";
     const entry = createCommunityGmailBind("demo");
     const tokenPayload = {
       version: 1,
@@ -135,6 +138,8 @@ describe("community tenant-mail API", () => {
   });
 
   it("rejects gmail token push without refresh_token", () => {
+    process.env.ORGOS_GMAIL_CLIENT_ID = "community-client";
+    process.env.ORGOS_GMAIL_CLIENT_SECRET = "secret";
     const entry = createCommunityGmailBind("demo");
     const result = handleCommunityTenantMailGmailToken(
       {
@@ -150,6 +155,90 @@ describe("community tenant-mail API", () => {
     );
     expect(result.ok).toBe(false);
     expect(result.error).toContain("refresh_token");
+  });
+
+  it("claims bind before saving token and rejects replay", () => {
+    process.env.ORGOS_GMAIL_CLIENT_ID = "community-client";
+    process.env.ORGOS_GMAIL_CLIENT_SECRET = "secret";
+    const entry = createCommunityGmailBind("demo");
+    const payload = {
+      tenant_id: "demo",
+      nonce: entry.nonce,
+      oauth_client_id: "community-client",
+      token: {
+        version: 1,
+        access_token: "access-abc",
+        refresh_token: "refresh-xyz",
+        token_type: "Bearer",
+        email: "user@example.com",
+      },
+    };
+
+    const first = handleCommunityTenantMailGmailToken(payload, true);
+    expect(first.ok).toBe(true);
+
+    const replay = handleCommunityTenantMailGmailToken(payload, true);
+    expect(replay.ok).toBe(false);
+    expect(replay.error).toContain("already used");
+  });
+
+  it("rejects community user email outside issued_for_emails", () => {
+    process.env.ORGOS_GMAIL_CLIENT_ID = "community-client";
+    process.env.ORGOS_GMAIL_CLIENT_SECRET = "secret";
+    const entry = createCommunityGmailBind("demo", 30, {
+      issuedForEmails: ["ceo@example.com"],
+    });
+    const result = handleCommunityTenantMailGmailToken(
+      {
+        tenant_id: "demo",
+        nonce: entry.nonce,
+        community_user_email: "other@example.com",
+        oauth_client_id: "community-client",
+        token: {
+          version: 1,
+          access_token: "access-abc",
+          refresh_token: "refresh-xyz",
+          email: "other@example.com",
+        },
+      },
+      true
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("not authorized");
+  });
+
+  it("rejects oauth client id mismatch", () => {
+    saveGmailOAuthClientConfig({
+      version: 1,
+      client_id: "steward-client",
+      client_secret: "secret",
+    });
+    const entry = createCommunityGmailBind("demo");
+    const result = handleCommunityTenantMailGmailToken(
+      {
+        tenant_id: "demo",
+        nonce: entry.nonce,
+        oauth_client_id: "community-client",
+        token: {
+          version: 1,
+          access_token: "access-abc",
+          refresh_token: "refresh-xyz",
+          email: "user@example.com",
+        },
+      },
+      true
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("client id mismatch");
+  });
+
+  it("claimCommunityGmailBind consumes atomically", () => {
+    const entry = createCommunityGmailBind("demo");
+    const claimed = claimCommunityGmailBind("demo", entry.nonce, {
+      communityUserId: "user-1",
+    });
+    expect(claimed.ok).toBe(true);
+    expect(verifyCommunityGmailBind("demo", entry.nonce).ok).toBe(false);
   });
 });
 
@@ -170,5 +259,56 @@ describe("protocol API tenant-mail routes", () => {
     const body = (await res.json()) as { base_path?: string; routes?: unknown[] };
     expect(body.base_path).toBe("/protocol/v1/community/tenant-mail");
     expect(body.routes?.length).toBeGreaterThan(0);
+  });
+
+  it("POST bind and gmail-token over HTTP with governance auth", async () => {
+    process.env.ORGOS_COMMUNITY_GOVERNANCE_TOKEN = "gov-http-test";
+    process.env.ORGOS_GMAIL_CLIENT_ID = "http-client";
+    process.env.ORGOS_GMAIL_CLIENT_SECRET = "http-secret";
+    setTenantId("demo");
+    const protocolDir = join(getDataDir(), "protocol");
+    if (existsSync(protocolDir)) rmSync(protocolDir, { recursive: true, force: true });
+    mkdirSync(protocolDir, { recursive: true });
+    const recordsDir = getExecutiveRecordsDir();
+    if (existsSync(recordsDir)) rmSync(recordsDir, { recursive: true, force: true });
+    mkdirSync(recordsDir, { recursive: true });
+
+    const server = await startProtocolApiServer({ host: "127.0.0.1", port: 0 });
+    close = server.close;
+
+    const bindRes = await fetch(`${server.url}/protocol/v1/community/tenant-mail/bind`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer gov-http-test",
+      },
+      body: JSON.stringify({ tenant_id: "demo", issued_for_emails: ["ceo@example.com"] }),
+    });
+    expect(bindRes.status).toBe(201);
+    const bindBody = (await bindRes.json()) as { nonce?: string };
+    expect(bindBody.nonce).toBeTruthy();
+
+    const pushRes = await fetch(`${server.url}/protocol/v1/community/tenant-mail/gmail-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer gov-http-test",
+      },
+      body: JSON.stringify({
+        tenant_id: "demo",
+        nonce: bindBody.nonce,
+        community_user_email: "ceo@example.com",
+        oauth_client_id: "http-client",
+        token: {
+          version: 1,
+          access_token: "access-http",
+          refresh_token: "refresh-http",
+          email: "ceo@example.com",
+        },
+      }),
+    });
+    expect(pushRes.ok).toBe(true);
+    setTenantId("demo");
+    expect(loadGmailOAuthToken()?.connected_via).toBe("community");
   });
 });

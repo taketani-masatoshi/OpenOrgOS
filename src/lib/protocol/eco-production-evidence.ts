@@ -38,6 +38,9 @@ export type CommunityIntegrationStatus = {
   e2e_green?: boolean;
   jurisdiction_registry_ui?: boolean;
   vocabulary_i18n?: boolean;
+  tenant_mail_connect_api?: boolean;
+  tenant_mail_connect_ui?: boolean;
+  readiness_score?: number;
 };
 
 export type EcoProductionEvidence = {

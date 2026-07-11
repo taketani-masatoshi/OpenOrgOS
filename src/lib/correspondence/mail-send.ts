@@ -5,7 +5,7 @@ import { join } from "node:path";
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import type { MailConfig } from "../../../schemas/correspondence/mail-config.js";
 import { getMailSentDir } from "./paths.js";
-import { resolveMailConfig, resolveSmtpCredentials } from "./mail-config.js";
+import { isDryRunSmtpHost, resolveMailConfig, resolveSmtpCredentials } from "./mail-config.js";
 import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
 import { resolveGmailAccessToken } from "./gmail-oauth.js";
 
@@ -250,7 +250,7 @@ export async function sendCorrespondenceEmail(
     return { mode: "dry_run", artifactPath };
   }
 
-  if (config.smtp?.host === "smtp.test.local") {
+  if (isDryRunSmtpHost(config.smtp?.host)) {
     const artifactPath = writeDryRunEml(draft, config);
     return { mode: "dry_run", artifactPath };
   }

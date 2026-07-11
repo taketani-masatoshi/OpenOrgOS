@@ -36,7 +36,9 @@ describe("wire-gateway discover (WG v2)", () => {
     expect(mal).toBeDefined();
     const suggestion = suggestWireGatewayPeerRegistration(mal!);
     expect(suggestion.register_command).toContain("orgos protocol peer register");
-    expect(suggestion.register_command).toContain("wire.mal.example/wire/v1/events");
+    expect(suggestion.register_command).toContain(
+      `${mal!.wire_url!.replace(/\/$/, "")}/wire/v1/events`
+    );
   });
 
   it("lists federation catalog from trust registry", () => {

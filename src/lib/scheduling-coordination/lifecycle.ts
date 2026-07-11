@@ -346,16 +346,17 @@ export function handleSchedulingCorrespondenceSent(
       ? findOrgApproval(draftRecord.approval_id)
       : undefined;
     const operatorId = draft.sent_by?.trim();
+    const approverName = approval?.approver_id;
     if (
       operatorId &&
       isHumanApproverOperatorId(operatorId) &&
-      approval?.approver_id
+      approverName
     ) {
       current = updateSchedulingCase(current.id, current.revision, (row) => ({
         ...row,
         proposal_send_authority: {
           operator_id: operatorId,
-          approver_name: approval.approver_id,
+          approver_name: approverName,
           covers_up_to_revision: row.proposal_revision,
         },
         updated_at: new Date().toISOString(),

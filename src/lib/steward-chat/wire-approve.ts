@@ -1,5 +1,13 @@
 import { approveOrgApproval, findOrgApproval } from "../org/approval/approve.js";
-import { isCorrespondenceApprovalSubject } from "../correspondence/review.js";
+import {
+  formatCorrespondenceDraftReview,
+  isCorrespondenceApprovalSubject,
+  loadCorrespondenceDraftForApproval,
+} from "../correspondence/review.js";
+import {
+  listCorrespondenceDrafts,
+  markCorrespondenceDraftApproved,
+} from "../correspondence/draft.js";
 import { getTenantId } from "../tenant.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
@@ -11,6 +19,7 @@ import {
 export interface ChatWireApproveResult {
   mode: "internal" | "wire";
   approval_id: string;
+  approval_ids?: string[];
   flushed?: number;
   transmission?: {
     transaction_id?: string;
@@ -20,10 +29,58 @@ export interface ChatWireApproveResult {
   approval: unknown;
 }
 
+function schedulingBatchKey(notes: string | undefined): string | undefined {
+  if (!notes?.includes("scheduling-case:")) return undefined;
+  const caseId = notes.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
+  const kind = notes.match(/\bkind:(proposal|reminder|confirm)\b/)?.[1];
+  const revision = notes.match(/\brevision:(\d+)\b/)?.[1];
+  return caseId && kind && revision ? `${caseId}:${kind}:${revision}` : undefined;
+}
+
+function loadSchedulingApprovalBatch(approvalId: string) {
+  const approval = findOrgApproval(approvalId);
+  if (!approval || !isCorrespondenceApprovalSubject(approval.subject_type)) {
+    throw new Error(`Scheduling correspondence approval ${approvalId} not found`);
+  }
+  const selected = loadCorrespondenceDraftForApproval(approval);
+  const key = schedulingBatchKey(selected?.notes);
+  if (!selected || !selected.notes?.includes("scheduling-case:")) {
+    throw new Error(
+      `Approval ${approvalId} is not scheduling correspondence and cannot be reviewed via Chat`
+    );
+  }
+  const drafts = key
+    ? listCorrespondenceDrafts({ channel: "email" })
+        .filter((draft) => schedulingBatchKey(draft.notes) === key)
+        .sort((a, b) => (a.to ?? "").localeCompare(b.to ?? ""))
+    : [selected];
+  return { selected, drafts };
+}
+
+export function loadSchedulingCorrespondencePreview(approvalId: string): {
+  approval_id: string;
+  draft_id: string;
+  draft_ids: string[];
+  preview: string;
+} {
+  const { selected, drafts } = loadSchedulingApprovalBatch(approvalId);
+  return {
+    approval_id: approvalId,
+    draft_id: selected.draft_id,
+    draft_ids: drafts.map((draft) => draft.draft_id),
+    preview: drafts
+      .map(
+        (draft, index) =>
+          `--- ${index + 1}/${drafts.length} ---\n${formatCorrespondenceDraftReview(draft)}`
+      )
+      .join("\n\n"),
+  };
+}
+
 export async function approveFromStewardChat(
   approvalId: string,
   user: WireConsoleUser,
-  opts?: { flush?: boolean }
+  opts?: { flush?: boolean; reviewed?: boolean }
 ): Promise<ChatWireApproveResult> {
   const tenantId = getTenantId();
   const pending = findOrgApproval(approvalId);
@@ -48,10 +105,46 @@ export async function approveFromStewardChat(
   }
 
   if (isCorrespondenceApprovalSubject(pending.subject_type)) {
-    throw new Error(
-      `Correspondence approval ${approvalId} cannot be approved via Chat/MCP — ` +
-        `human CEO must run: org approval approve --id ${approvalId} --approver "<name>" --reviewed`
-    );
+    const review = loadSchedulingCorrespondencePreview(approvalId);
+    if (opts?.reviewed !== true) {
+      throw new Error(
+        `Scheduling correspondence approval ${approvalId} requires the full preview and reviewed=true`
+      );
+    }
+    const results = review.draft_ids.map((draftId) => {
+      const draft = listCorrespondenceDrafts({ channel: "email" }).find(
+        (candidate) => candidate.draft_id === draftId
+      );
+      if (!draft?.approval_id) {
+        throw new Error(`Scheduling draft ${draftId} has no approval`);
+      }
+      const approval = findOrgApproval(draft.approval_id);
+      if (approval?.status === "approved" || approval?.status === "completed") {
+        return { approval: approval };
+      }
+      const result = approveOrgApproval({
+        approvalId: draft.approval_id,
+        approverId: user.approver_id,
+        operatorId: user.operator_id,
+        humanReviewConfirmed: true,
+      });
+      markCorrespondenceDraftApproved(draftId);
+      return result;
+    });
+    return {
+      mode: "internal",
+      approval_id: approvalId,
+      approval_ids: review.draft_ids
+        .map(
+          (draftId) =>
+            listCorrespondenceDrafts({ channel: "email" }).find(
+              (candidate) => candidate.draft_id === draftId
+            )?.approval_id
+        )
+        .filter((id): id is string => Boolean(id)),
+      approval: results.find((result) => result.approval.approval_id === approvalId)?.approval ??
+        results[0]?.approval,
+    };
   }
 
   const result = approveOrgApproval({

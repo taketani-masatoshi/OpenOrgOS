@@ -7,6 +7,7 @@ import {
   type OpenOrgDid,
 } from "../../../schemas/protocol/openorg-did.js";
 import { exportProtocolPublicKeyBase64 } from "../protocol/signing.js";
+import { resolveOrganizationCertificateSpkiSha256 } from "../protocol/org-cert-witness.js";
 import { loadTenantConfig } from "../tenant.js";
 import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-config.js";
 
@@ -40,6 +41,7 @@ export interface WireNodeIdentityFields {
   wire_version: "0.1";
   did?: OpenOrgDid;
   trust_registry_url?: string;
+  organization_certificate_spki_sha256?: string;
 }
 
 export function buildWireNodeIdentityFields(
@@ -61,5 +63,7 @@ export function buildWireNodeIdentityFields(
     wire_version: config.wire_version,
     did,
     trust_registry_url: trustRegistryUrl ?? config.trust_registry_url,
+    organization_certificate_spki_sha256:
+      resolveOrganizationCertificateSpkiSha256(protocolPublicKey, did),
   };
 }

@@ -35,10 +35,10 @@ describe("testing-modules doc sync", () => {
     }
   });
 
-  it("documents 29 catalog modules", () => {
+  it("documents 30 catalog modules", () => {
     const text = readFileSync(docPath, "utf-8");
-    expect(text).toMatch(/業務 catalog module[^\n]*\*\*29\*\*/);
-    expect(loadTestRegistry().stats.catalog_total).toBe(29);
+    expect(text).toMatch(/業務 catalog module[^\n]*\*\*30\*\*/);
+    expect(loadTestRegistry().stats.catalog_total).toBe(30);
   });
 
   it("documents catalog tier counts matching registry stats", () => {
