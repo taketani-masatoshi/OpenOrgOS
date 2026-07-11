@@ -11,8 +11,8 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 
 | 指標 | 値 |
 |------|-----|
-| Vitest テストファイル | **299**（`tests/**/*.test.ts` · registry 含む） |
-| テストケース（静的 `it`/`test` **1130**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
+| Vitest テストファイル | **305**（`tests/**/*.test.ts` · registry 含む） |
+| テストケース（静的 `it`/`test` **1147**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
 | 業務 catalog module | **30**（core 21 + JP pack 9） |
 | production_ready | **28** |
 | skeleton | **1**（`jp_permit_registry`） |
@@ -122,7 +122,17 @@ npm run test:platform -- P04_wire_stack
 - [`vitest.config.ts`](../vitest.config.ts): `fileParallelism: false`（mal routing-queue 等）· `hookTimeout: 40_000`（fixture restore）
 - [`tests/setup-restore-protocol.ts`](../tests/setup-restore-protocol.ts): 毎 `beforeEach` で protocol fixture 復元（ロック待ち最大 60s）
 - 同一 workspace 上での shard 並列は **非推奨**（fixture race）
-- stale lock: `tests/.fixture-restore.lock` が残ったら削除してから再実行
+- stale lock: `orgos doctor --repair`（または `rm -rf tests/.fixture-restore.lock`）
+- テナント runtime 生成物: [tenant-runtime-artifacts.md](../../docs/org-os/tenant-runtime-artifacts.md)
+
+### 7.2 全件 `npm test`（305 files · 直列 · 10 分超のことあり）
+
+```bash
+orgos doctor --repair    # stale fixture lock を除去
+npm test                 # CI validate job と同じ
+```
+
+PR 前は `npm run test:contract`（約 1 分）を優先。main push / release 前に全件 green を確認。
 
 ### 7.1 Agent / Skill 変更後（推奨）
 
@@ -147,6 +157,7 @@ npm run generated:check        # policy ミラー · generated artifacts
 
 ## 9. 関連
 
+- [tenant-runtime-artifacts.md](../../docs/org-os/tenant-runtime-artifacts.md) — gitignore 対象のテナント生成物
 - [module_contract.md](../modules/module_contract.md) — 業務 module 契約
 - [readiness.yaml](../modules/readiness.yaml) — tier 正本
 - [tool-neutral-development.md](tool-neutral-development.md) — テスト優先開発

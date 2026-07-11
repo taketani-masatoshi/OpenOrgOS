@@ -24,7 +24,7 @@ jobs:
       - run: npm run test:registry:check
       - run: npm run test:tiered:verify
       - run: npm run test:contract
-      - run: npm test
+      - run: /usr/bin/time -f "npm test elapsed: %E" npm test
   security-rbac:
     runs-on: ubuntu-latest
     needs: validate

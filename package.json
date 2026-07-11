@@ -21,6 +21,7 @@
     "validate:protocol:tenants": "node --import tsx scripts/validate-protocol-tenants.ts",
     "daily": "npm run check && npm run orgos -- pipeline run daily",
     "weekly": "npm run check && npm run orgos -- pipeline run weekly",
+    "test:preflight": "npm run orgos -- doctor --repair",
     "test": "node --import tsx scripts/run-tests.ts",
     "agent:catalog:sync": "node --import tsx scripts/sync-agent-catalog.ts",
     "agent:catalog:check": "node --import tsx scripts/sync-agent-catalog.ts --check",

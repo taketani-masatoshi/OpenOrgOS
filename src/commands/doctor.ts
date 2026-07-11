@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import {
@@ -117,7 +117,7 @@ function checkPdfkitDependency(): DoctorCheck {
   };
 }
 
-function checkFixtureRestoreLock(): DoctorCheck {
+function checkFixtureRestoreLock(opts?: { repair?: boolean }): DoctorCheck {
   const lockDir = join(getWorkspaceRoot(), "tests", ".fixture-restore.lock");
   if (!existsSync(lockDir)) {
     return { id: "fixture_restore_lock", ok: true, detail: "no stale Vitest fixture lock" };
@@ -125,12 +125,17 @@ function checkFixtureRestoreLock(): DoctorCheck {
   const ownerPath = join(lockDir, "owner");
   let owner = 0;
   try {
-    owner = Number(readFileSync(ownerPath, "utf-8"));
+    const raw = readFileSync(ownerPath, "utf-8").trim().split(/\s+/)[0] ?? "";
+    owner = Number(raw);
   } catch {
+    if (opts?.repair) {
+      rmSync(lockDir, { recursive: true, force: true });
+      return { id: "fixture_restore_lock", ok: true, detail: "removed broken tests/.fixture-restore.lock" };
+    }
     return {
       id: "fixture_restore_lock",
       ok: false,
-      detail: "stale tests/.fixture-restore.lock — run: rm -rf tests/.fixture-restore.lock",
+      detail: "stale tests/.fixture-restore.lock — run: orgos doctor --repair",
     };
   }
   let alive = false;
@@ -140,12 +145,16 @@ function checkFixtureRestoreLock(): DoctorCheck {
   } catch {
     alive = false;
   }
+  if (!alive && opts?.repair) {
+    rmSync(lockDir, { recursive: true, force: true });
+    return { id: "fixture_restore_lock", ok: true, detail: `removed stale fixture lock (dead pid ${owner})` };
+  }
   return {
     id: "fixture_restore_lock",
     ok: !alive || owner === process.pid,
     detail: alive
       ? `Vitest fixture restore in progress (pid ${owner})`
-      : "stale tests/.fixture-restore.lock — run: rm -rf tests/.fixture-restore.lock",
+      : "stale tests/.fixture-restore.lock — run: orgos doctor --repair",
   };
 }
 
@@ -195,17 +204,21 @@ export function runDoctor(opts: DoctorOptions = {}): void {
     checkWorkspace(),
     checkTenantTemplate(),
     checkPdfkitDependency(),
-    checkFixtureRestoreLock(),
+    checkFixtureRestoreLock({ repair: opts.repair }),
     checkWireConsoleDist(),
     checkIntegrationsSetup(),
   ];
+
+  let schedulingNextCommand: string | undefined;
 
   if (tenant) {
     const ops = collectOperationalReadinessIssues({
       repairApprovals: opts.repair,
       ensureMailConfig: opts.repair,
       syncOperatorKeys: opts.repair,
+      repairOperatorKeys: opts.repair,
     });
+    schedulingNextCommand = ops.next_command;
     for (const issue of ops.issues) {
       checks.push({
         id: issue.id,
@@ -218,6 +231,13 @@ export function runDoctor(opts: DoctorOptions = {}): void {
         id: "operator_key_sync",
         ok: true,
         detail: `synced operator key_hash: ${ops.synced_operators.join(", ")}`,
+      });
+    }
+    if (ops.rotated_operators.length) {
+      checks.push({
+        id: "operator_key_rotate",
+        ok: true,
+        detail: `rotated operator key: ${ops.rotated_operators.join(", ")}`,
       });
     }
     if (ops.repaired_approvals.length) {
@@ -261,4 +281,7 @@ export function runDoctor(opts: DoctorOptions = {}): void {
     process.exit(1);
   }
   console.log("\n✓ All checks passed");
+  if (schedulingNextCommand) {
+    console.log(`\nnext: ${schedulingNextCommand}`);
+  }
 }

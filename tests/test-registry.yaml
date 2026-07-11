@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 299
-  static_test_cases: 1130
-  tiered_execution_total: 299
+  vitest_total: 305
+  static_test_cases: 1147
+  tiered_execution_total: 305
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -455,6 +455,10 @@ tests:
     kind: integration
     domain: P01_kernel
     integration: I1_cli
+  cli-catalog-contract.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   cli-data-write-auth.test.ts:
     axis: platform
     kind: unit
@@ -611,6 +615,10 @@ tests:
   docs-score-sync.test.ts:
     axis: meta
     kind: meta
+  doctor-repair-operator.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   eco-production-evidence.test.ts:
     axis: meta
     kind: meta
@@ -1024,6 +1032,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  protocol-layer-contract.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   protocol-ledger-reconcile.test.ts:
     axis: platform
     kind: unit
@@ -1235,6 +1247,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-rehearsal-mail-path.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-reminder-poller.test.ts:
     axis: platform
     kind: unit
@@ -1290,6 +1306,10 @@ tests:
       - rental
       - restaurant
   skill-dispatch-contract.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  skill-execution-mode.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1507,6 +1527,10 @@ tests:
     kind: unit
     domain: P04_wire_stack
   wire-implementation-score.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
+  wire-live-verify.test.ts:
     axis: platform
     kind: unit
     domain: P04_wire_stack
