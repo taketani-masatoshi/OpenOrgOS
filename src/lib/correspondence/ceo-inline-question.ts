@@ -43,22 +43,40 @@ export function listPendingCeoInlineQuestions(): CeoInlineQuestion[] {
   return loadCeoInlineQueue().questions.filter((q) => q.status === "pending");
 }
 
+export function dismissPendingSchedulingQuestions(caseId: string): void {
+  const queue = loadCeoInlineQueue();
+  let changed = false;
+  queue.questions = queue.questions.map((question) => {
+    if (question.scheduling_case_id !== caseId || question.status !== "pending") {
+      return question;
+    }
+    changed = true;
+    return { ...question, status: "dismissed" as const };
+  });
+  if (changed) saveCeoInlineQueue(queue);
+}
+
 /** CONSULT MD の代わり — Today / Steward Chat で短く答えられる構造化質問 */
 export function askCeoInline(opts: {
   mailId: string;
   subject: string;
   contextL1: string;
   fields: CeoInlineQuestion["fields"];
+  schedulingCaseId?: string;
 }): CeoInlineQuestion {
   const queue = loadCeoInlineQueue();
   const existing = queue.questions.find(
-    (q) => q.mail_id === opts.mailId && q.status === "pending"
+    (q) =>
+      q.status === "pending" &&
+      (q.mail_id === opts.mailId ||
+        (opts.schedulingCaseId && q.scheduling_case_id === opts.schedulingCaseId))
   );
   if (existing) return existing;
 
   const question: CeoInlineQuestion = {
     id: nextQuestionId(queue),
     mail_id: opts.mailId,
+    scheduling_case_id: opts.schedulingCaseId,
     subject: opts.subject,
     context_l1: opts.contextL1.slice(0, 1000),
     fields: opts.fields,
@@ -91,8 +109,29 @@ export function answerCeoInline(
 }
 
 /** CEO 回答後の副作用 — sender identification 等へ反映 */
-export function applyCeoInlineAnswerSideEffects(question: CeoInlineQuestion): void {
+export async function applyCeoInlineAnswerSideEffects(
+  question: CeoInlineQuestion
+): Promise<void> {
   if (question.status !== "answered" || !question.answers) return;
+
+  if (
+    question.mail_id.startsWith("schedule-intake:") ||
+    question.mail_id.startsWith("schedule-intake-case:")
+  ) {
+    const { applyScheduleIntakeAnswer } = await import(
+      "../scheduling-coordination/process-mail.js"
+    );
+    await applyScheduleIntakeAnswer(question);
+    return;
+  }
+
+  if (question.scheduling_case_id || question.mail_id.startsWith("scheduling:")) {
+    const { applySchedulingCeoAnswer } = await import(
+      "../scheduling-coordination/ceo-confirm.js"
+    );
+    await applySchedulingCeoAnswer(question);
+    return;
+  }
 
   const idEntry = findSenderIdentification(question.mail_id);
   if (!idEntry || (idEntry.status !== "pending_ceo" && idEntry.status !== "pending_enrichment")) {
@@ -125,7 +164,7 @@ export function formatCeoInlineForToday(q: CeoInlineQuestion): string {
   for (const f of q.fields) {
     lines.push(`- ${f.label}`);
   }
-  lines.push("", `回答: orgos mail intake ceo answer --id ${q.id} --field <id> <value> ...`);
+  lines.push("", "Steward Chat の CEO 質問から回答してください。");
   return lines.join("\n");
 }
 

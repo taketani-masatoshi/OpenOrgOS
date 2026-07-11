@@ -35,11 +35,17 @@ const interpretResponseSchema = z.object({
   action_required: z.boolean(),
   summary_l1: z.string().max(500),
   confidence: z.number().min(0).max(1).optional(),
+  response: z.enum(["accept", "decline", "counter", "unknown"]).optional(),
+  slot_ids: z.array(z.string()).optional(),
+  counter_slots: z
+    .array(z.object({ start: z.string(), end: z.string().optional(), label: z.string().optional() }))
+    .optional(),
 });
 
 const SYSTEM_PROMPT = `You interpret inbound business email for OrgOS Secretary (L1 only).
-Return JSON only with keys: intent, who_lent, who_must_return, action_required, summary_l1, confidence.
+Return JSON only with keys: intent, who_lent, who_must_return, action_required, summary_l1, confidence, response, slot_ids, counter_slots.
 who_lent: sender=差出人 lent to recipient=受信組織. who_must_return: who must return the item.
+For schedule mail, response is accept/decline/counter/unknown. slot_ids contains only explicit SLOT-nnn references. counter_slots contains explicit alternative starts/ends.
 Japanese example: "あなたに貸したノートを返してください" → who_lent=sender, who_must_return=recipient.`;
 
 const interpretationQueueSchema = z.object({
@@ -154,12 +160,18 @@ export async function interpretMailWithEnsemble(
     "unclear"
   );
   const actionVote = majorityVoteBoolean(votes.map((v) => v.action_required));
+  const scheduleVotes = votes.filter((v) => v.intent === "schedule");
+  const responseVote = majorityVote(
+    scheduleVotes.map((v) => v.response ?? "unknown"),
+    "unknown"
+  );
 
   const winnerIdx = votes.findIndex((v) => v.intent === intentVote.winner);
   const dissent: string[] = [];
   if (intentVote.dissent.length) dissent.push(`intent: ${intentVote.dissent.join(", ")}`);
   if (lentVote.dissent.length) dissent.push(`who_lent: ${lentVote.dissent.join(", ")}`);
   if (returnVote.dissent.length) dissent.push(`who_must_return: ${returnVote.dissent.join(", ")}`);
+  if (responseVote.dissent.length) dissent.push(`response: ${responseVote.dissent.join(", ")}`);
 
   const agreement = Math.min(intentVote.agreement, lentVote.agreement, returnVote.agreement);
 
@@ -180,6 +192,20 @@ export async function interpretMailWithEnsemble(
       returnVote.winner === "unclear" ||
       entry.importance === "p0",
     ceo_questions: [],
+    response: intentVote.winner === "schedule" ? responseVote.winner : undefined,
+    slot_ids:
+      intentVote.winner === "schedule"
+        ? [...new Set(scheduleVotes.flatMap((v) => v.slot_ids ?? []))]
+        : undefined,
+    counter_slots:
+      intentVote.winner === "schedule"
+        ? scheduleVotes.flatMap((v) => v.counter_slots ?? [])
+        : undefined,
+    confidence:
+      intentVote.winner === "schedule" && scheduleVotes.length
+        ? scheduleVotes.reduce((sum, v) => sum + v.confidence, 0) / scheduleVotes.length
+        : undefined,
+    dissent,
   };
   result.ceo_questions = buildCeoQuestions(result);
   saveMailInterpretation(result);

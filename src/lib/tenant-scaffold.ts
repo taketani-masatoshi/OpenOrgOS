@@ -30,6 +30,7 @@ export function seedExecutiveYamlFromExamples(
     "sender-identification-queue",
     "ceo-inline-questions",
     "mail-interpretation-queue",
+    "scheduling-cases",
   ];
   for (const base of bases) {
     const example = join(execDir, `${base}.yaml.example`);
@@ -54,6 +55,7 @@ export function seedExecutiveYamlFromExamples(
       "sender-identification-queue": "version: 1\nentries: []\n",
       "ceo-inline-questions": "version: 1\nquestions: []\n",
       "mail-interpretation-queue": "version: 1\nentries: []\n",
+      "scheduling-cases": "version: 1\ncases: []\n",
     };
     writeScaffoldFile(target, empty[base] ?? "notes: |\n  skeleton\n");
     result?.created.push(rel);

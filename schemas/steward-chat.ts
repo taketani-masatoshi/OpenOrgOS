@@ -86,6 +86,21 @@ export const todayEmailWirePendingSchema = z.object({
   created_at: z.string(),
 });
 
+export const todaySchedulingCaseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  status: z.string(),
+  next_action: z.string(),
+  headline: z.string(),
+  detail: z.string(),
+  approval_id: z.string().optional(),
+  ceo_question_id: z.string().optional(),
+  action_path: z.string().optional(),
+  preview_path: z.string().optional(),
+  action_kind: z.enum(["approve", "answer", "retry"]).optional(),
+  pending_participants: z.number().int().nonnegative(),
+});
+
 export const todayContextSchema = z.object({
   tenant: z.string(),
   report_date: z.string(),
@@ -117,6 +132,9 @@ export const todayContextSchema = z.object({
     .default([]),
   ceo_inline_questions_pending_count: z.number().int().nonnegative().default(0),
   ceo_inline_questions_pending: z.array(todayCeoInlineQuestionSchema).default([]),
+  scheduling_cases_active_count: z.number().int().nonnegative().default(0),
+  scheduling_cases_action_count: z.number().int().nonnegative().default(0),
+  scheduling_cases_pending: z.array(todaySchedulingCaseSchema).default([]),
   escalate_pending_count: z.number().int().nonnegative(),
   agent_coo_relay_count: z.number().int().nonnegative().default(0),
   agent_coo_relay: z.array(todayAgentRelayItemSchema).default([]),
@@ -125,6 +143,12 @@ export const todayContextSchema = z.object({
   kpis: z.array(todayKpiSchema).max(6),
   executive_summary_path: z.string().optional(),
   dashboard_path: z.string().optional(),
+  agent_summary_paths: z.array(z.string()).default([]),
+  cashflow_schedule_path: z.string().optional(),
+  cashflow_shortfall_date: z.string().nullable().optional(),
+  cashflow_runway_days: z.number().nullable().optional(),
+  cashflow_required_funding_amount: z.number().nonnegative().nullable().optional(),
+  cashflow_required_funding_by_date: z.string().nullable().optional(),
 });
 
 export type TodayContext = z.output<typeof todayContextSchema>;
@@ -132,6 +156,25 @@ export type TodayContext = z.output<typeof todayContextSchema>;
 export const chatMessageRequestSchema = z.object({
   message: z.string().min(1),
   refresh: z.boolean().optional(),
+});
+
+export const chatCashflowStructuredSchema = z.object({
+  cashflow_path: z
+    .string()
+    .refine((path) => !path.startsWith("/") && !/^[A-Za-z]:[\\/]/u.test(path)),
+  cashflow_shortfall_date: z.string().nullable(),
+  cashflow_runway_days: z.number().nonnegative().nullable(),
+  cashflow_required_funding_amount: z.number().nonnegative().nullable(),
+  cashflow_required_funding_by_date: z.string().nullable(),
+  cashflow_wrote: z.boolean(),
+});
+
+export type ChatCashflowStructured = z.output<typeof chatCashflowStructuredSchema>;
+
+export const chatApprovalRequestSchema = z.object({
+  flush: z.boolean().optional(),
+  /** Required and must be true for scheduling correspondence. */
+  reviewed: z.boolean().optional(),
 });
 
 export const notificationsRegistrySchema = z.object({

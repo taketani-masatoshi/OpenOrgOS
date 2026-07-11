@@ -38,6 +38,8 @@ export const calendarEventSchema = z.object({
   external_visible: z.boolean().default(false),
   /** Google Calendar event id（push 後 · gitignore 正本のみ） */
   google_event_id: z.string().optional(),
+  /** Google Meet URL（push 後 · gitignore 正本のみ） */
+  meet_url: z.string().url().optional(),
 });
 
 export const calendarFileSchema = z.object({

@@ -35,6 +35,12 @@ export const mailTriageEntrySchema = z.object({
   sender_contact_ref: z.string().optional(),
   sender_scope: z.enum(["external", "internal", "peer"]).optional(),
   identification_status: senderIdentificationStatusSchema.optional(),
+  /** 日程調整案件 ID（Secretary schedule_coordination） */
+  scheduling_case_id: z.string().optional(),
+  /** 返信パース済み */
+  schedule_reply_parsed: z.boolean().optional(),
+  /** 関連メールスレッド ID */
+  mail_thread_ids: z.array(z.string()).default([]),
 });
 
 export const mailTriageQueueSchema = z.object({

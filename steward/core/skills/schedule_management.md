@@ -47,6 +47,8 @@ npm run orgos -- executive calendar list --from 2026-06-01 --to 2026-06-30
 npm run orgos -- executive calendar conflicts
 ```
 
+多者メール調整は [schedule_coordination.md](schedule_coordination.md) · `orgos executive scheduling ...`
+
 YAML 全文を @file せず期間要約できる。更新は引き続き `calendar.yaml` 編集 + `npm run validate`。
 
 ## 禁止

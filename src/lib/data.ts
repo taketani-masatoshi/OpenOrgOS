@@ -57,6 +57,7 @@ import {
 } from "../../schemas/index.js";
 import { existsSync } from "node:fs";
 import { loadEnabledModules } from "./modules.js";
+import { loadSchedulingCases } from "./scheduling-coordination/store.js";
 import { normalizeYojitsuPlan } from "./yojitsu-normalize.js";
 import { getPrimaryOperationsPublicRel } from "./ops-config.js";
 import { getDataDir, readYamlFile, listYamlFiles, getStakeholdersYaml, toLogicalPath, resolveTenantPath } from "./utils.js";
@@ -458,6 +459,10 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   }
   if (existsSync(getStakeholdersYaml())) {
     tryLoad("data/executive/stakeholders.yaml", () => loadStakeholders());
+  }
+  const schedulingCases = join(getDataDir(), "executive", "scheduling-cases.yaml");
+  if (existsSync(schedulingCases)) {
+    tryLoad("data/executive/scheduling-cases.yaml", () => loadSchedulingCases());
   }
   tryLoad("data/classification-registry.yaml", () =>
     readYamlFile(join(getDataDir(), "classification-registry.yaml"), classificationRegistrySchema)

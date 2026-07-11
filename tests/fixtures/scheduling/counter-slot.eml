@@ -1,0 +1,20 @@
+From: Carol <carol@example.com>
+To: secretary@example.test
+Subject: Re: Scheduling proposal
+Date: Thu, 20 Aug 2026 09:10:00 +0900
+Message-ID: <counter-slot@example.com>
+In-Reply-To: <proposal-001@example.test>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="schedule-boundary"
+
+--schedule-boundary
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+候補日は難しいため、代わりに 2026-08-25 14:00 を提案します。
+
+--schedule-boundary
+Content-Type: text/html; charset=UTF-8
+
+<p>候補日は難しいため、代わりに <strong>2026-08-25 14:00</strong> を提案します。</p>
+--schedule-boundary--

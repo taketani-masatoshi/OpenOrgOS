@@ -41,6 +41,22 @@ import {
   runSecretaryMailConfig,
   runSecretaryMailSetupGuide,
 } from "../../commands/mail-outbound.js";
+import {
+  runSchedulingAutoProcess,
+  runSchedulingCancel,
+  runSchedulingClose,
+  runSchedulingConfirm,
+  runSchedulingDraft,
+  runSchedulingLinkMail,
+  runSchedulingList,
+  runSchedulingNew,
+  runSchedulingPropose,
+  runSchedulingProcess,
+  runSchedulingReminderPollCommand,
+  runSchedulingRespond,
+  runSchedulingReschedule,
+  runSchedulingShow,
+} from "../../commands/scheduling-coordination.js";
 
 export function registerExecutiveCommands(program: Command): void {
   const executiveCmd = program
@@ -114,6 +130,194 @@ export function registerExecutiveCommands(program: Command): void {
     .description("Migrate cancelled → archived（Secretary 一覧ノイズ除去）")
     .option("--dry-run", "Count only")
     .action((opts) => runExecutiveTasksArchive({ dryRun: opts.dryRun }));
+
+  const schedulingCmd = executiveCmd
+    .command("scheduling")
+    .description("Multi-party schedule coordination via email (Secretary)");
+
+  schedulingCmd
+    .command("list")
+    .description("List scheduling cases")
+    .option("--status <status>", "Filter by status")
+    .option("--all", "Include closed/cancelled")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSchedulingList({ status: opts.status, json: opts.json, active: !opts.all })
+    );
+
+  schedulingCmd
+    .command("show")
+    .description("Show scheduling case detail")
+    .requiredOption("--id <caseId>", "SCH-YYYY-NNN")
+    .option("--json", "JSON output")
+    .action((opts) => runSchedulingShow({ id: opts.id, json: opts.json }));
+
+  schedulingCmd
+    .command("new")
+    .description("Create scheduling case")
+    .requiredOption("--title <title>", "Meeting title")
+    .requiredOption(
+      "--participant <spec>",
+      "name|email|role|contact_ref (repeatable)",
+      (v: string, arr: string[]) => {
+        arr.push(v);
+        return arr;
+      },
+      [] as string[]
+    )
+    .option("--duration <minutes>", "Slot duration", (v) => parseInt(v, 10))
+    .option("--from <YYYY-MM-DD>", "Search from")
+    .option("--to <YYYY-MM-DD>", "Search to")
+    .option("--meeting-format <format>", "online|in_person|unspecified")
+    .option("--location <text>", "Meeting location")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSchedulingNew({
+        title: opts.title,
+        participant: opts.participant,
+        duration: opts.duration,
+        from: opts.from,
+        to: opts.to,
+        meetingFormat: opts.meetingFormat,
+        location: opts.location,
+        json: opts.json,
+      })
+    );
+
+  schedulingCmd
+    .command("propose")
+    .description("Propose candidate slots from CEO calendar")
+    .requiredOption("--id <caseId>", "Case ID")
+    .option("--from <YYYY-MM-DD>")
+    .option("--to <YYYY-MM-DD>")
+    .option("--count <n>", "Number of slots", (v) => parseInt(v, 10))
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSchedulingPropose({
+        id: opts.id,
+        from: opts.from,
+        to: opts.to,
+        count: opts.count,
+        json: opts.json,
+      })
+    );
+
+  schedulingCmd
+    .command("respond")
+    .description("Record participant response")
+    .requiredOption("--id <caseId>", "Case ID")
+    .requiredOption("--response <status>", "accept|decline|counter|pending|unknown")
+    .option("--email <email>", "Participant email")
+    .option("--participant <partId>", "PART-NNN")
+    .option("--slot-id <slotId>", "SLOT-NNN")
+    .option("--mail-id <mailId>", "MSG-...")
+    .option("--note <text>", "Response note")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSchedulingRespond({
+        id: opts.id,
+        email: opts.email,
+        participant: opts.participant,
+        response: opts.response,
+        slotId: opts.slotId,
+        mailId: opts.mailId,
+        note: opts.note,
+        json: opts.json,
+      })
+    );
+
+  schedulingCmd
+    .command("link-mail")
+    .description("Link inbound mail to scheduling case")
+    .requiredOption("--id <caseId>", "Case ID")
+    .requiredOption("--mail-id <mailId>", "Mail triage ID")
+    .option("--json", "JSON output")
+    .action((opts) => runSchedulingLinkMail({ id: opts.id, mailId: opts.mailId, json: opts.json }));
+
+  schedulingCmd
+    .command("process")
+    .description("Process schedule-intent mail against cases")
+    .option("--mail-id <mailId>", "Single mail")
+    .option("--all", "Process all pending schedule mails")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runSchedulingProcess({ mailId: opts.mailId, all: opts.all, json: opts.json })
+    );
+
+  schedulingCmd
+    .command("auto-process")
+    .description("Auto-link schedule mail after sync (Phase 3)")
+    .option("--json", "JSON output")
+    .action(async (opts) => runSchedulingAutoProcess({ json: opts.json }));
+
+  schedulingCmd
+    .command("reminder-poll")
+    .description("Poll overdue scheduling reminders (independent of mail sync)")
+    .option("--at <iso>", "Evaluate as-of timestamp (tests / replay)")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runSchedulingReminderPollCommand({ json: opts.json, at: opts.at })
+    );
+
+  schedulingCmd
+    .command("confirm")
+    .description("Confirm final slot")
+    .requiredOption("--id <caseId>", "Case ID")
+    .requiredOption("--slot-id <slotId>", "SLOT-NNN")
+    .option("--write-calendar", "Write to calendar.yaml and push to Google")
+    .option("--no-push-calendar", "Skip Google Calendar push")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runSchedulingConfirm({
+        id: opts.id,
+        slotId: opts.slotId,
+        writeCalendar: opts.writeCalendar,
+        pushCalendar: !opts.noPushCalendar,
+        json: opts.json,
+      })
+    );
+
+  schedulingCmd
+    .command("draft")
+    .description("Generate adjustment email draft")
+    .requiredOption("--id <caseId>", "Case ID")
+    .option("--kind <kind>", "proposal|reminder|confirm")
+    .option("--write-draft", "Create correspondence draft + approval")
+    .option("--participant <participantId>", "PART-NNN for individual reminder")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSchedulingDraft({
+        id: opts.id,
+        kind: opts.kind,
+        writeDraft: opts.writeDraft,
+        participant: opts.participant,
+        json: opts.json,
+      })
+    );
+
+  schedulingCmd
+    .command("close")
+    .description("Close scheduling case")
+    .requiredOption("--id <caseId>", "Case ID")
+    .option("--json", "JSON output")
+    .action((opts) => runSchedulingClose({ id: opts.id, json: opts.json }));
+
+  schedulingCmd
+    .command("cancel")
+    .description("Cancel scheduling case")
+    .requiredOption("--id <caseId>", "Case ID")
+    .option("--reason <text>", "Cancellation reason")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSchedulingCancel({ id: opts.id, reason: opts.reason, json: opts.json })
+    );
+
+  schedulingCmd
+    .command("reschedule")
+    .description("Start a new proposal revision")
+    .requiredOption("--id <caseId>", "Case ID")
+    .option("--json", "JSON output")
+    .action((opts) => runSchedulingReschedule({ id: opts.id, json: opts.json }));
 
   const secretaryCmd = program
     .command("secretary")
@@ -376,6 +580,10 @@ export function registerExecutiveCommands(program: Command): void {
       "Community ベース URL（既定: ORGOS_COMMUNITY_URL または https://community.oorgos.org）"
     )
     .option("--ttl-minutes <n>", "bind nonce TTL（分）", "30")
+    .option(
+      "--expect-email <email>",
+      "Community 連携を許可する Google メール（CEO/operator）。未指定時は nonce URL 保持者なら可"
+    )
     .option("--no-open", "ブラウザを自動で開かない")
     .option("--port <n>", "OAuth callback ポート")
     .option("--json", "JSON output")
@@ -389,6 +597,7 @@ export function registerExecutiveCommands(program: Command): void {
         tenantId: opts.tenant,
         communityUrl: opts.communityUrl,
         ttlMinutes: opts.ttlMinutes ? parseInt(opts.ttlMinutes, 10) : undefined,
+        expectEmail: opts.expectEmail,
         noOpen: opts.noOpen,
         port: opts.port ? parseInt(opts.port, 10) : undefined,
       })
@@ -499,8 +708,8 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--operator <id>", "Answering operator id")
     .option("--json", "JSON output")
     .allowUnknownOption()
-    .action((opts) =>
-      runMailIntakeCeoAnswer({
+    .action(async (opts) =>
+      await runMailIntakeCeoAnswer({
         id: opts.id,
         fields: parseCeoFieldArgs(process.argv),
         operator: opts.operator,

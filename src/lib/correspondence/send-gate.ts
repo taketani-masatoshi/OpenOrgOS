@@ -151,6 +151,12 @@ export async function sendApprovedCorrespondence(opts: {
     sentBy: opts.operatorId,
     companyEventId: event.id,
   });
+  if (draft.notes?.includes("scheduling-case:")) {
+    const { handleSchedulingCorrespondenceSent } = await import(
+      "../scheduling-coordination/lifecycle.js"
+    );
+    handleSchedulingCorrespondenceSent(draft);
+  }
 
   return { draft, sendResult, companyEventId: event.id };
 }

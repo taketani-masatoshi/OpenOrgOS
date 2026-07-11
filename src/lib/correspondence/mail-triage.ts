@@ -172,6 +172,7 @@ export function classifyMail(
 
   return {
     source_message_id: parsed.messageId,
+    mail_thread_ids: [],
     received_at: parsed.receivedAt,
     from: parsed.from,
     subject: parsed.subject,
@@ -242,6 +243,9 @@ export async function triageEmlFile(
     sender_contact_ref: existing?.sender_contact_ref,
     sender_scope: existing?.sender_scope,
     identification_status: existing?.identification_status,
+    scheduling_case_id: existing?.scheduling_case_id,
+    schedule_reply_parsed: existing?.schedule_reply_parsed,
+    mail_thread_ids: existing?.mail_thread_ids ?? [],
   });
 
   if (opts?.identifySender !== false) {

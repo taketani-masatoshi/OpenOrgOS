@@ -28,8 +28,9 @@ import {
   runMonthlyCompanyEventsAudit,
   runWeeklyCompanyEventsAttestation,
 } from "../lib/company-events-attestation.js";
-import { join } from "node:path";
+import { runScheduleCoordinationSkill } from "./scheduling-coordination.js";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { calendarFileSchema, oneOnOnesFileSchema } from "../../schemas/executive.js";
 import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 import {
@@ -161,6 +162,12 @@ export const SKILL_COMMANDS = [
     description: "社長カレンダー件数サマリ",
   },
   {
+    id: "schedule-coordination",
+    skill: "schedule_coordination",
+    agent: "Secretary",
+    description: "多者日程調整案件サマリ",
+  },
+  {
     id: "one-on-one",
     skill: "one_on_one_prep",
     agent: "Secretary",
@@ -214,6 +221,12 @@ export const SKILL_COMMANDS = [
     agent: "Setup",
     description: "テナント integrations 初回設定",
   },
+  {
+    id: "platform-implement-guide",
+    skill: "platform_implement_guide",
+    agent: "Platform Guide",
+    description: "Agent/Skill/CLI/Module/Wire 実装チェックリスト",
+  },
 ] as const;
 
 export function runSkillsList(): void {
@@ -228,7 +241,7 @@ export function runSkillsList(): void {
   console.log("|---------|-----|-----|-------|");
   for (const s of loadSkillRegistry()) {
     const cli = s.cli_command ? `skills run ${s.cli_command}` : "—";
-    console.log(`| ${s.runtime} | ${s.id} | ${cli} | ${s.agent} |`);
+    console.log(`| ${s.runtime} | ${s.id} | ${cli} | ${s.agent_id} |`);
   }
 
   console.log(`\nCLI: ${getCliSkills().length} · agent-interactive: ${getCursorOnlySkills().length}`);
@@ -250,6 +263,8 @@ export interface SkillRunOptions {
   channel?: string;
   slackChannel?: string;
   answers?: string;
+  json?: boolean;
+  topic?: string;
 }
 
 export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<void> {
@@ -341,6 +356,9 @@ export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<
       console.log(`予定 ${cal.events?.length ?? 0} 件 · ${currentDate()}`);
       break;
     }
+    case "schedule-coordination":
+      runScheduleCoordinationSkill({ json: opts.json });
+      break;
     case "one-on-one": {
       const oooPath = join(getExecutiveDir(), "one-on-ones.yaml");
       if (!existsSync(oooPath)) {
@@ -456,6 +474,11 @@ export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<
         nonInteractive: true,
         skipValidate: true,
       });
+      break;
+    }
+    case "platform-implement-guide": {
+      const { runPlatformGuide } = await import("./platform-guide.js");
+      runPlatformGuide({ topic: opts.topic, json: opts.json });
       break;
     }
     default:

@@ -11,6 +11,10 @@ import {
 } from "../src/lib/correspondence/review.js";
 import { findOrgApproval } from "../src/lib/org/approval/index.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import {
+  approveFromStewardChat,
+  loadSchedulingCorrespondencePreview,
+} from "../src/lib/steward-chat/wire-approve.js";
 
 function cleanup(): void {
   for (const p of [
@@ -73,5 +77,45 @@ describe("correspondence review gate", () => {
     expect(text).toContain("cc: ceo@test.co.jp");
     expect(text).toContain("Body");
     expect(text).toContain("--reviewed");
+  });
+
+  it("allows only reviewed scheduling correspondence through Chat", async () => {
+    const { draft, approvalId } = createCorrespondenceDraft({
+      channel: "email",
+      to: "partner@example.com",
+      subject: "日程候補",
+      body: "候補日時の全文です。",
+      createdBy: "secretary",
+      notes: "scheduling-case:SCH-2026-001",
+      skipCcDefaults: true,
+    });
+    const user = {
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+      mode: "dev" as const,
+    };
+
+    const review = loadSchedulingCorrespondencePreview(approvalId!);
+    expect(review.draft_id).toBe(draft.draft_id);
+    expect(review.preview).toContain("候補日時の全文です。");
+    await expect(
+      approveFromStewardChat(approvalId!, user, { reviewed: false })
+    ).rejects.toThrow(/reviewed=true/);
+    const approved = await approveFromStewardChat(approvalId!, user, { reviewed: true });
+    expect(approved.approval_id).toBe(approvalId);
+  });
+
+  it("keeps general correspondence Chat approval forbidden", () => {
+    const { approvalId } = createCorrespondenceDraft({
+      channel: "email",
+      to: "partner@example.com",
+      subject: "一般連絡",
+      body: "一般 correspondence",
+      createdBy: "secretary",
+      skipCcDefaults: true,
+    });
+    expect(() => loadSchedulingCorrespondencePreview(approvalId!)).toThrow(
+      /not scheduling correspondence/
+    );
   });
 });

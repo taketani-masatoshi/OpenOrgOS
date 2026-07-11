@@ -72,10 +72,13 @@ npm run orgos -- executive brief --week
 | Skill | 用途 |
 |-------|------|
 | [schedule_management](../steward/core/skills/schedule_management.md) | カレンダー確認・競合チェック |
+| [schedule_coordination](../steward/core/skills/schedule_coordination.md) | 多者日程調整（メール往復 · 案件 SoT） |
 | [one_on_one_prep](../steward/core/skills/one_on_one_prep.md) | 1-on-1 前ブリーフ |
 | [inter_org_notice_draft](../steward/core/skills/inter_org_notice_draft.md) | **組織間 wire 起案**（draft のみ · approve は CEO） |
 
 **対外メール送信は [Mail Outbound Agent](mail_outbound_agent.md) に分離** — 下書き · 承認起案 · SMTP 送信。
+
+日程調整では、社外参加者ごとに proposal / reminder / confirm を個別起案する。`contact_ref` 未解決時は送信せず確認へ回し、CEO確定後は Calendar / Meet 同期成功を確認してから確定通知を起案する。案件を `closed` にできるのは全確定通知の承認・送信完了後だけとする。
 
 ---
 
@@ -280,6 +283,7 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 |------|------|
 | agent_pulse | `orgos agent pulse --agent secretary` |
 | schedule_management | registry Skill |
+| schedule_coordination | registry Skill · `executive scheduling` CLI |
 | one_on_one_prep | registry Skill |
 | external_correspondence | registry Skill |
 | correspondence_draft | registry Skill · cli |

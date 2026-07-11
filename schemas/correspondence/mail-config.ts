@@ -35,6 +35,14 @@ export const mailConfigSchema = z.object({
       interpret_models: z.array(z.string()).default([]),
       /** 同期後に自動トリアージ */
       auto_triage: z.boolean().default(true),
+      /** 同期後に日程調整案件へ自動反映（schedule_coordination） */
+      auto_schedule_coordination: z.boolean().default(true),
+      /** 日程候補送信後、未回答者を reminder 対象にするまでの時間 */
+      scheduling_reminder_after_hours: z.number().positive().default(72),
+      /** mail sync とは独立に reminder 期限を走査する */
+      scheduling_reminder_poll: z.boolean().default(true),
+      /** reminder 走査間隔（秒）— 未指定時は poll_interval_sec */
+      scheduling_reminder_poll_interval_sec: z.number().int().positive().optional(),
       /** 同期後に Wire MIME を protocol inbox へ ingest（R5 Phase 2） */
       auto_wire_scan: z.boolean().optional(),
       /** p0/p1 または immediate/today で通知 */

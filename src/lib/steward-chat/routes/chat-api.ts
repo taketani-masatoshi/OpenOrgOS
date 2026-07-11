@@ -4,14 +4,21 @@ import { operatorPolicyExcerpt } from "../../operator-policy.js";
 import { runOperatorAsk, runOperatorAskStream } from "../../operator-runtime/ask.js";
 import { loadQueueEvents } from "../../queue-db.js";
 import { getTenantId } from "../../tenant.js";
-import { chatMessageRequestSchema } from "../../../../schemas/steward-chat.js";
+import {
+  chatApprovalRequestSchema,
+  chatMessageRequestSchema,
+} from "../../../../schemas/steward-chat.js";
 import {
   appendChatTurn,
   historyForOperator,
   loadChatThread,
   threadIdFromSessionToken,
 } from "../chat-thread.js";
-import { approveFromStewardChat, flushWireDeliveryFromChat } from "../wire-approve.js";
+import {
+  approveFromStewardChat,
+  flushWireDeliveryFromChat,
+  loadSchedulingCorrespondencePreview,
+} from "../wire-approve.js";
 import {
   listPendingCeoInlineQuestions,
   findCeoInlineQuestion,
@@ -28,6 +35,11 @@ import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
 import { appendChatAudit, auditChatMessage } from "../audit.js";
 import { buildOperatorStats } from "../operator-stats.js";
+import {
+  handleSchedulingChatMessage,
+} from "../../scheduling-coordination/chat-intent.js";
+import { runValidateReport } from "../../../commands/validate.js";
+import { handleCashflowChatMessage } from "../../jp-bank-corporate/cashflow-chat-intent.js";
 
 export interface ChatApiContext {
   user: WireConsoleUser;
@@ -90,10 +102,105 @@ async function handleChatMessage(
   ctx: ChatApiContext
 ): Promise<boolean> {
   const threadId = resolveThreadId(ctx);
+
+  const scheduling = handleSchedulingChatMessage(threadId, parsed.message);
+  if (scheduling.handled && scheduling.reply) {
+    const reply = scheduling.reply;
+    appendChatTurn(threadId, getTenantId(), parsed.message, reply);
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: true,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: scheduling.caseRow
+        ? `scheduling_case:${scheduling.caseRow.id}`
+        : `scheduling_draft:${threadId}`,
+    });
+    if (stream) {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+      sseWrite(res, { type: "connected", thread_id: threadId });
+      sseWrite(res, {
+        type: "done",
+        ok: true,
+        reply,
+        thread_id: threadId,
+        structured: {
+          scheduling_case_id: scheduling.caseRow?.id,
+          scheduling_draft_status: scheduling.draft?.status,
+          missing_information: scheduling.caseRow ? false : true,
+        },
+      });
+      res.end();
+    } else {
+      json(res, 200, {
+        ok: true,
+        reply,
+        thread_id: threadId,
+        structured: {
+          scheduling_case_id: scheduling.caseRow?.id,
+          scheduling_draft_status: scheduling.draft?.status,
+          missing_information: scheduling.caseRow ? false : true,
+        },
+      });
+    }
+    return true;
+  }
+
+  const cashflow = await handleCashflowChatMessage(parsed.message, {
+    operatorId: ctx.user.operator_id,
+    approverId: ctx.user.approver_id,
+  });
+  if (cashflow.handled && cashflow.reply) {
+    if (cashflow.ok) {
+      appendChatTurn(threadId, getTenantId(), parsed.message, cashflow.reply);
+    }
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: cashflow.ok === true,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: `cashflow:${cashflow.structured?.cashflow_wrote ? "write" : "preview"}`,
+    });
+    if (stream) {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+      sseWrite(res, { type: "connected", thread_id: threadId });
+      sseWrite(res, {
+        type: "done",
+        ok: cashflow.ok === true,
+        reply: cashflow.reply,
+        thread_id: threadId,
+        structured: cashflow.structured,
+      });
+      res.end();
+    } else {
+      json(res, 200, {
+        ok: cashflow.ok === true,
+        reply: cashflow.reply,
+        thread_id: threadId,
+        structured: cashflow.structured,
+      });
+    }
+    return true;
+  }
+
   const { system, history } = buildChatSystem(threadId);
 
   if (!stream) {
-    const result = await runOperatorAsk(parsed.message, system, { history });
+    const result = await runOperatorAsk(parsed.message, system, {
+      history,
+      operatorId: ctx.user.operator_id,
+      approverId: ctx.user.approver_id,
+    });
     if (result.ok && result.reply) {
       appendChatTurn(threadId, getTenantId(), parsed.message, result.reply);
     }
@@ -128,7 +235,11 @@ async function handleChatMessage(
   sseWrite(res, { type: "connected", thread_id: threadId });
 
   try {
-    const gen = runOperatorAskStream(parsed.message, system, { history });
+    const gen = runOperatorAskStream(parsed.message, system, {
+      history,
+      operatorId: ctx.user.operator_id,
+      approverId: ctx.user.approver_id,
+    });
     let step = await gen.next();
     while (!step.done) {
       sseWrite(res, step.value);
@@ -198,6 +309,12 @@ export async function handleChatApi(
     return true;
   }
 
+  if (pathname === "/chat/v1/validate" && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    json(res, 200, runValidateReport());
+    return true;
+  }
+
   if (pathname === "/chat/v1/operator/stats" && method === "GET") {
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     json(res, 200, { ok: true, ...buildOperatorStats() });
@@ -211,20 +328,39 @@ export async function handleChatApi(
     return true;
   }
 
+  const approvalPreviewMatch = pathname.match(
+    /^\/chat\/v1\/approvals\/([^/]+)\/scheduling-preview$/
+  );
+  if (approvalPreviewMatch && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:approve", res)) return true;
+    const approvalId = decodeURIComponent(approvalPreviewMatch[1]!);
+    try {
+      json(res, 200, { ok: true, ...loadSchedulingCorrespondencePreview(approvalId) });
+    } catch (err) {
+      json(res, 400, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return true;
+  }
+
   const approveMatch = pathname.match(/^\/chat\/v1\/approvals\/([^/]+)\/approve$/);
   if (approveMatch && method === "POST") {
     if (!requireChatPermission(ctx.user, "chat:approve", res)) return true;
     const approvalId = decodeURIComponent(approveMatch[1]!);
     const body = await readBody(req);
     let flush = true;
+    let reviewed = false;
     try {
-      const parsed = JSON.parse(body || "{}") as { flush?: boolean };
+      const parsed = chatApprovalRequestSchema.parse(JSON.parse(body || "{}"));
       if (parsed.flush === false) flush = false;
+      reviewed = parsed.reviewed === true;
     } catch {
       /* default flush */
     }
     try {
-      const result = await approveFromStewardChat(approvalId, ctx.user, { flush });
+      const result = await approveFromStewardChat(approvalId, ctx.user, { flush, reviewed });
       appendChatAudit({
         action: "approve",
         operator_id: ctx.user.operator_id,
@@ -416,7 +552,7 @@ export async function handleChatApi(
         parsed.fields,
         ctx.user.approver_id ?? ctx.user.operator_id
       );
-      applyCeoInlineAnswerSideEffects(answered);
+      await applyCeoInlineAnswerSideEffects(answered);
       appendChatAudit({
         action: "ceo_answer",
         operator_id: ctx.user.operator_id,

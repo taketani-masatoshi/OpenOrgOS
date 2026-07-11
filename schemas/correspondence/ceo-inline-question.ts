@@ -10,6 +10,8 @@ export const ceoInlineFieldSchema = z.object({
 export const ceoInlineQuestionSchema = z.object({
   id: z.string(),
   mail_id: z.string(),
+  /** 日程調整案件（CEO 確定確認） */
+  scheduling_case_id: z.string().optional(),
   subject: z.string(),
   context_l1: z.string().max(1000),
   fields: z.array(ceoInlineFieldSchema).default([]),

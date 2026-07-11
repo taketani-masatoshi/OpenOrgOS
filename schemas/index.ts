@@ -11,6 +11,7 @@ export * from "./company-events.js";
 export * from "./company-events-chain.js";
 export * from "./dependency-graph.js";
 export * from "./executive.js";
+export * from "./executive/scheduling-cases.js";
 export * from "./classification.js";
 export * from "./modules.js";
 export * from "./venture-capital.js";

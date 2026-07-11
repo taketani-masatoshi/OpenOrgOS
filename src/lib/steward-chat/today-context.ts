@@ -3,9 +3,9 @@ import { listCooRelayInbox, listStewardInbox } from "../agent-reporting.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { listPendingInbox } from "../document-io.js";
 import { listWorkOrders } from "../escalate.js";
-import { getTenantId, loadTenantConfig } from "../tenant.js";
+import { getTenantId, getWorkspaceRoot, loadTenantConfig } from "../tenant.js";
 import { todayContextSchema, type TodayContext } from "../../../schemas/steward-chat.js";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { existsSync } from "node:fs";
 import { currentDate, getDocsDir } from "../utils.js";
 import { getTenantMailMessages } from "../wire-console/human-mail.js";
@@ -20,8 +20,22 @@ import {
 import { listSenderIdentificationPending } from "../correspondence/sender-identification.js";
 import {
   listPendingCeoInlineQuestions,
-  formatCeoInlineForToday,
 } from "../correspondence/ceo-inline-question.js";
+import {
+  isCorrespondenceApprovalSubject,
+  loadCorrespondenceDraftForApproval,
+} from "../correspondence/review.js";
+import { getCashflowTodaySummary } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
+import {
+  countActiveSchedulingCases,
+  listSchedulingCases,
+} from "../scheduling-coordination/store.js";
+import { buildSchedulingTodayItem } from "../scheduling-coordination/today-summary.js";
+import { findLatestAgentSummaries } from "../agent-summaries.js";
+
+function repoRelativePath(path: string): string {
+  return relative(getWorkspaceRoot(), path).replace(/\\/g, "/");
+}
 
 function countWirePending(): number {
   try {
@@ -145,13 +159,18 @@ export function buildTodayContext(): TodayContext {
     importance: t.importance,
   }));
 
-  const approvals = listOrgApprovals({ status: "pending_approval" }).map((a) => ({
-    id: a.approval_id,
-    scope: a.scope,
-    subject: a.subject_ref ?? a.approval_id,
-    status: a.status,
-    proposed_at: a.proposed_at,
-  }));
+  const approvals = listOrgApprovals({ status: "pending_approval" })
+    .filter((approval) => {
+      if (!isCorrespondenceApprovalSubject(approval.subject_type)) return true;
+      return loadCorrespondenceDraftForApproval(approval)?.notes?.includes("scheduling-case:") === true;
+    })
+    .map((a) => ({
+      id: a.approval_id,
+      scope: a.scope,
+      subject: a.subject_ref ?? a.approval_id,
+      status: a.status,
+      proposed_at: a.proposed_at,
+    }));
 
   const inbox = listPendingInbox().slice(0, 10).map((i) => ({
     id: i.id,
@@ -169,6 +188,26 @@ export function buildTodayContext(): TodayContext {
 
   const dashboardPath = join(getDocsDir(), "reports", "dashboard", `${currentDate()}.md`);
   const executivePath = join(getDocsDir(), "reports", "executive-notes", `${currentDate()}-dashboard-sync.md`);
+
+  let cashflowMeta: ReturnType<typeof getCashflowTodaySummary> = {};
+  try {
+    cashflowMeta = getCashflowTodaySummary();
+  } catch {
+    // JP cashflow module optional per tenant data
+  }
+  const latestAgentSummaries = findLatestAgentSummaries();
+  const agentSummaryPaths = latestAgentSummaries
+    ? [
+        latestAgentSummaries.finance,
+        latestAgentSummaries.contract,
+        latestAgentSummaries.compliance,
+        latestAgentSummaries.operations,
+        latestAgentSummaries.executive,
+        ...(latestAgentSummaries.modules ?? []).map((entry) => entry.path),
+      ]
+        .filter((path): path is string => Boolean(path))
+        .map(repoRelativePath)
+    : [];
 
   const wirePending = loadWirePendingItems(tenant);
   const wireDelivery = loadWireDeliveryItems();
@@ -209,6 +248,33 @@ export function buildTodayContext(): TodayContext {
     field_count: q.fields.length,
   }));
 
+  const schedulingActive = listSchedulingCases({ activeOnly: true, limit: 20 });
+  const schedulingNeeding = schedulingActive.filter((c) => c.next_action !== "none");
+  const schedulingPending = schedulingNeeding
+    .map((c) => ({ caseRow: c, item: buildSchedulingTodayItem(c) }))
+    .filter(({ item }) => item.visible_to_ceo)
+    .slice(0, 8)
+    .map(({ caseRow: c, item }) => ({
+      id: c.id,
+      title: c.title,
+      status: c.status,
+      next_action: c.next_action,
+      headline: item.headline,
+      detail: item.detail,
+      approval_id: item.approval_id,
+      ceo_question_id: item.ceo_question_id,
+      action_path: item.approval_id
+        ? `/chat/v1/approvals/${encodeURIComponent(item.approval_id)}/approve`
+        : item.ceo_question_id
+          ? `/chat/v1/ceo-questions/${encodeURIComponent(item.ceo_question_id)}/answer`
+          : undefined,
+      preview_path: item.approval_id
+        ? `/chat/v1/approvals/${encodeURIComponent(item.approval_id)}/scheduling-preview`
+        : undefined,
+      action_kind: item.approval_id ? "approve" as const : "answer" as const,
+      pending_participants: c.participants.filter((p) => p.response === "pending").length,
+    }));
+
   const ctx = todayContextSchema.parse({
     tenant,
     report_date: report.reportDate,
@@ -231,6 +297,9 @@ export function buildTodayContext(): TodayContext {
     sender_identification_pending: senderIdPending,
     ceo_inline_questions_pending_count: ceoInlineAll.length,
     ceo_inline_questions_pending: ceoInlinePending,
+    scheduling_cases_active_count: countActiveSchedulingCases(),
+    scheduling_cases_action_count: schedulingPending.length,
+    scheduling_cases_pending: schedulingPending,
     escalate_pending_count: escalatePending,
     agent_coo_relay_count: cooRelay.length,
     agent_coo_relay: cooRelay.slice(0, 8).map((m) => ({
@@ -251,193 +320,128 @@ export function buildTodayContext(): TodayContext {
     kpis,
     executive_summary_path: existsSync(executivePath) ? executivePath : undefined,
     dashboard_path: existsSync(dashboardPath) ? dashboardPath : undefined,
+    agent_summary_paths: agentSummaryPaths,
+    cashflow_schedule_path: cashflowMeta.schedule_path,
+    cashflow_shortfall_date: cashflowMeta.shortfall_date,
+    cashflow_runway_days: cashflowMeta.runway_days,
+    cashflow_required_funding_amount: cashflowMeta.required_funding_amount,
+    cashflow_required_funding_by_date: cashflowMeta.required_funding_by_date,
   });
 
   return ctx;
 }
 
 export function formatTodayContextMarkdown(ctx: TodayContext): string {
+  const actionableWire = ctx.wire_pending.filter(
+    (item) => item.can_approve && item.approval_id
+  );
+  const approvalIds = new Set([
+    ...ctx.approvals.map((item) => item.id),
+    ...actionableWire.map((item) => item.approval_id!),
+    ...ctx.scheduling_cases_pending
+      .map((item) => item.approval_id)
+      .filter((id): id is string => Boolean(id)),
+  ]);
+  const questionIds = new Set([
+    ...ctx.ceo_inline_questions_pending.map((item) => item.id),
+    ...ctx.scheduling_cases_pending
+      .map((item) => item.ceo_question_id)
+      .filter((id): id is string => Boolean(id)),
+  ]);
+  const schedulingQuestionIds = new Set(
+    ctx.scheduling_cases_pending
+      .map((item) => item.ceo_question_id)
+      .filter((id): id is string => Boolean(id))
+  );
+  const otherQuestions = ctx.ceo_inline_questions_pending.filter(
+    (item) => !schedulingQuestionIds.has(item.id)
+  );
+  const decisionCount = ctx.decisions.length + questionIds.size;
+  const approvalCount = approvalIds.size;
+  const retryCount = ctx.wire_delivery_pending_count > 0 ? 1 : 0;
   const lines = [
     `# Today — ${ctx.company_name}`,
-    "",
-    `**Date:** ${ctx.report_date} · **Tenant:** ${ctx.tenant}`,
-    "",
-    "## 今日の判断（最大 3 件）",
-    "",
+    `**結論:** 判断 ${decisionCount} 件 · 承認 ${approvalCount} 件 · 再試行 ${retryCount} 件`,
+    `**次の操作:** ${decisionCount + approvalCount + retryCount === 0 ? "ありません" : "以下の Chat 操作だけ実行できます"}`,
   ];
 
-  if (ctx.decisions.length === 0) {
-    lines.push("1. P0 タスクなし — 計画通り");
-  } else {
-    ctx.decisions.forEach((d, i) => {
-      lines.push(`${i + 1}. **${d.id}** ${d.title}${d.due_date ? `（期限 ${d.due_date}）` : ""}`);
-    });
-  }
-
-  lines.push("", "## 承認待ち", "");
-  if (ctx.approvals.length === 0) {
-    lines.push("（なし）");
-  } else {
-    for (const a of ctx.approvals) {
-      lines.push(`- **${a.id}** [${a.scope}] ${a.subject}`);
+  if (ctx.decisions.length > 0) {
+    lines.push("", "## 判断", "");
+    for (const decision of ctx.decisions) {
+      lines.push(
+        `- **${decision.title}**${decision.due_date ? `（期限 ${decision.due_date}）` : ""}`,
+        `  参照: ${decision.id}`
+      );
     }
   }
 
-  lines.push("", "## Mail Intake（受信メール）", "");
-  if (ctx.mail_intake_pending.length === 0) {
+  if (otherQuestions.length > 0) {
+    lines.push("", "## CEO回答", "");
+    for (const question of otherQuestions) {
+      lines.push(
+        `- **${question.subject}**`,
+        `  回答: POST /chat/v1/ceo-questions/${encodeURIComponent(question.id)}/answer`
+      );
+    }
+  }
+
+  if (ctx.scheduling_cases_pending.length > 0) {
+    lines.push("", "## 日程調整", "");
+    for (const item of ctx.scheduling_cases_pending) {
+      lines.push(`- **${item.headline}**`, `  ${item.detail}`);
+    }
+  }
+
+  const schedulingApprovalIds = new Set(
+    ctx.scheduling_cases_pending
+      .map((item) => item.approval_id)
+      .filter((id): id is string => Boolean(id))
+  );
+  const otherApprovals = ctx.approvals.filter(
+    (approval) => !schedulingApprovalIds.has(approval.id)
+  );
+  if (otherApprovals.length > 0 || actionableWire.length > 0) {
+    lines.push("", "## その他の承認", "");
+    for (const approval of otherApprovals) {
+      lines.push(
+        `- **${approval.subject}**`,
+        `  承認: POST /chat/v1/approvals/${encodeURIComponent(approval.id)}/approve`
+      );
+    }
+    for (const wire of actionableWire) {
+      lines.push(
+        `- **${wire.subject}** — ${wire.counterparty}`,
+        `  承認: POST /chat/v1/approvals/${encodeURIComponent(wire.approval_id!)}/approve`
+      );
+    }
+  }
+
+  if (ctx.wire_delivery_pending_count > 0) {
     lines.push(
-      `未処理 ${ctx.mail_intake_pending_count} 件 · 要対応 ${ctx.mail_intake_action_required_count} 件`
+      "",
+      "## 再試行",
+      "",
+      `- **Wire 配送 ${ctx.wire_delivery_pending_count} 件を再試行**`,
+      "  実行: POST /chat/v1/wire/flush"
     );
-  } else {
-    lines.push(
-      `未処理 ${ctx.mail_intake_pending_count} 件 · 要対応 ${ctx.mail_intake_action_required_count} 件`,
-      ""
-    );
-    for (const m of ctx.mail_intake_pending) {
+  }
+
+  if (ctx.cashflow_schedule_path) {
+    lines.push("", "## 資金繰り", "");
+    if ((ctx.cashflow_required_funding_amount ?? 0) > 0) {
       lines.push(
-        `- [${m.importance}/${m.urgency}] **${m.subject}** ← ${m.from} · ${m.handoff_status}`
+        `- 必要調達額: ${ctx.cashflow_required_funding_amount?.toLocaleString("ja-JP")}円` +
+          (ctx.cashflow_required_funding_by_date
+            ? `（${ctx.cashflow_required_funding_by_date}まで）`
+            : "")
       );
+    } else {
+      lines.push("- 必要調達額: 0円");
     }
+    lines.push(`  参照: ${ctx.cashflow_schedule_path}`);
   }
 
-  lines.push("", "## CEO インライン質問（要回答）", "");
-  if (ctx.ceo_inline_questions_pending.length === 0) {
-    lines.push("（なし）");
-  } else {
-    for (const q of ctx.ceo_inline_questions_pending) {
-      const full = listPendingCeoInlineQuestions().find((x) => x.id === q.id);
-      if (full) {
-        lines.push(formatCeoInlineForToday(full));
-      } else {
-        lines.push(`- **${q.subject}** (${q.id}) · ${q.mail_id} · 質問 ${q.field_count} 件`);
-      }
-      lines.push("");
-    }
-  }
-
-  lines.push("", "## 未知送信者（CEO 確認待ち）", "");
-  if (ctx.sender_identification_pending.length === 0) {
-    lines.push("（なし）");
-  } else {
-    for (const s of ctx.sender_identification_pending) {
-      lines.push(
-        `- **${s.mail_id}** ${s.sender_display_name ?? s.sender_email} · ${s.subject ?? "—"}`
-      );
-    }
-  }
-
-  lines.push(
-    "",
-    "## Wire 送信待ち",
-    ""
-  );
-  if (ctx.wire_pending.length === 0) {
-    lines.push(`（件数 ${ctx.wire_pending_count} — 詳細なし）`);
-  } else {
-    for (const w of ctx.wire_pending) {
-      lines.push(
-        `- **${w.subject}** — ${w.counterparty} · ${w.status_label}${w.can_approve ? " · 承認可" : ""}`
-      );
-      if (w.preview) lines.push(`  ${w.preview}`);
-    }
-  }
-
-  lines.push(
-    "",
-    "## Wire 配送待ち",
-    ""
-  );
-  if (ctx.wire_delivery.length === 0) {
-    lines.push(`（${ctx.wire_delivery_pending_count} 件 — 詳細なし）`);
-  } else {
-    for (const d of ctx.wire_delivery) {
-      lines.push(
-        `- **${d.peer_id}** · ${d.event_id.slice(0, 8)}… · attempts ${d.attempts}${d.last_error ? ` · ${d.last_error}` : ""}`
-      );
-    }
-  }
-
-  lines.push("", "## Email Wire 配送待ち", "");
-  if (ctx.email_wire_pending.length === 0) {
-    lines.push(`（${ctx.email_wire_pending_count} 件 — 詳細なし）`);
-  } else {
-    for (const d of ctx.email_wire_pending) {
-      lines.push(
-        `- **${d.peer_id}** · ${d.event_id.slice(0, 8)}… · attempts ${d.attempts}${d.last_error ? ` · ${d.last_error}` : ""}`
-      );
-    }
-  }
-
-  lines.push(
-    "",
-    "## Email-Wire 配送待ち",
-    ""
-  );
-  if (ctx.email_wire_pending.length === 0) {
-    lines.push(`（${ctx.email_wire_pending_count} 件 — 詳細なし）`);
-  } else {
-    for (const d of ctx.email_wire_pending) {
-      lines.push(
-        `- **${d.peer_id}** · ${d.event_id.slice(0, 8)}… · attempts ${d.attempts}${d.last_error ? ` · ${d.last_error}` : ""}`
-      );
-    }
-    lines.push("", "`orgos protocol deliver status --event-id <uuid>`");
-  }
-
-  lines.push(
-    "",
-    "## Witness 確認待ち",
-    ""
-  );
-  if (ctx.witness_pending.length === 0) {
-    lines.push("（なし）");
-  } else {
-    for (const w of ctx.witness_pending) {
-      lines.push(`- **${w.subject}**${w.event_id ? ` · ${w.event_id.slice(0, 8)}…` : ""}`);
-      if (w.preview) lines.push(`  ${w.preview}`);
-    }
-  }
-
-  lines.push(
-    "",
-    "## Agent 報告チェーン",
-    "",
-    `- COO 中継待ち: ${ctx.agent_coo_relay_count} 件`,
-    `- Steward inbox: ${ctx.agent_steward_inbox_count} 件`,
-    ""
-  );
-
-  if (ctx.agent_steward_inbox.length > 0) {
-    lines.push("### Steward inbox（抜粋）", "");
-    for (const m of ctx.agent_steward_inbox) {
-      lines.push(`- **${m.id}** · ${m.field_agent} · ${m.subject}`);
-    }
-    lines.push("");
-  }
-
-  lines.push(
-    "",
-    "## その他",
-    "",
-    `- Wire 送信待ち: ${ctx.wire_pending_count} 件`,
-    `- Wire 配送待ち: ${ctx.wire_delivery_pending_count} 件`,
-    `- Email Wire 配送待ち: ${ctx.email_wire_pending_count} 件`,
-    `- Witness 確認待ち: ${ctx.witness_pending_count} 件`,
-    `- inbox 未処理: ${ctx.inbox_pending.length} 件`,
-    `- Mail Intake 未処理: ${ctx.mail_intake_pending_count} 件 · 要対応: ${ctx.mail_intake_action_required_count} 件`,
-    `- CEO インライン質問: ${ctx.ceo_inline_questions_pending_count} 件`,
-    `- escalate pending: ${ctx.escalate_pending_count} 件`,
-    `- COO relay: ${ctx.agent_coo_relay_count} 件 · Steward inbox: ${ctx.agent_steward_inbox_count} 件`,
-    "",
-    "## KPI",
-    ""
-  );
-
-  for (const k of ctx.kpis) {
-    lines.push(`- ${k.label}: ${k.value}`);
-  }
-
-  return lines.join("\n");
+  return `${lines.join("\n")}\n`;
 }
 
 export function buildTodaySummaryForPush(ctx: TodayContext): string {

@@ -82,6 +82,12 @@ export async function runMailIntakeSync(opts: {
     if (config?.receive?.notify_high_priority !== false && triage.highPriorityIds.length) {
       triage.notified = await notifyMailTriageHighPriority(triage.highPriorityIds);
     }
+    if (config?.receive?.auto_schedule_coordination !== false) {
+      const { runScheduleCoordinationAutoProcess } = await import(
+        "../lib/scheduling-coordination/auto-process.js"
+      );
+      await runScheduleCoordinationAutoProcess();
+    }
   }
 
   let wireScan: { scanned: number; ingested: number; skipped: number } | undefined;
@@ -393,12 +399,12 @@ export function runMailIntakeCeoShow(opts: { id: string; json?: boolean }): void
   console.log(formatCeoInlineQuestionDetail(question));
 }
 
-export function runMailIntakeCeoAnswer(opts: {
+export async function runMailIntakeCeoAnswer(opts: {
   id: string;
   fields: Record<string, string>;
   operator?: string;
   json?: boolean;
-}): void {
+}): Promise<void> {
   requireCliDataWrite({ command: "mail intake ceo answer", permission: "escalate:plan" });
   auditCliMutation("mail intake ceo answer", "answer");
   const question = findCeoInlineQuestion(opts.id);
@@ -415,7 +421,7 @@ export function runMailIntakeCeoAnswer(opts: {
     process.exit(1);
   }
   const updated = answerCeoInline(opts.id, opts.fields, opts.operator);
-  applyCeoInlineAnswerSideEffects(updated);
+  await applyCeoInlineAnswerSideEffects(updated);
   if (opts.json) {
     console.log(JSON.stringify(updated, null, 2));
     return;
@@ -477,13 +483,16 @@ export async function runMailSetupGmailCommunityLink(opts: {
   tenantId?: string;
   communityUrl?: string;
   ttlMinutes?: number;
+  expectEmail?: string;
 }): Promise<void> {
   const tenantId = opts.tenantId?.trim() || getTenantId();
   const communityUrl = opts.communityUrl?.trim() || getCommunityUrl();
+  const issuedForEmails = opts.expectEmail?.trim() ? [opts.expectEmail.trim()] : undefined;
 
   try {
     const bind = await resolveCommunityGmailBindForCli(tenantId, {
       ttlMinutes: opts.ttlMinutes,
+      issuedForEmails,
     });
     const connectUrl = buildCommunityMailConnectUrl(bind.tenant_id, bind.nonce, communityUrl);
     const payload = {
@@ -535,6 +544,7 @@ export async function runMailSetupGmail(opts: {
   tenantId?: string;
   communityUrl?: string;
   ttlMinutes?: number;
+  expectEmail?: string;
 }): Promise<void> {
   if (opts.communityLink) {
     await runMailSetupGmailCommunityLink({
@@ -542,6 +552,7 @@ export async function runMailSetupGmail(opts: {
       tenantId: opts.tenantId,
       communityUrl: opts.communityUrl,
       ttlMinutes: opts.ttlMinutes,
+      expectEmail: opts.expectEmail,
     });
     return;
   }

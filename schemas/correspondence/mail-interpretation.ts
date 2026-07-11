@@ -12,6 +12,19 @@ export const mailInterpretIntentSchema = z.enum([
 
 export const partyRoleSchema = z.enum(["sender", "recipient", "none", "unclear"]);
 
+export const scheduleReplyResponseSchema = z.enum([
+  "accept",
+  "decline",
+  "counter",
+  "unknown",
+]);
+
+export const scheduleCounterSlotSchema = z.object({
+  start: z.string(),
+  end: z.string().optional(),
+  label: z.string().optional(),
+});
+
 export const mailInterpretVoteSchema = z.object({
   model: z.string(),
   intent: mailInterpretIntentSchema,
@@ -20,6 +33,10 @@ export const mailInterpretVoteSchema = z.object({
   action_required: z.boolean(),
   summary_l1: z.string().max(500),
   confidence: z.number().min(0).max(1).default(0.5),
+  /** Structured schedule reply fields. Optional for backward-compatible queues. */
+  response: scheduleReplyResponseSchema.optional(),
+  slot_ids: z.array(z.string()).optional(),
+  counter_slots: z.array(scheduleCounterSlotSchema).optional(),
 });
 
 export const mailInterpretationResultSchema = z.object({
@@ -35,7 +52,15 @@ export const mailInterpretationResultSchema = z.object({
   votes: z.array(mailInterpretVoteSchema).default([]),
   needs_ceo_confirm: z.boolean().default(false),
   ceo_questions: z.array(z.string()).default([]),
+  /** Ensemble winner for schedule replies. Optional for old interpretation records. */
+  response: scheduleReplyResponseSchema.optional(),
+  slot_ids: z.array(z.string()).optional(),
+  counter_slots: z.array(scheduleCounterSlotSchema).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  dissent: z.array(z.string()).optional(),
 });
 
 export type MailInterpretVote = z.output<typeof mailInterpretVoteSchema>;
 export type MailInterpretationResult = z.output<typeof mailInterpretationResultSchema>;
+export type ScheduleReplyResponse = z.output<typeof scheduleReplyResponseSchema>;
+export type ScheduleCounterSlot = z.output<typeof scheduleCounterSlotSchema>;
