@@ -1,0 +1,18 @@
+as_of: "2026-07-11"
+currency: JPY
+entries:
+  - id: BANK-20260701-001
+    date: "2026-07-01"
+    direction: outflow
+    amount: 90000
+    category: advisory
+    description: CTR-001 年間保守 第1回支払
+    account_id: BANK-001
+    chart_account_id: "5400"
+    reference: AP-2026-STW-07
+    counterparty: 竹谷（Steward OS）
+    import_batch_id: BANK-IMPORT-2026-07-11
+    status: matched
+    source: import
+notes: |
+  ダミーデータ — 銀行 CSV 取込の正本。`orgos jp bank statement import --file ... --write` で追記。

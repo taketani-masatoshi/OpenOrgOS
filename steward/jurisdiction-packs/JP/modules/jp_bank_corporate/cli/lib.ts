@@ -22,6 +22,7 @@ import {
 import {
   buildCashflowSchedule,
   formatCashflowCsv,
+  formatCashflowDetailCsv,
   formatCashflowJson,
   formatCashflowMarkdown,
 } from "./cashflow-builder.js";
@@ -34,7 +35,14 @@ import {
 import { buildCalendarImport, type CalendarImportSource } from "./calendar-import.js";
 import { buildInvoiceArApEntries, mergeArApEntries } from "./ar-ap-sync.js";
 import { validateCollectionTermReferences } from "./collection-terms.js";
+import { validateArApPaidAmount } from "./ar-ap-amounts.js";
+import {
+  buildBankStatementEntries,
+  mergeBankStatementEntries,
+  readBankStatementCsvFile,
+} from "./bank-statement-import.js";
 import { generateCashflowExport } from "./cashflow-export.js";
+import { bankStatementFileSchema } from "../../../../../../schemas/jp-bank-corporate.js";
 
 export const MODULE_ID = "jp_bank_corporate";
 
@@ -42,20 +50,28 @@ export interface JpBankCashflowGenerationResult {
   schedule: CashflowSchedule;
   content: string;
   output_path: string;
+  detail_schedule_path?: string;
   wrote: boolean;
 }
 
 function cashflowOutputPath(
   granularity: CashflowGranularity,
-  format: "md" | "csv" | "json"
+  format: "md" | "csv" | "json" | "detail-csv"
 ): string {
-  const ext = format === "csv" ? "csv" : format === "json" ? "json" : "md";
+  const ext =
+    format === "csv" || format === "detail-csv"
+      ? "csv"
+      : format === "json"
+        ? "json"
+        : "md";
+  const suffix =
+    format === "detail-csv" ? `${granularity}-detail` : granularity;
   return join(
     getDocsDir(),
     "finance",
     "treasury",
     "cashflow-schedule",
-    `${currentDate()}-${granularity}.${ext}`
+    `${currentDate()}-${suffix}.${ext}`
   );
 }
 
@@ -83,11 +99,24 @@ export function generateJpBankCashflow(opts: {
         ? formatCashflowJson(schedule)
         : formatCashflowMarkdown(schedule);
   const absolutePath = cashflowOutputPath(granularity, format);
-  if (opts.write) writeTrackedFile(absolutePath, content);
+  if (opts.write) {
+    if (
+      granularity !== "daily" &&
+      (schedule.detail_rows?.length ?? 0) > 0
+    ) {
+      const detailPath = cashflowOutputPath(granularity, "detail-csv");
+      writeTrackedFile(detailPath, formatCashflowDetailCsv(schedule));
+      schedule.detail_schedule_path = repoRelativePath(detailPath);
+    }
+    const persisted =
+      format === "json" ? formatCashflowJson(schedule) : content;
+    writeTrackedFile(absolutePath, persisted);
+  }
   return {
     schedule,
     content,
     output_path: repoRelativePath(absolutePath),
+    detail_schedule_path: schedule.detail_schedule_path,
     wrote: opts.write === true,
   };
 }
@@ -282,6 +311,7 @@ export function runJpBankArApValidate(): void {
     if (entry.due_date < entry.booked_date) {
       errors.push(`${entry.id}: due_date before booked_date`);
     }
+    errors.push(...validateArApPaidAmount(entry));
   }
   errors.push(
     ...validateCollectionTermReferences(
@@ -345,6 +375,41 @@ export function runJpBankArApSync(opts: {
   for (const warning of result.warnings) console.warn(`⚠ ${warning}`);
 }
 
+export function runJpBankStatementImport(opts: {
+  file: string;
+  write?: boolean;
+  json?: boolean;
+}): void {
+  const rows = readBankStatementCsvFile(opts.file);
+  const result = buildBankStatementEntries(rows);
+
+  if (opts.json) {
+    console.log(JSON.stringify({ rows, entries: result.entries, warnings: result.warnings }, null, 2));
+    return;
+  }
+
+  if (!opts.write) {
+    console.log("# bank statement import — dry-run\n");
+    for (const entry of result.entries) {
+      console.log(
+        `- ${entry.date} ${entry.direction} ${formatCurrency(entry.amount)} ${entry.category} (${entry.id})`
+      );
+    }
+    for (const warning of result.warnings) console.warn(`⚠ ${warning}`);
+    console.log("\n--write で bank-statements.yaml に追記");
+    return;
+  }
+
+  const path = resolveFinanceFilePath("bank-statements.yaml");
+  let file = existsSync(path)
+    ? bankStatementFileSchema.parse(YAML.parse(readFileSync(path, "utf-8")))
+    : { currency: "JPY" as const, entries: [] };
+  const merged = mergeBankStatementEntries(file, result.entries);
+  writeYamlFile(path, merged.file);
+  console.log(`✓ bank statement import — ${merged.added} entries added`);
+  for (const warning of result.warnings) console.warn(`⚠ ${warning}`);
+}
+
 export function runJpBankCashflowExport(opts: { template?: string; write?: boolean; json?: boolean }): void {
   const template = opts.template ?? "cash-book-csv";
   const result = generateCashflowExport(template);
@@ -401,9 +466,15 @@ export function runJpBankPositionSkill(opts: { json?: boolean }): void {
   runJpBankPositionShow({ json: opts.json });
 }
 
+const CASHFLOW_STALE_DAYS = 7;
+
 /** L1 summary for Steward Chat Today context */
 export function getCashflowTodaySummary(): {
   schedule_path?: string;
+  detail_schedule_path?: string;
+  generated_at?: string;
+  age_days?: number;
+  stale?: boolean;
   shortfall_date?: string | null;
   runway_days?: number | null;
   required_funding_amount?: number | null;
@@ -420,17 +491,36 @@ export function getCashflowTodaySummary(): {
   if (!latest) return {};
   const absolutePath = join(dir, latest);
   const schedule_path = repoRelativePath(absolutePath);
-  if (!latestJson) return { schedule_path };
+  const detailCandidates = readdirSync(dir)
+    .filter((f) => f.endsWith("-detail.csv"))
+    .sort();
+  const detail_schedule_path = detailCandidates.at(-1)
+    ? repoRelativePath(join(dir, detailCandidates.at(-1)!))
+    : undefined;
+  if (!latestJson) {
+    return { schedule_path, detail_schedule_path };
+  }
   let schedule: CashflowSchedule;
   try {
     schedule = cashflowScheduleSchema.parse(
       JSON.parse(readFileSync(absolutePath, "utf-8"))
     );
   } catch {
-    return { schedule_path };
+    return { schedule_path, detail_schedule_path };
   }
+  const generatedDate = schedule.generated_at.slice(0, 10);
+  const ageDays = Math.max(
+    0,
+    Math.floor(
+      (Date.now() - Date.parse(`${generatedDate}T12:00:00`)) / 86_400_000
+    )
+  );
   return {
     schedule_path,
+    detail_schedule_path: schedule.detail_schedule_path ?? detail_schedule_path,
+    generated_at: schedule.generated_at,
+    age_days: ageDays,
+    stale: ageDays > CASHFLOW_STALE_DAYS,
     shortfall_date: schedule.shortfall_date ?? null,
     runway_days: schedule.runway_days ?? null,
     required_funding_amount: schedule.required_funding_amount ?? null,

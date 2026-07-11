@@ -56,6 +56,7 @@ orgos jp bank position show --as-of YYYY-MM-DD
 orgos jp bank calendar validate
 orgos jp bank calendar import --from payroll|tax|yojitsu|contracts
 orgos jp bank ar-ap list|validate|sync --from invoices
+orgos jp bank statement import --file path/to/bank.csv [--write]
 orgos jp bank cashflow export --template cash-book-csv
 orgos jp bank cashflow export --template mizuho-weekly
 orgos jp bank cashflow export --template tax-payment-csv

@@ -396,6 +396,7 @@ describe("jp_bank_corporate cashflow", () => {
       actual_amount: null,
       forecast_amount: null,
       balance_total: 1060,
+      detail_count: 1,
     });
     expect(rolled[1]).toMatchObject({
       direction: "outflow",
@@ -549,5 +550,34 @@ describe("jp_bank_corporate cashflow", () => {
     runJpBankCashflowGenerate({ granularity: "weekly", horizon: "4w", format: "md" });
     expect(spy.mock.calls.some((c) => String(c[0]).includes("資金繰り表"))).toBe(true);
     spy.mockRestore();
+  });
+
+  it("includes bank statement actuals and detail rows in mal schedule", () => {
+    const schedule = buildCashflowSchedule({
+      granularity: "weekly",
+      horizonStart: "2026-07-01",
+      horizon: "13w",
+    });
+    const actualSources = (schedule.detail_rows ?? []).map((row) => row.source);
+    expect(actualSources).toContain("import");
+    expect(schedule.rows.some((row) => row.detail_count && row.detail_count > 0)).toBe(true);
+  });
+
+  it("parses bank statement CSV fixtures", async () => {
+    const { parseBankStatementCsv } = await import(
+      "../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/bank-statement-import.js"
+    );
+    const { readFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const csv = readFileSync(
+      join(
+        process.cwd(),
+        "steward/jurisdiction-packs/JP/modules/jp_bank_corporate/seed/bank-statement.csv.example"
+      ),
+      "utf-8"
+    );
+    const rows = parseBankStatementCsv(csv);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.direction).toBe("inflow");
   });
 });

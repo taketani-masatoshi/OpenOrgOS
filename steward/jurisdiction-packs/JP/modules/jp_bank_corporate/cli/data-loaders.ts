@@ -3,10 +3,12 @@ import { join } from "node:path";
 import type { z } from "zod";
 import {
   arApLedgerFileSchema,
+  bankStatementFileSchema,
   cashflowExportTemplateSchema,
   collectionTermsFileSchema,
   paymentCalendarFileSchema,
   type ArApLedgerFile,
+  type BankStatementFile,
   type CashflowExportTemplate,
   type CollectionTermsFile,
   type PaymentCalendarFile,
@@ -20,6 +22,7 @@ const FINANCE_FILES = {
   paymentCalendar: "payment-calendar.yaml",
   arApLedger: "ar-ap-ledger.yaml",
   collectionTerms: "collection-terms.yaml",
+  bankStatements: "bank-statements.yaml",
 } as const;
 
 function financePath(filename: string): string {
@@ -63,6 +66,10 @@ export function loadArApLedger(): { path: string; data: ArApLedgerFile } | null 
 
 export function loadCollectionTerms(): { path: string; data: CollectionTermsFile } | null {
   return loadFinanceFile(FINANCE_FILES.collectionTerms, collectionTermsFileSchema);
+}
+
+export function loadBankStatements(): { path: string; data: BankStatementFile } | null {
+  return loadFinanceFile(FINANCE_FILES.bankStatements, bankStatementFileSchema);
 }
 
 export function loadCashflowExportTemplate(

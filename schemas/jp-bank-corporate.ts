@@ -48,6 +48,8 @@ export const arApEntrySchema = z.object({
   id: z.string().min(1),
   kind: arApKind,
   amount: z.number().positive(),
+  /** Amount already collected (AR) or paid (AP). Required semantics for status=partial. */
+  paid_amount: z.number().nonnegative().optional(),
   category: z.string().min(1).optional(),
   booked_date: dateString,
   due_date: dateString,
@@ -91,6 +93,29 @@ export const collectionTermsFileSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const bankStatementEntrySchema = z.object({
+  id: z.string().min(1),
+  date: dateString,
+  direction: z.enum(["inflow", "outflow"]),
+  amount: z.number().positive(),
+  category: z.string().min(1),
+  description: z.string().min(1),
+  account_id: z.string().regex(/^BANK-\d{3,}$/),
+  chart_account_id: z.string().optional(),
+  reference: z.string().optional(),
+  counterparty: z.string().optional(),
+  import_batch_id: z.string().min(1).optional(),
+  status: z.enum(["matched", "unmatched"]).default("unmatched"),
+  source: z.literal("import").default("import"),
+});
+
+export const bankStatementFileSchema = z.object({
+  as_of: dateString.optional(),
+  currency: z.literal("JPY").default("JPY"),
+  entries: z.array(bankStatementEntrySchema).default([]),
+  notes: z.string().optional(),
+});
+
 export const cashflowGranularity = z.enum(["daily", "weekly", "monthly"]);
 
 export const cashflowScheduleRowSchema = z.object({
@@ -109,6 +134,9 @@ export const cashflowScheduleRowSchema = z.object({
   balance_by_account: z.record(z.string(), z.number()).default({}),
   source: cashflowLineSource,
   line_id: z.string().optional(),
+  detail_count: z.number().int().nonnegative().optional(),
+  detail_line_ids: z.array(z.string()).optional(),
+  detail_schedule_path: z.string().optional(),
 });
 
 export const cashflowScheduleSchema = z.object({
@@ -126,6 +154,8 @@ export const cashflowScheduleSchema = z.object({
   required_funding_amount: z.number().nonnegative().nullable().optional(),
   required_funding_by_date: dateString.nullable().optional(),
   rows: z.array(cashflowScheduleRowSchema),
+  detail_rows: z.array(cashflowScheduleRowSchema).optional(),
+  detail_schedule_path: z.string().optional(),
   warnings: z.array(z.string()).default([]),
 });
 
@@ -157,6 +187,8 @@ export const cashflowExportColumnKey = z.enum([
   "bank_account_id",
   "source",
   "line_id",
+  "detail_count",
+  "detail_line_ids",
   "tax_id",
   "tax_name",
 ]);
@@ -184,6 +216,8 @@ export type PaymentCalendarFile = z.output<typeof paymentCalendarFileSchema>;
 export type ArApEntry = z.output<typeof arApEntrySchema>;
 export type ArApLedgerFile = z.output<typeof arApLedgerFileSchema>;
 export type CollectionTermsFile = z.output<typeof collectionTermsFileSchema>;
+export type BankStatementEntry = z.output<typeof bankStatementEntrySchema>;
+export type BankStatementFile = z.output<typeof bankStatementFileSchema>;
 export type CashflowGranularity = z.output<typeof cashflowGranularity>;
 export type CashflowScheduleRow = z.output<typeof cashflowScheduleRowSchema>;
 export type CashflowSchedule = z.output<typeof cashflowScheduleSchema>;

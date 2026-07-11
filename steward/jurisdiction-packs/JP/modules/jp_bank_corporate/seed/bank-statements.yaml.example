@@ -1,0 +1,15 @@
+as_of: "2026-07-01"
+currency: JPY
+entries:
+  - id: BANK-20260701-001
+    date: "2026-07-01"
+    direction: inflow
+    amount: 100000
+    category: rent
+    description: 賃料入金
+    account_id: BANK-001
+    chart_account_id: "4100"
+    import_batch_id: BANK-IMPORT-2026-07-01
+    status: unmatched
+    source: import
+notes: サンプル — CSV 取込後の正本は data/finance/bank-statements.yaml

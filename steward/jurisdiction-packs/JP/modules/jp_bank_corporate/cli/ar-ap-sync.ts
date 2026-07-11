@@ -114,6 +114,7 @@ export function buildInvoiceArApEntries(
           description: `${property.name} ${invoice.month} 請求`,
           account_id: accountId,
           invoice_id: invoiceId,
+          collection_term_id: "term-ar-rent",
           due_date_source: "invoice-payment-due-date",
           origin_source: "invoice",
           origin_id: `${module.id}:${propertyId}:${invoice.fiscalYear}:${invoice.month}`,

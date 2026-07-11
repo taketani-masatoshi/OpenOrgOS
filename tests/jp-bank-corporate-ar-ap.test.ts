@@ -24,6 +24,10 @@ import {
   mergeArApEntries,
 } from "../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/ar-ap-sync.js";
 import {
+  resolveArApPlannedAmount,
+  resolveArApRemainingAmount,
+} from "../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/ar-ap-amounts.js";
+import {
   arApEntrySchema,
   arApLedgerFileSchema,
   collectionTermsFileSchema,
@@ -75,11 +79,38 @@ describe("jp_bank_corporate ar-ap", () => {
     spy.mockRestore();
   });
 
-  it("ar-ap sync invoices returns zero rows when artifacts are absent", () => {
+  it("ar-ap sync invoices dry-run skips months without artifacts", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runJpBankArApSync({ from: "invoices", fy: "FY2026", month: "2026-07" });
+    runJpBankArApSync({ from: "invoices", fy: "FY2099", month: "2099-01" });
     expect(spy.mock.calls.some((c) => String(c[0]).includes("dry-run"))).toBe(true);
     spy.mockRestore();
+  });
+
+  it("syncs mal bancho July invoice artifact into AR entries", () => {
+    const synced = buildInvoiceArApEntries({ fy: "FY2026", month: "2026-07" });
+    expect(synced.entries).toHaveLength(1);
+    expect(synced.entries[0]).toMatchObject({
+      id: "AR-INV-BANCHO-2026-07",
+      collection_term_id: "term-ar-rent",
+      amount: 100000,
+    });
+  });
+
+  it("resolves partial AR/AP amounts from paid_amount", () => {
+    const entry = arApEntrySchema.parse({
+      id: "AP-PARTIAL",
+      kind: "ap",
+      amount: 180000,
+      paid_amount: 90000,
+      booked_date: "2026-06-01",
+      due_date: "2026-07-15",
+      collected_or_paid_date: "2026-07-01",
+      counterparty: "fixture",
+      description: "fixture",
+      status: "partial",
+    });
+    expect(resolveArApRemainingAmount(entry)).toBe(90000);
+    expect(resolveArApPlannedAmount(entry)).toBe(90000);
   });
 
   it("computes collection-term due dates in calendar days", () => {
@@ -162,6 +193,7 @@ describe("jp_bank_corporate ar-ap", () => {
       due_date: "2026-08-31",
       due_date_source: "invoice-payment-due-date",
       origin_source: "invoice",
+      collection_term_id: "term-ar-rent",
     });
     const empty = arApLedgerFileSchema.parse({ currency: "JPY", entries: [] });
     const once = mergeArApEntries(empty, synced.entries);

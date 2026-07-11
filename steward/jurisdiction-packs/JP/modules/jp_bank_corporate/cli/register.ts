@@ -11,6 +11,7 @@ import {
   runJpBankCashflowGenerate,
   runJpBankPositionShow,
   runJpBankPositionSkill,
+  runJpBankStatementImport,
   runJpBankTreasurySkill,
   MODULE_ID,
 } from "./lib.js";
@@ -113,6 +114,22 @@ function registerJpBankCommands(program: Command): void {
         from: opts.from,
         fy: opts.fy,
         month: opts.month,
+        write: opts.write,
+        json: opts.json,
+      })
+    );
+
+  const statement = bank.command("statement").description("Bank statement import");
+
+  statement
+    .command("import")
+    .description("Import bank statement CSV into bank-statements.yaml")
+    .requiredOption("--file <path>", "CSV file path")
+    .option("--write", "Append to bank-statements.yaml")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runJpBankStatementImport({
+        file: opts.file,
         write: opts.write,
         json: opts.json,
       })

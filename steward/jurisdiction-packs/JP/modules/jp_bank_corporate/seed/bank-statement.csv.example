@@ -1,0 +1,3 @@
+date,direction,amount,category,description,account_id,reference,counterparty
+2026-07-01,inflow,100000,rent,番町賃料入金,BANK-001,AR-2026-001,番町テナント
+2026-07-25,outflow,320000,給与,三塚給与7月分,BANK-001,PAY-2026-07-25,

@@ -22,7 +22,8 @@ import type {
   PaymentCalendarEntry,
 } from "../../../../../../schemas/jp-bank-corporate.js";
 import type { ChartOfAccounts } from "../../../../../../schemas/finance/types.js";
-import { loadArApLedger, loadCollectionTerms, loadPaymentCalendar } from "./data-loaders.js";
+import { loadArApLedger, loadCollectionTerms, loadPaymentCalendar, loadBankStatements } from "./data-loaders.js";
+import { resolveArApRemainingAmount } from "./ar-ap-amounts.js";
 import { resolveDefaultAccountId } from "./calendar-import.js";
 import { resolveChartAccountId } from "./chart-account.js";
 
@@ -326,6 +327,7 @@ export function rollupCashflowRows(
     hasActual: boolean;
     hasForecast: boolean;
     count: number;
+    detailLineIds: string[];
     closingRow: CashflowScheduleRow;
   }
 
@@ -344,6 +346,7 @@ export function rollupCashflowRows(
       hasActual: false,
       hasForecast: false,
       count: 0,
+      detailLineIds: [],
       closingRow: row,
     };
     bucket.planned += row.planned_amount;
@@ -356,6 +359,7 @@ export function rollupCashflowRows(
       bucket.hasForecast = true;
     }
     bucket.count += 1;
+    if (row.line_id) bucket.detailLineIds.push(row.line_id);
     bucket.closingRow = row;
     buckets.set(key, bucket);
   }
@@ -393,6 +397,8 @@ export function rollupCashflowRows(
         balance_by_account: { ...closing.balance_by_account },
         source: "aggregate",
         line_id: `rollup-${bucket.period.period_key}-${bucket.direction}`,
+        detail_count: bucket.count,
+        detail_line_ids: [...bucket.detailLineIds],
       };
     });
 }
@@ -488,20 +494,41 @@ export class CashflowScheduleBuilder {
         : undefined;
       if (cashDate < horizonStart || cashDate > horizonEnd) continue;
       const direction = entry.kind === "ar" ? "inflow" : "outflow";
+      const remaining = resolveArApRemainingAmount(entry);
       items.push({
         line_id: entry.id,
         date: cashDate,
         direction,
         category: entry.category ?? (entry.kind === "ar" ? "売掛回収" : "買掛支払"),
         description: entry.description,
-        amount: entry.amount,
+        amount: remaining,
         account_id: entry.account_id ?? term?.default_account_id ?? defaultAccountId,
         chart_account_id: entry.chart_account_id ?? term?.chart_account_id,
         source: "ar-ap",
-        planned_amount: entry.status === "open" ? entry.amount : entry.amount * 0.5,
-        actual_amount: entry.status === "partial" ? entry.amount * 0.5 : null,
+        planned_amount: remaining,
+        actual_amount: null,
         forecast_amount: null,
         origin: "ar-ap",
+      });
+    }
+
+    const bankStatements = loadBankStatements();
+    for (const entry of bankStatements?.data.entries ?? []) {
+      if (entry.date < horizonStart || entry.date > horizonEnd) continue;
+      items.push({
+        line_id: entry.id,
+        date: entry.date,
+        direction: entry.direction,
+        category: entry.category,
+        description: entry.description,
+        amount: entry.amount,
+        account_id: entry.account_id,
+        chart_account_id: entry.chart_account_id,
+        source: "import",
+        planned_amount: 0,
+        actual_amount: entry.amount,
+        forecast_amount: null,
+        origin: "other",
       });
     }
 
@@ -779,6 +806,7 @@ export class CashflowScheduleBuilder {
       required_funding_amount: Math.max(0, -minimumBalance),
       required_funding_by_date:
         minimumBalance < 0 ? minimumBalanceDate : null,
+      detail_rows: rows,
       rows: rollupCashflowRows(rows, this.options.granularity),
       warnings: opening.warnings,
     };
@@ -838,7 +866,7 @@ export function formatCashflowMarkdown(schedule: CashflowSchedule): string {
 
 export function formatCashflowCsv(schedule: CashflowSchedule): string {
   const header =
-    "period_key,period_start,period_end,direction,category,description,planned_amount,actual_amount,forecast_amount,balance_total,account_id,chart_account_id,source,line_id,required_funding_amount,required_funding_by_date";
+    "period_key,period_start,period_end,direction,category,description,planned_amount,actual_amount,forecast_amount,balance_total,account_id,chart_account_id,source,line_id,detail_count,detail_line_ids,required_funding_amount,required_funding_by_date";
   const csvCell = (value: string | number | null | undefined): string => {
     const text = value == null ? "" : String(value);
     return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -859,8 +887,39 @@ export function formatCashflowCsv(schedule: CashflowSchedule): string {
       r.chart_account_id ?? "",
       r.source,
       r.line_id ?? "",
+      r.detail_count ?? "",
+      r.detail_line_ids?.join(";") ?? "",
       schedule.required_funding_amount ?? "",
       schedule.required_funding_by_date ?? "",
+    ].map(csvCell).join(",")
+  );
+  return [header, ...body].join("\n");
+}
+
+export function formatCashflowDetailCsv(schedule: CashflowSchedule): string {
+  const rows = schedule.detail_rows ?? schedule.rows;
+  const header =
+    "period_key,period_start,period_end,direction,category,description,planned_amount,actual_amount,forecast_amount,balance_total,account_id,chart_account_id,source,line_id";
+  const csvCell = (value: string | number | null | undefined): string => {
+    const text = value == null ? "" : String(value);
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+  const body = rows.map((r) =>
+    [
+      r.period_key,
+      r.period_start,
+      r.period_end,
+      r.direction,
+      r.category,
+      r.description,
+      r.planned_amount,
+      r.actual_amount ?? "",
+      r.forecast_amount ?? "",
+      r.balance_total,
+      r.account_id ?? "",
+      r.chart_account_id ?? "",
+      r.source,
+      r.line_id ?? "",
     ].map(csvCell).join(",")
   );
   return [header, ...body].join("\n");
