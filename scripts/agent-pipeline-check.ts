@@ -73,7 +73,12 @@ function runNpmScript(script: string): void {
   execSync(`npm run ${script}`, { stdio: "inherit", cwd: process.cwd() });
 }
 
-const externalScripts = ["agent:catalog:check", "agent:capability:check", "agent:docs:check"] as const;
+const externalScripts = [
+  "agent:catalog:check",
+  "agent:capability:check",
+  "agent:docs:check",
+  "skill:dispatch:check",
+] as const;
 
 let failed = false;
 for (const script of externalScripts) {

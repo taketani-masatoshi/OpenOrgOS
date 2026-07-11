@@ -8,5 +8,8 @@ export default defineConfig({
     // tenant's routing-queue on disk. Running test files sequentially removes
     // cross-file races on those shared JSONL/work-order files so CI is reliable.
     fileParallelism: false,
+    // setup-restore-protocol serializes fixture restores across concurrent
+    // Vitest processes and caps lock waits at 30 seconds.
+    hookTimeout: 40_000,
   },
 });

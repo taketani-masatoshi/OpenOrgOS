@@ -27,6 +27,10 @@ export function validateSkillDispatchReachability(
         issues.push(
           `${skill.id}: cli_command "${skill.cli_command}" unwired — ${byCli.reason}`
         );
+      } else if (skill.deferred) {
+        if (byId.status !== "deferred") {
+          issues.push(`${skill.id}: deferred skill expected deferred by id, got ${byId.status}`);
+        }
       } else if ("skill" in byCli && byCli.skill?.id !== skill.id) {
         issues.push(
           `${skill.id}: cli_command "${skill.cli_command}" resolves to ${byCli.skill?.id}`
