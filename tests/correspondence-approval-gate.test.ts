@@ -35,7 +35,7 @@ function seedMailSetupForTests(): void {
       provider: "smtp",
       from: { name: "Test Co", email: "rep@test.co.jp" },
       smtp: { host: "smtp.test.local", port: 587, secure: false },
-      inbox: { sync: "stub" },
+      receive: { sync: "stub" },
     }),
     "utf-8"
   );
@@ -45,7 +45,7 @@ function seedMailSetupForTests(): void {
 
 function cleanup(): void {
   for (const p of [
-    join(getDataDir(), "org"),
+    join(getDataDir(), "org", "pending-approvals.yaml"),
     join(getDataDir(), "protocol"),
     join(getDataDir(), "company-events.yaml"),
     join(getDocsDir(), "executive", "correspondence-drafts"),
@@ -95,11 +95,12 @@ describe("correspondence approval gate", () => {
     });
     approveOrgApproval({
       approvalId: approvalId!,
-      approverId: "段燕燕",
-      operatorId: "ceo",
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
+      humanReviewConfirmed: true,
     });
     await expect(
-      sendApprovedCorrespondence({ draftId: draft.draft_id, operatorId: "ceo" })
+      sendApprovedCorrespondence({ draftId: draft.draft_id, operatorId: "OP-001" })
     ).rejects.toThrow(CorrespondenceMailSetupError);
   });
 
@@ -115,13 +116,14 @@ describe("correspondence approval gate", () => {
 
     approveOrgApproval({
       approvalId: approvalId!,
-      approverId: "段燕燕",
-      operatorId: "ceo",
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
+      humanReviewConfirmed: true,
     });
 
     const result = await sendApprovedCorrespondence({
       draftId: draft.draft_id,
-      operatorId: "ceo",
+      operatorId: "OP-001",
     });
 
     expect(result.draft.status).toBe("sent");
@@ -129,7 +131,7 @@ describe("correspondence approval gate", () => {
     expect(result.sendResult.mode).toBe("dry_run");
 
     const reloaded = loadCorrespondenceDraft(draft.draft_id);
-    expect(reloaded.sent_by).toBe("ceo");
+    expect(reloaded.sent_by).toBe("OP-001");
     expect(reloaded.company_event_id).toBe(result.companyEventId);
   });
 

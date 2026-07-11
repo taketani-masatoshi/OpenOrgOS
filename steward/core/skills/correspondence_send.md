@@ -1,6 +1,6 @@
 # Skill: correspondence_send（承認済みメール送信）
 
-**runtime:** cli · **Agent:** Secretary のみ
+**runtime:** cli · **Agent:** Mail Outbound のみ
 
 ## 目的
 
@@ -32,11 +32,14 @@ npm run orgos -- secretary mail setup-guide
 ## CLI
 
 ```bash
-# 1. 承認（CEO / approver）
-npm run orgos -- org approval approve --id APR-20260709-001 --approver "段燕燕"
+# 1. 文案確認（CEO / approver）
+npm run orgos -- secretary correspondence show --id DRAFT-20260709-001
 
-# 2. 送信（approver 権限）
-npm run orgos -- secretary correspondence send --id DRAFT-20260709-001
+# 2. 承認（--reviewed 必須 · 上記全文を読んだ後）
+npm run orgos -- org approval approve --id APR-20260709-001 --approver "段燕燕" --reviewed
+
+# 3. 送信（ceo/approver · STEWARD_OPERATOR_AUTH=1 + operator キー）
+npm run orgos -- secretary correspondence send --id DRAFT-20260709-001 --operator-id OP-001
 ```
 
 Skill 経由:

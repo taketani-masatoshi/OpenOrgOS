@@ -77,6 +77,22 @@ npm run orgos -- validate
 
 ---
 
+## CEO 直接コミュニケーション
+
+秘書が CEO に確認する際は **CONSULT MD を既定で使わない**。
+
+正本: [ceo-communication-ux.md](ceo-communication-ux.md)
+
+| 優先 | 手段 | CLI / 正本 |
+|------|------|-----------|
+| 1 | Today インライン質問 | `data/executive/ceo-inline-questions.yaml` · `mail intake ceo answer` |
+| 2 | 返信下書き承認 | `mail outbound correspondence draft` → `org approval approve --reviewed` |
+| 3 | CONSULT MD | `ceo_question_mode: consult` 時のみ |
+
+Agent 間（Mail Intake → Secretary / Mail Outbound）では handoff に **文脈を省略しない** — 上記 CEO UX とは別レイヤ。
+
+---
+
 ## 下書き連携
 
 `secretary correspondence draft` は:

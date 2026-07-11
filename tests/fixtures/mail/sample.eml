@@ -1,0 +1,9 @@
+From: Sender <sender@example.com>
+To: Secretary <secretary@example.com>
+Subject: 請求書のご送付
+Message-ID: <test-message-001@example.com>
+Date: Thu, 10 Jul 2026 08:00:00 +0900
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+お世話になっております。請求書を送付いたします。

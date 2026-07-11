@@ -1,5 +1,5 @@
-import type { OrgApprovalRequest } from "../../schemas/org/approval.js";
-import type { OrgRef } from "../../schemas/protocol/org-event.js";
+import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
+import type { OrgRef } from "../../../schemas/protocol/org-event.js";
 import { loadCompany, loadContract } from "../data.js";
 import { exportInboxEntries, exportOutboxEntries } from "../protocol/inbox-export.js";
 import { findPeerByOrgRef } from "../protocol/inbound-verify.js";
@@ -59,6 +59,7 @@ export interface HumanMessageSummary {
   wire_event_id?: string;
   can_approve?: boolean;
   can_send?: boolean;
+  can_witness?: boolean;
 }
 
 export interface MailThreadSummary {
@@ -113,6 +114,10 @@ const HUB_DISPLAY: Record<string, string> = {
   "HUB-B": "公証機関 B",
 };
 
+function hubDisplayName(hubId: string): string {
+  return HUB_DISPLAY[hubId] ?? hubId;
+}
+
 function humanizeBodyText(text: string, contractId?: string): string {
   if (contractId) {
     const stripped = text.replace(new RegExp(`^${contractId}\\s*`), "").trim();
@@ -125,6 +130,7 @@ function contractShortTitle(contractId: string | undefined): string | undefined 
   if (!contractId) return undefined;
   try {
     const contract = loadContract(contractId);
+    if (!contract) return undefined;
     let title = contract.name.split("·")[0]?.trim() ?? contract.name;
     const open = (title.match(/（/g) ?? []).length;
     const close = (title.match(/）/g) ?? []).length;

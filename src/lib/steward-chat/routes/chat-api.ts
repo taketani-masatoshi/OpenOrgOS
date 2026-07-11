@@ -13,6 +13,12 @@ import {
 } from "../chat-thread.js";
 import { approveFromStewardChat, flushWireDeliveryFromChat } from "../wire-approve.js";
 import {
+  listPendingCeoInlineQuestions,
+  findCeoInlineQuestion,
+  answerCeoInline,
+  applyCeoInlineAnswerSideEffects,
+} from "../../correspondence/ceo-inline-question.js";
+import {
   flushWitnessPendingFromChat,
   registerWitnessFromChat,
   verifyWitnessFromChat,
@@ -354,6 +360,76 @@ export async function handleChatApi(
       const message = err instanceof Error ? err.message : String(err);
       appendChatAudit({
         action: "witness_flush",
+        operator_id: ctx.user.operator_id,
+        approver_id: ctx.user.approver_id,
+        ok: false,
+        path: pathname,
+        detail: message,
+      });
+      json(res, 400, { ok: false, error: message });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/ceo-questions" && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    const questions = listPendingCeoInlineQuestions();
+    json(res, 200, { ok: true, questions });
+    return true;
+  }
+
+  const ceoShowMatch = pathname.match(/^\/chat\/v1\/ceo-questions\/([^/]+)$/);
+  if (ceoShowMatch && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    const questionId = decodeURIComponent(ceoShowMatch[1]!);
+    const question = findCeoInlineQuestion(questionId);
+    if (!question) {
+      json(res, 404, { ok: false, error: `CEO question not found: ${questionId}` });
+      return true;
+    }
+    json(res, 200, { ok: true, question });
+    return true;
+  }
+
+  const ceoAnswerMatch = pathname.match(/^\/chat\/v1\/ceo-questions\/([^/]+)\/answer$/);
+  if (ceoAnswerMatch && method === "POST") {
+    if (!requireChatPermission(ctx.user, "chat:approve", res)) return true;
+    const questionId = decodeURIComponent(ceoAnswerMatch[1]!);
+    const body = await readBody(req);
+    try {
+      const parsed = JSON.parse(body || "{}") as { fields?: Record<string, string> };
+      if (!parsed.fields || typeof parsed.fields !== "object") {
+        json(res, 422, { ok: false, error: "fields object required" });
+        return true;
+      }
+      const question = findCeoInlineQuestion(questionId);
+      if (!question) {
+        json(res, 404, { ok: false, error: `CEO question not found: ${questionId}` });
+        return true;
+      }
+      if (question.status !== "pending") {
+        json(res, 400, { ok: false, error: `Question ${questionId} is already ${question.status}` });
+        return true;
+      }
+      const answered = answerCeoInline(
+        questionId,
+        parsed.fields,
+        ctx.user.approver_id ?? ctx.user.operator_id
+      );
+      applyCeoInlineAnswerSideEffects(answered);
+      appendChatAudit({
+        action: "ceo_answer",
+        operator_id: ctx.user.operator_id,
+        approver_id: ctx.user.approver_id,
+        ok: true,
+        path: pathname,
+        detail: questionId,
+      });
+      json(res, 200, { ok: true, question: answered });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      appendChatAudit({
+        action: "ceo_answer",
         operator_id: ctx.user.operator_id,
         approver_id: ctx.user.approver_id,
         ok: false,

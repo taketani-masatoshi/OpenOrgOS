@@ -23,6 +23,28 @@ agents:
     reports_to: coo
     scope: スケジュール · タスク · 1-on-1 · 対外下書き
 
+  mail_intake:
+    id: mail_intake
+    name: Mail Intake Agent
+    name_ja: メール取込
+    path: steward/core/agents/mail_intake_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: secretary
+    scope: 受信監視 · 分類 · 通知 · Mail Outbound ハンドオフ
+
+  mail_outbound:
+    id: mail_outbound
+    name: Mail Outbound Agent
+    name_ja: メール送信
+    path: steward/core/agents/mail_outbound_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: secretary
+    scope: 社外メール下書き · 承認起案 · 承認済み送信
+
   setup:
     id: setup
     name: Setup Agent

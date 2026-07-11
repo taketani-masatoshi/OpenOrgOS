@@ -110,25 +110,31 @@ skills:
   - id: external_correspondence
     file: external_correspondence.md
     runtime: agent
-    agent: Secretary
+    agent: Mail Outbound
     description: 社外連絡下書き
   - id: correspondence_draft
     file: correspondence_draft.md
     runtime: cli
     cli_command: correspondence-draft
-    agent: Secretary
+    agent: Mail Outbound
     description: 対外連絡下書き + 承認起案
+  - id: mail_intake_triage
+    file: mail_intake_triage.md
+    runtime: cli
+    cli_command: mail-intake-triage
+    agent: Mail Intake
+    description: 受信メールルール分類 + triage queue
   - id: correspondence_send
     file: correspondence_send.md
     runtime: cli
     cli_command: correspondence-send
-    agent: Secretary
+    agent: Mail Outbound
     description: 承認済みメール送信（SMTP）
   - id: slack_notify
     file: slack_notify.md
     runtime: cli
     cli_command: slack-notify
-    agent: Secretary
+    agent: Mail Outbound
     description: 承認済み Slack 通知
   - id: tenant_integrations_setup
     file: tenant_integrations_setup.md

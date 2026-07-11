@@ -73,11 +73,9 @@ npm run orgos -- executive brief --week
 |-------|------|
 | [schedule_management](../steward/core/skills/schedule_management.md) | カレンダー確認・競合チェック |
 | [one_on_one_prep](../steward/core/skills/one_on_one_prep.md) | 1-on-1 前ブリーフ |
-| [external_correspondence](../steward/core/skills/external_correspondence.md) | 社外メール下書き・ルーティング |
-| [correspondence_draft](../steward/core/skills/correspondence_draft.md) | 下書き + **org approval 起案**（送信しない） |
-| [correspondence_send](../steward/core/skills/correspondence_send.md) | **承認済み** メール送信（SMTP · cli） |
-| [slack_notify](../steward/core/skills/slack_notify.md) | **承認済み** Slack webhook（cli） |
 | [inter_org_notice_draft](../steward/core/skills/inter_org_notice_draft.md) | **組織間 wire 起案**（draft のみ · approve は CEO） |
+
+**対外メール送信は [Mail Outbound Agent](mail_outbound_agent.md) に分離** — 下書き · 承認起案 · SMTP 送信。
 
 ---
 
@@ -97,12 +95,14 @@ npm run orgos -- executive brief --week
 - 財務数値・契約金額・ランウェイの開示（社外・社内問わず Secretary 経由では回答しない）
 - `executive-remaining-tasks.md` の直接編集（経営 P0 は Steward 領域）
 - `external_visible: false` 予定の社外共有
-- 自動送信（メール・LINE 等）— 常に人間承認
-- **`secretary correspondence send` / `skills run correspondence-send` は `org approval approve` 後のみ**
+- 自動送信（メール・LINE 等）— 常に人間承認（**Mail Outbound 経由**）
+- **Agent は `org approval approve` を実行しない** — 文案提示後、人間 CEO が `--reviewed` 付きで承認
 
-## 社外連絡先の照合と更新
+## 社外連絡先の照合（Mail Outbound と共有）
 
-Secretary はメール下書き・送信前に **必ず正本を照合** する。推測で宛先を設定しない。
+宛先照合・登録 CLI は Secretary 名前空間のまま（`secretary contacts`）。**送信下書き作成は Mail Outbound** が担当。
+
+Mail Outbound はメール下書き・送信前に **必ず正本を照合** する。推測で宛先を設定しない。
 
 ### 照合順（宛先決定）
 
@@ -119,10 +119,20 @@ Secretary はメール下書き・送信前に **必ず正本を照合** する�
 
 | 状況 | Secretary の動作 |
 |------|------------------|
-| 人間が **知らない宛先** の設定を依頼 | **「正本に未登録のため把握していません」** と回答。推測・捏造しない |
+| 人間が **知らない宛先** の設定を依頼 | **「正本に未登録のため把握していません」** と回答（Mail Outbound も同様） |
 | 人間が **新しいメールアドレスを開示** | 上記正本を **更新** し、更新内容を報告する |
 | 経理窓口と代表者の区別が不明 | 用途（請求 / 代表業務 / 個人契約）を確認してから登録 |
 | 同一人物の複数人格（例: STK-001 個人 vs STK-003 法人代表） | **別 contact として分離** — 混同禁止 |
+
+### CEO への確認（UX 優先）
+
+**CONSULT MD は最後の手段。** 日常の確認は次の順で行う。
+
+1. **Today / Steward Chat インライン質問** — `ceo-inline-questions.yaml` · はい/いいえ・短文で回答（CEO の仕事を増やさない）
+2. **承認ゲート付き下書き** — 返信文案を見せてから送信（断定はしない）
+3. **CONSULT ファイル** — 複数 Agent · 長文エスカレーションのみ（`ORGOS_MAIL_CEO_QUESTION_MODE=consult`）
+
+メール解釈は **複数 LLM 多数決**（既定 ON · `ORGOS_MAIL_INTERPRET_MODELS`）で貸借関係・意図を構造化。不一致時のみ CEO に短く確認する。
 
 ### 更新手順（人間開示時）
 
@@ -144,42 +154,47 @@ npm run orgos -- validate
 - `--contact-ref EXT-...` を優先（正本の `email` を `--to` に反映）
 - `--to` を手入力する場合も、正本と一致するか確認する
 - 正本にない `--to` は **警告** を出し、送信前に人間が正本登録を完了していること
-- **実送信前** `orgos secretary mail setup-guide` が ready でない場合は、送信ではなく **初期設定ガイドを先に提示** する
+- **実送信前** `orgos mail outbound mail setup-guide` が ready でない場合は、送信ではなく **初期設定ガイドを先に提示** する
 
 ---
 
-### 対外送信ワークフロー（承認ゲート）
+### 対外送信（Mail Outbound に委譲）
 
-```
-Secretary draft → org approval propose (pending)
-       ↓
-人間 approve (CEO / approver)
-       ↓
-secretary correspondence send  → SMTP / Slack webhook
-       ↓
-company event 記録（Wire 配送ではない）
-```
+社外メール / Slack の下書き・承認・送信は **[mail_outbound_agent.md](mail_outbound_agent.md)** が担当。Secretary はスケジュール調整と Mail Intake ハンドオフの窓口。
 
 ```bash
-# 1. 下書き + 承認起案
-npm run orgos -- secretary correspondence draft --to "..." --subject "..." --body "..."
+# Mail Outbound 正本 CLI
+npm run orgos -- mail outbound correspondence draft ...
+npm run orgos -- mail outbound correspondence show --id DRAFT-...
+npm run orgos -- org approval approve --id APR-... --approver "CEO" --reviewed
+npm run orgos -- mail outbound correspondence send --id DRAFT-...
 
-# 2. 人間承認
-npm run orgos -- org approval approve --id APR-... --approver "CEO"
-
-# 3. 送信（approver 権限 · operator-id ログ）
-npm run orgos -- secretary correspondence send --id DRAFT-...
-
-# 送信前チェック（未設定ならガイド表示 · exit 1）
-npm run orgos -- secretary mail setup-guide
-
-# メール一覧（読取専用）
-npm run orgos -- secretary mail list
+# 後方互換
+npm run orgos -- secretary correspondence draft ...
 ```
 
-**送信ブロック:** 代表メール未登録 · `mail-config.yaml` 未作成 · SMTP 認証未設定のときは `correspondence send` を拒否し、`setup-guide` を表示する。`--dry-run` は EML 出力のみ許可。
+---
 
-Mail 設定: `records/executive/mail-config.yaml`（L2）· `ORGOS_SMTP_*` · `ORGOS_SLACK_WEBHOOK_URL`
+### Mail Intake からの受信ハンドオフ
+
+Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inbound-*.md` を受け取ったら:
+
+1. Secretary が L1 要約を **Mail Outbound に引き渡し**
+2. **Mail Outbound** が返信必要なら `correspondence_draft` で送信下書きを作成
+3. 本文は `records/executive/mail-received/*.eml` を @file のみ（L2）
+4. **Secretary は受信ポーリング · 送信下書き · 迷惑判定の正本を持たない**
+
+### 「inbox」用語の区別（混同禁止）
+
+| パス / 設定 | 意味 | 担当 |
+|-------------|------|------|
+| `records/executive/mail-received/` | **Mail Intake** 受信 .eml（L2） | Mail Intake → Secretary ハンドオフ |
+| `data/executive/mail-triage-queue.yaml` | 受信分類キュー（L1） | Mail Intake |
+| `docs/executive/correspondence-drafts/inbound-*.md` | Mail Intake からの受信ハンドオフ | Mail Outbound（返信下書き） |
+| `mail-config.receive` | IMAP 同期設定 | Mail Intake（Secretary は Read） |
+| `docs/io/inbox/` | **書類**受付トレイ（PDF 等） | Operations |
+| `docs/protocol/inbox/` | **Wire** 組織間通知の受信箱 | Wire / Protocol |
+| `agent_steward_inbox` | Agent 報告キュー（メールではない） | Executive Steward |
 
 テナント統合メタ: `data/integrations/integrations.yaml`（L2 · gitignore）· 充足確認 `orgos integrations status`
 

@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { listCorrespondenceDrafts } from "./draft.js";
-import { getMailInboxDir, getMailSentDir } from "./paths.js";
+import { getMailReceivedDir, getMailSentDir } from "./paths.js";
 import { loadMailConfig } from "./mail-config.js";
 
 export interface MailListEntry {
@@ -53,9 +53,9 @@ export function listExecutiveMail(opts?: {
   }
 
   if (direction === "received" || direction === "all") {
-    const inboxDir = getMailInboxDir();
-    if (existsSync(inboxDir)) {
-      for (const name of readdirSync(inboxDir)) {
+    const receivedDir = getMailReceivedDir();
+    if (existsSync(receivedDir)) {
+      for (const name of readdirSync(receivedDir)) {
         if (!name.endsWith(".eml") && !name.endsWith(".md")) continue;
         entries.push({
           id: name,
@@ -71,9 +71,9 @@ export function listExecutiveMail(opts?: {
   const config = loadMailConfig();
   if (entries.length === 0 && (direction === "received" || direction === "all")) {
     entries.push({
-      id: "inbox-stub",
+      id: "correspondence-receive-stub",
       direction: "received",
-      subject: `(inbox sync: ${config?.inbox?.sync ?? "stub"} — configure records/executive/mail-config.yaml)`,
+      subject: `(correspondence receive sync: ${config?.receive?.sync ?? "stub"} — not docs/io/inbox nor Wire protocol/inbox)`,
       date: new Date().toISOString(),
       source: "stub",
     });

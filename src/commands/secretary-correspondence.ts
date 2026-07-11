@@ -15,9 +15,14 @@ import {
   assessMailSetupReadiness,
   CorrespondenceMailSetupError,
 } from "../lib/correspondence/mail-setup-readiness.js";
-import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
+import { auditCliMutation, requireCliDataWrite, requireCliCorrespondenceSend } from "../lib/console-auth/cli-operator.js";
 import { getCliOperatorContext } from "../lib/console-auth/cli-operator.js";
 import { resolveContactRefForDraft } from "./secretary-contacts.js";
+import { formatCorrespondenceDraftReview } from "../lib/correspondence/review.js";
+import {
+  CORRESPONDENCE_CLI,
+  DEFAULT_CORRESPONDENCE_AGENT_ID,
+} from "../lib/correspondence/cli-labels.js";
 
 export interface CorrespondenceDraftCliOptions {
   channel?: string;
@@ -31,6 +36,7 @@ export interface CorrespondenceDraftCliOptions {
   notes?: string;
   operator?: string;
   noApproval?: boolean;
+  noCcDefaults?: boolean;
   json?: boolean;
 }
 
@@ -39,7 +45,7 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
     console.error("Provide --body or --body-file");
     process.exit(1);
   }
-  requireCliDataWrite({ command: "secretary correspondence draft", permission: "escalate:plan" });
+  requireCliDataWrite({ command: CORRESPONDENCE_CLI.draft, permission: "escalate:plan" });
 
   const channel = (opts.channel ?? "email") as "email" | "slack";
   let body = opts.body ?? "";
@@ -48,7 +54,7 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
   }
 
   const operator =
-    opts.operator ?? getCliOperatorContext()?.record.operator_id ?? "secretary";
+    opts.operator ?? getCliOperatorContext()?.record.operator_id ?? DEFAULT_CORRESPONDENCE_AGENT_ID;
 
   const { to: resolvedTo, warnings } = resolveContactRefForDraft({
     contactRef: opts.contactRef,
@@ -69,9 +75,10 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
     contactRef: opts.contactRef,
     notes: opts.notes,
     proposeApproval: !opts.noApproval,
+    skipCcDefaults: opts.noCcDefaults,
   });
 
-  auditCliMutation("secretary correspondence draft", draft.draft_id);
+  auditCliMutation(CORRESPONDENCE_CLI.draft, draft.draft_id);
 
   if (opts.json) {
     console.log(JSON.stringify({ draft, approvalId }, null, 2));
@@ -81,16 +88,20 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
   console.log(`✓ draft ${draft.draft_id} · ${draft.channel} · ${draft.status}`);
   if (approvalId) {
     console.log(`  approval: ${approvalId} (pending_approval)`);
-    console.log(`  next: org approval approve --id ${approvalId} --approver "<name>"`);
+    console.log(`  review: orgos ${CORRESPONDENCE_CLI.show} --id ${draft.draft_id}`);
+    console.log(`  next:   orgos org approval approve --id ${approvalId} --approver "<CEO>" --reviewed`);
   }
   console.log(`  path: docs/executive/correspondence-drafts/${draft.draft_id}.yaml`);
+  if (channel === "email" && draft.cc) {
+    console.log(`  cc (default oversight): ${draft.cc}`);
+  }
 
   if (channel === "email") {
     const readiness = assessMailSetupReadiness("email");
     if (!readiness.ready) {
       console.log("");
       console.log("⚠ メール初期設定が未完了です。実送信前に:");
-      console.log("  orgos secretary mail setup-guide");
+      console.log(`  orgos ${CORRESPONDENCE_CLI.setupGuide}`);
     }
   }
 }
@@ -135,7 +146,7 @@ export function runCorrespondenceShow(opts: CorrespondenceShowCliOptions): void 
     console.log(JSON.stringify(draft, null, 2));
     return;
   }
-  console.log(JSON.stringify(draft, null, 2));
+  console.log(formatCorrespondenceDraftReview(draft));
 }
 
 export interface CorrespondenceSendCliOptions {
@@ -147,11 +158,11 @@ export interface CorrespondenceSendCliOptions {
 
 export async function runCorrespondenceSend(opts: CorrespondenceSendCliOptions): Promise<void> {
   if (!opts.dryRun) {
-    requireCliDataWrite({ command: "secretary correspondence send", permission: "chat:approve" });
+    requireCliCorrespondenceSend(CORRESPONDENCE_CLI.send);
   }
 
   const operator =
-    opts.operator ?? getCliOperatorContext()?.record.operator_id ?? "secretary";
+    opts.operator ?? getCliOperatorContext()?.record.operator_id ?? DEFAULT_CORRESPONDENCE_AGENT_ID;
 
   try {
     const result = await sendApprovedCorrespondence({
@@ -161,7 +172,7 @@ export async function runCorrespondenceSend(opts: CorrespondenceSendCliOptions):
     });
 
     if (!opts.dryRun) {
-      auditCliMutation("secretary correspondence send", opts.id);
+      auditCliMutation(CORRESPONDENCE_CLI.send, opts.id);
     }
 
     if (opts.json) {
@@ -228,7 +239,7 @@ export function runSecretaryMailConfig(opts: { json?: boolean }): void {
     file_configured: Boolean(fileConfig),
     resolved_provider: resolved.provider,
     from: resolved.from,
-    inbox_sync: resolved.inbox?.sync ?? "stub",
+    receive_sync: resolved.receive?.sync ?? "stub",
     mail_setup_ready: readiness.ready,
     setup_issues: readiness.issues.map((i) => i.id),
     env: {

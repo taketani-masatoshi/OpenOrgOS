@@ -11,6 +11,17 @@ import { currentDate, getDocsDir } from "../utils.js";
 import { getTenantMailMessages } from "../wire-console/human-mail.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
 import { listWirePending } from "../protocol/wire-queue.js";
+import { findPeer, resolvePeerInboundEndpoints } from "../protocol/peers.js";
+import { isEmailWireEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
+import {
+  countHighPriorityTriage,
+  listTriageEntries,
+} from "../correspondence/mail-triage-queue.js";
+import { listSenderIdentificationPending } from "../correspondence/sender-identification.js";
+import {
+  listPendingCeoInlineQuestions,
+  formatCeoInlineForToday,
+} from "../correspondence/ceo-inline-question.js";
 
 function countWirePending(): number {
   try {
@@ -66,6 +77,39 @@ function countWireDeliveryPending(): number {
   }
 }
 
+function loadEmailWirePendingItems() {
+  try {
+    return listWirePending()
+      .filter((p) => {
+        const peer = findPeer(p.peer_id);
+        if (!peer) return false;
+        return resolvePeerInboundEndpoints(peer).some((ep) => isEmailWireEndpoint(ep));
+      })
+      .slice(0, 8)
+      .map((p) => ({
+        peer_id: p.peer_id,
+        event_id: p.event_id,
+        attempts: p.attempts,
+        last_error: p.last_error,
+        created_at: p.created_at,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+function countEmailWirePending(): number {
+  try {
+    return listWirePending().filter((p) => {
+      const peer = findPeer(p.peer_id);
+      if (!peer) return false;
+      return resolvePeerInboundEndpoints(peer).some((ep) => isEmailWireEndpoint(ep));
+    }).length;
+  } catch {
+    return 0;
+  }
+}
+
 function loadWitnessPendingItems(tenant: string) {
   if (!isWireConsoleEnabled(tenant)) return [];
   try {
@@ -104,7 +148,7 @@ export function buildTodayContext(): TodayContext {
   const approvals = listOrgApprovals({ status: "pending_approval" }).map((a) => ({
     id: a.approval_id,
     scope: a.scope,
-    subject: a.subject ?? a.subject_ref ?? a.approval_id,
+    subject: a.subject_ref ?? a.approval_id,
     status: a.status,
     proposed_at: a.proposed_at,
   }));
@@ -128,7 +172,42 @@ export function buildTodayContext(): TodayContext {
 
   const wirePending = loadWirePendingItems(tenant);
   const wireDelivery = loadWireDeliveryItems();
+  const emailWirePending = loadEmailWirePendingItems();
   const witnessPending = loadWitnessPendingItems(tenant);
+  const mailCounts = countHighPriorityTriage();
+  const mailIntakePending = listTriageEntries({
+    handoffStatus: "pending",
+    limit: 8,
+  })
+    .filter((e) => e.disposition !== "spam")
+    .map((e) => ({
+      id: e.id,
+      subject: e.subject,
+      from: e.from,
+      importance: e.importance,
+      urgency: e.urgency,
+      handoff_status: e.handoff_status,
+    }));
+
+  const senderIdAll = listSenderIdentificationPending();
+  const senderIdPending = senderIdAll.slice(0, 8).map((s) => {
+    const triage = listTriageEntries({ limit: 200 }).find((e) => e.id === s.mail_id);
+    return {
+      mail_id: s.mail_id,
+      sender_email: s.sender_email,
+      sender_display_name: s.sender_display_name,
+      subject: triage?.subject,
+    };
+  });
+
+  const ceoInlineAll = listPendingCeoInlineQuestions();
+  const ceoInlinePending = ceoInlineAll.slice(0, 8).map((q) => ({
+    id: q.id,
+    mail_id: q.mail_id,
+    subject: q.subject,
+    context_preview: q.context_l1.slice(0, 200),
+    field_count: q.fields.length,
+  }));
 
   const ctx = todayContextSchema.parse({
     tenant,
@@ -140,9 +219,18 @@ export function buildTodayContext(): TodayContext {
     wire_pending: wirePending,
     wire_delivery_pending_count: countWireDeliveryPending(),
     wire_delivery: wireDelivery,
+    email_wire_pending_count: countEmailWirePending(),
+    email_wire_pending: emailWirePending,
     witness_pending: witnessPending,
     witness_pending_count: witnessPending.length,
     inbox_pending: inbox,
+    mail_intake_pending_count: mailCounts.pending,
+    mail_intake_action_required_count: mailCounts.actionRequired,
+    mail_intake_pending: mailIntakePending,
+    sender_identification_pending_count: senderIdAll.length,
+    sender_identification_pending: senderIdPending,
+    ceo_inline_questions_pending_count: ceoInlineAll.length,
+    ceo_inline_questions_pending: ceoInlinePending,
     escalate_pending_count: escalatePending,
     agent_coo_relay_count: cooRelay.length,
     agent_coo_relay: cooRelay.slice(0, 8).map((m) => ({
@@ -195,6 +283,49 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
     }
   }
 
+  lines.push("", "## Mail Intake（受信メール）", "");
+  if (ctx.mail_intake_pending.length === 0) {
+    lines.push(
+      `未処理 ${ctx.mail_intake_pending_count} 件 · 要対応 ${ctx.mail_intake_action_required_count} 件`
+    );
+  } else {
+    lines.push(
+      `未処理 ${ctx.mail_intake_pending_count} 件 · 要対応 ${ctx.mail_intake_action_required_count} 件`,
+      ""
+    );
+    for (const m of ctx.mail_intake_pending) {
+      lines.push(
+        `- [${m.importance}/${m.urgency}] **${m.subject}** ← ${m.from} · ${m.handoff_status}`
+      );
+    }
+  }
+
+  lines.push("", "## CEO インライン質問（要回答）", "");
+  if (ctx.ceo_inline_questions_pending.length === 0) {
+    lines.push("（なし）");
+  } else {
+    for (const q of ctx.ceo_inline_questions_pending) {
+      const full = listPendingCeoInlineQuestions().find((x) => x.id === q.id);
+      if (full) {
+        lines.push(formatCeoInlineForToday(full));
+      } else {
+        lines.push(`- **${q.subject}** (${q.id}) · ${q.mail_id} · 質問 ${q.field_count} 件`);
+      }
+      lines.push("");
+    }
+  }
+
+  lines.push("", "## 未知送信者（CEO 確認待ち）", "");
+  if (ctx.sender_identification_pending.length === 0) {
+    lines.push("（なし）");
+  } else {
+    for (const s of ctx.sender_identification_pending) {
+      lines.push(
+        `- **${s.mail_id}** ${s.sender_display_name ?? s.sender_email} · ${s.subject ?? "—"}`
+      );
+    }
+  }
+
   lines.push(
     "",
     "## Wire 送信待ち",
@@ -224,6 +355,33 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
         `- **${d.peer_id}** · ${d.event_id.slice(0, 8)}… · attempts ${d.attempts}${d.last_error ? ` · ${d.last_error}` : ""}`
       );
     }
+  }
+
+  lines.push("", "## Email Wire 配送待ち", "");
+  if (ctx.email_wire_pending.length === 0) {
+    lines.push(`（${ctx.email_wire_pending_count} 件 — 詳細なし）`);
+  } else {
+    for (const d of ctx.email_wire_pending) {
+      lines.push(
+        `- **${d.peer_id}** · ${d.event_id.slice(0, 8)}… · attempts ${d.attempts}${d.last_error ? ` · ${d.last_error}` : ""}`
+      );
+    }
+  }
+
+  lines.push(
+    "",
+    "## Email-Wire 配送待ち",
+    ""
+  );
+  if (ctx.email_wire_pending.length === 0) {
+    lines.push(`（${ctx.email_wire_pending_count} 件 — 詳細なし）`);
+  } else {
+    for (const d of ctx.email_wire_pending) {
+      lines.push(
+        `- **${d.peer_id}** · ${d.event_id.slice(0, 8)}… · attempts ${d.attempts}${d.last_error ? ` · ${d.last_error}` : ""}`
+      );
+    }
+    lines.push("", "`orgos protocol deliver status --event-id <uuid>`");
   }
 
   lines.push(
@@ -263,8 +421,11 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
     "",
     `- Wire 送信待ち: ${ctx.wire_pending_count} 件`,
     `- Wire 配送待ち: ${ctx.wire_delivery_pending_count} 件`,
+    `- Email Wire 配送待ち: ${ctx.email_wire_pending_count} 件`,
     `- Witness 確認待ち: ${ctx.witness_pending_count} 件`,
     `- inbox 未処理: ${ctx.inbox_pending.length} 件`,
+    `- Mail Intake 未処理: ${ctx.mail_intake_pending_count} 件 · 要対応: ${ctx.mail_intake_action_required_count} 件`,
+    `- CEO インライン質問: ${ctx.ceo_inline_questions_pending_count} 件`,
     `- escalate pending: ${ctx.escalate_pending_count} 件`,
     `- COO relay: ${ctx.agent_coo_relay_count} 件 · Steward inbox: ${ctx.agent_steward_inbox_count} 件`,
     "",
@@ -284,5 +445,5 @@ export function buildTodaySummaryForPush(ctx: TodayContext): string {
     ctx.decisions.length > 0
       ? ctx.decisions.map((d, i) => `${i + 1}. ${d.title}`).join("; ")
       : "P0 なし";
-  return `${ctx.company_name} · ${ctx.report_date}: 判断=${decisionLines}; 承認待ち=${ctx.approvals.length}; inbox=${ctx.inbox_pending.length}`;
+  return `${ctx.company_name} · ${ctx.report_date}: 判断=${decisionLines}; 承認待ち=${ctx.approvals.length}; inbox=${ctx.inbox_pending.length}; mail_intake=${ctx.mail_intake_pending_count}`;
 }

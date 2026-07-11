@@ -6,11 +6,14 @@ import {
   type CorrespondenceChannel,
 } from "../../../schemas/correspondence/draft.js";
 import { proposeOrgApproval } from "../org/approval/index.js";
+import { CORRESPONDENCE_CLI } from "./cli-labels.js";
+import { resolveDefaultCorrespondenceCc } from "./cc-defaults.js";
 import {
   correspondenceDraftMdPath,
   correspondenceDraftYamlPath,
   getCorrespondenceDraftsDir,
 } from "./paths.js";
+import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
 
 function nextDraftId(): string {
   const dir = getCorrespondenceDraftsDir();
@@ -35,7 +38,8 @@ function slugify(text: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+$/, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
     .slice(0, 30);
   return slug || "message";
 }
@@ -52,6 +56,8 @@ export interface CreateCorrespondenceDraftOptions {
   notes?: string;
   slug?: string;
   proposeApproval?: boolean;
+  /** Skip automatic oversight CC (CEO 等) */
+  skipCcDefaults?: boolean;
 }
 
 export function saveCorrespondenceDraft(draft: CorrespondenceDraft): CorrespondenceDraft {
@@ -107,6 +113,17 @@ export function createCorrespondenceDraft(
 
   const slug = opts.slug ?? slugify(opts.subject ?? opts.slackChannel ?? "message");
   const draftId = `${nextDraftId()}${slug ? `-${slug}` : ""}`;
+
+  let cc = opts.cc;
+  if (opts.channel === "email") {
+    const ccResolved = resolveDefaultCorrespondenceCc({
+      to: opts.to,
+      explicitCc: opts.cc,
+      skipDefaults: opts.skipCcDefaults,
+    });
+    cc = ccResolved.cc;
+  }
+
   let draft: CorrespondenceDraft = {
     draft_id: draftId,
     channel: opts.channel,
@@ -114,9 +131,9 @@ export function createCorrespondenceDraft(
     created_at: new Date().toISOString(),
     created_by: opts.createdBy,
     to: opts.to,
-    cc: opts.cc,
+    cc,
     subject: opts.subject,
-    body: opts.body,
+    body: sanitizeOutboundEmailBody(opts.body),
     slack_channel: opts.slackChannel,
     contact_ref: opts.contactRef,
     notes: opts.notes,
@@ -171,7 +188,7 @@ function buildCorrespondenceDraftMarkdown(draft: CorrespondenceDraft): string {
   const lines = [
     `# 対外連絡下書き — ${draft.draft_id}`,
     "",
-    "> **自動送信禁止** — `org approval approve` 後に `secretary correspondence send` を実行",
+    `> **自動送信禁止** — \`org approval approve\` 後に \`${CORRESPONDENCE_CLI.send}\` を実行`,
     "",
     "| 項目 | 値 |",
     "|------|-----|",
@@ -182,6 +199,7 @@ function buildCorrespondenceDraftMarkdown(draft: CorrespondenceDraft): string {
   ];
   if (draft.channel === "email") {
     lines.push(`| to | ${draft.to ?? "—"} |`);
+    lines.push(`| cc | ${draft.cc ?? "—"} |`);
     lines.push(`| subject | ${draft.subject ?? "—"} |`);
   } else {
     lines.push(`| slack_channel | ${draft.slack_channel ?? "—"} |`);

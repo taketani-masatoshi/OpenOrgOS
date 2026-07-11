@@ -1,6 +1,6 @@
 # Skill: correspondence_draft（対外連絡下書き · 承認起案）
 
-**runtime:** cli · **Agent:** Secretary のみ
+**runtime:** cli · **Agent:** Mail Outbound のみ
 
 ## 目的
 
@@ -9,16 +9,14 @@
 ## CLI
 
 ```bash
-npm run orgos -- secretary correspondence draft \
+npm run orgos -- mail outbound correspondence draft \
   --channel email \
   --to "partner@example.com" \
   --subject "打合せのご調整" \
   --body "本文..."
 
-npm run orgos -- secretary correspondence draft \
-  --channel slack \
-  --slack-channel general \
-  --body "社内通知文案"
+# 後方互換
+npm run orgos -- secretary correspondence draft ...
 ```
 
 Skill 経由:
@@ -39,11 +37,24 @@ npm run orgos -- skills run correspondence-draft \
 ## ワークフロー
 
 1. **宛先照合** — `external-contacts.yaml` / `stakeholders.yaml`。未登録なら下書きを作らず「把握していません」と報告
-2. Secretary が下書き + `proposeOrgApproval`（`pending_approval`）
-3. 人間が `org approval approve --id APR-... --approver "CEO"`
-4. `correspondence_send` / `slack_notify` で送信（Secretary CLI · 承認済みのみ）
+2. Mail Outbound が下書き + `proposeOrgApproval`（`pending_approval`）— **既定で CEO 等を CC**
+3. **人間が文案を確認** — `mail outbound correspondence show --id DRAFT-...` または `DRAFT-*.md`
+4. 人間が `org approval approve --id APR-... --approver "CEO" --reviewed`（`--reviewed` 必須）
+5. `correspondence_send` / `slack_notify` で送信（**ceo/approver · operator 認証必須**）
 
 `--contact-ref EXT-...` 使用時は正本の `email` を `--to` に反映する。人間が新アドレスを開示した場合は **先に正本を更新** してから下書きを作成する。
+
+### 既定 CC（Secretary 送信元 → 外部）
+
+秘書アドレス（`records/executive/mail-config.yaml` の `from`）で社外へ送るとき、CEO 等の oversight 宛先を **自動 CC** する。
+
+| 優先 | 正本 |
+|------|------|
+| 1 | `mail-config.yaml` → `outbound.cc_defaults` |
+| 2 | `company.yaml` → `public_disclosure.correspondence_cc` |
+| 3 | `company.yaml` → `public_disclosure.contact_email` |
+
+除外: `to` · `from` と同一アドレス · `--no-cc-defaults` で無効化
 
 ## 禁止
 

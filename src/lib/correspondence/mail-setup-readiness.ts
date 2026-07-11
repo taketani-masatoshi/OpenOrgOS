@@ -12,6 +12,8 @@ import {
   resolveSlackWebhookUrl,
 } from "./mail-config.js";
 import { getMailConfigPath } from "./paths.js";
+import { isGmailOAuthConfigured, loadGmailOAuthToken } from "./gmail-oauth.js";
+import { CORRESPONDENCE_CLI } from "./cli-labels.js";
 
 const PLACEHOLDER_FROM_EMAILS = new Set(["secretary@example.com"]);
 
@@ -20,7 +22,7 @@ export class CorrespondenceMailSetupError extends Error {
   readonly guide: string;
 
   constructor(issues: MailSetupIssue[], guide: string) {
-    super(`Mail setup incomplete — ${issues.length} issue(s). Run: orgos secretary mail setup-guide`);
+    super(`Mail setup incomplete — ${issues.length} issue(s). Run: orgos ${CORRESPONDENCE_CLI.setupGuide}`);
     this.name = "CorrespondenceMailSetupError";
     this.issues = issues;
     this.guide = guide;
@@ -129,6 +131,33 @@ export function collectMailSetupIssues(channel: CorrespondenceChannel): MailSetu
       }
     }
 
+    if (config.provider === "gmail_api") {
+      const token = loadGmailOAuthToken();
+      if (!isGmailOAuthConfigured()) {
+        issues.push({
+          id: "gmail_oauth_token",
+          severity: "error",
+          message: "Gmail OAuth トークン未設定",
+          fix: "orgos mail setup gmail（Client ID/Secret は対話入力可）",
+        });
+      } else if (!token?.refresh_token) {
+        issues.push({
+          id: "gmail_refresh_token",
+          severity: "warning",
+          message: "Gmail refresh_token なし — 再認可が必要になる可能性",
+          fix: "orgos mail setup gmail を再実行",
+        });
+      }
+      if (!process.env.ORGOS_GMAIL_CLIENT_ID?.trim() || !process.env.ORGOS_GMAIL_CLIENT_SECRET?.trim()) {
+        issues.push({
+          id: "gmail_oauth_env",
+          severity: "warning",
+          message: "ORGOS_GMAIL_CLIENT_ID / SECRET 未設定（トークン refresh 不可）",
+          fix: "GCP OAuth クライアント ID/Secret を環境変数に設定",
+        });
+      }
+    }
+
     if (
       disclosure?.representative_email &&
       config.from.email &&
@@ -211,16 +240,16 @@ export function buildMailSetupGuide(issues: MailSetupIssue[]): string {
     "",
     "4. **確認**",
     "   ```bash",
-    "   orgos secretary mail config",
-    "   orgos secretary mail setup-guide",
+    `   orgos ${CORRESPONDENCE_CLI.config}`,
+    `   orgos ${CORRESPONDENCE_CLI.setupGuide}`,
     "   orgos integrations status",
     "   ```",
     "",
     "5. **下書き → 承認 → 送信**",
     "   ```bash",
-    "   orgos secretary correspondence draft ...",
-    "   orgos org approval approve --id APR-...",
-    "   orgos secretary correspondence send --id DRAFT-...",
+    `   orgos ${CORRESPONDENCE_CLI.draft} ...`,
+    "   orgos org approval approve --id APR-... --reviewed",
+    `   orgos ${CORRESPONDENCE_CLI.send} --id DRAFT-...`,
     "   ```",
     "",
   ];

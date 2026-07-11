@@ -7,6 +7,7 @@ export type ChatAuditAction =
   | "logout"
   | "message"
   | "approve"
+  | "ceo_answer"
   | "wire_flush"
   | "witness_register"
   | "witness_verify"

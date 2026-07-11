@@ -1,0 +1,5 @@
+# メール解釈多数決キュー（L1 · intent · 貸借 · agreement）
+# 実体: data/executive/mail-interpretation-queue.yaml（tenant scaffold で生成）
+
+version: 1
+entries: []

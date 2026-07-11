@@ -8,6 +8,7 @@ import {
 import { sendCorrespondenceEmail } from "./mail-send.js";
 import { sendSlackNotification } from "./slack-send.js";
 import { assertCorrespondenceMailSetupReady } from "./mail-setup-readiness.js";
+import { assertHumanCorrespondenceApproval, isHumanApproverOperatorId } from "./human-approval.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
 import { currentDate } from "../utils.js";
 
@@ -53,6 +54,7 @@ export function assertCorrespondenceApproved(draft: CorrespondenceDraft): void {
       `Approval ${draft.approval_id} status is ${approval.status} — human approval required`
     );
   }
+  assertHumanCorrespondenceApproval(approval, draft);
 }
 
 export function syncDraftApprovedFromRegistry(draftId: string): CorrespondenceDraft {
@@ -90,6 +92,13 @@ export async function sendApprovedCorrespondence(opts: {
   let draft = syncDraftApprovedFromRegistry(opts.draftId);
   assertCorrespondenceApproved(draft);
 
+  if (!opts.dryRun && !isHumanApproverOperatorId(opts.operatorId)) {
+    throw new CorrespondenceApprovalGateError(
+      `correspondence send requires ceo/approver operator id — got "${opts.operatorId}". ` +
+        "Agents create drafts only; humans send after approval."
+    );
+  }
+
   if (!opts.dryRun) {
     assertCorrespondenceMailSetupReady(draft.channel);
   }
@@ -125,9 +134,13 @@ export async function sendApprovedCorrespondence(opts: {
     kind: "misc",
     title,
     occurredAt: today,
-    slug: draft.draft_id.toLowerCase().replace(/^draft-/, "correspondence-"),
+    slug: draft.draft_id
+      .toLowerCase()
+      .replace(/^draft-/, "correspondence-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, ""),
     related: { approval_id: draft.approval_id },
-    notes: `Sent by ${opts.operatorId} via secretary correspondence (${draft.channel})`,
+    notes: `Sent by ${opts.operatorId} via mail outbound correspondence (${draft.channel})`,
   });
 
   if (draft.approval_id) {

@@ -1,0 +1,57 @@
+# Mail Intake トリアージ既定ルール（コア正本）
+# テナント上書き: data/correspondence/mail-triage-rules.yaml
+
+version: 1
+
+spam:
+  from_domains:
+    - newsletter.example
+    - noreply.
+    - no-reply.
+  subject_patterns:
+    - "(?i)unsubscribe"
+    - "(?i)配信停止"
+    - "(?i)メルマガ"
+
+suspicious:
+  subject_keywords:
+    - "パスワード再設定"
+    - "verify your account"
+    - "urgent action required"
+
+importance:
+  p0:
+    subject_keywords:
+      - "緊急"
+      - "至急"
+      - "URGENT"
+  p1:
+    subject_keywords:
+      - "請求"
+      - "invoice"
+      - "契約"
+  p2:
+    subject_keywords:
+      - "お問い合わせ"
+      - "ご連絡"
+
+urgency:
+  immediate:
+    subject_keywords:
+      - "今日中"
+      - "ASAP"
+      - "本日中"
+  today:
+    subject_keywords:
+      - "明日まで"
+      - "EOD"
+  week:
+    subject_keywords:
+      - "今週中"
+      - "by Friday"
+
+routing:
+  spam: ignore
+  suspicious: archive
+  p0_ham: secretary
+  default_ham: secretary

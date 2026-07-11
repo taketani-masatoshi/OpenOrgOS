@@ -1,12 +1,12 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { mailConfigSchema, type MailConfig } from "../../../schemas/correspondence/mail-config.js";
-import { readYamlFile } from "../utils.js";
+import { parseMailConfigFile } from "./mail-config-parse.js";
 import { getMailConfigExamplePath, getMailConfigPath } from "./paths.js";
 
 export function loadMailConfig(): MailConfig | null {
   const path = getMailConfigPath();
   if (!existsSync(path)) return null;
-  return readYamlFile(path, mailConfigSchema);
+  return parseMailConfigFile(readFileSync(path, "utf-8"));
 }
 
 export function resolveMailConfig(): MailConfig {
@@ -38,7 +38,8 @@ export function ensureMailConfigExample(): string {
 # Secrets via environment (never commit):
 #   ORGOS_SMTP_USER · ORGOS_SMTP_PASSWORD
 #   ORGOS_MAIL_FROM · ORGOS_MAIL_FROM_NAME
-#   ORGOS_GMAIL_OAUTH_TOKEN (gmail_api — future)
+#   ORGOS_GMAIL_CLIENT_ID · ORGOS_GMAIL_CLIENT_SECRET (gmail_api)
+#   orgos mail setup gmail → records/executive/gmail-oauth.json (+ client.json)
 #
 provider: smtp
 from:
@@ -48,13 +49,26 @@ smtp:
   host: smtp.gmail.com
   port: 587
   secure: false
-inbox:
+outbound:
+  cc_defaults:
+    - email: ceo@example.com
+      role: ceo
+receive:
   sync: stub
-  # imap: imap.gmail.com:993
-  # gmail_api: label INBOX
+  # imap_host: imap.example.com
+  # imap_port: 993
+  # imap_mailbox: INBOX
+  # poll_interval_sec: 300
+  # triage_mode: rules
+  # auto_triage: true
+  # notify_high_priority: true
+  # ceo_question_mode: inline
+  # interpret_ensemble: true
+  # interpret_models: []
+  # gmail_label: INBOX
 notes: |
-  Dev: Gmail App Password + SMTP above.
-  Prod: Gmail API OAuth or transactional SMTP relay.
+  receive = Secretary メール受信同期（IMAP 将来）
+  ≠ docs/io/inbox（書類）· ≠ docs/protocol/inbox（Wire）
 `;
   writeFileSync(path, example, "utf-8");
   return path;
@@ -67,6 +81,62 @@ export function resolveSmtpCredentials(): { user: string; pass: string } | null 
   return { user, pass };
 }
 
+export function resolveWireSmtpCredentials(): { user: string; pass: string } | null {
+  const wireUser = process.env.ORGOS_WIRE_SMTP_USER?.trim();
+  const wirePass = process.env.ORGOS_WIRE_SMTP_PASSWORD?.trim();
+  if (wireUser && wirePass) return { user: wireUser, pass: wirePass };
+  return resolveSmtpCredentials();
+}
+
+export interface WireOutboundConfig {
+  enabled: boolean;
+  provider: "smtp" | "dry_run";
+  from: { name: string; email: string };
+  smtp?: { host: string; port: number; secure: boolean };
+}
+
+export function resolveWireOutboundConfig(): WireOutboundConfig {
+  const base = resolveMailConfig();
+  const wire = base.wire_outbound;
+  const enabled = wire?.enabled === true;
+  const from = wire?.from ?? {
+    name: process.env.ORGOS_WIRE_MAIL_FROM_NAME ?? "OrgOS Wire",
+    email: process.env.ORGOS_WIRE_MAIL_FROM ?? "wire-notices@example.com",
+  };
+
+  const smtpHost =
+    wire?.smtp?.host ??
+    process.env.ORGOS_WIRE_SMTP_HOST ??
+    process.env.ORGOS_SMTP_HOST;
+  const smtpPort = Number(
+    wire?.smtp?.port ?? process.env.ORGOS_WIRE_SMTP_PORT ?? process.env.ORGOS_SMTP_PORT ?? 587
+  );
+  const smtpSecure =
+    wire?.smtp?.secure ??
+    (process.env.ORGOS_WIRE_SMTP_SECURE === "true" ||
+      process.env.ORGOS_SMTP_SECURE === "true");
+
+  const provider =
+    enabled && smtpHost && resolveWireSmtpCredentials() ? "smtp" : "dry_run";
+
+  return {
+    enabled,
+    provider,
+    from,
+    smtp: smtpHost
+      ? { host: smtpHost, port: smtpPort, secure: smtpSecure }
+      : undefined,
+  };
+}
+
 export function resolveSlackWebhookUrl(): string | undefined {
   return process.env.ORGOS_SLACK_WEBHOOK_URL?.trim() || undefined;
+}
+
+/** R5 Phase 2 — auto wire scan after mail sync/triage when enabled */
+export function shouldAutoWireScan(config: MailConfig | null): boolean {
+  if (!config) return false;
+  if (config.receive?.auto_wire_scan === false) return false;
+  if ((config.receive?.sync ?? "stub") === "stub") return false;
+  return true;
 }
