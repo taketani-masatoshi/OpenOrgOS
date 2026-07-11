@@ -2,6 +2,18 @@
 
 All notable changes to OrgOS Operator Layer are documented here.
 
+**Engineering rules / 憲章:** 正本 `steward/rules/engineering/` · 索引 `steward/rules/openorgos-engineering-constitution.md` — 変更時は本 CHANGELOG と該当 ADR を更新。
+
+## [Unreleased]
+
+### Added
+- Engineering Constitution 分割正本（`steward/rules/engineering/00–09`）と Cursor ミラー sync
+- `validatePolicyMirrors()` — `orgos validate` / `npm run generated:check` で policy ミラー鮮度検査
+- ADR 0001–0003 · `.github/pull_request_template.md`（DoD チェックリスト）
+
+### Changed
+- `openorgos-engineering-constitution.md` を索引専用に整理
+
 ## [0.8.0] — 2026-06-28
 
 ### Added

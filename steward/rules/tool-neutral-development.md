@@ -116,6 +116,7 @@ PR · Work Order 完了前に確認:
 - [ ] ドキュメント正本は `steward/rules/` または `docs/`（`.cursor/` 単独正本なし）
 - [ ] Work Order プロンプトが portable 形式（Path + @ 併記）
 - [ ] Agent 変更時 `orgos operator export` を実行済み
+- [ ] engineering ルール変更時 `orgos operator sync-policy --emit engineering` を実行済み
 - [ ] L2/L3 を tracked MD · テスト fixture に書いていない
 - [ ] [Engineering Constitution](openorgos-engineering-constitution.md) §11 Definition of Done を満たす（該当する場合）
 
@@ -163,7 +164,7 @@ PR · Work Order 完了前に確認:
 
 ## 7. 関連
 
-- [openorgos-engineering-constitution.md](openorgos-engineering-constitution.md) — エンジニアリング憲章 · AI コーディングルール
+- [openorgos-engineering-constitution.md](openorgos-engineering-constitution.md) — 憲章索引（正本: `engineering/00–09`）
 - [operator-policy.md](operator-policy.md) — Operator 境界 · L0–L3
 - [agent_skill_architecture.md](agent_skill_architecture.md) — 4 層 · Skill 一覧
 - [steward_os_principles.md](steward_os_principles.md) — 基本原則

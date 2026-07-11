@@ -33,6 +33,8 @@ steward/
 ├── standards/iso/           ISO テンプレ（横断）
 ├── standards/regulations/   移設済リダイレクト → jurisdiction-packs/JP/
 └── rules/                   原則 · ポリシー · 本書
+    ├── engineering/         憲章分割正本 00–09（Cursor ミラー: `.cursor/rules/0*.mdc`）
+    └── openorgos-engineering-constitution.md  憲章索引
 ```
 
 | 層 | パス | 接続 |

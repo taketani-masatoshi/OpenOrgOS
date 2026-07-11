@@ -1,0 +1,69 @@
+---
+description: OpenOrgOS TypeScript and coding principles
+globs: **/*.{ts,tsx}
+---
+
+
+# TypeScript & Coding Principles
+
+**Index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md)
+
+---
+
+# 4. Coding Principles
+
+## Functions
+
+Small · single responsibility · target 20–40 lines.
+
+## Nesting
+
+Maximum two levels. Prefer early return.
+
+## Naming
+
+Business terminology only.
+
+Good: `organizationId`, `memberId`, `eventDefinition`  
+Bad: `tmp`, `obj`, `foo`, `data`
+
+## Magic Numbers
+
+Never. Always define named constants.
+
+## Error Handling
+
+Never ignore errors. Never use empty catch blocks. Return meaningful errors.
+
+## Boolean Arguments
+
+Avoid `createUser(true)`. Prefer `createAdministrator()`.
+
+## Pure Functions
+
+Prefer pure functions. Minimize side effects.
+
+## Immutability
+
+Prefer immutable data. Mutation must be intentional.
+
+---
+
+# 5. Language Rules — TypeScript
+
+Required:
+
+- `strict = true`
+- `noImplicitAny`
+- eslint
+- prettier
+
+Rules:
+
+- Avoid `any`
+- Prefer `unknown`
+- Prefer `interface`
+- Prefer union types over enum
+- Avoid class unless necessary
+
+> **Mirror only.** Canonical: `steward/rules/engineering/02-typescript.md` · Regenerate: `orgos operator sync-policy --emit engineering`

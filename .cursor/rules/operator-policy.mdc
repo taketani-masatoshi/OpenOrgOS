@@ -130,7 +130,8 @@ Skill `runtime`: `cli`（LLM 不要）· `agent`（LLM + 定義添付 · 旧 `cu
 
 ## 8. 関連
 
-- [openorgos-engineering-constitution.md](openorgos-engineering-constitution.md) — エンジニアリング憲章 · AI コーディングルール
+- [openorgos-engineering-constitution.md](openorgos-engineering-constitution.md) — 憲章索引
+- [engineering/00-このフォルダについて.md](engineering/00-このフォルダについて.md) — 分割正本 00–09
 - [tool-neutral-development.md](tool-neutral-development.md) — **今後の開発ガイド（Cursor 非依存）**
 - [testing-modules.md](testing-modules.md) — Vitest 3 軸 taxonomy · 段階実行
 - [steward_os_principles.md](steward_os_principles.md)

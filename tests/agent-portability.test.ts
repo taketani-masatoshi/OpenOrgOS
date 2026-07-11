@@ -1,6 +1,16 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { resetAgentCatalogCache } from "../src/lib/agent-catalog.js";
-import { setTenantId } from "../src/lib/tenant.js";
+import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
+import {
+  syncOperatorPolicy,
+  syncEngineeringRules,
+  validatePolicyMirrors,
+  ENGINEERING_RULE_STEMS,
+  assertEngineeringRulesComplete,
+  TOOL_NEUTRAL_DEV_CURSOR_RULE,
+} from "../src/lib/operator-policy.js";
 import {
   agentPromptPath,
   formatAgentPromptRef,
@@ -44,6 +54,7 @@ describe("agent-portability", () => {
     const pack = buildPortableAgentPack("finance");
     expect(pack).toContain("# OrgOS Agent Pack · finance");
     expect(pack).toContain("## 1. Operator Policy");
+    expect(pack).toContain("## 1b. Engineering Constitution");
     expect(pack).toContain("# Finance Agent");
   });
 
@@ -66,29 +77,13 @@ describe("agent-portability", () => {
 });
 
 describe("operator-policy sync", () => {
-  it("syncOperatorPolicy emits dev-guide cursor rule", async () => {
-    const { syncOperatorPolicy, TOOL_NEUTRAL_DEV_CURSOR_RULE } = await import(
-      "../src/lib/operator-policy.js"
-    );
-    const { existsSync } = await import("node:fs");
-    const { join } = await import("node:path");
-    const { ROOT_DIR } = await import("../src/lib/tenant.js");
+  it("syncOperatorPolicy emits dev-guide cursor rule", () => {
     const paths = syncOperatorPolicy("dev-guide");
     expect(paths.devGuideRulePath).toBeDefined();
     expect(existsSync(join(ROOT_DIR, TOOL_NEUTRAL_DEV_CURSOR_RULE))).toBe(true);
   });
 
-  it("syncEngineeringRules emits 00-09 cursor mirrors", async () => {
-    const {
-      syncEngineeringRules,
-      validatePolicyMirrors,
-      ENGINEERING_RULE_STEMS,
-      assertEngineeringRulesComplete,
-    } = await import("../src/lib/operator-policy.js");
-    const { existsSync } = await import("node:fs");
-    const { join } = await import("node:path");
-    const { ROOT_DIR } = await import("../src/lib/tenant.js");
-
+  it("syncEngineeringRules emits 00-09 cursor mirrors", () => {
     assertEngineeringRulesComplete();
     const paths = syncEngineeringRules();
     expect(paths).toHaveLength(ENGINEERING_RULE_STEMS.length);
@@ -96,6 +91,35 @@ describe("operator-policy sync", () => {
       const mdc = join(ROOT_DIR, ".cursor", "rules", `${stem}.mdc`);
       expect(existsSync(mdc)).toBe(true);
     }
-    expect(validatePolicyMirrors()).toEqual([]);
+    const engineeringIssues = validatePolicyMirrors().filter((issue) =>
+      ENGINEERING_RULE_STEMS.some((stem) => issue.includes(`${stem}.mdc`))
+    );
+    expect(engineeringIssues).toEqual([]);
+  });
+
+  it("rewriteEngineeringBodyLinksForCursorMirror fixes parent-relative links", async () => {
+    const { rewriteEngineeringBodyLinksForCursorMirror } = await import(
+      "../src/lib/operator-policy.js"
+    );
+    const out = rewriteEngineeringBodyLinksForCursorMirror(
+      "[index](../openorgos-engineering-constitution.md) · [core](../../core/agents/)"
+    );
+    expect(out).toContain("](steward/rules/openorgos-engineering-constitution.md)");
+    expect(out).toContain("](steward/core/agents/");
+  });
+
+  it("validatePolicyMirrors detects stale engineering mdc", () => {
+    syncEngineeringRules();
+    const mdcPath = join(ROOT_DIR, ".cursor", "rules", "00-engineering-constitution.mdc");
+    const original = readFileSync(mdcPath, "utf-8");
+    writeFileSync(mdcPath, `${original}\n<!-- stale-test -->\n`, "utf-8");
+    try {
+      const issues = validatePolicyMirrors();
+      expect(
+        issues.some((m) => m.includes("00-engineering-constitution.mdc") && m.includes("stale"))
+      ).toBe(true);
+    } finally {
+      writeFileSync(mdcPath, original, "utf-8");
+    }
   });
 });

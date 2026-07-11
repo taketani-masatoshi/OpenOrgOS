@@ -76,6 +76,22 @@ export function parseEngineeringRuleFrontmatter(content: string): {
   return { frontmatter, body };
 }
 
+export function rewriteEngineeringBodyLinksForCursorMirror(body: string): string {
+  return body
+    .replace(/\]\(\.\.\/engineering\/([0-9]{2}-[^)]+\.md)\)/g, "](steward/rules/engineering/$1)")
+    .replace(/\]\(\.\.\/([a-z0-9_-]+\.md)\)/gi, "](steward/rules/$1)")
+    .replace(/\]\(([0-9]{2}-[a-z0-9-]+\.md)\)/g, "](steward/rules/engineering/$1)")
+    .replace(/\]\(\.\.\/\.\.\/core\//g, "](steward/core/")
+    .replace(/\]\(\.\.\/\.\.\/modules\//g, "](steward/modules/")
+    .replace(/\]\(\.\.\/\.\.\/\.\.\/docs\//g, "](docs/");
+}
+
+export function engineeringConstitutionExcerpt(maxLines = 55): string {
+  const path = join(ENGINEERING_RULES_DIR, "00-engineering-constitution.md");
+  const { body } = parseEngineeringRuleFrontmatter(readFileSync(path, "utf-8"));
+  return body.split("\n").slice(0, maxLines).join("\n");
+}
+
 export function buildEngineeringRuleMdc(stem: EngineeringRuleStem): string {
   const canonicalPath = join(ENGINEERING_RULES_DIR, `${stem}.md`);
   if (!existsSync(canonicalPath)) {
@@ -83,6 +99,7 @@ export function buildEngineeringRuleMdc(stem: EngineeringRuleStem): string {
   }
   const content = readFileSync(canonicalPath, "utf-8");
   const { frontmatter, body } = parseEngineeringRuleFrontmatter(content);
+  const mirrorBody = rewriteEngineeringBodyLinksForCursorMirror(body);
 
   const lines = [`description: ${frontmatter.description}`];
   if (frontmatter.alwaysApply === true) lines.push("alwaysApply: true");
@@ -92,7 +109,7 @@ export function buildEngineeringRuleMdc(stem: EngineeringRuleStem): string {
 ${lines.join("\n")}
 ---
 
-${body.trimEnd()}
+${mirrorBody.trimEnd()}
 
 > **Mirror only.** Canonical: \`steward/rules/engineering/${stem}.md\` · Regenerate: \`orgos operator sync-policy --emit engineering\`
 `;

@@ -1,0 +1,43 @@
+---
+description: OpenOrgOS documentation — README, CHANGELOG, ADR
+globs: "docs/**,steward/**"
+---
+
+# Documentation
+
+**Index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md)
+
+---
+
+# 9. Documentation
+
+Every public package contains:
+
+- README.md
+- CHANGELOG.md
+- Architecture Decision Records (ADR) for major decisions
+
+---
+
+## OrgOS layout
+
+| Kind | Canonical path |
+|------|----------------|
+| Operator / engineering rules | `steward/rules/` |
+| ADR | [docs/adr/](../../../docs/adr/README.md) |
+| Framework spec | `docs/spec/` · `docs/org-os/` |
+| Agent / Skill definitions | `steward/core/` · `steward/modules/` |
+| Cursor mirrors | `.cursor/rules/*.mdc` — **never sole canonical** |
+
+Regenerate mirrors:
+
+```bash
+orgos operator sync-policy --emit all
+```
+
+New major decisions: add `docs/adr/NNNN-title.md` and update [docs/adr/README.md](../../../docs/adr/README.md).
+
+**CHANGELOG:** フレームワーク公開変更はルート [CHANGELOG.md](../../../CHANGELOG.md) の `[Unreleased]` を更新。
+
+**Git / PR:** 憲章 §11 DoD — [.github/pull_request_template.md](../../../.github/pull_request_template.md) · 手動参照 `@05-git`（`.cursor/rules/05-git.mdc`）
+

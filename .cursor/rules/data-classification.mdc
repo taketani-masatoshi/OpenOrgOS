@@ -11,6 +11,8 @@ alwaysApply: true
 
 正本: テナント内 `data/classification-registry.yaml` · `steward/rules/folder_access_policy.md` §1.3
 
+**役割分担:** 本書 = L0–L3 **全文**（alwaysApply）。`src/` · tenant `data/` 編集時は [engineering/07-security.md](../../steward/rules/engineering/07-security.md) が短いリマインダ（glob 適用）。
+
 ## 3 境界
 
 | 境界 | 制御 | 目的 |

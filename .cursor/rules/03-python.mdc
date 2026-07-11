@@ -1,0 +1,30 @@
+---
+description: OpenOrgOS Python rules
+globs: **/*.py
+---
+
+
+# Python
+
+**Index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md)
+
+---
+
+# 5. Language Rules — Python
+
+Required:
+
+- Black
+- Ruff
+- mypy
+
+Rules:
+
+- Full type hints
+- dataclass preferred
+- logging instead of print
+- Small modules
+
+Apply [01-architecture.md](steward/rules/engineering/01-architecture.md) domain and layer rules to Python modules as well.
+
+> **Mirror only.** Canonical: `steward/rules/engineering/03-python.md` · Regenerate: `orgos operator sync-policy --emit engineering`

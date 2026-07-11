@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { validateGeneratedArtifacts } from "../src/lib/generated-artifacts.js";
+import { validatePolicyMirrors } from "../src/lib/operator-policy.js";
 
-const issues = validateGeneratedArtifacts();
+const issues = [...validateGeneratedArtifacts(), ...validatePolicyMirrors()];
 if (issues.length > 0) {
   for (const issue of issues) console.error(`generated-artifact: ${issue}`);
   process.exitCode = 1;

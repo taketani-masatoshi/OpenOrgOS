@@ -58,6 +58,7 @@ Data / File（事実）
 
 ## 関連
 
+- [openorgos-engineering-constitution.md](openorgos-engineering-constitution.md) — 長期保守のエンジニアリング憲章（SSOT · Event First 等）
 - [tool-neutral-development.md](tool-neutral-development.md) — Cursor 非依存 · CLI 正本
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [folder_access_policy.md](folder_access_policy.md)

@@ -39,7 +39,8 @@
 
 **3 境界:** `.gitignore`（Git）· `.cursorignore`（AI 自動）· `sanitize-output`（tracked MD 書込）· `steward broker`（振込）。
 
-正本: `data/classification-registry.yaml` · `.cursor/rules/data-classification.mdc`
+正本: `data/classification-registry.yaml` · `.cursor/rules/data-classification.mdc`（alwaysApply）  
+**`src/` · tenant `data/` 編集時:** [engineering/07-security.md](engineering/07-security.md)（glob 適用 · 詳細は本書 §1.3 と operator-policy）
 
 ---
 

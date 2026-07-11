@@ -1,0 +1,88 @@
+---
+description: OpenOrgOS event sourcing — event first, immutable events, deterministic state
+globs: "src/lib/protocol/**,src/commands/protocol/**,schemas/protocol/**"
+---
+
+# Event Sourcing
+
+**Index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Architecture:** [01-architecture.md](01-architecture.md) · **ADR:** [docs/adr/0002-engineering-rules-split.md](../../../docs/adr/0002-engineering-rules-split.md)
+
+---
+
+# 1.3 Event First
+
+Business history is represented as Events.
+
+Current State is derived from Events whenever possible.
+
+Never store State as the only source of truth.
+
+---
+
+# 1.4 Immutable Events
+
+Events cannot be modified.
+
+Corrections must be represented by new Events.
+
+Never rewrite history.
+
+---
+
+# 1.5 Deterministic
+
+Given identical Event sequences, the resulting State must always be identical.
+
+No hidden randomness. No hidden side effects.
+
+---
+
+## OrgOS implementations
+
+| Domain | Event / ledger path |
+|--------|---------------------|
+| Company events | `docs/company/events/` · `data/company-events.yaml` |
+| Wire delivery | `src/lib/protocol/delivery-ledger.ts` |
+| Wire pending / retry | `src/lib/protocol/wire-pending-retry.ts` |
+| Dead letter audit | `src/lib/protocol/wire-dead-letter-audit.ts` |
+
+When adding protocol features:
+
+1. Append events — do not mutate historical records
+2. Derive current state in Domain layer
+3. Keep replay deterministic (no `Date.now()` in domain logic without injection)
+
+---
+
+## Correction pattern (§1.4)
+
+Never edit a stored event. Append a compensating event:
+
+| Situation | Wrong | Right |
+|-----------|-------|-------|
+| Wrong delivery status | UPDATE ledger row | Append `delivery.reported` with correction ref |
+| Duplicate wire send | DELETE pending row | Append `wire.cancelled` / dead-letter audit entry |
+| Company event typo | Rewrite `EVT-*.md` history | New EVT entry + link `supersedes: EVT-...` in frontmatter |
+
+**OrgOS paths:** `src/lib/protocol/delivery-ledger.ts` · `wire-dead-letter-audit.ts` · `docs/company/events/`
+
+---
+
+## Replay checklist
+
+1. Load ordered event sequence (ledger file · YAML event list)
+2. Apply domain reducer in `src/lib/` — no I/O inside reducer
+3. Compare derived state to snapshot — tests in `tests/protocol-*` · `tests/wire-*`
+4. Inject clock / IDs in tests — avoid ambient `Date.now()` in domain code
+
+---
+
+## Non-event domains (legacy · migrate per ADR 0003)
+
+These still use YAML state as SSOT — **new features must not extend this pattern**:
+
+- Tenant business YAML (`data/**/*.yaml`) — eventual: derive summaries from event log where feasible
+- Module activation (`modules.yaml`) — catalog vs roster split in progress
+
+When touching these, prefer append-only audit fields and CLI-derived views.
+

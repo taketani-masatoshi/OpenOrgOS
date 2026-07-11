@@ -71,6 +71,58 @@ orgos escalate complete --id IMP-... --notes "..."
 
 ---
 
+## 1b. Engineering Constitution (excerpt)
+
+
+# OpenOrgOS Engineering Constitution
+
+Version: 1.0 · Status: Active  
+Applies to: All repositories, all languages, all contributors (human and AI)
+
+**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+
+---
+
+# Purpose
+
+OpenOrgOS is designed as infrastructure that may be maintained for decades.
+
+Therefore:
+
+- Correctness is more important than implementation speed.
+- Maintainability is more important than cleverness.
+- Explicitness is more important than implicit behavior.
+- Consistency is more important than individual coding style.
+
+When trade-offs exist, always prioritize long-term maintainability.
+
+---
+
+# 10. AI Coding Rules
+
+AI assistants (Cursor, Claude Code, ChatGPT, Copilot, etc.) must follow these rules.
+
+When proposing implementations:
+
+1. Never violate this constitution.
+2. Explain architectural trade-offs.
+3. Prefer simple code over clever code.
+4. Avoid unnecessary dependencies.
+5. Avoid duplication.
+6. Prefer deterministic implementations.
+7. Keep business logic framework-independent.
+8. Suggest refactoring when complexity increases.
+9. Do not optimize prematurely.
+10. If uncertain, ask instead of guessing.
+
+---
+
+# 11. Definition of Done
+
+Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules: `steward/rules/engineering/`
+
+---
+
 ## 2. Agent · QA（品質保証）
 
 # Quality Assurance Agent

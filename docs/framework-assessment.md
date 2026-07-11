@@ -3,7 +3,7 @@
 **スコープ:** リポジトリの **フレームワーク層**（`src/` · `schemas/` · `steward/` · `docs/spec*`）。  
 **スコープ外:** 特定法人の規程件数 · 契約 ID · 物件名 · P0 残タスク → 各テナント `docs/compliance/iso/steward-assessment.md`
 
-**仕様正本:** [spec.md](spec.md) · [framework-backlog.md](framework-backlog.md)
+**仕様正本:** [spec.md](spec.md) · [framework-backlog.md](framework-backlog.md) · [憲章索引](../steward/rules/openorgos-engineering-constitution.md) · [engineering/](../steward/rules/engineering/00-このフォルダについて.md) · [ADR 0003](adr/0003-constitution-code-compliance-roadmap.md)
 
 ---
 
@@ -11,12 +11,12 @@
 
 | 評価対象 | 文書 | 例 |
 |---------|------|-----|
-| フレームワーク製品 | **本書** | CLI 網羅 · スキーマ · モジュール tier |
+| フレームワーク製品 | **本書** | CLI 網羅 · スキーマ · モジュール tier · 憲章準拠 |
 | テナントインスタンス | `tenants/{id}/docs/.../steward-assessment.md` | 当該法人の REG/契約/P0 |
 
 ---
 
-## 2. フレームワーク次元（5 領域）
+## 2. フレームワーク次元（6 領域）
 
 | 領域 | 観点 | 確認方法 |
 |------|------|---------|
@@ -26,6 +26,19 @@
 | **Skills / Ops** | skills run * · ops p0/daily | `steward skills list` |
 | **仕様 · 文書** | spec-v0.3 · サブ spec · assessment 分離 | 本リポジトリ `docs/` |
 | **法域 · 言語** | TJS-11 pack · display_language registry | [org-os/tjs-11-target-jurisdictions.md](org-os/tjs-11-target-jurisdictions.md) |
+| **憲章準拠** | SSOT · Catalog/Roster · Event · Layer · DoD | [engineering/](../steward/rules/engineering/) · `validatePolicyMirrors()` · [ADR 0003](adr/0003-constitution-code-compliance-roadmap.md) |
+
+### 憲章準拠スコア（目安 · ADR 0003）
+
+| 条項 | 参照実装状態 | 確認 |
+|------|------------|------|
+| §1.1 SSOT | ○ `data/` 正本 | `orgos validate` |
+| §1.2 Catalog/Roster | △ 移行中 | `validateAgentCatalog` · `agent-roster` |
+| §1.3–1.5 Event First | △ Wire · company-events | [08-event-sourcing.md](../steward/rules/engineering/08-event-sourcing.md) |
+| §3 Layer | △ commands/lib 混在 | 新規 PR は Domain 分離優先 |
+| §7 CLI path | ○ | `src/commands/` パターン |
+| §8 Testing | ○ Vitest 3 軸 | [testing-modules.md](../steward/rules/testing-modules.md) |
+| Policy ミラー | ○ | `npm run generated:check` · validate integrity |
 
 ### 完成度レベル（目安）
 
@@ -270,7 +283,7 @@ TJS-11 法域: **11/11 完了**（2026-06-25）。
 ## 13. OrgOS 完成度（C1–C3）
 
 **用語:** [orgos-vocabulary.md](org-os/orgos-vocabulary.md) · **採点:** [orgos-scoring-methodology.md](org-os/orgos-scoring-methodology.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C · 運用: [runbook-orgos.md](runbook-orgos.md)  
-**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-07-11 · **893 tests**、静的正本。動的実行件数は CI 結果を参照）
+**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-07-11 · **1103 tests**、静的正本。動的実行件数は CI 結果を参照）
 
 ### 二重採点（矛盾解消）
 
