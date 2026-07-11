@@ -39,6 +39,7 @@ declaration_modules:
   - jp_trademark_application
   - jp_corporate_registration
   - jp_medical_device
+  - jp_permit_registry
 
 notes: 参照実装 — tenants/mal · 組織形態は entity-forms.yaml（株式会社以外含む）
 capability_catalog: business-capability-catalog.yaml

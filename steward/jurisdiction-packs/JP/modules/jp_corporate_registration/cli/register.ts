@@ -3,6 +3,7 @@ import type { ModuleCliBundle } from "../../../../../../src/lib/module-cli-types
 import {
   runJpCorporateChecklist,
   runJpCorporateDraft,
+  runJpCorporateExportPdf,
   runJpCorporatePrepare,
   runJpCorporateProcedures,
   runJpCorporateShow,
@@ -76,6 +77,22 @@ function registerCorporateCommands(operationsCmd: Command): void {
         case: opts.case,
         form: opts.form,
         write: opts.write,
+        json: opts.json,
+      })
+    );
+
+  cmd
+    .command("export-pdf")
+    .description("Export registration filing pack as PDF (TeX → xelatex)")
+    .requiredOption("--case <id>", "Case id from case-registry.yaml")
+    .option("--write", "Compile TeX and write PDF to docs/io/outbox/submissions/")
+    .option("--force", "Export even if checklist items are missing")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runJpCorporateExportPdf({
+        case: opts.case,
+        write: opts.write,
+        force: opts.force,
         json: opts.json,
       })
     );

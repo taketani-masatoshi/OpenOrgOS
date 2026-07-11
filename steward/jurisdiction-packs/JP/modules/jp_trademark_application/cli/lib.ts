@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { z } from "zod";
 import {
   trademarkFieldMapFileSchema,
   trademarkGoodsServicesFileSchema,
@@ -20,6 +21,15 @@ import { getModuleSeedDir } from "../../../../../../src/lib/modules.js";
 import { currentDate, getDocsDir, writeTrackedFile } from "../../../../../../src/lib/utils.js";
 
 export const MODULE_ID = "jp_trademark_application";
+
+function loadTrademarkDataFile<S extends z.ZodTypeAny>(
+  filename: string,
+  schema: S
+): { data: z.output<S>; path: string } | null {
+  const loaded = loadModuleDataFile(MODULE_ID, filename, schema);
+  if (!loaded) return null;
+  return { data: schema.parse(loaded.data), path: loaded.path };
+}
 
 const MARK_TYPE_LABELS: Record<string, string> = {
   standard_characters: "標準文字",
@@ -138,13 +148,13 @@ function resolveApplication(applicationId: string): {
   mark: TrademarkMark;
   catalog: TrademarkGoodsServicesCatalog;
 } | null {
-  const registry = loadModuleDataFile(MODULE_ID, "trademark-registry.yaml", trademarkRegistryFileSchema);
+  const registry = loadTrademarkDataFile("trademark-registry.yaml", trademarkRegistryFileSchema);
   if (!registry) return null;
   const app = registry.data.applications.find((a) => a.id === applicationId);
   if (!app) return null;
 
-  const marks = loadModuleDataFile(MODULE_ID, "marks.yaml", trademarkMarksFileSchema);
-  const gs = loadModuleDataFile(MODULE_ID, "goods-services.yaml", trademarkGoodsServicesFileSchema);
+  const marks = loadTrademarkDataFile("marks.yaml", trademarkMarksFileSchema);
+  const gs = loadTrademarkDataFile("goods-services.yaml", trademarkGoodsServicesFileSchema);
   if (!marks || !gs) return null;
 
   const mark = marks.data.marks.find((m) => m.id === app.mark_id);
@@ -155,7 +165,7 @@ function resolveApplication(applicationId: string): {
 }
 
 function loadSources() {
-  return loadModuleDataFile(MODULE_ID, "sources.yaml", trademarkSourcesFileSchema);
+  return loadTrademarkDataFile("sources.yaml", trademarkSourcesFileSchema);
 }
 
 function defaultSourceUrls(): { jpo: string; inpit: string; jplatpat: string } {
@@ -176,7 +186,7 @@ function buildDraftVars(
 ): Record<string, string> {
   const urls = defaultSourceUrls();
   const filingDate = app.filing_date ?? currentDate();
-  const fieldMap = loadModuleDataFile(MODULE_ID, "field-map.yaml", trademarkFieldMapFileSchema);
+  const fieldMap = loadTrademarkDataFile("field-map.yaml", trademarkFieldMapFileSchema);
   let applicantName = snap.name;
   let applicantAddress = snap.address ?? "";
   for (const m of fieldMap?.data.mappings ?? []) {
@@ -210,9 +220,9 @@ function buildDraftVars(
 }
 
 export function runJpTrademarkShow(opts: { json?: boolean }): void {
-  const registry = loadModuleDataFile(MODULE_ID, "trademark-registry.yaml", trademarkRegistryFileSchema);
-  const marks = loadModuleDataFile(MODULE_ID, "marks.yaml", trademarkMarksFileSchema);
-  const gs = loadModuleDataFile(MODULE_ID, "goods-services.yaml", trademarkGoodsServicesFileSchema);
+  const registry = loadTrademarkDataFile("trademark-registry.yaml", trademarkRegistryFileSchema);
+  const marks = loadTrademarkDataFile("marks.yaml", trademarkMarksFileSchema);
+  const gs = loadTrademarkDataFile("goods-services.yaml", trademarkGoodsServicesFileSchema);
   const sources = loadSources();
   const jurisdiction = getResolvedJurisdiction();
 
@@ -250,10 +260,10 @@ export function runJpTrademarkShow(opts: { json?: boolean }): void {
 
 export function runJpTrademarkValidate(): void {
   const errors: string[] = [];
-  const registry = loadModuleDataFile(MODULE_ID, "trademark-registry.yaml", trademarkRegistryFileSchema);
-  const marks = loadModuleDataFile(MODULE_ID, "marks.yaml", trademarkMarksFileSchema);
-  const gs = loadModuleDataFile(MODULE_ID, "goods-services.yaml", trademarkGoodsServicesFileSchema);
-  const fieldMap = loadModuleDataFile(MODULE_ID, "field-map.yaml", trademarkFieldMapFileSchema);
+  const registry = loadTrademarkDataFile("trademark-registry.yaml", trademarkRegistryFileSchema);
+  const marks = loadTrademarkDataFile("marks.yaml", trademarkMarksFileSchema);
+  const gs = loadTrademarkDataFile("goods-services.yaml", trademarkGoodsServicesFileSchema);
+  const fieldMap = loadTrademarkDataFile("field-map.yaml", trademarkFieldMapFileSchema);
   const sources = loadSources();
 
   if (!registry) errors.push("trademark-registry.yaml missing");

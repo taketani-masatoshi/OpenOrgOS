@@ -537,13 +537,13 @@ modules:
 
   - id: jp_permit_registry
     name_ja: 許認可・届出台帳
-    status: planned
+    status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
     categories: [compliance_legal, sector_operations]
     priority: P1
-    notes: permit_expiry_check skill 拡張 · docs/company/licenses/
+    notes: permit-types-catalog 60+ 種 · obligations · operations permit CLI · gap 分析
 
   - id: jp_subcontractor_act
     name_ja: 下請法コンプライアンス

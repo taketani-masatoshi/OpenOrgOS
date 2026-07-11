@@ -1,0 +1,61 @@
+sources:
+  - id: mhlw-ryokan
+    title: 旅館業法（厚生労働省）
+    url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000188411.html
+    category: accommodation
+    type: law
+  - id: mlit-minpaku
+    title: 住宅宿泊事業法（国土交通省）
+    url: https://www.mlit.go.jp/jutakukentiku/house/jutakukentiku_house_tk3_000015.html
+    category: accommodation
+    type: law
+  - id: fdma-fire
+    title: 消防庁 — 消防法関連
+    url: https://www.fdma.go.jp/
+    category: fire_building
+    type: portal
+  - id: mlit-building
+    title: 国土交通省 — 建築確認
+    url: https://www.mlit.go.jp/jutakukentiku/building/
+    category: fire_building
+    type: portal
+  - id: mhlw-food
+    title: 厚生労働省 — 食品衛生
+    url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/hygiene/
+    category: food_beverage
+    type: portal
+  - id: nta-alcohol
+    title: 国税庁 — 酒税
+    url: https://www.nta.go.jp/taxes/sake/index.htm
+    category: food_beverage
+    type: portal
+  - id: mlit-takken
+    title: 国土交通省 — 宅建業
+    url: https://www.mlit.go.jp/jutakukentiku/house/takken.html
+    category: real_estate
+    type: portal
+  - id: mlit-construction
+    title: 国土交通省 — 建設業
+    url: https://www.mlit.go.jp/jutakukentiku/anzen/kenchiku.html
+    category: construction
+    type: portal
+  - id: pmda
+    title: PMDA — 医療機器
+    url: https://www.pmda.go.jp/
+    category: medical_health
+    type: portal
+  - id: fsa
+    title: 金融庁
+    url: https://www.fsa.go.jp/
+    category: finance
+    type: portal
+  - id: npa-security
+    title: 警察庁 — 警備業
+    url: https://www.npa.go.jp/bureau/security/
+    category: security
+    type: portal
+  - id: ppc
+    title: 個人情報保護委員会
+    url: https://www.ppc.go.jp/
+    category: other
+    type: portal

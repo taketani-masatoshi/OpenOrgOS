@@ -1,0 +1,93 @@
+% MOJ form layout — dashed subtle rules · compact single-line rows
+\usepackage{array}
+\usepackage{calc}
+\usepackage{tikz}
+
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+
+\newcommand{\MojLabelWidth}{2.35cm}
+\newcommand{\MojFieldWidth}{\dimexpr\linewidth-\MojLabelWidth-1.5mm-2\tabcolsep\relax}
+\newcommand{\MojTableRule}{%
+  \par\vspace{0.6mm}%
+  \noindent\tikz{\draw[black!28,dashed,line width=0.35pt] (0,0) -- (\textwidth,0);}%
+  \vspace{1mm}}
+
+\newcommand{\MojReceiptBox}{%
+  \noindent\begin{tikzpicture}
+  \draw[black!25, dashed, line width=0.35pt]
+    (0,0) rectangle (\dimexpr\linewidth-0.4pt\relax,32mm);
+  \node[anchor=north west, inner sep=2mm] at (2mm,-2mm) {\small 受付番号票貼付欄};
+  \end{tikzpicture}\par\vspace{3mm}}
+
+\newcommand{\MojFormTitle}[1]{%
+  \begin{center}{\large\bfseries #1}\end{center}\vspace{1.5mm}}
+
+\newcommand{\MojCorpNumber}[1]{%
+  \noindent{\footnotesize １．会社法人等番号}\hfill{\normalsize #1}\par\vspace{2mm}}
+
+\newcommand{\MojFieldRow}[2]{%
+  \noindent\footnotesize
+  \begin{tabular}{@{}>{\bfseries}p{\MojLabelWidth}@{\hspace{1.5mm}}>{\raggedright\arraybackslash}p{\MojFieldWidth}@{}}
+  #1 & #2 \\
+  \end{tabular}\par\MojTableRule}
+
+\newcommand{\MojSectionPair}[2]{\MojFieldRow{#1}{#2}}
+
+\newcommand{\MojRecordBlock}[1]{\MojFieldRow{１．登記すべき事項}{#1}}
+
+\newcommand{\MojFeeRow}[1]{\MojFieldRow{１．登録免許税}{#1}}
+
+\newcommand{\MojAttachmentList}[1]{\MojFieldRow{１．添付書類}{#1}}
+
+\newcommand{\MojApplicationPhrase}{%
+  \vspace{3mm}
+  \begin{center}
+  {\normalsize 上\,\,記\,\,の\,\,と\,\,お\,\,り\,\,、\,\,登\,\,記\,\,の\,\,申\,\,請\,\,を\,\,し\,\,ま\,\,す\,\,。}
+  \end{center}\vspace{4mm}}
+
+\newcommand{\MojApplicantBlock}[5]{%
+  \noindent\hfill\begin{minipage}{0.72\textwidth}\footnotesize
+  \hfill #1\\[3mm]
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{8.6cm}@{}>{\raggedleft\arraybackslash}p{2.6cm}@{}}
+  #2 & 申請人\\[3mm]
+  #3 & \\[3mm]
+  #4 & 代表取締役\\[3mm]
+  \multicolumn{2}{@{}r@{}}{#5\hspace{1.5em}㊞}
+  \end{tabular}
+  \end{minipage}\par\vspace{3mm}}
+
+\newcommand{\MojRegistryAddressee}[1]{%
+  \noindent\hfill\begin{minipage}{0.42\textwidth}
+  \begin{center}\footnotesize #1\\[0.5mm]御中\end{center}
+  \end{minipage}\par\vspace{2mm}}
+
+\newcommand{\MojStampSheet}{%
+  \newpage
+  \thispagestyle{empty}
+  \vspace*{6mm}
+  \begin{center}{\large\bfseries 収入印紙貼付台紙}\end{center}
+  \vspace{10mm}
+  \noindent\hfill
+  \begin{tikzpicture}
+  \draw[black!25, dashed, line width=0.35pt] (0,0) rectangle (5.2,3.8);
+  \node at (2.6,1.9) {\footnotesize 収\hspace{1.2em}入\hspace{1.2em}印\hspace{1.2em}紙};
+  \end{tikzpicture}\hspace{6mm}
+  \begin{tikzpicture}
+  \draw[black!25, dashed, line width=0.35pt] (0,0) rectangle (2.8,3.8);
+  \node at (1.4,1.9) {\footnotesize 契\hspace{0.8em}印};
+  \end{tikzpicture}\par
+  \vfill}
+
+\newcommand{\MojDashedBox}[1]{%
+  \noindent\begin{tikzpicture}
+  \node[
+    anchor=west,
+    inner sep=4mm,
+    draw=black!25,
+    dashed,
+    line width=0.35pt,
+    text width=\dimexpr\linewidth-8mm\relax,
+    align=left
+  ] {\footnotesize #1};
+  \end{tikzpicture}\par}

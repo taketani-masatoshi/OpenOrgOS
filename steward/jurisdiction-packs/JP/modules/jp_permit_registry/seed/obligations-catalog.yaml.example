@@ -1,0 +1,332 @@
+# JP 許認可義務カタログ — permit_type_ids への紐づけ正本
+
+jurisdiction: JP
+updated: "2026-07-10"
+
+obligations:
+  # ── 宿泊 ──
+  - id: OBL-RYOKAN-PERMIT-OBTAIN
+    permit_type_ids: [pt-ryokan-hotel, pt-ryokan-ryokan, pt-ryokan-shukuhaku, pt-ryokan-geshuku]
+    title: 旅館業許可の取得
+    category: permit
+    legal_basis: 旅館業法第4条
+    notes: 営業開始前必須
+
+  - id: OBL-RYOKAN-GUEST-REGISTER
+    permit_type_ids: [pt-ryokan-hotel, pt-ryokan-ryokan, pt-ryokan-shukuhaku, pt-ryokan-geshuku]
+    title: 宿泊者名簿の備付・保存
+    category: record
+    frequency: 常時
+    evidence_ledger: guest-register
+    legal_basis: 旅館業法第6条
+    notes: 保存期間3年
+
+  - id: OBL-RYOKAN-PRICE-DISPLAY
+    permit_type_ids: [pt-ryokan-hotel, pt-ryokan-ryokan, pt-ryokan-shukuhaku, pt-ryokan-geshuku]
+    title: 宿泊料金の掲示
+    category: display
+    frequency: 常時
+    legal_basis: 旅館業法第5条
+
+  - id: OBL-RYOKAN-CHANGE-NOTIFY
+    permit_type_ids: [pt-ryokan-hotel, pt-ryokan-ryokan, pt-ryokan-shukuhaku, pt-ryokan-geshuku]
+    title: 許可事項変更届出
+    category: notification
+    frequency: 変更時
+    lead_days: 14
+    legal_basis: 旅館業法施行規則
+
+  - id: OBL-MINPAKU-REGISTER
+    permit_type_ids: [pt-minpaku-notification]
+    title: 住宅宿泊事業届出・届出番号表示
+    category: permit
+    legal_basis: 住宅宿泊事業法第5条
+
+  - id: OBL-MINPAKU-PERIODIC-REPORT
+    permit_type_ids: [pt-minpaku-notification]
+    title: 年間宿泊日数・実績報告（自治体条例による）
+    category: reporting
+    frequency: 年次
+    lead_days: 30
+    evidence_ledger: minpaku-annual-report
+
+  # ── 消防・建築 ──
+  - id: OBL-FIRE-EQUIP-CERT
+    permit_type_ids: [pt-fire-equip]
+    title: 消防用設備等配置証明の取得
+    category: permit
+    legal_basis: 消防法第17条の3
+
+  - id: OBL-FIRE-INSPECT-PERIODIC
+    permit_type_ids: [pt-fire-inspect]
+    title: 消防用設備等の定期点検・報告
+    category: inspection
+    frequency: 6ヶ月〜1年（設備による）
+    lead_days: 30
+    evidence_ledger: fire-inspection
+    legal_basis: 消防法第17条の4
+
+  - id: OBL-BUILDING-CONFIRM
+    permit_type_ids: [pt-building-confirm]
+    title: 建築確認申請・確認済証の取得
+    category: permit
+    legal_basis: 建築基準法第6条
+
+  - id: OBL-BUILDING-COMPLETE
+    permit_type_ids: [pt-building-complete]
+    title: 完了検査・検査済証の取得
+    category: permit
+    notes: pt-building-confirm 取得後
+    legal_basis: 建築基準法第7条
+
+  # ── 飲食・酒類 ──
+  - id: OBL-FOOD-PERMIT
+    permit_type_ids: [pt-food-restaurant, pt-food-manufacturing]
+    title: 営業許可の取得
+    category: permit
+    legal_basis: 食品衛生法第28条
+
+  - id: OBL-FOOD-HACCP-RECORD
+    permit_type_ids: [pt-food-restaurant, pt-food-manufacturing]
+    title: 衛生管理・温度記録の保存
+    category: record
+    frequency: 常時
+    evidence_ledger: food-hygiene
+
+  - id: OBL-ALCOHOL-LICENSE-RENEW
+    permit_type_ids: [pt-alcohol-sales, pt-alcohol-restaurant]
+    title: 酒類販売業免許の更新
+    category: renewal
+    frequency: 3年
+    lead_days: 90
+    evidence_ledger: alcohol-license
+    legal_basis: 酒税法第7条
+
+  # ── 不動産 ──
+  - id: OBL-TAKKEN-LICENSE
+    permit_type_ids: [pt-takken]
+    title: 宅建業免許の取得・更新
+    category: permit
+    frequency: 5年
+    lead_days: 90
+    legal_basis: 宅建業法第4条
+
+  - id: OBL-TAKKEN-TAKKENSHI
+    permit_type_ids: [pt-takken]
+    title: 専任宅地建物取引士の配置
+    category: record
+    frequency: 常時
+    legal_basis: 宅建業法第20条
+
+  - id: OBL-RENTAL-MGMT-REGISTER
+    permit_type_ids: [pt-rental-housing-mgmt]
+    title: 賃貸住宅管理業者登録の取得・更新
+    category: renewal
+    frequency: 5年
+    lead_days: 90
+
+  # ── 建設 ──
+  - id: OBL-CONSTRUCTION-LICENSE
+    permit_type_ids: [pt-construction-general, pt-construction-specific]
+    title: 建設業許可の取得・更新
+    category: renewal
+    frequency: 5年
+    lead_days: 90
+    legal_basis: 建設業法第3条
+
+  - id: OBL-CONSTRUCTION-INSURANCE
+    permit_type_ids: [pt-construction-general, pt-construction-specific]
+    title: 建設工事保険・賠償責任保険の加入
+    category: record
+    frequency: 工事ごと
+    evidence_ledger: construction-insurance
+
+  # ── 運送 ──
+  - id: OBL-TRANSPORT-LICENSE
+    permit_type_ids: [pt-freight-forwarding, pt-bus-common, pt-taxi]
+    title: 運送事業許可の取得
+    category: permit
+    legal_basis: 貨物自動車運送事業法 / 道路運送法
+
+  - id: OBL-TRANSPORT-SAFETY-MGMT
+    permit_type_ids: [pt-freight-forwarding, pt-bus-common, pt-taxi]
+    title: 安全運転管理者・運行管理者の選任
+    category: record
+    frequency: 常時
+
+  # ── 医療機器（jp_medical_device 連動） ──
+  - id: OBL-MD-PERMIT-MFG
+    permit_type_ids: [pt-medical-device-mfg]
+    title: 製造業許可の取得・更新
+    category: permit
+    evidence_ledger: license-registry
+    notes: 詳細は jp_medical_device モジュール
+
+  - id: OBL-MD-PERMIT-MAH
+    permit_type_ids: [pt-medical-device-mah]
+    title: 製造販売業許可の取得・更新
+    category: permit
+    evidence_ledger: license-registry
+
+  - id: OBL-MD-GVP-REPORT
+    permit_type_ids: [pt-medical-device-mah, pt-medical-device-dist]
+    title: 有害事象等の報告（PMDA）
+    category: reporting
+    frequency: 期限厳守
+    evidence_ledger: adverse_event
+    legal_basis: 薬機法・GVP省令
+
+  # ── 医療・薬局 ──
+  - id: OBL-CLINIC-OPEN
+    permit_type_ids: [pt-clinic, pt-hospital, pt-dental]
+    title: 医療機関開設許可・届出
+    category: permit
+    legal_basis: 医療法第19条
+
+  - id: OBL-PHARMACY-OPEN
+    permit_type_ids: [pt-pharmacy]
+    title: 薬局開設許可
+    category: permit
+    legal_basis: 薬局構造設備規則
+
+  # ── 金融 ──
+  - id: OBL-FINANCE-REGISTER
+    permit_type_ids: [pt-money-lending, pt-fund-transfer, pt-crypto-exchange]
+    title: 登録・許可の取得・更新
+    category: permit
+    legal_basis: 各業法
+
+  - id: OBL-FINANCE-ANNUAL-REPORT
+    permit_type_ids: [pt-money-lending, pt-fund-transfer, pt-crypto-exchange]
+    title: 事業報告書の提出
+    category: reporting
+    frequency: 年次
+    lead_days: 60
+
+  # ── 労働 ──
+  - id: OBL-STAFFING-LICENSE
+    permit_type_ids: [pt-staffing]
+    title: 労働者派遣事業許可の取得・更新
+    category: renewal
+    frequency: 3年
+    lead_days: 90
+
+  - id: OBL-JOB-INTRO-LICENSE
+    permit_type_ids: [pt-job-intro-fee]
+    title: 有料職業紹介事業許可の取得・更新
+    category: renewal
+    frequency: 5年
+    lead_days: 90
+
+  # ── 廃棄物 ──
+  - id: OBL-WASTE-LICENSE
+    permit_type_ids: [pt-waste-collect, pt-waste-disposal, pt-general-waste]
+    title: 廃棄物処理業許可の取得・更新
+    category: renewal
+    frequency: 5年
+    lead_days: 90
+
+  - id: OBL-WASTE-MANIFEST
+    permit_type_ids: [pt-waste-collect, pt-waste-disposal]
+    title: マニフェストの交付・保存
+    category: record
+    frequency: 都度
+    evidence_ledger: waste-manifest
+
+  # ── 警備 ──
+  - id: OBL-SECURITY-CERT
+    permit_type_ids: [pt-security]
+    title: 警備業認定の取得・更新
+    category: renewal
+    frequency: 5年
+    lead_days: 90
+
+  - id: OBL-SECURITY-TRAINING
+    permit_type_ids: [pt-security]
+    title: 警備員教育・研修記録
+    category: training
+    frequency: 年次
+    evidence_ledger: security-training
+
+  # ── 電気通信 ──
+  - id: OBL-TELECOM-NOTIFY
+    permit_type_ids: [pt-telecom, pt-telecom-registration]
+    title: 電気通信事業届出・登録
+    category: permit
+    legal_basis: 電気通信事業法第9条
+
+  - id: OBL-TELECOM-ANNUAL-REPORT
+    permit_type_ids: [pt-telecom, pt-telecom-registration]
+    title: 事業報告の提出
+    category: reporting
+    frequency: 年次
+    lead_days: 60
+
+  # ── 風営 ──
+  - id: OBL-FUEI-PERMIT
+    permit_type_ids: [pt-fueiho-1, pt-fueiho-2, pt-tokutei-yukyo]
+    title: 風俗営業許可の取得
+    category: permit
+    legal_basis: 風俗営業法第4条
+
+  - id: OBL-FUEI-CLOSE-REPORT
+    permit_type_ids: [pt-fueiho-1, pt-fueiho-2, pt-tokutei-yukyo]
+    title: 営業終了・休止届出
+    category: notification
+    frequency: 変更時
+
+  # ── 小売 ──
+  - id: OBL-ANTIQUE-LICENSE
+    permit_type_ids: [pt-antique-dealer]
+    title: 古物商許可の取得・更新
+    category: renewal
+    frequency: 5年
+    lead_days: 90
+
+  # ── 介護 ──
+  - id: OBL-CARE-DESIGNATION
+    permit_type_ids: [pt-home-care, pt-day-service, pt-disability-support]
+    title: 事業所指定・更新
+    category: permit
+    legal_basis: 介護保険法 / 障害者総合支援法
+
+  - id: OBL-CARE-QUALITY-REPORT
+    permit_type_ids: [pt-home-care, pt-day-service]
+    title: 介護サービス費算定・実績報告
+    category: reporting
+    frequency: 月次
+    evidence_ledger: care-service-report
+
+  # ── 教育 ──
+  - id: OBL-SCHOOL-APPROVAL
+    permit_type_ids: [pt-senshu-school, pt-misc-school]
+    title: 学校設置認可
+    category: permit
+    legal_basis: 学校教育法
+
+  # ── 農地 ──
+  - id: OBL-FARMLAND-CONVERSION
+    permit_type_ids: [pt-farmland-conversion]
+    title: 農地転用許可の取得
+    category: permit
+    legal_basis: 農地法第4条
+
+  # ── エネルギー ──
+  - id: OBL-ENERGY-REGISTER
+    permit_type_ids: [pt-electricity-retail, pt-gas-utility]
+    title: 事業登録・許可の取得
+    category: permit
+
+  # ── 横断 ──
+  - id: OBL-PRIVACY-CROSS-BORDER
+    permit_type_ids: [pt-privacy-cross-border]
+    title: 外国第三者提供届出
+    category: notification
+    legal_basis: 個人情報保護法第28条
+
+  - id: OBL-EMPLOYMENT-RULES
+    permit_type_ids: [pt-employment-rules]
+    title: 就業規則の届出・変更届
+    category: notification
+    frequency: 変更時
+    legal_basis: 労働基準法第89条

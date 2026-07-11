@@ -1,0 +1,20 @@
+# 法務局公表様式参照（PDF export テンプレ正本）
+# 出典: https://houmukyoku.moj.go.jp/homu/COMMERCE_11-1.html
+updated: "2026-07-11"
+forms:
+  - id: moj-1-13
+    name: 株式会社本店移転登記申請書（管轄登記所内移転）
+    version: R8.5.12
+    url: https://houmukyoku.moj.go.jp/homu/content/001364566.pdf
+    tex_template: templates/honten-iten-touki-kannai.tex.example
+    procedure_ids:
+      - head_office_relocation_same_bureau
+  - id: moj-1-14
+    name: 株式会社本店移転登記申請書（管轄登記所外移転）
+    version: R8.5.12
+    url: https://houmukyoku.moj.go.jp/homu/content/001252661.pdf
+    tex_templates:
+      old_bureau: templates/honten-iten-touki-kangai-old.tex.example
+      new_bureau: templates/honten-iten-touki-kangai-new.tex.example
+    procedure_ids:
+      - head_office_relocation_cross_bureau

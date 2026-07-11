@@ -1,0 +1,48 @@
+# 申請書フィールド → 社内データ写像
+# source プレフィックス: company.* · property.* · application.* · computed.*
+
+mappings:
+  - form_field: applicant_name
+    source: company.name
+    required: true
+  - form_field: applicant_address
+    source: company.address
+    required: true
+  - form_field: corporate_number
+    source: company.corporate_number
+    notes: 法人番号 · 願書に不要な場合も内部管理用に保持
+  - form_field: representative_name
+    source: company.representative_primary
+    required: true
+  - form_field: representative_address
+    source: company.address
+    required: true
+    notes: 代表者住所未登録時は本店住所を流用
+  - form_field: business_description
+    source: company.business_description_short
+  - form_field: site_name
+    source: property.name
+    required: true
+  - form_field: site_address
+    source: property.location
+    required: true
+  - form_field: room_count
+    source: property.hotel.room_count
+    notes: 旅館業 · 客室数
+  - form_field: building_area_sqm
+    source: property.building_area_sqm
+  - form_field: structure_use
+    source: application.structure_use
+    required: true
+    notes: 手入力または application-registry の overrides
+  - form_field: business_type
+    source: application.business_type
+  - form_field: license_type
+    source: application.license_type
+  - form_field: filing_date
+    source: computed.today_reiwa
+    required: true
+    format: reiwa
+  - form_field: filing_date_iso
+    source: computed.today_iso
+    format: plain

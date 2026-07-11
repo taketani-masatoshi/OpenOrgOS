@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   corporateRegistrationCaseRegistryFileSchema,
@@ -16,6 +16,11 @@ import {
 } from "../../../../../../src/lib/module-business-data.js";
 import { getModuleSeedDir } from "../../../../../../src/lib/modules.js";
 import { currentDate, getDocsDir, writeTrackedFile } from "../../../../../../src/lib/utils.js";
+import {
+  buildJapaneseLatexFontSetup,
+  detectLatexEngine,
+  writeTexAndCompile,
+} from "../../../../../../src/lib/latex-compile.js";
 import {
   findCompanyEventById,
   registerArtifactFiles,
@@ -137,9 +142,23 @@ export function enrichCaseWithDefaults(
       if (!enriched.head_office_change) {
         enriched.head_office_change = {
           resolution_date: filing,
+          effective_date: filing,
+          resolution_body: "board",
           old_address: snap.address ?? "（現本店 — 要記載）",
           new_address: "（移転先本店 — 要記載）",
           cross_bureau: procedure.id.includes("cross"),
+        };
+      } else {
+        const hoc = enriched.head_office_change;
+        enriched.head_office_change = {
+          ...hoc,
+          resolution_body: hoc.resolution_body ?? "board",
+          effective_date: hoc.effective_date ?? hoc.resolution_date,
+          cross_bureau: inferHeadOfficeCrossBureau(
+            hoc.old_address,
+            hoc.new_address,
+            hoc.cross_bureau
+          ),
         };
       }
       break;
@@ -150,6 +169,7 @@ export function enrichCaseWithDefaults(
         enriched.officer_change = {
           resolution_date: filing,
           resolution_body: "shareholders",
+          resigning: [],
           appointing: directors.map((d) => ({
             name: d.name,
             role: d.role ?? "取締役",
@@ -162,6 +182,7 @@ export function enrichCaseWithDefaults(
       if (!enriched.purpose_change) {
         enriched.purpose_change = {
           resolution_date: filing,
+          old_purposes: [],
           new_purposes: splitBusinessPurposes(snap.business_description),
         };
       }
@@ -228,7 +249,9 @@ export function buildSyntheticCase(procedureId: string, snap: CompanySnapshot): 
   const base: CorporateRegistrationCase = {
     id: `SIMPL-${procedureId}`,
     procedure_id: procedureId,
+    status: "draft",
     filing_date: currentDate(),
+    self_filing: false,
     simplified: true,
     registry_office: "東京法務局",
     docs_root: `docs/corporate-registration/SIMPL-${procedureId}`,
@@ -291,15 +314,36 @@ function buildFilingPackIndex(
 }
 
 function loadCatalog() {
-  return loadModuleDataFile(MODULE_ID, "procedures-catalog.yaml", corporateRegistrationProceduresFileSchema);
+  const loaded = loadModuleDataFile(
+    MODULE_ID,
+    "procedures-catalog.yaml",
+    corporateRegistrationProceduresFileSchema
+  );
+  return loaded
+    ? { ...loaded, data: corporateRegistrationProceduresFileSchema.parse(loaded.data) }
+    : null;
 }
 
 function loadSources() {
-  return loadModuleDataFile(MODULE_ID, "sources.yaml", corporateRegistrationFormsFileSchema);
+  const loaded = loadModuleDataFile(
+    MODULE_ID,
+    "sources.yaml",
+    corporateRegistrationFormsFileSchema
+  );
+  return loaded
+    ? { ...loaded, data: corporateRegistrationFormsFileSchema.parse(loaded.data) }
+    : null;
 }
 
 function loadCases() {
-  return loadModuleDataFile(MODULE_ID, "case-registry.yaml", corporateRegistrationCaseRegistryFileSchema);
+  const loaded = loadModuleDataFile(
+    MODULE_ID,
+    "case-registry.yaml",
+    corporateRegistrationCaseRegistryFileSchema
+  );
+  return loaded
+    ? { ...loaded, data: corporateRegistrationCaseRegistryFileSchema.parse(loaded.data) }
+    : null;
 }
 
 function findProcedure(id: string, catalog: ReturnType<typeof loadCatalog>): CorporateRegistrationProcedure | undefined {
@@ -318,6 +362,232 @@ function toReiwaDate(iso: string): string {
 
 function formatYen(n: number): string {
   return n.toLocaleString("ja-JP");
+}
+
+function isSelfFiling(caseEntry: CorporateRegistrationCase): boolean {
+  return caseEntry.self_filing === true || (caseEntry.notes?.includes("自社") ?? false);
+}
+
+function isHeadOfficeProcedure(procedureId: string): boolean {
+  return procedureId.startsWith("head_office_relocation");
+}
+
+const TOKYO_23_WARDS = [
+  "千代田区", "中央区", "港区", "新宿区", "文京区", "台東区", "墨田区", "江東区",
+  "品川区", "目黒区", "大田区", "世田谷区", "渋谷区", "中野区", "杉並区", "豊島区",
+  "北区", "荒川区", "板橋区", "練馬区", "足立区", "葛飾区", "江戸川区",
+];
+
+function addressPlain(addr: string): string {
+  return addr.replace(/^〒\d{3}-\d{4}\s*/, "").trim();
+}
+
+function formatCorporateNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length !== 13) return raw;
+  return `${digits.slice(0, 4)}－${digits.slice(4, 6)}－${digits.slice(6)}`;
+}
+
+function inferHeadOfficeCrossBureau(
+  oldAddress: string,
+  newAddress: string,
+  explicit?: boolean
+): boolean {
+  if (explicit === true) return true;
+  if (explicit === false) return false;
+  const inTokyo23 = (a: string) =>
+    a.includes("東京都") && TOKYO_23_WARDS.some((w) => a.includes(w));
+  if (inTokyo23(oldAddress) && inTokyo23(newAddress)) return false;
+  const oldPref = oldAddress.match(/^[^都道府県]+[都道府県]/)?.[0] ?? "";
+  const newPref = newAddress.match(/^[^都道府県]+[都道府県]/)?.[0] ?? "";
+  return oldPref !== newPref;
+}
+
+function normalizeRegistryOffice(name: string): string {
+  return name.replace(/（.*?）/g, "").replace(/\s+/g, "").trim() || "東京法務局";
+}
+
+function buildHeadOfficeRegistrationPurpose(
+  caseEntry: CorporateRegistrationCase,
+  target: "default" | "old" | "new" | "kannai"
+): string {
+  const hoc = caseEntry.head_office_change;
+  if (!hoc) return "本店移転";
+  const newPlain = addressPlain(hoc.new_address);
+  const effective = hoc.effective_date ?? hoc.resolution_date;
+  const effectiveReiwa = toReiwaDate(effective);
+  const crossBureau = inferHeadOfficeCrossBureau(hoc.old_address, hoc.new_address, hoc.cross_bureau);
+
+  if (!crossBureau || target === "kannai") {
+    return `「本店」${newPlain}\n「原因年月日」${effectiveReiwa}移転`;
+  }
+  if (target === "old") {
+    return `「登記記録に関する事項」${effectiveReiwa}${newPlain}に本店移転`;
+  }
+  if (target === "new") {
+    return `「登記記録に関する事項」${effectiveReiwa}${newPlain}から本店移転`;
+  }
+  return `「登記記録に関する事項」${effectiveReiwa}${newPlain}に本店移転`;
+}
+
+function buildBoardSignatureRowsTex(
+  directors: Array<{ name: string; role?: string }>
+): string {
+  return directors
+    .map((d, i) => {
+      const label = i === 0 ? "出席取締役" : "同";
+      return `${label} & ${d.name} & ㊞ \\\\`;
+    })
+    .join("\n");
+}
+
+function buildAttachmentsSubmissionTex(
+  resolutionBody: string,
+  crossBureau: boolean,
+  target: "main" | "new_bureau"
+): string {
+  if (crossBureau && target === "new_bureau") {
+    return "（該当なし）";
+  }
+  if (resolutionBody === "board") {
+    return "取締役会議事録\\quad １通";
+  }
+  return "株主総会議事録\\quad １通\\\\ 取締役会議事録\\quad １通";
+}
+
+function buildBoardOpeningParagraph(
+  caseEntry: CorporateRegistrationCase,
+  directors: Array<{ name: string; role?: string }>,
+  resolutionReiwa: string
+): string {
+  const hoc = caseEntry.head_office_change;
+  const start = hoc?.meeting_start_time ?? "10時00分";
+  const end = hoc?.meeting_end_time ?? "10時30分";
+  const place = hoc?.meeting_place ?? "当会社本店";
+  const count = directors.length;
+  return (
+    `${resolutionReiwa}午前${start}${place}において、取締役${count}名（総取締役数${count}名）` +
+    `出席のもとに、取締役会を開催し、下記議案につき可決確定のうえ、午前${end}分散会した。`
+  );
+}
+
+function buildBoardAttendingDirectorsTex(
+  directors: Array<{ name: string; role?: string }>,
+  chairName: string
+): string {
+  return directors
+    .map((d) => {
+      const suffix = d.name === chairName ? "（議長）" : "";
+      return `${d.name}${suffix}`;
+    })
+    .join("\\\\\n");
+}
+
+function buildBoardAttendingDirectorsMd(
+  directors: Array<{ name: string; role?: string }>,
+  chairName: string
+): string {
+  return directors
+    .map((d) => {
+      const suffix = d.name === chairName ? "（議長）" : "";
+      return `- ${d.name}${suffix}`;
+    })
+    .join("\n");
+}
+
+function augmentHeadOfficeSubmissionVars(
+  caseEntry: CorporateRegistrationCase,
+  procedure: CorporateRegistrationProcedure,
+  snap: CompanySnapshot,
+  base: Record<string, string>
+): Record<string, string> {
+  const hoc = caseEntry.head_office_change;
+  if (!hoc) return base;
+
+  const directors = snap.directors?.length
+    ? snap.directors
+    : [{ name: base.representative_primary, role: "代表取締役" }];
+  const chairName = base.representative_primary;
+  const effectiveDate = hoc.effective_date ?? hoc.resolution_date;
+  const effectiveReiwa = toReiwaDate(effectiveDate);
+  const resolutionReiwa = toReiwaDate(hoc.resolution_date);
+  const newPlain = addressPlain(hoc.new_address);
+  const oldPlain = addressPlain(hoc.old_address);
+  const crossBureau = inferHeadOfficeCrossBureau(hoc.old_address, hoc.new_address, hoc.cross_bureau);
+  const registryOffice = normalizeRegistryOffice(caseEntry.registry_office);
+  const resolutionBody = hoc.resolution_body ?? "board";
+  const applicantAddr = hoc.old_address;
+  const repAddr = hoc.old_address;
+  const attachmentMd = "取締役会議事録　1通";
+  const recordCellKannai = `「本店」${newPlain}　「原因年月日」${effectiveReiwa}移転`;
+  const recordCellOld = `\\parbox[t]{11cm}{「登記記録に関する事項」${effectiveReiwa}${newPlain}に本店移転}`;
+  const recordCellNew = `\\parbox[t]{11cm}{「登記記録に関する事項」${effectiveReiwa}${newPlain}から本店移転}`;
+
+  return {
+    ...base,
+    cross_bureau: String(crossBureau),
+    cross_bureau_label: crossBureau ? "あり" : "なし",
+    effective_date: effectiveDate,
+    effective_date_reiwa: effectiveReiwa,
+    new_address_plain: newPlain,
+    old_address_plain: oldPlain,
+    corporate_number_formatted: formatCorporateNumber(snap.corporate_number ?? base.corporate_number),
+    company_name_kana: "",
+    board_opening_paragraph: buildBoardOpeningParagraph(caseEntry, directors, resolutionReiwa),
+    board_attending_directors_tex: buildBoardAttendingDirectorsTex(directors, chairName),
+    board_attending_directors_md: buildBoardAttendingDirectorsMd(directors, chairName),
+    board_signature_rows_tex: buildBoardSignatureRowsTex(directors),
+    board_auditor_row_tex: "",
+    board_auditor_sign_note: "",
+    applicant_head_office: hoc.old_address,
+    applicant_head_office_new: hoc.new_address,
+    applicant_address_line: applicantAddr,
+    applicant_address_line_new: hoc.new_address,
+    representative_address_line: repAddr,
+    representative_address_line_new: hoc.new_address,
+    contact_phone: "　　　　　　　　　　　",
+    registration_record_entry: buildHeadOfficeRegistrationPurpose(caseEntry, "kannai"),
+    registration_record_cell_tex: recordCellKannai,
+    registration_record_cell_tex_old: recordCellOld,
+    registration_record_cell_tex_new: recordCellNew,
+    registration_record_entry_old: `${effectiveReiwa}${newPlain}に本店移転`,
+    registration_record_entry_new: `${effectiveReiwa}${newPlain}から本店移転`,
+    registration_purpose_block: buildHeadOfficeRegistrationPurpose(
+      caseEntry,
+      crossBureau ? "new" : "kannai"
+    ),
+    registration_purpose_block_old: buildHeadOfficeRegistrationPurpose(caseEntry, "old"),
+    registration_purpose_block_new: buildHeadOfficeRegistrationPurpose(caseEntry, "new"),
+    registration_fee_yen: "３万",
+    attachments_submission_block: attachmentMd,
+    attachments_submission_tex: buildAttachmentsSubmissionTex(resolutionBody, crossBureau, "main"),
+    attachments_submission_tex_new: buildAttachmentsSubmissionTex(resolutionBody, crossBureau, "new_bureau"),
+    attachments_submission_block_old: attachmentMd,
+    attachments_submission_block_new: crossBureau ? "（該当なし）" : attachmentMd,
+    registry_office_recipient: registryOffice,
+    registry_office_recipient_old: normalizeRegistryOffice(hoc.registry_office_old ?? registryOffice),
+    registry_office_recipient_new: normalizeRegistryOffice(hoc.registry_office_new ?? registryOffice),
+    registry_office: registryOffice,
+    registry_office_old: normalizeRegistryOffice(hoc.registry_office_old ?? registryOffice),
+    registry_office_new: normalizeRegistryOffice(hoc.registry_office_new ?? registryOffice),
+    attachments_block: attachmentMd,
+    fee_note: "金３万円",
+    official_form_id: crossBureau ? "moj-1-14" : "moj-1-13",
+    official_form_url: crossBureau
+      ? "https://houmukyoku.moj.go.jp/homu/content/001252661.pdf"
+      : "https://houmukyoku.moj.go.jp/homu/content/001364566.pdf",
+  };
+}
+
+function resolveRegistryOfficeOld(caseEntry: CorporateRegistrationCase): string {
+  return (
+    caseEntry.head_office_change?.registry_office_old ??
+    `${caseEntry.registry_office}（移転前本店管轄）`
+  );
+}
+
+function resolveRegistryOfficeNew(caseEntry: CorporateRegistrationCase): string {
+  return caseEntry.head_office_change?.registry_office_new ?? caseEntry.registry_office;
 }
 
 function resolveTemplatePath(templateRel: string): string | null {
@@ -398,7 +668,8 @@ function buildDraftVars(
   const inc = caseEntry.incorporation;
   const purposes = inc?.purposes ?? caseEntry.purpose_change?.new_purposes ?? splitBusinessPurposes(snap.business_description);
   const purposesBlock = purposes.map((p, i) => `(${i + 1}) ${p}`).join("\n");
-  const directors = inc?.directors ?? caseEntry.officer_change?.appointing ?? snap.directors ?? [];
+  const directors: Array<{ name: string; address?: string; role?: string }> =
+    inc?.directors ?? caseEntry.officer_change?.appointing ?? snap.directors ?? [];
   const promoters = inc?.promoters ?? [];
   const branch = caseEntry.branch_change;
   const reorg = caseEntry.corporate_reorg;
@@ -413,20 +684,41 @@ function buildDraftVars(
     caseEntry.dissolution?.resolution_date ??
     caseEntry.liquidation_completion?.resolution_date ??
     caseEntry.filing_date;
+  const effectiveDate =
+    caseEntry.head_office_change?.effective_date ??
+    caseEntry.head_office_change?.resolution_date ??
+    resolutionDate;
   const resolutionBody =
     caseEntry.officer_change?.resolution_body ??
+    caseEntry.head_office_change?.resolution_body ??
     caseEntry.dissolution?.resolution_body ??
-    "shareholders";
+    (isHeadOfficeProcedure(procedure.id) ? "board" : "shareholders");
   const officer = officerOverride ?? directors[0] ?? { name: repPrimary, role: "代表取締役", address: headOffice };
   const toukiUrl = sources?.data.sources.find((s) => s.id === "touki-portal")?.url ?? "https://www.touki.or.jp/";
   const mojUrl = sources?.data.sources.find((s) => s.id === "moj-registry-guide")?.url ?? "https://www.moj.go.jp/homu/homu_06.html";
 
   const attachments = procedure.form_ids
     .filter((id) => id !== "form-touki-shinseisho")
-    .map((id) => `- ${FORM_OUTPUT_NAMES[id] ?? id}`)
+    .map((id) => `- ${FORM_OUTPUT_NAMES[id]?.replace(".md", "") ?? id}`)
     .join("\n");
 
-  return {
+  const registrationPurpose = isHeadOfficeProcedure(procedure.id)
+    ? buildHeadOfficeRegistrationPurpose(caseEntry, "kannai")
+    : procedure.name_ja;
+  const registrationPurposeOld = isHeadOfficeProcedure(procedure.id)
+    ? buildHeadOfficeRegistrationPurpose(caseEntry, "old")
+    : registrationPurpose;
+  const registrationPurposeNew = isHeadOfficeProcedure(procedure.id)
+    ? buildHeadOfficeRegistrationPurpose(caseEntry, "new")
+    : registrationPurpose;
+
+  const agentBlockTex = caseEntry.agent_name
+    ? `\\section*{代理人}\n${caseEntry.agent_name}${
+        caseEntry.agent_registration_no ? `（登録番号 ${caseEntry.agent_registration_no}）` : ""
+      }`
+    : "";
+
+  const baseVars = {
     case_id: caseEntry.id,
     procedure_id: procedure.id,
     procedure_name: procedure.name_ja,
@@ -435,7 +727,8 @@ function buildDraftVars(
     filing_date_reiwa: toReiwaDate(caseEntry.filing_date),
     resolution_date: resolutionDate,
     resolution_date_reiwa: toReiwaDate(resolutionDate),
-    effective_date_reiwa: toReiwaDate(caseEntry.filing_date),
+    effective_date: effectiveDate,
+    effective_date_reiwa: toReiwaDate(effectiveDate),
     registry_office: caseEntry.registry_office,
     reference_number: caseEntry.reference_number ?? "",
     company_name: companyName,
@@ -481,7 +774,11 @@ function buildDraftVars(
     dissolution_reason: caseEntry.dissolution?.reason ?? "株主総会の決議による解散",
     change_subject: procedure.name_ja,
     articles_amendment_block: `（${procedure.name_ja}に伴う定款条文 — 司法書士が確定）`,
-    registration_purpose_block: procedure.name_ja,
+    registration_purpose_block: registrationPurpose,
+    registration_purpose_block_old: registrationPurposeOld,
+    registration_purpose_block_new: registrationPurposeNew,
+    registry_office_old: resolveRegistryOfficeOld(caseEntry),
+    registry_office_new: resolveRegistryOfficeNew(caseEntry),
     attachments_block: attachments || "（添付書類なし）",
     fee_note: procedure.fee_note ?? "登録免許税 — 最新の税額表を確認",
     branch_name: branch?.branch_name ?? "（支店名称 — 要記載）",
@@ -493,8 +790,14 @@ function buildDraftVars(
     agent_block: caseEntry.agent_name
       ? `【代理人】\n${caseEntry.agent_name}${caseEntry.agent_registration_no ? `（登録番号 ${caseEntry.agent_registration_no}）` : ""}`
       : "",
+    agent_block_tex: agentBlockTex,
     agent_name: caseEntry.agent_name ?? "（司法書士名 — 要記載）",
   };
+
+  if (isHeadOfficeProcedure(procedure.id)) {
+    return augmentHeadOfficeSubmissionVars(caseEntry, procedure, snap, baseVars);
+  }
+  return baseVars;
 }
 
 function resolveFormsForProcedure(
@@ -837,10 +1140,37 @@ export function runJpCorporateChecklist(opts: { case: string; json?: boolean }):
 
   checks.push({
     id: "judicial-scrivener",
-    label: "司法書士確認（人間）",
-    ok: caseEntry.status !== "draft" || Boolean(caseEntry.agent_name),
-    detail: caseEntry.agent_name ?? "agent_name 推奨",
+    label: isSelfFiling(caseEntry) ? "自社提出（司法書士任意）" : "司法書士確認（人間）",
+    ok:
+      isSelfFiling(caseEntry) ||
+      caseEntry.status !== "draft" ||
+      Boolean(caseEntry.agent_name),
+    detail: isSelfFiling(caseEntry)
+      ? "self_filing"
+      : (caseEntry.agent_name ?? "agent_name 推奨"),
   });
+
+  if (isHeadOfficeProcedure(procedure.id)) {
+    const hoc = caseEntry.head_office_change;
+    checks.push({
+      id: "head-office-old",
+      label: "移転前本店",
+      ok: Boolean(hoc?.old_address),
+      detail: hoc?.old_address ?? "missing",
+    });
+    checks.push({
+      id: "head-office-new",
+      label: "移転後本店",
+      ok: Boolean(hoc?.new_address),
+      detail: hoc?.new_address ?? "missing",
+    });
+    checks.push({
+      id: "head-office-resolution",
+      label: "決議日",
+      ok: Boolean(hoc?.resolution_date),
+      detail: hoc?.resolution_date ?? "missing",
+    });
+  }
 
   const passed = checks.every((c) => c.ok);
   const result = { case_id: caseEntry.id, procedure_id: procedure.id, passed, checks };
@@ -914,4 +1244,175 @@ export function runJpCorporateDraft(opts: {
     }
     console.log("\n---\n`--write` で docs/corporate-registration/ に保存");
   }
+}
+
+function buildExportReadiness(
+  caseEntry: CorporateRegistrationCase,
+  procedure: CorporateRegistrationProcedure,
+  snap: CompanySnapshot,
+  sources: ReturnType<typeof loadSources>
+): { ready: boolean; missing: string[] } {
+  const missing: string[] = [];
+  if (!resolveCompanyName(caseEntry, snap)) missing.push("company_name");
+  if (isHeadOfficeProcedure(procedure.id)) {
+    const hoc = caseEntry.head_office_change;
+    if (!hoc?.old_address) missing.push("head_office_change.old_address");
+    if (!hoc?.new_address) missing.push("head_office_change.new_address");
+    if (!hoc?.resolution_date) missing.push("head_office_change.resolution_date");
+  }
+  const texForms = resolveFormsForProcedure(procedure, sources).filter((f) => f.template_tex);
+  if (!texForms.length && isHeadOfficeProcedure(procedure.id)) {
+    missing.push("template_tex (honsha-iten / touki)");
+  }
+  if (!isSelfFiling(caseEntry) && !caseEntry.agent_name && caseEntry.status === "draft") {
+    missing.push("agent_name (or self_filing: true)");
+  }
+  return { ready: missing.length === 0, missing };
+}
+
+function stageMojFormMacros(workDir: string): void {
+  const src = resolveTemplatePath("templates/latex/moj-form-macros.tex.example");
+  if (!src) throw new Error("MOJ form macros template not found");
+  writeFileSync(join(workDir, "moj-form-macros.tex"), readFileSync(src, "utf-8"));
+}
+
+function buildHeadOfficeFilingPackTex(
+  vars: Record<string, string>,
+  crossBureau: boolean
+): string {
+  const honshaTex = loadTemplate("templates/honsha-iten-ketsugi.tex.example");
+  const packTex = loadTemplate("templates/head-office-relocation-pack.tex.example");
+  const honshaSection = renderTemplate(honshaTex, vars);
+
+  let toukiSection = "";
+  let toukiOldSection = "";
+  if (crossBureau) {
+    toukiSection = renderTemplate(
+      loadTemplate("templates/honten-iten-touki-kangai-old.tex.example"),
+      vars
+    );
+    toukiOldSection = `\\newpage\n${renderTemplate(
+      loadTemplate("templates/honten-iten-touki-kangai-new.tex.example"),
+      vars
+    )}`;
+  } else {
+    toukiSection = renderTemplate(
+      loadTemplate("templates/honten-iten-touki-kannai.tex.example"),
+      vars
+    );
+  }
+
+  return renderTemplate(packTex, {
+    latex_font_setup: buildJapaneseLatexFontSetup(),
+    honsha_section: honshaSection,
+    touki_section: toukiSection,
+    touki_old_section: toukiOldSection,
+  });
+}
+
+export function runJpCorporateExportPdf(opts: {
+  case: string;
+  write?: boolean;
+  force?: boolean;
+  json?: boolean;
+}): void {
+  const registry = loadCases();
+  const catalog = loadCatalog();
+  const sources = loadSources();
+  const caseEntry = findCase(opts.case, registry);
+  if (!caseEntry || !catalog || !sources) {
+    console.error(`Case ${opts.case} not found`);
+    process.exit(1);
+  }
+  const procedure = findProcedure(caseEntry.procedure_id, catalog);
+  if (!procedure) {
+    console.error(`Procedure ${caseEntry.procedure_id} not found`);
+    process.exit(1);
+  }
+  const snap = loadCompanySnapshot();
+  const enriched = enrichCaseWithDefaults(caseEntry, snap, procedure);
+  const readiness = buildExportReadiness(enriched, procedure, snap, sources);
+  if (!readiness.ready && !opts.force) {
+    console.error("Export checklist incomplete. Fix missing fields or use --force");
+    console.error(`Missing: ${readiness.missing.join(", ")}`);
+    process.exit(1);
+  }
+
+  const vars = buildDraftVars(enriched, procedure, snap, sources);
+  const crossBureau = enriched.head_office_change?.cross_bureau ?? false;
+  let texContent: string;
+
+  if (isHeadOfficeProcedure(procedure.id)) {
+    texContent = buildHeadOfficeFilingPackTex(vars, crossBureau);
+  } else {
+    console.error(
+      `PDF export is currently supported for head office relocation cases only (${procedure.id})`
+    );
+    process.exit(1);
+  }
+
+  const docsRoot = caseEntry.docs_root ?? `docs/corporate-registration/${caseEntry.id}`;
+  const absDocsRoot = join(getDocsDir(), docsRoot.replace(/^docs\//, ""));
+  const texPath = join(absDocsRoot, `${caseEntry.id}-filing-pack.tex`);
+  const pdfOutDir = join(getDocsDir(), "io", "outbox", "submissions");
+  const finalPdf = join(pdfOutDir, `${caseEntry.id}-filing-pack.pdf`);
+
+  if (!opts.write) {
+    if (opts.json) {
+      console.log(
+        JSON.stringify(
+          {
+            case_id: caseEntry.id,
+            procedure_id: procedure.id,
+            tex_path: texPath,
+            pdf_path: finalPdf,
+            ready: readiness.ready,
+            missing: readiness.missing,
+          },
+          null,
+          2
+        )
+      );
+      return;
+    }
+    console.log(texContent);
+    const engine = detectLatexEngine();
+    console.error(
+      `\nEngine: ${engine ?? "none"} · \`--write\` で ${texPath} → ${finalPdf}`
+    );
+    return;
+  }
+
+  const engine = detectLatexEngine();
+  if (!engine) {
+    console.error(
+      "LaTeX (xelatex/tectonic) not installed. Install MacTeX / TeX Live or `brew install tectonic`, or use `corporate draft --write` for MD only."
+    );
+    process.exit(1);
+  }
+
+  mkdirSync(absDocsRoot, { recursive: true });
+  mkdirSync(pdfOutDir, { recursive: true });
+  stageMojFormMacros(absDocsRoot);
+  const result = writeTexAndCompile(texContent, texPath, { engine, workDir: absDocsRoot });
+  writeFileSync(finalPdf, readFileSync(result.pdfPath));
+
+  if (opts.json) {
+    console.log(
+      JSON.stringify(
+        {
+          case_id: caseEntry.id,
+          tex_path: texPath,
+          pdf_path: finalPdf,
+          engine: result.engine,
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  console.log(`✓ TeX: ${texPath}`);
+  console.log(`✓ 提出用 PDF: ${finalPdf} (${result.engine})`);
 }

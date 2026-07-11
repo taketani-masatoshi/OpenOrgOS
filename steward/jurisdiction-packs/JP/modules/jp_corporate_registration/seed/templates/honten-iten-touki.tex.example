@@ -1,0 +1,46 @@
+\begin{center}
+{\Large 株式会社本店移転登記申請書}
+\end{center}
+
+\vspace{1.2em}
+\noindent
+\begin{tabular}{@{}p{4.2cm}p{10.8cm}@{}}
+１．会社法人等番号 & {{corporate_number_formatted}} \\[0.9em]
+２．商\hfill 号 & {{company_name}} \\[0.9em]
+３．本\hfill 店 & {{applicant_head_office}} \\
+\end{tabular}
+
+\vspace{1.6em}
+\noindent
+\begin{tabular}{@{}p{4.2cm}p{10.8cm}@{}}
+１．登記の事由 & 本店移転 \\
+\end{tabular}
+
+\vspace{0.8em}
+\noindent
+\begin{tabular}{@{}p{4.2cm}p{10.8cm}@{}}
+１．登記すべき事項 & 「登記記録に関する事項」{{registration_record_entry}} \\
+\end{tabular}
+
+\vspace{1.2em}
+\noindent
+\begin{tabular}{@{}p{4.2cm}p{10.8cm}@{}}
+１．登録免許税 & 金{{registration_fee_yen}}円 \\
+\end{tabular}
+
+\vspace{0.8em}
+\noindent
+\begin{tabular}{@{}p{4.2cm}p{10.8cm}@{}}
+１．添付書類 & {{attachments_submission_block}} \\
+\end{tabular}
+
+\vspace{2.4em}
+\noindent 上記のとおり、登記の申請をします。
+
+\vspace{2.4em}
+\begin{flushright}
+{{filing_date_reiwa}}\\[1.8em]
+{{registry_office_recipient}}\\[1.8em]
+{{company_name}}\\[0.8em]
+代表取締役\quad {{representative_primary}}\quad ㊞
+\end{flushright}

@@ -1,0 +1,37 @@
+\begin{center}
+{\large\bfseries 取締役会議事録}
+\end{center}
+
+\vspace{3mm}
+\indent\footnotesize
+{{board_opening_paragraph}}
+
+\vspace{3mm}
+\noindent\footnotesize\textbf{出席取締役}\\[0.5mm]
+{{board_attending_directors_tex}}
+{{board_auditor_row_tex}}
+
+\vspace{3mm}
+\MojDashedBox{%
+１\quad 決議事項\\[1.5mm]
+当会社の本店を下記へ移転すること。\\[1mm]
+本店移転先\quad {{new_address_plain}}\\[1mm]
+移転の時期は、{{effective_date_reiwa}}とする。\\[1mm]
+本件に関する登記申請その他一切の手続きは、代表取締役に委任する。%
+}
+
+\vspace{4mm}
+\indent\footnotesize
+上記の決議を明確にするため、この議事録を作成し、出席取締役{{board_auditor_sign_note}}全員がこれに記名押印する。
+
+\vfill
+\noindent\hfill
+\begin{minipage}{0.58\textwidth}
+\begin{center}\footnotesize
+{{effective_date_reiwa}}\\[5mm]
+{\bfseries {{company_name}}}\\[6mm]
+\begin{tabular}{@{}p{0.26\linewidth}p{0.58\linewidth}@{}>{\raggedleft\arraybackslash}p{0.14\linewidth}@{}}
+{{board_signature_rows_tex}}
+\end{tabular}
+\end{center}
+\end{minipage}

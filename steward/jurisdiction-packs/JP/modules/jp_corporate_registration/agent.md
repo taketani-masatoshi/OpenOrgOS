@@ -17,7 +17,10 @@
 | `data/corporate-registration/procedures-catalog.yaml` | 法務局登記手続一覧 |
 | `data/corporate-registration/case-registry.yaml` | 登記案件台帳 |
 | `data/corporate-registration/sources.yaml` | 公表 URL · 書式カタログ |
-| `docs/corporate-registration/{case-id}/` | 生成書類 MD |
+| `docs/corporate-registration/{case-id}/` | 生成書類 MD · TeX |
+| `seed/templates/latex/moj-form-macros.tex.example` | 法務局様式 R8.5.12 枠線マクロ |
+| `seed/official-form-ref.yaml.example` | 公表 PDF 様式 ID · URL 対応表 |
+| `docs/io/outbox/submissions/{case-id}-filing-pack.pdf` | 提出用 PDF（export-pdf） |
 
 ## CLI
 
@@ -27,7 +30,8 @@ npm run orgos -- --tenant mal operations corporate show
 npm run orgos -- --tenant mal operations corporate validate
 npm run orgos -- --tenant mal operations corporate checklist --case INC-2026-001
 npm run orgos -- --tenant mal operations corporate draft --case INC-2026-001 --write
-npm run orgos -- --tenant mal operations corporate draft --case CHG-2026-001 --form form-shogo-henko-ketsugi
+npm run orgos -- --tenant mal operations corporate draft --case CHG-2026-HONSHA-KAMEZAWA --write
+npm run orgos -- --tenant mal operations corporate export-pdf --case CHG-2026-HONSHA-KAMEZAWA --write
 ```
 
 ## 禁止

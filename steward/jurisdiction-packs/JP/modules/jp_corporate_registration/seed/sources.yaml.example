@@ -55,8 +55,9 @@ forms:
     procedure_ids: [incorporation]
     when_required: 設立登記と同時
   - id: form-touki-shinseisho
-    name: 登記申請書
+    name: 株式会社本店移転登記申請書
     template: templates/touki-shinseisho.md.example
+    template_tex: templates/honten-iten-touki-kannai.tex.example
     procedure_ids:
       - incorporation
       - head_office_relocation_same_bureau
@@ -80,6 +81,7 @@ forms:
   - id: form-honsha-iten-ketsugi
     name: 本店移転に関する決議書・議事録
     template: templates/honsha-iten-ketsugi.md.example
+    template_tex: templates/honsha-iten-ketsugi.tex.example
     procedure_ids:
       - head_office_relocation_same_bureau
       - head_office_relocation_cross_bureau

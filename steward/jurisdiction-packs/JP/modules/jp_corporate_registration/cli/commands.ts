@@ -1,6 +1,7 @@
 export {
   runJpCorporateChecklist,
   runJpCorporateDraft,
+  runJpCorporateExportPdf,
   runJpCorporatePrepare,
   runJpCorporateProcedures,
   runJpCorporateShow,

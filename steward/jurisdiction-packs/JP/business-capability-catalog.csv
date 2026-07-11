@@ -57,7 +57,7 @@ module,jp_social_insurance,社会保険・労働保険事務,,labor_hr,planned,P
 module,jp_employment_rules,就業規則・36協定,,labor_hr,planned,P0,human_resources,,,,skeleton,jurisdiction-packs/JP,,,,
 module,jp_payroll,給与・賞与・年末調整,,labor_hr,planned,P0,human_resources,,,,skeleton,jurisdiction-packs/JP,,,,
 module,jp_labor_contract,雇用契約・労務管理,,labor_hr,planned,P0,human_resources,,,,skeleton,jurisdiction-packs/JP,,,,
-module,jp_permit_registry,許認可・届出台帳,,compliance_legal,planned,P1,compliance,,,,skeleton,jurisdiction-packs/JP,,,permit_expiry_check skill 拡張 · docs/company/licenses/,
+module,jp_permit_registry,許認可・届出台帳,,compliance_legal,partial,P1,compliance,,,,skeleton,jurisdiction-packs/JP,,,permit-types-catalog 60+ 種 · obligations · operations permit CLI,
 module,jp_subcontractor_act,下請法コンプライアンス,,compliance_legal,planned,P1,contract,,,,skeleton,jurisdiction-packs/JP,,https://www.chusho.meti.go.jp/policy/shitauke/index.html,,
 module,jp_data_breach,個情漏えい報告・記録,,compliance_legal,planned,P1,compliance,,,,skeleton,jurisdiction-packs/JP,REG-010,https://www.ppc.go.jp/,,
 module,jp_patent_application,特許出願,,intellectual_property,planned,P2,compliance,,,,skeleton,jurisdiction-packs/JP,,https://www.jpo.go.jp/system/process/tokkyo/index.html,,

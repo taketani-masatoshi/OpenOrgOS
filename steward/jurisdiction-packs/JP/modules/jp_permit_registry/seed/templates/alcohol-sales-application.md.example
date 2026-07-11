@@ -1,0 +1,12 @@
+# 酒類販売業免許申請（内部整理用 MD）
+
+**申請 ID:** {{application_id}} · **種別:** {{license_type}} · **申請日:** {{filing_date}}
+
+| 項目 | 内容 |
+|------|------|
+| 申請人 | {{applicant_name}} |
+| 所在地 | {{applicant_address}} |
+| 代表者 | {{representative_name}} |
+| 営業所所在地 | {{site_address}} |
+
+公表: {{official_form_url}}

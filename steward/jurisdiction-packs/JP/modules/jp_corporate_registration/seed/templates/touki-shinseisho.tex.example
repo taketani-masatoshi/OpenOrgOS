@@ -1,0 +1,31 @@
+\begin{center}
+{\Large 登記申請書}
+\end{center}
+
+\vspace{0.5em}
+\small （ひな形 — 登記ねっと所定項目と照合すること）
+
+\section*{申請人}
+\begin{tabular}{ll}
+商号 & {{company_name}} \\
+本店 & {{head_office}} \\
+法人番号 & {{corporate_number}} \\
+\end{tabular}
+
+\section*{登記の目的}
+\noindent {{registration_purpose_block}}
+
+\section*{添付書類}
+\noindent {{attachments_block}}
+
+\section*{登録免許税}
+\noindent {{fee_note}}
+
+\vspace{1em}
+\noindent
+\begin{tabular}{ll}
+申請日 & {{filing_date_reiwa}} \\
+管轄登記所 & {{registry_office}} \\
+\end{tabular}
+
+{{agent_block_tex}}

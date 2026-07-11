@@ -1,0 +1,13 @@
+# 飲食店営業許可申請（内部ひな形 · MD）
+
+**申請 ID:** {{application_id}} · **申請日:** {{filing_date}}
+
+| 項目 | 内容 |
+|------|------|
+| 申請人 | {{applicant_name}} |
+| 所在地 | {{applicant_address}} |
+| 代表者 | {{representative_name}} |
+| 営業所 | {{site_address}} |
+| 業態 | {{business_type}} |
+
+{{official_form_url}}

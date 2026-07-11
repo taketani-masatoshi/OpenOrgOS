@@ -1,0 +1,26 @@
+entity: 株式会社MAL
+as_of: "2026-07-11"
+cases:
+  - id: CHG-2026-HONSHA-KAMEZAWA
+    procedure_id: head_office_relocation_same_bureau
+    status: draft
+    simplified: false
+    self_filing: true
+    filing_date: "2026-08-15"
+    docs_root: docs/corporate-registration/CHG-2026-HONSHA-KAMEZAWA
+    registry_office: 東京法務局
+    notes: |
+      本店移転のみ: 千代田区二番町1 → 墨田区亀沢1-7-13（PROP-002）。
+      千代田区・墨田区はいずれも東京法務局管轄内（管轄外移転ではない）。
+      決議機関: 取締役会（定款要約に準拠）。
+      提出: 自社（登記ねっと/書面）— 印鑑証明・免許税は別途。
+    head_office_change:
+      resolution_date: "2026-08-01"
+      effective_date: "2026-08-01"
+      resolution_body: board
+      old_address: "〒102-0084 東京都千代田区二番町1"
+      new_address: "〒130-0014 東京都墨田区亀沢1-7-13"
+      cross_bureau: false
+      meeting_start_time: "10時00分"
+      meeting_end_time: "10時30分"
+      meeting_place: "当会社本店"

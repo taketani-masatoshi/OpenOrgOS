@@ -1,0 +1,27 @@
+\MojReceiptBox
+\MojFormTitle{株式会社本店移転登記申請書}
+\MojCorpNumber{{{corporate_number_formatted}}}
+
+\MojFieldRow{フリガナ}{{{company_name_kana}}}
+\MojFieldRow{１．商　　号}{{{company_name}}}
+\MojFieldRow{１．本　　店}{{{applicant_head_office}}}
+
+\MojSectionPair{１．登記の事由}{本店移転}
+
+\MojRecordBlock{{{registration_record_cell_tex}}}
+
+\MojFeeRow{金{{registration_fee_yen}}円}
+
+\MojAttachmentList{{{attachments_submission_tex}}}
+
+\MojApplicationPhrase
+
+\MojApplicantBlock{{{filing_date_reiwa}}}{{{applicant_address_line}}}{{{company_name}}}{{{representative_address_line}}}{{{representative_primary}}}
+
+\noindent{\small 連絡先の電話番号}\hfill{{contact_phone}}\par\vspace{3mm}
+
+\MojRegistryAddressee{{{registry_office_recipient}}}
+
+\noindent\hfill{\small 契\hspace{2em}印}\par
+
+\MojStampSheet

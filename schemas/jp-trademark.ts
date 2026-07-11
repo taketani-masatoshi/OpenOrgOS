@@ -114,8 +114,8 @@ export const trademarkSourcesFileSchema = z.object({
   ),
 });
 
-export type TrademarkMark = z.infer<typeof trademarkMarksFileSchema>["marks"][number];
-export type TrademarkGoodsServicesCatalog = z.infer<
+export type TrademarkMark = z.output<typeof trademarkMarksFileSchema>["marks"][number];
+export type TrademarkGoodsServicesCatalog = z.output<
   typeof trademarkGoodsServicesFileSchema
 >["catalogs"][number];
-export type TrademarkApplication = z.infer<typeof trademarkRegistryFileSchema>["applications"][number];
+export type TrademarkApplication = z.output<typeof trademarkRegistryFileSchema>["applications"][number];

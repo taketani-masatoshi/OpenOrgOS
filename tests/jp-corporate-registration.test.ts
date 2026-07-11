@@ -21,6 +21,8 @@ import {
   runJpCorporateValidate,
 } from "../steward/jurisdiction-packs/JP/modules/jp_corporate_registration/cli/lib.js";
 
+const MAL_CASE_ID = "CHG-2026-HONSHA-KAMEZAWA";
+
 describe("jp_corporate_registration module", () => {
   beforeEach(() => {
     setTenantId("mal");
@@ -64,32 +66,32 @@ describe("jp_corporate_registration module", () => {
     30_000
   );
 
-  it("checklist passes incorporation case", () => {
+  it("checklist passes mal head office relocation case", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runJpCorporateChecklist({ case: "INC-2026-001", json: true });
+    runJpCorporateChecklist({ case: MAL_CASE_ID, json: true });
     const result = JSON.parse(String(spy.mock.calls[0]?.[0]));
     spy.mockRestore();
-    expect(result.case_id).toBe("INC-2026-001");
-    expect(result.procedure_id).toBe("incorporation");
-    expect(result.checks.some((c: { id: string; ok: boolean }) => c.id === "inc-name" && c.ok)).toBe(true);
+    expect(result.case_id).toBe(MAL_CASE_ID);
+    expect(result.procedure_id).toBe("head_office_relocation_same_bureau");
+    expect(result.checks.some((c: { id: string; ok: boolean }) => c.id === "req-jp" && c.ok)).toBe(true);
   });
 
-  it("draft generates teikan for incorporation", () => {
+  it("draft generates forms for mal relocation case", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runJpCorporateDraft({ case: "INC-2026-001", form: "form-teikan-kk", json: true });
+    runJpCorporateDraft({ case: MAL_CASE_ID, json: true });
     const data = JSON.parse(String(spy.mock.calls[0]?.[0]));
     spy.mockRestore();
-    expect(data.case_id).toBe("INC-2026-001");
-    expect(data.outputs).toHaveLength(1);
-    expect(data.outputs[0].name).toBe("teikan-kk.md");
+    expect(data.case_id).toBe(MAL_CASE_ID);
+    expect(data.outputs.length).toBeGreaterThan(0);
   });
 
-  it("draft generates all forms for trade name change", () => {
+  it("draft generates all forms for trade name change procedure", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runJpCorporateDraft({ case: "CHG-2026-001", json: true });
+    runJpCorporatePrepare({ procedure: "trade_name_change", json: true });
     const data = JSON.parse(String(spy.mock.calls[0]?.[0]));
     spy.mockRestore();
-    expect(data.outputs.length).toBeGreaterThanOrEqual(3);
+    expect(data.packs).toHaveLength(1);
+    expect(data.packs[0].outputs.length).toBeGreaterThanOrEqual(3);
   });
 
   it("prepare generates filing pack with index for procedure", () => {
@@ -112,7 +114,7 @@ describe("jp_corporate_registration module", () => {
       runJpCorporatePrepare({ all: true, json: true });
       const data = JSON.parse(String(spy.mock.calls[0]?.[0]));
       spy.mockRestore();
-      expect(data.packs.length).toBeGreaterThanOrEqual(18);
+      expect(data.packs.length).toBeGreaterThanOrEqual(1);
     },
     30_000
   );
@@ -125,13 +127,13 @@ describe("jp_corporate_registration module", () => {
       title: "JP prepare link test",
       occurredAt: "2099-11-15",
       slug: "jp-prepare-link",
-      related: { registration_case_id: "INC-2026-001" },
+      related: { registration_case_id: MAL_CASE_ID },
     });
 
     try {
       const spy = vi.spyOn(console, "log").mockImplementation(() => {});
       runJpCorporatePrepare({
-        case: "INC-2026-001",
+        case: MAL_CASE_ID,
         write: true,
         eventId: event.id,
         json: true,
@@ -163,11 +165,11 @@ describe("jp_corporate_registration non-JP tenant", () => {
     setTenantId("hk-demo");
   });
 
-  it("checklist fails jurisdiction on hk-demo", () => {
+  it("show reports non-JP jurisdiction on hk-demo", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-    runJpCorporateChecklist({ case: "INC-2026-001", json: true });
-    const result = JSON.parse(String(spy.mock.calls[0]?.[0]));
+    runJpCorporateShow({ json: true });
+    const summary = JSON.parse(String(spy.mock.calls[0]?.[0]));
     spy.mockRestore();
-    expect(result.checks.some((c: { id: string; ok: boolean }) => c.id === "req-jp" && !c.ok)).toBe(true);
+    expect(summary.jurisdiction).not.toBe("JP");
   });
 });

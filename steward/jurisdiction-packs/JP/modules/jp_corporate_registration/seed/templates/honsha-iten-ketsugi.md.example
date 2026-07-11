@@ -1,30 +1,35 @@
 ---
-title: 本店移転に関する決議書
+title: 本店移転に関する取締役会議事録
 case_id: {{case_id}}
 generated: {{generated_iso}}
 ---
 
-# {{resolution_body_label}}議事録（本店移転）
+# 取締役会議事録
 
-| 項目 | 内容 |
-|------|------|
-| 日時 | {{resolution_date_reiwa}} |
-| 会社 | {{company_name}} |
+{{board_opening_paragraph}}
 
-## 決議事項
+## 出席取締役
 
-本店を次のとおり移転することを決議した。
+{{board_attending_directors_md}}
 
-| | 住所 |
-|---|------|
-| 移転前 | {{old_address}} |
-| 移転後 | {{new_address}} |
+## 1　決議事項
 
-管轄法務局の変更: {{cross_bureau_label}}
+当会社の本店を下記へ移転すること。
+
+本店移転先　{{new_address_plain}}
+
+移転の時期は、{{effective_date_reiwa}}とする。
+
+本件に関する登記申請その他一切の手続きは、代表取締役に委任する。
+
+上記の決議を明確にするため、この議事録を作成し、出席取締役全員がこれに記名押印する。
 
 ---
 
-{{resolution_date_reiwa}}
+{{effective_date_reiwa}}
 
 {{company_name}}
-代表取締役　{{representative_primary}}　㊞
+
+{{board_attending_directors_md}}
+
+（各取締役　㊞）

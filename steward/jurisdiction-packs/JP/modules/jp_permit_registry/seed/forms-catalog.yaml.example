@@ -1,0 +1,58 @@
+# 申請書式カタログ — 許認可種別ごとの MD/TeX テンプレと必須項目
+
+jurisdiction: JP
+updated: "2026-07-10"
+
+forms:
+  - id: form-ryokan-permit
+    permit_type_ids:
+      - pt-ryokan-hotel
+      - pt-ryokan-ryokan
+      - pt-ryokan-shukuhaku
+      - pt-ryokan-geshuku
+    name_ja: 旅館業許可申請書（ひな形）
+    template_md: templates/ryokan-permit-application.md
+    template_tex: templates/ryokan-permit-application.tex
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - representative_address
+      - site_name
+      - site_address
+      - room_count
+      - structure_use
+      - filing_date
+    official_form_url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000188411.html
+    official_form_notes: 都道府県・保健所により様式が異なる。提出前に管轄保健所の最新様式を確認すること。
+    output_format: tex
+    notes: 社内 DB から自動差込後、checklist 合格で PDF 出力
+
+  - id: form-food-restaurant
+    permit_type_ids: [pt-food-restaurant]
+    name_ja: 飲食店営業許可申請（ひな形）
+    template_md: templates/food-restaurant-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - business_type
+      - filing_date
+    official_form_url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/hygiene/
+    output_format: tex
+
+  - id: form-alcohol-sales
+    permit_type_ids: [pt-alcohol-sales, pt-alcohol-restaurant]
+    name_ja: 酒類販売業免許申請（ひな形）
+    template_md: templates/alcohol-sales-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - license_type
+      - filing_date
+    official_form_url: https://www.nta.go.jp/taxes/sake/index.htm
+    output_format: md
+    official_form_notes: 税務署様式は e-Tax / 書面。本ひな形は内部整理用 MD。

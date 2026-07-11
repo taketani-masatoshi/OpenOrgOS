@@ -1,0 +1,13 @@
+id: jp_permit_registry
+required_seeds: []
+activation_seeds:
+  - permit-registry.yaml.example
+  - application-registry.yaml.example
+  - obligation-instances.yaml.example
+  - forms-catalog.yaml.example
+  - field-map.yaml.example
+optional_regulations:
+  - REG-009
+  - REG-012
+  - REG-016
+notes: skeleton — JP 許認可種別カタログ · 義務台帳 · gap 分析（JP 法域のみ）

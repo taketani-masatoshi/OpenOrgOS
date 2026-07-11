@@ -1,12 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
+import type { z } from "zod";
 import {
   subsidyApplicationRegistryFileSchema,
   subsidyBriefFileSchema,
   subsidyFieldMapFileSchema,
   subsidyPersonnelCostBasisFileSchema,
   subsidyProgramsFileSchema,
+  type SubsidyProgramsFile,
   type SubsidyRequirement,
 } from "../../../../../../schemas/jp-subsidy.js";
 import { loadCompany, loadEmployees } from "../../../../../../src/lib/data.js";
@@ -20,6 +22,15 @@ import { resolveTenantPath } from "../../../../../../src/lib/utils.js";
 import { readYamlFile } from "../../../../../../src/lib/utils.js";
 
 export const MODULE_ID = "jp_subsidy_application";
+
+function loadSubsidyDataFile<S extends z.ZodTypeAny>(
+  filename: string,
+  schema: S
+): { data: z.output<S>; path: string } | null {
+  const loaded = loadModuleDataFile(MODULE_ID, filename, schema);
+  if (!loaded) return null;
+  return { data: schema.parse(loaded.data), path: loaded.path };
+}
 
 export interface CompanySnapshot {
   name: string;
@@ -73,10 +84,10 @@ function activeEmployeeCount(): number {
 }
 
 function resolveProgramRequirements(programId: string): {
-  program: NonNullable<ReturnType<typeof loadModuleDataFile<typeof subsidyProgramsFileSchema>>>;
+  program: SubsidyProgramsFile["programs"][number];
   requirements: SubsidyRequirement[];
 } | null {
-  const programs = loadModuleDataFile(MODULE_ID, "programs.yaml", subsidyProgramsFileSchema);
+  const programs = loadSubsidyDataFile("programs.yaml", subsidyProgramsFileSchema);
   if (!programs) return null;
   const program = programs.data.programs.find((p) => p.id === programId);
   if (!program) return null;
@@ -99,7 +110,7 @@ function resolveProgramRequirements(programId: string): {
       break;
     }
   }
-  return { program: { data: programs.data, path: programs.path }, requirements: reqs };
+  return { program, requirements: reqs };
 }
 
 function evaluateRequirement(
@@ -147,8 +158,8 @@ function evaluateRequirement(
 }
 
 export function runJpSubsidyShow(opts: { json?: boolean }): void {
-  const programs = loadModuleDataFile(MODULE_ID, "programs.yaml", subsidyProgramsFileSchema);
-  const apps = loadModuleDataFile(MODULE_ID, "application-registry.yaml", subsidyApplicationRegistryFileSchema);
+  const programs = loadSubsidyDataFile("programs.yaml", subsidyProgramsFileSchema);
+  const apps = loadSubsidyDataFile("application-registry.yaml", subsidyApplicationRegistryFileSchema);
   const open =
     programs?.data.programs.filter((p) => p.status !== "closed" && p.status !== "submitted") ?? [];
   const summary = {
@@ -177,13 +188,13 @@ export function runJpSubsidyValidate(): void {
   if (getResolvedJurisdiction().code !== "JP") {
     issues.push("tenant jurisdiction is not JP");
   }
-  if (!loadModuleDataFile(MODULE_ID, "programs.yaml", subsidyProgramsFileSchema)) {
+  if (!loadSubsidyDataFile("programs.yaml", subsidyProgramsFileSchema)) {
     issues.push("programs.yaml missing");
   }
-  if (!loadModuleDataFile(MODULE_ID, "field-map.yaml", subsidyFieldMapFileSchema)) {
+  if (!loadSubsidyDataFile("field-map.yaml", subsidyFieldMapFileSchema)) {
     issues.push("field-map.yaml missing");
   }
-  if (!loadModuleDataFile(MODULE_ID, "personnel-cost-basis.yaml", subsidyPersonnelCostBasisFileSchema)) {
+  if (!loadSubsidyDataFile("personnel-cost-basis.yaml", subsidyPersonnelCostBasisFileSchema)) {
     issues.push("personnel-cost-basis.yaml missing");
   }
   if (issues.length) {
@@ -200,7 +211,7 @@ export function runJpSubsidyEligibility(opts: { program: string; json?: boolean 
     console.error(`Program ${opts.program} not found in programs.yaml`);
     process.exit(1);
   }
-  const program = resolved.program.data.programs.find((p) => p.id === opts.program)!;
+  const program = resolved.program;
   const snap = loadCompanySnapshot();
   const employeeCount = activeEmployeeCount();
   const checks = resolved.requirements.map((req) => {
@@ -228,7 +239,7 @@ export function runJpSubsidyEligibility(opts: { program: string; json?: boolean 
 }
 
 export function runJpSubsidyLaborCost(opts: { program?: string; json?: boolean }): void {
-  const basis = loadModuleDataFile(MODULE_ID, "personnel-cost-basis.yaml", subsidyPersonnelCostBasisFileSchema);
+  const basis = loadSubsidyDataFile("personnel-cost-basis.yaml", subsidyPersonnelCostBasisFileSchema);
   if (!basis) {
     console.error("personnel-cost-basis.yaml not found");
     process.exit(1);
@@ -310,8 +321,8 @@ export function runJpSubsidyDraft(opts: { program: string; json?: boolean }): vo
     console.error(`Program ${opts.program} not found`);
     process.exit(1);
   }
-  const program = resolved.program.data.programs.find((p) => p.id === opts.program)!;
-  const fieldMap = loadModuleDataFile(MODULE_ID, "field-map.yaml", subsidyFieldMapFileSchema);
+  const program = resolved.program;
+  const fieldMap = loadSubsidyDataFile("field-map.yaml", subsidyFieldMapFileSchema);
   const snap = loadCompanySnapshot();
   const employeeCount = activeEmployeeCount();
   const filled: Array<{ form_field: string; value: string; source: string }> = [];

@@ -60,6 +60,7 @@ export const corporateRegistrationFormsFileSchema = z.object({
       id: z.string(),
       name: z.string(),
       template: z.string(),
+      template_tex: z.string().optional(),
       procedure_ids: z.array(z.string()).optional(),
       legal_basis: z.string().optional(),
       when_required: z.string().optional(),
@@ -99,9 +100,16 @@ const officerChangeBlockSchema = z.object({
 
 const headOfficeChangeBlockSchema = z.object({
   resolution_date: isoDate,
+  effective_date: isoDate.optional(),
+  resolution_body: z.enum(["board", "shareholders"]).default("board"),
   old_address: z.string().min(1),
   new_address: z.string().min(1),
-  cross_bureau: z.boolean().default(false),
+  cross_bureau: z.boolean().optional(),
+  registry_office_old: z.string().optional(),
+  registry_office_new: z.string().optional(),
+  meeting_start_time: z.string().optional(),
+  meeting_end_time: z.string().optional(),
+  meeting_place: z.string().optional(),
 });
 
 const tradeNameChangeBlockSchema = z.object({
@@ -165,6 +173,7 @@ export const corporateRegistrationCaseRegistryFileSchema = z.object({
       reference_number: z.string().optional(),
       agent_name: z.string().optional(),
       agent_registration_no: z.string().optional(),
+      self_filing: z.boolean().default(false),
       simplified: z.boolean().default(true),
       incorporation: incorporationBlockSchema.optional(),
       officer_change: officerChangeBlockSchema.optional(),
