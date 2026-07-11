@@ -1,0 +1,64 @@
+as_of: "2026-07-01"
+currency: JPY
+entries:
+  - id: PAY-2026-07-25
+    date: "2026-07-25"
+    direction: outflow
+    amount: 320000
+    category: 給与
+    account_id: BANK-001
+    chart_account_id: "5300"
+    description: 三塚給与（7月分 · EMP-003）
+    source: payment-calendar
+    status: planned
+  - id: PAY-2026-08-25
+    date: "2026-08-25"
+    direction: outflow
+    amount: 320000
+    category: 給与
+    account_id: BANK-001
+    chart_account_id: "5300"
+    description: 三塚給与（8月分）
+    source: payment-calendar
+    status: planned
+  - id: COMM-2026-07-28
+    date: "2026-07-28"
+    direction: outflow
+    amount: 3000
+    category: 通信費
+    account_id: BANK-001
+    description: info@malkk.com 等
+    source: payment-calendar
+    status: planned
+  - id: TAX-2027-03-31
+    date: "2027-03-31"
+    direction: outflow
+    amount: 775000
+    category: 法人税
+    account_id: BANK-001
+    description: 第9期 法人税納付（暫定 · tax-profile）
+    source: tax-calendar
+    status: planned
+  - id: TAX-2027-01-31
+    date: "2027-01-31"
+    direction: outflow
+    amount: 120000
+    category: 固定資産税
+    account_id: BANK-001
+    description: 償却資産申告・固定資産税
+    source: tax-calendar
+    status: planned
+  - id: XFER-2026-08-15
+    date: "2026-08-15"
+    direction: transfer
+    amount: 1000000
+    category: 口座振替
+    account_id: BANK-002
+    counterparty_account_id: BANK-001
+    chart_account_id: "1100"
+    description: 亀沢開業前 — 予備口座から運転資金へ
+    source: payment-calendar
+    status: planned
+notes: |
+  ダミーデータ — 株式会社MAL FY2026 支払カレンダー。
+  給与25日 · 通信費28日 · 税務は tax-profile filing_calendar と整合。

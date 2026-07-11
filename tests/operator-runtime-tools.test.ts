@@ -1,22 +1,39 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { executeOperatorTool, listOperatorToolDefinitions } from "../src/lib/operator-runtime/tools.js";
-import { setTenantId } from "../src/lib/tenant.js";
+import { getWorkspaceRoot, setTenantId } from "../src/lib/tenant.js";
+import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { mkdirSync } from "node:fs";
 
 describe("operator runtime tools", () => {
   const env = { ...process.env };
+  const snapshots = new Map<string, string | undefined>();
 
   beforeEach(() => {
     setTenantId("demo");
+    clearOperatorsRegistryCacheForTests();
     process.env.ORGOS_LLM_TOOLS_WRITE = "0";
   });
 
   afterEach(() => {
+    for (const [path, content] of snapshots) {
+      if (content === undefined) {
+        rmSync(path, { force: true });
+      } else {
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, content, "utf-8");
+      }
+    }
+    snapshots.clear();
     process.env = { ...env };
+    clearOperatorsRegistryCacheForTests();
   });
 
   it("lists read-only tools by default", () => {
     const names = listOperatorToolDefinitions().map((t) => t.function.name);
     expect(names).toContain("operator_today");
+    expect(names).toContain("operator_validate_status");
     expect(names).toContain("operator_list_approvals");
     expect(names).not.toContain("operator_approve");
   });
@@ -27,10 +44,123 @@ describe("operator runtime tools", () => {
     expect(names).toContain("operator_approve");
   });
 
+  it("filters context-sensitive tools by registry permissions", () => {
+    process.env.ORGOS_LLM_TOOLS_WRITE = "1";
+    const operatorNames = listOperatorToolDefinitions({ operatorId: "OP-002" }).map(
+      (t) => t.function.name
+    );
+    expect(operatorNames).toContain("operator_generate_cashflow");
+    expect(operatorNames).not.toContain("operator_approve");
+
+    const ceoNames = listOperatorToolDefinitions({ operatorId: "OP-001" }).map(
+      (t) => t.function.name
+    );
+    expect(ceoNames).toContain("operator_generate_cashflow");
+    expect(ceoNames).toContain("operator_approve");
+  });
+
+  it("does not approve through the fallback MCP user without authorized context", async () => {
+    process.env.ORGOS_LLM_TOOLS_WRITE = "1";
+    const missing = await executeOperatorTool(
+      "operator_approve",
+      JSON.stringify({ approval_id: "NOTICE-NOT-EXECUTED" })
+    );
+    const operator = await executeOperatorTool(
+      "operator_approve",
+      JSON.stringify({ approval_id: "NOTICE-NOT-EXECUTED" }),
+      { operatorId: "OP-002", approverId: "Demo CEO" }
+    );
+    expect(missing.ok).toBe(false);
+    expect(operator.ok).toBe(false);
+    expect(operator.content).toContain("chat:approve");
+  });
+
+  it("allows cashflow preview with chat:ask and returns only an L1 summary", async () => {
+    const result = await executeOperatorTool(
+      "operator_generate_cashflow",
+      JSON.stringify({
+        granularity: "weekly",
+        horizon: "4w",
+        format: "json",
+        write: false,
+      }),
+      { operatorId: "OP-002" }
+    );
+    expect(result.ok).toBe(true);
+    const payload = JSON.parse(result.content) as Record<string, unknown>;
+    expect(payload.path).toMatch(
+      /^tenants\/demo\/docs\/finance\/treasury\/cashflow-schedule\//
+    );
+    expect(payload).toHaveProperty("required_funding_amount");
+    expect(payload).toHaveProperty("required_funding_by_date");
+    expect(result.content).not.toMatch(/account_id|BANK-\d+|opening_balance|rows/);
+  });
+
+  it("denies cashflow write without git:write and allows an authorized CEO", async () => {
+    process.env.ORGOS_LLM_TOOLS_WRITE = "1";
+    const args = JSON.stringify({
+      granularity: "weekly",
+      horizon: "4w",
+      format: "csv",
+      write: true,
+    });
+    const denied = await executeOperatorTool(
+      "operator_generate_cashflow",
+      args,
+      { operatorId: "OP-002" }
+    );
+    expect(denied.ok).toBe(false);
+    expect(denied.content).toContain("git:write");
+
+    const preview = await executeOperatorTool(
+      "operator_generate_cashflow",
+      args.replace('"write":true', '"write":false'),
+      { operatorId: "OP-001" }
+    );
+    const repoPath = JSON.parse(preview.content).path as string;
+    const absolutePath = resolve(getWorkspaceRoot(), repoPath);
+    snapshots.set(
+      absolutePath,
+      existsSync(absolutePath) ? readFileSync(absolutePath, "utf-8") : undefined
+    );
+
+    const allowed = await executeOperatorTool(
+      "operator_generate_cashflow",
+      args,
+      { operatorId: "OP-001" }
+    );
+    expect(allowed.ok).toBe(true);
+    expect(existsSync(absolutePath)).toBe(true);
+    expect(allowed.content).not.toMatch(/account_id|BANK-\d+|opening_balance|rows/);
+  });
+
   it("executes operator_today", async () => {
     const result = await executeOperatorTool("operator_today", "{}");
     expect(result.ok).toBe(true);
     expect(result.content).toContain("Today");
+  });
+
+  it("requires chat:read for validate status and returns only safe report fields", async () => {
+    const denied = await executeOperatorTool("operator_validate_status", "{}");
+    expect(denied.ok).toBe(false);
+    expect(denied.content).toContain("chat:read");
+
+    const result = await executeOperatorTool(
+      "operator_validate_status",
+      "{}",
+      { operatorId: "OP-002" }
+    );
+    expect(result.ok).toBe(true);
+    const payload = JSON.parse(result.content) as {
+      ok: boolean;
+      error_count: number;
+      warning_count: number;
+      issues: Array<{ path: string; message: string }>;
+    };
+    expect(typeof payload.error_count).toBe("number");
+    expect(typeof payload.warning_count).toBe("number");
+    expect(payload.issues.every((issue) => !issue.path.startsWith("/"))).toBe(true);
+    expect(result.content).not.toMatch(/\b\d{7,}\b/);
   });
 });
 
@@ -101,5 +231,70 @@ describe("operator runtime tool loop", () => {
     expect(result.tool_calls).toBe(1);
     expect(result.content).toContain("承認");
     expect(result.usage.total_tokens).toBe(45);
+  });
+
+  it("propagates operator context through the tool loop", async () => {
+    let call = 0;
+    let toolResultContent = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (_url, init) => {
+        call += 1;
+        if (call === 1) {
+          return {
+            ok: true,
+            text: async () =>
+              JSON.stringify({
+                choices: [
+                  {
+                    message: {
+                      role: "assistant",
+                      content: "",
+                      tool_calls: [
+                        {
+                          id: "call_cashflow",
+                          type: "function",
+                          function: {
+                            name: "operator_generate_cashflow",
+                            arguments: JSON.stringify({
+                              granularity: "weekly",
+                              horizon: "4w",
+                              format: "json",
+                              write: false,
+                            }),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }),
+          };
+        }
+        const body = JSON.parse(String(init?.body)) as {
+          messages: Array<{ role: string; content: string }>;
+        };
+        toolResultContent =
+          body.messages.find((message) => message.role === "tool")?.content ?? "";
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify({
+              choices: [{ message: { role: "assistant", content: "確認しました。" } }],
+            }),
+        };
+      })
+    );
+
+    const { runLlmWithTools } = await import("../src/lib/operator-runtime/tool-loop.js");
+    const result = await runLlmWithTools(
+      "system",
+      "資金繰りを確認",
+      undefined,
+      { operatorId: "OP-002" }
+    );
+    expect(result.ok).toBe(true);
+    expect(toolResultContent).toContain("preview generated");
+    expect(toolResultContent).not.toContain("lacks chat:ask");
   });
 });

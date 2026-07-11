@@ -601,13 +601,13 @@ modules:
 
   - id: jp_bank_corporate
     name_ja: 法人口座・資金管理
-    status: planned
-    tier: skeleton
+    status: implemented
+    tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: finance
-    categories: [banking_payments]
+    categories: [banking_payments, tax_finance]
     priority: P1
-    notes: broker transfer CLI 連動 · L2 口座は gitignore
+    notes: 日次/週次/月次資金繰り表 · payment-calendar · AR/AP · orgos jp bank CLI
 
   - id: jp_visa_employment
     name_ja: 在留・外国人雇用

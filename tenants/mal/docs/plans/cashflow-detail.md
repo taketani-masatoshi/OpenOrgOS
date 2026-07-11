@@ -1,5 +1,7 @@
 # キャッシュフロー詳細表
 
+> **Deprecated:** 本書は過去の説明用スナップショットです。資金繰り生成物の正本は `docs/finance/treasury/cashflow-schedule/`、入力正本は `data/finance/` と `data/plans/` です。
+
 経営ダッシュボードからリンクされる月次キャッシュフローの詳細。数値の正データは `data/` YAML。
 
 ---

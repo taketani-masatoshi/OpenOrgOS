@@ -16,6 +16,7 @@ import {
   isOperatorToolsEnabled,
   listOperatorToolDefinitions,
   mockToolCallForMessage,
+  type OperatorToolContext,
 } from "./tools.js";
 import {
   appendLlmTelemetry,
@@ -101,7 +102,8 @@ async function chatCompletion(
 
 async function runMockToolLoop(
   systemContext: string,
-  userMessage: string
+  userMessage: string,
+  toolContext: OperatorToolContext
 ): Promise<ToolLoopResult> {
   const cfg = getLlmApiConfig()!;
   const started = Date.now();
@@ -113,7 +115,11 @@ async function runMockToolLoop(
     if (mockCall) {
       toolRounds = 1;
       toolCalls = 1;
-      const toolResult = await executeOperatorTool(mockCall.name, mockCall.arguments);
+      const toolResult = await executeOperatorTool(
+        mockCall.name,
+        mockCall.arguments,
+        toolContext
+      );
       const content = [
         "【OrgOS モック LLM + ツール】",
         "",
@@ -200,7 +206,8 @@ async function runMockToolLoop(
 export async function runLlmWithTools(
   systemContext: string,
   userMessage: string,
-  history?: LlmHistoryTurn[]
+  history?: LlmHistoryTurn[],
+  toolContext: OperatorToolContext = {}
 ): Promise<ToolLoopResult> {
   const cfg = getLlmApiConfig();
   if (!cfg) {
@@ -217,14 +224,16 @@ export async function runLlmWithTools(
   }
 
   if (isLlmMockEnabled()) {
-    return runMockToolLoop(systemContext, userMessage);
+    return runMockToolLoop(systemContext, userMessage, toolContext);
   }
 
   const started = Date.now();
   let usage = emptyUsage();
   let toolRounds = 0;
   let toolCalls = 0;
-  const tools = isOperatorToolsEnabled() ? listOperatorToolDefinitions() : [];
+  const tools = isOperatorToolsEnabled()
+    ? listOperatorToolDefinitions(toolContext)
+    : [];
 
   const messages: ChatMessage[] = [{ role: "system", content: systemContext }];
   for (const turn of history ?? []) {
@@ -278,7 +287,8 @@ export async function runLlmWithTools(
           toolCalls += 1;
           const result = await executeOperatorTool(
             call.function.name,
-            call.function.arguments
+            call.function.arguments,
+            toolContext
           );
           messages.push({
             role: "tool",

@@ -1,0 +1,54 @@
+as_of: "2026-07-11"
+currency: JPY
+entries:
+  - id: AR-2026-OTA-07
+    kind: ar
+    amount: 980000
+    booked_date: "2026-07-05"
+    due_date: "2026-08-05"
+    counterparty: 宿泊OTA（7月分）
+    description: 亀沢旅館 7月宿泊売上（OTA入金待ち）
+    category: hotel_revenue
+    account_id: BANK-001
+    contract_id: CTR-010
+    status: open
+    source: ar-ap
+    notes: collection-terms term-ar-ota（翌月5日）想定
+  - id: AR-2026-BAN-07
+    kind: ar
+    amount: 100000
+    booked_date: "2026-07-01"
+    due_date: "2026-07-25"
+    counterparty: 番町テナント
+    description: 番町ハイム312 7月賃料
+    category: rent
+    account_id: BANK-001
+    status: open
+    source: ar-ap
+  - id: AP-2026-OPS-07
+    kind: ap
+    amount: 462000
+    booked_date: "2026-07-10"
+    due_date: "2026-07-31"
+    counterparty: 清掃・OTA手数料
+    description: 亀沢運営費（7月分 · monthly/2026-07 整合）
+    category: other_property
+    account_id: BANK-001
+    status: open
+    source: ar-ap
+  - id: AP-2026-STW-07
+    kind: ap
+    amount: 180000
+    booked_date: "2026-06-01"
+    due_date: "2026-07-15"
+    counterparty: 竹谷（Steward OS）
+    description: CTR-001 年間保守（FY2026 一括）
+    category: advisory
+    account_id: BANK-001
+    contract_id: CTR-001
+    status: partial
+    source: ar-ap
+    notes: 半額支払済み想定（デモ）
+notes: |
+  ダミーデータ — 売掛980k+100k · 買掛462k+180k（partial）。
+  口座番号は bank-accounts.yaml（L2）のみ。

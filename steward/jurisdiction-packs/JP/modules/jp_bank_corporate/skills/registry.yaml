@@ -1,0 +1,15 @@
+skills:
+  - id: jp-cashflow-schedule
+    file: jp_cashflow_schedule.md
+    runtime: cli
+    cli_command: jp bank cashflow generate
+    handler: jp-cashflow-schedule
+    description: 日次/週次/月次資金繰り表の決定論生成
+    agent_id: finance
+  - id: jp-treasury-position
+    file: jp_treasury_position.md
+    runtime: cli
+    cli_command: jp bank position show
+    handler: jp-treasury-position
+    description: 口座別キャッシュポジションと資金ショート警告
+    agent_id: finance

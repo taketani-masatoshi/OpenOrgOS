@@ -1,5 +1,8 @@
 # Skill: monthly_close（月次決算）
 
+**Path:** `steward/core/skills/monthly_close.md`
+**Runtime:** `cli`
+
 ## 目的
 
 指定月の収支を締め、月次 YAML と要約 MD を更新する。
@@ -37,7 +40,22 @@ npm run orgos -- finances add --month YYYY-MM
 npm run orgos -- deps check --file data/finance/monthly/YYYY-MM.yaml
 npm run validate
 npm run orgos -- sync all
+npm run orgos -- jp bank cashflow generate --granularity monthly --write
 ```
+
+## JP 資金繰り（月次締め後）
+
+Accounting Agent と連携し `jp_bank_corporate` で詳細表を生成:
+
+```bash
+npm run orgos -- jp bank calendar validate
+npm run orgos -- jp bank cashflow generate --granularity weekly --write
+npm run orgos -- validate
+```
+
+支払日程の正本は `data/finance/payment-calendar.yaml`。出力要約には `required_funding_amount` / `required_funding_by_date` を含める。Chat では `operator_validate_status`（`chat:read`）で validate 状態を確認できる。
+
+Path: `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/skills/jp_cashflow_schedule.md`
 
 ## 禁止
 

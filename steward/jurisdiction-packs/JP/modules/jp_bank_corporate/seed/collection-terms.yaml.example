@@ -1,0 +1,24 @@
+currency: JPY
+rules:
+  - id: term-net-30
+    label: 月末締め翌月末払い
+    kind: ap
+    days_after_month_end: 30
+    default_account_id: BANK-001
+    chart_account_id: "5200"
+    notes: 運営費・外注費の既定
+  - id: term-ar-ota
+    label: OTA入金（翌月5日）
+    kind: ar
+    days_after_month_end: 5
+    default_account_id: BANK-001
+    chart_account_id: "4200"
+    notes: 宿泊OTA売上回収
+  - id: term-ar-rent
+    label: 賃料（当月25日）
+    kind: ar
+    days_after_booking: 24
+    default_account_id: BANK-001
+    chart_account_id: "4100"
+    notes: 賃料売上回収
+notes: 回収・支払サイト既定 — invoice 同期時に due_date 算出に使用

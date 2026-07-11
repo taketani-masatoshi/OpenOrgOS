@@ -81,4 +81,28 @@ describe("chat rbac", () => {
     const body = (await res.json()) as { permission?: string };
     expect(body.permission).toBe("chat:wire");
   });
+
+  it("allows chat:read users to GET the L1-safe validate route", async () => {
+    start();
+    const { token } = registerSession({
+      operator_id: "guest",
+      approver_id: "guest-not-authorized",
+      mode: "prod",
+    });
+    const res = await fetch(`${baseUrl}/chat/v1/validate`, {
+      headers: { Cookie: `${WIRE_CONSOLE_SESSION_COOKIE}=${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      ok: boolean;
+      error_count: number;
+      warning_count: number;
+      issues: Array<{ path: string; message: string }>;
+    };
+    expect(typeof body.ok).toBe("boolean");
+    expect(typeof body.error_count).toBe("number");
+    expect(typeof body.warning_count).toBe("number");
+    expect(body.issues.every((issue) => !issue.path.startsWith("/"))).toBe(true);
+    expect(JSON.stringify(body)).not.toMatch(/\b\d{7,}\b/);
+  });
 });

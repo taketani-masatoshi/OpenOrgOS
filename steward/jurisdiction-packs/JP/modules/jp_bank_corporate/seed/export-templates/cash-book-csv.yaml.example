@@ -1,0 +1,23 @@
+id: cash-book-csv
+label: 出納帳 CSV（freee インポート互換イメージ）
+source: cashflow-schedule
+columns:
+  - key: period_key
+    header: 日付
+  - key: category
+    header: 勘定科目
+  - key: description
+    header: 摘要
+  - key: planned_amount
+    header: 入金
+    when: inflow
+  - key: planned_amount
+    header: 出金
+    when: outflow
+  - key: balance_total
+    header: 残高
+  - key: account_id
+    header: 口座ID
+encoding: utf-8
+delimiter: ","
+notes: orgos jp bank cashflow export --template cash-book-csv

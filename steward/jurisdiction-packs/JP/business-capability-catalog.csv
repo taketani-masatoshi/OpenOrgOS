@@ -63,7 +63,7 @@ module,jp_data_breach,個情漏えい報告・記録,,compliance_legal,planned,P
 module,jp_patent_application,特許出願,,intellectual_property,planned,P2,compliance,,,,skeleton,jurisdiction-packs/JP,,https://www.jpo.go.jp/system/process/tokkyo/index.html,,
 module,jp_minpaku,民泊・住宅宿泊,,sector_operations,planned,P2,compliance,,,,skeleton,jurisdiction-packs/JP,,,,
 module,jp_takken,宅地建物取引業,,sector_operations,planned,P2,contract,,,,skeleton,jurisdiction-packs/JP,,,,
-module,jp_bank_corporate,法人口座・資金管理,,banking_payments,planned,P1,finance,,,,skeleton,jurisdiction-packs/JP,,,broker transfer CLI 連動 · L2 口座は gitignore,
+module,jp_bank_corporate,法人口座・資金管理,,banking_payments;tax_finance,implemented,P1,finance,,cli,jp bank cashflow,,,activation_ready,jurisdiction-packs/JP,,,日次/週次/月次資金繰り表 · payment-calendar · AR/AP,
 module,jp_visa_employment,在留・外国人雇用,,labor_hr,planned,P2,human_resources,,,,skeleton,jurisdiction-packs/JP,,https://www.moj.go.jp/isa/applications/procedures/index.html,,
 skill,daily_ops,日次運用,,corporate_governance,implemented,P0,executive_steward,,cli,daily,,,,,,
 skill,p0_closing,P0 決算前ブロッカー,,corporate_governance,implemented,P0,executive_steward,,cli,p0,,,,,,

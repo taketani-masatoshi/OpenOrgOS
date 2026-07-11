@@ -5,6 +5,7 @@ import { runShellAsk, runShellDispatch, type ShellDispatchResult } from "./shell
 import { runLlmWithTools } from "./tool-loop.js";
 import type { OperatorResponse } from "../../../schemas/operator-response.js";
 import type { LlmTelemetryEntry } from "./telemetry.js";
+import type { OperatorToolContext } from "./tools.js";
 
 export type OperatorRuntimeUsed = "llm-api" | "shell";
 
@@ -126,9 +127,15 @@ function telemetryFromLoop(t: Omit<LlmTelemetryEntry, "at"> | undefined): Operat
 async function runLlmOperatorAsk(
   userMessage: string,
   systemContext: string,
-  history?: OperatorHistoryTurn[]
+  history?: OperatorHistoryTurn[],
+  toolContext: OperatorToolContext = {}
 ): Promise<OperatorAskResult> {
-  const llm = await runLlmWithTools(systemContext, userMessage, history);
+  const llm = await runLlmWithTools(
+    systemContext,
+    userMessage,
+    history,
+    toolContext
+  );
   return {
     ok: llm.ok,
     reply: llm.content,
@@ -177,12 +184,22 @@ export async function runOperatorAsk(
     profile?: string;
     preferShell?: boolean;
     history?: OperatorHistoryTurn[];
+    operatorId?: string;
+    approverId?: string;
   }
 ): Promise<OperatorAskResult> {
   const profile = resolveShellProfileName(opts?.profile);
 
   if (!opts?.preferShell && isLlmApiConfigured()) {
-    const llm = await runLlmOperatorAsk(userMessage, systemContext, opts?.history);
+    const llm = await runLlmOperatorAsk(
+      userMessage,
+      systemContext,
+      opts?.history,
+      {
+        operatorId: opts?.operatorId,
+        approverId: opts?.approverId,
+      }
+    );
     if (llm.ok) return llm;
   }
 
@@ -199,14 +216,27 @@ export async function runOperatorAsk(
 export async function* runOperatorAskStream(
   userMessage: string,
   systemContext: string,
-  opts?: { profile?: string; history?: OperatorHistoryTurn[] }
+  opts?: {
+    profile?: string;
+    history?: OperatorHistoryTurn[];
+    operatorId?: string;
+    approverId?: string;
+  }
 ): AsyncGenerator<
   { type: "delta"; content: string },
   OperatorAskResult,
   void
 > {
   if (isLlmApiConfigured()) {
-    const batch = await runLlmOperatorAsk(userMessage, systemContext, opts?.history);
+    const batch = await runLlmOperatorAsk(
+      userMessage,
+      systemContext,
+      opts?.history,
+      {
+        operatorId: opts?.operatorId,
+        approverId: opts?.approverId,
+      }
+    );
     if (batch.reply) {
       for (const word of batch.reply.split(/(\s+)/)) {
         if (word) yield { type: "delta", content: word };

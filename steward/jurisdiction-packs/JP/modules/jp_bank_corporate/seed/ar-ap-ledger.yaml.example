@@ -1,0 +1,27 @@
+as_of: "2026-07-01"
+currency: JPY
+entries:
+  - id: AR-2026-001
+    kind: ar
+    amount: 980000
+    booked_date: "2026-07-05"
+    due_date: "2026-08-05"
+    counterparty: 宿泊OTA（7月分）
+    description: 亀沢旅館 7月宿泊売上（回収待ち）
+    category: hotel_revenue
+    account_id: BANK-001
+    contract_id: CTR-010
+    status: open
+    source: ar-ap
+  - id: AP-2026-001
+    kind: ap
+    amount: 462000
+    booked_date: "2026-07-10"
+    due_date: "2026-07-31"
+    counterparty: 清掃・OTA手数料
+    description: 亀沢運営費（7月分）
+    category: other_property
+    account_id: BANK-001
+    status: open
+    source: ar-ap
+notes: サンプル — テナント data/finance/ar-ap-ledger.yaml にコピー

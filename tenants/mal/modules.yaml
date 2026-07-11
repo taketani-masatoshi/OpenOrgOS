@@ -120,6 +120,12 @@ modules:
     data_root: data/medical-device/
     summary_dir: agent-summaries/medical-device-regulatory/
     notes: 医療機器 QMS · GVP · REG-025/026 · ISO 13485 — MAL では無効（参照のみ）
+  - id: jp_bank_corporate
+    enabled: true
+    agent: jp_bank_corporate
+    docs_root: docs/finance/treasury/
+    data_root: data/finance/
+    notes: 法人口座 · 資金繰り表 · payment-calendar · AR/AP
   - id: membership
     enabled: false
     agent: membership

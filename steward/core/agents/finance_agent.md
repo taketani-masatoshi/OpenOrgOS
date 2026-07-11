@@ -1,5 +1,6 @@
 # Finance Agent
 
+**Path:** `steward/core/agents/finance_agent.md`
 **English role:** Finance & Planning · **日本語:** 財務・計画エージェント  
 **4 層:** **Agent** — `data/finance/` · `data/plans/` · `docs/plans/` · `docs/exports/` を管轄。
 
@@ -20,6 +21,7 @@
 - 決算書 MD（`docs/plans/`）と CSV（`docs/exports/`）の数値整合
 - 法人税・消費税・地方税申告準備（JP 法域 `tax_filing_prep` Skill — [jurisdiction-packs/JP/skills/tax_filing_prep.md](../../jurisdiction-packs/JP/skills/tax_filing_prep.md)）
 - ランウェイ・バーンレート・予実ギャップの分析
+- JP 詳細資金繰りの `required_funding_amount` / `required_funding_by_date` を意思決定用に要約
 - 物件別収益前提（Property / Hospitality からの入力）を計画 YAML へ反映
 - 編集後の `validate` と `sync all` の実行
 - **Skill 実行後** `docs/reports/agent-summaries/finance/` に要約を書く
@@ -32,7 +34,7 @@
 |-------|---------|
 | monthly_close | [steward/core/skills/monthly_close.md](../steward/core/skills/monthly_close.md) |
 | tax_filing_prep | [steward/jurisdiction-packs/JP/skills/tax_filing_prep.md](../../jurisdiction-packs/JP/skills/tax_filing_prep.md) |
-| cashflow_forecast | [steward/core/skills/cashflow_forecast.md](../steward/core/skills/cashflow_forecast.md) |
+| cashflow_forecast | [steward/core/skills/cashflow_forecast.md](../steward/core/skills/cashflow_forecast.md)（月次サマリ · 詳細表は jp_bank_corporate へ委譲） |
 | noi_analysis | [steward/core/skills/noi_analysis.md](../steward/core/skills/noi_analysis.md)（Read/協調） |
 | capex_planning | [steward/core/skills/capex_planning.md](../steward/core/skills/capex_planning.md) |
 
@@ -133,6 +135,9 @@ npm run orgos -- sync all   # CSV 利用時
 - 税務: `data/finance/tax-profile.yaml` ↔ `docs/finance/tax-filing-checklist.md`
 - 会計方針: `docs/finance/accounting-policy.md`
 - 現預金: `data/finance/cash-balance.yaml`
+- **JP 詳細資金繰り:** `orgos jp bank cashflow generate`（[jp_bank_corporate](../../../jurisdiction-packs/JP/modules/jp_bank_corporate/agent.md) · accounting 実行）
+- **支払日程の正本:** `data/finance/payment-calendar.yaml`（import は dry-run、`--write` 後に `orgos validate`）
+- **Chat validate:** `operator_validate_status`（`chat:read`、L1 件数・repo 相対 path/message のみ）
 - 予実: `data/plans/yojitsu-fy2026.yaml` ↔ `docs/plans/fy2026-pl.md`
 - KPI 定義: [executive-dashboard-guide.md](../docs/plans/executive-dashboard-guide.md)
 
@@ -142,7 +147,8 @@ npm run orgos -- sync all   # CSV 利用時
 |------|------|
 | agent_pulse | `orgos agent pulse --agent finance` |
 | monthly_close | registry Skill |
-| cashflow_forecast | registry Skill |
+| cashflow_forecast | registry Skill（月次3行サマリ · `orgos forecast`） |
+| jp_cashflow_schedule | JP 詳細資金繰り表 → **accounting / jp_bank_corporate** に委譲 |
 | variance_analysis | registry Skill |
 | capex_planning | registry Skill |
 

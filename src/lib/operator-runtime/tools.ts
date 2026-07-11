@@ -2,7 +2,14 @@ import { buildTodayContext, formatTodayContextMarkdown } from "../steward-chat/t
 import { approveFromStewardChat } from "../steward-chat/wire-approve.js";
 import { mcpOperatorUser } from "../steward-chat/wire-witness.js";
 import { findOperatorById } from "../org/operators.js";
-import { resolveOperatorPermissions } from "../console-auth/operator-rbac.js";
+import {
+  operatorHasPermission,
+  resolveOperatorPermissions,
+  type OperatorPermission,
+} from "../console-auth/operator-rbac.js";
+import { generateJpBankCashflow } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
+import { runValidateReport } from "../../commands/validate.js";
+import { validateCashflowRequest } from "../jp-bank-corporate/cashflow-request.js";
 
 export interface OperatorToolDefinition {
   type: "function";
@@ -36,6 +43,15 @@ function readOnlyTools(): OperatorToolDefinition[] {
     {
       type: "function",
       function: {
+        name: "operator_validate_status",
+        description:
+          "Run read-only OrgOS validation and return L1-safe counts, repo-relative paths, and messages",
+        parameters: { type: "object", properties: {}, additionalProperties: false },
+      },
+    },
+    {
+      type: "function",
+      function: {
         name: "operator_list_approvals",
         description: "List pending org approvals (id, scope, subject, status)",
         parameters: { type: "object", properties: {}, additionalProperties: false },
@@ -47,6 +63,25 @@ function readOnlyTools(): OperatorToolDefinition[] {
         name: "operator_list_wire_pending",
         description: "List wire pending items awaiting CEO approval",
         parameters: { type: "object", properties: {}, additionalProperties: false },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "operator_generate_cashflow",
+        description:
+          "Generate a deterministic L1 cashflow summary. Preview by default; write requires write=true.",
+        parameters: {
+          type: "object",
+          properties: {
+            granularity: { type: "string", enum: ["daily", "weekly", "monthly"] },
+            horizon: { type: "string", description: "Horizon such as 30d, 13w, or 3m" },
+            format: { type: "string", enum: ["md", "csv", "json"] },
+            write: { type: "boolean", description: "Write the generated schedule (default false)" },
+          },
+          required: ["granularity", "horizon", "format", "write"],
+          additionalProperties: false,
+        },
       },
     },
   ];
@@ -87,9 +122,32 @@ export function isOperatorToolsWriteEnabled(ctx?: { operatorId?: string }): bool
   return true;
 }
 
-export function listOperatorToolDefinitions(): OperatorToolDefinition[] {
-  const tools = readOnlyTools();
-  if (isOperatorToolsWriteEnabled()) {
+function contextHasPermission(
+  ctx: OperatorToolContext,
+  permission: OperatorPermission
+): boolean {
+  return operatorHasPermission(
+    ctx.operatorId ? findOperatorById(ctx.operatorId) : undefined,
+    permission
+  );
+}
+
+export function listOperatorToolDefinitions(
+  ctx?: OperatorToolContext
+): OperatorToolDefinition[] {
+  const tools = readOnlyTools().filter(
+    (tool) =>
+      (tool.function.name !== "operator_generate_cashflow" ||
+        ctx == null ||
+        contextHasPermission(ctx, "chat:ask")) &&
+      (tool.function.name !== "operator_validate_status" ||
+        ctx == null ||
+        contextHasPermission(ctx, "chat:read"))
+  );
+  if (
+    isOperatorToolsWriteEnabled(ctx) &&
+    (ctx == null || contextHasPermission(ctx, "chat:approve"))
+  ) {
     tools.push(...writeTools());
   }
   return tools;
@@ -98,6 +156,16 @@ export function listOperatorToolDefinitions(): OperatorToolDefinition[] {
 async function execOperatorToday(): Promise<OperatorToolResult> {
   const ctx = buildTodayContext();
   return { ok: true, content: formatTodayContextMarkdown(ctx) };
+}
+
+async function execOperatorValidateStatus(
+  ctx: OperatorToolContext
+): Promise<OperatorToolResult> {
+  if (!contextHasPermission(ctx, "chat:read")) {
+    return { ok: false, content: "Operator lacks chat:read" };
+  }
+  const report = runValidateReport();
+  return { ok: true, content: JSON.stringify(report) };
 }
 
 async function execOperatorListApprovals(): Promise<OperatorToolResult> {
@@ -147,6 +215,57 @@ async function execOperatorApprove(
   }
 }
 
+async function execOperatorGenerateCashflow(
+  args: Record<string, unknown>,
+  ctx: OperatorToolContext
+): Promise<OperatorToolResult> {
+  const validation = validateCashflowRequest(args);
+  if (!validation.ok) {
+    return {
+      ok: false,
+      content: validation.error,
+    };
+  }
+  const parsed = validation.request;
+  if (!contextHasPermission(ctx, "chat:ask")) {
+    return { ok: false, content: "Operator lacks chat:ask" };
+  }
+  if (
+    parsed.write &&
+    (process.env.ORGOS_LLM_TOOLS_WRITE !== "1" ||
+      !contextHasPermission(ctx, "git:write"))
+  ) {
+    return {
+      ok: false,
+      content: "Cashflow write disabled or operator lacks git:write",
+    };
+  }
+  try {
+    const result = generateJpBankCashflow(parsed);
+    return {
+      ok: true,
+      content: JSON.stringify({
+        summary: parsed.write
+          ? "Cashflow schedule generated and written."
+          : "Cashflow schedule preview generated.",
+        path: result.output_path,
+        shortfall_date: result.schedule.shortfall_date ?? null,
+        runway_days: result.schedule.runway_days ?? null,
+        required_funding_amount:
+          result.schedule.required_funding_amount ?? null,
+        required_funding_by_date:
+          result.schedule.required_funding_by_date ?? null,
+        wrote: result.wrote,
+      }),
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      content: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 export async function executeOperatorTool(
   name: string,
   argsJson: string,
@@ -162,12 +281,19 @@ export async function executeOperatorTool(
   switch (name) {
     case "operator_today":
       return execOperatorToday();
+    case "operator_validate_status":
+      return execOperatorValidateStatus(ctx);
     case "operator_list_approvals":
       return execOperatorListApprovals();
     case "operator_list_wire_pending":
       return execOperatorListWirePending();
+    case "operator_generate_cashflow":
+      return execOperatorGenerateCashflow(args, ctx);
     case "operator_approve":
-      if (!isOperatorToolsWriteEnabled(ctx)) {
+      if (
+        !isOperatorToolsWriteEnabled(ctx) ||
+        !contextHasPermission(ctx, "chat:approve")
+      ) {
         return { ok: false, content: "Write tools disabled or operator lacks chat:approve" };
       }
       return execOperatorApprove(args, ctx);

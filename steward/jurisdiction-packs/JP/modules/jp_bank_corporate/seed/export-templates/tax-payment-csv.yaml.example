@@ -1,0 +1,21 @@
+id: tax-payment-csv
+label: 税支払予定 CSV
+source: tax-payments
+columns:
+  - key: date
+    header: 納付予定日
+  - key: tax_id
+    header: 支払ID
+  - key: tax_name
+    header: 税目
+  - key: description
+    header: 摘要
+  - key: amount
+    header: 金額
+  - key: chart_account_id
+    header: 勘定科目コード
+  - key: bank_account_id
+    header: 口座ID
+encoding: utf-8
+delimiter: ","
+notes: tax profile または payment calendar に実額がある税支払だけを出力する。

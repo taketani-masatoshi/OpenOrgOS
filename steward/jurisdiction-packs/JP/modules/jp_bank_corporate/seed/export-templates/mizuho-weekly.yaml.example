@@ -1,0 +1,23 @@
+id: mizuho-weekly
+label: みずほ銀行提出向け週次資金予定
+source: mizuho-weekly
+columns:
+  - key: week_start
+    header: 週開始日
+  - key: week_end
+    header: 週終了日
+  - key: bank_account_id
+    header: 口座ID
+  - key: direction
+    header: 入出金区分
+  - key: category
+    header: 資金使途
+  - key: chart_account_id
+    header: 勘定科目コード
+  - key: amount
+    header: 金額
+  - key: balance_total
+    header: 週内最終残高
+encoding: utf-8
+delimiter: ","
+notes: 実口座番号を含めず bank_account_id のみを出力する。

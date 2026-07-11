@@ -1,0 +1,9 @@
+id: jp_bank_corporate
+required_seeds: []
+activation_seeds:
+  - payment-calendar.yaml.example
+  - ar-ap-ledger.yaml.example
+  - collection-terms.yaml.example
+optional_regulations:
+  - REG-005
+notes: JP 法人口座 · 日次/週次/月次資金繰り表 · payment-calendar · AR/AP · Zod 検証済み seed export templates · orgos jp bank CLI
