@@ -75,7 +75,7 @@ export function listWireGatewayDiscoverEntries(opts?: {
       return {
         source: "trust-registry" as const,
         node_id: node.node_id,
-        display_name: node.display_name,
+        display_name: node.display_name ?? node.node_id,
         node_uri: node.node_uri,
         did: node.did,
         wire_url: node.wire_url,
@@ -122,7 +122,7 @@ export function listWireGatewayFederationCatalog(): WireGatewayFederationEntry[]
   const registry = loadWireTrustRegistry();
   return registry.nodes.map((node) => ({
     node_id: node.node_id,
-    display_name: node.display_name,
+    display_name: node.display_name ?? node.node_id,
     node_uri: node.node_uri,
     did: node.did,
     wire_url: node.wire_url,

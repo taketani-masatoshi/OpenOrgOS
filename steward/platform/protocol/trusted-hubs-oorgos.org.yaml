@@ -1,8 +1,8 @@
 version: "1"
 
 # OpenOrgOS platform reference registry (draft)
-# Publish: https://openorgos.org/protocol/trusted-hubs.yaml
-# Mirror:  steward/platform/protocol/trusted-hubs-openorgos.org.yaml
+# Publish: https://oorgos.org/protocol/trusted-hubs.yaml
+# Mirror:  steward/platform/protocol/trusted-hubs-oorgos.org.yaml
 # Governance: docs/org-os/witness-hub-governance.md §7–§8
 # authoritative_plan: final  (provisional retained for history — see provisional_plan below)
 # Operating HQ: Tallinn OpenOrgOS OÜ (Wave 1) — NOT Tokyo
@@ -25,20 +25,20 @@ final_plan:
       city: Tokyo
       wave: 1
       role: thin_apac_chapter
-      hub_url: https://hub-apac.openorgos.org
+      hub_url: https://hub-apac.oorgos.org
       hub_public_key: REPLACE_AFTER_hub_export_public_key
       priority: 1
     - hub_id: HUB-ME
       city: Dubai
       wave: 1
-      hub_url: https://hub-me.openorgos.org
+      hub_url: https://hub-me.oorgos.org
       hub_public_key: TBD_DIFC_OPERATOR
       priority: 2
     - hub_id: HUB-EU-EE
       city: Tallinn
       wave: 1
       role: global_hq_treasury
-      hub_url: https://hub-eu-ee.openorgos.org
+      hub_url: https://hub-eu-ee.oorgos.org
       hub_public_key: TBD_ESTONIA_OU
       priority: 3
       notes: OpenOrgOS OÜ Treasury; OpenOrgOS Fund OÜ/AS at Wave 2 (separate legal entity)
@@ -47,7 +47,7 @@ final_plan:
       country: Ireland
       wave: 2
       role: eu_witness
-      hub_url: https://hub-eu-ie.openorgos.org
+      hub_url: https://hub-eu-ie.oorgos.org
       hub_public_key: TBD_IRELAND_OPERATOR
       priority: 4
       notes: Replaces provisional HUB-EU-FRA (Frankfurt)
@@ -56,27 +56,27 @@ final_plan:
       country: Turkey
       wave: 3
       role: eurasia_bridge
-      hub_url: https://hub-tr-ist.openorgos.org
+      hub_url: https://hub-tr-ist.oorgos.org
       hub_public_key: TBD_TURKEY_OPERATOR
       priority: 5
       notes: Promoted from transit-only in provisional plan; Star Alliance TK
     - hub_id: HUB-US
       city: New York
       wave: 3
-      hub_url: https://hub-us.openorgos.org
+      hub_url: https://hub-us.oorgos.org
       hub_public_key: TBD_US_OPERATOR
       priority: 6
     - hub_id: HUB-SA
       city: Santiago
       wave: 3
-      hub_url: https://hub-sa.openorgos.org
+      hub_url: https://hub-sa.oorgos.org
       hub_public_key: TBD_SA_OPERATOR
       priority: 7
     - hub_id: HUB-OCEANIA-NZ
       city: Auckland
       wave: 5
       succession_trust_wave: 2
-      hub_url: https://hub-oceania.openorgos.org
+      hub_url: https://hub-oceania.oorgos.org
       hub_public_key: TBD_NZ_CHARITABLE_TRUST
       priority: 8
 
@@ -125,19 +125,19 @@ africa_continental_pool:
     - hub_id: HUB-AF-CAI
       city: Cairo
       wave: 4
-      hub_url: https://hub-af-cai.openorgos.org
+      hub_url: https://hub-af-cai.oorgos.org
       hub_public_key: TBD_AF_CAI_OPERATOR
       priority: 1
     - hub_id: HUB-AF-DJ
       city: Djibouti
       wave: 4
-      hub_url: https://hub-af-dj.openorgos.org
+      hub_url: https://hub-af-dj.oorgos.org
       hub_public_key: TBD_AF_DJ_OPERATOR
       priority: 2
     - hub_id: HUB-AF-ZA
       city: South Africa
       wave: 4
-      hub_url: https://hub-af-za.openorgos.org
+      hub_url: https://hub-af-za.oorgos.org
       hub_public_key: TBD_AF_ZA_OPERATOR
       priority: 3
 
@@ -149,19 +149,19 @@ jurisdictions:
       Regional chapter: HUB-APAC-JP — see final_plan above.
     hubs:
       - hub_id: HUB-OPENORGOS-JP
-        hub_url: https://hub.openorgos.org
+        hub_url: https://hub.oorgos.org
         hub_public_key: REPLACE_AFTER_hub_export_public_key
         priority: 1
       - hub_id: HUB-COMMUNITY-JP-01
-        hub_url: https://witness-01.openorgos.org
+        hub_url: https://witness-01.oorgos.org
         hub_public_key: TBD_COMMUNITY_OPERATOR_PUBLISHES_KEY
         priority: 2
       - hub_id: HUB-COMMUNITY-JP-02
-        hub_url: https://witness-02.openorgos.org
+        hub_url: https://witness-02.oorgos.org
         hub_public_key: TBD_SECOND_OPERATOR
         priority: 3
       - hub_id: HUB-COMMUNITY-JP-03
-        hub_url: https://witness-03.openorgos.org
+        hub_url: https://witness-03.oorgos.org
         hub_public_key: TBD_THIRD_OPERATOR
         priority: 4
 

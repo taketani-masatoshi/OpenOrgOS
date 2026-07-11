@@ -291,7 +291,7 @@ export function startWireConsoleServer(
               !pathname.startsWith("/console/v1/auth/")
             ) {
               if (rejectCsrfOriginMismatch(req, res)) return;
-              if (rejectRateLimitExceeded(req, res, pathname)) return;
+              if (rejectRateLimitExceeded(req, res)) return;
             }
 
             if (await handleApi(req, res, pathname, method, url.searchParams)) return;

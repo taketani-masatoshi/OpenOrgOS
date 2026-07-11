@@ -8,6 +8,7 @@ export const wireTrustRegistryNodeSchema = z.object({
   display_name: z.string().optional(),
   protocol_public_key: z.string().default(""),
   wire_url: z.string().url().optional(),
+  wire_email: z.string().email().optional(),
   corporate_number: z.string().optional(),
   witness_jurisdiction: z.string().optional(),
   notes: z.string().optional(),

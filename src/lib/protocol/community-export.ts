@@ -5,6 +5,8 @@ import { existsSync, mkdirSync, writeFileSync, copyFileSync, readFileSync } from
 import { join } from "node:path";
 import { computeCommunityReadiness } from "./community-readiness.js";
 import { checkRevocationSla, loadTrustedOperatorsRegistry } from "./trusted-operators.js";
+import { communityWireNodeApiCatalog } from "./community-wire-node-api.js";
+import { communityTenantMailApiCatalog } from "./community-tenant-mail-api.js";
 import {
   computeEcoProductionEvidence,
   resolveCommunityReadinessCap,
@@ -32,6 +34,38 @@ export function exportCommunityProtocolBundle(root = getInstallRoot()): Communit
     copyFileSync(wireTrustSrc, join(dest, "wire-trust-registry.yaml"));
     files.push("wire-trust-registry.yaml");
   }
+
+  const wireGovSrc = join(STEWARD_PLATFORM_DIR, "protocol", "wire-node-governance.yaml");
+  if (existsSync(wireGovSrc)) {
+    copyFileSync(wireGovSrc, join(dest, "wire-node-governance.yaml"));
+    files.push("wire-node-governance.yaml");
+  }
+
+  writeFileSync(
+    join(dest, "community-wire-node-api.json"),
+    JSON.stringify(
+      {
+        generated_at: new Date().toISOString(),
+        ...communityWireNodeApiCatalog(),
+      },
+      null,
+      2
+    )
+  );
+  files.push("community-wire-node-api.json");
+
+  writeFileSync(
+    join(dest, "community-tenant-mail-api.json"),
+    JSON.stringify(
+      {
+        generated_at: new Date().toISOString(),
+        ...communityTenantMailApiCatalog(),
+      },
+      null,
+      2
+    )
+  );
+  files.push("community-tenant-mail-api.json");
 
   const readiness = computeCommunityReadiness();
   const readinessCap = resolveCommunityReadinessCap(root);

@@ -6,7 +6,8 @@ export class HttpGovGatewayTransport implements GovGatewayTransport {
     headers: Record<string, string>,
     body: string | Uint8Array
   ): Promise<GovGatewayTransportResult> {
-    const bodyInit = typeof body === "string" ? body : body;
+    const bodyInit: BodyInit =
+      typeof body === "string" ? body : new Uint8Array(body).buffer;
     try {
       const parsed = new URL(url);
       let res: Response;

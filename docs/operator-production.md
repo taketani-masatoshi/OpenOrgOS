@@ -335,3 +335,33 @@ npm run version:sync
 npm run package:publish-check
 npm run steward-chat:release-check
 ```
+
+---
+
+## 7. Mail Intake（受信メール監視）
+
+テナント横断 — `receive.sync` が `stub` のテナントは no-op。IMAP 有効テナントのみ:
+
+```bash
+export ORGOS_TENANT=mal
+# 資格情報: ORGOS_IMAP_USER/PASSWORD または ORGOS_SMTP_*（同一アカウント時）
+# 設定: records/executive/mail-config.yaml の receive.imap_host
+
+# 1 回取込 + 自動トリアージ
+orgos mail intake sync
+
+# cron（5 分ごと例）
+*/5 * * * * ORGOS_TENANT=mal orgos mail intake sync >> /var/log/orgos-mail-intake.log 2>&1
+
+# 常駐ポーリング
+orgos mail intake sync --watch
+```
+
+Secretary への受信ハンドオフ:
+
+```bash
+orgos mail intake list --unprocessed
+orgos mail intake handoff --id MSG-...
+```
+
+高優先度は Today / `mail_triage_high` 通知（`steward/platform/notifications/registry.yaml`）。

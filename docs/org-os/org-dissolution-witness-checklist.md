@@ -187,7 +187,7 @@ shasum -a 256 -c org-protocol.tar.gz.sha256
 npm run orgos -- --tenant <id> protocol witness verify --event-id <uuid>
 
 # リモート Hub が存続する場合
-npm run orgos -- hub anchor-verify --hub-url https://hub.openorgos.org --hub-id HUB-OPENORGOS-JP --date 2026-06-25
+npm run orgos -- hub anchor-verify --hub-url https://hub.oorgos.org --hub-id HUB-OPENORGOS-JP --date 2026-06-25
 ```
 
 ---
@@ -201,7 +201,7 @@ npm run orgos -- hub anchor-verify --hub-url https://hub.openorgos.org --hub-id 
 | **プロトコル正本** | Steward core · スキーマ · CLI — 寄付 / OSS 継続 |
 | **Community** | openorgos.net — 別運用主体 |
 | **Witness Hub ノード** | プールの 1 台 — 他 Hub が quorum を継続 |
-| **trusted-hubs レジストリ** | openorgos.org — 後継 maintainer が PR 更新 |
+| **trusted-hubs レジストリ** | oorgos.org — 後継 maintainer が PR 更新 |
 
 運営 Org の Hub を止めても **他 operator の Hub + 各 Org の receipt キャッシュ** で証拠链は維持可能（Model Y）。
 

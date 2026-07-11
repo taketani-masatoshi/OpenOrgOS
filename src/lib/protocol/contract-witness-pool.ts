@@ -2,12 +2,12 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { ContractProtocolConfig } from "../../../schemas/protocol/contract-protocol.js";
 import type { WitnessHubEntry } from "../../../schemas/protocol/witness-pool.js";
+import type { WitnessHubCertificate } from "../../../schemas/protocol/witness-trust.js";
 import { contractSchema } from "../../../schemas/contract.js";
 import { getDataDir, readYamlFile } from "../utils.js";
 import {
   fetchWitnessTrustBundle,
   verifiedHubsFromBundle,
-  type WitnessHubCertificate,
 } from "./witness-trust.js";
 import { defaultSlaTierForContract } from "./resilience-sla.js";
 import { writeWitnessPoolConfig } from "./witness-pool-persist.js";

@@ -6,6 +6,14 @@ import {
   type WireMessage,
 } from "../../../schemas/protocol/wire-message.js";
 import { envelopeDigest } from "../protocol/canonical.js";
+import { loadPeersRegistry } from "../protocol/peers.js";
+
+function peerOrgRefFromWireId(nodeId: string): OrgRef | undefined {
+  if (!nodeId.startsWith("PEER-")) return undefined;
+  const peer = loadPeersRegistry().peers.find((p) => p.peer_id === nodeId);
+  if (!peer) return undefined;
+  return { org_id: peer.peer_id, org_uri: peer.org_uri };
+}
 
 function resolveOrgRef(nodeId: string): OrgRef {
   if (nodeId.startsWith("steward://")) {
@@ -15,6 +23,8 @@ function resolveOrgRef(nodeId: string): OrgRef {
       org_uri: nodeId,
     };
   }
+  const peerRef = peerOrgRefFromWireId(nodeId);
+  if (peerRef) return peerRef;
   return { org_id: nodeId, org_uri: `steward://tenant/${nodeId}` };
 }
 
@@ -22,23 +32,28 @@ export function generateWireNonce(byteLength = 16): string {
   return randomBytes(byteLength).toString("hex");
 }
 
+function orgRefToWireString(ref: OrgRef): string {
+  const tenantSlug = ref.org_uri?.match(/^steward:\/\/tenant\/([^/]+)$/)?.[1];
+  if (ref.org_id && tenantSlug && ref.org_id !== tenantSlug) {
+    return ref.org_id;
+  }
+  if (ref.org_uri?.startsWith("steward://")) {
+    return ref.org_uri;
+  }
+  return ref.org_id;
+}
+
 /** EventEnvelope → WireMessage (WG-0 codec). Caller must ensure envelope is signed. */
 export function envelopeToWireMessage(
   envelope: EventEnvelope,
   options?: { nonce?: string }
 ): WireMessage {
-  const sender =
-    envelope.origin.org_uri?.startsWith("steward://")
-      ? envelope.origin.org_uri
-      : envelope.origin.org_id;
+  const sender = orgRefToWireString(envelope.origin);
   const receiverRef = envelope.destination;
   if (!receiverRef?.org_id && !receiverRef?.org_uri) {
     throw new Error("envelopeToWireMessage: envelope.destination is required for Wire delivery");
   }
-  const receiver =
-    receiverRef.org_uri?.startsWith("steward://")
-      ? receiverRef.org_uri
-      : receiverRef.org_id;
+  const receiver = orgRefToWireString(receiverRef);
 
   const hash = envelopeDigest(envelope);
   if (!envelope.signature) {

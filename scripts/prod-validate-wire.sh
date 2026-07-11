@@ -21,7 +21,7 @@ fail() {
 
 ORGOS_STRICT_TRUST=1 ORGOS_REQUIRE_PK_DID=1 npm run orgos -- protocol trust-registry validate || fail "protocol trust-registry validate"
 ORGOS_STRICT_TRUST=1 npm run orgos -- protocol trusted-hubs-validate || fail "protocol trusted-hubs-validate"
-ORGOS_STRICT_TLS=1 npm run orgos -- wire-gateway validate --tenant "$TENANT" || fail "wire-gateway validate"
+ORGOS_STRICT_TLS=1 ORGOS_REQUIRE_PK_DID=1 npm run orgos -- wire-gateway validate --tenant "$TENANT" || fail "wire-gateway validate"
 ORGOS_STRICT_TRANSPORT=1 npm run orgos -- protocol validate --tenant "$TENANT" || fail "protocol validate"
 GOV_GATEWAY_TRANSPORT="${GOV_GATEWAY_TRANSPORT:-live}" npm run orgos -- protocol gov-gateway validate --tenant "$TENANT" || fail "protocol gov-gateway validate"
 

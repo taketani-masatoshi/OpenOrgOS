@@ -1,6 +1,6 @@
 {
   "steward_export": true,
-  "steward_export_at": "2026-07-09T23:25:51.099Z",
+  "steward_export_at": "2026-07-11T00:55:50.604Z",
   "readiness_score": 99,
   "community_ui": true,
   "sla_dashboard": true,
@@ -9,6 +9,9 @@
   "governance_api": true,
   "jurisdiction_registry_ui": true,
   "vocabulary_i18n": true,
+  "wire_node_apply_ui": true,
+  "wire_node_governance_ui": true,
+  "wire_node_governance_api": true,
   "e2e_green": true,
   "community_integration_at": "2026-07-09T23:25:50.635Z"
 }

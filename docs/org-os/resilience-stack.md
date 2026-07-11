@@ -1,4 +1,4 @@
-# OrgOS Resilience Stack（R1–R4）
+# OrgOS Resilience Stack（R1–R5）
 
 **Status:** 2026-06 実装 · **Proposal 3 参照デモ:** aiac Org C · `https://127.0.0.1:9486`  
 **Parent:** [witness-hub-requirements.md](witness-hub-requirements.md) · [orgos-interface-spec.md](orgos-interface-spec.md) · [inter-org-three-org-demo.md](inter-org-three-org-demo.md)
@@ -15,6 +15,26 @@
 | **R2** | Multipath wire · `inbound_endpoints[]` | peer 設定 · `protocol deliver` |
 | **R3** | Pull/relay API · 契約 witness 绑定 | `protocol api-serve` · `witness pool init-from-contract` |
 | **R4** | SLA tier · reconcile 統合 | `protocol sla` · relay cycle 内 reconcile |
+| **R5** | Email-Wire transport · SMTP fallback · delivery attempts | `email_wire` endpoint · [email-wire-transport-requirements.md](email-wire-transport-requirements.md) |
+
+---
+
+## R5 — Email-Wire Transport
+
+HTTPS wire_v1 / Org C relay 失敗時に **SMTP 署名 envelope** を第3経路として試行する。
+
+```
+wire_v1 → relay → email_wire → wire-pending (relay worker 再試行)
+```
+
+| 項目 | 正本 |
+|------|------|
+| 要件 | [email-wire-transport-requirements.md](email-wire-transport-requirements.md) |
+| Node 登録 | [wire-node-governance.md](wire-node-governance.md) |
+| 試行台帳 | `data/protocol/delivery-attempts.yaml` |
+| Wire SMTP | `records/executive/mail-config.yaml` → `wire_outbound` |
+
+Phase 2: `orgos mail intake wire scan` — IMAP 受信 → protocol inbox ingest。
 
 ---
 
@@ -81,7 +101,9 @@ npm run orgos -- --tenant mal protocol witness pool init-from-contract --contrac
 |------|------|
 | bronze | committed（自 Org 台帳） |
 | silver | + delivered（wire 未到達 pending なし） |
+| silver-email | + email_wire fallback 設定済み · 90 日以内 fallback 成功ログ |
 | gold | + attested（witness quorum 充足） |
+| platinum | silver-email + 双方向 ingest（Phase 2 完了） |
 
 ```bash
 npm run orgos -- --tenant mal protocol sla --tier silver

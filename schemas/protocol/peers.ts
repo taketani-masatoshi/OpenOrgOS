@@ -14,6 +14,8 @@ export const peerProfileSchema = z.object({
   protocol_public_key: z.string().optional(),
   /** @deprecated Prefer inbound_endpoints — kept for backward compatibility. */
   inbound_webhook_url: z.string().url().optional(),
+  /** SMTP delivery address for email_wire transport (L1). */
+  wire_email: z.string().email().optional(),
   /** Multipath delivery endpoints (push · relay · pull fallback). */
   inbound_endpoints: z.array(peerEndpointSchema).optional(),
   /** Remote transaction ledger for reconcile (GET …/protocol/v1/ledger). */

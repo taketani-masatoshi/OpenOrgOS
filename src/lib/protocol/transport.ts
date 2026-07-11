@@ -3,7 +3,9 @@ import { serializeEventEnvelope } from "./envelope.js";
 import { envelopeDigest } from "./canonical.js";
 import { findPeer, resolvePeerInboundEndpoints } from "./peers.js";
 import { enqueueWirePending, removeWirePending, listWirePending } from "./wire-queue.js";
-import { markWireDelivered } from "./wire-delivered.js";
+import { markWireDelivered, isWireDelivered } from "./wire-delivered.js";
+import { recordDeliveryAttempt } from "./delivery-ledger.js";
+import { deliverEnvelopeViaEmailWire } from "./email-wire-deliver.js";
 import { listWireRelayPending } from "./wire-relay-store.js";
 import { findEnvelopeFileForWitness } from "./witness-client.js";
 import { loadTenantConfig, getTenantId } from "../tenant.js";
@@ -17,6 +19,7 @@ import {
 import {
   isGovGatewayEndpoint,
   isWireV1Endpoint,
+  isEmailWireEndpoint,
   type PeerEndpoint,
 } from "../../../schemas/protocol/peer-endpoint.js";
 import { deliverEnvelopeViaGovGateway } from "../wire/gov-gateway/deliver.js";
@@ -113,6 +116,17 @@ export async function deliverProtocolEnvelope(
   assertProtocolDeliverGate();
   assertEnvelopeDeliverAuthorized(envelope, peerId);
 
+  if (isWireDelivered(peerId, envelope.event_id)) {
+    recordDeliveryAttempt({
+      event_id: envelope.event_id,
+      peer_id: peerId,
+      channel: "wire_v1",
+      status: "skipped",
+      error: "E6: already delivered",
+    });
+    return { delivered: true, reason: "idempotent: already delivered" };
+  }
+
   const peer = findPeer(peerId);
   if (!peer) {
     return { delivered: false, reason: "peer not found" };
@@ -130,17 +144,45 @@ export async function deliverProtocolEnvelope(
     }
 
     let result: { ok: boolean; reason: string; httpStatus?: number };
+    let channel: "wire_v1" | "relay" | "email_wire" | "openorgos_p2p" = "openorgos_p2p";
+
     if (isGovGatewayEndpoint(ep)) {
       result = await deliverViaGovGatewayEndpoint(envelope, peerId, ep);
+      channel = "openorgos_p2p";
+    } else if (isEmailWireEndpoint(ep)) {
+      const emailResult = await deliverEnvelopeViaEmailWire(envelope, peer, ep.url);
+      result = { ok: emailResult.ok, reason: emailResult.reason };
+      channel = "email_wire";
+      recordDeliveryAttempt({
+        event_id: envelope.event_id,
+        peer_id: peerId,
+        channel,
+        status: emailResult.ok ? "success" : "failed",
+        direction: "outbound",
+        endpoint: ep.url,
+        error: emailResult.ok ? undefined : emailResult.reason,
+        smtp_message_id: emailResult.smtpMessageId,
+      });
     } else if (isWireV1Endpoint(ep)) {
       result = await postWireMessageToUrl(envelope, ep.url);
+      channel = "wire_v1";
     } else {
       result = await postEnvelopeToUrl(envelope, ep.url, {
         destinationOrgUri: peer.org_uri,
       });
+      channel = ep.transport === "relay" ? "relay" : "openorgos_p2p";
     }
 
     if (result.ok) {
+      if (channel !== "email_wire") {
+        recordDeliveryAttempt({
+          event_id: envelope.event_id,
+          peer_id: peerId,
+          channel,
+          status: "success",
+          endpoint: ep.url,
+        });
+      }
       markWireDelivered(peerId, envelope.event_id, ep.url);
       return {
         delivered: true,
@@ -148,6 +190,16 @@ export async function deliverProtocolEnvelope(
         reason: result.reason,
         httpStatus: result.httpStatus,
       };
+    }
+    if (channel !== "email_wire") {
+      recordDeliveryAttempt({
+        event_id: envelope.event_id,
+        peer_id: peerId,
+        channel,
+        status: "failed",
+        endpoint: ep.url,
+        error: result.reason,
+      });
     }
     errors.push(`${ep.transport}@${ep.url}: ${result.reason}`);
   }

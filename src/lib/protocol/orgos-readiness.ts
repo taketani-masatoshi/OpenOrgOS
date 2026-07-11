@@ -125,7 +125,7 @@ function computeInterfaceAxisChecks(): ReadinessCheck[] {
     {
       id: "module-production-ready",
       ok: moduleAxis.productionPct >= 88,
-      detail: `${moduleAxis.productionPct}% production_ready (${moduleAxis.productionReady}/${moduleAxis.total})`,
+      detail: `${moduleAxis.productionPct}% production_ready (${moduleAxis.productionReady}/${moduleAxis.catalogTotal})`,
     },
     fileOk("docs/org-os/orgos-interface-spec.md", "interface spec published"),
     fileOk("src/lib/extensibility-contract.ts", "manifest / pack contract check"),

@@ -19,7 +19,7 @@ echo "=== 1. Protocol bootstrap ($TENANT) ==="
 echo ""
 echo "=== 2. Trust registry publish mirror ==="
 ./scripts/publish-protocol-registry.sh
-echo "  Operator: copy publish/protocol/* → https://openorgos.org/protocol/ (CDN)"
+echo "  Operator: copy publish/protocol/* → https://oorgos.org/protocol/ (CDN)"
 
 echo ""
 echo "=== 3. Wire peer discovery (v2) ==="

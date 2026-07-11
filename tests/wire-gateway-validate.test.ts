@@ -75,3 +75,36 @@ describe("wire-gateway validate (STRICT TLS)", () => {
     expect(result.ok).toBe(true);
   });
 });
+
+describe("wire-gateway validate (pk-DID)", () => {
+  const prevRequirePk = process.env.ORGOS_REQUIRE_PK_DID;
+  const prevStrictTrust = process.env.ORGOS_STRICT_TRUST;
+
+  afterEach(() => {
+    if (prevRequirePk === undefined) delete process.env.ORGOS_REQUIRE_PK_DID;
+    else process.env.ORGOS_REQUIRE_PK_DID = prevRequirePk;
+    if (prevStrictTrust === undefined) delete process.env.ORGOS_STRICT_TRUST;
+    else process.env.ORGOS_STRICT_TRUST = prevStrictTrust;
+  });
+
+  it("ORGOS_REQUIRE_PK_DID=1 rejects slug DID in wire-gateway config", () => {
+    process.env.ORGOS_REQUIRE_PK_DID = "1";
+    const slugConfig = wireGatewayConfigSchema.parse({
+      ...baseConfig,
+      did: "did:ooo:org:mal",
+    });
+    const result = validateWireGatewayConfig(slugConfig);
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.code === "slug-did-disallowed")).toBe(true);
+  });
+
+  it("ORGOS_STRICT_TRUST=1 accepts pk-prefixed DID", () => {
+    process.env.ORGOS_STRICT_TRUST = "1";
+    const pkConfig = wireGatewayConfigSchema.parse({
+      ...baseConfig,
+      did: "did:ooo:org:pk-a1f974540eea4f7b",
+    });
+    const result = validateWireGatewayConfig(pkConfig);
+    expect(result.ok).toBe(true);
+  });
+});

@@ -16,7 +16,12 @@ export * from "./wire-pending.js";
 export * from "./wire-delivered.js";
 export * from "./trusted-hubs.js";
 export * from "./hub-federation.js";
-export * from "./wire-approval.js";
+export type {
+  WireApprovalTier,
+  WireApprovalGateInput,
+  WireApprovalGateResult,
+  OrgApprovalTier,
+} from "./wire-approval.js";
 export * from "./peer-endpoint.js";
 export * from "./resilience-sla.js";
 export * from "./witness-trust.js";
@@ -26,7 +31,25 @@ export * from "./contract-protocol.js";
 export * from "./protocol-api-config.js";
 export * from "./mesh-routes.js";
 export * from "./openorg-did.js";
-export * from "./gov-gateway-adapter.js";
+export {
+  govGatewayProfileIdSchema,
+  govGatewayWitnessModeSchema,
+  govGatewayPeerBindingSchema,
+  peerEndpointGovGatewaySchema,
+  govGatewayAuditBridgeSchema,
+  govGatewayProfileBindingSchema,
+  govGatewayConfigSchema,
+  govGatewayRegistryEntrySchema,
+  govGatewayRegistrySchema,
+} from "./gov-gateway-adapter.js";
+export type {
+  GovGatewayProfileId,
+  GovGatewayWitnessMode,
+  GovGatewayConfig,
+  GovGatewayRegistry,
+  GovGatewayPeerBinding,
+  GovGatewayProfileBinding,
+} from "./gov-gateway-adapter.js";
 export * from "./gov-gateway-profile.js";
 export * from "./wire-message.js";
 export * from "./wire-gateway-internal.js";
@@ -34,3 +57,5 @@ export * from "./wire-gateway-config.js";
 export * from "./wire-gateway-audit.js";
 export * from "./wire-export-policy.js";
 export * from "./wire-trust-registry.js";
+export * from "./delivery-attempt.js";
+export * from "./wire-node-governance.js";

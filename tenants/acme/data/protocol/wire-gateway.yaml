@@ -1,0 +1,5 @@
+node_id: acme-gov-node
+node_uri: steward://tenant/acme
+display_name: Acme Co
+internal_api:
+  base_url: https://wire.acme.example

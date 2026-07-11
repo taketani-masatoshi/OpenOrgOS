@@ -451,7 +451,7 @@ TCP/IP ルータや SMTP サーバに近い役割を担う。業務ロジック�
 | **TLS** | 全経路必須 | Mode A runbook · `ORGOS_STRICT_TLS` · mal `wire.mal.example` | オペレータ ACME/CA 適用 |
 | **mal 設定** | wire-gateway.yaml 等 | **committed** · `orgos wire-gateway init` · `init-tenant-wire-pilot.sh` | — |
 | **Hub スタック** | witness pool + relay | JP HUB-A/B pin · `wire-hub-stack-smoke.sh` · relay systemd | 法域別 Hub 本番鍵 |
-| **Node ID** | DNS/DID | **`did:ooo:org:*`** · Trust Registry pin 済 | openorgos.org 配信は operator |
+| **Node ID** | DNS/DID | **`did:ooo:org:*`** · Trust Registry pin 済 | oorgos.org 配信は operator |
 | **Gov Gateway** | Wire 下流 | P0 `production` · mal pilot config · live Playground Phase 4 | 実 SS token は operator |
 
 **Witness Hub:** v0.1 スコープ外。digest 証明は [witness-hub-requirements.md](witness-hub-requirements.md) を正とする。

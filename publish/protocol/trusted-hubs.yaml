@@ -1,7 +1,7 @@
 version: "1"
 
 # Jurisdiction-trusted Witness Hub registry.
-# Production: mirror to https://openorgos.org/protocol/trusted-hubs.yaml
+# Production: mirror to https://oorgos.org/protocol/trusted-hubs.yaml
 # Governance: docs/org-os/witness-hub-governance.md
 # Orgs pin hubs from this list into data/protocol/witness-pool.yaml via:
 #   orgos protocol witness pool init-trusted
@@ -23,7 +23,7 @@ jurisdictions:
     notes: Tallinn Hub pool placeholder — publish operator keys for production
     hubs:
       - hub_id: HUB-EE-TLL
-        hub_url: https://hub-tll.example.openorgos.org
+        hub_url: https://hub-tll.example.oorgos.org
         hub_public_key: ""
         priority: 1
 
@@ -31,7 +31,7 @@ jurisdictions:
     notes: Dubai Hub pool placeholder
     hubs:
       - hub_id: HUB-AE-DXB
-        hub_url: https://hub-dxb.example.openorgos.org
+        hub_url: https://hub-dxb.example.oorgos.org
         hub_public_key: ""
         priority: 1
 
@@ -39,7 +39,7 @@ jurisdictions:
     notes: Dublin Hub pool placeholder
     hubs:
       - hub_id: HUB-IE-DUB
-        hub_url: https://hub-dub.example.openorgos.org
+        hub_url: https://hub-dub.example.oorgos.org
         hub_public_key: ""
         priority: 1
 
@@ -47,7 +47,7 @@ jurisdictions:
     notes: Istanbul Hub pool placeholder
     hubs:
       - hub_id: HUB-TR-IST
-        hub_url: https://hub-ist.example.openorgos.org
+        hub_url: https://hub-ist.example.oorgos.org
         hub_public_key: ""
         priority: 1
 
@@ -55,7 +55,7 @@ jurisdictions:
     notes: New York Hub pool placeholder
     hubs:
       - hub_id: HUB-US-NYC
-        hub_url: https://hub-nyc.example.openorgos.org
+        hub_url: https://hub-nyc.example.oorgos.org
         hub_public_key: ""
         priority: 1
 
@@ -63,7 +63,7 @@ jurisdictions:
     notes: Santiago Hub pool placeholder
     hubs:
       - hub_id: HUB-CL-SCL
-        hub_url: https://hub-scl.example.openorgos.org
+        hub_url: https://hub-scl.example.oorgos.org
         hub_public_key: ""
         priority: 1
 
@@ -71,7 +71,7 @@ jurisdictions:
     notes: Auckland Hub pool placeholder
     hubs:
       - hub_id: HUB-NZ-AKL
-        hub_url: https://hub-akl.example.openorgos.org
+        hub_url: https://hub-akl.example.oorgos.org
         hub_public_key: ""
         priority: 1
 
@@ -83,6 +83,6 @@ jurisdictions:
     notes: Cairo AF pool placeholder
     hubs:
       - hub_id: HUB-EG-CAI
-        hub_url: https://hub-cai.example.openorgos.org
+        hub_url: https://hub-cai.example.oorgos.org
         hub_public_key: ""
         priority: 1

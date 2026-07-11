@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createServer, type Server } from "node:http";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { getInstallRoot } from "../src/lib/orgos-paths.js";
-import { registerPeer } from "../src/lib/protocol/peers.js";
+import { findPeer, registerPeer } from "../src/lib/protocol/peers.js";
 import { recordProtocolTransaction } from "../src/lib/protocol/record-transaction.js";
 import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
@@ -21,6 +21,10 @@ describe("mal wire peer deliver (Top5 W-5)", () => {
   beforeEach(() => {
     setTenantId("mal");
     ensureProtocolSigningKey();
+    const wireDeliveredPath = join(getDataDir(), "protocol", "wire-delivered.yaml");
+    if (existsSync(wireDeliveredPath)) {
+      unlinkSync(wireDeliveredPath);
+    }
     const peersPath = join(getDataDir(), "protocol", "peers.yaml");
     const seedPath = join(
       getInstallRoot(),
@@ -79,6 +83,7 @@ describe("mal wire peer deliver (Top5 W-5)", () => {
         },
       ],
     });
+    expect(findPeer("PEER-001")?.inbound_endpoints?.[0]?.url).toBe(localUrl);
 
     const attestation = operatorAttestationSchema.parse({
       operator_id: "op-mal",

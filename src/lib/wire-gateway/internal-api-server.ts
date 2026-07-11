@@ -72,7 +72,6 @@ function resolvePeerDid(peer: {
 function resolvePeerNodeId(peer: {
   peer_id: string;
   org_uri?: string;
-  display_name: string;
 }): string {
   if (peer.org_uri?.startsWith("steward://tenant/")) {
     const tenant = peer.org_uri.replace("steward://tenant/", "");

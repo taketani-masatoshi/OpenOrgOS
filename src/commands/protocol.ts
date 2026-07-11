@@ -957,7 +957,8 @@ export async function runProtocolMeshDeliver(opts: ProtocolMeshDeliverOptions): 
   }
 }
 
-export interface ProtocolNoticeDraftOptions extends ProtocolNoticeProposeOptions {
+export interface ProtocolNoticeDraftOptions
+  extends Omit<ProtocolNoticeProposeOptions, "operator"> {
   /** Secretary default operator label */
   operator?: string;
 }
@@ -2152,6 +2153,7 @@ export interface ProtocolTrustRegistryPinLocalOptions {
   nodeId?: string;
   force?: boolean;
   dryRun?: boolean;
+  bypassGovernance?: boolean;
   json?: boolean;
 }
 
@@ -2168,6 +2170,7 @@ export async function runProtocolTrustRegistryPinLocal(
     nodeId: opts.nodeId,
     force: opts.force,
     dryRun: opts.dryRun,
+    bypassGovernance: opts.bypassGovernance,
   });
   if (opts.json) {
     console.log(JSON.stringify({ results }, null, 2));
@@ -2180,4 +2183,104 @@ export async function runProtocolTrustRegistryPinLocal(
   if (results.some((r) => r.status === "error")) process.exit(1);
   console.log("✓ trust-registry pin-local");
   console.log("  Next: orgos protocol trusted-hubs-sync-keys --jurisdiction JP --force");
+}
+
+export interface ProtocolTrustRegistrySubmitOptions {
+  tenant: string;
+  wireEmail?: string;
+  corporateNumber?: string;
+  requestedBy?: string;
+  wireUrl?: string;
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistrySubmit(
+  opts: ProtocolTrustRegistrySubmitOptions
+): Promise<void> {
+  const { submitWireNodeGovernanceRequest } = await import("../lib/protocol/wire-node-governance.js");
+  const request = submitWireNodeGovernanceRequest({
+    tenantId: opts.tenant,
+    wireEmail: opts.wireEmail,
+    corporateNumber: opts.corporateNumber,
+    requestedBy: opts.requestedBy,
+    wireUrl: opts.wireUrl,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(request, null, 2));
+    return;
+  }
+  console.log(`✓ governance request submitted: ${request.request_id}`);
+  console.log(`  tenant: ${request.tenant_id} · node: ${request.node_id}`);
+  if (request.wire_email) console.log(`  wire_email: ${request.wire_email}`);
+}
+
+export interface ProtocolTrustRegistryDecideOptions {
+  requestId: string;
+  approve: boolean;
+  reject?: boolean;
+  decidedBy: string;
+  note?: string;
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistryDecide(
+  opts: ProtocolTrustRegistryDecideOptions
+): Promise<void> {
+  const approve = opts.reject ? false : !!opts.approve;
+  const { decideWireNodeGovernanceRequest } = await import("../lib/protocol/wire-node-governance.js");
+  const { request, node } = decideWireNodeGovernanceRequest({
+    requestId: opts.requestId,
+    approve,
+    decidedBy: opts.decidedBy,
+    note: opts.note,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ request, node }, null, 2));
+    return;
+  }
+  console.log(`✓ request ${request.request_id} ${request.status}`);
+  if (node) console.log(`  merged node: ${node.node_id}`);
+}
+
+export interface ProtocolTrustRegistryPendingOptions {
+  json?: boolean;
+}
+
+export async function runProtocolTrustRegistryPending(
+  opts: ProtocolTrustRegistryPendingOptions = {}
+): Promise<void> {
+  const { listPendingWireNodeRequests } = await import("../lib/protocol/wire-node-governance.js");
+  const pending = listPendingWireNodeRequests();
+  if (opts.json) {
+    console.log(JSON.stringify({ pending }, null, 2));
+    return;
+  }
+  console.log(`${pending.length} pending wire node request(s)`);
+  for (const r of pending) {
+    console.log(`  · ${r.request_id} · ${r.tenant_id} · ${r.node_id}`);
+  }
+}
+
+export interface ProtocolDeliverStatusOptions {
+  eventId: string;
+  peerId?: string;
+  json?: boolean;
+}
+
+export async function runProtocolDeliverStatus(opts: ProtocolDeliverStatusOptions): Promise<void> {
+  const { listDeliveryAttempts, formatDeliveryAttemptsReport } = await import(
+    "../lib/protocol/delivery-ledger.js"
+  );
+  const attempts = listDeliveryAttempts({
+    eventId: opts.eventId,
+    peerId: opts.peerId,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify({ attempts }, null, 2));
+    return;
+  }
+  console.log(formatDeliveryAttemptsReport(attempts, {
+    eventId: opts.eventId,
+    peerId: opts.peerId,
+  }));
 }

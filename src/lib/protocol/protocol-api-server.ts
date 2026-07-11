@@ -257,6 +257,30 @@ async function handleProtocolApiRequest(
     }
   }
 
+  const communityRoute = await (async () => {
+    const raw = req.method === "GET" ? "" : await readBody(req);
+    const { handleCommunityWireNodeApiRoute } = await import("./community-wire-node-api.js");
+    const wire = await handleCommunityWireNodeApiRoute(
+      req.method ?? "GET",
+      url.pathname,
+      raw,
+      req
+    );
+    if (wire) return wire;
+    const { handleCommunityTenantMailApiRoute } = await import("./community-tenant-mail-api.js");
+    return handleCommunityTenantMailApiRoute(
+      req.method ?? "GET",
+      url.pathname,
+      raw,
+      req,
+      url.searchParams
+    );
+  })();
+  if (communityRoute) {
+    json(res, communityRoute.status, communityRoute.body);
+    return;
+  }
+
   json(res, 404, { ok: false, error: "not found" });
 }
 

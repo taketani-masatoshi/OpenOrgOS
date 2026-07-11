@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { NoticeWireType } from "../../../schemas/protocol/pending-notice.js";
+import type { NoticeWireType } from "../../../../schemas/protocol/pending-notice.js";
 import { getSessionUser, sessionTokenFromRequest } from "../auth/session.js";
 import type { WireConsoleUser } from "../auth/session.js";
 import {

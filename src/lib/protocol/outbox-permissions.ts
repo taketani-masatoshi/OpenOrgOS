@@ -1,4 +1,5 @@
-import { chmodSync, chownSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import {
   getProtocolDataDir,
@@ -67,7 +68,8 @@ function setOwnership(
   for (const path of paths) {
     if (!existsSync(path)) continue;
     if (dryRun) continue;
-    chownSync(path, user, group ?? user);
+    const owner = group ? `${user}:${group}` : user;
+    execFileSync("chown", [owner, path], { stdio: "ignore" });
   }
   return true;
 }

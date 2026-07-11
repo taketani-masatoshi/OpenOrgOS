@@ -40,4 +40,5 @@ export const witnessTrustBundleSchema = z.object({
 
 export type WitnessTrustAuthority = z.output<typeof witnessTrustAuthoritySchema>;
 export type WitnessHubCertificate = z.output<typeof witnessHubCertificateSchema>;
+export type WitnessTrustRevocation = z.output<typeof witnessTrustRevocationSchema>;
 export type WitnessTrustBundle = z.output<typeof witnessTrustBundleSchema>;

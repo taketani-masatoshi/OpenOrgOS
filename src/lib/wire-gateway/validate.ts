@@ -12,6 +12,11 @@ import {
   internalWireInboxSubmitSchema,
   internalWireDeliveryReportSchema,
 } from "../../../schemas/protocol/wire-gateway-internal.js";
+import {
+  isOpenOrgDid,
+  isPkDidRequired,
+  isPkPrefixedOpenOrgDid,
+} from "../../../schemas/protocol/openorg-did.js";
 import { readYamlFile } from "../utils.js";
 import { getProtocolDataDir } from "../protocol/paths.js";
 import { assertWireHashMatchesEnvelope } from "./codec.js";
@@ -76,6 +81,28 @@ export function validateWireGatewayConfig(
     issues.push({
       code: "tls_incomplete",
       message: "listen.tls_key required when tls_cert is set",
+    });
+  }
+
+  if (cfg.did) {
+    if (!isOpenOrgDid(cfg.did)) {
+      issues.push({
+        code: "invalid-did",
+        message: `wire-gateway did is not OpenOrg format: ${cfg.did}`,
+        path: "did",
+      });
+    } else if (isPkDidRequired() && !isPkPrefixedOpenOrgDid(cfg.did)) {
+      issues.push({
+        code: "slug-did-disallowed",
+        message: `${cfg.node_id}: pk-DID required (ORGOS_REQUIRE_PK_DID / ORGOS_STRICT_TRUST) — run wire-gateway did init --force`,
+        path: "did",
+      });
+    }
+  } else if (isPkDidRequired()) {
+    issues.push({
+      code: "did-missing",
+      message: `${cfg.node_id}: wire-gateway did required under pk-DID enforcement — run wire-gateway did init`,
+      path: "did",
     });
   }
 

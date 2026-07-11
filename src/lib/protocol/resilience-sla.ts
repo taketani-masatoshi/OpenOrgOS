@@ -7,16 +7,25 @@ import { listWitnessPending } from "./witness-queue.js";
 import { loadWitnessPoolConfig, isWitnessEnabled } from "./witness-pool.js";
 import { verifyCachedReceiptsForEvent } from "./witness-client.js";
 
-const TIER_REQUIREMENTS: Record<ResilienceSlaTier, Array<"committed" | "delivered" | "attested">> = {
+import { hasSuccessfulEmailWireFallback, hasSuccessfulEmailWireIngest } from "./delivery-ledger.js";
+
+const TIER_REQUIREMENTS: Record<
+  ResilienceSlaTier,
+  Array<"committed" | "delivered" | "attested" | "email_fallback" | "bidirectional">
+> = {
   bronze: ["committed"],
   silver: ["committed", "delivered"],
+  "silver-email": ["committed", "delivered", "email_fallback"],
   gold: ["committed", "delivered", "attested"],
+  platinum: ["committed", "delivered", "email_fallback", "bidirectional"],
 };
 
 export function resolveTransactionSlaState(eventId: string): {
   committed: boolean;
   delivered: boolean;
   attested: boolean;
+  email_fallback: boolean;
+  bidirectional: boolean;
 } {
   const tx = findTransactionByEventId(eventId);
   const committed = !!tx;
@@ -34,7 +43,9 @@ export function resolveTransactionSlaState(eventId: string): {
       attested = quorum.satisfied;
     }
   }
-  return { committed, delivered, attested };
+  const email_fallback = hasSuccessfulEmailWireFallback();
+  const bidirectional = email_fallback && hasSuccessfulEmailWireIngest();
+  return { committed, delivered, attested, email_fallback, bidirectional };
 }
 
 export function evaluateTransactionSla(
@@ -52,6 +63,8 @@ export function evaluateTransactionSla(
   if (required.includes("committed") && !states.committed) missing.push("committed");
   if (required.includes("delivered") && !states.delivered) missing.push("delivered");
   if (required.includes("attested") && !states.attested) missing.push("attested");
+  if (required.includes("email_fallback") && !states.email_fallback) missing.push("email_fallback");
+  if (required.includes("bidirectional") && !states.bidirectional) missing.push("bidirectional");
 
   return {
     event_id: eventId,

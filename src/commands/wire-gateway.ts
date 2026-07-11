@@ -193,7 +193,7 @@ export interface WireGatewayDidInitOptions {
 
 export function runWireGatewayDidInit(opts: WireGatewayDidInitOptions = {}): void {
   if (opts.tenant) setTenantId(opts.tenant);
-  requireCliConfigWrite();
+  requireCliConfigWrite("wire-gateway did init");
   ensureProtocolSigningKey();
   const publicKey = exportProtocolPublicKeyBase64();
   if (!publicKey) {
@@ -221,7 +221,7 @@ export function runWireGatewayDidInit(opts: WireGatewayDidInitOptions = {}): voi
   const did = resolveWireNodeDid({
     publicKeyBase64: publicKey,
     configured: opts.force ? undefined : config.did,
-    tenantId: loadTenantConfig().id,
+    tenantId: getTenantId(),
     requirePk: true,
   });
   config.did = did;

@@ -1,4 +1,4 @@
-import type { GovGatewayProfileId } from "../../../../schemas/protocol/gov-gateway-adapter.js";
+import type { GovGatewayProfileId } from "../../../../../schemas/protocol/gov-gateway-adapter.js";
 import type { GovGatewayAdapter } from "../types.js";
 
 export function createStubAdapter(

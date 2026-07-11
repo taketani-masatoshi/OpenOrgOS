@@ -2,7 +2,7 @@ import type {
   NoticeWireType,
   PendingNotice,
   PendingNoticesRegistry,
-} from "../../schemas/protocol/pending-notice.js";
+} from "../../../schemas/protocol/pending-notice.js";
 import { loadContract } from "../data.js";
 import { findPeer } from "../protocol/peers.js";
 import {
@@ -300,7 +300,7 @@ export function listPendingNotices(filter?: {
 }): PendingNotice[] {
   const statusMap: Record<
     PendingNotice["status"],
-    import("../../schemas/org/approval.js").OrgApprovalStatus | undefined
+    import("../../../schemas/org/approval.js").OrgApprovalStatus | undefined
   > = {
     pending_approval: "pending_approval",
     approved: "approved",

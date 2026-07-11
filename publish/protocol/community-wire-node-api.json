@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-07-11T00:56:18.052Z",
+  "version": "1",
+  "base_path": "/protocol/v1/community/wire-node",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/protocol/v1/community/wire-node/pending",
+      "description": "List pending wire node governance requests"
+    },
+    {
+      "method": "POST",
+      "path": "/protocol/v1/community/wire-node/submit",
+      "description": "Submit wire node registration (pk-DID · duplicate checks)"
+    },
+    {
+      "method": "POST",
+      "path": "/protocol/v1/community/wire-node/decide",
+      "auth": "Bearer ORGOS_COMMUNITY_GOVERNANCE_TOKEN",
+      "description": "Committee approve/reject pending request"
+    }
+  ]
+}

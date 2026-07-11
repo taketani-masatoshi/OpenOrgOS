@@ -1,4 +1,5 @@
 import { approveOrgApproval, findOrgApproval } from "../org/approval/approve.js";
+import { isCorrespondenceApprovalSubject } from "../correspondence/review.js";
 import { getTenantId } from "../tenant.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
@@ -44,6 +45,13 @@ export async function approveFromStewardChat(
       transmission: wire.transmission,
       approval: wire.notice,
     };
+  }
+
+  if (isCorrespondenceApprovalSubject(pending.subject_type)) {
+    throw new Error(
+      `Correspondence approval ${approvalId} cannot be approved via Chat/MCP — ` +
+        `human CEO must run: org approval approve --id ${approvalId} --approver "<name>" --reviewed`
+    );
   }
 
   const result = approveOrgApproval({

@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const resilienceSlaTierSchema = z.enum(["bronze", "silver", "gold"]);
+export const resilienceSlaTierSchema = z.enum([
+  "bronze",
+  "silver",
+  "silver-email",
+  "gold",
+  "platinum",
+]);
 
 export const resilienceSlaStateSchema = z.enum(["committed", "delivered", "attested"]);
 

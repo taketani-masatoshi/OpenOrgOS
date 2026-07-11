@@ -33,10 +33,10 @@ witness_pool_at_dissolution:
     k: 3
   hubs:
     - hub_id: HUB-OPENORGOS-JP
-      hub_url: https://hub.openorgos.org
+      hub_url: https://hub.oorgos.org
       hub_public_key: REPLACE_FROM_witness-pool.yaml
     - hub_id: HUB-COMMUNITY-JP-01
-      hub_url: https://witness-01.openorgos.org
+      hub_url: https://witness-01.oorgos.org
       hub_public_key: REPLACE_FROM_witness-pool.yaml
 
 packages:
@@ -80,7 +80,7 @@ verification:
   commands:
     - shasum -a 256 -c org-protocol.tar.gz.sha256
     - npm run orgos -- --tenant example protocol witness verify --event-id <uuid>
-    - npm run orgos -- hub anchor-verify --hub-url https://hub.openorgos.org --hub-id HUB-OPENORGOS-JP --date 2026-06-25
+    - npm run orgos -- hub anchor-verify --hub-url https://hub.oorgos.org --hub-id HUB-OPENORGOS-JP --date 2026-06-25
 
 retention:
   years: 10

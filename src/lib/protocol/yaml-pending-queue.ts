@@ -30,7 +30,7 @@ export function createYamlPendingQueueStore<
   TRegistry extends PendingRegistryBase<TEntry>,
 >(opts: {
   getPath: () => string;
-  schema: z.ZodType<TRegistry>;
+  schema: z.ZodType<TRegistry, z.ZodTypeDef, unknown>;
   entryKey: (entry: TEntry) => string;
   emptyRegistry: () => TRegistry;
 }): YamlPendingQueueStore<TEntry, TRegistry> {

@@ -105,3 +105,7 @@ export function getGovGatewayYamlPath(): string {
 export function getGovGatewayAuditPath(): string {
   return join(getProtocolDataDir(), "gov-gateway-audit.jsonl");
 }
+
+export function getDeliveryAttemptsPath(): string {
+  return join(getProtocolDataDir(), "delivery-attempts.yaml");
+}

@@ -40,7 +40,7 @@ sudo cp deploy/wire-gateway/systemd/steward-wire-gateway@.service /etc/systemd/s
 sudo systemctl enable steward-wire-gateway@mal
 ```
 
-Registry publish mirror: `./scripts/publish-protocol-registry.sh` → `publish/protocol/` → `https://openorgos.org/protocol/`
+Registry publish mirror: `./scripts/publish-protocol-registry.sh` → `publish/protocol/` → `https://oorgos.org/protocol/`
 
 See [wire-gateway-requirements.md](../../docs/org-os/wire-gateway-requirements.md).
 

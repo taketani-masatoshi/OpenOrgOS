@@ -95,7 +95,8 @@ export function extractClientOrgUriFromTlsSocket(socket: TLSSocket): string | un
     ?.slice(4);
   if (sanUri?.startsWith("steward://")) return sanUri;
 
-  const cn = cert.subject.CN;
+  const subjectCn = cert.subject.CN;
+  const cn = Array.isArray(subjectCn) ? subjectCn[0] : subjectCn;
   if (cn?.startsWith("steward://")) return cn;
   return cn ? `steward://tenant/${cn}` : undefined;
 }
@@ -110,7 +111,9 @@ export function verifyMtlsClient(opts: {
   if (!opts.socket.authorized) {
     return {
       ok: false,
-      reason: opts.socket.authorizationError ?? "client certificate not authorized",
+      reason: opts.socket.authorizationError
+        ? String(opts.socket.authorizationError)
+        : "client certificate not authorized",
     };
   }
 

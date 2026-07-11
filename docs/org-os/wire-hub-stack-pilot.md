@@ -34,7 +34,7 @@
 |------|------|--------|
 | TLS | Mode A ACME / Mode B 本番証明書 | runbook · `wire-gateway tls-init`（dev のみ） |
 | Hub 法域拡張 | EE/AE/… の `hub_public_key` pin | `protocol trusted-hubs-validate` |
-| openorgos.org 配信 | `./scripts/publish-protocol-registry.sh` → CDN | スクリプトあり · CDN は operator |
+| oorgos.org 配信 | `./scripts/publish-protocol-registry.sh` → CDN | スクリプトあり · CDN は operator |
 | 実 SS / Gov token | `GOV_XROAD_*` 本番値 | env 設定 |
 | relay 常駐 | systemd / Docker profile | `setup-mal-wire-operator.sh --install-systemd` |
 

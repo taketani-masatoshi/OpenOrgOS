@@ -2,7 +2,7 @@
 
 **Status:** 合意草案 · 2026-07-06（Hub 仮計画 §7.A · **最終系 §7.B**）  
 **Parent:** [witness-hub-requirements.md](witness-hub-requirements.md) · [openorgos-core-philosophy.md](openorgos-core-philosophy.md)  
-**関連:** [org-dissolution-witness-checklist.md](org-dissolution-witness-checklist.md) · [`trusted-hubs-openorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-openorgos.org.yaml)
+**関連:** [org-dissolution-witness-checklist.md](org-dissolution-witness-checklist.md) · [`trusted-hubs-oorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-oorgos.org.yaml)
 
 ---
 
@@ -18,7 +18,7 @@ OpenOrgOS を運営する当組織も OrgOS の利用者である。Witness Hub 
 
 | 主体 | 維持するもの | 維持しないもの |
 |------|-------------|---------------|
-| **OpenOrgOS Foundation / 寄付本体** | Core スキーマ · CLI · 仕様 · Community 基盤 · **参考レジストリ**（openorgos.org） | 全テナントの Hub 単独運用 · envelope 全文保管 |
+| **OpenOrgOS Foundation / 寄付本体** | Core スキーマ · CLI · 仕様 · Community 基盤 · **参考レジストリ**（oorgos.org） | 全テナントの Hub 単独運用 · envelope 全文保管 |
 | **OpenOrgOS 運営 Org**（日常運営 · 配分決定） | 自テナント · **HUB-APAC-JP 等 1 台** · 自社 wire · **grant 正本・全 chapter 配分 = タリン Treasury** | 他 Org の正本 · quorum の唯一判定者 · **日本法人への運営本部集約** |
 | **Community / Academy 運営** | openorgos.net · 教材 API | Witness Hub（別レイヤ） |
 | **各利用 Org** | outbox / inbox · receipt キャッシュ · pool pin | 他 Org の Hub データ |
@@ -45,7 +45,7 @@ Org A ──wire──► Org B
 | **コピー必須** | アンカー Hub の attestation / receipt は **≥2 の独立 peer Hub** に gossip 複製 |
 | **digest のみ** | Hub は N-04 — 契約本文を集約しない |
 | **解散** | [org-dissolution-witness-checklist.md](org-dissolution-witness-checklist.md) — export + custodian |
-| **レジストリ** | openorgos.org は **pin 用参考一覧** — ルーティング権限ではない |
+| **レジストリ** | oorgos.org は **pin 用参考一覧** — ルーティング権限ではない |
 
 ### 3.1 本番最小構成（k≥3）
 
@@ -96,10 +96,10 @@ npm run orgos -- --tenant <id> protocol witness verify --event-id <uuid>
 
 ---
 
-## 4. trusted-hubs レジストリ（openorgos.org）
+## 4. trusted-hubs レジストリ（oorgos.org）
 
-**正本（公開予定）:** `https://openorgos.org/protocol/trusted-hubs.yaml`  
-**Steward 草案:** [`steward/platform/protocol/trusted-hubs-openorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-openorgos.org.yaml)
+**正本（公開予定）:** `https://oorgos.org/protocol/trusted-hubs.yaml`
+**Steward 草案:** [`steward/platform/protocol/trusted-hubs-oorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-oorgos.org.yaml)
 
 | 項目 | 説明 |
 |------|------|
@@ -141,7 +141,7 @@ npm run orgos -- --tenant <id> protocol witness pool init-trusted --jurisdiction
 運営 Org または Hub operator 撤退時:
 
 1. [org-dissolution-witness-checklist.md](org-dissolution-witness-checklist.md) Phase 2–5
-2. `trusted-hubs-openorgos.org.yaml` から該当 `hub_id` を retire
+2. `trusted-hubs-oorgos.org.yaml` から該当 `hub_id` を retire
 3. 利用 Org へ **pool 再 pin** を Community / リリースノートで通知（強制更新 API なし）
 
 ---
@@ -283,7 +283,7 @@ hubs:
 
 ### 7.B 最終系（Final Target · 2026-07-06）
 
-> **位置づけ:** §8 Wave · [`trusted-hubs-openorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-openorgos.org.yaml) `final_plan` · 運用移動（§10）の **正本**。
+> **位置づけ:** §8 Wave · [`trusted-hubs-oorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-oorgos.org.yaml) `final_plan` · 運用移動（§10）の **正本**。
 
 #### 7.B.1 グローバル 8 都市（最終系）
 
@@ -548,7 +548,7 @@ Witness Hub 間の **人的監査・鍵儀式** は Star Alliance 優先 · **�
 | ドメイン | 役割 |
 |----------|------|
 | `openorgos.net` | グローバル入口 · Academy · 索引 |
-| `openorgos.org` | レジストリ · ガバナンス · trusted-hubs |
+| `oorgos.org` | レジストリ · ガバナンス · trusted-hubs |
 | リージョン / chapter | 各国 · 地域の実行（上表の法人が operator） |
 
 ---
@@ -561,7 +561,7 @@ Witness Hub 間の **人的監査・鍵儀式** は Star Alliance 優先 · **�
 | [witness-hub-operations.md](witness-hub-operations.md) | デプロイ · バックアップ · CLI |
 | [org-dissolution-witness-checklist.md](org-dissolution-witness-checklist.md) | 解散 export |
 | [`witness-custody-handoff.template.yaml`](../../steward/platform/protocol/witness-custody-handoff.template.yaml) | 託し先マニフェスト |
-| [`trusted-hubs-openorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-openorgos.org.yaml) | Regional Chapter レジストリ草案 |
+| [`trusted-hubs-oorgos.org.yaml`](../../steward/platform/protocol/trusted-hubs-oorgos.org.yaml) | Regional Chapter レジストリ草案 |
 
 ---
 
@@ -569,7 +569,7 @@ Witness Hub 間の **人的監査・鍵儀式** は Star Alliance 優先 · **�
 
 | 日付 | 内容 |
 |------|------|
-| 2026-06-25 | 初版 — Model Y · 運営 Org Hub · openorgos.org レジストリ |
+| 2026-06-25 | 初版 — Model Y · 運営 Org Hub · oorgos.org レジストリ |
 | 2026-06-25 | k≥3 · n≥4 最小構成 · アンカー Hub コピー必須 |
 | 2026-07-05 | **7 Hub + AF 3 都市選定確定** · Wave 別法人役割 · 税務レイヤ · トランジット方針 |
 | 2026-07-05 | **税務・承継微修正** — 運営本部=タリン · 東京=薄い APAC · オークランド trust Wave 2 · §9.1 日本国籍創業者 |

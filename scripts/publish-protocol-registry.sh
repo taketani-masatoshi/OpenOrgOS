@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Mirror platform protocol registries for openorgos.org publication.
-# Operator copies publish/protocol/* to https://openorgos.org/protocol/
+# Mirror platform protocol registries for oorgos.org publication.
+# Operator copies publish/protocol/* to https://oorgos.org/protocol/
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

@@ -191,6 +191,9 @@ flowchart TB
 | FR-WT-05 | store-and-forward relay キュー | ✓ |
 | FR-WT-06 | HTTPS + mTLS（protocol API） | ✓ |
 | FR-WT-07 | peer outbox リモート export API | ✓ | `GET /protocol/v1/outbox` · `{eventId}` · deliver-pull |
+| FR-WT-08 | `email_wire` SMTP フォールバック transport | ✓ | `email-wire-deliver.ts` · peers `wire_email` |
+| FR-WT-09 | delivery-attempts 台帳（経路別試行履歴） | ✓ | `delivery-ledger.ts` · E1–E15 |
+| FR-WT-10 | Wire node governance（Community registry submit/decide） | ✓ | [wire-node-governance.md](../org-os/wire-node-governance.md) |
 
 ---
 
