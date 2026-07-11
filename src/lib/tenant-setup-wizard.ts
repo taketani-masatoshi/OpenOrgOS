@@ -9,6 +9,7 @@ import {
 } from "../../schemas/integrations.js";
 import { mailConfigSchema } from "../../schemas/correspondence/mail-config.js";
 import { ensureMailConfigExample } from "./correspondence/mail-config.js";
+import { ensureMailTriageQueueExample } from "./correspondence/mail-triage-queue.js";
 import {
   getExecutiveRecordsDir,
   getMailConfigPath,
@@ -81,7 +82,7 @@ function writeMailConfig(answers: TenantSetupAnswers): string | undefined {
             secure: answers.smtp_secure ?? false,
           }
         : undefined,
-    inbox: { sync: "stub" },
+    receive: { sync: "stub" },
     notes:
       answers.mail_provider === "gmail_compose"
         ? "Use orgos secretary mail compose-url for browser send"
@@ -153,6 +154,7 @@ export async function runTenantSetupWizard(
   const answers = await resolveAnswers(opts);
 
   const executiveSeeded = seedExecutiveYaml(Boolean(answers.skip_executive));
+  ensureMailTriageQueueExample();
 
   let operatorsInitialized = Boolean(loadOperatorRegistry()?.operators.length);
   if (!operatorsInitialized && !opts.nonInteractive && !opts.answers) {

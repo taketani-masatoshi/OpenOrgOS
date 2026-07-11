@@ -153,6 +153,8 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_subsidy_application: "finance",
   jp_trademark_application: "compliance",
   jp_corporate_registration: "secretary",
+  jp_medical_device: "medical_device_regulatory",
+  jp_permit_registry: "compliance",
 };
 
 const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
@@ -180,6 +182,8 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_subsidy_application",
   "jp_trademark_application",
   "jp_corporate_registration",
+  "jp_medical_device",
+  "jp_permit_registry",
 ];
 
 export function modulesFilePath(): string {

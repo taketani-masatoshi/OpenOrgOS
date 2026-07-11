@@ -21,6 +21,7 @@ import { jp_subsidy_applicationCli } from "../../steward/jurisdiction-packs/JP/m
 import { jp_trademark_applicationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_trademark_application/cli/register.js";
 import { jp_corporate_registrationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_corporate_registration/cli/register.js";
 import { jp_medical_deviceCli } from "../../steward/jurisdiction-packs/JP/modules/jp_medical_device/cli/register.js";
+import { jp_permit_registryCli } from "../../steward/jurisdiction-packs/JP/modules/jp_permit_registry/cli/register.js";
 
 const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   travelBookingCli,
@@ -40,6 +41,7 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   jp_trademark_applicationCli,
   jp_corporate_registrationCli,
   jp_medical_deviceCli,
+  jp_permit_registryCli,
 ];
 
 export function listModuleCliBundles(): ModuleCliBundle[] {

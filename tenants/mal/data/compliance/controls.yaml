@@ -1,6 +1,36 @@
 version: "1"
-as_of: 2026-06-28
+as_of: 2026-07-10
 controls:
+  - id: CTL-13485-4.1
+    maturity: L0
+  - id: CTL-13485-4.2.2
+    maturity: L0
+  - id: CTL-13485-4.2.4
+    maturity: L0
+  - id: CTL-13485-5.3
+    maturity: L0
+  - id: CTL-13485-6.2
+    maturity: L0
+  - id: CTL-13485-7.1
+    maturity: L0
+  - id: CTL-13485-7.3
+    maturity: L0
+  - id: CTL-13485-7.4
+    maturity: L0
+  - id: CTL-13485-7.5
+    maturity: L0
+  - id: CTL-13485-7.5.9
+    maturity: L0
+  - id: CTL-13485-8.2.2
+    maturity: L0
+  - id: CTL-13485-8.2.3
+    maturity: L0
+  - id: CTL-13485-8.2.4
+    maturity: L0
+  - id: CTL-13485-8.5.2
+    maturity: L0
+  - id: CTL-13485-8.5.3
+    maturity: L0
   - id: CTL-21401-4.1
     maturity: L2
     last_reviewed: 2026-06-28

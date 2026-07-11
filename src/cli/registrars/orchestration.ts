@@ -114,6 +114,10 @@ import {
   runProtocolTrustRegistryResolve,
   runProtocolTrustRegistrySyncKeys,
   runProtocolTrustRegistryPinLocal,
+  runProtocolTrustRegistrySubmit,
+  runProtocolTrustRegistryDecide,
+  runProtocolTrustRegistryPending,
+  runProtocolDeliverStatus,
 } from "../../commands/protocol.js";
 import {
   runHubServe,
@@ -1067,13 +1071,35 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) => runProtocolSigningRotate({ tenant: opts.tenant, json: opts.json }));
 
-  protocolCmd
+  const protocolDeliverCmd = protocolCmd
     .command("deliver")
-    .description("POST envelope JSON to peer inbound endpoints (gov_gateway or openorgos_p2p; store-and-forward on failure)")
-    .requiredOption("--peer <id>", "PEER-*")
-    .requiredOption("--file <path>", "Envelope JSON file")
+    .description("POST envelope to peer or show delivery attempt status (R5)")
+    .option("--peer <id>", "PEER-* (legacy top-level deliver)")
+    .option("--file <path>", "Envelope JSON file")
     .option("--tenant <id>", "Tenant id")
-    .action((opts) => runProtocolDeliver({ peer: opts.peer, file: opts.file, tenant: opts.tenant }));
+    .action((opts, cmd) => {
+      if (cmd.args[0] === "status") return;
+      if (opts.peer && opts.file) {
+        return runProtocolDeliver({ peer: opts.peer, file: opts.file, tenant: opts.tenant });
+      }
+      if (!cmd.args.length) {
+        protocolDeliverCmd.help({ error: true });
+      }
+    });
+
+  protocolDeliverCmd
+    .command("status")
+    .description("Show delivery attempt history for an event")
+    .requiredOption("--event-id <uuid>", "Event id")
+    .option("--peer <peerId>", "Filter by peer id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolDeliverStatus({
+        eventId: opts.eventId,
+        peerId: opts.peer,
+        json: opts.json,
+      })
+    );
 
   const protocolGovGatewayCmd = protocolCmd
     .command("gov-gateway")
@@ -1247,6 +1273,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--node-id <id>", "Limit to node_id")
     .option("--force", "Overwrite existing protocol_public_key")
     .option("--dry-run", "Report without writing YAML")
+    .option("--bypass-governance", "Skip governance gate (dev only)")
     .option("--json", "JSON output")
     .action((opts) =>
       runProtocolTrustRegistryPinLocal({
@@ -1254,9 +1281,61 @@ export function registerOrchestrationCommands(program: Command): void {
         nodeId: opts.nodeId,
         force: opts.force,
         dryRun: opts.dryRun,
+        bypassGovernance: opts.bypassGovernance,
         json: opts.json,
       })
     );
+  protocolTrustRegistryCmd
+    .command("submit")
+    .description("Submit wire node governance request (Community registry onboarding)")
+    .requiredOption("--tenant <id>", "Tenant id")
+    .option("--wire-email <email>", "Wire SMTP delivery address")
+    .option("--public-id <value>", "public_ids e.g. corporate_number:4010001189530")
+    .option("--requested-by <id>", "Operator id")
+    .option("--wire-url <url>", "Wire gateway public URL")
+    .option("--json", "JSON output")
+    .action((opts) => {
+      const publicId = opts.publicId as string | undefined;
+      const corporateNumber = publicId?.startsWith("corporate_number:")
+        ? publicId.slice("corporate_number:".length)
+        : publicId;
+      return runProtocolTrustRegistrySubmit({
+        tenant: opts.tenant,
+        wireEmail: opts.wireEmail,
+        corporateNumber,
+        requestedBy: opts.requestedBy,
+        wireUrl: opts.wireUrl,
+        json: opts.json,
+      });
+    });
+  protocolTrustRegistryCmd
+    .command("decide")
+    .description("Approve or reject a pending wire node governance request")
+    .requiredOption("--request-id <uuid>", "Governance request id")
+    .requiredOption("--decided-by <id>", "Committee chair / approver id")
+    .option("--approve", "Approve request")
+    .option("--reject", "Reject request")
+    .option("--note <text>", "Decision note")
+    .option("--json", "JSON output")
+    .action((opts) => {
+      if (!opts.approve && !opts.reject) {
+        console.error("Specify --approve or --reject");
+        process.exit(1);
+      }
+      return runProtocolTrustRegistryDecide({
+        requestId: opts.requestId,
+        approve: !!opts.approve,
+        reject: !!opts.reject,
+        decidedBy: opts.decidedBy,
+        note: opts.note,
+        json: opts.json,
+      });
+    });
+  protocolTrustRegistryCmd
+    .command("pending")
+    .description("List pending wire node governance requests")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolTrustRegistryPending({ json: opts.json }));
 
   const protocolCommunityCmd = protocolCmd
     .command("community")
@@ -1684,6 +1763,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--approver <name>", "Approver")
     .option("--co-approver <name>", "Second approver (tier B)")
     .option("--operator <name>", "Override operator id")
+    .option("--reviewed", "Confirm correspondence draft body was reviewed (required for correspondence.*)")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) =>
@@ -1693,6 +1773,7 @@ export function registerOrchestrationCommands(program: Command): void {
         coApprover: opts.coApprover,
         operator: opts.operator,
         tenant: opts.tenant,
+        reviewed: opts.reviewed,
         json: opts.json,
       })
     );

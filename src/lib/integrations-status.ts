@@ -61,7 +61,7 @@ export function computeIntegrationsStatus(tenantId: string): IntegrationsStatusR
       id: "smtp_credentials",
       ok:
         mailResolved.provider === "dry_run" ||
-        mailResolved.provider === "gmail_compose" ||
+        mailResolved.provider === "gmail_api" ||
         Boolean(process.env.ORGOS_SMTP_USER && process.env.ORGOS_SMTP_PASSWORD),
       detail:
         mailResolved.provider === "smtp"

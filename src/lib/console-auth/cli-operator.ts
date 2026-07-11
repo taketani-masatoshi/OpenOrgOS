@@ -5,6 +5,7 @@ import type { OperatorPermission } from "../../../schemas/org/operator.js";
 import { appendAuditEvent } from "../audit-log.js";
 import {
   authenticateOperator,
+  isOperatorAuthBypassed,
   isOperatorAuthRequired,
   requireOperatorPermission,
   type AuthenticatedOperator,
@@ -112,6 +113,40 @@ export function requireCliReportWrite(command: string): AuthenticatedOperator {
 /** CLI tenant config writes (audit-bridge · wire-gateway tls). */
 export function requireCliConfigWrite(command: string): AuthenticatedOperator {
   return requireCliDataWrite({ command, permission: "escalate:plan" });
+}
+
+/** Human-only approval (correspondence · wire) — no dev bypass. */
+export function requireCliHumanApproval(command: string): AuthenticatedOperator {
+  if (isOperatorAuthBypassed()) {
+    throw new Error(
+      `${command} requires operator authentication (STEWARD_OPERATOR_AUTH=1). ` +
+        "Dev bypass is not allowed for human approval actions."
+    );
+  }
+  const auth = requireCliOperator({ permission: "chat:approve", command });
+  if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
+    throw new Error(
+      `${command} requires ceo or approver role (got ${auth.record.role}). Agents cannot approve.`
+    );
+  }
+  return auth;
+}
+
+/** Outbound correspondence send — human approver only; no dev bypass. */
+export function requireCliCorrespondenceSend(command: string): AuthenticatedOperator {
+  if (isOperatorAuthBypassed()) {
+    throw new Error(
+      `${command} requires operator authentication (STEWARD_OPERATOR_AUTH=1, --operator-id, ORGOS_OPERATOR_KEY). ` +
+        "Dev bypass is not allowed for outbound mail."
+    );
+  }
+  const auth = requireCliOperator({ permission: "chat:approve", command });
+  if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
+    throw new Error(
+      `${command} requires ceo or approver role (got ${auth.record.role}). Secretary creates drafts only.`
+    );
+  }
+  return auth;
 }
 
 export function auditCliMutation(command: string, detail: string): void {

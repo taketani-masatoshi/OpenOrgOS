@@ -120,6 +120,10 @@ export const externalContactSchema = z.object({
   role: z.string().optional(),
   preferred_channel: z.string().optional(),
   email: z.string().email().optional(),
+  /** Wire peer link (L1) */
+  peer_id: z.string().regex(/^PEER-\d{3}$/).optional(),
+  wire_did: z.string().optional(),
+  wire_email: z.string().email().optional(),
   /** 詳細は gitignore の stakeholders.yaml へ */
   stakeholder_id: z.string().regex(/^STK-\d{3,}$/).optional(),
   notes: z.string().optional(),

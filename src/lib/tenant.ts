@@ -143,7 +143,7 @@ export function resolveTenantPath(logicalPath: string): string {
   if (normalized.startsWith("steward/") || normalized.startsWith("schemas/")) {
     return resolve(getInstallRoot(), normalized);
   }
-  if (normalized.startsWith("data/") || normalized.startsWith("docs/")) {
+  if (normalized.startsWith("data/") || normalized.startsWith("docs/") || normalized.startsWith("records/")) {
     return join(getTenantDir(), normalized);
   }
   return join(getWorkspaceRoot(), normalized);

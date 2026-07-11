@@ -11,6 +11,9 @@ import { z } from "zod";
 export const AGENT_PROMPT_PATHS: Record<AgentId, string> = {
   executive_steward: "steward/core/agents/executive_steward_agent.md",
   secretary: "steward/core/agents/secretary_agent.md",
+  mail_intake: "steward/core/agents/mail_intake_agent.md",
+  mail_outbound: "steward/core/agents/mail_outbound_agent.md",
+  setup: "steward/core/agents/setup_agent.md",
   finance: "steward/core/agents/finance_agent.md",
   contract: "steward/core/agents/contract_agent.md",
   compliance: "steward/core/agents/compliance_agent.md",
@@ -56,6 +59,7 @@ export const AGENT_PROMPT_PATHS: Record<AgentId, string> = {
   corporate_development: "steward/core/agents/corporate_development_agent.md",
   quality_assurance: "steward/core/agents/quality_assurance_agent.md",
   medical_device_regulatory: "steward/core/agents/medical_device_regulatory_agent.md",
+  records_audit: "steward/core/agents/records_audit_agent.md",
 };
 
 export const AGENT_EXPORTS_DIR = join(ROOT_DIR, "steward", "platform", "agent", "exports");

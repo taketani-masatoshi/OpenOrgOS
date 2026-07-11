@@ -1,4 +1,4 @@
-as_of: 2026-07-10
+as_of: 2026-07-11
 approvals:
   - approval_id: NOTICE-20260628-001
     scope: wire
@@ -429,6 +429,7 @@ approvals:
     approval_tier: A
     approver_id: 竹谷昌敏
     approved_at: 2026-07-09T22:42:07.431Z
+    audit_event_id: 604d3f5f-4825-4dc1-adce-00d2a2a310fb
     wire:
       peer_id: PEER-002
       transaction_type: obligation.acknowledged
@@ -436,4 +437,670 @@ approvals:
       correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
       transaction_id: TX-20260710-002
       wire_event_id: 8f020399-bbc5-4862-8802-66b80a44eca4
-    audit_event_id: 604d3f5f-4825-4dc1-adce-00d2a2a310fb
+  - approval_id: NOTICE-20260710-009
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T08:19:19.927Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T08:19:19.941Z
+    audit_event_id: dffe63b7-aea4-4118-9ee4-f5588c2951d4
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260710-002
+      wire_event_id: 2608cf0d-1113-43c4-bdbc-6055a2e68c08
+  - approval_id: NOTICE-20260710-010
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T08:33:12.244Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T08:33:12.274Z
+    audit_event_id: af9869cc-0a8b-4398-9b8a-c87ba6a9780a
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260710-002
+      wire_event_id: da5c1027-1185-4dd1-a555-9ef091872570
+  - approval_id: NOTICE-20260710-011
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T08:38:07.034Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T08:38:07.053Z
+    audit_event_id: 3d2415fe-65cb-4384-99f4-d209d12ac328
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260710-002
+      wire_event_id: 5250931a-fabb-4434-b20f-6d148b3f1528
+  - approval_id: NOTICE-20260710-012
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T10:17:02.077Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T10:17:02.091Z
+    audit_event_id: fd04428c-6b93-4b7c-b21c-55064946177d
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260710-002
+      wire_event_id: 874ca6a6-2b80-45bb-a600-1759e0b5136b
+  - approval_id: NOTICE-20260710-013
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T14:55:34.227Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T14:55:34.244Z
+    audit_event_id: d1e1e68d-b58b-4595-bcbe-4d5501073bfa
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260710-002
+      wire_event_id: 94fefc4e-063e-4d5b-aac4-e0412f96a4c6
+  - approval_id: NOTICE-20260710-014
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T14:56:25.173Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T14:56:25.194Z
+    audit_event_id: 05c5d3eb-d977-40f4-aaaa-ac86839822a6
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260710-002
+      wire_event_id: 40f55d4c-666d-4262-ae0e-f7a56c226537
+  - approval_id: NOTICE-20260711-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T15:00:03.679Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T15:00:03.697Z
+    audit_event_id: a61886f9-5e55-48d2-b6e6-248ae179d3e8
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: b76423f0-3d73-4b5e-b120-99abd21e9c89
+  - approval_id: NOTICE-20260711-002
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T15:03:00.471Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T15:03:00.488Z
+    audit_event_id: 50bdf8c1-280b-441d-9bec-7c1f9d2acab5
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: b5f3ff54-8636-43fd-b6a7-0906bc8777f7
+  - approval_id: NOTICE-20260711-003
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T15:06:32.079Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T15:06:32.100Z
+    audit_event_id: 1197464f-2957-45c3-946a-2a658eca4608
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: ec0df873-c986-4090-b910-aaabbd95da2d
+  - approval_id: NOTICE-20260711-004
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T15:07:15.916Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T15:07:15.942Z
+    audit_event_id: 966e1891-bb16-47f1-9e2d-5e15c61d5a17
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 012f4d73-bfa5-4329-bc4a-68c6b6bf7b70
+  - approval_id: NOTICE-20260711-005
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T15:08:43.493Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T15:08:43.513Z
+    audit_event_id: 9b3bb101-1e4b-45f6-bcf0-9589e80259f0
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 437eebf2-700c-4e85-b734-13194d97bf74
+  - approval_id: NOTICE-20260711-006
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T15:09:31.826Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T15:09:31.861Z
+    audit_event_id: 1638fe32-4b39-41bf-9762-37e25aac8273
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: e7afe435-ca4a-4b20-802e-fc9aadcaa1f7
+  - approval_id: NOTICE-20260711-007
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T15:10:14.602Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T15:10:14.855Z
+    audit_event_id: 18745f89-61ff-4add-99bf-9bb59f1f7a79
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 880f28bc-f37f-4bb7-87eb-97e0cf4184dd
+  - approval_id: NOTICE-20260711-008
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T22:09:43.495Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T22:09:43.515Z
+    audit_event_id: 0eb5b749-579a-4be9-8bcf-0c40695d73b6
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 2839ea00-29af-4428-8b65-23799d565a58
+  - approval_id: NOTICE-20260711-009
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T22:14:46.956Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T22:14:46.975Z
+    audit_event_id: e3b8f292-46eb-4e28-9698-cddc9d0374b7
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: eb2fe0c8-4b1a-495f-915d-b002af1f05b1
+  - approval_id: NOTICE-20260711-010
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T22:24:02.585Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T22:24:02.607Z
+    audit_event_id: 7fad7bbb-b803-46ff-a6f4-86748eb2015e
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 7d24b56f-a004-49f8-8180-0ff4c97f88ed
+  - approval_id: NOTICE-20260711-011
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T22:48:09.885Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T22:48:09.916Z
+    audit_event_id: d1fd8226-a292-4a3c-b8ba-601c199a3f06
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: fc084076-3426-4b16-bffa-402c13c5afb8
+  - approval_id: NOTICE-20260711-012
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:12:41.887Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:12:41.906Z
+    audit_event_id: ba3811ed-cb8d-4113-9a91-b3e9349b2a33
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 4c9884a7-45eb-4d80-b307-f3c1898f13f6
+  - approval_id: NOTICE-20260711-013
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:16:25.202Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:16:25.231Z
+    audit_event_id: 0f29c50b-9e93-44a7-b3b1-9864737b3946
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: c2ff57c6-8fec-4750-8a60-18a8e126a6ad
+  - approval_id: NOTICE-20260711-014
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:29:04.858Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:29:04.898Z
+    audit_event_id: 0f88c807-3f8d-4fa6-81c0-bc80d2c09d28
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 375a4cbb-8993-4de3-9136-cb598da0f1de
+  - approval_id: NOTICE-20260711-015
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:32:25.888Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:32:25.913Z
+    audit_event_id: a841e61c-28b9-4467-b2e9-1b650563eed0
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: bdaf33e1-3e4f-4c6e-a2ae-9e10b05e7649
+  - approval_id: NOTICE-20260711-016
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:37:35.928Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:37:35.954Z
+    audit_event_id: 2856c0df-4b4b-4f75-8035-8649e333a4d0
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: bf9fed6a-4d2b-47f1-a9db-ec4dfcc34a01
+  - approval_id: NOTICE-20260711-017
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:42:08.384Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:42:08.470Z
+    audit_event_id: 89fed2f8-5ec1-4d8a-80fd-9986e2dfa95e
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 934ddc24-6698-4b1f-ae4b-d259bf9e12d7
+  - approval_id: NOTICE-20260711-018
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:45:48.467Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:45:48.508Z
+    audit_event_id: 1498e8f4-72e5-426c-9aef-2bd7b4701c81
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: b0b7bece-1992-429c-9f6d-21732a99b41a
+  - approval_id: NOTICE-20260711-019
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-10T23:50:22.412Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-10T23:50:22.438Z
+    audit_event_id: e6090308-fd15-4b57-adac-3e4e7eef7283
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 97cf0861-82df-4d4e-a72e-c096a54e90bf
+  - approval_id: NOTICE-20260711-020
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-11T00:36:44.214Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-11T00:36:44.240Z
+    audit_event_id: b203d6a3-cf76-4edc-acf7-6c730d3912d3
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: fc2b3b80-b378-41fb-80fc-29d1a786d770
+  - approval_id: NOTICE-20260711-021
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-11T00:40:34.359Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-11T00:40:34.391Z
+    audit_event_id: 4b9707be-80b5-41af-a972-18e13790e480
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 415eed1e-c00b-439b-b7ac-bd5150be0148
+  - approval_id: NOTICE-20260711-022
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-11T00:55:51.591Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-11T00:55:51.621Z
+    audit_event_id: 4df5330c-ca89-432f-93ff-e5123c0dc918
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: d18efbec-4525-4127-8180-25a3d913b850
+  - approval_id: NOTICE-20260711-023
+    scope: wire
+    status: completed
+    proposed_at: 2026-07-11T01:38:53.371Z
+    proposed_by: 秘書オペレータ
+    subject_type: wire.outbound
+    subject_ref: CTR-012
+    amount:
+      value: 50000
+      currency: JPY
+    message: 契約範囲内の運用を確認
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: 竹谷昌敏
+    approved_at: 2026-07-11T01:38:53.396Z
+    wire:
+      peer_id: PEER-002
+      transaction_type: obligation.acknowledged
+      contract_id: CTR-012
+      correlation_event_id: a1b2c3d4-e5f6-4789-a012-3456789abcde
+      transaction_id: TX-20260711-002
+      wire_event_id: 4ed32e93-f35c-49de-88f1-24c9576946c9
+    audit_event_id: 34a08083-f8f6-465f-bed7-e7412d9edcd4

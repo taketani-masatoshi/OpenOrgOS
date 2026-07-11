@@ -1,6 +1,7 @@
 import { listEffectiveRegulations, loadEnabledRegulationIds } from "./regulations.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
-import { computeControlGaps, type ControlGapRow } from "./control-framework.js";
+import { computeControlGaps } from "./control-framework.js";
+import type { ControlGapRow } from "../../schemas/control-framework.js";
 
 export type { ControlGapRow };
 

@@ -22,7 +22,6 @@ import {
 } from "../lib/company-events.js";
 import { linkOutboxItemToEvent } from "../lib/document-io.js";
 import { validateCompanyEventChainWithRegistry } from "../lib/company-events-chain.js";
-import type { CompanyEventKind } from "../../schemas/company-events.js";
 import {
   assertCanVoidCompanyEvent,
   getCompanyEventWireStatus,
@@ -72,14 +71,15 @@ export function runEventsNew(opts: {
   related?: string;
   notes?: string;
 }): void {
-  if (!COMPANY_EVENT_KINDS.includes(opts.kind as CompanyEventKind)) {
+  const kind = opts.kind as (typeof COMPANY_EVENT_KINDS)[number];
+  if (!COMPANY_EVENT_KINDS.includes(kind)) {
     throw new Error(`Invalid kind. Use: ${COMPANY_EVENT_KINDS.join(", ")}`);
   }
   initCompanyEventsFile();
   ensureCompanyEventMonth(parseMonth(opts.date?.slice(0, 7)));
 
   const event = createCompanyEvent({
-    kind: opts.kind as CompanyEventKind,
+    kind,
     title: opts.title,
     occurredAt: opts.date,
     slug: opts.slug,

@@ -32,6 +32,11 @@ import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { calendarFileSchema, oneOnOnesFileSchema } from "../../schemas/executive.js";
 import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+import {
+  runCapexPlanningSkill,
+  runContractRegisterSkill,
+  runTaxFilingPrepSkill,
+} from "../lib/core-skill-runners.js";
 
 const SKILLS_ALWAYS_WRITE = new Set([
   "dashboard",
@@ -182,20 +187,26 @@ export const SKILL_COMMANDS = [
   {
     id: "correspondence-send",
     skill: "correspondence_send",
-    agent: "Secretary",
+    agent: "Mail Outbound",
     description: "承認済み対外メール送信（SMTP）",
   },
   {
     id: "slack-notify",
     skill: "slack_notify",
-    agent: "Secretary",
+    agent: "Mail Outbound",
     description: "承認済み Slack 通知（webhook）",
   },
   {
     id: "correspondence-draft",
     skill: "correspondence_draft",
-    agent: "Secretary",
+    agent: "Mail Outbound",
     description: "対外連絡下書き + 承認起案",
+  },
+  {
+    id: "mail-intake-triage",
+    skill: "mail_intake_triage",
+    agent: "Mail Intake",
+    description: "受信メールルール分類",
   },
   {
     id: "tenant-integrations-setup",
@@ -429,6 +440,11 @@ export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<
         slackChannel: opts.slackChannel,
       });
       break;
+    case "mail-intake-triage": {
+      const { runMailIntakeTriage } = await import("./mail-intake.js");
+      await runMailIntakeTriage({ notify: true });
+      break;
+    }
     case "tenant-integrations-setup": {
       const { runTenantSetupCommand } = await import("./tenant-setup.js");
       if (!opts.answers) {

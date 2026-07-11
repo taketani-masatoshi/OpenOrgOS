@@ -21,6 +21,23 @@ export const todayInboxItemSchema = z.object({
   title: z.string(),
 });
 
+export const todayMailIntakeItemSchema = z.object({
+  id: z.string(),
+  subject: z.string(),
+  from: z.string(),
+  importance: z.string(),
+  urgency: z.string(),
+  handoff_status: z.string(),
+});
+
+export const todayCeoInlineQuestionSchema = z.object({
+  id: z.string(),
+  mail_id: z.string(),
+  subject: z.string(),
+  context_preview: z.string(),
+  field_count: z.number().int().nonnegative(),
+});
+
 export const todayAgentRelayItemSchema = z.object({
   id: z.string(),
   field_agent: z.string(),
@@ -61,6 +78,14 @@ export const todayWireDeliverySchema = z.object({
   created_at: z.string(),
 });
 
+export const todayEmailWirePendingSchema = z.object({
+  peer_id: z.string(),
+  event_id: z.string(),
+  attempts: z.number().int().nonnegative(),
+  last_error: z.string().optional(),
+  created_at: z.string(),
+});
+
 export const todayContextSchema = z.object({
   tenant: z.string(),
   report_date: z.string(),
@@ -71,9 +96,27 @@ export const todayContextSchema = z.object({
   wire_pending: z.array(todayWirePendingSchema).default([]),
   wire_delivery_pending_count: z.number().int().nonnegative().default(0),
   wire_delivery: z.array(todayWireDeliverySchema).default([]),
+  email_wire_pending_count: z.number().int().nonnegative().default(0),
+  email_wire_pending: z.array(todayEmailWirePendingSchema).default([]),
   witness_pending: z.array(todayWitnessPendingSchema).default([]),
   witness_pending_count: z.number().int().nonnegative().default(0),
   inbox_pending: z.array(todayInboxItemSchema),
+  mail_intake_pending_count: z.number().int().nonnegative().default(0),
+  mail_intake_action_required_count: z.number().int().nonnegative().default(0),
+  mail_intake_pending: z.array(todayMailIntakeItemSchema).default([]),
+  sender_identification_pending_count: z.number().int().nonnegative().default(0),
+  sender_identification_pending: z
+    .array(
+      z.object({
+        mail_id: z.string(),
+        sender_email: z.string(),
+        sender_display_name: z.string().optional(),
+        subject: z.string().optional(),
+      })
+    )
+    .default([]),
+  ceo_inline_questions_pending_count: z.number().int().nonnegative().default(0),
+  ceo_inline_questions_pending: z.array(todayCeoInlineQuestionSchema).default([]),
   escalate_pending_count: z.number().int().nonnegative(),
   agent_coo_relay_count: z.number().int().nonnegative().default(0),
   agent_coo_relay: z.array(todayAgentRelayItemSchema).default([]),

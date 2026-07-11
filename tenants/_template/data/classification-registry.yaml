@@ -31,6 +31,14 @@ agents:
     label: Secretary
     max_level: L2
     output_max_level: L1
+  mail_intake:
+    label: Mail Intake
+    max_level: L2
+    output_max_level: L1
+  mail_outbound:
+    label: Mail Outbound
+    max_level: L2
+    output_max_level: L1
   finance:
     label: Finance
     max_level: L2
@@ -122,8 +130,27 @@ resources:
     git: ignore
     ai_context: on_demand
     description: Secretary メール SMTP 設定（パスワードは env）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
+    read_agents: [secretary, compliance, mail_intake, mail_outbound]
+    write_agents: [secretary, mail_outbound]
+
+  - id: RES-EXEC-MAIL-TRIAGE
+    path: data/executive/mail-triage-queue.yaml
+    example_path: data/executive/mail-triage-queue.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: Mail Intake トリアージキュー（件名・差出人・分類のみ）
+    read_agents: [mail_intake, secretary, compliance]
+    write_agents: [mail_intake]
+
+  - id: RES-EXEC-MAIL-RECEIVED
+    path: records/executive/mail-received/
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 受信メール .eml アーカイブ
+    read_agents: [mail_intake, secretary]
+    write_agents: [mail_intake]
 
   - id: RES-PROTOCOL-PEERS
     path: data/protocol/peers.yaml

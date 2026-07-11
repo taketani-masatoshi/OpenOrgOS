@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import {
   orgApprovalRegistrySchema,
+  orgApprovalRequestSchema,
   type OrgApprovalRegistry,
   type OrgApprovalRequest,
 } from "../../../../schemas/org/approval.js";
@@ -14,7 +15,7 @@ import { currentDate, readYamlFile, writeYamlFile } from "../../utils.js";
 import { resolveJurisdictionApprovalPolicy } from "../../jurisdiction/wire-governance/index.js";
 
 export function noticeToOrgApproval(notice: PendingNotice): OrgApprovalRequest {
-  return orgApprovalRegistrySchema.shape.approvals.element.parse({
+  return orgApprovalRequestSchema.parse({
     approval_id: notice.notice_id,
     scope: "wire",
     status: notice.status === "transmitted" ? "completed" : notice.status,

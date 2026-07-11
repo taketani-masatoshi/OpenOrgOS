@@ -19,6 +19,10 @@ import { computeControlGaps } from "./control-framework.js";
 import { loadExecutiveCalendar } from "./data.js";
 import { detectUnsyncedCalendarEvents } from "./executive-calendar-sync.js";
 import { validatePeerContactRegistry } from "./secretary/validate-peer-contact-registry.js";
+import { loadMailConfig } from "./correspondence/mail-config.js";
+import { getMailConfigPath } from "./correspondence/paths.js";
+import { loadMailTriageQueue } from "./correspondence/mail-triage-queue.js";
+import { resolveImapCredentials } from "./correspondence/imap-credentials.js";
 import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
@@ -199,6 +203,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     "one-on-ones.yaml",
     "external-contacts.yaml",
     "stakeholders.yaml",
+    "mail-triage-queue.yaml",
   ] as const;
   for (const name of executiveYaml) {
     const rel = `data/executive/${name}`;
@@ -296,6 +301,46 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch {
     // tenant or jurisdiction not configured — skip control checks
+  }
+
+  try {
+    const mailConfig = loadMailConfig();
+    if (mailConfig?.receive?.sync === "imap") {
+      if (!mailConfig.receive.imap_host && !resolveImapCredentials()?.host) {
+        push(
+          "warning",
+          getMailConfigPath(),
+          "receive.sync=imap だが imap_host 未設定 — receive.imap_host または ORGOS_IMAP_HOST"
+        );
+      }
+      if (!resolveImapCredentials()) {
+        push(
+          "warning",
+          "records/executive/imap.env",
+          "IMAP 資格情報未設定 — ORGOS_IMAP_USER/PASSWORD または SMTP 資格情報"
+        );
+      }
+    }
+    const queue = loadMailTriageQueue();
+    for (const entry of queue.entries) {
+      if (entry.subject.length > 500 || entry.from.length > 300) {
+        push(
+          "error",
+          "data/executive/mail-triage-queue.yaml",
+          `${entry.id}: queue フィールドが長すぎる — L2 本文混入の疑い`
+        );
+      }
+      const emlAbs = resolveTenantPath(entry.eml_ref);
+      if (!existsSync(emlAbs)) {
+        push(
+          "error",
+          "data/executive/mail-triage-queue.yaml",
+          `${entry.id}: eml_ref が存在しません (${entry.eml_ref})`
+        );
+      }
+    }
+  } catch {
+    // correspondence optional on some tenants
   }
 
   return issues;

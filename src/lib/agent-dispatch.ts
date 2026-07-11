@@ -60,9 +60,9 @@ export function buildDispatchManifest(
     if (!scopes.length) {
       throw new Error(`Agent ${w.to_agent} has no delegation scopes`);
     }
-    if (w.path) {
+    if (w.context.path) {
       const reg = loadClassificationRegistry();
-      const access = checkAgentAccess(reg, w.to_agent, w.path, "write");
+      const access = checkAgentAccess(reg, w.to_agent, w.context.path, "write");
       if (!access.allowed) {
         throw new Error(`Dispatch blocked: ${access.reason}`);
       }

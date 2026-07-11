@@ -73,6 +73,8 @@ const EXTENSION_AGENTS = new Set<AgentId>([
   "corporate_development",
   "quality_assurance",
   "medical_device_regulatory",
+  "mail_intake",
+  "mail_outbound",
 ]);
 
 const EXECUTIVE_DATA_PREFIXES = ["data/executive/", "docs/executive/"];

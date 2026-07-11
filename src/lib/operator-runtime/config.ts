@@ -15,6 +15,7 @@ import { ROOT_DIR } from "../tenant.js";
 import { isProdSecurityMode } from "../console-auth/operator-rbac.js";
 
 export { OPERATOR_RUNTIME_CONFIG_PATH };
+export type { ResolvedShellCommand };
 
 function isCursorSdkAvailable(): boolean {
   if (!process.env.CURSOR_API_KEY?.trim()) return false;
@@ -97,10 +98,8 @@ export function buildShellCommand(
     const allowed = Object.keys(cfg.profiles ?? {}).join(", ") || "(none)";
     throw new Error(`Unknown shell profile "${profileName}" — allowed: ${allowed}`);
   }
-  const profile =
-    (profileName && cfg.profiles?.[profileName]) ??
-    cfg.shell ??
-    cfg.profiles?.aider;
+  const namedProfile = profileName ? cfg.profiles?.[profileName] : undefined;
+  const profile = namedProfile ?? cfg.shell ?? cfg.profiles?.aider;
   if (!profile?.command?.length) return null;
   return expandProfile(profile, ctx);
 }

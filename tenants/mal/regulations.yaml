@@ -61,8 +61,8 @@ regulations:
     enabled: false
     notes: logistics
   - id: REG-025
-    enabled: false
+    enabled: true
     notes: jp_medical_device OFF · 参照のみ
   - id: REG-026
-    enabled: false
+    enabled: true
     notes: jp_medical_device OFF · 参照のみ

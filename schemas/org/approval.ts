@@ -44,6 +44,10 @@ export const orgApprovalRequestSchema = z
     approved_at: z.string().optional(),
     rejected_at: z.string().optional(),
     reject_reason: z.string().optional(),
+    /** correspondence.* — CEO が文案確認後に approve --reviewed で設定 */
+    human_review_confirmed_at: z.string().optional(),
+    /** operator registry id that recorded human approval (ceo/approver) */
+    approved_by_operator_id: z.string().optional(),
     audit_event_id: z.string().uuid().optional(),
     wire: orgWireOutboundDetailsSchema.optional(),
   })

@@ -16,7 +16,16 @@ import { getOrgAuditBridgeConfigPath } from "../lib/org/paths.js";
 import { listAuditEvents } from "../lib/audit-log.js";
 import { orgAuditBridgeConfigSchema, orgAuditBridgeRecommendedConfig } from "../../schemas/org/audit-bridge.js";
 import { writeYamlFile } from "../lib/utils.js";
-import { requireCliOperator, requireCliConfigWrite } from "../lib/console-auth/cli-operator.js";
+import { requireCliOperator, requireCliConfigWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
+import {
+  assertCorrespondenceReviewAcknowledged,
+  CorrespondenceReviewRequiredError,
+  formatCorrespondenceDraftReview,
+  isCorrespondenceApprovalSubject,
+  loadCorrespondenceDraftForApproval,
+} from "../lib/correspondence/review.js";
+import { CORRESPONDENCE_CLI } from "../lib/correspondence/cli-labels.js";
+import { markCorrespondenceDraftApproved } from "../lib/correspondence/draft.js";
 
 export interface OrgApprovalProposeOptions {
   subjectType: string;
@@ -56,25 +65,59 @@ export interface OrgApprovalApproveOptions {
   coApprover?: string;
   operator?: string;
   tenant?: string;
+  reviewed?: boolean;
   json?: boolean;
 }
 
 export function runOrgApprovalApprove(opts: OrgApprovalApproveOptions): void {
   if (opts.tenant) setTenantId(opts.tenant);
-  const auth = requireCliOperator({ permission: "chat:approve", command: "org approval approve" });
+  const pending = findOrgApproval(opts.id);
+  if (!pending || pending.scope !== "internal") {
+    console.error(`Internal approval ${opts.id} not found`);
+    process.exit(1);
+  }
+
+  const auth = isCorrespondenceApprovalSubject(pending.subject_type)
+    ? requireCliHumanApproval("org approval approve")
+    : requireCliOperator({ permission: "chat:approve", command: "org approval approve" });
+
+  try {
+    assertCorrespondenceReviewAcknowledged({ approval: pending, reviewed: opts.reviewed });
+  } catch (e) {
+    if (e instanceof CorrespondenceReviewRequiredError) {
+      console.error(e.preview);
+      console.error("");
+      console.error(e.message);
+      process.exit(1);
+    }
+    throw e;
+  }
   try {
     const result = approveOrgApproval({
       approvalId: opts.id,
       approverId: opts.approver || auth.record.approver_name || auth.record.display_name,
       coApproverId: opts.coApprover,
       operatorId: opts.operator || auth.record.operator_id,
+      humanReviewConfirmed: isCorrespondenceApprovalSubject(pending.subject_type)
+        ? Boolean(opts.reviewed)
+        : undefined,
     });
+    if (isCorrespondenceApprovalSubject(result.approval.subject_type) && result.approval.subject_ref) {
+      try {
+        markCorrespondenceDraftApproved(result.approval.subject_ref);
+      } catch {
+        /* draft may already be approved */
+      }
+    }
     if (opts.json) {
       console.log(JSON.stringify(result, null, 2));
       return;
     }
     console.log(`✓ approved ${result.approval.approval_id}`);
     console.log(`  tier: ${result.approval.approval_tier ?? "—"} · audit: ${result.auditEnvelope?.event_id ?? "—"}`);
+    if (isCorrespondenceApprovalSubject(result.approval.subject_type) && result.approval.subject_ref) {
+      console.log(`  next: ${CORRESPONDENCE_CLI.send} --id ${result.approval.subject_ref}`);
+    }
   } catch (e) {
     console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);
@@ -100,7 +143,7 @@ export function runOrgApprovalReject(opts: OrgApprovalRejectOptions): void {
     console.log(JSON.stringify(rejected, null, 2));
     return;
   }
-  console.log(`✓ rejected ${rejected.approval_id}`);
+  console.log(`✓ rejected ${rejected.approval.approval_id}`);
 }
 
 export interface OrgApprovalListOptions {
@@ -149,10 +192,16 @@ export function runOrgApprovalShow(opts: OrgApprovalShowOptions): void {
     process.exit(1);
   }
   if (opts.json) {
-    console.log(JSON.stringify(approval, null, 2));
+    const draft = loadCorrespondenceDraftForApproval(approval);
+    console.log(JSON.stringify({ approval, draft }, null, 2));
     return;
   }
   console.log(JSON.stringify(approval, null, 2));
+  const draft = loadCorrespondenceDraftForApproval(approval);
+  if (draft) {
+    console.log("");
+    console.log(formatCorrespondenceDraftReview(draft));
+  }
 }
 
 export interface OrgAuditBridgeOptions {

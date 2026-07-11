@@ -21,6 +21,7 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
   jp_trademark_application: "data/trademark",
   jp_corporate_registration: "data/corporate-registration",
   jp_medical_device: "data/medical-device",
+  jp_permit_registry: "data/permit-registry",
 };
 
 export function isModuleEnabled(moduleId: string): boolean {

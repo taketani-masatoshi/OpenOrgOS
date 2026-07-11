@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach } from "vitest";
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
@@ -9,9 +9,10 @@ import { ROOT_DIR } from "../src/lib/tenant.js";
 /** Operational tenants whose committed protocol config must survive E2E demos. */
 const OPERATIONAL_PROTOCOL_TENANTS = ["mal", "southwood", "aiac"] as const;
 
+/** Committed tenant paths restored before each test (deduped — mal protocol included via OPERATIONAL). */
 const FIXTURE_PATHS = [
   "tenants/demo/data",
-  "tenants/mal/data/protocol",
+  "tenants/mal/data/org",
   ...OPERATIONAL_PROTOCOL_TENANTS.map((id) => `tenants/${id}/data/protocol`),
 ] as const;
 
@@ -29,6 +30,14 @@ function buildFixtureSnapshot(): void {
     cwd: ROOT_DIR,
     stdio: "ignore",
   });
+  for (const rel of FIXTURE_PATHS) {
+    const src = join(SNAPSHOT_ROOT, rel);
+    if (!existsSync(src)) {
+      throw new Error(
+        `Fixture snapshot missing ${rel} — commit the path or remove it from FIXTURE_PATHS in tests/setup-restore-protocol.ts`
+      );
+    }
+  }
 }
 
 function restoreCommittedTenantFixtures(): void {
@@ -36,6 +45,7 @@ function restoreCommittedTenantFixtures(): void {
     const src = join(SNAPSHOT_ROOT, rel);
     const dest = join(ROOT_DIR, rel);
     if (!existsSync(src)) continue;
+    mkdirSync(dirname(dest), { recursive: true });
     if (existsSync(dest)) {
       rmSync(dest, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
     }

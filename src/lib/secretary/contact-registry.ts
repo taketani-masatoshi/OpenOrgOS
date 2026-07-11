@@ -139,9 +139,38 @@ export function verifyRecipientInRegistry(email: string): {
   verified: boolean;
   match?: ContactLookupMatch;
 } {
-  const result = resolveContactRegistry({});
-  const match = result.matches.find((m) => m.email && norm(m.email) === norm(email));
-  return match ? { verified: true, match } : { verified: false };
+  const resolved = resolveSenderByEmail(email);
+  if (!resolved.known || !resolved.match) return { verified: false };
+  return { verified: true, match: resolved.match };
+}
+
+export interface SenderResolution {
+  known: boolean;
+  match?: ContactLookupMatch;
+  ambiguous?: boolean;
+  matches?: ContactLookupMatch[];
+  internal_domain?: boolean;
+}
+
+/** メール差出人を contact registry 全体から照合（email 優先 · displayName フォールバック） */
+export function resolveSenderByEmail(email: string, displayName?: string): SenderResolution {
+  const candidates = collectContactRegistryCandidates();
+  const emailNorm = norm(email);
+  const emailMatches = candidates.filter((m) => m.email && norm(m.email) === emailNorm);
+  if (emailMatches.length === 1) return { known: true, match: emailMatches[0] };
+  if (emailMatches.length > 1) {
+    return { known: true, ambiguous: true, matches: emailMatches, match: emailMatches[0] };
+  }
+
+  if (displayName?.trim()) {
+    const nameMatches = filterMatches(candidates, { name: displayName.trim() });
+    if (nameMatches.length === 1) return { known: true, match: nameMatches[0] };
+    if (nameMatches.length > 1) {
+      return { known: true, ambiguous: true, matches: nameMatches, match: nameMatches[0] };
+    }
+  }
+
+  return { known: false };
 }
 
 function loadCompanyOfficers(): ContactLookupMatch[] {

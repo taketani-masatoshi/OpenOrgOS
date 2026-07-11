@@ -108,8 +108,13 @@ modules:
     data_root: data/operations/
     summary_dir: agent-summaries/operations/
     notes: 旅費・旅行手配 · REG-008 · operations travel CLI
+  - id: jp_corporate_registration
+    enabled: true
+    agent: jp_corporate_registration
+    data_root: data/corporate-registration/
+    notes: 法務局登記 — 本店移転（2026-07 亀沢）· Secretary proxy
   - id: jp_medical_device
-    enabled: false
+    enabled: true
     agent: jp_medical_device
     docs_root: docs/medical-device/
     data_root: data/medical-device/

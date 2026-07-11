@@ -54,6 +54,7 @@ export type AgentMission = z.output<typeof agentMissionSchema>;
 export type MissionType = z.output<typeof missionTypeSchema>;
 export type MissionStatus = z.output<typeof missionStatusSchema>;
 export type RelayStatus = z.output<typeof relayStatusSchema>;
+export type OrderSource = z.output<typeof orderSourceSchema>;
 
 export const chainPolicySchema = z.object({
   version: z.string(),

@@ -15,13 +15,13 @@ import {
   type PackTier,
 } from "../../schemas/jurisdiction.js";
 import { getInstallRoot } from "./orgos-paths.js";
-import { getInstallRoot } from "./orgos-paths.js";
 import { JURISDICTIONS_DIR, JURISDICTION_PACKS_DIR } from "./steward-paths.js";
 import { getResolvedDisplayLocale } from "./locale.js";
 import { loadTenantConfig, getTenantDir, getTenantId } from "./tenant.js";
 import { readYamlFile, readYamlFileRaw } from "./utils.js";
 
 export { JURISDICTIONS_DIR, JURISDICTION_PACKS_DIR } from "./steward-paths.js";
+export type { JurisdictionCode } from "../../schemas/jurisdiction.js";
 export const STUB_PACK_ROOT_REL = "steward/jurisdiction-packs/_stub";
 export const COUNTRIES_REGISTRY_PATH = join(JURISDICTIONS_DIR, "countries.yaml");
 export const JURISDICTION_REGISTRY_PATH = join(JURISDICTIONS_DIR, "registry.yaml");

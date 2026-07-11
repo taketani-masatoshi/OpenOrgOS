@@ -6,6 +6,9 @@ import {
   assertWireGovernanceApproval,
 } from "../../jurisdiction/wire-governance/index.js";
 import {
+  isCorrespondenceApprovalSubject,
+} from "../../correspondence/review.js";
+import {
   findOrgApproval,
   loadOrgApprovalRegistry,
   saveOrgApprovalRegistry,
@@ -21,6 +24,8 @@ export interface ApproveOrgApprovalOptions {
   basisRef?: string;
   /** When false, caller emits audit after side effects (wire transmit). */
   emitAudit?: boolean;
+  /** correspondence.* — must be true when human confirmed draft review */
+  humanReviewConfirmed?: boolean;
 }
 
 export interface ApproveOrgApprovalResult {
@@ -71,6 +76,13 @@ export function approveOrgApproval(opts: ApproveOrgApprovalOptions): ApproveOrgA
     );
   }
 
+  if (isCorrespondenceApprovalSubject(approval.subject_type) && !opts.humanReviewConfirmed) {
+    throw new Error(
+      `Correspondence approval ${opts.approvalId} requires humanReviewConfirmed after draft review — ` +
+        `use: org approval approve --id ${opts.approvalId} --approver "<CEO>" --reviewed`
+    );
+  }
+
   const gate = evaluateOrgApprovalGate(approval, opts.approverId, opts.coApproverId);
   const approvedAt = new Date().toISOString();
   const attestation: OperatorAttestation = {
@@ -104,6 +116,12 @@ export function approveOrgApproval(opts: ApproveOrgApprovalOptions): ApproveOrgA
     approval_tier: gate.tier,
     approved_at: approvedAt,
     audit_event_id: auditEnvelope?.event_id,
+    ...(isCorrespondenceApprovalSubject(approval.subject_type) && opts.humanReviewConfirmed
+      ? {
+          human_review_confirmed_at: approvedAt,
+          approved_by_operator_id: opts.operatorId,
+        }
+      : {}),
   };
   saveOrgApprovalRegistry(registry);
 

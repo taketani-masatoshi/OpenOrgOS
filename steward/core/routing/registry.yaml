@@ -157,8 +157,8 @@ routes:
         - data/executive/one-on-ones.yaml
 
   - id: secretary-correspondence
-    description: 社外連絡・メール下書き
-    agent: secretary
+    description: 社外連絡・メール下書き（後方互換ルート → mail_outbound）
+    agent: mail_outbound
     skill: external_correspondence
     boundary: executive_data
     priority: 75
@@ -171,6 +171,43 @@ routes:
         - 返信下書き
       paths:
         - data/executive/external-contacts.yaml
+        - docs/executive/correspondence-drafts/
+
+  - id: mail-outbound-correspondence
+    description: 社外メール送信下書き · 承認済み送信
+    agent: mail_outbound
+    skill: correspondence_draft
+    boundary: executive_data
+    priority: 76
+    resource_paths:
+      - docs/executive/correspondence-drafts/
+    match:
+      keywords:
+        - メール送信
+        - mail outbound
+        - correspondence draft
+        - SMTP
+      paths:
+        - docs/executive/correspondence-drafts/
+        - records/executive/mail-config.yaml
+
+  - id: mail-intake-handoff
+    description: 受信メール分類 · Secretary ハンドオフ
+    agent: mail_intake
+    skill: mail_intake_triage
+    boundary: executive_data
+    priority: 74
+    resource_paths:
+      - data/executive/mail-triage-queue.yaml
+    match:
+      keywords:
+        - 受信メール
+        - mail intake
+        - メール取込
+        - 迷惑メール
+      paths:
+        - data/executive/mail-triage-queue.yaml
+        - records/executive/mail-received/
 
   - id: tenant-setup
     description: テナント初回設定 · integrations

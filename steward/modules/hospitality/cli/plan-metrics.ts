@@ -1,4 +1,4 @@
-import type { PropertyRevenuePlan } from "../../../../schemas/plan.js";
+import type { PropertyRevenuePlan } from "../../../../schemas/finance/types.js";
 
 export interface HotelPlanMetrics {
   monthlyRevenue: number;

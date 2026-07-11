@@ -20,7 +20,17 @@ export function seedExecutiveYamlFromExamples(
 ): void {
   const execDir = join(dataDir, "executive");
   mkdirSync(execDir, { recursive: true });
-  const bases = ["calendar", "tasks", "one-on-ones", "external-contacts", "stakeholders"];
+  const bases = [
+    "calendar",
+    "tasks",
+    "one-on-ones",
+    "external-contacts",
+    "stakeholders",
+    "mail-triage-queue",
+    "sender-identification-queue",
+    "ceo-inline-questions",
+    "mail-interpretation-queue",
+  ];
   for (const base of bases) {
     const example = join(execDir, `${base}.yaml.example`);
     const target = join(execDir, `${base}.yaml`);
@@ -40,6 +50,10 @@ export function seedExecutiveYamlFromExamples(
       "one-on-ones": "one_on_ones: []\n",
       "external-contacts": "contacts: []\n",
       stakeholders: "stakeholders: []\n",
+      "mail-triage-queue": "version: 1\nentries: []\n",
+      "sender-identification-queue": "version: 1\nentries: []\n",
+      "ceo-inline-questions": "version: 1\nquestions: []\n",
+      "mail-interpretation-queue": "version: 1\nentries: []\n",
     };
     writeScaffoldFile(target, empty[base] ?? "notes: |\n  skeleton\n");
     result?.created.push(rel);

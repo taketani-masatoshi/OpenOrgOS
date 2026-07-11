@@ -5,7 +5,7 @@ import type {
   WireApprovalGateInput,
   WireApprovalGateResult,
   WireApprovalTier,
-} from "../../schemas/protocol/wire-approval.js";
+} from "../../../schemas/protocol/wire-approval.js";
 import { assertWireGovernanceApproval, resolveWireGovernanceTier } from "../jurisdiction/wire-governance/index.js";
 
 export type { WireApprovalGateInput, WireApprovalGateResult, WireApprovalTier };

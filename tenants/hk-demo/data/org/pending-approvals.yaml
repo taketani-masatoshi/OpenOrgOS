@@ -1,9 +1,9 @@
-as_of: 2026-07-10
+as_of: 2026-07-11
 approvals:
-  - approval_id: APR-20260710-001
+  - approval_id: APR-20260711-001
     scope: internal
     status: approved
-    proposed_at: 2026-07-09T22:41:55.359Z
+    proposed_at: 2026-07-11T00:55:44.024Z
     proposed_by: secretary
     subject_type: regulation.amendment
     subject_ref: REG-HK-004
@@ -14,5 +14,5 @@ approvals:
     approval_policy_ref: REG-HK-004
     approver_id: Chan Wei
     approval_tier: A
-    approved_at: 2026-07-09T22:41:55.362Z
-    audit_event_id: 3ca49ad2-bf5e-4bba-ac4e-f44d2e0df071
+    approved_at: 2026-07-11T00:55:44.027Z
+    audit_event_id: 04284a8d-7ffa-4991-bf9d-1422736d40a3

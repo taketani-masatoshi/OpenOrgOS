@@ -85,3 +85,6 @@ modules:
   jp_medical_device:
     tier: production_ready
     notes: 医療機器 QMS 4階層 · GVP · 台帳 · ISO-13485 control-map · operations medical-device CLI
+  jp_permit_registry:
+    tier: skeleton
+    notes: JP 許認可種別カタログ 60+ · 義務台帳 · operations permit CLI · gap 分析

@@ -72,11 +72,7 @@ function splitSystemMessages(messages: LlmChatMessage[]): {
 function toAnthropicMessages(messages: LlmChatMessage[]): Array<{ role: "user" | "assistant"; content: string }> {
   const out: Array<{ role: "user" | "assistant"; content: string }> = [];
   for (const m of messages) {
-    if (m.role === "user" || m.role === "assistant") {
-      if (typeof m.content === "string") {
-        out.push({ role: m.role, content: m.content });
-      }
-    } else if (m.role === "tool") {
+    if (m.role === "tool") {
       out.push({
         role: "user",
         content: `[tool result ${m.tool_call_id}]\n${m.content}`,
@@ -89,6 +85,10 @@ function toAnthropicMessages(messages: LlmChatMessage[]): Array<{ role: "user" |
         role: "assistant",
         content: m.content ? `${m.content}\n[tools: ${summary}]` : `[tools: ${summary}]`,
       });
+    } else if (m.role === "user" || m.role === "assistant") {
+      if (typeof m.content === "string") {
+        out.push({ role: m.role, content: m.content });
+      }
     }
   }
   return out;
