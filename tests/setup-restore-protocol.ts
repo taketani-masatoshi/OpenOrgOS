@@ -33,7 +33,7 @@ const FIXTURE_PATHS = [
   ...OPERATIONAL_PROTOCOL_TENANTS.map((id) => `tenants/${id}/data/protocol`),
 ] as const;
 
-/** Overlay after demo/data restore — agents.yaml is not in git archive yet. */
+/** Overlay after demo/data restore — demo/data wipe does not include operator/agents.yaml. */
 const TENANT_ROSTER_FIXTURE_ROOT = join(ROOT_DIR, "tests", "fixtures", "tenant-rosters");
 
 const SNAPSHOT_ROOT = join(ROOT_DIR, "tests", ".fixture-snapshot", String(process.pid));
@@ -50,7 +50,7 @@ function processExists(pid: number): boolean {
 }
 
 function acquireFixtureRestoreLock(): void {
-  const deadline = Date.now() + 30_000;
+  const deadline = Date.now() + 60_000;
   while (Date.now() < deadline) {
     try {
       mkdirSync(RESTORE_LOCK_DIR);

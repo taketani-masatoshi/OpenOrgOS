@@ -3,6 +3,7 @@ dist/
 test-results/
 playwright-report/
 tests/.fixture-snapshot/
+tests/.fixture-restore.lock/
 .orgos-ci/
 .orgos/
 data/.orgos/
@@ -43,6 +44,9 @@ deploy/proposal3/env/*.generated.env
 packages/orgos-cli/deploy/proposal3/env/*.generated.env
 # Demo Docker local overrides (template: deploy/demo/env/demo.env.example)
 deploy/demo/env/demo.env
+# mal Wire cloudflared token (template: cloudflared-wire.env.example)
+deploy/mal-pilot/env/.env.cloudflared
+deploy/mal-pilot/env/.env.mail-wire
 # Protocol mTLS client (generated — template: protocol-api-client.yaml.example)
 tenants/*/data/protocol/protocol-api-client.yaml
 tenants/*/data/protocol/tls/*.json
@@ -65,12 +69,18 @@ tenants/*/docs/protocol/inbox/**
 !tenants/*/docs/protocol/inbox/00-このフォルダについて.md
 !tenants/*/docs/protocol/inbox/**/00-このフォルダについて.md
 tenants/*/data/org/audit-bridge-state.yaml
+tenants/*/data/protocol/wire-gateway-audit.jsonl
+tenants/*/data/executive/mail-receive-state.yaml
+tenants/*/data/executive/mail-interpretation-queue.yaml
+tenants/*/data/executive/sender-identification-queue.yaml
+tenants/*/data/executive/ceo-inline-questions.yaml
 data/hub-*/gossip-cursor/
 tenants/*/data/executive/stakeholders.yaml
 tenants/*/data/executive/calendar.yaml
 tenants/*/data/executive/tasks.yaml
 tenants/*/data/executive/one-on-ones.yaml
 tenants/*/data/executive/external-contacts.yaml
+tenants/*/data/executive/scheduling-cases.yaml
 tenants/*/data/executive/mail-triage-queue.yaml
 tenants/*/data/correspondence/mail-triage-rules.yaml
 !tenants/*/data/executive/*.example.yaml

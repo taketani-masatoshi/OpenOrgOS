@@ -119,9 +119,20 @@ npm run test:platform -- P04_wire_stack
 
 ## 7. 実行制約
 
-- [`vitest.config.ts`](../vitest.config.ts): `fileParallelism: false`（mal routing-queue 等）
-- [`tests/setup-restore-protocol.ts`](../tests/setup-restore-protocol.ts): 毎 `beforeEach` で protocol fixture 復元
+- [`vitest.config.ts`](../vitest.config.ts): `fileParallelism: false`（mal routing-queue 等）· `hookTimeout: 40_000`（fixture restore）
+- [`tests/setup-restore-protocol.ts`](../tests/setup-restore-protocol.ts): 毎 `beforeEach` で protocol fixture 復元（ロック待ち最大 60s）
 - 同一 workspace 上での shard 並列は **非推奨**（fixture race）
+- stale lock: `tests/.fixture-restore.lock` が残ったら削除してから再実行
+
+### 7.1 Agent / Skill 変更後（推奨）
+
+```bash
+npm run test:contract          # 102 契約テスト（PR 前の高速 gate）
+npm run agent:pipeline:check   # catalog · docs · roster · skill dispatch
+npm run generated:check        # policy ミラー · generated artifacts
+```
+
+`npm run check` に `agent:pipeline:check` を含む — CI `validate` job でも実行されます。
 
 ---
 

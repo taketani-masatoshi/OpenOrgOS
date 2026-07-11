@@ -16,12 +16,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run generated:check
+      - run: npm run agent:pipeline:check
       - run: npm run check
       - run: npx tsc --noEmit
       - run: npm run test:registry:sync
       - run: git diff --exit-code tests/test-registry.yaml
       - run: npm run test:registry:check
       - run: npm run test:tiered:verify
+      - run: npm run test:contract
       - run: npm test
   security-rbac:
     runs-on: ubuntu-latest

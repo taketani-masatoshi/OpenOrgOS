@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import {
@@ -14,11 +14,13 @@ import { computeIntegrationsStatus } from "../lib/integrations-status.js";
 import { getTenantId, listTenantIds, setTenantId } from "../lib/tenant.js";
 import { STEWARD_CORE_DIR } from "../lib/steward-paths.js";
 import { runProdWireGate } from "../lib/protocol/prod-wire-gate.js";
+import { collectOperationalReadinessIssues } from "../lib/scheduling-coordination/operational-readiness.js";
 
 export interface DoctorOptions {
   json?: boolean;
   wireProd?: boolean;
   tenant?: string;
+  repair?: boolean;
 }
 
 interface DoctorCheck {
@@ -103,14 +105,61 @@ function checkWireConsoleDist(): DoctorCheck {
   };
 }
 
+function checkPdfkitDependency(): DoctorCheck {
+  const pkgPath = join(getInstallRoot(), "node_modules", "pdfkit", "package.json");
+  const ok = existsSync(pkgPath);
+  return {
+    id: "pdfkit",
+    ok,
+    detail: ok
+      ? "pdfkit installed (PDF export / broker)"
+      : "pdfkit missing — run: npm ci",
+  };
+}
+
+function checkFixtureRestoreLock(): DoctorCheck {
+  const lockDir = join(getWorkspaceRoot(), "tests", ".fixture-restore.lock");
+  if (!existsSync(lockDir)) {
+    return { id: "fixture_restore_lock", ok: true, detail: "no stale Vitest fixture lock" };
+  }
+  const ownerPath = join(lockDir, "owner");
+  let owner = 0;
+  try {
+    owner = Number(readFileSync(ownerPath, "utf-8"));
+  } catch {
+    return {
+      id: "fixture_restore_lock",
+      ok: false,
+      detail: "stale tests/.fixture-restore.lock — run: rm -rf tests/.fixture-restore.lock",
+    };
+  }
+  let alive = false;
+  try {
+    process.kill(owner, 0);
+    alive = true;
+  } catch {
+    alive = false;
+  }
+  return {
+    id: "fixture_restore_lock",
+    ok: !alive || owner === process.pid,
+    detail: alive
+      ? `Vitest fixture restore in progress (pid ${owner})`
+      : "stale tests/.fixture-restore.lock — run: rm -rf tests/.fixture-restore.lock",
+  };
+}
+
 export function runDoctor(opts: DoctorOptions = {}): void {
-    if (opts.wireProd) {
-    const tenant = opts.tenant ?? process.env.ORGOS_TENANT ?? "mal";
-    setTenantId(tenant);
+  const tenant = opts.tenant ?? process.env.ORGOS_TENANT;
+  if (tenant) setTenantId(tenant);
+
+  if (opts.wireProd) {
+    const wireTenant = tenant ?? "mal";
+    setTenantId(wireTenant);
     process.env.WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY ??= "1";
     process.env.ORGOS_STRICT_TRUST_JURISDICTIONS ??= "JP";
     const gate = runProdWireGate({
-      tenantId: tenant,
+      tenantId: wireTenant,
       strictTrust: true,
       strictTls: true,
       strictTransport: true,
@@ -145,9 +194,41 @@ export function runDoctor(opts: DoctorOptions = {}): void {
     checkInstallRoot(),
     checkWorkspace(),
     checkTenantTemplate(),
+    checkPdfkitDependency(),
+    checkFixtureRestoreLock(),
     checkWireConsoleDist(),
     checkIntegrationsSetup(),
   ];
+
+  if (tenant) {
+    const ops = collectOperationalReadinessIssues({
+      repairApprovals: opts.repair,
+      ensureMailConfig: opts.repair,
+      syncOperatorKeys: opts.repair,
+    });
+    for (const issue of ops.issues) {
+      checks.push({
+        id: issue.id,
+        ok: issue.severity !== "error",
+        detail: `${issue.severity === "error" ? "ERROR" : "WARN"}: ${issue.message} — ${issue.fix}`,
+      });
+    }
+    if (ops.synced_operators.length) {
+      checks.push({
+        id: "operator_key_sync",
+        ok: true,
+        detail: `synced operator key_hash: ${ops.synced_operators.join(", ")}`,
+      });
+    }
+    if (ops.repaired_approvals.length) {
+      checks.push({
+        id: "approval_registry_repair",
+        ok: true,
+        detail: `repaired ${ops.repaired_approvals.length} draft approval(s): ${ops.repaired_approvals.join(", ")}`,
+      });
+    }
+  }
+
   const failed = checks.filter((c) => !c.ok);
 
   if (opts.json) {
