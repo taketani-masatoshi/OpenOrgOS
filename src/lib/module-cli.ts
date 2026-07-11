@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import type { SkillRunOptions } from "../commands/skills.js";
 import type { ModuleCliBundle, ModuleCliContext } from "./module-cli-types.js";
+import { loadSkillRegistry } from "./skill-registry.js";
 
 export type { ModuleCliBundle, ModuleCliContext } from "./module-cli-types.js";
 
@@ -63,12 +64,29 @@ export function registerModuleCli(program: Command): Command {
   return operationsCmd;
 }
 
-export function resolveModuleSkillHandler(
-  skillCommandId: string
-): ((opts: SkillRunOptions) => void | Promise<void>) | undefined {
+export function getModuleSkillHandlers(): Record<
+  string,
+  (opts: SkillRunOptions) => void | Promise<void>
+> {
+  const handlers: Record<string, (opts: SkillRunOptions) => void | Promise<void>> = {};
+  const moduleSkills = loadSkillRegistry().filter((skill) => skill.moduleId);
   for (const bundle of MODULE_CLI_BUNDLES) {
-    const handler = bundle.skillHandlers?.[skillCommandId];
-    if (handler) return handler;
+    for (const [handlerKey, handler] of Object.entries(bundle.skillHandlers ?? {})) {
+      const skill = moduleSkills.find(
+        (entry) =>
+          entry.moduleId === bundle.moduleId &&
+          (entry.id === handlerKey || entry.cli_command === handlerKey)
+      );
+      const canonicalId = skill?.id ?? handlerKey;
+      if (handlers[canonicalId]) throw new Error(`Duplicate module skill handler: ${canonicalId}`);
+      handlers[canonicalId] = handler;
+    }
   }
-  return undefined;
+  return handlers;
+}
+
+export function resolveModuleSkillHandler(
+  canonicalSkillId: string
+): ((opts: SkillRunOptions) => void | Promise<void>) | undefined {
+  return getModuleSkillHandlers()[canonicalSkillId];
 }

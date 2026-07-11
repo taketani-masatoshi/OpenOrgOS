@@ -10,6 +10,6 @@ export interface ModuleCliContext {
 export interface ModuleCliBundle {
   moduleId: string;
   register: (ctx: ModuleCliContext) => void;
-  /** Skill CLI handlers keyed by `skills run <id>` command id */
+  /** Typed handlers keyed by canonical skill id from the skill registry. */
   skillHandlers?: Record<string, (opts: SkillRunOptions) => void | Promise<void>>;
 }

@@ -26,7 +26,7 @@ export const hospitalityCli: ModuleCliBundle = {
     // CLI は skills run records-check · revpar 経由
   },
   skillHandlers: {
-    "records-check": runRecordsCheckSkill,
-    revpar: runRevparSkill,
+    operations_records: runRecordsCheckSkill,
+    revpar_analysis: runRevparSkill,
   },
 };

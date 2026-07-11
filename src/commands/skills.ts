@@ -8,7 +8,6 @@ import { runAlerts } from "./alerts.js";
 import { runOpsP0, runOpsDaily } from "./ops.js";
 import { runPermitExpiryCheck, formatPermitCheckReport } from "../lib/permit-check.js";
 import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
-import { resolveModuleSkillHandler } from "../lib/module-cli.js";
 import { loadMonthlyFinance } from "../lib/data.js";
 import { runDashboard } from "./dashboard.js";
 import { runForecast } from "./forecast.js";
@@ -38,6 +37,12 @@ import {
   runContractRegisterSkill,
   runTaxFilingPrepSkill,
 } from "../lib/core-skill-runners.js";
+import { getModuleSkillHandlers } from "../lib/module-cli.js";
+import {
+  resolveSkillInvocation,
+  type SkillHandler,
+  type SkillInvocationResolution,
+} from "../lib/skill-invocation.js";
 
 const SKILLS_ALWAYS_WRITE = new Set([
   "dashboard",
@@ -267,18 +272,10 @@ export interface SkillRunOptions {
   topic?: string;
 }
 
-export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<void> {
-  const moduleHandler = resolveModuleSkillHandler(id);
-  if (moduleHandler) {
-    moduleHandler(opts);
-    return;
-  }
-
+async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promise<void> {
   const skill = SKILL_COMMANDS.find((s) => s.id === id);
   if (!skill) {
-    console.error(`Unknown skill command: ${id}`);
-    console.error("Run: steward skills list");
-    process.exit(1);
+    throw new Error(`Unknown core skill command: ${id}`);
   }
 
   ensureSkillWriteAuth(id, opts);
@@ -482,6 +479,34 @@ export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<
       break;
     }
     default:
-      process.exit(1);
+      throw new Error(`Core skill handler not implemented: ${id}`);
   }
 }
+
+const CORE_SKILL_HANDLERS: Readonly<Record<string, SkillHandler>> = Object.fromEntries(
+  SKILL_COMMANDS.map((skill) => [
+    skill.skill,
+    (opts: SkillRunOptions) => executeCoreSkillCommand(skill.id, opts),
+  ])
+);
+
+export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<void> {
+  const resolution = resolveRegisteredSkillInvocation(id, opts);
+  if (resolution.status !== "ready") {
+    throw new Error(`Skill ${id} is not executable (${resolution.status}): ${resolution.reason}`);
+  }
+  await resolution.handler(opts);
+}
+
+export function resolveRegisteredSkillInvocation(
+  id: string,
+  opts: SkillRunOptions = {}
+): SkillInvocationResolution {
+  return resolveSkillInvocation(id, opts, {
+    core: CORE_SKILL_HANDLERS,
+    module: getModuleSkillHandlers(),
+  });
+}
+
+/** Unified dispatch resolver — skill id · cli_command · legacy alias. */
+export const resolveSkillDispatch = resolveRegisteredSkillInvocation;

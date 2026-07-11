@@ -37,14 +37,6 @@ export interface ResolvedSkillEntry extends SkillRegistryEntry {
   moduleId?: string;
 }
 
-// Compatibility for the tenant-visible hospitality bundle. Its registry is outside
-// the active-context edit boundary, so canonical handler metadata is projected here
-// until that generated registry can be synchronized.
-const LEGACY_HANDLER_COMPAT: Readonly<Record<string, string>> = {
-  revpar_analysis: "revpar_analysis",
-  operations_records: "operations_records",
-};
-
 function normalizeSkillRuntime(runtime: SkillRegistryEntry["runtime"]): SkillRegistryEntry["runtime"] {
   return runtime === "cursor-only" ? "agent" : runtime;
 }
@@ -53,7 +45,6 @@ function loadRegistryAt(path: string): SkillRegistryEntry[] {
   return loadRegistryFile(path, skillRegistrySchema, () => ({ skills: [] })).skills.map((skill) => ({
     ...skill,
     runtime: normalizeSkillRuntime(skill.runtime),
-    handler: skill.handler ?? LEGACY_HANDLER_COMPAT[skill.id],
   }));
 }
 

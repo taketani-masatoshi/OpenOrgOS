@@ -7,13 +7,12 @@ import {
   loadRoutingRegistry,
   matchRoutes,
   pickBestRoute,
-  resolveSkillCliCommand,
   validateRoutingRegistry,
   writeHandoffFiles,
 } from "../lib/routing.js";
-import { runSkill } from "./skills.js";
+import { resolveSkillDispatch } from "./skills.js";
 import { formatWorkOrderMarkdown } from "../lib/escalate.js";
-import { appendAuditEvent } from "../lib/audit-log.js";
+import { executeRouteHandoff } from "../lib/route-execution.js";
 
 export function runRouteList(): void {
   const issues = validateRoutingRegistry();
@@ -180,11 +179,11 @@ export interface RouteDispatchOptions {
   mode?: "suggest" | "auto" | "implement";
 }
 
-export function runRouteDispatch(opts: RouteDispatchOptions): void {
+export async function runRouteDispatch(opts: RouteDispatchOptions): Promise<void> {
   const handoff = loadHandoff(opts.id);
   const mode = opts.mode ?? handoff.mode ?? "suggest";
 
-  if (mode === "suggest" || mode === "implement") {
+  if (mode === "suggest") {
     console.log(formatSuggestCard(handoff));
     console.log("\n" + (handoff.task_type === "implement" ? formatWorkOrderMarkdown(handoff) : formatHandoffMarkdown(handoff)));
     if (handoff.agent_prompt_path) {
@@ -193,27 +192,47 @@ export function runRouteDispatch(opts: RouteDispatchOptions): void {
     return;
   }
 
-  if (!handoff.access.allowed) {
-    console.error(`Dispatch blocked: ${handoff.access.reason}`);
-    process.exit(1);
+  const outcome = await executeRouteHandoff(
+    handoff,
+    mode,
+    resolveSkillDispatch
+  );
+  if (outcome.action !== "noop") {
+    writeHandoffFiles(outcome.handoff, undefined, { audit: false });
   }
 
-  if (!handoff.skill) {
-    console.error("No skill on handoff — auto dispatch unavailable");
-    process.exit(1);
+  if (outcome.action === "noop") {
+    console.log(`✓ already dispatched ${handoff.id}`);
+    return;
   }
 
-  const cliCommand = resolveSkillCliCommand(handoff.skill);
-  if (!cliCommand) {
-    console.error(`Skill ${handoff.skill} requires agent LLM or CLI — use suggest mode`);
-    process.exit(1);
+  if (outcome.action === "direct_skill") {
+    const argv = outcome.handoff.invocation?.argv;
+    if (argv) console.log(`→ ${argv.join(" ")}`);
+    console.log(`✓ dispatched ${handoff.id}`);
+    return;
   }
 
-  console.log(`→ skills run ${cliCommand}`);
-  runSkill(cliCommand);
-  appendAuditEvent({ event: "route_dispatch", ref: handoff.id, detail: cliCommand });
+  if (outcome.action === "work_order") {
+    console.log(formatSuggestCard(outcome.handoff));
+    console.log(
+      "\n" +
+        (outcome.handoff.task_type === "implement"
+          ? formatWorkOrderMarkdown(outcome.handoff)
+          : formatHandoffMarkdown(outcome.handoff))
+    );
+    console.log(`\nWork Order required: ${outcome.message}`);
+    return;
+  }
 
-  const updated = { ...handoff, mode: "auto" as const, status: "dispatched" as const };
-  writeHandoffFiles(updated);
-  console.log(`✓ dispatched ${handoff.id}`);
+  if (outcome.action === "human_approval") {
+    console.error(`Human approval required: ${outcome.message}`);
+    return;
+  }
+
+  if (outcome.action === "failed") {
+    throw new Error(`Skill dispatch failed: ${outcome.message}`);
+  }
+
+  console.error(`Auto dispatch ${outcome.action}: ${outcome.message}`);
 }

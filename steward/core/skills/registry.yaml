@@ -176,6 +176,13 @@ skills:
     required_options: [answers]
     description: テナント integrations 初回設定ウィザード
     agent_id: setup
+  - id: platform_implement_guide
+    file: platform_implement_guide.md
+    runtime: cli
+    cli_command: platform-implement-guide
+    handler: platform_implement_guide
+    description: "Deprecated advisor alias — prefer orgos platform extension-check / registry-verify"
+    agent_id: platform_guide
   - id: coo_work_order_triage
     file: extension/coo_work_order_triage.md
     runtime: cli

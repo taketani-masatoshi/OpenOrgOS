@@ -3,11 +3,13 @@ skills:
     file: revpar_analysis.md
     runtime: cli
     cli_command: revpar
+    handler: revpar_analysis
     description: RevPAR 分析
     agent_id: hospitality
   - id: operations_records
     file: operations_records.md
     runtime: cli
     cli_command: records-check
+    handler: operations_records
     description: 宿泊 · 清掃 · クレーム記録
     agent_id: operations

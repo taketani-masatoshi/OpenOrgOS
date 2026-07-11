@@ -31,6 +31,7 @@
     "agent:roster:bootstrap": "node --import tsx scripts/bootstrap-tenant-rosters.ts --write",
     "agent:roster:bootstrap:check": "node --import tsx scripts/bootstrap-tenant-rosters.ts",
     "agent:pipeline:check": "node --import tsx scripts/agent-pipeline-check.ts",
+    "skill:dispatch:check": "node --import tsx scripts/skill-dispatch-check.ts",
     "agent:roster:fixtures:sync": "node --import tsx scripts/sync-tenant-roster-fixtures.ts --bootstrap --write",
     "agent:roster:fixtures:check": "node --import tsx scripts/sync-tenant-roster-fixtures.ts",
     "generated:check": "node --import tsx scripts/check-generated-artifacts.ts",
