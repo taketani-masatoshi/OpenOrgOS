@@ -46,7 +46,8 @@ function runVitest(files: string[], label: string): number {
     return 0;
   }
   console.log(`[test:${label}] ${files.length} file(s)`);
-  const result = spawnSync("npx", ["vitest", "run", ...files], {
+  const exactFiles = files.map((file) => file.startsWith("tests/") ? file : `tests/${file}`);
+  const result = spawnSync("npx", ["vitest", "run", ...exactFiles], {
     stdio: "inherit",
     env: process.env,
   });

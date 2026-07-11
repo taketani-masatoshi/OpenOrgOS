@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 247
-  static_test_cases: 893
-  tiered_execution_total: 247
+  vitest_total: 262
+  static_test_cases: 946
+  tiered_execution_total: 262
   catalog_total: 29
   catalog_cli_registered: 18
   catalog_gap: 0
@@ -1088,6 +1088,67 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  scheduling-ceo-choice.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-ceo.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-chat.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-coordination.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I2_protocol_e2e
+  scheduling-exceptions-interpretation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-failure.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-mail-poller.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-mail.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-proposal-authority.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-reminder-poller.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-secretary-flow.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-state-reliability.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-tenant-behavior.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-unit.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   secretary-contact-registry.test.ts:
     axis: platform
     kind: unit

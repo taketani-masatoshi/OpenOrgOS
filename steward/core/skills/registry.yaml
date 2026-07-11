@@ -101,6 +101,12 @@ skills:
     cli_command: schedule
     agent: Secretary
     description: スケジュール管理
+  - id: schedule_coordination
+    file: schedule_coordination.md
+    runtime: cli
+    cli_command: schedule-coordination
+    agent: Secretary
+    description: 多者日程調整（メール往復）
   - id: one_on_one_prep
     file: one_on_one_prep.md
     runtime: cli
