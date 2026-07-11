@@ -1,62 +1,9 @@
 import { z } from "zod";
+import { AGENT_IDS } from "./generated/agent-ids.js";
 
 export const classificationLevel = z.enum(["L0", "L1", "L2", "L3"]);
 
-export const agentId = z.enum([
-  "executive_steward",
-  "secretary",
-  "mail_intake",
-  "mail_outbound",
-  "setup",
-  "finance",
-  "contract",
-  "property_rental",
-  "hospitality",
-  "compliance",
-  "operations",
-  // AI カンパニー拡張（2026-06 · 16 役割モデル）
-  "coo",
-  "cto",
-  "engineering",
-  "design_lead",
-  "design",
-  "sales_lead",
-  "sales_outbound",
-  "sales_inbound",
-  "customer_success",
-  "marketing_lead",
-  "social_media",
-  "personal_finance",
-  "legal",
-  "security",
-  // 一般企業拡張 P0–P2
-  "human_resources",
-  "corporate_governance",
-  "accounting",
-  "tax",
-  "procurement",
-  "government_affairs",
-  "intellectual_property",
-  "general_affairs",
-  "project_management",
-  "product_management",
-  "recruiting",
-  "risk_insurance",
-  "data_analytics",
-  "devops",
-  "investor_relations",
-  "esg_sustainability",
-  "internal_audit",
-  "privacy_officer",
-  "treasury",
-  "customer_support",
-  "pr_communications",
-  "learning_development",
-  "corporate_development",
-  "quality_assurance",
-  "medical_device_regulatory",
-  "records_audit",
-]);
+export const agentId = z.enum(AGENT_IDS);
 
 export const aiContextMode = z.enum(["auto", "on_demand", "blocked"]);
 

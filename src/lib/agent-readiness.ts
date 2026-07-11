@@ -2,16 +2,19 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import type { AgentReadinessAxis, AgentReadinessResult } from "../../schemas/agent-capability.js";
+import type { AgentReadinessProfile } from "../../schemas/agent-catalog.js";
 import {
   agentDefinitionPath,
   getAgentCapability,
-  listAgentCapabilities,
+  listOperationalCapabilities,
   readAgentDefinition,
 } from "./agent-capability.js";
+import { getCatalogAgent, isAgentActive, listCatalogAgents } from "./agent-catalog.js";
 import { loadRoutingRegistry } from "./routing.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { getTenantDir, resolveTenantPath } from "./tenant.js";
 import { getInstallRoot } from "./orgos-paths.js";
+import { resolveTestSuiteVerification } from "./protocol/test-suite-status.js";
 
 let _routingRegistry: ReturnType<typeof loadRoutingRegistry> | null = null;
 let _skillRegistry: ReturnType<typeof loadSkillRegistry> | null = null;
@@ -36,7 +39,15 @@ const WEIGHTS = {
   tenant: 15,
 } as const;
 
+function frameworkWorkspacePathExists(rel: string): boolean {
+  const base = rel.replace(/\/$/, "");
+  const frameworkPrefixes = ["docs/org-os/", "schemas/", "src/", "steward/", "tests/"];
+  if (!frameworkPrefixes.some((prefix) => `${base}/`.startsWith(prefix))) return false;
+  return existsSync(join(getInstallRoot(), base));
+}
+
 function pathExistsTenant(rel: string): boolean {
+  if (frameworkWorkspacePathExists(rel)) return true;
   try {
     return existsSync(resolveTenantPath(rel.replace(/\/$/, "")));
   } catch {
@@ -46,6 +57,7 @@ function pathExistsTenant(rel: string): boolean {
 
 function templateHasPath(rel: string): boolean {
   const base = rel.replace(/\/$/, "");
+  if (frameworkWorkspacePathExists(rel)) return true;
   const templatePath = join(getInstallRoot(), "tenants/_template", base);
   return existsSync(templatePath);
 }
@@ -156,14 +168,36 @@ function scoreDashboard(agentId: AgentId, slug: string): AgentReadinessAxis {
   };
 }
 
-function scoreTest(agentId: AgentId): AgentReadinessAxis {
-  const inManifest = listAgentCapabilities().some((a) => a.id === agentId);
+function scoreEvidenceActivationBoundary(agentId: AgentId): AgentReadinessAxis {
+  const agent = getCatalogAgent(agentId);
+  const verification = resolveTestSuiteVerification();
+  const profile = agent?.readiness_profile ?? "operational";
+  const active =
+    profile === "advisor"
+      ? agent?.activation === "developer_explicit"
+      : profile === "bootstrap"
+        ? agent?.status !== "active"
+        : isAgentActive(agentId, { profile: "operational", mode: "consult" });
+  const boundary =
+    agent != null &&
+    existsSync(agentDefinitionPath(agentId)) &&
+    (profile !== "advisor" ||
+      (agent.class === "advisor" &&
+        agent.access.write.length === 0 &&
+        agent.auto_route === false &&
+        agent.auto_pulse === false));
+  const score = (verification.verified && verification.passed ? 4 : 0) + (active ? 3 : 0) + (boundary ? 3 : 0);
+  const details = [
+    verification.verified && verification.passed ? verification.detail : `test evidence: ${verification.detail}`,
+    `activation: ${active ? "OK" : "not satisfied"}`,
+    `boundary: ${boundary ? "OK" : "not satisfied"}`,
+  ];
   return {
     id: "test",
-    label: "テスト",
-    score: inManifest ? WEIGHTS.test : 0,
+    label: "証拠",
+    score,
     max: WEIGHTS.test,
-    detail: inManifest ? "readiness テスト対象" : "manifest 外",
+    detail: details.join(" · "),
   };
 }
 
@@ -186,16 +220,84 @@ function scoreTenant(cap: ReturnType<typeof getAgentCapability>): AgentReadiness
   };
 }
 
+function scoreAdvisorDefinition(agentId: AgentId): AgentReadinessAxis {
+  const md = readAgentDefinition(agentId);
+  const checks = [
+    { label: "agent.md 存在", ok: md.length > 0 },
+    { label: "目的", ok: md.includes("## 目的") || md.includes("## 役割") },
+    { label: "禁止", ok: md.includes("## 禁止") },
+    { label: "read-only", ok: md.includes("Read-only") || md.includes("read-only") || md.includes("参照のみ") },
+    { label: "委譲", ok: md.includes("委譲") || md.includes("delegate") },
+  ];
+  const ok = checks.filter((c) => c.ok).length;
+  return {
+    id: "definition",
+    label: "定義",
+    score: Math.round((ok / checks.length) * WEIGHTS.definition),
+    max: WEIGHTS.definition,
+    detail: checks.filter((c) => !c.ok).map((c) => c.label).join(", ") || "OK",
+  };
+}
+
 export function computeAgentReadiness(agentId: AgentId): AgentReadinessResult {
+  const catalogAgent = getCatalogAgent(agentId);
+  const profile = catalogAgent?.readiness_profile ?? "operational";
   const cap = getAgentCapability(agentId);
   const slug = cap?.summary_slug ?? agentId.replace(/_/g, "-");
+
+  if (profile === "advisor") {
+    const axes = [
+      scoreAdvisorDefinition(agentId),
+      scoreSkillCli(agentId, cap),
+      { id: "routing", label: "routing", score: WEIGHTS.routing, max: WEIGHTS.routing, detail: "advisor — auto-route なし" },
+      { id: "data_sot", label: "データSoT", score: WEIGHTS.data_sot, max: WEIGHTS.data_sot, detail: "advisor — tenant 不要" },
+      { id: "dashboard", label: "要約", score: WEIGHTS.dashboard, max: WEIGHTS.dashboard, detail: "advisor — pulse 不要" },
+      scoreEvidenceActivationBoundary(agentId),
+      { id: "tenant", label: "テナント", score: WEIGHTS.tenant, max: WEIGHTS.tenant, detail: "advisor — tenant 不要" },
+    ];
+    const total = axes.reduce((s, a) => s + a.score, 0);
+    const max = axes.reduce((s, a) => s + a.max, 0);
+    const pct = Math.round((total / max) * 100);
+    return {
+      agent_id: agentId,
+      name: catalogAgent?.name ?? agentId,
+      profile,
+      total,
+      pct,
+      axes,
+      gaps: [],
+    };
+  }
+
+  if (profile === "bootstrap") {
+    const axes = [
+      scoreDefinition(agentId),
+      scoreSkillCli(agentId, cap),
+      scoreDataSot(cap),
+      scoreEvidenceActivationBoundary(agentId),
+    ];
+    const total = axes.reduce((sum, axis) => sum + axis.score, 0);
+    const max = axes.reduce((sum, axis) => sum + axis.max, 0);
+    return {
+      agent_id: agentId,
+      name: catalogAgent?.name ?? agentId,
+      profile,
+      total,
+      pct: Math.round((total / max) * 100),
+      axes,
+      gaps: axes
+        .filter((axis) => axis.score < axis.max * 0.8)
+        .map((axis) => `${axis.label}: ${axis.detail}`),
+    };
+  }
+
   const axes = [
     scoreDefinition(agentId),
     scoreSkillCli(agentId, cap),
     scoreDataSot(cap),
     scoreRouting(agentId, cap),
     scoreDashboard(agentId, slug),
-    scoreTest(agentId),
+    scoreEvidenceActivationBoundary(agentId),
     scoreTenant(cap),
   ];
   const total = axes.reduce((s, a) => s + a.score, 0);
@@ -204,7 +306,8 @@ export function computeAgentReadiness(agentId: AgentId): AgentReadinessResult {
   const gaps = axes.filter((a) => a.score < a.max * 0.8).map((a) => `${a.label}: ${a.detail}`);
   return {
     agent_id: agentId,
-    name: agentId,
+    name: catalogAgent?.name ?? agentId,
+    profile,
     total,
     pct,
     axes,
@@ -213,7 +316,34 @@ export function computeAgentReadiness(agentId: AgentId): AgentReadinessResult {
 }
 
 export function computeAllAgentReadiness(): AgentReadinessResult[] {
-  return listAgentCapabilities().map((a) => computeAgentReadiness(a.id));
+  return computeAgentReadinessProfile("operational");
+}
+
+export function computeOperationalAgentReadiness(): AgentReadinessResult[] {
+  return computeAllAgentReadiness();
+}
+
+export function computeAgentReadinessProfile(
+  profile: AgentReadinessProfile
+): AgentReadinessResult[] {
+  const ids =
+    profile === "operational"
+      ? listOperationalCapabilities().map((agent) => agent.id)
+      : listCatalogAgents()
+          .filter((agent) => agent.readiness_profile === profile && agent.status !== "planned")
+          .map((agent) => agent.id);
+  return ids.map((id) => computeAgentReadiness(id));
+}
+
+export function computeAllAgentReadinessProfiles(): Record<
+  AgentReadinessProfile,
+  AgentReadinessResult[]
+> {
+  return {
+    operational: computeAgentReadinessProfile("operational"),
+    advisor: computeAgentReadinessProfile("advisor"),
+    bootstrap: computeAgentReadinessProfile("bootstrap"),
+  };
 }
 
 export function formatAgentReadinessReport(results: AgentReadinessResult[]): string {

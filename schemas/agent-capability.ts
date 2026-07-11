@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { agentId } from "./classification.js";
+import type { AgentReadinessProfile } from "./agent-catalog.js";
 
 export const agentPulseCheckSchema = z.object({
   type: z.enum(["path_exists", "file_exists", "cli_hint"]),
@@ -36,6 +37,7 @@ export interface AgentReadinessAxis {
 export interface AgentReadinessResult {
   agent_id: z.output<typeof agentId>;
   name: string;
+  profile: AgentReadinessProfile;
   total: number;
   pct: number;
   axes: AgentReadinessAxis[];

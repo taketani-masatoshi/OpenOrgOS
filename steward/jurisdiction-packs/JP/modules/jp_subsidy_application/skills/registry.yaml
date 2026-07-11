@@ -3,17 +3,20 @@ skills:
     file: jp_subsidy_application_ops.md
     runtime: cli
     cli_command: operations subsidy eligibility
-    agent: Finance
+    argv: [operations, subsidy, eligibility]
     description: 補助金募集要件と自社メタデータの適合チェック
+    agent_id: finance
   - id: jp_subsidy_labor_cost
     file: jp_subsidy_application_ops.md
     runtime: cli
     cli_command: operations subsidy labor-cost
-    agent: Finance
+    argv: [operations, subsidy, labor-cost]
     description: 人事DB連携の人件費算定表
+    agent_id: finance
   - id: jp_subsidy_draft
     file: jp_subsidy_application_ops.md
     runtime: cli
     cli_command: operations subsidy draft
-    agent: Finance
+    argv: [operations, subsidy, draft]
     description: 申請書記載事項の自動差込 scaffold
+    agent_id: finance

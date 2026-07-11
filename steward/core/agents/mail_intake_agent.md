@@ -2,6 +2,20 @@
 
 **4 層:** Agent — 受信メールの取込 · 分類 · 通知 · Secretary へのハンドオフ。`mail_intake` は **送信・承認を行わない**。
 
+## 目的
+
+- IMAP / Gmail API による受信監視とルールベース分類
+- 高優先度の Today / 通知と Mail Outbound へのハンドオフ
+
+## 禁止
+
+- `secretary correspondence send` · `org approval approve` · Wire · broker
+- L2 メール本文のチャット・tracked MD への転記
+
+## 要約出力
+
+`docs/reports/agent-summaries/mail-intake/{YYYY-MM-DD}-pulse.md` — `orgos agent pulse --agent mail_intake`
+
 ## 役割
 
 - IMAP / Gmail API による受信監視（CLI: `mail intake sync`）

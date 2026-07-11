@@ -22,7 +22,9 @@ Data → YAML/MD 正本
 | 主体 | 読取 | 禁止 |
 |------|------|------|
 | **Executive Steward** | `docs/reports/dashboard/` · `agent-summaries/` · `executive-notes/` | `data/**/*.yaml` 直読 · 契約本文詳細 |
-| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` |
+| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` · 受信ポーリング |
+| **Mail Intake** | `mail-triage-queue.yaml` · `mail-received/`（@file のみ）· 分類ルール | 送信 · 承認 · L2 本文のチャット出力 |
+| **Mail Outbound** | `correspondence-drafts/` · `mail-config` · `external-contacts` | 承認 · 未承認送信 · L2 本文のチャット出力 |
 | **Finance / Contract / Compliance / Operations** | 各 `steward/core/agents/*_agent.md` の Primary Folders | 担当外編集 |
 | **Operator（汎用 LLM）** | ユーザ指示 + Today コンテキスト + 担当 Agent 定義 | L2/L3 値の出力 · 全フォルダ一括 @ |
 
@@ -125,8 +127,9 @@ Skill `runtime`: `cli`（LLM 不要）· `agent`（LLM + 定義添付 · 旧 `cu
 
 ## 8. 関連
 
+- [openorgos-engineering-constitution.md](openorgos-engineering-constitution.md) — エンジニアリング憲章 · AI コーディングルール
 - [tool-neutral-development.md](tool-neutral-development.md) — **今後の開発ガイド（Cursor 非依存）**
-- [testing-modules.md](steward/rules/testing-modules.md) — Vitest 3 軸 taxonomy · 段階実行
+- [testing-modules.md](testing-modules.md) — Vitest 3 軸 taxonomy · 段階実行
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - [secretary_steward_boundary.md](secretary_steward_boundary.md)
@@ -159,6 +162,19 @@ orgos operator sync-policy --emit all
 - 新 Skill は `runtime: cli` 優先 · `cursor-only` 新規禁止
 - Agent 参照は **Path 第一** · 変更後 `orgos operator export`
 
+## Engineering Constitution
+
+分割正本: [steward/rules/engineering/](steward/rules/engineering/00-このフォルダについて.md) · 索引: [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md)
+
+| ファイル | 内容 |
+|---------|------|
+| `00-engineering-constitution` | Purpose · AI Rules · DoD |
+| `01-architecture` | SSOT · layers · CLI path |
+| `08-event-sourcing` | Event First · immutable · deterministic |
+| `09-openorgos-domain` | 4-layer · Wire · catalog/roster |
+
+AI 実装提案時は **§10 AI Coding Rules**（`00-engineering-constitution`）に従う。Definition of Done: テスト · lint · ドキュメント · 重複/デッドコードなし。
+
 ## Quick commands
 
 ```bash
@@ -166,6 +182,7 @@ orgos chat today
 orgos validate
 orgos dashboard
 orgos operator export --agent finance
+orgos operator sync-policy --emit engineering
 ```
 
 Canonical: `steward/rules/operator-policy.md`

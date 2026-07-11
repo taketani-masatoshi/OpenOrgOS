@@ -2,5 +2,5 @@ skills:
   - id: staffing_ops
     file: staffing_ops.md
     runtime: cursor-only
-    agent: Operations
     description: staffing module operations checklist
+    agent_id: operations

@@ -3,13 +3,13 @@
 
 version: 2
 stats:
-  vitest_total: 262
-  static_test_cases: 946
-  tiered_execution_total: 262
-  catalog_total: 29
-  catalog_cli_registered: 18
+  vitest_total: 296
+  static_test_cases: 1114
+  tiered_execution_total: 296
+  catalog_total: 30
+  catalog_cli_registered: 19
   catalog_gap: 0
-  catalog_dedicated: 11
+  catalog_dedicated: 12
   catalog_bundled: 9
   catalog_only: 9
 platform_domains:
@@ -72,6 +72,14 @@ catalog_modules:
     cli: true
     tests:
       - hospitality.test.ts
+  jp_bank_corporate:
+    tier: activation_ready
+    coverage_tier: full
+    cli: true
+    tests:
+      - catalog/jp-bank-corporate.test.ts
+      - jp-bank-corporate-ar-ap.test.ts
+      - jp-bank-corporate-cashflow.test.ts
   jp_carbon_neutral_2050:
     tier: production_ready
     coverage_tier: catalog_only
@@ -229,6 +237,7 @@ ci_suites:
       - security-validate.test.ts
       - cli-data-write-auth.test.ts
       - tenant-registry-coverage.test.ts
+      - tenant-agent-roster-coverage.test.ts
       - shell-profile-integrity.test.ts
   wire-gateway-smoke:
     source: .github/workflows/validate.yml
@@ -304,6 +313,24 @@ tests:
     kind: integration
     domain: P02_business_data
     integration: I1_cli
+  agent-authority-external-keys.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-authority-graph.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-catalog-contract.test.ts:
+    axis: contract
+    kind: contract
+  agent-docs-drift.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-pipeline-check.test.ts:
+    axis: meta
+    kind: meta
   agent-portability.test.ts:
     axis: platform
     kind: unit
@@ -313,6 +340,10 @@ tests:
     kind: unit
     domain: P06_agent_workflow
   agent-reporting-chain.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-roster-alignment.test.ts:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
@@ -369,6 +400,11 @@ tests:
     kind: unit
     catalog_ids:
       - event_space
+  catalog/jp-bank-corporate.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_bank_corporate
   catalog/jp-carbon-neutral-2050.test.ts:
     axis: catalog
     kind: unit
@@ -424,6 +460,14 @@ tests:
     kind: unit
     domain: P01_kernel
   cli-operator-auth.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  cli-wire-surface-contract.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  community-gmail-connect-smoke.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -519,6 +563,10 @@ tests:
     kind: unit
     domain: P03_correspondence_org
   correspondence-mail-receive-sync.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-mail-setup-readiness.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -658,6 +706,16 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  jp-bank-corporate-ar-ap.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_bank_corporate
+  jp-bank-corporate-cashflow.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_bank_corporate
   jp-business-capability-catalog.test.ts:
     axis: contract
     kind: contract
@@ -720,11 +778,19 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  mail-community-link.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   mail-compose-url.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
   mail-config-parse.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  mail-intake-ceo-cli.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -784,6 +850,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  openorg-dns.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   operator-dispatch-unified.test.ts:
     axis: platform
     kind: unit
@@ -825,6 +895,10 @@ tests:
     kind: unit
     domain: P03_correspondence_org
   org-boundary.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  org-cert-witness.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -870,6 +944,14 @@ tests:
     kind: integration
     domain: P06_agent_workflow
     integration: I3_workflow
+  platform-implement-guide.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  platform-registry-verify.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   portability-assessment.test.ts:
     axis: meta
     kind: meta
@@ -922,6 +1004,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  protocol-email-wire-roundtrip.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   protocol-external-verify.test.ts:
     axis: platform
     kind: unit
@@ -960,6 +1046,10 @@ tests:
     kind: unit
     domain: P04_wire_stack
   protocol-peer-policy.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
+  protocol-readiness-facade.test.ts:
     axis: platform
     kind: unit
     domain: P04_wire_stack
@@ -1079,6 +1169,14 @@ tests:
     kind: unit
     catalog_ids:
       - restaurant
+  route-execution.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  routing-platform-advisor.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
   routing.test.ts:
     axis: integration
     kind: integration
@@ -1183,6 +1281,10 @@ tests:
     catalog_ids:
       - rental
       - restaurant
+  skill-invocation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   skill-registry.test.ts:
     axis: platform
     kind: unit
@@ -1205,6 +1307,10 @@ tests:
     kind: server
     domain: P05_console_layer
   steward-chat-auth.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-cashflow-intent.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -1232,6 +1338,13 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  tenant-agent-roster-coverage.test.ts:
+    axis: meta
+    kind: meta
+  tenant-agent-roster.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   tenant-document-zones.test.ts:
     axis: platform
     kind: unit
@@ -1241,6 +1354,9 @@ tests:
     kind: unit
     domain: P02_business_data
   tenant-registry-coverage.test.ts:
+    axis: meta
+    kind: meta
+  tenant-roster-fixtures.test.ts:
     axis: meta
     kind: meta
   tenant-setup-wizard.test.ts:
@@ -1281,6 +1397,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  validate-report.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   venture-capital.test.ts:
     axis: catalog
     kind: unit
@@ -1324,6 +1444,10 @@ tests:
     axis: platform
     kind: server
     domain: P04_wire_stack
+  wire-federation-gossip.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   wire-gateway-codec.test.ts:
     axis: platform
     kind: unit
@@ -1357,6 +1481,11 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
+  wire-gateway-security-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P04_wire_stack
+    integration: I2_protocol_e2e
   wire-gateway-server.test.ts:
     axis: platform
     kind: server
@@ -1365,7 +1494,20 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  wire-implementation-score.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   wire-node-pk-did-governance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
+  wire-pending-flush-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P04_wire_stack
+    integration: I2_protocol_e2e
+  wire-pending-retry.test.ts:
     axis: platform
     kind: unit
     domain: P04_wire_stack
@@ -1386,6 +1528,11 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  wire-two-gateway-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P04_wire_stack
+    integration: I2_protocol_e2e
   yojitsu-v2.test.ts:
     axis: platform
     kind: unit

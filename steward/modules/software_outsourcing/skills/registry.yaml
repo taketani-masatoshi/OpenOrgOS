@@ -2,5 +2,5 @@ skills:
   - id: software_outsourcing_ops
     file: software_outsourcing_ops.md
     runtime: cursor-only
-    agent: Operations
     description: software_outsourcing module operations checklist
+    agent_id: operations

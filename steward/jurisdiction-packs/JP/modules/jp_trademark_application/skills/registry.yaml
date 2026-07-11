@@ -3,11 +3,13 @@ skills:
     file: jp_trademark_application_ops.md
     runtime: cli
     cli_command: operations trademark checklist
-    agent: Compliance
+    argv: [operations, trademark, checklist]
     description: 商標出願前チェックリスト（法域 · 出願人 · 指定商品役務 · 見本）
+    agent_id: compliance
   - id: jp_trademark_draft
     file: jp_trademark_application_ops.md
     runtime: cli
     cli_command: operations trademark draft
-    agent: Compliance
+    argv: [operations, trademark, draft]
     description: 商標登録願ひな形から出願書類 MD を生成
+    agent_id: compliance

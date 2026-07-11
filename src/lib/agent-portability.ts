@@ -2,81 +2,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import { loadOperatorPolicyMarkdown, operatorPolicyExcerpt } from "./operator-policy.js";
-import { STEWARD_AGENTS_DIR } from "./steward-paths.js";
 import { loadSkillRegistry, type ResolvedSkillEntry } from "./skill-registry.js";
 import { ROOT_DIR, getTenantId } from "./tenant.js";
-import { loadRegistryFile, currentDate } from "./utils.js";
-import { z } from "zod";
-
-export const AGENT_PROMPT_PATHS: Record<AgentId, string> = {
-  executive_steward: "steward/core/agents/executive_steward_agent.md",
-  secretary: "steward/core/agents/secretary_agent.md",
-  mail_intake: "steward/core/agents/mail_intake_agent.md",
-  mail_outbound: "steward/core/agents/mail_outbound_agent.md",
-  setup: "steward/core/agents/setup_agent.md",
-  finance: "steward/core/agents/finance_agent.md",
-  contract: "steward/core/agents/contract_agent.md",
-  compliance: "steward/core/agents/compliance_agent.md",
-  operations: "steward/core/agents/operations_agent.md",
-  property_rental: "steward/core/agents/property_rental_agent.md",
-  hospitality: "steward/core/agents/hospitality_agent.md",
-  coo: "steward/core/agents/coo_agent.md",
-  cto: "steward/core/agents/cto_agent.md",
-  engineering: "steward/core/agents/engineering_agent.md",
-  design_lead: "steward/core/agents/design_lead_agent.md",
-  design: "steward/core/agents/design_agent.md",
-  sales_lead: "steward/core/agents/sales_lead_agent.md",
-  sales_outbound: "steward/core/agents/sales_outbound_agent.md",
-  sales_inbound: "steward/core/agents/sales_inbound_agent.md",
-  customer_success: "steward/core/agents/customer_success_agent.md",
-  marketing_lead: "steward/core/agents/marketing_lead_agent.md",
-  social_media: "steward/core/agents/social_media_agent.md",
-  personal_finance: "steward/core/agents/personal_finance_agent.md",
-  legal: "steward/core/agents/legal_agent.md",
-  security: "steward/core/agents/security_agent.md",
-  human_resources: "steward/core/agents/human_resources_agent.md",
-  corporate_governance: "steward/core/agents/corporate_governance_agent.md",
-  accounting: "steward/core/agents/accounting_agent.md",
-  tax: "steward/core/agents/tax_agent.md",
-  procurement: "steward/core/agents/procurement_agent.md",
-  government_affairs: "steward/core/agents/government_affairs_agent.md",
-  intellectual_property: "steward/core/agents/intellectual_property_agent.md",
-  general_affairs: "steward/core/agents/general_affairs_agent.md",
-  project_management: "steward/core/agents/project_management_agent.md",
-  product_management: "steward/core/agents/product_management_agent.md",
-  recruiting: "steward/core/agents/recruiting_agent.md",
-  risk_insurance: "steward/core/agents/risk_insurance_agent.md",
-  data_analytics: "steward/core/agents/data_analytics_agent.md",
-  devops: "steward/core/agents/devops_agent.md",
-  investor_relations: "steward/core/agents/investor_relations_agent.md",
-  esg_sustainability: "steward/core/agents/esg_sustainability_agent.md",
-  internal_audit: "steward/core/agents/internal_audit_agent.md",
-  privacy_officer: "steward/core/agents/privacy_officer_agent.md",
-  treasury: "steward/core/agents/treasury_agent.md",
-  customer_support: "steward/core/agents/customer_support_agent.md",
-  pr_communications: "steward/core/agents/pr_communications_agent.md",
-  learning_development: "steward/core/agents/learning_development_agent.md",
-  corporate_development: "steward/core/agents/corporate_development_agent.md",
-  quality_assurance: "steward/core/agents/quality_assurance_agent.md",
-  medical_device_regulatory: "steward/core/agents/medical_device_regulatory_agent.md",
-  records_audit: "steward/core/agents/records_audit_agent.md",
-};
+import { currentDate } from "./utils.js";
+import { getCatalogAgent, isAgentActive, listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
 
 export const AGENT_EXPORTS_DIR = join(ROOT_DIR, "steward", "platform", "agent", "exports");
-
-const agentRegistrySchema = z.object({
-  agents: z.record(
-    z.string(),
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      name_ja: z.string().optional(),
-      path: z.string(),
-      tier: z.string().optional(),
-      scope: z.string().optional(),
-    })
-  ),
-});
 
 export type AgentToolFormat = "portable" | "cursor" | "path";
 
@@ -90,13 +21,12 @@ export interface AgentRegistryEntry {
 }
 
 export function loadAgentRegistryEntries(): AgentRegistryEntry[] {
-  const registryPath = join(STEWARD_AGENTS_DIR, "registry.yaml");
-  const doc = loadRegistryFile(registryPath, agentRegistrySchema, () => ({ agents: {} }));
-  return Object.values(doc.agents);
+  return listCatalogAgents();
 }
 
 export function agentPromptPath(agent: AgentId): string {
-  return AGENT_PROMPT_PATHS[agent] ?? `steward/core/agents/${agent}_agent.md`;
+  const resolved = resolveAgentId(agent) ?? agent;
+  return getCatalogAgent(resolved)?.path ?? `steward/core/agents/${resolved}_agent.md`;
 }
 
 export function formatAgentPromptRef(agent: AgentId, format: AgentToolFormat = "portable"): string {
@@ -150,7 +80,7 @@ export function buildPortableAgentPack(agentId: AgentId, opts?: { fullPolicy?: b
   const policy = opts?.fullPolicy ? loadOperatorPolicyMarkdown() : operatorPolicyExcerpt(60);
   const body = readAgentDefinition(agentId);
   const skills = loadSkillRegistry(true)
-    .filter((s) => s.agent === agentId)
+    .filter((s) => s.agent_id === agentId)
     .map((s) => `- \`${s.id}\` · ${s.runtime} · \`${s.skillDirRel}/${s.file}\``)
     .join("\n");
 
@@ -284,8 +214,15 @@ export type OperatorExportEmit = "packs" | "index" | "mcp" | "all";
 
 export interface OperatorExportResult {
   packs: string[];
+  changedPacks: string[];
   indexPath?: string;
   mcpPaths: string[];
+}
+
+function writeGeneratedFileIfChanged(path: string, content: string): boolean {
+  if (existsSync(path) && readFileSync(path, "utf-8") === content) return false;
+  writeFileSync(path, content, "utf-8");
+  return true;
 }
 
 export function exportPortableAgents(opts: {
@@ -303,7 +240,12 @@ export function exportPortableAgents(opts: {
   const registry = loadAgentRegistryEntries();
   let targets: AgentRegistryEntry[];
   if (opts.all) {
-    targets = registry;
+    targets = registry.filter((entry) =>
+      isAgentActive(entry.id as AgentId, {
+        profile: "operational",
+        mode: "consult",
+      })
+    );
   } else if (opts.agent) {
     const found = registry.find((a) => a.id === opts.agent);
     if (!found) throw new Error(`Unknown agent: ${opts.agent}`);
@@ -312,32 +254,36 @@ export function exportPortableAgents(opts: {
     targets = registry.filter((a) => a.tier === "core");
   }
 
-  const result: OperatorExportResult = { packs: [], mcpPaths: [] };
+  const result: OperatorExportResult = { packs: [], changedPacks: [], mcpPaths: [] };
 
   if (emit === "packs" || emit === "all") {
     for (const entry of targets) {
       const packPath = join(agentsDir, `${entry.id}.pack.md`);
-      writeFileSync(packPath, buildPortableAgentPack(entry.id as AgentId, { fullPolicy: opts.fullPolicy }), "utf-8");
+      const changed = writeGeneratedFileIfChanged(
+        packPath,
+        buildPortableAgentPack(entry.id as AgentId, { fullPolicy: opts.fullPolicy })
+      );
       result.packs.push(packPath);
+      if (changed) result.changedPacks.push(packPath);
     }
   }
 
   if (emit === "index" || emit === "all") {
     const indexPath = join(AGENT_EXPORTS_DIR, "INDEX.md");
-    writeFileSync(indexPath, buildPortableIndex(), "utf-8");
+    writeGeneratedFileIfChanged(indexPath, buildPortableIndex());
     result.indexPath = indexPath;
   }
 
   if (emit === "mcp" || emit === "all") {
     const claudePath = join(mcpDir, "claude-desktop.snippet.json");
     const continuePath = join(mcpDir, "continue.snippet.json");
-    writeFileSync(claudePath, buildClaudeDesktopMcpSnippet(), "utf-8");
-    writeFileSync(continuePath, buildContinueMcpSnippet(), "utf-8");
+    writeGeneratedFileIfChanged(claudePath, buildClaudeDesktopMcpSnippet());
+    writeGeneratedFileIfChanged(continuePath, buildContinueMcpSnippet());
     result.mcpPaths.push(claudePath, continuePath);
   }
 
   const readmePath = join(AGENT_EXPORTS_DIR, "README.md");
-  writeFileSync(
+  writeGeneratedFileIfChanged(
     readmePath,
     [
       "# Agent exports（自動生成）",
@@ -352,8 +298,7 @@ export function exportPortableAgents(opts: {
       "",
       "正本 Agent 定義: `steward/core/agents/`",
       "",
-    ].join("\n"),
-    "utf-8"
+    ].join("\n")
   );
 
   return result;

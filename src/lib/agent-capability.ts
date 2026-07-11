@@ -7,6 +7,7 @@ import {
 } from "../../schemas/agent-capability.js";
 import { STEWARD_AGENTS_DIR } from "./steward-paths.js";
 import { readYamlFile } from "./utils.js";
+import { getCatalogAgent, listCatalogAgents } from "./agent-catalog.js";
 
 export const AGENT_CAPABILITY_MANIFEST_PATH = join(
   STEWARD_AGENTS_DIR,
@@ -37,7 +38,16 @@ export function agentSummarySlug(agentId: AgentId): string {
 }
 
 export function agentDefinitionPath(agentId: AgentId): string {
+  const catalogPath = getCatalogAgent(agentId)?.path;
+  if (catalogPath) return catalogPath;
   return join(STEWARD_AGENTS_DIR, `${agentId}_agent.md`);
+}
+
+export function listOperationalCapabilities(): AgentCapabilityEntry[] {
+  const advisorIds = new Set(
+    listCatalogAgents().filter((a) => a.class === "advisor").map((a) => a.id)
+  );
+  return loadAgentCapabilityManifest().filter((a) => !advisorIds.has(a.id));
 }
 
 export function readAgentDefinition(agentId: AgentId): string {

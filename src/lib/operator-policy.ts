@@ -1,12 +1,177 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { OPERATOR_POLICY_PATH } from "./steward-paths.js";
 import { ROOT_DIR } from "./tenant.js";
 
 export const AGENTS_MD_REL = "AGENTS.md";
 export const OPERATOR_POLICY_CURSOR_RULE = ".cursor/rules/operator-policy.mdc";
 export const TOOL_NEUTRAL_DEV_GUIDE_PATH = join(ROOT_DIR, "steward", "rules", "tool-neutral-development.md");
+export const ENGINEERING_CONSTITUTION_PATH = join(
+  ROOT_DIR,
+  "steward",
+  "rules",
+  "openorgos-engineering-constitution.md",
+);
+export const ENGINEERING_RULES_DIR = join(ROOT_DIR, "steward", "rules", "engineering");
 export const TOOL_NEUTRAL_DEV_CURSOR_RULE = ".cursor/rules/tool-neutral-development.mdc";
+
+/** Canonical engineering rule stems (00–09). Mirror: `.cursor/rules/{stem}.mdc` */
+export const ENGINEERING_RULE_STEMS = [
+  "00-engineering-constitution",
+  "01-architecture",
+  "02-typescript",
+  "03-python",
+  "04-testing",
+  "05-git",
+  "06-documentation",
+  "07-security",
+  "08-event-sourcing",
+  "09-openorgos-domain",
+] as const;
+
+export type EngineeringRuleStem = (typeof ENGINEERING_RULE_STEMS)[number];
+
+export interface EngineeringRuleFrontmatter {
+  description: string;
+  alwaysApply?: boolean;
+  globs?: string;
+}
+
+export function parseEngineeringRuleFrontmatter(content: string): {
+  frontmatter: EngineeringRuleFrontmatter;
+  body: string;
+} {
+  if (!content.startsWith("---\n")) {
+    throw new Error("Engineering rule missing YAML frontmatter (expected leading ---)");
+  }
+  const end = content.indexOf("\n---\n", 4);
+  if (end === -1) {
+    throw new Error("Engineering rule has unclosed YAML frontmatter");
+  }
+  const yamlBlock = content.slice(4, end);
+  const body = content.slice(end + 5);
+  const frontmatter: EngineeringRuleFrontmatter = { description: "" };
+
+  for (const line of yamlBlock.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const colon = trimmed.indexOf(":");
+    if (colon === -1) continue;
+    const key = trimmed.slice(0, colon).trim();
+    let value = trimmed.slice(colon + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (key === "description") frontmatter.description = value;
+    else if (key === "alwaysApply") frontmatter.alwaysApply = value === "true";
+    else if (key === "globs") frontmatter.globs = value;
+  }
+
+  if (!frontmatter.description) {
+    throw new Error("Engineering rule frontmatter requires description");
+  }
+  return { frontmatter, body };
+}
+
+export function buildEngineeringRuleMdc(stem: EngineeringRuleStem): string {
+  const canonicalPath = join(ENGINEERING_RULES_DIR, `${stem}.md`);
+  if (!existsSync(canonicalPath)) {
+    throw new Error(`Missing engineering rule: ${canonicalPath}`);
+  }
+  const content = readFileSync(canonicalPath, "utf-8");
+  const { frontmatter, body } = parseEngineeringRuleFrontmatter(content);
+
+  const lines = [`description: ${frontmatter.description}`];
+  if (frontmatter.alwaysApply === true) lines.push("alwaysApply: true");
+  if (frontmatter.globs) lines.push(`globs: ${frontmatter.globs}`);
+
+  return `---
+${lines.join("\n")}
+---
+
+${body.trimEnd()}
+
+> **Mirror only.** Canonical: \`steward/rules/engineering/${stem}.md\` · Regenerate: \`orgos operator sync-policy --emit engineering\`
+`;
+}
+
+export function listEngineeringRuleStemsOnDisk(): string[] {
+  if (!existsSync(ENGINEERING_RULES_DIR)) return [];
+  return readdirSync(ENGINEERING_RULES_DIR)
+    .filter((f) => f.endsWith(".md") && f !== "00-このフォルダについて.md")
+    .map((f) => basename(f, ".md"))
+    .sort();
+}
+
+export function assertEngineeringRulesComplete(): void {
+  const onDisk = listEngineeringRuleStemsOnDisk();
+  const missing = ENGINEERING_RULE_STEMS.filter((s) => !onDisk.includes(s));
+  if (missing.length > 0) {
+    throw new Error(`Missing engineering rule files: ${missing.join(", ")}`);
+  }
+  const extra = onDisk.filter((s) => !ENGINEERING_RULE_STEMS.includes(s as EngineeringRuleStem));
+  if (extra.length > 0) {
+    throw new Error(`Unexpected engineering rule files: ${extra.join(", ")}`);
+  }
+}
+
+export function syncEngineeringRules(): string[] {
+  assertEngineeringRulesComplete();
+  const cursorDir = join(ROOT_DIR, ".cursor", "rules");
+  mkdirSync(cursorDir, { recursive: true });
+  const paths: string[] = [];
+  for (const stem of ENGINEERING_RULE_STEMS) {
+    const outPath = join(cursorDir, `${stem}.mdc`);
+    writeFileSync(outPath, buildEngineeringRuleMdc(stem), "utf-8");
+    paths.push(outPath);
+  }
+  return paths;
+}
+
+export function validatePolicyMirrors(): string[] {
+  const issues: string[] = [];
+
+  try {
+    assertEngineeringRulesComplete();
+  } catch (error) {
+    return [error instanceof Error ? error.message : String(error)];
+  }
+
+  for (const stem of ENGINEERING_RULE_STEMS) {
+    const rel = `.cursor/rules/${stem}.mdc`;
+    const mirrorPath = join(ROOT_DIR, rel);
+    const expected = buildEngineeringRuleMdc(stem);
+    if (!existsSync(mirrorPath)) {
+      issues.push(`${rel} missing; run orgos operator sync-policy --emit engineering`);
+      continue;
+    }
+    if (readFileSync(mirrorPath, "utf-8") !== expected) {
+      issues.push(`${rel} stale; run orgos operator sync-policy --emit engineering`);
+    }
+  }
+
+  const policyMirrors = [
+    [OPERATOR_POLICY_CURSOR_RULE, buildCursorOperatorPolicyMdc(), "cursor"],
+    [TOOL_NEUTRAL_DEV_CURSOR_RULE, buildToolNeutralDevCursorMdc(), "dev-guide"],
+    [AGENTS_MD_REL, buildAgentsMd(), "all"],
+  ] as const;
+
+  for (const [rel, expected, emit] of policyMirrors) {
+    const mirrorPath = join(ROOT_DIR, rel);
+    if (!existsSync(mirrorPath)) {
+      issues.push(`${rel} missing; run orgos operator sync-policy --emit ${emit}`);
+      continue;
+    }
+    if (readFileSync(mirrorPath, "utf-8") !== expected) {
+      issues.push(`${rel} stale; run orgos operator sync-policy --emit ${emit}`);
+    }
+  }
+
+  return issues;
+}
 
 export function loadToolNeutralDevGuideMarkdown(): string {
   if (!existsSync(TOOL_NEUTRAL_DEV_GUIDE_PATH)) {
@@ -81,6 +246,19 @@ orgos operator sync-policy --emit all
 - 新 Skill は \`runtime: cli\` 優先 · \`cursor-only\` 新規禁止
 - Agent 参照は **Path 第一** · 変更後 \`orgos operator export\`
 
+## Engineering Constitution
+
+分割正本: [steward/rules/engineering/](steward/rules/engineering/00-このフォルダについて.md) · 索引: [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md)
+
+| ファイル | 内容 |
+|---------|------|
+| \`00-engineering-constitution\` | Purpose · AI Rules · DoD |
+| \`01-architecture\` | SSOT · layers · CLI path |
+| \`08-event-sourcing\` | Event First · immutable · deterministic |
+| \`09-openorgos-domain\` | 4-layer · Wire · catalog/roster |
+
+AI 実装提案時は **§10 AI Coding Rules**（\`00-engineering-constitution\`）に従う。Definition of Done: テスト · lint · ドキュメント · 重複/デッドコードなし。
+
 ## Quick commands
 
 \`\`\`bash
@@ -88,23 +266,26 @@ orgos chat today
 orgos validate
 orgos dashboard
 orgos operator export --agent finance
+orgos operator sync-policy --emit engineering
 \`\`\`
 
 Canonical: \`steward/rules/operator-policy.md\`
 `;
 }
 
-export type OperatorPolicyEmit = "cursor" | "agents-md" | "dev-guide" | "all";
+export type OperatorPolicyEmit = "cursor" | "agents-md" | "dev-guide" | "engineering" | "all";
 
 export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
   cursorRulePath?: string;
   agentsMdPath?: string;
   devGuideRulePath?: string;
+  engineeringRulePaths?: string[];
 } {
   const result: {
     cursorRulePath?: string;
     agentsMdPath?: string;
     devGuideRulePath?: string;
+    engineeringRulePaths?: string[];
   } = {};
 
   const cursorDir = join(ROOT_DIR, ".cursor", "rules");
@@ -127,6 +308,10 @@ export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
     const devGuideRulePath = join(ROOT_DIR, TOOL_NEUTRAL_DEV_CURSOR_RULE);
     writeFileSync(devGuideRulePath, buildToolNeutralDevCursorMdc(), "utf-8");
     result.devGuideRulePath = devGuideRulePath;
+  }
+
+  if (emit === "engineering" || emit === "all") {
+    result.engineeringRulePaths = syncEngineeringRules();
   }
 
   return result;

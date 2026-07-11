@@ -1,37 +1,60 @@
 # AI カンパニー — 組織図（16 役割モデル）
 
-**版:** 2026-06-28 · **正本:** 本書 · Agent 定義: [registry.yaml](registry.yaml)
+**版:** 2026-07-11 · **生成元・正本:** [registry.yaml](registry.yaml) の `reports_to`
+**注意:** [chain-policy.yaml](../reporting/chain-policy.yaml) は COO 経由の実行報告中継であり、組織上の上司を表さない。
 
 記事「AIで作業はできるのに、事業が回らない人へ」の **16 人 AI 社員** モデルを OrgOS に映射した構成。人間 CEO の判断・承認は OrgOS の **承認ゲート**（`org approval` · `protocol notice approve`）のまま。
 
+<!-- orgos:generated:org-chart-mermaid:start -->
 ```mermaid
 flowchart TB
-  CEO[CEO 人間]
-  ES[Steward Agent 経営統括]
-  CEO --> ES
-  ES --> COO
-  ES --> SEC[Secretary 秘書]
-  COO --> CTO
-  COO --> SL[Sales Lead 営業統括]
-  COO --> ML[Marketing Lead マーケ統括]
-  COO --> CS[Customer Success]
-  COO --> OPS[Operations 業務運用]
-  CTO --> ENG[Engineering]
-  CTO --> DL[Design Lead]
-  DL --> DES[Design]
-  SL --> SO[Sales Outbound]
-  SL --> SI[Sales Inbound]
-  ML --> SNS[Social Media]
-  ES --> FIN[Finance 経理]
-  ES --> PF[Personal Finance 個人財務]
-  ES --> LEG[Legal 法務]
-  ES --> SECU[Security セキュリティ]
-  ES --> CMP[Compliance]
-  ES --> CTR[Contract]
+CEO["CEO 人間"]
+CEO --> executive_steward
+executive_steward["ステュワード（経営統括）"]
+coo["統括執行"]
+cto["技術統括"]
+engineering["エンジニア"]
+design_lead["デザイン統括"]
+design["デザイナー"]
+sales_lead["営業統括"]
+sales_outbound["新規開拓（アウトバウンド）"]
+sales_inbound["新規開拓（インバウンド）"]
+customer_success["カスタマーサクセス"]
+marketing_lead["マーケティング統括"]
+social_media["SNS 担当"]
+finance["財務・計画"]
+personal_finance["個人財務"]
+secretary["秘書"]
+legal["法務"]
+security["セキュリティ統括"]
+contract["契約管理"]
+compliance["コンプライアンス"]
+operations["業務運用"]
+executive_steward --> coo
+coo --> cto
+cto --> engineering
+cto --> design_lead
+design_lead --> design
+coo --> sales_lead
+sales_lead --> sales_outbound
+sales_lead --> sales_inbound
+coo --> customer_success
+coo --> marketing_lead
+marketing_lead --> social_media
+coo --> finance
+executive_steward --> personal_finance
+coo --> secretary
+executive_steward --> legal
+executive_steward --> security
+coo --> contract
+coo --> compliance
+coo --> operations
 ```
+<!-- orgos:generated:org-chart-mermaid:end -->
 
 ## 16 役割 ↔ Agent id
 
+<!-- orgos:generated:org-chart-sixteen:start -->
 | # | 記事の役割 | Agent id | 定義 |
 |---|-----------|----------|------|
 | 1 | COO（CEO の右腕） | `coo` | [coo_agent.md](coo_agent.md) |
@@ -50,6 +73,7 @@ flowchart TB
 | 14 | 秘書 | `secretary` | [secretary_agent.md](secretary_agent.md) |
 | 15 | 法務 | `legal` | [legal_agent.md](legal_agent.md) |
 | 16 | セキュリティ統括 | `security` | [security_agent.md](security_agent.md) |
+<!-- orgos:generated:org-chart-sixteen:end -->
 
 **Steward Agent**（`executive_steward`）は 16 人の **統括・要約統合** 役。記事の「自分がいなくても各担当が動く」を **Work Order · Handoff · agent-summaries** で実現する。
 

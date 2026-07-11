@@ -125,6 +125,23 @@ routes:
         - data/executive/calendar.yaml
         - docs/executive/
 
+  - id: secretary-schedule-coordination
+    description: 多者日程調整（メール往復）
+    agent: secretary
+    skill: schedule_coordination
+    boundary: executive_data
+    priority: 92
+    resource_paths:
+      - data/executive/scheduling-cases.yaml
+    match:
+      keywords:
+        - 日程調整
+        - 候補日
+        - スケジュール調整
+        - 調整案件
+      paths:
+        - data/executive/scheduling-cases.yaml
+
   - id: secretary-tasks
     description: 社長タスク・ToDo
     agent: secretary
@@ -409,11 +426,15 @@ routes:
         - docs/company/teikan-summary.md
 
   - id: engineering-code
-    description: 実装 · バグ · PR
+    description: 実装 · バグ · PR · プラットフォーム実装
     agent: engineering
-    priority: 58
+    priority: 88
     resource_paths:
-      - data/company.yaml
+      - steward/
+      - src/
+      - schemas/
+      - tests/
+      - docs/org-os/
     match:
       keywords:
         - 実装
@@ -421,16 +442,46 @@ routes:
         - PR
         - リファクタ
         - エンジニア
+        - Agent追加
+        - Skill追加
+        - CLI追加
+        - モジュール追加
+        - プラットフォーム実装
+        - platform scaffold
+        - steward/
       paths:
         - src/
         - tests/
+        - steward/core/agents/
+        - steward/modules/
+        - steward/core/skills/
+        - docs/org-os/
+
+  - id: platform-guide-consult
+    description: OpenOrgOS 原則 · extension 設計の明示レビュー
+    agent: platform_guide
+    priority: 96
+    profiles: [developer]
+    resource_paths:
+      - steward/
+      - src/
+      - schemas/
+      - tests/
+      - docs/org-os/
+    match:
+      keywords:
+        - platform guide consult
+        - OpenOrgOS 原則レビュー
+        - extension plan review
+      paths: []
 
   - id: security-audit
-    description: セキュリティ · 分類 · アクセス境界
+    description: セキュリティ · 分類 · アクセス境界 · Wire 本番ゲート
     agent: security
-    priority: 76
+    priority: 90
     resource_paths:
       - data/classification-registry.yaml
+      - steward/platform/protocol/
     match:
       keywords:
         - セキュリティ
@@ -438,8 +489,15 @@ routes:
         - classification
         - gitignore
         - アクセス境界
+        - Wire production
+        - wire prod
+        - 本番ゲート
+        - production gate
+        - credential
       paths:
         - data/classification-registry.yaml
+        - src/lib/wire-gateway/
+        - src/lib/protocol/
 
   - id: compliance-controls
     description: ISO × REG 統制 · 成熟度 · ギャップ
@@ -641,14 +699,15 @@ routes:
         - docs/projects/
 
   - id: cto-architecture
-    description: 技術方針 · アーキテクチャ
+    description: 技術方針 · アーキテクチャ · 設計判断
     agent: cto
-    priority: 74
+    priority: 86
     resource_paths:
       - docs/engineering/
+      - docs/org-os/
     match:
-      keywords: [CTO, アーキテクチャ, 技術方針, 技術選定]
-      paths: [docs/engineering/]
+      keywords: [CTO, アーキテクチャ, 技術方針, 技術選定, 設計判断, architecture decision]
+      paths: [docs/engineering/, docs/org-os/]
 
   - id: design-lead-review
     description: デザイン統括 · レビュー

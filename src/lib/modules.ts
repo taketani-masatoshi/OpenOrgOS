@@ -208,6 +208,15 @@ export function loadEnabledModules(): TenantModule[] {
   return loadModulesFile().modules.filter((m) => m.enabled);
 }
 
+/** Returns [] when modules.yaml is missing or invalid (test / minimal tenants). */
+export function loadEnabledModulesSafe(): TenantModule[] {
+  try {
+    return loadEnabledModules();
+  } catch {
+    return [];
+  }
+}
+
 export interface ModuleValidationIssue {
   file: string;
   message: string;

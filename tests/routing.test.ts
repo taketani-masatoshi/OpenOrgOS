@@ -17,6 +17,7 @@ import {
   validateRoutingRegistry,
   formatSuggestCard,
 } from "../src/lib/routing.js";
+import { runRouteDispatch } from "../src/commands/route.js";
 
 describe("routing registry", () => {
   it("loads registry with example routes", () => {
@@ -111,5 +112,47 @@ describe("handoff", () => {
     expect(loaded.to_agent).toBe("finance");
     expect(loaded.skill).toBe("monthly_close");
     expect(formatSuggestCard(loaded)).toContain("finance");
+  });
+
+  it("marks a handoff dispatched only after a typed handler succeeds", async () => {
+    const matched = pickBestRoute({ path: "data/executive/calendar.yaml" });
+    const handoff = buildHandoff(
+      { path: "data/executive/calendar.yaml", fromAgent: "steward", mode: "auto" },
+      matched
+    );
+    created.push(handoff.id);
+    writeHandoffFiles(handoff, matched);
+
+    await runRouteDispatch({ id: handoff.id, mode: "auto" });
+
+    const dispatched = loadHandoff(handoff.id);
+    expect(dispatched.status).toBe("dispatched");
+    expect(dispatched.invocation?.status).toBe("succeeded");
+    expect(dispatched.invocation?.attempts).toBe(1);
+
+    await runRouteDispatch({ id: handoff.id, mode: "auto" });
+    expect(loadHandoff(handoff.id).invocation?.attempts).toBe(1);
+  });
+
+  it("keeps agent runtime handoffs pending during auto dispatch", async () => {
+    const matched = pickBestRoute({ text: "契約期限" });
+    const handoff = buildHandoff(
+      {
+        text: "契約期限",
+        fromAgent: "steward",
+        skill: "external_correspondence",
+        mode: "auto",
+      },
+      matched
+    );
+    created.push(handoff.id);
+    writeHandoffFiles(handoff, matched);
+
+    await runRouteDispatch({ id: handoff.id, mode: "auto" });
+
+    const deferred = loadHandoff(handoff.id);
+    expect(deferred.status).toBe("pending");
+    expect(deferred.invocation?.decision).toBe("work_order");
+    expect(deferred.invocation?.status).toBe("work_order");
   });
 });

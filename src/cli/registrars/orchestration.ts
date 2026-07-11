@@ -29,8 +29,15 @@ import {
   runAgentRelaySummary,
   runAgentReport,
 } from "../../commands/agent-reporting.js";
+import {
+  runAgentRosterInit,
+  runAgentRosterSet,
+  runAgentRosterShow,
+  runAgentRosterValidate,
+  runAgentRosterInitAll,
+  runAgentRosterMigrate,
+} from "../../commands/agent-roster.js";
 import { runQueuePush, runQueueList, runQueueDrain } from "../../commands/queue.js";
-import { runWebhookConfig, runWebhookSend, runWebhookIngest, runWebhookServe } from "../../commands/webhook.js";
 import { runMergePrPlan, runMergePrCreate } from "../../commands/merge-pr.js";
 import { runAuditLogAppend, runAuditLogList } from "../../commands/audit.js";
 import {
@@ -69,6 +76,7 @@ import {
   runProtocolDeliver,
   runProtocolDeliverFlushPending,
   runProtocolDeliverPull,
+  runProtocolMailWireScan,
   runProtocolMeshDeliver,
   runProtocolNoticeDraft,
   runProtocolApproversList,
@@ -144,6 +152,10 @@ import {
   runWireGatewayFederationList,
   runWireGatewayDiscoverApply,
   runWireGatewayFederationSync,
+  runWireGatewayDnsResolve,
+  runWireGatewayDnsHints,
+  runWireGatewayFederationGossip,
+  runWireGatewayScore,
   runWireInternalApiServe,
 } from "../../commands/wire-gateway.js";
 import { runComplianceGap } from "../../commands/compliance.js";
@@ -155,6 +167,8 @@ import {
   runControlsSet,
   runControlsInit,
 } from "../../commands/controls.js";
+import { registerCanonicalWireCommands } from "./wire.js";
+import { registerInternalWebhookCommands } from "./internal-webhook.js";
 
 export function registerOrchestrationCommands(program: Command): void {
   const routeCmd = program.command("route").description("Agent inter-routing (registry · access · handoff)");
@@ -395,6 +409,72 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
+  const agentRosterCmd = agentCmd.command("roster").description("Tenant Agent activation roster");
+  agentRosterCmd
+    .command("show")
+    .description("Show configured and effective Agent roster")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runAgentRosterShow({ tenant: opts.tenant, json: opts.json }));
+  agentRosterCmd
+    .command("init")
+    .description("Initialize data/operator/agents.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--force", "Replace the existing roster")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentRosterInit({ tenant: opts.tenant, force: opts.force, json: opts.json })
+    );
+  agentRosterCmd
+    .command("enable")
+    .description("Enable an Agent in a tenant profile")
+    .requiredOption("--agent <id>", "Agent id")
+    .option("--profile <profile>", "operational | developer", "operational")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runAgentRosterSet(true, opts));
+  agentRosterCmd
+    .command("disable")
+    .description("Disable a non-required Agent")
+    .requiredOption("--agent <id>", "Agent id")
+    .option("--profile <profile>", "operational | developer", "operational")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runAgentRosterSet(false, opts));
+  agentRosterCmd
+    .command("validate")
+    .description("Validate roster and module bindings")
+    .option("--tenant <id>", "Tenant id")
+    .option("--sync-modules", "Apply enabled module bindings")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentRosterValidate({
+        tenant: opts.tenant,
+        syncModules: opts.syncModules,
+        json: opts.json,
+      })
+    );
+  agentRosterCmd
+    .command("init-all")
+    .description("Bootstrap data/operator/agents.yaml for tenants missing roster files")
+    .option("--tenant <id>", "Ignored — operates on all tenants")
+    .option("--force", "Overwrite existing agents.yaml")
+    .option("--dry-run", "List tenants missing agents.yaml only")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentRosterInitAll({
+        force: opts.force,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
+  agentRosterCmd
+    .command("migrate")
+    .description("Migrate legacy agents-enabled.yaml to agents.yaml")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runAgentRosterMigrate({ tenant: opts.tenant, json: opts.json }));
+
   agentCmd
     .command("order")
     .description("Issue field-agent mission (COO → Steward reporting chain)")
@@ -502,34 +582,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--dry-run", "List only")
     .action((opts) => runQueueDrain({ tenant: opts.tenant, dryRun: opts.dryRun }));
 
-  const webhookCmd = program.command("webhook").description("Webhook outbound/inbound (Phase 2)");
-  webhookCmd.command("config").description("Show webhook registry").action(runWebhookConfig);
-  webhookCmd
-    .command("send")
-    .description("Send outbound webhook")
-    .requiredOption("--event <name>", "Event name")
-    .option("--ref <id>", "Reference id")
-    .option("--payload <file|json>", "Payload file or JSON string")
-    .action(async (opts) => runWebhookSend({ event: opts.event, ref: opts.ref, payload: opts.payload }));
-  webhookCmd
-    .command("ingest")
-    .description("Ingest inbound webhook payload file → queue")
-    .requiredOption("--file <path>", "JSON payload file")
-    .option("--secret <secret>", "Override secret")
-    .action((opts) => runWebhookIngest({ file: opts.file, secret: opts.secret }));
-  webhookCmd
-    .command("serve")
-    .description("Start inbound HTTP webhook server")
-    .option("--host <host>", "Bind host")
-    .option("--port <port>", "Bind port")
-    .option("--once", "Start and exit (health check)")
-    .action(async (opts) =>
-      runWebhookServe({
-        host: opts.host,
-        port: opts.port ? Number(opts.port) : undefined,
-        once: opts.once,
-      })
-    );
+  registerInternalWebhookCommands(program);
 
   const mergeCmd = program.command("merge").description("Work order merge · PR (Phase 3)");
   const mergePrCmd = mergeCmd.command("pr").description("Pull request from merged work order");
@@ -666,7 +719,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--dry-run", "Print path only")
     .action((opts) => runControlsInit({ tenant: opts.tenant, dryRun: opts.dryRun }));
 
-  const protocolCmd = program.command("protocol").description("Inter-org protocol (OpenOrgOS Core wire)");
+  const protocolCmd = program
+    .command("protocol")
+    .description("Compatibility alias for historical protocol CLI; prefer `orgos wire`");
   protocolCmd
     .command("validate")
     .description("Validate protocol registry · peers · transactions · audit chain")
@@ -1173,6 +1228,23 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) =>
       runProtocolDeliverFlushPending({ tenant: opts.tenant, json: opts.json })
+    );
+
+  const protocolMailCmd = protocolCmd.command("mail").description("R5 email-wire protocol path");
+  protocolMailCmd
+    .command("wire-scan")
+    .description("Scan received mail for Wire MIME envelopes (Phase 2 ingest)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--since-days <n>", "Lookback days", "7")
+    .option("--dry-run", "Parse only — do not ingest")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolMailWireScan({
+        tenant: opts.tenant,
+        sinceDays: opts.sinceDays ? parseInt(opts.sinceDays, 10) : undefined,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      })
     );
 
   protocolCmd
@@ -1872,7 +1944,7 @@ export function registerOrchestrationCommands(program: Command): void {
 
   const wireGatewayCmd = program
     .command("wire-gateway")
-    .description("Wire Gateway (I3-a) — external P2P boundary");
+    .description("Compatibility alias for `orgos wire gateway` (deprecated root)");
   wireGatewayCmd
     .command("serve")
     .description("Start Wire Gateway HTTP/HTTPS server")
@@ -1990,6 +2062,41 @@ export function registerOrchestrationCommands(program: Command): void {
         force: opts.force,
         json: opts.json,
       })
+    );
+  wireGatewayFederationCmd
+    .command("gossip")
+    .description("Pull federation catalog from registry wire_url peers (WG v2 gossip)")
+    .option("--dry-run", "Preview merge only")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runWireGatewayFederationGossip({ dryRun: opts.dryRun, json: opts.json })
+    );
+  const wireGatewayDnsCmd = wireGatewayCmd
+    .command("dns")
+    .description("OpenOrg DNS wire URL resolution (SRV/TXT/well-known)");
+  wireGatewayDnsCmd
+    .command("resolve")
+    .description("Resolve DNS-style node_id to wire base URL")
+    .argument("<nodeId>", "DNS-style node_id e.g. org.example.co.jp")
+    .option("--json", "JSON output")
+    .action(async (nodeId: string, opts: { json?: boolean }) =>
+      runWireGatewayDnsResolve({ nodeId, json: opts.json })
+    );
+  wireGatewayDnsCmd
+    .command("hints")
+    .description("Print DNS TXT/SRV hints for operator publish")
+    .requiredOption("--wire-url <url>", "Public wire base URL")
+    .option("--json", "JSON output")
+    .action((opts: { wireUrl: string; json?: boolean }) =>
+      runWireGatewayDnsHints({ wireUrl: opts.wireUrl, json: opts.json })
+    );
+  wireGatewayCmd
+    .command("score")
+    .description("Wire platform checklist, or runtime score with --strict")
+    .option("--strict", "Run mapped Vitest suites and score their execution evidence")
+    .option("--json", "JSON output")
+    .action((opts: { strict?: boolean; json?: boolean }) =>
+      runWireGatewayScore({ strict: opts.strict, json: opts.json })
     );
   const wireInternalApiCmd = wireGatewayCmd
     .command("internal-api")
@@ -2172,4 +2279,9 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       })
     );
+
+  hubCmd.description(
+    "Compatibility alias for historical Witness Hub CLI; canonical client operations use `orgos wire witness`"
+  );
+  registerCanonicalWireCommands(program);
 }

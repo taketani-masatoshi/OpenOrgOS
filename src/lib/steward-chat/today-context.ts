@@ -32,6 +32,7 @@ import {
 } from "../scheduling-coordination/store.js";
 import { buildSchedulingTodayItem } from "../scheduling-coordination/today-summary.js";
 import { findLatestAgentSummaries } from "../agent-summaries.js";
+import { buildAgentRosterTodaySummary } from "../agent-roster.js";
 
 function repoRelativePath(path: string): string {
   return relative(getWorkspaceRoot(), path).replace(/\\/g, "/");
@@ -275,6 +276,8 @@ export function buildTodayContext(): TodayContext {
       pending_participants: c.participants.filter((p) => p.response === "pending").length,
     }));
 
+  const roster = buildAgentRosterTodaySummary();
+
   const ctx = todayContextSchema.parse({
     tenant,
     report_date: report.reportDate,
@@ -326,6 +329,11 @@ export function buildTodayContext(): TodayContext {
     cashflow_runway_days: cashflowMeta.runway_days,
     cashflow_required_funding_amount: cashflowMeta.required_funding_amount,
     cashflow_required_funding_by_date: cashflowMeta.required_funding_by_date,
+    agent_roster_configured: roster.configured,
+    agent_roster_operational_count: roster.operational_count,
+    agent_roster_developer_count: roster.developer_count,
+    agent_roster_operational: roster.operational,
+    agent_roster_developer: roster.developer,
   });
 
   return ctx;
@@ -363,7 +371,21 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
     `# Today — ${ctx.company_name}`,
     `**結論:** 判断 ${decisionCount} 件 · 承認 ${approvalCount} 件 · 再試行 ${retryCount} 件`,
     `**次の操作:** ${decisionCount + approvalCount + retryCount === 0 ? "ありません" : "以下の Chat 操作だけ実行できます"}`,
+    "",
+    "## Agent roster",
+    `- configured: ${ctx.agent_roster_configured ? "yes" : "compatibility default"}`,
+    `- operational (${ctx.agent_roster_operational_count}): ${
+      ctx.agent_roster_operational.length
+        ? ctx.agent_roster_operational.map((a) => a.id).join(", ")
+        : "—"
+    }`,
   ];
+  if (ctx.agent_roster_developer_count > 0) {
+    lines.push(
+      `- developer (${ctx.agent_roster_developer_count}): ${ctx.agent_roster_developer.map((a) => a.id).join(", ")}`
+    );
+  }
+  lines.push(`- detail: agent roster show`);
 
   if (ctx.decisions.length > 0) {
     lines.push("", "## 判断", "");

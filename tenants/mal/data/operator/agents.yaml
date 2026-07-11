@@ -1,0 +1,14 @@
+version: 1
+profiles:
+  operational:
+    - compliance
+    - contract
+    - executive_steward
+    - finance
+    - hospitality
+    - medical_device_regulatory
+    - operations
+    - property_rental
+    - secretary
+  developer: []
+disabled: []

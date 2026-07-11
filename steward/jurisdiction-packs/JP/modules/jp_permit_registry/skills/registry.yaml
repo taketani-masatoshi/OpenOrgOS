@@ -2,13 +2,14 @@ skills:
   - id: jp_permit_gap
     file: jp_permit_registry_ops.md
     runtime: cli
-    cli_command: permit gap
-    agent: Compliance
+    cli_command: operations permit gap
+    argv: [operations, permit, gap]
     description: 許認可種別カタログと保有台帳の gap 分析
-
+    agent_id: compliance
   - id: jp_permit_obligations
     file: jp_permit_registry_ops.md
     runtime: cli
-    cli_command: permit obligations
-    agent: Compliance
+    cli_command: operations permit obligations
+    deferred: "requires --type <id> or --permit <id>"
     description: 義務台帳インスタンスの期限 · 超過チェック
+    agent_id: compliance

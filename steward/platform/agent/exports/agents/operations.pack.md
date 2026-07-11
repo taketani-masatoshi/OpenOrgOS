@@ -237,7 +237,10 @@ orgos agent pulse --agent operations
 
 ## 3. Skills（参照）
 
-（なし）
+- `operations_records_review` · cli · `steward/core/skills/extension/operations_records_review.md`
+- `operations_travel_booking` · cli · `steward/core/skills/extension/operations_travel_booking.md`
+- `operations_records` · cli · `steward/modules/hospitality/skills/operations_records.md`
+- `travel_booking` · agent · `steward/modules/travel_booking/skills/travel_booking.md`
 
 ---
 

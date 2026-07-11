@@ -129,6 +129,7 @@ export function assertCatalogSeedValidatorPresent(catalogId: string): string | n
 }
 
 const CONTRACT_FILES = new Set([
+  "agent-catalog-contract.test.ts",
   "extensibility-contract.test.ts",
   "modules.test.ts",
   "readiness.test.ts",
@@ -152,6 +153,9 @@ const META_FILES = new Set([
   "community-readiness.test.ts",
   "eco-production-evidence.test.ts",
   "tenant-registry-coverage.test.ts",
+  "tenant-agent-roster-coverage.test.ts",
+  "agent-pipeline-check.test.ts",
+  "tenant-roster-fixtures.test.ts",
 ]);
 
 const INTEGRATION_I1 = new Set([
@@ -742,6 +746,7 @@ export function buildRegistryFromDisk(): TestRegistry {
           "security-validate.test.ts",
           "cli-data-write-auth.test.ts",
           "tenant-registry-coverage.test.ts",
+          "tenant-agent-roster-coverage.test.ts",
           "shell-profile-integrity.test.ts",
         ],
       },

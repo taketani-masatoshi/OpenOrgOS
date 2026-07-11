@@ -265,7 +265,9 @@ orgos agent pulse --agent executive_steward
 
 ## 3. Skills（参照）
 
-（なし）
+- `p0_closing` · cli · `steward/core/skills/p0_closing.md`
+- `daily_ops` · cli · `steward/core/skills/daily_ops.md`
+- `executive_dashboard` · cli · `steward/core/skills/executive_dashboard.md`
 
 ---
 

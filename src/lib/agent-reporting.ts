@@ -17,6 +17,7 @@ import { STEWARD_AGENTS_DIR } from "./steward-paths.js";
 import { getTenantId } from "./tenant.js";
 import { currentDate, getDocsReportsDir, loadRegistryFile, readYamlFile, writeYamlFile } from "./utils.js";
 import { assertActiveTenant, assertIntraOrgAgentTarget } from "./org-boundary.js";
+import { getCatalogAgent } from "./agent-catalog.js";
 
 export const CHAIN_POLICY_PATH = join("steward", "core", "reporting", "chain-policy.yaml");
 const MISSIONS_SUBDIR = join("agent-missions", "missions");
@@ -40,7 +41,16 @@ export function missionsDir(): string {
 
 export function isFieldAgent(agentId: AgentId): boolean {
   const policy = loadChainPolicy();
-  return !policy.excluded_from_field.includes(agentId);
+  if (policy.excluded_from_field.includes(agentId)) return false;
+  const agent = getCatalogAgent(agentId);
+  if (!agent || agent.status === "planned") return false;
+  if (agent.class === "advisor") return false;
+  if (!agent.dispatch_modes.includes("implement")) return false;
+  return true;
+}
+
+export function canReceiveImplementOrder(agentId: AgentId): boolean {
+  return isFieldAgent(agentId);
 }
 
 export function reportingHubAgent(): AgentId {

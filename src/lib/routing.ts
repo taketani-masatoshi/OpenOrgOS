@@ -19,69 +19,17 @@ import { loadSkillRegistry, resolveSkillFilePath } from "./skill-registry.js";
 import { formatSkillReference, isAgentInteractiveSkill } from "./agent-portability.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { currentDate, ensureDocsReportsDir, readYamlFile, writeYamlFile } from "./utils.js";
+import { getCatalogAgent, isAgentActive, resolveAgentId } from "./agent-catalog.js";
 
 export { ROUTING_REGISTRY_PATH };
 export const ROUTING_QUEUE_SUBDIR = "routing-queue";
-
-const CORE_AGENTS = new Set<AgentId>([
-  "executive_steward",
-  "secretary",
-  "finance",
-  "contract",
-  "compliance",
-  "operations",
-]);
-
-/** AI カンパニー拡張 — 常時ルーティング可（modules.yaml 不要） */
-const EXTENSION_AGENTS = new Set<AgentId>([
-  "coo",
-  "cto",
-  "engineering",
-  "design_lead",
-  "design",
-  "sales_lead",
-  "sales_outbound",
-  "sales_inbound",
-  "customer_success",
-  "marketing_lead",
-  "social_media",
-  "personal_finance",
-  "legal",
-  "security",
-  "human_resources",
-  "corporate_governance",
-  "accounting",
-  "tax",
-  "procurement",
-  "government_affairs",
-  "intellectual_property",
-  "general_affairs",
-  "project_management",
-  "product_management",
-  "recruiting",
-  "risk_insurance",
-  "data_analytics",
-  "devops",
-  "investor_relations",
-  "esg_sustainability",
-  "internal_audit",
-  "privacy_officer",
-  "treasury",
-  "customer_support",
-  "pr_communications",
-  "learning_development",
-  "corporate_development",
-  "quality_assurance",
-  "medical_device_regulatory",
-  "mail_intake",
-  "mail_outbound",
-]);
 
 const EXECUTIVE_DATA_PREFIXES = ["data/executive/", "docs/executive/"];
 
 export interface RouteMatchInput {
   text?: string;
   path?: string;
+  profile?: "operational" | "developer";
 }
 
 export interface MatchedRoute {
@@ -128,19 +76,29 @@ function textMatchesKeyword(text: string, keyword: string): boolean {
 }
 
 function isModuleAgentEnabled(agent: AgentId): boolean {
-  if (CORE_AGENTS.has(agent) || EXTENSION_AGENTS.has(agent)) return true;
+  if (getCatalogAgent(agent) && !["property_rental", "hospitality"].includes(agent)) {
+    return isAgentActive(agent, { profile: "operational", mode: "consult" });
+  }
   const enabled = loadEnabledModules();
   return enabled.some((mod) => MODULE_TO_CLASSIFICATION_AGENT[mod.agent] === agent);
 }
 
 export function checkRouteAccess(agent: AgentId, resourcePaths: string[]): AccessCheckResult {
   const registry = loadClassificationRegistry();
+  const catalogAgent = getCatalogAgent(agent);
   if (resourcePaths.length === 0) {
     return { allowed: false, reason: "resource_paths 未設定 — アクセス検証不可" };
   }
   for (const resourcePath of resourcePaths) {
     const result = checkAgentAccess(registry, agent, resourcePath, "read");
-    if (!result.allowed) return result;
+    if (result.allowed) continue;
+    if (
+      result.reason.startsWith("未登録リソース") &&
+      catalogAgent?.access.read.some((pattern) => pathMatchesPattern(resourcePath, pattern))
+    ) {
+      continue;
+    }
+    return result;
   }
   return { allowed: true, reason: "ok" };
 }
@@ -148,12 +106,21 @@ export function checkRouteAccess(agent: AgentId, resourcePaths: string[]): Acces
 export function checkExecutiveBoundary(route: RouteDefinition, inputPath?: string): boolean {
   const path = inputPath ? normalizeResourcePath(inputPath) : undefined;
   const executiveData = path ? isExecutiveDataPath(path) : false;
+  const allowedAgent = getCatalogAgent(route.agent)?.access.read.some((pattern) =>
+    EXECUTIVE_DATA_PREFIXES.some(
+      (prefix) => pathMatchesPattern(prefix, pattern) || pathMatchesPattern(pattern, prefix)
+    )
+  );
 
   if (executiveData) {
-    return route.agent === "secretary";
+    return route.agent === "secretary" || allowedAgent === true;
   }
 
-  if (route.boundary === "executive_data" && route.agent !== "secretary") {
+  if (
+    route.boundary === "executive_data" &&
+    route.agent !== "secretary" &&
+    !allowedAgent
+  ) {
     return false;
   }
 
@@ -197,13 +164,17 @@ function scoreRoute(route: RouteDefinition, input: RouteMatchInput): { score: nu
 
 export function matchRoutes(input: RouteMatchInput, registry = loadRoutingRegistry()): MatchedRoute[] {
   const results: MatchedRoute[] = [];
+  const profile = input.profile ?? "operational";
 
   for (const route of registry.routes) {
+    if (!route.profiles.includes(profile)) continue;
     const { score, matchedBy } = scoreRoute(route, input);
     if (matchedBy.length === 0) continue;
 
     const access = checkRouteAccess(route.agent, route.resource_paths);
-    const moduleEnabled = route.module_agent ? isModuleAgentEnabled(route.agent) : true;
+    const moduleEnabled = route.module_agent
+      ? isModuleAgentEnabled(route.agent)
+      : isAgentActive(route.agent, { profile: input.profile, mode: "consult" });
     const boundaryOk = checkExecutiveBoundary(route, input.path);
     const skillAvailable = isSkillAvailable(route.skill);
 
@@ -314,6 +285,21 @@ export function formatHandoffMarkdown(handoff: Handoff, matched?: MatchedRoute):
     lines.push("## Notes", "", handoff.notes, "");
   }
 
+  if (handoff.invocation) {
+    lines.push(
+      "## Invocation",
+      "",
+      `- decision: ${handoff.invocation.decision}`,
+      `- status: ${handoff.invocation.status}`,
+      `- attempts: ${handoff.invocation.attempts}`,
+      `- required_arguments: ${handoff.invocation.required_arguments.join(", ") || "—"}`,
+      `- missing_arguments: ${handoff.invocation.missing_arguments.join(", ") || "—"}`,
+      `- result: ${handoff.invocation.result ?? "—"}`,
+      `- failure_reason: ${handoff.invocation.failure_reason ?? "—"}`,
+      ""
+    );
+  }
+
   return lines.join("\n");
 }
 
@@ -329,18 +315,24 @@ export function routingQueueDir(): string {
   return ensureDocsReportsDir(ROUTING_QUEUE_SUBDIR);
 }
 
-export function writeHandoffFiles(handoff: Handoff, matched?: MatchedRoute): { yamlPath: string; mdPath: string } {
+export function writeHandoffFiles(
+  handoff: Handoff,
+  matched?: MatchedRoute,
+  options: { audit?: boolean } = {}
+): { yamlPath: string; mdPath: string } {
   const dir = routingQueueDir();
   const yamlPath = join(dir, `${handoff.id}.yaml`);
   const mdPath = join(dir, `${handoff.id}.md`);
   writeYamlFile(yamlPath, handoff);
   writeFileSync(mdPath, formatHandoffMarkdown(handoff, matched), "utf-8");
-  appendAuditEvent({
-    event: handoff.task_type === "implement" ? "escalate" : "handoff",
-    ref: handoff.id,
-    actor: handoff.from_agent,
-    detail: `${handoff.from_agent} → ${handoff.to_agent}`,
-  });
+  if (options.audit !== false) {
+    appendAuditEvent({
+      event: handoff.task_type === "implement" ? "escalate" : "handoff",
+      ref: handoff.id,
+      actor: handoff.from_agent,
+      detail: `${handoff.from_agent} → ${handoff.to_agent}`,
+    });
+  }
   return { yamlPath, mdPath };
 }
 
@@ -366,16 +358,10 @@ export function listHandoffs(): Handoff[] {
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
-export function resolveSkillCliCommand(skillId: string): string | undefined {
-  const skill = loadSkillRegistry().find((s) => s.id === skillId);
-  if (!skill || skill.runtime !== "cli") return undefined;
-  return skill.cli_command;
-}
-
 export function validateRoutingRegistry(): string[] {
   const issues: string[] = [];
   const registry = loadRoutingRegistry();
-  const skillIds = new Set(loadSkillRegistry().map((s) => s.id));
+  const skillsById = new Map(loadSkillRegistry().map((skill) => [skill.id, skill]));
   const seen = new Set<string>();
 
   for (const route of registry.routes) {
@@ -384,8 +370,17 @@ export function validateRoutingRegistry(): string[] {
     }
     seen.add(route.id);
 
-    if (route.skill && !skillIds.has(route.skill)) {
+    if (!resolveAgentId(route.agent)) {
+      issues.push(`${route.id}: unknown agent ${route.agent}`);
+    }
+
+    if (route.skill && !skillsById.has(route.skill)) {
       issues.push(`${route.id}: unknown skill ${route.skill}`);
+    } else if (route.skill) {
+      const skill = skillsById.get(route.skill);
+      if (skill && resolveAgentId(skill.agent_id) !== resolveAgentId(route.agent)) {
+        issues.push(`${route.id}: skill owner ${skill.agent_id} does not match route agent ${route.agent}`);
+      }
     }
     if (route.resource_paths.length === 0) {
       issues.push(`${route.id}: resource_paths required for access check`);

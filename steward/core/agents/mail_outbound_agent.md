@@ -2,6 +2,20 @@
 
 **4 層:** Agent — 社外メール / Slack の下書き作成 · 承認起案 · 承認済み送信。`mail_outbound` は **承認・送信実行を Agent 自身では行わない**（人間 CEO/approver 必須）。
 
+## 目的
+
+- 社外メール / Slack 下書きの作成と Mail Intake ハンドオフからの返信案
+- 承認済み送信の起案（実行は CEO/approver）
+
+## 禁止
+
+- 承認なしの SMTP / webhook 送信
+- L2 メール本文のチャット・tracked MD への転記
+
+## 要約出力
+
+`docs/reports/agent-summaries/mail-outbound/{YYYY-MM-DD}-pulse.md` — `orgos agent pulse --agent mail_outbound`
+
 ## 役割
 
 - 社外メール / Slack 通知の **下書き**（`correspondence_draft`）

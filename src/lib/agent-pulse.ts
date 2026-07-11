@@ -3,8 +3,9 @@ import type { AgentId } from "../../schemas/classification.js";
 import {
   agentSummarySlug,
   getAgentCapability,
-  listAgentCapabilities,
+  listOperationalCapabilities,
 } from "./agent-capability.js";
+import { getCatalogAgent, isAgentActive } from "./agent-catalog.js";
 import { computeAgentReadiness } from "./agent-readiness.js";
 import { relayPulseReport } from "./agent-reporting.js";
 import { currentDate, resolveTenantPath, writeMarkdownReport } from "./utils.js";
@@ -51,6 +52,12 @@ export function formatAgentPulseMarkdown(agentId: AgentId): string {
     "```bash",
     `orgos agent pulse --agent ${agentId}`,
     `orgos agent readiness --agent ${agentId}`,
+    ...(agentId === "accounting" || agentId === "treasury"
+      ? [
+          "orgos jp bank cashflow generate --granularity weekly --write",
+          "orgos jp bank position show",
+        ]
+      : []),
     cap?.route_ids.length
       ? `orgos route match --text "（${agentId} 担当）"`
       : "# routing 参照: steward/core/routing/registry.yaml",
@@ -74,9 +81,18 @@ export function runAgentPulse(agentId: AgentId, opts: { suffix?: string } = {}):
   return path;
 }
 
+function shouldAutoPulse(agentId: AgentId): boolean {
+  const agent = getCatalogAgent(agentId);
+  if (!agent) return true;
+  if (agent.class === "advisor") return false;
+  if (!isAgentActive(agentId, { profile: "operational", mode: "consult" })) return false;
+  return agent.auto_pulse !== false;
+}
+
 export function runAllAgentPulses(opts: { suffix?: string } = {}): string[] {
   const paths: string[] = [];
-  for (const cap of listAgentCapabilities()) {
+  for (const cap of listOperationalCapabilities()) {
+    if (!shouldAutoPulse(cap.id)) continue;
     paths.push(runAgentPulse(cap.id, opts));
   }
   return paths;
@@ -93,8 +109,9 @@ const CORE_DEDICATED_SUMMARY = new Set<AgentId>([
 /** Pulse summaries for extension agents (core keeps dedicated dashboard formatters). */
 export function runExtensionAgentPulses(opts: { suffix?: string } = {}): string[] {
   const paths: string[] = [];
-  for (const cap of listAgentCapabilities()) {
+  for (const cap of listOperationalCapabilities()) {
     if (CORE_DEDICATED_SUMMARY.has(cap.id)) continue;
+    if (!shouldAutoPulse(cap.id)) continue;
     paths.push(runAgentPulse(cap.id, opts));
   }
   return paths;

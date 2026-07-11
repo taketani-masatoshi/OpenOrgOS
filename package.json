@@ -22,6 +22,18 @@
     "daily": "npm run check && npm run orgos -- pipeline run daily",
     "weekly": "npm run check && npm run orgos -- pipeline run weekly",
     "test": "node --import tsx scripts/run-tests.ts",
+    "agent:catalog:sync": "node --import tsx scripts/sync-agent-catalog.ts",
+    "agent:catalog:check": "node --import tsx scripts/sync-agent-catalog.ts --check",
+    "agent:capability:sync": "node --import tsx scripts/sync-agent-capability.ts --write",
+    "agent:capability:check": "node --import tsx scripts/sync-agent-capability.ts --check",
+    "agent:docs:sync": "node --import tsx scripts/sync-agent-docs.ts --write",
+    "agent:docs:check": "node --import tsx scripts/sync-agent-docs.ts --check",
+    "agent:roster:bootstrap": "node --import tsx scripts/bootstrap-tenant-rosters.ts --write",
+    "agent:roster:bootstrap:check": "node --import tsx scripts/bootstrap-tenant-rosters.ts",
+    "agent:pipeline:check": "node --import tsx scripts/agent-pipeline-check.ts",
+    "agent:roster:fixtures:sync": "node --import tsx scripts/sync-tenant-roster-fixtures.ts --bootstrap --write",
+    "agent:roster:fixtures:check": "node --import tsx scripts/sync-tenant-roster-fixtures.ts",
+    "generated:check": "node --import tsx scripts/check-generated-artifacts.ts",
     "test:registry:sync": "node --import tsx scripts/sync-test-registry.ts",
     "test:registry:scaffold": "node --import tsx scripts/scaffold-catalog-test.ts",
     "test:registry:check": "vitest run tests/testing-registry.test.ts",
@@ -85,9 +97,10 @@
     "@types/mailparser": "^3.4.6",
     "@types/node": "^22.13.10",
     "@types/pdfkit": "^0.17.6",
+    "esbuild": "^0.28.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
-    "vitest": "^3.0.8"
+    "vitest": "^3.2.7"
   },
   "engines": {
     "node": ">=20"

@@ -1,17 +1,13 @@
-# Skill レジストリ — hospitality モジュール
-# 正本: steward/modules/hospitality/skills/ · 集約: src/lib/skill-registry.ts
-
 skills:
   - id: revpar_analysis
     file: revpar_analysis.md
     runtime: cli
     cli_command: revpar
-    agent: Hospitality
     description: RevPAR 分析
-
+    agent_id: hospitality
   - id: operations_records
     file: operations_records.md
     runtime: cli
     cli_command: records-check
-    agent: Operations
     description: 宿泊 · 清掃 · クレーム記録
+    agent_id: operations

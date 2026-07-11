@@ -1,9 +1,20 @@
 import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { z } from "zod";
 import type { Contract, Property, Loan } from "../../schemas/index.js";
 import {
+  arApLedgerFileSchema,
+  collectionTermsFileSchema,
+  paymentCalendarFileSchema,
+  type ArApLedgerFile,
+  type CollectionTermsFile,
+  type PaymentCalendarFile,
+} from "../../schemas/jp-bank-corporate.js";
+import type { ChartOfAccounts } from "../../schemas/finance.js";
+import {
   loadAllData,
+  loadChartOfAccounts,
   loadContracts,
   loadLoans,
   loadProperties,
@@ -29,6 +40,13 @@ import {
   resolveModuleSecretsPath,
   isSkeletonTenant,
 } from "./ops-config.js";
+import { loadModulesFile } from "./modules.js";
+import { getModuleTier } from "./module-readiness.js";
+import { AGENT_CATALOG_PATH, validateAgentCatalog } from "./agent-catalog.js";
+import { validateCapabilityManifestDrift } from "./agent-capability-sync.js";
+import { AGENT_CAPABILITY_MANIFEST_PATH } from "./agent-capability.js";
+import { validateAgentAlignment } from "./agent-alignment.js";
+import { validatePolicyMirrors } from "./operator-policy.js";
 
 export interface IntegrityIssue {
   level: "error" | "warning";
@@ -36,13 +54,364 @@ export interface IntegrityIssue {
   message: string;
 }
 
+interface JpBankIntegrityInput {
+  paymentCalendar?: unknown;
+  arApLedger?: unknown;
+  collectionTerms?: unknown;
+  chartOfAccounts?: ChartOfAccounts;
+}
+
+const JP_BANK_FILES = {
+  paymentCalendar: "data/finance/payment-calendar.yaml",
+  arApLedger: "data/finance/ar-ap-ledger.yaml",
+  collectionTerms: "data/finance/collection-terms.yaml",
+  chartOfAccounts: "data/finance/chart-of-accounts.yaml",
+} as const;
+
+function validCalendarDate(value: string): boolean {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function addCalendarDays(value: string, days: number): string {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(Date.UTC(year!, month! - 1, day! + days))
+    .toISOString()
+    .slice(0, 10);
+}
+
+function expectedDueDate(
+  bookedDate: string,
+  term: CollectionTermsFile["rules"][number]
+): string {
+  if (term.days_after_month_end != null) {
+    const [year, month] = bookedDate.split("-").map(Number);
+    const monthEnd = new Date(Date.UTC(year!, month!, 0))
+      .toISOString()
+      .slice(0, 10);
+    return addCalendarDays(monthEnd, term.days_after_month_end);
+  }
+  return addCalendarDays(bookedDate, term.days_after_booking);
+}
+
+function zodMessage(error: z.ZodError): string {
+  const issue = error.issues[0];
+  if (!issue) return "schema validation failed";
+  const location = issue.path.length ? ` at ${issue.path.join(".")}` : "";
+  return `schema invalid${location}: ${issue.message}`;
+}
+
+function duplicateIdIssues(
+  rows: Array<{ id: string }>,
+  file: string,
+  label: string
+): IntegrityIssue[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const row of rows) {
+    if (seen.has(row.id)) duplicates.add(row.id);
+    seen.add(row.id);
+  }
+  return [...duplicates].sort().map((id) => ({
+    level: "error" as const,
+    file,
+    message: `duplicate ${label} id ${id}`,
+  }));
+}
+
+/** Pure JP bank schema/cross-file checks for validate/report callers and tests. */
+export function validateJpBankCorporateIntegrity(
+  input: JpBankIntegrityInput
+): IntegrityIssue[] {
+  const issues: IntegrityIssue[] = [];
+  const parse = <T>(
+    schema: z.ZodType<T, z.ZodTypeDef, unknown>,
+    value: unknown,
+    file: string
+  ): T | undefined => {
+    if (value === undefined) return undefined;
+    const result = schema.safeParse(value);
+    if (!result.success) {
+      issues.push({ level: "error", file, message: zodMessage(result.error) });
+      return undefined;
+    }
+    return result.data;
+  };
+
+  const calendar = parse<PaymentCalendarFile>(
+    paymentCalendarFileSchema,
+    input.paymentCalendar,
+    JP_BANK_FILES.paymentCalendar
+  );
+  const ledger = parse<ArApLedgerFile>(
+    arApLedgerFileSchema,
+    input.arApLedger,
+    JP_BANK_FILES.arApLedger
+  );
+  const terms = parse<CollectionTermsFile>(
+    collectionTermsFileSchema,
+    input.collectionTerms,
+    JP_BANK_FILES.collectionTerms
+  );
+
+  if (calendar) {
+    issues.push(
+      ...duplicateIdIssues(
+        calendar.entries,
+        JP_BANK_FILES.paymentCalendar,
+        "payment calendar"
+      )
+    );
+    for (const entry of calendar.entries) {
+      if (!validCalendarDate(entry.date)) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.paymentCalendar,
+          message: `${entry.id}: date is not a real calendar date`,
+        });
+      }
+      if (
+        entry.direction === "transfer" &&
+        (!entry.account_id ||
+          !entry.counterparty_account_id ||
+          entry.account_id === entry.counterparty_account_id)
+      ) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.paymentCalendar,
+          message: `${entry.id}: transfer requires distinct account_id and counterparty_account_id`,
+        });
+      }
+    }
+  }
+
+  if (terms) {
+    issues.push(
+      ...duplicateIdIssues(
+        terms.rules,
+        JP_BANK_FILES.collectionTerms,
+        "collection term"
+      )
+    );
+  }
+
+  if (ledger) {
+    issues.push(
+      ...duplicateIdIssues(ledger.entries, JP_BANK_FILES.arApLedger, "AR/AP")
+    );
+    const termsById = new Map(terms?.rules.map((term) => [term.id, term]) ?? []);
+    for (const entry of ledger.entries) {
+      if (!validCalendarDate(entry.booked_date) || !validCalendarDate(entry.due_date)) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.arApLedger,
+          message: `${entry.id}: booked_date or due_date is not a real calendar date`,
+        });
+        continue;
+      }
+      if (entry.due_date < entry.booked_date) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.arApLedger,
+          message: `${entry.id}: due_date precedes booked_date`,
+        });
+      }
+      if (!entry.collection_term_id) continue;
+      const term = termsById.get(entry.collection_term_id);
+      if (!term) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.arApLedger,
+          message: `${entry.id}: collection_term_id ${entry.collection_term_id} not found`,
+        });
+        continue;
+      }
+      if (term.kind !== entry.kind) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.arApLedger,
+          message: `${entry.id}: collection term kind ${term.kind} does not match ${entry.kind}`,
+        });
+      }
+      if (
+        entry.due_date_source === "collection-term" &&
+        entry.due_date !== expectedDueDate(entry.booked_date, term)
+      ) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.arApLedger,
+          message: `${entry.id}: due_date does not match collection term`,
+        });
+      }
+    }
+  }
+
+  const chartIds = new Set(input.chartOfAccounts?.accounts.map((account) => account.code) ?? []);
+  if (input.chartOfAccounts) {
+    const checkChartRef = (
+      rows: Array<{ id: string; chart_account_id?: string }>,
+      file: string
+    ) => {
+      for (const row of rows) {
+        if (row.chart_account_id && !chartIds.has(row.chart_account_id)) {
+          issues.push({
+            level: "error",
+            file,
+            message: `${row.id}: chart_account_id ${row.chart_account_id} not found in chart-of-accounts`,
+          });
+        }
+      }
+    };
+    checkChartRef(calendar?.entries ?? [], JP_BANK_FILES.paymentCalendar);
+    checkChartRef(ledger?.entries ?? [], JP_BANK_FILES.arApLedger);
+    checkChartRef(terms?.rules ?? [], JP_BANK_FILES.collectionTerms);
+  }
+
+  return issues;
+}
+
+function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
+  let enabled = false;
+  try {
+    enabled = loadModulesFile().modules.some(
+      (mod) =>
+        mod.enabled &&
+        (mod.id === "jp_bank_corporate" || mod.agent === "jp_bank_corporate")
+    );
+  } catch {
+    return [];
+  }
+  if (!enabled) return [];
+
+  const issues: IntegrityIssue[] = [];
+  const values: JpBankIntegrityInput = {};
+  const missingLevel: IntegrityIssue["level"] =
+    getModuleTier("jp_bank_corporate") === "production_ready"
+      ? "error"
+      : "warning";
+  const specs = [
+    ["paymentCalendar", JP_BANK_FILES.paymentCalendar, paymentCalendarFileSchema],
+    ["arApLedger", JP_BANK_FILES.arApLedger, arApLedgerFileSchema],
+    ["collectionTerms", JP_BANK_FILES.collectionTerms, collectionTermsFileSchema],
+  ] as const;
+  for (const [key, file, schema] of specs) {
+    const path = resolveTenantPath(file);
+    if (!existsSync(path)) {
+      issues.push({
+        level: missingLevel,
+        file,
+        message:
+          "enabled module data is not materialized; copy the module activation seed",
+      });
+      continue;
+    }
+    try {
+      values[key] = readYamlFile(path, schema);
+    } catch (error) {
+      issues.push({
+        level: "error",
+        file,
+        message:
+          error instanceof z.ZodError
+            ? zodMessage(error)
+            : error instanceof Error
+              ? error.message
+              : String(error),
+      });
+    }
+  }
+  try {
+    values.chartOfAccounts = loadChartOfAccounts();
+  } catch {
+    // validateAll owns the canonical chart-of-accounts schema error.
+  }
+  return [...issues, ...validateJpBankCorporateIntegrity(values)];
+}
+
 function docExists(relPath: string | undefined): boolean {
   if (!relPath) return false;
   return existsSync(resolveTenantPath(relPath));
 }
 
-export function runIntegrityChecks(): IntegrityIssue[] {
+export function validateAgentCatalogIntegrity(): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
+  try {
+    issues.push(
+      ...validateAgentCatalog().map((message) => ({
+        level: "error" as const,
+        file: AGENT_CATALOG_PATH,
+        message,
+      }))
+    );
+  } catch (error) {
+    issues.push({
+      level: "error",
+      file: AGENT_CATALOG_PATH,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  try {
+    for (const message of validateCapabilityManifestDrift()) {
+      issues.push({
+        level: "error",
+        file: AGENT_CAPABILITY_MANIFEST_PATH,
+        message,
+      });
+    }
+  } catch (error) {
+    issues.push({
+      level: "error",
+      file: AGENT_CAPABILITY_MANIFEST_PATH,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+  try {
+    for (const issue of validateAgentAlignment()) {
+      issues.push({
+        level: "error",
+        file: `agent-alignment:${issue.source}`,
+        message: issue.message,
+      });
+    }
+  } catch (error) {
+    issues.push({
+      level: "error",
+      file: "agent-alignment",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  try {
+    for (const message of validatePolicyMirrors()) {
+      issues.push({
+        level: "error",
+        file: "steward/rules/engineering",
+        message,
+      });
+    }
+  } catch (error) {
+    issues.push({
+      level: "error",
+      file: "steward/rules/engineering",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return issues;
+}
+
+export function runIntegrityChecks(): IntegrityIssue[] {
+  const issues: IntegrityIssue[] = validateAgentCatalogIntegrity();
   const skeleton = isSkeletonTenant();
   const push = (level: IntegrityIssue["level"], file: string, message: string) =>
     issues.push({ level, file, message });
@@ -342,6 +711,8 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   } catch {
     // correspondence optional on some tenants
   }
+
+  issues.push(...runJpBankCorporateIntegrityChecks());
 
   return issues;
 }

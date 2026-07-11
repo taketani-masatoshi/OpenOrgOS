@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { resetAgentCatalogCache } from "../src/lib/agent-catalog.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import {
   agentPromptPath,
@@ -13,6 +14,7 @@ import { loadSkillRegistry } from "../src/lib/skill-registry.js";
 describe("agent-portability", () => {
   beforeEach(() => {
     setTenantId("mal");
+    resetAgentCatalogCache();
   });
 
   it("formatAgentPromptRef portable includes path and cursor hint", () => {
@@ -24,6 +26,10 @@ describe("agent-portability", () => {
 
   it("agentPromptPath resolves known agents", () => {
     expect(agentPromptPath("secretary")).toBe("steward/core/agents/secretary_agent.md");
+  });
+
+  it("agentPromptPath resolves legacy module aliases to catalog owner path", () => {
+    expect(agentPromptPath("property_rental")).toBe(agentPromptPath("operations"));
   });
 
   it("formatSkillReference portable includes path", () => {
@@ -70,5 +76,26 @@ describe("operator-policy sync", () => {
     const paths = syncOperatorPolicy("dev-guide");
     expect(paths.devGuideRulePath).toBeDefined();
     expect(existsSync(join(ROOT_DIR, TOOL_NEUTRAL_DEV_CURSOR_RULE))).toBe(true);
+  });
+
+  it("syncEngineeringRules emits 00-09 cursor mirrors", async () => {
+    const {
+      syncEngineeringRules,
+      validatePolicyMirrors,
+      ENGINEERING_RULE_STEMS,
+      assertEngineeringRulesComplete,
+    } = await import("../src/lib/operator-policy.js");
+    const { existsSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { ROOT_DIR } = await import("../src/lib/tenant.js");
+
+    assertEngineeringRulesComplete();
+    const paths = syncEngineeringRules();
+    expect(paths).toHaveLength(ENGINEERING_RULE_STEMS.length);
+    for (const stem of ENGINEERING_RULE_STEMS) {
+      const mdc = join(ROOT_DIR, ".cursor", "rules", `${stem}.mdc`);
+      expect(existsSync(mdc)).toBe(true);
+    }
+    expect(validatePolicyMirrors()).toEqual([]);
   });
 });

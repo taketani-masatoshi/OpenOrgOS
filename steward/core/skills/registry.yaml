@@ -3,515 +3,550 @@ skills:
     file: contract_expiry_check.md
     runtime: cli
     cli_command: contract-expiry
-    agent: Contract
+    handler: contract_expiry_check
     description: 契約期限アラート（90日）
+    agent_id: contract
   - id: permit_expiry_check
     file: permit_expiry_check.md
     runtime: cli
     cli_command: permit-expiry
-    agent: Compliance
+    handler: permit_expiry_check
     description: 許認可 · 保険 INDEX · draft CTR
+    agent_id: compliance
   - id: iso_control_review
     file: iso_control_review.md
     runtime: cli
     cli_command: iso-control-review
-    agent: Compliance
+    handler: iso_control_review
     description: ISO × REG 統制ギャップ · 成熟度
+    agent_id: compliance
   - id: internal_audit_scope
     file: internal_audit_scope.md
     runtime: cli
     cli_command: internal-audit-scope
-    agent: Internal Audit
+    handler: internal_audit_scope
     description: CTL ベース内部監査スコープ
+    agent_id: internal_audit
   - id: company_events_chain_verify
     file: company_events_chain_verify.md
     runtime: cli
     cli_command: company-events-chain-verify
-    agent: Records Audit
+    handler: company_events_chain_verify
     description: 会社イベントハッシュチェーン整合検証
+    agent_id: records_audit
   - id: company_events_weekly_attest
     file: company_events_weekly_attest.md
     runtime: cli
     cli_command: company-events-weekly-attest
-    agent: Records Audit
+    handler: company_events_weekly_attest
     description: 週次チェーン検証後バッチ電子署名
+    agent_id: records_audit
   - id: company_events_monthly_audit
     file: company_events_monthly_audit.md
     runtime: cli
     cli_command: company-events-monthly-audit
-    agent: Records Audit
+    handler: company_events_monthly_audit
     description: 月次監査レポート + 人間通知
+    agent_id: records_audit
   - id: monthly_close
     file: monthly_close.md
     runtime: cli
     cli_command: monthly-close
-    agent: Finance
+    handler: monthly_close
     description: 月次締めサマリ
+    agent_id: finance
   - id: variance_analysis
     file: variance_analysis.md
     runtime: cli
     cli_command: variance
-    agent: Finance
+    handler: variance_analysis
     description: 予実 vs 月次 YAML 差異
+    agent_id: finance
   - id: p0_closing
     file: p0_closing.md
     runtime: cli
     cli_command: p0
-    agent: Executive
+    handler: p0_closing
     description: P0 決算前ブロッカー
+    agent_id: executive_steward
   - id: daily_ops
     file: daily_ops.md
     runtime: cli
     cli_command: daily
-    agent: Executive
+    handler: daily_ops
     description: 日次運用（成熟度 + P0 + 契約）
+    agent_id: executive_steward
   - id: executive_dashboard
     file: executive_dashboard.md
     runtime: cli
     cli_command: dashboard
-    agent: Executive Steward
+    handler: executive_dashboard
     description: 経営ダッシュボード — pipeline/dashboard CLI
+    agent_id: executive_steward
   - id: tax_filing_prep
     file: ../../jurisdiction-packs/JP/skills/tax_filing_prep.md
     runtime: cli
     cli_command: tax-filing-prep
-    agent: Finance
+    handler: tax_filing_prep
     description: 税務申告準備（JP 法域 adapter）
+    agent_id: tax
   - id: cashflow_forecast
     file: cashflow_forecast.md
     runtime: cli
     cli_command: forecast
-    agent: Finance
+    handler: cashflow_forecast
     description: CF 予測
+    agent_id: finance
   - id: contract_register
     file: contract_register.md
     runtime: cli
     cli_command: contract-register
-    agent: Contract
+    handler: contract_register
     description: 契約台帳整備
+    agent_id: contract
   - id: capex_planning
     file: capex_planning.md
     runtime: cli
     cli_command: capex-planning
-    agent: Finance
+    handler: capex_planning
     description: CAPEX 計画
+    agent_id: finance
   - id: schedule_management
     file: schedule_management.md
     runtime: cli
     cli_command: schedule
-    agent: Secretary
+    handler: schedule_management
     description: スケジュール管理
+    agent_id: secretary
   - id: schedule_coordination
     file: schedule_coordination.md
     runtime: cli
     cli_command: schedule-coordination
-    agent: Secretary
+    handler: schedule_coordination
     description: 多者日程調整（メール往復）
+    agent_id: secretary
   - id: one_on_one_prep
     file: one_on_one_prep.md
     runtime: cli
     cli_command: one-on-one
-    agent: Secretary
+    handler: one_on_one_prep
     description: 1-on-1 準備
+    agent_id: secretary
   - id: external_correspondence
     file: external_correspondence.md
     runtime: agent
-    agent: Mail Outbound
     description: 社外連絡下書き
+    agent_id: mail_outbound
   - id: correspondence_draft
     file: correspondence_draft.md
     runtime: cli
     cli_command: correspondence-draft
-    agent: Mail Outbound
+    handler: correspondence_draft
+    required_options: [channel, body]
     description: 対外連絡下書き + 承認起案
+    agent_id: mail_outbound
   - id: mail_intake_triage
     file: mail_intake_triage.md
     runtime: cli
     cli_command: mail-intake-triage
-    agent: Mail Intake
+    handler: mail_intake_triage
     description: 受信メールルール分類 + triage queue
+    agent_id: mail_intake
   - id: correspondence_send
     file: correspondence_send.md
     runtime: cli
     cli_command: correspondence-send
-    agent: Mail Outbound
+    handler: correspondence_send
+    required_options: [id]
     description: 承認済みメール送信（SMTP）
+    agent_id: mail_outbound
   - id: slack_notify
     file: slack_notify.md
     runtime: cli
     cli_command: slack-notify
-    agent: Mail Outbound
+    handler: slack_notify
+    required_options: [id]
     description: 承認済み Slack 通知
+    agent_id: mail_outbound
   - id: tenant_integrations_setup
     file: tenant_integrations_setup.md
     runtime: cli
     cli_command: tenant-integrations-setup
-    agent: Setup
+    handler: tenant_integrations_setup
+    required_options: [answers]
     description: テナント integrations 初回設定ウィザード
+    agent_id: setup
   - id: coo_work_order_triage
     file: extension/coo_work_order_triage.md
     runtime: cli
     cli_command: escalate
-    agent: COO
+    deferred: "parent command; a complete work-order subcommand and arguments are required"
     description: Work Order 優先度付け
+    agent_id: coo
   - id: coo_routing_review
     file: extension/coo_routing_review.md
     runtime: cli
     cli_command: routing-queue
-    agent: COO
+    deferred: "legacy display token has no executable CLI command"
     description: routing-queue レビュー
+    agent_id: coo
   - id: cto_architecture_review
     file: extension/cto_architecture_review.md
     runtime: agent
-    agent: CTO
     description: アーキテクチャレビュー
+    agent_id: cto
   - id: cto_tech_radar
     file: extension/cto_tech_radar.md
     runtime: agent
-    agent: CTO
     description: 技術選定 · 負債スキャン
+    agent_id: cto
   - id: engineering_code_review
     file: extension/engineering_code_review.md
     runtime: agent
-    agent: Engineering
     description: コードレビュー準備
+    agent_id: engineering
   - id: engineering_standards_check
     file: extension/engineering_standards_check.md
     runtime: agent
-    agent: Engineering
     description: コーディング規約整合
+    agent_id: engineering
   - id: design_lead_review
     file: extension/design_lead_review.md
     runtime: agent
-    agent: Design Lead
     description: デザインレビュー
+    agent_id: design_lead
   - id: design_system_audit
     file: extension/design_system_audit.md
     runtime: agent
-    agent: Design Lead
     description: デザインシステム監査
+    agent_id: design_lead
   - id: design_asset_inventory
     file: extension/design_asset_inventory.md
     runtime: agent
-    agent: Design
     description: 素材 · 資産棚卸
+    agent_id: design
   - id: design_ui_spec_draft
     file: extension/design_ui_spec_draft.md
     runtime: agent
-    agent: Design
     description: UI 仕様下書き
+    agent_id: design
   - id: sales_pipeline_review
     file: extension/sales_pipeline_review.md
     runtime: agent
-    agent: Sales Lead
     description: パイプライン分析
+    agent_id: sales_lead
   - id: sales_forecast_prep
     file: extension/sales_forecast_prep.md
     runtime: agent
-    agent: Sales Lead
     description: 受注予測
+    agent_id: sales_lead
   - id: sales_outbound_list_review
     file: extension/sales_outbound_list_review.md
     runtime: agent
-    agent: Sales Outbound
     description: リスト精査
+    agent_id: sales_outbound
   - id: sales_outreach_draft
     file: extension/sales_outreach_draft.md
     runtime: agent
-    agent: Sales Outbound
     description: アウトバウンド文案
+    agent_id: sales_outbound
   - id: sales_inbound_triage
     file: extension/sales_inbound_triage.md
     runtime: agent
-    agent: Sales Inbound
     description: 問合せトリアージ
+    agent_id: sales_inbound
   - id: sales_inquiry_response
     file: extension/sales_inquiry_response.md
     runtime: agent
-    agent: Sales Inbound
     description: 初回回答下書き
+    agent_id: sales_inbound
   - id: cs_health_check
     file: extension/cs_health_check.md
     runtime: agent
-    agent: Customer Success
     description: 顧客ヘルスチェック
+    agent_id: customer_success
   - id: cs_renewal_risk
     file: extension/cs_renewal_risk.md
     runtime: agent
-    agent: Customer Success
     description: 更新リスク
+    agent_id: customer_success
   - id: marketing_content_calendar
     file: extension/marketing_content_calendar.md
     runtime: agent
-    agent: Marketing Lead
     description: コンテンツカレンダー
+    agent_id: marketing_lead
   - id: marketing_campaign_brief
     file: extension/marketing_campaign_brief.md
     runtime: agent
-    agent: Marketing Lead
     description: キャンペーン企画書
+    agent_id: marketing_lead
   - id: social_calendar
     file: extension/social_calendar.md
     runtime: agent
-    agent: Social Media
     description: 投稿カレンダー
+    agent_id: social_media
   - id: social_post_draft
     file: extension/social_post_draft.md
     runtime: agent
-    agent: Social Media
     description: 投稿文案
+    agent_id: social_media
   - id: personal_budget_review
     file: extension/personal_budget_review.md
     runtime: agent
-    agent: Personal Finance
     description: 個人予算レビュー
+    agent_id: personal_finance
   - id: personal_expense_categorize
     file: extension/personal_expense_categorize.md
     runtime: agent
-    agent: Personal Finance
     description: 支出分類
+    agent_id: personal_finance
   - id: legal_register_review
     file: extension/legal_register_review.md
     runtime: agent
-    agent: Legal
     description: 法務登記 · 規程整合
+    agent_id: legal
   - id: legal_clause_check
     file: extension/legal_clause_check.md
     runtime: agent
-    agent: Legal
     description: 契約条項チェック
+    agent_id: legal
   - id: security_control_review
     file: extension/security_control_review.md
     runtime: agent
-    agent: Security
     description: 統制レビュー
+    agent_id: security
   - id: security_classification_audit
     file: extension/security_classification_audit.md
     runtime: agent
-    agent: Security
     description: 分類監査
+    agent_id: security
   - id: hr_policy_review
     file: extension/hr_policy_review.md
     runtime: agent
-    agent: Human Resources
     description: 就業規則 · HR ポリシー
+    agent_id: human_resources
   - id: hr_labor_compliance
     file: extension/hr_labor_compliance.md
     runtime: agent
-    agent: Human Resources
     description: 労務コンプライアンス
+    agent_id: human_resources
   - id: governance_meeting_prep
     file: extension/governance_meeting_prep.md
     runtime: agent
-    agent: Corporate Governance
     description: 株主総会 · 取締役会準備
+    agent_id: corporate_governance
   - id: governance_register_review
     file: extension/governance_register_review.md
     runtime: agent
-    agent: Corporate Governance
     description: ガバナンス台帳
+    agent_id: corporate_governance
   - id: procurement_order_review
     file: extension/procurement_order_review.md
     runtime: agent
-    agent: Procurement
     description: 発注レビュー
+    agent_id: procurement
   - id: procurement_vendor_eval
     file: extension/procurement_vendor_eval.md
     runtime: agent
-    agent: Procurement
     description: 供給者評価
+    agent_id: procurement
   - id: gov_subsidy_eligibility
     file: extension/gov_subsidy_eligibility.md
     runtime: cli
     cli_command: operations subsidy
-    agent: Government Affairs
+    deferred: "parent command; select a complete subsidy subcommand"
     description: 補助金適格性
+    agent_id: government_affairs
   - id: gov_regulatory_watch
     file: extension/gov_regulatory_watch.md
     runtime: agent
-    agent: Government Affairs
     description: 規制動向ウォッチ
+    agent_id: government_affairs
   - id: ip_portfolio_review
     file: extension/ip_portfolio_review.md
     runtime: cli
     cli_command: operations trademark
-    agent: Intellectual Property
+    deferred: "parent command; select checklist or draft"
     description: IP ポートフォリオ
+    agent_id: intellectual_property
   - id: ip_trademark_status
     file: extension/ip_trademark_status.md
     runtime: agent
-    agent: Intellectual Property
     description: 商標ステータス
+    agent_id: intellectual_property
   - id: ga_office_ops_check
     file: extension/ga_office_ops_check.md
     runtime: agent
-    agent: General Affairs
     description: 総務オペ確認
+    agent_id: general_affairs
   - id: ga_vendor_contract_review
     file: extension/ga_vendor_contract_review.md
     runtime: agent
-    agent: General Affairs
     description: 業者契約レビュー
+    agent_id: general_affairs
   - id: pm_status_review
     file: extension/pm_status_review.md
     runtime: agent
-    agent: Project Management
     description: プロジェクト状況
+    agent_id: project_management
   - id: pm_milestone_tracking
     file: extension/pm_milestone_tracking.md
     runtime: agent
-    agent: Project Management
     description: マイルストーン追跡
+    agent_id: project_management
   - id: pm_roadmap_review
     file: extension/pm_roadmap_review.md
     runtime: agent
-    agent: Product Management
     description: ロードマップ
+    agent_id: product_management
   - id: pm_feature_prioritization
     file: extension/pm_feature_prioritization.md
     runtime: agent
-    agent: Product Management
     description: 機能優先度
+    agent_id: product_management
   - id: recruiting_pipeline_review
     file: extension/recruiting_pipeline_review.md
     runtime: agent
-    agent: Recruiting
     description: 採用パイプライン
+    agent_id: recruiting
   - id: recruiting_interview_prep
     file: extension/recruiting_interview_prep.md
     runtime: agent
-    agent: Recruiting
     description: 面接準備
+    agent_id: recruiting
   - id: risk_register_review
     file: extension/risk_register_review.md
     runtime: agent
-    agent: Risk & Insurance
     description: リスク台帳
+    agent_id: risk_insurance
   - id: risk_insurance_renewal
     file: extension/risk_insurance_renewal.md
     runtime: agent
-    agent: Risk & Insurance
     description: 保険更新
+    agent_id: risk_insurance
   - id: analytics_metrics_review
     file: extension/analytics_metrics_review.md
     runtime: agent
-    agent: Data Analytics
     description: KPI · メトリクス
+    agent_id: data_analytics
   - id: analytics_data_quality
     file: extension/analytics_data_quality.md
     runtime: agent
-    agent: Data Analytics
     description: データ品質
+    agent_id: data_analytics
   - id: devops_infra_health
     file: extension/devops_infra_health.md
     runtime: agent
-    agent: DevOps
     description: インフラヘルス
+    agent_id: devops
   - id: devops_deploy_checklist
     file: extension/devops_deploy_checklist.md
     runtime: agent
-    agent: DevOps
     description: デプロイチェックリスト
+    agent_id: devops
   - id: ir_materials_prep
     file: extension/ir_materials_prep.md
     runtime: agent
-    agent: Investor Relations
     description: IR 資料準備
+    agent_id: investor_relations
   - id: ir_shareholder_comm
     file: extension/ir_shareholder_comm.md
     runtime: agent
-    agent: Investor Relations
     description: 株主コミュニケーション
+    agent_id: investor_relations
   - id: esg_metrics_review
     file: extension/esg_metrics_review.md
     runtime: agent
-    agent: ESG
     description: ESG 指標
+    agent_id: esg_sustainability
   - id: esg_report_prep
     file: extension/esg_report_prep.md
     runtime: agent
-    agent: ESG
     description: サステナビリティ報告
+    agent_id: esg_sustainability
   - id: privacy_impact_review
     file: extension/privacy_impact_review.md
     runtime: agent
-    agent: Privacy Officer
     description: PIMS · DPIA
+    agent_id: privacy_officer
   - id: privacy_data_inventory
     file: extension/privacy_data_inventory.md
     runtime: agent
-    agent: Privacy Officer
     description: データ棚卸
+    agent_id: privacy_officer
   - id: treasury_cash_position
     file: extension/treasury_cash_position.md
     runtime: agent
-    agent: Treasury
     description: キャッシュポジション
+    agent_id: treasury
   - id: treasury_liquidity_forecast
     file: extension/treasury_liquidity_forecast.md
     runtime: agent
-    agent: Treasury
     description: 流動性予測
+    agent_id: treasury
   - id: support_ticket_triage
     file: extension/support_ticket_triage.md
     runtime: agent
-    agent: Customer Support
     description: チケットトリアージ
+    agent_id: customer_support
   - id: support_sla_check
     file: extension/support_sla_check.md
     runtime: agent
-    agent: Customer Support
     description: SLA 確認
+    agent_id: customer_support
   - id: pr_press_release_draft
     file: extension/pr_press_release_draft.md
     runtime: agent
-    agent: PR
     description: プレスリリース
+    agent_id: pr_communications
   - id: pr_media_monitoring
     file: extension/pr_media_monitoring.md
     runtime: agent
-    agent: PR
     description: メディアモニタリング
+    agent_id: pr_communications
   - id: ld_training_plan
     file: extension/ld_training_plan.md
     runtime: agent
-    agent: L&D
     description: 研修計画
+    agent_id: learning_development
   - id: ld_competency_gap
     file: extension/ld_competency_gap.md
     runtime: agent
-    agent: L&D
     description: コンピテンシーギャップ
+    agent_id: learning_development
   - id: corpdev_ma_screen
     file: extension/corpdev_ma_screen.md
     runtime: agent
-    agent: Corp Dev
     description: M&A スクリーニング
+    agent_id: corporate_development
   - id: corpdev_partnership_brief
     file: extension/corpdev_partnership_brief.md
     runtime: agent
-    agent: Corp Dev
     description: 提携ブリーフ
+    agent_id: corporate_development
   - id: qa_nonconformance_triage
     file: extension/qa_nonconformance_triage.md
     runtime: cli
     cli_command: controls gap
-    agent: Quality Assurance
+    argv: [controls, gap]
     description: 不適合初動
+    agent_id: quality_assurance
   - id: qa_iso9001_controls
     file: extension/qa_iso9001_controls.md
     runtime: agent
-    agent: Quality Assurance
     description: ISO 9001 統制
+    agent_id: quality_assurance
   - id: operations_records_review
     file: extension/operations_records_review.md
     runtime: cli
     cli_command: document-io
-    agent: Operations
+    deferred: "parent command; select a complete document-io subcommand"
     description: 入出力記録レビュー
+    agent_id: operations
   - id: operations_travel_booking
     file: extension/operations_travel_booking.md
     runtime: cli
     cli_command: operations travel
-    agent: Operations
+    deferred: "parent command; select a complete travel subcommand"
     description: 旅費 · 旅行手配
+    agent_id: operations

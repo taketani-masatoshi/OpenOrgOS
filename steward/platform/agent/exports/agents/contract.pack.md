@@ -230,7 +230,8 @@ orgos agent pulse --agent contract
 
 ## 3. Skills（参照）
 
-（なし）
+- `contract_expiry_check` · cli · `steward/core/skills/contract_expiry_check.md`
+- `contract_register` · cli · `steward/core/skills/contract_register.md`
 
 ---
 

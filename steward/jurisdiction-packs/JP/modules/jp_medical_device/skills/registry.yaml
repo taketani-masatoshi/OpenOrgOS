@@ -3,19 +3,20 @@ skills:
     file: jp_medical_device_qms.md
     runtime: cli
     cli_command: operations medical-device qms
-    agent: medical_device_regulatory
+    argv: [operations, medical-device, qms]
     description: 医療機器 QMS 4 階層文書のカタログ · ドラフト生成
-
+    agent_id: medical_device_regulatory
   - id: jp_medical_device_gvp
     file: jp_medical_device_gvp.md
     runtime: cli
     cli_command: operations medical-device gvp
-    agent: medical_device_regulatory
+    argv: [operations, medical-device, gvp]
     description: GVP 手順書 · 様式のドラフト生成
-
+    agent_id: medical_device_regulatory
   - id: jp_medical_device_ledgers
     file: jp_medical_device_ledgers.md
     runtime: cli
     cli_command: operations medical-device ledger
-    agent: medical_device_regulatory
+    argv: [operations, medical-device, ledger]
     description: 出荷 · 苦情 · 有害事象等の台帳ステータス
+    agent_id: medical_device_regulatory

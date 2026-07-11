@@ -27,7 +27,7 @@
 | **OFF** | jp_medical_device（REG-025/026 未施行 · ISO-13485 OFF） |
 | **コア Agent** | executive · secretary · finance · operations |
 | **モジュール Agent** | rental · hospitality · travel_booking |
-| **マニフェスト** | [`data/operator/agents-enabled.yaml`](../../data/operator/agents-enabled.yaml) |
+| **マニフェスト** | [`data/operator/agents.yaml`](../../data/operator/agents.yaml) |
 
 ---
 

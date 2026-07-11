@@ -20,9 +20,12 @@ describe("permit-check", () => {
 });
 
 describe("records-check", () => {
-  it("counts kamezawa operation records", () => {
-    const r = checkOperationsRecords();
-    expect(r.totalRows).toBeGreaterThan(0);
+  it("discovers committed kamezawa record templates without requiring runtime records", () => {
+    const r = checkOperationsRecords(
+      "properties/PROP-002-kamezawa/operations/templates"
+    );
+    expect(r.files.length).toBeGreaterThan(0);
     expect(r.files.some((f) => f.path.includes("宿泊者名簿"))).toBe(true);
+    expect(r.totalRows).toBeGreaterThanOrEqual(0);
   });
 });

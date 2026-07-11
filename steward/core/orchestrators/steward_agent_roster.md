@@ -1,7 +1,8 @@
 # Steward Agent — 全 Agent 特性カタログ（オーケストレーター用）
 
 **読者:** Steward Agent（経営統括）· COO · 人間 CEO  
-**版:** 2026-06-28 · **正本:** 本書 · 定義: [registry.yaml](../agents/registry.yaml)
+**版:** 2026-07-11 · **生成元・正本:** [registry.yaml](../agents/registry.yaml)
+テナントごとの有効化は `data/operator/agents.yaml`（`orgos agent roster show`）。本書は説明用ミラー。
 
 Steward Agent は **正データを編集せず**、本カタログに従い **委譲 · Work Order · 要約統合** する。各 Agent の「特性」= **得意 · 禁止 · 人間承認 · 報告線**。
 
@@ -167,6 +168,63 @@ docs/reports/routing-queue/   ← COO · Work Order
 Growth/一般企業 Agent の要約は **Phase 2 で dashboard 自動連携**（registry gaps）。現状は Work Order 完了時に各 Agent が `agent-summaries/{id}/` へ書く想定。
 
 ---
+
+## Catalog index（generated · registry.yaml）
+
+<!-- orgos:generated:catalog-index:start -->
+| id | tier | class | activation | reports_to | definition |
+|----|------|-------|------------|------------|------------|
+| `platform_guide` | advisor | advisor | developer_explicit | cto | [platform_guide_agent.md](platform_guide_agent.md) |
+| `compliance` | core | operational | always | coo | [compliance_agent.md](compliance_agent.md) |
+| `contract` | core | operational | always | coo | [contract_agent.md](contract_agent.md) |
+| `executive_steward` | core | operational | always | — | [executive_steward_agent.md](executive_steward_agent.md) |
+| `finance` | core | operational | always | coo | [finance_agent.md](finance_agent.md) |
+| `operations` | core | operational | always | coo | [operations_agent.md](operations_agent.md) |
+| `secretary` | core | operational | always | coo | [secretary_agent.md](secretary_agent.md) |
+| `setup` | core | operational | always | — | [setup_agent.md](setup_agent.md) |
+| `accounting` | extension | operational | always | finance | [accounting_agent.md](accounting_agent.md) |
+| `coo` | extension | operational | always | executive_steward | [coo_agent.md](coo_agent.md) |
+| `corporate_development` | extension | operational | always | executive_steward | [corporate_development_agent.md](corporate_development_agent.md) |
+| `corporate_governance` | extension | operational | always | executive_steward | [corporate_governance_agent.md](corporate_governance_agent.md) |
+| `cto` | extension | operational | always | coo | [cto_agent.md](cto_agent.md) |
+| `customer_success` | extension | operational | always | coo | [customer_success_agent.md](customer_success_agent.md) |
+| `customer_support` | extension | operational | always | customer_success | [customer_support_agent.md](customer_support_agent.md) |
+| `data_analytics` | extension | operational | always | executive_steward | [data_analytics_agent.md](data_analytics_agent.md) |
+| `design` | extension | operational | always | design_lead | [design_agent.md](design_agent.md) |
+| `design_lead` | extension | operational | always | cto | [design_lead_agent.md](design_lead_agent.md) |
+| `devops` | extension | operational | always | cto | [devops_agent.md](devops_agent.md) |
+| `engineering` | extension | operational | always | cto | [engineering_agent.md](engineering_agent.md) |
+| `esg_sustainability` | extension | operational | always | compliance | [esg_sustainability_agent.md](esg_sustainability_agent.md) |
+| `general_affairs` | extension | operational | always | coo | [general_affairs_agent.md](general_affairs_agent.md) |
+| `government_affairs` | extension | operational | always | executive_steward | [government_affairs_agent.md](government_affairs_agent.md) |
+| `human_resources` | extension | operational | always | executive_steward | [human_resources_agent.md](human_resources_agent.md) |
+| `intellectual_property` | extension | operational | always | legal | [intellectual_property_agent.md](intellectual_property_agent.md) |
+| `internal_audit` | extension | operational | always | executive_steward | [internal_audit_agent.md](internal_audit_agent.md) |
+| `investor_relations` | extension | operational | always | executive_steward | [investor_relations_agent.md](investor_relations_agent.md) |
+| `learning_development` | extension | operational | always | human_resources | [learning_development_agent.md](learning_development_agent.md) |
+| `legal` | extension | operational | always | executive_steward | [legal_agent.md](legal_agent.md) |
+| `mail_intake` | extension | operational | always | secretary | [mail_intake_agent.md](mail_intake_agent.md) |
+| `mail_outbound` | extension | operational | always | secretary | [mail_outbound_agent.md](mail_outbound_agent.md) |
+| `marketing_lead` | extension | operational | always | coo | [marketing_lead_agent.md](marketing_lead_agent.md) |
+| `medical_device_regulatory` | extension | operational | always | compliance | [medical_device_regulatory_agent.md](medical_device_regulatory_agent.md) |
+| `personal_finance` | extension | operational | always | executive_steward | [personal_finance_agent.md](personal_finance_agent.md) |
+| `pr_communications` | extension | operational | always | marketing_lead | [pr_communications_agent.md](pr_communications_agent.md) |
+| `privacy_officer` | extension | operational | always | compliance | [privacy_officer_agent.md](privacy_officer_agent.md) |
+| `procurement` | extension | operational | always | coo | [procurement_agent.md](procurement_agent.md) |
+| `product_management` | extension | operational | always | cto | [product_management_agent.md](product_management_agent.md) |
+| `project_management` | extension | operational | always | coo | [project_management_agent.md](project_management_agent.md) |
+| `quality_assurance` | extension | operational | always | coo | [quality_assurance_agent.md](quality_assurance_agent.md) |
+| `records_audit` | extension | operational | always | executive_steward | [records_audit_agent.md](records_audit_agent.md) |
+| `recruiting` | extension | operational | always | human_resources | [recruiting_agent.md](recruiting_agent.md) |
+| `risk_insurance` | extension | operational | always | executive_steward | [risk_insurance_agent.md](risk_insurance_agent.md) |
+| `sales_inbound` | extension | operational | always | sales_lead | [sales_inbound_agent.md](sales_inbound_agent.md) |
+| `sales_lead` | extension | operational | always | coo | [sales_lead_agent.md](sales_lead_agent.md) |
+| `sales_outbound` | extension | operational | always | sales_lead | [sales_outbound_agent.md](sales_outbound_agent.md) |
+| `security` | extension | operational | always | executive_steward | [security_agent.md](security_agent.md) |
+| `social_media` | extension | operational | always | marketing_lead | [social_media_agent.md](social_media_agent.md) |
+| `tax` | extension | operational | always | finance | [tax_agent.md](tax_agent.md) |
+| `treasury` | extension | operational | always | finance | [treasury_agent.md](treasury_agent.md) |
+<!-- orgos:generated:catalog-index:end -->
 
 ## 関連
 

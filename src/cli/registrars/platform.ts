@@ -421,6 +421,47 @@ export function registerPlatformCommands(program: Command): void {
 
   registerModuleCli(program);
 
+  const platformExtCmd = program
+    .command("platform")
+    .description("Platform extensibility guides (Agent · Skill · CLI · Wire)");
+  platformExtCmd
+    .command("guide")
+    .description("Print implementation checklist (legacy — prefer extension-check)")
+    .option(
+      "--topic <name>",
+      "philosophy | agent | skill | cli | module | wire | eval | all",
+      "all"
+    )
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runPlatformGuide } = await import("../../commands/platform-guide.js");
+      runPlatformGuide({ topic: opts.topic, json: opts.json });
+    });
+  platformExtCmd
+    .command("extension-check")
+    .description("Verify platform extension prerequisites (read-only)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runPlatformExtensionCheck } = await import("../../commands/platform-extension-check.js");
+      runPlatformExtensionCheck({ json: opts.json });
+    });
+  platformExtCmd
+    .command("registry-verify")
+    .description("Verify catalog · routing · skills · capability drift")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runPlatformRegistryVerify } = await import("../../commands/platform-registry-verify.js");
+      runPlatformRegistryVerify({ json: opts.json });
+    });
+  platformExtCmd
+    .command("scaffold <kind> <id>")
+    .description("Dry-run scaffold for agent | skill | module (use --write to create)")
+    .option("--write", "Create files on disk")
+    .action(async (kind: string, id: string, opts: { write?: boolean }) => {
+      const { runPlatformScaffold } = await import("../../commands/platform-scaffold.js");
+      runPlatformScaffold({ kind: kind as "agent" | "skill" | "module", id, write: opts.write });
+    });
+
   const skillsCmd = program.command("skills").description("Run Agent Skills from CLI (no Cursor)");
   skillsCmd.command("list").description("List skill CLI commands").action(runSkillsList);
   skillsCmd
@@ -438,6 +479,8 @@ export function registerPlatformCommands(program: Command): void {
     .option("--channel <email|slack>", "Channel (correspondence-draft skill)")
     .option("--slack-channel <name>", "Slack channel (correspondence-draft skill)")
     .option("--answers <jsonPath>", "Answers JSON (tenant-integrations-setup skill)")
+    .option("--topic <name>", "Guide topic (platform-implement-guide skill)")
+    .option("--json", "JSON output (platform-implement-guide skill)")
     .action((id, opts) =>
       runSkill(id, {
         days: opts.days ? parseInt(opts.days, 10) : undefined,
@@ -452,6 +495,8 @@ export function registerPlatformCommands(program: Command): void {
         channel: opts.channel,
         slackChannel: opts.slackChannel,
         answers: opts.answers,
+        topic: opts.topic,
+        json: opts.json,
       })
     );
 
@@ -524,10 +569,12 @@ export function registerPlatformCommands(program: Command): void {
   operatorCmd
     .command("sync-policy")
     .description("Sync operator-policy.md to Cursor rule / AGENTS.md")
-    .option("--emit <target>", "cursor | agents-md | dev-guide | all", "all")
+    .option("--emit <target>", "cursor | agents-md | dev-guide | engineering | all", "all")
     .action(async (opts) => {
       const { runOperatorSyncPolicy } = await import("../../commands/operator.js");
-      runOperatorSyncPolicy({ emit: opts.emit as "cursor" | "agents-md" | "dev-guide" | "all" });
+      runOperatorSyncPolicy({
+        emit: opts.emit as "cursor" | "agents-md" | "dev-guide" | "engineering" | "all",
+      });
     });
   operatorCmd
     .command("export")

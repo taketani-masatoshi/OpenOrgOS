@@ -11,6 +11,12 @@
 
 `classification-registry.yaml` · `.gitignore` · `.cursorignore` の **整合レビュー** · インシデント初動チェックリスト · アクセス境界の監査（読取中心）。
 
+**Wire 本番ゲート（read/review 責任）:**
+
+- `orgos doctor --wire-prod` · `src/lib/protocol/prod-wire-gate.ts` の本番可否レビュー
+- Wire credential · classification 境界の違反指摘（**送信承認は CEO/approver**）
+- Platform 実装のセキュリティ観点レビュー — 実装修復は **engineering** へ委譲
+
 ## Primary Folders
 
 | パス | 用途 |

@@ -2,5 +2,5 @@ skills:
   - id: professional_services_ops
     file: professional_services_ops.md
     runtime: cursor-only
-    agent: Operations
     description: professional_services module operations checklist
+    agent_id: operations

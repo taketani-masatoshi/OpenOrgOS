@@ -1,0 +1,9 @@
+version: 1
+# 正本: data/operator/agents.yaml（agents-enabled.yaml は廃止）
+# 初期化: orgos agent roster init
+# 検証: orgos agent roster validate
+profiles:
+  operational: []
+  developer:
+    - platform_guide
+disabled: []

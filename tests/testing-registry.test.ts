@@ -114,10 +114,10 @@ describe("testing registry", () => {
     expect(registry.stats.static_test_cases).toBe(countStaticTestCases());
   });
 
-  it("declares 29 catalog modules aligned with readiness.yaml", () => {
+  it("declares 30 catalog modules aligned with readiness.yaml", () => {
     const registry = loadTestRegistry();
-    expect(Object.keys(registry.catalog_modules).length).toBe(29);
-    expect(registry.stats.catalog_total).toBe(29);
+    expect(Object.keys(registry.catalog_modules).length).toBe(30);
+    expect(registry.stats.catalog_total).toBe(30);
   });
 
   it("built registry from disk matches committed yaml", () => {
@@ -133,7 +133,7 @@ describe("testing registry", () => {
 
   it("security-rbac CI suite files exist on disk", () => {
     const files = listTestsForCiSuite("security-rbac");
-    expect(files.length).toBe(10);
+    expect(files.length).toBe(11);
     for (const f of files) {
       expect(listTestFilesOnDisk()).toContain(f);
     }

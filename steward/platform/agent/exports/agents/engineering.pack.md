@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · engineering
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-08 · **Tenant:** mal
+> **Generated:** 2026-07-11 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent engineering`
 
 ---
@@ -30,7 +30,9 @@ Data → YAML/MD 正本
 | 主体 | 読取 | 禁止 |
 |------|------|------|
 | **Executive Steward** | `docs/reports/dashboard/` · `agent-summaries/` · `executive-notes/` | `data/**/*.yaml` 直読 · 契約本文詳細 |
-| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` |
+| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` · 受信ポーリング |
+| **Mail Intake** | `mail-triage-queue.yaml` · `mail-received/`（@file のみ）· 分類ルール | 送信 · 承認 · L2 本文のチャット出力 |
+| **Mail Outbound** | `correspondence-drafts/` · `mail-config` · `external-contacts` | 承認 · 未承認送信 · L2 本文のチャット出力 |
 | **Finance / Contract / Compliance / Operations** | 各 `steward/core/agents/*_agent.md` の Primary Folders | 担当外編集 |
 | **Operator（汎用 LLM）** | ユーザ指示 + Today コンテキスト + 担当 Agent 定義 | L2/L3 値の出力 · 全フォルダ一括 @ |
 
@@ -66,8 +68,6 @@ orgos escalate complete --id IMP-... --notes "..."
 
 日次経営確認:
 
-```bash
-orgos chat today
 
 ---
 
@@ -85,6 +85,16 @@ orgos chat today
 ## 役割
 
 機能実装 · バグ修正 · テスト · リファクタ。**Work Order（IMP-*）** に基づき `src/` · `tests/` · `apps/` を編集。仕様不明点は CTO へ consult。
+
+**プラットフォーム実装境界（承認済み Work Order 内のみ）:**
+
+| パス | 用途 |
+|------|------|
+| `steward/core/agents/` · `steward/core/skills/` · `steward/modules/` | Agent/Skill/Module 追加 |
+| `docs/org-os/` | 仕様 · Wire/Hub 設計文書 |
+| `src/commands/` · `src/lib/` · `schemas/` · `tests/` | CLI · ドメインロジック |
+
+Platform Guide（advisor）は設計レビューのみ — **実装は本 Agent が担当**。
 
 ## Primary Folders
 
@@ -149,7 +159,8 @@ orgos agent pulse --agent engineering
 
 ## 3. Skills（参照）
 
-（なし）
+- `engineering_code_review` · agent · `steward/core/skills/extension/engineering_code_review.md`
+- `engineering_standards_check` · agent · `steward/core/skills/extension/engineering_standards_check.md`
 
 ---
 

@@ -2,5 +2,5 @@ skills:
   - id: event_operations_ops
     file: event_operations_ops.md
     runtime: cursor-only
-    agent: Operations
     description: event_operations module operations checklist
+    agent_id: operations

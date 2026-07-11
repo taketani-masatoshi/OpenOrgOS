@@ -1,6 +1,8 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
+import YAML from "yaml";
+import { agentId } from "../../schemas/classification.js";
 import { CORE_SKILL_REGISTRY_PATH, STEWARD_SKILLS_DIR } from "./steward-paths.js";
 import {
   getModuleRootDir,
@@ -17,7 +19,11 @@ const skillRegistrySchema = z.object({
       file: z.string(),
       runtime: z.enum(["cli", "cursor-only", "agent"]),
       cli_command: z.string().optional(),
-      agent: z.string(),
+      handler: z.string().optional(),
+      argv: z.array(z.string().min(1)).min(1).optional(),
+      required_options: z.array(z.string().min(1)).optional(),
+      deferred: z.string().min(1).optional(),
+      agent_id: agentId,
       description: z.string(),
     })
   ),
@@ -31,6 +37,14 @@ export interface ResolvedSkillEntry extends SkillRegistryEntry {
   moduleId?: string;
 }
 
+// Compatibility for the tenant-visible hospitality bundle. Its registry is outside
+// the active-context edit boundary, so canonical handler metadata is projected here
+// until that generated registry can be synchronized.
+const LEGACY_HANDLER_COMPAT: Readonly<Record<string, string>> = {
+  revpar_analysis: "revpar_analysis",
+  operations_records: "operations_records",
+};
+
 function normalizeSkillRuntime(runtime: SkillRegistryEntry["runtime"]): SkillRegistryEntry["runtime"] {
   return runtime === "cursor-only" ? "agent" : runtime;
 }
@@ -39,6 +53,7 @@ function loadRegistryAt(path: string): SkillRegistryEntry[] {
   return loadRegistryFile(path, skillRegistrySchema, () => ({ skills: [] })).skills.map((skill) => ({
     ...skill,
     runtime: normalizeSkillRuntime(skill.runtime),
+    handler: skill.handler ?? LEGACY_HANDLER_COMPAT[skill.id],
   }));
 }
 
@@ -105,8 +120,30 @@ export function resolveSkillFilePath(skill: ResolvedSkillEntry): string {
   return join(skill.skillDir, skill.file);
 }
 
-export function validateSkillRegistryFiles(scopeToTenant = false): string[] {
+export function validateSkillRegistryLegacyAgentFields(): string[] {
   const issues: string[] = [];
+  const paths = [CORE_SKILL_REGISTRY_PATH];
+  for (const moduleId of listCatalogModuleIds()) {
+    const registryPath = join(getModuleRootDir(moduleId), "skills", "registry.yaml");
+    if (existsSync(registryPath)) paths.push(registryPath);
+  }
+
+  for (const path of paths) {
+    const doc = YAML.parse(readFileSync(path, "utf-8")) as { skills?: Array<Record<string, unknown>> };
+    for (const skill of doc.skills ?? []) {
+      if ("agent" in skill && !("agent_id" in skill)) {
+        issues.push(`${path}: skill ${String(skill.id)} uses deprecated agent field — use agent_id`);
+      }
+      if ("agent" in skill && "agent_id" in skill) {
+        issues.push(`${path}: skill ${String(skill.id)} must not declare both agent and agent_id`);
+      }
+    }
+  }
+  return issues;
+}
+
+export function validateSkillRegistryFiles(scopeToTenant = false): string[] {
+  const issues: string[] = [...validateSkillRegistryLegacyAgentFields()];
   const seen = new Set<string>();
 
   for (const skill of loadSkillRegistry(scopeToTenant)) {
@@ -118,6 +155,25 @@ export function validateSkillRegistryFiles(scopeToTenant = false): string[] {
     }
     if (skill.runtime === "cli" && !skill.cli_command) {
       issues.push(`${skill.id}: cli runtime requires cli_command`);
+    }
+    if (skill.runtime === "cli") {
+      const classifications = [skill.handler, skill.argv, skill.deferred].filter(Boolean);
+      if (classifications.length === 0) {
+        issues.push(`${skill.id}: cli runtime is unwired; set handler, argv, or deferred`);
+      } else if (classifications.length > 1) {
+        issues.push(`${skill.id}: set exactly one of handler, argv, or deferred`);
+      }
+      if (skill.argv && skill.cli_command !== skill.argv.join(" ")) {
+        issues.push(`${skill.id}: cli_command must match argv`);
+      }
+      if (skill.handler && skill.handler !== skill.id) {
+        issues.push(`${skill.id}: handler must use the canonical skill id`);
+      }
+      if (skill.required_options?.length && !skill.handler) {
+        issues.push(`${skill.id}: required_options requires a typed handler`);
+      }
+    } else if (skill.handler || skill.argv || skill.required_options || skill.deferred) {
+      issues.push(`${skill.id}: agent runtime must not declare CLI invocation metadata`);
     }
   }
   return issues;

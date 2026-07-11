@@ -1,7 +1,21 @@
 # Core Agent レジストリ — 選択的拡張
 # テナントは agents.yaml で ON/OFF（将来）· 現状は全コア + 拡張有効
 
-version: 2
+version: 3
+
+defaults:
+  class: operational
+  activation: always
+  dispatch_modes: [consult, implement]
+  readiness_profile: operational
+  auto_route: true
+  auto_pulse: true
+
+# Legacy module-facing IDs remain accepted by schemas, but resolve to the
+# operational owner. They are not independent always-active Agent records.
+aliases:
+  property_rental: operations
+  hospitality: operations
 
 agents:
   executive_steward:
@@ -33,6 +47,24 @@ agents:
     status: active
     reports_to: secretary
     scope: 受信監視 · 分類 · 通知 · Mail Outbound ハンドオフ
+    access:
+      read:
+        - data/executive/
+        - records/executive/mail-received/
+        - steward/core/correspondence/
+      write:
+        - data/executive/mail-triage-queue.yaml
+        - data/executive/sender-identification-queue.yaml
+        - data/executive/ceo-inline-questions.yaml
+        - data/executive/mail-interpretation-queue.yaml
+    capability:
+      summary_slug: mail-intake
+      data_paths:
+        - data/executive/
+      docs_paths: []
+      pulse_checks:
+        - type: path_exists
+          path: data/executive/
 
   mail_outbound:
     id: mail_outbound
@@ -44,6 +76,23 @@ agents:
     status: active
     reports_to: secretary
     scope: 社外メール下書き · 承認起案 · 承認済み送信
+    access:
+      read:
+        - data/executive/
+        - data/org/pending-approvals.yaml
+        - docs/executive/correspondence-drafts/
+        - records/executive/
+      write:
+        - docs/executive/correspondence-drafts/
+    capability:
+      summary_slug: mail-outbound
+      data_paths:
+        - data/executive/external-contacts.yaml
+      docs_paths:
+        - docs/executive/correspondence-drafts/
+      pulse_checks:
+        - type: path_exists
+          path: docs/executive/
 
   setup:
     id: setup
@@ -117,6 +166,12 @@ agents:
     status: active
     reports_to: coo
     scope: 技術方針 · アーキテクチャ · エンジニアリング統括
+    access:
+      read:
+        - docs/engineering/
+        - docs/org-os/
+        - steward/
+      write: []
 
   engineering:
     id: engineering
@@ -128,6 +183,19 @@ agents:
     status: active
     reports_to: cto
     scope: 実装 · コード · CI · 技術調査
+    access:
+      read:
+        - src/
+        - tests/
+        - schemas/
+        - steward/
+        - docs/org-os/
+      write:
+        - src/
+        - tests/
+        - schemas/
+        - steward/
+        - docs/org-os/
 
   design_lead:
     id: design_lead
@@ -249,7 +317,14 @@ agents:
     required: false
     status: active
     reports_to: executive_steward
-    scope: アクセス境界 · 秘匿 · インシデント初動
+    scope: アクセス境界 · 秘匿 · インシデント初動 · Wire 本番ゲート
+    access:
+      read:
+        - data/classification-registry.yaml
+        - src/lib/wire-gateway/
+        - src/lib/protocol/
+        - steward/platform/protocol/
+      write: []
 
 
   # --- 一般企業拡張 P0–P2（2026-06）---
@@ -571,6 +646,35 @@ agents:
     scope: ISO 13485 · QMS · GVP · 薬事台帳
     binds_modules: [jp_medical_device]
 
+  platform_guide:
+    id: platform_guide
+    name: Platform Guide
+    name_ja: プラットフォーム実装ガイド
+    path: steward/core/agents/platform_guide_agent.md
+    tier: advisor
+    class: advisor
+    priority: P1
+    required: false
+    status: catalog
+    activation: developer_explicit
+    dispatch_modes: [consult]
+    readiness_profile: advisor
+    auto_route: false
+    auto_pulse: false
+    reports_to: cto
+    access:
+      read:
+        - steward/
+        - src/
+        - schemas/
+        - tests/
+        - docs/org-os/
+      write: []
+    implementation_delegate: engineering
+    architecture_delegate: cto
+    production_gate_delegate: security
+    scope: Agent/Skill/CLI/Module · Wire/Hub · OpenOrgOS 思想ガイド
+
 # 将来拡張候補
 extensions:
   group_consolidation:
@@ -585,3 +689,4 @@ gaps:
   - 一般企業 Agent の dashboard 要約自動生成
   - Growth Agent の Skill 自動要約（dashboard 連携）は Phase 2
   - 多法人・連結（グループ本社）
+  - "aliases.property_rental / aliases.hospitality は module 向け legacy ID — catalog agents ではなく operations へ解決"

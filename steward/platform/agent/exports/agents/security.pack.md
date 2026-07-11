@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · security
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-08 · **Tenant:** mal
+> **Generated:** 2026-07-11 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent security`
 
 ---
@@ -30,7 +30,9 @@ Data → YAML/MD 正本
 | 主体 | 読取 | 禁止 |
 |------|------|------|
 | **Executive Steward** | `docs/reports/dashboard/` · `agent-summaries/` · `executive-notes/` | `data/**/*.yaml` 直読 · 契約本文詳細 |
-| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` |
+| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` · 受信ポーリング |
+| **Mail Intake** | `mail-triage-queue.yaml` · `mail-received/`（@file のみ）· 分類ルール | 送信 · 承認 · L2 本文のチャット出力 |
+| **Mail Outbound** | `correspondence-drafts/` · `mail-config` · `external-contacts` | 承認 · 未承認送信 · L2 本文のチャット出力 |
 | **Finance / Contract / Compliance / Operations** | 各 `steward/core/agents/*_agent.md` の Primary Folders | 担当外編集 |
 | **Operator（汎用 LLM）** | ユーザ指示 + Today コンテキスト + 担当 Agent 定義 | L2/L3 値の出力 · 全フォルダ一括 @ |
 
@@ -66,8 +68,6 @@ orgos escalate complete --id IMP-... --notes "..."
 
 日次経営確認:
 
-```bash
-orgos chat today
 
 ---
 
@@ -85,6 +85,12 @@ orgos chat today
 ## 役割
 
 `classification-registry.yaml` · `.gitignore` · `.cursorignore` の **整合レビュー** · インシデント初動チェックリスト · アクセス境界の監査（読取中心）。
+
+**Wire 本番ゲート（read/review 責任）:**
+
+- `orgos doctor --wire-prod` · `src/lib/protocol/prod-wire-gate.ts` の本番可否レビュー
+- Wire credential · classification 境界の違反指摘（**送信承認は CEO/approver**）
+- Platform 実装のセキュリティ観点レビュー — 実装修復は **engineering** へ委譲
 
 ## Primary Folders
 
@@ -156,7 +162,8 @@ orgos agent pulse --agent security
 
 ## 3. Skills（参照）
 
-（なし）
+- `security_control_review` · agent · `steward/core/skills/extension/security_control_review.md`
+- `security_classification_audit` · agent · `steward/core/skills/extension/security_classification_audit.md`
 
 ---
 

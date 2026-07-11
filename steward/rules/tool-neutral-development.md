@@ -26,12 +26,13 @@
 | 種別 | 正本 | 禁止 |
 |------|------|------|
 | Operator / Agent ポリシー | `steward/rules/` | `.cursor/rules/` のみに書く |
+| エンジニアリング憲章 | `steward/rules/engineering/*.md` | `.cursor/rules/0*.mdc` 手編集 |
 | Agent 定義 | `steward/core/agents/*.md` · `steward/modules/*/agent.md` | Cursor `@` だけの参照 |
 | Skill 定義 | `steward/core/skills/` · `steward/modules/*/skills/` | チャット手順のみ |
 | 決定論処理 | `src/commands/` · `src/lib/` | LLM プロンプトのみ |
 | テナントデータ | `tenants/{id}/data/` · `docs/` | — |
 
-`.cursor/rules/*.mdc` は **`orgos operator sync-policy --emit all`** で再生成する。
+`.cursor/rules/*.mdc` は **`orgos operator sync-policy --emit all`** で再生成する（operator-policy · tool-neutral-development · **engineering 00–09**）。
 
 ### 2.2 参照の書き方（Agent · Skill · ドキュメント）
 
@@ -86,6 +87,22 @@ npm test
 
 Export 先: `steward/platform/agent/exports/agents/<id>.pack.md`
 
+### 2.6 Agent catalog · roster 変更後
+
+registry · roster · 生成物を一括同期する:
+
+```bash
+npm run agent:catalog:sync
+npm run agent:capability:sync
+npm run agent:docs:sync
+npm run agent:pipeline:check
+orgos platform registry-verify
+```
+
+テナント roster 初期化: `orgos agent roster init` / `init-all`
+Fixture 同期（Vitest overlay）: `npm run agent:roster:fixtures:sync`
+Advisor 運用: [agent-advisor-operations.md](agent-advisor-operations.md)
+
 ---
 
 ## 3. 機能追加チェックリスト
@@ -100,6 +117,7 @@ PR · Work Order 完了前に確認:
 - [ ] Work Order プロンプトが portable 形式（Path + @ 併記）
 - [ ] Agent 変更時 `orgos operator export` を実行済み
 - [ ] L2/L3 を tracked MD · テスト fixture に書いていない
+- [ ] [Engineering Constitution](openorgos-engineering-constitution.md) §11 Definition of Done を満たす（該当する場合）
 
 ---
 
@@ -137,7 +155,7 @@ PR · Work Order 完了前に確認:
 | `formatAgentPromptRef(agent, "portable")` | Work Order · ドキュメント用参照 |
 | `formatSkillReference(skill, "portable")` | Skill 添付指示 |
 | `exportPortableAgents()` | Agent pack 生成 |
-| `syncOperatorPolicy()` | AGENTS.md · Cursor rule ミラー |
+| `syncOperatorPolicy()` | AGENTS.md · Cursor rule ミラー · engineering 00–09 |
 
 実装: `src/lib/agent-portability.ts` · `src/lib/operator-policy.ts`
 
@@ -145,9 +163,12 @@ PR · Work Order 完了前に確認:
 
 ## 7. 関連
 
+- [openorgos-engineering-constitution.md](openorgos-engineering-constitution.md) — エンジニアリング憲章 · AI コーディングルール
 - [operator-policy.md](operator-policy.md) — Operator 境界 · L0–L3
 - [agent_skill_architecture.md](agent_skill_architecture.md) — 4 層 · Skill 一覧
 - [steward_os_principles.md](steward_os_principles.md) — 基本原則
 - [folder_access_policy.md](folder_access_policy.md) — Primary Folders
+- [docs/adr/](../../docs/adr/README.md) — Architecture Decision Records
+- [engineering/00-このフォルダについて.md](engineering/00-このフォルダについて.md) — engineering 00–09 分割正本 · Cursor ミラー
 
 **Mirror:** `.cursor/rules/tool-neutral-development.mdc` — `orgos operator sync-policy --emit all`

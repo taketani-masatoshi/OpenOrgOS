@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · mail_intake
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-10 · **Tenant:** mal
+> **Generated:** 2026-07-11 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent mail_intake`
 
 ---
@@ -76,6 +76,20 @@ orgos escalate complete --id IMP-... --notes "..."
 # Mail Intake Agent
 
 **4 層:** Agent — 受信メールの取込 · 分類 · 通知 · Secretary へのハンドオフ。`mail_intake` は **送信・承認を行わない**。
+
+## 目的
+
+- IMAP / Gmail API による受信監視とルールベース分類
+- 高優先度の Today / 通知と Mail Outbound へのハンドオフ
+
+## 禁止
+
+- `secretary correspondence send` · `org approval approve` · Wire · broker
+- L2 メール本文のチャット・tracked MD への転記
+
+## 要約出力
+
+`docs/reports/agent-summaries/mail-intake/{YYYY-MM-DD}-pulse.md` — `orgos agent pulse --agent mail_intake`
 
 ## 役割
 
@@ -199,7 +213,7 @@ orgos mail intake override --id MSG-... --disposition ham --routing secretary
 
 ## 3. Skills（参照）
 
-（なし）
+- `mail_intake_triage` · cli · `steward/core/skills/mail_intake_triage.md`
 
 ---
 

@@ -237,7 +237,8 @@ orgos agent pulse --agent compliance
 
 ## 3. Skills（参照）
 
-（なし）
+- `permit_expiry_check` · cli · `steward/core/skills/permit_expiry_check.md`
+- `iso_control_review` · cli · `steward/core/skills/iso_control_review.md`
 
 ---
 

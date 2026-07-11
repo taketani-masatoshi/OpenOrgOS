@@ -101,6 +101,12 @@ export const todaySchedulingCaseSchema = z.object({
   pending_participants: z.number().int().nonnegative(),
 });
 
+export const todayAgentRosterItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  tier: z.string(),
+});
+
 export const todayContextSchema = z.object({
   tenant: z.string(),
   report_date: z.string(),
@@ -149,6 +155,11 @@ export const todayContextSchema = z.object({
   cashflow_runway_days: z.number().nullable().optional(),
   cashflow_required_funding_amount: z.number().nonnegative().nullable().optional(),
   cashflow_required_funding_by_date: z.string().nullable().optional(),
+  agent_roster_configured: z.boolean().default(false),
+  agent_roster_operational_count: z.number().int().nonnegative().default(0),
+  agent_roster_developer_count: z.number().int().nonnegative().default(0),
+  agent_roster_operational: z.array(todayAgentRosterItemSchema).default([]),
+  agent_roster_developer: z.array(todayAgentRosterItemSchema).default([]),
 });
 
 export type TodayContext = z.output<typeof todayContextSchema>;

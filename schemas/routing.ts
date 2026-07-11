@@ -19,6 +19,7 @@ export const routeDefinitionSchema = z.object({
   priority: z.number().int().default(0),
   boundary: routeBoundarySchema.default("default"),
   module_agent: z.boolean().default(false),
+  profiles: z.array(z.enum(["operational", "developer"])).default(["operational"]),
 });
 
 export const routingRegistrySchema = z.object({
@@ -35,6 +36,36 @@ export type RoutingRegistry = z.output<typeof routingRegistrySchema>;
 export const taskTypeSchema = z.enum(["consult", "implement"]);
 export const handoffPrioritySchema = z.enum(["P0", "P1", "P2", "P3"]);
 export const handoffModeSchema = z.enum(["suggest", "auto", "implement"]);
+export const handoffExecutionDecisionSchema = z.enum([
+  "direct_skill",
+  "work_order",
+  "human_approval",
+]);
+export const handoffInvocationStatusSchema = z.enum([
+  "planned",
+  "running",
+  "succeeded",
+  "failed",
+  "deferred",
+  "work_order",
+  "human_approval",
+]);
+
+export const handoffInvocationSchema = z.object({
+  decision: handoffExecutionDecisionSchema,
+  status: handoffInvocationStatusSchema,
+  skill_id: z.string().optional(),
+  execution: z.enum(["handler", "argv", "agent", "deferred", "unwired"]).optional(),
+  argv: z.array(z.string()).optional(),
+  arguments: z.record(z.string(), z.unknown()).default({}),
+  required_arguments: z.array(z.string()).default([]),
+  missing_arguments: z.array(z.string()).default([]),
+  attempts: z.number().int().nonnegative().default(0),
+  result: z.string().optional(),
+  failure_reason: z.string().optional(),
+  started_at: z.string().optional(),
+  finished_at: z.string().optional(),
+});
 
 export const handoffSchema = z.object({
   id: z.string(),
@@ -67,10 +98,12 @@ export const handoffSchema = z.object({
   priority: handoffPrioritySchema.optional(),
   tenant: z.string().optional(),
   completion_notes: z.string().optional(),
+  invocation: handoffInvocationSchema.optional(),
 });
 
 export type TaskType = z.output<typeof taskTypeSchema>;
 export type HandoffMode = z.output<typeof handoffModeSchema>;
+export type HandoffInvocation = z.output<typeof handoffInvocationSchema>;
 export type Handoff = z.output<typeof handoffSchema>;
 
 export interface EscalationInput {

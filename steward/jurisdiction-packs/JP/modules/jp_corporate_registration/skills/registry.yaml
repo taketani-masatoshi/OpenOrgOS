@@ -3,12 +3,13 @@ skills:
     file: jp_corporate_registration_ops.md
     runtime: cli
     cli_command: operations corporate
-    agent: Secretary
+    deferred: "parent command; incorporation type and required arguments are missing"
     description: 株式会社設立登記 — 定款 · 創立総会 · 登記申請書
-
+    agent_id: secretary
   - id: jp_registry_change
     file: jp_corporate_registration_ops.md
     runtime: cli
     cli_command: operations corporate
-    agent: Secretary
+    deferred: "parent command; registry change type and required arguments are missing"
     description: 変更登記 — 本店移転 · 役員 · 商号 · 目的 · 資本
+    agent_id: secretary

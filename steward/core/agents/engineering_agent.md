@@ -11,6 +11,16 @@
 
 機能実装 · バグ修正 · テスト · リファクタ。**Work Order（IMP-*）** に基づき `src/` · `tests/` · `apps/` を編集。仕様不明点は CTO へ consult。
 
+**プラットフォーム実装境界（承認済み Work Order 内のみ）:**
+
+| パス | 用途 |
+|------|------|
+| `steward/core/agents/` · `steward/core/skills/` · `steward/modules/` | Agent/Skill/Module 追加 |
+| `docs/org-os/` | 仕様 · Wire/Hub 設計文書 |
+| `src/commands/` · `src/lib/` · `schemas/` · `tests/` | CLI · ドメインロジック |
+
+Platform Guide（advisor）は設計レビューのみ — **実装は本 Agent が担当**。
+
 ## Primary Folders
 
 | パス | 用途 |

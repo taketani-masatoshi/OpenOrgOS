@@ -27,11 +27,22 @@ describe("agent reporting chain", () => {
     if (existsSync(dir)) rmSync(dir, { recursive: true, force: true });
   });
 
-  it("treats core agents and extensions as field agents (not coo/steward)", () => {
+  it("treats core agents and extensions as field agents (not coo/steward/advisor)", () => {
     expect(isFieldAgent("finance")).toBe(true);
     expect(isFieldAgent("engineering")).toBe(true);
     expect(isFieldAgent("coo")).toBe(false);
     expect(isFieldAgent("executive_steward")).toBe(false);
+    expect(isFieldAgent("platform_guide")).toBe(false);
+  });
+
+  it("rejects implement orders to platform_guide advisor", () => {
+    expect(() =>
+      createAgentOrder({
+        toAgent: "platform_guide",
+        subject: "platform 実装",
+        fromActor: "executive_steward",
+      })
+    ).toThrow(/not a field agent/);
   });
 
   it("creates order → report → COO forward → Steward ack", () => {

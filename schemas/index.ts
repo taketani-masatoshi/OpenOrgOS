@@ -20,6 +20,8 @@ export * from "./regulations-catalog.js";
 export * from "./tenant-regulations.js";
 export * from "./control-framework.js";
 export * from "./agent-capability.js";
+export * from "./agent-catalog.js";
+export * from "./agent-roster.js";
 export * from "./ops-config.js";
 export * from "./routing.js";
 export * from "./audit-log.js";

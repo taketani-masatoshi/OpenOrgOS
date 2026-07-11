@@ -1,4 +1,7 @@
-# 現場 Agent → COO → Executive Steward 報告線
+# 実行報告の中継ポリシー（組織上の上司ではない）
+# 組織線は steward/core/agents/registry.yaml の reports_to が正本。
+# 本ファイルは現場 Agent の pulse / Work Order 完了報告を
+# COO が Executive Steward へ中継する transport policy。
 # CLI: orgos agent order | report | relay
 
 version: "1.0"

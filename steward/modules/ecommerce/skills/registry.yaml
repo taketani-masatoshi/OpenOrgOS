@@ -2,5 +2,5 @@ skills:
   - id: ecommerce_ops
     file: ecommerce_ops.md
     runtime: cursor-only
-    agent: Operations
     description: ecommerce module operations checklist
+    agent_id: operations

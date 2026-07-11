@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · privacy_officer
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-08 · **Tenant:** mal
+> **Generated:** 2026-07-11 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent privacy_officer`
 
 ---
@@ -30,7 +30,9 @@ Data → YAML/MD 正本
 | 主体 | 読取 | 禁止 |
 |------|------|------|
 | **Executive Steward** | `docs/reports/dashboard/` · `agent-summaries/` · `executive-notes/` | `data/**/*.yaml` 直読 · 契約本文詳細 |
-| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` |
+| **Secretary** | `data/executive/**` · 要約行のみ dashboard | `data/finance/**` · `data/contracts/**` · 受信ポーリング |
+| **Mail Intake** | `mail-triage-queue.yaml` · `mail-received/`（@file のみ）· 分類ルール | 送信 · 承認 · L2 本文のチャット出力 |
+| **Mail Outbound** | `correspondence-drafts/` · `mail-config` · `external-contacts` | 承認 · 未承認送信 · L2 本文のチャット出力 |
 | **Finance / Contract / Compliance / Operations** | 各 `steward/core/agents/*_agent.md` の Primary Folders | 担当外編集 |
 | **Operator（汎用 LLM）** | ユーザ指示 + Today コンテキスト + 担当 Agent 定義 | L2/L3 値の出力 · 全フォルダ一括 @ |
 
@@ -66,8 +68,6 @@ orgos escalate complete --id IMP-... --notes "..."
 
 日次経営確認:
 
-```bash
-orgos chat today
 
 ---
 
@@ -151,7 +151,8 @@ orgos agent pulse --agent privacy_officer
 
 ## 3. Skills（参照）
 
-（なし）
+- `privacy_impact_review` · agent · `steward/core/skills/extension/privacy_impact_review.md`
+- `privacy_data_inventory` · agent · `steward/core/skills/extension/privacy_data_inventory.md`
 
 ---
 

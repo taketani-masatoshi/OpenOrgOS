@@ -141,7 +141,7 @@ npm run orgos -- skills run tenant-integrations-setup
 
 ## 3. Skills（参照）
 
-（なし）
+- `tenant_integrations_setup` · cli · `steward/core/skills/tenant_integrations_setup.md`
 
 ---
 
