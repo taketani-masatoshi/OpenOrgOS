@@ -132,8 +132,8 @@ monthly_cost: 50000
       fromEmail: "wire@demo.example",
     });
     const folded = mime.replace(
-      /("approval_policy_ref":"REG-004")/,
-      '"approval_po\r\n licy_ref":"REG-004"'
+      /("wireVersion":"0\.1")/,
+      '"wireVers\r\n ion":"0.1"'
     );
     const emlPath = join(getMailReceivedDir(), "wire-folded.eml");
     writeFileSync(emlPath, folded, "utf-8");

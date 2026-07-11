@@ -126,7 +126,7 @@ export async function parseWireEml(emlPath: string): Promise<ParsedWireEmail | n
   );
   let payload =
     attachment?.content?.toString("utf-8") ?? extractWirePayloadFromRaw(raw) ?? "";
-  if (payload && !attachment) {
+  if (payload) {
     payload = unfoldMimeBody(payload);
   }
 

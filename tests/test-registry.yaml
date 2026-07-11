@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 296
-  static_test_cases: 1114
-  tiered_execution_total: 296
+  vitest_total: 299
+  static_test_cases: 1130
+  tiered_execution_total: 299
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -519,6 +519,10 @@ tests:
     kind: unit
     domain: P01_kernel
   correspondence-approval-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-approval-registry-repair.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -1223,6 +1227,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  scheduling-operational-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   scheduling-proposal-authority.test.ts:
     axis: platform
     kind: unit
@@ -1281,6 +1289,10 @@ tests:
     catalog_ids:
       - rental
       - restaurant
+  skill-dispatch-contract.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   skill-invocation.test.ts:
     axis: platform
     kind: unit

@@ -24,7 +24,7 @@
 | `data/finance/payroll.yaml` | 給与支払 |
 | `data/finance/fixed-costs.yaml` | 固定費 |
 | `data/finance/tax-profile.yaml` | 税務区分 |
-| `data/finance/chart-of-accounts.yaml` | 勘定科目と category mapping |
+| `data/finance/bank-statements.yaml` | 銀行 CSV 取込 actual（`orgos jp bank statement import`） |
 
 ### 2.1 P0 / P1 の正本と排他
 
@@ -46,7 +46,11 @@
 |------|------|
 | 生成レポート | `docs/finance/treasury/cashflow-schedule/{date}-{granularity}.md` |
 | CSV | 同上 `.csv` |
+| 明細 CSV | 同上 `-detail.csv`（rollup 行ごとの `detail_line_ids` / 明細行） |
 | Agent 要約 | `docs/reports/agent-summaries/accounting/` · `treasury/` |
+
+`orgos pipeline daily` 実行時に weekly JSON/MD と daily 明細 CSV を自動再生成する。
+Steward Chat Today は `generated_at` / `age_days` / `stale`（7 日超）を L1 表示する。
 
 ## 4. CLI
 
@@ -77,7 +81,7 @@ payment calendar から金額を取得できる税支払だけを出力する。
 | account_id | `BANK-xxx` のみ（L2 口座番号禁止） |
 | planned / actual / forecast | 3 列（Phase 2 以降 forecast 列を yojitsu 連動） |
 | balance_total | 合計残高 |
-| source | actual / planned / ar-ap / tax-calendar / payment-calendar |
+| source | actual / planned / ar-ap / import / tax-calendar / payment-calendar |
 
 schedule の `shortfall_amount` は最初に負残高となった時点の残高を保持する。
 `required_funding_amount` は期間内最小残高から `max(0, -minimum)` で算出し、

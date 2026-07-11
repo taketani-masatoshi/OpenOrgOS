@@ -90,7 +90,7 @@ cp tenants/mal/records/executive/mail-config.yaml.example \
 # 3. readiness + doctor
 ./scripts/phase4-mal-email-wire-live.sh mal check
 
-# 4. live roundtrip（ai@malkk.com → info@malkk.com → IMAP → wire-scan）
+# 4. live roundtrip（ai@malkk.com → ai+wireloop@malkk.com → IMAP → wire-scan）
 ./scripts/phase4-mal-email-wire-live.sh mal live
 ```
 

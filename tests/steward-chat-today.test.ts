@@ -96,7 +96,7 @@ describe("steward chat today", () => {
     snapshotAndWrite(
       schedulePath,
       JSON.stringify({
-        generated_at: "9999-12-31T00:00:00.000Z",
+        generated_at: "2020-01-01T00:00:00.000Z",
         granularity: "weekly",
         horizon_start: "9999-12-31",
         horizon_end: "9999-12-31",
@@ -122,8 +122,8 @@ describe("steward chat today", () => {
     expect(summary.runway_days).toBe(3);
     expect(summary.required_funding_amount).toBe(500);
     expect(summary.required_funding_by_date).toBe("9999-12-31");
-    expect(summary.generated_at).toBe("9999-12-31T00:00:00.000Z");
-    expect(summary.age_days).toBeGreaterThanOrEqual(0);
+    expect(summary.generated_at).toBe("2020-01-01T00:00:00.000Z");
+    expect(summary.age_days).toBeGreaterThan(7);
     expect(summary.stale).toBe(true);
     const ctx = buildTodayContext();
     expect(ctx.cashflow_required_funding_amount).toBe(500);
