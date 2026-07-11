@@ -1,3 +1,4 @@
+// @catalog-ids: rental, restaurant
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { existsSync, rmSync } from "node:fs";

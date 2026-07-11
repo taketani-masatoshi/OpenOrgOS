@@ -3,10 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 225
+  vitest_total: 247
+  static_test_cases: 893
+  tiered_execution_total: 247
   catalog_total: 29
   catalog_cli_registered: 18
-  catalog_gap: 9
+  catalog_gap: 0
+  catalog_dedicated: 11
+  catalog_bundled: 9
+  catalog_only: 9
 platform_domains:
   P01_kernel:
     layer: 1
@@ -23,37 +28,56 @@ platform_domains:
   P06_agent_workflow:
     layer: 4
 catalog_modules:
-  jp_permit_registry:
-    tier: skeleton
-    coverage_tier: full
+  clinic:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/clinic.test.ts
+  construction:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/construction.test.ts
+  ecommerce:
+    tier: production_ready
+    coverage_tier: bundled
     cli: true
     tests:
-      - jp-permit-registry.test.ts
-      - jp-permit-registry-application.test.ts
-  travel_booking:
+      - catalog/bundled-modules-contract.test.ts
+      - wave-modules-cli.test.ts
+  education:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/education.test.ts
+  event_operations:
+    tier: production_ready
+    coverage_tier: bundled
+    cli: true
+    tests:
+      - catalog/bundled-modules-contract.test.ts
+      - wave-modules-cli.test.ts
+  event_space:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/event-space.test.ts
+  hospitality:
     tier: production_ready
     coverage_tier: dedicated
     cli: true
     tests:
-      - travel-booking.test.ts
-  language_bridge:
+      - hospitality.test.ts
+  jp_carbon_neutral_2050:
     tier: production_ready
-    coverage_tier: dedicated
-    cli: true
+    coverage_tier: catalog_only
+    cli: false
     tests:
-      - language-bridge.test.ts
-  jp_subsidy_application:
-    tier: production_ready
-    coverage_tier: dedicated
-    cli: true
-    tests:
-      - jp-subsidy-application.test.ts
-  jp_trademark_application:
-    tier: production_ready
-    coverage_tier: dedicated
-    cli: true
-    tests:
-      - jp-trademark-application.test.ts
+      - catalog/jp-carbon-neutral-2050.test.ts
   jp_corporate_registration:
     tier: production_ready
     coverage_tier: dedicated
@@ -66,130 +90,132 @@ catalog_modules:
     cli: true
     tests:
       - jp-medical-device.test.ts
-  rental:
-    tier: production_ready
-    coverage_tier: partial
-    cli: false
-    tests:
-      - invoice.test.ts
-      - skeleton.test.ts
-  restaurant:
-    tier: production_ready
-    coverage_tier: partial
-    cli: false
-    tests:
-      - skeleton.test.ts
-  venture_capital:
-    tier: production_ready
-    coverage_tier: partial
+  jp_permit_registry:
+    tier: skeleton
+    coverage_tier: full
     cli: true
     tests:
-      - venture-capital.test.ts
+      - jp-permit-registry-application.test.ts
+      - jp-permit-registry.test.ts
+  jp_privacy_policy:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/jp-privacy-policy.test.ts
+  jp_subsidy_application:
+    tier: production_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - jp-subsidy-application.test.ts
+  jp_trademark_application:
+    tier: production_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - jp-trademark-application.test.ts
+  jp_women_empowerment:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/jp-women-empowerment.test.ts
+  language_bridge:
+    tier: production_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - language-bridge.test.ts
+  logistics:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/logistics.test.ts
+  membership:
+    tier: production_ready
+    coverage_tier: bundled
+    cli: true
+    tests:
+      - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
-  hospitality:
-    tier: production_ready
-    coverage_tier: partial
-    cli: true
-    tests: []
   professional_services:
     tier: production_ready
     coverage_tier: bundled
     cli: true
     tests:
-      - wave-modules-cli.test.ts
-  saas_subscription:
-    tier: production_ready
-    coverage_tier: bundled
-    cli: true
-    tests:
+      - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
   property_management:
     tier: production_ready
     coverage_tier: bundled
     cli: true
     tests:
-      - wave-modules-cli.test.ts
-  software_outsourcing:
-    tier: production_ready
-    coverage_tier: bundled
-    cli: true
-    tests:
+      - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
   real_estate_brokerage:
     tier: production_ready
     coverage_tier: bundled
     cli: true
     tests:
+      - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
-  membership:
+  rental:
+    tier: production_ready
+    coverage_tier: dedicated
+    cli: false
+    tests:
+      - invoice.test.ts
+      - rental.test.ts
+      - skeleton.test.ts
+  restaurant:
+    tier: production_ready
+    coverage_tier: dedicated
+    cli: false
+    tests:
+      - restaurant.test.ts
+      - skeleton.test.ts
+  retail_store:
+    tier: production_ready
+    coverage_tier: catalog_only
+    cli: false
+    tests:
+      - catalog/retail-store.test.ts
+  saas_subscription:
     tier: production_ready
     coverage_tier: bundled
     cli: true
     tests:
+      - catalog/bundled-modules-contract.test.ts
+      - wave-modules-cli.test.ts
+  software_outsourcing:
+    tier: production_ready
+    coverage_tier: bundled
+    cli: true
+    tests:
+      - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
   staffing:
     tier: production_ready
     coverage_tier: bundled
     cli: true
     tests:
+      - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
-  ecommerce:
+  travel_booking:
     tier: production_ready
-    coverage_tier: bundled
+    coverage_tier: dedicated
     cli: true
     tests:
-      - wave-modules-cli.test.ts
-  event_operations:
+      - travel-booking.test.ts
+  venture_capital:
     tier: production_ready
-    coverage_tier: bundled
+    coverage_tier: dedicated
     cli: true
     tests:
+      - venture-capital.test.ts
       - wave-modules-cli.test.ts
-  clinic:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  construction:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  education:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  event_space:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  logistics:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  retail_store:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  jp_carbon_neutral_2050:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  jp_women_empowerment:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
-  jp_privacy_policy:
-    tier: production_ready
-    coverage_tier: gap
-    cli: false
-    tests: []
 ci_suites:
   security-rbac:
     source: .github/workflows/validate.yml
@@ -310,6 +336,64 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  catalog/bundled-modules-contract.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - professional_services
+      - saas_subscription
+      - property_management
+      - software_outsourcing
+      - real_estate_brokerage
+      - membership
+      - staffing
+      - ecommerce
+      - event_operations
+  catalog/clinic.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - clinic
+  catalog/construction.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - construction
+  catalog/education.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - education
+  catalog/event-space.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - event_space
+  catalog/jp-carbon-neutral-2050.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_carbon_neutral_2050
+  catalog/jp-privacy-policy.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_privacy_policy
+  catalog/jp-women-empowerment.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_women_empowerment
+  catalog/logistics.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - logistics
+  catalog/retail-store.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - retail_store
   chat-audit.test.ts:
     axis: platform
     kind: unit
@@ -402,7 +486,31 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  correspondence-ceo-inline-chat.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-gmail-oauth.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-gmail-send.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-gmail-setup-wizard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-gmail-sync.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   correspondence-human-approval-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-mail-handoff.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -492,6 +600,11 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  hospitality.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - hospitality
   hub-federation.test.ts:
     axis: platform
     kind: unit
@@ -788,6 +901,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  protocol-community-tenant-mail-api.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   protocol-cross-hub-reconcile.test.ts:
     axis: platform
     kind: unit
@@ -797,14 +914,14 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
-    tags:
-      - P04_wire_stack
   protocol-email-wire-deliver.test.ts:
     axis: platform
     kind: unit
     domain: P04_wire_stack
-    tags:
-      - P03_correspondence_org
+  protocol-email-wire-ingest.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   protocol-external-verify.test.ts:
     axis: platform
     kind: unit
@@ -826,8 +943,6 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
-    tags:
-      - P04_wire_stack
   protocol-multipath.test.ts:
     axis: platform
     kind: unit
@@ -853,8 +968,6 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
-    tags:
-      - P04_wire_stack
   protocol-relay-worker.test.ts:
     axis: platform
     kind: unit
@@ -912,8 +1025,6 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
-    tags:
-      - P04_wire_stack
   protocol-witness-policy.test.ts:
     axis: platform
     kind: unit
@@ -958,6 +1069,16 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  rental.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - rental
+  restaurant.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - restaurant
   routing.test.ts:
     axis: integration
     kind: integration
@@ -1014,8 +1135,6 @@ tests:
     kind: integration
     domain: P01_kernel
     integration: I2_protocol_e2e
-    tags:
-      - P01_kernel
   standards.test.ts:
     axis: platform
     kind: unit
@@ -1070,6 +1189,9 @@ tests:
   test-suite-status.test.ts:
     axis: meta
     kind: meta
+  testing-modules-doc-sync.test.ts:
+    axis: meta
+    kind: meta
   testing-registry.test.ts:
     axis: contract
     kind: contract
@@ -1078,8 +1200,6 @@ tests:
     kind: integration
     domain: P01_kernel
     integration: I2_protocol_e2e
-    tags:
-      - P01_kernel
   tjs-11-progress.test.ts:
     axis: meta
     kind: meta
@@ -1176,8 +1296,6 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
-    tags:
-      - P04_wire_stack
   wire-gateway-server.test.ts:
     axis: platform
     kind: server
@@ -1195,8 +1313,6 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
-    tags:
-      - P04_wire_stack
   wire-trust-registry-governance.test.ts:
     axis: platform
     kind: unit

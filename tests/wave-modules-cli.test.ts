@@ -1,3 +1,4 @@
+// @catalog-ids: professional_services, saas_subscription, property_management, software_outsourcing, real_estate_brokerage, venture_capital, membership, staffing, ecommerce, event_operations
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";

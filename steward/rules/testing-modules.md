@@ -1,23 +1,28 @@
 # OrgOS 論理テストモジュール分割（正本）
 
-**版:** 1.0 · **日付:** 2026-07-10  
+**版:** 1.2 · **日付:** 2026-07-11
 **機械可読:** [`tests/test-registry.yaml`](../tests/test-registry.yaml) · [`tests/test-registry.ts`](../tests/test-registry.ts)
 
 Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類し、段階実行で安定稼働を確認するための taxonomy 正本。
 
 ---
 
-## 1. 数値正本（2026-07-10 実測）
+## 1. 数値正本（registry 同期 · `npm run test:registry:sync`）
 
 | 指標 | 値 |
 |------|-----|
-| Vitest テストファイル | **225**（`tests/**/*.test.ts` · registry 含む） |
+| Vitest テストファイル | **247**（`tests/**/*.test.ts` · registry 含む） |
+| テストケース（静的 `it`/`test` **893**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
 | 業務 catalog module | **29**（core 21 + JP pack 8） |
 | production_ready | **28** |
 | skeleton | **1**（`jp_permit_registry`） |
 | CLI 登録（`MODULE_CLI_BUNDLES`） | **18** |
-| CLI なし | **11** |
-| catalog coverage gap | **9**（専用 cli/lib テストなし） |
+| catalog coverage gap | **0** |
+| catalog dedicated (+ full) | **11** |
+| catalog bundled | **9** |
+| catalog_only | **9** |
+
+整合テスト: [`tests/testing-registry.test.ts`](../tests/testing-registry.test.ts) · [`tests/testing-modules-doc-sync.test.ts`](../tests/testing-modules-doc-sync.test.ts)
 
 ---
 
@@ -29,8 +34,9 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 | **Platform** | `src/lib/` 6 ドメイン | `npm run test:platform` |
 | **Catalog** | 業務 module catalog id（29） | `npm run test:catalog` |
 | **Integration** | CLI subprocess · protocol E2E · mal 共有 queue | `npm run test:integration` |
-| **Full gate** | 全 225 件 | `npm test`（CI 正本） |
+| **Full gate** | 全件 | `npm test`（CI 正本） |
 | **Tiered** | 上記を依存順 | `npm run test:tiered` |
+| **Verify only** | 分類整合（Vitest なし） | `npm run test:tiered:verify` |
 
 ---
 
@@ -56,19 +62,24 @@ npm run test:platform -- P04_wire_stack
 | tier | 件数 | 説明 |
 |------|------|------|
 | full | 1 | 専用テスト 2 ファイル以上（`jp_permit_registry`） |
-| dedicated | 6 | 単一 module 向け `jp-*` / travel / language_bridge |
-| bundled | 10 | `wave-modules-cli.test.ts` に束ね |
-| partial | 4 | invoice/skeleton/CLI のみ（rental, restaurant, hospitality, venture_capital） |
-| gap | 9 | contract テストのみ — 新規 `tests/catalog/` 追加候補 |
+| dedicated | 10 | 単一 module 向けテスト（`jp-*` · travel · rental · hospitality 等） |
+| bundled | 9 | `wave-modules-cli.test.ts` + `catalog/bundled-modules-contract.test.ts` |
+| catalog_only | 9 | CLI なし module — `tests/catalog/{id}.test.ts` 各 1 ファイル |
+| gap | 0 | 未カバー — **禁止**（registry check で検出） |
 
 **Catalog モジュールテスト合格基準:**
 
 - `steward/modules/{id}/cli/lib.ts` または seed schema を直接 import
 - `setTenantId` で tenant を 1 つ明示
+- catalog_only: `catalog-module-harness` — manifest · `invoiceTemplateSchema` · activation seed Zod · readiness
 - HTTP / CLI subprocess 不要（必要なら integration へ）
-- 追加後: `npm run test:registry:sync`
+- 追加後: `npm run test:registry:sync` → `npm run test:registry:check`
 
-雛形: [`tests/catalog/_template.example.ts`](../tests/catalog/_template.example.ts)
+`catalog_modules` の `coverage_tier` · `cli` · `tests[]` は **手書き禁止** — `readiness.yaml` + **`buildCatalogFileMap()`**（テストファイル内容から自動導出）+ `MODULE_CLI_BUNDLES` から導出。
+
+新規 catalog_only 追加: `npm run test:registry:scaffold -- <catalog_id>` → sync → check。
+
+雛形: [`tests/catalog/_template.example.ts`](../tests/catalog/_template.example.ts) · 共有 harness: [`tests/catalog/catalog-module-harness.ts`](../tests/catalog/catalog-module-harness.ts)
 
 ---
 
@@ -83,7 +94,19 @@ npm run test:platform -- P04_wire_stack
 
 ---
 
-## 6. CI subset（registry 正本）
+## 6. CI gate（registry 正本）
+
+| ステップ | Job | 内容 |
+|---------|-----|------|
+| registry sync diff | `validate` | YAML commit 漏れ検出 |
+| registry check | `validate` | 双方向整合 · catalog · platform · CI suites |
+| tiered verify | `validate` | `npm run test:tiered:verify` |
+| full vitest | `validate` | `npm test` |
+
+`npm run test:tiered` はローカル診断用。CI は partition の完全性を `test:tiered:verify` で検証後、
+同じ全ファイルを一度だけ `npm test` で実行する（二重全件実行を避ける）。
+
+**CI subset suites:**
 
 | suite | 件数 | 定義 |
 |-------|------|------|
@@ -91,8 +114,6 @@ npm run test:platform -- P04_wire_stack
 | wire-gateway-smoke | 26 | validate.yml + governance 2 件 |
 | steward-chat-smoke | 28 | `package.json` |
 | wire-console-test | 5 | `package.json` |
-
-整合テスト: [`tests/testing-registry.test.ts`](../tests/testing-registry.test.ts)
 
 ---
 
@@ -108,8 +129,8 @@ npm run test:platform -- P04_wire_stack
 
 1. `tests/{name}.test.ts` を追加
 2. `npm run test:registry:sync` で YAML 再生成
-3. `npm run test:registry:check`（testing-registry.test.ts）が通ることを確認
-4. catalog module 向けなら `catalog_modules.{id}.coverage_tier` を [`test-registry.ts`](../tests/test-registry.ts) の `buildDefaultCatalogModules()` で更新
+3. `npm run test:registry:check` · `npm run test:tiered:verify` が通ることを確認
+4. catalog module 向けなら `buildDefaultCatalogModules()` の `coverage_tier` / `tests` を更新
 
 ---
 

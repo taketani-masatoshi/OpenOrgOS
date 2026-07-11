@@ -1,3 +1,4 @@
+// @catalog-ids: rental
 import { describe, it, expect } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import {

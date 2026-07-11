@@ -4,14 +4,16 @@
  * Regenerate: npm run test:registry:sync
  */
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, globSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { listModuleCliBundles } from "../src/lib/module-cli.js";
+import { getModuleSeedDir } from "../src/lib/modules.js";
 
 export type TestAxis = "catalog" | "platform" | "contract" | "integration" | "meta";
 export type TestKind = "unit" | "server" | "contract" | "integration" | "meta" | "bundled" | "shared-state";
-export type CoverageTier = "full" | "dedicated" | "bundled" | "partial" | "gap";
+export type CoverageTier = "full" | "dedicated" | "bundled" | "catalog_only" | "partial" | "gap";
 
 export type PlatformDomainId =
   | "P01_kernel"
@@ -30,7 +32,6 @@ export interface TestEntry {
   domain?: PlatformDomainId;
   integration?: IntegrationTier;
   catalog_ids?: string[];
-  tags?: string[];
 }
 
 export interface CatalogModuleEntry {
@@ -54,9 +55,14 @@ export interface TestRegistry {
   version: number;
   stats: {
     vitest_total: number;
+    static_test_cases: number;
+    tiered_execution_total: number;
     catalog_total: number;
     catalog_cli_registered: number;
     catalog_gap: number;
+    catalog_dedicated: number;
+    catalog_bundled: number;
+    catalog_only: number;
   };
   platform_domains: Record<PlatformDomainId, PlatformDomainEntry>;
   catalog_modules: Record<string, CatalogModuleEntry>;
@@ -66,34 +72,61 @@ export interface TestRegistry {
 
 const REGISTRY_DIR = dirname(fileURLToPath(import.meta.url));
 export const TEST_REGISTRY_PATH = join(REGISTRY_DIR, "test-registry.yaml");
+const READINESS_PATH = join(REGISTRY_DIR, "../steward/modules/readiness.yaml");
 
-const WAVE_MODULE_IDS = [
-  "professional_services",
-  "saas_subscription",
-  "property_management",
-  "software_outsourcing",
-  "real_estate_brokerage",
-  "venture_capital",
-  "membership",
-  "staffing",
-  "ecommerce",
-  "event_operations",
-] as const;
+let catalogFileMapCache: Record<string, string[]> | null = null;
 
-const CATALOG_FILE_MAP: Record<string, string[]> = {
-  "travel-booking.test.ts": ["travel_booking"],
-  "language-bridge.test.ts": ["language_bridge"],
-  "venture-capital.test.ts": ["venture_capital"],
-  "wave-modules-cli.test.ts": [...WAVE_MODULE_IDS],
-  "jp-permit-registry.test.ts": ["jp_permit_registry"],
-  "jp-permit-registry-application.test.ts": ["jp_permit_registry"],
-  "jp-corporate-registration.test.ts": ["jp_corporate_registration"],
-  "jp-medical-device.test.ts": ["jp_medical_device"],
-  "jp-subsidy-application.test.ts": ["jp_subsidy_application"],
-  "jp-trademark-application.test.ts": ["jp_trademark_application"],
-  "invoice.test.ts": ["rental"],
-  "skeleton.test.ts": ["rental", "restaurant"],
-};
+function parseCatalogIdsFromTestFile(relativePath: string): string[] {
+  const body = readFileSync(join(REGISTRY_DIR, relativePath), "utf-8");
+  const annotated = body.match(/@catalog-ids:[ \t]*([a-z0-9_, -]+)/i)?.[1];
+  if (annotated) {
+    return annotated
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+  }
+  const fromDescribe = body.match(/describeCatalogModule\(["']([^"']+)["']\)/)?.[1];
+  if (fromDescribe) return [fromDescribe];
+  const ids = [...body.matchAll(/loadModuleManifest\(["']([^"']+)["']\)/g)].map((m) => m[1]);
+  const fileStem = relativePath.replace(/^catalog\//, "").replace(/\.test\.ts$/, "");
+  return [...new Set(ids)].filter((id) => fileStem === id.replace(/_/g, "-"));
+}
+
+/** Build catalog_id → test files from test-local metadata and direct module references. */
+export function buildCatalogFileMap(): Record<string, string[]> {
+  const map: Record<string, string[]> = {};
+  for (const file of listTestFilesOnDisk()) {
+    const ids = parseCatalogIdsFromTestFile(file);
+    if (ids.length === 0) continue;
+    map[file] = ids;
+  }
+  return map;
+}
+
+function getCatalogFileMap(): Record<string, string[]> {
+  if (!catalogFileMapCache) catalogFileMapCache = buildCatalogFileMap();
+  return catalogFileMapCache;
+}
+
+export function assertCatalogFileMapCoversReadiness(map = buildCatalogFileMap()): string[] {
+  const readiness = YAML.parse(readFileSync(READINESS_PATH, "utf-8")) as {
+    modules: Record<string, { tier: string }>;
+  };
+  const covered = new Set<string>();
+  for (const ids of Object.values(map)) {
+    for (const id of ids) covered.add(id);
+  }
+  const issues: string[] = [];
+  for (const id of Object.keys(readiness.modules)) {
+    if (!covered.has(id)) issues.push(`${id}: no catalog test file maps to this module`);
+  }
+  return issues.sort();
+}
+
+export function assertCatalogSeedValidatorPresent(catalogId: string): string | null {
+  const validatorPath = join(getModuleSeedDir(catalogId), "validate.ts");
+  return existsSync(validatorPath) ? null : `${catalogId}: missing seed/validate.ts`;
+}
 
 const CONTRACT_FILES = new Set([
   "extensibility-contract.test.ts",
@@ -111,6 +144,7 @@ const META_FILES = new Set([
   "orgos-readiness.test.ts",
   "test-suite-status.test.ts",
   "docs-score-sync.test.ts",
+  "testing-modules-doc-sync.test.ts",
   "tjs-11-progress.test.ts",
   "folder-housekeeping.test.ts",
   "package-release.test.ts",
@@ -148,9 +182,6 @@ const INTEGRATION_I3 = new Set([
 ]);
 
 const INTEGRATION_I4 = new Set([
-  "eco-production-evidence.test.ts",
-  "standalone-org-demo.test.ts",
-  "three-org-wire-demo.test.ts",
   "mal-wire-peer-deliver.test.ts",
   "mal-wire-pilot-gate.test.ts",
   "mal-peers-trust-registry.test.ts",
@@ -176,6 +207,27 @@ function isIntegrationFile(base: string): IntegrationTier | undefined {
   if (base.includes("-integration") || base.endsWith("-e2e.test.ts")) return "I2_protocol_e2e";
   if (base.endsWith("-demo.test.ts")) return "I4_evidence";
   return undefined;
+}
+
+export function assertClassificationRuleSetsDisjoint(): string[] {
+  const groups: Array<[string, ReadonlySet<string>]> = [
+    ["contract", CONTRACT_FILES],
+    ["meta", META_FILES],
+    ["I1", INTEGRATION_I1],
+    ["I2", INTEGRATION_I2],
+    ["I3", INTEGRATION_I3],
+    ["I4", INTEGRATION_I4],
+  ];
+  const owners = new Map<string, string>();
+  const issues: string[] = [];
+  for (const [group, files] of groups) {
+    for (const file of files) {
+      const previous = owners.get(file);
+      if (previous) issues.push(`${file}: classification rule appears in ${previous} and ${group}`);
+      else owners.set(file, group);
+    }
+  }
+  return issues.sort();
 }
 
 function classifyPlatformDomain(base: string): PlatformDomainId {
@@ -257,7 +309,7 @@ export function classifyTestFile(filename: string): TestEntry {
     return { file: base, axis: "meta", kind: "meta" };
   }
 
-  const catalogIds = CATALOG_FILE_MAP[base];
+  const catalogIds = getCatalogFileMap()[base];
   if (catalogIds) {
     return {
       file: base,
@@ -285,7 +337,6 @@ export function classifyTestFile(filename: string): TestEntry {
       kind: "integration",
       domain,
       integration,
-      tags: integration === "I2_protocol_e2e" ? [domain] : undefined,
     };
   }
 
@@ -299,23 +350,17 @@ export function classifyTestFile(filename: string): TestEntry {
   }
 
   const domain = classifyPlatformDomain(base);
-  const tags: string[] = [];
-  if (base === "protocol-email-wire-deliver.test.ts") {
-    tags.push("P03_correspondence_org");
-  }
-
   return {
     file: base,
     axis: "platform",
     kind: inferKind(base, "platform"),
     domain,
-    tags: tags.length > 0 ? tags : undefined,
   };
 }
 
 export function listTestFilesOnDisk(): string[] {
-  return readdirSync(REGISTRY_DIR)
-    .filter((f) => f.endsWith(".test.ts"))
+  return globSync("**/*.test.ts", { cwd: REGISTRY_DIR })
+    .map((f) => f.replace(/\\/g, "/"))
     .sort();
 }
 
@@ -334,9 +379,20 @@ export function listTestsByAxis(axis: TestAxis, registry = loadTestRegistry()): 
     .sort();
 }
 
+/** Platform tier execution set — axis === platform only (excludes integration). */
+export function listTestsByPlatformAxis(registry = loadTestRegistry()): string[] {
+  return listTestsByAxis("platform", registry);
+}
+
+/** Platform tests within a domain — primary `domain` only (tags are metadata; no double-run in tiered). */
+export function listTestsByPlatformDomain(domain: PlatformDomainId, registry = loadTestRegistry()): string[] {
+  return listTestsByPlatformAxis(registry).filter((file) => registry.tests[file]?.domain === domain);
+}
+
+/** All tests whose primary domain matches (includes integration axis for reporting only). */
 export function listTestsByDomain(domain: PlatformDomainId, registry = loadTestRegistry()): string[] {
   return Object.entries(registry.tests)
-    .filter(([, e]) => e.domain === domain || e.tags?.includes(domain))
+    .filter(([, e]) => e.domain === domain)
     .map(([file]) => file)
     .sort();
 }
@@ -376,6 +432,101 @@ export interface RegistryAssertResult {
   staleClassifications: string[];
 }
 
+function catalogIdsKey(ids?: string[]): string {
+  return [...(ids ?? [])].sort().join(",");
+}
+
+function classificationDiff(
+  file: string,
+  entry: Omit<TestEntry, "file">,
+  inferred: TestEntry
+): string[] {
+  const diffs: string[] = [];
+  if (inferred.axis !== entry.axis) diffs.push(`axis ${entry.axis} != ${inferred.axis}`);
+  if (inferred.kind !== entry.kind) diffs.push(`kind ${entry.kind} != ${inferred.kind}`);
+  if (inferred.domain !== entry.domain) diffs.push(`domain ${entry.domain} != ${inferred.domain}`);
+  if (inferred.integration !== entry.integration) {
+    diffs.push(`integration ${entry.integration} != ${inferred.integration}`);
+  }
+  if (catalogIdsKey(inferred.catalog_ids) !== catalogIdsKey(entry.catalog_ids)) {
+    diffs.push(`catalog_ids [${catalogIdsKey(entry.catalog_ids)}] != [${catalogIdsKey(inferred.catalog_ids)}]`);
+  }
+  return diffs.map((d) => `${file}: ${d}`);
+}
+
+export function countStaticTestCases(): number {
+  let total = 0;
+  for (const file of listTestFilesOnDisk()) {
+    const body = readFileSync(join(REGISTRY_DIR, file), "utf-8");
+    total += (body.match(/\b(it|test)\s*\(/g) ?? []).length;
+  }
+  return total;
+}
+
+export function countTieredExecutionFiles(registry = loadTestRegistry()): number {
+  const files = [
+    ...listTestsByAxis("contract", registry),
+    ...listTestsByAxis("meta", registry),
+    ...listTestsByPlatformAxis(registry),
+    ...listTestsByAxis("catalog", registry),
+    ...listIntegrationTests(registry),
+  ];
+  return new Set(files).size;
+}
+
+export function assertTieredExecutionDisjoint(registry = loadTestRegistry()): string[] {
+  const groups: Array<[string, string[]]> = [
+    ["contract", listTestsByAxis("contract", registry)],
+    ["meta", listTestsByAxis("meta", registry)],
+    ["platform", listTestsByPlatformAxis(registry)],
+    ["catalog", listTestsByAxis("catalog", registry)],
+    ["integration", listIntegrationTests(registry)],
+  ];
+  const owner = new Map<string, string>();
+  const issues: string[] = [];
+  for (const [label, files] of groups) {
+    for (const file of files) {
+      const prev = owner.get(file);
+      if (prev) issues.push(`${file}: listed in both ${prev} and ${label}`);
+      else owner.set(file, label);
+    }
+  }
+  const unionSize = owner.size;
+  const axisSum = groups.reduce((n, [, files]) => n + files.length, 0);
+  if (unionSize !== axisSum) {
+    issues.push(`tiered groups overlap: union ${unionSize} != sum ${axisSum}`);
+  }
+  if (unionSize !== registry.stats.vitest_total) {
+    issues.push(`tiered union ${unionSize} != vitest_total ${registry.stats.vitest_total}`);
+  }
+  return issues.sort();
+}
+
+export function assertCatalogModuleRegistryBidirectional(registry = loadTestRegistry()): string[] {
+  const issues: string[] = [];
+  for (const [id, mod] of Object.entries(registry.catalog_modules)) {
+    for (const testFile of mod.tests) {
+      const entry = registry.tests[testFile];
+      if (!entry?.catalog_ids?.includes(id)) {
+        issues.push(`${id}: catalog_modules lists ${testFile} but tests entry lacks catalog_id`);
+      }
+    }
+  }
+  for (const [file, entry] of Object.entries(registry.tests)) {
+    for (const id of entry.catalog_ids ?? []) {
+      const mod = registry.catalog_modules[id];
+      if (!mod) {
+        issues.push(`${file}: unknown catalog_id ${id}`);
+        continue;
+      }
+      if (!mod.tests.includes(file)) {
+        issues.push(`${id}: ${file} in tests.catalog_ids but not catalog_modules.tests`);
+      }
+    }
+  }
+  return issues.sort();
+}
+
 export function assertAllTestsRegistered(registry = loadTestRegistry()): RegistryAssertResult {
   const onDisk = new Set(listTestFilesOnDisk());
   const inRegistry = new Set(Object.keys(registry.tests));
@@ -386,14 +537,11 @@ export function assertAllTestsRegistered(registry = loadTestRegistry()): Registr
   const staleClassifications: string[] = [];
   for (const [file, entry] of Object.entries(registry.tests)) {
     if (!onDisk.has(file)) continue;
-    const inferred = classifyTestFile(file);
-    if (inferred.axis !== entry.axis) {
-      staleClassifications.push(`${file}: axis ${entry.axis} != inferred ${inferred.axis}`);
-    }
+    staleClassifications.push(...classificationDiff(file, entry, classifyTestFile(file)));
   }
 
   return {
-    ok: missingInRegistry.length === 0 && extraInRegistry.length === 0,
+    ok: missingInRegistry.length === 0 && extraInRegistry.length === 0 && staleClassifications.length === 0,
     missingOnDisk: extraInRegistry,
     extraOnDisk: missingInRegistry,
     missingInRegistry,
@@ -401,38 +549,154 @@ export function assertAllTestsRegistered(registry = loadTestRegistry()): Registr
   };
 }
 
-export function buildDefaultCatalogModules(): Record<string, CatalogModuleEntry> {
-  const modules: Record<string, CatalogModuleEntry> = {
-    jp_permit_registry: { tier: "skeleton", coverage_tier: "full", cli: true, tests: ["jp-permit-registry.test.ts", "jp-permit-registry-application.test.ts"] },
-    travel_booking: { tier: "production_ready", coverage_tier: "dedicated", cli: true, tests: ["travel-booking.test.ts"] },
-    language_bridge: { tier: "production_ready", coverage_tier: "dedicated", cli: true, tests: ["language-bridge.test.ts"] },
-    jp_subsidy_application: { tier: "production_ready", coverage_tier: "dedicated", cli: true, tests: ["jp-subsidy-application.test.ts"] },
-    jp_trademark_application: { tier: "production_ready", coverage_tier: "dedicated", cli: true, tests: ["jp-trademark-application.test.ts"] },
-    jp_corporate_registration: { tier: "production_ready", coverage_tier: "dedicated", cli: true, tests: ["jp-corporate-registration.test.ts"] },
-    jp_medical_device: { tier: "production_ready", coverage_tier: "dedicated", cli: true, tests: ["jp-medical-device.test.ts"] },
-    rental: { tier: "production_ready", coverage_tier: "partial", cli: false, tests: ["invoice.test.ts", "skeleton.test.ts"] },
-    restaurant: { tier: "production_ready", coverage_tier: "partial", cli: false, tests: ["skeleton.test.ts"] },
-    venture_capital: { tier: "production_ready", coverage_tier: "partial", cli: true, tests: ["venture-capital.test.ts", "wave-modules-cli.test.ts"] },
-    hospitality: { tier: "production_ready", coverage_tier: "partial", cli: true, tests: [] },
-    professional_services: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    saas_subscription: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    property_management: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    software_outsourcing: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    real_estate_brokerage: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    membership: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    staffing: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    ecommerce: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    event_operations: { tier: "production_ready", coverage_tier: "bundled", cli: true, tests: ["wave-modules-cli.test.ts"] },
-    clinic: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    construction: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    education: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    event_space: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    logistics: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    retail_store: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    jp_carbon_neutral_2050: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    jp_women_empowerment: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
-    jp_privacy_policy: { tier: "production_ready", coverage_tier: "gap", cli: false, tests: [] },
+export function assertTierPartitionComplete(registry = loadTestRegistry()): string[] {
+  const onDisk = new Set(listTestFilesOnDisk());
+  const seen = new Set<string>();
+  const duplicates: string[] = [];
+  for (const file of Object.keys(registry.tests)) {
+    if (seen.has(file)) duplicates.push(file);
+    seen.add(file);
+  }
+  const missing = [...onDisk].filter((f) => !registry.tests[f]).sort();
+  const extra = [...seen].filter((f) => !onDisk.has(f)).sort();
+  return [...duplicates, ...missing.map((f) => `missing:${f}`), ...extra.map((f) => `extra:${f}`)];
+}
+
+export function assertCatalogModulesCovered(registry = loadTestRegistry()): string[] {
+  const onDisk = new Set(listTestFilesOnDisk());
+  const issues: string[] = [];
+  for (const [id, mod] of Object.entries(registry.catalog_modules)) {
+    if (mod.coverage_tier === "gap") {
+      issues.push(`${id}: coverage_tier gap`);
+      continue;
+    }
+    const files = mod.tests.filter((f) => onDisk.has(f));
+    if (files.length === 0) {
+      issues.push(`${id}: no test files on disk (${mod.tests.join(", ") || "empty"})`);
+    }
+  }
+  return issues.sort();
+}
+
+export function assertPlatformDomainsHaveTests(registry = loadTestRegistry(), minPerDomain = 1): string[] {
+  const issues: string[] = [];
+  for (const domain of listPlatformDomainsInLayerOrder(registry)) {
+    const count = listTestsByPlatformDomain(domain, registry).length;
+    if (count < minPerDomain) {
+      issues.push(`${domain}: ${count} platform-axis tests (min ${minPerDomain})`);
+    }
+  }
+  return issues;
+}
+
+export function assertAxisCountsMatchTotal(registry = loadTestRegistry()): string[] {
+  const axes: TestAxis[] = ["catalog", "platform", "contract", "integration", "meta"];
+  const byAxis = Object.fromEntries(axes.map((a) => [a, 0])) as Record<TestAxis, number>;
+  for (const entry of Object.values(registry.tests)) {
+    byAxis[entry.axis] += 1;
+  }
+  const sum = axes.reduce((n, a) => n + byAxis[a], 0);
+  if (sum !== registry.stats.vitest_total) {
+    return [`axis sum ${sum} != vitest_total ${registry.stats.vitest_total}`];
+  }
+  return [];
+}
+
+export function assertCiSuitesOnDisk(registry = loadTestRegistry()): string[] {
+  const onDisk = new Set(listTestFilesOnDisk());
+  const issues: string[] = [];
+  for (const [suiteId, suite] of Object.entries(registry.ci_suites)) {
+    for (const file of suite.files) {
+      if (!onDisk.has(file)) {
+        issues.push(`${suiteId}: missing ${file}`);
+      }
+      if (!registry.tests[file]) {
+        issues.push(`${suiteId}: ${file} not in registry.tests`);
+      }
+    }
+  }
+  return issues.sort();
+}
+
+export function countCatalogByCoverageTier(
+  catalog_modules: Record<string, CatalogModuleEntry>
+): Pick<TestRegistry["stats"], "catalog_gap" | "catalog_dedicated" | "catalog_bundled" | "catalog_only"> {
+  const mods = Object.values(catalog_modules);
+  return {
+    catalog_gap: mods.filter((m) => m.coverage_tier === "gap").length,
+    catalog_dedicated: mods.filter((m) => m.coverage_tier === "dedicated" || m.coverage_tier === "full").length,
+    catalog_bundled: mods.filter((m) => m.coverage_tier === "bundled").length,
+    catalog_only: mods.filter((m) => m.coverage_tier === "catalog_only").length,
   };
+}
+
+export function listTestsForCatalogId(catalogId: string): string[] {
+  const files = new Set<string>();
+  for (const [file, ids] of Object.entries(getCatalogFileMap())) {
+    if (ids.includes(catalogId)) files.add(file);
+  }
+  return [...files].sort();
+}
+
+function readCatalogCoverageMarker(file: string): CoverageTier | undefined {
+  const body = readFileSync(join(REGISTRY_DIR, file), "utf-8");
+  return body.match(/@catalog-coverage:[ \t]*(full|dedicated|bundled|catalog_only)/)?.[1] as
+    | CoverageTier
+    | undefined;
+}
+
+export function inferCatalogCoverageTier(_catalogId: string, tests: string[]): CoverageTier {
+  const markers = tests.map(readCatalogCoverageMarker).filter(Boolean) as CoverageTier[];
+  if (markers.includes("full")) return "full";
+  if (markers.includes("bundled")) return "bundled";
+  if (markers.includes("catalog_only")) return "catalog_only";
+  if (
+    tests.length === 1 &&
+    readFileSync(join(REGISTRY_DIR, tests[0]), "utf-8").includes("describeCatalogModule(")
+  ) {
+    return "catalog_only";
+  }
+  return "dedicated";
+}
+
+export function assertCatalogModuleTestCoverage(registry = loadTestRegistry()): string[] {
+  const issues: string[] = [];
+  for (const [id, mod] of Object.entries(registry.catalog_modules)) {
+    const expected = listTestsForCatalogId(id);
+    const actual = [...mod.tests].sort();
+    if (expected.join("|") !== actual.join("|")) {
+      issues.push(`${id}: tests [${actual.join(", ")}] != derived map [${expected.join(", ")}]`);
+    }
+    const inferred = inferCatalogCoverageTier(id, expected);
+    if (mod.coverage_tier !== inferred) {
+      issues.push(`${id}: coverage_tier ${mod.coverage_tier} != inferred ${inferred}`);
+    }
+    const cliExpected = listModuleCliBundles().some((b) => b.moduleId === id);
+    if (mod.cli !== cliExpected) {
+      issues.push(`${id}: cli ${mod.cli} != MODULE_CLI_BUNDLES ${cliExpected}`);
+    }
+  }
+  return issues.sort();
+}
+
+export function buildDefaultCatalogModules(): Record<string, CatalogModuleEntry> {
+  const readiness = YAML.parse(readFileSync(READINESS_PATH, "utf-8")) as {
+    modules: Record<string, { tier: string }>;
+  };
+  const cliIds = new Set(listModuleCliBundles().map((b) => b.moduleId));
+  const modules: Record<string, CatalogModuleEntry> = {};
+  for (const id of Object.keys(readiness.modules).sort()) {
+    const tests = listTestsForCatalogId(id);
+    if (tests.length === 0) {
+      throw new Error(`buildCatalogFileMap() has no tests for readiness module: ${id}`);
+    }
+    modules[id] = {
+      tier: readiness.modules[id].tier,
+      coverage_tier: inferCatalogCoverageTier(id, tests),
+      cli: cliIds.has(id),
+      tests,
+    };
+  }
   return modules;
 }
 
@@ -445,15 +709,16 @@ export function buildRegistryFromDisk(): TestRegistry {
   }
 
   const catalog_modules = buildDefaultCatalogModules();
-  const gapCount = Object.values(catalog_modules).filter((m) => m.coverage_tier === "gap").length;
-
-  return {
+  const tierCounts = countCatalogByCoverageTier(catalog_modules);
+  const registry: TestRegistry = {
     version: 2,
     stats: {
       vitest_total: files.length,
-      catalog_total: 29,
-      catalog_cli_registered: 18,
-      catalog_gap: gapCount,
+      static_test_cases: countStaticTestCases(),
+      tiered_execution_total: 0,
+      catalog_total: Object.keys(catalog_modules).length,
+      catalog_cli_registered: listModuleCliBundles().length,
+      ...tierCounts,
     },
     platform_domains: {
       P01_kernel: { layer: 1 },
@@ -557,4 +822,6 @@ export function buildRegistryFromDisk(): TestRegistry {
     },
     tests,
   };
+  registry.stats.tiered_execution_total = countTieredExecutionFiles(registry);
+  return registry;
 }
