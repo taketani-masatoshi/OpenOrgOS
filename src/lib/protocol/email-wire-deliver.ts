@@ -4,7 +4,11 @@ import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import type { PeerProfile } from "../../../schemas/protocol/peers.js";
 import { parseEmailWireRecipient } from "../../../schemas/protocol/peer-endpoint.js";
 import { envelopeToWireMessage } from "../wire-gateway/codec.js";
-import { resolveWireOutboundConfig, resolveWireSmtpCredentials, loadMailConfig } from "../correspondence/mail-config.js";
+import {
+  resolveWireOutboundConfig,
+  resolveWireSmtpCredentials,
+  loadMailConfig,
+} from "../correspondence/mail-config.js";
 import { getWireSentDir } from "../correspondence/paths.js";
 import { loadTenantConfig, getTenantId } from "../tenant.js";
 import { resolveWireNodeDid } from "../../../schemas/protocol/openorg-did.js";
@@ -30,6 +34,7 @@ export interface EmailWireDeliverResult {
 }
 
 function encodeMimeHeaderUtf8(value: string): string {
+  // eslint-disable-next-line no-control-regex -- MIME header: detect non-ASCII for UTF-8 encoding
   return /[^\x00-\x7F]/.test(value)
     ? `=?UTF-8?B?${Buffer.from(value).toString("base64")}?=`
     : value;
@@ -186,10 +191,7 @@ export async function deliverEnvelopeViaEmailWire(
   const parts = splitWireJsonPayload(wireJson);
 
   const creds = resolveWireSmtpCredentials();
-  const dryRun =
-    config.provider === "dry_run" ||
-    !creds ||
-    config.smtp?.host === "smtp.test.local";
+  const dryRun = config.provider === "dry_run" || !creds || config.smtp?.host === "smtp.test.local";
 
   const artifactDir = getWireSentDir();
   mkdirSync(artifactDir, { recursive: true });

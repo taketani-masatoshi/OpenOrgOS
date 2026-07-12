@@ -20,6 +20,9 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0002](0002-engineering-rules-split.md) | Engineering Rules の分割構成 | Accepted |
 | [0003](0003-constitution-code-compliance-roadmap.md) | 憲章とコード準拠ロードマップ | Accepted |
 | [0004](0004-gmail-deferred-opt-in-gate.md) | Gmail / tenant-mail deferred · opt-in 本番ゲート | Accepted |
+| [0005](0005-event-first-standard-patterns.md) | Event First 標準パターン | Accepted |
+| [0006](0006-clock-id-injection-allowlist.md) | Clock / ID 注入と ambient Date allowlist | Accepted |
+| [0007](0007-non-event-domain-boundary.md) | 非イベント領域の境界（State SSOT） | Accepted |
 
 ## 新規 ADR
 

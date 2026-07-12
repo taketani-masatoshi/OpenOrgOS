@@ -86,6 +86,7 @@ monthly_cost: 50000
 
     const result = await scanMailReceivedForWire();
     expect(result.ingested).toBe(1);
+    expect(result.ingested_event_ids).toEqual([envelope.event_id]);
     expect(result.errors).toHaveLength(0);
   });
 

@@ -168,6 +168,11 @@ describe("wire-gateway security runtime E2E", () => {
       nonceLedgerPath: join(dir, "nonce-ledger.json"),
     });
 
+    const orgRefFor = (id: string) =>
+      id.startsWith("did:ooo:")
+        ? { org_id: id, org_uri: id }
+        : { org_id: id, org_uri: `steward://tenant/${id}` };
+
     const makeWire = (
       sender = SENDER_DID,
       receiver = LOCAL_DID,
@@ -177,11 +182,8 @@ describe("wire-gateway security runtime E2E", () => {
         protocol_version: "1" as const,
         event_id: randomUUID(),
         occurred_at: occurredAt,
-        origin: { org_id: sender, org_uri: `steward://tenant/${sender}` },
-        destination: {
-          org_id: receiver,
-          org_uri: `steward://tenant/${receiver}`,
-        },
+        origin: orgRefFor(sender),
+        destination: orgRefFor(receiver),
         identity: {
           org_ref: { org_id: sender, org_uri: SENDER_URI },
         },

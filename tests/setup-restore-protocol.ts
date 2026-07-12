@@ -13,7 +13,13 @@ import {
 import { dirname, join, relative } from "node:path";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
-import { ROOT_DIR } from "../src/lib/tenant.js";
+import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
+import { syncWireGatewayDidFromSigningKey } from "../src/lib/protocol/wire-gateway-did-sync.js";
+import {
+  ensureEmailWireLoopbackPeer,
+  removeEmailWireLoopbackPeer,
+  restoreMalMailConfigExampleIfPresent,
+} from "../src/lib/protocol/wire-pilot-hygiene.js";
 
 /** Operational tenants whose committed protocol config must survive E2E demos. */
 const OPERATIONAL_PROTOCOL_TENANTS = ["mal", "southwood", "aiac"] as const;
@@ -22,9 +28,14 @@ const OPERATIONAL_PROTOCOL_TENANTS = ["mal", "southwood", "aiac"] as const;
 const PRESERVE_PROTOCOL_SUBDIRS = [
   "witness-trust",
   "signing-key.pem",
+  "signing-key-meta.yaml",
+  "wire-gateway.yaml",
   "federation-gossip-store.yaml",
   "peers.yaml",
   "transactions-registry.yaml",
+  // Live email_wire confirmation must survive concurrent fixture restores.
+  "delivery-attempts.jsonl",
+  "delivery-attempts.yaml",
 ] as const;
 
 /** L2 / runtime tenant files preserved across fixture restore (gitignored pilot state). */
@@ -124,7 +135,12 @@ function buildFixtureSnapshot(): void {
 
 function preservedProtocolPaths(rel: string): string[] {
   const match = rel.match(/^tenants\/([^/]+)\/data\/protocol$/);
-  if (!match || !OPERATIONAL_PROTOCOL_TENANTS.includes(match[1] as (typeof OPERATIONAL_PROTOCOL_TENANTS)[number])) {
+  if (
+    !match ||
+    !OPERATIONAL_PROTOCOL_TENANTS.includes(
+      match[1] as (typeof OPERATIONAL_PROTOCOL_TENANTS)[number]
+    )
+  ) {
     return [];
   }
   return PRESERVE_PROTOCOL_SUBDIRS.map((name) => join(ROOT_DIR, rel, name));
@@ -225,6 +241,24 @@ function resetTenantCaches(): void {
   clearWireGovernanceCacheForTests();
 }
 
+/** After fixture restore, re-pin wire-gateway did + mal loopback / mail-config (F2/F3 hygiene). */
+function realignOperationalWireGatewayDids(): void {
+  restoreMalMailConfigExampleIfPresent();
+  for (const tenantId of OPERATIONAL_PROTOCOL_TENANTS) {
+    const keyPath = join(ROOT_DIR, "tenants", tenantId, "data/protocol/signing-key.pem");
+    if (!existsSync(keyPath)) continue;
+    setTenantId(tenantId);
+    try {
+      syncWireGatewayDidFromSigningKey();
+      if (tenantId === "mal") {
+        ensureEmailWireLoopbackPeer({ tenantId: "mal" });
+      }
+    } catch {
+      /* best-effort when key/meta incomplete or Zone C blocked */
+    }
+  }
+}
+
 beforeAll(() => {
   buildFixtureSnapshot();
   cleanGeneratedAgentMissions();
@@ -234,6 +268,7 @@ beforeEach(() => {
   acquireFixtureRestoreLock();
   try {
     restoreCommittedTenantFixtures();
+    realignOperationalWireGatewayDids();
     resetMalExecutiveMailTriageQueue();
     resetTenantCaches();
   } catch (error) {
@@ -249,5 +284,11 @@ afterEach(() => {
 afterAll(() => {
   releaseFixtureRestoreLock();
   cleanGeneratedAgentMissions();
+  try {
+    setTenantId("mal");
+    removeEmailWireLoopbackPeer();
+  } catch {
+    /* best-effort — do not leave Phase 4 loopback in tracked peers.yaml */
+  }
   rmSync(SNAPSHOT_ROOT, { recursive: true, force: true });
 });

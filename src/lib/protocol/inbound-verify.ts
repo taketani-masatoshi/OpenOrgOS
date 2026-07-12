@@ -13,11 +13,7 @@ export function findPeerByOrgRef(orgRef: OrgRef): PeerProfile | undefined {
     if (exact) return exact;
   }
 
-  const byDid = peers.find(
-    (p) =>
-      !!p.did &&
-      (p.did === orgRef.org_id || p.did === orgRef.org_uri)
-  );
+  const byDid = peers.find((p) => !!p.did && (p.did === orgRef.org_id || p.did === orgRef.org_uri));
   if (byDid) return byDid;
 
   const tenantFromUri = orgRef.org_uri?.match(/^steward:\/\/tenant\/([^/]+)$/);
@@ -43,7 +39,9 @@ export interface InboundEnvelopeVerification {
   issues: string[];
 }
 
-export function verifyInboundProtocolEnvelope(envelope: EventEnvelope): InboundEnvelopeVerification {
+export function verifyInboundProtocolEnvelope(
+  envelope: EventEnvelope
+): InboundEnvelopeVerification {
   const issues: string[] = [];
   const peer = findPeerByOrgRef(envelope.origin);
 

@@ -1,11 +1,14 @@
-as_of: "2026-07-10"
+as_of: "2026-07-12"
 peers:
   - peer_id: PEER-002
     display_name: 株式会社MAL
     jurisdiction: JP
     org_uri: steward://tenant/mal
-    did: did:ooo:org:pk-a1f974540eea4f7b
+    did: did:ooo:org:pk-5391e3fd05736bb5
+    protocol_public_key: MCowBQYDK2VwAyEAJq9+gY7CWLlhoUiiq7UcXxFIPLRm2CaHXB4YrD/8iwY=
   - peer_id: PEER-003
     display_name: AIAC株式会社
     jurisdiction: JP
     org_uri: steward://tenant/aiac
+    did: did:ooo:org:pk-0bb14f8132c22627
+    protocol_public_key: MCowBQYDK2VwAyEAa4W8w0+KVyzGJiWmVVuioDP/DMdyGN7IcIPb6JKn9XY=

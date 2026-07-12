@@ -83,6 +83,24 @@ describe("wire-gateway codec (WG-0)", () => {
     expect(decoded.destination?.org_id).toBe("org.partner.example");
   });
 
+  it("embeds PEER steward URI in receiver so hash is registry-independent", () => {
+    const doc = buildIdentityDocument();
+    const signed = maybeSignEnvelope(
+      buildIdentityEnvelope(doc, {
+        org_id: "PEER-003",
+        org_uri: "steward://tenant/mal",
+      })
+    );
+    const wire = envelopeToWireMessage(signed);
+    expect(wire.receiver).toBe("PEER-003;steward://tenant/mal");
+    assertWireHashMatchesEnvelope(wire);
+    const decoded = wireMessageToEnvelope(wire);
+    expect(decoded.destination).toEqual({
+      org_id: "PEER-003",
+      org_uri: "steward://tenant/mal",
+    });
+  });
+
   it("preserves OpenOrg pk-DID sender through wire decode (hash stable)", () => {
     const prev = process.env.ORGOS_REQUIRE_PK_DID;
     process.env.ORGOS_REQUIRE_PK_DID = "1";

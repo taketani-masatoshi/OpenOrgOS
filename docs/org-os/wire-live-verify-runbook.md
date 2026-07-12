@@ -22,10 +22,17 @@ Phase 3（Wire Gateway 本番ゲート）と Phase 4（email_wire）を **env-ga
 | メール | `ai@malkk.com`（L2: `tenants/mal/records/executive/smtp.env`） |
 | Phase 4 設定 | `tenants/mal/records/executive/mail-config.yaml` |
 | ゲート env | `ORGOS_LIVE_VERIFY=1` **必須** |
+| 衛生 | 実行前に `./scripts/mal-wire-hygiene.sh mal`（`wire-live-verify.sh` が自動実行） |
 
 ---
 
 ## コマンド
+
+### 衛生（鍵 · DID · mail-config · PEER-003）
+
+```bash
+./scripts/mal-wire-hygiene.sh mal
+```
 
 ### Check のみ（外部 SMTP 送信なし）
 
@@ -87,10 +94,25 @@ npm run orgos -- --tenant mal protocol transaction prune-orphans --apply
 
 | 問題 | 対策 |
 |------|------|
-| `mail-config.yaml` 消失 | `tests/setup-restore-protocol.ts` が mal L2 を preserve |
+| `mail-config.yaml` 消失 | `tests/setup-restore-protocol.ts` が mal L2 + mal-pilot example を preserve |
+| フルスイートと Phase 4 同時実行 | **禁止** — `./scripts/run-full-test-isolated.sh` · Phase 4 は vitest を pkill する |
 | `ORGOS_SMTP_*` 漏洩 | `resolveWireOutboundConfig` が `provider: dry_run` を尊重 |
 | mal gate テスト | `mal-wire-pilot-gate.test.ts` が mail-config を backup/restore |
 | orphan 復活 | HEAD の `transactions-registry.yaml` を空に commit · `protocol transaction prune-orphans --apply` |
+| email_wire loopback の witness noise | validate / live-verify は hub-path（wire_v1/relay）のみ要求 |
+
+### 隔離フルテスト
+
+```bash
+./scripts/run-full-test-isolated.sh
+# log: scratch/full-test-*.log
+```
+
+### Phase 4a 安定性
+
+```bash
+./scripts/phase4-live-stability.sh mal 3
+```
 
 ### Live 失敗の切り分け
 

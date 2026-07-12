@@ -26,11 +26,13 @@ describe("wire-trust-registry", () => {
     expect(resolveWireTrustNode("mal")?.matched_by).toBe("node_id");
   });
 
-  it("matches sender DID against peer entry", () => {
-    const ok = nodeIdentifierMatches("did:ooo:org:pk-a1f974540eea4f7b", {
+  it("matches node identifiers against peer entry", () => {
+    const mal = resolveWireTrustNode("mal");
+    expect(mal?.node.did).toMatch(/^did:ooo:org:pk-/);
+    const ok = nodeIdentifierMatches(mal!.node.did!, {
       peer_node_id: "mal",
       peer_node_uri: "steward://tenant/mal",
-      peer_did: "did:ooo:org:pk-a1f974540eea4f7b",
+      peer_did: mal!.node.did,
     });
     expect(ok).toBe(true);
   });

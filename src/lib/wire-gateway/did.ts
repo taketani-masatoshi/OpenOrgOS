@@ -10,6 +10,7 @@ import { exportProtocolPublicKeyBase64 } from "../protocol/signing.js";
 import { resolveOrganizationCertificateSpkiSha256 } from "../protocol/org-cert-witness.js";
 import { loadTenantConfig } from "../tenant.js";
 import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-config.js";
+import { syncWireGatewayDidFromSigningKey } from "../protocol/wire-gateway-did-sync.js";
 
 export {
   deriveOpenOrgDidFromPublicKey,
@@ -17,9 +18,12 @@ export {
   isOpenOrgDid,
   resolveOpenOrgDid,
   type OpenOrgDid,
+  syncWireGatewayDidFromSigningKey,
 };
 
-export function resolveWireGatewayDid(config?: Pick<WireGatewayConfig, "did">): OpenOrgDid | undefined {
+export function resolveWireGatewayDid(
+  config?: Pick<WireGatewayConfig, "did">
+): OpenOrgDid | undefined {
   const tenantId = loadTenantConfig().id;
   const publicKey = exportProtocolPublicKeyBase64();
   if (!publicKey) {
@@ -63,7 +67,9 @@ export function buildWireNodeIdentityFields(
     wire_version: config.wire_version,
     did,
     trust_registry_url: trustRegistryUrl ?? config.trust_registry_url,
-    organization_certificate_spki_sha256:
-      resolveOrganizationCertificateSpkiSha256(protocolPublicKey, did),
+    organization_certificate_spki_sha256: resolveOrganizationCertificateSpkiSha256(
+      protocolPublicKey,
+      did
+    ),
   };
 }

@@ -1,6 +1,4 @@
-# mal Wire pilot — peer registry (wire_v1)
-# Copied by init-tenant-wire-pilot.sh when peers.yaml is missing.
-as_of: "2026-07-12"
+as_of: 2026-07-12
 peers:
   - peer_id: PEER-001
     display_name: Southwood Inc
@@ -10,9 +8,9 @@ peers:
     protocol_public_key: MCowBQYDK2VwAyEA5/aLrlreTf6lNGa+V+m9ToGEfBF71iaW3Lo5R4PGsmU=
     inbound_endpoints:
       - url: https://wire.southwood.example/wire/v1/events
-        transport: wire_v1
-        mode: push
         priority: 1
+        mode: push
+        transport: wire_v1
   - peer_id: PEER-002
     display_name: AIAC (Org C relay)
     jurisdiction: JP
@@ -21,10 +19,10 @@ peers:
     protocol_public_key: MCowBQYDK2VwAyEAa4W8w0+KVyzGJiWmVVuioDP/DMdyGN7IcIPb6JKn9XY=
     inbound_endpoints:
       - url: https://wire.aiac.example/wire/v1/events
-        transport: wire_v1
-        mode: push
         priority: 1
+        mode: push
+        transport: wire_v1
       - url: https://127.0.0.1:9486/protocol/v1/relay/enqueue
-        transport: relay
-        mode: relay
         priority: 2
+        mode: relay
+        transport: relay

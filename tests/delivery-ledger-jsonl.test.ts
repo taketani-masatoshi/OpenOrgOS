@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
-import { getDataDir } from "../src/lib/utils.js";
+import { getDataDir, getDocsDir } from "../src/lib/utils.js";
+import { getWireSentDir } from "../src/lib/correspondence/paths.js";
 import {
+  getEmailWireEventConfirmation,
   recordDeliveryAttempt,
   listDeliveryAttempts,
   resetDeliveryAttemptRepository,
@@ -67,5 +69,34 @@ describe("delivery-ledger append-only jsonl", () => {
     const all = listDeliveryAttempts();
     expect(all.some((a) => a.peer_id === "PEER-LEGACY")).toBe(true);
     expect(all.some((a) => a.peer_id === "PEER-NEW")).toBe(true);
+  });
+
+  it("rehydrates confirmation from wire-sent and inbox when ledger was wiped", () => {
+    const eventId = "00000000-0000-4000-8000-000000000013";
+    const sentDir = getWireSentDir();
+    const inboxDir = join(getDocsDir(), "protocol", "inbox");
+    mkdirSync(sentDir, { recursive: true });
+    mkdirSync(inboxDir, { recursive: true });
+    writeFileSync(join(sentDir, `${eventId}.eml`), "From: wire@test\n\nok\n", "utf-8");
+    writeFileSync(
+      join(inboxDir, `${eventId}.json`),
+      JSON.stringify({ event_id: eventId }),
+      "utf-8"
+    );
+
+    // Simulate concurrent Vitest fixture restore wiping delivery-attempts*.
+    const jsonl = getDeliveryAttemptsJsonlPath();
+    const yaml = getDeliveryAttemptsPath();
+    if (existsSync(jsonl)) rmSync(jsonl, { force: true });
+    if (existsSync(yaml)) rmSync(yaml, { force: true });
+    resetDeliveryAttemptRepository();
+
+    expect(getEmailWireEventConfirmation(eventId)).toMatchObject({
+      event_id: eventId,
+      state: "confirmed",
+    });
+    expect(listDeliveryAttempts({ eventId, channel: "email_wire" }).length).toBeGreaterThanOrEqual(
+      2
+    );
   });
 });
