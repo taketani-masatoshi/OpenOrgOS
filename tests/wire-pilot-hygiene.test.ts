@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
@@ -7,15 +7,33 @@ import {
   ensureMailConfigFromExample,
   ensureMalMailConfigExampleFiles,
   runWirePilotHygiene,
+  stripHygieneSyncedNotes,
   EMAIL_WIRE_LOOPBACK_PEER_ID,
 } from "../src/lib/protocol/wire-pilot-hygiene.js";
 import { findPeer } from "../src/lib/protocol/peers.js";
 import { exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
 import { deriveOpenOrgDidFromPublicKey } from "../schemas/protocol/openorg-did.js";
+import { loadWireGatewayConfig } from "../src/lib/wire-gateway/validate.js";
 
 describe("wire-pilot-hygiene", () => {
   beforeEach(() => {
     setTenantId("mal");
+    process.env.ORGOS_HYGIENE_SKIP_TRUST_REGISTRY = "1";
+    delete process.env.ORGOS_HYGIENE_UPDATE_TRUST_REGISTRY;
+  });
+
+  afterEach(() => {
+    delete process.env.ORGOS_HYGIENE_SKIP_TRUST_REGISTRY;
+    delete process.env.ORGOS_HYGIENE_UPDATE_TRUST_REGISTRY;
+  });
+
+  it("stripHygieneSyncedNotes removes accumulated stamps", () => {
+    expect(
+      stripHygieneSyncedNotes(
+        "pk-DID derived from protocol_public_key · hygiene-synced 2026-07-12 · hygiene-synced 2026-07-12"
+      )
+    ).toBe("pk-DID derived from protocol_public_key");
+    expect(stripHygieneSyncedNotes("hygiene-synced 2026-07-12")).toBeUndefined();
   });
 
   it("aligns gateway DID, meta, and PEER-003 to the current signing key", () => {
@@ -32,6 +50,10 @@ describe("wire-pilot-hygiene", () => {
     expect(peer!.org_uri).toBe("steward://tenant/mal");
     expect(exportProtocolPublicKeyBase64()).toBe(result.public_key);
     expect(["aligned", "updated", "skipped"]).toContain(result.trust_registry);
+
+    // Gateway DID must match PEER-003 (trust write is skipped in tests).
+    const gateway = loadWireGatewayConfig();
+    expect(gateway?.did).toBe(result.gateway_did);
   });
 
   it("keeps deploy example mirrored into tenant records", () => {

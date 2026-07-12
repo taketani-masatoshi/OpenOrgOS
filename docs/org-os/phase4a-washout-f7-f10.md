@@ -62,14 +62,10 @@ Production default remains **unset** until CEO approval (Phase 5).
 Full `npm test` on this branch may still fail due to **F7 unrelated WIP** (mal finance/dashboard/yojitsu/agent dumps). Wire / Phase 4a suites below must pass before claiming F1–F4 / F11 done:
 
 ```bash
-npx vitest run \
-  tests/wire-gateway-security-e2e.test.ts \
-  tests/protocol-inbound-verify.test.ts \
-  tests/mal-signing-key-preserve.test.ts \
-  tests/trusted-hubs-jurisdiction-scope.test.ts \
-  tests/mal-peers-trust-registry.test.ts \
-  tests/protocol-gap-closure.test.ts
+npm run test:phase4a
 ```
+
+（個別ファイル列挙より `package.json` の `test:phase4a` を正本とする。）
 
 Core 厳格 cap 85 解除は **全件 `npm test` 緑** が条件 — F7 分離後に再実行。
 

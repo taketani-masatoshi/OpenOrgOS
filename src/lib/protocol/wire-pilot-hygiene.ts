@@ -114,11 +114,16 @@ export function ensureEmailWireLoopbackPeer(opts?: {
     registerPeer(profile);
     return "registered";
   }
+  const existingEndpoint = existing.inbound_endpoints?.[0];
+  const endpointMismatch =
+    existingEndpoint?.url !== profile.inbound_endpoints[0]!.url ||
+    existingEndpoint?.transport !== "email_wire";
   if (
     existing.protocol_public_key !== publicKey ||
     existing.did !== did ||
     existing.wire_email !== wireEmail ||
-    existing.org_uri !== profile.org_uri
+    existing.org_uri !== profile.org_uri ||
+    endpointMismatch
   ) {
     registerPeer(profile);
     return "updated";
@@ -141,13 +146,22 @@ export function tryRestoreSigningKeyFromBackup(): boolean {
   return true;
 }
 
-/** Pin platform wire-trust-registry node for this tenant to the current signing key. */
+/**
+ * Pin platform wire-trust-registry node for this tenant to the current signing key.
+ *
+ * Writes are opt-in (`ORGOS_HYGIENE_UPDATE_TRUST_REGISTRY=1`) so Vitest / casual CLI
+ * runs cannot rewrite tracked platform + publish registries. Never writes when the
+ * operational key was just minted in this hygiene pass (`forbidWrite`).
+ */
 export function syncTenantNodeInWireTrustRegistry(
   tenantId: string,
   publicKey: string,
-  did: string
+  did: string,
+  opts?: { forbidWrite?: boolean }
 ): "aligned" | "updated" | "skipped" {
   if (process.env.ORGOS_HYGIENE_SKIP_TRUST_REGISTRY === "1") return "skipped";
+  if (opts?.forbidWrite) return "skipped";
+  const allowWrite = process.env.ORGOS_HYGIENE_UPDATE_TRUST_REGISTRY === "1";
   try {
     const reg = loadWireTrustRegistry();
     const idx = reg.nodes.findIndex(
@@ -155,14 +169,20 @@ export function syncTenantNodeInWireTrustRegistry(
     );
     if (idx < 0) return "skipped";
     const node = reg.nodes[idx]!;
-    if (node.protocol_public_key === publicKey && node.did === did) {
+    const keysAligned = node.protocol_public_key === publicKey && node.did === did;
+    const cleanedNotes = stripHygieneSyncedNotes(node.notes);
+    const notesDirty = (node.notes ?? "") !== (cleanedNotes ?? "");
+    if (keysAligned && !notesDirty) {
       return "aligned";
     }
+    if (!allowWrite) return "skipped";
+    // Do not append hygiene-synced stamps — keys/did are the SSOT signal.
+    // When aligned, still strip accumulated stamps from prior buggy runs.
     reg.nodes[idx] = {
       ...node,
       did,
       protocol_public_key: publicKey,
-      notes: `${node.notes ?? ""} · hygiene-synced ${new Date().toISOString().slice(0, 10)}`.trim(),
+      notes: cleanedNotes,
     };
     saveWireTrustRegistry(reg);
     const publishPath = join(ROOT_DIR, "publish/protocol/wire-trust-registry.yaml");
@@ -173,6 +193,19 @@ export function syncTenantNodeInWireTrustRegistry(
   } catch {
     return "skipped";
   }
+}
+
+/** Remove accumulated `· hygiene-synced YYYY-MM-DD` suffixes from registry notes. */
+export function stripHygieneSyncedNotes(notes: string | undefined): string | undefined {
+  if (!notes) return notes;
+  const cleaned = notes
+    .replace(/(?:\s*·\s*)?hygiene-synced\s+\d{4}-\d{2}-\d{2}/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s*·\s*·/g, " · ")
+    .trim()
+    .replace(/^·\s*/, "")
+    .replace(/\s*·$/, "");
+  return cleaned.length ? cleaned : undefined;
 }
 
 /**
@@ -212,7 +245,10 @@ export function runWirePilotHygiene(tenantId?: string): WirePilotHygieneResult {
     const gateway = syncWireGatewayDidFromSigningKey();
     const mail = ensureMailConfigFromExample(tenant);
     const loopback = ensureEmailWireLoopbackPeer({ tenantId: tenant });
-    const trust = syncTenantNodeInWireTrustRegistry(tenant, publicKey, gateway.did);
+    // Never push a freshly minted key into the public trust registry.
+    const trust = syncTenantNodeInWireTrustRegistry(tenant, publicKey, gateway.did, {
+      forbidWrite: signingKey === "created",
+    });
 
     return {
       tenant,

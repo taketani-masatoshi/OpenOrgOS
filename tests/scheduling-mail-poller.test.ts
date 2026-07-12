@@ -15,7 +15,11 @@ vi.mock("../src/lib/correspondence/mail-receive-sync.js", () => ({
 }));
 
 vi.mock("../src/lib/protocol/email-wire-ingest.js", () => ({
-  scanMailReceivedForWire: vi.fn(async () => ({ scanned: 0, ingested: 0 })),
+  scanMailReceivedForWire: vi.fn(async () => ({
+    scanned: 0,
+    ingested: 0,
+    ingested_event_ids: [],
+  })),
 }));
 
 const tenantId = "test-scheduling-mail-poller";

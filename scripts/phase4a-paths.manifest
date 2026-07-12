@@ -14,7 +14,6 @@ src/lib/protocol/email-wire-ingest.ts
 src/lib/wire-gateway/codec.ts
 src/lib/wire-gateway/did.ts
 src/commands/protocol.ts
-src/cli/registrars/orchestration.ts
 
 # Tests
 tests/setup-restore-protocol.ts

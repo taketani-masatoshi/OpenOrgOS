@@ -157,6 +157,7 @@ async function main(): Promise<void> {
   let lastScan = {
     scanned: 0,
     ingested: 0,
+    ingested_event_ids: [] as string[],
     skipped: 0,
     errors: [] as Array<{ file: string; reason: string }>,
   };
@@ -169,7 +170,10 @@ async function main(): Promise<void> {
 
     lastScan = await scanMailReceivedForWire({ sinceDays: 1 });
     console.log(
-      `✓ Wire scan (attempt ${attempt}/${retries}): ingested ${lastScan.ingested} · skipped ${lastScan.skipped}`
+      `✓ Wire scan (attempt ${attempt}/${retries}): ingested ${lastScan.ingested} · skipped ${lastScan.skipped}` +
+        (lastScan.ingested_event_ids.length
+          ? ` · events ${lastScan.ingested_event_ids.join(",")}`
+          : "")
     );
     if (lastScan.errors.length) {
       for (const e of lastScan.errors) console.log(`  ✗ ${e.file}: ${e.reason}`);

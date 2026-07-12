@@ -37,7 +37,10 @@ ORGOS_LIVE_VERIFY=1 ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/wire-live-verify.sh ma
 - [x] Phase 4a `mal check` PASS（mail-config · blocking doctor）
 - [x] Phase 4a live 連続 green（stability · ingest retry）
 - [x] `email_wire_roundtrip` 証跡: `scratch/wire-live-verify-mal-*.json`
-- [x] 隔離フルテスト: `./scripts/run-full-test-isolated.sh`
+- [x] 隔離フルテスト: `./scripts/run-full-test-isolated.sh`（証跡例: `scratch/full-test-wave2b-green-20260712T050952Z.log` · **325** files / **1349** tests）
+- [x] mail-config 耐久: `deploy/mal-pilot/mail-config.mal-pilot.yaml.example` + `ensureMalMailConfigExampleFiles` · Phase 4 live で deploy → records 再同期
+- [x] Phase 4b 自動化証跡: `scratch/phase4b-staging-automated-*.json`（ブラウザ OAuth は人手）
+- [x] `scanMailReceivedForWire.ingested_event_ids` · registry sync（`wire-pilot-hygiene` 含む）
 
 ### データ衛生（Wave 0）
 

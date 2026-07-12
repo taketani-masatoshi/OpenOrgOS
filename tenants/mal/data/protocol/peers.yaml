@@ -30,8 +30,8 @@ peers:
     display_name: MAL mail loopback (Phase 4)
     jurisdiction: JP
     org_uri: steward://tenant/mal
-    did: did:ooo:org:pk-fc87d148e72b99ce
-    protocol_public_key: MCowBQYDK2VwAyEAtY7OQqkJiaFa0ZiryyUR7TKLDA4L3JomEZaWsp6bagY=
+    did: did:ooo:org:pk-e3c21eb5a967701e
+    protocol_public_key: MCowBQYDK2VwAyEA5oGtUTRH/StlryWlwN919VYwhjzXFBNKE5Qo8OjyJ5w=
     wire_email: ai+wireloop@malkk.com
     inbound_endpoints:
       - url: smtp://ai+wireloop@malkk.com

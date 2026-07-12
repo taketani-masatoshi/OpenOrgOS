@@ -11,15 +11,14 @@ nodes:
     witness_jurisdiction: JP
     notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:demo)
   - node_id: mal
-    did: did:ooo:org:pk-fc87d148e72b99ce
+    did: did:ooo:org:pk-e3c21eb5a967701e
     node_uri: steward://tenant/mal
     display_name: MAL Co
-    protocol_public_key: MCowBQYDK2VwAyEAtY7OQqkJiaFa0ZiryyUR7TKLDA4L3JomEZaWsp6bagY=
+    protocol_public_key: MCowBQYDK2VwAyEA5oGtUTRH/StlryWlwN919VYwhjzXFBNKE5Qo8OjyJ5w=
     wire_url: https://wire.oorgos.org
     corporate_number: "4010001189530"
     witness_jurisdiction: JP
-    notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:mal) ·
-      hygiene-synced 2026-07-12 · hygiene-synced 2026-07-12
+    notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:mal)
   - node_id: southwood
     did: did:ooo:org:pk-f5c38734d6a8a462
     node_uri: steward://tenant/southwood

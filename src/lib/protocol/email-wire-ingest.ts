@@ -217,6 +217,7 @@ export function ingestWireFromEmail(
 export interface WireScanResult {
   scanned: number;
   ingested: number;
+  ingested_event_ids: string[];
   skipped: number;
   errors: Array<{ file: string; reason: string }>;
 }
@@ -227,12 +228,18 @@ export async function scanMailReceivedForWire(opts?: {
 }): Promise<WireScanResult> {
   const dir = getMailReceivedDir();
   if (!existsSync(dir)) {
-    return { scanned: 0, ingested: 0, skipped: 0, errors: [] };
+    return { scanned: 0, ingested: 0, ingested_event_ids: [], skipped: 0, errors: [] };
   }
 
   const cutoff = opts?.sinceDays != null ? Date.now() - opts.sinceDays * 86_400_000 : undefined;
 
-  const result: WireScanResult = { scanned: 0, ingested: 0, skipped: 0, errors: [] };
+  const result: WireScanResult = {
+    scanned: 0,
+    ingested: 0,
+    ingested_event_ids: [],
+    skipped: 0,
+    errors: [],
+  };
 
   for (const file of readdirSync(dir).filter((n) => n.endsWith(".eml"))) {
     const emlPath = join(dir, file);
@@ -250,12 +257,16 @@ export async function scanMailReceivedForWire(opts?: {
 
     if (opts?.dryRun) {
       result.ingested++;
+      const eid = parsed.eventId ?? parsed.wire?.eventId;
+      if (eid) result.ingested_event_ids.push(eid);
       continue;
     }
 
     const ingest = ingestWireFromEmail(parsed);
     if (ingest.ok) {
       result.ingested++;
+      const eid = parsed.eventId ?? parsed.wire?.eventId;
+      if (eid) result.ingested_event_ids.push(eid);
     } else if (ingest.idempotent) {
       result.skipped++;
     } else if (ingest.reason?.includes("awaiting remaining parts")) {

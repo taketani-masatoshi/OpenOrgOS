@@ -7,6 +7,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TENANT="${1:-mal}"
 cd "$ROOT"
 export ORGOS_TENANT="$TENANT"
+# Opt-in: rewrite platform + publish trust registry to match operational key
+export ORGOS_HYGIENE_UPDATE_TRUST_REGISTRY=1
 
 EXAMPLE="$ROOT/deploy/mal-pilot/mail-config.mal-pilot.yaml.example"
 MAIL_DIR="$ROOT/tenants/$TENANT/records/executive"
