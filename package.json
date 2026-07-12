@@ -42,8 +42,6 @@
     "format": "prettier --write \"src/**/*.ts\" \"schemas/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"schemas/**/*.ts\" \"scripts/**/*.ts\"",
     "format:staged-src": "prettier --write",
-    "constitution:score": "node --import tsx scripts/constitution-score.ts",
-    "constitution:check": "node --import tsx scripts/constitution-score.ts --min A-",
     "test:registry:sync": "node --import tsx scripts/sync-test-registry.ts",
     "test:registry:scaffold": "node --import tsx scripts/scaffold-catalog-test.ts",
     "test:registry:check": "vitest run tests/testing-registry.test.ts",
