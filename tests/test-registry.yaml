@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 317
-  static_test_cases: 1194
-  tiered_execution_total: 317
+  vitest_total: 318
+  static_test_cases: 1196
+  tiered_execution_total: 318
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -625,6 +625,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  delivery-ledger-jsonl.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   demo-status.test.ts:
     axis: integration
     kind: integration
