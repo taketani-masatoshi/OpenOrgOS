@@ -14,7 +14,7 @@ import { exportGossipSnapshot } from "../src/lib/hub/gossip.js";
 const HUB_DIR = join(ROOT_DIR, "scratch", "hub-merkle-test");
 
 describe("hub merkle anchor and gossip", () => {
-  let server: { close: () => void };
+  let server: { url: string; close: () => void };
 
   beforeEach(async () => {
     rmSync(HUB_DIR, { recursive: true, force: true });
@@ -32,7 +32,7 @@ describe("hub merkle anchor and gossip", () => {
       hub_signature: "placeholder",
     });
     appendJsonl(getHubReceiptsPath(), receipt);
-    server = await startHubServer({ hubId: "HUB-T", dataDir: HUB_DIR, host: "127.0.0.1", port: 19480 });
+    server = await startHubServer({ hubId: "HUB-T", dataDir: HUB_DIR, host: "127.0.0.1", port: 0 });
   });
 
   afterEach(() => {
@@ -54,7 +54,7 @@ describe("hub merkle anchor and gossip", () => {
   });
 
   it("fetches GET /hub/v1/anchor with signature", async () => {
-    const res = await fetch("http://127.0.0.1:19480/hub/v1/anchor");
+    const res = await fetch(`${server.url}/hub/v1/anchor`);
     expect(res.ok).toBe(true);
     const body = (await res.json()) as { anchor?: { merkle_root: string; hub_signature?: string } };
     expect(body.anchor?.merkle_root).toBeTruthy();

@@ -19,8 +19,8 @@ const HUB_A = join(ROOT_DIR, "scratch", "gossip-sync-a");
 const HUB_B = join(ROOT_DIR, "scratch", "gossip-sync-b");
 
 describe("hub gossip sync", () => {
-  let serverA: { close: () => void };
-  let serverB: { close: () => void };
+  let serverA: { url: string; close: () => void };
+  let serverB: { url: string; close: () => void };
 
   beforeEach(async () => {
     rmSync(HUB_A, { recursive: true, force: true });
@@ -33,17 +33,17 @@ describe("hub gossip sync", () => {
     configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B });
     const hubBKey = exportHubPublicKeyBase64();
 
+    serverA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A, host: "127.0.0.1", port: 0 });
+    serverB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B, host: "127.0.0.1", port: 0 });
+
     writeYamlFile(
       join(HUB_B, "hub-federation.yaml"),
       hubFederationSchema.parse({
         hub_id: "HUB-B",
-        hub_peers: [{ hub_id: "HUB-A", hub_url: "http://127.0.0.1:19483", hub_public_key: hubAKey, priority: 1 }],
+        hub_peers: [{ hub_id: "HUB-A", hub_url: serverA.url, hub_public_key: hubAKey, priority: 1 }],
         gossip: { enabled: true, interval_sec: 300 },
       })
     );
-
-    serverA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A, host: "127.0.0.1", port: 19483 });
-    serverB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B, host: "127.0.0.1", port: 19484 });
 
     configureHubRuntime({ hubId: "HUB-A", dataDir: HUB_A });
     ensureProtocolSigningKey();

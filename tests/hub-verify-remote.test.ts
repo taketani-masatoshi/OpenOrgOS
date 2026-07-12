@@ -25,7 +25,7 @@ describe("hub verify remote", () => {
       hubId: "HUB-A",
       dataDir: HUB_DIR,
       host: "127.0.0.1",
-      port: 19475,
+      port: 0,
     });
 
     const keys = generateProtocolKeyPair();
@@ -45,7 +45,7 @@ describe("hub verify remote", () => {
       keys.privateKeyPem
     );
 
-    const post = await fetch("http://127.0.0.1:19475/hub/v1/attestations", {
+    const post = await fetch(`${server.url}/hub/v1/attestations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(attestation),
@@ -57,7 +57,7 @@ describe("hub verify remote", () => {
       runHubVerify({
         hubId: "HUB-A",
         eventId,
-        hubUrl: "http://127.0.0.1:19475",
+        hubUrl: server.url,
       })
     ).resolves.toBeUndefined();
 

@@ -14,6 +14,7 @@ import {
 import type { WireInternalClient } from "../src/lib/wire-gateway/internal-client.js";
 import { createOutboundPoller } from "../src/lib/wire-gateway/outbound-poller.js";
 import { startWireGatewayServer } from "../src/lib/wire-gateway/server.js";
+import { allocateEphemeralPort } from "./helpers/ephemeral-port.js";
 
 const LOCAL_DID = "did:ooo:org:pk-1111111111111111";
 const SENDER_DID = "did:ooo:org:pk-2222222222222222";
@@ -137,13 +138,14 @@ describe("wire-gateway security runtime E2E", () => {
       },
     } as unknown as WireInternalClient;
 
+    const listenPort = await allocateEphemeralPort();
     const config = wireGatewayConfigSchema.parse({
       node_id: LOCAL_DID,
       node_uri: "steward://tenant/security-local",
       did: LOCAL_DID,
       listen: {
         host: "127.0.0.1",
-        port: 18563,
+        port: listenPort,
         tls_cert: tls.serverCert,
         tls_key: tls.serverKey,
         tls_ca: tls.ca,
@@ -324,10 +326,11 @@ describe("wire-gateway security runtime E2E", () => {
       },
     } as unknown as WireInternalClient;
     const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const listenPort = await allocateEphemeralPort();
     const config = wireGatewayConfigSchema.parse({
       node_id: "legacy-sender",
       did: "did:ooo:org:legacy-sender",
-      listen: { host: "127.0.0.1", port: 18564 },
+      listen: { host: "127.0.0.1", port: listenPort },
       internal_api: { base_url: "http://127.0.0.1:1/internal/v1/wire" },
       audit: { path: join(dir, "outbound-audit.jsonl") },
     });

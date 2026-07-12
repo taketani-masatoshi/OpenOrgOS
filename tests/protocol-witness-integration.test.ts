@@ -26,8 +26,8 @@ function cleanup(): void {
 }
 
 describe("protocol witness integration", () => {
-  let hubA: { close: () => void };
-  let hubB: { close: () => void };
+  let hubA: { url: string; close: () => void };
+  let hubB: { url: string; close: () => void };
 
   beforeEach(async () => {
     setTenantId("demo");
@@ -57,8 +57,8 @@ monthly_cost: 85000
     configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B_DIR });
     const hubBKey = exportHubPublicKeyBase64();
 
-    hubA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A_DIR, host: "127.0.0.1", port: 19478 });
-    hubB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B_DIR, host: "127.0.0.1", port: 19479 });
+    hubA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A_DIR, host: "127.0.0.1", port: 0 });
+    hubB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B_DIR, host: "127.0.0.1", port: 0 });
 
     writeYamlFile(
       getWitnessPoolYamlPath(),
@@ -67,8 +67,8 @@ monthly_cost: 85000
         quorum: { mode: "any_of_n" },
         register_on: "both",
         hubs: [
-          { hub_id: "HUB-A", hub_url: "http://127.0.0.1:19478", hub_public_key: hubAKey, priority: 1 },
-          { hub_id: "HUB-B", hub_url: "http://127.0.0.1:19479", hub_public_key: hubBKey, priority: 2 },
+          { hub_id: "HUB-A", hub_url: hubA.url, hub_public_key: hubAKey, priority: 1 },
+          { hub_id: "HUB-B", hub_url: hubB.url, hub_public_key: hubBKey, priority: 2 },
         ],
       })
     );

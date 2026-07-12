@@ -59,9 +59,9 @@ monthly_cost: 85000
       approverId: "CEO",
     });
 
-    const server = await startWebhookServer({ host: "127.0.0.1", port: 19473, drain: false });
+    const server = await startWebhookServer({ host: "127.0.0.1", port: 0, drain: false });
     try {
-      const res = await fetch("http://127.0.0.1:19473/steward/webhook", {
+      const res = await fetch(server.url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(transmission.envelope),

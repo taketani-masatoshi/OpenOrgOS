@@ -23,10 +23,10 @@ describe("hub server", () => {
       hubId: "HUB-A",
       dataDir: HUB_DIR,
       host: "127.0.0.1",
-      port: 19474,
+      port: 0,
     });
 
-    const health = await fetch("http://127.0.0.1:19474/hub/v1/health");
+    const health = await fetch(`${server.url}/hub/v1/health`);
     expect(health.ok).toBe(true);
     const healthBody = (await health.json()) as { hub_id: string };
     expect(healthBody.hub_id).toBe("HUB-A");
@@ -48,7 +48,7 @@ describe("hub server", () => {
       keys.privateKeyPem
     );
 
-    const res = await fetch("http://127.0.0.1:19474/hub/v1/attestations", {
+    const res = await fetch(`${server.url}/hub/v1/attestations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(attestation),
@@ -66,10 +66,10 @@ describe("hub server", () => {
       hubId: "HUB-A",
       dataDir: HUB_DIR,
       host: "127.0.0.1",
-      port: 19475,
+      port: 0,
     });
     try {
-      const res = await fetch("http://127.0.0.1:19475/hub/v1/metrics");
+      const res = await fetch(`${server.url}/hub/v1/metrics`);
       expect(res.ok).toBe(true);
       const body = (await res.json()) as {
         service: string;

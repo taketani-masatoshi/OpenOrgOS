@@ -32,8 +32,8 @@ function buildSignedAttestation(eventId: string, side: "sent" | "received") {
 }
 
 describe("hub gossip attestation", () => {
-  let serverA: { close: () => void };
-  let serverB: { close: () => void };
+  let serverA: { url: string; close: () => void };
+  let serverB: { url: string; close: () => void };
   let hubAKey: string;
 
   beforeEach(async () => {
@@ -47,17 +47,17 @@ describe("hub gossip attestation", () => {
     configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B });
     exportHubPublicKeyBase64();
 
+    serverA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A, host: "127.0.0.1", port: 0 });
+    serverB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B, host: "127.0.0.1", port: 0 });
+
     writeYamlFile(
       join(HUB_B, "hub-federation.yaml"),
       hubFederationSchema.parse({
         hub_id: "HUB-B",
-        hub_peers: [{ hub_id: "HUB-A", hub_url: "http://127.0.0.1:19481", hub_public_key: hubAKey, priority: 1 }],
+        hub_peers: [{ hub_id: "HUB-A", hub_url: serverA.url, hub_public_key: hubAKey, priority: 1 }],
         gossip: { enabled: true, interval_sec: 300 },
       })
     );
-
-    serverA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A, host: "127.0.0.1", port: 19481 });
-    serverB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B, host: "127.0.0.1", port: 19482 });
   });
 
   afterEach(() => {
@@ -80,7 +80,7 @@ describe("hub gossip attestation", () => {
     configureHubRuntime({ hubId: "HUB-A", dataDir: HUB_A });
     registerHubAttestation(buildSignedAttestation("d2e2f3a4-b5c6-4789-a012-3456789abcde", "sent"));
 
-    const res = await fetch("http://127.0.0.1:19481/hub/v1/gossip/attestations");
+    const res = await fetch(`${serverA.url}/hub/v1/gossip/attestations`);
     expect(res.ok).toBe(true);
     const body = (await res.json()) as { attestation_count: number };
     expect(body.attestation_count).toBeGreaterThanOrEqual(1);

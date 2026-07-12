@@ -28,10 +28,10 @@ describe("trusted-hubs sync-keys", () => {
       hubId: "HUB-A",
       dataDir: hubDir,
       host: "127.0.0.1",
-      port: 19501,
+      port: 0,
     });
     try {
-      const key = await fetchHubPublicKey("http://127.0.0.1:19501");
+      const key = await fetchHubPublicKey(server.url);
       expect(key.hub_id).toBe("HUB-A");
       expect(key.public_key.length).toBeGreaterThan(20);
     } finally {
@@ -46,7 +46,7 @@ describe("trusted-hubs sync-keys", () => {
       hubId: "HUB-B",
       dataDir: hubDir,
       host: "127.0.0.1",
-      port: 19502,
+      port: 0,
     });
 
     writeFileSync(
@@ -56,7 +56,7 @@ jurisdictions:
   - jurisdiction: TEST
     hubs:
       - hub_id: HUB-B
-        hub_url: http://127.0.0.1:19502
+        hub_url: ${server.url}
         hub_public_key: ""
         priority: 1
 `,

@@ -26,8 +26,8 @@ function cleanup(): void {
 }
 
 describe("protocol witness pool", () => {
-  let hubA: { close: () => void };
-  let hubB: { close: () => void };
+  let hubA: { url: string; close: () => void };
+  let hubB: { url: string; close: () => void };
 
   beforeEach(async () => {
     setTenantId("demo");
@@ -42,8 +42,8 @@ describe("protocol witness pool", () => {
     configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B_DIR });
     const hubBKey = exportHubPublicKeyBase64();
 
-    hubA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A_DIR, host: "127.0.0.1", port: 19475 });
-    hubB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B_DIR, host: "127.0.0.1", port: 19476 });
+    hubA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A_DIR, host: "127.0.0.1", port: 0 });
+    hubB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B_DIR, host: "127.0.0.1", port: 0 });
 
     writeYamlFile(
       getWitnessPoolYamlPath(),
@@ -52,8 +52,8 @@ describe("protocol witness pool", () => {
         quorum: { mode: "any_of_n" },
         register_on: "both",
         hubs: [
-          { hub_id: "HUB-A", hub_url: "http://127.0.0.1:19475", hub_public_key: hubAKey, priority: 1 },
-          { hub_id: "HUB-B", hub_url: "http://127.0.0.1:19476", hub_public_key: hubBKey, priority: 2 },
+          { hub_id: "HUB-A", hub_url: hubA.url, hub_public_key: hubAKey, priority: 1 },
+          { hub_id: "HUB-B", hub_url: hubB.url, hub_public_key: hubBKey, priority: 2 },
         ],
       })
     );
@@ -134,15 +134,15 @@ describe("protocol witness pool", () => {
 
   it("partial hub failure still delivers to available hub", async () => {
     hubA.close();
-    hubB.close();
     rmSync(HUB_A_DIR, { recursive: true, force: true });
     mkdirSync(HUB_A_DIR, { recursive: true });
     const hubOnlyA = await startHubServer({
       hubId: "HUB-A",
       dataDir: HUB_A_DIR,
       host: "127.0.0.1",
-      port: 19477,
+      port: 0,
     });
+    hubB.close();
     configureHubRuntime({ hubId: "HUB-A", dataDir: HUB_A_DIR });
     const hubAKeyOnly = exportHubPublicKeyBase64();
 
@@ -153,8 +153,8 @@ describe("protocol witness pool", () => {
         quorum: { mode: "any_of_n" },
         register_on: "both",
         hubs: [
-          { hub_id: "HUB-A", hub_url: "http://127.0.0.1:19477", hub_public_key: hubAKeyOnly, priority: 1 },
-          { hub_id: "HUB-B", hub_url: "http://127.0.0.1:19476", hub_public_key: "dummy", priority: 2 },
+          { hub_id: "HUB-A", hub_url: hubOnlyA.url, hub_public_key: hubAKeyOnly, priority: 1 },
+          { hub_id: "HUB-B", hub_url: hubB.url, hub_public_key: "dummy", priority: 2 },
         ],
       })
     );

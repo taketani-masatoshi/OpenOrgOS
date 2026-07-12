@@ -41,8 +41,8 @@ function buildAttestation(side: "sent" | "received") {
 }
 
 describe("cross-hub reconcile", () => {
-  let serverA: { close: () => void };
-  let serverB: { close: () => void };
+  let serverA: { url: string; close: () => void };
+  let serverB: { url: string; close: () => void };
 
   beforeEach(async () => {
     setTenantId("demo");
@@ -57,8 +57,8 @@ describe("cross-hub reconcile", () => {
     configureHubRuntime({ hubId: "HUB-B", dataDir: HUB_B });
     const hubBKey = exportHubPublicKeyBase64();
 
-    serverA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A, host: "127.0.0.1", port: 19490 });
-    serverB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B, host: "127.0.0.1", port: 19491 });
+    serverA = await startHubServer({ hubId: "HUB-A", dataDir: HUB_A, host: "127.0.0.1", port: 0 });
+    serverB = await startHubServer({ hubId: "HUB-B", dataDir: HUB_B, host: "127.0.0.1", port: 0 });
 
     mkdirSync(join(getDataDir(), "protocol"), { recursive: true });
     writeYamlFile(
@@ -68,8 +68,8 @@ describe("cross-hub reconcile", () => {
         quorum: { mode: "any_of_n" },
         register_on: "both",
         hubs: [
-          { hub_id: "HUB-A", hub_url: "http://127.0.0.1:19490", hub_public_key: hubAKey, priority: 1 },
-          { hub_id: "HUB-B", hub_url: "http://127.0.0.1:19491", hub_public_key: hubBKey, priority: 2 },
+          { hub_id: "HUB-A", hub_url: serverA.url, hub_public_key: hubAKey, priority: 1 },
+          { hub_id: "HUB-B", hub_url: serverB.url, hub_public_key: hubBKey, priority: 2 },
         ],
       })
     );

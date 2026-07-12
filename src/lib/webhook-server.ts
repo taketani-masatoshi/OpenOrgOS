@@ -17,7 +17,9 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-export function startWebhookServer(options: WebhookServerOptions = {}): Promise<{ close: () => void }> {
+export function startWebhookServer(
+  options: WebhookServerOptions = {}
+): Promise<{ close: () => void; port: number; url: string }> {
   const registry = loadWebhookRegistry();
   const inbound = registry.inbound;
   if (!inbound?.enabled) {
@@ -34,8 +36,14 @@ export function startWebhookServer(options: WebhookServerOptions = {}): Promise<
 
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
-      console.log(`✓ Webhook server http://${host}:${port}${path}`);
+      const addr = server.address();
+      const actualPort =
+        typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+      const url = `http://${host}:${actualPort}${path}`;
+      console.log(`✓ Webhook server ${url}`);
       resolve({
+        port: actualPort,
+        url,
         close: () => server.close(),
       });
     });

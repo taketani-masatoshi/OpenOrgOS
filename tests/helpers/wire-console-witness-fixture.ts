@@ -34,13 +34,13 @@ export async function startWireConsoleWitnessHubs(): Promise<WireConsoleWitnessH
     hubId: "HUB-A",
     dataDir: HUB_A_DIR,
     host: "127.0.0.1",
-    port: 19482,
+    port: 0,
   });
   const hubB = await startHubServer({
     hubId: "HUB-B",
     dataDir: HUB_B_DIR,
     host: "127.0.0.1",
-    port: 19483,
+    port: 0,
   });
 
   writeYamlFile(
@@ -52,13 +52,13 @@ export async function startWireConsoleWitnessHubs(): Promise<WireConsoleWitnessH
       hubs: [
         {
           hub_id: "HUB-A",
-          hub_url: "http://127.0.0.1:19482",
+          hub_url: hubA.url,
           hub_public_key: hubAKey,
           priority: 1,
         },
         {
           hub_id: "HUB-B",
-          hub_url: "http://127.0.0.1:19483",
+          hub_url: hubB.url,
           hub_public_key: hubBKey,
           priority: 2,
         },
