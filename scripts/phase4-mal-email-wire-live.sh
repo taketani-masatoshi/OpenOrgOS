@@ -41,11 +41,6 @@ if [[ ! -f "$MAIL_ENV" ]]; then
   echo "  # set ORGOS_SMTP_USER/PASSWORD + ORGOS_IMAP_USER/PASSWORD (ai@malkk.com only)"
 fi
 
-echo "=== Phase 4: stop Vitest ==="
-pkill -9 -f 'node.*vitest' 2>/dev/null || true
-sleep 1
-
-echo ""
 echo "=== Phase 4: Wire Gateway public health ==="
 code="$(curl -s -o /dev/null -w '%{http_code}' "$PUBLIC_BASE_URL/wire/v1/health" 2>/dev/null || echo 000)"
 if [[ "$code" != "200" ]]; then
@@ -75,13 +70,19 @@ fi
 
 echo ""
 echo "=== Phase 4: SMTP/IMAP credentials (names only) ==="
+cred_ok=1
 for var in ORGOS_SMTP_USER ORGOS_SMTP_PASSWORD ORGOS_IMAP_USER ORGOS_IMAP_PASSWORD; do
   if [[ -n "${!var:-}" ]]; then
     echo "✓ $var set"
   else
     echo "✗ $var missing"
+    cred_ok=0
   fi
 done
+if [[ "$MODE" == "live" && "$cred_ok" -ne 1 ]]; then
+  echo "✗ live mode requires SMTP/IMAP credentials — source $MAIL_ENV" >&2
+  exit 1
+fi
 
 echo ""
 echo "=== Phase 4: email_wire readiness ==="
@@ -115,7 +116,11 @@ fi
 
 echo ""
 echo "=== Phase 4: live email_wire roundtrip ==="
+export PHASE4_CLEANUP_LOOPBACK="${PHASE4_CLEANUP_LOOPBACK:-1}"
 ORGOS_TENANT="$TENANT" node --import tsx "$ROOT/scripts/phase4-mal-email-wire-roundtrip.ts"
+if [[ "$PHASE4_CLEANUP_LOOPBACK" == "1" ]]; then
+  npm run orgos -- --tenant "$TENANT" protocol transaction prune-orphans --apply
+fi
 
 echo ""
 echo "✓ Phase 4 live complete"

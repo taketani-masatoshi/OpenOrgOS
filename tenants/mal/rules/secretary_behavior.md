@@ -114,9 +114,10 @@ cp tenants/mal/docs/executive/launchd-com.steward.executive-backup-reminder.plis
 launchctl load ~/Library/LaunchAgents/com.steward.executive-backup-reminder.plist
 ```
 
-## Today digest（平日 3 回 · CLI · LLM なし）
+## Today digest（毎日 3 回 · CLI · LLM なし）
 
-段向け Today を **09:00 / 13:00 / 17:00（JST · 月–金）** に生成する。
+段向け Today を **09:00 / 13:00 / 17:00（JST · 毎日）** に生成する。  
+不動産（土日）· 別業務（火水含む）のため週7日。
 
 ```bash
 bash tenants/mal/docs/executive/scripts/install-today-digest-launchd.sh

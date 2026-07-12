@@ -35,6 +35,12 @@ describe("company-events abnormal", () => {
   beforeEach(() => {
     setTenantId("mal");
     initCompanyEventsFile();
+    // Drop leftover 2099-* abnormal fixtures from prior interrupted runs.
+    const registry = loadCompanyEvents();
+    const filtered = registry.events.filter((e) => !/-2099/.test(e.id) && !e.id.includes("2099"));
+    if (filtered.length !== registry.events.length) {
+      writeYamlFile(REGISTRY_PATH(), { ...registry, events: filtered });
+    }
     if (existsSync(REGISTRY_PATH())) {
       copyFileSync(REGISTRY_PATH(), REGISTRY_BACKUP);
     }

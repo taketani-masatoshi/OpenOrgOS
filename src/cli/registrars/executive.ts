@@ -51,6 +51,7 @@ import {
   runSchedulingList,
   runSchedulingNew,
   runSchedulingPropose,
+  runSchedulingApproveSend,
   runSchedulingProcess,
   runSchedulingReminderPollCommand,
   runSchedulingRespond,
@@ -201,6 +202,24 @@ export function registerExecutiveCommands(program: Command): void {
         from: opts.from,
         to: opts.to,
         count: opts.count,
+        json: opts.json,
+      })
+    );
+
+  schedulingCmd
+    .command("approve-send")
+    .description("Approve and send unsent proposal drafts (CEO/approver · human gate)")
+    .requiredOption("--id <caseId>", "Case ID")
+    .option("--reviewed", "Confirm full draft review (required for correspondence)", true)
+    .option("--no-reviewed", "Reject without review acknowledgement")
+    .option("--dry-run", "Validate and write EML only (default)", true)
+    .option("--no-dry-run", "Deliver via real SMTP (requires mail-config + ORGOS_SMTP_*)")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runSchedulingApproveSend({
+        id: opts.id,
+        reviewed: opts.reviewed !== false,
+        dryRun: opts.dryRun !== false,
         json: opts.json,
       })
     );

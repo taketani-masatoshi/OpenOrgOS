@@ -2,7 +2,7 @@ wire_version: "0.1"
 node_id: mal
 node_uri: steward://tenant/mal
 display_name: MAL Co
-did: did:ooo:org:pk-a1f974540eea4f7b
+did: did:ooo:org:pk-a0cd8257c5046848
 trust_registry_url: https://oorgos.org/protocol/wire-trust-registry.yaml
 listen:
   host: 0.0.0.0

@@ -91,6 +91,7 @@ import { migrateLegacyWebhookPeers } from "../lib/protocol/peers-migrate-legacy.
 import { readFileSync } from "node:fs";
 import { orgIdentityDocumentSchema } from "../../schemas/protocol/identity-exchange.js";
 import { syncWireGatewayDidFromSigningKey } from "../lib/protocol/wire-gateway-did-sync.js";
+import { runWirePilotHygiene } from "../lib/protocol/wire-pilot-hygiene.js";
 
 export interface ProtocolValidateOptions {
   tenant?: string;
@@ -981,6 +982,28 @@ export function runProtocolSigningSyncGatewayDid(opts: ProtocolSigningSyncGatewa
   }
   console.log(`✓ wire-gateway did ${sync.updated ? "updated" : "already aligned"}: ${sync.did}`);
   console.log(`  path: ${sync.path}`);
+}
+
+export interface ProtocolWireHygieneOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolWireHygiene(opts: ProtocolWireHygieneOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const result = runWirePilotHygiene(opts.tenant);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`✓ Wire pilot hygiene (${result.tenant})`);
+  console.log(`  signing_key: ${result.signing_key}`);
+  console.log(`  signing_meta: ${result.signing_meta}`);
+  console.log(
+    `  gateway_did: ${result.gateway_did}${result.gateway_did_updated ? " (updated)" : ""}`
+  );
+  console.log(`  mail_config: ${result.mail_config}`);
+  console.log(`  loopback_peer: ${result.loopback_peer}`);
 }
 
 export interface ProtocolDeliverOptions {

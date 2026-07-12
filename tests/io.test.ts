@@ -12,9 +12,10 @@ import {
 } from "../src/lib/document-io.js";
 import { documentIoSchema } from "../schemas/document-io.js";
 
-import { getDataDir, getDocsOutboxDir, resolveTenantPath } from "../src/lib/utils.js";
+import { getDataDir, getDocsOutboxDir, resolveTenantPath, writeYamlFile } from "../src/lib/utils.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
-const IO_PATH = join(getDataDir(), "document-io.yaml");
+const IO_PATH = () => join(getDataDir(), "document-io.yaml");
 const IO_BACKUP = join(tmpdir(), "steward-document-io-backup.yaml");
 
 describe("document-io", () => {
@@ -23,8 +24,14 @@ describe("document-io", () => {
   const createdPaths: string[] = [];
 
   beforeEach(() => {
+    setTenantId("demo");
     initDocumentIoFile();
-    copyFileSync(IO_PATH, IO_BACKUP);
+    writeYamlFile(IO_PATH(), {
+      as_of: "2026-07-12",
+      inbox_items: [],
+      outbox_items: [],
+    });
+    copyFileSync(IO_PATH(), IO_BACKUP);
     tempDir = mkdtempSync(join(tmpdir(), "steward-io-"));
     samplePdf = join(tempDir, "sample.pdf");
     writeFileSync(samplePdf, "%PDF-1.4 test");
@@ -33,7 +40,7 @@ describe("document-io", () => {
 
   afterEach(() => {
     if (existsSync(IO_BACKUP)) {
-      copyFileSync(IO_BACKUP, IO_PATH);
+      copyFileSync(IO_BACKUP, IO_PATH());
     }
     for (const p of createdPaths) {
       if (existsSync(join(process.cwd(), p))) {

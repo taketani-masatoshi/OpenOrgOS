@@ -79,10 +79,10 @@ LOG="${ORGOS_TODAY_DIGEST_LOG:-/tmp/orgos-mal-today-digest.log}"
   SUB_S="$(printf '%s' "$SUB" | tr -d "\"'")"
   MSG_S="$(printf '%s' "$MSG" | tr -d "\"'")"
 
-  # カスタムアイコン付き applet（osascript 直呼びは Script Editor アイコンになる）
-  NOTIFY_APP="$ROOT/tenants/mal/docs/executive/apps/MAL Today.app/Contents/MacOS/applet"
-  if [[ -x "$NOTIFY_APP" ]]; then
-    "$NOTIFY_APP" "$TITLE_S" "$SUB_S" "$MSG_S" || true
+  # カスタムアイコン付き MAL Today.app（UNUserNotificationCenter）
+  NOTIFY_BIN="$ROOT/tenants/mal/docs/executive/apps/MAL Today.app/Contents/MacOS/MALToday"
+  if [[ -x "$NOTIFY_BIN" ]]; then
+    "$NOTIFY_BIN" "$TITLE_S" "$SUB_S" "$MSG_S" 2>>"$LOG" || true
   else
     /usr/bin/osascript -e "display notification \"${MSG_S}\" with title \"${TITLE_S}\" subtitle \"${SUB_S}\"" || true
   fi

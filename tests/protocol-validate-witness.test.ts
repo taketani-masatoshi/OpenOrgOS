@@ -7,6 +7,7 @@ import { validateProtocolState } from "../src/lib/protocol/validate.js";
 import { getWitnessPoolYamlPath, getTransactionsRegistryPath } from "../src/lib/protocol/paths.js";
 import { registerPeer } from "../src/lib/protocol/peers.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import { recordDeliveryAttempt } from "../src/lib/protocol/delivery-ledger.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 import { transactionsRegistrySchema } from "../schemas/protocol/transaction-record.js";
 
@@ -57,11 +58,20 @@ describe("protocol validate witness warnings", () => {
       })
     );
     writeFileSync(join(getDataDir(), "protocol", "audit-chain.jsonl"), "", "utf-8");
+    recordDeliveryAttempt({
+      event_id: "11111111-1111-4111-8111-111111111111",
+      peer_id: "PEER-001",
+      channel: "wire_v1",
+      status: "success",
+      at: new Date().toISOString(),
+      direction: "outbound",
+      endpoint: "https://peer.example/wire/v1/events",
+    });
   });
 
   afterEach(() => cleanup());
 
-  it("warns when witness receipts missing for outbound tx", () => {
+  it("warns when witness receipts missing for hub-path outbound tx", () => {
     const result = validateProtocolState();
     expect(result.ok).toBe(true);
     expect(result.warnings.some((w) => w.code === "witness-receipt-missing")).toBe(true);

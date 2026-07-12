@@ -5,6 +5,7 @@ import type {
 import {
   auditCliMutation,
   requireCliDataWrite,
+  requireCliHumanApproval,
   requireCliSchedulingApproval,
 } from "../lib/console-auth/cli-operator.js";
 import { getCliOperatorContext } from "../lib/console-auth/cli-operator.js";
@@ -42,6 +43,7 @@ import {
   ensureSchedulingCorrespondenceDrafts,
   recordSchedulingLifecycleEvent,
 } from "../lib/scheduling-coordination/lifecycle.js";
+import { approveAndSendSchedulingProposals } from "../lib/scheduling-coordination/approve-send-proposals.js";
 
 export interface SchedulingParticipantInput {
   name: string;
@@ -210,6 +212,47 @@ export function runSchedulingPropose(opts: {
     console.log(`  ${s.id}: ${s.label}`);
   }
   console.log(`  next: ${nextActionLabel(updated.next_action)}`);
+}
+
+export async function runSchedulingApproveSend(opts: {
+  id: string;
+  reviewed?: boolean;
+  dryRun?: boolean;
+  json?: boolean;
+}): Promise<void> {
+  const auth = requireCliHumanApproval("executive scheduling approve-send");
+  const dryRun = opts.dryRun !== false;
+  try {
+    const sent = await approveAndSendSchedulingProposals({
+      caseId: opts.id,
+      operatorId: auth.record.operator_id,
+      dryRun,
+      reviewed: opts.reviewed !== false,
+      command: "executive scheduling approve-send",
+    });
+    if (opts.json) {
+      console.log(
+        JSON.stringify(
+          { ok: true, case_id: opts.id, sent_draft_ids: sent, dry_run: dryRun },
+          null,
+          2
+        )
+      );
+      return;
+    }
+    console.log(
+      `✓ ${opts.id} · approved+sent ${sent.length} proposal draft(s)${dryRun ? " (dry-run)" : ""}`
+    );
+    for (const id of sent) console.log(`  ${id}`);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (opts.json) {
+      console.log(JSON.stringify({ ok: false, error: message }, null, 2));
+    } else {
+      console.error(message);
+    }
+    process.exit(1);
+  }
 }
 
 export function runSchedulingRespond(opts: {

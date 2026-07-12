@@ -9,7 +9,6 @@ import {
 } from "../src/lib/correspondence/ceo-inline-question.js";
 import { listCorrespondenceDrafts, loadCorrespondenceDraft } from "../src/lib/correspondence/draft.js";
 import { loadMailTriageQueue } from "../src/lib/correspondence/mail-triage-queue.js";
-import { sendApprovedCorrespondence } from "../src/lib/correspondence/send-gate.js";
 import { loadOrgApprovalRegistry } from "../src/lib/org/approval/index.js";
 import {
   approveFromStewardChat,
@@ -48,15 +47,11 @@ async function reviewApproveAndSendBatch(draftIds: string[]): Promise<void> {
   for (const draft of drafts) expect(review.preview).toContain(draft.body);
   const approval = await approveFromStewardChat(drafts[0]!.approval_id!, user, {
     reviewed: true,
+    send: true,
+    dryRun: false,
   });
   expect(approval.approval_ids).toHaveLength(drafts.length);
-  for (const draft of drafts) {
-    const transport = await sendApprovedCorrespondence({
-      draftId: draft.draft_id,
-      operatorId: "ceo-test",
-    });
-    expect(transport.sendResult.mode).toBe("dry_run");
-  }
+  expect(approval.sent_draft_ids).toEqual(expect.arrayContaining(draftIds));
 }
 
 describe("scheduling full secretary E2E", () => {

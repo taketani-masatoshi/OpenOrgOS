@@ -75,6 +75,7 @@ import {
   runProtocolSigningExportPublic,
   runProtocolSigningRotate,
   runProtocolSigningSyncGatewayDid,
+  runProtocolWireHygiene,
   runProtocolDeliver,
   runProtocolDeliverFlushPending,
   runProtocolDeliverPull,
@@ -1236,6 +1237,14 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runProtocolSigningSyncGatewayDid({ tenant: opts.tenant, json: opts.json }));
+  protocolCmd
+    .command("wire-hygiene")
+    .description(
+      "Ensure signing key · gateway DID · mail-config · email_wire loopback peer (no key rotate)"
+    )
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolWireHygiene({ tenant: opts.tenant, json: opts.json }));
 
   const protocolDeliverCmd = protocolCmd
     .command("deliver")

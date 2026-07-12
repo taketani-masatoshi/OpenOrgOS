@@ -347,15 +347,24 @@ export async function handleChatApi(
     const body = await readBody(req);
     let flush = true;
     let reviewed = false;
+    let send = false;
+    let dryRun = true;
     try {
       const parsed = chatApprovalRequestSchema.parse(JSON.parse(body || "{}"));
       if (parsed.flush === false) flush = false;
       reviewed = parsed.reviewed === true;
+      send = parsed.send === true;
+      if (parsed.dry_run === false) dryRun = false;
     } catch {
       /* default flush */
     }
     try {
-      const result = await approveFromStewardChat(approvalId, ctx.user, { flush, reviewed });
+      const result = await approveFromStewardChat(approvalId, ctx.user, {
+        flush,
+        reviewed,
+        send,
+        dryRun,
+      });
       appendChatAudit({
         action: "approve",
         operator_id: ctx.user.operator_id,

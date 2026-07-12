@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { collectMailSetupIssues } from "../correspondence/mail-setup-readiness.js";
 import { ensureExecutiveMailConfig } from "../correspondence/ensure-mail-config.js";
 import { getMailConfigPath } from "../correspondence/paths.js";
+import { loadMailConfig } from "../correspondence/mail-config.js";
 import { repairCorrespondenceApprovalRegistry } from "../correspondence/approval-registry-repair.js";
 import { readOperatorKeyFromFile } from "../console-auth/cli-operator.js";
 import { loadOperatorRegistry, verifyOperatorKey } from "../org/operators.js";
@@ -85,6 +86,44 @@ function checkSchedulingDataSkeleton(): OperationalReadinessIssue[] {
   return issues;
 }
 
+function checkReceiveAutomationHints(): OperationalReadinessIssue[] {
+  const issues: OperationalReadinessIssue[] = [];
+  const config = loadMailConfig();
+  if (!config) return issues;
+  if (config.receive?.auto_triage === false) {
+    issues.push({
+      id: "receive_auto_triage_off",
+      severity: "warning",
+      message:
+        "receive.auto_triage=false — IMAP sync 後の triage / schedule auto-process が自動起動しない",
+      fix: "records/executive/mail-config.yaml で auto_triage: true（または sync 後に orgos mail intake triage + executive scheduling auto-process）",
+    });
+  }
+  if (config.receive?.auto_schedule_coordination === false) {
+    issues.push({
+      id: "receive_auto_schedule_off",
+      severity: "warning",
+      message: "receive.auto_schedule_coordination=false — 日程返信の自動取込が無効",
+      fix: "mail-config.yaml で auto_schedule_coordination: true、または手動 process --all",
+    });
+  }
+  const hasGoogle =
+    Boolean(process.env.GOOGLE_CALENDAR_ID?.trim()) &&
+    Boolean(
+      process.env.GOOGLE_CALENDAR_ACCESS_TOKEN?.trim() || process.env.GOOGLE_ACCESS_TOKEN?.trim()
+    );
+  if (!hasGoogle) {
+    issues.push({
+      id: "google_calendar_not_configured",
+      severity: "warning",
+      message:
+        "Google Calendar 未設定 — 確定時はローカル calendar.yaml のみ（Meet URL なし）",
+      fix: "GOOGLE_CALENDAR_ID + GOOGLE_CALENDAR_ACCESS_TOKEN（tenants/<id>/docs/executive/google-calendar-setup.md）",
+    });
+  }
+  return issues;
+}
+
 export function syncOperatorKeyHashesFromLocalFiles(): string[] {
   return syncAndRepairOperatorKeys({ allowRotate: false }).synced;
 }
@@ -147,6 +186,7 @@ export function collectOperationalReadinessIssues(opts?: {
 
   issues.push(...checkOperatorKeyAlignment());
   issues.push(...checkSchedulingDataSkeleton());
+  issues.push(...checkReceiveAutomationHints());
 
   if (opts?.repairApprovals) {
     repaired = repairCorrespondenceApprovalRegistry().repaired;

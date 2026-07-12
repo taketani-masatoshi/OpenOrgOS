@@ -8,6 +8,7 @@ import {
   listCorrespondenceDrafts,
   markCorrespondenceDraftApproved,
 } from "../correspondence/draft.js";
+import { sendApprovedCorrespondence } from "../correspondence/send-gate.js";
 import { getTenantId } from "../tenant.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
@@ -17,6 +18,7 @@ export interface ChatWireApproveResult {
   mode: "internal" | "wire";
   approval_id: string;
   approval_ids?: string[];
+  sent_draft_ids?: string[];
   flushed?: number;
   transmission?: {
     transaction_id?: string;
@@ -77,7 +79,7 @@ export function loadSchedulingCorrespondencePreview(approvalId: string): {
 export async function approveFromStewardChat(
   approvalId: string,
   user: WireConsoleUser,
-  opts?: { flush?: boolean; reviewed?: boolean }
+  opts?: { flush?: boolean; reviewed?: boolean; send?: boolean; dryRun?: boolean }
 ): Promise<ChatWireApproveResult> {
   const tenantId = getTenantId();
   const pending = findOrgApproval(approvalId);
@@ -128,6 +130,17 @@ export async function approveFromStewardChat(
       markCorrespondenceDraftApproved(draftId);
       return result;
     });
+    const sentDraftIds: string[] = [];
+    if (opts?.send === true) {
+      for (const draftId of review.draft_ids) {
+        await sendApprovedCorrespondence({
+          draftId,
+          operatorId: user.operator_id,
+          dryRun: opts.dryRun !== false,
+        });
+        sentDraftIds.push(draftId);
+      }
+    }
     return {
       mode: "internal",
       approval_id: approvalId,
@@ -139,6 +152,7 @@ export async function approveFromStewardChat(
             )?.approval_id
         )
         .filter((id): id is string => Boolean(id)),
+      sent_draft_ids: sentDraftIds.length ? sentDraftIds : undefined,
       approval:
         results.find((result) => result.approval.approval_id === approvalId)?.approval ??
         results[0]?.approval,

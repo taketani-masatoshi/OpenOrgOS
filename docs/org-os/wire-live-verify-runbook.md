@@ -87,10 +87,25 @@ npm run orgos -- --tenant mal protocol transaction prune-orphans --apply
 
 | 問題 | 対策 |
 |------|------|
-| `mail-config.yaml` 消失 | `tests/setup-restore-protocol.ts` が mal L2 を preserve |
+| `mail-config.yaml` 消失 | `tests/setup-restore-protocol.ts` が mal L2 + mal-pilot example を preserve |
+| フルスイートと Phase 4 同時実行 | **禁止** — `./scripts/run-full-test-isolated.sh` · Phase 4 は vitest を pkill する |
 | `ORGOS_SMTP_*` 漏洩 | `resolveWireOutboundConfig` が `provider: dry_run` を尊重 |
 | mal gate テスト | `mal-wire-pilot-gate.test.ts` が mail-config を backup/restore |
 | orphan 復活 | HEAD の `transactions-registry.yaml` を空に commit · `protocol transaction prune-orphans --apply` |
+| email_wire loopback の witness noise | validate / live-verify は hub-path（wire_v1/relay）のみ要求 |
+
+### 隔離フルテスト
+
+```bash
+./scripts/run-full-test-isolated.sh
+# log: scratch/full-test-*.log
+```
+
+### Phase 4a 安定性
+
+```bash
+./scripts/phase4-live-stability.sh mal 3
+```
 
 ### Live 失敗の切り分け
 

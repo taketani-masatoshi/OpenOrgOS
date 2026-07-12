@@ -37,6 +37,7 @@
 orgos executive scheduling new --title "..." --participant "名前|email|external"
 orgos executive scheduling propose --id SCH-2026-001
 orgos executive scheduling approve-send --id SCH-2026-001 --reviewed
+orgos executive scheduling approve-send --id SCH-2026-001 --reviewed --no-dry-run
 orgos executive scheduling process --mail-id MSG-...
 orgos executive scheduling rehearsal --full --tenant <id>
 orgos executive scheduling draft --id SCH-2026-001 --write-draft
@@ -48,7 +49,9 @@ orgos executive scheduling reschedule --id SCH-2026-001
 orgos skills run schedule-coordination
 ```
 
-**返信取込:** 本番は Mail Intake sync → `auto-process` / `process --mail-id`。`executive scheduling respond` は **dev/test のショートカット**（リハーサルでは EML 注入 + `process-mail` を使用）。
+**提案送信:** CLI `approve-send`（既定 dry-run · `--no-dry-run` で実 SMTP）。Steward Chat は preview 後 `{ "reviewed": true, "send": true }`（`send` なしは承認のみ）。
+
+**返信取込:** 本番は Mail Intake sync → `auto-process` / `process --mail-id`。`auto_triage: false` のときは手動 triage が必要。`executive scheduling respond` は **dev/test のショートカット**（リハーサルでは EML 注入 + `process-mail` を使用）。
 
 ## 初回セットアップ
 
@@ -58,21 +61,21 @@ orgos doctor --tenant <id> --repair
 orgos executive scheduling rehearsal --full --tenant <id>
 ```
 
-`doctor --repair` は operator key · mail-config · approval registry を修復し、成功時に次コマンド（`rehearsal --full`）を表示する。
+`doctor --repair` は operator key · mail-config · approval registry を修復し、成功時に次コマンド（`rehearsal --full`）を表示する。受信自動化オフ / Google 未設定は **WARNING**。
 
 ## 本番 vs dev/test 経路
 
 | 段階 | 本番 | dev/test |
 |------|------|----------|
 | 初回セットアップ | `tenant scaffold-data` → `doctor --repair` | 同上 |
-| 候補提案送信 | `approve-send --reviewed`（`--no-dry-run` で実 SMTP） | `approve-send`（既定 dry-run · `smtp.test.local`） |
-| 返信取込 | Mail Intake sync → `auto-process` / `process --mail-id` | リハーサル: fixture EML → `process-mail` |
+| 候補提案送信 | `approve-send --reviewed --no-dry-run` または Chat `send:true` | `approve-send`（既定 dry-run）· `rehearsal` |
+| 返信取込 | Mail Intake sync → triage → `auto-process` | リハーサル: fixture EML → `process-mail` |
 | CEO 最終確認 | Steward Chat / `mail intake ceo answer` | リハーサル: inline CEO answer |
-| 完走確認 | `status=closed` · `orgos validate` | `rehearsal --full` 終了時アサーション |
+| 完走確認 | `status=closed` · `orgos validate` | `rehearsal --full` / `./scripts/scheduling-live-smoke.sh` |
 
-**スコープ外（別検証）:** IMAP 本番 sync · Google Calendar/Meet OAuth 本番 · Steward Chat session 本番。
+**別検証（テナント固有）:** IMAP/SMTP ライブ往復 · Steward Chat session 本番 · Google OAuth refresh。
 
-**運用 Runbook:** [scheduling-coordination-runbook.md](../../../docs/org-os/scheduling-coordination-runbook.md)（セットアップ · 本番フロー · トラブルシュート · 厳格チェックリスト）
+**運用 Runbook:** [scheduling-coordination-runbook.md](../../../docs/org-os/scheduling-coordination-runbook.md)
 
 ## 前提（mutation 前）
 

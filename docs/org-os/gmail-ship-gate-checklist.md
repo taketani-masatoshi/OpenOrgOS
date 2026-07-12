@@ -27,16 +27,15 @@
 
 ```bash
 ./scripts/phase4-mal-email-wire-live.sh mal check
-ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/phase4-mal-email-wire-live.sh mal check
-# Load L2 SMTP/IMAP before live (phase4 script auto-sources .env.mail-wire):
-./scripts/phase4-mal-email-wire-live.sh mal live
-ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_ROUNDTRIP=1 ./scripts/wire-live-verify.sh mal live
+./scripts/phase4-live-stability.sh mal 3
+ORGOS_LIVE_VERIFY=1 ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/wire-live-verify.sh mal check
 ```
 
 - [x] `ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/prod-validate-wire.sh mal` PASS
 - [x] Phase 4a `mal check` PASS（mail-config · blocking doctor）
-- [x] Phase 4a `mal live` SMTP→IMAP→ingest PASS（2026-07-12）
-- [x] `email_wire_roundtrip` 証跡: `scratch/wire-live-verify-mal-2026-07-12T03-51-54-090Z.json` ほか
+- [x] Phase 4a live 連続 green（stability · ingest retry）
+- [x] `email_wire_roundtrip` 証跡: `scratch/wire-live-verify-mal-*.json`
+- [x] 隔離フルテスト: `./scripts/run-full-test-isolated.sh`
 
 ### データ衛生（Wave 0）
 
@@ -69,6 +68,7 @@ export ORGOS_EMAIL_WIRE_REQUIRED=1
 - [ ] Steward: `ORGOS_GMAIL_CLIENT_*` · `ORGOS_COMMUNITY_GOVERNANCE_TOKEN`
 - [x] Community feature flag 既定 OFF · E2E 503（`COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED`）
 - [x] ステージング自動化: `./scripts/phase4b-community-gmail-staging.sh check|e2e`
+- [x] 手動 OAuth 証跡テンプレ: [phase4b-oauth-evidence.md.example](phase4b-oauth-evidence.md.example)
 - [ ] ステージング UI: flag 一時 `=1` で `mail setup gmail --community-link` ブラウザ確認
 - [ ] 本番 `publish/protocol/community-integration.json` → `tenant_mail_connect_*: true`（**Phase 5 のみ**）
 

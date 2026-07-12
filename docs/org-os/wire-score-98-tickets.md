@@ -54,8 +54,8 @@
 |----|-------|---------|:----:|-----|
 | **C-1** | 2–3 | email_wire deferred 本番ゲート | ✅ | `ORGOS_EMAIL_WIRE_REQUIRED` unset → PASS · [ADR 0004](../adr/0004-gmail-deferred-opt-in-gate.md) |
 | **C-2** | 2–3 | Community tenant-mail 未出荷フラグ | ✅ | `tenant_mail_connect_*: false` · `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED` |
-| **C-3** | 4a | SMTP/IMAP email_wire live | ✅ | `phase4-mal-email-wire-live.sh mal live` · `scratch/wire-live-verify-mal-*.json` |
-| **C-4** | 4b | Community Gmail OAuth ステージング | △ | `phase4b-community-gmail-staging.sh` · ブラウザ OAuth は手動残 |
+| **C-3** | 4a | SMTP/IMAP email_wire live | ✅ | `phase4-live-stability.sh` · ingest retry · diag JSON |
+| **C-4** | 4b | Community Gmail OAuth ステージング | △ | `phase4b-community-gmail-staging.sh e2e` · Playwright 503 · 手動 OAuth 残 |
 | **C-5** | 5 | CEO 承認後の本番固定 | ○ | `ORGOS_CEO_SHIP_APPROVED=1 ./scripts/mal-ship-gate-apply.sh` |
 
 ---

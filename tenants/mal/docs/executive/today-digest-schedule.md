@@ -14,7 +14,8 @@
 | **13:00** | 午後開始 |
 | **17:00** | 夕方確認 |
 
-平日（月–金）のみ。Mac のタイムゾーンを **Asia/Tokyo** にすること。
+平日だけでなく **毎日**（不動産の土日稼働 · 別業務の火水含む）。Mac のタイムゾーンを **Asia/Tokyo** にすること。
+
 
 ---
 
@@ -65,7 +66,8 @@ launchctl bootout "gui/$(id -u)/com.steward.mal-today-digest" 2>/dev/null \
 
 | 処理 | 頻度 | 担当 |
 |------|------|------|
-| Today digest | 平日 3 回 | 本 launchd |
+| Today digest | **毎日** 3 回 | 本 launchd |
+
 | Mail intake sync | 別途 cron（任意 · 15–30 分） | Mail Intake |
 
 Today には高優先メール・承認・日程調整が載るため、intake と組み合わせると気づきやすい。

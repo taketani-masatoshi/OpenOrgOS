@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · secretary
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-12 · **Tenant:** mal
+> **Generated:** 2026-07-12 · **Tenant:** aiac
 > **Regenerate:** `orgos operator export --agent secretary`
 
 ---
@@ -215,6 +215,8 @@ orgos doctor --tenant <id> --repair
 ```
 
 続けて dry-run 完走確認: `orgos executive scheduling rehearsal --full --tenant <id>`
+実用送信: `orgos executive scheduling approve-send --id SCH-... --reviewed`（`--no-dry-run` で実 SMTP）
+運用: [scheduling-coordination-runbook.md](docs/org-os/scheduling-coordination-runbook.md)
 詳細 Runbook: [scheduling-coordination-runbook.md](docs/org-os/scheduling-coordination-runbook.md) · Skill: [schedule_coordination.md](steward/core/skills/schedule_coordination.md)
 
 ---

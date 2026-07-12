@@ -195,6 +195,9 @@ export async function callStewardMcpTool(
     }
     const result = await approveFromStewardChat(approvalId, user, {
       flush: args.flush !== false,
+      reviewed: args.reviewed === true,
+      send: args.send === true,
+      dryRun: args.dry_run !== false,
     });
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   }

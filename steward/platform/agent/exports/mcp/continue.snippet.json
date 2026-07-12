@@ -12,7 +12,7 @@
           "start"
         ],
         "env": {
-          "ORGOS_TENANT": "mal",
+          "ORGOS_TENANT": "aiac",
           "ORGOS_MCP_TOKEN": "<generate: orgos mcp rotate-token>"
         }
       }

@@ -18,6 +18,7 @@ import { getPeersYamlPath, getTransactionsRegistryPath } from "./paths.js";
 import { resolveWitnessWireGovernancePolicy } from "../../../schemas/protocol/witness-pool.js";
 import { isWitnessEnabled, loadWitnessPoolConfig } from "./witness-pool.js";
 import { listWitnessPending } from "./witness-queue.js";
+import { listDeliveryAttempts } from "./delivery-ledger.js";
 import { listTransactions } from "./transactions.js";
 import { verifyCachedReceiptsForEvent } from "./witness-client.js";
 import { evaluateWitnessWireGovernancePolicy } from "./witness-policy.js";
@@ -220,6 +221,12 @@ export function validateProtocolState(
 
     for (const tx of listTransactions()) {
       if (tx.direction !== "outbound") continue;
+      // email_wire-only / undelivered loopback never hits witness hubs — skip noise.
+      const hubDelivered = listDeliveryAttempts({ eventId: tx.event_id }).some(
+        (a) =>
+          a.status === "success" && (a.channel === "wire_v1" || a.channel === "relay")
+      );
+      if (!hubDelivered) continue;
       const { receipts, quorum } = verifyCachedReceiptsForEvent(tx.event_id, pool);
       if (receipts.length === 0) {
         const entry = {

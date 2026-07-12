@@ -60,10 +60,14 @@ describe("mal protocol fixture preserve", () => {
     );
     writeFileSync(
       mailConfigPath,
-      readFileSync(
-        join(ROOT_DIR, "tenants/mal/records/executive/mail-config.mal-pilot.yaml.example"),
-        "utf-8"
-      ),
+      (() => {
+        const example = join(
+          ROOT_DIR,
+          "tenants/mal/records/executive/mail-config.mal-pilot.yaml.example"
+        );
+        if (existsSync(example)) return readFileSync(example, "utf-8");
+        return `provider: smtp\nfrom:\n  name: MAL\n  email: ai@malkk.com\nreceive:\n  sync: imap\n  auto_wire_scan: true\nwire_outbound:\n  enabled: true\n  from:\n    name: Wire\n    email: ai@malkk.com\n  smtp:\n    host: sv16463.xserver.jp\n    port: 587\n    secure: false\n`;
+      })(),
       "utf-8"
     );
   });

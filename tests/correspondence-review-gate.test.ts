@@ -90,7 +90,7 @@ describe("correspondence review gate", () => {
       skipCcDefaults: true,
     });
     const user = {
-      operator_id: "OP-001",
+      operator_id: "ceo-test",
       approver_id: "Demo CEO",
       mode: "dev" as const,
     };
@@ -103,6 +103,7 @@ describe("correspondence review gate", () => {
     ).rejects.toThrow(/reviewed=true/);
     const approved = await approveFromStewardChat(approvalId!, user, { reviewed: true });
     expect(approved.approval_id).toBe(approvalId);
+    expect(approved.sent_draft_ids).toBeUndefined();
   });
 
   it("keeps general correspondence Chat approval forbidden", () => {

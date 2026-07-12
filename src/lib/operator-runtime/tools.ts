@@ -200,6 +200,9 @@ async function execOperatorApprove(
   try {
     const result = await approveFromStewardChat(approvalId, user, {
       flush: args.flush !== false,
+      reviewed: args.reviewed === true,
+      send: args.send === true,
+      dryRun: args.dry_run !== false,
     });
     return { ok: true, content: JSON.stringify(result, null, 2) };
   } catch (err) {

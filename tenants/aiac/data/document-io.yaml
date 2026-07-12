@@ -19,6 +19,66 @@ inbox_items:
     notes: processed
     processed_at: 2026-07-12
     archive_path: scratch/test-archive-1783829820663.pdf
+  - id: INB-003
+    filename: 2026-07-12_テスト許可証.pdf
+    path: docs/io/inbox/licenses/2026-07-12_テスト許可証.pdf
+    category: licenses
+    status: pending
+    received_at: 2026-07-12
+    source: scan
+    title: テスト許可証
+    related_id: CTR-013
+  - id: INB-004
+    filename: 2026-07-12_申請書テスト.pdf
+    path: docs/io/inbox/applications/2026-07-12_申請書テスト.pdf
+    category: applications
+    status: done
+    received_at: 2026-07-12
+    source: scan
+    title: 申請書テスト
+    notes: processed
+    processed_at: 2026-07-12
+    archive_path: scratch/test-archive-1783831132470.pdf
+  - id: INB-005
+    filename: 2026-07-12_テスト許可証.pdf
+    path: docs/io/inbox/licenses/2026-07-12_テスト許可証.pdf
+    category: licenses
+    status: pending
+    received_at: 2026-07-12
+    source: scan
+    title: テスト許可証
+    related_id: CTR-013
+  - id: INB-006
+    filename: 2026-07-12_申請書テスト.pdf
+    path: docs/io/inbox/applications/2026-07-12_申請書テスト.pdf
+    category: applications
+    status: done
+    received_at: 2026-07-12
+    source: scan
+    title: 申請書テスト
+    notes: processed
+    processed_at: 2026-07-12
+    archive_path: scratch/test-archive-1783831281993.pdf
+  - id: INB-007
+    filename: 2026-07-12_テスト許可証.pdf
+    path: docs/io/inbox/licenses/2026-07-12_テスト許可証.pdf
+    category: licenses
+    status: pending
+    received_at: 2026-07-12
+    source: scan
+    title: テスト許可証
+    related_id: CTR-013
+  - id: INB-008
+    filename: 2026-07-12_申請書テスト.pdf
+    path: docs/io/inbox/applications/2026-07-12_申請書テスト.pdf
+    category: applications
+    status: done
+    received_at: 2026-07-12
+    source: scan
+    title: 申請書テスト
+    notes: processed
+    processed_at: 2026-07-12
+    archive_path: scratch/test-archive-1783831343834.pdf
 outbox_items:
   - id: OUT-001
     filename: test-out-1783829820722.pdf
@@ -28,3 +88,27 @@ outbox_items:
     generated_at: 2026-07-12
     source: manual
     title: test-out-1783829820722
+  - id: OUT-002
+    filename: test-out-1783831132506.pdf
+    path: docs/io/outbox/lodging/test-out-1783831132506.pdf
+    category: lodging
+    purpose: display
+    generated_at: 2026-07-12
+    source: manual
+    title: test-out-1783831132506
+  - id: OUT-003
+    filename: test-out-1783831282055.pdf
+    path: docs/io/outbox/lodging/test-out-1783831282055.pdf
+    category: lodging
+    purpose: display
+    generated_at: 2026-07-12
+    source: manual
+    title: test-out-1783831282055
+  - id: OUT-004
+    filename: test-out-1783831343868.pdf
+    path: docs/io/outbox/lodging/test-out-1783831343868.pdf
+    category: lodging
+    purpose: display
+    generated_at: 2026-07-12
+    source: manual
+    title: test-out-1783831343868

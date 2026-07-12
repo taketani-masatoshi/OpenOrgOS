@@ -135,6 +135,9 @@ export async function sendApprovedCorrespondence(opts: {
 
   if (opts.dryRun) {
     if (draft.notes?.includes("scheduling-case:")) {
+      if (draft.approval_id) {
+        completeCorrespondenceApproval(draft.approval_id);
+      }
       draft = markCorrespondenceDraftSent(draft.draft_id, {
         sentBy: opts.operatorId,
       });

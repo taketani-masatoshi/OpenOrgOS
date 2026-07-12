@@ -1,0 +1,36 @@
+# Phase 4b — Community Gmail OAuth 手動証跡テンプレ
+
+**用途:** ステージングでブラウザ OAuth を 1 回完了したときの L1 記録。  
+**禁止:** refresh/access token · client secret · 個人住所など L2 を書かない。  
+**コピー先:** `scratch/phase4b-oauth-evidence-YYYYMMDD.md`（gitignore 推奨）
+
+| 項目 | 値 |
+|------|-----|
+| 日付 (UTC) | |
+| Steward tenant | `mal` |
+| Community URL | `https://community.oorgos.org` または staging |
+| `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED` | `1`（デモ後は unset） |
+| Google redirect（login） | `/api/auth/callback/google` |
+| Google redirect（mail） | `/api/integrations/orgos-mail/callback` |
+| OAuth client 一致 | Steward `ORGOS_GMAIL_CLIENT_ID` = Community |
+| `connected_via` | `community` |
+| mail-config provider | `gmail_api` |
+| bind nonce | consumed |
+| 実行者 | |
+
+## 手順要約
+
+```bash
+export COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1
+# Community web 再起動後
+ORGOS_TENANT=mal npm run orgos -- mail setup gmail --community-link --expect-email <CEO> --json
+# connect_url をブラウザで完了
+```
+
+## 結果
+
+- [ ] token push HTTP 200
+- [ ] `records/executive/gmail-oauth.json` 存在（中身はチャットに出さない）
+- [ ] デモ後 `unset COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED` · Community 再起動
+
+関連: [gmail-ship-gate-checklist.md](gmail-ship-gate-checklist.md) · `./scripts/phase4b-community-gmail-staging.sh`
