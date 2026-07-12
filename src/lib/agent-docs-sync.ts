@@ -6,6 +6,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentCatalogEntry } from "../../schemas/agent-catalog.js";
 import { listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
+import { loadRoutingRegistry } from "./routing.js";
+import {
+  EXECUTING_AGENT_OVERRIDES,
+  STEWARD_SELF_EXECUTE_SKILLS,
+} from "./skill-execution-mode.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { ROOT_DIR } from "./tenant.js";
 
@@ -180,7 +185,118 @@ export function buildSkillDelegationRuntimeNote(): string {
     "- `runtime: agent` — LLM + Skill 定義添付（旧 `cursor-only` と同義）",
     "- `runtime: cli` — `orgos skills run` で決定論実行",
     "- 実行 Agent の override は `src/lib/skill-execution-mode.ts` が正本",
+    "- 標準経路: `resolveSkillExecutionMode` → `orgos route dispatch --mode auto`（authority 一致時のみ direct）",
   ].join("\n");
+}
+
+export function buildAgentLabelIndex(): string {
+  const lines = [
+    "| 表示名 | Agent id |",
+    "|--------|----------|",
+  ];
+  for (const agent of [...listCatalogAgents()].sort((a, b) => a.id.localeCompare(b.id))) {
+    lines.push(`| ${agent.name_ja ?? agent.name} | \`${agent.id}\` |`);
+  }
+  return lines.join("\n");
+}
+
+export function buildExecutingAgentOverrideTable(): string {
+  const skills = loadSkillRegistry();
+  const lines = [
+    "| Skill id | registry agent_id | executing agent_id |",
+    "|----------|-------------------|-------------------|",
+  ];
+  for (const [skillId, agentId] of Object.entries(EXECUTING_AGENT_OVERRIDES).sort(([a], [b]) =>
+    a.localeCompare(b)
+  )) {
+    const skill = skills.find((entry) => entry.id === skillId);
+    lines.push(
+      `| \`${skillId}\` | \`${skill?.agent_id ?? "—"}\` | \`${agentId}\` |`
+    );
+  }
+  return lines.join("\n");
+}
+
+export function buildStewardSelfExecuteTable(): string {
+  const lines = [
+    "| Skill id | executing agent | Steward の動き |",
+    "|----------|-----------------|--------------|",
+  ];
+  for (const skillId of [...STEWARD_SELF_EXECUTE_SKILLS].sort()) {
+    lines.push(
+      `| \`${skillId}\` | \`executive_steward\` | Steward **自実行**（CLI）→ 要約読取 |`
+    );
+  }
+  return lines.join("\n");
+}
+
+export function buildRoutingSkillIndex(): string {
+  const routes = loadRoutingRegistry().routes
+    .filter((route) => route.skill)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const lines = [
+    "| route id | agent id | skill id |",
+    "|----------|----------|----------|",
+  ];
+  for (const route of routes) {
+    lines.push(`| ${route.id} | \`${route.agent}\` | \`${route.skill}\` |`);
+  }
+  return lines.join("\n");
+}
+
+export function buildExecutionDecisionTree(): string {
+  return [
+    "```",
+    "Skill id / CLI が指定された",
+    "│",
+    "├─ resolveSkillExecutionMode()  （src/lib/skill-execution-mode.ts）",
+    "│",
+    "├─ direct_auto + resolution ready",
+    "│     → orgos route dispatch --mode auto（authority 一致 · CLI 直実行）",
+    "│",
+    "├─ delegate_work_order / agent_interactive / escalate",
+    "│     → Work Order（executing agent id へ IMP）",
+    "│",
+    "├─ deferred",
+    "│     → 必須 argv / parent command 不足 — 手動 dispatch",
+    "│",
+    "├─ human_approval",
+    "│     → wire · approval · broker — CEO ゲート",
+    "│",
+    "└─ skill 不明",
+    "      → orgos route match --text · orgos escalate plan",
+    "```",
+  ].join("\n");
+}
+
+export function validateSkillDelegationNarrativeDrift(): string[] {
+  const issues: string[] = [];
+  const text = readFileSync(SKILL_DELEGATION_MAP_PATH, "utf-8");
+  const narrative = text.replace(
+    /<!-- orgos:generated:[^>]+ -->[\s\S]*?<!-- orgos:generated:[^>]+ -->/g,
+    ""
+  );
+  if (/cursor-only/i.test(narrative)) {
+    issues.push("skill_delegation_map.md: remove cursor-only from narrative; use generated runtime note");
+  }
+  if (!text.includes("skill-execution-mode.ts")) {
+    issues.push("skill_delegation_map.md must reference src/lib/skill-execution-mode.ts as execution SoT");
+  }
+  const requiredSections = [
+    "agent-label-index",
+    "executing-agent-overrides",
+    "steward-self-execute",
+    "routing-skill-index",
+    "execution-decision-tree",
+    "skill-registry-index",
+    "skill-runtime-note",
+  ];
+  for (const name of requiredSections) {
+    if (!text.includes(generatedMarker(name, false))) {
+      issues.push(`skill_delegation_map.md: missing generated section ${name}`);
+    }
+  }
+  return issues;
 }
 
 export function generatedMarker(name: string, end = false): string {
@@ -221,6 +337,19 @@ export function syncAgentDocs(write = false): { orgChart: string; roster: string
   roster = replaceGeneratedSection(roster, "catalog-stats", buildCatalogStatsBlock());
 
   let delegation = readFileSync(SKILL_DELEGATION_MAP_PATH, "utf-8");
+  delegation = replaceGeneratedSection(delegation, "agent-label-index", buildAgentLabelIndex());
+  delegation = replaceGeneratedSection(
+    delegation,
+    "executing-agent-overrides",
+    buildExecutingAgentOverrideTable()
+  );
+  delegation = replaceGeneratedSection(delegation, "steward-self-execute", buildStewardSelfExecuteTable());
+  delegation = replaceGeneratedSection(delegation, "routing-skill-index", buildRoutingSkillIndex());
+  delegation = replaceGeneratedSection(
+    delegation,
+    "execution-decision-tree",
+    buildExecutionDecisionTree()
+  );
   delegation = replaceGeneratedSection(delegation, "skill-registry-index", buildSkillRegistryIndex());
   delegation = replaceGeneratedSection(
     delegation,
@@ -247,6 +376,11 @@ export function validateAgentDocsGeneratedDrift(): string[] {
     ["org-chart.md", "org-chart-sixteen", buildOrgChartSixteenTable(), orgChart],
     ["steward_agent_roster.md", "catalog-index", buildCatalogRosterIndex(), roster],
     ["steward_agent_roster.md", "catalog-stats", buildCatalogStatsBlock(), roster],
+    ["skill_delegation_map.md", "agent-label-index", buildAgentLabelIndex(), delegation],
+    ["skill_delegation_map.md", "executing-agent-overrides", buildExecutingAgentOverrideTable(), delegation],
+    ["skill_delegation_map.md", "steward-self-execute", buildStewardSelfExecuteTable(), delegation],
+    ["skill_delegation_map.md", "routing-skill-index", buildRoutingSkillIndex(), delegation],
+    ["skill_delegation_map.md", "execution-decision-tree", buildExecutionDecisionTree(), delegation],
     ["skill_delegation_map.md", "skill-registry-index", buildSkillRegistryIndex(), delegation],
     ["skill_delegation_map.md", "skill-runtime-note", buildSkillDelegationRuntimeNote(), delegation],
   ] as const) {
@@ -328,6 +462,7 @@ export function validateAgentDocsDrift(): string[] {
   return [
     ...validateOrgChartDrift(),
     ...validateStewardRosterDrift(),
+    ...validateSkillDelegationNarrativeDrift(),
     ...validateAgentDocsGeneratedDrift(),
   ];
 }

@@ -108,6 +108,23 @@ describe("operator-policy sync", () => {
     expect(out).toContain("](steward/core/agents/");
   });
 
+  it("rewriteMarkdownLinksForPortableExport fixes pack-relative links", async () => {
+    const { rewriteMarkdownLinksForPortableExport } = await import(
+      "../src/lib/operator-policy.js"
+    );
+    const out = rewriteMarkdownLinksForPortableExport(
+      "[constitution](../openorgos-engineering-constitution.md) · [skill](../steward/core/skills/x.md)"
+    );
+    expect(out).toContain("](steward/rules/openorgos-engineering-constitution.md)");
+    expect(out).toContain("](steward/core/skills/x.md)");
+  });
+
+  it("validateAgentPackExports passes after export --all", async () => {
+    exportPortableAgents({ all: true, emit: "all" });
+    const { validateAgentPackExports } = await import("../src/lib/agent-portability.js");
+    expect(validateAgentPackExports()).toEqual([]);
+  });
+
   it("validatePolicyMirrors detects stale engineering mdc", () => {
     syncEngineeringRules();
     const mdcPath = join(ROOT_DIR, ".cursor", "rules", "00-engineering-constitution.mdc");
@@ -121,5 +138,18 @@ describe("operator-policy sync", () => {
     } finally {
       writeFileSync(mdcPath, original, "utf-8");
     }
+  });
+
+  it("syncDataClassificationRule emits data-classification cursor mirror", async () => {
+    const { syncDataClassificationRule, DATA_CLASSIFICATION_CURSOR_RULE } = await import(
+      "../src/lib/operator-policy.js"
+    );
+    const path = syncDataClassificationRule();
+    expect(path).toContain("data-classification.mdc");
+    expect(existsSync(join(ROOT_DIR, DATA_CLASSIFICATION_CURSOR_RULE))).toBe(true);
+    const issues = validatePolicyMirrors().filter((issue) =>
+      issue.includes("data-classification.mdc")
+    );
+    expect(issues).toEqual([]);
   });
 });

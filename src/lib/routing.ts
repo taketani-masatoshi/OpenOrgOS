@@ -40,6 +40,8 @@ export interface MatchedRoute {
   moduleEnabled: boolean;
   boundaryOk: boolean;
   skillAvailable: boolean;
+  /** Human-readable reasons when the route is not eligible for dispatch. */
+  blockedReasons: string[];
 }
 
 export function loadRoutingRegistry(): RoutingRegistry {
@@ -75,9 +77,12 @@ function textMatchesKeyword(text: string, keyword: string): boolean {
   return text.toLowerCase().includes(keyword.toLowerCase());
 }
 
-function isModuleAgentEnabled(agent: AgentId): boolean {
+function isModuleAgentEnabled(
+  agent: AgentId,
+  profile: "operational" | "developer" | "task" = "operational"
+): boolean {
   if (getCatalogAgent(agent) && !["property_rental", "hospitality"].includes(agent)) {
-    return isAgentActive(agent, { profile: "operational", mode: "consult" });
+    return isAgentActive(agent, { profile, mode: "consult" });
   }
   const enabled = loadEnabledModules();
   return enabled.some((mod) => MODULE_TO_CLASSIFICATION_AGENT[mod.agent] === agent);
@@ -162,6 +167,31 @@ function scoreRoute(route: RouteDefinition, input: RouteMatchInput): { score: nu
   return { score, matchedBy };
 }
 
+function collectBlockedReasons(input: {
+  route: RouteDefinition;
+  access: AccessCheckResult;
+  moduleEnabled: boolean;
+  boundaryOk: boolean;
+  skillAvailable: boolean;
+}): string[] {
+  const reasons: string[] = [];
+  if (!input.access.allowed) {
+    reasons.push(`access: ${input.access.reason}`);
+  }
+  if (!input.moduleEnabled) {
+    reasons.push(
+      `agent ${input.route.agent} inactive — enable with: orgos agent roster enable --agent ${input.route.agent}`
+    );
+  }
+  if (!input.boundaryOk) {
+    reasons.push("executive boundary violation");
+  }
+  if (!input.skillAvailable && input.route.skill) {
+    reasons.push(`skill unavailable: ${input.route.skill}`);
+  }
+  return reasons;
+}
+
 export function matchRoutes(input: RouteMatchInput, registry = loadRoutingRegistry()): MatchedRoute[] {
   const results: MatchedRoute[] = [];
   const profile = input.profile ?? "operational";
@@ -174,10 +204,17 @@ export function matchRoutes(input: RouteMatchInput, registry = loadRoutingRegist
 
     const access = checkRouteAccess(route.agent, route.resource_paths);
     const moduleEnabled = route.module_agent
-      ? isModuleAgentEnabled(route.agent)
-      : isAgentActive(route.agent, { profile: input.profile, mode: "consult" });
+      ? isModuleAgentEnabled(route.agent, profile)
+      : isAgentActive(route.agent, { profile, mode: "consult" });
     const boundaryOk = checkExecutiveBoundary(route, input.path);
     const skillAvailable = isSkillAvailable(route.skill);
+    const blockedReasons = collectBlockedReasons({
+      route,
+      access,
+      moduleEnabled,
+      boundaryOk,
+      skillAvailable,
+    });
 
     results.push({
       route,
@@ -187,6 +224,7 @@ export function matchRoutes(input: RouteMatchInput, registry = loadRoutingRegist
       moduleEnabled,
       boundaryOk,
       skillAvailable,
+      blockedReasons,
     });
   }
 
@@ -309,7 +347,11 @@ export function formatSuggestCard(handoff: Handoff, matched?: MatchedRoute): str
   const routeLine = handoff.route_id ? ` · route=${handoff.route_id}` : "";
   const accessLine = handoff.access.allowed ? "access=ok" : `access=blocked (${handoff.access.reason})`;
   const matchLine = matched ? ` · score=${matched.score}` : "";
-  return `[handoff] ${handoff.from_agent} → ${handoff.to_agent}${skillLine}${routeLine} · ${accessLine}${matchLine}`;
+  const blocked =
+    matched && matched.blockedReasons.length
+      ? `\n  blocked: ${matched.blockedReasons.join("; ")}`
+      : "";
+  return `[handoff] ${handoff.from_agent} → ${handoff.to_agent}${skillLine}${routeLine} · ${accessLine}${matchLine}${blocked}`;
 }
 
 export function routingQueueDir(): string {

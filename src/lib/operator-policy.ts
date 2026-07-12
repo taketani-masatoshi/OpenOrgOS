@@ -14,6 +14,8 @@ export const ENGINEERING_CONSTITUTION_PATH = join(
 );
 export const ENGINEERING_RULES_DIR = join(ROOT_DIR, "steward", "rules", "engineering");
 export const TOOL_NEUTRAL_DEV_CURSOR_RULE = ".cursor/rules/tool-neutral-development.mdc";
+export const DATA_CLASSIFICATION_PATH = join(ROOT_DIR, "steward", "rules", "data-classification.md");
+export const DATA_CLASSIFICATION_CURSOR_RULE = ".cursor/rules/data-classification.mdc";
 
 /** Canonical engineering rule stems (00–09). Mirror: `.cursor/rules/{stem}.mdc` */
 export const ENGINEERING_RULE_STEMS = [
@@ -76,6 +78,40 @@ export function parseEngineeringRuleFrontmatter(content: string): {
   return { frontmatter, body };
 }
 
+export function rewriteDataClassificationLinksForCursorMirror(body: string): string {
+  return body.replace(/\]\(engineering\//g, "](steward/rules/engineering/");
+}
+
+export function buildDataClassificationCursorMdc(): string {
+  if (!existsSync(DATA_CLASSIFICATION_PATH)) {
+    throw new Error(`Missing data classification policy: ${DATA_CLASSIFICATION_PATH}`);
+  }
+  const body = rewriteDataClassificationLinksForCursorMirror(
+    readFileSync(DATA_CLASSIFICATION_PATH, "utf-8")
+  );
+  return `---
+description: データ機密階層 L0–L3 · Git/AI 境界 · 出力禁止
+globs:
+  - tenants/**/*
+  - docs/**/*
+  - steward/**/*
+alwaysApply: true
+---
+
+${body.trimEnd()}
+
+> **Mirror only.** Canonical: \`steward/rules/data-classification.md\` · Regenerate: \`orgos operator sync-policy --emit all\`
+`;
+}
+
+export function syncDataClassificationRule(): string {
+  const cursorDir = join(ROOT_DIR, ".cursor", "rules");
+  mkdirSync(cursorDir, { recursive: true });
+  const outPath = join(ROOT_DIR, DATA_CLASSIFICATION_CURSOR_RULE);
+  writeFileSync(outPath, buildDataClassificationCursorMdc(), "utf-8");
+  return outPath;
+}
+
 export function rewriteEngineeringBodyLinksForCursorMirror(body: string): string {
   return body
     .replace(/\]\(\.\.\/engineering\/([0-9]{2}-[^)]+\.md)\)/g, "](steward/rules/engineering/$1)")
@@ -90,6 +126,24 @@ export function engineeringConstitutionExcerpt(maxLines = 55): string {
   const path = join(ENGINEERING_RULES_DIR, "00-engineering-constitution.md");
   const { body } = parseEngineeringRuleFrontmatter(readFileSync(path, "utf-8"));
   return body.split("\n").slice(0, maxLines).join("\n");
+}
+
+/** Rewrite relative steward links for portable agent packs (external LLM tools). */
+export function rewriteMarkdownLinksForPortableExport(body: string): string {
+  return body
+    .replace(/\]\(\.\.\/engineering\//g, "](steward/rules/engineering/")
+    .replace(
+      /\]\(\.\.\/openorgos-engineering-constitution\.md\)/g,
+      "](steward/rules/openorgos-engineering-constitution.md)"
+    )
+    .replace(/\]\(\.\.\/rules\//g, "](steward/rules/")
+    .replace(/\]\(\.\.\/steward\//g, "](steward/")
+    .replace(/\]\(\.\.\/\.\.\/\.\.\/jurisdiction-packs\//g, "](steward/jurisdiction-packs/")
+    .replace(/\]\(\.\.\/\.\.\/jurisdiction-packs\//g, "](steward/jurisdiction-packs/")
+    .replace(/\]\(\.\.\/jurisdiction-packs\//g, "](steward/jurisdiction-packs/")
+    .replace(/\]\(\.\.\/docs\//g, "](docs/")
+    .replace(/\]\(\.\.\/orchestrators\//g, "](steward/orchestrators/")
+    .replace(/[ \t]+$/gm, "");
 }
 
 export function buildEngineeringRuleMdc(stem: EngineeringRuleStem): string {
@@ -173,6 +227,7 @@ export function validatePolicyMirrors(): string[] {
   const policyMirrors = [
     [OPERATOR_POLICY_CURSOR_RULE, buildCursorOperatorPolicyMdc(), "cursor"],
     [TOOL_NEUTRAL_DEV_CURSOR_RULE, buildToolNeutralDevCursorMdc(), "dev-guide"],
+    [DATA_CLASSIFICATION_CURSOR_RULE, buildDataClassificationCursorMdc(), "all"],
     [AGENTS_MD_REL, buildAgentsMd(), "all"],
   ] as const;
 
@@ -290,18 +345,26 @@ Canonical: \`steward/rules/operator-policy.md\`
 `;
 }
 
-export type OperatorPolicyEmit = "cursor" | "agents-md" | "dev-guide" | "engineering" | "all";
+export type OperatorPolicyEmit =
+  | "cursor"
+  | "agents-md"
+  | "dev-guide"
+  | "engineering"
+  | "data-classification"
+  | "all";
 
 export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
   cursorRulePath?: string;
   agentsMdPath?: string;
   devGuideRulePath?: string;
+  dataClassificationRulePath?: string;
   engineeringRulePaths?: string[];
 } {
   const result: {
     cursorRulePath?: string;
     agentsMdPath?: string;
     devGuideRulePath?: string;
+    dataClassificationRulePath?: string;
     engineeringRulePaths?: string[];
   } = {};
 
@@ -312,6 +375,10 @@ export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
     const cursorRulePath = join(ROOT_DIR, OPERATOR_POLICY_CURSOR_RULE);
     writeFileSync(cursorRulePath, buildCursorOperatorPolicyMdc(), "utf-8");
     result.cursorRulePath = cursorRulePath;
+  }
+
+  if (emit === "data-classification" || emit === "all") {
+    result.dataClassificationRulePath = syncDataClassificationRule();
   }
 
   if (emit === "agents-md" || emit === "all") {

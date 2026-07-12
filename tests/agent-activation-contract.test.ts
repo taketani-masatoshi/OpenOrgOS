@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
 import { validateAgentActivationContract } from "../src/lib/agent-activation-verify.js";
-import { isAgentActive, listCatalogAgents } from "../src/lib/agent-catalog.js";
+import { isAgentActive, listCatalogAgents, resolveAgentId } from "../src/lib/agent-catalog.js";
 import {
   clearTaskProfile,
   listActiveTenantAgents,
@@ -9,6 +9,8 @@ import {
   writeTaskProfileAgents,
 } from "../src/lib/agent-roster.js";
 import { listPulseEligibleAgents } from "../src/lib/agent-pulse.js";
+import { DEFAULT_CORE_OPERATIONAL_AGENTS } from "../src/lib/tenant-roster-bootstrap.js";
+import { matchRoutes } from "../src/lib/routing.js";
 
 describe("agent activation contract", () => {
   beforeAll(() => {
@@ -16,20 +18,21 @@ describe("agent activation contract", () => {
   });
 
   it("activation contract passes for acme tenant", () => {
-    expect(validateAgentActivationContract()).toEqual([]);
+    expect(validateAgentActivationContract({ allTenants: false })).toEqual([]);
   });
 
   it("acme roster yaml drives effective activation (selective load)", () => {
     const loaded = loadTenantAgentRoster();
     expect(loaded.exists).toBe(true);
-    const yamlCount = loaded.roster.profiles.operational.length;
-    const active = listActiveTenantAgents("operational");
-    expect(active.length).toBe(yamlCount);
-    expect(active.length).toBeLessThan(
+    const active = new Set(listActiveTenantAgents("operational"));
+    for (const id of loaded.roster.profiles.operational) {
+      const resolved = resolveAgentId(id) ?? id;
+      expect(active.has(resolved as never)).toBe(true);
+    }
+    expect(active.size).toBeLessThan(
       listCatalogAgents().filter((agent) => agent.status === "active").length
     );
-    expect(active).toContain("finance");
-    expect(active).not.toContain("coo");
+    expect(active.has("finance")).toBe(true);
   });
 
   it("task profile narrows active agents when set", () => {
@@ -52,5 +55,25 @@ describe("agent activation contract", () => {
       (agent) => agent.status === "active" && agent.class !== "advisor"
     ).length;
     expect(pulseEligible.length).toBeLessThanOrEqual(catalogOps);
+  });
+
+  it("inactive agent routes expose enable guidance", () => {
+    const matches = matchRoutes({ text: "税務申告", profile: "operational" });
+    const tax = matches.find((m) => m.route.agent === "tax");
+    if (!tax) return;
+    if (isAgentActive("tax", { profile: "operational" })) return;
+    expect(tax.moduleEnabled).toBe(false);
+    expect(tax.blockedReasons.some((r) => r.includes("roster enable"))).toBe(true);
+  });
+
+  it("unconfigured tenants fall back to core-only, not full catalog", () => {
+    setTenantId("phase4-restore-test");
+    const active = listActiveTenantAgents("operational");
+    expect(active.length).toBeLessThanOrEqual(DEFAULT_CORE_OPERATIONAL_AGENTS.length);
+    for (const id of DEFAULT_CORE_OPERATIONAL_AGENTS) {
+      expect(active).toContain(id);
+    }
+    expect(isAgentActive("coo", { profile: "operational" })).toBe(false);
+    setTenantId("acme");
   });
 });

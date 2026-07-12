@@ -225,7 +225,7 @@ export function isRosterAgentActive(
     );
   }
   if (agent.activation === "tenant") {
-    return !exists || roster.profiles.operational.includes(id);
+    return roster.profiles.operational.includes(id);
   }
   if (agent.activation === "always") {
     return true;
@@ -282,8 +282,10 @@ export function buildAgentRosterTodaySummary(): {
   configured: boolean;
   operational_count: number;
   developer_count: number;
+  task_count: number;
   operational: Array<{ id: string; label: string; tier: string }>;
   developer: Array<{ id: string; label: string; tier: string }>;
+  task: Array<{ id: string; label: string; tier: string }>;
 } {
   const loaded = loadTenantAgentRoster();
   const mapAgent = (id: AgentId) => {

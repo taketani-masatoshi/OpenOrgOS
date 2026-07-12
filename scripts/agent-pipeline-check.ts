@@ -18,22 +18,6 @@ const FIXTURE_ROOT = join(ROOT_DIR, "tests", "fixtures", "tenant-rosters");
 
 const steps: Array<{ name: string; run: () => string[] }> = [
   {
-    name: "agent-activation-contract",
-    run: () => validateAgentActivationContract(),
-  },
-  {
-    name: "agent-ids",
-    run: () => {
-      const issues: string[] = [];
-      for (const issue of validateGeneratedArtifacts()) {
-        if (issue.includes("agent-ids") || issue.includes("capability") || issue.includes("generated section")) {
-          issues.push(issue);
-        }
-      }
-      return issues;
-    },
-  },
-  {
     name: "tenant-roster-coverage",
     run: () => {
       const issues: string[] = [];
@@ -48,6 +32,22 @@ const steps: Array<{ name: string; run: () => string[] }> = [
       const legacy = listTenantsWithLegacyAgentRoster();
       if (legacy.length) {
         issues.push(`tenants with legacy agents-enabled.yaml: ${legacy.join(", ")}`);
+      }
+      return issues;
+    },
+  },
+  {
+    name: "agent-activation-contract",
+    run: () => validateAgentActivationContract({ allTenants: true }),
+  },
+  {
+    name: "agent-ids",
+    run: () => {
+      const issues: string[] = [];
+      for (const issue of validateGeneratedArtifacts()) {
+        if (issue.includes("agent-ids") || issue.includes("capability") || issue.includes("generated section")) {
+          issues.push(issue);
+        }
       }
       return issues;
     },

@@ -645,6 +645,18 @@ agents:
     reports_to: compliance
     scope: ISO 13485 · QMS · GVP · 薬事台帳
     binds_modules: [jp_medical_device]
+    access:
+      read:
+        - data/medical-device/
+        - docs/medical-device/
+        - docs/quality/
+        - steward/jurisdiction-packs/JP/modules/jp_medical_device/
+        - steward/standards/iso/ISO-13485/
+        - data/compliance/controls.yaml
+      write:
+        - data/medical-device/
+        - docs/medical-device/
+        - docs/quality/
 
   platform_guide:
     id: platform_guide

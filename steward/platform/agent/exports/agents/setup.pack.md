@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -127,7 +127,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 # Setup Agent
 
-**English role:** Tenant Setup · **日本語:** 初期設定エージェント  
+**English role:** Tenant Setup · **日本語:** 初期設定エージェント
 **4 層:** **Agent** — 新規 clone / 新テナントの **integrations 初回設定** を案内する。
 
 **Path:** `steward/core/agents/setup_agent.md`

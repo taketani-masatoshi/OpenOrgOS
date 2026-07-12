@@ -25,7 +25,7 @@ describe("agent readiness profiles", () => {
     const tenantAxis = guide.axes.find((axis) => axis.id === "tenant");
     expect(tenantAxis?.detail).toContain("advisor");
     const evidence = guide.axes.find((axis) => axis.id === "test");
-    expect(evidence?.detail).toContain("boundary:");
+    expect(evidence?.detail).toContain("skills:");
   });
 
   it("bootstrap profile uses reduced axis set", () => {

@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · finance
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-12 · **Tenant:** acme
+> **Generated:** 2026-07-12 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent finance`
 
 ---
@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -128,10 +128,10 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 # Finance Agent
 
 **Path:** `steward/core/agents/finance_agent.md`
-**English role:** Finance & Planning · **日本語:** 財務・計画エージェント  
+**English role:** Finance & Planning · **日本語:** 財務・計画エージェント
 **4 層:** **Agent** — `data/finance/` · `data/plans/` · `docs/plans/` · `docs/exports/` を管轄。
 
-**構成:** [repository_layout.md](../rules/repository_layout.md)
+**構成:** [repository_layout.md](steward/rules/repository_layout.md)
 
 ---
 
@@ -146,7 +146,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 - `data/finance/` と `data/plans/` の維持
 - **固定資産台帳・税務プロファイル・勘定科目**（tax-reporting レベル）の SoT 管理
 - 決算書 MD（`docs/plans/`）と CSV（`docs/exports/`）の数値整合
-- 法人税・消費税・地方税申告準備（JP 法域 `tax_filing_prep` Skill — [jurisdiction-packs/JP/skills/tax_filing_prep.md](../../jurisdiction-packs/JP/skills/tax_filing_prep.md)）
+- 法人税・消費税・地方税申告準備（JP 法域 `tax_filing_prep` Skill — [jurisdiction-packs/JP/skills/tax_filing_prep.md](steward/jurisdiction-packs/JP/skills/tax_filing_prep.md)）
 - ランウェイ・バーンレート・予実ギャップの分析
 - JP 詳細資金繰りの `required_funding_amount` / `required_funding_by_date` を意思決定用に要約
 - 物件別収益前提（Property / Hospitality からの入力）を計画 YAML へ反映
@@ -159,11 +159,11 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | Skill | ファイル |
 |-------|---------|
-| monthly_close | [steward/core/skills/monthly_close.md](../steward/core/skills/monthly_close.md) |
-| tax_filing_prep | [steward/jurisdiction-packs/JP/skills/tax_filing_prep.md](../../jurisdiction-packs/JP/skills/tax_filing_prep.md) |
-| cashflow_forecast | [steward/core/skills/cashflow_forecast.md](../steward/core/skills/cashflow_forecast.md)（月次サマリ · 詳細表は jp_bank_corporate へ委譲） |
-| noi_analysis | [steward/core/skills/noi_analysis.md](../steward/core/skills/noi_analysis.md)（Read/協調） |
-| capex_planning | [steward/core/skills/capex_planning.md](../steward/core/skills/capex_planning.md) |
+| monthly_close | [steward/core/skills/monthly_close.md](steward/core/skills/monthly_close.md) |
+| tax_filing_prep | [steward/jurisdiction-packs/JP/skills/tax_filing_prep.md](steward/jurisdiction-packs/JP/skills/tax_filing_prep.md) |
+| cashflow_forecast | [steward/core/skills/cashflow_forecast.md](steward/core/skills/cashflow_forecast.md)（月次サマリ · 詳細表は jp_bank_corporate へ委譲） |
+| noi_analysis | [steward/core/skills/noi_analysis.md](steward/core/skills/noi_analysis.md)（Read/協調） |
+| capex_planning | [steward/core/skills/capex_planning.md](steward/core/skills/capex_planning.md) |
 
 ## 要約出力先
 
@@ -262,11 +262,11 @@ npm run orgos -- sync all   # CSV 利用時
 - 税務: `data/finance/tax-profile.yaml` ↔ `docs/finance/tax-filing-checklist.md`
 - 会計方針: `docs/finance/accounting-policy.md`
 - 現預金: `data/finance/cash-balance.yaml`
-- **JP 詳細資金繰り:** `orgos jp bank cashflow generate`（[jp_bank_corporate](../../../jurisdiction-packs/JP/modules/jp_bank_corporate/agent.md) · accounting 実行）
+- **JP 詳細資金繰り:** `orgos jp bank cashflow generate`（[jp_bank_corporate](steward/jurisdiction-packs/JP/modules/jp_bank_corporate/agent.md) · accounting 実行）
 - **支払日程の正本:** `data/finance/payment-calendar.yaml`（import は dry-run、`--write` 後に `orgos validate`）
 - **Chat validate:** `operator_validate_status`（`chat:read`、L1 件数・repo 相対 path/message のみ）
 - 予実: `data/plans/yojitsu-fy2026.yaml` ↔ `docs/plans/fy2026-pl.md`
-- KPI 定義: [executive-dashboard-guide.md](../docs/plans/executive-dashboard-guide.md)
+- KPI 定義: [executive-dashboard-guide.md](docs/plans/executive-dashboard-guide.md)
 
 ## 使用 Skill / CLI
 
@@ -289,7 +289,7 @@ orgos agent pulse --agent finance
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
 
 
 
@@ -301,6 +301,8 @@ orgos agent pulse --agent finance
 - `variance_analysis` · cli · `steward/core/skills/variance_analysis.md`
 - `cashflow_forecast` · cli · `steward/core/skills/cashflow_forecast.md`
 - `capex_planning` · cli · `steward/core/skills/capex_planning.md`
+- `jp-cashflow-schedule` · cli · `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/skills/jp_cashflow_schedule.md`
+- `jp-treasury-position` · cli · `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/skills/jp_treasury_position.md`
 
 ---
 

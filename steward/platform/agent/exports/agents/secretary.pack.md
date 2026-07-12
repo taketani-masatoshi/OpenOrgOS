@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -127,10 +127,10 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 # Secretary Agent
 
-**English role:** Executive Secretary · **日本語:** 秘書エージェント  
+**English role:** Executive Secretary · **日本語:** 秘書エージェント
 **4 層:** **Agent** — 社長の行動・時間・対外窓口。`data/executive/` を SoT とする。
 
-**構成:** [repository_layout.md](../rules/repository_layout.md)
+**構成:** [repository_layout.md](steward/rules/repository_layout.md)
 
 ---
 
@@ -173,7 +173,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 | `data/company.yaml` | 役員名・代表者（Read） |
 | `data/protocol/peers.yaml` | peer 台帳（Read · 照合入口） |
 
-**Peer 横断（L1 限定）:** [folder_access_policy.md §2.8.1](../steward/rules/folder_access_policy.md) — `peers.yaml` 登録相手の `company.yaml` · `external-contacts.yaml` のみ。`ORGOS_TENANT` を相手 ID に切替えない。
+**Peer 横断（L1 限定）:** [folder_access_policy.md §2.8.1](steward/rules/folder_access_policy.md) — `peers.yaml` 登録相手の `company.yaml` · `external-contacts.yaml` のみ。`ORGOS_TENANT` を相手 ID に切替えない。
 
 ## Forbidden
 
@@ -198,10 +198,10 @@ npm run orgos -- executive brief --week
 
 | Skill | 用途 |
 |-------|------|
-| [schedule_management](../steward/core/skills/schedule_management.md) | カレンダー確認・競合チェック |
-| [schedule_coordination](../steward/core/skills/schedule_coordination.md) | 多者日程調整（メール往復 · 案件 SoT） |
-| [one_on_one_prep](../steward/core/skills/one_on_one_prep.md) | 1-on-1 前ブリーフ |
-| [inter_org_notice_draft](../steward/core/skills/inter_org_notice_draft.md) | **組織間 wire 起案**（draft のみ · approve は CEO） |
+| [schedule_management](steward/core/skills/schedule_management.md) | カレンダー確認・競合チェック |
+| [schedule_coordination](steward/core/skills/schedule_coordination.md) | 多者日程調整（メール往復 · 案件 SoT） |
+| [one_on_one_prep](steward/core/skills/one_on_one_prep.md) | 1-on-1 前ブリーフ |
+| [inter_org_notice_draft](steward/core/skills/inter_org_notice_draft.md) | **組織間 wire 起案**（draft のみ · approve は CEO） |
 
 **対外メール送信は [Mail Outbound Agent](mail_outbound_agent.md) に分離** — 下書き · 承認起案 · SMTP 送信。
 
@@ -214,8 +214,8 @@ orgos tenant scaffold-data --tenant <id>
 orgos doctor --tenant <id> --repair
 ```
 
-続けて dry-run 完走確認: `orgos executive scheduling rehearsal --full --tenant <id>`  
-詳細: [schedule_coordination.md](../steward/core/skills/schedule_coordination.md)
+続けて dry-run 完走確認: `orgos executive scheduling rehearsal --full --tenant <id>`
+詳細 Runbook: [scheduling-coordination-runbook.md](../../../docs/org-os/scheduling-coordination-runbook.md) · Skill: [schedule_coordination.md](steward/core/skills/schedule_coordination.md)
 
 ---
 
@@ -253,7 +253,7 @@ Mail Outbound はメール下書き・送信前に **必ず正本を照合** す
 5. `data/hr/employees.yaml` · `data/executive/one-on-ones.yaml`（自社の人物・役職）
 6. 契約 YAML の相手方メール（L1 記載がある場合のみ）
 
-正本ルール: [secretary-contact-registry.md](../steward/rules/secretary-contact-registry.md)
+正本ルール: [secretary-contact-registry.md](steward/rules/secretary-contact-registry.md)
 
 ### 未登録のメールアドレス
 
@@ -352,7 +352,7 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 
 ### 週次ブリーフ
 
-[docs/executive/weekly-brief-template.md](../docs/executive/weekly-brief-template.md) に準拠。
+[docs/executive/weekly-brief-template.md](docs/executive/weekly-brief-template.md) に準拠。
 
 ### 1-on-1 準備
 
@@ -411,8 +411,8 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 
 - **テナント:** `rules/company_context.md` · `modules.yaml`
 - **例示（架空）:** 株式会社サンプル商事 · 代表 山田 太郎
-- **境界:** [secretary_steward_boundary.md](../steward/rules/secretary_steward_boundary.md)
-- **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md)
+- **境界:** [secretary_steward_boundary.md](steward/rules/secretary_steward_boundary.md)
+- **参照:** [agent_skill_architecture.md](steward/rules/agent_skill_architecture.md)
 
 ## 使用 Skill / CLI
 
@@ -426,7 +426,7 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 | correspondence_draft | registry Skill · cli |
 | correspondence_send | registry Skill · cli（承認後のみ） |
 | slack_notify | registry Skill · cli（承認後のみ） |
-| contacts resolve / register | CLI · [secretary-contact-registry.md](../steward/rules/secretary-contact-registry.md) |
+| contacts resolve / register | CLI · [secretary-contact-registry.md](steward/rules/secretary-contact-registry.md) |
 
 ## CLI
 
@@ -440,7 +440,7 @@ orgos secretary contacts register --name "..." --email "..."
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
 
 
 

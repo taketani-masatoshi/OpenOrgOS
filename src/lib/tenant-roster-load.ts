@@ -9,6 +9,19 @@ import { z } from "zod";
 import { MODULE_TO_CLASSIFICATION_AGENT, type ModuleAgentId } from "./modules.js";
 import { resolveTenantPath, readYamlFile } from "./utils.js";
 
+/** Core agents active when data/operator/agents.yaml is absent. */
+export const DEFAULT_CORE_OPERATIONAL_AGENTS: AgentId[] = [
+  "executive_steward",
+  "secretary",
+  "finance",
+  "contract",
+  "compliance",
+  "operations",
+  "engineering",
+  "cto",
+  "security",
+];
+
 export const AGENT_ROSTER_REL_PATH = "data/operator/agents.yaml";
 export const LEGACY_AGENTS_ENABLED_REL_PATH = "data/operator/agents-enabled.yaml";
 
@@ -69,11 +82,11 @@ export function validateLegacyRosterFiles(): string[] {
 
   if (hasLegacy && hasRoster) {
     issues.push(
-      "deprecated: agents-enabled.yaml coexists with agents.yaml — remove legacy file after migration"
+      "error: agents-enabled.yaml coexists with agents.yaml — remove legacy file (orgos agent roster migrate)"
     );
   } else if (hasLegacy && !hasRoster) {
     issues.push(
-      "legacy roster: agents-enabled.yaml without agents.yaml — run orgos agent roster migrate"
+      "error: legacy roster agents-enabled.yaml without agents.yaml — run orgos agent roster migrate"
     );
   }
   return issues;
@@ -85,20 +98,42 @@ export function readTenantAgentRosterState(): {
   source: "agents.yaml" | "default";
 } {
   const rosterPath = resolveTenantPath(AGENT_ROSTER_REL_PATH);
-  if (existsSync(rosterPath)) {
+  if (!existsSync(rosterPath)) {
+    return {
+      exists: false,
+      roster: tenantAgentRosterSchema.parse({
+        version: 1,
+        profiles: {
+          operational: [...DEFAULT_CORE_OPERATIONAL_AGENTS].sort(),
+          developer: [],
+          task: [],
+        },
+        disabled: [],
+      }),
+      source: "default",
+    };
+  }
+
+  try {
     return {
       exists: true,
       roster: readYamlFile(rosterPath, tenantAgentRosterSchema),
       source: "agents.yaml",
     };
+  } catch {
+    // Corrupt / empty / null YAML — treat as unconfigured core-only default.
+    return {
+      exists: false,
+      roster: tenantAgentRosterSchema.parse({
+        version: 1,
+        profiles: {
+          operational: [...DEFAULT_CORE_OPERATIONAL_AGENTS].sort(),
+          developer: [],
+          task: [],
+        },
+        disabled: [],
+      }),
+      source: "default",
+    };
   }
-  return {
-    exists: false,
-    roster: tenantAgentRosterSchema.parse({
-      version: 1,
-      profiles: { operational: [], developer: [] },
-      disabled: [],
-    }),
-    source: "default",
-  };
 }

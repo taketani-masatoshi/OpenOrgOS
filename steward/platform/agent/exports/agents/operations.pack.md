@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -127,10 +127,10 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 # Operations Agent
 
-**English role:** Operations & Document I/O · **日本語:** 業務運用エージェント  
+**English role:** Operations & Document I/O · **日本語:** 業務運用エージェント
 **4 層:** **Agent** — `docs/io/` · `data/document-io.yaml` · `docs/company/hr/` を管轄。正データ YAML は編集しない。
 
-**構成:** [repository_layout.md](../rules/repository_layout.md)
+**構成:** [repository_layout.md](steward/rules/repository_layout.md)
 
 ---
 
@@ -157,8 +157,8 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | Skill | ファイル |
 |-------|---------|
-| contract_register | [steward/core/skills/contract_register.md](../steward/core/skills/contract_register.md)（inbox→归档） |
-| travel_booking | [steward/core/skills/travel_booking.md](../steward/core/skills/travel_booking.md)（秘書ヒアリング → 旅行サイト手配 · 決済直前停止） |
+| contract_register | [steward/core/skills/contract_register.md](steward/core/skills/contract_register.md)（inbox→归档） |
+| travel_booking | [steward/core/skills/travel_booking.md](steward/core/skills/travel_booking.md)（秘書ヒアリング → 旅行サイト手配 · 決済直前停止） |
 
 ## 要約出力先
 
@@ -261,7 +261,7 @@ npm run orgos -- io outbox list
 ## コンテキスト
 
 - I/O ガイド: `npm run orgos -- io guide`
-- inbox/outbox 説明: [docs/io/inbox/](../docs/io/inbox/00-このフォルダについて.md) · [docs/io/outbox/](../docs/io/outbox/00-このフォルダについて.md)
+- inbox/outbox 説明: [docs/io/inbox/](docs/io/inbox/00-このフォルダについて.md) · [docs/io/outbox/](docs/io/outbox/00-このフォルダについて.md)
 - 台帳: [document-io.yaml](../data/document-io.yaml)
 
 ## 使用 Skill / CLI
@@ -281,7 +281,7 @@ orgos agent pulse --agent operations
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
 
 
 

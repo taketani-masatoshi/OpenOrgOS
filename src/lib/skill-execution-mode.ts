@@ -40,7 +40,7 @@ export const STEWARD_SELF_EXECUTE_SKILLS = new Set([
 ]);
 
 /** Recommended executing agent overrides — steward/core/orchestrators/skill_delegation_map.md */
-const EXECUTING_AGENT_OVERRIDES: Partial<Record<string, AgentId>> = {
+export const EXECUTING_AGENT_OVERRIDES: Partial<Record<string, AgentId>> = {
   tax_filing_prep: "tax",
   jp_company_incorporation: "legal",
   jp_registry_change: "legal",
@@ -86,7 +86,9 @@ export function resolveSkillExecutionMode(
   }
 
   const skillId = canonicalSkillId(skillInput) ?? skillInput;
-  const skill = getSkillById(skillId);
+  const skill =
+    getSkillById(skillId) ??
+    (resolution && "skill" in resolution ? resolution.skill : undefined);
   if (!skill) {
     return { mode: "escalate", reason: `unknown skill: ${skillInput}` };
   }
@@ -184,7 +186,7 @@ export function validateSkillExecutionOverrides(): string[] {
     if (!getSkillById(skillId)) {
       issues.push(`execution override references missing skill: ${skillId}`);
     }
-    if (!resolveAgentId(agentId)) {
+    if (agentId && !resolveAgentId(agentId)) {
       issues.push(`execution override ${skillId}: unknown agent ${agentId}`);
     }
   }

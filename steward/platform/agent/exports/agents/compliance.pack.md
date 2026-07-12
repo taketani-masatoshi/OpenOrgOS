@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -127,10 +127,10 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 # Compliance Agent
 
-**English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント  
+**English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント
 **4 層:** **Agent** — 有効社内規程 · `docs/compliance/` を管轄。テンプレは [steward/standards/regulations/](../standards/regulations/00-このフォルダについて.md) · [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（Read）。
 
-**構成:** [repository_layout.md](../rules/repository_layout.md)
+**構成:** [repository_layout.md](steward/rules/repository_layout.md)
 
 ---
 
@@ -237,7 +237,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 - Executive: 要 / 不要
 
 ## 根拠
-- [steward-assessment.md](../docs/compliance/iso/steward-assessment.md)
+- [steward-assessment.md](docs/compliance/iso/steward-assessment.md)
 ```
 
 ---
@@ -281,7 +281,7 @@ orgos agent pulse --agent compliance
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
 
 
 

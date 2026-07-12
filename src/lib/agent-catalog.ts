@@ -12,6 +12,7 @@ import {
 } from "../../schemas/agent-catalog.js";
 import { STEWARD_AGENTS_DIR } from "./steward-paths.js";
 import { readTenantAgentRosterState } from "./tenant-roster-load.js";
+import { listCatalogModuleIds } from "./modules.js";
 import { readYamlFile } from "./utils.js";
 
 export const AGENT_CATALOG_PATH = join(STEWARD_AGENTS_DIR, "registry.yaml");
@@ -91,9 +92,13 @@ export function isAgentActive(
     );
   }
   if (agent.activation === "tenant") {
-    return !roster.exists || roster.operational.has(resolved!);
+    // Unconfigured tenants use the default core roster from readTenantAgentRosterState.
+    return roster.operational.has(resolved!);
   }
-  return true;
+  if (agent.activation === "always") {
+    return true;
+  }
+  return false;
 }
 
 export function validateAgentCatalog(): string[] {
@@ -116,6 +121,11 @@ export function validateAgentCatalog(): string[] {
     if (key !== agent.id) issues.push(`${key}: key must equal id ${agent.id}`);
     if (agent.reports_to && !ids.has(agent.reports_to)) {
       issues.push(`${agent.id}: unknown reports_to ${agent.reports_to}`);
+    }
+    for (const moduleId of agent.binds_modules ?? []) {
+      if (!listCatalogModuleIds().includes(moduleId)) {
+        issues.push(`${agent.id}: binds_modules unknown module ${moduleId}`);
+      }
     }
     if (agent.class === "advisor") {
       if (agent.access.write.length) issues.push(`${agent.id}: advisor must not declare write access`);

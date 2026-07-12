@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
-import { loadOperatorPolicyMarkdown, operatorPolicyExcerpt, engineeringConstitutionExcerpt } from "./operator-policy.js";
+import { loadOperatorPolicyMarkdown, operatorPolicyExcerpt, engineeringConstitutionExcerpt, rewriteMarkdownLinksForPortableExport } from "./operator-policy.js";
 import { loadSkillRegistry, type ResolvedSkillEntry } from "./skill-registry.js";
 import { ROOT_DIR, getTenantId } from "./tenant.js";
 import { currentDate } from "./utils.js";
@@ -77,8 +77,10 @@ export function readAgentDefinition(agent: AgentId): string {
 export function buildPortableAgentPack(agentId: AgentId, opts?: { fullPolicy?: boolean }): string {
   const registry = loadAgentRegistryEntries().find((a) => a.id === agentId);
   const label = registry?.name_ja ? `${registry.name}（${registry.name_ja}）` : (registry?.name ?? agentId);
-  const policy = opts?.fullPolicy ? loadOperatorPolicyMarkdown() : operatorPolicyExcerpt(60);
-  const body = readAgentDefinition(agentId);
+  const policy = rewriteMarkdownLinksForPortableExport(
+    opts?.fullPolicy ? loadOperatorPolicyMarkdown() : operatorPolicyExcerpt(60)
+  );
+  const body = rewriteMarkdownLinksForPortableExport(readAgentDefinition(agentId));
   const skills = loadSkillRegistry(true)
     .filter((s) => s.agent_id === agentId)
     .map((s) => `- \`${s.id}\` · ${s.runtime} · \`${s.skillDirRel}/${s.file}\``)
@@ -101,7 +103,7 @@ export function buildPortableAgentPack(agentId: AgentId, opts?: { fullPolicy?: b
     "",
     "## 1b. Engineering Constitution (excerpt)",
     "",
-    engineeringConstitutionExcerpt(45),
+    rewriteMarkdownLinksForPortableExport(engineeringConstitutionExcerpt(45)),
     "",
     "Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules: `steward/rules/engineering/`",
     "",
@@ -310,6 +312,63 @@ export function exportPortableAgents(opts: {
   );
 
   return result;
+}
+
+function normalizeAgentExportForCompare(content: string): string {
+  return content
+    .replace(/^Generated: .+$/m, "Generated: <deterministic>")
+    .replace(/^> \*\*Generated:\*\* .+$/m, "> **Generated:** <deterministic>");
+}
+
+export function validateAgentPackExports(): string[] {
+  const issues: string[] = [];
+  const registry = loadAgentRegistryEntries();
+  const targets = registry.filter((entry) =>
+    isAgentActive(entry.id as AgentId, { profile: "operational", mode: "consult" })
+  );
+  const agentsDir = join(AGENT_EXPORTS_DIR, "agents");
+
+  for (const entry of targets) {
+    const rel = `steward/platform/agent/exports/agents/${entry.id}.pack.md`;
+    const packPath = join(agentsDir, `${entry.id}.pack.md`);
+    const expected = normalizeAgentExportForCompare(
+      buildPortableAgentPack(entry.id as AgentId)
+    );
+    if (!existsSync(packPath)) {
+      issues.push(`${rel} missing; run orgos operator export --all`);
+      continue;
+    }
+    const actual = normalizeAgentExportForCompare(readFileSync(packPath, "utf-8"));
+    if (actual !== expected) {
+      issues.push(`${rel} stale; run orgos operator export --all`);
+    }
+  }
+
+  const indexRel = "steward/platform/agent/exports/INDEX.md";
+  const indexPath = join(AGENT_EXPORTS_DIR, "INDEX.md");
+  const expectedIndex = normalizeAgentExportForCompare(buildPortableIndex());
+  if (!existsSync(indexPath)) {
+    issues.push(`${indexRel} missing; run orgos operator export --all`);
+  } else if (normalizeAgentExportForCompare(readFileSync(indexPath, "utf-8")) !== expectedIndex) {
+    issues.push(`${indexRel} stale; run orgos operator export --all`);
+  }
+
+  const mcpDir = join(AGENT_EXPORTS_DIR, "mcp");
+  for (const name of ["claude-desktop.snippet.json", "continue.snippet.json"] as const) {
+    const rel = `steward/platform/agent/exports/mcp/${name}`;
+    const snippetPath = join(mcpDir, name);
+    const expected =
+      name === "claude-desktop.snippet.json"
+        ? buildClaudeDesktopMcpSnippet()
+        : buildContinueMcpSnippet();
+    if (!existsSync(snippetPath)) {
+      issues.push(`${rel} missing; run orgos operator export --emit mcp`);
+    } else if (readFileSync(snippetPath, "utf-8") !== expected) {
+      issues.push(`${rel} stale; run orgos operator export --emit mcp`);
+    }
+  }
+
+  return issues;
 }
 
 export interface PortabilityScoreBreakdown {

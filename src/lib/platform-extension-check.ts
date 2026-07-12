@@ -13,6 +13,7 @@ import {
   buildCliCommandCatalog,
   validateCliCommandCatalog,
 } from "./cli-command-catalog.js";
+import { validateLegacyWebhookSunset } from "./protocol/legacy-webhook-sunset.js";
 import { ROOT_DIR } from "./tenant.js";
 
 export interface PlatformExtensionCheck {
@@ -72,6 +73,16 @@ export function runPlatformExtensionChecks(): PlatformExtensionCheck[] {
       cliIssues.length === 0
         ? `${cliEntries.length} commands · wire facade OK`
         : cliIssues.join("; "),
+  });
+
+  const legacyIssues = validateLegacyWebhookSunset(true);
+  checks.push({
+    id: "wire:legacy-webhook-sunset",
+    ok: legacyIssues.length === 0,
+    detail:
+      legacyIssues.length === 0
+        ? "no legacy_webhook Wire peers in managed tenants"
+        : `${legacyIssues.length} legacy peer(s)`,
   });
 
   const registryIssues = verifyPlatformRegistry();

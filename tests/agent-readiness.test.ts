@@ -25,10 +25,9 @@ describe("agent readiness", () => {
     for (const result of results) {
       expect(result.profile).toBe("operational");
       const evidence = result.axes.find((axis) => axis.id === "test");
-      expect(evidence?.detail).toContain("test");
       expect(evidence?.detail).toContain("activation:");
-      expect(evidence?.detail).toContain("boundary:");
-      expect(evidence?.detail).not.toContain("manifest");
+      expect(evidence?.detail).toContain("skills:");
+      expect(evidence?.detail).not.toContain("test suite");
     }
   }, 60_000);
 

@@ -6,16 +6,14 @@ import type { AgentReadinessProfile } from "../../schemas/agent-catalog.js";
 import {
   agentDefinitionPath,
   getAgentCapability,
-  listOperationalCapabilities,
-  readAgentDefinition,
 } from "./agent-capability.js";
 import { getCatalogAgent, isAgentActive, listCatalogAgents } from "./agent-catalog.js";
 import { listActiveTenantAgents } from "./agent-roster.js";
 import { loadRoutingRegistry } from "./routing.js";
 import { loadSkillRegistry } from "./skill-registry.js";
+import { resolveExecutingAgentId } from "./skill-execution-mode.js";
 import { getTenantDir, resolveTenantPath } from "./tenant.js";
 import { getInstallRoot } from "./orgos-paths.js";
-import { resolveTestSuiteVerification } from "./protocol/test-suite-status.js";
 
 let _routingRegistry: ReturnType<typeof loadRoutingRegistry> | null = null;
 let _skillRegistry: ReturnType<typeof loadSkillRegistry> | null = null;
@@ -78,13 +76,14 @@ function hasRecentPulseSummary(agentId: AgentId, slug: string): boolean {
 }
 
 function scoreDefinition(agentId: AgentId): AgentReadinessAxis {
-  const md = readAgentDefinition(agentId);
+  const agent = getCatalogAgent(agentId);
+  const cap = getAgentCapability(agentId);
   const checks = [
-    { label: "agent.md 存在", ok: md.length > 0 },
-    { label: "目的", ok: md.includes("## 目的") },
-    { label: "禁止", ok: md.includes("## 禁止") },
-    { label: "要約出力先", ok: md.includes("要約出力") || md.includes("agent-summaries") },
-    { label: "CLI/pulse", ok: md.includes("orgos agent pulse") || md.includes("npm run orgos") },
+    { label: "catalog entry", ok: agent != null && agent.path.length > 0 },
+    { label: "definition file", ok: agentDefinitionExists(agentId) },
+    { label: "capability manifest", ok: cap != null },
+    { label: "read access declared", ok: (agent?.access.read.length ?? 0) > 0 },
+    { label: "catalog active", ok: agent?.status === "active" },
   ];
   const ok = checks.filter((c) => c.ok).length;
   const score = Math.round((ok / checks.length) * WEIGHTS.definition);
@@ -99,10 +98,14 @@ function scoreDefinition(agentId: AgentId): AgentReadinessAxis {
 
 function scoreSkillCli(agentId: AgentId, cap: ReturnType<typeof getAgentCapability>): AgentReadinessAxis {
   const skills = skillRegistry();
-  const dedicated = cap?.skills.filter((sid) => skills.some((s) => s.id === sid)) ?? [];
-  let score = 12; // agent pulse baseline
-  if (dedicated.length >= 1) score += 4;
-  if (dedicated.length >= 2) score += 4;
+  const owned = skills.filter((skill) => resolveExecutingAgentId(skill) === agentId);
+  const cliSkills = owned.filter((skill) => skill.runtime === "cli" && skill.cli_command);
+  const manifestSkills =
+    cap?.skills.filter((sid) => owned.some((skill) => skill.id === sid)) ?? [];
+  let score = owned.length > 0 ? 8 : 4;
+  if (cliSkills.length >= 1) score += 6;
+  if (manifestSkills.length >= 2) score += 4;
+  if (owned.some((skill) => skill.runtime === "agent")) score += 2;
   score = Math.min(score, WEIGHTS.skill_cli);
   return {
     id: "skill_cli",
@@ -110,9 +113,9 @@ function scoreSkillCli(agentId: AgentId, cap: ReturnType<typeof getAgentCapabili
     score,
     max: WEIGHTS.skill_cli,
     detail:
-      dedicated.length > 0
-        ? `${dedicated.join(", ")} + agent pulse`
-        : "agent pulse のみ",
+      owned.length > 0
+        ? `${owned.length} skill(s) · ${cliSkills.length} cli · manifest ${manifestSkills.length}`
+        : "no owned skills",
   };
 }
 
@@ -171,7 +174,6 @@ function scoreDashboard(agentId: AgentId, slug: string): AgentReadinessAxis {
 
 function scoreEvidenceActivationBoundary(agentId: AgentId): AgentReadinessAxis {
   const agent = getCatalogAgent(agentId);
-  const verification = resolveTestSuiteVerification();
   const profile = agent?.readiness_profile ?? "operational";
   const active =
     profile === "advisor"
@@ -181,17 +183,20 @@ function scoreEvidenceActivationBoundary(agentId: AgentId): AgentReadinessAxis {
         : isAgentActive(agentId, { profile: "operational", mode: "consult" });
   const boundary =
     agent != null &&
-    existsSync(agentDefinitionPath(agentId)) &&
+    agentDefinitionExists(agentId) &&
     (profile !== "advisor" ||
       (agent.class === "advisor" &&
         agent.access.write.length === 0 &&
         agent.auto_route === false &&
         agent.auto_pulse === false));
-  const score = (verification.verified && verification.passed ? 4 : 0) + (active ? 3 : 0) + (boundary ? 3 : 0);
+  const owned = skillRegistry().filter((skill) => resolveExecutingAgentId(skill) === agentId);
+  const cliOwned = owned.filter((skill) => skill.runtime === "cli" && skill.cli_command);
+  const skillEvidence = cliOwned.length > 0 ? 3 : owned.length > 0 ? 2 : 0;
+  const score = (active ? 4 : 0) + (boundary ? 3 : 0) + skillEvidence;
   const details = [
-    verification.verified && verification.passed ? verification.detail : `test evidence: ${verification.detail}`,
     `activation: ${active ? "OK" : "not satisfied"}`,
     `boundary: ${boundary ? "OK" : "not satisfied"}`,
+    `skills: ${owned.length} owned · ${cliOwned.length} cli`,
   ];
   return {
     id: "test",
@@ -222,13 +227,13 @@ function scoreTenant(cap: ReturnType<typeof getAgentCapability>): AgentReadiness
 }
 
 function scoreAdvisorDefinition(agentId: AgentId): AgentReadinessAxis {
-  const md = readAgentDefinition(agentId);
+  const agent = getCatalogAgent(agentId);
   const checks = [
-    { label: "agent.md 存在", ok: md.length > 0 },
-    { label: "目的", ok: md.includes("## 目的") || md.includes("## 役割") },
-    { label: "禁止", ok: md.includes("## 禁止") },
-    { label: "read-only", ok: md.includes("Read-only") || md.includes("read-only") || md.includes("参照のみ") },
-    { label: "委譲", ok: md.includes("委譲") || md.includes("delegate") },
+    { label: "catalog advisor", ok: agent?.class === "advisor" },
+    { label: "definition file", ok: agentDefinitionExists(agentId) },
+    { label: "no write access", ok: (agent?.access.write.length ?? 0) === 0 },
+    { label: "auto_route off", ok: agent?.auto_route === false },
+    { label: "developer_explicit", ok: agent?.activation === "developer_explicit" },
   ];
   const ok = checks.filter((c) => c.ok).length;
   return {

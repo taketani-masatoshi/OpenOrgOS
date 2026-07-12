@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -127,10 +127,10 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 # Executive Steward Agent
 
-**English role:** Executive Steward · **日本語:** 経営統括エージェント  
+**English role:** Executive Steward · **日本語:** 経営統括エージェント
 **4 層:** **Steward** — Agent 要約と CLI 集約のみを読み、Data 原本には原則アクセスしない。
 
-**構成:** 2026-06 再編後の物理パスは [repository_layout.md](../rules/repository_layout.md) が正本。
+**構成:** 2026-06 再編後の物理パスは [repository_layout.md](steward/rules/repository_layout.md) が正本。
 
 ---
 
@@ -188,12 +188,12 @@ npm run orgos -- scenario
 
 | Skill | 用途 |
 |-------|------|
-| [executive_dashboard](../steward/core/skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
+| [executive_dashboard](steward/core/skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
 | `steward dashboard` | 上記 Skill の CLI 実装 |
 | `steward alerts` | P0 契約・許認可 |
 | `steward forecast` / `scenario` | CF 要約（Finance 要約と併用） |
 
-各 Agent の Skill 出力: [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md)
+各 Agent の Skill 出力: [steward/core/skills/](steward/core/skills/00-このフォルダについて.md)
 
 ---
 
@@ -242,8 +242,8 @@ npm run orgos -- scenario
 
 ## 他エージェントへ照会すべき場合
 
-**全 Agent 特性（委譲 · 禁止 · 承認ゲート）:** [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)  
-**Skill 指定時の実行 Agent:** [skill_delegation_map.md](../orchestrators/skill_delegation_map.md)
+**全 Agent 特性（委譲 · 禁止 · 承認ゲート）:** [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+**Skill 指定時の実行 Agent:** [skill_delegation_map.md](steward/orchestrators/skill_delegation_map.md)
 
 | 状況 | 照会先 |
 |------|--------|
@@ -274,9 +274,9 @@ npm run orgos -- scenario
 | 技術方針 · 実装 | **CTO / Engineering** |
 | デザイン | **Design Lead / Design** |
 
-組織図: [org-chart.md](org-chart.md) · COO 委譲: [delegate_growth_team.md](../orchestrators/delegate_growth_team.md)
+組織図: [org-chart.md](org-chart.md) · COO 委譲: [delegate_growth_team.md](steward/orchestrators/delegate_growth_team.md)
 
-照会時は [folder_access_policy.md](../steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
+照会時は [folder_access_policy.md](steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
 
 **Secretary リダイレクト（1 行 · 段向け）:** 「予定・社外・1-on-1 は Secretary へ — `@secretary_agent` または Secretary スレッドで `data/executive/calendar.yaml` を参照してください（Executive は dashboard 経由のみ）。」
 
@@ -288,7 +288,7 @@ npm run orgos -- scenario
 
 - **テナント:** `rules/company_context.md` · 有効モジュール: `modules.yaml`
 - **例示（架空）:** 株式会社サンプル商事 · PROP-001 みなとビル501 · PROP-002 緑丘ゲストハウス
-- **参照:** [agent_skill_architecture.md](../steward/rules/agent_skill_architecture.md) · [steward/core/agents/](00-このフォルダについて.md)
+- **参照:** [agent_skill_architecture.md](steward/rules/agent_skill_architecture.md) · [steward/core/agents/](00-このフォルダについて.md)
 
 ## 使用 Skill / CLI
 
@@ -309,7 +309,7 @@ orgos agent pulse --agent executive_steward
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
 
 
 

@@ -4,20 +4,13 @@ import type { AgentId } from "../../schemas/classification.js";
 import type { TenantAgentRoster } from "../../schemas/agent-roster.js";
 import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModulesSafe } from "./modules.js";
 import { ROOT_DIR, listTenantIds } from "./tenant.js";
-import { AGENT_ROSTER_REL_PATH, LEGACY_AGENTS_ENABLED_REL_PATH } from "./tenant-roster-load.js";
+import {
+  AGENT_ROSTER_REL_PATH,
+  DEFAULT_CORE_OPERATIONAL_AGENTS,
+  LEGACY_AGENTS_ENABLED_REL_PATH,
+} from "./tenant-roster-load.js";
 
-export const DEFAULT_CORE_OPERATIONAL_AGENTS: AgentId[] = [
-  "executive_steward",
-  "secretary",
-  "finance",
-  "contract",
-  "compliance",
-  "operations",
-  // Platform routing delegates (platform_guide advisor → these agents)
-  "engineering",
-  "cto",
-  "security",
-];
+export { DEFAULT_CORE_OPERATIONAL_AGENTS };
 
 export const TENANT_ROSTER_EXEMPT = new Set(["_template"]);
 
