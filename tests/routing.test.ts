@@ -44,6 +44,14 @@ describe("route matching", () => {
     setTenantId("mal");
   });
 
+  it("matches monthly close by keyword", () => {
+    setTenantId("acme");
+    const best = pickBestRoute({ text: "月次締め" });
+    expect(best?.route.id).toBe("monthly-close");
+    expect(best?.route.agent).toBe("finance");
+    expect(best?.access.allowed).toBe(true);
+  });
+
   it("matches contract expiry by keyword", () => {
     const matches = matchRoutes({ text: "契約期限を確認したい" });
     expect(matches[0]?.route.id).toBe("contract-expiry");

@@ -1,5 +1,5 @@
 version: "1"
-as_of: 2026-07-10
+as_of: 2026-07-12
 levels:
   L0:
     label: 公開
@@ -37,6 +37,34 @@ agents:
   compliance:
     label: Compliance
     max_level: L2
+    output_max_level: L1
+  mail_intake:
+    label: Mail Intake
+    max_level: L2
+    output_max_level: L1
+  mail_outbound:
+    label: Mail Outbound
+    max_level: L2
+    output_max_level: L1
+  operations:
+    label: Operations
+    max_level: L2
+    output_max_level: L1
+  setup:
+    label: Setup
+    max_level: L2
+    output_max_level: L1
+  engineering:
+    label: Engineering
+    max_level: L1
+    output_max_level: L1
+  cto:
+    label: CTO
+    max_level: L1
+    output_max_level: L1
+  security:
+    label: Security
+    max_level: L1
     output_max_level: L1
 resources:
   - id: RES-BANK-ACCOUNTS
@@ -152,6 +180,90 @@ resources:
       - contract
     write_agents:
       - compliance
+  - id: RES-CASH-BALANCE
+    path: data/finance/cash-balance.yaml
+    level: L1
+    git: track
+    ai_context: auto
+    description: 現預金残高（口座番号なし · bank_account_id でリンク）
+    read_agents:
+      - finance
+      - executive_steward
+      - compliance
+      - secretary
+    write_agents:
+      - finance
+  - id: RES-COMPANY-PUBLIC
+    path: data/company.yaml
+    level: L0
+    git: track
+    ai_context: auto
+    description: 会社概要（公開値含む）· route access アンカー
+    read_agents: []
+    write_agents:
+      - operations
+      - secretary
+  - id: RES-CLASSIFICATION-REGISTRY
+    path: data/classification-registry.yaml
+    level: L1
+    git: track
+    ai_context: auto
+    description: データ分類レジストリ
+    read_agents:
+      - compliance
+      - secretary
+      - executive_steward
+    write_agents:
+      - compliance
+  - id: RES-EXEC-SCHEDULING-CASES
+    path: data/executive/scheduling-cases.yaml
+    example_path: data/executive/scheduling-cases.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 多者日程調整案件
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
+  - id: RES-CORRESPONDENCE-DRAFTS
+    path: docs/executive/correspondence-drafts/
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社外メール下書き
+    read_agents:
+      - mail_outbound
+      - secretary
+      - compliance
+    write_agents:
+      - mail_outbound
+      - secretary
+  - id: RES-EXEC-MAIL-TRIAGE
+    path: data/executive/mail-triage-queue.yaml
+    example_path: data/executive/mail-triage-queue.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: Mail Intake トリアージキュー（件名・差出人・分類のみ）
+    read_agents:
+      - mail_intake
+      - secretary
+      - compliance
+    write_agents:
+      - mail_intake
+  - id: RES-EXEC-MAIL-RECEIVED
+    path: records/executive/mail-received/
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 受信メール .eml アーカイブ
+    read_agents:
+      - mail_intake
+      - secretary
+    write_agents:
+      - mail_intake
 rules:
   - id: RULE-GITIGNORE
     text: git:ignore の resource は .gitignore にパターン登録必須。
