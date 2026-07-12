@@ -249,12 +249,17 @@ export function registerCanonicalWireCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id", "mal")
     .option("--public-base-url <url>", "Public Wire base URL")
     .option("--roundtrip", "Also run Phase 4 email_wire live roundtrip")
+    .option(
+      "--strict-email-wire",
+      "Fail when email_wire readiness is not OK (or set ORGOS_LIVE_VERIFY_STRICT_EMAIL=1)"
+    )
     .option("--json", "JSON output")
     .option("--no-evidence", "Skip writing scratch/wire-live-verify-*.json")
     .action(async (opts: {
       tenant?: string;
       publicBaseUrl?: string;
       roundtrip?: boolean;
+      strictEmailWire?: boolean;
       json?: boolean;
       noEvidence?: boolean;
     }) =>
@@ -262,6 +267,7 @@ export function registerCanonicalWireCommands(program: Command): void {
         tenant: opts.tenant,
         publicBaseUrl: opts.publicBaseUrl,
         roundtrip: opts.roundtrip,
+        strictEmailWire: opts.strictEmailWire,
         json: opts.json,
         noEvidence: opts.noEvidence,
       })

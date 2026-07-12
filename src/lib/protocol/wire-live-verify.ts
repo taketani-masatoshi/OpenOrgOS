@@ -61,6 +61,8 @@ export async function runWireLiveVerify(opts: {
   publicBaseUrl?: string;
   writeEvidence?: boolean;
   roundtrip?: boolean;
+  /** When true, email_wire readiness failures fail the step even if deferred by default. */
+  strictEmailWire?: boolean;
 }): Promise<WireLiveVerifyResult> {
   const tenant = opts.tenant;
   setTenantId(tenant);
@@ -134,12 +136,17 @@ export async function runWireLiveVerify(opts: {
   });
 
   const emailReady = evaluateEmailWireReadiness(tenant);
-  const emailRequired = isEmailWireProductionRequired();
+  const emailRequired =
+    opts.strictEmailWire === true ||
+    process.env.ORGOS_LIVE_VERIFY_STRICT_EMAIL === "1" ||
+    isEmailWireProductionRequired();
   steps.push({
     id: "email_wire_readiness",
     ok: emailRequired ? emailReady.ok : true,
     detail: emailRequired
-      ? emailReady.detail
+      ? emailReady.ok
+        ? `${emailReady.detail} (blocking)`
+        : emailReady.detail
       : emailReady.ok
         ? emailReady.detail
         : `deferred — ${(emailReady.issues ?? []).join("; ") || emailReady.detail}`,
@@ -174,7 +181,7 @@ export async function runWireLiveVerify(opts: {
   steps.push({
     id: "wire_checklist",
     ok: checklist.total >= 80,
-    detail: `${checklist.total}/${checklist.max} (${checklist.grade})`,
+    detail: `${checklist.total}/${checklist.max} (${checklist.grade}) — static checklist only; not live evidence`,
   });
 
   if (opts.roundtrip) {

@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
-# Wire implementation eval loop — 10 iterations, target 98/100 (strict platform scoring)
+# Wire implementation eval loop — static checklist only (NOT live / NOT --strict runtime)
+#
+# IMPORTANT:
+#   evaluateWireImplementationScore() === evaluateWireImplementationChecklist()
+#   This loop does NOT prove SMTP/IMAP live, prod gate, or Vitest --strict evidence.
+#   For runtime: npm run orgos -- wire-gateway score --strict
+#   For live:    ORGOS_LIVE_VERIFY=1 ./scripts/wire-live-verify.sh mal check
+#
+# Target 98/100 on the static checklist for regression hunting only.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 TARGET=98
 LOOPS=10
 
-echo "=== Wire implementation eval loop (strict, target ${TARGET}/100) ==="
+echo "=== Wire implementation eval loop (STATIC checklist, target ${TARGET}/100) ==="
+echo "  Note: not a live or --strict runtime score"
 
 for i in $(seq 1 "$LOOPS"); do
   echo ""

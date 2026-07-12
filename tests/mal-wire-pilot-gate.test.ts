@@ -55,6 +55,7 @@ describe("mal wire pilot gate", () => {
       if (existsSync(mailConfig)) rmSync(mailConfig);
       copyFileSync(mailConfigBackup, mailConfig);
       rmSync(mailConfigBackup);
+      expect(existsSync(mailConfig)).toBe(true);
       mailConfigBackup = null;
     }
     for (const key of envKeys) {

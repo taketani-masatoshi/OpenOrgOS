@@ -48,6 +48,9 @@ ARGS=(--tenant "$TENANT" --public-base-url "$PUBLIC_BASE_URL")
 if [[ "$ROUNDTRIP" == true ]]; then
   ARGS+=(--roundtrip)
 fi
+if [[ "${ORGOS_LIVE_VERIFY_STRICT_EMAIL:-}" == "1" ]] || [[ "${ORGOS_EMAIL_WIRE_REQUIRED:-}" == "1" ]]; then
+  ARGS+=(--strict-email-wire)
+fi
 
 npm run orgos -- wire live-verify "${ARGS[@]}"
 
