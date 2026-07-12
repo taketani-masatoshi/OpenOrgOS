@@ -115,7 +115,7 @@ export function exportCommunityProtocolBundle(
       steward_export: true,
       ...(options.generatedAt ? { steward_export_at: options.generatedAt } : {}),
       readiness_score: readiness.score,
-      tenant_mail_connect_api: true,
+      tenant_mail_connect_api: existing.tenant_mail_connect_api === true,
       tenant_mail_connect_ui: existing.tenant_mail_connect_ui === true,
     }
   );

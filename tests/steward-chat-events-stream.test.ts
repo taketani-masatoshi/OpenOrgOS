@@ -1,31 +1,29 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { pushQueueEvent } from "../src/lib/queue-db.js";
 
 describe("steward chat events stream", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19485;
+  let eventRefSeq = 0;
   const env = { ...process.env };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     setTenantId("demo");
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
-    testPort += 1;
+    eventRefSeq += 1;
     pushQueueEvent({
       type: "pipeline_daily_complete",
-      ref: `daily-test-${testPort}`,
+      ref: `daily-test-${eventRefSeq}`,
       status: "done",
       payload: { summary: "test pipeline" },
     });
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   });
 

@@ -1,8 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import {
   DEMO_WITNESS_EVENT_ID,
@@ -17,7 +15,6 @@ describe("steward chat witness API", () => {
   let handle: StewardChatServerHandle | undefined;
   let witnessHubs: DemoWitnessHubs | undefined;
   let baseUrl = "";
-  let testPort = 19511;
   const env = { ...process.env };
 
   beforeEach(async () => {
@@ -44,8 +41,7 @@ describe("steward chat witness API", () => {
     });
 
     witnessHubs = await startDemoWitnessHubs("demo");
-    testPort += 1;
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   });
 

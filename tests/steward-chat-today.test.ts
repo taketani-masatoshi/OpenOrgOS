@@ -6,7 +6,7 @@ import {
 } from "../src/lib/steward-chat/today-context.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getCashflowTodaySummary } from "../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { getDocsDir } from "../src/lib/utils.js";
 
@@ -134,13 +134,22 @@ describe("steward chat today", () => {
 
   it("returns only the path when the schedule exists only as Markdown", () => {
     setTenantId("demo");
-    const schedulePath = join(
+    const scheduleDir = join(
       getDocsDir(),
       "finance",
       "treasury",
-      "cashflow-schedule",
-      "9999-12-31-weekly.md"
+      "cashflow-schedule"
     );
+    mkdirSync(scheduleDir, { recursive: true });
+    for (const file of readdirSync(scheduleDir).filter((f) => f.endsWith("-detail.csv"))) {
+      const detailPath = join(scheduleDir, file);
+      snapshots.set(
+        detailPath,
+        existsSync(detailPath) ? readFileSync(detailPath, "utf-8") : undefined
+      );
+      rmSync(detailPath, { force: true });
+    }
+    const schedulePath = join(scheduleDir, "9999-12-31-weekly.md");
     snapshotAndWrite(schedulePath, "BODY-MUST-NOT-BE-PARSED");
     expect(getCashflowTodaySummary()).toEqual({
       schedule_path:

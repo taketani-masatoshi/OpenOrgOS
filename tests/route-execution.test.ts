@@ -165,6 +165,41 @@ describe("standard route execution", () => {
     }
   });
 
+  it("delegates when to_agent mismatches executing agent authority", () => {
+    const resolve: InvocationResolver = () => ({
+      status: "ready",
+      execution: "handler",
+      skill: {
+        id: "monthly_close",
+        file: "monthly_close.md",
+        runtime: "cli",
+        cli_command: "monthly-close",
+        handler: "monthly_close",
+        agent_id: "finance",
+        description: "monthly close",
+        skillDir: "/tmp",
+        skillDirRel: "steward/core/skills",
+      },
+      handler: vi.fn(),
+      argv: ["skills", "run", "monthly-close"],
+    });
+
+    const misaligned = evaluateRouteExecution(
+      handoff({ skill: "monthly_close", to_agent: "secretary" }),
+      "auto",
+      resolve
+    );
+    expect(misaligned.action).toBe("work_order");
+    expect(misaligned.message).toContain("executing agent finance");
+
+    const aligned = evaluateRouteExecution(
+      handoff({ skill: "monthly_close", to_agent: "finance" }),
+      "auto",
+      resolve
+    );
+    expect(aligned.action).toBe("direct_skill");
+  });
+
   it("keeps state pending and stores failure details", async () => {
     const resolve: InvocationResolver = () =>
       readyResolution(() => {

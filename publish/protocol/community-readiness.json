@@ -110,8 +110,8 @@
     },
     {
       "id": "tenant-mail-connect-api",
-      "ok": true,
-      "detail": "Community tenant-mail API export + Steward push route"
+      "ok": false,
+      "detail": "deferred — Gmail tenant-mail connect not shipped (scaffold only)"
     }
   ]
 }

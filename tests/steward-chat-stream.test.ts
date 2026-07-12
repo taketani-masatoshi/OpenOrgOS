@@ -1,15 +1,11 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { createServer, type Server } from "node:http";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getDataDir } from "../src/lib/utils.js";
-
-const TEST_PORT = 19480;
 
 describe("steward chat message stream", () => {
   let handle: StewardChatServerHandle | undefined;
@@ -46,11 +42,15 @@ describe("steward chat message stream", () => {
     process.env = { ...env };
   });
 
+  async function start() {
+    handle = await startStewardChatForTest();
+    baseUrl = handle.url;
+  }
+
   it("streams SSE deltas and done event", async () => {
     process.env.ORGOS_LLM_STRUCTURED = "1";
     process.env.ORGOS_LLM_TELEMETRY = "1";
-    handle = startStewardChatServer({ host: "127.0.0.1", port: TEST_PORT });
-    baseUrl = handle.url;
+    await start();
 
     const res = await fetch(`${baseUrl}/chat/v1/message/stream`, {
       method: "POST",
@@ -69,8 +69,7 @@ describe("steward chat message stream", () => {
   });
 
   it("handles scheduling collection in non-streaming and streaming routes", async () => {
-    handle = startStewardChatServer({ host: "127.0.0.1", port: TEST_PORT });
-    baseUrl = handle.url;
+    await start();
 
     const first = await fetch(`${baseUrl}/chat/v1/message`, {
       method: "POST",

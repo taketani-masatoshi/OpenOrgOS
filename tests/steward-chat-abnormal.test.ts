@@ -1,8 +1,9 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
-  startStewardChatServer,
   type StewardChatServerHandle,
+  STEWARD_CHAT_SPA_DIST,
 } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { startOperatorConsoleServer } from "../src/lib/operator-console/combined-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { resetRateLimitState } from "../src/lib/console-auth/rate-limit.js";
@@ -12,12 +13,10 @@ import {
 } from "../src/lib/wire-console/auth/session.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { STEWARD_CHAT_SPA_DIST } from "../src/lib/steward-chat/server.js";
 
 describe("steward chat abnormal paths", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19601;
   const env = { ...process.env };
 
   beforeEach(() => {
@@ -29,7 +28,6 @@ describe("steward chat abnormal paths", () => {
     process.env.ORGOS_CSRF = "0";
     process.env.ORGOS_RATE_LIMIT = "0";
     process.env.ORGOS_LLM_MOCK = "1";
-    testPort += 1;
   });
 
   afterEach(async () => {
@@ -42,8 +40,8 @@ describe("steward chat abnormal paths", () => {
     process.env = { ...env };
   });
 
-  function start() {
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+  async function start() {
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   }
 
@@ -58,7 +56,7 @@ describe("steward chat abnormal paths", () => {
   }
 
   it("A-01: rejects wrong dev passkey with 401", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -68,7 +66,7 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-02: rejects invalid session cookie on /chat/v1/today", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/today`, {
       headers: { Cookie: `${WIRE_CONSOLE_SESSION_COOKIE}=invalid-token-xyz` },
     });
@@ -76,7 +74,7 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-03: rejects empty chat message body with 400", async () => {
-    start();
+    await start();
     const cookie = await loginCookie();
     const res = await fetch(`${baseUrl}/chat/v1/message`, {
       method: "POST",
@@ -89,7 +87,7 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-04: rejects malformed JSON on chat message with 400", async () => {
-    start();
+    await start();
     const cookie = await loginCookie();
     const res = await fetch(`${baseUrl}/chat/v1/message`, {
       method: "POST",
@@ -100,7 +98,7 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-05: returns 400 for nonexistent approval approve", async () => {
-    start();
+    await start();
     const cookie = await loginCookie();
     const res = await fetch(`${baseUrl}/chat/v1/approvals/nonexistent-approval-id/approve`, {
       method: "POST",
@@ -118,7 +116,7 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-06: witness register rejects missing event_id with 422", async () => {
-    start();
+    await start();
     const cookie = await loginCookie();
     const res = await fetch(`${baseUrl}/chat/v1/wire/witness/register`, {
       method: "POST",
@@ -129,7 +127,7 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-07: witness register rejects invalid side with 422", async () => {
-    start();
+    await start();
     const cookie = await loginCookie();
     const res = await fetch(`${baseUrl}/chat/v1/wire/witness/register`, {
       method: "POST",
@@ -143,7 +141,7 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-08: returns 403 for prod guest on approve", async () => {
-    start();
+    await start();
     const { token } = registerSession({
       operator_id: "guest",
       approver_id: "not-in-company-yaml",
@@ -165,7 +163,7 @@ describe("steward chat abnormal paths", () => {
     process.env.ORGOS_RATE_LIMIT = "1";
     delete process.env.ORGOS_RATE_LIMIT_ASK_MAX;
     process.env.ORGOS_RATE_LIMIT_ASK_MAX = "2";
-    start();
+    await start();
     const cookie = await loginCookie();
     const headers = { Cookie: cookie, "Content-Type": "application/json", Origin: baseUrl };
 
@@ -188,7 +186,7 @@ describe("steward chat abnormal paths", () => {
 
   it("A-10: rejects CSRF on wire flush with foreign Origin", async () => {
     delete process.env.ORGOS_CSRF;
-    start();
+    await start();
     const cookie = await loginCookie();
     const res = await fetch(`${baseUrl}/chat/v1/wire/flush`, {
       method: "POST",
@@ -209,7 +207,7 @@ describe("steward chat abnormal paths", () => {
     process.env.WIRE_CONSOLE_PROD_ADAPTER = "legacy_token";
     process.env.WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN = "1";
     process.env.WIRE_CONSOLE_PROD_TOKEN = "prod-secret";
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -219,13 +217,13 @@ describe("steward chat abnormal paths", () => {
   });
 
   it("A-12: operator stats requires auth", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/operator/stats`);
     expect(res.status).toBe(401);
   });
 
   it("A-17: rejects session after logout", async () => {
-    start();
+    await start();
     const cookie = await loginCookie();
     const logout = await fetch(`${baseUrl}/chat/v1/auth/logout`, {
       method: "POST",
@@ -307,7 +305,7 @@ describe("operator console abnormal paths", () => {
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
     process.env.ORGOS_CSRF = "0";
-    const chat = startStewardChatServer({ host: "127.0.0.1", port: 19699 });
+    const chat = await startStewardChatForTest();
     try {
       const loginRes = await fetch(`${chat.url}/chat/v1/auth/login`, {
         method: "POST",

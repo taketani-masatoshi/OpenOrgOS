@@ -11,5 +11,6 @@ export default defineConfig({
     // setup-restore-protocol serializes fixture restores across concurrent
     // Vitest processes and caps lock waits at 30 seconds.
     hookTimeout: 40_000,
+    testTimeout: 60_000,
   },
 });

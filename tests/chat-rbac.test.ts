@@ -1,8 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import {
   registerSession,
@@ -16,7 +14,6 @@ import {
 describe("chat rbac", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19501;
   const env = { ...process.env };
 
   beforeEach(() => {
@@ -24,7 +21,6 @@ describe("chat rbac", () => {
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.ORGOS_CSRF = "0";
-    testPort += 1;
   });
 
   afterEach(async () => {
@@ -36,8 +32,8 @@ describe("chat rbac", () => {
     process.env = { ...env };
   });
 
-  function start() {
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+  async function start() {
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   }
 
@@ -65,7 +61,7 @@ describe("chat rbac", () => {
   });
 
   it("returns 403 when prod non-approver tries wire flush", async () => {
-    start();
+    await start();
     const { token } = registerSession({
       operator_id: "guest",
       approver_id: "guest-not-authorized",
@@ -83,7 +79,7 @@ describe("chat rbac", () => {
   });
 
   it("allows chat:read users to GET the L1-safe validate route", async () => {
-    start();
+    await start();
     const { token } = registerSession({
       operator_id: "guest",
       approver_id: "guest-not-authorized",

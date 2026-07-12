@@ -55,6 +55,15 @@ testingModules = testingModules
     `$1${dedicatedOnlyCount}$2`
   );
 writeFileSync(testingModulesPath, testingModules);
+
+const frameworkAssessmentPath = join(import.meta.dirname, "../docs/framework-assessment.md");
+let frameworkAssessment = readFileSync(frameworkAssessmentPath, "utf-8");
+frameworkAssessment = frameworkAssessment.replace(
+  /(\*\*~95\/100\*\*（[^·]+· \*\*)\d+(\s+tests\*\*)/,
+  `$1${registry.stats.static_test_cases}$2`
+);
+writeFileSync(frameworkAssessmentPath, frameworkAssessment);
+
 console.log(
-  `Wrote ${TEST_REGISTRY_PATH} and ${testingModulesPath} (${registry.stats.vitest_total} tests)`
+  `Wrote ${TEST_REGISTRY_PATH}, ${testingModulesPath}, and ${frameworkAssessmentPath} (${registry.stats.vitest_total} tests)`
 );

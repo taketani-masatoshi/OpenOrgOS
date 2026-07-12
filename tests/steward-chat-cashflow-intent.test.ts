@@ -6,10 +6,8 @@ import {
   isCashflowChatIntent,
   parseCashflowChatIntent,
 } from "../src/lib/jp-bank-corporate/cashflow-request.js";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import {
@@ -109,9 +107,8 @@ describe("cashflow intent through Steward Chat HTTP", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
   const env = { ...process.env };
-  const port = 19543;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     setTenantId("demo");
     clearOperatorsRegistryCacheForTests();
     resetSessionsForTests();
@@ -120,7 +117,7 @@ describe("cashflow intent through Steward Chat HTTP", () => {
     process.env.ORGOS_CSRF = "0";
     process.env.ORGOS_LLM_MOCK = "1";
     process.env.ORGOS_LLM_TOOLS_WRITE = "0";
-    handle = startStewardChatServer({ host: "127.0.0.1", port });
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   });
 

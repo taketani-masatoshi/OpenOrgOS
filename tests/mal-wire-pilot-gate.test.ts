@@ -36,7 +36,23 @@ describe("mal wire pilot gate", () => {
     }
   });
 
-  it("reports unresolved production blockers in committed mal tenant config", () => {
+  it("passes wire prod gate with email_wire deferred (Gmail not shipped)", () => {
+    delete process.env.ORGOS_EMAIL_WIRE_REQUIRED;
+    const result = runProdWireGate({
+      tenantId: "mal",
+      strictTrust: true,
+      strictTls: true,
+      strictTransport: true,
+      publicBaseUrl: "https://wire.mal.example",
+    });
+    expect(result.ok).toBe(true);
+    const email = result.checks.find((check) => check.id === "email_wire");
+    expect(email?.ok).toBe(true);
+    expect(email?.detail).toMatch(/deferred|not shipped/i);
+  });
+
+  it("reports email_wire blocker when ORGOS_EMAIL_WIRE_REQUIRED=1", () => {
+    process.env.ORGOS_EMAIL_WIRE_REQUIRED = "1";
     const result = runProdWireGate({
       tenantId: "mal",
       strictTrust: true,
@@ -48,5 +64,6 @@ describe("mal wire pilot gate", () => {
     const failed = result.checks.filter((check) => !check.ok);
     expect(failed.map((check) => check.id)).toEqual(["email_wire"]);
     expect(failed[0]?.issues).toContain("mail-config.yaml not present");
+    delete process.env.ORGOS_EMAIL_WIRE_REQUIRED;
   });
 });

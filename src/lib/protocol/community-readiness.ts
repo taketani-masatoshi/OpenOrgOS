@@ -193,15 +193,15 @@ export function computeCommunityReadiness(): CommunityReadiness {
   });
   if (vocabularyI18n) score += 1;
 
-  const tenantMailApi = integration?.tenant_mail_connect_api === true;
+  const tenantMailShipped = integration?.tenant_mail_connect_api === true;
   checks.push({
     id: "tenant-mail-connect-api",
-    ok: tenantMailApi,
-    detail: tenantMailApi
+    ok: tenantMailShipped,
+    detail: tenantMailShipped
       ? "Community tenant-mail API export + Steward push route"
-      : "tenant-mail connect API pending",
+      : "deferred — Gmail tenant-mail connect not shipped (scaffold only)",
   });
-  if (tenantMailApi) score += 1;
+  if (tenantMailShipped) score += 1;
 
   const cap = resolveCommunityReadinessCap();
   return { score: Math.min(score, cap), checks };

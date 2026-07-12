@@ -1,15 +1,12 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { resetRateLimitState } from "../src/lib/console-auth/rate-limit.js";
 
 describe("rate limit", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19491;
   const env = { ...process.env };
 
   beforeEach(() => {
@@ -22,7 +19,6 @@ describe("rate limit", () => {
     delete process.env.ORGOS_RATE_LIMIT;
     process.env.ORGOS_RATE_LIMIT_WINDOW_MS = "60000";
     process.env.ORGOS_RATE_LIMIT_LOGIN_MAX = "3";
-    testPort += 1;
   });
 
   afterEach(async () => {
@@ -35,13 +31,13 @@ describe("rate limit", () => {
     process.env = { ...env };
   });
 
-  function start() {
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+  async function start() {
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   }
 
   it("returns 429 when login rate limit exceeded", async () => {
-    start();
+    await start();
     for (let i = 0; i < 3; i++) {
       const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
         method: "POST",
@@ -64,7 +60,7 @@ describe("rate limit", () => {
   it("allows requests when ORGOS_RATE_LIMIT=0", async () => {
     process.env.ORGOS_RATE_LIMIT = "0";
     process.env.ORGOS_RATE_LIMIT_LOGIN_MAX = "1";
-    start();
+    await start();
 
     for (let i = 0; i < 3; i++) {
       const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {

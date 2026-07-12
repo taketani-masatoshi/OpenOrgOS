@@ -129,7 +129,8 @@ export function assertCatalogSeedValidatorPresent(catalogId: string): string | n
 }
 
 const CONTRACT_FILES = new Set([
-  "agent-catalog-contract.test.ts",
+  "agent-activation-contract.test.ts",
+  "agent-readiness-profiles.test.ts",
   "extensibility-contract.test.ts",
   "modules.test.ts",
   "readiness.test.ts",
@@ -822,6 +823,22 @@ export function buildRegistryFromDisk(): TestRegistry {
           "wire-console-redact.test.ts",
           "wire-console-webauthn-verify.test.ts",
           "wire-console-webauthn-register.test.ts",
+        ],
+      },
+      "scheduling-smoke": {
+        source: "package.json",
+        files: [
+          "doctor-repair-operator.test.ts",
+          "operator-registry-cli.test.ts",
+          "scheduling-operational-readiness.test.ts",
+          "scheduling-rehearsal-cli.test.ts",
+          "scheduling-rehearsal-mail-path.test.ts",
+          "scheduling-e2e.test.ts",
+          "scheduling-mail.test.ts",
+          "scheduling-mail-poller.test.ts",
+          "scheduling-reminder-poller.test.ts",
+          "scheduling-secretary-flow.test.ts",
+          "scheduling-state-reliability.test.ts",
         ],
       },
     },

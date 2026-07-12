@@ -11,8 +11,8 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 
 | 指標 | 値 |
 |------|-----|
-| Vitest テストファイル | **305**（`tests/**/*.test.ts` · registry 含む） |
-| テストケース（静的 `it`/`test` **1147**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
+| Vitest テストファイル | **309**（`tests/**/*.test.ts` · registry 含む） |
+| テストケース（静的 `it`/`test` **1160**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
 | 業務 catalog module | **30**（core 21 + JP pack 9） |
 | production_ready | **28** |
 | skeleton | **1**（`jp_permit_registry`） |
@@ -114,12 +114,14 @@ npm run test:platform -- P04_wire_stack
 | wire-gateway-smoke | 26 | validate.yml + governance 2 件 |
 | steward-chat-smoke | 28 | `package.json` |
 | wire-console-test | 5 | `package.json` |
+| scheduling-smoke | 11 | `package.json` · `npm run test:scheduling` |
 
 ---
 
 ## 7. 実行制約
 
-- [`vitest.config.ts`](../vitest.config.ts): `fileParallelism: false`（mal routing-queue 等）· `hookTimeout: 40_000`（fixture restore）
+- [`vitest.config.ts`](../vitest.config.ts): `fileParallelism: false`（mal routing-queue 等）· `hookTimeout: 40_000` · `testTimeout: 60_000`（mail-heavy）
+- 日程調整回帰: `npm run test:scheduling`（scheduling-*.test · doctor-repair · operator-registry-cli）
 - [`tests/setup-restore-protocol.ts`](../tests/setup-restore-protocol.ts): 毎 `beforeEach` で protocol fixture 復元（ロック待ち最大 60s）
 - 同一 workspace 上での shard 並列は **非推奨**（fixture race）
 - stale lock: `orgos doctor --repair`（または `rm -rf tests/.fixture-restore.lock`）

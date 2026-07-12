@@ -25,6 +25,11 @@ function loadRepresentativeEmail(): string | undefined {
   }
 }
 
+/** Public disclosure email for mail-config from / rehearsal overlay. */
+export function loadCompanyPublicDisclosureEmail(): string | undefined {
+  return loadRepresentativeEmail();
+}
+
 export function buildDefaultExecutiveMailConfig(opts?: {
   fromEmail?: string;
   fromName?: string;

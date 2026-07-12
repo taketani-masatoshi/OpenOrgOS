@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 305
-  static_test_cases: 1147
-  tiered_execution_total: 305
+  vitest_total: 309
+  static_test_cases: 1160
+  tiered_execution_total: 309
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -307,12 +307,29 @@ ci_suites:
       - wire-console-redact.test.ts
       - wire-console-webauthn-verify.test.ts
       - wire-console-webauthn-register.test.ts
+  scheduling-smoke:
+    source: package.json
+    files:
+      - doctor-repair-operator.test.ts
+      - operator-registry-cli.test.ts
+      - scheduling-operational-readiness.test.ts
+      - scheduling-rehearsal-cli.test.ts
+      - scheduling-rehearsal-mail-path.test.ts
+      - scheduling-e2e.test.ts
+      - scheduling-mail.test.ts
+      - scheduling-mail-poller.test.ts
+      - scheduling-reminder-poller.test.ts
+      - scheduling-secretary-flow.test.ts
+      - scheduling-state-reliability.test.ts
 tests:
   acme-validate.test.ts:
     axis: integration
     kind: integration
     domain: P02_business_data
     integration: I1_cli
+  agent-activation-contract.test.ts:
+    axis: contract
+    kind: contract
   agent-authority-external-keys.test.ts:
     axis: platform
     kind: unit
@@ -322,8 +339,9 @@ tests:
     kind: unit
     domain: P06_agent_workflow
   agent-catalog-contract.test.ts:
-    axis: contract
-    kind: contract
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
   agent-docs-drift.test.ts:
     axis: platform
     kind: unit
@@ -335,6 +353,9 @@ tests:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
+  agent-readiness-profiles.test.ts:
+    axis: contract
+    kind: contract
   agent-readiness.test.ts:
     axis: platform
     kind: unit
@@ -874,6 +895,10 @@ tests:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
+  operator-registry-cli.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
   operator-runtime-llm.test.ts:
     axis: platform
     kind: unit
@@ -1244,6 +1269,10 @@ tests:
     kind: unit
     domain: P01_kernel
   scheduling-proposal-authority.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  scheduling-rehearsal-cli.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

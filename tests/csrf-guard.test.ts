@@ -1,8 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { verifySameOrigin } from "../src/lib/console-auth/csrf.js";
 import type { IncomingMessage } from "node:http";
@@ -10,7 +8,6 @@ import type { IncomingMessage } from "node:http";
 describe("csrf guard", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19481;
   const env = { ...process.env };
 
   beforeEach(() => {
@@ -19,7 +16,6 @@ describe("csrf guard", () => {
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
     delete process.env.ORGOS_CSRF;
-    testPort += 1;
   });
 
   afterEach(async () => {
@@ -31,13 +27,13 @@ describe("csrf guard", () => {
     process.env = { ...env };
   });
 
-  function start() {
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+  async function start() {
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   }
 
   it("rejects mutating API without Origin when CSRF enabled", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/wire/flush`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -49,7 +45,7 @@ describe("csrf guard", () => {
   });
 
   it("exempts login from CSRF check", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -60,7 +56,7 @@ describe("csrf guard", () => {
 
   it("allows mutating requests when ORGOS_CSRF=0", async () => {
     process.env.ORGOS_CSRF = "0";
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

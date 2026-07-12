@@ -13,6 +13,6 @@
   "wire_node_governance_api": true,
   "e2e_green": true,
   "community_integration_at": "2026-07-09T23:25:50.635Z",
-  "tenant_mail_connect_api": true,
+  "tenant_mail_connect_api": false,
   "tenant_mail_connect_ui": false
 }

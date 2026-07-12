@@ -8,6 +8,7 @@ import {
 import { sendCorrespondenceEmail } from "./mail-send.js";
 import { sendSlackNotification } from "./slack-send.js";
 import { assertCorrespondenceMailSetupReady } from "./mail-setup-readiness.js";
+import { isDryRunSmtpHost, resolveMailConfig } from "./mail-config.js";
 import { repairMissingApprovalForDraft } from "./approval-registry-repair.js";
 import { assertHumanCorrespondenceApproval, isHumanApproverOperatorId } from "./human-approval.js";
 import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
@@ -102,7 +103,10 @@ export async function sendApprovedCorrespondence(opts: {
   }
 
   if (!opts.dryRun) {
-    assertCorrespondenceMailSetupReady(draft.channel);
+    const smtpHost = resolveMailConfig().smtp?.host;
+    if (!isDryRunSmtpHost(smtpHost)) {
+      assertCorrespondenceMailSetupReady(draft.channel);
+    }
   }
 
   let sendResult: SendApprovedCorrespondenceResult["sendResult"];
@@ -121,6 +125,15 @@ export async function sendApprovedCorrespondence(opts: {
   }
 
   if (opts.dryRun) {
+    if (draft.notes?.includes("scheduling-case:")) {
+      draft = markCorrespondenceDraftSent(draft.draft_id, {
+        sentBy: opts.operatorId,
+      });
+      const { handleSchedulingCorrespondenceSent } = await import(
+        "../scheduling-coordination/lifecycle.js"
+      );
+      handleSchedulingCorrespondenceSent(draft);
+    }
     return { draft, sendResult };
   }
 

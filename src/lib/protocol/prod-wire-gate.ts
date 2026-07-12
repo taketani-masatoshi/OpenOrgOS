@@ -36,6 +36,14 @@ export interface ProdWireGateResult {
   checks: ProdWireGateCheck[];
 }
 
+/** Phase 4 live pilot only — default defers Gmail / email_wire until shipped. */
+export function isEmailWireProductionRequired(): boolean {
+  return process.env.ORGOS_EMAIL_WIRE_REQUIRED === "1";
+}
+
+export const EMAIL_WIRE_DEFERRED_DETAIL =
+  "email_wire deferred — Gmail/community tenant-mail connect not shipped";
+
 function formatIssues(items: Array<{ code: string; message: string }>): string[] {
   return items.map((i) => `${i.code}: ${i.message}`);
 }
@@ -125,10 +133,15 @@ export function runProdWireGate(opts: ProdWireGateOptions): ProdWireGateResult {
     });
 
     const emailWireReady = evaluateEmailWireReadiness(opts.tenantId);
+    const emailWireRequired = isEmailWireProductionRequired();
     checks.push({
       id: "email_wire",
-      ok: emailWireReady.ok,
-      detail: emailWireReady.detail,
+      ok: emailWireRequired ? emailWireReady.ok : true,
+      detail: emailWireRequired
+        ? emailWireReady.detail
+        : emailWireReady.ok
+          ? emailWireReady.detail
+          : EMAIL_WIRE_DEFERRED_DETAIL,
       issues: emailWireReady.issues,
     });
   } finally {

@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { saveCeoInlineQueue } from "../src/lib/correspondence/ceo-inline-question.js";
@@ -13,7 +11,6 @@ import { ceoInlineQueueSchema } from "../schemas/correspondence/ceo-inline-quest
 describe("correspondence ceo inline chat api", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19571;
   const env = { ...process.env };
 
   beforeEach(() => {
@@ -43,7 +40,6 @@ describe("correspondence ceo inline chat api", () => {
         ],
       })
     );
-    testPort += 1;
   });
 
   afterEach(async () => {
@@ -57,13 +53,13 @@ describe("correspondence ceo inline chat api", () => {
     process.env = { ...env };
   });
 
-  function start() {
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+  async function start() {
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   }
 
   it("lists pending CEO inline questions", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/ceo-questions`);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; questions: Array<{ id: string }> };
@@ -72,7 +68,7 @@ describe("correspondence ceo inline chat api", () => {
   });
 
   it("shows CEO inline question detail", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/ceo-questions/CEO-Q-001`);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { question: { mail_id: string } };
@@ -80,7 +76,7 @@ describe("correspondence ceo inline chat api", () => {
   });
 
   it("answers CEO inline question via POST", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/ceo-questions/CEO-Q-001/answer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

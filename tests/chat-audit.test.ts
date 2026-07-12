@@ -1,10 +1,8 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getWorkspaceRoot } from "../src/lib/orgos-paths.js";
 import { appendChatAudit } from "../src/lib/steward-chat/audit.js";
@@ -12,7 +10,6 @@ import { appendChatAudit } from "../src/lib/steward-chat/audit.js";
 describe("chat audit", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19491;
   let auditPath = "";
   const env = { ...process.env };
 
@@ -25,7 +22,6 @@ describe("chat audit", () => {
     auditPath = join(getWorkspaceRoot(), "data", ".orgos", "chat-audit-test.jsonl");
     process.env.ORGOS_CHAT_AUDIT_LOG = auditPath;
     if (existsSync(auditPath)) rmSync(auditPath, { force: true });
-    testPort += 1;
   });
 
   afterEach(async () => {
@@ -38,8 +34,8 @@ describe("chat audit", () => {
     if (existsSync(auditPath)) rmSync(auditPath, { force: true });
   });
 
-  function start() {
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+  async function start() {
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   }
 
@@ -60,7 +56,7 @@ describe("chat audit", () => {
   });
 
   it("records login via chat API", async () => {
-    start();
+    await start();
     const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

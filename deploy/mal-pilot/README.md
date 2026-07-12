@@ -76,9 +76,14 @@ Set `WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1` and `PUBLIC_BASE_URL=https://wire
 - Wire Gateway: `deploy/wire-gateway/systemd/steward-wire-gateway@.service`
 - Protocol relay: `deploy/protocol-relay/systemd/steward-protocol-relay@.service`
 
-## Phase 4 — email_wire live (SMTP/IMAP)
+## Phase 4 — email_wire live (SMTP/IMAP) · **optional / deferred**
+
+Gmail / Community tenant-mail connect は **未出荷**。Wire pilot（Phase 2–3）のみで本番ゲートは通る。  
+Phase 4 を有効にする場合:
 
 ```bash
+export ORGOS_EMAIL_WIRE_REQUIRED=1   # prod gate で email_wire を blocking に
+```
 # 1. L2 credentials (gitignore)
 cp deploy/mal-pilot/env/mail-wire-mal.env.example deploy/mal-pilot/env/.env.mail-wire
 # ORGOS_SMTP_USER=ai@malkk.com · App Password を設定

@@ -51,17 +51,13 @@ async function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-export function startStewardChatServer(opts: StewardChatServerOptions = {}): StewardChatServerHandle {
-  assertProdAuthReady("chat");
-  const host = opts.host ?? process.env.STEWARD_CHAT_HOST?.trim() ?? "127.0.0.1";
-  const port = opts.port ?? Number(process.env.STEWARD_CHAT_PORT ?? 9471);
-
-  const server = createServer(async (req, res) => {
+function createStewardChatHttpServer(host: string, fallbackPort: number) {
+  return createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://${host}`);
     const pathname = url.pathname;
     const method = req.method ?? "GET";
 
-    if (rejectCsrfOriginMismatch(req, res, req.headers.host ?? `${host}:${port}`)) {
+    if (rejectCsrfOriginMismatch(req, res, req.headers.host ?? `${host}:${fallbackPort}`)) {
       return;
     }
 
@@ -110,7 +106,38 @@ export function startStewardChatServer(opts: StewardChatServerOptions = {}): Ste
 
     json(res, 404, { error: "not found" });
   });
+}
 
+export async function startStewardChatServerAsync(
+  opts: StewardChatServerOptions = {}
+): Promise<StewardChatServerHandle> {
+  assertProdAuthReady("chat");
+  const host = opts.host ?? process.env.STEWARD_CHAT_HOST?.trim() ?? "127.0.0.1";
+  const port = opts.port ?? Number(process.env.STEWARD_CHAT_PORT ?? 9471);
+  const server = createStewardChatHttpServer(host, port);
+
+  await new Promise<void>((resolve, reject) => {
+    server.listen(port, host, () => resolve());
+    server.on("error", reject);
+  });
+
+  const addr = server.address();
+  const actualPort =
+    typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+  const base = `http://${host}:${actualPort}`;
+  return {
+    url: base,
+    port: actualPort,
+    close: (cb) => server.close(cb),
+  };
+}
+
+/** @deprecated Prefer startStewardChatServerAsync when port may be 0 (tests). */
+export function startStewardChatServer(opts: StewardChatServerOptions = {}): StewardChatServerHandle {
+  assertProdAuthReady("chat");
+  const host = opts.host ?? process.env.STEWARD_CHAT_HOST?.trim() ?? "127.0.0.1";
+  const port = opts.port ?? Number(process.env.STEWARD_CHAT_PORT ?? 9471);
+  const server = createStewardChatHttpServer(host, port);
   server.listen(port, host);
   return {
     url: `http://${host}:${port}`,

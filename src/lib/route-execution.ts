@@ -1,7 +1,10 @@
 import type { Handoff, HandoffInvocation } from "../../schemas/routing.js";
 import type { SkillRunOptions } from "../commands/skills.js";
 import type { SkillInvocationResolution } from "./skill-invocation.js";
+import { resolveAgentId } from "./agent-catalog.js";
 import { appendAuditEvent } from "./audit-log.js";
+import { resolveSkillExecutionPlan } from "./skill-execution-mode.js";
+import type { AgentId } from "../../schemas/classification.js";
 
 export type InvocationResolver = (
   skillId: string,
@@ -130,11 +133,33 @@ export function evaluateRouteExecution(
     };
   }
 
-  const resolution = resolveInvocation(
+  const skillOpts = (handoff.invocation?.arguments ?? {}) as SkillRunOptions;
+  const toAgent = (resolveAgentId(handoff.to_agent) ?? handoff.to_agent) as AgentId;
+  const plan = resolveSkillExecutionPlan(
     handoff.skill,
-    (handoff.invocation?.arguments ?? {}) as SkillRunOptions
+    { fromAgent: handoff.from_agent, toAgent },
+    resolveInvocation,
+    skillOpts
   );
-  if (resolution.status === "agent") {
+  const resolution = plan.resolution;
+
+  if (plan.mode === "human_approval") {
+    return {
+      action: "human_approval",
+      handoff: withInvocation(
+        handoff,
+        invocationFromResolution(handoff, "human_approval", "human_approval", resolution)
+      ),
+      resolution,
+      message: plan.reason,
+    };
+  }
+
+  if (
+    plan.mode === "delegate_work_order" ||
+    plan.mode === "escalate" ||
+    plan.mode === "agent_interactive"
+  ) {
     return {
       action: "work_order",
       handoff: withInvocation(
@@ -142,10 +167,11 @@ export function evaluateRouteExecution(
         invocationFromResolution(handoff, "work_order", "work_order", resolution)
       ),
       resolution,
-      message: resolution.reason,
+      message: plan.reason,
     };
   }
-  if (resolution.status !== "ready") {
+
+  if (plan.mode === "deferred" || !resolution || resolution.status !== "ready") {
     return {
       action: "deferred",
       handoff: withInvocation(
@@ -153,9 +179,10 @@ export function evaluateRouteExecution(
         invocationFromResolution(handoff, "direct_skill", "deferred", resolution)
       ),
       resolution,
-      message: resolution.reason,
+      message: plan.reason,
     };
   }
+
   return {
     action: "direct_skill",
     handoff: withInvocation(
@@ -163,7 +190,7 @@ export function evaluateRouteExecution(
       invocationFromResolution(handoff, "direct_skill", "planned", resolution)
     ),
     resolution,
-    message: `ready: ${resolution.skill.id}`,
+    message: plan.reason,
   };
 }
 

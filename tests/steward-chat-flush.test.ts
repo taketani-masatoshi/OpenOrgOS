@@ -1,8 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-} from "../src/lib/steward-chat/server.js";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { pushQueueEvent } from "../src/lib/queue-db.js";
 import { spawnSync } from "node:child_process";
@@ -14,7 +12,6 @@ import { saveWirePending, enqueueWirePending } from "../src/lib/protocol/wire-qu
 describe("steward chat wire flush API", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
-  let testPort = 19521;
   const env = { ...process.env };
 
   beforeEach(async () => {
@@ -40,8 +37,7 @@ describe("steward chat wire flush API", () => {
       last_error: "test wire flush",
     });
 
-    testPort += 1;
-    handle = startStewardChatServer({ host: "127.0.0.1", port: testPort });
+    handle = await startStewardChatForTest();
     baseUrl = handle.url;
   });
 
