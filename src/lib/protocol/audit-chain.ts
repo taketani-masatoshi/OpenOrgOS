@@ -12,10 +12,10 @@ import { getProtocolAuditChainPath } from "./paths.js";
 import { serializeEventEnvelope } from "./envelope.js";
 import { assertProtocolWriteAuthorized, currentProtocolWriteSource } from "./protocol-write-guard.js";
 import { writeOutboxProvenance } from "./outbox-provenance.js";
+import { getClock, getIdGenerator } from "../runtime-context.js";
 
 function generateAuditId(): string {
-  const suffix = Math.random().toString(36).slice(2, 10);
-  return `PAUD-${Date.now()}-${suffix}`;
+  return getIdGenerator().uniqueId("PAUD");
 }
 
 export function loadProtocolAuditChain(): ProtocolAuditRecord[] {
@@ -35,7 +35,7 @@ export function appendProtocolAuditRecord(options: {
     transaction_id: options.transactionId,
     prev_audit_id: prev?.audit_id,
     digest: envelopeDigest(options.envelope),
-    recorded_at: new Date().toISOString(),
+    recorded_at: getClock().nowIso(),
   });
   appendJsonl(getProtocolAuditChainPath(), record);
   return record;

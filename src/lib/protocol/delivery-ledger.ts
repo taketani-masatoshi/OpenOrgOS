@@ -1,29 +1,88 @@
 import { existsSync } from "node:fs";
 import {
+  deliveryAttemptSchema,
   deliveryAttemptsRegistrySchema,
   type DeliveryAttempt,
   type DeliveryChannel,
   type DeliveryAttemptStatus,
 } from "../../../schemas/protocol/delivery-attempt.js";
-import { getDeliveryAttemptsPath } from "./paths.js";
+import { getDeliveryAttemptsJsonlPath, getDeliveryAttemptsPath } from "./paths.js";
+import { appendJsonl, loadJsonl } from "../jsonl-store.js";
 import { readYamlFile, writeYamlFile, currentDate } from "../utils.js";
+import { getClock } from "../runtime-context.js";
 
-export function loadDeliveryAttemptsRegistry() {
-  const path = getDeliveryAttemptsPath();
-  if (!existsSync(path)) {
-    return deliveryAttemptsRegistrySchema.parse({ attempts: [] });
-  }
-  return readYamlFile(path, deliveryAttemptsRegistrySchema);
+/**
+ * Storage port for delivery attempts (Repository pilot · engineering §3).
+ * Default: append-only jsonl under the tenant protocol dir.
+ */
+export interface DeliveryAttemptRepository {
+  loadAll(): DeliveryAttempt[];
+  append(attempt: DeliveryAttempt): void;
 }
 
-export function recordDeliveryAttempt(entry: Omit<DeliveryAttempt, "at"> & { at?: string }): DeliveryAttempt {
-  const registry = loadDeliveryAttemptsRegistry();
+function createJsonlDeliveryAttemptRepository(): DeliveryAttemptRepository {
+  return {
+    loadAll() {
+      const jsonlPath = getDeliveryAttemptsJsonlPath();
+      if (existsSync(jsonlPath)) {
+        return loadJsonl(jsonlPath, (raw) => deliveryAttemptSchema.parse(raw));
+      }
+      const yamlPath = getDeliveryAttemptsPath();
+      if (!existsSync(yamlPath)) return [];
+      const legacy = readYamlFile(yamlPath, deliveryAttemptsRegistrySchema);
+      for (const attempt of legacy.attempts) {
+        appendJsonl(jsonlPath, attempt);
+      }
+      return legacy.attempts;
+    },
+    append(attempt) {
+      const jsonlPath = getDeliveryAttemptsJsonlPath();
+      if (!existsSync(jsonlPath)) {
+        // Bootstrap legacy YAML before first append so history is preserved.
+        this.loadAll();
+      }
+      appendJsonl(jsonlPath, attempt);
+    },
+  };
+}
+
+let repository: DeliveryAttemptRepository = createJsonlDeliveryAttemptRepository();
+
+/** Test / DI hook — swap storage without changing domain callers. */
+export function setDeliveryAttemptRepository(next: DeliveryAttemptRepository): void {
+  repository = next;
+}
+
+export function resetDeliveryAttemptRepository(): void {
+  repository = createJsonlDeliveryAttemptRepository();
+}
+
+export function loadDeliveryAttemptsRegistry() {
+  const attempts = repository.loadAll();
+  return deliveryAttemptsRegistrySchema.parse({
+    as_of: currentDate(),
+    attempts,
+  });
+}
+
+export function recordDeliveryAttempt(
+  entry: Omit<DeliveryAttempt, "at"> & { at?: string }
+): DeliveryAttempt {
   const record: DeliveryAttempt = {
     ...entry,
-    at: entry.at ?? new Date().toISOString(),
+    at: entry.at ?? getClock().nowIso(),
   };
-  registry.attempts.push(record);
-  writeYamlFile(getDeliveryAttemptsPath(), { ...registry, as_of: currentDate() });
+  repository.append(record);
+  // Derived YAML snapshot (best-effort · not SSOT)
+  try {
+    const registry = loadDeliveryAttemptsRegistry();
+    writeYamlFile(getDeliveryAttemptsPath(), {
+      ...registry,
+      as_of: currentDate(),
+    });
+  } catch {
+    /* snapshot failure must not block append-only write */
+  }
   return record;
 }
 
@@ -42,7 +101,7 @@ export function listDeliveryAttempts(filter?: {
 }
 
 export function hasSuccessfulEmailWireFallback(withinDays = 90): boolean {
-  const cutoff = Date.now() - withinDays * 86_400_000;
+  const cutoff = getClock().nowMs() - withinDays * 86_400_000;
   return loadDeliveryAttemptsRegistry().attempts.some(
     (a) =>
       a.channel === "email_wire" &&
@@ -53,7 +112,7 @@ export function hasSuccessfulEmailWireFallback(withinDays = 90): boolean {
 }
 
 export function hasSuccessfulEmailWireIngest(withinDays = 90): boolean {
-  const cutoff = Date.now() - withinDays * 86_400_000;
+  const cutoff = getClock().nowMs() - withinDays * 86_400_000;
   return loadDeliveryAttemptsRegistry().attempts.some(
     (a) =>
       a.channel === "email_wire" &&
@@ -76,9 +135,7 @@ export interface EmailWireEventConfirmation {
   confirmed_at?: string;
 }
 
-export function getEmailWireEventConfirmation(
-  eventId: string
-): EmailWireEventConfirmation {
+export function getEmailWireEventConfirmation(eventId: string): EmailWireEventConfirmation {
   const attempts = listDeliveryAttempts({
     eventId,
     channel: "email_wire",
@@ -91,10 +148,7 @@ export function getEmailWireEventConfirmation(
     )
     .at(-1);
   const inbound = attempts
-    .filter(
-      (attempt) =>
-        attempt.status === "success" && attempt.direction === "inbound"
-    )
+    .filter((attempt) => attempt.status === "success" && attempt.direction === "inbound")
     .at(-1);
   if (!outbound) return { event_id: eventId, state: "not_sent", inbound };
   if (!inbound) {
@@ -113,13 +167,11 @@ export function getEmailWireEventConfirmation(
   };
 }
 
-export function listUnconfirmedEmailWireEvents(
-  withinDays = 90
-): EmailWireEventConfirmation[] {
-  const cutoff = Date.now() - withinDays * 86_400_000;
+export function listUnconfirmedEmailWireEvents(withinDays = 90): EmailWireEventConfirmation[] {
+  const cutoff = getClock().nowMs() - withinDays * 86_400_000;
   const eventIds = new Set(
-    loadDeliveryAttemptsRegistry().attempts
-      .filter(
+    loadDeliveryAttemptsRegistry()
+      .attempts.filter(
         (attempt) =>
           attempt.channel === "email_wire" &&
           attempt.status === "success" &&
@@ -145,7 +197,7 @@ export function countEmailWireAttemptsSince(sinceMs: number): number {
 
 export function isEmailWireRateLimited(maxPerHour: number): boolean {
   if (maxPerHour <= 0) return false;
-  const oneHourAgo = Date.now() - 3_600_000;
+  const oneHourAgo = getClock().nowMs() - 3_600_000;
   return countEmailWireAttemptsSince(oneHourAgo) >= maxPerHour;
 }
 

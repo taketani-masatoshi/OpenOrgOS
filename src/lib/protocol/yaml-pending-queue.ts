@@ -21,6 +21,9 @@ export interface YamlPendingQueueStore<
   enqueue(
     entry: Omit<TEntry, "attempts" | "created_at"> & { attempts?: number; created_at?: string }
   ): TEntry;
+  /** Archive matching entries (append-only hook) then remove from active pending. */
+  archive(match: (entry: TEntry) => boolean, reason: string): TEntry[];
+  /** @deprecated Prefer {@link archive} with an explicit reason. */
   remove(match: (entry: TEntry) => boolean): void;
   list(): TEntry[];
 }
@@ -33,6 +36,7 @@ export function createYamlPendingQueueStore<
   schema: z.ZodType<TRegistry, z.ZodTypeDef, unknown>;
   entryKey: (entry: TEntry) => string;
   emptyRegistry: () => TRegistry;
+  onArchive?: (entry: TEntry, reason: string) => void;
 }): YamlPendingQueueStore<TEntry, TRegistry> {
   const load = (): TRegistry => {
     const path = opts.getPath();
@@ -44,6 +48,24 @@ export function createYamlPendingQueueStore<
 
   const save = (registry: TRegistry): void => {
     writeYamlFile(opts.getPath(), { ...registry, as_of: currentDate() });
+  };
+
+  const archive = (match: (entry: TEntry) => boolean, reason: string): TEntry[] => {
+    const registry = load();
+    const removed: TEntry[] = [];
+    const kept: TEntry[] = [];
+    for (const entry of registry.pending) {
+      if (match(entry)) {
+        removed.push(entry);
+        opts.onArchive?.(entry, reason);
+      } else {
+        kept.push(entry);
+      }
+    }
+    if (removed.length === 0) return removed;
+    registry.pending = kept;
+    save(registry);
+    return removed;
   };
 
   return {
@@ -70,10 +92,9 @@ export function createYamlPendingQueueStore<
       save(registry);
       return existingIdx >= 0 ? registry.pending[existingIdx]! : record;
     },
+    archive,
     remove(match) {
-      const registry = load();
-      registry.pending = registry.pending.filter((p) => !match(p));
-      save(registry);
+      archive(match, "removed");
     },
     list() {
       return load().pending;

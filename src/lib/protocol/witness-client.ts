@@ -6,7 +6,11 @@ import type { WitnessReceipt } from "../../../schemas/protocol/witness-receipt.j
 import type { WitnessQuorumResult } from "../../../schemas/protocol/witness-quorum.js";
 import type { WitnessPoolConfig } from "../../../schemas/protocol/witness-pool.js";
 import { loadWitnessPoolConfig, sortedHubs, isWitnessEnabled } from "./witness-pool.js";
-import { enqueueWitnessPending, removeWitnessPending, listWitnessPending } from "./witness-queue.js";
+import {
+  enqueueWitnessPending,
+  archiveWitnessPending,
+  listWitnessPending,
+} from "./witness-queue.js";
 import {
   buildWitnessAttestationFromEnvelope,
   loadCachedWitnessReceipt,
@@ -76,7 +80,7 @@ export async function registerWitnessAttestationFanOut(opts: {
         });
         throw new Error(result.error ?? "unknown");
       }
-      removeWitnessPending(hub.hub_id, attestation.event_id, opts.side);
+      archiveWitnessPending(hub.hub_id, attestation.event_id, opts.side, "attested");
       try {
         emitWitnessAttestationRegistered(attestation, hub.hub_id);
       } catch {
@@ -145,7 +149,7 @@ export async function flushWitnessPending(pool?: WitnessPoolConfig): Promise<num
     const attestation = buildWitnessAttestationFromEnvelope({ envelope, side: entry.side });
     const post = await postAttestationToHub(hub.hub_url, attestation);
     if (post.ok) {
-      removeWitnessPending(entry.hub_id, entry.event_id, entry.side);
+      archiveWitnessPending(entry.hub_id, entry.event_id, entry.side, "attested");
       flushed++;
     } else {
       enqueueWitnessPending({

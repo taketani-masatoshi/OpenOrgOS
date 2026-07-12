@@ -3,7 +3,7 @@ import { serializeEventEnvelope } from "./envelope.js";
 import { envelopeDigest } from "./canonical.js";
 import { findPeer, resolvePeerInboundEndpoints } from "./peers.js";
 import { resolveOpenOrgWireUrl, isDnsStyleNodeId } from "../wire-gateway/openorg-dns.js";
-import { enqueueWirePending, removeWirePending, listWirePending } from "./wire-queue.js";
+import { enqueueWirePending, archiveWirePending, listWirePending } from "./wire-queue.js";
 import { markWireDelivered, isWireDelivered } from "./wire-delivered.js";
 import { recordDeliveryAttempt } from "./delivery-ledger.js";
 import { deliverEnvelopeViaEmailWire } from "./email-wire-deliver.js";
@@ -27,6 +27,7 @@ import {
   isGovGatewayEndpoint,
   isWireV1Endpoint,
   isEmailWireEndpoint,
+  isLegacyWebhookEndpoint,
   type PeerEndpoint,
 } from "../../../schemas/protocol/peer-endpoint.js";
 import { deliverEnvelopeViaGovGateway } from "../wire/gov-gateway/deliver.js";
@@ -36,6 +37,7 @@ import {
   isPkDidRequired,
   isPkPrefixedOpenOrgDid,
 } from "../../../schemas/protocol/openorg-did.js";
+import { assertLegacyWebhookDeliveryAllowed } from "./legacy-webhook-sunset.js";
 
 export interface DeliverEnvelopeResult {
   delivered: boolean;
@@ -215,6 +217,19 @@ export async function deliverProtocolEnvelope(
     } else if (isWireV1Endpoint(ep)) {
       result = await postWireMessageToUrl(envelope, ep.url);
       channel = "wire_v1";
+    } else if (isLegacyWebhookEndpoint(ep)) {
+      try {
+        assertLegacyWebhookDeliveryAllowed(`legacy_webhook deliver to ${peerId}`);
+      } catch (error) {
+        errors.push(
+          `legacy_webhook@${ep.url}: ${error instanceof Error ? error.message : String(error)}`
+        );
+        continue;
+      }
+      result = await postEnvelopeToUrl(envelope, ep.url, {
+        destinationOrgUri: peer.org_uri,
+      });
+      channel = "openorgos_p2p";
     } else {
       result = await postEnvelopeToUrl(envelope, ep.url, {
         destinationOrgUri: peer.org_uri,
@@ -301,7 +316,7 @@ export async function deliverProtocolEnvelopeWithRelay(
 ): Promise<DeliverEnvelopeResult> {
   const result = await deliverProtocolEnvelope(envelope, peerId, opts);
   if (result.delivered) {
-    removeWirePending(peerId, envelope.event_id);
+    archiveWirePending(peerId, envelope.event_id, "delivered");
     markWireDelivered(peerId, envelope.event_id, result.endpoint);
     return result;
   }
@@ -312,7 +327,7 @@ export async function deliverProtocolEnvelopeWithRelay(
     if (relayEndpoint) {
       const relayResult = await deliverViaRelayStore(envelope, peerId, relayEndpoint.url);
       if (relayResult.delivered) {
-        removeWirePending(peerId, envelope.event_id);
+        archiveWirePending(peerId, envelope.event_id, "delivered");
         markWireDelivered(peerId, envelope.event_id, relayResult.endpoint);
         return relayResult;
       }
@@ -334,7 +349,7 @@ export async function flushWirePending(): Promise<number> {
   for (const entry of listWirePending()) {
     if (isWirePendingDeadLetter(entry)) {
       appendWireDeadLetterAudit(entry);
-      removeWirePending(entry.peer_id, entry.event_id);
+      archiveWirePending(entry.peer_id, entry.event_id, "dead_letter");
       continue;
     }
     if (!isWirePendingReadyForRetry(entry)) continue;
@@ -344,7 +359,7 @@ export async function flushWirePending(): Promise<number> {
 
     const result = await deliverProtocolEnvelopeWithRelay(envelope, entry.peer_id);
     if (result.delivered) {
-      removeWirePending(entry.peer_id, entry.event_id);
+      archiveWirePending(entry.peer_id, entry.event_id, "delivered");
       flushed++;
     } else if (!result.queued) {
       const attempts = (entry.attempts ?? 0) + 1;

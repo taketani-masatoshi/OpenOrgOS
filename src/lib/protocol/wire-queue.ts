@@ -5,6 +5,10 @@ import {
 } from "../../../schemas/protocol/wire-pending.js";
 import { getWirePendingYamlPath } from "./paths.js";
 import { createYamlPendingQueueStore } from "./yaml-pending-queue.js";
+import {
+  appendWirePendingLifecycle,
+  type WirePendingLifecycleReason,
+} from "./wire-pending-lifecycle.js";
 
 const store = createYamlPendingQueueStore<
   WirePendingEntry,
@@ -14,6 +18,9 @@ const store = createYamlPendingQueueStore<
   schema: wirePendingRegistrySchema,
   emptyRegistry: () => ({ pending: [] }),
   entryKey: (entry) => `${entry.peer_id}:${entry.event_id}`,
+  onArchive: (entry, reason) => {
+    appendWirePendingLifecycle(entry, reason as WirePendingLifecycleReason);
+  },
 });
 
 export function loadWirePending(): WirePendingRegistry {
@@ -33,8 +40,17 @@ export function enqueueWirePending(
   return store.enqueue(entry);
 }
 
+export function archiveWirePending(
+  peerId: string,
+  eventId: string,
+  reason: WirePendingLifecycleReason
+): WirePendingEntry[] {
+  return store.archive((p) => p.peer_id === peerId && p.event_id === eventId, reason);
+}
+
+/** @deprecated Prefer {@link archiveWirePending} with an explicit lifecycle reason. */
 export function removeWirePending(peerId: string, eventId: string): void {
-  store.remove((p) => p.peer_id === peerId && p.event_id === eventId);
+  archiveWirePending(peerId, eventId, "removed");
 }
 
 export function listWirePending(): WirePendingEntry[] {

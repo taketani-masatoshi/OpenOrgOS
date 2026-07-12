@@ -35,6 +35,19 @@ export type QueueEventType = z.output<typeof queueEventTypeSchema>;
 export type QueueEventStatus = z.output<typeof queueEventStatusSchema>;
 export type QueueEvent = z.output<typeof queueEventSchema>;
 
+/** Append-only status transition (Event First · does not rewrite prior jsonl lines). */
+export const queueStatusRecordSchema = z.object({
+  record_type: z.literal("queue_status"),
+  id: z.string(),
+  target_id: z.string(),
+  status: queueEventStatusSchema,
+  error: z.string().optional(),
+  processed_at: z.string(),
+  recorded_at: z.string(),
+});
+
+export type QueueStatusRecord = z.output<typeof queueStatusRecordSchema>;
+
 export const dispatchTaskSchema = z.object({
   work_order_id: z.string(),
   agent: z.string(),

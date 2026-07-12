@@ -109,3 +109,8 @@ export function getGovGatewayAuditPath(): string {
 export function getDeliveryAttemptsPath(): string {
   return join(getProtocolDataDir(), "delivery-attempts.yaml");
 }
+
+/** Append-only SSOT for delivery attempts (YAML path is derived / legacy bootstrap). */
+export function getDeliveryAttemptsJsonlPath(): string {
+  return join(getProtocolDataDir(), "delivery-attempts.jsonl");
+}

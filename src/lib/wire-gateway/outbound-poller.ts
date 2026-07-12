@@ -2,6 +2,7 @@ import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-c
 import { WireInternalClient } from "./internal-client.js";
 import { envelopeToWireMessage } from "./codec.js";
 import { appendWireGatewayAudit } from "./audit.js";
+import { assertLegacyWebhookDeliveryAllowed } from "../protocol/legacy-webhook-sunset.js";
 import { strictPkDidError } from "./security.js";
 
 export interface OutboundPollerHandle {
@@ -70,6 +71,23 @@ export function createOutboundPoller(
             body = JSON.stringify(wire);
             headers["X-OpenOrgOS-Wire-Version"] = "0.1";
           } else {
+            try {
+              assertLegacyWebhookDeliveryAllowed(
+                `legacy_webhook delivery to ${peer.peer_node_id}`
+              );
+            } catch (error) {
+              appendWireGatewayAudit(config.audit.path, {
+                recorded_at: new Date().toISOString(),
+                action: "wire.reject",
+                event_id: item.event_id,
+                sender: config.node_id,
+                receiver: item.receiver_node_id,
+                peer_node_id: peer.peer_node_id,
+                reason: error instanceof Error ? error.message : String(error),
+                gateway_id: config.node_id,
+              });
+              continue;
+            }
             if (!legacyWarned) {
               console.warn(
                 `[wire-gateway] legacy_webhook delivery to ${peer.peer_node_id} is deprecated (sunset 2026-10-01)`

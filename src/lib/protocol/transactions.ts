@@ -40,6 +40,17 @@ export function appendTransaction(record: TransactionRecord): TransactionRecord 
   return record;
 }
 
+export function removeTransactionsById(transactionIds: string[]): TransactionRecord[] {
+  if (transactionIds.length === 0) return [];
+  const idSet = new Set(transactionIds);
+  const registry = loadTransactionsRegistry();
+  const removed = registry.transactions.filter((t) => idSet.has(t.transaction_id));
+  if (removed.length === 0) return [];
+  registry.transactions = registry.transactions.filter((t) => !idSet.has(t.transaction_id));
+  saveTransactionsRegistry(registry);
+  return removed;
+}
+
 export function listTransactions(filter?: {
   peerId?: string;
   since?: string;

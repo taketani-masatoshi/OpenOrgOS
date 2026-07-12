@@ -25,8 +25,10 @@ export function loadJsonl<T>(path: string, parse: (raw: unknown) => T): T[] {
 }
 
 /**
- * Rewrite a single line (matched by `id`) in place. Returns the mutated record,
- * or undefined when the file or id is absent.
+ * Rewrite a single line (matched by `id`) in place.
+ *
+ * @deprecated Prefer append-only event records (see `appendQueueStatusEvent` in queue-db.ts).
+ * Mutating jsonl history violates Event First / Immutable Events (engineering/08-event-sourcing.md).
  */
 export function updateJsonlLine<T extends { id: string }>(
   path: string,

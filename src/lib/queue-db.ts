@@ -2,15 +2,18 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join } from "node:path";
 import {
   queueEventSchema,
+  queueStatusRecordSchema,
   type QueueEvent,
   type QueueEventType,
   type QueueEventStatus,
+  type QueueStatusRecord,
 } from "../../schemas/queue.js";
 import { getTenantId } from "./tenant.js";
 import { getDocsReportsDir } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { auditEventTypeForQueueEvent } from "./protocol/map-internal.js";
-import { appendJsonl, loadJsonl, updateJsonlLine } from "./jsonl-store.js";
+import { appendJsonl } from "./jsonl-store.js";
+import { getClock, getIdGenerator } from "./runtime-context.js";
 
 export const QUEUE_SUBDIR = join("routing-queue", "queue");
 export const QUEUE_EVENTS_FILE = "events.jsonl";
@@ -33,7 +36,62 @@ export function queueEventsPath(): string {
 }
 
 function generateQueueId(): string {
-  return `Q-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return getIdGenerator().uniqueId("Q");
+}
+
+function generateQueueStatusRecordId(): string {
+  return getIdGenerator().uniqueId("QST");
+}
+
+type QueueJsonlRecord =
+  | { kind: "event"; data: QueueEvent }
+  | { kind: "status"; data: QueueStatusRecord };
+
+function parseQueueJsonlLine(raw: unknown): QueueJsonlRecord | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const record = raw as Record<string, unknown>;
+  if (record.record_type === "queue_status") {
+    return { kind: "status", data: queueStatusRecordSchema.parse(raw) };
+  }
+  return { kind: "event", data: queueEventSchema.parse(raw) };
+}
+
+/** Replay append-only queue jsonl into current event state (latest status wins). */
+export function reduceQueueEvents(records: QueueJsonlRecord[]): QueueEvent[] {
+  const byId = new Map<string, QueueEvent>();
+  for (const record of records) {
+    if (record.kind === "event") {
+      byId.set(record.data.id, record.data);
+      continue;
+    }
+    const current = byId.get(record.data.target_id);
+    if (!current) continue;
+    byId.set(
+      record.data.target_id,
+      queueEventSchema.parse({
+        ...current,
+        status: record.data.status,
+        error: record.data.error ?? current.error,
+        processed_at: record.data.processed_at,
+      })
+    );
+  }
+  return [...byId.values()];
+}
+
+function loadQueueJsonlRecords(): QueueJsonlRecord[] {
+  const path = queueEventsPath();
+  if (!existsSync(path)) return [];
+  const out: QueueJsonlRecord[] = [];
+  for (const line of readFileSync(path, "utf-8").split("\n").filter(Boolean)) {
+    try {
+      const parsed = parseQueueJsonlLine(JSON.parse(line));
+      if (parsed) out.push(parsed);
+    } catch {
+      // skip corrupt lines
+    }
+  }
+  return out;
 }
 
 export interface PushQueueOptions {
@@ -47,7 +105,7 @@ export interface PushQueueOptions {
 export function pushQueueEvent(options: PushQueueOptions): QueueEvent {
   const event = queueEventSchema.parse({
     id: generateQueueId(),
-    created_at: new Date().toISOString(),
+    created_at: getClock().nowIso(),
     tenant: options.tenant ?? getTenantId(),
     type: options.type,
     ref: options.ref,
@@ -68,7 +126,7 @@ export function loadQueueEvents(filter?: {
   type?: QueueEventType;
   tenant?: string;
 }): QueueEvent[] {
-  const events = loadJsonl(queueEventsPath(), (raw) => queueEventSchema.parse(raw));
+  const events = reduceQueueEvents(loadQueueJsonlRecords());
 
   return events.filter((e) => {
     if (filter?.status && e.status !== filter.status) return false;
@@ -78,21 +136,42 @@ export function loadQueueEvents(filter?: {
   });
 }
 
+export function appendQueueStatusEvent(
+  targetId: string,
+  update: Partial<Pick<QueueEvent, "status" | "error" | "processed_at">>
+): QueueEvent | undefined {
+  const current = loadQueueEvents().find((event) => event.id === targetId);
+  if (!current) return undefined;
+  if (!update.status && !update.error && !update.processed_at) return current;
+
+  const processedAt = update.processed_at ?? getClock().nowIso();
+  const statusRecord = queueStatusRecordSchema.parse({
+    record_type: "queue_status",
+    id: generateQueueStatusRecordId(),
+    target_id: targetId,
+    status: update.status ?? current.status,
+    error: update.error,
+    processed_at: processedAt,
+    recorded_at: getClock().nowIso(),
+  });
+  appendJsonl(queueEventsPath(), statusRecord);
+
+  return queueEventSchema.parse({
+    ...current,
+    ...update,
+    status: update.status ?? current.status,
+    processed_at: processedAt,
+  });
+}
+
+/**
+ * @deprecated Use {@link appendQueueStatusEvent}. Appends a status record (no in-place jsonl rewrite).
+ */
 export function updateQueueEvent(
   id: string,
   update: Partial<Pick<QueueEvent, "status" | "error" | "processed_at">>
 ): QueueEvent | undefined {
-  return updateJsonlLine(
-    queueEventsPath(),
-    id,
-    (raw) => queueEventSchema.parse(raw),
-    (event) =>
-      queueEventSchema.parse({
-        ...event,
-        ...update,
-        processed_at: update.processed_at ?? new Date().toISOString(),
-      })
-  );
+  return appendQueueStatusEvent(id, update);
 }
 
 export function writeWorkOrderResult(
@@ -103,7 +182,7 @@ export function writeWorkOrderResult(
   const body = {
     work_order_id: workOrderId,
     agent: result.agent,
-    completed_at: new Date().toISOString(),
+    completed_at: getClock().nowIso(),
     summary: result.summary,
     notes: result.notes,
     artifacts: result.artifacts ?? [],
