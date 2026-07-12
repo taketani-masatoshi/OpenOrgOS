@@ -218,6 +218,42 @@ ${voidLines}
 `;
 }
 
+/** Update YAML frontmatter only — never rewrite the human narrative body. */
+function patchEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): void {
+  if (!existsSync(absPath)) {
+    writeFileSync(absPath, renderEventMarkdown(event), "utf8");
+    return;
+  }
+  const content = readFileSync(absPath, "utf8");
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  const relatedBlock = event.related
+    ? Object.entries(event.related)
+        .filter(([, v]) => v !== undefined && v !== "")
+        .map(([k, v]) => `  ${k}: ${v}`)
+        .join("\n")
+    : "";
+  const fm = [
+    "---",
+    `event_id: ${event.id}`,
+    `occurred_at: ${event.occurred_at}`,
+    `kind: ${event.kind}`,
+    `status: ${event.status}`,
+    `artifact_dir: ${event.artifact_dir}`,
+    event.closed_at ? `closed_at: ${event.closed_at}` : null,
+    event.voided_by ? `voided_by: ${event.voided_by}` : null,
+    event.voided_at ? `voided_at: ${event.voided_at}` : null,
+    event.void_reason ? `void_reason: ${JSON.stringify(event.void_reason)}` : null,
+    event.target_event_id ? `target_event_id: ${event.target_event_id}` : null,
+    relatedBlock ? `related:\n${relatedBlock}` : null,
+    "---",
+    "",
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+  const normalizedBody = match ? match[2]! : `\n${content}`;
+  writeFileSync(absPath, `${fm}${normalizedBody.startsWith("\n") ? normalizedBody : `\n${normalizedBody}`}`, "utf8");
+}
+
 function renderArtifactIndex(event: CompanyEvent): string {
   return `# 出力書類 — ${event.id}
 
@@ -443,7 +479,7 @@ export function updateCompanyEventStatus(
   });
 
   const eventAbs = join(getDocsCompanyEventsDir(), updated.month, `${updated.id}.md`);
-  writeFileSync(eventAbs, renderEventMarkdown(updated), "utf8");
+  patchEventMarkdownFrontmatter(eventAbs, updated);
 
   registry.events[idx] = updated;
   saveCompanyEvents(registry);
@@ -652,14 +688,14 @@ export function voidCompanyEvent(targetId: string, reason: string): {
   });
 
   const eventAbs = join(getDocsCompanyEventsDir(), updatedTarget.month, `${updatedTarget.id}.md`);
-  writeFileSync(eventAbs, renderEventMarkdown(updatedTarget), "utf8");
+  patchEventMarkdownFrontmatter(eventAbs, updatedTarget);
 
   const voidEventAbs = join(
     getDocsCompanyEventsDir(),
     updatedVoidEvent.month,
     `${updatedVoidEvent.id}.md`
   );
-  writeFileSync(voidEventAbs, renderEventMarkdown(updatedVoidEvent), "utf8");
+  patchEventMarkdownFrontmatter(voidEventAbs, updatedVoidEvent);
 
   const freshRegistry = loadCompanyEvents();
   const tIdx = freshRegistry.events.findIndex((e) => e.id === targetId);

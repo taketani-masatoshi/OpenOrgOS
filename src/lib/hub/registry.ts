@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { witnessAttestationSchema, type WitnessAttestation } from "../../../schemas/protocol/witness-attestation.js";
 import { appendJsonl, loadJsonl } from "../jsonl-store.js";
+import { getClock, getIdGenerator } from "../runtime-context.js";
 import { getHubAttestationsPath } from "./paths.js";
 
 export const storedWitnessAttestationSchema = witnessAttestationSchema.extend({
@@ -11,7 +12,7 @@ export const storedWitnessAttestationSchema = witnessAttestationSchema.extend({
 export type StoredWitnessAttestation = z.output<typeof storedWitnessAttestationSchema>;
 
 function generateAttestationId(): string {
-  return `WATT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return getIdGenerator().uniqueId("WATT");
 }
 
 export function loadHubAttestations(): StoredWitnessAttestation[] {
@@ -46,7 +47,7 @@ export function appendHubAttestation(attestation: WitnessAttestation): StoredWit
   const stored = storedWitnessAttestationSchema.parse({
     ...attestation,
     attestation_id: generateAttestationId(),
-    recorded_at: new Date().toISOString(),
+    recorded_at: getClock().nowIso(),
   });
   appendJsonl(getHubAttestationsPath(), stored);
   return stored;

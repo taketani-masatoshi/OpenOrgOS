@@ -14,6 +14,8 @@
 
 **禁止:** イベント MD に書類全文を転記しない。書類は `artifacts/` のみ。イベント MD は `artifact_dir` リンクで参照。
 
+**MD 本文ポリシー（2026-07）:** CLI は **初回 `events new` 時のみ** テンプレ本文を書く。`close` / `archive` / `void` では **frontmatter のみ patch** し、経緯・決議の本文は上書きしない。
+
 **既存 I/O との関係**
 
 | 既存 | 用途 | 本構成との違い |

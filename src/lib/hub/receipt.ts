@@ -1,13 +1,14 @@
 import { witnessReceiptSchema, type WitnessReceipt } from "../../../schemas/protocol/witness-receipt.js";
 import type { WitnessAttestation } from "../../../schemas/protocol/witness-attestation.js";
 import { appendJsonl, loadJsonl } from "../jsonl-store.js";
+import { getIdGenerator } from "../runtime-context.js";
 import { ensureHubSigningKey, signWitnessReceipt, verifyWitnessReceiptSignature } from "./signing.js";
 import { appendHubAttestation, findAttestationsByEventId, getAttestationStatus } from "./registry.js";
 import { verifyAndRegisterAttestationOrg } from "./attestation-verify.js";
 import { getHubId, getHubReceiptsPath } from "./paths.js";
 
 function generateReceiptId(): string {
-  return `WRCPT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return getIdGenerator().uniqueId("WRCPT");
 }
 
 export function loadHubReceipts(): WitnessReceipt[] {

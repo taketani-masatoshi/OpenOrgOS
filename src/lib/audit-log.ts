@@ -5,7 +5,7 @@ import { getTenantId } from "./tenant.js";
 import { getDocsReportsDir } from "./utils.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { bridgeAuditEventToProtocolChain, ensureOrgAuditBridgeConfig } from "./org/audit-bridge.js";
-import { recordAuditBridgeFailure } from "./org/audit-bridge-errors.js";
+import { getClock, getIdGenerator } from "./runtime-context.js";
 
 export const AUDIT_LOG_SUBDIR = "audit-log";
 export const AUDIT_LOG_FILE = "audit.jsonl";
@@ -38,8 +38,7 @@ function resolveAuditTenant(explicit?: string): string {
 }
 
 function generateAuditId(): string {
-  const suffix = Math.random().toString(36).slice(2, 10);
-  return `AUD-${Date.now()}-${suffix}`;
+  return getIdGenerator().uniqueId("AUD");
 }
 
 export interface AppendAuditOptions {
@@ -55,7 +54,7 @@ export interface AppendAuditOptions {
 export function appendAuditEvent(options: AppendAuditOptions): AuditEvent {
   const event = auditEventSchema.parse({
     id: generateAuditId(),
-    timestamp: new Date().toISOString(),
+    timestamp: getClock().nowIso(),
     tenant: resolveAuditTenant(options.tenant),
     event: options.event,
     ref: options.ref,
