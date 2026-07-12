@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 324
-  static_test_cases: 1222
-  tiered_execution_total: 324
+  vitest_total: 325
+  static_test_cases: 1227
+  tiered_execution_total: 325
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -1631,6 +1631,10 @@ tests:
     kind: unit
     domain: P04_wire_stack
   wire-pending-retry.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
+  wire-pilot-hygiene.test.ts:
     axis: platform
     kind: unit
     domain: P04_wire_stack

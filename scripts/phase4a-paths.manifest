@@ -59,3 +59,8 @@ publish/protocol/wire-trust-registry.yaml
 
 # package scripts
 package.json
+
+# Registry sync for new Phase 4a tests
+tests/test-registry.yaml
+steward/rules/testing-modules.md
+docs/framework-assessment.md
