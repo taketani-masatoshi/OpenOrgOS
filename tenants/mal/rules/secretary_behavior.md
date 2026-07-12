@@ -114,9 +114,22 @@ cp tenants/mal/docs/executive/launchd-com.steward.executive-backup-reminder.plis
 launchctl load ~/Library/LaunchAgents/com.steward.executive-backup-reminder.plist
 ```
 
+## Today digest（平日 3 回 · CLI · LLM なし）
+
+段向け Today を **09:00 / 13:00 / 17:00（JST · 月–金）** に生成する。
+
+```bash
+bash tenants/mal/docs/executive/scripts/install-today-digest-launchd.sh
+```
+
+- 出力: `docs/reports/dashboard/today-digest/latest.md`
+- 手順: [today-digest-schedule.md](../docs/executive/today-digest-schedule.md)
+- 秘書は通知または `latest.md` を **結論先で短く** リレー（再解釈しない）
+
 ## 時刻
 
 - **すべて JST**（日本時間）。タイムゾーン明記は海外相手時のみ。
+- Today digest launchd は **Mac のシステム TZ** に従う → Asia/Tokyo を確認
 
 ## カスタム（段が編集）
 
