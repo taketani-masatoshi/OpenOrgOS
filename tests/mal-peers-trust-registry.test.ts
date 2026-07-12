@@ -32,4 +32,20 @@ describe("mal peers trust-registry pin (W1-2)", () => {
     expect(mal?.protocol_public_key?.length).toBeGreaterThan(10);
     expect(mal?.wire_url).toMatch(/^https:\/\//);
   });
+
+  it("PEER-002 aiac uses pk-prefixed DID and matches mal-peers-pilot seed", () => {
+    const root = getInstallRoot();
+    const peersPath = join(root, "tenants/mal/data/protocol/peers.yaml");
+    const seedPath = join(root, "steward/platform/protocol/seed/mal-peers-pilot.yaml.example");
+    const peers = peersRegistrySchema.parse(parseYaml(readFileSync(peersPath, "utf-8")));
+    const seed = peersRegistrySchema.parse(parseYaml(readFileSync(seedPath, "utf-8")));
+    const peer = peers.peers.find((p) => p.peer_id === "PEER-002");
+    const seedPeer = seed.peers.find((p) => p.peer_id === "PEER-002");
+    expect(peer, "mal peers must include PEER-002 aiac").toBeTruthy();
+    expect(seedPeer, "mal-peers-pilot seed must include PEER-002").toBeTruthy();
+    expect(peer!.did).toMatch(/^did:ooo:org:pk-[0-9a-f]{16}$/);
+    expect(peer!.did).toBe(seedPeer!.did);
+    expect(peer!.protocol_public_key).toBe(seedPeer!.protocol_public_key);
+    expect(peer!.org_uri).toBe("steward://tenant/aiac");
+  });
 });

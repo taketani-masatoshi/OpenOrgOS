@@ -5,6 +5,7 @@ import { getTenantId } from "./tenant.js";
 import { getDocsReportsDir } from "./utils.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { bridgeAuditEventToProtocolChain, ensureOrgAuditBridgeConfig } from "./org/audit-bridge.js";
+import { recordAuditBridgeFailure } from "./org/audit-bridge-errors.js";
 import { getClock, getIdGenerator } from "./runtime-context.js";
 
 export const AUDIT_LOG_SUBDIR = "audit-log";

@@ -18,8 +18,9 @@
 
 ### 準備
 
-- [ ] `deploy/mal-pilot/env/.env.mail-wire` — L2 SMTP/IMAP（`ai@malkk.com`）
-- [ ] `tenants/mal/records/executive/mail-config.yaml` — mal-pilot テンプレから生成
+- [x] `tenants/mal/records/executive/mail-config.mal-pilot.yaml.example` — Xserver · `ai@` テンプレ
+- [ ] `deploy/mal-pilot/env/.env.mail-wire` — L2 SMTP/IMAP（`ai@malkk.com`）※gitignore
+- [ ] `tenants/mal/records/executive/mail-config.yaml` — mal-pilot テンプレから生成 ※gitignore
 - [ ] Wire Gateway 公開 health 200（`https://wire.oorgos.org/wire/v1/health`）
 
 ### 検証
@@ -27,8 +28,15 @@
 ```bash
 ./scripts/phase4-mal-email-wire-live.sh mal check
 ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/phase4-mal-email-wire-live.sh mal check
+ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_STRICT_EMAIL=1 ./scripts/wire-live-verify.sh mal check
 ./scripts/phase4-mal-email-wire-live.sh mal live   # SMTP/IMAP 実送信
 ```
+
+### データ衛生（Wave 0）
+
+- [x] mal `peers.yaml` pk-DID 正本
+- [x] orphan transactions prune（registry 空）— **git commit 必須**（未 commit だと Vitest snapshot で復活）
+- [x] `protocol transaction prune-orphans` / `witness cache-missing` CLI
 
 ### 本番 env 固定（CEO 承認後）
 

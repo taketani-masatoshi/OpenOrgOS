@@ -105,6 +105,8 @@ tenants/*/records/executive/mail-sent/**
 tenants/*/records/executive/mail-received/**
 tenants/*/records/executive/mail-inbox/**
 !tenants/*/records/executive/mail-config.yaml.example
+!tenants/*/records/executive/mail-config.mal-pilot.yaml.example
+!tenants/*/records/executive/00-README.md
 !tenants/*/records/executive/00-このフォルダについて.md
 tenants/*/docs/operations/travel-drafts/**
 !tenants/*/docs/operations/travel-draft-template.md

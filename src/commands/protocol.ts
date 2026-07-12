@@ -114,6 +114,11 @@ export function runProtocolValidate(opts: ProtocolValidateOptions): void {
       for (const w of result.warnings) {
         console.log(`    [${w.code}] ${w.message}`);
       }
+      if (result.warnings.some((w) => w.code === "witness-receipt-missing")) {
+        console.log(
+          "  hint: orgos protocol witness cache-missing · or protocol transaction prune-orphans [--apply]"
+        );
+      }
     }
     const registry = loadProtocolRegistry();
     console.log(`  protocol_version: ${registry.protocol_version}`);
