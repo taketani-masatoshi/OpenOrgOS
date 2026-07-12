@@ -1,15 +1,30 @@
 #!/usr/bin/env bash
-# Isolated full Vitest run — refuses if another vitest is already running.
+# Isolated full Vitest run — waits for other vitest, then runs under a lock.
 # Usage: ./scripts/run-full-test-isolated.sh [vitest args...]
+# Env: FULL_TEST_WAIT_SEC (default 900) — max seconds to wait for another vitest
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 LOCK="$ROOT/scratch/full-test.lock"
 mkdir -p "$ROOT/scratch"
+WAIT_SEC="${FULL_TEST_WAIT_SEC:-900}"
 
-if pgrep -f '[n]ode \(vitest|[n]px vitest|[n]ode.*vitest' >/dev/null 2>&1; then
-  echo "✗ Another vitest process is running — stop it (or wait) before full suite" >&2
-  exit 1
+vitest_running() {
+  pgrep -f '[n]ode \(vitest|[n]px vitest|[n]ode.*vitest|[n]ode --import tsx scripts/run-tests' >/dev/null 2>&1
+}
+
+if vitest_running; then
+  echo "… Another vitest/run-tests is running — waiting up to ${WAIT_SEC}s" >&2
+  end=$(( $(date +%s) + WAIT_SEC ))
+  while vitest_running && [[ $(date +%s) -lt $end ]]; do
+    sleep 10
+  done
+  if vitest_running; then
+    echo "✗ Another vitest process is still running after ${WAIT_SEC}s" >&2
+    exit 1
+  fi
+  echo "✓ Other vitest finished — continuing" >&2
+  sleep 2
 fi
 
 if [[ -f "$LOCK" ]]; then
@@ -30,6 +45,6 @@ set +e
 npm test "$@" >"$LOG" 2>&1
 code=$?
 set -e
-tail -40 "$LOG"
+tail -50 "$LOG"
 echo "exit:$code log:$LOG"
 exit "$code"

@@ -70,6 +70,20 @@ echo "=== Community ship-gate + start-gate unit ==="
 
 echo ""
 echo "✓ Phase 4b staging e2e (automated) complete"
+STAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+EVIDENCE="$ROOT/scratch/phase4b-staging-automated-${STAMP//:/-}.json"
+mkdir -p "$ROOT/scratch"
+cat >"$EVIDENCE" <<EOF
+{
+  "kind": "phase4b_staging_automated",
+  "recorded_at": "$STAMP",
+  "browser_oauth": "pending_human",
+  "automated_gates": "pass",
+  "production_ship": false,
+  "notes": "Steward community-link + Community ship-gate units green. Fill docs/org-os/phase4b-oauth-evidence.md.example after browser OAuth."
+}
+EOF
+echo "  Automated evidence: $EVIDENCE"
 echo "  Manual browser OAuth: docs/org-os/phase4b-oauth-evidence.md.example"
 echo "  Do NOT set publish/protocol/community-integration.json tenant_mail_connect_*: true"
 echo "  until Phase 5 CEO approval (scripts/mal-ship-gate-apply.sh)."
