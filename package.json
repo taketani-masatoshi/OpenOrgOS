@@ -36,6 +36,12 @@
     "agent:roster:fixtures:sync": "node --import tsx scripts/sync-tenant-roster-fixtures.ts --bootstrap --write",
     "agent:roster:fixtures:check": "node --import tsx scripts/sync-tenant-roster-fixtures.ts",
     "generated:check": "node --import tsx scripts/check-generated-artifacts.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src schemas",
+    "lint:fix": "eslint src schemas --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"schemas/**/*.ts\" \"scripts/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"schemas/**/*.ts\" \"scripts/**/*.ts\"",
+    "format:staged-src": "prettier --write",
     "test:registry:sync": "node --import tsx scripts/sync-test-registry.ts",
     "test:registry:scaffold": "node --import tsx scripts/scaffold-catalog-test.ts",
     "test:registry:check": "vitest run tests/testing-registry.test.ts",
@@ -96,13 +102,18 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.51.0",
     "@types/mailparser": "^3.4.6",
     "@types/node": "^22.13.10",
     "@types/pdfkit": "^0.17.6",
     "esbuild": "^0.28.1",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.5",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
+    "typescript-eslint": "^8.63.0",
     "vitest": "^3.2.7"
   },
   "engines": {
