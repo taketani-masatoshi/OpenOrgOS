@@ -66,8 +66,8 @@ Live / ship-gate 前に `wire-live-verify.sh` が hygiene を自動実行。
 - [x] `./scripts/mal-ship-gate-check.sh mal`（既存証跡）
 - [x] `ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_STRICT_EMAIL=1 ./scripts/wire-live-verify.sh mal check`
 - [x] `ORGOS_LIVE_VERIFY_ROUNDTRIP=1 PHASE4_SMTP_WAIT_MS=90000 ./scripts/wire-live-verify.sh mal live`
-- [x] 薄い PR: ブランチ `fix/phase4a-thin`（base `feat/agent-catalog-ops-landing` · `scripts/phase4a-paths.manifest` 範囲のみ）
-- [x] 旧 `fix/phase4a-f7-pr` は履歴混在のため thin へ置換
+- [x] 薄い PR: https://github.com/taketani-masatoshi/OpenOrgOS/pull/15（`fix/phase4a-thin` · base `feat/agent-catalog-ops-landing` · manifest 範囲のみ）
+- [x] 旧 #14（`fix/phase4a-f7-pr`）は履歴混在のため close · thin へ置換
 
 ### Live 証跡（パスのみ · 秘密なし）
 
