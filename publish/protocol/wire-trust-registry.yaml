@@ -1,13 +1,5 @@
 version: "1"
-
-# Wire Trust Registry — platform reference for Node ID / DID resolution (WG-4)
-# Publish target: https://oorgos.org/protocol/wire-trust-registry.yaml
-# Mirror: steward/platform/protocol/wire-trust-registry.yaml
-# Witness hubs: steward/platform/protocol/trusted-hubs.yaml (separate layer)
-# pk-DID migration: 2026-07-10 — slug → did:ooo:org:pk-{sha256-prefix}
-
 publish_url: https://oorgos.org/protocol/wire-trust-registry.yaml
-
 nodes:
   - node_id: org.example.co.jp
     did: did:ooo:org:pk-2da32dcd88900ba3
@@ -15,26 +7,25 @@ nodes:
     display_name: Example Corp (demo)
     protocol_public_key: MCowBQYDK2VwAyEAj45T4HJ3K56J6Budd3w4HaxaEWSoGJxhVs71zr6YRck=
     wire_url: https://127.0.0.1:8443
-    witness_jurisdiction: JP
     corporate_number: "4010001199703"
+    witness_jurisdiction: JP
     notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:demo)
-
   - node_id: mal
-    did: did:ooo:org:pk-5391e3fd05736bb5
+    did: did:ooo:org:pk-fc87d148e72b99ce
     node_uri: steward://tenant/mal
     display_name: MAL Co
-    protocol_public_key: MCowBQYDK2VwAyEAJq9+gY7CWLlhoUiiq7UcXxFIPLRm2CaHXB4YrD/8iwY=
+    protocol_public_key: MCowBQYDK2VwAyEAtY7OQqkJiaFa0ZiryyUR7TKLDA4L3JomEZaWsp6bagY=
     wire_url: https://wire.oorgos.org
-    witness_jurisdiction: JP
     corporate_number: "4010001189530"
-    notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:mal)
-
+    witness_jurisdiction: JP
+    notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:mal) ·
+      hygiene-synced 2026-07-12 · hygiene-synced 2026-07-12
   - node_id: southwood
     did: did:ooo:org:pk-f5c38734d6a8a462
     node_uri: steward://tenant/southwood
     display_name: Southwood Inc
     protocol_public_key: MCowBQYDK2VwAyEA5/aLrlreTf6lNGa+V+m9ToGEfBF71iaW3Lo5R4PGsmU=
     wire_url: https://wire.southwood.example
-    witness_jurisdiction: JP
     corporate_number: "4010001199999"
+    witness_jurisdiction: JP
     notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:southwood)

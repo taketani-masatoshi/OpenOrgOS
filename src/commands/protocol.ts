@@ -1004,6 +1004,7 @@ export function runProtocolWireHygiene(opts: ProtocolWireHygieneOptions): void {
   );
   console.log(`  mail_config: ${result.mail_config}`);
   console.log(`  loopback_peer: ${result.loopback_peer}`);
+  console.log(`  trust_registry: ${result.trust_registry}`);
 }
 
 export interface ProtocolDeliverOptions {

@@ -53,6 +53,12 @@ echo "✓ $PUBLIC_BASE_URL/wire/v1/health"
 echo ""
 echo "=== Phase 4: mail-config ==="
 mkdir -p "$(dirname "$MAIL_CFG")"
+# Always re-mirror tracked deploy example into tenant records (survives Zone C / test wipe)
+DEPLOY_EXAMPLE="$ROOT/deploy/mal-pilot/mail-config.mal-pilot.yaml.example"
+if [[ -f "$DEPLOY_EXAMPLE" ]]; then
+  cp "$DEPLOY_EXAMPLE" "$MAIL_EXAMPLE"
+  echo "✓ Synced $MAIL_EXAMPLE from deploy/"
+fi
 if [[ ! -f "$MAIL_CFG" ]] || ! grep -q 'sync: imap' "$MAIL_CFG" 2>/dev/null; then
   if [[ -f "$MAIL_EXAMPLE" ]]; then
     cp "$MAIL_EXAMPLE" "$MAIL_CFG"
@@ -60,6 +66,9 @@ if [[ ! -f "$MAIL_CFG" ]] || ! grep -q 'sync: imap' "$MAIL_CFG" 2>/dev/null; the
   elif [[ -f "$MAIL_EXAMPLE_FALLBACK" ]]; then
     cp "$MAIL_EXAMPLE_FALLBACK" "$MAIL_CFG"
     echo "⚠ Created $MAIL_CFG from generic example — set receive.sync: imap for Phase 4"
+  elif [[ -f "$DEPLOY_EXAMPLE" ]]; then
+    cp "$DEPLOY_EXAMPLE" "$MAIL_CFG"
+    echo "✓ Wrote $MAIL_CFG from deploy/mal-pilot example"
   else
     echo "✗ mail-config.yaml missing and no example" >&2
     exit 1
@@ -67,6 +76,15 @@ if [[ ! -f "$MAIL_CFG" ]] || ! grep -q 'sync: imap' "$MAIL_CFG" 2>/dev/null; the
 else
   echo "✓ $MAIL_CFG exists (imap)"
 fi
+
+# Hygiene: restore if wiped mid-run + align loopback key
+ORGOS_TENANT="$TENANT" node --import tsx -e "
+import { setTenantId } from './src/lib/tenant.js';
+import { runWirePilotHygiene } from './src/lib/protocol/wire-pilot-hygiene.js';
+setTenantId(process.env.ORGOS_TENANT ?? 'mal');
+const r = runWirePilotHygiene(process.env.ORGOS_TENANT ?? 'mal');
+console.log('✓ hygiene mail=' + r.mail_config + ' loopback=' + r.loopback_peer);
+" || true
 
 echo ""
 echo "=== Phase 4: SMTP/IMAP credentials (names only) ==="

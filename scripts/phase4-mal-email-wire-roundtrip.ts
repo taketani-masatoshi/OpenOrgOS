@@ -31,6 +31,8 @@ import {
   resolveWireOutboundConfig,
 } from "../src/lib/correspondence/mail-config.js";
 import { redactSecrets } from "../src/lib/protocol/redact-secrets.js";
+import { runWirePilotHygiene } from "../src/lib/protocol/wire-pilot-hygiene.js";
+import { listTransactions, removeTransactionsById } from "../src/lib/protocol/transactions.js";
 
 const TENANT = process.env.ORGOS_TENANT ?? "mal";
 const LOOP_PEER = "PEER-003";
@@ -74,8 +76,22 @@ function cleanupLoopbackPeer(): void {
   console.log(`✓ Removed loopback ${LOOP_PEER}`);
 }
 
+function cleanupLoopbackTransaction(eventId: string): void {
+  const transactionIds = listTransactions()
+    .filter((transaction) => transaction.event_id === eventId)
+    .map((transaction) => transaction.transaction_id);
+  const removed = removeTransactionsById(transactionIds);
+  if (removed.length > 0) {
+    console.log(`✓ Removed ${removed.length} live verification transaction(s)`);
+  }
+}
+
 async function main(): Promise<void> {
   requireLiveSmtp();
+  const hygiene = runWirePilotHygiene(TENANT);
+  console.log(
+    `✓ Wire hygiene · did ${hygiene.gateway_did} · loopback ${hygiene.loopback_peer} · mail ${hygiene.mail_config}`
+  );
 
   const mail = loadMailConfig();
   const wireFrom = mail?.wire_outbound?.from?.email ?? "ai@malkk.com";
@@ -85,7 +101,6 @@ async function main(): Promise<void> {
     );
   }
 
-  ensureProtocolSigningKey();
   const publicKey = exportProtocolPublicKeyBase64();
   if (!publicKey) throw new Error("protocol signing key missing");
 
@@ -198,8 +213,21 @@ async function main(): Promise<void> {
   }
 
   console.log("✓ Phase 4 email_wire roundtrip OK");
+  const evidencePath = writeDiag({
+    tenant: TENANT,
+    ok: true,
+    event_id: envelope.event_id,
+    notice_id: notice.notice_id,
+    confirmation: confirm.state,
+    confirmed_at: confirm.confirmed_at,
+    deliver: { endpoint: deliver.endpoint, reason: deliver.reason },
+    sync: { fetched: lastSync.fetched, saved: lastSync.saved.length },
+    scan: lastScan,
+  });
+  console.log(`✓ Evidence: ${evidencePath}`);
   if (process.env.PHASE4_CLEANUP_LOOPBACK === "1") {
     cleanupLoopbackPeer();
+    cleanupLoopbackTransaction(envelope.event_id);
   }
 }
 

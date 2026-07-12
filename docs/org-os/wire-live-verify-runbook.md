@@ -22,10 +22,17 @@ Phase 3（Wire Gateway 本番ゲート）と Phase 4（email_wire）を **env-ga
 | メール | `ai@malkk.com`（L2: `tenants/mal/records/executive/smtp.env`） |
 | Phase 4 設定 | `tenants/mal/records/executive/mail-config.yaml` |
 | ゲート env | `ORGOS_LIVE_VERIFY=1` **必須** |
+| 衛生 | 実行前に `./scripts/mal-wire-hygiene.sh mal`（`wire-live-verify.sh` が自動実行） |
 
 ---
 
 ## コマンド
+
+### 衛生（鍵 · DID · mail-config · PEER-003）
+
+```bash
+./scripts/mal-wire-hygiene.sh mal
+```
 
 ### Check のみ（外部 SMTP 送信なし）
 

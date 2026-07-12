@@ -74,3 +74,5 @@ npx vitest run \
 Core 厳格 cap 85 解除は **全件 `npm test` 緑** が条件 — F7 分離後に再実行。
 
 **2026-07-12:** Phase 4a wire suite 緑 · `./scripts/mal-ship-gate-check.sh mal` PASS · live roundtrip PASS（`scratch/wire-live-verify-mal-2026-07-12T04-27-19-857Z.json`）。全件 `npm test` は F7 WIP で未緑（Core 厳格 marker は失敗のまま）。
+
+自己評価ギャップの実装対応: [phase4a-self-eval-remediation.md](phase4a-self-eval-remediation.md)

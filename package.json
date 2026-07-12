@@ -54,6 +54,7 @@
     "test:tiered": "node --import tsx scripts/run-tiered-tests.ts tiered",
     "test:tiered:verify": "node --import tsx scripts/run-tiered-tests.ts verify",
     "test:scheduling": "vitest run tests/scheduling-*.test.ts tests/doctor-repair-operator.test.ts tests/operator-registry-cli.test.ts",
+    "test:phase4a": "vitest run tests/wire-gateway-security-e2e.test.ts tests/wire-gateway-codec.test.ts tests/protocol-inbound-verify.test.ts tests/mal-signing-key-preserve.test.ts tests/trusted-hubs-jurisdiction-scope.test.ts tests/wire-pilot-hygiene.test.ts tests/mal-peers-trust-registry.test.ts tests/protocol-gap-closure.test.ts tests/wire-trust-registry.test.ts tests/mal-wire-pilot-gate.test.ts",
     "test:docker": "bash deploy/test/run.sh",
     "test:docker:smoke": "docker compose -f deploy/test/docker-compose.yaml --profile smoke run --rm --build smoke",
     "demo:docker:up": "docker compose -f deploy/demo/docker-compose.yaml up --build",

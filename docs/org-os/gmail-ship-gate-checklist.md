@@ -18,10 +18,12 @@
 
 ### 準備
 
-- [x] `tenants/mal/records/executive/mail-config.mal-pilot.yaml.example` — Xserver · `ai@` テンプレ
+- [x] `deploy/mal-pilot/mail-config.mal-pilot.yaml.example` — tracked 正本（Zone C 消失時の再生成源）
+- [x] `tenants/mal/records/executive/mail-config.mal-pilot.yaml.example` — deploy から同期（gitignore 可）
 - [x] `deploy/mal-pilot/env/.env.mail-wire` — L2 SMTP/IMAP（`ai@malkk.com`）※gitignore
 - [x] `tenants/mal/records/executive/mail-config.yaml` — mal-pilot テンプレから生成 ※gitignore
 - [x] Wire Gateway 公開 health 200（`https://wire.oorgos.org/wire/v1/health`）
+- [x] `protocol wire-hygiene` / `ensureMalMailConfigExampleFiles` — mail-config 耐久
 
 ### 検証
 

@@ -1,0 +1,61 @@
+# Phase 4a / washout F1–F11 — paths safe to stage for a focused PR
+# Usage: ./scripts/phase4a-stage.sh
+# Lines are repo-relative. Comments and blanks ignored.
+
+# Core wire / email_wire
+src/lib/protocol/wire-pilot-hygiene.ts
+src/lib/protocol/wire-gateway-did-sync.ts
+src/lib/protocol/trusted-hubs.ts
+src/lib/protocol/validate.ts
+src/lib/protocol/signing.ts
+src/lib/protocol/inbound-verify.ts
+src/lib/protocol/email-wire-deliver.ts
+src/lib/protocol/email-wire-ingest.ts
+src/lib/wire-gateway/codec.ts
+src/lib/wire-gateway/did.ts
+src/commands/protocol.ts
+src/cli/registrars/orchestration.ts
+
+# Tests
+tests/setup-restore-protocol.ts
+tests/wire-gateway-security-e2e.test.ts
+tests/wire-gateway-codec.test.ts
+tests/protocol-inbound-verify.test.ts
+tests/mal-signing-key-preserve.test.ts
+tests/trusted-hubs-jurisdiction-scope.test.ts
+tests/wire-pilot-hygiene.test.ts
+tests/protocol-gap-closure.test.ts
+tests/mal-peers-trust-registry.test.ts
+tests/wire-trust-registry.test.ts
+tests/mal-wire-pilot-gate.test.ts
+
+# Scripts / deploy
+scripts/mal-wire-hygiene.sh
+scripts/mal-ship-gate-check.sh
+scripts/mal-ship-gate-apply.sh
+scripts/phase4a-stage.sh
+scripts/phase4a-paths.manifest
+scripts/phase4-mal-email-wire-roundtrip.ts
+scripts/phase4-mal-email-wire-live.sh
+scripts/wire-live-verify.sh
+deploy/mal-pilot/mail-config.mal-pilot.yaml.example
+deploy/mal-pilot/env/mal-ship-gate.env.example
+deploy/mal-pilot/README.md
+
+# Docs
+docs/org-os/phase4a-washout-f7-f10.md
+docs/org-os/phase4a-self-eval-remediation.md
+docs/org-os/phase4a-open-tracks.md
+docs/org-os/gmail-ship-gate-checklist.md
+docs/org-os/wire-live-verify-runbook.md
+docs/adr/0004-gmail-deferred-opt-in-gate.md
+docs/adr/README.md
+
+# Tenant protocol SSOT (no L2 secrets)
+tenants/mal/data/protocol/peers.yaml
+tenants/southwood/data/protocol/peers.yaml
+steward/platform/protocol/wire-trust-registry.yaml
+publish/protocol/wire-trust-registry.yaml
+
+# package scripts
+package.json
