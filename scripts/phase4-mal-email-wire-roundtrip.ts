@@ -12,12 +12,6 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
-import {
-  ensureProtocolSigningKey,
-  exportProtocolPublicKeyBase64,
-} from "../src/lib/protocol/signing.js";
-import { deriveOpenOrgDidFromPublicKey } from "../schemas/protocol/openorg-did.js";
-import { loadPeersRegistry, registerPeer, savePeersRegistry } from "../src/lib/protocol/peers.js";
 import { proposeInterOrgNotice, approveInterOrgNotice } from "../src/lib/wire/index.js";
 import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
 import {
@@ -31,12 +25,18 @@ import {
   resolveWireOutboundConfig,
 } from "../src/lib/correspondence/mail-config.js";
 import { redactSecrets } from "../src/lib/protocol/redact-secrets.js";
-import { runWirePilotHygiene } from "../src/lib/protocol/wire-pilot-hygiene.js";
+import {
+  EMAIL_WIRE_LOOPBACK_EMAIL,
+  EMAIL_WIRE_LOOPBACK_PEER_ID,
+  ensureEmailWireLoopbackPeer,
+  removeEmailWireLoopbackPeer,
+  runWirePilotHygiene,
+} from "../src/lib/protocol/wire-pilot-hygiene.js";
 import { listTransactions, removeTransactionsById } from "../src/lib/protocol/transactions.js";
 
 const TENANT = process.env.ORGOS_TENANT ?? "mal";
-const LOOP_PEER = "PEER-003";
-const LOOP_WIRE_EMAIL = process.env.PHASE4_LOOP_WIRE_EMAIL ?? "ai+wireloop@malkk.com";
+const LOOP_PEER = EMAIL_WIRE_LOOPBACK_PEER_ID;
+const LOOP_WIRE_EMAIL = process.env.PHASE4_LOOP_WIRE_EMAIL ?? EMAIL_WIRE_LOOPBACK_EMAIL;
 
 setTenantId(TENANT);
 
@@ -69,11 +69,9 @@ function writeDiag(payload: Record<string, unknown>): string {
 }
 
 function cleanupLoopbackPeer(): void {
-  const registry = loadPeersRegistry();
-  const next = registry.peers.filter((p) => p.peer_id !== LOOP_PEER);
-  if (next.length === registry.peers.length) return;
-  savePeersRegistry({ ...registry, peers: next });
-  console.log(`✓ Removed loopback ${LOOP_PEER}`);
+  if (removeEmailWireLoopbackPeer()) {
+    console.log(`✓ Removed loopback ${LOOP_PEER}`);
+  }
 }
 
 function cleanupLoopbackTransaction(eventId: string): void {
@@ -101,27 +99,11 @@ async function main(): Promise<void> {
     );
   }
 
-  const publicKey = exportProtocolPublicKeyBase64();
-  if (!publicKey) throw new Error("protocol signing key missing");
-
-  registerPeer({
-    peer_id: LOOP_PEER,
-    display_name: "MAL mail loopback (Phase 4)",
-    jurisdiction: "JP",
-    org_uri: `steward://tenant/${TENANT}`,
-    did: deriveOpenOrgDidFromPublicKey(publicKey),
-    protocol_public_key: publicKey,
-    wire_email: LOOP_WIRE_EMAIL,
-    inbound_endpoints: [
-      {
-        url: `smtp://${LOOP_WIRE_EMAIL}`,
-        transport: "email_wire",
-        mode: "push",
-        priority: 1,
-      },
-    ],
+  const loopback = ensureEmailWireLoopbackPeer({
+    tenantId: TENANT,
+    wireEmail: LOOP_WIRE_EMAIL,
   });
-  console.log(`✓ Registered ${LOOP_PEER} → ${LOOP_WIRE_EMAIL}`);
+  console.log(`✓ Loopback ${LOOP_PEER} → ${LOOP_WIRE_EMAIL} (${loopback})`);
 
   const eventId = randomUUID();
   const notice = proposeInterOrgNotice({

@@ -17,6 +17,7 @@ import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
 import { syncWireGatewayDidFromSigningKey } from "../src/lib/protocol/wire-gateway-did-sync.js";
 import {
   ensureEmailWireLoopbackPeer,
+  removeEmailWireLoopbackPeer,
   restoreMalMailConfigExampleIfPresent,
 } from "../src/lib/protocol/wire-pilot-hygiene.js";
 
@@ -32,6 +33,9 @@ const PRESERVE_PROTOCOL_SUBDIRS = [
   "federation-gossip-store.yaml",
   "peers.yaml",
   "transactions-registry.yaml",
+  // Live email_wire confirmation must survive concurrent fixture restores.
+  "delivery-attempts.jsonl",
+  "delivery-attempts.yaml",
 ] as const;
 
 /** L2 / runtime tenant files preserved across fixture restore (gitignored pilot state). */
@@ -131,7 +135,12 @@ function buildFixtureSnapshot(): void {
 
 function preservedProtocolPaths(rel: string): string[] {
   const match = rel.match(/^tenants\/([^/]+)\/data\/protocol$/);
-  if (!match || !OPERATIONAL_PROTOCOL_TENANTS.includes(match[1] as (typeof OPERATIONAL_PROTOCOL_TENANTS)[number])) {
+  if (
+    !match ||
+    !OPERATIONAL_PROTOCOL_TENANTS.includes(
+      match[1] as (typeof OPERATIONAL_PROTOCOL_TENANTS)[number]
+    )
+  ) {
     return [];
   }
   return PRESERVE_PROTOCOL_SUBDIRS.map((name) => join(ROOT_DIR, rel, name));
@@ -275,5 +284,11 @@ afterEach(() => {
 afterAll(() => {
   releaseFixtureRestoreLock();
   cleanGeneratedAgentMissions();
+  try {
+    setTenantId("mal");
+    removeEmailWireLoopbackPeer();
+  } catch {
+    /* best-effort — do not leave Phase 4 loopback in tracked peers.yaml */
+  }
   rmSync(SNAPSHOT_ROOT, { recursive: true, force: true });
 });

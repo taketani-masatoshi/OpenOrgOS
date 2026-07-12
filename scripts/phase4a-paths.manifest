@@ -11,12 +11,14 @@ src/lib/protocol/signing.ts
 src/lib/protocol/inbound-verify.ts
 src/lib/protocol/email-wire-deliver.ts
 src/lib/protocol/email-wire-ingest.ts
+src/lib/protocol/delivery-ledger.ts
 src/lib/wire-gateway/codec.ts
 src/lib/wire-gateway/did.ts
 src/commands/protocol.ts
 
 # Tests
 tests/setup-restore-protocol.ts
+tests/delivery-ledger-jsonl.test.ts
 tests/wire-gateway-security-e2e.test.ts
 tests/wire-gateway-codec.test.ts
 tests/protocol-inbound-verify.test.ts
@@ -52,6 +54,7 @@ docs/adr/README.md
 
 # Tenant protocol SSOT (no L2 secrets)
 tenants/mal/data/protocol/peers.yaml
+tenants/mal/data/protocol/wire-gateway.yaml
 tenants/southwood/data/protocol/peers.yaml
 steward/platform/protocol/wire-trust-registry.yaml
 publish/protocol/wire-trust-registry.yaml
@@ -61,5 +64,9 @@ package.json
 
 # Registry sync for new Phase 4a tests
 tests/test-registry.yaml
+tests/protocol-email-wire-ingest.test.ts
 steward/rules/testing-modules.md
 docs/framework-assessment.md
+
+# Live / full-suite isolation (avoid concurrent Vitest wiping delivery-attempts)
+scripts/run-full-test-isolated.sh

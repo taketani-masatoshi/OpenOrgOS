@@ -26,15 +26,3 @@ peers:
         priority: 2
         mode: relay
         transport: relay
-  - peer_id: PEER-003
-    display_name: MAL mail loopback (Phase 4)
-    jurisdiction: JP
-    org_uri: steward://tenant/mal
-    did: did:ooo:org:pk-e3c21eb5a967701e
-    protocol_public_key: MCowBQYDK2VwAyEA5oGtUTRH/StlryWlwN919VYwhjzXFBNKE5Qo8OjyJ5w=
-    wire_email: ai+wireloop@malkk.com
-    inbound_endpoints:
-      - url: smtp://ai+wireloop@malkk.com
-        transport: email_wire
-        mode: push
-        priority: 1

@@ -6,11 +6,12 @@ import {
   ensureEmailWireLoopbackPeer,
   ensureMailConfigFromExample,
   ensureMalMailConfigExampleFiles,
+  removeEmailWireLoopbackPeer,
   runWirePilotHygiene,
   stripHygieneSyncedNotes,
   EMAIL_WIRE_LOOPBACK_PEER_ID,
 } from "../src/lib/protocol/wire-pilot-hygiene.js";
-import { findPeer } from "../src/lib/protocol/peers.js";
+import { findPeer, loadPeersRegistry } from "../src/lib/protocol/peers.js";
 import { exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
 import { deriveOpenOrgDidFromPublicKey } from "../schemas/protocol/openorg-did.js";
 import { loadWireGatewayConfig } from "../src/lib/wire-gateway/validate.js";
@@ -70,9 +71,9 @@ describe("wire-pilot-hygiene", () => {
     ensureMalMailConfigExampleFiles();
     const mail = ensureMailConfigFromExample("mal");
     if (mail.status === "missing_example") {
-      expect(existsSync(join(ROOT_DIR, "deploy/mal-pilot/mail-config.mal-pilot.yaml.example"))).toBe(
-        false
-      );
+      expect(
+        existsSync(join(ROOT_DIR, "deploy/mal-pilot/mail-config.mal-pilot.yaml.example"))
+      ).toBe(false);
       return;
     }
     expect(["present", "restored"]).toContain(mail.status);
@@ -82,5 +83,18 @@ describe("wire-pilot-hygiene", () => {
   it("ensureEmailWireLoopbackPeer is idempotent", () => {
     expect(ensureEmailWireLoopbackPeer({ tenantId: "mal" })).toMatch(/present|updated|registered/);
     expect(ensureEmailWireLoopbackPeer({ tenantId: "mal" })).toBe("present");
+  });
+
+  it("removeEmailWireLoopbackPeer drops PEER-003 without touching other peers", () => {
+    ensureEmailWireLoopbackPeer({ tenantId: "mal" });
+    expect(findPeer(EMAIL_WIRE_LOOPBACK_PEER_ID)).toBeTruthy();
+    const before = loadPeersRegistry().peers.map((p) => p.peer_id);
+    expect(before).toContain(EMAIL_WIRE_LOOPBACK_PEER_ID);
+    expect(removeEmailWireLoopbackPeer()).toBe(true);
+    expect(findPeer(EMAIL_WIRE_LOOPBACK_PEER_ID)).toBeUndefined();
+    const after = loadPeersRegistry().peers.map((p) => p.peer_id);
+    expect(after).not.toContain(EMAIL_WIRE_LOOPBACK_PEER_ID);
+    expect(after).toEqual(before.filter((id) => id !== EMAIL_WIRE_LOOPBACK_PEER_ID));
+    expect(removeEmailWireLoopbackPeer()).toBe(false);
   });
 });

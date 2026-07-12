@@ -8,7 +8,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync } from "node:f
 import { dirname, join } from "node:path";
 import { deriveOpenOrgDidFromPublicKey } from "../../../schemas/protocol/openorg-did.js";
 import { ROOT_DIR, getTenantId, setTenantId } from "../tenant.js";
-import { registerPeer, findPeer } from "./peers.js";
+import { registerPeer, findPeer, loadPeersRegistry, savePeersRegistry } from "./peers.js";
 import { getProtocolSigningKeyPath } from "./paths.js";
 import {
   ensureProtocolSigningKey,
@@ -129,6 +129,15 @@ export function ensureEmailWireLoopbackPeer(opts?: {
     return "updated";
   }
   return "present";
+}
+
+/** Remove Phase 4 loopback peer so tracked peers.yaml stays production-clean. */
+export function removeEmailWireLoopbackPeer(): boolean {
+  const registry = loadPeersRegistry();
+  const next = registry.peers.filter((p) => p.peer_id !== EMAIL_WIRE_LOOPBACK_PEER_ID);
+  if (next.length === registry.peers.length) return false;
+  savePeersRegistry({ ...registry, peers: next });
+  return true;
 }
 
 /** Prefer restoring rotated backup over minting a new operational key. */

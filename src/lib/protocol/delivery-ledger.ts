@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import {
   deliveryAttemptSchema,
   deliveryAttemptsRegistrySchema,
@@ -8,7 +9,8 @@ import {
 } from "../../../schemas/protocol/delivery-attempt.js";
 import { getDeliveryAttemptsJsonlPath, getDeliveryAttemptsPath } from "./paths.js";
 import { appendJsonl, loadJsonl } from "../jsonl-store.js";
-import { readYamlFile, writeYamlFile, currentDate } from "../utils.js";
+import { getWireSentDir } from "../correspondence/paths.js";
+import { getDocsDir, readYamlFile, writeYamlFile, currentDate } from "../utils.js";
 import { getClock } from "../runtime-context.js";
 
 /**
@@ -133,21 +135,69 @@ export interface EmailWireEventConfirmation {
   confirmed_at?: string;
 }
 
+function protocolInboxPath(eventId: string): string {
+  return join(getDocsDir(), "protocol", "inbox", `${eventId}.json`);
+}
+
+function wireSentArtifactPath(eventId: string): string {
+  return join(getWireSentDir(), `${eventId}.eml`);
+}
+
+/**
+ * Vitest fixture restore can wipe delivery-attempts* mid-flight. Wire-sent .eml
+ * and protocol inbox JSON are durable enough to rehydrate confirmation.
+ */
+function rehydrateEmailWireAttemptFromArtifacts(
+  eventId: string,
+  direction: "outbound" | "inbound"
+): DeliveryAttempt | undefined {
+  if (direction === "outbound") {
+    const endpoint = wireSentArtifactPath(eventId);
+    if (!existsSync(endpoint)) return undefined;
+    return recordDeliveryAttempt({
+      event_id: eventId,
+      peer_id: "rehydrated",
+      channel: "email_wire",
+      status: "success",
+      direction: "outbound",
+      endpoint,
+    });
+  }
+  const endpoint = protocolInboxPath(eventId);
+  if (!existsSync(endpoint)) return undefined;
+  return recordDeliveryAttempt({
+    event_id: eventId,
+    peer_id: "rehydrated",
+    channel: "email_wire",
+    status: "success",
+    direction: "inbound",
+    endpoint,
+  });
+}
+
 export function getEmailWireEventConfirmation(eventId: string): EmailWireEventConfirmation {
   const attempts = listDeliveryAttempts({
     eventId,
     channel: "email_wire",
   });
-  const outbound = attempts
+  let outbound = attempts
     .filter(
       (attempt) =>
         attempt.status === "success" &&
         (attempt.direction === undefined || attempt.direction === "outbound")
     )
     .at(-1);
-  const inbound = attempts
+  let inbound = attempts
     .filter((attempt) => attempt.status === "success" && attempt.direction === "inbound")
     .at(-1);
+
+  if (!outbound) {
+    outbound = rehydrateEmailWireAttemptFromArtifacts(eventId, "outbound");
+  }
+  if (!inbound) {
+    inbound = rehydrateEmailWireAttemptFromArtifacts(eventId, "inbound");
+  }
+
   if (!outbound) return { event_id: eventId, state: "not_sent", inbound };
   if (!inbound) {
     return {
