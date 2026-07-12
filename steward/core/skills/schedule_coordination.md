@@ -36,6 +36,9 @@
 ```bash
 orgos executive scheduling new --title "..." --participant "名前|email|external"
 orgos executive scheduling propose --id SCH-2026-001
+orgos executive scheduling approve-send --id SCH-2026-001 --reviewed
+orgos executive scheduling process --mail-id MSG-...
+orgos executive scheduling rehearsal --full --tenant <id>
 orgos executive scheduling draft --id SCH-2026-001 --write-draft
 orgos executive scheduling process --all
 orgos executive scheduling reminder-poll
@@ -44,6 +47,30 @@ orgos executive scheduling cancel --id SCH-2026-001 --reason "..."
 orgos executive scheduling reschedule --id SCH-2026-001
 orgos skills run schedule-coordination
 ```
+
+**返信取込:** 本番は Mail Intake sync → `auto-process` / `process --mail-id`。`executive scheduling respond` は **dev/test のショートカット**（リハーサルでは EML 注入 + `process-mail` を使用）。
+
+## 初回セットアップ
+
+```bash
+orgos tenant scaffold-data --tenant <id>
+orgos doctor --tenant <id> --repair
+orgos executive scheduling rehearsal --full --tenant <id>
+```
+
+`doctor --repair` は operator key · mail-config · approval registry を修復し、成功時に次コマンド（`rehearsal --full`）を表示する。
+
+## 本番 vs dev/test 経路
+
+| 段階 | 本番 | dev/test |
+|------|------|----------|
+| 初回セットアップ | `tenant scaffold-data` → `doctor --repair` | 同上 |
+| 候補提案送信 | `approve-send --reviewed`（`--no-dry-run` で実 SMTP） | `approve-send`（既定 dry-run · `smtp.test.local`） |
+| 返信取込 | Mail Intake sync → `auto-process` / `process --mail-id` | リハーサル: fixture EML → `process-mail` |
+| CEO 最終確認 | Steward Chat / `mail intake ceo answer` | リハーサル: inline CEO answer |
+| 完走確認 | `status=closed` · `orgos validate` | `rehearsal --full` 終了時アサーション |
+
+**スコープ外（別検証）:** IMAP 本番 sync · Google Calendar/Meet OAuth 本番 · Steward Chat session 本番。
 
 ## Agent 分担
 

@@ -5,13 +5,10 @@ import { ensureExecutiveMailConfig } from "../correspondence/ensure-mail-config.
 import { getMailConfigPath } from "../correspondence/paths.js";
 import { repairCorrespondenceApprovalRegistry } from "../correspondence/approval-registry-repair.js";
 import { readOperatorKeyFromFile } from "../console-auth/cli-operator.js";
-import {
-  hashOperatorKey,
-  loadOperatorRegistry,
-  saveOperatorRegistry,
-  verifyOperatorKey,
-} from "../org/operators.js";
+import { loadOperatorRegistry, verifyOperatorKey } from "../org/operators.js";
+import { syncAndRepairOperatorKeys } from "../org/operator-keys.js";
 import { getDataDir } from "../utils.js";
+import { getTenantId } from "../tenant.js";
 
 export interface OperationalReadinessIssue {
   id: string;
@@ -25,6 +22,8 @@ export interface OperationalReadinessReport {
   issues: OperationalReadinessIssue[];
   repaired_approvals: string[];
   synced_operators: string[];
+  rotated_operators: string[];
+  next_command?: string;
 }
 
 function checkOperatorKeyAlignment(): OperationalReadinessIssue[] {
@@ -87,34 +86,28 @@ function checkSchedulingDataSkeleton(): OperationalReadinessIssue[] {
 }
 
 export function syncOperatorKeyHashesFromLocalFiles(): string[] {
-  const registry = loadOperatorRegistry();
-  if (!registry) return [];
-  const synced: string[] = [];
-  let changed = false;
-  for (const operator of registry.operators) {
-    const key = readOperatorKeyFromFile(operator.operator_id);
-    if (!key) continue;
-    const nextHash = hashOperatorKey(key);
-    if (operator.key_hash === nextHash) continue;
-    operator.key_hash = nextHash;
-    synced.push(operator.operator_id);
-    changed = true;
-  }
-  if (changed) saveOperatorRegistry(registry);
-  return synced;
+  return syncAndRepairOperatorKeys({ allowRotate: false }).synced;
 }
+
+export { ensureOperatorAuthEnv, syncAndRepairOperatorKeys } from "../org/operator-keys.js";
 
 export function collectOperationalReadinessIssues(opts?: {
   repairApprovals?: boolean;
   ensureMailConfig?: boolean;
   syncOperatorKeys?: boolean;
+  repairOperatorKeys?: boolean;
 }): OperationalReadinessReport {
   const issues: OperationalReadinessIssue[] = [];
   let repaired: string[] = [];
-  const syncedOperators: string[] = [];
+  let syncedOperators: string[] = [];
+  let rotatedOperators: string[] = [];
 
-  if (opts?.syncOperatorKeys) {
-    syncedOperators.push(...syncOperatorKeyHashesFromLocalFiles());
+  if (opts?.syncOperatorKeys || opts?.repairOperatorKeys) {
+    const keyRepair = syncAndRepairOperatorKeys({
+      allowRotate: Boolean(opts.repairOperatorKeys),
+    });
+    syncedOperators = keyRepair.synced;
+    rotatedOperators = keyRepair.rotated;
   }
 
   if (opts?.ensureMailConfig && !existsSync(getMailConfigPath())) {
@@ -148,10 +141,17 @@ export function collectOperationalReadinessIssues(opts?: {
     repaired = repairCorrespondenceApprovalRegistry().repaired;
   }
 
+  const ready = !issues.some((issue) => issue.severity === "error");
+  const next_command = ready
+    ? `orgos executive scheduling rehearsal --full --tenant ${getTenantId()}`
+    : undefined;
+
   return {
-    ready: !issues.some((issue) => issue.severity === "error"),
+    ready,
     issues,
     repaired_approvals: repaired,
     synced_operators: syncedOperators,
+    rotated_operators: rotatedOperators,
+    next_command,
   };
 }
