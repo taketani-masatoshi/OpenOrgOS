@@ -1,25 +1,22 @@
 ---
 description: Steward OS tenant/docs layout — summary (domain detail in 09-openorgos-domain)
-globs:
-  - tenants/**/*
-  - scratch/**/*
-  - docs/**/*
-alwaysApply: false
+globs: tenants/**/*,scratch/**/*,docs/**/*
 ---
+
 
 # Steward OS 運用ルール（要約）
 
-**詳細ドメイン（4 層 · Catalog/Roster · Wire）:** [09-openorgos-domain.mdc](09-openorgos-domain.mdc) · 正本 `steward/rules/engineering/09-openorgos-domain.md`
+**詳細ドメイン（4 層 · Catalog/Roster · Wire）:** [engineering/09-openorgos-domain.md](steward/rules/engineering/09-openorgos-domain.md)
 
 ## 4 層（1 行）
 
-Steward → Agent → Skill + CLI → Data — 詳細は上記 09 参照 · [steward_os_principles.md](../../steward/rules/steward_os_principles.md)
+Steward → Agent → Skill + CLI → Data — 詳細は上記 09 参照 · [steward_os_principles.md](steward/rules/steward_os_principles.md)
 
 **テナント:** `tenants/{id}/`（既定: `mal`）。論理 `data/` · `docs/` はアクティブテナント内。
 
 - **Steward:** `docs/reports/agent-summaries/` + dashboard のみ原則読取
-- **Agent:** 部門フォルダ · Skill  dispatch
-- **Skill:** [steward/core/skills/](../../steward/core/skills/)
+- **Agent:** 部門フォルダ · Skill dispatch
+- **Skill:** `steward/core/skills/`
 
 ## 分け方の原則
 
@@ -39,7 +36,8 @@ Steward → Agent → Skill + CLI → Data — 詳細は上記 09 参照 · [ste
 
 ## 参照
 
-- Agent: [steward/core/agents/](../../steward/core/agents/00-このフォルダについて.md)
-- 有効モジュールのみ @ — `tenants/{id}/rules/active_context.md`
-- ルール正本: [steward/rules/](../../steward/rules/steward_os_principles.md)
-- 会社イベント: `.cursor/rules/company-events.mdc`
+- [repository_layout.md](steward/rules/repository_layout.md)
+- [folder_access_policy.md](steward/rules/folder_access_policy.md)
+- [operator-policy.md](steward/rules/operator-policy.md)
+
+> **Mirror only.** Canonical: `steward/rules/steward-ops-summary.md` · Regenerate: `orgos operator sync-policy --emit all`

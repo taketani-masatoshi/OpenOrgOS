@@ -1,15 +1,12 @@
 ---
 description: 会社イベント記録フォルダ — events/artifacts 分離 · YYYY-MM · EVT 命名
-globs:
-  - tenants/**/docs/company/events/**
-  - tenants/**/docs/company/artifacts/**
-  - tenants/**/data/company-events.yaml
-alwaysApply: false
+globs: tenants/**/docs/company/events/**,tenants/**/docs/company/artifacts/**,tenants/**/data/company-events.yaml,tenants/**/data/company-events-chain.jsonl
 ---
+
 
 # 会社イベント記録（AI 必須）
 
-**正本:** [steward/rules/company-events-layout.md](../../steward/rules/company-events-layout.md)
+**正本レイアウト:** [company-events-layout.md](steward/rules/company-events-layout.md)
 
 ## 二層分離
 
@@ -23,10 +20,16 @@ alwaysApply: false
 
 ## 命名
 
-- イベント ID: `EVT-{YYYYMMDD}-{kind}-{slug}`（kind: governance · registration · contract · finance · compliance · meeting · personnel · misc）
+- イベント ID: `EVT-{YYYYMMDD}-{kind}-{slug}`
 - 月フォルダ: `YYYY-MM`
-- 台帳: `data/company-events.yaml`
-- チェーン: `data/company-events-chain.jsonl`
+- 台帳: `data/company-events.yaml`（derived ビュー · 移行中）
+- チェーン: `data/company-events-chain.jsonl`（監査 · status/create/void）
+
+## MD 本文ポリシー
+
+- **初回作成時のみ** テンプレ本文を書く
+- **status / void 後も本文は上書きしない** — frontmatter（`status` 等）のみ patch
+- 経緯の追記は人間または明示編集。CLI は narrative を消さない
 
 ## 操作
 
@@ -34,17 +37,10 @@ alwaysApply: false
 npm run orgos -- events ensure-month
 npm run orgos -- events new --kind registration --title "…" [--slug …]
 npm run orgos -- events void EVT-… --reason "…"
-npm run orgos -- events wire-status EVT-…
-npm run orgos -- events void-request EVT-… --operator <id>
-npm run orgos -- events void-ack EVT-… --wire-event <uuid>
 npm run orgos -- events list
 npm run orgos -- events chain verify
 ```
 
-新規イベント前に `ensure-month`。無効化は `void` のみ（台帳からの物理削除禁止）。**Wire 配送済み EVT は相手 void ack まで void 不可**（先に `void-request` → `void-ack`）。既存テナントは初回 `events chain backfill`。
+新規イベント前に `ensure-month`。無効化は `void` のみ（台帳からの物理削除禁止）。
 
-## 参照
-
--  narrative → `@tenants/{id}/docs/company/events/`
-- 書類 → `@tenants/{id}/docs/company/artifacts/`
-- 登記 module 生成物も artifacts 配下（events とは別）
+> **Mirror only.** Canonical: `steward/rules/company-events-ai.md` · Regenerate: `orgos operator sync-policy --emit all`

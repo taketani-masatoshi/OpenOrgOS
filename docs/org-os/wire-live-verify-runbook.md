@@ -48,6 +48,9 @@ roundtrip 時は子プロセスに `ORGOS_EMAIL_WIRE_REQUIRED=1` を渡す（明
 ```bash
 ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/prod-validate-wire.sh mal
 ORGOS_EMAIL_WIRE_REQUIRED=1 ORGOS_LIVE_VERIFY=1 ./scripts/wire-live-verify.sh mal check
+# または
+ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_STRICT_EMAIL=1 ./scripts/wire-live-verify.sh mal check
+ORGOS_LIVE_VERIFY=1 npm run orgos -- wire live-verify --tenant mal --strict-email-wire
 ```
 
 ### Witness receipt キャッシュ補完
@@ -87,6 +90,17 @@ npm run orgos -- --tenant mal protocol transaction prune-orphans --apply
 | `mail-config.yaml` 消失 | `tests/setup-restore-protocol.ts` が mal L2 を preserve |
 | `ORGOS_SMTP_*` 漏洩 | `resolveWireOutboundConfig` が `provider: dry_run` を尊重 |
 | mal gate テスト | `mal-wire-pilot-gate.test.ts` が mail-config を backup/restore |
+| orphan 復活 | HEAD の `transactions-registry.yaml` を空に commit · `protocol transaction prune-orphans --apply` |
+
+### Live 失敗の切り分け
+
+| 症状 | 確認 |
+|------|------|
+| SMTP auth fail | L2 `smtp.env` / `.env.mail-wire` · `ai@malkk.com` のみ |
+| IMAP sync 0 | mail-config `receive.sync: imap` · Vitest 停止 |
+| ingest 0 | `ai+wireloop@` 配送 · base64 MIME · `wire-scan` |
+| `witness-receipt-missing` | `protocol witness cache-missing` · 不可なら `prune-orphans --apply` |
+| readiness deferred で誤 PASS | `--strict-email-wire` または `ORGOS_EMAIL_WIRE_REQUIRED=1` |
 
 ---
 

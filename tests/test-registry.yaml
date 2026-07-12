@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 318
-  static_test_cases: 1196
-  tiered_execution_total: 318
+  vitest_total: 320
+  static_test_cases: 1200
+  tiered_execution_total: 320
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -617,6 +617,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  correspondence-wire-outbound-dry-run.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   csrf-guard.test.ts:
     axis: platform
     kind: unit
@@ -850,6 +854,10 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I4_evidence
+  mal-protocol-preserve.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   mal-wire-peer-deliver.test.ts:
     axis: integration
     kind: integration
