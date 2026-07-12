@@ -1,14 +1,8 @@
-import { setTenantId, loadTenantConfig } from "../lib/tenant.js";
+import { loadTenantConfig } from "../lib/tenant.js";
 import { requireCliOperator } from "../lib/console-auth/cli-operator.js";
 import { applyProtocolTenant } from "./protocol-helpers.js";
-import {
-  buildIdentityDocument,
-  buildIdentityEnvelope,
-} from "../lib/protocol/identity.js";
-import {
-  exportDelegationProof,
-  buildDelegationEnvelope,
-} from "../lib/protocol/delegation.js";
+import { buildIdentityDocument, buildIdentityEnvelope } from "../lib/protocol/identity.js";
+import { exportDelegationProof, buildDelegationEnvelope } from "../lib/protocol/delegation.js";
 import {
   proposeInterOrgWire,
   approveInterOrgNotice,
@@ -17,13 +11,8 @@ import {
   findPendingNotice,
 } from "../lib/wire/index.js";
 import { loadAuthorizedApprovers } from "../lib/jurisdiction/wire-governance/index.js";
-import {
-  findTransaction,
-  listTransactions,
-} from "../lib/protocol/transactions.js";
-import {
-  recordProtocolTransaction,
-} from "../lib/protocol/record-transaction.js";
+import { findTransaction, listTransactions } from "../lib/protocol/transactions.js";
+import { recordProtocolTransaction } from "../lib/protocol/record-transaction.js";
 import { validateProtocolState, validateProtocolFile } from "../lib/protocol/validate.js";
 import {
   applyProtocolOutboxPermissions,
@@ -37,16 +26,16 @@ import {
 import { mapQueueEventToOrgEvent } from "../lib/protocol/map-internal.js";
 import { loadProtocolRegistry } from "../lib/protocol/registry.js";
 import type { TransactionType } from "../../schemas/protocol/transaction-record.js";
-import {
-  normalizeTransactionType,
-  transactionTypeSchema,
-} from "../../schemas/protocol/transaction-record.js";
+import { transactionTypeSchema } from "../../schemas/protocol/transaction-record.js";
 import { resolveJurisdictionApprovalPolicy } from "../lib/jurisdiction/wire-governance/index.js";
 import { eventEnvelopeSchema } from "../../schemas/protocol/org-event.js";
 import { loadQueueEvents } from "../lib/queue-db.js";
-import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey, rotateProtocolSigningKey } from "../lib/protocol/signing.js";
 import {
-  deliverProtocolEnvelope,
+  exportProtocolPublicKeyBase64,
+  ensureProtocolSigningKey,
+  rotateProtocolSigningKey,
+} from "../lib/protocol/signing.js";
+import {
   deliverProtocolEnvelopeWithRelay,
   flushWirePending,
   pullDeliverFromPeerOutbox,
@@ -59,7 +48,10 @@ import {
   findTrustedHubsForJurisdiction,
   validateTrustedHubsRegistry,
 } from "../lib/protocol/trusted-hubs.js";
-import { listDiscoverablePeers, listPeerRegistrationSuggestions } from "../lib/protocol/peer-discovery.js";
+import {
+  listDiscoverablePeers,
+  listPeerRegistrationSuggestions,
+} from "../lib/protocol/peer-discovery.js";
 import { deliverEnvelopeViaMesh } from "../lib/protocol/peer-mesh.js";
 import {
   initWitnessTrustAuthority,
@@ -89,10 +81,17 @@ import {
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProtocolDataDir } from "../lib/protocol/paths.js";
-import { findPeer, registerPeer, nextPeerId, resolvePeerOutboxBaseUrl } from "../lib/protocol/peers.js";
+import {
+  findPeer,
+  registerPeer,
+  nextPeerId,
+  resolvePeerOutboxBaseUrl,
+} from "../lib/protocol/peers.js";
 import { migrateLegacyWebhookPeers } from "../lib/protocol/peers-migrate-legacy.js";
 import { readFileSync } from "node:fs";
 import { orgIdentityDocumentSchema } from "../../schemas/protocol/identity-exchange.js";
+import { syncWireGatewayDidFromSigningKey } from "../lib/protocol/wire-gateway-did-sync.js";
+import { runWirePilotHygiene } from "../lib/protocol/wire-pilot-hygiene.js";
 
 export interface ProtocolValidateOptions {
   tenant?: string;
@@ -104,7 +103,9 @@ export function runProtocolValidate(opts: ProtocolValidateOptions): void {
   applyProtocolTenant(opts.tenant);
   const result = validateProtocolState({ standalone: opts.standalone });
   if (opts.json) {
-    console.log(JSON.stringify({ ...result, mode: opts.standalone ? "standalone" : "full" }, null, 2));
+    console.log(
+      JSON.stringify({ ...result, mode: opts.standalone ? "standalone" : "full" }, null, 2)
+    );
     return;
   }
   if (result.ok) {
@@ -140,7 +141,9 @@ export interface ProtocolOutboxApplyPermissionsOptions {
   json?: boolean;
 }
 
-export function runProtocolOutboxApplyPermissions(opts: ProtocolOutboxApplyPermissionsOptions): void {
+export function runProtocolOutboxApplyPermissions(
+  opts: ProtocolOutboxApplyPermissionsOptions
+): void {
   applyProtocolTenant(opts.tenant);
   const result = applyProtocolOutboxPermissions({
     user: opts.user,
@@ -156,14 +159,13 @@ export function runProtocolOutboxApplyPermissions(opts: ProtocolOutboxApplyPermi
     console.log(`  ${path}`);
   }
   if (result.skippedChown) {
-    console.log("  chown skipped (run as root or via deploy/protocol-outbox/apply-permissions.sh with sudo)");
+    console.log(
+      "  chown skipped (run as root or via deploy/protocol-outbox/apply-permissions.sh with sudo)"
+    );
   }
 }
 
-export function runProtocolOutboxCheckPermissions(opts: {
-  tenant?: string;
-  json?: boolean;
-}): void {
+export function runProtocolOutboxCheckPermissions(opts: { tenant?: string; json?: boolean }): void {
   applyProtocolTenant(opts.tenant);
   const issues = checkProtocolOutboxPermissionsLoose();
   if (opts.json) {
@@ -263,7 +265,8 @@ export function runProtocolPeerRegister(opts: ProtocolPeerRegisterOptions): void
   });
   console.log(`✓ Registered peer ${profile.peer_id} · ${profile.display_name}`);
   if (profile.protocol_public_key) console.log(`  protocol_public_key: set`);
-  if (profile.inbound_webhook_url) console.log(`  inbound_webhook_url: ${profile.inbound_webhook_url}`);
+  if (profile.inbound_webhook_url)
+    console.log(`  inbound_webhook_url: ${profile.inbound_webhook_url}`);
 }
 
 export interface ProtocolPeersMigrateLegacyOptions {
@@ -296,12 +299,8 @@ export function runProtocolPeersMigrateLegacy(opts: ProtocolPeersMigrateLegacyOp
     );
     return;
   }
-  console.warn(
-    "WARNING: legacy_webhook is deprecated and retained only until 2026-10-01."
-  );
-  console.warn(
-    "This is Wire peer transport, not the internal `orgos webhook` automation command."
-  );
+  console.warn("WARNING: legacy_webhook is deprecated and retained only until 2026-10-01.");
+  console.warn("This is Wire peer transport, not the internal `orgos webhook` automation command.");
   console.log(`peers migrate-legacy · ${apply ? "apply" : "dry-run"}`);
   for (const r of results) {
     console.log(`  [${r.status}] ${r.peer_id}${r.detail ? ` · ${r.detail}` : ""}`);
@@ -326,7 +325,9 @@ export function runProtocolPeerDiscover(opts: ProtocolPeerDiscoverOptions): void
   if (opts.suggest) {
     const suggestions = listPeerRegistrationSuggestions(jurisdiction);
     if (opts.json) {
-      console.log(JSON.stringify({ jurisdiction, count: suggestions.length, suggestions }, null, 2));
+      console.log(
+        JSON.stringify({ jurisdiction, count: suggestions.length, suggestions }, null, 2)
+      );
       return;
     }
     console.log(`Peer registration suggestions (${jurisdiction}): ${suggestions.length}`);
@@ -361,8 +362,7 @@ export interface ProtocolDelegationExportOptions {
 export function runProtocolDelegationExport(opts: ProtocolDelegationExportOptions): void {
   applyProtocolTenant(opts.tenant);
   try {
-    const basisRef =
-      opts.basisRef ?? resolveJurisdictionApprovalPolicy().policy_ref;
+    const basisRef = opts.basisRef ?? resolveJurisdictionApprovalPolicy().policy_ref;
     const proof = exportDelegationProof({
       scope: opts.scope,
       granteeAgent: opts.granteeAgent,
@@ -492,9 +492,7 @@ export function runProtocolTransactionRecord(opts: ProtocolTransactionRecordOpti
       brokerInstruction: opts.brokerInstruction,
       stakeholderId: opts.stakeholder,
       amount:
-        opts.amount != null
-          ? { value: opts.amount, currency: opts.currency ?? "JPY" }
-          : undefined,
+        opts.amount != null ? { value: opts.amount, currency: opts.currency ?? "JPY" } : undefined,
       notes: opts.notes,
     });
 
@@ -647,12 +645,14 @@ export interface ProtocolAuditVerifyOptions {
   tenant?: string;
 }
 
-export function runProtocolAuditVerify(opts: ProtocolAuditVerifyOptions & {
-  withEnvelopes?: boolean;
-  requireEnvelopes?: boolean;
-  chainPath?: string;
-  envelopeDir?: string[];
-}): void {
+export function runProtocolAuditVerify(
+  opts: ProtocolAuditVerifyOptions & {
+    withEnvelopes?: boolean;
+    requireEnvelopes?: boolean;
+    chainPath?: string;
+    envelopeDir?: string[];
+  }
+): void {
   applyProtocolTenant(opts.tenant);
 
   if (opts.withEnvelopes || opts.requireEnvelopes || opts.chainPath || opts.envelopeDir?.length) {
@@ -771,9 +771,7 @@ export function runProtocolNoticePropose(opts: ProtocolNoticeProposeOptions): vo
       brokerInstruction: opts.brokerInstruction,
       stakeholderId: opts.stakeholder,
       amount:
-        opts.amount != null
-          ? { value: opts.amount, currency: opts.currency ?? "JPY" }
-          : undefined,
+        opts.amount != null ? { value: opts.amount, currency: opts.currency ?? "JPY" } : undefined,
       message: opts.message,
     });
     if (opts.json) {
@@ -786,7 +784,9 @@ export function runProtocolNoticePropose(opts: ProtocolNoticeProposeOptions): vo
     if (notice.correlation_event_id) console.log(`  correlation: ${notice.correlation_event_id}`);
     if (opts.companyEvent) console.log(`  company_event: ${opts.companyEvent}`);
     console.log(`  operator: ${notice.proposed_by}`);
-    console.log(`  Next: steward protocol notice approve --id ${notice.notice_id} --approver <CEO>`);
+    console.log(
+      `  Next: steward protocol notice approve --id ${notice.notice_id} --approver <CEO>`
+    );
   } catch (e) {
     console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);
@@ -832,7 +832,10 @@ export interface ProtocolNoticeApproveOptions {
 
 export async function runProtocolNoticeApprove(opts: ProtocolNoticeApproveOptions): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const auth = requireCliOperator({ permission: "protocol:approve", command: "protocol notice approve" });
+  const auth = requireCliOperator({
+    permission: "protocol:approve",
+    command: "protocol notice approve",
+  });
   try {
     const result = approveInterOrgNotice({
       noticeId: opts.id,
@@ -931,7 +934,9 @@ export function runProtocolSigningExportPublic(opts: ProtocolSigningExportOption
   ensureProtocolSigningKey();
   const publicKey = exportProtocolPublicKeyBase64();
   if (!publicKey) {
-    console.error("No signing key — run notice approve once or ensure data/protocol/signing-key.pem");
+    console.error(
+      "No signing key — run notice approve once or ensure data/protocol/signing-key.pem"
+    );
     process.exit(1);
   }
   if (opts.json) {
@@ -949,8 +954,9 @@ export interface ProtocolSigningRotateOptions {
 export function runProtocolSigningRotate(opts: ProtocolSigningRotateOptions): void {
   applyProtocolTenant(opts.tenant);
   const result = rotateProtocolSigningKey();
+  const sync = syncWireGatewayDidFromSigningKey();
   if (opts.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify({ ...result, gateway_did: sync }, null, 2));
     return;
   }
   console.log("✓ Protocol signing key rotated");
@@ -958,7 +964,47 @@ export function runProtocolSigningRotate(opts: ProtocolSigningRotateOptions): vo
   if (result.backupPath) {
     console.log(`  backup: ${result.backupPath}`);
   }
+  console.log(`  wire-gateway did: ${sync.did}${sync.updated ? " (updated)" : ""}`);
   console.log("  Re-share public key with peers after rotation.");
+}
+
+export interface ProtocolSigningSyncGatewayDidOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolSigningSyncGatewayDid(opts: ProtocolSigningSyncGatewayDidOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const sync = syncWireGatewayDidFromSigningKey();
+  if (opts.json) {
+    console.log(JSON.stringify(sync, null, 2));
+    return;
+  }
+  console.log(`✓ wire-gateway did ${sync.updated ? "updated" : "already aligned"}: ${sync.did}`);
+  console.log(`  path: ${sync.path}`);
+}
+
+export interface ProtocolWireHygieneOptions {
+  tenant?: string;
+  json?: boolean;
+}
+
+export function runProtocolWireHygiene(opts: ProtocolWireHygieneOptions): void {
+  applyProtocolTenant(opts.tenant);
+  const result = runWirePilotHygiene(opts.tenant);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`✓ Wire pilot hygiene (${result.tenant})`);
+  console.log(`  signing_key: ${result.signing_key}`);
+  console.log(`  signing_meta: ${result.signing_meta}`);
+  console.log(
+    `  gateway_did: ${result.gateway_did}${result.gateway_did_updated ? " (updated)" : ""}`
+  );
+  console.log(`  mail_config: ${result.mail_config}`);
+  console.log(`  loopback_peer: ${result.loopback_peer}`);
+  console.log(`  trust_registry: ${result.trust_registry}`);
 }
 
 export interface ProtocolDeliverOptions {
@@ -1060,8 +1106,7 @@ export async function runProtocolMeshDeliver(opts: ProtocolMeshDeliverOptions): 
   }
 }
 
-export interface ProtocolNoticeDraftOptions
-  extends Omit<ProtocolNoticeProposeOptions, "operator"> {
+export interface ProtocolNoticeDraftOptions extends Omit<ProtocolNoticeProposeOptions, "operator"> {
   /** Secretary default operator label */
   operator?: string;
 }
@@ -1100,7 +1145,9 @@ export interface ProtocolWitnessRegisterOptions {
   json?: boolean;
 }
 
-export async function runProtocolWitnessRegister(opts: ProtocolWitnessRegisterOptions): Promise<void> {
+export async function runProtocolWitnessRegister(
+  opts: ProtocolWitnessRegisterOptions
+): Promise<void> {
   applyProtocolTenant(opts.tenant);
   const { findEnvelopeFileForWitness } = await import("../lib/protocol/witness-client.js");
   const { registerWitnessAttestationFanOut } = await import("../lib/protocol/witness-client.js");
@@ -1118,8 +1165,12 @@ export async function runProtocolWitnessRegister(opts: ProtocolWitnessRegisterOp
     console.log(JSON.stringify(result, null, 2));
     return;
   }
-  console.log(`witness fan-out: ${result.succeeded.length}/${result.succeeded.length + result.failed.length} hubs`);
-  console.log(`quorum: ${result.quorum.satisfied ? "satisfied" : "NOT satisfied"} (${result.quorum.matched}/${result.quorum.required})`);
+  console.log(
+    `witness fan-out: ${result.succeeded.length}/${result.succeeded.length + result.failed.length} hubs`
+  );
+  console.log(
+    `quorum: ${result.quorum.satisfied ? "satisfied" : "NOT satisfied"} (${result.quorum.matched}/${result.quorum.required})`
+  );
 }
 
 export interface ProtocolWitnessFlushPendingOptions {
@@ -1127,7 +1178,9 @@ export interface ProtocolWitnessFlushPendingOptions {
   json?: boolean;
 }
 
-export async function runProtocolWitnessFlushPending(opts: ProtocolWitnessFlushPendingOptions): Promise<void> {
+export async function runProtocolWitnessFlushPending(
+  opts: ProtocolWitnessFlushPendingOptions
+): Promise<void> {
   applyProtocolTenant(opts.tenant);
   const { flushWitnessPending } = await import("../lib/protocol/witness-client.js");
   const flushed = await flushWitnessPending();
@@ -1146,14 +1199,17 @@ export interface ProtocolWitnessVerifyOptions {
 
 export async function runProtocolWitnessVerify(opts: ProtocolWitnessVerifyOptions): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const { verifyCachedReceiptsForEvent, fetchReceiptsFromPool } = await import("../lib/protocol/witness-client.js");
+  const { verifyCachedReceiptsForEvent, fetchReceiptsFromPool } =
+    await import("../lib/protocol/witness-client.js");
   await fetchReceiptsFromPool(opts.eventId);
   const result = verifyCachedReceiptsForEvent(opts.eventId);
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
-  console.log(`receipts: ${result.receipts.length} · quorum: ${result.quorum.satisfied ? "ok" : "FAIL"}`);
+  console.log(
+    `receipts: ${result.receipts.length} · quorum: ${result.quorum.satisfied ? "ok" : "FAIL"}`
+  );
   for (const issue of result.issues) console.log(`  ! ${issue}`);
   if (!result.quorum.satisfied) process.exit(1);
 }
@@ -1163,7 +1219,9 @@ export interface ProtocolWitnessPoolStatusOptions {
   json?: boolean;
 }
 
-export async function runProtocolWitnessPoolStatus(opts: ProtocolWitnessPoolStatusOptions): Promise<void> {
+export async function runProtocolWitnessPoolStatus(
+  opts: ProtocolWitnessPoolStatusOptions
+): Promise<void> {
   applyProtocolTenant(opts.tenant);
   const { loadWitnessPoolConfig } = await import("../lib/protocol/witness-pool.js");
   const { checkWitnessPoolHealth } = await import("../lib/protocol/witness-client.js");
@@ -1173,7 +1231,9 @@ export async function runProtocolWitnessPoolStatus(opts: ProtocolWitnessPoolStat
     console.log(JSON.stringify({ pool, health }, null, 2));
     return;
   }
-  console.log(`witness pool: enabled=${pool.enabled} · quorum=${pool.quorum.mode} · hubs=${pool.hubs.length}`);
+  console.log(
+    `witness pool: enabled=${pool.enabled} · quorum=${pool.quorum.mode} · hubs=${pool.hubs.length}`
+  );
   for (const h of health) {
     console.log(`  · ${h.hub_id}: ${h.ok ? "ok" : "DOWN"} (${h.url})`);
   }
@@ -1192,9 +1252,8 @@ export async function runProtocolWitnessReconcile(
   opts: ProtocolWitnessReconcileOptions
 ): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const { reconcileWitnessWithPeerAndPersist, reconcileCrossHub } = await import(
-    "../lib/protocol/witness-reconcile.js"
-  );
+  const { reconcileWitnessWithPeerAndPersist, reconcileCrossHub } =
+    await import("../lib/protocol/witness-reconcile.js");
   const { persistAndEscalateAlerts } = await import("../lib/protocol/reconcile-alerts-store.js");
 
   if (opts.crossHub) {
@@ -1211,7 +1270,9 @@ export async function runProtocolWitnessReconcile(
       console.log(JSON.stringify(result, null, 2));
       return;
     }
-    console.log(`reconcile peer ${peer.peer_id}: checked ${peer.checked} · cross-hub ${cross.checked}`);
+    console.log(
+      `reconcile peer ${peer.peer_id}: checked ${peer.checked} · cross-hub ${cross.checked}`
+    );
     for (const alert of [...peer.alerts, ...cross.alerts]) {
       console.log(`  [${alert.severity}] ${alert.code}: ${alert.message}`);
     }
@@ -1488,11 +1549,23 @@ export async function runProtocolWitnessTrustVerify(
   }
   const result = verifyWitnessTrustBundle(bundle);
   if (opts.json) {
-    console.log(JSON.stringify({ ...result, authority_id: bundle.authority.authority_id, certs: bundle.certificates.length }, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          ...result,
+          authority_id: bundle.authority.authority_id,
+          certs: bundle.certificates.length,
+        },
+        null,
+        2
+      )
+    );
     return;
   }
   if (result.ok) {
-    console.log(`✓ trust bundle valid · authority=${bundle.authority.authority_id} · certs=${bundle.certificates.length}`);
+    console.log(
+      `✓ trust bundle valid · authority=${bundle.authority.authority_id} · certs=${bundle.certificates.length}`
+    );
   } else {
     console.error(`✗ trust bundle invalid:`);
     for (const issue of result.issues) console.error(`  · ${issue}`);
@@ -1510,7 +1583,8 @@ export async function runProtocolWitnessPoolInitFromTrust(
   opts: ProtocolWitnessPoolInitFromTrustOptions
 ): Promise<void> {
   applyProtocolTenant(opts.tenant);
-  const { initWitnessPoolFromTrustBundle } = await import("../lib/protocol/contract-witness-pool.js");
+  const { initWitnessPoolFromTrustBundle } =
+    await import("../lib/protocol/contract-witness-pool.js");
   const result = await initWitnessPoolFromTrustBundle(opts.bundleUrl);
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -1535,7 +1609,9 @@ export async function runProtocolWitnessPoolInitFromContract(
     console.log(JSON.stringify(result, null, 2));
     return;
   }
-  console.log(`✓ witness-pool.yaml from ${opts.contract} · sla=${result.sla} · hubs: ${result.hubs.length}`);
+  console.log(
+    `✓ witness-pool.yaml from ${opts.contract} · sla=${result.sla} · hubs: ${result.hubs.length}`
+  );
 }
 
 export interface ProtocolApiServeOptions {
@@ -1566,9 +1642,13 @@ export async function runProtocolApiServe(opts: ProtocolApiServeOptions): Promis
   console.log(`✓ Protocol API ${server.url}`);
   if (config.tls) console.log("  TLS: enabled · trust bundle over HTTPS");
   if (config.mtls_required) {
-    console.log(`  mTLS: required on relay/inbox/outbox · allowed: ${config.mtls_allowed_org_uris.join(", ") || "(any authorized client)"}`);
+    console.log(
+      `  mTLS: required on relay/inbox/outbox · allowed: ${config.mtls_allowed_org_uris.join(", ") || "(any authorized client)"}`
+    );
   }
-  console.log("  GET /protocol/v1/trust/bundle · /inbox · /outbox · /ledger · /metrics · POST /protocol/v1/relay/enqueue");
+  console.log(
+    "  GET /protocol/v1/trust/bundle · /inbox · /outbox · /ledger · /metrics · POST /protocol/v1/relay/enqueue"
+  );
   await new Promise<void>(() => {
     /* keep alive until SIGINT */
   });
@@ -1590,7 +1670,9 @@ export function runProtocolSlaCheck(opts: ProtocolSlaCheckOptions): void {
       console.log(JSON.stringify(evaluation, null, 2));
       return;
     }
-    console.log(`SLA ${tier} · ${evaluation.event_id}: ${evaluation.satisfied ? "OK" : "FAIL"} (${evaluation.state})`);
+    console.log(
+      `SLA ${tier} · ${evaluation.event_id}: ${evaluation.satisfied ? "OK" : "FAIL"} (${evaluation.state})`
+    );
     if (evaluation.missing.length) console.log(`  missing: ${evaluation.missing.join(", ")}`);
     if (!evaluation.satisfied) process.exit(1);
     return;
@@ -1615,7 +1697,9 @@ export interface ProtocolCommunityOperatorsListOptions {
   json?: boolean;
 }
 
-export function runProtocolCommunityOperatorsList(opts: ProtocolCommunityOperatorsListOptions): void {
+export function runProtocolCommunityOperatorsList(
+  opts: ProtocolCommunityOperatorsListOptions
+): void {
   const ops = opts.jurisdiction
     ? listActiveOperators(opts.jurisdiction)
     : loadTrustedOperatorsRegistry().operators;
@@ -1625,7 +1709,9 @@ export function runProtocolCommunityOperatorsList(opts: ProtocolCommunityOperato
   }
   console.log(`trusted operators: ${ops.length}`);
   for (const op of ops) {
-    console.log(`  · ${op.operator_id} (${op.status}) · ${op.org_name} · hubs: ${op.hub_ids.join(", ")}`);
+    console.log(
+      `  · ${op.operator_id} (${op.status}) · ${op.org_name} · hubs: ${op.hub_ids.join(", ")}`
+    );
   }
 }
 
@@ -1633,7 +1719,9 @@ export interface ProtocolCommunityOperatorsValidateOptions {
   json?: boolean;
 }
 
-export function runProtocolCommunityOperatorsValidate(opts: ProtocolCommunityOperatorsValidateOptions): void {
+export function runProtocolCommunityOperatorsValidate(
+  opts: ProtocolCommunityOperatorsValidateOptions
+): void {
   const result = validateTrustedOperatorsRegistry();
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -1666,7 +1754,9 @@ export function runProtocolCommunityCheckSla(opts: ProtocolCommunityCheckSlaOpti
     return;
   }
   for (const o of result.overdue) {
-    console.error(`  ✗ ${o.operator_id}: ${o.hours_since_revoke.toFixed(1)}h > SLA ${o.sla_hours}h`);
+    console.error(
+      `  ✗ ${o.operator_id}: ${o.hours_since_revoke.toFixed(1)}h > SLA ${o.sla_hours}h`
+    );
   }
   process.exit(1);
 }
@@ -1870,7 +1960,9 @@ export function runProtocolTlsRotate(opts: ProtocolTlsRotateOptions): void {
           `4. Party client: update ${clientConfigPath} (cert_path · key_path · ca_path)`,
           "5. Party: restart relay · npm run proposal3:party-relay OR launchctl",
         ]
-      : ["4. Party: write protocol-api-client.yaml from steward/platform/protocol/protocol-api-client.yaml.example"]),
+      : [
+          "4. Party: write protocol-api-client.yaml from steward/platform/protocol/protocol-api-client.yaml.example",
+        ]),
     "6. Verify trust bundle: npm run orgos -- protocol tls verify",
     "7. Verify daemons: npm run proposal3:daemon-smoke",
     "8. Re-pin contracts if bundle origin changed (witness_trust_bundle_url)",
@@ -1931,7 +2023,9 @@ export async function runProtocolTlsVerify(opts: ProtocolTlsVerifyOptions): Prom
   }
 
   const tls = client.tls ?? { ca_path: caPath!, reject_unauthorized: false };
-  const bundleRes = await protocolFetch(bundleUrl, { tls: { ca_path: tls.ca_path, reject_unauthorized: tls.reject_unauthorized ?? false } });
+  const bundleRes = await protocolFetch(bundleUrl, {
+    tls: { ca_path: tls.ca_path, reject_unauthorized: tls.reject_unauthorized ?? false },
+  });
   const report: Record<string, unknown> = {
     bundle_url: bundleUrl,
     bundle_ok: bundleRes.ok,
@@ -1997,7 +2091,8 @@ export async function runProtocolGovGatewayEncode(
   applyProtocolTenant(opts.tenant);
   const { findEnvelopeFileForWitness } = await import("../lib/protocol/witness-client.js");
   const { resolveAdapter } = await import("../lib/wire/gov-gateway/config.js");
-  const { govGatewayProfileIdSchema } = await import("../../schemas/protocol/gov-gateway-adapter.js");
+  const { govGatewayProfileIdSchema } =
+    await import("../../schemas/protocol/gov-gateway-adapter.js");
   const { getTenantId } = await import("../lib/tenant.js");
 
   const profileId = govGatewayProfileIdSchema.parse(opts.profile);
@@ -2016,7 +2111,10 @@ export async function runProtocolGovGatewayEncode(
       JSON.stringify(
         {
           ...native,
-          body: typeof native.body === "string" ? native.body : Buffer.from(native.body).toString("utf-8"),
+          body:
+            typeof native.body === "string"
+              ? native.body
+              : Buffer.from(native.body).toString("utf-8"),
         },
         null,
         2
@@ -2027,7 +2125,9 @@ export async function runProtocolGovGatewayEncode(
   console.log(`profile: ${native.profile_id}`);
   console.log(`mime: ${native.mime}`);
   console.log(`headers: ${JSON.stringify(native.headers)}`);
-  console.log(typeof native.body === "string" ? native.body : Buffer.from(native.body).toString("utf-8"));
+  console.log(
+    typeof native.body === "string" ? native.body : Buffer.from(native.body).toString("utf-8")
+  );
 }
 
 export interface ProtocolGovGatewayDecodeOptions {
@@ -2058,7 +2158,9 @@ export async function runProtocolGovGatewayDecode(
     console.log(JSON.stringify(result.envelope, null, 2));
     return;
   }
-  console.log(`✓ decoded · event_id ${result.envelope.event_id}${result.profile_id ? ` · ${result.profile_id}` : ""}`);
+  console.log(
+    `✓ decoded · event_id ${result.envelope.event_id}${result.profile_id ? ` · ${result.profile_id}` : ""}`
+  );
 }
 
 export interface ProtocolGovGatewayHealthOptions {
@@ -2073,7 +2175,8 @@ export async function runProtocolGovGatewayHealth(
 ): Promise<void> {
   applyProtocolTenant(opts.tenant);
   const { govGatewaySandboxHealth } = await import("../lib/wire/gov-gateway/sandbox.js");
-  const { govGatewayProfileIdSchema } = await import("../../schemas/protocol/gov-gateway-adapter.js");
+  const { govGatewayProfileIdSchema } =
+    await import("../../schemas/protocol/gov-gateway-adapter.js");
   const profileId = govGatewayProfileIdSchema.parse(opts.profile);
   const health = await govGatewaySandboxHealth(profileId, { live: opts.live });
   if (opts.json) {
@@ -2181,7 +2284,9 @@ export interface ProtocolTrustRegistryListOptions {
   json?: boolean;
 }
 
-export async function runProtocolTrustRegistryList(opts: ProtocolTrustRegistryListOptions = {}): Promise<void> {
+export async function runProtocolTrustRegistryList(
+  opts: ProtocolTrustRegistryListOptions = {}
+): Promise<void> {
   const { loadWireTrustRegistry } = await import("../lib/protocol/wire-trust-registry.js");
   const registry = loadWireTrustRegistry();
   if (opts.json) {
@@ -2199,7 +2304,9 @@ export interface ProtocolTrustRegistryResolveOptions {
   json?: boolean;
 }
 
-export async function runProtocolTrustRegistryResolve(opts: ProtocolTrustRegistryResolveOptions): Promise<void> {
+export async function runProtocolTrustRegistryResolve(
+  opts: ProtocolTrustRegistryResolveOptions
+): Promise<void> {
   const { resolveWireTrustNode } = await import("../lib/protocol/wire-trust-registry.js");
   const resolved = resolveWireTrustNode(opts.id);
   if (opts.json) {
@@ -2228,9 +2335,8 @@ export interface ProtocolTrustRegistrySyncKeysOptions {
 export async function runProtocolTrustRegistrySyncKeys(
   opts: ProtocolTrustRegistrySyncKeysOptions = {}
 ): Promise<void> {
-  const { syncWireTrustRegistryPublicKeys } = await import(
-    "../lib/protocol/wire-trust-registry-sync.js"
-  );
+  const { syncWireTrustRegistryPublicKeys } =
+    await import("../lib/protocol/wire-trust-registry-sync.js");
   const { results } = await syncWireTrustRegistryPublicKeys({
     nodeId: opts.nodeId,
     wireUrl: opts.wireUrl,
@@ -2265,9 +2371,8 @@ export async function runProtocolTrustRegistryPinLocal(
 ): Promise<void> {
   const { getTenantId } = await import("../lib/tenant.js");
   const tenant = opts.tenant ?? getTenantId();
-  const { pinLocalWireTrustRegistryKeys } = await import(
-    "../lib/protocol/wire-trust-registry-sync.js"
-  );
+  const { pinLocalWireTrustRegistryKeys } =
+    await import("../lib/protocol/wire-trust-registry-sync.js");
   const { results } = pinLocalWireTrustRegistryKeys({
     tenant,
     nodeId: opts.nodeId,
@@ -2300,7 +2405,8 @@ export interface ProtocolTrustRegistrySubmitOptions {
 export async function runProtocolTrustRegistrySubmit(
   opts: ProtocolTrustRegistrySubmitOptions
 ): Promise<void> {
-  const { submitWireNodeGovernanceRequest } = await import("../lib/protocol/wire-node-governance.js");
+  const { submitWireNodeGovernanceRequest } =
+    await import("../lib/protocol/wire-node-governance.js");
   const request = submitWireNodeGovernanceRequest({
     tenantId: opts.tenant,
     wireEmail: opts.wireEmail,
@@ -2330,7 +2436,8 @@ export async function runProtocolTrustRegistryDecide(
   opts: ProtocolTrustRegistryDecideOptions
 ): Promise<void> {
   const approve = opts.reject ? false : !!opts.approve;
-  const { decideWireNodeGovernanceRequest } = await import("../lib/protocol/wire-node-governance.js");
+  const { decideWireNodeGovernanceRequest } =
+    await import("../lib/protocol/wire-node-governance.js");
   const { request, node } = decideWireNodeGovernanceRequest({
     requestId: opts.requestId,
     approve,
@@ -2371,9 +2478,8 @@ export interface ProtocolDeliverStatusOptions {
 }
 
 export async function runProtocolDeliverStatus(opts: ProtocolDeliverStatusOptions): Promise<void> {
-  const { listDeliveryAttempts, formatDeliveryAttemptsReport } = await import(
-    "../lib/protocol/delivery-ledger.js"
-  );
+  const { listDeliveryAttempts, formatDeliveryAttemptsReport } =
+    await import("../lib/protocol/delivery-ledger.js");
   const attempts = listDeliveryAttempts({
     eventId: opts.eventId,
     peerId: opts.peerId,
@@ -2382,10 +2488,12 @@ export async function runProtocolDeliverStatus(opts: ProtocolDeliverStatusOption
     console.log(JSON.stringify({ attempts }, null, 2));
     return;
   }
-  console.log(formatDeliveryAttemptsReport(attempts, {
-    eventId: opts.eventId,
-    peerId: opts.peerId,
-  }));
+  console.log(
+    formatDeliveryAttemptsReport(attempts, {
+      eventId: opts.eventId,
+      peerId: opts.peerId,
+    })
+  );
 }
 
 export interface ProtocolMailWireScanOptions {
@@ -2396,7 +2504,9 @@ export interface ProtocolMailWireScanOptions {
 }
 
 /** R5 Phase 2 — scan received mail for Wire MIME envelopes (protocol path). */
-export async function runProtocolMailWireScan(opts: ProtocolMailWireScanOptions = {}): Promise<void> {
+export async function runProtocolMailWireScan(
+  opts: ProtocolMailWireScanOptions = {}
+): Promise<void> {
   applyProtocolTenant(opts.tenant);
   const { scanMailReceivedForWire } = await import("../lib/protocol/email-wire-ingest.js");
   const result = await scanMailReceivedForWire({

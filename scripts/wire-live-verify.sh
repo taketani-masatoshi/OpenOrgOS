@@ -20,11 +20,24 @@ fi
 echo "=== Wire live verify ($TENANT · $MODE) ==="
 pkill -9 -f 'node.*vitest' 2>/dev/null || true
 
+# Stabilize signing key · gateway DID · mail-config · PEER-003 (no rotate)
+if [[ -x "$ROOT/scripts/mal-wire-hygiene.sh" ]]; then
+  "$ROOT/scripts/mal-wire-hygiene.sh" "$TENANT" || true
+fi
+
 MAIL_CFG="$ROOT/tenants/$TENANT/records/executive/mail-config.yaml"
 MAIL_EXAMPLE="$ROOT/tenants/$TENANT/records/executive/mail-config.mal-pilot.yaml.example"
-if [[ ! -f "$MAIL_CFG" ]] && [[ -f "$MAIL_EXAMPLE" ]]; then
-  cp "$MAIL_EXAMPLE" "$MAIL_CFG"
-  echo "✓ Restored $MAIL_CFG from mal-pilot example"
+MAIL_EXAMPLE_DEPLOY="$ROOT/deploy/mal-pilot/mail-config.mal-pilot.yaml.example"
+if [[ ! -f "$MAIL_CFG" ]]; then
+  if [[ -f "$MAIL_EXAMPLE" ]]; then
+    mkdir -p "$(dirname "$MAIL_CFG")"
+    cp "$MAIL_EXAMPLE" "$MAIL_CFG"
+    echo "✓ Restored $MAIL_CFG from mal-pilot example"
+  elif [[ -f "$MAIL_EXAMPLE_DEPLOY" ]]; then
+    mkdir -p "$(dirname "$MAIL_CFG")"
+    cp "$MAIL_EXAMPLE_DEPLOY" "$MAIL_CFG"
+    echo "✓ Restored $MAIL_CFG from deploy/mal-pilot example"
+  fi
 fi
 
 # Load L2 mail credentials when present (names only in logs)

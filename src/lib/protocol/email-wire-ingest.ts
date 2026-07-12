@@ -58,11 +58,14 @@ function parseWirePartHeader(value: string): { index: number; total: number } | 
   return { index: parseInt(m[1]!, 10), total: parseInt(m[2]!, 10) };
 }
 
-function storeWirePart(eventId: string, index: number, total: number, payload: string): string | null {
+function storeWirePart(
+  eventId: string,
+  index: number,
+  total: number,
+  payload: string
+): string | null {
   const buffer = loadWirePartBuffer();
-  buffer.parts = buffer.parts.filter(
-    (p) => !(p.event_id === eventId && p.part_index === index)
-  );
+  buffer.parts = buffer.parts.filter((p) => !(p.event_id === eventId && p.part_index === index));
   buffer.parts.push({
     event_id: eventId,
     part_index: index,
@@ -121,21 +124,16 @@ export async function parseWireEml(emlPath: string): Promise<ParsedWireEmail | n
   const isWire =
     transport === "email_wire" ||
     parsed.attachments.some(
-      (a) =>
-        a.contentType?.includes(WIRE_MIME_TYPE) ||
-        a.filename === "wire-message.json"
+      (a) => a.contentType?.includes(WIRE_MIME_TYPE) || a.filename === "wire-message.json"
     ) ||
     raw.includes(WIRE_MIME_TYPE);
 
   if (!isWire) return null;
 
   const attachment = parsed.attachments.find(
-    (a) =>
-      a.contentType?.includes(WIRE_MIME_TYPE) ||
-      a.filename === "wire-message.json"
+    (a) => a.contentType?.includes(WIRE_MIME_TYPE) || a.filename === "wire-message.json"
   );
-  let payload =
-    attachment?.content?.toString("utf-8") ?? extractWirePayloadFromRaw(raw) ?? "";
+  let payload = attachment?.content?.toString("utf-8") ?? extractWirePayloadFromRaw(raw) ?? "";
   if (payload) {
     payload = unfoldMimeBody(payload);
   }
@@ -219,6 +217,7 @@ export function ingestWireFromEmail(
 export interface WireScanResult {
   scanned: number;
   ingested: number;
+  ingested_event_ids: string[];
   skipped: number;
   errors: Array<{ file: string; reason: string }>;
 }
@@ -229,15 +228,18 @@ export async function scanMailReceivedForWire(opts?: {
 }): Promise<WireScanResult> {
   const dir = getMailReceivedDir();
   if (!existsSync(dir)) {
-    return { scanned: 0, ingested: 0, skipped: 0, errors: [] };
+    return { scanned: 0, ingested: 0, ingested_event_ids: [], skipped: 0, errors: [] };
   }
 
-  const cutoff =
-    opts?.sinceDays != null
-      ? Date.now() - opts.sinceDays * 86_400_000
-      : undefined;
+  const cutoff = opts?.sinceDays != null ? Date.now() - opts.sinceDays * 86_400_000 : undefined;
 
-  const result: WireScanResult = { scanned: 0, ingested: 0, skipped: 0, errors: [] };
+  const result: WireScanResult = {
+    scanned: 0,
+    ingested: 0,
+    ingested_event_ids: [],
+    skipped: 0,
+    errors: [],
+  };
 
   for (const file of readdirSync(dir).filter((n) => n.endsWith(".eml"))) {
     const emlPath = join(dir, file);
@@ -255,12 +257,16 @@ export async function scanMailReceivedForWire(opts?: {
 
     if (opts?.dryRun) {
       result.ingested++;
+      const eid = parsed.eventId ?? parsed.wire?.eventId;
+      if (eid) result.ingested_event_ids.push(eid);
       continue;
     }
 
     const ingest = ingestWireFromEmail(parsed);
     if (ingest.ok) {
       result.ingested++;
+      const eid = parsed.eventId ?? parsed.wire?.eventId;
+      if (eid) result.ingested_event_ids.push(eid);
     } else if (ingest.idempotent) {
       result.skipped++;
     } else if (ingest.reason?.includes("awaiting remaining parts")) {

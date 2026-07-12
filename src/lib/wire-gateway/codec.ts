@@ -1,10 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { EventEnvelope, OrgRef } from "../../../schemas/protocol/org-event.js";
 import { eventEnvelopeSchema } from "../../../schemas/protocol/org-event.js";
-import {
-  wireMessageSchema,
-  type WireMessage,
-} from "../../../schemas/protocol/wire-message.js";
+import { wireMessageSchema, type WireMessage } from "../../../schemas/protocol/wire-message.js";
 import { isOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
 import { envelopeDigest } from "../protocol/canonical.js";
 import { loadPeersRegistry } from "../protocol/peers.js";
@@ -14,6 +11,21 @@ function peerOrgRefFromWireId(nodeId: string): OrgRef | undefined {
   const peer = loadPeersRegistry().peers.find((p) => p.peer_id === nodeId);
   if (!peer) return undefined;
   return { org_id: peer.peer_id, org_uri: peer.org_uri };
+}
+
+/** Encode PEER + steward URI so hash verification does not depend on peers.yaml. */
+function encodePeerOrgRef(ref: OrgRef): string | undefined {
+  if (!ref.org_id.startsWith("PEER-")) return undefined;
+  if (ref.org_uri?.startsWith("steward://tenant/")) {
+    return `${ref.org_id};${ref.org_uri}`;
+  }
+  return ref.org_id;
+}
+
+function decodePeerOrgRef(nodeId: string): OrgRef | undefined {
+  const m = nodeId.match(/^(PEER-\d+);(steward:\/\/tenant\/[^;]+)$/);
+  if (!m) return undefined;
+  return { org_id: m[1]!, org_uri: m[2]! };
 }
 
 function resolveOrgRef(nodeId: string): OrgRef {
@@ -27,6 +39,8 @@ function resolveOrgRef(nodeId: string): OrgRef {
   if (isOpenOrgDid(nodeId)) {
     return { org_id: nodeId, org_uri: nodeId };
   }
+  const decodedPeer = decodePeerOrgRef(nodeId);
+  if (decodedPeer) return decodedPeer;
   const peerRef = peerOrgRefFromWireId(nodeId);
   if (peerRef) return peerRef;
   return { org_id: nodeId, org_uri: `steward://tenant/${nodeId}` };
@@ -37,6 +51,8 @@ export function generateWireNonce(byteLength = 16): string {
 }
 
 function orgRefToWireString(ref: OrgRef): string {
+  const encodedPeer = encodePeerOrgRef(ref);
+  if (encodedPeer) return encodedPeer;
   const tenantSlug = ref.org_uri?.match(/^steward:\/\/tenant\/([^/]+)$/)?.[1];
   if (ref.org_id && tenantSlug && ref.org_id !== tenantSlug) {
     return ref.org_id;

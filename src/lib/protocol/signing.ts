@@ -4,7 +4,10 @@ import { dirname } from "node:path";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import { envelopeDigest } from "./canonical.js";
 import { getProtocolSigningKeyPath, getSigningKeyMetaPath } from "./paths.js";
-import { signingKeyMetaSchema, type SigningKeyMeta } from "../../../schemas/protocol/signing-key-meta.js";
+import {
+  signingKeyMetaSchema,
+  type SigningKeyMeta,
+} from "../../../schemas/protocol/signing-key-meta.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 
 export function generateProtocolKeyPair(): { publicKey: string; privateKeyPem: string } {
@@ -26,8 +29,9 @@ export function ensureProtocolSigningKey(): string {
   if (existing) return existing;
   const path = getProtocolSigningKeyPath();
   mkdirSync(dirname(path), { recursive: true });
-  const { privateKeyPem } = generateProtocolKeyPair();
+  const { privateKeyPem, publicKey } = generateProtocolKeyPair();
   writeFileSync(path, privateKeyPem, { mode: 0o600 });
+  saveSigningKeyMeta(publicKey);
   return privateKeyPem;
 }
 

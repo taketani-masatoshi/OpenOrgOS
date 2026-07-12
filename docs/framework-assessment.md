@@ -32,15 +32,16 @@
 
 | 条項 | 参照実装状態 | 確認 |
 |------|------------|------|
-| §1.1 SSOT | △ company-events は chain 監査強化 · yaml/md は当面書込ビュー | `orgos events validate` |
+| §1.1 SSOT | ○ company-events: chain.jsonl 正本 · yaml/md は materialize 派生（MD 本文は非上書き） | `orgos events chain verify` · `materialize` · `constitution:check` |
 | §1.2 Catalog/Roster | ○ module `id===agent` · legacy agents-enabled は validate error · binds_modules 検証 | `validateModules` · `validateAgentCatalog` |
-| §1.3–1.5 Event First | ○ queue status append · delivery jsonl · wire/witness lifecycle | `08-event-sourcing.md` · `tests/*-lifecycle*` |
-| §3 Layer | △ Repository パイロット（`DeliveryAttemptRepository`）· Application 層は未 | 新規 PR は Domain 分離優先 |
+| §1.3–1.5 Event First | ○ queue · delivery · pending · company-events · ADR 0005/0007 | `08-event-sourcing.md` · `npm run constitution:check` |
+| §3 Layer | ○− Repository: delivery-ledger + company-events-chain（Application 全面は別 Epic） | `constitution:check` |
 | §7 CLI path | ○ | `src/commands/` パターン |
 | §8 Testing | ○ Vitest 3 軸 | [testing-modules.md](../steward/rules/testing-modules.md) |
-| §11 Lint | △ ESLint warn 段階 · Prettier script あり（一括整形は段階） | `npm run lint` · `npm run typecheck` |
+| §11 Lint | ○ ESLint error（`no-explicit-any` のみ warn）· `format:check` CI | `npm run lint` · `npm run format:check` · `npm run typecheck` |
 | Policy ミラー | ○ data-classification 含む | `npm run generated:check` · validate integrity |
-| Determinism | △ `runtime-context` · protocol/queue/delivery/audit パイロット | `tests/runtime-context.test.ts` |
+| Determinism | ○− `runtime-context` + ADR 0006 allowlist（protocol/events/audit 優先適用済） | `tests/runtime-context.test.ts` · ADR 0006 |
+| 機械スコア | ○ `npm run constitution:check`（全軸 ≥ A−） | `scripts/constitution-score.ts` |
 
 ### 完成度レベル（目安）
 
@@ -285,7 +286,7 @@ TJS-11 法域: **11/11 完了**（2026-06-25）。
 ## 13. OrgOS 完成度（C1–C3）
 
 **用語:** [orgos-vocabulary.md](org-os/orgos-vocabulary.md) · **採点:** [orgos-scoring-methodology.md](org-os/orgos-scoring-methodology.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C · 運用: [runbook-orgos.md](runbook-orgos.md)  
-**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-07-12 · **1200 tests**、静的正本。動的実行件数は CI 結果を参照）
+**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-07-12 · **1228 tests**、静的正本。動的実行件数は CI 結果を参照）
 
 ### 二重採点（矛盾解消）
 
