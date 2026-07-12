@@ -35,6 +35,7 @@ business_description: |
 public_disclosure:
   website: "https://malkk.com/property/"
   about_url: "http://malkk.com/property/about-us"
+  representative_email: "ai@malkk.com"
   contact_email: "info@malkk.com"
   capital_yen: 8500000
   capital_as_of: "2025-09"

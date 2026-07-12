@@ -2,4 +2,4 @@
 
 | Event ID | 日付 | kind | タイトル | 状態 |
 |----------|------|------|----------|------|
-| [EVT-20990805-misc-cli-close-smoke](./EVT-20990805-misc-cli-close-smoke.md) | 2099-08-05 | misc | CLI close smoke | closed |
+| [EVT-20990801-contract-validate-test](./EVT-20990801-contract-validate-test.md) | 2099-08-01 | contract | Validate test | open |

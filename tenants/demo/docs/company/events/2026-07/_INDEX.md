@@ -2,4 +2,4 @@
 
 | Event ID | 日付 | kind | タイトル | 状態 |
 |----------|------|------|----------|------|
-| [EVT-20260708-misc-attest-test](./EVT-20260708-misc-attest-test.md) | 2026-07-08 | misc | Attest test event | open |
+| [EVT-20260712-meeting-schedule-sch-2026-001-created-r0](./EVT-20260712-meeting-schedule-sch-2026-001-created-r0.md) | 2026-07-12 | meeting | 日程調整起票 — 役員会 | open |

@@ -13,4 +13,4 @@ CTR-011,Booking.com 宿泊パートナー契約（亀沢旅館）,Booking.com B.
 CTR-012,オフィス賃貸借契約（本社区画 · サウスウッド）,株式会社サウスウッド,company,rental,executed,2026-04-01,2027-03-31,2026-06-25,,monthly,85000,毎月末締め・翌月25日振込。敷金2ヶ月・礼金1ヶ月相当は別途。,true,段燕燕,low,docs/contracts/CTR-012/01-draft.md,docs/contracts/CTR-012/02-executed.md,Inter-org protocol デモ契約。MAL＝貸主、サウスウッド＝借主。 旅館清掃（PROP-002）は別途業者選定（CTR-012 とは無関係）。 [protocol demo] executed for inter-org d
 CTR-013,火災保険（番町ハイム312）,東京海上ダミー火災保険株式会社,company,insurance,draft,2026-06-01,,,PROP-001,fixed,0,年払保険料（見積後記入）,true,段燕燕,high,docs/contracts/CTR-013/01-draft.md,docs/contracts/CTR-013/02-enrollment-packet.md,02-enrollment-packet.md のチェックリストを完了すること。 
 CTR-014,火災保険（亀沢旅館）,東京海上ダミー火災保険株式会社,company,insurance,draft,2026-06-01,,,PROP-002,fixed,0,年払保険料（見積後記入）,true,段燕燕,high,docs/contracts/CTR-014/01-draft.md,docs/contracts/CTR-014/02-enrollment-packet.md,licenses/insurance/ に証券PDF保管。 
-CTR-099,Test,Gov Partner,,rental,executed,2026-01-01,,2026-01-15,,,,,false,,,,,
+CTR-099,Test,Gov Partner,,rental,executed,2026-01-01,,2026-01-15,,,,,false,,,,docs/contracts/CTR-099-executed.md,

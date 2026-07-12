@@ -33,6 +33,24 @@
 - docs: `docs/operations/`
 - 要約: `docs/reports/agent-summaries/operations/`
 
+### `jp_corporate_registration` (`jp_corporate_registration`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_corporate_registration/agent.md`
+- data: `data/corporate-registration/`
+
+### `jp_medical_device` (`jp_medical_device`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_medical_device/agent.md`
+- data: `data/medical-device/`
+- docs: `docs/medical-device/`
+- 要約: `docs/reports/agent-summaries/medical-device-regulatory/`
+
+### `jp_bank_corporate` (`jp_bank_corporate`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/agent.md`
+- data: `data/finance/`
+- docs: `docs/finance/treasury/`
+
 ## 無効業務モジュール（読取禁止）
 
 - `professional_services` / `professional_services` — `steward/modules/professional_services/` **読まない**
@@ -48,18 +66,17 @@
 - `construction` / `construction` — `steward/modules/construction/` **読まない**
 - `education` / `education` — `steward/modules/education/` **読まない**
 - `property_management` / `property_management` — `steward/modules/property_management/` **読まない**
-- `jp_medical_device` / `jp_medical_device` — `steward/modules/jp_medical_device/` **読まない**
 - `membership` / `membership` — `steward/modules/membership/` **読まない**
 
 ## 有効 ISO 標準
 
+- **ISO-13485** — テンプレ: `steward/standards/iso/ISO-13485/` · 記録: `docs/compliance/iso/ISO-13485/`
 - **ISO-21401** — テンプレ: `steward/standards/iso/ISO-21401/` · 記録: `docs/compliance/iso/ISO-21401/`
 - **ISO-27001** — テンプレ: `steward/standards/iso/ISO-27001/` · 記録: `docs/compliance/iso/ISO-27001/`
 - **ISO-9001** — テンプレ: `steward/standards/iso/ISO-9001/` · 記録: `docs/compliance/iso/ISO-9001/`
 
 ## 無効 ISO 標準（読取禁止）
 
-- `ISO-13485` — `steward/standards/iso/ISO-13485/` **読まない**
 - `ISO-14001` — `steward/standards/iso/ISO-14001/` **読まない**
 - `ISO-20000` — `steward/standards/iso/ISO-20000/` **読まない**
 - `ISO-22000` — `steward/standards/iso/ISO-22000/` **読まない**
@@ -84,9 +101,14 @@
 - **REG-014** 環境・エネルギー管理規程 — 施行: `docs/company/regulations/kankyo-energy-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-014-kankyo-energy/template.md`
 - **REG-016** 内部監査規程 — 施行: `docs/company/regulations/naibu-kansa-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-016-naibu-kansa/template.md`
 - **REG-012** 宿泊運営・サステナビリティ規程 — 施行: `docs/company/regulations/shukuhaku-unyo-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/hospitality/REG-012-shukuhaku-unyo/template.md`
+- **REG-025** 医療機器QMS規程 — 施行: `docs/company/regulations/iryo-kiki-qms-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_medical_device/REG-025-iryo-kiki-qms/template.md`
+- **REG-026** 医療機器GVP規程 — 施行: `docs/company/regulations/iryo-kiki-gvp-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_medical_device/REG-026-iryo-kiki-gvp/template.md`
 
 ## 無効社内規程（読取禁止）
 
+- `REG-027` 経理規程 — `docs/company/regulations/keiri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-028` クレジットカード規程 — `docs/company/regulations/credit-card-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-029` 役員退職金規程 — `docs/company/regulations/yakuin-taishoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-013` 事業継続・危機管理規程 — `docs/company/regulations/jigyo-keizoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-015` 安全衛生管理規程 — `docs/company/regulations/anzen-eisei-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-017` 食品安全衛生管理規程 — `docs/company/regulations/shokuhin-anzen-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
@@ -97,14 +119,12 @@
 - `REG-022` EC取引規程 — `docs/company/regulations/ec-torihiki-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-023` 配送・倉庫管理規程 — `docs/company/regulations/haiso-soko-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-024` 会員管理規程 — `docs/company/regulations/kaiin-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
-- `REG-025` 医療機器QMS規程 — `docs/company/regulations/iryo-kiki-qms-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
-- `REG-026` 医療機器GVP規程 — `docs/company/regulations/iryo-kiki-gvp-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 
 ## 未バインドカタログ（読取禁止）
 
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_carbon_neutral_2050` — `modules.yaml` 未登録 · **読まない**
-- `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
+- `jp_permit_registry` — `modules.yaml` 未登録 · **読まない**
 - `jp_privacy_policy` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
 - `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**
@@ -117,9 +137,10 @@
 
 **正本:** `data/compliance/controls.yaml` · **フレームワーク:** `steward/standards/control-framework/` · **CLI:** `orgos controls for-agent <id>`
 
-- **compliance** — `CTL-21401-5.2`, `CTL-27001-4.1`, `CTL-27001-5.2`, `CTL-27001-A.5.1`, `CTL-27001-A.5.10`, `CTL-CORE-privacy`, `CTL-27001-9.2`, `CTL-27001-9.3`, `CTL-9001-4.3`, `CTL-9001-5.2`, `CTL-9001-6.1`, `CTL-CORE-doc-control` · 他 2 件は `orgos controls for-agent compliance`
-- **internal_audit** — `CTL-21401-9.2`, `CTL-27001-9.2`, `CTL-9001-9.2`, `CTL-9001-10.2`
-- **quality_assurance** — `CTL-21401-8.1`, `CTL-9001-4.3`, `CTL-9001-4.4`, `CTL-9001-5.2`, `CTL-9001-6.1`, `CTL-9001-6.2`, `CTL-9001-7.2`, `CTL-CORE-doc-control`, `CTL-9001-8.7`, `CTL-9001-9.1`, `CTL-9001-10.2`
+- **compliance** — `CTL-13485-4.1`, `CTL-13485-4.2.4`, `CTL-13485-8.2.3`, `CTL-21401-5.2`, `CTL-27001-4.1`, `CTL-27001-5.2`, `CTL-27001-A.5.1`, `CTL-27001-A.5.10`, `CTL-CORE-privacy`, `CTL-27001-9.2`, `CTL-27001-9.3`, `CTL-9001-4.3` · 他 5 件は `orgos controls for-agent compliance`
+- **internal_audit** — `CTL-13485-8.2.4`, `CTL-21401-9.2`, `CTL-27001-9.2`, `CTL-9001-9.2`, `CTL-9001-10.2`
+- **quality_assurance** — `CTL-13485-4.1`, `CTL-13485-5.3`, `CTL-13485-7.1`, `CTL-13485-7.5`, `CTL-13485-8.5.2`, `CTL-13485-8.5.3`, `CTL-21401-8.1`, `CTL-9001-4.3`, `CTL-9001-4.4`, `CTL-9001-5.2`, `CTL-9001-6.1`, `CTL-9001-6.2` · 他 5 件は `orgos controls for-agent quality_assurance`
+- **medical_device_regulatory** — `CTL-13485-4.1`, `CTL-13485-4.2.2`, `CTL-13485-4.2.4`, `CTL-13485-5.3`, `CTL-13485-6.2`, `CTL-13485-7.1`, `CTL-13485-7.3`, `CTL-13485-7.4`, `CTL-13485-7.5`, `CTL-13485-7.5.9`, `CTL-13485-8.2.2`, `CTL-13485-8.2.3` · 他 3 件は `orgos controls for-agent medical_device_regulatory`
 - **security** — `CTL-27001-4.1`, `CTL-27001-5.2`, `CTL-27001-6.1`, `CTL-27001-6.2`, `CTL-27001-A.5.1`, `CTL-27001-A.5.10`, `CTL-27001-A.8.1`, `CTL-CORE-privacy`, `CTL-27001-9.2`, `CTL-27001-9.3`
 - **privacy_officer** — `CTL-CORE-privacy`
 - **esg_sustainability** — `CTL-21401-4.1`, `CTL-21401-5.2`, `CTL-21401-6.2`, `CTL-21401-9.1`, `CTL-21401-9.2`

@@ -1,4 +1,6 @@
-name: "ACME Corp"
-fiscal_year_end_month: 1
-business_description: |
-  スケルトン — 事業概要を記載
+name: Acme Co
+corporate_number: "4010001199703"
+public_disclosure:
+  representative_email: ceo@acme.example
+  internal_domains:
+    - acme.example
