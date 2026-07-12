@@ -85,7 +85,11 @@ export function readYamlFileRaw(path: string): unknown {
  * Load a framework registry YAML, falling back to `fallback()` when the file is
  * absent. Shared by routing / webhook / cloud-agent / skill registries.
  */
-export function loadRegistryFile<S extends ZodTypeAny>(path: string, schema: S, fallback: () => z.output<S>): z.output<S> {
+export function loadRegistryFile<S extends ZodTypeAny>(
+  path: string,
+  schema: S,
+  fallback: () => z.output<S>
+): z.output<S> {
   if (!existsSync(path)) return fallback();
   return readYamlFile(path, schema);
 }
@@ -191,10 +195,6 @@ export function writeTrackedFile(path: string, content: string): string {
 }
 
 /** CLI が生成する Markdown レポート（人向け → docs/reports/ · L1 サニタイズ） */
-export function writeMarkdownReport(
-  subdir: string,
-  filename: string,
-  content: string
-): string {
+export function writeMarkdownReport(subdir: string, filename: string, content: string): string {
   return writeTrackedFile(join(ensureDocsReportsDir(subdir), filename), content);
 }

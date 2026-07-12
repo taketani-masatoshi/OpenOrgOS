@@ -6,13 +6,13 @@ export class HttpGovGatewayTransport implements GovGatewayTransport {
     headers: Record<string, string>,
     body: string | Uint8Array
   ): Promise<GovGatewayTransportResult> {
-    const bodyInit: BodyInit =
-      typeof body === "string" ? body : new Uint8Array(body).buffer;
+    const bodyInit: BodyInit = typeof body === "string" ? body : new Uint8Array(body).buffer;
     try {
       const parsed = new URL(url);
       let res: Response;
       if (parsed.protocol === "https:") {
-        const { loadProtocolApiClientConfig } = await import("../../protocol/protocol-api-config.js");
+        const { loadProtocolApiClientConfig } =
+          await import("../../protocol/protocol-api-config.js");
         const { protocolFetch } = await import("../../protocol/protocol-tls.js");
         const client = loadProtocolApiClientConfig();
         res = await protocolFetch(url, {
@@ -24,8 +24,10 @@ export class HttpGovGatewayTransport implements GovGatewayTransport {
       } else {
         res = await fetch(url, { method: "POST", headers, body: bodyInit });
       }
-      const correlationId = res.headers.get("x-correlation-id") ?? res.headers.get("X-Road-Request-Id") ?? undefined;
-      const nativeMessageId = res.headers.get("x-request-id") ?? res.headers.get("X-Request-Id") ?? undefined;
+      const correlationId =
+        res.headers.get("x-correlation-id") ?? res.headers.get("X-Road-Request-Id") ?? undefined;
+      const nativeMessageId =
+        res.headers.get("x-request-id") ?? res.headers.get("X-Request-Id") ?? undefined;
       if (!res.ok) {
         return {
           ok: false,

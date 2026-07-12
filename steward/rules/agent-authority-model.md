@@ -52,6 +52,40 @@ OrgOS では **組織上の上司** と **mission 作業報告の中継** を混
 
 legacy `agents-enabled.yaml` は **自動読取しない**。移行は `orgos agent roster migrate` のみ。
 
+未設定 / 破損の `agents.yaml` は **全 Agent 有効にしない** — コア既定のみ（`DEFAULT_CORE_OPERATIONAL_AGENTS`）。
+
+---
+
+## 4.1 Inactive Agent をいつ enable するか
+
+Catalog は広い（〜50）。テナント roster は **選択的（典型 6–10）** が正。route match が `agent … inactive` で落ちても、まず **本当にその Agent が必要か** を判断する。
+
+| 状況 | 推奨 |
+|------|------|
+| コア業務（finance · contract · compliance · operations · secretary · executive） | roster `operational` に含める（`orgos agent roster init` 既定） |
+| 税務申告・e-Tax 準備 | `tax` を enable — Skill `tax_filing_prep` の executing agent |
+| Work Order 委譲・進捗の専任 | `coo` を enable（無い場合は escalate / Steward 経由で足りることが多い） |
+| Wire 本番ゲート · classification 監査 | `security` を enable |
+| 法務・登記ドラフト | `legal`（JP 登記モジュール連動時） |
+| 一時タスクだけ広い Agent が必要 | `orgos agent roster task --agents a,b` + `route … --profile task`（終わったら `task --clear`） |
+| 実装相談のみ（`platform_guide`） | `developer` profile — [agent-advisor-operations.md](agent-advisor-operations.md) |
+
+```bash
+# 確認
+orgos route match --text "税務申告"          # inactive なら blockedReasons に enable 案内
+orgos agent roster show
+
+# 恒常運用に追加
+orgos agent roster enable --agent tax --profile operational
+
+# 一時セッション
+orgos agent roster task --agents tax,coo
+orgos route match --text "税務申告" --profile task
+orgos agent roster task --clear
+```
+
+**しないこと:** Catalog 全件を `operational` に並べる · inactive を無視して LLM に全 Agent を載せる。
+
 ---
 
 ## 5. 関連
@@ -59,3 +93,4 @@ legacy `agents-enabled.yaml` は **自動読取しない**。移行は `orgos ag
 - [agent-advisor-operations.md](agent-advisor-operations.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
 - `steward/platform/protocol/agent-delegation-scopes.yaml` — ドメイン別委譲スコープ
+- route access 欠落時: `orgos tenant align-classification`（`data/classification-registry.yaml` と route `resource_paths`）

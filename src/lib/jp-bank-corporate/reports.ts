@@ -17,16 +17,10 @@ export interface AgingRow {
 }
 
 function wholeDays(from: string, to: string): number {
-  return Math.floor(
-    (Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) /
-      86_400_000
-  );
+  return Math.floor((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000);
 }
 
-export function buildArApAging(
-  state: ReconciliationState,
-  asOf: string
-): AgingRow[] {
+export function buildArApAging(state: ReconciliationState, asOf: string): AgingRow[] {
   return [...state.ar_ap.values()]
     .filter((item) => item.remaining_amount > 0 && item.status !== "cancelled")
     .map((item) => {
@@ -49,11 +43,7 @@ export function buildArApAging(
         bucket,
       };
     })
-    .sort(
-      (a, b) =>
-        a.due_date.localeCompare(b.due_date) ||
-        a.ar_ap_id.localeCompare(b.ar_ap_id)
-    );
+    .sort((a, b) => a.due_date.localeCompare(b.due_date) || a.ar_ap_id.localeCompare(b.ar_ap_id));
 }
 
 export interface TieOutResult {
@@ -85,10 +75,7 @@ export function tieOutBankStatements(
   const balanceByAccount = new Map(
     cashBalance.accounts
       .filter((account) => account.amount != null)
-      .map((account) => [
-        account.bank_account_id ?? account.id ?? "",
-        account.amount ?? 0,
-      ])
+      .map((account) => [account.bank_account_id ?? account.id ?? "", account.amount ?? 0])
   );
   const accounts: TieOutResult["accounts"] = [];
   const errors: string[] = [];
@@ -97,8 +84,7 @@ export function tieOutBankStatements(
     const movement = statements.entries
       .filter((entry) => ids.has(entry.id))
       .reduce(
-        (sum, entry) =>
-          sum + (entry.direction === "inflow" ? entry.amount : -entry.amount),
+        (sum, entry) => sum + (entry.direction === "inflow" ? entry.amount : -entry.amount),
         0
       );
     const expected = (batch.opening_balance ?? 0) + movement;

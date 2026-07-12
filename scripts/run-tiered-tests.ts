@@ -140,7 +140,10 @@ function verifyRegistryPlan(): number {
     for (const issue of issues) console.error(`  - ${issue}`);
   }
 
-  const contractFiles = [...listTestsByAxis("contract", registry), ...listTestsByAxis("meta", registry)];
+  const contractFiles = [
+    ...listTestsByAxis("contract", registry),
+    ...listTestsByAxis("meta", registry),
+  ];
   const platformFiles = listTestsByPlatformAxis(registry);
   const catalogFiles = listTestsByAxis("catalog", registry);
   const integrationFiles = listIntegrationTests(registry);
@@ -200,7 +203,10 @@ function main(): number {
     if (verifyCode !== 0) return verifyCode;
 
     clearTestSuiteStatus();
-    const contractFiles = [...listTestsByAxis("contract", registry), ...listTestsByAxis("meta", registry)];
+    const contractFiles = [
+      ...listTestsByAxis("contract", registry),
+      ...listTestsByAxis("meta", registry),
+    ];
     const catalogFiles = listTestsByAxis("catalog", registry);
     const integrationFiles = listIntegrationTests(registry);
     const platformFiles = listTestsByPlatformAxis(registry);
@@ -217,7 +223,11 @@ function main(): number {
     for (const [label, files] of steps) {
       if (label === "platform") {
         for (const domain of listPlatformDomainsInLayerOrder(registry)) {
-          const code = runTier(`platform:${domain}`, listTestsByPlatformDomain(domain, registry), bail);
+          const code = runTier(
+            `platform:${domain}`,
+            listTestsByPlatformDomain(domain, registry),
+            bail
+          );
           if (code !== 0) {
             writeTestSuiteFailed("npm run test:tiered");
             return code;

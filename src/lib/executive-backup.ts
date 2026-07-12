@@ -13,9 +13,7 @@ export function executiveBackupStampAgeDays(): number | null {
 }
 
 export function hasExecutiveLocalData(): boolean {
-  return ["calendar.yaml", "tasks.yaml"].some((name) =>
-    existsSync(join(getExecutiveDir(), name))
-  );
+  return ["calendar.yaml", "tasks.yaml"].some((name) => existsSync(join(getExecutiveDir(), name)));
 }
 
 export function checkExecutiveBackupForWeekly(): { ok: boolean; message: string } {

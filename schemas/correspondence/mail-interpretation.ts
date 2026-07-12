@@ -12,12 +12,7 @@ export const mailInterpretIntentSchema = z.enum([
 
 export const partyRoleSchema = z.enum(["sender", "recipient", "none", "unclear"]);
 
-export const scheduleReplyResponseSchema = z.enum([
-  "accept",
-  "decline",
-  "counter",
-  "unknown",
-]);
+export const scheduleReplyResponseSchema = z.enum(["accept", "decline", "counter", "unknown"]);
 
 export const scheduleCounterSlotSchema = z.object({
   start: z.string(),

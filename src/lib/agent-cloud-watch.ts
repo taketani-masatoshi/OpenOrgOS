@@ -19,7 +19,7 @@ export async function runCloudWatch(options: CloudWatchOptions = {}): Promise<nu
   const interval = options.intervalMs ?? cfg.watch?.interval_ms ?? 30_000;
   let cycles = 0;
 
-  do {
+  for (;;) {
     cycles++;
     const drained = runQueueDrainInternal({});
     if (drained > 0) {
@@ -46,7 +46,7 @@ export async function runCloudWatch(options: CloudWatchOptions = {}): Promise<nu
 
     if (options.once) break;
     await sleep(interval);
-  } while (true);
+  }
 
   return cycles;
 }

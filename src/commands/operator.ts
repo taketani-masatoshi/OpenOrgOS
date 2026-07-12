@@ -70,7 +70,10 @@ export function runOperatorRuntimeShow(): void {
 export async function runOperatorRuntimeTest(): Promise<void> {
   const { runShellAsk } = await import("../lib/operator-runtime/shell.js");
   const { operatorPolicyExcerpt } = await import("../lib/operator-policy.js");
-  const result = await runShellAsk("Reply with exactly: OrgOS shell adapter ok", operatorPolicyExcerpt(20));
+  const result = await runShellAsk(
+    "Reply with exactly: OrgOS shell adapter ok",
+    operatorPolicyExcerpt(20)
+  );
   console.log(result.ok ? "✓ Shell adapter test passed" : "✗ Shell adapter test failed");
   console.log(`  ${result.detail}`);
   if (!result.ok) process.exit(1);

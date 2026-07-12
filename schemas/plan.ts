@@ -6,7 +6,10 @@ export const planLineSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   property_id: z.string().optional(),
-  contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
+  contract_id: z
+    .string()
+    .regex(/^CTR-\d{3,}$/)
+    .optional(),
   amount: z.number(),
   notes: z.string().optional(),
 });

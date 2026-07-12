@@ -11,7 +11,6 @@ import {
   matchRoutes,
   pickBestRoute,
   routingQueueDir,
-  writeHandoffFiles,
   type MatchedRoute,
 } from "./routing.js";
 import {
@@ -27,7 +26,11 @@ import { currentDate, writeYamlFile } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { createMissionFromWorkOrder, relayWorkOrderComplete } from "./agent-reporting.js";
 import { pushQueueEvent } from "./queue-db.js";
-import { assertActiveTenant, assertIntraOrgAgentTarget, assertIntraOrgText } from "./org-boundary.js";
+import {
+  assertActiveTenant,
+  assertIntraOrgAgentTarget,
+  assertIntraOrgText,
+} from "./org-boundary.js";
 import { scopesForAgent } from "./org/delegation-scopes.js";
 
 const PROMPTS_SUBDIR = "prompts";
@@ -58,7 +61,10 @@ export function nextWorkOrderIds(count: number): string[] {
       .filter((n) => !Number.isNaN(n));
     max = existing.length ? Math.max(...existing) : 0;
   }
-  return Array.from({ length: count }, (_, i) => `${prefix}${String(max + i + 1).padStart(3, "0")}`);
+  return Array.from(
+    { length: count },
+    (_, i) => `${prefix}${String(max + i + 1).padStart(3, "0")}`
+  );
 }
 
 export function parseEscalationText(text: string): EscalationInput {
@@ -213,7 +219,12 @@ export function formatWorkOrderMarkdown(handoff: Handoff, matched?: MatchedRoute
     extra.push("### Deliverables", "", ...handoff.deliverables.map((d) => `- ${d}`), "");
   }
   if (handoff.acceptance_criteria.length) {
-    extra.push("### Acceptance Criteria", "", ...handoff.acceptance_criteria.map((c) => `- ${c}`), "");
+    extra.push(
+      "### Acceptance Criteria",
+      "",
+      ...handoff.acceptance_criteria.map((c) => `- ${c}`),
+      ""
+    );
   }
   if (handoff.child_ids?.length) {
     extra.push("### 子 Work Orders", "", ...handoff.child_ids.map((c) => `- ${c}`), "");
@@ -285,9 +296,20 @@ export function formatAgentImplementationPrompt(handoff: Handoff): string {
   }
 
   if (handoff.acceptance_criteria.length) {
-    lines.push("## Acceptance Criteria", "", ...handoff.acceptance_criteria.map((c) => `- ${c}`), "");
+    lines.push(
+      "## Acceptance Criteria",
+      "",
+      ...handoff.acceptance_criteria.map((c) => `- ${c}`),
+      ""
+    );
   } else {
-    lines.push("## Acceptance Criteria", "", "- `npm run check` 通過", "- 担当 Primary Folders のみ編集", "");
+    lines.push(
+      "## Acceptance Criteria",
+      "",
+      "- `npm run check` 通過",
+      "- 担当 Primary Folders のみ編集",
+      ""
+    );
   }
 
   lines.push(
@@ -318,7 +340,10 @@ export function formatAgentImplementationPrompt(handoff: Handoff): string {
   return lines.join("\n");
 }
 
-export function writeWorkOrderFiles(handoff: Handoff, matched?: MatchedRoute): {
+export function writeWorkOrderFiles(
+  handoff: Handoff,
+  matched?: MatchedRoute
+): {
   yamlPath: string;
   mdPath: string;
   promptPath?: string;
@@ -467,7 +492,9 @@ function writeExecutiveSummary(
     .slice(0, 40)
     .replace(/[^\w\u3040-\u30ff\u4e00-\u9faf-]+/g, "-");
   const summaryPath = join(dir, `${currentDate()}-escalate-${slug}.md`);
-  const children = workOrders.filter((w) => w.parent_id || (!w.child_ids && w.task_type === "implement"));
+  const children = workOrders.filter(
+    (w) => w.parent_id || (!w.child_ids && w.task_type === "implement")
+  );
 
   const lines = [
     `# Executive 統合サマリ · ${currentDate()}`,
@@ -481,8 +508,7 @@ function writeExecutiveSummary(
     "| ID | Agent | Status | Prompt |",
     "|----|-------|--------|--------|",
     ...children.map(
-      (w) =>
-        `| ${w.id} | ${w.to_agent} | ${w.status} | ${w.agent_prompt_path ? "✓" : "—"} |`
+      (w) => `| ${w.id} | ${w.to_agent} | ${w.status} | ${w.agent_prompt_path ? "✓" : "—"} |`
     ),
     "",
   ];
@@ -519,7 +545,10 @@ export function regenerateWorkOrderPrompts(id: string): string[] {
     throw new Error(`${id} is not an implement work order (task_type=${handoff.task_type})`);
   }
 
-  const promptPath = join(routingQueueDir(), handoff.agent_prompt_path ?? `${PROMPTS_SUBDIR}/${id}_${handoff.to_agent}.md`);
+  const promptPath = join(
+    routingQueueDir(),
+    handoff.agent_prompt_path ?? `${PROMPTS_SUBDIR}/${id}_${handoff.to_agent}.md`
+  );
   mkdirSync(join(routingQueueDir(), PROMPTS_SUBDIR), { recursive: true });
   writeFileSync(promptPath, formatAgentImplementationPrompt(handoff), "utf-8");
   paths.push(promptPath);

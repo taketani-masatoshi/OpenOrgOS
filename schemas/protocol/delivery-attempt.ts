@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const deliveryChannelSchema = z.enum(["wire_v1", "relay", "email_wire", "openorgos_p2p", "legacy_webhook"]);
+export const deliveryChannelSchema = z.enum([
+  "wire_v1",
+  "relay",
+  "email_wire",
+  "openorgos_p2p",
+  "legacy_webhook",
+]);
 
 export const deliveryAttemptStatusSchema = z.enum(["success", "failed", "queued", "skipped"]);
 

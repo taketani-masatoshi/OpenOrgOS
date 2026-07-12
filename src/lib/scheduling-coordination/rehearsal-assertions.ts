@@ -14,12 +14,7 @@ export interface RehearsalAssertionReport {
   checks: RehearsalAssertionCheck[];
 }
 
-function push(
-  checks: RehearsalAssertionCheck[],
-  id: string,
-  ok: boolean,
-  detail: string
-): void {
+function push(checks: RehearsalAssertionCheck[], id: string, ok: boolean, detail: string): void {
   checks.push({ id, ok, detail });
 }
 
@@ -76,20 +71,25 @@ export function assertSchedulingRehearsalComplete(opts: {
     for (const mailId of opts.processedMailIds) {
       const triage = findTriageEntry(mailId);
       const parsed = Boolean(triage?.schedule_reply_parsed);
-      push(checks, `mail_parsed_${mailId}`, parsed, parsed ? "schedule_reply_parsed" : "not parsed");
+      push(
+        checks,
+        `mail_parsed_${mailId}`,
+        parsed,
+        parsed ? "schedule_reply_parsed" : "not parsed"
+      );
       const processed = caseRow.processed_mail_ids.includes(mailId);
-      push(checks, `mail_processed_${mailId}`, processed, processed ? "in processed_mail_ids" : "missing");
+      push(
+        checks,
+        `mail_processed_${mailId}`,
+        processed,
+        processed ? "in processed_mail_ids" : "missing"
+      );
     }
   }
 
   if (opts.runValidate) {
     const report = runValidateReport({ warnings: true });
-    push(
-      checks,
-      "validate",
-      report.ok,
-      report.ok ? "ok" : `${report.error_count} error(s)`
-    );
+    push(checks, "validate", report.ok, report.ok ? "ok" : `${report.error_count} error(s)`);
   }
 
   return { ok: checks.every((c) => c.ok), checks };

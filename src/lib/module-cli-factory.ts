@@ -25,7 +25,10 @@ export function registerStandardModuleCommands(
     .option("--json", "JSON output")
     .action((opts) => handlers.show({ json: opts.json }));
 
-  cmd.command("validate").description("Validate module data files").action(() => handlers.validate());
+  cmd
+    .command("validate")
+    .description("Validate module data files")
+    .action(() => handlers.validate());
 
   if (handlers.action) {
     const actionCmd = cmd.command(handlers.action.name).description(handlers.action.description);

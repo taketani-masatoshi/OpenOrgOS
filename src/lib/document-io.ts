@@ -1,10 +1,4 @@
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  renameSync,
-} from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, renameSync } from "node:fs";
 import { basename, extname, join, isAbsolute } from "node:path";
 import {
   documentIoSchema,
@@ -14,7 +8,16 @@ import {
   type OutboxCategory,
   type OutboxItem,
 } from "../../schemas/document-io.js";
-import { getDataDir, getDocsInboxDir, getDocsOutboxDir, currentDate, readYamlFile, writeYamlFile, resolveTenantPath, toLogicalPath } from "./utils.js";
+import {
+  getDataDir,
+  getDocsInboxDir,
+  getDocsOutboxDir,
+  currentDate,
+  readYamlFile,
+  writeYamlFile,
+  resolveTenantPath,
+  toLogicalPath,
+} from "./utils.js";
 
 function ioPath(): string {
   return join(getDataDir(), "document-io.yaml");
@@ -63,12 +66,14 @@ function nextId(prefix: "INB" | "OUT", items: { id: string }[]): string {
 }
 
 function slugify(text: string): string {
-  return text
-    .trim()
-    .replace(/[^\w\u3040-\u30ff\u3400-\u9fff-]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 48) || "document";
+  return (
+    text
+      .trim()
+      .replace(/[^\w\u3040-\u30ff\u3400-\u9fff-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 48) || "document"
+  );
 }
 
 export function ensureInboxCategoryDir(category: InboxCategory): string {
@@ -78,7 +83,9 @@ export function ensureInboxCategoryDir(category: InboxCategory): string {
 }
 
 export function ensureOutboxCategoryDir(category: OutboxCategory, subdir?: string): string {
-  const dir = subdir ? join(getDocsOutboxDir(), category, subdir) : join(getDocsOutboxDir(), category);
+  const dir = subdir
+    ? join(getDocsOutboxDir(), category, subdir)
+    : join(getDocsOutboxDir(), category);
   mkdirSync(dir, { recursive: true });
   return dir;
 }

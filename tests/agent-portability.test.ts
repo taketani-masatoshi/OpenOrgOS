@@ -58,16 +58,12 @@ describe("agent-portability", () => {
     expect(pack).toContain("# Finance Agent");
   });
 
-  it(
-    "exportPortableAgents writes core packs and mcp snippets",
-    () => {
-      const result = exportPortableAgents({ emit: "all" });
-      expect(result.packs.length).toBeGreaterThanOrEqual(6);
-      expect(result.indexPath).toBeDefined();
-      expect(result.mcpPaths.length).toBe(2);
-    },
-    60_000
-  );
+  it("exportPortableAgents writes core packs and mcp snippets", () => {
+    const result = exportPortableAgents({ emit: "all" });
+    expect(result.packs.length).toBeGreaterThanOrEqual(6);
+    expect(result.indexPath).toBeDefined();
+    expect(result.mcpPaths.length).toBe(2);
+  }, 60_000);
 
   it("loadAgentRegistryEntries includes core agents", () => {
     const entries = loadAgentRegistryEntries();
@@ -98,9 +94,8 @@ describe("operator-policy sync", () => {
   });
 
   it("rewriteEngineeringBodyLinksForCursorMirror fixes parent-relative links", async () => {
-    const { rewriteEngineeringBodyLinksForCursorMirror } = await import(
-      "../src/lib/operator-policy.js"
-    );
+    const { rewriteEngineeringBodyLinksForCursorMirror } =
+      await import("../src/lib/operator-policy.js");
     const out = rewriteEngineeringBodyLinksForCursorMirror(
       "[index](../openorgos-engineering-constitution.md) · [core](../../core/agents/)"
     );
@@ -109,14 +104,32 @@ describe("operator-policy sync", () => {
   });
 
   it("rewriteMarkdownLinksForPortableExport fixes pack-relative links", async () => {
-    const { rewriteMarkdownLinksForPortableExport } = await import(
-      "../src/lib/operator-policy.js"
-    );
+    const { rewriteMarkdownLinksForPortableExport } = await import("../src/lib/operator-policy.js");
     const out = rewriteMarkdownLinksForPortableExport(
-      "[constitution](../openorgos-engineering-constitution.md) · [skill](../steward/core/skills/x.md)"
+      "[constitution](../openorgos-engineering-constitution.md) · [skill](../steward/core/skills/x.md) · [esc](../core/orchestrators/secretary_escalation.md) · [runbook](../../../docs/org-os/x.md)"
     );
     expect(out).toContain("](steward/rules/openorgos-engineering-constitution.md)");
     expect(out).toContain("](steward/core/skills/x.md)");
+    expect(out).toContain("](steward/core/orchestrators/secretary_escalation.md)");
+    expect(out).toContain("](docs/org-os/x.md)");
+  });
+
+  it("validateAgentPackExports rejects parent-relative links in packs", async () => {
+    exportPortableAgents({ all: true, emit: "all" });
+    const { validateAgentPackExports, AGENT_EXPORTS_DIR } =
+      await import("../src/lib/agent-portability.js");
+    const { join } = await import("node:path");
+    const { readFileSync, writeFileSync, existsSync } = await import("node:fs");
+    const packPath = join(AGENT_EXPORTS_DIR, "agents", "finance.pack.md");
+    if (!existsSync(packPath)) return;
+    const original = readFileSync(packPath, "utf-8");
+    writeFileSync(packPath, `${original}\n[bad](../broken.md)\n`, "utf-8");
+    try {
+      const issues = validateAgentPackExports();
+      expect(issues.some((m) => m.includes("parent-relative"))).toBe(true);
+    } finally {
+      writeFileSync(packPath, original, "utf-8");
+    }
   });
 
   it("validateAgentPackExports passes after export --all", async () => {
@@ -141,9 +154,8 @@ describe("operator-policy sync", () => {
   });
 
   it("syncDataClassificationRule emits data-classification cursor mirror", async () => {
-    const { syncDataClassificationRule, DATA_CLASSIFICATION_CURSOR_RULE } = await import(
-      "../src/lib/operator-policy.js"
-    );
+    const { syncDataClassificationRule, DATA_CLASSIFICATION_CURSOR_RULE } =
+      await import("../src/lib/operator-policy.js");
     const path = syncDataClassificationRule();
     expect(path).toContain("data-classification.mdc");
     expect(existsSync(join(ROOT_DIR, DATA_CLASSIFICATION_CURSOR_RULE))).toBe(true);

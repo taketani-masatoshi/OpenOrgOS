@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
 import type { OrgAuditAttestationKind } from "../../../schemas/org/audit-attestation.js";
@@ -8,6 +7,7 @@ import { appendProtocolAuditRecord } from "../protocol/audit-chain.js";
 import { ourOrgRef } from "../protocol/identity.js";
 import { validateEnvelopeAgainstRegistry } from "../protocol/registry.js";
 import { maybeSignEnvelope } from "../protocol/signing.js";
+import { getClock, getIdGenerator } from "../runtime-context.js";
 
 export function emitOrgAuditAttested(opts: {
   approval: OrgApprovalRequest;
@@ -33,10 +33,10 @@ export function emitOrgAuditAttested(opts: {
 
   const correlationId =
     opts.wireEventId ?? opts.approval.wire?.wire_event_id ?? opts.approval.approval_id;
-  const now = new Date().toISOString();
+  const now = getClock().nowIso();
   let envelope: EventEnvelope = {
     protocol_version: "1",
-    event_id: randomUUID(),
+    event_id: getIdGenerator().uuid(),
     occurred_at: now,
     origin: ourOrgRef(),
     correlation_id: correlationId,

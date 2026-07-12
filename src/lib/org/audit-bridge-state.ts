@@ -1,6 +1,9 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { orgAuditBridgeStateSchema, ORG_AUDIT_BRIDGE_STATE_MAX_IDS } from "../../../schemas/org/audit-bridge-state.js";
+import {
+  orgAuditBridgeStateSchema,
+  ORG_AUDIT_BRIDGE_STATE_MAX_IDS,
+} from "../../../schemas/org/audit-bridge-state.js";
 import { getOrgAuditBridgeStatePath } from "./paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 
@@ -35,9 +38,12 @@ export function markAuditEventBridged(auditId: string): void {
 export function clearOrgAuditBridgeStateForTests(): void {
   const path = getOrgAuditBridgeStatePath();
   if (existsSync(path)) {
-    writeYamlFile(path, orgAuditBridgeStateSchema.parse({
-      bridged_audit_ids: [],
-      max_bridged_ids: ORG_AUDIT_BRIDGE_STATE_MAX_IDS,
-    }));
+    writeYamlFile(
+      path,
+      orgAuditBridgeStateSchema.parse({
+        bridged_audit_ids: [],
+        max_bridged_ids: ORG_AUDIT_BRIDGE_STATE_MAX_IDS,
+      })
+    );
   }
 }

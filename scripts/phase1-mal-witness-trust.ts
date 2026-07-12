@@ -4,7 +4,10 @@
  */
 import { readFileSync } from "node:fs";
 import { setTenantId } from "../src/lib/tenant.js";
-import { exportProtocolPublicKeyBase64, ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+import {
+  exportProtocolPublicKeyBase64,
+  ensureProtocolSigningKey,
+} from "../src/lib/protocol/signing.js";
 import { getWitnessTrustAuthorityKeyPath } from "../src/lib/protocol/paths.js";
 import {
   initWitnessTrustAuthority,
@@ -70,9 +73,7 @@ async function main(): Promise<void> {
   }
   console.log(`✓ trust bundle published · ${bundle.certificates.length} certificate(s)`);
 
-  const gw = YAML.parse(
-    readFileSync(`tenants/${TENANT}/data/protocol/wire-gateway.yaml`, "utf-8")
-  );
+  const gw = YAML.parse(readFileSync(`tenants/${TENANT}/data/protocol/wire-gateway.yaml`, "utf-8"));
   ensureProtocolSigningKey();
   const orgDid = gw.did;
   const pub = exportProtocolPublicKeyBase64();

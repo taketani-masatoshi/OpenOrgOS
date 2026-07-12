@@ -119,8 +119,7 @@ export function buildTransferInstruction(opts: TransferOptions): TransferInstruc
     payee_bank_hint: payeeBankHint,
     payee_email_hint: payeeEmailHint,
     dry_run: opts.dryRun ?? true,
-    note:
-      "口座番号の全文は bank-accounts.yaml（L2）· ネットバンキングで手入力。本指示は L1 サマリのみ。",
+    note: "口座番号の全文は bank-accounts.yaml（L2）· ネットバンキングで手入力。本指示は L1 サマリのみ。",
   };
 }
 
@@ -150,9 +149,7 @@ export function writeTransferInstructionFile(
 ): string {
   const dir = join(SCRATCH_DIR, "broker");
   mkdirSync(dir, { recursive: true });
-  const name =
-    filename ??
-    `transfer-${instr.from_account_id}-${instr.amount_yen}-${Date.now()}.md`;
+  const name = filename ?? `transfer-${instr.from_account_id}-${instr.amount_yen}-${Date.now()}.md`;
   const path = join(dir, name);
   writeFileSync(path, formatTransferMarkdown(instr), "utf-8");
   return path;

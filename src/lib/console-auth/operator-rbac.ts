@@ -1,5 +1,9 @@
 import type { ServerResponse } from "node:http";
-import type { OperatorPermission, OperatorRecord, OperatorRole } from "../../../schemas/org/operator.js";
+import type {
+  OperatorPermission,
+  OperatorRecord,
+  OperatorRole,
+} from "../../../schemas/org/operator.js";
 import {
   findOperatorByApproverName,
   findOperatorById,
@@ -8,10 +12,7 @@ import {
   registryHasApprovers,
   verifyOperatorKey,
 } from "../org/operators.js";
-import {
-  loadAuthorizedApprovers,
-  normalizePersonName,
-} from "../org/authorized-approvers.js";
+import { loadAuthorizedApprovers, normalizePersonName } from "../org/authorized-approvers.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import type { ChatPermission } from "./rbac.js";
 

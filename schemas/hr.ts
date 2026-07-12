@@ -9,7 +9,10 @@ export const employeeSchema = z.object({
   hired_date: dateString.nullable().optional(),
   job_type: z.string().nullable().optional(),
   status: employeeStatus.default("inactive"),
-  contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
+  contract_id: z
+    .string()
+    .regex(/^CTR-\d{3,}$/)
+    .optional(),
 });
 
 export const employeesFileSchema = z.object({

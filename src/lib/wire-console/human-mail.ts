@@ -143,7 +143,7 @@ function contractShortTitle(contractId: string | undefined): string | undefined 
 
 function orgDisplayName(
   orgRef: OrgRef,
-  peers: ReturnType<typeof loadPeersRegistry>["peers"]
+  _peers: ReturnType<typeof loadPeersRegistry>["peers"]
 ): string {
   const peer = findPeerByOrgRef(orgRef);
   if (peer?.display_name) return peer.display_name;
@@ -168,7 +168,10 @@ function isBusinessMailEnvelope(envelope: { event: { type: string; payload: unkn
   return true;
 }
 
-function peerDisplayName(peerId: string | undefined, peers: ReturnType<typeof loadPeersRegistry>["peers"]) {
+function peerDisplayName(
+  peerId: string | undefined,
+  peers: ReturnType<typeof loadPeersRegistry>["peers"]
+) {
   if (!peerId) return "—";
   const peer = peers.find((p) => p.peer_id === peerId);
   return peer?.display_name ?? peerId;
@@ -180,8 +183,7 @@ function payloadFields(payload: Record<string, unknown>) {
     transaction_type:
       typeof payload.transaction_type === "string" ? payload.transaction_type : undefined,
     direction: typeof payload.direction === "string" ? payload.direction : undefined,
-    transaction_id:
-      typeof payload.transaction_id === "string" ? payload.transaction_id : undefined,
+    transaction_id: typeof payload.transaction_id === "string" ? payload.transaction_id : undefined,
     contract_id:
       typeof payload.contract_id === "string"
         ? payload.contract_id
@@ -201,10 +203,10 @@ function payloadFields(payload: Record<string, unknown>) {
 }
 
 function buildSubject(fields: ReturnType<typeof payloadFields>, eventType: string): string {
-  const rawType = fields.transaction_type ?? eventType.replace(/^org\./, "").replace(/^steward\./, "");
+  const rawType =
+    fields.transaction_type ?? eventType.replace(/^org\./, "").replace(/^steward\./, "");
   const txLabel = fields.transaction_type
-    ? (TX_LABELS[fields.transaction_type.replace(/^steward\./, "")] ??
-        rawType.replace(/\./g, " "))
+    ? (TX_LABELS[fields.transaction_type.replace(/^steward\./, "")] ?? rawType.replace(/\./g, " "))
     : eventType.replace(/^org\./, "").replace(/\./g, " ");
   const contractTitle = contractShortTitle(fields.contract_id);
   if (contractTitle) return `${txLabel} — ${contractTitle}`;
@@ -218,7 +220,9 @@ function threadIdFor(fields: {
   correlation_event_id?: string;
   event_id: string;
 }): string {
-  return fields.transaction_id ?? fields.contract_id ?? fields.correlation_event_id ?? fields.event_id;
+  return (
+    fields.transaction_id ?? fields.contract_id ?? fields.correlation_event_id ?? fields.event_id
+  );
 }
 
 function envelopeStatus(
@@ -270,7 +274,9 @@ function buildEnvelopeMessage(
 ): HumanMessageSummary {
   const payload = entry.envelope.event.payload as Record<string, unknown>;
   const fields = payloadFields(payload);
-  const approval = listOrgApprovals({ scope: "wire" }).find((a) => a.wire?.wire_event_id === entry.event_id);
+  const approval = listOrgApprovals({ scope: "wire" }).find(
+    (a) => a.wire?.wire_event_id === entry.event_id
+  );
   const peerId = approval?.wire?.peer_id;
   const counterparty =
     location === "inbox"
@@ -286,9 +292,7 @@ function buildEnvelopeMessage(
       ? `${contractShortTitle(fields.contract_id)}に関する${buildSubject(fields, entry.envelope.event.type).split("（")[0]}です。`
       : "（本文なし）");
   const previewText =
-    fields.message != null
-      ? humanizeBodyText(fields.message, fields.contract_id)
-      : preview;
+    fields.message != null ? humanizeBodyText(fields.message, fields.contract_id) : preview;
 
   return {
     id: entry.event_id,
@@ -319,9 +323,14 @@ function buildApprovalMessage(
   const contractId = approval.wire?.contract_id ?? approval.subject_ref;
   const txType = approval.wire?.transaction_type;
   const txLabel = txType ? (TX_LABELS[txType] ?? txType) : "通知";
-  const subject = contractId ? `${txLabel} — ${contractId}` : txType ? `${txLabel}` : approval.subject_ref ?? "承認依頼";
+  const subject = contractId
+    ? `${txLabel} — ${contractId}`
+    : txType
+      ? `${txLabel}`
+      : (approval.subject_ref ?? "承認依頼");
   const status = approvalStatus(approval);
-  const preview = approval.message ?? `${peerDisplayName(peerId, peers)} 宛ての通知を送信する承認依頼です。`;
+  const preview =
+    approval.message ?? `${peerDisplayName(peerId, peers)} 宛ての通知を送信する承認依頼です。`;
 
   return {
     id: `approval:${approval.approval_id}`,
@@ -365,7 +374,10 @@ function buildWitnessPendingMessage(
   };
 }
 
-export function getTenantMailMessages(tenantId: string, folder: MailFolder = "all"): HumanMessageSummary[] {
+export function getTenantMailMessages(
+  tenantId: string,
+  folder: MailFolder = "all"
+): HumanMessageSummary[] {
   return withWireConsoleTenant(tenantId, () => {
     const peers = loadPeersRegistry().peers;
     const messages: HumanMessageSummary[] = [];
@@ -394,22 +406,27 @@ export function getTenantMailMessages(tenantId: string, folder: MailFolder = "al
       }
     }
 
-    return messages.sort((a, b) => b.recorded_at.localeCompare(a.recorded_at)).map(redactMessageSummary);
+    return messages
+      .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at))
+      .map(redactMessageSummary);
   });
 }
 
-export function getTenantMailThreads(tenantId: string, folder: MailFolder = "all"): MailThreadSummary[] {
+export function getTenantMailThreads(
+  tenantId: string,
+  folder: MailFolder = "all"
+): MailThreadSummary[] {
   const messages = getTenantMailMessages(tenantId, folder === "pending" ? "pending" : "all");
   const filtered =
     folder === "inbox"
       ? messages.filter((m) => m.folder === "inbox")
       : folder === "outbox"
         ? messages.filter((m) => m.folder === "outbox")
-      : folder === "pending"
-        ? messages.filter((m) => m.folder === "pending")
-        : folder === "witness"
-          ? messages.filter((m) => m.folder === "witness")
-          : messages;
+        : folder === "pending"
+          ? messages.filter((m) => m.folder === "pending")
+          : folder === "witness"
+            ? messages.filter((m) => m.folder === "witness")
+            : messages;
 
   const byThread = new Map<string, HumanMessageSummary[]>();
   for (const msg of filtered) {
@@ -439,13 +456,15 @@ export function getTenantMailThreads(tenantId: string, folder: MailFolder = "all
     });
   }
 
-  return threads.sort((a, b) => b.last_at.localeCompare(a.last_at)).map((t) => ({
-    ...t,
-    title: redactMailText(t.title),
-    counterparty: redactMailText(t.counterparty),
-    status_label: redactMailText(t.status_label),
-    messages: t.messages.map(redactMessageSummary),
-  }));
+  return threads
+    .sort((a, b) => b.last_at.localeCompare(a.last_at))
+    .map((t) => ({
+      ...t,
+      title: redactMailText(t.title),
+      counterparty: redactMailText(t.counterparty),
+      status_label: redactMailText(t.status_label),
+      messages: t.messages.map(redactMessageSummary),
+    }));
 }
 
 export function getTenantMailMessageBody(
@@ -474,7 +493,11 @@ export function getTenantMailMessageBody(
         body_text: `株式会社MAL と 株式会社サウスウッド の間で、オフィス賃貸借（CTR-012）に関する履行通知が交わされました。\n\n本組織は当事者ではありません。${hubDisplayName(pending.hub_id)} への${pending.side === "sent" ? "送信" : "受信"}側の記録登録が未了です。\n\n${summary.preview}`,
         status_label: summary.status_label,
         status_tone: summary.status_tone,
-        workflow_summary: ["① MAL が送信", "② サウスウッドが受信", "③ 本組織が第三者として公証に登録"],
+        workflow_summary: [
+          "① MAL が送信",
+          "② サウスウッドが受信",
+          "③ 本組織が第三者として公証に登録",
+        ],
         event_id: eventId,
         wire_event_id: eventId,
         can_approve: false,
@@ -485,7 +508,9 @@ export function getTenantMailMessageBody(
 
     if (messageId.startsWith("approval:")) {
       const approvalId = messageId.slice("approval:".length);
-      const approval = listOrgApprovals({ scope: "wire" }).find((a) => a.approval_id === approvalId);
+      const approval = listOrgApprovals({ scope: "wire" }).find(
+        (a) => a.approval_id === approvalId
+      );
       if (!approval) return undefined;
       const summary = buildApprovalMessage(approval, peers);
       return redactMessageBody({
@@ -549,7 +574,7 @@ export function getTenantMailMessageBody(
       ? humanizeBodyText(fields.message, fields.contract_id)
       : summary.preview;
 
-    let canWitness = false;
+    let canWitness: boolean;
     try {
       const v = verifyCachedReceiptsForEvent(messageId);
       canWitness = detail.location === "outbox" && !v.quorum.satisfied;

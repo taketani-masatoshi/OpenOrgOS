@@ -3,11 +3,7 @@ import type { GovGatewayPeerBinding } from "../../../../schemas/protocol/gov-gat
 import type { PeerEndpoint } from "../../../../schemas/protocol/peer-endpoint.js";
 import { isGovGatewayEndpoint } from "../../../../schemas/protocol/peer-endpoint.js";
 import { appendGovGatewayAuditBridge } from "./audit-bridge.js";
-import {
-  findProfileBinding,
-  loadGovGatewayConfig,
-  resolveAdapter,
-} from "./config.js";
+import { findProfileBinding, loadGovGatewayConfig, resolveAdapter } from "./config.js";
 import type { EncodeContext, GatewayTarget } from "./types.js";
 
 export type { GovGatewayPeerBinding };
@@ -108,7 +104,11 @@ export {
   isGovGatewayInboundBody,
   buildGovGatewayInboundWireBody,
 } from "./ingest.js";
-export { encodeOpenOrgOsMime, decodeOpenOrgOsMime, OPENORGOS_ENVELOPE_MIME } from "./encode-openorgos-mime.js";
+export {
+  encodeOpenOrgOsMime,
+  decodeOpenOrgOsMime,
+  OPENORGOS_ENVELOPE_MIME,
+} from "./encode-openorgos-mime.js";
 export {
   HttpGovGatewayTransport,
   MockGovGatewayTransport,

@@ -82,8 +82,7 @@ function resolveIdentity(
     };
   }
 
-  const operatorId =
-    payload.operator_id ?? payload.email ?? payload.name ?? payload.sub;
+  const operatorId = payload.operator_id ?? payload.email ?? payload.name ?? payload.sub;
 
   if (isProdSecurityMode()) {
     return {
@@ -94,7 +93,7 @@ function resolveIdentity(
 
   const approverId =
     isProdSecurityMode() || !opts?.approver_id
-      ? payload.approver_id ?? operatorId
+      ? (payload.approver_id ?? operatorId)
       : opts.approver_id;
   if (!operatorId || !approverId) {
     return { error: "operator_id and approver_id required (token claims or login body)" };

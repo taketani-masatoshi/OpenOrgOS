@@ -3,10 +3,7 @@ import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import type { AgentReadinessAxis, AgentReadinessResult } from "../../schemas/agent-capability.js";
 import type { AgentReadinessProfile } from "../../schemas/agent-catalog.js";
-import {
-  agentDefinitionPath,
-  getAgentCapability,
-} from "./agent-capability.js";
+import { agentDefinitionPath, getAgentCapability } from "./agent-capability.js";
 import { getCatalogAgent, isAgentActive, listCatalogAgents } from "./agent-catalog.js";
 import { listActiveTenantAgents } from "./agent-roster.js";
 import { loadRoutingRegistry } from "./routing.js";
@@ -92,16 +89,22 @@ function scoreDefinition(agentId: AgentId): AgentReadinessAxis {
     label: "定義",
     score,
     max: WEIGHTS.definition,
-    detail: checks.filter((c) => !c.ok).map((c) => c.label).join(", ") || "OK",
+    detail:
+      checks
+        .filter((c) => !c.ok)
+        .map((c) => c.label)
+        .join(", ") || "OK",
   };
 }
 
-function scoreSkillCli(agentId: AgentId, cap: ReturnType<typeof getAgentCapability>): AgentReadinessAxis {
+function scoreSkillCli(
+  agentId: AgentId,
+  cap: ReturnType<typeof getAgentCapability>
+): AgentReadinessAxis {
   const skills = skillRegistry();
   const owned = skills.filter((skill) => resolveExecutingAgentId(skill) === agentId);
   const cliSkills = owned.filter((skill) => skill.runtime === "cli" && skill.cli_command);
-  const manifestSkills =
-    cap?.skills.filter((sid) => owned.some((skill) => skill.id === sid)) ?? [];
+  const manifestSkills = cap?.skills.filter((sid) => owned.some((skill) => skill.id === sid)) ?? [];
   let score = owned.length > 0 ? 8 : 4;
   if (cliSkills.length >= 1) score += 6;
   if (manifestSkills.length >= 2) score += 4;
@@ -122,7 +125,13 @@ function scoreSkillCli(agentId: AgentId, cap: ReturnType<typeof getAgentCapabili
 function scoreDataSot(cap: ReturnType<typeof getAgentCapability>): AgentReadinessAxis {
   const paths = [...(cap?.data_paths ?? []), ...(cap?.docs_paths ?? [])];
   if (paths.length === 0) {
-    return { id: "data_sot", label: "データSoT", score: 8, max: WEIGHTS.data_sot, detail: "パス未定義" };
+    return {
+      id: "data_sot",
+      label: "データSoT",
+      score: 8,
+      max: WEIGHTS.data_sot,
+      detail: "パス未定義",
+    };
   }
   let tenantHits = 0;
   let templateHits = 0;
@@ -141,12 +150,21 @@ function scoreDataSot(cap: ReturnType<typeof getAgentCapability>): AgentReadines
   };
 }
 
-function scoreRouting(agentId: AgentId, cap: ReturnType<typeof getAgentCapability>): AgentReadinessAxis {
+function scoreRouting(
+  agentId: AgentId,
+  cap: ReturnType<typeof getAgentCapability>
+): AgentReadinessAxis {
   const routes = routingRegistry().routes.filter((r) => r.agent === agentId);
   const expected = cap?.route_ids.length ?? 0;
   const matched = cap?.route_ids.filter((id) => routes.some((r) => r.id === id)) ?? [];
   if (routes.length === 0 && expected === 0) {
-    return { id: "routing", label: "routing", score: 8, max: WEIGHTS.routing, detail: "route なし（コア委譲）" };
+    return {
+      id: "routing",
+      label: "routing",
+      score: 8,
+      max: WEIGHTS.routing,
+      detail: "route なし（コア委譲）",
+    };
   }
   const score =
     expected > 0
@@ -241,7 +259,11 @@ function scoreAdvisorDefinition(agentId: AgentId): AgentReadinessAxis {
     label: "定義",
     score: Math.round((ok / checks.length) * WEIGHTS.definition),
     max: WEIGHTS.definition,
-    detail: checks.filter((c) => !c.ok).map((c) => c.label).join(", ") || "OK",
+    detail:
+      checks
+        .filter((c) => !c.ok)
+        .map((c) => c.label)
+        .join(", ") || "OK",
   };
 }
 
@@ -255,11 +277,35 @@ export function computeAgentReadiness(agentId: AgentId): AgentReadinessResult {
     const axes = [
       scoreAdvisorDefinition(agentId),
       scoreSkillCli(agentId, cap),
-      { id: "routing", label: "routing", score: WEIGHTS.routing, max: WEIGHTS.routing, detail: "advisor — auto-route なし" },
-      { id: "data_sot", label: "データSoT", score: WEIGHTS.data_sot, max: WEIGHTS.data_sot, detail: "advisor — tenant 不要" },
-      { id: "dashboard", label: "要約", score: WEIGHTS.dashboard, max: WEIGHTS.dashboard, detail: "advisor — pulse 不要" },
+      {
+        id: "routing",
+        label: "routing",
+        score: WEIGHTS.routing,
+        max: WEIGHTS.routing,
+        detail: "advisor — auto-route なし",
+      },
+      {
+        id: "data_sot",
+        label: "データSoT",
+        score: WEIGHTS.data_sot,
+        max: WEIGHTS.data_sot,
+        detail: "advisor — tenant 不要",
+      },
+      {
+        id: "dashboard",
+        label: "要約",
+        score: WEIGHTS.dashboard,
+        max: WEIGHTS.dashboard,
+        detail: "advisor — pulse 不要",
+      },
       scoreEvidenceActivationBoundary(agentId),
-      { id: "tenant", label: "テナント", score: WEIGHTS.tenant, max: WEIGHTS.tenant, detail: "advisor — tenant 不要" },
+      {
+        id: "tenant",
+        label: "テナント",
+        score: WEIGHTS.tenant,
+        max: WEIGHTS.tenant,
+        detail: "advisor — tenant 不要",
+      },
     ];
     const total = axes.reduce((s, a) => s + a.score, 0);
     const max = axes.reduce((s, a) => s + a.max, 0);

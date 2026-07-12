@@ -27,7 +27,10 @@ export function readOperatorKeyFromFile(operatorId: string): string | undefined 
   return readFileSync(path, "utf-8").trim() || undefined;
 }
 
-export function resolveCliOperatorKey(operatorId: string, explicitKey?: string): string | undefined {
+export function resolveCliOperatorKey(
+  operatorId: string,
+  explicitKey?: string
+): string | undefined {
   return (
     explicitKey?.trim() ||
     process.env.ORGOS_OPERATOR_KEY?.trim() ||
@@ -145,17 +148,13 @@ export function requireCliSchedulingApproval(command: string): AuthenticatedOper
   }
   const auth = requireCliOperator({ permission: "scheduling:approve", command });
   if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
-    throw new Error(
-      `${command} requires ceo or approver role (got ${auth.record.role}).`
-    );
+    throw new Error(`${command} requires ceo or approver role (got ${auth.record.role}).`);
   }
   return auth;
 }
 
 /** Manual finance reconciliation and reversal — human approver only. */
-export function requireCliFinanceReconciliationApproval(
-  command: string
-): AuthenticatedOperator {
+export function requireCliFinanceReconciliationApproval(command: string): AuthenticatedOperator {
   if (isOperatorAuthBypassed()) {
     throw new Error(
       `${command} requires operator authentication (STEWARD_OPERATOR_AUTH=1). ` +
@@ -167,9 +166,7 @@ export function requireCliFinanceReconciliationApproval(
     command,
   });
   if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
-    throw new Error(
-      `${command} requires ceo or approver role (got ${auth.record.role}).`
-    );
+    throw new Error(`${command} requires ceo or approver role (got ${auth.record.role}).`);
   }
   return auth;
 }

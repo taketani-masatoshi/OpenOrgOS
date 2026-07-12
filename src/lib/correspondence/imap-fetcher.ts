@@ -18,8 +18,7 @@ export function createImapFetcher(): MailReceiveFetcher {
       try {
         const lock = await client.getMailboxLock(opts.mailbox);
         try {
-          const range =
-            opts.sinceUid > 0 ? `${opts.sinceUid + 1}:*` : "1:*";
+          const range = opts.sinceUid > 0 ? `${opts.sinceUid + 1}:*` : "1:*";
           for await (const msg of client.fetch(range, {
             uid: true,
             envelope: true,

@@ -1,12 +1,7 @@
 import { z } from "zod";
 import { agentId } from "./classification.js";
 
-export const missionTypeSchema = z.enum([
-  "order",
-  "report",
-  "pulse_report",
-  "work_order_complete",
-]);
+export const missionTypeSchema = z.enum(["order", "report", "pulse_report", "work_order_complete"]);
 
 export const missionStatusSchema = z.enum(["ordered", "in_progress", "completed", "cancelled"]);
 

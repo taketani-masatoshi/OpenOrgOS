@@ -22,8 +22,8 @@ globs: tenants/**/docs/company/events/**,tenants/**/docs/company/artifacts/**,te
 
 - イベント ID: `EVT-{YYYYMMDD}-{kind}-{slug}`
 - 月フォルダ: `YYYY-MM`
-- 台帳: `data/company-events.yaml`（derived ビュー · 移行中）
-- チェーン: `data/company-events-chain.jsonl`（監査 · status/create/void）
+- 台帳: `data/company-events.yaml`（chain から materialize する派生ビュー）
+- チェーン: `data/company-events-chain.jsonl`（**正本** · create/status/void/wire）
 
 ## MD 本文ポリシー
 
@@ -39,6 +39,7 @@ npm run orgos -- events new --kind registration --title "…" [--slug …]
 npm run orgos -- events void EVT-… --reason "…"
 npm run orgos -- events list
 npm run orgos -- events chain verify
+npm run orgos -- events chain materialize
 ```
 
 新規イベント前に `ensure-month`。無効化は `void` のみ（台帳からの物理削除禁止）。

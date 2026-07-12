@@ -9,7 +9,10 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { setTenantId, getTenantDir, ROOT_DIR } from "../../src/lib/tenant.js";
 import { registerPeer } from "../../src/lib/protocol/peers.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../../src/lib/protocol/signing.js";
+import {
+  ensureProtocolSigningKey,
+  exportProtocolPublicKeyBase64,
+} from "../../src/lib/protocol/signing.js";
 import { deliverEnvelopeViaMesh } from "../../src/lib/protocol/peer-mesh.js";
 import { getMeshRoutesYamlPath, getProtocolInboxDir } from "../../src/lib/protocol/paths.js";
 import { recordProtocolTransaction } from "../../src/lib/protocol/record-transaction.js";
@@ -86,7 +89,9 @@ function seedAiacPeerRegistry(malPublicKey: string): void {
   });
 }
 
-async function startRelayHopServer(postOrder: string[]): Promise<{ close: () => void; port: number }> {
+async function startRelayHopServer(
+  postOrder: string[]
+): Promise<{ close: () => void; port: number }> {
   const server = createServer(async (req, res) => {
     if (req.method !== "POST") {
       json(res, 404, { ok: false });
@@ -164,9 +169,7 @@ export async function runMeshToAiac(
     display_name: "Southwood mesh relay",
     jurisdiction: "JP",
     org_uri: `steward://tenant/${VENDOR_TENANT}`,
-    inbound_endpoints: [
-      { url: `http://127.0.0.1:${relayPort}/relay`, priority: 1, mode: "relay" },
-    ],
+    inbound_endpoints: [{ url: `http://127.0.0.1:${relayPort}/relay`, priority: 1, mode: "relay" }],
   });
   registerPeer({
     peer_id: PEER_AIAC,

@@ -9,6 +9,7 @@ import { findTransaction, loadTransactionsRegistry } from "../src/lib/protocol/t
 import { getProtocolAuditChainPath } from "../src/lib/protocol/paths.js";
 import { validateProtocolState } from "../src/lib/protocol/validate.js";
 import { exportDelegationProof } from "../src/lib/protocol/delegation.js";
+import { resetRuntimeContext, setRuntimeContext } from "../src/lib/runtime-context.js";
 
 function cleanupProtocolData(): void {
   const paths = [
@@ -47,7 +48,10 @@ compensation:
     });
   });
 
-  afterEach(() => cleanupProtocolData());
+  afterEach(() => {
+    cleanupProtocolData();
+    resetRuntimeContext();
+  });
 
   it("records contract.executed with envelope, audit, and outbox", () => {
     const result = recordProtocolTransaction({
@@ -67,6 +71,31 @@ compensation:
     expect(tx?.refs.contract_id).toBe("CTR-099");
     expect(loadTransactionsRegistry().transactions.length).toBe(1);
     expect(existsSync(getProtocolAuditChainPath())).toBe(true);
+  });
+
+  it("uses the injected clock and UUID for transaction records", () => {
+    setRuntimeContext({
+      clock: {
+        now: () => new Date("2026-07-12T03:04:05.000Z"),
+        nowMs: () => Date.parse("2026-07-12T03:04:05.000Z"),
+        nowIso: () => "2026-07-12T03:04:05.000Z",
+      },
+      idGenerator: {
+        randomSuffix: () => "fixed",
+        uniqueId: (prefix) => `${prefix}-fixed`,
+        uuid: () => "00000000-0000-4000-8000-000000000904",
+      },
+    });
+    const result = recordProtocolTransaction({
+      transactionType: "contract.executed",
+      peerId: "PEER-001",
+      contractId: "CTR-099",
+      operatorBypass: true,
+    });
+    expect(result.transaction.transaction_id).toBe("TX-20260712-001");
+    expect(result.transaction.recorded_at).toBe("2026-07-12T03:04:05.000Z");
+    expect(result.envelope.event_id).toBe("00000000-0000-4000-8000-000000000904");
+    expect(result.envelope.occurred_at).toBe("2026-07-12T03:04:05.000Z");
   });
 
   it("inbound execution notice accepts contract_id ref without local contract file", () => {

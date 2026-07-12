@@ -118,4 +118,6 @@ export type TrademarkMark = z.output<typeof trademarkMarksFileSchema>["marks"][n
 export type TrademarkGoodsServicesCatalog = z.output<
   typeof trademarkGoodsServicesFileSchema
 >["catalogs"][number];
-export type TrademarkApplication = z.output<typeof trademarkRegistryFileSchema>["applications"][number];
+export type TrademarkApplication = z.output<
+  typeof trademarkRegistryFileSchema
+>["applications"][number];

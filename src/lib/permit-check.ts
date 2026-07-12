@@ -1,8 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadContracts } from "./data.js";
-import { loadYojitsuFyPlan } from "./data.js";
-import { loadMonthlyFinances } from "./data.js";
 import { getDocsDir } from "./utils.js";
 
 export interface PermitRow {
@@ -59,12 +57,7 @@ export function runPermitExpiryCheck(): PermitCheckResult {
 }
 
 export function formatPermitCheckReport(result: PermitCheckResult): string {
-  const lines = [
-    "# 許認可 · 保険チェック（permit_expiry_check）",
-    "",
-    "## 保険 CTR（draft）",
-    "",
-  ];
+  const lines = ["# 許認可 · 保険チェック（permit_expiry_check）", "", "## 保険 CTR（draft）", ""];
   if (result.draftInsurance.length) {
     for (const id of result.draftInsurance) lines.push(`- **${id}** — 加入 · executed 化待ち`);
   } else {

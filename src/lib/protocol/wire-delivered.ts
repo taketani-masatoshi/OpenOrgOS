@@ -6,6 +6,7 @@ import {
 } from "../../../schemas/protocol/wire-delivered.js";
 import { getProtocolDataDir } from "./paths.js";
 import { readYamlFile, writeYamlFile, currentDate } from "../utils.js";
+import { getClock } from "../runtime-context.js";
 
 function getWireDeliveredPath(): string {
   return join(getProtocolDataDir(), "wire-delivered.yaml");
@@ -26,7 +27,7 @@ export function markWireDelivered(peerId: string, eventId: string, endpoint?: st
   const record = {
     peer_id: peerId,
     event_id: eventId,
-    delivered_at: new Date().toISOString(),
+    delivered_at: getClock().nowIso(),
     endpoint,
   };
   if (existing >= 0) {

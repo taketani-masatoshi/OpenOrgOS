@@ -72,11 +72,16 @@ export function signMerkleAnchor(record: MerkleAnchorRecord): SignedMerkleAnchor
     computed_at: record.computed_at,
   };
   const digest = Buffer.from(merkleAnchorDigest(unsigned), "hex");
-  const hub_signature = sign(null, digest, createPrivateKey(ensureHubSigningKey())).toString("base64");
+  const hub_signature = sign(null, digest, createPrivateKey(ensureHubSigningKey())).toString(
+    "base64"
+  );
   return { ...unsigned, hub_signature };
 }
 
-export function verifySignedMerkleAnchor(anchor: SignedMerkleAnchor, publicKeyBase64: string): boolean {
+export function verifySignedMerkleAnchor(
+  anchor: SignedMerkleAnchor,
+  publicKeyBase64: string
+): boolean {
   const { hub_signature, ...unsigned } = anchor;
   const digest = Buffer.from(merkleAnchorDigest(unsigned), "hex");
   const key = createPublicKey({

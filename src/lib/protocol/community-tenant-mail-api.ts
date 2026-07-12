@@ -1,7 +1,10 @@
 import type { IncomingMessage } from "node:http";
 import { setTenantId } from "../tenant.js";
 import { gmailOAuthTokenSchema } from "../../../schemas/correspondence/gmail-oauth.js";
-import { saveGmailOAuthToken, ensureGmailOAuthClientForCommunity } from "../correspondence/gmail-oauth.js";
+import {
+  saveGmailOAuthToken,
+  ensureGmailOAuthClientForCommunity,
+} from "../correspondence/gmail-oauth.js";
 import { writeGmailApiMailConfig } from "../correspondence/gmail-setup-wizard.js";
 import {
   claimCommunityGmailBind,
@@ -198,10 +201,7 @@ export async function handleCommunityTenantMailApiRoute(
   if (pathname === "/protocol/v1/community/tenant-mail/bind" && method === "POST") {
     try {
       const data = parseJsonBody<CommunityGmailBindCreateBody>(rawBody);
-      const result = handleCommunityTenantMailBindCreate(
-        data,
-        verifyCommunityGovernanceAuth(req)
-      );
+      const result = handleCommunityTenantMailBindCreate(data, verifyCommunityGovernanceAuth(req));
       return { status: result.status ?? (result.ok ? 201 : 422), body: result };
     } catch (e) {
       return {
@@ -214,10 +214,7 @@ export async function handleCommunityTenantMailApiRoute(
   if (pathname === "/protocol/v1/community/tenant-mail/gmail-token" && method === "POST") {
     try {
       const data = parseJsonBody<CommunityGmailTokenBody>(rawBody);
-      const result = handleCommunityTenantMailGmailToken(
-        data,
-        verifyCommunityGovernanceAuth(req)
-      );
+      const result = handleCommunityTenantMailGmailToken(data, verifyCommunityGovernanceAuth(req));
       return { status: result.status ?? (result.ok ? 200 : 422), body: result };
     } catch (e) {
       return {

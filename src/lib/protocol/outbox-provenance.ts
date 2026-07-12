@@ -1,7 +1,10 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
-import { outboxProvenanceSchema, type OutboxProvenance } from "../../../schemas/protocol/outbox-provenance.js";
+import {
+  outboxProvenanceSchema,
+  type OutboxProvenance,
+} from "../../../schemas/protocol/outbox-provenance.js";
 import { envelopeDigest } from "./canonical.js";
 import { isProtocolWriteGuardDisabled } from "./protocol-write-guard.js";
 
@@ -20,10 +23,17 @@ export function writeOutboxProvenance(
     written_at: new Date().toISOString(),
     digest: envelopeDigest(envelope),
   };
-  writeFileSync(outboxProvenancePath(outboxDir, envelope.event_id), JSON.stringify(record, null, 2), "utf-8");
+  writeFileSync(
+    outboxProvenancePath(outboxDir, envelope.event_id),
+    JSON.stringify(record, null, 2),
+    "utf-8"
+  );
 }
 
-export function loadOutboxProvenance(outboxDir: string, eventId: string): OutboxProvenance | undefined {
+export function loadOutboxProvenance(
+  outboxDir: string,
+  eventId: string
+): OutboxProvenance | undefined {
   const path = outboxProvenancePath(outboxDir, eventId);
   if (!existsSync(path)) return undefined;
   return outboxProvenanceSchema.parse(JSON.parse(readFileSync(path, "utf-8")));

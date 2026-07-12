@@ -9,19 +9,13 @@ import { parseGe3gInboundBody } from "./adapters/ge-3g.js";
 import type { GovGatewayInboundWireBody, IngestResult, NativeMessage } from "./types.js";
 
 function parseNativeMessage(raw: unknown): NativeMessage | undefined {
-  return (
-    parseXRoadInboundBody(raw) ??
-    parseJpEgovInboundBody(raw) ??
-    parseGe3gInboundBody(raw)
-  );
+  return parseXRoadInboundBody(raw) ?? parseJpEgovInboundBody(raw) ?? parseGe3gInboundBody(raw);
 }
 
 function decodeNativeBody(native: NativeMessage): EventEnvelope {
   if (native.profile_id === "ge_gov_gateway_3g") {
     const text =
-      typeof native.body === "string"
-        ? native.body
-        : new TextDecoder().decode(native.body);
+      typeof native.body === "string" ? native.body : new TextDecoder().decode(native.body);
     const parsed = JSON.parse(text) as { payload?: string | Record<string, unknown> };
     const payload = parsed.payload;
     if (typeof payload === "string") {
@@ -35,10 +29,7 @@ function decodeNativeBody(native: NativeMessage): EventEnvelope {
 }
 
 /** Sync decode for webhook ingest path. */
-export function decodeGovGatewayInboundSync(
-  raw: unknown,
-  _tenantId: string
-): IngestResult {
+export function decodeGovGatewayInboundSync(raw: unknown, _tenantId: string): IngestResult {
   const wrapped = parseNativeMessage(raw);
   if (wrapped) {
     try {
@@ -120,9 +111,7 @@ export function isGovGatewayInboundBody(raw: unknown): boolean {
   return false;
 }
 
-export function buildGovGatewayInboundWireBody(
-  native: NativeMessage
-): GovGatewayInboundWireBody {
+export function buildGovGatewayInboundWireBody(native: NativeMessage): GovGatewayInboundWireBody {
   return {
     format: "gov_gateway",
     profile_id: native.profile_id,

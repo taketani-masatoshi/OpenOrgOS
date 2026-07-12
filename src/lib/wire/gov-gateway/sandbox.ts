@@ -6,11 +6,7 @@ import type {
 } from "../../../../schemas/protocol/gov-gateway-adapter.js";
 import { STEWARD_PLATFORM_DIR } from "../../steward-paths.js";
 import { getGovGatewayYamlPath } from "../../protocol/paths.js";
-import {
-  findProfileBinding,
-  loadGovGatewayConfig,
-  resolveAdapter,
-} from "./config.js";
+import { findProfileBinding, loadGovGatewayConfig, resolveAdapter } from "./config.js";
 import type { AdapterHealth } from "./types.js";
 
 const SANDBOX_ENV: Partial<
@@ -83,7 +79,9 @@ export async function pingSandboxEndpoint(
     const ok = res.status < 500;
     return {
       ok,
-      detail: ok ? `reachable HTTP ${res.status} via ${method}` : `HTTP ${res.status} via ${method}`,
+      detail: ok
+        ? `reachable HTTP ${res.status} via ${method}`
+        : `HTTP ${res.status} via ${method}`,
       latencyMs,
       httpStatus: res.status,
       method,
@@ -162,12 +160,7 @@ export async function govGatewaySandboxHealth(
 
 export function initGovGatewaySandboxConfig(opts?: { force?: boolean }): string {
   const dest = getGovGatewayYamlPath();
-  const src = join(
-    STEWARD_PLATFORM_DIR,
-    "protocol",
-    "seed",
-    "gov-gateway-live-pilot.yaml.example"
-  );
+  const src = join(STEWARD_PLATFORM_DIR, "protocol", "seed", "gov-gateway-live-pilot.yaml.example");
   if (!existsSync(src)) {
     throw new Error(`Seed not found: ${src}`);
   }

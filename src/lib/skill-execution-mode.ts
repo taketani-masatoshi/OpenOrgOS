@@ -6,11 +6,12 @@ import type { AgentId } from "../../schemas/classification.js";
 import type { SkillRunOptions } from "../commands/skills.js";
 import { resolveAgentId } from "./agent-catalog.js";
 import { canonicalSkillId, type SkillInvocationResolution } from "./skill-invocation.js";
+import { getSkillById, type ResolvedSkillEntry } from "./skill-registry.js";
 import {
-  getSkillById,
-  type ResolvedSkillEntry,
-} from "./skill-registry.js";
-import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModules, type ModuleAgentId } from "./modules.js";
+  MODULE_TO_CLASSIFICATION_AGENT,
+  loadEnabledModules,
+  type ModuleAgentId,
+} from "./modules.js";
 
 export type SkillExecutionMode =
   | "direct_auto"
@@ -87,8 +88,7 @@ export function resolveSkillExecutionMode(
 
   const skillId = canonicalSkillId(skillInput) ?? skillInput;
   const skill =
-    getSkillById(skillId) ??
-    (resolution && "skill" in resolution ? resolution.skill : undefined);
+    getSkillById(skillId) ?? (resolution && "skill" in resolution ? resolution.skill : undefined);
   if (!skill) {
     return { mode: "escalate", reason: `unknown skill: ${skillInput}` };
   }
@@ -129,7 +129,7 @@ export function resolveSkillExecutionMode(
       reason:
         resolution?.status === "deferred"
           ? resolution.reason
-          : skill.deferred ?? "explicit argv/parent command requires manual dispatch",
+          : (skill.deferred ?? "explicit argv/parent command requires manual dispatch"),
     };
   }
 

@@ -1,4 +1,7 @@
-import { formatPlatformExtensionReport, runPlatformExtensionChecks } from "../lib/platform-extension-check.js";
+import {
+  formatPlatformExtensionReport,
+  runPlatformExtensionChecks,
+} from "../lib/platform-extension-check.js";
 
 export interface PlatformExtensionCheckOptions {
   json?: boolean;

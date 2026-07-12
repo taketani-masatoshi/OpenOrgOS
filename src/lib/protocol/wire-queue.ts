@@ -10,10 +10,7 @@ import {
   type WirePendingLifecycleReason,
 } from "./wire-pending-lifecycle.js";
 
-const store = createYamlPendingQueueStore<
-  WirePendingEntry,
-  WirePendingRegistry
->({
+const store = createYamlPendingQueueStore<WirePendingEntry, WirePendingRegistry>({
   getPath: getWirePendingYamlPath,
   schema: wirePendingRegistrySchema,
   emptyRegistry: () => ({ pending: [] }),

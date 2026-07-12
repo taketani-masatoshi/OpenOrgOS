@@ -12,18 +12,21 @@ export const peerEndpointModeSchema = z.enum(["push", "relay", "pull"]);
  * - relay — Org C relay enqueue
  * - email_wire — SMTP signed WireMessage envelope (R5 fallback)
  */
-export const peerEndpointUrlSchema = z.string().min(1).refine(
-  (u) => {
-    if (u.startsWith("smtp://")) return true;
-    try {
-      new URL(u);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  { message: "Invalid endpoint URL (https/http or smtp://)" }
-);
+export const peerEndpointUrlSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (u) => {
+      if (u.startsWith("smtp://")) return true;
+      try {
+        new URL(u);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: "Invalid endpoint URL (https/http or smtp://)" }
+  );
 
 export const peerTransportSchema = z.enum([
   "wire_v1",
@@ -45,10 +48,10 @@ export const peerEndpointSchema = z
     transport: peerTransportSchema.default("openorgos_p2p"),
     gov_gateway: govGatewayPeerBindingSchema.optional(),
   })
-  .refine(
-    (ep) => ep.transport !== "gov_gateway" || ep.gov_gateway !== undefined,
-    { message: "gov_gateway binding required when transport is gov_gateway", path: ["gov_gateway"] }
-  );
+  .refine((ep) => ep.transport !== "gov_gateway" || ep.gov_gateway !== undefined, {
+    message: "gov_gateway binding required when transport is gov_gateway",
+    path: ["gov_gateway"],
+  });
 
 export type PeerEndpoint = z.output<typeof peerEndpointSchema>;
 export type PeerEndpointMode = z.output<typeof peerEndpointModeSchema>;

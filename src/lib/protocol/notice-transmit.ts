@@ -6,10 +6,7 @@ import {
   evaluateWitnessWireGovernancePolicy,
   formatWitnessWireGovernancePolicySummary,
 } from "./witness-policy.js";
-import {
-  formatWitnessFanOutSummary,
-  maybeRegisterWitnessAfterWire,
-} from "./witness-hook.js";
+import { formatWitnessFanOutSummary, maybeRegisterWitnessAfterWire } from "./witness-hook.js";
 import type { WitnessPoolBindResult } from "./contract-witness-pool.js";
 
 export interface NoticeTransmitResult {

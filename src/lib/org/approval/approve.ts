@@ -2,17 +2,9 @@ import type { OrgApprovalRequest } from "../../../../schemas/org/approval.js";
 import type { OperatorAttestation } from "../../../../schemas/org/operator-attestation.js";
 import type { OrgApprovalTier } from "../../../../schemas/org/tier.js";
 import type { WireApprovalGateResult } from "../../../../schemas/protocol/wire-approval.js";
-import {
-  assertWireGovernanceApproval,
-} from "../../jurisdiction/wire-governance/index.js";
-import {
-  isCorrespondenceApprovalSubject,
-} from "../../correspondence/review.js";
-import {
-  findOrgApproval,
-  loadOrgApprovalRegistry,
-  saveOrgApprovalRegistry,
-} from "./registry.js";
+import { assertWireGovernanceApproval } from "../../jurisdiction/wire-governance/index.js";
+import { isCorrespondenceApprovalSubject } from "../../correspondence/review.js";
+import { findOrgApproval, loadOrgApprovalRegistry, saveOrgApprovalRegistry } from "./registry.js";
 import { emitOrgAuditAttested } from "../audit-emit.js";
 
 export interface ApproveOrgApprovalOptions {

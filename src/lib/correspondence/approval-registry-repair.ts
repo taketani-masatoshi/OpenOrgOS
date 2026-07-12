@@ -14,8 +14,14 @@ export function buildApprovalFromDraft(draft: CorrespondenceDraft): OrgApprovalR
   if (!draft.approval_id) {
     throw new Error(`Draft ${draft.draft_id} has no approval_id`);
   }
-  if (!isCorrespondenceApprovalSubject(draft.channel === "email" ? "correspondence.email" : "correspondence.slack")) {
-    throw new Error(`Draft ${draft.draft_id} channel ${draft.channel} is not correspondence approval`);
+  if (
+    !isCorrespondenceApprovalSubject(
+      draft.channel === "email" ? "correspondence.email" : "correspondence.slack"
+    )
+  ) {
+    throw new Error(
+      `Draft ${draft.draft_id} channel ${draft.channel} is not correspondence approval`
+    );
   }
   const subjectType = draft.channel === "email" ? "correspondence.email" : "correspondence.slack";
   const status =
@@ -46,7 +52,9 @@ export function buildApprovalFromDraft(draft: CorrespondenceDraft): OrgApprovalR
 }
 
 /** Ensure pending-approvals.yaml contains the draft's approval_id (idempotent). */
-export function repairMissingApprovalForDraft(draft: CorrespondenceDraft): OrgApprovalRequest | undefined {
+export function repairMissingApprovalForDraft(
+  draft: CorrespondenceDraft
+): OrgApprovalRequest | undefined {
   if (!draft.approval_id) return undefined;
   const existing = findOrgApproval(draft.approval_id);
   if (existing) return existing;

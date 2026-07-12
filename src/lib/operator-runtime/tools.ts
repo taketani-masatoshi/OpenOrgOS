@@ -36,7 +36,8 @@ function readOnlyTools(): OperatorToolDefinition[] {
       type: "function",
       function: {
         name: "operator_today",
-        description: "Fetch OrgOS Today context — decisions, approvals, wire, witness, inbox, KPIs (L1)",
+        description:
+          "Fetch OrgOS Today context — decisions, approvals, wire, witness, inbox, KPIs (L1)",
         parameters: { type: "object", properties: {}, additionalProperties: false },
       },
     },
@@ -98,7 +99,10 @@ function writeTools(): OperatorToolDefinition[] {
           type: "object",
           properties: {
             approval_id: { type: "string", description: "Approval ID e.g. NOTICE-..." },
-            flush: { type: "boolean", description: "Flush wire delivery after approve (default true)" },
+            flush: {
+              type: "boolean",
+              description: "Flush wire delivery after approve (default true)",
+            },
           },
           required: ["approval_id"],
           additionalProperties: false,
@@ -122,19 +126,14 @@ export function isOperatorToolsWriteEnabled(ctx?: { operatorId?: string }): bool
   return true;
 }
 
-function contextHasPermission(
-  ctx: OperatorToolContext,
-  permission: OperatorPermission
-): boolean {
+function contextHasPermission(ctx: OperatorToolContext, permission: OperatorPermission): boolean {
   return operatorHasPermission(
     ctx.operatorId ? findOperatorById(ctx.operatorId) : undefined,
     permission
   );
 }
 
-export function listOperatorToolDefinitions(
-  ctx?: OperatorToolContext
-): OperatorToolDefinition[] {
+export function listOperatorToolDefinitions(ctx?: OperatorToolContext): OperatorToolDefinition[] {
   const tools = readOnlyTools().filter(
     (tool) =>
       (tool.function.name !== "operator_generate_cashflow" ||
@@ -158,9 +157,7 @@ async function execOperatorToday(): Promise<OperatorToolResult> {
   return { ok: true, content: formatTodayContextMarkdown(ctx) };
 }
 
-async function execOperatorValidateStatus(
-  ctx: OperatorToolContext
-): Promise<OperatorToolResult> {
+async function execOperatorValidateStatus(ctx: OperatorToolContext): Promise<OperatorToolResult> {
   if (!contextHasPermission(ctx, "chat:read")) {
     return { ok: false, content: "Operator lacks chat:read" };
   }
@@ -173,9 +170,7 @@ async function execOperatorListApprovals(): Promise<OperatorToolResult> {
   if (ctx.approvals.length === 0) {
     return { ok: true, content: "No pending approvals." };
   }
-  const lines = ctx.approvals.map(
-    (a) => `- ${a.id} [${a.scope}] ${a.subject} (${a.status})`
-  );
+  const lines = ctx.approvals.map((a) => `- ${a.id} [${a.scope}] ${a.subject} (${a.status})`);
   return { ok: true, content: lines.join("\n") };
 }
 
@@ -232,8 +227,7 @@ async function execOperatorGenerateCashflow(
   }
   if (
     parsed.write &&
-    (process.env.ORGOS_LLM_TOOLS_WRITE !== "1" ||
-      !contextHasPermission(ctx, "git:write"))
+    (process.env.ORGOS_LLM_TOOLS_WRITE !== "1" || !contextHasPermission(ctx, "git:write"))
   ) {
     return {
       ok: false,
@@ -251,10 +245,8 @@ async function execOperatorGenerateCashflow(
         path: result.output_path,
         shortfall_date: result.schedule.shortfall_date ?? null,
         runway_days: result.schedule.runway_days ?? null,
-        required_funding_amount:
-          result.schedule.required_funding_amount ?? null,
-        required_funding_by_date:
-          result.schedule.required_funding_by_date ?? null,
+        required_funding_amount: result.schedule.required_funding_amount ?? null,
+        required_funding_by_date: result.schedule.required_funding_by_date ?? null,
         wrote: result.wrote,
       }),
     };
@@ -271,7 +263,7 @@ export async function executeOperatorTool(
   argsJson: string,
   ctx: OperatorToolContext = {}
 ): Promise<OperatorToolResult> {
-  let args: Record<string, unknown> = {};
+  let args: Record<string, unknown>;
   try {
     args = JSON.parse(argsJson || "{}") as Record<string, unknown>;
   } catch {
@@ -290,10 +282,7 @@ export async function executeOperatorTool(
     case "operator_generate_cashflow":
       return execOperatorGenerateCashflow(args, ctx);
     case "operator_approve":
-      if (
-        !isOperatorToolsWriteEnabled(ctx) ||
-        !contextHasPermission(ctx, "chat:approve")
-      ) {
+      if (!isOperatorToolsWriteEnabled(ctx) || !contextHasPermission(ctx, "chat:approve")) {
         return { ok: false, content: "Write tools disabled or operator lacks chat:approve" };
       }
       return execOperatorApprove(args, ctx);

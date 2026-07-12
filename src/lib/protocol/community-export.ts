@@ -7,10 +7,7 @@ import { computeCommunityReadiness } from "./community-readiness.js";
 import { checkRevocationSla, loadTrustedOperatorsRegistry } from "./trusted-operators.js";
 import { communityWireNodeApiCatalog } from "./community-wire-node-api.js";
 import { communityTenantMailApiCatalog } from "./community-tenant-mail-api.js";
-import {
-  computeEcoProductionEvidence,
-  resolveCommunityReadinessCap,
-} from "./eco-production-evidence.js";
+import { resolveCommunityReadinessCap } from "./eco-production-evidence.js";
 import { getInstallRoot } from "../orgos-paths.js";
 import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
 
@@ -52,51 +49,39 @@ export function exportCommunityProtocolBundle(
     files.push("wire-node-governance.yaml");
   }
 
-  writeJson(
-    join(dest, "community-wire-node-api.json"),
-    {
-      ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
-      ...communityWireNodeApiCatalog(),
-    }
-  );
+  writeJson(join(dest, "community-wire-node-api.json"), {
+    ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
+    ...communityWireNodeApiCatalog(),
+  });
   files.push("community-wire-node-api.json");
 
-  writeJson(
-    join(dest, "community-tenant-mail-api.json"),
-    {
-      ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
-      ...communityTenantMailApiCatalog(),
-    }
-  );
+  writeJson(join(dest, "community-tenant-mail-api.json"), {
+    ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
+    ...communityTenantMailApiCatalog(),
+  });
   files.push("community-tenant-mail-api.json");
 
   const readiness = computeCommunityReadiness();
   const readinessCap = resolveCommunityReadinessCap(root);
-  writeJson(
-    join(dest, "community-readiness.json"),
-    {
-      ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
-      score: readiness.score,
-      steward_side_cap: readinessCap,
-      strict_cap_base: 80,
-      checks: readiness.checks,
-    }
-  );
+  writeJson(join(dest, "community-readiness.json"), {
+    ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
+    score: readiness.score,
+    steward_side_cap: readinessCap,
+    strict_cap_base: 80,
+    checks: readiness.checks,
+  });
   files.push("community-readiness.json");
 
   const sla = checkRevocationSla();
   const registry = loadTrustedOperatorsRegistry();
-  writeJson(
-    join(dest, "community-sla.json"),
-    {
-      ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
-      ok: sla.ok,
-      policy: registry.revocation_sla,
-      overdue: sla.overdue,
-      active_operators: registry.operators.filter((o) => o.status === "active").length,
-      pending_governance: registry.governance_requests.filter((r) => r.status === "pending").length,
-    }
-  );
+  writeJson(join(dest, "community-sla.json"), {
+    ...(options.generatedAt ? { generated_at: options.generatedAt } : {}),
+    ok: sla.ok,
+    policy: registry.revocation_sla,
+    overdue: sla.overdue,
+    active_operators: registry.operators.filter((o) => o.status === "active").length,
+    pending_governance: registry.governance_requests.filter((r) => r.status === "pending").length,
+  });
   files.push("community-sla.json");
 
   const integrationPath = join(dest, "community-integration.json");
@@ -108,17 +93,14 @@ export function exportCommunityProtocolBundle(
     generated_at: _generatedAt,
     ...stableExisting
   } = existing;
-  writeJson(
-    integrationPath,
-    {
-      ...stableExisting,
-      steward_export: true,
-      ...(options.generatedAt ? { steward_export_at: options.generatedAt } : {}),
-      readiness_score: readiness.score,
-      tenant_mail_connect_api: existing.tenant_mail_connect_api === true,
-      tenant_mail_connect_ui: existing.tenant_mail_connect_ui === true,
-    }
-  );
+  writeJson(integrationPath, {
+    ...stableExisting,
+    steward_export: true,
+    ...(options.generatedAt ? { steward_export_at: options.generatedAt } : {}),
+    readiness_score: readiness.score,
+    tenant_mail_connect_api: existing.tenant_mail_connect_api === true,
+    tenant_mail_connect_ui: existing.tenant_mail_connect_ui === true,
+  });
   files.push("community-integration.json");
 
   return { dest, files };

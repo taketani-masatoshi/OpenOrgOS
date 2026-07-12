@@ -190,6 +190,13 @@ export const chatApprovalRequestSchema = z.object({
   flush: z.boolean().optional(),
   /** Required and must be true for scheduling correspondence. */
   reviewed: z.boolean().optional(),
+  /**
+   * When true, scheduling correspondence is sent after approval (SMTP / dry-run).
+   * Default false — approve alone does not deliver mail (explicit send gate).
+   */
+  send: z.boolean().optional(),
+  /** Passed to send gate when send=true. Default true (safe). */
+  dry_run: z.boolean().optional(),
 });
 
 export const notificationsRegistrySchema = z.object({

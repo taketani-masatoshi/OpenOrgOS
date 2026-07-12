@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import {
   loadFixedAssets,
   loadTaxProfile,
@@ -8,8 +8,13 @@ import {
   validateFixedAssetConsistency,
   validateAll,
 } from "../src/lib/data.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("fixed assets accounting", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("loads fixed-assets.yaml with valid schema", () => {
     const fa = loadFixedAssets();
     expect(fa.assets).toHaveLength(3);

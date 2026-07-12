@@ -32,7 +32,9 @@ export function isDnsStyleNodeId(nodeId: string): boolean {
   return /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/i.test(trimmed);
 }
 
-function wireUrlFromSrv(records: Array<{ name: string; port: number; priority?: number }>): string | undefined {
+function wireUrlFromSrv(
+  records: Array<{ name: string; port: number; priority?: number }>
+): string | undefined {
   if (!records.length) return undefined;
   const sorted = [...records].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
   const pick = sorted[0]!;
@@ -123,10 +125,7 @@ export async function resolveOpenOrgWireUrl(
     /* optional */
   }
 
-  const wellKnownCandidates = [
-    `https://wire.${domain}`,
-    `https://${domain}`,
-  ];
+  const wellKnownCandidates = [`https://wire.${domain}`, `https://${domain}`];
   for (const candidate of wellKnownCandidates) {
     const url = await fetchWellKnownWireUrl(candidate, resolver);
     if (url) return result(trimmed, "well-known", url, candidate);

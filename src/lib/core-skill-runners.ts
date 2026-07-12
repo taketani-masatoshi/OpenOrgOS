@@ -1,11 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import {
-  loadContracts,
-  loadFixedAssets,
-  loadInvestmentPlan,
-  loadTaxProfile,
-} from "./data.js";
+import { loadContracts, loadFixedAssets, loadInvestmentPlan, loadTaxProfile } from "./data.js";
 import { getDataDir, writeMarkdownReport } from "./utils.js";
 
 const TAX_FILES = [

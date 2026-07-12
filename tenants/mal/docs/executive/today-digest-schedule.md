@@ -25,7 +25,7 @@
 | `docs/reports/dashboard/today-digest/latest.md` | 直近 1 回分（上書き） |
 | `docs/reports/dashboard/today-digest/YYYY-MM-DD-HHMM-today.md` | 履歴 |
 | `/tmp/orgos-mal-today-digest.log` | 実行ログ |
-| macOS 通知 | 結論行の要約 |
+| macOS 通知 | 件数（subtitle）+ 先頭の判断/承認タイトル（本文）· アイコンは `apps/MAL Today.app` |
 
 ---
 

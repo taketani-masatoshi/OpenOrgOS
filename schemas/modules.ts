@@ -12,7 +12,10 @@ export const moduleAgentId = z.enum(ALL_MODULE_IDS);
 
 export const moduleBillingSchema = z.object({
   docs_base: z.string(),
-  invoice_number_prefix: z.string().regex(/^[A-Z0-9_-]+$/).default("RENT"),
+  invoice_number_prefix: z
+    .string()
+    .regex(/^[A-Z0-9_-]+$/)
+    .default("RENT"),
   template_id: z.string().default("rent-monthly"),
   sender_email: z.string().optional(),
   tenant_name: z.string().optional(),

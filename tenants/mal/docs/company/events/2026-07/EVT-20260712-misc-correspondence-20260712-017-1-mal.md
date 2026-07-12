@@ -4,6 +4,8 @@ occurred_at: 2026-07-12
 kind: misc
 status: open
 artifact_dir: docs/company/artifacts/2026-07/EVT-20260712-misc-correspondence-20260712-017-1-mal/
+related:
+  approval_id: APR-20260712-003
 ---
 
 # 社外メール送信 — 【見積依頼】旅館業・火災保険および施設賠償（墨田区亀沢・1棟貸し）／株式会社MAL

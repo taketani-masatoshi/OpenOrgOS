@@ -7,8 +7,7 @@ import {
 export function isJpBankCorporateEnabled(): boolean {
   return loadEnabledModulesSafe().some(
     (module) =>
-      module.enabled &&
-      (module.id === "jp_bank_corporate" || module.agent === "jp_bank_corporate")
+      module.enabled && (module.id === "jp_bank_corporate" || module.agent === "jp_bank_corporate")
   );
 }
 
@@ -35,11 +34,7 @@ export function runJpBankCorporatePipelineCashflow(): {
   });
   return {
     ran: true,
-    output_paths: [
-      json.output_path,
-      markdown.output_path,
-      json.detail_schedule_path,
-    ]
+    output_paths: [json.output_path, markdown.output_path, json.detail_schedule_path]
       .filter((path): path is string => Boolean(path))
       .filter((path, index, all) => all.indexOf(path) === index),
   };

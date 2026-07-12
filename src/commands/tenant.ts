@@ -1,4 +1,8 @@
-import { runTenantInit, scaffoldMissingTenantData, type TenantInitOptions } from "../lib/tenant-init.js";
+import {
+  runTenantInit,
+  scaffoldMissingTenantData,
+  type TenantInitOptions,
+} from "../lib/tenant-init.js";
 import {
   alignAllTenantsClassificationRegistry,
   alignClassificationRegistry,
@@ -15,7 +19,9 @@ export function runTenantScaffoldData(opts: { tenant?: string; json?: boolean } 
     console.log(JSON.stringify({ ...result, classification }, null, 2));
     return;
   }
-  console.log(`✓ Scaffold data: ${result.created.length} created, ${result.skipped.length} skipped (exists)`);
+  console.log(
+    `✓ Scaffold data: ${result.created.length} created, ${result.skipped.length} skipped (exists)`
+  );
   for (const p of result.created) console.log(`  + ${p}`);
   if (classification.updated) {
     console.log(

@@ -96,8 +96,10 @@
 ## 未バインドカタログ（読取禁止）
 
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
+- `jp_bank_corporate` — `modules.yaml` 未登録 · **読まない**
 - `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
 - `jp_medical_device` — `modules.yaml` 未登録 · **読まない**
+- `jp_permit_registry` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
 - `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**
 - `language_bridge` — `modules.yaml` 未登録 · **読まない**

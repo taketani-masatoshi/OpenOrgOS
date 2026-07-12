@@ -80,9 +80,7 @@ export function parseInboundWebhookBody(raw: unknown): {
 
   if (obj.legacy && typeof obj.legacy === "object") {
     const legacy = obj.legacy as Record<string, unknown>;
-    const envelopeParsed = obj.envelope
-      ? eventEnvelopeSchema.safeParse(obj.envelope)
-      : null;
+    const envelopeParsed = obj.envelope ? eventEnvelopeSchema.safeParse(obj.envelope) : null;
     return {
       legacy: {
         event: String(legacy.event ?? ""),

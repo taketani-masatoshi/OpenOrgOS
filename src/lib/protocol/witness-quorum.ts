@@ -52,9 +52,9 @@ export async function checkHubHealth(hubUrl: string): Promise<boolean> {
   }
 }
 
-export async function checkWitnessPoolHealth(pool?: WitnessPoolConfig): Promise<
-  { hub_id: string; ok: boolean; url: string }[]
-> {
+export async function checkWitnessPoolHealth(
+  pool?: WitnessPoolConfig
+): Promise<{ hub_id: string; ok: boolean; url: string }[]> {
   const hubs = sortedHubs(pool);
   const results = await Promise.all(
     hubs.map(async (hub) => ({

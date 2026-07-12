@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId, getTenantId } from "../lib/tenant.js";
 import {
@@ -6,15 +6,15 @@ import {
   validateWireGatewayConfig,
   getWireGatewayYamlPath,
 } from "../lib/wire-gateway/validate.js";
-import {
-  startWireGatewayServer,
-  startWireInternalApiServer,
-} from "../lib/wire-gateway/index.js";
+import { startWireGatewayServer, startWireInternalApiServer } from "../lib/wire-gateway/index.js";
 import { ensureDevServerTls } from "../lib/protocol/dev-server-tls.js";
 import { getDeployDir } from "../lib/orgos-paths.js";
 import { writeYamlFile } from "../lib/utils.js";
 import { requireCliConfigWrite } from "../lib/console-auth/cli-operator.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../lib/protocol/signing.js";
+import {
+  ensureProtocolSigningKey,
+  exportProtocolPublicKeyBase64,
+} from "../lib/protocol/signing.js";
 import { resolveWireGatewayDid } from "../lib/wire-gateway/did.js";
 import { resolveWireNodeDid } from "../../schemas/protocol/openorg-did.js";
 import { loadWireTrustRegistry } from "../lib/protocol/wire-trust-registry.js";
@@ -22,7 +22,6 @@ import {
   listWireGatewayDiscoverEntries,
   listWireGatewayFederationCatalog,
   listWireGatewayPeerSuggestions,
-  applyWireGatewayDiscover,
   applyWireGatewayDiscoverAsync,
   syncWireGatewayFederation,
 } from "../lib/wire-gateway/discover.js";
@@ -84,7 +83,9 @@ export async function runWireGatewayServe(opts: WireGatewayServeOptions = {}): P
   if (opts.tenant) setTenantId(opts.tenant);
   const config = opts.config ?? loadWireGatewayConfig();
   if (!config) {
-    throw new Error("wire-gateway.yaml not found — copy from steward/platform/protocol/seed/wire-gateway.yaml.example");
+    throw new Error(
+      "wire-gateway.yaml not found — copy from steward/platform/protocol/seed/wire-gateway.yaml.example"
+    );
   }
   const validation = validateWireGatewayConfig(config);
   if (!validation.ok) {
@@ -123,8 +124,7 @@ export interface WireGatewayTlsInitOptions {
 export function runWireGatewayTlsInit(opts: WireGatewayTlsInitOptions = {}): void {
   requireCliConfigWrite("wire-gateway tls-init");
   if (opts.tenant) setTenantId(opts.tenant);
-  const tlsDir =
-    opts.outputDir ?? join(getDeployDir(), "wire-gateway", "tls");
+  const tlsDir = opts.outputDir ?? join(getDeployDir(), "wire-gateway", "tls");
   const pki = ensureDevServerTls({
     outputDir: tlsDir,
     commonName: "wire-gateway.local",
@@ -299,7 +299,12 @@ export function runWireGatewayInit(opts: WireGatewayInitOptions = {}): void {
   mkdirSync(join(configPath, ".."), { recursive: true });
   writeYamlFile(configPath, config);
 
-  const summary = { tenant: tenantId, config_path: configPath, node_id: config.node_id, did: config.did };
+  const summary = {
+    tenant: tenantId,
+    config_path: configPath,
+    node_id: config.node_id,
+    did: config.did,
+  };
   if (opts.json) {
     console.log(JSON.stringify(summary, null, 2));
     return;
@@ -332,7 +337,13 @@ export function runWireGatewayDiscover(opts: WireGatewayDiscoverOptions = {}): v
   if (opts.suggest) {
     const suggestions = listWireGatewayPeerSuggestions({ tenantId, jurisdiction });
     if (opts.json) {
-      console.log(JSON.stringify({ tenant: tenantId, jurisdiction, count: suggestions.length, suggestions }, null, 2));
+      console.log(
+        JSON.stringify(
+          { tenant: tenantId, jurisdiction, count: suggestions.length, suggestions },
+          null,
+          2
+        )
+      );
       return;
     }
     console.log(`Wire peer suggestions (${tenantId}): ${suggestions.length}`);
@@ -344,13 +355,17 @@ export function runWireGatewayDiscover(opts: WireGatewayDiscoverOptions = {}): v
 
   const entries = listWireGatewayDiscoverEntries({ tenantId, jurisdiction });
   if (opts.json) {
-    console.log(JSON.stringify({ tenant: tenantId, jurisdiction, count: entries.length, entries }, null, 2));
+    console.log(
+      JSON.stringify({ tenant: tenantId, jurisdiction, count: entries.length, entries }, null, 2)
+    );
     return;
   }
   console.log(`Wire trust-registry nodes (${tenantId}): ${entries.length}`);
   for (const entry of entries) {
     const status = entry.self ? "self" : entry.registered ? "registered" : "unregistered";
-    console.log(`  · ${entry.node_id} — ${entry.display_name} [${status}]${entry.wire_url ? ` · ${entry.wire_url}` : ""}`);
+    console.log(
+      `  · ${entry.node_id} — ${entry.display_name} [${status}]${entry.wire_url ? ` · ${entry.wire_url}` : ""}`
+    );
   }
 }
 
@@ -367,7 +382,9 @@ export function runWireGatewayFederationList(opts: WireGatewayFederationOptions 
   console.log(`Wire Gateway federation catalog: ${catalog.length} node(s)`);
   for (const node of catalog) {
     const pin = node.protocol_public_key_pinned ? "pinned" : "unpinned";
-    console.log(`  · ${node.node_id} — ${node.display_name} [${pin}]${node.wire_url ? ` · ${node.wire_url}` : ""}`);
+    console.log(
+      `  · ${node.node_id} — ${node.display_name} [${pin}]${node.wire_url ? ` · ${node.wire_url}` : ""}`
+    );
   }
 }
 
@@ -379,7 +396,9 @@ export interface WireGatewayDiscoverApplyOptions {
   json?: boolean;
 }
 
-export async function runWireGatewayDiscoverApply(opts: WireGatewayDiscoverApplyOptions = {}): Promise<void> {
+export async function runWireGatewayDiscoverApply(
+  opts: WireGatewayDiscoverApplyOptions = {}
+): Promise<void> {
   if (opts.tenant) setTenantId(opts.tenant);
   requireCliConfigWrite("wire-gateway discover --apply");
   const result = await applyWireGatewayDiscoverAsync({
@@ -396,7 +415,9 @@ export async function runWireGatewayDiscoverApply(opts: WireGatewayDiscoverApply
   const mode = result.dry_run ? "dry-run" : "applied";
   console.log(`✓ wire-gateway discover ${mode} · ${result.applied.length} peer(s)`);
   for (const p of result.applied) {
-    console.log(`  · ${p.peer_id} ${p.display_name} → ${p.inbound_endpoints?.[0]?.url ?? "(no endpoint)"}`);
+    console.log(
+      `  · ${p.peer_id} ${p.display_name} → ${p.inbound_endpoints?.[0]?.url ?? "(no endpoint)"}`
+    );
   }
   for (const s of result.skipped) {
     console.log(`  skip ${s.node_id}: ${s.reason}`);
@@ -485,7 +506,9 @@ export async function runWireGatewayFederationGossip(
   }
   console.log(`✓ wire-gateway federation gossip · merged ${local.nodes.length} node(s)`);
   for (const r of results) {
-    console.log(`  · ${r.peer_wire_url}: ${r.status}${r.remote_nodes != null ? ` (${r.remote_nodes} nodes)` : ""}`);
+    console.log(
+      `  · ${r.peer_wire_url}: ${r.status}${r.remote_nodes != null ? ` (${r.remote_nodes} nodes)` : ""}`
+    );
   }
 }
 
@@ -504,7 +527,9 @@ export function runWireGatewayScore(opts: WireGatewayScoreOptions = {}): void {
   }
   console.log(`${score.label}: ${score.total}/${score.max} (${score.grade})`);
   if (!opts.strict) {
-    console.log("  Note: this checklist is static and does not prove runtime behavior; use --strict.");
+    console.log(
+      "  Note: this checklist is static and does not prove runtime behavior; use --strict."
+    );
   }
   for (const i of score.items) {
     const mark = i.ok ? "✓" : "✗";

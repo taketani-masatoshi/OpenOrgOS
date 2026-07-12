@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   companyEventsAttestationSchema,
@@ -36,7 +36,7 @@ export function getISOWeekParts(date = new Date()): { year: number; week: number
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const week = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   return { year: d.getUTCFullYear(), week };
 }
 
@@ -101,7 +101,8 @@ export function runWeeklyCompanyEventsAttestation(opts?: {
   const chain = loadCompanyEventChain();
   const tail = chain.length > 0 ? chain[chain.length - 1] : undefined;
   const prev = loadCompanyEventsAttestations().at(-1);
-  const linksSincePrev = prev?.chain_tail_seq != null && tail ? tail.seq - prev.chain_tail_seq : tail?.seq ?? 0;
+  const linksSincePrev =
+    prev?.chain_tail_seq != null && tail ? tail.seq - prev.chain_tail_seq : (tail?.seq ?? 0);
   const period = weekPeriodBounds(date);
   const registry = loadCompanyEvents();
 

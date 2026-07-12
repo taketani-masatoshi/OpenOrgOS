@@ -64,7 +64,9 @@ export function runAgentReport(opts: AgentReportOptions): void {
     console.log(JSON.stringify(mission, null, 2));
     return;
   }
-  console.log(`✓ report ${mission.id} · COO=${mission.relay.coo.status} · Steward=${mission.relay.steward.status}`);
+  console.log(
+    `✓ report ${mission.id} · COO=${mission.relay.coo.status} · Steward=${mission.relay.steward.status}`
+  );
 }
 
 export interface AgentRelayListOptions {

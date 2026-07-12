@@ -18,9 +18,7 @@ const agentDelegationScopesSchema = z.object({
 
 export function validateDelegationScopeAgents(): string[] {
   const issues: string[] = [];
-  const doc = agentDelegationScopesSchema.parse(
-    YAML.parse(readFileSync(SCOPES_PATH, "utf-8"))
-  );
+  const doc = agentDelegationScopesSchema.parse(YAML.parse(readFileSync(SCOPES_PATH, "utf-8")));
 
   for (const agentId of Object.keys(doc.agents)) {
     if (!resolveAgentId(agentId)) {

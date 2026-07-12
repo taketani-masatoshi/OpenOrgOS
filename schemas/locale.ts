@@ -1,6 +1,16 @@
 import { z } from "zod";
 
-export const displayLanguageCodeSchema = z.enum(["ja", "en", "zh-Hant", "zh-Hans", "et", "ms", "ar", "ru", "de"]);
+export const displayLanguageCodeSchema = z.enum([
+  "ja",
+  "en",
+  "zh-Hant",
+  "zh-Hans",
+  "et",
+  "ms",
+  "ar",
+  "ru",
+  "de",
+]);
 
 export const displayLanguagePolicyTier = z.enum([
   "core",

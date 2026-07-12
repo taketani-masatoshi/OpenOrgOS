@@ -1,7 +1,4 @@
-import {
-  formatWireLiveVerifyReport,
-  runWireLiveVerify,
-} from "../lib/protocol/wire-live-verify.js";
+import { formatWireLiveVerifyReport, runWireLiveVerify } from "../lib/protocol/wire-live-verify.js";
 
 export interface WireLiveVerifyCommandOptions {
   tenant?: string;
@@ -16,11 +13,9 @@ export async function runWireLiveVerifyCommand(
   opts: WireLiveVerifyCommandOptions = {}
 ): Promise<void> {
   const tenant = opts.tenant ?? process.env.ORGOS_TENANT ?? "mal";
-  const roundtrip =
-    opts.roundtrip === true || process.env.ORGOS_LIVE_VERIFY_ROUNDTRIP === "1";
+  const roundtrip = opts.roundtrip === true || process.env.ORGOS_LIVE_VERIFY_ROUNDTRIP === "1";
   const strictEmailWire =
-    opts.strictEmailWire === true ||
-    process.env.ORGOS_LIVE_VERIFY_STRICT_EMAIL === "1";
+    opts.strictEmailWire === true || process.env.ORGOS_LIVE_VERIFY_STRICT_EMAIL === "1";
   const result = await runWireLiveVerify({
     tenant,
     publicBaseUrl: opts.publicBaseUrl,

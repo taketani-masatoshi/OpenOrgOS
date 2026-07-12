@@ -5,7 +5,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { getInstallRoot, getDeployDir, getSchemasDir } from "../orgos-paths.js";
+import { getInstallRoot } from "../orgos-paths.js";
 import { JURISDICTION_PACKS_DIR } from "../steward-paths.js";
 import { computeModuleAxisStats } from "../extensibility-contract.js";
 import { computeCommunityReadiness } from "./community-readiness.js";
@@ -68,8 +68,11 @@ function computeStandaloneLoopChecks(): ReadinessCheck[] {
     c.id === "package.json"
       ? {
           ...c,
-          ok: existsSync(join(getInstallRoot(), "package.json")) &&
-            readFileSync(join(getInstallRoot(), "package.json"), "utf-8").includes("demo:mal-standalone"),
+          ok:
+            existsSync(join(getInstallRoot(), "package.json")) &&
+            readFileSync(join(getInstallRoot(), "package.json"), "utf-8").includes(
+              "demo:mal-standalone"
+            ),
         }
       : c
   );
@@ -192,14 +195,20 @@ export function computeOrgOsReadiness(): OrgOsReadinessReport {
     if (failed.length) gaps.push(`${label}: ${failed.map((f) => f.id).join(", ")}`);
   }
   if (interfaceAxis.score < 98) {
-    gaps.push(`インターフェース ${interfaceAxis.score}% — module production_ready 93%+ で 98 · 100% で 99`);
+    gaps.push(
+      `インターフェース ${interfaceAxis.score}% — module production_ready 93%+ で 98 · 100% で 99`
+    );
   }
   if (ecosystem.score < 99) {
     const eco = computeEcoProductionEvidence();
     if (eco.cap >= 99) {
-      gaps.push(`エコシステム ${ecosystem.score}% — 99 は vocabulary i18n + jurisdiction UI 統合済み · 残チェック確認`);
+      gaps.push(
+        `エコシステム ${ecosystem.score}% — 99 は vocabulary i18n + jurisdiction UI 統合済み · 残チェック確認`
+      );
     } else if (eco.cap >= 98) {
-      gaps.push(`エコシステム ${ecosystem.score}% — Community 統合 OK（cap 98）· 99+ は jurisdiction UI + i18n`);
+      gaps.push(
+        `エコシステム ${ecosystem.score}% — Community 統合 OK（cap 98）· 99+ は jurisdiction UI + i18n`
+      );
     } else if (eco.cap >= 92) {
       gaps.push(`エコシステム ${ecosystem.score}% — Community UI 統合で 98+`);
     } else {

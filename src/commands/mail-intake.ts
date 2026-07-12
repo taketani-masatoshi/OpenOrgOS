@@ -6,7 +6,10 @@ import {
   countHighPriorityTriage,
 } from "../lib/correspondence/mail-triage-queue.js";
 import { triageUnprocessedMail, overrideTriageEntry } from "../lib/correspondence/mail-triage.js";
-import { writeInboundHandoffDraft, notifyMailTriageHighPriority } from "../lib/correspondence/mail-handoff.js";
+import {
+  writeInboundHandoffDraft,
+  notifyMailTriageHighPriority,
+} from "../lib/correspondence/mail-handoff.js";
 import { upsertTriageEntry, findTriageEntry } from "../lib/correspondence/mail-triage-queue.js";
 import { loadMailConfig, shouldAutoWireScan } from "../lib/correspondence/mail-config.js";
 import { runGmailSetupWizard } from "../lib/correspondence/gmail-setup-wizard.js";
@@ -23,7 +26,10 @@ import {
   listSenderIdentificationPending,
   formatSenderIdentificationReport,
 } from "../lib/correspondence/sender-identification.js";
-import { findSenderIdentification, loadSenderIdentificationQueue } from "../lib/correspondence/sender-identification-queue.js";
+import {
+  findSenderIdentification,
+  loadSenderIdentificationQueue,
+} from "../lib/correspondence/sender-identification-queue.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 import {
   listPendingCeoInlineQuestions,
@@ -34,7 +40,10 @@ import {
   applyCeoInlineAnswerSideEffects,
 } from "../lib/correspondence/ceo-inline-question.js";
 import { postTriageInterpretAndCeoAsk } from "../lib/correspondence/mail-triage-interpret.js";
-import { interpretMailFromTriageEntry, findMailInterpretation } from "../lib/correspondence/mail-interpretation.js";
+import {
+  interpretMailFromTriageEntry,
+  findMailInterpretation,
+} from "../lib/correspondence/mail-interpretation.js";
 import { getTenantId } from "../lib/tenant.js";
 import {
   buildCommunityMailConnectUrl,
@@ -83,9 +92,8 @@ export async function runMailIntakeSync(opts: {
       triage.notified = await notifyMailTriageHighPriority(triage.highPriorityIds);
     }
     if (config?.receive?.auto_schedule_coordination !== false) {
-      const { runScheduleCoordinationAutoProcess } = await import(
-        "../lib/scheduling-coordination/auto-process.js"
-      );
+      const { runScheduleCoordinationAutoProcess } =
+        await import("../lib/scheduling-coordination/auto-process.js");
       await runScheduleCoordinationAutoProcess();
     }
   }
@@ -102,7 +110,9 @@ export async function runMailIntakeSync(opts: {
     return;
   }
 
-  console.log(`Sync mode: ${result.mode} · fetched: ${result.fetched} · saved: ${result.saved.length}`);
+  console.log(
+    `Sync mode: ${result.mode} · fetched: ${result.fetched} · saved: ${result.saved.length}`
+  );
   if (result.message) console.log(result.message);
   if (triage.processed) {
     console.log(`Triage processed: ${triage.processed} · notified: ${triage.notified}`);
@@ -152,7 +162,9 @@ export function runMailIntakeList(opts: { json?: boolean; unprocessed?: boolean 
     return;
   }
 
-  console.log(`Receive state: last_uid=${state.last_uid} · last_sync=${state.last_sync_at ?? "never"}`);
+  console.log(
+    `Receive state: last_uid=${state.last_uid} · last_sync=${state.last_sync_at ?? "never"}`
+  );
   console.log(`Triage pending: ${counts.pending} · action required: ${counts.actionRequired}`);
   for (const e of entries.slice(0, 30)) {
     console.log(
@@ -180,14 +192,12 @@ export async function runMailIntakeTriage(opts: {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
-  console.log(`Triage processed: ${result.processed} · high priority: ${result.highPriorityIds.length}`);
+  console.log(
+    `Triage processed: ${result.processed} · high priority: ${result.highPriorityIds.length}`
+  );
 }
 
-export function runMailIntakeHandoff(opts: {
-  id: string;
-  to?: string;
-  json?: boolean;
-}): void {
+export function runMailIntakeHandoff(opts: { id: string; to?: string; json?: boolean }): void {
   const entry = findTriageEntry(opts.id);
   if (!entry) {
     console.error(`Triage entry not found: ${opts.id}`);
@@ -259,7 +269,9 @@ export function runMailIntakeStatus(opts: { json?: boolean }): void {
     console.log(JSON.stringify(payload, null, 2));
     return;
   }
-  console.log(`sync: ${config?.receive?.sync ?? "stub"} · triage_mode: ${config?.receive?.triage_mode ?? "rules"}`);
+  console.log(
+    `sync: ${config?.receive?.sync ?? "stub"} · triage_mode: ${config?.receive?.triage_mode ?? "rules"}`
+  );
   console.log(`last sync: ${state.last_sync_at ?? "never"} · last_uid: ${state.last_uid}`);
   if (state.last_error) console.log(`last error: ${state.last_error}`);
   console.log(`pending triage: ${counts.pending} · action required: ${counts.actionRequired}`);
@@ -369,9 +381,8 @@ export function runMailIntakeSenderShow(opts: { id: string; json?: boolean }): v
 }
 
 export function runMailIntakeCeoList(opts: { json?: boolean; pending?: boolean }): void {
-  const questions = opts.pending === false
-    ? loadCeoInlineQueue().questions
-    : listPendingCeoInlineQuestions();
+  const questions =
+    opts.pending === false ? loadCeoInlineQueue().questions : listPendingCeoInlineQuestions();
   if (opts.json) {
     console.log(JSON.stringify(questions, null, 2));
     return;
@@ -430,10 +441,7 @@ export async function runMailIntakeCeoAnswer(opts: {
   console.log(formatCeoInlineQuestionDetail(updated));
 }
 
-export async function runMailIntakeInterpret(opts: {
-  id?: string;
-  json?: boolean;
-}): Promise<void> {
+export async function runMailIntakeInterpret(opts: { id?: string; json?: boolean }): Promise<void> {
   if (opts.id) {
     const entry = findTriageEntry(opts.id);
     if (!entry) {
@@ -464,7 +472,11 @@ export async function runMailIntakeInterpret(opts: {
   for (const entry of queue.entries) {
     if (entry.disposition === "spam" || entry.routing === "ignore") continue;
     if (!entry.sender_known) continue;
-    if (!(entry.importance === "p0" || entry.importance === "p1" || entry.routing === "secretary")) {
+    if (!(
+      entry.importance === "p0" ||
+      entry.importance === "p1" ||
+      entry.routing === "secretary"
+    )) {
       continue;
     }
     await postTriageInterpretAndCeoAsk(entry);

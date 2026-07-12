@@ -7,7 +7,9 @@ export function formatSecretaryRelayBlock(content: string, notePath: string): st
 
   const lines = [
     "── Secretary relay（段へそのまま貼付可）──",
-    conclusion ? `**結論:** ${conclusion.replace(/\n/g, " ").slice(0, 200)}` : "**結論:** （executive-notes を確認）",
+    conclusion
+      ? `**結論:** ${conclusion.replace(/\n/g, " ").slice(0, 200)}`
+      : "**結論:** （executive-notes を確認）",
   ];
 
   if (actions.length) {

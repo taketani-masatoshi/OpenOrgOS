@@ -39,9 +39,7 @@ export function buildSchedulingTodayItem(caseRow: SchedulingCase): {
       const names = pendingNames(caseRow);
       return {
         headline: `【要承認】${caseRow.title} — 未回答者へのリマインド`,
-        detail: names
-          ? `未回答 ${pending} 名（${names}）`
-          : `未回答 ${pending} 名`,
+        detail: names ? `未回答 ${pending} 名（${names}）` : `未回答 ${pending} 名`,
         approval_id: approvalId,
         visible_to_ceo: Boolean(approvalId),
       };
@@ -94,7 +92,7 @@ export function buildSchedulingTodayItem(caseRow: SchedulingCase): {
         detail:
           caseRow.calendar_sync === "failed"
             ? "同期を再試行してください。未送信のため案件は閉じていません"
-            : confirmSlotLabel(caseRow) ?? "確定日時を反映します",
+            : (confirmSlotLabel(caseRow) ?? "確定日時を反映します"),
         visible_to_ceo: caseRow.calendar_sync === "failed",
       };
     default:

@@ -15,7 +15,11 @@ import {
   assessMailSetupReadiness,
   CorrespondenceMailSetupError,
 } from "../lib/correspondence/mail-setup-readiness.js";
-import { auditCliMutation, requireCliDataWrite, requireCliCorrespondenceSend } from "../lib/console-auth/cli-operator.js";
+import {
+  auditCliMutation,
+  requireCliDataWrite,
+  requireCliCorrespondenceSend,
+} from "../lib/console-auth/cli-operator.js";
 import { getCliOperatorContext } from "../lib/console-auth/cli-operator.js";
 import { resolveContactRefForDraft } from "./secretary-contacts.js";
 import { formatCorrespondenceDraftReview } from "../lib/correspondence/review.js";
@@ -89,7 +93,9 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
   if (approvalId) {
     console.log(`  approval: ${approvalId} (pending_approval)`);
     console.log(`  review: orgos ${CORRESPONDENCE_CLI.show} --id ${draft.draft_id}`);
-    console.log(`  next:   orgos org approval approve --id ${approvalId} --approver "<CEO>" --reviewed`);
+    console.log(
+      `  next:   orgos org approval approve --id ${approvalId} --approver "<CEO>" --reviewed`
+    );
   }
   console.log(`  path: docs/executive/correspondence-drafts/${draft.draft_id}.yaml`);
   if (channel === "email" && draft.cc) {
@@ -114,7 +120,8 @@ export interface CorrespondenceListCliOptions {
 
 export function runCorrespondenceList(opts: CorrespondenceListCliOptions): void {
   const drafts = listCorrespondenceDrafts({
-    status: opts.status as ReturnType<typeof listCorrespondenceDrafts>[number]["status"] | undefined,
+    status: opts.status as
+      ReturnType<typeof listCorrespondenceDrafts>[number]["status"] | undefined,
     channel: opts.channel as "email" | "slack" | undefined,
   });
   if (opts.json) {
@@ -284,10 +291,7 @@ export async function runCorrespondenceSendSkill(opts: {
 }
 
 /** Skill runner: slack-notify (alias for slack channel send) */
-export async function runSlackNotifySkill(opts: {
-  id?: string;
-  dryRun?: boolean;
-}): Promise<void> {
+export async function runSlackNotifySkill(opts: { id?: string; dryRun?: boolean }): Promise<void> {
   if (!opts.id) {
     console.error("Provide --id DRAFT-...");
     process.exit(1);

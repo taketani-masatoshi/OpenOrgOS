@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { witnessHubEntrySchema } from "./witness-pool.js";
 
 /** Registry entry — hub_public_key may be empty until operator pins via sync-keys. */
 export const trustedHubRegistryEntrySchema = z.object({

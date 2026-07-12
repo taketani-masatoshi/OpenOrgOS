@@ -21,15 +21,7 @@ import {
 import { loadRegistryFile, writeYamlFile, getDataDir } from "../utils.js";
 
 const interpretResponseSchema = z.object({
-  intent: z.enum([
-    "schedule",
-    "return_item",
-    "invoice",
-    "inquiry",
-    "test",
-    "spam",
-    "unknown",
-  ]),
+  intent: z.enum(["schedule", "return_item", "invoice", "inquiry", "test", "spam", "unknown"]),
   who_lent: z.enum(["sender", "recipient", "none", "unclear"]).optional(),
   who_must_return: z.enum(["sender", "recipient", "none", "unclear"]).optional(),
   action_required: z.boolean(),
@@ -38,7 +30,9 @@ const interpretResponseSchema = z.object({
   response: z.enum(["accept", "decline", "counter", "unknown"]).optional(),
   slot_ids: z.array(z.string()).optional(),
   counter_slots: z
-    .array(z.object({ start: z.string(), end: z.string().optional(), label: z.string().optional() }))
+    .array(
+      z.object({ start: z.string(), end: z.string().optional(), label: z.string().optional() })
+    )
     .optional(),
 });
 

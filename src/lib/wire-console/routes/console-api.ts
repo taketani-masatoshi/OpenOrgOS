@@ -306,8 +306,7 @@ async function handleTenantPost(
     const action = noticeMatch[2]!;
     if (action === "approve") {
       const result = await approveTenantNotice(tenantId, user, noticeId, {
-        co_approver_id:
-          typeof body.co_approver_id === "string" ? body.co_approver_id : undefined,
+        co_approver_id: typeof body.co_approver_id === "string" ? body.co_approver_id : undefined,
       });
       json(res, 200, { ok: true, ...result });
       return true;

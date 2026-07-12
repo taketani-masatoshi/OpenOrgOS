@@ -12,7 +12,10 @@ import { enqueueWirePending, saveWirePending } from "../src/lib/protocol/wire-qu
 import { getWitnessPoolYamlPath } from "../src/lib/protocol/paths.js";
 import { witnessPoolConfigSchema } from "../schemas/protocol/witness-pool.js";
 import { writeYamlFile } from "../src/lib/utils.js";
-import { loadOrgApprovalRegistry, saveOrgApprovalRegistry } from "../src/lib/org/approval/registry.js";
+import {
+  loadOrgApprovalRegistry,
+  saveOrgApprovalRegistry,
+} from "../src/lib/org/approval/registry.js";
 import {
   DEMO_WITNESS_EVENT_ID,
   DEMO_WITNESS_TENANT,

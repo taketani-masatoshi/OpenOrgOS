@@ -38,10 +38,7 @@ function loadReportData(fiscalYear: string) {
   };
 }
 
-export async function runReportKessan(options: {
-  fy?: string;
-  output?: string;
-}): Promise<void> {
+export async function runReportKessan(options: { fy?: string; output?: string }): Promise<void> {
   requireCliReportWrite("report kessan");
   const fiscalYear = resolveFiscalYear(options.fy);
   const data = loadReportData(fiscalYear);
@@ -50,19 +47,13 @@ export async function runReportKessan(options: {
     ? filename
     : join(ensurePdfOutputDir("kessan"), filename);
 
-  const path = await generateKessanPdf(
-    { ...data, fiscalYear },
-    outputPath
-  );
+  const path = await generateKessanPdf({ ...data, fiscalYear }, outputPath);
   initDocumentIoFile();
   registerGeneratedPdf(path, "corporate", `report kessan --fy ${fiscalYear}`, "kessan");
   console.log(`✓ 決算報告書 PDF: ${path}`);
 }
 
-export async function runReportJigyo(options: {
-  fy?: string;
-  output?: string;
-}): Promise<void> {
+export async function runReportJigyo(options: { fy?: string; output?: string }): Promise<void> {
   requireCliReportWrite("report jigyo");
   const fiscalYear = resolveFiscalYear(options.fy);
   const data = loadReportData(fiscalYear);
@@ -71,26 +62,18 @@ export async function runReportJigyo(options: {
     ? filename
     : join(ensurePdfOutputDir("jigyo"), filename);
 
-  const path = await generateJigyoPdf(
-    { ...data, fiscalYear },
-    outputPath
-  );
+  const path = await generateJigyoPdf({ ...data, fiscalYear }, outputPath);
   initDocumentIoFile();
   registerGeneratedPdf(path, "corporate", `report jigyo --fy ${fiscalYear}`, "jigyo");
   console.log(`✓ 事業報告書 PDF: ${path}`);
 }
 
-export async function runReportAnnual(options: {
-  fy?: string;
-}): Promise<void> {
+export async function runReportAnnual(options: { fy?: string }): Promise<void> {
   await runReportKessan({ fy: options.fy });
   await runReportJigyo({ fy: options.fy });
 }
 
-export function runReportMonthly(options: {
-  month?: string;
-  output?: string;
-}): void {
+export function runReportMonthly(options: { month?: string; output?: string }): void {
   requireCliReportWrite("report monthly");
   const data = loadAllData();
   const month = options.month ?? currentMonth();

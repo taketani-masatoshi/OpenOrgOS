@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import type { TransactionRecord } from "../../../schemas/protocol/transaction-record.js";
 import {
@@ -19,6 +18,7 @@ import { appendTransaction, nextTransactionId } from "./transactions.js";
 import type { OperatorAttestation } from "../../../schemas/protocol/operator-attestation.js";
 import { operatorAttestationSchema } from "../../../schemas/protocol/operator-attestation.js";
 import { maybeSignEnvelope } from "./signing.js";
+import { getClock, getIdGenerator } from "../runtime-context.js";
 
 export interface RecordTransactionOptions {
   /** Legacy or committee type — normalized to steward.* on record. */
@@ -55,7 +55,9 @@ function peerOrgRef(peerId: string): { org_id: string; org_uri?: string } {
   return { org_id: peer.peer_id, org_uri: peer.org_uri };
 }
 
-function resolveAmountFromContract(contractId: string): { value: number; currency: string } | undefined {
+function resolveAmountFromContract(
+  contractId: string
+): { value: number; currency: string } | undefined {
   const contract = loadContract(contractId);
   if (!contract) return undefined;
   const amount = contract.compensation?.amount ?? contract.monthly_cost;
@@ -64,7 +66,9 @@ function resolveAmountFromContract(contractId: string): { value: number; currenc
 }
 
 export function recordProtocolTransaction(opts: RecordTransactionOptions): RecordTransactionResult {
-  return runWithProtocolWriteGuard("record-transaction", () => recordProtocolTransactionInner(opts));
+  return runWithProtocolWriteGuard("record-transaction", () =>
+    recordProtocolTransactionInner(opts)
+  );
 }
 
 function recordProtocolTransactionInner(opts: RecordTransactionOptions): RecordTransactionResult {
@@ -80,15 +84,16 @@ function recordProtocolTransactionInner(opts: RecordTransactionOptions): RecordT
 
   if (opts.contractId && direction === "outbound") {
     const requiresLocalContract =
-      isContractExecutedType(transactionType) ||
-      isContractExecutionNoticeType(transactionType);
+      isContractExecutedType(transactionType) || isContractExecutionNoticeType(transactionType);
     if (requiresLocalContract) {
       const contract = loadContract(opts.contractId);
       if (!contract) {
         throw new Error(`Contract ${opts.contractId} not found`);
       }
       if (isContractExecutedType(transactionType) && contract.status !== "executed") {
-        throw new Error(`Contract ${opts.contractId} status is ${contract.status}, expected executed`);
+        throw new Error(
+          `Contract ${opts.contractId} status is ${contract.status}, expected executed`
+        );
       }
       if (isContractExecutionNoticeType(transactionType) && contract.status !== "executed") {
         throw new Error(
@@ -98,25 +103,20 @@ function recordProtocolTransactionInner(opts: RecordTransactionOptions): RecordT
     }
   }
 
-  if (
-    direction === "outbound" &&
-    !opts.operatorBypass &&
-    !opts.operatorAttestation
-  ) {
+  if (direction === "outbound" && !opts.operatorBypass && !opts.operatorAttestation) {
     throw new Error(
       "Outbound inter-org wire requires operator approval — use `steward protocol notice propose` then `notice approve` (Steward agents do not cross org boundaries)"
     );
   }
 
-  const now = new Date().toISOString();
-  const eventId = opts.eventId ?? randomUUID();
+  const now = getClock().nowIso();
+  const eventId = opts.eventId ?? getIdGenerator().uuid();
   const transactionId = nextTransactionId();
   const ourOrg = ourOrgRef();
   const counterparty = peerOrgRef(opts.peerId);
 
   const amount =
-    opts.amount ??
-    (opts.contractId ? resolveAmountFromContract(opts.contractId) : undefined);
+    opts.amount ?? (opts.contractId ? resolveAmountFromContract(opts.contractId) : undefined);
 
   const refs = {
     contract_id: opts.contractId,

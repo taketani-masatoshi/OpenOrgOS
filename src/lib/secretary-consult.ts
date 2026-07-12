@@ -23,9 +23,7 @@ export function buildSecretaryEscalationMarkdown(input: SecretaryEscalateInput):
   const date = input.date ?? currentDate();
   const qs = input.questions.filter(Boolean);
   const questionBlock =
-    qs.length > 0
-      ? qs.map((q, i) => `${i + 1}. ${q}`).join("\n")
-      : "1. （質問を記入）";
+    qs.length > 0 ? qs.map((q, i) => `${i + 1}. ${q}`).join("\n") : "1. （質問を記入）";
 
   return [
     ORCHESTRATOR_REF,
@@ -99,7 +97,10 @@ export async function dispatchSecretaryEscalation(
   input: SecretaryEscalateInput,
   opts?: { webhook?: boolean; dryRun?: boolean }
 ): Promise<SecretaryEscalateResult> {
-  const result = await runSecretaryEscalateAsync(input, { webhook: opts?.webhook ?? true, dryRun: opts?.dryRun });
+  const result = await runSecretaryEscalateAsync(input, {
+    webhook: opts?.webhook ?? true,
+    dryRun: opts?.dryRun,
+  });
 
   if (!opts?.dryRun) {
     const handoff = buildHandoff({

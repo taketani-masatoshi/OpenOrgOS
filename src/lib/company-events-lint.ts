@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import type { CompanyEvent } from "../../schemas/company-events.js";
 
 const REQUIRED_EVENT_SECTIONS = ["概要", "経緯", "関連 ID", "出力書類"] as const;

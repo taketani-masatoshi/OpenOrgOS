@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import {
   loadDependencyGraph,
   computeImpact,
@@ -6,8 +6,13 @@ import {
   findStaleDependencies,
 } from "../src/lib/dependency-graph.js";
 import { dependencyGraphSchema } from "../schemas/dependency-graph.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("dependency-graph", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("loads and validates dependency-graph.yaml", () => {
     const graph = loadDependencyGraph();
     expect(dependencyGraphSchema.parse(graph)).toEqual(graph);

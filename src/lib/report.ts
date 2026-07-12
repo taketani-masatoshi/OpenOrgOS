@@ -6,7 +6,6 @@ import { analyzeAllProperties } from "./analyze.js";
 import { generateForecast, formatForecastMarkdown } from "./forecast.js";
 import { scanContractAlerts, formatAlertsMarkdown } from "./alerts.js";
 import type { StewardData } from "./data.js";
-import type { FixedCosts, Loans } from "../../schemas/index.js";
 
 function sumRevenue(f: MonthlyFinance): number {
   return f.revenue.reduce((s, r) => s + r.amount, 0);
@@ -89,10 +88,7 @@ function repairSummary(finance: MonthlyFinance): string {
   return `${formatCurrency(total)} (${details})`;
 }
 
-export function generateMonthlyReport(
-  data: StewardData,
-  month: string
-): string {
+export function generateMonthlyReport(data: StewardData, month: string): string {
   const finance = data.monthlyFinances.find((f) => f.month === month);
   const analyses = analyzeAllProperties(
     data.properties,
@@ -177,11 +173,7 @@ export function generateMonthlyReport(
   return lines.join("\n");
 }
 
-export function financesSummary(
-  finances: MonthlyFinance[],
-  from: string,
-  to: string
-) {
+export function financesSummary(finances: MonthlyFinance[], from: string, to: string) {
   const filtered = finances.filter((f) => f.month >= from && f.month <= to);
 
   let totalRevenue = 0;

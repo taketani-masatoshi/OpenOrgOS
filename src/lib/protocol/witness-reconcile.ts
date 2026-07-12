@@ -168,7 +168,10 @@ export async function reconcileCrossHub(opts?: {
   const pool = loadWitnessPoolConfig();
   const alerts: ReconcileAlert[] = [];
   if (!isWitnessEnabled(pool)) {
-    return { checked: 0, alerts: [{ severity: "warning", code: "witness-disabled", message: "Witness pool disabled" }] };
+    return {
+      checked: 0,
+      alerts: [{ severity: "warning", code: "witness-disabled", message: "Witness pool disabled" }],
+    };
   }
 
   const eventIds = new Set<string>();
@@ -178,7 +181,10 @@ export async function reconcileCrossHub(opts?: {
   }
 
   for (const eventId of eventIds) {
-    const statuses: Array<{ hub_id: string; status: Awaited<ReturnType<typeof fetchHubAttestationStatus>> }> = [];
+    const statuses: Array<{
+      hub_id: string;
+      status: Awaited<ReturnType<typeof fetchHubAttestationStatus>>;
+    }> = [];
     for (const hub of pool.hubs) {
       const status = await fetchHubAttestationStatus(hub.hub_url, eventId);
       statuses.push({ hub_id: hub.hub_id, status });
@@ -220,7 +226,9 @@ export async function reconcileCrossHub(opts?: {
     const roots = new Set<string>();
     for (const hub of pool.hubs) {
       const base = hub.hub_url.replace(/\/$/, "");
-      const res = await fetch(`${base}/hub/v1/anchor?date=${new Date().toISOString().slice(0, 10)}`);
+      const res = await fetch(
+        `${base}/hub/v1/anchor?date=${new Date().toISOString().slice(0, 10)}`
+      );
       if (res.ok) {
         const body = (await res.json()) as { anchor?: { merkle_root?: string } };
         if (body.anchor?.merkle_root) roots.add(body.anchor.merkle_root);
@@ -256,9 +264,7 @@ export interface RemoteLedgerEntry {
   recorded_at?: string;
 }
 
-export async function fetchRemotePeerLedger(
-  ledgerApiUrl: string
-): Promise<RemoteLedgerEntry[]> {
+export async function fetchRemotePeerLedger(ledgerApiUrl: string): Promise<RemoteLedgerEntry[]> {
   const base = ledgerApiUrl.replace(/\/$/, "");
   const url = base.endsWith("/protocol/v1/ledger") ? base : `${base}/protocol/v1/ledger`;
   const res = await fetch(url);
@@ -311,7 +317,13 @@ export async function reconcileRemotePeerLedger(opts: {
   if (!peer.ledger_api_url) {
     return {
       checked: 0,
-      alerts: [{ severity: "info", code: "ledger-api-unconfigured", message: "peer.ledger_api_url not set" }],
+      alerts: [
+        {
+          severity: "info",
+          code: "ledger-api-unconfigured",
+          message: "peer.ledger_api_url not set",
+        },
+      ],
     };
   }
 
@@ -349,7 +361,8 @@ export async function reconcileWitnessWithPeerAndPersist(opts: {
     }
   }
 
-  const escalated = persistAndEscalateAlerts(result.alerts, opts.peerId).filter((a) => a.escalated)
-    .length;
+  const escalated = persistAndEscalateAlerts(result.alerts, opts.peerId).filter(
+    (a) => a.escalated
+  ).length;
   return { ...result, escalated, ledger_alerts: ledgerAlerts };
 }

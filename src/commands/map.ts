@@ -1,4 +1,9 @@
-import { buildTenantMapTree, formatMapTree, listTenantPathMappings, resolveLogicalPath } from "../lib/tenant-map.js";
+import {
+  buildTenantMapTree,
+  formatMapTree,
+  listTenantPathMappings,
+  resolveLogicalPath,
+} from "../lib/tenant-map.js";
 import { getTenantId } from "../lib/tenant.js";
 
 export function runMapList(): void {

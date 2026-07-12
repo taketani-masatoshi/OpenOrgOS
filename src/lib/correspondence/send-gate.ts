@@ -1,4 +1,8 @@
-import { findOrgApproval, loadOrgApprovalRegistry, saveOrgApprovalRegistry } from "../org/approval/index.js";
+import {
+  findOrgApproval,
+  loadOrgApprovalRegistry,
+  saveOrgApprovalRegistry,
+} from "../org/approval/index.js";
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import {
   loadCorrespondenceDraft,
@@ -11,7 +15,12 @@ import { assertCorrespondenceMailSetupReady } from "./mail-setup-readiness.js";
 import { isDryRunSmtpHost, resolveMailConfig } from "./mail-config.js";
 import { repairMissingApprovalForDraft } from "./approval-registry-repair.js";
 import { assertHumanCorrespondenceApproval, isHumanApproverOperatorId } from "./human-approval.js";
-import { createCompanyEvent, initCompanyEventsFile, ensureCompanyEventMonth, parseMonth } from "../company-events.js";
+import {
+  createCompanyEvent,
+  initCompanyEventsFile,
+  ensureCompanyEventMonth,
+  parseMonth,
+} from "../company-events.js";
 import { currentDate } from "../utils.js";
 
 export class CorrespondenceApprovalGateError extends Error {
@@ -129,9 +138,8 @@ export async function sendApprovedCorrespondence(opts: {
       draft = markCorrespondenceDraftSent(draft.draft_id, {
         sentBy: opts.operatorId,
       });
-      const { handleSchedulingCorrespondenceSent } = await import(
-        "../scheduling-coordination/lifecycle.js"
-      );
+      const { handleSchedulingCorrespondenceSent } =
+        await import("../scheduling-coordination/lifecycle.js");
       handleSchedulingCorrespondenceSent(draft);
     }
     return { draft, sendResult };
@@ -167,9 +175,8 @@ export async function sendApprovedCorrespondence(opts: {
     companyEventId: event.id,
   });
   if (draft.notes?.includes("scheduling-case:")) {
-    const { handleSchedulingCorrespondenceSent } = await import(
-      "../scheduling-coordination/lifecycle.js"
-    );
+    const { handleSchedulingCorrespondenceSent } =
+      await import("../scheduling-coordination/lifecycle.js");
     handleSchedulingCorrespondenceSent(draft);
   }
 

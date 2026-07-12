@@ -1,4 +1,7 @@
-import type { SchedulingCase, SchedulingParticipant } from "../../../schemas/executive/scheduling-cases.js";
+import type {
+  SchedulingCase,
+  SchedulingParticipant,
+} from "../../../schemas/executive/scheduling-cases.js";
 import type { SchedulingDraftKind } from "./draft-text.js";
 
 export interface SchedulingRecipients {

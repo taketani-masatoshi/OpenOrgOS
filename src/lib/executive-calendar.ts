@@ -1,11 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { CalendarEvent, OneOnOne, ExecutiveTask } from "../../schemas/executive.js";
-import {
-  loadExecutiveCalendar,
-  loadExecutiveTasks,
-  loadOneOnOnes,
-} from "./data.js";
+import { loadExecutiveCalendar } from "./data.js";
 import { getExecutiveDir, currentDate } from "./utils.js";
 
 export function parseExecutiveDateTime(iso: string): Date {
@@ -79,9 +75,7 @@ export function formatEventLine(event: CalendarEvent): string {
 export function requireExecutiveCalendar(): CalendarEvent[] {
   const path = join(getExecutiveDir(), "calendar.yaml");
   if (!existsSync(path)) {
-    throw new Error(
-      "data/executive/calendar.yaml 未作成 — cp calendar.yaml.example calendar.yaml"
-    );
+    throw new Error("data/executive/calendar.yaml 未作成 — cp calendar.yaml.example calendar.yaml");
   }
   return loadExecutiveCalendar().events;
 }

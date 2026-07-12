@@ -19,8 +19,14 @@ export const paymentCalendarEntrySchema = z.object({
   direction: cashflowDirection,
   amount: z.number(),
   category: z.string().min(1),
-  account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
-  counterparty_account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
+  account_id: z
+    .string()
+    .regex(/^BANK-\d{3,}$/)
+    .optional(),
+  counterparty_account_id: z
+    .string()
+    .regex(/^BANK-\d{3,}$/)
+    .optional(),
   chart_account_id: z.string().optional(),
   description: z.string().min(1),
   source: cashflowLineSource.default("payment-calendar"),
@@ -56,9 +62,15 @@ export const arApEntrySchema = z.object({
   collected_or_paid_date: dateString.optional(),
   counterparty: z.string().min(1),
   description: z.string().min(1),
-  account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
+  account_id: z
+    .string()
+    .regex(/^BANK-\d{3,}$/)
+    .optional(),
   chart_account_id: z.string().optional(),
-  contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
+  contract_id: z
+    .string()
+    .regex(/^CTR-\d{3,}$/)
+    .optional(),
   invoice_id: z.string().optional(),
   collection_term_id: z.string().min(1).optional(),
   due_date_source: arApDueDateSource.optional(),
@@ -82,7 +94,10 @@ export const collectionTermRuleSchema = z.object({
   kind: arApKind,
   days_after_booking: z.number().int().nonnegative().default(0),
   days_after_month_end: z.number().int().nonnegative().optional(),
-  default_account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
+  default_account_id: z
+    .string()
+    .regex(/^BANK-\d{3,}$/)
+    .optional(),
   chart_account_id: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -95,7 +110,10 @@ export const collectionTermsFileSchema = z.object({
 
 export const bankStatementEntrySchema = z.object({
   id: z.string().min(1),
-  fingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  fingerprint: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
   date: dateString,
   direction: z.enum(["inflow", "outflow"]),
   amount: z.number().positive(),
@@ -121,7 +139,10 @@ export const bankStatementFileSchema = z.object({
         fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
         imported_at: z.string().datetime(),
         adapter: z.string().min(1).default("generic-csv"),
-        account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
+        account_id: z
+          .string()
+          .regex(/^BANK-\d{3,}$/)
+          .optional(),
         period_start: dateString.optional(),
         period_end: dateString.optional(),
         opening_balance: z.number().nonnegative().optional(),
@@ -194,7 +215,10 @@ export const cashflowScheduleRowSchema = z.object({
   direction: cashflowDirection,
   category: z.string().min(1),
   description: z.string().min(1),
-  account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
+  account_id: z
+    .string()
+    .regex(/^BANK-\d{3,}$/)
+    .optional(),
   chart_account_id: z.string().optional(),
   planned_amount: z.number(),
   actual_amount: z.number().nullable().optional(),
@@ -227,16 +251,15 @@ export const cashflowScheduleSchema = z.object({
   rows: z.array(cashflowScheduleRowSchema),
   detail_rows: z.array(cashflowScheduleRowSchema).optional(),
   detail_schedule_path: z.string().optional(),
-  input_fingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  input_fingerprint: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
   tie_out_status: z.enum(["passed", "failed", "not_available"]).optional(),
   warnings: z.array(z.string()).default([]),
 });
 
-export const cashflowExportSource = z.enum([
-  "cashflow-schedule",
-  "mizuho-weekly",
-  "tax-payments",
-]);
+export const cashflowExportSource = z.enum(["cashflow-schedule", "mizuho-weekly", "tax-payments"]);
 
 export const cashflowExportColumnKey = z.enum([
   "period_key",

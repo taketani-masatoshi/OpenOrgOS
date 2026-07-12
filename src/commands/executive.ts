@@ -57,7 +57,9 @@ export async function runExecutiveCalendarPush(opts: {
     console.log(`  ${e.id} → ${e.action}${e.googleEventId ? ` (${e.googleEventId})` : ""}`);
   }
   if (opts.dryRun) {
-    console.log("\n.env: GOOGLE_CALENDAR_ID · GOOGLE_CALENDAR_ACCESS_TOKEN — [google-calendar-setup.md]");
+    console.log(
+      "\n.env: GOOGLE_CALENDAR_ID · GOOGLE_CALENDAR_ACCESS_TOKEN — [google-calendar-setup.md]"
+    );
   }
 }
 
@@ -91,7 +93,9 @@ export async function runExecutiveCalendarPull(opts: {
   }
 
   console.log(`# Calendar pull since ${since} ${dryRun ? "(dry-run)" : ""}\n`);
-  console.log(`linked google_event_id: ${result.linked} · external (Google only): ${result.external}`);
+  console.log(
+    `linked google_event_id: ${result.linked} · external (Google only): ${result.external}`
+  );
   if (result.linkedEvents.length) {
     console.log("\n## Linked");
     for (const e of result.linkedEvents) {
@@ -202,9 +206,7 @@ export function buildExecutiveBriefMarkdown(referenceDate = currentDate()): stri
       lines.push("| ID | タイトル | 期限 | 優先度 | 状態 |");
       lines.push("|----|---------|------|--------|------|");
       for (const t of tasks) {
-        lines.push(
-          `| ${t.id} | ${t.title} | ${t.due ?? "—"} | ${t.priority} | ${t.status} |`
-        );
+        lines.push(`| ${t.id} | ${t.title} | ${t.due ?? "—"} | ${t.priority} | ${t.status} |`);
       }
     }
   } else {

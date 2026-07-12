@@ -110,7 +110,8 @@ export function computeCommunityReadiness(): CommunityReadiness {
     ok: existsSync(join(getInstallRoot(), "src/lib/protocol/openorgos-core-readiness.ts")),
     detail: "Core four-element scoring",
   });
-  if (existsSync(join(getInstallRoot(), "src/lib/protocol/openorgos-core-readiness.ts"))) score += 2;
+  if (existsSync(join(getInstallRoot(), "src/lib/protocol/openorgos-core-readiness.ts")))
+    score += 2;
 
   checks.push({
     id: "orgos-99-plan",
@@ -169,7 +170,9 @@ export function computeCommunityReadiness(): CommunityReadiness {
   });
   if (integrationOk) score += 2;
 
-  const wireTrustPublish = existsSync(join(getInstallRoot(), "publish/protocol/wire-trust-registry.yaml"));
+  const wireTrustPublish = existsSync(
+    join(getInstallRoot(), "publish/protocol/wire-trust-registry.yaml")
+  );
   checks.push({
     id: "wire-trust-registry-publish",
     ok: wireTrustPublish,
@@ -189,7 +192,9 @@ export function computeCommunityReadiness(): CommunityReadiness {
   checks.push({
     id: "vocabulary-i18n",
     ok: vocabularyI18n,
-    detail: vocabularyI18n ? "Steward-Community vocabulary · 8 locale" : "protocol-vocabulary i18n pending",
+    detail: vocabularyI18n
+      ? "Steward-Community vocabulary · 8 locale"
+      : "protocol-vocabulary i18n pending",
   });
   if (vocabularyI18n) score += 1;
 

@@ -27,7 +27,10 @@ function fileOk(relativePath: string, detail = "present"): CoreReadinessCheck {
   return { id: relativePath, ok: existsSync(path), detail: existsSync(path) ? detail : "missing" };
 }
 
-function bucketScore(checks: CoreReadinessCheck[]): { score: number; checks: CoreReadinessCheck[] } {
+function bucketScore(checks: CoreReadinessCheck[]): {
+  score: number;
+  checks: CoreReadinessCheck[];
+} {
   if (checks.length === 0) return { score: 0, checks };
   const passed = checks.filter((c) => c.ok).length;
   return { score: Math.round((passed / checks.length) * 100), checks };

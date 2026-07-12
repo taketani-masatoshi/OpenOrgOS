@@ -48,8 +48,7 @@ export function resolveImapCredentials(): ImapCredentials | null {
   if (!user || !pass) return null;
 
   const host = process.env.ORGOS_IMAP_HOST?.trim() || fileEnv.ORGOS_IMAP_HOST?.trim();
-  const portRaw =
-    process.env.ORGOS_IMAP_PORT?.trim() || fileEnv.ORGOS_IMAP_PORT?.trim();
+  const portRaw = process.env.ORGOS_IMAP_PORT?.trim() || fileEnv.ORGOS_IMAP_PORT?.trim();
 
   return {
     user,

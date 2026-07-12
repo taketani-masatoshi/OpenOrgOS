@@ -24,10 +24,7 @@ export function isWebAuthnRegistrationAllowed(): boolean {
   return listWebAuthnCredentials().length === 0;
 }
 
-export function createWebAuthnRegisterOptions(body: {
-  operator_id: string;
-  approver_id: string;
-}):
+export function createWebAuthnRegisterOptions(body: { operator_id: string; approver_id: string }):
   | {
       challenge: string;
       rp: { id: string; name: string };

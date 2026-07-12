@@ -1,10 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import * as msg from "@independentsoft/msg";
-import {
-  formatJapaneseDate,
-  formatJapaneseYearMonth,
-  paymentDueDate,
-} from "./invoice-dates.js";
+import { formatJapaneseDate, formatJapaneseYearMonth, paymentDueDate } from "./invoice-dates.js";
 
 export const TENANT_NAME_PLACEHOLDER = "[借主名 TBD]";
 export const TENANT_EMAIL_PLACEHOLDER = "[送付先メール TBD]";

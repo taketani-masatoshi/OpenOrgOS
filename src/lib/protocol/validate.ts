@@ -5,7 +5,6 @@ import { delegationProofSchema } from "../../../schemas/protocol/authority-deleg
 import { orgIdentityDocumentSchema } from "../../../schemas/protocol/identity-exchange.js";
 import { peersRegistrySchema } from "../../../schemas/protocol/peers.js";
 import { transactionsRegistrySchema } from "../../../schemas/protocol/transaction-record.js";
-import { getTenantsDir } from "../orgos-paths.js";
 import { readYamlFile, getStakeholdersYaml } from "../utils.js";
 import { loadStakeholders } from "../data.js";
 import {
@@ -35,6 +34,7 @@ import { listOutboxEventIdsWithoutProvenance } from "./outbox-provenance.js";
 import { isProtocolWriteGuardDisabled } from "./protocol-write-guard.js";
 import { checkProtocolOutboxPermissionsLoose } from "./outbox-permissions.js";
 import { isPkDidRequired, isPkPrefixedOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
+import { loadTenantConfig } from "../tenant.js";
 
 export interface ProtocolValidationIssue {
   code: string;
@@ -265,7 +265,10 @@ export function validateProtocolState(
   const keyMeta = loadSigningKeyMeta();
   if (keyMeta) {
     try {
+      const ourUri = `steward://tenant/${loadTenantConfig().id}`;
       for (const peer of loadPeersRegistry().peers) {
+        // Only self/loopback peers should pin our signing public key.
+        if (peer.org_uri !== ourUri) continue;
         if (peer.protocol_public_key && peer.protocol_public_key !== keyMeta.public_key) {
           warnings.push({
             code: "signing-key-peer-pin-stale",

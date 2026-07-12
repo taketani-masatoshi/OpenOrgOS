@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import {
   computeDashboard,
   formatDashboardMarkdown,
@@ -11,8 +11,13 @@ import {
 } from "../src/lib/agent-summaries.js";
 import { loadAllData } from "../src/lib/data.js";
 import { existsSync } from "node:fs";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("agent-summaries", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("formats finance summary with confirmed cash balance", () => {
     const report = computeDashboard();
     const md = formatFinanceSummary(report);

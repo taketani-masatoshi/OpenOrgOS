@@ -1,5 +1,5 @@
 // @catalog-ids: rental
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import { existsSync, rmSync } from "node:fs";
 import {
   billingMonthEndDate,
@@ -22,6 +22,11 @@ import {
   resolveBillingConfig,
 } from "../src/lib/invoice-config.js";
 import { runInvoiceGenerate } from "../src/lib/invoice-generate.js";
+import { setTenantId } from "../src/lib/tenant.js";
+
+beforeEach(() => {
+  setTenantId("mal");
+});
 
 describe("invoice dates", () => {
   it("computes month-end issue date", () => {

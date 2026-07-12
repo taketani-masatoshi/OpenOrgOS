@@ -10,9 +10,7 @@ export type SkillDispatchResolver = (
   opts?: Record<string, unknown>
 ) => SkillInvocationResolution;
 
-export function validateSkillDispatchReachability(
-  resolve: SkillDispatchResolver
-): string[] {
+export function validateSkillDispatchReachability(resolve: SkillDispatchResolver): string[] {
   const issues: string[] = [];
 
   for (const skill of getCliSkills()) {
@@ -24,9 +22,7 @@ export function validateSkillDispatchReachability(
     if (skill.cli_command) {
       const byCli = resolve(skill.cli_command);
       if (byCli.status === "unwired") {
-        issues.push(
-          `${skill.id}: cli_command "${skill.cli_command}" unwired — ${byCli.reason}`
-        );
+        issues.push(`${skill.id}: cli_command "${skill.cli_command}" unwired — ${byCli.reason}`);
       } else if (skill.deferred) {
         if (byId.status !== "deferred") {
           issues.push(`${skill.id}: deferred skill expected deferred by id, got ${byId.status}`);
@@ -40,9 +36,7 @@ export function validateSkillDispatchReachability(
 
     if (skill.handler) {
       if (!skill.required_options?.length && byId.status !== "ready") {
-        issues.push(
-          `${skill.id}: handler "${skill.handler}" expected ready, got ${byId.status}`
-        );
+        issues.push(`${skill.id}: handler "${skill.handler}" expected ready, got ${byId.status}`);
       }
       if (skill.handler !== skill.id) {
         issues.push(`${skill.id}: handler must equal canonical skill id`);

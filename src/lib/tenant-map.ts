@@ -17,10 +17,26 @@ export function listTenantPathMappings(): PathMapping[] {
   const tenantDir = getTenantDir();
   const rows: PathMapping[] = [
     { logical: `tenants/${tenantId}/`, absolute: tenantDir, scope: "tenant" },
-    { logical: "data/company.yaml", absolute: resolveTenantPath("data/company.yaml"), scope: "tenant" },
-    { logical: "data/ops-config.yaml", absolute: resolveTenantPath("data/ops-config.yaml"), scope: "tenant" },
-    { logical: "data/classification-registry.yaml", absolute: resolveTenantPath("data/classification-registry.yaml"), scope: "tenant" },
-    { logical: "data/dependency-graph.yaml", absolute: resolveTenantPath("data/dependency-graph.yaml"), scope: "tenant" },
+    {
+      logical: "data/company.yaml",
+      absolute: resolveTenantPath("data/company.yaml"),
+      scope: "tenant",
+    },
+    {
+      logical: "data/ops-config.yaml",
+      absolute: resolveTenantPath("data/ops-config.yaml"),
+      scope: "tenant",
+    },
+    {
+      logical: "data/classification-registry.yaml",
+      absolute: resolveTenantPath("data/classification-registry.yaml"),
+      scope: "tenant",
+    },
+    {
+      logical: "data/dependency-graph.yaml",
+      absolute: resolveTenantPath("data/dependency-graph.yaml"),
+      scope: "tenant",
+    },
     { logical: "modules.yaml", absolute: join(tenantDir, "modules.yaml"), scope: "tenant" },
   ];
 
@@ -58,7 +74,11 @@ export function resolveLogicalPath(logical: string): PathMapping {
       scope: "tenant",
     };
   }
-  if (normalized === "modules.yaml" || normalized === "regulations.yaml" || normalized === "standards.yaml") {
+  if (
+    normalized === "modules.yaml" ||
+    normalized === "regulations.yaml" ||
+    normalized === "standards.yaml"
+  ) {
     return {
       logical: normalized,
       absolute: join(getTenantDir(), normalized),
@@ -131,9 +151,10 @@ export function buildTenantMapTree(): MapTreeNode[] {
 
   const graphChildren: MapTreeNode[] = graph.nodes.map((n) => ({
     logical: n.id,
-    absolute: n.id.startsWith("data/") || n.id.startsWith("docs/")
-      ? resolveTenantPath(n.id)
-      : join(tenantDir, n.id),
+    absolute:
+      n.id.startsWith("data/") || n.id.startsWith("docs/")
+        ? resolveTenantPath(n.id)
+        : join(tenantDir, n.id),
     scope: "tenant" as const,
   }));
 

@@ -37,7 +37,10 @@ import {
   updateSchedulingCase,
 } from "./store.js";
 import { currentDate } from "../utils.js";
-import type { SchedulingCase, SchedulingParticipant } from "../../../schemas/executive/scheduling-cases.js";
+import type {
+  SchedulingCase,
+  SchedulingParticipant,
+} from "../../../schemas/executive/scheduling-cases.js";
 
 export interface SchedulingRehearsalParticipant {
   name: string;
@@ -100,7 +103,10 @@ function prepareOperatorContext(operatorId: string): void {
 }
 
 function createCase(opts: SchedulingRehearsalOptions): SchedulingCase {
-  requireCliDataWrite({ command: "executive scheduling rehearsal", permission: "scheduling:write" });
+  requireCliDataWrite({
+    command: "executive scheduling rehearsal",
+    permission: "scheduling:write",
+  });
   const file = loadSchedulingCases();
   const now = new Date().toISOString();
   const caseRow = applyNextAction({
@@ -124,7 +130,10 @@ function createCase(opts: SchedulingRehearsalOptions): SchedulingCase {
 }
 
 function proposeCase(caseId: string): SchedulingCase {
-  requireCliDataWrite({ command: "executive scheduling rehearsal", permission: "scheduling:write" });
+  requireCliDataWrite({
+    command: "executive scheduling rehearsal",
+    permission: "scheduling:write",
+  });
   const caseRow = findSchedulingCase(caseId);
   if (!caseRow) throw new Error(`Case ${caseId} not found`);
 
@@ -160,7 +169,11 @@ async function answerCeoForCase(caseId: string, operatorId: string): Promise<str
   if (!question) throw new Error(`No pending CEO question for ${caseId}`);
 
   requireCliDataWrite({ command: "executive scheduling rehearsal", permission: "escalate:plan" });
-  const updated = answerCeoInline(question.id, { schedule_ceo_choice: "はい（確定・通知送信）" }, operatorId);
+  const updated = answerCeoInline(
+    question.id,
+    { schedule_ceo_choice: "はい（確定・通知送信）" },
+    operatorId
+  );
   await applyCeoInlineAnswerSideEffects(updated);
   return question.id;
 }

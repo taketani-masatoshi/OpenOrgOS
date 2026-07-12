@@ -13,7 +13,8 @@ import {
 import { dirname, join, relative } from "node:path";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
-import { ROOT_DIR } from "../src/lib/tenant.js";
+import { setTenantId, ROOT_DIR } from "../src/lib/tenant.js";
+import { syncWireGatewayDidFromSigningKey } from "../src/lib/protocol/wire-gateway-did-sync.js";
 
 /** Operational tenants whose committed protocol config must survive E2E demos. */
 const OPERATIONAL_PROTOCOL_TENANTS = ["mal", "southwood", "aiac"] as const;
@@ -22,6 +23,7 @@ const OPERATIONAL_PROTOCOL_TENANTS = ["mal", "southwood", "aiac"] as const;
 const PRESERVE_PROTOCOL_SUBDIRS = [
   "witness-trust",
   "signing-key.pem",
+  "signing-key-meta.yaml",
   "federation-gossip-store.yaml",
   "peers.yaml",
   "transactions-registry.yaml",
@@ -225,6 +227,20 @@ function resetTenantCaches(): void {
   clearWireGovernanceCacheForTests();
 }
 
+/** After fixture restore, re-pin wire-gateway did to preserved signing keys (F2/F3). */
+function realignOperationalWireGatewayDids(): void {
+  for (const tenantId of OPERATIONAL_PROTOCOL_TENANTS) {
+    const keyPath = join(ROOT_DIR, "tenants", tenantId, "data/protocol/signing-key.pem");
+    if (!existsSync(keyPath)) continue;
+    setTenantId(tenantId);
+    try {
+      syncWireGatewayDidFromSigningKey();
+    } catch {
+      /* best-effort when key/meta incomplete */
+    }
+  }
+}
+
 beforeAll(() => {
   buildFixtureSnapshot();
   cleanGeneratedAgentMissions();
@@ -234,6 +250,7 @@ beforeEach(() => {
   acquireFixtureRestoreLock();
   try {
     restoreCommittedTenantFixtures();
+    realignOperationalWireGatewayDids();
     resetMalExecutiveMailTriageQueue();
     resetTenantCaches();
   } catch (error) {

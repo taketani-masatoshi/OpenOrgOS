@@ -17,7 +17,7 @@ import {
 } from "../lib/agent-readiness.js";
 import { runAgentPulse, runAllAgentPulses, runExtensionAgentPulses } from "../lib/agent-pulse.js";
 import { setTenantId } from "../lib/tenant.js";
-import { requireCliOperator, auditCliMutation } from "../lib/console-auth/cli-operator.js";
+import { requireCliOperator } from "../lib/console-auth/cli-operator.js";
 
 export interface AgentDispatchPlanOptions {
   id: string;
@@ -91,7 +91,9 @@ export async function runAgentImplement(opts: AgentImplementOptions): Promise<vo
   }
 
   console.log(`Work order: ${opts.id} · agent: ${handoff.to_agent}`);
-  console.log(`Runtime: ${result.runtime}${result.shellProfile ? ` (${result.shellProfile})` : ""}`);
+  console.log(
+    `Runtime: ${result.runtime}${result.shellProfile ? ` (${result.shellProfile})` : ""}`
+  );
   console.log(result.ok ? "✓" : "✗", result.reply.slice(0, 500) || result.detail);
   if (!result.ok) process.exit(1);
 }

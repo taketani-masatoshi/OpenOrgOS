@@ -101,10 +101,10 @@ export function runContactsRegister(opts: ContactsRegisterCliOptions): void {
   console.log("  next: npm run orgos -- validate");
 }
 
-export function resolveContactRefForDraft(opts: {
-  contactRef?: string;
+export function resolveContactRefForDraft(opts: { contactRef?: string; to?: string }): {
   to?: string;
-}): { to?: string; warnings: string[] } {
+  warnings: string[];
+} {
   const warnings: string[] = [];
   let to = opts.to;
 

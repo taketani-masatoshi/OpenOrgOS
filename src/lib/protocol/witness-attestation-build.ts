@@ -51,7 +51,10 @@ export function cacheWitnessReceipt(receipt: WitnessReceipt): string {
   return path;
 }
 
-export function loadCachedWitnessReceipt(eventId: string, hubId: string): WitnessReceipt | undefined {
+export function loadCachedWitnessReceipt(
+  eventId: string,
+  hubId: string
+): WitnessReceipt | undefined {
   const path = getWitnessReceiptPath(eventId, hubId);
   if (!existsSync(path)) return undefined;
   return witnessReceiptSchema.parse(JSON.parse(readFileSync(path, "utf-8")));

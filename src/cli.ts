@@ -29,7 +29,10 @@ program
     "--tenant <id>",
     `Tenant instance (env: ${ORGOS_TENANT_ENV} or ${LEGACY_TENANT_ENV}; default from tenant.yaml)`
   )
-  .option("--operator-id <id>", "Authenticated operator ID (required for mutation commands in prod)")
+  .option(
+    "--operator-id <id>",
+    "Authenticated operator ID (required for mutation commands in prod)"
+  )
   .option("--operator-key <key>", "Operator API key (or set ORGOS_OPERATOR_KEY env)");
 
 registerDomainCommands(program);

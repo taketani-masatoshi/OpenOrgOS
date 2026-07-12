@@ -20,7 +20,9 @@ export function formatOpenOrgDid(identifier: string): OpenOrgDid {
   return openOrgDidSchema.parse(`did:${OPENORG_DID_METHOD}:org:${id}`);
 }
 
-export function parseOpenOrgDid(value: string): { method: string; namespace: string; identifier: string } | null {
+export function parseOpenOrgDid(
+  value: string
+): { method: string; namespace: string; identifier: string } | null {
   const match = value.match(/^did:([a-z0-9]+):([a-z0-9]+):([a-z0-9-]+)$/i);
   if (!match) return null;
   return {
@@ -42,18 +44,12 @@ export function isPkPrefixedOpenOrgDid(value: string): boolean {
 
 /** True when pk-DID is mandatory (production / strict trust). */
 export function isPkDidRequired(): boolean {
-  return (
-    process.env.ORGOS_REQUIRE_PK_DID === "1" ||
-    process.env.ORGOS_STRICT_TRUST === "1"
-  );
+  return process.env.ORGOS_REQUIRE_PK_DID === "1" || process.env.ORGOS_STRICT_TRUST === "1";
 }
 
 /** True when pin-local / registry mutation requires committee-approved governance. */
 export function isWireNodeGovernanceRequired(): boolean {
-  return (
-    process.env.ORGOS_REQUIRE_GOVERNANCE_PIN === "1" ||
-    process.env.ORGOS_STRICT_TRUST === "1"
-  );
+  return process.env.ORGOS_REQUIRE_GOVERNANCE_PIN === "1" || process.env.ORGOS_STRICT_TRUST === "1";
 }
 
 /**

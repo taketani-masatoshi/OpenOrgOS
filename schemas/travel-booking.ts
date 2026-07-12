@@ -35,7 +35,10 @@ export const travelBookingRequestSchema = z.object({
   room_preference: z.string().optional(),
   traveler_role: travelRoleSchema.default("executive"),
   status: draftStatusSchema.default("draft"),
-  slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
 });
 
 export type TripType = z.output<typeof tripTypeSchema>;

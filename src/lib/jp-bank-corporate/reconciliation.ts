@@ -51,10 +51,7 @@ function compatibleDirection(bank: BankStatementEntry, arAp: ArApEntry): boolean
   );
 }
 
-function derivedArApStatus(
-  entry: ArApEntry,
-  settled: number
-): ArApEntry["status"] {
+function derivedArApStatus(entry: ArApEntry, settled: number): ArApEntry["status"] {
   if (entry.status === "cancelled") return "cancelled";
   if (settled <= 0) return "open";
   if (settled < entry.amount) return "partial";
@@ -132,11 +129,7 @@ export function replayReconciliation(
         errors.push(`${eventId}: direction does not match ${bank.id} -> ${arAp.id}`);
         continue;
       }
-      if (
-        bank.account_id &&
-        arAp.account_id &&
-        bank.account_id !== arAp.account_id
-      ) {
+      if (bank.account_id && arAp.account_id && bank.account_id !== arAp.account_id) {
         errors.push(`${eventId}: account does not match ${bank.id} -> ${arAp.id}`);
         continue;
       }
@@ -177,8 +170,7 @@ export function replayReconciliation(
       settled_amount: settled,
       remaining_amount: Math.max(0, entry.amount - settled),
       status: derivedArApStatus(entry, settled),
-      collected_or_paid_date:
-        lastDateByArAp.get(entry.id) ?? entry.collected_or_paid_date,
+      collected_or_paid_date: lastDateByArAp.get(entry.id) ?? entry.collected_or_paid_date,
     });
   }
 
@@ -281,8 +273,7 @@ export function buildReconciliationAppliedEvent(input: {
     effective_date: input.effectiveDate,
     actor_id: input.actorId,
     match_mode: input.matchMode,
-    rule_id:
-      input.matchMode === "exact_auto" ? "exact-reference-v1" : undefined,
+    rule_id: input.matchMode === "exact_auto" ? "exact-reference-v1" : undefined,
     proposal_id: input.proposal.id,
     allocations: [
       {

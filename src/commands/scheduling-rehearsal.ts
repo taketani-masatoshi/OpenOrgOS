@@ -22,7 +22,9 @@ export async function runSchedulingRehearsal(
     if (opts.setupOnly || !opts.full) {
       if (result.readiness?.ready) {
         console.log("✓ Scheduling rehearsal setup ready");
-        console.log(`  next: orgos executive scheduling rehearsal --full --tenant ${opts.tenant ?? process.env.ORGOS_TENANT}`);
+        console.log(
+          `  next: orgos executive scheduling rehearsal --full --tenant ${opts.tenant ?? process.env.ORGOS_TENANT}`
+        );
       } else {
         console.log("✗ Scheduling rehearsal setup incomplete");
         for (const issue of result.readiness?.issues.filter((i) => i.severity === "error") ?? []) {

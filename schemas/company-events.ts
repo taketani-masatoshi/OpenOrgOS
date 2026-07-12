@@ -26,28 +26,28 @@ export const companyEventRelatedSchema = z
   })
   .passthrough();
 
-export const companyEventWireBindingStatusSchema = z.enum([
-  "proposed",
-  "approved",
-  "delivered",
-]);
+export const companyEventWireBindingStatusSchema = z.enum(["proposed", "approved", "delivered"]);
 
 export const companyEventWireBindingSchema = z.object({
   notice_id: z.string().optional(),
   transaction_id: z.string().optional(),
   wire_event_id: z.string().uuid().optional(),
-  peer_id: z.string().regex(/^PEER-\d{3}$/).optional(),
+  peer_id: z
+    .string()
+    .regex(/^PEER-\d{3}$/)
+    .optional(),
   status: companyEventWireBindingStatusSchema.optional(),
   void_request_notice_id: z.string().optional(),
   void_ack_wire_event_id: z.string().uuid().optional(),
   void_ack_at: z.string().optional(),
-  void_ack_peer_id: z.string().regex(/^PEER-\d{3}$/).optional(),
+  void_ack_peer_id: z
+    .string()
+    .regex(/^PEER-\d{3}$/)
+    .optional(),
 });
 
 export const companyEventSchema = z.object({
-  id: z
-    .string()
-    .regex(/^EVT-\d{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  id: z.string().regex(/^EVT-\d{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/),
   occurred_at: dateString,
   month: z.string().regex(/^\d{4}-\d{2}$/),
   kind: companyEventKind,

@@ -5,11 +5,7 @@ import type {
   PropertyRevenuePlan,
   Property,
 } from "../../schemas/index.js";
-import {
-  addMonths,
-  currentMonth,
-  formatCurrency,
-} from "./utils.js";
+import { addMonths, currentMonth, formatCurrency } from "./utils.js";
 
 export interface ForecastMonth {
   month: string;
@@ -90,10 +86,7 @@ export function plannedMonthlyRevenue(
   return total;
 }
 
-export function plannedMonthlyExpenses(
-  plan: PropertyRevenuePlan,
-  fixedCosts: FixedCosts
-): number {
+export function plannedMonthlyExpenses(plan: PropertyRevenuePlan, fixedCosts: FixedCosts): number {
   const managementFees = plan.rental.reduce((s, r) => s + r.management_fee, 0);
   const propertyOpsEstimate = plan.rental.length * 50000 + plan.hotel.length * 400000;
   return monthlyFixedCosts(fixedCosts) + managementFees + propertyOpsEstimate;

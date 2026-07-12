@@ -43,7 +43,11 @@ function checkOpenSsl(): DoctorCheck {
     execFileSync("openssl", ["version"], { stdio: "pipe" });
     return { id: "openssl", ok: true, detail: "OpenSSL available (Wire mTLS / Proposal 3)" };
   } catch {
-    return { id: "openssl", ok: false, detail: "OpenSSL not found — required for protocol tls / Proposal 3" };
+    return {
+      id: "openssl",
+      ok: false,
+      detail: "OpenSSL not found — required for protocol tls / Proposal 3",
+    };
   }
 }
 
@@ -111,9 +115,7 @@ function checkPdfkitDependency(): DoctorCheck {
   return {
     id: "pdfkit",
     ok,
-    detail: ok
-      ? "pdfkit installed (PDF export / broker)"
-      : "pdfkit missing — run: npm ci",
+    detail: ok ? "pdfkit installed (PDF export / broker)" : "pdfkit missing — run: npm ci",
   };
 }
 
@@ -123,14 +125,18 @@ function checkFixtureRestoreLock(opts?: { repair?: boolean }): DoctorCheck {
     return { id: "fixture_restore_lock", ok: true, detail: "no stale Vitest fixture lock" };
   }
   const ownerPath = join(lockDir, "owner");
-  let owner = 0;
+  let owner: number;
   try {
     const raw = readFileSync(ownerPath, "utf-8").trim().split(/\s+/)[0] ?? "";
     owner = Number(raw);
   } catch {
     if (opts?.repair) {
       rmSync(lockDir, { recursive: true, force: true });
-      return { id: "fixture_restore_lock", ok: true, detail: "removed broken tests/.fixture-restore.lock" };
+      return {
+        id: "fixture_restore_lock",
+        ok: true,
+        detail: "removed broken tests/.fixture-restore.lock",
+      };
     }
     return {
       id: "fixture_restore_lock",
@@ -138,7 +144,7 @@ function checkFixtureRestoreLock(opts?: { repair?: boolean }): DoctorCheck {
       detail: "stale tests/.fixture-restore.lock — run: orgos doctor --repair",
     };
   }
-  let alive = false;
+  let alive: boolean;
   try {
     process.kill(owner, 0);
     alive = true;
@@ -147,7 +153,11 @@ function checkFixtureRestoreLock(opts?: { repair?: boolean }): DoctorCheck {
   }
   if (!alive && opts?.repair) {
     rmSync(lockDir, { recursive: true, force: true });
-    return { id: "fixture_restore_lock", ok: true, detail: `removed stale fixture lock (dead pid ${owner})` };
+    return {
+      id: "fixture_restore_lock",
+      ok: true,
+      detail: `removed stale fixture lock (dead pid ${owner})`,
+    };
   }
   return {
     id: "fixture_restore_lock",

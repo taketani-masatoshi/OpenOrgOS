@@ -11,7 +11,10 @@ import {
   type InternalWirePeerEntry,
   type InternalWireInboxSubmit,
 } from "../../../schemas/protocol/wire-gateway-internal.js";
-import { wireInboundResultSchema, type WireDeliveryReceipt } from "../../../schemas/protocol/wire-message.js";
+import {
+  wireInboundResultSchema,
+  type WireDeliveryReceipt,
+} from "../../../schemas/protocol/wire-message.js";
 import { getTenantId } from "../tenant.js";
 
 export interface WireInternalClientOptions {

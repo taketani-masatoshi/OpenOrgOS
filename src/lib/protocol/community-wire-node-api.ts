@@ -62,7 +62,11 @@ export function handleCommunityWireNodeDecide(
   authorized: boolean
 ): { ok: boolean; request?: unknown; node?: unknown; error?: string; status?: number } {
   if (!authorized) {
-    return { ok: false, error: "unauthorized — ORGOS_COMMUNITY_GOVERNANCE_TOKEN required", status: 401 };
+    return {
+      ok: false,
+      error: "unauthorized — ORGOS_COMMUNITY_GOVERNANCE_TOKEN required",
+      status: 401,
+    };
   }
   try {
     const { request, node } = decideWireNodeGovernanceRequest({

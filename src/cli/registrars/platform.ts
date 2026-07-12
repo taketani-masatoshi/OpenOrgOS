@@ -10,7 +10,11 @@ import {
 import { runTenantScaffoldDocs } from "../../commands/tenant-scaffold-docs.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
 import { runPipelineDaily, runPipelineList, runPipelineWeekly } from "../../commands/pipeline.js";
-import { runTenantInitCommand, runTenantScaffoldData, runTenantAlignClassification } from "../../commands/tenant.js";
+import {
+  runTenantInitCommand,
+  runTenantScaffoldData,
+  runTenantAlignClassification,
+} from "../../commands/tenant.js";
 import {
   runRegulationsList,
   runRegulationsEffective,
@@ -45,7 +49,12 @@ export function registerPlatformCommands(program: Command): void {
     .option("--repair", "Auto-repair mail-config and orphan draft approvals (with --tenant)")
     .action(async (opts) => {
       const { runDoctor } = await import("../../commands/doctor.js");
-      runDoctor({ json: opts.json, wireProd: opts.wireProd, tenant: opts.tenant, repair: opts.repair });
+      runDoctor({
+        json: opts.json,
+        wireProd: opts.wireProd,
+        tenant: opts.tenant,
+        repair: opts.repair,
+      });
     });
 
   const integrationsCmd = program
@@ -60,7 +69,9 @@ export function registerPlatformCommands(program: Command): void {
       runIntegrationsStatus({ json: opts.json });
     });
 
-  const workspaceCmd = program.command("workspace").description("OrgOS company workspace (tenants/)");
+  const workspaceCmd = program
+    .command("workspace")
+    .description("OrgOS company workspace (tenants/)");
   workspaceCmd
     .command("init")
     .description("Initialize orgos.yaml + tenants/ in current or target directory")
@@ -117,7 +128,10 @@ export function registerPlatformCommands(program: Command): void {
     .command("modules")
     .description("Business module catalog and tenant bindings");
 
-  modulesCmd.command("list").description("List steward/modules catalog vs tenant modules.yaml").action(runModulesList);
+  modulesCmd
+    .command("list")
+    .description("List steward/modules catalog vs tenant modules.yaml")
+    .action(runModulesList);
   modulesCmd
     .command("sync-context")
     .description("Regenerate active_context.md and tenant-active-context.mdc")
@@ -168,12 +182,25 @@ export function registerPlatformCommands(program: Command): void {
       })
     );
 
-  const mapCmd = program.command("map").description("Logical → physical path map (tenant · framework)");
-  mapCmd.command("list").description("List common logical paths for active tenant").action(runMapList);
-  mapCmd.command("resolve <path>").description("Resolve one logical path (e.g. data/company.yaml)").action(runMapResolve);
-  mapCmd.command("tree").description("Tenant map tree (enabled modules · dependency-graph nodes)").action(runMapTree);
+  const mapCmd = program
+    .command("map")
+    .description("Logical → physical path map (tenant · framework)");
+  mapCmd
+    .command("list")
+    .description("List common logical paths for active tenant")
+    .action(runMapList);
+  mapCmd
+    .command("resolve <path>")
+    .description("Resolve one logical path (e.g. data/company.yaml)")
+    .action(runMapResolve);
+  mapCmd
+    .command("tree")
+    .description("Tenant map tree (enabled modules · dependency-graph nodes)")
+    .action(runMapTree);
 
-  const pipelineCmd = program.command("pipeline").description("Automation pipelines (Cursor-external)");
+  const pipelineCmd = program
+    .command("pipeline")
+    .description("Automation pipelines (Cursor-external)");
   pipelineCmd.command("list").description("List available pipelines").action(runPipelineList);
   pipelineCmd
     .command("run <name>")
@@ -265,20 +292,21 @@ export function registerPlatformCommands(program: Command): void {
     .option("--module <id>", "Single module for Zone B")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
-    .action((opts: {
-      coreOnly?: boolean;
-      modulesOnly?: boolean;
-      module?: string;
-      tenant?: string;
-      json?: boolean;
-    }) =>
-      runTenantScaffoldDocs({
-        tenant: opts.tenant,
-        coreOnly: opts.coreOnly,
-        modulesOnly: opts.modulesOnly,
-        moduleId: opts.module,
-        json: opts.json,
-      })
+    .action(
+      (opts: {
+        coreOnly?: boolean;
+        modulesOnly?: boolean;
+        module?: string;
+        tenant?: string;
+        json?: boolean;
+      }) =>
+        runTenantScaffoldDocs({
+          tenant: opts.tenant,
+          coreOnly: opts.coreOnly,
+          modulesOnly: opts.modulesOnly,
+          moduleId: opts.module,
+          json: opts.json,
+        })
     );
 
   const wireCmd = program.command("wire").description("Inter-org Wire operator tools");
@@ -336,9 +364,14 @@ export function registerPlatformCommands(program: Command): void {
       runWireConsoleStatus();
     });
 
-  const localeCmd = program.command("locale").description("Display language (independent from legal jurisdiction)");
+  const localeCmd = program
+    .command("locale")
+    .description("Display language (independent from legal jurisdiction)");
   localeCmd.command("list").description("List supported display languages").action(runLocaleList);
-  localeCmd.command("show").description("Show resolved display locale for active tenant").action(runLocaleShow);
+  localeCmd
+    .command("show")
+    .description("Show resolved display locale for active tenant")
+    .action(runLocaleShow);
 
   const jurisdictionCmd = program.command("jurisdiction").description("Legal jurisdiction packs");
   jurisdictionCmd
@@ -346,16 +379,19 @@ export function registerPlatformCommands(program: Command): void {
     .description("List jurisdiction countries (ISO 3166-1 alpha-2)")
     .option("--all", "Include stub-tier countries")
     .action((opts: { all?: boolean }) => runJurisdictionCountries(opts.all));
-  jurisdictionCmd.command("list").description("List full-tier jurisdiction packs").action(runJurisdictionList);
-  jurisdictionCmd.command("show").description("Show resolved legal jurisdiction for active tenant").action(runJurisdictionShow);
+  jurisdictionCmd
+    .command("list")
+    .description("List full-tier jurisdiction packs")
+    .action(runJurisdictionList);
+  jurisdictionCmd
+    .command("show")
+    .description("Show resolved legal jurisdiction for active tenant")
+    .action(runJurisdictionShow);
   jurisdictionCmd
     .command("entity-forms <code>")
     .description("List selectable entity forms for a jurisdiction")
     .option("--subdivision <code>", "Legal subdivision (e.g. DE for Delaware)")
-    .option(
-      "--category <id>",
-      "Filter by category (e.g. professional_corporation — JP only)"
-    )
+    .option("--category <id>", "Filter by category (e.g. professional_corporation — JP only)")
     .action((code: string, opts: { subdivision?: string; category?: string }) =>
       runJurisdictionEntityForms(code, opts.subdivision, { category: opts.category })
     );
@@ -364,8 +400,13 @@ export function registerPlatformCommands(program: Command): void {
     .description("Verify jurisdiction pack catalog exists")
     .action((code: string | undefined) => runJurisdictionCheck(code));
 
-  const packsCmd = jurisdictionCmd.command("packs").description("Installed jurisdiction pack pins (OSS)");
-  packsCmd.command("list").description("List packs.lock.yaml pins").action(runJurisdictionPacksList);
+  const packsCmd = jurisdictionCmd
+    .command("packs")
+    .description("Installed jurisdiction pack pins (OSS)");
+  packsCmd
+    .command("list")
+    .description("List packs.lock.yaml pins")
+    .action(runJurisdictionPacksList);
   packsCmd
     .command("check [code]")
     .description("Verify pack manifest, templates, and pack modules")
@@ -380,12 +421,22 @@ export function registerPlatformCommands(program: Command): void {
       runJurisdictionPacksPin(code, opts.source, { packRoot: opts.packRoot, dryRun: opts.dryRun })
     );
 
-  const regulationsCmd = program.command("regulations").description("Regulation catalog and tenant effective docs");
-  regulationsCmd.command("list").description("List catalog vs tenant regulations").action(runRegulationsList);
-  regulationsCmd.command("effective").description("List effective regulation IDs").action(runRegulationsEffective);
+  const regulationsCmd = program
+    .command("regulations")
+    .description("Regulation catalog and tenant effective docs");
+  regulationsCmd
+    .command("list")
+    .description("List catalog vs tenant regulations")
+    .action(runRegulationsList);
+  regulationsCmd
+    .command("effective")
+    .description("List effective regulation IDs")
+    .action(runRegulationsEffective);
   regulationsCmd
     .command("init")
-    .description("Register all JP catalog regulations in regulations.yaml (default: disabled) and seed docs")
+    .description(
+      "Register all JP catalog regulations in regulations.yaml (default: disabled) and seed docs"
+    )
     .option("--enable", "Set enabled: true (default: all disabled)")
     .option("--no-seed", "Skip seeding docs/company/regulations/")
     .option("--force", "Overwrite existing regulation MD files when seeding")
@@ -402,7 +453,12 @@ export function registerPlatformCommands(program: Command): void {
     .option("--force", "Overwrite existing tenant docs")
     .option("--dry-run", "Print what would be seeded")
     .option("--include-disabled", "Seed all tenant-listed regulations (including enabled: false)")
-    .option("--id <regId>", "Seed single regulation (repeatable)", (v: string, prev: string[]) => [...prev, v], [])
+    .option(
+      "--id <regId>",
+      "Seed single regulation (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      []
+    )
     .action((opts) =>
       runRegulationsSeed({
         force: opts.force,
@@ -413,11 +469,22 @@ export function registerPlatformCommands(program: Command): void {
     );
 
   const standardsCmd = program.command("standards").description("ISO standards catalog");
-  standardsCmd.command("list").description("List ISO catalog vs tenant standards.yaml").action(runStandardsList);
-  standardsCmd.command("enabled").description("List enabled ISO standard IDs").action(runStandardsEnabled);
+  standardsCmd
+    .command("list")
+    .description("List ISO catalog vs tenant standards.yaml")
+    .action(runStandardsList);
+  standardsCmd
+    .command("enabled")
+    .description("List enabled ISO standard IDs")
+    .action(runStandardsEnabled);
 
-  const opsCmd = program.command("ops").description("Operational daily checks (P0 · contracts · maturity)");
-  opsCmd.command("daily").description("Daily ops summary (maturity + P0 + contract alerts)").action(runOpsDaily);
+  const opsCmd = program
+    .command("ops")
+    .description("Operational daily checks (P0 · contracts · maturity)");
+  opsCmd
+    .command("daily")
+    .description("Daily ops summary (maturity + P0 + contract alerts)")
+    .action(runOpsDaily);
   opsCmd.command("p0").description("P0 closing blockers only (exit 1 if open)").action(runOpsP0);
 
   registerModuleCli(program);
@@ -443,7 +510,8 @@ export function registerPlatformCommands(program: Command): void {
     .description("Verify platform extension prerequisites (read-only)")
     .option("--json", "JSON output")
     .action(async (opts) => {
-      const { runPlatformExtensionCheck } = await import("../../commands/platform-extension-check.js");
+      const { runPlatformExtensionCheck } =
+        await import("../../commands/platform-extension-check.js");
       runPlatformExtensionCheck({ json: opts.json });
     });
   platformExtCmd
@@ -451,7 +519,8 @@ export function registerPlatformCommands(program: Command): void {
     .description("Verify catalog · routing · skills · capability drift")
     .option("--json", "JSON output")
     .action(async (opts) => {
-      const { runPlatformRegistryVerify } = await import("../../commands/platform-registry-verify.js");
+      const { runPlatformRegistryVerify } =
+        await import("../../commands/platform-registry-verify.js");
       runPlatformRegistryVerify({ json: opts.json });
     });
   platformExtCmd
@@ -467,7 +536,9 @@ export function registerPlatformCommands(program: Command): void {
   skillsCmd.command("list").description("List skill CLI commands").action(runSkillsList);
   skillsCmd
     .command("run <id>")
-    .description("Run skill: contract-expiry | permit-expiry | monthly-close | variance | records-check | p0 | daily")
+    .description(
+      "Run skill: contract-expiry | permit-expiry | monthly-close | variance | records-check | p0 | daily"
+    )
     .option("-d, --days <number>", "Days ahead (contract-expiry)", "90")
     .option("-m, --month <YYYY-MM>", "Target month (monthly-close)")
     .option("--markdown", "Markdown output where supported")
@@ -531,7 +602,9 @@ export function registerPlatformCommands(program: Command): void {
     });
 
   const operatorCmd = program.command("operator").description("CEO operator layer");
-  const operatorRegistryCmd = operatorCmd.command("registry").description("Operator ID registry (data/org/operators.yaml)");
+  const operatorRegistryCmd = operatorCmd
+    .command("registry")
+    .description("Operator ID registry (data/org/operators.yaml)");
   operatorRegistryCmd
     .command("init")
     .description("Initialize operator registry from company.yaml approvers")
@@ -586,12 +659,7 @@ export function registerPlatformCommands(program: Command): void {
       const { runOperatorSyncPolicy } = await import("../../commands/operator.js");
       runOperatorSyncPolicy({
         emit: opts.emit as
-          | "cursor"
-          | "agents-md"
-          | "dev-guide"
-          | "engineering"
-          | "data-classification"
-          | "all",
+          "cursor" | "agents-md" | "dev-guide" | "engineering" | "data-classification" | "all",
       });
     });
   operatorCmd
@@ -620,15 +688,23 @@ export function registerPlatformCommands(program: Command): void {
       runOperatorPortability({ json: opts.json, write: opts.write });
     });
 
-  const operatorRuntimeCmd = operatorCmd.command("runtime").description("Operator runtime adapters");
-  operatorRuntimeCmd.command("show").description("Show runtime.yaml config").action(async () => {
-    const { runOperatorRuntimeShow } = await import("../../commands/operator.js");
-    runOperatorRuntimeShow();
-  });
-  operatorRuntimeCmd.command("test").description("Test shell adapter").action(async () => {
-    const { runOperatorRuntimeTest } = await import("../../commands/operator.js");
-    await runOperatorRuntimeTest();
-  });
+  const operatorRuntimeCmd = operatorCmd
+    .command("runtime")
+    .description("Operator runtime adapters");
+  operatorRuntimeCmd
+    .command("show")
+    .description("Show runtime.yaml config")
+    .action(async () => {
+      const { runOperatorRuntimeShow } = await import("../../commands/operator.js");
+      runOperatorRuntimeShow();
+    });
+  operatorRuntimeCmd
+    .command("test")
+    .description("Test shell adapter")
+    .action(async () => {
+      const { runOperatorRuntimeTest } = await import("../../commands/operator.js");
+      await runOperatorRuntimeTest();
+    });
   operatorRuntimeCmd
     .command("stats")
     .description("LLM telemetry summary")
@@ -639,7 +715,9 @@ export function registerPlatformCommands(program: Command): void {
       runOperatorRuntimeStats({ limit: opts.limit, json: opts.json });
     });
 
-  const operatorConsoleCmd = operatorCmd.command("console").description("Combined Operator Console");
+  const operatorConsoleCmd = operatorCmd
+    .command("console")
+    .description("Combined Operator Console");
   operatorConsoleCmd
     .command("start")
     .description("Start Chat + Wire on one origin (:9470)")
@@ -652,10 +730,13 @@ export function registerPlatformCommands(program: Command): void {
     });
 
   const mcpCmd = program.command("mcp").description("Steward MCP tools (stdio / HTTP)");
-  mcpCmd.command("start").description("MCP stdio server").action(async () => {
-    const { runMcpStart } = await import("../../commands/mcp.js");
-    await runMcpStart();
-  });
+  mcpCmd
+    .command("start")
+    .description("MCP stdio server")
+    .action(async () => {
+      const { runMcpStart } = await import("../../commands/mcp.js");
+      await runMcpStart();
+    });
   mcpCmd
     .command("serve-http")
     .description("MCP HTTP/SSE server (Bearer ORGOS_MCP_TOKEN)")
@@ -668,12 +749,17 @@ export function registerPlatformCommands(program: Command): void {
         port: opts.port ? parseInt(String(opts.port), 10) : undefined,
       });
     });
-  mcpCmd.command("rotate-token").description("Generate new ORGOS_MCP_TOKEN").action(async () => {
-    const { runMcpRotateToken } = await import("../../commands/mcp.js");
-    runMcpRotateToken();
-  });
+  mcpCmd
+    .command("rotate-token")
+    .description("Generate new ORGOS_MCP_TOKEN")
+    .action(async () => {
+      const { runMcpRotateToken } = await import("../../commands/mcp.js");
+      runMcpRotateToken();
+    });
 
-  const notificationsCmd = program.command("notifications").description("Push notifications (tenant registry)");
+  const notificationsCmd = program
+    .command("notifications")
+    .description("Push notifications (tenant registry)");
   notificationsCmd
     .command("test")
     .description("Send test notification payload")

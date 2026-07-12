@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import {
@@ -66,8 +66,12 @@ export function runJurisdictionCountries(all?: boolean): void {
 
 export function runJurisdictionList(): void {
   runJurisdictionCountries(false);
-  console.log("\nTenant: tenant.yaml `jurisdiction` · `entity_form` · optional `legal_subdivision`");
-  console.log("組織形態: `jurisdiction entity-forms JP` · `jurisdiction entity-forms US --subdivision DE`");
+  console.log(
+    "\nTenant: tenant.yaml `jurisdiction` · `entity_form` · optional `legal_subdivision`"
+  );
+  console.log(
+    "組織形態: `jurisdiction entity-forms JP` · `jurisdiction entity-forms US --subdivision DE`"
+  );
 }
 
 export function runJurisdictionEntityForms(
@@ -87,9 +91,7 @@ export function runJurisdictionEntityForms(
   console.log("| id | name | category | status |");
   console.log("|----|------|----------|--------|");
   for (const f of forms) {
-    console.log(
-      `| ${f.id} | ${f.name} | ${f.category ?? "—"} | ${f.status ?? "active"} |`
-    );
+    console.log(`| ${f.id} | ${f.name} | ${f.category ?? "—"} | ${f.status ?? "active"} |`);
   }
   if (subdivisions.length && !subdivision) {
     console.log(`\nSubdivisions: ${subdivisions.join(", ")}`);
@@ -102,7 +104,9 @@ export function runJurisdictionShow(): void {
   const tenantId = getTenantId();
   const j = getResolvedJurisdiction();
   console.log(`Legal jurisdiction — tenant=${tenantId}\n`);
-  console.log(`  pack:             ${j.code} (${j.pack.name}) v${j.pack.version} · tier ${j.packTier}`);
+  console.log(
+    `  pack:             ${j.code} (${j.pack.name}) v${j.pack.version} · tier ${j.packTier}`
+  );
   console.log(`  entity_form:      ${j.entityForm} — ${j.entityFormEntry.name}`);
   if (j.entityFormEntry.status) {
     console.log(`  entity status:    ${j.entityFormEntry.status}`);
@@ -175,7 +179,9 @@ export function runJurisdictionPacksCheck(codeArg?: string): void {
       failed = true;
       continue;
     }
-    console.log(`✓ ${code} v${pack.version} · ${catalog.regulations.length} regs · ${packModules.length} pack modules`);
+    console.log(
+      `✓ ${code} v${pack.version} · ${catalog.regulations.length} regs · ${packModules.length} pack modules`
+    );
   }
 
   if (failed) process.exit(1);
@@ -193,7 +199,9 @@ export function parsePackPinSource(source: string): { source: string; version: s
   }
   const version = m[2] ?? m[3];
   if (!version) {
-    throw new Error(`GitHub source requires @version or #tag — e.g. github:steward-os/jurisdiction-jp@1.0.0`);
+    throw new Error(
+      `GitHub source requires @version or #tag — e.g. github:steward-os/jurisdiction-jp@1.0.0`
+    );
   }
   return { source: `github:${m[1]}`, version };
 }

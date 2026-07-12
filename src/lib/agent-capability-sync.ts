@@ -3,7 +3,7 @@
  * Preserves existing data_paths / docs_paths / pulse_checks as seed data.
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import YAML from "yaml";
 import type { AgentId } from "../../schemas/classification.js";
 import {
@@ -60,7 +60,10 @@ export function buildCapabilityManifest(): AgentCapabilityManifest {
         id: agent.id,
         summary_slug: capBlock?.summary_slug ?? existing?.summary_slug ?? slugFromId(agent.id),
         data_paths: [],
-        docs_paths: capBlock?.docs_paths ?? existing?.docs_paths ?? agent.access.read.filter((p) => p.startsWith("docs/")),
+        docs_paths:
+          capBlock?.docs_paths ??
+          existing?.docs_paths ??
+          agent.access.read.filter((p) => p.startsWith("docs/")),
         route_ids: [],
         skills: [...new Set(skillsByAgent.get(agent.id) ?? existing?.skills ?? [])].sort(),
         pulse_checks: [],
@@ -99,7 +102,11 @@ export function syncAgentCapabilityManifest(write = false): AgentCapabilityManif
     const header =
       "# Generated from steward/core/agents/registry.yaml + skills + routing.\n" +
       "# Regenerate: npm run agent:capability:sync\n\n";
-    writeFileSync(AGENT_CAPABILITY_MANIFEST_PATH, header + YAML.stringify(manifest, { lineWidth: 120 }), "utf-8");
+    writeFileSync(
+      AGENT_CAPABILITY_MANIFEST_PATH,
+      header + YAML.stringify(manifest, { lineWidth: 120 }),
+      "utf-8"
+    );
   }
   return manifest;
 }

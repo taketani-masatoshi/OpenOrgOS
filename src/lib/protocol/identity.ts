@@ -1,10 +1,7 @@
 import type { EventEnvelope, OrgRef } from "../../../schemas/protocol/org-event.js";
 import type { OrgIdentityDocument } from "../../../schemas/protocol/identity-exchange.js";
 import { orgIdentityDocumentSchema } from "../../../schemas/protocol/identity-exchange.js";
-import {
-  isPkDidRequired,
-  resolveWireNodeDid,
-} from "../../../schemas/protocol/openorg-did.js";
+import { isPkDidRequired, resolveWireNodeDid } from "../../../schemas/protocol/openorg-did.js";
 import { loadOrgIdentityProfile } from "../org/identity-profile.js";
 import { getClock, getIdGenerator } from "../runtime-context.js";
 import { loadTenantConfig } from "../tenant.js";

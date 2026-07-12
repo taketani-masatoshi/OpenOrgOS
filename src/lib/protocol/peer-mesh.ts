@@ -6,10 +6,7 @@ import {
 import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import { readYamlFile } from "../utils.js";
 import { getMeshRoutesYamlPath } from "./paths.js";
-import {
-  deliverProtocolEnvelopeWithRelay,
-  type DeliverEnvelopeResult,
-} from "./transport.js";
+import { deliverProtocolEnvelopeWithRelay, type DeliverEnvelopeResult } from "./transport.js";
 
 export function loadMeshRoutesRegistry(): MeshRoutesRegistry {
   const path = getMeshRoutesYamlPath();

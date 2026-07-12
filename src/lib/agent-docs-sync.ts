@@ -7,10 +7,7 @@ import { join } from "node:path";
 import type { AgentCatalogEntry } from "../../schemas/agent-catalog.js";
 import { listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
 import { loadRoutingRegistry } from "./routing.js";
-import {
-  EXECUTING_AGENT_OVERRIDES,
-  STEWARD_SELF_EXECUTE_SKILLS,
-} from "./skill-execution-mode.js";
+import { EXECUTING_AGENT_OVERRIDES, STEWARD_SELF_EXECUTE_SKILLS } from "./skill-execution-mode.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { ROOT_DIR } from "./tenant.js";
 
@@ -83,11 +80,7 @@ export function buildOrgChartMermaid(): string {
     listCatalogAgents().find((agent) => agent.id === id)
   ).filter((agent): agent is AgentCatalogEntry => Boolean(agent));
 
-  const lines: string[] = [
-    "flowchart TB",
-    'CEO["CEO 人間"]',
-    "CEO --> executive_steward",
-  ];
+  const lines: string[] = ["flowchart TB", 'CEO["CEO 人間"]', "CEO --> executive_steward"];
 
   for (const agent of agents) {
     lines.push(`${agent.id}["${mermaidNodeLabel(agent)}"]`);
@@ -112,19 +105,14 @@ function agentMdLink(agent: AgentCatalogEntry): string {
 }
 
 export function buildOrgChartSixteenTable(): string {
-  const lines = [
-    "| # | 記事の役割 | Agent id | 定義 |",
-    "|---|-----------|----------|------|",
-  ];
+  const lines = ["| # | 記事の役割 | Agent id | 定義 |", "|---|-----------|----------|------|"];
   ORG_CHART_SIXTEEN_ROLE_IDS.forEach((id, index) => {
     const agent = listCatalogAgents().find((a) => a.id === id);
     if (!agent) {
       lines.push(`| ${index + 1} | ${SIXTEEN_ROLE_LABELS[id]} | \`${id}\` | — |`);
       return;
     }
-    lines.push(
-      `| ${index + 1} | ${SIXTEEN_ROLE_LABELS[id]} | \`${id}\` | ${agentMdLink(agent)} |`
-    );
+    lines.push(`| ${index + 1} | ${SIXTEEN_ROLE_LABELS[id]} | \`${id}\` | ${agentMdLink(agent)} |`);
   });
   return lines.join("\n");
 }
@@ -190,10 +178,7 @@ export function buildSkillDelegationRuntimeNote(): string {
 }
 
 export function buildAgentLabelIndex(): string {
-  const lines = [
-    "| 表示名 | Agent id |",
-    "|--------|----------|",
-  ];
+  const lines = ["| 表示名 | Agent id |", "|--------|----------|"];
   for (const agent of [...listCatalogAgents()].sort((a, b) => a.id.localeCompare(b.id))) {
     lines.push(`| ${agent.name_ja ?? agent.name} | \`${agent.id}\` |`);
   }
@@ -210,9 +195,7 @@ export function buildExecutingAgentOverrideTable(): string {
     a.localeCompare(b)
   )) {
     const skill = skills.find((entry) => entry.id === skillId);
-    lines.push(
-      `| \`${skillId}\` | \`${skill?.agent_id ?? "—"}\` | \`${agentId}\` |`
-    );
+    lines.push(`| \`${skillId}\` | \`${skill?.agent_id ?? "—"}\` | \`${agentId}\` |`);
   }
   return lines.join("\n");
 }
@@ -223,21 +206,16 @@ export function buildStewardSelfExecuteTable(): string {
     "|----------|-----------------|--------------|",
   ];
   for (const skillId of [...STEWARD_SELF_EXECUTE_SKILLS].sort()) {
-    lines.push(
-      `| \`${skillId}\` | \`executive_steward\` | Steward **自実行**（CLI）→ 要約読取 |`
-    );
+    lines.push(`| \`${skillId}\` | \`executive_steward\` | Steward **自実行**（CLI）→ 要約読取 |`);
   }
   return lines.join("\n");
 }
 
 export function buildRoutingSkillIndex(): string {
-  const routes = loadRoutingRegistry().routes
-    .filter((route) => route.skill)
+  const routes = loadRoutingRegistry()
+    .routes.filter((route) => route.skill)
     .sort((a, b) => a.id.localeCompare(b.id));
-  const lines = [
-    "| route id | agent id | skill id |",
-    "|----------|----------|----------|",
-  ];
+  const lines = ["| route id | agent id | skill id |", "|----------|----------|----------|"];
   for (const route of routes) {
     lines.push(`| ${route.id} | \`${route.agent}\` | \`${route.skill}\` |`);
   }
@@ -277,10 +255,14 @@ export function validateSkillDelegationNarrativeDrift(): string[] {
     ""
   );
   if (/cursor-only/i.test(narrative)) {
-    issues.push("skill_delegation_map.md: remove cursor-only from narrative; use generated runtime note");
+    issues.push(
+      "skill_delegation_map.md: remove cursor-only from narrative; use generated runtime note"
+    );
   }
   if (!text.includes("skill-execution-mode.ts")) {
-    issues.push("skill_delegation_map.md must reference src/lib/skill-execution-mode.ts as execution SoT");
+    issues.push(
+      "skill_delegation_map.md must reference src/lib/skill-execution-mode.ts as execution SoT"
+    );
   }
   const requiredSections = [
     "agent-label-index",
@@ -327,7 +309,11 @@ export function extractGeneratedSection(markdown: string, name: string): string 
   return pattern.exec(markdown)?.[1];
 }
 
-export function syncAgentDocs(write = false): { orgChart: string; roster: string; delegation: string } {
+export function syncAgentDocs(write = false): {
+  orgChart: string;
+  roster: string;
+  delegation: string;
+} {
   let orgChart = readFileSync(ORG_CHART_PATH, "utf-8");
   orgChart = replaceGeneratedSection(orgChart, "org-chart-mermaid", buildOrgChartMermaidBlock());
   orgChart = replaceGeneratedSection(orgChart, "org-chart-sixteen", buildOrgChartSixteenTable());
@@ -343,14 +329,22 @@ export function syncAgentDocs(write = false): { orgChart: string; roster: string
     "executing-agent-overrides",
     buildExecutingAgentOverrideTable()
   );
-  delegation = replaceGeneratedSection(delegation, "steward-self-execute", buildStewardSelfExecuteTable());
+  delegation = replaceGeneratedSection(
+    delegation,
+    "steward-self-execute",
+    buildStewardSelfExecuteTable()
+  );
   delegation = replaceGeneratedSection(delegation, "routing-skill-index", buildRoutingSkillIndex());
   delegation = replaceGeneratedSection(
     delegation,
     "execution-decision-tree",
     buildExecutionDecisionTree()
   );
-  delegation = replaceGeneratedSection(delegation, "skill-registry-index", buildSkillRegistryIndex());
+  delegation = replaceGeneratedSection(
+    delegation,
+    "skill-registry-index",
+    buildSkillRegistryIndex()
+  );
   delegation = replaceGeneratedSection(
     delegation,
     "skill-runtime-note",
@@ -377,12 +371,27 @@ export function validateAgentDocsGeneratedDrift(): string[] {
     ["steward_agent_roster.md", "catalog-index", buildCatalogRosterIndex(), roster],
     ["steward_agent_roster.md", "catalog-stats", buildCatalogStatsBlock(), roster],
     ["skill_delegation_map.md", "agent-label-index", buildAgentLabelIndex(), delegation],
-    ["skill_delegation_map.md", "executing-agent-overrides", buildExecutingAgentOverrideTable(), delegation],
+    [
+      "skill_delegation_map.md",
+      "executing-agent-overrides",
+      buildExecutingAgentOverrideTable(),
+      delegation,
+    ],
     ["skill_delegation_map.md", "steward-self-execute", buildStewardSelfExecuteTable(), delegation],
     ["skill_delegation_map.md", "routing-skill-index", buildRoutingSkillIndex(), delegation],
-    ["skill_delegation_map.md", "execution-decision-tree", buildExecutionDecisionTree(), delegation],
+    [
+      "skill_delegation_map.md",
+      "execution-decision-tree",
+      buildExecutionDecisionTree(),
+      delegation,
+    ],
     ["skill_delegation_map.md", "skill-registry-index", buildSkillRegistryIndex(), delegation],
-    ["skill_delegation_map.md", "skill-runtime-note", buildSkillDelegationRuntimeNote(), delegation],
+    [
+      "skill_delegation_map.md",
+      "skill-runtime-note",
+      buildSkillDelegationRuntimeNote(),
+      delegation,
+    ],
   ] as const) {
     const section = extractGeneratedSection(text, name);
     if (!section) {
@@ -443,14 +452,23 @@ export function validateStewardRosterDrift(): string[] {
     issues.push("steward_agent_roster.md must declare registry.yaml as canonical source");
   }
 
-  const tableIds = extractBacktickIds(text).filter((id) => catalogIds.has(id) || resolveAgentId(id));
+  const tableIds = extractBacktickIds(text).filter(
+    (id) => catalogIds.has(id) || resolveAgentId(id)
+  );
   for (const id of tableIds) {
     if (!resolveAgentId(id)) {
       issues.push(`steward_agent_roster.md references unknown agent: ${id}`);
     }
   }
 
-  for (const required of ["executive_steward", "secretary", "finance", "contract", "compliance", "operations"]) {
+  for (const required of [
+    "executive_steward",
+    "secretary",
+    "finance",
+    "contract",
+    "compliance",
+    "operations",
+  ]) {
     if (!text.includes(required)) {
       issues.push(`steward_agent_roster.md missing core agent mention: ${required}`);
     }

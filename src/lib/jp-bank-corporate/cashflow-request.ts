@@ -9,8 +9,7 @@ export interface CashflowRequest {
 }
 
 export type CashflowRequestValidation =
-  | { ok: true; request: CashflowRequest }
-  | { ok: false; error: string };
+  { ok: true; request: CashflowRequest } | { ok: false; error: string };
 
 export type CashflowChatIntent =
   | { intent: false }
@@ -78,9 +77,7 @@ function requestedFormat(message: string): CashflowFormat {
   return "md";
 }
 
-export function validateCashflowRequest(
-  args: Record<string, unknown>
-): CashflowRequestValidation {
+export function validateCashflowRequest(args: Record<string, unknown>): CashflowRequestValidation {
   const granularity = args.granularity;
   const format = args.format;
   const horizon = typeof args.horizon === "string" ? args.horizon.trim().toLowerCase() : "";

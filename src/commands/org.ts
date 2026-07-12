@@ -14,9 +14,16 @@ import {
 } from "../lib/org/audit-bridge.js";
 import { getOrgAuditBridgeConfigPath } from "../lib/org/paths.js";
 import { listAuditEvents } from "../lib/audit-log.js";
-import { orgAuditBridgeConfigSchema, orgAuditBridgeRecommendedConfig } from "../../schemas/org/audit-bridge.js";
+import {
+  orgAuditBridgeConfigSchema,
+  orgAuditBridgeRecommendedConfig,
+} from "../../schemas/org/audit-bridge.js";
 import { writeYamlFile } from "../lib/utils.js";
-import { requireCliOperator, requireCliConfigWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
+import {
+  requireCliOperator,
+  requireCliConfigWrite,
+  requireCliHumanApproval,
+} from "../lib/console-auth/cli-operator.js";
 import {
   assertCorrespondenceReviewAcknowledged,
   CorrespondenceReviewRequiredError,
@@ -47,9 +54,7 @@ export function runOrgApprovalPropose(opts: OrgApprovalProposeOptions): void {
     proposedBy: opts.operator,
     message: opts.message,
     amount:
-      opts.amount != null
-        ? { value: opts.amount, currency: opts.currency ?? "JPY" }
-        : undefined,
+      opts.amount != null ? { value: opts.amount, currency: opts.currency ?? "JPY" } : undefined,
   });
   if (opts.json) {
     console.log(JSON.stringify(approval, null, 2));
@@ -102,7 +107,10 @@ export function runOrgApprovalApprove(opts: OrgApprovalApproveOptions): void {
         ? Boolean(opts.reviewed)
         : undefined,
     });
-    if (isCorrespondenceApprovalSubject(result.approval.subject_type) && result.approval.subject_ref) {
+    if (
+      isCorrespondenceApprovalSubject(result.approval.subject_type) &&
+      result.approval.subject_ref
+    ) {
       try {
         markCorrespondenceDraftApproved(result.approval.subject_ref);
       } catch {
@@ -114,8 +122,13 @@ export function runOrgApprovalApprove(opts: OrgApprovalApproveOptions): void {
       return;
     }
     console.log(`✓ approved ${result.approval.approval_id}`);
-    console.log(`  tier: ${result.approval.approval_tier ?? "—"} · audit: ${result.auditEnvelope?.event_id ?? "—"}`);
-    if (isCorrespondenceApprovalSubject(result.approval.subject_type) && result.approval.subject_ref) {
+    console.log(
+      `  tier: ${result.approval.approval_tier ?? "—"} · audit: ${result.auditEnvelope?.event_id ?? "—"}`
+    );
+    if (
+      isCorrespondenceApprovalSubject(result.approval.subject_type) &&
+      result.approval.subject_ref
+    ) {
       console.log(`  next: ${CORRESPONDENCE_CLI.send} --id ${result.approval.subject_ref}`);
     }
   } catch (e) {
@@ -155,11 +168,7 @@ export interface OrgApprovalListOptions {
 export function runOrgApprovalList(opts: OrgApprovalListOptions): void {
   if (opts.tenant) setTenantId(opts.tenant);
   const status = opts.status as
-    | "pending_approval"
-    | "approved"
-    | "rejected"
-    | "completed"
-    | undefined;
+    "pending_approval" | "approved" | "rejected" | "completed" | undefined;
   const rows = listOrgApprovals({ scope: "internal", status });
   if (opts.json) {
     console.log(JSON.stringify(rows, null, 2));

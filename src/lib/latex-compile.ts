@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { ASSETS_DIR } from "./utils.js";
 
@@ -89,11 +89,10 @@ export function compileLatexToPdf(
   const base = basename(texPath, ".tex");
 
   if (engine === "tectonic") {
-    execFileSync(
-      "tectonic",
-      ["-X", "compile", texPath, "--outdir", workDir],
-      { cwd: workDir, stdio: "pipe" }
-    );
+    execFileSync("tectonic", ["-X", "compile", texPath, "--outdir", workDir], {
+      cwd: workDir,
+      stdio: "pipe",
+    });
   } else {
     for (let i = 0; i < passes; i++) {
       execFileSync(

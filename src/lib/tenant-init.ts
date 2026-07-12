@@ -1,11 +1,4 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  writeFileSync,
-} from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import YAML from "yaml";
 import { modulesFileSchema } from "../../schemas/modules.js";
@@ -14,10 +7,7 @@ import { getModuleSeedDir, listModuleSeedFiles, loadModulesFile } from "./module
 import { getTenantsDir } from "./orgos-paths.js";
 import { setTenantId, loadTenantConfig, getTenantTemplateDir, getTenantDir } from "./tenant.js";
 import { ensureExecutiveMailConfig } from "./correspondence/ensure-mail-config.js";
-import {
-  seedExecutiveYamlFromExamples,
-  seedProtocolYamlFromExamples,
-} from "./tenant-scaffold.js";
+import { seedExecutiveYamlFromExamples, seedProtocolYamlFromExamples } from "./tenant-scaffold.js";
 
 export interface TenantInitOptions {
   id: string;
@@ -124,7 +114,10 @@ function writeTenantYaml(dest: string, id: string, name: string, options: Tenant
   }
   if (options.legalSubdivision) {
     if (/^legal_subdivision:.*$/m.test(raw)) {
-      raw = raw.replace(/^legal_subdivision:.*$/m, `legal_subdivision: ${options.legalSubdivision}`);
+      raw = raw.replace(
+        /^legal_subdivision:.*$/m,
+        `legal_subdivision: ${options.legalSubdivision}`
+      );
     } else {
       raw += `legal_subdivision: ${options.legalSubdivision}\n`;
     }
@@ -188,7 +181,6 @@ function writeSkeletonData(
   options?: WriteSkeletonOptions
 ): ScaffoldTenantDataResult {
   const dataDir = join(dest, "data");
-  const docsDir = join(dest, "docs");
   const result: ScaffoldTenantDataResult = { created: [], skipped: [] };
 
   const put = (rel: string, content: string) => {
@@ -235,8 +227,7 @@ function writeSkeletonData(
   mkdirSync(join(dataDir, "finance", "monthly"), { recursive: true });
   mkdirSync(join(dataDir, "contracts"), { recursive: true });
 
-  const rentalEnabled =
-    fromModules === undefined ? true : fromModules.includes("rental");
+  const rentalEnabled = fromModules === undefined ? true : fromModules.includes("rental");
   if (rentalEnabled) {
     mkdirSync(join(dataDir, "properties"), { recursive: true });
     put("data/properties/PROP-001.yaml", skeletonProperty(name));
@@ -534,8 +525,18 @@ notes: debt plan skeleton
 
 function skeletonYojitsu(name: string): string {
   const months = [
-    "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07",
-    "2026-08", "2026-09", "2026-10", "2026-11", "2026-12", "2027-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07",
+    "2026-08",
+    "2026-09",
+    "2026-10",
+    "2026-11",
+    "2026-12",
+    "2027-01",
   ];
   const monthBlocks = months
     .map(
@@ -564,7 +565,6 @@ function copyModuleSeeds(dest: string, fromModules?: string[]): void {
     if (!existsSync(seedDir)) continue;
     for (const file of listModuleSeedFiles(modId)) {
       if (file.endsWith(".example")) continue;
-      const src = join(seedDir, file);
       const rel = readdirSync(seedDir).includes(file) ? file : null;
       if (!rel) continue;
       // Seeds stay in steward/modules — tenant copies only when data_root configured

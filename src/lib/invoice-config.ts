@@ -32,10 +32,7 @@ export function resolveBillingConfig(moduleId: string, propertyId: string): Reso
 }
 
 /** Dry-run skeleton paths when billing block is unset */
-export function resolveBillingConfigDryRun(
-  moduleId: string,
-  propertyId: string
-): ResolvedBilling {
+export function resolveBillingConfigDryRun(moduleId: string, propertyId: string): ResolvedBilling {
   try {
     return resolveBillingConfig(moduleId, propertyId);
   } catch {

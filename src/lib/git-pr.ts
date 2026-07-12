@@ -1,12 +1,12 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { prManifestSchema, type PrManifest } from "../../schemas/cloud-agent.js";
 import { collectWorkOrdersForMerge, mergeWorkOrderResults } from "./work-order-merge.js";
 import { pushQueueEvent } from "./queue-db.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { routingQueueDir } from "./routing.js";
-import { getDocsReportsDir, ROOT_DIR, currentDate, ensureDocsReportsDir } from "./utils.js";
+import { getDocsReportsDir, ROOT_DIR, currentDate } from "./utils.js";
 
 export function branchNameForWorkOrder(id: string): string {
   return `steward/${id.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`;
@@ -62,7 +62,6 @@ export interface CreatePrOptions {
 
 export function createPullRequest(options: CreatePrOptions): PrManifest {
   const manifest = planPullRequest(options.id, options.base ?? "main");
-  const body = readFileSync(manifest.body_path, "utf-8");
 
   pushQueueEvent({
     type: "pr_requested",

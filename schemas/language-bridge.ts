@@ -9,11 +9,7 @@ export const recordLanguageStrategySchema = z.enum([
 ]);
 
 /** Document drafting layout when user ≠ system language. */
-export const bilingualLayoutSchema = z.enum([
-  "user_primary",
-  "system_primary",
-  "bilingual",
-]);
+export const bilingualLayoutSchema = z.enum(["user_primary", "system_primary", "bilingual"]);
 
 export const documentLanguageRoleSchema = z.enum(["user", "system", "none"]);
 
@@ -30,9 +26,7 @@ export const languageBridgeConfigSchema = z.object({
   user_language: displayLanguageCodeSchema.optional(),
   record_strategy: recordLanguageStrategySchema.default("explicit"),
   layout: bilingualLayoutSchema.default("system_primary"),
-  document_types: z
-    .record(z.string(), documentTypePolicySchema)
-    .optional(),
+  document_types: z.record(z.string(), documentTypePolicySchema).optional(),
   notes: z.string().optional(),
 });
 

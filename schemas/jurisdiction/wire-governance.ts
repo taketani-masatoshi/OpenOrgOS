@@ -10,7 +10,10 @@ export const jurisdictionApprovalTierSchema = z.object({
 
 export const jurisdictionApprovalPolicySchema = z.object({
   policy_ref: z.string(),
-  currency: z.string().regex(/^[A-Z]{3}$/).default("JPY"),
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .default("JPY"),
   tiers: z.object({
     A: jurisdictionApprovalTierSchema,
     B: jurisdictionApprovalTierSchema,
@@ -21,7 +24,10 @@ export const jurisdictionApprovalPolicySchema = z.object({
 export const jurisdictionWireGovernancePackEntrySchema = z.object({
   path: z.string().min(1),
   /** sha256 hex of pack file — optional in dev, enforced when set */
-  pin: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  pin: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
 });
 
 export const jurisdictionWireGovernanceRegistrySchema = z.object({
@@ -36,4 +42,6 @@ export const jurisdictionWireGovernanceLegacyRegistrySchema = z.object({
 });
 
 export type JurisdictionApprovalPolicy = z.output<typeof jurisdictionApprovalPolicySchema>;
-export type JurisdictionWireGovernanceRegistry = z.output<typeof jurisdictionWireGovernanceRegistrySchema>;
+export type JurisdictionWireGovernanceRegistry = z.output<
+  typeof jurisdictionWireGovernanceRegistrySchema
+>;

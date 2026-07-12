@@ -37,15 +37,19 @@ export interface ResolvedSkillEntry extends SkillRegistryEntry {
   moduleId?: string;
 }
 
-function normalizeSkillRuntime(runtime: SkillRegistryEntry["runtime"]): SkillRegistryEntry["runtime"] {
+function normalizeSkillRuntime(
+  runtime: SkillRegistryEntry["runtime"]
+): SkillRegistryEntry["runtime"] {
   return runtime === "cursor-only" ? "agent" : runtime;
 }
 
 function loadRegistryAt(path: string): SkillRegistryEntry[] {
-  return loadRegistryFile(path, skillRegistrySchema, () => ({ skills: [] })).skills.map((skill) => ({
-    ...skill,
-    runtime: normalizeSkillRuntime(skill.runtime),
-  }));
+  return loadRegistryFile(path, skillRegistrySchema, () => ({ skills: [] })).skills.map(
+    (skill) => ({
+      ...skill,
+      runtime: normalizeSkillRuntime(skill.runtime),
+    })
+  );
 }
 
 function moduleSkillDirRel(moduleRoot: string, moduleId: string): string {
@@ -137,7 +141,9 @@ export function getCliSkills(scopeToTenant = false): ResolvedSkillEntry[] {
 }
 
 export function getAgentInteractiveSkills(scopeToTenant = false): ResolvedSkillEntry[] {
-  return loadSkillRegistry(scopeToTenant).filter((s) => s.runtime === "cursor-only" || s.runtime === "agent");
+  return loadSkillRegistry(scopeToTenant).filter(
+    (s) => s.runtime === "cursor-only" || s.runtime === "agent"
+  );
 }
 
 /** @deprecated use getAgentInteractiveSkills — cursor-only is legacy alias for agent runtime */
@@ -158,10 +164,14 @@ export function validateSkillRegistryLegacyAgentFields(): string[] {
   }
 
   for (const path of paths) {
-    const doc = YAML.parse(readFileSync(path, "utf-8")) as { skills?: Array<Record<string, unknown>> };
+    const doc = YAML.parse(readFileSync(path, "utf-8")) as {
+      skills?: Array<Record<string, unknown>>;
+    };
     for (const skill of doc.skills ?? []) {
       if ("agent" in skill && !("agent_id" in skill)) {
-        issues.push(`${path}: skill ${String(skill.id)} uses deprecated agent field — use agent_id`);
+        issues.push(
+          `${path}: skill ${String(skill.id)} uses deprecated agent field — use agent_id`
+        );
       }
       if ("agent" in skill && "agent_id" in skill) {
         issues.push(`${path}: skill ${String(skill.id)} must not declare both agent and agent_id`);

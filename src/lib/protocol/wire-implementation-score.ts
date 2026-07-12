@@ -104,10 +104,7 @@ export const STRICT_WIRE_SCORE_CATEGORIES: readonly StrictScoreCategory[] = [
     id: "store-forward",
     label: "Store-and-forward retry lifecycle",
     max: 10,
-    suites: [
-      "tests/wire-pending-retry.test.ts",
-      "tests/wire-pending-flush-e2e.test.ts",
-    ],
+    suites: ["tests/wire-pending-retry.test.ts", "tests/wire-pending-flush-e2e.test.ts"],
   },
   {
     id: "r5-email",
@@ -148,7 +145,10 @@ function scoreItem(
   checks: Array<{ ok: boolean; weight: number; detail?: string }>
 ): WireImplementationScoreItem {
   const earned = checks.reduce((s, c) => s + (c.ok ? c.weight : 0), 0);
-  const failed = checks.filter((c) => !c.ok).map((c) => c.detail).filter(Boolean);
+  const failed = checks
+    .filter((c) => !c.ok)
+    .map((c) => c.detail)
+    .filter(Boolean);
   return {
     id,
     label,
@@ -177,7 +177,10 @@ export function evaluateWireImplementationChecklist(): WireImplementationScoreRe
         detail: "gossip POST does not persist",
       },
       {
-        ok: hasTestPattern("tests/wire-gateway-server.test.ts", /federation\/catalog|wire\/v1\/health/),
+        ok: hasTestPattern(
+          "tests/wire-gateway-server.test.ts",
+          /federation\/catalog|wire\/v1\/health/
+        ),
         weight: 3,
         detail: "gateway E2E tests missing",
       },
@@ -226,12 +229,18 @@ export function evaluateWireImplementationChecklist(): WireImplementationScoreRe
 
     scoreItem("openorg-dns", "OpenOrg DNS in transport/discover", 10, [
       {
-        ok: hasPattern("src/lib/protocol/transport.ts", /resolveOpenOrgWireUrl|resolvePeerInboundEndpointsWithDns/),
+        ok: hasPattern(
+          "src/lib/protocol/transport.ts",
+          /resolveOpenOrgWireUrl|resolvePeerInboundEndpointsWithDns/
+        ),
         weight: 5,
         detail: "OpenOrg DNS not integrated in transport",
       },
       {
-        ok: hasPattern("src/lib/wire-gateway/discover.ts", /resolveOpenOrgWireUrl|applyWireGatewayDiscoverAsync/),
+        ok: hasPattern(
+          "src/lib/wire-gateway/discover.ts",
+          /resolveOpenOrgWireUrl|applyWireGatewayDiscoverAsync/
+        ),
         weight: 5,
         detail: "OpenOrg DNS not integrated in discover apply",
       },
@@ -244,12 +253,18 @@ export function evaluateWireImplementationChecklist(): WireImplementationScoreRe
         detail: "gossip store module missing",
       },
       {
-        ok: hasPattern("src/lib/wire-gateway/federation-gossip-store.ts", /applyIncomingWireFederationGossip/),
+        ok: hasPattern(
+          "src/lib/wire-gateway/federation-gossip-store.ts",
+          /applyIncomingWireFederationGossip/
+        ),
         weight: 3,
         detail: "gossip merge persist missing",
       },
       {
-        ok: hasTestPattern("tests/wire-federation-gossip.test.ts", /mergeWireFederationGossipCatalogs|applyIncoming/),
+        ok: hasTestPattern(
+          "tests/wire-federation-gossip.test.ts",
+          /mergeWireFederationGossipCatalogs|applyIncoming/
+        ),
         weight: 4,
         detail: "gossip E2E test missing",
       },
@@ -293,17 +308,26 @@ export function evaluateWireImplementationChecklist(): WireImplementationScoreRe
 
     scoreItem("r5-email", "Phase2 protocol CLI + prod gate", 12, [
       {
-        ok: hasPattern("src/commands/protocol.ts", /runProtocolMailWireScan|scanMailReceivedForWire/),
+        ok: hasPattern(
+          "src/commands/protocol.ts",
+          /runProtocolMailWireScan|scanMailReceivedForWire/
+        ),
         weight: 4,
         detail: "protocol mail wire-scan missing",
       },
       {
-        ok: hasPattern("src/cli/registrars/orchestration.ts", /protocol.*mail.*wire-scan|wire-scan/),
+        ok: hasPattern(
+          "src/cli/registrars/orchestration.ts",
+          /protocol.*mail.*wire-scan|wire-scan/
+        ),
         weight: 4,
         detail: "CLI protocol mail wire-scan not registered",
       },
       {
-        ok: hasPattern("src/lib/protocol/prod-wire-gate.ts", /email_wire|evaluateEmailWireReadiness/),
+        ok: hasPattern(
+          "src/lib/protocol/prod-wire-gate.ts",
+          /email_wire|evaluateEmailWireReadiness/
+        ),
         weight: 4,
         detail: "prod-wire-gate email_wire check missing",
       },
@@ -316,7 +340,10 @@ export function evaluateWireImplementationChecklist(): WireImplementationScoreRe
         detail: "org cert not connected to witness-trust",
       },
       {
-        ok: hasPattern("src/lib/wire-gateway/did.ts", /resolveOrganizationCertificateSpkiSha256|org-cert-witness/),
+        ok: hasPattern(
+          "src/lib/wire-gateway/did.ts",
+          /resolveOrganizationCertificateSpkiSha256|org-cert-witness/
+        ),
         weight: 5,
         detail: "well-known org cert not using witness anchor",
       },
@@ -329,7 +356,10 @@ export function evaluateWireImplementationChecklist(): WireImplementationScoreRe
         detail: "score lacks weighted category checks",
       },
       {
-        ok: hasPattern("src/lib/protocol/wire-implementation-score.ts", /hasPattern|hasTestPattern/),
+        ok: hasPattern(
+          "src/lib/protocol/wire-implementation-score.ts",
+          /hasPattern|hasTestPattern/
+        ),
         weight: 4,
         detail: "score lacks source pattern verification",
       },
@@ -345,8 +375,7 @@ export function evaluateWireImplementationChecklist(): WireImplementationScoreRe
   const rawMax = items.reduce((s, i) => s + i.max_points, 0);
   const max = 100;
   const total = Math.min(max, Math.round((rawTotal / rawMax) * max));
-  const grade =
-    total >= 95 ? "enterprise" : total >= 80 ? "production" : "pilot";
+  const grade = total >= 95 ? "enterprise" : total >= 80 ? "production" : "pilot";
 
   return {
     mode: "checklist",
@@ -416,12 +445,14 @@ export function evaluateStrictWireImplementationScore(
 
   const passedAssertions = results.reduce(
     (sum, result) =>
-      sum + (result.assertionResults ?? []).filter((assertion) => assertion.status === "passed").length,
+      sum +
+      (result.assertionResults ?? []).filter((assertion) => assertion.status === "passed").length,
     0
   );
   const failedAssertions = results.reduce(
     (sum, result) =>
-      sum + (result.assertionResults ?? []).filter((assertion) => assertion.status !== "passed").length,
+      sum +
+      (result.assertionResults ?? []).filter((assertion) => assertion.status !== "passed").length,
     0
   );
   const passedRuntimeCategories = categoryItems.filter((item) => item.ok).length;

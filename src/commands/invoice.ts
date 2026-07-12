@@ -38,7 +38,9 @@ export async function runInvoiceGenerateCommand(options: {
   }
   console.log("");
   if (options.dryRun) {
-    console.log("dry-run: ファイルは生成していません。billing 設定後に --dry-run なしで実行してください。");
+    console.log(
+      "dry-run: ファイルは生成していません。billing 設定後に --dry-run なしで実行してください。"
+    );
   } else {
     console.log("要記入: 借主名・送付先メール・振込先口座（プレースホルダのまま）");
   }

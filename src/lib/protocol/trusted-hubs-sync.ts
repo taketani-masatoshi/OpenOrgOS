@@ -1,9 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import type { TrustedHubsRegistry } from "../../../schemas/protocol/trusted-hubs.js";
 import { trustedHubsRegistrySchema } from "../../../schemas/protocol/trusted-hubs.js";
-import {
-  getTrustedHubsRegistryPath,
-} from "./trusted-hubs.js";
+import { getTrustedHubsRegistryPath } from "./trusted-hubs.js";
 import { readYamlFile } from "../utils.js";
 
 export interface HubPublicKeyResponse {
@@ -141,12 +139,7 @@ export async function syncTrustedHubPublicKeys(
         }
 
         if (!opts.dryRun) {
-          yamlText = patchHubPublicKeyInYaml(
-            yamlText,
-            hub.hub_id,
-            hub.hub_url,
-            fetched.public_key
-          );
+          yamlText = patchHubPublicKeyInYaml(yamlText, hub.hub_id, hub.hub_url, fetched.public_key);
           hub.hub_public_key = fetched.public_key;
         }
 

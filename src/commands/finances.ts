@@ -1,34 +1,22 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import {
-  loadMonthlyFinances,
-  loadMonthlyFinance,
-} from "../lib/data.js";
+import { loadMonthlyFinances, loadMonthlyFinance } from "../lib/data.js";
 import { monthlyFinanceSchema } from "../../schemas/index.js";
 import { getDataDir, writeYamlFile } from "../lib/utils.js";
-import {
-  financesSummary,
-  formatFinancesSummaryMarkdown,
-} from "../lib/report.js";
+import { financesSummary, formatFinancesSummaryMarkdown } from "../lib/report.js";
 import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
 import { writeMarkdownReport } from "../lib/utils.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 
-export function runFinancesSummary(options: {
-  from: string;
-  to: string;
-}): void {
+export function runFinancesSummary(options: { from: string; to: string }): void {
   const finances = loadMonthlyFinances();
   const summary = financesSummary(finances, options.from, options.to);
 
   console.log(formatFinancesSummaryMarkdown(summary, options.from, options.to));
 }
 
-export function runFinancesAdd(options: {
-  month: string;
-  file: string;
-}): void {
+export function runFinancesAdd(options: { month: string; file: string }): void {
   requireCliDataWrite({ command: "finances add", permission: "escalate:plan" });
   const raw = readFileSync(options.file, "utf-8");
   const parsed = YAML.parse(raw);

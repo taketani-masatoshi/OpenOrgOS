@@ -8,7 +8,6 @@ import {
   writePdfToFile,
   type PdfTableRow,
 } from "./pdf.js";
-import { formatCurrency } from "./utils.js";
 import type { InvoiceTemplate } from "../../schemas/invoice-template.js";
 import {
   billingMonthEndDate,
@@ -44,9 +43,7 @@ export function buildRentInvoiceRows(input: RentInvoiceInput): PdfTableRow[] {
       ?.replace("{year_month}", formatJapaneseYearMonth(input.billingMonth))
       .replace("{property_name}", input.propertyName) ??
     `${formatJapaneseYearMonth(input.billingMonth)}分 賃料（${input.propertyName}）`;
-  const lineNote =
-    tpl?.line_note ??
-    "貸付用家屋の賃貸料（消費税非課税の可能性あり・要税理士確認）";
+  const lineNote = tpl?.line_note ?? "貸付用家屋の賃貸料（消費税非課税の可能性あり・要税理士確認）";
   const taxLabel = tpl?.tax_label ?? "消費税（10%）";
   const taxNote = tpl?.tax_note ?? "貸付用家屋の賃貸料は原則非課税";
 
@@ -81,7 +78,7 @@ export async function generateRentInvoicePdf(
   ]);
 
   pdfSection(w, "請求先");
-  pdfParagraph(w, `${input.tenantName}　御中`, 11);
+  pdfParagraph(w, `${input.tenantName}\u3000御中`, 11);
   w.doc.moveDown(0.3);
 
   pdfSection(w, "請求元");

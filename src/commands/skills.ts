@@ -241,7 +241,9 @@ export function runSkillsList(): void {
     for (const i of issues) console.warn(`  ${i}`);
   }
 
-  console.log("Skill registry（steward/core/skills/registry.yaml + modules/*/skills/registry.yaml）:\n");
+  console.log(
+    "Skill registry（steward/core/skills/registry.yaml + modules/*/skills/registry.yaml）:\n"
+  );
   console.log("| runtime | id | cli | Agent |");
   console.log("|---------|-----|-----|-------|");
   for (const s of loadSkillRegistry()) {
@@ -249,7 +251,9 @@ export function runSkillsList(): void {
     console.log(`| ${s.runtime} | ${s.id} | ${cli} | ${s.agent_id} |`);
   }
 
-  console.log(`\nCLI: ${getCliSkills().length} · agent-interactive: ${getCursorOnlySkills().length}`);
+  console.log(
+    `\nCLI: ${getCliSkills().length} · agent-interactive: ${getCursorOnlySkills().length}`
+  );
   console.log("\n例: npm run orgos -- skills run contract-expiry");
   console.log("     npm run orgos -- pipeline run daily");
   console.log("     npm run orgos -- route list");
@@ -324,7 +328,11 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       const report = computeVarianceReport("FY2026");
       const md = formatVarianceMarkdown(report);
       if (opts.output) {
-        const path = writeMarkdownReport("plans/variance", opts.output ?? "fy2026-variance-auto.md", md);
+        const path = writeMarkdownReport(
+          "plans/variance",
+          opts.output ?? "fy2026-variance-auto.md",
+          md
+        );
         console.log(`✓ ${path}`);
       } else {
         console.log(md);

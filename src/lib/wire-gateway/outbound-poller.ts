@@ -72,9 +72,7 @@ export function createOutboundPoller(
             headers["X-OpenOrgOS-Wire-Version"] = "0.1";
           } else {
             try {
-              assertLegacyWebhookDeliveryAllowed(
-                `legacy_webhook delivery to ${peer.peer_node_id}`
-              );
+              assertLegacyWebhookDeliveryAllowed(`legacy_webhook delivery to ${peer.peer_node_id}`);
             } catch (error) {
               appendWireGatewayAudit(config.audit.path, {
                 recorded_at: new Date().toISOString(),

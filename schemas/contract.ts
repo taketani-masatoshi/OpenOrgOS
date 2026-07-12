@@ -27,12 +27,7 @@ export const contractRiskSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const contractStatus = z.enum([
-  "draft",
-  "pending_signature",
-  "executed",
-  "terminated",
-]);
+export const contractStatus = z.enum(["draft", "pending_signature", "executed", "terminated"]);
 
 export const counterpartyType = z.enum(["individual", "company"]);
 

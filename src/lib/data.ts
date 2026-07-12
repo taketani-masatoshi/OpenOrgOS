@@ -61,7 +61,14 @@ import { loadEnabledModules } from "./modules.js";
 import { loadSchedulingCases } from "./scheduling-coordination/store.js";
 import { normalizeYojitsuPlan } from "./yojitsu-normalize.js";
 import { getPrimaryOperationsPublicRel } from "./ops-config.js";
-import { getDataDir, readYamlFile, listYamlFiles, getStakeholdersYaml, toLogicalPath, resolveTenantPath } from "./utils.js";
+import {
+  getDataDir,
+  readYamlFile,
+  listYamlFiles,
+  getStakeholdersYaml,
+  toLogicalPath,
+  resolveTenantPath,
+} from "./utils.js";
 
 export interface StewardData {
   company: Company;
@@ -99,9 +106,7 @@ export function loadProperty(id: string): Property | undefined {
 }
 
 export function loadContracts(): Contract[] {
-  return listYamlFiles(join(getDataDir(), "contracts")).map((f) =>
-    readYamlFile(f, contractSchema)
-  );
+  return listYamlFiles(join(getDataDir(), "contracts")).map((f) => readYamlFile(f, contractSchema));
 }
 
 export function loadContract(id: string): Contract | undefined {
@@ -289,7 +294,9 @@ export function loadPropertyRevenuePlan(): PropertyRevenuePlan {
   );
 }
 
-export function loadYojitsuPlan(year: number): import("../../schemas/finance.js").YojitsuPlan | undefined {
+export function loadYojitsuPlan(
+  year: number
+): import("../../schemas/finance.js").YojitsuPlan | undefined {
   const path = join(getDataDir(), "plans", `yojitsu-${year}.yaml`);
   try {
     return normalizeYojitsuPlan(readYamlFile(path, yojitsuPlanSchema));
@@ -395,21 +402,15 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("data/company.yaml", () => loadCompany());
 
   for (const f of listYamlFiles(join(getDataDir(), "properties"))) {
-    tryLoad(toLogicalPath(f), () =>
-      readYamlFile(f, propertySchema)
-    );
+    tryLoad(toLogicalPath(f), () => readYamlFile(f, propertySchema));
   }
 
   for (const f of listYamlFiles(join(getDataDir(), "contracts"))) {
-    tryLoad(toLogicalPath(f), () =>
-      readYamlFile(f, contractSchema)
-    );
+    tryLoad(toLogicalPath(f), () => readYamlFile(f, contractSchema));
   }
 
   for (const f of listYamlFiles(join(getDataDir(), "finance", "monthly"))) {
-    tryLoad(toLogicalPath(f), () =>
-      readYamlFile(f, monthlyFinanceSchema)
-    );
+    tryLoad(toLogicalPath(f), () => readYamlFile(f, monthlyFinanceSchema));
   }
 
   tryLoad("data/finance/fixed-costs.yaml", () => loadFixedCosts());
@@ -429,9 +430,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   for (const f of listYamlFiles(join(getDataDir(), "plans")).filter((p) =>
     p.includes("yojitsu-")
   )) {
-    tryLoad(toLogicalPath(f), () =>
-      readYamlFile(f, yojitsuPlanSchema)
-    );
+    tryLoad(toLogicalPath(f), () => readYamlFile(f, yojitsuPlanSchema));
   }
 
   for (const mod of loadEnabledModules()) {
@@ -488,9 +487,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   const vcFundsPath = join(getDataDir(), "venture-capital", "funds.yaml");
   const vcPortfolioPath = join(getDataDir(), "venture-capital", "portfolio.yaml");
   if (existsSync(vcFundsPath)) {
-    tryLoad("data/venture-capital/funds.yaml", () =>
-      readYamlFile(vcFundsPath, fundsFileSchema)
-    );
+    tryLoad("data/venture-capital/funds.yaml", () => readYamlFile(vcFundsPath, fundsFileSchema));
   }
   if (existsSync(vcPortfolioPath)) {
     tryLoad("data/venture-capital/portfolio.yaml", () =>

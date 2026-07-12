@@ -2,18 +2,9 @@ import { z } from "zod";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-export const medicalDeviceBusinessRole = z.enum([
-  "manufacturing",
-  "mah",
-  "distribution",
-]);
+export const medicalDeviceBusinessRole = z.enum(["manufacturing", "mah", "distribution"]);
 
-export const medicalDeviceLicenseStatus = z.enum([
-  "active",
-  "pending",
-  "suspended",
-  "expired",
-]);
+export const medicalDeviceLicenseStatus = z.enum(["active", "pending", "suspended", "expired"]);
 
 export const medicalDeviceClass = z.enum(["I", "II", "III", "IV"]);
 
@@ -40,14 +31,7 @@ export const medicalDeviceObligationsFileSchema = z.object({
       id: z.string().min(1),
       role_ids: z.array(medicalDeviceBusinessRole).min(1),
       title: z.string().min(1),
-      category: z.enum([
-        "permit",
-        "qms",
-        "gvp",
-        "record",
-        "reporting",
-        "post_market",
-      ]),
+      category: z.enum(["permit", "qms", "gvp", "record", "reporting", "post_market"]),
       frequency: z.string().optional(),
       evidence_ledger: z.string().optional(),
       iso_refs: z.array(z.string()).optional(),
@@ -173,6 +157,10 @@ export type MedicalDeviceBusinessRole = z.output<typeof medicalDeviceBusinessRol
 export type MedicalDeviceObligationsFile = z.output<typeof medicalDeviceObligationsFileSchema>;
 export type MedicalDeviceQmsCatalogFile = z.output<typeof medicalDeviceQmsCatalogFileSchema>;
 export type MedicalDeviceGvpCatalogFile = z.output<typeof medicalDeviceGvpCatalogFileSchema>;
-export type MedicalDeviceLicenseRegistryFile = z.output<typeof medicalDeviceLicenseRegistryFileSchema>;
+export type MedicalDeviceLicenseRegistryFile = z.output<
+  typeof medicalDeviceLicenseRegistryFileSchema
+>;
 export type MedicalDeviceMasterFile = z.output<typeof medicalDeviceMasterFileSchema>;
-export type MedicalDeviceLedgerRegistryFile = z.output<typeof medicalDeviceLedgerRegistryFileSchema>;
+export type MedicalDeviceLedgerRegistryFile = z.output<
+  typeof medicalDeviceLedgerRegistryFileSchema
+>;

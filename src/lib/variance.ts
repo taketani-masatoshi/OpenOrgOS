@@ -1,9 +1,5 @@
 import { loadYojitsuFyPlan, loadMonthlyFinances, loadBusinessPlan } from "./data.js";
-import {
-  aggregateBySegment,
-  resolveYojitsuMonthSide,
-  sumRevenue,
-} from "./yojitsu-normalize.js";
+import { aggregateBySegment, resolveYojitsuMonthSide, sumRevenue } from "./yojitsu-normalize.js";
 
 export interface MonthVariance {
   month: string;

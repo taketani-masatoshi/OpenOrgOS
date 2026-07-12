@@ -145,8 +145,7 @@ export function startHubServer(options: HubServerOptions): Promise<HubServerHand
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
       const addr = server.address();
-      const actualPort =
-        typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+      const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
       const url = `${scheme}://${host}:${actualPort}`;
       console.log(`✓ Witness Hub ${options.hubId} ${url}`);
       resolve({
@@ -217,8 +216,7 @@ async function handleHubRequest(req: IncomingMessage, res: ServerResponse): Prom
 
   if (method === "GET" && pathname.startsWith("/hub/v1/anchor")) {
     const parsed = new URL(url, "http://localhost");
-    const date =
-      parsed.searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+    const date = parsed.searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
     const anchor = ensureSignedMerkleAnchor(date);
     sendJson(res, 200, { ok: true, anchor });
     return;

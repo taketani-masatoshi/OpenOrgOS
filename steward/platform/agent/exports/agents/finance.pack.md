@@ -289,7 +289,7 @@ orgos agent pulse --agent finance
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/core/orchestrators/steward_agent_roster.md)
 
 
 

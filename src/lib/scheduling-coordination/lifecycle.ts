@@ -4,14 +4,8 @@ import type {
   SchedulingParticipant,
 } from "../../../schemas/executive/scheduling-cases.js";
 import { appendAuditEvent } from "../audit-log.js";
-import {
-  createCompanyEvent,
-  listCompanyEvents,
-} from "../company-events.js";
-import {
-  createCorrespondenceDraft,
-  loadCorrespondenceDraft,
-} from "../correspondence/draft.js";
+import { createCompanyEvent, listCompanyEvents } from "../company-events.js";
+import { createCorrespondenceDraft, loadCorrespondenceDraft } from "../correspondence/draft.js";
 import { isHumanApproverOperatorId } from "../correspondence/human-approval.js";
 import {
   assertDelegatableProposalSend,
@@ -25,24 +19,13 @@ import {
 } from "../secretary/contact-registry.js";
 import { currentDate } from "../utils.js";
 import { writeSchedulingActionCard } from "./action-card.js";
-import {
-  buildSchedulingDraftText,
-  type SchedulingDraftKind,
-} from "./draft-text.js";
+import { buildSchedulingDraftText, type SchedulingDraftKind } from "./draft-text.js";
 import { applyNextAction } from "./next-action.js";
 import { resolveSchedulingRecipients } from "./recipients.js";
-import {
-  findSchedulingCase,
-  updateSchedulingCase,
-} from "./store.js";
+import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 
 export type SchedulingLifecycleStage =
-  | "created"
-  | "proposal_sent"
-  | "confirmed"
-  | "notification_sent"
-  | "cancelled"
-  | "rescheduled";
+  "created" | "proposal_sent" | "confirmed" | "notification_sent" | "cancelled" | "rescheduled";
 
 function contactRefId(contactRef: string): { extId?: string; stakeholderId?: string } {
   const extId = contactRef.match(/\bEXT-\d+\b/i)?.[0]?.toUpperCase();
@@ -111,8 +94,7 @@ export function recordSchedulingLifecycleEvent(
     stage === "created" || stage === "cancelled" ? 0 : current.proposal_revision;
   if (
     current.lifecycle_events.some(
-      (record) =>
-        record.stage === stage && record.proposal_revision === stageRevision
+      (record) => record.stage === stage && record.proposal_revision === stageRevision
     )
   ) {
     return current;
@@ -303,8 +285,7 @@ export function handleSchedulingCorrespondenceSent(
   const notes = draft.notes ?? "";
   const caseId = notes.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
   const kind = notes.match(/\bkind:(proposal|reminder|confirm)\b/)?.[1] as
-    | SchedulingDraftKind
-    | undefined;
+    SchedulingDraftKind | undefined;
   const participantId = notes.match(/\bparticipant:(PART-\d{3})\b/)?.[1];
   if (!caseId || !kind || !participantId) return undefined;
   let current = findSchedulingCase(caseId);
@@ -342,16 +323,10 @@ export function handleSchedulingCorrespondenceSent(
       );
     }
     const draftRecord = loadCorrespondenceDraft(draft.draft_id);
-    const approval = draftRecord.approval_id
-      ? findOrgApproval(draftRecord.approval_id)
-      : undefined;
+    const approval = draftRecord.approval_id ? findOrgApproval(draftRecord.approval_id) : undefined;
     const operatorId = draft.sent_by?.trim();
     const approverName = approval?.approver_id;
-    if (
-      operatorId &&
-      isHumanApproverOperatorId(operatorId) &&
-      approverName
-    ) {
+    if (operatorId && isHumanApproverOperatorId(operatorId) && approverName) {
       current = updateSchedulingCase(current.id, current.revision, (row) => ({
         ...row,
         proposal_send_authority: {

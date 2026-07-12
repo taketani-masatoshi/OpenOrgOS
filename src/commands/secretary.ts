@@ -41,7 +41,11 @@ export async function runSecretaryEscalate(opts: SecretaryEscalateCliOptions): P
     });
   }
 
-  const runner = opts.dispatch ? dispatchSecretaryEscalation : opts.webhook ? runSecretaryEscalateAsync : null;
+  const runner = opts.dispatch
+    ? dispatchSecretaryEscalation
+    : opts.webhook
+      ? runSecretaryEscalateAsync
+      : null;
   const result = runner
     ? await runner(input, {
         webhook: opts.webhook ?? opts.dispatch,

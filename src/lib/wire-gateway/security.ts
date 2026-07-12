@@ -1,16 +1,10 @@
 import type { WireMessage } from "../../../schemas/protocol/wire-message.js";
 import type { InternalWirePeerEntry } from "../../../schemas/protocol/wire-gateway-internal.js";
 import type { WireGatewayConfig } from "../../../schemas/protocol/wire-gateway-config.js";
-import {
-  isPkDidRequired,
-  isPkPrefixedOpenOrgDid,
-} from "../../../schemas/protocol/openorg-did.js";
+import { isPkDidRequired, isPkPrefixedOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
 import { nodeIdentifierMatches } from "../protocol/wire-trust-registry.js";
 import { verifyEventEnvelopeSignature } from "../protocol/signing.js";
-import {
-  assertWireHashMatchesEnvelope,
-  wireMessageToEnvelope,
-} from "./codec.js";
+import { assertWireHashMatchesEnvelope, wireMessageToEnvelope } from "./codec.js";
 
 export function checkTimestampSkew(timestamp: string, skewSec: number, now = new Date()): boolean {
   const ts = new Date(timestamp).getTime();
@@ -40,7 +34,10 @@ export interface InboundWireVerification {
   peerNodeId?: string;
 }
 
-export function strictPkDidError(identifier: string, role: "sender" | "receiver"): string | undefined {
+export function strictPkDidError(
+  identifier: string,
+  role: "sender" | "receiver"
+): string | undefined {
   if (!isPkDidRequired()) return undefined;
   if (isPkPrefixedOpenOrgDid(identifier)) return undefined;
   return `${role}_pk_did_required`;
@@ -81,10 +78,7 @@ export function verifyInboundWireMessage(
     return { ok: false, reason: "peer_unknown" };
   }
 
-  if (
-    isPkDidRequired() &&
-    (!peer.peer_did || !isPkPrefixedOpenOrgDid(peer.peer_did))
-  ) {
+  if (isPkDidRequired() && (!peer.peer_did || !isPkPrefixedOpenOrgDid(peer.peer_did))) {
     return { ok: false, reason: "peer_pk_did_required", peerNodeId: peer.peer_node_id };
   }
 

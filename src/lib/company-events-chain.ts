@@ -3,9 +3,16 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   companyEventChainLinkSchema,
+  companyEventChainPayloadSchema,
+  type CompanyEventChainCreatePayload,
   type CompanyEventChainLink,
+  type CompanyEventChainPayload,
 } from "../../schemas/company-events-chain.js";
-import type { CompanyEvent, CompanyEventsRegistry } from "../../schemas/company-events.js";
+import {
+  companyEventSchema,
+  type CompanyEvent,
+  type CompanyEventsRegistry,
+} from "../../schemas/company-events.js";
 import { canonicalJson } from "./protocol/canonical.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { getDataDir, toLogicalPath } from "./utils.js";
@@ -15,100 +22,139 @@ const CHAIN_GENESIS = "genesis";
 
 const CHAIN_PATH = () => join(getDataDir(), "company-events-chain.jsonl");
 
+/**
+ * Storage port for company-event chain (Repository · engineering §3).
+ * Default: append-only jsonl under the tenant data dir.
+ */
+export interface CompanyEventChainRepository {
+  loadAll(): CompanyEventChainLink[];
+  append(link: CompanyEventChainLink): void;
+  /** Empty the chain file (backfill --force only). */
+  truncate(): void;
+}
+
+function createJsonlCompanyEventChainRepository(): CompanyEventChainRepository {
+  return {
+    loadAll() {
+      return loadJsonl(CHAIN_PATH(), (raw) => companyEventChainLinkSchema.parse(raw));
+    },
+    append(link) {
+      mkdirSync(join(CHAIN_PATH(), ".."), { recursive: true });
+      appendJsonl(CHAIN_PATH(), link);
+    },
+    truncate() {
+      mkdirSync(join(CHAIN_PATH(), ".."), { recursive: true });
+      writeFileSync(CHAIN_PATH(), "", "utf8");
+    },
+  };
+}
+
+let chainRepository: CompanyEventChainRepository = createJsonlCompanyEventChainRepository();
+
+export function setCompanyEventChainRepository(next: CompanyEventChainRepository): void {
+  chainRepository = next;
+}
+
+export function resetCompanyEventChainRepository(): void {
+  chainRepository = createJsonlCompanyEventChainRepository();
+}
+
 export function companyEventChainPath(): string {
   return toLogicalPath(CHAIN_PATH());
 }
 
 export function loadCompanyEventChain(): CompanyEventChainLink[] {
-  return loadJsonl(CHAIN_PATH(), (raw) => companyEventChainLinkSchema.parse(raw));
+  return chainRepository.loadAll();
 }
 
-export interface CreateChainPayloadInput {
-  action: "create";
-  event: Pick<CompanyEvent, "id" | "occurred_at" | "kind" | "title" | "status">;
-}
-
-export interface VoidChainPayloadInput {
-  action: "void";
-  eventId: string;
-  targetEventId: string;
-  reason: string;
-}
-
-export interface StatusChainPayloadInput {
-  action: "status";
-  eventId: string;
-  status: CompanyEvent["status"];
-  closed_at?: string;
-}
-
-export type ChainPayloadInput =
-  | CreateChainPayloadInput
-  | VoidChainPayloadInput
-  | StatusChainPayloadInput;
+export type ChainPayloadInput = CompanyEventChainPayload;
 
 export function buildChainPayloadDigest(input: ChainPayloadInput): string {
-  const payload =
-    input.action === "create"
-      ? {
-          action: input.action,
-          event_id: input.event.id,
-          occurred_at: input.event.occurred_at,
-          kind: input.event.kind,
-          title: input.event.title,
-          status: input.event.status,
-        }
-      : input.action === "void"
-        ? {
-            action: input.action,
-            event_id: input.eventId,
-            target_event_id: input.targetEventId,
-            reason: input.reason,
-          }
-        : {
-            action: input.action,
-            event_id: input.eventId,
-            status: input.status,
-            closed_at: input.closed_at,
-          };
+  const payload = companyEventChainPayloadSchema.parse(input);
   return createHash("sha256").update(canonicalJson(payload)).digest("hex");
 }
 
 function buildLinkDigest(
   prevDigest: string | null,
-  link: Omit<CompanyEventChainLink, "digest">
+  link: Omit<CompanyEventChainLink, "digest" | "payload">
 ): string {
   const seed = prevDigest ?? CHAIN_GENESIS;
-  return createHash("sha256").update(seed + canonicalJson(link)).digest("hex");
+  return createHash("sha256")
+    .update(seed + canonicalJson(link))
+    .digest("hex");
+}
+
+function linkFieldsForDigest(
+  link: Pick<
+    CompanyEventChainLink,
+    | "seq"
+    | "link_id"
+    | "action"
+    | "event_id"
+    | "target_event_id"
+    | "prev_digest"
+    | "payload_digest"
+    | "recorded_at"
+  >
+): Omit<CompanyEventChainLink, "digest" | "payload"> {
+  return {
+    seq: link.seq,
+    link_id: link.link_id,
+    action: link.action,
+    event_id: link.event_id,
+    target_event_id: link.target_event_id,
+    prev_digest: link.prev_digest,
+    payload_digest: link.payload_digest,
+    recorded_at: link.recorded_at,
+  };
+}
+
+export function createPayloadFromEvent(event: CompanyEvent): CompanyEventChainCreatePayload {
+  return companyEventChainPayloadSchema.parse({
+    action: "create",
+    event_id: event.id,
+    occurred_at: event.occurred_at,
+    kind: event.kind,
+    title: event.title,
+    status: event.status === "voided" ? "open" : event.status,
+    month: event.month,
+    event_path: event.event_path,
+    artifact_dir: event.artifact_dir,
+    created_at: event.created_at,
+    related: event.related,
+    notes: event.notes,
+    target_event_id: event.target_event_id,
+    void_reason: event.void_reason,
+  }) as CompanyEventChainCreatePayload;
 }
 
 export function appendChainLink(input: ChainPayloadInput): CompanyEventChainLink {
-  mkdirSync(join(CHAIN_PATH(), ".."), { recursive: true });
   const chain = loadCompanyEventChain();
   const prev = chain.length > 0 ? chain[chain.length - 1] : undefined;
   const seq = (prev?.seq ?? 0) + 1;
-  const payload_digest = buildChainPayloadDigest(input);
-  const event_id =
-    input.action === "create" ? input.event.id : input.eventId;
-  const target_event_id = input.action === "void" ? input.targetEventId : undefined;
+  const payload = companyEventChainPayloadSchema.parse(input);
+  const payload_digest = buildChainPayloadDigest(payload);
+  const event_id = payload.event_id;
+  const target_event_id = payload.action === "void" ? payload.target_event_id : undefined;
 
-  const linkSansDigest: Omit<CompanyEventChainLink, "digest"> = {
+  const linkSansDigest = linkFieldsForDigest({
     seq,
     link_id: `CEL-${seq}`,
-    action: input.action,
+    action: payload.action,
     event_id,
     target_event_id,
     prev_digest: prev?.digest ?? null,
     payload_digest,
     recorded_at: getClock().nowIso(),
-  };
+  });
 
   const link = companyEventChainLinkSchema.parse({
     ...linkSansDigest,
+    payload,
     digest: buildLinkDigest(prev?.digest ?? null, linkSansDigest),
   });
 
-  appendJsonl(CHAIN_PATH(), link);
+  chainRepository.append(link);
   return link;
 }
 
@@ -119,9 +165,11 @@ export interface ChainVerifyIssue {
   event_id?: string;
 }
 
-export function verifyCompanyEventChainRecords(
-  chain: CompanyEventChainLink[]
-): { ok: boolean; issues: ChainVerifyIssue[]; checked: number } {
+export function verifyCompanyEventChainRecords(chain: CompanyEventChainLink[]): {
+  ok: boolean;
+  issues: ChainVerifyIssue[];
+  checked: number;
+} {
   const issues: ChainVerifyIssue[] = [];
   let expectedSeq = 1;
   let prevDigest: string | null = null;
@@ -145,16 +193,7 @@ export function verifyCompanyEventChainRecords(
       });
     }
 
-    const linkSansDigest: Omit<CompanyEventChainLink, "digest"> = {
-      seq: link.seq,
-      link_id: link.link_id,
-      action: link.action,
-      event_id: link.event_id,
-      target_event_id: link.target_event_id,
-      prev_digest: link.prev_digest,
-      payload_digest: link.payload_digest,
-      recorded_at: link.recorded_at,
-    };
+    const linkSansDigest = linkFieldsForDigest(link);
     const expectedDigest = buildLinkDigest(prevDigest, linkSansDigest);
     if (link.digest !== expectedDigest) {
       issues.push({
@@ -163,6 +202,26 @@ export function verifyCompanyEventChainRecords(
         seq: link.seq,
         event_id: link.event_id,
       });
+    }
+
+    if (link.payload) {
+      const expectedPayloadDigest = buildChainPayloadDigest(link.payload);
+      if (link.payload_digest !== expectedPayloadDigest) {
+        issues.push({
+          code: "chain-payload-digest-mismatch",
+          message: `payload_digest mismatch at seq ${link.seq}`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+      }
+      if (link.payload.action !== link.action) {
+        issues.push({
+          code: "chain-payload-action-mismatch",
+          message: `payload.action ${link.payload.action} != link.action ${link.action} at seq ${link.seq}`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+      }
     }
 
     if (link.action === "void" && !link.target_event_id) {
@@ -187,6 +246,189 @@ export function verifyCompanyEventChain(): {
   checked: number;
 } {
   return verifyCompanyEventChainRecords(loadCompanyEventChain());
+}
+
+export interface ReduceCompanyEventsResult {
+  registry: CompanyEventsRegistry;
+  issues: ChainVerifyIssue[];
+  /** True when every create link carried a materializable payload. */
+  complete: boolean;
+}
+
+function eventFromCreatePayload(
+  payload: CompanyEventChainCreatePayload,
+  chainSeq: number
+): CompanyEvent {
+  return companyEventSchema.parse({
+    id: payload.event_id,
+    occurred_at: payload.occurred_at,
+    month: payload.month,
+    kind: payload.kind,
+    title: payload.title,
+    status: payload.status,
+    event_path: payload.event_path,
+    artifact_dir: payload.artifact_dir,
+    related: payload.related,
+    notes: payload.notes,
+    created_at: payload.created_at,
+    chain_seq: chainSeq,
+    target_event_id: payload.target_event_id,
+    void_reason: payload.void_reason,
+  });
+}
+
+/**
+ * Deterministic reducer: chain links → company-events registry.
+ * Links without create payload cannot seed an event (legacy); those are reported.
+ */
+export function reduceCompanyEvents(
+  chain: CompanyEventChainLink[],
+  opts?: { seed?: CompanyEventsRegistry }
+): ReduceCompanyEventsResult {
+  const issues: ChainVerifyIssue[] = [];
+  const byId = new Map<string, CompanyEvent>();
+
+  if (opts?.seed) {
+    for (const event of opts.seed.events) {
+      byId.set(event.id, { ...event });
+    }
+  }
+
+  let complete = true;
+
+  for (const link of chain) {
+    if (link.action === "create") {
+      if (!link.payload || link.payload.action !== "create") {
+        complete = false;
+        if (!byId.has(link.event_id)) {
+          issues.push({
+            code: "chain-create-payload-missing",
+            message: `Create link seq ${link.seq} has no payload; cannot materialize ${link.event_id} from chain alone`,
+            seq: link.seq,
+            event_id: link.event_id,
+          });
+        } else {
+          byId.set(
+            link.event_id,
+            companyEventSchema.parse({ ...byId.get(link.event_id)!, chain_seq: link.seq })
+          );
+        }
+        continue;
+      }
+      byId.set(link.event_id, eventFromCreatePayload(link.payload, link.seq));
+      continue;
+    }
+
+    if (link.action === "status") {
+      const current = byId.get(link.event_id);
+      if (!current) {
+        issues.push({
+          code: "chain-status-missing-event",
+          message: `Status link seq ${link.seq} references unknown event ${link.event_id}`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+        continue;
+      }
+      if (!link.payload || link.payload.action !== "status") {
+        complete = false;
+        issues.push({
+          code: "chain-status-payload-missing",
+          message: `Status link seq ${link.seq} missing payload`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+        continue;
+      }
+      byId.set(
+        link.event_id,
+        companyEventSchema.parse({
+          ...current,
+          status: link.payload.status,
+          closed_at: link.payload.closed_at ?? current.closed_at,
+        })
+      );
+      continue;
+    }
+
+    if (link.action === "void") {
+      if (!link.payload || link.payload.action !== "void") {
+        complete = false;
+        issues.push({
+          code: "chain-void-payload-missing",
+          message: `Void link seq ${link.seq} missing payload`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+        continue;
+      }
+      const targetId = link.payload.target_event_id;
+      const target = byId.get(targetId);
+      if (!target) {
+        issues.push({
+          code: "chain-void-target-missing-reduce",
+          message: `Void link seq ${link.seq} targets unknown event ${targetId}`,
+          seq: link.seq,
+          event_id: targetId,
+        });
+        continue;
+      }
+      const voidedAt = link.payload.voided_at ?? target.voided_at;
+      byId.set(
+        targetId,
+        companyEventSchema.parse({
+          ...target,
+          status: "voided",
+          voided_by: link.payload.event_id,
+          voided_at: voidedAt,
+          void_reason: link.payload.reason,
+        })
+      );
+      continue;
+    }
+
+    if (link.action === "wire") {
+      if (!link.payload || link.payload.action !== "wire") {
+        complete = false;
+        issues.push({
+          code: "chain-wire-payload-missing",
+          message: `Wire link seq ${link.seq} missing payload`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+        continue;
+      }
+      const current = byId.get(link.event_id);
+      if (!current) {
+        issues.push({
+          code: "chain-wire-missing-event",
+          message: `Wire link seq ${link.seq} references unknown event ${link.event_id}`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+        continue;
+      }
+      byId.set(
+        link.event_id,
+        companyEventSchema.parse({
+          ...current,
+          wire_binding: {
+            ...current.wire_binding,
+            ...link.payload.wire_binding,
+          },
+        })
+      );
+    }
+  }
+
+  const registry: CompanyEventsRegistry = {
+    schema_version: 2,
+    events: [...byId.values()].sort(
+      (a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)
+    ),
+  };
+
+  return { registry, issues, complete: complete && issues.length === 0 };
 }
 
 export function crossCheckChainWithRegistry(
@@ -293,12 +535,27 @@ export function crossCheckChainWithRegistry(
     }
   }
 
+  // When reduce is complete, registry should match reduced state.
+  const reduced = reduceCompanyEvents(chain, { seed: registry });
+  if (reduced.complete) {
+    const reducedById = new Map(reduced.registry.events.map((e) => [e.id, e]));
+    for (const event of registry.events) {
+      const fromChain = reducedById.get(event.id);
+      if (!fromChain) continue;
+      if (event.status !== fromChain.status) {
+        issues.push({
+          code: "chain-status-drift",
+          message: `Event ${event.id} registry status ${event.status} != chain-reduced ${fromChain.status}`,
+          event_id: event.id,
+        });
+      }
+    }
+  }
+
   return issues;
 }
 
-export function validateCompanyEventChainWithRegistry(
-  registry: CompanyEventsRegistry
-): {
+export function validateCompanyEventChainWithRegistry(registry: CompanyEventsRegistry): {
   ok: boolean;
   issues: ChainVerifyIssue[];
 } {
@@ -326,7 +583,7 @@ export function backfillCompanyEventChain(
   }
 
   if (existing.length > 0 && opts?.force) {
-    writeFileSync(CHAIN_PATH(), "", "utf8");
+    chainRepository.truncate();
   }
 
   const sorted = [...registry.events].sort(
@@ -336,17 +593,41 @@ export function backfillCompanyEventChain(
   let links = 0;
   const seqByEventId = new Map<string, number>();
   for (const event of sorted) {
-    const link = appendChainLink({
-      action: "create",
-      event: {
-        id: event.id,
-        occurred_at: event.occurred_at,
-        kind: event.kind,
-        title: event.title,
-        status: event.status === "voided" ? "open" : event.status,
-      },
-    });
+    const link = appendChainLink(createPayloadFromEvent(event));
     seqByEventId.set(event.id, link.seq);
+    links += 1;
+
+    if (event.status === "closed" || event.status === "archived") {
+      appendChainLink({
+        action: "status",
+        event_id: event.id,
+        status: event.status,
+        closed_at: event.closed_at,
+      });
+      links += 1;
+    }
+  }
+
+  // Void links after creates (and status) so targets exist when reducing.
+  for (const event of sorted) {
+    if (event.status !== "voided" || !event.voided_by) continue;
+    appendChainLink({
+      action: "void",
+      event_id: event.voided_by,
+      target_event_id: event.id,
+      reason: event.void_reason ?? "backfill",
+      voided_at: event.voided_at,
+    });
+    links += 1;
+  }
+
+  for (const event of sorted) {
+    if (!event.wire_binding) continue;
+    appendChainLink({
+      action: "wire",
+      event_id: event.id,
+      wire_binding: event.wire_binding,
+    });
     links += 1;
   }
 

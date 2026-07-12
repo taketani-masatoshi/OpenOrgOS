@@ -86,7 +86,9 @@ export function findCaseForMailEntry(entry: MailTriageEntry): SchedulingCase | u
 function hasAmbiguousCaseMatch(entry: MailTriageEntry): boolean {
   if (entry.scheduling_case_id) return false;
   const ids = new Set(
-    [entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(Boolean) as string[]
+    [entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(
+      Boolean
+    ) as string[]
   );
   return (
     listSchedulingCases({ activeOnly: true }).filter((c) =>
@@ -97,7 +99,9 @@ function hasAmbiguousCaseMatch(entry: MailTriageEntry): boolean {
 
 function matchingCaseIds(entry: MailTriageEntry): string[] {
   const ids = new Set(
-    [entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(Boolean) as string[]
+    [entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(
+      Boolean
+    ) as string[]
   );
   return listSchedulingCases({ activeOnly: true })
     .filter((row) => row.mail_thread_ids.some((id) => ids.has(id)))
@@ -111,12 +115,14 @@ function askUnlinkedScheduleChoice(entry: MailTriageEntry, caseIds: string[]): v
     mailId: `schedule-intake:${entry.id}`,
     subject: `日程メールの紐付け確認 — ${entry.subject}`,
     contextL1: "既存案件との紐付けが一意に決まりません。1件選択してください。",
-    fields: [{
-      id: "schedule_intake_choice",
-      label: "紐付け先",
-      type: "choice",
-      choices: [...caseIds, "新規起票", "保留"],
-    }],
+    fields: [
+      {
+        id: "schedule_intake_choice",
+        label: "紐付け先",
+        type: "choice",
+        choices: [...caseIds, "新規起票", "保留"],
+      },
+    ],
   });
 }
 
@@ -134,9 +140,10 @@ function addMinutes(start: string, minutes: number): string {
     String(value.getMonth() + 1).padStart(2, "0"),
     String(value.getDate()).padStart(2, "0"),
   ].join("-");
-  const time = `${String(value.getHours()).padStart(2, "0")}:${String(
-    value.getMinutes()
-  ).padStart(2, "0")}`;
+  const time = `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(
+    2,
+    "0"
+  )}`;
   return `${date}T${time}`;
 }
 
@@ -156,7 +163,12 @@ function isScheduleIntent(entry: MailTriageEntry): boolean {
 }
 
 function senderDisplayName(from: string): string {
-  return from.replace(/<[^>]+>/g, "").replace(/^["']|["']$/g, "").trim() || "ご担当者";
+  return (
+    from
+      .replace(/<[^>]+>/g, "")
+      .replace(/^["']|["']$/g, "")
+      .trim() || "ご担当者"
+  );
 }
 
 function createSafeScheduleIntake(entry: MailTriageEntry): SchedulingCase | undefined {
@@ -171,18 +183,22 @@ function createSafeScheduleIntake(entry: MailTriageEntry): SchedulingCase | unde
       status: "needs_review",
       created_at: now,
       updated_at: now,
-      participants: [{
-        id: "PART-001",
-        name: senderDisplayName(entry.from),
-        email,
-        contact_ref: entry.sender_contact_ref,
-        role: "external",
-        response: "pending",
-      }],
+      participants: [
+        {
+          id: "PART-001",
+          name: senderDisplayName(entry.from),
+          email,
+          contact_ref: entry.sender_contact_ref,
+          role: "external",
+          response: "pending",
+        },
+      ],
       proposed_slots: [],
       duration_minutes: 60,
       mail_thread_ids: [
-        ...new Set([entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(Boolean)),
+        ...new Set(
+          [entry.id, entry.source_message_id, ...(entry.mail_thread_ids ?? [])].filter(Boolean)
+        ),
       ] as string[],
       processed_mail_ids: [],
       exception_reason: "schedule_intake_confirmation_required",
@@ -199,12 +215,14 @@ function createSafeScheduleIntake(entry: MailTriageEntry): SchedulingCase | unde
     mailId: `schedule-intake-case:${caseRow.id}:${entry.id}`,
     subject: `日程調整の起票確認 — ${caseRow.title}`,
     contextL1: `${senderDisplayName(entry.from)}からの日程メールを安全保留で起票しました。`,
-    fields: [{
-      id: "schedule_intake_choice",
-      label: "この案件として調整を開始しますか？",
-      type: "choice",
-      choices: ["続行", "中止"],
-    }],
+    fields: [
+      {
+        id: "schedule_intake_choice",
+        label: "この案件として調整を開始しますか？",
+        type: "choice",
+        choices: ["続行", "中止"],
+      },
+    ],
   });
   return findSchedulingCase(caseRow.id) ?? caseRow;
 }
@@ -214,9 +232,7 @@ export async function applyScheduleIntakeAnswer(
 ): Promise<SchedulingCase | undefined> {
   const choice = question.answers?.schedule_intake_choice?.trim();
   if (!choice) return undefined;
-  const caseMatch = question.mail_id.match(
-    /^schedule-intake-case:(SCH-\d{4}-\d{3}):(.+)$/
-  );
+  const caseMatch = question.mail_id.match(/^schedule-intake-case:(SCH-\d{4}-\d{3}):(.+)$/);
   if (caseMatch) {
     const caseRow = findSchedulingCase(caseMatch[1]!);
     if (!caseRow) return undefined;
@@ -306,7 +322,9 @@ export async function processScheduleMailEntry(
     return {
       mail_id: entry.id,
       action: "unlinked",
-      reason: hasAmbiguousCaseMatch(entry) ? "ambiguous case match; needs review" : "no matching case",
+      reason: hasAmbiguousCaseMatch(entry)
+        ? "ambiguous case match; needs review"
+        : "no matching case",
     };
   }
   if (caseRow.processed_mail_ids.includes(entry.id)) {
@@ -317,10 +335,7 @@ export async function processScheduleMailEntry(
       reason: "already processed",
     };
   }
-  if (
-    caseRow.status === "needs_review" &&
-    caseRow.mail_thread_ids.includes(entry.id)
-  ) {
+  if (caseRow.status === "needs_review" && caseRow.mail_thread_ids.includes(entry.id)) {
     return {
       mail_id: entry.id,
       case_id: caseRow.id,
@@ -344,8 +359,7 @@ export async function processScheduleMailEntry(
       return {
         ...p,
         response: parsed.response === "unknown" ? p.response : parsed.response,
-        accepted_slot_id:
-          parsed.response === "accept" ? parsed.slot_ids[0] : undefined,
+        accepted_slot_id: parsed.response === "accept" ? parsed.slot_ids[0] : undefined,
         response_note: parsed.note ?? p.response_note,
         responded_at: new Date().toISOString(),
         responded_mail_id: entry.id,
@@ -371,12 +385,14 @@ export async function processScheduleMailEntry(
         caseRow.search_from ??
         new Date().toISOString().slice(0, 10);
       const exact = explicit
-        ? [{
-            id: nextSlotId(caseRow.proposed_slots),
-            start: explicit.start,
-            end: explicit.end ?? addMinutes(explicit.start, caseRow.duration_minutes),
-            label: explicit.label,
-          }]
+        ? [
+            {
+              id: nextSlotId(caseRow.proposed_slots),
+              start: explicit.start,
+              end: explicit.end ?? addMinutes(explicit.start, caseRow.duration_minutes),
+              label: explicit.label,
+            },
+          ]
         : [];
       proposedSlots = [
         ...exact,
@@ -402,8 +418,7 @@ export async function processScheduleMailEntry(
     }
   }
 
-  const recognized =
-    Boolean(participant) && parsed.response !== "unknown" && !parsed.needs_review;
+  const recognized = Boolean(participant) && parsed.response !== "unknown" && !parsed.needs_review;
   const desired = applyNextAction({
     ...caseRow,
     participants,
@@ -461,9 +476,7 @@ export async function processScheduleMailEntry(
     mail_id: entry.id,
     case_id: caseRow.id,
     action: recognized ? "updated" : "linked",
-    reason: recognized
-      ? `response=${parsed.response}`
-      : `needs_review:${caseRow.exception_reason}`,
+    reason: recognized ? `response=${parsed.response}` : `needs_review:${caseRow.exception_reason}`,
   };
 }
 

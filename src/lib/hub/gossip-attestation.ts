@@ -56,7 +56,9 @@ export interface AttestationImportResult {
   affected_event_ids: string[];
 }
 
-export function importAttestationGossip(attestations: WitnessAttestation[]): AttestationImportResult {
+export function importAttestationGossip(
+  attestations: WitnessAttestation[]
+): AttestationImportResult {
   const issues: string[] = [];
   let imported = 0;
   let skipped = 0;

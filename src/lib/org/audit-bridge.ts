@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { AuditEvent } from "../../../schemas/audit-log.js";
@@ -11,6 +10,7 @@ import { appendProtocolAuditRecord } from "../protocol/audit-chain.js";
 import { ourOrgRef } from "../protocol/identity.js";
 import { validateEnvelopeAgainstRegistry } from "../protocol/registry.js";
 import { maybeSignEnvelope } from "../protocol/signing.js";
+import { getClock, getIdGenerator } from "../runtime-context.js";
 import { isAuditEventBridged, markAuditEventBridged } from "./audit-bridge-state.js";
 import { getOrgAuditBridgeConfigPath } from "./paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
@@ -42,10 +42,10 @@ export function bridgeAuditEventToProtocolChain(event: AuditEvent): EventEnvelop
   if (!shouldBridgeAuditEvent(event)) return null;
   if (isAuditEventBridged(event.id)) return null;
 
-  const now = new Date().toISOString();
+  const now = getClock().nowIso();
   let envelope: EventEnvelope = {
     protocol_version: "1",
-    event_id: randomUUID(),
+    event_id: getIdGenerator().uuid(),
     occurred_at: now,
     origin: ourOrgRef(),
     correlation_id: event.event_id ?? event.id,

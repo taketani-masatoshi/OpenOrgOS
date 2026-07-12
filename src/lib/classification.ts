@@ -11,7 +11,13 @@ import {
 
 export type { AgentId, ClassificationLevel, ClassificationRegistry, BankAccountsFile };
 import { cashBalanceSchema } from "../../schemas/finance.js";
-import { ROOT_DIR, getDataDir, readYamlFile, getBankAccountsYaml, getClassificationRegistryYaml } from "./utils.js";
+import {
+  ROOT_DIR,
+  getDataDir,
+  readYamlFile,
+  getBankAccountsYaml,
+  getClassificationRegistryYaml,
+} from "./utils.js";
 
 const LEVEL_ORDER: Record<ClassificationLevel, number> = {
   L0: 0,
@@ -33,7 +39,10 @@ export function levelAtMost(a: ClassificationLevel, b: ClassificationLevel): boo
   return LEVEL_ORDER[a] <= LEVEL_ORDER[b];
 }
 
-export function getAgentMaxLevel(registry: ClassificationRegistry, agent: AgentId): ClassificationLevel {
+export function getAgentMaxLevel(
+  registry: ClassificationRegistry,
+  agent: AgentId
+): ClassificationLevel {
   return registry.agents[agent]?.max_level ?? "L0";
 }
 
@@ -47,6 +56,9 @@ export function getAgentOutputMaxLevel(
 export function findResourceByPath(registry: ClassificationRegistry, resourcePath: string) {
   const normalized = resourcePath.replace(/\\/g, "/").replace(/^\.\//, "");
   return registry.resources.find((r) => {
+    if (r.path.endsWith("/")) {
+      return normalized === r.path || normalized.startsWith(r.path);
+    }
     if (r.path.includes("*")) {
       const prefix = r.path.replace(/\*\*\/\*\*$/, "").replace(/\*$/, "");
       return normalized.startsWith(prefix) || normalized.includes(prefix.replace(/\//g, ""));
@@ -120,8 +132,7 @@ export function checkAgentAccess(
     }
   }
 
-  const allowedAgents =
-    operation === "write" ? resource.write_agents : resource.read_agents;
+  const allowedAgents = operation === "write" ? resource.write_agents : resource.read_agents;
   if (allowedAgents.length > 0 && !allowedAgents.includes(agent)) {
     return {
       allowed: false,
@@ -197,7 +208,7 @@ export function validateBankAccountLinksSync(): ClassificationIssue[] {
 
 /**
  * Reduce a registry resource path glob to a literal "needle" usable for
- * substring matching against ignore files. `**​/records/**` → `records`.
+ * substring matching against ignore files. A global records glob becomes the needle `records`.
  */
 export function boundaryNeedle(resourcePath: string): string {
   const withoutGlobalGlob = resourcePath.replace(/^\*\*\//, "");

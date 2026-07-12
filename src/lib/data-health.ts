@@ -1,10 +1,5 @@
 import { existsSync } from "node:fs";
-import {
-  loadAllData,
-  loadEmployees,
-  loadYojitsuFyPlan,
-  validateAll,
-} from "./data.js";
+import { loadAllData, loadEmployees, loadYojitsuFyPlan, validateAll } from "./data.js";
 import { runIntegrityChecks, summarizeIntegrity } from "./integrity.js";
 import {
   getFiscalYearRange,
@@ -12,7 +7,7 @@ import {
   listOperationsModules,
   resolveModuleSecretsPath,
 } from "./ops-config.js";
-import { getDataDir, getStakeholdersYaml, resolveTenantPath, readYamlFile } from "./utils.js";
+import { getStakeholdersYaml, resolveTenantPath, readYamlFile } from "./utils.js";
 import { facilityPublicSchema } from "../../schemas/operations.js";
 
 export interface HealthMetric {
@@ -62,7 +57,11 @@ export function computeDataHealth(): DataHealthReport {
     label: "参照整合性",
     score: integrityScore,
     max: 20,
-    detail: errors ? `エラー ${errors} · 警告 ${warnings}` : warnings ? `警告 ${warnings}` : "問題なし",
+    detail: errors
+      ? `エラー ${errors} · 警告 ${warnings}`
+      : warnings
+        ? `警告 ${warnings}`
+        : "問題なし",
   });
   if (errors) recommendations.push("loan↔contract・property 参照エラーを修正");
   if (warnings) recommendations.push("欠落ドキュメントパス・TBD 項目を確認");
@@ -116,7 +115,9 @@ export function computeDataHealth(): DataHealthReport {
     label: "予実計画",
     score: yojitsuScore,
     max: 10,
-    detail: yojitsu ? `${yojitsu.months.length} ヶ月${yojitsu.summary ? " · summary あり" : ""}` : "未作成",
+    detail: yojitsu
+      ? `${yojitsu.months.length} ヶ月${yojitsu.summary ? " · summary あり" : ""}`
+      : "未作成",
   });
 
   const opsModules = listOperationsModules();
@@ -166,9 +167,7 @@ export function computeDataHealth(): DataHealthReport {
   }
 
   if (!existsSync(getStakeholdersYaml())) {
-    recommendations.push(
-      "stakeholders.yaml を example からコピー（利害関係者 · GitHub 非公開）"
-    );
+    recommendations.push("stakeholders.yaml を example からコピー（利害関係者 · GitHub 非公開）");
   }
 
   const overall = metrics.reduce((s, m) => s + m.score, 0);

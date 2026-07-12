@@ -1,8 +1,4 @@
-import type {
-  Property,
-  PropertyRevenuePlan,
-  MonthlyFinance,
-} from "../../schemas/index.js";
+import type { Property, PropertyRevenuePlan, MonthlyFinance } from "../../schemas/index.js";
 import { formatCurrency, formatPercent } from "./utils.js";
 import { computeRentalPlanMetrics } from "../../steward/modules/rental/cli/plan-metrics.js";
 import { computeHotelPlanMetrics } from "../../steward/modules/hospitality/cli/plan-metrics.js";
@@ -86,8 +82,7 @@ export function analyzeProperty(
   const months = filtered.length;
   const actualMonthlyRevenue = months > 0 ? totalRevenue / months : 0;
   const revenueDiff = actualMonthlyRevenue - plannedMonthlyRevenue;
-  const revenueDiffPercent =
-    plannedMonthlyRevenue > 0 ? revenueDiff / plannedMonthlyRevenue : 0;
+  const revenueDiffPercent = plannedMonthlyRevenue > 0 ? revenueDiff / plannedMonthlyRevenue : 0;
 
   return {
     propertyId: property.id,
@@ -120,18 +115,13 @@ export function analyzeAllProperties(
   fromMonth?: string,
   toMonth?: string
 ): PropertyAnalysis[] {
-  const targets = propertyId
-    ? properties.filter((p) => p.id === propertyId)
-    : properties;
+  const targets = propertyId ? properties.filter((p) => p.id === propertyId) : properties;
 
   return targets.map((p) => analyzeProperty(p, plan, finances, fromMonth, toMonth));
 }
 
 export function formatPropertyAnalysisMarkdown(analyses: PropertyAnalysis[]): string {
-  const lines = [
-    "# 物件別収益分析",
-    "",
-  ];
+  const lines = ["# 物件別収益分析", ""];
 
   for (const a of analyses) {
     lines.push(`## ${a.propertyName} (${a.propertyId})`);

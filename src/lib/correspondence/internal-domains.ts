@@ -6,7 +6,10 @@ import { getDataDir } from "../utils.js";
 function domainFromEmail(email: string): string | undefined {
   const at = email.lastIndexOf("@");
   if (at < 0) return undefined;
-  return email.slice(at + 1).trim().toLowerCase();
+  return email
+    .slice(at + 1)
+    .trim()
+    .toLowerCase();
 }
 
 /** L1 — company.yaml から自社ドメイン一覧を抽出 */
@@ -46,9 +49,7 @@ export function loadInternalEmailDomains(): string[] {
 export function isInternalEmailDomain(email: string): boolean {
   const domain = domainFromEmail(email);
   if (!domain) return false;
-  return loadInternalEmailDomains().some(
-    (d) => domain === d || domain.endsWith(`.${d}`)
-  );
+  return loadInternalEmailDomains().some((d) => domain === d || domain.endsWith(`.${d}`));
 }
 
 export function extractEmailAddress(fromHeader: string): string {

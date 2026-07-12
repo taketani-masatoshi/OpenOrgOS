@@ -8,19 +8,14 @@
 export const PLATFORM_GUIDE_LEGACY_DEPRECATION =
   "DEPRECATED: static platform guide checklist — use `orgos platform extension-check` and `orgos platform registry-verify`";
 
-export function warnLegacyPlatformGuideChecklist(stream: NodeJS.WriteStream = process.stderr): void {
+export function warnLegacyPlatformGuideChecklist(
+  stream: NodeJS.WriteStream = process.stderr
+): void {
   stream.write(`${PLATFORM_GUIDE_LEGACY_DEPRECATION}\n`);
 }
 
 export type PlatformGuideTopic =
-  | "philosophy"
-  | "agent"
-  | "skill"
-  | "cli"
-  | "module"
-  | "wire"
-  | "eval"
-  | "all";
+  "philosophy" | "agent" | "skill" | "cli" | "module" | "wire" | "eval" | "all";
 
 export const PLATFORM_GUIDE_TOPICS: PlatformGuideTopic[] = [
   "philosophy",
@@ -142,9 +137,7 @@ export function resolvePlatformGuideTopics(topic: string | undefined): PlatformG
   if (!topic || topic === "all") return PLATFORM_GUIDE_TOPICS;
   const t = topic as PlatformGuideTopic;
   if (!PLATFORM_GUIDE_TOPICS.includes(t)) {
-    throw new Error(
-      `Unknown topic: ${topic}. Use: all, ${PLATFORM_GUIDE_TOPICS.join(", ")}`
-    );
+    throw new Error(`Unknown topic: ${topic}. Use: all, ${PLATFORM_GUIDE_TOPICS.join(", ")}`);
   }
   return [t];
 }

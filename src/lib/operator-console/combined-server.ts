@@ -76,7 +76,12 @@ async function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-function serveSpaAtPrefix(res: ServerResponse, distDir: string, pathname: string, prefix: string): boolean {
+function serveSpaAtPrefix(
+  res: ServerResponse,
+  distDir: string,
+  pathname: string,
+  prefix: string
+): boolean {
   const indexHtml = join(distDir, "index.html");
   if (!existsSync(indexHtml)) return false;
 
@@ -191,8 +196,7 @@ export async function startOperatorConsoleServer(
   });
 
   const addr = server.address();
-  const actualPort =
-    typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+  const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
   const base = `http://${host}:${actualPort}`;
   return {
     url: base,

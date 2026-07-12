@@ -133,7 +133,9 @@ export interface OpenOrgOsCoreScore {
   strict: OpenOrgOsCoreReadiness;
 }
 
-function snapshotFromReadiness(readiness: ReturnType<typeof computeOrgOsReadiness>): OrgOsScoreSnapshot {
+function snapshotFromReadiness(
+  readiness: ReturnType<typeof computeOrgOsReadiness>
+): OrgOsScoreSnapshot {
   return {
     standaloneLoop: readiness.standaloneLoop.score,
     formUnification: readiness.formUnification.score,

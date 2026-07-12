@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import {
   clearSessionCookie,
@@ -8,7 +8,11 @@ import {
   sessionTokenFromRequest,
   setSessionCookie,
 } from "./auth/session.js";
-import { authenticateWireConsoleLogin, createWebAuthnLoginOptions, getWireConsoleAuthConfigResponse } from "./auth/login.js";
+import {
+  authenticateWireConsoleLogin,
+  createWebAuthnLoginOptions,
+  getWireConsoleAuthConfigResponse,
+} from "./auth/login.js";
 import { completeWebAuthnE2eLogin, isWebAuthnE2eLoginEnabled } from "./auth/webauthn-e2e.js";
 import {
   createWebAuthnRegisterOptions,
@@ -275,58 +279,56 @@ export function startWireConsoleServer(
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 0;
 
-  return preloadOidcJwks().then(
-    () => {
-      assertProdAuthReady("wire");
-      return new Promise<WireConsoleServerHandle>((resolve, reject) => {
-        const server = createServer(async (req, res) => {
-          try {
-            const url = new URL(req.url ?? "/", `http://${host}`);
-            const pathname = url.pathname;
-            const method = req.method ?? "GET";
+  return preloadOidcJwks().then(() => {
+    assertProdAuthReady("wire");
+    return new Promise<WireConsoleServerHandle>((resolve, reject) => {
+      const server = createServer(async (req, res) => {
+        try {
+          const url = new URL(req.url ?? "/", `http://${host}`);
+          const pathname = url.pathname;
+          const method = req.method ?? "GET";
 
-            if (
-              method === "POST" &&
-              pathname.startsWith("/console/v1/") &&
-              !pathname.startsWith("/console/v1/auth/")
-            ) {
-              if (rejectCsrfOriginMismatch(req, res)) return;
-              if (rejectRateLimitExceeded(req, res)) return;
-            }
+          if (
+            method === "POST" &&
+            pathname.startsWith("/console/v1/") &&
+            !pathname.startsWith("/console/v1/auth/")
+          ) {
+            if (rejectCsrfOriginMismatch(req, res)) return;
+            if (rejectRateLimitExceeded(req, res)) return;
+          }
 
-            if (await handleApi(req, res, pathname, method, url.searchParams)) return;
+          if (await handleApi(req, res, pathname, method, url.searchParams)) return;
 
-            if (!isPublicPath(pathname)) {
-              const user = getSessionUser(sessionTokenFromRequest(req));
-              if (!user) {
-                json(res, 401, { ok: false, error: "unauthorized" });
-                return;
-              }
-            }
-
-            if (pathname.startsWith("/console/")) {
-              json(res, 404, { ok: false, error: "not found" });
+          if (!isPublicPath(pathname)) {
+            const user = getSessionUser(sessionTokenFromRequest(req));
+            if (!user) {
+              json(res, 401, { ok: false, error: "unauthorized" });
               return;
             }
-
-            serveSpa(req, res, pathname);
-          } catch (e) {
-            json(res, 500, { ok: false, error: e instanceof Error ? e.message : String(e) });
           }
-        });
 
-        server.listen(port, host, () => {
-          const addr = server.address();
-          const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
-          const url = `http://${host}:${actualPort}`;
-          resolve({
-            url,
-            port: actualPort,
-            close: () => server.close(),
-          });
-        });
-        server.on("error", reject);
+          if (pathname.startsWith("/console/")) {
+            json(res, 404, { ok: false, error: "not found" });
+            return;
+          }
+
+          serveSpa(req, res, pathname);
+        } catch (e) {
+          json(res, 500, { ok: false, error: e instanceof Error ? e.message : String(e) });
+        }
       });
-    }
-  );
+
+      server.listen(port, host, () => {
+        const addr = server.address();
+        const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+        const url = `http://${host}:${actualPort}`;
+        resolve({
+          url,
+          port: actualPort,
+          close: () => server.close(),
+        });
+      });
+      server.on("error", reject);
+    });
+  });
 }

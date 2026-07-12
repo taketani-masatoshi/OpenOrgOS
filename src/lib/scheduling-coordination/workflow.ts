@@ -8,10 +8,7 @@ function reminderDelayMs(): number {
   return resolveMailConfig().receive.scheduling_reminder_after_hours * 60 * 60 * 1000;
 }
 
-export function refreshSchedulingReminder(
-  caseId: string,
-  now = new Date()
-): SchedulingCase {
+export function refreshSchedulingReminder(caseId: string, now = new Date()): SchedulingCase {
   const current = findSchedulingCase(caseId);
   if (!current) throw new Error(`Scheduling case ${caseId} not found`);
   if (
@@ -61,9 +58,7 @@ export function markSchedulingReminderDrafted(
   const current = findSchedulingCase(caseId);
   if (!current) throw new Error(`Scheduling case ${caseId} not found`);
   const duplicate = current.reminder_history.some(
-    (r) =>
-      r.proposal_revision === current.proposal_revision &&
-      r.participant_id === participantId
+    (r) => r.proposal_revision === current.proposal_revision && r.participant_id === participantId
   );
   if (duplicate) return current;
   return updateSchedulingCase(current.id, current.revision, (row) =>

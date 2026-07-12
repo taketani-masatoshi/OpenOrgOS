@@ -89,7 +89,9 @@ export async function resolveGmailAccessToken(): Promise<string | null> {
 }
 
 export function getGmailOAuthRedirectUri(): string {
-  return process.env.ORGOS_GMAIL_REDIRECT_URI?.trim() || "http://localhost:8787/oauth/gmail/callback";
+  return (
+    process.env.ORGOS_GMAIL_REDIRECT_URI?.trim() || "http://localhost:8787/oauth/gmail/callback"
+  );
 }
 
 export function getGmailOAuthClientPath(): string {

@@ -31,10 +31,7 @@ export function rateLimitLoginMax(): number {
 type RateBucket = "default" | "ask" | "login";
 
 function bucketForPath(pathname: string): RateBucket {
-  if (
-    pathname === "/chat/v1/message" ||
-    pathname === "/chat/v1/message/stream"
-  ) {
+  if (pathname === "/chat/v1/message" || pathname === "/chat/v1/message/stream") {
     return "ask";
   }
   if (pathname === "/chat/v1/auth/login" || pathname === "/console/v1/auth/login") {
@@ -121,10 +118,7 @@ export function checkRateLimit(
 }
 
 /** Returns true when the request was rejected (429). */
-export function rejectRateLimitExceeded(
-  req: IncomingMessage,
-  res: ServerResponse
-): boolean {
+export function rejectRateLimitExceeded(req: IncomingMessage, res: ServerResponse): boolean {
   const pathname = new URL(req.url ?? "/", "http://local").pathname;
   if (!shouldApplyRateLimit(pathname, req.method ?? "GET")) return false;
 

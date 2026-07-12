@@ -13,10 +13,7 @@ import { createOutboundPoller } from "./outbound-poller.js";
 import { NonceLedger } from "./nonce-ledger.js";
 import { RateLimiter } from "./rate-limit.js";
 import { appendWireGatewayAudit } from "./audit.js";
-import {
-  buildWireNodeWellKnown,
-  validateWireMessage,
-} from "./validate.js";
+import { buildWireNodeWellKnown, validateWireMessage } from "./validate.js";
 import {
   checkTimestampSkew,
   findPeerForSender,
@@ -24,8 +21,14 @@ import {
   wireReceiverIsLocal,
 } from "./security.js";
 import { envelopeToWireMessage, wireMessageToEnvelope } from "./codec.js";
-import { exportWireFederationGossipCatalog, validateWireFederationGossipPost } from "./federation-gossip.js";
-import { applyIncomingWireFederationGossip, listWireFederationCatalogWithGossip } from "./federation-gossip-store.js";
+import {
+  exportWireFederationGossipCatalog,
+  validateWireFederationGossipPost,
+} from "./federation-gossip.js";
+import {
+  applyIncomingWireFederationGossip,
+  listWireFederationCatalogWithGossip,
+} from "./federation-gossip-store.js";
 import { join } from "node:path";
 import { getProtocolDataDir } from "../protocol/paths.js";
 import { verifyMtlsClient } from "../protocol/protocol-tls.js";
@@ -96,8 +99,7 @@ export function startWireGatewayServer(
   const publicBaseUrl = options.publicBaseUrl ?? `${scheme}://${host}:${port}`;
   const client = options.internalClient ?? new WireInternalClient(config);
   const nonceLedger = new NonceLedger(
-    options.nonceLedgerPath ??
-      join(getProtocolDataDir(), "wire-gateway-nonce-ledger.json")
+    options.nonceLedgerPath ?? join(getProtocolDataDir(), "wire-gateway-nonce-ledger.json")
   );
   const rateLimiter = new RateLimiter(config.security.rate_limit_per_min);
   const poller = createOutboundPoller(config, client);
@@ -384,9 +386,7 @@ export function startWireGatewayServer(
     const httpsOptions: ServerOptions = {
       cert: readFileSync(config.listen.tls_cert, "utf-8"),
       key: readFileSync(config.listen.tls_key, "utf-8"),
-      ca: config.listen.tls_ca
-        ? readFileSync(config.listen.tls_ca, "utf-8")
-        : undefined,
+      ca: config.listen.tls_ca ? readFileSync(config.listen.tls_ca, "utf-8") : undefined,
       requestCert: config.security.mtls_required,
       // Keep the TLS connection open so the application can return an auditable
       // 401; verifyMtlsClient still requires TLSSocket.authorized (CA verified).

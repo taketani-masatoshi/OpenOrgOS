@@ -31,8 +31,7 @@ export interface KessanReportInput {
 export function buildKessanPlRows(yojitsu: YojitsuPlan): PdfTableRow[] {
   const revenueBySegment = aggregateBySegment(yojitsu, "revenue", true);
   const revenueTotal =
-    yojitsu.summary?.revenue_total ??
-    [...revenueBySegment.values()].reduce((a, b) => a + b, 0);
+    yojitsu.summary?.revenue_total ?? [...revenueBySegment.values()].reduce((a, b) => a + b, 0);
 
   const expenseByLabel = new Map<string, number>();
   for (const month of yojitsu.months) {
@@ -49,8 +48,7 @@ export function buildKessanPlRows(yojitsu: YojitsuPlan): PdfTableRow[] {
     [...expenseByLabel.values()].reduce((a, b) => a + b, 0) ||
     yojitsu.months.reduce((s, m) => s + sumOperatingExpenses(resolveYojitsuMonthSide(m)), 0);
 
-  const operatingProfit =
-    yojitsu.summary?.operating_profit ?? revenueTotal - sgaTotal;
+  const operatingProfit = yojitsu.summary?.operating_profit ?? revenueTotal - sgaTotal;
   const pretaxProfit = yojitsu.summary?.pretax_profit ?? operatingProfit;
   const taxEstimate = yojitsu.summary?.tax_estimate ?? 0;
   const netProfit = yojitsu.summary?.net_profit ?? pretaxProfit - taxEstimate;
@@ -111,16 +109,9 @@ export async function generateKessanPdf(
   const closedAt = yojitsu.closing?.closed_at ?? "2027-02-15";
 
   const basisNote =
-    yojitsu.closing?.basis === "forecast"
-      ? "（本報告書は予想ベースの決算数値に基づく）"
-      : "";
+    yojitsu.closing?.basis === "forecast" ? "（本報告書は予想ベースの決算数値に基づく）" : "";
 
-  const path =
-    outputPath ??
-    join(
-      ensurePdfOutputDir("kessan"),
-      `${fiscalYear}-kessan-hokoku.pdf`
-    );
+  const path = outputPath ?? join(ensurePdfOutputDir("kessan"), `${fiscalYear}-kessan-hokoku.pdf`);
 
   const w = createPdfWriter();
 
@@ -140,10 +131,7 @@ export async function generateKessanPdf(
   pdfTable(w, buildKessanPlRows(yojitsu));
 
   pdfSection(w, "2. 剰余金の処分");
-  pdfParagraph(
-    w,
-    "当期純利益は、内部留保として積み立てることといたします。（株主総会決議事項）"
-  );
+  pdfParagraph(w, "当期純利益は、内部留保として積み立てることといたします。（株主総会決議事項）");
 
   pdfSection(w, "3. 重要な会計方針");
   pdfParagraph(
@@ -158,13 +146,13 @@ export async function generateKessanPdf(
 
   const reps = (company.directors ?? [])
     .filter((d) => d.role?.includes("代表"))
-    .map((d) => `${d.role ?? "代表取締役"}　${d.name}　㊞`);
+    .map((d) => `${d.role ?? "代表取締役"}\u3000${d.name}\u3000㊞`);
 
   pdfSignatureBlock(
     w,
     formatJapaneseDate(closedAt),
     company.name,
-    reps.length > 0 ? reps : [`代表取締役　${company.representative ?? ""}　㊞`]
+    reps.length > 0 ? reps : [`代表取締役\u3000${company.representative ?? ""}\u3000㊞`]
   );
 
   await writePdfToFile(w.doc, path);

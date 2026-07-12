@@ -58,8 +58,7 @@ function payloadSummary(payload: Record<string, unknown>): {
     transaction_type:
       typeof payload.transaction_type === "string" ? payload.transaction_type : undefined,
     direction: typeof payload.direction === "string" ? payload.direction : undefined,
-    transaction_id:
-      typeof payload.transaction_id === "string" ? payload.transaction_id : undefined,
+    transaction_id: typeof payload.transaction_id === "string" ? payload.transaction_id : undefined,
     contract_id:
       typeof payload.contract_id === "string"
         ? payload.contract_id
@@ -75,9 +74,7 @@ function toListItem(
 ): EnvelopeListItem {
   const summary = payloadSummary(entry.envelope.event.payload as Record<string, unknown>);
   const hasProvenance =
-    location === "outbox"
-      ? !!loadOutboxProvenance(getProtocolOutboxDir(), entry.event_id)
-      : false;
+    location === "outbox" ? !!loadOutboxProvenance(getProtocolOutboxDir(), entry.event_id) : false;
   return {
     event_id: entry.event_id,
     envelope_digest: entry.envelope_digest,

@@ -83,8 +83,7 @@ export async function syncGmailReceive(opts?: {
       fetched: 0,
       saved: [],
       last_uid: loadMailReceiveState().last_uid,
-      message:
-        "Gmail API not configured — place OAuth token at records/executive/gmail-oauth.json",
+      message: "Gmail API not configured — place OAuth token at records/executive/gmail-oauth.json",
     };
   }
 

@@ -5,10 +5,7 @@ import type {
   ScheduleReplyResponse,
 } from "../../../schemas/correspondence/mail-interpretation.js";
 import { findMailInterpretation } from "../correspondence/mail-interpretation.js";
-import {
-  parseScheduleReplyText,
-  type ParsedScheduleReply,
-} from "./reply-parse.js";
+import { parseScheduleReplyText, type ParsedScheduleReply } from "./reply-parse.js";
 
 interface ScheduleVote {
   source: string;
@@ -18,10 +15,7 @@ interface ScheduleVote {
   confidence: number;
 }
 
-function fromMailVote(
-  vote: MailInterpretVote,
-  slots: SchedulingProposedSlot[]
-): ScheduleVote {
+function fromMailVote(vote: MailInterpretVote, slots: SchedulingProposedSlot[]): ScheduleVote {
   const parsed = parseScheduleReplyText(vote.summary_l1, slots);
   return {
     source: vote.model,
@@ -51,10 +45,7 @@ function aggregateVotes(votes: ScheduleVote[], fallback: ParsedScheduleReply): P
   const slot_ids = [...new Set(supporting.flatMap((v) => v.slot_ids))];
   const counter_slots = supporting.flatMap((v) => v.counter_slots);
   const needs_review =
-    winner === "unknown" ||
-    confidence < 0.67 ||
-    agreement < 1 ||
-    dissent.length > 0;
+    winner === "unknown" || confidence < 0.67 || agreement < 1 || dissent.length > 0;
 
   return {
     ...fallback,

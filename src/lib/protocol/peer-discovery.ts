@@ -53,7 +53,9 @@ export function listUnregisteredPeerCandidates(jurisdiction?: string): Discovera
       .filter(Boolean)
   );
   return listDiscoverablePeers({ jurisdiction: j }).filter(
-    (entry) => entry.source === "trusted-hub-catalog" || (entry.org_uri && !registeredOrgUris.has(entry.org_uri))
+    (entry) =>
+      entry.source === "trusted-hub-catalog" ||
+      (entry.org_uri && !registeredOrgUris.has(entry.org_uri))
   );
 }
 
@@ -87,6 +89,8 @@ export function suggestPeerRegistration(entry: DiscoverablePeerEntry): PeerRegis
   return { entry, register_command: parts.join(" ") };
 }
 
-export function listPeerRegistrationSuggestions(jurisdiction?: string): PeerRegistrationSuggestion[] {
+export function listPeerRegistrationSuggestions(
+  jurisdiction?: string
+): PeerRegistrationSuggestion[] {
   return listUnregisteredPeerCandidates(jurisdiction).map(suggestPeerRegistration);
 }

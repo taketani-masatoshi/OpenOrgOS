@@ -13,14 +13,9 @@ import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
 import { listWirePending } from "../protocol/wire-queue.js";
 import { findPeer, resolvePeerInboundEndpoints } from "../protocol/peers.js";
 import { isEmailWireEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
-import {
-  countHighPriorityTriage,
-  listTriageEntries,
-} from "../correspondence/mail-triage-queue.js";
+import { countHighPriorityTriage, listTriageEntries } from "../correspondence/mail-triage-queue.js";
 import { listSenderIdentificationPending } from "../correspondence/sender-identification.js";
-import {
-  listPendingCeoInlineQuestions,
-} from "../correspondence/ceo-inline-question.js";
+import { listPendingCeoInlineQuestions } from "../correspondence/ceo-inline-question.js";
 import {
   isCorrespondenceApprovalSubject,
   loadCorrespondenceDraftForApproval,
@@ -148,9 +143,7 @@ export function buildTodayContext(): TodayContext {
   const tenant = getTenantId();
   const company = loadTenantConfig();
 
-  const p0Tasks = report.highUrgencyTasks
-    .filter((t) => t.importance === "high")
-    .slice(0, 3);
+  const p0Tasks = report.highUrgencyTasks.filter((t) => t.importance === "high").slice(0, 3);
 
   const decisions = p0Tasks.map((t) => ({
     id: t.id,
@@ -163,7 +156,9 @@ export function buildTodayContext(): TodayContext {
   const approvals = listOrgApprovals({ status: "pending_approval" })
     .filter((approval) => {
       if (!isCorrespondenceApprovalSubject(approval.subject_type)) return true;
-      return loadCorrespondenceDraftForApproval(approval)?.notes?.includes("scheduling-case:") === true;
+      return (
+        loadCorrespondenceDraftForApproval(approval)?.notes?.includes("scheduling-case:") === true
+      );
     })
     .map((a) => ({
       id: a.approval_id,
@@ -173,10 +168,12 @@ export function buildTodayContext(): TodayContext {
       proposed_at: a.proposed_at,
     }));
 
-  const inbox = listPendingInbox().slice(0, 10).map((i) => ({
-    id: i.id,
-    title: i.title,
-  }));
+  const inbox = listPendingInbox()
+    .slice(0, 10)
+    .map((i) => ({
+      id: i.id,
+      title: i.title,
+    }));
 
   const escalatePending = listWorkOrders("pending").length;
   const cooRelay = listCooRelayInbox();
@@ -188,7 +185,12 @@ export function buildTodayContext(): TodayContext {
   }));
 
   const dashboardPath = join(getDocsDir(), "reports", "dashboard", `${currentDate()}.md`);
-  const executivePath = join(getDocsDir(), "reports", "executive-notes", `${currentDate()}-dashboard-sync.md`);
+  const executivePath = join(
+    getDocsDir(),
+    "reports",
+    "executive-notes",
+    `${currentDate()}-dashboard-sync.md`
+  );
 
   let cashflowMeta: ReturnType<typeof getCashflowTodaySummary> = {};
   try {
@@ -272,7 +274,7 @@ export function buildTodayContext(): TodayContext {
       preview_path: item.approval_id
         ? `/chat/v1/approvals/${encodeURIComponent(item.approval_id)}/scheduling-preview`
         : undefined,
-      action_kind: item.approval_id ? "approve" as const : "answer" as const,
+      action_kind: item.approval_id ? ("approve" as const) : ("answer" as const),
       pending_participants: c.participants.filter((p) => p.response === "pending").length,
     }));
 
@@ -344,9 +346,7 @@ export function buildTodayContext(): TodayContext {
 }
 
 export function formatTodayContextMarkdown(ctx: TodayContext): string {
-  const actionableWire = ctx.wire_pending.filter(
-    (item) => item.can_approve && item.approval_id
-  );
+  const actionableWire = ctx.wire_pending.filter((item) => item.can_approve && item.approval_id);
   const approvalIds = new Set([
     ...ctx.approvals.map((item) => item.id),
     ...actionableWire.map((item) => item.approval_id!),

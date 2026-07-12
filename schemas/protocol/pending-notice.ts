@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  transactionAmountSchema,
-  transactionTypeSchema,
-} from "./transaction-record.js";
+import { transactionAmountSchema } from "./transaction-record.js";
 
 export const pendingNoticeStatusSchema = z.enum([
   "pending_approval",

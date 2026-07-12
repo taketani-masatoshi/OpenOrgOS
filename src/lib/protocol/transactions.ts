@@ -6,6 +6,7 @@ import {
 } from "../../../schemas/protocol/transaction-record.js";
 import { getTransactionsRegistryPath } from "./paths.js";
 import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
+import { getClock } from "../runtime-context.js";
 
 export function loadTransactionsRegistry(): TransactionsRegistry {
   const path = getTransactionsRegistryPath();
@@ -64,7 +65,7 @@ export function listTransactions(filter?: {
     .sort((a, b) => a.recorded_at.localeCompare(b.recorded_at));
 }
 
-export function nextTransactionId(date = new Date()): string {
+export function nextTransactionId(date = getClock().now()): string {
   const ymd = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
   const prefix = `TX-${ymd}-`;
   const registry = loadTransactionsRegistry();

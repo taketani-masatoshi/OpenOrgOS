@@ -60,14 +60,14 @@ export function buildOperatorSetupGuide(): string {
     "   ```bash",
     "   export OPENAI_API_KEY=sk-...",
     "   # または Ollama: ORGOS_LLM_API_URL=http://127.0.0.1:11434/v1",
-    "   orgos chat ask \"来週の支払いリスクは？\"",
+    '   orgos chat ask "来週の支払いリスクは？"',
     "   ```",
     "",
     "2. **Anthropic ネイティブ API**",
     "   ```bash",
     "   export ANTHROPIC_API_KEY=sk-ant-...",
     "   export ORGOS_LLM_PROVIDER=anthropic",
-    "   orgos chat ask \"来週の支払いリスクは？\"",
+    '   orgos chat ask "来週の支払いリスクは？"',
     "   ```",
     "",
     "3. **aider**（PATH にインストール）",
@@ -111,7 +111,9 @@ function shellToAskResult(result: ShellDispatchResult, profile?: string): Operat
   };
 }
 
-function telemetryFromLoop(t: Omit<LlmTelemetryEntry, "at"> | undefined): OperatorAskTelemetry | undefined {
+function telemetryFromLoop(
+  t: Omit<LlmTelemetryEntry, "at"> | undefined
+): OperatorAskTelemetry | undefined {
   if (!t) return undefined;
   return {
     latency_ms: t.latency_ms,
@@ -130,12 +132,7 @@ async function runLlmOperatorAsk(
   history?: OperatorHistoryTurn[],
   toolContext: OperatorToolContext = {}
 ): Promise<OperatorAskResult> {
-  const llm = await runLlmWithTools(
-    systemContext,
-    userMessage,
-    history,
-    toolContext
-  );
+  const llm = await runLlmWithTools(systemContext, userMessage, history, toolContext);
   return {
     ok: llm.ok,
     reply: llm.content,
@@ -191,15 +188,10 @@ export async function runOperatorAsk(
   const profile = resolveShellProfileName(opts?.profile);
 
   if (!opts?.preferShell && isLlmApiConfigured()) {
-    const llm = await runLlmOperatorAsk(
-      userMessage,
-      systemContext,
-      opts?.history,
-      {
-        operatorId: opts?.operatorId,
-        approverId: opts?.approverId,
-      }
-    );
+    const llm = await runLlmOperatorAsk(userMessage, systemContext, opts?.history, {
+      operatorId: opts?.operatorId,
+      approverId: opts?.approverId,
+    });
     if (llm.ok) return llm;
   }
 
@@ -222,21 +214,12 @@ export async function* runOperatorAskStream(
     operatorId?: string;
     approverId?: string;
   }
-): AsyncGenerator<
-  { type: "delta"; content: string },
-  OperatorAskResult,
-  void
-> {
+): AsyncGenerator<{ type: "delta"; content: string }, OperatorAskResult, void> {
   if (isLlmApiConfigured()) {
-    const batch = await runLlmOperatorAsk(
-      userMessage,
-      systemContext,
-      opts?.history,
-      {
-        operatorId: opts?.operatorId,
-        approverId: opts?.approverId,
-      }
-    );
+    const batch = await runLlmOperatorAsk(userMessage, systemContext, opts?.history, {
+      operatorId: opts?.operatorId,
+      approverId: opts?.approverId,
+    });
     if (batch.reply) {
       for (const word of batch.reply.split(/(\s+)/)) {
         if (word) yield { type: "delta", content: word };

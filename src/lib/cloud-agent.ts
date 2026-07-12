@@ -10,7 +10,9 @@ export function loadCloudAgentConfig(): CloudAgentConfig {
   );
 }
 
-export function resolveDispatchRuntime(preferred?: "local" | "cloud" | "manifest"): "local" | "cloud" | "manifest" {
+export function resolveDispatchRuntime(
+  preferred?: "local" | "cloud" | "manifest"
+): "local" | "cloud" | "manifest" {
   if (preferred === "manifest") return "manifest";
   const cfg = loadCloudAgentConfig();
   if (preferred === "local" || preferred === "cloud") return preferred;

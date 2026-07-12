@@ -18,11 +18,7 @@ function formatSlotLabel(start: string, end: string): string {
   return e ? `${s}–${e}` : s;
 }
 
-function overlapsExisting(
-  startMs: number,
-  endMs: number,
-  events: CalendarEvent[]
-): boolean {
+function overlapsExisting(startMs: number, endMs: number, events: CalendarEvent[]): boolean {
   for (const e of events) {
     if (e.status === "cancelled") continue;
     const eStart = parseExecutiveDateTime(e.start).getTime();
@@ -53,7 +49,7 @@ export function proposeExecutiveSlots(opts: ProposeSlotsOptions = {}): Schedulin
   const durationMinutes = opts.durationMinutes ?? 60;
   const existing = opts.existingSlots ?? [];
 
-  let events: CalendarEvent[] = [];
+  let events: CalendarEvent[];
   try {
     events = loadExecutiveCalendar().events;
   } catch {

@@ -4,10 +4,7 @@ import {
   wireGatewayConfigSchema,
   type WireGatewayConfig,
 } from "../../../schemas/protocol/wire-gateway-config.js";
-import {
-  wireMessageSchema,
-  type WireMessage,
-} from "../../../schemas/protocol/wire-message.js";
+import { wireMessageSchema, type WireMessage } from "../../../schemas/protocol/wire-message.js";
 import {
   internalWireInboxSubmitSchema,
   internalWireDeliveryReportSchema,
@@ -117,16 +114,9 @@ export function validateWireGatewayConfig(
   }
 
   const publicBase =
-    opts?.publicBaseUrl ??
-    process.env.PUBLIC_BASE_URL ??
-    process.env.WIRE_GATEWAY_PUBLIC_BASE_URL;
-  const externalTls =
-    process.env.WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY === "1";
-  if (
-    publicBase?.startsWith("https://") &&
-    !cfg.listen.tls_cert &&
-    !externalTls
-  ) {
+    opts?.publicBaseUrl ?? process.env.PUBLIC_BASE_URL ?? process.env.WIRE_GATEWAY_PUBLIC_BASE_URL;
+  const externalTls = process.env.WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY === "1";
+  if (publicBase?.startsWith("https://") && !cfg.listen.tls_cert && !externalTls) {
     const item = {
       code: "https_without_local_tls",
       message:

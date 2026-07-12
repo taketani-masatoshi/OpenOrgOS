@@ -1,15 +1,16 @@
 import type { TransactionRecord } from "../../../schemas/protocol/transaction-record.js";
-import { findEnvelopeFileForWitness, fetchReceiptsFromPool, verifyCachedReceiptsForEvent } from "./witness-client.js";
+import {
+  findEnvelopeFileForWitness,
+  fetchReceiptsFromPool,
+  verifyCachedReceiptsForEvent,
+} from "./witness-client.js";
 import { isWitnessEnabled, loadWitnessPoolConfig } from "./witness-pool.js";
 import { listWitnessPending } from "./witness-queue.js";
 import { listWirePending } from "./wire-queue.js";
 import { listTransactions, removeTransactionsById } from "./transactions.js";
 
 export type TransactionOrphanReason =
-  | "envelope-missing"
-  | "witness-receipt-missing"
-  | "wire-pending"
-  | "witness-pending";
+  "envelope-missing" | "witness-receipt-missing" | "wire-pending" | "witness-pending";
 
 export interface TransactionOrphanCandidate {
   transaction: TransactionRecord;
@@ -55,11 +56,7 @@ export async function evaluateTransactionOrphans(
     if (!hasEnvelope) reasons.push("envelope-missing");
 
     let receipts = verifyCachedReceiptsForEvent(tx.event_id, pool).receipts;
-    if (
-      receipts.length === 0 &&
-      opts.fetchReceipts === true &&
-      isWitnessEnabled(pool)
-    ) {
+    if (receipts.length === 0 && opts.fetchReceipts === true && isWitnessEnabled(pool)) {
       receipts = await fetchReceiptsFromPool(tx.event_id, pool);
     }
     if (receipts.length === 0) reasons.push("witness-receipt-missing");

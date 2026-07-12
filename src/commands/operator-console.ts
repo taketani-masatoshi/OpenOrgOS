@@ -8,7 +8,9 @@ export interface OperatorConsoleStartOptions {
   tenant?: string;
 }
 
-export async function runOperatorConsoleStart(opts: OperatorConsoleStartOptions = {}): Promise<void> {
+export async function runOperatorConsoleStart(
+  opts: OperatorConsoleStartOptions = {}
+): Promise<void> {
   if (opts.tenant) setTenantEnv(opts.tenant);
 
   const warnings = formatProdAuthWarnings(runProdAuthChecks("all"));

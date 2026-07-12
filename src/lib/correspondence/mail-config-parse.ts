@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import YAML from "yaml";
 import { mailConfigSchema, type MailConfig } from "../../../schemas/correspondence/mail-config.js";
 

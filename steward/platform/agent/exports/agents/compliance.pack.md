@@ -128,7 +128,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 # Compliance Agent
 
 **English role:** Compliance & ISO · **日本語:** コンプライアンスエージェント
-**4 層:** **Agent** — 有効社内規程 · `docs/compliance/` を管轄。テンプレは [steward/standards/regulations/](../standards/regulations/00-このフォルダについて.md) · [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)（Read）。
+**4 層:** **Agent** — 有効社内規程 · `docs/compliance/` を管轄。テンプレは [steward/standards/regulations/](steward/standards/regulations/00-このフォルダについて.md) · [steward/standards/iso/](steward/standards/iso/00-このフォルダについて.md)（Read）。
 
 **構成:** [repository_layout.md](steward/rules/repository_layout.md)
 
@@ -157,8 +157,8 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | Skill | ファイル |
 |-------|---------|
-| permit_expiry_check | [steward/core/skills/permit_expiry_check.md](../skills/permit_expiry_check.md) |
-| iso_control_review | [steward/core/skills/iso_control_review.md](../skills/iso_control_review.md) |
+| permit_expiry_check | [steward/core/skills/permit_expiry_check.md](steward/core/skills/permit_expiry_check.md) |
+| iso_control_review | [steward/core/skills/iso_control_review.md](steward/core/skills/iso_control_review.md) |
 
 ## 統制オーナーシップ
 
@@ -257,9 +257,9 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ## コンテキスト
 
-- 規程: `regulations.yaml` で有効化 · カタログ [steward/standards/regulations/catalog.yaml](../standards/regulations/catalog.yaml)
-- ISO 標準: [steward/standards/iso/](../standards/iso/00-このフォルダについて.md)
-- 統制フレームワーク: [steward/standards/control-framework/](../standards/control-framework/00-README.md)
+- 規程: `regulations.yaml` で有効化 · カタログ [steward/standards/regulations/catalog.yaml](steward/standards/regulations/catalog.yaml)
+- ISO 標準: [steward/standards/iso/](steward/standards/iso/00-このフォルダについて.md)
+- 統制フレームワーク: [steward/standards/control-framework/](steward/standards/control-framework/00-README.md)
 - テナント評価: `docs/compliance/iso/steward-assessment.md`
 - アクティブ一覧: `tenants/{id}/rules/active_context.md`
 
@@ -281,7 +281,7 @@ orgos agent pulse --agent compliance
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/core/orchestrators/steward_agent_roster.md)
 
 
 

@@ -2,6 +2,7 @@ import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { AuditEventType } from "../../../schemas/audit-log.js";
 import { orgAuditBridgeErrorsSchema } from "../../../schemas/org/audit-bridge-errors.js";
+import { getClock } from "../runtime-context.js";
 import { getOrgAuditBridgeErrorsPath } from "./paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 
@@ -24,7 +25,7 @@ export function recordAuditBridgeFailure(options: {
     audit_id: options.auditId,
     audit_event: options.auditEvent,
     message: options.message,
-    recorded_at: new Date().toISOString(),
+    recorded_at: getClock().nowIso(),
   });
   const max = state.max_entries ?? 50;
   if (state.recent.length > max) {
@@ -34,7 +35,9 @@ export function recordAuditBridgeFailure(options: {
   writeYamlFile(path, state);
 }
 
-export function listRecentAuditBridgeFailures(): ReturnType<typeof loadOrgAuditBridgeErrors>["recent"] {
+export function listRecentAuditBridgeFailures(): ReturnType<
+  typeof loadOrgAuditBridgeErrors
+>["recent"] {
   return loadOrgAuditBridgeErrors().recent;
 }
 

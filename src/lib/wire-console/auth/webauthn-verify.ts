@@ -7,11 +7,7 @@ import {
   type KeyObject,
   verify,
 } from "node:crypto";
-import {
-  buildCoseEc2PublicKey,
-  buildRegistrationAuthData,
-  encodeCbor,
-} from "./webauthn-cbor.js";
+import { buildCoseEc2PublicKey, buildRegistrationAuthData, encodeCbor } from "./webauthn-cbor.js";
 
 /** Verify WebAuthn assertion signature (ES256 / RS256 over authData || SHA256(clientDataJSON)). */
 export function verifyWebAuthnAssertionSignature(opts: {
@@ -38,9 +34,7 @@ export function verifyWebAuthnAssertionSignature(opts: {
       return verify("RSA-SHA256", signedData, publicKey, signature);
     }
     if (keyType === "ec") {
-      if (
-        verify("sha256", signedData, { key: publicKey, dsaEncoding: "ieee-p1363" }, signature)
-      ) {
+      if (verify("sha256", signedData, { key: publicKey, dsaEncoding: "ieee-p1363" }, signature)) {
         return true;
       }
       try {
@@ -136,14 +130,14 @@ export function mintTestWebAuthnRegistration(opts: {
   operator_id: string;
   approver_id: string;
 } {
-  let privateKey: KeyObject;
   let publicKeySpki: Buffer;
   if (opts.privateKey) {
-    privateKey = opts.privateKey;
-    publicKeySpki = createPublicKey(privateKey).export({ type: "spki", format: "der" }) as Buffer;
+    publicKeySpki = createPublicKey(opts.privateKey).export({
+      type: "spki",
+      format: "der",
+    }) as Buffer;
   } else {
     const generated = generateKeyPairSync("ec", { namedCurve: "P-256" });
-    privateKey = generated.privateKey;
     publicKeySpki = generated.publicKey.export({ type: "spki", format: "der" }) as Buffer;
   }
 

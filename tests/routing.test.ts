@@ -88,6 +88,12 @@ describe("route matching", () => {
     const result = checkRouteAccess("contract", ["data/operations/kamezawa-secrets.yaml"]);
     expect(result.allowed).toBe(false);
   });
+
+  it("does not let catalog path metadata authorize an unregistered resource", () => {
+    const result = checkRouteAccess("finance", ["data/finance/not-registered.yaml"]);
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toContain("align-classification");
+  });
 });
 
 describe("handoff", () => {

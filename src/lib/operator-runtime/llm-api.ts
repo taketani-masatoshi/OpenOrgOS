@@ -37,8 +37,7 @@ export function resolveLlmProvider(): LlmProvider {
 
   const anthropicKey =
     process.env.ANTHROPIC_API_KEY?.trim() || process.env.ORGOS_ANTHROPIC_API_KEY?.trim();
-  const openaiKey =
-    process.env.ORGOS_LLM_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+  const openaiKey = process.env.ORGOS_LLM_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
 
   if (anthropicKey && !openaiKey) return "anthropic";
   return "openai-compatible";
@@ -78,10 +77,7 @@ export function getLlmApiConfig(): LlmApiConfig | null {
     };
   }
 
-  const apiKey =
-    process.env.ORGOS_LLM_API_KEY?.trim() ||
-    process.env.OPENAI_API_KEY?.trim() ||
-    "";
+  const apiKey = process.env.ORGOS_LLM_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim() || "";
   if (!apiKey) return null;
 
   const baseUrl = (
@@ -91,9 +87,7 @@ export function getLlmApiConfig(): LlmApiConfig | null {
   ).replace(/\/$/, "");
 
   const model =
-    process.env.ORGOS_LLM_MODEL?.trim() ||
-    process.env.OPENAI_MODEL?.trim() ||
-    "gpt-4o-mini";
+    process.env.ORGOS_LLM_MODEL?.trim() || process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
 
   return { provider: "openai-compatible", baseUrl, apiKey, model };
 }

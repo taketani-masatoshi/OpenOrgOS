@@ -21,14 +21,13 @@ export function loadReconciliationEventFile(): ReconciliationEventFile {
       events: [],
     });
   }
-  return reconciliationEventFileSchema.parse(
-    YAML.parse(readFileSync(path, "utf-8"))
-  );
+  return reconciliationEventFileSchema.parse(YAML.parse(readFileSync(path, "utf-8")));
 }
 
-export function appendReconciliationEvents(
-  incoming: ReconciliationEvent[]
-): { file: ReconciliationEventFile; added: number } {
+export function appendReconciliationEvents(incoming: ReconciliationEvent[]): {
+  file: ReconciliationEventFile;
+  added: number;
+} {
   const file = loadReconciliationEventFile();
   const ids = new Set(file.events.map((event) => event.id));
   const additions = incoming.filter((event) => {

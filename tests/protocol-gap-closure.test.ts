@@ -57,6 +57,7 @@ describe("protocol gap closure", () => {
   });
 
   it("rotates signing key and exports new public key", () => {
+    setTenantId("demo");
     const before = exportProtocolPublicKeyBase64();
     const rotated = rotateProtocolSigningKey();
     expect(rotated.publicKey).toBeTruthy();
@@ -74,5 +75,6 @@ describe("protocol gap closure", () => {
     if (rotated.backupPath && existsSync(rotated.backupPath)) {
       rmSync(rotated.backupPath, { force: true });
     }
+    setTenantId("mal");
   });
 });

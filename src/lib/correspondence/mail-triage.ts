@@ -8,7 +8,10 @@ import type {
   MailTriageEntry,
   MailUrgency,
 } from "../../../schemas/correspondence/mail-triage.js";
-import type { MailTriageRuleSet, MailTriageRules } from "../../../schemas/correspondence/mail-triage-rules.js";
+import type {
+  MailTriageRuleSet,
+  MailTriageRules,
+} from "../../../schemas/correspondence/mail-triage-rules.js";
 import { currentDate } from "../utils.js";
 import { loadMailTriageRules } from "./mail-triage-rules.js";
 import {
@@ -16,7 +19,6 @@ import {
   saveMailTriageQueue,
   upsertTriageEntry,
   isHighPriorityEntry,
-  findTriageEntry,
 } from "./mail-triage-queue.js";
 import { identifySenderForTriageEntry } from "./sender-identification.js";
 import { postTriageInterpretAndCeoAsk } from "./mail-triage-interpret.js";
@@ -143,7 +145,7 @@ export function classifyMail(
   const importance = pickImportance(hits);
   const urgency = pickUrgency(hits);
 
-  let routing: MailRouting = "secretary";
+  let routing: MailRouting;
   const routingRules = rules.routing;
   if (disposition === "spam") {
     routing =

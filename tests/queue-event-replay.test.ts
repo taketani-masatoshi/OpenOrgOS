@@ -27,6 +27,7 @@ describe("queue event replay (append-only status)", () => {
       idGenerator: {
         randomSuffix: () => "abcd1234",
         uniqueId: (prefix) => `${prefix}-FIXED`,
+        uuid: () => "00000000-0000-4000-8000-000000000099",
       },
       clock: {
         now: () => new Date("2026-07-12T00:00:00.000Z"),

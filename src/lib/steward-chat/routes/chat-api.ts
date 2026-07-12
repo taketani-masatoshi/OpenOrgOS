@@ -30,14 +30,11 @@ import {
   registerWitnessFromChat,
   verifyWitnessFromChat,
 } from "../wire-witness.js";
-import { sessionTokenFromRequest } from "../../wire-console/auth/session.js";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
 import { appendChatAudit, auditChatMessage } from "../audit.js";
 import { buildOperatorStats } from "../operator-stats.js";
-import {
-  handleSchedulingChatMessage,
-} from "../../scheduling-coordination/chat-intent.js";
+import { handleSchedulingChatMessage } from "../../scheduling-coordination/chat-intent.js";
 import { runValidateReport } from "../../../commands/validate.js";
 import { handleCashflowChatMessage } from "../../jp-bank-corporate/cashflow-chat-intent.js";
 
@@ -90,9 +87,7 @@ function buildChatSystem(threadId: string) {
 }
 
 function formatHistoryMarkdown(thread: ReturnType<typeof loadChatThread>): string {
-  return thread.messages
-    .map((m) => `- **${m.role}**: ${m.content.slice(0, 500)}`)
-    .join("\n");
+  return thread.messages.map((m) => `- **${m.role}**: ${m.content.slice(0, 500)}`).join("\n");
 }
 
 async function handleChatMessage(
@@ -544,7 +539,10 @@ export async function handleChatApi(
         return true;
       }
       if (question.status !== "pending") {
-        json(res, 400, { ok: false, error: `Question ${questionId} is already ${question.status}` });
+        json(res, 400, {
+          ok: false,
+          error: `Question ${questionId} is already ${question.status}`,
+        });
         return true;
       }
       const answered = answerCeoInline(
@@ -604,9 +602,13 @@ export async function handleChatApi(
     });
     res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
 
-    const recent = loadQueueEvents().filter((e) => e.type === "pipeline_daily_complete").slice(-1);
+    const recent = loadQueueEvents()
+      .filter((e) => e.type === "pipeline_daily_complete")
+      .slice(-1);
     if (recent[0]) {
-      res.write(`data: ${JSON.stringify({ type: "pipeline_daily_complete", event: recent[0] })}\n\n`);
+      res.write(
+        `data: ${JSON.stringify({ type: "pipeline_daily_complete", event: recent[0] })}\n\n`
+      );
     }
 
     const interval = setInterval(() => {

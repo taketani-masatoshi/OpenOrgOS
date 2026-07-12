@@ -1,9 +1,5 @@
 import type { StewardData } from "./data.js";
-import {
-  generateForecast,
-  formatForecastMarkdown,
-  type ScenarioOverrides,
-} from "./forecast.js";
+import { generateForecast, formatForecastMarkdown, type ScenarioOverrides } from "./forecast.js";
 import { formatCurrency } from "./utils.js";
 
 export interface ScenarioOptions {
@@ -44,10 +40,7 @@ export function runScenario(
   };
 }
 
-export function compareScenarios(
-  baseline: ScenarioResult,
-  scenario: ScenarioResult
-): string {
+export function compareScenarios(baseline: ScenarioResult, scenario: ScenarioResult): string {
   const lines = [
     "# シナリオ分析",
     "",

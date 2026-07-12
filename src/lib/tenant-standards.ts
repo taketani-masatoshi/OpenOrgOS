@@ -21,9 +21,7 @@ export function loadTenantStandards() {
 
 export function loadEnabledIsoIds(): string[] {
   const file = loadTenantStandards();
-  const enabled = new Set(
-    file.iso.filter((e) => e.enabled).map((e) => e.id)
-  );
+  const enabled = new Set(file.iso.filter((e) => e.enabled).map((e) => e.id));
   if (enabled.size === 0) return [];
   return listIsoStandardIds().filter((id) => enabled.has(id));
 }

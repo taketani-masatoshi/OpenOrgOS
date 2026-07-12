@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import {
@@ -15,9 +15,10 @@ import {
 } from "./classification.js";
 import { ROUTING_REGISTRY_PATH } from "./steward-paths.js";
 import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModules } from "./modules.js";
-import { loadSkillRegistry, resolveSkillFilePath } from "./skill-registry.js";
+import { loadSkillRegistry } from "./skill-registry.js";
 import { formatSkillReference, isAgentInteractiveSkill } from "./agent-portability.js";
 import { appendAuditEvent } from "./audit-log.js";
+import { getClock, getIdGenerator } from "./runtime-context.js";
 import { currentDate, ensureDocsReportsDir, readYamlFile, writeYamlFile } from "./utils.js";
 import { getCatalogAgent, isAgentActive, resolveAgentId } from "./agent-catalog.js";
 
@@ -90,18 +91,17 @@ function isModuleAgentEnabled(
 
 export function checkRouteAccess(agent: AgentId, resourcePaths: string[]): AccessCheckResult {
   const registry = loadClassificationRegistry();
-  const catalogAgent = getCatalogAgent(agent);
   if (resourcePaths.length === 0) {
     return { allowed: false, reason: "resource_paths 未設定 — アクセス検証不可" };
   }
   for (const resourcePath of resourcePaths) {
     const result = checkAgentAccess(registry, agent, resourcePath, "read");
     if (result.allowed) continue;
-    if (
-      result.reason.startsWith("未登録リソース") &&
-      catalogAgent?.access.read.some((pattern) => pathMatchesPattern(resourcePath, pattern))
-    ) {
-      continue;
+    if (result.reason.startsWith("未登録リソース")) {
+      return {
+        ...result,
+        reason: `${result.reason} — orgos tenant align-classification でテンプレート資源をマージ`,
+      };
     }
     return result;
   }
@@ -121,11 +121,7 @@ export function checkExecutiveBoundary(route: RouteDefinition, inputPath?: strin
     return route.agent === "secretary" || allowedAgent === true;
   }
 
-  if (
-    route.boundary === "executive_data" &&
-    route.agent !== "secretary" &&
-    !allowedAgent
-  ) {
+  if (route.boundary === "executive_data" && route.agent !== "secretary" && !allowedAgent) {
     return false;
   }
 
@@ -137,7 +133,10 @@ function isSkillAvailable(skillId?: string): boolean {
   return loadSkillRegistry().some((s) => s.id === skillId);
 }
 
-function scoreRoute(route: RouteDefinition, input: RouteMatchInput): { score: number; matchedBy: string[] } {
+function scoreRoute(
+  route: RouteDefinition,
+  input: RouteMatchInput
+): { score: number; matchedBy: string[] } {
   let score = route.priority;
   const matchedBy: string[] = [];
   const text = input.text?.trim() ?? "";
@@ -192,7 +191,10 @@ function collectBlockedReasons(input: {
   return reasons;
 }
 
-export function matchRoutes(input: RouteMatchInput, registry = loadRoutingRegistry()): MatchedRoute[] {
+export function matchRoutes(
+  input: RouteMatchInput,
+  registry = loadRoutingRegistry()
+): MatchedRoute[] {
   const results: MatchedRoute[] = [];
   const profile = input.profile ?? "operational";
   const routeProfile = profile === "task" ? "operational" : profile;
@@ -231,7 +233,10 @@ export function matchRoutes(input: RouteMatchInput, registry = loadRoutingRegist
   return results.sort((a, b) => b.score - a.score);
 }
 
-export function pickBestRoute(input: RouteMatchInput, registry = loadRoutingRegistry()): MatchedRoute | undefined {
+export function pickBestRoute(
+  input: RouteMatchInput,
+  registry = loadRoutingRegistry()
+): MatchedRoute | undefined {
   const eligible = matchRoutes(input, registry).filter(
     (m) => m.access.allowed && m.moduleEnabled && m.boundaryOk
   );
@@ -240,7 +245,7 @@ export function pickBestRoute(input: RouteMatchInput, registry = loadRoutingRegi
 
 export function generateHandoffId(): string {
   const stamp = currentDate().replace(/-/g, "");
-  const suffix = Math.random().toString(36).slice(2, 8);
+  const suffix = getIdGenerator().randomSuffix(6);
   return `HO-${stamp}-${suffix}`;
 }
 
@@ -268,7 +273,7 @@ export function buildHandoff(options: HandoffOptions, matched?: MatchedRoute): H
 
   return handoffSchema.parse({
     id: generateHandoffId(),
-    created_at: new Date().toISOString(),
+    created_at: getClock().nowIso(),
     from_agent: options.fromAgent ?? "steward",
     to_agent: toAgent,
     skill: options.skill ?? route?.skill,
@@ -308,7 +313,13 @@ export function formatHandoffMarkdown(handoff: Handoff, matched?: MatchedRoute):
   }
 
   if (matched) {
-    lines.push("## Match", "", `- score: ${matched.score}`, `- matched: ${matched.matchedBy.join(", ")}`, "");
+    lines.push(
+      "## Match",
+      "",
+      `- score: ${matched.score}`,
+      `- matched: ${matched.matchedBy.join(", ")}`,
+      ""
+    );
   }
 
   if (handoff.skill) {
@@ -345,7 +356,9 @@ export function formatHandoffMarkdown(handoff: Handoff, matched?: MatchedRoute):
 export function formatSuggestCard(handoff: Handoff, matched?: MatchedRoute): string {
   const skillLine = handoff.skill ? ` · skill=${handoff.skill}` : "";
   const routeLine = handoff.route_id ? ` · route=${handoff.route_id}` : "";
-  const accessLine = handoff.access.allowed ? "access=ok" : `access=blocked (${handoff.access.reason})`;
+  const accessLine = handoff.access.allowed
+    ? "access=ok"
+    : `access=blocked (${handoff.access.reason})`;
   const matchLine = matched ? ` · score=${matched.score}` : "";
   const blocked =
     matched && matched.blockedReasons.length
@@ -422,7 +435,9 @@ export function validateRoutingRegistry(): string[] {
     } else if (route.skill) {
       const skill = skillsById.get(route.skill);
       if (skill && resolveAgentId(skill.agent_id) !== resolveAgentId(route.agent)) {
-        issues.push(`${route.id}: skill owner ${skill.agent_id} does not match route agent ${route.agent}`);
+        issues.push(
+          `${route.id}: skill owner ${skill.agent_id} does not match route agent ${route.agent}`
+        );
       }
     }
     if (route.resource_paths.length === 0) {

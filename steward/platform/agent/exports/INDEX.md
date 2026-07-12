@@ -9,6 +9,22 @@ orgos operator export --all
 orgos operator sync-policy --emit all
 ```
 
+**鮮度の二重確認:** `export --all` のあと `npm run generated:check`（内部で `validateAgentPackExports`）が通ること。
+
+## Engineering Constitution（Path 表）
+
+| 分割 | Path |
+|------|------|
+| 索引 | `steward/rules/openorgos-engineering-constitution.md` |
+| 00 Purpose · DoD | `steward/rules/engineering/00-engineering-constitution.md` |
+| 01 Architecture | `steward/rules/engineering/01-architecture.md` |
+| 02 TypeScript | `steward/rules/engineering/02-typescript.md` |
+| 04 Testing | `steward/rules/engineering/04-testing.md` |
+| 08 Event sourcing | `steward/rules/engineering/08-event-sourcing.md` |
+| 09 OrgOS domain | `steward/rules/engineering/09-openorgos-domain.md` |
+| Operator policy | `steward/rules/operator-policy.md` |
+| Tool-neutral | `steward/rules/tool-neutral-development.md` |
+
 ## コア Agent
 
 | id | 名称 | 定義 Path | Export pack |

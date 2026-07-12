@@ -44,8 +44,7 @@ function generateQueueStatusRecordId(): string {
 }
 
 type QueueJsonlRecord =
-  | { kind: "event"; data: QueueEvent }
-  | { kind: "status"; data: QueueStatusRecord };
+  { kind: "event"; data: QueueEvent } | { kind: "status"; data: QueueStatusRecord };
 
 function parseQueueJsonlLine(raw: unknown): QueueJsonlRecord | undefined {
   if (!raw || typeof raw !== "object") return undefined;
@@ -191,14 +190,16 @@ export function writeWorkOrderResult(
   return path;
 }
 
-export function loadWorkOrderResult(workOrderId: string): {
-  work_order_id: string;
-  agent: string;
-  completed_at: string;
-  summary: string;
-  notes?: string;
-  artifacts: string[];
-} | undefined {
+export function loadWorkOrderResult(workOrderId: string):
+  | {
+      work_order_id: string;
+      agent: string;
+      completed_at: string;
+      summary: string;
+      notes?: string;
+      artifacts: string[];
+    }
+  | undefined {
   const path = join(resultsDir(), `${workOrderId}.yaml`);
   if (!existsSync(path)) return undefined;
   return JSON.parse(readFileSync(path, "utf-8"));
@@ -207,5 +208,7 @@ export function loadWorkOrderResult(workOrderId: string): {
 export function listWorkOrderResults(): string[] {
   const dir = resultsDir();
   if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter((f) => f.endsWith(".yaml")).map((f) => f.replace(/\.yaml$/, ""));
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".yaml"))
+    .map((f) => f.replace(/\.yaml$/, ""));
 }

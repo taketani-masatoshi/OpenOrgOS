@@ -359,7 +359,8 @@ export function formatSenderIdentificationReport(entry: SenderIdentificationEntr
   }
   if (entry.ceo_question) {
     lines.push("", `CEO 質問: ${entry.ceo_question.subject}`);
-    if (entry.ceo_question.escalate_path) lines.push(`CONSULT: ${entry.ceo_question.escalate_path}`);
+    if (entry.ceo_question.escalate_path)
+      lines.push(`CONSULT: ${entry.ceo_question.escalate_path}`);
   }
   if (entry.ceo_confirmed) {
     lines.push(

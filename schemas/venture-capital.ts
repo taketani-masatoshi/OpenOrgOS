@@ -13,13 +13,7 @@ export const fundSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const portfolioStage = z.enum([
-  "seed",
-  "early",
-  "growth",
-  "late",
-  "exit",
-]);
+export const portfolioStage = z.enum(["seed", "early", "growth", "late", "exit"]);
 
 export const portfolioCompanySchema = z.object({
   id: z.string().regex(/^PC-\d{3,}$/),
@@ -31,7 +25,10 @@ export const portfolioCompanySchema = z.object({
   fair_value_jpy: z.number().nonnegative().optional(),
   ownership_pct: z.number().min(0).max(100).optional(),
   status: z.enum(["active", "written_off", "exited"]).default("active"),
-  stakeholder_id: z.string().regex(/^STK-\d{3,}$/).optional(),
+  stakeholder_id: z
+    .string()
+    .regex(/^STK-\d{3,}$/)
+    .optional(),
   notes: z.string().optional(),
 });
 

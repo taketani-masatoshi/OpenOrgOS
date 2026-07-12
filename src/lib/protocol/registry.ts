@@ -1,4 +1,7 @@
-import { protocolRegistrySchema, type ProtocolRegistry } from "../../../schemas/protocol/registry.js";
+import {
+  protocolRegistrySchema,
+  type ProtocolRegistry,
+} from "../../../schemas/protocol/registry.js";
 import { PROTOCOL_REGISTRY_PATH } from "../steward-paths.js";
 import { loadRegistryFile } from "../utils.js";
 

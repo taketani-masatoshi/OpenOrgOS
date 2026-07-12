@@ -4,7 +4,7 @@ import {
   type MailTriageEntry,
   type MailTriageQueue,
 } from "../../../schemas/correspondence/mail-triage.js";
-import { loadRegistryFile, readYamlFile, writeYamlFile } from "../utils.js";
+import { loadRegistryFile, writeYamlFile } from "../utils.js";
 import { getMailTriageQueueExamplePath, getMailTriageQueuePath } from "./paths.js";
 
 export function loadMailTriageQueue(): MailTriageQueue {

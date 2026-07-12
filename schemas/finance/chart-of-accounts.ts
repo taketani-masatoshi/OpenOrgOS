@@ -17,7 +17,9 @@ export const chartAccountSchema = z.object({
 
 export const chartOfAccountsSchema = z.object({
   version: z.string().optional(),
-  currency: z.enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"]).default("JPY"),
+  currency: z
+    .enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"])
+    .default("JPY"),
   accounts: z.array(chartAccountSchema).min(1),
   category_mapping: z.object({
     revenue: z.record(revenueCategory, z.string()),

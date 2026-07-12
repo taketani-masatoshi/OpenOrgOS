@@ -222,10 +222,7 @@ export interface ModuleValidationIssue {
   message: string;
 }
 
-const AGENT_PROPERTY_TYPES: Record<
-  string,
-  Array<"rental" | "hotel" | "mixed">
-> = {
+const AGENT_PROPERTY_TYPES: Record<string, Array<"rental" | "hotel" | "mixed">> = {
   rental: ["rental", "mixed"],
   hospitality: ["hotel", "mixed"],
 };
@@ -340,9 +337,7 @@ export function validateModules(): ModuleValidationIssue[] {
     }
 
     if (mod.docs_root) {
-      const abs = tenantDocsPath(
-        ...mod.docs_root.replace(/^docs\//, "").split("/")
-      );
+      const abs = tenantDocsPath(...mod.docs_root.replace(/^docs\//, "").split("/"));
       if (!existsSync(abs)) {
         issues.push({
           file: logicalFile,
@@ -356,8 +351,7 @@ export function validateModules(): ModuleValidationIssue[] {
         ? tenantDataPath(...mod.data_root.replace(/^data\//, "").split("/"))
         : join(getTenantDir(), mod.data_root);
       const seedDir = getModuleSeedDir(mod.agent);
-      const hasSeed =
-        existsSync(seedDir) && listModuleSeedFiles(mod.agent).length > 0;
+      const hasSeed = existsSync(seedDir) && listModuleSeedFiles(mod.agent).length > 0;
       if (!existsSync(abs) && !hasSeed) {
         issues.push({
           file: logicalFile,
@@ -372,27 +366,16 @@ export function validateModules(): ModuleValidationIssue[] {
         ? tenantDataPath(...rel.replace(/^data\//, "").split("/"))
         : join(getTenantDir(), rel);
       const exampleAbs = `${abs}.example`;
-      const seedExample = join(
-        getModuleSeedDir(mod.agent),
-        `${abs.split("/").pop()}.example`
-      );
+      const seedExample = join(getModuleSeedDir(mod.agent), `${abs.split("/").pop()}.example`);
       const seedFallback = existsSync(getModuleSeedDir(mod.agent))
         ? readdirSync(getModuleSeedDir(mod.agent)).find(
             (f) =>
               f.endsWith(".example") &&
-              (rel.includes("public")
-                ? f.includes("public")
-                : f.includes("secret"))
+              (rel.includes("public") ? f.includes("public") : f.includes("secret"))
           )
         : undefined;
-      const seedAbs = seedFallback
-        ? join(getModuleSeedDir(mod.agent), seedFallback)
-        : seedExample;
-      if (
-        !existsSync(abs) &&
-        !existsSync(exampleAbs) &&
-        !existsSync(seedAbs)
-      ) {
+      const seedAbs = seedFallback ? join(getModuleSeedDir(mod.agent), seedFallback) : seedExample;
+      if (!existsSync(abs) && !existsSync(exampleAbs) && !existsSync(seedAbs)) {
         issues.push({
           file: logicalFile,
           message: `module "${mod.id}" path not found: ${rel} (tenant .example or steward/modules/${mod.agent}/seed/)`,
@@ -452,11 +435,7 @@ export interface ModuleCheckIssue {
   message: string;
 }
 
-function checkSeedFiles(
-  catalogId: string,
-  seeds: string[],
-  label: string
-): ModuleCheckIssue[] {
+function checkSeedFiles(catalogId: string, seeds: string[], label: string): ModuleCheckIssue[] {
   const issues: ModuleCheckIssue[] = [];
   const loc = resolveModuleLocation(catalogId);
   const seedDir = getModuleSeedDir(catalogId);

@@ -69,10 +69,7 @@ async function ensureGmailOAuthClient(opts: GmailSetupWizardOptions): Promise<vo
   console.log(`✓ OAuth client を L2 に保存 (${getGmailOAuthClientPath()})`);
 }
 
-export function writeGmailApiMailConfig(opts: {
-  fromEmail: string;
-  fromName: string;
-}): string {
+export function writeGmailApiMailConfig(opts: { fromEmail: string; fromName: string }): string {
   ensureMailConfigExample();
   mkdirSync(getExecutiveRecordsDir(), { recursive: true });
   const path = getMailConfigPath();

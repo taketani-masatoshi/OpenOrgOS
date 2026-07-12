@@ -5,21 +5,9 @@ import {
   runClassificationAccess,
   runClassificationBoundaries,
 } from "../../commands/classification.js";
-import {
-  runBrokerBankList,
-  runBrokerBankShow,
-  runBrokerTransfer,
-} from "../../commands/broker.js";
-import {
-  runContractsList,
-  runContractsShow,
-  CONTRACT_TYPES,
-} from "../../commands/contracts.js";
-import {
-  runPropertiesList,
-  runPropertiesShow,
-  PROPERTY_TYPES,
-} from "../../commands/properties.js";
+import { runBrokerBankList, runBrokerBankShow, runBrokerTransfer } from "../../commands/broker.js";
+import { runContractsList, runContractsShow, CONTRACT_TYPES } from "../../commands/contracts.js";
+import { runPropertiesList, runPropertiesShow, PROPERTY_TYPES } from "../../commands/properties.js";
 import {
   runFinancesSummary,
   runFinancesAdd,
@@ -31,7 +19,12 @@ import { runMigrateYojitsu } from "../../commands/migrate.js";
 import { runAnalyzeProperty } from "../../commands/analyze.js";
 import { runScenarioCommand } from "../../commands/scenario.js";
 import { runAlerts } from "../../commands/alerts.js";
-import { runReportMonthly, runReportKessan, runReportJigyo, runReportAnnual } from "../../commands/report.js";
+import {
+  runReportMonthly,
+  runReportKessan,
+  runReportJigyo,
+  runReportAnnual,
+} from "../../commands/report.js";
 import { runDashboard } from "../../commands/dashboard.js";
 import { runSyncAll, runSyncContracts } from "../../commands/sync.js";
 import {
@@ -50,6 +43,7 @@ import {
   runEventsChainBackfill,
   runEventsChainTail,
   runEventsChainVerify,
+  runEventsChainMaterialize,
   runEventsClose,
   runEventsEnsureMonth,
   runEventsLinkOutbox,
@@ -117,7 +111,10 @@ export function registerDomainCommands(program: Command): void {
     .requiredOption("--file <path>", "YAML file path")
     .action(runFinancesAdd);
   finances.command("list").description("List all monthly finance entries").action(runFinancesList);
-  finances.command("show <month>").description("Show monthly finance details").action(runFinancesShow);
+  finances
+    .command("show <month>")
+    .description("Show monthly finance details")
+    .action(runFinancesShow);
   finances
     .command("variance")
     .description("FY plan vs monthly YAML revenue variance")
@@ -291,7 +288,10 @@ export function registerDomainCommands(program: Command): void {
       })
     );
   outbox.command("scan").description("Register unlisted PDFs in outbox/").action(runIoOutboxScan);
-  outbox.command("printed <id>").description("Mark outbox item as printed").action(runIoOutboxPrinted);
+  outbox
+    .command("printed <id>")
+    .description("Mark outbox item as printed")
+    .action(runIoOutboxPrinted);
 
   const events = program
     .command("events")
@@ -343,16 +343,27 @@ export function registerDomainCommands(program: Command): void {
     .action((opts) => runEventsChainVerify({ json: opts.json }));
   eventsChain
     .command("backfill")
-    .description("Rebuild create links from registry (existing chain requires --force)")
+    .description(
+      "Rebuild create/status/void/wire links from registry (existing chain requires --force)"
+    )
     .option("--force", "Overwrite existing chain file")
     .action((opts) => runEventsChainBackfill({ force: opts.force }));
+  eventsChain
+    .command("materialize")
+    .description("Derive YAML + MD frontmatter from chain (never rewrites MD body)")
+    .option("--check", "Reduce only; do not write derived views")
+    .option("--json", "JSON output")
+    .action((opts) => runEventsChainMaterialize({ check: opts.check, json: opts.json }));
   eventsChain
     .command("attest")
     .description("Verify hash chain then sign weekly batch attestation (Ed25519)")
     .option("--force", "Re-sign current ISO week even if attestation exists")
     .option("--json", "JSON output")
     .action((opts) => runEventsChainAttest({ force: opts.force, json: opts.json }));
-  eventsChain.command("tail").description("Show chain tail link").action(() => runEventsChainTail());
+  eventsChain
+    .command("tail")
+    .description("Show chain tail link")
+    .action(() => runEventsChainTail());
   const eventsAudit = events.command("audit").description("Company events periodic audit");
   eventsAudit
     .command("monthly")
@@ -387,9 +398,7 @@ export function registerDomainCommands(program: Command): void {
     .description("Register files in artifact index for event")
     .requiredOption("--files <names>", "Comma-separated filenames in artifact dir")
     .option("--kind <kind>", "Artifact kind label (default: generated-md)")
-    .action((id, opts) =>
-      runEventsRegisterArtifact({ id, files: opts.files, kind: opts.kind })
-    );
+    .action((id, opts) => runEventsRegisterArtifact({ id, files: opts.files, kind: opts.kind }));
   events
     .command("link-outbox")
     .description("Link document-io outbox item to company event")
@@ -481,7 +490,9 @@ export function registerDomainCommands(program: Command): void {
     .option("--operation <op>", "read | write | export", "read")
     .action((opts) => runClassificationAccess(opts.agent, opts.path, opts.operation));
 
-  const broker = program.command("broker").description("Capability broker — L2 口座をチャットに出さない");
+  const broker = program
+    .command("broker")
+    .description("Capability broker — L2 口座をチャットに出さない");
   broker
     .command("list")
     .description("List corporate bank accounts (redacted by default)")

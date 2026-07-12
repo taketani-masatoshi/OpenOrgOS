@@ -30,15 +30,11 @@ export function runControlsList(opts: ControlsOptions = {}): void {
   applyTenant(opts);
   let controls = listEffectiveControls().filter((c) => c.in_scope);
   if (opts.iso) {
-    controls = controls.filter((c) =>
-      c.iso_refs.some((r) => r.standard === opts.iso)
-    );
+    controls = controls.filter((c) => c.iso_refs.some((r) => r.standard === opts.iso));
   }
   if (opts.agent) {
     controls = controls.filter(
-      (c) =>
-        c.primary_agent === opts.agent ||
-        c.secondary_agents?.includes(opts.agent as AgentId)
+      (c) => c.primary_agent === opts.agent || c.secondary_agents?.includes(opts.agent as AgentId)
     );
   }
 
@@ -97,7 +93,7 @@ export function runControlsForAgent(agentId: string, opts: ControlsOptions = {})
 export function runControlsSet(opts: ControlsOptions): void {
   applyTenant(opts);
   if (!opts.id || !opts.maturity) {
-    console.error("Usage: orgos controls set --id CTL-... --maturity L2 [--notes \"...\"]");
+    console.error('Usage: orgos controls set --id CTL-... --maturity L2 [--notes "..."]');
     process.exit(1);
   }
   setTenantControlMaturity({

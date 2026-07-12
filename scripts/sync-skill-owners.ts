@@ -42,7 +42,8 @@ function registryFiles(dir: string): string[] {
   for (const name of readdirSync(dir)) {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) out.push(...registryFiles(path));
-    else if (name === "registry.yaml" && path.includes(`${join("skills", "registry.yaml")}`)) out.push(path);
+    else if (name === "registry.yaml" && path.includes(`${join("skills", "registry.yaml")}`))
+      out.push(path);
   }
   return out;
 }

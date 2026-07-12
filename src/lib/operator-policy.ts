@@ -5,18 +5,33 @@ import { ROOT_DIR } from "./tenant.js";
 
 export const AGENTS_MD_REL = "AGENTS.md";
 export const OPERATOR_POLICY_CURSOR_RULE = ".cursor/rules/operator-policy.mdc";
-export const TOOL_NEUTRAL_DEV_GUIDE_PATH = join(ROOT_DIR, "steward", "rules", "tool-neutral-development.md");
+export const TOOL_NEUTRAL_DEV_GUIDE_PATH = join(
+  ROOT_DIR,
+  "steward",
+  "rules",
+  "tool-neutral-development.md"
+);
 export const ENGINEERING_CONSTITUTION_PATH = join(
   ROOT_DIR,
   "steward",
   "rules",
-  "openorgos-engineering-constitution.md",
+  "openorgos-engineering-constitution.md"
 );
 export const ENGINEERING_RULES_DIR = join(ROOT_DIR, "steward", "rules", "engineering");
 export const TOOL_NEUTRAL_DEV_CURSOR_RULE = ".cursor/rules/tool-neutral-development.mdc";
-export const DATA_CLASSIFICATION_PATH = join(ROOT_DIR, "steward", "rules", "data-classification.md");
+export const DATA_CLASSIFICATION_PATH = join(
+  ROOT_DIR,
+  "steward",
+  "rules",
+  "data-classification.md"
+);
 export const DATA_CLASSIFICATION_CURSOR_RULE = ".cursor/rules/data-classification.mdc";
-export const STEWARD_OPS_SUMMARY_PATH = join(ROOT_DIR, "steward", "rules", "steward-ops-summary.md");
+export const STEWARD_OPS_SUMMARY_PATH = join(
+  ROOT_DIR,
+  "steward",
+  "rules",
+  "steward-ops-summary.md"
+);
 export const STEWARD_OPS_CURSOR_RULE = ".cursor/rules/steward.mdc";
 export const COMPANY_EVENTS_AI_PATH = join(ROOT_DIR, "steward", "rules", "company-events-ai.md");
 export const COMPANY_EVENTS_CURSOR_RULE = ".cursor/rules/company-events.mdc";
@@ -199,17 +214,30 @@ export function engineeringConstitutionExcerpt(maxLines = 55): string {
 export function rewriteMarkdownLinksForPortableExport(body: string): string {
   return body
     .replace(/\]\(\.\.\/engineering\//g, "](steward/rules/engineering/")
+    .replace(/\]\(\.\.\/\.\.\/engineering\//g, "](steward/rules/engineering/")
     .replace(
       /\]\(\.\.\/openorgos-engineering-constitution\.md\)/g,
       "](steward/rules/openorgos-engineering-constitution.md)"
     )
     .replace(/\]\(\.\.\/rules\//g, "](steward/rules/")
+    .replace(/\]\(\.\.\/\.\.\/\.\.\/steward\//g, "](steward/")
+    .replace(/\]\(\.\.\/\.\.\/steward\//g, "](steward/")
     .replace(/\]\(\.\.\/steward\//g, "](steward/")
     .replace(/\]\(\.\.\/\.\.\/\.\.\/jurisdiction-packs\//g, "](steward/jurisdiction-packs/")
     .replace(/\]\(\.\.\/\.\.\/jurisdiction-packs\//g, "](steward/jurisdiction-packs/")
     .replace(/\]\(\.\.\/jurisdiction-packs\//g, "](steward/jurisdiction-packs/")
+    .replace(/\]\(\.\.\/\.\.\/\.\.\/docs\//g, "](docs/")
+    .replace(/\]\(\.\.\/\.\.\/docs\//g, "](docs/")
     .replace(/\]\(\.\.\/docs\//g, "](docs/")
-    .replace(/\]\(\.\.\/orchestrators\//g, "](steward/orchestrators/")
+    .replace(/\]\(\.\.\/\.\.\/tenants\//g, "](tenants/")
+    .replace(/\]\(\.\.\/tenants\//g, "](tenants/")
+    .replace(/\]\(\.\.\/\.\.\/rules\//g, "](steward/rules/")
+    .replace(/\]\(\.\.\/standards\//g, "](steward/standards/")
+    .replace(/\]\(\.\.\/data\//g, "](data/")
+    .replace(/\]\(\.\.\/\.\.\/core\//g, "](steward/core/")
+    .replace(/\]\(\.\.\/core\//g, "](steward/core/")
+    .replace(/\]\(\.\.\/orchestrators\//g, "](steward/core/orchestrators/")
+    .replace(/\]\(\.\.\/skills\//g, "](steward/core/skills/")
     .replace(/[ \t]+$/gm, "");
 }
 
@@ -415,12 +443,7 @@ Canonical: \`steward/rules/operator-policy.md\`
 }
 
 export type OperatorPolicyEmit =
-  | "cursor"
-  | "agents-md"
-  | "dev-guide"
-  | "engineering"
-  | "data-classification"
-  | "all";
+  "cursor" | "agents-md" | "dev-guide" | "engineering" | "data-classification" | "all";
 
 export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
   cursorRulePath?: string;

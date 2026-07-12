@@ -6,10 +6,7 @@ import { buildShellCommand, type ResolvedShellCommand } from "./config.js";
 import { getTenantId } from "../tenant.js";
 import { tenantDispatchRoot, assertDispatchCwdWithinTenant } from "../org-boundary.js";
 import { getCliOperatorContext } from "../console-auth/cli-operator.js";
-import {
-  isProdSecurityMode,
-  operatorHasPermission,
-} from "../console-auth/operator-rbac.js";
+import { isProdSecurityMode, operatorHasPermission } from "../console-auth/operator-rbac.js";
 
 export interface ShellDispatchResult {
   ok: boolean;
@@ -81,8 +78,7 @@ function assertShellDispatchAllowed(profile?: string): void {
 
 export function assertResolvedShellCommandSafe(resolved: ResolvedShellCommand): void {
   const joined = resolved.command.join(" ");
-  const hasYesFlag =
-    resolved.command.includes("--yes") || /(?:^|\s)--yes(?:\s|$)/.test(joined);
+  const hasYesFlag = resolved.command.includes("--yes") || /(?:^|\s)--yes(?:\s|$)/.test(joined);
   if (hasYesFlag && isProdSecurityMode() && process.env.ORGOS_SHELL_AUTO_YES !== "1") {
     throw new Error(
       "Shell --yes is blocked in production — set ORGOS_SHELL_AUTO_YES=1 to allow non-interactive shell"
@@ -91,9 +87,7 @@ export function assertResolvedShellCommandSafe(resolved: ResolvedShellCommand): 
   if (/\bgit\b/.test(joined)) {
     const op = getCliOperatorContext();
     if (op && !operatorHasPermission(op.record, "git:write")) {
-      throw new Error(
-        `Operator ${op.record.operator_id} lacks git:write for shell git command`
-      );
+      throw new Error(`Operator ${op.record.operator_id} lacks git:write for shell git command`);
     }
   }
 }

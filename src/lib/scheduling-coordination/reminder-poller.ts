@@ -67,8 +67,8 @@ export function createSchedulingReminderPoller(): SchedulingReminderPollerHandle
       const config = resolveMailConfig();
       if (config.receive.scheduling_reminder_poll === false) return;
       const intervalMs =
-        (config.receive.scheduling_reminder_poll_interval_sec ??
-          config.receive.poll_interval_sec) * 1000;
+        (config.receive.scheduling_reminder_poll_interval_sec ?? config.receive.poll_interval_sec) *
+        1000;
       if (timer) return;
       void pollOnce();
       timer = setInterval(() => void pollOnce(), intervalMs);

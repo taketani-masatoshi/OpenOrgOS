@@ -142,7 +142,7 @@ export function pdfTable(
 
     const amountText =
       row.amount === undefined
-        ? row.note ?? ""
+        ? (row.note ?? "")
         : typeof row.amount === "number"
           ? formatCurrency(row.amount)
           : row.amount;
@@ -154,9 +154,12 @@ export function pdfTable(
     });
 
     if (row.note && row.amount !== undefined) {
-      w.doc.fontSize(8).fillColor("#555555").text(row.note, w.left + indent, y + 14, {
-        width: labelWidth - indent,
-      });
+      w.doc
+        .fontSize(8)
+        .fillColor("#555555")
+        .text(row.note, w.left + indent, y + 14, {
+          width: labelWidth - indent,
+        });
       w.doc.fillColor("#000000");
       w.doc.y = y + rowHeight + (row.note ? 6 : 0);
     } else {
@@ -166,13 +169,10 @@ export function pdfTable(
   w.doc.moveDown(0.4);
 }
 
-export function pdfMetaBlock(
-  w: PdfWriter,
-  lines: { label: string; value: string }[]
-): void {
+export function pdfMetaBlock(w: PdfWriter, lines: { label: string; value: string }[]): void {
   for (const line of lines) {
     ensureSpace(w, 18);
-    w.doc.fontSize(10).text(`${line.label}　${line.value}`, w.left, w.doc.y, {
+    w.doc.fontSize(10).text(`${line.label}\u3000${line.value}`, w.left, w.doc.y, {
       width: w.contentWidth,
     });
   }

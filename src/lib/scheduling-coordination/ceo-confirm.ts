@@ -11,10 +11,7 @@ import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 import { syncSchedulingCaseCalendar } from "./calendar-write.js";
 import { applyNextAction } from "./next-action.js";
 import { findOperatorByApproverName, findOperatorById } from "../org/operators.js";
-import {
-  buildSchedulingCeoChoices,
-  resolveSchedulingCeoChoice,
-} from "./ceo-choice.js";
+import { buildSchedulingCeoChoices, resolveSchedulingCeoChoice } from "./ceo-choice.js";
 import {
   ensureSchedulingCorrespondenceDrafts,
   recordSchedulingLifecycleEvent,
@@ -61,9 +58,7 @@ export function ensureSchedulingCeoConfirmQuestion(
   const isSplitAccept = caseRow.exception_reason === "schedule_split_accept";
   if (!slot && !isCounterLimit) return undefined;
 
-  const byId = caseRow.ceo_question_id
-    ? findCeoInlineQuestion(caseRow.ceo_question_id)
-    : undefined;
+  const byId = caseRow.ceo_question_id ? findCeoInlineQuestion(caseRow.ceo_question_id) : undefined;
   const byCase = findCeoInlineQuestionBySchedulingCase(caseRow.id);
 
   const pendingNames = caseRow.participants
@@ -97,13 +92,16 @@ export function ensureSchedulingCeoConfirmQuestion(
     "選択でカレンダー反映と参加者への確定通知まで進みます",
   ].filter(Boolean);
 
-  const question = byId?.status === "pending" || byCase ? (byId ?? byCase)! : askCeoInline({
-    mailId: schedulingMailId(caseRow.id),
-    schedulingCaseId: caseRow.id,
-    subject: `日程確定 — ${caseRow.title}`,
-    contextL1: contextLines.join("\n"),
-    fields,
-  });
+  const question =
+    byId?.status === "pending" || byCase
+      ? (byId ?? byCase)!
+      : askCeoInline({
+          mailId: schedulingMailId(caseRow.id),
+          schedulingCaseId: caseRow.id,
+          subject: `日程確定 — ${caseRow.title}`,
+          contextL1: contextLines.join("\n"),
+          fields,
+        });
 
   const latest = findSchedulingCase(caseRow.id) ?? caseRow;
   const pendingSlotId = isSplitAccept || isCounterLimit ? undefined : slot?.id;
@@ -172,8 +170,7 @@ export async function confirmSchedulingCaseFromCeo(
 export async function applySchedulingCeoAnswer(
   question: CeoInlineQuestion
 ): Promise<SchedulingCase | undefined> {
-  const caseId =
-    question.scheduling_case_id ?? parseSchedulingMailId(question.mail_id);
+  const caseId = question.scheduling_case_id ?? parseSchedulingMailId(question.mail_id);
   if (!caseId || question.status !== "answered" || !question.answers) return undefined;
 
   const caseRow = findSchedulingCase(caseId);

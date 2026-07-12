@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { witnessAttestationSchema, type WitnessAttestation } from "../../../schemas/protocol/witness-attestation.js";
+import {
+  witnessAttestationSchema,
+  type WitnessAttestation,
+} from "../../../schemas/protocol/witness-attestation.js";
 import { appendJsonl, loadJsonl } from "../jsonl-store.js";
 import { getClock, getIdGenerator } from "../runtime-context.js";
 import { getHubAttestationsPath } from "./paths.js";
@@ -34,7 +37,11 @@ export function findAttestation(
 }
 
 export function appendHubAttestation(attestation: WitnessAttestation): StoredWitnessAttestation {
-  const existing = findAttestation(attestation.event_id, attestation.side, attestation.org_ref.org_id);
+  const existing = findAttestation(
+    attestation.event_id,
+    attestation.side,
+    attestation.org_ref.org_id
+  );
   if (existing) {
     if (existing.envelope_digest !== attestation.envelope_digest) {
       throw new Error(

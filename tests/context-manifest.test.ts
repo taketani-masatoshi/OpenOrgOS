@@ -1,12 +1,17 @@
 import { existsSync, readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   buildActiveContextMarkdown,
   loadEnabledIsoIds,
   syncActiveContext,
 } from "../src/lib/context-manifest.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("context-manifest", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("loads enabled ISO for mal tenant", () => {
     const ids = loadEnabledIsoIds();
     expect(ids).toContain("ISO-9001");

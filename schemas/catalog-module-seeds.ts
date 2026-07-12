@@ -259,18 +259,30 @@ function expectMinTemplateLength(body: string, min: number, label: string): void
 export function validateJpCarbonNeutral2050ModuleSeeds(seedDir: string): void {
   jpCarbonDeclarationSeedSchema.parse(readSeedYaml(seedDir, "declaration.yaml.example"));
   jpActionPlanSeedSchema.parse(readSeedYaml(seedDir, "action-plan.yaml.example"));
-  expectMinTemplateLength(readSeedText(seedDir, "declaration-template.md.example"), 80, "declaration-template");
+  expectMinTemplateLength(
+    readSeedText(seedDir, "declaration-template.md.example"),
+    80,
+    "declaration-template"
+  );
 }
 
 export function validateJpWomenEmpowermentModuleSeeds(seedDir: string): void {
   jpWomenDeclarationSeedSchema.parse(readSeedYaml(seedDir, "declaration.yaml.example"));
   jpActionPlanSeedSchema.parse(readSeedYaml(seedDir, "action-plan.yaml.example"));
-  expectMinTemplateLength(readSeedText(seedDir, "declaration-template.md.example"), 80, "declaration-template");
+  expectMinTemplateLength(
+    readSeedText(seedDir, "declaration-template.md.example"),
+    80,
+    "declaration-template"
+  );
 }
 
 export function validateJpPrivacyPolicyModuleSeeds(seedDir: string): void {
   jpPrivacyMetaSeedSchema.parse(readSeedYaml(seedDir, "policy-meta.yaml.example"));
-  expectMinTemplateLength(readSeedText(seedDir, "privacy-policy-template.md.example"), 80, "privacy-policy-template");
+  expectMinTemplateLength(
+    readSeedText(seedDir, "privacy-policy-template.md.example"),
+    80,
+    "privacy-policy-template"
+  );
 }
 
 export type CatalogSeedValidator = (seedDir: string) => void;

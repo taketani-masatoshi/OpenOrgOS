@@ -38,9 +38,7 @@ export function assertIntraOrgAgentTarget(toAgent: string, context: string): voi
 
   for (const pattern of CROSS_ORG_PATTERNS) {
     if (pattern.test(agent)) {
-      throw new Error(
-        `${context}: cross-org reference in agent target "${agent}" is not allowed`
-      );
+      throw new Error(`${context}: cross-org reference in agent target "${agent}" is not allowed`);
     }
   }
 }

@@ -1,11 +1,7 @@
 import { chmodSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import {
-  getProtocolDataDir,
-  getProtocolInboxDir,
-  getProtocolOutboxDir,
-} from "./paths.js";
+import { getProtocolDataDir, getProtocolInboxDir, getProtocolOutboxDir } from "./paths.js";
 
 export interface ProtocolOutboxPermissionSpec {
   outboxDirMode: number;

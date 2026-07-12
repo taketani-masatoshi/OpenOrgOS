@@ -41,13 +41,24 @@ No hidden randomness. No hidden side effects.
 
 | Domain | Event / ledger path |
 |--------|---------------------|
-| Company events | `data/company-events-chain.jsonl` (audit) · yaml/md derived views |
+| Company events | `data/company-events-chain.jsonl` (SSOT) · yaml/md derived via `materializeCompanyEventsFromChain` |
 | Routing queue | `docs/.../queue/events.jsonl` · status via `appendQueueStatusEvent` |
 | Wire delivery | `data/protocol/delivery-attempts.jsonl` (SSOT) · yaml snapshot derived |
 | Wire / witness pending | active YAML + `*-pending-lifecycle.jsonl` archive |
 | Dead letter audit | `src/lib/protocol/wire-dead-letter-audit.ts` |
 
-Clock / ID injection: `src/lib/runtime-context.ts` · Repository pilot: `DeliveryAttemptRepository` in delivery-ledger.
+Clock / ID injection: `src/lib/runtime-context.ts` · Repository pilots: `DeliveryAttemptRepository` · `CompanyEventChainRepository`.
+
+**Domain write paths must use `getClock()` / `getIdGenerator()`** (including `currentDate()` / `currentMonth()` via utils).
+
+Ambient `Date.now` / `new Date()` **allowlist** (not domain event SSOT):
+
+| Area | Examples | Why allowed |
+|------|----------|-------------|
+| Transport / UI | SSE heartbeat · CLI progress stamps · file backup suffixes | Wall-clock display only |
+| External adapters | Gmail bind expiry · HTTP client timeouts · SLA evaluators with injectable `now` param | Boundary / optional inject |
+| Cryptographic ops | Key rotation wall time in signing helpers | Infra, not reducer input |
+| Pure date math | `daysBetween(from, to)` parsing ISO strings | No ambient "now" |
 
 When adding protocol features:
 

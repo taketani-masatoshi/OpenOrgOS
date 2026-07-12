@@ -111,20 +111,15 @@ export function resolveWireOutboundConfig(): WireOutboundConfig {
   };
 
   const smtpHost =
-    wire?.smtp?.host ??
-    process.env.ORGOS_WIRE_SMTP_HOST ??
-    process.env.ORGOS_SMTP_HOST;
+    wire?.smtp?.host ?? process.env.ORGOS_WIRE_SMTP_HOST ?? process.env.ORGOS_SMTP_HOST;
   const smtpPort = Number(
     wire?.smtp?.port ?? process.env.ORGOS_WIRE_SMTP_PORT ?? process.env.ORGOS_SMTP_PORT ?? 587
   );
   const smtpSecure =
     wire?.smtp?.secure ??
-    (process.env.ORGOS_WIRE_SMTP_SECURE === "true" ||
-      process.env.ORGOS_SMTP_SECURE === "true");
+    (process.env.ORGOS_WIRE_SMTP_SECURE === "true" || process.env.ORGOS_SMTP_SECURE === "true");
 
-  const smtpConfig = smtpHost
-    ? { host: smtpHost, port: smtpPort, secure: smtpSecure }
-    : undefined;
+  const smtpConfig = smtpHost ? { host: smtpHost, port: smtpPort, secure: smtpSecure } : undefined;
 
   if (base.provider === "dry_run" || isDryRunSmtpHost(wire?.smtp?.host)) {
     return {
@@ -135,8 +130,7 @@ export function resolveWireOutboundConfig(): WireOutboundConfig {
     };
   }
 
-  const provider =
-    enabled && smtpHost && resolveWireSmtpCredentials() ? "smtp" : "dry_run";
+  const provider = enabled && smtpHost && resolveWireSmtpCredentials() ? "smtp" : "dry_run";
 
   return {
     enabled,

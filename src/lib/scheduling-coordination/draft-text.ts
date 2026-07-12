@@ -34,9 +34,7 @@ export function buildSchedulingDraftText(
   const slots = formatSlotLines(caseRow);
   const subjectBase = caseRow.title;
   const tone = loadSecretaryDraftTone();
-  const greeting = targetParticipant?.name
-    ? `${targetParticipant.name} 様`
-    : "ご担当者様";
+  const greeting = targetParticipant?.name ? `${targetParticipant.name} 様` : "ご担当者様";
   const formatLabel =
     caseRow.meeting_format === "online"
       ? "オンライン"
@@ -59,7 +57,9 @@ export function buildSchedulingDraftText(
           : "",
         "",
         tone.proposalClosing,
-      ].filter(Boolean).join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
     };
   }
 
@@ -90,9 +90,7 @@ export function buildSchedulingDraftText(
 
   const slot =
     caseRow.proposed_slots.find((s) =>
-      caseRow.participants.every(
-        (p) => p.response !== "accept" || p.accepted_slot_id === s.id
-      )
+      caseRow.participants.every((p) => p.response !== "accept" || p.accepted_slot_id === s.id)
     ) ?? caseRow.proposed_slots[0];
   const calendarEvent = caseRow.linked_event_id
     ? loadExecutiveCalendar().events.find((event) => event.id === caseRow.linked_event_id)
@@ -119,7 +117,9 @@ export function buildSchedulingDraftText(
       meetingLine,
       "",
       tone.confirmClosing,
-    ].filter(Boolean).join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n"),
   };
 }
 
@@ -131,9 +131,7 @@ export function formatSchedulingCaseSummary(caseRow: SchedulingCase): string {
   ].join("\n");
 }
 
-export function draftKindForNextAction(
-  caseRow: SchedulingCase
-): SchedulingDraftKind | undefined {
+export function draftKindForNextAction(caseRow: SchedulingCase): SchedulingDraftKind | undefined {
   switch (caseRow.next_action) {
     case "send_proposal":
       return "proposal";

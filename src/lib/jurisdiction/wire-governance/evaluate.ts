@@ -3,10 +3,7 @@ import type {
   WireApprovalGateResult,
   WireApprovalTier,
 } from "../../../../schemas/protocol/wire-approval.js";
-import {
-  assertApproverAuthorized,
-  normalizePersonName,
-} from "./approvers.js";
+import { assertApproverAuthorized, normalizePersonName } from "./approvers.js";
 import { resolveJurisdictionApprovalPolicy } from "./policy.js";
 
 export function resolveWireGovernanceTier(amount: number, currency: string): WireApprovalTier {

@@ -12,7 +12,7 @@ export interface LegacyYojitsuFieldMap {
 
 const TENANT_LEGACY_MAP = "data/yojitsu-legacy-map.yaml";
 
-let _cachedMap: Record<string, LegacyYojitsuFieldMap> | null = null;
+const cachedMaps = new Map<string, Record<string, LegacyYojitsuFieldMap>>();
 
 function parseLegacyMap(raw: unknown): Record<string, LegacyYojitsuFieldMap> {
   if (!raw || typeof raw !== "object") return {};
@@ -21,14 +21,16 @@ function parseLegacyMap(raw: unknown): Record<string, LegacyYojitsuFieldMap> {
 }
 
 export function loadLegacyYojitsuFieldMap(): Record<string, LegacyYojitsuFieldMap> {
-  if (_cachedMap) return _cachedMap;
-
   const tenantPath = join(getTenantDir(), TENANT_LEGACY_MAP);
+  const cached = cachedMaps.get(tenantPath);
+  if (cached) return cached;
   if (existsSync(tenantPath)) {
-    _cachedMap = parseLegacyMap(YAML.parse(readFileSync(tenantPath, "utf-8")));
-    return _cachedMap;
+    const parsed = parseLegacyMap(YAML.parse(readFileSync(tenantPath, "utf-8")));
+    cachedMaps.set(tenantPath, parsed);
+    return parsed;
   }
 
-  _cachedMap = {};
-  return _cachedMap;
+  const empty: Record<string, LegacyYojitsuFieldMap> = {};
+  cachedMaps.set(tenantPath, empty);
+  return empty;
 }

@@ -15,10 +15,7 @@ import {
 } from "../lib/agent-roster.js";
 import { validateLegacyRosterFiles } from "../lib/tenant-roster-load.js";
 import { isAgentActive, listCatalogAgents } from "../lib/agent-catalog.js";
-import {
-  auditCliMutation,
-  requireCliOperator,
-} from "../lib/console-auth/cli-operator.js";
+import { auditCliMutation, requireCliOperator } from "../lib/console-auth/cli-operator.js";
 import { setTenantId } from "../lib/tenant.js";
 
 interface RosterOptions {
@@ -54,9 +51,7 @@ export function runAgentRosterShow(opts: RosterOptions = {}): void {
   console.log(`Disabled: ${loaded.roster.disabled.join(", ") || "—"}`);
 }
 
-export function runAgentRosterInit(
-  opts: RosterOptions & { force?: boolean } = {}
-): void {
+export function runAgentRosterInit(opts: RosterOptions & { force?: boolean } = {}): void {
   selectTenant(opts.tenant);
   requireCliOperator({ permission: "agent:order", command: "agent roster init" });
   const roster = initializeTenantAgentRoster(opts.force);
@@ -79,17 +74,12 @@ export function runAgentRosterSet(
     throw new Error(`Unknown roster profile: ${profile}`);
   }
   const roster = setTenantAgentEnabled(opts.agent, enabled, profile);
-  auditCliMutation(
-    `agent roster ${enabled ? "enable" : "disable"}`,
-    `${opts.agent}:${profile}`
-  );
+  auditCliMutation(`agent roster ${enabled ? "enable" : "disable"}`, `${opts.agent}:${profile}`);
   if (opts.json) console.log(JSON.stringify(roster, null, 2));
   else console.log(`✓ ${opts.agent} ${enabled ? "enabled" : "disabled"} (${profile})`);
 }
 
-export function runAgentRosterValidate(
-  opts: RosterOptions & { syncModules?: boolean } = {}
-): void {
+export function runAgentRosterValidate(opts: RosterOptions & { syncModules?: boolean } = {}): void {
   selectTenant(opts.tenant);
   const loaded = loadTenantAgentRoster();
   let roster = loaded.roster;
@@ -104,7 +94,9 @@ export function runAgentRosterValidate(
   }
   const issues = [...validateTenantAgentRoster(roster), ...validateLegacyRosterFiles()];
   if (opts.json) {
-    console.log(JSON.stringify({ configured: loaded.exists, source: loaded.source, issues }, null, 2));
+    console.log(
+      JSON.stringify({ configured: loaded.exists, source: loaded.source, issues }, null, 2)
+    );
   } else if (issues.length) {
     for (const issue of issues) {
       if (issue.startsWith("deprecated:")) console.warn(`⚠ ${issue}`);
@@ -131,7 +123,9 @@ export function runAgentRosterInitAll(
   const created = results.filter((r) => r.action === "created");
   const errors = results.filter((r) => r.action === "error");
   if (opts.json) {
-    console.log(JSON.stringify({ created: created.length, errors: errors.length, results }, null, 2));
+    console.log(
+      JSON.stringify({ created: created.length, errors: errors.length, results }, null, 2)
+    );
   } else {
     for (const result of results) {
       if (result.action === "created") console.log(`✓ ${result.tenantId}: ${result.detail}`);
@@ -156,7 +150,7 @@ export function runAgentRosterTask(
           .map((id) => id.trim())
           .filter(Boolean)
       );
-  auditCliMutation("agent roster task", opts.clear ? "clear" : opts.agents ?? "");
+  auditCliMutation("agent roster task", opts.clear ? "clear" : (opts.agents ?? ""));
   if (opts.json) console.log(JSON.stringify(roster, null, 2));
   else {
     console.log(

@@ -1,5 +1,8 @@
 import { existsSync } from "node:fs";
-import { wireRelayRegistrySchema, type WireRelayEntry } from "../../../schemas/protocol/wire-relay.js";
+import {
+  wireRelayRegistrySchema,
+  type WireRelayEntry,
+} from "../../../schemas/protocol/wire-relay.js";
 import { getWireRelayYamlPath } from "./paths.js";
 import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
 import { randomUUID } from "node:crypto";

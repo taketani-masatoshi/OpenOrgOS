@@ -95,11 +95,7 @@ async function main(): Promise<void> {
   });
   publishWitnessTrustBundle();
   const bundleUrl = `${api.url}/protocol/v1/trust/bundle`;
-  const bundleCheck = verifyWitnessTrustBundle(
-    JSON.parse(
-      await (await fetch(bundleUrl)).text()
-    )
-  );
+  const bundleCheck = verifyWitnessTrustBundle(JSON.parse(await (await fetch(bundleUrl)).text()));
   console.log(`✓ Org C trust bundle published · verify=${bundleCheck.ok}`);
 
   for (const tenant of [ORG_A, ORG_B]) {

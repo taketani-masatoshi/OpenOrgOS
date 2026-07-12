@@ -169,7 +169,7 @@ export function runHousekeepingChecks(root = getWorkspaceRoot()): HousekeepingFi
 
 export function applyHousekeepingFixes(
   findings: HousekeepingFinding[],
-  root = getWorkspaceRoot()
+  _root = getWorkspaceRoot()
 ): string[] {
   const fixed: string[] = [];
 

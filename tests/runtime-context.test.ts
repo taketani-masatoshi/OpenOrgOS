@@ -16,9 +16,11 @@ describe("runtime-context", () => {
       idGenerator: {
         randomSuffix: () => "abcd1234",
         uniqueId: (prefix) => `${prefix}-FIXED`,
+        uuid: () => "00000000-0000-4000-8000-000000000001",
       },
     });
     expect(getIdGenerator().uniqueId("PAUD")).toBe("PAUD-FIXED");
+    expect(getIdGenerator().uuid()).toBe("00000000-0000-4000-8000-000000000001");
   });
 
   it("getClock returns injected fixed time", () => {
@@ -38,6 +40,7 @@ describe("runtime-context", () => {
       idGenerator: {
         randomSuffix: () => "x",
         uniqueId: () => "TEST-ID",
+        uuid: () => "uuid-test",
       },
     });
     resetRuntimeContext();

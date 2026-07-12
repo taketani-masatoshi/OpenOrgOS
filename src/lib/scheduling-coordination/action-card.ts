@@ -72,13 +72,7 @@ export function buildSchedulingActionCardMarkdown(opts: {
     lines.push(`| 日時 | ${slot.label ?? `${slot.start}–${slot.end}`} |`);
   }
 
-  lines.push(
-    "",
-    "## Gmail",
-    "",
-    `[Gmail で下書きを開く](${gmailUrl})`,
-    ""
-  );
+  lines.push("", "## Gmail", "", `[Gmail で下書きを開く](${gmailUrl})`, "");
 
   lines.push(
     "## メール本文（コピー用）",

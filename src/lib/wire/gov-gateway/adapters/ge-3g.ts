@@ -1,11 +1,7 @@
 import type { EventEnvelope } from "../../../../../schemas/protocol/org-event.js";
 import type { GovGatewayProfileBinding } from "../../../../../schemas/protocol/gov-gateway-adapter.js";
 import type { GovGatewayProfileDocument } from "../../../../../schemas/protocol/gov-gateway-profile.js";
-import {
-  decodeOpenOrgOsMime,
-  encodeOpenOrgOsMime,
-  OPENORGOS_ENVELOPE_MIME,
-} from "../encode-openorgos-mime.js";
+import { decodeOpenOrgOsMime, encodeOpenOrgOsMime } from "../encode-openorgos-mime.js";
 import type {
   DecodeContext,
   EncodeContext,
@@ -32,8 +28,7 @@ export function createGe3gAdapter(opts: Ge3gAdapterOptions): GovGatewayAdapter {
 
     async encode(envelope: EventEnvelope, ctx: EncodeContext): Promise<NativeMessage> {
       const payload = encodeOpenOrgOsMime(envelope);
-      const participantId =
-        ctx.participant_id ?? binding?.member_code ?? envelope.origin.org_id;
+      const participantId = ctx.participant_id ?? binding?.member_code ?? envelope.origin.org_id;
       const serviceId = ctx.service_code ?? binding?.service_code ?? DEFAULT_SERVICE;
       const wrapper = {
         service_id: serviceId,
@@ -57,7 +52,8 @@ export function createGe3gAdapter(opts: Ge3gAdapterOptions): GovGatewayAdapter {
     },
 
     async decode(native: NativeMessage, _ctx: DecodeContext): Promise<EventEnvelope> {
-      const text = typeof native.body === "string" ? native.body : new TextDecoder().decode(native.body);
+      const text =
+        typeof native.body === "string" ? native.body : new TextDecoder().decode(native.body);
       const parsed = JSON.parse(text) as { payload?: string | Record<string, unknown> };
       const payload = parsed.payload;
       if (typeof payload === "string") {

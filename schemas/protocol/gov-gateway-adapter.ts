@@ -32,11 +32,7 @@ export const govGatewayProfileIdSchema = z.enum([
   "in_api_setu",
 ]);
 
-export const govGatewayWitnessModeSchema = z.enum([
-  "orgos_hub",
-  "native",
-  "both",
-]);
+export const govGatewayWitnessModeSchema = z.enum(["orgos_hub", "native", "both"]);
 
 export const govGatewayTransportSchema = z.enum([
   "gov_gateway",

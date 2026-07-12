@@ -61,19 +61,12 @@ function mergeUsage(a: LlmUsage, b: Partial<LlmUsage>): LlmUsage {
   };
 }
 
-function parseUsage(raw: unknown): Partial<LlmUsage> {
-  if (!raw || typeof raw !== "object") return {};
-  const u = raw as Record<string, number>;
-  return {
-    prompt_tokens: u.prompt_tokens ?? 0,
-    completion_tokens: u.completion_tokens ?? 0,
-    total_tokens: u.total_tokens ?? 0,
-  };
-}
-
 async function chatCompletion(
   messages: ChatMessage[],
-  opts?: { tools?: ReturnType<typeof listOperatorToolDefinitions>; responseFormat?: Record<string, unknown> }
+  opts?: {
+    tools?: ReturnType<typeof listOperatorToolDefinitions>;
+    responseFormat?: Record<string, unknown>;
+  }
 ): Promise<{
   ok: boolean;
   message?: ChatMessage & { role: "assistant" };
@@ -107,19 +100,13 @@ async function runMockToolLoop(
 ): Promise<ToolLoopResult> {
   const cfg = getLlmApiConfig()!;
   const started = Date.now();
-  let toolCalls = 0;
-  let toolRounds = 0;
 
   if (isOperatorToolsEnabled()) {
     const mockCall = mockToolCallForMessage(userMessage);
     if (mockCall) {
-      toolRounds = 1;
-      toolCalls = 1;
-      const toolResult = await executeOperatorTool(
-        mockCall.name,
-        mockCall.arguments,
-        toolContext
-      );
+      const toolRounds = 1;
+      const toolCalls = 1;
+      const toolResult = await executeOperatorTool(mockCall.name, mockCall.arguments, toolContext);
       const content = [
         "【OrgOS モック LLM + ツール】",
         "",
@@ -231,9 +218,7 @@ export async function runLlmWithTools(
   let usage = emptyUsage();
   let toolRounds = 0;
   let toolCalls = 0;
-  const tools = isOperatorToolsEnabled()
-    ? listOperatorToolDefinitions(toolContext)
-    : [];
+  const tools = isOperatorToolsEnabled() ? listOperatorToolDefinitions(toolContext) : [];
 
   const messages: ChatMessage[] = [{ role: "system", content: systemContext }];
   for (const turn of history ?? []) {
@@ -243,7 +228,9 @@ export async function runLlmWithTools(
 
   try {
     for (let round = 0; round < maxToolRounds(); round += 1) {
-      const completion = await chatCompletion(messages, { tools: tools.length ? tools : undefined });
+      const completion = await chatCompletion(messages, {
+        tools: tools.length ? tools : undefined,
+      });
       usage = mergeUsage(usage, completion.usage);
       if (!completion.ok || !completion.message) {
         const latency_ms = Date.now() - started;
@@ -273,8 +260,7 @@ export async function runLlmWithTools(
       }
 
       const msg = completion.message;
-      const calls =
-        "tool_calls" in msg && msg.tool_calls?.length ? msg.tool_calls : undefined;
+      const calls = "tool_calls" in msg && msg.tool_calls?.length ? msg.tool_calls : undefined;
 
       if (calls?.length) {
         toolRounds += 1;

@@ -23,7 +23,10 @@ export function sortedHubs(config?: WitnessPoolConfig): WitnessHubEntry[] {
   return [...pool.hubs].sort((a, b) => a.priority - b.priority);
 }
 
-export function findHubInPool(hubId: string, config?: WitnessPoolConfig): WitnessHubEntry | undefined {
+export function findHubInPool(
+  hubId: string,
+  config?: WitnessPoolConfig
+): WitnessHubEntry | undefined {
   return sortedHubs(config).find((h) => h.hub_id === hubId);
 }
 

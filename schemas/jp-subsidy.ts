@@ -31,7 +31,9 @@ export const subsidyProgramsFileSchema = z.object({
       brief_path: z.string().optional(),
       managing_body: z.string().optional(),
       application_deadline: isoDate.optional(),
-      status: z.enum(["tracking", "eligibility_check", "drafting", "submitted", "closed"]).optional(),
+      status: z
+        .enum(["tracking", "eligibility_check", "drafting", "submitted", "closed"])
+        .optional(),
       requirements: z.array(subsidyRequirementSchema).default([]),
       notes: z.string().optional(),
     })

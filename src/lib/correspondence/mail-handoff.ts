@@ -63,7 +63,9 @@ function formatInterpretationSection(mailId: string): string[] {
   return [
     `- intent: **${interp.intent}** · agreement: ${Math.round(interp.agreement * 100)}%`,
     `- 要約: ${interp.summary_l1}`,
-    interp.who_lent ? `- 貸主: ${interp.who_lent} · 返却義務: ${interp.who_must_return ?? "—"}` : "",
+    interp.who_lent
+      ? `- 貸主: ${interp.who_lent} · 返却義務: ${interp.who_must_return ?? "—"}`
+      : "",
     interp.dissent_notes.length ? `- 不一致: ${interp.dissent_notes.join("; ")}` : "",
     interp.action_required ? "- 対応要: はい" : "- 対応要: いいえ",
   ].filter(Boolean);

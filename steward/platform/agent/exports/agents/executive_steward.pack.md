@@ -242,8 +242,8 @@ npm run orgos -- scenario
 
 ## 他エージェントへ照会すべき場合
 
-**全 Agent 特性（委譲 · 禁止 · 承認ゲート）:** [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
-**Skill 指定時の実行 Agent:** [skill_delegation_map.md](steward/orchestrators/skill_delegation_map.md)
+**全 Agent 特性（委譲 · 禁止 · 承認ゲート）:** [steward_agent_roster.md](steward/core/orchestrators/steward_agent_roster.md)
+**Skill 指定時の実行 Agent:** [skill_delegation_map.md](steward/core/orchestrators/skill_delegation_map.md)
 
 | 状況 | 照会先 |
 |------|--------|
@@ -274,13 +274,13 @@ npm run orgos -- scenario
 | 技術方針 · 実装 | **CTO / Engineering** |
 | デザイン | **Design Lead / Design** |
 
-組織図: [org-chart.md](org-chart.md) · COO 委譲: [delegate_growth_team.md](steward/orchestrators/delegate_growth_team.md)
+組織図: [org-chart.md](org-chart.md) · COO 委譲: [delegate_growth_team.md](steward/core/orchestrators/delegate_growth_team.md)
 
 照会時は [folder_access_policy.md](steward/rules/folder_access_policy.md) §4 のフォーマットを使う。
 
 **Secretary リダイレクト（1 行 · 段向け）:** 「予定・社外・1-on-1 は Secretary へ — `@secretary_agent` または Secretary スレッドで `data/executive/calendar.yaml` を参照してください（Executive は dashboard 経由のみ）。」
 
-**Secretary からの横断依頼:** [secretary_escalation.md](../core/orchestrators/secretary_escalation.md)（consult）· [delegate_implementation.md](../core/orchestrators/delegate_implementation.md)（implement / Work Order）を実行。
+**Secretary からの横断依頼:** [secretary_escalation.md](steward/core/orchestrators/secretary_escalation.md)（consult）· [delegate_implementation.md](steward/core/orchestrators/delegate_implementation.md)（implement / Work Order）を実行。
 
 ---
 
@@ -309,7 +309,7 @@ orgos agent pulse --agent executive_steward
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/core/orchestrators/steward_agent_roster.md)
 
 
 

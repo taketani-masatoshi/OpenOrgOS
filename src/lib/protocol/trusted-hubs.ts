@@ -53,9 +53,16 @@ export function validateTrustedHubsRegistry(): {
   try {
     const reg = loadTrustedHubsRegistry();
     const strict = process.env.ORGOS_STRICT_TRUST === "1";
-    const jurisdictionFilter = process.env.ORGOS_STRICT_TRUST_JURISDICTIONS?.split(",")
+    const validateAll = process.env.ORGOS_TRUSTED_HUBS_VALIDATE_ALL === "1";
+    const envFilter = process.env.ORGOS_STRICT_TRUST_JURISDICTIONS?.split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+    // Default: tenant jurisdiction only — avoids noise from placeholder non-local hubs (EE/AE/…).
+    const jurisdictionFilter = envFilter?.length
+      ? envFilter
+      : validateAll
+        ? undefined
+        : [loadTenantConfig().jurisdiction ?? "JP"];
     const seenJurisdictions = new Set<string>();
     for (const entry of reg.jurisdictions) {
       if (jurisdictionFilter?.length && !jurisdictionFilter.includes(entry.jurisdiction)) {

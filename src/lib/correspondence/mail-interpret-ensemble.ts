@@ -61,11 +61,12 @@ export function parseInterpretModelsFromEnv(): string[] {
     /* ignore */
   }
   const raw =
-    process.env.ORGOS_MAIL_INTERPRET_MODELS?.trim() ||
-    process.env.ORGOS_LLM_MODEL?.trim() ||
-    "";
+    process.env.ORGOS_MAIL_INTERPRET_MODELS?.trim() || process.env.ORGOS_LLM_MODEL?.trim() || "";
   if (!raw) return ["gpt-4o-mini"];
-  const models = raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+  const models = raw
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
   return models.length ? models.slice(0, 5) : ["gpt-4o-mini"];
 }
 

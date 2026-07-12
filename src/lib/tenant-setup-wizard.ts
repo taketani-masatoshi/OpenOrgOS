@@ -1,27 +1,18 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { join } from "node:path";
 import YAML from "yaml";
-import {
-  tenantSetupAnswersSchema,
-  type TenantSetupAnswers,
-} from "../../schemas/integrations.js";
+import { tenantSetupAnswersSchema, type TenantSetupAnswers } from "../../schemas/integrations.js";
 import { mailConfigSchema } from "../../schemas/correspondence/mail-config.js";
 import { ensureMailConfigExample } from "./correspondence/mail-config.js";
 import { ensureMailTriageQueueExample } from "./correspondence/mail-triage-queue.js";
-import {
-  getExecutiveRecordsDir,
-  getMailConfigPath,
-} from "./correspondence/paths.js";
+import { getExecutiveRecordsDir, getMailConfigPath } from "./correspondence/paths.js";
 import { ensureIntegrationsExample, saveIntegrations } from "./integrations.js";
 import { loadOperatorRegistry } from "./org/operators.js";
 import { runOperatorInitRegistry } from "../commands/operator-registry.js";
 import { getDataDir, currentDate } from "./utils.js";
-import {
-  seedExecutiveYamlFromExamples,
-  seedProtocolYamlFromExamples,
-} from "./tenant-scaffold.js";
+import { seedExecutiveYamlFromExamples, seedProtocolYamlFromExamples } from "./tenant-scaffold.js";
 
 export interface TenantSetupWizardOptions {
   answers?: TenantSetupAnswers;
@@ -62,8 +53,7 @@ function seedExecutiveYaml(skip: boolean): boolean {
 }
 
 function writeMailConfig(answers: TenantSetupAnswers): string | undefined {
-  const provider =
-    answers.mail_provider === "gmail_compose" ? "dry_run" : answers.mail_provider;
+  const provider = answers.mail_provider === "gmail_compose" ? "dry_run" : answers.mail_provider;
   if (!answers.from_email && !answers.from_name) return undefined;
 
   ensureMailConfigExample();
@@ -137,8 +127,7 @@ async function resolveAnswers(opts: TenantSetupWizardOptions): Promise<TenantSet
   const webhookUrl = await prompt("Webhook URL for secretary_escalate (optional)", "", opts);
   if (webhookUrl) {
     answers.webhook_url = webhookUrl;
-    answers.webhook_secret =
-      (await prompt("Webhook secret (optional)", "", opts)) || undefined;
+    answers.webhook_secret = (await prompt("Webhook secret (optional)", "", opts)) || undefined;
   }
 
   const slack = await prompt("Slack webhook URL (optional · env)", "", opts);

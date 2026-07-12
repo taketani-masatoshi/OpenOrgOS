@@ -22,7 +22,8 @@ export function withRehearsalMailOverlay<T>(fn: () => T): T {
   const path = getMailConfigPath();
   const hadFile = existsSync(path);
   const backup = hadFile ? readFileSync(path, "utf-8") : undefined;
-  const fromEmail = loadCompanyPublicDisclosureEmail() ?? loadMailConfig()?.from.email ?? "rehearsal@orgos.local";
+  const fromEmail =
+    loadCompanyPublicDisclosureEmail() ?? loadMailConfig()?.from.email ?? "rehearsal@orgos.local";
   writeFileSync(path, YAML.stringify(buildRehearsalMailConfig(fromEmail)), "utf-8");
   try {
     return fn();
@@ -37,7 +38,8 @@ export async function withRehearsalMailOverlayAsync<T>(fn: () => Promise<T>): Pr
   const path = getMailConfigPath();
   const hadFile = existsSync(path);
   const backup = hadFile ? readFileSync(path, "utf-8") : undefined;
-  const fromEmail = loadCompanyPublicDisclosureEmail() ?? loadMailConfig()?.from.email ?? "rehearsal@orgos.local";
+  const fromEmail =
+    loadCompanyPublicDisclosureEmail() ?? loadMailConfig()?.from.email ?? "rehearsal@orgos.local";
   writeFileSync(path, YAML.stringify(buildRehearsalMailConfig(fromEmail)), "utf-8");
   try {
     return await fn();

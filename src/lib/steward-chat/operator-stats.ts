@@ -36,9 +36,6 @@ export function buildOperatorStats(limit = 50): OperatorStatsResponse {
   const entries = readRecentLlmTelemetry(limit);
   return {
     stats: summarizeLlmTelemetry(entries),
-    recent: entries
-      .slice(-5)
-      .reverse()
-      .map(toRecentEntry),
+    recent: entries.slice(-5).reverse().map(toRecentEntry),
   };
 }

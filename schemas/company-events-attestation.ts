@@ -11,7 +11,10 @@ export const companyEventsAttestationSchema = z.object({
   chain_ok: z.boolean(),
   chain_checked: z.number().int().nonnegative(),
   chain_tail_seq: z.number().int().positive().optional(),
-  chain_tail_digest: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  chain_tail_digest: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
   chain_tail_link_id: z.string().optional(),
   links_since_prev: z.number().int().nonnegative(),
   prev_attestation_id: z.string().optional(),

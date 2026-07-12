@@ -1,14 +1,10 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadHandoff, loadHandoffChildren, routingQueueDir, writeHandoffFiles } from "./routing.js";
+import { loadHandoff, loadHandoffChildren, writeHandoffFiles } from "./routing.js";
 import { handoffSchema, type Handoff } from "../../schemas/routing.js";
-import {
-  loadWorkOrderResult,
-  pushQueueEvent,
-  writeWorkOrderResult,
-} from "./queue-db.js";
+import { loadWorkOrderResult, pushQueueEvent, writeWorkOrderResult } from "./queue-db.js";
 import { appendAuditEvent } from "./audit-log.js";
-import { getDocsReportsDir, currentDate, ensureDocsReportsDir } from "./utils.js";
+import { currentDate, ensureDocsReportsDir } from "./utils.js";
 import { sendWebhook } from "./webhook.js";
 
 export interface MergeOptions {
@@ -68,7 +64,9 @@ export function mergeWorkOrderResults(options: MergeOptions): { path: string; co
 
   const content = lines.join("\n");
   const outDir = ensureDocsReportsDir("executive-notes");
-  const filename = options.output ?? `${currentDate()}-merge-${(parent?.id ?? options.id).replace(/[^A-Z0-9-]/gi, "")}.md`;
+  const filename =
+    options.output ??
+    `${currentDate()}-merge-${(parent?.id ?? options.id).replace(/[^A-Z0-9-]/gi, "")}.md`;
   const path = join(outDir, filename);
   writeFileSync(path, content, "utf-8");
 

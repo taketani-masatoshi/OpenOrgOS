@@ -11,6 +11,7 @@ import { bridgeAuditEventToProtocolChain } from "../src/lib/org/audit-bridge.js"
 import { clearOrgAuditBridgeStateForTests } from "../src/lib/org/audit-bridge-state.js";
 import { ORG_AUDIT_BRIDGE_EVENT_TYPES } from "../schemas/org/audit-bridge.js";
 import { auditEventSchema, type AuditEventType } from "../schemas/audit-log.js";
+import { resetRuntimeContext, setRuntimeContext } from "../src/lib/runtime-context.js";
 
 function cleanup(): void {
   for (const p of [
@@ -37,6 +38,7 @@ describe("org audit bridge", () => {
   afterEach(() => {
     cleanup();
     clearOrgAuditBridgeStateForTests();
+    resetRuntimeContext();
   });
 
   it("bridges all operational audit event types with operational.recorded payload", () => {
@@ -80,6 +82,31 @@ describe("org audit bridge", () => {
     expect(first?.event_id).toBeTruthy();
     expect(second).toBeNull();
     expect(loadProtocolAuditChain().length).toBe(1);
+  });
+
+  it("uses the injected clock and UUID for protocol audit envelopes", () => {
+    setRuntimeContext({
+      clock: {
+        now: () => new Date("2026-07-12T02:03:04.000Z"),
+        nowMs: () => Date.parse("2026-07-12T02:03:04.000Z"),
+        nowIso: () => "2026-07-12T02:03:04.000Z",
+      },
+      idGenerator: {
+        randomSuffix: () => "fixed",
+        uniqueId: (prefix) => `${prefix}-fixed`,
+        uuid: () => "00000000-0000-4000-8000-000000000903",
+      },
+    });
+    const audit = auditEventSchema.parse({
+      id: "AUD-deterministic-bridge",
+      timestamp: "2026-07-12T02:00:00.000Z",
+      tenant: "demo",
+      event: "escalate",
+      ref: "WO-FIXED",
+    });
+    const envelope = bridgeAuditEventToProtocolChain(audit);
+    expect(envelope?.event_id).toBe("00000000-0000-4000-8000-000000000903");
+    expect(envelope?.occurred_at).toBe("2026-07-12T02:03:04.000Z");
   });
 
   it("respects events filter when not bridging all types", () => {

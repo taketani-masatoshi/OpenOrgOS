@@ -4,7 +4,10 @@
  */
 import { randomUUID } from "node:crypto";
 import { setTenantId } from "../src/lib/tenant.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
+import {
+  ensureProtocolSigningKey,
+  exportProtocolPublicKeyBase64,
+} from "../src/lib/protocol/signing.js";
 import { deriveOpenOrgDidFromPublicKey } from "../schemas/protocol/openorg-did.js";
 import { registerPeer } from "../src/lib/protocol/peers.js";
 import { proposeInterOrgNotice, approveInterOrgNotice } from "../src/lib/wire/index.js";
@@ -79,8 +82,9 @@ async function main(): Promise<void> {
   }
   console.log(`✓ Delivered via ${deliver.endpoint} · ${deliver.reason}`);
 
-  console.log("  Waiting 45s for SMTP delivery…");
-  await new Promise((r) => setTimeout(r, 45_000));
+  const waitMs = Number(process.env.PHASE4_SMTP_WAIT_MS ?? "45000");
+  console.log(`  Waiting ${Math.round(waitMs / 1000)}s for SMTP delivery…`);
+  await new Promise((r) => setTimeout(r, Number.isFinite(waitMs) ? waitMs : 45_000));
 
   const sync = await syncMailReceive();
   console.log(`✓ IMAP sync: fetched ${sync.fetched} · saved ${sync.saved.length}`);

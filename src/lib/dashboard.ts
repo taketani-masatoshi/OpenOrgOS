@@ -190,10 +190,7 @@ export function buildLiquidityOutlook(cf: CashFlowMetrics): LiquidityOutlook {
       mode: "deficit",
       primaryLabel: "ランウェイ",
       primaryValue: cf.runwayMonths !== null ? `${cf.runwayMonths.toFixed(1)} ヶ月` : "TBD",
-      primaryNote:
-        cf.runwayMonths !== null
-          ? "現預金 ÷ ネットバーン"
-          : "cash-balance.yaml 確定後",
+      primaryNote: cf.runwayMonths !== null ? "現預金 ÷ ネットバーン" : "cash-balance.yaml 確定後",
       netCashFlowLabel: "ネットバーン",
       netCashFlowValue: formatCurrency(cf.monthlyNetBurn),
       netCashFlowNote: "月次のキャッシュ流出",
@@ -327,9 +324,7 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
   const contributionMargin =
     monthlyRevenue > 0 ? (monthlyRevenue - variableCosts) / monthlyRevenue : null;
   const breakEvenRevenue =
-    contributionMargin && contributionMargin > 0
-      ? fixedCosts / contributionMargin
-      : null;
+    contributionMargin && contributionMargin > 0 ? fixedCosts / contributionMargin : null;
 
   let cashBalance: number | null = null;
   const cashData = loadCashBalance();
@@ -548,7 +543,9 @@ function buildTrendNarrative(trend: MonthlyTrendPoint[]): string[] {
         `直近稼働月 ${last.month}: 売上 ${formatCurrency(last.revenue)}（前月比 ${revDelta >= 0 ? "+" : ""}${formatCurrency(revDelta)}）。`
       );
     } else {
-      lines.push(`直近稼働月 ${last.month}: 売上 ${formatCurrency(last.revenue)}・純増減 ${formatCurrency(last.net)}。`);
+      lines.push(
+        `直近稼働月 ${last.month}: 売上 ${formatCurrency(last.revenue)}・純増減 ${formatCurrency(last.net)}。`
+      );
     }
   }
 
@@ -561,11 +558,7 @@ function buildTrendNarrative(trend: MonthlyTrendPoint[]): string[] {
   return lines;
 }
 
-function buildKpis(
-  data: StewardData,
-  cashFlow: CashFlowMetrics,
-  fiscalYear: string
-): KpiItem[] {
+function buildKpis(data: StewardData, cashFlow: CashFlowMetrics, fiscalYear: string): KpiItem[] {
   const yojitsu = loadYojitsuFyPlan(fiscalYear);
   const forecast = generateForecast(
     data.monthlyFinances,
@@ -575,8 +568,7 @@ function buildKpis(
     data.properties,
     { months: 6 }
   );
-  const avgNet =
-    forecast.reduce((s, f) => s + f.netCashFlow, 0) / Math.max(forecast.length, 1);
+  const avgNet = forecast.reduce((s, f) => s + f.netCashFlow, 0) / Math.max(forecast.length, 1);
 
   const hotelPlan = data.propertyRevenuePlan.hotel[0];
   const rentalPlan = data.propertyRevenuePlan.rental[0];
@@ -629,9 +621,7 @@ function buildKpis(
     {
       id: "break_even",
       label: "損益分岐売上",
-      value: cashFlow.breakEvenRevenue
-        ? formatCurrency(cashFlow.breakEvenRevenue)
-        : "算出不可",
+      value: cashFlow.breakEvenRevenue ? formatCurrency(cashFlow.breakEvenRevenue) : "算出不可",
       explanation: cashFlow.contributionMargin
         ? `固定費 ÷ 限界利益率（${formatPercent(cashFlow.contributionMargin)}）`
         : "売上ゼロのため限界利益率未定",
@@ -653,9 +643,7 @@ function buildKpis(
     {
       id: "fy_net_profit",
       label: `${fiscalYear} 当期純利益（予実）`,
-      value: yojitsu?.summary?.net_profit
-        ? formatCurrency(yojitsu.summary.net_profit)
-        : "—",
+      value: yojitsu?.summary?.net_profit ? formatCurrency(yojitsu.summary.net_profit) : "—",
       explanation: "yojitsu サマリー。確定ベースは forecast / 月次実績で補完。",
     },
     {
@@ -696,11 +684,6 @@ function fiscalYearEndDate(fiscalYear: string, fiscalYearEndMonth: number): stri
   const startYear = parseInt(fiscalYear.replace("FY", ""), 10);
   const endYear = fiscalYearEndMonth === 12 ? startYear : startYear + 1;
   return lastDayOfMonth(`${endYear}-${String(fiscalYearEndMonth).padStart(2, "0")}`);
-}
-
-function nextFiscalYear(fiscalYear: string): string {
-  const year = parseInt(fiscalYear.replace("FY", ""), 10);
-  return `FY${year + 1}`;
 }
 
 function paymentDaysRemaining(reportDate: string, dueDate: string): number {
@@ -781,8 +764,7 @@ export function collectUpcomingPayments(
 
   try {
     const debtPlan = loadDebtPlan();
-    const baseScenario =
-      debtPlan.scenarios.find((s) => s.id === "base") ?? debtPlan.scenarios[0];
+    const baseScenario = debtPlan.scenarios.find((s) => s.id === "base") ?? debtPlan.scenarios[0];
     const fyEnd = fiscalYearEndDate(fiscalYear, fiscalEndMonth);
 
     for (const entry of baseScenario.repayments) {
@@ -807,11 +789,13 @@ export function collectUpcomingPayments(
       });
     }
 
-    const currentFyRepayments = baseScenario.repayments.filter(
-      (e) => e.fiscal_year === fiscalYear
-    );
+    const currentFyRepayments = baseScenario.repayments.filter((e) => e.fiscal_year === fiscalYear);
     const hasCurrentFyPayment = currentFyRepayments.some((e) => e.principal > 0);
-    if (!payments.some((p) => p.category === "借入返済") && !hasCurrentFyPayment && fyEnd >= reportDate) {
+    if (
+      !payments.some((p) => p.category === "借入返済") &&
+      !hasCurrentFyPayment &&
+      fyEnd >= reportDate
+    ) {
       payments.push({
         id: `LOAN-NONE-${fiscalYear}`,
         title: `${fiscalYear} 借入返済（base シナリオ）`,
@@ -866,11 +850,13 @@ export function collectUpcomingPayments(
   });
 }
 
-function buildTbdItems(cashFlow: ReturnType<typeof computeCashFlowMetrics>, data: StewardData): string[] {
+function buildTbdItems(
+  cashFlow: ReturnType<typeof computeCashFlowMetrics>,
+  data: StewardData
+): string[] {
   const items: string[] = [];
   const cashData = loadCashBalance();
-  const cashOk =
-    cashData?.status === "confirmed" && resolveCashBalanceTotal(cashData) != null;
+  const cashOk = cashData?.status === "confirmed" && resolveCashBalanceTotal(cashData) != null;
   if (!cashOk) {
     items.push("現預金残高（cash-balance.yaml — 金額入力待ち）");
   }

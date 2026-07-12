@@ -54,15 +54,40 @@ LOG="${ORGOS_TODAY_DIGEST_LOG:-/tmp/orgos-mal-today-digest.log}"
   rm -f "$ERR_FILE"
   cp "$OUT_FILE" "$LATEST"
 
-  SUMMARY="$(grep -m1 '^\*\*結論:\*\*' "$OUT_FILE" | sed 's/^\*\*結論:\*\*[[:space:]]*//' || true)"
-  if [[ -z "$SUMMARY" ]]; then
-    SUMMARY="Today を更新しました（${SLOT}）"
-  fi
-  SUMMARY="${SUMMARY:0:100}"
-  SUMMARY_SAFE="$(printf '%s' "$SUMMARY" | tr -d "\"'")"
+  # 通知: 件数は subtitle、本文は先頭の要対応項目（パスではなく中身）
+  COUNTS="$(grep -m1 '^\*\*結論:\*\*' "$OUT_FILE" | sed 's/^\*\*結論:\*\*[[:space:]]*//; s/ · 再試行 0 件//; s/ 件//g' || true)"
+  [[ -n "$COUNTS" ]] || COUNTS="Today 更新"
 
-  /usr/bin/osascript -e "display notification \"${SUMMARY_SAFE}\" with title \"MAL · Today ${SLOT}\" subtitle \"today-digest/latest.md\"" || true
+  # 「- **タイトル**（…）」のタイトルだけ最大 2 件
+  BODY="$(
+    grep -E '^- \*\*' "$OUT_FILE" \
+      | sed -E 's/^- \*\*//; s/\*\*.*$//; s/[[:space:]]+$//' \
+      | head -2 \
+      | awk '{ if (NR>1) printf " / "; printf "%s", $0 } END { print "" }' \
+      || true
+  )"
+  if [[ -z "$BODY" ]]; then
+    BODY="詳細は today-digest/latest.md"
+  fi
+
+  SLOT_HM="$(date +%H:%M)"
+  TITLE="MAL Today · ${SLOT_HM}"
+  SUB="${COUNTS:0:60}"
+  MSG="${BODY:0:110}"
+  # 引用符除去（AppleScript argv）
+  TITLE_S="$(printf '%s' "$TITLE" | tr -d "\"'")"
+  SUB_S="$(printf '%s' "$SUB" | tr -d "\"'")"
+  MSG_S="$(printf '%s' "$MSG" | tr -d "\"'")"
+
+  # カスタムアイコン付き applet（osascript 直呼びは Script Editor アイコンになる）
+  NOTIFY_APP="$ROOT/tenants/mal/docs/executive/apps/MAL Today.app/Contents/MacOS/applet"
+  if [[ -x "$NOTIFY_APP" ]]; then
+    "$NOTIFY_APP" "$TITLE_S" "$SUB_S" "$MSG_S" || true
+  else
+    /usr/bin/osascript -e "display notification \"${MSG_S}\" with title \"${TITLE_S}\" subtitle \"${SUB_S}\"" || true
+  fi
 
   echo "✓ wrote $OUT_FILE"
   echo "✓ latest → $LATEST"
+  echo "✓ notify: ${TITLE_S} | ${SUB_S} | ${MSG_S}"
 } >>"$LOG" 2>&1

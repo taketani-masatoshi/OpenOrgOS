@@ -18,6 +18,7 @@ import {
   validateCompanyEvents,
   verifyCompanyEventChain,
   voidCompanyEvent,
+  materializeCompanyEventsFromChain,
   type CreateCompanyEventOptions,
 } from "../lib/company-events.js";
 import { linkOutboxItemToEvent } from "../lib/document-io.js";
@@ -168,7 +169,10 @@ export function runEventsRegisterArtifact(opts: {
   kind?: string;
 }): void {
   initCompanyEventsFile();
-  const names = opts.files.split(",").map((f) => f.trim()).filter(Boolean);
+  const names = opts.files
+    .split(",")
+    .map((f) => f.trim())
+    .filter(Boolean);
   if (!names.length) {
     throw new Error("Specify --files as comma-separated filenames");
   }
@@ -289,7 +293,9 @@ export function runEventsChainAttest(opts: { force?: boolean; json?: boolean }):
     return;
   }
   console.log(`✓ Weekly company events attestation signed: ${result.attestation.attestation_id}`);
-  console.log(`  chain_tail: ${result.attestation.chain_tail_link_id ?? "—"} seq ${result.attestation.chain_tail_seq ?? 0}`);
+  console.log(
+    `  chain_tail: ${result.attestation.chain_tail_link_id ?? "—"} seq ${result.attestation.chain_tail_seq ?? 0}`
+  );
   console.log(`  links_since_prev: ${result.attestation.links_since_prev}`);
   console.log(`  → ${result.path}`);
 }
@@ -359,6 +365,41 @@ export function runEventsChainBackfill(opts: { force?: boolean }): void {
   console.log(`  events: ${result.events}`);
   console.log(`  links: ${result.links}`);
   console.log(`  → ${companyEventChainPath()}`);
+}
+
+export function runEventsChainMaterialize(opts: { check?: boolean; json?: boolean }): void {
+  initCompanyEventsFile();
+  const result = materializeCompanyEventsFromChain({ checkOnly: opts.check });
+  if (opts.json) {
+    console.log(
+      JSON.stringify(
+        {
+          ok: result.issues.length === 0,
+          complete: result.complete,
+          wrote: result.wrote,
+          events: result.registry.events.length,
+          issues: result.issues,
+        },
+        null,
+        2
+      )
+    );
+    if (result.issues.length > 0) process.exit(1);
+    return;
+  }
+  console.log(
+    opts.check
+      ? "Company event chain materialize check"
+      : result.wrote
+        ? "✓ Company events materialized from chain"
+        : "Company events materialize (no write)"
+  );
+  console.log(`  events: ${result.registry.events.length}`);
+  console.log(`  complete: ${result.complete}`);
+  for (const issue of result.issues) {
+    console.log(`  [warn] ${issue.code}: ${issue.message}`);
+  }
+  if (result.issues.length > 0 && opts.check) process.exit(1);
 }
 
 export function runEventsChainTail(): void {

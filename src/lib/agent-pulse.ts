@@ -1,9 +1,6 @@
 import { existsSync } from "node:fs";
 import type { AgentId } from "../../schemas/classification.js";
-import {
-  agentSummarySlug,
-  getAgentCapability,
-} from "./agent-capability.js";
+import { agentSummarySlug, getAgentCapability } from "./agent-capability.js";
 import { getCatalogAgent, isAgentActive } from "./agent-catalog.js";
 import { listActiveTenantAgents } from "./agent-roster.js";
 import { computeAgentReadiness } from "./agent-readiness.js";
@@ -23,7 +20,6 @@ function checkPath(rel: string): { ok: boolean; detail: string } {
 export function formatAgentPulseMarkdown(agentId: AgentId): string {
   const cap = getAgentCapability(agentId);
   const readiness = computeAgentReadiness(agentId);
-  const slug = cap?.summary_slug ?? agentSummarySlug(agentId);
   const paths = [...(cap?.data_paths ?? []), ...(cap?.docs_paths ?? [])];
   const pathRows = paths.map((p) => {
     const c = checkPath(p);

@@ -16,10 +16,7 @@ export interface Proposal3PkiMaterial {
   caKeyPath: string;
   serverCertPath: string;
   serverKeyPath: string;
-  clientCerts: Record<
-    string,
-    { orgUri: string; certPath: string; keyPath: string }
-  >;
+  clientCerts: Record<string, { orgUri: string; certPath: string; keyPath: string }>;
 }
 
 function runOpenSsl(args: string[]): void {
@@ -186,7 +183,10 @@ export function writePartyProtocolClientConfig(
   });
 }
 
-export function writeOrgCServerTlsMetadata(orgCTenantId: string, pki: Proposal3PkiMaterial): string {
+export function writeOrgCServerTlsMetadata(
+  orgCTenantId: string,
+  pki: Proposal3PkiMaterial
+): string {
   setTenantId(orgCTenantId);
   const tlsDir = join(getProtocolDataDir(), "tls");
   mkdirSync(tlsDir, { recursive: true });
@@ -229,7 +229,10 @@ export function loadOrgCServerTlsMetadata(orgCTenantId: string): {
   };
 }
 
-export function proposal3OrgCApiEnv(orgCTenantId: string, pki: Proposal3PkiMaterial): Record<string, string> {
+export function proposal3OrgCApiEnv(
+  orgCTenantId: string,
+  pki: Proposal3PkiMaterial
+): Record<string, string> {
   return {
     ORGOS_TENANT: orgCTenantId,
     PROTOCOL_API_HOST: "127.0.0.1",
@@ -248,18 +251,12 @@ export function writeProposal3DeployEnv(orgCTenantId: string, pki: Proposal3PkiM
   const envDir = join(getDeployDir(), "proposal3", "env");
   mkdirSync(envDir, { recursive: true });
   const envPath = join(envDir, "org-c-api.generated.env");
-  const lines = Object.entries(proposal3OrgCApiEnv(orgCTenantId, pki)).map(
-    ([k, v]) => `${k}=${v}`
-  );
+  const lines = Object.entries(proposal3OrgCApiEnv(orgCTenantId, pki)).map(([k, v]) => `${k}=${v}`);
   writeFileSync(envPath, `${lines.join("\n")}\n`, "utf-8");
 
   for (const tenantId of Object.keys(pki.clientCerts)) {
     const partyPath = join(envDir, `party-relay-${tenantId}.generated.env`);
-    writeFileSync(
-      partyPath,
-      `ORGOS_TENANT=${tenantId}\nRELAY_INTERVAL_SEC=30\n`,
-      "utf-8"
-    );
+    writeFileSync(partyPath, `ORGOS_TENANT=${tenantId}\nRELAY_INTERVAL_SEC=30\n`, "utf-8");
   }
 
   return envPath;

@@ -6,7 +6,6 @@ import {
   validateCursorignoreCoverage,
   validateCursorindexingignoreCoverage,
   type AccessOperation,
-  type AgentId,
 } from "../lib/classification.js";
 import { appendAuditEvent } from "../lib/audit-log.js";
 import { agentId } from "../../schemas/classification.js";
@@ -15,7 +14,9 @@ export function runClassificationCheck(opts: { json?: boolean }): void {
   const issues = runClassificationChecks();
 
   if (opts.json) {
-    console.log(JSON.stringify({ ok: !issues.some((i) => i.severity === "error"), issues }, null, 2));
+    console.log(
+      JSON.stringify({ ok: !issues.some((i) => i.severity === "error"), issues }, null, 2)
+    );
     if (issues.some((i) => i.severity === "error")) process.exit(1);
     return;
   }
@@ -49,7 +50,9 @@ export function runClassificationBoundaries(opts: { check?: boolean; json?: bool
     return;
   }
 
-  console.log("# AI 境界パターン（registry 駆動 · .cursorignore / .cursorindexingignore に必要）\n");
+  console.log(
+    "# AI 境界パターン（registry 駆動 · .cursorignore / .cursorindexingignore に必要）\n"
+  );
   for (const p of patterns) {
     console.log(`${p.path}    # ${p.id} (${p.level})`);
   }
@@ -64,11 +67,7 @@ export function runClassificationBoundaries(opts: { check?: boolean; json?: bool
   }
 }
 
-export function runClassificationAccess(
-  agent: string,
-  path: string,
-  operation: string
-): void {
+export function runClassificationAccess(agent: string, path: string, operation: string): void {
   const parsedAgent = agentId.safeParse(agent);
   if (!parsedAgent.success) {
     console.error(`Unknown agent: ${agent}`);

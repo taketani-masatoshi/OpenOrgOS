@@ -1,9 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { getSessionUser, sessionTokenFromRequest } from "../auth/session.js";
-import {
-  computeWireConsoleFingerprints,
-  globalWireConsoleFingerprint,
-} from "../snapshot-watch.js";
+import { computeWireConsoleFingerprints, globalWireConsoleFingerprint } from "../snapshot-watch.js";
 
 const SSE_POLL_MS = Number(process.env.WIRE_CONSOLE_SSE_POLL_MS ?? 2000);
 
@@ -11,10 +8,7 @@ function writeSse(res: ServerResponse, event: string, data: unknown): void {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
-export function handleEventsStream(
-  req: IncomingMessage,
-  res: ServerResponse
-): boolean {
+export function handleEventsStream(req: IncomingMessage, res: ServerResponse): boolean {
   const user = getSessionUser(sessionTokenFromRequest(req));
   if (!user) {
     res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });

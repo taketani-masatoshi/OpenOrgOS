@@ -15,17 +15,16 @@ export interface MigrateLegacyPeersOptions {
 
 function hasOnlyLegacyWebhook(peer: PeerProfile): boolean {
   if (peer.inbound_endpoints?.length) {
-    return peer.inbound_endpoints.every(
-      (ep) => inferPeerTransport(ep) === "legacy_webhook"
-    );
+    return peer.inbound_endpoints.every((ep) => inferPeerTransport(ep) === "legacy_webhook");
   }
   return Boolean(peer.inbound_webhook_url);
 }
 
 /** Detect / rewrite legacy webhook peers into inbound_endpoints. */
-export function migrateLegacyWebhookPeers(
-  opts: MigrateLegacyPeersOptions = {}
-): { results: MigrateLegacyPeerResult[]; apply: boolean } {
+export function migrateLegacyWebhookPeers(opts: MigrateLegacyPeersOptions = {}): {
+  results: MigrateLegacyPeerResult[];
+  apply: boolean;
+} {
   const registry = loadPeersRegistry();
   const results: MigrateLegacyPeerResult[] = [];
   let changed = false;
@@ -41,19 +40,14 @@ export function migrateLegacyWebhookPeers(
     }
 
     if (!hasOnlyLegacyWebhook(peer) && peer.inbound_endpoints?.length) {
-      const hasWire = peer.inbound_endpoints.some(
-        (ep) => inferPeerTransport(ep) === "wire_v1"
-      );
+      const hasWire = peer.inbound_endpoints.some((ep) => inferPeerTransport(ep) === "wire_v1");
       if (hasWire && !peer.inbound_webhook_url) {
         results.push({ peer_id: peer.peer_id, status: "unchanged", detail: "already wire_v1" });
         continue;
       }
     }
 
-    const fromUrl =
-      opts.toWireUrl ??
-      peer.inbound_webhook_url ??
-      peer.inbound_endpoints?.[0]?.url;
+    const fromUrl = opts.toWireUrl ?? peer.inbound_webhook_url ?? peer.inbound_endpoints?.[0]?.url;
 
     if (!fromUrl) {
       results.push({
@@ -104,8 +98,6 @@ export function migrateLegacyWebhookPeers(
 export function listLegacyTransportPeers(): PeerProfile[] {
   return loadPeersRegistry().peers.filter((peer) => {
     if (peer.inbound_webhook_url) return true;
-    return (peer.inbound_endpoints ?? []).some(
-      (ep) => inferPeerTransport(ep) === "legacy_webhook"
-    );
+    return (peer.inbound_endpoints ?? []).some((ep) => inferPeerTransport(ep) === "legacy_webhook");
   });
 }

@@ -19,7 +19,10 @@ import { buildIdentityDocument, buildIdentityEnvelope } from "../src/lib/protoco
 import { exportDelegationProof, buildDelegationEnvelope } from "../src/lib/protocol/delegation.js";
 import { resolveJurisdictionApprovalPolicy } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { validateProtocolState } from "../src/lib/protocol/validate.js";
-import { verifyProtocolAuditChain, loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
+import {
+  verifyProtocolAuditChain,
+  loadProtocolAuditChain,
+} from "../src/lib/protocol/audit-chain.js";
 import { loadEnvelopesFromDirectories } from "../src/lib/protocol/external-verify.js";
 import { serializeEventEnvelope } from "../src/lib/protocol/envelope.js";
 import { getProtocolOutboxDir } from "../src/lib/protocol/paths.js";
@@ -32,7 +35,10 @@ import { orgApprovalRegistrySchema } from "../schemas/org/approval.js";
 import { getPendingApprovalsPath } from "../src/lib/org/paths.js";
 import { enqueueWitnessPending } from "../src/lib/protocol/witness-queue.js";
 import { envelopeDigest } from "../src/lib/protocol/canonical.js";
-import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "../src/lib/protocol/signing.js";
+import {
+  ensureProtocolSigningKey,
+  exportProtocolPublicKeyBase64,
+} from "../src/lib/protocol/signing.js";
 import { ingestWebhook } from "../src/lib/webhook.js";
 import { configureHubRuntime } from "../src/lib/hub/runtime.js";
 import { startHubServer } from "../src/lib/hub-server.js";
@@ -121,7 +127,8 @@ function ensureCtr012Executed(): void {
       ...contract.documents,
       executed: "docs/contracts/CTR-012/02-executed.md",
     },
-    notes: `${baseNotes}\n[protocol demo] executed for inter-org demo · peer ${VENDOR_TENANT}`.trim(),
+    notes:
+      `${baseNotes}\n[protocol demo] executed for inter-org demo · peer ${VENDOR_TENANT}`.trim(),
   });
 }
 
@@ -224,7 +231,11 @@ export const AIAC_TENANT = "aiac";
 
 async function seedMalSendOnly(
   sharedEventId: string,
-  orgC: { relayEnqueueUrl: string; bundleUrl: string; pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial }
+  orgC: {
+    relayEnqueueUrl: string;
+    bundleUrl: string;
+    pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial;
+  }
 ): Promise<{ path: string; envelope: EventEnvelope }> {
   setTenantId(MAL_TENANT);
   resetProtocolState(MAL_TENANT);
@@ -442,7 +453,9 @@ async function seedVendorSide(
 
   const v = validateProtocolState();
   if (!v.ok) {
-    throw new Error(`${VENDOR_TENANT} protocol validate failed: ${v.issues.map((i) => i.message).join("; ")}`);
+    throw new Error(
+      `${VENDOR_TENANT} protocol validate failed: ${v.issues.map((i) => i.message).join("; ")}`
+    );
   }
 
   console.log(
@@ -450,9 +463,11 @@ async function seedVendorSide(
   );
 }
 
-async function seedVendorReceiveOnly(
-  orgC: { bundleUrl: string; apiUrl: string; pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial }
-): Promise<void> {
+async function seedVendorReceiveOnly(orgC: {
+  bundleUrl: string;
+  apiUrl: string;
+  pki: import("../src/lib/protocol/tls-pki.js").Proposal3PkiMaterial;
+}): Promise<void> {
   setTenantId(VENDOR_TENANT);
   resetProtocolState(VENDOR_TENANT);
   ensureProtocolSigningKey();
@@ -485,17 +500,15 @@ async function seedVendorReceiveOnly(
 
   const v = validateProtocolState();
   if (!v.ok) {
-    throw new Error(`${VENDOR_TENANT} protocol validate failed: ${v.issues.map((i) => i.message).join("; ")}`);
+    throw new Error(
+      `${VENDOR_TENANT} protocol validate failed: ${v.issues.map((i) => i.message).join("; ")}`
+    );
   }
 
   console.log(`[${VENDOR_TENANT}] ✓ 受信 1通 · Org C relay pull (${pulled})`);
 }
 
-function seedAiacWitnessRole(
-  eventId: string,
-  envelope: EventEnvelope,
-  bundleUrl: string
-): void {
+function seedAiacWitnessRole(eventId: string, envelope: EventEnvelope, bundleUrl: string): void {
   setTenantId(AIAC_TENANT);
   for (const p of [
     join(getTenantDir(AIAC_TENANT), "docs", "protocol", "outbox"),
@@ -567,7 +580,9 @@ export async function runWireConsoleThreeRoleDemo(): Promise<void> {
 }
 
 export async function runInterOrgDemo(): Promise<void> {
-  console.log(`Inter-org demo — operator approval + witness pool (${MAL_TENANT} ↔ ${VENDOR_TENANT})\n`);
+  console.log(
+    `Inter-org demo — operator approval + witness pool (${MAL_TENANT} ↔ ${VENDOR_TENANT})\n`
+  );
 
   if (!existsSync(join(ROOT_DIR, "tenants", VENDOR_TENANT, "tenant.yaml"))) {
     throw new Error(`Tenant ${VENDOR_TENANT} not found`);
@@ -615,7 +630,9 @@ export async function runInterOrgDemo(): Promise<void> {
     }
 
     console.log("\n--- Summary ---");
-    console.log("Flow: operator propose → CEO approve → webhook ingest → ack · witness fan-out · gossip sync");
+    console.log(
+      "Flow: operator propose → CEO approve → webhook ingest → ack · witness fan-out · gossip sync"
+    );
     console.log(`Shared event_id: ${DEMO_EVENT_ID}`);
     setTenantId(MAL_TENANT);
     const malChain = loadProtocolAuditChain();
@@ -631,10 +648,15 @@ export async function runInterOrgDemo(): Promise<void> {
       `[mal] audit-chain verify: ${auditVerify.ok ? "ok" : "FAIL"} · records=${auditVerify.checked} · witness envelopes=${witnessOnChain}`
     );
     if (!auditVerify.ok) {
-      throw new Error(`inter-org audit verify failed: ${auditVerify.issues.map((i) => i.message).join("; ")}`);
+      throw new Error(
+        `inter-org audit verify failed: ${auditVerify.issues.map((i) => i.message).join("; ")}`
+      );
     }
     console.log("\nTry:");
-    console.log("  npm run orgos -- --tenant mal protocol witness verify --event-id", DEMO_EVENT_ID);
+    console.log(
+      "  npm run orgos -- --tenant mal protocol witness verify --event-id",
+      DEMO_EVENT_ID
+    );
     console.log("  npm run orgos -- --tenant mal protocol witness pool status");
     console.log("  docs/org-os/witness-hub-requirements.md");
   } finally {

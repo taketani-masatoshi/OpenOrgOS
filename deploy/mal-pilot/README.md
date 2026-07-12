@@ -116,4 +116,8 @@ npm run orgos -- --tenant mal protocol transaction prune-orphans --apply
 
 See [wire-hub-stack-pilot.md](../../docs/org-os/wire-hub-stack-pilot.md).
 
-**出荷チェックリスト:** [gmail-ship-gate-checklist.md](../../docs/org-os/gmail-ship-gate-checklist.md) · env 例: `deploy/mal-pilot/env/mal-ship-gate.env.example`
+**出荷チェックリスト:** [gmail-ship-gate-checklist.md](../../docs/org-os/gmail-ship-gate-checklist.md) · env 例: `deploy/mal-pilot/env/mal-ship-gate.env.example`  
+**Ship-gate dry-run (opt-in · systemd 非変更):** `./scripts/mal-ship-gate-check.sh mal`  
+**Phase 4b staging:** `./scripts/phase4b-community-gmail-staging.sh check`  
+**Phase 5 apply (CEO 承認後のみ):** `ORGOS_CEO_SHIP_APPROVED=1 ./scripts/mal-ship-gate-apply.sh dry-run|apply`
+**Washout F7–F10:** [phase4a-washout-f7-f10.md](../../docs/org-os/phase4a-washout-f7-f10.md)

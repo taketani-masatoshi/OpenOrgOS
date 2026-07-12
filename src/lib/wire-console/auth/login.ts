@@ -1,12 +1,13 @@
 import { createDevSession, registerSession, type WireConsoleUser } from "./session.js";
 import { createProdSession } from "./prod.js";
-import { getWireConsoleAuthConfig, isLegacyProdTokenAllowed, wireConsoleAuthMode, wireConsoleProdAdapter } from "./mode.js";
-import { getOidcConfig, verifyOidcIdToken } from "./oidc.js";
 import {
-  createWebAuthnLoginOptions,
-  getWebAuthnConfig,
-  verifyWebAuthnLogin,
-} from "./webauthn.js";
+  getWireConsoleAuthConfig,
+  isLegacyProdTokenAllowed,
+  wireConsoleAuthMode,
+  wireConsoleProdAdapter,
+} from "./mode.js";
+import { getOidcConfig, verifyOidcIdToken } from "./oidc.js";
+import { createWebAuthnLoginOptions, getWebAuthnConfig, verifyWebAuthnLogin } from "./webauthn.js";
 import { isWebAuthnE2eLoginEnabled } from "./webauthn-e2e.js";
 
 export interface WireConsoleLoginBody {
@@ -24,12 +25,12 @@ export interface WireConsoleLoginBody {
   };
 }
 
-export function authenticateWireConsoleLogin(
-  body: WireConsoleLoginBody
-): { token: string; user: WireConsoleUser; deprecated?: string } | {
-  error: string;
-  status: number;
-} {
+export function authenticateWireConsoleLogin(body: WireConsoleLoginBody):
+  | { token: string; user: WireConsoleUser; deprecated?: string }
+  | {
+      error: string;
+      status: number;
+    } {
   const mode = wireConsoleAuthMode();
 
   if (mode === "prod") {
@@ -40,12 +41,16 @@ export function authenticateWireConsoleLogin(
     if (body.prod_token) {
       if (!isLegacyProdTokenAllowed()) {
         return {
-          error: "prod_token is deprecated — use OIDC id_token or WebAuthn (set WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1 to override)",
+          error:
+            "prod_token is deprecated — use OIDC id_token or WebAuthn (set WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1 to override)",
           status: 403,
         };
       }
       if (!body.operator_id || !body.approver_id) {
-        return { error: "operator_id and approver_id required with legacy prod_token", status: 422 };
+        return {
+          error: "operator_id and approver_id required with legacy prod_token",
+          status: 422,
+        };
       }
       const result = createProdSession({
         prod_token: body.prod_token,

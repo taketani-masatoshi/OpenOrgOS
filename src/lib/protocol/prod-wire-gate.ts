@@ -197,8 +197,7 @@ export function evaluateEmailWireReadiness(tenantId: string): {
   }
 
   const dryRun =
-    config?.provider === "dry_run" ||
-    config?.wire_outbound?.smtp?.host === "smtp.test.local";
+    config?.provider === "dry_run" || config?.wire_outbound?.smtp?.host === "smtp.test.local";
   if (!dryRun) {
     if (!config?.wire_outbound?.smtp?.host) {
       issues.push("wire_outbound.smtp is required outside dry_run");

@@ -5,7 +5,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { TenantModule } from "../../schemas/modules.js";
-import { loadEnabledModules, loadModulesFile } from "./modules.js";
+import { loadModulesFile } from "./modules.js";
 import { MODULE_DEFAULT_DATA_ROOT } from "./module-business-data.js";
 import { getTenantDir } from "./tenant.js";
 
@@ -67,10 +67,8 @@ const CORE_README: Partial<Record<(typeof CORE_DOC_DIRS)[number], string>> = {
   "procurement/quotes/received":
     "# 受領見積\n\nベンダー・相手社から受け取った見積。Zone A（Core）。\n",
   "sales/quotes": "# 提出見積\n\n顧客向けに自社が提出した見積。Zone A（Core）。\n",
-  contracts:
-    "# 契約書\n\nCTR-XXX/。Zone A。組織間: steward/rules/inter-org-contract-workflow.md\n",
-  "io/inbox":
-    "# inbox\n\n外部受領。Zone A。組織間契約ドラフトは P2 までここ。\n",
+  contracts: "# 契約書\n\nCTR-XXX/。Zone A。組織間: steward/rules/inter-org-contract-workflow.md\n",
+  "io/inbox": "# inbox\n\n外部受領。Zone A。組織間契約ドラフトは P2 までここ。\n",
   "io/outbox/sent": "# outbox/sent\n\n送付控え。Zone A。\n",
 };
 
@@ -165,8 +163,7 @@ export function getModuleExtensionPaths(mod: TenantModule): string[] {
   const paths: string[] = [];
 
   const docsRoot =
-    mod.docs_root?.replace(/\/$/, "") ??
-    MODULE_DEFAULT_DOCS_ROOT[mod.id]?.replace(/\/$/, "");
+    mod.docs_root?.replace(/\/$/, "") ?? MODULE_DEFAULT_DOCS_ROOT[mod.id]?.replace(/\/$/, "");
   if (docsRoot) {
     paths.push(docsRoot);
     if (PROPERTY_MODULE_AGENTS.has(mod.agent) && docsRoot.includes("/operations")) {
@@ -180,8 +177,7 @@ export function getModuleExtensionPaths(mod: TenantModule): string[] {
   }
 
   const dataRoot =
-    mod.data_root?.replace(/\/$/, "") ??
-    MODULE_DEFAULT_DATA_ROOT[mod.agent]?.replace(/\/$/, "");
+    mod.data_root?.replace(/\/$/, "") ?? MODULE_DEFAULT_DATA_ROOT[mod.agent]?.replace(/\/$/, "");
   if (dataRoot) {
     paths.push(dataRoot);
   }
@@ -196,7 +192,7 @@ export function getModuleExtensionPaths(mod: TenantModule): string[] {
   return [...new Set(paths)];
 }
 
-function moduleExtensionReadme(mod: TenantModule, rel: string): string {
+function moduleExtensionReadme(mod: TenantModule, _rel: string): string {
   return `# Extension — ${mod.id}
 
 **Zone B** · モジュール \`${mod.id}\`（\`${mod.agent}\`）有効化時に作成。

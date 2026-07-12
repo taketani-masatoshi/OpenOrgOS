@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   dispatchManifestSchema,
@@ -14,7 +14,7 @@ import { appendAuditEvent } from "./audit-log.js";
 import { loadCloudAgentConfig, resolveDispatchRuntime } from "./cloud-agent.js";
 import { isLlmApiConfigured } from "./operator-runtime/llm-api.js";
 import { runOperatorDispatch } from "./operator-runtime/ask.js";
-import { assertActiveTenant, assertIntraOrgAgentTarget, tenantDispatchRoot } from "./org-boundary.js";
+import { assertActiveTenant, assertIntraOrgAgentTarget } from "./org-boundary.js";
 import { scopesForAgent } from "./org/delegation-scopes.js";
 import { checkAgentAccess, loadClassificationRegistry } from "./classification.js";
 

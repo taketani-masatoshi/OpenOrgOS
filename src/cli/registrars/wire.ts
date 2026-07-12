@@ -159,9 +159,7 @@ export function registerCanonicalWireCommands(program: Command): void {
     .action((opts) => runProtocolPeerDiscover(opts));
   peer
     .command("migrate-legacy")
-    .description(
-      "Migrate legacy_webhook before 2026-10-01 (Wire transport; not orgos webhook)"
-    )
+    .description("Migrate legacy_webhook before 2026-10-01 (Wire transport; not orgos webhook)")
     .option("--tenant <id>", "Tenant id")
     .option("--apply", "Write peers.yaml (default: dry-run)")
     .option("--to-wire-url <url>", "Replace legacy endpoint with wire_v1 URL")
@@ -255,21 +253,22 @@ export function registerCanonicalWireCommands(program: Command): void {
     )
     .option("--json", "JSON output")
     .option("--no-evidence", "Skip writing scratch/wire-live-verify-*.json")
-    .action(async (opts: {
-      tenant?: string;
-      publicBaseUrl?: string;
-      roundtrip?: boolean;
-      strictEmailWire?: boolean;
-      json?: boolean;
-      noEvidence?: boolean;
-    }) =>
-      runWireLiveVerifyCommand({
-        tenant: opts.tenant,
-        publicBaseUrl: opts.publicBaseUrl,
-        roundtrip: opts.roundtrip,
-        strictEmailWire: opts.strictEmailWire,
-        json: opts.json,
-        noEvidence: opts.noEvidence,
-      })
+    .action(
+      async (opts: {
+        tenant?: string;
+        publicBaseUrl?: string;
+        roundtrip?: boolean;
+        strictEmailWire?: boolean;
+        json?: boolean;
+        noEvidence?: boolean;
+      }) =>
+        runWireLiveVerifyCommand({
+          tenant: opts.tenant,
+          publicBaseUrl: opts.publicBaseUrl,
+          roundtrip: opts.roundtrip,
+          strictEmailWire: opts.strictEmailWire,
+          json: opts.json,
+          noEvidence: opts.noEvidence,
+        })
     );
 }

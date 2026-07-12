@@ -41,11 +41,7 @@ export function upsertSchedulingCase(caseRow: SchedulingCase): SchedulingCase {
   const existing = findSchedulingCase(caseRow.id);
   if (!existing) return insertSchedulingCase(caseRow);
   if (caseRow.revision !== existing.revision) {
-    throw new SchedulingRevisionConflictError(
-      caseRow.id,
-      caseRow.revision,
-      existing.revision
-    );
+    throw new SchedulingRevisionConflictError(caseRow.id, caseRow.revision, existing.revision);
   }
   return updateSchedulingCase(existing.id, existing.revision, () => caseRow);
 }

@@ -1,6 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { randomUUID } from "node:crypto";
 import {
   protocolAuditRecordSchema,
   type ProtocolAuditRecord,
@@ -10,7 +9,10 @@ import { appendJsonl, loadJsonl } from "../jsonl-store.js";
 import { envelopeDigest } from "./canonical.js";
 import { getProtocolAuditChainPath } from "./paths.js";
 import { serializeEventEnvelope } from "./envelope.js";
-import { assertProtocolWriteAuthorized, currentProtocolWriteSource } from "./protocol-write-guard.js";
+import {
+  assertProtocolWriteAuthorized,
+  currentProtocolWriteSource,
+} from "./protocol-write-guard.js";
 import { writeOutboxProvenance } from "./outbox-provenance.js";
 import { getClock, getIdGenerator } from "../runtime-context.js";
 

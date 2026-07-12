@@ -9,10 +9,16 @@ import { setTenantId } from "../../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../../src/lib/utils.js";
 import { validateAll } from "../../src/lib/data.js";
 import { buildIdentityDocument, buildIdentityEnvelope } from "../../src/lib/protocol/identity.js";
-import { exportDelegationProof, buildDelegationEnvelope } from "../../src/lib/protocol/delegation.js";
+import {
+  exportDelegationProof,
+  buildDelegationEnvelope,
+} from "../../src/lib/protocol/delegation.js";
 import { resolveJurisdictionApprovalPolicy } from "../../src/lib/jurisdiction/wire-governance/index.js";
 import { validateProtocolState } from "../../src/lib/protocol/validate.js";
-import { verifyProtocolAuditChain, appendProtocolAuditRecord } from "../../src/lib/protocol/audit-chain.js";
+import {
+  verifyProtocolAuditChain,
+  appendProtocolAuditRecord,
+} from "../../src/lib/protocol/audit-chain.js";
 import { ensureProtocolSigningKey, maybeSignEnvelope } from "../../src/lib/protocol/signing.js";
 import { getWitnessPoolYamlPath } from "../../src/lib/protocol/paths.js";
 import { witnessPoolConfigSchema } from "../../schemas/protocol/witness-pool.js";
@@ -71,7 +77,11 @@ function archiveEnvelope(envelope: ReturnType<typeof buildIdentityEnvelope>, lab
   runWithProtocolWriteGuard("standalone-org-demo", () => {
     const dir = getProtocolOutboxDir();
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, `${label}-${signed.event_id}.json`), serializeEventEnvelope(signed), "utf-8");
+    writeFileSync(
+      join(dir, `${label}-${signed.event_id}.json`),
+      serializeEventEnvelope(signed),
+      "utf-8"
+    );
     writeOutboxProvenance(dir, signed, "standalone-org-demo");
   });
 }
@@ -105,9 +115,7 @@ export function runStandaloneOrgDemo(tenant: string): StandaloneOrgDemoResult {
 
   const persons = loadOrgAuthorizedPersons();
   const approver =
-    persons.directors[0]?.name ??
-    persons.representative?.split(/[、,]/)[0]?.trim() ??
-    "Director";
+    persons.directors[0]?.name ?? persons.representative?.split(/[、,]/)[0]?.trim() ?? "Director";
   const policyRef = resolveJurisdictionApprovalPolicy().policy_ref;
   const request = proposeOrgApproval({
     scope: "internal",

@@ -43,7 +43,11 @@ export function findEnvelopeFileForWitness(eventId: string): EventEnvelope | und
   return undefined;
 }
 
-export { buildWitnessAttestationFromEnvelope, cacheWitnessReceipt, loadCachedWitnessReceipt } from "./witness-attestation-build.js";
+export {
+  buildWitnessAttestationFromEnvelope,
+  cacheWitnessReceipt,
+  loadCachedWitnessReceipt,
+} from "./witness-attestation-build.js";
 
 export interface FanOutResult {
   succeeded: string[];
@@ -60,7 +64,10 @@ export async function registerWitnessAttestationFanOut(opts: {
   const pool = opts.pool ?? loadWitnessPoolConfig();
   if (!isWitnessEnabled(pool)) return null;
 
-  const attestation = buildWitnessAttestationFromEnvelope({ envelope: opts.envelope, side: opts.side });
+  const attestation = buildWitnessAttestationFromEnvelope({
+    envelope: opts.envelope,
+    side: opts.side,
+  });
   const digest = attestation.envelope_digest;
   const succeeded: string[] = [];
   const failed: { hub_id: string; error: string }[] = [];

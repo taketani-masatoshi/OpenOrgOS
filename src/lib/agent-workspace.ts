@@ -5,12 +5,7 @@ import type { TenantModule } from "../../schemas/modules.js";
 import { getAgentCapability } from "./agent-capability.js";
 import { initTenantControlsFile } from "./control-framework.js";
 import { MODULE_DEFAULT_DATA_ROOT } from "./module-business-data.js";
-import {
-  getModuleSeedDir,
-  loadModuleManifest,
-  loadModulesFile,
-  MODULES_FILE,
-} from "./modules.js";
+import { getModuleSeedDir, loadModuleManifest, loadModulesFile, MODULES_FILE } from "./modules.js";
 import { loadTenantRegulationsFile } from "./regulations.js";
 import { seedRegulationDocs } from "./regulations.js";
 import { REGULATIONS_FILE } from "./regulations.js";
@@ -133,10 +128,7 @@ function enableRegulations(ids: string[]): string[] {
     enabled.push(id);
   }
   if (enabled.length) {
-    writeYamlFile(
-      join(getTenantDir(), REGULATIONS_FILE),
-      tenantRegulationsFileSchema.parse(file)
-    );
+    writeYamlFile(join(getTenantDir(), REGULATIONS_FILE), tenantRegulationsFileSchema.parse(file));
   }
   return enabled;
 }
@@ -212,14 +204,10 @@ export function activateTenantModule(
       : enableRegulations(manifest.optional_regulations.filter((id) => id.startsWith("REG-")));
 
   const isoEnabled =
-    opts.skipIso || !MODULE_ISO[moduleId]?.length
-      ? []
-      : enableIsoStandards(MODULE_ISO[moduleId]!);
+    opts.skipIso || !MODULE_ISO[moduleId]?.length ? [] : enableIsoStandards(MODULE_ISO[moduleId]!);
 
   const regulationsSeeded =
-    regulationsEnabled.length > 0
-      ? seedRegulationDocs({ ids: regulationsEnabled }).seeded
-      : [];
+    regulationsEnabled.length > 0 ? seedRegulationDocs({ ids: regulationsEnabled }).seeded : [];
 
   const controlsInitialized =
     opts.skipControls || (!isoEnabled.length && !regulationsEnabled.length)

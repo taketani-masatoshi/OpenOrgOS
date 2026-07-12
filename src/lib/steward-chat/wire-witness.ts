@@ -14,10 +14,7 @@ import {
   resolveOperatorPermissions,
 } from "../console-auth/operator-rbac.js";
 
-export async function registerWitnessFromChat(
-  eventId: string,
-  side: WitnessAttestationSide
-) {
+export async function registerWitnessFromChat(eventId: string, side: WitnessAttestationSide) {
   const tenantId = getTenantId();
   if (!isWireConsoleEnabled(tenantId)) {
     throw new Error(`Tenant ${tenantId} does not have wire_console enabled`);

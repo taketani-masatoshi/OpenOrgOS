@@ -1,2 +1,30 @@
-inbox_items: []
-outbox_items: []
+inbox_items:
+  - id: INB-001
+    filename: 2026-07-12_テスト許可証.pdf
+    path: docs/io/inbox/licenses/2026-07-12_テスト許可証.pdf
+    category: licenses
+    status: pending
+    received_at: 2026-07-12
+    source: scan
+    title: テスト許可証
+    related_id: CTR-013
+  - id: INB-002
+    filename: 2026-07-12_申請書テスト.pdf
+    path: docs/io/inbox/applications/2026-07-12_申請書テスト.pdf
+    category: applications
+    status: done
+    received_at: 2026-07-12
+    source: scan
+    title: 申請書テスト
+    notes: processed
+    processed_at: 2026-07-12
+    archive_path: scratch/test-archive-1783829820663.pdf
+outbox_items:
+  - id: OUT-001
+    filename: test-out-1783829820722.pdf
+    path: docs/io/outbox/lodging/test-out-1783829820722.pdf
+    category: lodging
+    purpose: display
+    generated_at: 2026-07-12
+    source: manual
+    title: test-out-1783829820722

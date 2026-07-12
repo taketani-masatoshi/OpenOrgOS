@@ -19,10 +19,7 @@ import { loadTenantConfig, getTenantId } from "../tenant.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProtocolInboxDir } from "./paths.js";
-import {
-  assertProtocolDeliverGate,
-  assertEnvelopeDeliverAuthorized,
-} from "./pre-deliver-gate.js";
+import { assertProtocolDeliverGate, assertEnvelopeDeliverAuthorized } from "./pre-deliver-gate.js";
 import {
   isGovGatewayEndpoint,
   isWireV1Endpoint,
@@ -33,10 +30,7 @@ import {
 import { deliverEnvelopeViaGovGateway } from "../wire/gov-gateway/deliver.js";
 import { envelopeToWireMessage } from "../wire-gateway/codec.js";
 import type { OpenOrgDnsResolver } from "../wire-gateway/openorg-dns.js";
-import {
-  isPkDidRequired,
-  isPkPrefixedOpenOrgDid,
-} from "../../../schemas/protocol/openorg-did.js";
+import { isPkDidRequired, isPkPrefixedOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
 import { assertLegacyWebhookDeliveryAllowed } from "./legacy-webhook-sunset.js";
 
 export interface DeliverEnvelopeResult {
@@ -60,7 +54,8 @@ export async function resolvePeerInboundEndpointsWithDns(
   const endpoints = resolvePeerInboundEndpoints(peer);
   if (endpoints.length > 0) return endpoints;
 
-  const nodeId = peer.did?.replace(/^did:ooo:org:/, "") ?? peer.org_uri?.replace(/^steward:\/\/tenant\//, "");
+  const nodeId =
+    peer.did?.replace(/^did:ooo:org:/, "") ?? peer.org_uri?.replace(/^steward:\/\/tenant\//, "");
   if (!nodeId || !isDnsStyleNodeId(nodeId)) return endpoints;
 
   const resolved = await resolveOpenOrgWireUrl(nodeId, { resolver: opts?.dnsResolver });
@@ -195,7 +190,7 @@ export async function deliverProtocolEnvelope(
     }
 
     let result: { ok: boolean; reason: string; httpStatus?: number };
-    let channel: "wire_v1" | "relay" | "email_wire" | "openorgos_p2p" = "openorgos_p2p";
+    let channel: "wire_v1" | "relay" | "email_wire" | "openorgos_p2p";
 
     if (isGovGatewayEndpoint(ep)) {
       result = await deliverViaGovGatewayEndpoint(envelope, peerId, ep);

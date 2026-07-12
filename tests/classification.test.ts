@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import {
   loadClassificationRegistry,
   checkAgentAccess,
@@ -6,12 +6,18 @@ import {
   validateBankAccountLinksSync,
   aiBoundaryPatterns,
   boundaryNeedle,
+  findResourceByPath,
   unsafeTrackedResource,
   assertSafeTrackedPath,
   validateCursorindexingignoreCoverage,
 } from "../src/lib/classification.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("classification", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("loads classification-registry.yaml", () => {
     const reg = loadClassificationRegistry();
     expect(reg.version).toBe("1");
@@ -54,6 +60,13 @@ describe("classification", () => {
   it("level ordering", () => {
     expect(levelAtMost("L1", "L2")).toBe(true);
     expect(levelAtMost("L2", "L1")).toBe(false);
+  });
+
+  it("treats directory resources as boundaries for descendants", () => {
+    const reg = loadClassificationRegistry();
+    expect(findResourceByPath(reg, "steward/platform/protocol/registry.yaml")?.id).toBe(
+      "RES-PLATFORM-STEWARD"
+    );
   });
 
   it("cash-balance links to existing bank accounts when file present", () => {

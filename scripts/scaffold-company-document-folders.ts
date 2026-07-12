@@ -49,8 +49,7 @@ const README: Record<string, string> = {
     "# procurement/quotes/received — 受領見積\n\nベンダー・相手社から受け取った見積書。`{ベンダー名}/QUO-YYYYMMDD-*.md`\n",
   "procurement/quotes/sent":
     "# procurement/quotes/sent — 見積依頼・RFQ 送付\n\n見積依頼の送付記録。\n",
-  "procurement/orders":
-    "# procurement/orders — 発注書\n\nPO・発注書。稟議承認後に格納。\n",
+  "procurement/orders": "# procurement/orders — 発注書\n\nPO・発注書。稟議承認後に格納。\n",
   "sales/quotes":
     "# sales/quotes — 提出見積\n\n顧客・委託者向けに提出した見積書。`{相手先}/QUO-YYYYMMDD-*.md`\n",
   "finance/accounting/invoices/issued":
@@ -65,8 +64,7 @@ const README: Record<string, string> = {
     "# records — スキャン原本（非追跡推奨）\n\nPDF・画像の正本。Git 外 `records/` または `.gitignore` 配下。\n",
   "io/inbox":
     "# io/inbox — 外部受領\n\n未分類の受領書類・組織間契約ドラフト（相手送付）。\n\n組織間契約: [inter-org-contract-workflow.md](../../../../steward/rules/inter-org-contract-workflow.md)\n",
-  "io/outbox/sent":
-    "# io/outbox/sent — 送付控え\n\nメール送付した契約・見積の控え。\n",
+  "io/outbox/sent": "# io/outbox/sent — 送付控え\n\nメール送付した契約・見積の控え。\n",
   legal: "# docs/legal — 法務\n\nリーガルメモ、契約レビュー、NDA ドラフト（契約台帳外）。\n",
   compliance: "# docs/compliance — コンプライアンス\n\nISO、プライバシー、内部監査。\n",
   executive: "# docs/executive — 役員・秘書\n\nスケジュール、1on1、対外下書き。\n",

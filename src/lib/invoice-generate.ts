@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadCompany, loadProperties } from "./data.js";
+import { loadProperties } from "./data.js";
 import { loadOrgCompanyBilling } from "./org/tenant-data.js";
 import { monthRange } from "./utils.js";
 import {
@@ -15,11 +15,7 @@ import {
   generateRentInvoicePdf,
   type RentInvoiceInput,
 } from "./invoice-pdf.js";
-import {
-  formatJapaneseDate,
-  formatJapaneseYearMonth,
-  paymentDueDate,
-} from "./invoice-dates.js";
+import { formatJapaneseDate, formatJapaneseYearMonth, paymentDueDate } from "./invoice-dates.js";
 import {
   invoiceEmailsDir,
   invoiceOutputDir,
@@ -109,7 +105,10 @@ export async function runInvoiceGenerate(
 
   const monthlyRent = prop.rental?.monthly_rent ?? 100_000;
   const tenantName =
-    options.tenantName ?? billing.tenant_name ?? template.defaults?.tenant_name ?? TENANT_NAME_PLACEHOLDER;
+    options.tenantName ??
+    billing.tenant_name ??
+    template.defaults?.tenant_name ??
+    TENANT_NAME_PLACEHOLDER;
   const tenantEmail =
     options.tenantEmail ??
     billing.tenant_email ??

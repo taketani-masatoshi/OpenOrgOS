@@ -67,7 +67,6 @@ import {
   runProtocolAuditVerify,
   runProtocolVerifyAuditChain,
   runProtocolVerifyDelegation,
-  runProtocolEnvelopeValidate,
   runProtocolNoticePropose,
   runProtocolNoticeList,
   runProtocolNoticeApprove,
@@ -75,6 +74,7 @@ import {
   runProtocolNoticeShow,
   runProtocolSigningExportPublic,
   runProtocolSigningRotate,
+  runProtocolSigningSyncGatewayDid,
   runProtocolDeliver,
   runProtocolDeliverFlushPending,
   runProtocolDeliverPull,
@@ -174,7 +174,9 @@ import { registerCanonicalWireCommands } from "./wire.js";
 import { registerInternalWebhookCommands } from "./internal-webhook.js";
 
 export function registerOrchestrationCommands(program: Command): void {
-  const routeCmd = program.command("route").description("Agent inter-routing (registry · access · handoff)");
+  const routeCmd = program
+    .command("route")
+    .description("Agent inter-routing (registry · access · handoff)");
   routeCmd.command("list").description("List static route registry").action(runRouteList);
   routeCmd
     .command("match")
@@ -248,7 +250,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--mode <mode>", "suggest | auto | implement")
     .action((opts) => runRouteDispatch({ id: opts.id, mode: opts.mode }));
 
-  const escalateCmd = program.command("escalate").description("Delegation / work orders (implement task routing)");
+  const escalateCmd = program
+    .command("escalate")
+    .description("Delegation / work orders (implement task routing)");
   escalateCmd
     .command("plan")
     .description("Plan work orders from request text (dry-run default)")
@@ -257,8 +261,18 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--subject <text>", "Work order subject")
     .option("--background <text>", "Background context")
     .option("--requirements <text>", "Implementation requirements")
-    .option("--deliverable <d>", "Deliverable (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
-    .option("--acceptance <c>", "Acceptance criterion (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option(
+      "--deliverable <d>",
+      "Deliverable (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
+    .option(
+      "--acceptance <c>",
+      "Acceptance criterion (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--priority <p>", "P0 | P1 | P2 | P3")
     .option("--tenant <id>", "Tenant id")
     .option("--dry-run", "Plan only (default)", true)
@@ -286,8 +300,18 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--subject <text>", "Subject")
     .option("--background <text>", "Background")
     .option("--requirements <text>", "Requirements")
-    .option("--deliverable <d>", "Deliverable", (v: string, prev: string[]) => [...prev, v], [] as string[])
-    .option("--acceptance <c>", "Acceptance criterion", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option(
+      "--deliverable <d>",
+      "Deliverable",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
+    .option(
+      "--acceptance <c>",
+      "Acceptance criterion",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--priority <p>", "P0 | P1 | P2 | P3")
     .option("--from <agent>", "Source agent", "executive_steward")
     .option("--tenant <id>", "Tenant id")
@@ -313,7 +337,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--pending", "Pending only")
     .option("--blocked", "Blocked only")
     .option("--json", "JSON output")
-    .action((opts) => runEscalateStatus({ pending: opts.pending, blocked: opts.blocked, json: opts.json }));
+    .action((opts) =>
+      runEscalateStatus({ pending: opts.pending, blocked: opts.blocked, json: opts.json })
+    );
   escalateCmd
     .command("complete")
     .description("Mark work order completed (+ auto-merge parent when all siblings done)")
@@ -376,7 +402,10 @@ export function registerOrchestrationCommands(program: Command): void {
     });
 
   const agentCloudCmd = agentCmd.command("cloud").description("Cloud Agent runtime (Phase 3)");
-  agentCloudCmd.command("config").description("Show cloud agent config").action(runAgentCloudConfig);
+  agentCloudCmd
+    .command("config")
+    .description("Show cloud agent config")
+    .action(runAgentCloudConfig);
   agentCloudCmd
     .command("watch")
     .description("Poll queue and dispatch via cloud/local SDK")
@@ -442,7 +471,9 @@ export function registerOrchestrationCommands(program: Command): void {
     );
   agentRosterCmd
     .command("enable")
-    .description("Enable an Agent in a tenant profile")
+    .description(
+      "Enable an Agent in a tenant profile (see steward/rules/agent-authority-model.md §4.1)"
+    )
     .requiredOption("--agent <id>", "Agent id")
     .option("--profile <profile>", "operational | developer | task", "operational")
     .option("--tenant <id>", "Tenant id")
@@ -578,7 +609,10 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       })
     );
-  agentRelayCmd.command("summary").description("Markdown inbox summary").action(() => runAgentRelaySummary());
+  agentRelayCmd
+    .command("summary")
+    .description("Markdown inbox summary")
+    .action(() => runAgentRelaySummary());
 
   agentCmd
     .command("missions")
@@ -586,7 +620,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--agent <id>", "Filter by field agent")
     .option("--json", "JSON output")
-    .action((opts) => runAgentMissionList({ tenant: opts.tenant, agent: opts.agent, json: opts.json }));
+    .action((opts) =>
+      runAgentMissionList({ tenant: opts.tenant, agent: opts.agent, json: opts.json })
+    );
 
   const queueCmd = program.command("queue").description("Work order event queue (JSONL DB)");
   queueCmd
@@ -596,7 +632,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--ref <ref>", "Reference id")
     .option("--payload <json>", "JSON payload")
     .option("--tenant <id>", "Tenant id")
-    .action((opts) => runQueuePush({ type: opts.type, ref: opts.ref, payload: opts.payload, tenant: opts.tenant }));
+    .action((opts) =>
+      runQueuePush({ type: opts.type, ref: opts.ref, payload: opts.payload, tenant: opts.tenant })
+    );
   queueCmd
     .command("list")
     .description("List queue events")
@@ -604,7 +642,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--type <type>", "Event type filter")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
-    .action((opts) => runQueueList({ status: opts.status, type: opts.type, tenant: opts.tenant, json: opts.json }));
+    .action((opts) =>
+      runQueueList({ status: opts.status, type: opts.type, tenant: opts.tenant, json: opts.json })
+    );
   queueCmd
     .command("drain")
     .description("Process pending queue events")
@@ -646,7 +686,10 @@ export function registerOrchestrationCommands(program: Command): void {
   auditLogCmd
     .command("append")
     .description("Append audit event")
-    .requiredOption("--event <type>", "handoff | validate | classification_block | escalate | route_dispatch")
+    .requiredOption(
+      "--event <type>",
+      "handoff | validate | classification_block | escalate | route_dispatch"
+    )
     .requiredOption("--ref <id>", "Reference id or path")
     .option("--actor <agent>", "Actor agent id")
     .option("--detail <text>", "Detail")
@@ -762,7 +805,9 @@ export function registerOrchestrationCommands(program: Command): void {
       runProtocolValidate({ tenant: opts.tenant, json: opts.json, standalone: opts.standalone })
     );
 
-  const protocolOutboxCmd = protocolCmd.command("outbox").description("Protocol outbox directory hardening");
+  const protocolOutboxCmd = protocolCmd
+    .command("outbox")
+    .description("Protocol outbox directory hardening");
   protocolOutboxCmd
     .command("apply-permissions")
     .description("Set outbox/inbox 750 · protocol data 700 · envelope files 640 (deploy template)")
@@ -785,9 +830,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Verify outbox/inbox are not world-writable (production hardening)")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
-    .action((opts) =>
-      runProtocolOutboxCheckPermissions({ tenant: opts.tenant, json: opts.json })
-    );
+    .action((opts) => runProtocolOutboxCheckPermissions({ tenant: opts.tenant, json: opts.json }));
 
   const protocolIdentityCmd = protocolCmd.command("identity").description("Identity exchange");
   protocolIdentityCmd
@@ -872,7 +915,9 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
-  const protocolMeshCmd = protocolCmd.command("mesh").description("Multi-hop peer mesh delivery (FR-EM-07)");
+  const protocolMeshCmd = protocolCmd
+    .command("mesh")
+    .description("Multi-hop peer mesh delivery (FR-EM-07)");
   protocolMeshCmd
     .command("deliver")
     .description("Deliver envelope via configured mesh route (via chain)")
@@ -889,13 +934,18 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
-  const protocolDelegationCmd = protocolCmd.command("delegation").description("Authority delegation");
+  const protocolDelegationCmd = protocolCmd
+    .command("delegation")
+    .description("Authority delegation");
   protocolDelegationCmd
     .command("export")
     .description("Export DelegationProof as EventEnvelope")
     .requiredOption("--scope <scope>", "e.g. contract.sign")
     .requiredOption("--grantee-agent <id>", "Agent id (contract · finance · …)")
-    .option("--basis-ref <ref>", "Policy basis (jurisdiction policy_ref, e.g. from wire-governance pack)")
+    .option(
+      "--basis-ref <ref>",
+      "Policy basis (jurisdiction policy_ref, e.g. from wire-governance pack)"
+    )
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) =>
@@ -913,7 +963,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--file <path>", "JSON file")
     .action((opts) => runProtocolDelegationValidate({ file: opts.file }));
 
-  const protocolTxCmd = protocolCmd.command("transaction").description("Inter-org transaction ledger");
+  const protocolTxCmd = protocolCmd
+    .command("transaction")
+    .description("Inter-org transaction ledger");
   protocolTxCmd
     .command("record")
     .description("Record inbound transaction (outbound requires notice approve)")
@@ -1129,7 +1181,9 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
-  const protocolVerifyCmd = protocolCmd.command("verify").description("Third-party protocol verification");
+  const protocolVerifyCmd = protocolCmd
+    .command("verify")
+    .description("Third-party protocol verification");
   protocolVerifyCmd
     .command("audit-chain")
     .description("Verify audit-chain with optional envelope digest checks")
@@ -1161,7 +1215,9 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) => runProtocolVerifyDelegation({ file: opts.file, json: opts.json }));
 
-  const protocolSigningCmd = protocolCmd.command("signing").description("Protocol envelope signing");
+  const protocolSigningCmd = protocolCmd
+    .command("signing")
+    .description("Protocol envelope signing");
   protocolSigningCmd
     .command("export-public")
     .description("Export base64 protocol public key for peer registration")
@@ -1174,6 +1230,12 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runProtocolSigningRotate({ tenant: opts.tenant, json: opts.json }));
+  protocolSigningCmd
+    .command("sync-gateway-did")
+    .description("Pin wire-gateway.yaml did to the current signing public key")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => runProtocolSigningSyncGatewayDid({ tenant: opts.tenant, json: opts.json }));
 
   const protocolDeliverCmd = protocolCmd
     .command("deliver")
@@ -1275,9 +1337,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Retry wire deliveries queued in data/protocol/wire-pending.yaml")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
-    .action((opts) =>
-      runProtocolDeliverFlushPending({ tenant: opts.tenant, json: opts.json })
-    );
+    .action((opts) => runProtocolDeliverFlushPending({ tenant: opts.tenant, json: opts.json }));
 
   const protocolMailCmd = protocolCmd.command("mail").description("R5 email-wire protocol path");
   protocolMailCmd
@@ -1486,7 +1546,11 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--reason <text>", "Revocation reason")
     .option("--json", "JSON output")
     .action((opts) =>
-      runProtocolCommunityRevoke({ operatorId: opts.operatorId, reason: opts.reason, json: opts.json })
+      runProtocolCommunityRevoke({
+        operatorId: opts.operatorId,
+        reason: opts.reason,
+        json: opts.json,
+      })
     );
   const protocolCommunityGovCmd = protocolCommunityCmd
     .command("governance")
@@ -1498,7 +1562,12 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--org-name <name>", "Operator org name")
     .requiredOption("--jurisdiction <code>", "ISO jurisdiction")
     .requiredOption("--requested-by <id>", "Requester id")
-    .option("--hub-id <id>", "Hub id (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option(
+      "--hub-id <id>",
+      "Hub id (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--json", "JSON output")
     .action((opts) =>
       runProtocolCommunityGovernanceSubmit({
@@ -1746,7 +1815,9 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
-  const protocolRelayCmd = protocolCmd.command("relay").description("Wire + witness relay worker (R1–R4)");
+  const protocolRelayCmd = protocolCmd
+    .command("relay")
+    .description("Wire + witness relay worker (R1–R4)");
   protocolRelayCmd
     .command("once")
     .description("Run one relay cycle (flush wire/witness pending + reconcile)")
@@ -1807,7 +1878,12 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tls-key <path>", "Server TLS private key (PEM)")
     .option("--tls-ca <path>", "Client CA for mTLS verification (PEM)")
     .option("--mtls-required", "Require client cert on relay/inbox/outbox")
-    .option("--mtls-allowed-org <uri>", "Allowed client org_uri (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option(
+      "--mtls-allowed-org <uri>",
+      "Allowed client org_uri (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--tenant <id>", "Tenant id")
     .action((opts) =>
       runProtocolApiServe({
@@ -1840,7 +1916,12 @@ export function registerOrchestrationCommands(program: Command): void {
     .command("init-proposal3")
     .description("Generate dev PKI + protocol-api-client.yaml for Proposal 3 (Org C mTLS)")
     .option("--org-c <tenant>", "Org C tenant id", "aiac")
-    .option("--client <id>", "Party tenant with client cert (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option(
+      "--client <id>",
+      "Party tenant with client cert (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--force", "Regenerate existing PKI material")
     .option("--json", "JSON output")
     .action((opts) =>
@@ -1867,8 +1948,12 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
-  const orgCmd = program.command("org").description("Universal org activity root (approval · audit bridge)");
-  const orgApprovalCmd = orgCmd.command("approval").description("Internal human approval (scope: internal)");
+  const orgCmd = program
+    .command("org")
+    .description("Universal org activity root (approval · audit bridge)");
+  const orgApprovalCmd = orgCmd
+    .command("approval")
+    .description("Internal human approval (scope: internal)");
   orgApprovalCmd
     .command("propose")
     .description("Propose internal approval (Secretary / operator)")
@@ -1899,7 +1984,10 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--approver <name>", "Approver")
     .option("--co-approver <name>", "Second approver (tier B)")
     .option("--operator <name>", "Override operator id")
-    .option("--reviewed", "Confirm correspondence draft body was reviewed (required for correspondence.*)")
+    .option(
+      "--reviewed",
+      "Confirm correspondence draft body was reviewed (required for correspondence.*)"
+    )
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) =>
@@ -1974,7 +2062,10 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--data-dir <path>", "Hub data directory", "./data/hub")
     .option("--host <host>", "Bind host", "127.0.0.1")
     .option("--port <n>", "Bind port", "9474")
-    .option("--gossip-interval <sec>", "Background gossip sync interval (requires hub-federation.yaml)")
+    .option(
+      "--gossip-interval <sec>",
+      "Background gossip sync interval (requires hub-federation.yaml)"
+    )
     .option("--tls-cert <path>", "TLS certificate PEM (enables HTTPS)")
     .option("--tls-key <path>", "TLS private key PEM")
     .option("--tls-ca <path>", "CA bundle for mTLS client verification")
@@ -2084,7 +2175,12 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--suggest", "Print suggested peer register commands for unregistered nodes")
     .option("--apply", "Register unregistered nodes into peers.yaml")
     .option("--dry-run", "With --apply: preview without writing peers.yaml")
-    .option("--node-id <id>", "Limit --apply to node_id (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option(
+      "--node-id <id>",
+      "Limit --apply to node_id (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--json", "JSON output")
     .action((opts) => {
       if (opts.apply) {

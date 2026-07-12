@@ -53,7 +53,10 @@ export function verifyAndRegisterAttestationOrg(attestation: WitnessAttestation)
   if (attestation.side === "sent" && attestation.org_ref.org_id !== attestation.origin.org_id) {
     issues.push("sent attestation org_ref must match origin");
   }
-  if (attestation.side === "received" && attestation.org_ref.org_id !== attestation.destination.org_id) {
+  if (
+    attestation.side === "received" &&
+    attestation.org_ref.org_id !== attestation.destination.org_id
+  ) {
     issues.push("received attestation org_ref must match destination");
   }
 

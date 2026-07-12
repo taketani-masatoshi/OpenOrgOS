@@ -47,9 +47,7 @@ export async function generateJigyoPdf(
   const fyYear = businessPlan.years.find((y) => y.year === yojitsu.year);
   const investment = fyYear?.investment_plan ?? 0;
 
-  const path =
-    outputPath ??
-    join(ensurePdfOutputDir("jigyo"), `${fiscalYear}-jigyo-hokoku.pdf`);
+  const path = outputPath ?? join(ensurePdfOutputDir("jigyo"), `${fiscalYear}-jigyo-hokoku.pdf`);
 
   const w = createPdfWriter();
 
@@ -91,10 +89,7 @@ export async function generateJigyoPdf(
 
   pdfSection(w, "3. 物件の状況");
   for (const prop of properties) {
-    const price =
-      prop.acquisition_price != null
-        ? formatCurrency(prop.acquisition_price)
-        : "—";
+    const price = prop.acquisition_price != null ? formatCurrency(prop.acquisition_price) : "—";
     pdfParagraph(
       w,
       `・${prop.name}（${prop.location}）— 取得${price}、種別: ${prop.type === "hotel" ? "旅館" : "賃貸"}`,
@@ -136,16 +131,10 @@ export async function generateJigyoPdf(
   }
 
   pdfSection(w, "7. 従業員の状況");
-  pdfParagraph(
-    w,
-    "当会社に使用する従業員はなく、代表取締役2名により業務を運営しております。"
-  );
+  pdfParagraph(w, "当会社に使用する従業員はなく、代表取締役2名により業務を運営しております。");
 
   pdfSection(w, "8. 重要な契約及び偶発事項");
-  pdfParagraph(
-    w,
-    "訴訟事件、行政処分その他の重要な偶発事項はありません。"
-  );
+  pdfParagraph(w, "訴訟事件、行政処分その他の重要な偶発事項はありません。");
 
   pdfSection(w, "9. 今後の方針");
   const nextYear = businessPlan.years.find((y) => y.year === yojitsu.year + 1);
@@ -158,13 +147,13 @@ export async function generateJigyoPdf(
 
   const reps = (company.directors ?? [])
     .filter((d) => d.role?.includes("代表"))
-    .map((d) => `${d.role ?? "代表取締役"}　${d.name}　㊞`);
+    .map((d) => `${d.role ?? "代表取締役"}\u3000${d.name}\u3000㊞`);
 
   pdfSignatureBlock(
     w,
     formatJapaneseDate(closedAt),
     company.name,
-    reps.length > 0 ? reps : [`代表取締役　${company.representative ?? ""}　㊞`]
+    reps.length > 0 ? reps : [`代表取締役\u3000${company.representative ?? ""}\u3000㊞`]
   );
 
   await writePdfToFile(w.doc, path);

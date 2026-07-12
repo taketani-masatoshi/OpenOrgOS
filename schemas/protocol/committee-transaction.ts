@@ -47,23 +47,15 @@ export function normalizeTransactionType(input: string): CommitteeTransactionTyp
 }
 
 export function isContractExecutionNoticeType(type: string): boolean {
-  return (
-    type === "contract.execution.notice" ||
-    type === "steward.contract.execution.notice"
-  );
+  return type === "contract.execution.notice" || type === "steward.contract.execution.notice";
 }
 
 export function isContractVoidAcknowledgedType(type: string): boolean {
-  return (
-    type === "contract.void.acknowledged" ||
-    type === "steward.contract.void.acknowledged"
-  );
+  return type === "contract.void.acknowledged" || type === "steward.contract.void.acknowledged";
 }
 
 export function isContractVoidRequestedType(type: string): boolean {
-  return (
-    type === "contract.void.requested" || type === "steward.contract.void.requested"
-  );
+  return type === "contract.void.requested" || type === "steward.contract.void.requested";
 }
 
 export function isContractExecutedType(type: string): boolean {

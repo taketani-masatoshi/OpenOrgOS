@@ -55,8 +55,8 @@ Required:
 
 - `strict = true`
 - `noImplicitAny`
-- eslint
-- prettier
+- eslint (`npm run lint` · scope: `src/` · `schemas/` · recommended = **error** · `no-explicit-any` = warn)
+- prettier (`npm run format:check` · CI enforced · `schemas/generated/**` ignored)
 
 Rules:
 

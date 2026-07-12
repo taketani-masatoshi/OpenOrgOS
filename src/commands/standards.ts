@@ -1,6 +1,5 @@
 import { listIsoStandardIds } from "../lib/standards.js";
 import { loadEnabledIsoIds, loadTenantStandards } from "../lib/tenant-standards.js";
-import { getTenantId } from "../lib/tenant.js";
 
 export function runStandardsList(): void {
   const catalog = listIsoStandardIds();
@@ -12,9 +11,7 @@ export function runStandardsList(): void {
   console.log("|----|----------------|-------|");
   for (const id of catalog) {
     const entry = tenantById.get(id);
-    console.log(
-      `| ${id} | ${entry?.enabled ? "yes" : "no"} | ${entry?.notes ?? "—"} |`
-    );
+    console.log(`| ${id} | ${entry?.enabled ? "yes" : "no"} | ${entry?.notes ?? "—"} |`);
   }
 }
 

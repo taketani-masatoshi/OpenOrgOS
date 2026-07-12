@@ -27,9 +27,7 @@ import {
 } from "../lib/scheduling-coordination/process-mail.js";
 import { runScheduleCoordinationAutoProcess } from "../lib/scheduling-coordination/auto-process.js";
 import { runSchedulingReminderPoll } from "../lib/scheduling-coordination/reminder-poller.js";
-import {
-  advanceSchedulingWorkflow,
-} from "../lib/scheduling-coordination/workflow.js";
+import { advanceSchedulingWorkflow } from "../lib/scheduling-coordination/workflow.js";
 import {
   findSchedulingCase,
   insertSchedulingCase,
@@ -77,7 +75,11 @@ function buildParticipants(inputs: SchedulingParticipantInput[]): SchedulingPart
   return participants;
 }
 
-export function runSchedulingList(opts: { status?: string; json?: boolean; active?: boolean }): void {
+export function runSchedulingList(opts: {
+  status?: string;
+  json?: boolean;
+  active?: boolean;
+}): void {
   const cases = listSchedulingCases({
     activeOnly: opts.active !== false,
     status: opts.status as SchedulingCase["status"] | undefined,
@@ -265,7 +267,10 @@ export function runSchedulingRespond(opts: {
 }
 
 export function runSchedulingLinkMail(opts: { id: string; mailId: string; json?: boolean }): void {
-  requireCliDataWrite({ command: "executive scheduling link-mail", permission: "scheduling:write" });
+  requireCliDataWrite({
+    command: "executive scheduling link-mail",
+    permission: "scheduling:write",
+  });
   const updated = linkMailToCase(opts.id, opts.mailId);
   auditCliMutation("executive scheduling link-mail", `${opts.id}+${opts.mailId}`);
   if (opts.json) {
@@ -295,14 +300,13 @@ export async function runSchedulingProcess(opts: {
   }
 
   for (const r of results) {
-    console.log(`${r.mail_id}: ${r.action}${r.case_id ? ` → ${r.case_id}` : ""}${r.reason ? ` (${r.reason})` : ""}`);
+    console.log(
+      `${r.mail_id}: ${r.action}${r.case_id ? ` → ${r.case_id}` : ""}${r.reason ? ` (${r.reason})` : ""}`
+    );
   }
 }
 
-export function assertSchedulingCaseConfirmable(
-  caseRow: SchedulingCase,
-  slotId: string
-): void {
+export function assertSchedulingCaseConfirmable(caseRow: SchedulingCase, slotId: string): void {
   if (!caseRow.proposed_slots.some((slot) => slot.id === slotId)) {
     throw new Error(`Slot ${slotId} does not belong to case ${caseRow.id}`);
   }
@@ -337,14 +341,15 @@ export async function runSchedulingConfirm(opts: {
       pushCalendar: opts.pushCalendar !== false,
       ceoAuthorize: cliOperator
         ? {
-            approverName:
-              cliOperator.record.approver_name ??
-              cliOperator.record.display_name,
+            approverName: cliOperator.record.approver_name ?? cliOperator.record.display_name,
             operatorId: cliOperator.record.operator_id,
           }
         : undefined,
     });
-    auditCliMutation("executive scheduling confirm", `${opts.id}+${closed.linked_event_id ?? opts.slotId}`);
+    auditCliMutation(
+      "executive scheduling confirm",
+      `${opts.id}+${closed.linked_event_id ?? opts.slotId}`
+    );
     if (opts.json) {
       console.log(JSON.stringify(closed, null, 2));
       return;
@@ -404,8 +409,7 @@ export function runSchedulingDraft(opts: {
               caseRow.reminder_targets.includes(p.id) &&
               !caseRow.reminder_history.some(
                 (r) =>
-                  r.proposal_revision === caseRow.proposal_revision &&
-                  r.participant_id === p.id
+                  r.proposal_revision === caseRow.proposal_revision && r.participant_id === p.id
               )
           )
         : listReminderTargets(caseRow);
@@ -415,7 +419,10 @@ export function runSchedulingDraft(opts: {
     const operator = getCliOperatorContext()?.record.operator_id ?? "secretary";
     const before = new Set(caseRow.correspondence.map((record) => record.draft_id));
     const updated = ensureSchedulingCorrespondenceDrafts(caseRow.id, kind, operator);
-    if (updated.status === "needs_review" && updated.exception_reason?.startsWith("schedule_contact_unresolved")) {
+    if (
+      updated.status === "needs_review" &&
+      updated.exception_reason?.startsWith("schedule_contact_unresolved")
+    ) {
       throw new Error(
         `Unresolved scheduling contact blocks send: ${updated.exception_reason.split(":")[1]}`
       );
@@ -448,7 +455,6 @@ export function runSchedulingDraft(opts: {
     if (recipients.cc) console.log(`Cc: ${recipients.cc}`);
     return;
   }
-
 }
 
 export function runSchedulingClose(opts: { id: string; json?: boolean }): void {
@@ -491,7 +497,10 @@ export function runSchedulingCancel(opts: { id: string; reason?: string; json?: 
 }
 
 export function runSchedulingReschedule(opts: { id: string; json?: boolean }): void {
-  requireCliDataWrite({ command: "executive scheduling reschedule", permission: "scheduling:write" });
+  requireCliDataWrite({
+    command: "executive scheduling reschedule",
+    permission: "scheduling:write",
+  });
   const caseRow = findSchedulingCase(opts.id);
   if (!caseRow) throw new Error(`Case ${opts.id} not found`);
   const participants = caseRow.participants.map((participant) => ({

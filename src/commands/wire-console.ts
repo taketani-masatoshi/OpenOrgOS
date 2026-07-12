@@ -6,7 +6,10 @@ import {
   stopWireConsoleServer,
 } from "../lib/wire-console/process.js";
 import { WIRE_CONSOLE_DEFAULT_PORT } from "../lib/wire-console/paths.js";
-import { anyWireConsoleTenantEnabled, listWireConsoleTenants } from "../lib/wire-console/tenant-registry.js";
+import {
+  anyWireConsoleTenantEnabled,
+  listWireConsoleTenants,
+} from "../lib/wire-console/tenant-registry.js";
 
 export interface WireConsoleStartOptions {
   port?: number;
@@ -16,7 +19,9 @@ export interface WireConsoleStartOptions {
 
 export async function runWireConsoleStart(opts: WireConsoleStartOptions): Promise<void> {
   if (!anyWireConsoleTenantEnabled()) {
-    console.error("No tenant has wire_console: true — enable in tenant.yaml or use tenant init --wire-console");
+    console.error(
+      "No tenant has wire_console: true — enable in tenant.yaml or use tenant init --wire-console"
+    );
     process.exit(1);
   }
 

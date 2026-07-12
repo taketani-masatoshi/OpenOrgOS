@@ -1,10 +1,7 @@
 import { loadContracts } from "../lib/data.js";
 import type { ContractType } from "../../schemas/index.js";
 
-export function runContractsList(options: {
-  type?: string;
-  property?: string;
-}): void {
+export function runContractsList(options: { type?: string; property?: string }): void {
   let contracts = loadContracts();
 
   if (options.type) {

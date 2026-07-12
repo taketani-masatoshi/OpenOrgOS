@@ -8,7 +8,10 @@ export const contractWitnessHubRefSchema = z.object({
 });
 
 export const contractProtocolConfigSchema = z.object({
-  peer_id: z.string().regex(/^PEER-\d{3}$/).optional(),
+  peer_id: z
+    .string()
+    .regex(/^PEER-\d{3}$/)
+    .optional(),
   resilience_sla: resilienceSlaTierSchema.default("silver"),
   witness_hubs: z.array(contractWitnessHubRefSchema).optional(),
   witness_trust_authority_url: z.string().url().optional(),

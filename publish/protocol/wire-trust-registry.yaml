@@ -20,10 +20,10 @@ nodes:
     notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:demo)
 
   - node_id: mal
-    did: did:ooo:org:pk-a1f974540eea4f7b
+    did: did:ooo:org:pk-5391e3fd05736bb5
     node_uri: steward://tenant/mal
     display_name: MAL Co
-    protocol_public_key: MCowBQYDK2VwAyEA8b0x7YSDfF/4SlWfBxS4opPLdhDnDZiyGEpNhqvaEzI=
+    protocol_public_key: MCowBQYDK2VwAyEAJq9+gY7CWLlhoUiiq7UcXxFIPLRm2CaHXB4YrD/8iwY=
     wire_url: https://wire.oorgos.org
     witness_jurisdiction: JP
     corporate_number: "4010001189530"

@@ -26,7 +26,9 @@ export function findSenderIdentification(mailId: string): SenderIdentificationEn
   return loadSenderIdentificationQueue().entries.find((e) => e.mail_id === mailId);
 }
 
-export function upsertSenderIdentification(entry: SenderIdentificationEntry): SenderIdentificationEntry {
+export function upsertSenderIdentification(
+  entry: SenderIdentificationEntry
+): SenderIdentificationEntry {
   const queue = loadSenderIdentificationQueue();
   const idx = queue.entries.findIndex((e) => e.mail_id === entry.mail_id);
   const next = { ...entry, updated_at: new Date().toISOString() };

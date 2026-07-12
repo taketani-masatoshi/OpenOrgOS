@@ -64,7 +64,9 @@ export function registerExecutiveCommands(program: Command): void {
     .command("executive")
     .description("Secretary executive SoT — calendar · brief (data/executive/)");
 
-  const executiveCalendar = executiveCmd.command("calendar").description("Executive calendar from calendar.yaml");
+  const executiveCalendar = executiveCmd
+    .command("calendar")
+    .description("Executive calendar from calendar.yaml");
   executiveCalendar
     .command("list")
     .description("List events in date range (default: current week)")
@@ -256,9 +258,7 @@ export function registerExecutiveCommands(program: Command): void {
     .description("Poll overdue scheduling reminders (independent of mail sync)")
     .option("--at <iso>", "Evaluate as-of timestamp (tests / replay)")
     .option("--json", "JSON output")
-    .action(async (opts) =>
-      runSchedulingReminderPollCommand({ json: opts.json, at: opts.at })
-    );
+    .action(async (opts) => runSchedulingReminderPollCommand({ json: opts.json, at: opts.at }));
 
   schedulingCmd
     .command("confirm")
@@ -309,9 +309,7 @@ export function registerExecutiveCommands(program: Command): void {
     .requiredOption("--id <caseId>", "Case ID")
     .option("--reason <text>", "Cancellation reason")
     .option("--json", "JSON output")
-    .action((opts) =>
-      runSchedulingCancel({ id: opts.id, reason: opts.reason, json: opts.json })
-    );
+    .action((opts) => runSchedulingCancel({ id: opts.id, reason: opts.reason, json: opts.json }));
 
   schedulingCmd
     .command("reschedule")
@@ -344,7 +342,12 @@ export function registerExecutiveCommands(program: Command): void {
     .description("Write CONSULT MD + optional webhook (secretary_escalation orchestrator)")
     .requiredOption("--subject <text>", "Escalation subject (one line)")
     .option("--background <text>", "Background")
-    .option("--q <question>", "Question (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option(
+      "--q <question>",
+      "Question (repeatable)",
+      (v: string, prev: string[]) => [...prev, v],
+      [] as string[]
+    )
     .option("--confidential <level>", "L0 | L1 | L2", "L1")
     .option("--format <text>", "Desired response format")
     .option("--memo <text>", "Secretary memo")
@@ -413,10 +416,14 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--json", "JSON output")
     .action(async (opts) => runCorrespondenceSend(opts));
 
-  const secretaryMailCmd = secretaryCmd.command("mail").description("Executive mail (legacy alias → mail outbound)");
+  const secretaryMailCmd = secretaryCmd
+    .command("mail")
+    .description("Executive mail (legacy alias → mail outbound)");
   secretaryMailCmd
     .command("list")
-    .description("List correspondence mail archive (sent drafts · mail-received/ · not docs/io/inbox)")
+    .description(
+      "List correspondence mail archive (sent drafts · mail-received/ · not docs/io/inbox)"
+    )
     .option("--direction <sent|received|all>", "Filter direction", "all")
     .option("--limit <n>", "Max entries", "50")
     .option("--json", "JSON output")
@@ -465,7 +472,9 @@ export function registerExecutiveCommands(program: Command): void {
 
   contactsCmd
     .command("register")
-    .description("Register or update contact after human disclosure (external-contacts + stakeholders)")
+    .description(
+      "Register or update contact after human disclosure (external-contacts + stakeholders)"
+    )
     .requiredOption("--name <text>", "Contact person name")
     .option("--email <email>", "Email address")
     .option("--org <text>", "Organization")
@@ -512,9 +521,7 @@ export function registerExecutiveCommands(program: Command): void {
       console.log(url);
     });
 
-  const mailCmd = program
-    .command("mail")
-    .description("Mail — intake (receive) · outbound (send)");
+  const mailCmd = program.command("mail").description("Mail — intake (receive) · outbound (send)");
 
   const intakeCmd = mailCmd.command("intake").description("Inbound mail monitoring");
   intakeCmd
@@ -726,16 +733,19 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--json", "JSON output")
     .allowUnknownOption()
     .allowExcessArguments(true)
-    .action(async (opts) =>
-      await runMailIntakeCeoAnswer({
-        id: opts.id,
-        fields: parseCeoFieldArgs(process.argv),
-        operator: opts.operator,
-        json: opts.json,
-      })
+    .action(
+      async (opts) =>
+        await runMailIntakeCeoAnswer({
+          id: opts.id,
+          fields: parseCeoFieldArgs(process.argv),
+          operator: opts.operator,
+          json: opts.json,
+        })
     );
 
-  const outboundCmd = mailCmd.command("outbound").description("Outbound mail · Slack (approval-gated)");
+  const outboundCmd = mailCmd
+    .command("outbound")
+    .description("Outbound mail · Slack (approval-gated)");
   const outboundCorrespondence = outboundCmd
     .command("correspondence")
     .description("Approval-gated outbound email/Slack (Mail Outbound)");

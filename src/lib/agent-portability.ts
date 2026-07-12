@@ -1,11 +1,21 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
-import { loadOperatorPolicyMarkdown, operatorPolicyExcerpt, engineeringConstitutionExcerpt, rewriteMarkdownLinksForPortableExport } from "./operator-policy.js";
+import {
+  loadOperatorPolicyMarkdown,
+  operatorPolicyExcerpt,
+  engineeringConstitutionExcerpt,
+  rewriteMarkdownLinksForPortableExport,
+} from "./operator-policy.js";
 import { loadSkillRegistry, type ResolvedSkillEntry } from "./skill-registry.js";
 import { ROOT_DIR, getTenantId } from "./tenant.js";
 import { currentDate } from "./utils.js";
-import { getCatalogAgent, isAgentActive, listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
+import {
+  getCatalogAgent,
+  isAgentActive,
+  listCatalogAgents,
+  resolveAgentId,
+} from "./agent-catalog.js";
 
 export const AGENT_EXPORTS_DIR = join(ROOT_DIR, "steward", "platform", "agent", "exports");
 
@@ -45,7 +55,10 @@ export function formatAgentPromptRef(agent: AgentId, format: AgentToolFormat = "
   }
 }
 
-export function formatSkillReference(skill: ResolvedSkillEntry, format: AgentToolFormat = "portable"): string {
+export function formatSkillReference(
+  skill: ResolvedSkillEntry,
+  format: AgentToolFormat = "portable"
+): string {
   const rel = `${skill.skillDirRel}/${skill.file}`;
   switch (format) {
     case "cursor":
@@ -76,7 +89,9 @@ export function readAgentDefinition(agent: AgentId): string {
 
 export function buildPortableAgentPack(agentId: AgentId, opts?: { fullPolicy?: boolean }): string {
   const registry = loadAgentRegistryEntries().find((a) => a.id === agentId);
-  const label = registry?.name_ja ? `${registry.name}（${registry.name_ja}）` : (registry?.name ?? agentId);
+  const label = registry?.name_ja
+    ? `${registry.name}（${registry.name_ja}）`
+    : (registry?.name ?? agentId);
   const policy = rewriteMarkdownLinksForPortableExport(
     opts?.fullPolicy ? loadOperatorPolicyMarkdown() : operatorPolicyExcerpt(60)
   );
@@ -154,6 +169,22 @@ export function buildPortableIndex(): string {
     "orgos operator export --all",
     "orgos operator sync-policy --emit all",
     "```",
+    "",
+    "**鮮度の二重確認:** `export --all` のあと `npm run generated:check`（内部で `validateAgentPackExports`）が通ること。",
+    "",
+    "## Engineering Constitution（Path 表）",
+    "",
+    "| 分割 | Path |",
+    "|------|------|",
+    "| 索引 | `steward/rules/openorgos-engineering-constitution.md` |",
+    "| 00 Purpose · DoD | `steward/rules/engineering/00-engineering-constitution.md` |",
+    "| 01 Architecture | `steward/rules/engineering/01-architecture.md` |",
+    "| 02 TypeScript | `steward/rules/engineering/02-typescript.md` |",
+    "| 04 Testing | `steward/rules/engineering/04-testing.md` |",
+    "| 08 Event sourcing | `steward/rules/engineering/08-event-sourcing.md` |",
+    "| 09 OrgOS domain | `steward/rules/engineering/09-openorgos-domain.md` |",
+    "| Operator policy | `steward/rules/operator-policy.md` |",
+    "| Tool-neutral | `steward/rules/tool-neutral-development.md` |",
     "",
     "## コア Agent",
     "",
@@ -317,7 +348,9 @@ export function exportPortableAgents(opts: {
 function normalizeAgentExportForCompare(content: string): string {
   return content
     .replace(/^Generated: .+$/m, "Generated: <deterministic>")
-    .replace(/^> \*\*Generated:\*\* .+$/m, "> **Generated:** <deterministic>");
+    .replace(/^> \*\*Generated:\*\* .+$/m, "> **Generated:** <deterministic>")
+    .replace(/^> \*\*Tenant:\*\* .+$/m, "> **Tenant:** <deterministic>")
+    .replace(/^(Generated: .+?) · Tenant: .+$/m, "$1 · Tenant: <deterministic>");
 }
 
 export function validateAgentPackExports(): string[] {
@@ -331,9 +364,7 @@ export function validateAgentPackExports(): string[] {
   for (const entry of targets) {
     const rel = `steward/platform/agent/exports/agents/${entry.id}.pack.md`;
     const packPath = join(agentsDir, `${entry.id}.pack.md`);
-    const expected = normalizeAgentExportForCompare(
-      buildPortableAgentPack(entry.id as AgentId)
-    );
+    const expected = normalizeAgentExportForCompare(buildPortableAgentPack(entry.id as AgentId));
     if (!existsSync(packPath)) {
       issues.push(`${rel} missing; run orgos operator export --all`);
       continue;
@@ -341,6 +372,14 @@ export function validateAgentPackExports(): string[] {
     const actual = normalizeAgentExportForCompare(readFileSync(packPath, "utf-8"));
     if (actual !== expected) {
       issues.push(`${rel} stale; run orgos operator export --all`);
+    }
+    // Packs must not ship broken parent-relative links for external LLM paste.
+    const rawPack = readFileSync(packPath, "utf-8");
+    const broken = [...rawPack.matchAll(/\[[^\]]*\]\((\.\.\/[^)]+)\)/g)].map((m) => m[1]!);
+    if (broken.length > 0) {
+      issues.push(
+        `${rel} has parent-relative links (${broken.slice(0, 3).join(", ")}); rewrite to steward/… paths`
+      );
     }
   }
 
@@ -363,12 +402,19 @@ export function validateAgentPackExports(): string[] {
         : buildContinueMcpSnippet();
     if (!existsSync(snippetPath)) {
       issues.push(`${rel} missing; run orgos operator export --emit mcp`);
-    } else if (readFileSync(snippetPath, "utf-8") !== expected) {
+    } else if (
+      normalizeMcpSnippetForCompare(readFileSync(snippetPath, "utf-8")) !==
+      normalizeMcpSnippetForCompare(expected)
+    ) {
       issues.push(`${rel} stale; run orgos operator export --emit mcp`);
     }
   }
 
   return issues;
+}
+
+function normalizeMcpSnippetForCompare(content: string): string {
+  return content.replace(/("ORGOS_TENANT"\s*:\s*")[^"]+(")/g, "$1<tenant>$2");
 }
 
 export interface PortabilityScoreBreakdown {

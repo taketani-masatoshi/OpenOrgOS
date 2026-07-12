@@ -1,4 +1,3 @@
-import { agentId } from "../../schemas/classification.js";
 import type { EscalationInput } from "../../schemas/routing.js";
 import {
   completeWorkOrder,
@@ -11,9 +10,8 @@ import {
 } from "../lib/escalate.js";
 import { mergeWorkOrderResults, registerWorkOrderResult } from "../lib/work-order-merge.js";
 import { formatSecretaryRelayBlock } from "../lib/secretary-relay.js";
-import { loadHandoff } from "../lib/routing.js";
 import { setTenantId } from "../lib/tenant.js";
-import { requireCliOperator, auditCliMutation } from "../lib/console-auth/cli-operator.js";
+import { requireCliOperator } from "../lib/console-auth/cli-operator.js";
 
 export interface EscalatePlanOptions {
   text?: string;
@@ -113,7 +111,9 @@ export function runEscalateRun(opts: EscalateRunCliOptions): void {
   }
   if (result.summaryPath) console.log(`✓ ${result.summaryPath}`);
 
-  console.log(`\n${result.workOrders.length} work order(s) · agents: ${result.plan.agents.join(", ")}`);
+  console.log(
+    `\n${result.workOrders.length} work order(s) · agents: ${result.plan.agents.join(", ")}`
+  );
 }
 
 export interface EscalateStatusOptions {

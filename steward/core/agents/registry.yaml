@@ -26,6 +26,15 @@ agents:
     tier: core
     required: true
     scope: 経営判断 · KPI · ダッシュボード · 要約統合
+    access:
+      read:
+        - docs/reports/
+        - docs/company/
+        - data/company.yaml
+        - data/finance/cash-balance.yaml
+      write:
+        - docs/reports/executive-notes/
+        - docs/reports/dashboard/
 
   secretary:
     id: secretary
@@ -36,6 +45,13 @@ agents:
     required: true
     reports_to: coo
     scope: スケジュール · タスク · 1-on-1 · 対外下書き
+    access:
+      read:
+        - data/executive/
+        - records/executive/
+        - data/company.yaml
+      write:
+        - data/executive/
 
   mail_intake:
     id: mail_intake
@@ -112,6 +128,20 @@ agents:
     required: true
     reports_to: coo
     scope: 予実 · 資金 · 税務データ · 決算（JP kessan）
+    access:
+      read:
+        - data/finance/
+        - data/plans/
+        - data/company.yaml
+        - docs/plans/
+        - docs/exports/
+        - docs/finance/
+      write:
+        - data/finance/
+        - data/plans/
+        - docs/plans/
+        - docs/exports/
+        - docs/finance/accounting/
 
   contract:
     id: contract
@@ -122,6 +152,15 @@ agents:
     required: true
     reports_to: coo
     scope: 契約台帳 · 更新 · 紐づけ
+    access:
+      read:
+        - data/contracts/
+        - docs/contracts/
+        - data/company.yaml
+        - docs/exports/
+      write:
+        - data/contracts/
+        - docs/contracts/
 
   compliance:
     id: compliance
@@ -132,6 +171,17 @@ agents:
     required: true
     reports_to: coo
     scope: 規程 · ISO · 法域 pack 連動
+    access:
+      read:
+        - docs/compliance/
+        - data/compliance/
+        - data/classification-registry.yaml
+        - data/company.yaml
+        - docs/company/regulations/
+        - docs/company/licenses/
+      write:
+        - data/compliance/
+        - docs/compliance/
 
   operations:
     id: operations
@@ -142,6 +192,18 @@ agents:
     required: true
     reports_to: coo
     scope: 日次運用 · travel · モジュール横断オペ
+    access:
+      read:
+        - docs/io/
+        - data/document-io.yaml
+        - data/company.yaml
+        - data/operations/
+        - docs/operations/
+        - docs/company/hr/
+      write:
+        - data/document-io.yaml
+        - docs/io/
+        - docs/operations/
 
   # --- AI カンパニー拡張（16 役割 · org-chart.md）---
 

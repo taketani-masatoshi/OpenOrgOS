@@ -31,7 +31,7 @@ export function runRouteList(): void {
     );
   }
   console.log(`\n${registry.routes.length} routes · steward/core/routing/registry.yaml`);
-  console.log("例: npm run orgos -- route match --text \"契約期限\"");
+  console.log('例: npm run orgos -- route match --text "契約期限"');
 }
 
 export interface RouteMatchOptions {
@@ -85,15 +85,14 @@ export function runRouteMatch(opts: RouteMatchOptions): void {
   for (const m of matches) {
     const eligible = m.access.allowed && m.moduleEnabled && m.boundaryOk ? "yes" : "no";
     const reason = m.blockedReasons.length ? m.blockedReasons.join("; ") : m.matchedBy.join(", ");
-    console.log(
-      `| ${m.route.id} | ${m.route.agent} | ${m.score} | ${eligible} | ${reason} |`
-    );
+    console.log(`| ${m.route.id} | ${m.route.agent} | ${m.score} | ${eligible} | ${reason} |`);
   }
 
   const inactive = matches.filter((m) => !m.moduleEnabled);
   if (inactive.length) {
+    console.log("\nInactive agents — enable with: orgos agent roster enable --agent <id>");
     console.log(
-      "\nInactive agents — enable with: orgos agent roster enable --agent <id>"
+      "When to enable: steward/rules/agent-authority-model.md §4.1 · temporary: roster task + --profile task"
     );
   }
 }
@@ -113,7 +112,9 @@ export interface RouteSuggestOptions {
 export function runRouteSuggest(opts: RouteSuggestOptions): void {
   const profile = opts.profile ?? "operational";
   let matched =
-    opts.text || opts.path ? pickBestRoute({ text: opts.text, path: opts.path, profile }) : undefined;
+    opts.text || opts.path
+      ? pickBestRoute({ text: opts.text, path: opts.path, profile })
+      : undefined;
 
   if (opts.routeId && !matched) {
     matched = matchRoutes({ text: opts.text, path: opts.path, profile }).find(
@@ -164,7 +165,9 @@ export interface RouteHandoffOptions {
 export function runRouteHandoff(opts: RouteHandoffOptions): void {
   const profile = opts.profile ?? "operational";
   let matched =
-    opts.text || opts.path ? pickBestRoute({ text: opts.text, path: opts.path, profile }) : undefined;
+    opts.text || opts.path
+      ? pickBestRoute({ text: opts.text, path: opts.path, profile })
+      : undefined;
   if (opts.routeId && !matched) {
     matched = matchRoutes({ text: opts.text, path: opts.path, profile }).find(
       (m) => m.route.id === opts.routeId
@@ -208,18 +211,19 @@ export async function runRouteDispatch(opts: RouteDispatchOptions): Promise<void
 
   if (mode === "suggest") {
     console.log(formatSuggestCard(handoff));
-    console.log("\n" + (handoff.task_type === "implement" ? formatWorkOrderMarkdown(handoff) : formatHandoffMarkdown(handoff)));
+    console.log(
+      "\n" +
+        (handoff.task_type === "implement"
+          ? formatWorkOrderMarkdown(handoff)
+          : formatHandoffMarkdown(handoff))
+    );
     if (handoff.agent_prompt_path) {
       console.log(`\nPrompt: docs/reports/routing-queue/${handoff.agent_prompt_path}`);
     }
     return;
   }
 
-  const outcome = await executeRouteHandoff(
-    handoff,
-    mode,
-    resolveSkillDispatch
-  );
+  const outcome = await executeRouteHandoff(handoff, mode, resolveSkillDispatch);
   if (outcome.action !== "noop") {
     writeHandoffFiles(outcome.handoff, undefined, { audit: false });
   }

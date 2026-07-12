@@ -21,7 +21,9 @@ if (process.argv.includes("--check")) {
     console.error(`Stale ${outputPath}; run npm run agent:catalog:sync`);
     process.exitCode = 1;
   } else {
-    console.log(`Current ${outputPath} (${ids.length} agents, ${Object.keys(aliases).length} aliases)`);
+    console.log(
+      `Current ${outputPath} (${ids.length} agents, ${Object.keys(aliases).length} aliases)`
+    );
   }
 } else {
   writeFileSync(outputPath, source, "utf-8");

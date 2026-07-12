@@ -1,9 +1,5 @@
 import { loadContracts } from "../lib/data.js";
-import {
-  scanContractAlerts,
-  formatAlertsMarkdown,
-  formatAlertsTable,
-} from "../lib/alerts.js";
+import { scanContractAlerts, formatAlertsMarkdown, formatAlertsTable } from "../lib/alerts.js";
 import { writeMarkdownReport, currentDate } from "../lib/utils.js";
 import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 

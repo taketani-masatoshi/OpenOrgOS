@@ -20,10 +20,7 @@ function nextOperatorId(existing: OperatorRecord[]): string {
   return `OP-${String(next).padStart(3, "0")}`;
 }
 
-export function runOperatorInitRegistry(opts: {
-  writeKeys?: boolean;
-  json?: boolean;
-}): void {
+export function runOperatorInitRegistry(opts: { writeKeys?: boolean; json?: boolean }): void {
   const existing = loadOperatorRegistry();
   if (existing?.operators.length) {
     console.log(`operators.yaml already exists (${existing.operators.length} operators)`);
@@ -78,7 +75,13 @@ export function runOperatorInitRegistry(opts: {
   const path = saveOperatorRegistry(registry);
 
   if (opts.json) {
-    console.log(JSON.stringify({ path, tenant: getTenantId(), operators: operators.map((o) => o.operator_id) }, null, 2));
+    console.log(
+      JSON.stringify(
+        { path, tenant: getTenantId(), operators: operators.map((o) => o.operator_id) },
+        null,
+        2
+      )
+    );
   } else {
     console.log(`✓ Operator registry initialized: ${path}`);
     console.log(`  Tenant: ${getTenantId()}`);
@@ -96,7 +99,9 @@ export function runOperatorInitRegistry(opts: {
     if (!opts.json) {
       console.log("\nUsage:");
       console.log(`  export ORGOS_OPERATOR_KEY="$(cat ~/.orgos/operators/OP-001.key)"`);
-      console.log(`  orgos --operator-id OP-001 --tenant ${getTenantId()} escalate plan --text "..."`);
+      console.log(
+        `  orgos --operator-id OP-001 --tenant ${getTenantId()} escalate plan --text "..."`
+      );
     }
   }
 }

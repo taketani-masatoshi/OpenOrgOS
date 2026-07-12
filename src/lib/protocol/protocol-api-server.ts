@@ -1,10 +1,18 @@
-import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from "node:http";
+import {
+  createServer as createHttpServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import { createServer as createHttpsServer, type ServerOptions } from "node:https";
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { TLSSocket } from "node:tls";
 import { exportInboxEntries, exportOutboxEntries } from "./inbox-export.js";
-import { listWireRelayPending, markWireRelayDelivered, enqueueWireRelay } from "./wire-relay-store.js";
+import {
+  listWireRelayPending,
+  markWireRelayDelivered,
+  enqueueWireRelay,
+} from "./wire-relay-store.js";
 import { getWitnessTrustBundlePath, getProtocolRelayStoreDir } from "./paths.js";
 import { loadTransactionsRegistry } from "./transactions.js";
 import { loadRelayState } from "./relay-state.js";
@@ -260,12 +268,7 @@ async function handleProtocolApiRequest(
   const communityRoute = await (async () => {
     const raw = req.method === "GET" ? "" : await readBody(req);
     const { handleCommunityWireNodeApiRoute } = await import("./community-wire-node-api.js");
-    const wire = await handleCommunityWireNodeApiRoute(
-      req.method ?? "GET",
-      url.pathname,
-      raw,
-      req
-    );
+    const wire = await handleCommunityWireNodeApiRoute(req.method ?? "GET", url.pathname, raw, req);
     if (wire) return wire;
     const { handleCommunityTenantMailApiRoute } = await import("./community-tenant-mail-api.js");
     return handleCommunityTenantMailApiRoute(

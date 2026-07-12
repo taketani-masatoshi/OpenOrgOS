@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { computeVarianceReport } from "../src/lib/variance.js";
 import { runPermitExpiryCheck } from "../src/lib/permit-check.js";
 import { checkOperationsRecords } from "../src/lib/records-check.js";
+import { setTenantId } from "../src/lib/tenant.js";
+
+beforeEach(() => {
+  setTenantId("mal");
+});
 
 describe("variance", () => {
   it("computes FY2026 variance from yojitsu and monthly yaml", () => {

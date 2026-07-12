@@ -26,10 +26,7 @@ export function createMailReceivePoller(opts?: MailReceivePollerOptions): MailRe
     try {
       const result = await syncMailReceive();
       const config = loadMailConfig();
-      if (
-        result.fetched > 0 &&
-        config?.receive?.auto_triage !== false
-      ) {
+      if (result.fetched > 0 && config?.receive?.auto_triage !== false) {
         const triage = await triageUnprocessedMail();
         if (config?.receive?.notify_high_priority !== false && triage.highPriorityIds.length) {
           await notifyMailTriageHighPriority(triage.highPriorityIds);

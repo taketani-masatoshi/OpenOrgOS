@@ -138,7 +138,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 契約台帳（CTR-001〜014）のライフサイクル管理。**draft → executed → 更新/終了** を YAML と MD で追跡する。
 
-**組織間契約:** 起票〜すり合わせ（P0〜P2）は起票側テナントのみにドラフトを置く。相手側は `docs/io/inbox/`。正本: [steward/rules/inter-org-contract-workflow.md](../../rules/inter-org-contract-workflow.md)
+**組織間契約:** 起票〜すり合わせ（P0〜P2）は起票側テナントのみにドラフトを置く。相手側は `docs/io/inbox/`。正本: [steward/rules/inter-org-contract-workflow.md](steward/rules/inter-org-contract-workflow.md)
 
 ---
 
@@ -253,7 +253,7 @@ npm run orgos -- alerts
 ## コンテキスト
 
 - 参照整合: LOAN.contract_id → CTR · CTR.property_id → PROP
-- 依存: [dependency-graph.yaml](../data/dependency-graph.yaml)
+- 依存: [dependency-graph.yaml](data/dependency-graph.yaml)
 - 契約索引: [docs/contracts/00-このフォルダについて.md](docs/contracts/00-このフォルダについて.md)
 
 ## 使用 Skill / CLI
@@ -274,7 +274,7 @@ orgos agent pulse --agent contract
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/core/orchestrators/steward_agent_roster.md)
 
 
 

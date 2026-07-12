@@ -1,9 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadWireTrustRegistry } from "./wire-trust-registry.js";
-import {
-  wireNodeGovernanceRegistrySchema,
-} from "../../../schemas/protocol/wire-node-governance.js";
+import { wireNodeGovernanceRegistrySchema } from "../../../schemas/protocol/wire-node-governance.js";
 import { isWireNodeGovernanceRequired } from "../../../schemas/protocol/openorg-did.js";
 import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
 import { readYamlFile } from "../utils.js";

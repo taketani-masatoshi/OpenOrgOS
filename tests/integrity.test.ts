@@ -1,10 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import { runIntegrityChecks, integrityErrorsOnly } from "../src/lib/integrity.js";
 import { computeDataHealth } from "../src/lib/data-health.js";
 import { validateAll } from "../src/lib/data.js";
 import { syncContractsCsv } from "../src/lib/sync-csv.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { setTenantId } from "../src/lib/tenant.js";
+
+beforeEach(() => {
+  setTenantId("mal");
+});
 
 describe("integrity", () => {
   it("passes schema validation on repo data", () => {

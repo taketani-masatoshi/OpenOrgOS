@@ -1,17 +1,15 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import type { SchedulingCase, SchedulingParticipant } from "../../../schemas/executive/scheduling-cases.js";
+import type {
+  SchedulingCase,
+  SchedulingParticipant,
+} from "../../../schemas/executive/scheduling-cases.js";
 import { resolveContactRegistry } from "../secretary/contact-registry.js";
 import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { applyNextAction } from "./next-action.js";
 import { recordSchedulingLifecycleEvent } from "./lifecycle.js";
-import {
-  loadSchedulingCases,
-  nextSchedulingCaseId,
-  insertSchedulingCase,
-  updateSchedulingCase,
-} from "./store.js";
+import { loadSchedulingCases, nextSchedulingCaseId, insertSchedulingCase } from "./store.js";
 
 const SCHEDULE_INTENT =
   /(?:日程|スケジュール).{0,8}(?:調整|合わせ)|(?:\d+)\s*名.{0,12}(?:日程|調整|会議|MTG|打合せ)|(?:会議|MTG|打合せ).{0,8}(?:調整|設定)/i;
@@ -150,12 +148,14 @@ function cleanParticipantName(raw: string): string {
   const afterLabel = raw.split(/(?:参加者|出席者|メンバー)(?:は|：|:)\s*/u).at(-1) ?? raw;
   return afterLabel
     .replace(/^.*[。]\s*/u, "")
-    .replace(/[<（(\[]+$/u, "")
+    .replace(/[<（([]+$/u, "")
     .replace(/(?:さん|様)$/u, "")
     .trim();
 }
 
-function extractParticipants(message: string): Array<z.output<typeof schedulingChatParticipantSchema>> {
+function extractParticipants(
+  message: string
+): Array<z.output<typeof schedulingChatParticipantSchema>> {
   const found: Array<z.output<typeof schedulingChatParticipantSchema>> = [];
   const segments = message.split(/[\n,、;；]+/u);
   for (const segment of segments) {
@@ -164,7 +164,7 @@ function extractParticipants(message: string): Array<z.output<typeof schedulingC
     if (!email && !contactRef) continue;
     const marker = email ?? contactRef!;
     const before = segment.slice(0, segment.indexOf(marker));
-    const name = cleanParticipantName(before.replace(/[<（(\[]\s*$/u, ""));
+    const name = cleanParticipantName(before.replace(/[<（([]\s*$/u, ""));
     if (!name || /(?:日程|調整|所要|形式|オンライン|対面)/u.test(name)) continue;
 
     let resolvedEmail = email;
@@ -256,7 +256,10 @@ function formatSchedulingChatAck(caseRow: SchedulingCase): string {
   ].join("\n");
 }
 
-export function handleSchedulingChatMessage(threadId: string, message: string): SchedulingChatResult {
+export function handleSchedulingChatMessage(
+  threadId: string,
+  message: string
+): SchedulingChatResult {
   const normalized = normalizeMessage(message);
   const existing = findSchedulingChatDraft(threadId);
   const continuing = existing?.status === "collecting";

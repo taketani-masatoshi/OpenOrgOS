@@ -48,11 +48,7 @@ export function hasOidcJwks(): boolean {
   return jwksByKid.size > 0 || defaultPublicKey != null;
 }
 
-export function verifyRs256Signature(
-  signed: string,
-  signature: Buffer,
-  kid?: string
-): boolean {
+export function verifyRs256Signature(signed: string, signature: Buffer, kid?: string): boolean {
   const key =
     (kid ? jwksByKid.get(kid) : undefined) ??
     defaultPublicKey ??

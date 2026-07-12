@@ -24,7 +24,10 @@ export function buildGoogleCalendarTemplateUrl(opts: {
   location?: string;
 }): string {
   const toUtcCompact = (iso: string): string => {
-    const d = iso.length <= 10 ? new Date(`${iso}T00:00:00+09:00`) : new Date(iso.includes("+") || iso.endsWith("Z") ? iso : `${iso}:00+09:00`);
+    const d =
+      iso.length <= 10
+        ? new Date(`${iso}T00:00:00+09:00`)
+        : new Date(iso.includes("+") || iso.endsWith("Z") ? iso : `${iso}:00+09:00`);
     const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
   };

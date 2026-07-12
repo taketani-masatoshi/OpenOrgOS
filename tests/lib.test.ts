@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import {
   plannedMonthlyRevenue,
   plannedMonthlyExpenses,
@@ -11,6 +11,11 @@ import { fiscalYearNumber } from "../src/lib/pdf.js";
 import { buildKessanPlRows } from "../src/lib/kessan-pdf.js";
 import { loadYojitsuFyPlan } from "../src/lib/data.js";
 import type { PropertyRevenuePlan, Property, MonthlyFinance, FixedCosts, Loans, Contract } from "../schemas/index.js";
+import { setTenantId } from "../src/lib/tenant.js";
+
+beforeEach(() => {
+  setTenantId("mal");
+});
 
 const samplePlan: PropertyRevenuePlan = {
   rental: [

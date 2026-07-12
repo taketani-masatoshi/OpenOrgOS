@@ -28,13 +28,15 @@
 ```bash
 ./scripts/phase4-mal-email-wire-live.sh mal check
 ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/phase4-mal-email-wire-live.sh mal check
-ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_STRICT_EMAIL=1 ./scripts/wire-live-verify.sh mal check
+# Load L2 SMTP/IMAP before live (phase4 script auto-sources .env.mail-wire):
+./scripts/phase4-mal-email-wire-live.sh mal live
 ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_ROUNDTRIP=1 ./scripts/wire-live-verify.sh mal live
 ```
 
 - [x] `ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/prod-validate-wire.sh mal` PASS
-- [x] `ORGOS_LIVE_VERIFY=1 … STRICT_EMAIL=1 … check` PASS
-- [x] base64 MIME live roundtrip PASS（`scratch/wire-live-verify-mal-*.json`）
+- [x] Phase 4a `mal check` PASS（mail-config · blocking doctor）
+- [x] Phase 4a `mal live` SMTP→IMAP→ingest PASS（2026-07-12）
+- [x] `email_wire_roundtrip` 証跡: `scratch/wire-live-verify-mal-2026-07-12T03-51-54-090Z.json` ほか
 
 ### データ衛生（Wave 0）
 
@@ -52,6 +54,9 @@ ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_ROUNDTRIP=1 ./scripts/wire-live-verify.sh 
 
 ```bash
 # deploy/mal-pilot/env/mal-ship-gate.env.example を参照
+# または dry-run（systemd は変更しない）:
+./scripts/mal-ship-gate-check.sh mal
+
 export ORGOS_EMAIL_WIRE_REQUIRED=1
 ./scripts/prod-validate-wire.sh mal   # email_wire blocking で PASS 必須
 ```
@@ -62,10 +67,10 @@ export ORGOS_EMAIL_WIRE_REQUIRED=1
 
 - [ ] Google OAuth redirect 2 本（login + orgos-mail callback）
 - [ ] Steward: `ORGOS_GMAIL_CLIENT_*` · `ORGOS_COMMUNITY_GOVERNANCE_TOKEN`
-- [ ] Community: `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1`
-- [ ] `orgos mail setup gmail --community-link` → token push E2E
-- [ ] `publish/protocol/community-integration.json` → `tenant_mail_connect_api/ui: true`
-- [ ] `orgos protocol community export`
+- [x] Community feature flag 既定 OFF · E2E 503（`COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED`）
+- [x] ステージング自動化: `./scripts/phase4b-community-gmail-staging.sh check|e2e`
+- [ ] ステージング UI: flag 一時 `=1` で `mail setup gmail --community-link` ブラウザ確認
+- [ ] 本番 `publish/protocol/community-integration.json` → `tenant_mail_connect_*: true`（**Phase 5 のみ**）
 
 ---
 
@@ -75,12 +80,14 @@ export ORGOS_EMAIL_WIRE_REQUIRED=1
 |---|------|------|
 | 1 | Phase 4a live roundtrip 証跡（`scratch/wire-live-verify-*.json`） | Engineering |
 | 2 | Phase 4b Community E2E（任意 · OAuth 経路） | Engineering |
-| 3 | **CEO / approver 承認** — 本番 env で blocking 化 | CEO |
-| 4 | mal systemd env に `ORGOS_EMAIL_WIRE_REQUIRED=1` 反映 | Operator |
-| 5 | Community 本番 env に `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1` | Operator |
-| 6 | integration フラグ `true` + Steward export + Community 再デプロイ | Operator |
+| 3 | **CEO / approver 承認** — `ORGOS_CEO_SHIP_APPROVED=1` | CEO |
+| 4 | `ORGOS_CEO_SHIP_APPROVED=1 ./scripts/mal-ship-gate-apply.sh apply` | Operator |
+| 5 | mal systemd env に `ORGOS_EMAIL_WIRE_REQUIRED=1` 反映 | Operator |
+| 6 | Community 本番 env に `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1` | Operator |
+| 7 | Community 再デプロイ · `prod-validate-wire.sh mal`（blocking）PASS | Operator |
 
-承認記録: `orgos approval` または社内稟議（REG-004）に従う。
+承認記録: `orgos approval` または社内稟議（REG-004）に従う。  
+**本番フラグは承認なしでは付けない** — `mal-ship-gate-apply.sh` は `ORGOS_CEO_SHIP_APPROVED=1` 必須。
 
 ---
 
@@ -97,6 +104,8 @@ unset COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED
 ---
 
 ## 定期確認（出荷前 · 現行運用）
+
+スコープ分離: [phase4a-washout-f7-f10.md](phase4a-washout-f7-f10.md)（F7 WIP · F8 maturity · F9 4b · F10 ship-gate）
 
 ```bash
 # Gmail 不要 — 週次またはデプロイ前

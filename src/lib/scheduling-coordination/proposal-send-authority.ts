@@ -37,16 +37,14 @@ export function clearProposalSendAuthority(caseId: string, revision: number): Sc
   }));
 }
 
-export function invalidateStaleProposalSendAuthority(
-  caseRow: SchedulingCase
-): SchedulingCase {
+export function invalidateStaleProposalSendAuthority(caseRow: SchedulingCase): SchedulingCase {
   if (!caseRow.proposal_send_authority) return caseRow;
   if (resolveProposalSendAuthority(caseRow)) return caseRow;
   return clearProposalSendAuthority(caseRow.id, caseRow.revision);
 }
 
 export function assertDelegatableProposalSend(caseRow: SchedulingCase): SchedulingCase {
-  let current = invalidateStaleProposalSendAuthority(caseRow);
+  const current = invalidateStaleProposalSendAuthority(caseRow);
   if (!canDelegateProposalSend(current)) return current;
   return current;
 }

@@ -1,10 +1,4 @@
-import {
-  createHash,
-  createPrivateKey,
-  createPublicKey,
-  sign,
-  verify,
-} from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey, sign, verify } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -14,10 +8,7 @@ import {
 import type { OpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
 import { canonicalJson } from "./canonical.js";
 import { getWitnessTrustDir } from "./paths.js";
-import {
-  loadWitnessTrustBundle,
-  verifyWitnessTrustBundle,
-} from "./witness-trust.js";
+import { loadWitnessTrustBundle, verifyWitnessTrustBundle } from "./witness-trust.js";
 
 export type UnsignedOrganizationCertificateAttestation = Omit<
   OrganizationCertificateAttestation,
@@ -34,7 +25,9 @@ function organizationCertificateAttestationPath(): string {
 }
 
 /** SHA-256 hex of SPKI DER (organization signing key attestation). */
-export function organizationCertificateSpkiSha256(protocolPublicKeyBase64: string): string | undefined {
+export function organizationCertificateSpkiSha256(
+  protocolPublicKeyBase64: string
+): string | undefined {
   if (!protocolPublicKeyBase64.trim()) return undefined;
   try {
     const der = Buffer.from(protocolPublicKeyBase64, "base64");
@@ -58,11 +51,9 @@ export function signOrganizationCertificateAttestation(
     .omit({ authority_signature: true })
     .parse(attestation);
   const digest = Buffer.from(organizationCertificateAttestationDigest(unsigned), "hex");
-  const authority_signature = sign(
-    null,
-    digest,
-    createPrivateKey(authorityPrivateKeyPem)
-  ).toString("base64");
+  const authority_signature = sign(null, digest, createPrivateKey(authorityPrivateKeyPem)).toString(
+    "base64"
+  );
   return organizationCertificateAttestationSchema.parse({
     ...unsigned,
     authority_signature,
@@ -116,10 +107,7 @@ export function verifyOrganizationCertificateAttestation(
 
   try {
     const { authority_signature, ...unsigned } = value;
-    const digest = Buffer.from(
-      organizationCertificateAttestationDigest(unsigned),
-      "hex"
-    );
+    const digest = Buffer.from(organizationCertificateAttestationDigest(unsigned), "hex");
     const key = createPublicKey({
       key: Buffer.from(authority.public_key, "base64"),
       format: "der",
@@ -145,14 +133,11 @@ export function saveOrganizationCertificateAttestation(
 }
 
 export function loadOrganizationCertificateAttestation():
-  | OrganizationCertificateAttestation
-  | undefined {
+  OrganizationCertificateAttestation | undefined {
   const path = organizationCertificateAttestationPath();
   if (!existsSync(path)) return undefined;
   try {
-    return organizationCertificateAttestationSchema.parse(
-      JSON.parse(readFileSync(path, "utf-8"))
-    );
+    return organizationCertificateAttestationSchema.parse(JSON.parse(readFileSync(path, "utf-8")));
   } catch {
     return undefined;
   }

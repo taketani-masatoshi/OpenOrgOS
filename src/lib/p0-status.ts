@@ -54,8 +54,7 @@ export function listP0Items(): P0Item[] {
       label: cashCfg?.label ?? "cash-balance.yaml 確定",
       status: cash?.status === "confirmed" ? "done" : cash ? "in_progress" : "open",
       blocker: cashCfg?.blocker ?? true,
-      detail:
-        cash?.status === "confirmed" ? "confirmed" : `status: ${cash?.status ?? "missing"}`,
+      detail: cash?.status === "confirmed" ? "confirmed" : `status: ${cash?.status ?? "missing"}`,
     });
   }
 
@@ -67,9 +66,7 @@ export function listP0Items(): P0Item[] {
       label: spec.label,
       status: exists ? "in_progress" : "open",
       blocker: spec.blocker,
-      detail: exists
-        ? (spec.in_progress_detail ?? "記録あり")
-        : (spec.open_detail ?? "未作成"),
+      detail: exists ? (spec.in_progress_detail ?? "記録あり") : (spec.open_detail ?? "未作成"),
     });
   }
 

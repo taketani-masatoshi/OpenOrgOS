@@ -28,7 +28,10 @@ export interface GoogleCalendarPushResult {
   }>;
 }
 
-function toRfc3339(iso: string, timeZone = "Asia/Tokyo"): { dateTime: string; timeZone: string } | { date: string } {
+function toRfc3339(
+  iso: string,
+  timeZone = "Asia/Tokyo"
+): { dateTime: string; timeZone: string } | { date: string } {
   if (iso.length <= 10) {
     return { date: iso };
   }
@@ -75,8 +78,7 @@ export function buildGoogleCalendarEventBody(
 
 export function loadGoogleCalendarConfig(): GoogleCalendarConfig | null {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
-  const accessToken =
-    process.env.GOOGLE_CALENDAR_ACCESS_TOKEN ?? process.env.GOOGLE_ACCESS_TOKEN;
+  const accessToken = process.env.GOOGLE_CALENDAR_ACCESS_TOKEN ?? process.env.GOOGLE_ACCESS_TOKEN;
   if (!calendarId || !accessToken) return null;
   return {
     calendarId,
@@ -137,7 +139,9 @@ export async function pushEventToGoogleCalendar(
     );
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Google Calendar PATCH ${event.id}: HTTP ${res.status} ${text.slice(0, 200)}`);
+      throw new Error(
+        `Google Calendar PATCH ${event.id}: HTTP ${res.status} ${text.slice(0, 200)}`
+      );
     }
     const data = (await res.json()) as { id: string; hangoutLink?: string };
     return { action: "update", googleEventId: data.id, meetUrl: data.hangoutLink };

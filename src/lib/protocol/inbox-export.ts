@@ -15,7 +15,9 @@ export interface InboxExportEntry {
 function readEnvelopesFromDir(dir: string): InboxExportEntry[] {
   let files: string[];
   try {
-    files = readdirSync(dir).filter((f) => f.endsWith(".json") && !f.endsWith(".steward-provenance.json"));
+    files = readdirSync(dir).filter(
+      (f) => f.endsWith(".json") && !f.endsWith(".steward-provenance.json")
+    );
   } catch {
     return [];
   }
@@ -40,10 +42,7 @@ function readEnvelopesFromDir(dir: string): InboxExportEntry[] {
   return entries.sort((a, b) => a.recorded_at.localeCompare(b.recorded_at));
 }
 
-export function exportInboxEntries(opts?: {
-  since?: string;
-  limit?: number;
-}): InboxExportEntry[] {
+export function exportInboxEntries(opts?: { since?: string; limit?: number }): InboxExportEntry[] {
   const all = readEnvelopesFromDir(getProtocolInboxDir());
   let filtered = all;
   if (opts?.since) {
@@ -55,10 +54,7 @@ export function exportInboxEntries(opts?: {
   return filtered;
 }
 
-export function exportOutboxEntries(opts?: {
-  since?: string;
-  limit?: number;
-}): InboxExportEntry[] {
+export function exportOutboxEntries(opts?: { since?: string; limit?: number }): InboxExportEntry[] {
   const all = readEnvelopesFromDir(getProtocolOutboxDir());
   let filtered = all;
   if (opts?.since) {

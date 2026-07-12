@@ -3,10 +3,15 @@ import { existsSync, mkdirSync, copyFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT_DIR } from "../tenant.js";
 import { setTenantId } from "../tenant.js";
-import { runProdWireGate, evaluateEmailWireReadiness, isEmailWireProductionRequired } from "./prod-wire-gate.js";
+import {
+  runProdWireGate,
+  evaluateEmailWireReadiness,
+  isEmailWireProductionRequired,
+} from "./prod-wire-gate.js";
 import { evaluateWireImplementationChecklist } from "./wire-implementation-score.js";
 import { redactEnvRecord, redactSecrets } from "./redact-secrets.js";
 import { listTransactions } from "./transactions.js";
+import { listDeliveryAttempts } from "./delivery-ledger.js";
 import { loadWitnessPoolConfig, isWitnessEnabled } from "./witness-pool.js";
 import { fetchReceiptsFromPool, verifyCachedReceiptsForEvent } from "./witness-client.js";
 
@@ -14,6 +19,13 @@ export interface WireLiveVerifyStep {
   id: string;
   ok: boolean;
   detail: string;
+}
+
+/** True when outbound event was successfully delivered on a hub-visible channel. */
+function hasHubPathDelivery(eventId: string): boolean {
+  return listDeliveryAttempts({ eventId }).some(
+    (a) => a.status === "success" && (a.channel === "wire_v1" || a.channel === "relay")
+  );
 }
 
 export interface WireLiveVerifyResult {
@@ -96,7 +108,8 @@ export async function runWireLiveVerify(opts: {
         {
           id: "env_gate",
           ok: false,
-          detail: "Set ORGOS_LIVE_VERIFY=1 to run live verification (no external side effects in check mode)",
+          detail:
+            "Set ORGOS_LIVE_VERIFY=1 to run live verification (no external side effects in check mode)",
         },
       ],
       scores: { wire_checklist: 0, wire_checklist_grade: "pilot" },
@@ -113,7 +126,9 @@ export async function runWireLiveVerify(opts: {
   steps.push({
     id: "wire_health",
     ok: health.ok,
-    detail: health.ok ? `${healthUrl} HTTP ${health.status}` : `${healthUrl} HTTP ${health.status || "failed"}`,
+    detail: health.ok
+      ? `${healthUrl} HTTP ${health.status}`
+      : `${healthUrl} HTTP ${health.status || "failed"}`,
   });
 
   const gate = runProdWireGate({
@@ -155,8 +170,14 @@ export async function runWireLiveVerify(opts: {
   if (isWitnessEnabled(loadWitnessPoolConfig())) {
     const pool = loadWitnessPoolConfig();
     const missing: string[] = [];
+    let skippedNonHub = 0;
     for (const tx of listTransactions()) {
       if (tx.direction !== "outbound") continue;
+      // Witness hubs only see wire_v1 / relay deliveries — skip email_wire-only and undelivered ledger noise.
+      if (!hasHubPathDelivery(tx.event_id)) {
+        skippedNonHub += 1;
+        continue;
+      }
       await fetchReceiptsFromPool(tx.event_id, pool);
       const { receipts } = verifyCachedReceiptsForEvent(tx.event_id, pool);
       if (receipts.length === 0) missing.push(tx.event_id);
@@ -166,7 +187,9 @@ export async function runWireLiveVerify(opts: {
       ok: missing.length === 0,
       detail:
         missing.length === 0
-          ? "all outbound transactions have cached witness receipts"
+          ? skippedNonHub > 0
+            ? `all hub-path outbound have receipts · skipped ${skippedNonHub} non-hub`
+            : "all outbound transactions have cached witness receipts"
           : `missing receipts for ${missing.length} event(s)`,
     });
   } else {
@@ -201,7 +224,8 @@ export async function runWireLiveVerify(opts: {
     steps.push({
       id: "email_wire_roundtrip",
       ok: live.status === 0,
-      detail: live.status === 0 ? "Phase 4 live roundtrip OK" : output.slice(-500) || "roundtrip failed",
+      detail:
+        live.status === 0 ? "Phase 4 live roundtrip OK" : output.slice(-500) || "roundtrip failed",
     });
   }
 

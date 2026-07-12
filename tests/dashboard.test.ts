@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import {
   computeDashboard,
   collectTasks,
@@ -11,8 +11,13 @@ import {
 } from "../src/lib/dashboard.js";
 import { loadAllData } from "../src/lib/data.js";
 import type { StewardData } from "../src/lib/data.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("dashboard", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("resolves fiscal year from month", () => {
     expect(resolveFiscalYear(1, "2026-06")).toBe("FY2026");
     expect(resolveFiscalYear(1, "2027-01")).toBe("FY2026");

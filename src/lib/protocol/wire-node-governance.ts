@@ -12,13 +12,17 @@ import {
 } from "../../../schemas/protocol/wire-trust-registry.js";
 import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
-import { getWireTrustRegistryPath, validateWireTrustRegistry, loadWireTrustRegistry } from "./wire-trust-registry.js";
+import {
+  getWireTrustRegistryPath,
+  validateWireTrustRegistry,
+  loadWireTrustRegistry,
+} from "./wire-trust-registry.js";
 import { isTenantInWireTrustRegistry } from "./wire-node-governance-gate.js";
 import { setTenantId } from "../tenant.js";
 import { getDataDir } from "../utils.js";
 import { loadWireGatewayConfig } from "../wire-gateway/validate.js";
 import { ensureProtocolSigningKey, exportProtocolPublicKeyBase64 } from "./signing.js";
-import { resolveOpenOrgDid, resolveWireNodeDid } from "../../../schemas/protocol/openorg-did.js";
+import { resolveWireNodeDid } from "../../../schemas/protocol/openorg-did.js";
 import { isInternalEmailDomain } from "../correspondence/internal-domains.js";
 import { companySchema } from "../../../schemas/company.js";
 import YAML from "yaml";
@@ -47,7 +51,10 @@ export function saveWireNodeGovernanceRegistry(
   writeYamlFile(path ?? GOVERNANCE_PATH, registry);
 }
 
-function loadTenantCompanyProfile(tenantId: string): { corporate_number?: string; display_name?: string } {
+function loadTenantCompanyProfile(tenantId: string): {
+  corporate_number?: string;
+  display_name?: string;
+} {
   const path = join(getDataDir(), "company.yaml");
   if (!existsSync(path)) return {};
   setTenantId(tenantId);

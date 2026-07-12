@@ -1,5 +1,9 @@
 import { existsSync } from "node:fs";
-import { peersRegistrySchema, type PeerProfile, type PeersRegistry } from "../../../schemas/protocol/peers.js";
+import {
+  peersRegistrySchema,
+  type PeerProfile,
+  type PeersRegistry,
+} from "../../../schemas/protocol/peers.js";
 import type { PeerEndpoint } from "../../../schemas/protocol/peer-endpoint.js";
 import { inferPeerTransport } from "../../../schemas/protocol/peer-endpoint.js";
 import { getPeersYamlPath } from "./paths.js";

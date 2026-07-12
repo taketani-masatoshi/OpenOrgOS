@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { computeMaturityReport } from "../src/lib/maturity.js";
 import { listP0Items } from "../src/lib/p0-status.js";
 import { getModuleTier } from "../src/lib/module-readiness.js";
+import { setTenantId } from "../src/lib/tenant.js";
+
+beforeEach(() => {
+  setTenantId("mal");
+});
 
 describe("maturity", () => {
   it("computes three dimensions", () => {

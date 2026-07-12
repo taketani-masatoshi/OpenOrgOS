@@ -18,13 +18,37 @@ export interface ProtocolLayerModule {
 export const PROTOCOL_LAYER_MODULES: readonly ProtocolLayerModule[] = [
   { layer: "core", path: "src/lib/protocol/core/index.ts", role: "event · identity · audit" },
   { layer: "transport", path: "src/lib/protocol/transport/index.ts", role: "wire delivery facade" },
-  { layer: "transport", path: "src/lib/protocol/transport/types.ts", role: "delivery result types" },
-  { layer: "transport", path: "src/lib/protocol/transport/dns.ts", role: "peer endpoint DNS resolution" },
-  { layer: "transport", path: "src/lib/protocol/transport/inbound.ts", role: "inbound mirror · pull" },
+  {
+    layer: "transport",
+    path: "src/lib/protocol/transport/types.ts",
+    role: "delivery result types",
+  },
+  {
+    layer: "transport",
+    path: "src/lib/protocol/transport/dns.ts",
+    role: "peer endpoint DNS resolution",
+  },
+  {
+    layer: "transport",
+    path: "src/lib/protocol/transport/inbound.ts",
+    role: "inbound mirror · pull",
+  },
   { layer: "transport", path: "src/lib/protocol/transport/relay.ts", role: "relay inbox flush" },
-  { layer: "distribution", path: "src/lib/protocol/distribution/index.ts", role: "witness · hub · relay worker" },
-  { layer: "adapters", path: "src/lib/protocol/adapters/index.ts", role: "email_wire · webhook bridge" },
-  { layer: "adapters", path: "src/lib/wire/gov-gateway/deliver.ts", role: "gov gateway adapter (optional)" },
+  {
+    layer: "distribution",
+    path: "src/lib/protocol/distribution/index.ts",
+    role: "witness · hub · relay worker",
+  },
+  {
+    layer: "adapters",
+    path: "src/lib/protocol/adapters/index.ts",
+    role: "email_wire · webhook bridge",
+  },
+  {
+    layer: "adapters",
+    path: "src/lib/wire/gov-gateway/deliver.ts",
+    role: "gov gateway adapter (optional)",
+  },
 ] as const;
 
 export function validateProtocolLayerCatalog(): string[] {

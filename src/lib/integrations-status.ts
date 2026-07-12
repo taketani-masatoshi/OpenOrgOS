@@ -36,7 +36,9 @@ export function computeIntegrationsStatus(tenantId: string): IntegrationsStatusR
     {
       id: "integrations_file",
       ok: Boolean(integrations),
-      detail: integrations ? "data/integrations/integrations.yaml" : "missing — run orgos tenant setup",
+      detail: integrations
+        ? "data/integrations/integrations.yaml"
+        : "missing — run orgos tenant setup",
     },
     {
       id: "setup_completed",
@@ -80,7 +82,9 @@ export function computeIntegrationsStatus(tenantId: string): IntegrationsStatusR
     {
       id: "slack_webhook",
       ok: Boolean(process.env.ORGOS_SLACK_WEBHOOK_URL?.trim()),
-      detail: process.env.ORGOS_SLACK_WEBHOOK_URL ? "ORGOS_SLACK_WEBHOOK_URL set" : "optional — not set",
+      detail: process.env.ORGOS_SLACK_WEBHOOK_URL
+        ? "ORGOS_SLACK_WEBHOOK_URL set"
+        : "optional — not set",
     },
   ];
 

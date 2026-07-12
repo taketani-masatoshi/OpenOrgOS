@@ -7,10 +7,7 @@ import {
   type JurisdictionApprovalPolicy,
 } from "../../../../schemas/jurisdiction/wire-governance.js";
 import { loadTenantConfig } from "../../tenant.js";
-import {
-  getWireGovernanceRegistryPath,
-  resolveWireGovernancePackPath,
-} from "./paths.js";
+import { getWireGovernanceRegistryPath, resolveWireGovernancePackPath } from "./paths.js";
 
 let cachedRegistry: ReturnType<typeof jurisdictionWireGovernanceRegistrySchema.parse> | undefined;
 const cachedPolicies = new Map<string, JurisdictionApprovalPolicy>();

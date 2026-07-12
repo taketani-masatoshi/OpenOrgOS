@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { computeVarianceReport, formatVarianceMarkdown } from "../src/lib/variance.js";
@@ -7,8 +7,13 @@ import {
   normalizeYojitsuSide,
 } from "../src/lib/yojitsu-normalize.js";
 import { loadYojitsuFyPlan } from "../src/lib/data.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("yojitsu v2", () => {
+  beforeEach(() => {
+    setTenantId("mal");
+  });
+
   it("normalizes MAL legacy columns to lines[]", () => {
     const plan = loadYojitsuFyPlan("FY2026");
     expect(plan).toBeDefined();

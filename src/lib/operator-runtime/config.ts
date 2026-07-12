@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -105,12 +104,7 @@ export function buildShellCommand(
 }
 
 export type DispatchRuntimePreference =
-  | "shell"
-  | "cursor"
-  | "local"
-  | "cloud"
-  | "manifest"
-  | "auto";
+  "shell" | "cursor" | "local" | "cloud" | "manifest" | "auto";
 
 export function resolveOperatorRuntime(
   preferred?: DispatchRuntimePreference
@@ -132,7 +126,11 @@ export function resolveOperatorRuntime(
 
   // auto
   if (cfg.default_runtime === "shell") {
-    const shell = buildShellCommand({ promptPath: "/tmp/x", workspace: process.cwd(), tenant: "x" });
+    const shell = buildShellCommand({
+      promptPath: "/tmp/x",
+      workspace: process.cwd(),
+      tenant: "x",
+    });
     if (shell) return "shell";
   }
   if (cfg.default_runtime === "cursor" && isCursorSdkAvailable() && cfg.cursor?.enabled !== false) {

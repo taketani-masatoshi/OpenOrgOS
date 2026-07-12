@@ -71,10 +71,7 @@ function isControlIsoInScope(ctrl: ControlDefinition, enabledIso: string[]): boo
   return controlIsoStandards(ctrl).some((id) => enabledIso.includes(id));
 }
 
-function isControlRegInScope(
-  ctrl: ControlDefinition,
-  effectiveRegIds: Set<string>
-): boolean {
+function isControlRegInScope(ctrl: ControlDefinition, effectiveRegIds: Set<string>): boolean {
   if (ctrl.reg_refs.length === 0) return true;
   return ctrl.reg_refs.some((r) => effectiveRegIds.has(r.reg_id));
 }
@@ -84,7 +81,10 @@ function matchesGlobPattern(tenantRelPath: string, pattern: string): boolean {
   const pat = pattern.replace(/\\/g, "/").replace(/^\.\//, "");
 
   if (pat.includes("*")) {
-    const base = pat.replace(/\/\*\*\/\*$/, "").replace(/\/\*\*$/, "").replace(/\*\*$/, "");
+    const base = pat
+      .replace(/\/\*\*\/\*$/, "")
+      .replace(/\/\*\*$/, "")
+      .replace(/\*\*$/, "");
     if (base && !normalized.startsWith(base.replace(/\/$/, ""))) {
       return false;
     }
@@ -162,18 +162,14 @@ export function listEffectiveControls(): EffectiveControl[] {
 
 export function controlsForAgent(agentId: AgentId): EffectiveControl[] {
   return listEffectiveControls().filter(
-    (c) =>
-      c.in_scope &&
-      (c.primary_agent === agentId || c.secondary_agents?.includes(agentId))
+    (c) => c.in_scope && (c.primary_agent === agentId || c.secondary_agents?.includes(agentId))
   );
 }
 
 export function computeControlGaps(): ControlGapRow[] {
   const gaps: ControlGapRow[] = [];
   const effectiveRegs = listEffectiveRegulations();
-  const effectiveRegIds = new Set(
-    effectiveRegs.filter((r) => r.effective).map((r) => r.id)
-  );
+  const effectiveRegIds = new Set(effectiveRegs.filter((r) => r.effective).map((r) => r.id));
 
   for (const ctrl of listEffectiveControls()) {
     if (!ctrl.in_scope) continue;
@@ -202,10 +198,7 @@ export function computeControlGaps(): ControlGapRow[] {
       });
     }
 
-    if (
-      maturityRank(ctrl.tenant_maturity) >= maturityRank("L2") &&
-      !hasEvidenceForControl(ctrl)
-    ) {
+    if (maturityRank(ctrl.tenant_maturity) >= maturityRank("L2") && !hasEvidenceForControl(ctrl)) {
       gaps.push({
         control_id: ctrl.id,
         title: ctrl.title,
@@ -315,7 +308,7 @@ export function setTenantControlMaturity(opts: {
   notes?: string;
 }): void {
   const path = controlsFilePath();
-  let file = existsSync(path)
+  const file = existsSync(path)
     ? readYamlFile(path, tenantControlsFileSchema)
     : { version: "1", controls: [] as TenantControlStatus[] };
 

@@ -9,10 +9,7 @@ import { validateAgentActivationContract } from "./agent-activation-verify.js";
 import { verifyPlatformRegistry } from "./platform-registry-verify.js";
 import { validateProtocolLayerCatalog } from "./protocol/layer-catalog.js";
 import { buildOrgOsCommandProgram } from "./cli-program.js";
-import {
-  buildCliCommandCatalog,
-  validateCliCommandCatalog,
-} from "./cli-command-catalog.js";
+import { buildCliCommandCatalog, validateCliCommandCatalog } from "./cli-command-catalog.js";
 import { validateLegacyWebhookSunset } from "./protocol/legacy-webhook-sunset.js";
 import { ROOT_DIR } from "./tenant.js";
 
@@ -44,7 +41,8 @@ export function runPlatformExtensionChecks(): PlatformExtensionCheck[] {
   const advisor = listCatalogAgents().find((a) => a.id === "platform_guide");
   checks.push({
     id: "advisor:platform_guide",
-    ok: advisor?.class === "advisor" && advisor.auto_route === false && advisor.auto_pulse === false,
+    ok:
+      advisor?.class === "advisor" && advisor.auto_route === false && advisor.auto_pulse === false,
     detail: advisor
       ? `class=${advisor.class} auto_route=${advisor.auto_route} auto_pulse=${advisor.auto_pulse}`
       : "missing from catalog",

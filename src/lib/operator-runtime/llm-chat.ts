@@ -69,7 +69,9 @@ function splitSystemMessages(messages: LlmChatMessage[]): {
   return { system: systemParts.join("\n\n"), rest };
 }
 
-function toAnthropicMessages(messages: LlmChatMessage[]): Array<{ role: "user" | "assistant"; content: string }> {
+function toAnthropicMessages(
+  messages: LlmChatMessage[]
+): Array<{ role: "user" | "assistant"; content: string }> {
   const out: Array<{ role: "user" | "assistant"; content: string }> = [];
   for (const m of messages) {
     if (m.role === "tool") {

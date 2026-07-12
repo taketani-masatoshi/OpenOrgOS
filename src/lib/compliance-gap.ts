@@ -91,10 +91,7 @@ export function formatComplianceGapReport(): string {
   if (control_gaps.length === 0) {
     lines.push("統制ギャップなし ✓", "");
   } else {
-    lines.push(
-      "| CTL | 種別 | 統制 | 詳細 | Agent |",
-      "|-----|------|------|------|-------|"
-    );
+    lines.push("| CTL | 種別 | 統制 | 詳細 | Agent |", "|-----|------|------|------|-------|");
     for (const g of control_gaps) {
       lines.push(
         `| ${g.control_id} | ${g.gap_type} | ${g.title} | ${g.detail} | ${g.primary_agent} |`

@@ -19,7 +19,9 @@ let memoryOverride: StoredWebAuthnCredential[] | undefined;
 function readStoreFile(): StoredWebAuthnCredential[] {
   if (!existsSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH)) return [];
   try {
-    const doc = JSON.parse(readFileSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, "utf-8")) as CredentialStoreDocument;
+    const doc = JSON.parse(
+      readFileSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, "utf-8")
+    ) as CredentialStoreDocument;
     return Array.isArray(doc.credentials) ? doc.credentials : [];
   } catch {
     return [];
@@ -105,6 +107,8 @@ export function resetWebAuthnCredentialsForTests(): void {
   }
 }
 
-export function useInMemoryWebAuthnCredentialsForTests(credentials: StoredWebAuthnCredential[]): void {
+export function useInMemoryWebAuthnCredentialsForTests(
+  credentials: StoredWebAuthnCredential[]
+): void {
   memoryOverride = credentials;
 }

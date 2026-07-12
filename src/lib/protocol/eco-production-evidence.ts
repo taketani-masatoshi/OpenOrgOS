@@ -50,7 +50,9 @@ export type EcoProductionEvidence = {
   integration?: CommunityIntegrationStatus;
 };
 
-export function loadCommunityIntegration(root = getInstallRoot()): CommunityIntegrationStatus | undefined {
+export function loadCommunityIntegration(
+  root = getInstallRoot()
+): CommunityIntegrationStatus | undefined {
   const path = join(root, "publish/protocol/community-integration.json");
   if (!existsSync(path)) return undefined;
   try {

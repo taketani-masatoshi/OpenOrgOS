@@ -47,10 +47,15 @@ const tenantConfigSchema = z.object({
     .string()
     .regex(/^[a-z][a-z0-9_]*$/, "entity form id from jurisdiction entity-forms.yaml")
     .optional(),
-  display_language: z.enum(["ja", "en", "zh-Hant", "zh-Hans", "et", "ms", "ar", "ru", "de"]).optional(),
+  display_language: z
+    .enum(["ja", "en", "zh-Hant", "zh-Hans", "et", "ms", "ar", "ru", "de"])
+    .optional(),
   legal_subdivision: z.string().optional(),
   locale: z.string().optional(),
-  default_currency: z.string().regex(/^[A-Z]{3}$/).optional(),
+  default_currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .optional(),
   wire_console: z.boolean().optional(),
 });
 
@@ -143,7 +148,11 @@ export function resolveTenantPath(logicalPath: string): string {
   if (normalized.startsWith("steward/") || normalized.startsWith("schemas/")) {
     return resolve(getInstallRoot(), normalized);
   }
-  if (normalized.startsWith("data/") || normalized.startsWith("docs/") || normalized.startsWith("records/")) {
+  if (
+    normalized.startsWith("data/") ||
+    normalized.startsWith("docs/") ||
+    normalized.startsWith("records/")
+  ) {
     return join(getTenantDir(), normalized);
   }
   return join(getWorkspaceRoot(), normalized);

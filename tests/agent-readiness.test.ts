@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
 import { computeAllAgentReadiness, computeAgentReadiness } from "../src/lib/agent-readiness.js";
 import { listActiveTenantAgents } from "../src/lib/agent-roster.js";
@@ -7,7 +7,7 @@ import { getCatalogAgent } from "../src/lib/agent-catalog.js";
 describe("agent readiness", () => {
   let operationalCount = 0;
 
-  beforeAll(() => {
+  beforeEach(() => {
     setTenantId("acme");
     operationalCount = listActiveTenantAgents("operational").filter((id) => {
       const agent = getCatalogAgent(id);

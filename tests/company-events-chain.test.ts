@@ -16,6 +16,8 @@ import {
   ensureCompanyEventMonth,
   initCompanyEventsFile,
   loadCompanyEvents,
+  materializeCompanyEventsFromChain,
+  reduceCompanyEvents,
   saveCompanyEvents,
   validateCompanyEvents,
   voidCompanyEvent,
@@ -245,5 +247,30 @@ describe("company-events-chain", () => {
     expect(chain.length).toBe(before + 1);
     expect(chain.at(-1)?.action).toBe("status");
     expect(chain.at(-1)?.event_id).toBe(event.id);
+  });
+
+  it("stores payloads and reduce/materialize rebuilds registry status", () => {
+    ensureCompanyEventMonth("2100-06");
+    const event = createCompanyEvent({
+      kind: "misc",
+      title: "Reduce me",
+      occurredAt: "2100-06-01",
+      slug: "reduce-me",
+    });
+    created.push(event.event_path, event.artifact_dir);
+    closeCompanyEvent(event.id);
+
+    const chain = loadCompanyEventChain();
+    expect(chain[0]?.payload?.action).toBe("create");
+    expect(chain.at(-1)?.payload?.action).toBe("status");
+
+    const reduced = reduceCompanyEvents(chain);
+    expect(reduced.complete).toBe(true);
+    expect(reduced.registry.events.find((e) => e.id === event.id)?.status).toBe("closed");
+
+    writeFileSync(REGISTRY_PATH(), "schema_version: 2\nevents: []\n", "utf8");
+    const materialized = materializeCompanyEventsFromChain({ seedFromRegistry: false });
+    expect(materialized.wrote).toBe(true);
+    expect(loadCompanyEvents().events.find((e) => e.id === event.id)?.status).toBe("closed");
   });
 });

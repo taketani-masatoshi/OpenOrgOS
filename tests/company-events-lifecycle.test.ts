@@ -5,6 +5,7 @@ import {
   readFileSync,
   rmSync,
   unlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -71,16 +72,23 @@ describe("company-events lifecycle", () => {
     });
     created.push(event.event_path, event.artifact_dir);
 
+    const mdPath = resolveTenantPath(event.event_path);
+    const marker = "## 人間追記マーカー — do-not-overwrite";
+    const before = readFileSync(mdPath, "utf8");
+    writeFileSync(mdPath, `${before.trimEnd()}\n\n${marker}\n`, "utf8");
+
     const closed = closeCompanyEvent(event.id);
     expect(closed.status).toBe("closed");
     expect(closed.closed_at).toBeTruthy();
 
-    const mdClosed = readFileSync(resolveTenantPath(event.event_path), "utf8");
+    const mdClosed = readFileSync(mdPath, "utf8");
     expect(mdClosed).toContain("status: closed");
+    expect(mdClosed).toContain(marker);
 
     const archived = archiveCompanyEvent(event.id);
     expect(archived.status).toBe("archived");
     expect(loadCompanyEvents().events.find((e) => e.id === event.id)?.status).toBe("archived");
+    expect(readFileSync(mdPath, "utf8")).toContain(marker);
   });
 
   it("rejects invalid status transition", () => {

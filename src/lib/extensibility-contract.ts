@@ -13,10 +13,7 @@ import { protocolRegistrySchema } from "../../schemas/protocol/registry.js";
 import { getJurisdictionPackRoot, listJurisdictionCodes } from "./jurisdiction.js";
 import { listModuleCliBundles } from "./module-cli.js";
 import { getModuleTier, loadModuleReadiness } from "./module-readiness.js";
-import {
-  listCatalogModuleIds,
-  resolveModuleLocation,
-} from "./modules.js";
+import { listCatalogModuleIds, resolveModuleLocation } from "./modules.js";
 import { ROOT_DIR } from "./tenant.js";
 import { PROTOCOL_REGISTRY_PATH } from "./steward-paths.js";
 import { readYamlFile } from "./utils.js";
@@ -155,14 +152,8 @@ export function checkModuleCliRegistration(): ExtensibilityIssue[] {
 
 /** JP business-capability-catalog.yaml integrity (when present) */
 export function checkJpCapabilityCatalog(): ExtensibilityIssue[] {
-  const yamlPath = join(
-    ROOT_DIR,
-    "steward/jurisdiction-packs/JP/business-capability-catalog.yaml"
-  );
-  const csvPath = join(
-    ROOT_DIR,
-    "steward/jurisdiction-packs/JP/business-capability-catalog.csv"
-  );
+  const yamlPath = join(ROOT_DIR, "steward/jurisdiction-packs/JP/business-capability-catalog.yaml");
+  const csvPath = join(ROOT_DIR, "steward/jurisdiction-packs/JP/business-capability-catalog.csv");
   if (!existsSync(yamlPath)) return [];
   const issues: ExtensibilityIssue[] = [];
   const doc = YAML.parse(readFileSync(yamlPath, "utf-8")) as {

@@ -1,4 +1,7 @@
-import { notificationsRegistrySchema, type NotificationsRegistry } from "../../../schemas/steward-chat.js";
+import {
+  notificationsRegistrySchema,
+  type NotificationsRegistry,
+} from "../../../schemas/steward-chat.js";
 import { NOTIFICATIONS_REGISTRY_PATH } from "../steward-paths.js";
 import { loadRegistryFile } from "../utils.js";
 import { sendWebhook } from "../webhook.js";

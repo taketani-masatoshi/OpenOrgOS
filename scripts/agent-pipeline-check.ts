@@ -9,7 +9,10 @@ import {
   listTenantsMissingAgentRoster,
 } from "../src/lib/agent-roster.js";
 import { validateGeneratedArtifacts } from "../src/lib/generated-artifacts.js";
-import { listTenantsWithLegacyAgentRoster, listRosterManagedTenants } from "../src/lib/tenant-roster-bootstrap.js";
+import {
+  listTenantsWithLegacyAgentRoster,
+  listRosterManagedTenants,
+} from "../src/lib/tenant-roster-bootstrap.js";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT_DIR } from "../src/lib/tenant.js";
@@ -45,7 +48,11 @@ const steps: Array<{ name: string; run: () => string[] }> = [
     run: () => {
       const issues: string[] = [];
       for (const issue of validateGeneratedArtifacts()) {
-        if (issue.includes("agent-ids") || issue.includes("capability") || issue.includes("generated section")) {
+        if (
+          issue.includes("agent-ids") ||
+          issue.includes("capability") ||
+          issue.includes("generated section")
+        ) {
           issues.push(issue);
         }
       }
@@ -58,7 +65,9 @@ const steps: Array<{ name: string; run: () => string[] }> = [
       const issues: string[] = [];
       const expected = listRosterManagedTenants();
       if (!existsSync(FIXTURE_ROOT)) {
-        issues.push("tests/fixtures/tenant-rosters missing — run npm run agent:roster:fixtures:sync");
+        issues.push(
+          "tests/fixtures/tenant-rosters missing — run npm run agent:roster:fixtures:sync"
+        );
         return issues;
       }
       const fixtures = readdirSync(FIXTURE_ROOT)
@@ -106,7 +115,10 @@ for (const step of steps) {
 }
 
 const remaining = validateGeneratedArtifacts().filter(
-  (issue) => !issue.includes("agent-ids") && !issue.includes("capability") && !issue.includes("generated section")
+  (issue) =>
+    !issue.includes("agent-ids") &&
+    !issue.includes("capability") &&
+    !issue.includes("generated section")
 );
 if (remaining.length) {
   failed = true;

@@ -122,8 +122,7 @@ export async function startStewardChatServerAsync(
   });
 
   const addr = server.address();
-  const actualPort =
-    typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+  const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
   const base = `http://${host}:${actualPort}`;
   return {
     url: base,
@@ -133,7 +132,9 @@ export async function startStewardChatServerAsync(
 }
 
 /** @deprecated Prefer startStewardChatServerAsync when port may be 0 (tests). */
-export function startStewardChatServer(opts: StewardChatServerOptions = {}): StewardChatServerHandle {
+export function startStewardChatServer(
+  opts: StewardChatServerOptions = {}
+): StewardChatServerHandle {
   assertProdAuthReady("chat");
   const host = opts.host ?? process.env.STEWARD_CHAT_HOST?.trim() ?? "127.0.0.1";
   const port = opts.port ?? Number(process.env.STEWARD_CHAT_PORT ?? 9471);

@@ -1,5 +1,8 @@
 import type { EventEnvelope } from "../../../../../schemas/protocol/org-event.js";
-import type { GovGatewayProfileBinding, GovGatewayProfileId } from "../../../../../schemas/protocol/gov-gateway-adapter.js";
+import type {
+  GovGatewayProfileBinding,
+  GovGatewayProfileId,
+} from "../../../../../schemas/protocol/gov-gateway-adapter.js";
 import type { GovGatewayProfileDocument } from "../../../../../schemas/protocol/gov-gateway-profile.js";
 import {
   bodyToString,
@@ -85,8 +88,7 @@ export function nativeMessageFromXRoadWire(body: {
   headers?: Record<string, string>;
   body: string | Record<string, unknown>;
 }): NativeMessage {
-  const payload =
-    typeof body.body === "string" ? body.body : JSON.stringify(body.body);
+  const payload = typeof body.body === "string" ? body.body : JSON.stringify(body.body);
   return {
     profile_id: body.profile_id,
     mime: OPENORGOS_ENVELOPE_MIME,

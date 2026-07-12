@@ -106,7 +106,9 @@ export function verifyWitnessTrustBundle(bundle: WitnessTrustBundle): {
     if (cert.expires_at && cert.expires_at < new Date().toISOString()) {
       issues.push(`${cert.hub_id}: certificate expired`);
     }
-    const revoked = (bundle.revocations ?? []).some((r) => r.cert_id === cert.cert_id || r.hub_id === cert.hub_id);
+    const revoked = (bundle.revocations ?? []).some(
+      (r) => r.cert_id === cert.cert_id || r.hub_id === cert.hub_id
+    );
     if (revoked) {
       issues.push(`${cert.hub_id}: certificate revoked`);
     }
@@ -121,7 +123,7 @@ export function ensureWitnessTrustAuthorityKey(): string {
     return readFileSync(path, "utf-8");
   }
   mkdirSync(getWitnessTrustDir(), { recursive: true });
-  const { privateKeyPem, publicKey } = generateHubKeyPair();
+  const { privateKeyPem } = generateHubKeyPair();
   writeFileSync(path, privateKeyPem, { mode: 0o600 });
   return privateKeyPem;
 }
@@ -240,7 +242,8 @@ export async function fetchWitnessTrustBundle(
   url: string,
   tls?: import("../../../schemas/protocol/protocol-api-config.js").ProtocolTlsCredentials
 ): Promise<WitnessTrustBundle> {
-  const { loadProtocolApiClientConfig, mergeTlsCredentials } = await import("./protocol-api-config.js");
+  const { loadProtocolApiClientConfig, mergeTlsCredentials } =
+    await import("./protocol-api-config.js");
   const { protocolFetch } = await import("./protocol-tls.js");
   const client = loadProtocolApiClientConfig();
   const useTls = url.startsWith("https://") ? mergeTlsCredentials(client.tls, tls) : undefined;

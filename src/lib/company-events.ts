@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   companyEventsRegistrySchema,
@@ -20,11 +20,10 @@ import {
 import { lintCompanyEventMarkdown } from "./company-events-lint.js";
 import {
   appendChainLink,
-  backfillCompanyEventChain,
-  getCompanyEventChainTail,
+  createPayloadFromEvent,
   loadCompanyEventChain,
+  reduceCompanyEvents,
   validateCompanyEventChainWithRegistry,
-  verifyCompanyEventChain,
 } from "./company-events-chain.js";
 
 export const COMPANY_EVENT_KINDS = companyEventKind.options.filter((k) => k !== "void");
@@ -105,11 +104,7 @@ function slugifyEventSlug(title: string, kind: CompanyEventKind, used: Set<strin
   return slug;
 }
 
-export function buildEventId(
-  occurredAt: string,
-  kind: CompanyEventKind,
-  slug: string
-): string {
+export function buildEventId(occurredAt: string, kind: CompanyEventKind, slug: string): string {
   const datePart = occurredAt.replace(/-/g, "");
   const cleanSlug = slug.replace(/^-+|-+$/g, "");
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cleanSlug) || cleanSlug.length < 3) {
@@ -219,7 +214,7 @@ ${voidLines}
 }
 
 /** Update YAML frontmatter only — never rewrite the human narrative body. */
-function patchEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): void {
+export function patchCompanyEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): void {
   if (!existsSync(absPath)) {
     writeFileSync(absPath, renderEventMarkdown(event), "utf8");
     return;
@@ -251,7 +246,79 @@ function patchEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): vo
     .filter((line) => line !== null)
     .join("\n");
   const normalizedBody = match ? match[2]! : `\n${content}`;
-  writeFileSync(absPath, `${fm}${normalizedBody.startsWith("\n") ? normalizedBody : `\n${normalizedBody}`}`, "utf8");
+  writeFileSync(
+    absPath,
+    `${fm}${normalizedBody.startsWith("\n") ? normalizedBody : `\n${normalizedBody}`}`,
+    "utf8"
+  );
+}
+
+/**
+ * Derive YAML + MD frontmatter (+ month indexes) from the chain.
+ * MD narrative body is never rewritten when the file already exists.
+ */
+export function materializeCompanyEventsFromChain(opts?: {
+  checkOnly?: boolean;
+  /** Seed reduce with current YAML for legacy links lacking payload (default true). */
+  seedFromRegistry?: boolean;
+}): {
+  registry: CompanyEventsRegistry;
+  issues: { code: string; message: string; seq?: number; event_id?: string }[];
+  complete: boolean;
+  wrote: boolean;
+} {
+  initCompanyEventsFile();
+  const chain = loadCompanyEventChain();
+  const seed = opts?.seedFromRegistry === false ? undefined : loadCompanyEvents();
+  const reduced = reduceCompanyEvents(chain, { seed });
+
+  if (opts?.checkOnly) {
+    return {
+      registry: reduced.registry,
+      issues: reduced.issues,
+      complete: reduced.complete,
+      wrote: false,
+    };
+  }
+
+  applyMaterializedRegistry(reduced.registry);
+  return {
+    registry: reduced.registry,
+    issues: reduced.issues,
+    complete: reduced.complete,
+    wrote: true,
+  };
+}
+
+function ensureEventMarkdownAndArtifacts(event: CompanyEvent): void {
+  const artifactDirAbs = resolveTenantPath(event.artifact_dir);
+  mkdirSync(join(artifactDirAbs, "records"), { recursive: true });
+  const eventAbs = resolveTenantPath(event.event_path);
+  if (!existsSync(eventAbs)) {
+    mkdirSync(join(eventAbs, ".."), { recursive: true });
+    writeFileSync(eventAbs, renderEventMarkdown(event), "utf8");
+  } else {
+    patchCompanyEventMarkdownFrontmatter(eventAbs, event);
+  }
+  const indexAbs = join(artifactDirAbs, "00-artifact-index.md");
+  if (!existsSync(indexAbs)) {
+    writeFileSync(indexAbs, renderArtifactIndex(event), "utf8");
+  }
+}
+
+function applyMaterializedRegistry(registry: CompanyEventsRegistry): void {
+  if (registry.schema_version !== 2) {
+    registry.schema_version = 2;
+  }
+  saveCompanyEvents(registry);
+  const months = new Set<string>();
+  for (const event of registry.events) {
+    ensureEventMarkdownAndArtifacts(event);
+    months.add(event.month);
+  }
+  for (const month of months) {
+    refreshMonthIndex(month, registry.events);
+  }
 }
 
 function renderArtifactIndex(event: CompanyEvent): string {
@@ -280,8 +347,7 @@ function refreshMonthIndex(month: string, events: CompanyEvent[]): void {
 
   const rows = monthEvents
     .map(
-      (e) =>
-        `| [${e.id}](./${e.id}.md) | ${e.occurred_at} | ${e.kind} | ${e.title} | ${e.status} |`
+      (e) => `| [${e.id}](./${e.id}.md) | ${e.occurred_at} | ${e.kind} | ${e.title} | ${e.status} |`
     )
     .join("\n");
 
@@ -308,16 +374,8 @@ export interface CreateCompanyEventOptions {
 function insertCompanyEventRecord(event: CompanyEvent): CompanyEvent {
   const artifactDirAbs = resolveTenantPath(event.artifact_dir);
   mkdirSync(join(artifactDirAbs, "records"), { recursive: true });
-  writeFileSync(
-    resolveTenantPath(event.event_path),
-    renderEventMarkdown(event),
-    "utf8"
-  );
-  writeFileSync(
-    join(artifactDirAbs, "00-artifact-index.md"),
-    renderArtifactIndex(event),
-    "utf8"
-  );
+  writeFileSync(resolveTenantPath(event.event_path), renderEventMarkdown(event), "utf8");
+  writeFileSync(join(artifactDirAbs, "00-artifact-index.md"), renderArtifactIndex(event), "utf8");
 
   const registry = loadCompanyEvents();
   registry.events.push(event);
@@ -383,35 +441,15 @@ export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEven
     void_reason: opts.voidReason,
   });
 
-  insertCompanyEventRecord(event);
-
   if (opts.skipChain) {
+    insertCompanyEventRecord(event);
     return event;
   }
 
-  const link = appendChainLink({
-    action: "create",
-    event: {
-      id: event.id,
-      occurred_at: event.occurred_at,
-      kind: event.kind,
-      title: event.title,
-      status: event.status,
-    },
-  });
-
-  const updatedRegistry = loadCompanyEvents();
-  const idx = updatedRegistry.events.findIndex((e) => e.id === event.id);
-  if (idx >= 0) {
-    updatedRegistry.events[idx] = companyEventSchema.parse({
-      ...updatedRegistry.events[idx],
-      chain_seq: link.seq,
-    });
-    saveCompanyEvents(updatedRegistry);
-    return updatedRegistry.events[idx]!;
-  }
-
-  return { ...event, chain_seq: link.seq };
+  const link = appendChainLink(createPayloadFromEvent(event));
+  const materialized = materializeCompanyEventsFromChain();
+  const found = materialized.registry.events.find((e) => e.id === event.id);
+  return found ?? { ...event, chain_seq: link.seq };
 }
 
 export function listCompanyEvents(filter?: {
@@ -430,7 +468,9 @@ export function listCompanyEvents(filter?: {
   if (filter?.status) {
     events = events.filter((e) => e.status === filter.status);
   }
-  return events.sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
+  return events.sort(
+    (a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id)
+  );
 }
 
 export function artifactDirForEvent(event: Pick<CompanyEvent, "id" | "month">): string {
@@ -472,24 +512,18 @@ export function updateCompanyEventStatus(
     throw new Error(`Cannot transition ${current.status} → ${status} for ${id}`);
   }
 
-  const updated: CompanyEvent = companyEventSchema.parse({
-    ...current,
-    status,
-    closed_at: currentDate(),
-  });
-
-  const eventAbs = join(getDocsCompanyEventsDir(), updated.month, `${updated.id}.md`);
-  patchEventMarkdownFrontmatter(eventAbs, updated);
-
-  registry.events[idx] = updated;
-  saveCompanyEvents(registry);
+  const closedAt = currentDate();
   appendChainLink({
     action: "status",
-    eventId: updated.id,
-    status: updated.status,
-    closed_at: updated.closed_at,
+    event_id: id,
+    status,
+    closed_at: closedAt,
   });
-  refreshMonthIndex(updated.month, registry.events);
+  const materialized = materializeCompanyEventsFromChain();
+  const updated = materialized.registry.events.find((e) => e.id === id);
+  if (!updated) {
+    throw new Error(`Event missing after materialize: ${id}`);
+  }
   return updated;
 }
 
@@ -592,9 +626,7 @@ export function registerArtifactFiles(
   }
   const indexAbs = resolveTenantPath(`${event.artifact_dir}00-artifact-index.md`);
   const kind = opts?.kind ?? "generated-md";
-  const rows = fileNames
-    .map((name) => `| \`${name}\` | ${kind} | module prepare |`)
-    .join("\n");
+  const rows = fileNames.map((name) => `| \`${name}\` | ${kind} | module prepare |`).join("\n");
   const content = `# 出力書類 — ${event.id}
 
 **イベント:** ${event.title}  
@@ -623,7 +655,10 @@ export function archiveCompanyEvent(id: string): CompanyEvent {
   return updateCompanyEventStatus(id, "archived");
 }
 
-export function voidCompanyEvent(targetId: string, reason: string): {
+export function voidCompanyEvent(
+  targetId: string,
+  reason: string
+): {
   voidEvent: CompanyEvent;
   target: CompanyEvent;
 } {
@@ -652,62 +687,23 @@ export function voidCompanyEvent(targetId: string, reason: string): {
     slug: `void-${target.id.replace(/^EVT-/, "").slice(0, 24)}`,
     targetEventId: targetId,
     voidReason: reason.trim(),
-    skipChain: true,
-  });
-
-  const createLink = appendChainLink({
-    action: "create",
-    event: {
-      id: voidEvent.id,
-      occurred_at: voidEvent.occurred_at,
-      kind: voidEvent.kind,
-      title: voidEvent.title,
-      status: voidEvent.status,
-    },
-  });
-
-  appendChainLink({
-    action: "void",
-    eventId: voidEvent.id,
-    targetEventId: targetId,
-    reason: reason.trim(),
   });
 
   const voidedAt = currentDate();
-  const updatedTarget: CompanyEvent = companyEventSchema.parse({
-    ...target,
-    status: "voided",
-    voided_by: voidEvent.id,
+  appendChainLink({
+    action: "void",
+    event_id: voidEvent.id,
+    target_event_id: targetId,
+    reason: reason.trim(),
     voided_at: voidedAt,
-    void_reason: reason.trim(),
   });
 
-  const updatedVoidEvent: CompanyEvent = companyEventSchema.parse({
-    ...voidEvent,
-    chain_seq: createLink.seq,
-  });
-
-  const eventAbs = join(getDocsCompanyEventsDir(), updatedTarget.month, `${updatedTarget.id}.md`);
-  patchEventMarkdownFrontmatter(eventAbs, updatedTarget);
-
-  const voidEventAbs = join(
-    getDocsCompanyEventsDir(),
-    updatedVoidEvent.month,
-    `${updatedVoidEvent.id}.md`
-  );
-  patchEventMarkdownFrontmatter(voidEventAbs, updatedVoidEvent);
-
-  const freshRegistry = loadCompanyEvents();
-  const tIdx = freshRegistry.events.findIndex((e) => e.id === targetId);
-  const vIdx = freshRegistry.events.findIndex((e) => e.id === voidEvent.id);
-  if (tIdx >= 0) freshRegistry.events[tIdx] = updatedTarget;
-  if (vIdx >= 0) freshRegistry.events[vIdx] = updatedVoidEvent;
-  saveCompanyEvents(freshRegistry);
-  refreshMonthIndex(updatedTarget.month, freshRegistry.events);
-  if (updatedVoidEvent.month !== updatedTarget.month) {
-    refreshMonthIndex(updatedVoidEvent.month, freshRegistry.events);
+  const materialized = materializeCompanyEventsFromChain();
+  const updatedTarget = materialized.registry.events.find((e) => e.id === targetId);
+  const updatedVoidEvent = materialized.registry.events.find((e) => e.id === voidEvent.id);
+  if (!updatedTarget || !updatedVoidEvent) {
+    throw new Error(`Void materialize incomplete for ${targetId}`);
   }
-
   return { voidEvent: updatedVoidEvent, target: updatedTarget };
 }
 
@@ -715,6 +711,7 @@ export {
   backfillCompanyEventChain,
   getCompanyEventChainTail,
   loadCompanyEventChain,
+  reduceCompanyEvents,
   verifyCompanyEventChain,
   companyEventChainPath,
 } from "./company-events-chain.js";

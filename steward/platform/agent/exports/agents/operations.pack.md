@@ -148,7 +148,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 - `docs/company/hr/` テンプレ整備
 - `docs/finance/accounting/templates/` の Finance との協調
 - `steward io` CLI による I/O 自動化
-- **旅行手配**（出張 · 宿泊）— **ヒアリング →** browser MCP · 決済直前まで（[travel_booking](../core/skills/travel_booking.md)）
+- **旅行手配**（出張 · 宿泊）— **ヒアリング →** browser MCP · 決済直前まで（[travel_booking](steward/core/skills/travel_booking.md)）
 - **Skill 実行後** `docs/reports/agent-summaries/operations/` に要約を書く
 
 ---
@@ -262,7 +262,7 @@ npm run orgos -- io outbox list
 
 - I/O ガイド: `npm run orgos -- io guide`
 - inbox/outbox 説明: [docs/io/inbox/](docs/io/inbox/00-このフォルダについて.md) · [docs/io/outbox/](docs/io/outbox/00-このフォルダについて.md)
-- 台帳: [document-io.yaml](../data/document-io.yaml)
+- 台帳: [document-io.yaml](data/document-io.yaml)
 
 ## 使用 Skill / CLI
 
@@ -281,7 +281,7 @@ orgos agent pulse --agent operations
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/core/orchestrators/steward_agent_roster.md)
 
 
 

@@ -5,20 +5,12 @@ import {
   listTenantModules,
   loadEnabledModules,
 } from "../lib/modules.js";
-import {
-  activateTenantModule,
-  formatActivateModuleResult,
-} from "../lib/agent-workspace.js";
+import { activateTenantModule, formatActivateModuleResult } from "../lib/agent-workspace.js";
 import { scaffoldModuleExtensionDocs } from "../lib/tenant-document-zones.js";
 import { validateExtensibilityContracts } from "../lib/extensibility-contract.js";
-import {
-  syncActiveContext,
-} from "../lib/context-manifest.js";
+import { syncActiveContext } from "../lib/context-manifest.js";
 import { loadEnabledIsoIds } from "../lib/tenant-standards.js";
-import {
-  listEffectiveRegulations,
-  loadEnabledRegulationIds,
-} from "../lib/regulations.js";
+import { loadEnabledRegulationIds } from "../lib/regulations.js";
 import { getTenantId, setTenantId } from "../lib/tenant.js";
 import { getModuleTier, type ReadinessTier } from "../lib/module-readiness.js";
 

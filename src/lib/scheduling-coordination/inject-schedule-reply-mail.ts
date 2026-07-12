@@ -57,7 +57,8 @@ export function injectScheduleAcceptReplyMail(opts: {
     caseRow.proposed_slots[0];
   if (!slot) throw new Error(`No proposed slots on ${opts.caseId}`);
 
-  const mailId = opts.mailId ?? `MSG-REH-${Date.now()}-${opts.participantEmail.replace(/[^a-z0-9]/gi, "-")}`;
+  const mailId =
+    opts.mailId ?? `MSG-REH-${Date.now()}-${opts.participantEmail.replace(/[^a-z0-9]/gi, "-")}`;
   const emlName = `${mailId}.eml`;
   mkdirSync(getMailReceivedDir(), { recursive: true });
   writeFileSync(
@@ -87,7 +88,9 @@ export function injectScheduleAcceptReplyMail(opts: {
     eml_ref: `records/executive/mail-received/${emlName}`,
     rule_hits: ["schedule"],
     scheduling_case_id: opts.caseId,
-    mail_thread_ids: caseRow.mail_thread_ids.length ? caseRow.mail_thread_ids : [`THREAD-${opts.caseId}`],
+    mail_thread_ids: caseRow.mail_thread_ids.length
+      ? caseRow.mail_thread_ids
+      : [`THREAD-${opts.caseId}`],
   });
 }
 

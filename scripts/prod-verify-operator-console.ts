@@ -110,7 +110,9 @@ async function main(): Promise<void> {
   if (notify.status === 0) {
     console.log("✓ orgos notifications test");
   } else {
-    console.log("⚠ orgos notifications test skipped or failed (configure registry webhook for full check)");
+    console.log(
+      "⚠ orgos notifications test skipped or failed (configure registry webhook for full check)"
+    );
   }
 
   if (!opts.skipWitness) {

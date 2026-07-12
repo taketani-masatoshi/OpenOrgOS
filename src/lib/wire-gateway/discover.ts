@@ -4,11 +4,7 @@ import { loadWireTrustRegistry } from "../protocol/wire-trust-registry.js";
 import type { WireTrustRegistryNode } from "../../../schemas/protocol/wire-trust-registry.js";
 import type { PeerProfile } from "../../../schemas/protocol/peers.js";
 import { syncWireTrustRegistryPublicKeys } from "../protocol/wire-trust-registry-sync.js";
-import {
-  resolveOpenOrgWireUrl,
-  isDnsStyleNodeId,
-  type OpenOrgDnsResolver,
-} from "./openorg-dns.js";
+import { resolveOpenOrgWireUrl, isDnsStyleNodeId, type OpenOrgDnsResolver } from "./openorg-dns.js";
 
 export interface WireGatewayDiscoverEntry {
   source: "trust-registry";
@@ -38,10 +34,7 @@ export interface WireGatewayPeerSuggestion {
 }
 
 function tenantNodeUris(tenantId: string): Set<string> {
-  return new Set([
-    `steward://tenant/${tenantId}`,
-    `steward://tenant/${tenantId}/`,
-  ]);
+  return new Set([`steward://tenant/${tenantId}`, `steward://tenant/${tenantId}/`]);
 }
 
 function isRegisteredPeer(node: WireTrustRegistryNode, registeredOrgUris: Set<string>): boolean {
@@ -249,9 +242,7 @@ export async function applyWireGatewayDiscoverAsync(
     const resolved =
       opts.resolveDns === false
         ? {
-            profile: entry.wire_url
-              ? buildPeerProfileFromDiscoverEntry(entry)
-              : undefined,
+            profile: entry.wire_url ? buildPeerProfileFromDiscoverEntry(entry) : undefined,
             reason: entry.wire_url ? undefined : "no wire_url in trust registry",
           }
         : await resolveWireGatewayDiscoverEntry(entry, opts.dnsResolver);

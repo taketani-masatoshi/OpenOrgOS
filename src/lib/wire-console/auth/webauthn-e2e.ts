@@ -22,7 +22,9 @@ export function completeWebAuthnE2eLogin(challenge: string) {
   }
   let fixture: WebAuthnSmokeFixture;
   try {
-    fixture = JSON.parse(readFileSync(WIRE_CONSOLE_WEBAUTHN_SMOKE_FIXTURE, "utf-8")) as WebAuthnSmokeFixture;
+    fixture = JSON.parse(
+      readFileSync(WIRE_CONSOLE_WEBAUTHN_SMOKE_FIXTURE, "utf-8")
+    ) as WebAuthnSmokeFixture;
   } catch {
     return { error: "webauthn e2e fixture missing" as const };
   }

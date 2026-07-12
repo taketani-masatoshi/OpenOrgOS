@@ -5,6 +5,7 @@ packages/**
 dist/**
 node_modules/**
 coverage/**
+schemas/generated/**
 *.md
 *.yaml
 *.yml

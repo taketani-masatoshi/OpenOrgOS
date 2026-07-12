@@ -86,7 +86,14 @@ export const schedulingProposalSendAuthoritySchema = z.object({
 });
 
 export const schedulingLifecycleEventSchema = z.object({
-  stage: z.enum(["created", "proposal_sent", "confirmed", "notification_sent", "cancelled", "rescheduled"]),
+  stage: z.enum([
+    "created",
+    "proposal_sent",
+    "confirmed",
+    "notification_sent",
+    "cancelled",
+    "rescheduled",
+  ]),
   proposal_revision: z.number().int().nonnegative().default(0),
   event_id: z.string(),
   recorded_at: z.string(),
@@ -138,9 +145,7 @@ export const schedulingCasesFileSchema = z.object({
 });
 
 export type SchedulingCaseStatus = z.output<typeof schedulingCaseStatusSchema>;
-export type SchedulingParticipantResponse = z.output<
-  typeof schedulingParticipantResponseSchema
->;
+export type SchedulingParticipantResponse = z.output<typeof schedulingParticipantResponseSchema>;
 export type SchedulingParticipant = z.output<typeof schedulingParticipantSchema>;
 export type SchedulingProposedSlot = z.output<typeof schedulingProposedSlotSchema>;
 export type SchedulingCase = z.output<typeof schedulingCaseSchema>;

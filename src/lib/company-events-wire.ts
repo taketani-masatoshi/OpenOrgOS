@@ -1,23 +1,17 @@
 import type { CompanyEvent } from "../../schemas/company-events.js";
-import { companyEventSchema } from "../../schemas/company-events.js";
 import type { OrgApprovalRequest } from "../../schemas/org/approval.js";
 import {
   isContractVoidAcknowledgedType,
   isContractVoidRequestedType,
 } from "../../schemas/protocol/committee-transaction.js";
 import { isWireDelivered } from "./protocol/wire-delivered.js";
-import {
-  findTransactionByEventId,
-  loadTransactionsRegistry,
-} from "./protocol/transactions.js";
+import { findTransactionByEventId, loadTransactionsRegistry } from "./protocol/transactions.js";
 import { listOrgApprovals } from "./org/approval/index.js";
 import { proposeInterOrgWire } from "./wire/notice-workflow.js";
 import type { RecordTransactionResult } from "./protocol/record-transaction.js";
-import {
-  findCompanyEventById,
-  loadCompanyEvents,
-  saveCompanyEvents,
-} from "./company-events.js";
+import { findCompanyEventById, materializeCompanyEventsFromChain } from "./company-events.js";
+import { appendChainLink } from "./company-events-chain.js";
+import { getClock } from "./runtime-context.js";
 
 export interface DeliveredWireExposure {
   peer_id: string;
@@ -45,15 +39,10 @@ function approvalCompanyEventId(approval: OrgApprovalRequest): string | undefine
 }
 
 export function findWireApprovalsForCompanyEvent(eventId: string): OrgApprovalRequest[] {
-  return listOrgApprovals({ scope: "wire" }).filter(
-    (a) => approvalCompanyEventId(a) === eventId
-  );
+  return listOrgApprovals({ scope: "wire" }).filter((a) => approvalCompanyEventId(a) === eventId);
 }
 
-function mergeExposure(
-  map: Map<string, DeliveredWireExposure>,
-  exp: DeliveredWireExposure
-): void {
+function mergeExposure(map: Map<string, DeliveredWireExposure>, exp: DeliveredWireExposure): void {
   const key = `${exp.peer_id}:${exp.wire_event_id}`;
   const existing = map.get(key);
   if (!existing) {
@@ -111,7 +100,10 @@ export function resolveDeliveredWireExposures(event: CompanyEvent): DeliveredWir
 
 function exposureIsDelivered(exp: DeliveredWireExposure, event: CompanyEvent): boolean {
   if (isWireDelivered(exp.peer_id, exp.wire_event_id)) return true;
-  if (event.wire_binding?.status === "delivered" && event.wire_binding.wire_event_id === exp.wire_event_id) {
+  if (
+    event.wire_binding?.status === "delivered" &&
+    event.wire_binding.wire_event_id === exp.wire_event_id
+  ) {
     return true;
   }
   const approval = findWireApprovalsForCompanyEvent(event.id).find(
@@ -164,22 +156,24 @@ function patchCompanyEventWireBinding(
   eventId: string,
   patch: NonNullable<CompanyEvent["wire_binding"]>
 ): CompanyEvent {
-  const registry = loadCompanyEvents();
-  const idx = registry.events.findIndex((e) => e.id === eventId);
-  if (idx < 0) {
+  const current = findCompanyEventById(eventId);
+  if (!current) {
     throw new Error(`Event not found: ${eventId}`);
   }
-  const current = registry.events[idx]!;
   const merged = {
     ...current.wire_binding,
     ...patch,
   };
-  const updated = companyEventSchema.parse({
-    ...current,
+  appendChainLink({
+    action: "wire",
+    event_id: eventId,
     wire_binding: merged,
   });
-  registry.events[idx] = updated;
-  saveCompanyEvents(registry);
+  const materialized = materializeCompanyEventsFromChain();
+  const updated = materialized.registry.events.find((e) => e.id === eventId);
+  if (!updated) {
+    throw new Error(`Event missing after wire materialize: ${eventId}`);
+  }
   return updated;
 }
 
@@ -233,9 +227,7 @@ export function proposeVoidWireForCompanyEvent(
   }
 
   const target =
-    (opts.peerId
-      ? exposures.find((e) => e.peer_id === opts.peerId)
-      : undefined) ?? exposures[0]!;
+    (opts.peerId ? exposures.find((e) => e.peer_id === opts.peerId) : undefined) ?? exposures[0]!;
 
   if (target.void_ack_wire_event_id) {
     throw new Error(`Void acknowledgment already registered for ${opts.companyEventId}`);
@@ -288,13 +280,11 @@ export function registerCompanyEventVoidAck(
       throw new Error(`Wire event ${opts.wireEventId} is not inbound`);
     }
     if (!isContractVoidAcknowledgedType(inbound.transaction_type)) {
-      throw new Error(
-        `Wire event ${opts.wireEventId} is not steward.contract.void.acknowledged`
-      );
+      throw new Error(`Wire event ${opts.wireEventId} is not steward.contract.void.acknowledged`);
     }
   }
 
-  const ackAt = new Date().toISOString();
+  const ackAt = getClock().nowIso();
   return patchCompanyEventWireBinding(opts.companyEventId, {
     void_ack_wire_event_id: opts.wireEventId,
     void_ack_at: ackAt,
@@ -303,7 +293,9 @@ export function registerCompanyEventVoidAck(
 }
 
 /** Scan inbound ledger for void.ack matching a delivered exposure correlation. */
-export function tryAutoRegisterVoidAckFromInbound(companyEventId: string): CompanyEvent | undefined {
+export function tryAutoRegisterVoidAckFromInbound(
+  companyEventId: string
+): CompanyEvent | undefined {
   const event = findCompanyEventById(companyEventId);
   if (!event?.wire_binding?.wire_event_id) return undefined;
   if (event.wire_binding.void_ack_wire_event_id) return event;

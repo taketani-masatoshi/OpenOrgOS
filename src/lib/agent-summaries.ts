@@ -3,13 +3,15 @@ import type { StewardData } from "./data.js";
 import { loadAllData } from "./data.js";
 import { scanContractAlerts } from "./alerts.js";
 import { listPendingInbox, loadDocumentIo } from "./document-io.js";
-import {
-  computeDashboard,
-  buildLiquidityOutlook,
-  type DashboardReport,
-} from "./dashboard.js";
+import { computeDashboard, buildLiquidityOutlook, type DashboardReport } from "./dashboard.js";
 import { loadEnabledRegulationIds } from "./regulations.js";
-import { currentDate, getDocsDir, formatCurrency, formatPercent, writeMarkdownReport } from "./utils.js";
+import {
+  currentDate,
+  getDocsDir,
+  formatCurrency,
+  formatPercent,
+  writeMarkdownReport,
+} from "./utils.js";
 import { loadEnabledModules, type TenantModule } from "./modules.js";
 import { join } from "node:path";
 import { readdirSync, existsSync } from "node:fs";
@@ -143,17 +145,13 @@ export function formatContractSummary(data: StewardData, report: DashboardReport
     "",
     "| ID | 名称 | 状態 | 物件 |",
     "|----|------|------|------|",
-    ...drafts.map(
-      (c) => `| ${c.id} | ${c.name} | draft | ${c.property_id ?? "—"} |`
-    ),
+    ...drafts.map((c) => `| ${c.id} | ${c.name} | draft | ${c.property_id ?? "—"} |`),
     ...(drafts.length === 0 ? ["| — | draft なし | — | — |"] : []),
     "",
     "## リスク・P0",
     "",
     ...insuranceDrafts.map((c) => `- **${c.id}** ${c.name} — 未加入`),
-    ...drafts
-      .filter((c) => c.type !== "insurance")
-      .map((c) => `- ${c.id} ${c.name}（draft）`),
+    ...drafts.filter((c) => c.type !== "insurance").map((c) => `- ${c.id} ${c.name}（draft）`),
     "",
     "## 推奨アクション",
     "",
@@ -230,7 +228,6 @@ export function formatHospitalityModuleSummary(
     return `# Hospitality Module 要約 ${report.reportDate}\n\n${propId} 未找到または type≠hotel。\n`;
   }
   const h = p.hotel!;
-  const oc = p.operating_costs;
   const daysPerMonth = 30 * h.occupancy_rate;
   const monthlyGross = h.adr * daysPerMonth;
   const revpar = h.adr * h.occupancy_rate;
@@ -280,10 +277,7 @@ export function formatProfessionalServicesSummary(
   ].join("\n");
 }
 
-export function formatVentureCapitalSummary(
-  report: DashboardReport,
-  mod: TenantModule
-): string {
+export function formatVentureCapitalSummary(report: DashboardReport, mod: TenantModule): string {
   return [
     `# Venture Capital Module 要約 ${report.reportDate}`,
     "",
@@ -372,9 +366,7 @@ export function formatOperationsSummary(report: DashboardReport): string {
       : []),
     "## リスク・P0",
     "",
-    ...(inbox.length > 0
-      ? ["- inbox 滞留 — 48h 以内分類"]
-      : ["- inbox 空 — 正常"]),
+    ...(inbox.length > 0 ? ["- inbox 滞留 — 48h 以内分類"] : ["- inbox 空 — 正常"]),
     "- 保険証券スキャン受信時は Contract へ路由",
     "",
     "## 推奨アクション",

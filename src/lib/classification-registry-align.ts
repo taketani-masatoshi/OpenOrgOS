@@ -7,7 +7,12 @@ import {
 } from "../../schemas/classification.js";
 import { getTenantTemplateDir, listTenantIds, setTenantId, getTenantId } from "./tenant.js";
 import { getTenantsDir } from "./orgos-paths.js";
-import { currentDate, readYamlFile, writeYamlFile, getClassificationRegistryYaml } from "./utils.js";
+import {
+  currentDate,
+  readYamlFile,
+  writeYamlFile,
+  getClassificationRegistryYaml,
+} from "./utils.js";
 
 export interface AlignClassificationResult {
   tenantId: string;
@@ -44,7 +49,9 @@ function loadExistingRegistry(
   try {
     return readYamlFile(registryPath, classificationRegistrySchema);
   } catch {
-    const loose = YAML.parse(readFileSync(registryPath, "utf-8")) as Partial<ClassificationRegistry>;
+    const loose = YAML.parse(
+      readFileSync(registryPath, "utf-8")
+    ) as Partial<ClassificationRegistry>;
     const levels = { ...template.levels };
     for (const [key, value] of Object.entries(loose.levels ?? {})) {
       const levelKey = key as keyof typeof levels;

@@ -12,7 +12,10 @@ import {
   setSessionCookie,
   type WireConsoleUser,
 } from "../wire-console/auth/session.js";
-import { completeWebAuthnE2eLogin, isWebAuthnE2eLoginEnabled } from "../wire-console/auth/webauthn-e2e.js";
+import {
+  completeWebAuthnE2eLogin,
+  isWebAuthnE2eLoginEnabled,
+} from "../wire-console/auth/webauthn-e2e.js";
 import {
   createWebAuthnRegisterOptions,
   isWebAuthnRegistrationAllowed,
@@ -40,10 +43,7 @@ export function getChatSessionUser(req: IncomingMessage): WireConsoleUser | unde
   return getSessionUser(sessionTokenFromRequest(req));
 }
 
-export function requireChatAuth(
-  req: IncomingMessage,
-  res: ServerResponse
-): WireConsoleUser | null {
+export function requireChatAuth(req: IncomingMessage, res: ServerResponse): WireConsoleUser | null {
   if (!isStewardChatAuthEnabled()) {
     return {
       operator_id: "dev-bypass",

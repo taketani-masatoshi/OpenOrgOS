@@ -18,7 +18,11 @@ export interface GossipCursor {
 export function loadHubFederation(): HubFederationConfig {
   const path = getHubFederationPath();
   if (!existsSync(path)) {
-    return hubFederationSchema.parse({ hub_id: getHubId(), hub_peers: [], gossip: { enabled: true, interval_sec: 300 } });
+    return hubFederationSchema.parse({
+      hub_id: getHubId(),
+      hub_peers: [],
+      gossip: { enabled: true, interval_sec: 300 },
+    });
   }
   return readYamlFile(path, hubFederationSchema);
 }
@@ -27,7 +31,10 @@ export function saveHubFederation(config: HubFederationConfig): void {
   writeYamlFile(getHubFederationPath(), config);
 }
 
-export function findFederationPeer(peerId: string, config?: HubFederationConfig): WitnessHubEntry | undefined {
+export function findFederationPeer(
+  peerId: string,
+  config?: HubFederationConfig
+): WitnessHubEntry | undefined {
   const federation = config ?? loadHubFederation();
   return federation.hub_peers.find((p) => p.hub_id === peerId);
 }
@@ -55,7 +62,11 @@ export function saveGossipCursor(cursor: GossipCursor): void {
   writeFileSync(getGossipCursorPath(cursor.peer_id), JSON.stringify(cursor, null, 2), "utf-8");
 }
 
-export function updateGossipCursor(peerId: string, lastRecordedAt: string, lastAttestationId?: string): GossipCursor {
+export function updateGossipCursor(
+  peerId: string,
+  lastRecordedAt: string,
+  lastAttestationId?: string
+): GossipCursor {
   const cursor: GossipCursor = {
     peer_id: peerId,
     last_recorded_at: lastRecordedAt,

@@ -56,7 +56,11 @@ export function decodeCbor(input: Buffer, offset = 0): { value: unknown; next: n
   throw new Error(`cbor: unsupported major type ${major}`);
 }
 
-function readAdditional(input: Buffer, offset: number, info: number): { length: number; next: number } {
+function readAdditional(
+  input: Buffer,
+  offset: number,
+  info: number
+): { length: number; next: number } {
   if (info < 24) return { length: info, next: offset + 1 };
   if (info === 24) return { length: input[offset + 1]!, next: offset + 2 };
   if (info === 25) return { length: input.readUInt16BE(offset + 1), next: offset + 3 };
@@ -163,12 +167,10 @@ export function coseEc2ToSpkiDer(coseKey: Buffer): Buffer | null {
     if (map.get(1) !== 2 || map.get(3) !== -7 || map.get(-1) !== 1) return null;
     const x = map.get(-2);
     const y = map.get(-3);
-    if (!Buffer.isBuffer(x) || !Buffer.isBuffer(y) || x.length !== 32 || y.length !== 32) return null;
+    if (!Buffer.isBuffer(x) || !Buffer.isBuffer(y) || x.length !== 32 || y.length !== 32)
+      return null;
     const point = Buffer.concat([Buffer.from([0x04]), x, y]);
-    const prefix = Buffer.from(
-      "3059301306072a8648ce3d020106082a8648ce3d030107034200",
-      "hex"
-    );
+    const prefix = Buffer.from("3059301306072a8648ce3d020106082a8648ce3d030107034200", "hex");
     return Buffer.concat([prefix, point]);
   } catch {
     return null;

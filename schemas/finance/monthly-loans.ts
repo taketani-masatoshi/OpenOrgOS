@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { dateString, monthString } from "../common.js";
 
-export const revenueCategory = z.enum([
-  "rent",
-  "hotel_revenue",
-  "other_revenue",
-]);
+export const revenueCategory = z.enum(["rent", "hotel_revenue", "other_revenue"]);
 
 export const expenseCategory = z.enum([
   "repair",
@@ -63,7 +59,10 @@ export const loanSchema = z.object({
   id: z.string().regex(/^LOAN-\d{3,}$/),
   lender: z.string().min(1),
   property_id: z.string().optional(),
-  contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
+  contract_id: z
+    .string()
+    .regex(/^CTR-\d{3,}$/)
+    .optional(),
   balance: z.number().nonnegative(),
   interest_rate: z.number().min(0),
   monthly_payment: z.number().nonnegative(),
@@ -156,4 +155,3 @@ export const payrollSchema = z.object({
   account_code: z.string().optional(),
   notes: z.string().optional(),
 });
-

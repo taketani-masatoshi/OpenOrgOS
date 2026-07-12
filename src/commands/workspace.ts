@@ -34,7 +34,9 @@ export function runWorkspaceInit(opts: WorkspaceInitOptions = {}): void {
   );
 
   if (opts.json) {
-    console.log(JSON.stringify({ workspace: target, config: configPath, tenants_dir: tenantsDir }, null, 2));
+    console.log(
+      JSON.stringify({ workspace: target, config: configPath, tenants_dir: tenantsDir }, null, 2)
+    );
     return;
   }
 

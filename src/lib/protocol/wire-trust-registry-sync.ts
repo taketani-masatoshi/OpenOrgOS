@@ -202,9 +202,10 @@ export interface PinLocalWireTrustOptions {
 }
 
 /** Pin local tenant signing public key into platform wire-trust-registry.yaml. */
-export function pinLocalWireTrustRegistryKeys(
-  opts: PinLocalWireTrustOptions
-): { results: WireTrustSyncResult[]; registry: WireTrustRegistry } {
+export function pinLocalWireTrustRegistryKeys(opts: PinLocalWireTrustOptions): {
+  results: WireTrustSyncResult[];
+  registry: WireTrustRegistry;
+} {
   setTenantId(opts.tenant);
   assertPinLocalGovernanceApproved(opts.tenant, { bypass: opts.bypassGovernance });
   ensureProtocolSigningKey();

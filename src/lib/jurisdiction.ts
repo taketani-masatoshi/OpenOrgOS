@@ -15,7 +15,7 @@ import {
   type PackTier,
 } from "../../schemas/jurisdiction.js";
 import { getInstallRoot } from "./orgos-paths.js";
-import { JURISDICTIONS_DIR, JURISDICTION_PACKS_DIR } from "./steward-paths.js";
+import { JURISDICTIONS_DIR } from "./steward-paths.js";
 import { getResolvedDisplayLocale } from "./locale.js";
 import { loadTenantConfig, getTenantDir, getTenantId } from "./tenant.js";
 import { readYamlFile, readYamlFileRaw } from "./utils.js";
@@ -118,9 +118,7 @@ function loadPackEntry(code: JurisdictionCode): JurisdictionPackEntry {
     pack_root: packRootRel,
     tier: country.tier,
     regulations_catalog: repoRelative(join(packRootAbs, manifest.regulations_catalog)),
-    regulations_templates_dir: repoRelative(
-      join(packRootAbs, manifest.regulations_templates_dir)
-    ),
+    regulations_templates_dir: repoRelative(join(packRootAbs, manifest.regulations_templates_dir)),
   };
   _packCache.set(code, entry);
   return entry;
@@ -152,10 +150,7 @@ export function getJurisdictionPackRoot(code: JurisdictionCode): string {
   return join(getInstallRoot(), resolvePackRootRel(code));
 }
 
-export function loadEntityFormsFile(
-  code: JurisdictionCode,
-  legalSubdivision?: string | null
-) {
+export function loadEntityFormsFile(code: JurisdictionCode, legalSubdivision?: string | null) {
   const packRoot = getJurisdictionPackRoot(code);
   if (legalSubdivision) {
     const subPath = join(packRoot, "subdivisions", legalSubdivision, "entity-forms.yaml");
@@ -195,10 +190,7 @@ export function resolveEntityForm(
       `Unknown entity_form "${formId}" for jurisdiction ${scope} — run: steward jurisdiction entity-forms ${code}`
     );
   }
-  if (
-    form.jurisdiction_exclusive?.length &&
-    !form.jurisdiction_exclusive.includes(code)
-  ) {
+  if (form.jurisdiction_exclusive?.length && !form.jurisdiction_exclusive.includes(code)) {
     throw new Error(
       `entity_form "${formId}" is exclusive to ${form.jurisdiction_exclusive.join(", ")} — not valid for ${code}`
     );

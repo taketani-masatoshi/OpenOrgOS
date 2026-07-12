@@ -1,9 +1,5 @@
 import type { SkillRunOptions } from "../commands/skills.js";
-import {
-  getSkillByCliCommand,
-  getSkillById,
-  type ResolvedSkillEntry,
-} from "./skill-registry.js";
+import { getSkillByCliCommand, getSkillById, type ResolvedSkillEntry } from "./skill-registry.js";
 
 export type SkillHandler = (opts: SkillRunOptions) => void | Promise<void>;
 

@@ -1,17 +1,9 @@
 import { loadAllData } from "../lib/data.js";
-import {
-  generateForecast,
-  formatForecastMarkdown,
-  formatForecastJson,
-} from "../lib/forecast.js";
+import { generateForecast, formatForecastMarkdown, formatForecastJson } from "../lib/forecast.js";
 import { writeMarkdownReport, currentMonth } from "../lib/utils.js";
 import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 
-export function runForecast(options: {
-  months: number;
-  format: string;
-  output?: string;
-}): void {
+export function runForecast(options: { months: number; format: string; output?: string }): void {
   const data = loadAllData();
   const forecast = generateForecast(
     data.monthlyFinances,

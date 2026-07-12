@@ -1,7 +1,5 @@
 import type { AgentReadinessProfile } from "../../schemas/agent-catalog.js";
-import {
-  computeAllAgentReadinessProfiles,
-} from "./agent-readiness.js";
+import { computeAllAgentReadinessProfiles } from "./agent-readiness.js";
 import {
   computeOpenOrgOsCoreReadiness,
   computeOpenOrgOsCoreStrictReadiness,

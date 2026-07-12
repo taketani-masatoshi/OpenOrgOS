@@ -77,11 +77,12 @@ function scaffoldModule(id: string): { path: string; content: string } {
 }
 
 export function runPlatformScaffold(opts: PlatformScaffoldOptions): void {
-  const builders: Record<PlatformScaffoldKind, (id: string) => { path: string; content: string }> = {
-    agent: scaffoldAgent,
-    skill: scaffoldSkill,
-    module: scaffoldModule,
-  };
+  const builders: Record<PlatformScaffoldKind, (id: string) => { path: string; content: string }> =
+    {
+      agent: scaffoldAgent,
+      skill: scaffoldSkill,
+      module: scaffoldModule,
+    };
   const build = builders[opts.kind];
   if (!build) throw new Error(`Unknown scaffold kind: ${opts.kind}`);
 

@@ -36,15 +36,13 @@ function collectSmtpRecipients(draft: CorrespondenceDraft): string[] {
 }
 
 function encodeMimeHeaderUtf8(value: string): string {
+  // eslint-disable-next-line no-control-regex -- MIME header: detect non-ASCII for UTF-8 encoding
   return /[^\x00-\x7F]/.test(value)
     ? `=?UTF-8?B?${Buffer.from(value).toString("base64")}?=`
     : value;
 }
 
-function buildMimeMessage(
-  draft: CorrespondenceDraft,
-  config: MailConfig
-): string {
+function buildMimeMessage(draft: CorrespondenceDraft, config: MailConfig): string {
   const from = `${encodeMimeHeaderUtf8(config.from.name)} <${config.from.email}>`;
   const to = draft.to ?? "";
   const subject = encodeMimeHeaderUtf8(draft.subject ?? "(no subject)");
@@ -70,10 +68,7 @@ async function readResponse(socket: Socket | TLSSocket): Promise<string> {
   });
 }
 
-async function sendSmtpCommand(
-  socket: Socket | TLSSocket,
-  command: string
-): Promise<string> {
+async function sendSmtpCommand(socket: Socket | TLSSocket, command: string): Promise<string> {
   socket.write(`${command}\r\n`);
   return readResponse(socket);
 }

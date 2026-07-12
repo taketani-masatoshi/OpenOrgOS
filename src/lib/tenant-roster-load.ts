@@ -1,10 +1,7 @@
 import { existsSync } from "node:fs";
 import type { AgentId } from "../../schemas/classification.js";
 import { AGENT_ID_ALIASES, AGENT_IDS } from "../../schemas/generated/agent-ids.js";
-import {
-  tenantAgentRosterSchema,
-  type TenantAgentRoster,
-} from "../../schemas/agent-roster.js";
+import { tenantAgentRosterSchema, type TenantAgentRoster } from "../../schemas/agent-roster.js";
 import { z } from "zod";
 import { MODULE_TO_CLASSIFICATION_AGENT, type ModuleAgentId } from "./modules.js";
 import { resolveTenantPath, readYamlFile } from "./utils.js";

@@ -37,9 +37,7 @@ export function persistAndEscalateAlerts(
   for (const alert of alerts) {
     const key = alertKey(alert.code, alert.event_id, peerId);
     const occurrence =
-      store.alerts.filter(
-        (a) => alertKey(a.code, a.event_id, a.peer_id) === key
-      ).length + 1;
+      store.alerts.filter((a) => alertKey(a.code, a.event_id, a.peer_id) === key).length + 1;
     let severity = alert.severity;
     let escalated = false;
     if (occurrence >= ESCALATION_THRESHOLD && alert.severity !== "error") {

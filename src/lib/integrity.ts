@@ -38,12 +38,13 @@ import { loadMailConfig } from "./correspondence/mail-config.js";
 import { getMailConfigPath } from "./correspondence/paths.js";
 import { loadMailTriageQueue } from "./correspondence/mail-triage-queue.js";
 import { resolveImapCredentials } from "./correspondence/imap-credentials.js";
-import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
-  listOperationsModules,
-  resolveModuleSecretsPath,
-  isSkeletonTenant,
-} from "./ops-config.js";
+  readYamlFile,
+  getClassificationRegistryYaml,
+  resolveTenantPath,
+  SCRATCH_DIR,
+} from "./utils.js";
+import { listOperationsModules, resolveModuleSecretsPath, isSkeletonTenant } from "./ops-config.js";
 import { loadModulesFile } from "./modules.js";
 import { getModuleTier } from "./module-readiness.js";
 import { AGENT_CATALOG_PATH, validateAgentCatalog } from "./agent-catalog.js";
@@ -86,28 +87,19 @@ function validCalendarDate(value: string): boolean {
   const day = Number(match[3]);
   const date = new Date(Date.UTC(year, month - 1, day));
   return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
   );
 }
 
 function addCalendarDays(value: string, days: number): string {
   const [year, month, day] = value.split("-").map(Number);
-  return new Date(Date.UTC(year!, month! - 1, day! + days))
-    .toISOString()
-    .slice(0, 10);
+  return new Date(Date.UTC(year!, month! - 1, day! + days)).toISOString().slice(0, 10);
 }
 
-function expectedDueDate(
-  bookedDate: string,
-  term: CollectionTermsFile["rules"][number]
-): string {
+function expectedDueDate(bookedDate: string, term: CollectionTermsFile["rules"][number]): string {
   if (term.days_after_month_end != null) {
     const [year, month] = bookedDate.split("-").map(Number);
-    const monthEnd = new Date(Date.UTC(year!, month!, 0))
-      .toISOString()
-      .slice(0, 10);
+    const monthEnd = new Date(Date.UTC(year!, month!, 0)).toISOString().slice(0, 10);
     return addCalendarDays(monthEnd, term.days_after_month_end);
   }
   return addCalendarDays(bookedDate, term.days_after_booking);
@@ -139,9 +131,7 @@ function duplicateIdIssues(
 }
 
 /** Pure JP bank schema/cross-file checks for validate/report callers and tests. */
-export function validateJpBankCorporateIntegrity(
-  input: JpBankIntegrityInput
-): IntegrityIssue[] {
+export function validateJpBankCorporateIntegrity(input: JpBankIntegrityInput): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   const parse = <T>(
     schema: z.ZodType<T, z.ZodTypeDef, unknown>,
@@ -185,11 +175,7 @@ export function validateJpBankCorporateIntegrity(
 
   if (calendar) {
     issues.push(
-      ...duplicateIdIssues(
-        calendar.entries,
-        JP_BANK_FILES.paymentCalendar,
-        "payment calendar"
-      )
+      ...duplicateIdIssues(calendar.entries, JP_BANK_FILES.paymentCalendar, "payment calendar")
     );
     for (const entry of calendar.entries) {
       if (!validCalendarDate(entry.date)) {
@@ -216,18 +202,12 @@ export function validateJpBankCorporateIntegrity(
 
   if (terms) {
     issues.push(
-      ...duplicateIdIssues(
-        terms.rules,
-        JP_BANK_FILES.collectionTerms,
-        "collection term"
-      )
+      ...duplicateIdIssues(terms.rules, JP_BANK_FILES.collectionTerms, "collection term")
     );
   }
 
   if (ledger) {
-    issues.push(
-      ...duplicateIdIssues(ledger.entries, JP_BANK_FILES.arApLedger, "AR/AP")
-    );
+    issues.push(...duplicateIdIssues(ledger.entries, JP_BANK_FILES.arApLedger, "AR/AP"));
     const termsById = new Map(terms?.rules.map((term) => [term.id, term]) ?? []);
     for (const entry of ledger.entries) {
       if (!validCalendarDate(entry.booked_date) || !validCalendarDate(entry.due_date)) {
@@ -284,11 +264,7 @@ export function validateJpBankCorporateIntegrity(
 
   if (bankStatements) {
     issues.push(
-      ...duplicateIdIssues(
-        bankStatements.entries,
-        JP_BANK_FILES.bankStatements,
-        "bank statement"
-      )
+      ...duplicateIdIssues(bankStatements.entries, JP_BANK_FILES.bankStatements, "bank statement")
     );
     for (const entry of bankStatements.entries) {
       if (!validCalendarDate(entry.date)) {
@@ -370,12 +346,10 @@ export function validateJpBankCorporateIntegrity(
 }
 
 function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
-  let enabled = false;
+  let enabled: boolean;
   try {
     enabled = loadModulesFile().modules.some(
-      (mod) =>
-        mod.enabled &&
-        (mod.id === "jp_bank_corporate" || mod.agent === "jp_bank_corporate")
+      (mod) => mod.enabled && (mod.id === "jp_bank_corporate" || mod.agent === "jp_bank_corporate")
     );
   } catch {
     return [];
@@ -385,9 +359,7 @@ function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   const values: JpBankIntegrityInput = {};
   const missingLevel: IntegrityIssue["level"] =
-    getModuleTier("jp_bank_corporate") === "production_ready"
-      ? "error"
-      : "warning";
+    getModuleTier("jp_bank_corporate") === "production_ready" ? "error" : "warning";
   const specs = [
     ["paymentCalendar", JP_BANK_FILES.paymentCalendar, paymentCalendarFileSchema],
     ["arApLedger", JP_BANK_FILES.arApLedger, arApLedgerFileSchema],
@@ -399,8 +371,7 @@ function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
       issues.push({
         level: missingLevel,
         file,
-        message:
-          "enabled module data is not materialized; copy the module activation seed",
+        message: "enabled module data is not materialized; copy the module activation seed",
       });
       continue;
     }
@@ -421,11 +392,7 @@ function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
   }
   const optionalSpecs = [
     ["bankStatements", JP_BANK_FILES.bankStatements, bankStatementFileSchema],
-    [
-      "reconciliationEvents",
-      JP_BANK_FILES.reconciliationEvents,
-      reconciliationEventFileSchema,
-    ],
+    ["reconciliationEvents", JP_BANK_FILES.reconciliationEvents, reconciliationEventFileSchema],
   ] as const;
   for (const [key, file, schema] of optionalSpecs) {
     const path = resolveTenantPath(file);
@@ -553,21 +520,37 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       push("warning", `data/contracts/${c.id}.yaml`, "executed status but no executed_date");
     }
     if (c.status === "executed" && c.documents?.executed && !docExists(c.documents.executed)) {
-      push("warning", `data/contracts/${c.id}.yaml`, `executed doc missing: ${c.documents.executed}`);
+      push(
+        "warning",
+        `data/contracts/${c.id}.yaml`,
+        `executed doc missing: ${c.documents.executed}`
+      );
     }
     if (c.status === "draft" && c.documents?.enrollment && !docExists(c.documents.enrollment)) {
-      push("warning", `data/contracts/${c.id}.yaml`, `enrollment doc missing: ${c.documents.enrollment}`);
+      push(
+        "warning",
+        `data/contracts/${c.id}.yaml`,
+        `enrollment doc missing: ${c.documents.enrollment}`
+      );
     }
   }
 
   for (const plan of data.propertyRevenuePlan.rental) {
     if (!propertyIds.has(plan.property_id)) {
-      push("error", "data/plans/property-revenue.yaml", `rental plan references unknown property ${plan.property_id}`);
+      push(
+        "error",
+        "data/plans/property-revenue.yaml",
+        `rental plan references unknown property ${plan.property_id}`
+      );
     }
   }
   for (const plan of data.propertyRevenuePlan.hotel) {
     if (!propertyIds.has(plan.property_id)) {
-      push("error", "data/plans/property-revenue.yaml", `hotel plan references unknown property ${plan.property_id}`);
+      push(
+        "error",
+        "data/plans/property-revenue.yaml",
+        `hotel plan references unknown property ${plan.property_id}`
+      );
     }
   }
 
@@ -575,10 +558,18 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     if (p.financing) {
       const loan = loanById.get(p.financing);
       if (!loan) {
-        push("error", `data/properties/${p.id}.yaml`, `financing ${p.financing} not found in loans.yaml`);
+        push(
+          "error",
+          `data/properties/${p.id}.yaml`,
+          `financing ${p.financing} not found in loans.yaml`
+        );
       } else {
         if (loan.property_id && loan.property_id !== p.id) {
-          push("error", "data/finance/loans.yaml", `${loan.id} property_id ${loan.property_id} ≠ ${p.id}`);
+          push(
+            "error",
+            "data/finance/loans.yaml",
+            `${loan.id} property_id ${loan.property_id} ≠ ${p.id}`
+          );
         }
         if (p.acquisition_price !== undefined && loan.balance !== p.acquisition_price) {
           push(
@@ -597,12 +588,15 @@ export function runIntegrityChecks(): IntegrityIssue[] {
 
   const yojitsu2026 = loadYojitsuPlan(2026);
   if (yojitsu2026 && yojitsu2026.months.length !== 12) {
-    push("warning", "data/plans/yojitsu-2026.yaml", `expected 12 months, got ${yojitsu2026.months.length}`);
+    push(
+      "warning",
+      "data/plans/yojitsu-2026.yaml",
+      `expected 12 months, got ${yojitsu2026.months.length}`
+    );
   }
 
   for (const mod of listOperationsModules()) {
     const publicRel = mod.operationsPublic;
-    const publicFile = publicRel ?? `module:${mod.moduleId}:operations_public`;
     if (publicRel) {
       try {
         const ops = readYamlFile(resolveTenantPath(publicRel), facilityPublicSchema);
@@ -626,14 +620,11 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       try {
         const secrets = readYamlFile(secretsPath, facilitySecretsSchema);
         const placeholders = Object.entries(secrets).filter(
-          ([, v]) => typeof v === "string" && (v === "REPLACE_ME" || v === "TBD" || v.startsWith("TBD"))
+          ([, v]) =>
+            typeof v === "string" && (v === "REPLACE_ME" || v === "TBD" || v.startsWith("TBD"))
         );
         if (placeholders.length) {
-          push(
-            "warning",
-            secretsRel,
-            `${placeholders.length} 項目が未入力（REPLACE_ME / TBD）`
-          );
+          push("warning", secretsRel, `${placeholders.length} 項目が未入力（REPLACE_ME / TBD）`);
         }
       } catch (e) {
         push("warning", secretsRel, e instanceof Error ? e.message : String(e));
@@ -654,7 +645,11 @@ export function runIntegrityChecks(): IntegrityIssue[] {
           "テンプレート — 残高入力後 status: confirmed に変更"
         );
       } else if (cash.status === "confirmed" && total == null) {
-        push("warning", "data/finance/cash-balance.yaml", "confirmed だが total / accounts が未入力");
+        push(
+          "warning",
+          "data/finance/cash-balance.yaml",
+          "confirmed だが total / accounts が未入力"
+        );
       }
     }
   } catch (e) {
@@ -665,7 +660,11 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     const hr = loadEmployees();
     for (const emp of hr.employees) {
       if (emp.contract_id && !contractById.has(emp.contract_id)) {
-        push("error", "data/hr/employees.yaml", `${emp.id} references unknown contract ${emp.contract_id}`);
+        push(
+          "error",
+          "data/hr/employees.yaml",
+          `${emp.id} references unknown contract ${emp.contract_id}`
+        );
       }
     }
   } catch (e) {
@@ -675,11 +674,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   try {
     readYamlFile(getClassificationRegistryYaml(), classificationRegistrySchema);
   } catch (e) {
-    push(
-      "error",
-      "data/classification-registry.yaml",
-      e instanceof Error ? e.message : String(e)
-    );
+    push("error", "data/classification-registry.yaml", e instanceof Error ? e.message : String(e));
   }
 
   const executiveYaml = [
@@ -749,9 +744,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       if (out) {
         const m = out.match(/(\d{4}-\d{2}-\d{2})/);
         if (m?.[1]) {
-          const ageDays = Math.floor(
-            (Date.now() - Date.parse(m[1] + "T12:00:00")) / 86_400_000
-          );
+          const ageDays = Math.floor((Date.now() - Date.parse(m[1] + "T12:00:00")) / 86_400_000);
           if (ageDays > 7) {
             push(
               "warning",
@@ -840,19 +833,35 @@ function checkLoanRefs(
   push: (level: IntegrityIssue["level"], file: string, message: string) => void
 ): void {
   if (loan.property_id && !propertyById.has(loan.property_id)) {
-    push("error", "data/finance/loans.yaml", `${loan.id} property_id ${loan.property_id} not found`);
+    push(
+      "error",
+      "data/finance/loans.yaml",
+      `${loan.id} property_id ${loan.property_id} not found`
+    );
   }
   if (loan.contract_id) {
     const ctr = contractById.get(loan.contract_id);
     if (!ctr) {
-      push("error", "data/finance/loans.yaml", `${loan.id} contract_id ${loan.contract_id} not found`);
+      push(
+        "error",
+        "data/finance/loans.yaml",
+        `${loan.id} contract_id ${loan.contract_id} not found`
+      );
       return;
     }
     if (ctr.type !== "loan") {
-      push("warning", "data/finance/loans.yaml", `${loan.id} linked contract ${loan.contract_id} type is ${ctr.type}`);
+      push(
+        "warning",
+        "data/finance/loans.yaml",
+        `${loan.id} linked contract ${loan.contract_id} type is ${ctr.type}`
+      );
     }
     if (loan.property_id && ctr.property_id && loan.property_id !== ctr.property_id) {
-      push("error", "data/finance/loans.yaml", `${loan.id} property_id ≠ contract ${loan.contract_id} property_id`);
+      push(
+        "error",
+        "data/finance/loans.yaml",
+        `${loan.id} property_id ≠ contract ${loan.contract_id} property_id`
+      );
     }
     if (ctr.compensation?.amount !== undefined && loan.balance !== ctr.compensation.amount) {
       push(
@@ -862,7 +871,11 @@ function checkLoanRefs(
       );
     }
     if (loan.documents?.executed && !docExists(loan.documents.executed)) {
-      push("warning", "data/finance/loans.yaml", `${loan.id} executed doc missing: ${loan.documents.executed}`);
+      push(
+        "warning",
+        "data/finance/loans.yaml",
+        `${loan.id} executed doc missing: ${loan.documents.executed}`
+      );
     }
   }
 }

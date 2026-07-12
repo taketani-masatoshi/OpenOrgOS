@@ -46,8 +46,10 @@ docs/company/
             └── records/              # PDF · L2（gitignore）
 ```
 
-**正本台帳:** `data/company-events.yaml` — event id · paths · related IDs  
-**整合チェーン:** `data/company-events-chain.jsonl` — append-only · `events new` / `events void` のみ追記
+**正本:** `data/company-events-chain.jsonl` — append-only（create · status · void · wire）· payload 付き  
+**派生ビュー:** `data/company-events.yaml` · イベント MD frontmatter · `_INDEX.md` — `events chain materialize`  
+**MD 本文:** 初回作成時のみテンプレ。以降は frontmatter patch のみ（本文は上書きしない）
+
 
 ```bash
 npm run orgos -- events ensure-month              # 今月
@@ -146,13 +148,14 @@ related:
 
 ---
 
-## 7. ハッシュチェーン（v2）
+## 7. ハッシュチェーン（v2 · SSOT）
 
 | 項目 | 内容 |
 |------|------|
-| 正本 | `data/company-events-chain.jsonl` |
-| 追記対象 | `events new`（create）· `events void`（void EVT の create + void リンク） |
-| 検証 | `events chain verify` · `events validate`（台帳クロスチェック含む） |
+| 正本 | `data/company-events-chain.jsonl`（payload 付き append-only） |
+| 追記対象 | create · status · void · wire |
+| 派生 | `events chain materialize` → yaml + MD frontmatter（本文非上書き） |
+| 検証 | `events chain verify` · `events validate` |
 | 連番 | `seq` 1 始まり — 欠番・digest 不一致で改ざん検知 |
 | 関連思想 | [openorg-ooo-basic-philosophy.md](../../docs/org-os/openorg-ooo-basic-philosophy.md) — 削除 = 新イベント |
 

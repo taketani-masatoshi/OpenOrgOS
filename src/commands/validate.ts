@@ -36,9 +36,7 @@ function safeReportPath(file: string): string {
 }
 
 function safeReportMessage(message: string): string {
-  return message
-    .replaceAll(getWorkspaceRoot(), ".")
-    .replace(/\b\d{7,}\b/g, "[redacted]");
+  return message.replaceAll(getWorkspaceRoot(), ".").replace(/\b\d{7,}\b/g, "[redacted]");
 }
 
 /** Non-exiting, read-only validation API for operator tools and HTTP routes. */

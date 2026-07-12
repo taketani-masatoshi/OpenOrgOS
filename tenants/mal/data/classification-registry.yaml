@@ -375,6 +375,86 @@ resources:
       - contract
     write_agents:
       - compliance
+  - id: RES-PLATFORM-STEWARD
+    path: steward/
+    level: L1
+    git: track
+    ai_context: auto
+    description: OrgOS policy, agent, module, and protocol platform definitions
+    read_agents:
+      - engineering
+      - cto
+      - security
+      - platform_guide
+    write_agents:
+      - engineering
+  - id: RES-PLATFORM-SOURCE
+    path: src/
+    level: L1
+    git: track
+    ai_context: auto
+    description: OrgOS implementation source
+    read_agents:
+      - engineering
+      - cto
+      - security
+      - platform_guide
+    write_agents:
+      - engineering
+  - id: RES-PLATFORM-SCHEMAS
+    path: schemas/
+    level: L1
+    git: track
+    ai_context: auto
+    description: OrgOS data and protocol schemas
+    read_agents:
+      - engineering
+      - cto
+      - security
+      - platform_guide
+    write_agents:
+      - engineering
+  - id: RES-PLATFORM-TESTS
+    path: tests/
+    level: L1
+    git: track
+    ai_context: auto
+    description: OrgOS deterministic test suites and fixtures
+    read_agents:
+      - engineering
+      - cto
+      - security
+      - platform_guide
+    write_agents:
+      - engineering
+  - id: RES-PLATFORM-DOCS
+    path: docs/org-os/
+    level: L1
+    git: track
+    ai_context: auto
+    description: OrgOS architecture and operations documentation
+    read_agents:
+      - engineering
+      - cto
+      - security
+      - platform_guide
+    write_agents:
+      - engineering
+      - cto
+  - id: RES-ENGINEERING-DOCS
+    path: docs/engineering/
+    level: L1
+    git: track
+    ai_context: auto
+    description: Tenant engineering decisions and architecture records
+    read_agents:
+      - engineering
+      - cto
+      - security
+      - platform_guide
+    write_agents:
+      - engineering
+      - cto
 rules:
   - id: RULE-LINK-ONLY
     text: L1 ファイルは L2 リソースへ bank_account_id / stakeholder_id

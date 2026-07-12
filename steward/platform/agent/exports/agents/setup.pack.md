@@ -157,7 +157,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | Skill | 用途 |
 |-------|------|
-| [tenant_integrations_setup](../skills/tenant_integrations_setup.md) | CLI ウィザード実行 |
+| [tenant_integrations_setup](steward/core/skills/tenant_integrations_setup.md) | CLI ウィザード実行 |
 
 ---
 
@@ -186,7 +186,7 @@ npm run orgos -- operator init-registry
 npm run orgos -- skills run tenant-integrations-setup
 ```
 
-**正本:** [docs/spec/tenant-integrations-requirements.md](../../docs/spec/tenant-integrations-requirements.md)
+**正本:** [docs/spec/tenant-integrations-requirements.md](docs/spec/tenant-integrations-requirements.md)
 
 
 ---

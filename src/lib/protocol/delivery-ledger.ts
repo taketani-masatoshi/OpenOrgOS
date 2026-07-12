@@ -123,9 +123,7 @@ export function hasSuccessfulEmailWireIngest(withinDays = 90): boolean {
 }
 
 export type EmailWireEventConfirmationState =
-  | "not_sent"
-  | "awaiting_inbound_confirmation"
-  | "confirmed";
+  "not_sent" | "awaiting_inbound_confirmation" | "confirmed";
 
 export interface EmailWireEventConfirmation {
   event_id: string;

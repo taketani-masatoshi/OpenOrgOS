@@ -1,5 +1,8 @@
 import { setTenantEnv } from "../lib/orgos-cli.js";
-import { buildTodayContext, formatTodayContextMarkdown } from "../lib/steward-chat/today-context.js";
+import {
+  buildTodayContext,
+  formatTodayContextMarkdown,
+} from "../lib/steward-chat/today-context.js";
 import {
   appendChatTurn,
   historyForOperator,
@@ -31,7 +34,9 @@ export async function runChatStart(opts: ChatStartOptions = {}): Promise<void> {
 
   const handle = startStewardChatServer({
     host: opts.host ?? process.env.STEWARD_CHAT_HOST?.trim(),
-    port: opts.port ?? (process.env.STEWARD_CHAT_PORT ? Number(process.env.STEWARD_CHAT_PORT) : undefined),
+    port:
+      opts.port ??
+      (process.env.STEWARD_CHAT_PORT ? Number(process.env.STEWARD_CHAT_PORT) : undefined),
   });
   console.log(`✓ Steward Chat BFF · ${handle.url}`);
   console.log("  GET  /chat/v1/today");
@@ -52,7 +57,9 @@ export async function runChatStart(opts: ChatStartOptions = {}): Promise<void> {
   });
 }
 
-export async function runChatToday(opts: { json?: boolean; refresh?: boolean } = {}): Promise<void> {
+export async function runChatToday(
+  opts: { json?: boolean; refresh?: boolean } = {}
+): Promise<void> {
   if (opts.refresh) {
     await runPipelineDaily({ skipValidate: false });
   }
@@ -64,10 +71,7 @@ export async function runChatToday(opts: { json?: boolean; refresh?: boolean } =
   console.log(formatTodayContextMarkdown(ctx));
 }
 
-export async function runChatAsk(
-  message: string,
-  opts: { refresh?: boolean } = {}
-): Promise<void> {
+export async function runChatAsk(message: string, opts: { refresh?: boolean } = {}): Promise<void> {
   if (opts.refresh) {
     runPipelineDaily({ skipValidate: false });
   }

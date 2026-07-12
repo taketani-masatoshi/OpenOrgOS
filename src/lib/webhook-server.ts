@@ -23,7 +23,9 @@ export function startWebhookServer(
   const registry = loadWebhookRegistry();
   const inbound = registry.inbound;
   if (!inbound?.enabled) {
-    throw new Error("webhook inbound disabled — set inbound.enabled in steward/platform/webhook/registry.yaml");
+    throw new Error(
+      "webhook inbound disabled — set inbound.enabled in steward/platform/webhook/registry.yaml"
+    );
   }
 
   const host = options.host ?? inbound.host ?? "127.0.0.1";
@@ -37,8 +39,7 @@ export function startWebhookServer(
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
       const addr = server.address();
-      const actualPort =
-        typeof addr === "object" && addr && "port" in addr ? addr.port : port;
+      const actualPort = typeof addr === "object" && addr && "port" in addr ? addr.port : port;
       const url = `http://${host}:${actualPort}${path}`;
       console.log(`✓ Webhook server ${url}`);
       resolve({

@@ -33,16 +33,24 @@ function mergeProtocolPolicy(
     next.contract_ids.push(contractId);
   }
   if (protocol.allowed_event_types?.length) {
-    next.allowed_event_types = [...new Set([...(next.allowed_event_types ?? []), ...protocol.allowed_event_types])];
+    next.allowed_event_types = [
+      ...new Set([...(next.allowed_event_types ?? []), ...protocol.allowed_event_types]),
+    ];
   }
   if (protocol.allowed_transaction_types?.length) {
     next.allowed_transaction_types = [
-      ...new Set([...(next.allowed_transaction_types ?? []), ...protocol.allowed_transaction_types]),
+      ...new Set([
+        ...(next.allowed_transaction_types ?? []),
+        ...protocol.allowed_transaction_types,
+      ]),
     ];
   }
   if (protocol.allowed_payload_namespaces?.length) {
     next.allowed_payload_namespaces = [
-      ...new Set([...(next.allowed_payload_namespaces ?? []), ...protocol.allowed_payload_namespaces]),
+      ...new Set([
+        ...(next.allowed_payload_namespaces ?? []),
+        ...protocol.allowed_payload_namespaces,
+      ]),
     ];
   }
   return next;
@@ -105,7 +113,9 @@ export function assertTransactionPayloadAllowedForPeer(
   }
 
   if (policy.allowed_payload_namespaces?.length) {
-    const ok = policy.allowed_payload_namespaces.some((ns) => matchesNamespace(transactionType, ns));
+    const ok = policy.allowed_payload_namespaces.some((ns) =>
+      matchesNamespace(transactionType, ns)
+    );
     if (!ok) {
       throw new Error(
         `Transaction type ${transactionType} not in allowed namespaces for peer ${peerId}: ${policy.allowed_payload_namespaces.join(", ")}`

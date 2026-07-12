@@ -1,5 +1,4 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { peersRegistrySchema } from "../../../schemas/protocol/peers.js";
 import { readYamlFile, resolveTenantPath } from "../utils.js";
 import { getPeersYamlPath } from "../protocol/paths.js";
@@ -39,8 +38,7 @@ export function validatePeerContactRegistry(): PeerContactRegistryIssue[] {
       code: "executive-external-contacts-scaffold-missing",
       file: "data/executive/external-contacts.yaml.example",
       level: "warning",
-      message:
-        "external-contacts example 未作成 — cp example または orgos tenant scaffold-data",
+      message: "external-contacts example 未作成 — cp example または orgos tenant scaffold-data",
     });
   }
 

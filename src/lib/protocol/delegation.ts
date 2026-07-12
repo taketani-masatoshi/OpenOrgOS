@@ -44,11 +44,13 @@ export function exportDelegationProof(options: {
   }
 
   const now = new Date().toISOString();
-  const grantee = options.granteeOrg ?? actorIdentitySchema.parse({
-    actor_id: options.granteeAgent,
-    role: agent.id,
-    org_ref: ourOrgRef(),
-  });
+  const grantee =
+    options.granteeOrg ??
+    actorIdentitySchema.parse({
+      actor_id: options.granteeAgent,
+      role: agent.id,
+      org_ref: ourOrgRef(),
+    });
 
   return delegationProofSchema.parse({
     grant: {
@@ -63,9 +65,12 @@ export function exportDelegationProof(options: {
   });
 }
 
-export function buildDelegationEnvelope(proof: DelegationProof, destination?: OrgRef): EventEnvelope {
+export function buildDelegationEnvelope(
+  proof: DelegationProof,
+  destination?: OrgRef
+): EventEnvelope {
   const now = new Date().toISOString();
-  let envelope: EventEnvelope = {
+  const envelope: EventEnvelope = {
     protocol_version: "1",
     event_id: randomUUID(),
     occurred_at: now,

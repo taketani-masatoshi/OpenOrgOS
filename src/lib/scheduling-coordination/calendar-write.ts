@@ -3,10 +3,7 @@ import type { CalendarEvent } from "../../../schemas/executive.js";
 import { calendarEventSchema, calendarFileSchema } from "../../../schemas/executive.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { loadExecutiveCalendar } from "../data.js";
-import {
-  loadGoogleCalendarConfig,
-  pushEventToGoogleCalendar,
-} from "../google-calendar-push.js";
+import { loadGoogleCalendarConfig, pushEventToGoogleCalendar } from "../google-calendar-push.js";
 import { getExecutiveDir, writeYamlFile } from "../utils.js";
 import { applyNextAction } from "./next-action.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
@@ -87,16 +84,12 @@ export async function syncSchedulingCaseCalendar(
     return ensured.caseRow;
   }
 
-  const syncing = updateSchedulingCase(
-    ensured.caseRow.id,
-    ensured.caseRow.revision,
-    (current) => ({
-      ...current,
-      calendar_sync: "syncing",
-      calendar_sync_error: undefined,
-      updated_at: new Date().toISOString(),
-    })
-  );
+  const syncing = updateSchedulingCase(ensured.caseRow.id, ensured.caseRow.revision, (current) => ({
+    ...current,
+    calendar_sync: "syncing",
+    calendar_sync_error: undefined,
+    updated_at: new Date().toISOString(),
+  }));
 
   try {
     const config = loadGoogleCalendarConfig();

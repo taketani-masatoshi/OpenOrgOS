@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import {
-  startStewardChatServer,
-  STEWARD_CHAT_SPA_DIST,
-} from "../src/lib/steward-chat/server.js";
+import { startStewardChatServer, STEWARD_CHAT_SPA_DIST } from "../src/lib/steward-chat/server.js";
 import { writeWireConsoleWebAuthnSmokeFixture } from "../tests/helpers/wire-console-webauthn-e2e-fixture.js";
 
 async function main(): Promise<void> {

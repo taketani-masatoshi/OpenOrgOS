@@ -99,61 +99,50 @@ export function computeMaturityReport(): MaturityReport {
   let ops = 0;
   let opsDim: MaturityDimension;
   if (skeleton) {
-    opsDim = dim(
-      "operational",
-      "運用度",
-      0,
-      100,
-      "スケルトンモード — 運用評価対象外",
-      true
-    );
+    opsDim = dim("operational", "運用度", 0, 100, "スケルトンモード — 運用評価対象外", true);
   } else {
-  const executed = data.contracts.filter((c) => c.status === "executed");
-  ops += Math.round((executed.length / Math.max(data.contracts.length, 1)) * 20);
-  const draftP0 = data.contracts.filter(
-    (c) => c.status === "draft" && p0ContractIds.has(c.id)
-  );
-  if (draftP0.length) {
-    recommendations.push(`P0 契約: ${draftP0.map((c) => c.id).join(", ")} を executed 化`);
-  }
-  const fyFinance = data.monthlyFinances.filter(
-    (m) => m.month >= fy.from && m.month <= fy.to
-  );
-  ops += Math.round((fyFinance.length / 12) * 25);
-
-  const recordProbes = getP0Records();
-  const hasRecords = recordProbes.some((spec) => {
-    const p = resolveRecordsProbePath(spec.module_id, spec.probe_file);
-    return p ? existsSync(p) : false;
-  });
-  ops += hasRecords ? 20 : 0;
-  if (recordProbes.length && !hasRecords) {
-    recommendations.push("operations/records に運用記録を開始");
-  }
-
-  const cash = loadCashBalance();
-  if (cash?.status === "confirmed") {
-    ops += 15;
-  } else {
-    ops += cash ? 5 : 0;
-    recommendations.push("cash-balance.yaml を confirmed に更新");
-  }
-
-  const opsModules = listOperationsModules();
-  for (const mod of opsModules) {
-    if (!mod.operationsSecrets) continue;
-    const secretsPath = resolveModuleSecretsPath(mod.moduleId);
-    if (secretsPath && existsSync(secretsPath)) {
-      ops += 20;
-    } else if (!skeleton) {
-      recommendations.push(`${mod.operationsSecrets} を example から作成`);
+    const executed = data.contracts.filter((c) => c.status === "executed");
+    ops += Math.round((executed.length / Math.max(data.contracts.length, 1)) * 20);
+    const draftP0 = data.contracts.filter((c) => c.status === "draft" && p0ContractIds.has(c.id));
+    if (draftP0.length) {
+      recommendations.push(`P0 契約: ${draftP0.map((c) => c.id).join(", ")} を executed 化`);
     }
-  }
+    const fyFinance = data.monthlyFinances.filter((m) => m.month >= fy.from && m.month <= fy.to);
+    ops += Math.round((fyFinance.length / 12) * 25);
 
-  const audits = getP0Audits();
-  if (audits.some((audit) => existsSync(resolveTenantDocPath(audit.path)))) {
-    ops += 20;
-  }
+    const recordProbes = getP0Records();
+    const hasRecords = recordProbes.some((spec) => {
+      const p = resolveRecordsProbePath(spec.module_id, spec.probe_file);
+      return p ? existsSync(p) : false;
+    });
+    ops += hasRecords ? 20 : 0;
+    if (recordProbes.length && !hasRecords) {
+      recommendations.push("operations/records に運用記録を開始");
+    }
+
+    const cash = loadCashBalance();
+    if (cash?.status === "confirmed") {
+      ops += 15;
+    } else {
+      ops += cash ? 5 : 0;
+      recommendations.push("cash-balance.yaml を confirmed に更新");
+    }
+
+    const opsModules = listOperationsModules();
+    for (const mod of opsModules) {
+      if (!mod.operationsSecrets) continue;
+      const secretsPath = resolveModuleSecretsPath(mod.moduleId);
+      if (secretsPath && existsSync(secretsPath)) {
+        ops += 20;
+      } else if (!skeleton) {
+        recommendations.push(`${mod.operationsSecrets} を example から作成`);
+      }
+    }
+
+    const audits = getP0Audits();
+    if (audits.some((audit) => existsSync(resolveTenantDocPath(audit.path)))) {
+      ops += 20;
+    }
 
     opsDim = dim(
       "operational",

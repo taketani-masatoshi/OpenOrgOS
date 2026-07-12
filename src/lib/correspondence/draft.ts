@@ -101,9 +101,10 @@ function joinYamlPath(dir: string, name: string): string {
   return `${dir}/${name}`;
 }
 
-export function createCorrespondenceDraft(
-  opts: CreateCorrespondenceDraftOptions
-): { draft: CorrespondenceDraft; approvalId?: string } {
+export function createCorrespondenceDraft(opts: CreateCorrespondenceDraftOptions): {
+  draft: CorrespondenceDraft;
+  approvalId?: string;
+} {
   if (opts.channel === "email" && (!opts.to || !opts.subject)) {
     throw new Error("email channel requires --to and --subject");
   }
@@ -141,8 +142,7 @@ export function createCorrespondenceDraft(
 
   let approvalId: string | undefined;
   if (opts.proposeApproval !== false) {
-    const subjectType =
-      opts.channel === "email" ? "correspondence.email" : "correspondence.slack";
+    const subjectType = opts.channel === "email" ? "correspondence.email" : "correspondence.slack";
     const approval = proposeOrgApproval({
       scope: "internal",
       subjectType,

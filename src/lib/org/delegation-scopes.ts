@@ -14,9 +14,7 @@ let cachedScopes: z.output<typeof agentDelegationScopesSchema> | undefined;
 
 function loadAgentDelegationScopes() {
   if (cachedScopes) return cachedScopes;
-  cachedScopes = agentDelegationScopesSchema.parse(
-    YAML.parse(readFileSync(SCOPES_PATH, "utf-8"))
-  );
+  cachedScopes = agentDelegationScopesSchema.parse(YAML.parse(readFileSync(SCOPES_PATH, "utf-8")));
   return cachedScopes;
 }
 

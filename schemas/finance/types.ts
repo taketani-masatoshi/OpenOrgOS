@@ -1,9 +1,5 @@
 import type { z } from "zod";
-import {
-  fixedAssetsSchema,
-  fixedAssetSchema,
-  type CashBalance,
-} from "./balance-assets.js";
+import { fixedAssetsSchema, fixedAssetSchema, type CashBalance } from "./balance-assets.js";
 import { chartOfAccountsSchema } from "./chart-of-accounts.js";
 import {
   monthlyFinanceSchema,
@@ -13,11 +9,7 @@ import {
   propertyRevenuePlanSchema,
   loanSchema,
 } from "./monthly-loans.js";
-import {
-  taxProfileSchema,
-  taxProfileUsSchema,
-  taxProfileCorporateSchema,
-} from "./tax-profiles.js";
+import { taxProfileSchema, taxProfileUsSchema, taxProfileCorporateSchema } from "./tax-profiles.js";
 import {
   yojitsuLineKind,
   yojitsuLineSchema,

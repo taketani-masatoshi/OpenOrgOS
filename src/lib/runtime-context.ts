@@ -25,7 +25,10 @@ const defaultClock = (): Clock => ({
 });
 
 const defaultIdGenerator = (): IdGenerator => ({
-  randomSuffix: (length = 8) => Math.random().toString(36).slice(2, 2 + length),
+  randomSuffix: (length = 8) =>
+    Math.random()
+      .toString(36)
+      .slice(2, 2 + length),
   uniqueId: (prefix: string) => {
     const suffix = Math.random().toString(36).slice(2, 10);
     return `${prefix}-${clock.nowMs()}-${suffix}`;
@@ -44,10 +47,7 @@ export function getIdGenerator(): IdGenerator {
   return idGenerator;
 }
 
-export function setRuntimeContext(ctx: {
-  clock?: Clock;
-  idGenerator?: IdGenerator;
-}): void {
+export function setRuntimeContext(ctx: { clock?: Clock; idGenerator?: IdGenerator }): void {
   if (ctx.clock) clock = ctx.clock;
   if (ctx.idGenerator) idGenerator = ctx.idGenerator;
 }

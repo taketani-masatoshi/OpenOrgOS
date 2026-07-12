@@ -1,4 +1,9 @@
-import { formatWebhookConfig, ingestWebhook, sendWebhook, loadWebhookRegistry } from "../lib/webhook.js";
+import {
+  formatWebhookConfig,
+  ingestWebhook,
+  sendWebhook,
+  loadWebhookRegistry,
+} from "../lib/webhook.js";
 import { setTenantId } from "../lib/tenant.js";
 import { readFileSync, existsSync } from "node:fs";
 import { startWebhookServer } from "../lib/webhook-server.js";

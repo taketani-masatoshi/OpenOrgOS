@@ -49,9 +49,7 @@ export function getCatalogRegulation(id: string): CatalogRegulation | undefined 
 
 function isModuleEnabled(moduleId: string): boolean {
   const modules = loadModulesFile().modules;
-  return modules.some(
-    (m) => m.enabled && (m.id === moduleId || m.agent === moduleId)
-  );
+  return modules.some((m) => m.enabled && (m.id === moduleId || m.agent === moduleId));
 }
 
 function isBindSatisfied(bind: RegulationBind, enabledIso: string[]): boolean {
@@ -172,10 +170,7 @@ export function validateRegulations(): RegulationValidationIssue[] {
 
     const effective = listEffectiveRegulations().find((r) => r.id === entry.id);
     if (entry.enabled && effective?.effective) {
-      const docAbs = tenantDocsPath(
-        TENANT_REGULATIONS_SUBDIR,
-        cat.tenant_doc
-      );
+      const docAbs = tenantDocsPath(TENANT_REGULATIONS_SUBDIR, cat.tenant_doc);
       if (!existsSync(docAbs)) {
         issues.push({
           file: logicalFile,
@@ -223,9 +218,7 @@ function applyRegulationPlaceholders(content: string, companyName: string): stri
     .concat("\n\n---\n\n> [TBD] 施行日・条項詳細はテナント側で確定してください。\n");
 }
 
-export function seedRegulationDocs(
-  options: SeedRegulationsOptions = {}
-): SeedRegulationsResult {
+export function seedRegulationDocs(options: SeedRegulationsOptions = {}): SeedRegulationsResult {
   const companyName = loadTenantConfig().legal_name ?? loadTenantConfig().name;
   const result: SeedRegulationsResult = { seeded: [], skipped: [], missing: [] };
 

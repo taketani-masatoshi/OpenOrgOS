@@ -109,26 +109,21 @@ export function answerCeoInline(
 }
 
 /** CEO 回答後の副作用 — sender identification 等へ反映 */
-export async function applyCeoInlineAnswerSideEffects(
-  question: CeoInlineQuestion
-): Promise<void> {
+export async function applyCeoInlineAnswerSideEffects(question: CeoInlineQuestion): Promise<void> {
   if (question.status !== "answered" || !question.answers) return;
 
   if (
     question.mail_id.startsWith("schedule-intake:") ||
     question.mail_id.startsWith("schedule-intake-case:")
   ) {
-    const { applyScheduleIntakeAnswer } = await import(
-      "../scheduling-coordination/process-mail.js"
-    );
+    const { applyScheduleIntakeAnswer } =
+      await import("../scheduling-coordination/process-mail.js");
     await applyScheduleIntakeAnswer(question);
     return;
   }
 
   if (question.scheduling_case_id || question.mail_id.startsWith("scheduling:")) {
-    const { applySchedulingCeoAnswer } = await import(
-      "../scheduling-coordination/ceo-confirm.js"
-    );
+    const { applySchedulingCeoAnswer } = await import("../scheduling-coordination/ceo-confirm.js");
     await applySchedulingCeoAnswer(question);
     return;
   }
@@ -142,7 +137,10 @@ export async function applyCeoInlineAnswerSideEffects(
   const name =
     answers.sender_name?.trim() ||
     answers.name?.trim() ||
-    answers.note?.trim()?.split(/[·,、]/)[0]?.trim();
+    answers.note
+      ?.trim()
+      ?.split(/[·,、]/)[0]
+      ?.trim();
   if (!name) return;
 
   const yes = (v?: string) => v === "yes" || v === "はい" || v === "true";

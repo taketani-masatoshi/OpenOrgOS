@@ -1,8 +1,8 @@
 hub_id: HUB-B
 hub_peers:
   - hub_id: HUB-A
-    hub_url: http://127.0.0.1:63998
-    hub_public_key: MCowBQYDK2VwAyEA2oHflfFrrMz4Zb+R0P97+QpX6op5ak6mtM7c4hgNc5Q=
+    hub_url: http://127.0.0.1:56411
+    hub_public_key: MCowBQYDK2VwAyEAHEB3M+RgPUS00AgFuBjuBOPYQWRDYAcqcotKqV3/5JI=
     priority: 1
 gossip:
   enabled: true

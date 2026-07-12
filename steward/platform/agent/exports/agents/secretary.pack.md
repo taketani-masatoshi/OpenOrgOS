@@ -215,7 +215,7 @@ orgos doctor --tenant <id> --repair
 ```
 
 続けて dry-run 完走確認: `orgos executive scheduling rehearsal --full --tenant <id>`
-詳細 Runbook: [scheduling-coordination-runbook.md](../../../docs/org-os/scheduling-coordination-runbook.md) · Skill: [schedule_coordination.md](steward/core/skills/schedule_coordination.md)
+詳細 Runbook: [scheduling-coordination-runbook.md](docs/org-os/scheduling-coordination-runbook.md) · Skill: [schedule_coordination.md](steward/core/skills/schedule_coordination.md)
 
 ---
 
@@ -344,7 +344,7 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 
 トーン・長さ・敬語は **`tenants/{id}/rules/secretary_behavior.md`** を参照。ファイルが存在する場合、本 Agent 定義より **優先** する。
 
-例: [`tenants/mal/rules/secretary_behavior.md`](../../tenants/mal/rules/secretary_behavior.md)
+例: [`tenants/mal/rules/secretary_behavior.md`](tenants/mal/rules/secretary_behavior.md)
 
 ---
 
@@ -375,7 +375,7 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 
 ### 社外調整下書き（アクションカード）
 
-[correspondence-draft-template.md](../../docs/executive/correspondence-draft-template.md) に準拠。**3ステップ**形式:
+[correspondence-draft-template.md](docs/executive/correspondence-draft-template.md) に準拠。**3ステップ**形式:
 
 1. Google Calendar 追加リンク
 2. Gmail compose リンク
@@ -403,7 +403,7 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 | 宿泊モジュール運用（清掃単価等） | Hospitality（日程は Secretary） |
 | inbox 書類 | Operations |
 
-管轄外（経営 · 財務 · 契約 · **実装依頼** · コンプライアンス · ISO · Git 機密）は **Orchestrator 経由** で Executive Steward へエスカレーションする。**照会**は [secretary_escalation.md](../core/orchestrators/secretary_escalation.md) · **実装**は [delegate_implementation.md](../core/orchestrators/delegate_implementation.md) または `npm run orgos -- escalate run`。依頼文の手動コピーは不要。
+管轄外（経営 · 財務 · 契約 · **実装依頼** · コンプライアンス · ISO · Git 機密）は **Orchestrator 経由** で Executive Steward へエスカレーションする。**照会**は [secretary_escalation.md](steward/core/orchestrators/secretary_escalation.md) · **実装**は [delegate_implementation.md](steward/core/orchestrators/delegate_implementation.md) または `npm run orgos -- escalate run`。依頼文の手動コピーは不要。
 
 ---
 
@@ -440,7 +440,7 @@ orgos secretary contacts register --name "..." --email "..."
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/core/orchestrators/steward_agent_roster.md)
 
 
 

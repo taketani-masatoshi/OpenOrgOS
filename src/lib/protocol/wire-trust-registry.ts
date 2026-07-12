@@ -5,7 +5,11 @@ import {
   type WireTrustRegistry,
   type WireTrustRegistryNode,
 } from "../../../schemas/protocol/wire-trust-registry.js";
-import { isOpenOrgDid, isPkPrefixedOpenOrgDid, isPkDidRequired } from "../../../schemas/protocol/openorg-did.js";
+import {
+  isOpenOrgDid,
+  isPkPrefixedOpenOrgDid,
+  isPkDidRequired,
+} from "../../../schemas/protocol/openorg-did.js";
 import { STEWARD_PLATFORM_DIR } from "../steward-paths.js";
 import { writeYamlFile, readYamlFile } from "../utils.js";
 
@@ -55,7 +59,10 @@ export function validateWireTrustRegistry(registry?: WireTrustRegistry): {
 
     if (node.did) {
       if (!isOpenOrgDid(node.did)) {
-        issues.push({ code: "invalid-did", message: `Invalid DID for ${node.node_id}: ${node.did}` });
+        issues.push({
+          code: "invalid-did",
+          message: `Invalid DID for ${node.node_id}: ${node.did}`,
+        });
       } else if (seenDids.has(node.did)) {
         issues.push({ code: "duplicate-did", message: `Duplicate DID: ${node.did}` });
       }
@@ -134,10 +141,7 @@ export interface NodeIdentifierPeer {
 }
 
 /** Match Wire sender/receiver against peer table or trust registry entry. */
-export function nodeIdentifierMatches(
-  claimed: string,
-  peer: NodeIdentifierPeer
-): boolean {
+export function nodeIdentifierMatches(claimed: string, peer: NodeIdentifierPeer): boolean {
   if (peer.peer_node_id === claimed) return true;
   if (peer.peer_node_uri === claimed) return true;
   if (peer.peer_did === claimed) return true;

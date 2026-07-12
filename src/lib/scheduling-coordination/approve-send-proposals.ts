@@ -1,8 +1,8 @@
+import { auditCliMutation, requireCliHumanApproval } from "../console-auth/cli-operator.js";
 import {
-  auditCliMutation,
-  requireCliHumanApproval,
-} from "../console-auth/cli-operator.js";
-import { loadCorrespondenceDraft, markCorrespondenceDraftApproved } from "../correspondence/draft.js";
+  loadCorrespondenceDraft,
+  markCorrespondenceDraftApproved,
+} from "../correspondence/draft.js";
 import { sendApprovedCorrespondence } from "../correspondence/send-gate.js";
 import { assertCorrespondenceReviewAcknowledged } from "../correspondence/review.js";
 import { approveOrgApproval } from "../org/approval/approve.js";
@@ -46,7 +46,10 @@ export async function approveAndSendSchedulingProposals(
     const pending = findOrgApproval(draft.approval_id);
     if (!pending) throw new Error(`Approval ${draft.approval_id} not found`);
 
-    assertCorrespondenceReviewAcknowledged({ approval: pending, reviewed: opts.reviewed !== false });
+    assertCorrespondenceReviewAcknowledged({
+      approval: pending,
+      reviewed: opts.reviewed !== false,
+    });
     approveOrgApproval({
       approvalId: draft.approval_id,
       approverId: approverName,

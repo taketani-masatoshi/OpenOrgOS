@@ -23,7 +23,9 @@ export class CorrespondenceMailSetupError extends Error {
   readonly guide: string;
 
   constructor(issues: MailSetupIssue[], guide: string) {
-    super(`Mail setup incomplete — ${issues.length} issue(s). Run: orgos ${CORRESPONDENCE_CLI.setupGuide}`);
+    super(
+      `Mail setup incomplete — ${issues.length} issue(s). Run: orgos ${CORRESPONDENCE_CLI.setupGuide}`
+    );
     this.name = "CorrespondenceMailSetupError";
     this.issues = issues;
     this.guide = guide;
@@ -156,7 +158,10 @@ export function collectMailSetupIssues(channel: CorrespondenceChannel): MailSetu
           fix: "orgos mail setup gmail を再実行",
         });
       }
-      if (!process.env.ORGOS_GMAIL_CLIENT_ID?.trim() || !process.env.ORGOS_GMAIL_CLIENT_SECRET?.trim()) {
+      if (
+        !process.env.ORGOS_GMAIL_CLIENT_ID?.trim() ||
+        !process.env.ORGOS_GMAIL_CLIENT_SECRET?.trim()
+      ) {
         issues.push({
           id: "gmail_oauth_env",
           severity: "warning",
@@ -298,7 +303,9 @@ export function assessMailSetupReadiness(
 }
 
 /** Throws when real SMTP/Slack send prerequisites are missing. */
-export function assertCorrespondenceMailSetupReady(channel: CorrespondenceChannel): MailSetupReadiness {
+export function assertCorrespondenceMailSetupReady(
+  channel: CorrespondenceChannel
+): MailSetupReadiness {
   const readiness = assessMailSetupReadiness(channel);
   if (readiness.ready) return readiness;
   throw new CorrespondenceMailSetupError(readiness.issues, readiness.guide);

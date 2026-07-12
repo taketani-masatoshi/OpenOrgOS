@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import type { z } from "zod";
 import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
+import { getClock } from "../runtime-context.js";
 
 type PendingEntryBase = {
   attempts: number;
@@ -78,7 +79,7 @@ export function createYamlPendingQueueStore<
       const record = {
         ...entry,
         attempts: entry.attempts ?? 0,
-        created_at: entry.created_at ?? new Date().toISOString(),
+        created_at: entry.created_at ?? getClock().nowIso(),
       } as TEntry;
       if (existingIdx >= 0) {
         registry.pending[existingIdx] = {

@@ -58,7 +58,9 @@ export interface ProposeInterOrgWireOptions {
   companyEventId?: string;
 }
 
-function contractMonthlyAmount(contractId: string): { value: number; currency: string } | undefined {
+function contractMonthlyAmount(
+  contractId: string
+): { value: number; currency: string } | undefined {
   const contract = loadContract(contractId);
   if (!contract) return undefined;
   const value = contract.compensation?.amount ?? contract.monthly_cost;
@@ -148,11 +150,7 @@ export function proposeInterOrgWire(opts: ProposeInterOrgWireOptions): PendingNo
   const approval = proposeOrgApproval({
     scope: "wire",
     subjectType: opts.companyEventId ? "company.event" : "wire.outbound",
-    subjectRef:
-      opts.companyEventId ??
-      opts.contractId ??
-      opts.invoiceId ??
-      opts.correlationEventId,
+    subjectRef: opts.companyEventId ?? opts.contractId ?? opts.invoiceId ?? opts.correlationEventId,
     proposedBy: opts.proposedBy,
     message: opts.message ?? defaultMessage(opts),
     amount: opts.amount ?? (opts.contractId ? contractMonthlyAmount(opts.contractId) : undefined),
@@ -295,9 +293,7 @@ export function rejectInterOrgNotice(opts: RejectInterOrgNoticeOptions): Pending
   return orgApprovalToPendingNotice(rejected);
 }
 
-export function listPendingNotices(filter?: {
-  status?: PendingNotice["status"];
-}): PendingNotice[] {
+export function listPendingNotices(filter?: { status?: PendingNotice["status"] }): PendingNotice[] {
   const statusMap: Record<
     PendingNotice["status"],
     import("../../../schemas/org/approval.js").OrgApprovalStatus | undefined

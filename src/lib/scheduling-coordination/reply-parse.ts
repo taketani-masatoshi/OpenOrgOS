@@ -126,14 +126,22 @@ export function parseScheduleReplyText(
     response = "accept";
   }
 
-  const slot_ids =
-    response === "accept" ? matchedSlots.map((s) => s.id) : [];
+  const slot_ids = response === "accept" ? matchedSlots.map((s) => s.id) : [];
   const counter_slots = response === "counter" ? extractCounterSlots(body, counterDates) : [];
   const confidence =
-    response === "unknown" ? 0.25 : dissent.length ? 0.4 : response === "accept" && !slot_ids.length ? 0.75 : 0.9;
+    response === "unknown"
+      ? 0.25
+      : dissent.length
+        ? 0.4
+        : response === "accept" && !slot_ids.length
+          ? 0.75
+          : 0.9;
 
   let note: string | undefined;
-  const lines = body.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = body
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   if (lines.length) {
     note = lines.slice(0, 3).join(" ").slice(0, 200);
   }

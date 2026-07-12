@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateString, monthString } from "../common.js";
+import { monthString } from "../common.js";
 export const yojitsuLineKind = z.enum(["revenue", "expense", "depreciation", "capex"]);
 
 /** yojitsu v2 — business-plan segments[].name と kind で計画・実績行を表現 */

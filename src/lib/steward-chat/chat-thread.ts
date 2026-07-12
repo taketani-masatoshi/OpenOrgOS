@@ -86,6 +86,8 @@ export function appendChatTurn(
   return saveChatThread(thread);
 }
 
-export function historyForOperator(thread: ChatThread): Array<{ role: "user" | "assistant"; content: string }> {
+export function historyForOperator(
+  thread: ChatThread
+): Array<{ role: "user" | "assistant"; content: string }> {
   return thread.messages.map((m) => ({ role: m.role, content: m.content }));
 }

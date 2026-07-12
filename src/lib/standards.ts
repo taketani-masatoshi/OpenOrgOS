@@ -9,12 +9,7 @@ export const STEWARD_ISO_DIR = join(STEWARD_STANDARDS_DIR, "iso");
 export function listIsoStandardIds(): string[] {
   if (!existsSync(STEWARD_ISO_DIR)) return [];
   return readdirSync(STEWARD_ISO_DIR, { withFileTypes: true })
-    .filter(
-      (d) =>
-        d.isDirectory() &&
-        !d.name.startsWith(".") &&
-        d.name.startsWith("ISO-")
-    )
+    .filter((d) => d.isDirectory() && !d.name.startsWith(".") && d.name.startsWith("ISO-"))
     .map((d) => d.name)
     .sort();
 }

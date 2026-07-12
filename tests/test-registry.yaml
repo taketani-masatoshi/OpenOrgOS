@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 320
-  static_test_cases: 1200
-  tiered_execution_total: 320
+  vitest_total: 324
+  static_test_cases: 1222
+  tiered_execution_total: 324
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -858,6 +858,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  mal-signing-key-preserve.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   mal-wire-peer-deliver.test.ts:
     axis: integration
     kind: integration
@@ -1079,6 +1083,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  protocol-inbound-verify.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   protocol-internal-envelope.test.ts:
     axis: platform
     kind: unit
@@ -1244,6 +1252,10 @@ tests:
     kind: unit
     catalog_ids:
       - restaurant
+  route-dispatch-event-first.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   route-execution.test.ts:
     axis: platform
     kind: unit
@@ -1484,6 +1496,10 @@ tests:
     kind: unit
     catalog_ids:
       - travel_booking
+  trusted-hubs-jurisdiction-scope.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   trusted-hubs-sync.test.ts:
     axis: platform
     kind: unit

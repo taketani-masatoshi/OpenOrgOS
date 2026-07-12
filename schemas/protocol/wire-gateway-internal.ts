@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eventEnvelopeSchema } from "./org-event.js";
-import { wireDeliveryReceiptSchema, wireInboundResultSchema, wireNodeIdentitySchema } from "./wire-message.js";
+import { wireDeliveryReceiptSchema, wireNodeIdentitySchema } from "./wire-message.js";
 import { openOrgDidSchema } from "./openorg-did.js";
 
 /** Org Core Internal API — called by Wire Gateway only (localhost / Docker network). */

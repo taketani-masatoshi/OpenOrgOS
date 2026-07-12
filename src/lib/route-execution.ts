@@ -41,8 +41,7 @@ function isHumanApprovalOperation(handoff: Handoff): boolean {
   return (
     /\b(?:wire|protocol notice|approval|broker transfer)\b.{0,40}\b(?:send|transmit|approve|execute)\b/.test(
       text
-    ) ||
-    /(?:wire送信|wireを送信|承認操作|承認を実行|振込実行)/i.test(text)
+    ) || /(?:wire送信|wireを送信|承認操作|承認を実行|振込実行)/i.test(text)
   );
 }
 
@@ -54,9 +53,8 @@ function invocationFromResolution(
 ): HandoffInvocation {
   const previous = handoff.invocation;
   const required =
-    resolution && "skill" in resolution ? resolution.skill?.required_options ?? [] : [];
-  const missing =
-    resolution?.status === "deferred" ? resolution.missingOptions ?? [] : [];
+    resolution && "skill" in resolution ? (resolution.skill?.required_options ?? []) : [];
+  const missing = resolution?.status === "deferred" ? (resolution.missingOptions ?? []) : [];
   return {
     decision,
     status,
@@ -68,8 +66,7 @@ function invocationFromResolution(
     missing_arguments: missing,
     attempts: previous?.attempts ?? 0,
     result: previous?.result,
-    failure_reason:
-      resolution && resolution.status !== "ready" ? resolution.reason : undefined,
+    failure_reason: resolution && resolution.status !== "ready" ? resolution.reason : undefined,
     started_at: previous?.started_at,
     finished_at: previous?.finished_at,
   };
@@ -223,9 +220,7 @@ export async function executeRouteHandoff(
   });
 
   try {
-    await resolution.handler(
-      (evaluated.handoff.invocation?.arguments ?? {}) as SkillRunOptions
-    );
+    await resolution.handler((evaluated.handoff.invocation?.arguments ?? {}) as SkillRunOptions);
     const finishedAt = new Date().toISOString();
     const updated: Handoff = {
       ...evaluated.handoff,

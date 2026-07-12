@@ -1,11 +1,15 @@
 import { type RelayCycleMetrics } from "../../../schemas/protocol/relay-state.js";
 import { loadRelayState, saveRelayState } from "./relay-state.js";
-import { flushWirePending, deliverProtocolEnvelopeWithRelay, pullOrgCRelayInboxIfConfigured } from "./transport.js";
+import {
+  flushWirePending,
+  deliverProtocolEnvelopeWithRelay,
+  pullOrgCRelayInboxIfConfigured,
+} from "./transport.js";
 import { flushWitnessPending } from "./witness-client.js";
 import { listWirePending } from "./wire-queue.js";
 import { listWitnessPending } from "./witness-queue.js";
 import { loadPeersRegistry } from "./peers.js";
-import { reconcileWitnessWithPeer, reconcileCrossHub, reconcileWitnessWithPeerAndPersist } from "./witness-reconcile.js";
+import { reconcileCrossHub, reconcileWitnessWithPeerAndPersist } from "./witness-reconcile.js";
 import { evaluateTransactionSla } from "./resilience-sla.js";
 import { evaluateRelaySlaAlerts } from "./relay-sla-alert.js";
 import { listTransactions } from "./transactions.js";

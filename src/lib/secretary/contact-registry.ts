@@ -126,11 +126,7 @@ export function resolveEmailFromContactRef(contactRef: string): string | undefin
   if (ext?.email) return ext.email;
   if (ext?.stakeholder_id) {
     const stk = loadStakeholdersIfExists()?.stakeholders.find((s) => s.id === ext.stakeholder_id);
-    return (
-      stk?.representative_contact?.email ??
-      stk?.contact?.email ??
-      undefined
-    );
+    return stk?.representative_contact?.email ?? stk?.contact?.email ?? undefined;
   }
   return undefined;
 }
@@ -227,13 +223,8 @@ function loadProtocolPeers(): Array<{ peer_id: string; display_name: string; org
   }
 }
 
-function tenantIdFromOrgUri(orgUri?: string): string | undefined {
-  return tenantIdFromPeerOrgUri(orgUri);
-}
-
 function loadPeerTenantContacts(tenantId: string): ContactLookupMatch[] {
   // Policy: folder_access_policy §2.8.1 — L1 only; caller must gate via loadProtocolPeers() + org_uri.
-  const base = join(getTenantsDir(), tenantId);
   const out: ContactLookupMatch[] = [];
 
   const companyPath = peerTenantCompanyYamlPath(tenantId);
@@ -381,11 +372,7 @@ export function resolveContactRegistry(query: ContactLookupQuery): ContactLookup
   const unique = matches.filter(
     (m, i, arr) =>
       arr.findIndex(
-        (x) =>
-          x.ref === m.ref &&
-          x.source === m.source &&
-          x.email === m.email &&
-          x.name === m.name
+        (x) => x.ref === m.ref && x.source === m.source && x.email === m.email && x.name === m.name
       ) === i
   );
   return {
@@ -400,11 +387,15 @@ export function formatContactLookupReport(result: ContactLookupResult): string {
   const lines: string[] = [];
   if (!result.found) {
     lines.push("正本に該当する連絡先は見つかりませんでした。");
-    lines.push("推測せず、人間に確認するか、開示された情報で `orgos secretary contacts register` を実行してください。");
+    lines.push(
+      "推測せず、人間に確認するか、開示された情報で `orgos secretary contacts register` を実行してください。"
+    );
     return lines.join("\n");
   }
   if (result.ambiguous) {
-    lines.push(`複数候補 (${result.matches.length} 件) — 用途・部署を確認してから選択してください。`);
+    lines.push(
+      `複数候補 (${result.matches.length} 件) — 用途・部署を確認してから選択してください。`
+    );
   } else {
     lines.push("1 件一致:");
   }
@@ -448,9 +439,7 @@ export function registerContact(input: RegisterContactInput): RegisterContactRes
 
   if (idx < 0 && !extId) {
     const match = file.contacts.find(
-      (c) =>
-        includesNorm(c.name, input.name) &&
-        (!input.org || includesNorm(c.org, input.org))
+      (c) => includesNorm(c.name, input.name) && (!input.org || includesNorm(c.org, input.org))
     );
     if (match) {
       extId = match.id;
@@ -489,7 +478,11 @@ export function registerContact(input: RegisterContactInput): RegisterContactRes
   let stakeholderSynced = false;
   const stakeholderId = contact.stakeholder_id;
   const stakeholdersPath = join(getDataDir(), "executive", "stakeholders.yaml");
-  if (stakeholderId && existsSync(stakeholdersPath) && (input.email || input.role || input.department)) {
+  if (
+    stakeholderId &&
+    existsSync(stakeholdersPath) &&
+    (input.email || input.role || input.department)
+  ) {
     const stakeholders = readYamlFile(stakeholdersPath, stakeholdersFileSchema);
     const sIdx = stakeholders.stakeholders.findIndex((s) => s.id === stakeholderId);
     if (sIdx >= 0) {
@@ -510,9 +503,7 @@ export function registerContact(input: RegisterContactInput): RegisterContactRes
           registered_at: rep.registered_at ?? currentDate(),
           source: input.source ?? rep.source ?? "secretary contacts register",
         },
-        contact: input.email
-          ? { ...stk.contact, email: input.email }
-          : stk.contact,
+        contact: input.email ? { ...stk.contact, email: input.email } : stk.contact,
       };
       writeYamlFile(stakeholdersPath, stakeholdersFileSchema.parse(stakeholders));
       stakeholderSynced = true;

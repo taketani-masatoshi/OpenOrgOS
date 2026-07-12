@@ -19,7 +19,11 @@ function csvEscape(value: string | number | undefined | null): string {
   return s;
 }
 
-function writeCsv(path: string, header: string[], rows: (string | number | undefined | null)[][]): string {
+function writeCsv(
+  path: string,
+  header: string[],
+  rows: (string | number | undefined | null)[][]
+): string {
   const lines = [header.join(",")];
   for (const row of rows) {
     lines.push(row.map(csvEscape).join(","));
@@ -103,7 +107,16 @@ export function syncRevenueCsv(): string {
   }
   return writeCsv(
     join(getDocsDir(), "data", "売上計画.csv"),
-    ["fiscal_year", "period_from", "period_to", "line_id", "line_name", "property_id", "amount_jpy", "notes"],
+    [
+      "fiscal_year",
+      "period_from",
+      "period_to",
+      "line_id",
+      "line_name",
+      "property_id",
+      "amount_jpy",
+      "notes",
+    ],
     rows
   );
 }
@@ -127,7 +140,16 @@ export function syncExpenseCsv(): string {
   }
   return writeCsv(
     join(getDocsDir(), "data", "費用計画.csv"),
-    ["fiscal_year", "period_from", "period_to", "line_id", "line_name", "property_id", "amount_jpy", "notes"],
+    [
+      "fiscal_year",
+      "period_from",
+      "period_to",
+      "line_id",
+      "line_name",
+      "property_id",
+      "amount_jpy",
+      "notes",
+    ],
     rows
   );
 }
@@ -188,7 +210,17 @@ export function syncInvestmentCsv(): string {
   }
   return writeCsv(
     join(getDocsDir(), "data", "投資計画.csv"),
-    ["fiscal_year", "period_from", "period_to", "item_id", "item_name", "property_id", "month", "amount_jpy", "notes"],
+    [
+      "fiscal_year",
+      "period_from",
+      "period_to",
+      "item_id",
+      "item_name",
+      "property_id",
+      "month",
+      "amount_jpy",
+      "notes",
+    ],
     rows
   );
 }

@@ -1,11 +1,7 @@
 import { createHash } from "node:crypto";
 import { listWireGatewayFederationCatalog, type WireGatewayFederationEntry } from "./discover.js";
 import { loadWireTrustRegistry } from "../protocol/wire-trust-registry.js";
-import { wireNodeWellKnownSchema } from "../../../schemas/protocol/wire-message.js";
-import {
-  applyIncomingWireFederationGossip,
-  listWireFederationCatalogWithGossip,
-} from "./federation-gossip-store.js";
+import { applyIncomingWireFederationGossip } from "./federation-gossip-store.js";
 
 export {
   applyIncomingWireFederationGossip,
@@ -21,7 +17,9 @@ export interface WireFederationGossipCatalog {
   nodes: WireGatewayFederationEntry[];
 }
 
-export function exportWireFederationGossipCatalog(publisherNodeId?: string): WireFederationGossipCatalog {
+export function exportWireFederationGossipCatalog(
+  publisherNodeId?: string
+): WireFederationGossipCatalog {
   const registry = loadWireTrustRegistry();
   const publisher =
     publisherNodeId ??
@@ -132,7 +130,9 @@ function saveWireFederationGossipStore(catalog: WireFederationGossipCatalog): vo
   applyIncomingWireFederationGossip(catalog);
 }
 
-export function validateWireFederationGossipPost(body: unknown): WireFederationGossipCatalog | null {
+export function validateWireFederationGossipPost(
+  body: unknown
+): WireFederationGossipCatalog | null {
   if (!body || typeof body !== "object") return null;
   const b = body as WireFederationGossipCatalog;
   if (b.version !== WIRE_FEDERATION_GOSSIP_VERSION || !Array.isArray(b.nodes)) return null;

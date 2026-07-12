@@ -18,12 +18,7 @@ export const calendarEventType = z.enum([
   "external",
 ]);
 
-export const calendarEventStatus = z.enum([
-  "confirmed",
-  "tentative",
-  "cancelled",
-  "tbd",
-]);
+export const calendarEventStatus = z.enum(["confirmed", "tentative", "cancelled", "tbd"]);
 
 export const calendarEventSchema = z.object({
   id: z.string().regex(/^EVT-\d{3,}$/),
@@ -82,13 +77,7 @@ export const tasksFileSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const oneOnOneCadence = z.enum([
-  "weekly",
-  "biweekly",
-  "monthly",
-  "quarterly",
-  "ad_hoc",
-]);
+export const oneOnOneCadence = z.enum(["weekly", "biweekly", "monthly", "quarterly", "ad_hoc"]);
 
 export const actionItemSchema = z.object({
   text: z.string().min(1),
@@ -123,11 +112,17 @@ export const externalContactSchema = z.object({
   preferred_channel: z.string().optional(),
   email: z.string().email().optional(),
   /** Wire peer link (L1) */
-  peer_id: z.string().regex(/^PEER-\d{3}$/).optional(),
+  peer_id: z
+    .string()
+    .regex(/^PEER-\d{3}$/)
+    .optional(),
   wire_did: z.string().optional(),
   wire_email: z.string().email().optional(),
   /** 詳細は gitignore の stakeholders.yaml へ */
-  stakeholder_id: z.string().regex(/^STK-\d{3,}$/).optional(),
+  stakeholder_id: z
+    .string()
+    .regex(/^STK-\d{3,}$/)
+    .optional(),
   notes: z.string().optional(),
 });
 

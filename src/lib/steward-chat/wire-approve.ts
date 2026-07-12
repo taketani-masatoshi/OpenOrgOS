@@ -11,10 +11,7 @@ import {
 import { getTenantId } from "../tenant.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
-import {
-  approveTenantNotice,
-  flushTenantWirePending,
-} from "../wire-console/tenant-actions.js";
+import { approveTenantNotice, flushTenantWirePending } from "../wire-console/tenant-actions.js";
 
 export interface ChatWireApproveResult {
   mode: "internal" | "wire";
@@ -142,7 +139,8 @@ export async function approveFromStewardChat(
             )?.approval_id
         )
         .filter((id): id is string => Boolean(id)),
-      approval: results.find((result) => result.approval.approval_id === approvalId)?.approval ??
+      approval:
+        results.find((result) => result.approval.approval_id === approvalId)?.approval ??
         results[0]?.approval,
     };
   }

@@ -1,5 +1,7 @@
-import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
-import type { ResilienceSlaEvaluation, ResilienceSlaTier } from "../../../schemas/protocol/resilience-sla.js";
+import type {
+  ResilienceSlaEvaluation,
+  ResilienceSlaTier,
+} from "../../../schemas/protocol/resilience-sla.js";
 import { findTransactionByEventId } from "./transactions.js";
 import { listWirePending } from "./wire-queue.js";
 import { isEventDelivered } from "./wire-delivered.js";

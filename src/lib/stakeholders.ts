@@ -1,7 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { stakeholdersFileSchema, type Stakeholder } from "../../schemas/executive.js";
-import { getStakeholdersDocsDir, getStakeholdersYaml, readYamlFile, resolveTenantPath } from "./utils.js";
+import {
+  getStakeholdersDocsDir,
+  getStakeholdersYaml,
+  readYamlFile,
+  resolveTenantPath,
+} from "./utils.js";
 
 export function stakeholdersFileExists(): boolean {
   return existsSync(getStakeholdersYaml());

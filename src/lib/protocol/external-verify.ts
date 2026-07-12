@@ -10,11 +10,7 @@ import { ourOrgRef } from "./identity.js";
 import { validateProtocolFile } from "./validate.js";
 import { loadJsonl } from "../jsonl-store.js";
 import { protocolAuditRecordSchema } from "../../../schemas/protocol/audit-record.js";
-import {
-  getProtocolAuditChainPath,
-  getProtocolInboxDir,
-  getProtocolOutboxDir,
-} from "./paths.js";
+import { getProtocolAuditChainPath, getProtocolInboxDir, getProtocolOutboxDir } from "./paths.js";
 import { exportProtocolPublicKeyBase64, verifyEventEnvelopeSignature } from "./signing.js";
 
 export interface ExternalVerifyIssue {
@@ -48,16 +44,10 @@ interface ParsedDelegationFile {
   envelope?: EventEnvelope;
 }
 
-function resolveGrantorProtocolPublicKey(
-  grantor: OrgRef,
-  override?: string
-): string | undefined {
+function resolveGrantorProtocolPublicKey(grantor: OrgRef, override?: string): string | undefined {
   if (override) return override;
   const ours = ourOrgRef();
-  if (
-    grantor.org_id === ours.org_id ||
-    (grantor.org_uri && grantor.org_uri === ours.org_uri)
-  ) {
+  if (grantor.org_id === ours.org_id || (grantor.org_uri && grantor.org_uri === ours.org_uri)) {
     return exportProtocolPublicKeyBase64();
   }
   return findPeerByOrgRef(grantor)?.protocol_public_key;
@@ -104,7 +94,10 @@ export function verifyDelegationProofExternal(
   }
 
   if (envelope) {
-    const publicKey = resolveGrantorProtocolPublicKey(proof.grant.grantor, options?.grantorPublicKey);
+    const publicKey = resolveGrantorProtocolPublicKey(
+      proof.grant.grantor,
+      options?.grantorPublicKey
+    );
     if (envelope.signature) {
       if (!publicKey) {
         issues.push({
@@ -185,9 +178,7 @@ export function verifyAuditChainExternal(options?: {
     };
   }
 
-  const dirs =
-    options?.envelopeDirs ??
-    [getProtocolOutboxDir(), getProtocolInboxDir()];
+  const dirs = options?.envelopeDirs ?? [getProtocolOutboxDir(), getProtocolInboxDir()];
   const envelopesByEventId = loadEnvelopesFromDirectories(dirs);
 
   const chain = verifyProtocolAuditChain({

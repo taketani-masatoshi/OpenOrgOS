@@ -14,10 +14,7 @@ import {
 import { exportGossipSnapshot } from "../lib/hub/gossip.js";
 import { exportAttestationGossip } from "../lib/hub/gossip-attestation.js";
 import { syncFromPeer, syncAllPeers } from "../lib/hub/gossip-sync.js";
-import {
-  loadHubFederation,
-  addFederationPeer,
-} from "../lib/hub/federation.js";
+import { loadHubFederation, addFederationPeer } from "../lib/hub/federation.js";
 import { fetchReceiptFromHub } from "../lib/protocol/witness-attestation-build.js";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -85,7 +82,7 @@ export interface HubVerifyOptions {
 }
 
 export async function runHubVerify(opts: HubVerifyOptions): Promise<void> {
-  let receipt = undefined as ReturnType<typeof findHubReceiptByEventId>;
+  let receipt: ReturnType<typeof findHubReceiptByEventId> | undefined;
   let status: ReturnType<typeof getAttestationStatus> | undefined;
   let pubKey = opts.hubPublicKey;
 
@@ -151,7 +148,9 @@ export function runHubAnchorExport(opts: HubAnchorExportOptions): void {
     console.log(JSON.stringify({ ...signed, path }, null, 2));
     return;
   }
-  console.log(`✓ signed merkle anchor ${date}: ${signed.merkle_root.slice(0, 16)}… (${signed.receipt_count} receipts)`);
+  console.log(
+    `✓ signed merkle anchor ${date}: ${signed.merkle_root.slice(0, 16)}… (${signed.receipt_count} receipts)`
+  );
   console.log(`  saved: ${path}`);
 }
 
@@ -281,7 +280,9 @@ export function runHubFederationShow(opts: HubFederationShowOptions): void {
     console.log(JSON.stringify(federation, null, 2));
     return;
   }
-  console.log(`federation ${federation.hub_id}: ${federation.hub_peers.length} peer(s) · gossip=${federation.gossip.enabled}`);
+  console.log(
+    `federation ${federation.hub_id}: ${federation.hub_peers.length} peer(s) · gossip=${federation.gossip.enabled}`
+  );
   for (const p of federation.hub_peers) {
     console.log(`  · ${p.hub_id}: ${p.hub_url}`);
   }
@@ -343,7 +344,9 @@ export async function runHubGossipSync(opts: HubGossipSyncOptions): Promise<void
     return;
   }
   for (const r of results) {
-    console.log(`✓ sync ${r.peer_id}: imported=${r.imported} skipped=${r.skipped} receipts=${r.receipts_rebuilt}`);
+    console.log(
+      `✓ sync ${r.peer_id}: imported=${r.imported} skipped=${r.skipped} receipts=${r.receipts_rebuilt}`
+    );
     for (const issue of r.issues) console.log(`  ! ${issue}`);
   }
 }

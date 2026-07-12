@@ -99,10 +99,7 @@ export function getResolvedDisplayLocale(fallbackPackLocale?: string): ResolvedD
   const labelKey: "ja" | "en" = code === "en" ? "en" : "ja";
   const label = entry.label[labelKey] ?? entry.label.en;
 
-  const bcp47 =
-    !fromEnv && !config.display_language && config.locale
-      ? config.locale
-      : entry.bcp47;
+  const bcp47 = !fromEnv && !config.display_language && config.locale ? config.locale : entry.bcp47;
 
   return { code, bcp47, label };
 }

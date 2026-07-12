@@ -15,11 +15,7 @@ export function runPropertiesList(options: { type?: string }): void {
   }
 
   console.log(
-    "ID".padEnd(10) +
-      "Name".padEnd(30) +
-      "Type".padEnd(10) +
-      "Location".padEnd(30) +
-      "Price"
+    "ID".padEnd(10) + "Name".padEnd(30) + "Type".padEnd(10) + "Location".padEnd(30) + "Price"
   );
   console.log("-".repeat(90));
 

@@ -90,8 +90,7 @@ export function validateAgentActivationContract(opts: { allTenants?: boolean } =
   }
 
   const previousTenant = process.env.ORGOS_TENANT;
-  const tenants =
-    opts.allTenants === false ? [getTenantId()] : listRosterManagedTenants();
+  const tenants = opts.allTenants === false ? [getTenantId()] : listRosterManagedTenants();
 
   for (const tenantId of tenants) {
     setTenantId(tenantId);

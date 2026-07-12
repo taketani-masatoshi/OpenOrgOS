@@ -1,20 +1,26 @@
 import { z } from "zod";
-import { dateString, monthString } from "../common.js";
-export const cashBalanceAccountSchema = z.object({
-  id: z.string().min(1).optional(),
-  bank_account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
-  name: z.string().min(1).optional(),
-  institution: z.string().optional(),
-  amount: z.number().nonnegative().nullable().optional(),
-}).refine(
-  (a) => a.bank_account_id != null || (a.id != null && a.name != null),
-  { message: "cash balance account requires bank_account_id or id+name" }
-);
+import { dateString } from "../common.js";
+export const cashBalanceAccountSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    bank_account_id: z
+      .string()
+      .regex(/^BANK-\d{3,}$/)
+      .optional(),
+    name: z.string().min(1).optional(),
+    institution: z.string().optional(),
+    amount: z.number().nonnegative().nullable().optional(),
+  })
+  .refine((a) => a.bank_account_id != null || (a.id != null && a.name != null), {
+    message: "cash balance account requires bank_account_id or id+name",
+  });
 
 export const cashBalanceSchema = z.object({
   as_of: dateString,
   status: z.enum(["template", "confirmed"]),
-  currency: z.enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"]).default("JPY"),
+  currency: z
+    .enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"])
+    .default("JPY"),
   accounts: z.array(cashBalanceAccountSchema).default([]),
   total: z.number().nonnegative().nullable().optional(),
   notes: z.string().optional(),
@@ -29,8 +35,14 @@ export const depreciationMethodTax = z.enum(["定額法", "定率法", "非償�
 export const fixedAssetSchema = z.object({
   id: z.string().regex(/^ASSET-\d{3,}$/),
   property_id: z.string().regex(/^PROP-\d{3,}$/),
-  loan_id: z.string().regex(/^LOAN-\d{3,}$/).optional(),
-  contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
+  loan_id: z
+    .string()
+    .regex(/^LOAN-\d{3,}$/)
+    .optional(),
+  contract_id: z
+    .string()
+    .regex(/^CTR-\d{3,}$/)
+    .optional(),
   name: z.string().min(1),
   category: assetCategory,
   acquisition_date: dateString,
@@ -54,7 +66,9 @@ export const fixedAssetsSummarySchema = z.object({
 export const fixedAssetsSchema = z.object({
   as_of: dateString,
   fiscal_year: z.string().optional(),
-  currency: z.enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"]).default("JPY"),
+  currency: z
+    .enum(["JPY", "USD", "EUR", "SGD", "GBP", "HKD", "AUD", "TWD", "MYR", "CNY", "AED", "RUB"])
+    .default("JPY"),
   assets: z.array(fixedAssetSchema).default([]),
   summary: fixedAssetsSummarySchema.optional(),
   notes: z.string().optional(),

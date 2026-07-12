@@ -5,9 +5,8 @@ export function redactSecrets(text: string): string {
     "$1=***"
   );
   out = out.replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer ***");
-  out = out.replace(
-    /(?<![A-Z0-9_])(password|pass|token|secret|api[_-]?key)\s*[:=]\s*\S+/gi,
-    (m) => m.replace(/\S+$/, "***")
+  out = out.replace(/(?<![A-Z0-9_])(password|pass|token|secret|api[_-]?key)\s*[:=]\s*\S+/gi, (m) =>
+    m.replace(/\S+$/, "***")
   );
   return out;
 }

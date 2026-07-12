@@ -43,7 +43,9 @@ export function loadWireFederationGossipStore(): WireFederationGossipStore | nul
   return readYamlFile(path, gossipStoreSchema);
 }
 
-export function saveWireFederationGossipStore(catalog: WireFederationGossipCatalog): WireFederationGossipStore {
+export function saveWireFederationGossipStore(
+  catalog: WireFederationGossipCatalog
+): WireFederationGossipStore {
   const store: WireFederationGossipStore = {
     version: 1,
     updated_at: new Date().toISOString(),

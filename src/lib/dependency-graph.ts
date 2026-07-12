@@ -125,7 +125,13 @@ export function computeImpact(
 
   const seen = new Set<string>();
   const impacts: ImpactItem[] = [];
-  const queue: { nodeId: string; depth: number; reason: string; action: DependencyAction; edgeCategory: EdgeCategory }[] = [];
+  const queue: {
+    nodeId: string;
+    depth: number;
+    reason: string;
+    action: DependencyAction;
+    edgeCategory: EdgeCategory;
+  }[] = [];
 
   for (const src of sources) {
     seen.add(src.id);
@@ -177,7 +183,10 @@ export function computeImpact(
   return { sources, impacts };
 }
 
-function resolveFilePath(nodeId: string, nodeIndex: Map<string, DependencyNode>): string | undefined {
+function resolveFilePath(
+  nodeId: string,
+  nodeIndex: Map<string, DependencyNode>
+): string | undefined {
   const node = nodeIndex.get(nodeId);
   if (!node) {
     if (nodeId.startsWith("data/") || nodeId.startsWith("docs/")) {
@@ -225,10 +234,7 @@ export function formatImpactMarkdown(
   sources: DependencyNode[],
   impacts: ImpactItem[]
 ): string {
-  const lines: string[] = [
-    `# 影響チェックリスト: ${input}`,
-    "",
-  ];
+  const lines: string[] = [`# 影響チェックリスト: ${input}`, ""];
 
   if (sources.length === 0) {
     lines.push("_依存グラフに一致するノードがありません。_");
@@ -271,7 +277,9 @@ export function formatImpactMarkdown(
   if (impacts.some((i) => i.action === "sync" || i.path?.startsWith("docs/exports/"))) {
     lines.push("npm run orgos -- sync all");
   }
-  if (impacts.some((i) => i.nodeId.includes("dashboard") || i.path?.includes("reports/dashboard"))) {
+  if (
+    impacts.some((i) => i.nodeId.includes("dashboard") || i.path?.includes("reports/dashboard"))
+  ) {
     lines.push("npm run orgos -- dashboard");
   }
   lines.push("```");

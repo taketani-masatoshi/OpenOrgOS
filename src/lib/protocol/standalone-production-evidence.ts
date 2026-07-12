@@ -23,7 +23,9 @@ export type StandaloneProductionEvidence = {
   missing: string[];
 };
 
-export function computeStandaloneProductionEvidence(root = getInstallRoot()): StandaloneProductionEvidence {
+export function computeStandaloneProductionEvidence(
+  root = getInstallRoot()
+): StandaloneProductionEvidence {
   const missing: string[] = [];
   for (const rel of PRODUCTION_ARTIFACTS) {
     if (!existsSync(join(root, rel))) missing.push(rel);

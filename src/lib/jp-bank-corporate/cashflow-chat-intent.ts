@@ -26,10 +26,7 @@ function formatNullable(value: string | number | null): string {
   return value == null ? "なし" : String(value);
 }
 
-function formatCashflowReply(
-  summary: string,
-  structured: ChatCashflowStructured
-): string {
+function formatCashflowReply(summary: string, structured: ChatCashflowStructured): string {
   return [
     summary,
     `Path: \`${structured.cashflow_path}\``,
@@ -78,7 +75,10 @@ export async function handleCashflowChatMessage(
     return {
       handled: true,
       ok: true,
-      reply: formatCashflowReply(String(payload.summary ?? "資金繰り表を生成しました。"), structured),
+      reply: formatCashflowReply(
+        String(payload.summary ?? "資金繰り表を生成しました。"),
+        structured
+      ),
       structured,
     };
   } catch {

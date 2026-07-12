@@ -6,10 +6,7 @@ import {
   rejectInterOrgNotice,
 } from "../wire/notice-workflow.js";
 import { transmitApprovedNotice } from "../protocol/notice-transmit.js";
-import {
-  deliverProtocolEnvelopeWithRelay,
-  flushWirePending,
-} from "../protocol/transport.js";
+import { deliverProtocolEnvelopeWithRelay, flushWirePending } from "../protocol/transport.js";
 import {
   findEnvelopeFileForWitness,
   flushWitnessPending,
@@ -107,11 +104,7 @@ export async function rejectTenantNotice(
   });
 }
 
-export async function deliverTenantEnvelope(
-  tenantId: string,
-  peerId: string,
-  eventId: string
-) {
+export async function deliverTenantEnvelope(tenantId: string, peerId: string, eventId: string) {
   return withWireConsoleTenantAsync(tenantId, async () => {
     const envelope = findEnvelopeFileForWitness(eventId);
     if (!envelope) {

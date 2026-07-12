@@ -1,4 +1,8 @@
-import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from "node:http";
+import {
+  createServer as createHttpServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { exportOutboxEntries } from "../protocol/inbox-export.js";
@@ -64,15 +68,11 @@ function resolvePeerDid(peer: {
 }): string | undefined {
   if (peer.did) return peer.did;
   const fromRegistry =
-    resolveWireTrustNode(peer.org_uri ?? "") ??
-    resolveWireTrustNode(resolvePeerNodeId(peer));
+    resolveWireTrustNode(peer.org_uri ?? "") ?? resolveWireTrustNode(resolvePeerNodeId(peer));
   return fromRegistry?.node.did;
 }
 
-function resolvePeerNodeId(peer: {
-  peer_id: string;
-  org_uri?: string;
-}): string {
+function resolvePeerNodeId(peer: { peer_id: string; org_uri?: string }): string {
   if (peer.org_uri?.startsWith("steward://tenant/")) {
     const tenant = peer.org_uri.replace("steward://tenant/", "");
     return tenant;
@@ -80,7 +80,9 @@ function resolvePeerNodeId(peer: {
   return peer.org_uri ?? peer.peer_id;
 }
 
-function resolveWireEndpoint(peer: ReturnType<typeof loadPeersRegistry>["peers"][number]): string | undefined {
+function resolveWireEndpoint(
+  peer: ReturnType<typeof loadPeersRegistry>["peers"][number]
+): string | undefined {
   const endpoints = resolvePeerInboundEndpoints(peer);
   const wireEp = endpoints.find((ep) => ep.url.includes("/wire/v1/events"));
   if (wireEp) return wireEp.url;
@@ -160,8 +162,8 @@ async function handleRequest(
   }
 
   if (req.method === "GET" && subpath === "/peers") {
-    const peers = loadPeersRegistry().peers
-      .map((peer) => {
+    const peers = loadPeersRegistry()
+      .peers.map((peer) => {
         const endpoints = resolvePeerInboundEndpoints(peer);
         const preferred =
           endpoints.find((e) => e.transport === "wire_v1") ??
@@ -321,8 +323,7 @@ export function startWireInternalApiServer(
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
       const addr = server.address();
-      const boundPort =
-        addr && typeof addr === "object" ? addr.port : port;
+      const boundPort = addr && typeof addr === "object" ? addr.port : port;
       resolve({
         url: `http://${host}:${boundPort}/internal/v1/wire`,
         close: () => server.close(),
