@@ -52,6 +52,31 @@ describe("correspondence mail setup readiness", () => {
     expect(issues.some((issue) => issue.id === "smtp_credentials")).toBe(false);
   });
 
+  it("accepts contact_email when representative_email is absent", () => {
+    writeFileSync(
+      join(getDataDir(), "company.yaml"),
+      YAML.stringify({
+        name: "Test Co",
+        public_disclosure: { contact_email: "contact@test.co.jp" },
+      }),
+      "utf-8"
+    );
+    mkdirSync(getExecutiveRecordsDir(), { recursive: true });
+    writeFileSync(
+      getMailConfigPath(),
+      YAML.stringify({
+        provider: "smtp",
+        from: { name: "Test Co", email: "contact@test.co.jp" },
+        smtp: { host: "smtp.test.local", port: 587, secure: false },
+        receive: { sync: "stub" },
+      }),
+      "utf-8"
+    );
+
+    const issues = collectMailSetupIssues("email");
+    expect(issues.some((issue) => issue.id === "representative_email")).toBe(false);
+  });
+
   it("still requires SMTP credentials for production hosts", () => {
     mkdirSync(getExecutiveRecordsDir(), { recursive: true });
     writeFileSync(

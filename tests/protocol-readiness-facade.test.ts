@@ -52,7 +52,7 @@ describe("readiness profiles and facade", () => {
     expect(evidence?.label).toBe("証拠");
     expect(evidence?.detail).toContain("activation:");
     expect(evidence?.detail).toContain("boundary:");
-    expect(evidence?.detail).toContain("test");
+    expect(evidence?.detail).toContain("skills:");
   });
 
   it("returns one JSON-safe Core/OrgOS/Wire/Community facade", () => {

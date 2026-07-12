@@ -100,8 +100,10 @@ wire_outbound:
     expect(mime).toContain("X-OpenOrgOS-Event-Id:");
     expect(mime).toContain("X-OpenOrgOS-Transport: email_wire");
     expect(mime).toContain("application/vnd.openorgos.wire+json");
+    expect(mime).toContain("Content-Transfer-Encoding: base64");
     const plainSection = mime.split("application/vnd.openorgos.wire+json")[0] ?? mime;
     expect(plainSection).not.toContain("50000");
+    expect(mime).not.toMatch(/"wireVersion"\s*:\s*"0\.1"/);
   });
 
   it("E12 rejects self-delivery to own wire_email", () => {

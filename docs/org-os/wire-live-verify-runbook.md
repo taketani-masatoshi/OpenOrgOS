@@ -41,10 +41,26 @@ ORGOS_LIVE_VERIFY=1 npm run orgos -- wire live-verify --tenant mal
 ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_ROUNDTRIP=1 ./scripts/wire-live-verify.sh mal live
 ```
 
+roundtrip 時は子プロセスに `ORGOS_EMAIL_WIRE_REQUIRED=1` を渡す（明示上書き可）。
+
+### email_wire を blocking ゲートにする（方針 B · opt-in）
+
+```bash
+ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/prod-validate-wire.sh mal
+ORGOS_EMAIL_WIRE_REQUIRED=1 ORGOS_LIVE_VERIFY=1 ./scripts/wire-live-verify.sh mal check
+```
+
 ### Witness receipt キャッシュ補完
 
 ```bash
 npm run orgos -- --tenant mal protocol witness cache-missing
+```
+
+Hub に receipt が無い場合は解決しない。registry orphan は次を dry-run:
+
+```bash
+npm run orgos -- --tenant mal protocol transaction prune-orphans
+npm run orgos -- --tenant mal protocol transaction prune-orphans --apply
 ```
 
 ---

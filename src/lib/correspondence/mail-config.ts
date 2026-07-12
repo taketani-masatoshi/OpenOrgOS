@@ -122,6 +122,19 @@ export function resolveWireOutboundConfig(): WireOutboundConfig {
     (process.env.ORGOS_WIRE_SMTP_SECURE === "true" ||
       process.env.ORGOS_SMTP_SECURE === "true");
 
+  const smtpConfig = smtpHost
+    ? { host: smtpHost, port: smtpPort, secure: smtpSecure }
+    : undefined;
+
+  if (base.provider === "dry_run" || isDryRunSmtpHost(wire?.smtp?.host)) {
+    return {
+      enabled,
+      provider: "dry_run",
+      from,
+      smtp: smtpConfig,
+    };
+  }
+
   const provider =
     enabled && smtpHost && resolveWireSmtpCredentials() ? "smtp" : "dry_run";
 
@@ -129,9 +142,7 @@ export function resolveWireOutboundConfig(): WireOutboundConfig {
     enabled,
     provider,
     from,
-    smtp: smtpHost
-      ? { host: smtpHost, port: smtpPort, secure: smtpSecure }
-      : undefined,
+    smtp: smtpConfig,
   };
 }
 

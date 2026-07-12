@@ -124,17 +124,20 @@ monthly_cost: 50000
     expect(result.skipped).toBe(1);
   });
 
-  it("ingests wire payload when MTA folded long JSON lines", async () => {
+  it("ingests wire payload when MTA folded base64 attachment lines", async () => {
     const envelope = sampleEnvelope("77777777-7777-4777-8777-777777777777");
     const mime = buildWireMimeMessage(envelope, {
       to: "wire@demo.example",
       fromName: "Wire",
       fromEmail: "wire@demo.example",
     });
-    const folded = mime.replace(
-      /("wireVersion":"0\.1")/,
-      '"wireVers\r\n ion":"0.1"'
-    );
+    const boundary = mime.match(/boundary="([^"]+)"/)?.[1];
+    const marker = "Content-Transfer-Encoding: base64\r\n\r\n";
+    const start = mime.indexOf(marker) + marker.length;
+    const end = mime.indexOf(`\r\n--${boundary}`, start);
+    const b64 = mime.slice(start, end);
+    const foldedB64 = b64.replace(/(.{40})/g, "$1\r\n ");
+    const folded = mime.slice(0, start) + foldedB64 + mime.slice(end);
     const emlPath = join(getMailReceivedDir(), "wire-folded.eml");
     writeFileSync(emlPath, folded, "utf-8");
 

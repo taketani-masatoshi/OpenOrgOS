@@ -182,7 +182,12 @@ export async function runWireLiveVerify(opts: {
     const live = spawnSync(script, [tenant, "live"], {
       cwd: ROOT_DIR,
       encoding: "utf-8",
-      env: { ...process.env, ORGOS_TENANT: tenant, PUBLIC_BASE_URL: publicBaseUrl },
+      env: {
+        ...process.env,
+        ORGOS_TENANT: tenant,
+        PUBLIC_BASE_URL: publicBaseUrl,
+        ORGOS_EMAIL_WIRE_REQUIRED: process.env.ORGOS_EMAIL_WIRE_REQUIRED ?? "1",
+      },
       timeout: 180_000,
     });
     const output = redactSecrets(`${live.stdout ?? ""}${live.stderr ?? ""}`).trim();

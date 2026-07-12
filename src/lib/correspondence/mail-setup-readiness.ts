@@ -69,20 +69,27 @@ function isPlaceholderEmail(email: string): boolean {
   return false;
 }
 
+function resolveDisclosureEmail(
+  disclosure: { representative_email?: string; contact_email?: string } | null | undefined
+): string | undefined {
+  return disclosure?.representative_email?.trim() || disclosure?.contact_email?.trim() || undefined;
+}
+
 export function collectMailSetupIssues(channel: CorrespondenceChannel): MailSetupIssue[] {
   const issues: MailSetupIssue[] = [];
   const config = resolveMailConfig();
   const fileConfig = loadMailConfig();
   const creds = resolveSmtpCredentials();
   const disclosure = loadCompanyPublicDisclosure();
+  const disclosureEmail = resolveDisclosureEmail(disclosure);
 
   if (channel === "email") {
-    if (!disclosure?.representative_email) {
+    if (!disclosureEmail) {
       issues.push({
         id: "representative_email",
         severity: "error",
         message: "代表者メールが company.yaml public_disclosure に未登録",
-        fix: "data/company.yaml に public_disclosure.representative_email を追加",
+        fix: "data/company.yaml に public_disclosure.representative_email または contact_email を追加",
       });
     }
 
@@ -160,16 +167,16 @@ export function collectMailSetupIssues(channel: CorrespondenceChannel): MailSetu
     }
 
     if (
-      disclosure?.representative_email &&
+      disclosureEmail &&
       config.from.email &&
-      disclosure.representative_email.toLowerCase() !== config.from.email.toLowerCase() &&
+      disclosureEmail.toLowerCase() !== config.from.email.toLowerCase() &&
       !isPlaceholderEmail(config.from.email)
     ) {
       issues.push({
         id: "from_mismatch",
         severity: "warning",
-        message: `送信元 (${config.from.email}) と代表登録 (${disclosure.representative_email}) が不一致`,
-        fix: "mail-config.from.email を representative_email と揃える",
+        message: `送信元 (${config.from.email}) と代表登録 (${disclosureEmail}) が不一致`,
+        fix: "mail-config.from.email を representative_email / contact_email と揃える",
       });
     }
 

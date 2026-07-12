@@ -1,6 +1,6 @@
 # mal Wire pilot — peer registry (wire_v1)
 # Copied by init-tenant-wire-pilot.sh when peers.yaml is missing.
-as_of: "2026-07-10"
+as_of: "2026-07-12"
 peers:
   - peer_id: PEER-001
     display_name: Southwood Inc

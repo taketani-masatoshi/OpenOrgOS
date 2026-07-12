@@ -25,6 +25,14 @@ load_env_file() {
 load_env_file "$ROOT/tenants/$TENANT/records/executive/smtp.env"
 load_env_file "$ROOT/deploy/mal-pilot/env/.env.mail-wire"
 
+# email_wire blocking gate is opt-in (方針 B):
+#   ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/prod-validate-wire.sh mal
+if [[ "${ORGOS_EMAIL_WIRE_REQUIRED:-}" == "1" ]]; then
+  echo "  email_wire: blocking (ORGOS_EMAIL_WIRE_REQUIRED=1)"
+else
+  echo "  email_wire: deferred (set ORGOS_EMAIL_WIRE_REQUIRED=1 to block on readiness)"
+fi
+
 echo "=== Wire production gate (${TENANT}) ==="
 
 fail() {

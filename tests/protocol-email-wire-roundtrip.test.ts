@@ -33,6 +33,21 @@ import { evaluateEmailWireReadiness } from "../src/lib/protocol/prod-wire-gate.j
 
 const TEST_TENANT = `test-email-wire-${process.pid}-${randomUUID().slice(0, 8)}`;
 
+const MAIL_ENV_KEYS = [
+  "ORGOS_SMTP_HOST",
+  "ORGOS_SMTP_PORT",
+  "ORGOS_SMTP_SECURE",
+  "ORGOS_SMTP_USER",
+  "ORGOS_SMTP_PASSWORD",
+  "ORGOS_WIRE_SMTP_HOST",
+  "ORGOS_WIRE_SMTP_PORT",
+  "ORGOS_WIRE_SMTP_SECURE",
+  "ORGOS_WIRE_SMTP_USER",
+  "ORGOS_WIRE_SMTP_PASSWORD",
+  "ORGOS_MAIL_FROM",
+  "ORGOS_WIRE_MAIL_FROM",
+] as const;
+
 function removeTestTenant(): void {
   if (!/^test-email-wire-\d+-[a-f0-9]{8}$/.test(TEST_TENANT)) {
     throw new Error(`Refusing to remove non-test tenant: ${TEST_TENANT}`);
@@ -46,7 +61,13 @@ function removeTestTenant(): void {
 }
 
 describe("protocol email_wire approve-to-inbox roundtrip", () => {
+  const savedMailEnv: Partial<Record<(typeof MAIL_ENV_KEYS)[number], string | undefined>> = {};
+
   beforeEach(() => {
+    for (const key of MAIL_ENV_KEYS) {
+      savedMailEnv[key] = process.env[key];
+      delete process.env[key];
+    }
     const tenantDir = join(getTenantsDir(), TEST_TENANT);
     removeTestTenant();
     mkdirSync(join(tenantDir, "data", "contracts"), { recursive: true });
@@ -98,6 +119,10 @@ wire_outbound:
 
   afterEach(() => {
     delete process.env.STEWARD_SKIP_DELIVER_VALIDATE;
+    for (const key of MAIL_ENV_KEYS) {
+      if (savedMailEnv[key] === undefined) delete process.env[key];
+      else process.env[key] = savedMailEnv[key];
+    }
     setTenantId("demo");
     removeTestTenant();
   });

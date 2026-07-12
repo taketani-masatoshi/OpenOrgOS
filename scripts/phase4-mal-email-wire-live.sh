@@ -99,10 +99,11 @@ console.log('✓', r.detail);
 "
 
 echo ""
-echo "=== Phase 4: doctor wire-prod (email_wire gate) ==="
+echo "=== Phase 4: doctor wire-prod (email_wire blocking gate) ==="
 WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1 \
 PUBLIC_BASE_URL="$PUBLIC_BASE_URL" \
 GOV_GATEWAY_TRANSPORT=mock \
+ORGOS_EMAIL_WIRE_REQUIRED=1 \
   npm run orgos -- doctor --wire-prod --tenant "$TENANT"
 
 if [[ "$MODE" != "live" ]]; then

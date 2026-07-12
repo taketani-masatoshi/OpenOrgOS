@@ -19,6 +19,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0001](0001-adopt-engineering-constitution.md) | Engineering Constitution の採用 | Accepted |
 | [0002](0002-engineering-rules-split.md) | Engineering Rules の分割構成 | Accepted |
 | [0003](0003-constitution-code-compliance-roadmap.md) | 憲章とコード準拠ロードマップ | Accepted |
+| [0004](0004-gmail-deferred-opt-in-gate.md) | Gmail / tenant-mail deferred · opt-in 本番ゲート | Accepted |
 
 ## 新規 ADR
 

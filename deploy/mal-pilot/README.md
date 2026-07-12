@@ -76,17 +76,23 @@ Set `WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1` and `PUBLIC_BASE_URL=https://wire
 - Wire Gateway: `deploy/wire-gateway/systemd/steward-wire-gateway@.service`
 - Protocol relay: `deploy/protocol-relay/systemd/steward-protocol-relay@.service`
 
-## Phase 4 — email_wire live (SMTP/IMAP) · **optional / deferred**
+## Phase 4 — email_wire live (SMTP/IMAP · Xserver)
 
-Gmail / Community tenant-mail connect は **未出荷**。Wire pilot（Phase 2–3）のみで本番ゲートは通る。  
-Phase 4 を有効にする場合:
+Phase 2–3（Wire Gateway + witness）のみで `./scripts/prod-validate-wire.sh mal` は **デフォルト PASS**（email_wire は deferred）。
+
+Phase 4（`ai@malkk.com` · Xserver SMTP/IMAP）を **blocking ゲート**にする場合:
 
 ```bash
-export ORGOS_EMAIL_WIRE_REQUIRED=1   # prod gate で email_wire を blocking に
+export ORGOS_EMAIL_WIRE_REQUIRED=1
+ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/prod-validate-wire.sh mal
 ```
+
+Setup:
+
+```bash
 # 1. L2 credentials (gitignore)
 cp deploy/mal-pilot/env/mail-wire-mal.env.example deploy/mal-pilot/env/.env.mail-wire
-# ORGOS_SMTP_USER=ai@malkk.com · App Password を設定
+# ORGOS_SMTP_USER=ai@malkk.com · password を設定
 
 # 2. mail-config（script が example から自動作成可）
 cp tenants/mal/records/executive/mail-config.yaml.example \
@@ -99,6 +105,15 @@ cp tenants/mal/records/executive/mail-config.yaml.example \
 ./scripts/phase4-mal-email-wire-live.sh mal live
 ```
 
-**前提:** Wire Gateway 起動中（`./scripts/phase2-mal-wire-live.sh mal`）· Vitest 停止。
+**前提:** Wire Gateway 起動中（`./scripts/phase2-mal-wire-live.sh mal`）· Vitest 停止 · `info@malkk.com` は使用しない。
+
+Registry 衛生（orphan outbound · envelope/receipt なし）:
+
+```bash
+npm run orgos -- --tenant mal protocol transaction prune-orphans          # dry-run
+npm run orgos -- --tenant mal protocol transaction prune-orphans --apply
+```
 
 See [wire-hub-stack-pilot.md](../../docs/org-os/wire-hub-stack-pilot.md).
+
+**出荷チェックリスト:** [gmail-ship-gate-checklist.md](../../docs/org-os/gmail-ship-gate-checklist.md) · env 例: `deploy/mal-pilot/env/mal-ship-gate.env.example`

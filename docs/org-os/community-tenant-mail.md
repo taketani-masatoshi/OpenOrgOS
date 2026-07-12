@@ -2,7 +2,8 @@
 
 > **ステータス: 未出荷（scaffold only）**  
 > Gmail / Community 連携 UI はコード・API スキャフォールドのみ。本番ゲート・`community-integration.json` では `tenant_mail_connect_*: false`。  
-> ライブ pilot 時は `ORGOS_EMAIL_WIRE_REQUIRED=1` と mail-config / OAuth 設定後に Phase 4 を実行。
+> ライブ pilot 時は `ORGOS_EMAIL_WIRE_REQUIRED=1` と mail-config / OAuth 設定後に Phase 4 を実行。  
+> 出荷チェックリスト: [gmail-ship-gate-checklist.md](gmail-ship-gate-checklist.md)
 
 Community ログイン後に Gmail を連携し、OAuth トークンを OrgOS Steward テナント workspace へ push するフロー（**将来出荷**）。
 

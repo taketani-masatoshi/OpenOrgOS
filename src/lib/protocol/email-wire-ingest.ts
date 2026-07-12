@@ -89,13 +89,23 @@ function unfoldMimeBody(text: string): string {
   return text.replace(/\r?\n[ \t]+/g, "");
 }
 
+function decodeWireAttachmentPayload(raw: string): string | null {
+  const unfolded = unfoldMimeBody(raw.trim());
+  if (unfolded.startsWith("{")) return unfolded;
+  try {
+    const decoded = Buffer.from(unfolded.replace(/\s/g, ""), "base64").toString("utf-8");
+    return decoded.startsWith("{") ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
 function extractWirePayloadFromRaw(raw: string): string | null {
   const re =
     /Content-Type:\s*application\/vnd\.openorgos\.wire\+json[^\r\n]*(?:\r?\n[^\r\n]+)*\r?\n\r?\n([\s\S]*?)(?:\r?\n--|$)/i;
   const m = raw.match(re);
   if (!m?.[1]) return null;
-  const payload = unfoldMimeBody(m[1].trim());
-  return payload.startsWith("{") ? payload : null;
+  return decodeWireAttachmentPayload(m[1]);
 }
 
 export async function parseWireEml(emlPath: string): Promise<ParsedWireEmail | null> {

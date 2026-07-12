@@ -73,6 +73,15 @@ export function splitWireJsonPayload(wireJson: string): string[] {
   return parts;
 }
 
+function encodeBase64MimeBody(text: string): string {
+  const encoded = Buffer.from(text, "utf8").toString("base64");
+  const lines: string[] = [];
+  for (let offset = 0; offset < encoded.length; offset += 76) {
+    lines.push(encoded.slice(offset, offset + 76));
+  }
+  return lines.join("\r\n");
+}
+
 export function buildWireMimeMessage(
   envelope: EventEnvelope,
   opts: {
@@ -89,6 +98,7 @@ export function buildWireMimeMessage(
   }
   const wire = envelopeToWireMessage(envelope);
   const wireJson = opts.wireJson ?? JSON.stringify(wire);
+  const wireBody = encodeBase64MimeBody(wireJson);
   const boundary = `openorgos-${envelope.event_id.slice(0, 8)}`;
   const subjectTag = envelope.event_id.slice(0, 8);
   const from = `${encodeMimeHeaderUtf8(opts.fromName)} <${opts.fromEmail}>`;
@@ -123,9 +133,9 @@ export function buildWireMimeMessage(
     `--${boundary}`,
     'Content-Type: application/vnd.openorgos.wire+json; charset="UTF-8"',
     'Content-Disposition: attachment; filename="wire-message.json"',
-    "Content-Transfer-Encoding: 8bit",
+    "Content-Transfer-Encoding: base64",
     "",
-    wireJson,
+    wireBody,
     "",
     `--${boundary}--`,
     "",

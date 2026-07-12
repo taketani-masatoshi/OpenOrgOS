@@ -42,7 +42,7 @@ export function isEmailWireProductionRequired(): boolean {
 }
 
 export const EMAIL_WIRE_DEFERRED_DETAIL =
-  "email_wire deferred — Gmail/community tenant-mail connect not shipped";
+  "email_wire deferred — set ORGOS_EMAIL_WIRE_REQUIRED=1 for blocking readiness (SMTP/IMAP pilot)";
 
 function formatIssues(items: Array<{ code: string; message: string }>): string[] {
   return items.map((i) => `${i.code}: ${i.message}`);

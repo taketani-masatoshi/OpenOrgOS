@@ -63,7 +63,7 @@ npm run orgos -- --tenant mal protocol witness reconcile --cross-hub
 
 | コード | 意味 | 一次対応 |
 |--------|------|----------|
-| `witness-receipt-missing` | outbound tx に receipt なし | witness flush · Hub 到達 · warn_only 確認 |
+| `witness-receipt-missing` | outbound tx に receipt なし | `protocol witness cache-missing` · 不可なら `protocol transaction prune-orphans --apply` |
 | `witness-quorum-not-met` | k_of_n 未達 | 追加 Hub attestation · pool 設定 |
 | `audit-bridge-failed` | operational → chain bridge 失敗 | bridge-errors.yaml · 署名/パス確認 |
 | `protocol-event-scope-unknown` | registry に scope 未定義 | `steward/platform/protocol/registry.yaml` 更新 |
