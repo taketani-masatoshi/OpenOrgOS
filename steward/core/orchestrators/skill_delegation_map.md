@@ -1,7 +1,9 @@
 # Skill → Agent 委譲マップ（オーケストレーター用）
 
 **読者:** Steward Agent · COO · 人間オペレータ  
-**版:** 2026-06-28 · **正本:** 本書 · Skill 索引: `npm run orgos -- skills list`
+**版:** 2026-07-12 · **実行正本:** `src/lib/skill-execution-mode.ts` · **Skill 索引:** `npm run orgos -- skills list`
+
+> 人数・Skill 一覧・routing 対応・実行 override は **生成セクション**（`npm run agent:docs:sync`）を正とする。手書き表は持たない。
 
 ---
 
@@ -9,7 +11,7 @@
 
 | 主体 | Skill 指定時の役割 |
 |------|-------------------|
-| **Steward Agent** | 自分用 Skill は **CLI 実行** · 他 Skill は **Work Order で担当 Agent に委譲** |
+| **Steward Agent** | 自分用 Skill は **CLI 実行** · 他 Skill は **authority 確認後** direct または **Work Order** |
 | **COO** | Steward から降ろされた IMP に **skill id · agent id** を付与 · 進捗追跡 |
 | **人間 CEO** | `protocol notice approve` · 振込 · 契約締結 · 公開のみ |
 
@@ -19,179 +21,36 @@
 # 1) Skill id またはキーワードで route 確認
 npm run orgos -- route match --text "月次締め"
 
-# 2) Work Order 生成（to_agent は下表の「実行 Agent id」）
+# 2) authority 不一致なら Work Order（executing agent は生成表の override 参照）
 npm run orgos -- escalate plan --text "**件名:** 月次締め **実装要件:** monthly_close Skill 実行"
 
-# 3) 担当 Agent スレッドで Skill 実行
+# 3) authority 一致なら direct（auto モード）
+npm run orgos -- route dispatch --mode auto --handoff <id>
+
+# 4) 担当 Agent スレッドで Skill 実行
 npm run orgos -- skills run monthly-close
-# cursor-only の場合: @steward/core/skills/{file} または module skills/
+# runtime: agent の場合: agent.md + skill ファイルを @（Work Order 経由）
 ```
 
 **Handoff** に `skill` · `route_id` が付く（`escalate run`）。担当 Agent は **Primary Folders 内のみ** 編集。
 
 ---
 
-## 2. ラベル → Agent id 変換
+## 2. 生成インデックス（正本ミラー）
 
-Skill registry の `agent` 列（表示名）→ 実行時の **Agent id**:
-
-| registry 表示名 | Agent id |
-|-----------------|----------|
-| Executive Steward / Executive | `executive_steward` |
-| Secretary | `secretary` |
-| Finance | `finance` |
-| Contract | `contract` |
-| Compliance | `compliance` |
-| Operations | `operations` |
-| Property Rental | `property_rental` |
-| Hospitality | `hospitality` |
-
-拡張 Agent（registry に未記載だが **推奨実行担当**）:
-
-| 領域 | 推奨 Agent id |
-|------|---------------|
-| 税務申告 | `tax`（Skill 名義は Finance） |
-| 経理実務 | `accounting` |
-| 定款 · 登記 | `legal`（CLI は Secretary 名義） |
-| 補助金 | `government_affairs`（CLI は Finance 名義） |
-| 商標 · 知財 | `intellectual_property`（CLI は Compliance 名義） |
-| 案件 PMO | `project_management` |
+| セクション | 内容 |
+|-----------|------|
+| [Agent 表示名 → id](#orgosgeneratedagent-label-indexstart) | catalog から導出 |
+| [実行 Agent override](#orgosgeneratedexecuting-agent-overridesstart) | `EXECUTING_AGENT_OVERRIDES` |
+| [Steward 自実行 Skill](#orgosgeneratedsteward-self-executestart) | `STEWARD_SELF_EXECUTE_SKILLS` |
+| [routing ↔ skill](#orgosgeneratedrouting-skill-indexstart) | `steward/core/routing/registry.yaml` |
+| [委譲決定木](#orgosgeneratedexecution-decision-treestart) | `resolveSkillExecutionMode` |
+| [全 Skill registry](#orgosgeneratedskill-registry-indexstart) | core + modules |
+| [runtime 注記](#orgosgeneratedskill-runtime-notestart) | cli / agent |
 
 ---
 
-## 3. コア Skill — Steward 自身が実行
-
-| Skill id | CLI | 実行 Agent | Steward の動き |
-|----------|-----|------------|----------------|
-| `executive_dashboard` | `skills run dashboard` | `executive_steward` | **自実行** → 要約読取 |
-| `daily_ops` | `skills run daily` | `executive_steward` | **自実行** |
-| `p0_closing` | `skills run p0` | `executive_steward` | **自実行** |
-
----
-
-## 4. コア Skill — 担当 Agent に委譲
-
-| Skill id | CLI | registry Agent | **実行 Agent id** | routing id |
-|----------|-----|----------------|-------------------|------------|
-| `contract_expiry_check` | `contract-expiry` | Contract | `contract` | contract-expiry |
-| `contract_register` | `contract-register` | Contract | `contract` | — |
-| `permit_expiry_check` | `permit-expiry` | Compliance | `compliance` | compliance-permit |
-| `iso_control_review` | `iso-control-review` | Compliance | `compliance` | compliance-controls |
-| `internal_audit_scope` | `internal-audit-scope` | Internal Audit | `internal_audit` | internal-audit-scope |
-| `monthly_close` | `monthly-close` | Finance | `finance` | monthly-close |
-| `variance_analysis` | `variance` | Finance | `finance` | finance-variance |
-| `cashflow_forecast` | `forecast` | Finance | `finance` | — |
-| `capex_planning` | `capex-planning` | Finance | `finance` | — |
-| `tax_filing_prep` | `tax-filing-prep` | Finance | **`tax`**（推奨）· `finance`（registry） | tax-filing |
-| `schedule_management` | `schedule` | Secretary | `secretary` | secretary-schedule |
-| `one_on_one_prep` | `one-on-one` | Secretary | `secretary` | secretary-one-on-one |
-| `external_correspondence` | — (cursor-only) | Secretary | `secretary` | secretary-correspondence |
-
----
-
-## 5. 未登録 Skill（Agent 定義のみ · registry 外）
-
-| Skill ファイル | 実行 Agent id | 備考 |
-|---------------|---------------|------|
-| `inter_org_notice_draft` | `secretary` | `protocol notice draft` · approve は CEO |
-
----
-
-## 6. JP 法域モジュール Skill
-
-| Skill id | CLI | registry Agent | **推奨実行 Agent id** | モジュール proxy |
-|----------|-----|----------------|----------------------|-----------------|
-| `jp_company_incorporation` | `operations corporate …` | Secretary | **`legal`** | `jp_corporate_registration` → secretary |
-| `jp_registry_change` | 同上 | Secretary | **`legal`** | 同上 |
-| `jp_subsidy_eligibility` | `operations subsidy eligibility` | Finance | **`government_affairs`** | finance |
-| `jp_subsidy_labor_cost` | `operations subsidy labor-cost` | Finance | **`government_affairs`** | finance |
-| `jp_subsidy_draft` | `operations subsidy draft` | Finance | **`government_affairs`** | finance |
-| `jp_trademark_checklist` | `operations trademark checklist` | Compliance | **`intellectual_property`** | compliance |
-| `jp_trademark_draft` | `operations trademark draft` | Compliance | **`intellectual_property`** | compliance |
-
-**前提:** 対応モジュールが `modules.yaml` で `enabled: true`。無効時は route **blocked**。
-
----
-
-## 7. 業務モジュール Skill
-
-| Skill id | runtime | registry Agent | **実行 Agent id** | モジュール | 有効化 |
-|----------|---------|----------------|-------------------|-----------|--------|
-| `travel_booking` | cursor-only | Operations | `operations` | travel_booking | テナント |
-| `operations_records` | cli `records-check` | Operations | `operations` | hospitality | hospitality |
-| `revpar_analysis` | cli `revpar` | Hospitality | `hospitality` | hospitality | hospitality |
-| `noi_analysis` | cursor-only | Property Rental | `property_rental` | rental | rental |
-| `language_bridge` | cursor-only | Secretary | `secretary` | language_bridge | テナント |
-| `ecommerce_ops` | cursor-only | Operations | `operations` ※ | ecommerce | テナント |
-| `professional_services_ops` | cursor-only | Operations | `operations` | professional_services | テナント |
-| `venture_capital_ops` | cursor-only | Operations | **`finance`** ※ | venture_capital | テナント |
-| `saas_subscription_ops` | cursor-only | Operations | **`finance`** ※ | saas_subscription | テナント |
-| `membership_ops` | cursor-only | Operations | **`finance`** ※ | membership | テナント |
-| `staffing_ops` | cursor-only | Operations | `operations` | staffing | テナント |
-| `software_outsourcing_ops` | cursor-only | Operations | `operations` | software_outsourcing | テナント |
-| `event_operations_ops` | cursor-only | Operations | `operations` | event_operations | テナント |
-| `property_management_ops` | cursor-only | Operations | **`property_rental`** ※ | property_management | テナント |
-| `real_estate_brokerage_ops` | cursor-only | Operations | **`contract`** ※ | real_estate_brokerage | テナント |
-
-※ registry は Operations だが **MODULE_TO_CLASSIFICATION_AGENT** により routing アクセスは右列 Agent。Work Order は **右列 id** へ。
-
----
-
-## 8. Skill 指定 → 委譲決定木
-
-```
-Skill id / CLI が指定された
-│
-├─ executive_dashboard | daily_ops | p0_closing
-│     → Steward 自実行（CLI）
-│
-├─ cursor-only
-│     → 実行 Agent id の agent.md + skill ファイルを @
-│     → Steward/COO は Work Order のみ（CLI なし）
-│
-├─ cli + コア Skill（§4）
-│     → 表の「実行 Agent id」へ IMP
-│     → 担当が npm run orgos -- skills run {cli}
-│
-├─ cli + operations …（JP / モジュール）
-│     → モジュール enabled 確認
-│     → 推奨 Agent id（§6–7）へ IMP
-│     → 担当が operations サブコマンド実行
-│
-└─ skill 不明
-      → route match --text
-      → escalate plan
-```
-
----
-
-## 9. routing と Skill の対応（Skill 付き route）
-
-| route id | agent id | skill id |
-|----------|----------|----------|
-| contract-expiry | contract | contract_expiry_check |
-| monthly-close | finance | monthly_close |
-| finance-variance | finance | variance_analysis |
-| travel-booking | operations | travel_booking |
-| secretary-schedule | secretary | schedule_management |
-| secretary-one-on-one | secretary | one_on_one_prep |
-| secretary-correspondence | secretary | external_correspondence |
-| executive-daily | executive_steward | daily_ops |
-| compliance-permit | compliance | permit_expiry_check |
-| compliance-controls | compliance | iso_control_review |
-| internal-audit-scope | internal_audit | internal_audit_scope |
-| tax-filing | tax | tax_filing_prep |
-| hr-labor | human_resources | — |
-| corporate-meetings | corporate_governance | — |
-| accounting-ops | accounting | — |
-| legal-teikan | legal | — |
-| coo-work-order | coo | — |
-
-Skill 未绑定の route → 担当 Agent は **会話・編集** で対応（専用 CLI なし）。
-
----
-
-## 10. 多 Agent 衝突時（Steward）
+## 3. 多 Agent 衝突時（Steward）
 
 | 依頼 | 優先 Skill / Agent |
 |------|-------------------|
@@ -210,6 +69,128 @@ Skill 未绑定の route → 担当 Agent は **会話・編集** で対応（�
 - [delegate_growth_team.md](delegate_growth_team.md) — COO 委譲雛形
 - [../routing/registry.yaml](../routing/registry.yaml)
 - [../skills/registry.yaml](../skills/registry.yaml)
+
+<!-- orgos:generated:agent-label-index:start -->
+| 表示名 | Agent id |
+|--------|----------|
+| 経理実務 | `accounting` |
+| コンプライアンス | `compliance` |
+| 契約管理 | `contract` |
+| 統括執行 | `coo` |
+| 経企 | `corporate_development` |
+| コーポレートガバナンス | `corporate_governance` |
+| 技術統括 | `cto` |
+| カスタマーサクセス | `customer_success` |
+| サポート | `customer_support` |
+| データ分析 | `data_analytics` |
+| デザイナー | `design` |
+| デザイン統括 | `design_lead` |
+| DevOps | `devops` |
+| エンジニア | `engineering` |
+| ESG | `esg_sustainability` |
+| ステュワード（経営統括） | `executive_steward` |
+| 財務・計画 | `finance` |
+| 総務 | `general_affairs` |
+| 行政・公的制度 | `government_affairs` |
+| 人事・労務 | `human_resources` |
+| 知財 | `intellectual_property` |
+| 内部監査 | `internal_audit` |
+| IR | `investor_relations` |
+| 研修 | `learning_development` |
+| 法務 | `legal` |
+| メール取込 | `mail_intake` |
+| メール送信 | `mail_outbound` |
+| マーケティング統括 | `marketing_lead` |
+| 医療機器薬事 | `medical_device_regulatory` |
+| 業務運用 | `operations` |
+| 個人財務 | `personal_finance` |
+| プラットフォーム実装ガイド | `platform_guide` |
+| 広報 | `pr_communications` |
+| 個情管理責任者 | `privacy_officer` |
+| 購買・調達 | `procurement` |
+| プロダクト | `product_management` |
+| PMO | `project_management` |
+| 品質保証 | `quality_assurance` |
+| 記録監査 | `records_audit` |
+| 採用 | `recruiting` |
+| リスク・保険 | `risk_insurance` |
+| 新規開拓（インバウンド） | `sales_inbound` |
+| 営業統括 | `sales_lead` |
+| 新規開拓（アウトバウンド） | `sales_outbound` |
+| 秘書 | `secretary` |
+| セキュリティ統括 | `security` |
+| 初期設定 | `setup` |
+| SNS 担当 | `social_media` |
+| 税務 | `tax` |
+| 資金・FX | `treasury` |
+<!-- orgos:generated:agent-label-index:end -->
+
+<!-- orgos:generated:executing-agent-overrides:start -->
+| Skill id | registry agent_id | executing agent_id |
+|----------|-------------------|-------------------|
+| `jp_company_incorporation` | `secretary` | `legal` |
+| `jp_registry_change` | `secretary` | `legal` |
+| `jp_subsidy_draft` | `finance` | `government_affairs` |
+| `jp_subsidy_eligibility` | `finance` | `government_affairs` |
+| `jp_subsidy_labor_cost` | `finance` | `government_affairs` |
+| `jp_trademark_checklist` | `compliance` | `intellectual_property` |
+| `jp_trademark_draft` | `compliance` | `intellectual_property` |
+| `tax_filing_prep` | `tax` | `tax` |
+<!-- orgos:generated:executing-agent-overrides:end -->
+
+<!-- orgos:generated:steward-self-execute:start -->
+| Skill id | executing agent | Steward の動き |
+|----------|-----------------|--------------|
+| `daily_ops` | `executive_steward` | Steward **自実行**（CLI）→ 要約読取 |
+| `executive_dashboard` | `executive_steward` | Steward **自実行**（CLI）→ 要約読取 |
+| `p0_closing` | `executive_steward` | Steward **自実行**（CLI）→ 要約読取 |
+<!-- orgos:generated:steward-self-execute:end -->
+
+<!-- orgos:generated:routing-skill-index:start -->
+| route id | agent id | skill id |
+|----------|----------|----------|
+| company-events-chain-audit | `records_audit` | `company_events_chain_verify` |
+| company-events-monthly-audit | `records_audit` | `company_events_monthly_audit` |
+| compliance-controls | `compliance` | `iso_control_review` |
+| compliance-permit | `compliance` | `permit_expiry_check` |
+| contract-expiry | `contract` | `contract_expiry_check` |
+| executive-daily | `executive_steward` | `daily_ops` |
+| finance-variance | `finance` | `variance_analysis` |
+| internal-audit-scope | `internal_audit` | `internal_audit_scope` |
+| mail-intake-handoff | `mail_intake` | `mail_intake_triage` |
+| mail-outbound-correspondence | `mail_outbound` | `correspondence_draft` |
+| monthly-close | `finance` | `monthly_close` |
+| secretary-correspondence | `mail_outbound` | `external_correspondence` |
+| secretary-one-on-one | `secretary` | `one_on_one_prep` |
+| secretary-schedule | `secretary` | `schedule_management` |
+| secretary-schedule-coordination | `secretary` | `schedule_coordination` |
+| tax-filing | `tax` | `tax_filing_prep` |
+| tenant-setup | `setup` | `tenant_integrations_setup` |
+| travel-booking | `operations` | `travel_booking` |
+<!-- orgos:generated:routing-skill-index:end -->
+
+<!-- orgos:generated:execution-decision-tree:start -->
+```
+Skill id / CLI が指定された
+│
+├─ resolveSkillExecutionMode()  （src/lib/skill-execution-mode.ts）
+│
+├─ direct_auto + resolution ready
+│     → orgos route dispatch --mode auto（authority 一致 · CLI 直実行）
+│
+├─ delegate_work_order / agent_interactive / escalate
+│     → Work Order（executing agent id へ IMP）
+│
+├─ deferred
+│     → 必須 argv / parent command 不足 — 手動 dispatch
+│
+├─ human_approval
+│     → wire · approval · broker — CEO ゲート
+│
+└─ skill 不明
+      → orgos route match --text · orgos escalate plan
+```
+<!-- orgos:generated:execution-decision-tree:end -->
 
 <!-- orgos:generated:skill-registry-index:start -->
 | Skill id | runtime | agent_id | CLI | module |
@@ -347,4 +328,5 @@ Skill 未绑定の route → 担当 Agent は **会話・編集** で対応（�
 - `runtime: agent` — LLM + Skill 定義添付（旧 `cursor-only` と同義）
 - `runtime: cli` — `orgos skills run` で決定論実行
 - 実行 Agent の override は `src/lib/skill-execution-mode.ts` が正本
+- 標準経路: `resolveSkillExecutionMode` → `orgos route dispatch --mode auto`（authority 一致時のみ direct）
 <!-- orgos:generated:skill-runtime-note:end -->

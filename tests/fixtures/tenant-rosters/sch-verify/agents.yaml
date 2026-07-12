@@ -1,0 +1,13 @@
+version: 1
+profiles:
+  operational:
+    - compliance
+    - contract
+    - executive_steward
+    - finance
+    - operations
+    - property_rental
+    - secretary
+  developer: []
+  task: []
+disabled: []
