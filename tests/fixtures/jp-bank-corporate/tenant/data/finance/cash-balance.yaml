@@ -1,0 +1,9 @@
+as_of: "2026-07-12"
+status: confirmed
+currency: JPY
+accounts:
+  - bank_account_id: BANK-901
+    name: Fixture operating account
+    amount: 10100
+total: 10100
+notes: Test-only fictional balance.

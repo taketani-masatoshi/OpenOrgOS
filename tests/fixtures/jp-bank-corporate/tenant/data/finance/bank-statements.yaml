@@ -1,0 +1,30 @@
+as_of: "2026-07-01"
+currency: JPY
+import_batches: []
+entries:
+  - id: BANK-FIX-IN-001
+    date: "2026-07-01"
+    direction: inflow
+    amount: 400
+    category: rent
+    description: Fixture partial receipt
+    account_id: BANK-901
+    chart_account_id: "4100"
+    reference: AR-FIX-001
+    counterparty: Fixture Customer
+    import_batch_id: BATCH-FIX-001
+    status: unmatched
+    source: import
+  - id: BANK-FIX-OUT-001
+    date: "2026-07-01"
+    direction: outflow
+    amount: 300
+    category: fixture_cost
+    description: Fixture partial payment
+    account_id: BANK-901
+    chart_account_id: "5100"
+    reference: AP-FIX-001
+    counterparty: Fixture Supplier
+    import_batch_id: BATCH-FIX-001
+    status: unmatched
+    source: import

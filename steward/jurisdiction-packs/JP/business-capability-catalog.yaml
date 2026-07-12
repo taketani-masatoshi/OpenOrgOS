@@ -607,7 +607,7 @@ modules:
     agent_proxy: finance
     categories: [banking_payments, tax_finance]
     priority: P1
-    notes: 日次/週次/月次資金繰り表 · payment-calendar · AR/AP · orgos jp bank CLI
+    notes: append-only 消込 · 冪等銀行取込 · aging/tie-out · fixture E2E · orgos jp bank CLI
 
   - id: jp_visa_employment
     name_ja: 在留・外国人雇用

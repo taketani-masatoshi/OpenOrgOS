@@ -8,10 +8,12 @@ import {
   bankStatementFileSchema,
   collectionTermsFileSchema,
   paymentCalendarFileSchema,
+  reconciliationEventFileSchema,
   type ArApLedgerFile,
   type BankStatementFile,
   type CollectionTermsFile,
   type PaymentCalendarFile,
+  type ReconciliationEventFile,
 } from "../../schemas/jp-bank-corporate.js";
 import type { ChartOfAccounts } from "../../schemas/finance.js";
 import {
@@ -50,6 +52,7 @@ import { AGENT_CAPABILITY_MANIFEST_PATH } from "./agent-capability.js";
 import { validateAgentAlignment } from "./agent-alignment.js";
 import { validateArApPaidAmount } from "../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/ar-ap-amounts.js";
 import { validatePolicyMirrors } from "./operator-policy.js";
+import { replayReconciliation } from "./jp-bank-corporate/reconciliation.js";
 
 export interface IntegrityIssue {
   level: "error" | "warning";
@@ -62,6 +65,7 @@ interface JpBankIntegrityInput {
   arApLedger?: unknown;
   collectionTerms?: unknown;
   bankStatements?: unknown;
+  reconciliationEvents?: unknown;
   chartOfAccounts?: ChartOfAccounts;
 }
 
@@ -70,6 +74,7 @@ const JP_BANK_FILES = {
   arApLedger: "data/finance/ar-ap-ledger.yaml",
   collectionTerms: "data/finance/collection-terms.yaml",
   bankStatements: "data/finance/bank-statements.yaml",
+  reconciliationEvents: "data/finance/reconciliation-events.yaml",
   chartOfAccounts: "data/finance/chart-of-accounts.yaml",
 } as const;
 
@@ -171,6 +176,11 @@ export function validateJpBankCorporateIntegrity(
     bankStatementFileSchema,
     input.bankStatements,
     JP_BANK_FILES.bankStatements
+  );
+  const reconciliationEvents = parse<ReconciliationEventFile>(
+    reconciliationEventFileSchema,
+    input.reconciliationEvents,
+    JP_BANK_FILES.reconciliationEvents
   );
 
   if (calendar) {
@@ -289,6 +299,49 @@ export function validateJpBankCorporateIntegrity(
         });
       }
     }
+    issues.push(
+      ...duplicateIdIssues(
+        bankStatements.import_batches,
+        JP_BANK_FILES.bankStatements,
+        "bank statement import batch"
+      )
+    );
+    const entryIds = new Set(bankStatements.entries.map((entry) => entry.id));
+    for (const batch of bankStatements.import_batches) {
+      for (const id of batch.entry_ids) {
+        if (!entryIds.has(id)) {
+          issues.push({
+            level: "error",
+            file: JP_BANK_FILES.bankStatements,
+            message: `${batch.id}: entry_id ${id} not found`,
+          });
+        }
+      }
+    }
+  }
+
+  if (ledger && bankStatements && reconciliationEvents) {
+    for (const event of reconciliationEvents.events) {
+      if (!validCalendarDate(event.effective_date)) {
+        issues.push({
+          level: "error",
+          file: JP_BANK_FILES.reconciliationEvents,
+          message: `${event.id}: effective_date is not a real calendar date`,
+        });
+      }
+    }
+    const state = replayReconciliation(
+      ledger.entries,
+      bankStatements.entries,
+      reconciliationEvents.events
+    );
+    for (const message of state.errors) {
+      issues.push({
+        level: "error",
+        file: JP_BANK_FILES.reconciliationEvents,
+        message,
+      });
+    }
   }
 
   const chartIds = new Set(input.chartOfAccounts?.accounts.map((account) => account.code) ?? []);
@@ -366,14 +419,23 @@ function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
       });
     }
   }
-  const bankPath = resolveTenantPath(JP_BANK_FILES.bankStatements);
-  if (existsSync(bankPath)) {
+  const optionalSpecs = [
+    ["bankStatements", JP_BANK_FILES.bankStatements, bankStatementFileSchema],
+    [
+      "reconciliationEvents",
+      JP_BANK_FILES.reconciliationEvents,
+      reconciliationEventFileSchema,
+    ],
+  ] as const;
+  for (const [key, file, schema] of optionalSpecs) {
+    const path = resolveTenantPath(file);
+    if (!existsSync(path)) continue;
     try {
-      values.bankStatements = readYamlFile(bankPath, bankStatementFileSchema);
+      values[key] = readYamlFile(path, schema);
     } catch (error) {
       issues.push({
         level: "error",
-        file: JP_BANK_FILES.bankStatements,
+        file,
         message:
           error instanceof z.ZodError
             ? zodMessage(error)

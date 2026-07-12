@@ -1,11 +1,14 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { chartOfAccountsSchema } from "../schemas/finance.js";
 import {
   runIntegrityChecks,
   validateJpBankCorporateIntegrity,
 } from "../src/lib/integrity.js";
 import { runValidateReport } from "../src/commands/validate.js";
-import { setTenantId } from "../src/lib/tenant.js";
+import {
+  cleanupJpBankCorporateTenant,
+  seedJpBankCorporateTenant,
+} from "./helpers/jp-bank-corporate-fixture.js";
 
 const chart = chartOfAccountsSchema.parse({
   currency: "JPY",
@@ -17,7 +20,9 @@ const chart = chartOfAccountsSchema.parse({
 });
 
 describe("validate report and JP bank integrity", () => {
-  beforeEach(() => setTenantId("mal"));
+  const tenantId = `test-jp-bank-validate-${process.pid}`;
+  beforeEach(() => seedJpBankCorporateTenant(tenantId));
+  afterEach(() => cleanupJpBankCorporateTenant(tenantId));
 
   it(
     "returns a non-exiting L1-safe report with repo-relative paths",
@@ -40,6 +45,8 @@ describe("validate report and JP bank integrity", () => {
           "data/finance/payment-calendar.yaml",
           "data/finance/ar-ap-ledger.yaml",
           "data/finance/collection-terms.yaml",
+          "data/finance/bank-statements.yaml",
+          "data/finance/reconciliation-events.yaml",
         ].includes(issue.file)
     );
     expect(errors).toEqual([]);
@@ -134,5 +141,64 @@ describe("validate report and JP bank integrity", () => {
       paymentCalendar: { entries: [{ id: "BAD" }] },
     });
     expect(schemaIssues[0]?.message).toContain("schema invalid");
+  });
+
+  it("detects invalid append-only reconciliation allocations", () => {
+    const issues = validateJpBankCorporateIntegrity({
+      chartOfAccounts: chart,
+      arApLedger: {
+        currency: "JPY",
+        entries: [
+          {
+            id: "AR-FIX",
+            kind: "ar",
+            amount: 100,
+            booked_date: "2026-06-01",
+            due_date: "2026-06-30",
+            counterparty: "Fixture",
+            description: "Fixture",
+            status: "open",
+          },
+        ],
+      },
+      bankStatements: {
+        currency: "JPY",
+        entries: [
+          {
+            id: "BANK-FIX",
+            date: "2026-07-01",
+            direction: "inflow",
+            amount: 100,
+            category: "rent",
+            description: "Fixture",
+            account_id: "BANK-901",
+          },
+        ],
+      },
+      reconciliationEvents: {
+        version: "1",
+        currency: "JPY",
+        events: [
+          {
+            id: "REC-FIX",
+            type: "reconciliation.applied",
+            occurred_at: "2026-07-01T00:00:00.000Z",
+            effective_date: "2026-07-01",
+            actor_id: "system:test",
+            match_mode: "exact_auto",
+            allocations: [
+              {
+                bank_statement_id: "BANK-FIX",
+                ar_ap_id: "AR-FIX",
+                amount: 101,
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(issues.map((issue) => issue.message)).toContain(
+      "REC-FIX: allocation exceeds remaining amount for AR-FIX"
+    );
   });
 });

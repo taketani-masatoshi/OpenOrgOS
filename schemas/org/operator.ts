@@ -18,6 +18,7 @@ export const operatorPermissionSchema = z.enum([
   "protocol:approve",
   "protocol:draft",
   "broker:transfer",
+  "finance:reconcile",
   "scheduling:write",
   "scheduling:approve",
   "escalate:plan",

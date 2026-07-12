@@ -84,7 +84,7 @@ orgos dashboard
 
 | Role | 主な permission |
 |------|-----------------|
-| `ceo` / `approver` | `chat:approve` · `chat:wire` · `protocol:approve` · `broker:transfer` |
+| `ceo` / `approver` | `chat:approve` · `chat:wire` · `protocol:approve` · `broker:transfer` · `finance:reconcile` |
 | `operator` | `chat:ask` · `escalate:*` · `agent:dispatch` · `agent:order` |
 | `readonly` | `chat:read` のみ |
 | `mcp_service` | 明示 tool のみ（既定 read + ask） |

@@ -3,6 +3,7 @@ import type { ModuleCliBundle } from "../../../../../../src/lib/module-cli-types
 import type { SkillRunOptions } from "../../../../../../src/commands/skills.js";
 import {
   runJpBankArApList,
+  runJpBankArApAging,
   runJpBankArApSync,
   runJpBankArApValidate,
   runJpBankCalendarImport,
@@ -12,6 +13,12 @@ import {
   runJpBankPositionShow,
   runJpBankPositionSkill,
   runJpBankStatementImport,
+  runJpBankStatementTieOut,
+  runJpBankReconcileApply,
+  runJpBankReconcileAuto,
+  runJpBankReconcileList,
+  runJpBankReconcilePropose,
+  runJpBankReconcileReverse,
   runJpBankTreasurySkill,
   MODULE_ID,
 } from "./lib.js";
@@ -102,6 +109,13 @@ function registerJpBankCommands(program: Command): void {
   arAp.command("validate").description("Validate ar-ap-ledger.yaml").action(() => runJpBankArApValidate());
 
   arAp
+    .command("aging")
+    .description("Show AR/AP aging buckets")
+    .option("--as-of <date>", "As-of date YYYY-MM-DD")
+    .option("--json", "JSON output")
+    .action((opts) => runJpBankArApAging({ asOf: opts.asOf, json: opts.json }));
+
+  arAp
     .command("sync")
     .description("Sync AR/AP from external source")
     .option("--from <source>", "invoices")
@@ -125,12 +139,82 @@ function registerJpBankCommands(program: Command): void {
     .command("import")
     .description("Import bank statement CSV into bank-statements.yaml")
     .requiredOption("--file <path>", "CSV file path")
+    .option("--adapter <id>", "Input adapter id", "generic-csv")
+    .option("--opening-balance <amount>", "Statement opening balance", Number)
+    .option("--closing-balance <amount>", "Statement closing balance", Number)
     .option("--write", "Append to bank-statements.yaml")
     .option("--json", "JSON output")
     .action((opts) =>
       runJpBankStatementImport({
         file: opts.file,
+        adapter: opts.adapter,
+        openingBalance: opts.openingBalance,
+        closingBalance: opts.closingBalance,
         write: opts.write,
+        json: opts.json,
+      })
+    );
+
+  statement
+    .command("tie-out")
+    .description("Tie bank statement closing balances to cash-balance")
+    .option("--json", "JSON output")
+    .action((opts) => runJpBankStatementTieOut({ json: opts.json }));
+
+  const reconcile = bank
+    .command("reconcile")
+    .description("Append-only bank statement to AR/AP reconciliation");
+
+  reconcile
+    .command("propose")
+    .description("List exact and approval-required match proposals")
+    .option("--json", "JSON output")
+    .action((opts) => runJpBankReconcilePropose({ json: opts.json }));
+
+  reconcile
+    .command("auto")
+    .description("Apply unique exact-reference matches")
+    .option("--json", "JSON output")
+    .action((opts) => runJpBankReconcileAuto({ json: opts.json }));
+
+  reconcile
+    .command("list")
+    .description("Show derived reconciliation state")
+    .option("--json", "JSON output")
+    .action((opts) => runJpBankReconcileList({ json: opts.json }));
+
+  reconcile
+    .command("apply")
+    .description("Approve and append a reconciliation event")
+    .requiredOption("--bank-id <id>", "Bank statement entry id")
+    .requiredOption("--ar-ap-id <id>", "AR/AP entry id")
+    .requiredOption("--amount <amount>", "Allocation amount", Number)
+    .requiredOption("--reason <reason>", "Approval reason")
+    .option("--effective-date <date>", "Effective date YYYY-MM-DD")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runJpBankReconcileApply({
+        bankId: opts.bankId,
+        arApId: opts.arApId,
+        amount: opts.amount,
+        effectiveDate: opts.effectiveDate,
+        reason: opts.reason,
+        json: opts.json,
+      })
+    );
+
+  reconcile
+    .command("reverse")
+    .description("Append a compensating reversal event")
+    .requiredOption("--event-id <id>", "Applied reconciliation event id")
+    .requiredOption("--reason <reason>", "Reversal reason")
+    .option("--effective-date <date>", "Effective date YYYY-MM-DD")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runJpBankReconcileReverse({
+        eventId: opts.eventId,
+        reason: opts.reason,
+        effectiveDate: opts.effectiveDate,
         json: opts.json,
       })
     );

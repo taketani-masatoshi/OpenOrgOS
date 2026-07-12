@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import type {
+  BankStatementImportBatch,
   BankStatementEntry,
   BankStatementFile,
 } from "../../../../../../schemas/jp-bank-corporate.js";
@@ -17,6 +19,38 @@ export interface BankStatementCsvRow {
   account_id: string;
   reference?: string;
   counterparty?: string;
+}
+
+function sha256(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function normalizeFingerprintText(value: string | undefined): string {
+  return (value ?? "").normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+export function bankStatementRowFingerprint(row: BankStatementCsvRow): string {
+  return sha256(
+    [
+      row.date,
+      row.direction,
+      String(row.amount),
+      row.account_id,
+      normalizeFingerprintText(row.category),
+      normalizeFingerprintText(row.reference),
+      normalizeFingerprintText(row.description),
+      normalizeFingerprintText(row.counterparty),
+    ].join("|")
+  );
+}
+
+export function bankStatementBatchFingerprint(
+  rows: BankStatementCsvRow[],
+  adapter = "generic-csv"
+): string {
+  return sha256(
+    `${adapter}\n${rows.map(bankStatementRowFingerprint).sort().join("\n")}`
+  );
 }
 
 const CSV_HEADER = [
@@ -118,12 +152,28 @@ export function buildBankStatementEntries(
     importBatchId?: string;
     chartOfAccounts?: ChartOfAccounts;
     defaultAccountId?: string;
+    adapter?: string;
+    importedAt?: string;
+    openingBalance?: number;
+    closingBalance?: number;
   } = {}
-): { entries: BankStatementEntry[]; warnings: string[] } {
+): {
+  entries: BankStatementEntry[];
+  batch: BankStatementImportBatch;
+  warnings: string[];
+} {
+  if (rows.length === 0) {
+    throw new Error("Bank statement CSV contains no data rows");
+  }
   const warnings: string[] = [];
-  const batchId = options.importBatchId ?? `BANK-IMPORT-${currentDate()}`;
+  const adapter = options.adapter ?? "generic-csv";
+  const batchFingerprint = bankStatementBatchFingerprint(rows, adapter);
+  const batchId =
+    options.importBatchId ?? `BANK-IMPORT-${batchFingerprint.slice(0, 16)}`;
   const defaultAccountId = options.defaultAccountId ?? resolveDefaultAccountId();
-  const entries = rows.map((row, index) => {
+  const entries: BankStatementEntry[] = [];
+  for (const [index, row] of rows.entries()) {
+    const fingerprint = bankStatementRowFingerprint(row);
     const resolved = options.chartOfAccounts
       ? resolveChartAccountId(
           {
@@ -134,44 +184,89 @@ export function buildBankStatementEntries(
         )
       : { chart_account_id: undefined, warning: undefined };
     if (resolved.warning) warnings.push(`row ${index + 1}: ${resolved.warning}`);
-    return {
-      id: `BANK-${row.date.replace(/-/g, "")}-${String(index + 1).padStart(3, "0")}`,
+    const accountId = row.account_id || defaultAccountId;
+    if (!accountId) {
+      warnings.push(`row ${index + 1}: missing account_id (configure payment calendar or cash-balance)`);
+      continue;
+    }
+    entries.push({
+      id: `BANK-${fingerprint.slice(0, 20)}`,
+      fingerprint,
       date: row.date,
       direction: row.direction,
       amount: row.amount,
       category: row.category,
       description: row.description,
-      account_id: row.account_id || defaultAccountId,
+      account_id: accountId,
       chart_account_id: resolved.chart_account_id,
       reference: row.reference,
       counterparty: row.counterparty,
       import_batch_id: batchId,
       status: "unmatched" as const,
       source: "import" as const,
-    };
-  });
-  return { entries, warnings };
+    });
+  }
+  const dates = rows.map((row) => row.date).sort();
+  const accounts = [...new Set(entries.map((entry) => entry.account_id))];
+  const batch: BankStatementImportBatch = {
+    id: batchId,
+    fingerprint: batchFingerprint,
+    imported_at: options.importedAt ?? new Date().toISOString(),
+    adapter,
+    account_id: accounts.length === 1 ? accounts[0] : undefined,
+    period_start: dates[0],
+    period_end: dates.at(-1),
+    opening_balance: options.openingBalance,
+    closing_balance: options.closingBalance,
+    entry_ids: entries.map((entry) => entry.id).sort(),
+  };
+  return { entries, batch, warnings };
 }
 
 export function mergeBankStatementEntries(
   file: BankStatementFile,
-  incoming: BankStatementEntry[]
-): { file: BankStatementFile; added: number } {
-  const ids = new Set(file.entries.map((entry) => entry.id));
+  incoming: BankStatementEntry[],
+  batch?: BankStatementImportBatch
+): { file: BankStatementFile; added: number; duplicate_batch: boolean } {
+  const byId = new Map(file.entries.map((entry) => [entry.id, entry]));
+  const duplicateBatch = Boolean(
+    batch &&
+      file.import_batches.some(
+        (existing) =>
+          existing.id === batch.id || existing.fingerprint === batch.fingerprint
+      )
+  );
+  if (duplicateBatch) {
+    return { file, added: 0, duplicate_batch: true };
+  }
   const additions = incoming.filter((entry) => {
-    if (ids.has(entry.id)) return false;
-    ids.add(entry.id);
+    const existing = byId.get(entry.id);
+    if (existing) {
+      if (
+        existing.fingerprint !== entry.fingerprint ||
+        existing.amount !== entry.amount ||
+        existing.direction !== entry.direction
+      ) {
+        throw new Error(`Bank statement id conflict: ${entry.id}`);
+      }
+      return false;
+    }
+    byId.set(entry.id, entry);
     return true;
   });
   return {
     file: {
       ...file,
       as_of: currentDate(),
+      import_batches: batch
+        ? [...file.import_batches, batch].sort((a, b) => a.id.localeCompare(b.id))
+        : file.import_batches,
       entries: [...file.entries, ...additions].sort(
         (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)
       ),
     },
     added: additions.length,
+    duplicate_batch: false,
   };
 }
 

@@ -6,11 +6,13 @@ import type {
 } from "../../../../../../schemas/jp-bank-corporate.js";
 import type { ChartOfAccounts } from "../../../../../../schemas/finance/types.js";
 import { loadChartOfAccounts, loadProperties } from "../../../../../../src/lib/data.js";
-import { billingMonthEndDate, invoiceNumber, paymentDueDate } from "../../../../../../src/lib/invoice-dates.js";
+import { billingMonthEndDate, invoiceNumber } from "../../../../../../src/lib/invoice-dates.js";
 import { loadModulesFile } from "../../../../../../src/lib/modules.js";
 import { resolveTenantPath } from "../../../../../../src/lib/utils.js";
 import { resolveDefaultAccountId } from "./calendar-import.js";
 import { resolveChartAccountId } from "./chart-account.js";
+import { dueDateFromCollectionTerm } from "./collection-terms.js";
+import { loadCollectionTerms } from "./data-loaders.js";
 
 export interface InvoiceArApSyncOptions {
   fy?: string;
@@ -64,6 +66,7 @@ export function buildInvoiceArApEntries(
     properties?: ReturnType<typeof loadProperties>;
     accountId?: string;
     chartOfAccounts?: ChartOfAccounts;
+    collectionTerms?: NonNullable<ReturnType<typeof loadCollectionTerms>>["data"];
     resolveInvoiceMonths?: typeof findGeneratedInvoiceMonths;
   } = {}
 ): InvoiceArApSyncResult {
@@ -75,6 +78,11 @@ export function buildInvoiceArApEntries(
   const accountId = dependencies.accountId ?? resolveDefaultAccountId();
   const resolveInvoiceMonths =
     dependencies.resolveInvoiceMonths ?? findGeneratedInvoiceMonths;
+  const collectionTerms =
+    dependencies.collectionTerms ?? loadCollectionTerms()?.data;
+  const termsById = new Map(
+    (collectionTerms?.rules ?? []).map((term) => [term.id, term])
+  );
   let chart = dependencies.chartOfAccounts;
   if (!chart) {
     try {
@@ -102,20 +110,31 @@ export function buildInvoiceArApEntries(
         warnings.push(`${module.id}/${propertyId}: no generated invoice artifacts found`);
       }
       for (const invoice of invoices) {
+        const collectionTermId = billing.collection_term_id;
+        const collectionTerm = collectionTermId
+          ? termsById.get(collectionTermId)
+          : undefined;
+        if (!collectionTermId || !collectionTerm) {
+          warnings.push(
+            `${module.id}/${propertyId}: billing collection_term_id is missing or undefined`
+          );
+          continue;
+        }
         const invoiceId = invoiceNumber(invoice.month, billing.invoice_number_prefix);
+        const bookedDate = billingMonthEndDate(invoice.month);
         entries.push({
           id: `AR-${invoiceId}`,
           kind: "ar",
           amount,
           category: "rent",
-          booked_date: billingMonthEndDate(invoice.month),
-          due_date: paymentDueDate(invoice.month),
+          booked_date: bookedDate,
+          due_date: dueDateFromCollectionTerm(bookedDate, collectionTerm),
           counterparty: billing.tenant_name ?? `${property.name} 賃借人`,
           description: `${property.name} ${invoice.month} 請求`,
           account_id: accountId,
           invoice_id: invoiceId,
-          collection_term_id: "term-ar-rent",
-          due_date_source: "invoice-payment-due-date",
+          collection_term_id: collectionTermId,
+          due_date_source: "collection-term",
           origin_source: "invoice",
           origin_id: `${module.id}:${propertyId}:${invoice.fiscalYear}:${invoice.month}`,
           status: "open",

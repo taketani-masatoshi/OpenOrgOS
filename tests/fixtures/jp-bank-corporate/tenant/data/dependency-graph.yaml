@@ -1,0 +1,44 @@
+version: "1"
+description: Test-only cashflow freshness graph
+nodes:
+  - id: cash-balance
+    label: Cash balance
+    category: file
+    path: data/finance/cash-balance.yaml
+  - id: ar-ap-ledger
+    label: AR/AP ledger
+    category: file
+    path: data/finance/ar-ap-ledger.yaml
+  - id: bank-statements
+    label: Bank statements
+    category: file
+    path: data/finance/bank-statements.yaml
+  - id: reconciliation-events
+    label: Reconciliation events
+    category: file
+    path: data/finance/reconciliation-events.yaml
+  - id: cashflow-schedule
+    label: Cashflow schedule
+    category: report
+    path: docs/finance/treasury/cashflow-schedule/2026-07-12-weekly.json
+edges:
+  - from: cash-balance
+    to: cashflow-schedule
+    category: data→reports
+    reason: Opening balance changed
+    action: regenerate
+  - from: ar-ap-ledger
+    to: cashflow-schedule
+    category: data→reports
+    reason: Planned cashflow changed
+    action: regenerate
+  - from: bank-statements
+    to: cashflow-schedule
+    category: data→reports
+    reason: Actual cashflow changed
+    action: regenerate
+  - from: reconciliation-events
+    to: cashflow-schedule
+    category: data→reports
+    reason: Outstanding balance changed
+    action: regenerate

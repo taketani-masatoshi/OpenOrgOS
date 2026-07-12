@@ -1,0 +1,4 @@
+items:
+  - name: 通信費
+    monthly_amount: 50
+    annual_amount: 600

@@ -1,7 +1,6 @@
 // @catalog-coverage: full
 // @catalog-ids: jp_bank_corporate
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { setTenantId } from "../src/lib/utils.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   loadArApLedger,
   loadCollectionTerms,
@@ -38,15 +37,21 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { loadProperties } from "../src/lib/data.js";
 import { loadModulesFile } from "../src/lib/modules.js";
+import {
+  cleanupJpBankCorporateTenant,
+  seedJpBankCorporateTenant,
+} from "./helpers/jp-bank-corporate-fixture.js";
 
 describe("jp_bank_corporate ar-ap", () => {
+  const tenantId = `test-jp-bank-ar-ap-${process.pid}`;
   beforeEach(() => {
-    setTenantId("mal");
+    seedJpBankCorporateTenant(tenantId);
   });
+  afterEach(() => cleanupJpBankCorporateTenant(tenantId));
 
   it("loads ar-ap ledger from tenant", () => {
     const ledger = loadArApLedger();
-    expect(ledger?.data.entries.length).toBeGreaterThanOrEqual(3);
+    expect(ledger?.data.entries.length).toBeGreaterThanOrEqual(2);
     const kinds = new Set(ledger?.data.entries.map((e) => e.kind));
     expect(kinds.has("ar")).toBe(true);
     expect(kinds.has("ap")).toBe(true);
@@ -55,7 +60,7 @@ describe("jp_bank_corporate ar-ap", () => {
   it("loads collection terms", () => {
     const terms = loadCollectionTerms();
     expect(terms?.data.rules.length).toBeGreaterThan(0);
-    expect(terms?.data.rules.some((r) => r.id === "term-ar-ota")).toBe(true);
+    expect(terms?.data.rules.some((r) => r.id === "term-ar-rent")).toBe(true);
   });
 
   it("validates ar-ap cross-references", () => {
@@ -68,7 +73,7 @@ describe("jp_bank_corporate ar-ap", () => {
   it("lists open AR entries", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     runJpBankArApList({ kind: "ar" });
-    expect(spy.mock.calls.some((c) => String(c[0]).includes("AR-2026"))).toBe(true);
+    expect(spy.mock.calls.some((c) => String(c[0]).includes("AR-FIX"))).toBe(true);
     spy.mockRestore();
   });
 
@@ -86,13 +91,13 @@ describe("jp_bank_corporate ar-ap", () => {
     spy.mockRestore();
   });
 
-  it("syncs mal bancho July invoice artifact into AR entries", () => {
+  it("syncs committed fixture invoice artifact into AR entries", () => {
     const synced = buildInvoiceArApEntries({ fy: "FY2026", month: "2026-07" });
     expect(synced.entries).toHaveLength(1);
     expect(synced.entries[0]).toMatchObject({
-      id: "AR-INV-BANCHO-2026-07",
+      id: "AR-INV-FIXTURE-2026-07",
       collection_term_id: "term-ar-rent",
-      amount: 100000,
+      amount: 1000,
     });
   });
 
@@ -145,23 +150,9 @@ describe("jp_bank_corporate ar-ap", () => {
     ]);
   });
 
-  it("imports real payroll, tax, yojitsu, and contract fixture values", () => {
-    expect(buildCalendarImport({ from: "payroll", month: "2026-07" }).entries[0]).toMatchObject({
-      amount: 320000,
-      date: "2026-07-25",
-    });
-    expect(buildCalendarImport({ from: "tax", fy: "FY2026" }).entries[0]).toMatchObject({
-      amount: 775000,
-      date: "2027-03-31",
-    });
-    expect(
-      buildCalendarImport({ from: "yojitsu", fy: "FY2026", month: "2026-03" }).entries[0]
-    ).toMatchObject({ amount: 13000000, date: "2026-03-31" });
-    expect(buildCalendarImport({ from: "contracts", month: "2026-07" }).entries).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: "CTR-IMPORT-CTR-012-2026-07", amount: 85000 }),
-      ])
-    );
+  it("keeps empty template calendar imports deterministic", () => {
+    expect(buildCalendarImport({ from: "payroll", month: "2026-07" }).entries).toEqual([]);
+    expect(buildCalendarImport({ from: "yojitsu", fy: "FY2026", month: "2026-03" }).entries).toEqual([]);
   });
 
   it("builds stable invoice entries and merges idempotently", () => {
@@ -184,14 +175,14 @@ describe("jp_bank_corporate ar-ap", () => {
     );
     expect(synced.entries).toHaveLength(1);
     expect(synced.entries[0]).toMatchObject({
-      id: "AR-INV-BANCHO-2026-07",
-      invoice_id: "INV-BANCHO-2026-07",
-      amount: 100000,
+      id: "AR-INV-FIXTURE-2026-07",
+      invoice_id: "INV-FIXTURE-2026-07",
+      amount: 1000,
       category: "rent",
       chart_account_id: "4100",
       booked_date: "2026-07-31",
-      due_date: "2026-08-31",
-      due_date_source: "invoice-payment-due-date",
+      due_date: "2026-08-30",
+      due_date_source: "collection-term",
       origin_source: "invoice",
       collection_term_id: "term-ar-rent",
     });

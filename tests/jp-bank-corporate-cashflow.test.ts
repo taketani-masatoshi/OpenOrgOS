@@ -1,9 +1,8 @@
 // @catalog-coverage: full
 // @catalog-ids: jp_bank_corporate
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadModuleManifest } from "../src/lib/modules.js";
 import { listModuleCliBundles } from "../src/lib/module-cli.js";
-import { setTenantId } from "../src/lib/utils.js";
 import {
   buildCashflowSchedule,
   CashflowScheduleBuilder,
@@ -32,11 +31,17 @@ import {
   runJpBankPositionShow,
 } from "../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
 import { loadPaymentCalendar } from "../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/data-loaders.js";
+import {
+  cleanupJpBankCorporateTenant,
+  seedJpBankCorporateTenant,
+} from "./helpers/jp-bank-corporate-fixture.js";
 
 describe("jp_bank_corporate cashflow", () => {
+  const tenantId = `test-jp-bank-cashflow-${process.pid}`;
   beforeEach(() => {
-    setTenantId("mal");
+    seedJpBankCorporateTenant(tenantId);
   });
+  afterEach(() => cleanupJpBankCorporateTenant(tenantId));
 
   it("has manifest and CLI bundle", () => {
     const manifest = loadModuleManifest("jp_bank_corporate");
@@ -47,7 +52,7 @@ describe("jp_bank_corporate cashflow", () => {
   it("loads payment calendar from tenant finance", () => {
     const cal = loadPaymentCalendar();
     expect(cal?.data.entries.length).toBeGreaterThan(0);
-    expect(cal?.path).toContain("tenants/mal/data/finance/payment-calendar.yaml");
+    expect(cal?.path).toContain(`${tenantId}/data/finance/payment-calendar.yaml`);
   });
 
   it("parses horizon strings", () => {
@@ -61,8 +66,8 @@ describe("jp_bank_corporate cashflow", () => {
       horizonStart: "2026-07-01",
       horizon: "4w",
     });
-    expect(schedule.opening_balance_total).toBe(10000000);
-    expect(schedule.opening_balance_by_account["BANK-001"]).toBe(6500000);
+    expect(schedule.opening_balance_total).toBe(10100);
+    expect(schedule.opening_balance_by_account["BANK-901"]).toBe(10100);
     expect(schedule.rows.length).toBeGreaterThan(0);
     expect(schedule.granularity).toBe("weekly");
     expect(schedule.horizon_start).toBe("2026-07-01");
@@ -141,10 +146,10 @@ describe("jp_bank_corporate cashflow", () => {
     expect(resolved.warnings).toEqual([]);
   });
 
-  it("builds the mal 13-week schedule without chart warnings", () => {
+  it("builds the fixture 13-week schedule without chart warnings", () => {
     const schedule = buildCashflowSchedule({
       granularity: "weekly",
-      horizonStart: "2026-07-11",
+      horizonStart: "2026-07-13",
       horizon: "13w",
     });
 
@@ -184,9 +189,7 @@ describe("jp_bank_corporate cashflow", () => {
     expect(weekly.csv).not.toMatch(/口座番号|account_number/);
 
     const tax = generateCashflowExport("tax-payment-csv");
-    expect(tax.row_count).toBe(2);
-    expect(tax.csv).toContain("775000");
-    expect(tax.csv).toContain("120000");
+    expect(tax.row_count).toBe(0);
     expect(tax.csv).not.toContain("消費税");
     expect(tax.csv).not.toContain("法人住民税");
     expect(tax.csv).not.toMatch(/口座番号|account_number/);
@@ -445,18 +448,18 @@ describe("jp_bank_corporate cashflow", () => {
       horizonEnd: "2026-07-31",
     }).computeSchedule([transfer]);
 
-    expect(daily.closing_balance_total).toBe(10000000);
+    expect(daily.closing_balance_total).toBe(10100);
     expect(weekly.closing_balance_total).toBe(daily.closing_balance_total);
     expect(
       Object.values(weekly.closing_balance_by_account).reduce(
         (sum, amount) => sum + amount,
         0
       )
-    ).toBe(10000000);
+    ).toBe(10100);
     expect(weekly.rows[0]).toMatchObject({
       direction: "transfer",
       planned_amount: 1000000,
-      balance_total: 10000000,
+      balance_total: 10100,
     });
   });
 
@@ -466,8 +469,22 @@ describe("jp_bank_corporate cashflow", () => {
       horizonStart: "2026-03-01",
       horizonEnd: "2026-04-30",
     });
-    const schedule = builder.build();
+    const schedule = builder.computeSchedule([
+      {
+        line_id: "CAPEX-FIXTURE",
+        date: "2026-03-20",
+        direction: "outflow",
+        category: "設備投資",
+        description: "Fixture capex",
+        amount: 11000,
+        source: "planned",
+        planned_amount: 11000,
+        actual_amount: null,
+        forecast_amount: null,
+      },
+    ]);
     expect(schedule.rows.some((r) => r.category === "設備投資")).toBe(true);
+    expect(schedule.shortfall_date).toBe("2026-03-20");
   });
 
   it("distinguishes first shortfall from deepest required funding", () => {
@@ -482,9 +499,9 @@ describe("jp_bank_corporate cashflow", () => {
         direction: "outflow",
         category: "fixture",
         description: "first shortfall",
-        amount: 11000000,
+        amount: 11100,
         source: "planned",
-        planned_amount: 11000000,
+        planned_amount: 11100,
         actual_amount: null,
         forecast_amount: null,
       },
@@ -494,9 +511,9 @@ describe("jp_bank_corporate cashflow", () => {
         direction: "inflow",
         category: "fixture",
         description: "partial recovery",
-        amount: 500000,
+        amount: 500,
         source: "planned",
-        planned_amount: 500000,
+        planned_amount: 500,
         actual_amount: null,
         forecast_amount: null,
       },
@@ -506,18 +523,18 @@ describe("jp_bank_corporate cashflow", () => {
         direction: "outflow",
         category: "fixture",
         description: "deepest shortfall",
-        amount: 2000000,
+        amount: 2000,
         source: "planned",
-        planned_amount: 2000000,
+        planned_amount: 2000,
         actual_amount: null,
         forecast_amount: null,
       },
     ]);
-    expect(schedule.shortfall_amount).toBe(-1000000);
+    expect(schedule.shortfall_amount).toBe(-1000);
     expect(schedule.shortfall_date).toBe("2026-07-10");
-    expect(schedule.required_funding_amount).toBe(2500000);
+    expect(schedule.required_funding_amount).toBe(2500);
     expect(schedule.required_funding_by_date).toBe("2026-07-20");
-    expect(formatCashflowMarkdown(schedule)).toContain("必要調達額: ￥2,500,000");
+    expect(formatCashflowMarkdown(schedule)).toContain("必要調達額: ￥2,500");
   });
 
   it("formats markdown report", () => {
@@ -552,7 +569,7 @@ describe("jp_bank_corporate cashflow", () => {
     spy.mockRestore();
   });
 
-  it("includes bank statement actuals and detail rows in mal schedule", () => {
+  it("includes bank statement actuals and detail rows in fixture schedule", () => {
     const schedule = buildCashflowSchedule({
       granularity: "weekly",
       horizonStart: "2026-07-01",

@@ -35,6 +35,7 @@ describe("operator rbac", () => {
     expect(perms).toContain("chat:approve");
     expect(perms).toContain("scheduling:approve");
     expect(perms).toContain("scheduling:write");
+    expect(perms).toContain("finance:reconcile");
     expect(perms).toContain("agent:dispatch");
   });
 
@@ -51,6 +52,7 @@ describe("operator rbac", () => {
       expect(auth.permissions).toContain("scheduling:write");
       expect(auth.permissions).not.toContain("scheduling:approve");
       expect(auth.permissions).not.toContain("chat:approve");
+      expect(auth.permissions).not.toContain("finance:reconcile");
     }
   });
 

@@ -1,0 +1,3 @@
+date,direction,amount,category,description,account_id,reference,counterparty
+2026-07-01,inflow,400,rent,Fixture partial receipt,BANK-901,AR-FIX-001,Fixture Customer
+2026-07-01,outflow,300,other,Fixture partial payment,BANK-901,AP-FIX-001,Fixture Supplier

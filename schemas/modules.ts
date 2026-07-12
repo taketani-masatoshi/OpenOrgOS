@@ -18,6 +18,7 @@ export const moduleBillingSchema = z.object({
   tenant_name: z.string().optional(),
   tenant_email: z.string().optional(),
   bank_account: z.string().optional(),
+  collection_term_id: z.string().min(1).optional(),
 });
 
 export const tenantModuleSchema = z.object({

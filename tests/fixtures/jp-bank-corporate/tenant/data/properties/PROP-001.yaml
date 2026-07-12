@@ -1,0 +1,9 @@
+id: PROP-001
+name: Fixture Property
+location: Test-only
+type: rental
+rental:
+  monthly_rent: 1000
+  vacancy_rate: 0
+  management_fee: 0
+notes: Fictional property for deterministic tests.

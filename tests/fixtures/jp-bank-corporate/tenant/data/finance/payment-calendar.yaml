@@ -1,0 +1,13 @@
+as_of: "2026-07-01"
+currency: JPY
+entries:
+  - id: PAY-FIX-001
+    date: "2026-07-20"
+    direction: outflow
+    amount: 500
+    category: fixture_cost
+    account_id: BANK-901
+    chart_account_id: "5100"
+    description: Fixture scheduled payment
+    source: payment-calendar
+    status: confirmed

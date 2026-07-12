@@ -1,0 +1,16 @@
+currency: JPY
+rules:
+  - id: term-ar-rent
+    label: Month-end plus 30 days
+    kind: ar
+    days_after_month_end: 30
+    days_after_booking: 0
+    default_account_id: BANK-901
+    chart_account_id: "4100"
+  - id: term-ap-standard
+    label: Month-end plus 15 days
+    kind: ap
+    days_after_month_end: 15
+    days_after_booking: 0
+    default_account_id: BANK-901
+    chart_account_id: "5100"

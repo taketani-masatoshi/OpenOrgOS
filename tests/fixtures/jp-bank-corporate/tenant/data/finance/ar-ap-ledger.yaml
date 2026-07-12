@@ -1,0 +1,32 @@
+as_of: "2026-06-30"
+currency: JPY
+entries:
+  - id: AR-FIX-001
+    kind: ar
+    amount: 1000
+    category: rent
+    booked_date: "2026-06-30"
+    due_date: "2026-07-30"
+    counterparty: Fixture Customer
+    description: Fixture receivable
+    account_id: BANK-901
+    chart_account_id: "4100"
+    invoice_id: INV-FIX-001
+    collection_term_id: term-ar-rent
+    due_date_source: collection-term
+    status: open
+    source: ar-ap
+  - id: AP-FIX-001
+    kind: ap
+    amount: 600
+    category: fixture_cost
+    booked_date: "2026-06-30"
+    due_date: "2026-07-15"
+    counterparty: Fixture Supplier
+    description: Fixture payable
+    account_id: BANK-901
+    chart_account_id: "5100"
+    collection_term_id: term-ap-standard
+    due_date_source: collection-term
+    status: open
+    source: ar-ap

@@ -1,0 +1,7 @@
+officer_compensation_annual: 1200
+officers:
+  - name: Fixture Officer
+    role: Test
+    monthly: 100
+    annual: 1200
+account_code: "5500"

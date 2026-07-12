@@ -89,5 +89,5 @@ modules:
     tier: skeleton
     notes: JP 許認可種別カタログ 60+ · 義務台帳 · operations permit CLI · gap 分析
   jp_bank_corporate:
-    tier: activation_ready
-    notes: JP 法人口座 · 日次/週次/月次資金繰り表 · payment-calendar · AR/AP · jp bank CLI
+    tier: production_ready
+    notes: JP 法人口座 · append-only 消込 · 冪等銀行取込 · 日次/週次/月次資金繰り · fixture E2E

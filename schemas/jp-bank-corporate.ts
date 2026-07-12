@@ -95,6 +95,7 @@ export const collectionTermsFileSchema = z.object({
 
 export const bankStatementEntrySchema = z.object({
   id: z.string().min(1),
+  fingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   date: dateString,
   direction: z.enum(["inflow", "outflow"]),
   amount: z.number().positive(),
@@ -105,15 +106,83 @@ export const bankStatementEntrySchema = z.object({
   reference: z.string().optional(),
   counterparty: z.string().optional(),
   import_batch_id: z.string().min(1).optional(),
-  status: z.enum(["matched", "unmatched"]).default("unmatched"),
+  /** Compatibility snapshot only. Reconciliation events are authoritative. */
+  status: z.enum(["matched", "partial", "unmatched"]).default("unmatched"),
   source: z.literal("import").default("import"),
 });
 
 export const bankStatementFileSchema = z.object({
   as_of: dateString.optional(),
   currency: z.literal("JPY").default("JPY"),
+  import_batches: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+        imported_at: z.string().datetime(),
+        adapter: z.string().min(1).default("generic-csv"),
+        account_id: z.string().regex(/^BANK-\d{3,}$/).optional(),
+        period_start: dateString.optional(),
+        period_end: dateString.optional(),
+        opening_balance: z.number().nonnegative().optional(),
+        closing_balance: z.number().nonnegative().optional(),
+        entry_ids: z.array(z.string().min(1)).default([]),
+      })
+    )
+    .default([]),
   entries: z.array(bankStatementEntrySchema).default([]),
   notes: z.string().optional(),
+});
+
+export const reconciliationAllocationSchema = z.object({
+  bank_statement_id: z.string().min(1),
+  ar_ap_id: z.string().min(1),
+  amount: z.number().positive(),
+});
+
+export const reconciliationAppliedEventSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal("reconciliation.applied"),
+  occurred_at: z.string().datetime(),
+  effective_date: dateString,
+  actor_id: z.string().min(1),
+  match_mode: z.enum(["exact_auto", "approved"]),
+  rule_id: z.string().min(1).optional(),
+  proposal_id: z.string().min(1).optional(),
+  allocations: z.array(reconciliationAllocationSchema).min(1),
+  reason: z.string().min(1).optional(),
+});
+
+export const reconciliationReversedEventSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal("reconciliation.reversed"),
+  occurred_at: z.string().datetime(),
+  effective_date: dateString,
+  actor_id: z.string().min(1),
+  target_event_id: z.string().min(1),
+  reason: z.string().min(1),
+});
+
+export const bankStatementVoidedEventSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal("bank_statement.voided"),
+  occurred_at: z.string().datetime(),
+  effective_date: dateString,
+  actor_id: z.string().min(1),
+  bank_statement_id: z.string().min(1),
+  reason: z.string().min(1),
+});
+
+export const reconciliationEventSchema = z.discriminatedUnion("type", [
+  reconciliationAppliedEventSchema,
+  reconciliationReversedEventSchema,
+  bankStatementVoidedEventSchema,
+]);
+
+export const reconciliationEventFileSchema = z.object({
+  version: z.literal("1").default("1"),
+  currency: z.literal("JPY").default("JPY"),
+  events: z.array(reconciliationEventSchema).default([]),
 });
 
 export const cashflowGranularity = z.enum(["daily", "weekly", "monthly"]);
@@ -144,6 +213,8 @@ export const cashflowScheduleSchema = z.object({
   granularity: cashflowGranularity,
   horizon_start: dateString,
   horizon_end: dateString,
+  opening_balance_as_of: dateString.optional(),
+  balance_age_days: z.number().int().nonnegative().optional(),
   opening_balance_total: z.number(),
   opening_balance_by_account: z.record(z.string(), z.number()).default({}),
   closing_balance_total: z.number(),
@@ -156,6 +227,8 @@ export const cashflowScheduleSchema = z.object({
   rows: z.array(cashflowScheduleRowSchema),
   detail_rows: z.array(cashflowScheduleRowSchema).optional(),
   detail_schedule_path: z.string().optional(),
+  input_fingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  tie_out_status: z.enum(["passed", "failed", "not_available"]).optional(),
   warnings: z.array(z.string()).default([]),
 });
 
@@ -218,6 +291,10 @@ export type ArApLedgerFile = z.output<typeof arApLedgerFileSchema>;
 export type CollectionTermsFile = z.output<typeof collectionTermsFileSchema>;
 export type BankStatementEntry = z.output<typeof bankStatementEntrySchema>;
 export type BankStatementFile = z.output<typeof bankStatementFileSchema>;
+export type BankStatementImportBatch = BankStatementFile["import_batches"][number];
+export type ReconciliationAllocation = z.output<typeof reconciliationAllocationSchema>;
+export type ReconciliationEvent = z.output<typeof reconciliationEventSchema>;
+export type ReconciliationEventFile = z.output<typeof reconciliationEventFileSchema>;
 export type CashflowGranularity = z.output<typeof cashflowGranularity>;
 export type CashflowScheduleRow = z.output<typeof cashflowScheduleRowSchema>;
 export type CashflowSchedule = z.output<typeof cashflowScheduleSchema>;

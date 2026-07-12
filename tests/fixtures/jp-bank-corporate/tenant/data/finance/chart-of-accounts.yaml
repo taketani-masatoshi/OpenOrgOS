@@ -1,0 +1,34 @@
+version: "1"
+currency: JPY
+accounts:
+  - code: "1100"
+    name: Cash
+    type: asset
+    normal_balance: debit
+  - code: "4100"
+    name: Fixture revenue
+    type: revenue
+    normal_balance: credit
+  - code: "5100"
+    name: Fixture expense
+    type: expense
+    normal_balance: debit
+  - code: "5500"
+    name: Payroll
+    type: expense
+    normal_balance: debit
+    data_source: data/finance/payroll.yaml
+  - code: "5700"
+    name: 通信費
+    type: expense
+    normal_balance: debit
+  - code: "4900"
+    name: 月次予測CF
+    type: revenue
+    normal_balance: credit
+category_mapping:
+  revenue:
+    rent: "4100"
+  expense:
+    communication: "5700"
+    other: "5100"

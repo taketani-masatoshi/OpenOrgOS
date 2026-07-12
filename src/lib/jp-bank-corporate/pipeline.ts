@@ -1,5 +1,8 @@
 import { loadEnabledModulesSafe } from "../modules.js";
-import { generateJpBankCashflow } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
+import {
+  generateJpBankCashflow,
+  runJpBankReconcileAuto,
+} from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
 
 export function isJpBankCorporateEnabled(): boolean {
   return loadEnabledModulesSafe().some(
@@ -17,6 +20,7 @@ export function runJpBankCorporatePipelineCashflow(): {
   if (!isJpBankCorporateEnabled()) {
     return { ran: false, output_paths: [] };
   }
+  runJpBankReconcileAuto({ json: false });
   const json = generateJpBankCashflow({
     granularity: "weekly",
     horizon: "13w",
@@ -29,16 +33,14 @@ export function runJpBankCorporatePipelineCashflow(): {
     format: "md",
     write: true,
   });
-  const detail = generateJpBankCashflow({
-    granularity: "daily",
-    horizon: "13w",
-    format: "csv",
-    write: true,
-  });
   return {
     ran: true,
-    output_paths: [json.output_path, markdown.output_path, detail.output_path].filter(
-      (path, index, all) => all.indexOf(path) === index
-    ),
+    output_paths: [
+      json.output_path,
+      markdown.output_path,
+      json.detail_schedule_path,
+    ]
+      .filter((path): path is string => Boolean(path))
+      .filter((path, index, all) => all.indexOf(path) === index),
   };
 }

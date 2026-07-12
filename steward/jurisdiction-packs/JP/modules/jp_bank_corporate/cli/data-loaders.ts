@@ -7,11 +7,13 @@ import {
   cashflowExportTemplateSchema,
   collectionTermsFileSchema,
   paymentCalendarFileSchema,
+  reconciliationEventFileSchema,
   type ArApLedgerFile,
   type BankStatementFile,
   type CashflowExportTemplate,
   type CollectionTermsFile,
   type PaymentCalendarFile,
+  type ReconciliationEventFile,
 } from "../../../../../../schemas/jp-bank-corporate.js";
 import { getModuleSeedDir } from "../../../../../../src/lib/modules.js";
 import { getDataDir, readYamlFile } from "../../../../../../src/lib/utils.js";
@@ -23,6 +25,7 @@ const FINANCE_FILES = {
   arApLedger: "ar-ap-ledger.yaml",
   collectionTerms: "collection-terms.yaml",
   bankStatements: "bank-statements.yaml",
+  reconciliationEvents: "reconciliation-events.yaml",
 } as const;
 
 function financePath(filename: string): string {
@@ -70,6 +73,16 @@ export function loadCollectionTerms(): { path: string; data: CollectionTermsFile
 
 export function loadBankStatements(): { path: string; data: BankStatementFile } | null {
   return loadFinanceFile(FINANCE_FILES.bankStatements, bankStatementFileSchema);
+}
+
+export function loadReconciliationEvents(): {
+  path: string;
+  data: ReconciliationEventFile;
+} | null {
+  return loadFinanceFile(
+    FINANCE_FILES.reconciliationEvents,
+    reconciliationEventFileSchema
+  );
 }
 
 export function loadCashflowExportTemplate(

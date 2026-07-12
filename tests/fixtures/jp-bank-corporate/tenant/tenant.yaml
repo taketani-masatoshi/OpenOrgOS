@@ -1,0 +1,11 @@
+id: test-jp-bank
+name: JP Bank Fixture Company
+legal_name: JP Bank Fixture Company
+display_name: Bank Fixture
+description: Test-only fictional tenant
+default: false
+lifecycle: test
+jurisdiction: JP
+entity_form: kk
+display_language: ja
+default_currency: JPY

@@ -21,7 +21,8 @@ describe("module production_ready tier (Direction C)", () => {
     expect(production).toContain("jp_carbon_neutral_2050");
     expect(production).toContain("jp_women_empowerment");
     expect(production).toContain("jp_privacy_policy");
-    expect(production.length).toBe(28);
+    expect(production).toContain("jp_bank_corporate");
+    expect(production.length).toBe(29);
   });
 
   it("each production_ready module passes catalog check", () => {

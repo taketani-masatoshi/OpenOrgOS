@@ -1,9 +1,11 @@
 id: jp_bank_corporate
-required_seeds: []
+required_seeds:
+  - bank-statements.yaml.example
+  - reconciliation-events.yaml.example
 activation_seeds:
   - payment-calendar.yaml.example
   - ar-ap-ledger.yaml.example
   - collection-terms.yaml.example
 optional_regulations:
   - REG-005
-notes: JP 法人口座 · 日次/週次/月次資金繰り表 · payment-calendar · AR/AP · Zod 検証済み seed export templates · orgos jp bank CLI
+notes: production_ready — 決定論資金繰り · append-only 消込 · 冪等銀行取込 · fixture E2E · orgos jp bank CLI

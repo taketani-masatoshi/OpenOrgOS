@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, relative } from "node:path";
 import YAML from "yaml";
 import {
@@ -30,6 +31,8 @@ import {
   loadArApLedger,
   loadCollectionTerms,
   loadPaymentCalendar,
+  loadBankStatements,
+  loadReconciliationEvents,
   resolveFinanceFilePath,
 } from "./data-loaders.js";
 import { buildCalendarImport, type CalendarImportSource } from "./calendar-import.js";
@@ -43,6 +46,22 @@ import {
 } from "./bank-statement-import.js";
 import { generateCashflowExport } from "./cashflow-export.js";
 import { bankStatementFileSchema } from "../../../../../../schemas/jp-bank-corporate.js";
+import {
+  buildReconciliationAppliedEvent,
+  proposeReconciliationMatches,
+  replayReconciliation,
+  type MatchProposal,
+} from "../../../../../../src/lib/jp-bank-corporate/reconciliation.js";
+import {
+  appendReconciliationEvents,
+  loadReconciliationEventFile,
+} from "../../../../../../src/lib/jp-bank-corporate/reconciliation-store.js";
+import {
+  buildArApAging,
+  tieOutBankStatements,
+} from "../../../../../../src/lib/jp-bank-corporate/reports.js";
+import { requireCliFinanceReconciliationApproval } from "../../../../../../src/lib/console-auth/cli-operator.js";
+import { computeJpBankInputFingerprint } from "../../../../../../src/lib/jp-bank-corporate/input-fingerprint.js";
 
 export const MODULE_ID = "jp_bank_corporate";
 
@@ -92,6 +111,13 @@ export function generateJpBankCashflow(opts: {
     granularity,
     horizon: opts.horizon ?? "13w",
   });
+  schedule.input_fingerprint = computeJpBankInputFingerprint();
+  const statements = loadBankStatements();
+  const balance = loadCashBalance();
+  schedule.tie_out_status =
+    statements && balance
+      ? tieOutBankStatements(statements.data, balance).status
+      : "not_available";
   const content =
     format === "csv"
       ? formatCashflowCsv(schedule)
@@ -377,11 +403,18 @@ export function runJpBankArApSync(opts: {
 
 export function runJpBankStatementImport(opts: {
   file: string;
+  adapter?: string;
+  openingBalance?: number;
+  closingBalance?: number;
   write?: boolean;
   json?: boolean;
 }): void {
   const rows = readBankStatementCsvFile(opts.file);
-  const result = buildBankStatementEntries(rows);
+  const result = buildBankStatementEntries(rows, {
+    adapter: opts.adapter,
+    openingBalance: opts.openingBalance,
+    closingBalance: opts.closingBalance,
+  });
 
   if (opts.json) {
     console.log(JSON.stringify({ rows, entries: result.entries, warnings: result.warnings }, null, 2));
@@ -403,11 +436,243 @@ export function runJpBankStatementImport(opts: {
   const path = resolveFinanceFilePath("bank-statements.yaml");
   let file = existsSync(path)
     ? bankStatementFileSchema.parse(YAML.parse(readFileSync(path, "utf-8")))
-    : { currency: "JPY" as const, entries: [] };
-  const merged = mergeBankStatementEntries(file, result.entries);
-  writeYamlFile(path, merged.file);
-  console.log(`✓ bank statement import — ${merged.added} entries added`);
+    : { currency: "JPY" as const, entries: [], import_batches: [] };
+  const merged = mergeBankStatementEntries(file, result.entries, result.batch);
+  if (!merged.duplicate_batch) {
+    writeYamlFile(path, merged.file);
+  }
+  console.log(
+    `✓ bank statement import — ${merged.added} entries added${merged.duplicate_batch ? " (duplicate batch)" : ""}`
+  );
   for (const warning of result.warnings) console.warn(`⚠ ${warning}`);
+}
+
+function reconciliationInputs() {
+  const ledger = loadArApLedger();
+  const statements = loadBankStatements();
+  if (!ledger) throw new Error("ar-ap-ledger.yaml missing");
+  if (!statements) throw new Error("bank-statements.yaml missing");
+  return {
+    ledger: ledger.data,
+    statements: statements.data,
+    events: loadReconciliationEventFile(),
+  };
+}
+
+function reconciliationEventId(value: string): string {
+  return `REC-${createHash("sha256").update(value).digest("hex").slice(0, 20)}`;
+}
+
+export function runJpBankReconcilePropose(opts: { json?: boolean }): void {
+  const input = reconciliationInputs();
+  const proposals = proposeReconciliationMatches(
+    input.ledger.entries,
+    input.statements.entries,
+    input.events.events,
+    currentDate(),
+    input.ledger.as_of
+  );
+  if (opts.json) {
+    console.log(JSON.stringify({ proposals }, null, 2));
+    return;
+  }
+  for (const proposal of proposals) {
+    console.log(
+      `${proposal.id} ${proposal.confidence} ${proposal.bank_statement_id} -> ${proposal.ar_ap_id} ${formatCurrency(proposal.amount)}`
+    );
+  }
+  if (proposals.length === 0) console.log("消込候補はありません");
+}
+
+export function runJpBankReconcileAuto(opts: { json?: boolean }): void {
+  if (!loadArApLedger() || !loadBankStatements()) {
+    if (opts.json) {
+      console.log(JSON.stringify({ added: 0, events: [], skipped: true }));
+    } else {
+      console.log("✓ exact reconciliation — skipped (ledger or statements missing)");
+    }
+    return;
+  }
+  const input = reconciliationInputs();
+  const events = [...input.events.events];
+  const added = [];
+  while (true) {
+    const proposal = proposeReconciliationMatches(
+      input.ledger.entries,
+      input.statements.entries,
+      events,
+      currentDate(),
+      input.ledger.as_of
+    ).find((candidate) => candidate.confidence === "exact");
+    if (!proposal) break;
+    const occurredAt = new Date().toISOString();
+    const event = buildReconciliationAppliedEvent({
+      id: reconciliationEventId(`auto|${proposal.id}|${events.length}`),
+      occurredAt,
+      effectiveDate:
+        input.statements.entries.find(
+          (entry) => entry.id === proposal.bank_statement_id
+        )?.date ?? currentDate(),
+      actorId: "system:exact-reference-v1",
+      matchMode: "exact_auto",
+      proposal,
+    });
+    events.push(event);
+    added.push(event);
+  }
+  const result = appendReconciliationEvents(added);
+  if (opts.json) {
+    console.log(JSON.stringify({ added: result.added, events: added }, null, 2));
+    return;
+  }
+  console.log(`✓ exact reconciliation — ${result.added} events added`);
+}
+
+export function runJpBankReconcileApply(opts: {
+  bankId: string;
+  arApId: string;
+  amount: number;
+  effectiveDate?: string;
+  reason: string;
+  json?: boolean;
+}): void {
+  const auth = requireCliFinanceReconciliationApproval(
+    "jp bank reconcile apply"
+  );
+  const input = reconciliationInputs();
+  const proposal: MatchProposal = {
+    id: reconciliationEventId(
+      `approved|${opts.bankId}|${opts.arApId}|${opts.amount}`
+    ),
+    bank_statement_id: opts.bankId,
+    ar_ap_id: opts.arApId,
+    amount: opts.amount,
+    confidence: "candidate",
+    reasons: ["human-approved"],
+  };
+  const event = buildReconciliationAppliedEvent({
+    id: reconciliationEventId(
+      `apply|${proposal.id}|${input.events.events.length}`
+    ),
+    occurredAt: new Date().toISOString(),
+    effectiveDate: opts.effectiveDate ?? currentDate(),
+    actorId: auth.record.operator_id,
+    matchMode: "approved",
+    proposal,
+  });
+  event.reason = opts.reason;
+  const checked = replayReconciliation(
+    input.ledger.entries,
+    input.statements.entries,
+    [...input.events.events, event]
+  );
+  if (checked.errors.length > 0) {
+    throw new Error(checked.errors.join("; "));
+  }
+  appendReconciliationEvents([event]);
+  if (opts.json) {
+    console.log(JSON.stringify(event, null, 2));
+    return;
+  }
+  console.log(`✓ reconciliation applied — ${event.id}`);
+}
+
+export function runJpBankReconcileReverse(opts: {
+  eventId: string;
+  reason: string;
+  effectiveDate?: string;
+  json?: boolean;
+}): void {
+  const auth = requireCliFinanceReconciliationApproval(
+    "jp bank reconcile reverse"
+  );
+  const input = reconciliationInputs();
+  const event = {
+    id: reconciliationEventId(
+      `reverse|${opts.eventId}|${input.events.events.length}`
+    ),
+    type: "reconciliation.reversed" as const,
+    occurred_at: new Date().toISOString(),
+    effective_date: opts.effectiveDate ?? currentDate(),
+    actor_id: auth.record.operator_id,
+    target_event_id: opts.eventId,
+    reason: opts.reason,
+  };
+  const checked = replayReconciliation(
+    input.ledger.entries,
+    input.statements.entries,
+    [...input.events.events, event]
+  );
+  if (checked.errors.length > 0) {
+    throw new Error(checked.errors.join("; "));
+  }
+  appendReconciliationEvents([event]);
+  if (opts.json) {
+    console.log(JSON.stringify(event, null, 2));
+    return;
+  }
+  console.log(`✓ reconciliation reversed — ${event.id}`);
+}
+
+export function runJpBankReconcileList(opts: { json?: boolean }): void {
+  const input = reconciliationInputs();
+  const state = replayReconciliation(
+    input.ledger.entries,
+    input.statements.entries,
+    input.events.events
+  );
+  const payload = {
+    ar_ap: [...state.ar_ap.values()],
+    bank_statements: [...state.bank_statements.values()],
+    errors: state.errors,
+  };
+  if (opts.json) {
+    console.log(JSON.stringify(payload, null, 2));
+    return;
+  }
+  for (const item of payload.bank_statements) {
+    console.log(
+      `${item.entry.id} ${item.status} allocated=${formatCurrency(item.allocated_amount)} unapplied=${formatCurrency(item.unapplied_amount)}`
+    );
+  }
+}
+
+export function runJpBankArApAging(opts: {
+  asOf?: string;
+  json?: boolean;
+}): void {
+  const input = reconciliationInputs();
+  const asOf = opts.asOf ?? currentDate();
+  const state = replayReconciliation(
+    input.ledger.entries,
+    input.statements.entries,
+    input.events.events,
+    asOf
+  );
+  const rows = buildArApAging(state, asOf);
+  if (opts.json) {
+    console.log(JSON.stringify({ as_of: asOf, rows }, null, 2));
+    return;
+  }
+  for (const row of rows) {
+    console.log(
+      `${row.ar_ap_id} ${row.bucket} ${formatCurrency(row.remaining_amount)}`
+    );
+  }
+}
+
+export function runJpBankStatementTieOut(opts: { json?: boolean }): void {
+  const statements = loadBankStatements();
+  const balance = loadCashBalance();
+  if (!statements) throw new Error("bank-statements.yaml missing");
+  if (!balance) throw new Error("cash-balance.yaml missing");
+  const result = tieOutBankStatements(statements.data, balance);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(`statement tie-out: ${result.status}`);
+  for (const error of result.errors) console.error(`- ${error}`);
 }
 
 export function runJpBankCashflowExport(opts: { template?: string; write?: boolean; json?: boolean }): void {
@@ -474,6 +739,7 @@ export function getCashflowTodaySummary(): {
   detail_schedule_path?: string;
   generated_at?: string;
   age_days?: number;
+  balance_age_days?: number;
   stale?: boolean;
   shortfall_date?: string | null;
   runway_days?: number | null;
@@ -515,12 +781,20 @@ export function getCashflowTodaySummary(): {
       (Date.now() - Date.parse(`${generatedDate}T12:00:00`)) / 86_400_000
     )
   );
+  const fingerprintChanged =
+    schedule.input_fingerprint != null &&
+    schedule.input_fingerprint !== computeJpBankInputFingerprint();
   return {
     schedule_path,
     detail_schedule_path: schedule.detail_schedule_path ?? detail_schedule_path,
     generated_at: schedule.generated_at,
     age_days: ageDays,
-    stale: ageDays > CASHFLOW_STALE_DAYS,
+    balance_age_days: schedule.balance_age_days,
+    stale:
+      ageDays > CASHFLOW_STALE_DAYS ||
+      fingerprintChanged ||
+      (schedule.balance_age_days ?? 0) > 0 ||
+      schedule.tie_out_status === "failed",
     shortfall_date: schedule.shortfall_date ?? null,
     runway_days: schedule.runway_days ?? null,
     required_funding_amount: schedule.required_funding_amount ?? null,

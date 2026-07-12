@@ -57,6 +57,7 @@ export function requireCliOperator(opts: {
         "protocol:approve",
         "protocol:draft",
         "broker:transfer",
+        "finance:reconcile",
         "scheduling:write",
         "scheduling:approve",
         "escalate:plan",
@@ -143,6 +144,28 @@ export function requireCliSchedulingApproval(command: string): AuthenticatedOper
     );
   }
   const auth = requireCliOperator({ permission: "scheduling:approve", command });
+  if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
+    throw new Error(
+      `${command} requires ceo or approver role (got ${auth.record.role}).`
+    );
+  }
+  return auth;
+}
+
+/** Manual finance reconciliation and reversal — human approver only. */
+export function requireCliFinanceReconciliationApproval(
+  command: string
+): AuthenticatedOperator {
+  if (isOperatorAuthBypassed()) {
+    throw new Error(
+      `${command} requires operator authentication (STEWARD_OPERATOR_AUTH=1). ` +
+        "Dev bypass is not allowed for finance reconciliation approval."
+    );
+  }
+  const auth = requireCliOperator({
+    permission: "finance:reconcile",
+    command,
+  });
   if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
     throw new Error(
       `${command} requires ceo or approver role (got ${auth.record.role}).`

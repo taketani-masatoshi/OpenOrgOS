@@ -22,8 +22,14 @@ import type {
   PaymentCalendarEntry,
 } from "../../../../../../schemas/jp-bank-corporate.js";
 import type { ChartOfAccounts } from "../../../../../../schemas/finance/types.js";
-import { loadArApLedger, loadCollectionTerms, loadPaymentCalendar, loadBankStatements } from "./data-loaders.js";
-import { resolveArApRemainingAmount } from "./ar-ap-amounts.js";
+import {
+  loadArApLedger,
+  loadCollectionTerms,
+  loadPaymentCalendar,
+  loadBankStatements,
+  loadReconciliationEvents,
+} from "./data-loaders.js";
+import { replayReconciliation } from "../../../../../../src/lib/jp-bank-corporate/reconciliation.js";
 import { resolveDefaultAccountId } from "./calendar-import.js";
 import { resolveChartAccountId } from "./chart-account.js";
 
@@ -434,8 +440,15 @@ export class CashflowScheduleBuilder {
   >;
 
   constructor(options: CashflowBuilderOptions) {
-    const asOf = options.asOf ?? currentDate();
-    const horizonStart = options.horizonStart ?? asOf;
+    const asOf =
+      options.asOf ??
+      (options.horizonStart ? addDays(options.horizonStart, -1) : currentDate());
+    const horizonStart = options.horizonStart ?? addDays(asOf, 1);
+    if (horizonStart <= asOf) {
+      throw new Error(
+        `horizonStart ${horizonStart} must be after end-of-day asOf ${asOf}`
+      );
+    }
     const horizonEnd =
       options.horizonEnd ??
       (options.horizon ? parseHorizonEnd(horizonStart, options.horizon) : addDays(horizonStart, 13 * 7));
@@ -450,6 +463,7 @@ export class CashflowScheduleBuilder {
   loadOpeningBalances(): {
     total: number;
     byAccount: Record<string, number>;
+    asOf?: string;
     warnings: string[];
   } {
     const warnings: string[] = [];
@@ -461,13 +475,18 @@ export class CashflowScheduleBuilder {
     if (balance.status !== "confirmed") {
       warnings.push(`cash-balance status is "${balance.status}" — use confirmed for treasury`);
     }
+    if (balance.as_of !== this.options.asOf) {
+      warnings.push(
+        `cash-balance as_of ${balance.as_of} does not match schedule asOf ${this.options.asOf}`
+      );
+    }
     const byAccount: Record<string, number> = {};
     for (const acct of balance.accounts) {
       const id = acct.bank_account_id ?? acct.id;
       if (id && acct.amount != null) byAccount[id] = acct.amount;
     }
     const total = resolveCashBalanceTotal(balance) ?? Object.values(byAccount).reduce((s, v) => s + v, 0);
-    return { total, byAccount, warnings };
+    return { total, byAccount, asOf: balance.as_of, warnings };
   }
 
   buildRawLineItems(): RawLineItem[] {
@@ -484,17 +503,31 @@ export class CashflowScheduleBuilder {
 
     const arAp = loadArApLedger();
     const terms = loadCollectionTerms();
+    const bankStatements = loadBankStatements();
+    const reconciliationEvents = loadReconciliationEvents();
+    const reconciliation = replayReconciliation(
+      arAp?.data.entries ?? [],
+      bankStatements?.data.entries ?? [],
+      reconciliationEvents?.data.events ?? [],
+      this.options.asOf
+    );
     const termById = new Map((terms?.data.rules ?? []).map((r) => [r.id, r]));
 
     for (const entry of arAp?.data.entries ?? []) {
-      if (["collected", "paid", "cancelled"].includes(entry.status)) continue;
+      const derived = reconciliation.ar_ap.get(entry.id);
+      if (
+        derived?.status === "cancelled" ||
+        derived?.remaining_amount === 0
+      ) {
+        continue;
+      }
       const cashDate = entry.due_date;
       const term = entry.collection_term_id
         ? termById.get(entry.collection_term_id)
         : undefined;
       if (cashDate < horizonStart || cashDate > horizonEnd) continue;
       const direction = entry.kind === "ar" ? "inflow" : "outflow";
-      const remaining = resolveArApRemainingAmount(entry);
+      const remaining = derived?.remaining_amount ?? entry.amount;
       items.push({
         line_id: entry.id,
         date: cashDate,
@@ -512,8 +545,12 @@ export class CashflowScheduleBuilder {
       });
     }
 
-    const bankStatements = loadBankStatements();
     for (const entry of bankStatements?.data.entries ?? []) {
+      if (
+        reconciliation.bank_statements.get(entry.id)?.status === "voided"
+      ) {
+        continue;
+      }
       if (entry.date < horizonStart || entry.date > horizonEnd) continue;
       items.push({
         line_id: entry.id,
@@ -796,6 +833,17 @@ export class CashflowScheduleBuilder {
       granularity: this.options.granularity,
       horizon_start: this.options.horizonStart,
       horizon_end: this.options.horizonEnd,
+      opening_balance_as_of: opening.asOf,
+      balance_age_days: opening.asOf
+        ? Math.max(
+            0,
+            Math.floor(
+              (Date.parse(`${this.options.asOf}T12:00:00Z`) -
+                Date.parse(`${opening.asOf}T12:00:00Z`)) /
+                86_400_000
+            )
+          )
+        : undefined,
       opening_balance_total: opening.total,
       opening_balance_by_account: opening.byAccount,
       closing_balance_total: balanceTotal,

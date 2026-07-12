@@ -1,0 +1,18 @@
+modules:
+  - id: rental
+    enabled: true
+    agent: rental
+    property_ids: [PROP-001]
+    docs_root: docs/properties/PROP-001/operations/
+    billing:
+      PROP-001:
+        docs_base: docs/finance/accounting/invoices/fixture
+        invoice_number_prefix: FIXTURE
+        template_id: rent-monthly
+        tenant_name: Fixture Tenant
+        collection_term_id: term-ar-rent
+  - id: jp_bank_corporate
+    enabled: true
+    agent: jp_bank_corporate
+    data_root: data/finance/
+    docs_root: docs/finance/treasury/
