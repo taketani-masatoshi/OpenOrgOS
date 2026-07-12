@@ -283,7 +283,7 @@ TJS-11 法域: **11/11 完了**（2026-06-25）。
 ## 13. OrgOS 完成度（C1–C3）
 
 **用語:** [orgos-vocabulary.md](org-os/orgos-vocabulary.md) · **採点:** [orgos-scoring-methodology.md](org-os/orgos-scoring-methodology.md) · 実行: [framework-backlog.md](framework-backlog.md) Phase ORG-C · 運用: [runbook-orgos.md](runbook-orgos.md)  
-**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-07-12 · **1172 tests**、静的正本。動的実行件数は CI 結果を参照）
+**Org 根幹（P0–P5）:** [org-approval-schema.md](org-os/org-approval-schema.md) §12–19 · **~95/100**（2026-07-12 · **1191 tests**、静的正本。動的実行件数は CI 結果を参照）
 
 ### 二重採点（矛盾解消）
 

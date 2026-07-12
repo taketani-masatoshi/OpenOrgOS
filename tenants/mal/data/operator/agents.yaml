@@ -3,6 +3,8 @@ profiles:
   operational:
     - compliance
     - contract
+    - cto
+    - engineering
     - executive_steward
     - finance
     - hospitality
@@ -10,5 +12,6 @@ profiles:
     - operations
     - property_rental
     - secretary
+    - security
   developer: []
 disabled: []

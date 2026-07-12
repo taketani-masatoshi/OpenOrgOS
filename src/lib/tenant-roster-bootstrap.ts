@@ -13,12 +13,16 @@ export const DEFAULT_CORE_OPERATIONAL_AGENTS: AgentId[] = [
   "contract",
   "compliance",
   "operations",
+  // Platform routing delegates (platform_guide advisor → these agents)
+  "engineering",
+  "cto",
+  "security",
 ];
 
 export const TENANT_ROSTER_EXEMPT = new Set(["_template"]);
 
 /** Ephemeral tenants created by integration tests — not roster-managed. */
-const EPHEMERAL_TENANT_PATTERN = /^(test-|acme-init-test$)/;
+const EPHEMERAL_TENANT_PATTERN = /^(test-|acme-init-test$|phase4-restore-test$)/;
 
 export function isEphemeralTenantId(tenantId: string): boolean {
   return EPHEMERAL_TENANT_PATTERN.test(tenantId);

@@ -31,11 +31,16 @@ profiles:
   operational:
     - executive_steward
     - secretary
+    - engineering   # platform_guide 実装委譲先（routing 必須）
+    - cto           # 設計判断委譲先
+    - security      # Wire 本番ゲート委譲先
     # ... 通常業務 Agent
   developer:
     - platform_guide   # ← developer_explicit のみここで有効化
 disabled: []
 ```
+
+> `engineering` · `cto` · `security` は `DEFAULT_CORE_OPERATIONAL_AGENTS` に含まれます。roster に無いと advisor 委譲ルートが `pickBestRoute` で落ちます。
 
 ```bash
 orgos agent roster enable --agent platform_guide --profile developer

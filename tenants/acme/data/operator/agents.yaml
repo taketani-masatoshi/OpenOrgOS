@@ -3,11 +3,14 @@ profiles:
   operational:
     - compliance
     - contract
+    - cto
+    - engineering
     - executive_steward
     - finance
     - medical_device_regulatory
     - operations
     - property_rental
     - secretary
+    - security
   developer: []
 disabled: []

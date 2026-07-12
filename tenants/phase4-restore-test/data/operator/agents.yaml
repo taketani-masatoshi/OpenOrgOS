@@ -8,8 +8,8 @@ profiles:
     - executive_steward
     - finance
     - operations
-    - property_rental
     - secretary
     - security
   developer: []
+  task: []
 disabled: []

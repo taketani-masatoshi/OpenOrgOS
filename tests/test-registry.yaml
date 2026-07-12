@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 309
-  static_test_cases: 1160
-  tiered_execution_total: 309
+  vitest_total: 317
+  static_test_cases: 1191
+  tiered_execution_total: 317
   catalog_total: 30
   catalog_cli_registered: 19
   catalog_gap: 0
@@ -73,13 +73,14 @@ catalog_modules:
     tests:
       - hospitality.test.ts
   jp_bank_corporate:
-    tier: activation_ready
+    tier: production_ready
     coverage_tier: full
     cli: true
     tests:
       - catalog/jp-bank-corporate.test.ts
       - jp-bank-corporate-ar-ap.test.ts
       - jp-bank-corporate-cashflow.test.ts
+      - jp-bank-corporate-reconciliation.test.ts
   jp_carbon_neutral_2050:
     tier: production_ready
     coverage_tier: catalog_only
@@ -384,6 +385,11 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  bank-corporate-cashflow-pipeline-integration.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I3_workflow
   broker.test.ts:
     axis: platform
     kind: unit
@@ -749,6 +755,11 @@ tests:
     kind: unit
     catalog_ids:
       - jp_bank_corporate
+  jp-bank-corporate-reconciliation.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_bank_corporate
   jp-business-capability-catalog.test.ts:
     axis: contract
     kind: contract
@@ -803,6 +814,9 @@ tests:
     kind: unit
     catalog_ids:
       - language_bridge
+  legacy-webhook-sunset.test.ts:
+    axis: contract
+    kind: contract
   lib.test.ts:
     axis: platform
     kind: unit
@@ -1115,6 +1129,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  protocol-transaction-orphans.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   protocol-transaction.test.ts:
     axis: platform
     kind: unit
@@ -1185,6 +1203,10 @@ tests:
     kind: integration
     domain: P06_agent_workflow
     integration: I3_workflow
+  queue-event-replay.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   rate-limit.test.ts:
     axis: platform
     kind: unit
@@ -1223,6 +1245,10 @@ tests:
     kind: integration
     domain: P06_agent_workflow
     integration: I3_workflow
+  runtime-context.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   sanitize-output.test.ts:
     axis: platform
     kind: unit
@@ -1572,6 +1598,10 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
+  wire-pending-lifecycle.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   wire-pending-retry.test.ts:
     axis: platform
     kind: unit
@@ -1598,6 +1628,10 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
+  witness-pending-lifecycle.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   yojitsu-v2.test.ts:
     axis: platform
     kind: unit

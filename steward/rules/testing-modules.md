@@ -11,8 +11,8 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 
 | 指標 | 値 |
 |------|-----|
-| Vitest テストファイル | **309**（`tests/**/*.test.ts` · registry 含む） |
-| テストケース（静的 `it`/`test` **1160**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
+| Vitest テストファイル | **317**（`tests/**/*.test.ts` · registry 含む） |
+| テストケース（静的 `it`/`test` **1191**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
 | 業務 catalog module | **30**（core 21 + JP pack 9） |
 | production_ready | **28** |
 | skeleton | **1**（`jp_permit_registry`） |
@@ -157,7 +157,19 @@ npm run generated:check        # policy ミラー · generated artifacts
 
 ---
 
-## 9. 関連
+## 9. mal Wire pilot と Vitest
+
+`tenants/mal` の protocol pilot データ（`peers.yaml` · `transactions-registry.yaml`）と L2 `records/executive/mail-config.yaml` は **`tests/setup-restore-protocol.ts` が preserve** する。
+
+mal pilot 作業中に Cursor / IDE の Vitest 常駐が mal データを上書きする場合:
+
+```bash
+pkill -9 -f vitest   # 作業前に停止
+```
+
+---
+
+## 10. 関連
 
 - [tenant-runtime-artifacts.md](../../docs/org-os/tenant-runtime-artifacts.md) — gitignore 対象のテナント生成物
 - [module_contract.md](../modules/module_contract.md) — 業務 module 契約

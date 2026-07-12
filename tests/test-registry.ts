@@ -131,6 +131,7 @@ export function assertCatalogSeedValidatorPresent(catalogId: string): string | n
 const CONTRACT_FILES = new Set([
   "agent-activation-contract.test.ts",
   "agent-readiness-profiles.test.ts",
+  "legacy-webhook-sunset.test.ts",
   "extensibility-contract.test.ts",
   "modules.test.ts",
   "readiness.test.ts",
@@ -184,6 +185,7 @@ const INTEGRATION_I3 = new Set([
   "phase3.test.ts",
   "routing.test.ts",
   "queue-audit-bridge.test.ts",
+  "bank-corporate-cashflow-pipeline-integration.test.ts",
 ]);
 
 const INTEGRATION_I4 = new Set([
