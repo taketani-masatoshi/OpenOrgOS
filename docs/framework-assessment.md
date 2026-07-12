@@ -32,13 +32,15 @@
 
 | 条項 | 参照実装状態 | 確認 |
 |------|------------|------|
-| §1.1 SSOT | ○ `data/` 正本 | `orgos validate` |
-| §1.2 Catalog/Roster | △ 移行中 | `validateAgentCatalog` · `agent-roster` |
-| §1.3–1.5 Event First | △ Wire · company-events | [08-event-sourcing.md](../steward/rules/engineering/08-event-sourcing.md) |
-| §3 Layer | △ commands/lib 混在 | 新規 PR は Domain 分離優先 |
+| §1.1 SSOT | △ company-events は chain 監査強化 · yaml/md は当面書込ビュー | `orgos events validate` |
+| §1.2 Catalog/Roster | ○ module `id===agent` · legacy agents-enabled は validate error · binds_modules 検証 | `validateModules` · `validateAgentCatalog` |
+| §1.3–1.5 Event First | ○ queue status append · delivery jsonl · wire/witness lifecycle | `08-event-sourcing.md` · `tests/*-lifecycle*` |
+| §3 Layer | △ Repository パイロット（`DeliveryAttemptRepository`）· Application 層は未 | 新規 PR は Domain 分離優先 |
 | §7 CLI path | ○ | `src/commands/` パターン |
 | §8 Testing | ○ Vitest 3 軸 | [testing-modules.md](../steward/rules/testing-modules.md) |
-| Policy ミラー | ○ | `npm run generated:check` · validate integrity |
+| §11 Lint | △ ESLint warn 段階 · Prettier script あり（一括整形は段階） | `npm run lint` · `npm run typecheck` |
+| Policy ミラー | ○ data-classification 含む | `npm run generated:check` · validate integrity |
+| Determinism | △ `runtime-context` · protocol/queue/delivery/audit パイロット | `tests/runtime-context.test.ts` |
 
 ### 完成度レベル（目安）
 

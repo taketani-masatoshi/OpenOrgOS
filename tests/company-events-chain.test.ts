@@ -228,7 +228,7 @@ describe("company-events-chain", () => {
     expect(validateCompanyEvents().issues.some((i) => i.code === "chain-missing-create")).toBe(false);
   });
 
-  it("close does not append extra chain links", () => {
+  it("close appends a status chain link", () => {
     ensureCompanyEventMonth("2100-05");
     const event = createCompanyEvent({
       kind: "misc",
@@ -241,6 +241,9 @@ describe("company-events-chain", () => {
 
     closeCompanyEvent(event.id);
 
-    expect(loadCompanyEventChain().length).toBe(before);
+    const chain = loadCompanyEventChain();
+    expect(chain.length).toBe(before + 1);
+    expect(chain.at(-1)?.action).toBe("status");
+    expect(chain.at(-1)?.event_id).toBe(event.id);
   });
 });

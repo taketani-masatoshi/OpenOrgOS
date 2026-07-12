@@ -17,8 +17,9 @@
 - [ ] アーキテクチャ整合（SSOT · Catalog/Roster 混在なし）
 - [ ] ビジネスロジックは `src/lib/` / CLI（LLM のみに依存しない）
 - [ ] テスト追加 / 更新（Domain 可能な範囲）
-- [ ] Lint / Format 通過（`npm run lint` · `npm run format:check`）
+- [ ] Lint / Format 通過（`npm run lint` · 段階的に `npm run format:check`）
 - [ ] ドキュメント / ADR 更新（仕様変更時）
+- [ ] Event First: jsonl 履歴を in-place 書き換えしていない（queue / delivery / pending）
 - [ ] 重複ロジック · デッドコード · TODO 残置なし
 - [ ] L2/L3 を tracked MD · チャットに出力していない
 
