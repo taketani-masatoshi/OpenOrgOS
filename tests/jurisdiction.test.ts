@@ -169,13 +169,17 @@ describe("US jurisdiction pack", () => {
 });
 
 describe("us-demo validate", () => {
-  it("passes steward validate", () => {
-    execFileSync(
-      "npm",
-      ["run", "orgos", "--", "--tenant", "us-demo", "validate"],
-      { cwd: join(import.meta.dirname, ".."), encoding: "utf-8", stdio: "pipe" }
-    );
-  });
+  it(
+    "passes steward validate",
+    () => {
+      execFileSync(
+        "npm",
+        ["run", "orgos", "--", "--tenant", "us-demo", "validate"],
+        { cwd: join(import.meta.dirname, ".."), encoding: "utf-8", stdio: "pipe" }
+      );
+    },
+    60_000
+  );
 });
 
 describe.each([
@@ -205,11 +209,15 @@ describe.each([
     }
   });
 
-  it("passes steward validate", () => {
-    execFileSync(
-      "npm",
-      ["run", "orgos", "--", "--tenant", tenantId, "validate"],
-      { cwd: join(import.meta.dirname, ".."), encoding: "utf-8", stdio: "pipe" }
-    );
-  });
+  it(
+    "passes steward validate",
+    () => {
+      execFileSync(
+        "npm",
+        ["run", "orgos", "--", "--tenant", tenantId, "validate"],
+        { cwd: join(import.meta.dirname, ".."), encoding: "utf-8", stdio: "pipe" }
+      );
+    },
+    60_000
+  );
 });

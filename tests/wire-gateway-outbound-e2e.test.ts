@@ -19,9 +19,8 @@ import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config
 import { isWireDelivered } from "../src/lib/protocol/wire-delivered.js";
 import { wireMessageSchema } from "../schemas/protocol/wire-message.js";
 import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
+import { allocateEphemeralPort } from "./helpers/ephemeral-port.js";
 
-const INTERNAL_PORT = 18110;
-const GATEWAY_PORT = 18450;
 const BEARER = "e2e-poll-token";
 
 function cleanup(): void {
@@ -55,6 +54,8 @@ monthly_cost: 50000
   afterEach(() => cleanup());
 
   it("poller delivers outbox via wire_v1 WireMessage and marks delivered", async () => {
+    const internalPort = await allocateEphemeralPort();
+    const gatewayPort = await allocateEphemeralPort();
     const received: unknown[] = [];
     const peerServer = createServer((req, res) => {
       if (req.method === "POST" && req.url === "/wire/v1/events") {
@@ -108,9 +109,9 @@ monthly_cost: 50000
 
     const config = wireGatewayConfigSchema.parse({
       node_id: "demo",
-      listen: { host: "127.0.0.1", port: GATEWAY_PORT },
+      listen: { host: "127.0.0.1", port: gatewayPort },
       internal_api: {
-        base_url: `http://127.0.0.1:${INTERNAL_PORT}/internal/v1/wire`,
+        base_url: `http://127.0.0.1:${internalPort}/internal/v1/wire`,
         bearer_token: BEARER,
       },
       outbound: { poll_interval_ms: 60_000 },
@@ -119,7 +120,7 @@ monthly_cost: 50000
 
     const internal = await startWireInternalApiServer({
       host: "127.0.0.1",
-      port: INTERNAL_PORT,
+      port: internalPort,
       bearerToken: BEARER,
       tenantId: "demo",
     });
@@ -198,6 +199,8 @@ monthly_cost: 50000
   });
 
   it("legacy_webhook delivery appends wire.legacy_deprecated audit", async () => {
+    const internalPort = await allocateEphemeralPort();
+    const gatewayPort = await allocateEphemeralPort();
     const auditPath = join(getDataDir(), "protocol", "wire-gateway-audit.jsonl");
     const peerServer = createServer((req, res) => {
       if (req.method === "POST") {
@@ -244,9 +247,9 @@ monthly_cost: 50000
 
     const config = wireGatewayConfigSchema.parse({
       node_id: "demo",
-      listen: { host: "127.0.0.1", port: GATEWAY_PORT + 2 },
+      listen: { host: "127.0.0.1", port: gatewayPort },
       internal_api: {
-        base_url: `http://127.0.0.1:${INTERNAL_PORT + 2}/internal/v1/wire`,
+        base_url: `http://127.0.0.1:${internalPort}/internal/v1/wire`,
         bearer_token: BEARER,
       },
       outbound: { poll_interval_ms: 60_000 },
@@ -255,7 +258,7 @@ monthly_cost: 50000
 
     const internal = await startWireInternalApiServer({
       host: "127.0.0.1",
-      port: INTERNAL_PORT + 2,
+      port: internalPort,
       bearerToken: BEARER,
       tenantId: "demo",
     });
@@ -274,11 +277,13 @@ monthly_cost: 50000
   });
 
   it("gateway inbound health stays up beside poller client", async () => {
+    const internalPort = await allocateEphemeralPort();
+    const gatewayPort = await allocateEphemeralPort();
     const config = wireGatewayConfigSchema.parse({
       node_id: "demo",
-      listen: { host: "127.0.0.1", port: GATEWAY_PORT + 1 },
+      listen: { host: "127.0.0.1", port: gatewayPort },
       internal_api: {
-        base_url: `http://127.0.0.1:${INTERNAL_PORT + 1}/internal/v1/wire`,
+        base_url: `http://127.0.0.1:${internalPort}/internal/v1/wire`,
         bearer_token: BEARER,
       },
       outbound: { poll_interval_ms: 60_000 },
@@ -286,7 +291,7 @@ monthly_cost: 50000
     });
     const internal = await startWireInternalApiServer({
       host: "127.0.0.1",
-      port: INTERNAL_PORT + 1,
+      port: internalPort,
       bearerToken: BEARER,
       tenantId: "demo",
     });
@@ -295,7 +300,7 @@ monthly_cost: 50000
       enableOutbound: false,
     });
     try {
-      const health = await fetch(`http://127.0.0.1:${GATEWAY_PORT + 1}/wire/v1/health`);
+      const health = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/health`);
       expect(health.ok).toBe(true);
     } finally {
       gateway.close();

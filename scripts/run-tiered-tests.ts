@@ -10,6 +10,8 @@
  *   npm run test:integration
  */
 import { spawnSync } from "node:child_process";
+import { rmSync } from "node:fs";
+import { join } from "node:path";
 import {
   clearTestSuiteStatus,
   writeTestSuiteFailed,
@@ -40,13 +42,25 @@ import {
 const tier = process.argv[2] ?? "tiered";
 const arg = process.argv[3];
 
+function syncTestRegistryArtifacts(): void {
+  const result = spawnSync("npm", ["run", "test:registry:sync"], {
+    stdio: "inherit",
+    cwd: process.cwd(),
+  });
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
 function runVitest(files: string[], label: string): number {
   if (files.length === 0) {
     console.log(`[test:${label}] no files — skip`);
     return 0;
   }
+  syncTestRegistryArtifacts();
   console.log(`[test:${label}] ${files.length} file(s)`);
   const exactFiles = files.map((file) => file.startsWith("tests/") ? file : `tests/${file}`);
+  rmSync(join(process.cwd(), "tests", ".fixture-restore.lock"), { recursive: true, force: true });
   const result = spawnSync("npx", ["vitest", "run", ...exactFiles], {
     stdio: "inherit",
     env: process.env,
@@ -111,6 +125,10 @@ function verifyRegistryPlan(): number {
 }
 
 function main(): number {
+  if (tier === "verify" || tier === "contract" || tier === "tiered") {
+    syncTestRegistryArtifacts();
+  }
+
   const registry = loadTestRegistry();
   const bail = tier === "tiered";
 

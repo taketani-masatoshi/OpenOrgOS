@@ -24,7 +24,15 @@ const PRESERVE_PROTOCOL_SUBDIRS = [
   "signing-key.pem",
   "federation-gossip-store.yaml",
   "peers.yaml",
+  "transactions-registry.yaml",
 ] as const;
+
+/** L2 / runtime tenant files preserved across fixture restore (gitignored pilot state). */
+const PRESERVE_TENANT_RUNTIME_PATHS: Partial<
+  Record<(typeof OPERATIONAL_PROTOCOL_TENANTS)[number], readonly string[]>
+> = {
+  mal: ["records/executive/mail-config.yaml"],
+};
 
 /** Committed tenant paths restored before each test (deduped — mal protocol included via OPERATIONAL). */
 const FIXTURE_PATHS = [
@@ -50,26 +58,30 @@ function processExists(pid: number): boolean {
 }
 
 function acquireFixtureRestoreLock(): void {
-  const deadline = Date.now() + 60_000;
+  const deadline = Date.now() + 45_000;
   while (Date.now() < deadline) {
     try {
       mkdirSync(RESTORE_LOCK_DIR);
-      writeFileSync(join(RESTORE_LOCK_DIR, "owner"), String(process.pid), "utf-8");
+      writeFileSync(join(RESTORE_LOCK_DIR, "owner"), `${process.pid}\n${Date.now()}`, "utf-8");
       restoreLockHeld = true;
       return;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
       try {
-        const owner = Number(readFileSync(join(RESTORE_LOCK_DIR, "owner"), "utf-8"));
-        // Vitest may reuse a worker process while reloading this setup module.
-        // A lock marker owned by this PID is stale; no concurrent test in the
-        // same worker can be restoring fixtures when fileParallelism is false.
+        const ownerText = readFileSync(join(RESTORE_LOCK_DIR, "owner"), "utf-8").trim();
+        const [ownerRaw, startedRaw] = ownerText.split(/\s+/);
+        const owner = Number(ownerRaw);
+        const startedAt = Number(startedRaw);
         if (owner === process.pid) {
           rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
           restoreLockHeld = false;
           continue;
         }
         if (Number.isInteger(owner) && owner > 0 && !processExists(owner)) {
+          rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
+          continue;
+        }
+        if (Number.isFinite(startedAt) && Date.now() - startedAt > 120_000) {
           rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
           continue;
         }
@@ -118,6 +130,36 @@ function preservedProtocolPaths(rel: string): string[] {
   return PRESERVE_PROTOCOL_SUBDIRS.map((name) => join(ROOT_DIR, rel, name));
 }
 
+function preservedTenantRuntimePaths(): string[] {
+  const paths: string[] = [];
+  for (const tenantId of OPERATIONAL_PROTOCOL_TENANTS) {
+    for (const rel of PRESERVE_TENANT_RUNTIME_PATHS[tenantId] ?? []) {
+      paths.push(join(ROOT_DIR, "tenants", tenantId, rel));
+    }
+  }
+  return paths;
+}
+
+function backupPreservedPaths(
+  snapshotRoot: string,
+  paths: string[]
+): Array<{ path: string; backup: string }> {
+  return paths
+    .filter((path) => existsSync(path))
+    .map((path) => ({
+      path,
+      backup: join(snapshotRoot, ".runtime-preserve", relative(ROOT_DIR, path)),
+    }));
+}
+
+function restorePreservedPaths(items: Array<{ path: string; backup: string }>): void {
+  for (const item of items) {
+    mkdirSync(dirname(item.path), { recursive: true });
+    cpSync(item.backup, item.path, { recursive: true, force: true });
+    rmSync(item.backup, { recursive: true, force: true });
+  }
+}
+
 function overlayTenantRosterFixtures(): void {
   if (!existsSync(TENANT_ROSTER_FIXTURE_ROOT)) return;
   for (const tenantId of readdirSync(TENANT_ROSTER_FIXTURE_ROOT, { withFileTypes: true })) {
@@ -126,22 +168,25 @@ function overlayTenantRosterFixtures(): void {
     if (!existsSync(src)) continue;
     const dest = join(ROOT_DIR, "tenants", tenantId.name, "data", "operator", "agents.yaml");
     mkdirSync(dirname(dest), { recursive: true });
-    cpSync(src, dest, { force: true });
+    if (existsSync(dest)) rmSync(dest, { force: true });
+    cpSync(src, dest);
   }
 }
 
 function restoreCommittedTenantFixtures(): void {
+  const runtimePreserved = backupPreservedPaths(SNAPSHOT_ROOT, preservedTenantRuntimePaths());
+  for (const item of runtimePreserved) {
+    rmSync(item.backup, { recursive: true, force: true });
+    mkdirSync(dirname(item.backup), { recursive: true });
+    cpSync(item.path, item.backup, { recursive: true, force: true });
+  }
+
   for (const rel of FIXTURE_PATHS) {
     const src = join(SNAPSHOT_ROOT, rel);
     const dest = join(ROOT_DIR, rel);
     if (!existsSync(src)) continue;
     mkdirSync(dirname(dest), { recursive: true });
-    const preserved = preservedProtocolPaths(rel)
-      .filter((path) => existsSync(path))
-      .map((path) => ({
-        path,
-        backup: join(SNAPSHOT_ROOT, ".runtime-preserve", relative(ROOT_DIR, path)),
-      }));
+    const preserved = backupPreservedPaths(SNAPSHOT_ROOT, preservedProtocolPaths(rel));
     for (const item of preserved) {
       rmSync(item.backup, { recursive: true, force: true });
       mkdirSync(dirname(item.backup), { recursive: true });
@@ -151,12 +196,9 @@ function restoreCommittedTenantFixtures(): void {
       rmSync(dest, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
     }
     cpSync(src, dest, { recursive: true, force: true });
-    for (const item of preserved) {
-      mkdirSync(dirname(item.path), { recursive: true });
-      cpSync(item.backup, item.path, { recursive: true, force: true });
-      rmSync(item.backup, { recursive: true, force: true });
-    }
+    restorePreservedPaths(preserved);
   }
+  restorePreservedPaths(runtimePreserved);
   overlayTenantRosterFixtures();
 }
 
@@ -170,6 +212,12 @@ function cleanGeneratedAgentMissions(): void {
       }
     }
   }
+}
+
+function resetMalExecutiveMailTriageQueue(): void {
+  const queuePath = join(ROOT_DIR, "tenants/mal/data/executive/mail-triage-queue.yaml");
+  mkdirSync(dirname(queuePath), { recursive: true });
+  writeFileSync(queuePath, "version: 1\nentries: []\n", "utf-8");
 }
 
 function resetTenantCaches(): void {
@@ -186,6 +234,7 @@ beforeEach(() => {
   acquireFixtureRestoreLock();
   try {
     restoreCommittedTenantFixtures();
+    resetMalExecutiveMailTriageQueue();
     resetTenantCaches();
   } catch (error) {
     releaseFixtureRestoreLock();

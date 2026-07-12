@@ -14,6 +14,7 @@ describe("cli operator auth", () => {
     delete process.env.ORGOS_TENANT;
     delete process.env.STEWARD_OPERATOR_AUTH;
     delete process.env.ORGOS_OPERATOR_KEY;
+    delete process.env.ORGOS_CLI_OPERATOR_ID;
   });
 
   afterEach(() => {

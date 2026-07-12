@@ -16,9 +16,8 @@ import { startWireInternalApiServer } from "../src/lib/wire-gateway/internal-api
 import { startWireGatewayServer } from "../src/lib/wire-gateway/server.js";
 import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config.js";
 import { getProtocolInboxDir } from "../src/lib/protocol/paths.js";
+import { allocateEphemeralPort } from "./helpers/ephemeral-port.js";
 
-const INTERNAL_PORT = 18082;
-const GATEWAY_PORT = 18444;
 const BEARER = "wire-test-token";
 
 function cleanup(): void {
@@ -37,6 +36,8 @@ describe("wire-gateway server (WG-1)", () => {
   afterEach(() => cleanup());
 
   it("health, well-known, and inbound wire POST → inbox", async () => {
+    const internalPort = await allocateEphemeralPort();
+    const gatewayPort = await allocateEphemeralPort();
     const senderKeys = generateProtocolKeyPair();
     registerPeer({
       peer_id: "PEER-099",
@@ -59,9 +60,9 @@ describe("wire-gateway server (WG-1)", () => {
       node_id: "demo",
       node_uri: "steward://tenant/demo",
       display_name: "Demo Corp",
-      listen: { host: "127.0.0.1", port: GATEWAY_PORT },
+      listen: { host: "127.0.0.1", port: gatewayPort },
       internal_api: {
-        base_url: `http://127.0.0.1:${INTERNAL_PORT}/internal/v1/wire`,
+        base_url: `http://127.0.0.1:${internalPort}/internal/v1/wire`,
         bearer_token: BEARER,
       },
       outbound: { poll_interval_ms: 60_000 },
@@ -70,37 +71,37 @@ describe("wire-gateway server (WG-1)", () => {
 
     const internal = await startWireInternalApiServer({
       host: "127.0.0.1",
-      port: INTERNAL_PORT,
+      port: internalPort,
       bearerToken: BEARER,
       tenantId: "demo",
     });
 
     const gateway = await startWireGatewayServer({
       config,
-      publicBaseUrl: `http://127.0.0.1:${GATEWAY_PORT}`,
+      publicBaseUrl: `http://127.0.0.1:${gatewayPort}`,
       enableOutbound: false,
     });
 
     try {
-      const health = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/health`);
+      const health = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/health`);
       expect(health.ok).toBe(true);
       const healthBody = (await health.json()) as { service: string; node_id: string };
       expect(healthBody.service).toBe("wire-gateway");
       expect(healthBody.node_id).toBe("demo");
 
-      const wellKnown = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/.well-known/wire-node.json`);
+      const wellKnown = await fetch(`http://127.0.0.1:${gatewayPort}/.well-known/wire-node.json`);
       expect(wellKnown.ok).toBe(true);
       const wkBody = (await wellKnown.json()) as { protocol_public_key: string; endpoints: { events_push: string } };
       expect(wkBody.protocol_public_key).toBe(exportProtocolPublicKeyBase64());
       expect(wkBody.endpoints.events_push).toContain("/wire/v1/events");
 
-      const catalog = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/federation/catalog`);
+      const catalog = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/federation/catalog`);
       expect(catalog.ok).toBe(true);
       const catBody = (await catalog.json()) as { version: string; nodes: unknown[] };
       expect(catBody.version).toBe("1");
       expect(catBody.nodes.length).toBeGreaterThan(0);
 
-      const res = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/events`, {
+      const res = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(wire),
@@ -114,7 +115,7 @@ describe("wire-gateway server (WG-1)", () => {
       const inboxPath = join(getProtocolInboxDir(), `${signed.event_id}.json`);
       expect(existsSync(inboxPath)).toBe(true);
 
-      const replay = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/events`, {
+      const replay = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(wire),
@@ -136,7 +137,7 @@ describe("wire-gateway server (WG-1)", () => {
           },
         ],
       };
-      const gossipPost = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/federation/gossip`, {
+      const gossipPost = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/federation/gossip`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(remoteCatalog),
@@ -146,7 +147,7 @@ describe("wire-gateway server (WG-1)", () => {
       expect(gossipBody.ok).toBe(true);
       expect(gossipBody.merged_nodes).toBeGreaterThan(0);
 
-      const catalogAfter = await fetch(`http://127.0.0.1:${GATEWAY_PORT}/wire/v1/federation/catalog`);
+      const catalogAfter = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/federation/catalog`);
       const catAfterBody = (await catalogAfter.json()) as { nodes: Array<{ node_id: string }> };
       expect(catAfterBody.nodes.some((n) => n.node_id === "remote-node")).toBe(true);
     } finally {
@@ -156,6 +157,8 @@ describe("wire-gateway server (WG-1)", () => {
   });
 
   it("rejects unknown sender peer", async () => {
+    const internalPort = await allocateEphemeralPort();
+    const gatewayPort = await allocateEphemeralPort();
     const unknownKeys = generateProtocolKeyPair();
     const doc = buildIdentityDocument();
     doc.org_ref = { org_id: "unknown", org_uri: "steward://tenant/unknown" };
@@ -167,9 +170,9 @@ describe("wire-gateway server (WG-1)", () => {
 
     const config = wireGatewayConfigSchema.parse({
       node_id: "demo",
-      listen: { host: "127.0.0.1", port: GATEWAY_PORT + 1 },
+      listen: { host: "127.0.0.1", port: gatewayPort },
       internal_api: {
-        base_url: `http://127.0.0.1:${INTERNAL_PORT + 1}/internal/v1/wire`,
+        base_url: `http://127.0.0.1:${internalPort}/internal/v1/wire`,
         bearer_token: BEARER,
       },
       outbound: { poll_interval_ms: 60_000 },
@@ -178,7 +181,7 @@ describe("wire-gateway server (WG-1)", () => {
 
     const internal = await startWireInternalApiServer({
       host: "127.0.0.1",
-      port: INTERNAL_PORT + 1,
+      port: internalPort,
       bearerToken: BEARER,
       tenantId: "demo",
     });
@@ -188,7 +191,7 @@ describe("wire-gateway server (WG-1)", () => {
     });
 
     try {
-      const res = await fetch(`http://127.0.0.1:${GATEWAY_PORT + 1}/wire/v1/events`, {
+      const res = await fetch(`http://127.0.0.1:${gatewayPort}/wire/v1/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(wire),

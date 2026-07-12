@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, rmSync, mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
@@ -16,6 +16,8 @@ function cleanupProtocolData(): void {
   for (const p of paths) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
+  const auditPath = auditLogPath();
+  if (existsSync(auditPath)) unlinkSync(auditPath);
 }
 
 describe("protocol transaction audit separation", () => {

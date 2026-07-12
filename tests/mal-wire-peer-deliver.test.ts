@@ -30,9 +30,7 @@ describe("mal wire peer deliver (Top5 W-5)", () => {
       getInstallRoot(),
       "steward/platform/protocol/seed/mal-peers-pilot.yaml.example"
     );
-    if (!existsSync(peersPath) || !readFileSync(peersPath, "utf-8").includes("wire_v1")) {
-      writeFileSync(peersPath, readFileSync(seedPath, "utf-8"), "utf-8");
-    }
+    writeFileSync(peersPath, readFileSync(seedPath, "utf-8"), "utf-8");
     peersBackup = readFileSync(peersPath, "utf-8");
   });
 

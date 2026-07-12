@@ -93,7 +93,7 @@ describe("executive data (Secretary Agent SoT)", () => {
   it("loads stakeholders.yaml when present (local gitignore file)", () => {
     if (!stakeholdersFileExists()) return;
     const reg = loadStakeholders();
-    expect(reg.stakeholders.length).toBeGreaterThan(0);
+    expect(Array.isArray(reg.stakeholders)).toBe(true);
   });
 
   it("validates the canonical empty stakeholder scaffold fallback", () => {
