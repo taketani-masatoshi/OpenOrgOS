@@ -26,6 +26,8 @@ export function runOperatorSyncPolicy(opts: { emit?: OperatorPolicyEmit }): void
   if (paths.agentsMdPath) console.log(`  ${paths.agentsMdPath}`);
   if (paths.devGuideRulePath) console.log(`  ${paths.devGuideRulePath}`);
   if (paths.dataClassificationRulePath) console.log(`  ${paths.dataClassificationRulePath}`);
+  if (paths.stewardOpsRulePath) console.log(`  ${paths.stewardOpsRulePath}`);
+  if (paths.companyEventsRulePath) console.log(`  ${paths.companyEventsRulePath}`);
   if (paths.engineeringRulePaths?.length) {
     for (const p of paths.engineeringRulePaths) console.log(`  ${p}`);
   }

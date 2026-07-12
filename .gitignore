@@ -139,3 +139,8 @@ packages/orgos-cli/apps/
 .env
 .env.*
 !.env.example
+
+# Ephemeral / local verify tenants (not product SSOT)
+tenants/phase4-restore-test/
+tenants/sch-verify/**
+!tenants/sch-verify/data/operator/agents.yaml

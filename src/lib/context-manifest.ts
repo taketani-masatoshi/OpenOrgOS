@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   listCatalogModuleIds,
@@ -272,4 +272,20 @@ export function syncActiveContext(): { contextPath: string; cursorRulePath: stri
   writeFileSync(cursorRulePath, buildCursorActiveRuleMdc(), "utf-8");
 
   return { contextPath, cursorRulePath };
+}
+
+/** Freshness check for tenant-active-context.mdc (does not rewrite). */
+export function validateActiveContextMirror(): string[] {
+  const issues: string[] = [];
+  const rel = CURSOR_ACTIVE_RULE;
+  const mirrorPath = join(ROOT_DIR, rel);
+  const expected = buildCursorActiveRuleMdc();
+  if (!existsSync(mirrorPath)) {
+    issues.push(`${rel} missing; run orgos modules sync-context`);
+    return issues;
+  }
+  if (readFileSync(mirrorPath, "utf-8") !== expected) {
+    issues.push(`${rel} stale; run orgos modules sync-context`);
+  }
+  return issues;
 }

@@ -1,0 +1,44 @@
+---
+description: 会社イベント記録フォルダ — events/artifacts 分離 · YYYY-MM · EVT 命名
+globs: "tenants/**/docs/company/events/**,tenants/**/docs/company/artifacts/**,tenants/**/data/company-events.yaml,tenants/**/data/company-events-chain.jsonl"
+alwaysApply: false
+---
+
+# 会社イベント記録（AI 必須）
+
+**正本レイアウト:** [company-events-layout.md](company-events-layout.md)
+
+## 二層分離
+
+| 書く場所 | 内容 |
+|---------|------|
+| `docs/company/events/{YYYY-MM}/EVT-*.md` | **経緯・決議・タイムライン**（L1 以下） |
+| `docs/company/artifacts/{YYYY-MM}/{event-id}/` | **出力書類 MD** · `00-artifact-index.md` |
+| `…/artifacts/…/records/` | PDF/scan（L2 · gitignore · チャット禁止） |
+
+イベント MD に書類全文を書かない。書類は artifacts のみ。
+
+## 命名
+
+- イベント ID: `EVT-{YYYYMMDD}-{kind}-{slug}`
+- 月フォルダ: `YYYY-MM`
+- 台帳: `data/company-events.yaml`（derived ビュー · 移行中）
+- チェーン: `data/company-events-chain.jsonl`（監査 · status/create/void）
+
+## MD 本文ポリシー
+
+- **初回作成時のみ** テンプレ本文を書く
+- **status / void 後も本文は上書きしない** — frontmatter（`status` 等）のみ patch
+- 経緯の追記は人間または明示編集。CLI は narrative を消さない
+
+## 操作
+
+```bash
+npm run orgos -- events ensure-month
+npm run orgos -- events new --kind registration --title "…" [--slug …]
+npm run orgos -- events void EVT-… --reason "…"
+npm run orgos -- events list
+npm run orgos -- events chain verify
+```
+
+新規イベント前に `ensure-month`。無効化は `void` のみ（台帳からの物理削除禁止）。

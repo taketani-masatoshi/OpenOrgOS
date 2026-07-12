@@ -16,6 +16,10 @@ export const ENGINEERING_RULES_DIR = join(ROOT_DIR, "steward", "rules", "enginee
 export const TOOL_NEUTRAL_DEV_CURSOR_RULE = ".cursor/rules/tool-neutral-development.mdc";
 export const DATA_CLASSIFICATION_PATH = join(ROOT_DIR, "steward", "rules", "data-classification.md");
 export const DATA_CLASSIFICATION_CURSOR_RULE = ".cursor/rules/data-classification.mdc";
+export const STEWARD_OPS_SUMMARY_PATH = join(ROOT_DIR, "steward", "rules", "steward-ops-summary.md");
+export const STEWARD_OPS_CURSOR_RULE = ".cursor/rules/steward.mdc";
+export const COMPANY_EVENTS_AI_PATH = join(ROOT_DIR, "steward", "rules", "company-events-ai.md");
+export const COMPANY_EVENTS_CURSOR_RULE = ".cursor/rules/company-events.mdc";
 
 /** Canonical engineering rule stems (00–09). Mirror: `.cursor/rules/{stem}.mdc` */
 export const ENGINEERING_RULE_STEMS = [
@@ -109,6 +113,69 @@ export function syncDataClassificationRule(): string {
   mkdirSync(cursorDir, { recursive: true });
   const outPath = join(ROOT_DIR, DATA_CLASSIFICATION_CURSOR_RULE);
   writeFileSync(outPath, buildDataClassificationCursorMdc(), "utf-8");
+  return outPath;
+}
+
+function buildRuleMdcFromCanonical(
+  canonicalPath: string,
+  mirrorRel: string,
+  linkRewrite: (body: string) => string,
+  emitHint: string
+): string {
+  if (!existsSync(canonicalPath)) {
+    throw new Error(`Missing canonical rule: ${canonicalPath}`);
+  }
+  const content = readFileSync(canonicalPath, "utf-8");
+  const { frontmatter, body } = parseEngineeringRuleFrontmatter(content);
+  const mirrorBody = linkRewrite(body);
+  const lines = [`description: ${frontmatter.description}`];
+  if (frontmatter.alwaysApply === true) lines.push("alwaysApply: true");
+  if (frontmatter.globs) lines.push(`globs: ${frontmatter.globs}`);
+  const canonicalRel = canonicalPath.replace(`${ROOT_DIR}/`, "");
+  return `---
+${lines.join("\n")}
+---
+
+${mirrorBody.trimEnd()}
+
+> **Mirror only.** Canonical: \`${canonicalRel}\` · Regenerate: \`orgos operator sync-policy --emit ${emitHint}\`
+`;
+}
+
+export function buildStewardOpsCursorMdc(): string {
+  return buildRuleMdcFromCanonical(
+    STEWARD_OPS_SUMMARY_PATH,
+    STEWARD_OPS_CURSOR_RULE,
+    (body) =>
+      body
+        .replace(/\]\(engineering\//g, "](steward/rules/engineering/")
+        .replace(/\]\(([a-z0-9_-]+\.md)\)/gi, "](steward/rules/$1)"),
+    "all"
+  );
+}
+
+export function buildCompanyEventsCursorMdc(): string {
+  return buildRuleMdcFromCanonical(
+    COMPANY_EVENTS_AI_PATH,
+    COMPANY_EVENTS_CURSOR_RULE,
+    (body) => body.replace(/\]\(([a-z0-9_-]+\.md)\)/gi, "](steward/rules/$1)"),
+    "all"
+  );
+}
+
+export function syncStewardOpsRule(): string {
+  const cursorDir = join(ROOT_DIR, ".cursor", "rules");
+  mkdirSync(cursorDir, { recursive: true });
+  const outPath = join(ROOT_DIR, STEWARD_OPS_CURSOR_RULE);
+  writeFileSync(outPath, buildStewardOpsCursorMdc(), "utf-8");
+  return outPath;
+}
+
+export function syncCompanyEventsRule(): string {
+  const cursorDir = join(ROOT_DIR, ".cursor", "rules");
+  mkdirSync(cursorDir, { recursive: true });
+  const outPath = join(ROOT_DIR, COMPANY_EVENTS_CURSOR_RULE);
+  writeFileSync(outPath, buildCompanyEventsCursorMdc(), "utf-8");
   return outPath;
 }
 
@@ -228,6 +295,8 @@ export function validatePolicyMirrors(): string[] {
     [OPERATOR_POLICY_CURSOR_RULE, buildCursorOperatorPolicyMdc(), "cursor"],
     [TOOL_NEUTRAL_DEV_CURSOR_RULE, buildToolNeutralDevCursorMdc(), "dev-guide"],
     [DATA_CLASSIFICATION_CURSOR_RULE, buildDataClassificationCursorMdc(), "all"],
+    [STEWARD_OPS_CURSOR_RULE, buildStewardOpsCursorMdc(), "all"],
+    [COMPANY_EVENTS_CURSOR_RULE, buildCompanyEventsCursorMdc(), "all"],
     [AGENTS_MD_REL, buildAgentsMd(), "all"],
   ] as const;
 
@@ -358,6 +427,8 @@ export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
   agentsMdPath?: string;
   devGuideRulePath?: string;
   dataClassificationRulePath?: string;
+  stewardOpsRulePath?: string;
+  companyEventsRulePath?: string;
   engineeringRulePaths?: string[];
 } {
   const result: {
@@ -365,6 +436,8 @@ export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
     agentsMdPath?: string;
     devGuideRulePath?: string;
     dataClassificationRulePath?: string;
+    stewardOpsRulePath?: string;
+    companyEventsRulePath?: string;
     engineeringRulePaths?: string[];
   } = {};
 
@@ -379,6 +452,11 @@ export function syncOperatorPolicy(emit: OperatorPolicyEmit = "all"): {
 
   if (emit === "data-classification" || emit === "all") {
     result.dataClassificationRulePath = syncDataClassificationRule();
+  }
+
+  if (emit === "all") {
+    result.stewardOpsRulePath = syncStewardOpsRule();
+    result.companyEventsRulePath = syncCompanyEventsRule();
   }
 
   if (emit === "agents-md" || emit === "all") {

@@ -4,7 +4,8 @@ import {
   tenantAgentRosterSchema,
   type TenantAgentRoster,
 } from "../../schemas/agent-roster.js";
-import { getCatalogAgent, isAgentActive, listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
+import { getCatalogAgent, listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
+import { isAgentActive } from "./agent-activation.js";
 import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModulesSafe } from "./modules.js";
 import {
   AGENT_ROSTER_REL_PATH,
@@ -127,7 +128,9 @@ export function validateTenantAgentRoster(roster = loadTenantAgentRoster().roste
 }
 
 export function syncRosterWithModules(roster: TenantAgentRoster): TenantAgentRoster {
-  const enabledModules = new Set(loadEnabledModulesSafe().map((module) => module.id));
+  const enabledModules = new Set(
+    loadEnabledModulesSafe().flatMap((module) => [module.id, module.agent])
+  );
   const operational = new Set(roster.profiles.operational);
   const disabled = new Set(roster.disabled);
   for (const agent of listCatalogAgents()) {
@@ -201,36 +204,7 @@ export function isRosterAgentActive(
   id: AgentId,
   options: { profile?: AgentRosterProfile } = {}
 ): boolean {
-  const agent = getCatalogAgent(id);
-  if (!agent || agent.status === "planned") return false;
-  const profile = options.profile ?? "operational";
-  const { exists, roster } = loadTenantAgentRoster();
-  if (exists && roster.disabled.includes(id)) return false;
-
-  if (profile === "task") {
-    if (exists && roster.profiles.task.length > 0) {
-      return (
-        roster.profiles.task.includes(id) &&
-        isRosterAgentActive(id, { profile: "operational" })
-      );
-    }
-    return isRosterAgentActive(id, { profile: "operational" });
-  }
-
-  if (agent.activation === "developer_explicit") {
-    return (
-      profile === "developer" &&
-      exists &&
-      roster.profiles.developer.includes(id)
-    );
-  }
-  if (agent.activation === "tenant") {
-    return roster.profiles.operational.includes(id);
-  }
-  if (agent.activation === "always") {
-    return true;
-  }
-  return false;
+  return isAgentActive(id, { profile: options.profile ?? "operational" });
 }
 
 export function writeTaskProfileAgents(rawIds: string[]): TenantAgentRoster {
@@ -297,13 +271,13 @@ export function buildAgentRosterTodaySummary(): {
     };
   };
   const operational = listCatalogAgents()
-    .filter((agent) => isAgentActive(agent.id as AgentId, { profile: "operational" }))
+    .filter((agent) => isRosterAgentActive(agent.id as AgentId, { profile: "operational" }))
     .map((agent) => mapAgent(agent.id as AgentId));
   const developer = listCatalogAgents()
-    .filter((agent) => isAgentActive(agent.id as AgentId, { profile: "developer" }))
+    .filter((agent) => isRosterAgentActive(agent.id as AgentId, { profile: "developer" }))
     .map((agent) => mapAgent(agent.id as AgentId));
   const task = listCatalogAgents()
-    .filter((agent) => isAgentActive(agent.id as AgentId, { profile: "task" }))
+    .filter((agent) => isRosterAgentActive(agent.id as AgentId, { profile: "task" }))
     .map((agent) => mapAgent(agent.id as AgentId));
   return {
     configured: loaded.exists,

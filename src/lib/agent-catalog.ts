@@ -8,10 +8,8 @@ import {
   agentCatalogSchema,
   type AgentCatalog,
   type AgentCatalogEntry,
-  type AgentDispatchMode,
 } from "../../schemas/agent-catalog.js";
 import { STEWARD_AGENTS_DIR } from "./steward-paths.js";
-import { readTenantAgentRosterState } from "./tenant-roster-load.js";
 import { listCatalogModuleIds } from "./modules.js";
 import { readYamlFile } from "./utils.js";
 
@@ -23,6 +21,9 @@ export function loadAgentCatalog(): AgentCatalog {
   cache ??= readYamlFile(AGENT_CATALOG_PATH, agentCatalogSchema);
   return cache;
 }
+
+export { isAgentActive } from "./agent-activation.js";
+export type { AgentActivationProfile } from "./agent-activation.js";
 
 export function resetAgentCatalogCache(): void {
   cache = null;
@@ -45,64 +46,6 @@ export function resolveAgentId(id: string): AgentId | undefined {
 export function getCatalogAgent(id: string): AgentCatalogEntry | undefined {
   const resolved = resolveAgentId(id);
   return resolved ? loadAgentCatalog().agents[resolved] : undefined;
-}
-
-function loadTenantRoster(): {
-  exists: boolean;
-  operational: Set<AgentId>;
-  developer: Set<AgentId>;
-  task: Set<AgentId>;
-  disabled: Set<AgentId>;
-} {
-  const { exists, roster } = readTenantAgentRosterState();
-  return {
-    exists,
-    operational: new Set(roster.profiles.operational),
-    developer: new Set(roster.profiles.developer),
-    task: new Set(roster.profiles.task ?? []),
-    disabled: new Set(roster.disabled),
-  };
-}
-
-/**
- * Catalog-facing activation probe that also reads the tenant roster.
- * Prefer {@link isRosterAgentActive} from `agent-roster.ts` for new code (catalog/roster boundary).
- */
-export function isAgentActive(
-  id: AgentId,
-  options: { profile?: "operational" | "developer" | "task"; mode?: AgentDispatchMode } = {}
-): boolean {
-  const resolved = resolveAgentId(id);
-  const agent = resolved ? getCatalogAgent(resolved) : undefined;
-  if (!agent || agent.status === "planned") return false;
-  if (options.mode && !agent.dispatch_modes.includes(options.mode)) return false;
-
-  const roster = loadTenantRoster();
-  if (roster.disabled.has(resolved!)) return false;
-
-  const profile = options.profile ?? "operational";
-  if (profile === "task") {
-    if (roster.task.size > 0) {
-      return roster.task.has(resolved!) && isAgentActive(resolved!, { profile: "operational", mode: options.mode });
-    }
-    return isAgentActive(resolved!, { profile: "operational", mode: options.mode });
-  }
-
-  if (agent.activation === "developer_explicit") {
-    return (
-      profile === "developer" &&
-      roster.exists &&
-      roster.developer.has(resolved!)
-    );
-  }
-  if (agent.activation === "tenant") {
-    // Unconfigured tenants use the default core roster from readTenantAgentRosterState.
-    return roster.operational.has(resolved!);
-  }
-  if (agent.activation === "always") {
-    return true;
-  }
-  return false;
 }
 
 export function validateAgentCatalog(): string[] {

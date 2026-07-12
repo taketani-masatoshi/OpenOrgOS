@@ -2,11 +2,13 @@
 import { validateGeneratedArtifacts } from "../src/lib/generated-artifacts.js";
 import { validatePolicyMirrors } from "../src/lib/operator-policy.js";
 import { validateAgentPackExports } from "../src/lib/agent-portability.js";
+import { validateActiveContextMirror } from "../src/lib/context-manifest.js";
 
 const issues = [
   ...validateGeneratedArtifacts(),
   ...validatePolicyMirrors(),
   ...validateAgentPackExports(),
+  ...validateActiveContextMirror(),
 ];
 if (issues.length > 0) {
   for (const issue of issues) console.error(`generated-artifact: ${issue}`);
