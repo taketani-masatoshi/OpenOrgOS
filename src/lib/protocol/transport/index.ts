@@ -1,5 +1,14 @@
 /** Wire transport and store-and-forward behavior. */
-export * from "../transport.js";
+export * from "./types.js";
+export * from "./dns.js";
+export * from "./inbound.js";
+export * from "./relay.js";
+export {
+  deliverProtocolEnvelope,
+  deliverProtocolEnvelopeWithRelay,
+  deliverViaRelayStore,
+  flushWirePending,
+} from "../transport.js";
 export * from "../delivery-ledger.js";
 export * from "../notice-transmit.js";
 export * from "../wire-queue.js";

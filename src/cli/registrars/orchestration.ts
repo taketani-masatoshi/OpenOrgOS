@@ -33,6 +33,7 @@ import {
   runAgentRosterInit,
   runAgentRosterSet,
   runAgentRosterShow,
+  runAgentRosterTask,
   runAgentRosterValidate,
   runAgentRosterInitAll,
   runAgentRosterMigrate,
@@ -429,7 +430,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .command("enable")
     .description("Enable an Agent in a tenant profile")
     .requiredOption("--agent <id>", "Agent id")
-    .option("--profile <profile>", "operational | developer", "operational")
+    .option("--profile <profile>", "operational | developer | task", "operational")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runAgentRosterSet(true, opts));
@@ -437,7 +438,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .command("disable")
     .description("Disable a non-required Agent")
     .requiredOption("--agent <id>", "Agent id")
-    .option("--profile <profile>", "operational | developer", "operational")
+    .option("--profile <profile>", "operational | developer | task", "operational")
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((opts) => runAgentRosterSet(false, opts));
@@ -465,6 +466,21 @@ export function registerOrchestrationCommands(program: Command): void {
       runAgentRosterInitAll({
         force: opts.force,
         dryRun: opts.dryRun,
+        json: opts.json,
+      })
+    );
+  agentRosterCmd
+    .command("task")
+    .description("Set ephemeral task-profile agents (empty list falls back to operational)")
+    .option("--agents <ids>", "Comma-separated Agent ids")
+    .option("--clear", "Clear task profile")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runAgentRosterTask({
+        tenant: opts.tenant,
+        agents: opts.agents,
+        clear: opts.clear,
         json: opts.json,
       })
     );
