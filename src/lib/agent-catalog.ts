@@ -64,6 +64,10 @@ function loadTenantRoster(): {
   };
 }
 
+/**
+ * Catalog-facing activation probe that also reads the tenant roster.
+ * Prefer {@link isRosterAgentActive} from `agent-roster.ts` for new code (catalog/roster boundary).
+ */
 export function isAgentActive(
   id: AgentId,
   options: { profile?: "operational" | "developer" | "task"; mode?: AgentDispatchMode } = {}
