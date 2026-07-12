@@ -83,15 +83,53 @@ function loadCoreSkills(): ResolvedSkillEntry[] {
   }));
 }
 
-export function loadSkillRegistry(scopeToTenant = false): ResolvedSkillEntry[] {
+interface SkillRegistryCache {
+  skills: ResolvedSkillEntry[];
+  byId: Map<string, ResolvedSkillEntry>;
+  byCliCommand: Map<string, ResolvedSkillEntry>;
+}
+
+const registryCache = new Map<boolean, SkillRegistryCache>();
+
+/** Test / hot-reload hook — clears memoized registry indexes. */
+export function clearSkillRegistryCache(): void {
+  registryCache.clear();
+}
+
+function buildRegistryCache(scopeToTenant: boolean): SkillRegistryCache {
   const byId = new Map<string, ResolvedSkillEntry>();
   for (const skill of loadCoreSkills()) byId.set(skill.id, skill);
   for (const skill of resolveModuleSkillRegistries(scopeToTenant)) byId.set(skill.id, skill);
-  return [...byId.values()];
+
+  const byCliCommand = new Map<string, ResolvedSkillEntry>();
+  for (const skill of byId.values()) {
+    if (skill.cli_command) byCliCommand.set(skill.cli_command, skill);
+  }
+
+  return { skills: [...byId.values()], byId, byCliCommand };
+}
+
+function getRegistryCache(scopeToTenant = false): SkillRegistryCache {
+  const cached = registryCache.get(scopeToTenant);
+  if (cached) return cached;
+  const built = buildRegistryCache(scopeToTenant);
+  registryCache.set(scopeToTenant, built);
+  return built;
+}
+
+export function loadSkillRegistry(scopeToTenant = false): ResolvedSkillEntry[] {
+  return getRegistryCache(scopeToTenant).skills;
 }
 
 export function getSkillById(id: string, scopeToTenant = false): ResolvedSkillEntry | undefined {
-  return loadSkillRegistry(scopeToTenant).find((s) => s.id === id);
+  return getRegistryCache(scopeToTenant).byId.get(id);
+}
+
+export function getSkillByCliCommand(
+  cliCommand: string,
+  scopeToTenant = false
+): ResolvedSkillEntry | undefined {
+  return getRegistryCache(scopeToTenant).byCliCommand.get(cliCommand);
 }
 
 export function getCliSkills(scopeToTenant = false): ResolvedSkillEntry[] {

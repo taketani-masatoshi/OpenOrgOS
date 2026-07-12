@@ -1,7 +1,7 @@
 import type { SkillRunOptions } from "../commands/skills.js";
 import {
+  getSkillByCliCommand,
   getSkillById,
-  loadSkillRegistry,
   type ResolvedSkillEntry,
 } from "./skill-registry.js";
 
@@ -47,10 +47,9 @@ function hasOption(opts: SkillRunOptions, name: string): boolean {
 }
 
 export function canonicalSkillId(input: string): string | undefined {
-  const skills = loadSkillRegistry();
-  const canonical = skills.find((skill) => skill.id === input);
-  if (canonical) return canonical.id;
-  return skills.find((skill) => skill.cli_command === input)?.id;
+  const byId = getSkillById(input);
+  if (byId) return byId.id;
+  return getSkillByCliCommand(input)?.id;
 }
 
 export function resolveSkillInvocation(

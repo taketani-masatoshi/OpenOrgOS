@@ -64,10 +64,21 @@ export function registerModuleCli(program: Command): Command {
   return operationsCmd;
 }
 
+let moduleSkillHandlersCache: Record<
+  string,
+  (opts: SkillRunOptions) => void | Promise<void>
+> | null = null;
+
+export function clearModuleSkillHandlersCache(): void {
+  moduleSkillHandlersCache = null;
+}
+
 export function getModuleSkillHandlers(): Record<
   string,
   (opts: SkillRunOptions) => void | Promise<void>
 > {
+  if (moduleSkillHandlersCache) return moduleSkillHandlersCache;
+
   const handlers: Record<string, (opts: SkillRunOptions) => void | Promise<void>> = {};
   const moduleSkills = loadSkillRegistry().filter((skill) => skill.moduleId);
   for (const bundle of MODULE_CLI_BUNDLES) {
@@ -82,6 +93,7 @@ export function getModuleSkillHandlers(): Record<
       handlers[canonicalId] = handler;
     }
   }
+  moduleSkillHandlersCache = handlers;
   return handlers;
 }
 
