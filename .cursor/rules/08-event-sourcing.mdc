@@ -42,10 +42,13 @@ No hidden randomness. No hidden side effects.
 
 | Domain | Event / ledger path |
 |--------|---------------------|
-| Company events | `docs/company/events/` · `data/company-events.yaml` |
-| Wire delivery | `src/lib/protocol/delivery-ledger.ts` |
-| Wire pending / retry | `src/lib/protocol/wire-pending-retry.ts` |
+| Company events | `data/company-events-chain.jsonl` (audit) · yaml/md derived views |
+| Routing queue | `docs/.../queue/events.jsonl` · status via `appendQueueStatusEvent` |
+| Wire delivery | `data/protocol/delivery-attempts.jsonl` (SSOT) · yaml snapshot derived |
+| Wire / witness pending | active YAML + `*-pending-lifecycle.jsonl` archive |
 | Dead letter audit | `src/lib/protocol/wire-dead-letter-audit.ts` |
+
+Clock / ID injection: `src/lib/runtime-context.ts` · Repository pilot: `DeliveryAttemptRepository` in delivery-ledger.
 
 When adding protocol features:
 
