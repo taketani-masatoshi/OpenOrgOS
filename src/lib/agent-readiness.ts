@@ -10,6 +10,7 @@ import {
   readAgentDefinition,
 } from "./agent-capability.js";
 import { getCatalogAgent, isAgentActive, listCatalogAgents } from "./agent-catalog.js";
+import { listActiveTenantAgents } from "./agent-roster.js";
 import { loadRoutingRegistry } from "./routing.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { getTenantDir, resolveTenantPath } from "./tenant.js";
@@ -328,7 +329,10 @@ export function computeAgentReadinessProfile(
 ): AgentReadinessResult[] {
   const ids =
     profile === "operational"
-      ? listOperationalCapabilities().map((agent) => agent.id)
+      ? listActiveTenantAgents("operational").filter((id) => {
+          const agent = getCatalogAgent(id);
+          return agent?.class !== "advisor" && agent?.status !== "planned";
+        })
       : listCatalogAgents()
           .filter((agent) => agent.readiness_profile === profile && agent.status !== "planned")
           .map((agent) => agent.id);

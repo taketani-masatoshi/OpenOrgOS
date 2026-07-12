@@ -1,11 +1,11 @@
 # Core Agent レジストリ — 選択的拡張
-# テナントは agents.yaml で ON/OFF（将来）· 現状は全コア + 拡張有効
+# テナントは data/operator/agents.yaml で ON/OFF · 既定 activation: tenant
 
 version: 3
 
 defaults:
   class: operational
-  activation: always
+  activation: tenant
   dispatch_modes: [consult, implement]
   readiness_profile: operational
   auto_route: true

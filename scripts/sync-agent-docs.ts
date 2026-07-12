@@ -16,6 +16,6 @@ if (check && !write) {
   }
 } else {
   console.log(
-    `Agent docs ${write ? "synced" : "preview"} (org-chart-mermaid · org-chart-sixteen · catalog-index)`
+    `Agent docs ${write ? "synced" : "preview"} (org-chart · roster · skill-delegation generated sections)`
   );
 }

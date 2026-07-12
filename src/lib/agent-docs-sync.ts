@@ -6,12 +6,17 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentCatalogEntry } from "../../schemas/agent-catalog.js";
 import { listCatalogAgents, resolveAgentId } from "./agent-catalog.js";
+import { loadSkillRegistry } from "./skill-registry.js";
 import { ROOT_DIR } from "./tenant.js";
 
 export const ORG_CHART_PATH = join(ROOT_DIR, "steward/core/agents/org-chart.md");
 export const STEWARD_ROSTER_PATH = join(
   ROOT_DIR,
   "steward/core/orchestrators/steward_agent_roster.md"
+);
+export const SKILL_DELEGATION_MAP_PATH = join(
+  ROOT_DIR,
+  "steward/core/orchestrators/skill_delegation_map.md"
 );
 
 export const GENERATED_MARKER_PREFIX = "orgos:generated";
@@ -136,6 +141,48 @@ export function buildCatalogRosterIndex(): string {
   return lines.join("\n");
 }
 
+export function buildCatalogStatsBlock(): string {
+  const agents = listCatalogAgents();
+  const activeAgents = agents.filter((agent) => agent.status === "active").length;
+  const skills = loadSkillRegistry();
+  const cliSkills = skills.filter((skill) => skill.runtime === "cli").length;
+  const agentSkills = skills.filter((skill) => skill.runtime === "agent").length;
+  return [
+    "| 指標 | 値 | 正本 |",
+    "|------|-----|------|",
+    `| catalog agents | ${agents.length} | \`steward/core/agents/registry.yaml\` |`,
+    `| active agents | ${activeAgents} | registry \`status: active\` |`,
+    `| skills (registry) | ${skills.length} | \`steward/core/skills/registry.yaml\` + modules |`,
+    `| runtime: cli | ${cliSkills} | registry |`,
+    `| runtime: agent | ${agentSkills} | registry（旧 cursor-only 含む） |`,
+    `| テナント有効化 | \`orgos agent roster show\` | \`data/operator/agents.yaml\` |`,
+    `| pulse 対象 | active roster のみ | \`orgos agent pulse --all\` |`,
+  ].join("\n");
+}
+
+export function buildSkillRegistryIndex(): string {
+  const skills = [...loadSkillRegistry()].sort((a, b) => a.id.localeCompare(b.id));
+  const lines = [
+    "| Skill id | runtime | agent_id | CLI | module |",
+    "|----------|---------|----------|-----|--------|",
+  ];
+  for (const skill of skills) {
+    const runtime = skill.runtime === "agent" ? "agent" : skill.runtime;
+    lines.push(
+      `| \`${skill.id}\` | ${runtime} | \`${skill.agent_id}\` | ${skill.cli_command ? `\`${skill.cli_command}\`` : "—"} | ${skill.moduleId ?? "core"} |`
+    );
+  }
+  return lines.join("\n");
+}
+
+export function buildSkillDelegationRuntimeNote(): string {
+  return [
+    "- `runtime: agent` — LLM + Skill 定義添付（旧 `cursor-only` と同義）",
+    "- `runtime: cli` — `orgos skills run` で決定論実行",
+    "- 実行 Agent の override は `src/lib/skill-execution-mode.ts` が正本",
+  ].join("\n");
+}
+
 export function generatedMarker(name: string, end = false): string {
   return `<!-- ${GENERATED_MARKER_PREFIX}:${name}:${end ? "end" : "start"} -->`;
 }
@@ -164,32 +211,45 @@ export function extractGeneratedSection(markdown: string, name: string): string 
   return pattern.exec(markdown)?.[1];
 }
 
-export function syncAgentDocs(write = false): { orgChart: string; roster: string } {
+export function syncAgentDocs(write = false): { orgChart: string; roster: string; delegation: string } {
   let orgChart = readFileSync(ORG_CHART_PATH, "utf-8");
   orgChart = replaceGeneratedSection(orgChart, "org-chart-mermaid", buildOrgChartMermaidBlock());
   orgChart = replaceGeneratedSection(orgChart, "org-chart-sixteen", buildOrgChartSixteenTable());
 
   let roster = readFileSync(STEWARD_ROSTER_PATH, "utf-8");
   roster = replaceGeneratedSection(roster, "catalog-index", buildCatalogRosterIndex());
+  roster = replaceGeneratedSection(roster, "catalog-stats", buildCatalogStatsBlock());
+
+  let delegation = readFileSync(SKILL_DELEGATION_MAP_PATH, "utf-8");
+  delegation = replaceGeneratedSection(delegation, "skill-registry-index", buildSkillRegistryIndex());
+  delegation = replaceGeneratedSection(
+    delegation,
+    "skill-runtime-note",
+    buildSkillDelegationRuntimeNote()
+  );
 
   if (write) {
     writeFileSync(ORG_CHART_PATH, orgChart, "utf-8");
     writeFileSync(STEWARD_ROSTER_PATH, roster, "utf-8");
+    writeFileSync(SKILL_DELEGATION_MAP_PATH, delegation, "utf-8");
   }
-  return { orgChart, roster };
+  return { orgChart, roster, delegation };
 }
 
 export function validateAgentDocsGeneratedDrift(): string[] {
   const issues: string[] = [];
   const orgChart = readFileSync(ORG_CHART_PATH, "utf-8");
   const roster = readFileSync(STEWARD_ROSTER_PATH, "utf-8");
+  const delegation = readFileSync(SKILL_DELEGATION_MAP_PATH, "utf-8");
 
-  for (const [file, name, expected] of [
-    ["org-chart.md", "org-chart-mermaid", buildOrgChartMermaidBlock()],
-    ["org-chart.md", "org-chart-sixteen", buildOrgChartSixteenTable()],
-    ["steward_agent_roster.md", "catalog-index", buildCatalogRosterIndex()],
+  for (const [file, name, expected, text] of [
+    ["org-chart.md", "org-chart-mermaid", buildOrgChartMermaidBlock(), orgChart],
+    ["org-chart.md", "org-chart-sixteen", buildOrgChartSixteenTable(), orgChart],
+    ["steward_agent_roster.md", "catalog-index", buildCatalogRosterIndex(), roster],
+    ["steward_agent_roster.md", "catalog-stats", buildCatalogStatsBlock(), roster],
+    ["skill_delegation_map.md", "skill-registry-index", buildSkillRegistryIndex(), delegation],
+    ["skill_delegation_map.md", "skill-runtime-note", buildSkillDelegationRuntimeNote(), delegation],
   ] as const) {
-    const text = file === "org-chart.md" ? orgChart : roster;
     const section = extractGeneratedSection(text, name);
     if (!section) {
       issues.push(`${file}: missing generated section ${name}; run npm run agent:docs:sync`);

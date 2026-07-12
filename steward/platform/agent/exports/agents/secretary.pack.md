@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · secretary
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-11 · **Tenant:** mal
+> **Generated:** 2026-07-12 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent secretary`
 
 ---
@@ -207,6 +207,16 @@ npm run orgos -- executive brief --week
 
 日程調整では、社外参加者ごとに proposal / reminder / confirm を個別起案する。`contact_ref` 未解決時は送信せず確認へ回し、CEO確定後は Calendar / Meet 同期成功を確認してから確定通知を起案する。案件を `closed` にできるのは全確定通知の承認・送信完了後だけとする。
 
+**多者日程調整 — 初回セットアップ（2 コマンド）:**
+
+```bash
+orgos tenant scaffold-data --tenant <id>
+orgos doctor --tenant <id> --repair
+```
+
+続けて dry-run 完走確認: `orgos executive scheduling rehearsal --full --tenant <id>`  
+詳細: [schedule_coordination.md](../steward/core/skills/schedule_coordination.md)
+
 ---
 
 ## 編集できるフォルダ
@@ -410,7 +420,7 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 |------|------|
 | agent_pulse | `orgos agent pulse --agent secretary` |
 | schedule_management | registry Skill |
-| schedule_coordination | registry Skill · `executive scheduling` CLI |
+| schedule_coordination | registry Skill · `executive scheduling` CLI（`approve-send` · `rehearsal --full`） |
 | one_on_one_prep | registry Skill |
 | external_correspondence | registry Skill |
 | correspondence_draft | registry Skill · cli |

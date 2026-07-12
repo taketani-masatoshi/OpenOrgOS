@@ -3,9 +3,9 @@ import type { AgentId } from "../../schemas/classification.js";
 import {
   agentSummarySlug,
   getAgentCapability,
-  listOperationalCapabilities,
 } from "./agent-capability.js";
 import { getCatalogAgent, isAgentActive } from "./agent-catalog.js";
+import { listActiveTenantAgents } from "./agent-roster.js";
 import { computeAgentReadiness } from "./agent-readiness.js";
 import { relayPulseReport } from "./agent-reporting.js";
 import { currentDate, resolveTenantPath, writeMarkdownReport } from "./utils.js";
@@ -89,11 +89,15 @@ function shouldAutoPulse(agentId: AgentId): boolean {
   return agent.auto_pulse !== false;
 }
 
+export function listPulseEligibleAgents(): AgentId[] {
+  return listActiveTenantAgents("operational").filter((id) => shouldAutoPulse(id));
+}
+
 export function runAllAgentPulses(opts: { suffix?: string } = {}): string[] {
   const paths: string[] = [];
-  for (const cap of listOperationalCapabilities()) {
-    if (!shouldAutoPulse(cap.id)) continue;
-    paths.push(runAgentPulse(cap.id, opts));
+  for (const agentId of listActiveTenantAgents("operational")) {
+    if (!shouldAutoPulse(agentId)) continue;
+    paths.push(runAgentPulse(agentId, opts));
   }
   return paths;
 }
@@ -109,10 +113,10 @@ const CORE_DEDICATED_SUMMARY = new Set<AgentId>([
 /** Pulse summaries for extension agents (core keeps dedicated dashboard formatters). */
 export function runExtensionAgentPulses(opts: { suffix?: string } = {}): string[] {
   const paths: string[] = [];
-  for (const cap of listOperationalCapabilities()) {
-    if (CORE_DEDICATED_SUMMARY.has(cap.id)) continue;
-    if (!shouldAutoPulse(cap.id)) continue;
-    paths.push(runAgentPulse(cap.id, opts));
+  for (const agentId of listActiveTenantAgents("operational")) {
+    if (CORE_DEDICATED_SUMMARY.has(agentId)) continue;
+    if (!shouldAutoPulse(agentId)) continue;
+    paths.push(runAgentPulse(agentId, opts));
   }
   return paths;
 }

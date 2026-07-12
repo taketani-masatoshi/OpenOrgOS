@@ -232,3 +232,15 @@ Growth/一般企業 Agent の要約は **Phase 2 で dashboard 自動連携**（
 - [executive_steward_agent.md](../agents/executive_steward_agent.md)
 - [delegate_growth_team.md](delegate_growth_team.md)
 - [secretary_escalation.md](secretary_escalation.md)
+
+<!-- orgos:generated:catalog-stats:start -->
+| 指標 | 値 | 正本 |
+|------|-----|------|
+| catalog agents | 50 | `steward/core/agents/registry.yaml` |
+| active agents | 49 | registry `status: active` |
+| skills (registry) | 127 | `steward/core/skills/registry.yaml` + modules |
+| runtime: cli | 48 | registry |
+| runtime: agent | 79 | registry（旧 cursor-only 含む） |
+| テナント有効化 | `orgos agent roster show` | `data/operator/agents.yaml` |
+| pulse 対象 | active roster のみ | `orgos agent pulse --all` |
+<!-- orgos:generated:catalog-stats:end -->

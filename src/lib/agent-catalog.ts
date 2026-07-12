@@ -46,18 +46,26 @@ export function getCatalogAgent(id: string): AgentCatalogEntry | undefined {
   return resolved ? loadAgentCatalog().agents[resolved] : undefined;
 }
 
-function loadTenantRoster(): { operational: Set<AgentId>; developer: Set<AgentId>; disabled: Set<AgentId> } {
-  const { roster } = readTenantAgentRosterState();
+function loadTenantRoster(): {
+  exists: boolean;
+  operational: Set<AgentId>;
+  developer: Set<AgentId>;
+  task: Set<AgentId>;
+  disabled: Set<AgentId>;
+} {
+  const { exists, roster } = readTenantAgentRosterState();
   return {
+    exists,
     operational: new Set(roster.profiles.operational),
     developer: new Set(roster.profiles.developer),
+    task: new Set(roster.profiles.task ?? []),
     disabled: new Set(roster.disabled),
   };
 }
 
 export function isAgentActive(
   id: AgentId,
-  options: { profile?: "operational" | "developer"; mode?: AgentDispatchMode } = {}
+  options: { profile?: "operational" | "developer" | "task"; mode?: AgentDispatchMode } = {}
 ): boolean {
   const resolved = resolveAgentId(id);
   const agent = resolved ? getCatalogAgent(resolved) : undefined;
@@ -66,10 +74,25 @@ export function isAgentActive(
 
   const roster = loadTenantRoster();
   if (roster.disabled.has(resolved!)) return false;
-  if (agent.activation === "developer_explicit") {
-    return options.profile === "developer" && roster.developer.has(resolved!);
+
+  const profile = options.profile ?? "operational";
+  if (profile === "task") {
+    if (roster.task.size > 0) {
+      return roster.task.has(resolved!) && isAgentActive(resolved!, { profile: "operational", mode: options.mode });
+    }
+    return isAgentActive(resolved!, { profile: "operational", mode: options.mode });
   }
-  if (agent.activation === "tenant") return roster.operational.has(resolved!);
+
+  if (agent.activation === "developer_explicit") {
+    return (
+      profile === "developer" &&
+      roster.exists &&
+      roster.developer.has(resolved!)
+    );
+  }
+  if (agent.activation === "tenant") {
+    return !roster.exists || roster.operational.has(resolved!);
+  }
   return true;
 }
 

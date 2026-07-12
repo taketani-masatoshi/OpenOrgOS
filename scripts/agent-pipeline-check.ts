@@ -3,6 +3,7 @@
  * Agent catalog · capability · docs · roster · generated artifacts — single check gate.
  */
 import { execSync } from "node:child_process";
+import { validateAgentActivationContract } from "../src/lib/agent-activation-verify.js";
 import {
   bootstrapAllTenantAgentRosters,
   listTenantsMissingAgentRoster,
@@ -16,6 +17,10 @@ import { ROOT_DIR } from "../src/lib/tenant.js";
 const FIXTURE_ROOT = join(ROOT_DIR, "tests", "fixtures", "tenant-rosters");
 
 const steps: Array<{ name: string; run: () => string[] }> = [
+  {
+    name: "agent-activation-contract",
+    run: () => validateAgentActivationContract(),
+  },
   {
     name: "agent-ids",
     run: () => {

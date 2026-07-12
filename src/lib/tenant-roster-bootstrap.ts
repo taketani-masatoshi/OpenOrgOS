@@ -41,6 +41,7 @@ export function buildDefaultTenantRoster(): TenantAgentRoster {
     profiles: {
       operational: [...operational].sort(),
       developer: [],
+      task: [],
     },
     disabled: [],
   };

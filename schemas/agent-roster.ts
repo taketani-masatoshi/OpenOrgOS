@@ -7,6 +7,8 @@ export const tenantAgentRosterSchema = z.object({
     .object({
       operational: z.array(agentId).default([]),
       developer: z.array(agentId).default([]),
+      /** Ephemeral work-order scope; empty falls back to operational. */
+      task: z.array(agentId).default([]),
     })
     .default({}),
   disabled: z.array(agentId).default([]),

@@ -29,7 +29,7 @@ const EXECUTIVE_DATA_PREFIXES = ["data/executive/", "docs/executive/"];
 export interface RouteMatchInput {
   text?: string;
   path?: string;
-  profile?: "operational" | "developer";
+  profile?: "operational" | "developer" | "task";
 }
 
 export interface MatchedRoute {
@@ -165,9 +165,10 @@ function scoreRoute(route: RouteDefinition, input: RouteMatchInput): { score: nu
 export function matchRoutes(input: RouteMatchInput, registry = loadRoutingRegistry()): MatchedRoute[] {
   const results: MatchedRoute[] = [];
   const profile = input.profile ?? "operational";
+  const routeProfile = profile === "task" ? "operational" : profile;
 
   for (const route of registry.routes) {
-    if (!route.profiles.includes(profile)) continue;
+    if (!route.profiles.includes(routeProfile)) continue;
     const { score, matchedBy } = scoreRoute(route, input);
     if (matchedBy.length === 0) continue;
 

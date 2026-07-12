@@ -21,7 +21,7 @@ export const agentCatalogEntrySchema = z.object({
   class: agentClassSchema.default("operational"),
   required: z.boolean().default(false),
   status: z.enum(["active", "catalog", "planned"]).default("active"),
-  activation: agentActivationSchema.default("always"),
+  activation: agentActivationSchema.default("tenant"),
   dispatch_modes: z.array(agentDispatchModeSchema).default(["consult", "implement"]),
   reports_to: agentId.optional(),
   scope: z.string().default(""),
@@ -48,7 +48,7 @@ export const agentCatalogSchema = z.object({
   defaults: z
     .object({
       class: agentClassSchema.default("operational"),
-      activation: agentActivationSchema.default("always"),
+      activation: agentActivationSchema.default("tenant"),
       dispatch_modes: z.array(agentDispatchModeSchema).default(["consult", "implement"]),
       readiness_profile: agentReadinessProfileSchema.default("operational"),
       auto_route: z.boolean().default(true),

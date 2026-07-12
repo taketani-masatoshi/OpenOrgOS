@@ -1,20 +1,22 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
 import { computeAllAgentReadiness, computeAgentReadiness } from "../src/lib/agent-readiness.js";
-import { listOperationalCapabilities } from "../src/lib/agent-capability.js";
-import { listCatalogAgents } from "../src/lib/agent-catalog.js";
+import { listActiveTenantAgents } from "../src/lib/agent-roster.js";
+import { getCatalogAgent } from "../src/lib/agent-catalog.js";
 
 describe("agent readiness", () => {
-  const operationalCount = listCatalogAgents().filter(
-    (a) => a.class !== "advisor" && a.status !== "planned"
-  ).length;
+  let operationalCount = 0;
 
   beforeAll(() => {
     setTenantId("acme");
+    operationalCount = listActiveTenantAgents("operational").filter((id) => {
+      const agent = getCatalogAgent(id);
+      return agent?.class !== "advisor" && agent?.status !== "planned";
+    }).length;
   });
 
-  it("operational manifest matches catalog (excludes advisors)", () => {
-    expect(listOperationalCapabilities().length).toBe(operationalCount);
+  it("operational readiness matches active roster (excludes advisors)", () => {
+    expect(computeAllAgentReadiness().length).toBe(operationalCount);
   });
 
   it("all operational agents expose evidence, activation, and boundary checks", () => {

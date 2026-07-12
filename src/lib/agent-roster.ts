@@ -28,7 +28,7 @@ export { AGENT_ROSTER_REL_PATH, LEGACY_AGENTS_ENABLED_REL_PATH };
 function emptyRoster(): TenantAgentRoster {
   return tenantAgentRosterSchema.parse({
     version: 1,
-    profiles: { operational: [], developer: [] },
+    profiles: { operational: [], developer: [], task: [] },
     disabled: [],
   });
 }
@@ -98,7 +98,7 @@ export function validateTenantAgentRoster(roster = loadTenantAgentRoster().roste
     else if (agent.required) issues.push(`${id}: required agent cannot be disabled`);
   }
 
-  for (const profile of ["operational", "developer"] as const) {
+  for (const profile of ["operational", "developer", "task"] as const) {
     const seen = new Set<string>();
     for (const id of roster.profiles[profile]) {
       const agent = getCatalogAgent(id);
@@ -108,6 +108,9 @@ export function validateTenantAgentRoster(roster = loadTenantAgentRoster().roste
       if (disabled.has(id)) issues.push(`${id}: both enabled and disabled`);
       if (profile === "developer" && agent?.activation !== "developer_explicit") {
         issues.push(`${id}: developer profile is only for developer_explicit agents`);
+      }
+      if (profile === "task" && agent?.activation === "tenant" && !roster.profiles.operational.includes(id)) {
+        issues.push(`${id}: task profile requires operational activation`);
       }
     }
   }
@@ -156,20 +159,25 @@ export function setTenantAgentEnabled(
   if (profile === "developer" && agent.activation !== "developer_explicit") {
     throw new Error(`${resolved} is not developer_explicit`);
   }
+  if (profile === "task" && enabled && !isRosterAgentActive(resolved, { profile: "operational" })) {
+    throw new Error(`${resolved} must be operationally active before task profile`);
+  }
 
   const current = loadTenantAgentRoster();
   const roster = current.exists ? current.roster : emptyRoster();
   const operational = new Set(roster.profiles.operational);
   const developer = new Set(roster.profiles.developer);
+  const task = new Set(roster.profiles.task);
   const disabled = new Set(roster.disabled);
-  const target = profile === "developer" ? developer : operational;
+  const target =
+    profile === "developer" ? developer : profile === "task" ? task : operational;
 
   if (enabled) {
     target.add(resolved);
     disabled.delete(resolved);
   } else {
     target.delete(resolved);
-    disabled.add(resolved);
+    if (profile !== "task") disabled.add(resolved);
   }
 
   const updated = syncRosterWithModules(
@@ -178,6 +186,7 @@ export function setTenantAgentEnabled(
       profiles: {
         operational: [...operational].sort(),
         developer: [...developer].sort(),
+        task: [...task].sort(),
       },
       disabled: [...disabled].sort(),
     })
@@ -194,11 +203,23 @@ export function isRosterAgentActive(
 ): boolean {
   const agent = getCatalogAgent(id);
   if (!agent || agent.status === "planned") return false;
+  const profile = options.profile ?? "operational";
   const { exists, roster } = loadTenantAgentRoster();
   if (exists && roster.disabled.includes(id)) return false;
+
+  if (profile === "task") {
+    if (exists && roster.profiles.task.length > 0) {
+      return (
+        roster.profiles.task.includes(id) &&
+        isRosterAgentActive(id, { profile: "operational" })
+      );
+    }
+    return isRosterAgentActive(id, { profile: "operational" });
+  }
+
   if (agent.activation === "developer_explicit") {
     return (
-      options.profile === "developer" &&
+      profile === "developer" &&
       exists &&
       roster.profiles.developer.includes(id)
     );
@@ -206,7 +227,46 @@ export function isRosterAgentActive(
   if (agent.activation === "tenant") {
     return !exists || roster.profiles.operational.includes(id);
   }
-  return true;
+  if (agent.activation === "always") {
+    return true;
+  }
+  return false;
+}
+
+export function writeTaskProfileAgents(rawIds: string[]): TenantAgentRoster {
+  const current = loadTenantAgentRoster();
+  const roster = current.exists ? current.roster : emptyRoster();
+  const task = new Set<AgentId>();
+  for (const raw of rawIds) {
+    const resolved = resolveAgentId(raw);
+    if (!resolved) throw new Error(`Unknown agent: ${raw}`);
+    if (!isRosterAgentActive(resolved, { profile: "operational" })) {
+      throw new Error(`${resolved} is not operationally active`);
+    }
+    task.add(resolved);
+  }
+  const updated = tenantAgentRosterSchema.parse({
+    ...roster,
+    profiles: {
+      ...roster.profiles,
+      task: [...task].sort(),
+    },
+  });
+  const issues = validateTenantAgentRoster(updated);
+  if (issues.length) throw new Error(issues.join("; "));
+  writeTenantAgentRoster(updated);
+  return updated;
+}
+
+export function clearTaskProfile(): TenantAgentRoster {
+  const current = loadTenantAgentRoster();
+  const roster = current.exists ? current.roster : emptyRoster();
+  const updated = tenantAgentRosterSchema.parse({
+    ...roster,
+    profiles: { ...roster.profiles, task: [] },
+  });
+  writeTenantAgentRoster(updated);
+  return updated;
 }
 
 export function listActiveTenantAgents(
@@ -240,12 +300,17 @@ export function buildAgentRosterTodaySummary(): {
   const developer = listCatalogAgents()
     .filter((agent) => isAgentActive(agent.id as AgentId, { profile: "developer" }))
     .map((agent) => mapAgent(agent.id as AgentId));
+  const task = listCatalogAgents()
+    .filter((agent) => isAgentActive(agent.id as AgentId, { profile: "task" }))
+    .map((agent) => mapAgent(agent.id as AgentId));
   return {
     configured: loaded.exists,
     operational_count: operational.length,
     developer_count: developer.length,
+    task_count: task.length,
     operational,
     developer,
+    task,
   };
 }
 

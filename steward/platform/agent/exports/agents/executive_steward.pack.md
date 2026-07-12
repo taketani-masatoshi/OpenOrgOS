@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · executive_steward
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-11 · **Tenant:** mal
+> **Generated:** 2026-07-12 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent executive_steward`
 
 ---

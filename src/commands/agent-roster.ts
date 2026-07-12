@@ -1,6 +1,7 @@
 import type { AgentId } from "../../schemas/classification.js";
 import {
   bootstrapAllTenantAgentRosters,
+  clearTaskProfile,
   initializeTenantAgentRoster,
   listTenantsMissingAgentRoster,
   loadTenantAgentRoster,
@@ -8,6 +9,7 @@ import {
   syncRosterWithModules,
   validateTenantAgentRoster,
   writeMigratedTenantAgentRoster,
+  writeTaskProfileAgents,
   writeTenantAgentRoster,
   type AgentRosterProfile,
 } from "../lib/agent-roster.js";
@@ -37,6 +39,9 @@ export function runAgentRosterShow(opts: RosterOptions = {}): void {
     active: listCatalogAgents()
       .filter((agent) => isAgentActive(agent.id as AgentId, { profile: "operational" }))
       .map((agent) => agent.id),
+    task_active: listCatalogAgents()
+      .filter((agent) => isAgentActive(agent.id as AgentId, { profile: "task" }))
+      .map((agent) => agent.id),
   };
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -45,6 +50,7 @@ export function runAgentRosterShow(opts: RosterOptions = {}): void {
   console.log(`Roster: ${loaded.exists ? loaded.source : "compatibility default (file absent)"}`);
   console.log(`Operational: ${loaded.roster.profiles.operational.join(", ") || "—"}`);
   console.log(`Developer: ${loaded.roster.profiles.developer.join(", ") || "—"}`);
+  console.log(`Task: ${loaded.roster.profiles.task.join(", ") || "— (falls back to operational)"}`);
   console.log(`Disabled: ${loaded.roster.disabled.join(", ") || "—"}`);
 }
 
@@ -69,7 +75,7 @@ export function runAgentRosterSet(
     command: `agent roster ${enabled ? "enable" : "disable"}`,
   });
   const profile = (opts.profile ?? "operational") as AgentRosterProfile;
-  if (profile !== "operational" && profile !== "developer") {
+  if (profile !== "operational" && profile !== "developer" && profile !== "task") {
     throw new Error(`Unknown roster profile: ${profile}`);
   }
   const roster = setTenantAgentEnabled(opts.agent, enabled, profile);
@@ -135,6 +141,30 @@ export function runAgentRosterInitAll(
   }
   if (errors.length) process.exitCode = 1;
   else auditCliMutation("agent roster init-all", `created:${created.length}`);
+}
+
+export function runAgentRosterTask(
+  opts: RosterOptions & { agents?: string; clear?: boolean }
+): void {
+  selectTenant(opts.tenant);
+  requireCliOperator({ permission: "agent:order", command: "agent roster task" });
+  const roster = opts.clear
+    ? clearTaskProfile()
+    : writeTaskProfileAgents(
+        (opts.agents ?? "")
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean)
+      );
+  auditCliMutation("agent roster task", opts.clear ? "clear" : opts.agents ?? "");
+  if (opts.json) console.log(JSON.stringify(roster, null, 2));
+  else {
+    console.log(
+      opts.clear
+        ? "✓ task profile cleared (falls back to operational)"
+        : `✓ task profile: ${roster.profiles.task.join(", ") || "—"}`
+    );
+  }
 }
 
 export function runAgentRosterMigrate(opts: RosterOptions = {}): void {

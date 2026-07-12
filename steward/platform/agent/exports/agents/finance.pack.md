@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · finance
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-11 · **Tenant:** mal
+> **Generated:** 2026-07-12 · **Tenant:** acme
 > **Regenerate:** `orgos operator export --agent finance`
 
 ---
@@ -301,8 +301,6 @@ orgos agent pulse --agent finance
 - `variance_analysis` · cli · `steward/core/skills/variance_analysis.md`
 - `cashflow_forecast` · cli · `steward/core/skills/cashflow_forecast.md`
 - `capex_planning` · cli · `steward/core/skills/capex_planning.md`
-- `jp-cashflow-schedule` · cli · `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/skills/jp_cashflow_schedule.md`
-- `jp-treasury-position` · cli · `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/skills/jp_treasury_position.md`
 
 ---
 
