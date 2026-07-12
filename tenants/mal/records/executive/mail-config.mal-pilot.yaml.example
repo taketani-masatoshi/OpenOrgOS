@@ -1,0 +1,33 @@
+# mal Phase 4a — Xserver SMTP/IMAP mail-config template (L2 values via env)
+# Install:
+#   cp deploy/mal-pilot/mail-config.mal-pilot.yaml.example \
+#      tenants/mal/records/executive/mail-config.yaml
+# Or: npm run orgos -- protocol wire-hygiene --tenant mal
+# Credentials: deploy/mal-pilot/env/.env.mail-wire (ORGOS_SMTP_* / ORGOS_IMAP_*)
+# Account: ai@malkk.com only — never info@malkk.com for OrgOS wire/mail
+
+provider: smtp
+from:
+  name: "MAL Secretary"
+  email: ai@malkk.com
+smtp:
+  host: sv16463.xserver.jp
+  port: 587
+  secure: false
+receive:
+  sync: imap
+  imap_host: sv16463.xserver.jp
+  imap_port: 993
+  imap_mailbox: INBOX
+  auto_wire_scan: true
+  auto_triage: false
+wire_outbound:
+  enabled: true
+  from:
+    name: "MAL Wire"
+    email: ai@malkk.com
+  smtp:
+    host: sv16463.xserver.jp
+    port: 587
+    secure: false
+  max_per_hour: 30
