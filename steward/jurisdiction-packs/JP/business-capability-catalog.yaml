@@ -356,7 +356,7 @@ modules:
   - id: travel_booking
     name_ja: 出張・旅行手配
     status: partial
-    tier: activation_ready
+    tier: production_ready
     pack: steward/modules
     agent_proxy: operations
     categories: [sector_operations, cross_border]

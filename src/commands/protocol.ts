@@ -562,6 +562,80 @@ export function runProtocolTransactionShow(opts: ProtocolTransactionShowOptions)
   if (tx.notes) console.log(`notes: ${tx.notes}`);
 }
 
+export interface ProtocolTransactionPruneOrphansOptions {
+  tenant?: string;
+  peer?: string;
+  since?: string;
+  fetch?: boolean;
+  apply?: boolean;
+  json?: boolean;
+}
+
+export async function runProtocolTransactionPruneOrphans(
+  opts: ProtocolTransactionPruneOrphansOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { pruneOrphanTransactions } = await import("../lib/protocol/transaction-orphans.js");
+  const result = await pruneOrphanTransactions({
+    peerId: opts.peer,
+    since: opts.since,
+    fetchReceipts: opts.fetch === true,
+    apply: opts.apply === true,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  if (result.orphans.length === 0) {
+    console.log("✓ No orphan outbound transactions");
+    return;
+  }
+  console.log(
+    `${result.dry_run ? "Would remove" : "Removed"} ${result.orphans.length} orphan transaction(s):`
+  );
+  for (const orphan of result.orphans) {
+    console.log(
+      `  · ${orphan.transaction.transaction_id} · ${orphan.transaction.event_id} · ${orphan.reasons.join(", ")}`
+    );
+  }
+  if (result.dry_run) {
+    console.log("  (dry-run — pass --apply to remove from registry)");
+  }
+}
+
+export interface ProtocolWitnessCacheMissingOptions {
+  tenant?: string;
+  peer?: string;
+  since?: string;
+  json?: boolean;
+}
+
+export async function runProtocolWitnessCacheMissing(
+  opts: ProtocolWitnessCacheMissingOptions
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { cacheMissingWitnessReceipts } = await import("../lib/protocol/transaction-orphans.js");
+  const result = await cacheMissingWitnessReceipts({
+    peerId: opts.peer,
+    since: opts.since,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(
+    `witness cache-missing: ${result.checked} outbound without cache · fetched ${result.fetched} event(s)`
+  );
+  if (result.still_missing.length) {
+    console.log(`  still missing (${result.still_missing.length}):`);
+    for (const eventId of result.still_missing) console.log(`    · ${eventId}`);
+  } else if (result.checked === 0) {
+    console.log("  (all outbound transactions already cached or none registered)");
+  } else {
+    console.log("✓ witness receipts cached for all checked events");
+  }
+}
+
 export interface ProtocolAuditVerifyOptions {
   since?: string;
   json?: boolean;

@@ -267,6 +267,13 @@ export function validateModules(): ModuleValidationIssue[] {
     }
     seenIds.add(mod.id);
 
+    if (mod.id !== mod.agent) {
+      issues.push({
+        file: logicalFile,
+        message: `module id "${mod.id}" must equal agent "${mod.agent}" (catalog/roster boundary)`,
+      });
+    }
+
     if (!catalogIds.has(mod.agent)) {
       issues.push({
         file: logicalFile,

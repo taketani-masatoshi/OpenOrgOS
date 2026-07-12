@@ -577,11 +577,21 @@ export function registerPlatformCommands(program: Command): void {
   operatorCmd
     .command("sync-policy")
     .description("Sync steward/rules to Cursor mirrors, AGENTS.md, and engineering 00–09")
-    .option("--emit <target>", "cursor | agents-md | dev-guide | engineering | all", "all")
+    .option(
+      "--emit <target>",
+      "cursor | agents-md | dev-guide | engineering | data-classification | all",
+      "all"
+    )
     .action(async (opts) => {
       const { runOperatorSyncPolicy } = await import("../../commands/operator.js");
       runOperatorSyncPolicy({
-        emit: opts.emit as "cursor" | "agents-md" | "dev-guide" | "engineering" | "all",
+        emit: opts.emit as
+          | "cursor"
+          | "agents-md"
+          | "dev-guide"
+          | "engineering"
+          | "data-classification"
+          | "all",
       });
     });
   operatorCmd

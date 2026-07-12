@@ -72,6 +72,16 @@ orgos executive scheduling rehearsal --full --tenant <id>
 
 **スコープ外（別検証）:** IMAP 本番 sync · Google Calendar/Meet OAuth 本番 · Steward Chat session 本番。
 
+**運用 Runbook:** [scheduling-coordination-runbook.md](../../../docs/org-os/scheduling-coordination-runbook.md)（セットアップ · 本番フロー · トラブルシュート · 厳格チェックリスト）
+
+## 前提（mutation 前）
+
+```bash
+export STEWARD_OPERATOR_AUTH=1
+export ORGOS_OPERATOR_KEY="$(cat ~/.orgos/operators/OP-001.key)"
+orgos doctor --tenant <id> --repair   # ERROR 0 を確認
+```
+
 ## Agent 分担
 
 | 主体 | 役割 |

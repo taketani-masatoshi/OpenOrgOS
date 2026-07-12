@@ -1,17 +1,8 @@
----
-description: データ機密階層 L0–L3 · Git/AI 境界 · 出力禁止
-globs:
-  - tenants/**/*
-  - docs/**/*
-  - steward/**/*
-alwaysApply: true
----
-
 # データ分類・AI 開示ルール
 
 正本: テナント内 `data/classification-registry.yaml` · `steward/rules/folder_access_policy.md` §1.3
 
-**役割分担:** 本書 = L0–L3 **全文**（alwaysApply）。`src/` · tenant `data/` 編集時は [engineering/07-security.md](steward/rules/engineering/07-security.md) が短いリマインダ（glob 適用）。
+**役割分担:** 本書 = L0–L3 **全文**（alwaysApply）。`src/` · tenant `data/` 編集時は [engineering/07-security.md](engineering/07-security.md) が短いリマインダ（glob 適用）。
 
 ## 3 境界
 
@@ -41,5 +32,3 @@ alwaysApply: true
 ## Privacy Mode
 
 L2 を AI に渡す場合は Cursor **Privacy Mode ON**（ZDR）を前提とする。
-
-> **Mirror only.** Canonical: `steward/rules/data-classification.md` · Regenerate: `orgos operator sync-policy --emit all`

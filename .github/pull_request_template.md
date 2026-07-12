@@ -5,6 +5,8 @@
 ## Test plan
 
 - [ ] `npm test`（該当 tier があれば `npm run test:platform` 等）
+- [ ] `npm run typecheck`
+- [ ] `npm run lint` · `npm run format:check`（`src/` · `schemas/` · `scripts/` 変更時）
 - [ ] `npm run validate`（データ変更時）
 - [ ] `npm run generated:check`（生成物 · policy ミラー変更時）
 - [ ] `orgos operator sync-policy --emit all`（`steward/rules/` · `engineering/` 変更時）
@@ -15,6 +17,7 @@
 - [ ] アーキテクチャ整合（SSOT · Catalog/Roster 混在なし）
 - [ ] ビジネスロジックは `src/lib/` / CLI（LLM のみに依存しない）
 - [ ] テスト追加 / 更新（Domain 可能な範囲）
+- [ ] Lint / Format 通過（`npm run lint` · `npm run format:check`）
 - [ ] ドキュメント / ADR 更新（仕様変更時）
 - [ ] 重複ロジック · デッドコード · TODO 残置なし
 - [ ] L2/L3 を tracked MD · チャットに出力していない

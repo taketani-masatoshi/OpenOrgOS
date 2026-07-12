@@ -30,14 +30,17 @@ Human makes final decisions. Agents propose and draft only.
 
 | Catalog (definition) | Roster (runtime) |
 |---------------------|------------------|
-| Agent capability manifest | Agent roster assignments |
-| Skill registry | Skill invocations / work orders |
-| Module catalog | `modules.yaml` activation |
-| Wire trust registry | Hub federation · registered orgs |
+| `steward/core/agents/registry.yaml` | `tenants/{id}/data/operator/agents.yaml` |
+| `steward/modules/{id}/` · jurisdiction packs | `tenants/{id}/modules.yaml` (`enabled`) |
+| Skill registry (catalog) | Skill invocations / work orders |
+| Wire trust / hub topology | Registered orgs · pending queues |
+| — | ~~`agents-enabled.yaml`~~ migrate only · validate fails if present |
 
-Schemas: `schemas/agent-catalog.ts` · `schemas/agent-roster.ts`
+Schemas: `schemas/agent-catalog.ts` · `schemas/agent-roster.ts` · `schemas/modules.ts`
 
-Never write roster state into catalog files or vice versa.
+- Module roster convention: `modules.yaml` entry `id` **must equal** `agent` (catalog id).
+- Never write roster state into catalog files or vice versa.
+- `orgos validate` checks module id/agent alignment and rejects legacy `agents-enabled.yaml`.
 
 ---
 

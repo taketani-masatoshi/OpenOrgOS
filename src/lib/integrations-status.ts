@@ -91,7 +91,7 @@ export function computeIntegrationsStatus(tenantId: string): IntegrationsStatusR
   return {
     tenant: tenantId,
     setup_completed: Boolean(integrations?.setup?.completed_at),
-    setup_completed_at: integrations?.setup?.completed_at,
+    setup_completed_at: integrations?.setup?.completed_at ?? undefined,
     items,
     score_pct,
   };

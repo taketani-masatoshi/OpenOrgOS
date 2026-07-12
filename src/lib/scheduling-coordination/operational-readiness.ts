@@ -110,8 +110,19 @@ export function collectOperationalReadinessIssues(opts?: {
     rotatedOperators = keyRepair.rotated;
   }
 
-  if (opts?.ensureMailConfig && !existsSync(getMailConfigPath())) {
-    ensureExecutiveMailConfig({ dryRunSmtp: true });
+  if (opts?.ensureMailConfig) {
+    const mailConfigPath = getMailConfigPath();
+    if (!existsSync(mailConfigPath)) {
+      ensureExecutiveMailConfig({ dryRunSmtp: true });
+    } else {
+      const mailErrors = collectMailSetupIssues("email").filter((i) => i.severity === "error");
+      const repairable = mailErrors.some((e) =>
+        ["from_placeholder", "provider_dry_run", "mail_config_file", "from_mismatch"].includes(e.id)
+      );
+      if (repairable) {
+        ensureExecutiveMailConfig({ dryRunSmtp: true, force: true });
+      }
+    }
   }
 
   if (!existsSync(getMailConfigPath())) {

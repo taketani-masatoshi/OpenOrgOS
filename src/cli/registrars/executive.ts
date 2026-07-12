@@ -57,6 +57,7 @@ import {
   runSchedulingReschedule,
   runSchedulingShow,
 } from "../../commands/scheduling-coordination.js";
+import { runSchedulingRehearsal } from "../../commands/scheduling-rehearsal.js";
 
 export function registerExecutiveCommands(program: Command): void {
   const executiveCmd = program
@@ -318,6 +319,22 @@ export function registerExecutiveCommands(program: Command): void {
     .requiredOption("--id <caseId>", "Case ID")
     .option("--json", "JSON output")
     .action((opts) => runSchedulingReschedule({ id: opts.id, json: opts.json }));
+
+  schedulingCmd
+    .command("rehearsal")
+    .description("Dry-run scheduling coordination end-to-end (setup · propose · reply · confirm)")
+    .option("--full", "Run full rehearsal (default: setup readiness only)")
+    .option("--setup-only", "Check mail/operator readiness without mutating cases")
+    .option("--tenant <id>", "Tenant ID (default: ORGOS_TENANT)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runSchedulingRehearsal({
+        full: opts.full,
+        setupOnly: opts.setupOnly,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
 
   const secretaryCmd = program
     .command("secretary")

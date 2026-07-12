@@ -63,6 +63,7 @@ import {
   runProtocolTransactionRecord,
   runProtocolTransactionList,
   runProtocolTransactionShow,
+  runProtocolTransactionPruneOrphans,
   runProtocolAuditVerify,
   runProtocolVerifyAuditChain,
   runProtocolVerifyDelegation,
@@ -84,6 +85,7 @@ import {
   runProtocolWitnessRegister,
   runProtocolWitnessFlushPending,
   runProtocolWitnessVerify,
+  runProtocolWitnessCacheMissing,
   runProtocolWitnessReconcile,
   runProtocolWitnessPoolStatus,
   runProtocolTrustedHubsList,
@@ -179,8 +181,16 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Match routes by --text and/or --path")
     .option("--text <text>", "User intent or message text")
     .option("--path <path>", "Resource path (logical)")
+    .option("--profile <profile>", "operational | developer | task", "operational")
     .option("--json", "JSON output")
-    .action((opts) => runRouteMatch({ text: opts.text, path: opts.path, json: opts.json }));
+    .action((opts) =>
+      runRouteMatch({
+        text: opts.text,
+        path: opts.path,
+        profile: opts.profile,
+        json: opts.json,
+      })
+    );
   routeCmd
     .command("suggest")
     .description("Suggest handoff card (console)")
@@ -191,6 +201,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--path <path>", "Path for match")
     .option("--route-id <id>", "Force route id from registry")
     .option("--mode <mode>", "suggest | auto", "suggest")
+    .option("--profile <profile>", "operational | developer | task", "operational")
     .option("--json", "JSON output")
     .action((opts) =>
       runRouteSuggest({
@@ -201,6 +212,7 @@ export function registerOrchestrationCommands(program: Command): void {
         path: opts.path,
         routeId: opts.routeId,
         mode: opts.mode,
+        profile: opts.profile,
         json: opts.json,
       })
     );
@@ -214,6 +226,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--path <path>", "Path for match")
     .option("--route-id <id>", "Force route id")
     .option("--mode <mode>", "suggest | auto", "suggest")
+    .option("--profile <profile>", "operational | developer | task", "operational")
     .option("--notes <text>", "Optional notes")
     .action((opts) =>
       runRouteHandoff({
@@ -224,6 +237,7 @@ export function registerOrchestrationCommands(program: Command): void {
         path: opts.path,
         routeId: opts.routeId,
         mode: opts.mode,
+        profile: opts.profile,
         notes: opts.notes,
       })
     );
@@ -951,6 +965,25 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--json", "JSON output")
     .action((id, opts) => runProtocolTransactionShow({ id, tenant: opts.tenant, json: opts.json }));
+  protocolTxCmd
+    .command("prune-orphans")
+    .description("List or remove outbound registry rows with no envelope and no witness receipt")
+    .option("--peer <id>", "Filter by counterparty PEER-*")
+    .option("--since <date>", "YYYY-MM-DD")
+    .option("--fetch", "Fetch witness receipts from hub before classifying orphan")
+    .option("--apply", "Remove orphans from transactions-registry.yaml (default: dry-run)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolTransactionPruneOrphans({
+        peer: opts.peer,
+        since: opts.since,
+        fetch: opts.fetch,
+        apply: opts.apply,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
+    );
 
   const protocolNoticeCmd = protocolCmd
     .command("notice")
@@ -1549,6 +1582,21 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) =>
       runProtocolWitnessVerify({ eventId: opts.eventId, tenant: opts.tenant, json: opts.json })
+    );
+  protocolWitnessCmd
+    .command("cache-missing")
+    .description("Fetch witness hub receipts for outbound txs missing local cache")
+    .option("--peer <id>", "Filter by counterparty PEER-*")
+    .option("--since <date>", "YYYY-MM-DD")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runProtocolWitnessCacheMissing({
+        peer: opts.peer,
+        since: opts.since,
+        tenant: opts.tenant,
+        json: opts.json,
+      })
     );
   protocolWitnessCmd
     .command("reconcile")

@@ -1,0 +1,12 @@
+# Generated / large trees — format gradually (ADR 0003 phase B)
+tenants/**
+apps/**
+packages/**
+dist/**
+node_modules/**
+coverage/**
+*.md
+*.yaml
+*.yml
+*.jsonl
+*.csv

@@ -37,6 +37,7 @@ export function runRouteList(): void {
 export interface RouteMatchOptions {
   text?: string;
   path?: string;
+  profile?: "operational" | "developer" | "task";
   json?: boolean;
 }
 
@@ -46,7 +47,8 @@ export function runRouteMatch(opts: RouteMatchOptions): void {
     process.exit(1);
   }
 
-  const matches = matchRoutes({ text: opts.text, path: opts.path });
+  const profile = opts.profile ?? "operational";
+  const matches = matchRoutes({ text: opts.text, path: opts.path, profile });
 
   if (opts.json) {
     console.log(
@@ -61,7 +63,9 @@ export function runRouteMatch(opts: RouteMatchOptions): void {
           moduleEnabled: m.moduleEnabled,
           boundaryOk: m.boundaryOk,
           skillAvailable: m.skillAvailable,
+          blockedReasons: m.blockedReasons,
           eligible: m.access.allowed && m.moduleEnabled && m.boundaryOk,
+          profile,
         })),
         null,
         2
@@ -75,12 +79,21 @@ export function runRouteMatch(opts: RouteMatchOptions): void {
     return;
   }
 
-  console.log("| id | agent | score | eligible | matched |");
-  console.log("|----|-------|-------|----------|---------|");
+  console.log(`Profile: ${profile}`);
+  console.log("| id | agent | score | eligible | reason |");
+  console.log("|----|-------|-------|----------|--------|");
   for (const m of matches) {
     const eligible = m.access.allowed && m.moduleEnabled && m.boundaryOk ? "yes" : "no";
+    const reason = m.blockedReasons.length ? m.blockedReasons.join("; ") : m.matchedBy.join(", ");
     console.log(
-      `| ${m.route.id} | ${m.route.agent} | ${m.score} | ${eligible} | ${m.matchedBy.join(", ")} |`
+      `| ${m.route.id} | ${m.route.agent} | ${m.score} | ${eligible} | ${reason} |`
+    );
+  }
+
+  const inactive = matches.filter((m) => !m.moduleEnabled);
+  if (inactive.length) {
+    console.log(
+      "\nInactive agents — enable with: orgos agent roster enable --agent <id>"
     );
   }
 }
@@ -93,14 +106,19 @@ export interface RouteSuggestOptions {
   path?: string;
   routeId?: string;
   mode?: "suggest" | "auto";
+  profile?: "operational" | "developer" | "task";
   json?: boolean;
 }
 
 export function runRouteSuggest(opts: RouteSuggestOptions): void {
-  let matched = opts.text || opts.path ? pickBestRoute({ text: opts.text, path: opts.path }) : undefined;
+  const profile = opts.profile ?? "operational";
+  let matched =
+    opts.text || opts.path ? pickBestRoute({ text: opts.text, path: opts.path, profile }) : undefined;
 
   if (opts.routeId && !matched) {
-    matched = matchRoutes({ text: opts.text, path: opts.path }).find((m) => m.route.id === opts.routeId);
+    matched = matchRoutes({ text: opts.text, path: opts.path, profile }).find(
+      (m) => m.route.id === opts.routeId
+    );
   }
 
   const parsedTo = opts.to ? agentId.safeParse(opts.to) : null;
@@ -139,13 +157,18 @@ export interface RouteHandoffOptions {
   path?: string;
   routeId?: string;
   mode?: "suggest" | "auto";
+  profile?: "operational" | "developer" | "task";
   notes?: string;
 }
 
 export function runRouteHandoff(opts: RouteHandoffOptions): void {
-  let matched = opts.text || opts.path ? pickBestRoute({ text: opts.text, path: opts.path }) : undefined;
+  const profile = opts.profile ?? "operational";
+  let matched =
+    opts.text || opts.path ? pickBestRoute({ text: opts.text, path: opts.path, profile }) : undefined;
   if (opts.routeId && !matched) {
-    matched = matchRoutes({ text: opts.text, path: opts.path }).find((m) => m.route.id === opts.routeId);
+    matched = matchRoutes({ text: opts.text, path: opts.path, profile }).find(
+      (m) => m.route.id === opts.routeId
+    );
   }
 
   const parsedTo = opts.to ? agentId.safeParse(opts.to) : null;

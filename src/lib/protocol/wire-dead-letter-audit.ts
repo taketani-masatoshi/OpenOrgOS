@@ -1,4 +1,5 @@
 import { appendJsonl } from "../jsonl-store.js";
+import { getClock } from "../runtime-context.js";
 import { join } from "node:path";
 import { getProtocolDataDir } from "./paths.js";
 import type { WirePendingEntry } from "../../../schemas/protocol/wire-pending.js";
@@ -19,7 +20,7 @@ export function getWireDeadLetterAuditPath(): string {
 
 export function appendWireDeadLetterAudit(entry: WirePendingEntry): void {
   const record: WireDeadLetterAuditEntry = {
-    recorded_at: new Date().toISOString(),
+    recorded_at: getClock().nowIso(),
     peer_id: entry.peer_id,
     event_id: entry.event_id,
     envelope_digest: entry.envelope_digest,

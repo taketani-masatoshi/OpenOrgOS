@@ -9,6 +9,7 @@ import type { CompanyEvent, CompanyEventsRegistry } from "../../schemas/company-
 import { canonicalJson } from "./protocol/canonical.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { getDataDir, toLogicalPath } from "./utils.js";
+import { getClock } from "./runtime-context.js";
 
 const CHAIN_GENESIS = "genesis";
 
@@ -34,7 +35,17 @@ export interface VoidChainPayloadInput {
   reason: string;
 }
 
-export type ChainPayloadInput = CreateChainPayloadInput | VoidChainPayloadInput;
+export interface StatusChainPayloadInput {
+  action: "status";
+  eventId: string;
+  status: CompanyEvent["status"];
+  closed_at?: string;
+}
+
+export type ChainPayloadInput =
+  | CreateChainPayloadInput
+  | VoidChainPayloadInput
+  | StatusChainPayloadInput;
 
 export function buildChainPayloadDigest(input: ChainPayloadInput): string {
   const payload =
@@ -47,12 +58,19 @@ export function buildChainPayloadDigest(input: ChainPayloadInput): string {
           title: input.event.title,
           status: input.event.status,
         }
-      : {
-          action: input.action,
-          event_id: input.eventId,
-          target_event_id: input.targetEventId,
-          reason: input.reason,
-        };
+      : input.action === "void"
+        ? {
+            action: input.action,
+            event_id: input.eventId,
+            target_event_id: input.targetEventId,
+            reason: input.reason,
+          }
+        : {
+            action: input.action,
+            event_id: input.eventId,
+            status: input.status,
+            closed_at: input.closed_at,
+          };
   return createHash("sha256").update(canonicalJson(payload)).digest("hex");
 }
 
@@ -70,7 +88,8 @@ export function appendChainLink(input: ChainPayloadInput): CompanyEventChainLink
   const prev = chain.length > 0 ? chain[chain.length - 1] : undefined;
   const seq = (prev?.seq ?? 0) + 1;
   const payload_digest = buildChainPayloadDigest(input);
-  const event_id = input.action === "create" ? input.event.id : input.eventId;
+  const event_id =
+    input.action === "create" ? input.event.id : input.eventId;
   const target_event_id = input.action === "void" ? input.targetEventId : undefined;
 
   const linkSansDigest: Omit<CompanyEventChainLink, "digest"> = {
@@ -81,7 +100,7 @@ export function appendChainLink(input: ChainPayloadInput): CompanyEventChainLink
     target_event_id,
     prev_digest: prev?.digest ?? null,
     payload_digest,
-    recorded_at: new Date().toISOString(),
+    recorded_at: getClock().nowIso(),
   };
 
   const link = companyEventChainLinkSchema.parse({

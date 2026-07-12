@@ -201,7 +201,7 @@ function writeSkeletonData(
     result.created.push(rel);
   };
 
-  put("data/company.yaml", skeletonCompany(name));
+  put("data/company.yaml", skeletonCompany(name, id));
   put("data/ops-config.yaml", skeletonOpsConfig());
   put("data/classification-registry.yaml", skeletonClassificationRegistry());
   put("data/document-io.yaml", "inbox_items: []\noutbox_items: []\n");
@@ -299,23 +299,17 @@ function seedExecutiveRecordsFromExample(
 ): void {
   const recDir = join(dest, "records", "executive");
   mkdirSync(recDir, { recursive: true });
-  const example = join(recDir, "mail-config.yaml.example");
   const target = join(recDir, "mail-config.yaml");
   const rel = "records/executive/mail-config.yaml";
   if (skipExisting && existsSync(target)) {
     result?.skipped.push(rel);
     return;
   }
-  if (existsSync(example)) {
-    cpSync(example, target);
-    result?.created.push(rel);
-    return;
-  }
   const tenantId = basename(dest);
   const prevTenant = process.env.ORGOS_TENANT;
   process.env.ORGOS_TENANT = tenantId;
   setTenantId(tenantId);
-  ensureExecutiveMailConfig({ dryRunSmtp: true });
+  ensureExecutiveMailConfig({ dryRunSmtp: true, force: !skipExisting });
   if (prevTenant) process.env.ORGOS_TENANT = prevTenant;
   if (existsSync(target)) {
     result?.created.push(rel);
@@ -327,11 +321,13 @@ function writeFile(path: string, content: string): void {
   writeFileSync(path, content, "utf-8");
 }
 
-function skeletonCompany(name: string): string {
+function skeletonCompany(name: string, tenantId: string): string {
   return `name: "${name}"
 fiscal_year_end_month: 1
 business_description: |
   スケルトン — 事業概要を記載
+public_disclosure:
+  representative_email: ceo@${tenantId}.orgos.local
 `;
 }
 

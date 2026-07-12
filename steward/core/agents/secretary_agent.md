@@ -88,7 +88,7 @@ orgos doctor --tenant <id> --repair
 ```
 
 続けて dry-run 完走確認: `orgos executive scheduling rehearsal --full --tenant <id>`  
-詳細: [schedule_coordination.md](../steward/core/skills/schedule_coordination.md)
+詳細 Runbook: [scheduling-coordination-runbook.md](../../../docs/org-os/scheduling-coordination-runbook.md) · Skill: [schedule_coordination.md](../steward/core/skills/schedule_coordination.md)
 
 ---
 

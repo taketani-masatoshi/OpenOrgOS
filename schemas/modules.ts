@@ -22,7 +22,9 @@ export const moduleBillingSchema = z.object({
 });
 
 export const tenantModuleSchema = z.object({
+  /** Catalog module id. Convention: must equal `agent` (validated by validateModules). */
   id: z.string().regex(/^[a-z][a-z0-9_-]*$/),
+  /** Runtime activation flag (roster). Catalog definitions live under steward/modules/. */
   enabled: z.boolean(),
   agent: moduleAgentId,
   property_ids: z.array(z.string().regex(/^PROP-\d{3,}$/)).optional(),

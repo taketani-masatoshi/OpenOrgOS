@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const companyEventChainActionSchema = z.enum(["create", "void"]);
+export const companyEventChainActionSchema = z.enum(["create", "void", "status"]);
 
 export const companyEventChainLinkSchema = z.object({
   seq: z.number().int().positive(),

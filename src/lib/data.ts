@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { validateModules } from "./modules.js";
+import { validateLegacyRosterFiles } from "./tenant-roster-load.js";
 import { getResolvedJurisdiction } from "./jurisdiction.js";
 import { validateRegulations } from "./regulations.js";
 import {
@@ -470,6 +471,10 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
 
   for (const issue of validateModules()) {
     errors.push({ file: issue.file, message: issue.message });
+  }
+
+  for (const message of validateLegacyRosterFiles()) {
+    errors.push({ file: "data/operator/agents-enabled.yaml", message });
   }
 
   for (const issue of validateRegulations()) {

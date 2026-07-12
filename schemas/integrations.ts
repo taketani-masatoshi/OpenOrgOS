@@ -8,8 +8,8 @@ export const integrationWebhookSchema = z.object({
 });
 
 export const integrationsSetupSchema = z.object({
-  completed_at: z.string().optional(),
-  completed_by: z.string().optional(),
+  completed_at: z.string().nullish(),
+  completed_by: z.string().nullish(),
   version: z.string().optional(),
 });
 

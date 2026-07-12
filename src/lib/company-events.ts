@@ -447,6 +447,12 @@ export function updateCompanyEventStatus(
 
   registry.events[idx] = updated;
   saveCompanyEvents(registry);
+  appendChainLink({
+    action: "status",
+    eventId: updated.id,
+    status: updated.status,
+    closed_at: updated.closed_at,
+  });
   refreshMonthIndex(updated.month, registry.events);
   return updated;
 }

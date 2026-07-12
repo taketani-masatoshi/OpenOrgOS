@@ -19,6 +19,7 @@ jobs:
       - run: npm run agent:pipeline:check
       - run: npm run check
       - run: npx tsc --noEmit
+      - run: npm run lint
       - run: npm run test:registry:sync
       - run: git diff --exit-code tests/test-registry.yaml
       - run: npm run test:registry:check
