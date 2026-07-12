@@ -7,6 +7,7 @@ import {
   runWireGatewayServe,
   runWireGatewayValidate,
 } from "../../commands/wire-gateway.js";
+import { runWireLiveVerifyCommand } from "../../commands/wire-live-verify.js";
 import {
   runProtocolPeerDiscover,
   runProtocolPeerRegister,
@@ -242,4 +243,27 @@ export function registerCanonicalWireCommands(program: Command): void {
     .option("--strict", "Run focused mapped test evidence")
     .option("--json", "JSON output")
     .action((opts) => runWireGatewayScore(opts));
+  wire
+    .command("live-verify")
+    .description("Env-gated live Wire verification (requires ORGOS_LIVE_VERIFY=1)")
+    .option("--tenant <id>", "Tenant id", "mal")
+    .option("--public-base-url <url>", "Public Wire base URL")
+    .option("--roundtrip", "Also run Phase 4 email_wire live roundtrip")
+    .option("--json", "JSON output")
+    .option("--no-evidence", "Skip writing scratch/wire-live-verify-*.json")
+    .action(async (opts: {
+      tenant?: string;
+      publicBaseUrl?: string;
+      roundtrip?: boolean;
+      json?: boolean;
+      noEvidence?: boolean;
+    }) =>
+      runWireLiveVerifyCommand({
+        tenant: opts.tenant,
+        publicBaseUrl: opts.publicBaseUrl,
+        roundtrip: opts.roundtrip,
+        json: opts.json,
+        noEvidence: opts.noEvidence,
+      })
+    );
 }

@@ -12,6 +12,19 @@ export WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY="${WIRE_GATEWAY_TLS_TERMINATED_EXT
 export ORGOS_STRICT_TRUST_JURISDICTIONS="${ORGOS_STRICT_TRUST_JURISDICTIONS:-JP}"
 export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-$([ "$TENANT" = mal ] && echo https://wire.oorgos.org || echo "https://wire.${TENANT}.example")}"
 
+load_env_file() {
+  local f="$1"
+  if [[ -f "$f" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$f"
+    set +a
+  fi
+}
+
+load_env_file "$ROOT/tenants/$TENANT/records/executive/smtp.env"
+load_env_file "$ROOT/deploy/mal-pilot/env/.env.mail-wire"
+
 echo "=== Wire production gate (${TENANT}) ==="
 
 fail() {
