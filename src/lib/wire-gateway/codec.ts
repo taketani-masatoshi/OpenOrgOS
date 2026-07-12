@@ -5,6 +5,7 @@ import {
   wireMessageSchema,
   type WireMessage,
 } from "../../../schemas/protocol/wire-message.js";
+import { isOpenOrgDid } from "../../../schemas/protocol/openorg-did.js";
 import { envelopeDigest } from "../protocol/canonical.js";
 import { loadPeersRegistry } from "../protocol/peers.js";
 
@@ -22,6 +23,9 @@ function resolveOrgRef(nodeId: string): OrgRef {
       org_id: match?.[1] ?? nodeId,
       org_uri: nodeId,
     };
+  }
+  if (isOpenOrgDid(nodeId)) {
+    return { org_id: nodeId, org_uri: nodeId };
   }
   const peerRef = peerOrgRefFromWireId(nodeId);
   if (peerRef) return peerRef;

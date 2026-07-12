@@ -19,6 +19,7 @@ import { wireMessageSchema } from "../schemas/protocol/wire-message.js";
 import { wireGatewayConfigSchema } from "../schemas/protocol/wire-gateway-config.js";
 import { wireExportPolicySchema } from "../schemas/protocol/wire-export-policy.js";
 import { wireGatewayAuditEntrySchema } from "../schemas/protocol/wire-gateway-audit.js";
+import { resetRuntimeContext, setRuntimeContext } from "../src/lib/runtime-context.js";
 
 describe("wire-gateway codec (WG-0)", () => {
   beforeEach(() => {
@@ -80,6 +81,54 @@ describe("wire-gateway codec (WG-0)", () => {
     expect(wire.receiver).toBe("org.partner.example");
     const decoded = wireMessageToEnvelope(wire);
     expect(decoded.destination?.org_id).toBe("org.partner.example");
+  });
+
+  it("preserves OpenOrg pk-DID sender through wire decode (hash stable)", () => {
+    const prev = process.env.ORGOS_REQUIRE_PK_DID;
+    process.env.ORGOS_REQUIRE_PK_DID = "1";
+    try {
+      const doc = buildIdentityDocument();
+      expect(doc.org_ref.org_id).toMatch(/^did:ooo:org:pk-/);
+      const signed = maybeSignEnvelope(
+        buildIdentityEnvelope(doc, {
+          org_id: "did:ooo:org:pk-deadbeefdeadbeef",
+          org_uri: "did:ooo:org:pk-deadbeefdeadbeef",
+        })
+      );
+      const wire = envelopeToWireMessage(signed);
+      expect(wire.sender).toMatch(/^did:ooo:org:pk-/);
+      assertWireHashMatchesEnvelope(wire);
+      const decoded = wireMessageToEnvelope(wire);
+      expect(decoded.origin.org_id).toBe(wire.sender);
+      expect(decoded.origin.org_uri).toBe(wire.sender);
+    } finally {
+      if (prev === undefined) delete process.env.ORGOS_REQUIRE_PK_DID;
+      else process.env.ORGOS_REQUIRE_PK_DID = prev;
+    }
+  });
+
+  it("uses the injected clock and UUID for identity events", () => {
+    setRuntimeContext({
+      clock: {
+        now: () => new Date("2026-07-12T01:02:03.000Z"),
+        nowMs: () => Date.parse("2026-07-12T01:02:03.000Z"),
+        nowIso: () => "2026-07-12T01:02:03.000Z",
+      },
+      idGenerator: {
+        randomSuffix: () => "fixed",
+        uniqueId: (prefix) => `${prefix}-fixed`,
+        uuid: () => "00000000-0000-4000-8000-000000000902",
+      },
+    });
+    try {
+      const doc = buildIdentityDocument();
+      const envelope = buildIdentityEnvelope(doc);
+      expect(doc.issued_at).toBe("2026-07-12T01:02:03.000Z");
+      expect(envelope.occurred_at).toBe("2026-07-12T01:02:03.000Z");
+      expect(envelope.event_id).toBe("00000000-0000-4000-8000-000000000902");
+    } finally {
+      resetRuntimeContext();
+    }
   });
 });
 

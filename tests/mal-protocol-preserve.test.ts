@@ -48,7 +48,23 @@ describe("mal protocol fixture preserve", () => {
     expect(existsSync(mailConfigPath)).toBe(true);
     expect(readFileSync(mailConfigPath, "utf-8")).toContain(marker);
 
-    // Restore pilot-clean transactions for subsequent suites (empty + no marker noise).
+    // Restore pilot-clean artifacts for subsequent suites.
     writeFileSync(transactionsPath, `as_of: "2026-07-12"\ntransactions: []\n`, "utf-8");
+    writeFileSync(
+      peersPath,
+      readFileSync(peersPath, "utf-8")
+        .split("\n")
+        .filter((line) => !line.includes("preserve-marker-"))
+        .join("\n"),
+      "utf-8"
+    );
+    writeFileSync(
+      mailConfigPath,
+      readFileSync(
+        join(ROOT_DIR, "tenants/mal/records/executive/mail-config.mal-pilot.yaml.example"),
+        "utf-8"
+      ),
+      "utf-8"
+    );
   });
 });
