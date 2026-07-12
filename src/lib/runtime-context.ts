@@ -3,6 +3,8 @@
  * Default: system Date / Math.random. Tests: setRuntimeContext({ clock, idGenerator }).
  */
 
+import { randomUUID } from "node:crypto";
+
 export interface Clock {
   now(): Date;
   nowMs(): number;
@@ -12,6 +14,8 @@ export interface Clock {
 export interface IdGenerator {
   randomSuffix(length?: number): string;
   uniqueId(prefix: string): string;
+  /** Stable UUID-shaped id (default: crypto.randomUUID). */
+  uuid(): string;
 }
 
 const defaultClock = (): Clock => ({
@@ -24,8 +28,9 @@ const defaultIdGenerator = (): IdGenerator => ({
   randomSuffix: (length = 8) => Math.random().toString(36).slice(2, 2 + length),
   uniqueId: (prefix: string) => {
     const suffix = Math.random().toString(36).slice(2, 10);
-    return `${prefix}-${Date.now()}-${suffix}`;
+    return `${prefix}-${clock.nowMs()}-${suffix}`;
   },
+  uuid: () => randomUUID(),
 });
 
 let clock: Clock = defaultClock();

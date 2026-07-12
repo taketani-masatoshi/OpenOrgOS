@@ -10,7 +10,7 @@
  *   npm run test:integration
  */
 import { spawnSync } from "node:child_process";
-import { rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import {
   clearTestSuiteStatus,
@@ -52,6 +52,37 @@ function syncTestRegistryArtifacts(): void {
   }
 }
 
+function processExists(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code !== "ESRCH";
+  }
+}
+
+/** Drop only stale fixture locks — never steal a live Vitest owner's lock. */
+function clearStaleFixtureRestoreLock(): void {
+  const lockDir = join(process.cwd(), "tests", ".fixture-restore.lock");
+  if (!existsSync(lockDir)) return;
+  try {
+    const ownerText = readFileSync(join(lockDir, "owner"), "utf-8").trim();
+    const [ownerRaw, startedRaw] = ownerText.split(/\s+/);
+    const owner = Number(ownerRaw);
+    const startedAt = Number(startedRaw);
+    const staleOwner = !Number.isInteger(owner) || owner <= 0 || !processExists(owner);
+    const staleAge = Number.isFinite(startedAt) && Date.now() - startedAt > 120_000;
+    if (staleOwner || staleAge) {
+      rmSync(lockDir, { recursive: true, force: true });
+      console.log(`[test] cleared stale fixture-restore.lock (owner=${ownerRaw ?? "?"})`);
+    } else {
+      console.log(`[test] fixture-restore.lock held by live pid ${owner} — leaving in place`);
+    }
+  } catch {
+    rmSync(lockDir, { recursive: true, force: true });
+  }
+}
+
 function runVitest(files: string[], label: string): number {
   if (files.length === 0) {
     console.log(`[test:${label}] no files — skip`);
@@ -59,8 +90,8 @@ function runVitest(files: string[], label: string): number {
   }
   syncTestRegistryArtifacts();
   console.log(`[test:${label}] ${files.length} file(s)`);
-  const exactFiles = files.map((file) => file.startsWith("tests/") ? file : `tests/${file}`);
-  rmSync(join(process.cwd(), "tests", ".fixture-restore.lock"), { recursive: true, force: true });
+  const exactFiles = files.map((file) => (file.startsWith("tests/") ? file : `tests/${file}`));
+  clearStaleFixtureRestoreLock();
   const result = spawnSync("npx", ["vitest", "run", ...exactFiles], {
     stdio: "inherit",
     env: process.env,

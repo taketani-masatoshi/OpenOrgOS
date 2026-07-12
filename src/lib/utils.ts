@@ -11,6 +11,7 @@ import {
   resolveTenantPath,
   toLogicalPath,
 } from "./tenant.js";
+import { getClock } from "./runtime-context.js";
 
 export { ROOT_DIR, FRAMEWORK_DOCS_DIR, resolveTenantPath, toLogicalPath, getTenantDir };
 export { getTenantId, setTenantId, loadTenantConfig, listTenantIds } from "./tenant.js";
@@ -143,12 +144,12 @@ export function monthRange(from: string, to: string): string[] {
 }
 
 export function currentMonth(): string {
-  const now = new Date();
+  const now = getClock().now();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
 export function currentDate(): string {
-  const now = new Date();
+  const now = getClock().now();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
