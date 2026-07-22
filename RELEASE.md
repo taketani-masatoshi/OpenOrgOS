@@ -24,7 +24,7 @@ npm publish -w @orgos/wire --access public
 ```
 
 7. Homebrew tap: `homebrew-tap/Formula/orgos.rb` の `sha256` を Release tarball の値に更新
-8. **Demo Docker:** workflow `demo-docker` が tag / `main` で GHCR に **multi-arch** push。初回は [deploy/demo/PUBLISH.md](deploy/demo/PUBLISH.md) で Package **Public** と Actions **publish** green を確認
+8. **Demo Docker:** workflow `demo-docker` が tag / `main` で GHCR に **linux/amd64** push。ベータタグ（`v*-beta*`）は `:beta` も付与。初回は [deploy/demo/PUBLISH.md](deploy/demo/PUBLISH.md) で Package **Public** と Actions **publish** green を確認。公開ベータ運用は [docs/org-os/beta-operations.md](docs/org-os/beta-operations.md)。
 
 ```bash
 ORGOS_DEMO_IMAGE=ghcr.io/<owner>/orgos-demo:0.8.0 npm run demo:docker:verify-ghcr

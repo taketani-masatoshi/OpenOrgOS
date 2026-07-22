@@ -2,9 +2,23 @@
 
 **Organizational OS — 組織 OS 参照実装**。業務モジュール・ISO 標準はフレームワーク側（`steward/`）に初期定義し、会社データは **テナント**（`tenants/`）で接続・分離する。
 
+> **Public beta (`0.8.0-beta.x`)** — expect frequent updates.  
+> Run only on infrastructure **you control** (dedicated host, localhost demo bind, tenant data isolated).  
+> Ops: [`docs/org-os/beta-operations.md`](docs/org-os/beta-operations.md) · Update feed: [`channel/latest.json`](channel/latest.json)
+
 **製品名:** OrgOS · **npm:** `orgos-reference` · **CLI:** `orgos`（旧 `steward` は非推奨 · [docs/org-os/cli-migration.md](docs/org-os/cli-migration.md)）
 
 **物理構成正本:** [steward/rules/repository_layout.md](steward/rules/repository_layout.md)
+
+### Try the beta demo (Docker)
+
+```bash
+docker pull ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.1
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.1
+# http://127.0.0.1:9470/  ·  Wire: http://127.0.0.1:9470/wire/
+```
+
+OpenOrgOS **Community** (module registry / committees / OOO certification portal) is a **separate** repository: [OS_Community](https://github.com/taketani-masatoshi/OS_Community).
 
 ---
 

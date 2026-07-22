@@ -94,7 +94,11 @@ jobs:
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             VER="${GITHUB_REF_NAME#v}"
-            echo "tags=${IMAGE}:${VER},${IMAGE}:latest" >> "$GITHUB_OUTPUT"
+            if [[ "$VER" == *beta* || "$VER" == *rc* ]]; then
+              echo "tags=${IMAGE}:${VER},${IMAGE}:beta" >> "$GITHUB_OUTPUT"
+            else
+              echo "tags=${IMAGE}:${VER},${IMAGE}:latest" >> "$GITHUB_OUTPUT"
+            fi
             echo "primary=${IMAGE}:${VER}" >> "$GITHUB_OUTPUT"
           else
             echo "tags=${IMAGE}:main" >> "$GITHUB_OUTPUT"
@@ -108,19 +112,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push (linux/amd64 · linux/arm64)
+      - name: Build and push (linux/amd64)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/demo/Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -143,6 +144,6 @@ jobs:
           echo "### Demo Docker published" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Image: \`${{ steps.meta.outputs.primary }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Platforms: linux/amd64, linux/arm64" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Platforms: linux/amd64" >> "$GITHUB_STEP_SUMMARY"
           echo "- Verify locally: \`ORGOS_DEMO_IMAGE=${{ steps.meta.outputs.primary }} npm run demo:docker:verify-ghcr\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Set Package visibility to **Public** for anonymous pull (see deploy/demo/PUBLISH.md)" >> "$GITHUB_STEP_SUMMARY"

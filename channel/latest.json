@@ -1,0 +1,14 @@
+{
+  "product": "orgos",
+  "channel": "beta",
+  "latest": "0.8.0-beta.1",
+  "minSupported": "0.8.0-beta.1",
+  "releasedAt": "2026-07-22T22:00:00.000Z",
+  "image": "ghcr.io/taketani-masatoshi/orgos-demo",
+  "cliPackage": "@orgos/cli",
+  "releasesUrl": "https://github.com/taketani-masatoshi/OpenOrgOS/releases",
+  "docsUrl": "https://github.com/taketani-masatoshi/OpenOrgOS/blob/main/docs/org-os/beta-operations.md",
+  "securityNotice": "Beta software. Run OrgOS only on infrastructure you control (dedicated host / private network). Do not expose demo ports to the public Internet. Keep tenant data and production secrets off shared machines. Prefer localhost bind for the demo image.",
+  "updateMessage": "A newer OrgOS beta is available. Pull the tagged GHCR demo image and/or upgrade the CLI from the GitHub Release.",
+  "breaking": false
+}
