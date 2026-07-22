@@ -17,8 +17,8 @@
 
 ```bash
 # Pinned beta
-docker pull ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.1
-docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.1
+docker pull ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.2
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.2
 
 # Moving beta pointer
 docker pull ghcr.io/taketani-masatoshi/orgos-demo:beta
@@ -26,7 +26,7 @@ docker pull ghcr.io/taketani-masatoshi/orgos-demo:beta
 
 - Chat: http://127.0.0.1:9470/
 - Wire console: http://127.0.0.1:9470/wire/
-- Verify: `ORGOS_DEMO_IMAGE=ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.1 npm run demo:docker:verify-ghcr`
+- Verify: `ORGOS_DEMO_IMAGE=ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.2 npm run demo:docker:verify-ghcr`
 
 Platforms: **linux/amd64** (arm64 not required for this beta channel).
 
@@ -35,7 +35,7 @@ Platforms: **linux/amd64** (arm64 not required for this beta channel).
 ```bash
 git clone https://github.com/taketani-masatoshi/OpenOrgOS.git
 cd OpenOrgOS
-git checkout v0.8.0-beta.1
+git checkout v0.8.0-beta.2
 npm ci
 npm run orgos -- --tenant demo validate
 npm run orgos -- doctor
