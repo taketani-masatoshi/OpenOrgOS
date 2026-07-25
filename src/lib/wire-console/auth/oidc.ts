@@ -65,11 +65,12 @@ import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
 
 function resolveIdentity(
   payload: OidcClaims,
-  opts?: { approver_id?: string }
+  opts?: { approver_id?: string; requireRegistry?: boolean }
 ): { operator_id: string; approver_id: string } | { error: string } {
+  const byOpClaim = payload.operator_id ? findOperatorById(payload.operator_id) : undefined;
   const byEmail = payload.email ? findOperatorByEmail(payload.email) : undefined;
   const bySub = findOperatorById(payload.sub);
-  const registryOp = byEmail ?? bySub;
+  const registryOp = byOpClaim ?? byEmail ?? bySub;
 
   if (registryOp) {
     return {
@@ -85,7 +86,7 @@ function resolveIdentity(
   const operatorId =
     payload.operator_id ?? payload.email ?? payload.name ?? payload.sub;
 
-  if (isProdSecurityMode()) {
+  if (isProdSecurityMode() || opts?.requireRegistry) {
     return {
       error:
         "OIDC identity not mapped to data/org/operators.yaml — register operator with matching email or sub",
@@ -104,7 +105,7 @@ function resolveIdentity(
 
 export function verifyOidcIdToken(
   idToken: string,
-  opts?: { approver_id?: string }
+  opts?: { approver_id?: string; requireRegistry?: boolean }
 ): { operator_id: string; approver_id: string } | { error: string } {
   const cfg = getOidcConfig();
   if (!cfg.issuer || !cfg.audience) {

@@ -1,3 +1,5 @@
+# Community Google SSO: email must match User.email (NextAuth Google login).
+# Founder Community login (k.lab.masa@gmail.com) → OP-001 for local Operator Console handoff.
 version: "1"
 operators:
   - operator_id: OP-001
@@ -5,6 +7,7 @@ operators:
     role: ceo
     status: active
     approver_name: "段燕燕"
+    email: k.lab.masa@gmail.com
     key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
   - operator_id: OP-002
     display_name: "秘書オペレータ"

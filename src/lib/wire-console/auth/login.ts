@@ -24,6 +24,22 @@ export interface WireConsoleLoginBody {
   };
 }
 
+function sessionFromOidcIdToken(
+  idToken: string,
+  opts?: { approver_id?: string }
+): { token: string; user: WireConsoleUser } | { error: string; status: number } {
+  const verified = verifyOidcIdToken(idToken, opts);
+  if ("error" in verified) {
+    return { error: verified.error, status: 401 };
+  }
+  const mode = wireConsoleAuthMode();
+  return registerSession({
+    operator_id: verified.operator_id,
+    approver_id: verified.approver_id,
+    mode: mode === "prod" ? "prod" : "dev",
+  });
+}
+
 export function authenticateWireConsoleLogin(
   body: WireConsoleLoginBody
 ): { token: string; user: WireConsoleUser; deprecated?: string } | {
@@ -31,6 +47,11 @@ export function authenticateWireConsoleLogin(
   status: number;
 } {
   const mode = wireConsoleAuthMode();
+
+  // Community SSO handoff (and generic OIDC) — allowed in both auth modes.
+  if (body.id_token) {
+    return sessionFromOidcIdToken(body.id_token, { approver_id: body.approver_id });
+  }
 
   if (mode === "prod") {
     if (body.passkey) {
@@ -64,18 +85,7 @@ export function authenticateWireConsoleLogin(
     const adapter = wireConsoleProdAdapter();
 
     if (adapter === "oidc") {
-      if (!body.id_token) {
-        return { error: "id_token required for OIDC prod login", status: 422 };
-      }
-      const verified = verifyOidcIdToken(body.id_token, { approver_id: body.approver_id });
-      if ("error" in verified) {
-        return { error: verified.error, status: 401 };
-      }
-      return registerSession({
-        operator_id: verified.operator_id,
-        approver_id: verified.approver_id,
-        mode: "prod",
-      });
+      return { error: "id_token required for OIDC prod login", status: 422 };
     }
 
     if (adapter === "webauthn") {
@@ -93,7 +103,7 @@ export function authenticateWireConsoleLogin(
   }
 
   if (!body.passkey) {
-    return { error: "passkey required", status: 422 };
+    return { error: "passkey or id_token required", status: 422 };
   }
   const result = createDevSession({
     passkey: body.passkey,
@@ -110,11 +120,14 @@ export function getWireConsoleAuthConfigResponse() {
   const base = getWireConsoleAuthConfig();
   const oidc = getOidcConfig();
   const webauthn = getWebAuthnConfig();
+  const oidcReady = Boolean(oidc.issuer && oidc.audience && (oidc.hs256_configured || oidc.jwks_configured));
   return {
     ...base,
-    oidc: base.mode === "prod" ? oidc : undefined,
+    // Expose OIDC when configured so SPAs know Community handoff is available in dev too.
+    oidc: oidcReady ? oidc : base.mode === "prod" ? oidc : undefined,
     webauthn: base.mode === "prod" ? webauthn : undefined,
     webauthn_e2e_login: base.mode === "prod" && isWebAuthnE2eLoginEnabled(),
+    community_handoff: oidcReady,
   };
 }
 

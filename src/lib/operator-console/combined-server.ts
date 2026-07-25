@@ -14,6 +14,7 @@ import {
 import { STEWARD_CHAT_SPA_DIST } from "../steward-chat/server.js";
 import { handleWireConsoleApi } from "../wire-console/server.js";
 import { WIRE_CONSOLE_SPA_DIST } from "../wire-console/paths.js";
+import { handleCommunityHandoff } from "../wire-console/auth/community-handoff.js";
 import { preloadOidcJwks } from "../wire-console/auth/oidc.js";
 import { sessionTokenFromRequest } from "../wire-console/auth/session.js";
 
@@ -133,6 +134,11 @@ export async function startOperatorConsoleServer(
           wire_spa: existsSync(join(wireDist, "index.html")),
           chat_spa: existsSync(join(STEWARD_CHAT_SPA_DIST, "index.html")),
         });
+        return;
+      }
+
+      if (pathname === "/auth/community-handoff") {
+        handleCommunityHandoff(req, res, url);
         return;
       }
 

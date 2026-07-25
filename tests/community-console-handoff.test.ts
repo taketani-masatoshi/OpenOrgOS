@@ -1,0 +1,170 @@
+import { createHmac } from "node:crypto";
+import { writeFileSync } from "node:fs";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  clearOperatorsRegistryCacheForTests,
+  operatorsRegistryPath,
+} from "../src/lib/org/operators.js";
+import { mintTestOidcIdToken } from "../src/lib/wire-console/auth/oidc.js";
+import { authenticateWireConsoleLogin } from "../src/lib/wire-console/auth/login.js";
+import { handleCommunityHandoff } from "../src/lib/wire-console/auth/community-handoff.js";
+import { resetSessionsForTests, getSessionUser } from "../src/lib/wire-console/auth/session.js";
+import type { IncomingMessage, ServerResponse } from "node:http";
+
+function mintWithEmail(claims: {
+  sub: string;
+  email: string;
+  operator_id?: string;
+}): string {
+  const secret = process.env.WIRE_CONSOLE_OIDC_HS256_SECRET ?? "test-oidc-secret";
+  const issuer = process.env.WIRE_CONSOLE_OIDC_ISSUER ?? "https://idp.test/orgos";
+  const audience = process.env.WIRE_CONSOLE_OIDC_AUDIENCE ?? "wire-console";
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const payload = Buffer.from(
+    JSON.stringify({
+      iss: issuer,
+      aud: audience,
+      sub: claims.sub,
+      email: claims.email,
+      operator_id: claims.operator_id,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+  ).toString("base64url");
+  const signed = `${header}.${payload}`;
+  const sig = createHmac("sha256", secret).update(signed).digest("base64url");
+  return `${signed}.${sig}`;
+}
+
+describe("Community → Console SSO handoff", () => {
+  const prev: Record<string, string | undefined> = {};
+
+  beforeEach(() => {
+    for (const k of [
+      "WIRE_CONSOLE_AUTH",
+      "WIRE_CONSOLE_OIDC_ISSUER",
+      "WIRE_CONSOLE_OIDC_AUDIENCE",
+      "WIRE_CONSOLE_OIDC_HS256_SECRET",
+      "ORGOS_TENANT",
+      "ORGOS_WORKSPACE",
+    ]) {
+      prev[k] = process.env[k];
+    }
+    process.env.WIRE_CONSOLE_AUTH = "dev";
+    process.env.WIRE_CONSOLE_OIDC_ISSUER = "https://community.oorgos.org";
+    process.env.WIRE_CONSOLE_OIDC_AUDIENCE = "orgos-operator-console";
+    process.env.WIRE_CONSOLE_OIDC_HS256_SECRET = "community-console-sso-test-secret";
+    process.env.ORGOS_TENANT = "mal";
+    process.env.ORGOS_WORKSPACE = process.cwd();
+    clearOperatorsRegistryCacheForTests();
+    resetSessionsForTests();
+  });
+
+  afterEach(() => {
+    for (const [k, v] of Object.entries(prev)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+    clearOperatorsRegistryCacheForTests();
+    resetSessionsForTests();
+  });
+
+  it("accepts id_token in dev mode (passkey not required)", () => {
+    const idToken = mintTestOidcIdToken({
+      sub: "community-user",
+      operator_id: "OP-001",
+      approver_id: "段燕燕",
+    });
+    const result = authenticateWireConsoleLogin({ id_token: idToken });
+    expect("error" in result).toBe(false);
+    if ("error" in result) return;
+    expect(result.user.operator_id).toBe("OP-001");
+    expect(result.user.mode).toBe("dev");
+  });
+
+  it("maps Google email to operators.yaml via handoff", () => {
+    // setup-restore-protocol restores tenants/mal/data/org from HEAD — patch email for this test.
+    writeFileSync(
+      operatorsRegistryPath(),
+      `version: "1"
+operators:
+  - operator_id: OP-001
+    display_name: "段燕燕"
+    role: ceo
+    status: active
+    approver_name: "段燕燕"
+    email: k.lab.masa@gmail.com
+    key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
+  - operator_id: OP-002
+    display_name: "秘書オペレータ"
+    role: operator
+    status: active
+    key_hash: sha256:4a7c449d22a99026fac16a47621ff68792ff589f72334ea3950ce186a5615e9a
+`,
+      "utf-8"
+    );
+    clearOperatorsRegistryCacheForTests();
+
+    const idToken = mintWithEmail({
+      sub: "ooo-user-id",
+      email: "k.lab.masa@gmail.com",
+    });
+
+    let status = 0;
+    let location = "";
+    let cookie = "";
+    let bodyBuf = "";
+    const res = {
+      writeHead(code: number, headers?: Record<string, string>) {
+        status = code;
+        if (headers?.Location) location = headers.Location;
+        if (headers?.["Set-Cookie"]) cookie = headers["Set-Cookie"];
+      },
+      setHeader(name: string, value: string) {
+        if (name.toLowerCase() === "set-cookie") cookie = value;
+      },
+      end(chunk?: string) {
+        bodyBuf = chunk ?? "";
+      },
+    } as unknown as ServerResponse;
+
+    const url = new URL(
+      `http://127.0.0.1:9470/auth/community-handoff?token=${encodeURIComponent(idToken)}&next=/wire/`
+    );
+    handleCommunityHandoff({ method: "GET" } as IncomingMessage, res, url);
+
+    expect(status, bodyBuf).toBe(302);
+    expect(location).toBe("/wire/");
+    expect(cookie).toContain("orgos_wire_session=");
+
+    const match = /orgos_wire_session=([^;]+)/.exec(cookie);
+    expect(match).toBeTruthy();
+    const user = getSessionUser(decodeURIComponent(match![1]!));
+    expect(user?.operator_id).toBe("OP-001");
+  });
+
+  it("rejects unmapped email with requireRegistry", () => {
+    const idToken = mintWithEmail({
+      sub: "ooo-unknown",
+      email: "nobody@example.com",
+    });
+
+    let status = 0;
+    let body = "";
+    const res = {
+      writeHead(code: number) {
+        status = code;
+      },
+      setHeader() {},
+      end(chunk?: string) {
+        body = chunk ?? "";
+      },
+    } as unknown as ServerResponse;
+
+    const url = new URL(
+      `http://127.0.0.1:9470/auth/community-handoff?token=${encodeURIComponent(idToken)}&next=/`
+    );
+    handleCommunityHandoff({ method: "GET" } as IncomingMessage, res, url);
+    expect(status).toBe(401);
+    expect(body).toContain("operators.yaml");
+  });
+});
