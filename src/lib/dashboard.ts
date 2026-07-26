@@ -225,6 +225,20 @@ function sumLoanPayments(finance: MonthlyFinance): number {
     .reduce((s, e) => s + e.amount, 0);
 }
 
+/**
+ * Prefer the latest monthly finance on or before `asOfMonth` (default: calendar month).
+ * Future stub months must not drive "current" burn rate / runway.
+ */
+export function selectBasisMonthlyFinance(
+  finances: MonthlyFinance[],
+  asOfMonth = currentMonth()
+): MonthlyFinance | undefined {
+  if (!finances.length) return undefined;
+  const onOrBefore = finances.filter((m) => m.month <= asOfMonth);
+  if (onOrBefore.length) return onOrBefore[onOrBefore.length - 1];
+  return finances[0];
+}
+
 export function resolveFiscalYear(fiscalYearEndMonth: number, refMonth = currentMonth()): string {
   const { year, month } = parseMonthParts(refMonth);
   const fyStartMonth = fiscalYearEndMonth === 12 ? 1 : fiscalYearEndMonth + 1;
@@ -253,14 +267,18 @@ function monthlyDepreciation(data: StewardData, fiscalYear: string): number {
   return dep ? dep.amount / 12 : 0;
 }
 
-function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlowMetrics {
+function computeCashFlowMetrics(
+  data: StewardData,
+  fiscalYear: string,
+  asOfMonth = currentMonth()
+): CashFlowMetrics {
   const notes: string[] = [];
   const loanPayments = monthlyLoanPayments(data.loans);
   const fixedBase = monthlyFixedFromYaml(data);
   const depreciation = monthlyDepreciation(data, fiscalYear);
   const fixedCosts = fixedBase + loanPayments + depreciation;
 
-  const latestActual = data.monthlyFinances.at(-1);
+  const latestActual = selectBasisMonthlyFinance(data.monthlyFinances, asOfMonth);
   const plannedRevenue = plannedMonthlyRevenue(data.propertyRevenuePlan, data.properties);
   const plannedExpenses = plannedMonthlyExpenses(data.propertyRevenuePlan, data.fixedCosts);
   const variableFromPlan = Math.max(0, plannedExpenses - fixedBase);
@@ -277,6 +295,12 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
     monthlyLoan = sumLoanPayments(latestActual);
     source = "actual";
     basisMonth = latestActual.month;
+    if (latestActual.month < asOfMonth) {
+      notes.push(`基準月 ${basisMonth}（${asOfMonth} 時点で利用可能な最新月次）`);
+    }
+    if (data.monthlyFinances.some((m) => m.month > asOfMonth)) {
+      notes.push(`未来月の月次ファイルは基準に使わない（as_of=${asOfMonth}）`);
+    }
     if (monthlyRevenue === 0 && monthlyExpenses <= depreciation) {
       notes.push(`実績 ${basisMonth} は片寄りデータのため、計画値も併記推奨`);
     }
@@ -290,10 +314,11 @@ function computeCashFlowMetrics(data: StewardData, fiscalYear: string): CashFlow
   }
 
   const yojitsu = loadYojitsuFyPlan(fiscalYear);
-  if (yojitsu?.months.length) {
+  const pinnedToExactMonth = data.monthlyFinances.some((m) => m.month === asOfMonth);
+  if (yojitsu?.months.length && !pinnedToExactMonth) {
     const operatingMonths = yojitsu.months.filter((m) => {
       const rev = sumYojitsuRevenue(resolveYojitsuMonthSide(m));
-      return rev > 0;
+      return rev > 0 && m.month <= asOfMonth;
     });
     if (operatingMonths.length && source === "actual" && monthlyRevenue < plannedRevenue * 0.5) {
       const last = operatingMonths[operatingMonths.length - 1];
@@ -884,10 +909,14 @@ function buildTbdItems(cashFlow: ReturnType<typeof computeCashFlowMetrics>, data
   return items;
 }
 
-export function computeDashboard(data?: StewardData): DashboardReport {
+export function computeDashboard(
+  data?: StewardData,
+  opts?: { asOfMonth?: string }
+): DashboardReport {
   const d = data ?? loadAllData();
-  const fiscalYear = resolveFiscalYear(d.company.fiscal_year_end_month ?? 3);
-  const cashFlow = computeCashFlowMetrics(d, fiscalYear);
+  const asOfMonth = opts?.asOfMonth ?? currentMonth();
+  const fiscalYear = resolveFiscalYear(d.company.fiscal_year_end_month ?? 3, asOfMonth);
+  const cashFlow = computeCashFlowMetrics(d, fiscalYear, asOfMonth);
   const allTasks = collectTasks(d);
   const highImportanceTasks = allTasks.filter((t) => t.importance === "high");
   const highUrgencyTasks = allTasks.filter((t) => t.urgency === "high");

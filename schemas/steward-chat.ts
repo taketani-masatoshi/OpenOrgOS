@@ -168,10 +168,41 @@ export const todayContextSchema = z.object({
 
 export type TodayContext = z.output<typeof todayContextSchema>;
 
+export const chatAgentIdSchema = z.enum(["secretary", "executive_steward"]);
+
 export const chatMessageRequestSchema = z.object({
   message: z.string().min(1),
   refresh: z.boolean().optional(),
+  /** Optional agent role — attaches steward/core/agents/{id}_agent.md to system prompt. */
+  agent_id: chatAgentIdSchema.optional(),
 });
+
+export const chatSettingsUpdateSchema = z.object({
+  max_turns: z.union([z.literal(5), z.literal(10), z.literal(20)]),
+});
+
+export const agentInboxScopeSchema = z.enum(["executive_steward", "secretary"]);
+
+export const agentInboxAckSchema = z.object({
+  mission_id: z.string().min(1),
+  notes: z.string().max(2000).optional(),
+});
+
+export const agentInboxDelegateSchema = z.object({
+  /** Operator must confirm in UI before POST (defense in depth). */
+  confirmed: z.literal(true),
+  subject: z.string().min(1).max(200),
+  requirements: z.string().min(1).max(4000),
+  background: z.string().max(4000).optional(),
+  path: z.string().max(500).optional(),
+  priority: z.enum(["P0", "P1", "P2", "P3"]).optional(),
+  /** Source actor for the Work Order (defaults to executive_steward). */
+  from: z.enum(["executive_steward", "secretary"]).optional(),
+});
+
+export type AgentInboxScope = z.output<typeof agentInboxScopeSchema>;
+export type AgentInboxDelegate = z.output<typeof agentInboxDelegateSchema>;
+
 
 export const chatCashflowStructuredSchema = z.object({
   cashflow_path: z

@@ -94,12 +94,20 @@ export function listMissions(filter?: {
   fieldAgent?: AgentId;
   status?: AgentMission["status"];
   type?: MissionType;
+  /** Skip corrupt / schema-invalid YAML instead of throwing (UI / BFF paths). */
+  skipInvalid?: boolean;
 }): AgentMission[] {
   const dir = missionsDir();
   if (!existsSync(dir)) return [];
-  const missions = readdirSync(dir)
-    .filter((f) => f.endsWith(".yaml"))
-    .map((f) => readYamlFile(join(dir, f), agentMissionSchema));
+  const missions: AgentMission[] = [];
+  for (const f of readdirSync(dir).filter((name) => name.endsWith(".yaml"))) {
+    try {
+      missions.push(readYamlFile(join(dir, f), agentMissionSchema));
+    } catch (err) {
+      if (filter?.skipInvalid) continue;
+      throw err;
+    }
+  }
   return missions
     .filter((m) => {
       if (filter?.fieldAgent && m.field_agent !== filter.fieldAgent) return false;
