@@ -19,9 +19,9 @@
 ### 準備
 
 - [x] `tenants/mal/records/executive/mail-config.mal-pilot.yaml.example` — Xserver · `ai@` テンプレ
-- [ ] `deploy/mal-pilot/env/.env.mail-wire` — L2 SMTP/IMAP（`ai@malkk.com`）※gitignore
-- [ ] `tenants/mal/records/executive/mail-config.yaml` — mal-pilot テンプレから生成 ※gitignore
-- [ ] Wire Gateway 公開 health 200（`https://wire.oorgos.org/wire/v1/health`）
+- [x] `deploy/mal-pilot/env/.env.mail-wire` — L2 SMTP/IMAP（`ai@malkk.com`）※gitignore
+- [x] `tenants/mal/records/executive/mail-config.yaml` — mal-pilot テンプレから生成 ※gitignore
+- [x] Wire Gateway 公開 health 200（`https://wire.oorgos.org/wire/v1/health`）
 
 ### 検証
 
@@ -29,14 +29,24 @@
 ./scripts/phase4-mal-email-wire-live.sh mal check
 ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/phase4-mal-email-wire-live.sh mal check
 ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_STRICT_EMAIL=1 ./scripts/wire-live-verify.sh mal check
-./scripts/phase4-mal-email-wire-live.sh mal live   # SMTP/IMAP 実送信
+ORGOS_LIVE_VERIFY=1 ORGOS_LIVE_VERIFY_ROUNDTRIP=1 ./scripts/wire-live-verify.sh mal live
 ```
+
+- [x] `ORGOS_EMAIL_WIRE_REQUIRED=1 ./scripts/prod-validate-wire.sh mal` PASS
+- [x] `ORGOS_LIVE_VERIFY=1 … STRICT_EMAIL=1 … check` PASS
+- [x] base64 MIME live roundtrip PASS（`scratch/wire-live-verify-mal-*.json`）
 
 ### データ衛生（Wave 0）
 
 - [x] mal `peers.yaml` pk-DID 正本
-- [x] orphan transactions prune（registry 空）— **git commit 必須**（未 commit だと Vitest snapshot で復活）
-- [x] `protocol transaction prune-orphans` / `witness cache-missing` CLI
+- [x] orphan transactions prune CLI
+- [x] git commit of clean `transactions-registry.yaml` + peers + codec/DID fixes
+
+### Wave 3 で直した本番バグ
+
+- [x] `ourOrgRef()` — `ORGOS_REQUIRE_PK_DID=1` 時に pk-DID origin
+- [x] `resolveOrgRef` — OpenOrg DID を `steward://tenant/did:…` に壊さない
+- [x] `findPeerByOrgRef` — `peer.did` 照合
 
 ### 本番 env 固定（CEO 承認後）
 

@@ -13,6 +13,13 @@ export function findPeerByOrgRef(orgRef: OrgRef): PeerProfile | undefined {
     if (exact) return exact;
   }
 
+  const byDid = peers.find(
+    (p) =>
+      !!p.did &&
+      (p.did === orgRef.org_id || p.did === orgRef.org_uri)
+  );
+  if (byDid) return byDid;
+
   const tenantFromUri = orgRef.org_uri?.match(/^steward:\/\/tenant\/([^/]+)$/);
   if (tenantFromUri) {
     const tenantId = tenantFromUri[1];

@@ -48,12 +48,15 @@ describe("align classification registry", () => {
     expect(result.updated).toBe(true);
     expect(result.error).toBeUndefined();
     expect(result.addedResources).toContain("RES-PROTOCOL-PEERS");
+    expect(result.addedResources).toContain("RES-CASH-BALANCE");
+    expect(result.addedResources).toContain("RES-COMPANY-PUBLIC");
     expect(result.addedAgents).toContain("secretary");
 
     const parsed = classificationRegistrySchema.parse(
       YAML.parse(readFileSync(demoRegistry, "utf-8"))
     );
     expect(parsed.resources.some((r) => r.id === "RES-PROTOCOL-PEERS")).toBe(true);
+    expect(parsed.resources.some((r) => r.id === "RES-CASH-BALANCE")).toBe(true);
     expect(parsed.agents.finance).toBeDefined();
     expect(parsed.agents.secretary).toBeDefined();
   });

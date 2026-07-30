@@ -1,10 +1,5 @@
-# データ分類レジストリ — 機密階層とエージェントアクセス（正本）
-# 実装: src/lib/classification.ts · CLI: steward classification check
-# AI 境界: .cursorignore · .cursorindexingignore · .cursor/rules/data-classification.mdc
-
 version: "1"
-as_of: "2026-06-09"
-
+as_of: 2026-07-12
 levels:
   L0:
     label: 公開
@@ -22,8 +17,6 @@ levels:
     label: 禁止出力
     description: L2 の内容をチャット・docs 追跡 MD・PR へ転記禁止。存在のみ報告可。
     export_allowed: false
-
-# ai_context: auto=自動コンテキスト可 · on_demand=@file/明示参照 · blocked=.cursorignore
 agents:
   executive_steward:
     label: Executive Steward
@@ -57,7 +50,30 @@ agents:
     label: Operations
     max_level: L2
     output_max_level: L1
-
+  mail_intake:
+    label: Mail Intake
+    max_level: L2
+    output_max_level: L1
+  mail_outbound:
+    label: Mail Outbound
+    max_level: L2
+    output_max_level: L1
+  setup:
+    label: Setup
+    max_level: L2
+    output_max_level: L1
+  engineering:
+    label: Engineering
+    max_level: L1
+    output_max_level: L1
+  cto:
+    label: CTO
+    max_level: L1
+    output_max_level: L1
+  security:
+    label: Security
+    max_level: L1
+    output_max_level: L1
 resources:
   - id: RES-BANK-ACCOUNTS
     path: data/finance/bank-accounts.yaml
@@ -66,22 +82,34 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 法人銀行口座（支店・口座番号）
-    read_agents: [finance, compliance, secretary, executive_steward]
-    write_agents: [finance]
+    read_agents:
+      - finance
+      - compliance
+      - secretary
+      - executive_steward
+    write_agents:
+      - finance
     link_from:
       - path: data/finance/cash-balance.yaml
         field: accounts[].bank_account_id
-        allowed_fields: [bank_account_id, amount, as_of, status]
-
+        allowed_fields:
+          - bank_account_id
+          - amount
+          - as_of
+          - status
   - id: RES-CASH-BALANCE
     path: data/finance/cash-balance.yaml
     level: L1
     git: track
     ai_context: auto
     description: 現預金残高（口座番号なし · bank_account_id でリンク）
-    read_agents: [finance, executive_steward, compliance, secretary]
-    write_agents: [finance]
-
+    read_agents:
+      - finance
+      - executive_steward
+      - compliance
+      - secretary
+    write_agents:
+      - finance
   - id: RES-KAMEZAWA-SECRETS
     path: data/operations/kamezawa-secrets.yaml
     example_path: data/operations/kamezawa-secrets.yaml.example
@@ -89,9 +117,11 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 亀沢 Wi-Fi・鍵・緊急連絡
-    read_agents: [hospitality, compliance]
-    write_agents: [hospitality]
-
+    read_agents:
+      - hospitality
+      - compliance
+    write_agents:
+      - hospitality
   - id: RES-TRAVEL-PORTALS
     path: data/operations/travel-portals.yaml
     example_path: data/operations/travel-portals.yaml.example
@@ -99,18 +129,23 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 旅行ポータル login_id（パスワードはセッション入力 · YAML 禁止）
-    read_agents: [operations, compliance]
-    write_agents: [operations]
-
+    read_agents:
+      - operations
+      - compliance
+    write_agents:
+      - operations
   - id: RES-TRAVEL-DRAFTS
     path: docs/operations/travel-drafts/**
     level: L1
     git: ignore
     ai_context: on_demand
     description: 旅行手配ドラフト MD（手配内容 · Operations 生成）
-    read_agents: [operations, secretary, compliance]
-    write_agents: [operations]
-
+    read_agents:
+      - operations
+      - secretary
+      - compliance
+    write_agents:
+      - operations
   - id: RES-STAKEHOLDERS
     path: data/executive/stakeholders.yaml
     example_path: data/executive/stakeholders.yaml.example
@@ -118,9 +153,16 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 利害関係者連絡先（L1 メール · L2 は records/）
-    read_agents: [secretary, contract, property_rental, hospitality, finance, compliance]
-    write_agents: [secretary, contract]
-
+    read_agents:
+      - secretary
+      - contract
+      - property_rental
+      - hospitality
+      - finance
+      - compliance
+    write_agents:
+      - secretary
+      - contract
   - id: RES-INTEGRATIONS
     path: data/integrations/integrations.yaml
     example_path: data/integrations/integrations.yaml.example
@@ -128,9 +170,12 @@ resources:
     git: ignore
     ai_context: on_demand
     description: テナント統合 · webhook · setup 完了 stamp
-    read_agents: [secretary, operations, compliance]
-    write_agents: [operations]
-
+    read_agents:
+      - secretary
+      - operations
+      - compliance
+    write_agents:
+      - operations
   - id: RES-EXEC-MAIL-CONFIG
     path: records/executive/mail-config.yaml
     example_path: records/executive/mail-config.yaml.example
@@ -138,27 +183,33 @@ resources:
     git: ignore
     ai_context: on_demand
     description: Secretary メール SMTP（パスワードは env）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
-
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
   - id: RES-EXEC-CORRESPONDENCE-DRAFTS
     path: docs/executive/correspondence-drafts/**
     level: L1
     git: ignore
     ai_context: on_demand
     description: 社外招待・調整下書き MD（氏名・メール文面 · Secretary 生成 · gitignore）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
-
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
   - id: RES-EXEC-ONE-ON-ONE-PREP
     path: docs/executive/one-on-one-prep-*.md
     level: L1
     git: ignore
     ai_context: on_demand
     description: 1-on-1 準備 MD（個人名・議題 · Secretary 生成 · gitignore）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
-
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
   - id: RES-EXEC-CALENDAR
     path: data/executive/calendar.yaml
     example_path: data/executive/calendar.yaml.example
@@ -166,9 +217,11 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 社長カレンダー（社外氏名・予定 · Secretary SoT）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
-
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
   - id: RES-EXEC-TASKS
     path: data/executive/tasks.yaml
     example_path: data/executive/tasks.yaml.example
@@ -176,9 +229,11 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 社長タスク（dashboard P0 とは別）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
-
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
   - id: RES-EXEC-ONE-ON-ONES
     path: data/executive/one-on-ones.yaml
     example_path: data/executive/one-on-ones.yaml.example
@@ -186,9 +241,11 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 1-on-1 レジストリ（個人名 · 議題）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
-
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
   - id: RES-EXEC-EXTERNAL-CONTACTS
     path: data/executive/external-contacts.yaml
     example_path: data/executive/external-contacts.yaml.example
@@ -196,18 +253,25 @@ resources:
     git: ignore
     ai_context: on_demand
     description: 主要社外連絡先（最小限 · stakeholder_id でリンク）
-    read_agents: [secretary, compliance]
-    write_agents: [secretary]
-
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
   - id: RES-STAKEHOLDER-PROFILES
     path: docs/executive/stakeholders/*.md
     level: L1
     git: ignore
     ai_context: on_demand
     description: 利害関係者プロフィール MD
-    read_agents: [secretary, contract, property_rental, hospitality]
-    write_agents: [secretary, contract]
-
+    read_agents:
+      - secretary
+      - contract
+      - property_rental
+      - hospitality
+    write_agents:
+      - secretary
+      - contract
   - id: RES-PII-RECORDS
     path: "**/records/**"
     level: L2
@@ -215,25 +279,112 @@ resources:
     ai_context: blocked
     cursorignore: true
     description: 個人住所・携帯等（L2 専用 · .cursorignore）
-    read_agents: [compliance, secretary]
-    write_agents: [secretary]
-
+    read_agents:
+      - compliance
+      - secretary
+    write_agents:
+      - secretary
   - id: RES-COMPANY-PUBLIC
     path: data/company.yaml
     level: L0
     git: track
     ai_context: auto
     description: 会社概要（公開値含む）
-    read_agents: [executive_steward, secretary, finance, contract, property_rental, hospitality, compliance, operations]
-
+    read_agents:
+      - executive_steward
+      - secretary
+      - finance
+      - contract
+      - property_rental
+      - hospitality
+      - compliance
+      - operations
+    write_agents: []
+  - id: RES-CLASSIFICATION-REGISTRY
+    path: data/classification-registry.yaml
+    level: L1
+    git: track
+    ai_context: auto
+    description: データ分類レジストリ
+    read_agents:
+      - compliance
+      - secretary
+      - executive_steward
+      - security
+    write_agents:
+      - compliance
+  - id: RES-EXEC-SCHEDULING-CASES
+    path: data/executive/scheduling-cases.yaml
+    example_path: data/executive/scheduling-cases.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 多者日程調整案件
+    read_agents:
+      - secretary
+      - compliance
+    write_agents:
+      - secretary
+  - id: RES-CORRESPONDENCE-DRAFTS
+    path: docs/executive/correspondence-drafts/
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: 社外メール下書き
+    read_agents:
+      - mail_outbound
+      - secretary
+      - compliance
+    write_agents:
+      - mail_outbound
+      - secretary
+  - id: RES-EXEC-MAIL-TRIAGE
+    path: data/executive/mail-triage-queue.yaml
+    example_path: data/executive/mail-triage-queue.yaml.example
+    level: L1
+    git: ignore
+    ai_context: on_demand
+    description: Mail Intake トリアージキュー（件名・差出人・分類のみ）
+    read_agents:
+      - mail_intake
+      - secretary
+      - compliance
+    write_agents:
+      - mail_intake
+  - id: RES-EXEC-MAIL-RECEIVED
+    path: records/executive/mail-received/
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 受信メール .eml アーカイブ
+    read_agents:
+      - mail_intake
+      - secretary
+    write_agents:
+      - mail_intake
+  - id: RES-PROTOCOL-PEERS
+    path: data/protocol/peers.yaml
+    example_path: data/protocol/peers.yaml.example
+    level: L1
+    git: track
+    ai_context: on_demand
+    description: protocol peer 台帳（Secretary 照合 org_uri gate）
+    read_agents:
+      - secretary
+      - compliance
+      - contract
+    write_agents:
+      - compliance
 rules:
   - id: RULE-LINK-ONLY
-    text: L1 ファイルは L2 リソースへ bank_account_id / stakeholder_id のみリンク可。口座番号・個人住所のインライン記載禁止。
+    text: L1 ファイルは L2 リソースへ bank_account_id / stakeholder_id
+      のみリンク可。口座番号・個人住所のインライン記載禁止。
   - id: RULE-EXPORT-L3
     text: L2/L3 リソースのフィールド値を Agent チャット・docs 追跡 MD・GitHub PR へ出力禁止。「更新済」「存在する」のみ可。
   - id: RULE-GITIGNORE
     text: git:ignore の resource は .gitignore にパターン登録必須。validate --warnings で未登録を警告。
   - id: RULE-AI-BOUNDARY
-    text: ai_context:blocked は .cursorignore 必須。ai_context:on_demand は gitignore のみ（Privacy Mode 前提で @file 可）。
+    text: ai_context:blocked は .cursorignore 必須。ai_context:on_demand は gitignore
+      のみ（Privacy Mode 前提で @file 可）。
   - id: RULE-BROKER
     text: 振込・請求の口座詳細は steward broker CLI 経由。チャットへの口座番号出力禁止。
