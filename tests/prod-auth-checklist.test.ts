@@ -68,4 +68,19 @@ describe("prod auth checklist", () => {
     delete process.env.ORGOS_LLM_MOCK;
     expect(() => assertProdAuthReady("wire")).toThrow(/WIRE_CONSOLE_AUTH must be prod/);
   });
+
+  it("blocks startup when WebAuthn origin missing in production wire mode", () => {
+    process.env.ORGOS_ENV = "production";
+    process.env.STEWARD_CHAT_AUTH = "1";
+    process.env.WIRE_CONSOLE_AUTH = "prod";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "operator.example.com";
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN;
+    delete process.env.ORGOS_CSRF;
+    delete process.env.WIRE_CONSOLE_DEV_PASSKEY;
+    delete process.env.ORGOS_SESSION_PERSIST;
+    delete process.env.ORGOS_LLM_MOCK;
+    delete process.env.ORGOS_MCP_AUTH;
+    process.env.ORGOS_MCP_TOKEN = "test-token";
+    expect(() => assertProdAuthReady("all")).toThrow(/WIRE_CONSOLE_WEBAUTHN_ORIGIN/);
+  });
 });

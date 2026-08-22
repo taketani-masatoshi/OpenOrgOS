@@ -6,22 +6,34 @@ import {
   verifyWebAuthnAssertionSignature,
 } from "./webauthn-verify.js";
 import {
+  credentialPurpose,
   findWebAuthnCredential,
-  listWebAuthnCredentials,
+  listWebAuthnCredentialsByPurpose,
   updateWebAuthnSignCount,
 } from "./webauthn-store.js";
+import { isLoginPasskeyBootstrap } from "./webauthn-register-gate.js";
 import { isWebAuthnRegistrationAllowed } from "./webauthn-register.js";
 import { rpId } from "./webauthn-shared.js";
+import { webauthnOriginsEqual } from "./webauthn-origin.js";
 
 export { rpId };
 
 const pendingChallenges = new Map<string, { challenge: string; expires_at: number }>();
 
 export function getWebAuthnConfig() {
+  const loginCreds = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() });
+  const settlementCreds = listWebAuthnCredentialsByPurpose("settlement", { rpId: rpId() });
+  const approveOrigin =
+    process.env.ORGOS_SETTLEMENT_APPROVE_ORIGIN?.trim() || "https://approve.oorgos.org";
   return {
     rp_id: rpId(),
-    credential_count: listWebAuthnCredentials().length,
+    credential_count: loginCreds.length,
+    settlement_count: settlementCreds.length,
     registration_allowed: isWebAuthnRegistrationAllowed(),
+    login_registration_requires_session: true,
+    login_registration_bootstrap: isLoginPasskeyBootstrap(),
+    approve_origin: approveOrigin.replace(/\/$/, ""),
+    origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
   };
 }
 
@@ -29,21 +41,27 @@ export function createWebAuthnLoginOptions(): {
   challenge: string;
   rp_id: string;
   timeout: number;
-  allow_credentials: { id: string; type: "public-key" }[];
+  allow_credentials: { id: string; type: "public-key"; transports?: Array<"internal"> }[];
+  user_verification: "required";
+  hints: Array<"client-device">;
 } {
   const challenge = randomBytes(32).toString("base64url");
   pendingChallenges.set(challenge, {
     challenge,
     expires_at: Date.now() + 5 * 60_000,
   });
+  const loginCreds = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() });
   return {
     challenge,
     rp_id: rpId(),
     timeout: 300_000,
-    allow_credentials: listWebAuthnCredentials().map((c) => ({
+    allow_credentials: loginCreds.map((c) => ({
       id: c.credential_id,
       type: "public-key" as const,
+      transports: ["internal"] as Array<"internal">,
     })),
+    user_verification: "required" as const,
+    hints: ["client-device"] as const,
   };
 }
 
@@ -70,13 +88,19 @@ export function verifyWebAuthnLogin(body: {
     return { error: "webauthn client data mismatch" };
   }
   const expectedOrigin = process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN;
-  if (expectedOrigin && clientData.origin && clientData.origin !== expectedOrigin) {
+  if (!webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
     return { error: "webauthn origin mismatch" };
   }
 
   const cred = findWebAuthnCredential(body.credential_id);
   if (!cred) {
     return { error: "unknown webauthn credential" };
+  }
+  if (credentialPurpose(cred) !== "login") {
+    return { error: "settlement credential cannot create a login session" };
+  }
+  if ((cred.rp_id ?? rpId()) !== rpId()) {
+    return { error: "webauthn credential rp_id mismatch for login" };
   }
 
   const publicKeySpki = cred.public_key_spki_base64;

@@ -4,7 +4,7 @@ import type {
   PendingNoticesRegistry,
 } from "../../../schemas/protocol/pending-notice.js";
 import { loadContract } from "../data.js";
-import { findPeer } from "../protocol/peers.js";
+import { resolveWireCounterparty } from "../protocol/wire-counterparty.js";
 import {
   recordProtocolTransaction,
   type RecordTransactionResult,
@@ -53,6 +53,8 @@ export interface ProposeInterOrgWireOptions {
   invoiceId?: string;
   brokerInstruction?: string;
   stakeholderId?: string;
+  receiptId?: string;
+  receiptDigest?: string;
   amount?: { value: number; currency: string };
   correlationEventId?: string;
   companyEventId?: string;
@@ -66,55 +68,90 @@ function contractMonthlyAmount(contractId: string): { value: number; currency: s
   return { value, currency: "JPY" };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function assertUuid(value: string, label: string): void {
+  if (!UUID_RE.test(value.trim())) {
+    throw new Error(
+      `${label}はUUID形式で入力してください（例: 550e8400-e29b-41d4-a716-446655440000）`
+    );
+  }
+}
+
 function validateProposeOptions(opts: ProposeInterOrgWireOptions): void {
-  if (!findPeer(opts.peerId)) {
-    throw new Error(`Peer ${opts.peerId} not registered`);
+  // Shared resolver (peers.yaml + OOO adopter directory). Propose still accepts
+  // local PEER-* entries; registry alignment is enforced by discover --doctor / Console register.
+  const counterparty = resolveWireCounterparty({ peerId: opts.peerId });
+  if (!counterparty?.peer) {
+    throw new Error(`宛先ピア ${opts.peerId} は登録されていません`);
   }
 
   switch (opts.transactionType) {
     case "contract.execution.notice":
     case "contract.executed": {
-      if (!opts.contractId) {
-        throw new Error(`contract_id required for ${opts.transactionType}`);
+      if (!opts.contractId?.trim()) {
+        throw new Error(
+          `契約IDが必要です（例: CTR-001）。種別「${opts.transactionType}」では締結済み契約を指定してください`
+        );
       }
       const contract = loadContract(opts.contractId);
       if (!contract) {
-        throw new Error(`Contract ${opts.contractId} not found`);
+        throw new Error(`契約 ${opts.contractId} が見つかりません`);
       }
       if (contract.status !== "executed") {
         throw new Error(
-          `Contract ${opts.contractId} must be executed (status: ${contract.status})`
+          `契約 ${opts.contractId} は締結済み（executed）である必要があります（現在: ${contract.status}）`
         );
       }
       break;
     }
     case "obligation.acknowledged": {
-      if (!opts.correlationEventId) {
-        throw new Error("correlation_event_id required for obligation.acknowledged");
+      if (!opts.correlationEventId?.trim()) {
+        throw new Error(
+          "関連イベントIDが必要です。受信トレイにある相手通知の event_id（UUID）を指定してください"
+        );
       }
+      assertUuid(opts.correlationEventId, "関連イベントID");
       break;
     }
     case "invoice.issued": {
-      if (!opts.invoiceId) {
-        throw new Error("invoice_id required for invoice.issued");
+      if (!opts.invoiceId?.trim()) {
+        throw new Error("請求IDが必要です（例: INV-2026-001）");
       }
       break;
     }
     case "payment.instructed": {
-      if (!opts.brokerInstruction) {
-        throw new Error("broker_instruction required for payment.instructed");
+      if (!opts.brokerInstruction?.trim()) {
+        throw new Error("支払指示ID（broker_instruction）が必要です");
       }
       if (!opts.amount) {
-        throw new Error("amount required for payment.instructed");
+        throw new Error("金額（amount.value と currency）が必要です");
       }
       break;
     }
     case "contract.void.requested": {
-      if (!opts.correlationEventId) {
-        throw new Error("correlation_event_id required for contract.void.requested");
+      if (!opts.correlationEventId?.trim()) {
+        throw new Error(
+          "関連イベントIDが必要です。対象Wire通知の event_id（UUID）を指定してください"
+        );
       }
-      if (!opts.companyEventId) {
-        throw new Error("company_event_id required for contract.void.requested");
+      assertUuid(opts.correlationEventId, "関連イベントID");
+      if (!opts.companyEventId?.trim()) {
+        throw new Error("会社イベントIDが必要です（例: EVT-2026-001）");
+      }
+      break;
+    }
+    case "receipt.claimed": {
+      if (!opts.receiptId?.trim()) {
+        throw new Error("領収書ID（receipt_id）が必要です");
+      }
+      if (!opts.receiptDigest?.trim()) {
+        throw new Error("領収書 digest（receipt_digest）が必要です");
+      }
+      if (opts.amount != null) {
+        throw new Error(
+          "receipt.claimed に金額は載せられません（ADR 0032 · amount-free Wire claim）",
+        );
       }
       break;
     }
@@ -137,6 +174,8 @@ function defaultMessage(opts: ProposeInterOrgWireOptions): string {
       return `契約 ${opts.contractId} 締結の実行通知`;
     case "contract.void.requested":
       return `会社イベント ${opts.companyEventId} の void 許可依頼（元 Wire: ${opts.correlationEventId}）`;
+    case "receipt.claimed":
+      return `領収書 ${opts.receiptId} claim 確定 · digest ${opts.receiptDigest}`;
     default:
       return "Inter-org wire notice";
   }
@@ -152,10 +191,15 @@ export function proposeInterOrgWire(opts: ProposeInterOrgWireOptions): PendingNo
       opts.companyEventId ??
       opts.contractId ??
       opts.invoiceId ??
+      opts.receiptId ??
       opts.correlationEventId,
     proposedBy: opts.proposedBy,
     message: opts.message ?? defaultMessage(opts),
-    amount: opts.amount ?? (opts.contractId ? contractMonthlyAmount(opts.contractId) : undefined),
+    amount:
+      opts.transactionType === "receipt.claimed"
+        ? undefined
+        : opts.amount ??
+          (opts.contractId ? contractMonthlyAmount(opts.contractId) : undefined),
     useNoticeId: true,
     wire: {
       peerId: opts.peerId,
@@ -164,6 +208,8 @@ export function proposeInterOrgWire(opts: ProposeInterOrgWireOptions): PendingNo
       invoiceId: opts.invoiceId,
       brokerInstruction: opts.brokerInstruction,
       stakeholderId: opts.stakeholderId,
+      receiptId: opts.receiptId,
+      receiptDigest: opts.receiptDigest,
       correlationEventId: opts.correlationEventId,
       companyEventId: opts.companyEventId,
     },
@@ -214,6 +260,10 @@ export interface ApproveInterOrgNoticeOptions {
   coApproverId?: string;
   operatorId?: string;
   eventId?: string;
+  settlementAssertion?: import("../../../schemas/org/settlement-stepup.js").SettlementWebAuthnAssertion & {
+    challenge_id: string;
+    token: string;
+  };
 }
 
 export interface ApproveInterOrgNoticeResult {
@@ -237,7 +287,10 @@ export function approveInterOrgNotice(
     throw new Error(`Notice ${opts.noticeId} not found`);
   }
   const notice = orgApprovalToPendingNotice(pending);
-  const amount = resolveNoticeAmountForWire(notice);
+  const amount =
+    notice.transaction_type === "receipt.claimed"
+      ? undefined
+      : resolveNoticeAmountForWire(notice);
 
   const { attestation } = approveOrgApproval({
     approvalId: opts.noticeId,
@@ -245,8 +298,13 @@ export function approveInterOrgNotice(
     coApproverId: opts.coApproverId,
     operatorId: opts.operatorId,
     basis: attestationBasis(notice),
-    basisRef: notice.contract_id ?? notice.invoice_id ?? notice.correlation_event_id,
+    basisRef:
+      notice.contract_id ??
+      notice.invoice_id ??
+      notice.receipt_id ??
+      notice.correlation_event_id,
     emitAudit: false,
+    settlementAssertion: opts.settlementAssertion,
   });
 
   const transmission = recordProtocolTransaction({
@@ -256,7 +314,9 @@ export function approveInterOrgNotice(
     invoiceId: notice.invoice_id,
     brokerInstruction: notice.broker_instruction,
     stakeholderId: notice.stakeholder_id,
-    amount: notice.amount ?? amount,
+    receiptId: notice.receipt_id,
+    receiptDigest: notice.receipt_digest,
+    amount: notice.transaction_type === "receipt.claimed" ? undefined : notice.amount ?? amount,
     direction: "outbound",
     notes: notice.message,
     eventId: opts.eventId,
@@ -358,6 +418,26 @@ export function bridgeProposePaymentInstructed(options: {
     stakeholderId: options.stakeholderId,
     proposedBy: options.proposedBy,
     transactionType: "payment.instructed",
+    message: options.message,
+  });
+}
+
+/** Issuer confirms another OOO claimed a receipt — never include amount/lines. */
+export function bridgeProposeReceiptClaimed(options: {
+  peerId: string;
+  receiptId: string;
+  receiptDigest: string;
+  proposedBy: string;
+  correlationEventId?: string;
+  message?: string;
+}): PendingNotice {
+  return proposeInterOrgWire({
+    peerId: options.peerId,
+    transactionType: "receipt.claimed",
+    proposedBy: options.proposedBy,
+    receiptId: options.receiptId,
+    receiptDigest: options.receiptDigest,
+    correlationEventId: options.correlationEventId,
     message: options.message,
   });
 }

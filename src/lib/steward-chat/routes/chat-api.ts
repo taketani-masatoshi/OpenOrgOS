@@ -7,18 +7,35 @@ import { getTenantId } from "../../tenant.js";
 import {
   chatApprovalRequestSchema,
   chatMessageRequestSchema,
+  chatSettingsUpdateSchema,
+  chatAgentIdSchema,
 } from "../../../../schemas/steward-chat.js";
 import {
   appendChatTurn,
+  appendChatUserMessage,
+  getChatSettings,
   historyForOperator,
   loadChatThread,
+  loadOrMigrateAgentThread,
+  pruneAllChatThreadsToCurrentLimit,
+  setChatHistoryMaxTurns,
   threadIdFromSessionToken,
+  type ChatHistoryMaxTurns,
 } from "../chat-thread.js";
 import {
   approveFromStewardChat,
   flushWireDeliveryFromChat,
   loadSchedulingCorrespondencePreview,
+  loadTenantConfigApprovalPreview,
+  rejectTenantConfigFromStewardChat,
 } from "../wire-approve.js";
+import {
+  handleSettlementApi,
+  settlementStepUpResponse,
+} from "./settlement-api.js";
+import { SettlementStepUpRequiredError } from "../../org/settlement-stepup.js";
+import { findOrgApproval } from "../../org/approval/approve.js";
+import { settlementAssuranceRequired } from "../../org/settlement-stepup.js";
 import {
   listPendingCeoInlineQuestions,
   findCeoInlineQuestion,
@@ -30,7 +47,6 @@ import {
   registerWitnessFromChat,
   verifyWitnessFromChat,
 } from "../wire-witness.js";
-import { sessionTokenFromRequest } from "../../wire-console/auth/session.js";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
 import { appendChatAudit, auditChatMessage } from "../audit.js";
@@ -40,11 +56,39 @@ import {
 } from "../../scheduling-coordination/chat-intent.js";
 import { runValidateReport } from "../../../commands/validate.js";
 import { handleCashflowChatMessage } from "../../jp-bank-corporate/cashflow-chat-intent.js";
+import { handleOrgBudgetApi } from "./org-budget-api.js";
+import { handleOrgChartApi } from "./org-chart-api.js";
+import { handleReceiptApi } from "./receipt-api.js";
+import { handleLlmApi } from "./llm-api.js";
+import { handleCommandApi } from "./command-api.js";
+import { handleAgentInboxApi } from "./agent-inbox-api.js";
+import {
+  buildAgentInbox,
+  formatAgentInboxMarkdown,
+} from "../../agent-inbox.js";
+import { formatChatGroundingBlock } from "../chat-grounding.js";
+import { formatCeoReplyStyleBlock } from "../ceo-reply-style.js";
+import {
+  applyFactRefusalGuard,
+  buildFactStructuredPayload,
+  handleFactChatMessage,
+} from "../../operator-facts/index.js";
+import { handleTenantConfigProposeChatMessage } from "../tenant-config-intent.js";
+import { handleStewardOrchestrateChatMessage } from "../steward-orchestrate-intent.js";
+import { handleChatCommandMessage } from "../../operator-commands/index.js";
+import {
+  resolveOperatorFromSessionUser,
+  resolveOperatorPermissions,
+} from "../../console-auth/operator-rbac.js";
+import { readAgentDefinition } from "../../agent-capability.js";
+import type { AgentId } from "../../../../schemas/classification.js";
 
 export interface ChatApiContext {
   user: WireConsoleUser;
   sessionToken?: string;
 }
+
+type ChatAgentId = "secretary" | "executive_steward";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -64,13 +108,77 @@ async function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-function resolveThreadId(ctx: ChatApiContext): string {
-  return threadIdFromSessionToken(ctx.sessionToken);
+function resolveThreadId(ctx: ChatApiContext, agentId?: ChatAgentId): string {
+  // When chat auth is off, keep a stable thread so history survives reloads
+  // even if a leftover session cookie is present.
+  const base =
+    process.env.STEWARD_CHAT_AUTH === "0"
+      ? "local"
+      : threadIdFromSessionToken(ctx.sessionToken);
+  return agentId ? `${base}:${agentId}` : base;
 }
 
-function buildChatSystem(threadId: string) {
+function preferAgentRoleSections(definition: string, maxChars = 12_000): string {
+  if (definition.length <= maxChars) return definition;
+  const headings = [
+    /primary\s*folders/i,
+    /skills?\b/i,
+    /\bcli\b/i,
+    /delegation|委譲/i,
+    /role\b|役割/i,
+    /boundaries|境界/i,
+  ];
+  const sections = definition.split(/(?=^#{1,3}\s+)/m);
+  const preferred: string[] = [];
+  const rest: string[] = [];
+  for (const section of sections) {
+    const head = section.split("\n", 1)[0] ?? "";
+    if (headings.some((re) => re.test(head))) preferred.push(section);
+    else rest.push(section);
+  }
+  let out = [...preferred, ...rest].join("").trim();
+  if (out.length > maxChars) out = `${out.slice(0, maxChars)}\n\n…(truncated)`;
+  return out;
+}
+
+function agentRoleBlock(agentId: ChatAgentId | undefined): string {
+  if (!agentId) return "";
+  const definition = readAgentDefinition(agentId as AgentId);
+  if (!definition.trim()) {
+    return [
+      "",
+      `## Agent role (${agentId})`,
+      `Path: steward/core/agents/${agentId}_agent.md`,
+      "(definition file not found — stay within Operator Policy bounds)",
+    ].join("\n");
+  }
+  const clipped = preferAgentRoleSections(definition, 12_000);
+  return [
+    "",
+    `## Agent role — ${agentId}`,
+    `Path: steward/core/agents/${agentId}_agent.md`,
+    "Stay inside Primary Folders and L0–L1 output rules for this agent.",
+    "",
+    clipped,
+  ].join("\n");
+}
+
+/** Inject AgentMission inbox digest into the system prompt (no LLM tools). */
+function agentInboxBlock(agentId?: ChatAgentId): string {
+  if (process.env.ORGOS_CHAT_INBOX_CONTEXT === "0") return "";
+  try {
+    const scope = agentId === "secretary" ? "secretary" : "executive_steward";
+    const snapshot = buildAgentInbox({ for: scope, limit: 20 });
+    const md = formatAgentInboxMarkdown(snapshot, { limit: 8, summaryMaxChars: 400 });
+    return md.trim() ? `\n${md}` : "";
+  } catch {
+    return "";
+  }
+}
+
+function buildChatSystem(threadId: string, agentId?: ChatAgentId) {
   const ctx = buildTodayContext();
-  const thread = loadChatThread(threadId, getTenantId());
+  const thread = loadOrMigrateAgentThread(threadId, getTenantId(), agentId);
   const historyBlock =
     thread.messages.length > 0
       ? ["", "## Conversation history (recent)", formatHistoryMarkdown(thread)].join("\n")
@@ -81,9 +189,13 @@ function buildChatSystem(threadId: string) {
     history: historyForOperator(thread),
     system: [
       operatorPolicyExcerpt(35),
+      agentRoleBlock(agentId),
+      formatCeoReplyStyleBlock(),
+      formatChatGroundingBlock(),
       "",
       "## Today context",
       formatTodayContextMarkdown(ctx),
+      agentInboxBlock(agentId),
       historyBlock,
     ].join("\n"),
   };
@@ -96,12 +208,15 @@ function formatHistoryMarkdown(thread: ReturnType<typeof loadChatThread>): strin
 }
 
 async function handleChatMessage(
-  parsed: { message: string },
+  parsed: { message: string; agent_id?: ChatAgentId },
   res: ServerResponse,
   stream: boolean,
   ctx: ChatApiContext
 ): Promise<boolean> {
-  const threadId = resolveThreadId(ctx);
+  const agentId = parsed.agent_id;
+  const threadId = resolveThreadId(ctx, agentId);
+  // Persist 依頼 before long LLM work so switching agent pages cannot lose it.
+  appendChatUserMessage(threadId, getTenantId(), parsed.message);
 
   const scheduling = handleSchedulingChatMessage(threadId, parsed.message);
   if (scheduling.handled && scheduling.reply) {
@@ -151,6 +266,92 @@ async function handleChatMessage(
     return true;
   }
 
+  // Deterministic fact providers (HR / finance / contract) before cashflow + LLM.
+  const factReply = handleFactChatMessage(parsed.message, {
+    fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+  });
+  if (factReply.handled && factReply.reply) {
+    appendChatTurn(threadId, getTenantId(), parsed.message, factReply.reply);
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: factReply.ok !== false,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: `facts:${factReply.providerId ?? "unknown"}:${factReply.coverage ?? "n/a"}`,
+    });
+    const structured = buildFactStructuredPayload(factReply);
+    if (stream) {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+      sseWrite(res, { type: "connected", thread_id: threadId });
+      sseWrite(res, {
+        type: "done",
+        ok: factReply.ok !== false,
+        reply: factReply.reply,
+        thread_id: threadId,
+        structured,
+      });
+      res.end();
+    } else {
+      json(res, 200, {
+        ok: factReply.ok !== false,
+        reply: factReply.reply,
+        thread_id: threadId,
+        structured,
+      });
+    }
+    return true;
+  }
+
+  const configPropose = handleTenantConfigProposeChatMessage(parsed.message, {
+    proposedBy: ctx.user.operator_id,
+  });
+  if (configPropose.handled && configPropose.reply) {
+    appendChatTurn(threadId, getTenantId(), parsed.message, configPropose.reply);
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: configPropose.ok !== false,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: `tenant-config:${configPropose.approval_id ?? "err"}`,
+    });
+    const structured = {
+      tenant_config: {
+        change_id: configPropose.change_id,
+        approval_id: configPropose.approval_id,
+      },
+    };
+    if (stream) {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+      sseWrite(res, { type: "connected", thread_id: threadId });
+      sseWrite(res, {
+        type: "done",
+        ok: configPropose.ok !== false,
+        reply: configPropose.reply,
+        thread_id: threadId,
+        structured,
+      });
+      res.end();
+    } else {
+      json(res, 200, {
+        ok: configPropose.ok !== false,
+        reply: configPropose.reply,
+        thread_id: threadId,
+        structured,
+      });
+    }
+    return true;
+  }
+
   const cashflow = await handleCashflowChatMessage(parsed.message, {
     operatorId: ctx.user.operator_id,
     approverId: ctx.user.approver_id,
@@ -193,7 +394,108 @@ async function handleChatMessage(
     return true;
   }
 
-  const { system, history } = buildChatSystem(threadId);
+  const orchestrate = handleStewardOrchestrateChatMessage(parsed.message, {
+    fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+  });
+  if (orchestrate.handled && orchestrate.reply) {
+    appendChatTurn(threadId, getTenantId(), parsed.message, orchestrate.reply);
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: orchestrate.ok === true,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: `orchestrate:${(orchestrate.work_order_ids ?? []).join(",") || "none"}`,
+    });
+    if (stream) {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+      sseWrite(res, { type: "connected", thread_id: threadId });
+      sseWrite(res, {
+        type: "done",
+        ok: orchestrate.ok === true,
+        reply: orchestrate.reply,
+        thread_id: threadId,
+        structured: { work_order_ids: orchestrate.work_order_ids },
+      });
+      res.end();
+    } else {
+      json(res, 200, {
+        ok: orchestrate.ok === true,
+        reply: orchestrate.reply,
+        thread_id: threadId,
+        structured: { work_order_ids: orchestrate.work_order_ids },
+      });
+    }
+    return true;
+  }
+
+  const operatorRecord = resolveOperatorFromSessionUser(ctx.user);
+  const commandResult = await handleChatCommandMessage({
+    message: parsed.message,
+    operatorId: ctx.user.operator_id,
+    permissions: operatorRecord ? resolveOperatorPermissions(operatorRecord) : undefined,
+  });
+  if (commandResult.handled && commandResult.reply) {
+    appendChatTurn(threadId, getTenantId(), parsed.message, commandResult.reply);
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: commandResult.run?.ok !== false,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: `commands:${commandResult.plan?.status ?? "n/a"}:${commandResult.plan?.skill_id ?? "none"}`,
+    });
+    const structured = {
+      command_plan: commandResult.plan,
+      command_run: commandResult.run,
+    };
+    if (stream) {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+      sseWrite(res, { type: "connected", thread_id: threadId });
+      sseWrite(res, {
+        type: "done",
+        ok: commandResult.run?.ok !== false,
+        reply: commandResult.reply,
+        thread_id: threadId,
+        structured,
+      });
+      res.end();
+    } else {
+      json(res, 200, {
+        ok: commandResult.run?.ok !== false,
+        reply: commandResult.reply,
+        thread_id: threadId,
+        structured,
+      });
+    }
+    return true;
+  }
+
+  const { system, history } = buildChatSystem(threadId, agentId);
+
+  const buildGuardedStructured = (
+    guarded: ReturnType<typeof applyFactRefusalGuard>,
+    fallback: unknown
+  ) => {
+    if (!guarded.guarded) return fallback;
+    const structured: Record<string, unknown> = {};
+    if (guarded.finance_metrics) structured.finance_metrics = guarded.finance_metrics;
+    if (guarded.contract_status) structured.contract_status = guarded.contract_status;
+    if (guarded.hr_headcount) structured.hr_headcount = guarded.hr_headcount;
+    if (guarded.work_order_ids) structured.work_order_ids = guarded.work_order_ids;
+    if (guarded.providerId) {
+      structured.facts = { id: guarded.providerId, view: guarded.view };
+    }
+    return Object.keys(structured).length > 0 ? structured : fallback;
+  };
 
   if (!stream) {
     const result = await runOperatorAsk(parsed.message, system, {
@@ -201,8 +503,12 @@ async function handleChatMessage(
       operatorId: ctx.user.operator_id,
       approverId: ctx.user.approver_id,
     });
-    if (result.ok && result.reply) {
-      appendChatTurn(threadId, getTenantId(), parsed.message, result.reply);
+    const guarded = applyFactRefusalGuard(parsed.message, result.reply, {
+      fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+    });
+    const finalReply = guarded.reply;
+    if (result.ok && finalReply) {
+      appendChatTurn(threadId, getTenantId(), parsed.message, finalReply);
     }
     appendChatAudit({
       action: "message",
@@ -210,15 +516,21 @@ async function handleChatMessage(
       approver_id: ctx.user.approver_id,
       ok: result.ok,
       path: "/chat/v1/message",
-      detail: auditChatMessage(parsed.message),
+      detail: [
+        agentId ? `agent:${agentId}` : null,
+        guarded.guarded ? `${guarded.guard_kind ?? "fact"}_guard` : null,
+        auditChatMessage(parsed.message),
+      ]
+        .filter(Boolean)
+        .join(" "),
     });
     json(res, 200, {
       ok: result.ok,
-      reply: result.reply,
+      reply: finalReply,
       runtime: result.runtime,
       model: result.model,
       setup_required: result.setup_required,
-      structured: result.structured,
+      structured: buildGuardedStructured(guarded, result.structured),
       telemetry: result.telemetry,
       thread_id: threadId,
       stdout: result.stdout.slice(0, 4000),
@@ -246,8 +558,12 @@ async function handleChatMessage(
       step = await gen.next();
     }
     const result = step.value;
-    if (result.ok && result.reply) {
-      appendChatTurn(threadId, getTenantId(), parsed.message, result.reply);
+    const guarded = applyFactRefusalGuard(parsed.message, result.reply, {
+      fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+    });
+    const finalReply = guarded.reply;
+    if (result.ok && finalReply) {
+      appendChatTurn(threadId, getTenantId(), parsed.message, finalReply);
     }
     appendChatAudit({
       action: "message",
@@ -255,16 +571,22 @@ async function handleChatMessage(
       approver_id: ctx.user.approver_id,
       ok: result.ok,
       path: "/chat/v1/message/stream",
-      detail: auditChatMessage(parsed.message),
+      detail: [
+        agentId ? `agent:${agentId}` : null,
+        guarded.guarded ? `${guarded.guard_kind ?? "fact"}_guard` : null,
+        auditChatMessage(parsed.message),
+      ]
+        .filter(Boolean)
+        .join(" "),
     });
     sseWrite(res, {
       type: "done",
       ok: result.ok,
-      reply: result.reply,
+      reply: finalReply,
       runtime: result.runtime,
       model: result.model,
       setup_required: result.setup_required,
-      structured: result.structured,
+      structured: buildGuardedStructured(guarded, result.structured),
       telemetry: result.telemetry,
       thread_id: threadId,
     });
@@ -287,6 +609,7 @@ async function handleChatMessage(
   return true;
 }
 
+
 export async function handleChatApi(
   req: IncomingMessage,
   res: ServerResponse,
@@ -294,6 +617,28 @@ export async function handleChatApi(
   method: string,
   ctx: ChatApiContext
 ): Promise<boolean> {
+  if (
+    await handleSettlementApi(req, res, pathname, method, {
+      user: ctx.user,
+      readBody,
+      hostFallback: req.headers.host,
+    })
+  ) {
+    return true;
+  }
+  if (await handleOrgBudgetApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleOrgChartApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleReceiptApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleLlmApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleCommandApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleAgentInboxApi(req, res, pathname, method, ctx.user))
+    return true;
+
   if (pathname === "/chat/v1/today" && method === "GET") {
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     const today = buildTodayContext();
@@ -345,6 +690,61 @@ export async function handleChatApi(
     return true;
   }
 
+  const configPreviewMatch = pathname.match(
+    /^\/chat\/v1\/approvals\/([^/]+)\/config-preview$/
+  );
+  if (configPreviewMatch && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:approve", res)) return true;
+    const approvalId = decodeURIComponent(configPreviewMatch[1]!);
+    try {
+      json(res, 200, { ok: true, ...loadTenantConfigApprovalPreview(approvalId) });
+    } catch (err) {
+      json(res, 400, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return true;
+  }
+
+  const rejectMatch = pathname.match(/^\/chat\/v1\/approvals\/([^/]+)\/reject$/);
+  if (rejectMatch && method === "POST") {
+    if (!requireChatPermission(ctx.user, "chat:approve", res)) return true;
+    const approvalId = decodeURIComponent(rejectMatch[1]!);
+    const body = await readBody(req);
+    let reason: string | undefined;
+    try {
+      const parsed = JSON.parse(body || "{}") as { reason?: string };
+      reason = typeof parsed.reason === "string" ? parsed.reason : undefined;
+    } catch {
+      /* empty */
+    }
+    try {
+      const result = rejectTenantConfigFromStewardChat(approvalId, ctx.user, reason);
+      appendChatAudit({
+        action: "reject",
+        operator_id: ctx.user.operator_id,
+        approver_id: ctx.user.approver_id,
+        ok: true,
+        path: pathname,
+        detail: approvalId,
+      });
+      json(res, 200, { ok: true, ...result });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      appendChatAudit({
+        action: "reject",
+        operator_id: ctx.user.operator_id,
+        approver_id: ctx.user.approver_id,
+        ok: false,
+        path: pathname,
+        detail: message,
+      });
+      json(res, 400, { ok: false, error: message });
+    }
+    return true;
+  }
+
   const approveMatch = pathname.match(/^\/chat\/v1\/approvals\/([^/]+)\/approve$/);
   if (approveMatch && method === "POST") {
     if (!requireChatPermission(ctx.user, "chat:approve", res)) return true;
@@ -352,15 +752,71 @@ export async function handleChatApi(
     const body = await readBody(req);
     let flush = true;
     let reviewed = false;
+    let settlementAssertion:
+      | {
+          challenge_id: string;
+          token: string;
+          credential_id: string;
+          challenge: string;
+          client_data_json: string;
+          authenticator_data_base64?: string;
+          signature_base64?: string;
+        }
+      | undefined;
+    let coApproverId: string | undefined;
     try {
-      const parsed = chatApprovalRequestSchema.parse(JSON.parse(body || "{}"));
-      if (parsed.flush === false) flush = false;
-      reviewed = parsed.reviewed === true;
+      const parsed = JSON.parse(body || "{}") as Record<string, unknown>;
+      const gated = chatApprovalRequestSchema.parse(parsed);
+      if (gated.flush === false) flush = false;
+      reviewed = gated.reviewed === true;
+      if (typeof parsed.co_approver_id === "string") coApproverId = parsed.co_approver_id;
+      if (
+        parsed.settlement &&
+        typeof parsed.settlement === "object" &&
+        parsed.settlement !== null
+      ) {
+        const s = parsed.settlement as Record<string, string>;
+        if (s.challenge_id && s.token && s.credential_id && s.challenge && s.client_data_json) {
+          settlementAssertion = {
+            challenge_id: s.challenge_id,
+            token: s.token,
+            credential_id: s.credential_id,
+            challenge: s.challenge,
+            client_data_json: s.client_data_json,
+            authenticator_data_base64: s.authenticator_data_base64,
+            signature_base64: s.signature_base64,
+          };
+        }
+      }
     } catch {
       /* default flush */
     }
+
+    const pending = findOrgApproval(approvalId);
+    if (pending && settlementAssuranceRequired(pending) && !settlementAssertion) {
+      const { resolveApprovalAssuranceTier } = await import(
+        "../../org/settlement-stepup.js"
+      );
+      json(
+        res,
+        409,
+        settlementStepUpResponse(
+          new SettlementStepUpRequiredError(
+            approvalId,
+            resolveApprovalAssuranceTier(pending)
+          )
+        )
+      );
+      return true;
+    }
+
     try {
-      const result = await approveFromStewardChat(approvalId, ctx.user, { flush, reviewed });
+      const result = await approveFromStewardChat(approvalId, ctx.user, {
+        flush,
+        reviewed,
+        settlementAssertion,
+        coApproverId,
+      });
       appendChatAudit({
         action: "approve",
         operator_id: ctx.user.operator_id,
@@ -371,6 +827,10 @@ export async function handleChatApi(
       });
       json(res, 200, { ok: true, ...result });
     } catch (err) {
+      if (err instanceof SettlementStepUpRequiredError) {
+        json(res, 409, settlementStepUpResponse(err));
+        return true;
+      }
       const message = err instanceof Error ? err.message : String(err);
       appendChatAudit({
         action: "approve",
@@ -583,7 +1043,7 @@ export async function handleChatApi(
   ) {
     if (!requireChatPermission(ctx.user, "chat:ask", res)) return true;
     const raw = await readBody(req);
-    let parsed: { message: string; refresh?: boolean };
+    let parsed: { message: string; refresh?: boolean; agent_id?: ChatAgentId };
     try {
       parsed = chatMessageRequestSchema.parse(JSON.parse(raw));
     } catch {
@@ -593,6 +1053,52 @@ export async function handleChatApi(
 
     const stream = pathname.endsWith("/stream");
     return handleChatMessage(parsed, res, stream, ctx);
+  }
+
+  if (pathname === "/chat/v1/thread" && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    const agentRaw = new URL(req.url ?? "/", "http://local").searchParams.get("agent_id");
+    let agentId: ChatAgentId | undefined;
+    if (agentRaw) {
+      const parsed = chatAgentIdSchema.safeParse(agentRaw);
+      if (!parsed.success) {
+        json(res, 400, { ok: false, error: "invalid agent_id" });
+        return true;
+      }
+      agentId = parsed.data;
+    }
+    const threadId = resolveThreadId(ctx, agentId);
+    const thread = loadOrMigrateAgentThread(threadId, getTenantId(), agentId);
+    const settings = getChatSettings();
+    json(res, 200, {
+      ok: true,
+      thread_id: thread.thread_id,
+      messages: thread.messages,
+      settings,
+    });
+    return true;
+  }
+
+  if (pathname === "/chat/v1/settings" && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    json(res, 200, { ok: true, settings: getChatSettings() });
+    return true;
+  }
+
+  if (pathname === "/chat/v1/settings" && method === "PUT") {
+    if (!requireChatPermission(ctx.user, "chat:ask", res)) return true;
+    const raw = await readBody(req);
+    let maxTurns: ChatHistoryMaxTurns;
+    try {
+      maxTurns = chatSettingsUpdateSchema.parse(JSON.parse(raw)).max_turns;
+    } catch {
+      json(res, 400, { ok: false, error: "invalid body" });
+      return true;
+    }
+    const settings = setChatHistoryMaxTurns(maxTurns);
+    const pruned = pruneAllChatThreadsToCurrentLimit(getTenantId());
+    json(res, 200, { ok: true, settings, pruned_threads: pruned });
+    return true;
   }
 
   if (pathname === "/chat/v1/events/stream" && method === "GET") {

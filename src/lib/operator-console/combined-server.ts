@@ -1,10 +1,11 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { existsSync, createReadStream, statSync } from "node:fs";
-import { extname, join } from "node:path";
+import { extname, join, sep } from "node:path";
 import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
 import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
 import { handleChatApi } from "../steward-chat/routes/chat-api.js";
+import { handleSettlementApi } from "../steward-chat/routes/settlement-api.js";
 import {
   handleChatAuthApi,
   isPublicChatPath,
@@ -17,6 +18,8 @@ import { WIRE_CONSOLE_SPA_DIST } from "../wire-console/paths.js";
 import { handleCommunityHandoff } from "../wire-console/auth/community-handoff.js";
 import { preloadOidcJwks } from "../wire-console/auth/oidc.js";
 import { sessionTokenFromRequest } from "../wire-console/auth/session.js";
+import { runWithTenantIdAsync } from "../tenant.js";
+import { resolveTenantFromEnv } from "../orgos-cli.js";
 
 function logDemoSecurityBanner(): void {
   const demoEnv = process.env.ORGOS_ENV === "demo";
@@ -62,9 +65,23 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
+/**
+ * Vite emits content-hashed names under `assets/`, so those are safe to cache
+ * forever. Everything else (index.html above all) must revalidate — a cached
+ * index.html would keep pointing at the previous bundle after a rebuild.
+ */
+function cacheControlFor(filePath: string): string {
+  return filePath.includes(`${sep}assets${sep}`)
+    ? "public, max-age=31536000, immutable"
+    : "no-cache";
+}
+
 function serveFile(res: ServerResponse, filePath: string): void {
   const ext = extname(filePath);
-  res.writeHead(200, { "Content-Type": MIME[ext] ?? "application/octet-stream" });
+  res.writeHead(200, {
+    "Content-Type": MIME[ext] ?? "application/octet-stream",
+    "Cache-Control": cacheControlFor(filePath),
+  });
   createReadStream(filePath).pipe(res);
 }
 
@@ -146,6 +163,15 @@ export async function startOperatorConsoleServer(
         return;
       }
 
+      if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/settlement/")) {
+        const handled = await handleSettlementApi(req, res, pathname, method, {
+          user: null,
+          readBody,
+          hostFallback: req.headers.host ?? `${host}:${port}`,
+        });
+        if (handled) return;
+      }
+
       if (await handleWireConsoleApi(req, res, pathname, method, url.searchParams)) {
         return;
       }
@@ -153,10 +179,16 @@ export async function startOperatorConsoleServer(
       if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
         const user = requireChatAuth(req, res);
         if (!user) return;
-        const handled = await handleChatApi(req, res, pathname, method, {
-          user,
-          sessionToken: sessionTokenFromRequest(req),
-        });
+        const homeTenant = resolveTenantFromEnv();
+        const runChat = () =>
+          handleChatApi(req, res, pathname, method, {
+            user,
+            sessionToken: sessionTokenFromRequest(req),
+          });
+        // Pin Chat to ORGOS_TENANT even if a prior Wire request polluted sticky setTenantId.
+        const handled = homeTenant
+          ? await runWithTenantIdAsync(homeTenant, runChat)
+          : await runChat();
         if (handled) return;
         json(res, 404, { error: "not found" });
         return;

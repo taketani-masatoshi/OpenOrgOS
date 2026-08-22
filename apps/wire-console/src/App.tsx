@@ -1,4 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { OperatorShell } from "@ops-shared/OperatorShell";
+import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
+import { PasskeyAuthPanel } from "@ops-shared/PasskeyAuthPanel";
+import { PasskeySetupCard } from "@ops-shared/PasskeySetupCard";
+import { registerSettlementPasskey } from "@ops-shared/register-settlement-passkey";
+import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
 import { api, type AuthConfig, type TenantSummary, type User } from "./api";
 import { MailWorkbench } from "./MailWorkbench";
 import { loginWithWebAuthn } from "./webauthn-login";
@@ -11,8 +17,8 @@ export function App() {
   const [passkey, setPasskey] = useState("orgos-dev");
   const [prodToken, setProdToken] = useState("");
   const [idToken, setIdToken] = useState("");
-  const [operatorId, setOperatorId] = useState("Wire Console");
-  const [approverId, setApproverId] = useState("南木健一");
+  const [operatorId, setOperatorId] = useState("OP-001");
+  const [approverId, setApproverId] = useState("段燕燕");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [webAuthnBusy, setWebAuthnBusy] = useState(false);
@@ -78,15 +84,17 @@ export function App() {
     setWebAuthnBusy(true);
     setError(null);
     try {
+      const op = user?.operator_id ?? operatorId.trim();
+      const appr = user?.approver_id ?? approverId.trim();
       await registerWithWebAuthn(api, {
-        operator_id: operatorId.trim(),
-        approver_id: approverId.trim(),
+        operator_id: op,
+        approver_id: appr,
       });
       await loadSession();
       const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
       setAuthConfig(cfg);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(webauthnUserMessage(err));
     } finally {
       setWebAuthnBusy(false);
     }
@@ -99,7 +107,7 @@ export function App() {
       await loginWithWebAuthn(api, { e2e: authConfig?.webauthn_e2e_login });
       await loadSession();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(webauthnUserMessage(err));
     } finally {
       setWebAuthnBusy(false);
     }
@@ -112,7 +120,23 @@ export function App() {
   }
 
   if (loading) {
-    return <div className="shell wide">Loading…</div>;
+    return (
+      <div className="auth-page">
+        <header className="auth-header">
+          <div className="auth-header-inner">
+            <a className="auth-brand" href="https://oorgos.org">
+              OpenOrgOS
+            </a>
+          </div>
+        </header>
+        <section className="auth-hero">
+          <div className="auth-hero-inner">
+            <h1>この Mac で入る</h1>
+            <p className="auth-lead">読み込み中…</p>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   if (!user) {
@@ -120,58 +144,52 @@ export function App() {
     const oidcMode = prodMode && authConfig?.prod_adapter === "oidc";
     const webAuthnMode = prodMode && authConfig?.prod_adapter === "webauthn";
     const showRegister =
-      webAuthnMode &&
-      authConfig?.webauthn?.registration_allowed &&
-      (authConfig.webauthn.credential_count ?? 0) === 0;
+      webAuthnMode && Boolean(authConfig?.webauthn?.registration_allowed);
     const showSignIn =
-      webAuthnMode && !showRegister && (authConfig?.webauthn?.credential_count ?? 0) > 0;
+      webAuthnMode && (authConfig?.webauthn?.credential_count ?? 0) > 0;
+    if (webAuthnMode) {
+      return (
+        <PasskeyAuthPanel
+          operatorId={operatorId}
+          approverId={approverId}
+          onOperatorId={setOperatorId}
+          onApproverId={setApproverId}
+          showRegister={showRegister}
+          showSignIn={showSignIn}
+          settlementReady={(authConfig?.webauthn?.settlement_count ?? 0) > 0}
+          busy={webAuthnBusy}
+          error={error}
+          onRegister={() => void registerWebAuthn()}
+          onSignIn={() => void loginWebAuthn()}
+          loginOrigin={authConfig?.webauthn?.origin}
+          loginRpId={authConfig?.webauthn?.rp_id}
+          registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
+          communityHandoffUrl={
+            authConfig?.community_handoff ? "https://community.oorgos.org/mypage" : undefined
+          }
+        />
+      );
+    }
     return (
-      <div className="shell login">
-        <h1>OrgOS Wire Console</h1>
-        <p>Inter-org outbox / inbox · operator UI</p>
-        <p className="hint">
-          Auth: {authConfig?.mode ?? "dev"}
-          {prodMode ? ` · ${authConfig?.prod_adapter ?? "oidc"}` : ""}
-          {prodMode && authConfig?.prod_default_adapter === "oidc" ? " · prod default OIDC" : ""}
-        </p>
-        {webAuthnMode ? (
-          <>
-            <p className="hint">
-              WebAuthn prod — passkeys stored in{" "}
-              <code>.orgos/wire-console-webauthn-credentials.json</code>
-            </p>
-            <label>
-              Operator
-              <input value={operatorId} onChange={(e) => setOperatorId(e.target.value)} autoComplete="off" />
-            </label>
-            <label>
-              Approver
-              <input
-                value={approverId}
-                onChange={(e) => setApproverId(e.target.value)}
-                autoComplete="off"
-                placeholder="南木健一"
-              />
-            </label>
-            {showRegister ? (
-              <button type="button" disabled={webAuthnBusy} onClick={() => void registerWebAuthn()}>
-                {webAuthnBusy ? "Registering…" : "Register passkey"}
-              </button>
-            ) : null}
-            {showSignIn ? (
-              <button type="button" disabled={webAuthnBusy} onClick={() => void loginWebAuthn()}>
-                {webAuthnBusy ? "Signing in…" : "Sign in with passkey"}
-              </button>
-            ) : null}
-            {webAuthnMode && !showRegister && !showSignIn ? (
-              <p className="hint">No passkeys registered and bootstrap registration is disabled.</p>
-            ) : null}
-          </>
-        ) : (
-          <form onSubmit={login}>
+      <div className="auth-page">
+        <header className="auth-header">
+          <div className="auth-header-inner">
+            <a className="auth-brand" href="https://oorgos.org">
+              OpenOrgOS
+            </a>
+          </div>
+        </header>
+        <section className="auth-hero">
+          <div className="auth-hero-inner">
+            <h1>オペレーターとして入る</h1>
+            <p className="auth-lead">コンソールに入るための認証です。</p>
+          </div>
+        </section>
+        <main className="auth-main">
+          <form className="auth-card" onSubmit={login}>
             {oidcMode ? (
-              <label>
-                OIDC id_token
+              <label className="auth-field">
+                <span>OIDC トークン</span>
                 <input
                   type="password"
                   value={idToken}
@@ -180,8 +198,8 @@ export function App() {
                 />
               </label>
             ) : prodMode ? (
-              <label>
-                Prod token (legacy)
+              <label className="auth-field">
+                <span>本番トークン</span>
                 <input
                   type="password"
                   value={prodToken}
@@ -190,47 +208,123 @@ export function App() {
                 />
               </label>
             ) : (
-              <label>
-                Dev passkey
-                <input value={passkey} onChange={(e) => setPasskey(e.target.value)} autoComplete="off" />
+              <label className="auth-field">
+                <span>開発用パスキー</span>
+                <input
+                  value={passkey}
+                  onChange={(e) => setPasskey(e.target.value)}
+                  autoComplete="off"
+                />
               </label>
             )}
-            <label>
-              Operator
-              <input value={operatorId} onChange={(e) => setOperatorId(e.target.value)} autoComplete="off" />
+            <label className="auth-field">
+              <span>オペレーター</span>
+              <input
+                value={operatorId}
+                onChange={(e) => setOperatorId(e.target.value)}
+                autoComplete="username"
+              />
             </label>
-            <label>
-              Approver
+            <label className="auth-field">
+              <span>承認者</span>
               <input
                 value={approverId}
                 onChange={(e) => setApproverId(e.target.value)}
-                autoComplete="off"
-                placeholder="南木健一"
+                autoComplete="name"
               />
             </label>
-            <button type="submit">Sign in</button>
+            <div className="auth-actions">
+              <button type="submit" className="btn btn-primary">
+                入る
+              </button>
+            </div>
+            {error ? <p className="auth-error">{error}</p> : null}
           </form>
-        )}
-        {error ? <p className="error">{error}</p> : null}
+        </main>
       </div>
     );
   }
 
+  async function enrollSettlementPasskey() {
+    setError(null);
+    await registerSettlementPasskey(api, {
+      operator_id: user.operator_id,
+      approver_id: user.approver_id,
+      optionsPath: "/console/v1/auth/webauthn/register/options",
+      registerPath: "/console/v1/auth/webauthn/register",
+    });
+    const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
+    setAuthConfig(cfg);
+  }
+
   return (
-    <div className="shell wide">
-      <header className="app-header">
-        <div>
-          <h1>Wire Console</h1>
-          <p className="subtitle">
-            {user.operator_id} · approver {user.approver_id} · {user.mode}
-            {authConfig?.mode === "prod" ? " · prod auth" : ""}
-          </p>
-        </div>
-        <button type="button" className="secondary" onClick={logout}>
-          Sign out
-        </button>
-      </header>
-      <MailWorkbench tenants={tenants} />
-    </div>
+    <OperatorShell
+      active="wire"
+      operatorLabel={
+        formatOperatorSessionLabel(user) +
+        (authConfig?.mode === "prod" ? " · 本番認証" : "")
+      }
+      onSignOut={() => void logout()}
+      yojitsuHref="/"
+      wireHref={
+        import.meta.env.BASE_URL.endsWith("/")
+          ? import.meta.env.BASE_URL
+          : `${import.meta.env.BASE_URL}/`
+      }
+      secretaryHref="/secretary/"
+      stewardHref="/steward/"
+      orgHref="/org/"
+    >
+      {authConfig?.prod_adapter === "webauthn" ? (
+        <>
+          {authConfig.webauthn?.login_registration_bootstrap &&
+          (authConfig.webauthn.credential_count ?? 0) === 0 ? (
+            <section className="passkey-setup" aria-label="ログイン PassKey">
+              <div className="passkey-setup-copy">
+                <h2 className="passkey-setup-title">Touch ID を登録</h2>
+                <p className="passkey-setup-lead">
+                  Community で入ったあと、この Mac 用のログイン PassKey を登録します。
+                </p>
+              </div>
+              <div className="passkey-setup-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={webAuthnBusy}
+                  onClick={() => void registerWebAuthn()}
+                >
+                  {webAuthnBusy ? "登録中…" : "Touch ID で登録"}
+                </button>
+              </div>
+              {error ? <p className="passkey-setup-error">{error}</p> : null}
+            </section>
+          ) : null}
+          <PasskeySetupCard
+          settlementReady={(authConfig.webauthn?.settlement_count ?? 0) > 0}
+          busy={webAuthnBusy}
+          error={error}
+          onRegister={async () => {
+            try {
+              await enrollSettlementPasskey();
+            } catch (err) {
+              setError(webauthnUserMessage(err));
+              throw err;
+            }
+          }}
+          onReregister={async () => {
+            try {
+              await enrollSettlementPasskey();
+            } catch (err) {
+              setError(webauthnUserMessage(err));
+              throw err;
+            }
+          }}
+        />
+        </>
+      ) : null}
+      <div className="wire-workspace">
+        <MailWorkbench tenants={tenants} />
+      </div>
+    </OperatorShell>
   );
 }

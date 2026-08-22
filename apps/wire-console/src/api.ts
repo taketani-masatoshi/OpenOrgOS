@@ -1,3 +1,7 @@
+import { ConsoleApiError } from "@ops-shared/settlement-stepup-client";
+
+export { ConsoleApiError };
+
 export interface User {
   operator_id: string;
   approver_id: string;
@@ -18,8 +22,18 @@ export interface AuthConfig {
     jwks_configured?: boolean;
     hs256_configured?: boolean;
   };
-  webauthn?: { rp_id: string; credential_count: number; registration_allowed?: boolean };
+  webauthn?: {
+    rp_id: string;
+    credential_count: number;
+    settlement_count?: number;
+    registration_allowed?: boolean;
+    login_registration_requires_session?: boolean;
+    login_registration_bootstrap?: boolean;
+    approve_origin?: string;
+    origin?: string;
+  };
   webauthn_e2e_login?: boolean;
+  community_handoff?: boolean;
 }
 
 export interface TenantSummary {
@@ -149,7 +163,26 @@ export const NOTICE_TYPES: NoticeWireTypeOption[] = [
   { value: "contract.executed", label: "契約の締結" },
 ];
 
-export type MailFolder = "inbox" | "outbox" | "pending" | "witness" | "all" | "threads";
+/** CEO console: open waits only（受信/送信/スレッドは出さない）. */
+export type MailFolder = "ours" | "theirs";
+
+/** Classify a mail row into the two wait buckets (or null = hide). */
+export function classifyWaitFolder(m: {
+  folder: string;
+  status_label: string;
+  can_approve?: boolean;
+}): MailFolder | null {
+  // 承認待ち: 秘書起案の社内決裁
+  if (m.folder === "pending" && (m.can_approve || m.status_label === "承認待ち")) {
+    return "ours";
+  }
+  // 相手送信待ち: 当社決裁後〜相手側の応答／完了前（送信済みアーカイブや完了は出さない）
+  if (m.folder === "outbox") {
+    if (m.status_label === "完了" || m.status_label === "差し戻し") return null;
+    return "theirs";
+  }
+  return null;
+}
 
 export interface HumanMessageSummary {
   id: string;
@@ -244,9 +277,17 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     credentials: "same-origin",
   });
-  const body = (await res.json()) as T & { error?: string };
+  const body = (await res.json()) as T & {
+    error?: string;
+    code?: string;
+    step_up_required?: boolean;
+  };
   if (!res.ok) {
-    throw new Error(body.error ?? `HTTP ${res.status}`);
+    throw new ConsoleApiError(body.error ?? `HTTP ${res.status}`, {
+      status: res.status,
+      code: body.code,
+      stepUpRequired: body.step_up_required === true || body.code === "step_up_required",
+    });
   }
   return body;
 }

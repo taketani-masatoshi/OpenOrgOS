@@ -71,12 +71,41 @@ server {
 | `ORGOS_ALLOWED_ORIGINS` | 任意 | 追加許可 origin（カンマ区切り） |
 | `ORGOS_CHAT_AUDIT` | 未設定（有効） | Chat 操作監査 JSONL |
 | `ORGOS_CHAT_AUDIT_LOG` | 任意 | 既定: `data/.orgos/chat-audit.jsonl` |
+| `ORGOS_SETTLEMENT_STEPUP` | 未設定（有効） | `0` は dev のみ — tier B/C の PassKey step-up 無効。本番は doctor が拒否 |
+| `WIRE_CONSOLE_WEBAUTHN_RP_ID` | 必須（本番） | 公開コンソールホスト（例: `operator.example.com`）。login / settlement 共通 |
+| `WIRE_CONSOLE_WEBAUTHN_ORIGIN` | 必須（本番） | `https://` + 上記ホスト（セレモニー origin） |
+| `ORGOS_SETTLEMENT_RP_ID` | 非推奨 | 旧 Dual RP 用。セレモニーでは使わない |
+| `ORGOS_SETTLEMENT_APPROVE_ORIGIN` | 任意 | ヘルプ HTML 用のみ（既定 `https://approve.oorgos.org`） |
+
+本番デプロイ後: `npm run settlement-passkey:verify -- --url https://<公開ホスト> --tenant <id>`（WebAuthn 整合 + settlement 単体テスト）。iPhone hybrid は [settlement-passkey-production-verification.md](org-os/settlement-passkey-production-verification.md) §3–§6。
 
 セッションストア: `data/.orgos/sessions.json` — バックアップ・ファイル権限（600 推奨）を運用側で設定。
 
+### Dual PassKey（ADR 0037）
+
+| PassKey | 用途 | RP / origin |
+|---------|------|-------------|
+| **login** | Mac Touch ID → セッション | `WIRE_CONSOLE_WEBAUTHN_RP_ID` · `hints: client-device` |
+| **settlement** | iPhone hybrid QR → tier B/C 承認 | **同じ RP** · `hints: hybrid` · origin = `WIRE_CONSOLE_WEBAUTHN_ORIGIN` |
+
+Tier A（〜10万円）と金額なし承認は Chat セッションで可。B/C は settlement assertion 必須。
+
+#### 本番 HTTPS（フェーズ 4）
+
+1. Combined console を公開 HTTPS に載せる（上節の nginx 例）。
+2. `WIRE_CONSOLE_WEBAUTHN_RP_ID=operator.example.com`  
+   `WIRE_CONSOLE_WEBAUTHN_ORIGIN=https://operator.example.com`
+3. Mac Chrome または Safari でログイン（Touch ID）→「iPhone で登録」→ ブラウザ QR → iPhone Face ID。
+4. B/C 承認も同じページで hybrid `get`。Bluetooth をオン。オフだと失敗する（Google と同じ）。
+5. ローカル検証は引き続き `127.0.0.1`（`localhost` と混ぜない）。
+
+**本番現場検証（フェーズ 4）:**  
+自動ゲート: `npm run settlement-passkey:verify -- --url https://<公開ホスト> [--tenant <id>]`  
+手動（iPhone hybrid · Bluetooth）: [org-os/settlement-passkey-production-verification.md](org-os/settlement-passkey-production-verification.md)
+
 ### CSRF
 
-mutating API（`POST /chat/v1/*` · `POST /console/v1/*`）は **Origin または Referer** が許可 origin と一致することを要求します。ログイン系（`/auth/login` 等）は除外。SameSite=Strict cookie と併用。
+mutating API（`POST /chat/v1/*` · `POST /console/v1/*`）は **Origin または Referer** が許可 origin と一致することを要求します。ログイン系（`/auth/login` 等）と settlement complete / challenge GET は除外または approve origin を許可。SameSite=Strict cookie と併用。
 
 ### RBAC（Operator Registry + Chat / Wire / MCP）
 

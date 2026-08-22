@@ -1,0 +1,172 @@
+/**
+ * OpenOrgOS shared UI tokens — aligned with oorgos.org (coming-soon).
+ * Import from steward-chat and wire-console so Chat / Wire feel continuous with the overview site.
+ */
+:root {
+  --ink: #1d1d1f;
+  --ink-soft: #6e6e73;
+  --navy: #003366;
+  --accent: #0071e3;
+  --accent-soft: rgba(0, 113, 227, 0.12);
+  --accent-hover: #0077ed;
+  --surface: #f5f5f7;
+  --surface-elevated: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --success-bg: #ecfdf5;
+  --success-text: #065f46;
+  --font-sans: "Instrument Sans", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Noto Sans JP", "Yu Gothic UI", "Helvetica Neue", Helvetica, sans-serif;
+  --font-display: Newsreader, Georgia, "Times New Roman", serif;
+  /* Type scale — Operator Console / oorgos.org */
+  --text-xs: 0.75rem; /* badges · captions */
+  --text-sm: 0.875rem; /* nav · meta · secondary buttons */
+  --text-md: 0.95rem; /* body · leads */
+  --text-base: 1rem;
+  --text-lg: 1.125rem; /* section titles (sans) */
+  --text-xl: 1.35rem; /* subsection emphasis */
+  --text-display: 1.75rem; /* page H1 (all surfaces) */
+  --leading-tight: 1.25;
+  --leading-body: 1.55;
+  --tracking-display: -0.03em;
+  --weight-display: 500;
+  --weight-ui: 600;
+  --weight-strong: 650;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 980px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --page-gutter: 24px;
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --shadow-soft: 0 20px 48px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  /* Aliases used by existing Chat CSS */
+  --color-bg: var(--surface);
+  --color-bg-elevated: var(--surface-elevated);
+  --color-surface: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-border-muted: var(--border-strong);
+  --color-text: var(--ink);
+  --color-text-muted: var(--ink-soft);
+  --color-accent: var(--accent);
+  --color-success-bg: var(--success-bg);
+  --color-success-text: var(--success-text);
+  --color-error: var(--danger);
+  --space-xs: var(--space-1);
+  --space-sm: var(--space-2);
+  --space-md: var(--space-4);
+  --space-lg: var(--space-5);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  background: var(--surface);
+  color: var(--ink);
+  line-height: var(--leading-body);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-tight);
+}
+
+h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-strong);
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+}
+
+h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-strong);
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+}
+
+/* Shared page chrome (予実 / 予算 / 領収書 / チャット / 設定) */
+.ops-page-title,
+.agent-chat-title,
+.receipt-claim-title,
+.wallet-title,
+.cloud-llm-title,
+.chat-settings-title,
+.page-heading h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+.ops-page-lead,
+.receipt-claim-lead,
+.cloud-llm-lead,
+.chat-settings-lead,
+.page-heading > div > p:last-child {
+  margin: var(--space-2) 0 0;
+  max-width: 40rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  color: var(--ink-soft);
+  letter-spacing: 0;
+}
+
+.ops-page-meta {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  line-height: var(--leading-body);
+}
+
+p {
+  margin: 0 0 var(--space-3);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}

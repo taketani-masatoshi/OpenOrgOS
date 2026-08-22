@@ -11,8 +11,10 @@ import {
 import { authenticateWireConsoleLogin, createWebAuthnLoginOptions, getWireConsoleAuthConfigResponse } from "./auth/login.js";
 import { completeWebAuthnE2eLogin, isWebAuthnE2eLoginEnabled } from "./auth/webauthn-e2e.js";
 import {
+  authorizeWebAuthnRegistration,
   createWebAuthnRegisterOptions,
   isWebAuthnRegistrationAllowed,
+  registrationErrorStatus,
   verifyWebAuthnRegistration,
 } from "./auth/webauthn-register.js";
 import { WIRE_CONSOLE_SPA_DIST } from "./paths.js";
@@ -80,19 +82,25 @@ async function handleApi(
   }
 
   if (method === "POST" && pathname === "/console/v1/auth/webauthn/register/options") {
-    if (!isWebAuthnRegistrationAllowed()) {
-      json(res, 403, { ok: false, error: "webauthn registration disabled" });
-      return true;
-    }
     try {
+      const sessionUser = getSessionUser(sessionTokenFromRequest(req));
       const raw = await readBody(req);
-      const body = JSON.parse(raw || "{}") as { operator_id?: string; approver_id?: string };
-      const result = createWebAuthnRegisterOptions({
-        operator_id: body.operator_id ?? "",
-        approver_id: body.approver_id ?? "",
-      });
+      const body = JSON.parse(raw || "{}") as {
+        operator_id?: string;
+        approver_id?: string;
+        purpose?: "login" | "settlement";
+      };
+      const purpose = body.purpose === "settlement" ? "settlement" : "login";
+      const result = createWebAuthnRegisterOptions(
+        {
+          operator_id: body.operator_id ?? "",
+          approver_id: body.approver_id ?? "",
+          purpose,
+        },
+        { sessionUser }
+      );
       if ("error" in result) {
-        json(res, 422, { ok: false, error: result.error });
+        json(res, registrationErrorStatus(result.error), { ok: false, error: result.error });
         return true;
       }
       json(res, 200, { ok: true, ...result });
@@ -104,20 +112,43 @@ async function handleApi(
   }
 
   if (method === "POST" && pathname === "/console/v1/auth/webauthn/register") {
-    if (!isWebAuthnRegistrationAllowed()) {
-      json(res, 403, { ok: false, error: "webauthn registration disabled" });
-      return true;
-    }
     try {
+      const sessionUser = getSessionUser(sessionTokenFromRequest(req));
       const raw = await readBody(req);
       const body = JSON.parse(raw || "{}") as Parameters<typeof verifyWebAuthnRegistration>[0];
-      const result = verifyWebAuthnRegistration(body);
+      const purpose = body.purpose === "settlement" ? "settlement" : "login";
+      const authorized = authorizeWebAuthnRegistration(
+        {
+          operator_id: body.operator_id ?? "",
+          approver_id: body.approver_id ?? "",
+          purpose,
+        },
+        sessionUser
+      );
+      if ("status" in authorized) {
+        json(res, authorized.status, { ok: false, error: authorized.error });
+        return true;
+      }
+      const result = verifyWebAuthnRegistration({ ...body, purpose });
       if ("error" in result) {
         json(res, 401, { ok: false, error: result.error });
         return true;
       }
-      setSessionCookie(res, result.token);
-      json(res, 200, { ok: true, user: result.user });
+      if (result.token && result.user) {
+        setSessionCookie(res, result.token);
+        json(res, 200, {
+          ok: true,
+          user: result.user,
+          credential_id: result.credential_id,
+          purpose: "login",
+        });
+      } else {
+        json(res, 200, {
+          ok: true,
+          credential_id: result.credential_id,
+          purpose: "settlement",
+        });
+      }
       return true;
     } catch (e) {
       json(res, 400, { ok: false, error: e instanceof Error ? e.message : String(e) });

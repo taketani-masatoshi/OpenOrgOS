@@ -88,6 +88,7 @@ orgActivityScopeSchema = "internal" | "wire"
 | `contract.internal` | `CTR-*` |
 | `expenditure.capex` | 稟議番号 |
 | `policy.exception` | 例外 ID |
+| `tenant.config` | `CFG-*`（modules/standards の enabled 変更 · ADR 0036） |
 
 ---
 
@@ -129,6 +130,11 @@ pending_approval → approved | rejected | completed
 | `notice_id` | optional · wire 互換 |
 | `approval_policy_ref` | optional · propose 時注入 |
 | `approval_tier` | A/B/C |
+| `settlement_credential_id` | optional · ADR 0037 tier B/C step-up |
+| `settlement_challenge_id` | optional · ADR 0037 |
+| `settlement_rp_id` | optional · ADR 0037（例: `approve.oorgos.org`） |
+
+**Assurance:** jurisdiction tier **B/C**（金額帯）はセッション承認不可 — settlement PassKey（iPhone + QR）必須。tier **A** と金額なし subject は Chat セッションで可。[ADR 0037](../adr/0037-dual-passkey-settlement-stepup.md)
 
 ---
 

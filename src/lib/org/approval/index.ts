@@ -8,12 +8,16 @@ export {
   noticeToOrgApproval,
   orgApprovalToPendingNotice,
   defaultApprovalPolicyRef,
+  withOrgApprovalRegistryLock,
 } from "./registry.js";
 export { proposeOrgApproval, type ProposeOrgApprovalOptions } from "./propose.js";
 export {
   approveOrgApproval,
+  assertNotSelfApproval,
   completeOrgApprovalWire,
   evaluateOrgApprovalGate,
+  isSelfApproval,
+  isSelfApprovalBannedSubject,
   type ApproveOrgApprovalOptions,
   type ApproveOrgApprovalResult,
 } from "./approve.js";

@@ -492,47 +492,71 @@ describe("wire console server", () => {
     resetWebAuthnCredentialsForTests();
     process.env.WIRE_CONSOLE_AUTH = "prod";
     process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
-    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "127.0.0.1";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "localhost";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "http://localhost:9470";
+    process.env.WIRE_CONSOLE_OIDC_ISSUER = "https://idp.test/orgos";
+    process.env.WIRE_CONSOLE_OIDC_AUDIENCE = "wire-console";
+    process.env.WIRE_CONSOLE_OIDC_HS256_SECRET = "test-oidc-secret";
     delete process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
     delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
     delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
     delete process.env.WIRE_CONSOLE_E2E_WEBAUTHN;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP;
 
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
 
     const config = await fetch(`${server.url}/console/v1/auth/config`);
     const cfg = (await config.json()) as {
-      webauthn?: { credential_count: number; registration_allowed?: boolean };
+      webauthn?: {
+        credential_count: number;
+        settlement_count?: number;
+        registration_allowed?: boolean;
+      };
     };
     expect(cfg.webauthn?.registration_allowed).toBe(true);
     expect(cfg.webauthn?.credential_count).toBe(0);
 
-    const regOptions = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
+    const idToken = mintTestOidcIdToken({
+      sub: "OP-001",
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+    });
+    const login = await fetch(`${server.url}/console/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ operator_id: "Passkey Ops", approver_id: "テスト承認者" }),
+      body: JSON.stringify({ id_token: idToken, approver_id: "Demo CEO" }),
     });
+    expect(login.status).toBe(200);
+    const cookie = login.headers.get("set-cookie") ?? "";
+
+    const regOptions = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({ operator_id: "OP-001", approver_id: "Demo CEO" }),
+    });
+    expect(regOptions.status).toBe(200);
     const regOpts = (await regOptions.json()) as { challenge: string };
     const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
     const registration = mintTestWebAuthnRegistration({
-      rpId: "127.0.0.1",
+      rpId: "localhost",
+      origin: "http://localhost:9470",
       challenge: regOpts.challenge,
-      operator_id: "Passkey Ops",
-      approver_id: "テスト承認者",
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
       privateKey,
     });
 
     const register = await fetch(`${server.url}/console/v1/auth/webauthn/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({
         challenge: regOpts.challenge,
         credential_id: registration.credential_id,
         client_data_json: registration.client_data_json,
         attestation_object_base64: registration.attestation_object_base64,
-        operator_id: "Passkey Ops",
-        approver_id: "テスト承認者",
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
       }),
     });
     expect(register.status).toBe(200);
@@ -542,13 +566,14 @@ describe("wire console server", () => {
     });
     const loginOpts = (await loginOptions.json()) as { challenge: string };
     const assertion = mintTestWebAuthnAssertion({
-      rpId: "127.0.0.1",
+      rpId: "localhost",
+      origin: "http://localhost:9470",
       challenge: loginOpts.challenge,
       credentialId: registration.credential_id,
       privateKey,
     });
 
-    const login = await fetch(`${server.url}/console/v1/auth/login`, {
+    const loginWebAuthn = await fetch(`${server.url}/console/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -561,9 +586,9 @@ describe("wire console server", () => {
         },
       }),
     });
-    expect(login.status).toBe(200);
-    const body = (await login.json()) as { user: { operator_id: string } };
-    expect(body.user.operator_id).toBe("Passkey Ops");
+    expect(loginWebAuthn.status).toBe(200);
+    const body = (await loginWebAuthn.json()) as { user: { operator_id: string } };
+    expect(body.user.operator_id).toBe("OP-001");
   });
 
   it("registers and verifies witness attestation via console API", async () => {

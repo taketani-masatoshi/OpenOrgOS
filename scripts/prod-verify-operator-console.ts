@@ -2,8 +2,10 @@
 /**
  * Production verification for Operator Console deployment.
  * Usage: npm run prod:verify -- --url https://operator.southwood.inc [--tenant demo]
+ * Settlement PassKey (ADR 0037 Phase 4): npm run settlement-passkey:verify -- --url ...
  */
 import { spawnSync } from "node:child_process";
+import { validateDeployUrlMatchesWebAuthn } from "../src/lib/console-auth/settlement-passkey-prod.js";
 
 interface VerifyOptions {
   url: string;
@@ -72,11 +74,25 @@ async function main(): Promise<void> {
     const auth = (await fetchJson(`${opts.url}/chat/v1/auth/config`)) as {
       mode?: string;
       prod_adapter?: string;
+      webauthn?: {
+        rp_id?: string;
+        origin?: string;
+        settlement_count?: number;
+        registration_allowed?: boolean;
+      };
     };
     if (auth.mode !== "prod") {
       failures.push(`auth config mode=${auth.mode} (expected prod)`);
     } else {
       console.log(`✓ /chat/v1/auth/config (prod · ${auth.prod_adapter ?? "adapter"})`);
+    }
+    const webauthnFailures = validateDeployUrlMatchesWebAuthn(opts.url, auth.webauthn);
+    if (webauthnFailures.length) {
+      for (const f of webauthnFailures) failures.push(`webauthn: ${f}`);
+    } else if (auth.webauthn?.origin) {
+      console.log(
+        `✓ webauthn single RP (rp_id=${auth.webauthn.rp_id} · origin=${auth.webauthn.origin} · settlement=${auth.webauthn.settlement_count ?? 0})`
+      );
     }
   } catch (e) {
     failures.push(`/chat/v1/auth/config: ${e instanceof Error ? e.message : e}`);

@@ -1,23 +1,20 @@
-function base64UrlToBuffer(value: string): ArrayBuffer {
-  const pad = value.length % 4 === 0 ? "" : "=".repeat(4 - (value.length % 4));
-  const binary = atob(value.replace(/-/g, "+").replace(/_/g, "/") + pad);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes.buffer;
-}
-
-function bufferToBase64Url(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+import { ensureWebAuthnRpHost } from "@ops-shared/webauthn-page-origin";
+import {
+  browserSupportsWebAuthn,
+  getPasskeyWithSimpleWebAuthn,
+} from "@ops-shared/webauthn-simple";
 
 interface WebAuthnOptionsResponse {
   challenge: string;
   rp_id: string;
   timeout: number;
-  allow_credentials: { id: string; type: "public-key" }[];
+  allow_credentials: {
+    id: string;
+    type: "public-key";
+    transports?: Array<"hybrid" | "internal" | "usb" | "nfc" | "ble">;
+  }[];
+  user_verification?: "required" | "preferred";
+  hints?: Array<"client-device" | "hybrid">;
 }
 
 export async function loginWithWebAuthn(
@@ -37,39 +34,25 @@ export async function loginWithWebAuthn(
     return;
   }
 
-  if (!window.PublicKeyCredential) {
-    throw new Error("WebAuthn is not available in this browser");
+  if (!browserSupportsWebAuthn()) {
+    throw new Error("WebAuthn is not available");
   }
 
-  const allowCredentials = optsRes.allow_credentials.map((c) => ({
-    id: base64UrlToBuffer(c.id),
-    type: c.type,
-  }));
-
-  const assertion = (await navigator.credentials.get({
-    publicKey: {
-      challenge: base64UrlToBuffer(optsRes.challenge),
-      rpId: optsRes.rp_id,
-      timeout: optsRes.timeout,
-      allowCredentials,
-      userVerification: "preferred",
-    },
-  })) as PublicKeyCredential | null;
-
-  if (!assertion) {
-    throw new Error("WebAuthn sign-in was cancelled");
+  if (!ensureWebAuthnRpHost(optsRes.rp_id)) {
+    throw new Error("webauthn origin mismatch");
   }
 
-  const response = assertion.response as AuthenticatorAssertionResponse;
+  const assertion = await getPasskeyWithSimpleWebAuthn(optsRes);
+
   await api("/console/v1/auth/login", {
     method: "POST",
     body: JSON.stringify({
       webauthn: {
-        credential_id: bufferToBase64Url(new Uint8Array(assertion.rawId).buffer),
+        credential_id: assertion.rawId,
         challenge: optsRes.challenge,
-        client_data_json: bufferToBase64Url(response.clientDataJSON),
-        authenticator_data_base64: bufferToBase64Url(response.authenticatorData),
-        signature_base64: bufferToBase64Url(response.signature),
+        client_data_json: assertion.response.clientDataJSON,
+        authenticator_data_base64: assertion.response.authenticatorData,
+        signature_base64: assertion.response.signature,
       },
     }),
   });

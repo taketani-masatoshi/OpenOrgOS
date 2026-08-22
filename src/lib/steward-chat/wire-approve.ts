@@ -8,6 +8,13 @@ import {
   listCorrespondenceDrafts,
   markCorrespondenceDraftApproved,
 } from "../correspondence/draft.js";
+import {
+  approveAndApplyTenantConfigChange,
+  isTenantConfigApprovalSubject,
+  previewTenantConfigChange,
+  rejectTenantConfigChange,
+} from "../org/tenant-config-change.js";
+import { isHumanApproverOperatorId } from "../correspondence/human-approval.js";
 import { getTenantId } from "../tenant.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
@@ -27,6 +34,8 @@ export interface ChatWireApproveResult {
     outbox_path?: string;
   };
   approval: unknown;
+  config_change?: unknown;
+  warnings?: string[];
 }
 
 function schedulingBatchKey(notes: string | undefined): string | undefined {
@@ -80,7 +89,15 @@ export function loadSchedulingCorrespondencePreview(approvalId: string): {
 export async function approveFromStewardChat(
   approvalId: string,
   user: WireConsoleUser,
-  opts?: { flush?: boolean; reviewed?: boolean }
+  opts?: {
+    flush?: boolean;
+    reviewed?: boolean;
+    coApproverId?: string;
+    settlementAssertion?: import("../../../schemas/org/settlement-stepup.js").SettlementWebAuthnAssertion & {
+      challenge_id: string;
+      token: string;
+    };
+  }
 ): Promise<ChatWireApproveResult> {
   const tenantId = getTenantId();
   const pending = findOrgApproval(approvalId);
@@ -89,7 +106,10 @@ export async function approveFromStewardChat(
   }
 
   if (pending.scope === "wire" && isWireConsoleEnabled(tenantId)) {
-    const wire = await approveTenantNotice(tenantId, user, approvalId);
+    const wire = await approveTenantNotice(tenantId, user, approvalId, {
+      co_approver_id: opts?.coApproverId,
+      settlementAssertion: opts?.settlementAssertion,
+    });
     let flushed = 0;
     if (opts?.flush !== false) {
       const flushResult = await flushTenantWirePending(tenantId);
@@ -127,6 +147,7 @@ export async function approveFromStewardChat(
         approverId: user.approver_id,
         operatorId: user.operator_id,
         humanReviewConfirmed: true,
+        settlementAssertion: opts?.settlementAssertion,
       });
       markCorrespondenceDraftApproved(draftId);
       return result;
@@ -147,16 +168,64 @@ export async function approveFromStewardChat(
     };
   }
 
+  if (isTenantConfigApprovalSubject(pending.subject_type)) {
+    if (!isHumanApproverOperatorId(user.operator_id)) {
+      throw new Error(
+        `tenant.config approval requires ceo/approver operator (got ${user.operator_id})`
+      );
+    }
+    const result = approveAndApplyTenantConfigChange({
+      approvalId,
+      approverId: user.approver_id,
+      operatorId: user.operator_id,
+      reviewed: opts?.reviewed === true,
+    });
+    return {
+      mode: "internal",
+      approval_id: approvalId,
+      approval: result.approval,
+      config_change: result.change,
+      warnings: result.warnings,
+    };
+  }
+
   const result = approveOrgApproval({
     approvalId,
     approverId: user.approver_id,
     operatorId: user.operator_id,
+    coApproverId: opts?.coApproverId,
+    settlementAssertion: opts?.settlementAssertion,
   });
   return {
     mode: "internal",
     approval_id: approvalId,
     approval: result.approval,
   };
+}
+
+export function loadTenantConfigApprovalPreview(approvalId: string) {
+  return previewTenantConfigChange(approvalId);
+}
+
+export function rejectTenantConfigFromStewardChat(
+  approvalId: string,
+  user: WireConsoleUser,
+  reason?: string
+) {
+  if (!isHumanApproverOperatorId(user.operator_id)) {
+    throw new Error(
+      `tenant.config reject requires ceo/approver operator (got ${user.operator_id})`
+    );
+  }
+  const pending = findOrgApproval(approvalId);
+  if (!pending || !isTenantConfigApprovalSubject(pending.subject_type)) {
+    throw new Error(`tenant.config approval ${approvalId} not found`);
+  }
+  return rejectTenantConfigChange({
+    approvalId,
+    approverId: user.approver_id,
+    reason,
+  });
 }
 
 export async function flushWireDeliveryFromChat(): Promise<{ flushed: number }> {

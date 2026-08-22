@@ -8,78 +8,131 @@ import {
 } from "./webauthn-cbor.js";
 import {
   findWebAuthnCredential,
-  listWebAuthnCredentials,
+  listWebAuthnCredentialsByPurpose,
   saveWebAuthnCredential,
 } from "./webauthn-store.js";
 import { rpId } from "./webauthn-shared.js";
+import { webauthnOriginsEqual } from "./webauthn-origin.js";
+import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
+import {
+  authorizeWebAuthnRegistration,
+  isWebAuthnLoginRegistrationAllowedPublic,
+  registrationErrorStatus,
+} from "./webauthn-register-gate.js";
+
+export { authorizeWebAuthnRegistration, registrationErrorStatus };
 
 const pendingRegisterChallenges = new Map<
   string,
-  { challenge: string; operator_id: string; approver_id: string; expires_at: number }
+  {
+    challenge: string;
+    operator_id: string;
+    approver_id: string;
+    purpose: WebAuthnCredentialPurpose;
+    rp_id: string;
+    expires_at: number;
+  }
 >();
 
 export function isWebAuthnRegistrationAllowed(): boolean {
-  if (process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER === "1") return false;
-  if (process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_REGISTER === "1") return true;
-  return listWebAuthnCredentials().length === 0;
+  return isWebAuthnLoginRegistrationAllowedPublic();
 }
 
-export function createWebAuthnRegisterOptions(body: {
-  operator_id: string;
-  approver_id: string;
-}):
+/** Login registration gate. Settlement may still register after login keys exist. */
+export function isSettlementRegistrationAllowed(): boolean {
+  return process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER !== "1";
+}
+
+export function createWebAuthnRegisterOptions(
+  body: {
+    operator_id: string;
+    approver_id: string;
+    purpose?: WebAuthnCredentialPurpose;
+  },
+  opts?: { sessionUser?: WireConsoleUser }
+):
   | {
       challenge: string;
       rp: { id: string; name: string };
       user: { id: string; name: string; displayName: string };
       pub_key_cred_params: { type: "public-key"; alg: number }[];
       timeout: number;
-      exclude_credentials: { id: string; type: "public-key" }[];
+      exclude_credentials: {
+        id: string;
+        type: "public-key";
+        transports?: Array<"hybrid" | "internal">;
+      }[];
       authenticator_selection: {
+        authenticatorAttachment?: "platform" | "cross-platform";
         residentKey: "preferred";
-        userVerification: "preferred";
+        userVerification: "required";
       };
+      hints: Array<"hybrid" | "client-device">;
+      purpose: WebAuthnCredentialPurpose;
     }
   | { error: string } {
-  if (!isWebAuthnRegistrationAllowed()) {
-    return { error: "webauthn registration disabled" };
+  const purpose: WebAuthnCredentialPurpose = body.purpose ?? "login";
+  const authorized = authorizeWebAuthnRegistration(body, opts?.sessionUser);
+  if ("status" in authorized) {
+    return { error: authorized.error };
   }
-  if (!body.operator_id?.trim() || !body.approver_id?.trim()) {
-    return { error: "operator_id and approver_id required" };
-  }
+  const resolved = authorized;
+
+  // Phase 1: settlement uses the same RP as the console (browser hybrid QR on this page).
+  const registerRpId = rpId();
 
   const challenge = randomBytes(32).toString("base64url");
   pendingRegisterChallenges.set(challenge, {
     challenge,
-    operator_id: body.operator_id.trim(),
-    approver_id: body.approver_id.trim(),
+    operator_id: resolved.operator_id,
+    approver_id: resolved.approver_id,
+    purpose,
+    rp_id: registerRpId,
     expires_at: Date.now() + 5 * 60_000,
   });
 
   const userId = createHash("sha256")
-    .update(`${body.operator_id}\0${body.approver_id}`, "utf-8")
+    .update(`${resolved.operator_id}\0${resolved.approver_id}\0${purpose}`, "utf-8")
     .digest()
     .subarray(0, 32)
     .toString("base64url");
 
+  const exclude = listWebAuthnCredentialsByPurpose(purpose, { rpId: registerRpId }).filter(
+    (c) => c.operator_id === resolved.operator_id
+  );
+  const settlement = purpose === "settlement";
+
   return {
     challenge,
-    rp: { id: rpId(), name: "OrgOS Wire Console" },
+    rp: {
+      id: registerRpId,
+      name: settlement ? "OrgOS Settlement" : "OrgOS Wire Console",
+    },
     user: {
       id: userId,
-      name: body.operator_id.trim(),
-      displayName: body.operator_id.trim(),
+      name: resolved.operator_id,
+      displayName: resolved.operator_id,
     },
     pub_key_cred_params: [{ type: "public-key", alg: -7 }],
     timeout: 300_000,
-    exclude_credentials: listWebAuthnCredentials().map((c) => ({
+    exclude_credentials: exclude.map((c) => ({
       id: c.credential_id,
       type: "public-key" as const,
+      transports: settlement ? ["hybrid", "internal"] : ["internal"],
     })),
-    authenticator_selection: {
-      residentKey: "preferred",
-      userVerification: "preferred",
-    },
+    authenticator_selection: settlement
+      ? {
+          authenticatorAttachment: "cross-platform",
+          residentKey: "preferred",
+          userVerification: "required",
+        }
+      : {
+          authenticatorAttachment: "platform",
+          residentKey: "preferred",
+          userVerification: "required",
+        },
+    hints: settlement ? (["hybrid"] as const) : (["client-device"] as const),
+    purpose,
   };
 }
 
@@ -90,11 +143,8 @@ export function verifyWebAuthnRegistration(body: {
   attestation_object_base64: string;
   operator_id: string;
   approver_id: string;
-}): { token: string; user: WireConsoleUser } | { error: string } {
-  if (!isWebAuthnRegistrationAllowed()) {
-    return { error: "webauthn registration disabled" };
-  }
-
+  purpose?: WebAuthnCredentialPurpose;
+}): { token?: string; user?: WireConsoleUser; credential_id: string } | { error: string } {
   const pending = pendingRegisterChallenges.get(body.challenge);
   if (!pending || pending.expires_at < Date.now()) {
     return { error: "webauthn registration challenge expired or unknown" };
@@ -108,6 +158,11 @@ export function verifyWebAuthnRegistration(body: {
     return { error: "operator_id or approver_id mismatch" };
   }
 
+  const purpose = body.purpose ?? pending.purpose;
+  if (purpose !== pending.purpose) {
+    return { error: "purpose mismatch" };
+  }
+
   let clientData: { type?: string; challenge?: string; origin?: string };
   try {
     clientData = JSON.parse(Buffer.from(body.client_data_json, "base64url").toString("utf-8"));
@@ -117,9 +172,15 @@ export function verifyWebAuthnRegistration(body: {
   if (clientData.type !== "webauthn.create" || clientData.challenge !== body.challenge) {
     return { error: "webauthn client data mismatch" };
   }
+
   const expectedOrigin = process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN;
-  if (expectedOrigin && clientData.origin && clientData.origin !== expectedOrigin) {
-    return { error: "webauthn origin mismatch" };
+  if (!webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
+    return {
+      error:
+        purpose === "settlement"
+          ? "settlement webauthn origin mismatch"
+          : "webauthn origin mismatch",
+    };
   }
 
   let authData: Buffer;
@@ -153,7 +214,7 @@ export function verifyWebAuthnRegistration(body: {
     return { error: "unsupported credential public key (expected ES256 P-256)" };
   }
 
-  const rpHash = createHash("sha256").update(rpId()).digest();
+  const rpHash = createHash("sha256").update(pending.rp_id).digest();
   if (!authData.subarray(0, 32).equals(rpHash)) {
     return { error: "webauthn rpId hash mismatch" };
   }
@@ -164,14 +225,23 @@ export function verifyWebAuthnRegistration(body: {
     operator_id: pending.operator_id,
     approver_id: pending.approver_id,
     sign_count: extracted.signCount,
+    purpose,
+    rp_id: pending.rp_id,
+    authenticator_attachment: purpose === "settlement" ? "cross-platform" : "platform",
   });
+
+  // Settlement keys never mint a console session (ADR 0037).
+  if (purpose === "settlement") {
+    return { credential_id: credentialId };
+  }
 
   const user: WireConsoleUser = {
     operator_id: pending.operator_id,
     approver_id: pending.approver_id,
     mode: "prod",
   };
-  return registerSession(user);
+  const session = registerSession(user);
+  return { token: session.token, user: session.user, credential_id: credentialId };
 }
 
 export function resetWebAuthnRegisterChallengesForTests(): void {

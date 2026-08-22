@@ -7,10 +7,14 @@ test.describe("wire console webauthn smoke", () => {
     await installWebAuthnVirtualCredential(page);
     await page.goto("/");
 
-    await expect(page.getByRole("button", { name: "Sign in with passkey" })).toBeVisible();
-    await page.getByRole("button", { name: "Sign in with passkey" }).click();
+    await expect(page.getByRole("button", { name: "Touch ID で入る" })).toBeVisible();
+    await page.getByRole("button", { name: "Touch ID で入る" }).click();
 
-    await expect(page.getByRole("heading", { name: "Wire Console" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("link", { name: "Wire", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+      { timeout: 15_000 }
+    );
     await expect(page.getByText(/E2E WebAuthn/)).toBeVisible();
     await expect(page.getByText(/approver テスト承認者/)).toBeVisible();
   });

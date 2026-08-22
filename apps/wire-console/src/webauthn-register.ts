@@ -1,17 +1,8 @@
-function base64UrlToBuffer(value: string): ArrayBuffer {
-  const pad = value.length % 4 === 0 ? "" : "=".repeat(4 - (value.length % 4));
-  const binary = atob(value.replace(/-/g, "+").replace(/_/g, "/") + pad);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes.buffer;
-}
-
-function bufferToBase64Url(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+import { ensureWebAuthnRpHost } from "@ops-shared/webauthn-page-origin";
+import {
+  browserSupportsWebAuthn,
+  createPasskeyWithSimpleWebAuthn,
+} from "@ops-shared/webauthn-simple";
 
 interface WebAuthnRegisterOptionsResponse {
   challenge: string;
@@ -19,19 +10,25 @@ interface WebAuthnRegisterOptionsResponse {
   user: { id: string; name: string; displayName: string };
   pub_key_cred_params: { type: "public-key"; alg: number }[];
   timeout: number;
-  exclude_credentials: { id: string; type: "public-key" }[];
+  exclude_credentials: {
+    id: string;
+    type: "public-key";
+    transports?: Array<"hybrid" | "internal" | "usb" | "nfc" | "ble">;
+  }[];
   authenticator_selection: {
+    authenticatorAttachment?: "platform" | "cross-platform";
     residentKey: "preferred";
-    userVerification: "preferred";
+    userVerification: "required" | "preferred";
   };
+  hints?: Array<"hybrid" | "client-device">;
 }
 
 export async function registerWithWebAuthn(
   api: <T>(path: string, init?: RequestInit) => Promise<T>,
   opts: { operator_id: string; approver_id: string }
 ): Promise<void> {
-  if (!window.PublicKeyCredential) {
-    throw new Error("WebAuthn is not available in this browser");
+  if (!browserSupportsWebAuthn()) {
+    throw new Error("WebAuthn is not available");
   }
 
   const regOpts = await api<{ ok: boolean } & WebAuthnRegisterOptionsResponse>(
@@ -45,37 +42,19 @@ export async function registerWithWebAuthn(
     }
   );
 
-  const credential = (await navigator.credentials.create({
-    publicKey: {
-      challenge: base64UrlToBuffer(regOpts.challenge),
-      rp: regOpts.rp,
-      user: {
-        id: base64UrlToBuffer(regOpts.user.id),
-        name: regOpts.user.name,
-        displayName: regOpts.user.displayName,
-      },
-      pubKeyCredParams: regOpts.pub_key_cred_params,
-      timeout: regOpts.timeout,
-      excludeCredentials: regOpts.exclude_credentials.map((c) => ({
-        id: base64UrlToBuffer(c.id),
-        type: c.type,
-      })),
-      authenticatorSelection: regOpts.authenticator_selection,
-    },
-  })) as PublicKeyCredential | null;
-
-  if (!credential) {
-    throw new Error("WebAuthn registration was cancelled");
+  if (!ensureWebAuthnRpHost(regOpts.rp?.id)) {
+    throw new Error("webauthn origin mismatch");
   }
 
-  const response = credential.response as AuthenticatorAttestationResponse;
+  const cred = await createPasskeyWithSimpleWebAuthn(regOpts);
+
   await api("/console/v1/auth/webauthn/register", {
     method: "POST",
     body: JSON.stringify({
       challenge: regOpts.challenge,
-      credential_id: bufferToBase64Url(new Uint8Array(credential.rawId).buffer),
-      client_data_json: bufferToBase64Url(response.clientDataJSON),
-      attestation_object_base64: bufferToBase64Url(response.attestationObject),
+      credential_id: cred.rawId,
+      client_data_json: cred.response.clientDataJSON,
+      attestation_object_base64: cred.response.attestationObject,
       operator_id: opts.operator_id,
       approver_id: opts.approver_id,
     }),

@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { NoticeWireType } from "../../../../schemas/protocol/pending-notice.js";
+import { SettlementStepUpRequiredError } from "../../org/settlement-stepup.js";
+import { settlementStepUpResponse } from "../../steward-chat/routes/settlement-api.js";
 import { getSessionUser, sessionTokenFromRequest } from "../auth/session.js";
 import type { WireConsoleUser } from "../auth/session.js";
 import {
@@ -127,6 +129,10 @@ export async function handleConsoleApi(
       const body = await parseJsonBody(req);
       return await handleTenantPost(req, res, tenantId, section, body, user);
     } catch (e) {
+      if (e instanceof SettlementStepUpRequiredError) {
+        json(res, 409, settlementStepUpResponse(e));
+        return true;
+      }
       const message = e instanceof Error ? e.message : String(e);
       json(res, actionErrorStatus(message), { ok: false, error: message });
       return true;
@@ -308,6 +314,21 @@ async function handleTenantPost(
       const result = await approveTenantNotice(tenantId, user, noticeId, {
         co_approver_id:
           typeof body.co_approver_id === "string" ? body.co_approver_id : undefined,
+        settlementAssertion:
+          body.settlement &&
+          typeof body.settlement === "object" &&
+          body.settlement !== null &&
+          typeof (body.settlement as { challenge_id?: unknown }).challenge_id === "string"
+            ? (body.settlement as {
+                challenge_id: string;
+                token: string;
+                credential_id: string;
+                challenge: string;
+                client_data_json: string;
+                authenticator_data_base64?: string;
+                signature_base64?: string;
+              })
+            : undefined,
       });
       json(res, 200, { ok: true, ...result });
       return true;

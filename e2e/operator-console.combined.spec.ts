@@ -2,9 +2,18 @@ import { expect, test } from "@playwright/test";
 
 async function login(page: import("@playwright/test").Page): Promise<void> {
   await page.goto("/");
-  await page.getByLabel("Dev passkey").fill("orgos-dev");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+  // Codex 予実 login gate
+  const pass = page.getByLabel("パスワード（dev passkey）");
+  if (await pass.count()) {
+    await pass.fill("orgos-dev");
+    await page.getByRole("button", { name: "ログイン" }).click();
+  } else {
+    await page.getByLabel("Dev passkey").fill("orgos-dev");
+    await page.getByRole("button", { name: "Sign in" }).click();
+  }
+  await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 test.describe("operator console combined", () => {
@@ -42,34 +51,42 @@ test.describe("operator console combined", () => {
     expect(title.length).toBeGreaterThan(0);
   });
 
-  test("shows KPI and wire console link on combined origin", async ({ page }) => {
+  test("shows 予実 shell and wire console link on combined origin", async ({ page }) => {
     await login(page);
-    await expect(page.getByRole("heading", { name: "KPI" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Wire Console →" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "Wire" })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "予実" })
+    ).toHaveAttribute("aria-current", "page");
   });
 
   test("approves wire pending with shared session", async ({ page }) => {
     await login(page);
+    await page.goto("/wire/");
+    await expect(page.getByRole("button", { name: "承認待ち" })).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "承認待ち" }).click();
 
-    const statsBefore = await page.locator(".stats").textContent();
-    const countBefore = Number(statsBefore?.match(/Wire:\s*(\d+)/)?.[1] ?? "0");
+    const pendingRow = page.locator(".message-row").filter({ hasText: "承認待ち" }).first();
+    await expect(pendingRow).toBeVisible({ timeout: 15_000 });
+    const countBefore = await page.locator(".message-row").filter({ hasText: "承認待ち" }).count();
     expect(countBefore).toBeGreaterThan(0);
 
     await Promise.all([
       page.waitForResponse(
         (r) =>
-          r.url().includes("/chat/v1/approvals/") &&
-          r.url().endsWith("/approve") &&
+          (r.url().includes("/chat/v1/approvals/") || r.url().includes("/console/v1/")) &&
+          r.url().includes("approve") &&
           r.request().method() === "POST"
       ),
-      page.getByRole("button", { name: "承認" }).first().click(),
+      pendingRow.click().then(async () => {
+        await page.getByRole("button", { name: "承認" }).click();
+      }),
     ]);
 
     await expect
-      .poll(async () => {
-        const text = await page.locator(".stats").textContent();
-        return Number(text?.match(/Wire:\s*(\d+)/)?.[1] ?? "0");
-      })
+      .poll(async () => page.locator(".message-row").filter({ hasText: "承認待ち" }).count())
       .toBeLessThan(countBefore);
   });
 });

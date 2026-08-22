@@ -20,6 +20,8 @@ export const orgWireOutboundDetailsSchema = z.object({
   invoice_id: z.string().optional(),
   broker_instruction: z.string().optional(),
   stakeholder_id: z.string().optional(),
+  receipt_id: z.string().optional(),
+  receipt_digest: z.string().optional(),
   correlation_event_id: z.string().uuid().optional(),
   company_event_id: z.string().regex(/^EVT-\d{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
   transaction_id: z.string().optional(),

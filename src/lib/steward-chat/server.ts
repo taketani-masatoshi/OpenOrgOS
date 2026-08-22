@@ -5,6 +5,7 @@ import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
 import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
 import { handleChatApi } from "./routes/chat-api.js";
+import { handleSettlementApi } from "./routes/settlement-api.js";
 import {
   handleChatAuthApi,
   isPublicChatPath,
@@ -76,6 +77,16 @@ function createStewardChatHttpServer(host: string, fallbackPort: number) {
 
     if (await handleChatAuthApi(req, res, pathname, method, readBody)) {
       return;
+    }
+
+    // Settlement public routes (iPhone QR) — no session cookie
+    if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/settlement/")) {
+      const handled = await handleSettlementApi(req, res, pathname, method, {
+        user: null,
+        readBody,
+        hostFallback: req.headers.host ?? `${host}:${fallbackPort}`,
+      });
+      if (handled) return;
     }
 
     if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {

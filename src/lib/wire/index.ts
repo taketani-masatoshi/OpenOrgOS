@@ -13,6 +13,7 @@ export {
   bridgeProposeContractExecuted,
   bridgeProposeInvoiceIssued,
   bridgeProposePaymentInstructed,
+  bridgeProposeReceiptClaimed,
   getPendingNoticesPath,
   type ProposeInterOrgWireOptions,
   type ProposeInterOrgNoticeOptions,

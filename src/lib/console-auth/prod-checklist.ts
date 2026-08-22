@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { operatorsRegistryPath, registryHasApprovers } from "../org/operators.js";
+import { validateWebAuthnProdEnv } from "./settlement-passkey-prod.js";
 
 export interface ProdAuthCheck {
   id: string;
@@ -173,6 +174,41 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
             ? "Chat audit disabled (ok for tests)"
             : "Chat operation audit logging enabled",
     });
+
+    const settlementOff = process.env.ORGOS_SETTLEMENT_STEPUP === "0";
+    checks.push({
+      id: "settlement_stepup_enabled",
+      ok: prod ? !settlementOff : true,
+      warn: prod && settlementOff,
+      detail:
+        prod && settlementOff
+          ? "ORGOS_SETTLEMENT_STEPUP=0 in production — tier B/C PassKey step-up disabled (ADR 0037)"
+          : settlementOff
+            ? "Settlement step-up disabled (ok for local/dev tests)"
+            : "Settlement PassKey step-up enabled for tier B/C",
+    });
+
+    if (prod && (scope === "wire" || scope === "all")) {
+      const webauthnRows = validateWebAuthnProdEnv({ host });
+      const ids = [
+        "webauthn_rp_id",
+        "webauthn_origin",
+        "webauthn_origin_https",
+        "webauthn_rp_origin_match",
+        "webauthn_no_deprecated_settlement_rp",
+      ] as const;
+      webauthnRows.forEach((row, i) => {
+        const id = ids[i] ?? `webauthn_env_${i}`;
+        const deprecatedWarn =
+          id === "webauthn_no_deprecated_settlement_rp" && row.detail.startsWith("WARN:");
+        checks.push({
+          id,
+          ok: deprecatedWarn ? true : row.ok,
+          warn: deprecatedWarn,
+          detail: deprecatedWarn ? row.detail.replace(/^WARN: /, "") : row.detail,
+        });
+      });
+    }
 
     const rateLimitOff = process.env.ORGOS_RATE_LIMIT === "0";
     checks.push({

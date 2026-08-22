@@ -14,8 +14,9 @@ import {
 } from "../wire-console/auth/session.js";
 import { completeWebAuthnE2eLogin, isWebAuthnE2eLoginEnabled } from "../wire-console/auth/webauthn-e2e.js";
 import {
+  authorizeWebAuthnRegistration,
   createWebAuthnRegisterOptions,
-  isWebAuthnRegistrationAllowed,
+  registrationErrorStatus,
   verifyWebAuthnRegistration,
 } from "../wire-console/auth/webauthn-register.js";
 import { resolveChatPermissions } from "../console-auth/rbac.js";
@@ -32,6 +33,9 @@ export function isStewardChatAuthEnabled(): boolean {
 export function isPublicChatPath(pathname: string, method: string): boolean {
   if (pathname === "/health") return true;
   if (pathname.startsWith("/chat/v1/auth/")) return true;
+  if (pathname.startsWith("/chat/v1/settlement/challenge/") && method === "GET") return true;
+  if (pathname === "/chat/v1/settlement/complete" && method === "POST") return true;
+  if (method === "OPTIONS" && pathname.startsWith("/chat/v1/settlement/")) return true;
   if (method === "GET" && (pathname === "/" || pathname.startsWith("/assets/"))) return true;
   return false;
 }
@@ -79,6 +83,15 @@ export async function handleChatAuthApi(
   }
 
   if (method === "GET" && pathname === "/chat/v1/auth/me") {
+    if (!isStewardChatAuthEnabled()) {
+      const bypass = {
+        operator_id: "dev-bypass",
+        approver_id: "dev-bypass",
+        mode: "dev" as const,
+      };
+      json(200, { ok: true, user: authUserPayload(bypass), permissions: resolveChatPermissions(bypass) });
+      return true;
+    }
     const user = getChatSessionUser(req);
     if (!user) {
       json(401, { ok: false, error: "unauthorized" });
@@ -133,19 +146,25 @@ export async function handleChatAuthApi(
   }
 
   if (method === "POST" && pathname === "/chat/v1/auth/webauthn/register/options") {
-    if (!isWebAuthnRegistrationAllowed()) {
-      json(403, { ok: false, error: "WebAuthn registration disabled" });
-      return true;
-    }
     try {
+      const sessionUser = getChatSessionUser(req);
       const raw = await readBody(req);
-      const body = JSON.parse(raw || "{}") as { operator_id?: string; approver_id?: string };
-      const result = createWebAuthnRegisterOptions({
-        operator_id: body.operator_id ?? "",
-        approver_id: body.approver_id ?? "",
-      });
+      const body = JSON.parse(raw || "{}") as {
+        operator_id?: string;
+        approver_id?: string;
+        purpose?: "login" | "settlement";
+      };
+      const purpose = body.purpose === "settlement" ? "settlement" : "login";
+      const result = createWebAuthnRegisterOptions(
+        {
+          operator_id: body.operator_id ?? "",
+          approver_id: body.approver_id ?? "",
+          purpose,
+        },
+        { sessionUser }
+      );
       if ("error" in result) {
-        json(422, { ok: false, error: result.error });
+        json(registrationErrorStatus(result.error), { ok: false, error: result.error });
         return true;
       }
       json(200, { ok: true, ...result });
@@ -157,27 +176,66 @@ export async function handleChatAuthApi(
   }
 
   if (method === "POST" && pathname === "/chat/v1/auth/webauthn/register") {
-    if (!isWebAuthnRegistrationAllowed()) {
-      json(403, { ok: false, error: "WebAuthn registration disabled" });
-      return true;
-    }
     try {
+      const sessionUser = getChatSessionUser(req);
       const raw = await readBody(req);
       const body = JSON.parse(raw || "{}") as Parameters<typeof verifyWebAuthnRegistration>[0];
-      const result = verifyWebAuthnRegistration(body);
+      const purpose = body.purpose === "settlement" ? "settlement" : "login";
+      const authorized = authorizeWebAuthnRegistration(
+        {
+          operator_id: body.operator_id ?? "",
+          approver_id: body.approver_id ?? "",
+          purpose,
+        },
+        sessionUser
+      );
+      if ("status" in authorized) {
+        json(authorized.status, { ok: false, error: authorized.error });
+        return true;
+      }
+      const result = verifyWebAuthnRegistration({ ...body, purpose });
       if ("error" in result) {
         json(401, { ok: false, error: result.error });
         return true;
       }
-      setSessionCookie(res, result.token);
-      appendChatAudit({
-        action: "login",
-        operator_id: result.user.operator_id,
-        approver_id: result.user.approver_id,
-        ok: true,
-        path: pathname,
-      });
-      json(200, { ok: true, user: authUserPayload(result.user) });
+      if (result.token && result.user) {
+        setSessionCookie(res, result.token);
+        appendChatAudit({
+          action: "webauthn_register",
+          operator_id: result.user.operator_id,
+          approver_id: result.user.approver_id,
+          ok: true,
+          path: pathname,
+          detail: `login:${result.credential_id}`,
+        });
+        appendChatAudit({
+          action: "login",
+          operator_id: result.user.operator_id,
+          approver_id: result.user.approver_id,
+          ok: true,
+          path: pathname,
+        });
+        json(200, {
+          ok: true,
+          user: authUserPayload(result.user),
+          credential_id: result.credential_id,
+          purpose: "login",
+        });
+      } else {
+        appendChatAudit({
+          action: "webauthn_register",
+          operator_id: body.operator_id ?? "unknown",
+          approver_id: body.approver_id ?? "unknown",
+          ok: true,
+          path: pathname,
+          detail: `settlement:${result.credential_id}`,
+        });
+        json(200, {
+          ok: true,
+          credential_id: result.credential_id,
+          purpose: "settlement",
+        });
+      }
       return true;
     } catch (e) {
       json(400, { ok: false, error: e instanceof Error ? e.message : String(e) });
