@@ -55,10 +55,11 @@ describe("mcp steward tools", () => {
   });
 
   async function callWithAudit(tool: string, args: Record<string, unknown> = {}) {
-    const user = mcpOperatorUser();
+    const token = "demo-operator-key";
+    const user = mcpOperatorUser(token);
     let result: Awaited<ReturnType<typeof callStewardMcpTool>> | undefined;
     await auditMcpToolCall(tool, args, user.operator_id, user.approver_id, async () => {
-      result = await callStewardMcpTool(tool, args);
+      result = await callStewardMcpTool(tool, args, { token });
       return { ok: !result.isError, error: result.isError ? result.content[0]?.text : undefined };
     });
     return result!;

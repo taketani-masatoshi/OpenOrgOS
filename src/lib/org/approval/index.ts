@@ -13,11 +13,14 @@ export {
 export { proposeOrgApproval, type ProposeOrgApprovalOptions } from "./propose.js";
 export {
   approveOrgApproval,
+  humanApproveOrgApproval,
+  assertApproverIdentityBound,
   assertNotSelfApproval,
   completeOrgApprovalWire,
   evaluateOrgApprovalGate,
   isSelfApproval,
   isSelfApprovalBannedSubject,
+  operatorMatchesApproverIdentity,
   type ApproveOrgApprovalOptions,
   type ApproveOrgApprovalResult,
 } from "./approve.js";

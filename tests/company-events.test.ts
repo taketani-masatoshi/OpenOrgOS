@@ -1,69 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  unlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { setTenantId } from "../src/lib/tenant.js";
 import {
   createCompanyEvent,
   ensureCompanyEventMonth,
-  initCompanyEventsFile,
   listCompanyEvents,
   loadCompanyEvents,
 } from "../src/lib/company-events.js";
 import { companyEventsRegistrySchema } from "../schemas/company-events.js";
-import { getDataDir, resolveTenantPath } from "../src/lib/utils.js";
-
-const REGISTRY_PATH = () => join(getDataDir(), "company-events.yaml");
-const CHAIN_PATH = () => join(getDataDir(), "company-events-chain.jsonl");
-const REGISTRY_BACKUP = join(tmpdir(), "steward-company-events-backup.yaml");
-const CHAIN_BACKUP = join(tmpdir(), "steward-company-events-chain-backup.jsonl");
+import { resolveTenantPath } from "../src/lib/utils.js";
+import { setupTempCompanyEventsTenant } from "./helpers/temp-company-events-tenant.js";
 
 describe("company-events", () => {
-  const created: string[] = [];
+  let restore: () => void;
 
   beforeEach(() => {
-    setTenantId("mal");
-    initCompanyEventsFile();
-    if (existsSync(REGISTRY_PATH())) {
-      copyFileSync(REGISTRY_PATH(), REGISTRY_BACKUP);
-    }
-    if (existsSync(CHAIN_PATH())) {
-      copyFileSync(CHAIN_PATH(), CHAIN_BACKUP);
-    } else if (existsSync(CHAIN_BACKUP)) {
-      unlinkSync(CHAIN_BACKUP);
-    }
-    writeFileSync(REGISTRY_PATH(), "schema_version: 2\nevents: []\n", "utf8");
-    if (existsSync(CHAIN_PATH())) {
-      unlinkSync(CHAIN_PATH());
-    }
-    created.length = 0;
+    restore = setupTempCompanyEventsTenant().restore;
   });
 
   afterEach(() => {
-    for (const rel of created) {
-      const abs = resolveTenantPath(rel);
-      if (existsSync(abs)) {
-        rmSync(abs, { recursive: true, force: true });
-      }
-    }
-    if (existsSync(REGISTRY_BACKUP)) {
-      copyFileSync(REGISTRY_BACKUP, REGISTRY_PATH());
-      unlinkSync(REGISTRY_BACKUP);
-    }
-    if (existsSync(CHAIN_BACKUP)) {
-      copyFileSync(CHAIN_BACKUP, CHAIN_PATH());
-      unlinkSync(CHAIN_BACKUP);
-    } else if (existsSync(CHAIN_PATH())) {
-      unlinkSync(CHAIN_PATH());
-    }
+    restore();
   });
 
   it("validates empty registry", () => {
@@ -75,7 +31,6 @@ describe("company-events", () => {
   it("ensure-month creates events and artifacts folders", () => {
     const month = "2099-01";
     const result = ensureCompanyEventMonth(month);
-    created.push(result.eventsDirRel, result.artifactsDirRel);
     expect(existsSync(result.eventsDir)).toBe(true);
     expect(existsSync(result.artifactsDir)).toBe(true);
     expect(existsSync(join(result.eventsDir, "_INDEX.md"))).toBe(true);
@@ -90,7 +45,6 @@ describe("company-events", () => {
       slug: "test-incorp",
       related: { registration_case_id: "INC-2099-001" },
     });
-    created.push(event.event_path, event.artifact_dir);
 
     expect(event.id).toBe("EVT-20990215-registration-test-incorp");
     expect(existsSync(resolveTenantPath(event.event_path))).toBe(true);
@@ -113,7 +67,6 @@ describe("company-events", () => {
       title: "取締役会",
       occurredAt: "2099-03-01",
     });
-    created.push(event.event_path, event.artifact_dir);
     expect(event.id).toMatch(/^EVT-20990301-governance-governance/);
   });
 });

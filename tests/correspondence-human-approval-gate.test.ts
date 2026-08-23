@@ -6,6 +6,7 @@ import { getDataDir, getDocsDir } from "../src/lib/utils.js";
 import { createCorrespondenceDraft } from "../src/lib/correspondence/draft.js";
 import {
   approveOrgApproval,
+  humanApproveOrgApproval,
 } from "../src/lib/org/approval/index.js";
 import {
   sendApprovedCorrespondence,
@@ -48,10 +49,11 @@ describe("correspondence human approval gate", () => {
       })
     ).toThrow(/humanReviewConfirmed/i);
 
-    approveOrgApproval({
+    humanApproveOrgApproval({
       approvalId: approvalId!,
       approverId: "Demo CEO",
       operatorId: "OP-001",
+      source: "cli",
       humanReviewConfirmed: true,
     });
 

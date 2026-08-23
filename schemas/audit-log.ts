@@ -6,6 +6,17 @@ export const auditEventTypeSchema = z.enum([
   "classification_block",
   "escalate",
   "route_dispatch",
+  "module_gateway_call",
+  "module_capability_decision",
+  "module_relay_call",
+  "module_policy_decision",
+  "module_install",
+  "module_capability_grant",
+  "llm_governance",
+  "module_certification_publish",
+  "module_certification_grant",
+  "module_certification_revoke",
+  "events_chain_rebuild",
 ]);
 
 export const auditEventSchema = z.object({

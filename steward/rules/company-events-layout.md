@@ -59,13 +59,14 @@ npm run orgos -- events void-request EVT-... --operator ops-user
 npm run orgos -- events void-ack EVT-... --wire-event <inbound-uuid>
 npm run orgos -- events list --month 2026-06
 npm run orgos -- events chain verify
+npm run orgos -- events chain pin
 ```
 
-**削除禁止:** 台帳・チェーン・MD からの物理削除は行わない。無効化は `events void`（新しい void EVT + チェーンリンク）。
+**削除禁止:** 台帳・チェーン・MD からの物理削除は行わない。無効化は `events void`（新しい void EVT + チェーンリンク）。壊れたチェーンを `events chain backfill --force` で復旧しない。復旧が必要な場合は別 Epic（復旧イベント + 新しい署名済み Genesis）とする。
 
 **Wire 配送済み void ゲート:** 社外へ送った EVT は相手の void 許可 Wire（`void-ack` 登録）まで `events void` 不可。取消は先に `events void-request` → `protocol notice approve`。
 
-**記録監査（records_audit）:** 週次 `events chain attest`（検証後 Ed25519 署名）· 月次 `events audit monthly`（レポート + 人間通知）。Agent 正本: `steward/core/agents/records_audit_agent.md`。
+**記録監査（records_audit）:** 週次 `events chain attest`（検証後 Ed25519 署名 + Witness 固定）· 月次 `events audit monthly`（レポート + 人間通知）。Agent 正本: `steward/core/agents/records_audit_agent.md`。
 
 **台帳 `wire_binding`:** `peer_id` · `wire_event_id` · `void_request_notice_id` · `void_ack_wire_event_id` — `protocol notice propose --company-event` で紐づけ。
 

@@ -70,17 +70,18 @@ orgos mcp rotate-token
 | **mcp stdio** | `orgos mcp start` | Cursor / Continue · `ORGOS_MCP_TOKEN` |
 | **mcp http** | `orgos mcp serve-http` | Open WebUI 等 · `Authorization: Bearer` |
 
-### MCP ツール（7 本）
+### MCP ツール（6 本）
 
 | ツール | 用途 |
 |--------|------|
 | `steward_today` | Today コンテキスト（L1） |
 | `steward_ask` | Operator 質問 |
-| `steward_approve` | 承認実行 |
 | `steward_wire_flush` | Wire 配送 flush |
 | `steward_witness_register` | Witness 登録 |
 | `steward_witness_verify` | Witness quorum 検証 |
 | `steward_witness_flush` | Witness pending 再送 |
+
+最終承認は Chat/Wire UI または `org approval approve` のみ。MCP / LLM ツールは承認を実行しない。
 
 ---
 
@@ -113,6 +114,7 @@ Today コンテキストは **human-mail 承認待ち** と **wire delivery 配�
 | Rate limit | `ORGOS_RATE_LIMIT=0` 禁止 |
 | Chat audit | `ORGOS_CHAT_AUDIT=0` 禁止 |
 | MCP | `ORGOS_MCP_TOKEN` 必須 |
+| LLM write | `ORGOS_LLM_TOOLS_WRITE=1` 禁止（承認ツールは LLM に出さない） |
 
 ---
 
@@ -143,4 +145,4 @@ Today コンテキストは **human-mail 承認待ち** と **wire delivery 配�
 
 ---
 
-**版:** 2026-06-28 · v1.1（combined console · MCP 7 tools · HTTP Bearer · rate limit / CSRF / RBAC · E2E マトリクス）
+**版:** 2026-08-23 · v1.2（MCP 6 tools · LLM/MCP は最終承認しない · HTTP Bearer · rate limit / CSRF / RBAC）

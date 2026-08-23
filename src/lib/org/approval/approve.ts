@@ -3,6 +3,7 @@ import type { OperatorAttestation } from "../../../../schemas/org/operator-attes
 import type { OrgApprovalTier } from "../../../../schemas/org/tier.js";
 import type { WireApprovalGateResult } from "../../../../schemas/protocol/wire-approval.js";
 import type { SettlementWebAuthnAssertion } from "../../../../schemas/org/settlement-stepup.js";
+import type { HumanApprovalContext, HumanApprovalSource } from "../../../../schemas/org/human-approval-context.js";
 import {
   assertWireGovernanceApproval,
   normalizePersonName,
@@ -36,23 +37,17 @@ import {
   assertSettlementAssuranceOrThrow,
   markSettlementChallengeConsumed,
 } from "../settlement-stepup.js";
+import {
+  assertHumanApprovalContext,
+  issueHumanApprovalContext,
+} from "../human-approval-context.js";
 
-/** Subjects that forbid the proposer from also being the approver (ADR 0027). */
-export function isSelfApprovalBannedSubject(subjectType: string): boolean {
-  return (
-    subjectType === "budget.company_total" ||
-    subjectType === "budget.department_total" ||
-    subjectType === "expense.claim.manager" ||
-    subjectType === EXPENSE_CLAIM_REPRESENTATIVE_SUBJECT ||
-    subjectType === EXPENSE_CLAIM_LATE_EXCEPTION_SUBJECT ||
-    subjectType === "expense.claim.ringi" ||
-    subjectType === EXPENSE_CLAIM_BOARD_SUBJECT ||
-    subjectType === "tenant.config" ||
-    subjectType.startsWith("business_plan.")
-  );
+/** Subjects that historically listed an extra self-approval ban (ADR 0027). All internal approvals now ban self-approval. */
+export function isSelfApprovalBannedSubject(_subjectType: string): boolean {
+  return true;
 }
 
-function operatorMatchesApproverIdentity(
+export function operatorMatchesApproverIdentity(
   operatorId: string,
   approverId: string,
 ): boolean {
@@ -95,12 +90,35 @@ export function isSelfApproval(
   return false;
 }
 
+export function assertApproverIdentityBound(approverId: string, operatorId?: string): void {
+  const opId = operatorId?.trim();
+  if (!opId) {
+    throw new Error(
+      "operatorId is required for approval — bind the authenticated operator (ceo or approver)"
+    );
+  }
+  const op = findOperatorById(opId);
+  if (!op || op.status !== "active") {
+    throw new Error(`Operator ${opId} is not an active operator`);
+  }
+  if (op.role !== "ceo" && op.role !== "approver") {
+    throw new Error(
+      `Operator ${opId} role ${op.role} cannot approve — ceo or approver required`
+    );
+  }
+  if (!operatorMatchesApproverIdentity(opId, approverId)) {
+    throw new Error(
+      `Approver "${approverId}" does not match authenticated operator ${opId} ` +
+        `(${op.approver_name ?? op.display_name})`
+    );
+  }
+}
+
 export function assertNotSelfApproval(
   approval: OrgApprovalRequest,
   approverId: string,
   operatorId?: string,
 ): void {
-  if (!isSelfApprovalBannedSubject(approval.subject_type)) return;
   if (!isSelfApproval(approval, approverId, operatorId)) return;
   throw new Error(
     `自己承認は禁止されています（${approval.subject_type} · proposed_by=${approval.proposed_by}）。` +
@@ -124,6 +142,8 @@ export interface ApproveOrgApprovalOptions {
     challenge_id: string;
     token: string;
   };
+  /** ADR 0038 — signed human ceremony. Prefer humanApproveOrgApproval. */
+  humanContext?: HumanApprovalContext;
 }
 
 export interface ApproveOrgApprovalResult {
@@ -208,7 +228,13 @@ export function approveOrgApproval(opts: ApproveOrgApprovalOptions): ApproveOrgA
       );
     }
 
+    assertApproverIdentityBound(opts.approverId, opts.operatorId);
     assertNotSelfApproval(approval, opts.approverId, opts.operatorId);
+    assertHumanApprovalContext({
+      context: opts.humanContext,
+      approval,
+      operatorId: opts.operatorId!,
+    });
 
     const settlementMeta = assertSettlementAssuranceOrThrow(
       approval,
@@ -223,7 +249,7 @@ export function approveOrgApproval(opts: ApproveOrgApprovalOptions): ApproveOrgA
     );
     const approvedAt = new Date().toISOString();
     const attestation: OperatorAttestation = {
-      operator_id: opts.operatorId ?? approval.proposed_by,
+      operator_id: opts.operatorId!.trim(),
       approver_id: opts.approverId,
       co_approver_id: opts.coApproverId,
       approval_tier: gate.tier as OrgApprovalTier,
@@ -318,6 +344,25 @@ export function completeOrgApprovalWire(opts: {
   };
   saveOrgApprovalRegistry(registry);
   return { approval: registry.approvals[idx]!, auditEnvelope };
+}
+
+export function humanApproveOrgApproval(
+  opts: ApproveOrgApprovalOptions & { source: HumanApprovalSource },
+): ApproveOrgApprovalResult {
+  const pending = findOrgApproval(opts.approvalId);
+  if (!pending) {
+    throw new Error(`Approval ${opts.approvalId} not found`);
+  }
+  const operatorId = opts.operatorId?.trim();
+  if (!operatorId) {
+    throw new Error("operatorId is required for human approval");
+  }
+  const humanContext = issueHumanApprovalContext({
+    approval: pending,
+    operatorId,
+    source: opts.source,
+  });
+  return approveOrgApproval({ ...opts, operatorId, humanContext });
 }
 
 export { findOrgApproval };

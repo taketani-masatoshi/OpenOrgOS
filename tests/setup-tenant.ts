@@ -16,6 +16,7 @@ process.env.STEWARD_SKIP_DELIVER_VALIDATE ??= "1";
 process.env.ORGOS_AUDIT_LOG ??= join(tmpdir(), `orgos-vitest-audit-${process.pid}.jsonl`);
 process.env.ORGOS_AUDIT_TENANT ??= "_orgos_test";
 process.env.ORGOS_AUDIT_BRIDGE_DISABLED ??= "1";
+process.env.ORGOS_HUMAN_APPROVAL_STORE ??= join(tmpdir(), `orgos-vitest-hac-${process.pid}.json`);
 
 /** Remove polluted audit logs left by older test runs (gitignored runtime files). */
 const TENANTS_WITH_STALE_AUDIT_LOGS = ["mal", "demo", "acme", "aiac", "southwood"] as const;

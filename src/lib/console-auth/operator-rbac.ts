@@ -9,6 +9,14 @@ import {
   verifyOperatorKey,
 } from "../org/operators.js";
 import {
+  effectiveHasPermission,
+  resolveEffectiveOperatorAccess,
+  roleDefaultPermissions,
+  validateOperatorGovernance,
+  DANGEROUS_PERMISSIONS,
+} from "../org/operator-effective.js";
+import { assertRegulationBindingsAllowExecution } from "../org/regulation-bindings.js";
+import {
   loadAuthorizedApprovers,
   normalizePersonName,
 } from "../org/authorized-approvers.js";
@@ -17,55 +25,19 @@ import type { ChatPermission } from "./rbac.js";
 
 export type { OperatorPermission };
 
-const ROLE_PERMISSIONS: Record<OperatorRole, OperatorPermission[]> = {
-  ceo: [
-    "chat:read",
-    "chat:ask",
-    "chat:approve",
-    "chat:wire",
-    "protocol:approve",
-    "protocol:draft",
-    "broker:transfer",
-    "finance:reconcile",
-    "scheduling:write",
-    "scheduling:approve",
-    "escalate:plan",
-    "escalate:run",
-    "escalate:complete",
-    "agent:dispatch",
-    "agent:order",
-    "agent:report",
-    "agent:shell",
-    "git:write",
-  ],
-  approver: [
-    "chat:read",
-    "chat:ask",
-    "chat:approve",
-    "chat:wire",
-    "protocol:approve",
-    "protocol:draft",
-    "broker:transfer",
-    "finance:reconcile",
-    "scheduling:write",
-    "scheduling:approve",
-    "agent:shell",
-    "git:write",
-  ],
-  operator: [
-    "chat:read",
-    "chat:ask",
-    "scheduling:write",
-    "escalate:plan",
-    "escalate:run",
-    "escalate:complete",
-    "agent:dispatch",
-    "agent:order",
-    "agent:report",
-  ],
-  readonly: ["chat:read"],
-  mcp_service: ["chat:read", "chat:ask"],
-};
+export {
+  DANGEROUS_PERMISSIONS,
+  resolveEffectiveOperatorAccess,
+  roleDefaultPermissions,
+  assertAgentAllowed,
+  assertDataPathAllowed,
+  validateOperatorGovernance,
+} from "../org/operator-effective.js";
+
+/** @deprecated Prefer roleDefaultPermissions — kept for call sites expecting full matrix lookup. */
+export function rolePermissionsSnapshot(role: OperatorRole): OperatorPermission[] {
+  return roleDefaultPermissions(role);
+}
 
 export function isProdSecurityMode(): boolean {
   return (
@@ -93,9 +65,7 @@ export function isOperatorAuthRequired(): boolean {
 }
 
 export function resolveOperatorPermissions(record: OperatorRecord): OperatorPermission[] {
-  const base = new Set<OperatorPermission>(ROLE_PERMISSIONS[record.role] ?? []);
-  for (const p of record.permissions ?? []) base.add(p);
-  return [...base];
+  return resolveEffectiveOperatorAccess(record).permissions;
 }
 
 export function operatorHasPermission(
@@ -103,7 +73,7 @@ export function operatorHasPermission(
   perm: OperatorPermission
 ): boolean {
   if (!record || record.status !== "active") return false;
-  return resolveOperatorPermissions(record).includes(perm);
+  return effectiveHasPermission(record, perm);
 }
 
 export function chatPermissionToOperatorPerm(perm: ChatPermission): OperatorPermission {
@@ -158,6 +128,10 @@ export function assertRegistryReadyForProd(): void {
       "Production requires at least one ceo/approver operator in data/org/operators.yaml"
     );
   }
+  const govErrors = validateOperatorGovernance({ requireCeo: true });
+  if (govErrors.length) {
+    throw new Error(govErrors.join("; "));
+  }
 }
 
 export interface AuthenticatedOperator {
@@ -209,6 +183,9 @@ export function requireOperatorPermission(
       `Operator "${auth.record.operator_id}" lacks permission ${perm} (role: ${auth.record.role})`
     );
   }
+  if ((DANGEROUS_PERMISSIONS as string[]).includes(perm)) {
+    assertRegulationBindingsAllowExecution(`permission:${perm}`);
+  }
 }
 
 export function wirePermissionForAction(action: string): OperatorPermission {
@@ -240,7 +217,18 @@ export function requireWireConsolePermission(
 export function mcpToolPermission(tool: string): OperatorPermission | undefined {
   if (tool === "steward_today") return "chat:read";
   if (tool === "steward_ask") return "chat:ask";
-  if (tool === "steward_approve") return "chat:approve";
+  if (tool === "steward_governance_audit") return "audit:read";
+  if (tool === "steward_mail_draft") return "escalate:plan";
+  if (tool === "steward_mail_send") return "chat:approve";
+  if (tool === "steward_mail_drafts_list" || tool === "steward_events_list") return "chat:read";
+  if (tool === "steward_vault_status") return "chat:read";
+  if (tool === "steward_finance_month_axes") return "chat:read";
+  if (
+    tool === "steward_canvas_view" ||
+    tool === "steward_certification_challenge"
+  )
+    return "chat:read";
+  if (tool === "steward_agent_dispatch_plan") return "agent:dispatch";
   if (tool.startsWith("steward_wire") || tool.startsWith("steward_witness")) return "chat:wire";
   return undefined;
 }

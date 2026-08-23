@@ -6,6 +6,7 @@ import { getDataDir } from "../src/lib/utils.js";
 import {
   proposeOrgApproval,
   approveOrgApproval,
+  humanApproveOrgApproval,
   rejectOrgApproval,
   listOrgApprovals,
 } from "../src/lib/org/approval/index.js";
@@ -13,7 +14,10 @@ import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 
 function cleanup(): void {
-  for (const p of [join(getDataDir(), "org"), join(getDataDir(), "protocol")]) {
+  for (const p of [
+    join(getDataDir(), "org", "pending-approvals.yaml"),
+    join(getDataDir(), "protocol"),
+  ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
 }
@@ -39,9 +43,11 @@ describe("org approval root (internal scope)", () => {
     expect(request.approval_id).toMatch(/^APR-/);
     expect(request.approval_policy_ref).toBe("REG-004");
 
-    const { approval, auditEnvelope } = approveOrgApproval({
+    const { approval, auditEnvelope } = humanApproveOrgApproval({
       approvalId: request.approval_id,
-      approverId: "段燕燕",
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
+      source: "cli",
     });
 
     expect(approval.status).toBe("approved");
@@ -67,7 +73,7 @@ describe("org approval root (internal scope)", () => {
     });
     const { approval: rejected, auditEnvelope } = rejectOrgApproval({
       approvalId: request.approval_id,
-      approverId: "段燕燕",
+      approverId: "Demo CEO",
       reason: "defer",
     });
     expect(rejected.status).toBe("rejected");
@@ -81,5 +87,52 @@ describe("org approval root (internal scope)", () => {
     });
     const chain = loadProtocolAuditChain();
     expect(chain.some((r) => r.event_id === auditEnvelope?.event_id)).toBe(true);
+  });
+
+  it("requires operatorId bound to the named approver", () => {
+    const request = proposeOrgApproval({
+      scope: "internal",
+      subjectType: "regulation.amendment",
+      subjectRef: "REG-004",
+      proposedBy: "secretary",
+      amount: { value: 85_000, currency: "JPY" },
+    });
+    expect(() =>
+      approveOrgApproval({
+        approvalId: request.approval_id,
+        approverId: "Demo CEO",
+      })
+    ).toThrow(/operatorId is required/);
+    expect(() =>
+      approveOrgApproval({
+        approvalId: request.approval_id,
+        approverId: "Not The CEO",
+        operatorId: "OP-001",
+      })
+    ).toThrow(/does not match authenticated operator/);
+    expect(() =>
+      approveOrgApproval({
+        approvalId: request.approval_id,
+        approverId: "秘書オペレータ",
+        operatorId: "OP-002",
+      })
+    ).toThrow(/cannot approve/);
+  });
+
+  it("forbids self-approval on generic internal subjects", () => {
+    const request = proposeOrgApproval({
+      scope: "internal",
+      subjectType: "regulation.amendment",
+      subjectRef: "REG-004",
+      proposedBy: "OP-001",
+      amount: { value: 85_000, currency: "JPY" },
+    });
+    expect(() =>
+      approveOrgApproval({
+        approvalId: request.approval_id,
+        approverId: "Demo CEO",
+        operatorId: "OP-001",
+      })
+    ).toThrow(/自己承認は禁止/);
   });
 });

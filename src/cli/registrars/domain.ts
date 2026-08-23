@@ -48,6 +48,7 @@ import {
 import {
   runEventsArchive,
   runEventsChainBackfill,
+  runEventsChainPin,
   runEventsChainTail,
   runEventsChainVerify,
   runEventsClose,
@@ -60,6 +61,9 @@ import {
   runEventsValidate,
   runEventsChainAttest,
   runEventsAuditMonthly,
+  runEventsVoid,
+  runEventsVoidAck,
+  runEventsVoidRequest,
 } from "../../commands/company-events.js";
 import { COMPANY_EVENT_KINDS } from "../../lib/company-events.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "../../commands/deps.js";
@@ -344,8 +348,11 @@ export function registerDomainCommands(program: Command): void {
   eventsChain
     .command("backfill")
     .description("Rebuild create links from registry (existing chain requires --force)")
-    .option("--force", "Overwrite existing chain file")
-    .action((opts) => runEventsChainBackfill({ force: opts.force }));
+    .option("--force", "Overwrite existing chain file (destructive; disabled unless rebuild env is set)")
+    .option("--i-understand-rebuild", "Confirm destructive chain rebuild")
+    .action((opts) =>
+      runEventsChainBackfill({ force: opts.force, iUnderstandRebuild: opts.iUnderstandRebuild }),
+    );
   eventsChain
     .command("attest")
     .description("Verify hash chain then sign weekly batch attestation (Ed25519)")
@@ -353,6 +360,10 @@ export function registerDomainCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) => runEventsChainAttest({ force: opts.force, json: opts.json }));
   eventsChain.command("tail").description("Show chain tail link").action(() => runEventsChainTail());
+  eventsChain
+    .command("pin")
+    .description("Pin chain tail digest as a witness fixity point (do not use backfill --force to recover)")
+    .action(() => runEventsChainPin());
   const eventsAudit = events.command("audit").description("Company events periodic audit");
   eventsAudit
     .command("monthly")
@@ -377,6 +388,39 @@ export function registerDomainCommands(program: Command): void {
     .command("archive <id>")
     .description("Archive company event (closed → archived, or open → archived)")
     .action((id) => runEventsArchive({ id }));
+  events
+    .command("void <id>")
+    .description("Void a company event (append-only compensation; never deletes)")
+    .requiredOption("--reason <reason>", "Why this event is voided")
+    .action((id, opts) => runEventsVoid({ id, reason: opts.reason }));
+  events
+    .command("void-request <id>")
+    .description("Propose counterpart void acknowledgment wire for a sent event")
+    .requiredOption("--operator <id>", "Requesting operator id")
+    .option("--peer <id>", "Peer id")
+    .option("--message <text>", "Optional message")
+    .action((id, opts) =>
+      runEventsVoidRequest({
+        id,
+        operator: opts.operator,
+        peer: opts.peer,
+        message: opts.message,
+      }),
+    );
+  events
+    .command("void-ack <id>")
+    .description("Register inbound void acknowledgment then allow events void")
+    .option("--wire-event <id>", "Inbound wire event id")
+    .option("--peer <id>", "Peer id")
+    .option("--auto", "Pick inbound ack automatically")
+    .action((id, opts) =>
+      runEventsVoidAck({
+        id,
+        wireEvent: opts.wireEvent,
+        peer: opts.peer,
+        auto: opts.auto,
+      }),
+    );
   events
     .command("validate")
     .description("Validate registry vs event MD and artifact folders")

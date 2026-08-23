@@ -1,4 +1,4 @@
-import { approveOrgApproval, findOrgApproval } from "../org/approval/approve.js";
+import { humanApproveOrgApproval, findOrgApproval } from "../org/approval/approve.js";
 import {
   formatCorrespondenceDraftReview,
   isCorrespondenceApprovalSubject,
@@ -99,6 +99,11 @@ export async function approveFromStewardChat(
     };
   }
 ): Promise<ChatWireApproveResult> {
+  if (!isHumanApproverOperatorId(user.operator_id)) {
+    throw new Error(
+      `approval requires ceo or approver operator (got ${user.operator_id}). Agents cannot approve.`
+    );
+  }
   const tenantId = getTenantId();
   const pending = findOrgApproval(approvalId);
   if (!pending) {
@@ -142,10 +147,11 @@ export async function approveFromStewardChat(
       if (approval?.status === "approved" || approval?.status === "completed") {
         return { approval: approval };
       }
-      const result = approveOrgApproval({
+      const result = humanApproveOrgApproval({
         approvalId: draft.approval_id,
         approverId: user.approver_id,
         operatorId: user.operator_id,
+        source: "chat_ui",
         humanReviewConfirmed: true,
         settlementAssertion: opts?.settlementAssertion,
       });
@@ -189,10 +195,11 @@ export async function approveFromStewardChat(
     };
   }
 
-  const result = approveOrgApproval({
+  const result = humanApproveOrgApproval({
     approvalId,
     approverId: user.approver_id,
     operatorId: user.operator_id,
+    source: "chat_ui",
     coApproverId: opts?.coApproverId,
     settlementAssertion: opts?.settlementAssertion,
   });

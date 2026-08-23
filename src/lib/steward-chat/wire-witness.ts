@@ -11,7 +11,6 @@ import type { WitnessAttestationSide } from "../../../schemas/protocol/witness-a
 import {
   authenticateOperatorByKey,
   isProdSecurityMode,
-  resolveOperatorPermissions,
 } from "../console-auth/operator-rbac.js";
 
 export async function registerWitnessFromChat(
@@ -62,11 +61,9 @@ export function mcpOperatorUser(token?: string): WireConsoleUser {
     }
   }
 
-  const operatorId = process.env.MCP_OPERATOR_ID?.trim() || "MCP Operator";
-  const approverId = process.env.MCP_APPROVER_ID?.trim() || "CEO";
   return {
-    operator_id: operatorId,
-    approver_id: approverId,
+    operator_id: "mcp-unauthenticated",
+    approver_id: "mcp-unauthenticated",
     mode: isProdSecurityMode() ? "prod" : "dev",
   };
 }
@@ -76,14 +73,6 @@ export function mcpOperatorPermissions(token?: string): string[] {
   if (key) {
     const auth = authenticateOperatorByKey(key);
     if (auth) return auth.permissions;
-  }
-  if (!isProdSecurityMode()) {
-    return resolveOperatorPermissions({
-      operator_id: "dev",
-      display_name: "dev",
-      role: "ceo",
-      status: "active",
-    });
   }
   return ["chat:read", "chat:ask"];
 }

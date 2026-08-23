@@ -224,6 +224,32 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
     });
   }
 
+  const llmWrite = process.env.ORGOS_LLM_TOOLS_WRITE === "1";
+  checks.push({
+    id: "llm_tools_write_disabled",
+    ok: !prod || !llmWrite,
+    warn: prod && llmWrite,
+    detail:
+      prod && llmWrite
+        ? "ORGOS_LLM_TOOLS_WRITE=1 in production — LLM must not execute approvals or ledger writes"
+        : llmWrite
+          ? "LLM write tools enabled (ok for local/dev; never includes operator_approve)"
+          : "LLM write tools disabled",
+  });
+
+  const hacSecret = Boolean(process.env.ORGOS_HUMAN_APPROVAL_SECRET?.trim());
+  checks.push({
+    id: "human_approval_secret",
+    ok: true,
+    warn: prod && !hacSecret,
+    detail:
+      prod && !hacSecret
+        ? "ORGOS_HUMAN_APPROVAL_SECRET missing in production — HumanApprovalContext HMAC is unbound"
+        : hacSecret
+          ? "HumanApprovalContext HMAC secret is set"
+          : "HumanApprovalContext uses the development HMAC secret",
+  });
+
   return checks;
 }
 

@@ -5,7 +5,7 @@ import {
 import { loadCorrespondenceDraft, markCorrespondenceDraftApproved } from "../correspondence/draft.js";
 import { sendApprovedCorrespondence } from "../correspondence/send-gate.js";
 import { assertCorrespondenceReviewAcknowledged } from "../correspondence/review.js";
-import { approveOrgApproval } from "../org/approval/approve.js";
+import { humanApproveOrgApproval } from "../org/approval/approve.js";
 import { findOrgApproval } from "../org/approval/index.js";
 import { findSchedulingCase } from "./store.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
@@ -47,10 +47,11 @@ export async function approveAndSendSchedulingProposals(
     if (!pending) throw new Error(`Approval ${draft.approval_id} not found`);
 
     assertCorrespondenceReviewAcknowledged({ approval: pending, reviewed: opts.reviewed !== false });
-    approveOrgApproval({
+    humanApproveOrgApproval({
       approvalId: draft.approval_id,
       approverId: approverName,
       operatorId: opts.operatorId,
+      source: "cli",
       humanReviewConfirmed: true,
     });
     markCorrespondenceDraftApproved(draft.draft_id);

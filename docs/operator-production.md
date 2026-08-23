@@ -66,6 +66,7 @@ server {
 | `ORGOS_COOKIE_SECURE` | `1` | HTTPS 必須 |
 | `ORGOS_SESSION_PERSIST` | `1`（デフォルト） | `data/.orgos/sessions.json` |
 | `ORGOS_LLM_MOCK` | 未設定 | 本番 mock 禁止 |
+| `ORGOS_LLM_TOOLS_WRITE` | **未設定 / `0`** | `1` は LLM の非承認書き込み。本番は doctor / 起動拒否。`operator_approve` はフラグに関係なく LLM に出さない |
 | `OPENAI_API_KEY` | 設定 | Operator LLM |
 | `ORGOS_CSRF` | 未設定（有効） | `0` は dev/test のみ — POST は Origin/Referer 検証 |
 | `ORGOS_ALLOWED_ORIGINS` | 任意 | 追加許可 origin（カンマ区切り） |
@@ -201,11 +202,12 @@ Cursor MCP 設定（`.cursor/mcp.json` 例）:
 |--------|------|
 | `steward_today` | Today コンテキスト（L1） |
 | `steward_ask` | Operator 質問 |
-| `steward_approve` | 承認実行 |
 | `steward_wire_flush` | Wire 配送 flush |
 | `steward_witness_register` | Witness 登録（sent/received） |
 | `steward_witness_verify` | Witness quorum 検証 |
 | `steward_witness_flush` | Witness pending 再送 |
+
+最終承認は Chat/Wire UI または `org approval approve` のみ。MCP に承認ツールはない。
 
 ### MCP トークン rotation
 

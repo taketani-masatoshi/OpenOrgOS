@@ -12,6 +12,7 @@ import {
   toLogicalPath,
 } from "./tenant.js";
 import { getClock } from "./runtime-context.js";
+import { assertEventsWriteAuthorized } from "./company-events-write-guard.js";
 
 export { ROOT_DIR, FRAMEWORK_DOCS_DIR, resolveTenantPath, toLogicalPath, getTenantDir };
 export { getTenantId, setTenantId, loadTenantConfig, listTenantIds } from "./tenant.js";
@@ -41,7 +42,7 @@ export function getStakeholdersDocsDir(): string {
 }
 
 export function getBankAccountsYaml(): string {
-  return join(getDataDir(), "finance", "bank-accounts.yaml");
+  return resolveTenantPath("data/finance/bank-accounts.yaml");
 }
 
 export function getClassificationRegistryYaml(): string {
@@ -97,6 +98,7 @@ export function formatJapaneseDate(iso: string): string {
 }
 
 export function writeYamlFile(path: string, data: unknown): void {
+  assertEventsWriteAuthorized(path);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, YAML.stringify(data), "utf-8");
 }

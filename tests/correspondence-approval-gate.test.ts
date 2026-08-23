@@ -16,7 +16,7 @@ import {
 } from "../src/lib/correspondence/send-gate.js";
 import { CorrespondenceMailSetupError } from "../src/lib/correspondence/mail-setup-readiness.js";
 import {
-  approveOrgApproval,
+  humanApproveOrgApproval,
 } from "../src/lib/org/approval/index.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 
@@ -93,10 +93,11 @@ describe("correspondence approval gate", () => {
       body: "Body",
       createdBy: "secretary",
     });
-    approveOrgApproval({
+    humanApproveOrgApproval({
       approvalId: approvalId!,
       approverId: "Demo CEO",
       operatorId: "OP-001",
+      source: "cli",
       humanReviewConfirmed: true,
     });
     await expect(
@@ -114,10 +115,11 @@ describe("correspondence approval gate", () => {
       createdBy: "secretary",
     });
 
-    approveOrgApproval({
+    humanApproveOrgApproval({
       approvalId: approvalId!,
       approverId: "Demo CEO",
       operatorId: "OP-001",
+      source: "cli",
       humanReviewConfirmed: true,
     });
 

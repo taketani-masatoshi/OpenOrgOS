@@ -1,6 +1,4 @@
 import { buildTodayContext, formatTodayContextMarkdown } from "../steward-chat/today-context.js";
-import { approveFromStewardChat } from "../steward-chat/wire-approve.js";
-import { mcpOperatorUser } from "../steward-chat/wire-witness.js";
 import { findOperatorById } from "../org/operators.js";
 import {
   operatorHasPermission,
@@ -29,6 +27,10 @@ export interface OperatorToolContext {
   operatorId?: string;
   approverId?: string;
 }
+
+/** LLM / tool-loop must never execute final approval (operator-policy §4). */
+export const OPERATOR_APPROVE_TOOL_DISABLED =
+  "AI cannot approve. Humans approve via Chat/Wire UI or `org approval approve`.";
 
 function readOnlyTools(): OperatorToolDefinition[] {
   return [
@@ -88,24 +90,7 @@ function readOnlyTools(): OperatorToolDefinition[] {
 }
 
 function writeTools(): OperatorToolDefinition[] {
-  return [
-    {
-      type: "function",
-      function: {
-        name: "operator_approve",
-        description: "Approve a pending org approval by approval_id (wire or internal)",
-        parameters: {
-          type: "object",
-          properties: {
-            approval_id: { type: "string", description: "Approval ID e.g. NOTICE-..." },
-            flush: { type: "boolean", description: "Flush wire delivery after approve (default true)" },
-          },
-          required: ["approval_id"],
-          additionalProperties: false,
-        },
-      },
-    },
-  ];
+  return [];
 }
 
 export function isOperatorToolsEnabled(): boolean {
@@ -113,6 +98,7 @@ export function isOperatorToolsEnabled(): boolean {
   return true;
 }
 
+/** Non-approval writes only (e.g. cashflow). Never enables operator_approve. */
 export function isOperatorToolsWriteEnabled(ctx?: { operatorId?: string }): boolean {
   if (process.env.ORGOS_LLM_TOOLS_WRITE !== "1") return false;
   if (ctx?.operatorId) {
@@ -191,30 +177,6 @@ async function execOperatorListWirePending(): Promise<OperatorToolResult> {
   return { ok: true, content: lines.join("\n") };
 }
 
-async function execOperatorApprove(
-  args: Record<string, unknown>,
-  ctx: OperatorToolContext
-): Promise<OperatorToolResult> {
-  const approvalId = String(args.approval_id ?? "").trim();
-  if (!approvalId) {
-    return { ok: false, content: "approval_id is required" };
-  }
-  const user = mcpOperatorUser();
-  if (ctx.operatorId) user.operator_id = ctx.operatorId;
-  if (ctx.approverId) user.approver_id = ctx.approverId;
-  try {
-    const result = await approveFromStewardChat(approvalId, user, {
-      flush: args.flush !== false,
-    });
-    return { ok: true, content: JSON.stringify(result, null, 2) };
-  } catch (err) {
-    return {
-      ok: false,
-      content: err instanceof Error ? err.message : String(err),
-    };
-  }
-}
-
 async function execOperatorGenerateCashflow(
   args: Record<string, unknown>,
   ctx: OperatorToolContext
@@ -290,13 +252,7 @@ export async function executeOperatorTool(
     case "operator_generate_cashflow":
       return execOperatorGenerateCashflow(args, ctx);
     case "operator_approve":
-      if (
-        !isOperatorToolsWriteEnabled(ctx) ||
-        !contextHasPermission(ctx, "chat:approve")
-      ) {
-        return { ok: false, content: "Write tools disabled or operator lacks chat:approve" };
-      }
-      return execOperatorApprove(args, ctx);
+      return { ok: false, content: OPERATOR_APPROVE_TOOL_DISABLED };
     default:
       return { ok: false, content: `Unknown tool: ${name}` };
   }

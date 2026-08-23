@@ -1,12 +1,16 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { startStewardMcpHttpServer } from "../src/lib/mcp/http-server.js";
 import { callStewardMcpTool, resetMcpRateLimitState } from "../src/lib/mcp/tools.js";
+import { setTenantId } from "../src/lib/tenant.js";
+import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 
 describe("mcp abnormal paths", () => {
   const env = { ...process.env };
   let handle: Awaited<ReturnType<typeof startStewardMcpHttpServer>> | undefined;
 
   beforeEach(() => {
+    setTenantId("demo");
+    clearOperatorsRegistryCacheForTests();
     process.env.ORGOS_MCP_TOKEN = "abnormal-test-token";
     delete process.env.ORGOS_MCP_AUTH;
     resetMcpRateLimitState();
@@ -41,7 +45,7 @@ describe("mcp abnormal paths", () => {
 
   it("M-03: steward_witness_verify rejects missing event_id", async () => {
     process.env.ORGOS_MCP_RATE_LIMIT = "0";
-    const result = await callStewardMcpTool("steward_witness_verify", {});
+    const result = await callStewardMcpTool("steward_witness_verify", {}, { token: "demo-operator-key" });
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toMatch(/event_id/i);
   });

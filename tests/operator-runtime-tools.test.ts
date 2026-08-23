@@ -38,10 +38,16 @@ describe("operator runtime tools", () => {
     expect(names).not.toContain("operator_approve");
   });
 
-  it("includes approve when write enabled", () => {
+  it("never includes operator_approve, even when write is enabled for a CEO", () => {
     process.env.ORGOS_LLM_TOOLS_WRITE = "1";
     const names = listOperatorToolDefinitions().map((t) => t.function.name);
-    expect(names).toContain("operator_approve");
+    expect(names).not.toContain("operator_approve");
+
+    const ceoNames = listOperatorToolDefinitions({ operatorId: "OP-001" }).map(
+      (t) => t.function.name
+    );
+    expect(ceoNames).toContain("operator_generate_cashflow");
+    expect(ceoNames).not.toContain("operator_approve");
   });
 
   it("filters context-sensitive tools by registry permissions", () => {
@@ -51,15 +57,9 @@ describe("operator runtime tools", () => {
     );
     expect(operatorNames).toContain("operator_generate_cashflow");
     expect(operatorNames).not.toContain("operator_approve");
-
-    const ceoNames = listOperatorToolDefinitions({ operatorId: "OP-001" }).map(
-      (t) => t.function.name
-    );
-    expect(ceoNames).toContain("operator_generate_cashflow");
-    expect(ceoNames).toContain("operator_approve");
   });
 
-  it("does not approve through the fallback MCP user without authorized context", async () => {
+  it("rejects operator_approve for every operator, including CEO", async () => {
     process.env.ORGOS_LLM_TOOLS_WRITE = "1";
     const missing = await executeOperatorTool(
       "operator_approve",
@@ -70,9 +70,15 @@ describe("operator runtime tools", () => {
       JSON.stringify({ approval_id: "NOTICE-NOT-EXECUTED" }),
       { operatorId: "OP-002", approverId: "Demo CEO" }
     );
+    const ceo = await executeOperatorTool(
+      "operator_approve",
+      JSON.stringify({ approval_id: "NOTICE-NOT-EXECUTED" }),
+      { operatorId: "OP-001", approverId: "Demo CEO" }
+    );
     expect(missing.ok).toBe(false);
     expect(operator.ok).toBe(false);
-    expect(operator.content).toContain("chat:approve");
+    expect(ceo.ok).toBe(false);
+    expect(ceo.content).toMatch(/cannot approve/i);
   });
 
   it("allows cashflow preview with chat:ask and returns only an L1 summary", async () => {

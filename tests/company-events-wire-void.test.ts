@@ -27,7 +27,7 @@ import {
 function cleanup(): void {
   for (const p of [
     join(getDataDir(), "protocol"),
-    join(getDataDir(), "org"),
+    join(getDataDir(), "org", "pending-approvals.yaml"),
     join(getDataDir(), "company-events.yaml"),
     join(getDataDir(), "company-events-chain.jsonl"),
   ]) {
@@ -146,7 +146,8 @@ monthly_cost: 50000
 
     approveInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "CEO Sample",
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
     });
 
     const updated = loadCompanyEvents().events.find((e) => e.id === eventId);

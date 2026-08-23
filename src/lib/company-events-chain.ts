@@ -10,6 +10,7 @@ import { canonicalJson } from "./protocol/canonical.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { getDataDir, toLogicalPath } from "./utils.js";
 import { getClock } from "./runtime-context.js";
+import { runWithEventsWriteGuard } from "./company-events-write-guard.js";
 
 const CHAIN_GENESIS = "genesis";
 
@@ -83,6 +84,7 @@ function buildLinkDigest(
 }
 
 export function appendChainLink(input: ChainPayloadInput): CompanyEventChainLink {
+  return runWithEventsWriteGuard("company-events-chain", () => {
   mkdirSync(join(CHAIN_PATH(), ".."), { recursive: true });
   const chain = loadCompanyEventChain();
   const prev = chain.length > 0 ? chain[chain.length - 1] : undefined;
@@ -110,6 +112,7 @@ export function appendChainLink(input: ChainPayloadInput): CompanyEventChainLink
 
   appendJsonl(CHAIN_PATH(), link);
   return link;
+  });
 }
 
 export interface ChainVerifyIssue {
@@ -318,6 +321,7 @@ export function backfillCompanyEventChain(
   registry: CompanyEventsRegistry,
   opts?: { force?: boolean }
 ): { links: number; events: number; registry: CompanyEventsRegistry } {
+  return runWithEventsWriteGuard("events chain backfill", () => {
   const existing = loadCompanyEventChain();
   if (existing.length > 0 && !opts?.force) {
     throw new Error(
@@ -326,6 +330,11 @@ export function backfillCompanyEventChain(
   }
 
   if (existing.length > 0 && opts?.force) {
+    if (process.env.ORGOS_EVENTS_CHAIN_REBUILD !== "1") {
+      throw new Error(
+        "events chain backfill --force is disabled. Destructive rebuild requires ORGOS_EVENTS_CHAIN_REBUILD=1, a ceo operator, and --i-understand-rebuild. Do not use --force to recover a broken ledger.",
+      );
+    }
     writeFileSync(CHAIN_PATH(), "", "utf8");
   }
 
@@ -359,4 +368,5 @@ export function backfillCompanyEventChain(
   registry.schema_version = 2;
 
   return { links, events: sorted.length, registry };
+  });
 }

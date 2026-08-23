@@ -401,7 +401,7 @@ export async function sendSchedulingConfirmationsAuthorizedByCeo(
   );
   if (!pendingConfirmRecords.length) return applyPersistedNextAction(current);
 
-  const { approveOrgApproval } = await import("../org/approval/index.js");
+  const { humanApproveOrgApproval } = await import("../org/approval/index.js");
   const { sendApprovedCorrespondence } = await import("../correspondence/send-gate.js");
 
   const approvalIds = new Set<string>();
@@ -411,10 +411,11 @@ export async function sendSchedulingConfirmationsAuthorizedByCeo(
   }
 
   for (const approvalId of approvalIds) {
-    approveOrgApproval({
+    humanApproveOrgApproval({
       approvalId,
       approverId: opts.approverName,
       operatorId: opts.operatorId,
+      source: "chat_ui",
       humanReviewConfirmed: true,
     });
   }
@@ -452,7 +453,7 @@ export async function sendSchedulingProposalsUnderStoredAuthority(
   );
   if (!pendingProposalRecords.length) return current;
 
-  const { approveOrgApproval } = await import("../org/approval/index.js");
+  const { humanApproveOrgApproval } = await import("../org/approval/index.js");
   const { sendApprovedCorrespondence } = await import("../correspondence/send-gate.js");
 
   const approvalIds = new Set<string>();
@@ -462,10 +463,11 @@ export async function sendSchedulingProposalsUnderStoredAuthority(
   }
 
   for (const approvalId of approvalIds) {
-    approveOrgApproval({
+    humanApproveOrgApproval({
       approvalId,
       approverId: authority.approver_name,
       operatorId: authority.operator_id,
+      source: "chat_ui",
       humanReviewConfirmed: true,
     });
   }

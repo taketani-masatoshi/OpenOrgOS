@@ -3,11 +3,12 @@ import { dirname } from "node:path";
 import { setTenantId } from "../lib/tenant.js";
 import {
   proposeOrgApproval,
-  approveOrgApproval,
+  humanApproveOrgApproval,
   rejectOrgApproval,
   listOrgApprovals,
   findOrgApproval,
 } from "../lib/org/approval/index.js";
+import { operatorMatchesApproverIdentity } from "../lib/org/approval/approve.js";
 import {
   bridgeAuditEventToProtocolChain,
   loadOrgAuditBridgeConfig,
@@ -16,7 +17,7 @@ import { getOrgAuditBridgeConfigPath } from "../lib/org/paths.js";
 import { listAuditEvents } from "../lib/audit-log.js";
 import { orgAuditBridgeConfigSchema, orgAuditBridgeRecommendedConfig } from "../../schemas/org/audit-bridge.js";
 import { writeYamlFile } from "../lib/utils.js";
-import { requireCliOperator, requireCliConfigWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
+import { requireCliConfigWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
 import {
   assertCorrespondenceReviewAcknowledged,
   CorrespondenceReviewRequiredError,
@@ -77,9 +78,17 @@ export function runOrgApprovalApprove(opts: OrgApprovalApproveOptions): void {
     process.exit(1);
   }
 
-  const auth = isCorrespondenceApprovalSubject(pending.subject_type)
-    ? requireCliHumanApproval("org approval approve")
-    : requireCliOperator({ permission: "chat:approve", command: "org approval approve" });
+  const auth = requireCliHumanApproval("org approval approve");
+  const boundName = auth.record.approver_name || auth.record.display_name;
+  if (
+    opts.approver?.trim() &&
+    !operatorMatchesApproverIdentity(auth.record.operator_id, opts.approver.trim())
+  ) {
+    console.error(
+      `--approver "${opts.approver}" does not match authenticated operator ${auth.record.operator_id} (${boundName})`
+    );
+    process.exit(1);
+  }
 
   try {
     assertCorrespondenceReviewAcknowledged({ approval: pending, reviewed: opts.reviewed });
@@ -93,11 +102,12 @@ export function runOrgApprovalApprove(opts: OrgApprovalApproveOptions): void {
     throw e;
   }
   try {
-    const result = approveOrgApproval({
+    const result = humanApproveOrgApproval({
       approvalId: opts.id,
-      approverId: opts.approver || auth.record.approver_name || auth.record.display_name,
+      approverId: opts.approver?.trim() || boundName,
       coApproverId: opts.coApprover,
-      operatorId: opts.operator || auth.record.operator_id,
+      operatorId: auth.record.operator_id,
+      source: "cli",
       humanReviewConfirmed: isCorrespondenceApprovalSubject(pending.subject_type)
         ? Boolean(opts.reviewed)
         : undefined,

@@ -1,12 +1,10 @@
 import { buildTodayContext, formatTodayContextMarkdown } from "../steward-chat/today-context.js";
 import { operatorPolicyExcerpt } from "../operator-policy.js";
 import { runOperatorAsk } from "../operator-runtime/ask.js";
-import { approveFromStewardChat } from "../steward-chat/wire-approve.js";
 import {
   flushWitnessPendingFromChat,
   flushWireFromChat,
   mcpOperatorPermissions,
-  mcpOperatorUser,
   registerWitnessFromChat,
   verifyWitnessFromChat,
 } from "../steward-chat/wire-witness.js";
@@ -40,18 +38,6 @@ const MCP_TOOL_DEFINITIONS: McpToolDefinition[] = [
         message: { type: "string", description: "CEO question in natural language" },
       },
       required: ["message"],
-    },
-  },
-  {
-    name: "steward_approve",
-    description: "Approve a pending org approval (wire or internal) by approval_id",
-    inputSchema: {
-      type: "object",
-      properties: {
-        approval_id: { type: "string" },
-        flush: { type: "boolean", description: "Flush wire delivery after approve (default true)" },
-      },
-      required: ["approval_id"],
     },
   },
   {
@@ -162,8 +148,6 @@ export async function callStewardMcpTool(
     }
   }
 
-  const user = mcpOperatorUser(token);
-
   if (tool === "steward_today") {
     const ctx = buildTodayContext();
     return { content: [{ type: "text", text: formatTodayContextMarkdown(ctx) }] };
@@ -189,14 +173,15 @@ export async function callStewardMcpTool(
   }
 
   if (tool === "steward_approve") {
-    const approvalId = String(args.approval_id ?? "").trim();
-    if (!approvalId) {
-      return { content: [{ type: "text", text: "approval_id is required" }], isError: true };
-    }
-    const result = await approveFromStewardChat(approvalId, user, {
-      flush: args.flush !== false,
-    });
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    return {
+      content: [
+        {
+          type: "text",
+          text: "steward_approve is not available. Humans approve via Chat/Wire UI or `org approval approve`.",
+        },
+      ],
+      isError: true,
+    };
   }
 
   if (tool === "steward_wire_flush") {

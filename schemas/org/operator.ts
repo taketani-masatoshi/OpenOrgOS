@@ -6,6 +6,7 @@ export const operatorRoleSchema = z.enum([
   "operator",
   "readonly",
   "mcp_service",
+  "auditor",
 ]);
 
 export const operatorStatusSchema = z.enum(["active", "disabled"]);
@@ -29,6 +30,11 @@ export const operatorPermissionSchema = z.enum([
   "agent:report",
   "agent:shell",
   "git:write",
+  "audit:read",
+  "llm:admin",
+  "llm:approve",
+  "receipt:issue",
+  "events:write",
 ]);
 
 export const operatorRecordSchema = z.object({
@@ -36,6 +42,12 @@ export const operatorRecordSchema = z.object({
   display_name: z.string().min(1),
   role: operatorRoleSchema,
   stakeholder_id: z.string().optional(),
+  /** org-chart node id (department / headquarters). */
+  org_unit_id: z.string().optional(),
+  /** Empty = profile default (ceo: all roster agents; operator: none until grant/list set). */
+  allowed_agents: z.array(z.string().min(1)).optional(),
+  /** Empty = no path write restriction for ceo; operators should set or rely on grants. */
+  data_path_globs: z.array(z.string().min(1)).optional(),
   status: operatorStatusSchema.default("active"),
   permissions: z.array(operatorPermissionSchema).optional(),
   key_hash: z.string().optional(),

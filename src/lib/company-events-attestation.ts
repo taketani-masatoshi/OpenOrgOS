@@ -18,6 +18,7 @@ import {
 } from "./company-events-signing.js";
 import { currentDate, getDataDir, toLogicalPath, writeMarkdownReport } from "./utils.js";
 import { loadNotificationsRegistry } from "./notifications/push.js";
+import { pinCompanyEventChainTail, verifyCompanyEventsWitnessPin } from "./company-events-witness-pin.js";
 import { getTenantId } from "./tenant.js";
 import { sendWebhook } from "./webhook.js";
 
@@ -133,6 +134,11 @@ export function runWeeklyCompanyEventsAttestation(opts?: {
 
   mkdirSync(join(ATTESTATIONS_PATH(), ".."), { recursive: true });
   appendJsonl(ATTESTATIONS_PATH(), attestation);
+  try {
+    pinCompanyEventChainTail({ hubId: "weekly-attest" });
+  } catch {
+    /* empty chain or pin optional until first event */
+  }
   return { attestation, path: companyEventsAttestationsPath() };
 }
 
@@ -237,6 +243,21 @@ export async function runMonthlyCompanyEventsAudit(opts?: {
       severity: "error",
       code: "weekly-attestations-missing",
       message: `No weekly attestations found for ${month}`,
+    });
+  }
+
+  const pin = verifyCompanyEventsWitnessPin();
+  if (!pin.ok) {
+    findings.push({
+      severity: "error",
+      code: pin.code ?? "witness-pin-mismatch",
+      message: pin.message ?? "Witness pin does not match chain tail",
+    });
+  } else if (pin.pin) {
+    findings.push({
+      severity: "info",
+      code: "witness-pin-ok",
+      message: `Witness pin matches chain tail ${pin.pin.chain_tail_digest.slice(0, 12)}… (seq ${pin.pin.chain_tail_seq})`,
     });
   }
 

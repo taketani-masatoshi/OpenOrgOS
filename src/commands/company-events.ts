@@ -33,6 +33,13 @@ import {
   runMonthlyCompanyEventsAudit,
   runWeeklyCompanyEventsAttestation,
 } from "../lib/company-events-attestation.js";
+import { requireCliOperator } from "../lib/console-auth/cli-operator.js";
+import { appendAuditEvent } from "../lib/audit-log.js";
+import { pinCompanyEventChainTail, verifyCompanyEventsWitnessPin } from "../lib/company-events-witness-pin.js";
+
+function requireEventsWrite(command: string) {
+  return requireCliOperator({ permission: "events:write", command });
+}
 
 function parseRelated(raw?: string): CreateCompanyEventOptions["related"] | undefined {
   if (!raw) return undefined;
@@ -71,6 +78,7 @@ export function runEventsNew(opts: {
   related?: string;
   notes?: string;
 }): void {
+  requireEventsWrite("events new");
   const kind = opts.kind as (typeof COMPANY_EVENT_KINDS)[number];
   if (!COMPANY_EVENT_KINDS.includes(kind)) {
     throw new Error(`Invalid kind. Use: ${COMPANY_EVENT_KINDS.join(", ")}`);
@@ -131,6 +139,7 @@ export function runEventsStatus(): void {
 }
 
 export function runEventsClose(opts: { id: string }): void {
+  requireEventsWrite("events close");
   initCompanyEventsFile();
   const event = closeCompanyEvent(opts.id);
   console.log(`✓ Company event closed: ${event.id}`);
@@ -138,6 +147,7 @@ export function runEventsClose(opts: { id: string }): void {
 }
 
 export function runEventsArchive(opts: { id: string }): void {
+  requireEventsWrite("events archive");
   initCompanyEventsFile();
   const event = archiveCompanyEvent(opts.id);
   console.log(`✓ Company event archived: ${event.id}`);
@@ -190,6 +200,7 @@ export function runEventsLinkOutbox(opts: { eventId: string; outboxId: string })
 }
 
 export function runEventsVoid(opts: { id: string; reason: string }): void {
+  requireEventsWrite("events void");
   initCompanyEventsFile();
   const target = findCompanyEventById(opts.id);
   if (!target) {
@@ -208,6 +219,7 @@ export function runEventsVoidRequest(opts: {
   peer?: string;
   message?: string;
 }): void {
+  requireEventsWrite("events void-request");
   initCompanyEventsFile();
   const notice = proposeVoidWireForCompanyEvent({
     companyEventId: opts.id,
@@ -228,6 +240,7 @@ export function runEventsVoidAck(opts: {
   peer?: string;
   auto?: boolean;
 }): void {
+  requireEventsWrite("events void-ack");
   initCompanyEventsFile();
   if (opts.auto) {
     const updated = tryAutoRegisterVoidAckFromInbound(opts.id);
@@ -322,8 +335,15 @@ export function runEventsChainVerify(opts: { json?: boolean }): void {
   const registry = loadCompanyEvents();
   const chain = verifyCompanyEventChain();
   const cross = validateCompanyEventChainWithRegistry(registry);
+  const pin = verifyCompanyEventsWitnessPin();
   const issues = [...chain.issues, ...cross.issues];
-  const ok = chain.ok && cross.ok;
+  if (!pin.ok) {
+    issues.push({
+      code: pin.code ?? "witness-pin-mismatch",
+      message: pin.message ?? "Witness pin does not match chain tail",
+    });
+  }
+  const ok = chain.ok && cross.ok && pin.ok;
 
   if (opts.json) {
     console.log(
@@ -350,8 +370,33 @@ export function runEventsChainVerify(opts: { json?: boolean }): void {
   console.log(`  chain_links: ${chain.checked}`);
 }
 
-export function runEventsChainBackfill(opts: { force?: boolean }): void {
+export function runEventsChainBackfill(opts: {
+  force?: boolean;
+  iUnderstandRebuild?: boolean;
+}): void {
   initCompanyEventsFile();
+  if (opts.force) {
+    const auth = requireEventsWrite("events chain backfill --force");
+    if (auth.record.role !== "ceo") {
+      throw new Error("events chain backfill --force requires ceo role");
+    }
+    if (!opts.iUnderstandRebuild) {
+      throw new Error(
+        "events chain backfill --force requires --i-understand-rebuild (destructive; do not use to recover a broken ledger)",
+      );
+    }
+    if (process.env.ORGOS_EVENTS_CHAIN_REBUILD !== "1") {
+      throw new Error(
+        "events chain backfill --force is disabled. Set ORGOS_EVENTS_CHAIN_REBUILD=1 only for isolated rebuild, never as recovery.",
+      );
+    }
+    appendAuditEvent({
+      event: "events_chain_rebuild",
+      ref: "company-events-chain",
+      actor: auth.record.operator_id,
+      detail: "events chain backfill --force",
+    });
+  }
   const registry = loadCompanyEvents();
   const result = backfillCompanyEventChain(registry, { force: opts.force });
   saveCompanyEvents(result.registry);
@@ -374,4 +419,14 @@ export function runEventsChainTail(): void {
   console.log(`  event_id: ${tail.event_id}`);
   console.log(`  digest: ${tail.digest}`);
   console.log(`  → ${companyEventChainPath()}`);
+}
+
+export function runEventsChainPin(): void {
+  requireEventsWrite("events chain pin");
+  initCompanyEventsFile();
+  const pin = pinCompanyEventChainTail();
+  console.log(`✓ Company event chain tail pinned`);
+  console.log(`  seq: ${pin.chain_tail_seq}`);
+  console.log(`  digest: ${pin.chain_tail_digest}`);
+  console.log(`  hub: ${pin.hub_id ?? "local-pin"}`);
 }

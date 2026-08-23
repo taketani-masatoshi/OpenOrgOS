@@ -1,20 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  copyFileSync,
-  existsSync,
-  readFileSync,
-  rmSync,
-  unlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { setTenantId } from "../src/lib/tenant.js";
 import {
   createCompanyEvent,
   closeCompanyEvent,
   ensureCompanyEventMonth,
-  initCompanyEventsFile,
   loadCompanyEvents,
   saveCompanyEvents,
   validateCompanyEvents,
@@ -25,63 +15,25 @@ import {
   loadCompanyEventChain,
   verifyCompanyEventChain,
 } from "../src/lib/company-events-chain.js";
-import { getDataDir, resolveTenantPath } from "../src/lib/utils.js";
+import { getDataDir } from "../src/lib/utils.js";
+import { writeYamlFile } from "../src/lib/utils.js";
+import {
+  pinCompanyEventChainTail,
+  verifyCompanyEventsWitnessPin,
+} from "../src/lib/company-events-witness-pin.js";
+import { setupTempCompanyEventsTenant } from "./helpers/temp-company-events-tenant.js";
 
-const REGISTRY_PATH = () => join(getDataDir(), "company-events.yaml");
 const CHAIN_PATH = () => join(getDataDir(), "company-events-chain.jsonl");
-const REGISTRY_BACKUP = join(tmpdir(), "steward-company-events-chain-registry-backup.yaml");
-const CHAIN_BACKUP = join(tmpdir(), "steward-company-events-chain-backup.jsonl");
-
-function backupChainState(): void {
-  initCompanyEventsFile();
-  if (existsSync(REGISTRY_PATH())) {
-    copyFileSync(REGISTRY_PATH(), REGISTRY_BACKUP);
-  }
-  if (existsSync(CHAIN_PATH())) {
-    copyFileSync(CHAIN_PATH(), CHAIN_BACKUP);
-  } else if (existsSync(CHAIN_BACKUP)) {
-    unlinkSync(CHAIN_BACKUP);
-  }
-}
-
-function restoreChainState(): void {
-  if (existsSync(REGISTRY_BACKUP)) {
-    copyFileSync(REGISTRY_BACKUP, REGISTRY_PATH());
-    unlinkSync(REGISTRY_BACKUP);
-  }
-  if (existsSync(CHAIN_BACKUP)) {
-    copyFileSync(CHAIN_BACKUP, CHAIN_PATH());
-    unlinkSync(CHAIN_BACKUP);
-  } else if (existsSync(CHAIN_PATH())) {
-    unlinkSync(CHAIN_PATH());
-  }
-}
-
-function resetChainTestState(): void {
-  writeFileSync(REGISTRY_PATH(), "schema_version: 2\nevents: []\n", "utf8");
-  if (existsSync(CHAIN_PATH())) {
-    unlinkSync(CHAIN_PATH());
-  }
-}
 
 describe("company-events-chain", () => {
-  const created: string[] = [];
+  let restore: () => void;
 
   beforeEach(() => {
-    setTenantId("mal");
-    backupChainState();
-    resetChainTestState();
-    created.length = 0;
+    restore = setupTempCompanyEventsTenant().restore;
   });
 
   afterEach(() => {
-    for (const rel of created) {
-      const abs = resolveTenantPath(rel);
-      if (existsSync(abs)) {
-        rmSync(abs, { recursive: true, force: true });
-      }
-    }
-    restoreChainState();
+    restore();
   });
 
   it("chains three create events with continuous seq and digests", () => {
@@ -104,7 +56,6 @@ describe("company-events-chain", () => {
       occurredAt: "2099-11-03",
       slug: "chain-three",
     });
-    created.push(e1.event_path, e1.artifact_dir, e2.event_path, e2.artifact_dir, e3.event_path, e3.artifact_dir);
 
     const chain = loadCompanyEventChain();
     expect(chain).toHaveLength(3);
@@ -128,10 +79,8 @@ describe("company-events-chain", () => {
       occurredAt: "2099-12-01",
       slug: "void-target",
     });
-    created.push(target.event_path, target.artifact_dir);
 
     const { voidEvent, target: voided } = voidCompanyEvent(target.id, "duplicate entry");
-    created.push(voidEvent.event_path, voidEvent.artifact_dir);
 
     expect(voided.status).toBe("voided");
     expect(voided.voided_by).toBe(voidEvent.id);
@@ -155,7 +104,6 @@ describe("company-events-chain", () => {
       occurredAt: "2100-01-01",
       slug: "tamper-target",
     });
-    created.push(event.event_path, event.artifact_dir);
 
     const registry = loadCompanyEvents();
     registry.events = registry.events.filter((e) => e.id !== event.id);
@@ -168,19 +116,18 @@ describe("company-events-chain", () => {
 
   it("detects missing line in JSONL chain", () => {
     ensureCompanyEventMonth("2100-02");
-    const e1 = createCompanyEvent({
+    createCompanyEvent({
       kind: "misc",
       title: "Chain gap a",
       occurredAt: "2100-02-01",
       slug: "chain-gap-a",
     });
-    const e2 = createCompanyEvent({
+    createCompanyEvent({
       kind: "misc",
       title: "Chain gap b",
       occurredAt: "2100-02-02",
       slug: "chain-gap-b",
     });
-    created.push(e1.event_path, e1.artifact_dir, e2.event_path, e2.artifact_dir);
 
     const lines = readFileSync(CHAIN_PATH(), "utf8").trim().split("\n");
     expect(lines).toHaveLength(2);
@@ -199,24 +146,20 @@ describe("company-events-chain", () => {
       occurredAt: "2100-03-01",
       slug: "double-void",
     });
-    created.push(target.event_path, target.artifact_dir);
-    const first = voidCompanyEvent(target.id, "first void");
-    created.push(first.voidEvent.event_path, first.voidEvent.artifact_dir);
+    voidCompanyEvent(target.id, "first void");
     expect(() => voidCompanyEvent(target.id, "second void")).toThrow(/already voided/);
   });
 
-  it("backfills create links for existing registry", () => {
+  it("backfills create links for existing registry after chain file is removed", () => {
     ensureCompanyEventMonth("2100-04");
-    const event = createCompanyEvent({
+    createCompanyEvent({
       kind: "misc",
       title: "Backfill me",
       occurredAt: "2100-04-01",
       slug: "backfill-me",
-      skipChain: true,
     });
-    created.push(event.event_path, event.artifact_dir);
     if (existsSync(CHAIN_PATH())) {
-      unlinkSync(CHAIN_PATH());
+      rmSync(CHAIN_PATH());
     }
 
     const registry = loadCompanyEvents();
@@ -228,6 +171,45 @@ describe("company-events-chain", () => {
     expect(validateCompanyEvents().issues.some((i) => i.code === "chain-missing-create")).toBe(false);
   });
 
+  it("rejects public skipChain on create and still appends void compensation links", () => {
+    expect(() =>
+      createCompanyEvent({
+        kind: "misc",
+        title: "Skip banned",
+        occurredAt: "2100-06-01",
+        slug: "skip-banned",
+        skipChain: true,
+      } as never),
+    ).toThrow(/skipChain is not a public option/);
+
+    ensureCompanyEventMonth("2100-06");
+    const target = createCompanyEvent({
+      kind: "misc",
+      title: "Void still chains",
+      occurredAt: "2100-06-02",
+      slug: "void-still-chains",
+    });
+    const before = loadCompanyEventChain().length;
+    voidCompanyEvent(target.id, "internal skip remains");
+    expect(loadCompanyEventChain().length).toBe(before + 2);
+  });
+
+  it("refuses --force rebuild without ORGOS_EVENTS_CHAIN_REBUILD", () => {
+    ensureCompanyEventMonth("2100-07");
+    createCompanyEvent({
+      kind: "misc",
+      title: "Force guard",
+      occurredAt: "2100-07-01",
+      slug: "force-guard",
+    });
+    const before = readFileSync(CHAIN_PATH(), "utf8");
+    delete process.env.ORGOS_EVENTS_CHAIN_REBUILD;
+    expect(() => backfillCompanyEventChain(loadCompanyEvents(), { force: true })).toThrow(
+      /ORGOS_EVENTS_CHAIN_REBUILD/,
+    );
+    expect(readFileSync(CHAIN_PATH(), "utf8")).toBe(before);
+  });
+
   it("close appends a status chain link", () => {
     ensureCompanyEventMonth("2100-05");
     const event = createCompanyEvent({
@@ -236,7 +218,6 @@ describe("company-events-chain", () => {
       occurredAt: "2100-05-01",
       slug: "close-chain",
     });
-    created.push(event.event_path, event.artifact_dir);
     const before = loadCompanyEventChain().length;
 
     closeCompanyEvent(event.id);
@@ -245,5 +226,30 @@ describe("company-events-chain", () => {
     expect(chain.length).toBe(before + 1);
     expect(chain.at(-1)?.action).toBe("status");
     expect(chain.at(-1)?.event_id).toBe(event.id);
+  });
+
+  it("pins chain tail and fails when the pinned link is rewritten", () => {
+    ensureCompanyEventMonth("2100-08");
+    createCompanyEvent({
+      kind: "misc",
+      title: "Pin me",
+      occurredAt: "2100-08-01",
+      slug: "pin-me",
+    });
+    const pin = pinCompanyEventChainTail();
+    expect(verifyCompanyEventsWitnessPin().ok).toBe(true);
+    expect(pin.chain_tail_digest).toHaveLength(64);
+
+    const lines = readFileSync(CHAIN_PATH(), "utf8").trim().split("\n");
+    const first = JSON.parse(lines[0]!) as { digest: string; seq: number };
+    first.digest = "a".repeat(64);
+    writeFileSync(CHAIN_PATH(), `${JSON.stringify(first)}\n`, "utf8");
+    expect(verifyCompanyEventsWitnessPin().ok).toBe(false);
+  });
+
+  it("rejects writeYamlFile of company-events.yaml outside the events CLI guard", () => {
+    expect(() =>
+      writeYamlFile(join(getDataDir(), "company-events.yaml"), { schema_version: 2, events: [] }),
+    ).toThrow(/Company events write rejected/);
   });
 });

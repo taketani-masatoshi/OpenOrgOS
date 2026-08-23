@@ -18,6 +18,7 @@ import {
   writeYamlFile,
 } from "./utils.js";
 import { lintCompanyEventMarkdown } from "./company-events-lint.js";
+import { runWithEventsWriteGuard, assertEventsWriteAuthorized } from "./company-events-write-guard.js";
 import {
   appendChainLink,
   backfillCompanyEventChain,
@@ -26,6 +27,7 @@ import {
   validateCompanyEventChainWithRegistry,
   verifyCompanyEventChain,
 } from "./company-events-chain.js";
+import { verifyCompanyEventsWitnessPin } from "./company-events-witness-pin.js";
 
 export const COMPANY_EVENT_KINDS = companyEventKind.options.filter((k) => k !== "void");
 
@@ -71,7 +73,9 @@ export function loadCompanyEvents(): CompanyEventsRegistry {
 }
 
 export function saveCompanyEvents(data: CompanyEventsRegistry): void {
-  writeYamlFile(REGISTRY_PATH(), data);
+  runWithEventsWriteGuard("company-events-registry", () => {
+    writeYamlFile(REGISTRY_PATH(), data);
+  });
 }
 
 export function initCompanyEventsFile(): void {
@@ -220,6 +224,8 @@ ${voidLines}
 
 /** Update YAML frontmatter only — never rewrite the human narrative body. */
 function patchEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): void {
+  runWithEventsWriteGuard("company-events-md", () => {
+  assertEventsWriteAuthorized(absPath);
   if (!existsSync(absPath)) {
     writeFileSync(absPath, renderEventMarkdown(event), "utf8");
     return;
@@ -252,6 +258,7 @@ function patchEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): vo
     .join("\n");
   const normalizedBody = match ? match[2]! : `\n${content}`;
   writeFileSync(absPath, `${fm}${normalizedBody.startsWith("\n") ? normalizedBody : `\n${normalizedBody}`}`, "utf8");
+  });
 }
 
 function renderArtifactIndex(event: CompanyEvent): string {
@@ -302,14 +309,16 @@ export interface CreateCompanyEventOptions {
   notes?: string;
   targetEventId?: string;
   voidReason?: string;
-  skipChain?: boolean;
 }
 
 function insertCompanyEventRecord(event: CompanyEvent): CompanyEvent {
+  return runWithEventsWriteGuard("company-events-create", () => {
   const artifactDirAbs = resolveTenantPath(event.artifact_dir);
   mkdirSync(join(artifactDirAbs, "records"), { recursive: true });
+  const eventAbs = resolveTenantPath(event.event_path);
+  assertEventsWriteAuthorized(eventAbs);
   writeFileSync(
-    resolveTenantPath(event.event_path),
+    eventAbs,
     renderEventMarkdown(event),
     "utf8"
   );
@@ -327,9 +336,13 @@ function insertCompanyEventRecord(event: CompanyEvent): CompanyEvent {
   saveCompanyEvents(registry);
   refreshMonthIndex(event.month, registry.events);
   return event;
+  });
 }
 
-export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEvent {
+function createCompanyEventCore(
+  opts: CreateCompanyEventOptions,
+  chain: { append: boolean },
+): CompanyEvent {
   if (opts.kind === "void" && !opts.targetEventId) {
     throw new Error("void kind events require targetEventId");
   }
@@ -385,7 +398,7 @@ export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEven
 
   insertCompanyEventRecord(event);
 
-  if (opts.skipChain) {
+  if (!chain.append) {
     return event;
   }
 
@@ -412,6 +425,15 @@ export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEven
   }
 
   return { ...event, chain_seq: link.seq };
+}
+
+export function createCompanyEvent(opts: CreateCompanyEventOptions): CompanyEvent {
+  if (Object.prototype.hasOwnProperty.call(opts, "skipChain")) {
+    throw new Error(
+      "skipChain is not a public option; company events always append to the hash chain",
+    );
+  }
+  return createCompanyEventCore(opts, { append: true });
 }
 
 export function listCompanyEvents(filter?: {
@@ -578,6 +600,14 @@ export function validateCompanyEvents(): {
     });
   }
 
+  const pin = verifyCompanyEventsWitnessPin();
+  if (!pin.ok) {
+    issues.push({
+      code: pin.code ?? "witness-pin-mismatch",
+      message: pin.message ?? "Witness pin does not match chain tail",
+    });
+  }
+
   return { ok: issues.length === 0, issues, warnings };
 }
 
@@ -646,14 +676,16 @@ export function voidCompanyEvent(targetId: string, reason: string): {
     throw new Error(`Event already voided: ${targetId}`);
   }
 
-  const voidEvent = createCompanyEvent({
-    kind: "void",
-    title: `Void: ${target.title}`,
-    slug: `void-${target.id.replace(/^EVT-/, "").slice(0, 24)}`,
-    targetEventId: targetId,
-    voidReason: reason.trim(),
-    skipChain: true,
-  });
+  const voidEvent = createCompanyEventCore(
+    {
+      kind: "void",
+      title: `Void: ${target.title}`,
+      slug: `void-${target.id.replace(/^EVT-/, "").slice(0, 24)}`,
+      targetEventId: targetId,
+      voidReason: reason.trim(),
+    },
+    { append: false },
+  );
 
   const createLink = appendChainLink({
     action: "create",

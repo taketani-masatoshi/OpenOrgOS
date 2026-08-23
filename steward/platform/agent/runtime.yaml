@@ -5,8 +5,9 @@ fallback_runtime: manifest
 # LLM 優先順: ORGOS_LLM_API_KEY / OPENAI_API_KEY → profiles.aider (PATH) → shell.command
 # 環境変数: ORGOS_LLM_API_URL, ORGOS_LLM_MODEL, ORGOS_SHELL_PROFILE
 # Operator LLM 拡張:
-#   ORGOS_LLM_TOOLS=1          — tool calling (Today · approvals · wire)
-#   ORGOS_LLM_TOOLS_WRITE=1    — operator_approve ツール
+#   ORGOS_LLM_TOOLS=1          — tool calling (Today · approvals list · wire status)
+#   ORGOS_LLM_TOOLS_WRITE=1    — non-approval writes (e.g. cashflow); never operator_approve
+#                                 production: forbidden (prod-checklist / orgos doctor)
 #   ORGOS_LLM_STRUCTURED=1      — JSON schema CEO 回答
 #   ORGOS_LLM_TELEMETRY=1       — data/.orgos/llm-telemetry.jsonl
 #   ORGOS_LLM_PRICE_INPUT/OUTPUT — USD per 1M tokens (cost estimate)

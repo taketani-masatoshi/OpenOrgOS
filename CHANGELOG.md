@@ -13,6 +13,11 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 - `openorgos-engineering-constitution.md` を索引専用に整理
+- LLM / MCP から最終承認ツールを削除（`operator_approve` · `steward_approve`）。本番は `ORGOS_LLM_TOOLS_WRITE=1` を doctor / prod-checklist が拒否
+- `orgos doctor` が prod-checklist を実行する
+- 承認は認証済み ceo/approver に名義バインド。自己承認禁止を全内部 subject に適用
+- 週次 attest がチェーン末尾 digest を Witness pin として固定。`events chain pin` を追加。台帳 YAML/JSONL/MD のヘルパー直書きを拒否。壊れたチェーンを `backfill --force` で復旧しない
+- `events:write` で会社イベント CLI を認証。`chain backfill --force` は `ORGOS_EVENTS_CHAIN_REBUILD=1` + ceo + `--i-understand-rebuild` に隔離。`skipChain` は非公開
 
 ## [0.8.0] — 2026-06-28
 

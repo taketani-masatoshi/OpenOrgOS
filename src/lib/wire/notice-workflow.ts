@@ -11,7 +11,7 @@ import {
 } from "../protocol/record-transaction.js";
 import { getPendingNoticesPath } from "../protocol/paths.js";
 import {
-  approveOrgApproval,
+  humanApproveOrgApproval,
   completeOrgApprovalWire,
   findOrgApproval,
   listOrgApprovals,
@@ -292,11 +292,12 @@ export function approveInterOrgNotice(
       ? undefined
       : resolveNoticeAmountForWire(notice);
 
-  const { attestation } = approveOrgApproval({
+  const { attestation } = humanApproveOrgApproval({
     approvalId: opts.noticeId,
     approverId: opts.approverId,
     coApproverId: opts.coApproverId,
     operatorId: opts.operatorId,
+    source: "wire_ui",
     basis: attestationBasis(notice),
     basisRef:
       notice.contract_id ??

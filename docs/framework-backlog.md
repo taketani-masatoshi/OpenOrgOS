@@ -7,6 +7,35 @@
 
 ---
 
+## Phase HA — 人間最終承認 · Event 台帳（2026-08）
+
+**チケット正本:** [framework-backlog-tickets-human-approval.md](framework-backlog-tickets-human-approval.md)  
+**方針:** AI は提案のみ。最終承認は人間。Company Event の無認証変更とテスト汚染を塞ぐ。MAL チェーンの破壊的復旧は対象外。
+
+| ID | 内容 | 状態 |
+|----|------|:----:|
+| HA-0 | Epic · 計画と品質ゲート | [x] |
+| HA-1 | LLM/MCP 承認ツール削除 · 本番 `ORGOS_LLM_TOOLS_WRITE` 拒否 | [x] |
+| HA-2 | 承認者バインド · ceo/approver ロール · 自己承認全件 | [x] |
+| HA-3 | events CLI 認証 · `events:write` · `--force` / `skipChain` | [x] |
+| HA-4 | company-events テストの一時テナント隔離 | [x] |
+| HA-5 | HumanApprovalContext · ADR 改訂 · Dev MCP 緩和閉鎖 | [x] |
+| HA-6 | Witness 固定 · write guard · doctor 整合 | [x] |
+
+実装順は HA-1 → HA-6。各チケットの受け入れ・テスト・文書同期はチケット正本を見る。
+
+---
+
+## Phase CHAT-CMD — Chat ↔ CLI 能力パリティ（2026-07）
+
+| ID | 内容 | 状態 |
+|----|------|:----:|
+| CHAT-CMD-1 | Skill `chat` ブロック · Command Intent Router · confirmation card | [x] |
+| CHAT-CMD-2 | `orgos commands list\|match` · integrity · ADR 0035 | [x] |
+| CHAT-CMD-3 | `supports_tools` ワーカーフラグ · operator_run_command | [x] |
+
+---
+
 ## Phase TI-1 — テナント統合 · Secretary メール（2026-07）
 
 **正本:** [spec/tenant-integrations-requirements.md](spec/tenant-integrations-requirements.md)

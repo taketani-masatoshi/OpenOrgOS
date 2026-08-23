@@ -15,6 +15,7 @@ import { getTenantId, listTenantIds, setTenantId } from "../lib/tenant.js";
 import { STEWARD_CORE_DIR } from "../lib/steward-paths.js";
 import { runProdWireGate } from "../lib/protocol/prod-wire-gate.js";
 import { collectOperationalReadinessIssues } from "../lib/scheduling-coordination/operational-readiness.js";
+import { runProdAuthChecks } from "../lib/console-auth/prod-checklist.js";
 
 export interface DoctorOptions {
   json?: boolean;
@@ -23,7 +24,7 @@ export interface DoctorOptions {
   repair?: boolean;
 }
 
-interface DoctorCheck {
+export interface DoctorCheck {
   id: string;
   ok: boolean;
   detail: string;
@@ -158,6 +159,73 @@ function checkFixtureRestoreLock(opts?: { repair?: boolean }): DoctorCheck {
   };
 }
 
+export function collectDoctorChecks(opts: DoctorOptions = {}): {
+  checks: DoctorCheck[];
+  nextCommand?: string;
+} {
+  const tenant = opts.tenant ?? process.env.ORGOS_TENANT;
+  if (tenant) setTenantId(tenant);
+
+  const checks: DoctorCheck[] = [
+    checkNode(),
+    checkOpenSsl(),
+    checkInstallRoot(),
+    checkWorkspace(),
+    checkTenantTemplate(),
+    checkPdfkitDependency(),
+    checkFixtureRestoreLock({ repair: opts.repair }),
+    checkWireConsoleDist(),
+    checkIntegrationsSetup(),
+    ...runProdAuthChecks("all").map((c) => ({
+      id: c.id,
+      ok: c.ok,
+      detail: c.warn && c.ok ? `WARN: ${c.detail}` : c.detail,
+    })),
+  ];
+
+  let nextCommand: string | undefined;
+
+  if (tenant) {
+    const ops = collectOperationalReadinessIssues({
+      repairApprovals: opts.repair,
+      ensureMailConfig: opts.repair,
+      syncOperatorKeys: opts.repair,
+      repairOperatorKeys: opts.repair,
+    });
+    nextCommand = ops.next_command;
+    for (const issue of ops.issues) {
+      checks.push({
+        id: issue.id,
+        ok: issue.severity !== "error",
+        detail: `${issue.severity === "error" ? "ERROR" : "WARN"}: ${issue.message} — ${issue.fix}`,
+      });
+    }
+    if (ops.synced_operators.length) {
+      checks.push({
+        id: "operator_key_sync",
+        ok: true,
+        detail: `synced operator key_hash: ${ops.synced_operators.join(", ")}`,
+      });
+    }
+    if (ops.rotated_operators.length) {
+      checks.push({
+        id: "operator_key_rotate",
+        ok: true,
+        detail: `rotated operator key: ${ops.rotated_operators.join(", ")}`,
+      });
+    }
+    if (ops.repaired_approvals.length) {
+      checks.push({
+        id: "approval_registry_repair",
+        ok: true,
+        detail: `repaired ${ops.repaired_approvals.length} draft approval(s): ${ops.repaired_approvals.join(", ")}`,
+      });
+    }
+  }
+
+  return { checks, nextCommand };
+}
+
 export function runDoctor(opts: DoctorOptions = {}): void {
   const tenant = opts.tenant ?? process.env.ORGOS_TENANT;
   if (tenant) setTenantId(tenant);
@@ -197,58 +265,7 @@ export function runDoctor(opts: DoctorOptions = {}): void {
     return;
   }
 
-  const checks: DoctorCheck[] = [
-    checkNode(),
-    checkOpenSsl(),
-    checkInstallRoot(),
-    checkWorkspace(),
-    checkTenantTemplate(),
-    checkPdfkitDependency(),
-    checkFixtureRestoreLock({ repair: opts.repair }),
-    checkWireConsoleDist(),
-    checkIntegrationsSetup(),
-  ];
-
-  let schedulingNextCommand: string | undefined;
-
-  if (tenant) {
-    const ops = collectOperationalReadinessIssues({
-      repairApprovals: opts.repair,
-      ensureMailConfig: opts.repair,
-      syncOperatorKeys: opts.repair,
-      repairOperatorKeys: opts.repair,
-    });
-    schedulingNextCommand = ops.next_command;
-    for (const issue of ops.issues) {
-      checks.push({
-        id: issue.id,
-        ok: issue.severity !== "error",
-        detail: `${issue.severity === "error" ? "ERROR" : "WARN"}: ${issue.message} — ${issue.fix}`,
-      });
-    }
-    if (ops.synced_operators.length) {
-      checks.push({
-        id: "operator_key_sync",
-        ok: true,
-        detail: `synced operator key_hash: ${ops.synced_operators.join(", ")}`,
-      });
-    }
-    if (ops.rotated_operators.length) {
-      checks.push({
-        id: "operator_key_rotate",
-        ok: true,
-        detail: `rotated operator key: ${ops.rotated_operators.join(", ")}`,
-      });
-    }
-    if (ops.repaired_approvals.length) {
-      checks.push({
-        id: "approval_registry_repair",
-        ok: true,
-        detail: `repaired ${ops.repaired_approvals.length} draft approval(s): ${ops.repaired_approvals.join(", ")}`,
-      });
-    }
-  }
-
+  const { checks, nextCommand: schedulingNextCommand } = collectDoctorChecks(opts);
   const failed = checks.filter((c) => !c.ok);
 
   if (opts.json) {

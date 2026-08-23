@@ -68,6 +68,7 @@ export function requireCliOperator(opts: {
         "agent:report",
         "agent:shell",
         "git:write",
+        "events:write",
       ],
     };
     setCliOperatorContext(fallback);

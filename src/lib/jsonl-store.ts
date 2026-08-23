@@ -1,5 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { assertEventsWriteAuthorized } from "./company-events-write-guard.js";
 
 /**
  * Shared append-only JSONL store helpers used by the audit log and queue DB.
@@ -7,6 +8,7 @@ import { dirname } from "node:path";
  */
 
 export function appendJsonl<T>(path: string, record: T): void {
+  assertEventsWriteAuthorized(path);
   mkdirSync(dirname(path), { recursive: true });
   appendFileSync(path, JSON.stringify(record) + "\n", "utf-8");
 }
