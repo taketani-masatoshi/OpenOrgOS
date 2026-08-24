@@ -15,6 +15,7 @@ import {
 } from "./tenant-roster-load.js";
 import {
   buildDefaultTenantRoster,
+  DEFAULT_CORE_OPERATIONAL_AGENTS,
   listRosterManagedTenants,
   listTenantsMissingAgentRoster,
   type BootstrapTenantRosterResult,
@@ -288,6 +289,38 @@ export function buildAgentRosterTodaySummary(): {
     developer,
     task,
   };
+}
+
+export function repairCoreOperationalAgentGaps(opts?: { dryRun?: boolean }): Array<{
+  tenantId: string;
+  added: string[];
+}> {
+  const results: Array<{ tenantId: string; added: string[] }> = [];
+  for (const tenantId of listRosterManagedTenants()) {
+    setTenantId(tenantId);
+    const loaded = loadTenantAgentRoster();
+    if (!loaded.exists) continue;
+    const operational = new Set(loaded.roster.profiles.operational);
+    const added: string[] = [];
+    for (const id of DEFAULT_CORE_OPERATIONAL_AGENTS) {
+      if (!operational.has(id)) {
+        operational.add(id);
+        added.push(id);
+      }
+    }
+    if (added.length && !opts?.dryRun) {
+      const next = syncRosterWithModules({
+        ...loaded.roster,
+        profiles: {
+          ...loaded.roster.profiles,
+          operational: [...operational].sort(),
+        },
+      });
+      writeTenantAgentRoster(next);
+    }
+    results.push({ tenantId, added });
+  }
+  return results;
 }
 
 export function bootstrapAllTenantAgentRosters(
