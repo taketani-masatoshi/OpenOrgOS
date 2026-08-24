@@ -9,6 +9,7 @@ import {
 } from "./agent-capability.js";
 import { getCatalogAgent, isAgentActive, listCatalogAgents } from "./agent-catalog.js";
 import { listActiveTenantAgents } from "./agent-roster.js";
+import { evaluateAgentPulseChecks } from "./agent-pulse.js";
 import { loadRoutingRegistry } from "./routing.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { resolveExecutingAgentId } from "./skill-execution-mode.js";
@@ -36,7 +37,10 @@ const WEIGHTS = {
   dashboard: 15,
   test: 10,
   tenant: 15,
+  orchestration: 2,
 } as const;
+
+const EXECUTIVE_STEWARD_SKILL_CLI_MAX = WEIGHTS.skill_cli - WEIGHTS.orchestration;
 
 function frameworkWorkspacePathExists(rel: string): boolean {
   const base = rel.replace(/\/$/, "");
@@ -106,12 +110,14 @@ function scoreSkillCli(agentId: AgentId, cap: ReturnType<typeof getAgentCapabili
   if (cliSkills.length >= 1) score += 6;
   if (manifestSkills.length >= 2) score += 4;
   if (owned.some((skill) => skill.runtime === "agent")) score += 2;
-  score = Math.min(score, WEIGHTS.skill_cli);
+  const max =
+    agentId === "executive_steward" ? EXECUTIVE_STEWARD_SKILL_CLI_MAX : WEIGHTS.skill_cli;
+  score = Math.min(score, max);
   return {
     id: "skill_cli",
     label: "Skill/CLI",
     score,
-    max: WEIGHTS.skill_cli,
+    max,
     detail:
       owned.length > 0
         ? `${owned.length} skill(s) · ${cliSkills.length} cli · manifest ${manifestSkills.length}`
@@ -161,14 +167,60 @@ function scoreRouting(agentId: AgentId, cap: ReturnType<typeof getAgentCapabilit
   };
 }
 
+function scoreOrchestration(agentId: AgentId): AgentReadinessAxis | null {
+  if (agentId !== "executive_steward") return null;
+  const skills = skillRegistry();
+  const routes = routingRegistry().routes;
+  const checks = [
+    {
+      label: "orchestration_status skill",
+      ok: skills.some((skill) => skill.id === "orchestration_status" && skill.runtime === "cli"),
+    },
+    {
+      label: "orchestration-status route",
+      ok: routes.some((route) => route.id === "orchestration-status"),
+    },
+    {
+      label: "plan-graph + state machine",
+      ok: frameworkWorkspacePathExists("src/lib/orchestration/plan-graph.ts"),
+    },
+    {
+      label: "orchestration tests",
+      ok: frameworkWorkspacePathExists("tests/orchestration-dag.test.ts"),
+    },
+  ];
+  const ok = checks.filter((check) => check.ok).length;
+  const score = Math.round((ok / checks.length) * WEIGHTS.orchestration);
+  return {
+    id: "orchestration",
+    label: "orchestration",
+    score,
+    max: WEIGHTS.orchestration,
+    detail: checks.filter((check) => !check.ok).map((check) => check.label).join(", ") || "DAG + CLI + tests",
+  };
+}
+
 function scoreDashboard(agentId: AgentId, slug: string): AgentReadinessAxis {
   const has = hasRecentPulseSummary(agentId, slug);
+  const pulse = evaluateAgentPulseChecks(agentId);
+  let score = has ? Math.round(WEIGHTS.dashboard * 0.5) : Math.round(WEIGHTS.dashboard * 0.3);
+  const details: string[] = [has ? "pulse 要約あり" : "pulse 未実行"];
+  if (pulse.total > 0) {
+    const pulseScore = Math.round((pulse.ok / pulse.total) * WEIGHTS.dashboard * 0.5);
+    score += pulseScore;
+    details.push(`checks ${pulse.ok}/${pulse.total} OK`);
+    if (pulse.stale.length) {
+      details.push(`stale: ${pulse.stale.slice(0, 2).join("; ")}`);
+    }
+  } else {
+    score += Math.round(WEIGHTS.dashboard * 0.2);
+  }
   return {
     id: "dashboard",
     label: "要約",
-    score: has ? WEIGHTS.dashboard : Math.round(WEIGHTS.dashboard * 0.6),
+    score: Math.min(score, WEIGHTS.dashboard),
     max: WEIGHTS.dashboard,
-    detail: has ? "pulse 要約あり" : "pulse 未実行（dashboard 時に生成可）",
+    detail: details.join(" · "),
   };
 }
 
@@ -306,6 +358,8 @@ export function computeAgentReadiness(agentId: AgentId): AgentReadinessResult {
     scoreEvidenceActivationBoundary(agentId),
     scoreTenant(cap),
   ];
+  const orchestration = scoreOrchestration(agentId);
+  if (orchestration) axes.push(orchestration);
   const total = axes.reduce((s, a) => s + a.score, 0);
   const max = axes.reduce((s, a) => s + a.max, 0);
   const pct = Math.round((total / max) * 100);

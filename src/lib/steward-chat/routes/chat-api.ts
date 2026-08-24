@@ -58,6 +58,8 @@ import { runValidateReport } from "../../../commands/validate.js";
 import { handleCashflowChatMessage } from "../../jp-bank-corporate/cashflow-chat-intent.js";
 import { handleOrgBudgetApi } from "./org-budget-api.js";
 import { handleOrgChartApi } from "./org-chart-api.js";
+import { handleAnalyticsApi } from "./analytics-api.js";
+import { handleOrchestrationApi } from "./orchestration-api.js";
 import { handleReceiptApi } from "./receipt-api.js";
 import { handleLlmApi } from "./llm-api.js";
 import { handleCommandApi } from "./command-api.js";
@@ -629,6 +631,10 @@ export async function handleChatApi(
   if (await handleOrgBudgetApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleOrgChartApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleAnalyticsApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleOrchestrationApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleReceiptApi(req, res, pathname, method, ctx.user))
     return true;

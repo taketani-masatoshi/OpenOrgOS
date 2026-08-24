@@ -5,6 +5,10 @@ export const queueEventTypeSchema = z.enum([
   "work_order_complete",
   "dispatch_requested",
   "dispatch_complete",
+  "dispatch_failed",
+  "work_order_retry",
+  "work_order_waiting",
+  "work_order_running",
   "webhook_received",
   "merge_complete",
   "pr_requested",
@@ -56,6 +60,8 @@ export const dispatchTaskSchema = z.object({
   mode: z
     .enum(["codex_cli", "codex_sdk", "cursor_sdk", "cursor_cloud", "manifest"])
     .default("manifest"),
+  attempt: z.number().int().positive().optional(),
+  trace_id: z.string().optional(),
 });
 
 export const dispatchManifestSchema = z.object({
@@ -68,6 +74,7 @@ export const dispatchManifestSchema = z.object({
   cursor_sdk_available: z.boolean().default(false),
   codex_cli_available: z.boolean().default(false),
   codex_sdk_available: z.boolean().default(false),
+  trace_id: z.string().optional(),
 });
 
 export type DispatchManifest = z.output<typeof dispatchManifestSchema>;

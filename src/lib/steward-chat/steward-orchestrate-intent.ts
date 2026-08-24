@@ -99,6 +99,7 @@ export function handleStewardOrchestrateChatMessage(
   const rows = (children.length ? children : result.workOrders).map(
     (w) => `- **${w.id}** → ${w.to_agent}（${w.status}）`
   );
+  const rootId = result.parent?.id ?? result.workOrders[0]?.id;
 
   return {
     handled: true,
@@ -109,12 +110,16 @@ export function handleStewardOrchestrateChatMessage(
       "",
       "Steward が **実在の Work Order** を起票しました（LLM の「委譲したふり」ではありません）。",
       "",
-      `**親:** ${result.parent?.id ?? result.workOrders[0]?.id}`,
+      `**親:** ${rootId}`,
       "**担当:**",
       ...rows,
       "",
+      children.length > 1
+        ? `DAG 進捗: \`orgos orchestrate status --id ${rootId}\`（wave · AIA run 含む）`
+        : `進捗: \`orgos orchestrate status --id ${rootId}\` または \`orgos escalate status --pending\``,
+      "",
       "完了後は「委譲と回答」受信箱に要約が届きます。",
-      `確認: \`orgos escalate status --pending\` · Path: \`docs/reports/routing-queue/\``,
+      `Path: \`docs/reports/routing-queue/\``,
       "",
       "経営向けの単純 KPI（契約本数・90日期限・解除窓 / バーン・ランウェイ / 従業員数）は起票せず即答できます。",
       "例:「契約本数を教えて」「従業員数は何人？」「Contract / 人事 に詳細を確認して」",

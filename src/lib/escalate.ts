@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import type { EscalationInput, Handoff, WorkOrderPlan } from "../../schemas/routing.js";
@@ -23,9 +23,10 @@ import {
 } from "./agent-portability.js";
 import { loadSkillRegistry } from "./skill-registry.js";
 import { getTenantId, setTenantId } from "./tenant.js";
-import { currentDate, writeYamlFile } from "./utils.js";
+import { currentDate, writeYamlFile, writeTrackedFile } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { createMissionFromWorkOrder, relayWorkOrderComplete } from "./agent-reporting.js";
+import { completeWorkOrderViaState } from "./orchestration/work-order-state.js";
 import { pushQueueEvent } from "./queue-db.js";
 import { assertActiveTenant, assertIntraOrgAgentTarget, assertIntraOrgText } from "./org-boundary.js";
 import { scopesForAgent } from "./org/delegation-scopes.js";
@@ -327,7 +328,7 @@ export function writeWorkOrderFiles(handoff: Handoff, matched?: MatchedRoute): {
   const yamlPath = join(dir, `${handoff.id}.yaml`);
   const mdPath = join(dir, `${handoff.id}.md`);
   writeYamlFile(yamlPath, handoff);
-  writeFileSync(mdPath, formatWorkOrderMarkdown(handoff, matched), "utf-8");
+  writeTrackedFile(mdPath, formatWorkOrderMarkdown(handoff, matched));
 
   if (handoff.task_type === "implement") {
     appendAuditEvent({
@@ -348,7 +349,7 @@ export function writeWorkOrderFiles(handoff: Handoff, matched?: MatchedRoute): {
   if (handoff.task_type === "implement" && handoff.agent_prompt_path) {
     promptPath = join(dir, handoff.agent_prompt_path);
     mkdirSync(join(dir, PROMPTS_SUBDIR), { recursive: true });
-    writeFileSync(promptPath, formatAgentImplementationPrompt(handoff), "utf-8");
+    writeTrackedFile(promptPath, formatAgentImplementationPrompt(handoff));
   }
 
   return { yamlPath, mdPath, promptPath };
@@ -500,7 +501,7 @@ function writeExecutiveSummary(
     ""
   );
 
-  writeFileSync(summaryPath, lines.join("\n"), "utf-8");
+  writeTrackedFile(summaryPath, lines.join("\n"));
   return summaryPath;
 }
 
@@ -521,7 +522,7 @@ export function regenerateWorkOrderPrompts(id: string): string[] {
 
   const promptPath = join(routingQueueDir(), handoff.agent_prompt_path ?? `${PROMPTS_SUBDIR}/${id}_${handoff.to_agent}.md`);
   mkdirSync(join(routingQueueDir(), PROMPTS_SUBDIR), { recursive: true });
-  writeFileSync(promptPath, formatAgentImplementationPrompt(handoff), "utf-8");
+  writeTrackedFile(promptPath, formatAgentImplementationPrompt(handoff));
   paths.push(promptPath);
   return paths;
 }
@@ -533,20 +534,7 @@ export function listWorkOrders(filter?: "pending" | "blocked" | "all"): Handoff[
 }
 
 export function completeWorkOrder(id: string, notes?: string): Handoff {
-  const handoff = loadHandoff(id);
-  const updated = handoffSchema.parse({
-    ...handoff,
-    status: "completed",
-    completion_notes: notes,
-  });
-  writeWorkOrderFiles(updated);
-  pushQueueEvent({
-    type: "work_order_complete",
-    ref: updated.id,
-    payload: { agent: updated.to_agent },
-  });
-  relayWorkOrderComplete(updated, notes);
-  return updated;
+  return completeWorkOrderViaState(id, notes);
 }
 
 export function formatPlanOutput(plan: WorkOrderPlan, dryRun: boolean): string {

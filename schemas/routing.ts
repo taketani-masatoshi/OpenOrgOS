@@ -51,6 +51,26 @@ export const handoffInvocationStatusSchema = z.enum([
   "human_approval",
 ]);
 
+export const handoffStatusSchema = z.enum([
+  "pending",
+  "waiting",
+  "dispatched",
+  "running",
+  "completed",
+  "failed",
+  "blocked",
+]);
+
+export const workOrderDispatchSchema = z.object({
+  attempts: z.number().int().nonnegative().default(0),
+  max_attempts: z.number().int().positive().default(2),
+  last_run_id: z.string().optional(),
+  last_error: z.string().optional(),
+  started_at: z.string().optional(),
+  finished_at: z.string().optional(),
+  trace_id: z.string().optional(),
+});
+
 export const handoffInvocationSchema = z.object({
   decision: handoffExecutionDecisionSchema,
   status: handoffInvocationStatusSchema,
@@ -84,8 +104,10 @@ export const handoffSchema = z.object({
     text: z.string().optional(),
     path: z.string().optional(),
   }),
-  status: z.enum(["pending", "dispatched", "completed", "blocked"]),
+  status: handoffStatusSchema,
   notes: z.string().optional(),
+  depends_on: z.array(z.string()).default([]),
+  dispatch: workOrderDispatchSchema.optional(),
   /** implement work order fields */
   subject: z.string().optional(),
   background: z.string().optional(),
@@ -101,6 +123,8 @@ export const handoffSchema = z.object({
   invocation: handoffInvocationSchema.optional(),
 });
 
+export type HandoffStatus = z.output<typeof handoffStatusSchema>;
+export type WorkOrderDispatch = z.output<typeof workOrderDispatchSchema>;
 export type TaskType = z.output<typeof taskTypeSchema>;
 export type HandoffMode = z.output<typeof handoffModeSchema>;
 export type HandoffInvocation = z.output<typeof handoffInvocationSchema>;

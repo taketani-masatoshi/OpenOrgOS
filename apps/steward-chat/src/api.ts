@@ -236,8 +236,11 @@ export interface AuthConfig {
     credential_count: number;
     settlement_count?: number;
     registration_allowed?: boolean;
+    settlement_registration_allowed?: boolean;
+    additional_login_registration_allowed?: boolean;
     login_registration_requires_session?: boolean;
     login_registration_bootstrap?: boolean;
+    bootstrap_token_required?: boolean;
     approve_origin?: string;
     origin?: string;
   };
@@ -1265,6 +1268,102 @@ export function receiptPdfUrl(receiptId: string): string {
 export async function fetchOrgBudget(fy?: string): Promise<OrgBudgetPayload> {
   const query = fy?.trim() ? `?fy=${encodeURIComponent(fy.trim())}` : "";
   return chatApi<OrgBudgetPayload>(`/chat/v1/org/budget${query}`);
+}
+
+export interface AnalyticsKpiRow {
+  metric: {
+    id: string;
+    title: string;
+    category: string;
+    unit: string;
+    owner_agent: string;
+  };
+  actual: {
+    formatted: string;
+    value: number | null;
+  };
+  target_value: number | null;
+  rag: "green" | "amber" | "red" | "unknown";
+  delta: number | null;
+  delta_pct: number | null;
+  prev_value: number | null;
+  mom_delta: number | null;
+  mom_delta_pct: number | null;
+}
+
+export interface AnalyticsDashboardPayload {
+  view_model: {
+    title: string;
+    summary?: string;
+    report_date: string;
+    sections: Array<
+      | { type: "stats"; items: Array<{ value: string; label: string; tone?: string }> }
+      | { type: "bars"; title?: string; categories: string[]; series: Array<{ name: string; values: number[] }> }
+      | { type: "table"; title?: string; headers: string[]; rows: unknown[][] }
+    >;
+  };
+  kpi: {
+    fiscal_year: string;
+    as_of: string;
+    rows: AnalyticsKpiRow[];
+    summary: { green: number; amber: number; red: number; unknown: number };
+  };
+  data_quality_overall: number;
+}
+
+export async function fetchAnalyticsDashboard(): Promise<AnalyticsDashboardPayload> {
+  return chatApi<AnalyticsDashboardPayload>("/chat/v1/analytics/dashboard");
+}
+
+export interface OrchestrationRunNode {
+  id: string;
+  agent: string;
+  status: string;
+  depends_on: string[];
+  wave: number;
+  aia?: {
+    run_id: string;
+    state: string;
+    fail_reason?: string;
+  };
+}
+
+export interface OrchestrationRunPayload {
+  ok?: boolean;
+  rootId: string;
+  nodeCount: number;
+  waveCount: number;
+  readyCount: number;
+  blockedByFailureCount: number;
+  aia: {
+    tier: string;
+    max_concurrent: number;
+    running: number;
+    queued: number;
+  };
+  nodes: OrchestrationRunNode[];
+  aia_runs: Array<{
+    run_id: string;
+    work_order_id?: string;
+    agent_id: string;
+    state: string;
+    fail_reason?: string;
+  }>;
+  blocked_downstream: Array<{ id: string; agent: string; status: string }>;
+}
+
+export interface OrchestrationRunsListPayload {
+  ok: boolean;
+  active_roots: string[];
+  count: number;
+}
+
+export async function fetchOrchestrationRuns(): Promise<OrchestrationRunsListPayload> {
+  return chatApi<OrchestrationRunsListPayload>("/chat/v1/orchestration/runs");
+}
+
+export async function fetchOrchestrationRun(id: string): Promise<OrchestrationRunPayload> {
+  return chatApi<OrchestrationRunPayload>(`/chat/v1/orchestration/runs?id=${encodeURIComponent(id)}`);
 }
 
 export async function setOrgCompanyBudget(body: {

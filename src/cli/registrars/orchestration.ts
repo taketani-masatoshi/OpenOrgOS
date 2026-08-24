@@ -14,6 +14,13 @@ import {
   runEscalateMerge,
 } from "../../commands/escalate.js";
 import {
+  runOrchestrateCancel,
+  runOrchestratePlan,
+  runOrchestrateRetry,
+  runOrchestrateRun,
+  runOrchestrateStatus,
+} from "../../commands/orchestrate.js";
+import {
   runAgentDispatchPlan,
   runAgentDispatchRun,
   runAgentCloudConfig,
@@ -329,6 +336,100 @@ export function registerOrchestrationCommands(program: Command): void {
     .action((opts) =>
       runEscalateMerge({ id: opts.id, output: opts.output, autoComplete: opts.autoComplete })
     );
+
+  const orchestrateCmd = program.command("orchestrate").description("Executive Steward work order DAG orchestration");
+  orchestrateCmd
+    .command("plan")
+    .description("Plan multi-agent work orders + optional DAG dependencies (dry-run default)")
+    .option("--text <text>", "Request or structured escalation input")
+    .option("--path <path>", "Resource path for route match")
+    .option("--subject <text>", "Work order subject")
+    .option("--background <text>", "Background context")
+    .option("--requirements <text>", "Implementation requirements")
+    .option("--deliverable <d>", "Deliverable (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--acceptance <c>", "Acceptance criterion (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--priority <p>", "P0 | P1 | P2 | P3")
+    .option("--depends <spec>", "Dependency CHILD:PARENT (repeatable)", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--propose", "P1: propose plan with validation envelope (dry-run)")
+    .option("--write", "Create work orders and persist --depends (requires escalate:run)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--dry-run", "Plan only (default)", true)
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runOrchestratePlan({
+        text: opts.text,
+        path: opts.path,
+        subject: opts.subject,
+        background: opts.background,
+        requirements: opts.requirements,
+        deliverables: opts.deliverable,
+        acceptance: opts.acceptance,
+        priority: opts.priority,
+        depends: opts.depends,
+        tenant: opts.tenant,
+        dryRun: opts.dryRun,
+        write: opts.write,
+        propose: opts.propose,
+        json: opts.json,
+      })
+    );
+  orchestrateCmd
+    .command("run")
+    .description("Create (optional) and execute work orders in dependency wave order")
+    .option("--id <id>", "Existing parent or child IMP id")
+    .option("--text <text>", "Create plan from text when --id omitted")
+    .option("--path <path>", "Resource path")
+    .option("--subject <text>", "Subject")
+    .option("--background <text>", "Background")
+    .option("--requirements <text>", "Requirements")
+    .option("--deliverable <d>", "Deliverable", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--acceptance <c>", "Acceptance criterion", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--priority <p>", "P0 | P1 | P2 | P3")
+    .option("--depends <spec>", "Dependency CHILD:PARENT", (v: string, prev: string[]) => [...prev, v], [] as string[])
+    .option("--from <agent>", "Source agent", "executive_steward")
+    .option("--parallel <n>", "Max parallel agents per wave", "3")
+    .option("--runtime <mode>", "local | cloud | manifest")
+    .option("--wave <n>", "Run only wave N (1-indexed); omit for all waves")
+    .option("--retry-failed", "Retry failed nodes before dispatch")
+    .option("--dry-run", "Plan manifest only")
+    .option("--tenant <id>", "Tenant id")
+    .action(async (opts) =>
+      runOrchestrateRun({
+        id: opts.id,
+        text: opts.text,
+        path: opts.path,
+        subject: opts.subject,
+        background: opts.background,
+        requirements: opts.requirements,
+        deliverables: opts.deliverable,
+        acceptance: opts.acceptance,
+        priority: opts.priority,
+        depends: opts.depends,
+        from: opts.from,
+        parallel: opts.parallel ? Number(opts.parallel) : undefined,
+        runtime: opts.runtime,
+        wave: opts.wave ? Number(opts.wave) : undefined,
+        retryFailed: opts.retryFailed,
+        dryRun: opts.dryRun,
+        tenant: opts.tenant,
+      })
+    );
+  orchestrateCmd
+    .command("status")
+    .description("Show DAG, status, attempts, and trace for a plan")
+    .requiredOption("--id <id>", "Parent or child IMP id")
+    .option("--json", "JSON output")
+    .action((opts) => runOrchestrateStatus({ id: opts.id, json: opts.json }));
+  orchestrateCmd
+    .command("retry")
+    .description("Reset retryable failed work orders to pending")
+    .requiredOption("--id <id>", "Parent or child IMP id")
+    .action((opts) => runOrchestrateRetry({ id: opts.id }));
+  orchestrateCmd
+    .command("cancel")
+    .description("Block pending/waiting work orders in a plan")
+    .requiredOption("--id <id>", "Parent or child IMP id")
+    .action((opts) => runOrchestrateCancel({ id: opts.id }));
 
   const agentCmd = program.command("agent").description("Agent parallel dispatch (Phase 2)");
   const agentDispatchCmd = agentCmd.command("dispatch").description("Dispatch work orders");
@@ -1868,6 +1969,33 @@ export function registerOrchestrationCommands(program: Command): void {
     );
 
   const orgCmd = program.command("org").description("Universal org activity root (approval · audit bridge)");
+  const orgChartCmd = orgCmd.command("chart").description("Org chart (OCH proposals)");
+  const orgChartChangeCmd = orgChartCmd.command("change").description("Org chart change proposals");
+  orgChartChangeCmd
+    .command("validate")
+    .description("Validate OCH proposal file(s)")
+    .option("--file <path>", "Single proposal YAML")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOrgChartChangeValidate } = await import("../../commands/org-chart-change.js");
+      runOrgChartChangeValidate({ file: opts.file, json: opts.json });
+    });
+  orgChartChangeCmd
+    .command("apply")
+    .description("Apply approved OCH proposal to org-chart.yaml")
+    .requiredOption("--file <path>", "Proposal YAML")
+    .requiredOption("--operator <id>", "Operator applying the change")
+    .option("--dry-run", "Compute hashes without writing")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOrgChartChangeApply } = await import("../../commands/org-chart-change.js");
+      runOrgChartChangeApply({
+        file: opts.file,
+        operator: opts.operator,
+        dryRun: Boolean(opts.dryRun),
+        json: opts.json,
+      });
+    });
   const orgApprovalCmd = orgCmd.command("approval").description("Internal human approval (scope: internal)");
   orgApprovalCmd
     .command("propose")

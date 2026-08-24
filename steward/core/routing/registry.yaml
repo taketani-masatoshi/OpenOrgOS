@@ -5,6 +5,268 @@ version: "1"
 as_of: "2026-06-08"
 
 routes:
+  - id: workspace-validate
+    description: YAML 検証 · validate
+    agent: executive_steward
+    skill: workspace_validate
+    priority: 72
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - validate
+        - 検証して
+        - バリデーション
+        - YAML検証
+        - 整合チェック
+      paths: []
+
+  - id: workspace-doctor
+    description: doctor 診断
+    agent: executive_steward
+    skill: workspace_doctor
+    priority: 68
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - doctor
+        - 診断
+        - 本番ゲート
+        - インストール確認
+      paths: []
+
+  - id: deps-check
+    description: 依存グラフ整合
+    agent: operations
+    skill: deps_check
+    priority: 64
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - deps check
+        - 依存チェック
+        - 依存グラフ
+        - impact
+      paths: []
+
+  - id: integrations-status
+    description: 外部連携ステータス
+    agent: setup
+    skill: integrations_status
+    priority: 60
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - integrations
+        - 連携ステータス
+        - 連携状況
+        - Gmail設定
+      paths: []
+
+  - id: integration-brief
+    description: Integration Agent 未読 module-message ブリーフ
+    agent: integration
+    skill: integration_brief
+    priority: 59
+    resource_paths:
+      - data/org/module-messages/
+    match:
+      keywords:
+        - integration brief
+        - 連携ブリーフ
+        - module message
+        - モジュールメッセージ
+      paths: []
+
+  - id: agent-pulse
+    description: Agent pulse サマリ
+    agent: executive_steward
+    skill: agent_pulse_summary
+    priority: 58
+    resource_paths:
+      - docs/reports/dashboard/
+    match:
+      keywords:
+        - agent pulse
+        - パルス
+        - エージェント要約
+      paths:
+        - docs/reports/agent-summaries/
+
+  - id: executive-dashboard
+    description: 経営ダッシュボード生成
+    agent: executive_steward
+    skill: executive_dashboard
+    priority: 74
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - ダッシュボード
+        - dashboard
+        - 経営ダッシュボード生成
+      paths:
+        - docs/reports/dashboard/
+
+  - id: hr-headcount
+    description: 在籍人員
+    agent: human_resources
+    skill: hr_headcount
+    priority: 76
+    resource_paths:
+      - data/hr/
+    match:
+      keywords:
+        - 在籍人員
+        - 従業員数
+        - 従業員の数
+        - 社員数
+        - headcount
+      paths:
+        - data/hr/
+
+  - id: tenant-config-propose
+    description: テナント設定変更の提案
+    agent: executive_steward
+    skill: tenant_config_propose
+    priority: 74
+    resource_paths:
+      - standards.yaml
+      - modules.yaml
+    match:
+      keywords:
+        - ISMS
+        - ISO-27001
+        - 情報セキュリティを有効
+        - 標準を有効
+        - モジュールを有効
+        - tenant-config
+      paths:
+        - standards.yaml
+        - modules.yaml
+
+  - id: cashflow-forecast
+    description: CF 予測
+    agent: finance
+    skill: cashflow_forecast
+    priority: 66
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - CF予測
+        - キャッシュフロー予測
+        - forecast
+      paths:
+        - data/finance/
+
+  - id: contract-register
+    description: 契約台帳サマリ
+    agent: contract
+    skill: contract_register
+    priority: 67
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 契約台帳
+        - 契約一覧
+        - contract register
+      paths:
+        - data/contracts/
+
+  - id: p0-closing
+    description: P0 ブロッカー
+    agent: executive_steward
+    skill: p0_closing
+    priority: 73
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - P0
+        - ブロッカー
+        - 決算前
+      paths: []
+
+  - id: escalate-work-order
+    description: Work Order 起票
+    agent: executive_steward
+    skill: escalate_work_order
+    priority: 55
+    resource_paths:
+      - docs/reports/routing-queue/
+    match:
+      keywords:
+        - Work Order起票
+        - escalate run
+        - エスカレーション実行
+      paths:
+        - docs/reports/routing-queue/
+
+  - id: orchestration-status
+    description: オーケストレーション DAG / 進捗
+    agent: executive_steward
+    skill: orchestration_status
+    priority: 54
+    boundary: executive_summaries
+    resource_paths:
+      - docs/reports/routing-queue/
+    match:
+      keywords:
+        - オーケストレーション
+        - orchestrate status
+        - 並列進捗
+        - DAG
+        - Work Order進捗
+      paths:
+        - docs/reports/routing-queue/
+
+  - id: broker-transfer-gate
+    description: 振込実行（人間ゲート）
+    agent: finance
+    skill: broker_transfer_gate
+    priority: 90
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - 振込実行
+        - broker transfer
+        - 送金実行
+      paths: []
+
+  - id: wire-send-gate
+    description: Wire 送信（人間ゲート）
+    agent: secretary
+    skill: wire_send_gate
+    priority: 90
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - wire送信
+        - Wireを送信
+        - wire send
+      paths: []
+
+  - id: org-approval-gate
+    description: 組織承認（人間ゲート）
+    agent: executive_steward
+    skill: org_approval_gate
+    priority: 88
+    resource_paths:
+      - data/company.yaml
+    match:
+      keywords:
+        - 承認を実行
+        - org approval approve
+        - 稟議承認
+      paths: []
+
   - id: contract-expiry
     description: 契約期限・更新アラート
     agent: contract
@@ -330,6 +592,7 @@ routes:
   - id: sales-pipeline
     description: 営業 · 見積 · パイプライン
     agent: sales_lead
+    skill: sales_pipeline_review
     priority: 72
     resource_paths:
       - data/company.yaml
@@ -344,9 +607,27 @@ routes:
         - docs/sales/
         - data/sales/
 
+  - id: sales-forecast
+    description: 営業 · 受注予測
+    agent: sales_lead
+    skill: sales_forecast_prep
+    priority: 71
+    resource_paths:
+      - data/sales/
+    match:
+      keywords:
+        - 受注予測
+        - 売上予測
+        - フォーキャスト
+        - forecast
+      paths:
+        - docs/sales/
+        - data/sales/
+
   - id: sales-outbound
     description: 新規開拓 · アウトバウンド
     agent: sales_outbound
+    skill: sales_outbound_list_review
     priority: 68
     resource_paths:
       - data/company.yaml
@@ -405,7 +686,42 @@ routes:
         - 解約
         - オンボーディング
       paths:
-        - docs/customer-success/
+        - docs/customers/
+        - data/customers/
+
+  - id: customer-success-health
+    description: 顧客ヘルススコア · ドリフト
+    agent: customer_success
+    skill: cs_health_check
+    priority: 69
+    resource_paths:
+      - data/customers/
+    match:
+      keywords:
+        - 顧客ヘルス
+        - ヘルススコア
+        - health score
+        - 利用状況
+      paths:
+        - docs/customers/
+        - data/customers/
+
+  - id: customer-success-renewal
+    description: 更新期日 · 解約リスク
+    agent: customer_success
+    skill: cs_renewal_risk
+    priority: 68
+    resource_paths:
+      - data/customers/
+    match:
+      keywords:
+        - 更新期日
+        - 更新リスク
+        - 解約リスク
+        - renewal
+      paths:
+        - docs/customers/
+        - data/customers/
 
   - id: legal-teikan
     description: 法務 · 定款 · 登記ドラフト
@@ -554,6 +870,23 @@ routes:
         - data/company-events.yaml
         - docs/company/events/
 
+  - id: company-events-weekly-attest
+    description: 会社イベント週次バッチ署名 · チェーン attestation
+    agent: records_audit
+    skill: company_events_weekly_attest
+    priority: 82
+    resource_paths:
+      - data/company-events-attestations.jsonl
+      - data/company-events-chain.jsonl
+    match:
+      keywords:
+        - 週次署名
+        - バッチ署名
+        - attestation
+        - 記録監査
+      paths:
+        - data/company-events-attestations.jsonl
+
   - id: company-events-monthly-audit
     description: 会社イベント月次監査 · 週次署名確認
     agent: records_audit
@@ -576,7 +909,8 @@ routes:
     agent: human_resources
     priority: 78
     resource_paths:
-      - data/company.yaml
+      - data/hr/employees.yaml
+      - data/hr/
     match:
       keywords:
         - 人事
@@ -584,6 +918,11 @@ routes:
         - 社保
         - 就業規則
         - 36協定
+        - 従業員
+        - 社員
+        - 人員
+        - 在籍
+        - headcount
       paths:
         - data/hr/
         - docs/company/hr/
@@ -605,8 +944,9 @@ routes:
         - docs/company/
 
   - id: accounting-ops
-    description: 経理 · 請求 · 支払
+    description: 経理 · 請求 · 支払 · 経費精算
     agent: accounting
+    skill: expense_claim_ops
     priority: 71
     resource_paths:
       - data/company.yaml
@@ -617,6 +957,9 @@ routes:
         - 仕訳
         - 経理
         - インボイス
+        - 経費精算
+        - 精算
+        - expense
       paths:
         - docs/finance/accounting/
 
@@ -636,6 +979,75 @@ routes:
         - e-Tax
       paths:
         - docs/company/tax/
+
+  - id: jp-corporate-tax
+    description: 法人税申告書準備
+    agent: tax
+    skill: jp_corporate_tax_return
+    priority: 72
+    resource_paths:
+      - data/finance/tax-profile.yaml
+    match:
+      keywords:
+        - 法人税申告
+        - 別表
+        - 決算申告
+      paths:
+        - docs/company/tax/
+
+  - id: jp-consumption-tax
+    description: 消費税申告準備
+    agent: tax
+    skill: jp_consumption_tax_return
+    priority: 71
+    resource_paths:
+      - data/finance/tax-profile.yaml
+    match:
+      keywords:
+        - 消費税申告
+        - 課税売上
+        - インボイス免税
+      paths:
+        - docs/company/tax/
+
+  - id: jp-invoice-registration
+    description: インボイス登録 · T 番号
+    agent: tax
+    skill: jp_invoice_registration
+    priority: 70
+    resource_paths:
+      - data/finance/tax-profile.yaml
+    match:
+      keywords:
+        - インボイス登録
+        - T番号
+        - 適格請求書発行事業者
+
+  - id: jp-qualified-invoice
+    description: 適格請求書発行チェック
+    agent: tax
+    skill: jp_qualified_invoice_issue
+    priority: 69
+    resource_paths:
+      - data/finance/tax-profile.yaml
+    match:
+      keywords:
+        - 適格請求書
+        - 請求書登録番号
+
+  - id: jp-withholding-payment
+    description: 源泉徴収 · 法定調書
+    agent: tax
+    skill: jp_withholding_payment
+    priority: 68
+    resource_paths:
+      - data/finance/payroll.yaml
+    match:
+      keywords:
+        - 源泉徴収
+        - 法定調書
+        - 支払調書
+        - 年末調整
 
   - id: procurement-order
     description: 購買 · 調達 · 稟議
@@ -686,17 +1098,65 @@ routes:
   - id: pmo-project
     description: PMO · 案件進捗
     agent: project_management
+    skill: pmo_portfolio
     priority: 63
     resource_paths:
-      - data/company.yaml
+      - data/projects/
+      - docs/projects/
     match:
       keywords:
         - PMO
-        - 案件
-        - WBS
+        - 案件状況
+        - 案件進捗
+        - ポートフォリオ
         - 進捗報告
+        - RAG
       paths:
+        - data/projects/
         - docs/projects/
+
+  - id: pmo-milestones
+    description: PMO · マイルストーン期限
+    agent: project_management
+    skill: pm_milestone_tracking
+    priority: 67
+    resource_paths:
+      - data/projects/
+    match:
+      keywords:
+        - マイルストーン
+        - 期限超過
+        - 期限間近
+      paths:
+        - data/projects/
+
+  - id: pmo-risks
+    description: PMO · open リスク
+    agent: project_management
+    skill: pmo_risks
+    priority: 67
+    resource_paths:
+      - data/projects/
+    match:
+      keywords:
+        - 案件リスク
+        - プロジェクトリスク
+      paths:
+        - data/projects/
+
+  - id: pmo-show
+    description: PMO · 1 案件
+    agent: project_management
+    skill: pmo_show
+    priority: 68
+    resource_paths:
+      - data/projects/
+    match:
+      keywords:
+        - 案件詳細
+        - PRJ-
+      paths:
+        - data/projects/
 
   - id: cto-architecture
     description: 技術方針 · アーキテクチャ · 設計判断
@@ -792,12 +1252,35 @@ routes:
   - id: data-analytics
     description: データ分析 · KPI 深掘り
     agent: data_analytics
+    skill: analytics_kpi_scorecard
     priority: 62
     resource_paths:
       - data/analytics/
     match:
-      keywords: [分析, KPI, ダッシュボード]
-      paths: [docs/analytics/]
+      keywords: [分析, KPI, ダッシュボード, スコアカード, メトリクス, 指標, analytics, scorecard]
+      paths: [data/analytics/, docs/analytics/]
+
+  - id: analytics-metric-catalog
+    description: メトリクス定義カタログ
+    agent: data_analytics
+    skill: analytics_metric_catalog
+    priority: 61
+    resource_paths:
+      - data/analytics/
+    match:
+      keywords: [メトリクスカタログ, 指標定義, metrics.yaml, カタログ]
+      paths: [data/analytics/]
+
+  - id: analytics-data-quality
+    description: データ品質レポート
+    agent: data_analytics
+    skill: analytics_data_quality
+    priority: 60
+    resource_paths:
+      - data/analytics/
+    match:
+      keywords: [データ品質, 品質スコア, data health, データ健全性]
+      paths: [data/analytics/, docs/analytics/]
 
   - id: devops-ops
     description: DevOps · CI/CD · 監視
