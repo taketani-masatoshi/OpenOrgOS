@@ -11,9 +11,13 @@
 cd /path/to/OS_Steward
 export ORGOS_TENANT=<tenant-id>
 npm run passkey:field-check -- --url https://<公開ホスト>
+# 公開後（operator.oorgos.org）— 自動項目 #1/#4/#5 をログ表へ追記:
+npm run passkey:field-check -- --url https://operator.oorgos.org --record --operator <operator-id>
 # または
-orgos operator passkey-bootstrap field-check --url https://<公開ホスト>
+orgos operator passkey-bootstrap field-check --url https://operator.oorgos.org --record --operator <operator-id>
 ```
+
+**HTTPS 公開手順:** [operator-console-https-runbook.md](operator-console-https-runbook.md) · Community 側 DNS/Tunnel: `OS_Community/docs/oorgos-subdomain-setup.md` 付録 operator
 
 | チェック | 内容 |
 |----------|------|
@@ -50,6 +54,9 @@ orgos operator passkey-bootstrap field-check --url https://<公開ホスト>
 | prod auth checklist (wire smoke env) | vitest `passkey-prod-readiness.test.ts` | Pass |
 | registry approver 解決 · settlement 登録権限 | vitest `webauthn-register-gate.test.ts` | Pass |
 | bootstrap consume 失敗時に credential を残さない（ADR 0041 fail-closed） | vitest `passkey-bootstrap-http.test.ts` | Pass |
+| 設定 `/settings` credentials 再取得なし（Wire / Steward · mount 後 5 秒） | Playwright `passkey-settings-stability.smoke.spec.ts` · `steward-chat-webauthn.smoke.spec.ts` | Pass |
+| 127.0.0.1 → localhost リダイレクト（設定 · banner のみ） | Playwright `passkey-settings-stability.smoke.spec.ts` | Pass |
+| settlement 登録中 `data-busy` + disabled（Wire / Steward） | Playwright `wire-console-settlement-stepup.smoke.spec.ts` · `steward-chat-webauthn.smoke.spec.ts` | Pass |
 
 CI: `passkey-ui-smoke` job（`.github/workflows/validate.yml`）が `npm run passkey:ui-smoke` を実行し、
 prod 系 vitest は `security-rbac` job でも個別に走る。
@@ -73,11 +80,11 @@ npx vitest run \
 
 | # | 項目 | ホスト | 実施日 | 結果 | 担当 |
 |---|------|--------|--------|------|------|
-| 1 | HTTPS 本番 Origin で初回 login 鍵登録（bootstrap token + SSO） | | | | |
-| 2 | 登録後 Touch ID / platform 鍵で再ログイン | | | | |
-| 3 | iPhone hybrid 決済鍵（ADR 0037） | | | | |
-| 4 | credential ファイル mode 0600 確認 | | | | |
-| 5 | `orgos doctor` prod auth checks 全緑 | | | | |
+| 1 | HTTPS 本番 Origin で初回 login 鍵登録（bootstrap token + SSO） | operator.oorgos.org（公開後） | | `--record` で自動 | |
+| 2 | 登録後 Touch ID / platform 鍵で再ログイン | operator.oorgos.org | | 要手動 | |
+| 3 | iPhone hybrid 決済鍵（ADR 0037） | operator.oorgos.org | | 要手動 | |
+| 4 | credential ファイル mode 0600 確認 | operator.oorgos.org | | `--record` で自動 | |
+| 5 | `orgos doctor` prod auth checks 全緑 | operator.oorgos.org | | `--record` で自動 | |
 
 ## 関連
 

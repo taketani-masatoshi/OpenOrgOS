@@ -12,6 +12,7 @@ export default defineConfig({
   use: {
     baseURL: webauthnBaseUrl,
     trace: "off",
+    locale: "ja-JP",
   },
   webServer: process.env.STEWARD_CHAT_WEBAUTHN_BASE_URL
     ? undefined

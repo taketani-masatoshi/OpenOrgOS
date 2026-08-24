@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
   installHybridVirtualAuthenticator,
-  installSettlementVirtualCredential,
   installWebAuthnVirtualCredential,
 } from "./helpers/webauthn-smoke";
 
@@ -9,8 +8,7 @@ test.describe("wire console settlement step-up smoke", () => {
   test("approves tier B wire notice with settlement PassKey ceremony", async ({ page }) => {
     await page.goto("about:blank");
     await installWebAuthnVirtualCredential(page);
-    const hybridAuthenticatorId = await installHybridVirtualAuthenticator(page);
-    await installSettlementVirtualCredential(page, hybridAuthenticatorId);
+    await installHybridVirtualAuthenticator(page);
     await page.goto("/");
 
     await expect(page.getByRole("button", { name: "Touch ID で入る" })).toBeVisible();
@@ -20,6 +18,16 @@ test.describe("wire console settlement step-up smoke", () => {
       "page",
       { timeout: 15_000 },
     );
+
+    await page.goto("/settings/");
+    await page.getByRole("button", { name: /^iPhone で登録$|^別の iPhone で登録$/ }).click();
+    await expect(page.locator(".passkey-manage-panel[data-busy='true']")).toBeVisible({
+      timeout: 5_000,
+    });
+    await expect(page.getByRole("button", { name: /^iPhone で登録$|^別の iPhone で登録$/ })).toBeDisabled();
+    await expect(page.getByRole("cell", { name: "iPhone（決済）" })).toBeVisible({
+      timeout: 20_000,
+    });
 
     await page.goto("/");
     await Promise.all([
@@ -43,6 +51,7 @@ test.describe("wire console settlement step-up smoke", () => {
     await expect(page.locator(".message-reader h2")).toContainText("支払いの指示", {
       timeout: 15_000,
     });
+    await page.locator(".message-reader").getByLabel("共同承認者（tier B）").selectOption("テスト承認者");
     await page.locator(".message-reader").getByRole("button", { name: "承認" }).click();
 
     await expect(page.getByRole("heading", { name: "iPhone の PassKey で承認" })).toBeVisible({

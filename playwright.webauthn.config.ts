@@ -9,14 +9,16 @@ export default defineConfig({
   testMatch: [
     "wire-console-settlement-stepup.smoke.spec.ts",
     "wire-console-webauthn.smoke.spec.ts",
-    "wire-console-settlement-passkey.smoke.spec.ts",
     "passkey-settings-handoff.smoke.spec.ts",
+    "passkey-settings-stability.smoke.spec.ts",
+    "wire-console-z-settlement-passkey.smoke.spec.ts",
   ],
   timeout: 60_000,
   workers: 1,
   use: {
     baseURL: webauthnBaseUrl,
     trace: "off",
+    locale: "ja-JP",
   },
   webServer: process.env.WIRE_CONSOLE_WEBAUTHN_BASE_URL
     ? undefined

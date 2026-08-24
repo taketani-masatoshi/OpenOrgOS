@@ -17,6 +17,7 @@
     "steward": "node --import tsx src/cli.ts",
     "validate": "node --import tsx src/cli.ts validate",
     "validate:demo": "node --import tsx src/cli.ts --tenant demo validate",
+    "check:canonical-writes": "node --import tsx scripts/check-canonical-writes.ts",
     "check": "npm run validate && npm run check:canonical-writes && npm run orgos -- --tenant demo validate && npm run orgos -- --tenant demo events validate && npm run orgos -- --tenant acme validate && npm run orgos -- --tenant us-demo validate && npm run orgos -- --tenant sg-demo validate && npm run orgos -- --tenant ee-demo validate && npm run orgos -- --tenant hk-demo validate && npm run orgos -- --tenant au-demo validate && npm run orgos -- --tenant tw-demo validate && npm run orgos -- --tenant my-demo validate && npm run orgos -- --tenant cn-demo validate && npm run orgos -- --tenant ae-demo validate && npm run orgos -- --tenant ru-demo validate && npm run orgos -- --tenant eu-demo validate && npm run validate:protocol:tenants && npm run orgos -- modules check --all && npm run orgos -- classification check && npm run agent:pipeline:check",
     "validate:protocol:tenants": "node --import tsx scripts/validate-protocol-tenants.ts",
     "daily": "npm run check && npm run orgos -- pipeline run daily",
@@ -33,6 +34,8 @@
     "agent:roster:bootstrap:check": "node --import tsx scripts/bootstrap-tenant-rosters.ts",
     "agent:roster:repair-core": "node --import tsx scripts/repair-core-operational-rosters.ts --write",
     "agent:pipeline:check": "node --import tsx scripts/agent-pipeline-check.ts",
+    "jp:catalog:sync": "node scripts/sync-jp-business-capability-catalog.mjs --write",
+    "jp:catalog:check": "node scripts/sync-jp-business-capability-catalog.mjs",
     "skill:dispatch:check": "node --import tsx scripts/skill-dispatch-check.ts",
     "agent:roster:fixtures:sync": "node --import tsx scripts/sync-tenant-roster-fixtures.ts --bootstrap --write",
     "agent:roster:fixtures:check": "node --import tsx scripts/sync-tenant-roster-fixtures.ts",
@@ -90,11 +93,10 @@
     "prod:verify": "node --import tsx scripts/prod-verify-operator-console.ts",
     "settlement-passkey:verify": "node --import tsx scripts/settlement-passkey-verify.ts",
     "passkey:field-check": "node --import tsx scripts/passkey-field-check.ts",
-    "passkey:ui-smoke": "npm run wire-console:build && npm run steward-chat:build && playwright test --config=playwright.steward-chat-webauthn.config.ts && playwright test e2e/passkey-settings-handoff.smoke.spec.ts e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test --config=playwright.webauthn-bootstrap.config.ts",
+    "passkey:ui-smoke": "npm run wire-console:build && npm run steward-chat:build && playwright test --config=playwright.steward-chat-webauthn.config.ts && playwright test e2e/passkey-settings-handoff.smoke.spec.ts e2e/passkey-settings-stability.smoke.spec.ts e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test --config=playwright.webauthn-bootstrap.config.ts",
     "package:publish-check": "node scripts/package-publish-check.mjs",
     "build:package": "node scripts/build-orgos-package.mjs",
-    "package:pack": "npm run build:package && npm pack -w @orgos/cli",
-    "check:canonical-writes": "node --import tsx scripts/check-canonical-writes.ts"
+    "package:pack": "npm run build:package && npm pack -w @orgos/cli"
   },
   "dependencies": {
     "@independentsoft/msg": "^1.0.2",

@@ -5,6 +5,7 @@ import {
   startStewardChatServer,
   STEWARD_CHAT_SPA_DIST,
 } from "../src/lib/steward-chat/server.js";
+import { WIRE_CONSOLE_TEST_TENANT } from "../tests/helpers/wire-console-test-fixture.js";
 import { writeWireConsoleWebAuthnSmokeFixture } from "../tests/helpers/wire-console-webauthn-e2e-fixture.js";
 
 async function main(): Promise<void> {
@@ -13,6 +14,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  process.env.ORGOS_TENANT = WIRE_CONSOLE_TEST_TENANT;
   process.env.WIRE_CONSOLE_AUTH = "prod";
   process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
   process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "localhost";
@@ -23,6 +25,9 @@ async function main(): Promise<void> {
   delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
   delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
   process.env.STEWARD_CHAT_AUTH = "1";
+  process.env.ORGOS_SETTLEMENT_STEPUP = "1";
+  process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET =
+    "steward-chat-webauthn-smoke-settlement-secret";
   process.env.ORGOS_CSRF = "0";
   process.env.ORGOS_RATE_LIMIT = "0";
 
