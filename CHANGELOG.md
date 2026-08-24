@@ -13,6 +13,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 - `openorgos-engineering-constitution.md` を索引専用に整理
+- `tax-filing-gaps.yaml` を他の finance overlay と同様に任意ファイルとして validate する
+- `tenants/*/docs/finance/treasury/00-このフォルダについて.md` を追跡し、`jp_bank_corporate` の `docs_root` を CI で解決する
 
 ## [0.8.0-beta.3] — 2026-08-24
 
