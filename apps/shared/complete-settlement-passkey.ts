@@ -1,3 +1,4 @@
+import { assertWebAuthnRpHost } from "./webauthn-page-origin";
 import {
   browserSupportsWebAuthn,
   getPasskeyWithSimpleWebAuthn,
@@ -31,6 +32,8 @@ export async function completeSettlementPasskey(
   if (!challenge.allow_credentials?.length) {
     throw new Error("決済 PassKey が未登録です。先に「iPhone で登録」を完了してください");
   }
+
+  assertWebAuthnRpHost(challenge.rp_id);
 
   const assertion = await getPasskeyWithSimpleWebAuthn({
     challenge: challenge.webauthn_challenge,

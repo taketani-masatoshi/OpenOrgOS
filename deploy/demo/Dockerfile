@@ -33,7 +33,8 @@ RUN mkdir -p /stage \
   && cd /stage \
   && rm -rf node_modules docs deploy \
   && npm install --omit=dev --ignore-scripts \
-  && find . -name '*.map' -delete
+  && find . -name '*.map' -delete \
+  && node --input-type=module -e "await import('/stage/dist/src/lib/operator-console/combined-server.js')"
 
 FROM node:22-alpine AS runtime
 RUN apk add --no-cache ca-certificates \

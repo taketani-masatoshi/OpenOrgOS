@@ -127,6 +127,7 @@ tenants/*/records/**
 tenants/*/docs/company/artifacts/**
 # Local treasury working docs (generated exports)
 tenants/*/docs/finance/treasury/**
+!tenants/*/docs/finance/treasury/00-このフォルダについて.md
 *.log
 .DS_Store
 *.tgz

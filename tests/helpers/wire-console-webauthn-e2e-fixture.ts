@@ -1,6 +1,8 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { createPublicKey, generateKeyPairSync, randomBytes } from "node:crypto";
-import { ORGOS_STATE_DIR, WIRE_CONSOLE_WEBAUTHN_SMOKE_FIXTURE } from "../../src/lib/wire-console/paths.js";
+import { ORGOS_STATE_DIR, WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, WIRE_CONSOLE_WEBAUTHN_SMOKE_FIXTURE } from "../../src/lib/wire-console/paths.js";
+import { mintPasskeyBootstrapToken, resetPasskeyBootstrapStoreForTests } from "../../src/lib/wire-console/auth/passkey-bootstrap.js";
+import { resetWebAuthnCredentialsForTests } from "../../src/lib/wire-console/auth/webauthn-store.js";
 
 export { WIRE_CONSOLE_WEBAUTHN_SMOKE_FIXTURE };
 
@@ -11,6 +13,31 @@ export interface WireConsoleWebAuthnSmokeFixture {
   private_key_base64: string;
   operator_id: string;
   approver_id: string;
+  bootstrap_token?: string;
+}
+
+export function writeWireConsoleWebAuthnBootstrapSmokeFixture(): WireConsoleWebAuthnSmokeFixture {
+  resetPasskeyBootstrapStoreForTests();
+  resetWebAuthnCredentialsForTests();
+  try {
+    unlinkSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH);
+  } catch {
+    /* fresh bootstrap run */
+  }
+  const { token } = mintPasskeyBootstrapToken({ operatorId: "OP-001", ttl: "1h" });
+  const fixture: WireConsoleWebAuthnSmokeFixture = {
+    rp_id: "localhost",
+    credential_id: "",
+    credential_id_base64: "",
+    private_key_base64: "",
+    operator_id: "OP-001",
+    approver_id: "Demo CEO",
+    bootstrap_token: token,
+  };
+  mkdirSync(ORGOS_STATE_DIR, { recursive: true });
+  writeFileSync(WIRE_CONSOLE_WEBAUTHN_SMOKE_FIXTURE, JSON.stringify(fixture, null, 2), "utf-8");
+  delete process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
+  return fixture;
 }
 
 export function writeWireConsoleWebAuthnSmokeFixture(): WireConsoleWebAuthnSmokeFixture {

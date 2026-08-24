@@ -1,5 +1,9 @@
 import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
-import { normalizeRegistrationPersonName as normalizePersonName } from "./webauthn-register-gate.js";
+import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
+import { hasUnusedPasskeyBootstrapToken } from "./passkey-bootstrap.js";
+import {
+  normalizeRegistrationPersonName as normalizePersonName,
+} from "./webauthn-register-gate.js";
 import type { WireConsoleUser } from "./session.js";
 import { rpId } from "./webauthn-shared.js";
 import {
@@ -7,6 +11,7 @@ import {
   deleteWebAuthnCredential,
   isEnvManagedWebAuthnCredential,
   listWebAuthnCredentials,
+  listWebAuthnCredentialsByPurpose,
 } from "./webauthn-store.js";
 
 export type PasskeyCredentialSummary = {
@@ -76,6 +81,27 @@ export function revokePasskeyForSession(
   }
   if (!credentialBelongsToSession(cred, session)) {
     return { error: "passkey does not belong to your session", status: 403 };
+  }
+
+  if (
+    isProdSecurityMode() &&
+    credentialPurpose(cred) === "login" &&
+    (cred.rp_id ?? rpId()) === rpId()
+  ) {
+    const sessionLoginCreds = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() }).filter(
+      (c) => credentialBelongsToSession(c, session),
+    );
+    if (
+      sessionLoginCreds.length === 1 &&
+      sessionLoginCreds[0]!.credential_id === id &&
+      !hasUnusedPasskeyBootstrapToken(session.operator_id)
+    ) {
+      return {
+        error:
+          "cannot revoke your only login passkey in production — mint a bootstrap token first: orgos operator passkey-bootstrap mint",
+        status: 403,
+      };
+    }
   }
 
   const result = deleteWebAuthnCredential(id);

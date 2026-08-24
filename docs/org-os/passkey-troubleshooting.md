@@ -33,13 +33,38 @@ Wire ログイン画面の ID は、登録時に使った値と一致させる�
 | operator_id | `tenants/mal/data/org/operators.yaml`（例: `OP-001`） |
 | approver_id | 同ファイルの `approver_name`（例: `段燕燕`） |
 
-### 2.1 登録ゲート（2026-08-22）
+### 2.1 登録ゲート（2026-08-24）
 
 | 種別 | 条件 |
 |------|------|
-| **ログイン PassKey（初回）** | Community SSO セッション必須 → Touch ID 登録（bootstrap 1 回） |
+| **ログイン PassKey（初回・本番）** | Community SSO セッション + **bootstrap token**（`orgos operator passkey-bootstrap mint`）→ 設定画面で Touch ID 登録 |
+| **ログイン PassKey（初回・非 production）** | Community SSO セッション → Touch ID 登録 |
 | **ログイン PassKey（追加）** | 既定 OFF（`WIRE_CONSOLE_WEBAUTHN_ALLOW_ADDITIONAL_LOGIN=1` でのみ） |
-| **決済 PassKey** | ログイン済みセッション必須 · `operator_id` / `approver_id` がセッションと一致 · ceo/approver ロール |
+| **決済 PassKey** | ログイン済みセッション必須 · セッション identity 一致 · ceo/approver ロール |
+
+### 2.2 bootstrap token（本番初回）
+
+```bash
+orgos operator passkey-bootstrap mint --operator-id OP-001 --ttl 24h
+```
+
+1. Community で SSO ログイン → Console `/settings/`
+2. 表示された **Bootstrap トークン** 欄に `pkb_…` を貼付
+3. 「Touch ID で登録」
+
+token は **1 回限り**。期限切れ・使用済みなら再 mint。
+
+### 2.3 credential / challenge store 破損
+
+| 症状 | 対処 |
+|------|------|
+| `credential store unreadable` | `.orgos/wire-console-webauthn-credentials.json` を復旧またはバックアップから復元。破損のままでは bootstrap は **再開しない**（503） |
+| `webauthn challenge expired`（複数プロセス） | `.orgos/webauthn-challenges.json` が共有 volume 上にあるか確認（ADR 0042） |
+| 最後の login 鍵を revoke できない（本番） | 先に `passkey-bootstrap mint` してから revoke → 再登録 |
+
+### 2.4 Secure Cookie
+
+公開 HTTPS ホストでは `ORGOS_COOKIE_SECURE=1` を必須にする。`orgos doctor` の prod auth checks で確認。
 
 ### 3. settlement_count=0（決済 PassKey 未登録）
 

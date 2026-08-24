@@ -596,7 +596,9 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("data/finance/loans.yaml", () => loadLoans());
   tryLoad("data/finance/fixed-assets.yaml", () => loadFixedAssets());
   tryLoad("data/finance/tax-profile.yaml", () => loadTaxProfile());
-  tryLoad("data/finance/tax-filing-gaps.yaml", () => loadTaxFilingGaps());
+  if (existsSync(join(getDataDir(), "finance", "tax-filing-gaps.yaml"))) {
+    tryLoad("data/finance/tax-filing-gaps.yaml", () => loadTaxFilingGaps());
+  }
   tryLoad("data/finance/chart-of-accounts.yaml", () => loadChartOfAccounts());
   tryLoad("data/plans/business-plan.yaml", () => loadBusinessPlan());
   tryLoad("data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());
