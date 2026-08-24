@@ -9,8 +9,8 @@
 
 ```bash
 # GHCR（Public パッケージ · main マージ後）
-docker pull ghcr.io/taketani-masatoshi/orgos-demo:main
-docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:main
+docker pull ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.3
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.3
 
 # 永続 workspace
 docker volume create orgos-demo-workspace

@@ -13,6 +13,15 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 - `openorgos-engineering-constitution.md` を索引専用に整理
+
+## [0.8.0-beta.3] — 2026-08-24
+
+Public demo refresh (`ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.3`).
+
+### Changed
+- Community OIDC 引き継ぎで Wire / 予実の二重ログインを避ける
+- Steward の財務回答をテナント YAML に接地し、Work Order を自動オーケストレーション
+- PassKey 登録を SSO 必須にし、`operators.yaml` にバインド
 - LLM / MCP から最終承認ツールを削除（`operator_approve` · `steward_approve`）。本番は `ORGOS_LLM_TOOLS_WRITE=1` を doctor / prod-checklist が拒否
 - `orgos doctor` が prod-checklist を実行する
 - 承認は認証済み ceo/approver に名義バインド。自己承認禁止を全内部 subject に適用
