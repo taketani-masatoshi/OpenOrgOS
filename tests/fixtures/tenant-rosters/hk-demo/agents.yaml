@@ -1,6 +1,7 @@
 version: 1
 profiles:
   operational:
+    - accounting
     - compliance
     - contract
     - cto
@@ -10,5 +11,7 @@ profiles:
     - operations
     - secretary
     - security
+    - tax
   developer: []
+  task: []
 disabled: []
