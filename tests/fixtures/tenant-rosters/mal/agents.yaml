@@ -1,6 +1,7 @@
 version: 1
 profiles:
   operational:
+    - accounting
     - compliance
     - contract
     - cto
@@ -8,10 +9,13 @@ profiles:
     - executive_steward
     - finance
     - hospitality
+    - legal
     - medical_device_regulatory
     - operations
     - property_rental
     - secretary
     - security
+    - tax
   developer: []
+  task: []
 disabled: []
