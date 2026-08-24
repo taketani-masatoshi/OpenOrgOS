@@ -1,17 +1,34 @@
 import {
   getCliSkills,
   getCursorOnlySkills,
+  getSkillById,
   loadSkillRegistry,
   validateSkillRegistryFiles,
 } from "../lib/skill-registry.js";
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { runClassificationCheck } from "./classification.js";
+import { getInstallRoot } from "../lib/orgos-paths.js";
 import { runAlerts } from "./alerts.js";
 import { runOpsP0, runOpsDaily } from "./ops.js";
 import { runPermitExpiryCheck, formatPermitCheckReport } from "../lib/permit-check.js";
 import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
+import { runAnalyzeProperty } from "./analyze.js";
 import { loadMonthlyFinance } from "../lib/data.js";
 import { runDashboard } from "./dashboard.js";
 import { runForecast } from "./forecast.js";
 import { runHrHeadcount } from "./hr.js";
+import {
+  runPmoMilestones,
+  runPmoPortfolio,
+  runPmoRisks,
+  runPmoShow,
+} from "./pmo.js";
+import {
+  runAnalyticsKpi,
+  runAnalyticsMetrics,
+  runAnalyticsQuality,
+} from "./analytics.js";
 import { currentDate, readYamlFile, writeMarkdownReport, getExecutiveDir } from "../lib/utils.js";
 import {
   runCorrespondenceSendSkill,
@@ -28,9 +45,17 @@ import {
   runMonthlyCompanyEventsAudit,
   runWeeklyCompanyEventsAttestation,
 } from "../lib/company-events-attestation.js";
-import { runScheduleCoordinationSkill } from "./scheduling-coordination.js";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { runExpenseClaimList } from "./expense-claim.js";
+import { runFinancesClose } from "./finances-close.js";
+import {
+  runLedgerMonthlyReconcile,
+  runLedgerPostSource,
+  runLedgerTrialBalance,
+} from "./ledger.js";
+import {
+  runTaxConsumptionCalc,
+  runTaxDepreciation,
+} from "./tax.js";
 import { calendarFileSchema, oneOnOnesFileSchema } from "../../schemas/executive.js";
 import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
 import {
@@ -44,6 +69,31 @@ import {
   type SkillHandler,
   type SkillInvocationResolution,
 } from "../lib/skill-invocation.js";
+import { runWithFsGuardAgentAsync } from "../lib/org/fs-guard/index.js";
+import { resolveSkillFsGuardAgentById } from "../lib/org/fs-guard/skill-agent-context.js";
+import {
+  buildSalesForecastView,
+  buildSalesPipelineView,
+  formatSalesForecastMarkdown,
+  formatSalesPipelineMarkdown,
+} from "../lib/sales-pipeline-view.js";
+import {
+  buildCustomerSuccessView,
+  formatCustomerSuccessMarkdown,
+} from "../lib/customer-success-view.js";
+import {
+  buildSalesInboundView,
+  formatSalesInboundMarkdown,
+} from "../lib/sales-inbound-view.js";
+import {
+  buildSalesOutboundView,
+  formatSalesOutboundMarkdown,
+} from "../lib/sales-outbound-view.js";
+import {
+  runTreasuryCashPositionSkill,
+  runTreasuryLiquidityForecastSkill,
+} from "../lib/finance/treasury-skill-runners.js";
+import { runScheduleCoordinationSkill } from "./scheduling-coordination.js";
 
 const SKILLS_ALWAYS_WRITE = new Set([
   "dashboard",
@@ -62,6 +112,12 @@ const SKILLS_OUTPUT_WRITE = new Set([
   "tax-filing-prep",
   "contract-register",
   "capex-planning",
+  "sales-pipeline",
+  "sales-forecast",
+  "sales-inbound",
+  "sales-outbound",
+  "cs-health",
+  "cs-renewal",
 ]);
 
 function ensureSkillWriteAuth(id: string, opts: SkillRunOptions): void {
@@ -126,10 +182,58 @@ export const SKILL_COMMANDS = [
     description: "予実 vs 月次 YAML 差異",
   },
   {
+    id: "noi-analysis",
+    skill: "noi_analysis",
+    agent: "Finance",
+    description: "物件別 NOI（賃料収入 − 運営費）",
+  },
+  {
+    id: "journal-post",
+    skill: "journal_post",
+    agent: "Accounting",
+    description: "仕訳起票",
+  },
+  {
+    id: "trial-balance",
+    skill: "trial_balance",
+    agent: "Accounting",
+    description: "試算表・月次突合",
+  },
+  {
+    id: "depreciation-run",
+    skill: "depreciation_run",
+    agent: "Accounting",
+    description: "減価償却検算と仕訳",
+  },
+  {
+    id: "consumption-tax-calc",
+    skill: "consumption_tax_calc",
+    agent: "Tax",
+    description: "消費税集計",
+  },
+  {
+    id: "payroll-calc",
+    skill: "payroll_calc",
+    agent: "Human Resources",
+    description: "給与計算サマリ",
+  },
+  {
+    id: "annual-close",
+    skill: "annual_close",
+    agent: "Accounting",
+    description: "年次決算",
+  },
+  {
     id: "records-check",
     skill: "operations_records",
     agent: "Operations",
     description: "宿泊 · 清掃 · クレーム記録の蓄積確認",
+  },
+  {
+    id: "expense-claim",
+    skill: "expense_claim_ops",
+    agent: "Accounting",
+    description: "経費精算一覧（取込・承認は CLI + HumanApproval）",
   },
   {
     id: "p0",
@@ -160,6 +264,48 @@ export const SKILL_COMMANDS = [
     skill: "hr_headcount",
     agent: "Human Resources",
     description: "在籍人員 L1 集計（氏名非出力）",
+  },
+  {
+    id: "pmo-portfolio",
+    skill: "pmo_portfolio",
+    agent: "PMO",
+    description: "案件ポートフォリオ · RAG 集計",
+  },
+  {
+    id: "pmo-milestones",
+    skill: "pm_milestone_tracking",
+    agent: "PMO",
+    description: "マイルストーン期限超過 · 間近",
+  },
+  {
+    id: "pmo-risks",
+    skill: "pmo_risks",
+    agent: "PMO",
+    description: "open リスク一覧",
+  },
+  {
+    id: "pmo-show",
+    skill: "pmo_show",
+    agent: "PMO",
+    description: "1 案件（リンク id のみ）",
+  },
+  {
+    id: "analytics-kpi",
+    skill: "analytics_kpi_scorecard",
+    agent: "Data Analytics",
+    description: "KPI スコアカード（目標 vs 実績 · RAG）",
+  },
+  {
+    id: "analytics-metrics",
+    skill: "analytics_metric_catalog",
+    agent: "Data Analytics",
+    description: "メトリクス定義一覧",
+  },
+  {
+    id: "analytics-quality",
+    skill: "analytics_data_quality",
+    agent: "Data Analytics",
+    description: "データ品質レポート",
   },
   {
     id: "tenant-config-propose",
@@ -194,7 +340,7 @@ export const SKILL_COMMANDS = [
   {
     id: "tax-filing-prep",
     skill: "tax_filing_prep",
-    agent: "Finance",
+    agent: "Tax",
     description: "税務申告準備 — 正データ存在チェック",
   },
   {
@@ -270,6 +416,12 @@ export const SKILL_COMMANDS = [
     description: "外部連携ステータス",
   },
   {
+    id: "integration-brief",
+    skill: "integration_brief",
+    agent: "Integration",
+    description: "未読 module-message ブリーフ",
+  },
+  {
     id: "agent-pulse",
     skill: "agent_pulse_summary",
     agent: "Executive Steward",
@@ -281,7 +433,102 @@ export const SKILL_COMMANDS = [
     agent: "Executive Steward",
     description: "Work Order 起票",
   },
+  {
+    id: "orchestration-status",
+    skill: "orchestration_status",
+    agent: "Executive Steward",
+    description: "オーケストレーション DAG 進捗",
+  },
+  {
+    id: "sales-pipeline",
+    skill: "sales_pipeline_review",
+    agent: "Sales Lead",
+    description: "営業パイプライン分析（件数 · 加重 · アラート）",
+  },
+  {
+    id: "sales-forecast",
+    skill: "sales_forecast_prep",
+    agent: "Sales Lead",
+    description: "受注予測（対象月クローズ想定）",
+  },
+  {
+    id: "sales-inbound",
+    skill: "sales_inbound_triage",
+    agent: "Sales Inbound",
+    description: "インバウンド問合せトリアージ（件数 · SLA · アラート）",
+  },
+  {
+    id: "sales-outbound",
+    skill: "sales_outbound_list_review",
+    agent: "Sales Outbound",
+    description: "アウトバウンドリスト精査（件数 · 接触率 · アラート）",
+  },
+  {
+    id: "cs-health",
+    skill: "cs_health_check",
+    agent: "Customer Success",
+    description: "顧客ヘルススコア · drift 検出",
+  },
+  {
+    id: "cs-renewal",
+    skill: "cs_renewal_risk",
+    agent: "Customer Success",
+    description: "更新期日リスク（horizon 内顧客）",
+  },
+  {
+    id: "classification-check",
+    skill: "security_classification_audit",
+    agent: "Security",
+    description: "分類 registry · AI 境界監査",
+  },
+  {
+    id: "platform-registry-verify",
+    skill: "engineering_standards_check",
+    agent: "Engineering",
+    description: "platform registry 整合検証",
+  },
+  {
+    id: "cto-tech-radar",
+    skill: "cto_tech_radar",
+    agent: "CTO",
+    description: "ADR インベントリ · 技術負債スキャン",
+  },
 ] as const;
+
+function runCtoTechRadarSkill(opts: SkillRunOptions): void {
+  const adrDir = join(getInstallRoot(), "docs/adr");
+  const files = readdirSync(adrDir)
+    .filter((f) => /^\d{4}-.+\.md$/.test(f))
+    .sort();
+  const lines = [
+    "# Tech Radar — ADR Inventory",
+    "",
+    `**Date:** ${currentDate()}`,
+    `**Count:** ${files.length}`,
+    "",
+    "| ADR | Title |",
+    "|-----|-------|",
+  ];
+  for (const file of files) {
+    const id = file.replace(/\.md$/, "");
+    const title = id.replace(/^\d{4}-/, "").replace(/-/g, " ");
+    lines.push(`| ${id} | ${title} |`);
+  }
+  lines.push("");
+  const md = lines.join("\n");
+  if (opts.output) {
+    const path = writeMarkdownReport(
+      "agent-summaries/cto",
+      opts.output ?? `tech-radar-${currentDate()}.md`,
+      md,
+    );
+    console.log(`✓ ${path}`);
+  } else if (opts.json) {
+    console.log(JSON.stringify({ count: files.length, adrs: files }, null, 2));
+  } else {
+    console.log(md);
+  }
+}
 
 export function runSkillsList(): void {
   const issues = validateSkillRegistryFiles();
@@ -310,6 +557,7 @@ export interface SkillRunOptions {
   output?: string;
   markdown?: boolean;
   id?: string;
+  period?: string;
   dryRun?: boolean;
   to?: string;
   subject?: string;
@@ -323,6 +571,7 @@ export interface SkillRunOptions {
   all?: boolean;
   target?: string;
   enabled?: boolean;
+  staleDays?: number;
 }
 
 async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promise<void> {
@@ -359,18 +608,10 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     }
     case "monthly-close": {
       const month = opts.month ?? currentDate().slice(0, 7);
-      const entry = loadMonthlyFinance(month);
-      if (!entry) {
-        console.error(`月次 YAML なし: data/finance/monthly/${month}.yaml`);
-        process.exit(1);
-      }
-      const rev = entry.revenue.reduce((s, r) => s + r.amount, 0);
-      const exp = entry.expenses.reduce((s, e) => s + e.amount, 0);
-      console.log(
-        `月次締め ${month}: 売上 ${rev.toLocaleString()} · 費用 ${exp.toLocaleString()} · 純 ${(rev - exp).toLocaleString()}`
-      );
-      console.log(`\n次: npm run orgos -- deps check --file data/finance/monthly/${month}.yaml`);
-      console.log("     npm run validate");
+      runFinancesClose({
+        month,
+        output: opts.output ?? `${month}-close.md`,
+      });
       break;
     }
     case "variance": {
@@ -382,6 +623,52 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       } else {
         console.log(md);
       }
+      break;
+    }
+    case "noi-analysis": {
+      runAnalyzeProperty({
+        id: opts.id,
+        period: opts.period,
+        output: opts.output,
+      });
+      break;
+    }
+    case "journal-post": {
+      if (!opts.month) {
+        throw new Error("journal-post requires --month for depreciation source");
+      }
+      runLedgerPostSource({ source: "depreciation", month: opts.month });
+      break;
+    }
+    case "trial-balance": {
+      const month = opts.month ?? currentDate().slice(0, 7);
+      runLedgerTrialBalance({ asOf: `${month}-28`, json: opts.json });
+      runLedgerMonthlyReconcile({ month, json: opts.json });
+      break;
+    }
+    case "depreciation-run": {
+      runTaxDepreciation({ json: opts.json });
+      if (opts.month) {
+        runLedgerPostSource({ source: "depreciation", month: opts.month });
+      }
+      break;
+    }
+    case "consumption-tax-calc": {
+      const period = opts.month ?? currentDate().slice(0, 7);
+      runTaxConsumptionCalc({ period, json: opts.json });
+      break;
+    }
+    case "payroll-calc": {
+      const month = opts.month ?? currentDate().slice(0, 7);
+      console.log(`Run: npm run orgos -- operations payroll calc --month ${month}`);
+      break;
+    }
+    case "annual-close": {
+      const fy = opts.period ?? "FY2026";
+      runFinancesClose({
+        fiscalYear: fy,
+        output: opts.output ?? `${fy.toLowerCase()}-annual-close.md`,
+      });
       break;
     }
     case "p0":
@@ -398,6 +685,34 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       break;
     case "hr-headcount":
       runHrHeadcount({ json: opts.json });
+      break;
+    case "pmo-portfolio":
+      runPmoPortfolio({ json: opts.json });
+      break;
+    case "pmo-milestones":
+      runPmoMilestones({ json: opts.json, days: opts.days });
+      break;
+    case "pmo-risks":
+      runPmoRisks({ json: opts.json });
+      break;
+    case "pmo-show": {
+      if (!opts.id) {
+        throw new Error("pmo-show requires --id PRJ-…");
+      }
+      runPmoShow(opts.id, { json: opts.json });
+      break;
+    }
+    case "analytics-kpi":
+      runAnalyticsKpi({ json: opts.json });
+      break;
+    case "analytics-metrics":
+      runAnalyticsMetrics({ json: opts.json });
+      break;
+    case "analytics-quality":
+      runAnalyticsQuality({ json: opts.json });
+      break;
+    case "expense-claim":
+      runExpenseClaimList({ json: opts.json });
       break;
     case "tenant-config-propose": {
       const { runTenantConfigPropose } = await import("./tenant-config.js");
@@ -590,6 +905,11 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       runIntegrationsStatus({ json: opts.json });
       break;
     }
+    case "integration-brief": {
+      const { runIntegrationBrief } = await import("./module-message.js");
+      runIntegrationBrief({ agent: opts.agent, json: opts.json });
+      break;
+    }
     case "agent-pulse": {
       const { runAgentPulseCommand } = await import("./agent.js");
       runAgentPulseCommand({
@@ -618,24 +938,181 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       }
       break;
     }
+    case "orchestration-status": {
+      const { runOrchestrateStatusSkill } = await import("./orchestrate.js");
+      runOrchestrateStatusSkill({ id: opts.id, json: opts.json });
+      break;
+    }
+    case "sales-pipeline": {
+      const view = buildSalesPipelineView({
+        actionHorizonDays: opts.days ?? 14,
+        includeDemo: false,
+      });
+      const md = formatSalesPipelineMarkdown(view);
+      if (opts.output) {
+        const path = writeMarkdownReport(
+          "agent-summaries/sales-lead",
+          opts.output ?? `pipeline-${currentDate()}.md`,
+          md,
+        );
+        console.log(`✓ ${path}`);
+      } else {
+        console.log(md);
+      }
+      break;
+    }
+    case "sales-forecast": {
+      const month = opts.month ?? currentDate().slice(0, 7);
+      const forecast = buildSalesForecastView({ month, includeDemo: false });
+      const md = formatSalesForecastMarkdown(forecast);
+      if (opts.output) {
+        const path = writeMarkdownReport(
+          "agent-summaries/sales-lead",
+          opts.output ?? `forecast-${month}.md`,
+          md,
+        );
+        console.log(`✓ ${path}`);
+      } else {
+        console.log(md);
+      }
+      break;
+    }
+    case "sales-inbound": {
+      const view = buildSalesInboundView({
+        actionHorizonDays: opts.days ?? 7,
+        staleDays: opts.staleDays ?? 3,
+        includeDemo: false,
+      });
+      const md = formatSalesInboundMarkdown(view);
+      if (opts.output) {
+        const path = writeMarkdownReport(
+          "agent-summaries/sales-inbound",
+          opts.output ?? `inbound-${currentDate()}.md`,
+          md,
+        );
+        console.log(`✓ ${path}`);
+      } else {
+        console.log(md);
+      }
+      break;
+    }
+    case "sales-outbound": {
+      const view = buildSalesOutboundView({
+        actionHorizonDays: opts.days ?? 7,
+        includeDemo: false,
+      });
+      const md = formatSalesOutboundMarkdown(view);
+      if (opts.output) {
+        const path = writeMarkdownReport(
+          "agent-summaries/sales-outbound",
+          opts.output ?? `outbound-${currentDate()}.md`,
+          md,
+        );
+        console.log(`✓ ${path}`);
+      } else {
+        console.log(md);
+      }
+      break;
+    }
+    case "cs-health": {
+      const view = buildCustomerSuccessView({
+        horizonDays: opts.days ?? 90,
+        includeDemo: false,
+      });
+      const md = formatCustomerSuccessMarkdown(view, { showScores: true });
+      if (opts.output) {
+        const path = writeMarkdownReport(
+          "agent-summaries/customer-success",
+          opts.output ?? `health-${currentDate()}.md`,
+          md,
+        );
+        console.log(`✓ ${path}`);
+      } else {
+        console.log(md);
+      }
+      break;
+    }
+    case "cs-renewal": {
+      const view = buildCustomerSuccessView({
+        horizonDays: opts.days ?? 90,
+        includeDemo: false,
+      });
+      const lines = [
+        `# 更新リスク — ${view.company_name}`,
+        "",
+        `**基準日:** ${view.as_of}`,
+        `**Horizon:** ${view.horizon_days} 日`,
+        `**該当:** ${view.renewal_alerts.length} 件`,
+        "",
+      ];
+      if (view.renewal_alerts.length === 0) {
+        lines.push("該当なし。");
+      } else {
+        lines.push(
+          "| 顧客ID | 会社 | 更新日 | 残日数 | ヘルス |",
+          "|---|---|---|---:|---|",
+        );
+        for (const r of view.renewal_alerts) {
+          lines.push(
+            `| ${r.account_id} | ${r.company} | ${r.renewal_date} | ${r.days_remaining} | ${r.health} |`,
+          );
+        }
+      }
+      const md = lines.join("\n");
+      if (opts.output) {
+        const path = writeMarkdownReport(
+          "agent-summaries/customer-success",
+          opts.output ?? `renewal-${currentDate()}.md`,
+          md,
+        );
+        console.log(`✓ ${path}`);
+      } else {
+        console.log(md);
+      }
+      break;
+    }
+    case "classification-check":
+      runClassificationCheck({ json: opts.json });
+      break;
+    case "platform-registry-verify": {
+      const { runPlatformRegistryVerify } = await import("./platform-registry-verify.js");
+      runPlatformRegistryVerify({ json: opts.json });
+      break;
+    }
+    case "cto-tech-radar":
+      runCtoTechRadarSkill(opts);
+      break;
     default:
       throw new Error(`Core skill handler not implemented: ${id}`);
   }
 }
 
-const CORE_SKILL_HANDLERS: Readonly<Record<string, SkillHandler>> = Object.fromEntries(
-  SKILL_COMMANDS.map((skill) => [
-    skill.skill,
-    (opts: SkillRunOptions) => executeCoreSkillCommand(skill.id, opts),
-  ])
-);
+const CORE_SKILL_HANDLERS: Readonly<Record<string, SkillHandler>> = {
+  ...Object.fromEntries(
+    SKILL_COMMANDS.map((skill) => [
+      skill.skill,
+      (opts: SkillRunOptions) => executeCoreSkillCommand(skill.id, opts),
+    ])
+  ),
+  treasury_cash_position: runTreasuryCashPositionSkill,
+  treasury_liquidity_forecast: runTreasuryLiquidityForecastSkill,
+};
 
 export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<void> {
   const resolution = resolveRegisteredSkillInvocation(id, opts);
   if (resolution.status !== "ready") {
     throw new Error(`Skill ${id} is not executable (${resolution.status}): ${resolution.reason}`);
   }
-  await resolution.handler(opts);
+  const skill = getSkillById(id);
+  const invoke = async (): Promise<void> => {
+    await resolution.handler(opts);
+  };
+  const guardAgent = resolveSkillFsGuardAgentById(id);
+  if (guardAgent) {
+    await runWithFsGuardAgentAsync(guardAgent, invoke);
+    return;
+  }
+  await invoke();
 }
 
 export function resolveRegisteredSkillInvocation(

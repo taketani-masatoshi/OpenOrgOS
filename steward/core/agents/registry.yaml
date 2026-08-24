@@ -26,6 +26,44 @@ agents:
     tier: core
     required: true
     scope: 経営判断 · KPI · ダッシュボード · 要約統合
+    access:
+      read:
+        - docs/reports/dashboard/
+        - docs/reports/agent-summaries/
+        - docs/reports/executive-notes/
+      write:
+        - docs/reports/dashboard/
+        - docs/reports/executive-notes/
+        - docs/reports/agent-summaries/executive-steward/
+
+  integration:
+    id: integration
+    name: Integration Agent
+    name_ja: 統合
+    path: steward/core/agents/integration_agent.md
+    tier: extension
+    required: false
+    status: active
+    reports_to: executive_steward
+    scope: 横断統合 · module-messages · routing-queue 読取 · 正データ非編集
+    access:
+      read:
+        - docs/reports/agent-summaries/
+        - docs/reports/routing-queue/
+        - docs/reports/dashboard/
+        - data/org/module-messages/
+      write:
+        - docs/reports/executive-notes/
+        - data/org/module-messages/
+    capability:
+      summary_slug: integration
+      data_paths:
+        - data/org/module-messages/
+      docs_paths:
+        - docs/reports/executive-notes/
+      pulse_checks:
+        - type: path_exists
+          path: docs/reports/agent-summaries/
 
   secretary:
     id: secretary
@@ -36,6 +74,15 @@ agents:
     required: true
     reports_to: coo
     scope: スケジュール · タスク · 1-on-1 · 対外下書き
+    access:
+      read:
+        - data/executive/
+        - docs/executive/
+        - docs/reports/dashboard/
+      write:
+        - data/executive/
+        - docs/executive/
+        - docs/reports/agent-summaries/secretary/
 
   mail_intake:
     id: mail_intake
@@ -112,6 +159,18 @@ agents:
     required: true
     reports_to: coo
     scope: 予実 · 資金 · 税務データ · 決算（JP kessan）
+    access:
+      read:
+        - data/finance/
+        - data/plans/
+        - docs/plans/
+        - docs/finance/
+      write:
+        - data/finance/
+        - data/plans/
+        - docs/plans/
+        - docs/finance/
+        - docs/reports/agent-summaries/finance/
 
   contract:
     id: contract
@@ -122,6 +181,14 @@ agents:
     required: true
     reports_to: coo
     scope: 契約台帳 · 更新 · 紐づけ
+    access:
+      read:
+        - data/contracts/
+        - docs/contracts/
+      write:
+        - data/contracts/
+        - docs/contracts/
+        - docs/reports/agent-summaries/contract/
 
   compliance:
     id: compliance
@@ -132,6 +199,18 @@ agents:
     required: true
     reports_to: coo
     scope: 規程 · ISO · 法域 pack 連動
+    access:
+      read:
+        - data/compliance/
+        - docs/compliance/
+        - docs/company/regulations/
+        - docs/company/licenses/
+      write:
+        - data/compliance/
+        - docs/compliance/
+        - docs/company/regulations/
+        - docs/company/licenses/
+        - docs/reports/agent-summaries/compliance/
 
   operations:
     id: operations
@@ -142,6 +221,14 @@ agents:
     required: true
     reports_to: coo
     scope: 日次運用 · travel · モジュール横断オペ
+    access:
+      read:
+        - data/document-io.yaml
+        - docs/io/
+      write:
+        - data/document-io.yaml
+        - docs/io/
+        - docs/reports/agent-summaries/operations/
 
   # --- AI カンパニー拡張（16 役割 · org-chart.md）---
 
@@ -229,6 +316,16 @@ agents:
     status: active
     reports_to: coo
     scope: パイプライン · 見積方針 · 営業 KPI
+    access:
+      read:
+        - data/sales/
+        - docs/sales/
+        - data/customers/
+        - docs/contracts/
+      write:
+        - data/sales/
+        - docs/sales/
+        - docs/reports/agent-summaries/sales-lead/
 
   sales_outbound:
     id: sales_outbound
@@ -240,6 +337,15 @@ agents:
     status: active
     reports_to: sales_lead
     scope: コールド outreach · リスト · 初回アプローチ下書き
+    access:
+      read:
+        - data/sales/outbound/
+        - docs/sales/outbound/
+      write:
+        - data/sales/outbound/
+        - docs/sales/outbound/
+        - docs/executive/correspondence-drafts/
+        - docs/reports/agent-summaries/sales-outbound/
 
   sales_inbound:
     id: sales_inbound
@@ -251,6 +357,16 @@ agents:
     status: active
     reports_to: sales_lead
     scope: 問い合わせ · 提携 · 紹介案件
+    access:
+      read:
+        - data/sales/inbound/
+        - docs/sales/inbound/
+        - data/executive/external-contacts.yaml
+      write:
+        - data/sales/inbound/
+        - docs/sales/inbound/
+        - docs/executive/correspondence-drafts/
+        - docs/reports/agent-summaries/sales-inbound/
 
   customer_success:
     id: customer_success
@@ -262,6 +378,15 @@ agents:
     status: active
     reports_to: coo
     scope: 既存顧客フォロー · 解約防止 · 利用支援
+    access:
+      read:
+        - data/customers/
+        - docs/customers/
+        - data/contracts/
+      write:
+        - data/customers/
+        - docs/customers/
+        - docs/reports/agent-summaries/customer-success/
 
   marketing_lead:
     id: marketing_lead
@@ -307,6 +432,17 @@ agents:
     reports_to: executive_steward
     scope: 契約レビュー支援 · 定款 · 登記ドラフト · リスク整理
     binds_modules: [jp_corporate_registration]
+    access:
+      read:
+        - data/legal/
+        - docs/legal/
+        - data/corporate-registration/
+        - docs/contracts/
+        - docs/corporate-registration/
+      write:
+        - docs/legal/
+        - docs/corporate-registration/
+        - docs/reports/agent-summaries/legal/
 
   security:
     id: security
@@ -340,6 +476,14 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 採用 · 社保 · 就業規則 · 給与連携
+    access:
+      read:
+        - data/hr/
+        - docs/company/hr/
+      write:
+        - data/hr/
+        - docs/company/hr/
+        - docs/reports/agent-summaries/human-resources/
 
   corporate_governance:
     id: corporate_governance
@@ -364,6 +508,26 @@ agents:
     status: active
     reports_to: finance
     scope: 請求 · 支払 · 仕訳 · インボイス
+    access:
+      read:
+        - data/finance/
+        - docs/finance/accounting/
+      write:
+        - docs/finance/accounting/
+        - docs/reports/agent-summaries/accounting/
+    capability:
+      summary_slug: accounting
+      data_paths:
+        - data/finance/
+      docs_paths:
+        - docs/finance/accounting/
+      pulse_checks:
+        - type: path_exists
+          path: docs/finance/accounting/invoices/
+        - type: path_exists
+          path: docs/finance/accounting/
+        - type: path_exists
+          path: data/finance/payment-calendar.yaml
 
   tax:
     id: tax
@@ -376,6 +540,13 @@ agents:
     status: active
     reports_to: finance
     scope: 法人税 · 消費税 · 申告準備
+    access:
+      read:
+        - data/finance/tax-profile.yaml
+        - docs/company/tax/
+      write:
+        - docs/company/tax/
+        - docs/reports/agent-summaries/tax/
 
   procurement:
     id: procurement
@@ -437,7 +608,16 @@ agents:
     required: false
     status: active
     reports_to: coo
-    scope: 案件 WBS · 進捗 · 報告
+    scope: 横断イニシアチブのポートフォリオ · RAG · マイルストーン（WO 割当は COO · モジュール YAML はリンクのみ）
+    access:
+      read:
+        - data/projects/
+        - docs/projects/
+        - docs/reports/routing-queue/
+      write:
+        - data/projects/
+        - docs/projects/
+        - docs/reports/agent-summaries/project-management/
 
   product_management:
     id: product_management
@@ -486,6 +666,18 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 経営分析 · KPI 深掘り
+    access:
+      read:
+        - data/analytics/
+        - data/finance/
+        - data/hr/
+        - data/compliance/
+        - docs/analytics/
+        - docs/reports/dashboard/
+      write:
+        - data/analytics/
+        - docs/analytics/
+        - docs/reports/agent-summaries/data-analytics/
 
   devops:
     id: devops
@@ -509,8 +701,19 @@ agents:
     required: false
     status: active
     reports_to: executive_steward
-    scope: 株主 · 投資家向け資料
-    binds_modules: [venture_capital]
+    scope: 株主 · 投資家向け資料 · 資本政策
+    binds_modules: [investor_relations]
+    access:
+      read:
+        - data/investor-relations/
+        - docs/investor-relations/
+        - data/finance/capital-raise-cases.yaml
+        - data/finance/funding-strategy.yaml
+        - docs/company/shareholder-register.md
+      write:
+        - data/investor-relations/
+        - docs/investor-relations/
+        - docs/reports/agent-summaries/investor-relations/
 
   esg_sustainability:
     id: esg_sustainability

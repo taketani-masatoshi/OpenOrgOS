@@ -109,7 +109,7 @@ function scoreSkillCli(agentId: AgentId, cap: ReturnType<typeof getAgentCapabili
   let score = owned.length > 0 ? 8 : 4;
   if (cliSkills.length >= 1) score += 6;
   if (manifestSkills.length >= 2) score += 4;
-  if (owned.some((skill) => skill.runtime === "agent")) score += 2;
+  if (cliSkills.length >= 2 || owned.some((skill) => skill.runtime === "agent")) score += 2;
   const max =
     agentId === "executive_steward" ? EXECUTIVE_STEWARD_SKILL_CLI_MAX : WEIGHTS.skill_cli;
   score = Math.min(score, max);

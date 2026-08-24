@@ -11,6 +11,7 @@ import {
 } from "../lib/agent-workspace.js";
 import { scaffoldModuleExtensionDocs } from "../lib/tenant-document-zones.js";
 import { validateExtensibilityContracts } from "../lib/extensibility-contract.js";
+import { checkConcurrentJobsManifest } from "../lib/aia/concurrent-jobs-manifest.js";
 import {
   syncActiveContext,
 } from "../lib/context-manifest.js";
@@ -21,6 +22,12 @@ import {
 } from "../lib/regulations.js";
 import { getTenantId, setTenantId } from "../lib/tenant.js";
 import { getModuleTier, type ReadinessTier } from "../lib/module-readiness.js";
+import {
+  computeAllModuleReadiness,
+  computeModuleReadiness,
+  computeModuleReadinessForTenant,
+  formatModuleReadinessReport,
+} from "../lib/module-readiness-score.js";
 
 function countTiers(): Record<ReadinessTier, number> {
   const counts: Record<ReadinessTier, number> = {
@@ -49,7 +56,7 @@ export function runModulesCheck(catalogId: string): void {
 
 export function runModulesCheckAll(): void {
   const catalogIds = listCatalogModuleIds();
-  const issues = checkAllModules();
+  const issues = [...checkAllModules(), ...checkConcurrentJobsManifest()];
   const extIssues = validateExtensibilityContracts();
 
   if (issues.length === 0 && extIssues.length === 0) {
@@ -157,4 +164,33 @@ export function runModulesActivate(moduleId: string, opts: ModulesActivateOption
   if (docs.created.length) {
     console.log(`  extension docs created: ${docs.created.join(", ")}`);
   }
+}
+
+export interface ModulesReadinessOptions {
+  tenant?: string;
+  module?: string;
+  catalog?: boolean;
+  json?: boolean;
+  min?: number;
+}
+
+export function runModulesReadiness(opts: ModulesReadinessOptions = {}): void {
+  if (opts.tenant) setTenantId(opts.tenant);
+  const tenantId = getTenantId();
+
+  const results = opts.module
+    ? [computeModuleReadiness(opts.module, { tenantId })]
+    : opts.catalog
+      ? computeAllModuleReadiness()
+      : computeModuleReadinessForTenant(tenantId);
+
+  if (opts.json) {
+    console.log(JSON.stringify(results, null, 2));
+  } else {
+    console.log(formatModuleReadinessReport(results));
+  }
+
+  const min = opts.min ?? 0;
+  const below = results.filter((r) => r.pct < min);
+  if (min > 0 && below.length) process.exit(1);
 }

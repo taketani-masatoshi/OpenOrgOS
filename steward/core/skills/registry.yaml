@@ -502,7 +502,9 @@ skills:
     agent_id: cto
   - id: cto_tech_radar
     file: extension/cto_tech_radar.md
-    runtime: agent
+    runtime: cli
+    cli_command: cto-tech-radar
+    handler: cto_tech_radar
     description: 技術選定 · 負債スキャン
     agent_id: cto
   - id: engineering_code_review
@@ -512,7 +514,9 @@ skills:
     agent_id: engineering
   - id: engineering_standards_check
     file: extension/engineering_standards_check.md
-    runtime: agent
+    runtime: cli
+    cli_command: platform-registry-verify
+    handler: engineering_standards_check
     description: コーディング規約整合
     agent_id: engineering
   - id: design_lead_review
@@ -659,7 +663,9 @@ skills:
     agent_id: security
   - id: security_classification_audit
     file: extension/security_classification_audit.md
-    runtime: agent
+    runtime: cli
+    cli_command: classification-check
+    handler: security_classification_audit
     description: 分類監査
     agent_id: security
   - id: hr_policy_review

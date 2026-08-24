@@ -6,16 +6,20 @@ agents:
   - id: accounting
     summary_slug: accounting
     data_paths:
-      - data/finance/invoices/
+      - data/finance/
     docs_paths:
       - docs/finance/accounting/
     route_ids:
       - accounting-ops
     skills:
+      - annual_close
+      - depreciation_run
       - expense_claim_ops
+      - journal_post
+      - trial_balance
     pulse_checks:
       - type: path_exists
-        path: data/finance/invoices/
+        path: docs/finance/accounting/invoices/
       - type: path_exists
         path: docs/finance/accounting/
       - type: path_exists
@@ -134,8 +138,13 @@ agents:
       - docs/customers/
     route_ids:
       - customer-success
+      - customer-success-health
+      - customer-success-renewal
     skills:
       - cs_health_check
+      - cs_nps_analysis
+      - cs_onboarding_review
+      - cs_qbr_prep
       - cs_renewal_risk
     pulse_checks:
       - type: path_exists
@@ -165,6 +174,8 @@ agents:
     docs_paths:
       - docs/analytics/
     route_ids:
+      - analytics-data-quality
+      - analytics-metric-catalog
       - data-analytics
     skills:
       - analytics_data_quality
@@ -292,6 +303,7 @@ agents:
     route_ids:
       - broker-transfer-gate
       - cashflow-forecast
+      - finance-noi
       - finance-variance
       - monthly-close
     skills:
@@ -304,6 +316,7 @@ agents:
       - jp_subsidy_eligibility
       - jp_subsidy_labor_cost
       - monthly_close
+      - noi_analysis
       - variance_analysis
     pulse_checks:
       - type: path_exists
@@ -359,6 +372,9 @@ agents:
       - hr_headcount
       - hr_labor_compliance
       - hr_policy_review
+      - jp_payroll_run
+      - jp_social_insurance_prep
+      - payroll_calc
     pulse_checks:
       - type: path_exists
         path: data/hr/
@@ -420,6 +436,8 @@ agents:
     route_ids:
       - investor-relations
     skills:
+      - ir_cap_table_review
+      - ir_disclosure_calendar
       - ir_materials_prep
       - ir_shareholder_comm
     pulse_checks:
@@ -549,7 +567,8 @@ agents:
       - saas_subscription_ops
       - software_outsourcing_ops
       - staffing_ops
-      - travel_booking
+      - travel_intake_validate
+      - travel_policy_check
       - venture_capital_ops
     pulse_checks:
       - type: path_exists
@@ -653,10 +672,16 @@ agents:
     docs_paths:
       - docs/projects/
     route_ids:
+      - pmo-milestones
       - pmo-project
+      - pmo-risks
+      - pmo-show
     skills:
       - pm_milestone_tracking
       - pm_status_review
+      - pmo_portfolio
+      - pmo_risks
+      - pmo_show
     pulse_checks:
       - type: path_exists
         path: data/projects/
@@ -767,6 +792,7 @@ agents:
     docs_paths:
       - docs/sales/
     route_ids:
+      - sales-forecast
       - sales-pipeline
     skills:
       - sales_forecast_prep
@@ -870,8 +896,19 @@ agents:
     docs_paths:
       - docs/company/tax/
     route_ids:
+      - jp-consumption-tax
+      - jp-corporate-tax
+      - jp-invoice-registration
+      - jp-qualified-invoice
+      - jp-withholding-payment
       - tax-filing
     skills:
+      - consumption_tax_calc
+      - jp_consumption_tax_return
+      - jp_corporate_tax_return
+      - jp_invoice_registration
+      - jp_qualified_invoice_issue
+      - jp_withholding_payment
       - tax_filing_prep
     pulse_checks:
       - type: path_exists

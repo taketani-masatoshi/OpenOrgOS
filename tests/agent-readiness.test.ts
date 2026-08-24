@@ -38,6 +38,46 @@ describe("agent readiness", () => {
     expect(skillAxis?.score).toBeGreaterThanOrEqual(16);
   });
 
+  it("sales_lead agent meets readiness threshold on mal tenant", () => {
+    setTenantId("mal");
+    const r = computeAgentReadiness("sales_lead");
+    expect(r.pct).toBeGreaterThanOrEqual(90);
+    const skillAxis = r.axes.find((a) => a.id === "skill_cli");
+    expect(skillAxis?.score).toBeGreaterThanOrEqual(14);
+  });
+
+  it("sales_inbound agent reaches full readiness on mal tenant", () => {
+    setTenantId("mal");
+    const r = computeAgentReadiness("sales_inbound");
+    expect(r.pct).toBe(100);
+    expect(r.axes.find((a) => a.id === "skill_cli")?.score).toBe(20);
+  });
+
+  it("cli-only agents with two or more skills earn full skill_cli execution depth", () => {
+    setTenantId("mal");
+    for (const id of ["compliance", "tax", "medical_device_regulatory", "sales_lead"] as const) {
+      const skillAxis = computeAgentReadiness(id).axes.find((a) => a.id === "skill_cli");
+      expect(skillAxis?.score, `${id} skill_cli`).toBe(20);
+    }
+  });
+
+  it("whole sales line is roster-active and above threshold on mal tenant", () => {
+    setTenantId("mal");
+    for (const id of [
+      "sales_lead",
+      "sales_inbound",
+      "sales_outbound",
+      "customer_success",
+    ] as const) {
+      const r = computeAgentReadiness(id);
+      expect(r.pct, `${id} readiness`).toBeGreaterThanOrEqual(90);
+      expect(
+        r.axes.find((a) => a.id === "test")?.detail,
+        `${id} activation`,
+      ).toContain("activation: OK");
+    }
+  });
+
   it("platform_guide advisor profile does not require tenant data", () => {
     const r = computeAgentReadiness("platform_guide");
     expect(r.pct).toBeGreaterThanOrEqual(80);

@@ -1,6 +1,13 @@
 skills:
-  - id: noi_analysis
+  - id: rental_rent_roll
     file: noi_analysis.md
-    runtime: cursor-only
-    description: NOI 分析
+    runtime: cli
+    cli_command: rental-rent-roll
+    description: NOI · 賃料ロール
+    agent_id: property_rental
+  - id: rental_show
+    file: noi_analysis.md
+    runtime: cli
+    cli_command: rental-show
+    description: 賃貸モジュール状態
     agent_id: property_rental

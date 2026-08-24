@@ -32,6 +32,18 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0040](0040-aia-parallel-runtime.md) | AIA 並行ランタイム（10/20/30 · 隔離 · Integration） | Accepted |
 | [0041](0041-passkey-bootstrap-token.md) | Passkey bootstrap token（本番初回登録） | Accepted |
 | [0042](0042-webauthn-challenge-file-store.md) | WebAuthn challenge file store（複数プロセス） | Accepted |
+| [0043](0043-pmo-portfolio-ssot.md) | PMO ポートフォリオ SSOT（COO WO · モジュール案件の三角） | Accepted |
+| [0044](0044-work-order-dag-orchestration.md) | Work Order DAG orchestration（状態機械 · depends_on · orchestrate CLI） | Accepted |
+| [0045](0045-company-events-chain-trust-anchor.md) | 会社イベントチェーン内部トラストアンカー（records_audit hardening） | Accepted |
+| [0046](0046-tax-obligation-rhythm-engine.md) | 税務 obligation rhythm エンジン · 概算金額方針 | Accepted |
+| [0051](0051-jp-tax-skills-cli-only.md) | JP tax skill CLI-only · tax readiness 指標分離 | Accepted |
+| [0052](0052-tax-filing-phase5-deferred.md) | e-Tax / XML / 宿泊税 ledger — Phase 5 defer ロードマップ | Proposed |
+| [0046](0046-analytics-metric-catalog-ssot.md) | Analytics メトリクス Catalog SSOT（resolver · KPI 定義） | Accepted |
+| [0047](0047-sales-line-deterministic-stack.md) | 営業ライン決定論スタック（pipeline CLI · fact provider · validate） | Accepted |
+| [0048](0048-investor-relations-ssot.md) | 自社 IR SSOT（cap table · 開示カレンダー · investor_relations モジュール） | Accepted |
+| [0049](0049-inbound-inquiry-intake.md) | インバウンド問合せメール intake（routing sales_inbound · inquiries 起票） | Accepted |
+| [0050](0050-customer-success-deterministic-stack.md) | カスタマーサクセス決定論スタック（health score · モジュール · fact provider） | Accepted |
+| [0053](0053-module-readiness-score.md) | Module Readiness Score（公式 7 軸 · `orgos modules readiness`） | Accepted |
 
 ## 新規 ADR
 

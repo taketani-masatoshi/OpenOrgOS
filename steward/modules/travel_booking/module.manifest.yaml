@@ -6,4 +6,12 @@ optional_regulations:
   - REG-008
 activation_seeds:
   - travel-request.yaml.example
+cli_commands:
+  - portals
+  - intake
+  - check
+  - draft
 notes: activation_ready — operations travel CLI · browser Phase 0 cursor-only
+security:
+  limits:
+    concurrent_jobs: 2

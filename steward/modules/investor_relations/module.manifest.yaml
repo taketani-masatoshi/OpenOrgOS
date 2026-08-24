@@ -1,0 +1,13 @@
+id: investor_relations
+activation_seeds:
+  - cap-table.yaml
+  - investor-registry.yaml
+  - disclosure-calendar.yaml
+  - ir-materials.yaml
+cli_commands:
+  - show
+  - validate
+  - briefing
+  - cap-table-review
+  - disclosure-calendar
+notes: production_ready — cap table · investor registry · disclosure calendar · IR materials index

@@ -121,4 +121,31 @@ export const travelBookingCli: ModuleCliBundle = {
   register(ctx) {
     registerTravelCommands(ctx.operationsCmd);
   },
+  skillHandlers: {
+    travel_policy_check: (opts) =>
+      runTravelCheck({
+        budget: opts.budget,
+        role: opts.role,
+        tripType: opts.tripType,
+        flightPreApproved: opts.flightPreApproved,
+        json: opts.json,
+      }),
+    travel_intake_validate: (opts) =>
+      runTravelIntake({
+        portal: opts.portal,
+        tripType: opts.tripType,
+        destination: opts.destination,
+        area: opts.area,
+        checkIn: opts.checkIn,
+        checkOut: opts.checkOut,
+        guests: opts.guests,
+        budget: opts.budget,
+        purpose: opts.purpose,
+        room: opts.room,
+        role: opts.role,
+        slug: opts.slug,
+        file: opts.file,
+        json: opts.json,
+      }),
+  },
 };

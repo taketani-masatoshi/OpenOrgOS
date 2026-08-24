@@ -1,0 +1,14 @@
+id: customer_success
+activation_seeds:
+  - health-signals.yaml.example
+  - onboarding.yaml.example
+  - qbr.yaml.example
+  - nps.yaml.example
+  - churn-events.yaml.example
+cli_commands:
+  - show
+  - validate
+  - health
+  - onboarding
+  - nps
+notes: production_ready — customer health score · onboarding · QBR · NPS · churn events

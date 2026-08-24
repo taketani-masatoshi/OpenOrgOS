@@ -12,3 +12,14 @@ optional_regulations:
   - REG-003
   - REG-004
 notes: production_ready — 法務局登記手続カタログ · 定款 · 登記申請書等ドラフト（JP 法域のみ）
+cli_commands:
+  - procedures
+  - show
+  - validate
+  - checklist
+  - prepare
+  - draft
+  - export-pdf
+security:
+  limits:
+    concurrent_jobs: 1

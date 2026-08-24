@@ -18,3 +18,13 @@ optional_regulations:
   - REG-025
   - REG-026
 notes: production_ready — 医療機器 製造 · 製造販売 · 販売 · QMS 4階層 · GVP · 台帳（JP 法域のみ）
+cli_commands:
+  - show
+  - validate
+  - obligations
+  - qms
+  - gvp
+  - ledger
+security:
+  limits:
+    concurrent_jobs: 1

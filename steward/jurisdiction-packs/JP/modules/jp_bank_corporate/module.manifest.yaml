@@ -9,3 +9,13 @@ activation_seeds:
 optional_regulations:
   - REG-005
 notes: production_ready — 決定論資金繰り · append-only 消込 · 冪等銀行取込 · fixture E2E · orgos jp bank CLI
+cli_commands:
+  - cashflow
+  - position
+  - calendar
+  - ar-ap
+  - statement
+  - reconcile
+security:
+  limits:
+    concurrent_jobs: 1

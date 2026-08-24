@@ -1,6 +1,13 @@
 skills:
-  - id: travel_booking
+  - id: travel_policy_check
     file: travel_booking.md
-    runtime: cursor-only
-    description: 旅行サイト手配（browser · 決済直前停止）
+    runtime: cli
+    cli_command: travel-check
+    description: REG-008 旅費上限チェック
+    agent_id: operations
+  - id: travel_intake_validate
+    file: travel_booking.md
+    runtime: cli
+    cli_command: travel-intake
+    description: Step 0 ヒアリング検証
     agent_id: operations

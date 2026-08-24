@@ -6,6 +6,7 @@ import {
   runModulesCheckAll,
   runModulesActivate,
   runModulesScaffoldDocs,
+  runModulesReadiness,
 } from "../../commands/modules.js";
 import { runTenantScaffoldDocs } from "../../commands/tenant-scaffold-docs.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
@@ -218,6 +219,23 @@ export function registerPlatformCommands(program: Command): void {
         tenant: opts.tenant,
         moduleId: opts.module,
         json: opts.json,
+      })
+    );
+  modulesCmd
+    .command("readiness")
+    .description("Module readiness score (definition · contract · CLI · skill · test · tier · operational)")
+    .option("--tenant <id>", "Score enabled modules for tenant")
+    .option("--module <id>", "Single module id")
+    .option("--catalog", "Score full steward/modules catalog (ignore tenant enabled filter)")
+    .option("--json", "JSON output")
+    .option("--min <n>", "Exit 1 if any module below n%", (v) => Number(v))
+    .action((opts: { tenant?: string; module?: string; catalog?: boolean; json?: boolean; min?: number }) =>
+      runModulesReadiness({
+        tenant: opts.tenant,
+        module: opts.module,
+        catalog: opts.catalog,
+        json: opts.json,
+        min: opts.min,
       })
     );
 
@@ -562,7 +580,8 @@ export function registerPlatformCommands(program: Command): void {
   skillsCmd
     .command("run <id>")
     .description("Run skill: contract-expiry | permit-expiry | monthly-close | variance | records-check | p0 | daily")
-    .option("-d, --days <number>", "Days ahead (contract-expiry)", "90")
+    .option("-d, --days <number>", "Horizon days (skill-specific default when omitted)")
+    .option("--stale-days <number>", "Stale SLA days (sales-inbound / sales-pipeline skills)")
     .option("-m, --month <YYYY-MM>", "Target month (monthly-close)")
     .option("--markdown", "Markdown output where supported")
     .option("-o, --output <filename>", "Save report under docs/reports/")
@@ -579,6 +598,7 @@ export function registerPlatformCommands(program: Command): void {
     .action((id, opts) =>
       runSkill(id, {
         days: opts.days ? parseInt(opts.days, 10) : undefined,
+        staleDays: opts.staleDays ? parseInt(opts.staleDays, 10) : undefined,
         month: opts.month,
         markdown: opts.markdown,
         output: opts.output,

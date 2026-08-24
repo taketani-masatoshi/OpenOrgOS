@@ -1,4 +1,4 @@
-import type { Command } from "commander";
+import { Command } from "commander";
 import type { SkillRunOptions } from "../commands/skills.js";
 import type { ModuleCliBundle, ModuleCliContext } from "./module-cli-types.js";
 import { loadSkillRegistry } from "./skill-registry.js";
@@ -14,6 +14,8 @@ import { property_managementCli } from "../../steward/modules/property_managemen
 import { software_outsourcingCli } from "../../steward/modules/software_outsourcing/cli/register.js";
 import { real_estate_brokerageCli } from "../../steward/modules/real_estate_brokerage/cli/register.js";
 import { venture_capitalCli } from "../../steward/modules/venture_capital/cli/register.js";
+import { investor_relationsCli } from "../../steward/modules/investor_relations/cli/register.js";
+import { customer_successCli } from "../../steward/modules/customer_success/cli/register.js";
 import { membershipCli } from "../../steward/modules/membership/cli/register.js";
 import { staffingCli } from "../../steward/modules/staffing/cli/register.js";
 import { ecommerceCli } from "../../steward/modules/ecommerce/cli/register.js";
@@ -24,6 +26,18 @@ import { jp_corporate_registrationCli } from "../../steward/jurisdiction-packs/J
 import { jp_medical_deviceCli } from "../../steward/jurisdiction-packs/JP/modules/jp_medical_device/cli/register.js";
 import { jp_permit_registryCli } from "../../steward/jurisdiction-packs/JP/modules/jp_permit_registry/cli/register.js";
 import { jp_bank_corporateCli } from "../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/register.js";
+import { jp_certificationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_certification/cli/register.js";
+import { jp_inspectionCli } from "../../steward/jurisdiction-packs/JP/modules/jp_inspection/cli/register.js";
+import { jp_minpakuCli } from "../../steward/jurisdiction-packs/JP/modules/jp_minpaku/cli/register.js";
+import { jp_permit_applicationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_permit_application/cli/register.js";
+import { jp_tax_corporateCli } from "../../steward/jurisdiction-packs/JP/modules/jp_tax_corporate/cli/register.js";
+import { jp_tax_consumptionCli } from "../../steward/jurisdiction-packs/JP/modules/jp_tax_consumption/cli/register.js";
+import { jp_invoice_qualifiedCli } from "../../steward/jurisdiction-packs/JP/modules/jp_invoice_qualified/cli/register.js";
+import { jp_withholding_statutoryCli } from "../../steward/jurisdiction-packs/JP/modules/jp_withholding_statutory/cli/register.js";
+import { jp_payrollCli } from "../../steward/jurisdiction-packs/JP/modules/jp_payroll/cli/register.js";
+import { jp_social_insuranceCli } from "../../steward/jurisdiction-packs/JP/modules/jp_social_insurance/cli/register.js";
+import { venueBookingCli } from "../../steward/modules/venue_booking/cli/register.js";
+import { rentalCli } from "../../steward/modules/rental/cli/register.js";
 
 const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   travelBookingCli,
@@ -35,20 +49,133 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   software_outsourcingCli,
   real_estate_brokerageCli,
   venture_capitalCli,
+  investor_relationsCli,
+  customer_successCli,
   membershipCli,
   staffingCli,
   ecommerceCli,
   event_operationsCli,
+  venueBookingCli,
+  rentalCli,
   jp_subsidy_applicationCli,
   jp_trademark_applicationCli,
   jp_corporate_registrationCli,
   jp_medical_deviceCli,
   jp_permit_registryCli,
   jp_bank_corporateCli,
+  jp_certificationCli,
+  jp_inspectionCli,
+  jp_minpakuCli,
+  jp_permit_applicationCli,
+  jp_tax_corporateCli,
+  jp_tax_consumptionCli,
+  jp_invoice_qualifiedCli,
+  jp_withholding_statutoryCli,
+  jp_payrollCli,
+  jp_social_insuranceCli,
 ];
 
 export function listModuleCliBundles(): ModuleCliBundle[] {
   return MODULE_CLI_BUNDLES;
+}
+
+export interface ModuleCliRegistration {
+  moduleId: string;
+  /** Command path from the CLI root, e.g. `["operations", "hospitality"]`. */
+  rootPath: string[];
+  /** Subcommand names directly under `rootPath`. */
+  subcommands: string[];
+}
+
+/** path (space-joined) → direct child command names */
+function snapshotCommandTree(root: Command): Map<string, string[]> {
+  const tree = new Map<string, string[]>();
+  const walk = (cmd: Command, path: string[]): void => {
+    tree.set(
+      path.join(" "),
+      cmd.commands.map((child) => child.name())
+    );
+    for (const child of cmd.commands) walk(child, [...path, child.name()]);
+  };
+  walk(root, []);
+  return tree;
+}
+
+function collectAddedPaths(before: Map<string, string[]>, after: Map<string, string[]>): string[] {
+  const added = new Set<string>();
+  for (const [path, children] of after) {
+    if (!before.has(path)) {
+      added.add(path);
+      continue;
+    }
+    const previous = new Set(before.get(path));
+    for (const child of children) {
+      if (!previous.has(child)) added.add(`${path} ${child}`.trim());
+    }
+  }
+  return [...added];
+}
+
+function isAncestorOrSelf(ancestor: string[], candidate: string[]): boolean {
+  return ancestor.every((segment, index) => candidate[index] === segment);
+}
+
+/**
+ * A bundle may nest its commands (e.g. `jp bank`), so the root is the deepest
+ * registered path that shares a branch with every other registered path and
+ * still owns subcommands. Leaf commands are therefore never mistaken for roots.
+ */
+function resolveRootPath(addedPaths: string[], tree: Map<string, string[]>): string[] {
+  const paths = addedPaths
+    .map((path) => path.split(" ").filter(Boolean))
+    .sort((a, b) => a.length - b.length);
+
+  let root = paths[0] ?? [];
+  for (const candidate of paths) {
+    const onSameBranch = paths.every(
+      (other) => isAncestorOrSelf(candidate, other) || isAncestorOrSelf(other, candidate)
+    );
+    const hasSubcommands = (tree.get(candidate.join(" ")) ?? []).length > 0;
+    if (onSameBranch && hasSubcommands && candidate.length > root.length) root = candidate;
+  }
+  return root;
+}
+
+let registrationCache: Map<string, ModuleCliRegistration> | null = null;
+
+/**
+ * Introspect the commands each bundle actually registers. Registration is the
+ * single source of truth; module manifests declare `cli_commands` as a contract
+ * that `orgos modules readiness` verifies against this result.
+ */
+export function describeModuleCliRegistrations(): Map<string, ModuleCliRegistration> {
+  if (registrationCache) return registrationCache;
+
+  const program = new Command().name("orgos").exitOverride();
+  const operationsCmd = program.command("operations").description("Corporate operations");
+  const ctx: ModuleCliContext = { program, operationsCmd };
+
+  const registrations = new Map<string, ModuleCliRegistration>();
+  for (const bundle of MODULE_CLI_BUNDLES) {
+    const before = snapshotCommandTree(program);
+    bundle.register(ctx);
+    const after = snapshotCommandTree(program);
+
+    const rootPath = resolveRootPath(collectAddedPaths(before, after), after);
+    registrations.set(bundle.moduleId, {
+      moduleId: bundle.moduleId,
+      rootPath,
+      subcommands: after.get(rootPath.join(" ")) ?? [],
+    });
+  }
+
+  registrationCache = registrations;
+  return registrations;
+}
+
+/** Test hook — bundles are static, so the introspection result is memoized. */
+export function clearModuleCliRegistrationCache(): void {
+  registrationCache = null;
 }
 
 /** Register `operations` and all module subcommands on the root program. */
