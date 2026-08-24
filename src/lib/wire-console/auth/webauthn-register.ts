@@ -19,6 +19,8 @@ import {
   isLoginPasskeyBootstrap,
   isWebAuthnLoginRegistrationAllowedPublic,
   registrationErrorStatus,
+  resolveRegistrationHttpStatus,
+  type WebAuthnRegistrationFailure,
 } from "./webauthn-register-gate.js";
 import {
   consumePasskeyBootstrapToken,
@@ -32,7 +34,8 @@ import {
   webauthnChallengeTtlMs,
 } from "./webauthn-challenge-store.js";
 
-export { authorizeWebAuthnRegistration, registrationErrorStatus };
+export { authorizeWebAuthnRegistration, registrationErrorStatus, resolveRegistrationHttpStatus };
+export type { WebAuthnRegistrationFailure };
 
 export function isWebAuthnRegistrationAllowed(): boolean {
   return isWebAuthnLoginRegistrationAllowedPublic();
@@ -71,11 +74,11 @@ export function createWebAuthnRegisterOptions(
       hints: Array<"hybrid" | "client-device">;
       purpose: WebAuthnCredentialPurpose;
     }
-  | { error: string } {
+  | WebAuthnRegistrationFailure {
   const purpose: WebAuthnCredentialPurpose = body.purpose ?? "login";
   const authorized = authorizeWebAuthnRegistration(body, opts?.sessionUser);
   if ("status" in authorized) {
-    return { error: authorized.error };
+    return { error: authorized.error, status: authorized.status };
   }
   const resolved = authorized;
 
@@ -87,6 +90,7 @@ export function createWebAuthnRegisterOptions(
     if (!body.bootstrap_token?.trim()) {
       return {
         error: "bootstrap token required for first passkey registration in production",
+        status: 401,
       };
     }
     const reserved = reservePasskeyBootstrapChallenge({
@@ -95,7 +99,7 @@ export function createWebAuthnRegisterOptions(
       challenge,
     });
     if (!reserved.ok) {
-      return { error: reserved.error };
+      return { error: reserved.error, status: 403 };
     }
   }
   saveWebAuthnChallenge({

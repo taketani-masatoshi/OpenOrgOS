@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createHash } from "node:crypto";
+import { createHash, generateKeyPairSync } from "node:crypto";
 import type { StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { verifyWebAuthnAssertion } from "../src/lib/wire-console/auth/webauthn-assertion.js";
-import { mintTestWebAuthnAssertion } from "../src/lib/wire-console/auth/webauthn-verify.js";
+import { mintTestWebAuthnAssertion, mintTestWebAuthnRegistration } from "../src/lib/wire-console/auth/webauthn-verify.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import {
@@ -10,6 +10,7 @@ import {
   resetPasskeyBootstrapStoreForTests,
 } from "../src/lib/wire-console/auth/passkey-bootstrap.js";
 import { mintTestOidcIdToken } from "../src/lib/wire-console/auth/oidc.js";
+import { resetWebAuthnChallengeStoreForTests, disableWebAuthnChallengeStoreMemoryForTests } from "../src/lib/wire-console/auth/webauthn-challenge-store.js";
 import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
 import { resetWireConsoleTestTenant } from "./helpers/wire-console-test-fixture.js";
 
@@ -21,6 +22,8 @@ describe("passkey bootstrap HTTP", () => {
     resetWireConsoleTestTenant();
     resetWebAuthnCredentialsForTests();
     resetPasskeyBootstrapStoreForTests();
+    disableWebAuthnChallengeStoreMemoryForTests();
+    resetWebAuthnChallengeStoreForTests();
     setTenantId("demo");
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_SESSION_PERSIST = "0";
@@ -117,6 +120,63 @@ describe("passkey bootstrap HTTP", () => {
       }),
     });
     expect(res.status).toBe(403);
+  });
+
+  it("rejects reused bootstrap token on second register/options after successful verify", async () => {
+    const baseUrl = await startProd();
+    const cookie = await prodSessionCookie(baseUrl);
+    resetPasskeyBootstrapStoreForTests();
+    const { token } = mintPasskeyBootstrapToken({ operatorId: "OP-001" });
+
+    const regOptions = await fetch(`${baseUrl}/chat/v1/auth/webauthn/register/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        bootstrap_token: token,
+      }),
+    });
+    expect(regOptions.status).toBe(200);
+    const regOpts = (await regOptions.json()) as { challenge: string };
+    const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+    const registration = mintTestWebAuthnRegistration({
+      rpId: "127.0.0.1",
+      origin: "http://127.0.0.1:9471",
+      challenge: regOpts.challenge,
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+      privateKey,
+    });
+    const register = await fetch(`${baseUrl}/chat/v1/auth/webauthn/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        challenge: regOpts.challenge,
+        credential_id: registration.credential_id,
+        client_data_json: registration.client_data_json,
+        attestation_object_base64: registration.attestation_object_base64,
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        bootstrap_token: token,
+      }),
+    });
+    expect(register.status).toBe(200);
+
+    resetWebAuthnCredentialsForTests();
+
+    const secondOptions = await fetch(`${baseUrl}/chat/v1/auth/webauthn/register/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        bootstrap_token: token,
+      }),
+    });
+    expect(secondOptions.status).toBe(403);
+    const body = (await secondOptions.json()) as { error?: string };
+    expect(body.error).toMatch(/bootstrap token/i);
   });
 });
 

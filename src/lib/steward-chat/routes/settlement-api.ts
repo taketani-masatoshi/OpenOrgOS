@@ -19,7 +19,7 @@ import {
   authorizeWebAuthnRegistration,
   createWebAuthnRegisterOptions,
   isSettlementRegistrationAllowed,
-  registrationErrorStatus,
+  resolveRegistrationHttpStatus,
   verifyWebAuthnRegistration,
 } from "../../wire-console/auth/webauthn-register.js";
 
@@ -261,7 +261,7 @@ export async function handleSettlementApi(
         { sessionUser: opts.user }
       );
       if ("error" in result) {
-        json(res, registrationErrorStatus(result.error), { ok: false, error: result.error });
+        json(res, resolveRegistrationHttpStatus(result), { ok: false, error: result.error });
         return true;
       }
       json(res, 200, { ok: true, ...result });

@@ -17,6 +17,7 @@ import {
   authorizeWebAuthnRegistration,
   createWebAuthnRegisterOptions,
   registrationErrorStatus,
+  resolveRegistrationHttpStatus,
   verifyWebAuthnRegistration,
 } from "../wire-console/auth/webauthn-register.js";
 import {
@@ -170,7 +171,7 @@ export async function handleChatAuthApi(
         { sessionUser }
       );
       if ("error" in result) {
-        json(registrationErrorStatus(result.error), { ok: false, error: result.error });
+        json(resolveRegistrationHttpStatus(result), { ok: false, error: result.error });
         return true;
       }
       json(200, { ok: true, ...result });
