@@ -16,7 +16,7 @@ import { webauthnOriginsEqual } from "./webauthn-origin.js";
 import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
 import {
   authorizeWebAuthnRegistration,
-  isLoginPasskeyBootstrap,
+  isBootstrapTokenRequiredForLoginRegistration,
   isWebAuthnLoginRegistrationAllowedPublic,
   registrationErrorStatus,
   resolveRegistrationHttpStatus,
@@ -26,13 +26,13 @@ import {
   consumePasskeyBootstrapToken,
   reservePasskeyBootstrapChallenge,
 } from "./passkey-bootstrap.js";
-import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
 import {
   consumeWebAuthnChallenge,
   resetWebAuthnChallengeStoreForTests,
   saveWebAuthnChallenge,
   webauthnChallengeTtlMs,
 } from "./webauthn-challenge-store.js";
+import { verifyRegistrationAttestation } from "./webauthn-attestation.js";
 
 export { authorizeWebAuthnRegistration, registrationErrorStatus, resolveRegistrationHttpStatus };
 export type { WebAuthnRegistrationFailure };
@@ -86,7 +86,7 @@ export function createWebAuthnRegisterOptions(
   const registerRpId = rpId();
 
   const challenge = randomBytes(32).toString("base64url");
-  if (purpose === "login" && isProdSecurityMode() && isLoginPasskeyBootstrap()) {
+  if (purpose === "login" && isBootstrapTokenRequiredForLoginRegistration()) {
     if (!body.bootstrap_token?.trim()) {
       return {
         error: "bootstrap token required for first passkey registration in production",
@@ -210,6 +210,14 @@ export function verifyWebAuthnRegistration(body: {
     if (attestation.fmt !== "none" && attestation.fmt !== "packed") {
       return { error: `unsupported attestation format: ${attestation.fmt}` };
     }
+    const attestationCheck = verifyRegistrationAttestation({
+      fmt: attestation.fmt,
+      authData: attestation.authData,
+      attStmt: attestation.attStmt,
+    });
+    if (!attestationCheck.ok) {
+      return { error: attestationCheck.error };
+    }
     authData = attestation.authData;
   } catch (e) {
     return { error: e instanceof Error ? e.message : "invalid attestation object" };
@@ -248,7 +256,7 @@ export function verifyWebAuthnRegistration(body: {
   }
 
   const bootstrapRegistration =
-    purpose === "login" && isProdSecurityMode() && isLoginPasskeyBootstrap();
+    purpose === "login" && isBootstrapTokenRequiredForLoginRegistration();
   if (bootstrapRegistration && !pending.bootstrap_token) {
     return {
       error: "bootstrap token required for first passkey registration in production",

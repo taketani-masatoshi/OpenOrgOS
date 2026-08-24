@@ -89,6 +89,8 @@
     "operator-console:build": "npm run steward-chat:build && VITE_BASE=/wire/ VITE_OUT_DIR=dist-combined npm run build -w @orgos/wire-console",
     "prod:verify": "node --import tsx scripts/prod-verify-operator-console.ts",
     "settlement-passkey:verify": "node --import tsx scripts/settlement-passkey-verify.ts",
+    "passkey:field-check": "node --import tsx scripts/passkey-field-check.ts",
+    "passkey:ui-smoke": "npm run wire-console:build && npm run steward-chat:build && playwright test --config=playwright.steward-chat-webauthn.config.ts && playwright test e2e/passkey-settings-handoff.smoke.spec.ts e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test --config=playwright.webauthn-bootstrap.config.ts",
     "package:publish-check": "node scripts/package-publish-check.mjs",
     "build:package": "node scripts/build-orgos-package.mjs",
     "package:pack": "npm run build:package && npm pack -w @orgos/cli"

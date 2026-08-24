@@ -2,23 +2,32 @@ import { expect, test } from "@playwright/test";
 import { installWebAuthnVirtualCredential } from "./helpers/webauthn-smoke";
 
 test.describe("steward chat webauthn smoke", () => {
-  test("budget gate loads (Codex 予実; WebAuthn optional via Wire/prod)", async ({ page }) => {
+  test("unauthenticated /settings shows Community handoff", async ({ page }) => {
+    await page.goto("/settings");
+
+    await expect(
+      page.getByRole("heading", { name: "PassKey 設定の前に Community でログイン" }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    const handoff = page.getByRole("link", { name: /Community で Google ログイン|Community で入る/ });
+    await expect(handoff.first()).toBeVisible();
+    const href = await handoff.first().getAttribute("href");
+    expect(href).toContain(encodeURIComponent("/settings"));
+  });
+
+  test("budget gate loads with WebAuthn login (localhost)", async ({ page }) => {
     await page.goto("about:blank");
     await installWebAuthnVirtualCredential(page);
     await page.goto("/");
 
-    // Codex 予実 default gate is zero-trust budget login (dev passkey).
-    await expect(page.getByRole("heading", { name: "予算ログイン" })).toBeVisible({
+    await expect(page.getByRole("heading", { name: "この Mac で入る" })).toBeVisible({
       timeout: 15_000,
     });
-    const webauthn = page.getByRole("button", {
-      name: /Touch ID で入る|Touch ID で登録|Sign in \(WebAuthn\)|WebAuthn|passkey/i,
+
+    await page.getByRole("button", { name: "Touch ID で入る" }).click();
+
+    await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
+      timeout: 15_000,
     });
-    if (await webauthn.count()) {
-      await webauthn.first().click();
-      await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
-        timeout: 15_000,
-      });
-    }
   });
 });

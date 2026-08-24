@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { OperatorShell, type OperatorShellActive } from "@ops-shared/OperatorShell";
 import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
 import { buildCommunityConsoleStartUrl } from "@ops-shared/community-console-handoff";
@@ -20,7 +20,27 @@ import { registerWithWebAuthn } from "./webauthn-register";
 
 function isPasskeySettingsPath(): boolean {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
-  return path === "/settings";
+  return path === "/settings" || path.startsWith("/settings/");
+}
+
+function PasskeyAuthLoadingShell() {
+  return (
+    <div className="auth-page auth-loading">
+      <header className="auth-header">
+        <div className="auth-header-inner">
+          <a className="auth-brand" href="https://oorgos.org">
+            OpenOrgOS
+          </a>
+        </div>
+      </header>
+      <section className="auth-hero">
+        <div className="auth-hero-inner">
+          <h1>この Mac で入る</h1>
+          <p className="auth-lead">読み込み中…</p>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 /**
@@ -42,12 +62,21 @@ export function BudgetAuthGate({
   const [approverId, setApproverId] = useState("段燕燕");
   const [busy, setBusy] = useState(false);
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
-  const [bootstrapToken, setBootstrapToken] = useState("");
 
   const webAuthnMode =
     authConfig?.mode === "prod" && authConfig.prod_adapter === "webauthn";
 
   const settingsPage = isPasskeySettingsPath();
+
+  const userMsgOpts = {
+    expectedOrigin: authConfig?.webauthn?.origin,
+    rpId: authConfig?.webauthn?.rp_id,
+  };
+
+  const refreshAuthConfig = useCallback(async () => {
+    const cfg = await fetchAuthConfig().catch(() => null);
+    if (cfg) setAuthConfig(cfg);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,8 +105,7 @@ export function BudgetAuthGate({
   async function refreshAfterAuth() {
     const me = await fetchMe();
     setUser(me);
-    const cfg = await fetchAuthConfig().catch(() => null);
-    if (cfg) setAuthConfig(cfg);
+    await refreshAuthConfig();
   }
 
   async function onLogin(e: FormEvent) {
@@ -107,14 +135,11 @@ export function BudgetAuthGate({
       await registerWithWebAuthn(chatApi, {
         operator_id: op,
         approver_id: appr,
-        bootstrap_token: (opts?.bootstrap_token ?? bootstrapToken.trim()) || undefined,
+        bootstrap_token: opts?.bootstrap_token,
       });
       await refreshAfterAuth();
     } catch (err) {
-      setError(webauthnUserMessage(err, {
-        expectedOrigin: authConfig?.webauthn?.origin,
-        rpId: authConfig?.webauthn?.rp_id,
-      }));
+      setError(webauthnUserMessage(err, { ...userMsgOpts, purpose: "login" }));
     } finally {
       setBusy(false);
     }
@@ -127,10 +152,7 @@ export function BudgetAuthGate({
       await loginWithWebAuthn(chatApi, { e2e: authConfig?.webauthn_e2e_login });
       await refreshAfterAuth();
     } catch (err) {
-      setError(webauthnUserMessage(err, {
-        expectedOrigin: authConfig?.webauthn?.origin,
-        rpId: authConfig?.webauthn?.rp_id,
-      }));
+      setError(webauthnUserMessage(err, { ...userMsgOpts, purpose: "login" }));
     } finally {
       setBusy(false);
     }
@@ -147,26 +169,39 @@ export function BudgetAuthGate({
 
   async function enrollSettlementPasskey() {
     if (!user) return;
+    setBusy(true);
     setError(null);
-    await registerSettlementPasskey(chatApi, {
-      operator_id: user.operator_id,
-      approver_id: user.approver_id,
-    });
-    const cfg = await fetchAuthConfig().catch(() => null);
-    if (cfg) setAuthConfig(cfg);
+    try {
+      await registerSettlementPasskey(chatApi, {
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
+      });
+      await refreshAuthConfig();
+    } catch (err) {
+      setError(webauthnUserMessage(err, { ...userMsgOpts, purpose: "settlement" }));
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading && webAuthnMode) {
+    return <PasskeyAuthLoadingShell />;
   }
 
   if (!loading && !user && webAuthnMode) {
     const showRegister = Boolean(authConfig?.webauthn?.registration_allowed);
     const showSignIn = (authConfig?.webauthn?.credential_count ?? 0) > 0;
+    const emphasizeBootstrapFlow =
+      settingsPage && Boolean(authConfig?.webauthn?.login_registration_requires_session);
     return (
       <PasskeyAuthPanel
         operatorId={operatorId}
         approverId={approverId}
         onOperatorId={setOperatorId}
         onApproverId={setApproverId}
-        showRegister={showRegister}
-        showSignIn={showSignIn}
+        showRegister={showRegister || emphasizeBootstrapFlow}
+        showSignIn={showSignIn && !emphasizeBootstrapFlow}
         busy={busy}
         error={error}
         onRegister={() => void onRegister()}
@@ -174,11 +209,13 @@ export function BudgetAuthGate({
         loginOrigin={authConfig?.webauthn?.origin}
         loginRpId={authConfig?.webauthn?.rp_id}
         registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
-        bootstrapTokenRequired={authConfig?.webauthn?.bootstrap_token_required}
-        bootstrapToken={bootstrapToken}
-        onBootstrapToken={setBootstrapToken}
-        communityHandoffUrl={authConfig?.community_handoff ? buildCommunityConsoleStartUrl("/settings") : undefined}
+        communityHandoffUrl={
+          authConfig?.community_handoff
+            ? buildCommunityConsoleStartUrl("/settings/")
+            : undefined
+        }
         settingsPath="/settings/"
+        emphasizeBootstrapFlow={emphasizeBootstrapFlow}
       />
     );
   }
@@ -209,22 +246,8 @@ export function BudgetAuthGate({
         busy={busy}
         error={error}
         onRegisterLogin={(opts) => onRegister(opts)}
-        onRegisterSettlement={async () => {
-          try {
-            await enrollSettlementPasskey();
-          } catch (err) {
-            setError(
-              webauthnUserMessage(err, {
-                expectedOrigin: authConfig?.webauthn?.origin,
-                rpId: authConfig?.webauthn?.rp_id,
-              }),
-            );
-          }
-        }}
-        onRefreshAuthConfig={async () => {
-          const cfg = await fetchAuthConfig().catch(() => null);
-          if (cfg) setAuthConfig(cfg);
-        }}
+        onRegisterSettlement={() => void enrollSettlementPasskey()}
+        onRefreshAuthConfig={refreshAuthConfig}
         expectedOrigin={authConfig?.webauthn?.origin}
         rpId={authConfig?.webauthn?.rp_id}
       />
@@ -245,9 +268,13 @@ export function BudgetAuthGate({
       stewardHref="/steward/"
     >
       {loading ? (
-        <div className="wallet-shell">
-          <div className="wallet-page wallet-loading">認証を確認中…</div>
-        </div>
+        webAuthnMode ? (
+          <PasskeyAuthLoadingShell />
+        ) : (
+          <div className="wallet-shell">
+            <div className="wallet-page wallet-loading">認証を確認中…</div>
+          </div>
+        )
       ) : user ? (
         mainContent
       ) : (

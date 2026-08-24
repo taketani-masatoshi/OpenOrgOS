@@ -30,7 +30,16 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [webAuthnBusy, setWebAuthnBusy] = useState(false);
-  const [bootstrapToken, setBootstrapToken] = useState("");
+
+  const userMsgOpts = {
+    expectedOrigin: authConfig?.webauthn?.origin,
+    rpId: authConfig?.webauthn?.rp_id,
+  };
+
+  const refreshAuthConfig = useCallback(async () => {
+    const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
+    setAuthConfig(cfg);
+  }, []);
 
   const loadSession = useCallback(async () => {
     try {
@@ -48,16 +57,24 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     void api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config")
-      .then(setAuthConfig)
-      .catch(() =>
-        setAuthConfig({
-          mode: "dev",
-          dev_login_allowed: true,
-          prod_default_adapter: "oidc",
-        })
-      );
+      .then((cfg) => {
+        if (!cancelled) setAuthConfig(cfg);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAuthConfig({
+            mode: "dev",
+            dev_login_allowed: true,
+            prod_default_adapter: "oidc",
+          });
+        }
+      });
     void loadSession();
+    return () => {
+      cancelled = true;
+    };
   }, [loadSession]);
 
   async function login(e: React.FormEvent) {
@@ -98,16 +115,12 @@ export function App() {
       await registerWithWebAuthn(api, {
         operator_id: op,
         approver_id: appr,
-        bootstrap_token: (opts?.bootstrap_token ?? bootstrapToken.trim()) || undefined,
+        bootstrap_token: opts?.bootstrap_token,
       });
       await loadSession();
-      const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
-      setAuthConfig(cfg);
+      await refreshAuthConfig();
     } catch (err) {
-      setError(webauthnUserMessage(err, {
-        expectedOrigin: authConfig?.webauthn?.origin,
-        rpId: authConfig?.webauthn?.rp_id,
-      }));
+      setError(webauthnUserMessage(err, { ...userMsgOpts, purpose: "login" }));
     } finally {
       setWebAuthnBusy(false);
     }
@@ -120,10 +133,7 @@ export function App() {
       await loginWithWebAuthn(api, { e2e: authConfig?.webauthn_e2e_login });
       await loadSession();
     } catch (err) {
-      setError(webauthnUserMessage(err, {
-        expectedOrigin: authConfig?.webauthn?.origin,
-        rpId: authConfig?.webauthn?.rp_id,
-      }));
+      setError(webauthnUserMessage(err, { ...userMsgOpts, purpose: "login" }));
     } finally {
       setWebAuthnBusy(false);
     }
@@ -159,10 +169,11 @@ export function App() {
     const prodMode = authConfig?.mode === "prod";
     const oidcMode = prodMode && authConfig?.prod_adapter === "oidc";
     const webAuthnMode = prodMode && authConfig?.prod_adapter === "webauthn";
-    const showRegister =
-      webAuthnMode && Boolean(authConfig?.webauthn?.registration_allowed);
-    const showSignIn =
-      webAuthnMode && (authConfig?.webauthn?.credential_count ?? 0) > 0;
+    const showRegister = webAuthnMode && Boolean(authConfig?.webauthn?.registration_allowed);
+    const showSignIn = webAuthnMode && (authConfig?.webauthn?.credential_count ?? 0) > 0;
+    const settingsHandoff =
+      isPasskeySettingsPath() &&
+      Boolean(authConfig?.webauthn?.login_registration_requires_session);
     if (webAuthnMode) {
       return (
         <PasskeyAuthPanel
@@ -170,8 +181,8 @@ export function App() {
           approverId={approverId}
           onOperatorId={setOperatorId}
           onApproverId={setApproverId}
-          showRegister={showRegister}
-          showSignIn={showSignIn}
+          showRegister={showRegister || settingsHandoff}
+          showSignIn={showSignIn && !settingsHandoff}
           busy={webAuthnBusy}
           error={error}
           onRegister={() => void registerWebAuthn()}
@@ -179,13 +190,13 @@ export function App() {
           loginOrigin={authConfig?.webauthn?.origin}
           loginRpId={authConfig?.webauthn?.rp_id}
           registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
-          bootstrapTokenRequired={authConfig?.webauthn?.bootstrap_token_required}
-          bootstrapToken={bootstrapToken}
-          onBootstrapToken={setBootstrapToken}
           communityHandoffUrl={
-            authConfig?.community_handoff ? buildCommunityConsoleStartUrl("/settings/") : undefined
+            authConfig?.community_handoff
+              ? buildCommunityConsoleStartUrl("/settings/")
+              : undefined
           }
           settingsPath="/settings/"
+          emphasizeBootstrapFlow={settingsHandoff}
         />
       );
     }
@@ -312,23 +323,17 @@ export function App() {
                 approver_id: user.approver_id,
               });
               await loadSession();
-              const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
-              setAuthConfig(cfg);
+              await refreshAuthConfig();
             } catch (err) {
               setError(
-                webauthnUserMessage(err, {
-                  expectedOrigin: authConfig?.webauthn?.origin,
-                  rpId: authConfig?.webauthn?.rp_id,
-                }),
+                webauthnUserMessage(err, { ...userMsgOpts, purpose: "settlement" }),
               );
             } finally {
               setWebAuthnBusy(false);
             }
           }}
-          onRefreshAuthConfig={async () => {
-            const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
-            setAuthConfig(cfg);
-          }}
+          onRefreshAuthConfig={refreshAuthConfig}
+          backLinks={[{ href: "/wire/", label: "Wire に戻る" }]}
           expectedOrigin={authConfig?.webauthn?.origin}
           rpId={authConfig?.webauthn?.rp_id}
         />

@@ -14,6 +14,7 @@ WebAuthn の RP ID に **IP アドレスは使えない**。ローカル開発�
 - 参照: [web.dev — RP ID deep dive](https://web.dev/articles/webauthn-rp-id)
 - 正しいローカル URL: **`http://localhost:9470`**（`:9471` に逃げた場合はそのポート）
 - `http://127.0.0.1:9470` で開いても、コンソールは **`localhost` へリダイレクト**する
+- **2026-08-24 UI:** 127.0.0.1 では PassKey フォームを出さず、リダイレクト banner のみ表示してから `localhost` へ移動する（paint 前に判定）
 
 環境変数（Docker / ローカル）:
 
@@ -54,15 +55,30 @@ orgos operator passkey-bootstrap mint --operator-id OP-001 --ttl 24h
 
 token は **1 回限り**。期限切れ・使用済みなら再 mint。
 
+### 2.6 `/settings/` 直アクセス（未ログイン）
+
+PassKey 設定 URL をブックマークして未ログインで開いた場合:
+
+1. 見出し **「PassKey 設定の前に Community でログイン」** が表示される
+2. **Community で Google ログイン** リンク → `https://community.oorgos.org/ops/console/start?next=…`（Wire は `/settings/` · Steward Chat は `/settings`）
+3. SSO 後、設定画面の **PasskeyManagePanel** で bootstrap トークン + Touch ID 登録
+
+Wire / Steward Chat で handoff UI は同一（shared `PasskeyAuthPanel`）。
+
 ### 2.3 credential / challenge store 破損
 
 | 症状 | 対処 |
 |------|------|
 | `credential store unreadable` | `.orgos/wire-console-webauthn-credentials.json` を復旧またはバックアップから復元。破損のままでは bootstrap は **再開しない**（503） |
-| `webauthn challenge expired`（複数プロセス） | `.orgos/webauthn-challenges.json` が共有 volume 上にあるか確認（ADR 0042） |
+| `webauthn challenge expired`（複数プロセス） | `.orgos/webauthn-challenges.json` が共有 volume 上にあるか確認（ADR 0042 · Linux=`flock` · macOS dev=`wx`+PID） |
+| `challenge store probe failed` | `orgos doctor` · `npm run passkey:field-check -- --url …` で詳細確認 |
 | 最後の login 鍵を revoke できない（本番） | 先に `passkey-bootstrap mint` してから revoke → 再登録 |
 
-### 2.4 Secure Cookie
+### 2.4 packed attestation
+
+登録時 `packed` は **self-attestation 署名**（または leaf cert 署名のみ · PKIX 信頼なし）を検証する。Apple / hybrid 向けに **attestation 強制はしない**（`none` も許可）。
+
+### 2.5 Secure Cookie
 
 公開 HTTPS ホストでは `ORGOS_COOKIE_SECURE=1` を必須にする。`orgos doctor` の prod auth checks で確認。
 
@@ -100,6 +116,10 @@ docker compose -f docker-compose.yml -f docker-compose.operator.yml -f docker-co
 ```bash
 curl -s http://localhost:9470/chat/v1/auth/config | jq '.webauthn'
 # rp_id: "localhost", origin: "http://localhost:9470"
+```
+
+```bash
+cd /Users/kk/OS_Steward && npm run passkey:field-check -- --url http://localhost:9470
 ```
 
 ```bash

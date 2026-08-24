@@ -1,7 +1,6 @@
 import {
   chmodSync,
   closeSync,
-  constants,
   existsSync,
   openSync,
   readFileSync,
@@ -19,6 +18,11 @@ const LOCK_FILENAME = "webauthn-challenges.lock";
 const DEFAULT_TTL_MS = 5 * 60_000;
 const LOCK_RETRY_MS = 25;
 const LOCK_MAX_ATTEMPTS = 80;
+
+/** BSD flock(2) operations — not exposed in Node's fs.constants typings. */
+const LOCK_EX = 2;
+const LOCK_NB = 4;
+const LOCK_UN = 8;
 
 type FlockFn = (fd: number, operation: number) => void;
 
@@ -118,7 +122,7 @@ function acquireLock(): number {
     const fd = openSync(lockPath(), "a");
     for (let i = 0; i < LOCK_MAX_ATTEMPTS; i++) {
       try {
-        flockSync(fd, constants.LOCK_EX | constants.LOCK_NB);
+        flockSync(fd, LOCK_EX | LOCK_NB);
         return fd;
       } catch (err) {
         const code = (err as NodeJS.ErrnoException).code;
@@ -149,7 +153,7 @@ function acquireLock(): number {
 function releaseLock(fd: number): void {
   if (useFlock && flockSync) {
     try {
-      flockSync(fd, constants.LOCK_UN);
+      flockSync(fd, LOCK_UN);
     } catch {
       /* ignore */
     }
@@ -305,4 +309,37 @@ export function disableWebAuthnChallengeStoreMemoryForTests(): void {
 /** Test helper: whether this runtime uses advisory flock (Linux prod) vs wx fallback. */
 export function webauthnChallengeStoreUsesFlock(): boolean {
   return useFlock;
+}
+
+export interface WebAuthnChallengeStoreProbe {
+  ok: boolean;
+  detail: string;
+  lock: "flock" | "wx";
+}
+
+/** Best-effort read/write probe for doctor / field-check (does not leave challenges behind). */
+export function probeWebAuthnChallengeStore(): WebAuthnChallengeStoreProbe {
+  const lock: "flock" | "wx" = useFlock ? "flock" : "wx";
+  if (memoryOverride) {
+    return { ok: true, detail: "in-memory challenge store (test override)", lock };
+  }
+  const token = `probe-${process.pid}-${Date.now()}`;
+  try {
+    saveWebAuthnChallenge({
+      kind: "login",
+      challenge: token,
+      expires_at: Date.now() + 5_000,
+    });
+    const consumed = consumeWebAuthnChallenge(token, "login");
+    if (!consumed) {
+      return { ok: false, detail: "challenge store probe write succeeded but consume failed", lock };
+    }
+    return { ok: true, detail: `challenge store read/write ok (${lock} lock)`, lock };
+  } catch (error) {
+    return {
+      ok: false,
+      detail: error instanceof Error ? error.message : "challenge store probe failed",
+      lock,
+    };
+  }
 }

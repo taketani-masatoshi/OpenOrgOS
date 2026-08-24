@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchPasskeyCredentials,
   formatPasskeyCreatedAt,
@@ -27,6 +27,7 @@ export type PasskeyManagePanelProps = {
   approverId: string;
   policy: PasskeyWebAuthnPolicy;
   busy?: boolean;
+  /** Parent-supplied error string (already user-facing). */
   error?: string | null;
   onRegisterLogin: (opts?: { bootstrap_token?: string }) => void | Promise<void>;
   onRegisterSettlement: () => void | Promise<void>;
@@ -71,18 +72,21 @@ export function PasskeyManagePanel({
   const running = busy || actionKind !== "idle";
   const userMsgOpts = { expectedOrigin, rpId };
 
+  const refreshConfigRef = useRef(onRefreshAuthConfig);
+  refreshConfigRef.current = onRefreshAuthConfig;
+
   const refresh = useCallback(async () => {
     setListError(null);
     try {
       const rows = await fetchPasskeyCredentials(api);
       setCredentials(rows);
-      await onRefreshAuthConfig?.();
+      await refreshConfigRef.current?.();
     } catch (e) {
       setListError(webauthnUserMessage(e, userMsgOpts));
     } finally {
       setLoading(false);
     }
-  }, [api, onRefreshAuthConfig, expectedOrigin, rpId]);
+  }, [api, expectedOrigin, rpId]);
 
   useEffect(() => {
     if (!webAuthnMode) {
@@ -97,7 +101,6 @@ export function PasskeyManagePanel({
         const rows = await fetchPasskeyCredentials(api);
         if (cancelled) return;
         setCredentials(rows);
-        await onRefreshAuthConfig?.();
       } catch (e) {
         if (!cancelled) setListError(webauthnUserMessage(e, userMsgOpts));
       } finally {
@@ -107,7 +110,7 @@ export function PasskeyManagePanel({
     return () => {
       cancelled = true;
     };
-  }, [webAuthnMode, api, operatorId, onRefreshAuthConfig, expectedOrigin, rpId]);
+  }, [webAuthnMode, api, operatorId, expectedOrigin, rpId]);
 
   const loginCreds = credentials.filter((c) => c.purpose === "login");
   const settlementCreds = credentials.filter((c) => c.purpose === "settlement");
@@ -139,7 +142,7 @@ export function PasskeyManagePanel({
       await revokePasskeyCredential(api, cred.credential_id);
       await refresh();
     } catch (e) {
-      setLocalError(webauthnUserMessage(e, userMsgOpts));
+      setLocalError(webauthnUserMessage(e, { ...userMsgOpts, purpose: "login" }));
     } finally {
       setActionKind("idle");
     }
@@ -158,7 +161,7 @@ export function PasskeyManagePanel({
       setBootstrapToken("");
       await refresh();
     } catch (e) {
-      setLocalError(webauthnUserMessage(e, userMsgOpts));
+      setLocalError(webauthnUserMessage(e, { ...userMsgOpts, purpose: "login" }));
     } finally {
       setActionKind("idle");
     }
@@ -171,13 +174,13 @@ export function PasskeyManagePanel({
       await onRegisterSettlement();
       await refresh();
     } catch (e) {
-      setLocalError(webauthnUserMessage(e, userMsgOpts));
+      setLocalError(webauthnUserMessage(e, { ...userMsgOpts, purpose: "settlement" }));
     } finally {
       setActionKind("idle");
     }
   }
 
-  const displayError = localError ?? (error ? webauthnUserMessage(error, userMsgOpts) : null) ?? listError;
+  const displayError = localError ?? error ?? listError;
 
   if (!webAuthnMode) {
     return (
@@ -248,7 +251,7 @@ export function PasskeyManagePanel({
   }
 
   return (
-    <>
+    <div className="passkey-manage-panel" data-busy={running ? "true" : undefined}>
       {displayError ? <p className="passkey-setup-error" role="alert">{displayError}</p> : null}
 
       <div className="passkey-settings-sections">
@@ -344,6 +347,6 @@ export function PasskeyManagePanel({
       <p className="passkey-settings-meta">
         オペレーター: {operatorId} · 承認者: {approverId}
       </p>
-    </>
+    </div>
   );
 }

@@ -181,6 +181,19 @@ export const todayContextSchema = z.object({
   hr_on_roster: z.number().int().nonnegative().optional(),
   hr_coverage: z.enum(["registered", "unregistered", "partial"]).optional(),
   hr_source_path: z.string().optional(),
+  /** 旅館業の期限（宿泊税 · 滞在 · 清掃）。未有効テナントは空。 */
+  hospitality_ops_due: z
+    .array(
+      z.object({
+        id: z.string(),
+        severity: z.enum(["p0", "p1", "p2"]),
+        kind: z.enum(["tax", "stay", "cleaning"]),
+        title: z.string(),
+        due_on: z.string(),
+        cli_hint: z.string(),
+      })
+    )
+    .default([]),
 });
 
 export type TodayContext = z.output<typeof todayContextSchema>;
@@ -239,6 +252,25 @@ export const chatApprovalRequestSchema = z.object({
   /** Required and must be true for scheduling correspondence. */
   reviewed: z.boolean().optional(),
 });
+
+export const chatAuditActionSchema = z.enum([
+  "login",
+  "logout",
+  "message",
+  "approve",
+  "reject",
+  "ceo_answer",
+  "wire_flush",
+  "witness_register",
+  "witness_verify",
+  "witness_flush",
+  "webauthn_register",
+  "webauthn_revoke",
+  "settlement_challenge",
+  "settlement_complete",
+]);
+
+export type ChatAuditAction = z.output<typeof chatAuditActionSchema>;
 
 export const notificationsRegistrySchema = z.object({
   version: z.string(),

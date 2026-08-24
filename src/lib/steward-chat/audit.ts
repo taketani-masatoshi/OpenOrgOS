@@ -1,21 +1,10 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import type { ChatAuditAction } from "../../../schemas/steward-chat.js";
 import { appendInstructionAudit } from "../org/instruction-audit.js";
 import { getWorkspaceRoot } from "../orgos-paths.js";
 
-export type ChatAuditAction =
-  | "login"
-  | "logout"
-  | "message"
-  | "approve"
-  | "reject"
-  | "ceo_answer"
-  | "wire_flush"
-  | "witness_register"
-  | "witness_verify"
-  | "witness_flush"
-  | "webauthn_register"
-  | "webauthn_revoke";
+export type { ChatAuditAction };
 
 export interface ChatAuditEntry {
   at: string;

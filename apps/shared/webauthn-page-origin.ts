@@ -1,9 +1,24 @@
 import { browserSupportsWebAuthn } from "./webauthn-simple";
 
 const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+const REDIRECT_GUARD_KEY = "orgos_webauthn_loopback_redirect";
 
 /** Local WebAuthn RP ID must be `localhost` — IP addresses are not valid RP IDs (web.dev). */
 export const LOCAL_WEBAUTHN_CANONICAL_HOST = "localhost";
+
+function redirectLoopback(next: URL): WebAuthnHostCheck {
+  if (typeof window === "undefined") return "redirecting";
+  try {
+    if (sessionStorage.getItem(REDIRECT_GUARD_KEY) === next.toString()) {
+      return "redirecting";
+    }
+    sessionStorage.setItem(REDIRECT_GUARD_KEY, next.toString());
+  } catch {
+    /* ignore */
+  }
+  window.location.replace(next.toString());
+  return "redirecting";
+}
 
 export class WebAuthnRedirectInProgressError extends Error {
   constructor() {
@@ -31,8 +46,7 @@ function resolveRpHost(rpId: string): WebAuthnHostCheck {
   if (!isLoopbackHost(host) || !isLoopbackHost(rpId)) return "mismatch";
   const next = new URL(window.location.href);
   next.hostname = LOCAL_WEBAUTHN_CANONICAL_HOST;
-  window.location.replace(next.toString());
-  return "redirecting";
+  return redirectLoopback(next);
 }
 
 function resolvePageOrigin(expectedOrigin: string): WebAuthnHostCheck {
@@ -47,8 +61,7 @@ function resolvePageOrigin(expectedOrigin: string): WebAuthnHostCheck {
     next.protocol = expected.protocol;
     next.hostname = LOCAL_WEBAUTHN_CANONICAL_HOST;
     next.port = expected.port;
-    window.location.replace(next.toString());
-    return "redirecting";
+    return redirectLoopback(next);
   } catch {
     return "ok";
   }

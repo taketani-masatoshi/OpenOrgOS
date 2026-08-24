@@ -3,6 +3,8 @@ import { WebAuthnRedirectInProgressError } from "./webauthn-page-origin";
 export type WebAuthnUserMessageOpts = {
   expectedOrigin?: string;
   rpId?: string;
+  /** login: Touch ID cancel · settlement: hybrid / Bluetooth hints */
+  purpose?: "login" | "settlement";
 };
 
 function originHint(opts?: WebAuthnUserMessageOpts): string {
@@ -46,6 +48,9 @@ export function webauthnUserMessage(err: unknown, opts?: WebAuthnUserMessageOpts
     return "操作を完了できませんでした。ページを再読み込みしてもう一度お試しください";
   }
   if (name === "NotAllowedError" || /cancel/i.test(raw)) {
+    if (opts?.purpose === "login") {
+      return "Touch ID をキャンセルしました。もう一度お試しください";
+    }
     return "キャンセルしました。もう一度試すときは Bluetooth をオンにしてください";
   }
   if (name === "InvalidStateError" || /already registered|exclude/i.test(text)) {

@@ -5,6 +5,7 @@ import { startWireConsoleServer } from "../src/lib/wire-console/server.js";
 import { WIRE_CONSOLE_SPA_DIST } from "../src/lib/wire-console/paths.js";
 import { writeWireConsoleWebAuthnBootstrapSmokeFixture } from "../tests/helpers/wire-console-webauthn-e2e-fixture.js";
 import { writeWireConsoleOidcSmokeFixture } from "../tests/helpers/wire-console-oidc-e2e-fixture.js";
+import { resetWireConsoleTestTenant } from "../tests/helpers/wire-console-test-fixture.js";
 
 async function main(): Promise<void> {
   if (!existsSync(join(WIRE_CONSOLE_SPA_DIST, "index.html"))) {
@@ -12,26 +13,22 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  process.env.ORGOS_ENV = "production";
+  resetWireConsoleTestTenant();
+  process.env.WIRE_CONSOLE_INCLUDE_TEST_TENANTS = "1";
+  process.env.ORGOS_SETTLEMENT_STEPUP = "1";
   process.env.WIRE_CONSOLE_AUTH = "prod";
   process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
-  process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET =
-    process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET ?? "bootstrap-smoke-settlement-secret";
-  process.env.ORGOS_SESSION_PERSIST = "1";
+  process.env.WIRE_CONSOLE_WEBAUTHN_BOOTSTRAP_TOKEN_REQUIRED = "1";
   process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "localhost";
   delete process.env.WIRE_CONSOLE_E2E_WEBAUTHN;
+  const port = Number(process.env.WIRE_CONSOLE_WEBAUTHN_BOOTSTRAP_SMOKE_PORT ?? 9478);
+  process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = `http://localhost:${port}`;
   delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
   delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
-  delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP;
+  delete process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
 
-  const port = Number(process.env.WIRE_CONSOLE_WEBAUTHN_BOOTSTRAP_SMOKE_PORT ?? 9474);
-  process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = `http://localhost:${port}`;
-
-  await writeWireConsoleOidcSmokeFixture({
-    operatorId: "OP-001",
-    approverId: "Demo CEO",
-  });
   writeWireConsoleWebAuthnBootstrapSmokeFixture();
+  await writeWireConsoleOidcSmokeFixture({ operatorId: "OP-001", approverId: "段燕燕" });
 
   const server = await startWireConsoleServer({ host: "localhost", port });
   console.log(`wire-console webauthn bootstrap smoke server ${server.url}`);

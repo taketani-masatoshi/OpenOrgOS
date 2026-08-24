@@ -17,6 +17,8 @@ export const auditEventTypeSchema = z.enum([
   "module_certification_grant",
   "module_certification_revoke",
   "events_chain_rebuild",
+  "events_chain_repair",
+  "events_signing_key_rotate",
 ]);
 
 export const auditEventSchema = z.object({

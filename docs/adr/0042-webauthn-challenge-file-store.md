@@ -7,7 +7,9 @@
 ## Decision
 
 1. Persist login and register challenges in `.orgos/webauthn-challenges.json` with 5-minute TTL and one-time consume.
-2. Use tmp + rename writes, mode `0600`, and a short-lived `wx` lock file for read-modify-write across processes on one machine.
+2. Use tmp + rename writes, mode `0600`, and cross-process locking:
+   - **Linux (production):** advisory `fs.flock` on `webauthn-challenges.lock`
+   - **macOS dev / flock unavailable:** `wx` lock file + PID + stale lock recovery
 3. JSON corruption throws `WebAuthnChallengeStoreCorruptError` (fail-closed; no silent empty store).
 4. Settlement approval challenges remain in `.orgos/settlement-challenges.json` but adopt the same atomic write / corrupt-throw discipline (ADR 0037).
 
@@ -15,8 +17,9 @@ Redis or cross-host challenge sharing is out of scope; sticky sessions or shared
 
 ## Consequences
 
-- Vitest resets challenge store via memory override helpers.
+- Vitest resets challenge store via memory override helpers (file lock skipped in memory mode).
 - Production multi-container on one VM: shared `.orgos` volume required for WebAuthn login/register to work across workers.
+- `orgos doctor` and `npm run passkey:field-check` probe challenge store read/write.
 
 ## Related
 

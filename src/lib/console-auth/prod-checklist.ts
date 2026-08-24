@@ -7,8 +7,10 @@ import {
 import {
   listWebAuthnCredentialsByPurpose,
 } from "../wire-console/auth/webauthn-store.js";
+import { probeWebAuthnChallengeStore } from "../wire-console/auth/webauthn-challenge-store.js";
 import { rpId } from "../wire-console/auth/webauthn-shared.js";
 import { listFsGuardSkillCliExceptions } from "../org/fs-guard/skill-cli-policy.js";
+import { isFsGuardInitialized } from "../org/fs-guard/store.js";
 
 export interface ProdAuthCheck {
   id: string;
@@ -132,6 +134,26 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
         ? "WIRE_CONSOLE_AUTH must be prod in production — dev passkey login is not allowed"
         : "Wire Console production auth enabled",
     });
+
+    const webauthnRows = validateWebAuthnProdEnv({ host });
+    const ids = [
+      "webauthn_rp_id",
+      "webauthn_origin",
+      "webauthn_origin_https",
+      "webauthn_rp_origin_match",
+      "webauthn_no_deprecated_settlement_rp",
+    ] as const;
+    webauthnRows.forEach((row, i) => {
+      const id = ids[i] ?? `webauthn_env_${i}`;
+      const deprecatedWarn =
+        id === "webauthn_no_deprecated_settlement_rp" && row.detail.startsWith("WARN:");
+      checks.push({
+        id,
+        ok: deprecatedWarn ? true : row.ok,
+        warn: deprecatedWarn,
+        detail: deprecatedWarn ? row.detail.replace(/^WARN: /, "") : row.detail,
+      });
+    });
   }
 
   if (prod) {
@@ -195,28 +217,6 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
             ? "Settlement step-up disabled (ok for local/dev tests)"
             : "Settlement PassKey step-up enabled for tier B/C",
     });
-
-    if (prod && (scope === "wire" || scope === "all")) {
-      const webauthnRows = validateWebAuthnProdEnv({ host });
-      const ids = [
-        "webauthn_rp_id",
-        "webauthn_origin",
-        "webauthn_origin_https",
-        "webauthn_rp_origin_match",
-        "webauthn_no_deprecated_settlement_rp",
-      ] as const;
-      webauthnRows.forEach((row, i) => {
-        const id = ids[i] ?? `webauthn_env_${i}`;
-        const deprecatedWarn =
-          id === "webauthn_no_deprecated_settlement_rp" && row.detail.startsWith("WARN:");
-        checks.push({
-          id,
-          ok: deprecatedWarn ? true : row.ok,
-          warn: deprecatedWarn,
-          detail: deprecatedWarn ? row.detail.replace(/^WARN: /, "") : row.detail,
-        });
-      });
-    }
 
     const rateLimitOff = process.env.ORGOS_RATE_LIMIT === "0";
     checks.push({
@@ -310,6 +310,15 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
           : "WebAuthn test secret bypass disabled",
     });
 
+    const challengeProbe = probeWebAuthnChallengeStore();
+    checks.push({
+      id: "webauthn_challenge_store",
+      ok: challengeProbe.ok,
+      detail: challengeProbe.ok
+        ? challengeProbe.detail
+        : `${challengeProbe.detail} — ensure shared .orgos volume across workers (ADR 0042)`,
+    });
+
     const skillExceptions = listFsGuardSkillCliExceptions();
     checks.push({
       id: "fs_guard_skill_cli_exceptions",
@@ -319,6 +328,18 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
         skillExceptions.length > 0
           ? `${skillExceptions.length} Skill CLI commands still bypass guard apply (see docs/org-os/fs-guard-skill-cli-policy.md)`
           : "All Skill CLI mutations routed through fs-guard",
+    });
+
+    const guardOff = process.env.ORGOS_FS_GUARD === "off";
+    const guardInit = isFsGuardInitialized();
+    checks.push({
+      id: "fs_guard_initialized",
+      ok: !guardOff && guardInit,
+      detail: guardOff
+        ? "ORGOS_FS_GUARD=off is forbidden in production"
+        : guardInit
+          ? "FS-guard initialized"
+          : "FS-guard not initialized — run: orgos guard init",
     });
   }
 

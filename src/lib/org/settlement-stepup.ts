@@ -348,7 +348,7 @@ export function getSettlementChallengePublic(
   status: string;
   summary: SettlementChallengeRecord["summary"];
   expires_at: string;
-  allow_credentials: { id: string; type: "public-key"; transports?: Array<"hybrid" | "internal"> }[];
+  allow_credentials: { id: string; type: "public-key"; transports?: Array<"hybrid" | "internal" | "usb"> }[];
   user_verification: "required";
   hints: Array<"hybrid">;
 } {

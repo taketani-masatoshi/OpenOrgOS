@@ -104,7 +104,9 @@ export function isLoginPasskeyBootstrap(): boolean {
 
 /** Production first-login passkey requires CLI-minted bootstrap token. */
 export function isBootstrapTokenRequiredForLoginRegistration(): boolean {
-  if (!isProdSecurityMode()) return false;
+  const forceBootstrap =
+    process.env.WIRE_CONSOLE_WEBAUTHN_BOOTSTRAP_TOKEN_REQUIRED === "1";
+  if (!forceBootstrap && !isProdSecurityMode()) return false;
   try {
     return isLoginPasskeyBootstrap();
   } catch {

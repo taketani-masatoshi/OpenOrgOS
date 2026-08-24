@@ -173,6 +173,20 @@
   margin: var(--space-4, 16px) 0 0;
 }
 
+.auth-page.auth-loading .auth-lead {
+  color: var(--ink-soft, #6e6e73);
+}
+
+.passkey-manage-panel[data-busy="true"] .passkey-cred-revoke:not(:disabled),
+.passkey-manage-panel[data-busy="true"] .btn-primary:not(:disabled) {
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.passkey-manage-panel[data-busy="true"] {
+  opacity: 0.98;
+}
+
 .auth-status-banner {
   max-width: 420px;
   margin: 0 auto var(--space-4, 16px);
@@ -546,9 +560,13 @@
 
 .passkey-settings-section-title {
   margin: 0 0 var(--space-2, 8px);
-  font-family: var(--font-display, Newsreader, Georgia, serif);
+  font-family: var(--font-sans, "Instrument Sans", sans-serif);
   font-size: var(--text-lg, 1.125rem);
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.passkey-settings-page > .passkey-settings-section-title {
+  margin-top: var(--space-5, 24px);
 }
 
 .passkey-settings-section-lead {

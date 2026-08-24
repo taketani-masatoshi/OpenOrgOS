@@ -119,6 +119,7 @@ function encodeNegative(value: number): Buffer {
 export function parseAttestationObject(attestationObjectBase64: string): {
   fmt: string;
   authData: Buffer;
+  attStmt: Map<unknown, unknown>;
 } {
   const decoded = decodeCbor(Buffer.from(attestationObjectBase64, "base64url"));
   if (!(decoded.value instanceof Map)) {
@@ -126,10 +127,13 @@ export function parseAttestationObject(attestationObjectBase64: string): {
   }
   const fmt = decoded.value.get("fmt");
   const authData = decoded.value.get("authData");
+  const attStmtRaw = decoded.value.get("attStmt");
   if (typeof fmt !== "string" || !Buffer.isBuffer(authData)) {
     throw new Error("attestationObject missing fmt or authData");
   }
-  return { fmt, authData };
+  const attStmt =
+    attStmtRaw instanceof Map ? attStmtRaw : new Map<unknown, unknown>();
+  return { fmt, authData, attStmt };
 }
 
 export function extractCredentialFromAuthData(authData: Buffer): {
