@@ -63,10 +63,11 @@ export function isWebAuthnTestSecretAllowed(): boolean {
   );
 }
 
-/** Build minimal authenticatorData for tests (UP flag + rpIdHash). */
+/** Build minimal authenticatorData for tests (UP|UV flags + rpIdHash). */
 export function buildTestAuthenticatorData(rpId: string): Buffer {
   const rpIdHash = createHash("sha256").update(rpId).digest();
-  return Buffer.concat([rpIdHash, Buffer.from([0x01, 0, 0, 0, 0])]);
+  // flags: UP (0x01) | UV (0x04) = 0x05 — required by verifyWebAuthnAssertion
+  return Buffer.concat([rpIdHash, Buffer.from([0x05, 0, 0, 0, 0])]);
 }
 
 /** Mint signed WebAuthn assertion for vitest (ES256 P-256). */

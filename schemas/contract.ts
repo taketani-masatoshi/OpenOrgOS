@@ -13,6 +13,7 @@ export const contractType = z.enum([
   "insurance",
   "construction",
   "loan",
+  "employment",
   "outsourcing",
   "advisory",
   "system",
@@ -50,6 +51,70 @@ export const contractCompensationSchema = z.object({
   invoice_registration: z.string().optional(),
 });
 
+/** Lifecycle transition stages recorded on the contract YAML (audit link). */
+export const contractLifecycleStageSchema = z.enum([
+  "pending_signature",
+  "executed",
+  "terminated",
+]);
+
+export const contractLifecycleEventSchema = z.object({
+  stage: contractLifecycleStageSchema,
+  revision: z.number().int().nonnegative(),
+  event_id: z.string().min(1),
+  recorded_at: z.string().min(1),
+  actor: z.string().min(1).optional(),
+});
+
+/** CEO / Canvas L1 — impact of an obligation or whole contract */
+export const contractImpactLevelSchema = z.enum([
+  "critical",
+  "high",
+  "medium",
+  "low",
+]);
+
+/** Short duty line for Canvas (no L2). party: us = 当社 */
+export const contractDutyLineSchema = z.object({
+  party: z.enum(["us", "them", "both"]).default("us"),
+  summary: z.string().min(1).max(200),
+  impact: contractImpactLevelSchema.optional(),
+});
+
+export const contractRightLineSchema = z.object({
+  party: z.enum(["us", "them", "both"]).default("us"),
+  summary: z.string().min(1).max(200),
+});
+
+export const contractExitWindowKindSchema = z.enum([
+  "renewal_notice",
+  "mid_term_termination",
+  "non_renewal",
+  "end_of_term",
+]);
+
+export const contractExitWindowSchema = z.object({
+  kind: contractExitWindowKindSchema,
+  /** Decision / notice deadline (YYYY-MM-DD) */
+  deadline: dateString.optional(),
+  summary: z.string().min(1).max(200),
+  consequence_if_missed: z.string().max(200).optional(),
+});
+
+/**
+ * CEO-facing L1 projection fields. Optional — heuristics fill gaps for Canvas.
+ * Do not put bank numbers, addresses, or contract body here.
+ */
+export const contractCeoSchema = z.object({
+  business_impact: contractImpactLevelSchema.optional(),
+  impact_note: z.string().max(240).optional(),
+  our_obligations: z.array(contractDutyLineSchema).max(8).optional(),
+  our_rights: z.array(contractRightLineSchema).max(8).optional(),
+  exit_windows: z.array(contractExitWindowSchema).max(6).optional(),
+  /** When true, excluded from CEO Canvas / Web portfolio (法務デモ等) */
+  demo: z.boolean().optional(),
+});
+
 export const contractSchema = z.object({
   id: z.string().regex(/^CTR-\d{3,}$/),
   name: z.string().min(1),
@@ -73,7 +138,17 @@ export const contractSchema = z.object({
   risk: contractRiskSchema.optional(),
   notes: z.string().optional(),
   protocol: contractProtocolConfigSchema.optional(),
+  /** CEO Canvas L1: duties, rights, exit windows, impact */
+  ceo: contractCeoSchema.optional(),
+  /** Appended by `orgos contracts transition` — do not invent historically */
+  lifecycle_events: z.array(contractLifecycleEventSchema).optional(),
 });
 
 export type Contract = z.output<typeof contractSchema>;
+export type ContractStatus = z.output<typeof contractStatus>;
 export type ContractType = z.output<typeof contractType>;
+export type ContractLifecycleStage = z.output<typeof contractLifecycleStageSchema>;
+export type ContractLifecycleEvent = z.output<typeof contractLifecycleEventSchema>;
+export type ContractImpactLevel = z.output<typeof contractImpactLevelSchema>;
+export type ContractCeo = z.output<typeof contractCeoSchema>;
+export type ContractExitWindow = z.output<typeof contractExitWindowSchema>;

@@ -99,6 +99,10 @@ export function sumAllOutflows(side: YojitsuMonthSide): number {
   return sumLines(side, ["expense", "depreciation", "capex"]);
 }
 
+export function sumNonOperating(side: YojitsuMonthSide): number {
+  return sumLines(side, "non_operating");
+}
+
 export function aggregateBySegment(
   plan: YojitsuPlan,
   kind: YojitsuLineKind,
@@ -106,7 +110,8 @@ export function aggregateBySegment(
 ): Map<string, number> {
   const totals = new Map<string, number>();
   for (const month of plan.months) {
-    const side = (useActual && month.actual ? month.actual : month.plan) ?? month.plan;
+    const side = useActual ? month.actual : month.plan;
+    if (!side) continue;
     for (const line of side.lines) {
       if (line.kind !== kind) continue;
       const key = lineDisplayLabel(line);

@@ -29,6 +29,8 @@ export interface RecordTransactionOptions {
   invoiceId?: string;
   stakeholderId?: string;
   brokerInstruction?: string;
+  receiptId?: string;
+  receiptDigest?: string;
   amount?: { value: number; currency: string };
   notes?: string;
   correlationId?: string;
@@ -123,6 +125,8 @@ function recordProtocolTransactionInner(opts: RecordTransactionOptions): RecordT
     invoice_id: opts.invoiceId,
     stakeholder_id: opts.stakeholderId ?? peer.stakeholder_id,
     broker_instruction: opts.brokerInstruction,
+    receipt_id: opts.receiptId,
+    receipt_digest: opts.receiptDigest,
   };
 
   const payload: Record<string, unknown> = {
@@ -132,7 +136,10 @@ function recordProtocolTransactionInner(opts: RecordTransactionOptions): RecordT
     counterparty: counterparty.org_id,
     refs,
   };
-  if (amount) payload.amount = amount;
+  // receipt.claimed must never carry amount (ADR 0032)
+  if (amount && transactionType !== "steward.receipt.claimed") {
+    payload.amount = amount;
+  }
   if (opts.notes) payload.notes = opts.notes;
   if (opts.operatorAttestation) {
     payload.operator_attestation = operatorAttestationSchema.parse(opts.operatorAttestation);

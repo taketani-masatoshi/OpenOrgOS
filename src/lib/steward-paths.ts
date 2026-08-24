@@ -23,6 +23,11 @@ export const CLOUD_AGENT_CONFIG_PATH = join(STEWARD_PLATFORM_DIR, "agent", "clou
 export const OPERATOR_RUNTIME_CONFIG_PATH = join(STEWARD_PLATFORM_DIR, "agent", "runtime.yaml");
 export const PROTOCOL_REGISTRY_PATH = join(STEWARD_PLATFORM_DIR, "protocol", "registry.yaml");
 export const NOTIFICATIONS_REGISTRY_PATH = join(STEWARD_PLATFORM_DIR, "notifications", "registry.yaml");
+export const CANVAS_VIEWS_REGISTRY_PATH = join(
+  STEWARD_PLATFORM_DIR,
+  "canvas-views",
+  "registry.yaml"
+);
 
 /** Operator policy — CEO ↔ Operator boundary (I4) */
 export const OPERATOR_POLICY_PATH = join(getInstallRoot(), "steward", "rules", "operator-policy.md");

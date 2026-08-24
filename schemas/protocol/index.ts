@@ -58,6 +58,7 @@ export * from "./wire-gateway-audit.js";
 export * from "./wire-export-policy.js";
 export * from "./wire-trust-registry.js";
 export * from "./delivery-attempt.js";
+export * from "./notify-pull-pending.js";
 export * from "./wire-node-governance.js";
 export * from "./org-certificate-attestation.js";
 

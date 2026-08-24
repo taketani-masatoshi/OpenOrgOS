@@ -122,6 +122,11 @@ export const externalContactSchema = z.object({
   role: z.string().optional(),
   preferred_channel: z.string().optional(),
   email: z.string().email().optional(),
+  /**
+   * 社外文の受信者 locale（例: ja-JP · en-US）。
+   * 未設定時はテナント jurisdiction の default locale。
+   */
+  correspondence_locale: z.string().min(2).optional(),
   /** Wire peer link (L1) */
   peer_id: z.string().regex(/^PEER-\d{3}$/).optional(),
   wire_did: z.string().optional(),

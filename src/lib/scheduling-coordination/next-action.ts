@@ -4,6 +4,24 @@ import type {
   SchedulingNextAction,
 } from "../../../schemas/executive/scheduling-cases.js";
 import { schedulingCaseSchema } from "../../../schemas/executive/scheduling-cases.js";
+import {
+  caseNeedsCeoIntake,
+  isCeoGateException,
+  SCHEDULE_COUNTER_NEEDS_CEO,
+  SCHEDULE_FORMAT_CHANGE,
+  SCHEDULE_IDENTITY_QUERY,
+  SCHEDULE_INTAKE_PENDING,
+  SCHEDULE_PURPOSE_UNCLEAR,
+  SCHEDULE_VENUE_PENDING,
+  SCHEDULE_VENUE_CLARIFY,
+  SCHEDULE_VENUE_RESERVATION_PENDING,
+} from "./ceo-gates.js";
+import { caseNeedsVenueResolution, caseNeedsVenueReservationForConfirm } from "./venue-gate.js";
+import {
+  clarifySentForRevision,
+  needsClarifyBeforeProposal,
+  needsVenueClarifyInput,
+} from "./venue-clarify.js";
 import { findUnanimousAcceptedSlot } from "./slots.js";
 
 export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction {
@@ -15,11 +33,25 @@ export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction
     return "none";
   }
 
+  if (caseNeedsVenueResolution(caseRow)) {
+    return "ceo_confirm";
+  }
+
+  if (needsVenueClarifyInput(caseRow)) {
+    return "ceo_confirm";
+  }
+
   if (caseRow.status === "confirmed") {
+    if (caseNeedsVenueReservationForConfirm(caseRow)) {
+      return "none";
+    }
     return caseRow.calendar_sync === "synced" ? "send_confirmation" : "write_calendar";
   }
 
   if (caseRow.status === "notifying") {
+    if (caseNeedsVenueReservationForConfirm(caseRow)) {
+      return "none";
+    }
     const externalIds = caseRow.participants
       .filter((participant) => participant.role === "external")
       .map((participant) => participant.id);
@@ -35,12 +67,41 @@ export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction
     return allSent ? "none" : "send_confirmation";
   }
 
-  const hasCounter = caseRow.participants.some((p) => p.response === "counter");
-  if (hasCounter && caseRow.counter_round >= 3) {
+  if (caseNeedsCeoIntake(caseRow) || caseRow.exception_reason === SCHEDULE_INTAKE_PENDING) {
     return "ceo_confirm";
   }
+
+  if (
+    isCeoGateException(caseRow.exception_reason) &&
+    [
+      SCHEDULE_COUNTER_NEEDS_CEO,
+      SCHEDULE_FORMAT_CHANGE,
+      SCHEDULE_PURPOSE_UNCLEAR,
+      SCHEDULE_IDENTITY_QUERY,
+      SCHEDULE_VENUE_PENDING,
+      SCHEDULE_VENUE_CLARIFY,
+      "schedule_counter_limit",
+    ].includes(caseRow.exception_reason ?? "")
+  ) {
+    // 会場ゲート理由が残っていても、条件が解消済みなら通過（applyNextAction で clear）
+    if (
+      caseRow.exception_reason === SCHEDULE_VENUE_CLARIFY &&
+      !needsVenueClarifyInput(caseRow)
+    ) {
+      /* fall through */
+    } else if (
+      caseRow.exception_reason === SCHEDULE_VENUE_PENDING &&
+      !caseNeedsVenueResolution(caseRow)
+    ) {
+      /* fall through */
+    } else {
+      return "ceo_confirm";
+    }
+  }
+
+  const hasCounter = caseRow.participants.some((p) => p.response === "counter");
   if (hasCounter) {
-    return "propose_slots";
+    return "ceo_confirm";
   }
 
   const unanimous = findUnanimousAcceptedSlot(caseRow.participants, caseRow.proposed_slots);
@@ -48,11 +109,24 @@ export function computeNextAction(caseRow: SchedulingCase): SchedulingNextAction
     return "ceo_confirm";
   }
 
+  if (needsClarifyBeforeProposal(caseRow)) {
+    const drafted = caseRow.correspondence.some(
+      (r) => r.kind === "clarify" && r.proposal_revision === caseRow.proposal_revision
+    );
+    return drafted && !clarifySentForRevision(caseRow) ? "none" : "send_clarify";
+  }
+
   if (!caseRow.proposed_slots.length) {
+    if (caseRow.meeting_format === "in_person" && !clarifySentForRevision(caseRow)) {
+      return "none";
+    }
     return "propose_slots";
   }
 
   if (caseRow.status === "open" || caseRow.status === "proposing") {
+    if (caseRow.meeting_format === "in_person" && !clarifySentForRevision(caseRow)) {
+      return "send_clarify";
+    }
     return "send_proposal";
   }
 
@@ -74,18 +148,47 @@ export function applyNextAction(caseInput: SchedulingCaseInput): SchedulingCase 
   const caseRow = schedulingCaseSchema.parse(caseInput);
   const next_action = computeNextAction(caseRow);
   let status = caseRow.status;
+  let exception_reason = caseRow.exception_reason;
 
-  if (next_action === "ceo_confirm" && status === "awaiting_responses") {
-    status = "awaiting_responses";
+  if (caseNeedsCeoIntake(caseRow) && !exception_reason) {
+    exception_reason = SCHEDULE_INTAKE_PENDING;
+  }
+
+  if (needsVenueClarifyInput(caseRow) && !exception_reason) {
+    exception_reason = SCHEDULE_VENUE_CLARIFY;
+  }
+
+  if (caseNeedsVenueResolution(caseRow)) {
+    exception_reason = SCHEDULE_VENUE_PENDING;
+  } else if (
+    exception_reason === SCHEDULE_VENUE_PENDING &&
+    !caseNeedsVenueResolution(caseRow)
+  ) {
+    exception_reason = undefined;
+  } else if (
+    exception_reason === SCHEDULE_VENUE_CLARIFY &&
+    !needsVenueClarifyInput(caseRow)
+  ) {
+    exception_reason = undefined;
+  }
+
+  if (caseNeedsVenueReservationForConfirm(caseRow)) {
+    exception_reason = SCHEDULE_VENUE_RESERVATION_PENDING;
+  } else if (
+    exception_reason === SCHEDULE_VENUE_RESERVATION_PENDING &&
+    !caseNeedsVenueReservationForConfirm(caseRow)
+  ) {
+    exception_reason = undefined;
+  }
+
+  if (next_action === "send_clarify" && status === "open") {
+    status = "proposing";
   }
   if (next_action === "send_proposal" && status === "open") {
     status = "proposing";
   }
   if (next_action === "send_reminder" && status === "proposing") {
     status = "awaiting_responses";
-  }
-  if (next_action === "propose_slots" && hasCounterResponses(caseRow)) {
-    status = "proposing";
   }
 
   if (next_action === "ceo_confirm") {
@@ -101,14 +204,15 @@ export function applyNextAction(caseInput: SchedulingCaseInput): SchedulingCase 
   const hasAcceptWithoutSlot = caseRow.participants.some(
     (p) => p.response === "accept" && !p.accepted_slot_id
   );
-  const exception_reason =
-    hasCounterResponses(caseRow) && caseRow.counter_round >= 3
-      ? "schedule_counter_limit"
-      : caseRow.proposed_slots.length > 0 &&
-          caseRow.participants.every((p) => p.response === "accept") &&
-          (acceptedSlotIds.size !== 1 || hasAcceptWithoutSlot)
-        ? "schedule_split_accept"
-        : caseRow.exception_reason;
+  if (hasCounterResponses(caseRow) && caseRow.counter_round >= 3) {
+    exception_reason = "schedule_counter_limit";
+  } else if (
+    caseRow.proposed_slots.length > 0 &&
+    caseRow.participants.every((p) => p.response === "accept") &&
+    (acceptedSlotIds.size !== 1 || hasAcceptWithoutSlot)
+  ) {
+    exception_reason = "schedule_split_accept";
+  }
 
   return { ...caseRow, status, next_action, exception_reason };
 }
@@ -121,6 +225,8 @@ export function nextActionLabel(action: SchedulingNextAction): string {
   switch (action) {
     case "propose_slots":
       return "候補日時を生成";
+    case "send_clarify":
+      return "会場案のご相談メール下書き";
     case "send_proposal":
       return "候補提示メール下書き";
     case "send_reminder":
@@ -128,7 +234,7 @@ export function nextActionLabel(action: SchedulingNextAction): string {
     case "send_confirmation":
       return "確定通知メール下書き";
     case "ceo_confirm":
-      return "CEO 最終確認";
+      return "CEO 確認";
     case "write_calendar":
       return "カレンダー反映";
     default:

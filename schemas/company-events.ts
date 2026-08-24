@@ -23,6 +23,12 @@ export const companyEventRelatedSchema = z
     approval_id: z.string().optional(),
     meeting_ref: z.string().optional(),
     target_event_id: z.string().optional(),
+    application_id: z.string().optional(),
+    permit_id: z.string().optional(),
+    permit_type_id: z.string().optional(),
+    property_id: z.string().optional(),
+    license_lifecycle: z.string().optional(),
+    phase: z.string().optional(),
   })
   .passthrough();
 

@@ -9,6 +9,10 @@ export function getPendingApprovalsPath(): string {
   return join(getOrgDataDir(), "pending-approvals.yaml");
 }
 
+export function getTenantConfigChangesPath(): string {
+  return join(getOrgDataDir(), "config-change-requests.yaml");
+}
+
 export function getOrgAuditBridgeConfigPath(): string {
   return join(getOrgDataDir(), "audit-bridge.yaml");
 }

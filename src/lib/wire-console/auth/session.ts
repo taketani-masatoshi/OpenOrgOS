@@ -1,6 +1,7 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
+  cookieSecureEnabled,
   loadPersistedSessions,
   savePersistedSessions,
   sessionPersistenceEnabled,
@@ -96,18 +97,17 @@ export function sessionTokenFromRequest(req: IncomingMessage): string | undefine
   return parseCookies(req)[WIRE_CONSOLE_SESSION_COOKIE];
 }
 
+function sessionCookieBase(tokenValue: string): string {
+  const secure = cookieSecureEnabled() ? "; Secure" : "";
+  return `${WIRE_CONSOLE_SESSION_COOKIE}=${tokenValue}; Path=/; HttpOnly; SameSite=Strict${secure}`;
+}
+
 export function setSessionCookie(res: ServerResponse, token: string): void {
-  res.setHeader(
-    "Set-Cookie",
-    `${WIRE_CONSOLE_SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict`
-  );
+  res.setHeader("Set-Cookie", sessionCookieBase(encodeURIComponent(token)));
 }
 
 export function clearSessionCookie(res: ServerResponse): void {
-  res.setHeader(
-    "Set-Cookie",
-    `${WIRE_CONSOLE_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`
-  );
+  res.setHeader("Set-Cookie", `${sessionCookieBase("")}; Max-Age=0`);
 }
 
 export function resetSessionsForTests(): void {

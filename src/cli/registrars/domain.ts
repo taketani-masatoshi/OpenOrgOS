@@ -13,6 +13,7 @@ import {
 import {
   runContractsList,
   runContractsShow,
+  runContractsSummary,
   CONTRACT_TYPES,
 } from "../../commands/contracts.js";
 import {
@@ -26,7 +27,18 @@ import {
   runFinancesList,
   runFinancesShow,
   runFinancesVariance,
+  runFinancesBriefing,
+  runFinancesCashBalance,
 } from "../../commands/finances.js";
+import {
+  runReceiptInit,
+  runReceiptIssue,
+  runReceiptList,
+  runReceiptShow,
+  runReceiptPdf,
+  runReceiptVerify,
+  runReceiptConfigShow,
+} from "../../commands/receipt.js";
 import { runMigrateYojitsu } from "../../commands/migrate.js";
 import { runAnalyzeProperty } from "../../commands/analyze.js";
 import { runScenarioCommand } from "../../commands/scenario.js";
@@ -48,9 +60,9 @@ import {
 import {
   runEventsArchive,
   runEventsChainBackfill,
-  runEventsChainPin,
   runEventsChainTail,
   runEventsChainVerify,
+  runEventsChainPin,
   runEventsClose,
   runEventsEnsureMonth,
   runEventsLinkOutbox,
@@ -69,6 +81,7 @@ import { COMPANY_EVENT_KINDS } from "../../lib/company-events.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "../../commands/deps.js";
 import { runInvoiceGenerateCommand } from "../../commands/invoice.js";
 import { runForecast } from "../../commands/forecast.js";
+import { runHrHeadcount } from "../../commands/hr.js";
 
 export function registerDomainCommands(program: Command): void {
   program
@@ -90,6 +103,12 @@ export function registerDomainCommands(program: Command): void {
   sync.command("all").description("Sync all plan CSVs and contract ledger").action(runSyncAll);
   sync.command("contracts").description("Sync 契約管理表.csv only").action(runSyncContracts);
 
+  const hr = program.command("hr").description("HR master (L1 headcount)");
+  hr.command("headcount")
+    .description("Deterministic headcount from data/hr/employees.yaml (no names)")
+    .option("--json", "Print JSON")
+    .action((opts: { json?: boolean }) => runHrHeadcount({ json: Boolean(opts.json) }));
+
   const contracts = program.command("contracts").description("Contract ledger");
   contracts
     .command("list")
@@ -98,6 +117,17 @@ export function registerDomainCommands(program: Command): void {
     .option("--property <id>", "Filter by property ID")
     .action(runContractsList);
   contracts.command("show <id>").description("Show contract details").action(runContractsShow);
+  contracts
+    .command("summary")
+    .description("Executive contract portfolio (counts, expiry, exit windows)")
+    .option("--days <n>", "Horizon days (default 90)", "90")
+    .option("--json", "Print JSON")
+    .action((opts: { days?: string; json?: boolean }) =>
+      runContractsSummary({
+        days: opts.days ? Number(opts.days) : 90,
+        json: Boolean(opts.json),
+      })
+    );
 
   const properties = program.command("properties").description("Property ledger");
   properties
@@ -123,10 +153,119 @@ export function registerDomainCommands(program: Command): void {
   finances.command("list").description("List all monthly finance entries").action(runFinancesList);
   finances.command("show <month>").description("Show monthly finance details").action(runFinancesShow);
   finances
+    .command("briefing")
+    .description("Executive finance briefing (cash, burn, tax estimate, YTD)")
+    .option("--month <YYYY-MM>", "as_of month (default: current)")
+    .action((opts: { month?: string }) => runFinancesBriefing({ month: opts.month }));
+  finances
+    .command("cash-balance")
+    .description("Show confirmed cash balance (L1 · bank_account_id only)")
+    .option("--json", "Print JSON")
+    .action((opts: { json?: boolean }) => runFinancesCashBalance({ json: Boolean(opts.json) }));
+  finances
     .command("variance")
     .description("FY plan vs monthly YAML revenue variance")
     .option("-o, --output <filename>", "Save to docs/plans/variance/")
     .action((opts) => runFinancesVariance({ output: opts.output }));
+
+  const receipt = program
+    .command("receipt")
+    .description("QR-signed JP receipt (適格請求書) issue · claim · verify");
+  receipt
+    .command("init")
+    .description("Create data/receipt-qr/config.yaml")
+    .requiredOption(
+      "--claim-base-url <url>",
+      "Claim endpoint prefix (e.g. https://host/wire/v1/receipts/claim)",
+    )
+    .option("--portal-url <url>", "Verify portal URL", "https://receipt.oorgos.org/r")
+    .option("--simple-eligible", "Allow qualified_simplified_invoice")
+    .option("--simple-basis <text>", "Business basis for simplified invoice")
+    .option("--force", "Overwrite existing config")
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) =>
+      runReceiptInit({
+        tenant: opts.tenant,
+        claimBaseUrl: opts.claimBaseUrl,
+        portalUrl: opts.portalUrl,
+        simpleEligible: Boolean(opts.simpleEligible),
+        simpleBasis: opts.simpleBasis,
+        force: Boolean(opts.force),
+      }),
+    );
+  receipt
+    .command("issue")
+    .description("Issue a signed QR receipt from YAML/JSON")
+    .requiredOption("--file <path>", "Issue input file")
+    .option("--pdf <path>", "Write PDF to path")
+    .option("--json", "Print JSON")
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) =>
+      void runReceiptIssue({
+        tenant: opts.tenant,
+        file: opts.file,
+        pdf: opts.pdf,
+        json: Boolean(opts.json),
+      }),
+    );
+  receipt
+    .command("list")
+    .description("List issued receipts")
+    .option("--status <status>", "Filter claim_status")
+    .option("--json", "Print JSON")
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) =>
+      runReceiptList({
+        tenant: opts.tenant,
+        status: opts.status,
+        json: Boolean(opts.json),
+      }),
+    );
+  receipt
+    .command("show")
+    .description("Show receipt details")
+    .argument("<id>", "RCPT-YYYYMMDD-NNN")
+    .option("--json", "Print JSON")
+    .option("--tenant <id>", "Tenant id")
+    .action((id: string, opts) =>
+      runReceiptShow({ tenant: opts.tenant, id, json: Boolean(opts.json) }),
+    );
+  receipt
+    .command("pdf")
+    .description("Regenerate PDF for an issued receipt")
+    .argument("<id>", "RCPT-YYYYMMDD-NNN")
+    .requiredOption("--out <path>", "Output PDF path")
+    .option("--tenant <id>", "Tenant id")
+    .action((id: string, opts) =>
+      void runReceiptPdf({ tenant: opts.tenant, id, out: opts.out }),
+    );
+  receipt
+    .command("verify")
+    .description("Verify a receipt link, JSON file, or raw JSON")
+    .argument("<input>", "Link, file path, or JSON")
+    .option("--json", "Print JSON")
+    .option("--tenant <id>", "Tenant id")
+    .action((input: string, opts) =>
+      runReceiptVerify({
+        tenant: opts.tenant,
+        input,
+        json: Boolean(opts.json),
+      }),
+    );
+  receipt
+    .command("config")
+    .description("Show receipt-qr config")
+    .option("--json", "Print JSON")
+    .option("--tenant <id>", "Tenant id")
+    .action((opts) =>
+      runReceiptConfigShow({ tenant: opts.tenant, json: Boolean(opts.json) }),
+    );
+
+  program
+    .command("cash-balance")
+    .description("Show cash balance (alias of finances cash-balance)")
+    .option("--json", "Print JSON")
+    .action((opts: { json?: boolean }) => runFinancesCashBalance({ json: Boolean(opts.json) }));
 
   const migrate = program.command("migrate").description("Data migrations");
   migrate
@@ -547,6 +686,7 @@ export function registerDomainCommands(program: Command): void {
     .option("--stakeholder <stkId>", "STK-xxx for payee hints")
     .option("--confirm", "Mark as confirmed (not dry-run)")
     .option("--write", "Save to scratch/broker/ (gitignore)")
+    .option("--approval-id <id>", "APR-... required for tier B/C --write (ADR 0037)")
     .action((opts) =>
       runBrokerTransfer({
         from: opts.from,
@@ -556,6 +696,7 @@ export function registerDomainCommands(program: Command): void {
         stakeholderId: opts.stakeholder,
         dryRun: !opts.confirm,
         write: opts.write ?? false,
+        approvalId: opts.approvalId,
       })
     );
 }

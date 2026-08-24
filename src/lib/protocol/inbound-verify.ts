@@ -3,7 +3,12 @@ import type { EventEnvelope } from "../../../schemas/protocol/org-event.js";
 import type { PeerProfile } from "../../../schemas/protocol/peers.js";
 import { operatorAttestationSchema } from "../../../schemas/protocol/operator-attestation.js";
 import { loadPeersRegistry } from "./peers.js";
-import { verifyEventEnvelopeSignature } from "./signing.js";
+import {
+  exportProtocolPublicKeyBase64,
+  verifyEventEnvelopeSignature,
+} from "./signing.js";
+import { ourOrgRef } from "./identity.js";
+import { getTenantId } from "../tenant.js";
 
 export function findPeerByOrgRef(orgRef: OrgRef): PeerProfile | undefined {
   const peers = loadPeersRegistry().peers;
@@ -12,6 +17,9 @@ export function findPeerByOrgRef(orgRef: OrgRef): PeerProfile | undefined {
     const exact = peers.find((p) => p.org_uri === orgRef.org_uri);
     if (exact) return exact;
   }
+
+  const byDid = peers.find((p) => !!p.did && (p.did === orgRef.org_id || p.did === orgRef.org_uri));
+  if (byDid) return byDid;
 
   const tenantFromUri = orgRef.org_uri?.match(/^steward:\/\/tenant\/([^/]+)$/);
   if (tenantFromUri) {
@@ -31,22 +39,53 @@ export function findPeerByOrgRef(orgRef: OrgRef): PeerProfile | undefined {
   );
 }
 
+/** True when origin is this tenant (loopback notify / self-pull). */
+export function isOurOrgRef(orgRef: OrgRef): boolean {
+  const tenantId = getTenantId();
+  if (orgRef.org_id === tenantId) return true;
+  if (orgRef.org_uri === `steward://tenant/${tenantId}`) return true;
+  try {
+    const ours = ourOrgRef();
+    if (orgRef.org_id === ours.org_id) return true;
+    if (orgRef.org_uri && ours.org_uri && orgRef.org_uri === ours.org_uri) return true;
+  } catch {
+    /* tenant config incomplete in some fixtures */
+  }
+  return false;
+}
+
 export interface InboundEnvelopeVerification {
   ok: boolean;
   issues: string[];
 }
 
-export function verifyInboundProtocolEnvelope(envelope: EventEnvelope): InboundEnvelopeVerification {
+export function verifyInboundProtocolEnvelope(
+  envelope: EventEnvelope
+): InboundEnvelopeVerification {
   const issues: string[] = [];
   const peer = findPeerByOrgRef(envelope.origin);
+  // Loopback notify registers PEER-005 with our org_uri — still treat as self-origin
+  // and verify with the local signing key (peer key may lag hygiene updates).
+  const selfOrigin = isOurOrgRef(envelope.origin);
+  const verifyKey = selfOrigin
+    ? exportProtocolPublicKeyBase64() ?? peer?.protocol_public_key
+    : peer?.protocol_public_key;
 
-  if (!peer) {
+  if (!peer && !selfOrigin) {
     issues.push(`unknown origin org ${envelope.origin.org_id}`);
-  } else if (peer.protocol_public_key) {
+  } else if (verifyKey) {
     if (!envelope.signature) {
-      issues.push(`missing signature from peer ${peer.peer_id}`);
-    } else if (!verifyEventEnvelopeSignature(envelope, peer.protocol_public_key)) {
-      issues.push(`invalid signature from peer ${peer.peer_id}`);
+      issues.push(
+        selfOrigin
+          ? "missing signature from self-origin envelope"
+          : `missing signature from peer ${peer!.peer_id}`
+      );
+    } else if (!verifyEventEnvelopeSignature(envelope, verifyKey)) {
+      issues.push(
+        selfOrigin
+          ? "invalid signature on self-origin envelope"
+          : `invalid signature from peer ${peer!.peer_id}`
+      );
     }
   }
 

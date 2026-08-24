@@ -26,6 +26,8 @@ export const agentCatalogEntrySchema = z.object({
   reports_to: agentId.optional(),
   scope: z.string().default(""),
   binds_modules: z.array(z.string()).default([]),
+  /** Direct canonical CLI roots not derivable from owned Skills. */
+  cli_roots: z.array(z.string().min(1)).default([]),
   access: agentAccessBoundarySchema.default({ read: [], write: [] }),
   capability: z
     .object({

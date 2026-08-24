@@ -9,6 +9,7 @@ export const relayCycleMetricsSchema = z.object({
   sla_failures: z.number().int().nonnegative().default(0),
   reconcile_alerts: z.number().int().nonnegative().default(0),
   relay_pulled: z.number().int().nonnegative().default(0),
+  notify_pulled: z.number().int().nonnegative().default(0),
 });
 
 export const relayStateSchema = z.object({

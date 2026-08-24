@@ -28,6 +28,7 @@ import { exportWireFederationGossipCatalog, validateWireFederationGossipPost } f
 import { applyIncomingWireFederationGossip, listWireFederationCatalogWithGossip } from "./federation-gossip-store.js";
 import { join } from "node:path";
 import { getProtocolDataDir } from "../protocol/paths.js";
+import { handleReceiptClaimApi } from "../receipt-qr.js";
 import { verifyMtlsClient } from "../protocol/protocol-tls.js";
 
 export interface WireGatewayServerOptions {
@@ -343,6 +344,29 @@ export function startWireGatewayServer(
           return;
         }
         await handleInboundWire(res, parsed.message, access.clientOrgUri);
+      } catch (e) {
+        json(res, 400, {
+          ok: false,
+          error: e instanceof Error ? e.message : "schema_invalid",
+        });
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/wire/v1/receipts/claim") {
+      const access = authorizeProtectedRequest(req, res);
+      if (!access.ok) return;
+      try {
+        const raw = await readBody(req);
+        const result = handleReceiptClaimApi(raw);
+        appendWireGatewayAudit(config.audit.path, {
+          recorded_at: new Date().toISOString(),
+          action: "wire.receive",
+          peer_node_id: access.clientOrgUri ?? "unknown",
+          reason: `receipt_claim:${result.status}:${String((result.body as { receipt_id?: string }).receipt_id ?? "")}`,
+          gateway_id: config.node_id,
+        });
+        json(res, result.status, result.body);
       } catch (e) {
         json(res, 400, {
           ok: false,

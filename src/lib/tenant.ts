@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import YAML from "yaml";
@@ -10,6 +11,14 @@ import {
   getFrameworkDocsDir,
   getTenantTemplateDir,
 } from "./orgos-paths.js";
+import {
+  isVaultLogicalPath,
+  resolveVaultLogicalPath,
+  tenantVaultRoot,
+} from "./vault.js";
+
+/** Per-request tenant override (Wire / Console). Does not mutate process default. */
+const tenantAls = new AsyncLocalStorage<string>();
 
 export {
   getInstallRoot,
@@ -39,6 +48,11 @@ const tenantConfigSchema = z.object({
   description: z.string().optional(),
   default: z.boolean().optional(),
   lifecycle: z.enum(["skeleton", "operational", "test"]).optional(),
+  /**
+   * Explicitly separates framework/fixture work from company operations.
+   * `development` must not be used to mutate tenant canonical business data.
+   */
+  operation_mode: z.enum(["development", "tenant"]).optional(),
   jurisdiction: z
     .string()
     .regex(/^[A-Z]{2}$/, "ISO 3166-1 alpha-2 jurisdiction code")
@@ -55,6 +69,7 @@ const tenantConfigSchema = z.object({
 });
 
 export type TenantConfig = z.infer<typeof tenantConfigSchema>;
+export type TenantOperationMode = "development" | "tenant";
 
 let _tenantId: string | null = null;
 
@@ -81,6 +96,18 @@ export function setTenantId(id: string): void {
   _tenantId = assertValidTenantId(id);
 }
 
+/** Run `fn` with a request-scoped tenant (safe under concurrent Wire + Chat). */
+export function runWithTenantId<T>(tenantId: string, fn: () => T): T {
+  return tenantAls.run(assertValidTenantId(tenantId), fn);
+}
+
+export async function runWithTenantIdAsync<T>(
+  tenantId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  return tenantAls.run(assertValidTenantId(tenantId), fn);
+}
+
 export function listTenantIds(): string[] {
   const tenantsDir = getTenantsDir();
   if (!existsSync(tenantsDir)) return [];
@@ -101,6 +128,9 @@ function readTenantConfig(tenantId: string): TenantConfig {
 }
 
 export function getTenantId(): string {
+  const fromAls = tenantAls.getStore();
+  if (fromAls) return fromAls;
+
   if (_tenantId) return _tenantId;
 
   const fromEnv = resolveTenantFromEnv();
@@ -135,6 +165,13 @@ export function loadTenantConfig(): TenantConfig {
   return readTenantConfig(getTenantId());
 }
 
+export function getTenantOperationMode(
+  config: TenantConfig = loadTenantConfig()
+): TenantOperationMode {
+  if (config.operation_mode) return config.operation_mode;
+  return config.lifecycle === "test" ? "development" : "tenant";
+}
+
 export function resolveTenantPath(logicalPath: string): string {
   const normalized = logicalPath.replace(/\\/g, "/").replace(/^\.\//, "");
   if (normalized.startsWith("tenants/")) {
@@ -144,19 +181,38 @@ export function resolveTenantPath(logicalPath: string): string {
     return resolve(getInstallRoot(), normalized);
   }
   if (normalized.startsWith("data/") || normalized.startsWith("docs/") || normalized.startsWith("records/")) {
+    if (isVaultLogicalPath(normalized)) {
+      return resolveVaultLogicalPath({
+        tenantId: getTenantId(),
+        tenantDir: getTenantDir(),
+        logicalPath: normalized,
+      });
+    }
     return join(getTenantDir(), normalized);
   }
   return join(getWorkspaceRoot(), normalized);
 }
 
 export function toLogicalPath(absPath: string): string {
+  const vaultRoot = tenantVaultRoot(getTenantId());
+  if (vaultRoot) {
+    const vaultRel = relative(vaultRoot, absPath).replace(/\\/g, "/");
+    if (!vaultRel.startsWith("..")) return vaultRel;
+  }
   const rel = relative(getTenantDir(), absPath).replace(/\\/g, "/");
   if (!rel.startsWith("..")) return rel;
   return relative(getWorkspaceRoot(), absPath).replace(/\\/g, "/");
 }
 
 export function tenantDataPath(...segments: string[]): string {
-  return join(getTenantDir(), "data", ...segments);
+  const logical = join("data", ...segments).replace(/\\/g, "/");
+  return isVaultLogicalPath(logical)
+    ? resolveVaultLogicalPath({
+        tenantId: getTenantId(),
+        tenantDir: getTenantDir(),
+        logicalPath: logical,
+      })
+    : join(getTenantDir(), logical);
 }
 
 export function tenantDocsPath(...segments: string[]): string {

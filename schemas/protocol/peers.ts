@@ -20,6 +20,10 @@ export const peerProfileSchema = z.object({
   inbound_endpoints: z.array(peerEndpointSchema).optional(),
   /** Remote transaction ledger for reconcile (GET …/protocol/v1/ledger). */
   ledger_api_url: z.string().url().optional(),
+  /** 国税庁法人番号（13桁）— 公表サイト / Web-API 連携用 */
+  corporate_number: z.string().regex(/^\d{13}$/).optional(),
+  /** 本店所在地（国税庁公表の L1） */
+  registered_address: z.string().optional(),
 });
 
 export const peersRegistrySchema = z.object({

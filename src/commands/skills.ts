@@ -11,6 +11,7 @@ import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.j
 import { loadMonthlyFinance } from "../lib/data.js";
 import { runDashboard } from "./dashboard.js";
 import { runForecast } from "./forecast.js";
+import { runHrHeadcount } from "./hr.js";
 import { currentDate, readYamlFile, writeMarkdownReport, getExecutiveDir } from "../lib/utils.js";
 import {
   runCorrespondenceSendSkill,
@@ -155,6 +156,18 @@ export const SKILL_COMMANDS = [
     description: "キャッシュフロー予測",
   },
   {
+    id: "hr-headcount",
+    skill: "hr_headcount",
+    agent: "Human Resources",
+    description: "在籍人員 L1 集計（氏名非出力）",
+  },
+  {
+    id: "tenant-config-propose",
+    skill: "tenant_config_propose",
+    agent: "Executive Steward",
+    description: "modules/standards 有効化の承認付き提案",
+  },
+  {
     id: "revpar",
     skill: "revpar_analysis",
     agent: "Hospitality",
@@ -232,6 +245,42 @@ export const SKILL_COMMANDS = [
     agent: "Platform Guide",
     description: "Agent/Skill/CLI/Module/Wire 実装チェックリスト",
   },
+  {
+    id: "validate",
+    skill: "workspace_validate",
+    agent: "Executive Steward",
+    description: "テナント YAML 検証（read-only）",
+  },
+  {
+    id: "doctor",
+    skill: "workspace_doctor",
+    agent: "Executive Steward",
+    description: "インストール・本番ゲート診断",
+  },
+  {
+    id: "deps-check",
+    skill: "deps_check",
+    agent: "Operations",
+    description: "依存グラフ整合チェック",
+  },
+  {
+    id: "integrations-status",
+    skill: "integrations_status",
+    agent: "Setup",
+    description: "外部連携ステータス",
+  },
+  {
+    id: "agent-pulse",
+    skill: "agent_pulse_summary",
+    agent: "Executive Steward",
+    description: "Agent pulse サマリ",
+  },
+  {
+    id: "escalate-run",
+    skill: "escalate_work_order",
+    agent: "Executive Steward",
+    description: "Work Order 起票",
+  },
 ] as const;
 
 export function runSkillsList(): void {
@@ -270,6 +319,10 @@ export interface SkillRunOptions {
   answers?: string;
   json?: boolean;
   topic?: string;
+  agent?: string;
+  all?: boolean;
+  target?: string;
+  enabled?: boolean;
 }
 
 async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promise<void> {
@@ -343,6 +396,45 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     case "forecast":
       runForecast({ months: 12, format: opts.markdown ? "markdown" : "text", output: opts.output });
       break;
+    case "hr-headcount":
+      runHrHeadcount({ json: opts.json });
+      break;
+    case "tenant-config-propose": {
+      const { runTenantConfigPropose } = await import("./tenant-config.js");
+      const { parseTenantConfigProposeIntent } = await import(
+        "../lib/steward-chat/tenant-config-intent.js"
+      );
+      const { requireCliOperator } = await import(
+        "../lib/console-auth/cli-operator.js"
+      );
+      requireCliOperator({
+        permission: "chat:ask",
+        command: "skills run tenant-config-propose",
+      });
+      let target = opts.target;
+      let id = opts.id;
+      let enabled = opts.enabled;
+      if ((!target || !id || enabled === undefined) && opts.body) {
+        const parsed = parseTenantConfigProposeIntent(opts.body);
+        if (parsed) {
+          target = target ?? parsed.target;
+          id = id ?? parsed.targetId;
+          enabled = enabled ?? parsed.enabled;
+        }
+      }
+      if (!target || !id || enabled === undefined) {
+        throw new Error(
+          "tenant-config-propose requires --target, --id, --enabled (or a natural-language body)"
+        );
+      }
+      runTenantConfigPropose({
+        target,
+        id,
+        enabled,
+        message: opts.subject,
+      });
+      break;
+    }
     case "schedule": {
       const calPath = join(getExecutiveDir(), "calendar.yaml");
       if (!existsSync(calPath)) {
@@ -476,6 +568,54 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     case "platform-implement-guide": {
       const { runPlatformGuide } = await import("./platform-guide.js");
       runPlatformGuide({ topic: opts.topic, json: opts.json });
+      break;
+    }
+    case "validate": {
+      const { runValidate } = await import("./validate.js");
+      runValidate({ warnings: true });
+      break;
+    }
+    case "doctor": {
+      const { runDoctor } = await import("./doctor.js");
+      runDoctor({});
+      break;
+    }
+    case "deps-check": {
+      const { runDepsCheck } = await import("./deps.js");
+      runDepsCheck({});
+      break;
+    }
+    case "integrations-status": {
+      const { runIntegrationsStatus } = await import("./integrations.js");
+      runIntegrationsStatus({ json: opts.json });
+      break;
+    }
+    case "agent-pulse": {
+      const { runAgentPulseCommand } = await import("./agent.js");
+      runAgentPulseCommand({
+        agent: opts.agent,
+        all: opts.all ?? !opts.agent,
+      });
+      break;
+    }
+    case "escalate-run": {
+      if (!opts.body?.trim()) {
+        console.error("escalate-run requires body (Work Order text)");
+        process.exit(1);
+      }
+      const { runEscalation } = await import("../lib/escalate.js");
+      const result = runEscalation({
+        fromAgent: "executive_steward",
+        input: { text: opts.body.trim() },
+        dryRun: opts.dryRun,
+      });
+      if (result.workOrders.length === 0) {
+        console.log("No work orders created (no matching agents or dry-run).");
+        break;
+      }
+      for (const wo of result.workOrders) {
+        console.log(`✓ Work Order ${wo.id} → ${wo.to_agent}`);
+      }
       break;
     }
     default:

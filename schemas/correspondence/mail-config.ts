@@ -45,8 +45,12 @@ export const mailConfigSchema = z.object({
       scheduling_reminder_poll_interval_sec: z.number().int().positive().optional(),
       /** 同期後に Wire MIME を protocol inbox へ ingest（R5 Phase 2） */
       auto_wire_scan: z.boolean().optional(),
+      /** 同期後に email_notify を Pull して protocol inbox へ ingest */
+      auto_notify_scan: z.boolean().optional(),
       /** p0/p1 または immediate/today で通知 */
       notify_high_priority: z.boolean().default(true),
+      /** 高優先 triage 時に macOS 即時通知（ops-poll / mail sync 稼働 Mac） */
+      notify_ceo_desktop: z.boolean().default(true),
     })
     .default({ sync: "stub" }),
   outbound: z

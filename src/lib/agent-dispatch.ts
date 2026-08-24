@@ -13,6 +13,7 @@ import { pushQueueEvent } from "./queue-db.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { loadCloudAgentConfig, resolveDispatchRuntime } from "./cloud-agent.js";
 import { isLlmApiConfigured } from "./operator-runtime/llm-api.js";
+import { hasConfiguredLlmWorkers } from "./llm-pool/registry.js";
 import { runOperatorDispatch } from "./operator-runtime/ask.js";
 import { assertActiveTenant, assertIntraOrgAgentTarget, tenantDispatchRoot } from "./org-boundary.js";
 import { scopesForAgent } from "./org/delegation-scopes.js";
@@ -159,7 +160,7 @@ export async function runDispatch(
         continue;
       }
 
-      if (isLlmApiConfigured() || process.env.ORGOS_SHELL_PROFILE) {
+      if (isLlmApiConfigured() || hasConfiguredLlmWorkers() || process.env.ORGOS_SHELL_PROFILE) {
         const dispatched = await runOperatorDispatch(promptText, {
           workOrderId: task.work_order_id,
           agent: task.agent,

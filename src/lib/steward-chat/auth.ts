@@ -19,6 +19,10 @@ import {
   registrationErrorStatus,
   verifyWebAuthnRegistration,
 } from "../wire-console/auth/webauthn-register.js";
+import {
+  listPasskeysForSession,
+  revokePasskeyForSession,
+} from "../wire-console/auth/webauthn-credentials-api.js";
 import { resolveChatPermissions } from "../console-auth/rbac.js";
 import { appendChatAudit } from "./audit.js";
 
@@ -274,6 +278,43 @@ export async function handleChatAuthApi(
       json(400, { ok: false, error: e instanceof Error ? e.message : String(e) });
       return true;
     }
+  }
+
+  if (method === "GET" && pathname === "/chat/v1/auth/webauthn/credentials") {
+    const user = getChatSessionUser(req);
+    if (!user) {
+      json(401, { ok: false, error: "unauthorized" });
+      return true;
+    }
+    const listed = listPasskeysForSession(user);
+    json(200, { ok: true, ...listed });
+    return true;
+  }
+
+  const credentialDeleteMatch = pathname.match(
+    /^\/chat\/v1\/auth\/webauthn\/credentials\/([^/]+)$/
+  );
+  if (method === "DELETE" && credentialDeleteMatch) {
+    const user = getChatSessionUser(req);
+    if (!user) {
+      json(401, { ok: false, error: "unauthorized" });
+      return true;
+    }
+    const revoked = revokePasskeyForSession(user, decodeURIComponent(credentialDeleteMatch[1]!));
+    if ("error" in revoked) {
+      json(revoked.status, { ok: false, error: revoked.error });
+      return true;
+    }
+    appendChatAudit({
+      action: "webauthn_revoke",
+      operator_id: user.operator_id,
+      approver_id: user.approver_id,
+      ok: true,
+      path: pathname,
+      detail: credentialDeleteMatch[1],
+    });
+    json(200, { ok: true });
+    return true;
   }
 
   if (method === "POST" && pathname === "/chat/v1/auth/logout") {

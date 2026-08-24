@@ -19,6 +19,8 @@ export const noticeWireTypeSchema = z.enum([
   "payment.instructed",
   "contract.executed",
   "contract.void.requested",
+  /** Issuer confirms receipt claimed by another OOO (amount-free; ADR 0032). */
+  "receipt.claimed",
 ]);
 
 export const pendingNoticeSchema = z.object({
@@ -32,6 +34,8 @@ export const pendingNoticeSchema = z.object({
   invoice_id: z.string().optional(),
   broker_instruction: z.string().optional(),
   stakeholder_id: z.string().optional(),
+  receipt_id: z.string().optional(),
+  receipt_digest: z.string().optional(),
   amount: transactionAmountSchema.optional(),
   correlation_event_id: z.string().uuid().optional(),
   message: z.string().optional(),

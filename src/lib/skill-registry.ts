@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import YAML from "yaml";
 import { agentId } from "../../schemas/classification.js";
+import { operatorPermissionSchema } from "../../schemas/org/operator.js";
 import { CORE_SKILL_REGISTRY_PATH, STEWARD_SKILLS_DIR } from "./steward-paths.js";
 import {
   getModuleRootDir,
@@ -11,6 +12,22 @@ import {
   loadEnabledModules,
 } from "./modules.js";
 import { loadRegistryFile } from "./utils.js";
+
+export const skillChatArgSchema = z.object({
+  name: z.string().min(1),
+  type: z.enum(["month", "string", "number", "id", "boolean"]).default("string"),
+  required: z.boolean().default(false),
+});
+
+export const skillChatSchema = z.object({
+  enabled: z.boolean().default(false),
+  kind: z.enum(["read", "write", "approval"]),
+  permission: operatorPermissionSchema,
+  label: z.string().min(1),
+  args: z.array(skillChatArgSchema).optional(),
+  /** Optional keywords for catalog search / integrity; routing registry remains primary match. */
+  keywords: z.array(z.string().min(1)).optional(),
+});
 
 const skillRegistrySchema = z.object({
   skills: z.array(
@@ -25,10 +42,13 @@ const skillRegistrySchema = z.object({
       deferred: z.string().min(1).optional(),
       agent_id: agentId,
       description: z.string(),
+      chat: skillChatSchema.optional(),
     })
   ),
 });
 
+export type SkillChatArg = z.infer<typeof skillChatArgSchema>;
+export type SkillChatConfig = z.infer<typeof skillChatSchema>;
 export type SkillRegistryEntry = z.infer<typeof skillRegistrySchema>["skills"][number];
 
 export interface ResolvedSkillEntry extends SkillRegistryEntry {
@@ -138,6 +158,13 @@ export function getCliSkills(scopeToTenant = false): ResolvedSkillEntry[] {
 
 export function getAgentInteractiveSkills(scopeToTenant = false): ResolvedSkillEntry[] {
   return loadSkillRegistry(scopeToTenant).filter((s) => s.runtime === "cursor-only" || s.runtime === "agent");
+}
+
+/** Skills exposed to Steward Chat command router (`chat.enabled: true`). */
+export function getChatEnabledSkills(scopeToTenant = false): ResolvedSkillEntry[] {
+  return loadSkillRegistry(scopeToTenant).filter(
+    (s) => s.runtime === "cli" && s.chat?.enabled === true
+  );
 }
 
 /** @deprecated use getAgentInteractiveSkills — cursor-only is legacy alias for agent runtime */

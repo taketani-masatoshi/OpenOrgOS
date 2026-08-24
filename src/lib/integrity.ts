@@ -38,6 +38,10 @@ import { loadMailConfig } from "./correspondence/mail-config.js";
 import { getMailConfigPath } from "./correspondence/paths.js";
 import { loadMailTriageQueue } from "./correspondence/mail-triage-queue.js";
 import { resolveImapCredentials } from "./correspondence/imap-credentials.js";
+import { validateExpenseClaimsIntegrity } from "./finance/expense-claim.js";
+import { validateReceiptRegistryIntegrity } from "./receipt-qr.js";
+import { validateLlmWorkersIntegrity } from "./llm-pool/registry.js";
+import { validateChatCommandCatalog } from "./operator-commands/validate-catalog.js";
 import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
@@ -829,6 +833,54 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   }
 
   issues.push(...runJpBankCorporateIntegrityChecks());
+
+  try {
+    for (const issue of validateExpenseClaimsIntegrity()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+  } catch {
+    /* expense claims optional when finance accounting not seeded */
+  }
+
+  try {
+    for (const issue of validateReceiptRegistryIntegrity()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+  } catch {
+    /* receipt-qr optional */
+  }
+
+  try {
+    for (const issue of validateLlmWorkersIntegrity()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+  } catch {
+    /* llm workers optional */
+  }
+
+  try {
+    for (const issue of validateChatCommandCatalog()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+  } catch {
+    /* chat command catalog optional during partial checkouts */
+  }
 
   return issues;
 }

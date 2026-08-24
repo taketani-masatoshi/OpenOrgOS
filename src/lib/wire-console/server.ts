@@ -17,6 +17,10 @@ import {
   registrationErrorStatus,
   verifyWebAuthnRegistration,
 } from "./auth/webauthn-register.js";
+import {
+  listPasskeysForSession,
+  revokePasskeyForSession,
+} from "./auth/webauthn-credentials-api.js";
 import { WIRE_CONSOLE_SPA_DIST } from "./paths.js";
 import { handleConsoleApi } from "./routes/console-api.js";
 import { handleEventsStream } from "./routes/events-stream.js";
@@ -235,6 +239,37 @@ async function handleApi(
   if (method === "GET" && pathname === "/console/v1/auth/me") {
     const user = getSessionUser(sessionTokenFromRequest(req))!;
     json(res, 200, { ok: true, user });
+    return true;
+  }
+
+  if (method === "GET" && pathname === "/console/v1/auth/webauthn/credentials") {
+    const user = getSessionUser(sessionTokenFromRequest(req));
+    if (!user) {
+      json(res, 401, { ok: false, error: "unauthorized" });
+      return true;
+    }
+    json(res, 200, { ok: true, ...listPasskeysForSession(user) });
+    return true;
+  }
+
+  const consoleCredentialDeleteMatch = pathname.match(
+    /^\/console\/v1\/auth\/webauthn\/credentials\/([^/]+)$/
+  );
+  if (method === "DELETE" && consoleCredentialDeleteMatch) {
+    const user = getSessionUser(sessionTokenFromRequest(req));
+    if (!user) {
+      json(res, 401, { ok: false, error: "unauthorized" });
+      return true;
+    }
+    const revoked = revokePasskeyForSession(
+      user,
+      decodeURIComponent(consoleCredentialDeleteMatch[1]!)
+    );
+    if ("error" in revoked) {
+      json(res, revoked.status, { ok: false, error: revoked.error });
+      return true;
+    }
+    json(res, 200, { ok: true });
     return true;
   }
 

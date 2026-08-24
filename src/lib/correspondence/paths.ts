@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getDataDir, getDocsDir, getTenantDir } from "../utils.js";
+import { getDataDir, getDocsDir, resolveTenantPath } from "../utils.js";
 import { STEWARD_CORE_DIR } from "../steward-paths.js";
 
 export function getCorrespondenceDraftsDir(): string {
@@ -7,7 +7,7 @@ export function getCorrespondenceDraftsDir(): string {
 }
 
 export function getTenantRecordsDir(): string {
-  return join(getTenantDir(), "records");
+  return resolveTenantPath("records");
 }
 
 export function getExecutiveRecordsDir(): string {

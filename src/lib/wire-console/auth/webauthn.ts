@@ -1,40 +1,65 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { WireConsoleUser } from "./session.js";
 import { registerSession } from "./session.js";
-import {
-  isWebAuthnTestSecretAllowed,
-  verifyWebAuthnAssertionSignature,
-} from "./webauthn-verify.js";
+import { isWebAuthnTestSecretAllowed } from "./webauthn-verify.js";
+import { verifyWebAuthnAssertion } from "./webauthn-assertion.js";
+import { webauthnOriginsEqual } from "./webauthn-origin.js";
 import {
   credentialPurpose,
   findWebAuthnCredential,
   listWebAuthnCredentialsByPurpose,
   updateWebAuthnSignCount,
+  WebAuthnCredentialStoreCorruptError,
 } from "./webauthn-store.js";
 import { isLoginPasskeyBootstrap } from "./webauthn-register-gate.js";
-import { isWebAuthnRegistrationAllowed } from "./webauthn-register.js";
+import { isWebAuthnRegistrationAllowed, isSettlementRegistrationAllowed } from "./webauthn-register.js";
+import { isAdditionalLoginPasskeyRegistrationAllowed } from "./webauthn-register-gate.js";
 import { rpId } from "./webauthn-shared.js";
-import { webauthnOriginsEqual } from "./webauthn-origin.js";
 
 export { rpId };
 
 const pendingChallenges = new Map<string, { challenge: string; expires_at: number }>();
 
 export function getWebAuthnConfig() {
-  const loginCreds = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() });
-  const settlementCreds = listWebAuthnCredentialsByPurpose("settlement", { rpId: rpId() });
-  const approveOrigin =
-    process.env.ORGOS_SETTLEMENT_APPROVE_ORIGIN?.trim() || "https://approve.oorgos.org";
-  return {
-    rp_id: rpId(),
-    credential_count: loginCreds.length,
-    settlement_count: settlementCreds.length,
-    registration_allowed: isWebAuthnRegistrationAllowed(),
-    login_registration_requires_session: true,
-    login_registration_bootstrap: isLoginPasskeyBootstrap(),
-    approve_origin: approveOrigin.replace(/\/$/, ""),
-    origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
-  };
+  try {
+    const loginCreds = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() });
+    const settlementCreds = listWebAuthnCredentialsByPurpose("settlement", { rpId: rpId() });
+    const approveOrigin =
+      process.env.ORGOS_SETTLEMENT_APPROVE_ORIGIN?.trim() || "https://approve.oorgos.org";
+    return {
+      rp_id: rpId(),
+      credential_count: loginCreds.length,
+      settlement_count: settlementCreds.length,
+      registration_allowed: isWebAuthnRegistrationAllowed(),
+      settlement_registration_allowed: isSettlementRegistrationAllowed(),
+      additional_login_registration_allowed: isAdditionalLoginPasskeyRegistrationAllowed(),
+      login_registration_requires_session: true,
+      login_registration_bootstrap: isLoginPasskeyBootstrap(),
+      approve_origin: approveOrigin.replace(/\/$/, ""),
+      origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
+      credential_store_ok: true as const,
+    };
+  } catch (error) {
+    if (error instanceof WebAuthnCredentialStoreCorruptError) {
+      const approveOrigin =
+        process.env.ORGOS_SETTLEMENT_APPROVE_ORIGIN?.trim() || "https://approve.oorgos.org";
+      return {
+        rp_id: rpId(),
+        credential_count: 0,
+        settlement_count: 0,
+        registration_allowed: false,
+        settlement_registration_allowed: false,
+        additional_login_registration_allowed: false,
+        login_registration_requires_session: true,
+        login_registration_bootstrap: false,
+        approve_origin: approveOrigin.replace(/\/$/, ""),
+        origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
+        credential_store_ok: false as const,
+        credential_store_error: error.message,
+      };
+    }
+    throw error;
+  }
 }
 
 export function createWebAuthnLoginOptions(): {
@@ -87,10 +112,6 @@ export function verifyWebAuthnLogin(body: {
   if (clientData.type !== "webauthn.get" || clientData.challenge !== body.challenge) {
     return { error: "webauthn client data mismatch" };
   }
-  const expectedOrigin = process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN;
-  if (!webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
-    return { error: "webauthn origin mismatch" };
-  }
 
   const cred = findWebAuthnCredential(body.credential_id);
   if (!cred) {
@@ -105,8 +126,12 @@ export function verifyWebAuthnLogin(body: {
 
   const publicKeySpki = cred.public_key_spki_base64;
   const testSecret = process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
+  const expectedOrigin = (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "");
 
   if (testSecret && isWebAuthnTestSecretAllowed() && body.signature_base64) {
+    if (!webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
+      return { error: "webauthn origin mismatch" };
+    }
     const expected = Buffer.from(testSecret, "utf-8");
     const got = Buffer.from(body.signature_base64, "base64url");
     if (expected.length !== got.length || !timingSafeEqual(expected, got)) {
@@ -119,26 +144,19 @@ export function verifyWebAuthnLogin(body: {
     if (!publicKeySpki) {
       return { error: "credential missing public_key_spki_base64" };
     }
-    const ok = verifyWebAuthnAssertionSignature({
-      publicKeySpkiBase64: publicKeySpki,
-      authenticatorDataBase64: body.authenticator_data_base64,
+    const verified = verifyWebAuthnAssertion({
+      expectedRpId: rpId(),
+      expectedOrigin,
       clientDataJsonBase64: body.client_data_json,
+      authenticatorDataBase64: body.authenticator_data_base64,
       signatureBase64: body.signature_base64,
+      publicKeySpkiBase64: publicKeySpki,
+      previousSignCount: cred.sign_count ?? 0,
     });
-    if (!ok) {
-      return { error: "invalid webauthn assertion signature" };
+    if (!verified.ok) {
+      return { error: verified.error };
     }
-
-    try {
-      const authData = Buffer.from(body.authenticator_data_base64, "base64url");
-      const signCount = authData.readUInt32BE(33);
-      if (cred.sign_count !== undefined && signCount > 0 && signCount <= cred.sign_count) {
-        return { error: "webauthn sign count replay" };
-      }
-      updateWebAuthnSignCount(body.credential_id, signCount);
-    } catch {
-      /* sign count best-effort */
-    }
+    updateWebAuthnSignCount(body.credential_id, verified.signCount);
   }
 
   const user: WireConsoleUser = {

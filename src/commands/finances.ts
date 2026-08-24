@@ -11,6 +11,14 @@ import {
   financesSummary,
   formatFinancesSummaryMarkdown,
 } from "../lib/report.js";
+import {
+  buildFinanceBriefing,
+  formatFinanceBriefingMarkdown,
+} from "../lib/finance-briefing.js";
+import {
+  buildCashBalanceView,
+  formatCashBalanceMarkdown,
+} from "../lib/cash-balance-view.js";
 import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
 import { writeMarkdownReport } from "../lib/utils.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
@@ -23,6 +31,23 @@ export function runFinancesSummary(options: {
   const summary = financesSummary(finances, options.from, options.to);
 
   console.log(formatFinancesSummaryMarkdown(summary, options.from, options.to));
+}
+
+export function runFinancesBriefing(options?: { month?: string }): void {
+  const brief = buildFinanceBriefing({ asOfMonth: options?.month });
+  console.log(formatFinanceBriefingMarkdown(brief));
+}
+
+export function runFinancesCashBalance(options?: { json?: boolean }): void {
+  const view = buildCashBalanceView();
+  if (options?.json) {
+    console.log(JSON.stringify(view, null, 2));
+    return;
+  }
+  console.log(formatCashBalanceMarkdown(view));
+  if (view.missing || view.total == null) {
+    process.exitCode = 1;
+  }
 }
 
 export function runFinancesAdd(options: {

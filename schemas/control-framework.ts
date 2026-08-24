@@ -15,6 +15,7 @@ export const controlDomain = z.enum([
   "continuity",
   "audit",
   "operations",
+  "compliance_ms",
 ]);
 
 export const controlCheckType = z.enum(["policy", "record", "operation"]);

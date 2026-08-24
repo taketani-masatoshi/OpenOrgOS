@@ -218,6 +218,13 @@ export function verifyWebAuthnRegistration(body: {
   if (!authData.subarray(0, 32).equals(rpHash)) {
     return { error: "webauthn rpId hash mismatch" };
   }
+  const flags = authData[32] ?? 0;
+  if ((flags & 0x01) === 0) {
+    return { error: "webauthn user not present" };
+  }
+  if ((flags & 0x04) === 0) {
+    return { error: "webauthn user not verified" };
+  }
 
   saveWebAuthnCredential({
     credential_id: credentialId,

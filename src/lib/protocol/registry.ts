@@ -16,7 +16,12 @@ export function loadProtocolRegistry(): ProtocolRegistry {
         "org.witness.attestation.registered",
         "org.witness.receipt.issued",
       ],
-      payload_namespaces: ["steward.contract", "steward.payment", "steward.invoice"],
+      payload_namespaces: [
+        "steward.contract",
+        "steward.payment",
+        "steward.invoice",
+        "steward.document_attestation",
+      ],
     })
   );
 }

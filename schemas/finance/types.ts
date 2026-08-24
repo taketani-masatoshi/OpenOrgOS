@@ -17,6 +17,7 @@ import {
   taxProfileSchema,
   taxProfileUsSchema,
   taxProfileCorporateSchema,
+  obligationRhythmSchema,
 } from "./tax-profiles.js";
 import {
   yojitsuLineKind,
@@ -32,6 +33,7 @@ export type FixedAsset = z.output<typeof fixedAssetSchema>;
 export type TaxProfile = z.output<typeof taxProfileSchema>;
 export type TaxProfileUs = z.output<typeof taxProfileUsSchema>;
 export type TaxProfileCorporate = z.output<typeof taxProfileCorporateSchema>;
+export type ObligationRhythm = z.output<typeof obligationRhythmSchema>;
 export type ChartOfAccounts = z.output<typeof chartOfAccountsSchema>;
 
 export type YojitsuLineKind = z.output<typeof yojitsuLineKind>;

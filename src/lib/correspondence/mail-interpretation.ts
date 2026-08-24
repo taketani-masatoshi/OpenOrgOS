@@ -10,7 +10,9 @@ import {
 import { parseEmlHeaders } from "./mail-triage.js";
 import { getMailReceivedDir } from "./paths.js";
 import { postLlmChat } from "../operator-runtime/llm-chat.js";
-import { getLlmApiConfig, isLlmMockEnabled } from "../operator-runtime/llm-api.js";
+import { getLlmApiConfig, isLlmMockEnabled, type LlmApiConfig } from "../operator-runtime/llm-api.js";
+import { withLlmWorker } from "../llm-pool/router.js";
+import { hasConfiguredLlmWorkers } from "../llm-pool/registry.js";
 import {
   isMailInterpretEnsembleEnabled,
   majorityVote,
@@ -79,17 +81,18 @@ async function interpretWithModel(
   model: string,
   userPrompt: string
 ): Promise<MailInterpretVote | undefined> {
-  if (!getLlmApiConfig() && !isLlmMockEnabled()) return undefined;
+  if (!getLlmApiConfig() && !isLlmMockEnabled() && !hasConfiguredLlmWorkers()) {
+    return undefined;
+  }
 
-  const prev = process.env.ORGOS_LLM_MODEL;
-  process.env.ORGOS_LLM_MODEL = model;
-  try {
+  const run = async (base: LlmApiConfig) => {
+    const target: LlmApiConfig = { ...base, model };
     const res = await postLlmChat(
       [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
-      { responseFormat: { type: "json_object" }, temperature: 0.2 }
+      { responseFormat: { type: "json_object" }, temperature: 0.2, target }
     );
 
     if (!res.ok || !res.message || typeof res.message.content !== "string") return undefined;
@@ -100,10 +103,19 @@ async function interpretWithModel(
     } catch {
       return undefined;
     }
-  } finally {
-    if (prev === undefined) delete process.env.ORGOS_LLM_MODEL;
-    else process.env.ORGOS_LLM_MODEL = prev;
+  };
+
+  if (hasConfiguredLlmWorkers() || isLlmMockEnabled()) {
+    try {
+      return await withLlmWorker((lease) => run(lease.target));
+    } catch {
+      return undefined;
+    }
   }
+
+  const cfg = getLlmApiConfig();
+  if (!cfg) return undefined;
+  return run(cfg);
 }
 
 function buildCeoQuestions(result: MailInterpretationResult): string[] {

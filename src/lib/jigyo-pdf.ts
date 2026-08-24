@@ -9,13 +9,14 @@ import {
   fiscalPeriodLabel,
   fiscalYearNumber,
   pdfBulletList,
+  pdfCoverHeader,
   pdfMetaBlock,
+  pdfMutedNote,
   pdfParagraph,
   pdfSection,
   pdfSignatureBlock,
-  pdfSubtitle,
+  pdfStatRow,
   pdfTable,
-  pdfTitle,
   writePdfToFile,
 } from "./pdf.js";
 import { ensurePdfOutputDir, formatCurrency, formatJapaneseDate } from "./utils.js";
@@ -53,12 +54,22 @@ export async function generateJigyoPdf(
 
   const w = createPdfWriter();
 
-  pdfTitle(w, "事　業　報　告　書");
-  pdfSubtitle(w, company.name);
+  pdfCoverHeader(
+    w,
+    "事業報告書",
+    `第${termNumber}期  ·  ${company.name}`
+  );
+
   pdfMetaBlock(w, [
     { label: "事業年度", value: `第${termNumber}期（${periodLabel}）` },
-    { label: "本店所在地", value: company.address ?? "" },
+    { label: "本店", value: company.address ?? "" },
     { label: "代表者", value: company.representative ?? "" },
+  ]);
+
+  pdfStatRow(w, [
+    { label: "売上高", value: formatCurrency(revenue) },
+    { label: "営業利益", value: formatCurrency(operatingProfit) },
+    { label: "当期純利益", value: formatCurrency(netProfit) },
   ]);
 
   pdfSection(w, "1. 事業の経過及びその成果");
@@ -75,17 +86,17 @@ export async function generateJigyoPdf(
     `当事業年度の売上高は${formatCurrency(revenue)}、営業利益は${formatCurrency(operatingProfit)}、当期純利益は${formatCurrency(netProfit)}となりました。`
   );
 
-  const basisNote =
-    yojitsu.closing?.basis === "forecast"
-      ? "なお、当事業年度の数値は予想ベースで確定したものです。"
-      : "";
-  if (basisNote) pdfParagraph(w, basisNote);
+  if (yojitsu.closing?.basis === "forecast") {
+    pdfMutedNote(w, "※ 当事業年度の数値は予想ベースで確定したものです。");
+  } else if (yojitsu.closing?.basis === "actual") {
+    pdfMutedNote(w, "※ 当事業年度の数値は月次実績の再構成に基づきます。");
+  }
 
   pdfSection(w, "2. セグメント別の状況");
   for (const segment of businessPlan.segments) {
-    pdfParagraph(w, `■ ${segment.name}`, 10.5);
+    pdfParagraph(w, segment.name, 10.5);
     if (segment.description) {
-      pdfParagraph(w, segment.description, 10);
+      pdfMutedNote(w, segment.description);
     }
   }
 
@@ -95,40 +106,36 @@ export async function generateJigyoPdf(
       prop.acquisition_price != null
         ? formatCurrency(prop.acquisition_price)
         : "—";
-    pdfParagraph(
-      w,
-      `・${prop.name}（${prop.location}）— 取得${price}、種別: ${prop.type === "hotel" ? "旅館" : "賃貸"}`,
-      10
-    );
-    if (prop.notes) {
-      pdfParagraph(w, prop.notes.trim().split("\n")[0], 9);
-    }
+    const kind = prop.type === "hotel" ? "旅館" : "賃貸";
+    pdfParagraph(w, `${prop.name}`, 10.5);
+    pdfMutedNote(w, `${prop.location}  ·  ${kind}  ·  取得 ${price}`);
   }
 
   pdfSection(w, "4. 設備投資の状況");
   pdfParagraph(
     w,
-    `当事業年度の設備投資額は${formatCurrency(investment)}です。主な内容は亀沢旅館の上置き建築費（概算）です。`
+    `当事業年度の設備投資額は${formatCurrency(investment)}です。主な内容は亀沢旅館の上置き建築に係る支出です。`
   );
 
   pdfSection(w, "5. 借入金の状況");
   pdfTable(
     w,
     loans.loans.map((loan) => ({
-      label: `${loan.id}（${loan.lender}）`,
+      label: `${loan.id}  ${loan.lender}`,
       amount: loan.balance,
       note: loan.notes?.split("\n")[0],
+      variant: "muted" as const,
     })),
-    { labelWidth: w.contentWidth * 0.6 }
+    { labelWidth: w.contentWidth * 0.62 }
   );
-  pdfParagraph(w, "いずれも役員貸付による調達。返済条件は別途整理中。");
+  pdfMutedNote(w, "いずれも役員貸付による調達。返済条件は別途整理中。");
 
   pdfSection(w, "6. 中期目標及びKPI");
   if (businessPlan.mid_term_goals.length > 0) {
     pdfBulletList(w, businessPlan.mid_term_goals);
   }
   if (businessPlan.kpi.length > 0) {
-    pdfParagraph(w, "主要KPI:", 10);
+    pdfParagraph(w, "主要KPI", 10);
     pdfBulletList(
       w,
       businessPlan.kpi.map((k) => `${k.name}: ${k.target}${k.unit ?? ""}`)
@@ -142,17 +149,14 @@ export async function generateJigyoPdf(
   );
 
   pdfSection(w, "8. 重要な契約及び偶発事項");
-  pdfParagraph(
-    w,
-    "訴訟事件、行政処分その他の重要な偶発事項はありません。"
-  );
+  pdfParagraph(w, "訴訟事件、行政処分その他の重要な偶発事項はありません。");
 
   pdfSection(w, "9. 今後の方針");
   const nextYear = businessPlan.years.find((y) => y.year === yojitsu.year + 1);
   if (nextYear) {
     pdfParagraph(
       w,
-      `翌事業年度（${yojitsu.year + 1}年）の売上計画${formatCurrency(nextYear.revenue_plan)}、営業利益計画${formatCurrency(nextYear.operating_profit_plan)}に向け、亀沢旅館の稼働率安定化及び翻訳・DXサービスの収益化を進めます。`
+      `翌事業年度の売上計画${formatCurrency(nextYear.revenue_plan)}、営業利益計画${formatCurrency(nextYear.operating_profit_plan)}に向け、物件稼働の安定化とサービス事業の収益化を進めます。`
     );
   }
 

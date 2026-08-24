@@ -6,7 +6,12 @@ export const propertyType = z.enum(["rental", "hotel", "mixed"]);
 export const rentalBlock = z.object({
   monthly_rent: z.number().nonnegative(),
   vacancy_rate: z.number().min(0).max(1),
+  /** 管理費（貸主負担・月額） */
   management_fee: z.number().nonnegative(),
+  /** 更新時の更新料（想定・契約に明記があれば優先） */
+  renewal_fee: z.number().nonnegative().optional(),
+  /** 修繕・維持の年間見込（管理費・減価償却とは別の運営想定） */
+  maintenance_annual: z.number().nonnegative().optional(),
 });
 
 export const hotelBlock = z.object({
@@ -44,8 +49,11 @@ export const propertySchema = z.object({
     .object({
       cleaning_per_stay: z.number().nonnegative(),
       ota_commission_rate: z.number().min(0).max(1),
+      management_fee_rate: z.number().min(0).max(1).optional(),
+      average_stay_nights: z.number().positive().optional(),
       utilities_monthly: z.number().nonnegative(),
       amenities_per_stay: z.number().nonnegative().optional(),
+      amenities_per_occupied_night: z.number().nonnegative().optional(),
       wifi_monthly: z.number().nonnegative().optional(),
       notes: z.string().optional(),
     })

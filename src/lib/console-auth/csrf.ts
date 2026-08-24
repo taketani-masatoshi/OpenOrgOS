@@ -15,7 +15,11 @@ export function isCsrfExemptPath(pathname: string): boolean {
     pathname === "/console/v1/auth/login" ||
     pathname === "/console/v1/auth/logout" ||
     pathname.startsWith("/chat/v1/auth/webauthn/") ||
-    pathname.startsWith("/console/v1/auth/webauthn/")
+    pathname.startsWith("/console/v1/auth/webauthn/") ||
+    pathname === "/chat/v1/settlement/complete" ||
+    pathname === "/chat/v1/settlement/enroll" ||
+    pathname === "/chat/v1/settlement/enroll/options" ||
+    pathname.startsWith("/chat/v1/settlement/challenge/")
   );
 }
 
@@ -34,6 +38,9 @@ export function allowedOrigins(hostHeader: string | undefined): string[] {
   for (const o of explicit) {
     origins.add(o.replace(/\/$/, ""));
   }
+  const settle =
+    process.env.ORGOS_SETTLEMENT_APPROVE_ORIGIN?.trim() || "https://approve.oorgos.org";
+  origins.add(settle.replace(/\/$/, ""));
   if (hostHeader) {
     const h = hostHeader.trim();
     origins.add(`http://${h}`);

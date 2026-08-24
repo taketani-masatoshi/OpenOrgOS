@@ -1,4 +1,8 @@
 import { loadContracts } from "../lib/data.js";
+import {
+  buildContractStatusView,
+  formatContractStatusMarkdown,
+} from "../lib/contract-status-view.js";
 import type { ContractType } from "../../schemas/index.js";
 
 export function runContractsList(options: {
@@ -52,6 +56,17 @@ export function runContractsShow(id: string): void {
   }
 
   console.log(JSON.stringify(contract, null, 2));
+}
+
+export function runContractsSummary(options?: { days?: number; json?: boolean }): void {
+  const view = buildContractStatusView({
+    horizonDays: options?.days ?? 90,
+  });
+  if (options?.json) {
+    console.log(JSON.stringify(view, null, 2));
+    return;
+  }
+  console.log(formatContractStatusMarkdown(view));
 }
 
 export const CONTRACT_TYPES: ContractType[] = [

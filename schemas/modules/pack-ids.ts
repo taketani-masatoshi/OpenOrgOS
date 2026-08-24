@@ -8,6 +8,10 @@ export const JP_PACK_MODULE_IDS = [
   "jp_corporate_registration",
   "jp_medical_device",
   "jp_permit_registry",
+  "jp_permit_application",
+  "jp_minpaku",
+  "jp_certification",
+  "jp_inspection",
   "jp_bank_corporate",
 ] as const;
 

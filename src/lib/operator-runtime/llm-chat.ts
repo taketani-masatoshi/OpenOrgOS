@@ -21,6 +21,8 @@ export interface LlmChatCompletionOptions {
   }>;
   responseFormat?: Record<string, unknown>;
   temperature?: number;
+  /** Explicit target; when omitted, falls back to env `getLlmApiConfig()`. */
+  target?: import("./llm-api.js").LlmApiConfig;
 }
 
 export interface LlmChatCompletionResult {
@@ -98,7 +100,7 @@ async function postOpenAiChat(
   messages: LlmChatMessage[],
   opts?: LlmChatCompletionOptions
 ): Promise<LlmChatCompletionResult> {
-  const cfg = getLlmApiConfig();
+  const cfg = opts?.target ?? getLlmApiConfig();
   if (!cfg) {
     return { ok: false, usage: {}, detail: "LLM API not configured", model: "" };
   }
@@ -156,7 +158,7 @@ async function postAnthropicChat(
   messages: LlmChatMessage[],
   opts?: LlmChatCompletionOptions
 ): Promise<LlmChatCompletionResult> {
-  const cfg = getLlmApiConfig();
+  const cfg = opts?.target ?? getLlmApiConfig();
   if (!cfg) {
     return { ok: false, usage: {}, detail: "LLM API not configured", model: "" };
   }
@@ -228,7 +230,7 @@ export async function postLlmChat(
   messages: LlmChatMessage[],
   opts?: LlmChatCompletionOptions
 ): Promise<LlmChatCompletionResult> {
-  if (isLlmMockEnabled()) {
+  if (isLlmMockEnabled() && !opts?.target) {
     return {
       ok: true,
       message: { role: "assistant", content: "【mock chat completion】" },
@@ -238,7 +240,18 @@ export async function postLlmChat(
     };
   }
 
-  return resolveLlmProvider() === "anthropic"
+  if (opts?.target?.baseUrl.startsWith("mock://")) {
+    return {
+      ok: true,
+      message: { role: "assistant", content: "【mock chat completion】" },
+      usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+      detail: "",
+      model: opts.target.model,
+    };
+  }
+
+  const provider = opts?.target?.provider ?? resolveLlmProvider();
+  return provider === "anthropic"
     ? postAnthropicChat(messages, opts)
     : postOpenAiChat(messages, opts);
 }

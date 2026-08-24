@@ -7,6 +7,7 @@ import {
 import {
   getLlmApiConfig,
   isLlmMockEnabled,
+  type LlmApiConfig,
   type LlmHistoryTurn,
   type LlmUsage,
 } from "./llm-api.js";
@@ -24,6 +25,8 @@ import {
   estimateLlmCostUsd,
   type LlmTelemetryEntry,
 } from "./telemetry.js";
+import { withLlmWorker, type LlmWorkerLease } from "../llm-pool/router.js";
+import { hasConfiguredLlmWorkers } from "../llm-pool/registry.js";
 
 export interface ToolLoopResult {
   ok: boolean;
@@ -36,6 +39,9 @@ export interface ToolLoopResult {
   tool_calls: number;
   latency_ms: number;
   telemetry?: Omit<LlmTelemetryEntry, "at">;
+  worker_id?: string;
+  tier?: "local" | "cloud";
+  queued_ms?: number;
 }
 
 type ChatMessage = LlmChatMessage;
@@ -61,19 +67,13 @@ function mergeUsage(a: LlmUsage, b: Partial<LlmUsage>): LlmUsage {
   };
 }
 
-function parseUsage(raw: unknown): Partial<LlmUsage> {
-  if (!raw || typeof raw !== "object") return {};
-  const u = raw as Record<string, number>;
-  return {
-    prompt_tokens: u.prompt_tokens ?? 0,
-    completion_tokens: u.completion_tokens ?? 0,
-    total_tokens: u.total_tokens ?? 0,
-  };
-}
-
 async function chatCompletion(
   messages: ChatMessage[],
-  opts?: { tools?: ReturnType<typeof listOperatorToolDefinitions>; responseFormat?: Record<string, unknown> }
+  opts?: {
+    tools?: ReturnType<typeof listOperatorToolDefinitions>;
+    responseFormat?: Record<string, unknown>;
+    target?: LlmApiConfig;
+  }
 ): Promise<{
   ok: boolean;
   message?: ChatMessage & { role: "assistant" };
@@ -81,7 +81,7 @@ async function chatCompletion(
   detail: string;
   model: string;
 }> {
-  const cfg = getLlmApiConfig();
+  const cfg = opts?.target ?? getLlmApiConfig();
   if (!cfg) {
     return { ok: false, usage: {}, detail: "LLM API not configured", model: "" };
   }
@@ -89,6 +89,7 @@ async function chatCompletion(
   const result = await postLlmChat(messages, {
     tools: opts?.tools,
     responseFormat: opts?.responseFormat,
+    target: cfg,
   });
 
   return {
@@ -100,15 +101,30 @@ async function chatCompletion(
   };
 }
 
+function leaseMeta(lease?: LlmWorkerLease): {
+  worker_id?: string;
+  tier?: "local" | "cloud";
+  queued_ms?: number;
+} {
+  if (!lease) return {};
+  return {
+    worker_id: lease.worker.id,
+    tier: lease.worker.tier,
+    queued_ms: lease.queued_ms,
+  };
+}
+
 async function runMockToolLoop(
   systemContext: string,
   userMessage: string,
-  toolContext: OperatorToolContext
+  toolContext: OperatorToolContext,
+  lease?: LlmWorkerLease
 ): Promise<ToolLoopResult> {
-  const cfg = getLlmApiConfig()!;
+  const cfg = lease?.target ?? getLlmApiConfig()!;
   const started = Date.now();
   let toolCalls = 0;
   let toolRounds = 0;
+  const meta = leaseMeta(lease);
 
   if (isOperatorToolsEnabled()) {
     const mockCall = mockToolCallForMessage(userMessage);
@@ -152,6 +168,7 @@ async function runMockToolLoop(
         structured: Boolean(structured),
         estimated_cost_usd: estimateLlmCostUsd(usage),
         ok: true,
+        ...meta,
       });
       appendLlmTelemetry(telemetry);
 
@@ -166,6 +183,7 @@ async function runMockToolLoop(
         tool_calls: toolCalls,
         latency_ms,
         telemetry,
+        ...meta,
       };
     }
   }
@@ -188,6 +206,7 @@ async function runMockToolLoop(
     structured: false,
     estimated_cost_usd: estimateLlmCostUsd(usage),
     ok: true,
+    ...meta,
   });
   appendLlmTelemetry(telemetry);
   return {
@@ -200,38 +219,29 @@ async function runMockToolLoop(
     tool_calls: 0,
     latency_ms,
     telemetry,
+    ...meta,
   };
 }
 
-export async function runLlmWithTools(
+async function runLlmWithToolsOnTarget(
   systemContext: string,
   userMessage: string,
-  history?: LlmHistoryTurn[],
-  toolContext: OperatorToolContext = {}
+  history: LlmHistoryTurn[] | undefined,
+  toolContext: OperatorToolContext,
+  lease: LlmWorkerLease
 ): Promise<ToolLoopResult> {
-  const cfg = getLlmApiConfig();
-  if (!cfg) {
-    return {
-      ok: false,
-      content: "",
-      detail: "LLM API not configured",
-      model: "",
-      usage: emptyUsage(),
-      tool_rounds: 0,
-      tool_calls: 0,
-      latency_ms: 0,
-    };
-  }
+  const cfg = lease.target;
+  const meta = leaseMeta(lease);
 
-  if (isLlmMockEnabled()) {
-    return runMockToolLoop(systemContext, userMessage, toolContext);
+  if (isLlmMockEnabled() || cfg.baseUrl.startsWith("mock://")) {
+    return runMockToolLoop(systemContext, userMessage, toolContext, lease);
   }
 
   const started = Date.now();
   let usage = emptyUsage();
   let toolRounds = 0;
   let toolCalls = 0;
-  const tools = isOperatorToolsEnabled()
+  const tools = isOperatorToolsEnabled({ supportsTools: lease.worker.supports_tools })
     ? listOperatorToolDefinitions(toolContext)
     : [];
 
@@ -243,7 +253,10 @@ export async function runLlmWithTools(
 
   try {
     for (let round = 0; round < maxToolRounds(); round += 1) {
-      const completion = await chatCompletion(messages, { tools: tools.length ? tools : undefined });
+      const completion = await chatCompletion(messages, {
+        tools: tools.length ? tools : undefined,
+        target: cfg,
+      });
       usage = mergeUsage(usage, completion.usage);
       if (!completion.ok || !completion.message) {
         const latency_ms = Date.now() - started;
@@ -257,6 +270,7 @@ export async function runLlmWithTools(
           structured: false,
           ok: false,
           error: completion.detail,
+          ...meta,
         });
         appendLlmTelemetry(telemetry);
         return {
@@ -269,6 +283,7 @@ export async function runLlmWithTools(
           tool_calls: toolCalls,
           latency_ms,
           telemetry,
+          ...meta,
         };
       }
 
@@ -319,6 +334,7 @@ export async function runLlmWithTools(
             type: "json_schema",
             json_schema: operatorResponseJsonSchema(),
           },
+          target: cfg,
         });
         usage = mergeUsage(usage, structuredCompletion.usage);
         if (structuredCompletion.ok && structuredCompletion.message?.content) {
@@ -338,6 +354,7 @@ export async function runLlmWithTools(
               structured: true,
               estimated_cost_usd: estimateLlmCostUsd(usage),
               ok: true,
+              ...meta,
             });
             appendLlmTelemetry(telemetry);
             return {
@@ -351,6 +368,7 @@ export async function runLlmWithTools(
               tool_calls: toolCalls,
               latency_ms,
               telemetry,
+              ...meta,
             };
           } catch {
             /* fall through to plain text */
@@ -371,6 +389,7 @@ export async function runLlmWithTools(
           structured: false,
           ok: false,
           error: detail,
+          ...meta,
         });
         appendLlmTelemetry(telemetry);
         return {
@@ -383,6 +402,7 @@ export async function runLlmWithTools(
           tool_calls: toolCalls,
           latency_ms,
           telemetry,
+          ...meta,
         };
       }
 
@@ -397,6 +417,7 @@ export async function runLlmWithTools(
         structured: false,
         estimated_cost_usd: estimateLlmCostUsd(usage),
         ok: true,
+        ...meta,
       });
       appendLlmTelemetry(telemetry);
       return {
@@ -409,6 +430,7 @@ export async function runLlmWithTools(
         tool_calls: toolCalls,
         latency_ms,
         telemetry,
+        ...meta,
       };
     }
 
@@ -424,6 +446,7 @@ export async function runLlmWithTools(
       structured: false,
       ok: false,
       error: detail,
+      ...meta,
     });
     appendLlmTelemetry(telemetry);
     return {
@@ -436,6 +459,7 @@ export async function runLlmWithTools(
       tool_calls: toolCalls,
       latency_ms,
       telemetry,
+      ...meta,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -450,6 +474,7 @@ export async function runLlmWithTools(
       structured: false,
       ok: false,
       error: message,
+      ...meta,
     });
     appendLlmTelemetry(telemetry);
     return {
@@ -462,6 +487,35 @@ export async function runLlmWithTools(
       tool_calls: toolCalls,
       latency_ms,
       telemetry,
+      ...meta,
     };
   }
+}
+
+export async function runLlmWithTools(
+  systemContext: string,
+  userMessage: string,
+  history?: LlmHistoryTurn[],
+  toolContext: OperatorToolContext = {}
+): Promise<ToolLoopResult> {
+  if (!hasConfiguredLlmWorkers() && !getLlmApiConfig() && !isLlmMockEnabled()) {
+    return {
+      ok: false,
+      content: "",
+      detail: "LLM API not configured",
+      model: "",
+      usage: emptyUsage(),
+      tool_rounds: 0,
+      tool_calls: 0,
+      latency_ms: 0,
+    };
+  }
+
+  if (isLlmMockEnabled() && !hasConfiguredLlmWorkers()) {
+    return runMockToolLoop(systemContext, userMessage, toolContext);
+  }
+
+  return withLlmWorker((lease) =>
+    runLlmWithToolsOnTarget(systemContext, userMessage, history, toolContext, lease)
+  );
 }

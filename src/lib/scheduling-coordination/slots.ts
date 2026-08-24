@@ -11,6 +11,20 @@ import {
 } from "../executive-calendar.js";
 
 const DEFAULT_SLOT_HOURS = [10, 11, 14, 15, 16];
+/** 会食・対面祝い向け（夕方） */
+const EVENING_SLOT_HOURS = [18, 19, 20];
+
+export type SlotTimePreference = "business_hours" | "evening";
+
+export interface ProposeSlotsOptions {
+  from?: string;
+  to?: string;
+  count?: number;
+  durationMinutes?: number;
+  existingSlots?: SchedulingProposedSlot[];
+  /** Default business_hours; meal / in_person celebration → evening */
+  timePreference?: SlotTimePreference;
+}
 
 function formatSlotLabel(start: string, end: string): string {
   const s = start.includes("T") ? start.slice(0, 16).replace("T", " ") : start;
@@ -38,20 +52,14 @@ function isWeekday(isoDate: string): boolean {
   return day >= 1 && day <= 5;
 }
 
-export interface ProposeSlotsOptions {
-  from?: string;
-  to?: string;
-  count?: number;
-  durationMinutes?: number;
-  existingSlots?: SchedulingProposedSlot[];
-}
-
 export function proposeExecutiveSlots(opts: ProposeSlotsOptions = {}): SchedulingProposedSlot[] {
   const from = opts.from ?? currentDate();
   const to = opts.to ?? addCalendarDays(from, 14);
   const count = opts.count ?? 3;
   const durationMinutes = opts.durationMinutes ?? 60;
   const existing = opts.existingSlots ?? [];
+  const hours =
+    opts.timePreference === "evening" ? EVENING_SLOT_HOURS : DEFAULT_SLOT_HOURS;
 
   let events: CalendarEvent[] = [];
   try {
@@ -71,21 +79,23 @@ export function proposeExecutiveSlots(opts: ProposeSlotsOptions = {}): Schedulin
 
   while (proposed.length < count && day <= to) {
     if (isWeekday(day)) {
-      for (const hour of DEFAULT_SLOT_HOURS) {
-        if (proposed.length >= count) break;
-        const start = `${day}T${String(hour).padStart(2, "0")}:00`;
-        const endDate = new Date(`${day}T${String(hour).padStart(2, "0")}:00:00`);
-        endDate.setMinutes(endDate.getMinutes() + durationMinutes);
-        const end = `${day}T${String(endDate.getHours()).padStart(2, "0")}:${String(endDate.getMinutes()).padStart(2, "0")}`;
-        const startMs = parseExecutiveDateTime(start).getTime();
-        const endMs = parseExecutiveDateTime(end).getTime();
-        if (overlapsExisting(startMs, endMs, rangeEvents)) continue;
-        proposed.push({
-          id: nextSlotId([...existing, ...proposed]),
-          start,
-          end,
-          label: formatSlotLabel(start, end),
-        });
+      for (const hour of hours) {
+        if (proposed.length < count) {
+          const start = `${day}T${String(hour).padStart(2, "0")}:00`;
+          const endDate = new Date(`${day}T${String(hour).padStart(2, "0")}:00:00`);
+          endDate.setMinutes(endDate.getMinutes() + durationMinutes);
+          const end = `${day}T${String(endDate.getHours()).padStart(2, "0")}:${String(endDate.getMinutes()).padStart(2, "0")}`;
+          const startMs = parseExecutiveDateTime(start).getTime();
+          const endMs = parseExecutiveDateTime(end).getTime();
+          if (!overlapsExisting(startMs, endMs, rangeEvents)) {
+            proposed.push({
+              id: nextSlotId([...existing, ...proposed]),
+              start,
+              end,
+              label: formatSlotLabel(start, end),
+            });
+          }
+        }
       }
     }
     day = addCalendarDays(day, 1);

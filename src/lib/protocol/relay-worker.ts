@@ -86,6 +86,7 @@ export async function runRelayCycle(opts?: {
     sla_failures: slaFailures,
     reconcile_alerts: reconcileAlerts.length,
     relay_pulled: relayPulled,
+    notify_pulled: 0,
   };
 
   const state = loadRelayState();

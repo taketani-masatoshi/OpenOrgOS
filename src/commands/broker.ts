@@ -8,6 +8,8 @@ import {
 import { loadBankAccounts } from "../lib/classification.js";
 import type { BrokerDisplayMode } from "../lib/broker.js";
 import { auditCliMutation, requireCliOperator } from "../lib/console-auth/cli-operator.js";
+import { findOrgApproval } from "../lib/org/approval/approve.js";
+import { amountRequiresSettlementStepUp } from "../lib/org/settlement-stepup.js";
 
 export function runBrokerBankList(opts: { mode: BrokerDisplayMode }): void {
   console.log(formatBankList(opts.mode));
@@ -38,8 +40,36 @@ export function runBrokerTransfer(opts: {
   stakeholderId?: string;
   dryRun: boolean;
   write: boolean;
+  approvalId?: string;
 }): void {
   requireCliOperator({ permission: "broker:transfer", command: "broker transfer" });
+
+  if (opts.write && amountRequiresSettlementStepUp(opts.amount)) {
+    const approvalId = opts.approvalId?.trim();
+    if (!approvalId) {
+      console.error(
+        "金額が REG-004 tier B/C です。--write には --approval-id APR-... が必要です" +
+          "（settlement PassKey step-up 済みの承認）。"
+      );
+      process.exit(1);
+    }
+    const approval = findOrgApproval(approvalId);
+    if (!approval || (approval.status !== "approved" && approval.status !== "completed")) {
+      console.error(`承認 ${approvalId} が見つからないか、未承認です`);
+      process.exit(1);
+    }
+    if (!approval.amount || approval.amount.value < opts.amount) {
+      console.error(
+        `承認 ${approvalId} の金額が振込額をカバーしていません（承認額を確認）`
+      );
+      process.exit(1);
+    }
+    if (!approval.approver_id) {
+      console.error(`承認 ${approvalId} に approver がありません`);
+      process.exit(1);
+    }
+  }
+
   const instr = buildTransferInstruction({
     from: opts.from,
     amount: opts.amount,
@@ -54,6 +84,9 @@ export function runBrokerTransfer(opts: {
   if (opts.write) {
     const path = writeTransferInstructionFile(instr);
     console.log(`\n✓ 指示書（L1 · scratch/gitignore）: ${path}`);
+    if (opts.approvalId) {
+      console.log(`  approval: ${opts.approvalId}`);
+    }
     auditCliMutation("broker transfer", `write:${path}`);
   }
 

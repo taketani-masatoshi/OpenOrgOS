@@ -6,6 +6,11 @@ import { runLlmWithTools } from "./tool-loop.js";
 import type { OperatorResponse } from "../../../schemas/operator-response.js";
 import type { LlmTelemetryEntry } from "./telemetry.js";
 import type { OperatorToolContext } from "./tools.js";
+import { hasConfiguredLlmWorkers } from "../llm-pool/registry.js";
+
+function isLlmReady(): boolean {
+  return isLlmApiConfigured() || hasConfiguredLlmWorkers();
+}
 
 export type OperatorRuntimeUsed = "llm-api" | "shell";
 
@@ -190,7 +195,7 @@ export async function runOperatorAsk(
 ): Promise<OperatorAskResult> {
   const profile = resolveShellProfileName(opts?.profile);
 
-  if (!opts?.preferShell && isLlmApiConfigured()) {
+  if (!opts?.preferShell && isLlmReady()) {
     const llm = await runLlmOperatorAsk(
       userMessage,
       systemContext,
@@ -206,7 +211,7 @@ export async function runOperatorAsk(
   const shell = await runShellAsk(userMessage, systemContext, { profile });
   const ask = shellToAskResult(shell, profile);
 
-  if (!ask.ok && isLlmApiConfigured() && !ask.setup_required) {
+  if (!ask.ok && isLlmReady() && !ask.setup_required) {
     ask.detail = `${ask.detail} (LLM API also unavailable or failed)`;
   }
 
@@ -227,7 +232,7 @@ export async function* runOperatorAskStream(
   OperatorAskResult,
   void
 > {
-  if (isLlmApiConfigured()) {
+  if (isLlmReady()) {
     const batch = await runLlmOperatorAsk(
       userMessage,
       systemContext,

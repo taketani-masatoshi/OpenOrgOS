@@ -6,7 +6,10 @@ import {
   loadOperatorRegistry,
 } from "../../org/operators.js";
 import type { WireConsoleUser } from "./session.js";
-import { listWebAuthnCredentialsByPurpose } from "./webauthn-store.js";
+import {
+  listWebAuthnCredentialsByPurpose,
+  WebAuthnCredentialStoreCorruptError,
+} from "./webauthn-store.js";
 import { rpId } from "./webauthn-shared.js";
 
 export { normalizePersonName as normalizeRegistrationPersonName };
@@ -124,7 +127,17 @@ export function assertLoginPasskeyRegistrationGate(
     return { error: "webauthn registration disabled", status: 403 };
   }
 
-  if (isLoginPasskeyBootstrap()) {
+  let bootstrap: boolean;
+  try {
+    bootstrap = isLoginPasskeyBootstrap();
+  } catch (error) {
+    if (error instanceof WebAuthnCredentialStoreCorruptError) {
+      return { error: "credential store unreadable", status: 503 };
+    }
+    throw error;
+  }
+
+  if (bootstrap) {
     if (!sessionUser && !openBootstrapWithoutSessionAllowed()) {
       return {
         error:

@@ -8,6 +8,8 @@ export const protocolRegistrySchema = z.object({
   /** Event type → usage scope (internal-only · wire · both). */
   core_event_scopes: z.record(orgEventScopeSchema).optional(),
   payload_namespaces: z.array(z.string()).default([]),
+  /** Norm Stack Exchange types (draft/validate; send via notice gate). */
+  norm_exchange_event_types: z.array(z.string()).optional(),
   outbound: z
     .object({
       format: z.enum(["legacy", "envelope", "dual"]).default("legacy"),

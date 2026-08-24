@@ -14,6 +14,9 @@ export const todayApprovalSchema = z.object({
   subject: z.string(),
   status: z.string(),
   proposed_at: z.string(),
+  subject_type: z.string().optional(),
+  message: z.string().optional(),
+  preview_path: z.string().optional(),
 });
 
 export const todayInboxItemSchema = z.object({
@@ -147,6 +150,13 @@ export const todayContextSchema = z.object({
   agent_steward_inbox_count: z.number().int().nonnegative().default(0),
   agent_steward_inbox: z.array(todayAgentRelayItemSchema).default([]),
   kpis: z.array(todayKpiSchema).max(6),
+  /** Deterministic CF KPIs from computeDashboard (grounding for Steward Chat). */
+  finance_basis_month: z.string().optional(),
+  finance_burn_rate: z.number().optional(),
+  finance_runway_months: z.number().nullable().optional(),
+  finance_cash_balance: z.number().nullable().optional(),
+  finance_cash_flow_mode: z.enum(["surplus", "deficit", "break_even"]).optional(),
+  finance_metrics_source: z.string().optional(),
   executive_summary_path: z.string().optional(),
   dashboard_path: z.string().optional(),
   agent_summary_paths: z.array(z.string()).default([]),
@@ -164,6 +174,13 @@ export const todayContextSchema = z.object({
   agent_roster_developer_count: z.number().int().nonnegative().default(0),
   agent_roster_operational: z.array(todayAgentRosterItemSchema).default([]),
   agent_roster_developer: z.array(todayAgentRosterItemSchema).default([]),
+  /** L1 headcount from data/hr/employees.yaml (no names). */
+  hr_active: z.number().int().nonnegative().optional(),
+  hr_on_leave: z.number().int().nonnegative().optional(),
+  hr_total: z.number().int().nonnegative().optional(),
+  hr_on_roster: z.number().int().nonnegative().optional(),
+  hr_coverage: z.enum(["registered", "unregistered", "partial"]).optional(),
+  hr_source_path: z.string().optional(),
 });
 
 export type TodayContext = z.output<typeof todayContextSchema>;

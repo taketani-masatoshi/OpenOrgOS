@@ -24,6 +24,9 @@ export interface LlmTelemetryEntry {
   estimated_cost_usd?: number;
   ok: boolean;
   error?: string;
+  worker_id?: string;
+  tier?: "local" | "cloud";
+  queued_ms?: number;
 }
 
 export function isLlmTelemetryEnabled(): boolean {

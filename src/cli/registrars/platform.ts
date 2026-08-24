@@ -18,6 +18,13 @@ import {
   runRegulationsInit,
 } from "../../commands/regulations.js";
 import { runStandardsList, runStandardsEnabled } from "../../commands/standards.js";
+import {
+  runTenantConfigApprove,
+  runTenantConfigApplyDev,
+  runTenantConfigList,
+  runTenantConfigPreview,
+  runTenantConfigPropose,
+} from "../../commands/tenant-config.js";
 import { runOpsDaily, runOpsP0 } from "../../commands/ops.js";
 import { runSkillsList, runSkill } from "../../commands/skills.js";
 import { registerModuleCli } from "../../lib/module-cli.js";
@@ -416,6 +423,47 @@ export function registerPlatformCommands(program: Command): void {
   standardsCmd.command("list").description("List ISO catalog vs tenant standards.yaml").action(runStandardsList);
   standardsCmd.command("enabled").description("List enabled ISO standard IDs").action(runStandardsEnabled);
 
+  const tenantConfigCmd = program
+    .command("tenant-config")
+    .description("Approval-gated modules/standards enabled toggles");
+  tenantConfigCmd
+    .command("propose")
+    .description("Propose enabling/disabling a standard or module (creates org approval)")
+    .requiredOption("--target <standards|modules>", "Config target")
+    .requiredOption("--id <id>", "ISO-27001 or module id")
+    .requiredOption("--enabled <bool>", "true or false", (v: string) => {
+      if (v === "true" || v === "1") return true;
+      if (v === "false" || v === "0") return false;
+      throw new Error("--enabled must be true or false");
+    })
+    .option("--message <text>", "Human-readable summary")
+    .action((opts: { target: string; id: string; enabled: boolean; message?: string }) => {
+      runTenantConfigPropose(opts);
+    });
+  tenantConfigCmd
+    .command("list")
+    .description("List pending (or all) config change requests")
+    .option("--all", "Include applied/rejected")
+    .action((opts: { all?: boolean }) => runTenantConfigList(opts));
+  tenantConfigCmd
+    .command("preview")
+    .description("Show diff + side effects for an approval id")
+    .requiredOption("--id <approvalId>", "APR-… approval id")
+    .action((opts: { id: string }) => runTenantConfigPreview(opts));
+  tenantConfigCmd
+    .command("approve")
+    .description("CEO/approver: approve after --reviewed and apply YAML")
+    .requiredOption("--id <approvalId>", "APR-… approval id")
+    .option("--reviewed", "Confirm preview was reviewed")
+    .action((opts: { id: string; reviewed?: boolean }) => runTenantConfigApprove(opts));
+  tenantConfigCmd
+    .command("apply-dev")
+    .description("Dev only: apply CFG-… without approval (blocked in production)")
+    .requiredOption("--change-id <changeId>", "CFG-… change id")
+    .action((opts: { changeId: string }) =>
+      runTenantConfigApplyDev({ changeId: opts.changeId })
+    );
+
   const opsCmd = program.command("ops").description("Operational daily checks (P0 · contracts · maturity)");
   opsCmd.command("daily").description("Daily ops summary (maturity + P0 + contract alerts)").action(runOpsDaily);
   opsCmd.command("p0").description("P0 closing blockers only (exit 1 if open)").action(runOpsP0);
@@ -672,6 +720,68 @@ export function registerPlatformCommands(program: Command): void {
     const { runMcpRotateToken } = await import("../../commands/mcp.js");
     runMcpRotateToken();
   });
+
+  const llmCmd = program.command("llm").description("LLM worker pool");
+  const llmWorkersCmd = llmCmd.command("workers").description("Manage LLM workers.yaml");
+  llmWorkersCmd
+    .command("init")
+    .description("Create data/llm/workers.yaml from env defaults")
+    .option("--tenant <id>", "Tenant id")
+    .option("--force", "Overwrite existing config")
+    .action((opts) => {
+      void import("../../commands/llm.js").then(({ runLlmWorkersInit }) =>
+        runLlmWorkersInit({ tenant: opts.tenant, force: opts.force }),
+      );
+    });
+  llmWorkersCmd
+    .command("list")
+    .description("List configured LLM workers")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => {
+      void import("../../commands/llm.js").then(({ runLlmWorkersList }) =>
+        runLlmWorkersList({ tenant: opts.tenant, json: opts.json }),
+      );
+    });
+  llmWorkersCmd
+    .command("probe")
+    .description("Probe worker health (OpenAI-compatible /models)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--id <workerId>", "Specific worker id")
+    .action(async (opts) => {
+      const { runLlmWorkersProbe } = await import("../../commands/llm.js");
+      await runLlmWorkersProbe({ tenant: opts.tenant, id: opts.id });
+    });
+
+  const commandsCmd = program.command("commands").description("Chat command router (skill catalog)");
+  commandsCmd
+    .command("list")
+    .description("List chat-enabled commands")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action((opts) => {
+      void import("../../commands/operator-commands.js").then(({ runCommandsList }) =>
+        runCommandsList({ tenant: opts.tenant, json: opts.json })
+      );
+    });
+  commandsCmd
+    .command("match")
+    .description("Resolve a natural-language request to a CLI command (dry-run)")
+    .requiredOption("--text <message>", "User message")
+    .option("--tenant <id>", "Tenant id")
+    .option("--skill <id>", "Force skill id")
+    .option("--execute", "Execute read commands immediately (write still needs confirmation path)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runCommandsMatch } = await import("../../commands/operator-commands.js");
+      await runCommandsMatch({
+        tenant: opts.tenant,
+        text: opts.text,
+        skillId: opts.skill,
+        execute: opts.execute,
+        json: opts.json,
+      });
+    });
 
   const notificationsCmd = program.command("notifications").description("Push notifications (tenant registry)");
   notificationsCmd

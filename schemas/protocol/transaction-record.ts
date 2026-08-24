@@ -33,6 +33,8 @@ export const transactionRefsSchema = z.object({
   invoice_id: z.string().optional(),
   stakeholder_id: z.string().optional(),
   broker_instruction: z.string().optional(),
+  receipt_id: z.string().optional(),
+  receipt_digest: z.string().optional(),
 });
 
 /** Accept legacy or committee types; stored form is always committee namespace. */

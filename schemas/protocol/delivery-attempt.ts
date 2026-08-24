@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-export const deliveryChannelSchema = z.enum(["wire_v1", "relay", "email_wire", "openorgos_p2p", "legacy_webhook"]);
+export const deliveryChannelSchema = z.enum([
+  "wire_v1",
+  "relay",
+  "email_notify",
+  "email_wire",
+  "openorgos_p2p",
+  "legacy_webhook",
+]);
 
 export const deliveryAttemptStatusSchema = z.enum(["success", "failed", "queued", "skipped"]);
 
@@ -10,7 +17,7 @@ export const deliveryAttemptSchema = z.object({
   channel: deliveryChannelSchema,
   status: deliveryAttemptStatusSchema,
   at: z.string().min(1),
-  /** outbound = tenant send · inbound = email_wire scan ingest */
+  /** outbound = tenant send · inbound = email_wire / email_notify scan ingest */
   direction: z.enum(["outbound", "inbound"]).optional(),
   error: z.string().optional(),
   smtp_message_id: z.string().optional(),

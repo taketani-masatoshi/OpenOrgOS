@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
 import {
   correspondenceDraftSchema,
@@ -14,6 +20,7 @@ import {
   getCorrespondenceDraftsDir,
 } from "./paths.js";
 import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
+import { recordSecretaryDraftEditIfBodyChanged } from "../scheduling-coordination/quality-signals.js";
 
 function nextDraftId(): string {
   const dir = getCorrespondenceDraftsDir();
@@ -53,6 +60,7 @@ export interface CreateCorrespondenceDraftOptions {
   subject?: string;
   slackChannel?: string;
   contactRef?: string;
+  attachmentRefs?: string[];
   notes?: string;
   slug?: string;
   proposeApproval?: boolean;
@@ -60,14 +68,16 @@ export interface CreateCorrespondenceDraftOptions {
   skipCcDefaults?: boolean;
 }
 
-export function saveCorrespondenceDraft(draft: CorrespondenceDraft): CorrespondenceDraft {
+export function saveCorrespondenceDraft(
+  draft: CorrespondenceDraft,
+): CorrespondenceDraft {
   const parsed = correspondenceDraftSchema.parse(draft);
   mkdirSync(getCorrespondenceDraftsDir(), { recursive: true });
   writeYamlFile(correspondenceDraftYamlPath(parsed.draft_id), parsed);
   writeFileSync(
     correspondenceDraftMdPath(parsed.draft_id),
     buildCorrespondenceDraftMarkdown(parsed),
-    "utf-8"
+    "utf-8",
   );
   return parsed;
 }
@@ -89,7 +99,10 @@ export function listCorrespondenceDrafts(opts?: {
   const drafts: CorrespondenceDraft[] = [];
   for (const name of readdirSync(dir)) {
     if (!name.endsWith(".yaml")) continue;
-    const draft = readYamlFile(joinYamlPath(dir, name), correspondenceDraftSchema);
+    const draft = readYamlFile(
+      joinYamlPath(dir, name),
+      correspondenceDraftSchema,
+    );
     if (opts?.status && draft.status !== opts.status) continue;
     if (opts?.channel && draft.channel !== opts.channel) continue;
     drafts.push(draft);
@@ -102,7 +115,7 @@ function joinYamlPath(dir: string, name: string): string {
 }
 
 export function createCorrespondenceDraft(
-  opts: CreateCorrespondenceDraftOptions
+  opts: CreateCorrespondenceDraftOptions,
 ): { draft: CorrespondenceDraft; approvalId?: string } {
   if (opts.channel === "email" && (!opts.to || !opts.subject)) {
     throw new Error("email channel requires --to and --subject");
@@ -111,7 +124,8 @@ export function createCorrespondenceDraft(
     throw new Error("slack channel requires --slack-channel");
   }
 
-  const slug = opts.slug ?? slugify(opts.subject ?? opts.slackChannel ?? "message");
+  const slug =
+    opts.slug ?? slugify(opts.subject ?? opts.slackChannel ?? "message");
   const draftId = `${nextDraftId()}${slug ? `-${slug}` : ""}`;
 
   let cc = opts.cc;
@@ -136,13 +150,16 @@ export function createCorrespondenceDraft(
     body: sanitizeOutboundEmailBody(opts.body),
     slack_channel: opts.slackChannel,
     contact_ref: opts.contactRef,
+    attachment_refs: opts.attachmentRefs ?? [],
     notes: opts.notes,
   };
 
   let approvalId: string | undefined;
   if (opts.proposeApproval !== false) {
     const subjectType =
-      opts.channel === "email" ? "correspondence.email" : "correspondence.slack";
+      opts.channel === "email"
+        ? "correspondence.email"
+        : "correspondence.slack";
     const approval = proposeOrgApproval({
       scope: "internal",
       subjectType,
@@ -162,17 +179,31 @@ export function createCorrespondenceDraft(
   return { draft, approvalId };
 }
 
-export function markCorrespondenceDraftApproved(draftId: string): CorrespondenceDraft {
+import { writeVenueBookingHandoff } from "../scheduling-coordination/venue-handoff.js";
+
+function schedulingCaseIdFromDraftNotes(notes?: string): string | undefined {
+  return notes?.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
+}
+
+export function markCorrespondenceDraftApproved(
+  draftId: string,
+): CorrespondenceDraft {
   const draft = loadCorrespondenceDraft(draftId);
   if (draft.status !== "pending_approval") {
-    throw new Error(`Draft ${draftId} status is ${draft.status}, expected pending_approval`);
+    throw new Error(
+      `Draft ${draftId} status is ${draft.status}, expected pending_approval`,
+    );
+  }
+  const caseId = schedulingCaseIdFromDraftNotes(draft.notes);
+  if (caseId) {
+    recordSecretaryDraftEditIfBodyChanged(caseId, draft);
   }
   return saveCorrespondenceDraft({ ...draft, status: "approved" });
 }
 
 export function markCorrespondenceDraftSent(
   draftId: string,
-  opts: { sentBy: string; companyEventId?: string }
+  opts: { sentBy: string; companyEventId?: string },
 ): CorrespondenceDraft {
   const draft = loadCorrespondenceDraft(draftId);
   return saveCorrespondenceDraft({
@@ -203,6 +234,9 @@ function buildCorrespondenceDraftMarkdown(draft: CorrespondenceDraft): string {
     lines.push(`| subject | ${draft.subject ?? "—"} |`);
   } else {
     lines.push(`| slack_channel | ${draft.slack_channel ?? "—"} |`);
+  }
+  if (draft.attachment_refs.length > 0) {
+    lines.push(`| attachments | ${draft.attachment_refs.join("<br>")} |`);
   }
   lines.push("", "## 本文", "", "```", draft.body.trimEnd(), "```", "");
   if (draft.notes) {

@@ -23,10 +23,8 @@ import {
   listWebAuthnCredentialsByPurpose,
   updateWebAuthnSignCount,
 } from "../wire-console/auth/webauthn-store.js";
-import {
-  isWebAuthnTestSecretAllowed,
-  verifyWebAuthnAssertionSignature,
-} from "../wire-console/auth/webauthn-verify.js";
+import { isWebAuthnTestSecretAllowed } from "../wire-console/auth/webauthn-verify.js";
+import { verifyWebAuthnAssertion } from "../wire-console/auth/webauthn-assertion.js";
 import { settlementRpId, rpId } from "../wire-console/auth/webauthn-shared.js";
 import { webauthnOriginsEqual } from "../wire-console/auth/webauthn-origin.js";
 
@@ -423,6 +421,9 @@ export function verifySettlementAssertionAndConsume(opts: {
 
   const testSecret = process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
   if (testSecret && isWebAuthnTestSecretAllowed() && parsed.signature_base64) {
+    if (!expectedOrigin || !webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
+      throw new Error("settlement webauthn origin mismatch");
+    }
     const expected = Buffer.from(testSecret, "utf-8");
     const got = Buffer.from(parsed.signature_base64, "base64url");
     if (expected.length !== got.length || !timingSafeEqual(expected, got)) {
@@ -432,23 +433,20 @@ export function verifySettlementAssertionAndConsume(opts: {
     if (!parsed.authenticator_data_base64 || !parsed.signature_base64) {
       throw new Error("authenticator_data_base64 and signature_base64 required");
     }
-    const ok = verifyWebAuthnAssertionSignature({
-      publicKeySpkiBase64: cred.public_key_spki_base64,
-      authenticatorDataBase64: parsed.authenticator_data_base64,
-      clientDataJsonBase64: parsed.client_data_json,
-      signatureBase64: parsed.signature_base64,
-    });
-    if (!ok) throw new Error("invalid settlement webauthn assertion signature");
-    try {
-      const authData = Buffer.from(parsed.authenticator_data_base64, "base64url");
-      const signCount = authData.readUInt32BE(33);
-      if (cred.sign_count !== undefined && signCount > 0 && signCount <= cred.sign_count) {
-        throw new Error("webauthn sign count replay");
-      }
-      updateWebAuthnSignCount(parsed.credential_id, signCount);
-    } catch (e) {
-      if (e instanceof Error && e.message.includes("sign count")) throw e;
+    if (!expectedOrigin) {
+      throw new Error("settlement webauthn origin mismatch");
     }
+    const verified = verifyWebAuthnAssertion({
+      expectedRpId: record.rp_id,
+      expectedOrigin,
+      clientDataJsonBase64: parsed.client_data_json,
+      authenticatorDataBase64: parsed.authenticator_data_base64,
+      signatureBase64: parsed.signature_base64,
+      publicKeySpkiBase64: cred.public_key_spki_base64,
+      previousSignCount: cred.sign_count ?? 0,
+    });
+    if (!verified.ok) throw new Error(verified.error);
+    updateWebAuthnSignCount(parsed.credential_id, verified.signCount);
   }
 
   const completedAt = new Date().toISOString();

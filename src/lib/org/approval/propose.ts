@@ -8,6 +8,7 @@ import {
   nextApprovalId,
   nextWireNoticeId,
   saveOrgApprovalRegistry,
+  withOrgApprovalRegistryLock,
 } from "./registry.js";
 
 export interface ProposeOrgApprovalOptions {
@@ -25,6 +26,8 @@ export interface ProposeOrgApprovalOptions {
     invoiceId?: string;
     brokerInstruction?: string;
     stakeholderId?: string;
+    receiptId?: string;
+    receiptDigest?: string;
     correlationEventId?: string;
     companyEventId?: string;
   };
@@ -39,34 +42,38 @@ export function proposeOrgApproval(opts: ProposeOrgApprovalOptions): OrgApproval
     }
   }
 
-  const approval = orgApprovalRequestSchema.parse({
-    approval_id: opts.useNoticeId ? nextWireNoticeId() : nextApprovalId(),
-    scope: opts.scope,
-    status: "pending_approval",
-    proposed_at: new Date().toISOString(),
-    proposed_by: opts.proposedBy,
-    subject_type: opts.subjectType,
-    subject_ref: opts.subjectRef,
-    amount: opts.amount,
-    message: opts.message,
-    approval_policy_ref: opts.approvalPolicyRef ?? defaultApprovalPolicyRef(),
-    wire:
-      opts.scope === "wire" && opts.wire
-        ? {
-            peer_id: opts.wire.peerId,
-            transaction_type: opts.wire.transactionType,
-            contract_id: opts.wire.contractId,
-            invoice_id: opts.wire.invoiceId,
-            broker_instruction: opts.wire.brokerInstruction,
-            stakeholder_id: opts.wire.stakeholderId,
-            correlation_event_id: opts.wire.correlationEventId,
-            company_event_id: opts.wire.companyEventId,
-          }
-        : undefined,
-  });
+  return withOrgApprovalRegistryLock(() => {
+    const approval = orgApprovalRequestSchema.parse({
+      approval_id: opts.useNoticeId ? nextWireNoticeId() : nextApprovalId(),
+      scope: opts.scope,
+      status: "pending_approval",
+      proposed_at: new Date().toISOString(),
+      proposed_by: opts.proposedBy,
+      subject_type: opts.subjectType,
+      subject_ref: opts.subjectRef,
+      amount: opts.amount,
+      message: opts.message,
+      approval_policy_ref: opts.approvalPolicyRef ?? defaultApprovalPolicyRef(),
+      wire:
+        opts.scope === "wire" && opts.wire
+          ? {
+              peer_id: opts.wire.peerId,
+              transaction_type: opts.wire.transactionType,
+              contract_id: opts.wire.contractId,
+              invoice_id: opts.wire.invoiceId,
+              broker_instruction: opts.wire.brokerInstruction,
+              stakeholder_id: opts.wire.stakeholderId,
+              receipt_id: opts.wire.receiptId,
+              receipt_digest: opts.wire.receiptDigest,
+              correlation_event_id: opts.wire.correlationEventId,
+              company_event_id: opts.wire.companyEventId,
+            }
+          : undefined,
+    });
 
-  const registry = loadOrgApprovalRegistry();
-  registry.approvals.push(approval);
-  saveOrgApprovalRegistry(registry);
-  return approval;
+    const registry = loadOrgApprovalRegistry();
+    registry.approvals.push(approval);
+    saveOrgApprovalRegistry(registry);
+    return approval;
+  });
 }

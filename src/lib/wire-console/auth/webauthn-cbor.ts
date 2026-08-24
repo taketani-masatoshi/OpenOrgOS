@@ -201,7 +201,8 @@ export function buildRegistrationAuthData(
   credLen.writeUInt16BE(credentialId.length, 0);
   return Buffer.concat([
     rpIdHash,
-    Buffer.from([0x41]),
+    // AT (0x40) | UP (0x01) | UV (0x04)
+    Buffer.from([0x45]),
     Buffer.from([0, 0, 0, 0]),
     aaguid,
     credLen,

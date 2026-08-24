@@ -53,7 +53,9 @@ export const dispatchTaskSchema = z.object({
   agent: z.string(),
   prompt_path: z.string(),
   prompt_relative: z.string().optional(),
-  mode: z.enum(["cursor_sdk", "cursor_cloud", "manifest"]).default("manifest"),
+  mode: z
+    .enum(["codex_cli", "codex_sdk", "cursor_sdk", "cursor_cloud", "manifest"])
+    .default("manifest"),
 });
 
 export const dispatchManifestSchema = z.object({
@@ -64,6 +66,8 @@ export const dispatchManifestSchema = z.object({
   parallel: z.number().int().default(3),
   tasks: z.array(dispatchTaskSchema),
   cursor_sdk_available: z.boolean().default(false),
+  codex_cli_available: z.boolean().default(false),
+  codex_sdk_available: z.boolean().default(false),
 });
 
 export type DispatchManifest = z.output<typeof dispatchManifestSchema>;

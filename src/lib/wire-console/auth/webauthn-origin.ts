@@ -10,7 +10,8 @@ function parseOrigin(value: string): URL | null {
 
 /** True when two WebAuthn origins are the same site, including loopback aliases. */
 export function webauthnOriginsEqual(actual?: string, expected?: string): boolean {
-  if (!expected || !actual) return true;
+  // Missing sides must fail closed (passkey-production-security-plan §2.1).
+  if (!expected || !actual) return false;
   if (actual === expected) return true;
   const a = parseOrigin(actual);
   const e = parseOrigin(expected);

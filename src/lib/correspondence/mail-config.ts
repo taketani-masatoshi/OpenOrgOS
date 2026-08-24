@@ -67,6 +67,7 @@ receive:
   # triage_mode: rules
   # auto_triage: true
   # notify_high_priority: true
+  # notify_ceo_desktop: true   # 高優先 triage 時の macOS 即時通知
   # ceo_question_mode: inline
   # interpret_ensemble: true
   # interpret_models: []
@@ -154,6 +155,14 @@ export function resolveSlackWebhookUrl(): string | undefined {
 export function shouldAutoWireScan(config: MailConfig | null): boolean {
   if (!config) return false;
   if (config.receive?.auto_wire_scan === false) return false;
+  if ((config.receive?.sync ?? "stub") === "stub") return false;
+  return true;
+}
+
+/** email_notify Pull scan after mail sync when enabled (default on when IMAP/API sync active). */
+export function shouldAutoNotifyScan(config: MailConfig | null): boolean {
+  if (!config) return false;
+  if (config.receive?.auto_notify_scan === false) return false;
   if ((config.receive?.sync ?? "stub") === "stub") return false;
   return true;
 }

@@ -170,6 +170,8 @@ export function decideWireNodeGovernanceRequest(opts: {
     const trust = readYamlFile(trustPath, wireTrustRegistrySchema);
     const approvedNode: WireTrustRegistryNode = {
       node_id: req.node_id,
+      tenant_id: req.node_id,
+      status: "active",
       did: req.did,
       node_uri: req.node_uri,
       display_name: req.display_name,

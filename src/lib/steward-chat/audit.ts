@@ -1,5 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { appendInstructionAudit } from "../org/instruction-audit.js";
 import { getWorkspaceRoot } from "../orgos-paths.js";
 
 export type ChatAuditAction =
@@ -7,11 +8,14 @@ export type ChatAuditAction =
   | "logout"
   | "message"
   | "approve"
+  | "reject"
   | "ceo_answer"
   | "wire_flush"
   | "witness_register"
   | "witness_verify"
-  | "witness_flush";
+  | "witness_flush"
+  | "webauthn_register"
+  | "webauthn_revoke";
 
 export interface ChatAuditEntry {
   at: string;
@@ -43,6 +47,12 @@ export function appendChatAudit(entry: Omit<ChatAuditEntry, "at">): void {
   mkdirSync(dirname(path), { recursive: true });
   const line: ChatAuditEntry = { at: new Date().toISOString(), ...entry };
   appendFileSync(path, `${JSON.stringify(line)}\n`, "utf-8");
+  appendInstructionAudit({
+    actor_operator_id: entry.operator_id || "unknown",
+    action: entry.action === "message" ? "chat.message" : "cli.mutation",
+    ok: entry.ok,
+    detail: entry.detail ?? entry.action,
+  });
 }
 
 export function auditChatMessage(message: string): string {

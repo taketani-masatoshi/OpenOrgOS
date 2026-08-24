@@ -153,13 +153,15 @@ export function computeDataHealth(): DataHealthReport {
   });
 
   try {
-    loadEmployees();
+    const hr = loadEmployees();
+    const n = hr.employees.length;
+    const active = hr.employees.filter((e) => e.status === "active").length;
     metrics.push({
       id: "hr",
       label: "HR マスタ",
       score: 5,
       max: 5,
-      detail: "スキーマ有効（従業員0名）",
+      detail: `スキーマ有効（登録 ${n} 名 · active ${active}）`,
     });
   } catch {
     metrics.push({ id: "hr", label: "HR マスタ", score: 0, max: 5, detail: "要修正" });

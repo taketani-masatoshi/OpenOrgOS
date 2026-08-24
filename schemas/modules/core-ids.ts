@@ -20,7 +20,13 @@ export const CORE_BUSINESS_MODULE_IDS = [
   "real_estate_brokerage",
   "property_management",
   "travel_booking",
+  "venue_booking",
+  "document_attestation",
+  "org_pdf_sign",
+  "pdf_esign",
   "language_bridge",
+  "iso_cms",
+  "receipt_qr",
 ] as const;
 
 export type CoreBusinessModuleId = (typeof CORE_BUSINESS_MODULE_IDS)[number];

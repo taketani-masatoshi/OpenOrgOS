@@ -31,7 +31,7 @@ export interface WireConsoleAuthConfig {
   /** Prod default is OIDC; WebAuthn requires explicit WIRE_CONSOLE_PROD_ADAPTER=webauthn (Wave 4). */
   prod_default_adapter: "oidc";
   oidc?: { issuer: string; audience: string; client_id: string };
-  webauthn?: { rp_id: string; credential_count: number };
+  webauthn?: { rp_id: string; credential_count: number; registration_allowed?: boolean };
 }
 
 export function getWireConsoleAuthConfig(): WireConsoleAuthConfig {

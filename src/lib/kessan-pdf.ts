@@ -11,16 +11,18 @@ import {
   createPdfWriter,
   fiscalPeriodLabel,
   fiscalYearNumber,
+  pdfCoverHeader,
   pdfMetaBlock,
+  pdfMutedNote,
   pdfParagraph,
   pdfSection,
   pdfSignatureBlock,
+  pdfStatRow,
   pdfTable,
-  pdfTitle,
   writePdfToFile,
   type PdfTableRow,
 } from "./pdf.js";
-import { ensurePdfOutputDir, formatJapaneseDate } from "./utils.js";
+import { ensurePdfOutputDir, formatCurrency, formatJapaneseDate } from "./utils.js";
 
 export interface KessanReportInput {
   company: Company;
@@ -56,44 +58,46 @@ export function buildKessanPlRows(yojitsu: YojitsuPlan): PdfTableRow[] {
   const netProfit = yojitsu.summary?.net_profit ?? pretaxProfit - taxEstimate;
 
   const rows: PdfTableRow[] = [
-    { label: "【損益計算書】", amount: "", bold: true },
-    { label: "Ⅰ. 売上高", amount: "", bold: true },
+    { label: "Ⅰ. 売上高", amount: "", variant: "section" },
   ];
 
   for (const [segment, amount] of [...revenueBySegment.entries()].sort((a, b) =>
     a[0].localeCompare(b[0], "ja")
   )) {
     if (amount > 0) {
-      rows.push({ label: segment, amount, indent: 1 });
+      rows.push({ label: segment, amount, indent: 1, variant: "muted" });
     }
   }
 
   rows.push(
-    { label: "売上高 合計", amount: revenueTotal, bold: true },
-    { label: "Ⅱ. 売上原価", amount: 0 },
-    { label: "売上総利益", amount: revenueTotal, bold: true },
-    { label: "Ⅲ. 販売費及び一般管理費", amount: "", bold: true }
+    { label: "売上高合計", amount: revenueTotal, variant: "total" },
+    { label: "Ⅱ. 売上原価", amount: "", variant: "section" },
+    { label: "売上原価", amount: 0, indent: 1, variant: "muted" },
+    { label: "売上総利益", amount: revenueTotal, variant: "total" },
+    { label: "Ⅲ. 販売費及び一般管理費", amount: "", variant: "section" }
   );
 
   for (const [label, amount] of [...expenseByLabel.entries()].sort((a, b) =>
     a[0].localeCompare(b[0], "ja")
   )) {
     if (amount > 0) {
-      rows.push({ label, amount, indent: 1 });
+      rows.push({ label, amount, indent: 1, variant: "muted" });
     }
   }
 
   rows.push(
-    { label: "販管費 合計", amount: sgaTotal, bold: true },
-    { label: "Ⅳ. 営業利益", amount: operatingProfit, bold: true },
-    { label: "Ⅴ. 営業外収益", amount: 0 },
-    { label: "Ⅵ. 営業外費用", amount: 0 },
-    { label: "経常利益", amount: pretaxProfit, bold: true },
-    { label: "Ⅶ. 特別利益", amount: 0 },
-    { label: "Ⅷ. 特別損失", amount: 0 },
-    { label: "税引前当期純利益", amount: pretaxProfit, bold: true },
-    { label: "Ⅸ. 法人税等", amount: taxEstimate },
-    { label: "当期純利益", amount: netProfit, bold: true }
+    { label: "販管費合計", amount: sgaTotal, variant: "total" },
+    { label: "Ⅳ. 営業利益", amount: operatingProfit, variant: "emphasis" },
+    { label: "Ⅴ. 営業外損益", amount: "", variant: "section" },
+    { label: "営業外収益", amount: 0, indent: 1, variant: "muted" },
+    { label: "営業外費用", amount: 0, indent: 1, variant: "muted" },
+    { label: "経常利益", amount: pretaxProfit, variant: "total" },
+    { label: "Ⅵ. 特別損益・税等", amount: "", variant: "section" },
+    { label: "特別利益", amount: 0, indent: 1, variant: "muted" },
+    { label: "特別損失", amount: 0, indent: 1, variant: "muted" },
+    { label: "税引前当期純利益", amount: pretaxProfit, variant: "total" },
+    { label: "法人税等", amount: taxEstimate, indent: 1, variant: "muted" },
+    { label: "当期純利益", amount: netProfit, variant: "emphasis" }
   );
 
   return rows;
@@ -110,31 +114,44 @@ export async function generateKessanPdf(
   const termNumber = fiscalYearNumber(company.established_date, periodTo);
   const closedAt = yojitsu.closing?.closed_at ?? "2027-02-15";
 
-  const basisNote =
-    yojitsu.closing?.basis === "forecast"
-      ? "（本報告書は予想ベースの決算数値に基づく）"
-      : "";
+  const revenue = yojitsu.summary?.revenue_total ?? 0;
+  const operatingProfit = yojitsu.summary?.operating_profit ?? 0;
+  const netProfit = yojitsu.summary?.net_profit ?? 0;
 
   const path =
     outputPath ??
-    join(
-      ensurePdfOutputDir("kessan"),
-      `${fiscalYear}-kessan-hokoku.pdf`
-    );
+    join(ensurePdfOutputDir("kessan"), `${fiscalYear}-kessan-hokoku.pdf`);
 
   const w = createPdfWriter();
 
-  pdfTitle(w, "決　算　報　告　書");
+  pdfCoverHeader(
+    w,
+    "決算報告書",
+    `第${termNumber}期  ·  ${company.name}`
+  );
+
   pdfMetaBlock(w, [
     { label: "商号", value: company.name },
     { label: "本店", value: company.address ?? "" },
     { label: "事業年度", value: `第${termNumber}期（${periodLabel}）` },
   ]);
 
+  pdfStatRow(w, [
+    { label: "売上高", value: formatCurrency(revenue) },
+    { label: "営業利益", value: formatCurrency(operatingProfit) },
+    { label: "当期純利益", value: formatCurrency(netProfit) },
+  ]);
+
   pdfParagraph(
     w,
-    `当会社は、${periodLabel}の第${termNumber}期事業年度の計算書類等について、下記のとおり利益を有しましたので、決算報告いたします。${basisNote}`
+    `当会社は、${periodLabel}の第${termNumber}期事業年度の計算書類等について、下記のとおり報告いたします。`
   );
+
+  if (yojitsu.closing?.basis === "forecast") {
+    pdfMutedNote(w, "※ 本報告書の数値は予想ベースです。税理士確認後に確定版へ更新してください。");
+  } else if (yojitsu.closing?.basis === "actual") {
+    pdfMutedNote(w, "※ 本報告書の数値は月次実績の再構成に基づきます。税理士確認後に確定版へ更新してください。");
+  }
 
   pdfSection(w, "1. 損益の状況");
   pdfTable(w, buildKessanPlRows(yojitsu));
@@ -148,7 +165,7 @@ export async function generateKessanPdf(
   pdfSection(w, "3. 重要な会計方針");
   pdfParagraph(
     w,
-    "減価償却は定額法により計上。番町ハイム312の取得価額1,660万円を耐用年数47年で償却。亀沢旅館の減価償却は当年度未計上。"
+    "減価償却は定額法により計上しています。番町ハイム312の取得価額1,660万円を耐用年数47年で償却し、亀沢旅館の減価償却は当年度未計上としています。"
   );
 
   if (yojitsu.closing?.notes) {

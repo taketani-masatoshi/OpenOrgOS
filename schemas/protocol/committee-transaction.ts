@@ -10,6 +10,7 @@ export const committeeTransactionTypeSchema = z.enum([
   "steward.invoice.issued",
   "steward.payment.instructed",
   "steward.obligation.acknowledged",
+  "steward.receipt.claimed",
 ]);
 
 export type CommitteeTransactionType = z.output<typeof committeeTransactionTypeSchema>;
@@ -23,6 +24,7 @@ export const LEGACY_TRANSACTION_TYPE_MAP = {
   "invoice.issued": "steward.invoice.issued",
   "payment.instructed": "steward.payment.instructed",
   "obligation.acknowledged": "steward.obligation.acknowledged",
+  "receipt.claimed": "steward.receipt.claimed",
 } as const satisfies Record<string, CommitteeTransactionType>;
 
 export type LegacyTransactionType = keyof typeof LEGACY_TRANSACTION_TYPE_MAP;
@@ -36,6 +38,7 @@ export const legacyTransactionTypeSchema = z.enum([
   "invoice.issued",
   "payment.instructed",
   "obligation.acknowledged",
+  "receipt.claimed",
 ]);
 
 export function normalizeTransactionType(input: string): CommitteeTransactionType {

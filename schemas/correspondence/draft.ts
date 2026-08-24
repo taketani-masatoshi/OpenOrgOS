@@ -29,9 +29,15 @@ export const correspondenceDraftSchema = z.object({
   sent_by: z.string().optional(),
   company_event_id: z.string().optional(),
   contact_ref: z.string().optional(),
+  /** Tenant-logical docs paths only. Resolved and attached by the mail transport. */
+  attachment_refs: z.array(z.string().min(1)).default([]),
   notes: z.string().optional(),
 });
 
-export type CorrespondenceChannel = z.output<typeof correspondenceChannelSchema>;
-export type CorrespondenceDraftStatus = z.output<typeof correspondenceDraftStatusSchema>;
+export type CorrespondenceChannel = z.output<
+  typeof correspondenceChannelSchema
+>;
+export type CorrespondenceDraftStatus = z.output<
+  typeof correspondenceDraftStatusSchema
+>;
 export type CorrespondenceDraft = z.output<typeof correspondenceDraftSchema>;

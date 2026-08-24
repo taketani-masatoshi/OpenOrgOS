@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { dateString, monthString } from "./common.js";
 import { loanDocumentsSchema } from "./finance.js";
+import { costAllocationArraySchema } from "./finance/cost-allocation.js";
 
 export const planLineSchema = z.object({
   id: z.string().min(1),
@@ -8,7 +9,19 @@ export const planLineSchema = z.object({
   property_id: z.string().optional(),
   contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
   amount: z.number(),
+  /** Optional BU / org / employee allocation of this budget line. */
+  allocations: costAllocationArraySchema.optional(),
   notes: z.string().optional(),
+}).superRefine((line, ctx) => {
+  if (!line.allocations?.length) return;
+  const sum = line.allocations.reduce((s, a) => s + a.amount, 0);
+  if (Math.abs(sum - Math.abs(line.amount)) > 0.01) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `allocations sum ${sum} must equal line amount ${line.amount}`,
+      path: ["allocations"],
+    });
+  }
 });
 
 export const fiscalYearPlanSchema = z.object({
@@ -96,24 +109,32 @@ export const debtScenarioSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().optional(),
+  /** Bank financing scenario amount (0 for none). Officer loans stay in loans[]. */
+  bank_borrowing: z.number().nonnegative().optional(),
+  annual_debt_service: z.number().nonnegative().optional(),
+  term_years: z.number().int().positive().optional(),
+  interest_rate: z.number().min(0).optional(),
+  notes: z.string().optional(),
   repayments: z.array(debtRepaymentEntrySchema).default([]),
 });
 
 export const debtPlanLoanSchema = z.object({
   loan_id: z.string().regex(/^LOAN-\d{3,}$/),
-  contract_id: z.string().regex(/^CTR-\d{3,}$/),
+  contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
   property_id: z.string().optional(),
   property_name: z.string().optional(),
   lender: z.string().optional(),
   balance: z.number().nonnegative(),
   interest_rate: z.number().min(0),
   executed_date: dateString.optional(),
-  maturity_date: dateString,
+  maturity_date: dateString.optional(),
   repayment_start: z.string().optional(),
+  tranche_ids: z.array(z.string().regex(/^TRANCHE-\d{3,}$/)).optional(),
   use_of_funds: z
     .object({
       land: z.number().nonnegative().optional(),
       construction: z.number().nonnegative().optional(),
+      initial_equipment: z.number().nonnegative().optional(),
     })
     .optional(),
   documents: loanDocumentsSchema.optional(),

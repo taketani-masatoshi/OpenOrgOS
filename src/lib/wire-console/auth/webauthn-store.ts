@@ -1,4 +1,11 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join } from "node:path";
 import { ensureOrgOsStateDir, WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH } from "../paths.js";
 import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
 import { rpId } from "./webauthn-shared.js";
@@ -20,24 +27,62 @@ interface CredentialStoreDocument {
   credentials: StoredWebAuthnCredential[];
 }
 
+export class WebAuthnCredentialStoreCorruptError extends Error {
+  constructor(message = "credential store unreadable") {
+    super(message);
+    this.name = "WebAuthnCredentialStoreCorruptError";
+  }
+}
+
 let memoryOverride: StoredWebAuthnCredential[] | undefined;
+
+function hardenStoreMode(): void {
+  try {
+    if (existsSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH)) {
+      chmodSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, 0o600);
+    }
+  } catch {
+    /* best-effort on platforms that ignore mode */
+  }
+}
 
 function readStoreFile(): StoredWebAuthnCredential[] {
   if (!existsSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH)) return [];
+  hardenStoreMode();
+  let raw: string;
   try {
-    const doc = JSON.parse(
-      readFileSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, "utf-8")
-    ) as CredentialStoreDocument;
-    return Array.isArray(doc.credentials) ? doc.credentials : [];
-  } catch {
-    return [];
+    raw = readFileSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, "utf-8");
+  } catch (error) {
+    throw new WebAuthnCredentialStoreCorruptError(
+      error instanceof Error ? error.message : "credential store unreadable",
+    );
   }
+  let doc: unknown;
+  try {
+    doc = JSON.parse(raw);
+  } catch {
+    throw new WebAuthnCredentialStoreCorruptError("credential store JSON corrupt");
+  }
+  if (
+    !doc ||
+    typeof doc !== "object" ||
+    !Array.isArray((doc as CredentialStoreDocument).credentials)
+  ) {
+    throw new WebAuthnCredentialStoreCorruptError(
+      "credential store missing credentials array",
+    );
+  }
+  return (doc as CredentialStoreDocument).credentials;
 }
 
 function writeStoreFile(credentials: StoredWebAuthnCredential[]): void {
   ensureOrgOsStateDir();
   const doc: CredentialStoreDocument = { credentials };
-  writeFileSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, JSON.stringify(doc, null, 2), "utf-8");
+  const target = WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH;
+  const tmp = join(dirname(target), `.webauthn-credentials.${process.pid}.tmp`);
+  writeFileSync(tmp, JSON.stringify(doc, null, 2), { encoding: "utf-8", mode: 0o600 });
+  renameSync(tmp, target);
+  hardenStoreMode();
 }
 
 function normalizeCredential(c: StoredWebAuthnCredential): StoredWebAuthnCredential {
@@ -75,7 +120,7 @@ function loadEnvCredentials(): StoredWebAuthnCredential[] {
           purpose: c.purpose,
           rp_id: c.rp_id,
           authenticator_attachment: c.authenticator_attachment,
-        })
+        }),
       )
       .filter((c) => c.public_key_spki_base64);
   } catch {
@@ -98,7 +143,7 @@ export function listWebAuthnCredentials(): StoredWebAuthnCredential[] {
 
 export function listWebAuthnCredentialsByPurpose(
   purpose: WebAuthnCredentialPurpose,
-  opts?: { rpId?: string }
+  opts?: { rpId?: string },
 ): StoredWebAuthnCredential[] {
   const wantRp = opts?.rpId;
   return listWebAuthnCredentials().filter((c) => {
@@ -127,6 +172,11 @@ export function saveWebAuthnCredential(credential: StoredWebAuthnCredential): vo
 }
 
 export function updateWebAuthnSignCount(credentialId: string, signCount: number): void {
+  if (isEnvManagedWebAuthnCredential(credentialId)) {
+    // Env-backed credentials are not writable; callers still run replay checks
+    // against previousSignCount when present on the merged view.
+    return;
+  }
   const file = memoryOverride ?? readStoreFile();
   const idx = file.findIndex((c) => c.credential_id === credentialId);
   if (idx < 0) return;
@@ -136,6 +186,37 @@ export function updateWebAuthnSignCount(credentialId: string, signCount: number)
     return;
   }
   writeStoreFile(file);
+}
+
+function envCredentialIds(): Set<string> {
+  return new Set(loadEnvCredentials().map((c) => c.credential_id));
+}
+
+export function isEnvManagedWebAuthnCredential(credentialId: string): boolean {
+  return envCredentialIds().has(credentialId);
+}
+
+export function deleteWebAuthnCredential(credentialId: string): {
+  ok: boolean;
+  error?: string;
+} {
+  if (isEnvManagedWebAuthnCredential(credentialId)) {
+    return {
+      ok: false,
+      error: "this passkey is managed by environment configuration and cannot be removed here",
+    };
+  }
+  const file = memoryOverride ?? readStoreFile();
+  const next = file.filter((c) => c.credential_id !== credentialId);
+  if (next.length === file.length) {
+    return { ok: false, error: "passkey not found" };
+  }
+  if (memoryOverride) {
+    memoryOverride = next;
+    return { ok: true };
+  }
+  writeStoreFile(next);
+  return { ok: true };
 }
 
 export function setWebAuthnCredentialsForTests(credentials: StoredWebAuthnCredential[]): void {

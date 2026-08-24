@@ -7,7 +7,7 @@ import { getTenantId, getWorkspaceRoot, loadTenantConfig } from "../tenant.js";
 import { todayContextSchema, type TodayContext } from "../../../schemas/steward-chat.js";
 import { join, relative } from "node:path";
 import { existsSync } from "node:fs";
-import { currentDate, getDocsDir } from "../utils.js";
+import { currentDate, formatCurrency, getDocsDir } from "../utils.js";
 import { getTenantMailMessages } from "../wire-console/human-mail.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
 import { listWirePending } from "../protocol/wire-queue.js";
@@ -25,7 +25,12 @@ import {
   isCorrespondenceApprovalSubject,
   loadCorrespondenceDraftForApproval,
 } from "../correspondence/review.js";
+import { isTenantConfigApprovalSubject } from "../org/tenant-config-change.js";
 import { getCashflowTodaySummary } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
+import {
+  buildHeadcountView,
+  formatHeadcountTodayLines,
+} from "../hr/headcount-view.js";
 import {
   countActiveSchedulingCases,
   listSchedulingCases,
@@ -33,6 +38,10 @@ import {
 import { buildSchedulingTodayItem } from "../scheduling-coordination/today-summary.js";
 import { findLatestAgentSummaries } from "../agent-summaries.js";
 import { buildAgentRosterTodaySummary } from "../agent-roster.js";
+import {
+  buildContractStatusView,
+  formatContractStatusTodayLines,
+} from "../contract-status-view.js";
 
 function repoRelativePath(path: string): string {
   return relative(getWorkspaceRoot(), path).replace(/\\/g, "/");
@@ -162,6 +171,7 @@ export function buildTodayContext(): TodayContext {
 
   const approvals = listOrgApprovals({ status: "pending_approval" })
     .filter((approval) => {
+      if (isTenantConfigApprovalSubject(approval.subject_type)) return true;
       if (!isCorrespondenceApprovalSubject(approval.subject_type)) return true;
       return loadCorrespondenceDraftForApproval(approval)?.notes?.includes("scheduling-case:") === true;
     })
@@ -171,6 +181,13 @@ export function buildTodayContext(): TodayContext {
       subject: a.subject_ref ?? a.approval_id,
       status: a.status,
       proposed_at: a.proposed_at,
+      subject_type: a.subject_type,
+      message: a.message,
+      preview_path: isTenantConfigApprovalSubject(a.subject_type)
+        ? `/chat/v1/approvals/${encodeURIComponent(a.approval_id)}/config-preview`
+        : isCorrespondenceApprovalSubject(a.subject_type)
+          ? `/chat/v1/approvals/${encodeURIComponent(a.approval_id)}/scheduling-preview`
+          : undefined,
     }));
 
   const inbox = listPendingInbox().slice(0, 10).map((i) => ({
@@ -186,6 +203,7 @@ export function buildTodayContext(): TodayContext {
     label: k.label,
     value: k.value,
   }));
+  const cf = report.cashFlow;
 
   const dashboardPath = join(getDocsDir(), "reports", "dashboard", `${currentDate()}.md`);
   const executivePath = join(getDocsDir(), "reports", "executive-notes", `${currentDate()}-dashboard-sync.md`);
@@ -321,6 +339,12 @@ export function buildTodayContext(): TodayContext {
       has_report: true,
     })),
     kpis,
+    finance_basis_month: cf.basisMonth,
+    finance_burn_rate: cf.burnRate,
+    finance_runway_months: cf.runwayMonths,
+    finance_cash_balance: cf.cashBalance,
+    finance_cash_flow_mode: cf.cashFlowMode,
+    finance_metrics_source: cf.source,
     executive_summary_path: existsSync(executivePath) ? executivePath : undefined,
     dashboard_path: existsSync(dashboardPath) ? dashboardPath : undefined,
     agent_summary_paths: agentSummaryPaths,
@@ -338,6 +362,21 @@ export function buildTodayContext(): TodayContext {
     agent_roster_developer_count: roster.developer_count,
     agent_roster_operational: roster.operational,
     agent_roster_developer: roster.developer,
+    ...(() => {
+      try {
+        const hr = buildHeadcountView();
+        return {
+          hr_active: hr.by_status.active,
+          hr_on_leave: hr.by_status.leave,
+          hr_total: hr.total,
+          hr_on_roster: hr.on_roster,
+          hr_coverage: hr.coverage,
+          hr_source_path: hr.source_path,
+        };
+      } catch {
+        return {};
+      }
+    })(),
   });
 
   return ctx;
@@ -391,6 +430,72 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
   }
   lines.push(`- detail: agent roster show`);
 
+  if (ctx.finance_basis_month != null && ctx.finance_burn_rate != null) {
+    const modeJa =
+      ctx.finance_cash_flow_mode === "surplus"
+        ? "黒字"
+        : ctx.finance_cash_flow_mode === "deficit"
+          ? "赤字"
+          : "均衡";
+    const runway =
+      ctx.finance_cash_flow_mode === "surplus"
+        ? "該当なし（黒字）"
+        : ctx.finance_runway_months == null
+          ? "未確定"
+          : `${ctx.finance_runway_months.toFixed(1)} ヶ月`;
+    const burnNote =
+      ctx.finance_cash_flow_mode === "surplus"
+        ? `符号付きバーン ${formatCurrency(ctx.finance_burn_rate)}（負＝黒字）· 月次キャッシュ増を主指標とする`
+        : ctx.finance_cash_flow_mode === "deficit"
+          ? `ネットバーン（消耗） ${formatCurrency(ctx.finance_burn_rate)}`
+          : `符号付きバーン ${formatCurrency(ctx.finance_burn_rate)}（≈0）`;
+    lines.push(
+      "",
+      "## 財務KPI（computeDashboard · 決定論）",
+      `- 基準月: ${ctx.finance_basis_month}（${ctx.finance_metrics_source ?? "unknown"}）`,
+      `- キャッシュ指標: ${burnNote}`,
+      `- ランウェイ: ${runway}`,
+      `- 現預金: ${ctx.finance_cash_balance == null ? "未設定" : formatCurrency(ctx.finance_cash_balance)}`,
+      `- 運転モード: ${modeJa}`,
+      "- これらの数値は Today に含まれる。ユーザーがバーンレート／CF を聞いたらこの値を述べてよい（捏造禁止・拒否エッセイ禁止）。符号付きバーンの負は黒字であり矛盾ではない。"
+    );
+  }
+
+  try {
+    const contractView = buildContractStatusView();
+    lines.push(
+      "",
+      "## 契約KPI（loadContracts · 決定論 · L1）",
+      ...formatContractStatusTodayLines(contractView),
+      "- 契約本数・期限・解除窓は Today / 決定論パスで述べてよい。本文詳細は Contract へ実 IMP 委譲。"
+    );
+  } catch {
+    /* tenant without contracts dir */
+  }
+
+  if (ctx.hr_coverage != null) {
+    lines.push(
+      "",
+      "## 人員KPI（loadEmployees · 決定論 · L1）",
+      `- 在籍（active+leave）: ${ctx.hr_on_roster ?? 0} 名（active ${ctx.hr_active ?? 0} · leave ${ctx.hr_on_leave ?? 0}）`,
+      `- 登録総数: ${ctx.hr_total ?? 0} · 被覆: ${ctx.hr_coverage}`,
+      `- Path: \`${ctx.hr_source_path ?? "data/hr/employees.yaml"}\``,
+      "- 従業員数・在籍人数は Today / 決定論パス（`orgos hr headcount`）で述べてよい。氏名は出力しない。未登録時は Human Resources へ実 IMP。"
+    );
+  } else {
+    try {
+      const hr = buildHeadcountView();
+      lines.push(
+        "",
+        "## 人員KPI（loadEmployees · 決定論 · L1）",
+        ...formatHeadcountTodayLines(hr),
+        "- 従業員数・在籍人数は Today / 決定論パスで述べてよい。氏名は出力しない。"
+      );
+    } catch {
+      /* optional */
+    }
+  }
+
   if (ctx.decisions.length > 0) {
     lines.push("", "## 判断", "");
     for (const decision of ctx.decisions) {
@@ -429,9 +534,15 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
   if (otherApprovals.length > 0 || actionableWire.length > 0) {
     lines.push("", "## その他の承認", "");
     for (const approval of otherApprovals) {
+      const label = approval.message ?? approval.subject;
+      const kind = approval.subject_type ? ` (${approval.subject_type})` : "";
       lines.push(
-        `- **${approval.subject}**`,
-        `  承認: POST /chat/v1/approvals/${encodeURIComponent(approval.id)}/approve`
+        `- **${label}**${kind}`,
+        approval.preview_path
+          ? `  プレビュー: GET ${approval.preview_path}`
+          : `  対象: ${approval.subject}`,
+        `  承認: POST /chat/v1/approvals/${encodeURIComponent(approval.id)}/approve` +
+          (approval.subject_type === "tenant.config" ? ` {\"reviewed\":true}` : "")
       );
     }
     for (const wire of actionableWire) {

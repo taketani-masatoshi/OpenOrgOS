@@ -11,6 +11,7 @@ export const peerEndpointModeSchema = z.enum(["push", "relay", "pull"]);
  * - gov_gateway — national gateway adapter (I3-b)
  * - relay — Org C relay enqueue
  * - email_wire — SMTP signed WireMessage envelope (R5 fallback)
+ * - email_notify — SMTP light header + outbox Pull URL (R5b · before email_wire)
  */
 export const peerEndpointUrlSchema = z.string().min(1).refine(
   (u) => {
@@ -31,6 +32,7 @@ export const peerTransportSchema = z.enum([
   "legacy_webhook",
   "gov_gateway",
   "relay",
+  "email_notify",
   "email_wire",
 ]);
 
@@ -76,6 +78,10 @@ export function isOpenOrgOsP2pEndpoint(ep: PeerEndpoint): boolean {
 
 export function isEmailWireEndpoint(ep: PeerEndpoint): boolean {
   return ep.transport === "email_wire" || ep.url.startsWith("smtp://");
+}
+
+export function isEmailNotifyEndpoint(ep: PeerEndpoint): boolean {
+  return ep.transport === "email_notify";
 }
 
 /** Extract recipient from smtp://user@host or smtp://host (peer.wire_email preferred). */

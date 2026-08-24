@@ -9,11 +9,17 @@ import { z } from "zod";
 import { MODULE_TO_CLASSIFICATION_AGENT, type ModuleAgentId } from "./modules.js";
 import { resolveTenantPath, readYamlFile } from "./utils.js";
 
-/** Core agents active when data/operator/agents.yaml is absent. */
+/**
+ * Agents active when data/operator/agents.yaml is absent, and seeded by
+ * `orgos agent roster init`. Includes the finance triangle (finance →
+ * accounting → tax): every corporation needs tax/accounting ops by default.
+ */
 export const DEFAULT_CORE_OPERATIONAL_AGENTS: AgentId[] = [
   "executive_steward",
   "secretary",
   "finance",
+  "accounting",
+  "tax",
   "contract",
   "compliance",
   "operations",

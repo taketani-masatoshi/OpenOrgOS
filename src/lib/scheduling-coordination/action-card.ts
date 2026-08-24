@@ -16,6 +16,8 @@ function resolveSlot(caseRow: SchedulingCase) {
 
 function kindLabel(kind: SchedulingDraftKind): string {
   switch (kind) {
+    case "clarify":
+      return "会場案のご相談（候補日前）";
     case "proposal":
       return "候補日時の送付";
     case "reminder":

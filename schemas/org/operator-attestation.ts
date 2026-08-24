@@ -21,6 +21,10 @@ export const operatorAttestationSchema = z.object({
   co_approver_id: z.string().optional(),
   approval_tier: orgApprovalTierSchema.optional(),
   approval_policy_ref: z.string().optional(),
+  /** ADR 0037 — settlement PassKey used for tier B/C step-up (no L2 values). */
+  settlement_credential_id: z.string().min(1).optional(),
+  settlement_challenge_id: z.string().min(1).optional(),
+  settlement_rp_id: z.string().min(1).optional(),
 });
 
 export type OperatorAttestation = z.output<typeof operatorAttestationSchema>;

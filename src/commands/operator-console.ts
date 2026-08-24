@@ -26,6 +26,9 @@ export async function runOperatorConsoleStart(opts: OperatorConsoleStartOptions 
   console.log(`  Chat:  ${handle.chatUrl}`);
   console.log(`  Wire:  ${handle.wireUrl}`);
   console.log(`  APIs:  /chat/v1/* · /console/v1/* (shared session cookie)`);
+  console.log(
+    "  Deterministic chat routes: finance-metrics · contract-status · cashflow · steward-orchestrate"
+  );
   console.log(`  Build: npm run operator-console:build  (Wire SPA at /wire/)`);
   console.log("  Press Ctrl+C to stop");
 

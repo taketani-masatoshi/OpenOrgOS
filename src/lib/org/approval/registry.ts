@@ -11,8 +11,24 @@ import {
 } from "../../../../schemas/protocol/pending-notice.js";
 import { getPendingApprovalsPath } from "../paths.js";
 import { getPendingNoticesPath } from "../../protocol/paths.js";
-import { currentDate, readYamlFile, writeYamlFile } from "../../utils.js";
+import { currentDate, readYamlFile } from "../../utils.js";
+import { withYamlFileLock, writeYamlFileAtomic } from "../../yaml-atomic.js";
 import { resolveJurisdictionApprovalPolicy } from "../../jurisdiction/wire-governance/index.js";
+
+/** Nestable exclusive section for load → mutate → save of pending-approvals. */
+let orgApprovalLockDepth = 0;
+
+export function withOrgApprovalRegistryLock<T>(fn: () => T): T {
+  if (orgApprovalLockDepth > 0) return fn();
+  return withYamlFileLock(getPendingApprovalsPath(), () => {
+    orgApprovalLockDepth += 1;
+    try {
+      return fn();
+    } finally {
+      orgApprovalLockDepth -= 1;
+    }
+  });
+}
 
 export function noticeToOrgApproval(notice: PendingNotice): OrgApprovalRequest {
   return orgApprovalRequestSchema.parse({
@@ -22,7 +38,11 @@ export function noticeToOrgApproval(notice: PendingNotice): OrgApprovalRequest {
     proposed_at: notice.proposed_at,
     proposed_by: notice.proposed_by,
     subject_type: "wire.outbound",
-    subject_ref: notice.contract_id ?? notice.invoice_id ?? notice.correlation_event_id,
+    subject_ref:
+      notice.contract_id ??
+      notice.invoice_id ??
+      notice.receipt_id ??
+      notice.correlation_event_id,
     amount: notice.amount,
     message: notice.message,
     approval_policy_ref: notice.approval_policy_ref,
@@ -40,6 +60,8 @@ export function noticeToOrgApproval(notice: PendingNotice): OrgApprovalRequest {
       invoice_id: notice.invoice_id,
       broker_instruction: notice.broker_instruction,
       stakeholder_id: notice.stakeholder_id,
+      receipt_id: notice.receipt_id,
+      receipt_digest: notice.receipt_digest,
       correlation_event_id: notice.correlation_event_id,
       transaction_id: notice.transaction_id,
       wire_event_id: notice.event_id,
@@ -68,6 +90,8 @@ export function orgApprovalToPendingNotice(approval: OrgApprovalRequest): Pendin
     invoice_id: w.invoice_id,
     broker_instruction: w.broker_instruction,
     stakeholder_id: w.stakeholder_id,
+    receipt_id: w.receipt_id,
+    receipt_digest: w.receipt_digest,
     amount: approval.amount,
     correlation_event_id: w.correlation_event_id,
     message: approval.message,
@@ -107,7 +131,19 @@ export function loadOrgApprovalRegistry(): OrgApprovalRegistry {
 }
 
 export function saveOrgApprovalRegistry(registry: OrgApprovalRegistry): void {
-  writeYamlFile(getPendingApprovalsPath(), { ...registry, as_of: currentDate() });
+  const path = getPendingApprovalsPath();
+  const parsed = orgApprovalRegistrySchema.parse({
+    ...registry,
+    as_of: currentDate(),
+  });
+  const write = (): void => {
+    writeYamlFileAtomic(path, parsed);
+  };
+  if (orgApprovalLockDepth > 0) {
+    write();
+    return;
+  }
+  withYamlFileLock(path, write);
 }
 
 export function findOrgApproval(approvalId: string): OrgApprovalRequest | undefined {

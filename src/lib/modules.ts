@@ -25,6 +25,11 @@ import {
   type JurisdictionCode,
 } from "./jurisdiction.js";
 import { getResolvedJurisdiction } from "./jurisdiction.js";
+import {
+  moduleSecuritySectionSchema,
+  type ModuleSecuritySection,
+} from "../../schemas/module-security-manifest.js";
+import { grantedCapabilitiesFromSecurity } from "./module-capability.js";
 
 export const MODULES_FILE = "modules.yaml";
 export { STEWARD_MODULES_DIR } from "./steward-paths.js";
@@ -146,7 +151,13 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   real_estate_brokerage: "contract",
   property_management: "property_rental",
   travel_booking: "operations",
+  venue_booking: "operations",
+  document_attestation: "contract",
+  org_pdf_sign: "contract",
+  pdf_esign: "contract",
   language_bridge: "secretary",
+  iso_cms: "compliance",
+  receipt_qr: "finance",
   jp_carbon_neutral_2050: "compliance",
   jp_women_empowerment: "compliance",
   jp_privacy_policy: "compliance",
@@ -155,6 +166,10 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_corporate_registration: "secretary",
   jp_medical_device: "medical_device_regulatory",
   jp_permit_registry: "compliance",
+  jp_permit_application: "compliance",
+  jp_minpaku: "compliance",
+  jp_certification: "compliance",
+  jp_inspection: "compliance",
   jp_bank_corporate: "finance",
 };
 
@@ -176,7 +191,13 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "software_outsourcing",
   "real_estate_brokerage",
   "travel_booking",
+  "venue_booking",
+  "document_attestation",
+  "org_pdf_sign",
+  "pdf_esign",
   "language_bridge",
+  "iso_cms",
+  "receipt_qr",
   "jp_carbon_neutral_2050",
   "jp_women_empowerment",
   "jp_privacy_policy",
@@ -185,6 +206,10 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_corporate_registration",
   "jp_medical_device",
   "jp_permit_registry",
+  "jp_permit_application",
+  "jp_minpaku",
+  "jp_certification",
+  "jp_inspection",
   "jp_bank_corporate",
 ];
 
@@ -437,14 +462,36 @@ const moduleManifestSchema = z.object({
   activation_seeds: z.array(z.string()).default([]),
   optional_regulations: z.array(z.string()).optional(),
   notes: z.string().optional(),
+  /**
+   * Optional isolation permissions (M1).
+   * Omitted → zero gateway capabilities (default deny) for third-party paths.
+   * Internal catalog may omit without failing `modules check`.
+   */
+  security: moduleSecuritySectionSchema.optional(),
 });
 
-export function loadModuleManifest(catalogId: string) {
+export type ModuleManifest = z.output<typeof moduleManifestSchema>;
+
+export function loadModuleManifest(catalogId: string): ModuleManifest | null {
   const loc = resolveModuleLocation(catalogId);
   if (!loc) return null;
   const path = join(loc.rootDir, "module.manifest.yaml");
   if (!existsSync(path)) return null;
   return moduleManifestSchema.parse(YAML.parse(readFileSync(path, "utf-8")));
+}
+
+/** Resolve security block or empty default-deny section. */
+export function resolveModuleSecurity(catalogId: string): ModuleSecuritySection {
+  const manifest = loadModuleManifest(catalogId);
+  if (manifest?.security) return manifest.security;
+  return moduleSecuritySectionSchema.parse({
+    publisher: "openorgos",
+    trust_class: "internal",
+  });
+}
+
+export function resolveModuleGrantedCapabilities(catalogId: string): Set<string> {
+  return grantedCapabilitiesFromSecurity(resolveModuleSecurity(catalogId));
 }
 
 export interface ModuleCheckIssue {

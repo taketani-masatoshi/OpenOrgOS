@@ -58,7 +58,13 @@ export async function approveTenantNotice(
   tenantId: string,
   user: WireConsoleUser,
   noticeId: string,
-  opts?: { co_approver_id?: string }
+  opts?: {
+    co_approver_id?: string;
+    settlementAssertion?: import("../../../schemas/org/settlement-stepup.js").SettlementWebAuthnAssertion & {
+      challenge_id: string;
+      token: string;
+    };
+  }
 ) {
   return withWireConsoleTenantAsync(tenantId, async () => {
     const result = approveInterOrgNotice({
@@ -66,6 +72,7 @@ export async function approveTenantNotice(
       approverId: user.approver_id,
       coApproverId: opts?.co_approver_id,
       operatorId: user.operator_id,
+      settlementAssertion: opts?.settlementAssertion,
     });
     const transmit = await transmitApprovedNotice(result);
     return {
