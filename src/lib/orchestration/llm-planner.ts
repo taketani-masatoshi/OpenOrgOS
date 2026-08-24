@@ -1,22 +1,19 @@
-import type { EscalationInput } from "../../../schemas/routing.js";
-import { planWorkOrders, type WorkOrderPlan } from "../escalate.js";
-
-export type OrchestrationPlanSource = "deterministic" | "llm";
+import type { EscalationInput, WorkOrderPlan } from "../../../schemas/routing.js";
+import { planWorkOrders } from "../escalate.js";
 
 export interface OrchestrationPlanProposal {
-  source: OrchestrationPlanSource;
+  /** Always "deterministic" today — LLM decomposition lands with the P1 critique loop. */
+  source: "deterministic";
   plan: WorkOrderPlan;
   validation: {
     ok: boolean;
     issues: string[];
   };
-  /** P1: critique loop output (stub until LLM reviewer wired). */
-  critique?: string;
 }
 
 /**
- * P1 planner entry — deterministic route match today; LLM decomposition when configured.
- * Always returns a validation envelope so CLI `--propose` can gate on `validation.ok`.
+ * Proposes a work order plan and reports why it would be rejected, so `orchestrate plan
+ * --propose` can gate on `validation.ok` before anything is written to the routing queue.
  */
 export function proposeOrchestrationPlan(input: EscalationInput): OrchestrationPlanProposal {
   const plan = planWorkOrders(input);
@@ -27,20 +24,6 @@ export function proposeOrchestrationPlan(input: EscalationInput): OrchestrationP
   }
   for (const match of plan.matches.filter((m) => !m.eligible)) {
     issues.push(`route ${match.routeId} (${match.agent}) not eligible`);
-  }
-
-  const useLlm =
-    process.env.ORGOS_ORCHESTRATE_LLM_PLANNER === "1" &&
-    (Boolean(process.env.OPENAI_API_KEY) || Boolean(process.env.ORGOS_LLM_API_URL));
-
-  if (useLlm) {
-    // P1 stub: LLM decomposition hook — falls back to deterministic plan until wired.
-    return {
-      source: "llm",
-      plan,
-      validation: { ok: issues.length === 0, issues },
-      critique: "LLM planner stub — using deterministic route match until critique loop lands.",
-    };
   }
 
   return {

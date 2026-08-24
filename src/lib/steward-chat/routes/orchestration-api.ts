@@ -14,12 +14,15 @@ function parseQuery(url: string | undefined): URLSearchParams {
   return new URLSearchParams(q);
 }
 
+/** Top-level work orders — DAG parents and standalone single-node runs alike. */
 function listActivePlanRoots(): string[] {
   try {
-    const parents = listHandoffs()
-      .filter((h) => h.child_ids?.length && h.status !== "completed")
+    const roots = listHandoffs()
+      .filter(
+        (h) => h.task_type === "implement" && !h.parent_id && h.status !== "completed",
+      )
       .map((h) => h.id);
-    return [...new Set(parents)].sort();
+    return [...new Set(roots)].sort();
   } catch {
     return [];
   }

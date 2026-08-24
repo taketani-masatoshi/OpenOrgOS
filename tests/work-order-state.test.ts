@@ -79,20 +79,27 @@ describe("work-order-state", () => {
     expect(updated.completion_notes).toBe("manual done");
   });
 
-  it("pushes work_order_running queue event on running transition", () => {
+  it("emits dispatch_requested and work_order_running from the state machine", () => {
     seedHandoff("IMP-STATE-RUN");
     transitionWorkOrder("IMP-STATE-RUN", "dispatched", {
       traceId: "TRC-run",
       runId: "RUN-IMP-STATE-RUN",
-      skipQueueEvent: true,
+      eventPayload: { manifest_id: "DISP-TEST", attempt: 1 },
     });
     transitionWorkOrder("IMP-STATE-RUN", "running", {
       traceId: "TRC-run",
       runId: "RUN-IMP-STATE-RUN",
       incrementAttempt: true,
     });
+
     const raw = existsSync(queueEventsPath()) ? readFileSync(queueEventsPath(), "utf-8") : "";
-    expect(raw).toContain("work_order_running");
-    expect(raw).toContain("IMP-STATE-RUN");
+    const events = raw
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as { type: string; ref: string; payload?: Record<string, unknown> })
+      .filter((event) => event.ref === "IMP-STATE-RUN");
+
+    expect(events.map((event) => event.type)).toEqual(["dispatch_requested", "work_order_running"]);
+    expect(events[0]?.payload).toMatchObject({ manifest_id: "DISP-TEST", attempt: 1, trace_id: "TRC-run" });
   });
 });

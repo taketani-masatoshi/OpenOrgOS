@@ -184,17 +184,7 @@ export function writeDispatchManifest(manifest: DispatchManifest): string {
     transitionWorkOrder(task.work_order_id, "dispatched", {
       traceId: manifest.trace_id,
       runId: `RUN-${task.work_order_id}`,
-      skipQueueEvent: true,
-    });
-    pushQueueEvent({
-      type: "dispatch_requested",
-      ref: task.work_order_id,
-      payload: {
-        manifest_id: manifest.id,
-        agent: task.agent,
-        trace_id: manifest.trace_id,
-        attempt: task.attempt,
-      },
+      eventPayload: { manifest_id: manifest.id, attempt: task.attempt },
     });
   }
   appendAuditEvent({

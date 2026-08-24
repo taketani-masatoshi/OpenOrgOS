@@ -24,12 +24,14 @@ const ALLOWED: Record<HandoffStatus, HandoffStatus[]> = {
 /** Set when `orchestrate cancel` blocks a node; must not auto-unblock on upstream recovery. */
 export const WORK_ORDER_CANCEL_BLOCK_REASON = "cancelled by orchestrate cancel";
 
+/** Every lifecycle transition emits its queue event here — callers must not push duplicates. */
 const STATUS_QUEUE_EVENT: Partial<Record<HandoffStatus, QueueEventType>> = {
   waiting: "work_order_waiting",
+  dispatched: "dispatch_requested",
+  running: "work_order_running",
   completed: "work_order_complete",
   failed: "dispatch_failed",
   pending: "work_order_retry",
-  running: "work_order_running",
 };
 
 export function getWorkOrderDispatch(handoff: Handoff): WorkOrderDispatch {
@@ -52,6 +54,8 @@ export interface TransitionContext {
   completionNotes?: string;
   incrementAttempt?: boolean;
   skipQueueEvent?: boolean;
+  /** Extra queue event fields (manifest id, attempt) merged into the emitted payload. */
+  eventPayload?: Record<string, unknown>;
 }
 
 export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: TransitionContext = {}): Handoff {
@@ -109,6 +113,7 @@ export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: Transiti
           trace_id: nextDispatch.trace_id,
           run_id: ctx.runId,
           error: ctx.error,
+          ...ctx.eventPayload,
         },
       });
     }

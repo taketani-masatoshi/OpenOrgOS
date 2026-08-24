@@ -5,7 +5,12 @@ const smokeBaseUrl = process.env.STEWARD_CHAT_BASE_URL ?? `http://127.0.0.1:${sm
 
 export default defineConfig({
   testDir: "e2e",
-  testMatch: ["steward-chat.smoke.spec.ts", "steward-chat.wire.spec.ts", "steward-chat.witness.spec.ts"],
+  testMatch: [
+    "steward-chat.smoke.spec.ts",
+    "steward-chat.runboard.spec.ts",
+    "steward-chat.wire.spec.ts",
+    "steward-chat.witness.spec.ts",
+  ],
   timeout: 60_000,
   workers: 1,
   use: {

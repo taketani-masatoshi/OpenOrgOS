@@ -6,11 +6,13 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
+import { threadId } from "node:worker_threads";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
@@ -44,9 +46,29 @@ const FIXTURE_PATHS = [
 /** Overlay after demo/data restore — demo/data wipe does not include operator/agents.yaml. */
 const TENANT_ROSTER_FIXTURE_ROOT = join(ROOT_DIR, "tests", "fixtures", "tenant-rosters");
 
-const SNAPSHOT_ROOT = join(ROOT_DIR, "tests", ".fixture-snapshot", String(process.pid));
+const SNAPSHOT_PARENT = join(ROOT_DIR, "tests", ".fixture-snapshot");
+/** Worker-unique: forks share no pid, but threads pool workers do. */
+const WORKER_TOKEN = `${process.pid}-${threadId}`;
+const SNAPSHOT_ROOT = join(SNAPSHOT_PARENT, WORKER_TOKEN);
 const RESTORE_LOCK_DIR = join(ROOT_DIR, "tests", ".fixture-restore.lock");
+const OWNER_MARKER = join(RESTORE_LOCK_DIR, "owner");
+
+/**
+ * A concurrent `vitest` run on the same worktree (another terminal / agent session)
+ * legitimately holds this lock for minutes. Raise via ORGOS_TEST_LOCK_TIMEOUT_MS.
+ */
+const LOCK_TIMEOUT_MS = Number(process.env.ORGOS_TEST_LOCK_TIMEOUT_MS ?? 90_000);
+/** A lock dir whose marker never materialises is a crashed acquirer. */
+const MARKER_GRACE_MS = 5_000;
+const OWNER_STALE_MS = 120_000;
+
 let restoreLockHeld = false;
+
+interface LockOwner {
+  token: string;
+  pid: number;
+  startedAt: number;
+}
 
 function processExists(pid: number): boolean {
   try {
@@ -57,47 +79,140 @@ function processExists(pid: number): boolean {
   }
 }
 
+function readLockOwner(): LockOwner | null {
+  let text: string;
+  try {
+    text = readFileSync(OWNER_MARKER, "utf-8");
+  } catch {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(text) as Partial<LockOwner>;
+    if (typeof parsed.token !== "string" || typeof parsed.pid !== "number") return null;
+    return { token: parsed.token, pid: parsed.pid, startedAt: Number(parsed.startedAt) || 0 };
+  } catch {
+    // Legacy "<pid>\n<startedAt>" marker — a concurrent run may still use the previous format.
+    const [pidRaw, startedRaw] = text.trim().split(/\s+/);
+    const pid = Number(pidRaw);
+    if (!Number.isInteger(pid) || pid <= 0) return null;
+    return { token: `legacy-${pid}`, pid, startedAt: Number(startedRaw) || 0 };
+  }
+}
+
+/**
+ * Publish ownership atomically so waiters never observe a half-written marker.
+ * Returns false when a concurrent waiter broke the lock dir mid-publish.
+ */
+function writeLockOwner(): boolean {
+  const owner: LockOwner = { token: WORKER_TOKEN, pid: process.pid, startedAt: Date.now() };
+  const tmp = `${OWNER_MARKER}.${WORKER_TOKEN}.tmp`;
+  try {
+    writeFileSync(tmp, JSON.stringify(owner), "utf-8");
+    renameSync(tmp, OWNER_MARKER);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    rmSync(tmp, { force: true });
+    return false;
+  }
+}
+
+function breakLock(): void {
+  rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
+}
+
+function backoff(): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+}
+
 function acquireFixtureRestoreLock(): void {
-  const deadline = Date.now() + 45_000;
+  const startedWaiting = Date.now();
+  const deadline = startedWaiting + LOCK_TIMEOUT_MS;
+  let markerMissingSince = 0;
+  let lastOwner: LockOwner | null = null;
+
   while (Date.now() < deadline) {
     try {
       mkdirSync(RESTORE_LOCK_DIR);
-      writeFileSync(join(RESTORE_LOCK_DIR, "owner"), `${process.pid}\n${Date.now()}`, "utf-8");
-      restoreLockHeld = true;
-      return;
+      if (writeLockOwner()) {
+        restoreLockHeld = true;
+        return;
+      }
+      backoff();
+      continue;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-      try {
-        const ownerText = readFileSync(join(RESTORE_LOCK_DIR, "owner"), "utf-8").trim();
-        const [ownerRaw, startedRaw] = ownerText.split(/\s+/);
-        const owner = Number(ownerRaw);
-        const startedAt = Number(startedRaw);
-        if (owner === process.pid) {
-          rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
-          restoreLockHeld = false;
-          continue;
-        }
-        if (Number.isInteger(owner) && owner > 0 && !processExists(owner)) {
-          rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
-          continue;
-        }
-        if (Number.isFinite(startedAt) && Date.now() - startedAt > 120_000) {
-          rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
-          continue;
-        }
-      } catch {
-        // The owner may still be creating the marker; retry without deleting it.
-      }
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
     }
+
+    const owner = readLockOwner();
+    if (!owner) {
+      // Acquirer may still be publishing its marker; only break once it clearly gave up.
+      if (markerMissingSince === 0) markerMissingSince = Date.now();
+      else if (Date.now() - markerMissingSince > MARKER_GRACE_MS) breakLock();
+    } else {
+      markerMissingSince = 0;
+      lastOwner = owner;
+      const abandoned =
+        owner.token === WORKER_TOKEN ||
+        !processExists(owner.pid) ||
+        Date.now() - owner.startedAt > OWNER_STALE_MS;
+      if (abandoned) {
+        restoreLockHeld = false;
+        breakLock();
+        continue;
+      }
+    }
+    backoff();
   }
-  throw new Error("Timed out waiting for fixture restore lock");
+
+  throw new Error(
+    [
+      `Timed out waiting for fixture restore lock after ${Date.now() - startedWaiting}ms.`,
+      lastOwner
+        ? `Held by pid ${lastOwner.pid} (token ${lastOwner.token}) for ${Date.now() - lastOwner.startedAt}ms.`
+        : `Lock dir ${RESTORE_LOCK_DIR} has no readable owner marker.`,
+      "Another vitest run is likely active on this worktree — finish it, or raise ORGOS_TEST_LOCK_TIMEOUT_MS.",
+    ].join(" ")
+  );
 }
 
 function releaseFixtureRestoreLock(): void {
   if (!restoreLockHeld) return;
-  rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
+  breakLock();
   restoreLockHeld = false;
+}
+
+/**
+ * Worker snapshots leak whenever a run is killed before afterAll; reap dead owners.
+ * Returns pids of snapshots still owned by live foreign processes (concurrent vitest runs).
+ */
+function pruneOrphanSnapshots(): number[] {
+  if (!existsSync(SNAPSHOT_PARENT)) return [];
+  const live = new Set<number>();
+  for (const entry of readdirSync(SNAPSHOT_PARENT, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name === WORKER_TOKEN) continue;
+    const pid = Number(entry.name.split("-")[0]);
+    if (Number.isInteger(pid) && pid > 0 && pid !== process.pid && processExists(pid)) {
+      live.add(pid);
+      continue;
+    }
+    if (Number.isInteger(pid) && pid > 0 && pid === process.pid) continue;
+    rmSync(join(SNAPSHOT_PARENT, entry.name), { recursive: true, force: true });
+  }
+  return [...live];
+}
+
+/**
+ * Fixture restore is serialized, but test bodies are not: two vitest runs on one
+ * worktree still race on shared tenant files. Surface it instead of leaving
+ * unexplained cross-run failures.
+ */
+function warnOnConcurrentRuns(foreignPids: number[]): void {
+  if (foreignPids.length === 0) return;
+  console.warn(
+    `⚠ ${foreignPids.length} other vitest run(s) active on this worktree (pid ${foreignPids.join(", ")}). ` +
+      "Shared tenant fixtures may race — run suites sequentially for reliable results."
+  );
 }
 
 /** Tenants whose generated agent-mission YAML must not accumulate across tests. */
@@ -226,6 +341,7 @@ function resetTenantCaches(): void {
 }
 
 beforeAll(() => {
+  warnOnConcurrentRuns(pruneOrphanSnapshots());
   buildFixtureSnapshot();
   cleanGeneratedAgentMissions();
 });

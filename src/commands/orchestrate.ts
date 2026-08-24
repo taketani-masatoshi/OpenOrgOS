@@ -82,9 +82,6 @@ export function runOrchestratePlan(opts: OrchestratePlanOptions): void {
     } else {
       console.log(formatPlanOutput(proposal.plan, true));
       console.log(`\nProposed via ${proposal.source}`);
-      if (proposal.critique) {
-        console.log(`\nCritique: ${proposal.critique}`);
-      }
       if (proposal.validation.issues.length) {
         console.log("\nValidation issues:");
         for (const issue of proposal.validation.issues) {
@@ -203,7 +200,7 @@ export async function runOrchestrateRun(opts: OrchestrateRunOptions): Promise<vo
     retryFailed: opts.retryFailed,
   });
 
-  auditCliMutation("orchestrate run", targetId, `${result.results.length} tasks`);
+  auditCliMutation("orchestrate run", `${targetId} · ${result.results.length} tasks`);
 
   if (opts.dryRun) {
     console.log(formatDispatchPlan(result.manifest));
@@ -243,7 +240,7 @@ export function runOrchestrateRetry(opts: OrchestrateRetryOptions): void {
     console.log("No retryable failed work orders");
     return;
   }
-  auditCliMutation("orchestrate retry", opts.id, retried.join(", "));
+  auditCliMutation("orchestrate retry", `${opts.id} · ${retried.join(", ")}`);
   console.log(`Queued retry for: ${retried.join(", ")}`);
 }
 
@@ -254,7 +251,7 @@ export interface OrchestrateCancelOptions {
 export function runOrchestrateCancel(opts: OrchestrateCancelOptions): void {
   requireCliOperator({ permission: "agent:dispatch", command: "orchestrate cancel" });
   const cancelled = cancelPendingWorkOrders(opts.id);
-  auditCliMutation("orchestrate cancel", opts.id, `${cancelled.length} cancelled`);
+  auditCliMutation("orchestrate cancel", `${opts.id} · ${cancelled.length} cancelled`);
   console.log(`Cancelled ${cancelled.length} work order(s)`);
 }
 

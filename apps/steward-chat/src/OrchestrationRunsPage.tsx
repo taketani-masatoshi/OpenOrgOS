@@ -6,12 +6,22 @@ import {
 } from "./api";
 import "./orchestration-runs.css";
 
-function statusBadge(status: string): string {
-  if (status === "completed") return "🟢";
-  if (status === "failed" || status === "blocked") return "🔴";
-  if (status === "running" || status === "dispatched") return "🔵";
-  if (status === "waiting") return "🟡";
-  return "⚪";
+const STATUS_LABEL: Record<string, string> = {
+  pending: "待機",
+  waiting: "依存待ち",
+  dispatched: "送出",
+  running: "実行中",
+  completed: "完了",
+  failed: "失敗",
+  blocked: "停止",
+};
+
+/** Text over emoji: status must stay legible where emoji fonts are unavailable. */
+function statusTone(status: string): string {
+  if (status === "completed") return "is-done";
+  if (status === "failed" || status === "blocked") return "is-alert";
+  if (status === "running" || status === "dispatched") return "is-active";
+  return "is-idle";
 }
 
 export function OrchestrationRunsPage() {
@@ -20,6 +30,7 @@ export function OrchestrationRunsPage() {
   const [payload, setPayload] = useState<OrchestrationRunPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [streaming, setStreaming] = useState(true);
 
   const loadRoots = useCallback(async () => {
     const list = await fetchOrchestrationRuns();
@@ -58,7 +69,7 @@ export function OrchestrationRunsPage() {
       return;
     }
     let cancelled = false;
-    let source: EventSource | null = null;
+    let pollTimer = 0;
 
     const refresh = async () => {
       try {
@@ -72,34 +83,38 @@ export function OrchestrationRunsPage() {
     };
 
     void refresh();
-    try {
-      source = new EventSource(
-        `/chat/v1/orchestration/runs/stream?id=${encodeURIComponent(selectedId)}`,
-      );
-      source.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data) as {
-            type: string;
-            payload?: OrchestrationRunPayload;
-          };
-          if (msg.type === "orchestration_status" && msg.payload && !cancelled) {
-            setPayload(msg.payload);
-          }
-        } catch {
-          /* ignore malformed SSE */
+
+    const source = new EventSource(
+      `/chat/v1/orchestration/runs/stream?id=${encodeURIComponent(selectedId)}`,
+    );
+    source.onmessage = (event) => {
+      if (cancelled) return;
+      try {
+        const msg = JSON.parse(event.data) as {
+          type: string;
+          payload?: OrchestrationRunPayload;
+        };
+        if (msg.type === "orchestration_status" && msg.payload) {
+          setPayload(msg.payload);
+          setStreaming(true);
         }
-      };
-    } catch {
-      const interval = window.setInterval(refresh, 5000);
-      return () => {
-        cancelled = true;
-        window.clearInterval(interval);
-      };
-    }
+      } catch {
+        /* ignore malformed SSE frame */
+      }
+    };
+    // EventSource reports failures via onerror, never by throwing — without this the
+    // board would silently freeze on the first fetch when the stream is unavailable.
+    source.onerror = () => {
+      if (cancelled || pollTimer !== 0) return;
+      source.close();
+      setStreaming(false);
+      pollTimer = window.setInterval(() => void refresh(), 5000);
+    };
 
     return () => {
       cancelled = true;
-      source?.close();
+      source.close();
+      if (pollTimer !== 0) window.clearInterval(pollTimer);
     };
   }, [selectedId, loadDetail]);
 
@@ -109,7 +124,7 @@ export function OrchestrationRunsPage() {
         <div>
           <h1 className="ops-page-title">Run Board</h1>
           <p className="ops-page-lead">
-            Work Order DAG · AIA 実行状況（5 秒 SSE 更新）
+            Work Order DAG · AIA 実行状況（{streaming ? "5 秒 SSE 更新" : "5 秒ポーリング更新"}）
           </p>
         </div>
       </div>
@@ -181,7 +196,9 @@ export function OrchestrationRunsPage() {
               </div>
               {payload.nodes.map((node) => (
                 <div key={node.id} className="category-table-row orchestration-table-row">
-                  <span title={node.status}>{statusBadge(node.status)}</span>
+                  <span className={`orchestration-status ${statusTone(node.status)}`}>
+                    {STATUS_LABEL[node.status] ?? node.status}
+                  </span>
                   <span>{node.id}</span>
                   <span>{node.agent}</span>
                   <span>{node.wave}</span>

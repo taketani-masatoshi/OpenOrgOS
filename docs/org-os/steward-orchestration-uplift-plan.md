@@ -138,8 +138,8 @@ wave は **保存しない**（`depends_on` から毎回導出）。
 
 ### P1 — LLM planner + critique ループ（骨格 2026-08-24）
 
-- ✅ `orchestrate plan --propose` — 目標分解案 + validation envelope（`src/lib/orchestration/llm-planner.ts`）
-- ✅ `work_order_running` queue event — `transitionWorkOrder(running)` 連動
+- ✅ `orchestrate plan --propose` — 起票前ゲート（`validation.ok` / 不適格 route の列挙）· `src/lib/orchestration/llm-planner.ts`。**分解は決定論のみ**（`source: "deterministic"` を偽らない）
+- ✅ queue event を状態機械に集約 — `dispatched → dispatch_requested` · `running → work_order_running`。呼び出し側の重複 push を排除
 - ⬜ 別 Agent レビュー → 修正 WO 起票
 - **dispatch E2E 方針:** `tests/orchestration-dispatch.test.ts`（`ORGOS_LLM_MOCK=1` · spy）を正とし、実 LLM E2E は Playwright + staging operator のみ
 
@@ -147,7 +147,33 @@ wave は **保存しない**（`depends_on` から毎回導出）。
 
 - ✅ `/chat/v1/orchestration/runs` · SSE（API 骨格）
 - ✅ Steward Chat `/?runs=1` · `OrchestrationRunsPage`（一覧 + ノード表 + SSE）
-- ⬜ Agent Inbox パネル接続
+- ✅ E2E — `e2e/steward-chat.runboard.spec.ts`（`playwright.steward-chat.config.ts`）
+- ⬜ Agent Inbox パネル接続 · retry/cancel 操作 UI
+
+---
+
+## 6.1 テスト実行の前提（fixture restore lock）
+
+`tests/setup-restore-protocol.ts` はテナント fixture の復元を **worktree 単位のロック**で直列化する。
+ただし直列化されるのは **復元処理だけ** で、テスト本体は直列化されない。
+同一 worktree で複数の `vitest` を同時に走らせると、共有テナントファイル（routing-queue · AIA run store）で競合する。
+
+| 症状 | 対処 |
+|------|------|
+| `Timed out waiting for fixture restore lock` | 他セッションの `vitest` 完了を待つ（`pgrep -fl "vitest run"`） |
+| 単独では通るのに同時実行で落ちる | **同一 worktree での並行 vitest を避ける**（設計上の制約） |
+| 長時間の並行実行が避けられない | `ORGOS_TEST_LOCK_TIMEOUT_MS=300000` |
+| `tests/.fixture-snapshot/` の肥大 | `beforeAll` の孤児 GC が dead pid 分を自動削除 |
+
+**2026-08-24 の改善:**
+
+- タイムアウトエラーに **保持中の pid・経過時間・対処** を含める
+- 孤児 snapshot GC（放置 119 ディレクトリを実測で確認 → 自動回収）
+- owner marker の atomic 書込 + 旧形式互換（並行する旧コード実行を誤って破棄しない）
+- 他 run 検出時に `beforeAll` で警告を出力
+
+**既知ギャップ:** `tests/test-registry.yaml` は worktree 全体が未コミットのため disk と乖離（disk 424 / registry 440）。
+本オーケストレーション分の 6 ファイルは登録済み。tree 全体のコミット時に `npm run test:registry:sync` が必要。
 
 ### P3 — Observability / cost
 
