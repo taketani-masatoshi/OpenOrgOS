@@ -1,6 +1,14 @@
 import { existsSync } from "node:fs";
 import { operatorsRegistryPath, registryHasApprovers } from "../org/operators.js";
 import { validateWebAuthnProdEnv } from "./settlement-passkey-prod.js";
+import {
+  hasUnusedPasskeyBootstrapToken,
+} from "../wire-console/auth/passkey-bootstrap.js";
+import {
+  listWebAuthnCredentialsByPurpose,
+} from "../wire-console/auth/webauthn-store.js";
+import { rpId } from "../wire-console/auth/webauthn-shared.js";
+import { listFsGuardSkillCliExceptions } from "../org/fs-guard/skill-cli-policy.js";
 
 export interface ProdAuthCheck {
   id: string;
@@ -249,6 +257,70 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
           ? "HumanApprovalContext HMAC secret is set"
           : "HumanApprovalContext uses the development HMAC secret",
   });
+
+  if (prod) {
+    const openBootstrap = process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP === "1";
+    checks.push({
+      id: "passkey_open_bootstrap_disabled",
+      ok: !openBootstrap,
+      detail: openBootstrap
+        ? "WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP=1 is forbidden in production"
+        : "Open bootstrap disabled (production default)",
+    });
+
+    let loginCount = 0;
+    try {
+      loginCount = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() }).length;
+    } catch {
+      loginCount = -1;
+    }
+    const bootstrapReady =
+      loginCount > 0 || hasUnusedPasskeyBootstrapToken();
+    checks.push({
+      id: "passkey_bootstrap_ready",
+      ok: loginCount !== -1 && bootstrapReady,
+      warn: loginCount === 0 && !hasUnusedPasskeyBootstrapToken(),
+      detail:
+        loginCount === -1
+          ? "WebAuthn credential store unreadable — fix before first login registration"
+          : loginCount > 0
+            ? `Login passkeys registered (${loginCount})`
+            : hasUnusedPasskeyBootstrapToken()
+              ? "Bootstrap token minted and unused — ready for first registration"
+              : "No login passkey and no bootstrap token — mint: orgos operator passkey-bootstrap mint",
+    });
+
+    const settlementSecret = Boolean(process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET?.trim());
+    checks.push({
+      id: "settlement_challenge_secret",
+      ok: settlementSecret,
+      detail: settlementSecret
+        ? "Settlement challenge HMAC secret configured"
+        : "ORGOS_SETTLEMENT_CHALLENGE_SECRET required in production",
+    });
+
+    const webauthnTestSecret = Boolean(process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET?.trim());
+    const allowTestSecret = process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET === "1";
+    checks.push({
+      id: "webauthn_test_secret_disabled",
+      ok: !webauthnTestSecret && !allowTestSecret,
+      detail:
+        webauthnTestSecret || allowTestSecret
+          ? "WIRE_CONSOLE_WEBAUTHN_TEST_SECRET / ALLOW_TEST_SECRET forbidden in production"
+          : "WebAuthn test secret bypass disabled",
+    });
+
+    const skillExceptions = listFsGuardSkillCliExceptions();
+    checks.push({
+      id: "fs_guard_skill_cli_exceptions",
+      ok: true,
+      warn: skillExceptions.length > 0,
+      detail:
+        skillExceptions.length > 0
+          ? `${skillExceptions.length} Skill CLI commands still bypass guard apply (see docs/org-os/fs-guard-skill-cli-policy.md)`
+          : "All Skill CLI mutations routed through fs-guard",
+    });
+  }
 
   return checks;
 }

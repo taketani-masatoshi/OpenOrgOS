@@ -1,0 +1,357 @@
+/* Receipt claim — typography via shared oorgos type scale */
+
+.receipt-claim {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-5, 24px) var(--page-gutter, 24px) var(--space-6, 32px);
+  font-family: var(--font-sans);
+  font-size: var(--text-md, 0.95rem);
+  line-height: var(--leading-body, 1.55);
+  color: var(--ink, #1d1d1f);
+}
+
+.receipt-claim-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-5, 24px);
+}
+
+.receipt-claim-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-display, 1.75rem);
+  font-weight: var(--weight-display, 500);
+  letter-spacing: var(--tracking-display, -0.03em);
+  line-height: var(--leading-tight, 1.25);
+}
+
+.receipt-claim-lead {
+  margin: var(--space-2, 8px) 0 0;
+  max-width: 40rem;
+  color: var(--ink-soft, #6e6e73);
+  font-size: var(--text-md, 0.95rem);
+  line-height: var(--leading-body, 1.55);
+  font-weight: 400;
+}
+
+.receipt-claim-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px) var(--space-3, 12px);
+  margin: 0 0 var(--space-4, 16px);
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--ink-soft, #6e6e73);
+}
+
+.receipt-claim-meta strong {
+  color: var(--ink, #1d1d1f);
+  font-weight: var(--weight-strong, 650);
+}
+
+.receipt-claim-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-pill, 980px);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--weight-ui, 600);
+  color: var(--success-text, #065f46);
+  background: var(--success-bg, #ecfdf5);
+}
+
+.receipt-claim-status,
+.receipt-claim-empty {
+  margin: 0 0 var(--space-4, 16px);
+  color: var(--ink-soft, #6e6e73);
+  font-size: var(--text-md, 0.95rem);
+}
+
+.receipt-claim-list {
+  list-style: none;
+  margin: 0 0 var(--space-4, 16px);
+  padding: 0;
+  display: grid;
+  gap: var(--space-3, 12px);
+}
+
+.receipt-claim-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  padding: var(--space-4, 16px);
+  background: var(--surface-elevated, #fff);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-md, 12px);
+}
+
+.receipt-claim-item-main {
+  display: grid;
+  gap: var(--space-1, 4px);
+  min-width: 0;
+  flex: 1;
+}
+
+.receipt-claim-id {
+  font-size: var(--text-md, 0.95rem);
+  font-weight: var(--weight-strong, 650);
+  letter-spacing: -0.02em;
+}
+
+.receipt-claim-detail,
+.receipt-claim-local {
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--ink-soft, #6e6e73);
+  line-height: 1.45;
+}
+
+.receipt-claim-local {
+  color: var(--accent, #0071e3);
+}
+
+.receipt-claim-item .primary-button {
+  flex-shrink: 0;
+  width: auto;
+  min-width: 9.5rem;
+}
+
+.receipt-claim-ok {
+  margin: 0 0 var(--space-3, 12px);
+  color: var(--success-text, #065f46);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.receipt-claim-foot {
+  margin: var(--space-4, 16px) 0 0;
+  color: var(--ink-soft, #6e6e73);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.receipt-claim-badge-warn {
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.receipt-claim-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  margin: 0 0 var(--space-4, 16px);
+}
+
+.receipt-claim-tab {
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  background: transparent;
+  border-radius: var(--radius-pill, 980px);
+  padding: 0.35rem 0.85rem;
+  font-size: var(--text-sm, 0.875rem);
+  cursor: pointer;
+  color: var(--ink-soft, #6e6e73);
+}
+
+.receipt-claim-tab.is-active {
+  background: var(--accent, #0071e3);
+  border-color: var(--accent, #0071e3);
+  color: #fff;
+}
+
+.receipt-claim-expand {
+  display: grid;
+  gap: var(--space-1, 4px);
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.receipt-claim-detail-panel {
+  margin-top: var(--space-3, 12px);
+  padding-top: var(--space-3, 12px);
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.receipt-claim-detail-panel ul {
+  margin: var(--space-2, 8px) 0;
+  padding-left: 1.2rem;
+}
+
+.receipt-claim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.receipt-claim-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: var(--space-4, 16px);
+}
+
+.receipt-claim-modal-card {
+  width: min(420px, 100%);
+  background: var(--surface-elevated, #fff);
+  border-radius: var(--radius-md, 12px);
+  padding: var(--space-5, 24px);
+  display: grid;
+  gap: var(--space-3, 12px);
+}
+
+.receipt-claim-modal-card textarea {
+  width: 100%;
+  margin-top: var(--space-2, 8px);
+  padding: var(--space-2, 8px);
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  font: inherit;
+}
+
+.receipt-issue {
+  max-width: 880px;
+}
+
+.receipt-issue-form,
+.receipt-issue-lines,
+.receipt-issue-issuer {
+  display: grid;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-5, 24px);
+  padding: var(--space-4, 16px);
+  background: var(--surface-elevated, #fff);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-md, 12px);
+}
+
+.receipt-issue-issuer-dl {
+  display: grid;
+  gap: var(--space-3, 12px);
+  margin: 0;
+}
+
+.receipt-issue-issuer-dl > div {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: var(--space-2, 8px);
+  align-items: baseline;
+}
+
+.receipt-issue-issuer-dl dt {
+  margin: 0;
+  color: var(--muted, #6e6e73);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.receipt-issue-issuer-dl dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.receipt-issue-form label,
+.receipt-issue-lines label {
+  display: grid;
+  gap: var(--space-1, 4px);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.receipt-issue-form input,
+.receipt-issue-form select,
+.receipt-issue-line input,
+.receipt-issue-line select {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  border-radius: 8px;
+  font: inherit;
+}
+
+.receipt-issue-lines-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.receipt-issue-lines-head h2,
+.receipt-issue-preview h2 {
+  margin: 0;
+  font-size: var(--text-lg, 1.1rem);
+}
+
+.receipt-issue-lines ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3, 12px);
+}
+
+.receipt-issue-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  align-items: center;
+}
+
+.receipt-issue-reduced {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.35rem;
+  grid-template-columns: none !important;
+}
+
+.receipt-issue-total {
+  margin: 0;
+  text-align: right;
+}
+
+.receipt-issue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-4, 16px);
+}
+
+.receipt-issue-preview {
+  padding: var(--space-4, 16px);
+  background: var(--surface-elevated, #fff);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-md, 12px);
+  margin-bottom: var(--space-4, 16px);
+}
+
+.receipt-issue-qr {
+  width: 180px;
+  margin: var(--space-3, 12px) 0;
+}
+
+.receipt-issue-qr svg {
+  width: 100%;
+  height: auto;
+}
+
+.receipt-issue-link {
+  word-break: break-all;
+  font-size: var(--text-xs, 0.75rem);
+}
+
+.receipt-issue-actions a.primary-button {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}

@@ -15,6 +15,7 @@ import {
   createWebAuthnRegisterOptions,
   isWebAuthnRegistrationAllowed,
   registrationErrorStatus,
+  resolveRegistrationHttpStatus,
   verifyWebAuthnRegistration,
 } from "./auth/webauthn-register.js";
 import {
@@ -93,6 +94,7 @@ async function handleApi(
         operator_id?: string;
         approver_id?: string;
         purpose?: "login" | "settlement";
+        bootstrap_token?: string;
       };
       const purpose = body.purpose === "settlement" ? "settlement" : "login";
       const result = createWebAuthnRegisterOptions(
@@ -100,11 +102,12 @@ async function handleApi(
           operator_id: body.operator_id ?? "",
           approver_id: body.approver_id ?? "",
           purpose,
+          bootstrap_token: body.bootstrap_token,
         },
         { sessionUser }
       );
       if ("error" in result) {
-        json(res, registrationErrorStatus(result.error), { ok: false, error: result.error });
+        json(res, resolveRegistrationHttpStatus(result), { ok: false, error: result.error });
         return true;
       }
       json(res, 200, { ok: true, ...result });
@@ -126,6 +129,7 @@ async function handleApi(
           operator_id: body.operator_id ?? "",
           approver_id: body.approver_id ?? "",
           purpose,
+          bootstrap_token: (body as { bootstrap_token?: string }).bootstrap_token,
         },
         sessionUser
       );

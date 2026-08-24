@@ -4,23 +4,31 @@ import {
   assertSettlementPasskeyRegistrationGate,
   authorizeWebAuthnRegistration,
   resolveRegistryRegistrationIdentity,
+  resolveRegistrationHttpStatus,
 } from "../src/lib/wire-console/auth/webauthn-register-gate.js";
 import {
   resetWebAuthnCredentialsForTests,
   setWebAuthnCredentialsForTests,
 } from "../src/lib/wire-console/auth/webauthn-store.js";
+import {
+  mintPasskeyBootstrapToken,
+  resetPasskeyBootstrapStoreForTests,
+} from "../src/lib/wire-console/auth/passkey-bootstrap.js";
 import { resetWireConsoleTestTenant } from "./helpers/wire-console-test-fixture.js";
 
 describe("webauthn register gate", () => {
   beforeEach(() => {
     resetWireConsoleTestTenant();
     resetWebAuthnCredentialsForTests();
+    resetPasskeyBootstrapStoreForTests();
     delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP;
     delete process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER;
+    delete process.env.ORGOS_ENV;
   });
 
   afterEach(() => {
     resetWebAuthnCredentialsForTests();
+    resetPasskeyBootstrapStoreForTests();
   });
 
   it("resolves registry-backed operator identity", () => {
@@ -44,6 +52,26 @@ describe("webauthn register gate", () => {
   it("requires session for first login passkey bootstrap", () => {
     const gate = assertLoginPasskeyRegistrationGate(undefined);
     expect(gate?.status).toBe(401);
+  });
+
+  it("requires bootstrap token in production for first login passkey", () => {
+    process.env.ORGOS_ENV = "production";
+    const gate = assertLoginPasskeyRegistrationGate(
+      { operator_id: "OP-001", approver_id: "Demo CEO", mode: "prod" },
+      undefined,
+    );
+    expect(gate?.status).toBe(401);
+  });
+
+  it("allows bootstrap login registration with session and token in production", () => {
+    process.env.ORGOS_ENV = "production";
+    const { token } = mintPasskeyBootstrapToken({ operatorId: "OP-001" });
+    expect(
+      assertLoginPasskeyRegistrationGate(
+        { operator_id: "OP-001", approver_id: "Demo CEO", mode: "prod" },
+        token,
+      ),
+    ).toBeNull();
   });
 
   it("allows bootstrap login registration with session", () => {
@@ -96,5 +124,25 @@ describe("webauthn register gate", () => {
       error: expect.stringContaining("not permitted to register a settlement passkey"),
       status: 403,
     });
+  });
+
+  it("resolveRegistrationHttpStatus prefers explicit status over string heuristics", () => {
+    expect(
+      resolveRegistrationHttpStatus({
+        error: "bootstrap token invalid, expired, or already used",
+        status: 403,
+      }),
+    ).toBe(403);
+    expect(
+      resolveRegistrationHttpStatus({
+        error: "unknown operator_id: NO-SUCH",
+      }),
+    ).toBe(422);
+    expect(
+      resolveRegistrationHttpStatus({
+        error: "authenticated session required",
+        status: 401,
+      }),
+    ).toBe(401);
   });
 });

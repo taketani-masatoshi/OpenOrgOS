@@ -3,10 +3,18 @@
  */
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
 import type { OrgApprovalTier } from "../../../schemas/org/tier.js";
+import { isProdSecurityMode } from "../console-auth/operator-rbac.js";
 import {
   settlementChallengeRecordSchema,
   settlementQrFragmentSchema,
@@ -73,12 +81,26 @@ export function settlementChallengeStorePath(): string {
 
 type ChallengeFile = { version: 1; challenges: Record<string, SettlementChallengeRecord> };
 
+export class SettlementChallengeStoreCorruptError extends Error {
+  constructor(message = "settlement challenge store unreadable") {
+    super(message);
+    this.name = "SettlementChallengeStoreCorruptError";
+  }
+}
+
 function hmacSecret(): Buffer {
-  const raw =
-    process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET?.trim() ||
-    process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET?.trim() ||
-    "orgos-dev-settlement-challenge";
-  return Buffer.from(raw, "utf-8");
+  const configured = process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET?.trim();
+  if (configured) return Buffer.from(configured, "utf-8");
+  if (isProdSecurityMode()) {
+    throw new SettlementChallengeStoreCorruptError(
+      "ORGOS_SETTLEMENT_CHALLENGE_SECRET required in production",
+    );
+  }
+  const test = process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET?.trim();
+  if (test && isWebAuthnTestSecretAllowed()) {
+    return Buffer.from(test, "utf-8");
+  }
+  return Buffer.from("orgos-dev-settlement-challenge", "utf-8");
 }
 
 function signToken(challengeId: string, approvalId: string, operatorId: string): string {
@@ -102,19 +124,36 @@ function verifyToken(
 function readChallengeFile(): ChallengeFile {
   const path = settlementChallengeStorePath();
   if (!existsSync(path)) return { version: 1, challenges: {} };
+  let raw: string;
   try {
-    const parsed = JSON.parse(readFileSync(path, "utf-8")) as ChallengeFile;
+    raw = readFileSync(path, "utf-8");
+  } catch (error) {
+    throw new SettlementChallengeStoreCorruptError(
+      error instanceof Error ? error.message : "settlement challenge store unreadable",
+    );
+  }
+  try {
+    const parsed = JSON.parse(raw) as ChallengeFile;
     if (parsed.version === 1 && parsed.challenges) return parsed;
   } catch {
-    /* rebuild */
+    throw new SettlementChallengeStoreCorruptError("settlement challenge store JSON corrupt");
   }
-  return { version: 1, challenges: {} };
+  throw new SettlementChallengeStoreCorruptError(
+    "settlement challenge store missing challenges object",
+  );
 }
 
 function writeChallengeFile(file: ChallengeFile): void {
   const path = settlementChallengeStorePath();
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(file, null, 2), "utf-8");
+  const tmp = `${path}.tmp-${process.pid}`;
+  writeFileSync(tmp, JSON.stringify(file, null, 2), { encoding: "utf-8", mode: 0o600 });
+  renameSync(tmp, path);
+  try {
+    chmodSync(path, 0o600);
+  } catch {
+    /* best-effort */
+  }
 }
 
 function purgeExpired(file: ChallengeFile): ChallengeFile {
@@ -421,14 +460,29 @@ export function verifySettlementAssertionAndConsume(opts: {
 
   const testSecret = process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
   if (testSecret && isWebAuthnTestSecretAllowed() && parsed.signature_base64) {
-    if (!expectedOrigin || !webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
-      throw new Error("settlement webauthn origin mismatch");
-    }
     const expected = Buffer.from(testSecret, "utf-8");
     const got = Buffer.from(parsed.signature_base64, "base64url");
     if (expected.length !== got.length || !timingSafeEqual(expected, got)) {
       throw new Error("invalid settlement test signature");
     }
+    if (!parsed.authenticator_data_base64) {
+      throw new Error("authenticator_data_base64 required");
+    }
+    if (!expectedOrigin) {
+      throw new Error("settlement webauthn origin mismatch");
+    }
+    const verified = verifyWebAuthnAssertion({
+      expectedRpId: record.rp_id,
+      expectedOrigin,
+      clientDataJsonBase64: parsed.client_data_json,
+      authenticatorDataBase64: parsed.authenticator_data_base64,
+      signatureBase64: parsed.signature_base64,
+      publicKeySpkiBase64: cred.public_key_spki_base64,
+      previousSignCount: cred.sign_count ?? 0,
+      skipSignatureVerification: true,
+    });
+    if (!verified.ok) throw new Error(verified.error);
+    updateWebAuthnSignCount(parsed.credential_id, verified.signCount);
   } else {
     if (!parsed.authenticator_data_base64 || !parsed.signature_base64) {
       throw new Error("authenticator_data_base64 and signature_base64 required");
