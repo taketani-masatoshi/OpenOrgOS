@@ -157,6 +157,7 @@ export async function handleChatAuthApi(
         operator_id?: string;
         approver_id?: string;
         purpose?: "login" | "settlement";
+        bootstrap_token?: string;
       };
       const purpose = body.purpose === "settlement" ? "settlement" : "login";
       const result = createWebAuthnRegisterOptions(
@@ -164,6 +165,7 @@ export async function handleChatAuthApi(
           operator_id: body.operator_id ?? "",
           approver_id: body.approver_id ?? "",
           purpose,
+          bootstrap_token: body.bootstrap_token,
         },
         { sessionUser }
       );
@@ -190,6 +192,7 @@ export async function handleChatAuthApi(
           operator_id: body.operator_id ?? "",
           approver_id: body.approver_id ?? "",
           purpose,
+          bootstrap_token: (body as { bootstrap_token?: string }).bootstrap_token,
         },
         sessionUser
       );

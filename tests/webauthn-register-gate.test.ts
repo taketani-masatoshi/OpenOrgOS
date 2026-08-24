@@ -9,18 +9,25 @@ import {
   resetWebAuthnCredentialsForTests,
   setWebAuthnCredentialsForTests,
 } from "../src/lib/wire-console/auth/webauthn-store.js";
+import {
+  mintPasskeyBootstrapToken,
+  resetPasskeyBootstrapStoreForTests,
+} from "../src/lib/wire-console/auth/passkey-bootstrap.js";
 import { resetWireConsoleTestTenant } from "./helpers/wire-console-test-fixture.js";
 
 describe("webauthn register gate", () => {
   beforeEach(() => {
     resetWireConsoleTestTenant();
     resetWebAuthnCredentialsForTests();
+    resetPasskeyBootstrapStoreForTests();
     delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP;
     delete process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER;
+    delete process.env.ORGOS_ENV;
   });
 
   afterEach(() => {
     resetWebAuthnCredentialsForTests();
+    resetPasskeyBootstrapStoreForTests();
   });
 
   it("resolves registry-backed operator identity", () => {
@@ -44,6 +51,26 @@ describe("webauthn register gate", () => {
   it("requires session for first login passkey bootstrap", () => {
     const gate = assertLoginPasskeyRegistrationGate(undefined);
     expect(gate?.status).toBe(401);
+  });
+
+  it("requires bootstrap token in production for first login passkey", () => {
+    process.env.ORGOS_ENV = "production";
+    const gate = assertLoginPasskeyRegistrationGate(
+      { operator_id: "OP-001", approver_id: "Demo CEO", mode: "prod" },
+      undefined,
+    );
+    expect(gate?.status).toBe(401);
+  });
+
+  it("allows bootstrap login registration with session and token in production", () => {
+    process.env.ORGOS_ENV = "production";
+    const { token } = mintPasskeyBootstrapToken({ operatorId: "OP-001" });
+    expect(
+      assertLoginPasskeyRegistrationGate(
+        { operator_id: "OP-001", approver_id: "Demo CEO", mode: "prod" },
+        token,
+      ),
+    ).toBeNull();
   });
 
   it("allows bootstrap login registration with session", () => {

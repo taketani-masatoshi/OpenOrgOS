@@ -9,18 +9,31 @@ export function isMutatingMethod(method: string): boolean {
 }
 
 export function isCsrfExemptPath(pathname: string): boolean {
-  return (
+  if (
     pathname === "/chat/v1/auth/login" ||
-    pathname === "/chat/v1/auth/logout" ||
     pathname === "/console/v1/auth/login" ||
-    pathname === "/console/v1/auth/logout" ||
-    pathname.startsWith("/chat/v1/auth/webauthn/") ||
-    pathname.startsWith("/console/v1/auth/webauthn/") ||
+    pathname === "/chat/v1/auth/logout" ||
+    pathname === "/console/v1/auth/logout"
+  ) {
+    return true;
+  }
+  if (
+    pathname.endsWith("/auth/webauthn/options") ||
+    pathname.endsWith("/auth/webauthn/register/options") ||
+    pathname.endsWith("/auth/webauthn/register") ||
+    pathname.endsWith("/auth/webauthn/e2e-complete")
+  ) {
+    return true;
+  }
+  if (
     pathname === "/chat/v1/settlement/complete" ||
     pathname === "/chat/v1/settlement/enroll" ||
     pathname === "/chat/v1/settlement/enroll/options" ||
     pathname.startsWith("/chat/v1/settlement/challenge/")
-  );
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function shouldApplyCsrf(pathname: string, method: string): boolean {

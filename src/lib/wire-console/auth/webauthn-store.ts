@@ -8,6 +8,10 @@ import {
 import { dirname, join } from "node:path";
 import { ensureOrgOsStateDir, WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH } from "../paths.js";
 import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
+import {
+  readEnvManagedSignCount,
+  writeEnvManagedSignCount,
+} from "./webauthn-env-sign-count.js";
 import { rpId } from "./webauthn-shared.js";
 
 export interface StoredWebAuthnCredential {
@@ -85,12 +89,23 @@ function writeStoreFile(credentials: StoredWebAuthnCredential[]): void {
   hardenStoreMode();
 }
 
-function normalizeCredential(c: StoredWebAuthnCredential): StoredWebAuthnCredential {
+function normalizeCredentialBase(c: StoredWebAuthnCredential): StoredWebAuthnCredential {
   return {
     ...c,
     purpose: c.purpose ?? "login",
     rp_id: c.rp_id ?? rpId(),
   };
+}
+
+function applyEnvSignCount(c: StoredWebAuthnCredential): StoredWebAuthnCredential {
+  if (!envCredentialIds().has(c.credential_id)) return c;
+  const sidecar = readEnvManagedSignCount(c.credential_id);
+  if (sidecar === undefined) return c;
+  return { ...c, sign_count: sidecar };
+}
+
+function normalizeCredential(c: StoredWebAuthnCredential): StoredWebAuthnCredential {
+  return applyEnvSignCount(normalizeCredentialBase(c));
 }
 
 function loadEnvCredentials(): StoredWebAuthnCredential[] {
@@ -111,7 +126,7 @@ function loadEnvCredentials(): StoredWebAuthnCredential[] {
     return parsed
       .filter((c) => c.credential_id && c.operator_id && c.approver_id)
       .map((c) =>
-        normalizeCredential({
+        normalizeCredentialBase({
           credential_id: c.credential_id,
           public_key_spki_base64: c.public_key_spki_base64 ?? c.public_key_base64 ?? "",
           operator_id: c.operator_id,
@@ -173,8 +188,7 @@ export function saveWebAuthnCredential(credential: StoredWebAuthnCredential): vo
 
 export function updateWebAuthnSignCount(credentialId: string, signCount: number): void {
   if (isEnvManagedWebAuthnCredential(credentialId)) {
-    // Env-backed credentials are not writable; callers still run replay checks
-    // against previousSignCount when present on the merged view.
+    writeEnvManagedSignCount(credentialId, signCount);
     return;
   }
   const file = memoryOverride ?? readStoreFile();
@@ -189,7 +203,14 @@ export function updateWebAuthnSignCount(credentialId: string, signCount: number)
 }
 
 function envCredentialIds(): Set<string> {
-  return new Set(loadEnvCredentials().map((c) => c.credential_id));
+  const raw = process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
+  if (!raw) return new Set();
+  try {
+    const parsed = JSON.parse(raw) as Array<{ credential_id?: string }>;
+    return new Set(parsed.map((c) => c.credential_id).filter(Boolean) as string[]);
+  } catch {
+    return new Set();
+  }
 }
 
 export function isEnvManagedWebAuthnCredential(credentialId: string): boolean {
