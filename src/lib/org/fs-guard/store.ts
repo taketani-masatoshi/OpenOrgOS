@@ -3,9 +3,11 @@ import { dirname, join } from "node:path";
 import { homedir } from "node:os";
 import YAML from "yaml";
 import {
+  fsGuardApplyRecordSchema,
   fsGuardEventSchema,
   fsGuardGrantsFileSchema,
   fsGuardIdentitiesFileSchema,
+  type FsGuardApplyRecord,
   type FsGuardEvent,
   type FsGuardGrantsFile,
   type FsGuardIdentitiesFile,
@@ -18,6 +20,8 @@ export interface FsGuardPaths {
   identitiesPath: string;
   eventsPath: string;
   snapshotPath: string;
+  appliesPath: string;
+  leasesPath: string;
   issuerKeyPath: string;
   agentKeyDir: string;
 }
@@ -34,6 +38,8 @@ export function defaultFsGuardPaths(): FsGuardPaths {
     identitiesPath: tenantDataPath("org", "agent-identities.yaml"),
     eventsPath: tenantDataPath("org", "fs-guard-events.jsonl"),
     snapshotPath: tenantDataPath("org", "fs-guard-grants.yaml"),
+    appliesPath: tenantDataPath("org", "fs-guard-applies.jsonl"),
+    leasesPath: tenantDataPath(".orgos", "canonical-leases.json"),
     issuerKeyPath: tenantDataPath(".orgos", "fs-guard-issuer.pem"),
     agentKeyDir: join(homedir(), ".orgos", "agents", tenantId),
   };
@@ -47,10 +53,32 @@ export function isFsGuardInitialized(paths = fsGuardPaths()): boolean {
   return existsSync(paths.identitiesPath) && existsSync(paths.issuerKeyPath);
 }
 
+export function isFsGuardProdMode(): boolean {
+  return (
+    process.env.ORGOS_ENV === "production" ||
+    process.env.ORGOS_PROD === "1" ||
+    process.env.NODE_ENV === "production"
+  );
+}
+
 export function isFsGuardEnforced(paths = fsGuardPaths()): boolean {
-  if (process.env.ORGOS_FS_GUARD === "off") return false;
+  if (process.env.ORGOS_FS_GUARD === "off" && !isFsGuardProdMode()) return false;
   if (process.env.ORGOS_FS_GUARD === "enforce") return true;
+  if (isFsGuardProdMode()) return true;
   return isFsGuardInitialized(paths);
+}
+
+/** Production CLI/server: off is forbidden and uninitialized tenants must not mutate. */
+export function assertFsGuardProdReady(opts?: { command?: string }): void {
+  if (!isFsGuardProdMode()) return;
+  const command = opts?.command?.trim() ?? "";
+  if (command === "guard init" || command.startsWith("guard init ")) return;
+  if (process.env.ORGOS_FS_GUARD === "off") {
+    throw new Error("ORGOS_FS_GUARD=off is forbidden in production");
+  }
+  if (!isFsGuardInitialized()) {
+    throw new Error("FS-guard required in production — run: orgos guard init");
+  }
 }
 
 export function loadIdentities(paths = fsGuardPaths()): FsGuardIdentitiesFile | undefined {
@@ -69,6 +97,10 @@ export function loadGrantEvents(paths = fsGuardPaths()): FsGuardEvent[] {
 
 export function appendGrantEvent(event: FsGuardEvent, paths = fsGuardPaths()): void {
   appendJsonl(paths.eventsPath, fsGuardEventSchema.parse(event));
+}
+
+export function appendApplyRecord(record: FsGuardApplyRecord, paths = fsGuardPaths()): void {
+  appendJsonl(paths.appliesPath, fsGuardApplyRecordSchema.parse(record));
 }
 
 export function saveGrantSnapshot(file: FsGuardGrantsFile, paths = fsGuardPaths()): void {

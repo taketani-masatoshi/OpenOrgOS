@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { AgentId } from "../../../../schemas/classification.js";
 import {
@@ -10,12 +10,21 @@ import {
   type FsGuardOp,
   type FsGuardWriteIntent,
 } from "../../../../schemas/org/fs-guard.js";
-import { getAgentCapability, listAgentCapabilities } from "../../agent-capability.js";
+import { listAgentCapabilities } from "../../agent-capability.js";
 import { getCatalogAgent, resolveAgentId } from "../../agent-catalog.js";
 import { checkAgentAccess, findResourceByPath, loadClassificationRegistry } from "../../classification.js";
 import { matchSimpleGlob } from "../operator-effective.js";
 import { getClock, getIdGenerator } from "../../runtime-context.js";
-import { resolveTenantPath, toLogicalPath } from "../../tenant.js";
+import { resolve } from "node:path";
+import { getTenantDir, resolveTenantPath } from "../../tenant.js";
+import { withYamlFileLock } from "../../yaml-atomic.js";
+import {
+  classifyCanonicalLogicalPath,
+  registerFsGuardWriteAssert,
+} from "./write-hook.js";
+import { assertFsGuardProdReady } from "./store.js";
+import { FsGuardError } from "./errors.js";
+import { withCanonicalLease } from "./lease.js";
 import {
   generateFsGuardKeyPair,
   publicKeyFromPrivatePem,
@@ -25,6 +34,7 @@ import {
 } from "./crypto.js";
 import {
   agentPrivateKeyPath,
+  appendApplyRecord,
   appendGrantEvent,
   fsGuardPaths,
   isFsGuardEnforced,
@@ -39,15 +49,7 @@ import {
   writePrivateKeyPem,
 } from "./store.js";
 
-export class FsGuardError extends Error {
-  readonly code: string;
-
-  constructor(code: string, message: string) {
-    super(message);
-    this.name = "FsGuardError";
-    this.code = code;
-  }
-}
+export { FsGuardError } from "./errors.js";
 
 export interface FsGuardCheckResult {
   allowed: boolean;
@@ -67,7 +69,7 @@ const FORBIDDEN_PATTERNS = [
   /\.pem$/i,
   /\.key$/i,
   /\/data\/\.orgos\//,
-  /company-events(-chain)?\.(yaml|jsonl)$/,
+  /company-events(-chain|-attestations|-witness-pin|-signing-meta)?\.(yaml|jsonl)$/,
 ];
 
 function normalizeLogical(path: string): string {
@@ -396,17 +398,41 @@ function unsignedIntent(intent: FsGuardWriteIntent): Omit<FsGuardWriteIntent, "s
   return rest;
 }
 
+export function currentCanonicalSha256(logicalPath: string): string {
+  const logical = assertSafeTargetPath(logicalPath);
+  const abs = resolve(resolveTenantPath(logical));
+  return existsSync(abs) ? sha256Hex(readFileSync(abs)) : sha256Hex("");
+}
+
 export function applyAgentWrite(opts: {
   agentId: string;
   path: string;
   content: string | Buffer;
   runId?: string;
+  expectedSha256?: string;
   paths?: FsGuardPaths;
 }): { path: string; grant_id?: string; content_sha256: string } {
   const paths = opts.paths ?? fsGuardPaths();
   const resolved = resolveAgentId(opts.agentId);
   if (!resolved) throw new FsGuardError("unknown_agent", `Unknown agent: ${opts.agentId}`);
   const logical = assertSafeTargetPath(opts.path);
+  const pathClass = classifyCanonicalLogicalPath(logical);
+  if (pathClass !== "platform") {
+    assertFsGuardProdReady();
+  }
+  if (pathClass === "agent_forbidden") {
+    throw new FsGuardError(
+      "agent_forbidden",
+      `Agents cannot write ${logical} via guard apply (RBAC / grant registry path)`
+    );
+  }
+  if (!opts.expectedSha256 || !/^[a-f0-9]{64}$/.test(opts.expectedSha256)) {
+    throw new FsGuardError(
+      "cas_required",
+      `CAS expected_sha256 is required for ${logical} (new file: sha256 of empty string)`
+    );
+  }
+  const expectedSha256 = opts.expectedSha256;
   const policy = checkAgentWritePolicy(resolved, logical, "write", paths);
   if (!policy.allowed) {
     throw new FsGuardError("denied", policy.reason);
@@ -427,6 +453,7 @@ export function applyAgentWrite(opts: {
     op: "write",
     path: logical,
     content_sha256: contentSha,
+    expected_sha256: expectedSha256,
     issued_at: getClock().nowIso(),
     run_id: opts.runId,
     signature: "",
@@ -435,16 +462,44 @@ export function applyAgentWrite(opts: {
   if (!verifyPayload(unsignedIntent(intent), intent.signature, identity.public_key)) {
     throw new FsGuardError("bad_intent_signature", "Write intent signature did not verify");
   }
-  const abs = resolveTenantPath(logical);
-  const roundTrip = normalizeLogical(toLogicalPath(abs));
-  if (roundTrip !== logical && !roundTrip.endsWith(`/${logical}`) && roundTrip !== logical.replace(/\/$/, "")) {
-    if (roundTrip.includes("..")) {
-      throw new FsGuardError("path_escape", `Resolved path escapes tenant: ${logical}`);
-    }
+  const abs = resolve(resolveTenantPath(logical));
+  const tenantRoot = resolve(getTenantDir());
+  if (abs !== tenantRoot && !abs.startsWith(`${tenantRoot}/`)) {
+    throw new FsGuardError("path_escape", `Resolved path escapes tenant: ${logical}`);
   }
-  mkdirSync(dirname(abs), { recursive: true });
-  writeFileSync(abs, opts.content, typeof opts.content === "string" ? "utf-8" : undefined);
-  return { path: logical, grant_id: policy.grant_id, content_sha256: contentSha };
+  return withCanonicalLease(
+    logical,
+    resolved,
+    () => {
+      withYamlFileLock(abs, () => {
+        const current = existsSync(abs) ? sha256Hex(readFileSync(abs)) : sha256Hex("");
+        if (current !== expectedSha256) {
+          throw new FsGuardError(
+            "revision_conflict",
+            `CAS mismatch for ${logical}: expected ${expectedSha256.slice(0, 12)}… got ${current.slice(0, 12)}…`
+          );
+        }
+        mkdirSync(dirname(abs), { recursive: true });
+        writeFileSync(abs, opts.content);
+      });
+      appendApplyRecord(
+        {
+          event_id: getIdGenerator().uuid(),
+          occurred_at: getClock().nowIso(),
+          agent_id: resolved,
+          path: logical,
+          grant_id: policy.grant_id,
+          content_sha256: contentSha,
+          expected_sha256: expectedSha256,
+          run_id: opts.runId,
+          signature: intent.signature,
+        },
+        paths
+      );
+      return { path: logical, grant_id: policy.grant_id, content_sha256: contentSha };
+    },
+    opts.runId
+  );
 }
 
 function asDirectoryPattern(rel: string): string {
@@ -505,5 +560,13 @@ export function assertDispatchPathAllowed(agentId: string, logicalPath: string):
     throw new FsGuardError("dispatch_denied", `Dispatch blocked by fs-guard: ${result.reason}`);
   }
 }
+
+registerFsGuardWriteAssert((_absPath, agentId, logicalPath) => {
+  if (!isFsGuardEnforced()) return;
+  const result = checkAgentWritePolicy(agentId, logicalPath, "write");
+  if (!result.allowed) {
+    throw new FsGuardError("denied", `FS-guard blocked YAML write (${agentId}): ${result.reason}`);
+  }
+});
 
 export { isFsGuardEnforced, isFsGuardInitialized };

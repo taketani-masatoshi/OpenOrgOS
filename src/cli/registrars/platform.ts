@@ -927,13 +927,22 @@ export function registerPlatformCommands(program: Command): void {
       runGuardCheck({ agent: opts.agent, path: opts.path, op: opts.op, json: opts.json });
     });
   guardCmd
+    .command("hash")
+    .description("Print sha256 of a logical tenant file (empty file = sha256 of empty string)")
+    .requiredOption("--path <path>", "Logical path")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardHash } = await import("../../commands/fs-guard.js");
+      runGuardHash({ path: opts.path, json: opts.json });
+    });
+  guardCmd
     .command("apply")
     .description("Sign and write a file if the agent grant allows it")
     .requiredOption("--agent <id>", "Agent id whose host key signs the write")
     .requiredOption("--path <path>", "Logical destination path")
     .requiredOption("--from <file>", "Source file to write")
     .option("--run-id <id>", "Optional AIA run id")
-    .option("--expected-sha256 <hex>", "CAS: sha256 of the current destination file")
+    .option("--expected-sha256 <hex>", "Required CAS: sha256 of the current destination file")
     .option("--json", "JSON output")
     .action(async (opts) => {
       const { runGuardApply } = await import("../../commands/fs-guard.js");

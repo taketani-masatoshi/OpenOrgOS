@@ -69,7 +69,20 @@ export const fsGuardWriteIntentSchema = z.object({
   op: z.literal("write"),
   path: z.string().min(1),
   content_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  expected_sha256: z.string().regex(/^[a-f0-9]{64}$/),
   issued_at: z.string().min(1),
+  run_id: z.string().optional(),
+  signature: z.string().min(1),
+});
+
+export const fsGuardApplyRecordSchema = z.object({
+  event_id: z.string().min(1),
+  occurred_at: z.string().min(1),
+  agent_id: z.string().min(1),
+  path: z.string().min(1),
+  grant_id: z.string().optional(),
+  content_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  expected_sha256: z.string().regex(/^[a-f0-9]{64}$/),
   run_id: z.string().optional(),
   signature: z.string().min(1),
 });
@@ -81,3 +94,4 @@ export type FsGuardAgentIdentity = z.output<typeof fsGuardAgentIdentitySchema>;
 export type FsGuardIdentitiesFile = z.output<typeof fsGuardIdentitiesFileSchema>;
 export type FsGuardGrantsFile = z.output<typeof fsGuardGrantsFileSchema>;
 export type FsGuardWriteIntent = z.output<typeof fsGuardWriteIntentSchema>;
+export type FsGuardApplyRecord = z.output<typeof fsGuardApplyRecordSchema>;
