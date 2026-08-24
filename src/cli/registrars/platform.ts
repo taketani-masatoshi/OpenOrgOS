@@ -693,6 +693,24 @@ export function registerPlatformCommands(program: Command): void {
       const { runPasskeyBootstrapStatus } = await import("../../commands/passkey-bootstrap.js");
       runPasskeyBootstrapStatus({ json: opts.json });
     });
+  passkeyBootstrapCmd
+    .command("field-check")
+    .description("Automated passkey / WebAuthn field readiness (HTTP + local state)")
+    .requiredOption("--url <url>", "Operator Console base URL")
+    .option("--scope <scope>", "chat | wire | all", "all")
+    .option("--json", "JSON output")
+    .option("--record", "Write automated checklist rows to passkey-field-validation-log.md")
+    .option("--operator <name>", "Operator name for log 担当 column")
+    .action(async (opts) => {
+      const { runPasskeyFieldCheckCli } = await import("../../commands/passkey-field-check.js");
+      await runPasskeyFieldCheckCli({
+        url: opts.url,
+        scope: opts.scope,
+        json: opts.json,
+        record: opts.record,
+        operator: opts.operator,
+      });
+    });
   operatorCmd
     .command("sync-policy")
     .description("Sync steward/rules to Cursor mirrors, AGENTS.md, and engineering 00–09")

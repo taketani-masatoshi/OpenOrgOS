@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHash, generateKeyPairSync } from "node:crypto";
 import type { StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { verifyWebAuthnAssertion } from "../src/lib/wire-console/auth/webauthn-assertion.js";
@@ -11,12 +11,25 @@ import {
 } from "../src/lib/wire-console/auth/passkey-bootstrap.js";
 import { mintTestOidcIdToken } from "../src/lib/wire-console/auth/oidc.js";
 import { resetWebAuthnChallengeStoreForTests, disableWebAuthnChallengeStoreMemoryForTests } from "../src/lib/wire-console/auth/webauthn-challenge-store.js";
-import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
+import {
+  listWebAuthnCredentialsByPurpose,
+  resetWebAuthnCredentialsForTests,
+} from "../src/lib/wire-console/auth/webauthn-store.js";
 import { resetWireConsoleTestTenant } from "./helpers/wire-console-test-fixture.js";
+import { installFsGuardStoreForTests, type FsGuardStoreFixture } from "./helpers/fs-guard-store-fixture.js";
 
 describe("passkey bootstrap HTTP", () => {
   let handle: StewardChatServerHandle | undefined;
+  let guard: FsGuardStoreFixture;
   const env = { ...process.env };
+
+  beforeAll(() => {
+    guard = installFsGuardStoreForTests();
+  });
+
+  afterAll(() => {
+    guard.cleanup();
+  });
 
   beforeEach(() => {
     resetWireConsoleTestTenant();
@@ -177,6 +190,58 @@ describe("passkey bootstrap HTTP", () => {
     expect(secondOptions.status).toBe(403);
     const body = (await secondOptions.json()) as { error?: string };
     expect(body.error).toMatch(/bootstrap token/i);
+  });
+
+  it("does not persist a credential when the challenge is no longer the reserved one", async () => {
+    const baseUrl = await startProd();
+    const cookie = await prodSessionCookie(baseUrl);
+    resetPasskeyBootstrapStoreForTests();
+    const { token } = mintPasskeyBootstrapToken({ operatorId: "OP-001" });
+
+    async function registerOptions(): Promise<string> {
+      const res = await fetch(`${baseUrl}/chat/v1/auth/webauthn/register/options`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", cookie },
+        body: JSON.stringify({
+          operator_id: "OP-001",
+          approver_id: "Demo CEO",
+          bootstrap_token: token,
+        }),
+      });
+      expect(res.status).toBe(200);
+      return ((await res.json()) as { challenge: string }).challenge;
+    }
+
+    // The second options call re-reserves the token for a newer challenge,
+    // so completing the first one must fail without leaving a credential behind.
+    const staleChallenge = await registerOptions();
+    await registerOptions();
+
+    const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+    const registration = mintTestWebAuthnRegistration({
+      rpId: "127.0.0.1",
+      origin: "http://127.0.0.1:9471",
+      challenge: staleChallenge,
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+      privateKey,
+    });
+
+    const register = await fetch(`${baseUrl}/chat/v1/auth/webauthn/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        challenge: staleChallenge,
+        credential_id: registration.credential_id,
+        client_data_json: registration.client_data_json,
+        attestation_object_base64: registration.attestation_object_base64,
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        bootstrap_token: token,
+      }),
+    });
+    expect(register.status).not.toBe(200);
+    expect(listWebAuthnCredentialsByPurpose("login", { rpId: "127.0.0.1" })).toEqual([]);
   });
 });
 

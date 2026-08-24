@@ -15,10 +15,13 @@ import {
   resetPasskeyBootstrapStoreForTests,
 } from "../src/lib/wire-console/auth/passkey-bootstrap.js";
 import { resetWireConsoleTestTenant } from "./helpers/wire-console-test-fixture.js";
+import { setTenantId } from "../src/lib/tenant.js";
 
 describe("webauthn register gate", () => {
   beforeEach(() => {
     resetWireConsoleTestTenant();
+    // Registry assertions below target the demo operators.yaml (OP-001 = Demo CEO).
+    setTenantId("demo");
     resetWebAuthnCredentialsForTests();
     resetPasskeyBootstrapStoreForTests();
     delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP;

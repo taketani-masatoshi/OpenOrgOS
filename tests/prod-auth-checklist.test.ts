@@ -1,15 +1,21 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, afterEach } from "vitest";
 import {
   assertProdAuthReady,
   runProdAuthChecks,
 } from "../src/lib/console-auth/prod-checklist.js";
 import { collectDoctorChecks } from "../src/commands/doctor.js";
+import { setFsGuardPathsForTests } from "../src/lib/org/fs-guard/index.js";
+import {
+  makeFsGuardPathsForTests,
+  removeFsGuardPathsForTests,
+} from "./helpers/fs-guard-store-fixture.js";
 
 describe("prod auth checklist", () => {
   const env = { ...process.env };
 
   afterEach(() => {
     process.env = { ...env };
+    setFsGuardPathsForTests(undefined);
   });
 
   it("warns when auth disabled", () => {
@@ -105,6 +111,28 @@ describe("prod auth checklist", () => {
     expect(checks.find((c) => c.id === "llm_tools_write_disabled")?.ok).toBe(false);
   });
 
+  it("fails production when FS-guard is off", () => {
+    process.env.ORGOS_ENV = "production";
+    process.env.ORGOS_FS_GUARD = "off";
+    const checks = runProdAuthChecks("all");
+    expect(checks.find((c) => c.id === "fs_guard_initialized")?.ok).toBe(false);
+    expect(checks.find((c) => c.id === "fs_guard_initialized")?.detail).toMatch(/forbidden/);
+  });
+
+  it("fails production when FS-guard is not initialized", () => {
+    process.env.ORGOS_ENV = "production";
+    delete process.env.ORGOS_FS_GUARD;
+    const empty = makeFsGuardPathsForTests("orgos-prod-guard-empty-");
+    setFsGuardPathsForTests(empty);
+    try {
+      const checks = runProdAuthChecks("all");
+      expect(checks.find((c) => c.id === "fs_guard_initialized")?.ok).toBe(false);
+      expect(checks.find((c) => c.id === "fs_guard_initialized")?.detail).toMatch(/not initialized/);
+    } finally {
+      removeFsGuardPathsForTests(empty);
+    }
+  });
+
   it("fails production when settlement challenge secret missing", () => {
     process.env.ORGOS_ENV = "production";
     process.env.STEWARD_CHAT_AUTH = "1";
@@ -125,5 +153,58 @@ describe("prod auth checklist", () => {
     process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET = "leak";
     const checks = runProdAuthChecks("all");
     expect(checks.find((c) => c.id === "webauthn_test_secret_disabled")?.ok).toBe(false);
+  });
+
+  it("blocks CLI mutations in production when FS-guard is uninitialized", async () => {
+    const { requireCliDataWrite } = await import("../src/lib/console-auth/cli-operator.js");
+    const { assertFsGuardProdReady } = await import("../src/lib/org/fs-guard/store.js");
+    process.env.ORGOS_ENV = "production";
+    delete process.env.ORGOS_FS_GUARD;
+    const empty = makeFsGuardPathsForTests("orgos-prod-cli-guard-empty-");
+    setFsGuardPathsForTests(empty);
+    try {
+      expect(() => requireCliDataWrite({ command: "finances add" })).toThrow(/orgos guard init/);
+      expect(() => assertFsGuardProdReady({ command: "guard init" })).not.toThrow();
+    } finally {
+      removeFsGuardPathsForTests(empty);
+    }
+  });
+
+  it("blocks writeYamlFile at write boundary in production when guard is uninitialized", async () => {
+    const { writeYamlFile } = await import("../src/lib/utils.js");
+    const { setTenantId, tenantDataPath } = await import("../src/lib/tenant.js");
+    setTenantId("demo");
+    process.env.ORGOS_ENV = "production";
+    delete process.env.ORGOS_FS_GUARD;
+    const empty = makeFsGuardPathsForTests("orgos-prod-write-boundary-");
+    setFsGuardPathsForTests(empty);
+    try {
+      expect(() =>
+        writeYamlFile(tenantDataPath("finance", "_prod-boundary-test.yaml"), { ok: true })
+      ).toThrow(/orgos guard init/);
+    } finally {
+      removeFsGuardPathsForTests(empty);
+      delete process.env.ORGOS_ENV;
+    }
+  });
+
+  it("allows platform scratch writes without guard init in production", async () => {
+    const { writeCanonicalFile } = await import("../src/lib/utils.js");
+    const { setTenantId, tenantDataPath } = await import("../src/lib/tenant.js");
+    const { existsSync, unlinkSync } = await import("node:fs");
+    setTenantId("demo");
+    process.env.ORGOS_ENV = "production";
+    delete process.env.ORGOS_FS_GUARD;
+    const empty = makeFsGuardPathsForTests("orgos-prod-scratch-write-");
+    setFsGuardPathsForTests(empty);
+    const path = tenantDataPath("scratch", "_prod-scratch-test.txt");
+    try {
+      writeCanonicalFile(path, "ok\n");
+      expect(existsSync(path)).toBe(true);
+    } finally {
+      if (existsSync(path)) unlinkSync(path);
+      removeFsGuardPathsForTests(empty);
+      delete process.env.ORGOS_ENV;
+    }
   });
 });

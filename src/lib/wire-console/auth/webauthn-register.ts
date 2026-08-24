@@ -263,17 +263,8 @@ export function verifyWebAuthnRegistration(body: {
     };
   }
 
-  saveWebAuthnCredential({
-    credential_id: credentialId,
-    public_key_spki_base64: spki.toString("base64"),
-    operator_id: pending.operator_id,
-    approver_id: pending.approver_id,
-    sign_count: extracted.signCount,
-    purpose,
-    rp_id: pending.rp_id,
-    authenticator_attachment: purpose === "settlement" ? "cross-platform" : "platform",
-  });
-
+  // Consume before persisting: a credential saved alongside a rejected token would
+  // satisfy isLoginPasskeyBootstrap() and disable the gate entirely (ADR 0041).
   if (bootstrapRegistration && pending.bootstrap_token) {
     const consumed = consumePasskeyBootstrapToken({
       token: pending.bootstrap_token,
@@ -284,6 +275,17 @@ export function verifyWebAuthnRegistration(body: {
       return { error: consumed.error };
     }
   }
+
+  saveWebAuthnCredential({
+    credential_id: credentialId,
+    public_key_spki_base64: spki.toString("base64"),
+    operator_id: pending.operator_id,
+    approver_id: pending.approver_id,
+    sign_count: extracted.signCount,
+    purpose,
+    rp_id: pending.rp_id,
+    authenticator_attachment: purpose === "settlement" ? "cross-platform" : "platform",
+  });
 
   // Settlement keys never mint a console session (ADR 0037).
   if (purpose === "settlement") {

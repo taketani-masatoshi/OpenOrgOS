@@ -25,7 +25,7 @@ jobs:
       - run: npm run test:registry:check
       - run: npm run test:tiered:verify
       - run: npm run test:contract
-      - run: /usr/bin/time -f "npm test elapsed: %E" npm test
+      - run: '/usr/bin/time -f "npm test elapsed: %E" npm test'
   security-rbac:
     runs-on: ubuntu-latest
     needs: validate
@@ -44,6 +44,10 @@ jobs:
           tests/org-boundary.test.ts
           tests/shell-sandbox.test.ts
           tests/prod-auth-checklist.test.ts
+          tests/prod-startup.test.ts
+          tests/passkey-bootstrap-http.test.ts
+          tests/passkey-prod-readiness.test.ts
+          tests/webauthn-register-gate.test.ts
           tests/security-validate.test.ts
           tests/cli-data-write-auth.test.ts
           tests/tenant-registry-coverage.test.ts
@@ -102,6 +106,22 @@ jobs:
       - run: npm run steward-chat:webauthn-e2e
         env:
           STEWARD_CHAT_WEBAUTHN_SMOKE_PORT: "9477"
+  passkey-ui-smoke:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run passkey:ui-smoke
+        env:
+          STEWARD_CHAT_WEBAUTHN_SMOKE_PORT: "9477"
+          WIRE_CONSOLE_WEBAUTHN_SMOKE_PORT: "9473"
+          WIRE_CONSOLE_WEBAUTHN_BOOTSTRAP_SMOKE_PORT: "9478"
   package-publish-check:
     runs-on: ubuntu-latest
     needs: validate

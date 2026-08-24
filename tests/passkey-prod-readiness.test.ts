@@ -1,13 +1,23 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { runProdAuthChecks } from "../src/lib/console-auth/prod-checklist.js";
 import {
   resetPasskeyBootstrapStoreForTests,
   mintPasskeyBootstrapToken,
 } from "../src/lib/wire-console/auth/passkey-bootstrap.js";
 import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
+import { installFsGuardStoreForTests, type FsGuardStoreFixture } from "./helpers/fs-guard-store-fixture.js";
 
 describe("passkey prod readiness (smoke fixture env)", () => {
   const envSnapshot = { ...process.env };
+  let guard: FsGuardStoreFixture;
+
+  beforeAll(() => {
+    guard = installFsGuardStoreForTests();
+  });
+
+  afterAll(() => {
+    guard.cleanup();
+  });
 
   afterEach(() => {
     process.env = { ...envSnapshot };
