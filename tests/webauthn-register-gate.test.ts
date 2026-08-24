@@ -4,6 +4,7 @@ import {
   assertSettlementPasskeyRegistrationGate,
   authorizeWebAuthnRegistration,
   resolveRegistryRegistrationIdentity,
+  resolveRegistrationHttpStatus,
 } from "../src/lib/wire-console/auth/webauthn-register-gate.js";
 import {
   resetWebAuthnCredentialsForTests,
@@ -123,5 +124,25 @@ describe("webauthn register gate", () => {
       error: expect.stringContaining("not permitted to register a settlement passkey"),
       status: 403,
     });
+  });
+
+  it("resolveRegistrationHttpStatus prefers explicit status over string heuristics", () => {
+    expect(
+      resolveRegistrationHttpStatus({
+        error: "bootstrap token invalid, expired, or already used",
+        status: 403,
+      }),
+    ).toBe(403);
+    expect(
+      resolveRegistrationHttpStatus({
+        error: "unknown operator_id: NO-SUCH",
+      }),
+    ).toBe(422);
+    expect(
+      resolveRegistrationHttpStatus({
+        error: "authenticated session required",
+        status: 401,
+      }),
+    ).toBe(401);
   });
 });

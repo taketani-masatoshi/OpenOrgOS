@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { OperatorShell, type OperatorShellActive } from "@ops-shared/OperatorShell";
 import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
+import { buildCommunityConsoleStartUrl } from "@ops-shared/community-console-handoff";
 import { PasskeyAuthPanel } from "@ops-shared/PasskeyAuthPanel";
 import { PasskeySettingsPage } from "@ops-shared/PasskeySettingsPage";
 import { registerSettlementPasskey } from "@ops-shared/register-settlement-passkey";
@@ -176,9 +177,7 @@ export function BudgetAuthGate({
         bootstrapTokenRequired={authConfig?.webauthn?.bootstrap_token_required}
         bootstrapToken={bootstrapToken}
         onBootstrapToken={setBootstrapToken}
-        communityHandoffUrl={
-          authConfig?.community_handoff ? "https://community.oorgos.org/mypage" : undefined
-        }
+        communityHandoffUrl={authConfig?.community_handoff ? buildCommunityConsoleStartUrl("/settings") : undefined}
         settingsPath="/settings/"
       />
     );

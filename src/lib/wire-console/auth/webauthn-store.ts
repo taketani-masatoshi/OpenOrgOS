@@ -179,7 +179,7 @@ export function saveWebAuthnCredential(credential: StoredWebAuthnCredential): vo
     ...normalizeCredential(credential),
     created_at: credential.created_at ?? new Date().toISOString(),
   });
-  if (memoryOverride) {
+  if (memoryOverride !== undefined) {
     memoryOverride = next;
     return;
   }
@@ -195,7 +195,7 @@ export function updateWebAuthnSignCount(credentialId: string, signCount: number)
   const idx = file.findIndex((c) => c.credential_id === credentialId);
   if (idx < 0) return;
   file[idx] = { ...file[idx]!, sign_count: signCount };
-  if (memoryOverride) {
+  if (memoryOverride !== undefined) {
     memoryOverride = file;
     return;
   }
@@ -232,7 +232,7 @@ export function deleteWebAuthnCredential(credentialId: string): {
   if (next.length === file.length) {
     return { ok: false, error: "passkey not found" };
   }
-  if (memoryOverride) {
+  if (memoryOverride !== undefined) {
     memoryOverride = next;
     return { ok: true };
   }
@@ -246,4 +246,9 @@ export function setWebAuthnCredentialsForTests(credentials: StoredWebAuthnCreden
 
 export function resetWebAuthnCredentialsForTests(): void {
   memoryOverride = [];
+}
+
+/** Switch from in-memory test override back to on-disk credential store. */
+export function clearWebAuthnCredentialsMemoryOverrideForTests(): void {
+  memoryOverride = undefined;
 }

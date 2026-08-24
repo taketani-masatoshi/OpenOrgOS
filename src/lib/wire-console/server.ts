@@ -15,6 +15,7 @@ import {
   createWebAuthnRegisterOptions,
   isWebAuthnRegistrationAllowed,
   registrationErrorStatus,
+  resolveRegistrationHttpStatus,
   verifyWebAuthnRegistration,
 } from "./auth/webauthn-register.js";
 import {
@@ -106,7 +107,7 @@ async function handleApi(
         { sessionUser }
       );
       if ("error" in result) {
-        json(res, registrationErrorStatus(result.error), { ok: false, error: result.error });
+        json(res, resolveRegistrationHttpStatus(result), { ok: false, error: result.error });
         return true;
       }
       json(res, 200, { ok: true, ...result });

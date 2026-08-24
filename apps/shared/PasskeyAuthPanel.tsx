@@ -4,6 +4,7 @@
  */
 import { useEffect, useState, type FormEvent } from "react";
 import { browserSupportsWebAuthn } from "./webauthn-simple";
+import { buildCommunityConsoleStartUrl } from "./community-console-handoff";
 import { inspectWebAuthnPage, type WebAuthnPageInspect } from "./webauthn-page-origin";
 import { webauthnUserMessage } from "./webauthn-user-error";
 
@@ -68,6 +69,9 @@ export function PasskeyAuthPanel({
   settingsPath = "/settings/",
 }: PasskeyAuthPanelProps) {
   const [pageState, setPageState] = useState<WebAuthnPageInspect>({ status: "ok" });
+
+  const communityStartUrl =
+    communityHandoffUrl ?? buildCommunityConsoleStartUrl(settingsPath);
 
   const ready =
     operatorId.trim().length > 0 &&
@@ -191,9 +195,9 @@ export function PasskeyAuthPanel({
                 </p>
                 <ol className="auth-steps">
                   <li>
-                    {communityHandoffUrl ? (
+                    {communityStartUrl ? (
                       <>
-                        <a href={communityHandoffUrl}>Community で Google ログイン</a>
+                        <a href={communityStartUrl}>Community で Google ログイン</a>
                       </>
                     ) : (
                       "Community で Google ログイン"
@@ -209,8 +213,8 @@ export function PasskeyAuthPanel({
                     </span>
                   </li>
                 </ol>
-                {communityHandoffUrl ? (
-                  <a className="btn btn-primary" href={communityHandoffUrl}>
+                {communityStartUrl ? (
+                  <a className="btn btn-primary" href={communityStartUrl}>
                     Community で入る
                   </a>
                 ) : null}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { OperatorShell } from "@ops-shared/OperatorShell";
 import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
+import { buildCommunityConsoleStartUrl } from "@ops-shared/community-console-handoff";
 import { PasskeyAuthPanel } from "@ops-shared/PasskeyAuthPanel";
 import { PasskeySettingsPage } from "@ops-shared/PasskeySettingsPage";
 import type { PasskeyCredentialsApi } from "@ops-shared/passkey-credentials-client";
@@ -182,7 +183,7 @@ export function App() {
           bootstrapToken={bootstrapToken}
           onBootstrapToken={setBootstrapToken}
           communityHandoffUrl={
-            authConfig?.community_handoff ? "https://community.oorgos.org/mypage" : undefined
+            authConfig?.community_handoff ? buildCommunityConsoleStartUrl("/settings/") : undefined
           }
           settingsPath="/settings/"
         />

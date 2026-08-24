@@ -288,6 +288,30 @@ export function authorizeWebAuthnRegistration(
   return resolved;
 }
 
+export type WebAuthnRegistrationFailure = { error: string; status: number };
+
+export function isWebAuthnRegistrationFailure(
+  value: unknown,
+): value is WebAuthnRegistrationFailure {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "error" in value &&
+    typeof (value as WebAuthnRegistrationFailure).error === "string" &&
+    "status" in value &&
+    typeof (value as WebAuthnRegistrationFailure).status === "number"
+  );
+}
+
+/** Prefer explicit status from gate; fall back to legacy string matching. */
+export function resolveRegistrationHttpStatus(result: {
+  error: string;
+  status?: number;
+}): number {
+  if (typeof result.status === "number") return result.status;
+  return registrationErrorStatus(result.error);
+}
+
 export function registrationErrorStatus(error: string): number {
   if (
     error.includes("session required") ||

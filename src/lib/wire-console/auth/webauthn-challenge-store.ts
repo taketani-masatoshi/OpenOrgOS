@@ -1,12 +1,15 @@
 import {
   chmodSync,
   closeSync,
+  constants,
   existsSync,
   openSync,
   readFileSync,
   renameSync,
+  statSync,
   unlinkSync,
   writeFileSync,
+  writeSync,
 } from "node:fs";
 import { join } from "node:path";
 import { ensureOrgOsStateDir, getOrgOsStateDir } from "../paths.js";
@@ -16,6 +19,22 @@ const LOCK_FILENAME = "webauthn-challenges.lock";
 const DEFAULT_TTL_MS = 5 * 60_000;
 const LOCK_RETRY_MS = 25;
 const LOCK_MAX_ATTEMPTS = 80;
+
+type FlockFn = (fd: number, operation: number) => void;
+
+/** Node exposes fs.flock on Linux; macOS dev falls back to wx lock files. */
+function resolveFlock(): FlockFn | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("node:fs") as typeof import("node:fs") & { flock?: FlockFn };
+    return typeof fs.flock === "function" ? fs.flock.bind(fs) : null;
+  } catch {
+    return null;
+  }
+}
+
+const flockSync = resolveFlock();
+const useFlock = flockSync !== null;
 
 export class WebAuthnChallengeStoreCorruptError extends Error {
   constructor(message = "webauthn challenge store unreadable") {
@@ -62,18 +81,65 @@ function hardenStoreMode(path: string): void {
 }
 
 function sleepMs(ms: number): void {
-  const end = Date.now() + ms;
-  while (Date.now() < end) {
-    /* spin */
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function cleanupStaleLockFile(): void {
+  const path = lockPath();
+  if (!existsSync(path)) return;
+  try {
+    const st = statSync(path);
+    if (st.size === 0) {
+      unlinkSync(path);
+      return;
+    }
+    const pid = Number(readFileSync(path, "utf-8").trim());
+    if (!Number.isFinite(pid) || pid <= 0) {
+      unlinkSync(path);
+      return;
+    }
+    process.kill(pid, 0);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ESRCH" || code === "ENOENT") {
+      try {
+        unlinkSync(path);
+      } catch {
+        /* ignore */
+      }
+    }
   }
 }
 
 function acquireLock(): number {
   ensureOrgOsStateDir();
+  cleanupStaleLockFile();
+  if (useFlock && flockSync) {
+    const fd = openSync(lockPath(), "a");
+    for (let i = 0; i < LOCK_MAX_ATTEMPTS; i++) {
+      try {
+        flockSync(fd, constants.LOCK_EX | constants.LOCK_NB);
+        return fd;
+      } catch (err) {
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code !== "EWOULDBLOCK" && code !== "EAGAIN") {
+          closeSync(fd);
+          throw err;
+        }
+        sleepMs(LOCK_RETRY_MS);
+      }
+    }
+    closeSync(fd);
+    throw new WebAuthnChallengeStoreCorruptError("webauthn challenge store lock timeout");
+  }
+
   for (let i = 0; i < LOCK_MAX_ATTEMPTS; i++) {
     try {
-      return openSync(lockPath(), "wx");
+      const fd = openSync(lockPath(), "wx");
+      writeSync(fd, String(process.pid));
+      return fd;
     } catch {
+      cleanupStaleLockFile();
       sleepMs(LOCK_RETRY_MS);
     }
   }
@@ -81,6 +147,20 @@ function acquireLock(): number {
 }
 
 function releaseLock(fd: number): void {
+  if (useFlock && flockSync) {
+    try {
+      flockSync(fd, constants.LOCK_UN);
+    } catch {
+      /* ignore */
+    }
+    try {
+      closeSync(fd);
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+
   try {
     closeSync(fd);
   } catch {
@@ -150,6 +230,13 @@ function purgeExpired(doc: ChallengeStoreDocument): ChallengeStoreDocument {
 }
 
 function withStoreLock<T>(fn: (doc: ChallengeStoreDocument) => T): T {
+  if (memoryOverride) {
+    const doc = purgeExpired(readStoreUnlocked());
+    const result = fn(doc);
+    writeStoreUnlocked(doc);
+    return result;
+  }
+
   const fd = acquireLock();
   try {
     const doc = purgeExpired(readStoreUnlocked());
@@ -211,4 +298,11 @@ export function disableWebAuthnChallengeStoreMemoryForTests(): void {
   memoryOverride = undefined;
   const path = storePath();
   if (existsSync(path)) unlinkSync(path);
+  const lock = lockPath();
+  if (existsSync(lock)) unlinkSync(lock);
+}
+
+/** Test helper: whether this runtime uses advisory flock (Linux prod) vs wx fallback. */
+export function webauthnChallengeStoreUsesFlock(): boolean {
+  return useFlock;
 }
