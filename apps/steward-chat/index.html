@@ -3,7 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Steward Chat</title>
+    <title>OpenOrgOS Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        var k = "oorgos-theme",
+          p = "system";
+        try {
+          var c = document.cookie.match(/(?:^|; )oorgos-theme=([^;]*)/);
+          if (c) p = decodeURIComponent(c[1]);
+          else {
+            var s = localStorage.getItem(k);
+            if (s) p = s;
+          }
+        } catch (e) {}
+        if (p !== "light" && p !== "dark" && p !== "system") p = "system";
+        var r =
+          p === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : p;
+        var el = document.documentElement;
+        el.setAttribute("data-theme", r);
+        el.setAttribute("data-theme-pref", p);
+        el.style.colorScheme = r;
+        try {
+          var nav = (navigator.language || "").toLowerCase();
+          if (nav.indexOf("ja") === 0) el.lang = "ja";
+          else if (nav) el.lang = nav.split("-")[0];
+        } catch (e2) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

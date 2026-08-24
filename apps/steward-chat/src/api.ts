@@ -1291,6 +1291,8 @@ export interface AnalyticsKpiRow {
   mom_delta_pct: number | null;
 }
 
+export type AnalyticsDataQualityOverall = number | null;
+
 export interface AnalyticsDashboardPayload {
   view_model: {
     title: string;
@@ -1308,7 +1310,7 @@ export interface AnalyticsDashboardPayload {
     rows: AnalyticsKpiRow[];
     summary: { green: number; amber: number; red: number; unknown: number };
   };
-  data_quality_overall: number;
+  data_quality_overall: AnalyticsDataQualityOverall;
 }
 
 export async function fetchAnalyticsDashboard(): Promise<AnalyticsDashboardPayload> {

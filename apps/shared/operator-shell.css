@@ -24,7 +24,7 @@
   gap: var(--space-4, 16px);
   min-height: 52px;
   padding: 0 var(--page-gutter, 24px);
-  background: rgba(255, 255, 255, 0.86);
+  background: var(--header-bg, rgba(245, 245, 247, 0.86));
   border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.08));
   backdrop-filter: saturate(180%) blur(16px);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
@@ -85,6 +85,32 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ops-shell-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill, 980px);
+  color: var(--ink-soft, #6e6e73);
+  text-decoration: none;
+}
+
+.ops-shell-settings:hover {
+  color: var(--ink, #1d1d1f);
+  background: var(--accent-soft, rgba(0, 113, 227, 0.12));
+  text-decoration: none;
+}
+
+.ops-shell-settings.is-active {
+  color: var(--accent, #0071e3);
+  background: var(--accent-soft, rgba(0, 113, 227, 0.12));
+}
+
+.ops-shell-settings-icon {
+  display: block;
 }
 
 .ops-shell-signout {

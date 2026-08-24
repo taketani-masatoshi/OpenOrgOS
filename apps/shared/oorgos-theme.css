@@ -3,16 +3,24 @@
  * Import from steward-chat and wire-console so Chat / Wire feel continuous with the overview site.
  */
 :root {
+  color-scheme: light;
   --ink: #1d1d1f;
   --ink-soft: #6e6e73;
-  --navy: #003366;
+  --navy: var(--ink);
   --accent: #0071e3;
   --accent-soft: rgba(0, 113, 227, 0.12);
   --accent-hover: #0077ed;
+  --on-accent: #ffffff;
   --surface: #f5f5f7;
   --surface-elevated: #ffffff;
+  --section-alt: #eef1f6;
   --border: rgba(0, 0, 0, 0.08);
   --border-strong: rgba(0, 0, 0, 0.12);
+  --header-bg: rgba(245, 245, 247, 0.72);
+  --frost-bg: rgba(255, 255, 255, 0.92);
+  --ink-muted: var(--ink-soft);
+  --surface-raised: var(--surface-elevated);
+  --alt-section: var(--section-alt);
   --danger: #b91c1c;
   --danger-soft: #fef2f2;
   --success-bg: #ecfdf5;
@@ -66,6 +74,33 @@
   --space-sm: var(--space-2);
   --space-md: var(--space-4);
   --space-lg: var(--space-5);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f5f5f7;
+  --ink-soft: #a1a1a6;
+  --navy: var(--ink);
+  --accent: #0a84ff;
+  --accent-soft: rgba(10, 132, 255, 0.2);
+  --accent-hover: #409cff;
+  --on-accent: #ffffff;
+  --surface: #1c1c1e;
+  --surface-elevated: #2c2c2e;
+  --section-alt: #000000;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --header-bg: rgba(28, 28, 30, 0.82);
+  --frost-bg: rgba(44, 44, 46, 0.92);
+  --ink-muted: var(--ink-soft);
+  --surface-raised: var(--surface-elevated);
+  --alt-section: var(--section-alt);
+  --danger: #ff453a;
+  --danger-soft: rgba(255, 69, 58, 0.16);
+  --success-bg: rgba(48, 209, 88, 0.16);
+  --success-text: #30d158;
+  --shadow-soft: 0 20px 48px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 *,
@@ -169,4 +204,81 @@ p {
 
 p:last-child {
   margin-bottom: 0;
+}
+
+.theme-picker {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  border: 0;
+}
+
+.theme-picker-legend {
+  padding: 0;
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-ui);
+  color: var(--ink);
+}
+
+.theme-picker-option {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  cursor: pointer;
+}
+
+.theme-picker-option:hover {
+  border-color: var(--border-strong);
+}
+
+.theme-picker-option:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.theme-picker-option input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.theme-picker-swatch {
+  width: 72px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.theme-picker-swatch.is-light {
+  background: linear-gradient(180deg, #eef1f6, #f5f5f7);
+}
+
+.theme-picker-swatch.is-dark {
+  background: linear-gradient(180deg, #2c2c2e, #1c1c1e);
+}
+
+.theme-picker-swatch.is-system {
+  background: linear-gradient(90deg, #f5f5f7 50%, #1c1c1e 50%);
+}
+
+.theme-picker-copy {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.theme-picker-copy strong {
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.theme-picker-copy span {
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+  line-height: 1.45;
 }
