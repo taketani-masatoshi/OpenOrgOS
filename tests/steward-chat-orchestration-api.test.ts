@@ -64,5 +64,7 @@ describe("orchestration run board payload", () => {
       queued: expect.any(Number),
     });
     expect(payload.nodes.some((node) => node.id === child.id)).toBe(true);
+    expect(payload.retryableCount).toBe(0);
+    expect(payload.cancellableCount).toBeGreaterThan(0);
   });
 });

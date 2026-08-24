@@ -101,6 +101,8 @@ export interface OrchestrationStatusPayload {
   waveCount: number;
   readyCount: number;
   blockedByFailureCount: number;
+  retryableCount: number;
+  cancellableCount: number;
   aia: {
     tier: string;
     max_concurrent: number;
@@ -136,6 +138,10 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
   syncDependencyStatuses(graph);
   const ready = readyWorkOrders(graph);
   const blocked = blockedByFailure(graph);
+  const retryable = retryableFailedWorkOrders(graph);
+  const cancellableCount = [...graph.nodes.values()].filter(
+    (node) => node.status === "pending" || node.status === "waiting",
+  ).length;
   const aiaConfig = loadAiaRuntimeConfig();
   const aiaMetrics = getSharedAiaScheduler().metrics();
   const aiaLookup = buildAiaRunLookup(loadAiaQueueFile().runs);
@@ -188,6 +194,8 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
     waveCount: graph.waves.length,
     readyCount: ready.length,
     blockedByFailureCount: blocked.length,
+    retryableCount: retryable.length,
+    cancellableCount,
     aia: {
       tier: aiaConfig.tier,
       max_concurrent: aiaConfig.max_concurrent_aia,

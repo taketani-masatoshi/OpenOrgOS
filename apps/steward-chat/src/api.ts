@@ -1337,6 +1337,8 @@ export interface OrchestrationRunPayload {
   waveCount: number;
   readyCount: number;
   blockedByFailureCount: number;
+  retryableCount: number;
+  cancellableCount: number;
   aia: {
     tier: string;
     max_concurrent: number;
@@ -1357,15 +1359,33 @@ export interface OrchestrationRunPayload {
 export interface OrchestrationRunsListPayload {
   ok: boolean;
   active_roots: string[];
+  completed_roots?: string[];
   count: number;
 }
 
-export async function fetchOrchestrationRuns(): Promise<OrchestrationRunsListPayload> {
-  return chatApi<OrchestrationRunsListPayload>("/chat/v1/orchestration/runs");
+export async function fetchOrchestrationRuns(opts?: {
+  includeCompleted?: boolean;
+}): Promise<OrchestrationRunsListPayload> {
+  const q = opts?.includeCompleted ? "?include=completed" : "";
+  return chatApi<OrchestrationRunsListPayload>(`/chat/v1/orchestration/runs${q}`);
 }
 
 export async function fetchOrchestrationRun(id: string): Promise<OrchestrationRunPayload> {
   return chatApi<OrchestrationRunPayload>(`/chat/v1/orchestration/runs?id=${encodeURIComponent(id)}`);
+}
+
+export async function retryOrchestrationRun(id: string): Promise<OrchestrationRunPayload & { retried: string[] }> {
+  return chatApi<OrchestrationRunPayload & { retried: string[] }>(
+    `/chat/v1/orchestration/runs/retry?id=${encodeURIComponent(id)}`,
+    { method: "POST" },
+  );
+}
+
+export async function cancelOrchestrationRun(id: string): Promise<OrchestrationRunPayload & { cancelled: string[] }> {
+  return chatApi<OrchestrationRunPayload & { cancelled: string[] }>(
+    `/chat/v1/orchestration/runs/cancel?id=${encodeURIComponent(id)}`,
+    { method: "POST" },
+  );
 }
 
 export async function setOrgCompanyBudget(body: {

@@ -70,7 +70,7 @@ P0 で **ADR 0044** として固定済み。
 | # | 条件 | 状態 | 根拠 |
 |---|------|:----:|------|
 | 1 | ADR 0044 Accepted | ✅ | [0044-work-order-dag-orchestration.md](../adr/0044-work-order-dag-orchestration.md) |
-| 2 | 本計画書 + CHANGELOG `[Unreleased]` 更新 | ✅ | 本書 · `CHANGELOG.md` |
+| 2 | 本計画書 + CHANGELOG `[Unreleased]` 更新 | ✅ | 本書 · `CHANGELOG.md`（オーケストレーション行のみ · 他セッション記述は別件） |
 | 3 | `orgos orchestrate` CLI 5 サブコマンド | ✅ | plan · run · status · retry · cancel |
 | 4 | `transitionWorkOrder` 集約 · queue event 連動 | ✅ | `src/lib/orchestration/work-order-state.ts` |
 | 5 | wave 駆動 dispatch · `trace_id` 伝播 | ✅ | `src/lib/agent-dispatch.ts` |
@@ -78,11 +78,11 @@ P0 で **ADR 0044** として固定済み。
 | 7 | 失敗下流ブロック + `orchestrate retry` 再開 | ✅ | `blocked → pending` 復帰 · `orchestration-dag.test.ts` |
 | 8 | LLM なしで P0 コアが動作 | ✅ | 決定論 CLI + mock 統合テスト |
 | 9 | 既存 WO YAML 後方互換 | ✅ | `pending→completed` 許可 · schema optional フィールド |
-| 10 | `npm test`（orchestration 関連）通過 | ✅ | **21 件**（state 6 · dag 12 · dispatch 3 · 2026-08-24 再検証） |
-| 11 | `orgos validate`（mal）通過 | ✅ | exit 0（warnings のみ · 2026-08-24 再検証） |
-| 12 | `orgos operator sync-policy --emit all` | ✅ | 2026-08-24 実行済み |
+| 10 | `npm test`（orchestration 関連）通過 | ✅ | **40 件** vitest（+ HTTP 6 · payload 契約）· E2E 4（失敗→待機 retry 含む · 2026-08-24 再検証） |
+| 11 | `orgos validate`（mal）通過 | ✅ | exit 0 · 21 warnings（2026-08-24 本ラウンド再実行） |
+| 12 | `orgos operator sync-policy --emit all` | ✅ | 2026-08-24 初回実行済み · **本ラウンド未再実行**（ミラー大量再生成を避ける） |
 | 13 | `runDispatch` 統合テスト（wave · retry · max_attempts） | ✅ | `tests/orchestration-dispatch.test.ts` |
-| 14 | `npm run check` 全テナント通過 | ⚠️ | demo 等テナントデータ — 別途確認 |
+| 14 | `npm run check` 全テナント通過 | ⚠️ | **未再確認** — demo / 他テナントデータは本 uplift の範囲外。オーケストレーション単体 + `orgos validate`（mal）を正とする |
 | 15 | readiness orchestration 軸の formalize | ✅ | `agent-readiness.ts` · executive_steward **100%** |
 | 16 | `orchestrate plan --write --depends` | ✅ | 依存 edge 永続化 · `applyDependsToWorkOrders` |
 | 17 | 親 IMP 自動 complete（全 child completed） | ✅ | `syncParentPlanStatus` |
@@ -91,7 +91,7 @@ P0 で **ADR 0044** として固定済み。
 | 20 | Run Board API 骨格 | ✅ | `GET /chat/v1/orchestration/runs` · SSE stream |
 | 21 | CLI smoke テスト | ✅ | `tests/orchestrate-cli.smoke.test.ts` |
 
-**P0 サマリ:** オーケストレーション必須 **19/19 達成**（#14 は demo テナント · repo 横断）。
+**P0 サマリ:** チェック 21 項目のうち **20/21 達成**（#14 は全テナント `check` · 本 uplift では未再確認）。
 
 ---
 
@@ -147,8 +147,11 @@ wave は **保存しない**（`depends_on` から毎回導出）。
 
 - ✅ `/chat/v1/orchestration/runs` · SSE（API 骨格）
 - ✅ Steward Chat `/?runs=1` · `OrchestrationRunsPage`（一覧 + ノード表 + SSE）
-- ✅ E2E — `e2e/steward-chat.runboard.spec.ts`（`playwright.steward-chat.config.ts`）
-- ⬜ Agent Inbox パネル接続 · retry/cancel 操作 UI
+- ✅ E2E — `e2e/steward-chat.runboard.spec.ts`（サブナビ · deep link · シード pending「待機」· **failed retry 失敗→待機** · 4 件 green）
+- ✅ retry / cancel 操作 UI — `retryableCount` / `cancellableCount` で可能時のみ表示 · confirm「待機に戻します」
+- ✅ 完了済み root（`GET ?include=completed` · 「完了済み」セクション）
+- ✅ Steward Inbox は `/steward/` リンクのみ（フル Inbox パネルは未接続）
+- ✅ POST エラー — not found → 404 · その他 → 400 · 一覧は queue 例外を 500 で返す（空配列に握りつぶさない）
 
 ---
 
@@ -171,9 +174,10 @@ wave は **保存しない**（`depends_on` から毎回導出）。
 - 孤児 snapshot GC（放置 119 ディレクトリを実測で確認 → 自動回収）
 - owner marker の atomic 書込 + 旧形式互換（並行する旧コード実行を誤って破棄しない）
 - 他 run 検出時に `beforeAll` で警告を出力
+- lock 判定を `tests/helpers/fixture-restore-lock.ts` に切り出し、単体テストで固定
+- `vitest.config.ts` の `hookTimeout` を **120s**（lock 既定 90s / `ORGOS_TEST_LOCK_TIMEOUT_MS` より上）
 
-**既知ギャップ:** `tests/test-registry.yaml` は worktree 全体が未コミットのため disk と乖離（disk 424 / registry 440）。
-本オーケストレーション分の 6 ファイルは登録済み。tree 全体のコミット時に `npm run test:registry:sync` が必要。
+**test-registry:** オーケストレーション追加分（`steward-chat-orchestration-http.test.ts` · `fixture-restore-lock.test.ts`）を登録。worktree 全体の未コミットテストがある場合は tree コミット時に `npm run test:registry:sync`。
 
 ### P3 — Observability / cost
 

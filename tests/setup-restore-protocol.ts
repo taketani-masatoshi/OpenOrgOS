@@ -13,6 +13,12 @@ import {
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { threadId } from "node:worker_threads";
+import {
+  isLockAbandoned,
+  parseLockOwnerText,
+  shouldPruneSnapshotDir,
+  type FixtureLockOwner,
+} from "./helpers/fixture-restore-lock.js";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
@@ -64,12 +70,6 @@ const OWNER_STALE_MS = 120_000;
 
 let restoreLockHeld = false;
 
-interface LockOwner {
-  token: string;
-  pid: number;
-  startedAt: number;
-}
-
 function processExists(pid: number): boolean {
   try {
     process.kill(pid, 0);
@@ -79,24 +79,14 @@ function processExists(pid: number): boolean {
   }
 }
 
-function readLockOwner(): LockOwner | null {
+function readLockOwner(): FixtureLockOwner | null {
   let text: string;
   try {
     text = readFileSync(OWNER_MARKER, "utf-8");
   } catch {
     return null;
   }
-  try {
-    const parsed = JSON.parse(text) as Partial<LockOwner>;
-    if (typeof parsed.token !== "string" || typeof parsed.pid !== "number") return null;
-    return { token: parsed.token, pid: parsed.pid, startedAt: Number(parsed.startedAt) || 0 };
-  } catch {
-    // Legacy "<pid>\n<startedAt>" marker — a concurrent run may still use the previous format.
-    const [pidRaw, startedRaw] = text.trim().split(/\s+/);
-    const pid = Number(pidRaw);
-    if (!Number.isInteger(pid) || pid <= 0) return null;
-    return { token: `legacy-${pid}`, pid, startedAt: Number(startedRaw) || 0 };
-  }
+  return parseLockOwnerText(text);
 }
 
 /**
@@ -104,7 +94,7 @@ function readLockOwner(): LockOwner | null {
  * Returns false when a concurrent waiter broke the lock dir mid-publish.
  */
 function writeLockOwner(): boolean {
-  const owner: LockOwner = { token: WORKER_TOKEN, pid: process.pid, startedAt: Date.now() };
+  const owner: FixtureLockOwner = { token: WORKER_TOKEN, pid: process.pid, startedAt: Date.now() };
   const tmp = `${OWNER_MARKER}.${WORKER_TOKEN}.tmp`;
   try {
     writeFileSync(tmp, JSON.stringify(owner), "utf-8");
@@ -129,7 +119,7 @@ function acquireFixtureRestoreLock(): void {
   const startedWaiting = Date.now();
   const deadline = startedWaiting + LOCK_TIMEOUT_MS;
   let markerMissingSince = 0;
-  let lastOwner: LockOwner | null = null;
+  let lastOwner: FixtureLockOwner | null = null;
 
   while (Date.now() < deadline) {
     try {
@@ -152,10 +142,11 @@ function acquireFixtureRestoreLock(): void {
     } else {
       markerMissingSince = 0;
       lastOwner = owner;
-      const abandoned =
-        owner.token === WORKER_TOKEN ||
-        !processExists(owner.pid) ||
-        Date.now() - owner.startedAt > OWNER_STALE_MS;
+      const abandoned = isLockAbandoned(owner, {
+        workerToken: WORKER_TOKEN,
+        staleMs: OWNER_STALE_MS,
+        processExists,
+      });
       if (abandoned) {
         restoreLockHeld = false;
         breakLock();
@@ -190,13 +181,18 @@ function pruneOrphanSnapshots(): number[] {
   if (!existsSync(SNAPSHOT_PARENT)) return [];
   const live = new Set<number>();
   for (const entry of readdirSync(SNAPSHOT_PARENT, { withFileTypes: true })) {
-    if (!entry.isDirectory() || entry.name === WORKER_TOKEN) continue;
-    const pid = Number(entry.name.split("-")[0]);
-    if (Number.isInteger(pid) && pid > 0 && pid !== process.pid && processExists(pid)) {
-      live.add(pid);
+    if (!entry.isDirectory()) continue;
+    const action = shouldPruneSnapshotDir(entry.name, {
+      workerToken: WORKER_TOKEN,
+      selfPid: process.pid,
+      processExists,
+    });
+    if (action === "keep-live") {
+      const pid = Number(entry.name.split("-")[0]);
+      if (Number.isInteger(pid) && pid > 0) live.add(pid);
       continue;
     }
-    if (Number.isInteger(pid) && pid > 0 && pid === process.pid) continue;
+    if (action === "keep-self") continue;
     rmSync(join(SNAPSHOT_PARENT, entry.name), { recursive: true, force: true });
   }
   return [...live];
@@ -275,6 +271,21 @@ function restorePreservedPaths(items: Array<{ path: string; backup: string }>): 
   }
 }
 
+/** Overlay after org restore — keeps uncommitted org-chart.yaml available in tests. */
+const ORG_CHART_FIXTURE_ROOT = join(ROOT_DIR, "tests", "fixtures", "org-charts");
+
+function overlayOrgChartFixtures(): void {
+  if (!existsSync(ORG_CHART_FIXTURE_ROOT)) return;
+  for (const tenantId of readdirSync(ORG_CHART_FIXTURE_ROOT, { withFileTypes: true })) {
+    if (!tenantId.isDirectory() || tenantId.name.startsWith(".")) continue;
+    const src = join(ORG_CHART_FIXTURE_ROOT, tenantId.name, "org-chart.yaml");
+    if (!existsSync(src)) continue;
+    const dest = join(ROOT_DIR, "tenants", tenantId.name, "data", "org", "org-chart.yaml");
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(src, dest, { force: true });
+  }
+}
+
 function overlayTenantRosterFixtures(): void {
   if (!existsSync(TENANT_ROSTER_FIXTURE_ROOT)) return;
   for (const tenantId of readdirSync(TENANT_ROSTER_FIXTURE_ROOT, { withFileTypes: true })) {
@@ -315,6 +326,7 @@ function restoreCommittedTenantFixtures(): void {
   }
   restorePreservedPaths(runtimePreserved);
   overlayTenantRosterFixtures();
+  overlayOrgChartFixtures();
 }
 
 function cleanGeneratedAgentMissions(): void {

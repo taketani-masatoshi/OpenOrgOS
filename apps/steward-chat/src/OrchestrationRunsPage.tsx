@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  cancelOrchestrationRun,
   fetchOrchestrationRun,
   fetchOrchestrationRuns,
+  retryOrchestrationRun,
   type OrchestrationRunPayload,
 } from "./api";
 import "./orchestration-runs.css";
@@ -26,16 +28,19 @@ function statusTone(status: string): string {
 
 export function OrchestrationRunsPage() {
   const [roots, setRoots] = useState<string[]>([]);
+  const [completedRoots, setCompletedRoots] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [payload, setPayload] = useState<OrchestrationRunPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [streaming, setStreaming] = useState(true);
+  const [streaming, setStreaming] = useState(false);
+  const [busy, setBusy] = useState<"retry" | "cancel" | null>(null);
 
   const loadRoots = useCallback(async () => {
-    const list = await fetchOrchestrationRuns();
+    const list = await fetchOrchestrationRuns({ includeCompleted: true });
     setRoots(list.active_roots);
-    setSelectedId((prev) => prev ?? list.active_roots[0] ?? null);
+    setCompletedRoots(list.completed_roots ?? []);
+    setSelectedId((prev) => prev ?? list.active_roots[0] ?? list.completed_roots?.[0] ?? null);
   }, []);
 
   const loadDetail = useCallback(async (id: string) => {
@@ -118,13 +123,34 @@ export function OrchestrationRunsPage() {
     };
   }, [selectedId, loadDetail]);
 
+  async function act(kind: "retry" | "cancel") {
+    if (!selectedId || busy) return;
+    const label = kind === "retry" ? "失敗ノードを待機に戻します" : "未実行ノードを停止します";
+    if (!window.confirm(`${selectedId}: ${label}。よろしいですか？`)) return;
+    setBusy(kind);
+    try {
+      const next =
+        kind === "retry"
+          ? await retryOrchestrationRun(selectedId)
+          : await cancelOrchestrationRun(selectedId);
+      setPayload(next);
+      setError(null);
+      await loadRoots();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <main className="workspace orchestration-runs">
       <div className="page-heading">
         <div>
           <h1 className="ops-page-title">Run Board</h1>
           <p className="ops-page-lead">
-            Work Order DAG · AIA 実行状況（{streaming ? "5 秒 SSE 更新" : "5 秒ポーリング更新"}）
+            Work Order DAG · AIA 実行状況（
+            {streaming ? "5 秒 SSE 更新" : "5 秒ポーリング更新"}）
           </p>
         </div>
       </div>
@@ -156,6 +182,28 @@ export function OrchestrationRunsPage() {
         )}
       </section>
 
+      {completedRoots.length > 0 && (
+        <section className="outlook-panel">
+          <h2 className="section-title">完了済み</h2>
+          <div className="orchestration-root-list">
+            {completedRoots.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={
+                  selectedId === id
+                    ? "orchestration-root-chip is-active"
+                    : "orchestration-root-chip"
+                }
+                onClick={() => setSelectedId(id)}
+              >
+                {id}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {payload && (
         <>
           <section className="outlook-panel">
@@ -182,6 +230,31 @@ export function OrchestrationRunsPage() {
               AIA {payload.aia.tier} · running {payload.aia.running} / max{" "}
               {payload.aia.max_concurrent} · queued {payload.aia.queued}
             </p>
+            <div className="orchestration-actions">
+              {payload.retryableCount > 0 && (
+                <button
+                  type="button"
+                  className="orchestration-action"
+                  disabled={busy !== null}
+                  onClick={() => void act("retry")}
+                >
+                  {busy === "retry" ? "再試行中…" : "失敗を再試行"}
+                </button>
+              )}
+              {payload.cancellableCount > 0 && (
+                <button
+                  type="button"
+                  className="orchestration-action"
+                  disabled={busy !== null}
+                  onClick={() => void act("cancel")}
+                >
+                  {busy === "cancel" ? "停止中…" : "未実行を停止"}
+                </button>
+              )}
+              <a className="orchestration-inbox-link" href="/steward/">
+                Steward チャットで開く
+              </a>
+            </div>
           </section>
 
           <section className="outlook-panel">

@@ -1,7 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
-import { buildOrchestrationStatusPayload } from "../../orchestration/orchestrate-actions.js";
+import {
+  buildOrchestrationStatusPayload,
+  cancelPendingWorkOrders,
+  retryFailedWorkOrders,
+} from "../../orchestration/orchestrate-actions.js";
 import { listHandoffs } from "../../routing.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
@@ -14,25 +18,30 @@ function parseQuery(url: string | undefined): URLSearchParams {
   return new URLSearchParams(q);
 }
 
-/** Top-level work orders — DAG parents and standalone single-node runs alike. */
-function listActivePlanRoots(): string[] {
-  try {
-    const roots = listHandoffs()
-      .filter(
-        (h) => h.task_type === "implement" && !h.parent_id && h.status !== "completed",
-      )
-      .map((h) => h.id);
-    return [...new Set(roots)].sort();
-  } catch {
-    return [];
-  }
+function orchestrationErrorStatus(err: unknown): number {
+  const message = err instanceof Error ? err.message : String(err);
+  return /not found/i.test(message) ? 404 : 400;
+}
+
+function listPlanRoots(includeCompleted: boolean): {
+  active_roots: string[];
+  completed_roots: string[];
+} {
+  const implement = listHandoffs().filter((h) => h.task_type === "implement" && !h.parent_id);
+  const active_roots = [...new Set(implement.filter((h) => h.status !== "completed").map((h) => h.id))].sort();
+  const completed_roots = includeCompleted
+    ? [...new Set(implement.filter((h) => h.status === "completed").map((h) => h.id))].sort()
+    : [];
+  return { active_roots, completed_roots };
 }
 
 /**
- * Run Board API — P2 骨格
- * GET /chat/v1/orchestration/runs?id=<IMP-...> — single plan payload
- * GET /chat/v1/orchestration/runs — active parent IMP ids
- * GET /chat/v1/orchestration/runs/stream?id=<IMP-...> — SSE status snapshots
+ * Run Board API
+ * GET  /chat/v1/orchestration/runs[?include=completed]
+ * GET  /chat/v1/orchestration/runs?id=<IMP-...>
+ * GET  /chat/v1/orchestration/runs/stream?id=<IMP-...>
+ * POST /chat/v1/orchestration/runs/retry?id=<IMP-...>   (chat:ask)
+ * POST /chat/v1/orchestration/runs/cancel?id=<IMP-...>  (chat:ask)
  */
 export async function handleOrchestrationApi(
   req: IncomingMessage,
@@ -42,12 +51,45 @@ export async function handleOrchestrationApi(
   user: WireConsoleUser,
 ): Promise<boolean> {
   if (!pathname.startsWith("/chat/v1/orchestration/runs")) return false;
-  if (!requireChatPermission(user, "chat:read", res)) return true;
 
   const query = parseQuery(req.url);
+  const id = query.get("id")?.trim();
+
+  if (pathname === "/chat/v1/orchestration/runs/retry" && method === "POST") {
+    if (!requireChatPermission(user, "chat:ask", res)) return true;
+    if (!id) {
+      json(res, 400, { ok: false, error: "id query required" });
+      return true;
+    }
+    try {
+      const retried = retryFailedWorkOrders(id);
+      json(res, 200, { ok: true, retried, ...buildOrchestrationStatusPayload(id) });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      json(res, orchestrationErrorStatus(err), { ok: false, error: message });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/orchestration/runs/cancel" && method === "POST") {
+    if (!requireChatPermission(user, "chat:ask", res)) return true;
+    if (!id) {
+      json(res, 400, { ok: false, error: "id query required" });
+      return true;
+    }
+    try {
+      const cancelled = cancelPendingWorkOrders(id);
+      json(res, 200, { ok: true, cancelled, ...buildOrchestrationStatusPayload(id) });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      json(res, orchestrationErrorStatus(err), { ok: false, error: message });
+    }
+    return true;
+  }
+
+  if (!requireChatPermission(user, "chat:read", res)) return true;
 
   if (pathname === "/chat/v1/orchestration/runs/stream" && method === "GET") {
-    const id = query.get("id")?.trim();
     if (!id) {
       json(res, 400, { ok: false, error: "id query required" });
       return true;
@@ -76,7 +118,6 @@ export async function handleOrchestrationApi(
   }
 
   if (pathname === "/chat/v1/orchestration/runs" && method === "GET") {
-    const id = query.get("id")?.trim();
     if (id) {
       try {
         json(res, 200, { ok: true, ...buildOrchestrationStatusPayload(id) });
@@ -87,8 +128,19 @@ export async function handleOrchestrationApi(
       return true;
     }
 
-    const roots = listActivePlanRoots();
-    json(res, 200, { ok: true, active_roots: roots, count: roots.length });
+    const includeCompleted = query.get("include") === "completed";
+    try {
+      const { active_roots, completed_roots } = listPlanRoots(includeCompleted);
+      json(res, 200, {
+        ok: true,
+        active_roots,
+        completed_roots,
+        count: active_roots.length,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      json(res, 500, { ok: false, error: message });
+    }
     return true;
   }
 

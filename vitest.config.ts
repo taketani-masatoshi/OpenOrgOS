@@ -13,8 +13,9 @@ export default defineConfig({
     // cross-file races on those shared JSONL/work-order files so CI is reliable.
     fileParallelism: false,
     // setup-restore-protocol serializes fixture restores across concurrent
-    // Vitest processes and caps lock waits at 30 seconds.
-    hookTimeout: 40_000,
+    // Vitest processes. Lock wait defaults to 90s (ORGOS_TEST_LOCK_TIMEOUT_MS);
+    // hookTimeout must stay above that so beforeAll is not killed first.
+    hookTimeout: 120_000,
     testTimeout: 60_000,
   },
 });
