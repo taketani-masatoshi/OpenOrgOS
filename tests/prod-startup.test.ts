@@ -25,6 +25,9 @@ describe("prod startup", () => {
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.WIRE_CONSOLE_AUTH = "prod";
     process.env.ORGOS_MCP_TOKEN = "test-mcp-token-for-prod-startup";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "127.0.0.1";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "http://127.0.0.1:9470";
+    delete process.env.ORGOS_SETTLEMENT_STEPUP;
     delete process.env.WIRE_CONSOLE_DEV_PASSKEY;
     delete process.env.ORGOS_SESSION_PERSIST;
     delete process.env.ORGOS_LLM_MOCK;
