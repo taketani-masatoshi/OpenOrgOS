@@ -1,7 +1,7 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { sendWebhook } from "./webhook.js";
-import { currentDate } from "./utils.js";
+import { currentDate, writeTrackedFile } from "./utils.js";
 import { routingQueueDir } from "./routing.js";
 import { getTenantId } from "./tenant.js";
 import { buildHandoff, writeHandoffFiles } from "./routing.js";
@@ -74,7 +74,7 @@ export function writeSecretaryConsultFile(
   const consultPath = join(dir, filename);
 
   if (!opts?.dryRun) {
-    writeFileSync(consultPath, markdown + "\n", "utf-8");
+    writeTrackedFile(consultPath, `${markdown}\n`);
   }
 
   return { markdown, consultPath, slug };

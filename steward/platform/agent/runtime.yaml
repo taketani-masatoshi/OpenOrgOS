@@ -12,6 +12,8 @@ fallback_runtime: manifest
 #   ORGOS_LLM_TELEMETRY=1       — data/.orgos/llm-telemetry.jsonl
 #   ORGOS_LLM_PRICE_INPUT/OUTPUT — USD per 1M tokens (cost estimate)
 
+# cwd in YAML is {tenant_root} for profile_integrity hash stability; runShellDispatch
+# overwrites cwd to data/scratch/aia-runs/{run_id} when ORGOS_FS_GUARD=enforce.
 shell:
   command:
     - echo

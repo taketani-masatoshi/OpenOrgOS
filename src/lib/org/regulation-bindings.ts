@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import YAML from "yaml";
 import {
@@ -20,6 +20,7 @@ import {
   hashYamlFile,
   parseYamlFile,
 } from "./content-fingerprint.js";
+import { writeYamlFile } from "../utils.js";
 
 let cachedTenant: string | undefined;
 let cached: RegulationBindingsManifest | undefined;
@@ -61,7 +62,7 @@ export function saveRegulationBindings(
     return path;
   }
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, YAML.stringify(parsed), "utf-8");
+  writeYamlFile(path, parsed);
   cachedTenant = getTenantId();
   cached = parsed;
   return path;

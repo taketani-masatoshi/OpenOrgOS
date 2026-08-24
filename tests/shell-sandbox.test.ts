@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
 import { tenantDispatchRoot, assertDispatchCwdWithinTenant } from "../src/lib/org-boundary.js";
 import { buildShellCommand } from "../src/lib/operator-runtime/config.js";
-import { assertResolvedShellCommandSafe } from "../src/lib/operator-runtime/shell.js";
+import { assertResolvedShellCommandSafe, assertShellCwdIsRunWorkspace, assertShellCommandAllowlist, assertShellCommandAvoidsCanonicalWrites } from "../src/lib/operator-runtime/shell.js";
 import type { ResolvedShellCommand } from "../src/lib/operator-runtime/config.js";
 import { setCliOperatorContext } from "../src/lib/console-auth/cli-operator.js";
 import { isProdSecurityMode } from "../src/lib/console-auth/operator-rbac.js";
@@ -22,7 +22,7 @@ describe("shell sandbox", () => {
     setCliOperatorContext(undefined);
   });
 
-  it("uses tenant root for shell cwd placeholder", () => {
+  it("uses the provided workspace placeholder for shell cwd", () => {
     const root = tenantDispatchRoot();
     const resolved = buildShellCommand({
       promptPath: "/tmp/prompt.md",
@@ -31,6 +31,41 @@ describe("shell sandbox", () => {
       tenantRoot: root,
     });
     expect(resolved?.cwd).toBe(root);
+  });
+
+  it("rejects aia-runs-missing cwd when FS-guard is enforced", () => {
+    process.env.ORGOS_FS_GUARD = "enforce";
+    expect(() => assertShellCwdIsRunWorkspace(tenantDispatchRoot())).toThrow(/data\/scratch\/aia-runs/);
+  });
+
+  it("rejects docs/scratch/aia-runs cwd when FS-guard is enforced", () => {
+    process.env.ORGOS_FS_GUARD = "enforce";
+    expect(() =>
+      assertShellCwdIsRunWorkspace(`${tenantDispatchRoot()}/docs/scratch/aia-runs/RUN-1`)
+    ).toThrow(/data\/scratch\/aia-runs/);
+  });
+
+  it("allows scratch/aia-runs cwd when FS-guard is enforced", () => {
+    process.env.ORGOS_FS_GUARD = "enforce";
+    expect(() =>
+      assertShellCwdIsRunWorkspace(`${tenantDispatchRoot()}/data/scratch/aia-runs/RUN-1`)
+    ).not.toThrow();
+  });
+
+  it("blocks shell redirects onto canonical data paths", () => {
+    process.env.ORGOS_FS_GUARD = "enforce";
+    expect(() =>
+      assertShellCommandAvoidsCanonicalWrites(["bash", "-lc", "echo x > data/finance/cash.yaml"])
+    ).toThrow(/canonical/);
+    expect(() =>
+      assertShellCommandAvoidsCanonicalWrites([
+        "orgos",
+        "guard",
+        "apply",
+        "--path",
+        "data/finance/cash.yaml",
+      ])
+    ).not.toThrow();
   });
 
   it("rejects cwd outside tenant", () => {
@@ -57,5 +92,14 @@ describe("shell sandbox", () => {
     };
     expect(() => assertResolvedShellCommandSafe(resolved)).toThrow(/ORGOS_SHELL_AUTO_YES/);
     expect(isProdSecurityMode()).toBe(true);
+  });
+
+  it("rejects interpreter binaries outside runtime allowlist when enforced", () => {
+    process.env.ORGOS_FS_GUARD = "enforce";
+    expect(() => assertShellCommandAllowlist(["python", "-c", "open('data/x','w')"])).toThrow(
+      /allowlist/
+    );
+    expect(() => assertShellCommandAllowlist(["echo", "ok"])).not.toThrow();
+    expect(() => assertShellCommandAllowlist(["aider", "--message-file", "/tmp/x"])).not.toThrow();
   });
 });

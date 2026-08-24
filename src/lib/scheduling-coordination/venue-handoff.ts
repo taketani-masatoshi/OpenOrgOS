@@ -1,7 +1,7 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
-import { getDocsDir } from "../utils.js";
+import { getDocsDir, writeTrackedFile } from "../utils.js";
 
 /**
  * Venue Booking 専門 Agent 向け handoff（Secretary → Operations）。
@@ -53,6 +53,6 @@ export function writeVenueBookingHandoff(caseRow: SchedulingCase): string {
     `**生成:** ${new Date().toISOString()}`,
     "",
   ].join("\n");
-  writeFileSync(path, body, "utf-8");
+  writeTrackedFile(path, body);
   return path;
 }

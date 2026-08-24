@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import YAML from "yaml";
 import {
@@ -8,6 +8,7 @@ import {
 } from "../../../schemas/org/access-grants.js";
 import type { OperatorPermission } from "../../../schemas/org/operator.js";
 import { getTenantId, tenantDataPath } from "../tenant.js";
+import { writeYamlFile } from "../utils.js";
 
 let cachedTenant: string | undefined;
 let cached: AccessGrantRegistry | undefined;
@@ -39,7 +40,7 @@ export function loadAccessGrantRegistry(): AccessGrantRegistry {
 export function saveAccessGrantRegistry(registry: AccessGrantRegistry): string {
   const path = accessGrantsPath();
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, YAML.stringify(registry), "utf-8");
+  writeYamlFile(path, registry);
   cachedTenant = getTenantId();
   cached = registry;
   return path;

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   queueEventSchema,
@@ -9,7 +9,7 @@ import {
   type QueueStatusRecord,
 } from "../../schemas/queue.js";
 import { getTenantId } from "./tenant.js";
-import { getDocsReportsDir } from "./utils.js";
+import { getDocsReportsDir, writeCanonicalFile } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { auditEventTypeForQueueEvent } from "./protocol/map-internal.js";
 import { appendJsonl } from "./jsonl-store.js";
@@ -187,7 +187,7 @@ export function writeWorkOrderResult(
     notes: result.notes,
     artifacts: result.artifacts ?? [],
   };
-  writeFileSync(path, JSON.stringify(body, null, 2), "utf-8");
+  writeCanonicalFile(path, JSON.stringify(body, null, 2), "utf-8");
   return path;
 }
 

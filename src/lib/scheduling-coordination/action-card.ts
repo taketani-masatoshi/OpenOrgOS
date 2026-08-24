@@ -1,8 +1,8 @@
-import { writeFileSync } from "node:fs";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import { buildGmailComposeUrl } from "../mail-compose-url.js";
 import { correspondenceDraftMdPath } from "../correspondence/paths.js";
+import { writeTrackedFile } from "../utils.js";
 import type { SchedulingDraftKind } from "./draft-text.js";
 import { findUnanimousAcceptedSlot } from "./slots.js";
 
@@ -106,6 +106,6 @@ export function writeSchedulingActionCard(opts: {
 }): string {
   const md = buildSchedulingActionCardMarkdown(opts);
   const path = correspondenceDraftMdPath(opts.draft.draft_id);
-  writeFileSync(path, md, "utf-8");
+  writeTrackedFile(path, md);
   return path;
 }

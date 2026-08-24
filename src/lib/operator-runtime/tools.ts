@@ -19,6 +19,7 @@ import {
   resolveCommandPlan,
   saveCommandPlan,
 } from "../operator-commands/index.js";
+import { applyAgentWrite, getFsGuardAgent, runWithFsGuardAgent, runWithFsGuardAgentAsync } from "../org/fs-guard/index.js";
 
 export interface OperatorToolDefinition {
   type: "function";
@@ -37,6 +38,8 @@ export interface OperatorToolResult {
 export interface OperatorToolContext {
   operatorId?: string;
   approverId?: string;
+  /** Bound AIA identity when dispatch/skill already set FS-guard context. */
+  agentId?: string;
 }
 
 /** LLM / tool-loop must never execute final approval (operator-policy §4). */
@@ -152,6 +155,31 @@ function readOnlyTools(): OperatorToolDefinition[] {
   ];
 }
 
+function guardApplyTool(): OperatorToolDefinition {
+  return {
+    type: "function",
+    function: {
+      name: "operator_guard_apply",
+      description:
+        "Write a canonical tenant file through orgos guard (signed agent grant + required CAS). Host holds keys; do not require ORGOS_LLM_TOOLS_WRITE.",
+      parameters: {
+        type: "object",
+        properties: {
+          agent: { type: "string", description: "Agent id (e.g. finance)" },
+          path: { type: "string", description: "Logical destination (data/… or docs/…)" },
+          content: { type: "string", description: "Full file contents to write" },
+          expected_sha256: {
+            type: "string",
+            description: "Required CAS: sha256 of the current file (missing file = sha256 of empty string)",
+          },
+        },
+        required: ["agent", "path", "content", "expected_sha256"],
+        additionalProperties: false,
+      },
+    },
+  };
+}
+
 export function isOperatorToolsEnabled(opts?: { supportsTools?: boolean }): boolean {
   if (process.env.ORGOS_LLM_TOOLS === "0") return false;
   if (process.env.ORGOS_LLM_TOOLS === "1") return true;
@@ -203,6 +231,9 @@ export function listOperatorToolDefinitions(
     }
     return true;
   });
+  if (ctx == null || contextHasPermission(ctx, "agent:dispatch")) {
+    tools.push(guardApplyTool());
+  }
   return tools;
 }
 
@@ -270,7 +301,9 @@ async function execOperatorGenerateCashflow(
     };
   }
   try {
-    const result = generateJpBankCashflow(parsed);
+    const result = parsed.write
+      ? runWithFsGuardAgent("finance", () => generateJpBankCashflow(parsed))
+      : generateJpBankCashflow(parsed);
     return {
       ok: true,
       content: JSON.stringify({
@@ -317,6 +350,43 @@ async function execFactProvider(
   }
 }
 
+async function execOperatorGuardApply(
+  args: Record<string, unknown>,
+  ctx: OperatorToolContext
+): Promise<OperatorToolResult> {
+  if (ctx.operatorId && !contextHasPermission(ctx, "agent:dispatch")) {
+    return { ok: false, content: "Operator lacks agent:dispatch" };
+  }
+  const agent = String(args.agent ?? ctx.agentId ?? getFsGuardAgent() ?? "").trim();
+  const path = String(args.path ?? "").trim();
+  if (!agent || !path) {
+    return { ok: false, content: "agent and path are required" };
+  }
+  if (typeof args.content !== "string") {
+    return { ok: false, content: "content is required" };
+  }
+  if (typeof args.expected_sha256 !== "string" || !/^[a-f0-9]{64}$/.test(args.expected_sha256)) {
+    return {
+      ok: false,
+      content: "expected_sha256 is required (64 lowercase hex chars; new file = sha256 of empty string)",
+    };
+  }
+  const expected = args.expected_sha256;
+  try {
+    const result = runWithFsGuardAgent(agent, () =>
+      applyAgentWrite({
+        agentId: agent,
+        path,
+        content: args.content,
+        expectedSha256: expected,
+      })
+    );
+    return { ok: true, content: JSON.stringify({ ok: true, ...result }) };
+  } catch (err) {
+    return { ok: false, content: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 async function execOperatorListCommands(ctx: OperatorToolContext): Promise<OperatorToolResult> {
   const op = ctx.operatorId ? findOperatorById(ctx.operatorId) : undefined;
   const permissions = op ? resolveOperatorPermissions(op) : undefined;
@@ -349,31 +419,37 @@ async function execOperatorRunCommand(
         return op ? resolveOperatorPermissions(op) : undefined;
       })()
     : undefined;
-  const result = await handleChatCommandMessage({
-    message,
-    skillId: typeof args.skill_id === "string" ? args.skill_id : undefined,
-    operatorId: ctx.operatorId,
-    permissions,
-  });
-  if (!result.handled) {
-    const plan = resolveCommandPlan({ message, permissions });
-    return { ok: false, content: plan.message ?? "no command matched" };
-  }
-  if (result.plan && result.plan.status !== "ready") {
-    saveCommandPlan(result.plan);
-  }
-  return {
-    ok: result.run?.ok !== false,
-    content: JSON.stringify(
-      {
-        reply: result.reply,
-        plan: result.plan,
-        run: result.run,
-      },
-      null,
-      2
-    ),
+  const run = async (): Promise<OperatorToolResult> => {
+    const result = await handleChatCommandMessage({
+      message,
+      skillId: typeof args.skill_id === "string" ? args.skill_id : undefined,
+      operatorId: ctx.operatorId,
+      permissions,
+    });
+    if (!result.handled) {
+      const plan = resolveCommandPlan({ message, permissions });
+      return { ok: false, content: plan.message ?? "no command matched" };
+    }
+    if (result.plan && result.plan.status !== "ready") {
+      saveCommandPlan(result.plan);
+    }
+    return {
+      ok: result.run?.ok !== false,
+      content: JSON.stringify(
+        {
+          reply: result.reply,
+          plan: result.plan,
+          run: result.run,
+        },
+        null,
+        2
+      ),
+    };
   };
+  if (ctx.agentId?.trim()) {
+    return runWithFsGuardAgentAsync(ctx.agentId.trim(), run);
+  }
+  return run();
 }
 
 export async function executeOperatorTool(
@@ -399,6 +475,8 @@ export async function executeOperatorTool(
       return execOperatorListWirePending();
     case "operator_generate_cashflow":
       return execOperatorGenerateCashflow(args, ctx);
+    case "operator_guard_apply":
+      return execOperatorGuardApply(args, ctx);
     case "operator_list_commands":
       return execOperatorListCommands(ctx);
     case "operator_run_command":

@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import YAML from "yaml";
 import {
   operatorRegistrySchema,
@@ -9,6 +9,7 @@ import {
 } from "../../../schemas/org/operator.js";
 import type { OrgChartNode } from "../../../schemas/org/org-chart.js";
 import { tenantDataPath, getTenantId } from "../tenant.js";
+import { writeYamlFile } from "../utils.js";
 import { loadOrgChart } from "./org-chart.js";
 
 export const OPERATORS_REGISTRY_REL = "org/operators.yaml";
@@ -57,7 +58,7 @@ export function loadOperatorRegistry(): OperatorRegistry | undefined {
 
 export function saveOperatorRegistry(registry: OperatorRegistry): string {
   const path = operatorsRegistryPath();
-  writeFileSync(path, YAML.stringify(registry), "utf-8");
+  writeYamlFile(path, registry);
   cachedRegistryTenant = getTenantId();
   cachedRegistry = registry;
   return path;

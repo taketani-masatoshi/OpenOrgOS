@@ -89,6 +89,23 @@ function expandProfile(profile: ShellProfile, ctx: ShellCommandContext): Resolve
   };
 }
 
+/** argv[0] values allowed when FS-guard shell sandbox is enforced. */
+export function listAllowedShellBinaries(): Set<string> {
+  const cfg = loadOperatorRuntimeConfig();
+  const bins = new Set<string>();
+  const add = (command?: string[]) => {
+    const raw = command?.[0]?.trim();
+    if (!raw) return;
+    const base = raw.split(/[/\\]/).pop() ?? raw;
+    bins.add(base);
+  };
+  add(cfg.shell?.command);
+  for (const profile of Object.values(cfg.profiles ?? {})) {
+    add(profile.command);
+  }
+  return bins;
+}
+
 export function buildShellCommand(
   ctx: ShellCommandContext,
   profileName?: string
