@@ -236,8 +236,11 @@ export interface AuthConfig {
     credential_count: number;
     settlement_count?: number;
     registration_allowed?: boolean;
+    settlement_registration_allowed?: boolean;
+    additional_login_registration_allowed?: boolean;
     login_registration_requires_session?: boolean;
     login_registration_bootstrap?: boolean;
+    bootstrap_token_required?: boolean;
     approve_origin?: string;
     origin?: string;
   };
