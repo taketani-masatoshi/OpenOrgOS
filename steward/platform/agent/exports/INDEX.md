@@ -1,6 +1,6 @@
 # OrgOS Agent Export Index
 
-Generated: 2026-07-12 · Tenant: mal
+Generated: 2026-08-24 · Tenant: mal
 
 Regenerate all packs:
 
@@ -25,6 +25,7 @@ orgos operator sync-policy --emit all
 
 | id | 名称 | 定義 Path | Export pack |
 |----|------|-----------|-------------|
+| integration | 統合 | `steward/core/agents/integration_agent.md` | `exports/agents/integration.pack.md` |
 | mail_intake | メール取込 | `steward/core/agents/mail_intake_agent.md` | `exports/agents/mail_intake.pack.md` |
 | mail_outbound | メール送信 | `steward/core/agents/mail_outbound_agent.md` | `exports/agents/mail_outbound.pack.md` |
 | coo | 統括執行 | `steward/core/agents/coo_agent.md` | `exports/agents/coo.pack.md` |

@@ -1,14 +1,18 @@
 version: 1
 profiles:
   operational:
+    - accounting
     - compliance
     - contract
     - cto
     - engineering
     - executive_steward
     - finance
+    - human_resources
     - operations
     - secretary
     - security
+    - tax
   developer: []
+  task: []
 disabled: []

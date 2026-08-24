@@ -3,11 +3,28 @@ import { agentId } from "./classification.js";
 import type { AgentReadinessProfile } from "./agent-catalog.js";
 import type { ModuleAgentId } from "./modules.js";
 
-export const agentPulseCheckSchema = z.object({
-  type: z.enum(["path_exists", "file_exists", "cli_hint"]),
-  path: z.string().optional(),
-  detail: z.string().optional(),
-});
+export const agentPulseCheckSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("path_exists"),
+    path: z.string(),
+    detail: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal("file_exists"),
+    path: z.string(),
+    detail: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal("cli_hint"),
+    detail: z.string(),
+  }),
+  z.object({
+    type: z.literal("freshness"),
+    path: z.string(),
+    max_age_days: z.number().int().positive(),
+    detail: z.string().optional(),
+  }),
+]);
 
 export const agentCapabilityEntrySchema = z.object({
   id: agentId,
@@ -152,6 +169,7 @@ export const readinessExecutionReportSchema = z.object({
 });
 
 export type AgentCapabilityEntry = z.output<typeof agentCapabilityEntrySchema>;
+export type AgentPulseCheck = z.output<typeof agentPulseCheckSchema>;
 export type AgentCapabilityManifest = z.output<
   typeof agentCapabilityManifestSchema
 >;

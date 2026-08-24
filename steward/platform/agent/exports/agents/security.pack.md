@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · security
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-12 · **Tenant:** mal
+> **Generated:** 2026-08-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent security`
 
 ---
@@ -159,8 +159,11 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ```bash
 npm run orgos -- classification check
+orgos guard list
 orgos controls for-agent security
 ```
+
+Grant 発行・失効は人間（`guard:admin`）。Security は台帳の監査のみ。秘密鍵はチャットに出さない。
 
 ## 要約出力先
 

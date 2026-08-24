@@ -2,6 +2,7 @@
 // Do not edit by hand.
 export const AGENT_IDS = [
   "executive_steward",
+  "integration",
   "secretary",
   "mail_intake",
   "mail_outbound",

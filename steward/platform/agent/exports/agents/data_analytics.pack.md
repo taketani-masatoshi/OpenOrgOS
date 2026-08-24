@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · data_analytics
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-11 · **Tenant:** mal
+> **Generated:** 2026-08-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent data_analytics`
 
 ---
@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -127,22 +127,25 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 # Data & Analytics Agent
 
-**English role:** Data & Analytics · **日本語:** データ分析  
+**English role:** Data & Analytics · **日本語:** データ分析
 **優先度:** P1 · **報告:** executive_steward · **4 層:** **Agent**
 
 ---
 
 ## 役割
 
-経営分析 · レポート · KPI 深掘り（dashboard 補完）。
+経営分析 · KPI 深掘り · データ品質監視（dashboard 補完）。
+
+- **正本:** `data/analytics/metrics.yaml`（指標定義）· `kpi-targets.yaml`（FY 目標）
+- **実測:** Metric Resolver が finance / hr / compliance 等の SoT から決定論取得（コピー禁止）
 
 ## Primary Folders
 
 | パス | 権限 |
 |------|------|
+| `data/analytics/**` | Primary（定義 · 目標のみ） |
 | `docs/analytics/**` | Primary |
-| `docs/exports/**` | Primary |
-| `docs/reports/dashboard/` | Primary |
+| `docs/reports/dashboard/` | Read（要約行注入のみ） |
 
 ## 要約出力先
 
@@ -152,35 +155,35 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | 状況 | Agent |
 |------|-------|
-| 数値定義 | **finance** |
+| 数値定義 · 月次実績 SoT | **finance** |
+| 人員定義 | **human_resources** |
+| 統制ギャップ | **compliance** |
 | 判断材料提示 | **executive_steward** |
 
 ## 禁止
 
-- data/** 正データ改変
+- `data/**` 正データ改変（analytics 以外）
 - L2 生データの要約混入
-
-## 目的
-
-- 担当領域の監視 · 下書き · 要約（Primary Folder 正本）
-- pulse 後: `docs/reports/agent-summaries/data-analytics/`
-
-## 禁止事項
-
-- 人間承認ゲートの単独実行
-- 担当外 data/docs 編集 · L2/L3 出力
-
+- 実測値の metrics.yaml 転記
 
 ## 使用 Skill / CLI
 
 | 手段 | 内容 |
 |------|------|
+| `analytics_kpi_scorecard` | `orgos analytics kpi` — KPI スコアカード |
+| `analytics_metric_catalog` | `orgos analytics metrics` — 定義一覧 |
+| `analytics_data_quality` | `orgos analytics quality` — データ品質 |
+| `analytics_metrics_review` | LLM — CEO 向け叙述（CLI 結果添付） |
+| `analytics snapshot` | `orgos analytics snapshot` — 月次 MD |
 | agent_pulse | `orgos agent pulse --agent data_analytics` |
-
 
 ## CLI
 
 ```bash
+orgos analytics kpi
+orgos analytics metrics
+orgos analytics quality
+orgos analytics snapshot
 orgos agent readiness --agent data_analytics
 orgos agent pulse --agent data_analytics
 ```
@@ -188,16 +191,18 @@ orgos agent pulse --agent data_analytics
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
-
+- 引き上げ計画: [data-analytics-quality-uplift-plan.md](../../../docs/org-os/data-analytics-quality-uplift-plan.md)
+- ADR: [0046-analytics-metric-catalog-ssot.md](../../../docs/adr/0046-analytics-metric-catalog-ssot.md)
 
 
 ---
 
 ## 3. Skills（参照）
 
+- `analytics_kpi_scorecard` · cli · `steward/core/skills/analytics_kpi_scorecard.md`
+- `analytics_metric_catalog` · cli · `steward/core/skills/analytics_metric_catalog.md`
 - `analytics_metrics_review` · agent · `steward/core/skills/extension/analytics_metrics_review.md`
-- `analytics_data_quality` · agent · `steward/core/skills/extension/analytics_data_quality.md`
+- `analytics_data_quality` · cli · `steward/core/skills/analytics_data_quality.md`
 
 ---
 

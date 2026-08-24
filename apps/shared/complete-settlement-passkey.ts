@@ -42,13 +42,17 @@ export async function completeSettlementPasskey(
     allow_credentials: challenge.allow_credentials.map((c) => ({
       id: c.id,
       type: "public-key" as const,
-      transports: (c.transports as Array<"hybrid" | "internal"> | undefined) ?? [
+      transports: (c.transports as Array<"hybrid" | "internal" | "usb"> | undefined) ?? [
         "hybrid",
         "internal",
       ],
     })),
     user_verification: "required",
-    hints: challenge.hints ?? ["hybrid"],
+    hints:
+      challenge.hints ??
+      (challenge.allow_credentials.some((c) => c.transports?.includes("usb"))
+        ? (["client-device"] as const)
+        : (["hybrid"] as const)),
   });
 
   await api("/chat/v1/settlement/complete", {

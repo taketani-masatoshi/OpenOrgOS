@@ -3,7 +3,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { startWireConsoleServer } from "../src/lib/wire-console/server.js";
 import { mintTestOidcIdToken, mintTestOidcIdTokenRs256, preloadOidcJwks } from "../src/lib/wire-console/auth/oidc.js";
 import { resetOidcJwksForTests } from "../src/lib/wire-console/auth/oidc-jwks.js";
-import { mintTestWebAuthnAssertion, mintTestWebAuthnRegistration } from "../src/lib/wire-console/auth/webauthn-verify.js";
+import { mintTestWebAuthnAssertion, mintTestWebAuthnRegistration, buildTestAuthenticatorData } from "../src/lib/wire-console/auth/webauthn-verify.js";
 import {
   resetSessionsForTests,
   WIRE_CONSOLE_SESSION_COOKIE,
@@ -21,6 +21,10 @@ import {
   startWireConsoleWitnessHubs,
 } from "./helpers/wire-console-witness-fixture.js";
 import { writeWireConsoleWebAuthnSmokeFixture } from "./helpers/wire-console-webauthn-e2e-fixture.js";
+import {
+  mintPasskeyBootstrapToken,
+  resetPasskeyBootstrapStoreForTests,
+} from "../src/lib/wire-console/auth/passkey-bootstrap.js";
 
 function setupOidcProdEnv(): void {
   process.env.WIRE_CONSOLE_AUTH = "prod";
@@ -52,6 +56,7 @@ describe("wire console server", () => {
     webauthnOrigin: process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN,
     oidcJwksUrl: process.env.WIRE_CONSOLE_OIDC_JWKS_URL,
     oidcAllowHs256: process.env.WIRE_CONSOLE_OIDC_ALLOW_HS256,
+    orgosEnv: process.env.ORGOS_ENV,
     orgosCsrf: process.env.ORGOS_CSRF,
   };
 
@@ -69,6 +74,7 @@ describe("wire console server", () => {
     resetWebAuthnChallengesForTests();
     resetWebAuthnRegisterChallengesForTests();
     resetWebAuthnCredentialsForTests();
+    resetPasskeyBootstrapStoreForTests();
     resetOidcJwksForTests();
     const restore: Record<string, string | undefined> = {
       WIRE_CONSOLE_AUTH: envSnapshot.auth,
@@ -88,6 +94,7 @@ describe("wire console server", () => {
       WIRE_CONSOLE_WEBAUTHN_ORIGIN: envSnapshot.webauthnOrigin,
       WIRE_CONSOLE_OIDC_JWKS_URL: envSnapshot.oidcJwksUrl,
       WIRE_CONSOLE_OIDC_ALLOW_HS256: envSnapshot.oidcAllowHs256,
+      ORGOS_ENV: envSnapshot.orgosEnv,
       ORGOS_CSRF: envSnapshot.orgosCsrf,
     };
     for (const [key, val] of Object.entries(restore)) {
@@ -96,11 +103,18 @@ describe("wire console server", () => {
     }
   });
 
-  async function loginDevCookie(base: string, approver = "テスト承認者"): Promise<string> {
+  async function loginDevCookie(
+    base: string,
+    opts?: { operator_id?: string; approver_id?: string },
+  ): Promise<string> {
     const login = await fetch(`${base}/console/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passkey: "orgos-dev", approver_id: approver }),
+      body: JSON.stringify({
+        passkey: "orgos-dev",
+        operator_id: opts?.operator_id ?? "OP-002",
+        approver_id: opts?.approver_id ?? "Demo CEO",
+      }),
     });
     return login.headers.get("set-cookie")?.split(";")[0] ?? "";
   }
@@ -184,18 +198,47 @@ describe("wire console server", () => {
     const detailBody = (await detail.json()) as { subject: string; body_text: string };
     expect(detailBody.subject.length).toBeGreaterThan(0);
     expect(detailBody.body_text.length).toBeGreaterThan(0);
+
+    const pending = msgBody.messages.find((m) => m.folder === "pending");
+    if (pending?.id.includes(":")) {
+      const encodedId = encodeURIComponent(pending.id);
+      const encodedDetail = await fetch(
+        `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/messages/${encodedId}`,
+        { headers: { cookie } }
+      );
+      expect(encodedDetail.status).toBe(200);
+    }
+  });
+
+  it("serves settlement challenge API on wire console origin", async () => {
+    process.env.ORGOS_SETTLEMENT_STEPUP = "1";
+    process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET = "wire-console-settlement-test-secret";
+    const server = await startWireConsoleServer({ port: 0 });
+    close = server.close;
+
+    const unauth = await fetch(`${server.url}/chat/v1/settlement/challenge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ approval_id: "NOTICE-000" }),
+    });
+    expect(unauth.status).toBe(401);
+    const unauthBody = (await unauth.json()) as { error?: string };
+    expect(unauthBody.error).toBe("unauthorized");
   });
 
   it("propose and approve wire notice on isolated test tenant", async () => {
     const server = await startWireConsoleServer({ port: 0 });
     close = server.close;
-    const cookie = await loginDevCookie(server.url);
+    const proposeCookie = await loginDevCookie(server.url, {
+      operator_id: "OP-002",
+      approver_id: "秘書オペレータ",
+    });
 
     const propose = await fetch(
       `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/notices/propose`,
       {
         method: "POST",
-        headers: { cookie, "Content-Type": "application/json" },
+        headers: { cookie: proposeCookie, "Content-Type": "application/json" },
         body: JSON.stringify({
           peer_id: "PEER-001",
           transaction_type: "contract.execution.notice",
@@ -207,9 +250,17 @@ describe("wire console server", () => {
     expect(propose.status).toBe(200);
     const proposed = (await propose.json()) as { notice: { notice_id: string } };
 
+    const approveCookie = await loginDevCookie(server.url, {
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+    });
     const approve = await fetch(
       `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/notices/${proposed.notice.notice_id}/approve`,
-      { method: "POST", headers: { cookie, "Content-Type": "application/json" }, body: "{}" }
+      {
+        method: "POST",
+        headers: { cookie: approveCookie, "Content-Type": "application/json" },
+        body: "{}",
+      }
     );
     expect(approve.status).toBe(200);
     const approved = (await approve.json()) as { notice: { status: string } };
@@ -366,6 +417,8 @@ describe("wire console server", () => {
     process.env.WIRE_CONSOLE_AUTH = "prod";
     process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
     process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET = "1";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "localhost";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "http://localhost:9470";
     process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS = JSON.stringify([
       {
         credential_id: "test-cred",
@@ -384,8 +437,13 @@ describe("wire console server", () => {
     });
     const opts = (await options.json()) as { challenge: string };
     const clientDataJson = Buffer.from(
-      JSON.stringify({ type: "webauthn.get", challenge: opts.challenge })
+      JSON.stringify({
+        type: "webauthn.get",
+        challenge: opts.challenge,
+        origin: "http://localhost:9470",
+      })
     ).toString("base64url");
+    const authenticatorDataBase64 = buildTestAuthenticatorData("localhost").toString("base64url");
 
     const login = await fetch(`${server.url}/console/v1/auth/login`, {
       method: "POST",
@@ -395,6 +453,7 @@ describe("wire console server", () => {
           credential_id: "test-cred",
           challenge: opts.challenge,
           client_data_json: clientDataJson,
+          authenticator_data_base64: authenticatorDataBase64,
           signature_base64: Buffer.from("webauthn-test-secret").toString("base64url"),
         },
       }),
@@ -409,6 +468,7 @@ describe("wire console server", () => {
     process.env.WIRE_CONSOLE_AUTH = "prod";
     process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
     process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "127.0.0.1";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "https://127.0.0.1";
     delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
     delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
 
@@ -423,6 +483,7 @@ describe("wire console server", () => {
       rpId: "127.0.0.1",
       challenge: opts.challenge,
       credentialId: "crypto-cred",
+      origin: "https://127.0.0.1",
     });
     process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS = JSON.stringify([
       {
@@ -591,6 +652,170 @@ describe("wire console server", () => {
     expect(body.user.operator_id).toBe("OP-001");
   });
 
+  it("requires bootstrap token for first passkey registration in production", async () => {
+    resetWebAuthnChallengesForTests();
+    resetWebAuthnRegisterChallengesForTests();
+    resetWebAuthnCredentialsForTests();
+    resetPasskeyBootstrapStoreForTests();
+    process.env.ORGOS_ENV = "production";
+    process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET = "test-settlement-challenge-secret";
+    process.env.WIRE_CONSOLE_AUTH = "prod";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "localhost";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "http://localhost:9470";
+    setupOidcProdEnv();
+    process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
+    delete process.env.WIRE_CONSOLE_E2E_WEBAUTHN;
+    const { token } = mintPasskeyBootstrapToken({ operatorId: "OP-001" });
+
+    const server = await startWireConsoleServer({ port: 0 });
+    close = server.close;
+
+    const idToken = mintTestOidcIdToken({
+      sub: "OP-001",
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+    });
+    const login = await fetch(`${server.url}/console/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_token: idToken, approver_id: "Demo CEO" }),
+    });
+    expect(login.status).toBe(200);
+    const cookie = login.headers.get("set-cookie") ?? "";
+
+    const withoutToken = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({ operator_id: "OP-001", approver_id: "Demo CEO" }),
+    });
+    expect(withoutToken.status).toBeGreaterThanOrEqual(400);
+
+    const regOptions = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        bootstrap_token: token,
+      }),
+    });
+    expect(regOptions.status).toBe(200);
+    const regOpts = (await regOptions.json()) as { challenge: string };
+    const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+    const registration = mintTestWebAuthnRegistration({
+      rpId: "localhost",
+      origin: "http://localhost:9470",
+      challenge: regOpts.challenge,
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+      privateKey,
+    });
+    const register = await fetch(`${server.url}/console/v1/auth/webauthn/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        challenge: regOpts.challenge,
+        credential_id: registration.credential_id,
+        client_data_json: registration.client_data_json,
+        attestation_object_base64: registration.attestation_object_base64,
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        bootstrap_token: token,
+      }),
+    });
+    expect(register.status).toBe(200);
+  });
+
+  it("registers settlement passkey via console API with authenticated session", async () => {
+    resetWebAuthnChallengesForTests();
+    resetWebAuthnRegisterChallengesForTests();
+    resetWebAuthnCredentialsForTests();
+    process.env.WIRE_CONSOLE_AUTH = "prod";
+    process.env.WIRE_CONSOLE_PROD_ADAPTER = "webauthn";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET = "1";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "localhost";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "http://localhost:9470";
+    process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET = "webauthn-test-secret";
+    process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS = JSON.stringify([
+      {
+        credential_id: "login-cred-settlement",
+        public_key_spki_base64: "dummy",
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+      },
+    ]);
+
+    const server = await startWireConsoleServer({ port: 0 });
+    close = server.close;
+
+    const options = await fetch(`${server.url}/console/v1/auth/webauthn/options`, {
+      method: "POST",
+    });
+    const opts = (await options.json()) as { challenge: string };
+    const clientDataJson = Buffer.from(
+      JSON.stringify({
+        type: "webauthn.get",
+        challenge: opts.challenge,
+        origin: "http://localhost:9470",
+      }),
+    ).toString("base64url");
+    const authenticatorDataBase64 = buildTestAuthenticatorData("localhost").toString("base64url");
+    const login = await fetch(`${server.url}/console/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        webauthn: {
+          credential_id: "login-cred-settlement",
+          challenge: opts.challenge,
+          client_data_json: clientDataJson,
+          authenticator_data_base64: authenticatorDataBase64,
+          signature_base64: Buffer.from("webauthn-test-secret").toString("base64url"),
+        },
+      }),
+    });
+    expect(login.status).toBe(200);
+    const cookie = login.headers.get("set-cookie") ?? "";
+
+    const regOptions = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        purpose: "settlement",
+      }),
+    });
+    expect(regOptions.status).toBe(200);
+    const regOpts = (await regOptions.json()) as { challenge: string };
+    const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+    const registration = mintTestWebAuthnRegistration({
+      rpId: "localhost",
+      origin: "http://localhost:9470",
+      challenge: regOpts.challenge,
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+      privateKey,
+    });
+    const register = await fetch(`${server.url}/console/v1/auth/webauthn/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", cookie },
+      body: JSON.stringify({
+        challenge: regOpts.challenge,
+        credential_id: registration.credential_id,
+        client_data_json: registration.client_data_json,
+        attestation_object_base64: registration.attestation_object_base64,
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        purpose: "settlement",
+      }),
+    });
+    expect(register.status).toBe(200);
+    const body = (await register.json()) as { purpose?: string; credential_id?: string };
+    expect(body.purpose).toBe("settlement");
+    expect(body.credential_id).toBeTruthy();
+  });
+
   it("registers and verifies witness attestation via console API", async () => {
     resetWireConsoleTestTenant();
     const witness = await startWireConsoleWitnessHubs();
@@ -600,13 +825,16 @@ describe("wire console server", () => {
       witness.close();
       removeWireConsoleWitnessPoolConfig();
     };
-    const cookie = await loginDevCookie(server.url);
+    const proposeCookie = await loginDevCookie(server.url, {
+      operator_id: "OP-002",
+      approver_id: "秘書オペレータ",
+    });
 
     const propose = await fetch(
       `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/notices/propose`,
       {
         method: "POST",
-        headers: { cookie, "Content-Type": "application/json" },
+        headers: { cookie: proposeCookie, "Content-Type": "application/json" },
         body: JSON.stringify({
           peer_id: "PEER-001",
           transaction_type: "contract.execution.notice",
@@ -615,9 +843,17 @@ describe("wire console server", () => {
       }
     );
     const proposed = (await propose.json()) as { notice: { notice_id: string } };
+    const approveCookie = await loginDevCookie(server.url, {
+      operator_id: "OP-001",
+      approver_id: "Demo CEO",
+    });
     const approve = await fetch(
       `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/notices/${proposed.notice.notice_id}/approve`,
-      { method: "POST", headers: { cookie, "Content-Type": "application/json" }, body: "{}" }
+      {
+        method: "POST",
+        headers: { cookie: approveCookie, "Content-Type": "application/json" },
+        body: "{}",
+      }
     );
     const approved = (await approve.json()) as { transmission: { event_id: string } };
     const eventId = approved.transmission.event_id;
@@ -627,7 +863,7 @@ describe("wire console server", () => {
         `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/witness/register`,
         {
           method: "POST",
-          headers: { cookie, "Content-Type": "application/json" },
+          headers: { cookie: approveCookie, "Content-Type": "application/json" },
           body: JSON.stringify({ event_id: eventId, side }),
         }
       );
@@ -638,7 +874,7 @@ describe("wire console server", () => {
       `${server.url}/console/v1/tenants/${WIRE_CONSOLE_TEST_TENANT}/witness/verify`,
       {
         method: "POST",
-        headers: { cookie, "Content-Type": "application/json" },
+        headers: { cookie: approveCookie, "Content-Type": "application/json" },
         body: JSON.stringify({ event_id: eventId }),
       }
     );

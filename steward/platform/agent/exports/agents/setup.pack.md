@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · setup
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-12 · **Tenant:** mal
+> **Generated:** 2026-08-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent setup`
 
 ---
@@ -193,6 +193,7 @@ npm run orgos -- skills run tenant-integrations-setup
 
 ## 3. Skills（参照）
 
+- `integrations_status` · cli · `steward/core/skills/integrations_status.md`
 - `tenant_integrations_setup` · cli · `steward/core/skills/tenant_integrations_setup.md`
 
 ---

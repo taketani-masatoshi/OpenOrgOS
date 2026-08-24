@@ -240,7 +240,7 @@ function handleTenantGet(
   }
 
   if (section.startsWith("messages/")) {
-    const messageId = section.slice("messages/".length);
+    const messageId = decodeURIComponent(section.slice("messages/".length));
     const body = getTenantMailMessageBody(tenantId, messageId);
     if (!body) {
       json(res, 404, { ok: false, error: "message not found" });

@@ -3,11 +3,11 @@
 version: "1"
 operators:
   - operator_id: OP-001
-    display_name: Demo CEO
+    display_name: 段燕燕
     role: ceo
     status: active
-    approver_name: Demo CEO
-    key_hash: sha256:4a7c449d22a99026fac16a47621ff68792ff589f72334ea3950ce186a5615e9a
+    approver_name: 段燕燕
+    key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
   - operator_id: OP-002
     display_name: 秘書オペレータ
     role: operator

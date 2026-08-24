@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · executive_steward
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-12 · **Tenant:** mal
+> **Generated:** 2026-08-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent executive_steward`
 
 ---
@@ -189,6 +189,7 @@ npm run orgos -- scenario
 | Skill | 用途 |
 |-------|------|
 | [executive_dashboard](steward/core/skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
+| [orchestration_status](steward/core/skills/orchestration_status.md) | Work Order DAG · wave · 進捗 · retry 状況 |
 | `steward dashboard` | 上記 Skill の CLI 実装 |
 | `steward alerts` | P0 契約・許認可 |
 | `steward forecast` / `scenario` | CF 要約（Finance 要約と併用） |
@@ -201,6 +202,21 @@ npm run orgos -- scenario
 
 - **原則なし**（正データ・契約・規程は触らない）
 - 例外: `docs/reports/executive-notes/` · `docs/reports/` への **経営メモ追記**（オーナー指示時のみ）
+
+---
+
+## オーケストレーション責務（Executive Steward）
+
+**Path:** `steward/core/agents/executive_steward_agent.md` · **CLI:** `orgos orchestrate`
+
+| やってよい | やってはいけない |
+|-----------|----------------|
+| 目標を Work Order DAG に分解・起票（`depends_on`） | 正データ YAML / 契約 / 規程の編集 |
+| 部門 Agent への dispatch 統括（wave 順・retry） | 組織承認 · Wire · broker の **実行** |
+| 進捗統合（`orchestrate status` · merge · executive-notes） | L2/L3 値のチャット出力 |
+| 失敗時の retry / cancel 判断の **提案** | 人間承認の代替 |
+
+多 Agent 計画の親 Work Order は `to_agent: executive_steward` とし、実行は子 IMP を department agent に委譲する。
 
 ---
 
@@ -320,6 +336,13 @@ orgos agent pulse --agent executive_steward
 - `p0_closing` · cli · `steward/core/skills/p0_closing.md`
 - `daily_ops` · cli · `steward/core/skills/daily_ops.md`
 - `executive_dashboard` · cli · `steward/core/skills/executive_dashboard.md`
+- `tenant_config_propose` · cli · `steward/core/skills/tenant_config_propose.md`
+- `workspace_validate` · cli · `steward/core/skills/workspace_validate.md`
+- `workspace_doctor` · cli · `steward/core/skills/workspace_doctor.md`
+- `agent_pulse_summary` · cli · `steward/core/skills/agent_pulse_summary.md`
+- `escalate_work_order` · cli · `steward/core/skills/escalate_work_order.md`
+- `orchestration_status` · cli · `steward/core/skills/orchestration_status.md`
+- `org_approval_gate` · cli · `steward/core/skills/org_approval_gate.md`
 
 ---
 

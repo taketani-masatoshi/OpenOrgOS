@@ -11,7 +11,8 @@ agents:
       - docs/finance/accounting/
     route_ids:
       - accounting-ops
-    skills: []
+    skills:
+      - expense_claim_ops
     pulse_checks:
       - type: path_exists
         path: data/finance/invoices/
@@ -32,6 +33,7 @@ agents:
       - compliance-permit
     skills:
       - iso_control_review
+      - jp_permit_application_ops
       - jp_permit_gap
       - jp_permit_obligations
       - jp_trademark_checklist
@@ -54,6 +56,7 @@ agents:
       - docs/contracts/
     route_ids:
       - contract-expiry
+      - contract-register
     skills:
       - contract_expiry_check
       - contract_register
@@ -165,6 +168,8 @@ agents:
       - data-analytics
     skills:
       - analytics_data_quality
+      - analytics_kpi_scorecard
+      - analytics_metric_catalog
       - analytics_metrics_review
     pulse_checks:
       - type: path_exists
@@ -249,12 +254,28 @@ agents:
       - docs/reports/dashboard/
       - docs/reports/executive-notes/
     route_ids:
+      - agent-pulse
+      - escalate-work-order
       - executive-daily
+      - executive-dashboard
       - executive-kpi
+      - orchestration-status
+      - org-approval-gate
+      - p0-closing
+      - tenant-config-propose
+      - workspace-doctor
+      - workspace-validate
     skills:
+      - agent_pulse_summary
       - daily_ops
+      - escalate_work_order
       - executive_dashboard
+      - orchestration_status
+      - org_approval_gate
       - p0_closing
+      - tenant_config_propose
+      - workspace_doctor
+      - workspace_validate
     pulse_checks:
       - type: path_exists
         path: docs/reports/dashboard/
@@ -269,9 +290,12 @@ agents:
       - docs/plans/
       - docs/finance/
     route_ids:
+      - broker-transfer-gate
+      - cashflow-forecast
       - finance-variance
       - monthly-close
     skills:
+      - broker_transfer_gate
       - capex_planning
       - cashflow_forecast
       - jp-cashflow-schedule
@@ -329,8 +353,10 @@ agents:
     docs_paths:
       - docs/company/hr/
     route_ids:
+      - hr-headcount
       - hr-labor
     skills:
+      - hr_headcount
       - hr_labor_compliance
       - hr_policy_review
     pulse_checks:
@@ -338,6 +364,19 @@ agents:
         path: data/hr/
       - type: path_exists
         path: docs/company/hr/
+  - id: integration
+    summary_slug: integration
+    data_paths:
+      - data/org/module-messages/
+    docs_paths:
+      - docs/reports/executive-notes/
+    route_ids:
+      - integration-brief
+    skills:
+      - integration_brief
+    pulse_checks:
+      - type: path_exists
+        path: docs/reports/agent-summaries/
   - id: intellectual_property
     summary_slug: intellectual-property
     data_paths:
@@ -492,10 +531,12 @@ agents:
     docs_paths:
       - docs/io/
     route_ids:
+      - deps-check
       - inbox-routing
       - outbox-routing
       - travel-booking
     skills:
+      - deps_check
       - ecommerce_ops
       - event_operations_ops
       - membership_ops
@@ -653,6 +694,7 @@ agents:
     route_ids:
       - company-events-chain-audit
       - company-events-monthly-audit
+      - company-events-weekly-attest
     skills:
       - company_events_chain_verify
       - company_events_monthly_audit
@@ -662,6 +704,14 @@ agents:
         path: data/company-events.yaml
       - type: path_exists
         path: data/company-events-chain.jsonl
+      - type: freshness
+        path: data/company-events-attestations.jsonl
+        max_age_days: 8
+        detail: weekly attestation
+      - type: freshness
+        path: docs/reports/agent-summaries/records-audit/
+        max_age_days: 35
+        detail: monthly audit report
   - id: recruiting
     summary_slug: recruiting
     data_paths:
@@ -753,6 +803,7 @@ agents:
       - secretary-schedule
       - secretary-schedule-coordination
       - secretary-tasks
+      - wire-send-gate
     skills:
       - jp_company_incorporation
       - jp_registry_change
@@ -760,6 +811,7 @@ agents:
       - one_on_one_prep
       - schedule_coordination
       - schedule_management
+      - wire_send_gate
     pulse_checks:
       - type: path_exists
         path: data/executive/
@@ -787,8 +839,10 @@ agents:
       - data/integrations/
     docs_paths: []
     route_ids:
+      - integrations-status
       - tenant-setup
     skills:
+      - integrations_status
       - tenant_integrations_setup
     pulse_checks:
       - type: path_exists
@@ -812,7 +866,7 @@ agents:
   - id: tax
     summary_slug: tax
     data_paths:
-      - data/finance/tax/
+      - data/finance/tax-profile.yaml
     docs_paths:
       - docs/company/tax/
     route_ids:
@@ -821,7 +875,7 @@ agents:
       - tax_filing_prep
     pulse_checks:
       - type: path_exists
-        path: data/finance/tax/
+        path: data/finance/tax-profile.yaml
       - type: path_exists
         path: docs/company/tax/
   - id: treasury

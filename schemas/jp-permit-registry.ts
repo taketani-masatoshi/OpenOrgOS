@@ -248,6 +248,21 @@ export const permitFieldMapFileSchema = z.object({
   mappings: z.array(permitFieldMappingSchema).min(1),
 });
 
+export const permitHandoffEntrySchema = z.object({
+  id: z.string().min(1),
+  application_id: z.string().min(1),
+  contact_id: z.string().optional(),
+  authority_label_ja: z.string().min(1),
+  channel: z.string().min(1),
+  sent_on: isoDate.optional(),
+  notes: z.string().optional(),
+});
+
+export const permitHandoffFileSchema = z.object({
+  as_of: isoDate.optional(),
+  handoffs: z.array(permitHandoffEntrySchema).default([]),
+});
+
 export const permitApplicationDraftFileSchema = z.object({
   application_id: z.string().min(1),
   permit_type_id: z.string().min(1),
@@ -294,3 +309,4 @@ export type PermitApplicationEntry = z.output<typeof permitApplicationEntrySchem
 export type PermitFormEntry = z.output<typeof permitFormEntrySchema>;
 export type PermitFieldMapping = z.output<typeof permitFieldMappingSchema>;
 export type PermitApplicationDraftFile = z.output<typeof permitApplicationDraftFileSchema>;
+export type PermitHandoffEntry = z.output<typeof permitHandoffEntrySchema>;

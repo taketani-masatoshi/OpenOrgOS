@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · operations
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-12 · **Tenant:** mal
+> **Generated:** 2026-08-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent operations`
 
 ---
@@ -289,6 +289,7 @@ orgos agent pulse --agent operations
 
 ## 3. Skills（参照）
 
+- `deps_check` · cli · `steward/core/skills/deps_check.md`
 - `operations_records_review` · cli · `steward/core/skills/extension/operations_records_review.md`
 - `operations_travel_booking` · cli · `steward/core/skills/extension/operations_travel_booking.md`
 - `operations_records` · cli · `steward/modules/hospitality/skills/operations_records.md`

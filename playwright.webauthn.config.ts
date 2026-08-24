@@ -6,7 +6,12 @@ const webauthnBaseUrl =
 
 export default defineConfig({
   testDir: "e2e",
-  testMatch: "wire-console-webauthn.smoke.spec.ts",
+  testMatch: [
+    "wire-console-settlement-stepup.smoke.spec.ts",
+    "wire-console-webauthn.smoke.spec.ts",
+    "wire-console-settlement-passkey.smoke.spec.ts",
+    "passkey-settings-handoff.smoke.spec.ts",
+  ],
   timeout: 60_000,
   workers: 1,
   use: {
@@ -18,7 +23,7 @@ export default defineConfig({
     : {
         command: "node --import tsx scripts/run-wire-console-webauthn-smoke-server.ts",
         url: `${webauthnBaseUrl}/health`,
-        reuseExistingServer: false,
+        reuseExistingServer: !process.env.CI,
         timeout: 120_000,
       },
 });

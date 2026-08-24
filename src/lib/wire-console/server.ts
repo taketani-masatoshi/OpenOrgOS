@@ -29,6 +29,14 @@ import { preloadOidcJwks } from "./auth/oidc.js";
 import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
 import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
+import { handleSettlementApi } from "../steward-chat/routes/settlement-api.js";
+
+function isSettlementPublicPath(pathname: string, method: string): boolean {
+  if (pathname.startsWith("/chat/v1/settlement/challenge/") && method === "GET") return true;
+  if (pathname === "/chat/v1/settlement/complete" && method === "POST") return true;
+  if (method === "OPTIONS" && pathname.startsWith("/chat/v1/settlement/")) return true;
+  return false;
+}
 
 export interface WireConsoleServerOptions {
   host?: string;
@@ -219,6 +227,39 @@ async function handleApi(
 
   if (method === "GET" && pathname === "/console/v1/events/stream") {
     return handleEventsStream(req, res);
+  }
+
+  if (pathname.startsWith("/chat/v1/settlement/")) {
+    if (
+      method === "POST" &&
+      pathname === "/chat/v1/settlement/challenge" &&
+      rejectCsrfOriginMismatch(req, res)
+    ) {
+      return true;
+    }
+    if (
+      method === "POST" &&
+      pathname === "/chat/v1/settlement/challenge" &&
+      rejectRateLimitExceeded(req, res)
+    ) {
+      return true;
+    }
+    const sessionUser = getSessionUser(sessionTokenFromRequest(req));
+    if (!isSettlementPublicPath(pathname, method) && !sessionUser) {
+      json(res, 401, { ok: false, error: "unauthorized" });
+      return true;
+    }
+    if (
+      await handleSettlementApi(req, res, pathname, method, {
+        user: sessionUser ?? null,
+        readBody,
+        hostFallback: req.headers.host,
+      })
+    ) {
+      return true;
+    }
+    json(res, 404, { ok: false, error: "not found" });
+    return true;
   }
 
   if (

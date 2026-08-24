@@ -93,6 +93,7 @@ npm run orgos -- skills run monthly-close
 | 総務 | `general_affairs` |
 | 行政・公的制度 | `government_affairs` |
 | 人事・労務 | `human_resources` |
+| 統合 | `integration` |
 | 知財 | `intellectual_property` |
 | 内部監査 | `internal_audit` |
 | IR | `investor_relations` |
@@ -149,24 +150,43 @@ npm run orgos -- skills run monthly-close
 <!-- orgos:generated:routing-skill-index:start -->
 | route id | agent id | skill id |
 |----------|----------|----------|
+| agent-pulse | `executive_steward` | `agent_pulse_summary` |
+| broker-transfer-gate | `finance` | `broker_transfer_gate` |
+| cashflow-forecast | `finance` | `cashflow_forecast` |
 | company-events-chain-audit | `records_audit` | `company_events_chain_verify` |
 | company-events-monthly-audit | `records_audit` | `company_events_monthly_audit` |
+| company-events-weekly-attest | `records_audit` | `company_events_weekly_attest` |
 | compliance-controls | `compliance` | `iso_control_review` |
 | compliance-permit | `compliance` | `permit_expiry_check` |
 | contract-expiry | `contract` | `contract_expiry_check` |
+| contract-register | `contract` | `contract_register` |
+| data-analytics | `data_analytics` | `analytics_kpi_scorecard` |
+| deps-check | `operations` | `deps_check` |
+| escalate-work-order | `executive_steward` | `escalate_work_order` |
 | executive-daily | `executive_steward` | `daily_ops` |
+| executive-dashboard | `executive_steward` | `executive_dashboard` |
 | finance-variance | `finance` | `variance_analysis` |
+| hr-headcount | `human_resources` | `hr_headcount` |
+| integration-brief | `integration` | `integration_brief` |
+| integrations-status | `setup` | `integrations_status` |
 | internal-audit-scope | `internal_audit` | `internal_audit_scope` |
 | mail-intake-handoff | `mail_intake` | `mail_intake_triage` |
 | mail-outbound-correspondence | `mail_outbound` | `correspondence_draft` |
 | monthly-close | `finance` | `monthly_close` |
+| orchestration-status | `executive_steward` | `orchestration_status` |
+| org-approval-gate | `executive_steward` | `org_approval_gate` |
+| p0-closing | `executive_steward` | `p0_closing` |
 | secretary-correspondence | `mail_outbound` | `external_correspondence` |
 | secretary-one-on-one | `secretary` | `one_on_one_prep` |
 | secretary-schedule | `secretary` | `schedule_management` |
 | secretary-schedule-coordination | `secretary` | `schedule_coordination` |
 | tax-filing | `tax` | `tax_filing_prep` |
+| tenant-config-propose | `executive_steward` | `tenant_config_propose` |
 | tenant-setup | `setup` | `tenant_integrations_setup` |
 | travel-booking | `operations` | `travel_booking` |
+| wire-send-gate | `secretary` | `wire_send_gate` |
+| workspace-doctor | `executive_steward` | `workspace_doctor` |
+| workspace-validate | `executive_steward` | `workspace_validate` |
 <!-- orgos:generated:routing-skill-index:end -->
 
 <!-- orgos:generated:execution-decision-tree:start -->
@@ -195,8 +215,12 @@ Skill id / CLI が指定された
 <!-- orgos:generated:skill-registry-index:start -->
 | Skill id | runtime | agent_id | CLI | module |
 |----------|---------|----------|-----|--------|
-| `analytics_data_quality` | agent | `data_analytics` | — | core |
+| `agent_pulse_summary` | cli | `executive_steward` | `agent-pulse` | core |
+| `analytics_data_quality` | cli | `data_analytics` | `analytics-quality` | core |
+| `analytics_kpi_scorecard` | cli | `data_analytics` | `analytics-kpi` | core |
+| `analytics_metric_catalog` | cli | `data_analytics` | `analytics-metrics` | core |
 | `analytics_metrics_review` | agent | `data_analytics` | — | core |
+| `broker_transfer_gate` | cli | `finance` | `broker-transfer` | core |
 | `capex_planning` | cli | `finance` | `capex-planning` | core |
 | `cashflow_forecast` | cli | `finance` | `forecast` | core |
 | `company_events_chain_verify` | cli | `records_audit` | `company-events-chain-verify` | core |
@@ -215,6 +239,7 @@ Skill id / CLI が指定された
 | `cto_architecture_review` | agent | `cto` | — | core |
 | `cto_tech_radar` | agent | `cto` | — | core |
 | `daily_ops` | cli | `executive_steward` | `daily` | core |
+| `deps_check` | cli | `operations` | `deps-check` | core |
 | `design_asset_inventory` | agent | `design` | — | core |
 | `design_lead_review` | agent | `design_lead` | — | core |
 | `design_system_audit` | agent | `design_lead` | — | core |
@@ -224,10 +249,12 @@ Skill id / CLI が指定された
 | `ecommerce_ops` | agent | `operations` | — | ecommerce |
 | `engineering_code_review` | agent | `engineering` | — | core |
 | `engineering_standards_check` | agent | `engineering` | — | core |
+| `escalate_work_order` | cli | `executive_steward` | `escalate-run` | core |
 | `esg_metrics_review` | agent | `esg_sustainability` | — | core |
 | `esg_report_prep` | agent | `esg_sustainability` | — | core |
 | `event_operations_ops` | agent | `operations` | — | event_operations |
 | `executive_dashboard` | cli | `executive_steward` | `dashboard` | core |
+| `expense_claim_ops` | cli | `accounting` | `expense-claim` | core |
 | `external_correspondence` | agent | `mail_outbound` | — | core |
 | `ga_office_ops_check` | agent | `general_affairs` | — | core |
 | `ga_vendor_contract_review` | agent | `general_affairs` | — | core |
@@ -235,8 +262,11 @@ Skill id / CLI が指定された
 | `gov_subsidy_eligibility` | cli | `government_affairs` | `operations subsidy` | core |
 | `governance_meeting_prep` | agent | `corporate_governance` | — | core |
 | `governance_register_review` | agent | `corporate_governance` | — | core |
+| `hr_headcount` | cli | `human_resources` | `hr-headcount` | core |
 | `hr_labor_compliance` | agent | `human_resources` | — | core |
 | `hr_policy_review` | agent | `human_resources` | — | core |
+| `integration_brief` | cli | `integration` | `integration-brief` | core |
+| `integrations_status` | cli | `setup` | `integrations-status` | core |
 | `internal_audit_scope` | cli | `internal_audit` | `internal-audit-scope` | core |
 | `ip_portfolio_review` | cli | `intellectual_property` | `operations trademark` | core |
 | `ip_trademark_status` | agent | `intellectual_property` | — | core |
@@ -247,6 +277,7 @@ Skill id / CLI が指定された
 | `jp_medical_device_gvp` | cli | `medical_device_regulatory` | `operations medical-device gvp` | jp_medical_device |
 | `jp_medical_device_ledgers` | cli | `medical_device_regulatory` | `operations medical-device ledger` | jp_medical_device |
 | `jp_medical_device_qms` | cli | `medical_device_regulatory` | `operations medical-device qms` | jp_medical_device |
+| `jp_permit_application_ops` | cli | `compliance` | `operations permit-app create` | jp_permit_application |
 | `jp_permit_gap` | cli | `compliance` | `operations permit gap` | jp_permit_registry |
 | `jp_permit_obligations` | cli | `compliance` | `operations permit obligations` | jp_permit_registry |
 | `jp_registry_change` | cli | `secretary` | `operations corporate` | jp_corporate_registration |
@@ -272,6 +303,8 @@ Skill id / CLI が指定された
 | `operations_records` | cli | `operations` | `records-check` | hospitality |
 | `operations_records_review` | cli | `operations` | `document-io` | core |
 | `operations_travel_booking` | cli | `operations` | `operations travel` | core |
+| `orchestration_status` | cli | `executive_steward` | `orchestration-status` | core |
+| `org_approval_gate` | cli | `executive_steward` | `org-approval-approve` | core |
 | `p0_closing` | cli | `executive_steward` | `p0` | core |
 | `permit_expiry_check` | cli | `compliance` | `permit-expiry` | core |
 | `personal_budget_review` | agent | `personal_finance` | — | core |
@@ -316,12 +349,16 @@ Skill id / CLI が指定された
 | `support_sla_check` | agent | `customer_support` | — | core |
 | `support_ticket_triage` | agent | `customer_support` | — | core |
 | `tax_filing_prep` | cli | `tax` | `tax-filing-prep` | core |
+| `tenant_config_propose` | cli | `executive_steward` | `tenant-config-propose` | core |
 | `tenant_integrations_setup` | cli | `setup` | `tenant-integrations-setup` | core |
 | `travel_booking` | agent | `operations` | — | travel_booking |
-| `treasury_cash_position` | agent | `treasury` | — | core |
-| `treasury_liquidity_forecast` | agent | `treasury` | — | core |
+| `treasury_cash_position` | cli | `treasury` | `jp-treasury-position` | core |
+| `treasury_liquidity_forecast` | cli | `treasury` | `jp-treasury-liquidity` | core |
 | `variance_analysis` | cli | `finance` | `variance` | core |
 | `venture_capital_ops` | agent | `operations` | — | venture_capital |
+| `wire_send_gate` | cli | `secretary` | `wire-send` | core |
+| `workspace_doctor` | cli | `executive_steward` | `doctor` | core |
+| `workspace_validate` | cli | `executive_steward` | `validate` | core |
 <!-- orgos:generated:skill-registry-index:end -->
 
 <!-- orgos:generated:skill-runtime-note:start -->

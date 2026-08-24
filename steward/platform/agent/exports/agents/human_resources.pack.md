@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · human_resources
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-11 · **Tenant:** mal
+> **Generated:** 2026-08-24 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent human_resources`
 
 ---
@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -127,7 +127,7 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 # Human Resources Agent
 
-**English role:** Human Resources · **日本語:** 人事・労務  
+**English role:** Human Resources · **日本語:** 人事・労務
 **優先度:** P0 · **報告:** executive_steward · **4 層:** **Agent**
 
 ---
@@ -176,12 +176,15 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | 手段 | 内容 |
 |------|------|
+| hr_headcount | `orgos hr headcount` · `orgos hr headcount --json`（L1 在籍人数 · 氏名非出力） |
 | agent_pulse | `orgos agent pulse --agent human_resources` |
 
 
 ## CLI
 
 ```bash
+orgos hr headcount
+orgos hr headcount --json
 orgos agent readiness --agent human_resources
 orgos agent pulse --agent human_resources
 ```
@@ -189,7 +192,8 @@ orgos agent pulse --agent human_resources
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- Skill: [hr_headcount.md](../skills/hr_headcount.md)
 
 
 
@@ -197,6 +201,7 @@ orgos agent pulse --agent human_resources
 
 ## 3. Skills（参照）
 
+- `hr_headcount` · cli · `steward/core/skills/hr_headcount.md`
 - `hr_policy_review` · agent · `steward/core/skills/extension/hr_policy_review.md`
 - `hr_labor_compliance` · agent · `steward/core/skills/extension/hr_labor_compliance.md`
 

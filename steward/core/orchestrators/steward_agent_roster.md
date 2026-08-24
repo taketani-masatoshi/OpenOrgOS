@@ -78,7 +78,7 @@ Steward Agent は **正データを編集せず**、本カタログに従い **�
 | **government_affairs** | 補助金 · 認定 · 行政書類 | 補助金 · 交付金 | 申請提出 |
 | **intellectual_property** | 商標 · 特許 · ライセンス | 出願 · 侵害初動 | 出願 · 訴訟 |
 | **general_affairs** | 備品 · 庶務 · 社内通知 | オフィス · 備品 | 高額購買 |
-| **project_management** | 案件 WBS · 進捗 · クライアント報告 | 受託 · SI · 工事 | スコープ変更 |
+| **project_management** | 横断イニシアチブのポートフォリオ · RAG · マイルストーン | 案件状況 · 遅延 · 許認可/登記リンク | スコープ変更 |
 | **product_management** | PRD · ロードマップ · 優先度 | 機能要件 · SaaS | 価格 · リリース |
 | **recruiting** | JD · パイプライン（**HR 配下**） | 採用活動 | 内定 |
 | **risk_insurance** | 損保 · BCP · 更新 | 保険満了 | 契約締結 |
@@ -198,6 +198,7 @@ Growth/一般企業 Agent の要約は **Phase 2 で dashboard 自動連携**（
 | `general_affairs` | extension | operational | tenant | coo | [general_affairs_agent.md](general_affairs_agent.md) |
 | `government_affairs` | extension | operational | tenant | executive_steward | [government_affairs_agent.md](government_affairs_agent.md) |
 | `human_resources` | extension | operational | tenant | executive_steward | [human_resources_agent.md](human_resources_agent.md) |
+| `integration` | extension | operational | tenant | executive_steward | [integration_agent.md](integration_agent.md) |
 | `intellectual_property` | extension | operational | tenant | legal | [intellectual_property_agent.md](intellectual_property_agent.md) |
 | `internal_audit` | extension | operational | tenant | executive_steward | [internal_audit_agent.md](internal_audit_agent.md) |
 | `investor_relations` | extension | operational | tenant | executive_steward | [investor_relations_agent.md](investor_relations_agent.md) |
@@ -236,11 +237,11 @@ Growth/一般企業 Agent の要約は **Phase 2 で dashboard 自動連携**（
 <!-- orgos:generated:catalog-stats:start -->
 | 指標 | 値 | 正本 |
 |------|-----|------|
-| catalog agents | 50 | `steward/core/agents/registry.yaml` |
-| active agents | 49 | registry `status: active` |
-| skills (registry) | 127 | `steward/core/skills/registry.yaml` + modules |
-| runtime: cli | 48 | registry |
-| runtime: agent | 79 | registry（旧 cursor-only 含む） |
+| catalog agents | 51 | `steward/core/agents/registry.yaml` |
+| active agents | 50 | registry `status: active` |
+| skills (registry) | 144 | `steward/core/skills/registry.yaml` + modules |
+| runtime: cli | 68 | registry |
+| runtime: agent | 76 | registry（旧 cursor-only 含む） |
 | テナント有効化 | `orgos agent roster show` | `data/operator/agents.yaml` |
 | pulse 対象 | active roster のみ | `orgos agent pulse --all` |
 <!-- orgos:generated:catalog-stats:end -->

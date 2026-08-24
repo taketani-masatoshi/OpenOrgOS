@@ -67,7 +67,9 @@ export function SettlementPasskeyModal({
           webauthn_challenge: challenge.webauthn_challenge,
           rp_id: challenge.rp_id,
           allow_credentials: challenge.allow_credentials,
-          hints: ["hybrid"],
+          hints: challenge.allow_credentials.some((c) => c.transports?.includes("usb"))
+            ? ["client-device"]
+            : ["hybrid"],
         });
         if (!alive || cancelledRef.current) return;
         setStatus("done");
