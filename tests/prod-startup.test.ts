@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { startOperatorConsoleServer } from "../src/lib/operator-console/combined-server.js";
 import { STEWARD_CHAT_SPA_DIST } from "../src/lib/steward-chat/server.js";
 import { assertProdAuthReady } from "../src/lib/console-auth/prod-checklist.js";
+import { mintPasskeyBootstrapToken, resetPasskeyBootstrapStoreForTests } from "../src/lib/wire-console/auth/passkey-bootstrap.js";
+import { resetWebAuthnCredentialsForTests } from "../src/lib/wire-console/auth/webauthn-store.js";
 
 describe("prod startup", () => {
   const env = { ...process.env };
@@ -18,6 +20,8 @@ describe("prod startup", () => {
 
   afterEach(() => {
     process.env = { ...env };
+    resetPasskeyBootstrapStoreForTests();
+    resetWebAuthnCredentialsForTests();
   });
 
   function setProdEnv(): void {
@@ -25,6 +29,10 @@ describe("prod startup", () => {
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.WIRE_CONSOLE_AUTH = "prod";
     process.env.ORGOS_MCP_TOKEN = "test-mcp-token-for-prod-startup";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "127.0.0.1";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "http://127.0.0.1:9470";
+    process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET = "prod-startup-test-secret";
+    delete process.env.ORGOS_SETTLEMENT_STEPUP;
     delete process.env.WIRE_CONSOLE_DEV_PASSKEY;
     delete process.env.ORGOS_SESSION_PERSIST;
     delete process.env.ORGOS_LLM_MOCK;
@@ -34,6 +42,11 @@ describe("prod startup", () => {
     delete process.env.ORGOS_MCP_AUTH;
     delete process.env.STEWARD_CHAT_HOST;
     delete process.env.OPERATOR_CONSOLE_HOST;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP;
+    resetWebAuthnCredentialsForTests();
+    mintPasskeyBootstrapToken({ operatorId: "OP-001" });
   }
 
   it("passes prod auth checklist with required env", () => {
