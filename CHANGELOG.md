@@ -11,6 +11,9 @@ All notable changes to OrgOS Operator Layer are documented here.
 - `validatePolicyMirrors()` — `orgos validate` / `npm run generated:check` で policy ミラー鮮度検査
 - ADR 0001–0003 · `.github/pull_request_template.md`（DoD チェックリスト）
 
+### Fixed
+- **FS-guard 自己評価修正** — `runFsGuardInternal` で台帳書込を hook 免除し `operator_guard_apply` / 本番 `guard init` が監査追記で失敗しない問題を解消 · bootstrap パス（operators / access-grants）の本番 init 前免除 · canonical-write baseline を `file:symbol` 件数キーへ · Shell 走査を interpreter argv のみに限定 · doctor の Skill Agent 警告を WARN 化
+
 ### Changed
 - `openorgos-engineering-constitution.md` を索引専用に整理
 

@@ -1,7 +1,18 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { executeOperatorTool, listOperatorToolDefinitions } from "../src/lib/operator-runtime/tools.js";
-import { getWorkspaceRoot, setTenantId } from "../src/lib/tenant.js";
+import { getWorkspaceRoot, resolveTenantPath, setTenantId } from "../src/lib/tenant.js";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
+import {
+  ensureIssuer,
+  issueGrant,
+  keygenAgent,
+  setFsGuardPathsForTests,
+  sha256Hex,
+} from "../src/lib/org/fs-guard/index.js";
+import {
+  makeFsGuardPathsForTests,
+  removeFsGuardPathsForTests,
+} from "./helpers/fs-guard-store-fixture.js";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { mkdirSync } from "node:fs";
@@ -36,6 +47,88 @@ describe("operator runtime tools", () => {
     expect(names).toContain("operator_validate_status");
     expect(names).toContain("operator_list_approvals");
     expect(names).not.toContain("operator_approve");
+  });
+
+  it("exposes operator_guard_apply without ORGOS_LLM_TOOLS_WRITE", () => {
+    process.env.ORGOS_LLM_TOOLS_WRITE = "0";
+    const names = listOperatorToolDefinitions().map((t) => t.function.name);
+    expect(names).toContain("operator_guard_apply");
+    expect(names).not.toContain("operator_approve");
+
+    const operatorNames = listOperatorToolDefinitions({ operatorId: "OP-002" }).map(
+      (t) => t.function.name
+    );
+    expect(operatorNames).toContain("operator_guard_apply");
+
+    const approverNames = listOperatorToolDefinitions({ operatorId: "OP-003" }).map(
+      (t) => t.function.name
+    );
+    expect(approverNames).not.toContain("operator_guard_apply");
+  });
+
+  it("rejects operator_guard_apply without CAS expected_sha256", async () => {
+    const denied = await executeOperatorTool(
+      "operator_guard_apply",
+      JSON.stringify({
+        agent: "finance",
+        path: "docs/reports/agent-summaries/finance/note.md",
+        content: "nope\n",
+      }),
+      { operatorId: "OP-002" }
+    );
+    expect(denied.ok).toBe(false);
+    expect(denied.content).toMatch(/expected_sha256/);
+  });
+
+  it("rejects operator_guard_apply without agent:dispatch", async () => {
+    const denied = await executeOperatorTool(
+      "operator_guard_apply",
+      JSON.stringify({
+        agent: "finance",
+        path: "docs/reports/agent-summaries/finance/note.md",
+        content: "nope\n",
+      }),
+      { operatorId: "OP-003" }
+    );
+    expect(denied.ok).toBe(false);
+    expect(denied.content).toContain("agent:dispatch");
+  });
+
+  it("applies operator_guard_apply and appends fs-guard-applies audit", async () => {
+    const guardStore = makeFsGuardPathsForTests("orgos-guard-apply-tool-");
+    setFsGuardPathsForTests(guardStore);
+    ensureIssuer(guardStore);
+    keygenAgent("finance", { paths: guardStore });
+    issueGrant({
+      agentId: "finance",
+      op: "write",
+      pathPattern: "docs/reports/agent-summaries/finance/**",
+      issuedBy: "test",
+      paths: guardStore,
+    });
+    const rel = "docs/reports/agent-summaries/finance/_operator-guard-apply.md";
+    const abs = resolveTenantPath(rel);
+    const content = "via tool\n";
+    snapshots.set(abs, existsSync(abs) ? readFileSync(abs, "utf-8") : undefined);
+    try {
+      const result = await executeOperatorTool(
+        "operator_guard_apply",
+        JSON.stringify({
+          agent: "finance",
+          path: rel,
+          content,
+          expected_sha256: sha256Hex(""),
+        }),
+        { operatorId: "OP-002" }
+      );
+      expect(result.ok).toBe(true);
+      expect(existsSync(abs)).toBe(true);
+      expect(readFileSync(abs, "utf-8")).toBe(content);
+      expect(readFileSync(guardStore.appliesPath, "utf-8")).toContain(rel);
+    } finally {
+      setFsGuardPathsForTests(undefined);
+      removeFsGuardPathsForTests(guardStore);
+    }
   });
 
   it("never includes operator_approve, even when write is enabled for a CEO", () => {

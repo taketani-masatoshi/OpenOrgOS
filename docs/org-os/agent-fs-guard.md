@@ -60,8 +60,12 @@ orgos guard revoke --id AGRNT-20260824-001
 - `ORGOS_ENV=production`（または `ORGOS_PROD=1` / `NODE_ENV=production`）では **未 init を起動拒否**（prod-checklist · `orgos doctor`）。
 - 本番で `ORGOS_FS_GUARD=off` は禁止（ゲートも無効化しない）。
 - 本番 CLI の mutation（`requireCliOperator`）は未 init を拒否。例外は `guard init`。
-- **書込境界**（`wrapCanonicalWrite` · `applyAgentWrite`）でも本番未 init を拒否。platform 面（`.orgos` · `chat` · `scratch`）のみ init 前も通過。
+- **書込境界**（`wrapCanonicalWrite` · `applyAgentWrite`）でも本番未 init を拒否。platform 面（`.orgos` · `chat` · `scratch`）のみ init 前も通過。`data/org/operators.yaml` · `access-grants.yaml` は init 前の本番チェックから免除（**agent_forbidden** は維持）。
 - 非本番の未 init はオフ（既存テナントを壊さない）。init 済み、または `ORGOS_FS_GUARD=enforce` ならオン。
+
+## ランタイム内部スコープ
+
+Guard ランタイム自身が台帳へ書く処理（`saveIdentities` · grant イベント · apply 監査）は **`runFsGuardInternal`** で包み、`wrapCanonicalWrite` をスキップする（公開 API からは export しない）。これにより `operator_guard_apply` / `guard init` が対象ファイル書込後に監査追記で失敗しない。LLM / Skill から台帳を直接 `writeYamlFile` する経路は引き続き **agent_forbidden** で拒否される。
 
 ## パス三分類
 
@@ -73,7 +77,7 @@ orgos guard revoke --id AGRNT-20260824-001
 
 ## AIA の使い方
 
-1. 下書きは Run 面（`data/scratch/aia-runs/{run_id}`）に書く。Shell cwd もここ（enforce 時はコードが cwd を run workspace に上書き。`runtime.yaml` は `{tenant_root}` のまま）。リダイレクト/`cp` による正本書きも拒否。argv[0] は runtime allowlist（echo · aider · cat）のみ。
+1. 下書きは Run 面（`data/scratch/aia-runs/{run_id}`）に書く。Shell cwd もここ（enforce 時はコードが cwd を run workspace に上書き。`runtime.yaml` は `{tenant_root}` のまま）。シェル interpreter（`bash` 等）経由のリダイレクト/`cp`/`install` による正本書きは拒否。`echo` 等の非シェル argv は走査しない。argv[0] は runtime allowlist（echo · aider · cat）のみ。
 2. 正本へ入れるときは **LLM がファイルを直接保存せず** 次のいずれか:
    - ランタイムが `orgos guard apply --agent <id> --path <logical> --from <draft> --expected-sha256 <hex>` を呼ぶ
    - Steward Chat の `operator_guard_apply`（`agent:dispatch` · `expected_sha256` 必須。`ORGOS_LLM_TOOLS_WRITE` は不要）

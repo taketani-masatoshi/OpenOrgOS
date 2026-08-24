@@ -372,12 +372,13 @@ async function execOperatorGuardApply(
     };
   }
   const expected = args.expected_sha256;
+  const content: string = args.content;
   try {
     const result = runWithFsGuardAgent(agent, () =>
       applyAgentWrite({
         agentId: agent,
         path,
-        content: args.content,
+        content,
         expectedSha256: expected,
       })
     );

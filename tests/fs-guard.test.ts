@@ -21,7 +21,7 @@ import {
   sha256Hex,
   type FsGuardPaths,
 } from "../src/lib/org/fs-guard/index.js";
-import { setTenantId, tenantDataPath } from "../src/lib/tenant.js";
+import { setTenantId, resolveTenantPath, tenantDataPath } from "../src/lib/tenant.js";
 import { writeYamlFile } from "../src/lib/utils.js";
 import {
   makeFsGuardPathsForTests,
@@ -293,6 +293,74 @@ describe("fs-guard", () => {
         writeYamlFile(tenantDataPath("org", "operators.yaml"), { version: "1", operators: [] });
       })
     ).toThrow(/agent_forbidden|cannot write/);
+  });
+
+  it("blocks agent context from writing agent identities ledger", () => {
+    ensureIssuer(store);
+    keygenAgent("finance", { paths: store });
+    expect(() =>
+      runWithFsGuardAgent("finance", () => {
+        writeYamlFile(store.identitiesPath, {
+          version: "1",
+          issuer: { public_key: "x", key_id: "y" },
+          agents: {},
+        });
+      })
+    ).toThrow(/agent_forbidden|cannot write/);
+  });
+
+  it("initializes guard store in production on an empty workspace", () => {
+    process.env.ORGOS_ENV = "production";
+    delete process.env.ORGOS_FS_GUARD;
+    const empty = makeFsGuardPathsForTests("prod-init-");
+    setFsGuardPathsForTests(empty);
+    try {
+      ensureIssuer(empty);
+      keygenAgent("finance", { paths: empty });
+      expect(existsSync(empty.identitiesPath)).toBe(true);
+      expect(loadIdentities(empty)?.agents.some((a) => a.agent_id === "finance")).toBe(true);
+    } finally {
+      delete process.env.ORGOS_ENV;
+      setFsGuardPathsForTests(store);
+    }
+  });
+
+  it("records apply audit under agent context without blocking on applies jsonl", () => {
+    ensureIssuer(store);
+    keygenAgent("finance", { paths: store });
+    issueGrant({
+      agentId: "finance",
+      op: "write",
+      pathPattern: "docs/reports/agent-summaries/finance/**",
+      issuedBy: "test",
+      paths: store,
+    });
+    const rel = "docs/reports/agent-summaries/finance/_apply-audit.md";
+    const abs = resolveTenantPath(rel);
+    const content = "applied\n";
+    const beforeApplies = existsSync(store.appliesPath)
+      ? readFileSync(store.appliesPath, "utf-8")
+      : "";
+    try {
+      const result = runWithFsGuardAgent("finance", () =>
+        applyAgentWrite({
+          agentId: "finance",
+          path: rel,
+          content,
+          expectedSha256: sha256Hex(""),
+          paths: store,
+        })
+      );
+      expect(result.path).toBe(rel);
+      expect(existsSync(abs)).toBe(true);
+      expect(readFileSync(abs, "utf-8")).toBe(content);
+      expect(existsSync(store.appliesPath)).toBe(true);
+      const applies = readFileSync(store.appliesPath, "utf-8");
+      expect(applies.length).toBeGreaterThan(beforeApplies.length);
+      expect(applies).toContain(rel);
+    } finally {
+      if (existsSync(abs)) unlinkSync(abs);
+    }
   });
 
   it("fails closed when another agent holds a canonical lease", async () => {

@@ -15,6 +15,13 @@ import {
 import { getTenantId, tenantDataPath } from "../../tenant.js";
 import { appendJsonl, loadJsonl } from "../../jsonl-store.js";
 import { writeYamlFileAtomic } from "../../yaml-atomic.js";
+import { runFsGuardInternal } from "./context.js";
+
+/** Paths that must be writable in production before guard init completes. */
+const PROD_BOOTSTRAP_LOGICAL_PATHS = new Set([
+  "data/org/operators.yaml",
+  "data/org/access-grants.yaml",
+]);
 
 export interface FsGuardPaths {
   identitiesPath: string;
@@ -69,10 +76,12 @@ export function isFsGuardEnforced(paths = fsGuardPaths()): boolean {
 }
 
 /** Production CLI/server: off is forbidden and uninitialized tenants must not mutate. */
-export function assertFsGuardProdReady(opts?: { command?: string }): void {
+export function assertFsGuardProdReady(opts?: { command?: string; logicalPath?: string }): void {
   if (!isFsGuardProdMode()) return;
   const command = opts?.command?.trim() ?? "";
   if (command === "guard init" || command.startsWith("guard init ")) return;
+  const logical = opts?.logicalPath?.replace(/\\/g, "/").replace(/^\.\//, "") ?? "";
+  if (logical && PROD_BOOTSTRAP_LOGICAL_PATHS.has(logical)) return;
   if (process.env.ORGOS_FS_GUARD === "off") {
     throw new Error("ORGOS_FS_GUARD=off is forbidden in production");
   }
@@ -87,8 +96,10 @@ export function loadIdentities(paths = fsGuardPaths()): FsGuardIdentitiesFile | 
 }
 
 export function saveIdentities(file: FsGuardIdentitiesFile, paths = fsGuardPaths()): void {
-  mkdirSync(dirname(paths.identitiesPath), { recursive: true });
-  writeYamlFileAtomic(paths.identitiesPath, fsGuardIdentitiesFileSchema.parse(file));
+  runFsGuardInternal(() => {
+    mkdirSync(dirname(paths.identitiesPath), { recursive: true });
+    writeYamlFileAtomic(paths.identitiesPath, fsGuardIdentitiesFileSchema.parse(file));
+  });
 }
 
 export function loadGrantEvents(paths = fsGuardPaths()): FsGuardEvent[] {
@@ -96,16 +107,22 @@ export function loadGrantEvents(paths = fsGuardPaths()): FsGuardEvent[] {
 }
 
 export function appendGrantEvent(event: FsGuardEvent, paths = fsGuardPaths()): void {
-  appendJsonl(paths.eventsPath, fsGuardEventSchema.parse(event));
+  runFsGuardInternal(() => {
+    appendJsonl(paths.eventsPath, fsGuardEventSchema.parse(event));
+  });
 }
 
 export function appendApplyRecord(record: FsGuardApplyRecord, paths = fsGuardPaths()): void {
-  appendJsonl(paths.appliesPath, fsGuardApplyRecordSchema.parse(record));
+  runFsGuardInternal(() => {
+    appendJsonl(paths.appliesPath, fsGuardApplyRecordSchema.parse(record));
+  });
 }
 
 export function saveGrantSnapshot(file: FsGuardGrantsFile, paths = fsGuardPaths()): void {
-  mkdirSync(dirname(paths.snapshotPath), { recursive: true });
-  writeYamlFileAtomic(paths.snapshotPath, fsGuardGrantsFileSchema.parse(file));
+  runFsGuardInternal(() => {
+    mkdirSync(dirname(paths.snapshotPath), { recursive: true });
+    writeYamlFileAtomic(paths.snapshotPath, fsGuardGrantsFileSchema.parse(file));
+  });
 }
 
 export function writePrivateKeyPem(path: string, pem: string): void {

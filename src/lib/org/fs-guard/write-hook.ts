@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { getFsGuardAgent } from "./context.js";
+import { getFsGuardAgent, isFsGuardInternal } from "./context.js";
 import { FsGuardError } from "./errors.js";
 import { assertFsGuardProdReady, isFsGuardEnforced } from "./store.js";
 import { withCanonicalLease } from "./lease.js";
@@ -90,10 +90,11 @@ export function assertFsGuardCanonicalWrite(absPath: string): void {
 /** Grant check + short exclusive lease for agent canonical writes. */
 export function wrapCanonicalWrite<T>(absPath: string, fn: () => T): T {
   assertEventsWriteAuthorized(absPath);
+  if (isFsGuardInternal()) return fn();
   const logical = normalizeLogicalPath(toLogicalPath(absPath));
   const pathClass = classifyCanonicalLogicalPath(logical);
   if (pathClass === "platform") return fn();
-  assertFsGuardProdReady();
+  assertFsGuardProdReady({ logicalPath: logical });
   const agentId = getFsGuardAgent();
   if (agentId && pathClass === "agent_forbidden") {
     throw new FsGuardError(

@@ -68,6 +68,27 @@ describe("shell sandbox", () => {
     ).not.toThrow();
   });
 
+  it("skips canonical write scan for non-shell argv even when path appears in args", () => {
+    process.env.ORGOS_FS_GUARD = "enforce";
+    expect(() =>
+      assertShellCommandAvoidsCanonicalWrites([
+        "echo",
+        "see docs/quickstart.md for data/finance/cash-balance.yaml",
+      ])
+    ).not.toThrow();
+  });
+
+  it("blocks install onto canonical paths via shell interpreter", () => {
+    process.env.ORGOS_FS_GUARD = "enforce";
+    expect(() =>
+      assertShellCommandAvoidsCanonicalWrites([
+        "bash",
+        "-lc",
+        "install -m 644 /tmp/x data/finance/cash-balance.yaml",
+      ])
+    ).toThrow(/canonical/);
+  });
+
   it("rejects cwd outside tenant", () => {
     expect(() => assertDispatchCwdWithinTenant("/tmp")).toThrow(/escapes tenant/);
   });

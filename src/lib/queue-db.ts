@@ -187,7 +187,7 @@ export function writeWorkOrderResult(
     notes: result.notes,
     artifacts: result.artifacts ?? [],
   };
-  writeCanonicalFile(path, JSON.stringify(body, null, 2), "utf-8");
+  writeCanonicalFile(path, JSON.stringify(body, null, 2));
   return path;
 }
 

@@ -126,7 +126,7 @@ export function createPullRequest(options: CreatePrOptions): PrManifest {
     });
 
     const prPath = join(routingQueueDir(), `${created.id}.yaml`);
-    writeCanonicalFile(prPath, JSON.stringify(created, null, 2), "utf-8");
+    writeCanonicalFile(prPath, JSON.stringify(created, null, 2));
 
     pushQueueEvent({
       type: "pr_created",

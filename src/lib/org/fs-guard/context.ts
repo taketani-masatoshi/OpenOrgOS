@@ -5,6 +5,7 @@ interface FsGuardAgentStore {
 }
 
 const als = new AsyncLocalStorage<FsGuardAgentStore>();
+const internalAls = new AsyncLocalStorage<true>();
 
 export function getFsGuardAgent(): string | undefined {
   return als.getStore()?.agentId ?? (process.env.ORGOS_FS_GUARD_AGENT?.trim() || undefined);
@@ -34,4 +35,13 @@ export async function runWithFsGuardAgentAsync<T>(agentId: string, fn: () => Pro
       else process.env.ORGOS_FS_GUARD_AGENT = prev;
     }
   });
+}
+
+/** Guard runtime ledger writes — skips wrapCanonicalWrite policy (not exported from index). */
+export function runFsGuardInternal<T>(fn: () => T): T {
+  return internalAls.run(true, fn);
+}
+
+export function isFsGuardInternal(): boolean {
+  return internalAls.getStore() === true;
 }

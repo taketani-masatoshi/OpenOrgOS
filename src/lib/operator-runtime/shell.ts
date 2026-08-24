@@ -128,11 +128,14 @@ export function assertShellCwdIsRunWorkspace(cwd: string): void {
 
 export function assertShellCommandAvoidsCanonicalWrites(command: string[]): void {
   if (!isFsGuardEnforced()) return;
+  const shellBin = (command[0]?.split(/[/\\]/).pop() ?? "").toLowerCase();
+  const isShellInterpreter = /^(bash|sh|zsh|dash|ksh)$/.test(shellBin);
+  if (!isShellInterpreter) return;
   const joined = command.join(" ").replace(/\\/g, "/");
   if (/\borgos\b/.test(joined) && /\bguard\b/.test(joined)) return;
   const writesCanonical =
     /(?:^|[\s"'`])(?:>{1,2}|tee\b).*(?:data\/(?!scratch\/)|docs\/|records\/)/.test(joined) ||
-    /(?:\bcp\b|\bmv\b|\brm\b|\btouch\b)\s+\S.*(?:data\/(?!scratch\/)|docs\/|records\/)/.test(
+    /(?:\bcp\b|\bmv\b|\brm\b|\btouch\b|\binstall\b)\s+\S.*(?:data\/(?!scratch\/)|docs\/|records\/)/.test(
       joined
     );
   if (writesCanonical) {

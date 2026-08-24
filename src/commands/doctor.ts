@@ -16,6 +16,16 @@ import { STEWARD_CORE_DIR } from "../lib/steward-paths.js";
 import { runProdWireGate } from "../lib/protocol/prod-wire-gate.js";
 import { collectOperationalReadinessIssues } from "../lib/scheduling-coordination/operational-readiness.js";
 import { runProdAuthChecks } from "../lib/console-auth/prod-checklist.js";
+import {
+  deriveGrantsFromEvents,
+  isFsGuardInitialized,
+  isFsGuardProdMode,
+  loadGrantEvents,
+  loadIdentities,
+} from "../lib/org/fs-guard/index.js";
+import { countCanonicalWriteBaselineEntries } from "../lib/org/fs-guard/canonical-write-baseline.js";
+import { listSkillsMissingFsGuardAgent } from "../lib/org/fs-guard/skill-agent-context.js";
+
 
 export interface DoctorOptions {
   json?: boolean;
@@ -159,6 +169,77 @@ function checkFixtureRestoreLock(opts?: { repair?: boolean }): DoctorCheck {
   };
 }
 
+
+function checkFsGuard(): DoctorCheck {
+  try {
+    if (isFsGuardProdMode() && process.env.ORGOS_FS_GUARD === "off") {
+      return {
+        id: "fs_guard",
+        ok: false,
+        detail: "ORGOS_FS_GUARD=off is forbidden in production",
+      };
+    }
+    if (!isFsGuardInitialized()) {
+      const required = isFsGuardProdMode() || process.env.ORGOS_FS_GUARD === "enforce";
+      return {
+        id: "fs_guard",
+        ok: !required,
+        detail: required
+          ? "FS-guard required — orgos guard init"
+          : "FS-guard not initialized (optional) — orgos guard init",
+      };
+    }
+    const identities = loadIdentities();
+    if (!identities) {
+      return { id: "fs_guard", ok: false, detail: "identities.yaml missing after init" };
+    }
+    deriveGrantsFromEvents(loadGrantEvents(), identities.issuer.public_key);
+    return {
+      id: "fs_guard",
+      ok: true,
+      detail: `issuer ${identities.issuer.key_id} · ${identities.agents.length} agent key(s)`,
+    };
+  } catch (err) {
+    return {
+      id: "fs_guard",
+      ok: false,
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+function checkFsGuardCanonicalWriteBaseline(): DoctorCheck {
+  const count = countCanonicalWriteBaselineEntries();
+  return {
+    id: "fs_guard_canonical_write_baseline",
+    ok: true,
+    detail:
+      count === 0
+        ? "no documented unhooked direct writes"
+        : `${count} documented direct write(s) pending migration — npm run check:canonical-writes`,
+  };
+}
+
+function checkFsGuardSkillAgentContext(): DoctorCheck {
+  try {
+    const missing = listSkillsMissingFsGuardAgent();
+    return {
+      id: "fs_guard_skill_agent_context",
+      ok: true,
+      detail:
+        missing.length === 0
+          ? "CLI skills resolve FS-guard agent (agent_id or module fallback)"
+          : `WARN: CLI skills without agent context: ${missing.slice(0, 8).join(", ")}${missing.length > 8 ? "…" : ""} — assign agent_id or enable module fallback before enforce`,
+    };
+  } catch (err) {
+    return {
+      id: "fs_guard_skill_agent_context",
+      ok: false,
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 export function collectDoctorChecks(opts: DoctorOptions = {}): {
   checks: DoctorCheck[];
   nextCommand?: string;
@@ -176,6 +257,9 @@ export function collectDoctorChecks(opts: DoctorOptions = {}): {
     checkFixtureRestoreLock({ repair: opts.repair }),
     checkWireConsoleDist(),
     checkIntegrationsSetup(),
+    checkFsGuard(),
+    checkFsGuardCanonicalWriteBaseline(),
+    checkFsGuardSkillAgentContext(),
     ...runProdAuthChecks("all").map((c) => ({
       id: c.id,
       ok: c.ok,

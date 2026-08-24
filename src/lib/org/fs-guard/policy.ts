@@ -418,7 +418,7 @@ export function applyAgentWrite(opts: {
   const logical = assertSafeTargetPath(opts.path);
   const pathClass = classifyCanonicalLogicalPath(logical);
   if (pathClass !== "platform") {
-    assertFsGuardProdReady();
+    assertFsGuardProdReady({ logicalPath: logical });
   }
   if (pathClass === "agent_forbidden") {
     throw new FsGuardError(
