@@ -19,6 +19,8 @@ import {
   setWebAuthnCredentialsForTests,
 } from "../src/lib/wire-console/auth/webauthn-store.js";
 import { createWebAuthnLoginOptions } from "../src/lib/wire-console/auth/webauthn.js";
+import { resetWebAuthnChallengeStoreForTests } from "../src/lib/wire-console/auth/webauthn-challenge-store.js";
+import { buildTestAuthenticatorData } from "../src/lib/wire-console/auth/webauthn-verify.js";
 import type { OrgApprovalRequest } from "../schemas/org/approval.js";
 
 function approval(partial: Partial<OrgApprovalRequest> & { approval_id: string }): OrgApprovalRequest {
@@ -60,6 +62,7 @@ describe("settlement step-up (ADR 0037)", () => {
     process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "http://127.0.0.1:9470";
     resetSettlementChallengesForTests();
     resetWebAuthnCredentialsForTests();
+    resetWebAuthnChallengeStoreForTests();
   });
 
   afterEach(() => {
@@ -207,6 +210,8 @@ describe("settlement step-up (ADR 0037)", () => {
       "utf-8"
     ).toString("base64url");
 
+    const authDataBase64 = buildTestAuthenticatorData("127.0.0.1").toString("base64url");
+
     const verified = verifySettlementAssertionAndConsume({
       challengeId: created.challenge.challenge_id,
       token: created.challenge.token,
@@ -214,6 +219,7 @@ describe("settlement step-up (ADR 0037)", () => {
         credential_id: "settle-cred",
         challenge: created.challenge.webauthn_challenge,
         client_data_json: clientData,
+        authenticator_data_base64: authDataBase64,
         signature_base64: Buffer.from("test-settlement-secret", "utf-8").toString("base64url"),
       },
       expectedApprovalId: a.approval_id,
@@ -256,6 +262,7 @@ describe("settlement step-up (ADR 0037)", () => {
           credential_id: "login-only",
           challenge: created2.challenge.webauthn_challenge,
           client_data_json: clientData2,
+          authenticator_data_base64: authDataBase64,
           signature_base64: Buffer.from("test-settlement-secret", "utf-8").toString("base64url"),
         },
       })
@@ -291,10 +298,12 @@ describe("settlement step-up (ADR 0037)", () => {
       }),
       "utf-8"
     ).toString("base64url");
+    const authDataBase64 = buildTestAuthenticatorData("127.0.0.1").toString("base64url");
     const assertion = {
       credential_id: "settle-cred",
       challenge: created.challenge.webauthn_challenge,
       client_data_json: clientData,
+      authenticator_data_base64: authDataBase64,
       signature_base64: Buffer.from("test-settlement-secret", "utf-8").toString("base64url"),
     };
     verifySettlementAssertionAndConsume({

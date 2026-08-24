@@ -1,4 +1,4 @@
-import { ensureWebAuthnRpHost } from "@ops-shared/webauthn-page-origin";
+import { assertWebAuthnRpHost } from "@ops-shared/webauthn-page-origin";
 import {
   browserSupportsWebAuthn,
   getPasskeyWithSimpleWebAuthn,
@@ -38,9 +38,7 @@ export async function loginWithWebAuthn(
     throw new Error("WebAuthn is not available");
   }
 
-  if (!ensureWebAuthnRpHost(optsRes.rp_id)) {
-    throw new Error("webauthn origin mismatch");
-  }
+  assertWebAuthnRpHost(optsRes.rp_id);
 
   const assertion = await getPasskeyWithSimpleWebAuthn(optsRes);
 

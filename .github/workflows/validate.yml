@@ -2,8 +2,11 @@ name: validate
 
 on:
   push:
-    branches: [main, master, "cursor/**"]
+    branches: [main, master, "cursor/**", "pr/**"]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   validate:

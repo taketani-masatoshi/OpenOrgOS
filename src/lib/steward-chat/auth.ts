@@ -17,6 +17,7 @@ import {
   authorizeWebAuthnRegistration,
   createWebAuthnRegisterOptions,
   registrationErrorStatus,
+  resolveRegistrationHttpStatus,
   verifyWebAuthnRegistration,
 } from "../wire-console/auth/webauthn-register.js";
 import {
@@ -157,6 +158,7 @@ export async function handleChatAuthApi(
         operator_id?: string;
         approver_id?: string;
         purpose?: "login" | "settlement";
+        bootstrap_token?: string;
       };
       const purpose = body.purpose === "settlement" ? "settlement" : "login";
       const result = createWebAuthnRegisterOptions(
@@ -164,11 +166,12 @@ export async function handleChatAuthApi(
           operator_id: body.operator_id ?? "",
           approver_id: body.approver_id ?? "",
           purpose,
+          bootstrap_token: body.bootstrap_token,
         },
         { sessionUser }
       );
       if ("error" in result) {
-        json(registrationErrorStatus(result.error), { ok: false, error: result.error });
+        json(resolveRegistrationHttpStatus(result), { ok: false, error: result.error });
         return true;
       }
       json(200, { ok: true, ...result });
@@ -190,6 +193,7 @@ export async function handleChatAuthApi(
           operator_id: body.operator_id ?? "",
           approver_id: body.approver_id ?? "",
           purpose,
+          bootstrap_token: (body as { bootstrap_token?: string }).bootstrap_token,
         },
         sessionUser
       );

@@ -104,4 +104,26 @@ describe("prod auth checklist", () => {
     const { checks } = collectDoctorChecks();
     expect(checks.find((c) => c.id === "llm_tools_write_disabled")?.ok).toBe(false);
   });
+
+  it("fails production when settlement challenge secret missing", () => {
+    process.env.ORGOS_ENV = "production";
+    process.env.STEWARD_CHAT_AUTH = "1";
+    process.env.WIRE_CONSOLE_AUTH = "prod";
+    process.env.WIRE_CONSOLE_WEBAUTHN_RP_ID = "operator.example.com";
+    process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN = "https://operator.example.com";
+    delete process.env.ORGOS_SETTLEMENT_CHALLENGE_SECRET;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
+    delete process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_TEST_SECRET;
+    delete process.env.WIRE_CONSOLE_DEV_PASSKEY;
+    delete process.env.ORGOS_CSRF;
+    const checks = runProdAuthChecks("all");
+    expect(checks.find((c) => c.id === "settlement_challenge_secret")?.ok).toBe(false);
+  });
+
+  it("fails production when webauthn test secret enabled", () => {
+    process.env.ORGOS_ENV = "production";
+    process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET = "leak";
+    const checks = runProdAuthChecks("all");
+    expect(checks.find((c) => c.id === "webauthn_test_secret_disabled")?.ok).toBe(false);
+  });
 });

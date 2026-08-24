@@ -112,7 +112,7 @@ describe("steward chat abnormal paths", () => {
     expect(res.status).toBe(400);
     const body = (await res.json()) as { ok: boolean; error: string };
     expect(body.ok).toBe(false);
-    expect(body.error).toMatch(/not found/i);
+    expect(body.error).toMatch(/not found|ceo or approver/i);
   });
 
   it("A-06: witness register rejects missing event_id with 422", async () => {

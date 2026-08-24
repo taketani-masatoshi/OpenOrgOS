@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { OperatorShell } from "@ops-shared/OperatorShell";
 import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
+import { buildCommunityConsoleStartUrl } from "@ops-shared/community-console-handoff";
 import { PasskeyAuthPanel } from "@ops-shared/PasskeyAuthPanel";
-import { PasskeySetupCard } from "@ops-shared/PasskeySetupCard";
-import { registerSettlementPasskey } from "@ops-shared/register-settlement-passkey";
+import { PasskeySettingsPage } from "@ops-shared/PasskeySettingsPage";
+import type { PasskeyCredentialsApi } from "@ops-shared/passkey-credentials-client";
 import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
 import { api, type AuthConfig, type TenantSummary, type User } from "./api";
 import { MailWorkbench } from "./MailWorkbench";
 import { loginWithWebAuthn } from "./webauthn-login";
-import { registerWithWebAuthn } from "./webauthn-register";
+import { registerWithWebAuthn, registerSettlementWithWebAuthn } from "./webauthn-register";
+
+function isPasskeySettingsPath(): boolean {
+  return typeof window !== "undefined" && window.location.pathname.startsWith("/settings");
+}
+
+const passkeyApi: PasskeyCredentialsApi = (path, init) =>
+  api(path.replace(/^\/chat\/v1/, "/console/v1"), init);
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -22,6 +30,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [webAuthnBusy, setWebAuthnBusy] = useState(false);
+  const [bootstrapToken, setBootstrapToken] = useState("");
 
   const loadSession = useCallback(async () => {
     try {
@@ -80,7 +89,7 @@ export function App() {
     }
   }
 
-  async function registerWebAuthn() {
+  async function registerWebAuthn(opts?: { bootstrap_token?: string }) {
     setWebAuthnBusy(true);
     setError(null);
     try {
@@ -89,12 +98,16 @@ export function App() {
       await registerWithWebAuthn(api, {
         operator_id: op,
         approver_id: appr,
+        bootstrap_token: (opts?.bootstrap_token ?? bootstrapToken.trim()) || undefined,
       });
       await loadSession();
       const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
       setAuthConfig(cfg);
     } catch (err) {
-      setError(webauthnUserMessage(err));
+      setError(webauthnUserMessage(err, {
+        expectedOrigin: authConfig?.webauthn?.origin,
+        rpId: authConfig?.webauthn?.rp_id,
+      }));
     } finally {
       setWebAuthnBusy(false);
     }
@@ -107,7 +120,10 @@ export function App() {
       await loginWithWebAuthn(api, { e2e: authConfig?.webauthn_e2e_login });
       await loadSession();
     } catch (err) {
-      setError(webauthnUserMessage(err));
+      setError(webauthnUserMessage(err, {
+        expectedOrigin: authConfig?.webauthn?.origin,
+        rpId: authConfig?.webauthn?.rp_id,
+      }));
     } finally {
       setWebAuthnBusy(false);
     }
@@ -156,7 +172,6 @@ export function App() {
           onApproverId={setApproverId}
           showRegister={showRegister}
           showSignIn={showSignIn}
-          settlementReady={(authConfig?.webauthn?.settlement_count ?? 0) > 0}
           busy={webAuthnBusy}
           error={error}
           onRegister={() => void registerWebAuthn()}
@@ -164,9 +179,13 @@ export function App() {
           loginOrigin={authConfig?.webauthn?.origin}
           loginRpId={authConfig?.webauthn?.rp_id}
           registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
+          bootstrapTokenRequired={authConfig?.webauthn?.bootstrap_token_required}
+          bootstrapToken={bootstrapToken}
+          onBootstrapToken={setBootstrapToken}
           communityHandoffUrl={
-            authConfig?.community_handoff ? "https://community.oorgos.org/mypage" : undefined
+            authConfig?.community_handoff ? buildCommunityConsoleStartUrl("/settings/") : undefined
           }
+          settingsPath="/settings/"
         />
       );
     }
@@ -245,18 +264,6 @@ export function App() {
     );
   }
 
-  async function enrollSettlementPasskey() {
-    setError(null);
-    await registerSettlementPasskey(api, {
-      operator_id: user.operator_id,
-      approver_id: user.approver_id,
-      optionsPath: "/console/v1/auth/webauthn/register/options",
-      registerPath: "/console/v1/auth/webauthn/register",
-    });
-    const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
-    setAuthConfig(cfg);
-  }
-
   return (
     <OperatorShell
       active="wire"
@@ -265,6 +272,8 @@ export function App() {
         (authConfig?.mode === "prod" ? " · 本番認証" : "")
       }
       onSignOut={() => void logout()}
+      settingsHref="/settings/"
+      settingsActive={isPasskeySettingsPath()}
       yojitsuHref="/"
       wireHref={
         import.meta.env.BASE_URL.endsWith("/")
@@ -275,56 +284,59 @@ export function App() {
       stewardHref="/steward/"
       orgHref="/org/"
     >
-      {authConfig?.prod_adapter === "webauthn" ? (
-        <>
-          {authConfig.webauthn?.login_registration_bootstrap &&
-          (authConfig.webauthn.credential_count ?? 0) === 0 ? (
-            <section className="passkey-setup" aria-label="ログイン PassKey">
-              <div className="passkey-setup-copy">
-                <h2 className="passkey-setup-title">Touch ID を登録</h2>
-                <p className="passkey-setup-lead">
-                  Community で入ったあと、この Mac 用のログイン PassKey を登録します。
-                </p>
-              </div>
-              <div className="passkey-setup-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={webAuthnBusy}
-                  onClick={() => void registerWebAuthn()}
-                >
-                  {webAuthnBusy ? "登録中…" : "Touch ID で登録"}
-                </button>
-              </div>
-              {error ? <p className="passkey-setup-error">{error}</p> : null}
-            </section>
-          ) : null}
-          <PasskeySetupCard
-          settlementReady={(authConfig.webauthn?.settlement_count ?? 0) > 0}
+      {isPasskeySettingsPath() ? (
+        <PasskeySettingsPage
+          webAuthnMode={authConfig?.mode === "prod" && authConfig.prod_adapter === "webauthn"}
+          api={passkeyApi}
+          operatorId={user.operator_id}
+          approverId={user.approver_id}
+          policy={{
+            login_registration_bootstrap: authConfig?.webauthn?.login_registration_bootstrap,
+            bootstrap_token_required: authConfig?.webauthn?.bootstrap_token_required,
+            registration_allowed: authConfig?.webauthn?.registration_allowed,
+            settlement_registration_allowed: authConfig?.webauthn?.settlement_registration_allowed,
+            additional_login_registration_allowed:
+              authConfig?.webauthn?.additional_login_registration_allowed,
+            credential_count: authConfig?.webauthn?.credential_count,
+            settlement_count: authConfig?.webauthn?.settlement_count,
+          }}
           busy={webAuthnBusy}
           error={error}
-          onRegister={async () => {
+          onRegisterLogin={(opts) => void registerWebAuthn(opts)}
+          onRegisterSettlement={async () => {
+            setWebAuthnBusy(true);
+            setError(null);
             try {
-              await enrollSettlementPasskey();
+              await registerSettlementWithWebAuthn(api, {
+                operator_id: user.operator_id,
+                approver_id: user.approver_id,
+              });
+              await loadSession();
+              const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
+              setAuthConfig(cfg);
             } catch (err) {
-              setError(webauthnUserMessage(err));
-              throw err;
+              setError(
+                webauthnUserMessage(err, {
+                  expectedOrigin: authConfig?.webauthn?.origin,
+                  rpId: authConfig?.webauthn?.rp_id,
+                }),
+              );
+            } finally {
+              setWebAuthnBusy(false);
             }
           }}
-          onReregister={async () => {
-            try {
-              await enrollSettlementPasskey();
-            } catch (err) {
-              setError(webauthnUserMessage(err));
-              throw err;
-            }
+          onRefreshAuthConfig={async () => {
+            const cfg = await api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config");
+            setAuthConfig(cfg);
           }}
+          expectedOrigin={authConfig?.webauthn?.origin}
+          rpId={authConfig?.webauthn?.rp_id}
         />
-        </>
-      ) : null}
-      <div className="wire-workspace">
-        <MailWorkbench tenants={tenants} />
-      </div>
+      ) : (
+        <div className="wire-workspace">
+          <MailWorkbench tenants={tenants} />
+        </div>
+      )}
     </OperatorShell>
   );
 }

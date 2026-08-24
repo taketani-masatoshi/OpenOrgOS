@@ -11,14 +11,21 @@ import {
   updateWebAuthnSignCount,
   WebAuthnCredentialStoreCorruptError,
 } from "./webauthn-store.js";
-import { isLoginPasskeyBootstrap } from "./webauthn-register-gate.js";
+import {
+  isBootstrapTokenRequiredForLoginRegistration,
+  isLoginPasskeyBootstrap,
+} from "./webauthn-register-gate.js";
 import { isWebAuthnRegistrationAllowed, isSettlementRegistrationAllowed } from "./webauthn-register.js";
 import { isAdditionalLoginPasskeyRegistrationAllowed } from "./webauthn-register-gate.js";
 import { rpId } from "./webauthn-shared.js";
+import {
+  consumeWebAuthnChallenge,
+  resetWebAuthnChallengeStoreForTests,
+  saveWebAuthnChallenge,
+  webauthnChallengeTtlMs,
+} from "./webauthn-challenge-store.js";
 
 export { rpId };
-
-const pendingChallenges = new Map<string, { challenge: string; expires_at: number }>();
 
 export function getWebAuthnConfig() {
   try {
@@ -35,6 +42,7 @@ export function getWebAuthnConfig() {
       additional_login_registration_allowed: isAdditionalLoginPasskeyRegistrationAllowed(),
       login_registration_requires_session: true,
       login_registration_bootstrap: isLoginPasskeyBootstrap(),
+      bootstrap_token_required: isBootstrapTokenRequiredForLoginRegistration(),
       approve_origin: approveOrigin.replace(/\/$/, ""),
       origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
       credential_store_ok: true as const,
@@ -52,6 +60,7 @@ export function getWebAuthnConfig() {
         additional_login_registration_allowed: false,
         login_registration_requires_session: true,
         login_registration_bootstrap: false,
+        bootstrap_token_required: false,
         approve_origin: approveOrigin.replace(/\/$/, ""),
         origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
         credential_store_ok: false as const,
@@ -71,9 +80,10 @@ export function createWebAuthnLoginOptions(): {
   hints: Array<"client-device">;
 } {
   const challenge = randomBytes(32).toString("base64url");
-  pendingChallenges.set(challenge, {
+  saveWebAuthnChallenge({
+    kind: "login",
     challenge,
-    expires_at: Date.now() + 5 * 60_000,
+    expires_at: Date.now() + webauthnChallengeTtlMs(),
   });
   const loginCreds = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() });
   return {
@@ -97,11 +107,10 @@ export function verifyWebAuthnLogin(body: {
   authenticator_data_base64?: string;
   signature_base64?: string;
 }): { token: string; user: WireConsoleUser } | { error: string } {
-  const pending = pendingChallenges.get(body.challenge);
-  if (!pending || pending.expires_at < Date.now()) {
+  const pending = consumeWebAuthnChallenge(body.challenge, "login");
+  if (!pending) {
     return { error: "webauthn challenge expired or unknown" };
   }
-  pendingChallenges.delete(body.challenge);
 
   let clientData: { type?: string; challenge?: string; origin?: string };
   try {
@@ -129,14 +138,31 @@ export function verifyWebAuthnLogin(body: {
   const expectedOrigin = (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "");
 
   if (testSecret && isWebAuthnTestSecretAllowed() && body.signature_base64) {
-    if (!webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
-      return { error: "webauthn origin mismatch" };
-    }
     const expected = Buffer.from(testSecret, "utf-8");
     const got = Buffer.from(body.signature_base64, "base64url");
     if (expected.length !== got.length || !timingSafeEqual(expected, got)) {
       return { error: "invalid webauthn test signature" };
     }
+    if (!body.authenticator_data_base64) {
+      return { error: "authenticator_data_base64 required" };
+    }
+    if (!publicKeySpki) {
+      return { error: "credential missing public_key_spki_base64" };
+    }
+    const verified = verifyWebAuthnAssertion({
+      expectedRpId: rpId(),
+      expectedOrigin,
+      clientDataJsonBase64: body.client_data_json,
+      authenticatorDataBase64: body.authenticator_data_base64,
+      signatureBase64: body.signature_base64,
+      publicKeySpkiBase64: publicKeySpki,
+      previousSignCount: cred.sign_count ?? 0,
+      skipSignatureVerification: true,
+    });
+    if (!verified.ok) {
+      return { error: verified.error };
+    }
+    updateWebAuthnSignCount(body.credential_id, verified.signCount);
   } else {
     if (!body.authenticator_data_base64 || !body.signature_base64) {
       return { error: "authenticator_data_base64 and signature_base64 required" };
@@ -168,5 +194,5 @@ export function verifyWebAuthnLogin(body: {
 }
 
 export function resetWebAuthnChallengesForTests(): void {
-  pendingChallenges.clear();
+  resetWebAuthnChallengeStoreForTests();
 }

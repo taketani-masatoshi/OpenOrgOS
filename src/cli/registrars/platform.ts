@@ -67,6 +67,52 @@ export function registerPlatformCommands(program: Command): void {
       runIntegrationsStatus({ json: opts.json });
     });
 
+  const moduleMessageCmd = program
+    .command("module-message")
+    .description("Typed inter-module messages (ADR 0040)");
+  moduleMessageCmd
+    .command("send")
+    .description("Append a module message")
+    .requiredOption("--from <id>", "Sender agent/module id")
+    .requiredOption("--to <id>", "Target agent/module id")
+    .requiredOption("--intent <intent>", "inquire | inform | handoff | reply | …")
+    .requiredOption("--summary <text>", "L0/L1 payload summary")
+    .option("--from-kind <kind>", "agent | module | integration", "agent")
+    .option("--to-kind <kind>", "agent | module | integration", "agent")
+    .option("--work-order-id <id>", "Related work order")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runModuleMessageSend } = await import("../../commands/module-message.js");
+      runModuleMessageSend({
+        from: opts.from,
+        fromKind: opts.fromKind,
+        to: opts.to,
+        toKind: opts.toKind,
+        intent: opts.intent,
+        summary: opts.summary,
+        workOrderId: opts.workOrderId,
+        json: opts.json,
+      });
+    });
+  moduleMessageCmd
+    .command("list")
+    .description("List pending messages for a target")
+    .requiredOption("--to <id>", "Target agent/module id")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runModuleMessageList } = await import("../../commands/module-message.js");
+      runModuleMessageList({ to: opts.to, json: opts.json });
+    });
+  moduleMessageCmd
+    .command("import")
+    .description("Import a message YAML file")
+    .requiredOption("--file <path>", "Message YAML path")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runModuleMessageImport } = await import("../../commands/module-message.js");
+      runModuleMessageImport({ file: opts.file, json: opts.json });
+    });
+
   const workspaceCmd = program.command("workspace").description("OrgOS company workspace (tenants/)");
   workspaceCmd
     .command("init")
@@ -622,6 +668,31 @@ export function registerPlatformCommands(program: Command): void {
       const { runOperatorInitRegistry } = await import("../../commands/operator-registry.js");
       runOperatorInitRegistry({ writeKeys: opts.writeKeys !== false, json: opts.json });
     });
+  const passkeyBootstrapCmd = operatorCmd
+    .command("passkey-bootstrap")
+    .description("Passkey bootstrap token (production first registration — ADR 0041)");
+  passkeyBootstrapCmd
+    .command("mint")
+    .description("Mint a one-time bootstrap token for an operator")
+    .requiredOption("--operator-id <id>", "Operator ID")
+    .option("--ttl <duration>", "Token TTL (e.g. 24h)", "24h")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runPasskeyBootstrapMint } = await import("../../commands/passkey-bootstrap.js");
+      runPasskeyBootstrapMint({
+        operatorId: opts.operatorId,
+        ttl: opts.ttl,
+        json: opts.json,
+      });
+    });
+  passkeyBootstrapCmd
+    .command("status")
+    .description("Show whether bootstrap token is required")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runPasskeyBootstrapStatus } = await import("../../commands/passkey-bootstrap.js");
+      runPasskeyBootstrapStatus({ json: opts.json });
+    });
   operatorCmd
     .command("sync-policy")
     .description("Sync steward/rules to Cursor mirrors, AGENTS.md, and engineering 00–09")
@@ -781,6 +852,119 @@ export function registerPlatformCommands(program: Command): void {
         execute: opts.execute,
         json: opts.json,
       });
+    });
+
+  const guardCmd = program
+    .command("guard")
+    .description("Agent filesystem write gate (Ed25519 identities · signed grants)");
+  guardCmd
+    .command("init")
+    .description("Create tenant issuer key and public identity registry")
+    .option("--seed", "Issue write grants from agent capability catalog")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardInit } = await import("../../commands/fs-guard.js");
+      runGuardInit({ seed: opts.seed, json: opts.json });
+    });
+  guardCmd
+    .command("keygen")
+    .description("Generate an agent Ed25519 keypair (private key stays on this host)")
+    .requiredOption("--agent <id>", "Agent id (e.g. finance)")
+    .option("--rotate", "Replace an existing agent key")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardKeygen } = await import("../../commands/fs-guard.js");
+      runGuardKeygen({ agent: opts.agent, rotate: opts.rotate, json: opts.json });
+    });
+  guardCmd
+    .command("grant")
+    .description("Issue a signed path grant to an agent")
+    .requiredOption("--agent <id>", "Agent id")
+    .requiredOption("--path <pattern>", "Logical path glob (data/finance/**)")
+    .option("--op <op>", "read | write", "write")
+    .option("--expires <iso>", "Optional expiry timestamp")
+    .option("--reason <text>", "Grant reason")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardGrant } = await import("../../commands/fs-guard.js");
+      runGuardGrant({
+        agent: opts.agent,
+        path: opts.path,
+        op: opts.op,
+        expires: opts.expires,
+        reason: opts.reason,
+        json: opts.json,
+      });
+    });
+  guardCmd
+    .command("revoke")
+    .description("Revoke a grant by id")
+    .requiredOption("--id <grantId>", "AGRNT-YYYYMMDD-NNN")
+    .option("--reason <text>", "Revoke reason")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardRevoke } = await import("../../commands/fs-guard.js");
+      runGuardRevoke({ id: opts.id, reason: opts.reason, json: opts.json });
+    });
+  guardCmd
+    .command("list")
+    .description("List agent public keys and grants")
+    .option("--agent <id>", "Filter by agent")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardList } = await import("../../commands/fs-guard.js");
+      runGuardList({ agent: opts.agent, json: opts.json });
+    });
+  guardCmd
+    .command("check")
+    .description("Check whether an agent grant covers a path")
+    .requiredOption("--agent <id>", "Agent id")
+    .requiredOption("--path <path>", "Logical path")
+    .option("--op <op>", "read | write", "write")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardCheck } = await import("../../commands/fs-guard.js");
+      runGuardCheck({ agent: opts.agent, path: opts.path, op: opts.op, json: opts.json });
+    });
+  guardCmd
+    .command("apply")
+    .description("Sign and write a file if the agent grant allows it")
+    .requiredOption("--agent <id>", "Agent id whose host key signs the write")
+    .requiredOption("--path <path>", "Logical destination path")
+    .requiredOption("--from <file>", "Source file to write")
+    .option("--run-id <id>", "Optional AIA run id")
+    .option("--expected-sha256 <hex>", "CAS: sha256 of the current destination file")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGuardApply } = await import("../../commands/fs-guard.js");
+      runGuardApply({
+        agent: opts.agent,
+        path: opts.path,
+        from: opts.from,
+        runId: opts.runId,
+        expectedSha256: opts.expectedSha256,
+        json: opts.json,
+      });
+    });
+
+  const aiaCmd = program.command("aia").description("AIA parallel runtime (ADR 0040)");
+  aiaCmd
+    .command("status")
+    .description("Show tenant AIA runtime config and scheduler metrics")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { createAiaScheduler, loadAiaRuntimeConfig } = await import(
+        "../../lib/aia/scheduler.js"
+      );
+      const config = loadAiaRuntimeConfig();
+      const scheduler = createAiaScheduler(config);
+      const payload = { config, metrics: scheduler.metrics() };
+      if (opts.json) {
+        console.log(JSON.stringify(payload, null, 2));
+        return;
+      }
+      console.log(`tier=${config.tier} max_concurrent_aia=${config.max_concurrent_aia}`);
+      console.log(`running=${payload.metrics.aia_running} queued=${payload.metrics.aia_queued}`);
     });
 
   const notificationsCmd = program.command("notifications").description("Push notifications (tenant registry)");

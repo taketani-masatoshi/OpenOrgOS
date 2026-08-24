@@ -20,6 +20,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0002](0002-engineering-rules-split.md) | Engineering Rules の分割構成 | Accepted |
 | [0003](0003-constitution-code-compliance-roadmap.md) | 憲章とコード準拠ロードマップ | Accepted |
 | [0004](0004-gmail-deferred-opt-in-gate.md) | Gmail / tenant-mail deferred · opt-in 本番ゲート | Accepted |
+| [0027](0027-budget-envelope-governance.md) | 予算執行枠ガバナンス（計画ロック · 調整帯 · 取締役会） | Accepted |
 | [0032](0032-amount-free-receipt-wire-claim.md) | QR 領収書 Wire claim は amount-free | Accepted |
 | [0033](0033-deterministic-fact-provider-registry.md) | 決定論 Fact Provider Registry（HR headcount 含む） | Accepted |
 | [0034](0034-llm-worker-pool-routing.md) | LLM Worker Pool（ローカル優先 + クラウド昇格） | Accepted |
@@ -27,6 +28,10 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0036](0036-tenant-config-approval.md) | テナント設定変更の承認付き適用（modules/standards） | Accepted |
 | [0037](0037-dual-passkey-settlement-stepup.md) | Dual PassKey（ログイン / 決済 step-up） | Accepted · [実装計画](../org-os/passkey-iphone-qr-implementation-plan.md) |
 | [0038](0038-human-approval-context.md) | 全最終承認の HumanApprovalContext | Accepted |
+| [0039](0039-agent-fs-guard.md) | Agent 正本書込ゲート（Ed25519 · 署名付き grant） | Accepted |
+| [0040](0040-aia-parallel-runtime.md) | AIA 並行ランタイム（10/20/30 · 隔離 · Integration） | Accepted |
+| [0041](0041-passkey-bootstrap-token.md) | Passkey bootstrap token（本番初回登録） | Accepted |
+| [0042](0042-webauthn-challenge-file-store.md) | WebAuthn challenge file store（複数プロセス） | Accepted |
 
 ## 新規 ADR
 

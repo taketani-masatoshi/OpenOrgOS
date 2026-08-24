@@ -75,4 +75,22 @@ describe("csrf guard", () => {
     } as IncomingMessage;
     expect(verifySameOrigin(req, "127.0.0.1:9471")).toBe(true);
   });
+
+  it("rejects credential revoke DELETE without Origin when CSRF enabled", async () => {
+    await start();
+    const login = await fetch(`${baseUrl}/chat/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ passkey: "test-pass" }),
+    });
+    expect(login.status).toBe(200);
+    const cookie = login.headers.get("set-cookie") ?? "";
+    const res = await fetch(`${baseUrl}/chat/v1/auth/webauthn/credentials/some-cred`, {
+      method: "DELETE",
+      headers: { cookie },
+    });
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("csrf_origin_mismatch");
+  });
 });
