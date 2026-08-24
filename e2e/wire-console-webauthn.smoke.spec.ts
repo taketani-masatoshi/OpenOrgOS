@@ -15,7 +15,7 @@ test.describe("wire console webauthn smoke", () => {
       "page",
       { timeout: 15_000 }
     );
-    await expect(page.getByText(/E2E WebAuthn/)).toBeVisible();
-    await expect(page.getByText(/approver テスト承認者/)).toBeVisible();
+    await expect(page.getByText(/OP-001/)).toBeVisible();
+    await expect(page.getByText(/承認者 段燕燕/)).toBeVisible();
   });
 });

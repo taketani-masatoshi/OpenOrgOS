@@ -24,10 +24,6 @@ import {
   type SettlementWebAuthnAssertion,
 } from "../../../schemas/org/settlement-stepup.js";
 import { resolveWireGovernanceTier } from "../jurisdiction/wire-governance/evaluate.js";
-import {
-  loadAuthorizedApprovers,
-  normalizePersonName,
-} from "./authorized-approvers.js";
 import { getWorkspaceRoot } from "../orgos-paths.js";
 import {
   credentialPurpose,
@@ -186,14 +182,6 @@ export function resolveApprovalAssuranceTier(
   }
 }
 
-/** When tier B has exactly one other authorized signatory, use as default co-approver. */
-function resolveDefaultCoApprover(approverId: string, tier: OrgApprovalTier): string | undefined {
-  if (tier !== "B") return undefined;
-  const norm = normalizePersonName(approverId);
-  const others = loadAuthorizedApprovers().filter((a) => a !== norm);
-  return others.length === 1 ? others[0] : undefined;
-}
-
 export function settlementAssuranceRequired(approval: OrgApprovalRequest): boolean {
   if (!isSettlementStepUpEnabled()) return false;
   const tier = resolveApprovalAssuranceTier(approval);
@@ -273,8 +261,6 @@ export function createSettlementChallenge(opts: {
   const challengeId = `SCH-${randomBytes(12).toString("hex")}`;
   const webauthnChallenge = randomBytes(32).toString("base64url");
   const tier = resolveApprovalAssuranceTier(opts.approval);
-  const coApproverId =
-    opts.coApproverId?.trim() || resolveDefaultCoApprover(opts.approverId, tier);
   const token = signToken(challengeId, opts.approval.approval_id, opts.operatorId);
   const now = Date.now();
   // Phase 2: same RP as console login (browser hybrid QR on this page).
@@ -287,7 +273,7 @@ export function createSettlementChallenge(opts: {
     approval_id: opts.approval.approval_id,
     operator_id: opts.operatorId,
     approver_id: opts.approverId,
-    co_approver_id: coApproverId,
+    co_approver_id: opts.coApproverId,
     api_origin: opts.apiOrigin.replace(/\/$/, ""),
     rp_id: rp,
     status: "pending",

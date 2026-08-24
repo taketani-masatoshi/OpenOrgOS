@@ -110,9 +110,10 @@ export async function handleConsoleApi(
   const section = match[2] ?? "";
 
   if (method === "GET") {
-    if (!requireUser(req, res)) return true;
+    const user = requireUser(req, res);
+    if (!user) return true;
     try {
-      return handleTenantGet(req, res, tenantId, section, searchParams);
+      return handleTenantGet(req, res, tenantId, section, searchParams, user);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       const status =
@@ -147,7 +148,8 @@ function handleTenantGet(
   res: ServerResponse,
   tenantId: string,
   section: string,
-  searchParams: URLSearchParams
+  searchParams: URLSearchParams,
+  user: WireConsoleUser
 ): boolean {
   if (!section) {
     json(res, 200, { ok: true, tenant_id: tenantId });
@@ -241,7 +243,7 @@ function handleTenantGet(
 
   if (section.startsWith("messages/")) {
     const messageId = decodeURIComponent(section.slice("messages/".length));
-    const body = getTenantMailMessageBody(tenantId, messageId);
+    const body = getTenantMailMessageBody(tenantId, messageId, user.approver_id);
     if (!body) {
       json(res, 404, { ok: false, error: "message not found" });
       return true;

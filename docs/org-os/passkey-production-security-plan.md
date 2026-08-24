@@ -254,7 +254,7 @@ WebAuthn の login / register は challenge が CSRF トークン相当。**Orig
 - CSRF exempt 解除（2.6）
 - ログインと決済の RP 再分離（ADR 0037 維持）
 - 自前 QR / approve ホストでのセレモニー
-- 同期鍵の attestation 強制（iPhone hybrid が死ぬ）
+- 同期鍵の **attestation 強制**（iPhone hybrid が死ぬ）— `packed` self/leaf 署名検証のみ実装（PKIX 信頼なし）
 - challenge の Redis 共有（Wave 4 / 別 ADR）
 
 ---

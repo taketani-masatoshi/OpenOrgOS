@@ -46,6 +46,7 @@ export function isSettlementStepUpError(err: unknown): boolean {
 export async function approveWithSettlementCeremony(opts: {
   api: SettlementApi;
   approvalId: string;
+  coApproverId?: string;
   tryApprove: () => Promise<unknown>;
   runCeremony: (challenge: SettlementPasskeyChallenge) => Promise<void>;
 }): Promise<unknown> {
@@ -59,7 +60,10 @@ export async function approveWithSettlementCeremony(opts: {
     "/chat/v1/settlement/challenge",
     {
       method: "POST",
-      body: JSON.stringify({ approval_id: opts.approvalId }),
+      body: JSON.stringify({
+        approval_id: opts.approvalId,
+        ...(opts.coApproverId ? { co_approver_id: opts.coApproverId } : {}),
+      }),
     }
   );
   await opts.runCeremony(challenge);

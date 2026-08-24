@@ -1,6 +1,7 @@
 import { PasskeyManagePanel, type PasskeyWebAuthnPolicy } from "./PasskeyManagePanel";
 import type { PasskeyCredentialsApi } from "./passkey-credentials-client";
 import { AppearancePanel } from "./AppearancePanel";
+import { prefersJapaneseLocale } from "./ui-locale";
 
 export type PasskeySettingsBackLink = {
   href: string;
@@ -25,10 +26,16 @@ export type PasskeySettingsPageProps = {
   backLinks?: PasskeySettingsBackLink[];
 };
 
-const DEFAULT_BACK_LINKS: PasskeySettingsBackLink[] = [
+const DEFAULT_BACK_LINKS_JA: PasskeySettingsBackLink[] = [
   { href: "/", label: "予実に戻る" },
   { href: "/wire/", label: "Wire" },
   { href: "/chat-settings/", label: "チャット履歴" },
+];
+
+const DEFAULT_BACK_LINKS_EN: PasskeySettingsBackLink[] = [
+  { href: "/", label: "Back to budget" },
+  { href: "/wire/", label: "Wire" },
+  { href: "/chat-settings/", label: "Chat history" },
 ];
 
 /**
@@ -49,21 +56,25 @@ export function PasskeySettingsPage({
   settlementRegistrationUrl,
   expectedOrigin,
   rpId,
-  backLinks = DEFAULT_BACK_LINKS,
+  backLinks,
 }: PasskeySettingsPageProps) {
+  const japanese = prefersJapaneseLocale();
+  const links = backLinks ?? (japanese ? DEFAULT_BACK_LINKS_JA : DEFAULT_BACK_LINKS_EN);
+
   if (!webAuthnMode) {
     return (
       <div className="passkey-settings-page">
         <header className="passkey-settings-header">
-          <h1 className="passkey-settings-title">設定</h1>
+          <h1 className="passkey-settings-title">{japanese ? "設定" : "Settings"}</h1>
           <p className="passkey-settings-lead">
-            画面の外観を切り替えられます。この環境では WebAuthn が有効ではないため、PassKey
-            の登録は開発ログインまたは本番 OIDC をご利用ください。
+            {japanese
+              ? "画面の外観を切り替えられます。この環境では WebAuthn が有効ではないため、PassKey の登録は開発ログインまたは本番 OIDC をご利用ください。"
+              : "You can switch the overall appearance. WebAuthn is off in this environment, so register PassKeys via the development login or production OIDC."}
           </p>
         </header>
         <AppearancePanel />
         <p className="passkey-settings-back">
-          {backLinks.map((link, i) => (
+          {links.map((link, i) => (
             <span key={link.href}>
               {i > 0 ? " · " : null}
               <a href={link.href}>{link.label}</a>
@@ -77,15 +88,17 @@ export function PasskeySettingsPage({
   return (
     <div className="passkey-settings-page">
       <header className="passkey-settings-header">
-        <h1 className="passkey-settings-title">設定</h1>
+        <h1 className="passkey-settings-title">{japanese ? "設定" : "Settings"}</h1>
         <p className="passkey-settings-lead">
-          画面の外観と、ログイン用（Touch ID）・決済用（iPhone）の PassKey をこの端末で管理します。
+          {japanese
+            ? "画面の外観と、ログイン用（Touch ID）・決済用（iPhone）の PassKey をこの端末で管理します。"
+            : "Manage appearance and the login (Touch ID) and settlement (iPhone) PassKeys on this device."}
         </p>
       </header>
 
       <AppearancePanel />
 
-      <h2 className="passkey-settings-section-title">PassKey 管理</h2>
+      <h2 className="passkey-settings-section-title">{japanese ? "PassKey 管理" : "PassKeys"}</h2>
 
       <PasskeyManagePanel
         webAuthnMode={webAuthnMode}
@@ -105,7 +118,7 @@ export function PasskeySettingsPage({
       />
 
       <p className="passkey-settings-back">
-        {backLinks.map((link, i) => (
+        {links.map((link, i) => (
           <span key={link.href}>
             {i > 0 ? " · " : null}
             <a href={link.href}>{link.label}</a>

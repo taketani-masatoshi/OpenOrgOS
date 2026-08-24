@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { approveWithSettlementCeremony } from "@ops-shared/settlement-stepup-client";
+import { useSettlementStepUp } from "@ops-shared/use-settlement-stepup";
+import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
 import { api, shortDigest, type EventDetail, type EventWorkflow, type HumanMessageBody } from "../api";
 
 interface Props {
@@ -28,6 +31,12 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [coApproverId, setCoApproverId] = useState("");
+  const { runCeremony, modal } = useSettlementStepUp(api);
+
+  useEffect(() => {
+    setCoApproverId("");
+  }, [body?.id]);
 
   useEffect(() => {
     setActionMessage(null);
@@ -73,17 +82,31 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
 
   async function approve() {
     if (!body?.approval_id) return;
+    if (body.co_approver_required && !coApproverId.trim()) {
+      setError("tier B の共同承認者を選択してください");
+      return;
+    }
     setBusy(true);
     setError(null);
+    const coPayload = coApproverId.trim()
+      ? { co_approver_id: coApproverId.trim() }
+      : {};
     try {
-      await api(`/console/v1/tenants/${tenantId}/notices/${body.approval_id}/approve`, {
-        method: "POST",
-        body: JSON.stringify({}),
+      await approveWithSettlementCeremony({
+        api,
+        approvalId: body.approval_id,
+        coApproverId: coApproverId.trim() || undefined,
+        tryApprove: () =>
+          api(`/console/v1/tenants/${tenantId}/notices/${body.approval_id}/approve`, {
+            method: "POST",
+            body: JSON.stringify(coPayload),
+          }),
+        runCeremony,
       });
       setActionMessage("承認しました");
       onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(webauthnUserMessage(err));
     } finally {
       setBusy(false);
     }
@@ -181,6 +204,8 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
   }
 
   return (
+    <>
+      {modal}
     <aside className="message-reader">
       <header className="reader-header">
         <h2>{body.subject}</h2>
@@ -209,9 +234,30 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
         </ol>
       ) : null}
       <div className="reader-actions">
+        {body.co_approver_required ? (
+          <label className="reader-co-approver">
+            <span>共同承認者（tier B）</span>
+            <select
+              value={coApproverId}
+              disabled={busy}
+              onChange={(e) => setCoApproverId(e.target.value)}
+            >
+              <option value="">選択してください</option>
+              {(body.co_approver_candidates ?? []).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         {body.can_approve ? (
           <>
-            <button type="button" disabled={busy} onClick={() => void approve()}>
+            <button
+              type="button"
+              disabled={busy || (body.co_approver_required && !coApproverId.trim())}
+              onClick={() => void approve()}
+            >
               承認
             </button>
             <button type="button" className="secondary" disabled={busy} onClick={() => void reject()}>
@@ -277,5 +323,6 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
         </details>
       ) : null}
     </aside>
+    </>
   );
 }

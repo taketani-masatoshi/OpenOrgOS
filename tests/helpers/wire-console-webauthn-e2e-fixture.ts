@@ -16,9 +16,6 @@ export interface WireConsoleWebAuthnSmokeFixture {
   operator_id: string;
   approver_id: string;
   bootstrap_token?: string;
-  settlement_credential_id?: string;
-  settlement_credential_id_base64?: string;
-  settlement_private_key_base64?: string;
 }
 
 export function writeWireConsoleWebAuthnBootstrapSmokeFixture(): WireConsoleWebAuthnSmokeFixture {
@@ -61,15 +58,8 @@ export function writeWireConsoleWebAuthnSmokeFixture(): WireConsoleWebAuthnSmoke
   const rpId = "localhost";
   const rawId = randomBytes(16);
   const credentialId = rawId.toString("base64url");
-  const settlementRawId = randomBytes(16);
-  const settlementCredentialId = settlementRawId.toString("base64url");
   const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
-  const { privateKey: settlementPrivateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
   const publicKeySpki = createPublicKey(privateKey).export({ type: "spki", format: "der" });
-  const settlementPublicKeySpki = createPublicKey(settlementPrivateKey).export({
-    type: "spki",
-    format: "der",
-  });
   const fixture: WireConsoleWebAuthnSmokeFixture = {
     rp_id: rpId,
     credential_id: credentialId,
@@ -77,11 +67,6 @@ export function writeWireConsoleWebAuthnSmokeFixture(): WireConsoleWebAuthnSmoke
     private_key_base64: privateKey.export({ type: "pkcs8", format: "der" }).toString("base64"),
     operator_id: "OP-001",
     approver_id: "段燕燕",
-    settlement_credential_id: settlementCredentialId,
-    settlement_credential_id_base64: settlementRawId.toString("base64"),
-    settlement_private_key_base64: settlementPrivateKey
-      .export({ type: "pkcs8", format: "der" })
-      .toString("base64"),
   };
 
   mkdirSync(ORGOS_STATE_DIR, { recursive: true });
@@ -93,14 +78,6 @@ export function writeWireConsoleWebAuthnSmokeFixture(): WireConsoleWebAuthnSmoke
       public_key_spki_base64: publicKeySpki.toString("base64"),
       operator_id: fixture.operator_id,
       approver_id: fixture.approver_id,
-    },
-    {
-      credential_id: fixture.settlement_credential_id,
-      public_key_spki_base64: settlementPublicKeySpki.toString("base64"),
-      operator_id: fixture.operator_id,
-      approver_id: fixture.approver_id,
-      purpose: "settlement",
-      authenticator_attachment: "cross-platform",
     },
   ]);
 

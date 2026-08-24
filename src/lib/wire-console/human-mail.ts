@@ -7,6 +7,11 @@ import { loadPeersRegistry } from "../protocol/peers.js";
 import { listWitnessPending } from "../protocol/witness-queue.js";
 import { verifyCachedReceiptsForEvent } from "../protocol/witness-client.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
+import {
+  loadAuthorizedApprovers,
+  normalizePersonName,
+} from "../org/authorized-approvers.js";
+import { resolveWireGovernanceTier } from "../jurisdiction/wire-governance/evaluate.js";
 import { getTenantId } from "../tenant.js";
 import { withWireConsoleTenant } from "./tenant-context.js";
 import { getTenantEventDetail, getTenantEventWorkflow } from "./tenant-data.js";
@@ -93,6 +98,31 @@ export interface HumanMessageBody {
   can_approve?: boolean;
   can_send?: boolean;
   can_witness?: boolean;
+  amount?: { value: number; currency: string };
+  co_approver_required?: boolean;
+  co_approver_candidates?: string[];
+}
+
+function wireCoApproverContext(
+  approval: OrgApprovalRequest,
+  sessionApproverId: string
+): Pick<HumanMessageBody, "amount" | "co_approver_required" | "co_approver_candidates"> {
+  const amount = approval.amount;
+  if (!amount || amount.value <= 0) return {};
+  let tier: "A" | "B" | "C" = "A";
+  try {
+    tier = resolveWireGovernanceTier(amount.value, amount.currency);
+  } catch {
+    return { amount };
+  }
+  if (tier !== "B") return { amount };
+  const norm = normalizePersonName(sessionApproverId);
+  const candidates = loadAuthorizedApprovers().filter((a) => a !== norm);
+  return {
+    amount,
+    co_approver_required: true,
+    co_approver_candidates: candidates,
+  };
 }
 
 const TX_LABELS: Record<string, string> = {
@@ -450,7 +480,8 @@ export function getTenantMailThreads(tenantId: string, folder: MailFolder = "all
 
 export function getTenantMailMessageBody(
   tenantId: string,
-  messageId: string
+  messageId: string,
+  sessionApproverId?: string
 ): HumanMessageBody | undefined {
   return withWireConsoleTenant(tenantId, () => {
     const peers = loadPeersRegistry().peers;
@@ -505,6 +536,7 @@ export function getTenantMailMessageBody(
         can_approve: summary.can_approve,
         can_send: false,
         can_witness: false,
+        ...(sessionApproverId ? wireCoApproverContext(approval, sessionApproverId) : {}),
       });
     }
 
