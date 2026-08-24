@@ -1,4 +1,4 @@
-import { ensureWebAuthnRpHost } from "./webauthn-page-origin";
+import { assertWebAuthnRpHost } from "./webauthn-page-origin";
 import {
   browserSupportsWebAuthn,
   createPasskeyWithSimpleWebAuthn,
@@ -57,9 +57,7 @@ export async function registerSettlementPasskey(
     }),
   });
 
-  if (!ensureWebAuthnRpHost(regOpts.rp?.id)) {
-    throw new Error("webauthn origin mismatch");
-  }
+  assertWebAuthnRpHost(regOpts.rp?.id);
 
   const cred = await createPasskeyWithSimpleWebAuthn(regOpts);
 

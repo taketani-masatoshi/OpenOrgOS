@@ -5,6 +5,9 @@ import {
   findOperatorById,
   loadOperatorRegistry,
 } from "../../org/operators.js";
+import {
+  verifyPasskeyBootstrapToken,
+} from "./passkey-bootstrap.js";
 import type { WireConsoleUser } from "./session.js";
 import {
   listWebAuthnCredentialsByPurpose,
@@ -99,6 +102,16 @@ export function isLoginPasskeyBootstrap(): boolean {
   return listWebAuthnCredentialsByPurpose("login", { rpId: rpId() }).length === 0;
 }
 
+/** Production first-login passkey requires CLI-minted bootstrap token. */
+export function isBootstrapTokenRequiredForLoginRegistration(): boolean {
+  if (!isProdSecurityMode()) return false;
+  try {
+    return isLoginPasskeyBootstrap();
+  } catch {
+    return false;
+  }
+}
+
 /** Public config: first login passkey may be enrolled (requires authenticated session at API). */
 export function isLoginPasskeyBootstrapAllowed(): boolean {
   if (process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER === "1") return false;
@@ -120,8 +133,35 @@ function openBootstrapWithoutSessionAllowed(): boolean {
   return process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP === "1";
 }
 
+export function assertBootstrapTokenForLoginRegistration(
+  sessionUser: WireConsoleUser | undefined,
+  bootstrapToken?: string,
+): { error: string; status: number } | null {
+  if (!isProdSecurityMode()) return null;
+  let bootstrap: boolean;
+  try {
+    bootstrap = isLoginPasskeyBootstrap();
+  } catch {
+    return null;
+  }
+  if (!bootstrap) return null;
+  if (!sessionUser) return null;
+  const verified = verifyPasskeyBootstrapToken(bootstrapToken, sessionUser.operator_id);
+  if (!verified.ok) {
+    return {
+      error:
+        verified.error === "bootstrap token required"
+          ? "bootstrap token required for first passkey registration in production"
+          : verified.error,
+      status: verified.error === "bootstrap token required" ? 401 : 403,
+    };
+  }
+  return null;
+}
+
 export function assertLoginPasskeyRegistrationGate(
-  sessionUser: WireConsoleUser | undefined
+  sessionUser: WireConsoleUser | undefined,
+  bootstrapToken?: string,
 ): { error: string; status: number } | null {
   if (process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER === "1") {
     return { error: "webauthn registration disabled", status: 403 };
@@ -145,6 +185,8 @@ export function assertLoginPasskeyRegistrationGate(
         status: 401,
       };
     }
+    const tokenGate = assertBootstrapTokenForLoginRegistration(sessionUser, bootstrapToken);
+    if (tokenGate) return tokenGate;
     return null;
   }
 
@@ -216,13 +258,14 @@ export function authorizeWebAuthnRegistration(
     operator_id: string;
     approver_id: string;
     purpose?: WebAuthnCredentialPurpose;
+    bootstrap_token?: string;
   },
   sessionUser?: WireConsoleUser
 ): ResolvedRegistrationIdentity | { error: string; status: number } {
   const purpose: WebAuthnCredentialPurpose = body.purpose ?? "login";
 
   if (purpose === "login") {
-    const gate = assertLoginPasskeyRegistrationGate(sessionUser);
+    const gate = assertLoginPasskeyRegistrationGate(sessionUser, body.bootstrap_token);
     if (gate) return gate;
   } else {
     const gate = assertSettlementPasskeyRegistrationGate(sessionUser, body);
@@ -246,10 +289,18 @@ export function authorizeWebAuthnRegistration(
 }
 
 export function registrationErrorStatus(error: string): number {
-  if (error.includes("session required") || error.includes("authenticated session")) {
+  if (
+    error.includes("session required") ||
+    error.includes("authenticated session") ||
+    error.includes("bootstrap token required")
+  ) {
     return 401;
   }
-  if (error.includes("disabled") || error.includes("must match")) {
+  if (
+    error.includes("disabled") ||
+    error.includes("must match") ||
+    error.includes("bootstrap token")
+  ) {
     return 403;
   }
   return 422;

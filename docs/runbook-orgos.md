@@ -345,7 +345,7 @@ npm run orgos -- tenant init southwood --name Southwood --wire-console
 |--------|------|----------|
 | dev（デフォルト） | — | passkey `orgos-dev`（`WIRE_CONSOLE_DEV_PASSKEY` で上書き可） |
 | prod OIDC | `WIRE_CONSOLE_AUTH=prod` · `WIRE_CONSOLE_PROD_ADAPTER=oidc` · OIDC env | POST login `{ id_token, approver_id }` |
-| prod WebAuthn（Wave 4） | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WEBAUTHN_RP_ID` · `WEBAUTHN_ORIGIN` | 初回 **Register passkey**（bootstrap）→ 以降 **Sign in with passkey** · 正本 `.orgos/wire-console-webauthn-credentials.json` |
+| prod WebAuthn（Wave 4） | `WIRE_CONSOLE_PROD_ADAPTER=webauthn` · `WIRE_CONSOLE_WEBAUTHN_RP_ID` · `WIRE_CONSOLE_WEBAUTHN_ORIGIN` | 初回 **bootstrap token + SSO** → Touch ID 登録 → 以降 Touch ID で入る · 正本 `.orgos/wire-console-webauthn-credentials.json` |
 | legacy token（非推奨） | `WIRE_CONSOLE_ALLOW_LEGACY_PROD_TOKEN=1` | `prod_token` — 移行期間のみ |
 
 ```bash
@@ -361,8 +361,8 @@ export WIRE_CONSOLE_PROD_ADAPTER=webauthn
 export WIRE_CONSOLE_WEBAUTHN_RP_ID='console.example.com'
 export WIRE_CONSOLE_WEBAUTHN_ORIGIN='https://console.example.com'
 npm run orgos -- wire console start
-# UI: Operator / Approver を入力 → Register passkey
-# 以降: Sign in with passkey（`.orgos/wire-console-webauthn-credentials.json` に保存）
+# UI: オペレーター / 承認者を入力 → Touch ID で登録
+# 以降: Touch ID で入る（`.orgos/wire-console-webauthn-credentials.json` に保存）
 
 # 追加 passkey を常時許可する場合
 export WIRE_CONSOLE_WEBAUTHN_ALLOW_REGISTER=1

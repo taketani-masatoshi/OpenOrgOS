@@ -16,23 +16,23 @@ import { webauthnOriginsEqual } from "./webauthn-origin.js";
 import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
 import {
   authorizeWebAuthnRegistration,
+  isLoginPasskeyBootstrap,
   isWebAuthnLoginRegistrationAllowedPublic,
   registrationErrorStatus,
 } from "./webauthn-register-gate.js";
+import {
+  consumePasskeyBootstrapToken,
+  reservePasskeyBootstrapChallenge,
+} from "./passkey-bootstrap.js";
+import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
+import {
+  consumeWebAuthnChallenge,
+  resetWebAuthnChallengeStoreForTests,
+  saveWebAuthnChallenge,
+  webauthnChallengeTtlMs,
+} from "./webauthn-challenge-store.js";
 
 export { authorizeWebAuthnRegistration, registrationErrorStatus };
-
-const pendingRegisterChallenges = new Map<
-  string,
-  {
-    challenge: string;
-    operator_id: string;
-    approver_id: string;
-    purpose: WebAuthnCredentialPurpose;
-    rp_id: string;
-    expires_at: number;
-  }
->();
 
 export function isWebAuthnRegistrationAllowed(): boolean {
   return isWebAuthnLoginRegistrationAllowedPublic();
@@ -48,6 +48,7 @@ export function createWebAuthnRegisterOptions(
     operator_id: string;
     approver_id: string;
     purpose?: WebAuthnCredentialPurpose;
+    bootstrap_token?: string;
   },
   opts?: { sessionUser?: WireConsoleUser }
 ):
@@ -82,13 +83,30 @@ export function createWebAuthnRegisterOptions(
   const registerRpId = rpId();
 
   const challenge = randomBytes(32).toString("base64url");
-  pendingRegisterChallenges.set(challenge, {
+  if (purpose === "login" && isProdSecurityMode() && isLoginPasskeyBootstrap()) {
+    if (!body.bootstrap_token?.trim()) {
+      return {
+        error: "bootstrap token required for first passkey registration in production",
+      };
+    }
+    const reserved = reservePasskeyBootstrapChallenge({
+      token: body.bootstrap_token,
+      operatorId: resolved.operator_id,
+      challenge,
+    });
+    if (!reserved.ok) {
+      return { error: reserved.error };
+    }
+  }
+  saveWebAuthnChallenge({
+    kind: "register",
     challenge,
+    expires_at: Date.now() + webauthnChallengeTtlMs(),
     operator_id: resolved.operator_id,
     approver_id: resolved.approver_id,
     purpose,
     rp_id: registerRpId,
-    expires_at: Date.now() + 5 * 60_000,
+    bootstrap_token: body.bootstrap_token?.trim() || undefined,
   });
 
   const userId = createHash("sha256")
@@ -145,11 +163,10 @@ export function verifyWebAuthnRegistration(body: {
   approver_id: string;
   purpose?: WebAuthnCredentialPurpose;
 }): { token?: string; user?: WireConsoleUser; credential_id: string } | { error: string } {
-  const pending = pendingRegisterChallenges.get(body.challenge);
-  if (!pending || pending.expires_at < Date.now()) {
+  const pending = consumeWebAuthnChallenge(body.challenge, "register");
+  if (!pending || !pending.operator_id || !pending.approver_id || !pending.purpose || !pending.rp_id) {
     return { error: "webauthn registration challenge expired or unknown" };
   }
-  pendingRegisterChallenges.delete(body.challenge);
 
   if (
     pending.operator_id !== body.operator_id.trim() ||
@@ -226,6 +243,14 @@ export function verifyWebAuthnRegistration(body: {
     return { error: "webauthn user not verified" };
   }
 
+  const bootstrapRegistration =
+    purpose === "login" && isProdSecurityMode() && isLoginPasskeyBootstrap();
+  if (bootstrapRegistration && !pending.bootstrap_token) {
+    return {
+      error: "bootstrap token required for first passkey registration in production",
+    };
+  }
+
   saveWebAuthnCredential({
     credential_id: credentialId,
     public_key_spki_base64: spki.toString("base64"),
@@ -236,6 +261,17 @@ export function verifyWebAuthnRegistration(body: {
     rp_id: pending.rp_id,
     authenticator_attachment: purpose === "settlement" ? "cross-platform" : "platform",
   });
+
+  if (bootstrapRegistration && pending.bootstrap_token) {
+    const consumed = consumePasskeyBootstrapToken({
+      token: pending.bootstrap_token,
+      operatorId: pending.operator_id,
+      challenge: body.challenge,
+    });
+    if (!consumed.ok) {
+      return { error: consumed.error };
+    }
+  }
 
   // Settlement keys never mint a console session (ADR 0037).
   if (purpose === "settlement") {
@@ -252,5 +288,5 @@ export function verifyWebAuthnRegistration(body: {
 }
 
 export function resetWebAuthnRegisterChallengesForTests(): void {
-  pendingRegisterChallenges.clear();
+  resetWebAuthnChallengeStoreForTests();
 }
