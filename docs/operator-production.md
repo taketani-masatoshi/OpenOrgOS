@@ -32,7 +32,9 @@ orgos operator console start --host 0.0.0.0 --port 9470
 
 | URL | 用途 |
 |-----|------|
-| `/` | Steward Chat（CEO Today · Ask） |
+| `/` | 予実 · 帳簿 |
+| `/approvals/` | CEO 承認受信箱 |
+| `/steward/` | Steward Chat |
 | `/wire/` | Wire Console SPA |
 | `/chat/v1/*` | Chat BFF API |
 | `/console/v1/*` | Wire Console API |
@@ -138,6 +140,14 @@ orgos --operator-id OP-001 --tenant mal protocol notice list
 ```
 
 prod では `data/org/operators.yaml` に ceo/approver が必須。MCP Bearer は operator ごとの `key_hash` と照合（共有 `ORGOS_MCP_TOKEN` は dev 向けレガシー）。`/chat/v1/auth/me` が `permissions` を返します。
+
+**OOO / Community SSO ドメイン:** テナント `login_policy.email_domains` を置くと、Operator Console への Google SSO は会社ドメインに限る。個人メールは **創業者1席**（`grandfather_emails` 最大1件・active ceo と一致）のみ。2人目の常勤人間には先に会社ドメインが必要。同じメールを複数テナントの常勤オペレータにしない（ゲストは可）。PassKey は対象外。Community 側は `OOO_LOGIN_EMAIL_DOMAINS` / `OOO_LOGIN_EMAIL_GRANDFATHER`（先頭1件）で同じ方針を先に拒否できる。
+
+**本鍵 SSO / 第2鍵 PassKey:** 本番推奨は会社メール SSO を本鍵、ログイン PassKey を第2鍵（`WIRE_CONSOLE_WEBAUTHN_ALLOW_ADDITIONAL_LOGIN=1` · **最大2本/operator**）。故障時は SSO で再ログインし、壊れた credential を削除してから再登録。
+
+**創業者移行:** `orgos operator login-domain set` · `founder-email retire` · grace 超過は validate で警告/エラー。
+
+**テナント畳み:** `orgos tenant lifecycle declare-winding-down` → liquidator 追加可 → `archive`。archived 中は SSO 拒否。
 
 ### Chat 監査ログ
 

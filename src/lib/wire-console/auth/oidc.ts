@@ -60,7 +60,16 @@ export function getOidcConfig() {
   };
 }
 
-import { findOperatorByEmail, findOperatorById } from "../../org/operators.js";
+import { findOperatorByEmail, findOperatorById, loadOperatorRegistry } from "../../org/operators.js";
+import {
+  isOooLoginEmailAllowedForRegistry,
+  normalizeOooEmail,
+} from "../../org/ooo-login-email.js";
+import {
+  getTenantLifecycleStatus,
+  isGuestOperatorExpired,
+  operatorAllowedForLifecycleSso,
+} from "../../org/tenant-lifecycle.js";
 import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
 
 function resolveIdentity(
@@ -164,6 +173,33 @@ export function verifyOidcIdToken(
 
   const identity = resolveIdentity(parsed.payload, opts);
   if ("error" in identity) return identity;
+
+  const email = parsed.payload.email?.trim();
+  if (email) {
+    const registry = loadOperatorRegistry();
+    if (registry && !isOooLoginEmailAllowedForRegistry(email, registry)) {
+      return { error: "OIDC email is outside tenant login_policy.email_domains" };
+    }
+    const mapped = findOperatorById(identity.operator_id);
+    if (mapped?.email && normalizeOooEmail(mapped.email) !== normalizeOooEmail(email)) {
+      return { error: "OIDC email does not match the mapped operator email" };
+    }
+  }
+
+  const mappedOp = findOperatorById(identity.operator_id);
+  if (mappedOp) {
+    if (isGuestOperatorExpired(mappedOp)) {
+      return { error: "operator guest access expired" };
+    }
+    const lifecycleStatus = getTenantLifecycleStatus();
+    if (lifecycleStatus === "archived" || lifecycleStatus === "purged") {
+      return { error: "tenant lifecycle archived — SSO handoff denied" };
+    }
+    if (!operatorAllowedForLifecycleSso(mappedOp)) {
+      return { error: "tenant lifecycle winding_down — SSO limited to ceo, approver, and liquidator" };
+    }
+  }
+
   return identity;
 }
 

@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   clearOperatorsRegistryCacheForTests,
@@ -35,8 +35,34 @@ function mintWithEmail(claims: {
   return `${signed}.${sig}`;
 }
 
+function captureHandoff(idToken: string): { status: number; location: string; cookie: string; body: string } {
+  let status = 0;
+  let location = "";
+  let cookie = "";
+  let body = "";
+  const res = {
+    writeHead(code: number, headers?: Record<string, string>) {
+      status = code;
+      if (headers?.Location) location = headers.Location;
+      if (headers?.["Set-Cookie"]) cookie = headers["Set-Cookie"];
+    },
+    setHeader(name: string, value: string) {
+      if (name.toLowerCase() === "set-cookie") cookie = value;
+    },
+    end(chunk?: string) {
+      body = chunk ?? "";
+    },
+  } as unknown as ServerResponse;
+  const url = new URL(
+    `http://127.0.0.1:9470/auth/community-handoff?token=${encodeURIComponent(idToken)}&next=/wire/`,
+  );
+  handleCommunityHandoff({ method: "GET" } as IncomingMessage, res, url);
+  return { status, location, cookie, body };
+}
+
 describe("Community → Console SSO handoff", () => {
   const prev: Record<string, string | undefined> = {};
+  let registrySnapshot = "";
 
   beforeEach(() => {
     for (const k of [
@@ -55,11 +81,13 @@ describe("Community → Console SSO handoff", () => {
     process.env.WIRE_CONSOLE_OIDC_HS256_SECRET = "community-console-sso-test-secret";
     process.env.ORGOS_TENANT = "mal";
     process.env.ORGOS_WORKSPACE = process.cwd();
+    registrySnapshot = readFileSync(operatorsRegistryPath(), "utf-8");
     clearOperatorsRegistryCacheForTests();
     resetSessionsForTests();
   });
 
   afterEach(() => {
+    writeFileSync(operatorsRegistryPath(), registrySnapshot, "utf-8");
     for (const [k, v] of Object.entries(prev)) {
       if (v === undefined) delete process.env[k];
       else process.env[k] = v;
@@ -109,30 +137,8 @@ operators:
       email: "k.lab.masa@gmail.com",
     });
 
-    let status = 0;
-    let location = "";
-    let cookie = "";
-    let bodyBuf = "";
-    const res = {
-      writeHead(code: number, headers?: Record<string, string>) {
-        status = code;
-        if (headers?.Location) location = headers.Location;
-        if (headers?.["Set-Cookie"]) cookie = headers["Set-Cookie"];
-      },
-      setHeader(name: string, value: string) {
-        if (name.toLowerCase() === "set-cookie") cookie = value;
-      },
-      end(chunk?: string) {
-        bodyBuf = chunk ?? "";
-      },
-    } as unknown as ServerResponse;
-
-    const url = new URL(
-      `http://127.0.0.1:9470/auth/community-handoff?token=${encodeURIComponent(idToken)}&next=/wire/`
-    );
-    handleCommunityHandoff({ method: "GET" } as IncomingMessage, res, url);
-
-    expect(status, bodyBuf).toBe(302);
+    const { status, location, cookie, body } = captureHandoff(idToken);
+    expect(status, body).toBe(302);
     expect(location).toBe("/wire/");
     expect(cookie).toContain("orgos_wire_session=");
 
@@ -142,29 +148,107 @@ operators:
     expect(user?.operator_id).toBe("OP-001");
   });
 
+  it("accepts grandfathered personal email on tenant login_policy", () => {
+    const { status, location } = captureHandoff(
+      mintWithEmail({ sub: "ooo-user-id", email: "k.lab.masa@gmail.com" }),
+    );
+    expect(status).toBe(302);
+    expect(location).toBe("/wire/");
+  });
+
   it("rejects unmapped email with requireRegistry", () => {
     const idToken = mintWithEmail({
       sub: "ooo-unknown",
       email: "nobody@example.com",
     });
-
-    let status = 0;
-    let body = "";
-    const res = {
-      writeHead(code: number) {
-        status = code;
-      },
-      setHeader() {},
-      end(chunk?: string) {
-        body = chunk ?? "";
-      },
-    } as unknown as ServerResponse;
-
-    const url = new URL(
-      `http://127.0.0.1:9470/auth/community-handoff?token=${encodeURIComponent(idToken)}&next=/`
-    );
-    handleCommunityHandoff({ method: "GET" } as IncomingMessage, res, url);
+    const { status, body } = captureHandoff(idToken);
     expect(status).toBe(401);
     expect(body).toContain("operators.yaml");
+  });
+
+  it("rejects mapped email outside login_policy.email_domains", () => {
+    writeFileSync(
+      operatorsRegistryPath(),
+      `version: "1"
+login_policy:
+  email_domains:
+    - malkk.com
+  grandfather_emails: []
+operators:
+  - operator_id: OP-001
+    display_name: "段燕燕"
+    role: ceo
+    status: active
+    approver_name: "段燕燕"
+    email: outsider@gmail.com
+    key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
+`,
+      "utf-8",
+    );
+    clearOperatorsRegistryCacheForTests();
+
+    const { status, body } = captureHandoff(
+      mintWithEmail({ sub: "ooo-user-id", email: "outsider@gmail.com" }),
+    );
+    expect(status).toBe(401);
+    expect(body).toContain("login_policy");
+  });
+
+  it("accepts company-domain email on the registry", () => {
+    writeFileSync(
+      operatorsRegistryPath(),
+      `version: "1"
+login_policy:
+  email_domains:
+    - malkk.com
+operators:
+  - operator_id: OP-001
+    display_name: "段燕燕"
+    role: ceo
+    status: active
+    approver_name: "段燕燕"
+    email: ceo@malkk.com
+    key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
+`,
+      "utf-8",
+    );
+    clearOperatorsRegistryCacheForTests();
+
+    const { status, location } = captureHandoff(
+      mintWithEmail({ sub: "ooo-user-id", email: "ceo@malkk.com" }),
+    );
+    expect(status).toBe(302);
+    expect(location).toBe("/wire/");
+  });
+
+  it("rejects token email that does not match the mapped operator email", () => {
+    writeFileSync(
+      operatorsRegistryPath(),
+      `version: "1"
+login_policy:
+  email_domains:
+    - malkk.com
+operators:
+  - operator_id: OP-001
+    display_name: "段燕燕"
+    role: ceo
+    status: active
+    approver_name: "段燕燕"
+    email: ceo@malkk.com
+    key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
+`,
+      "utf-8",
+    );
+    clearOperatorsRegistryCacheForTests();
+
+    const { status, body } = captureHandoff(
+      mintWithEmail({
+        sub: "ooo-user-id",
+        email: "other@malkk.com",
+        operator_id: "OP-001",
+      }),
+    );
+    expect(status).toBe(401);
+    expect(body).toContain("mapped operator email");
   });
 });

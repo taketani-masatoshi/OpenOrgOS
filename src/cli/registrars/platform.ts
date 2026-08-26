@@ -352,6 +352,44 @@ export function registerPlatformCommands(program: Command): void {
       })
     );
 
+  const tenantLifecycleCmd = tenantCmd
+    .command("lifecycle")
+    .description("Tenant winding-down / archive lifecycle");
+  tenantLifecycleCmd
+    .command("status")
+    .description("Show tenant lifecycle status")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runTenantLifecycleStatus } = await import("../../commands/tenant-lifecycle.js");
+      runTenantLifecycleStatus({ json: opts.json });
+    });
+  tenantLifecycleCmd
+    .command("declare-winding-down")
+    .description("Declare tenant winding_down (ceo/approver only — human CLI)")
+    .requiredOption("--operator-id <id>", "Declaring operator ID")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runTenantLifecycleDeclareWindingDown } = await import("../../commands/tenant-lifecycle.js");
+      runTenantLifecycleDeclareWindingDown({
+        operatorId: opts.operatorId,
+        json: opts.json,
+      });
+    });
+  tenantLifecycleCmd
+    .command("archive")
+    .description("Mark tenant archived after export")
+    .requiredOption("--export-id <id>", "Archive export identifier")
+    .option("--retention-until <date>", "Retention end date (ISO)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runTenantLifecycleArchive } = await import("../../commands/tenant-lifecycle.js");
+      runTenantLifecycleArchive({
+        exportId: opts.exportId,
+        retentionUntil: opts.retentionUntil,
+        json: opts.json,
+      });
+    });
+
   const wireCmd = program.command("wire").description("Inter-org Wire operator tools");
 
   wireCmd
@@ -489,19 +527,26 @@ export function registerPlatformCommands(program: Command): void {
 
   const tenantConfigCmd = program
     .command("tenant-config")
-    .description("Approval-gated modules/standards enabled toggles");
+    .description("Approval-gated modules/standards/agents toggles");
   tenantConfigCmd
     .command("propose")
-    .description("Propose enabling/disabling a standard or module (creates org approval)")
-    .requiredOption("--target <standards|modules>", "Config target")
-    .requiredOption("--id <id>", "ISO-27001 or module id")
+    .description("Propose enabling/disabling a standard, module, or agent (creates org approval)")
+    .requiredOption("--target <standards|modules|agents>", "Config target")
+    .requiredOption("--id <id>", "ISO-27001, module id, or agent id")
     .requiredOption("--enabled <bool>", "true or false", (v: string) => {
       if (v === "true" || v === "1") return true;
       if (v === "false" || v === "0") return false;
       throw new Error("--enabled must be true or false");
     })
+    .option("--action <set_enabled|import_enable>", "For modules: import catalog entry and enable")
     .option("--message <text>", "Human-readable summary")
-    .action((opts: { target: string; id: string; enabled: boolean; message?: string }) => {
+    .action((opts: {
+      target: string;
+      id: string;
+      enabled: boolean;
+      message?: string;
+      action?: string;
+    }) => {
       runTenantConfigPropose(opts);
     });
   tenantConfigCmd
@@ -595,6 +640,7 @@ export function registerPlatformCommands(program: Command): void {
     .option("--answers <jsonPath>", "Answers JSON (tenant-integrations-setup skill)")
     .option("--topic <name>", "Guide topic (platform-implement-guide skill)")
     .option("--json", "JSON output (platform-implement-guide skill)")
+    .option("--write", "Write files where supported (hospitality-sync-derived)")
     .action((id, opts) =>
       runSkill(id, {
         days: opts.days ? parseInt(opts.days, 10) : undefined,
@@ -612,6 +658,7 @@ export function registerPlatformCommands(program: Command): void {
         answers: opts.answers,
         topic: opts.topic,
         json: opts.json,
+        write: opts.write,
       })
     );
 
@@ -642,6 +689,24 @@ export function registerPlatformCommands(program: Command): void {
     .action(async (message: string, opts) => {
       const { runChatAsk } = await import("../../commands/chat.js");
       await runChatAsk(message, opts);
+    });
+  const chatMemoryCmd = chatCmd.command("memory").description("Chat answer-memory index");
+  chatMemoryCmd
+    .command("reindex")
+    .description("Rebuild derived answer-memory from chat threads")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runChatMemoryReindex } = await import("../../commands/chat.js");
+      await runChatMemoryReindex(opts);
+    });
+  const chatFaqCmd = chatCmd.command("faq").description("FAQ index from Good-rated Q&A");
+  chatFaqCmd
+    .command("build")
+    .description("Rebuild FAQ index now")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runChatFaqBuild } = await import("../../commands/chat.js");
+      await runChatFaqBuild(opts);
     });
 
   const operatorCmd = program.command("operator").description("CEO operator layer");
@@ -731,6 +796,71 @@ export function registerPlatformCommands(program: Command): void {
         operator: opts.operator,
       });
     });
+  const loginDomainCmd = operatorCmd
+    .command("login-domain")
+    .description("Company login domain policy (founder migration)");
+  loginDomainCmd
+    .command("set")
+    .description("Add company email domain and open founder migration grace if needed")
+    .requiredOption("--domain <domain>", "Company domain (e.g. malkk.com)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorLoginDomainSet } = await import("../../commands/operator-login-policy.js");
+      runOperatorLoginDomainSet({ domain: opts.domain, json: opts.json });
+    });
+
+  const founderEmailCmd = operatorCmd.command("founder-email").description("Founder personal email migration");
+  founderEmailCmd
+    .command("retire")
+    .description("Retire grandfather personal email after ceo uses company domain")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorFounderEmailRetire } = await import("../../commands/operator-login-policy.js");
+      runOperatorFounderEmailRetire({ json: opts.json });
+    });
+  founderEmailCmd
+    .command("status")
+    .description("Show founder migration status")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorFounderEmailStatus } = await import("../../commands/operator-login-policy.js");
+      runOperatorFounderEmailStatus({ json: opts.json });
+    });
+
+  const liquidatorCmd = operatorCmd.command("liquidator").description("Winding-down liquidator seats");
+  liquidatorCmd
+    .command("add")
+    .description("Add liquidator seat (winding_down only)")
+    .requiredOption("--email <email>", "Company-domain liquidator email")
+    .requiredOption("--until <date>", "guest_expires_at (ISO date)")
+    .requiredOption("--display-name <name>", "Display name")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorLiquidatorAdd } = await import("../../commands/operator-liquidator.js");
+      runOperatorLiquidatorAdd({
+        email: opts.email,
+        until: opts.until,
+        displayName: opts.displayName,
+        json: opts.json,
+      });
+    });
+  liquidatorCmd
+    .command("extend")
+    .description("Extend liquidator seat (max 24 months from winding_down)")
+    .requiredOption("--operator-id <id>", "Liquidator operator ID")
+    .requiredOption("--until <date>", "New guest_expires_at")
+    .requiredOption("--reason <text>", "Audit reason (L1)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOperatorLiquidatorExtend } = await import("../../commands/operator-liquidator.js");
+      runOperatorLiquidatorExtend({
+        operatorId: opts.operatorId,
+        until: opts.until,
+        reason: opts.reason,
+        json: opts.json,
+      });
+    });
+
   operatorCmd
     .command("sync-policy")
     .description("Sync steward/rules to Cursor mirrors, AGENTS.md, and engineering 00–09")

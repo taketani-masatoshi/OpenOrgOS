@@ -7,10 +7,18 @@ import {
   type OperatorRegistry,
   type OperatorRole,
 } from "../../../schemas/org/operator.js";
+import {
+  normalizeOooLoginEmailPolicy,
+  standingEntriesFromRegistry,
+  type OooLoginEmailPolicy,
+  type StandingOperatorEmailEntry,
+} from "./ooo-login-email.js";
 import type { OrgChartNode } from "../../../schemas/org/org-chart.js";
-import { tenantDataPath, getTenantId } from "../tenant.js";
+import { tenantDataPath, getTenantId, listTenantIds } from "../tenant.js";
+import { getTenantsDir } from "../orgos-paths.js";
 import { writeYamlFile } from "../utils.js";
 import { loadOrgChart } from "./org-chart.js";
+import { join } from "node:path";
 
 export const OPERATORS_REGISTRY_REL = "org/operators.yaml";
 
@@ -68,6 +76,34 @@ export function listActiveOperators(): OperatorRecord[] {
   const reg = loadOperatorRegistry();
   if (!reg) return [];
   return reg.operators.filter((o) => o.status === "active");
+}
+
+export function getOperatorLoginPolicy(): OooLoginEmailPolicy {
+  return normalizeOooLoginEmailPolicy(loadOperatorRegistry()?.login_policy);
+}
+
+/** Read operators.yaml for any tenant without switching ALS / cache. */
+export function loadOperatorRegistryForTenant(
+  tenantId: string,
+): OperatorRegistry | undefined {
+  const path = join(getTenantsDir(), tenantId, "data", "org", "operators.yaml");
+  if (!existsSync(path)) return undefined;
+  try {
+    return operatorRegistrySchema.parse(YAML.parse(readFileSync(path, "utf-8")));
+  } catch {
+    return undefined;
+  }
+}
+
+/** Standing human operator email seats across all tenants (for cross-tenant uniqueness). */
+export function collectStandingOperatorEmailEntries(): StandingOperatorEmailEntry[] {
+  const entries: StandingOperatorEmailEntry[] = [];
+  for (const tenantId of listTenantIds()) {
+    const reg = loadOperatorRegistryForTenant(tenantId);
+    if (!reg) continue;
+    entries.push(...standingEntriesFromRegistry(tenantId, reg));
+  }
+  return entries;
 }
 
 export type OutlookPublishCandidate = {
@@ -216,6 +252,13 @@ export function listOutlookPublishCandidates(): OutlookPublishCandidate[] {
 
 export function findOperatorById(operatorId: string): OperatorRecord | undefined {
   return listActiveOperators().find((o) => o.operator_id === operatorId);
+}
+
+/** Registry approver name for an operator — ignores stale session labels such as "Demo CEO". */
+export function boundApproverId(operatorId: string, fallback = ""): string {
+  const op = findOperatorById(operatorId.trim());
+  if (!op) return fallback.trim();
+  return op.approver_name?.trim() || op.display_name.trim() || fallback.trim();
 }
 
 export function findOperatorByKey(key: string): OperatorRecord | undefined {

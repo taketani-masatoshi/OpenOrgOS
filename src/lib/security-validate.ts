@@ -1,12 +1,24 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadOperatorRegistry, registryHasApprovers } from "./org/operators.js";
+import {
+  collectStandingOperatorEmailEntries,
+  loadOperatorRegistry,
+  registryHasApprovers,
+} from "./org/operators.js";
+import {
+  assertCanAddStandingHuman,
+  assertFounderGrandfatherPolicy,
+  assertFounderMigrationPolicy,
+  findStandingOperatorEmailCollisions,
+  listOperatorEmailsOutsideLoginPolicy,
+} from "./org/ooo-login-email.js";
 import { loadAuthorizedApprovers } from "./org/authorized-approvers.js";
 import { isProdSecurityMode } from "./console-auth/operator-rbac.js";
 import { OPERATOR_RUNTIME_CONFIG_PATH } from "./steward-paths.js";
 import type { AgentId } from "../../schemas/classification.js";
 import { checkAgentAccess, loadClassificationRegistry } from "./classification.js";
 import { loadAgentCapabilityManifest } from "./agent-capability.js";
+import { getTenantLifecycleStatus } from "./org/tenant-lifecycle.js";
 import { ROOT_DIR } from "./tenant.js";
 
 export interface SecurityIssue {
@@ -109,6 +121,61 @@ export function runSecurityChecks(): SecurityIssue[] {
       level: "error",
       file: "data/org/operators.yaml",
       message: "No ceo/approver operator in registry",
+    });
+  }
+
+  if (reg) {
+    for (const issue of assertFounderGrandfatherPolicy(reg)) {
+      issues.push({
+        level: "error",
+        file: "data/org/operators.yaml",
+        message: issue.message,
+      });
+    }
+    for (const issue of assertFounderMigrationPolicy(reg)) {
+      issues.push({
+        level: isProdSecurityMode() ? "error" : "warning",
+        file: "data/org/operators.yaml",
+        message: issue.message,
+      });
+    }
+    const standingBlock = assertCanAddStandingHuman(reg);
+    if (standingBlock) {
+      issues.push({
+        level: "error",
+        file: "data/org/operators.yaml",
+        message: standingBlock.message,
+      });
+    }
+    for (const row of listOperatorEmailsOutsideLoginPolicy(reg)) {
+      if (row.reason === "personal_not_founder") continue;
+      issues.push({
+        level: "error",
+        file: "data/org/operators.yaml",
+        message: `Operator ${row.operator_id} email is outside login_policy.email_domains (add a company-domain email or an explicit grandfather_emails entry)`,
+      });
+    }
+  }
+
+  const lifecycleStatus = getTenantLifecycleStatus();
+  if (lifecycleStatus === "archived") {
+    issues.push({
+      level: isProdSecurityMode() ? "error" : "warning",
+      file: "data/org/tenant-lifecycle.yaml",
+      message: "tenant lifecycle is archived — SSO and standing invites are blocked",
+    });
+  }
+
+  for (const collision of findStandingOperatorEmailCollisions(
+    collectStandingOperatorEmailEntries(),
+  )) {
+    const seatLabel = collision.seats
+      .map((s) => `${s.tenantId}/${s.operator_id}`)
+      .join(", ");
+    issues.push({
+      level: "error",
+      file: `tenants/${collision.seats[0]?.tenantId ?? "unknown"}/data/org/operators.yaml`,
+      message: `Standing operator email used across tenants (${seatLabel}) — each standing OOO seat needs a tenant-unique login email`,
     });
   }
 

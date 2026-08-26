@@ -1,6 +1,14 @@
 # Community Google SSO: email must match User.email (NextAuth Google login).
 # Founder Community login (k.lab.masa@gmail.com) → OP-001 for local Operator Console handoff.
 version: "1"
+login_policy:
+  email_domains:
+    - malkk.com
+  grandfather_emails:
+    - k.lab.masa@gmail.com
+  founder_migration:
+    status: grace
+    grace_until: "2026-11-24"
 operators:
   - operator_id: OP-001
     display_name: "段燕燕"

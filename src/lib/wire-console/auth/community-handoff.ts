@@ -27,7 +27,7 @@ a{color:#0071e3}
 </style></head><body>
 <h1>Operator Console に入れませんでした</h1>
 <p>${htmlEscape(message)}</p>
-<p>Community の Google ログインと <code>operators.yaml</code> の email / <code>operator_id</code> が紐付いているか確認してください。</p>
+<p>Community の Google ログインと <code>operators.yaml</code> の email / <code>operator_id</code> が紐付いているか、会社ドメイン方針（<code>login_policy</code>）を満たしているか確認してください。</p>
 <p><a href="/">予実</a> · <a href="/wire/">Wire</a></p>
 </body></html>`;
   res.writeHead(status, { "Content-Type": "text/html; charset=utf-8" });
@@ -63,9 +63,13 @@ export function handleCommunityHandoff(
   const verified = verifyOidcIdToken(token, { requireRegistry: true });
   if ("error" in verified) {
     const hint =
-      verified.error.includes("not mapped") || verified.error.includes("operators.yaml")
-        ? `${verified.error} — テナント data/org/operators.yaml に Google と同じ email を登録するか、Community User.orgosOperatorId を設定してください。`
-        : verified.error;
+      verified.error.includes("lifecycle archived")
+        ? "テナントは archived 状態のため SSO できません。CEO による復旧が必要です。"
+        : verified.error.includes("login_policy")
+        ? `${verified.error} — Operator Console の SSO はテナント login_policy.email_domains（または移行中の grandfather_emails）に限られます。`
+        : verified.error.includes("not mapped") || verified.error.includes("operators.yaml")
+          ? `${verified.error} — テナント data/org/operators.yaml に Google と同じ email を登録するか、Community User.orgosOperatorId を設定してください。`
+          : verified.error;
     handoffErrorPage(res, 401, hint);
     return true;
   }
