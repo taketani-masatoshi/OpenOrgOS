@@ -37,11 +37,17 @@ agents:
       - compliance-permit
     skills:
       - iso_control_review
+      - jp_carbon_neutral_show
+      - jp_carbon_neutral_targets
       - jp_permit_application_ops
       - jp_permit_gap
       - jp_permit_obligations
+      - jp_privacy_policy_show
+      - jp_privacy_policy_status
       - jp_trademark_checklist
       - jp_trademark_draft
+      - jp_women_empowerment_kpi
+      - jp_women_empowerment_show
       - permit_expiry_check
     pulse_checks:
       - type: path_exists
@@ -303,7 +309,6 @@ agents:
     route_ids:
       - broker-transfer-gate
       - cashflow-forecast
-      - finance-noi
       - finance-variance
       - monthly-close
     skills:
@@ -317,6 +322,8 @@ agents:
       - jp_subsidy_labor_cost
       - monthly_close
       - noi_analysis
+      - retail_store_margin
+      - retail_store_show
       - variance_analysis
     pulse_checks:
       - type: path_exists
@@ -549,21 +556,36 @@ agents:
     docs_paths:
       - docs/io/
     route_ids:
+      - change-apply
+      - change-plan
       - deps-check
       - inbox-routing
       - outbox-routing
       - travel-booking
     skills:
+      - change_apply
+      - change_plan
+      - clinic_appointments
+      - clinic_show
+      - construction_show
+      - construction_site_progress
       - deps_check
       - ecommerce_ops
+      - education_enrollment
+      - education_show
       - event_operations_ops
+      - event_space_show
+      - event_space_utilization
+      - logistics_delivery_sla
+      - logistics_show
       - membership_ops
-      - operations_records
       - operations_records_review
       - operations_travel_booking
       - professional_services_ops
       - property_management_ops
       - real_estate_brokerage_ops
+      - restaurant_seating
+      - restaurant_show
       - saas_subscription_ops
       - software_outsourcing_ops
       - staffing_ops
@@ -904,6 +926,8 @@ agents:
       - tax-filing
     skills:
       - consumption_tax_calc
+      - jp_consumption_refund_eligibility
+      - jp_consumption_refund_show
       - jp_consumption_tax_return
       - jp_corporate_tax_return
       - jp_invoice_registration

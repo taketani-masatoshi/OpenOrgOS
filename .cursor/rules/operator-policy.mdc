@@ -102,6 +102,118 @@ orgos dashboard
 
 ---
 
+## 4.1a ローカル LLM 向け変更ゲート（等級 A/B/C）
+
+ローカル LLM（Ollama 等）は会社 YAML を **直接書き換えない**。意図は JSON/YAML → `orgos change plan` → dry-run → 人間確認 → `orgos change apply`。
+
+正本スキーマ: `schemas/operator-change.ts` · 実装: `src/lib/operator-change/` · ADR: [0060](../../docs/adr/0060-local-llm-change-gates.md)
+
+| 等級 | 例 | apply |
+|------|-----|--------|
+| **A** | `opened_date` / `max_guests` / hospitality `sync-derived` | dry-run 後、Steward Chat の確認カード（CommandActionCard）または CLI `--write` |
+| **B** | 予実・宿泊税・滞在台帳の連動 | plan まで。apply は `--i-understand-grade-b` または人間セッションのみ |
+| **C** | 損金設計・許可変更届・保険を外す | plan の論点メモのみ。**apply 禁止** |
+
+- Chat スキル: `change_plan`（kind `read`）· `change_apply`（kind `write` → 既存どおり confirmation plan）
+- 監査: `data/operator/change-audit.jsonl`（gitignore）
+- ask のみ（tools なし）の応答経路は変更しない。黙って `data/**/*.yaml` を書く経路は増やさない
+
+---
+
+## 4.1b ローカル LLM ERROR フォールバック
+
+worker `tier: local` の LLM 応答で、必要情報が prompt / tool 結果 / 添付に無いときは **「未確認」や拒否エッセイを出さず**、出力は **`ERROR: <理由>` の1行のみ**とする。
+
+正本: [local-llm-error-fallback.md](local-llm-error-fallback.md) · 実装: `src/lib/operator-runtime/local-llm-error-fallback.ts` · ADR: [0061](../../docs/adr/0061-local-llm-error-fallback.md)
+
+- runtime が `tool-loop` で block 注入 + 応答 enforce（`ORGOS_LOCAL_LLM_ERROR_FALLBACK=0` で無効）
+- クラウド worker は従来 Grounding（未確認）を維持
+- 意図的 `ERROR:` は Fact refusal guard で Work Order 起票しない
+
+---
+
+## 4.2 OOO / Operator Console ログイン制限（会社ドメイン）
+
+会社の根幹（Operator Console）への Community SSO は、名簿照合に加え、テナントが宣言したログインメールドメインに限定する。
+
+正本: `tenants/{id}/data/org/operators.yaml` の `login_policy` · 実装: `src/lib/org/ooo-login-email.ts` · 寿命: `data/org/tenant-lifecycle.yaml`
+
+| 項目 | 意味 |
+|------|------|
+| `email_domains` | 人間オペレータの SSO メールが属する会社ドメイン（例: `malkk.com`） |
+| `grandfather_emails` | **創業者1席のみ**（最大1件）。active ceo の email と一致必須。新規追加しない |
+| `founder_migration` | 創業者 Gmail → 会社ドメイン移行枠（`status` · `grace_until` · `closed_at`） |
+
+### 本鍵 / 第2鍵（PassKey）
+
+| 鍵 | 用途 |
+|----|------|
+| **本鍵** | 会社ドメイン Community SSO |
+| **第2鍵** | ログイン PassKey（Mac + 予備 iPhone、**operator あたり最大2** · `WIRE_CONSOLE_WEBAUTHN_ALLOW_ADDITIONAL_LOGIN=1`） |
+| **Settlement PassKey** | 承認専用 — ログイン復旧に使わない |
+
+故障時: SSO 本鍵で再ログイン → 壊れた login PassKey を credentials API で削除 → 再登録。
+
+### 創業者ドメイン移行（CLI · 人間のみ）
+
+```bash
+orgos operator login-domain set --domain malkk.com   # 初回 domain 設定時 grace 90日
+orgos operator founder-email status
+orgos operator founder-email retire                 # ceo が会社メール SSO 確認後
+```
+
+- `grace_until` 超過かつ grandfather 残存 → validate warning（非 prod）/ error（prod）
+- grandfather 残存中は **2人目の常勤人間を invite 不可**（retire 必須）
+
+### 清算人席（`seat_kind: liquidator`）
+
+- `liquidator@会社ドメイン` · `guest_expires_at` 必須 · 個人 grandfather 不可
+- **tenant lifecycle `winding_down` 中のみ**追加可
+- 延長は `winding_down.declared_at` から **最長24か月**
+
+```bash
+orgos tenant lifecycle declare-winding-down --operator-id OP-001
+orgos operator liquidator add --email liquidator@malkk.com --until 2027-06-30 --display-name "清算人"
+orgos operator liquidator extend --operator-id OP-LIQ-001 --until 2027-12-31 --reason "..."
+```
+
+### テナント寿命
+
+正本: `tenants/{id}/data/org/tenant-lifecycle.yaml` · `active → winding_down → archived → purged`
+
+| status | SSO | standing invite | liquidator |
+|--------|-----|-----------------|------------|
+| `active` | 通常 | 通常 | 不可 |
+| `winding_down` | ceo/approver/liquidator のみ | 不可 | 可 |
+| `archived` | 拒否 | 不可 | 不可 |
+
+```bash
+orgos tenant lifecycle status
+orgos tenant lifecycle declare-winding-down --operator-id OP-001
+orgos tenant lifecycle archive --export-id <export-id>
+```
+
+LLM / MCP は lifecycle · retire · liquidator extend を実行しない。
+
+席の規則（役職ではなく席の種類）:
+
+| 席 | メール |
+|----|--------|
+| ドメイン取得前の創業者 1 名（active ceo） | 個人メール可（`grandfather_emails`） |
+| AIA / メールなしエージェント | SSO メールなし |
+| 2人目以降の常勤人間 | 会社ドメイン必須（先に `email_domains`） |
+| 税理士・業務委託 | 期限付きゲスト（`guest_expires_at`）。常勤にしない |
+| 同一メールの複数テナント常勤 | **禁止**（ゲストは可） |
+
+- ドメイン未設定（空 / 省略）のデモテナントは名簿照合のみ。常勤人間メールが2件以上なら error
+- Community SSO の token email は、mapped operator の `email` と一致必須（operator に email がある場合）
+- PassKey ログインは `operator_id` バインド済みのためドメイン検査しない
+- `mcp_service` と期限付きゲストはドメイン・横断検査の免除
+- 新規 standing operator の email はドメインまたは grandfather に一致必須
+- LLM / MCP は `login_policy` を変更しない
+
+---
+
 ## 5. 生成物
 
 | 種別 | パス |

@@ -13,7 +13,7 @@ Thank you for staying with us. This is a **quiet residential neighborhood** — 
 |---|---|
 | **Check-in** | 3:00 PM onward |
 | **Check-out** | By 10:00 AM |
-| **Max guests** | 7 (including children) — no unregistered overnight guests |
+| **Max guests** | <!-- orgos:sync max_guests_en -->8 (including children) — no unregistered overnight guests<!-- /orgos:sync --> |
 | **Quiet hours** | **10:00 PM – 7:00 AM** — lower voices, TV, and music |
 | **Smoking** | **Not allowed anywhere** — indoors, balcony, entrance, or street in front of the house. Includes e-cigarettes. |
 | **Parties & events** | Not allowed |

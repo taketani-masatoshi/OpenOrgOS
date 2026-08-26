@@ -60,6 +60,10 @@ nodes:
     label: 亀沢 稼働率
     category: parameter
     path: data/properties/PROP-002.yaml
+  - id: PROP-002.hotel.opened_date
+    label: 亀沢 開業日
+    category: parameter
+    path: data/properties/PROP-002.yaml
   - id: PROP-002.hotel.adr
     label: 亀沢 ADR
     category: parameter
@@ -306,13 +310,13 @@ edges:
   - from: data/finance/fixed-assets.yaml
     to: docs/finance/fixed-asset-register.md
     category: data→docs
-    reason: 固定資産台帳 MD は YAML 更新後に同期
-    action: review
+    reason: 固定資産台帳 MD は tax_filing_prep スキルで YAML から再生成
+    action: regenerate
   - from: data/finance/tax-profile.yaml
     to: docs/finance/tax-filing-checklist.md
     category: data→docs
-    reason: 申告期限・確定項目はチェックリスト MD と一致
-    action: review
+    reason: 申告期限・確定項目は tax_filing_prep スキルでチェックリスト MD を再生成
+    action: regenerate
   - from: data/finance/chart-of-accounts.yaml
     to: data/finance/monthly
     category: data→data
@@ -558,7 +562,7 @@ edges:
     to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/house-rules.md
     category: operations→docs
     reason: チェックイン時間・人数上限等はゲスト MD と一致させる
-    action: review
+    action: sync
   - from: data/operations/kamezawa-public.yaml
     to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/local-guide-en.md
     category: operations→docs
@@ -568,7 +572,27 @@ edges:
     to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/welcome-sheet.md
     category: operations→docs
     reason: 連絡先・施設名をウェルカムシートに反映
+    action: sync
+  - from: data/operations/kamezawa-public.yaml
+    to: data/hospitality/operations-public.yaml
+    category: operations→data
+    reason: legacy 公開 YAML は kamezawa-public の dual-write
+    action: sync
+  - from: PROP-002.hotel.opened_date
+    to: data/operations/stays.yaml
+    category: property→operations
+    reason: 開業日前の滞在は integrity warning
     action: review
+  - from: data/operations/kamezawa-public.yaml
+    to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/ハウスルール.md
+    category: operations→docs
+    reason: 定員は sync-derived マーカーで同期
+    action: sync
+  - from: data/operations/kamezawa-public.yaml
+    to: docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/宿泊約款・ハウスルール.md
+    category: operations→docs
+    reason: 定員条項は sync-derived マーカーで同期
+    action: sync
   - from: data/operations/kamezawa-public.yaml
     to: docs/io/outbox/lodging
     category: operations→docs

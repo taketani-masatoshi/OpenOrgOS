@@ -217,6 +217,42 @@ skills:
       kind: read
       permission: chat:read
       label: キャッシュフロー予測
+  - id: change_plan
+    file: change_plan.md
+    runtime: cli
+    cli_command: change-plan
+    handler: change_plan
+    description: 等級付き変更提案（ローカル LLM 向けゲート）
+    agent_id: operations
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 変更プラン
+      keywords:
+        - change plan
+        - 変更提案
+        - grade A
+      args:
+        - { name: body, type: string, required: false }
+  - id: change_apply
+    file: change_apply.md
+    runtime: cli
+    cli_command: change-apply
+    handler: change_apply
+    description: 変更提案の dry-run / apply（確認カード必須）
+    agent_id: operations
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: 変更適用
+      keywords:
+        - change apply
+        - 変更適用
+      args:
+        - { name: id, type: string, required: true }
+        - { name: write, type: boolean, required: false }
   - id: contract_register
     file: contract_register.md
     runtime: cli

@@ -12,7 +12,7 @@
 | **Quiet: 10 PM – 7 AM** | **夜間: 22時〜7時は静かに** |
 | **No smoking anywhere** | **全面禁煙** |
 | **Trash → kitchen bins only** | **ゴミはキッチンで分別** |
-| **Max 7 guests** | **定員7名** |
+| <!-- orgos:sync max_guests_welcome -->**Max 8 guests** | **定員8名**<!-- /orgos:sync --> |
 
 ---
 

@@ -7,6 +7,12 @@ tests/.fixture-restore.lock/
 .orgos-ci/
 .orgos/
 data/.orgos/
+tenants/*/data/.orgos/
+tenants/*/data/chat/answer-memory/
+tenants/*/data/chat/faq-index/
+tenants/*/data/*.pre-repair-*.bak
+# Agent FS-guard private keys (public identities live in data/org/agent-identities.yaml)
+
 # Wire Console build output
 apps/wire-console/dist/
 scratch/*
@@ -30,6 +36,7 @@ tenants/*/data/operations/kamezawa-secrets.yaml
 tenants/*/data/operations/*-secrets.yaml
 tenants/*/data/operations/travel-portals.yaml
 tenants/*/data/finance/bank-accounts.yaml
+tenants/*/data/hr/payroll-detail/**
 tenants/*/data/integrations/integrations.yaml
 tenants/*/data/protocol/signing-key.pem
 tenants/*/data/protocol/signing-key.pem.bak-*
@@ -70,6 +77,8 @@ tenants/*/docs/protocol/inbox/**
 !tenants/*/docs/protocol/inbox/**/00-このフォルダについて.md
 tenants/*/data/org/audit-bridge-state.yaml
 tenants/*/data/protocol/wire-gateway-audit.jsonl
+tenants/*/data/operator/change-audit.jsonl
+tenants/*/data/operator/change-proposals/
 tenants/*/data/protocol/federation-gossip-store.yaml
 tenants/*/data/executive/mail-receive-state.yaml
 tenants/*/data/executive/mail-interpretation-queue.yaml
@@ -146,3 +155,7 @@ packages/orgos-cli/apps/
 tenants/phase4-restore-test/
 tenants/sch-verify/**
 !tenants/sch-verify/data/operator/agents.yaml
+
+# Operator Console production secrets
+deploy/operator-console/env/production.env
+data/product/stripe-secrets.env

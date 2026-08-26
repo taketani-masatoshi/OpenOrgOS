@@ -163,6 +163,55 @@ routes:
       paths:
         - data/finance/
 
+  - id: change-plan
+    description: 等級付き変更提案
+    agent: operations
+    skill: change_plan
+    priority: 74
+    resource_paths:
+      - data/properties/PROP-002.yaml
+      - data/operations/kamezawa-public.yaml
+    match:
+      keywords:
+        - change plan
+        - 変更提案
+        - 変更プラン
+        - grade A
+        - max_guests
+        - opened_date
+      paths: []
+
+  - id: change-apply
+    description: 変更提案の適用（確認カード）
+    agent: operations
+    skill: change_apply
+    priority: 73
+    resource_paths:
+      - data/properties/PROP-002.yaml
+      - data/operations/kamezawa-public.yaml
+    match:
+      keywords:
+        - change apply
+        - 変更適用
+        - apply change
+      paths: []
+
+  - id: hospitality-sync-derived
+    description: 旅館公開 YAML · ゲスト MD マーカー同期
+    agent: hospitality
+    skill: hospitality_sync_derived
+    priority: 72
+    resource_paths:
+      - data/operations/kamezawa-public.yaml
+      - data/properties/PROP-002.yaml
+    match:
+      keywords:
+        - sync-derived
+        - ゲスト MD
+        - 定員同期
+        - hospitality sync
+      paths: []
+
   - id: contract-register
     description: 契約台帳サマリ
     agent: contract

@@ -6,10 +6,11 @@ acquired_date: "2025-06-01"
 acquisition_price: 96000000
 financing: LOAN-002
 hotel:
+  # 1棟貸しの販売単位。物理客室数は notes（3室）。room_count を 3 にすると計画売上が3倍になる。
   room_count: 1
   occupancy_rate: 0.70
   adr: 50000
-  opened_date: "2026-08-01"
+  opened_date: "2026-09-18"
 operating_costs:
   cleaning_per_stay: 12000
   ota_commission_rate: 0.155
@@ -26,6 +27,6 @@ notes: |
   土地: 2025年6月購入、7,000万円（売主 株式会社日本住宅 · CTR-006 · STK-004）。
   上置き2,600万円（請負 株式会社日本住宅 · CTR-007 · STK-004 · 営業 佐々木）。
   総投資9,600万円（役員貸付・全額）。
-  開業: 2026年8月（opened_date）。
-  1棟貸し。物理3室・最大7名・平均5名。
+  開業: 2026-09-18（opened_date · 8月開業から遅延）。
+  1棟貸し。物理3室・最大8名。料金前提（ADR）は税理士・料金改定まで現行のまま。
   料金: 10,000円/人/泊×5名＝50,000円/泊。稼働率70%。

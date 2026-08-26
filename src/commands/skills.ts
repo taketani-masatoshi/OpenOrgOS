@@ -260,6 +260,18 @@ export const SKILL_COMMANDS = [
     description: "キャッシュフロー予測",
   },
   {
+    id: "change-plan",
+    skill: "change_plan",
+    agent: "Operations",
+    description: "等級付き変更提案（ローカル LLM ゲート）",
+  },
+  {
+    id: "change-apply",
+    skill: "change_apply",
+    agent: "Operations",
+    description: "変更提案の dry-run / apply",
+  },
+  {
     id: "hr-headcount",
     skill: "hr_headcount",
     agent: "Human Resources",
@@ -683,6 +695,44 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     case "forecast":
       runForecast({ months: 12, format: opts.markdown ? "markdown" : "text", output: opts.output });
       break;
+    case "change-plan": {
+      const { runChangePlan } = await import("./change.js");
+      let intentJson = opts.body;
+      if (!intentJson && opts.id) {
+        intentJson = JSON.stringify({
+          grade: "A",
+          summary: `apply intent ${opts.id}`,
+          intent_id: opts.id,
+        });
+      }
+      if (!intentJson) {
+        throw new Error(
+          "change-plan requires --body (intent YAML/JSON) or --id set_opened_date|set_max_guests|sync_derived"
+        );
+      }
+      let raw: unknown;
+      try {
+        raw = JSON.parse(intentJson);
+      } catch {
+        const YAML = (await import("yaml")).default;
+        raw = YAML.parse(intentJson);
+      }
+      runChangePlan({ intentJson: JSON.stringify(raw), json: opts.json, save: true });
+      break;
+    }
+    case "change-apply": {
+      const { runChangeApply } = await import("./change.js");
+      if (!opts.id) {
+        throw new Error("change-apply requires --id <proposalId>");
+      }
+      runChangeApply({
+        proposal: opts.id,
+        write: Boolean(opts.write),
+        dryRun: !opts.write,
+        json: opts.json,
+      });
+      break;
+    }
     case "hr-headcount":
       runHrHeadcount({ json: opts.json });
       break;

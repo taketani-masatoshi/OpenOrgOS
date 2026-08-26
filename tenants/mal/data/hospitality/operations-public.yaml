@@ -1,6 +1,5 @@
-# 亀沢旅館 — 施設公開情報（ゲスト・OTA用）
-
-# 機密（鍵コード・Wi-Fi PW・代表携帯）は kamezawa-secrets.yaml（gitignore）に記載。
+# 亀沢旅館 — 施設公開情報（legacy path · 正本は data/operations/kamezawa-public.yaml）
+# modules.yaml operations_public と同期。integrity 用に facilityPublicSchema 準拠。
 
 property_id: PROP-002
 name: "亀沢旅館（Kamezawa House）"
@@ -35,5 +34,5 @@ guest_docs:
   welcome_sheet: "docs/properties/PROP-002-kamezawa/operations/templates/guest-facing/welcome-sheet.md"
 
 notes: |
-  番地・スマートロック・Wi-Fiは secrets ファイルで管理。
-  ゲスト MD 更新時は本 YAML と secrets を同期。
+  正本: data/operations/kamezawa-public.yaml
+  番地・スマートロック・Wi-Fiは kamezawa-secrets.yaml で管理。

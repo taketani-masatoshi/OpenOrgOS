@@ -1,15 +1,34 @@
 skills:
-  - id: revpar_analysis
-    file: revpar_analysis.md
-    runtime: cli
-    cli_command: revpar
-    handler: revpar_analysis
-    description: RevPAR 分析
-    agent_id: hospitality
   - id: operations_records
     file: operations_records.md
     runtime: cli
     cli_command: records-check
     handler: operations_records
-    description: 宿泊 · 清掃 · クレーム記録
-    agent_id: operations
+    description: 宿泊 · 清掃 · クレーム記録の蓄積確認
+    agent_id: hospitality
+  - id: revpar_analysis
+    file: revpar_analysis.md
+    runtime: cli
+    cli_command: revpar
+    handler: revpar_analysis
+    description: 宿泊 RevPAR 要約
+    agent_id: hospitality
+  - id: hospitality_sync_derived
+    file: hospitality_sync_derived.md
+    runtime: cli
+    cli_command: hospitality-sync-derived
+    handler: hospitality_sync_derived
+    description: 公開 YAML · ゲスト MD マーカーを kamezawa-public / PROP-002 から同期
+    agent_id: hospitality
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: 旅館派生同期
+      keywords:
+        - sync-derived
+        - max_guests
+        - ゲスト MD
+        - 定員同期
+      args:
+        - { name: write, type: boolean, required: false }

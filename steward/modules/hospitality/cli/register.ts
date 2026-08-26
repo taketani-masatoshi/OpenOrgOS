@@ -2,6 +2,7 @@ import type { ModuleCliBundle } from "../../../../src/lib/module-cli-types.js";
 import type { SkillRunOptions } from "../../../../src/commands/skills.js";
 import { currentDate, writeMarkdownReport } from "../../../../src/lib/utils.js";
 import { checkOperationsRecords, formatRecordsCheck } from "./records-check.js";
+import { formatSyncDerivedResult, runHospitalitySyncDerived } from "./sync-derived.js";
 
 export const MODULE_ID = "hospitality";
 
@@ -20,6 +21,16 @@ function runRevparSkill(_opts: SkillRunOptions): void {
   console.log("次: npm run orgos -- skills run dashboard");
 }
 
+function runSyncDerivedSkill(opts: SkillRunOptions): void {
+  const write = Boolean(opts.write);
+  const result = runHospitalitySyncDerived({ write, dryRun: !write });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(formatSyncDerivedResult(result));
+}
+
 export const hospitalityCli: ModuleCliBundle = {
   moduleId: MODULE_ID,
   register(_ctx) {
@@ -28,5 +39,6 @@ export const hospitalityCli: ModuleCliBundle = {
   skillHandlers: {
     operations_records: runRecordsCheckSkill,
     revpar_analysis: runRevparSkill,
+    hospitality_sync_derived: runSyncDerivedSkill,
   },
 };

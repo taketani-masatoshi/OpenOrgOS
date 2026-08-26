@@ -39,6 +39,7 @@ import { getMailConfigPath } from "./correspondence/paths.js";
 import { loadMailTriageQueue } from "./correspondence/mail-triage-queue.js";
 import { resolveImapCredentials } from "./correspondence/imap-credentials.js";
 import { validateExpenseClaimsIntegrity } from "./finance/expense-claim.js";
+import { collectHospitalityIntegrityIssues } from "./hospitality/integrity.js";
 import { validateReceiptRegistryIntegrity } from "./receipt-qr.js";
 import { validateLlmWorkersIntegrity } from "./llm-pool/registry.js";
 import { validateChatCommandCatalog } from "./operator-commands/validate-catalog.js";
@@ -859,6 +860,18 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch {
     /* expense claims optional when finance accounting not seeded */
+  }
+
+  try {
+    for (const issue of collectHospitalityIntegrityIssues()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+  } catch {
+    /* hospitality opened_date lint optional */
   }
 
   try {

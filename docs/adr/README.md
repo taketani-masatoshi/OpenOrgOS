@@ -44,6 +44,11 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0049](0049-inbound-inquiry-intake.md) | インバウンド問合せメール intake（routing sales_inbound · inquiries 起票） | Accepted |
 | [0050](0050-customer-success-deterministic-stack.md) | カスタマーサクセス決定論スタック（health score · モジュール · fact provider） | Accepted |
 | [0053](0053-module-readiness-score.md) | Module Readiness Score（公式 7 軸 · `orgos modules readiness`） | Accepted |
+| [0056](0056-consumption-tax-assessment-vs-refund.md) | 消費税は集計（Assessment）と還付手続（Fulfilment）を分ける | Accepted |
+| [0058](0058-orgos-ledger-product-layer.md) | OrgOS Ledger 製品層（マネージド単一テナント · 電子帳簿必須 · e-Tax 別） | Accepted |
+| [0059](0059-chat-answer-memory.md) | Chat answer memory（クラウド回答をローカル LLM の参考注入） | Accepted |
+| [0060](0060-local-llm-change-gates.md) | ローカル LLM 変更ゲート（plan/apply · 等級 A/B/C） | Accepted |
+| [0061](0061-local-llm-error-fallback.md) | ローカル LLM ERROR フォールバック（`ERROR: <理由>` 1行） | Accepted |
 
 ## 新規 ADR
 

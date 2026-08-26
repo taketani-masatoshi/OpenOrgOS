@@ -79,6 +79,7 @@ import {
 } from "../../commands/company-events.js";
 import { COMPANY_EVENT_KINDS } from "../../lib/company-events.js";
 import { runDepsCheck, runDepsGraph, runImpact } from "../../commands/deps.js";
+import { runChangePlan, runChangeApply } from "../../commands/change.js";
 import { runInvoiceGenerateCommand } from "../../commands/invoice.js";
 import { runForecast } from "../../commands/forecast.js";
 import { runHrHeadcount } from "../../commands/hr.js";
@@ -599,6 +600,43 @@ export function registerDomainCommands(program: Command): void {
     .description("Print dependency relationship map (markdown)")
     .option("-o, --output <filename>", "Save to docs/reports/deps/")
     .action((opts) => runDepsGraph({ output: opts.output }));
+
+
+  const changeCmd = program.command("change").description("Gated tenant data change (local LLM safe)");
+  changeCmd
+    .command("plan")
+    .description("Build a graded change proposal from intent JSON/YAML")
+    .option("--intent-file <path>", "Intent YAML/JSON file")
+    .option("--intent-json <json>", "Intent JSON string")
+    .option("--no-save", "Do not write proposal under data/operator/change-proposals/")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runChangePlan({
+        intentFile: opts.intentFile,
+        intentJson: opts.intentJson,
+        save: opts.save,
+        json: opts.json,
+      })
+    );
+  changeCmd
+    .command("apply")
+    .description("Dry-run or apply a change proposal (grade C forbidden)")
+    .requiredOption("--proposal <idOrPath>", "Proposal id or YAML path")
+    .option("--write", "Write files (default dry-run)")
+    .option("--dry-run", "Force dry-run")
+    .option("--i-understand-grade-b", "Required for grade B write")
+    .option("--operator <id>", "Operator id for audit")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runChangeApply({
+        proposal: opts.proposal,
+        write: opts.write,
+        dryRun: opts.dryRun,
+        iUnderstandGradeB: opts.iUnderstandGradeB,
+        operator: opts.operator,
+        json: opts.json,
+      })
+    );
 
   program
     .command("impact <path>")
