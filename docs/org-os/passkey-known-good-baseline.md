@@ -9,7 +9,7 @@
 
 ## コード上の正本（ロールバック時にこのコミットへ戻す）
 
-**Git:** `1cd66f6f` — `Fix settlement PassKey scoping and add passkey state snapshot tooling.`
+**Git（コード）:** `1cd66f6f` — PassKey 修正本体 · `dddf2e2d` — 本 runbook
 
 | 領域 | パス |
 |------|------|
@@ -59,7 +59,8 @@ npm run passkey:field-check -- --url http://localhost:9470
 
 正本ディレクトリ: `${ORGOS_WORKSPACE}/.orgos/`（gitignore）
 
-**スナップショット ID（2026-08-27 保存済み）:** `20260826T154605Z-passkey-known-good-20260827`
+**スナップショット ID（2026-08-27 保存済み · コードコミット後）:** `20260826T154640Z-passkey-known-good-post-commit`  
+（初回: `20260826T154605Z-passkey-known-good-20260827`）
 
 ### 保存
 
@@ -81,7 +82,7 @@ cd /Users/kk/OS_Steward
 ```bash
 OPERATOR_PASSKEY_RESTORE_YES=1 ./scripts/operator-passkey-restore.sh latest
 # または特定 ID:
-OPERATOR_PASSKEY_RESTORE_YES=1 ./scripts/operator-passkey-restore.sh 20260826T154605Z-passkey-known-good-20260827
+OPERATOR_PASSKEY_RESTORE_YES=1 ./scripts/operator-passkey-restore.sh 20260826T154640Z-passkey-known-good-post-commit
 ```
 
 復元後:
