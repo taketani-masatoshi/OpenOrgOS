@@ -9,6 +9,8 @@
 
 ## コード上の正本（ロールバック時にこのコミットへ戻す）
 
+**Git:** `1cd66f6f` — `Fix settlement PassKey scoping and add passkey state snapshot tooling.`
+
 | 領域 | パス |
 |------|------|
 | Ceremony Router（login=`client-device` / settlement=`hybrid`） | `apps/shared/passkey-ceremony.ts` |
@@ -57,6 +59,8 @@ npm run passkey:field-check -- --url http://localhost:9470
 
 正本ディレクトリ: `${ORGOS_WORKSPACE}/.orgos/`（gitignore）
 
+**スナップショット ID（2026-08-27 保存済み）:** `20260826T154605Z-passkey-known-good-20260827`
+
 ### 保存
 
 ```bash
@@ -77,7 +81,7 @@ cd /Users/kk/OS_Steward
 ```bash
 OPERATOR_PASSKEY_RESTORE_YES=1 ./scripts/operator-passkey-restore.sh latest
 # または特定 ID:
-OPERATOR_PASSKEY_RESTORE_YES=1 ./scripts/operator-passkey-restore.sh 20260827T154500Z-passkey-known-good
+OPERATOR_PASSKEY_RESTORE_YES=1 ./scripts/operator-passkey-restore.sh 20260826T154605Z-passkey-known-good-20260827
 ```
 
 復元後:
