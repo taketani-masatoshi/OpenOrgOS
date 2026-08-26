@@ -1,0 +1,19 @@
+version: 1
+as_of: "2026-08-24"
+company_label: Sample Corp (demo)
+lines:
+  - holder_ref: STK-FOUNDERS
+    security_type: common
+    shares: 6000
+    fully_diluted_pct: 60
+    notes: Founder pool aggregate
+  - holder_ref: STK-EMP-POOL
+    security_type: stock_option
+    shares: 1000
+    fully_diluted_pct: 10
+    notes: ESOP reserved
+  - holder_ref: STK-INV-001
+    security_type: preferred
+    shares: 3000
+    fully_diluted_pct: 30
+    notes: Series A — link stakeholder_id in tenant vault

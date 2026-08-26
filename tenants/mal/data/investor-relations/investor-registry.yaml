@@ -1,0 +1,12 @@
+version: 1
+contacts:
+  - id: INV-001
+    label: Lead VC (Series A)
+    type: investor
+    organization_label: Sample Ventures LLC
+    notes: Primary IR contact — use stakeholder_ref in production tenant
+  - id: INV-002
+    label: Angel syndicate
+    type: shareholder
+    organization_label: Angel Group A
+    notes: Quarterly update distribution list

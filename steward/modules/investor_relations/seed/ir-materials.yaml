@@ -1,0 +1,14 @@
+version: 1
+materials:
+  - id: IRM-FY2026-FACT
+    title: FY2026 investor fact sheet
+    type: fact_sheet
+    status: draft
+    as_of: "2026-08-01"
+    doc_ref: docs/investor-relations/fy2026-fact-sheet.md
+    notes: Numbers from finance — human approval before external share
+  - id: IRM-Q1-DECK
+    title: Q1 earnings deck
+    type: earnings_deck
+    status: in_review
+    doc_ref: docs/investor-relations/q1-2026-deck.md

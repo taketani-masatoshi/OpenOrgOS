@@ -1,0 +1,15 @@
+skills:
+  - id: ir_cap_table_review
+    file: ir_cap_table_review.md
+    runtime: cli
+    cli_command: operations ir cap-table-review
+    handler: ir_cap_table_review
+    agent_id: investor_relations
+    description: Cap table validation — totals · duplicates
+  - id: ir_disclosure_calendar
+    file: ir_disclosure_calendar.md
+    runtime: cli
+    cli_command: operations ir disclosure-calendar
+    handler: ir_disclosure_calendar
+    agent_id: investor_relations
+    description: Upcoming disclosure calendar window
