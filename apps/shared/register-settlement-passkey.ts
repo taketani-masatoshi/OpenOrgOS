@@ -1,4 +1,5 @@
 import { assertWebAuthnRpHost } from "./webauthn-page-origin";
+import { buildRegistrationCeremonyOptions } from "./passkey-ceremony";
 import {
   browserSupportsWebAuthn,
   createPasskeyWithSimpleWebAuthn,
@@ -59,7 +60,8 @@ export async function registerSettlementPasskey(
 
   assertWebAuthnRpHost(regOpts.rp?.id);
 
-  const cred = await createPasskeyWithSimpleWebAuthn(regOpts);
+  const ceremony = buildRegistrationCeremonyOptions("settlement", regOpts);
+  const cred = await createPasskeyWithSimpleWebAuthn(ceremony);
 
   await api(registerPath, {
     method: "POST",

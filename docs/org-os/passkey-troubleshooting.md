@@ -40,7 +40,7 @@ Wire ログイン画面の ID は、登録時に使った値と一致させる�
 |------|------|
 | **ログイン PassKey（初回・本番）** | Community SSO セッション + **bootstrap token**（`orgos operator passkey-bootstrap mint`）→ 設定画面で Touch ID 登録 |
 | **ログイン PassKey（初回・非 production）** | Community SSO セッション → Touch ID 登録 |
-| **ログイン PassKey（追加）** | 既定 OFF（`WIRE_CONSOLE_WEBAUTHN_ALLOW_ADDITIONAL_LOGIN=1` でのみ） |
+| **ログイン PassKey（追加）** | 既定 OFF（`WIRE_CONSOLE_WEBAUTHN_ALLOW_ADDITIONAL_LOGIN=1` でのみ）· **同一 operator 最大2本**（Mac + iPhone 予備）· SSO が本鍵 |
 | **決済 PassKey** | ログイン済みセッション必須 · セッション identity 一致 · ceo/approver ロール |
 
 ### 2.2 bootstrap token（本番初回）
@@ -90,6 +90,15 @@ Wire / Steward Chat で handoff UI は同一（shared `PasskeyAuthPanel`）。
 2. Steward Chat または Wire で「**iPhone で登録**」
 3. Chrome / Safari が出す **ブラウザ標準 QR** を iPhone カメラで読む（Bluetooth オン）
 
+### 3.1 ログイン鍵（Touch ID）で承認できない
+
+承認・高額決裁は **決済 PassKey（iPhone）** のみ。Mac Touch ID ログイン鍵では承認できません。
+
+- 正本: `apps/shared/passkey-ceremony.ts`（Ceremony Router）
+- ログイン: `hints: client-device` · `purpose: login`
+- 決済: `hints: hybrid` · `purpose: settlement`
+- 承認タブで「iPhone で承認を開始」→ ブラウザ QR → iPhone カメラ
+
 ### 4. iPhone hybrid の前提
 
 - Mac と iPhone で **Bluetooth オン**
@@ -129,6 +138,21 @@ cd /Users/kk/OS_Steward && npm run settlement-passkey:verify -- --url http://loc
 ---
 
 ## credential バックアップ
+
+### スナップショット（推奨 · 2026-08-27）
+
+既知良好状態の保存・復元:
+
+```bash
+cd /Users/kk/OS_Steward
+./scripts/operator-passkey-snapshot.sh --label passkey-known-good
+./scripts/operator-passkey-snapshot.sh --list
+OPERATOR_PASSKEY_RESTORE_YES=1 ./scripts/operator-passkey-restore.sh latest
+```
+
+詳細: [passkey-known-good-baseline.md](./passkey-known-good-baseline.md)
+
+### RP 移行時の自動退避
 
 RP 移行時に `.orgos/wire-console-webauthn-credentials.json` を空にした場合、旧ファイルは  
 `.orgos/wire-console-webauthn-credentials.backup-pre-localhost-rp.json` に退避される。

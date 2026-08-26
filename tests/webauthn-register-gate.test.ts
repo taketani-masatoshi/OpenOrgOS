@@ -57,6 +57,11 @@ describe("webauthn register gate", () => {
     expect(gate?.status).toBe(401);
   });
 
+  it("allows first login passkey without session when open bootstrap is on", () => {
+    process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP = "1";
+    expect(assertLoginPasskeyRegistrationGate(undefined)).toBeNull();
+  });
+
   it("requires bootstrap token in production for first login passkey", () => {
     process.env.ORGOS_ENV = "production";
     const gate = assertLoginPasskeyRegistrationGate(
@@ -99,6 +104,34 @@ describe("webauthn register gate", () => {
     ]);
     const gate = assertLoginPasskeyRegistrationGate(undefined);
     expect(gate?.status).toBe(403);
+  });
+
+  it("blocks third login passkey when two already exist for operator", () => {
+    process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_ADDITIONAL_LOGIN = "1";
+    setWebAuthnCredentialsForTests([
+      {
+        credential_id: "a",
+        public_key_spki_base64: "x",
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        purpose: "login",
+      },
+      {
+        credential_id: "b",
+        public_key_spki_base64: "y",
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        purpose: "login",
+      },
+    ]);
+    const result = authorizeWebAuthnRegistration(
+      { operator_id: "OP-001", approver_id: "Demo CEO", purpose: "login" },
+      { operator_id: "OP-001", approver_id: "Demo CEO", mode: "prod" },
+    );
+    expect(result).toMatchObject({
+      error: expect.stringContaining("login passkey limit reached"),
+      status: 403,
+    });
   });
 
   it("requires settlement registration session and matching identity", () => {

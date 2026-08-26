@@ -12,7 +12,7 @@ import {
   saveWebAuthnCredential,
 } from "./webauthn-store.js";
 import { rpId } from "./webauthn-shared.js";
-import { webauthnOriginsEqual } from "./webauthn-origin.js";
+import { resolveExpectedWebAuthnOrigin, webauthnOriginsEqual } from "./webauthn-origin.js";
 import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
 import {
   authorizeWebAuthnRegistration,
@@ -26,6 +26,7 @@ import {
   consumePasskeyBootstrapToken,
   reservePasskeyBootstrapChallenge,
 } from "./passkey-bootstrap.js";
+import { markGuestInviteUsed, resolveGuestInviteToken } from "../../product/ledger-guest-invite.js";
 import {
   consumeWebAuthnChallenge,
   resetWebAuthnChallengeStoreForTests,
@@ -52,6 +53,7 @@ export function createWebAuthnRegisterOptions(
     approver_id: string;
     purpose?: WebAuthnCredentialPurpose;
     bootstrap_token?: string;
+    guest_invite_token?: string;
   },
   opts?: { sessionUser?: WireConsoleUser }
 ):
@@ -72,6 +74,7 @@ export function createWebAuthnRegisterOptions(
         userVerification: "required";
       };
       hints: Array<"hybrid" | "client-device">;
+      ceremony_kind: WebAuthnCredentialPurpose;
       purpose: WebAuthnCredentialPurpose;
     }
   | WebAuthnRegistrationFailure {
@@ -86,7 +89,13 @@ export function createWebAuthnRegisterOptions(
   const registerRpId = rpId();
 
   const challenge = randomBytes(32).toString("base64url");
-  if (purpose === "login" && isBootstrapTokenRequiredForLoginRegistration()) {
+  const guestInviteToken = body.guest_invite_token?.trim();
+  if (guestInviteToken) {
+    const invite = resolveGuestInviteToken(guestInviteToken);
+    if (!invite?.valid || invite.operator_id !== resolved.operator_id) {
+      return { error: "invalid guest invite token", status: 403 };
+    }
+  } else if (purpose === "login" && isBootstrapTokenRequiredForLoginRegistration()) {
     if (!body.bootstrap_token?.trim()) {
       return {
         error: "bootstrap token required for first passkey registration in production",
@@ -111,6 +120,7 @@ export function createWebAuthnRegisterOptions(
     purpose,
     rp_id: registerRpId,
     bootstrap_token: body.bootstrap_token?.trim() || undefined,
+    guest_invite_token: guestInviteToken || undefined,
   });
 
   const userId = createHash("sha256")
@@ -154,6 +164,7 @@ export function createWebAuthnRegisterOptions(
           userVerification: "required",
         },
     hints: settlement ? (["hybrid"] as const) : (["client-device"] as const),
+    ceremony_kind: purpose,
     purpose,
   };
 }
@@ -194,7 +205,7 @@ export function verifyWebAuthnRegistration(body: {
     return { error: "webauthn client data mismatch" };
   }
 
-  const expectedOrigin = process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN;
+  const expectedOrigin = resolveExpectedWebAuthnOrigin(clientData.origin);
   if (!webauthnOriginsEqual(clientData.origin, expectedOrigin)) {
     return {
       error:
@@ -257,7 +268,7 @@ export function verifyWebAuthnRegistration(body: {
 
   const bootstrapRegistration =
     purpose === "login" && isBootstrapTokenRequiredForLoginRegistration();
-  if (bootstrapRegistration && !pending.bootstrap_token) {
+  if (bootstrapRegistration && !pending.bootstrap_token && !pending.guest_invite_token) {
     return {
       error: "bootstrap token required for first passkey registration in production",
     };
@@ -265,7 +276,13 @@ export function verifyWebAuthnRegistration(body: {
 
   // Consume before persisting: a credential saved alongside a rejected token would
   // satisfy isLoginPasskeyBootstrap() and disable the gate entirely (ADR 0041).
-  if (bootstrapRegistration && pending.bootstrap_token) {
+  if (pending.guest_invite_token) {
+    const invite = resolveGuestInviteToken(pending.guest_invite_token);
+    if (!invite?.valid || invite.operator_id !== pending.operator_id) {
+      return { error: "invalid guest invite token" };
+    }
+    markGuestInviteUsed(pending.guest_invite_token);
+  } else if (bootstrapRegistration && pending.bootstrap_token) {
     const consumed = consumePasskeyBootstrapToken({
       token: pending.bootstrap_token,
       operatorId: pending.operator_id,

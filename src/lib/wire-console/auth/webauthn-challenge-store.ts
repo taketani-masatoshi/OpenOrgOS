@@ -59,6 +59,7 @@ export interface StoredWebAuthnChallenge {
   purpose?: "login" | "settlement";
   rp_id?: string;
   bootstrap_token?: string;
+  guest_invite_token?: string;
 }
 
 interface ChallengeStoreDocument {

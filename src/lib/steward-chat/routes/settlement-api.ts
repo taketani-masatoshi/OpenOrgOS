@@ -13,6 +13,8 @@ import {
   settlementAssuranceRequired,
   verifySettlementAssertionAndConsume,
 } from "../../org/settlement-stepup.js";
+import { boundApproverId } from "../../org/operators.js";
+import { isTenantConfigApprovalSubject } from "../../org/tenant-config-change.js";
 import { approveFromStewardChat } from "../wire-approve.js";
 import { appendChatAudit } from "../audit.js";
 import {
@@ -101,7 +103,7 @@ export async function handleSettlementApi(
       const created = createSettlementChallenge({
         approval,
         operatorId: opts.user.operator_id,
-        approverId: opts.user.approver_id,
+        approverId: boundApproverId(opts.user.operator_id, opts.user.approver_id),
         coApproverId: body.co_approver_id,
         apiOrigin,
       });
@@ -115,6 +117,7 @@ export async function handleSettlementApi(
       });
       json(res, 200, {
         ok: true,
+        ceremony_kind: "settlement",
         challenge_id: created.challenge.challenge_id,
         token: created.challenge.token,
         webauthn_challenge: created.challenge.webauthn_challenge,
@@ -124,6 +127,7 @@ export async function handleSettlementApi(
         qr_url: created.qr_url,
         qr: created.qr,
         allow_credentials: created.allow_credentials,
+        hints: created.hints,
       });
     } catch (e) {
       json(res, 400, { ok: false, error: e instanceof Error ? e.message : String(e) });
@@ -193,9 +197,14 @@ export async function handleSettlementApi(
         mode: "prod",
       };
 
+      const pendingApproval = findOrgApproval(verified.record.approval_id);
+      const reviewed =
+        body.reviewed === true ||
+        (pendingApproval != null && isTenantConfigApprovalSubject(pendingApproval.subject_type));
+
       const result = await approveFromStewardChat(verified.record.approval_id, user, {
         flush: body.flush !== false,
-        reviewed: body.reviewed === true,
+        reviewed,
         settlementAssertion: {
           challenge_id: body.challenge_id,
           token: body.token,

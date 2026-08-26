@@ -1,3 +1,6 @@
+import { PASSKEY_COPY } from "./console-copy";
+import type { UiLocale } from "./locale";
+
 export type PasskeyCredentialSummary = {
   credential_id: string;
   purpose: "login" | "settlement";
@@ -35,10 +38,13 @@ export function shortCredentialId(id: string): string {
   return `${id.slice(0, 8)}…${id.slice(-4)}`;
 }
 
-export function formatPasskeyCreatedAt(iso?: string): string {
+export function formatPasskeyCreatedAt(
+  iso?: string,
+  locale: UiLocale = "ja",
+): string {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleString("ja-JP", {
+    return new Date(iso).toLocaleString(locale === "en" ? "en-US" : "ja-JP", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -50,9 +56,13 @@ export function formatPasskeyCreatedAt(iso?: string): string {
   }
 }
 
-export function passkeyDeviceLabel(cred: PasskeyCredentialSummary): string {
-  if (cred.purpose === "settlement") return "iPhone（決済）";
-  if (cred.authenticator_attachment === "cross-platform") return "iPhone / 外部";
-  if (cred.authenticator_attachment === "platform") return "この Mac（Touch ID）";
-  return cred.purpose === "login" ? "ログイン" : "決済";
+export function passkeyDeviceLabel(
+  cred: PasskeyCredentialSummary,
+  locale: UiLocale = "ja",
+): string {
+  const copy = PASSKEY_COPY[locale];
+  if (cred.purpose === "settlement") return copy.deviceIphoneSettlement;
+  if (cred.authenticator_attachment === "cross-platform") return copy.deviceExternal;
+  if (cred.authenticator_attachment === "platform") return copy.deviceThisMac;
+  return cred.purpose === "login" ? copy.purposeLogin : copy.purposeSettlement;
 }

@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { completeSettlementPasskey } from "./complete-settlement-passkey";
+import { SETTLEMENT_COPY } from "./console-copy";
+import { useCopy } from "./define-copy";
+import { useUiLocale } from "./useUiLocale";
 import { webauthnUserMessage } from "./webauthn-user-error";
+import type { PasskeyCeremonyKind } from "./passkey-ceremony";
 
 export type SettlementPasskeyChallenge = {
   challenge_id: string;
   token: string;
   webauthn_challenge: string;
   rp_id: string;
+  ceremony_kind?: PasskeyCeremonyKind;
   expires_at?: string;
+  hints?: Array<"hybrid" | "client-device">;
   summary: {
     approval_id: string;
     subject_type: string;
@@ -25,8 +31,10 @@ export type SettlementPasskeyChallenge = {
 
 type Api = <T>(path: string, init?: RequestInit) => Promise<T>;
 
+type ModalStatus = "ready" | "waiting" | "done" | "error";
+
 /**
- * Hybrid settlement get on the console page — status, retry, cancel-safe.
+ * Hybrid settlement get on the console page — manual start, retry, cancel-safe.
  */
 export function SettlementPasskeyModal({
   challenge,
@@ -39,7 +47,7 @@ export function SettlementPasskeyModal({
   onSuccess: () => void;
   onCancel: () => void;
 }) {
-  const [status, setStatus] = useState<"waiting" | "done" | "error">("waiting");
+  const [status, setStatus] = useState<ModalStatus>("ready");
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const cancelledRef = useRef(false);
@@ -48,16 +56,18 @@ export function SettlementPasskeyModal({
   onSuccessRef.current = onSuccess;
   apiRef.current = api;
 
+  const copy = useCopy(SETTLEMENT_COPY);
+  const locale = useUiLocale();
   const amount = challenge.summary.amount
-    ? `${challenge.summary.amount.value.toLocaleString("ja-JP")} ${challenge.summary.amount.currency}`
+    ? `${challenge.summary.amount.value.toLocaleString(locale === "en" ? "en-US" : "ja-JP")} ${challenge.summary.amount.currency}`
     : "—";
   const subject = challenge.summary.message || challenge.summary.subject_type;
 
   useEffect(() => {
+    if (status !== "waiting") return;
+
     cancelledRef.current = false;
     let alive = true;
-    setStatus("waiting");
-    setError(null);
 
     void (async () => {
       try {
@@ -66,10 +76,9 @@ export function SettlementPasskeyModal({
           token: challenge.token,
           webauthn_challenge: challenge.webauthn_challenge,
           rp_id: challenge.rp_id,
+          ceremony_kind: challenge.ceremony_kind ?? "settlement",
           allow_credentials: challenge.allow_credentials,
-          hints: challenge.allow_credentials.some((c) => c.transports?.includes("usb"))
-            ? ["client-device"]
-            : ["hybrid"],
+          hints: challenge.hints,
         });
         if (!alive || cancelledRef.current) return;
         setStatus("done");
@@ -78,8 +87,9 @@ export function SettlementPasskeyModal({
         }, 600);
       } catch (err) {
         if (!alive || cancelledRef.current) return;
+        const message = webauthnUserMessage(err, { purpose: "settlement" });
         setStatus("error");
-        setError(webauthnUserMessage(err));
+        setError(message);
       }
     })();
 
@@ -88,10 +98,13 @@ export function SettlementPasskeyModal({
     };
   }, [
     attempt,
+    status,
     challenge.challenge_id,
     challenge.token,
     challenge.webauthn_challenge,
     challenge.rp_id,
+    challenge.ceremony_kind,
+    challenge.hints,
     challenge.allow_credentials,
   ]);
 
@@ -108,9 +121,17 @@ export function SettlementPasskeyModal({
     onCancel();
   }
 
+  function startCeremony() {
+    cancelledRef.current = false;
+    setError(null);
+    setStatus("waiting");
+  }
+
   function retry() {
     cancelledRef.current = false;
+    setError(null);
     setAttempt((n) => n + 1);
+    setStatus("waiting");
   }
 
   return (
@@ -122,36 +143,44 @@ export function SettlementPasskeyModal({
       aria-labelledby="settlement-passkey-title"
     >
       <div className="settlement-qr-card">
-        <h2 id="settlement-passkey-title">iPhone の PassKey で承認</h2>
+        <h2 id="settlement-passkey-title">{copy.title}</h2>
         <p className="settlement-qr-lead">
           {status === "done"
-            ? "承認できました。"
+            ? copy.done
             : status === "error"
-              ? error || "承認できませんでした。"
-              : "ブラウザの PassKey シートを開いています。iPhone のカメラで QR を読んでください。"}
+              ? error || copy.failed
+              : status === "waiting"
+                ? copy.waiting
+                : copy.ready}
         </p>
-        {status === "waiting" ? (
-          <p className="settlement-qr-hint">Mac と iPhone の Bluetooth をオンにしてください。</p>
+        {status === "ready" ? (
+          <p className="settlement-qr-hint">{copy.notLoginKey}</p>
+        ) : null}
+        {status === "ready" || status === "waiting" ? (
+          <p className="settlement-qr-hint">{copy.bluetoothOn}</p>
         ) : null}
         {status === "error" ? (
-          <p className="settlement-qr-hint">
-            Bluetooth がオフ、または距離が遠いと失敗します。もう一度試してください。
-          </p>
+          <p className="settlement-qr-hint">{copy.retryHint}</p>
         ) : null}
         <dl className="settlement-qr-meta">
           <div>
-            <dt>金額</dt>
+            <dt>{copy.amount}</dt>
             <dd>{amount}</dd>
           </div>
           <div>
-            <dt>件名</dt>
+            <dt>{copy.subject}</dt>
             <dd>{subject}</dd>
           </div>
         </dl>
         <div className="settlement-qr-actions">
+          {status === "ready" ? (
+            <button type="button" className="btn btn-primary" onClick={startCeremony}>
+              {copy.start}
+            </button>
+          ) : null}
           {status === "error" ? (
             <button type="button" className="btn btn-primary" onClick={retry}>
-              もう一度
+              {copy.again}
             </button>
           ) : null}
           <button
@@ -160,7 +189,7 @@ export function SettlementPasskeyModal({
             onClick={cancel}
             disabled={status === "done"}
           >
-            {status === "waiting" ? "キャンセル" : "閉じる"}
+            {status === "waiting" ? copy.cancel : copy.close}
           </button>
         </div>
       </div>

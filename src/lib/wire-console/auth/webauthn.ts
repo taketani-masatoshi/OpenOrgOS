@@ -3,7 +3,7 @@ import type { WireConsoleUser } from "./session.js";
 import { registerSession } from "./session.js";
 import { isWebAuthnTestSecretAllowed } from "./webauthn-verify.js";
 import { verifyWebAuthnAssertion } from "./webauthn-assertion.js";
-import { webauthnOriginsEqual } from "./webauthn-origin.js";
+import { configuredWebAuthnOrigin, resolveExpectedWebAuthnOrigin } from "./webauthn-origin.js";
 import {
   credentialPurpose,
   findWebAuthnCredential,
@@ -12,11 +12,12 @@ import {
   WebAuthnCredentialStoreCorruptError,
 } from "./webauthn-store.js";
 import {
+  isAdditionalLoginPasskeyRegistrationAllowed,
   isBootstrapTokenRequiredForLoginRegistration,
   isLoginPasskeyBootstrap,
+  isOpenBootstrapWithoutSessionAllowed,
 } from "./webauthn-register-gate.js";
 import { isWebAuthnRegistrationAllowed, isSettlementRegistrationAllowed } from "./webauthn-register.js";
-import { isAdditionalLoginPasskeyRegistrationAllowed } from "./webauthn-register-gate.js";
 import { rpId } from "./webauthn-shared.js";
 import {
   consumeWebAuthnChallenge,
@@ -40,11 +41,11 @@ export function getWebAuthnConfig() {
       registration_allowed: isWebAuthnRegistrationAllowed(),
       settlement_registration_allowed: isSettlementRegistrationAllowed(),
       additional_login_registration_allowed: isAdditionalLoginPasskeyRegistrationAllowed(),
-      login_registration_requires_session: true,
+      login_registration_requires_session: !isOpenBootstrapWithoutSessionAllowed(),
       login_registration_bootstrap: isLoginPasskeyBootstrap(),
       bootstrap_token_required: isBootstrapTokenRequiredForLoginRegistration(),
       approve_origin: approveOrigin.replace(/\/$/, ""),
-      origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
+      origin: configuredWebAuthnOrigin(),
       credential_store_ok: true as const,
     };
   } catch (error) {
@@ -58,11 +59,11 @@ export function getWebAuthnConfig() {
         registration_allowed: false,
         settlement_registration_allowed: false,
         additional_login_registration_allowed: false,
-        login_registration_requires_session: true,
+        login_registration_requires_session: !isOpenBootstrapWithoutSessionAllowed(),
         login_registration_bootstrap: false,
         bootstrap_token_required: false,
         approve_origin: approveOrigin.replace(/\/$/, ""),
-        origin: (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "") || undefined,
+        origin: configuredWebAuthnOrigin(),
         credential_store_ok: false as const,
         credential_store_error: error.message,
       };
@@ -72,6 +73,7 @@ export function getWebAuthnConfig() {
 }
 
 export function createWebAuthnLoginOptions(): {
+  ceremony_kind: "login";
   challenge: string;
   rp_id: string;
   timeout: number;
@@ -87,6 +89,7 @@ export function createWebAuthnLoginOptions(): {
   });
   const loginCreds = listWebAuthnCredentialsByPurpose("login", { rpId: rpId() });
   return {
+    ceremony_kind: "login",
     challenge,
     rp_id: rpId(),
     timeout: 300_000,
@@ -135,7 +138,7 @@ export function verifyWebAuthnLogin(body: {
 
   const publicKeySpki = cred.public_key_spki_base64;
   const testSecret = process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
-  const expectedOrigin = (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").replace(/\/$/, "");
+  const expectedOrigin = resolveExpectedWebAuthnOrigin(clientData.origin);
 
   if (testSecret && isWebAuthnTestSecretAllowed() && body.signature_base64) {
     const expected = Buffer.from(testSecret, "utf-8");

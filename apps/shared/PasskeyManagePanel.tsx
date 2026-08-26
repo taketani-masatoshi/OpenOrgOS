@@ -8,7 +8,12 @@ import {
   type PasskeyCredentialSummary,
   type PasskeyCredentialsApi,
 } from "./passkey-credentials-client";
+import { AUTH_COPY, PASSKEY_COPY, SETTINGS_COPY } from "./console-copy";
+import { useCopy } from "./define-copy";
 import { webauthnUserMessage } from "./webauthn-user-error";
+import { SettingsAccordionItem } from "./SettingsAccordionItem";
+import { useUiLocale } from "./useUiLocale";
+import { canRegisterLoginPasskey } from "./webauthn-issuance";
 
 export type PasskeyWebAuthnPolicy = {
   login_registration_bootstrap?: boolean;
@@ -40,17 +45,23 @@ export type PasskeyManagePanelProps = {
   rpId?: string;
 };
 
-function purposeLabel(purpose: PasskeyCredentialSummary["purpose"]): string {
-  return purpose === "login" ? "ログイン" : "決済";
-}
-
 type ActionKind = "idle" | "login" | "settlement" | "revoke";
+
+function credentialStatus(
+  count: number,
+  loading: boolean,
+  copy: (typeof SETTINGS_COPY)["ja"],
+  passkey: (typeof PASSKEY_COPY)["ja"],
+): string {
+  if (loading) return copy.loading;
+  if (count === 0) return copy.none;
+  return passkey.count(count);
+}
 
 export function PasskeyManagePanel({
   webAuthnMode,
   api,
   operatorId,
-  approverId,
   policy,
   busy = false,
   error = null,
@@ -58,7 +69,7 @@ export function PasskeyManagePanel({
   onRegisterSettlement,
   onRefreshAuthConfig,
   settlementRegistrationEnabled = true,
-  settlementRegistrationUrl = "/steward/settings/",
+  settlementRegistrationUrl = "/settings/",
   expectedOrigin,
   rpId,
 }: PasskeyManagePanelProps) {
@@ -68,6 +79,10 @@ export function PasskeyManagePanel({
   const [actionKind, setActionKind] = useState<ActionKind>("idle");
   const [localError, setLocalError] = useState<string | null>(null);
   const [bootstrapToken, setBootstrapToken] = useState("");
+  const locale = useUiLocale();
+  const settings = useCopy(SETTINGS_COPY);
+  const copy = useCopy(PASSKEY_COPY);
+  const auth = useCopy(AUTH_COPY);
 
   const running = busy || actionKind !== "idle";
   const userMsgOpts = { expectedOrigin, rpId };
@@ -118,9 +133,7 @@ export function PasskeyManagePanel({
   const showLoginBootstrap = Boolean(
     policy.login_registration_bootstrap && loginCreds.length === 0,
   );
-  const canAddLogin =
-    showLoginBootstrap ||
-    Boolean(policy.additional_login_registration_allowed && policy.registration_allowed);
+  const canAddLogin = canRegisterLoginPasskey(policy, loginCreds.length);
   const canAddSettlement =
     settlementRegistrationEnabled && policy.settlement_registration_allowed !== false;
   const showBootstrapTokenField = Boolean(
@@ -131,10 +144,8 @@ export function PasskeyManagePanel({
 
   async function revoke(cred: PasskeyCredentialSummary) {
     if (!cred.revocable) return;
-    const label = passkeyDeviceLabel(cred);
-    const ok = window.confirm(
-      `${label} の PassKey（${shortCredentialId(cred.credential_id)}）を登録解除しますか？`,
-    );
+    const label = passkeyDeviceLabel(cred, locale);
+    const ok = window.confirm(copy.confirmRevoke(label, shortCredentialId(cred.credential_id)));
     if (!ok) return;
     setActionKind("revoke");
     setLocalError(null);
@@ -183,26 +194,22 @@ export function PasskeyManagePanel({
   const displayError = localError ?? error ?? listError;
 
   if (!webAuthnMode) {
-    return (
-      <p className="passkey-settings-hint">
-        この環境では WebAuthn が有効ではありません。
-      </p>
-    );
+    return <p className="passkey-settings-hint">{settings.webauthnDisabled}</p>;
   }
 
   function loginButtonLabel(): string {
-    if (actionKind === "login") return "Touch ID を確認中…";
-    return showLoginBootstrap ? "Touch ID で登録" : "別の鍵を追加";
+    if (actionKind === "login") return copy.checkingTouchId;
+    return showLoginBootstrap ? auth.touchIdRegister : copy.addAnotherKey;
   }
 
   function settlementButtonLabel(): string {
-    if (actionKind === "settlement") return "iPhone の QR を表示中…";
-    return settlementCreds.length ? "別の iPhone で登録" : "iPhone で登録";
+    if (actionKind === "settlement") return copy.showingIphoneQr;
+    return settlementCreds.length ? copy.registerAnotherIphone : copy.registerIphone;
   }
 
   function renderCredentialTable(rows: PasskeyCredentialSummary[], emptyLabel: string) {
     if (loading) {
-      return <p className="passkey-settings-muted">読み込み中…</p>;
+      return <p className="passkey-settings-muted">{settings.loadingEllipsis}</p>;
     }
     if (rows.length === 0) {
       return <p className="passkey-settings-hint">{emptyLabel}</p>;
@@ -212,19 +219,21 @@ export function PasskeyManagePanel({
         <table className="passkey-cred-table">
           <thead>
             <tr>
-              <th scope="col">種別</th>
-              <th scope="col">端末</th>
-              <th scope="col">登録日時</th>
-              <th scope="col">ID</th>
-              <th scope="col">操作</th>
+              <th scope="col">{copy.colKind}</th>
+              <th scope="col">{copy.colDevice}</th>
+              <th scope="col">{copy.colRegistered}</th>
+              <th scope="col">{copy.colId}</th>
+              <th scope="col">{copy.colAction}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((cred) => (
               <tr key={cred.credential_id}>
-                <td>{purposeLabel(cred.purpose)}</td>
-                <td>{passkeyDeviceLabel(cred)}</td>
-                <td>{formatPasskeyCreatedAt(cred.created_at)}</td>
+                <td>
+                  {cred.purpose === "login" ? copy.purposeLogin : copy.purposeSettlement}
+                </td>
+                <td>{passkeyDeviceLabel(cred, locale)}</td>
+                <td>{formatPasskeyCreatedAt(cred.created_at, locale)}</td>
                 <td>
                   <code className="passkey-cred-id">{shortCredentialId(cred.credential_id)}</code>
                 </td>
@@ -236,10 +245,10 @@ export function PasskeyManagePanel({
                       disabled={running}
                       onClick={() => void revoke(cred)}
                     >
-                      {actionKind === "revoke" ? "解除中…" : "登録解除"}
+                      {actionKind === "revoke" ? copy.revoking : copy.revoke}
                     </button>
                   ) : (
-                    <span className="passkey-settings-muted">環境変数</span>
+                    <span className="passkey-settings-muted">{copy.managedByEnv}</span>
                   )}
                 </td>
               </tr>
@@ -254,99 +263,74 @@ export function PasskeyManagePanel({
     <div className="passkey-manage-panel" data-busy={running ? "true" : undefined}>
       {displayError ? <p className="passkey-setup-error" role="alert">{displayError}</p> : null}
 
-      <div className="passkey-settings-sections">
-        <section className="passkey-settings-section" aria-labelledby="login-passkey-manage">
-          <div className="passkey-settings-section-head">
-            <div>
-              <h2 id="login-passkey-manage" className="passkey-settings-section-title">
-                ログイン PassKey
-              </h2>
-              <p className="passkey-settings-section-lead">
-                Touch ID でコンソールに入る鍵です。Community SSO のあと登録します。
-              </p>
-            </div>
-            {canAddLogin ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={running || !loginRegisterReady}
-                onClick={() => void registerLogin()}
-              >
-                {loginButtonLabel()}
-              </button>
-            ) : null}
+      <SettingsAccordionItem
+        id="login-passkey"
+        title={settings.loginPasskey}
+        status={credentialStatus(loginCreds.length, loading, settings, copy)}
+      >
+        <p className="passkey-settings-section-lead">{copy.loginLead}</p>
+        {canAddLogin ? (
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={running || !loginRegisterReady}
+            onClick={() => void registerLogin()}
+          >
+            {loginButtonLabel()}
+          </button>
+        ) : null}
+        {showLoginBootstrap ? (
+          <div className="passkey-bootstrap-guide">
+            <p className="passkey-settings-hint">{copy.bootstrapHint}</p>
           </div>
-          {showLoginBootstrap ? (
-            <div className="passkey-bootstrap-guide">
-              <p className="passkey-settings-hint">
-                初回登録: CLI でトークンを発行 → 下欄に貼り付け → Touch ID で登録
-              </p>
-            </div>
-          ) : null}
-          {showBootstrapTokenField ? (
-            <label className="auth-field passkey-bootstrap-field">
-              <span>Bootstrap トークン</span>
-              <input
-                type="password"
-                value={bootstrapToken}
-                onChange={(e) => setBootstrapToken(e.target.value)}
-                autoComplete="off"
-                placeholder="pkb_…（orgos operator passkey-bootstrap mint）"
-              />
-            </label>
-          ) : null}
-          {renderCredentialTable(loginCreds, "ログイン用の PassKey はまだありません。")}
-          {!canAddLogin && loginCreds.length > 0 ? (
-            <p className="passkey-settings-hint">
-              追加のログイン鍵は管理者が有効にしたときだけ登録できます。
-            </p>
-          ) : null}
-        </section>
+        ) : null}
+        {showBootstrapTokenField ? (
+          <label className="auth-field passkey-bootstrap-field">
+            <span>{copy.bootstrapToken}</span>
+            <input
+              type="password"
+              value={bootstrapToken}
+              onChange={(e) => setBootstrapToken(e.target.value)}
+              autoComplete="off"
+              placeholder="pkb_…（orgos operator passkey-bootstrap mint）"
+            />
+          </label>
+        ) : null}
+        {renderCredentialTable(loginCreds, copy.emptyLogin)}
+        {!canAddLogin && loginCreds.length > 0 ? (
+          <p className="passkey-settings-hint">{copy.extraLoginHint}</p>
+        ) : null}
+      </SettingsAccordionItem>
 
-        <section className="passkey-settings-section" aria-labelledby="settlement-passkey-manage">
-          <div className="passkey-settings-section-head">
-            <div>
-              <h2 id="settlement-passkey-manage" className="passkey-settings-section-title">
-                決済 PassKey
-              </h2>
-              <p className="passkey-settings-section-lead">
-                高額承認用です。ブラウザの QR を iPhone のカメラで読み、Bluetooth をオンにしてください。
-              </p>
-            </div>
-            {canAddSettlement ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={running}
-                onClick={() => void registerSettlement()}
-              >
-                {settlementButtonLabel()}
-              </button>
-            ) : null}
-          </div>
-          {!settlementRegistrationEnabled ? (
+      <SettingsAccordionItem
+        id="settlement-passkey"
+        title={settings.settlementPasskey}
+        status={credentialStatus(settlementCreds.length, loading, settings, copy)}
+      >
+        <p className="passkey-settings-section-lead">{copy.settlementLead}</p>
+        {canAddSettlement ? (
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={running}
+            onClick={() => void registerSettlement()}
+          >
+            {settlementButtonLabel()}
+          </button>
+        ) : null}
+        {!settlementRegistrationEnabled ? (
             <p className="passkey-settings-callout">
-              決済 PassKey の登録は Steward Chat の設定から行ってください。
-              {" "}
-              <a href={settlementRegistrationUrl}>Steward Chat の PassKey 設定</a>
+              {copy.settlementCallout}{" "}
+              <a href={settlementRegistrationUrl}>{copy.settlementCalloutLink}</a>
             </p>
-          ) : null}
-          {renderCredentialTable(settlementCreds, "決済 PassKey は未登録です。")}
-          {settlementCreds.length > 0 ? (
-            <p className="passkey-settings-hint">
-              登録済みです。高額承認のとき、この Mac のブラウザが QR を表示します。
-            </p>
-          ) : canAddSettlement ? (
-            <p className="passkey-settings-hint">
-              登録中は Mac の Bluetooth をオンにし、iPhone を近くに置いてください。
-            </p>
-          ) : null}
-        </section>
-      </div>
-
-      <p className="passkey-settings-meta">
-        オペレーター: {operatorId} · 承認者: {approverId}
-      </p>
+        ) : null}
+        {renderCredentialTable(settlementCreds, copy.emptySettlement)}
+        {settlementCreds.length > 0 ? (
+          <p className="passkey-settings-hint">{copy.settlementRegistered}</p>
+        ) : canAddSettlement ? (
+          <p className="passkey-settings-hint">{copy.settlementHint}</p>
+        ) : null}
+      </SettingsAccordionItem>
     </div>
   );
 }

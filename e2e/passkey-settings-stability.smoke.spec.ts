@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expandSettingsSection } from "./helpers/settings-accordion";
 import { installWebAuthnVirtualCredential } from "./helpers/webauthn-smoke";
 
 function smokePort(): number {
@@ -33,7 +34,7 @@ test.describe("passkey settings stability (wire)", () => {
     credentialHits = 0;
 
     await page.goto("/settings/");
-    await expect(page.getByText("PassKey 管理")).toBeVisible({
+    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
       timeout: 15_000,
     });
     await expect.poll(() => credentialHits, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
@@ -60,6 +61,6 @@ test.describe("passkey settings stability (wire)", () => {
       page.getByRole("heading", { name: "PassKey 設定の前に Community でログイン" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Touch ID で入る" })).toHaveCount(0);
-    await expect(page.getByText("PassKey 管理")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toHaveCount(0);
   });
 });

@@ -1,4 +1,5 @@
 import { assertWebAuthnRpHost } from "./webauthn-page-origin";
+import { buildRegistrationCeremonyOptions } from "./passkey-ceremony";
 import {
   browserSupportsWebAuthn,
   createPasskeyWithSimpleWebAuthn,
@@ -10,12 +11,12 @@ interface WebAuthnRegisterOptionsResponse {
   user: { id: string; name: string; displayName: string };
   pub_key_cred_params: { type: "public-key"; alg: number }[];
   timeout: number;
-  exclude_credentials: {
+  exclude_credentials?: {
     id: string;
     type: "public-key";
     transports?: Array<"hybrid" | "internal" | "usb" | "nfc" | "ble">;
   }[];
-  authenticator_selection: {
+  authenticator_selection?: {
     authenticatorAttachment?: "platform" | "cross-platform";
     residentKey: "preferred";
     userVerification: "required" | "preferred";
@@ -31,6 +32,7 @@ export async function registerLoginPasskey(
     operator_id: string;
     approver_id: string;
     bootstrap_token?: string;
+    guest_invite_token?: string;
     optionsPath: string;
     registerPath: string;
   },
@@ -46,6 +48,9 @@ export async function registerLoginPasskey(
   if (opts.bootstrap_token?.trim()) {
     optionsBody.bootstrap_token = opts.bootstrap_token.trim();
   }
+  if (opts.guest_invite_token?.trim()) {
+    optionsBody.guest_invite_token = opts.guest_invite_token.trim();
+  }
 
   const regOpts = await api<{ ok: boolean } & WebAuthnRegisterOptionsResponse>(opts.optionsPath, {
     method: "POST",
@@ -54,7 +59,8 @@ export async function registerLoginPasskey(
 
   assertWebAuthnRpHost(regOpts.rp?.id);
 
-  const cred = await createPasskeyWithSimpleWebAuthn(regOpts);
+  const ceremony = buildRegistrationCeremonyOptions("login", regOpts);
+  const cred = await createPasskeyWithSimpleWebAuthn(ceremony);
 
   const registerBody: Record<string, string> = {
     challenge: regOpts.challenge,
@@ -66,6 +72,9 @@ export async function registerLoginPasskey(
   };
   if (opts.bootstrap_token?.trim()) {
     registerBody.bootstrap_token = opts.bootstrap_token.trim();
+  }
+  if (opts.guest_invite_token?.trim()) {
+    registerBody.guest_invite_token = opts.guest_invite_token.trim();
   }
 
   await api(opts.registerPath, {

@@ -3,9 +3,14 @@
  * Settlement PassKey is configured after login on /settings/.
  */
 import { useLayoutEffect, useState, type FormEvent } from "react";
+import { AUTH_COPY } from "./console-copy";
+import { useCopy } from "./define-copy";
+import { LocaleSync } from "./LocaleSync";
+import { ThemeSync } from "./ThemeSync";
 import { browserSupportsWebAuthn } from "./webauthn-simple";
 import { buildCommunityConsoleStartUrl } from "./community-console-handoff";
 import { inspectWebAuthnPage, type WebAuthnPageInspect } from "./webauthn-page-origin";
+import { WEBAUTHN_COPY } from "./webauthn-copy";
 import { webauthnUserMessage } from "./webauthn-user-error";
 
 export type PasskeyAuthPanelProps = {
@@ -30,12 +35,15 @@ export type PasskeyAuthPanelProps = {
   emphasizeBootstrapFlow?: boolean;
 };
 
-function pageBanner(state: WebAuthnPageInspect): string | null {
+function pageBanner(
+  state: WebAuthnPageInspect,
+  errors: (typeof WEBAUTHN_COPY)["ja"],
+): string | null {
   if (state.status === "redirecting") {
-    return "正しい URL に移動しています…";
+    return errors.redirecting;
   }
   if (state.status === "unsupported_browser") {
-    return "このブラウザでは PassKey を使えません。Chrome または Safari をご利用ください";
+    return errors.unsupportedPlease;
   }
   if (state.status === "origin_mismatch") {
     return webauthnUserMessage(new Error("webauthn origin mismatch"), {
@@ -75,6 +83,8 @@ export function PasskeyAuthPanel({
   const [pageState, setPageState] = useState<WebAuthnPageInspect>(() =>
     initialPageState(loginOrigin, loginRpId),
   );
+  const copy = useCopy(AUTH_COPY);
+  const errors = useCopy(WEBAUTHN_COPY);
 
   const communityStartUrl =
     communityHandoffUrl ?? buildCommunityConsoleStartUrl(settingsPath);
@@ -87,7 +97,7 @@ export function PasskeyAuthPanel({
     (showRegister && registrationRequiresSession) || emphasizeBootstrapFlow;
   const browserOk = typeof window === "undefined" ? true : browserSupportsWebAuthn();
   const pageBlocked = pageState.status !== "ok";
-  const banner = pageBanner(pageState);
+  const banner = pageBanner(pageState, errors);
   const hideForm = pageBlocked;
 
   useLayoutEffect(() => {
@@ -106,13 +116,13 @@ export function PasskeyAuthPanel({
       ? new URL(settingsPath, window.location.origin).pathname
       : settingsPath;
 
-  const title = emphasizeBootstrapFlow ? "PassKey 設定の前に Community でログイン" : "この Mac で入る";
-  const lead = emphasizeBootstrapFlow
-    ? "Community で SSO ログインしたあと、このページで Touch ID 用 PassKey を登録します。"
-    : "Touch ID でコンソールに入ります。決済 PassKey はログイン後、設定から登録します。";
+  const title = emphasizeBootstrapFlow ? copy.communityFirstTitle : copy.titleMac;
+  const lead = emphasizeBootstrapFlow ? copy.communityFirstLead : copy.macLead;
 
   return (
     <div className="auth-page">
+      <ThemeSync />
+      <LocaleSync />
       <header className="auth-header">
         <div className="auth-header-inner">
           <a className="auth-brand" href="https://oorgos.org">
@@ -135,24 +145,24 @@ export function PasskeyAuthPanel({
           <form className="auth-key-card auth-key-card-solo" onSubmit={onSubmit}>
             {!emphasizeBootstrapFlow ? (
               <>
-                <p className="auth-key-device">この Mac</p>
-                <h2 className="auth-key-title">ログイン</h2>
-                <p className="auth-key-copy">Touch ID でコンソールに入ります。</p>
+                <p className="auth-key-device">{copy.thisMac}</p>
+                <h2 className="auth-key-title">{copy.login}</h2>
+                <p className="auth-key-copy">{copy.loginLead}</p>
                 <p
                   className={
                     showSignIn ? "auth-key-status is-ready" : "auth-key-status is-pending"
                   }
                 >
-                  {showSignIn ? "使える" : "まだ"}
+                  {showSignIn ? copy.loginStatusReady : copy.loginStatusPending}
                 </p>
               </>
             ) : null}
 
             {showIdFields ? (
               <details className="auth-advanced" open={firstRegister || undefined}>
-                <summary>オペレーターと承認者</summary>
+                <summary>{copy.operatorAndApprover}</summary>
                 <label className="auth-field">
-                  <span>オペレーター</span>
+                  <span>{copy.operator}</span>
                   <input
                     value={operatorId}
                     onChange={(e) => onOperatorId(e.target.value)}
@@ -161,12 +171,12 @@ export function PasskeyAuthPanel({
                   />
                 </label>
                 <label className="auth-field">
-                  <span>承認者</span>
+                  <span>{copy.approver}</span>
                   <input
                     value={approverId}
                     onChange={(e) => onApproverId(e.target.value)}
                     autoComplete="name"
-                    placeholder="表示名"
+                    placeholder={copy.displayNamePlaceholder}
                   />
                 </label>
               </details>
@@ -175,22 +185,22 @@ export function PasskeyAuthPanel({
             <div className="auth-actions">
               {showHandoff ? (
                 <div className="auth-handoff">
-                  <p className="auth-hint">
-                    初回登録は Community でログインしたあと、PassKey 設定から行います。
-                  </p>
+                  <p className="auth-hint">{copy.handoffHint}</p>
                   <ol className="auth-steps">
                     <li>
                       {communityStartUrl ? (
-                        <a href={communityStartUrl}>Community で Google ログイン</a>
+                        <a href={communityStartUrl}>{copy.communityGoogle}</a>
                       ) : (
-                        "Community で Google ログイン"
+                        copy.communityGoogle
                       )}
                     </li>
                     <li>
-                      このコンソールの <a href={settingsHref}>PassKey 設定</a> を開く
+                      {copy.openPasskeySettingsBefore}
+                      <a href={settingsHref}>{copy.openPasskeySettingsLink}</a>
+                      {copy.openPasskeySettingsAfter}
                     </li>
                     <li>
-                      CLI で発行した bootstrap トークンを入力し、Touch ID で登録
+                      {copy.bootstrapStep}
                       <span className="auth-steps-note">
                         （orgos operator passkey-bootstrap mint）
                       </span>
@@ -198,7 +208,7 @@ export function PasskeyAuthPanel({
                   </ol>
                   {communityStartUrl ? (
                     <a className="btn btn-primary" href={communityStartUrl}>
-                      Community で入る
+                      {copy.communityEnter}
                     </a>
                   ) : null}
                 </div>
@@ -208,7 +218,7 @@ export function PasskeyAuthPanel({
                   className="btn btn-primary"
                   disabled={busy || pageBlocked || !browserOk}
                 >
-                  {busy ? "確認中…" : "Touch ID で入る"}
+                  {busy ? copy.checkingBusy : copy.touchIdEnter}
                 </button>
               ) : showLoginRegister ? (
                 <button
@@ -216,11 +226,11 @@ export function PasskeyAuthPanel({
                   className="btn btn-primary"
                   disabled={busy || pageBlocked || !browserOk || !ready}
                 >
-                  {busy ? "登録中…" : "Touch ID で登録"}
+                  {busy ? copy.registering : copy.touchIdRegister}
                 </button>
               ) : (
                 <p className="auth-hint">
-                  ログイン用の鍵がまだありません。管理者に登録の許可を依頼してください。
+                  {copy.noLoginKey}
                 </p>
               )}
               {showSignIn && showLoginRegister ? (
@@ -230,7 +240,7 @@ export function PasskeyAuthPanel({
                   disabled={busy || pageBlocked || !browserOk || !ready}
                   onClick={onRegister}
                 >
-                  別の鍵を登録
+                  {copy.registerAnother}
                 </button>
               ) : null}
             </div>

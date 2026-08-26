@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expandSettingsSection } from "./helpers/settings-accordion";
 import { installHybridVirtualAuthenticator, installWebAuthnVirtualCredential } from "./helpers/webauthn-smoke";
 
 test.describe("steward chat webauthn smoke", () => {
@@ -56,7 +57,7 @@ test.describe("steward chat webauthn smoke", () => {
     credentialHits = 0;
 
     await page.goto("/settings");
-    await expect(page.getByText("PassKey 管理")).toBeVisible({
+    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
       timeout: 15_000,
     });
     await expect.poll(() => credentialHits, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
@@ -89,9 +90,10 @@ test.describe("steward chat webauthn smoke", () => {
     });
 
     await page.goto("/settings");
-    await expect(page.getByText("PassKey 管理")).toBeVisible({
+    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
       timeout: 15_000,
     });
+    await expandSettingsSection(page, "決済 PassKey");
 
     const registerBtn = page.getByRole("button", { name: "iPhone で登録" });
     await registerBtn.click();

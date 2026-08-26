@@ -23,6 +23,13 @@ import {
   type SettlementQrFragment,
   type SettlementWebAuthnAssertion,
 } from "../../../schemas/org/settlement-stepup.js";
+import { TENANT_CONFIG_SUBJECT } from "../../../schemas/org/tenant-config-change.js";
+import { boundApproverId } from "./operators.js";
+import {
+  findTenantConfigChange,
+  findTenantConfigChangeByApproval,
+  isTenantConfigPrivilegeIncrease,
+} from "./tenant-config-change.js";
 import { resolveWireGovernanceTier } from "../jurisdiction/wire-governance/evaluate.js";
 import { getWorkspaceRoot } from "../orgos-paths.js";
 import {
@@ -169,17 +176,31 @@ function purgeExpired(file: ChallengeFile): ChallengeFile {
   return { version: 1, challenges };
 }
 
-/** Resolve materiality tier for an approval (A/B/C). Amount-less → A. */
+function tenantConfigChangeForApproval(
+  approval: OrgApprovalRequest
+): ReturnType<typeof findTenantConfigChangeByApproval> {
+  if (approval.subject_type !== TENANT_CONFIG_SUBJECT) return undefined;
+  return (
+    findTenantConfigChangeByApproval(approval.approval_id) ??
+    (approval.subject_ref ? findTenantConfigChange(approval.subject_ref) : undefined)
+  );
+}
+
+/** Resolve materiality tier for an approval (A/B/C). Amount-less tenant.config privilege → C. */
 export function resolveApprovalAssuranceTier(
   approval: OrgApprovalRequest
 ): OrgApprovalTier {
   const amount = approval.amount;
-  if (!amount || amount.value <= 0) return "A";
-  try {
-    return resolveWireGovernanceTier(amount.value, amount.currency);
-  } catch {
-    return "C";
+  if (amount && amount.value > 0) {
+    try {
+      return resolveWireGovernanceTier(amount.value, amount.currency);
+    } catch {
+      return "C";
+    }
   }
+  const change = tenantConfigChangeForApproval(approval);
+  if (change && isTenantConfigPrivilegeIncrease(change)) return "C";
+  return "A";
 }
 
 export function settlementAssuranceRequired(approval: OrgApprovalRequest): boolean {
@@ -240,6 +261,40 @@ function peekCompletedSettlement(
   return record;
 }
 
+export type SettlementAllowCredential = {
+  id: string;
+  type: "public-key";
+  transports: Array<"hybrid" | "internal">;
+};
+
+/** Prefer settlement keys bound to the registry approver — avoid stale Demo CEO ids on the same operator. */
+export function settlementAllowCredentialsForOperator(
+  operatorId: string,
+  approverId: string,
+  rp: string
+): SettlementAllowCredential[] {
+  const bound = boundApproverId(operatorId, approverId);
+  const operatorCreds = listWebAuthnCredentialsByPurpose("settlement", { rpId: rp }).filter(
+    (c) => c.operator_id === operatorId
+  );
+  const boundMatches = operatorCreds.filter((c) => c.approver_id === bound);
+  const sessionMatches = operatorCreds.filter(
+    (c) => approverId.trim().length > 0 && c.approver_id === approverId.trim()
+  );
+  const selected =
+    boundMatches.length > 0
+      ? boundMatches
+      : sessionMatches.length > 0
+        ? sessionMatches
+        : operatorCreds;
+
+  return selected.map((c) => ({
+    id: c.credential_id,
+    type: "public-key" as const,
+    transports: ["hybrid", "internal"] as Array<"hybrid" | "internal">,
+  }));
+}
+
 export function createSettlementChallenge(opts: {
   approval: OrgApprovalRequest;
   operatorId: string;
@@ -250,7 +305,9 @@ export function createSettlementChallenge(opts: {
   challenge: SettlementChallengeRecord;
   qr: SettlementQrFragment;
   qr_url: string;
-  allow_credentials: { id: string; type: "public-key" }[];
+  allow_credentials: SettlementAllowCredential[];
+  hints: readonly ["hybrid"];
+  ceremony_kind: "settlement";
 } {
   if (!settlementAssuranceRequired(opts.approval)) {
     throw new Error(
@@ -261,6 +318,7 @@ export function createSettlementChallenge(opts: {
   const challengeId = `SCH-${randomBytes(12).toString("hex")}`;
   const webauthnChallenge = randomBytes(32).toString("base64url");
   const tier = resolveApprovalAssuranceTier(opts.approval);
+  const boundApprover = boundApproverId(opts.operatorId, opts.approverId);
   const token = signToken(challengeId, opts.approval.approval_id, opts.operatorId);
   const now = Date.now();
   // Phase 2: same RP as console login (browser hybrid QR on this page).
@@ -272,7 +330,7 @@ export function createSettlementChallenge(opts: {
     webauthn_challenge: webauthnChallenge,
     approval_id: opts.approval.approval_id,
     operator_id: opts.operatorId,
-    approver_id: opts.approverId,
+    approver_id: boundApprover,
     co_approver_id: opts.coApproverId,
     api_origin: opts.apiOrigin.replace(/\/$/, ""),
     rp_id: rp,
@@ -303,16 +361,7 @@ export function createSettlementChallenge(opts: {
     approve_origin: approveOrigin,
   });
 
-  const allow = listWebAuthnCredentialsByPurpose("settlement", { rpId: rp })
-    .filter((c) => c.operator_id === opts.operatorId || c.approver_id === opts.approverId)
-    .map((c) => ({
-      id: c.credential_id,
-      type: "public-key" as const,
-      transports:
-        c.authenticator_attachment === "cross-platform"
-          ? (["hybrid", "internal", "usb"] as Array<"hybrid" | "internal" | "usb">)
-          : (["hybrid", "internal"] as Array<"hybrid" | "internal">),
-    }));
+  const allow = settlementAllowCredentialsForOperator(opts.operatorId, boundApprover, rp);
 
   // Deprecated: ceremony no longer opens this URL (Phase 2). Kept for older clients.
   const fragment = Buffer.from(JSON.stringify(qr), "utf-8").toString("base64url");
@@ -321,6 +370,8 @@ export function createSettlementChallenge(opts: {
     qr,
     qr_url: `${approveOrigin}/?help=1#${fragment}`,
     allow_credentials: allow,
+    hints: ["hybrid"] as const,
+    ceremony_kind: "settlement" as const,
   };
 }
 
@@ -328,13 +379,14 @@ export function getSettlementChallengePublic(
   challengeId: string,
   token: string
 ): {
+  ceremony_kind: "settlement";
   challenge_id: string;
   webauthn_challenge: string;
   rp_id: string;
   status: string;
   summary: SettlementChallengeRecord["summary"];
   expires_at: string;
-  allow_credentials: { id: string; type: "public-key"; transports?: Array<"hybrid" | "internal" | "usb"> }[];
+  allow_credentials: { id: string; type: "public-key"; transports?: Array<"hybrid" | "internal"> }[];
   user_verification: "required";
   hints: Array<"hybrid">;
 } {
@@ -355,21 +407,14 @@ export function getSettlementChallengePublic(
     throw new Error("settlement challenge expired");
   }
 
-  const allow = listWebAuthnCredentialsByPurpose("settlement", { rpId: record.rp_id })
-    .filter(
-      (c) =>
-        c.operator_id === record.operator_id || c.approver_id === record.approver_id
-    )
-    .map((c) => ({
-      id: c.credential_id,
-      type: "public-key" as const,
-      transports:
-        c.authenticator_attachment === "cross-platform"
-          ? (["hybrid", "internal", "usb"] as Array<"hybrid" | "internal" | "usb">)
-          : (["hybrid", "internal"] as Array<"hybrid" | "internal">),
-    }));
+  const allow = settlementAllowCredentialsForOperator(
+    record.operator_id,
+    record.approver_id,
+    record.rp_id
+  );
 
   return {
+    ceremony_kind: "settlement",
     challenge_id: record.challenge_id,
     webauthn_challenge: record.webauthn_challenge,
     rp_id: record.rp_id,

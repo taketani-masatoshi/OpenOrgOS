@@ -2,31 +2,41 @@ import { useCallback, useEffect, useState } from "react";
 import { approveWithSettlementCeremony } from "@ops-shared/settlement-stepup-client";
 import { useSettlementStepUp } from "@ops-shared/use-settlement-stepup";
 import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
+import { useCopy } from "@ops-shared/define-copy";
+import { STEWARD_COPY } from "./steward-copy";
 import {
   chatApi,
   fetchApprovals,
+  fetchAuthConfig,
   fetchConfigApprovalPreview,
   rejectConfigChange,
   type TenantConfigPreview,
   type TodayApprovalItem,
 } from "./api";
 
+function isTenantConfig(item: TodayApprovalItem): boolean {
+  return item.subject_type === "tenant.config";
+}
+
 /**
- * CEO approval queue for tenant.config (and other pending items surfaced by Today).
+ * CEO approval inbox — tenant.config and other pending items from Today.
  */
-export function ApprovalsQueue() {
+export function ApprovalsQueue({ asPage = false }: { asPage?: boolean }) {
+  const copy = useCopy(STEWARD_COPY);
   const [items, setItems] = useState<TodayApprovalItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [previews, setPreviews] = useState<Record<string, TenantConfigPreview>>(
     {},
   );
+  const [settlementCount, setSettlementCount] = useState<number | null>(null);
   const { runCeremony, modal } = useSettlementStepUp(chatApi);
 
   const reload = useCallback(async () => {
     try {
-      const rows = await fetchApprovals();
+      const [rows, auth] = await Promise.all([fetchApprovals(), fetchAuthConfig()]);
       setItems(rows);
+      setSettlementCount(auth.webauthn?.settlement_count ?? 0);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -37,7 +47,7 @@ export function ApprovalsQueue() {
     void reload();
   }, [reload]);
 
-  const configItems = items.filter((a) => a.subject_type === "tenant.config");
+  const configItems = items.filter(isTenantConfig);
   const configIds = configItems.map((i) => i.id).join(",");
 
   useEffect(() => {
@@ -54,9 +64,15 @@ export function ApprovalsQueue() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when id set changes
   }, [configIds]);
 
-  if (configItems.length === 0 && !error && !modal) return null;
+  if (!asPage && items.length === 0 && !error && !modal) return null;
+
+  const settlementPasskeyMissing = settlementCount === 0;
 
   async function onApprove(id: string) {
+    if (settlementPasskeyMissing) {
+      setError(copy.settlementPasskeyRequired);
+      return;
+    }
     setBusyId(id);
     setError(null);
     try {
@@ -72,7 +88,7 @@ export function ApprovalsQueue() {
       });
       await reload();
     } catch (err) {
-      setError(webauthnUserMessage(err));
+      setError(webauthnUserMessage(err, { purpose: "settlement" }));
     } finally {
       setBusyId(null);
     }
@@ -82,7 +98,7 @@ export function ApprovalsQueue() {
     setBusyId(id);
     setError(null);
     try {
-      await rejectConfigChange(id, "rejected from Steward Chat");
+      await rejectConfigChange(id, "rejected from CEO inbox");
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -94,62 +110,88 @@ export function ApprovalsQueue() {
   return (
     <>
       {modal}
-      <section className="approvals-queue" aria-label="テナント設定の承認待ち">
-        <header className="approvals-queue-header">
-          <h2 className="approvals-queue-title">設定変更の承認</h2>
+      <section
+        className={asPage ? "approvals-inbox" : "approvals-queue"}
+        aria-label={copy.approvalsLabel}
+      >
+        <header className={asPage ? "page-heading" : "approvals-queue-header"}>
+          <div>
+            <h1 className={asPage ? "ops-page-title" : "approvals-queue-title"}>
+              {copy.approvalsTitle}
+            </h1>
+            {asPage ? <p className="ops-page-lead">{copy.approvalsLead}</p> : null}
+          </div>
           <button
             type="button"
-            className="agent-chat-text-btn"
+            className="quiet-button"
             onClick={() => void reload()}
           >
-            更新
+            {copy.refresh}
           </button>
         </header>
         {error && <div className="error-banner">{error}</div>}
-        <ul className="approvals-queue-list">
-          {configItems.map((item) => {
-            const preview = previews[item.id];
-            return (
-              <li key={item.id} className="approvals-queue-item">
-                <p className="approvals-queue-message">
-                  {item.message ?? item.subject}
-                </p>
-                {preview ? (
-                  <>
-                    <p className="approvals-queue-diff">
-                      <code>{preview.diff_line}</code>
-                    </p>
-                    <ul className="approvals-queue-effects">
-                      {preview.side_effects_plan.map((s) => (
-                        <li key={s}>{s}</li>
-                      ))}
-                    </ul>
-                  </>
-                ) : (
-                  <p className="approvals-queue-muted">差分を読み込み中…</p>
-                )}
-                <div className="approvals-queue-actions">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    disabled={busyId === item.id}
-                    onClick={() => void onApprove(item.id)}
-                  >
-                    {busyId === item.id ? "処理中…" : "承認して適用"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    disabled={busyId === item.id}
-                    onClick={() => void onReject(item.id)}
-                  >
-                    却下
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        {settlementPasskeyMissing && items.length > 0 ? (
+          <p className="approvals-queue-muted">
+            {copy.settlementPasskeyRequired}{" "}
+            <a href="/settings/">{copy.settlementPasskeySettingsLink}</a>
+          </p>
+        ) : null}
+        {items.length === 0 && !error ? (
+          <p className="approvals-queue-muted">{copy.approvalsEmpty}</p>
+        ) : (
+          <ul className="approvals-queue-list">
+            {items.map((item) => {
+              const preview = previews[item.id];
+              const config = isTenantConfig(item);
+              return (
+                <li key={item.id} className="approvals-queue-item">
+                  {item.subject_type ? (
+                    <p className="approvals-queue-kind">{item.subject_type}</p>
+                  ) : null}
+                  <p className="approvals-queue-message">
+                    {item.message ?? item.subject}
+                  </p>
+                  {config ? (
+                    preview ? (
+                      <>
+                        <p className="approvals-queue-diff">
+                          <code>{preview.diff_line}</code>
+                        </p>
+                        <ul className="approvals-queue-effects">
+                          {preview.side_effects_plan.map((s) => (
+                            <li key={s}>{s}</li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <p className="approvals-queue-muted">{copy.previewLoading}</p>
+                    )
+                  ) : null}
+                  <div className="approvals-queue-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      disabled={busyId === item.id || settlementPasskeyMissing}
+                      onClick={() => void onApprove(item.id)}
+                    >
+                      {busyId === item.id ? copy.approving : copy.approveApply}
+                    </button>
+                    {config ? (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        disabled={busyId === item.id}
+                        onClick={() => void onReject(item.id)}
+                      >
+                        {copy.reject}
+                      </button>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
     </>
   );

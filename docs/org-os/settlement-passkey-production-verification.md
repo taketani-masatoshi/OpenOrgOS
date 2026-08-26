@@ -123,7 +123,7 @@ curl -sS "https://<公開ホスト>/chat/v1/auth/config" | jq '.webauthn.settlem
 
 ### 4A. 設定変更承認（金額なし · tier A）
 
-1. Chat の **設定変更の承認**（`ApprovalsQueue`）で tier A 項目を 1 件用意  
+1. **承認**タブ（`/approvals/` · `ApprovalsQueue`）で tier A 項目を 1 件用意  
    （例: `orgos tenant-config propose ...` で起案済みの pending）
 2. **「承認して適用」** を押す
 

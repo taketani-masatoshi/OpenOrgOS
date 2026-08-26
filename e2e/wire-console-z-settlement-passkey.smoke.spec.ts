@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expandSettingsSection } from "./helpers/settings-accordion";
 import {
   installHybridVirtualAuthenticator,
   installWebAuthnVirtualCredential,
@@ -21,7 +22,8 @@ test.describe("wire console settlement passkey smoke", () => {
     );
 
     await page.goto("/settings/");
-    await expect(page.getByRole("heading", { name: "PassKey 管理" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible();
+    await expandSettingsSection(page, "決済 PassKey");
 
     await page.getByRole("button", { name: "iPhone で登録" }).click();
     await expect(page.getByRole("cell", { name: "iPhone（決済）" })).toBeVisible({

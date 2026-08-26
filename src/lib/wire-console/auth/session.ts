@@ -8,6 +8,7 @@ import {
   sessionTtlMs,
   type PersistedSessionRecord,
 } from "../../console-auth/session-store.js";
+import { boundApproverId, findOperatorById } from "../../org/operators.js";
 
 export interface WireConsoleUser {
   operator_id: string;
@@ -47,11 +48,23 @@ function devPasskeyExpected(): string {
   return process.env.WIRE_CONSOLE_DEV_PASSKEY ?? "orgos-dev";
 }
 
+function bindSessionUser(user: WireConsoleUser): WireConsoleUser {
+  try {
+    return {
+      ...user,
+      approver_id: boundApproverId(user.operator_id, user.approver_id),
+    };
+  } catch {
+    return user;
+  }
+}
+
 export function registerSession(user: WireConsoleUser): { token: string; user: WireConsoleUser } {
   const token = randomBytes(24).toString("hex");
-  sessions.set(token, { user, created_at: new Date().toISOString() });
+  const bound = bindSessionUser(user);
+  sessions.set(token, { user: bound, created_at: new Date().toISOString() });
   persistSessionsToDisk();
-  return { token, user };
+  return { token, user: bound };
 }
 
 export function createDevSession(login: {
@@ -64,9 +77,21 @@ export function createDevSession(login: {
   if (expected.length !== got.length || !timingSafeEqual(expected, got)) {
     return { error: "invalid passkey" };
   }
+  const requestedOperator = login.operator_id?.trim() || "OP-001";
+  let operatorId = requestedOperator;
+  let approverId = login.approver_id?.trim() || requestedOperator;
+  try {
+    const op = findOperatorById(requestedOperator);
+    if (op) {
+      operatorId = op.operator_id;
+      approverId = op.approver_name?.trim() || op.display_name.trim();
+    }
+  } catch {
+    /* registry unavailable — keep submitted ids */
+  }
   const user: WireConsoleUser = {
-    operator_id: login.operator_id ?? "秘書オペレータ",
-    approver_id: login.approver_id ?? login.operator_id ?? "秘書オペレータ",
+    operator_id: operatorId,
+    approver_id: approverId,
     mode: "dev",
   };
   return registerSession(user);
@@ -79,7 +104,8 @@ export function destroySession(token: string | undefined): void {
 
 export function getSessionUser(token: string | undefined): WireConsoleUser | undefined {
   if (!token) return undefined;
-  return sessions.get(token)?.user;
+  const user = sessions.get(token)?.user;
+  return user ? bindSessionUser(user) : undefined;
 }
 
 export function parseCookies(req: IncomingMessage): Record<string, string> {

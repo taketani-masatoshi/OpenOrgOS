@@ -15,6 +15,7 @@ import {
   rejectTenantConfigChange,
 } from "../org/tenant-config-change.js";
 import { isHumanApproverOperatorId } from "../correspondence/human-approval.js";
+import { boundApproverId } from "../org/operators.js";
 import { getTenantId } from "../tenant.js";
 import type { WireConsoleUser } from "../wire-console/auth/session.js";
 import { isWireConsoleEnabled } from "../wire-console/tenant-registry.js";
@@ -99,9 +100,13 @@ export async function approveFromStewardChat(
     };
   }
 ): Promise<ChatWireApproveResult> {
-  if (!isHumanApproverOperatorId(user.operator_id)) {
+  const actor: WireConsoleUser = {
+    ...user,
+    approver_id: boundApproverId(user.operator_id, user.approver_id),
+  };
+  if (!isHumanApproverOperatorId(actor.operator_id)) {
     throw new Error(
-      `approval requires ceo or approver operator (got ${user.operator_id}). Agents cannot approve.`
+      `approval requires ceo or approver operator (got ${actor.operator_id}). Agents cannot approve.`
     );
   }
   const tenantId = getTenantId();
@@ -111,7 +116,7 @@ export async function approveFromStewardChat(
   }
 
   if (pending.scope === "wire" && isWireConsoleEnabled(tenantId)) {
-    const wire = await approveTenantNotice(tenantId, user, approvalId, {
+    const wire = await approveTenantNotice(tenantId, actor, approvalId, {
       co_approver_id: opts?.coApproverId,
       settlementAssertion: opts?.settlementAssertion,
     });
@@ -149,8 +154,8 @@ export async function approveFromStewardChat(
       }
       const result = humanApproveOrgApproval({
         approvalId: draft.approval_id,
-        approverId: user.approver_id,
-        operatorId: user.operator_id,
+        approverId: actor.approver_id,
+        operatorId: actor.operator_id,
         source: "chat_ui",
         humanReviewConfirmed: true,
         settlementAssertion: opts?.settlementAssertion,
@@ -175,16 +180,12 @@ export async function approveFromStewardChat(
   }
 
   if (isTenantConfigApprovalSubject(pending.subject_type)) {
-    if (!isHumanApproverOperatorId(user.operator_id)) {
-      throw new Error(
-        `tenant.config approval requires ceo/approver operator (got ${user.operator_id})`
-      );
-    }
     const result = approveAndApplyTenantConfigChange({
       approvalId,
-      approverId: user.approver_id,
-      operatorId: user.operator_id,
+      approverId: actor.approver_id,
+      operatorId: actor.operator_id,
       reviewed: opts?.reviewed === true,
+      settlementAssertion: opts?.settlementAssertion,
     });
     return {
       mode: "internal",
@@ -197,8 +198,8 @@ export async function approveFromStewardChat(
 
   const result = humanApproveOrgApproval({
     approvalId,
-    approverId: user.approver_id,
-    operatorId: user.operator_id,
+    approverId: actor.approver_id,
+    operatorId: actor.operator_id,
     source: "chat_ui",
     coApproverId: opts?.coApproverId,
     settlementAssertion: opts?.settlementAssertion,
@@ -219,9 +220,13 @@ export function rejectTenantConfigFromStewardChat(
   user: WireConsoleUser,
   reason?: string
 ) {
-  if (!isHumanApproverOperatorId(user.operator_id)) {
+  const actor: WireConsoleUser = {
+    ...user,
+    approver_id: boundApproverId(user.operator_id, user.approver_id),
+  };
+  if (!isHumanApproverOperatorId(actor.operator_id)) {
     throw new Error(
-      `tenant.config reject requires ceo/approver operator (got ${user.operator_id})`
+      `tenant.config reject requires ceo/approver operator (got ${actor.operator_id})`
     );
   }
   const pending = findOrgApproval(approvalId);
@@ -230,7 +235,7 @@ export function rejectTenantConfigFromStewardChat(
   }
   return rejectTenantConfigChange({
     approvalId,
-    approverId: user.approver_id,
+    approverId: actor.approver_id,
     reason,
   });
 }

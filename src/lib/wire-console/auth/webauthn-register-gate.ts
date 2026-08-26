@@ -8,6 +8,7 @@ import {
 import {
   verifyPasskeyBootstrapToken,
 } from "./passkey-bootstrap.js";
+import { resolveGuestInviteToken } from "../../product/ledger-guest-invite.js";
 import type { WireConsoleUser } from "./session.js";
 import {
   listWebAuthnCredentialsByPurpose,
@@ -125,14 +126,53 @@ export function isAdditionalLoginPasskeyRegistrationAllowed(): boolean {
   return process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_ADDITIONAL_LOGIN === "1";
 }
 
+export const MAX_LOGIN_PASSKEYS_PER_OPERATOR = 2;
+
+export function countLoginPasskeysForOperator(operatorId: string): number {
+  const norm = normalizePersonName(operatorId);
+  return listWebAuthnCredentialsByPurpose("login", { rpId: rpId() }).filter(
+    (c) => normalizePersonName(c.operator_id) === norm,
+  ).length;
+}
+
 export function isWebAuthnLoginRegistrationAllowedPublic(): boolean {
   if (process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER === "1") return false;
   if (isLoginPasskeyBootstrap()) return true;
   return isAdditionalLoginPasskeyRegistrationAllowed();
 }
 
-function openBootstrapWithoutSessionAllowed(): boolean {
+/** Local first-key enroll without Community SSO (loopback founder bootstrap). */
+export function isOpenBootstrapWithoutSessionAllowed(): boolean {
   return process.env.WIRE_CONSOLE_WEBAUTHN_ALLOW_OPEN_BOOTSTRAP === "1";
+}
+
+export function assertGuestInviteLoginRegistration(
+  guestInviteToken: string | undefined,
+  operatorId: string,
+): { error: string; status: number } | null {
+  if (process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER === "1") {
+    return { error: "webauthn registration disabled", status: 403 };
+  }
+  const token = guestInviteToken?.trim();
+  if (!token) {
+    return { error: "guest invite token required", status: 401 };
+  }
+  const invite = resolveGuestInviteToken(token);
+  if (!invite || !invite.valid) {
+    return {
+      error:
+        invite?.reason === "expired"
+          ? "guest invite expired"
+          : invite?.reason === "used"
+            ? "guest invite already used"
+            : "invalid guest invite token",
+      status: 403,
+    };
+  }
+  if (invite.operator_id !== operatorId.trim()) {
+    return { error: "guest invite operator mismatch", status: 403 };
+  }
+  return null;
 }
 
 export function assertBootstrapTokenForLoginRegistration(
@@ -180,7 +220,7 @@ export function assertLoginPasskeyRegistrationGate(
   }
 
   if (bootstrap) {
-    if (!sessionUser && !openBootstrapWithoutSessionAllowed()) {
+    if (!sessionUser && !isOpenBootstrapWithoutSessionAllowed()) {
       return {
         error:
           "authenticated session required — sign in with Community SSO before registering your first passkey",
@@ -261,14 +301,23 @@ export function authorizeWebAuthnRegistration(
     approver_id: string;
     purpose?: WebAuthnCredentialPurpose;
     bootstrap_token?: string;
+    guest_invite_token?: string;
   },
   sessionUser?: WireConsoleUser
 ): ResolvedRegistrationIdentity | { error: string; status: number } {
   const purpose: WebAuthnCredentialPurpose = body.purpose ?? "login";
 
   if (purpose === "login") {
-    const gate = assertLoginPasskeyRegistrationGate(sessionUser, body.bootstrap_token);
-    if (gate) return gate;
+    if (body.guest_invite_token?.trim()) {
+      const guestGate = assertGuestInviteLoginRegistration(
+        body.guest_invite_token,
+        body.operator_id,
+      );
+      if (guestGate) return guestGate;
+    } else {
+      const gate = assertLoginPasskeyRegistrationGate(sessionUser, body.bootstrap_token);
+      if (gate) return gate;
+    }
   } else {
     const gate = assertSettlementPasskeyRegistrationGate(sessionUser, body);
     if (gate) return gate;
@@ -285,7 +334,17 @@ export function authorizeWebAuthnRegistration(
   }
 
   const sessionGate = enforceSessionRegistrationIdentity(sessionUser, resolved);
-  if (sessionGate) return sessionGate;
+  if (sessionGate && !body.guest_invite_token?.trim()) return sessionGate;
+
+  if (purpose === "login" && !isLoginPasskeyBootstrap()) {
+    const count = countLoginPasskeysForOperator(resolved.operator_id);
+    if (count >= MAX_LOGIN_PASSKEYS_PER_OPERATOR) {
+      return {
+        error: `login passkey limit reached (${MAX_LOGIN_PASSKEYS_PER_OPERATOR} per operator — remove a broken credential first)`,
+        status: 403,
+      };
+    }
+  }
 
   return resolved;
 }

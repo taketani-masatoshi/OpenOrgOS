@@ -10,9 +10,11 @@ import {
   resolveApprovalAssuranceTier,
   settlementAssuranceRequired,
   SettlementStepUpRequiredError,
+  settlementAllowCredentialsForOperator,
   verifySettlementAssertionAndConsume,
 } from "../src/lib/org/settlement-stepup.js";
 import { assertSettlementAssuranceOrThrow } from "../src/lib/org/settlement-stepup.js";
+import { boundApproverId } from "../src/lib/org/operators.js";
 import {
   listWebAuthnCredentialsByPurpose,
   resetWebAuthnCredentialsForTests,
@@ -22,6 +24,21 @@ import { createWebAuthnLoginOptions } from "../src/lib/wire-console/auth/webauth
 import { resetWebAuthnChallengeStoreForTests } from "../src/lib/wire-console/auth/webauthn-challenge-store.js";
 import { buildTestAuthenticatorData } from "../src/lib/wire-console/auth/webauthn-verify.js";
 import type { OrgApprovalRequest } from "../schemas/org/approval.js";
+import { setTenantId } from "../src/lib/tenant.js";
+import { getDataDir } from "../src/lib/utils.js";
+import { existsSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { proposeTenantConfigChange } from "../src/lib/org/tenant-config-change.js";
+import { findOrgApproval } from "../src/lib/org/approval/approve.js";
+import { loadEnabledIsoIds } from "../src/lib/tenant-standards.js";
+import { buildAgentModuleInventory } from "../src/lib/steward-chat/agent-module-inventory.js";
+
+function cleanupOrgArtifacts(): void {
+  for (const rel of ["org/pending-approvals.yaml", "org/config-change-requests.yaml"]) {
+    const p = join(getDataDir(), rel);
+    if (existsSync(p)) rmSync(p, { force: true });
+  }
+}
 
 function approval(partial: Partial<OrgApprovalRequest> & { approval_id: string }): OrgApprovalRequest {
   return {
@@ -63,9 +80,12 @@ describe("settlement step-up (ADR 0037)", () => {
     resetSettlementChallengesForTests();
     resetWebAuthnCredentialsForTests();
     resetWebAuthnChallengeStoreForTests();
+    setTenantId("mal");
+    cleanupOrgArtifacts();
   });
 
   afterEach(() => {
+    cleanupOrgArtifacts();
     if (prevStepUp === undefined) delete process.env.ORGOS_SETTLEMENT_STEPUP;
     else process.env.ORGOS_SETTLEMENT_STEPUP = prevStepUp;
     if (prevStore === undefined) delete process.env.ORGOS_SETTLEMENT_CHALLENGE_STORE;
@@ -133,6 +153,72 @@ describe("settlement step-up (ADR 0037)", () => {
     expect(amountRequiresSettlementStepUp(50_000)).toBe(false);
   });
 
+  it("requires settlement for tenant.config capability increases without amount", () => {
+    const sample = buildAgentModuleInventory().agents_available[0];
+    expect(sample).toBeTruthy();
+    const proposed = proposeTenantConfigChange({
+      target: "agents",
+      targetId: sample!.id,
+      enabled: true,
+      proposedBy: "OP-001",
+    });
+    const apr = findOrgApproval(proposed.approval_id)!;
+    expect(settlementAssuranceRequired(apr)).toBe(true);
+    expect(resolveApprovalAssuranceTier(apr)).toBe("C");
+
+    const enabledIso = loadEnabledIsoIds().find((id) => id.startsWith("ISO-"));
+    expect(enabledIso).toBeTruthy();
+    const disable = proposeTenantConfigChange({
+      target: "standards",
+      targetId: enabledIso!,
+      enabled: false,
+      proposedBy: "OP-001",
+    });
+    const disableApr = findOrgApproval(disable.approval_id)!;
+    expect(settlementAssuranceRequired(disableApr)).toBe(false);
+    expect(resolveApprovalAssuranceTier(disableApr)).toBe("A");
+  });
+
+  it("excludes stale settlement credentials when registry approver differs", () => {
+    const bound = boundApproverId("OP-001", "段燕燕");
+    expect(bound).toBe("段燕燕");
+    setWebAuthnCredentialsForTests([
+      {
+        credential_id: "stale-demo-ceo",
+        public_key_spki_base64: "AAAA",
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+        purpose: "settlement",
+        rp_id: "127.0.0.1",
+      },
+      {
+        credential_id: "current-bound",
+        public_key_spki_base64: "BBBB",
+        operator_id: "OP-001",
+        approver_id: bound,
+        purpose: "settlement",
+        rp_id: "127.0.0.1",
+      },
+    ]);
+
+    const ids = settlementAllowCredentialsForOperator("OP-001", bound, "127.0.0.1").map(
+      (c) => c.id
+    );
+    expect(ids).toEqual(["current-bound"]);
+
+    const created = createSettlementChallenge({
+      approval: approval({
+        approval_id: "APR-20260827-100",
+        amount: { value: 250_000, currency: "JPY" },
+      }),
+      operatorId: "OP-001",
+      approverId: bound,
+      apiOrigin: "https://tenant.example",
+    });
+    expect(created.allow_credentials.map((c) => c.id)).toEqual(["current-bound"]);
+    expect(created.challenge.approver_id).toBe(bound);
+  });
+
   it("login options exclude settlement credentials", () => {
     setWebAuthnCredentialsForTests([
       {
@@ -154,6 +240,8 @@ describe("settlement step-up (ADR 0037)", () => {
     ]);
     const opts = createWebAuthnLoginOptions();
     expect(opts.allow_credentials.map((c) => c.id)).toEqual(["login-cred"]);
+    expect(opts.hints).toEqual(["client-device"]);
+    expect(opts.ceremony_kind).toBe("login");
     expect(listWebAuthnCredentialsByPurpose("settlement").map((c) => c.credential_id)).toEqual([
       "settle-cred",
     ]);
@@ -194,6 +282,9 @@ describe("settlement step-up (ADR 0037)", () => {
     expect(created.challenge.rp_id).toBe("127.0.0.1");
     expect(created.qr_url).toContain("help=1");
     expect(created.challenge.summary.tier).toBe("B");
+    expect(created.hints).toEqual(["hybrid"]);
+    expect(created.ceremony_kind).toBe("settlement");
+    expect(created.allow_credentials[0]?.transports).toEqual(["hybrid", "internal"]);
 
     const pub = getSettlementChallengePublic(
       created.challenge.challenge_id,

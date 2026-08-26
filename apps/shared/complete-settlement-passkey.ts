@@ -1,5 +1,9 @@
 import { assertWebAuthnRpHost } from "./webauthn-page-origin";
 import {
+  buildAuthenticationCeremonyOptions,
+  type PasskeyCeremonyKind,
+} from "./passkey-ceremony";
+import {
   browserSupportsWebAuthn,
   getPasskeyWithSimpleWebAuthn,
 } from "./webauthn-simple";
@@ -9,6 +13,7 @@ export type SettlementCeremonyChallenge = {
   token: string;
   webauthn_challenge: string;
   rp_id: string;
+  ceremony_kind?: PasskeyCeremonyKind;
   allow_credentials: {
     id: string;
     type: string;
@@ -35,24 +40,22 @@ export async function completeSettlementPasskey(
 
   assertWebAuthnRpHost(challenge.rp_id);
 
-  const assertion = await getPasskeyWithSimpleWebAuthn({
+  const ceremony = buildAuthenticationCeremonyOptions({
+    kind: "settlement",
     challenge: challenge.webauthn_challenge,
     rp_id: challenge.rp_id,
     timeout: 300_000,
-    allow_credentials: challenge.allow_credentials.map((c) => ({
-      id: c.id,
-      type: "public-key" as const,
-      transports: (c.transports as Array<"hybrid" | "internal" | "usb"> | undefined) ?? [
-        "hybrid",
-        "internal",
-      ],
-    })),
-    user_verification: "required",
-    hints:
-      challenge.hints ??
-      (challenge.allow_credentials.some((c) => c.transports?.includes("usb"))
-        ? (["client-device"] as const)
-        : (["hybrid"] as const)),
+    allow_credentials: challenge.allow_credentials,
+    server_hints: challenge.hints,
+  });
+
+  const assertion = await getPasskeyWithSimpleWebAuthn({
+    challenge: ceremony.challenge,
+    rp_id: ceremony.rp_id,
+    timeout: ceremony.timeout,
+    allow_credentials: ceremony.allow_credentials,
+    user_verification: ceremony.user_verification,
+    hints: ceremony.hints,
   });
 
   await api("/chat/v1/settlement/complete", {
