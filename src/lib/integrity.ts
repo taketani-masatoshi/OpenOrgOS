@@ -42,6 +42,7 @@ import { validateExpenseClaimsIntegrity } from "./finance/expense-claim.js";
 import { validateReceiptRegistryIntegrity } from "./receipt-qr.js";
 import { validateLlmWorkersIntegrity } from "./llm-pool/registry.js";
 import { validateChatCommandCatalog } from "./operator-commands/validate-catalog.js";
+import { collectRosterPayrollConsistencyIssues } from "./hr/roster-payroll-consistency.js";
 import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
@@ -62,6 +63,10 @@ export interface IntegrityIssue {
   level: "error" | "warning";
   file: string;
   message: string;
+  /** Stable machine code when the check is structured (e.g. roster/payroll). */
+  code?: string;
+  /** Concrete steps to clear a warning — never required for errors. */
+  fix_hints?: string[];
 }
 
 interface JpBankIntegrityInput {
@@ -674,6 +679,16 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch (e) {
     push("warning", "data/hr/employees.yaml", e instanceof Error ? e.message : String(e));
+  }
+
+  for (const soft of collectRosterPayrollConsistencyIssues()) {
+    issues.push({
+      level: soft.level,
+      file: soft.file,
+      message: soft.message,
+      code: soft.code,
+      fix_hints: soft.fix_hints,
+    });
   }
 
   try {

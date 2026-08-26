@@ -5,6 +5,11 @@
 import { loadCompany, loadEmployees, loadPayroll } from "../data.js";
 import { loadOrgChart } from "../org/org-chart.js";
 import { currentDate } from "../utils.js";
+import {
+  collectRosterPayrollConsistencyIssues,
+  formatConsistencyNote,
+  type RosterPayrollConsistencyIssue,
+} from "./roster-payroll-consistency.js";
 
 export type HeadcountCoverage = "registered" | "unregistered" | "partial";
 
@@ -28,6 +33,8 @@ export interface HeadcountView {
     payroll_employee_ids: number;
   };
   notes: string[];
+  /** Soft roster/payroll/org-chart warnings (same source as validate). */
+  consistency_warnings: RosterPayrollConsistencyIssue[];
 }
 
 function bump(map: Record<string, number>, key: string): void {
@@ -62,6 +69,7 @@ export function buildHeadcountView(opts?: { asOf?: string }): HeadcountView {
       notes: [
         `未確認: ${sourcePath} を読めません（${err instanceof Error ? err.message : String(err)}）。`,
       ],
+      consistency_warnings: [],
     };
   }
 
@@ -101,16 +109,11 @@ export function buildHeadcountView(opts?: { asOf?: string }): HeadcountView {
     /* optional */
   }
 
-  if (orgChartLinked > 0 && orgChartLinked !== byStatus.active) {
-    notes.push(
-      `要整備: org-chart の employee_id リンク数（${orgChartLinked}）と active 従業員数（${byStatus.active}）が一致しません。`
-    );
+  const consistencyWarnings = collectRosterPayrollConsistencyIssues();
+  for (const issue of consistencyWarnings) {
+    notes.push(formatConsistencyNote(issue));
   }
-  if (payrollIds > 0 && payrollIds !== byStatus.active) {
-    notes.push(
-      `要整備: payroll.employee_ids（${payrollIds}）と active 従業員数（${byStatus.active}）が一致しません。`
-    );
-  }
+
   if (file.notes?.trim()) {
     notes.push("employees.yaml notes あり（本文は L1 のため省略）");
   }
@@ -145,6 +148,7 @@ export function buildHeadcountView(opts?: { asOf?: string }): HeadcountView {
       payroll_employee_ids: payrollIds,
     },
     notes,
+    consistency_warnings: consistencyWarnings,
   };
 }
 
@@ -194,8 +198,25 @@ export function formatHeadcountMarkdown(view: HeadcountView): string {
     "この数値は `loadEmployees()` の決定論結果です。氏名は出力しません。"
   );
 
-  if (view.notes.length > 0) {
+  if (view.consistency_warnings.length > 0) {
+    lines.push("", "## 警告と修正案");
+    for (const w of view.consistency_warnings) {
+      lines.push(`- **[${w.code}]** ${w.message}`);
+      for (const hint of w.fix_hints) {
+        lines.push(`  - 修正案: ${hint}`);
+      }
+    }
+  } else if (view.notes.length > 0) {
     lines.push("", "## 注記", ...view.notes.map((n) => `- ${n}`));
+  }
+
+  if (view.consistency_warnings.length > 0) {
+    const extraNotes = view.notes.filter(
+      (n) => !view.consistency_warnings.some((w) => n.startsWith(w.message))
+    );
+    if (extraNotes.length > 0) {
+      lines.push("", "## 注記", ...extraNotes.map((n) => `- ${n}`));
+    }
   }
 
   return lines.join("\n");

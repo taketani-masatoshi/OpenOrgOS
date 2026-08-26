@@ -19,6 +19,8 @@ export interface ValidateReportIssue {
   path: string;
   message: string;
   source: "schema" | "integrity" | "security";
+  code?: string;
+  fix_hints?: string[];
 }
 
 export interface ValidateReport {
@@ -97,6 +99,10 @@ export function runValidateReport(opts: ValidateOptions = {}): ValidateReport {
       path: safeReportPath(issue.file),
       message: safeReportMessage(issue.message),
       source: "integrity" as const,
+      ...(issue.code ? { code: issue.code } : {}),
+      ...(issue.fix_hints?.length
+        ? { fix_hints: issue.fix_hints.map(safeReportMessage) }
+        : {}),
     })),
     ...security.map((issue) => ({
       severity: issue.level,
@@ -162,6 +168,9 @@ function printWarnings(issues: IntegrityIssue[]): void {
     console.log(`\n⚠ ${warnings.length} warning(s):`);
     for (const w of warnings) {
       console.log(`  ${w.file}: ${w.message}`);
+      for (const hint of w.fix_hints ?? []) {
+        console.log(`    → 修正案: ${hint}`);
+      }
     }
   }
 }
