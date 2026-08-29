@@ -8,6 +8,8 @@ tests/.fixture-restore.lock/
 .orgos/
 .exports/
 .tmp-*
+# Locally fetched SiVa validation service (upstream clone + 240MB jars)
+services/siva/
 data/.orgos/
 tenants/*/data/.orgos/
 tenants/*/data/chat/answer-memory/
