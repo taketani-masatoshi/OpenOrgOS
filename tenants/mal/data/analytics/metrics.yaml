@@ -1,0 +1,63 @@
+version: 1
+as_of: "2026-08-24"
+metrics:
+  - id: MET-CASH-BALANCE
+    title: 現預金残高
+    category: finance
+    resolver: finance.dashboard.cash_balance
+    direction: higher_better
+    unit: yen
+    owner_agent: finance
+  - id: MET-RUNWAY
+    title: キャッシュランウェイ
+    category: finance
+    resolver: finance.dashboard.runway_months
+    direction: higher_better
+    unit: months
+    threshold_warning_pct: 20
+    threshold_critical_pct: 40
+    owner_agent: finance
+  - id: MET-MONTHLY-PROFIT
+    title: 月次営業利益（近似）
+    category: finance
+    resolver: finance.dashboard.monthly_profit
+    direction: higher_better
+    unit: yen
+    owner_agent: finance
+  - id: MET-REVENUE-VAR-PCT
+    title: 売上予実差異率
+    category: finance
+    resolver: finance.variance.revenue_delta_pct
+    direction: neutral
+    unit: percent
+    threshold_warning_pct: 10
+    threshold_critical_pct: 20
+    owner_agent: finance
+  - id: MET-HEADCOUNT
+    title: 在籍人数
+    category: hr
+    resolver: hr.headcount.on_roster
+    direction: neutral
+    unit: count
+    owner_agent: human_resources
+  - id: MET-CONTROL-GAPS
+    title: 統制ギャップ件数
+    category: compliance
+    resolver: compliance.controls.gap_count
+    direction: lower_better
+    unit: count
+    owner_agent: compliance
+  - id: MET-DATA-HEALTH
+    title: データ健全性スコア
+    category: quality
+    resolver: quality.data_health.overall
+    direction: higher_better
+    unit: score
+    owner_agent: data_analytics
+  - id: MET-OS-SCORE
+    title: OrgOS 総合スコア
+    category: ops
+    resolver: os_score.composite
+    direction: higher_better
+    unit: score
+    owner_agent: executive_steward

@@ -1,0 +1,11 @@
+version: 1
+entries:
+  - month: 2026-08
+    values:
+      MET-CASH-BALANCE: 10000000
+      MET-MONTHLY-PROFIT: 623818
+      MET-REVENUE-VAR-PCT: 32.7
+      MET-HEADCOUNT: 3
+      MET-CONTROL-GAPS: 20
+      MET-DATA-HEALTH: 80
+      MET-OS-SCORE: 94

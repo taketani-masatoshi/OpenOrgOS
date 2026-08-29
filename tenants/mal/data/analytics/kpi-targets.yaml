@@ -1,0 +1,28 @@
+version: 1
+fiscal_year: FY2026
+targets:
+  - metric_id: MET-RUNWAY
+    target_value: 12
+    notes: 12ヶ月以上を目標
+  - metric_id: MET-DATA-HEALTH
+    target_value: 85
+  - metric_id: MET-CONTROL-GAPS
+    target_value: 0
+  - metric_id: MET-OS-SCORE
+    target_value: 90
+  # From business-plan.yaml years[2026].operating_profit_plan / 12
+  - metric_id: MET-MONTHLY-PROFIT
+    target_value: 347192
+    notes: FY2026 営業利益計画 4,166,309 ÷ 12
+  # Operating cash buffer (code DEFAULT_CASH_TARGET alignment · not a new OKR layer)
+  - metric_id: MET-CASH-BALANCE
+    target_value: 10000000
+    notes: 運転資金バッファ 1,000万円（dashboard 定数と整合）
+  # Maintain current roster size (hr/employees.yaml)
+  - metric_id: MET-HEADCOUNT
+    target_value: 4
+    notes: 現状ヘッドカウント維持（捏造の増員目標なし）
+  # Variance near zero is the goal (plan vs GL)
+  - metric_id: MET-REVENUE-VAR-PCT
+    target_value: 0
+    notes: 売上予実差異率は 0% 近傍を目標

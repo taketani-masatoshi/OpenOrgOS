@@ -1,0 +1,7 @@
+version: 1
+fiscal_year: FY2026
+targets:
+  - metric_id: MET-RUNWAY
+    target_value: 12
+  - metric_id: MET-DATA-HEALTH
+    target_value: 85

@@ -1,13 +1,24 @@
 import { useEffect, useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import {
   fetchAnalyticsDashboard,
   type AnalyticsDashboardPayload,
   type AnalyticsKpiRow,
 } from "./api";
+import { OPS_PAGES_COPY } from "./ops-pages-copy";
 
 function pctBar(actual: number, target: number): number {
   if (target <= 0) return 0;
   return Math.min(100, Math.round((actual / target) * 100));
+}
+
+/** Mirrors the Executive home target formatting so both pages read the same. */
+function formatTarget(value: number | null, unit: string): string {
+  if (value == null) return "—";
+  if (unit === "yen") return `${Math.round(value).toLocaleString("ja-JP")} 円`;
+  if (unit === "percent") return `${value}%`;
+  if (unit === "months") return `${value} ヶ月`;
+  return String(value);
 }
 
 function momSummary(rows: AnalyticsKpiRow[]): string {
@@ -47,6 +58,7 @@ function KpiBar({ row }: { row: AnalyticsKpiRow }) {
 }
 
 export function AnalyticsDashboardPage() {
+  const copy = useCopy(OPS_PAGES_COPY);
   const [payload, setPayload] = useState<AnalyticsDashboardPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,75 +93,81 @@ export function AnalyticsDashboardPage() {
     <main className="workspace analytics-dashboard">
       <div className="page-heading">
         <div>
-          <h1 className="ops-page-title">分析ダッシュボード</h1>
+          <h1 className="ops-page-title">{copy.analyticsTitle}</h1>
           <p className="ops-page-lead">
-            KPI スコアカードとデータ品質（決定論 · resolver 経由）
+            {copy.analyticsLead}
           </p>
         </div>
       </div>
 
-      {loading && <div className="loading-panel">読み込み中…</div>}
+      {loading && <div className="loading-panel">{copy.loading}</div>}
       {error && <div className="error-banner">{error}</div>}
 
       {kpi && (
         <>
           <section className="outlook-panel">
-            <h2 className="section-title">サマリー</h2>
+            <h2 className="section-title">{copy.summary}</h2>
             <div className="outlook-kpi summary-grid">
               <div>
                 <span className="kpi-value">{kpi.summary.green}</span>
-                <span className="kpi-label">正常</span>
+                <span className="kpi-label">{copy.kpiGreen}</span>
               </div>
               <div>
                 <span className="kpi-value">{kpi.summary.amber}</span>
-                <span className="kpi-label">注意</span>
+                <span className="kpi-label">{copy.kpiAmber}</span>
               </div>
               <div>
                 <span className="kpi-value">{kpi.summary.red}</span>
-                <span className="kpi-label">要対応</span>
+                <span className="kpi-label">{copy.kpiRed}</span>
               </div>
               <div>
                 <span className="kpi-value">{payload?.data_quality_overall ?? "—"}</span>
-                <span className="kpi-label">データ品質</span>
+                <span className="kpi-label">{copy.dataQuality}</span>
               </div>
               <div>
                 <span className="kpi-value">{momSummary(kpi.rows)}</span>
-                <span className="kpi-label">前月比あり</span>
+                <span className="kpi-label">{copy.momPresent}</span>
               </div>
             </div>
-            {stats?.type === "stats" && (
-              <p className="page-desc muted">
-                {payload?.view_model.summary}
-              </p>
-            )}
           </section>
 
           <section className="outlook-panel">
-            <h2 className="section-title">目標達成率</h2>
+            <h2 className="section-title">{copy.attainment}</h2>
             {kpi.rows.map((row) => (
               <KpiBar key={row.metric.id} row={row} />
             ))}
             {kpi.rows.length === 0 && (
-              <p className="empty-panel">metrics.yaml に定義がありません。</p>
+              <div className="empty-state">
+                <strong>{copy.noMetrics}</strong>
+                <p>{copy.noMetricsHint}</p>
+              </div>
             )}
           </section>
 
           <section className="outlook-panel">
-            <h2 className="section-title">KPI 一覧</h2>
+            <h2 className="section-title">{copy.kpiList}</h2>
             <div className="category-table">
               <div className="category-table-head analytics-table-head">
-                <span>RAG</span>
-                <span>指標</span>
-                <span>実測</span>
-                <span>目標</span>
-                <span>前月比</span>
+                <span>{copy.colRag}</span>
+                <span>{copy.colMetric}</span>
+                <span>{copy.colActual}</span>
+                <span>{copy.colTarget}</span>
+                <span>{copy.colMom}</span>
               </div>
               {kpi.rows.map((row) => (
                 <div key={row.metric.id} className="category-table-row analytics-table-row">
-                  <span>{row.rag === "green" ? "🟢" : row.rag === "amber" ? "🟡" : row.rag === "red" ? "🔴" : "?"}</span>
+                  <span className={`executive-rag executive-rag-${row.rag}`}>
+                    {row.rag === "green"
+                      ? copy.kpiGreen
+                      : row.rag === "amber"
+                        ? copy.kpiAmber
+                        : row.rag === "red"
+                          ? copy.kpiRed
+                          : copy.kpiUnknown}
+                  </span>
                   <span>{row.metric.title}</span>
                   <span>{row.actual.formatted}</span>
-                  <span>{row.target_value ?? "—"}</span>
+                  <span>{formatTarget(row.target_value, row.metric.unit)}</span>
                   <span className="muted">{formatMom(row)}</span>
                 </div>
               ))}

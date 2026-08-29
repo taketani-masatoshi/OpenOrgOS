@@ -1,0 +1,19 @@
+version: 1
+as_of: "2026-08-24"
+metrics:
+  - id: MET-RUNWAY
+    title: キャッシュランウェイ
+    category: finance
+    resolver: finance.dashboard.runway_months
+    direction: higher_better
+    unit: months
+    threshold_warning_pct: 20
+    threshold_critical_pct: 40
+    owner_agent: finance
+  - id: MET-DATA-HEALTH
+    title: データ健全性スコア
+    category: quality
+    resolver: quality.data_health.overall
+    direction: higher_better
+    unit: score
+    owner_agent: data_analytics
