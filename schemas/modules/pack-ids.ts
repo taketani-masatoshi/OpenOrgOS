@@ -13,6 +13,13 @@ export const JP_PACK_MODULE_IDS = [
   "jp_certification",
   "jp_inspection",
   "jp_bank_corporate",
+  "jp_tax_corporate",
+  "jp_tax_consumption",
+  "jp_consumption_refund",
+  "jp_invoice_qualified",
+  "jp_withholding_statutory",
+  "jp_payroll",
+  "jp_social_insurance",
 ] as const;
 
 export type JpPackModuleId = (typeof JP_PACK_MODULE_IDS)[number];

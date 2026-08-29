@@ -65,11 +65,13 @@ export const yojitsuMonth = yojitsuMonthSchema;
 
 export const yojitsuClosingSchema = z.object({
   status: z.enum(["open", "closed"]),
-  basis: z.enum(["actual", "forecast"]).optional(),
+  /** @deprecated Use `gl` — actual results are derived from journal entries. */
+  basis: z.enum(["actual", "forecast", "gl"]).optional().default("gl"),
   closed_at: z.string().optional(),
   notes: z.string().optional(),
 });
 
+/** Plan-level FY summary only — not authoritative for actuals (use GL). */
 export const yojitsuSummarySchema = z.object({
   revenue_total: z.number().nonnegative().optional(),
   operating_profit: z.number().optional(),

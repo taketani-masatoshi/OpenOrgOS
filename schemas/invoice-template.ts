@@ -10,6 +10,8 @@ export const invoiceTemplateSchema = z.object({
     line_note: z.string().optional(),
     tax_label: z.string().default("消費税（10%）"),
     tax_note: z.string().optional(),
+    tax_mode: z.enum(["non_taxable", "taxable_10"]).default("non_taxable"),
+    lodging_tax_label: z.string().optional(),
     footer_notes: z.string().optional(),
   }),
   email: z.object({

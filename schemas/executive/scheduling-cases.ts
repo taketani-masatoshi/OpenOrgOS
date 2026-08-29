@@ -190,6 +190,9 @@ export const schedulingCaseSchema = z.object({
   proposal_send_authority: schedulingProposalSendAuthoritySchema.optional(),
   revision: z.number().int().nonnegative().default(0),
   source: z.enum(["cli", "chat"]).default("cli"),
+  /** Optional link to sales deal (e.g. product demo) */
+  deal_id: z.string().regex(/^DEAL-\d{4}-\d{3}$/).optional(),
+  kind: z.enum(["general", "sales_demo"]).default("general"),
   notes: z.string().optional(),
   next_action: schedulingNextActionSchema.default("propose_slots"),
 });

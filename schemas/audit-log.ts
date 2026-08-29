@@ -19,6 +19,17 @@ export const auditEventTypeSchema = z.enum([
   "events_chain_rebuild",
   "events_chain_repair",
   "events_signing_key_rotate",
+  "events_adopt",
+  "events_orphan_prune",
+  "sales_intake",
+  "sales_mail_link",
+  "sales_stage_change",
+  "sales_classify",
+  "sales_quote",
+  "sales_handoff",
+  "sales_dedupe_merge",
+  "sales_demo",
+  "correspondence_gate",
 ]);
 
 export const auditEventSchema = z.object({

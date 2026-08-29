@@ -4,6 +4,8 @@ export const operatorRoleSchema = z.enum([
   "ceo",
   "approver",
   "operator",
+  /** Employee seat: files own expense claims. No console, no chat, no approval. */
+  "employee",
   "readonly",
   "mcp_service",
   "auditor",
@@ -36,6 +38,8 @@ export const operatorPermissionSchema = z.enum([
   "receipt:issue",
   "events:write",
   "guard:admin",
+  /** Employee seat: file own expense claims and read own envelope. Nothing else. */
+  "expense:claim",
 ]);
 
 export const operatorRecordSchema = z.object({
@@ -45,6 +49,8 @@ export const operatorRecordSchema = z.object({
   stakeholder_id: z.string().optional(),
   /** org-chart node id (department / headquarters). */
   org_unit_id: z.string().optional(),
+  /** org-chart node id of the human behind this seat (budget person / claimant). */
+  person_id: z.string().optional(),
   /** Empty = profile default (ceo: all roster agents; operator: none until grant/list set). */
   allowed_agents: z.array(z.string().min(1)).optional(),
   /** Empty = no path write restriction for ceo; operators should set or rely on grants. */

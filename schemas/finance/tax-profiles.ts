@@ -17,6 +17,19 @@ export const taxProfileFiscalYearSchema = z.object({
 
 export const taxProfileConsumptionTaxSchema = z.object({
   status: z.union([z.literal("TBD"), z.string()]),
+  /** 本則 / 簡易。未設定は本則扱い。 */
+  method: z.enum(["standard", "simplified"]).optional(),
+  /** 簡易課税のみなし仕入率（%）。simplified の calc に必須。 */
+  deemed_purchase_rate_pct: z
+    .union([
+      z.literal(40),
+      z.literal(50),
+      z.literal(60),
+      z.literal(70),
+      z.literal(80),
+      z.literal(90),
+    ])
+    .optional(),
   options: z.array(z.string()).optional(),
   invoice_registration_number: z.string().optional(),
   invoice_registered: z.boolean().optional(),
@@ -85,6 +98,7 @@ export const obligationAmountSchema = z.object({
       "payroll_withholding_rough",
       "payroll_social_employer_rough",
       "fixed_asset_quarter",
+      "consumption_refund_open",
     ])
     .optional(),
   /** Dot path under tax-profile, e.g. corporate_tax.estimated_tax_fy2026 */
@@ -125,6 +139,7 @@ export const obligationRhythmSchema = z.object({
       "has_social_insurance",
       "consumption_taxable",
       "has_fixed_assets",
+      "has_open_consumption_refund",
     ])
     .default("always"),
   amount: obligationAmountSchema.optional(),

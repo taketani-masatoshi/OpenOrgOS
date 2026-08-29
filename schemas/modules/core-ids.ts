@@ -27,6 +27,9 @@ export const CORE_BUSINESS_MODULE_IDS = [
   "language_bridge",
   "iso_cms",
   "receipt_qr",
+  "investor_relations",
+  "customer_success",
+  "sales",
 ] as const;
 
 export type CoreBusinessModuleId = (typeof CORE_BUSINESS_MODULE_IDS)[number];

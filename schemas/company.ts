@@ -40,6 +40,46 @@ export const companyGovernanceStatusSchema = z.object({
     .optional(),
 }).passthrough();
 
+/** Console 組織ページに出す社外専門家の種別。 */
+export const companyAdvisorKindSchema = z.enum(["legal", "tax", "technical"]);
+
+export const companyAdvisorStatusSchema = z.enum(["engaged", "none"]);
+
+export const companyAdvisorSchema = z
+  .object({
+    kind: companyAdvisorKindSchema,
+    status: companyAdvisorStatusSchema.default("none"),
+    name: z.string().min(1).optional(),
+    firm: z.string().min(1).optional(),
+    note: z.string().optional(),
+    /** `external-contacts.yaml` の id。Console には出さない。 */
+    contact_id: z.string().regex(/^EXT-\d{3,}$/).optional(),
+    contract_id: z.string().min(1).optional(),
+  })
+  .superRefine((row, ctx) => {
+    if (row.status === "engaged" && !row.name?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "engaged advisor requires name",
+        path: ["name"],
+      });
+    }
+  });
+
+export const companyAdvisorsListSchema = z.array(companyAdvisorSchema).superRefine((rows, ctx) => {
+  const seen = new Set<string>();
+  rows.forEach((row, index) => {
+    if (seen.has(row.kind)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `duplicate advisor kind: ${row.kind}`,
+        path: [index, "kind"],
+      });
+    }
+    seen.add(row.kind);
+  });
+});
+
 export const companySchema = z.object({
   name: z.string().min(1),
   corporate_number: z.string().optional(),
@@ -49,10 +89,13 @@ export const companySchema = z.object({
   address: z.string().optional(),
   business_description: z.string().optional(),
   fiscal_year_end_month: z.number().int().min(1).max(12).optional(),
+  /** One-line aliases. Console 正本は `advisors`。 */
   tax_advisor: z.string().optional(),
+  technical_advisor: z.string().optional(),
   judicial_scrivener: z.string().optional(),
   administrative_scrivener: z.string().optional(),
   legal_advisor: z.string().optional(),
+  advisors: companyAdvisorsListSchema.optional(),
   /** 資本金等（許可申請の自動記入用 · L1） */
   share_capital: shareCapitalSchema.optional(),
   public_disclosure: companyPublicDisclosureSchema.optional(),
@@ -60,4 +103,6 @@ export const companySchema = z.object({
 });
 
 export type Director = z.output<typeof directorSchema>;
+export type CompanyAdvisor = z.output<typeof companyAdvisorSchema>;
+export type CompanyAdvisorKind = z.output<typeof companyAdvisorKindSchema>;
 export type Company = z.output<typeof companySchema>;

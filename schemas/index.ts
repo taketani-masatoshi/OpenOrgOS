@@ -52,7 +52,13 @@ export * from "./required-compliance.js";
 export * from "./canvas-view.js";
 export * from "./attention-midterm.js";
 export * from "./sales.js";
+export * from "./customer-success/index.js";
 export * from "./operating-review.js";
+export * from "./projects/index.js";
+export * from "./analytics/index.js";
+export * from "./investor-relations/index.js";
+export * from "./dispatch-tower.js";
+export * from "./dispatch-tower-registry.js";
 
 export * from "./agent-capability.js";
 export * from "./agent-reporting.js";

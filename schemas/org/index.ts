@@ -16,6 +16,8 @@ export * from "./org-chart-change.js";
 export * from "./org-authority.js";
 export * from "./budget-delegation.js";
 export * from "./governance-policy.js";
+export * from "./iso-37000-self-declaration.js";
 export * from "./access-grants.js";
 export * from "./instruction-audit.js";
+export * from "./fs-guard.js";
 export * from "./regulation-bindings.js";

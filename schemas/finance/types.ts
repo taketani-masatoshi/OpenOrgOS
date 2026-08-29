@@ -4,7 +4,7 @@ import {
   fixedAssetSchema,
   type CashBalance,
 } from "./balance-assets.js";
-import { chartOfAccountsSchema } from "./chart-of-accounts.js";
+import { chartOfAccountsSchema, journalSourceAccountsSchema } from "./chart-of-accounts.js";
 import {
   monthlyFinanceSchema,
   fixedCostsSchema,
@@ -35,6 +35,7 @@ export type TaxProfileUs = z.output<typeof taxProfileUsSchema>;
 export type TaxProfileCorporate = z.output<typeof taxProfileCorporateSchema>;
 export type ObligationRhythm = z.output<typeof obligationRhythmSchema>;
 export type ChartOfAccounts = z.output<typeof chartOfAccountsSchema>;
+export type JournalSourceAccounts = z.output<typeof journalSourceAccountsSchema>;
 
 export type YojitsuLineKind = z.output<typeof yojitsuLineKind>;
 export type YojitsuLine = z.output<typeof yojitsuLineSchema>;

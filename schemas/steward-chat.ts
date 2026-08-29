@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { llmRouteHintSchema } from "./llm-workers.js";
 
 export const todayDecisionSchema = z.object({
   id: z.string(),
@@ -187,7 +188,7 @@ export const todayContextSchema = z.object({
       z.object({
         id: z.string(),
         severity: z.enum(["p0", "p1", "p2"]),
-        kind: z.enum(["tax", "stay", "cleaning"]),
+        kind: z.enum(["tax", "stay", "cleaning", "register", "damage", "recurring", "id_doc", "nights_cap"]),
         title: z.string(),
         due_on: z.string(),
         cli_hint: z.string(),
@@ -205,10 +206,18 @@ export const chatMessageRequestSchema = z.object({
   refresh: z.boolean().optional(),
   /** Optional agent role — attaches steward/core/agents/{id}_agent.md to system prompt. */
   agent_id: chatAgentIdSchema.optional(),
+  /** Auto / local-only / cloud-only / pin a registered worker. */
+  llm_route: llmRouteHintSchema.optional(),
 });
 
 export const chatSettingsUpdateSchema = z.object({
   max_turns: z.union([z.literal(5), z.literal(10), z.literal(20)]),
+});
+
+export const chatFeedbackRequestSchema = z.object({
+  turn_id: z.string().min(1),
+  rating: z.enum(["good", "bad"]),
+  agent_id: chatAgentIdSchema.optional(),
 });
 
 export const agentInboxScopeSchema = z.enum(["executive_steward", "secretary"]);
@@ -268,6 +277,26 @@ export const chatAuditActionSchema = z.enum([
   "webauthn_revoke",
   "settlement_challenge",
   "settlement_complete",
+  "events_create",
+  "events_close",
+  "events_archive",
+  "events_void",
+  "propose",
+  "broker_transfer",
+  "ledger_period_lock",
+  "ledger_period_unlock",
+  "correspondence_send",
+  "org_chart_change_propose",
+  "org_chart_change_apply",
+  "mail_gmail_connect",
+  "mail_gmail_disconnect",
+  "mail_config_update",
+  "mail_secrets_update",
+  "platform_flag_update",
+  "esign_create",
+  "esign_prepare",
+  "esign_attach",
+  "esign_verify",
 ]);
 
 export type ChatAuditAction = z.output<typeof chatAuditActionSchema>;

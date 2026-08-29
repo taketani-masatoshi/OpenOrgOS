@@ -26,11 +26,23 @@ export const budgetMutabilitySchema = z.enum([
   "allocatable",
 ]);
 
+export const statementSectionSchema = z.enum([
+  "revenue",
+  "cogs",
+  "sga",
+  "non_operating_income",
+  "non_operating_expense",
+  "extraordinary",
+  "income_tax",
+]);
+
 export const chartAccountSchema = z.object({
   code: z.string().regex(/^\d{4}$/),
   name: z.string().min(1),
   type: z.string().min(1),
   normal_balance: z.enum(["debit", "credit"]),
+  /** P/L statement line grouping for GL-derived kessan PDF. */
+  statement_section: statementSectionSchema.optional(),
   data_source: z.string().optional(),
   filter: z.string().optional(),
   field: z.string().optional(),
@@ -47,8 +59,25 @@ export const chartAccountSchema = z.object({
   note: z.string().optional(),
 });
 
+export type StatementSection = z.output<typeof statementSectionSchema>;
 export type BudgetDelegationScope = z.output<typeof budgetDelegationScopeSchema>;
 export type BudgetMutability = z.output<typeof budgetMutabilitySchema>;
+
+export const journalSourceAccountsSchema = z.object({
+  bank_control: z.string().regex(/^\d{4}$/),
+  accounts_receivable: z.string().regex(/^\d{4}$/),
+  withholding_payable: z.string().regex(/^\d{4}$/),
+  social_insurance_payable: z.string().regex(/^\d{4}$/),
+  payroll_payable: z.string().regex(/^\d{4}$/),
+  accounts_payable: z.string().regex(/^\d{4}$/).optional(),
+  payroll_expense: z.string().regex(/^\d{4}$/),
+  depreciation_expense: z.string().regex(/^\d{4}$/),
+  accumulated_depreciation: z.string().regex(/^\d{4}$/),
+  retained_earnings: z.string().regex(/^\d{4}$/),
+  consumption_tax_payable: z.string().regex(/^\d{4}$/).optional(),
+  consumption_tax_receivable: z.string().regex(/^\d{4}$/).optional(),
+  lodging_tax_payable: z.string().regex(/^\d{4}$/).optional(),
+});
 
 export const chartOfAccountsSchema = z.object({
   version: z.string().optional(),
@@ -58,6 +87,7 @@ export const chartOfAccountsSchema = z.object({
     revenue: z.record(revenueCategory, z.string()),
     expense: z.record(expenseCategory, z.string()),
   }),
+  journal_source_accounts: journalSourceAccountsSchema.optional(),
   monthly_close_adjustments: z
     .array(
       z.object({
