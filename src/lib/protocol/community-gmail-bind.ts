@@ -86,6 +86,11 @@ export function getCommunityUrl(): string {
   return process.env.ORGOS_COMMUNITY_URL?.trim() || "https://community.oorgos.org";
 }
 
+/** Community Connections page (Gmail opt-in lives here). */
+export function communityConnectionsUrl(communityUrl = getCommunityUrl()): string {
+  return `${communityUrl.replace(/\/$/, "")}/settings/connections`;
+}
+
 export function buildCommunityMailConnectUrl(
   tenantId: string,
   nonce: string,

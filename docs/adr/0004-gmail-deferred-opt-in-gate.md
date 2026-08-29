@@ -1,6 +1,6 @@
 # ADR 0004: Gmail / tenant-mail connect の deferred 扱いと opt-in 本番ゲート
 
-**状態:** Accepted · **Implemented:** 2026-07-12  
+**状態:** Accepted · **Implemented:** 2026-07-12 · **Updated:** 2026-08-29  
 **日付:** 2026-07-12  
 **決定者:** OpenOrgOS コアメンテナ
 
@@ -26,7 +26,7 @@ mal Wire pilot（Phase 2–3）を進める一方、以下 2 系統のメール�
 2. **opt-in:** `ORGOS_EMAIL_WIRE_REQUIRED=1` のときのみ mail-config 不足で blocking
 3. **Community フラグ:** `tenant_mail_connect_api/ui: false` を正本とし、export 時に自動 `true` 化しない
 4. **scaffold 維持:** `email_wire` · tenant-mail API コードと mock テストは削除しない
-5. **Community UI:** `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1` まで orgos-mail 連携 UI/API を 503 で非公開
+5. **Community UI:** `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1` まで orgos-mail 連携 UI/API を 503 で非公開。ルートは実装済み（`/api/integrations/orgos-mail/*`）。Console は「会社の設定」（`/?onboarding=1`）で接続状態・送信元・provider を編集し、`POST /chat/v1/mail/gmail/connect` で bind 付き Community URL を出す（トークンと SMTP パスワードは非表示）。未出荷のときは `platform_ready: false` を返して UI が止める
 6. **roundtrip:** `wire-live-verify --roundtrip` 時のみ子プロセスへ `ORGOS_EMAIL_WIRE_REQUIRED=1` を渡す
 
 ### フェーズ分割
@@ -49,7 +49,7 @@ mal Wire pilot（Phase 2–3）を進める一方、以下 2 系統のメール�
 ### Negative / トレードオフ
 
 - email_wire の本番検証は **明示 opt-in まで後回し** — Phase 4a 着手前に runbook 確認が必要
-- Community tenant-mail は UI 非表示のため、内部 demo は env で明示有効化が必要
+- **Community tenant-mail** は UI 非表示（既定 503）のため、内部 demo は `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1` で明示有効化が必要。コードは出荷可能。
 - readiness スコアの `tenant-mail-connect-api` チェックは `ok: false`（deferred）— cap 99 には影響しない
 
 ## 関連

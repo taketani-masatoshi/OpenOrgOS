@@ -50,12 +50,18 @@ export ORGOS_EMAIL_WIRE_REQUIRED=1
 
 ## Phase 4b — Community Gmail OAuth（後追い）
 
+- [x] Community `/api/integrations/orgos-mail/{status,start,callback}` + Connections カード（既定 503）
+- [x] Operator Console 設定から Community Connections へリンク（SHIPPED は CEO）
+- [x] Operator Console「会社の設定」（`/?onboarding=1`）に メールカード — 送信元・provider・連携 / 切断（秘密は扱わない）
 - [ ] Google OAuth redirect 2 本（login + orgos-mail callback）
 - [ ] Steward: `ORGOS_GMAIL_CLIENT_*` · `ORGOS_COMMUNITY_GOVERNANCE_TOKEN`
 - [ ] Community: `COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1`
 - [ ] `orgos mail setup gmail --community-link` → token push E2E
-- [ ] `publish/protocol/community-integration.json` → `tenant_mail_connect_api/ui: true`
-- [ ] `orgos protocol community export`
+- [ ] 出荷フラグを立てる（**手編集しない**）:
+  - 運営ビュー: Operator Console `/?platform=1` →「出荷フラグ」（`ORGOS_PLATFORM_OPERATORS` に載った運営のみ）
+  - CLI: `orgos protocol community integration set --flag tenant_mail_connect_api --value true`（`--flag tenant_mail_connect_ui` も同様）
+  - 確認: `orgos protocol community integration list`
+- [ ] `orgos protocol community export`（export はフラグを保持するだけで、**自動で true にしない** — ADR 0004）
 
 ---
 
@@ -71,6 +77,15 @@ export ORGOS_EMAIL_WIRE_REQUIRED=1
 | 6 | integration フラグ `true` + Steward export + Community 再デプロイ | Operator |
 
 承認記録: `orgos approval` または社内稟議（REG-004）に従う。
+
+## 運営ビュー（`/?platform=1`）
+
+| 表示 | 意味 |
+|---|---|
+| 出荷フラグ | `publish/protocol/community-integration.json` の宣言（Steward 側） |
+| Community 側の env | `/api/integrations/orgos-mail/status` の実状。503 は「API はあるが env 未設定」 |
+
+Community の env は再デプロイでしか変わらないため、運営ビューは**状態を可視化し次の手順を示す**役割に留める。BFF は `GET/PUT /chat/v1/platform/integration`、書き込みは `chat:approve` + 運営許可リストの両方が必要で、テナント operator は 403。
 
 ---
 
