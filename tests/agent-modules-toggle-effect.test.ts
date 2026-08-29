@@ -31,6 +31,14 @@ function cleanupOrgArtifacts(): void {
   }
 }
 
+function setModuleEnabled(id: string, enabled: boolean): void {
+  const file = loadModulesFile();
+  const mod = file.modules.find((row) => row.id === id);
+  if (!mod) throw new Error(`module ${id} not installed in fixture tenant`);
+  mod.enabled = enabled;
+  writeYamlFile(modulesFilePath(), modulesFileSchema.parse(file));
+}
+
 describe("WebUI agent/module toggles write the tenant SSOT", () => {
   preserveTenantSsot("mal");
 
@@ -42,6 +50,7 @@ describe("WebUI agent/module toggles write the tenant SSOT", () => {
     originalAgents = readFileSync(agentRosterPath(), "utf-8");
     originalModules = readFileSync(modulesFilePath(), "utf-8");
     cleanupOrgArtifacts();
+    setModuleEnabled("professional_services", false);
     process.env.STEWARD_OPERATOR_AUTH = "0";
   });
 

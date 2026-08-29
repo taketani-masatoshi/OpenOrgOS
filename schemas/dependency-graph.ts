@@ -12,6 +12,8 @@ export const edgeCategory = z.enum([
   "plan→report",
   "contract→records",
   "operations→docs",
+  "operations→data",
+  "property→operations",
 ]);
 
 export const nodeCategory = z.enum(["file", "parameter", "report", "queue"]);

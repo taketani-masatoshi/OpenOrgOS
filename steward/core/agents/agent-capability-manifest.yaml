@@ -434,12 +434,22 @@ agents:
       - docs/compliance/
     route_ids:
       - internal-audit-scope
+      - iso-audit-brief
+      - iso-audit-follow-up
       - iso-internal-audit-report
       - iso-internal-audit-run
+      - jsox-evaluate
+      - jsox-gaps
+      - jsox-scope
     skills:
       - internal_audit_scope
+      - iso_audit_brief
+      - iso_audit_follow_up
       - iso_internal_audit_report
       - iso_internal_audit_run
+      - jsox_evaluate
+      - jsox_gaps
+      - jsox_scope
     pulse_checks:
       - type: path_exists
         path: data/compliance/
@@ -614,6 +624,7 @@ agents:
       - software_outsourcing_validate
       - staffing_ops
       - staffing_validate
+      - travel_booking
       - travel_intake_validate
       - travel_policy_check
       - venture_capital_ops

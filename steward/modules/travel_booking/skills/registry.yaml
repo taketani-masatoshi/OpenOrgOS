@@ -1,4 +1,9 @@
 skills:
+  - id: travel_booking
+    file: travel_booking.md
+    runtime: agent
+    description: 出張・旅行手配の受付
+    agent_id: operations
   - id: travel_policy_check
     file: travel_booking.md
     runtime: cli

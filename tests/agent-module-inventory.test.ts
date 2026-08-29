@@ -1,9 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readFileSync, writeFileSync } from "node:fs";
 import { setTenantId } from "../src/lib/tenant.js";
-import { modulesFilePath } from "../src/lib/modules.js";
+import { loadModulesFile, modulesFilePath } from "../src/lib/modules.js";
+import { modulesFileSchema } from "../schemas/modules.js";
+import { writeYamlFile } from "../src/lib/utils.js";
 import { importCatalogModule, isModuleInstalled } from "../src/lib/module-import.js";
 import { buildAgentModuleInventory } from "../src/lib/steward-chat/agent-module-inventory.js";
+
+function setModuleEnabled(id: string, enabled: boolean): void {
+  const file = loadModulesFile();
+  const mod = file.modules.find((row) => row.id === id);
+  if (!mod) throw new Error(`module ${id} not installed in fixture tenant`);
+  mod.enabled = enabled;
+  writeYamlFile(modulesFilePath(), modulesFileSchema.parse(file));
+}
 
 describe("agent / module inventory", () => {
   let originalModulesYaml = "";
@@ -11,6 +21,7 @@ describe("agent / module inventory", () => {
   beforeEach(() => {
     setTenantId("mal");
     originalModulesYaml = readFileSync(modulesFilePath(), "utf-8");
+    setModuleEnabled("professional_services", false);
   });
 
   afterEach(() => {

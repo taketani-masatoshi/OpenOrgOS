@@ -1,0 +1,19 @@
+version: 1
+channel: venue_booking
+default_provider: hotpepper_deep_link
+providers:
+  - id: manual
+    name: 手動予約（電話・店頭）
+    base_url: https://www.google.com/
+    supports_api: false
+    supports_deep_link: true
+  - id: hotpepper_deep_link
+    name: ホットペッパーグルメ
+    base_url: https://www.hotpepper.jp/
+    supports_api: false
+    supports_deep_link: true
+  - id: tabelog_deep_link
+    name: 食べログ
+    base_url: https://tabelog.com/
+    supports_api: false
+    supports_deep_link: true

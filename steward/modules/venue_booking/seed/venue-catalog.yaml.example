@@ -1,0 +1,7 @@
+version: 1
+venues:
+  - id: VENUE-001
+    name: 例）新橋の和食店
+    area: 新橋
+    provider_id: hotpepper_deep_link
+    typical_budget_jpy: 10000

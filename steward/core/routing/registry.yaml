@@ -400,7 +400,7 @@ routes:
   - id: travel-booking
     description: 旅行手配・出張宿泊予約（総務）
     agent: operations
-    skill: travel_policy_check
+    skill: travel_booking
     priority: 62
     resource_paths:
       - data/company.yaml
@@ -987,6 +987,79 @@ routes:
         - 内部監査報告
       paths:
         - docs/audit/internal/latest-iso-audit.md
+
+  - id: iso-audit-brief
+    description: 要求事項ブリーフィング（判定しない）
+    agent: internal_audit
+    skill: iso_audit_brief
+    priority: 82
+    resource_paths:
+      - data/compliance/iso-audit-plans.yaml
+    match:
+      keywords:
+        - 監査ブリーフィング
+        - 要求事項の解説
+        - 何を見ればよいか
+      paths:
+        - data/compliance/iso-audit-plans.yaml
+
+  - id: iso-audit-follow-up
+    description: 不適合フォローアップ
+    agent: internal_audit
+    skill: iso_audit_follow_up
+    priority: 82
+    resource_paths:
+      - data/compliance/iso-audit-plans.yaml
+    match:
+      keywords:
+        - フォローアップ
+        - 是正の有効性
+        - 不適合の閉じ
+      paths:
+        - data/compliance/iso-audit-plans.yaml
+
+  - id: jsox-scope
+    description: J-SOX 評価範囲
+    agent: internal_audit
+    skill: jsox_scope
+    priority: 70
+    resource_paths:
+      - data/jp-jsox/scope.yaml
+    match:
+      keywords:
+        - J-SOX
+        - 評価範囲
+        - 財務報告内部統制
+      paths:
+        - data/jp-jsox/
+
+  - id: jsox-gaps
+    description: J-SOX 評価ギャップ
+    agent: internal_audit
+    skill: jsox_gaps
+    priority: 70
+    resource_paths:
+      - data/jp-jsox/scope.yaml
+    match:
+      keywords:
+        - J-SOXギャップ
+        - 内部統制のギャップ
+      paths:
+        - data/jp-jsox/
+
+  - id: jsox-evaluate
+    description: J-SOX 評価（finance 自己評価は拒否）
+    agent: internal_audit
+    skill: jsox_evaluate
+    priority: 70
+    resource_paths:
+      - data/jp-jsox/scope.yaml
+    match:
+      keywords:
+        - J-SOX評価
+        - 内部統制評価
+      paths:
+        - data/jp-jsox/
 
   - id: company-events-chain-audit
     description: 会社イベントハッシュチェーン · 改竄検知

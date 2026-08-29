@@ -18,7 +18,7 @@ import {
   resolveModuleLocation,
 } from "./modules.js";
 import { ROOT_DIR } from "./tenant.js";
-import { PROTOCOL_REGISTRY_PATH } from "./steward-paths.js";
+import { PROTOCOL_REGISTRY_PATH, STEWARD_MODULES_DIR } from "./steward-paths.js";
 import { readYamlFile } from "./utils.js";
 
 export interface ExtensibilityIssue {
@@ -142,8 +142,9 @@ export function checkModuleCliRegistration(): ExtensibilityIssue[] {
     }
   }
   for (const id of bundles) {
-    const loc = resolveModuleLocation(id);
-    if (!loc || !existsSync(join(loc.rootDir, "cli", "register.ts"))) {
+    // Platform bundles (e.g. pdf_esign) ship a CLI without a business-module agent.
+    const rootDir = resolveModuleLocation(id)?.rootDir ?? join(STEWARD_MODULES_DIR, id);
+    if (!existsSync(join(rootDir, "cli", "register.ts"))) {
       issues.push({
         code: "cli-orphan-bundle",
         message: `ModuleCliBundle ${id} has no cli/register.ts`,
