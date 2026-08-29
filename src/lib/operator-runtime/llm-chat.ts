@@ -96,6 +96,35 @@ function toAnthropicMessages(messages: LlmChatMessage[]): Array<{ role: "user" |
   return out;
 }
 
+export function llmMaxTokens(): number {
+  const raw = Number(process.env.ORGOS_LLM_MAX_TOKENS ?? "2048");
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 2048;
+}
+
+export function llmTimeoutMs(): number {
+  const raw = Number(process.env.ORGOS_LLM_TIMEOUT_MS ?? "120000");
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 120_000;
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new Error(`LLM API timeout after ${timeoutMs}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function postOpenAiChat(
   messages: LlmChatMessage[],
   opts?: LlmChatCompletionOptions
@@ -109,6 +138,7 @@ async function postOpenAiChat(
     model: cfg.model,
     messages,
     temperature: opts?.temperature ?? 0.3,
+    max_tokens: llmMaxTokens(),
   };
   if (opts?.tools?.length) {
     body.tools = opts.tools;
@@ -119,14 +149,28 @@ async function postOpenAiChat(
   }
 
   const url = `${cfg.baseUrl}/chat/completions`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${cfg.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      },
+      llmTimeoutMs(),
+    );
+  } catch (err) {
+    return {
+      ok: false,
+      usage: {},
+      detail: err instanceof Error ? err.message : String(err),
+      model: cfg.model,
+    };
+  }
 
   const raw = await res.text();
   if (!res.ok) {
@@ -182,15 +226,29 @@ async function postAnthropicChat(
     }));
   }
 
-  const res = await fetch(`${cfg.baseUrl}/v1/messages`, {
-    method: "POST",
-    headers: {
-      "x-api-key": cfg.apiKey,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(
+      `${cfg.baseUrl}/v1/messages`,
+      {
+        method: "POST",
+        headers: {
+          "x-api-key": cfg.apiKey,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      },
+      llmTimeoutMs(),
+    );
+  } catch (err) {
+    return {
+      ok: false,
+      usage: {},
+      detail: err instanceof Error ? err.message : String(err),
+      model: cfg.model,
+    };
+  }
 
   const raw = await res.text();
   if (!res.ok) {

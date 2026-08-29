@@ -12,6 +12,7 @@ import {
   isWorkerKeyConfigured,
   loadLlmWorkersConfig,
   loadLlmWorkersConfigFile,
+  resolveWorkerBaseUrl,
   saveLlmWorkersConfig,
 } from "../../llm-pool/registry.js";
 import { probeWorker } from "../../llm-pool/health.js";
@@ -22,6 +23,7 @@ import {
 import {
   clearWorkerUnhealthy,
   getTotalInflight,
+  markWorkerUnhealthy,
   snapshotWorkerStats,
 } from "../../llm-pool/stats.js";
 
@@ -63,6 +65,7 @@ function publicWorkersPayload() {
         tier: w.tier,
         provider: w.provider,
         base_url: w.base_url,
+        resolved_base_url: resolveWorkerBaseUrl(w),
         model: w.model,
         max_inflight: w.max_inflight,
         enabled: w.enabled,
@@ -95,6 +98,15 @@ export async function handleLlmApi(
   if (pathname === "/chat/v1/llm/workers" && method === "GET") {
     if (!requireBudgetSurfacePermission(user, "chat:read", res)) return true;
     try {
+      const url = new URL(req.url ?? "/", "http://local");
+      if (url.searchParams.get("probe") === "1") {
+        const config = loadLlmWorkersConfig();
+        for (const worker of config.workers.filter((w) => w.enabled)) {
+          const result = await probeWorker(worker);
+          if (result.ok) clearWorkerUnhealthy(worker.id);
+          else markWorkerUnhealthy(worker.id, result.detail);
+        }
+      }
       json(res, 200, publicWorkersPayload());
     } catch (error) {
       json(res, 422, { ok: false, error: formatRouteError(error) });

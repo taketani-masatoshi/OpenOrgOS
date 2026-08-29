@@ -27,6 +27,8 @@ export interface LlmTelemetryEntry {
   worker_id?: string;
   tier?: "local" | "cloud";
   queued_ms?: number;
+  /** ADR 0061 — local worker intentional ERROR: fallback. */
+  local_error?: boolean;
 }
 
 export function isLlmTelemetryEnabled(): boolean {

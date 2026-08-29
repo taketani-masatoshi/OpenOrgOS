@@ -25,8 +25,19 @@ import {
   estimateLlmCostUsd,
   type LlmTelemetryEntry,
 } from "./telemetry.js";
-import { withLlmWorker, type LlmWorkerLease } from "../llm-pool/router.js";
+import {
+  LlmPoolError,
+  withLlmWorker,
+  type LlmRouteHint,
+  type LlmWorkerLease,
+} from "../llm-pool/router.js";
 import { hasConfiguredLlmWorkers } from "../llm-pool/registry.js";
+import {
+  applyLocalLlmErrorFallbackToSystem,
+  enforceLocalLlmErrorReply,
+  isLocalLlmErrorFallbackEnabled,
+  parseLocalLlmErrorReply,
+} from "./local-llm-error-fallback.js";
 
 export interface ToolLoopResult {
   ok: boolean;
@@ -42,6 +53,8 @@ export interface ToolLoopResult {
   worker_id?: string;
   tier?: "local" | "cloud";
   queued_ms?: number;
+  /** Local worker emitted intentional ERROR: fallback (ADR 0061). */
+  local_error?: boolean;
 }
 
 type ChatMessage = LlmChatMessage;
@@ -111,6 +124,61 @@ function leaseMeta(lease?: LlmWorkerLease): {
     worker_id: lease.worker.id,
     tier: lease.worker.tier,
     queued_ms: lease.queued_ms,
+  };
+}
+
+function normalizeLocalAssistantText(
+  text: string,
+  tier?: "local" | "cloud",
+): { content: string; local_error: boolean } {
+  if (tier !== "local" || !isLocalLlmErrorFallbackEnabled()) {
+    return { content: text, local_error: false };
+  }
+  const content = enforceLocalLlmErrorReply(text);
+  return { content, local_error: parseLocalLlmErrorReply(content).isError };
+}
+
+function buildPlainAssistantResult(opts: {
+  assistantText: string;
+  tier?: "local" | "cloud";
+  model: string;
+  usage: LlmUsage;
+  toolRounds: number;
+  toolCalls: number;
+  started: number;
+  meta: ReturnType<typeof leaseMeta>;
+}): ToolLoopResult {
+  const { content, local_error } = normalizeLocalAssistantText(
+    opts.assistantText,
+    opts.tier,
+  );
+  const latency_ms = Date.now() - opts.started;
+  const telemetry = buildTelemetryEntry({
+    model: opts.model,
+    runtime: "llm-api",
+    latency_ms,
+    ...opts.usage,
+    tool_rounds: opts.toolRounds,
+    tool_calls: opts.toolCalls,
+    structured: false,
+    estimated_cost_usd: estimateLlmCostUsd(opts.usage),
+    ok: true,
+    local_error: local_error || undefined,
+    ...opts.meta,
+  });
+  appendLlmTelemetry(telemetry);
+  return {
+    ok: true,
+    content,
+    detail: content,
+    model: opts.model,
+    usage: opts.usage,
+    tool_rounds: opts.toolRounds,
+    tool_calls: opts.toolCalls,
+    latency_ms,
+    telemetry,
+    local_error: local_error || undefined,
+    ...opts.meta,
   };
 }
 
@@ -245,7 +313,8 @@ async function runLlmWithToolsOnTarget(
     ? listOperatorToolDefinitions(toolContext)
     : [];
 
-  const messages: ChatMessage[] = [{ role: "system", content: systemContext }];
+  const system = applyLocalLlmErrorFallbackToSystem(systemContext, lease.worker.tier);
+  const messages: ChatMessage[] = [{ role: "system", content: system }];
   for (const turn of history ?? []) {
     messages.push({ role: turn.role, content: turn.content });
   }
@@ -317,6 +386,23 @@ async function runLlmWithToolsOnTarget(
       const assistantText = (msg.content ?? "").trim();
       if (!assistantText && tools.length) {
         continue;
+      }
+
+      const localNormalized = normalizeLocalAssistantText(
+        assistantText,
+        lease.worker.tier,
+      );
+      if (localNormalized.local_error) {
+        return buildPlainAssistantResult({
+          assistantText: localNormalized.content,
+          tier: lease.worker.tier,
+          model: completion.model || cfg.model,
+          usage,
+          toolRounds,
+          toolCalls,
+          started,
+          meta,
+        });
       }
 
       if (isStructuredOutputEnabled()) {
@@ -406,32 +492,16 @@ async function runLlmWithToolsOnTarget(
         };
       }
 
-      const latency_ms = Date.now() - started;
-      const telemetry = buildTelemetryEntry({
-        model: completion.model || cfg.model,
-        runtime: "llm-api",
-        latency_ms,
-        ...usage,
-        tool_rounds: toolRounds,
-        tool_calls: toolCalls,
-        structured: false,
-        estimated_cost_usd: estimateLlmCostUsd(usage),
-        ok: true,
-        ...meta,
-      });
-      appendLlmTelemetry(telemetry);
-      return {
-        ok: true,
-        content: assistantText,
-        detail: assistantText,
+      return buildPlainAssistantResult({
+        assistantText,
+        tier: lease.worker.tier,
         model: completion.model || cfg.model,
         usage,
-        tool_rounds: toolRounds,
-        tool_calls: toolCalls,
-        latency_ms,
-        telemetry,
-        ...meta,
-      };
+        toolRounds,
+        toolCalls,
+        started,
+        meta,
+      });
     }
 
     const latency_ms = Date.now() - started;
@@ -496,7 +566,8 @@ export async function runLlmWithTools(
   systemContext: string,
   userMessage: string,
   history?: LlmHistoryTurn[],
-  toolContext: OperatorToolContext = {}
+  toolContext: OperatorToolContext = {},
+  hint?: LlmRouteHint,
 ): Promise<ToolLoopResult> {
   if (!hasConfiguredLlmWorkers() && !getLlmApiConfig() && !isLlmMockEnabled()) {
     return {
@@ -515,7 +586,23 @@ export async function runLlmWithTools(
     return runMockToolLoop(systemContext, userMessage, toolContext);
   }
 
-  return withLlmWorker((lease) =>
-    runLlmWithToolsOnTarget(systemContext, userMessage, history, toolContext, lease)
-  );
+  try {
+    return await withLlmWorker(
+      (lease) =>
+        runLlmWithToolsOnTarget(systemContext, userMessage, history, toolContext, lease),
+      hint,
+    );
+  } catch (err) {
+    if (!(err instanceof LlmPoolError)) throw err;
+    return {
+      ok: false,
+      content: err.message,
+      detail: err.message,
+      model: "",
+      usage: emptyUsage(),
+      tool_rounds: 0,
+      tool_calls: 0,
+      latency_ms: 0,
+    };
+  }
 }

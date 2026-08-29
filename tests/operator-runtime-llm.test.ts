@@ -42,4 +42,19 @@ describe("operator runtime llm-api", () => {
     expect(result.runtime).toBe("llm-api");
     expect(result.reply).toContain("モック");
   });
+
+  it("runOperatorAsk returns the LLM error instead of the unset-LLM shell guide", async () => {
+    process.env.ORGOS_LLM_MOCK = "0";
+    process.env.ORGOS_SHELL_PROFILE_AUTO = "0";
+    delete process.env.ORGOS_SHELL_PROFILE;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("ECONNREFUSED 11434")),
+    );
+    const result = await runOperatorAsk("質問", "context");
+    expect(result.ok).toBe(false);
+    expect(result.runtime).toBe("llm-api");
+    expect(result.reply).toMatch(/ECONNREFUSED|timeout|LLM/i);
+    expect(result.reply).not.toContain("未設定");
+  });
 });

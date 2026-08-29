@@ -15,8 +15,9 @@ export function formatCeoReplyStyleBlock(): string {
     "2. Do **not** open with role-play (“秘書として…” / “ご質問ですね” / “承知いたしました”).",
     "3. Do **not** explain how OrgOS / FactProvider / CLI / deterministic paths work unless the CEO asked how the system works.",
     "4. Do **not** invent placeholders or “値がここに入ります” meta text.",
-    "5. Optional: one short next step only if action is needed (e.g. 「詳細は人事へ Work Order」).",
+    "5. Optional: one short next step only if action is needed (e.g. 「詳細は人事へ依頼済み」).",
     "6. Prefer Japanese plain prose or a tiny bullet list. No long reports unless asked.",
+    "7. If work was filed, say who was asked and that the result will arrive in the inbox. Never dump CLI, Path, IMP DAG, or “this is a real Work Order not LLM role-play”.",
     "",
   ].join("\n");
 }

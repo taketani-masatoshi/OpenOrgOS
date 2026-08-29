@@ -73,6 +73,43 @@ const MCP_TOOL_DEFINITIONS: McpToolDefinition[] = [
     description: "Retry failed witness attestations in pending queue",
     inputSchema: { type: "object", properties: {} },
   },
+  {
+    name: "ledger_today",
+    description:
+      "Ledger today summary — unmatched bank rows, month-close checklist, journal count (read-only)",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "ledger_trial_balance",
+    description: "Trial balance summary as_of YYYY-MM-DD (read-only)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        as_of: { type: "string", description: "YYYY-MM-DD" },
+      },
+    },
+  },
+  {
+    name: "ledger_propose_manual_entry",
+    description:
+      "Propose a two-line manual journal (does NOT post — approve in Workbench)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        description: { type: "string" },
+        debit_account: { type: "string" },
+        credit_account: { type: "string" },
+        amount_yen: { type: "number" },
+        occurred_at: { type: "string" },
+      },
+      required: ["description", "debit_account", "credit_account", "amount_yen"],
+    },
+  },
+  {
+    name: "ledger_propose_bank_match",
+    description: "List bank reconciliation proposals (read-only; approve in Workbench)",
+    inputSchema: { type: "object", properties: {} },
+  },
 ];
 
 export function listStewardMcpTools(): McpToolDefinition[] {
@@ -214,6 +251,119 @@ export async function callStewardMcpTool(
   if (tool === "steward_witness_flush") {
     const result = await flushWitnessPendingFromChat();
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  }
+
+  if (tool === "ledger_today") {
+    const { buildMonthCloseChecklist } = await import(
+      "../product/ledger-month-close-checklist.js"
+    );
+    const { listBankReconciliationWorkbench } = await import(
+      "../finance/bank-reconcile-apply.js"
+    );
+    const { loadJournalEntries } = await import("../finance/expense-claim-journal.js");
+    const checklist = buildMonthCloseChecklist();
+    const bank = listBankReconciliationWorkbench();
+    const journals = loadJournalEntries().entries.length;
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              journal_count: journals,
+              bank_unmatched: bank.unmatched_count,
+              proposals: bank.proposals.slice(0, 8),
+              month_close: checklist,
+              note: "Read-only. Approve writes in Workbench /?ledger=1",
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  }
+
+  if (tool === "ledger_trial_balance") {
+    const { buildTrialBalance } = await import("../finance/ledger/trial-balance.js");
+    const asOf =
+      typeof args.as_of === "string" && args.as_of.trim()
+        ? args.as_of.trim()
+        : new Date().toISOString().slice(0, 10);
+    const tb = buildTrialBalance({ asOf });
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              as_of: asOf,
+              balanced: tb.balanced,
+              debit_total_yen: tb.debit_total_yen,
+              credit_total_yen: tb.credit_total_yen,
+              rows: tb.rows.slice(0, 40),
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  }
+
+  if (tool === "ledger_propose_manual_entry") {
+    const { enqueueManualJournalProposal } = await import(
+      "../product/ledger-proposal-queue.js"
+    );
+    const proposal = enqueueManualJournalProposal({
+      description: String(args.description ?? ""),
+      debitAccount: String(args.debit_account ?? ""),
+      creditAccount: String(args.credit_account ?? ""),
+      amountYen: Number(args.amount_yen),
+      occurredAt:
+        typeof args.occurred_at === "string" ? args.occurred_at : undefined,
+      source: "mcp",
+      note: "MCP proposal — approve in Workbench",
+    });
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              queued: true,
+              proposal,
+              note: "Queued for Workbench approval — MCP did not post a journal",
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  }
+
+  if (tool === "ledger_propose_bank_match") {
+    const { listBankReconciliationWorkbench } = await import(
+      "../finance/bank-reconcile-apply.js"
+    );
+    const workbench = listBankReconciliationWorkbench();
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              unmatched_count: workbench.unmatched_count,
+              proposals: workbench.proposals,
+              note: "Proposal only — approve in Workbench",
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
   }
 
   return {

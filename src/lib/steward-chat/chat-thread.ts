@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
@@ -11,10 +11,31 @@ export type ChatHistoryMaxTurns = (typeof CHAT_HISTORY_TURN_OPTIONS)[number];
 /** @deprecated Prefer getChatHistoryMaxTurns(); kept for tests / callers. */
 export const CHAT_THREAD_MAX_TURNS = 20;
 
+/** Where an assistant reply came from (optional; legacy threads omit). */
+export const CHAT_ANSWER_SOURCES = ["cloud", "local", "deterministic", "unknown", "faq"] as const;
+export type ChatAnswerSource = (typeof CHAT_ANSWER_SOURCES)[number];
+
+export const CHAT_FEEDBACK_RATINGS = ["good", "bad"] as const;
+export type ChatFeedbackRating = (typeof CHAT_FEEDBACK_RATINGS)[number];
+
+export const chatTurnMetaSchema = z.object({
+  source: z.enum(CHAT_ANSWER_SOURCES).optional(),
+  model: z.string().optional(),
+  worker_id: z.string().optional(),
+  turn_id: z.string().optional(),
+});
+export type ChatTurnMeta = z.output<typeof chatTurnMetaSchema>;
+
 export const chatThreadMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string(),
   at: z.string(),
+  turn_id: z.string().optional(),
+  source: z.enum(CHAT_ANSWER_SOURCES).optional(),
+  model: z.string().optional(),
+  worker_id: z.string().optional(),
+  feedback: z.enum(CHAT_FEEDBACK_RATINGS).optional(),
+  feedback_at: z.string().optional(),
 });
 
 export const chatThreadSchema = z.object({
@@ -25,13 +46,29 @@ export const chatThreadSchema = z.object({
   messages: z.array(chatThreadMessageSchema),
 });
 
+const answerMemorySettingsSchema = z.object({
+  enabled: z.boolean().default(true),
+  ttl_days: z.number().int().positive().default(30),
+  max_hits: z.number().int().positive().max(5).default(2),
+  min_score: z.number().min(0).max(1).default(0.35),
+});
+
 const chatSettingsSchema = z.object({
   max_turns: z.union([z.literal(5), z.literal(10), z.literal(20)]).default(10),
+  answer_memory: answerMemorySettingsSchema.optional(),
 });
 
 export type ChatThread = z.output<typeof chatThreadSchema>;
 export type ChatThreadMessage = z.output<typeof chatThreadMessageSchema>;
 export type ChatSettings = z.output<typeof chatSettingsSchema>;
+export type AnswerMemorySettings = z.output<typeof answerMemorySettingsSchema>;
+
+export const DEFAULT_ANSWER_MEMORY_SETTINGS: AnswerMemorySettings = {
+  enabled: true,
+  ttl_days: 30,
+  max_hits: 2,
+  min_score: 0.35,
+};
 
 function chatRoot(): string {
   const dir = tenantDataPath("chat");
@@ -59,26 +96,38 @@ export function threadIdFromSessionToken(token: string | undefined): string {
   return createHash("sha256").update(token).digest("hex").slice(0, 24);
 }
 
-export function getChatHistoryMaxTurns(): ChatHistoryMaxTurns {
+function readChatSettingsFile(): ChatSettings {
   const path = settingsPath();
-  if (!existsSync(path)) return 10;
+  if (!existsSync(path)) {
+    return { max_turns: 10 };
+  }
   try {
-    const parsed = chatSettingsSchema.parse(JSON.parse(readFileSync(path, "utf-8")));
-    return parsed.max_turns;
+    return chatSettingsSchema.parse(JSON.parse(readFileSync(path, "utf-8")));
   } catch {
-    return 10;
+    return { max_turns: 10 };
   }
 }
 
+export function getChatHistoryMaxTurns(): ChatHistoryMaxTurns {
+  return readChatSettingsFile().max_turns;
+}
+
 export function getChatSettings(): ChatSettings {
-  return { max_turns: getChatHistoryMaxTurns() };
+  return readChatSettingsFile();
+}
+
+export function getAnswerMemorySettings(): AnswerMemorySettings {
+  const raw = readChatSettingsFile().answer_memory;
+  if (!raw) return { ...DEFAULT_ANSWER_MEMORY_SETTINGS };
+  return { ...DEFAULT_ANSWER_MEMORY_SETTINGS, ...raw };
 }
 
 export function setChatHistoryMaxTurns(maxTurns: ChatHistoryMaxTurns): ChatSettings {
   if (!CHAT_HISTORY_TURN_OPTIONS.includes(maxTurns)) {
     throw new Error(`max_turns must be one of ${CHAT_HISTORY_TURN_OPTIONS.join(",")}`);
   }
-  const next = chatSettingsSchema.parse({ max_turns: maxTurns });
+  const prev = readChatSettingsFile();
+  const next = chatSettingsSchema.parse({ ...prev, max_turns: maxTurns });
   const path = settingsPath();
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(next, null, 2), "utf-8");
@@ -167,33 +216,122 @@ export function pruneAllChatThreadsToCurrentLimit(tenant: string): number {
   return pruned;
 }
 
+/** Latest user turn with this text that does not yet have an assistant reply. */
+export function findUnpairedUserIndex(
+  messages: ChatThread["messages"],
+  userMessage: string,
+): number {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const row = messages[i];
+    if (row?.role !== "user" || row.content !== userMessage) continue;
+    const next = messages[i + 1];
+    if (!next || next.role !== "assistant") return i;
+  }
+  return -1;
+}
+
+export function latestAssistantTurnId(thread: ChatThread): string | undefined {
+  for (let i = thread.messages.length - 1; i >= 0; i--) {
+    const row = thread.messages[i];
+    if (row?.role === "assistant" && row.turn_id) return row.turn_id;
+  }
+  return undefined;
+}
+
+export function findMessageByTurnId(
+  thread: ChatThread,
+  turnId: string,
+): { message: ChatThreadMessage; index: number } | null {
+  const index = thread.messages.findIndex((m) => m.turn_id === turnId);
+  if (index < 0) return null;
+  const message = thread.messages[index];
+  if (!message) return null;
+  return { message, index };
+}
+
+/** User message immediately before an assistant turn (same Q&A pair). */
+export function pairedUserMessage(
+  thread: ChatThread,
+  assistantIndex: number,
+): ChatThreadMessage | null {
+  if (assistantIndex <= 0) return null;
+  const prev = thread.messages[assistantIndex - 1];
+  if (prev?.role !== "user") return null;
+  return prev;
+}
+
+export function setMessageFeedback(
+  threadId: string,
+  tenant: string,
+  turnId: string,
+  rating: ChatFeedbackRating,
+): { thread: ChatThread; assistant: ChatThreadMessage; userQuery: string } | null {
+  const thread = loadChatThread(threadId, tenant);
+  const found = findMessageByTurnId(thread, turnId);
+  if (!found || found.message.role !== "assistant") return null;
+  const user = pairedUserMessage(thread, found.index);
+  if (!user) return null;
+  const now = new Date().toISOString();
+  thread.messages[found.index] = {
+    ...found.message,
+    feedback: rating,
+    feedback_at: now,
+  };
+  const saved = saveChatThread(thread);
+  const assistant = saved.messages[found.index]!;
+  return { thread: saved, assistant, userQuery: user.content };
+}
+
 export function appendChatTurn(
   threadId: string,
   tenant: string,
   userMessage: string,
-  assistantReply: string
+  assistantReply: string,
+  meta?: ChatTurnMeta
 ): ChatThread {
   const thread = loadChatThread(threadId, tenant);
   const now = new Date().toISOString();
-  const last = thread.messages[thread.messages.length - 1];
-  // If the user turn was already persisted at request start, only append the reply.
-  if (
-    last &&
-    last.role === "user" &&
-    last.content === userMessage
-  ) {
-    thread.messages.push({
-      role: "assistant",
-      content: assistantReply,
-      at: now,
-    });
+  const unpaired = findUnpairedUserIndex(thread.messages, userMessage);
+  const metaFields = chatTurnMetaSchema.parse(meta ?? {});
+  const assistantTurnId = metaFields.turn_id ?? randomUUID();
+  const reply: ChatThreadMessage = {
+    role: "assistant",
+    content: assistantReply,
+    at: now,
+    ...metaFields,
+    turn_id: assistantTurnId,
+  };
+  if (unpaired >= 0) {
+    const userRow = thread.messages[unpaired];
+    if (userRow && !userRow.turn_id) {
+      thread.messages[unpaired] = { ...userRow, turn_id: randomUUID() };
+    }
+    thread.messages.splice(unpaired + 1, 0, reply);
   } else {
     thread.messages.push(
-      { role: "user", content: userMessage, at: now },
-      { role: "assistant", content: assistantReply, at: now },
+      { role: "user", content: userMessage, at: now, turn_id: randomUUID() },
+      reply,
     );
   }
   return saveChatThread(thread);
+}
+
+/** List on-disk thread ids for the active tenant chat store. */
+export function listChatThreadIds(): string[] {
+  const dir = threadsDir();
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((name) => name.endsWith(".json"))
+    .map((name) => name.replace(/\.json$/, ""));
+}
+
+/** Extract secretary / executive_steward from `{base}:{agent}` thread ids. */
+export function agentIdFromThreadId(threadId: string): string | undefined {
+  const idx = threadId.lastIndexOf(":");
+  if (idx < 0) return undefined;
+  const suffix = threadId.slice(idx + 1);
+  if (suffix === "secretary" || suffix === "executive_steward") return suffix;
+  return undefined;
 }
 
 /** Persist the user 依頼 immediately so navigation away cannot erase it. */
@@ -208,12 +346,23 @@ export function appendChatUserMessage(
   if (last?.role === "user" && last.content === userMessage) {
     return thread;
   }
-  thread.messages.push({ role: "user", content: userMessage, at: now });
+  thread.messages.push({
+    role: "user",
+    content: userMessage,
+    at: now,
+    turn_id: randomUUID(),
+  });
   return saveChatThread(thread);
+}
+
+function isLegacyTowerPlanReply(content: string): boolean {
+  return content.includes("**司令塔プラン（確認待ち）**");
 }
 
 export function historyForOperator(
   thread: ChatThread
 ): Array<{ role: "user" | "assistant"; content: string }> {
-  return thread.messages.map((m) => ({ role: m.role, content: m.content }));
+  return thread.messages
+    .filter((m) => m.role !== "assistant" || !isLegacyTowerPlanReply(m.content))
+    .map((m) => ({ role: m.role, content: m.content }));
 }

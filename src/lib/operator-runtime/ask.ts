@@ -7,6 +7,8 @@ import type { OperatorResponse } from "../../../schemas/operator-response.js";
 import type { LlmTelemetryEntry } from "./telemetry.js";
 import type { OperatorToolContext } from "./tools.js";
 import { hasConfiguredLlmWorkers } from "../llm-pool/registry.js";
+import type { LlmRouteHint } from "../llm-pool/router.js";
+import { getFsGuardAgent, runWithFsGuardAgentAsync } from "../org/fs-guard/index.js";
 
 function isLlmReady(): boolean {
   return isLlmApiConfigured() || hasConfiguredLlmWorkers();
@@ -35,7 +37,12 @@ export interface OperatorAskResult {
   runtime: OperatorRuntimeUsed;
   shellProfile?: string;
   model?: string;
+  /** Worker pool tier when leased; absent for shell / legacy single-env. */
+  tier?: "local" | "cloud";
+  worker_id?: string;
   setup_required?: boolean;
+  /** Local worker emitted intentional ERROR: fallback (ADR 0061). */
+  local_error?: boolean;
   structured?: OperatorResponse;
   telemetry?: OperatorAskTelemetry;
 }
@@ -129,27 +136,36 @@ function telemetryFromLoop(t: Omit<LlmTelemetryEntry, "at"> | undefined): Operat
   };
 }
 
+function isExplicitLlmRoute(hint?: LlmRouteHint): boolean {
+  return Boolean(hint && (hint.mode !== "auto" || hint.worker_id));
+}
+
 async function runLlmOperatorAsk(
   userMessage: string,
   systemContext: string,
   history?: OperatorHistoryTurn[],
-  toolContext: OperatorToolContext = {}
+  toolContext: OperatorToolContext = {},
+  hint?: LlmRouteHint,
 ): Promise<OperatorAskResult> {
   const llm = await runLlmWithTools(
     systemContext,
     userMessage,
     history,
-    toolContext
+    toolContext,
+    hint,
   );
   return {
     ok: llm.ok,
-    reply: llm.content,
+    reply: llm.content || llm.detail,
     stdout: llm.content,
     stderr: "",
     detail: llm.detail,
     runtime: "llm-api",
     model: llm.model,
+    tier: llm.tier,
+    worker_id: llm.worker_id,
     structured: llm.structured,
+    local_error: llm.local_error,
     telemetry: telemetryFromLoop(llm.telemetry),
   };
 }
@@ -158,28 +174,38 @@ export async function runOperatorDispatch(
   promptText: string,
   opts?: { workOrderId?: string; profile?: string; agent?: string }
 ): Promise<OperatorAskResult> {
-  const profile = resolveShellProfileName(opts?.profile);
-  if (profile) {
-    const shell = await runShellDispatch(promptText, {
-      workOrderId: opts?.workOrderId,
-      profile,
-    });
-    return shellToAskResult(shell, profile);
+  const run = async (): Promise<OperatorAskResult> => {
+    const profile = resolveShellProfileName(opts?.profile);
+    if (profile) {
+      const shell = await runShellDispatch(promptText, {
+        workOrderId: opts?.workOrderId,
+        profile,
+        agentId: opts?.agent,
+      });
+      return shellToAskResult(shell, profile);
+    }
+
+    const system = [
+      operatorPolicyExcerpt(35),
+      "",
+      "## Work order dispatch",
+      opts?.workOrderId ? `Work order: ${opts.workOrderId}` : "",
+      opts?.agent ? `Agent: ${opts.agent}` : "",
+      "",
+      "Do not write tenant canonical YAML/MD directly.",
+      "Propose drafts, then the runtime applies via `orgos guard apply`.",
+      "Stay inside Primary Folders for this agent.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return runOperatorAsk(promptText, system, { preferShell: false });
+  };
+
+  if (opts?.agent) {
+    return runWithFsGuardAgentAsync(opts.agent, run);
   }
-
-  const system = [
-    operatorPolicyExcerpt(35),
-    "",
-    "## Work order dispatch",
-    opts?.workOrderId ? `Work order: ${opts.workOrderId}` : "",
-    opts?.agent ? `Agent: ${opts.agent}` : "",
-    "",
-    "Execute the task below. Edit files in Primary Folders only.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  return runOperatorAsk(promptText, system, { preferShell: false });
+  return run();
 }
 
 export async function runOperatorAsk(
@@ -191,11 +217,12 @@ export async function runOperatorAsk(
     history?: OperatorHistoryTurn[];
     operatorId?: string;
     approverId?: string;
+    llmRoute?: LlmRouteHint;
   }
 ): Promise<OperatorAskResult> {
   const profile = resolveShellProfileName(opts?.profile);
 
-  if (!opts?.preferShell && isLlmReady()) {
+  if (!opts?.preferShell && (isLlmReady() || isExplicitLlmRoute(opts?.llmRoute))) {
     const llm = await runLlmOperatorAsk(
       userMessage,
       systemContext,
@@ -203,9 +230,13 @@ export async function runOperatorAsk(
       {
         operatorId: opts?.operatorId,
         approverId: opts?.approverId,
-      }
+        agentId: getFsGuardAgent(),
+      },
+      opts?.llmRoute,
     );
     if (llm.ok) return llm;
+    // Configured workers / API must not fall through to the "LLM 未設定" shell stub.
+    if (isExplicitLlmRoute(opts?.llmRoute) || isLlmReady()) return llm;
   }
 
   const shell = await runShellAsk(userMessage, systemContext, { profile });
@@ -226,13 +257,14 @@ export async function* runOperatorAskStream(
     history?: OperatorHistoryTurn[];
     operatorId?: string;
     approverId?: string;
+    llmRoute?: LlmRouteHint;
   }
 ): AsyncGenerator<
   { type: "delta"; content: string },
   OperatorAskResult,
   void
 > {
-  if (isLlmReady()) {
+  if (isLlmReady() || isExplicitLlmRoute(opts?.llmRoute)) {
     const batch = await runLlmOperatorAsk(
       userMessage,
       systemContext,
@@ -240,7 +272,9 @@ export async function* runOperatorAskStream(
       {
         operatorId: opts?.operatorId,
         approverId: opts?.approverId,
-      }
+        agentId: getFsGuardAgent(),
+      },
+      opts?.llmRoute,
     );
     if (batch.reply) {
       for (const word of batch.reply.split(/(\s+)/)) {

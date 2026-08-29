@@ -32,6 +32,14 @@ import {
   formatHeadcountTodayLines,
 } from "../hr/headcount-view.js";
 import {
+  buildCompanyOfficersView,
+  formatCompanyOfficersTodayLines,
+} from "../company-officers-view.js";
+import {
+  buildCashCounterpartiesView,
+  formatCashCounterpartiesTodayLines,
+} from "../cash-counterparties-view.js";
+import {
   countActiveSchedulingCases,
   listSchedulingCases,
 } from "../scheduling-coordination/store.js";
@@ -42,6 +50,27 @@ import {
   buildContractStatusView,
   formatContractStatusTodayLines,
 } from "../contract-status-view.js";
+import {
+  buildSalesPipelineView,
+  formatSalesPipelineTodayLines,
+} from "../sales-pipeline-view.js";
+import {
+  buildCustomerSuccessView,
+  formatCustomerSuccessTodayLines,
+} from "../customer-success-view.js";
+import {
+  buildSalesInboundView,
+  formatSalesInboundTodayLines,
+} from "../sales-inbound-view.js";
+import {
+  buildSalesOutboundView,
+  formatSalesOutboundTodayLines,
+} from "../sales-outbound-view.js";
+import {
+  buildIrBriefingView,
+  formatIrBriefingTodayLines,
+} from "../investor-relations/briefing-view.js";
+import { listHospitalityOpsDue } from "../../../steward/modules/hospitality/cli/ops-lib.js";
 
 function repoRelativePath(path: string): string {
   return relative(getWorkspaceRoot(), path).replace(/\\/g, "/");
@@ -161,13 +190,33 @@ export function buildTodayContext(): TodayContext {
     .filter((t) => t.importance === "high")
     .slice(0, 3);
 
-  const decisions = p0Tasks.map((t) => ({
-    id: t.id,
-    title: t.title,
-    category: t.category,
-    due_date: t.dueDate,
-    importance: t.importance,
-  }));
+  let hospitalityOpsDue: ReturnType<typeof listHospitalityOpsDue> = [];
+  try {
+    hospitalityOpsDue = listHospitalityOpsDue();
+  } catch {
+    hospitalityOpsDue = [];
+  }
+  const hospitalityP0 = hospitalityOpsDue
+    .filter((item) => item.severity === "p0")
+    .slice(0, 2)
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      category: "hospitality",
+      due_date: item.due_on,
+      importance: "high",
+    }));
+
+  const decisions = [
+    ...hospitalityP0,
+    ...p0Tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      category: t.category,
+      due_date: t.dueDate,
+      importance: t.importance,
+    })),
+  ].slice(0, 3);
 
   const approvals = listOrgApprovals({ status: "pending_approval" })
     .filter((approval) => {
@@ -377,6 +426,7 @@ export function buildTodayContext(): TodayContext {
         return {};
       }
     })(),
+    hospitality_ops_due: hospitalityOpsDue,
   });
 
   return ctx;
@@ -414,6 +464,37 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
     `# Today — ${ctx.company_name}`,
     `**結論:** 判断 ${decisionCount} 件 · 承認 ${approvalCount} 件 · 再試行 ${retryCount} 件`,
     `**次の操作:** ${decisionCount + approvalCount + retryCount === 0 ? "ありません" : "以下の Chat 操作だけ実行できます"}`,
+  ];
+
+  try {
+    const officers = buildCompanyOfficersView();
+    if (officers.coverage === "registered") {
+      lines.push(
+        "",
+        "## 会社概要（loadCompany · 決定論 · L0）",
+        ...formatCompanyOfficersTodayLines(officers),
+        "- 代表取締役の氏名は Today / 決定論パスで述べてよい。住所・個情は出さない。"
+      );
+    }
+  } catch {
+    /* tenant without company.yaml officers */
+  }
+
+  try {
+    const counterparties = buildCashCounterpartiesView();
+    if (counterparties.coverage === "registered") {
+      lines.push(
+        "",
+        "## 入出金相手（売掛・買掛・通帳 · 決定論 · L1）",
+        ...formatCashCounterpartiesTodayLines(counterparties),
+        "- 入出金の相手先一覧は Today / 決定論パスで述べてよい。口座番号は出さない。"
+      );
+    }
+  } catch {
+    /* tenant without AR/AP or bank statements */
+  }
+
+  lines.push(
     "",
     "## Agent roster",
     `- configured: ${ctx.agent_roster_configured ? "yes" : "compatibility default"}`,
@@ -422,7 +503,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
         ? ctx.agent_roster_operational.map((a) => a.id).join(", ")
         : "—"
     }`,
-  ];
+  );
   if (ctx.agent_roster_developer_count > 0) {
     lines.push(
       `- developer (${ctx.agent_roster_developer_count}): ${ctx.agent_roster_developer.map((a) => a.id).join(", ")}`
@@ -473,6 +554,68 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
     /* tenant without contracts dir */
   }
 
+  try {
+    const salesView = buildSalesPipelineView({ includeDemo: false });
+    lines.push(
+      "",
+      "## 営業KPI（loadSalesPipeline · 決定論 · L1）",
+      ...formatSalesPipelineTodayLines(salesView),
+      "- 商談件数 · 加重パイプライン · 期限アラートは Today / 決定論パスで述べてよい。担当者連絡先は出さない。",
+    );
+  } catch {
+    /* tenant without sales pipeline */
+  }
+
+  try {
+    const csView = buildCustomerSuccessView({ includeDemo: false });
+    lines.push(
+      "",
+      "## 顧客KPI（loadCustomerAccounts · 決定論 · L1）",
+      ...formatCustomerSuccessTodayLines(csView),
+      "- 顧客数 · ヘルス · 更新期日 · drift は Today / 決定論パスで述べてよい。顧客連絡先は出さない。",
+    );
+  } catch {
+    /* tenant without customer accounts */
+  }
+
+  try {
+    const inboundView = buildSalesInboundView({ includeDemo: false });
+    lines.push(
+      "",
+      "## インバウンド問合せKPI（loadSalesInquiries · 決定論 · L1）",
+      ...formatSalesInboundTodayLines(inboundView),
+      "- 問合せ件数 · 未対応 · 初動 SLA は Today / 決定論パスで述べてよい。差出人メール · 本文は出さない。",
+    );
+  } catch {
+    /* tenant without inbound inquiries */
+  }
+
+  try {
+    const outboundView = buildSalesOutboundView({ includeDemo: false });
+    lines.push(
+      "",
+      "## アウトバウンド施策KPI（loadSalesOutboundCampaigns · 決定論 · L1）",
+      ...formatSalesOutboundTodayLines(outboundView),
+      "- 施策件数 · active · 接触率は Today / 決定論パスで述べてよい。リスト連絡先 · 本文は出さない。",
+    );
+  } catch {
+    /* tenant without outbound campaigns */
+  }
+
+  try {
+    const irView = buildIrBriefingView({ asOf: ctx.report_date });
+    if (irView.module_enabled || irView.coverage !== "unregistered") {
+      lines.push(
+        "",
+        "## IR KPI（data/investor-relations · 決定論 · L1）",
+        ...formatIrBriefingTodayLines(irView),
+        "- cap table 行数 · 開示予定 · 資料件数は Today / 決定論パスで述べてよい。L2 連絡先値は出さない。",
+      );
+    }
+  } catch {
+    /* optional IR module */
+  }
+
   if (ctx.hr_coverage != null) {
     lines.push(
       "",
@@ -493,6 +636,13 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       );
     } catch {
       /* optional */
+    }
+  }
+
+  if (ctx.hospitality_ops_due.length > 0) {
+    lines.push("", "## 旅館運用（期限・事前）", "");
+    for (const item of ctx.hospitality_ops_due.slice(0, 8)) {
+      lines.push(`- **${item.title}**`, `  ${item.cli_hint}`);
     }
   }
 
@@ -538,6 +688,7 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       const kind = approval.subject_type ? ` (${approval.subject_type})` : "";
       lines.push(
         `- **${label}**${kind}`,
+        `  UI: /approvals/`,
         approval.preview_path
           ? `  プレビュー: GET ${approval.preview_path}`
           : `  対象: ${approval.subject}`,

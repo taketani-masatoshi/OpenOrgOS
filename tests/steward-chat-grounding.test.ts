@@ -16,6 +16,7 @@ describe("chat grounding", () => {
     expect(isChatGroundingEnabled()).toBe(true);
     const block = formatChatGroundingBlock();
     expect(block).toContain("## Grounding rules (mandatory)");
+    expect(block).toMatch(/Calendar today is \*\*\d{4}-\d{2}-\d{2}\*\*/);
     expect(block).toContain("未確認");
     expect(block).toContain("¥XX,XXX");
     expect(block).toContain("orgos dashboard");

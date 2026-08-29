@@ -2,9 +2,11 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { existsSync, createReadStream, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
+import { hydrateStripeEnvFromStore } from "../product/stripe-secrets-store.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
 import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
 import { handleChatApi } from "./routes/chat-api.js";
+import { handleProductApi } from "./routes/product-api.js";
 import { handleSettlementApi } from "./routes/settlement-api.js";
 import {
   handleChatAuthApi,
@@ -89,6 +91,11 @@ function createStewardChatHttpServer(host: string, fallbackPort: number) {
       if (handled) return;
     }
 
+    if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/product/")) {
+      const handled = await handleProductApi(req, res, pathname, method, undefined);
+      if (handled) return;
+    }
+
     if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
       const user = requireChatAuth(req, res);
       if (!user) return;
@@ -123,6 +130,7 @@ export async function startStewardChatServerAsync(
   opts: StewardChatServerOptions = {}
 ): Promise<StewardChatServerHandle> {
   assertProdAuthReady("chat");
+  hydrateStripeEnvFromStore();
   const host = opts.host ?? process.env.STEWARD_CHAT_HOST?.trim() ?? "127.0.0.1";
   const port = opts.port ?? Number(process.env.STEWARD_CHAT_PORT ?? 9471);
   const server = createStewardChatHttpServer(host, port);
@@ -146,6 +154,7 @@ export async function startStewardChatServerAsync(
 /** @deprecated Prefer startStewardChatServerAsync when port may be 0 (tests). */
 export function startStewardChatServer(opts: StewardChatServerOptions = {}): StewardChatServerHandle {
   assertProdAuthReady("chat");
+  hydrateStripeEnvFromStore();
   const host = opts.host ?? process.env.STEWARD_CHAT_HOST?.trim() ?? "127.0.0.1";
   const port = opts.port ?? Number(process.env.STEWARD_CHAT_PORT ?? 9471);
   const server = createStewardChatHttpServer(host, port);

@@ -7,6 +7,7 @@ import { getTenantId } from "../../tenant.js";
 import {
   chatApprovalRequestSchema,
   chatMessageRequestSchema,
+  chatFeedbackRequestSchema,
   chatSettingsUpdateSchema,
   chatAgentIdSchema,
 } from "../../../../schemas/steward-chat.js";
@@ -15,6 +16,7 @@ import {
   appendChatUserMessage,
   getChatSettings,
   historyForOperator,
+  latestAssistantTurnId,
   loadChatThread,
   loadOrMigrateAgentThread,
   pruneAllChatThreadsToCurrentLimit,
@@ -22,6 +24,16 @@ import {
   threadIdFromSessionToken,
   type ChatHistoryMaxTurns,
 } from "../chat-thread.js";
+import {
+  chatMetaFromLlmResult,
+  formatAnswerMemoryBlock,
+  recentUserQueryHashes,
+  rememberAnswer,
+  retrieveAnswerMemory,
+} from "../answer-memory.js";
+import { recordChatFeedback } from "../chat-feedback.js";
+import { buildFaqIndex, tryServeFaqAnswer } from "../faq-index.js";
+import { touchChatActivityForFaq } from "../faq-idle.js";
 import {
   approveFromStewardChat,
   flushWireDeliveryFromChat,
@@ -35,6 +47,8 @@ import {
 } from "./settlement-api.js";
 import { SettlementStepUpRequiredError } from "../../org/settlement-stepup.js";
 import { findOrgApproval } from "../../org/approval/approve.js";
+import { proposeOrgApproval } from "../../org/approval/propose.js";
+import { findOperatorById } from "../../org/operators.js";
 import { settlementAssuranceRequired } from "../../org/settlement-stepup.js";
 import {
   listPendingCeoInlineQuestions,
@@ -58,12 +72,26 @@ import { runValidateReport } from "../../../commands/validate.js";
 import { handleCashflowChatMessage } from "../../jp-bank-corporate/cashflow-chat-intent.js";
 import { handleOrgBudgetApi } from "./org-budget-api.js";
 import { handleOrgChartApi } from "./org-chart-api.js";
+import { handlePlatformApi } from "./platform-api.js";
+import { handleEsignApi } from "./esign-api.js";
 import { handleAnalyticsApi } from "./analytics-api.js";
+import { handleLedgerApi } from "./ledger-api.js";
+import { handleProductApi } from "./product-api.js";
+import { handleCustomersApi } from "./customers-api.js";
+import { handleTaxApi } from "./tax-api.js";
+import { handleDomainOpsApi } from "./domain-ops-api.js";
 import { handleOrchestrationApi } from "./orchestration-api.js";
 import { handleReceiptApi } from "./receipt-api.js";
 import { handleLlmApi } from "./llm-api.js";
 import { handleCommandApi } from "./command-api.js";
+import { handleTowerApi } from "./tower-api.js";
+import { handleTowerChatMessage } from "../../dispatch-tower/chat-handler.js";
 import { handleAgentInboxApi } from "./agent-inbox-api.js";
+import { buildExecutiveHome } from "../../executive-home/build-home.js";
+import { handleCorrespondenceApi } from "./correspondence-api.js";
+import { handleBrokerApi } from "./broker-api.js";
+import { handleEventsApi } from "./events-api.js";
+import { handleAgentModulesApi } from "./agent-modules-api.js";
 import {
   buildAgentInbox,
   formatAgentInboxMarkdown,
@@ -83,7 +111,9 @@ import {
   resolveOperatorPermissions,
 } from "../../console-auth/operator-rbac.js";
 import { readAgentDefinition } from "../../agent-capability.js";
+import { formatOwnerDeskChatRules } from "../../agent-owner-desks.js";
 import type { AgentId } from "../../../../schemas/classification.js";
+import type { LlmRouteHint } from "../../../../schemas/llm-workers.js";
 
 export interface ChatApiContext {
   user: WireConsoleUser;
@@ -152,6 +182,7 @@ function agentRoleBlock(agentId: ChatAgentId | undefined): string {
       `## Agent role (${agentId})`,
       `Path: steward/core/agents/${agentId}_agent.md`,
       "(definition file not found — stay within Operator Policy bounds)",
+      formatOwnerDeskChatRules(agentId),
     ].join("\n");
   }
   const clipped = preferAgentRoleSections(definition, 12_000);
@@ -160,6 +191,7 @@ function agentRoleBlock(agentId: ChatAgentId | undefined): string {
     `## Agent role — ${agentId}`,
     `Path: steward/core/agents/${agentId}_agent.md`,
     "Stay inside Primary Folders and L0–L1 output rules for this agent.",
+    formatOwnerDeskChatRules(agentId),
     "",
     clipped,
   ].join("\n");
@@ -178,22 +210,31 @@ function agentInboxBlock(agentId?: ChatAgentId): string {
   }
 }
 
-function buildChatSystem(threadId: string, agentId?: ChatAgentId) {
+function buildChatSystem(threadId: string, agentId?: ChatAgentId, userMessage?: string) {
   const ctx = buildTodayContext();
   const thread = loadOrMigrateAgentThread(threadId, getTenantId(), agentId);
   const historyBlock =
     thread.messages.length > 0
       ? ["", "## Conversation history (recent)", formatHistoryMarkdown(thread)].join("\n")
       : "";
+  const memoryHits = userMessage
+    ? retrieveAnswerMemory(userMessage, {
+        agentId,
+        excludeQueryHashes: recentUserQueryHashes(thread),
+      })
+    : [];
+  const memoryBlock = formatAnswerMemoryBlock(memoryHits);
   return {
     ctx,
     thread,
     history: historyForOperator(thread),
+    memoryHits,
     system: [
       operatorPolicyExcerpt(35),
       agentRoleBlock(agentId),
       formatCeoReplyStyleBlock(),
       formatChatGroundingBlock(),
+      memoryBlock,
       "",
       "## Today context",
       formatTodayContextMarkdown(ctx),
@@ -203,6 +244,102 @@ function buildChatSystem(threadId: string, agentId?: ChatAgentId) {
   };
 }
 
+function persistLlmChatTurn(
+  threadId: string,
+  agentId: ChatAgentId | undefined,
+  userMessage: string,
+  assistantReply: string,
+  result: { runtime: string; model?: string; tier?: "local" | "cloud"; worker_id?: string },
+  sourceOverride?: "faq"
+): string | undefined {
+  const meta =
+    sourceOverride === "faq"
+      ? { source: "faq" as const }
+      : chatMetaFromLlmResult(result);
+  const saved = appendChatTurn(threadId, getTenantId(), userMessage, assistantReply, meta);
+  if (meta.source && meta.source !== "deterministic") {
+    rememberAnswer({
+      query: userMessage,
+      answer: assistantReply,
+      agentId,
+      source: meta.source,
+      model: meta.model,
+      worker_id: meta.worker_id,
+    });
+  }
+  touchChatActivityForFaq();
+  return latestAssistantTurnId(saved);
+}
+
+/** Deterministic pre-handler replies — still get turn_id so Good/Bad UI works. */
+function persistDeterministicTurn(
+  threadId: string,
+  userMessage: string,
+  assistantReply: string,
+): string | undefined {
+  const saved = appendChatTurn(threadId, getTenantId(), userMessage, assistantReply, {
+    source: "deterministic",
+  });
+  touchChatActivityForFaq();
+  return latestAssistantTurnId(saved);
+}
+
+function respondChatDone(
+  res: ServerResponse,
+  stream: boolean,
+  threadId: string,
+  payload: Record<string, unknown>,
+): void {
+  if (stream) {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+    sseWrite(res, { type: "connected", thread_id: threadId });
+    sseWrite(res, { type: "done", ...payload, thread_id: threadId });
+    res.end();
+  } else {
+    json(res, 200, { ...payload, thread_id: threadId });
+  }
+}
+
+async function respondFaqHit(
+  parsed: { message: string; agent_id?: ChatAgentId },
+  res: ServerResponse,
+  stream: boolean,
+  ctx: ChatApiContext,
+  threadId: string,
+  agentId: ChatAgentId | undefined,
+  reply: string
+): Promise<boolean> {
+  const assistantTurnId = persistLlmChatTurn(
+    threadId,
+    agentId,
+    parsed.message,
+    reply,
+    { runtime: "llm-api" },
+    "faq"
+  );
+  appendChatAudit({
+    action: "message",
+    operator_id: ctx.user.operator_id,
+    approver_id: ctx.user.approver_id,
+    ok: true,
+    path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+    detail: "faq_served",
+  });
+  const body = {
+    ok: true,
+    reply,
+    runtime: "faq-index",
+    faq_served: true,
+    assistant_turn_id: assistantTurnId,
+  };
+  respondChatDone(res, stream, threadId, body);
+  return true;
+}
+
 function formatHistoryMarkdown(thread: ReturnType<typeof loadChatThread>): string {
   return thread.messages
     .map((m) => `- **${m.role}**: ${m.content.slice(0, 500)}`)
@@ -210,7 +347,7 @@ function formatHistoryMarkdown(thread: ReturnType<typeof loadChatThread>): strin
 }
 
 async function handleChatMessage(
-  parsed: { message: string; agent_id?: ChatAgentId },
+  parsed: { message: string; agent_id?: ChatAgentId; llm_route?: LlmRouteHint },
   res: ServerResponse,
   stream: boolean,
   ctx: ChatApiContext
@@ -223,7 +360,7 @@ async function handleChatMessage(
   const scheduling = handleSchedulingChatMessage(threadId, parsed.message);
   if (scheduling.handled && scheduling.reply) {
     const reply = scheduling.reply;
-    appendChatTurn(threadId, getTenantId(), parsed.message, reply);
+    const assistantTurnId = persistDeterministicTurn(threadId, parsed.message, reply);
     appendChatAudit({
       action: "message",
       operator_id: ctx.user.operator_id,
@@ -234,37 +371,50 @@ async function handleChatMessage(
         ? `scheduling_case:${scheduling.caseRow.id}`
         : `scheduling_draft:${threadId}`,
     });
-    if (stream) {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      });
-      sseWrite(res, { type: "connected", thread_id: threadId });
-      sseWrite(res, {
-        type: "done",
-        ok: true,
-        reply,
-        thread_id: threadId,
-        structured: {
-          scheduling_case_id: scheduling.caseRow?.id,
-          scheduling_draft_status: scheduling.draft?.status,
-          missing_information: scheduling.caseRow ? false : true,
-        },
-      });
-      res.end();
-    } else {
-      json(res, 200, {
-        ok: true,
-        reply,
-        thread_id: threadId,
-        structured: {
-          scheduling_case_id: scheduling.caseRow?.id,
-          scheduling_draft_status: scheduling.draft?.status,
-          missing_information: scheduling.caseRow ? false : true,
-        },
-      });
-    }
+    respondChatDone(res, stream, threadId, {
+      ok: true,
+      reply,
+      assistant_turn_id: assistantTurnId,
+      structured: {
+        scheduling_case_id: scheduling.caseRow?.id,
+        scheduling_draft_status: scheduling.draft?.status,
+        missing_information: scheduling.caseRow ? false : true,
+      },
+    });
+    return true;
+  }
+
+  const tower = await handleTowerChatMessage(parsed.message, {
+    fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+    operatorId: ctx.user.operator_id,
+    approverId: ctx.user.approver_id,
+    permissions: resolveOperatorFromSessionUser(ctx.user)
+      ? resolveOperatorPermissions(resolveOperatorFromSessionUser(ctx.user)!)
+      : undefined,
+    toolCtx: {
+      operatorId: ctx.user.operator_id,
+      approverId: ctx.user.approver_id,
+    },
+  });
+  if (tower.handled && tower.reply) {
+    const assistantTurnId = persistDeterministicTurn(threadId, parsed.message, tower.reply);
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: tower.ok !== false,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: `tower:${tower.classification?.kind ?? "n/a"}`,
+    });
+    respondChatDone(res, stream, threadId, {
+      ok: tower.ok !== false,
+      reply: tower.reply,
+      assistant_turn_id: assistantTurnId,
+      structured: {
+        tower_plan: tower.tower_plan,
+        ...tower.structured,
+      },
+    });
     return true;
   }
 
@@ -273,7 +423,7 @@ async function handleChatMessage(
     fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
   });
   if (factReply.handled && factReply.reply) {
-    appendChatTurn(threadId, getTenantId(), parsed.message, factReply.reply);
+    const assistantTurnId = persistDeterministicTurn(threadId, parsed.message, factReply.reply);
     appendChatAudit({
       action: "message",
       operator_id: ctx.user.operator_id,
@@ -282,38 +432,21 @@ async function handleChatMessage(
       path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
       detail: `facts:${factReply.providerId ?? "unknown"}:${factReply.coverage ?? "n/a"}`,
     });
-    const structured = buildFactStructuredPayload(factReply);
-    if (stream) {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      });
-      sseWrite(res, { type: "connected", thread_id: threadId });
-      sseWrite(res, {
-        type: "done",
-        ok: factReply.ok !== false,
-        reply: factReply.reply,
-        thread_id: threadId,
-        structured,
-      });
-      res.end();
-    } else {
-      json(res, 200, {
-        ok: factReply.ok !== false,
-        reply: factReply.reply,
-        thread_id: threadId,
-        structured,
-      });
-    }
+    respondChatDone(res, stream, threadId, {
+      ok: factReply.ok !== false,
+      reply: factReply.reply,
+      assistant_turn_id: assistantTurnId,
+      structured: buildFactStructuredPayload(factReply),
+    });
     return true;
   }
 
   const configPropose = handleTenantConfigProposeChatMessage(parsed.message, {
     proposedBy: ctx.user.operator_id,
+    fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
   });
   if (configPropose.handled && configPropose.reply) {
-    appendChatTurn(threadId, getTenantId(), parsed.message, configPropose.reply);
+    const assistantTurnId = persistDeterministicTurn(threadId, parsed.message, configPropose.reply);
     appendChatAudit({
       action: "message",
       operator_id: ctx.user.operator_id,
@@ -322,85 +455,53 @@ async function handleChatMessage(
       path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
       detail: `tenant-config:${configPropose.approval_id ?? "err"}`,
     });
-    const structured = {
-      tenant_config: {
-        change_id: configPropose.change_id,
-        approval_id: configPropose.approval_id,
+    respondChatDone(res, stream, threadId, {
+      ok: configPropose.ok !== false,
+      reply: configPropose.reply,
+      assistant_turn_id: assistantTurnId,
+      structured: {
+        tenant_config: {
+          change_id: configPropose.change_id,
+          approval_id: configPropose.approval_id,
+        },
       },
-    };
-    if (stream) {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      });
-      sseWrite(res, { type: "connected", thread_id: threadId });
-      sseWrite(res, {
-        type: "done",
-        ok: configPropose.ok !== false,
-        reply: configPropose.reply,
-        thread_id: threadId,
-        structured,
-      });
-      res.end();
-    } else {
-      json(res, 200, {
-        ok: configPropose.ok !== false,
-        reply: configPropose.reply,
-        thread_id: threadId,
-        structured,
-      });
-    }
+    });
     return true;
   }
 
-  const cashflow = await handleCashflowChatMessage(parsed.message, {
-    operatorId: ctx.user.operator_id,
-    approverId: ctx.user.approver_id,
-  });
-  if (cashflow.handled && cashflow.reply) {
-    if (cashflow.ok) {
-      appendChatTurn(threadId, getTenantId(), parsed.message, cashflow.reply);
-    }
-    appendChatAudit({
-      action: "message",
-      operator_id: ctx.user.operator_id,
-      approver_id: ctx.user.approver_id,
-      ok: cashflow.ok === true,
-      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
-      detail: `cashflow:${cashflow.structured?.cashflow_wrote ? "write" : "preview"}`,
+  if (agentId !== "secretary") {
+    const cashflow = await handleCashflowChatMessage(parsed.message, {
+      operatorId: ctx.user.operator_id,
+      approverId: ctx.user.approver_id,
     });
-    if (stream) {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
+    if (cashflow.handled && cashflow.reply) {
+      let assistantTurnId: string | undefined;
+      if (cashflow.ok) {
+        assistantTurnId = persistDeterministicTurn(threadId, parsed.message, cashflow.reply);
+      }
+      appendChatAudit({
+        action: "message",
+        operator_id: ctx.user.operator_id,
+        approver_id: ctx.user.approver_id,
+        ok: cashflow.ok === true,
+        path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+        detail: `cashflow:${cashflow.structured?.cashflow_wrote ? "write" : "preview"}`,
       });
-      sseWrite(res, { type: "connected", thread_id: threadId });
-      sseWrite(res, {
-        type: "done",
+      respondChatDone(res, stream, threadId, {
         ok: cashflow.ok === true,
         reply: cashflow.reply,
-        thread_id: threadId,
+        assistant_turn_id: assistantTurnId,
         structured: cashflow.structured,
       });
-      res.end();
-    } else {
-      json(res, 200, {
-        ok: cashflow.ok === true,
-        reply: cashflow.reply,
-        thread_id: threadId,
-        structured: cashflow.structured,
-      });
+      return true;
     }
-    return true;
   }
 
   const orchestrate = handleStewardOrchestrateChatMessage(parsed.message, {
     fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
   });
   if (orchestrate.handled && orchestrate.reply) {
-    appendChatTurn(threadId, getTenantId(), parsed.message, orchestrate.reply);
+    const assistantTurnId = persistDeterministicTurn(threadId, parsed.message, orchestrate.reply);
     appendChatAudit({
       action: "message",
       operator_id: ctx.user.operator_id,
@@ -409,29 +510,12 @@ async function handleChatMessage(
       path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
       detail: `orchestrate:${(orchestrate.work_order_ids ?? []).join(",") || "none"}`,
     });
-    if (stream) {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      });
-      sseWrite(res, { type: "connected", thread_id: threadId });
-      sseWrite(res, {
-        type: "done",
-        ok: orchestrate.ok === true,
-        reply: orchestrate.reply,
-        thread_id: threadId,
-        structured: { work_order_ids: orchestrate.work_order_ids },
-      });
-      res.end();
-    } else {
-      json(res, 200, {
-        ok: orchestrate.ok === true,
-        reply: orchestrate.reply,
-        thread_id: threadId,
-        structured: { work_order_ids: orchestrate.work_order_ids },
-      });
-    }
+    respondChatDone(res, stream, threadId, {
+      ok: orchestrate.ok === true,
+      reply: orchestrate.reply,
+      assistant_turn_id: assistantTurnId,
+      structured: { work_order_ids: orchestrate.work_order_ids },
+    });
     return true;
   }
 
@@ -440,9 +524,14 @@ async function handleChatMessage(
     message: parsed.message,
     operatorId: ctx.user.operator_id,
     permissions: operatorRecord ? resolveOperatorPermissions(operatorRecord) : undefined,
+    fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
   });
   if (commandResult.handled && commandResult.reply) {
-    appendChatTurn(threadId, getTenantId(), parsed.message, commandResult.reply);
+    const assistantTurnId = persistDeterministicTurn(
+      threadId,
+      parsed.message,
+      commandResult.reply,
+    );
     appendChatAudit({
       action: "message",
       operator_id: ctx.user.operator_id,
@@ -451,37 +540,24 @@ async function handleChatMessage(
       path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
       detail: `commands:${commandResult.plan?.status ?? "n/a"}:${commandResult.plan?.skill_id ?? "none"}`,
     });
-    const structured = {
-      command_plan: commandResult.plan,
-      command_run: commandResult.run,
-    };
-    if (stream) {
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      });
-      sseWrite(res, { type: "connected", thread_id: threadId });
-      sseWrite(res, {
-        type: "done",
-        ok: commandResult.run?.ok !== false,
-        reply: commandResult.reply,
-        thread_id: threadId,
-        structured,
-      });
-      res.end();
-    } else {
-      json(res, 200, {
-        ok: commandResult.run?.ok !== false,
-        reply: commandResult.reply,
-        thread_id: threadId,
-        structured,
-      });
-    }
+    respondChatDone(res, stream, threadId, {
+      ok: commandResult.run?.ok !== false,
+      reply: commandResult.reply,
+      assistant_turn_id: assistantTurnId,
+      structured: {
+        command_plan: commandResult.plan,
+        command_run: commandResult.run,
+      },
+    });
     return true;
   }
 
-  const { system, history } = buildChatSystem(threadId, agentId);
+  const faqHit = tryServeFaqAnswer(parsed.message, { agentId });
+  if (faqHit) {
+    return respondFaqHit(parsed, res, stream, ctx, threadId, agentId, faqHit.answer);
+  }
+
+  const { system, history } = buildChatSystem(threadId, agentId, parsed.message);
 
   const buildGuardedStructured = (
     guarded: ReturnType<typeof applyFactRefusalGuard>,
@@ -504,13 +580,15 @@ async function handleChatMessage(
       history,
       operatorId: ctx.user.operator_id,
       approverId: ctx.user.approver_id,
+      llmRoute: parsed.llm_route,
     });
     const guarded = applyFactRefusalGuard(parsed.message, result.reply, {
       fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
     });
     const finalReply = guarded.reply;
+    let assistantTurnId: string | undefined;
     if (result.ok && finalReply) {
-      appendChatTurn(threadId, getTenantId(), parsed.message, finalReply);
+      assistantTurnId = persistLlmChatTurn(threadId, agentId, parsed.message, finalReply, result);
     }
     appendChatAudit({
       action: "message",
@@ -532,9 +610,11 @@ async function handleChatMessage(
       runtime: result.runtime,
       model: result.model,
       setup_required: result.setup_required,
+      local_error: result.local_error === true,
       structured: buildGuardedStructured(guarded, result.structured),
       telemetry: result.telemetry,
       thread_id: threadId,
+      assistant_turn_id: assistantTurnId,
       stdout: result.stdout.slice(0, 4000),
       stderr: result.stderr.slice(0, 2000),
     });
@@ -553,6 +633,7 @@ async function handleChatMessage(
       history,
       operatorId: ctx.user.operator_id,
       approverId: ctx.user.approver_id,
+      llmRoute: parsed.llm_route,
     });
     let step = await gen.next();
     while (!step.done) {
@@ -564,8 +645,9 @@ async function handleChatMessage(
       fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
     });
     const finalReply = guarded.reply;
+    let assistantTurnId: string | undefined;
     if (result.ok && finalReply) {
-      appendChatTurn(threadId, getTenantId(), parsed.message, finalReply);
+      assistantTurnId = persistLlmChatTurn(threadId, agentId, parsed.message, finalReply, result);
     }
     appendChatAudit({
       action: "message",
@@ -588,9 +670,11 @@ async function handleChatMessage(
       runtime: result.runtime,
       model: result.model,
       setup_required: result.setup_required,
+      local_error: result.local_error === true,
       structured: buildGuardedStructured(guarded, result.structured),
       telemetry: result.telemetry,
       thread_id: threadId,
+      assistant_turn_id: assistantTurnId,
     });
   } catch (err) {
     appendChatAudit({
@@ -632,7 +716,21 @@ export async function handleChatApi(
     return true;
   if (await handleOrgChartApi(req, res, pathname, method, ctx.user))
     return true;
+  if (await handlePlatformApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleEsignApi(req, res, pathname, method, ctx.user))
+    return true;
   if (await handleAnalyticsApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleLedgerApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleTaxApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleDomainOpsApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleProductApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleCustomersApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleOrchestrationApi(req, res, pathname, method, ctx.user))
     return true;
@@ -640,15 +738,38 @@ export async function handleChatApi(
     return true;
   if (await handleLlmApi(req, res, pathname, method, ctx.user))
     return true;
+  if (await handleTowerApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleCorrespondenceApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleBrokerApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleEventsApi(req, res, pathname, method, ctx.user))
+    return true;
   if (await handleCommandApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleAgentInboxApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleAgentModulesApi(req, res, pathname, method, ctx.user))
     return true;
 
   if (pathname === "/chat/v1/today" && method === "GET") {
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     const today = buildTodayContext();
     json(res, 200, today);
+    return true;
+  }
+
+  if (pathname === "/chat/v1/executive/home" && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    try {
+      json(res, 200, buildExecutiveHome());
+    } catch (err) {
+      json(res, 500, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
     return true;
   }
 
@@ -676,6 +797,60 @@ export async function handleChatApi(
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     const today = buildTodayContext();
     json(res, 200, { approvals: today.approvals });
+    return true;
+  }
+
+  if (pathname === "/chat/v1/approvals/propose" && method === "POST") {
+    if (!requireChatPermission(ctx.user, "chat:ask", res)) return true;
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}") as Record<string, unknown>;
+      const subjectType = String(body.subject_type ?? "").trim();
+      if (!subjectType) {
+        json(res, 422, { ok: false, error: "subject_type is required" });
+        return true;
+      }
+      const op = findOperatorById(ctx.user.operator_id);
+      const proposedBy =
+        op?.display_name?.trim() || ctx.user.approver_id || ctx.user.operator_id;
+      const amountNum = Number(body.amount);
+      const amount =
+        Number.isFinite(amountNum) && amountNum > 0
+          ? {
+              value: amountNum,
+              currency: String(body.currency ?? "JPY").toUpperCase().slice(0, 3) || "JPY",
+            }
+          : undefined;
+      const subjectRef =
+        typeof body.subject_ref === "string" && body.subject_ref.trim()
+          ? body.subject_ref.trim()
+          : undefined;
+      const message =
+        typeof body.message === "string" && body.message.trim()
+          ? body.message.trim()
+          : undefined;
+      const approval = proposeOrgApproval({
+        scope: "internal",
+        subjectType,
+        subjectRef,
+        proposedBy,
+        message,
+        amount,
+      });
+      appendChatAudit({
+        action: "propose",
+        operator_id: ctx.user.operator_id,
+        approver_id: ctx.user.approver_id,
+        ok: true,
+        path: pathname,
+        detail: approval.approval_id,
+      });
+      json(res, 200, { ok: true, approval });
+    } catch (err) {
+      json(res, 422, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
     return true;
   }
 
@@ -1049,7 +1224,12 @@ export async function handleChatApi(
   ) {
     if (!requireChatPermission(ctx.user, "chat:ask", res)) return true;
     const raw = await readBody(req);
-    let parsed: { message: string; refresh?: boolean; agent_id?: ChatAgentId };
+    let parsed: {
+      message: string;
+      refresh?: boolean;
+      agent_id?: ChatAgentId;
+      llm_route?: LlmRouteHint;
+    };
     try {
       parsed = chatMessageRequestSchema.parse(JSON.parse(raw));
     } catch {
@@ -1104,6 +1284,39 @@ export async function handleChatApi(
     const settings = setChatHistoryMaxTurns(maxTurns);
     const pruned = pruneAllChatThreadsToCurrentLimit(getTenantId());
     json(res, 200, { ok: true, settings, pruned_threads: pruned });
+    return true;
+  }
+
+  if (pathname === "/chat/v1/feedback" && method === "POST") {
+    if (!requireChatPermission(ctx.user, "chat:ask", res)) return true;
+    const raw = await readBody(req);
+    let body;
+    try {
+      body = chatFeedbackRequestSchema.parse(JSON.parse(raw));
+    } catch {
+      json(res, 400, { ok: false, error: "invalid body" });
+      return true;
+    }
+    const threadId = resolveThreadId(ctx, body.agent_id);
+    const result = recordChatFeedback({
+      threadId,
+      tenant: getTenantId(),
+      turnId: body.turn_id,
+      rating: body.rating,
+      agentId: body.agent_id,
+    });
+    if (!result.ok) {
+      json(res, 404, { ok: false, error: result.error });
+      return true;
+    }
+    json(res, 200, { ok: true, rating: result.rating });
+    return true;
+  }
+
+  if (pathname === "/chat/v1/faq/build" && method === "POST") {
+    if (!requireChatPermission(ctx.user, "chat:ask", res)) return true;
+    const built = buildFaqIndex();
+    json(res, 200, { ok: true, ...built });
     return true;
   }
 
