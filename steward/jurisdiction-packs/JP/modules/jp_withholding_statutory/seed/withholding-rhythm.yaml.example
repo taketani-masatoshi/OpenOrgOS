@@ -1,0 +1,10 @@
+obligation_rhythms:
+  - id: gensen-monthly
+    kind: tax
+    label: 源泉所得税納付
+    cadence: month
+    due_rule: next_month_day_10
+    apply_when: has_withholding
+    amount:
+      mode: formula
+      formula: payroll_withholding_rough

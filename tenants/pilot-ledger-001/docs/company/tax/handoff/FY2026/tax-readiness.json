@@ -1,0 +1,4 @@
+{
+  "error": "chart-of-accounts.yaml is missing journal_source_accounts — required for automated journal posting",
+  "note": "partial readiness — chart/journal_source_accounts may be incomplete"
+}

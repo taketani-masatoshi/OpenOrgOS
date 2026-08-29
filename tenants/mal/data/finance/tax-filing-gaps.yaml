@@ -1,0 +1,57 @@
+# 税務申告ギャップ台帳 — 第8期締め後（2026-07-28）· handoff 2026-08-24
+as_of: "2026-08-24"
+fiscal_year: FY2025
+source: operator
+gaps:
+  - id: fy2025-bank-balance-proof
+    severity: warning
+    area: balance_sheet
+    message: 第8期末（2026-01-31）銀行残高証明が未突合。社内試算は 13,853,191円。
+    path: docs/company/fy2025-keisansyorui.md
+    handoff: tax_advisor
+    status: deferred
+    notes: tax-advisor-handoff 2026-08-24 · checklist #2 · 回答待ち
+  - id: fy2025-corp-tax-finalize
+    severity: warning
+    area: corporate_tax
+    message: 第8期法人税等 127,021円は概算（所得×15%）。税理士確定が必要。
+    path: data/plans/yojitsu-fy2025.yaml
+    handoff: tax_advisor
+    status: deferred
+    notes: tax-advisor-handoff 2026-08-24 · checklist #5 · 回答待ち
+  - id: fy2025-imputed-interest
+    severity: warning
+    area: related_party
+    message: 役員貸付（LOAN-001/002）金利0%のみなし利息の税務処理が未確定。
+    path: data/finance/loans.yaml
+    handoff: tax_advisor
+    status: deferred
+    notes: tax-advisor-handoff 2026-08-24 · checklist #8 · 回答待ち
+  - id: fy2025-cip-evidence
+    severity: info
+    area: fixed_assets
+    message: 亀沢上置き 建設仮勘定 2,600万円の証憑・振替日（第9期 ASSET-003）を確認。
+    path: data/finance/fixed-assets.yaml
+    handoff: accounting
+    status: resolved
+    notes: ASSET-003 取得 2026-04-01 · 供用 2027-02 · investment-plan/LOAN-002 整合 · 税理士 #9 で最終確認
+  - id: fy2026-invoice-exempt-reconcile
+    severity: warning
+    area: consumption_tax
+    message: 免税事業者かつインボイス登録済 — 制度上の整合（invoice_exempt_reconciled_basis）を税理士確認。
+    path: data/finance/tax-profile.yaml
+    handoff: tax_advisor
+    status: deferred
+    notes: 暫定 basis 記録済 · handoff 2026-08-24 · checklist #10 · 税理士署名待ち
+  - id: fy2025-retained-earnings-bridge
+    severity: info
+    area: balance_sheet
+    message: 第8期末繰越利益剰余金 5,000,000円を第9期期首へ接続済み（社内再構成）。税理士突合残。
+    path: docs/company/fy2025-keisansyorui.md
+    handoff: tax_advisor
+    status: deferred
+    notes: tax-profile.prior_retained_earnings と一致 · handoff 2026-08-24
+notes: |
+  第8期（〜2026-01-31）社内決算を 2026-07-28 に再構成締め。
+  2026-08-24: 税理士送付パッケージ整備（docs/company/tax/fy2026-tax-advisor-handoff.md）。
+  warning 4 件は tax_advisor deferred（回答待ち）。CIP 証憑は社内 resolved。
