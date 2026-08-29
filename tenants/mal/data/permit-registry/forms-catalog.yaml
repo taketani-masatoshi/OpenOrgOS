@@ -1,8 +1,5 @@
-# 申請書式カタログ — 許認可種別ごとの MD/TeX テンプレと必須項目
-
 jurisdiction: JP
-updated: "2026-07-10"
-
+updated: 2026-07-10
 forms:
   - id: form-ryokan-permit
     permit_type_ids:
@@ -25,11 +22,14 @@ forms:
       - filing_date
     official_form_url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000188411.html
     official_form_notes: 都道府県・保健所により様式が異なる。提出前に管轄保健所の最新様式を確認すること。
+    submission:
+      authority_label_ja: 保健所（都道府県・政令市）
+      channel: counter
     output_format: tex
     notes: 社内 DB から自動差込後、checklist 合格で PDF 出力
-
   - id: form-food-restaurant
-    permit_type_ids: [pt-food-restaurant]
+    permit_type_ids:
+      - pt-food-restaurant
     name_ja: 飲食店営業許可申請（ひな形）
     template_md: templates/food-restaurant-application.md
     required_fields:
@@ -40,10 +40,15 @@ forms:
       - business_type
       - filing_date
     official_form_url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/hygiene/
+    template_tex: templates/food-restaurant-application.tex
     output_format: tex
-
+    submission:
+      authority_label_ja: 保健所
+      channel: counter
   - id: form-alcohol-sales
-    permit_type_ids: [pt-alcohol-sales, pt-alcohol-restaurant]
+    permit_type_ids:
+      - pt-alcohol-sales
+      - pt-alcohol-restaurant
     name_ja: 酒類販売業免許申請（ひな形）
     template_md: templates/alcohol-sales-application.md
     required_fields:
@@ -56,3 +61,2134 @@ forms:
     official_form_url: https://www.nta.go.jp/taxes/sake/index.htm
     output_format: md
     official_form_notes: 税務署様式は e-Tax / 書面。本ひな形は内部整理用 MD。
+    submission:
+      authority_label_ja: 税務署
+      channel: counter
+  - id: form-minpaku-notification
+    permit_type_ids:
+      - pt-minpaku-notification
+    name_ja: 住宅宿泊事業届出（民泊）申請書（ひな形）
+    template_md: templates/minpaku-notification-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 市区町村
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/minpaku-notification-application.tex
+  - id: form-fire-compliance-notice
+    permit_type_ids:
+      - pt-fire-compliance-notice
+    name_ja: 消防法令適合通知書申請書（ひな形）
+    template_md: templates/fire-compliance-notice-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 消防署
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fire-compliance-notice-application.tex
+  - id: form-lodging-tax-registration
+    permit_type_ids:
+      - pt-lodging-tax-registration
+    name_ja: 宿泊税特別徴収義務者登録申請書（ひな形）
+    template_md: templates/lodging-tax-registration-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 東京都主税局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/lodging-tax-registration-application.tex
+  - id: form-fire-equip
+    permit_type_ids:
+      - pt-fire-equip
+    name_ja: 消防用設備等配置証明申請書（ひな形）
+    template_md: templates/fire-equip-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 消防署
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fire-equip-application.tex
+  - id: form-fire-inspect
+    permit_type_ids:
+      - pt-fire-inspect
+    name_ja: 消防用設備等検査（定期）申請書（ひな形）
+    template_md: templates/fire-inspect-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 消防署
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fire-inspect-application.tex
+  - id: form-building-confirm
+    permit_type_ids:
+      - pt-building-confirm
+    name_ja: 建築確認済証申請書（ひな形）
+    template_md: templates/building-confirm-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 指定確認検査機関または建築主事
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/building-confirm-application.tex
+  - id: form-building-complete
+    permit_type_ids:
+      - pt-building-complete
+    name_ja: 検査済証（完了検査）申請書（ひな形）
+    template_md: templates/building-complete-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/building-complete-application.tex
+  - id: form-building-use-change
+    permit_type_ids:
+      - pt-building-use-change
+    name_ja: 用途変更確認・届出申請書（ひな形）
+    template_md: templates/building-use-change-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/building-use-change-application.tex
+  - id: form-food-manufacturing
+    permit_type_ids:
+      - pt-food-manufacturing
+    name_ja: 食品製造業許可申請書（ひな形）
+    template_md: templates/food-manufacturing-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 保健所
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/food-manufacturing-application.tex
+  - id: form-takken
+    permit_type_ids:
+      - pt-takken
+    name_ja: 宅地建物取引業免許申請書（ひな形）
+    template_md: templates/takken-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/takken-application.tex
+  - id: form-rental-housing-mgmt
+    permit_type_ids:
+      - pt-rental-housing-mgmt
+    name_ja: 賃貸住宅管理業者登録申請書（ひな形）
+    template_md: templates/rental-housing-mgmt-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 国土交通省
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/rental-housing-mgmt-application.tex
+  - id: form-condo-mgmt
+    permit_type_ids:
+      - pt-condo-mgmt
+    name_ja: マンション管理業者登録申請書（ひな形）
+    template_md: templates/condo-mgmt-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 国土交通省
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/condo-mgmt-application.tex
+  - id: form-construction-general
+    permit_type_ids:
+      - pt-construction-general
+    name_ja: 建設業許可（一般建設業）申請書（ひな形）
+    template_md: templates/construction-general-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/construction-general-application.tex
+  - id: form-construction-specific
+    permit_type_ids:
+      - pt-construction-specific
+    name_ja: 建設業許可（特定建設業）申請書（ひな形）
+    template_md: templates/construction-specific-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/construction-specific-application.tex
+  - id: form-architect-office
+    permit_type_ids:
+      - pt-architect-office
+    name_ja: 建築士事務所登録申請書（ひな形）
+    template_md: templates/architect-office-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/architect-office-application.tex
+  - id: form-freight-forwarding
+    permit_type_ids:
+      - pt-freight-forwarding
+    name_ja: 一般貨物自動車運送事業許可申請書（ひな形）
+    template_md: templates/freight-forwarding-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 地方運輸局・地方整備局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/freight-forwarding-application.tex
+  - id: form-bus-common
+    permit_type_ids:
+      - pt-bus-common
+    name_ja: 一般乗合旅客自動車運送事業許可申請書（ひな形）
+    template_md: templates/bus-common-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 地方運輸局・地方整備局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/bus-common-application.tex
+  - id: form-taxi
+    permit_type_ids:
+      - pt-taxi
+    name_ja: 一般乗用旅客自動車運送事業許可申請書（ひな形）
+    template_md: templates/taxi-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 地方運輸局・地方整備局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/taxi-application.tex
+  - id: form-medical-device-mfg
+    permit_type_ids:
+      - pt-medical-device-mfg
+    name_ja: 医療機器製造業許可申請書（ひな形）
+    template_md: templates/medical-device-mfg-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/medical-device-mfg-application.tex
+  - id: form-medical-device-mah
+    permit_type_ids:
+      - pt-medical-device-mah
+    name_ja: 医療機器製造販売業許可申請書（ひな形）
+    template_md: templates/medical-device-mah-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/medical-device-mah-application.tex
+  - id: form-medical-device-dist
+    permit_type_ids:
+      - pt-medical-device-dist
+    name_ja: 医療機器販売業許可申請書（ひな形）
+    template_md: templates/medical-device-dist-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/medical-device-dist-application.tex
+  - id: form-medical-device-repair
+    permit_type_ids:
+      - pt-medical-device-repair
+    name_ja: 医療機器修理業許可申請書（ひな形）
+    template_md: templates/medical-device-repair-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/medical-device-repair-application.tex
+  - id: form-clinic
+    permit_type_ids:
+      - pt-clinic
+    name_ja: 診療所開設許可申請書（ひな形）
+    template_md: templates/clinic-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/clinic-application.tex
+  - id: form-hospital
+    permit_type_ids:
+      - pt-hospital
+    name_ja: 病院開設許可申請書（ひな形）
+    template_md: templates/hospital-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/hospital-application.tex
+  - id: form-pharmacy
+    permit_type_ids:
+      - pt-pharmacy
+    name_ja: 薬局開設許可申請書（ひな形）
+    template_md: templates/pharmacy-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pharmacy-application.tex
+  - id: form-dental
+    permit_type_ids:
+      - pt-dental
+    name_ja: 歯科診療所開設届出申請書（ひな形）
+    template_md: templates/dental-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/dental-application.tex
+  - id: form-money-lending
+    permit_type_ids:
+      - pt-money-lending
+    name_ja: 貸金業登録申請書（ひな形）
+    template_md: templates/money-lending-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/money-lending-application.tex
+  - id: form-fund-transfer
+    permit_type_ids:
+      - pt-fund-transfer
+    name_ja: 資金移動業者登録申請書（ひな形）
+    template_md: templates/fund-transfer-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 財務局長
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fund-transfer-application.tex
+  - id: form-crypto-exchange
+    permit_type_ids:
+      - pt-crypto-exchange
+    name_ja: 暗号資産交換業登録申請書（ひな形）
+    template_md: templates/crypto-exchange-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 財務局長
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/crypto-exchange-application.tex
+  - id: form-staffing
+    permit_type_ids:
+      - pt-staffing
+    name_ja: 労働者派遣事業許可申請書（ひな形）
+    template_md: templates/staffing-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/staffing-application.tex
+  - id: form-job-intro-fee
+    permit_type_ids:
+      - pt-job-intro-fee
+    name_ja: 有料職業紹介事業許可申請書（ひな形）
+    template_md: templates/job-intro-fee-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/job-intro-fee-application.tex
+  - id: form-job-intro-free
+    permit_type_ids:
+      - pt-job-intro-free
+    name_ja: 無料職業紹介事業届出申請書（ひな形）
+    template_md: templates/job-intro-free-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/job-intro-free-application.tex
+  - id: form-waste-collect
+    permit_type_ids:
+      - pt-waste-collect
+    name_ja: 産業廃棄物収集運搬業許可申請書（ひな形）
+    template_md: templates/waste-collect-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/waste-collect-application.tex
+  - id: form-waste-disposal
+    permit_type_ids:
+      - pt-waste-disposal
+    name_ja: 産業廃棄物処分業許可申請書（ひな形）
+    template_md: templates/waste-disposal-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/waste-disposal-application.tex
+  - id: form-general-waste
+    permit_type_ids:
+      - pt-general-waste
+    name_ja: 一般廃棄物収集運搬業許可申請書（ひな形）
+    template_md: templates/general-waste-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 市区町村
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/general-waste-application.tex
+  - id: form-security
+    permit_type_ids:
+      - pt-security
+    name_ja: 警備業認定申請書（ひな形）
+    template_md: templates/security-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/security-application.tex
+  - id: form-telecom
+    permit_type_ids:
+      - pt-telecom
+    name_ja: 電気通信事業届出申請書（ひな形）
+    template_md: templates/telecom-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 総務大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/telecom-application.tex
+  - id: form-telecom-registration
+    permit_type_ids:
+      - pt-telecom-registration
+    name_ja: 電気通信事業登録（基礎的電気通信役務）申請書（ひな形）
+    template_md: templates/telecom-registration-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 所管省庁
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/telecom-registration-application.tex
+  - id: form-broadcast
+    permit_type_ids:
+      - pt-broadcast
+    name_ja: 基幹放送事業許可申請書（ひな形）
+    template_md: templates/broadcast-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 総務大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/broadcast-application.tex
+  - id: form-import-declaration
+    permit_type_ids:
+      - pt-import-declaration
+    name_ja: 輸入申告（通関）申請書（ひな形）
+    template_md: templates/import-declaration-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 税関
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/import-declaration-application.tex
+  - id: form-export-declaration
+    permit_type_ids:
+      - pt-export-declaration
+    name_ja: 輸出申告（通関）申請書（ひな形）
+    template_md: templates/export-declaration-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 税関
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/export-declaration-application.tex
+  - id: form-fueiho-1
+    permit_type_ids:
+      - pt-fueiho-1
+    name_ja: 風俗営業第1種（キャバレー・クラブ等）申請書（ひな形）
+    template_md: templates/fueiho-1-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 公安委員会
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fueiho-1-application.tex
+  - id: form-fueiho-2
+    permit_type_ids:
+      - pt-fueiho-2
+    name_ja: 風俗営業第2種（料理店等）申請書（ひな形）
+    template_md: templates/fueiho-2-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 警察署（公安委員会）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fueiho-2-application.tex
+  - id: form-tokutei-yukyo
+    permit_type_ids:
+      - pt-tokutei-yukyo
+    name_ja: 特定遊興飲食店営業許可申請書（ひな形）
+    template_md: templates/tokutei-yukyo-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 警察署（公安委員会）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/tokutei-yukyo-application.tex
+  - id: form-antique-dealer
+    permit_type_ids:
+      - pt-antique-dealer
+    name_ja: 古物商許可申請書（ひな形）
+    template_md: templates/antique-dealer-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/antique-dealer-application.tex
+  - id: form-tobacco-retail
+    permit_type_ids:
+      - pt-tobacco-retail
+    name_ja: たばこ小売販売業届出申請書（ひな形）
+    template_md: templates/tobacco-retail-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/tobacco-retail-application.tex
+  - id: form-home-care
+    permit_type_ids:
+      - pt-home-care
+    name_ja: 訪問介護事業指定申請書（ひな形）
+    template_md: templates/home-care-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/home-care-application.tex
+  - id: form-day-service
+    permit_type_ids:
+      - pt-day-service
+    name_ja: 通所介護事業指定申請書（ひな形）
+    template_md: templates/day-service-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/day-service-application.tex
+  - id: form-disability-support
+    permit_type_ids:
+      - pt-disability-support
+    name_ja: 障害福祉サービス事業所指定申請書（ひな形）
+    template_md: templates/disability-support-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/disability-support-application.tex
+  - id: form-senshu-school
+    permit_type_ids:
+      - pt-senshu-school
+    name_ja: 専修学校設置認可申請書（ひな形）
+    template_md: templates/senshu-school-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/senshu-school-application.tex
+  - id: form-misc-school
+    permit_type_ids:
+      - pt-misc-school
+    name_ja: 各種学校設置認可申請書（ひな形）
+    template_md: templates/misc-school-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/misc-school-application.tex
+  - id: form-farmland-conversion
+    permit_type_ids:
+      - pt-farmland-conversion
+    name_ja: 農地転用許可申請書（ひな形）
+    template_md: templates/farmland-conversion-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/farmland-conversion-application.tex
+  - id: form-fishery-right
+    permit_type_ids:
+      - pt-fishery-right
+    name_ja: 漁業権設定・許可申請書（ひな形）
+    template_md: templates/fishery-right-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fishery-right-application.tex
+  - id: form-electricity-retail
+    permit_type_ids:
+      - pt-electricity-retail
+    name_ja: 小売電気事業登録申請書（ひな形）
+    template_md: templates/electricity-retail-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 経済産業大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/electricity-retail-application.tex
+  - id: form-gas-utility
+    permit_type_ids:
+      - pt-gas-utility
+    name_ja: ガス事業許可申請書（ひな形）
+    template_md: templates/gas-utility-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 所管省庁
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/gas-utility-application.tex
+  - id: form-privacy-cross-border
+    permit_type_ids:
+      - pt-privacy-cross-border
+    name_ja: 個人情報の外国第三者提供に関する届出申請書（ひな形）
+    template_md: templates/privacy-cross-border-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 個人情報保護委員会
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/privacy-cross-border-application.tex
+  - id: form-employment-rules
+    permit_type_ids:
+      - pt-employment-rules
+    name_ja: 就業規則届出申請書（ひな形）
+    template_md: templates/employment-rules-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 労働基準監督署
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/employment-rules-application.tex
+  - id: form-fiea-type1
+    permit_type_ids:
+      - pt-fiea-type1
+    name_ja: 第一種金融商品取引業申請書（ひな形）
+    template_md: templates/fiea-type1-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣（金融庁）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fiea-type1-application.tex
+  - id: form-fiea-type2
+    permit_type_ids:
+      - pt-fiea-type2
+    name_ja: 第二種金融商品取引業申請書（ひな形）
+    template_md: templates/fiea-type2-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣（金融庁）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fiea-type2-application.tex
+  - id: form-fiea-investment-advisory
+    permit_type_ids:
+      - pt-fiea-investment-advisory
+    name_ja: 投資助言・代理業申請書（ひな形）
+    template_md: templates/fiea-investment-advisory-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣（金融庁）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fiea-investment-advisory-application.tex
+  - id: form-fiea-investment-management
+    permit_type_ids:
+      - pt-fiea-investment-management
+    name_ja: 投資運用業申請書（ひな形）
+    template_md: templates/fiea-investment-management-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣（金融庁）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fiea-investment-management-application.tex
+  - id: form-fiea-registered-financial-institution
+    permit_type_ids:
+      - pt-fiea-registered-financial-institution
+    name_ja: 登録金融機関業務（金商法）申請書（ひな形）
+    template_md: templates/fiea-registered-financial-institution-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣（金融庁）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fiea-registered-financial-institution-application.tex
+  - id: form-banking
+    permit_type_ids:
+      - pt-banking
+    name_ja: 銀行業免許申請書（ひな形）
+    template_md: templates/banking-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/banking-application.tex
+  - id: form-insurance
+    permit_type_ids:
+      - pt-insurance
+    name_ja: 保険業免許申請書（ひな形）
+    template_md: templates/insurance-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/insurance-application.tex
+  - id: form-insurance-agent
+    permit_type_ids:
+      - pt-insurance-agent
+    name_ja: 保険募集人登録申請書（ひな形）
+    template_md: templates/insurance-agent-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 財務局長等
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/insurance-agent-application.tex
+  - id: form-trust
+    permit_type_ids:
+      - pt-trust
+    name_ja: 信託業免許・登録申請書（ひな形）
+    template_md: templates/trust-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/trust-application.tex
+  - id: form-prepaid-payment
+    permit_type_ids:
+      - pt-prepaid-payment
+    name_ja: 前払式支払手段発行者届出・登録申請書（ひな形）
+    template_md: templates/prepaid-payment-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 財務局長
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/prepaid-payment-application.tex
+  - id: form-electronic-payment-agency
+    permit_type_ids:
+      - pt-electronic-payment-agency
+    name_ja: 電子決済等代行業者登録申請書（ひな形）
+    template_md: templates/electronic-payment-agency-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/electronic-payment-agency-application.tex
+  - id: form-financial-instruments-intermediary
+    permit_type_ids:
+      - pt-financial-instruments-intermediary
+    name_ja: 金融商品仲介業登録申請書（ひな形）
+    template_md: templates/financial-instruments-intermediary-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 内閣総理大臣（金融庁）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/financial-instruments-intermediary-application.tex
+  - id: form-credit-card
+    permit_type_ids:
+      - pt-credit-card
+    name_ja: 包括信用購入あっせん業登録申請書（ひな形）
+    template_md: templates/credit-card-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 経済産業大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/credit-card-application.tex
+  - id: form-commodity-derivatives
+    permit_type_ids:
+      - pt-commodity-derivatives
+    name_ja: 商品先物取引業者許可申請書（ひな形）
+    template_md: templates/commodity-derivatives-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 農林水産大臣・経済産業大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/commodity-derivatives-application.tex
+  - id: form-cosmetics-mah
+    permit_type_ids:
+      - pt-cosmetics-mah
+    name_ja: 化粧品製造販売業許可申請書（ひな形）
+    template_md: templates/cosmetics-mah-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県知事
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/cosmetics-mah-application.tex
+  - id: form-cosmetics-mfg
+    permit_type_ids:
+      - pt-cosmetics-mfg
+    name_ja: 化粧品製造業許可申請書（ひな形）
+    template_md: templates/cosmetics-mfg-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/cosmetics-mfg-application.tex
+  - id: form-quasi-drug-mah
+    permit_type_ids:
+      - pt-quasi-drug-mah
+    name_ja: 医薬部外品製造販売業許可申請書（ひな形）
+    template_md: templates/quasi-drug-mah-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/quasi-drug-mah-application.tex
+  - id: form-quasi-drug-mfg
+    permit_type_ids:
+      - pt-quasi-drug-mfg
+    name_ja: 医薬部外品製造業許可申請書（ひな形）
+    template_md: templates/quasi-drug-mfg-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/quasi-drug-mfg-application.tex
+  - id: form-pharma-mah
+    permit_type_ids:
+      - pt-pharma-mah
+    name_ja: 医薬品製造販売業許可申請書（ひな形）
+    template_md: templates/pharma-mah-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pharma-mah-application.tex
+  - id: form-pharma-mfg
+    permit_type_ids:
+      - pt-pharma-mfg
+    name_ja: 医薬品製造業許可申請書（ひな形）
+    template_md: templates/pharma-mfg-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pharma-mfg-application.tex
+  - id: form-pharma-wholesale
+    permit_type_ids:
+      - pt-pharma-wholesale
+    name_ja: 医薬品卸売販売業許可申請書（ひな形）
+    template_md: templates/pharma-wholesale-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pharma-wholesale-application.tex
+  - id: form-pharma-store-sales
+    permit_type_ids:
+      - pt-pharma-store-sales
+    name_ja: 店舗販売業許可（医薬品）申請書（ひな形）
+    template_md: templates/pharma-store-sales-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pharma-store-sales-application.tex
+  - id: form-pharma-placement-sales
+    permit_type_ids:
+      - pt-pharma-placement-sales
+    name_ja: 配置販売業許可（医薬品）申請書（ひな形）
+    template_md: templates/pharma-placement-sales-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pharma-placement-sales-application.tex
+  - id: form-poisonous-drug
+    permit_type_ids:
+      - pt-poisonous-drug
+    name_ja: 毒物劇物製造業・販売業登録申請書（ひな形）
+    template_md: templates/poisonous-drug-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/poisonous-drug-application.tex
+  - id: form-narcotics-handler
+    permit_type_ids:
+      - pt-narcotics-handler
+    name_ja: 麻薬取扱者免許申請書（ひな形）
+    template_md: templates/narcotics-handler-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/narcotics-handler-application.tex
+  - id: form-regenerative-mah
+    permit_type_ids:
+      - pt-regenerative-mah
+    name_ja: 再生医療等製品製造販売業許可申請書（ひな形）
+    template_md: templates/regenerative-mah-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/regenerative-mah-application.tex
+  - id: form-travel-agency-1
+    permit_type_ids:
+      - pt-travel-agency-1
+    name_ja: 旅行業登録（第1種）申請書（ひな形）
+    template_md: templates/travel-agency-1-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 観光庁長官
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/travel-agency-1-application.tex
+  - id: form-travel-agency-2
+    permit_type_ids:
+      - pt-travel-agency-2
+    name_ja: 旅行業登録（第2種）申請書（ひな形）
+    template_md: templates/travel-agency-2-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/travel-agency-2-application.tex
+  - id: form-travel-agency-3
+    permit_type_ids:
+      - pt-travel-agency-3
+    name_ja: 旅行業登録（第3種）申請書（ひな形）
+    template_md: templates/travel-agency-3-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/travel-agency-3-application.tex
+  - id: form-travel-agency-regional
+    permit_type_ids:
+      - pt-travel-agency-regional
+    name_ja: 地域限定旅行業登録申請書（ひな形）
+    template_md: templates/travel-agency-regional-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/travel-agency-regional-application.tex
+  - id: form-travel-agent
+    permit_type_ids:
+      - pt-travel-agent
+    name_ja: 旅行業者代理業登録申請書（ひな形）
+    template_md: templates/travel-agent-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/travel-agent-application.tex
+  - id: form-warehousing
+    permit_type_ids:
+      - pt-warehousing
+    name_ja: 倉庫業登録申請書（ひな形）
+    template_md: templates/warehousing-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 地方運輸局長
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/warehousing-application.tex
+  - id: form-motor-vehicle-maintenance
+    permit_type_ids:
+      - pt-motor-vehicle-maintenance
+    name_ja: 自動車分解整備事業認証申請書（ひな形）
+    template_md: templates/motor-vehicle-maintenance-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 地方運輸局・地方整備局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/motor-vehicle-maintenance-application.tex
+  - id: form-passenger-bus-charter
+    permit_type_ids:
+      - pt-passenger-bus-charter
+    name_ja: 一般貸切旅客自動車運送事業許可申請書（ひな形）
+    template_md: templates/passenger-bus-charter-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 地方運輸局・地方整備局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/passenger-bus-charter-application.tex
+  - id: form-coastal-shipping
+    permit_type_ids:
+      - pt-coastal-shipping
+    name_ja: 内航海運業許可・届出申請書（ひな形）
+    template_md: templates/coastal-shipping-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 国土交通省
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/coastal-shipping-application.tex
+  - id: form-surveying
+    permit_type_ids:
+      - pt-surveying
+    name_ja: 測量業登録申請書（ひな形）
+    template_md: templates/surveying-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 国土交通大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/surveying-application.tex
+  - id: form-real-estate-appraiser-office
+    permit_type_ids:
+      - pt-real-estate-appraiser-office
+    name_ja: 不動産鑑定業者登録申請書（ひな形）
+    template_md: templates/real-estate-appraiser-office-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/real-estate-appraiser-office-application.tex
+  - id: form-labor-dispatch-special
+    permit_type_ids:
+      - pt-labor-dispatch-special
+    name_ja: 特定労働者派遣事業（経過・参照）申請書（ひな形）
+    template_md: templates/labor-dispatch-special-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/labor-dispatch-special-application.tex
+  - id: form-employment-placement-special
+    permit_type_ids:
+      - pt-employment-placement-special
+    name_ja: 特別の法人等による無料職業紹介申請書（ひな形）
+    template_md: templates/employment-placement-special-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/employment-placement-special-application.tex
+  - id: form-secondhand-articles-auction
+    permit_type_ids:
+      - pt-secondhand-articles-auction
+    name_ja: 古物市場主許可申請書（ひな形）
+    template_md: templates/secondhand-articles-auction-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/secondhand-articles-auction-application.tex
+  - id: form-door-to-door-sales-notify
+    permit_type_ids:
+      - pt-door-to-door-sales-notify
+    name_ja: 特定商取引法に基づく表示・届出管理申請書（ひな形）
+    template_md: templates/door-to-door-sales-notify-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 経済産業省
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/door-to-door-sales-notify-application.tex
+  - id: form-pawnbroker
+    permit_type_ids:
+      - pt-pawnbroker
+    name_ja: 質屋営業許可申請書（ひな形）
+    template_md: templates/pawnbroker-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pawnbroker-application.tex
+  - id: form-used-car-dealer
+    permit_type_ids:
+      - pt-used-car-dealer
+    name_ja: 古物商（自動車）特記申請書（ひな形）
+    template_md: templates/used-car-dealer-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/used-car-dealer-application.tex
+  - id: form-animal-handling
+    permit_type_ids:
+      - pt-animal-handling
+    name_ja: 第一種動物取扱業登録申請書（ひな形）
+    template_md: templates/animal-handling-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/animal-handling-application.tex
+  - id: form-animal-handling-2
+    permit_type_ids:
+      - pt-animal-handling-2
+    name_ja: 第二種動物取扱業届出申請書（ひな形）
+    template_md: templates/animal-handling-2-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/animal-handling-2-application.tex
+  - id: form-veterinary-clinic
+    permit_type_ids:
+      - pt-veterinary-clinic
+    name_ja: 動物病院開設届出申請書（ひな形）
+    template_md: templates/veterinary-clinic-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/veterinary-clinic-application.tex
+  - id: form-nursery-authorized
+    permit_type_ids:
+      - pt-nursery-authorized
+    name_ja: 保育所設置認可申請書（ひな形）
+    template_md: templates/nursery-authorized-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/nursery-authorized-application.tex
+  - id: form-nursery-unauthorized-notify
+    permit_type_ids:
+      - pt-nursery-unauthorized-notify
+    name_ja: 認可外保育施設届出申請書（ひな形）
+    template_md: templates/nursery-unauthorized-notify-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/nursery-unauthorized-notify-application.tex
+  - id: form-after-school-care
+    permit_type_ids:
+      - pt-after-school-care
+    name_ja: 放課後児童健全育成事業届出申請書（ひな形）
+    template_md: templates/after-school-care-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 市区町村
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/after-school-care-application.tex
+  - id: form-nursing-home
+    permit_type_ids:
+      - pt-nursing-home
+    name_ja: 介護老人福祉施設開設許可申請書（ひな形）
+    template_md: templates/nursing-home-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/nursing-home-application.tex
+  - id: form-fee-based-home-elderly
+    permit_type_ids:
+      - pt-fee-based-home-elderly
+    name_ja: 有料老人ホーム設置届出申請書（ひな形）
+    template_md: templates/fee-based-home-elderly-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/fee-based-home-elderly-application.tex
+  - id: form-driving-school
+    permit_type_ids:
+      - pt-driving-school
+    name_ja: 指定自動車教習所指定申請書（ひな形）
+    template_md: templates/driving-school-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 公安委員会
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/driving-school-application.tex
+  - id: form-cram-school-fire
+    permit_type_ids:
+      - pt-cram-school-fire
+    name_ja: 学習塾等の防火対象物届出申請書（ひな形）
+    template_md: templates/cram-school-fire-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 消防署
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/cram-school-fire-application.tex
+  - id: form-food-processing-additive
+    permit_type_ids:
+      - pt-food-processing-additive
+    name_ja: 添加物製造業許可申請書（ひな形）
+    template_md: templates/food-processing-additive-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 保健所
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/food-processing-additive-application.tex
+  - id: form-meat-processing
+    permit_type_ids:
+      - pt-meat-processing
+    name_ja: 食肉製品製造業許可申請書（ひな形）
+    template_md: templates/meat-processing-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 保健所
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/meat-processing-application.tex
+  - id: form-confectionery
+    permit_type_ids:
+      - pt-confectionery
+    name_ja: 菓子製造業許可申請書（ひな形）
+    template_md: templates/confectionery-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 保健所
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/confectionery-application.tex
+  - id: form-food-import-notification
+    permit_type_ids:
+      - pt-food-import-notification
+    name_ja: 食品等輸入届出申請書（ひな形）
+    template_md: templates/food-import-notification-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 検疫所
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/food-import-notification-application.tex
+  - id: form-mahjong
+    permit_type_ids:
+      - pt-mahjong
+    name_ja: 風俗営業第4号（マージャン等）申請書（ひな形）
+    template_md: templates/mahjong-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 警察署（公安委員会）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/mahjong-application.tex
+  - id: form-game-center
+    permit_type_ids:
+      - pt-game-center
+    name_ja: 風俗営業第5号（ゲームセンター等）申請書（ひな形）
+    template_md: templates/game-center-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 警察署（公安委員会）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/game-center-application.tex
+  - id: form-late-night-restaurant
+    permit_type_ids:
+      - pt-late-night-restaurant
+    name_ja: 深夜酒類提供飲食店営業届出申請書（ひな形）
+    template_md: templates/late-night-restaurant-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 警察署（公安委員会）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/late-night-restaurant-application.tex
+  - id: form-radio-station
+    permit_type_ids:
+      - pt-radio-station
+    name_ja: 無線局免許申請書（ひな形）
+    template_md: templates/radio-station-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 総務大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/radio-station-application.tex
+  - id: form-domain-mvno
+    permit_type_ids:
+      - pt-domain-mvno
+    name_ja: 電気通信事業者届出（MVNO等）申請書（ひな形）
+    template_md: templates/domain-mvno-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 総務大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/domain-mvno-application.tex
+  - id: form-heat-supply
+    permit_type_ids:
+      - pt-heat-supply
+    name_ja: 熱供給事業登録申請書（ひな形）
+    template_md: templates/heat-supply-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 経済産業大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/heat-supply-application.tex
+  - id: form-petroleum-retail
+    permit_type_ids:
+      - pt-petroleum-retail
+    name_ja: 揮発油販売業登録申請書（ひな形）
+    template_md: templates/petroleum-retail-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 経済産業省
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/petroleum-retail-application.tex
+  - id: form-pcb-waste
+    permit_type_ids:
+      - pt-pcb-waste
+    name_ja: PCB廃棄物処理業許可申請書（ひな形）
+    template_md: templates/pcb-waste-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/pcb-waste-application.tex
+  - id: form-industrial-waste-collection-special
+    permit_type_ids:
+      - pt-industrial-waste-collection-special
+    name_ja: 特別管理産業廃棄物収集運搬業許可申請書（ひな形）
+    template_md: templates/industrial-waste-collection-special-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/industrial-waste-collection-special-application.tex
+  - id: form-detective
+    permit_type_ids:
+      - pt-detective
+    name_ja: 探偵業届出申請書（ひな形）
+    template_md: templates/detective-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 都道府県
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/detective-application.tex
+  - id: form-firearms
+    permit_type_ids:
+      - pt-firearms
+    name_ja: 銃砲刀剣類所持許可（事業者）申請書（ひな形）
+    template_md: templates/firearms-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 警察署（公安委員会）
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/firearms-application.tex
+  - id: form-immigration-support
+    permit_type_ids:
+      - pt-immigration-support
+    name_ja: 登録支援機関の登録申請書（ひな形）
+    template_md: templates/immigration-support-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 出入国在留管理庁
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/immigration-support-application.tex
+  - id: form-specified-skilled-worker-org
+    permit_type_ids:
+      - pt-specified-skilled-worker-org
+    name_ja: 特定技能所属機関届出申請書（ひな形）
+    template_md: templates/specified-skilled-worker-org-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 出入国在留管理庁
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/specified-skilled-worker-org-application.tex
+  - id: form-certified-public-accountant-firm
+    permit_type_ids:
+      - pt-certified-public-accountant-firm
+    name_ja: 監査法人登録申請書（ひな形）
+    template_md: templates/certified-public-accountant-firm-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 金融庁
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/certified-public-accountant-firm-application.tex
+  - id: form-judicial-scrivener-office
+    permit_type_ids:
+      - pt-judicial-scrivener-office
+    name_ja: 司法書士法人設立認可等申請書（ひな形）
+    template_md: templates/judicial-scrivener-office-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 法務局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/judicial-scrivener-office-application.tex
+  - id: form-administrative-scrivener-office
+    permit_type_ids:
+      - pt-administrative-scrivener-office
+    name_ja: 行政書士法人設立認可等申請書（ひな形）
+    template_md: templates/administrative-scrivener-office-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 法務局
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/administrative-scrivener-office-application.tex
+  - id: form-social-insurance-labor-consultant-office
+    permit_type_ids:
+      - pt-social-insurance-labor-consultant-office
+    name_ja: 社会保険労務士法人設立認可等申請書（ひな形）
+    template_md: templates/social-insurance-labor-consultant-office-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 所管省庁
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/social-insurance-labor-consultant-office-application.tex
+  - id: form-patent-attorney-office
+    permit_type_ids:
+      - pt-patent-attorney-office
+    name_ja: 弁理士法人設立認可等申請書（ひな形）
+    template_md: templates/patent-attorney-office-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 経済産業大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/patent-attorney-office-application.tex
+  - id: form-tax-accountant-office
+    permit_type_ids:
+      - pt-tax-accountant-office
+    name_ja: 税理士法人設立認可等申請書（ひな形）
+    template_md: templates/tax-accountant-office-application.md
+    required_fields:
+      - applicant_name
+      - applicant_address
+      - representative_name
+      - site_address
+      - filing_date
+    output_format: tex
+    submission:
+      authority_label_ja: 財務大臣
+    official_form_notes: 内部整理用ひな形。提出前に管轄窓口の最新様式を確認すること。
+    template_tex: templates/tax-accountant-office-application.tex

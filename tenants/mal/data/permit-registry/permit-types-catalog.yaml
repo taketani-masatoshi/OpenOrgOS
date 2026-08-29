@@ -120,6 +120,14 @@ permit_types:
     property_scoped: true
     site_scoped: false
     notes: 旅館業許可と排他ではないが実務上選択。自治体条例で追加要件。
+  - id: pt-lodging-tax-registration
+    category: accommodation
+    name_ja: 宿泊税特別徴収義務者登録
+    legal_basis: 東京都宿泊税条例第10条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+    notes: 宿泊税を課す自治体のみ。徴収・申告義務が伴う。
   - id: pt-fire-equip
     category: fire_building
     name_ja: 消防用設備等配置証明
@@ -135,6 +143,14 @@ permit_types:
     renewal_cycle: 設備種別により6ヶ月〜1年
     property_scoped: true
     site_scoped: false
+  - id: pt-fire-compliance-notice
+    category: fire_building
+    name_ja: 消防法令適合通知書
+    legal_basis: 消防法施行規則第31条の3
+    issuer_type: fire_department
+    property_scoped: true
+    site_scoped: false
+    notes: 旅館業許可申請に添付。消防署が消防法令適合を通知する。
   - id: pt-building-confirm
     category: fire_building
     name_ja: 建築確認済証

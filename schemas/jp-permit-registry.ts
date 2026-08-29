@@ -23,6 +23,9 @@ export const permitCategory = z.enum([
   "education",
   "agriculture",
   "energy",
+  "travel",
+  "animal",
+  "childcare",
   "other",
 ]);
 
