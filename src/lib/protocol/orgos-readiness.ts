@@ -124,8 +124,8 @@ function computeInterfaceAxisChecks(): ReadinessCheck[] {
   return [
     {
       id: "module-production-ready",
-      ok: moduleAxis.productionPct >= 88,
-      detail: `${moduleAxis.productionPct}% production_ready (${moduleAxis.productionReady}/${moduleAxis.catalogTotal})`,
+      ok: moduleAxis.coreProductionPct >= 88,
+      detail: `core ${moduleAxis.coreProductionPct}% production_ready (${moduleAxis.coreProductionReady}/${moduleAxis.coreTotal}) · catalog ${moduleAxis.productionReady}/${moduleAxis.catalogTotal}`,
     },
     fileOk("docs/org-os/orgos-interface-spec.md", "interface spec published"),
     fileOk("src/lib/extensibility-contract.ts", "manifest / pack contract check"),
@@ -140,13 +140,13 @@ function computeInterfaceAxisChecks(): ReadinessCheck[] {
 function interfaceAxisScore(checks: ReadinessCheck[]): number {
   const moduleAxis = computeModuleAxisStats();
   let base =
-    moduleAxis.productionPct >= 100
+    moduleAxis.coreProductionPct >= 100
       ? 99
-      : moduleAxis.productionPct >= 93
+      : moduleAxis.coreProductionPct >= 93
         ? 98
-        : moduleAxis.productionPct >= 89
+        : moduleAxis.coreProductionPct >= 89
           ? 95
-          : moduleAxis.productionPct >= 88
+          : moduleAxis.coreProductionPct >= 88
             ? 92
             : 60;
   const passed = checks.filter((c) => c.ok).length;

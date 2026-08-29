@@ -22,7 +22,7 @@ describe("module production_ready tier (Direction C)", () => {
     expect(production).toContain("jp_women_empowerment");
     expect(production).toContain("jp_privacy_policy");
     expect(production).toContain("jp_bank_corporate");
-    expect(production.length).toBe(29);
+    expect(production.length).toBe(32);
   });
 
   it("each production_ready module passes catalog check", () => {

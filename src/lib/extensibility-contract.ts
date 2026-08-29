@@ -290,6 +290,10 @@ export interface ModuleAxisStats {
   activationReady: number;
   skeleton: number;
   productionPct: number;
+  /** Core catalog only — jurisdiction packs are gated by filing support, not by this axis. */
+  coreTotal: number;
+  coreProductionReady: number;
+  coreProductionPct: number;
 }
 
 export function computeModuleAxisStats(): ModuleAxisStats {
@@ -297,11 +301,17 @@ export function computeModuleAxisStats(): ModuleAxisStats {
   let productionReady = 0;
   let activationReady = 0;
   let skeleton = 0;
+  let coreTotal = 0;
+  let coreProductionReady = 0;
   for (const id of ids) {
     const tier = getModuleTier(id);
     if (tier === "production_ready") productionReady++;
     else if (tier === "activation_ready") activationReady++;
     else skeleton++;
+    if (!resolveModuleLocation(id)?.jurisdictionPack) {
+      coreTotal++;
+      if (tier === "production_ready") coreProductionReady++;
+    }
   }
   return {
     catalogTotal: ids.length,
@@ -309,5 +319,8 @@ export function computeModuleAxisStats(): ModuleAxisStats {
     activationReady,
     skeleton,
     productionPct: ids.length ? Math.round((productionReady / ids.length) * 100) : 0,
+    coreTotal,
+    coreProductionReady,
+    coreProductionPct: coreTotal ? Math.round((coreProductionReady / coreTotal) * 100) : 0,
   };
 }

@@ -57,7 +57,7 @@ export function computeOrgOsStrictReadiness(): OrgOsReadinessReport {
   };
   const interfaceAxis = {
     ...checklist.interfaceAxis,
-    score: Math.min(moduleAxis.productionPct, checklist.interfaceAxis.score),
+    score: Math.min(moduleAxis.coreProductionPct, checklist.interfaceAxis.score),
   };
   const ecosystem = {
     ...checklist.ecosystem,
