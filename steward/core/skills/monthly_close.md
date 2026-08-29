@@ -35,12 +35,12 @@ Finance Agent
 ## CLI
 
 ```bash
-npm run orgos -- skills run monthly-close --month YYYY-MM
-npm run orgos -- finances add --month YYYY-MM
+npm run orgos -- finances close --month YYYY-MM -o YYYY-MM-close.md
+npm run orgos -- ledger trial-balance --as-of YYYY-MM-28
+npm run orgos -- ledger monthly-reconcile --month YYYY-MM
 npm run orgos -- deps check --file data/finance/monthly/YYYY-MM.yaml
 npm run validate
-npm run orgos -- sync all
-npm run orgos -- jp bank cashflow generate --granularity monthly --write
+npm run orgos -- jp bank cashflow generate --granularity weekly --write
 ```
 
 ## JP 資金繰り（月次締め後）

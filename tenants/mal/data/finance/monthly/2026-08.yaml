@@ -8,11 +8,16 @@ revenue:
     amount: 1050000
 expenses:
   - property_id: PROP-001
-    category: other
-    amount: 29433
-    notes: 減価償却費（番町ハイム）
+    category: depreciation
+    amount: 29432
+    notes: 減価償却費（番町ハイム）· floor(353191/12)
   - property_id: PROP-002
     category: other_property
     amount: 496750
     notes: 運営費（OTA・清掃・光熱費等）
-notes: 亀沢旅館 開業 / 予想ベース決算
+  - category: other
+    amount: 300000
+    notes: 三塚力 給与（EMP-003）
+notes: |
+  亀沢旅館 開業 / 予想ベース決算。
+  鈴木友也（EMP-004）は 2026-08-26 入社のため 8月給与は未計上（9月分から）。

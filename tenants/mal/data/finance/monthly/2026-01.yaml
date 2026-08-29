@@ -1,4 +1,5 @@
 month: 2026-01
+basis: actual
 revenue:
   - property_id: PROP-001
     category: rent
@@ -8,4 +9,6 @@ expenses:
     category: other
     amount: 29433
     notes: 減価償却費（番町ハイム）
-notes: 予想ベース決算
+notes: |
+  第8期末月（2026-01-31 決算）。
+  番町賃料10万円 + 減価償却。亀沢未開業・役員報酬0。

@@ -1,0 +1,7 @@
+id: jp_withholding_statutory
+required_seeds: []
+activation_seeds:
+  - withholding-rhythm.yaml.example
+notes: skeleton — 源泉徴収 · 法定調書 · 社保 rhythm
+cli_commands:
+  - calendar

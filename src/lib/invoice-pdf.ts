@@ -21,6 +21,7 @@ import {
 export interface RentInvoiceInput {
   billingMonth: string;
   monthlyRent: number;
+  lodgingTaxJpy?: number;
   tenantName: string;
   propertyName: string;
   propertyLocation: string;
@@ -49,6 +50,32 @@ export function buildRentInvoiceRows(input: RentInvoiceInput): PdfTableRow[] {
     "貸付用家屋の賃貸料（消費税非課税の可能性あり・要税理士確認）";
   const taxLabel = tpl?.tax_label ?? "消費税（10%）";
   const taxNote = tpl?.tax_note ?? "貸付用家屋の賃貸料は原則非課税";
+
+  const taxMode = tpl?.tax_mode ?? "non_taxable";
+  const lodgingTax = input.lodgingTaxJpy ?? 0;
+
+  if (taxMode === "taxable_10") {
+    const consumptionTax = Math.floor(input.monthlyRent * 0.1);
+    const total = input.monthlyRent + consumptionTax + lodgingTax;
+    const rows: PdfTableRow[] = [
+      {
+        label: lineLabel,
+        amount: input.monthlyRent,
+        note: lineNote,
+      },
+      { label: "小計（税抜）", amount: input.monthlyRent, bold: true },
+      { label: taxLabel, amount: consumptionTax, note: taxNote },
+    ];
+    if (lodgingTax > 0) {
+      rows.push({
+        label: tpl?.lodging_tax_label ?? "宿泊税（都条例）",
+        amount: lodgingTax,
+        note: "特別徴収 · 別途申告",
+      });
+    }
+    rows.push({ label: "請求合計", amount: total, bold: true });
+    return rows;
+  }
 
   return [
     {

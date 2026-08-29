@@ -16,8 +16,8 @@ expenses:
     amount: 462000
     notes: 運営費（OTA・清掃 · 7月分 · ダミー）
   - category: other
-    amount: 320000
-    notes: 三塚給与（EMP-003 · 人件費 · ダミー）
+    amount: 300000
+    notes: 三塚力 給与（EMP-003）
   - category: communication
     amount: 3000
     notes: 通信費

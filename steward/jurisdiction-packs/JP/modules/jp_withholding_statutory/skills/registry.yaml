@@ -1,0 +1,8 @@
+skills:
+  - id: jp_withholding_payment
+    file: jp_withholding_payment.md
+    runtime: cli
+    cli_command: jp-withholding-payment
+    handler: jp_withholding_payment
+    description: 源泉 · 社保 · 法定調書 rhythm カレンダー
+    agent_id: tax

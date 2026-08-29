@@ -16,7 +16,7 @@ expenses:
     amount: 185000
     notes: プレオープン準備・清掃（ダミー）
   - category: other
-    amount: 320000
-    notes: 三塚給与（EMP-003 · 人件費 · ダミー）
+    amount: 300000
+    notes: 三塚力 給与（EMP-003）
 notes: |
   ダミーデータ — 亀沢ソフトオープン月。

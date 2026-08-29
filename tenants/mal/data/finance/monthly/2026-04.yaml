@@ -12,10 +12,10 @@ expenses:
     amount: 29433
     notes: 減価償却費（番町ハイム）
   - category: other
-    amount: 160000
-    notes: 三塚給与（4/15入社 · 日割 · ダミー）
+    amount: 300000
+    notes: 三塚力 給与（EMP-003 · 入社月）
   - category: other
     amount: 88000
     notes: 三塚採用費（求人媒体 · ダミー）
 notes: |
-  ダミーデータ — 三塚（EMP-003）入社月。亀沢は5月プレオープン準備中。
+  三塚力（EMP-003）入社月。亀沢は5月プレオープン準備中。

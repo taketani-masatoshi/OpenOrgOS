@@ -1,4 +1,4 @@
-as_of: "2026-07-11"
+as_of: "2026-09-30"
 currency: JPY
 entries:
   - id: BANK-20260701-001
@@ -15,4 +15,6 @@ entries:
     status: matched
     source: import
 notes: |
-  ダミーデータ — 銀行 CSV 取込の正本。`orgos jp bank statement import --file ... --write` で追記。
+  正本 — `orgos jp bank statement import --file ... --write` で追記。
+  as_of は opening（2026-08-31）以降をカバーすること（GL↔1100 統制）。
+  2026-09 時点の GL 1100 変動なしのため、opening 以降の net movement は 0。

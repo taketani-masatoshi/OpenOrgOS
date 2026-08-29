@@ -1,7 +1,7 @@
-import { loadYojitsuFyPlan, loadMonthlyFinances, loadBusinessPlan } from "./data.js";
+import { loadYojitsuFyPlan, loadBusinessPlan } from "./data.js";
+import { buildGlMonthlyActuals } from "./finance/gl-report-basis.js";
 import {
   aggregateBySegment,
-  resolveYojitsuMonthSide,
   sumRevenue,
 } from "./yojitsu-normalize.js";
 
@@ -29,15 +29,10 @@ export interface VarianceReport {
   deltaTotal: number;
 }
 
-function sumRevenueFromFinanceMonth(revenue: { amount: number }[]): number {
-  return revenue.reduce((s, r) => s + r.amount, 0);
-}
-
-/** 予実 FY 計画 vs 月次 finance YAML の売上差異 */
+/** 予実 FY 計画（yojitsu） vs 実績（GL）の売上差異 */
 export function computeVarianceReport(fiscalYear = "FY2026"): VarianceReport {
   const yojitsu = loadYojitsuFyPlan(fiscalYear);
-  const finances = loadMonthlyFinances();
-  const financeByMonth = new Map(finances.map((f) => [f.month, f]));
+  const glActuals = new Map(buildGlMonthlyActuals(fiscalYear).map((row) => [row.month, row]));
 
   const months: MonthVariance[] = [];
   let planTotal = 0;
@@ -45,27 +40,29 @@ export function computeVarianceReport(fiscalYear = "FY2026"): VarianceReport {
 
   for (const ym of yojitsu?.months ?? []) {
     const plan = sumRevenue(ym.plan);
-    const yActual = sumRevenue(resolveYojitsuMonthSide(ym));
-    const fin = financeByMonth.get(ym.month);
-    const finRev = fin ? sumRevenueFromFinanceMonth(fin.revenue) : yActual;
-    const delta = finRev - plan;
+    const glRow = glActuals.get(ym.month);
+    const glRev = glRow?.revenue_total ?? 0;
+    const delta = glRev - plan;
     months.push({
       month: ym.month,
       planRevenue: plan,
-      actualRevenue: finRev,
+      actualRevenue: glRev,
       delta,
       pct: plan ? Math.round((delta / plan) * 1000) / 10 : null,
     });
     planTotal += plan;
-    actualTotal += finRev;
+    actualTotal += glRev;
   }
 
   const planBySegment = yojitsu
     ? aggregateBySegment(yojitsu, "revenue", false)
     : new Map<string, number>();
-  const actualBySegment = yojitsu
-    ? aggregateBySegment(yojitsu, "revenue", true)
-    : new Map<string, number>();
+  const actualBySegment = new Map<string, number>();
+  for (const row of buildGlMonthlyActuals(fiscalYear)) {
+    if (row.revenue_total > 0) {
+      actualBySegment.set("gl_total", (actualBySegment.get("gl_total") ?? 0) + row.revenue_total);
+    }
+  }
   const segmentNames = new Set([...planBySegment.keys(), ...actualBySegment.keys()]);
   const segments: SegmentVariance[] = [...segmentNames]
     .sort()
@@ -108,8 +105,8 @@ export function formatVarianceMarkdown(report: VarianceReport): string {
     "",
     "## 月次",
     "",
-    "| 月 | 計画売上 | 月次YAML売上 | 差異 | 差異% |",
-    "|----|--------:|------------:|-----:|------:|",
+    "| 月 | 計画売上 | GL実績売上 | 差異 | 差異% |",
+    "|----|--------:|----------:|-----:|------:|",
     ...report.months.map(
       (m) =>
         `| ${m.month} | ${m.planRevenue.toLocaleString()} | ${m.actualRevenue.toLocaleString()} | ${m.delta >= 0 ? "+" : ""}${m.delta.toLocaleString()} | ${m.pct ?? "—"}% |`

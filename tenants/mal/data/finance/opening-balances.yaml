@@ -1,0 +1,35 @@
+# GL 期首残高 — カットオーバー基準（period_start 以降で月次突合を実施）
+# 社内再構成 · 税理士突合残。貸借差額は 3200 繰越利益剰余金で調整。
+
+version: 1
+fiscal_year: FY2026
+period_start: "2026-09"
+as_of: "2026-08-31"
+currency: JPY
+
+lines:
+  - account_code: "1100"
+    debit_yen: 10000000
+    credit_yen: 0
+  - account_code: "1200"
+    debit_yen: 42600000
+    credit_yen: 0
+  - account_code: "1210"
+    debit_yen: 70000000
+    credit_yen: 0
+  - account_code: "1290"
+    debit_yen: 0
+    credit_yen: 706382
+  - account_code: "2100"
+    debit_yen: 0
+    credit_yen: 112600000
+  - account_code: "3100"
+    debit_yen: 0
+    credit_yen: 8500000
+  - account_code: "3200"
+    debit_yen: 0
+    credit_yen: 793618
+
+notes: |
+  CoA data_source 派生（cash-balance · fixed-assets · loans · tax-profile）。
+  貸借差額は 3200 で調整。GL 稼働開始月は 2026-09。

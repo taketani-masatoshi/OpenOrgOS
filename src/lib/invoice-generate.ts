@@ -15,6 +15,8 @@ import {
   generateRentInvoicePdf,
   type RentInvoiceInput,
 } from "./invoice-pdf.js";
+import { postSalesInvoiceJournalEntry } from "./finance/journal-sources.js";
+import { computeStayMetrics, loadTaxLedger } from "../../steward/modules/hospitality/cli/ops-lib.js";
 import {
   formatJapaneseDate,
   formatJapaneseYearMonth,
@@ -107,7 +109,7 @@ export async function runInvoiceGenerate(
   const template = loadInvoiceTemplate(billing.moduleId, billing.template_id);
   const bodyTemplateText = loadInvoiceBodyTemplate(billing.moduleId, template);
 
-  const monthlyRent = prop.rental?.monthly_rent ?? 100_000;
+  const monthlyRentDefault = prop.rental?.monthly_rent ?? 100_000;
   const tenantName =
     options.tenantName ?? billing.tenant_name ?? template.defaults?.tenant_name ?? TENANT_NAME_PLACEHOLDER;
   const tenantEmail =
@@ -137,6 +139,45 @@ export async function runInvoiceGenerate(
     const pdfFilename = `${base}-invoice.pdf`;
     const pdfPath = join(outputDir, pdfFilename);
 
+    let monthlyRent = monthlyRentDefault;
+    let lodgingTaxJpy = 0;
+    if (options.moduleId === "hospitality") {
+      const metrics = computeStayMetrics(billingMonth, options.propertyId);
+      if (metrics.revenue_jpy > 0) monthlyRent = metrics.revenue_jpy;
+      try {
+        const ledger = loadTaxLedger();
+        lodgingTaxJpy = ledger.assessments
+          .filter((a) => a.period === billingMonth && a.property_id === options.propertyId)
+          .reduce((sum, a) => sum + a.tax_jpy, 0);
+      } catch {
+        /* no tax ledger */
+      }
+    }
+
+    let consumptionTaxJpy = 0;
+    let invoiceTotal = monthlyRent;
+    if (template.pdf.tax_mode === "taxable_10") {
+      consumptionTaxJpy = Math.floor(monthlyRent * 0.1);
+      invoiceTotal = monthlyRent + consumptionTaxJpy + lodgingTaxJpy;
+    }
+
+    const invoiceId = `${billing.propertyId}-${billingMonth}`;
+    const splitConsumptionTax =
+      template.pdf.tax_mode === "taxable_10" && options.moduleId === "hospitality";
+    postSalesInvoiceJournalEntry({
+      invoiceId,
+      amountYen: invoiceTotal,
+      revenueAccountCode: options.moduleId === "hospitality" ? "4200" : undefined,
+      taxCategory: splitConsumptionTax ? "taxable_10" : undefined,
+      netRevenueYen: splitConsumptionTax ? monthlyRent : undefined,
+      consumptionTaxYen: splitConsumptionTax ? consumptionTaxJpy : undefined,
+      lodgingTaxYen:
+        splitConsumptionTax && lodgingTaxJpy > 0 ? lodgingTaxJpy : undefined,
+      occurredAt: `${billingMonth}-01T00:00:00.000Z`,
+      authorizedBy: "invoice-generate",
+      propertyId: options.propertyId ?? billing.propertyId,
+    });
+
     const templateVars: TemplateVars = {
       property_name: prop.name,
       property_location: prop.location,
@@ -151,6 +192,7 @@ export async function runInvoiceGenerate(
     const invoiceInput: RentInvoiceInput = {
       billingMonth,
       monthlyRent,
+      lodgingTaxJpy: lodgingTaxJpy > 0 ? lodgingTaxJpy : undefined,
       tenantName,
       propertyName: prop.name,
       propertyLocation: prop.location,

@@ -28,6 +28,10 @@ export interface KessanReportInput {
   company: Company;
   yojitsu: YojitsuPlan;
   fiscalYear: string;
+  plRows?: PdfTableRow[];
+  bsRows?: PdfTableRow[];
+  equityRows?: PdfTableRow[];
+  noteRows?: string[];
 }
 
 export function buildKessanPlRows(yojitsu: YojitsuPlan): PdfTableRow[] {
@@ -149,28 +153,47 @@ export async function generateKessanPdf(
 
   if (yojitsu.closing?.basis === "forecast") {
     pdfMutedNote(w, "※ 本報告書の数値は予想ベースです。税理士確認後に確定版へ更新してください。");
+  } else if (yojitsu.closing?.basis === "gl") {
+    pdfMutedNote(w, "※ 本報告書の数値は総勘定元帳（GL）に基づきます。税理士確認後に確定版へ更新してください。");
   } else if (yojitsu.closing?.basis === "actual") {
     pdfMutedNote(w, "※ 本報告書の数値は月次実績の再構成に基づきます。税理士確認後に確定版へ更新してください。");
   }
 
   pdfSection(w, "1. 損益の状況");
-  pdfTable(w, buildKessanPlRows(yojitsu));
+  pdfTable(w, input.plRows ?? buildKessanPlRows(yojitsu));
 
-  pdfSection(w, "2. 剰余金の処分");
+  if (input.bsRows && input.bsRows.length > 0) {
+    pdfSection(w, "2. 財政状態");
+    pdfTable(w, input.bsRows);
+  }
+
+  if (input.equityRows && input.equityRows.length > 0) {
+    pdfSection(w, input.bsRows ? "3. 株主資本等変動" : "2. 株主資本等変動");
+    pdfTable(w, input.equityRows);
+  }
+
+  const surplusIndex = input.bsRows ? (input.equityRows ? 4 : 3) : 2;
+  pdfSection(w, `${surplusIndex}. 剰余金の処分`);
   pdfParagraph(
     w,
     "当期純利益は、内部留保として積み立てることといたします。（株主総会決議事項）"
   );
 
-  pdfSection(w, "3. 重要な会計方針");
+  pdfSection(w, `${surplusIndex + 1}. 重要な会計方針`);
   pdfParagraph(
     w,
-    "減価償却は定額法により計上しています。番町ハイム312の取得価額1,660万円を耐用年数47年で償却し、亀沢旅館の減価償却は当年度未計上としています。"
+    "減価償却は定額法により計上しています。収益は発生主義（売掛金）、費用は発生主義（買掛金）で認識しています。",
   );
 
-  if (yojitsu.closing?.notes) {
-    pdfSection(w, "4. 注記");
-    pdfParagraph(w, yojitsu.closing.notes.trim());
+  const notes = [
+    ...(yojitsu.closing?.notes ? [yojitsu.closing.notes.trim()] : []),
+    ...(input.noteRows ?? []),
+  ].filter(Boolean);
+  if (notes.length > 0) {
+    pdfSection(w, `${surplusIndex + 2}. 注記`);
+    for (const note of notes) {
+      pdfParagraph(w, note);
+    }
   }
 
   const reps = (company.directors ?? [])
