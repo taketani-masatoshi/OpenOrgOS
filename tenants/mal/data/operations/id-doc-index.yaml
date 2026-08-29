@@ -1,0 +1,8 @@
+version: 1
+entries:
+  - id: IDDOC-STAY-2026-001-1
+    stay_id: STAY-2026-001
+    doc_type: passport
+    relative_path: 2026/08/id-docs/demo.pdf
+    retained_until: 2031-08-22
+    registered_on: 2026-07-13

@@ -1,17 +1,36 @@
 version: 1
 profiles:
   operational:
+    - accounting
     - compliance
     - contract
+    - corporate_governance
     - cto
+    - customer_success
+    - data_analytics
     - engineering
+    - esg_sustainability
     - executive_steward
     - finance
     - hospitality
+    - human_resources
+    - intellectual_property
+    - internal_audit
+    - investor_relations
+    - legal
     - medical_device_regulatory
     - operations
+    - privacy_officer
+    - procurement
+    - project_management
     - property_rental
+    - risk_insurance
+    - sales_inbound
+    - sales_lead
+    - sales_outbound
     - secretary
     - security
+    - tax
   developer: []
+  task: []
 disabled: []

@@ -1,0 +1,7 @@
+entity: mal
+as_of: 2026-08-29
+meetings:
+  - id: MTG-20260829-board-employment-counsel
+    kind: board
+    scheduled_on: 2026-08-29
+    status: held

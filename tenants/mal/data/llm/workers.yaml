@@ -1,0 +1,19 @@
+schema: orgos.llm.workers.v1
+queue:
+  max_queue: 64
+  queue_timeout_ms: 120000
+  cloud_overflow:
+    enabled: false
+    wait_threshold_ms: 8000
+    max_inflight: 2
+workers:
+  # Host npm: 127.0.0.1 · Docker stack: ORGOS_LLM_API_URL rewrites to host.docker.internal
+  - id: local-01
+    label: Local Ollama
+    tier: local
+    provider: openai-compatible
+    base_url: http://127.0.0.1:11434/v1
+    model: gemma4:latest
+    max_inflight: 2
+    enabled: true
+    api_key_env: ORGOS_LLM_API_KEY

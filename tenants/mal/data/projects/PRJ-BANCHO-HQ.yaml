@@ -1,0 +1,27 @@
+id: PRJ-BANCHO-HQ
+title: 番町の本社兼用賃貸
+status: active
+rag: green
+owner_agent: operations
+sponsor: ceo
+start_date: "2025-02-10"
+target_date: "2026-12-31"
+notes: 本社事務所を同物件内に置く。賃貸モジュール YAML を複製しない。
+milestones:
+  - id: MS-LEASE-STABLE
+    title: 賃貸稼働の継続確認
+    due: "2026-12-31"
+    status: open
+risks:
+  - id: RSK-HQ-MOVE
+    summary: 本店移転後も番町を事務所として維持する前提が崩れる
+    severity: medium
+    status: open
+links:
+  contract_ids:
+    - CTR-013
+  work_order_ids: []
+  module_refs:
+    - module: rental
+  property_ids:
+    - PROP-001

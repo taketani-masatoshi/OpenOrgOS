@@ -26,6 +26,13 @@
 - docs: `docs/properties/PROP-002-kamezawa/operations/`
 - 要約: `docs/reports/agent-summaries/prop-002/`
 
+### `investor_relations` (`investor_relations`)
+
+- Agent: `steward/modules/investor_relations/agent.md`
+- data: `data/investor-relations/`
+- docs: `docs/investor-relations/`
+- 要約: `docs/reports/agent-summaries/investor-relations/`
+
 ### `travel_booking` (`travel_booking`)
 
 - Agent: `steward/modules/travel_booking/agent.md`
@@ -51,6 +58,110 @@
 - data: `data/finance/`
 - docs: `docs/finance/treasury/`
 
+### `jp_tax_corporate` (`jp_tax_corporate`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_tax_corporate/agent.md`
+- data: `data/finance/`
+
+### `jp_tax_consumption` (`jp_tax_consumption`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_tax_consumption/agent.md`
+- data: `data/finance/`
+
+### `jp_invoice_qualified` (`jp_invoice_qualified`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_invoice_qualified/agent.md`
+- data: `data/finance/`
+
+### `jp_withholding_statutory` (`jp_withholding_statutory`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_withholding_statutory/agent.md`
+- data: `data/finance/`
+
+### `sales` (`sales`)
+
+- Agent: `steward/modules/sales/agent.md`
+- data: `data/sales/`
+- docs: `docs/sales/`
+- 要約: `docs/reports/agent-summaries/sales-lead/`
+
+### `customer_success` (`customer_success`)
+
+- Agent: `steward/modules/customer_success/agent.md`
+- data: `data/customers/`
+- docs: `docs/customers/`
+- 要約: `docs/reports/agent-summaries/customer-success/`
+
+### `language_bridge` (`language_bridge`)
+
+- Agent: `steward/modules/language_bridge/agent.md`
+- data: `data/language-bridge/`
+- docs: `docs/language-bridge/`
+- 要約: `docs/reports/agent-summaries/language-bridge/`
+
+### `jp_carbon_neutral_2050` (`jp_carbon_neutral_2050`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_carbon_neutral_2050/agent.md`
+- data: `data/jp-carbon-neutral-2050/`
+- docs: `docs/jp-carbon-neutral-2050/`
+- 要約: `docs/reports/agent-summaries/jp-carbon-neutral-2050/`
+
+### `jp_certification` (`jp_certification`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_certification/agent.md`
+- data: `data/jp-certification/`
+- docs: `docs/jp-certification/`
+- 要約: `docs/reports/agent-summaries/jp-certification/`
+
+### `jp_inspection` (`jp_inspection`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_inspection/agent.md`
+- data: `data/jp-inspection/`
+- docs: `docs/jp-inspection/`
+- 要約: `docs/reports/agent-summaries/jp-inspection/`
+
+### `jp_minpaku` (`jp_minpaku`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_minpaku/agent.md`
+- data: `data/jp-minpaku/`
+- docs: `docs/jp-minpaku/`
+- 要約: `docs/reports/agent-summaries/jp-minpaku/`
+
+### `jp_permit_application` (`jp_permit_application`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_permit_application/agent.md`
+- data: `data/jp-permit-application/`
+- docs: `docs/jp-permit-application/`
+- 要約: `docs/reports/agent-summaries/jp-permit-application/`
+
+### `jp_permit_registry` (`jp_permit_registry`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_permit_registry/agent.md`
+- data: `data/permit-registry/`
+- docs: `docs/jp-permit-registry/`
+- 要約: `docs/reports/agent-summaries/jp-permit-registry/`
+
+### `jp_privacy_policy` (`jp_privacy_policy`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_privacy_policy/agent.md`
+- data: `data/jp-privacy-policy/`
+- docs: `docs/jp-privacy-policy/`
+- 要約: `docs/reports/agent-summaries/jp-privacy-policy/`
+
+### `jp_trademark_application` (`jp_trademark_application`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_trademark_application/agent.md`
+- data: `data/trademark/`
+- docs: `docs/jp-trademark-application/`
+- 要約: `docs/reports/agent-summaries/jp-trademark-application/`
+
+### `jp_women_empowerment` (`jp_women_empowerment`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_women_empowerment/agent.md`
+- data: `data/jp-women-empowerment/`
+- docs: `docs/jp-women-empowerment/`
+- 要約: `docs/reports/agent-summaries/jp-women-empowerment/`
+
 ## 無効業務モジュール（読取禁止）
 
 - `professional_services` / `professional_services` — `steward/modules/professional_services/` **読まない**
@@ -67,23 +178,25 @@
 - `education` / `education` — `steward/modules/education/` **読まない**
 - `property_management` / `property_management` — `steward/modules/property_management/` **読まない**
 - `membership` / `membership` — `steward/modules/membership/` **読まない**
+- `jp_social_insurance` / `jp_social_insurance` — `steward/modules/jp_social_insurance/` **読まない**
 
 ## 有効 ISO 標準
 
-- **ISO-13485** — テンプレ: `steward/standards/iso/ISO-13485/` · 記録: `docs/compliance/iso/ISO-13485/`
 - **ISO-21401** — テンプレ: `steward/standards/iso/ISO-21401/` · 記録: `docs/compliance/iso/ISO-21401/`
-- **ISO-27001** — テンプレ: `steward/standards/iso/ISO-27001/` · 記録: `docs/compliance/iso/ISO-27001/`
-- **ISO-9001** — テンプレ: `steward/standards/iso/ISO-9001/` · 記録: `docs/compliance/iso/ISO-9001/`
 
 ## 無効 ISO 標準（読取禁止）
 
+- `ISO-13485` — `steward/standards/iso/ISO-13485/` **読まない**
 - `ISO-14001` — `steward/standards/iso/ISO-14001/` **読まない**
 - `ISO-20000` — `steward/standards/iso/ISO-20000/` **読まない**
 - `ISO-22000` — `steward/standards/iso/ISO-22000/` **読まない**
 - `ISO-22301` — `steward/standards/iso/ISO-22301/` **読まない**
+- `ISO-27001` — `steward/standards/iso/ISO-27001/` **読まない**
+- `ISO-37000` — `steward/standards/iso/ISO-37000/` **読まない**
 - `ISO-37001` — `steward/standards/iso/ISO-37001/` **読まない**
 - `ISO-45001` — `steward/standards/iso/ISO-45001/` **読まない**
 - `ISO-50001` — `steward/standards/iso/ISO-50001/` **読まない**
+- `ISO-9001` — `steward/standards/iso/ISO-9001/` **読まない**
 
 ## 有効社内規程
 
@@ -95,9 +208,7 @@
 - **REG-006** 利益相反取引規程 — 施行: `docs/company/regulations/riekisohan-torihiki-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-006-riekisohan/template.md`
 - **REG-007** 文書管理規程 — 施行: `docs/company/regulations/bunsho-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-007-bunsho-kanri/template.md`
 - **REG-008** 旅費規程 — 施行: `docs/company/regulations/ryohi-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-008-ryohi/template.md`
-- **REG-009** 情報セキュリティ管理規程 — 施行: `docs/company/regulations/joho-security-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-009-joho-security/template.md`
 - **REG-010** 個人情報保護規程 — 施行: `docs/company/regulations/kojin-joho-hogo-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-010-kojin-joho/template.md`
-- **REG-011** 品質管理規程 — 施行: `docs/company/regulations/hinshitsu-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-011-hinshitsu/template.md`
 - **REG-014** 環境・エネルギー管理規程 — 施行: `docs/company/regulations/kankyo-energy-kanri-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-014-kankyo-energy/template.md`
 - **REG-016** 内部監査規程 — 施行: `docs/company/regulations/naibu-kansa-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/core/REG-016-naibu-kansa/template.md`
 - **REG-012** 宿泊運営・サステナビリティ規程 — 施行: `docs/company/regulations/shukuhaku-unyo-kisoku.md` · テンプレ: `steward/jurisdiction-packs/JP/regulations/templates/by-module/hospitality/REG-012-shukuhaku-unyo/template.md`
@@ -109,6 +220,8 @@
 - `REG-027` 経理規程 — `docs/company/regulations/keiri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-028` クレジットカード規程 — `docs/company/regulations/credit-card-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-029` 役員退職金規程 — `docs/company/regulations/yakuin-taishoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-009` 情報セキュリティ管理規程 — `docs/company/regulations/joho-security-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
+- `REG-011` 品質管理規程 — `docs/company/regulations/hinshitsu-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-013` 事業継続・危機管理規程 — `docs/company/regulations/jigyo-keizoku-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-015` 安全衛生管理規程 — `docs/company/regulations/anzen-eisei-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
 - `REG-017` 食品安全衛生管理規程 — `docs/company/regulations/shokuhin-anzen-kanri-kisoku.md` · テンプレ **読まない**（regulations.yaml で無効）
@@ -123,27 +236,21 @@
 ## 未バインドカタログ（読取禁止）
 
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
-- `jp_carbon_neutral_2050` — `modules.yaml` 未登録 · **読まない**
-- `jp_permit_registry` — `modules.yaml` 未登録 · **読まない**
-- `jp_privacy_policy` — `modules.yaml` 未登録 · **読まない**
+- `jp_consumption_refund` — `modules.yaml` 未登録 · **読まない**
+- `jp_payroll` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
-- `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**
-- `jp_women_empowerment` — `modules.yaml` 未登録 · **読まない**
-- `language_bridge` — `modules.yaml` 未登録 · **読まない**
 - `real_estate_brokerage` — `modules.yaml` 未登録 · **読まない**
 - `software_outsourcing` — `modules.yaml` 未登録 · **読まない**
+- `venue_booking` — `modules.yaml` 未登録 · **読まない**
 
 ## 統制マトリクス（有効 ISO のみ）
 
 **正本:** `data/compliance/controls.yaml` · **フレームワーク:** `steward/standards/control-framework/` · **CLI:** `orgos controls for-agent <id>`
 
-- **compliance** — `CTL-13485-4.1`, `CTL-13485-4.2.4`, `CTL-13485-8.2.3`, `CTL-21401-5.2`, `CTL-27001-4.1`, `CTL-27001-5.2`, `CTL-27001-A.5.1`, `CTL-27001-A.5.10`, `CTL-CORE-privacy`, `CTL-27001-9.2`, `CTL-27001-9.3`, `CTL-9001-4.3` · 他 5 件は `orgos controls for-agent compliance`
-- **internal_audit** — `CTL-13485-8.2.4`, `CTL-21401-9.2`, `CTL-27001-9.2`, `CTL-9001-9.2`, `CTL-9001-10.2`
-- **quality_assurance** — `CTL-13485-4.1`, `CTL-13485-5.3`, `CTL-13485-7.1`, `CTL-13485-7.5`, `CTL-13485-8.5.2`, `CTL-13485-8.5.3`, `CTL-21401-8.1`, `CTL-9001-4.3`, `CTL-9001-4.4`, `CTL-9001-5.2`, `CTL-9001-6.1`, `CTL-9001-6.2` · 他 5 件は `orgos controls for-agent quality_assurance`
-- **medical_device_regulatory** — `CTL-13485-4.1`, `CTL-13485-4.2.2`, `CTL-13485-4.2.4`, `CTL-13485-5.3`, `CTL-13485-6.2`, `CTL-13485-7.1`, `CTL-13485-7.3`, `CTL-13485-7.4`, `CTL-13485-7.5`, `CTL-13485-7.5.9`, `CTL-13485-8.2.2`, `CTL-13485-8.2.3` · 他 3 件は `orgos controls for-agent medical_device_regulatory`
-- **security** — `CTL-27001-4.1`, `CTL-27001-5.2`, `CTL-27001-6.1`, `CTL-27001-6.2`, `CTL-27001-A.5.1`, `CTL-27001-A.5.10`, `CTL-27001-A.8.1`, `CTL-CORE-privacy`, `CTL-27001-9.2`, `CTL-27001-9.3`
-- **privacy_officer** — `CTL-CORE-privacy`
-- **esg_sustainability** — `CTL-21401-4.1`, `CTL-21401-5.2`, `CTL-21401-6.2`, `CTL-21401-9.1`, `CTL-21401-9.2`
+- **compliance** — `CTL-CORE-scope`, `CTL-CORE-policy`, `CTL-CORE-risk-approach`, `CTL-CORE-objectives-monitoring`, `CTL-CORE-competence`, `CTL-CORE-doc-control`, `CTL-CORE-operation`, `CTL-CORE-internal-audit`, `CTL-CORE-management-review`, `CTL-21401-env-aspects`, `CTL-21401-soc-protection`, `CTL-21401-guest-safety`
+- **internal_audit** — `CTL-CORE-internal-audit`, `CTL-CORE-corrective-action`
+- **quality_assurance** — `CTL-CORE-doc-control`, `CTL-CORE-corrective-action`, `CTL-21401-8.1`, `CTL-21401-hygiene`
+- **esg_sustainability** — `CTL-21401-env-aspects`, `CTL-21401-env-resources`, `CTL-21401-env-waste`, `CTL-21401-env-purchasing`, `CTL-21401-soc-community`, `CTL-21401-soc-heritage`, `CTL-21401-eco-local`, `CTL-21401-guest-communication`
 
 
 ## Secretary 読取面（on_demand · @file 明示）

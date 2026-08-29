@@ -1,0 +1,20 @@
+schema_version: 1
+module_id: jp_carbon_neutral_2050
+as_of: "2026-01-01"
+items:
+  - id: ACT-CN-001
+    title: 省エネ設備更新計画の策定
+    category: facility
+    owner_role: 施設管理
+    due: "2026-12-31"
+    status: planned
+    expected_reduction_tco2e: null
+    notes: "PROP は modules.yaml 参照"
+  - id: ACT-CN-002
+    title: Scope1+2 排出量ベースライン算定
+    category: measurement
+    owner_role: 経理
+    due: "2026-09-30"
+    status: planned
+    expected_reduction_tco2e: null
+    notes: "Finance と協調"

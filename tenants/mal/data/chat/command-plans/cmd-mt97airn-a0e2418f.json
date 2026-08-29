@@ -1,0 +1,29 @@
+{
+  "plan_id": "cmd-mt97airn-a0e2418f",
+  "status": "needs_args",
+  "skill_id": "orchestration_status",
+  "label": "オーケストレーション進捗",
+  "cli_display": "orgos skills run orchestration-status",
+  "kind": "read",
+  "permission": "chat:read",
+  "args": {},
+  "missing_args": [
+    "id"
+  ],
+  "candidates": [
+    {
+      "skill_id": "orchestration_status",
+      "label": "オーケストレーション進捗",
+      "cli_display": "orgos skills run orchestration-status",
+      "kind": "read",
+      "permission": "chat:read",
+      "score": 74,
+      "matched_by": [
+        "keyword:オーケストレーション"
+      ]
+    }
+  ],
+  "message": "missing required options: id",
+  "created_at": "2026-08-25T21:52:21.635Z",
+  "expires_at": "2026-08-25T22:07:21.635Z"
+}

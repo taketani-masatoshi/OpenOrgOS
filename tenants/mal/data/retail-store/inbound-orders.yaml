@@ -1,0 +1,77 @@
+entity: "株式会社MAL"
+as_of: "2026-07-14"
+# 発注・入荷予定（Amazon / 楽天 / 業者 / 個人商店）· L1
+orders:
+  - id: INB-2026-041
+    channel: amazon
+    source_label: "Amazon.co.jp"
+    origin_label: "国内FC"
+    destination_store_id: STORE-001
+    status: in_transit
+    ordered_on: "2026-07-12"
+    eta_date: "2026-07-16"
+    lines:
+      - sku_id: SKU-302
+        item_name: "清掃用洗剤（詰め替え）"
+        qty: 12
+      - sku_id: SKU-201
+        item_name: "客室アメニティセット"
+        qty: 20
+    notes: "低在庫洗剤の補充"
+
+  - id: INB-2026-042
+    channel: rakuten
+    source_label: "楽天市場 · リネン専門店"
+    origin_label: "大阪"
+    destination_store_id: STORE-001
+    status: shipped
+    ordered_on: "2026-07-10"
+    eta_date: "2026-07-18"
+    lines:
+      - sku_id: SKU-202
+        item_name: "リネン替えシーツ"
+        qty: 10
+    notes: "シーツ在庫6・補充"
+
+  - id: INB-2026-043
+    channel: supplier
+    source_label: "関東備品商事"
+    origin_label: "埼玉"
+    destination_store_id: STORE-002
+    status: ordered
+    ordered_on: "2026-07-14"
+    eta_date: "2026-07-22"
+    lines:
+      - sku_id: SKU-301
+        item_name: "消耗電池単3（箱）"
+        qty: 40
+      - sku_id: SKU-203
+        item_name: "コピー用紙 A4"
+        qty: 5
+
+  - id: INB-2026-044
+    channel: individual
+    source_label: "個人商店 · LED照明"
+    origin_label: "東京"
+    destination_store_id: STORE-001
+    status: out_for_delivery
+    ordered_on: "2026-07-11"
+    eta_date: "2026-07-15"
+    lines:
+      - sku_id: SKU-303
+        item_name: "非常用ライト予備"
+        qty: 4
+
+  - id: INB-2026-040
+    channel: amazon
+    source_label: "Amazon.co.jp"
+    origin_label: "国内FC"
+    destination_store_id: STORE-002
+    status: delivered
+    ordered_on: "2026-07-05"
+    eta_date: "2026-07-12"
+    delivered_on: "2026-07-12"
+    lines:
+      - sku_id: SKU-203
+        item_name: "コピー用紙 A4"
+        qty: 10

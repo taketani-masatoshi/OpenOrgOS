@@ -1,13 +1,22 @@
+# 認証対象として運用する ISO は ISO-21401 の1件のみ。
+# disabled の規格は統制評価・内部監査の対象外になるが、
+# 対応する社内規程（REG-025/026）は施行中のまま。
 iso:
-  - id: ISO-9001
-    enabled: true
-    notes: 品質マネジメント
-  - id: ISO-27001
-    enabled: true
-    notes: 情報セキュリティ
   - id: ISO-21401
     enabled: true
-    notes: サステナブル宿泊（亀沢関連）
+    notes: サステナブル宿泊（亀沢旅館 PROP-002）· 認証対象規格として単独運用
+  - id: ISO-9001
+    enabled: false
+    notes: 品質マネジメント · REG-011 は施行中（規格運用は停止）
+  - id: ISO-27001
+    enabled: false
+    notes: 情報セキュリティ · REG-009 は施行中（規格運用は停止）
+  - id: ISO-13485
+    enabled: false
+    notes: jp_medical_device On · REG-025/026 は施行中（規格運用は停止）
+  - id: ISO-37000
+    enabled: false
+    notes: 組織ガバナンス Guidance · 自己宣言データは保持（規格運用は停止）
   - id: ISO-22301
     enabled: false
   - id: ISO-45001
@@ -16,9 +25,6 @@ iso:
     enabled: false
   - id: ISO-50001
     enabled: false
-  - id: ISO-13485
-    enabled: true
-    notes: jp_medical_device 無効 · REG-025/026 未施行
   - id: ISO-22000
     enabled: false
     notes: 食品安全

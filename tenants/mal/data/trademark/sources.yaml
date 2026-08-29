@@ -1,0 +1,40 @@
+sources:
+  - id: jpo-trademark-basics
+    title: "商標出願のいろは"
+    url: "https://www.jpo.go.jp/system/basic/trademark/index.html"
+    type: guide
+    notes: "出願の流れ · オンライン出願 · 手数料概要"
+  - id: inpit-writing-guide-202601
+    title: "商標登録願・指定商品役務の書き方（令和8年1月改訂）"
+    url: "https://faq.inpit.go.jp/FAQ/trademark202601.pdf"
+    type: form_guide
+    notes: "商標登録願の記載例 · 8cm² 枠 · 標準文字 · 区分表"
+  - id: j-platpat-goods-search
+    title: "J-PlatPat 商品・役務名検索"
+    url: "https://www.j-platpat.inpit.go.jp/"
+    type: tool
+  - id: jpo-online-filing
+    title: "特許庁オンライン出願ソフト"
+    url: "https://www.j-platpat.inpit.go.jp/web/trial/online-shutsugan"
+    type: tool
+    notes: "出願ソフトのダウンロード · 人間操作で提出"
+  - id: jpo-fee-trademark
+    title: "特許庁手数料（商標）"
+    url: "https://www.jpo.go.jp/system/process/tesuryo/index.html"
+    type: fee
+
+forms:
+  - id: form-trademark-application
+    name: "商標登録願"
+    template: templates/shohyo-toroku-gen.md.example
+    legal_basis: "特許法施行規則 様式第1に準拠"
+    when_required: "すべての商標登録出願"
+    notes: "整理番号 · 提出日 · あて先 · 商標 · 指定商品役務 · 出願人"
+  - id: form-specimen-instruction
+    name: "商標見本の作成の指示"
+    template: templates/shohyo-kenben-shiji.md.example
+    when_required: "図形商標 · 立体商標等 · 見本の説明が必要な場合"
+  - id: form-power-of-attorney
+    name: "委任状"
+    template: templates/dairi-ininjo.md.example
+    when_required: "弁理士等の代理人を選任する場合"

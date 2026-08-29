@@ -1,0 +1,18 @@
+{
+  "thread_id": "4d9f73de636edd0b4eaadec4:executive_steward",
+  "tenant": "mal",
+  "created_at": "2026-07-28T14:23:38.121Z",
+  "updated_at": "2026-07-28T14:24:28.543Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "会社の決算期は？",
+      "at": "2026-07-28T14:23:38.122Z"
+    },
+    {
+      "role": "assistant",
+      "content": "決算期に関する具体的な情報は、現在のコンテキストからは確認できません。\n\n財務KPIの基準月は2026年7月ですが、正式な決算期末日についてはFinance Agentへ照会が必要です。",
+      "at": "2026-07-28T14:24:28.543Z"
+    }
+  ]
+}

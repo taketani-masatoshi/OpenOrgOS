@@ -1,17 +1,43 @@
 version: "1"
-as_of: 2026-07-10
+as_of: 2026-08-29
 controls:
-  - id: CTL-13485-4.1
+  - id: CTL-CORE-scope
+    maturity: L2
+    last_reviewed: 2026-06-28
+    notes: REG-011 第2条でスコープ文書化 · mal seed 2026-06
+  - id: CTL-CORE-policy
+    maturity: L2
+    last_reviewed: 2026-06-28
+    notes: mal seed 2026-06
+  - id: CTL-CORE-risk-approach
+    maturity: L2
+    last_reviewed: 2026-06-28
+    notes: 運用証拠（risk-opportunities.csv）未着手 · mal seed 2026-06
+  - id: CTL-CORE-objectives-monitoring
+    maturity: L2
+    last_reviewed: 2026-06-28
+    notes: mal seed 2026-06
+  - id: CTL-CORE-competence
+    maturity: L2
+    last_reviewed: 2026-06-28
+    notes: mal seed 2026-06
+  - id: CTL-CORE-doc-control
+    maturity: L2
+    last_reviewed: 2026-06-07
+  - id: CTL-CORE-operation
     maturity: L0
+  - id: CTL-CORE-internal-audit
+    maturity: L3
+    last_reviewed: 2026-06-28
+    notes: 第1回内部監査完了 FY2026 · shared audit FY2026
+  - id: CTL-CORE-management-review
+    maturity: L2
+    last_reviewed: 2026-06-28
+    notes: mal seed 2026-06
+  - id: CTL-CORE-corrective-action
+    maturity: L2
+    last_reviewed: 2026-06-07
   - id: CTL-13485-4.2.2
-    maturity: L0
-  - id: CTL-13485-4.2.4
-    maturity: L0
-  - id: CTL-13485-5.3
-    maturity: L0
-  - id: CTL-13485-6.2
-    maturity: L0
-  - id: CTL-13485-7.1
     maturity: L0
   - id: CTL-13485-7.3
     maturity: L0
@@ -25,117 +51,33 @@ controls:
     maturity: L0
   - id: CTL-13485-8.2.3
     maturity: L0
-  - id: CTL-13485-8.2.4
-    maturity: L0
-  - id: CTL-13485-8.5.2
-    maturity: L0
-  - id: CTL-13485-8.5.3
-    maturity: L0
-  - id: CTL-21401-4.1
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-21401-5.2
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-21401-6.2
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-21401-7.2
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
   - id: CTL-21401-8.1
     maturity: L2
     last_reviewed: 2026-06-28
     notes: mal seed 2026-06
-  - id: CTL-21401-9.1
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-21401-9.2
-    maturity: L3
-    last_reviewed: 2026-06-28
-    notes: shared audit FY2026
-  - id: CTL-27001-4.1
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-27001-5.2
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-27001-6.1
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-27001-6.2
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-27001-A.5.1
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-27001-A.5.10
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-27001-A.8.1
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-CORE-privacy
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-27001-9.2
-    maturity: L3
-    last_reviewed: 2026-06-28
-    notes: shared audit FY2026
-  - id: CTL-27001-9.3
-    maturity: L2
-    last_reviewed: 2026-06-28
-    notes: mal seed 2026-06
-  - id: CTL-9001-4.3
-    maturity: L2
-    last_reviewed: 2026-06-07
-    notes: REG-011 第2条でスコープ文書化
-  - id: CTL-9001-4.4
-    maturity: L2
-    last_reviewed: 2026-06-07
-  - id: CTL-9001-5.2
-    maturity: L2
-    last_reviewed: 2026-06-07
-  - id: CTL-9001-6.1
-    maturity: L2
-    last_reviewed: 2026-06-07
-    notes: 運用証拠（risk-opportunities.csv）未着手
-  - id: CTL-9001-6.2
-    maturity: L2
-    last_reviewed: 2026-06-07
-  - id: CTL-9001-7.2
-    maturity: L2
-    last_reviewed: 2026-06-07
-  - id: CTL-CORE-doc-control
-    maturity: L2
-    last_reviewed: 2026-06-07
-  - id: CTL-9001-8.7
-    maturity: L2
-    last_reviewed: 2026-06-07
-    notes: nonconformance-log 実データ未着手
-  - id: CTL-9001-9.1
-    maturity: L2
-    last_reviewed: 2026-06-07
-  - id: CTL-9001-9.2
-    maturity: L3
-    last_reviewed: 2026-06-07
-    notes: 第1回内部監査完了 FY2026
-  - id: CTL-9001-9.3
-    maturity: L2
-    last_reviewed: 2026-06-07
-  - id: CTL-9001-10.2
-    maturity: L2
-    last_reviewed: 2026-06-07
+  - id: CTL-21401-hygiene
+    maturity: L0
+  - id: CTL-21401-env-aspects
+    maturity: L0
+  - id: CTL-21401-env-resources
+    maturity: L0
+  - id: CTL-21401-env-waste
+    maturity: L0
+  - id: CTL-21401-env-purchasing
+    maturity: L0
+  - id: CTL-21401-soc-community
+    maturity: L0
+  - id: CTL-21401-soc-heritage
+    maturity: L0
+  - id: CTL-21401-soc-protection
+    maturity: L0
+  - id: CTL-21401-soc-accessibility
+    maturity: L0
+  - id: CTL-21401-eco-local
+    maturity: L0
+  - id: CTL-21401-guest-safety
+    maturity: L0
+  - id: CTL-21401-guest-communication
+    maturity: L0
+  - id: CTL-21401-worker-welfare
+    maturity: L0

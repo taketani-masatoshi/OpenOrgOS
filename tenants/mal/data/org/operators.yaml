@@ -22,3 +22,18 @@ operators:
     role: operator
     status: active
     key_hash: sha256:4a7c449d22a99026fac16a47621ff68792ff589f72334ea3950ce186a5615e9a
+  # 社員席（claim 専用）。Operator Console の経営・帳簿・顧客は開かない。
+  - operator_id: OP-003
+    display_name: "三塚力"
+    role: employee
+    status: active
+    email: mitsuzuka@malkk.com
+    org_unit_id: business-unit
+    person_id: business-unit
+  - operator_id: OP-004
+    display_name: "鈴木友也"
+    role: employee
+    status: active
+    email: suzuki@malkk.com
+    org_unit_id: admin-unit
+    person_id: admin-unit

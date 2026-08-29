@@ -1,0 +1,108 @@
+{
+  "thread_id": "f2bdff73da112a42f8804be2:executive_steward",
+  "tenant": "mal",
+  "created_at": "2026-08-25T04:50:53.631Z",
+  "updated_at": "2026-08-25T22:31:19.313Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "資金繰りを教えて。",
+      "at": "2026-08-25T21:49:37.574Z"
+    },
+    {
+      "role": "assistant",
+      "content": "Cashflow schedule preview generated.\nPath: `tenants/mal/docs/finance/treasury/cashflow-schedule/2026-08-25-weekly.md`\n資金ショート日: なし\nRunway（日）: なし\n必要調達額: 0\n必要調達期限: なし\nwrote: false",
+      "at": "2026-08-25T21:49:37.700Z"
+    },
+    {
+      "role": "user",
+      "content": "資金繰り表の格納場所は？",
+      "at": "2026-08-25T21:49:56.433Z"
+    },
+    {
+      "role": "assistant",
+      "content": "Cashflow schedule preview generated.\nPath: `tenants/mal/docs/finance/treasury/cashflow-schedule/2026-08-25-weekly.md`\n資金ショート日: なし\nRunway（日）: なし\n必要調達額: 0\n必要調達期限: なし\nwrote: false",
+      "at": "2026-08-25T21:49:56.550Z"
+    },
+    {
+      "role": "user",
+      "content": "組織を変えたい。取締役会を開きたい。支援して。",
+      "at": "2026-08-25T21:50:19.299Z"
+    },
+    {
+      "role": "assistant",
+      "content": "組織変更や取締役会開催の支援は、**Corporate Governance Agent** の専門領域です。\n\n支援するためには、まず「何を決定したいのか」という目的を明確にし、必要な資料（提案書、変更理由、関連規程など）を収集する必要があります。\n\n次のステップとして、Corporate Governance Agent に具体的なアジェンダ作成と資料収集のWork Orderを出すことを推奨します。",
+      "at": "2026-08-25T21:50:40.818Z"
+    },
+    {
+      "role": "user",
+      "content": "取締役会でCOOを任命したい。名前は竹谷澪音です。",
+      "at": "2026-08-25T21:51:22.239Z"
+    },
+    {
+      "role": "assistant",
+      "content": "COOの任命は、**Corporate Governance Agent** の管轄です。\n\n任命の目的、背景、および必要な法務・規程上の根拠を明確にすることが最優先です。\n\n具体的なアジェンダ作成と資料収集のため、Corporate Governance Agent にWork Orderを出すことを推奨します。",
+      "at": "2026-08-25T21:51:43.098Z"
+    },
+    {
+      "role": "user",
+      "content": "このWebUIのスチュワードは他のエージェントに依頼するというオーケストレーションはできないの？",
+      "at": "2026-08-25T21:52:20.563Z"
+    },
+    {
+      "role": "assistant",
+      "content": "**オーケストレーション進捗** — 不足パラメータ: id\n`orgos skills run orchestration-status`",
+      "at": "2026-08-25T21:52:21.636Z"
+    },
+    {
+      "role": "user",
+      "content": "操作できるCLIを列挙して。",
+      "at": "2026-08-25T21:52:43.734Z"
+    },
+    {
+      "role": "assistant",
+      "content": "主な操作可能なCLIは以下の通りです。\n\n**【ダッシュボード・集約系】**\n*   `npm run orgos -- dashboard`：ダッシュボードとAgent要約7件を同時生成します。\n*   `npm run orgos -- status`：Work Orderの進捗状況を確認します。\n*   `npm run orgos -- alerts`：P0契約や許認可のアラートを確認します。\n*   `npm run orgos -- forecast`：キャッシュフロー（CF）の予測を行います。\n*   `npm run orgos -- scenario`：シナリオ分析を行います。\n\n**【エージェントステータス確認】**\n*   `orgos agent readiness --agent executive_steward`：エージェントの準備状況を確認します。\n*   `orgos agent pulse --agent executive_steward`：エージェントの活動状況を確認します。",
+      "at": "2026-08-25T21:53:09.270Z"
+    },
+    {
+      "role": "user",
+      "content": "人事エージェントに今の当社の社員人数を聞いてください。",
+      "at": "2026-08-25T22:28:07.781Z"
+    },
+    {
+      "role": "assistant",
+      "content": "3名",
+      "at": "2026-08-25T22:28:07.804Z"
+    },
+    {
+      "role": "user",
+      "content": "社長の名前は？",
+      "at": "2026-08-25T22:28:16.837Z"
+    },
+    {
+      "role": "assistant",
+      "content": "現在のコンテキストからは、代表取締役様の氏名は確認できません。",
+      "at": "2026-08-25T22:28:46.069Z"
+    },
+    {
+      "role": "user",
+      "content": "どのエージェントに聞けば代表取締役の氏名はわかる？",
+      "at": "2026-08-25T22:29:20.609Z"
+    },
+    {
+      "role": "assistant",
+      "content": "現在のコンテキストからは、代表取締役様の氏名に関する情報を持つエージェントは特定できません。",
+      "at": "2026-08-25T22:29:47.790Z"
+    },
+    {
+      "role": "user",
+      "content": "株式会社MALの代表取締役は誰？",
+      "at": "2026-08-25T22:30:09.892Z"
+    },
+    {
+      "role": "assistant",
+      "content": "現在のコンテキストからは、代表取締役様の氏名は確認できません。",
+      "at": "2026-08-25T22:31:19.312Z"
+    }
+  ]
+}

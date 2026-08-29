@@ -1,0 +1,45 @@
+id: CTR-022
+name: 顧問弁護士委任契約
+counterparty: 桃尾・松尾・難波法律事務所
+counterparty_type: company
+type: advisory
+status: executed
+start_date: "2026-08-29"
+end_date: "2027-08-28"
+executed_date: "2026-08-29"
+auto_renewal: true
+owner: 段燕燕
+scope_summary: |
+  顧問弁護士 松尾剛行。一般企業法務相談・契約レビュー。
+  期間 2026-08-29〜2027-08-28（自動更新）。顧問料は月額 50,000円・年額 600,000円。
+compensation:
+  type: monthly
+  amount: 50000
+  tax_included: false
+  payment_terms: 月額5万円（税別）。年額60万円。
+monthly_cost: 50000
+documents:
+  draft: docs/contracts/CTR-022/01-draft.md
+  executed: docs/contracts/CTR-022/02-executed.md
+risk:
+  renewal_deadline: "2027-07-28"
+  risk_level: low
+  notes: 自動更新。更新協議は終了1ヶ月前まで。年額60万円は REG-004 区分 B（両代表）。2026-08-29 取締役会で承認。
+ceo:
+  business_impact: medium
+  impact_note: 会社法務の顧問窓口。デモ契約ではない。
+  our_obligations:
+    - party: us
+      summary: 委任範囲内の相談・書面レビュー依頼
+    - party: us
+      summary: 月額顧問料 50,000円（税別）の支払
+  our_rights:
+    - party: us
+      summary: 担当弁護士への相談
+  exit_windows:
+    - kind: renewal_notice
+      deadline: "2027-07-28"
+      summary: 自動更新前の更新協議・解約通知
+notes: |
+  CEO確認 2026-08-29。担当 松尾剛行。連絡 EXT-005。
+  取締役会で相手方・担当・顧問料（月額5万円・年額60万円）を承認。期間は1年＋自動更新。

@@ -1,0 +1,9 @@
+# 民泊・住宅宿泊 — 公開運用メモ（ひな形）
+
+as_of: "2026-07-14"
+notification_number: ""  # 届出番号（取得後に記入 · L1）
+property_ids: []         # 例: [PROP-002]
+annual_nights_cap: 180   # 条例により異なる場合あり
+notes: |
+  届出取得は jp_permit_application（pt-minpaku-notification）。
+  台帳は jp_permit_registry。旅館業簡易宿所と混同しないこと。

@@ -9,20 +9,38 @@ directors:
     role: "代表取締役"
 address: "〒102-0084 東京都千代田区二番町1"
 fiscal_year_end_month: 1
+legal_advisor: 松尾剛行（桃尾・松尾・難波法律事務所）
+tax_advisor: なし（未契約）
+technical_advisor: なし（未契約）
+advisors:
+  - kind: legal
+    status: engaged
+    name: 松尾剛行
+    firm: 桃尾・松尾・難波法律事務所
+    contract_id: CTR-022
+    contact_id: EXT-005
+    note: CEO確認 2026-08-29。連絡は事務所代表。個人アドレスは置かない。
+  - kind: tax
+    status: none
+    note: 未契約
+  - kind: technical
+    status: none
+    note: 未契約
 governance_status:
   director_resignation:
     person: 宮城万貴子
     notice_sent: "2026-07-02"
     effective_date: "2026-07-31"
     registration_planned: "2026-08"
-    status: pending_registration
-    note: 辞任届送付済 · 登記前。company.yaml の取締役欄は登記完了まで現状維持。
+    status: in_progress
+    note: >
+      CEO確認 2026-08-29 — 共同代表は継続。退任手続は未完了のため
+      予定効力日は未到来扱い。取締役欄は現状維持。
 share_capital:
   amount_yen: 8500000
   issued_shares: 100
   par_value_yen: 85000
   sole_shareholder: 段燕燕
-  demo_confirmed_at: "2026-07-05"
 business_description: |
   不動産オーナー向け翻訳・通訳サービス、イベントスペース貸出、旅館運営、
   業務DX化支援、ソフトウェア開発。自社物件を保有。
@@ -39,6 +57,6 @@ public_disclosure:
   contact_email: "info@malkk.com"
   capital_yen: 8500000
   capital_as_of: "2025-09"
-  employees: 3
+  employees: 4
   source: "公式 About us ページ"
-  note: "tax-profile.capital_stock=850万円 · デモ用確定（2026-07-05）"
+  note: "資本金850万円 · 株主は段燕燕 100%（CEO確認 2026-08-29）。従業員4名は役員含む（同日確認）。顧問弁護士は松尾剛行（桃尾・松尾・難波）。税理士は未契約。"

@@ -1,0 +1,24 @@
+schema_version: 1
+module_id: jp_women_empowerment
+plan_type: general_employer_action_plan
+status: draft
+published_at: null
+plan_period:
+  from: "2026-04-01"
+  to: "2027-03-31"
+declaration_types:
+  - general_action_plan
+  - voluntary_support_declaration
+targets:
+  - id: KPI-W-001
+    name: 女性管理職比率
+    unit: "%"
+    baseline: null
+    target: null
+  - id: KPI-W-002
+    name: 男性育児休業取得率
+    unit: "%"
+    baseline: null
+    target: null
+review_cycle: annual
+notes: "数値は人事確定後 · 個人名は記載しない"

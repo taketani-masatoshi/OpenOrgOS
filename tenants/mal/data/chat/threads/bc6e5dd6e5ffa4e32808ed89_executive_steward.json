@@ -1,0 +1,18 @@
+{
+  "thread_id": "bc6e5dd6e5ffa4e32808ed89:executive_steward",
+  "tenant": "mal",
+  "created_at": "2026-07-26T17:08:30.132Z",
+  "updated_at": "2026-07-26T17:08:30.132Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "2026年1月の売り上げを教えて",
+      "at": "2026-07-26T17:08:30.132Z"
+    },
+    {
+      "role": "assistant",
+      "content": "# 財務指標 — 株式会社MAL\n\n1月（2026年）の売上は、以下の通りです。\n\n- **月次売上:** **￥100,000**\n- **データソース:** `data/finance/monthly/2026-01.yaml` (actual)\n\n## 内訳\n- rent: ￥100,000\n\n**基準月:** 2026-01（指定 2026-01）\n\nこの数値はテナント月次 YAML と `computeDashboard()` の決定論結果に基づいています。",
+      "at": "2026-07-26T17:08:30.132Z"
+    }
+  ]
+}

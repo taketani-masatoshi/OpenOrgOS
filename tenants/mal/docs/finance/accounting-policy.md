@@ -13,7 +13,7 @@
 | 記帳方法 | **発生主義**（収益・費用は発生時点で認識） |
 | 現金管理 | 銀行明細・`cash-balance.yaml` で補助。ランウェイ試算は残高確定後 |
 
-**注:** 月次 YAML の一部は予想ベース（forecast）。決算確定時は税理士帳簿を正とし、Steward YAML を同期する。
+**注:** 月次 YAML と `journal-entries.yaml`（OrgOS GL）を正とする。税理士レビュー後に YAML を確定させる。
 
 ---
 
@@ -78,9 +78,14 @@ OTA 経由の宿泊収入は **売上総額認識**（OTA 手数料は運営費�
 
 | 帳簿 | 保存期間 | Steward 対応 |
 |------|:--------:|-------------|
-| 仕訳帳・総勘定元帳 | 10年 | 会計ソフト（TBD） |
+| 仕訳帳（正本） | 10年 | `data/finance/journal-entries.yaml`（append-only） |
+| 総勘定元帳・試算表 | 10年 | `orgos ledger gl` / `orgos ledger trial-balance` |
+| 人間可読ミラー | 10年 | `docs/finance/accounting/records/*.csv` |
+| 期首残高 | 10年 | `data/finance/opening-balances.yaml` |
 | 固定資産台帳 | 10年 | fixed-assets.yaml + 本 MD |
 | 領収書・請求書 | 7〜10年 | docs/io/inbox · operations/accounting |
+
+月次経営 P/L（`data/finance/monthly/*.yaml`）は GL と併存する。`orgos ledger monthly-reconcile` で試算表との差異を検証する。
 
 ---
 
@@ -88,4 +93,5 @@ OTA 経由の宿泊収入は **売上総額認識**（OTA 手数料は運営費�
 
 - [fixed-asset-register.md](fixed-asset-register.md)
 - [tax-filing-checklist.md](tax-filing-checklist.md)
+- [file-based-accounting-runbook.md](file-based-accounting-runbook.md)
 - [docs/company/tax/fy2026/07-accounting-minimum-ledger.md](../../company/tax/fy2026/07-accounting-minimum-ledger.md)

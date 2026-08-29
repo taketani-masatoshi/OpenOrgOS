@@ -1,0 +1,25 @@
+id: PRJ-MED-QMS
+title: 医療機器 QMS / GVP 運用
+status: active
+rag: green
+owner_agent: medical_device_regulatory
+sponsor: ceo
+start_date: "2026-01-01"
+target_date: "2026-12-31"
+notes: QMS 台帳は医療機器モジュール正本。PMO はリンクのみ。
+milestones:
+  - id: MS-QMS-REVIEW
+    title: 年次 QMS レビュー
+    due: "2026-12-15"
+    status: open
+risks:
+  - id: RSK-AUDIT-GAP
+    summary: 記録の欠落が監査指摘になる
+    severity: medium
+    status: open
+links:
+  contract_ids: []
+  work_order_ids: []
+  module_refs:
+    - module: jp_medical_device
+  property_ids: []

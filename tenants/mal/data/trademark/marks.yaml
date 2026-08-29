@@ -1,0 +1,19 @@
+entity: "サンプル商事株式会社"
+as_of: "2026-06-01"
+marks:
+  - id: MARK-001
+    label: "Steward OS（標準文字 · 例示）"
+    type: standard_characters
+    representation: |
+      Steward OS
+    specimen_note: "標準文字する商標 · 書体は問いません"
+    j_platpat_search_hint: "J-PlatPat で同一・類似標章の有無を確認してから出願"
+    notes: "自社プロダクト名の例示 · 実出願前に弁理士レビュー推奨"
+  - id: MARK-002
+    label: "ロゴ商標（図形 · 例示）"
+    type: figurative
+    representation: |
+      （図形商標 · 商標見本を 8cm×8cm 以内で添付）
+    specimen_path: records/trademark/MARK-002-specimen.png
+    specimen_note: "カラー指定がある場合は色を明示 · 見本は records/ 側（L2）"
+    notes: "draft 時に shohyo-kenben-shiji テンプレも生成対象"

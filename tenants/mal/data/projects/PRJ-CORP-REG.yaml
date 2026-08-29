@@ -1,0 +1,27 @@
+id: PRJ-CORP-REG
+title: 本店移転ほか法人登記
+status: active
+rag: amber
+owner_agent: secretary
+sponsor: ceo
+start_date: "2026-07-01"
+target_date: "2026-09-30"
+notes: 登記ケース YAML を複製しない。リンクは case id のみ。
+milestones:
+  - id: MS-FILE-CHANGE
+    title: 本店移転登記の提出
+    due: "2026-08-15"
+    status: open
+risks:
+  - id: RSK-FILING-WINDOW
+    summary: 決議日から提出期限までの窓が短い
+    severity: medium
+    status: open
+links:
+  contract_ids: []
+  work_order_ids: []
+  module_refs:
+    - module: jp_corporate_registration
+      ref: CHG-2026-HONSHA-KAMEZAWA
+  property_ids:
+    - PROP-002

@@ -1,0 +1,68 @@
+version: 1
+# L1 only — 駅・エリアラベル。個人の番地住所は records（L2）に置き、ここには書かない。
+station_clusters:
+  麹町: chiyoda-west
+  半蔵門: chiyoda-west
+  永田町: chiyoda-west
+  四ツ谷: chiyoda-west
+  市ヶ谷: chiyoda-west
+  東京: marunouchi
+  大手町: marunouchi
+  丸の内: marunouchi
+  有楽町: marunouchi
+  銀座: ginza-shimbashi
+  新橋: ginza-shimbashi
+  汐留: ginza-shimbashi
+  日比谷: ginza-shimbashi
+  日本橋: nihonbashi
+  人形町: nihonbashi
+  茅場町: nihonbashi
+  神田: kanda
+  秋葉原: kanda
+  白金高輪: shirokane
+  白金台: shirokane
+  目黒: shirokane
+  新御徒町: ueno-east
+  仲御徒町: ueno-east
+  御徒町: ueno-east
+  上野: ueno-east
+  稲荷町: ueno-east
+  品川: other
+parties:
+  - id: LOC-PARTY-mal-office
+    party_kind: self_company
+    role: office
+    station: 麹町
+    area: 千代田区二番町
+    weight_day: 1
+    weight_evening: 0.7
+    notes: company.yaml 本店近傍（公開住所の最寄駅）
+  - id: LOC-PARTY-southwood-office
+    party_kind: counterparty_org
+    role: office
+    station: 麹町
+    area: 千代田区二番町
+    org_hint: サウスウッド
+    email_domains:
+      - southwood.co.jp
+    weight_day: 1
+    weight_evening: 0.7
+    notes: 相手本店が同一エリアの場合の L1 アンカー
+  - id: LOC-PARTY-ceo-home
+    party_kind: self_operator
+    role: home_commute
+    operator_id: OP-001
+    station: 白金高輪
+    area: 港区白金
+    weight_day: 0.3
+    weight_evening: 1.2
+    notes: L2 番地は records/executive/party-home-addresses.yaml · ここは最寄駅のみ
+  - id: LOC-PARTY-taketani-home
+    party_kind: counterparty_contact
+    role: home_commute
+    email: m.taketani@southwood.co.jp
+    station: 新御徒町
+    area: 台東区東上野
+    weight_day: 0.3
+    weight_evening: 1.2
+    notes: L2 番地は records · ここは最寄駅のみ

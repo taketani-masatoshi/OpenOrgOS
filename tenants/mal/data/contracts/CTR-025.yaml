@@ -1,0 +1,27 @@
+id: CTR-025
+name: 雇用契約（三塚力）
+counterparty: 三塚力
+counterparty_type: individual
+type: employment
+status: executed
+start_date: "2026-04-01"
+auto_renewal: false
+owner: 段燕燕
+compensation:
+  type: monthly
+  amount: 300000
+  tax_included: true
+  payment_terms: 毎月25日払い（当月分）。源泉徴収あり。
+scope_summary: |
+  正社員。翻訳・通訳および業務DX支援（EMP-003）。
+  月額給与 300,000円（額面 · CEO確認 2026-08-29）。
+documents:
+  draft: docs/contracts/CTR-025/01-draft.md
+  executed: docs/contracts/CTR-025/02-executed.md
+executed_date: "2026-08-29"
+risk:
+  risk_level: low
+  notes: 年額360万円のため REG-004 区分 C（取締役会）。2026-08-29 決議で確定。
+notes: |
+  employee_id EMP-003。給与正本は data/finance/payroll.yaml。
+  2026-06-25 取締役会のデモ月額は本決議で訂正。

@@ -1,123 +1,200 @@
-# 勘定科目（最小セット）— 複式簿記・申告書対応の科目コード
-# 会計方針: docs/finance/accounting-policy.md
-
 version: "1"
 currency: JPY
-
 accounts:
-  # 資産
   - code: "1100"
     name: 現金及び預金
     type: asset
     normal_balance: debit
     data_source: data/finance/cash-balance.yaml
+    budget_delegation: department
   - code: "1200"
     name: 建物
     type: asset
     normal_balance: debit
     data_source: data/finance/fixed-assets.yaml
     filter: category=建物
+    budget_delegation: department
   - code: "1210"
     name: 土地
     type: asset
     normal_balance: debit
     data_source: data/finance/fixed-assets.yaml
     filter: category=土地
+    budget_delegation: department
   - code: "1290"
     name: 減価償却累計額
     type: asset_contra
     normal_balance: credit
     data_source: data/finance/fixed-assets.yaml
     field: accumulated_depreciation
+    budget_delegation: department
+  - code: "1150"
+    name: 売掛金
+    type: asset
+    normal_balance: debit
+    budget_delegation: department
+    note: 請求発行・入金消込の AR 科目
   - code: "1300"
     name: 役員貸付金
     type: asset
     normal_balance: debit
     data_source: data/finance/loans.yaml
+    budget_delegation: department
     note: 貸付対象者は負債科目（役員借入金）と相殺せず別管理（税理士確認）
-
-  # 負債
   - code: "2100"
     name: 役員借入金
     type: liability
     normal_balance: credit
     data_source: data/finance/loans.yaml
+    budget_delegation: department
     note: 無利息役員貸付 LOAN-001/002。みなし利息調整は tax-profile 参照
-
-  # 純資産
+  - code: "2120"
+    name: 預り金-源泉所得税
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+    note: 給与源泉徴収
+  - code: "2130"
+    name: 預り金-社会保険料
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+    note: 健保・厚年・雇用（労働者負担分）
+  - code: "2140"
+    name: 未払給与
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+    note: 給与支払未払
+  - code: "2160"
+    name: 仮受消費税
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+    note: 請求書発行時の消費税相当額
+  - code: "2110"
+    name: 買掛金
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+    note: 仕入・外注の AP 統制勘定
+  - code: "2165"
+    name: 宿泊税預り金
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+    note: 都条例に基づく宿泊税特別徴収
+  - code: "2170"
+    name: 仮払消費税
+    type: asset
+    normal_balance: debit
+    budget_delegation: department
+    note: 仕入税額（控除対象）
   - code: "3100"
     name: 資本金
     type: equity
     normal_balance: credit
     data_source: data/finance/tax-profile.yaml
     field: corporate_tax.capital_stock
+    budget_delegation: department
   - code: "3200"
     name: 繰越利益剰余金
     type: equity
     normal_balance: credit
     data_source: data/finance/tax-profile.yaml
     field: corporate_tax.prior_retained_earnings
-
-  # 収益
+    budget_delegation: department
   - code: "4100"
     name: 賃貸料収入
     type: revenue
     normal_balance: credit
-    property_ids: [PROP-001]
+    statement_section: revenue
+    property_ids:
+      - PROP-001
+    budget_delegation: department
   - code: "4200"
     name: 宿泊収入
     type: revenue
     normal_balance: credit
-    property_ids: [PROP-002]
+    statement_section: revenue
+    property_ids:
+      - PROP-002
+    budget_delegation: department
   - code: "4900"
     name: 雑収入
     type: revenue
     normal_balance: credit
-
-  # 費用
+    statement_section: revenue
+    budget_delegation: department
   - code: "5100"
     name: 減価償却費
     type: expense
     normal_balance: debit
+    statement_section: sga
     data_source: data/plans/expense-plan.yaml
     line_id: depreciation
+    budget_delegation: department
   - code: "5200"
     name: 旅館運営費
     type: expense
     normal_balance: debit
-    property_ids: [PROP-002]
+    statement_section: sga
+    property_ids:
+      - PROP-002
+    budget_delegation: person
   - code: "5300"
     name: 役員報酬
     type: expense
     normal_balance: debit
+    statement_section: sga
     data_source: data/finance/payroll.yaml
+    budget_delegation: department
   - code: "5400"
     name: 業務委託費
     type: expense
     normal_balance: debit
-    contract_ids: [CTR-001]
+    statement_section: sga
+    contract_ids:
+      - CTR-001
+      - CTR-022
+    budget_delegation: department
   - code: "5500"
     name: 支払利息
     type: expense
     normal_balance: debit
+    statement_section: non_operating_expense
+    budget_delegation: department
     note: 現状 LOAN-001/002 は利率0%
   - code: "5600"
     name: 修繕費
     type: expense
     normal_balance: debit
+    statement_section: sga
+    budget_delegation: department
   - code: "5700"
     name: 通信費
     type: expense
     normal_balance: debit
+    statement_section: sga
+    budget_delegation: department
   - code: "5800"
     name: 保険料
     type: expense
     normal_balance: debit
+    statement_section: sga
+    budget_delegation: department
   - code: "5900"
     name: 雑費
     type: expense
     normal_balance: debit
-
+    statement_section: sga
+    budget_delegation: person
+  - code: "8100"
+    name: 法人税等
+    type: expense
+    normal_balance: debit
+    statement_section: income_tax
+    budget_delegation: department
 category_mapping:
   revenue:
     rent: "4100"
@@ -136,15 +213,23 @@ category_mapping:
     system: "5400"
     loan_payment: "2100"
     capex: "1200"
+    depreciation: "5100"
     other: "5900"
-
-monthly_close_adjustments:
-  - trigger: 減価償却費（番町ハイム）
-    debit: "5100"
-    credit: "1290"
-    amount_source: fixed-assets ASSET-001 annual_depreciation
-    note: 月次 YAML の other カテゴリ行と整合
-
+journal_source_accounts:
+  bank_control: "1100"
+  accounts_receivable: "1150"
+  withholding_payable: "2120"
+  social_insurance_payable: "2130"
+  payroll_payable: "2140"
+  accounts_payable: "2110"
+  payroll_expense: "5300"
+  depreciation_expense: "5100"
+  accumulated_depreciation: "1290"
+  retained_earnings: "3200"
+  consumption_tax_payable: "2160"
+  consumption_tax_receivable: "2170"
+  lodging_tax_payable: "2165"
 notes: |
-  本ファイルは Steward 正データの科目マッピング。実際の仕訳・総勘定元帳は freee会計（デモ用）で管理。
+  本ファイルは Steward 正データの科目マッピング。仕訳・総勘定元帳は journal-entries.yaml + orgos ledger。
+  人間可読ミラー: docs/finance/accounting/records/*.csv（会計 SaaS 非導入）。
   capex 発生時は investment-plan と fixed-assets を同時更新。

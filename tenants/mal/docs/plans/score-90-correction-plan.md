@@ -42,10 +42,9 @@
 
 ### 2.3 事業モジュール · Agent
 
-| 有効モジュール | rental · hospitality · travel_booking |
+| 有効モジュール | rental · hospitality · travel_booking · **jp_medical_device** |
 |----------------|----------------------------------------|
-| **OFF** | jp_medical_device（REG-025/026 は未施行・参照のみ） |
-| **有効 Agent（最小）** | Executive · Secretary · Finance · Operations + rental · hospitality · travel_booking |
+| **有効 Agent（最小）** | Executive · Secretary · Finance · Operations + rental · hospitality · travel_booking · medical_device_regulatory |
 
 ### 2.4 契約カウンターパーティ
 
@@ -99,14 +98,14 @@ rg 'TBD' tenants/mal/data --glob '*.yaml'   # 0 件
 
 ### Phase B — モジュール · Agent マニフェスト（P0）
 
-**完了条件:** `modules.yaml` と Agent 有効セットが一致 · jp_medical OFF
+**完了条件:** `modules.yaml` と Agent 有効セットが一致 · **jp_medical_device On**（2026-08 更新）
 
 | # | タスク | 主なファイル | 担当 |
 |---|--------|-------------|------|
-| B1 | `jp_medical_device` を `enabled: false` | `modules.yaml` | Operations |
-| B2 | **Agent 有効化マニフェスト新規** — モジュール → 必要 Agent の明示 | `data/operator/agents-enabled.yaml`（新規） | Executive |
-| B3 | REG-025/026 MD 先頭に「未施行 · jp_medical OFF」バナー | `docs/company/regulations/iryo-kiki-*.md` | Compliance |
-| B4 | ISO 13485 関連 dashboard 警告を「モジュール無効」のため info に格下げ（assessment 更新） | `docs/compliance/iso/steward-assessment.md` | Compliance |
+| B1 | ~~`jp_medical_device` を `enabled: false`~~ → **On に確定**（運用台帳・REG-025/026 適用） | `modules.yaml` | Operations（済） |
+| B2 | **Agent 有効化マニフェスト** — モジュール → 必要 Agent の明示 | `data/operator/agents.yaml` | Executive |
+| B3 | REG-025/026 を jp_medical_device On に整合（適用バナー · 運用台帳） | `docs/company/regulations/iryo-kiki-*.md` | Compliance（済 · 2026-08） |
+| B4 | ISO 13485 assessment をモジュール On・プレースホルダ品目として更新 | `docs/compliance/iso/steward-assessment.md` | Compliance（済） |
 | B5 | `orgos operator export` を有効 Agent のみに限定する CLI オプション検討（任意） | `src/cli/` | Platform |
 
 **agents-enabled.yaml 案:**
@@ -234,7 +233,7 @@ flowchart LR
 |------|------|
 | L2 口座番号 · Wi-Fi パスワード | gitignore 維持 · `bank_account_id` リンクのみ |
 | 実登記 · 実保険加入 | ダミー narrative のみ · 人間 P0 は executive-remaining-tasks に「実務」セクション分離 |
-| ISO 13485 実監査 | jp_medical OFF のため Phase B で assessment から除外 |
+| ISO 13485 実監査 | モジュール On · 品目はプレースホルダ。実監査は人間 P0 |
 | OrgOS 厳格 99% | 本プラン対象外（Community UI 等の構造 cap） |
 
 ---

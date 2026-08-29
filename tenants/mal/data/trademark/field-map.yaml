@@ -1,0 +1,8 @@
+mappings:
+  - form_field: "商標登録出願人・氏名又は名称"
+    source: company.name
+  - form_field: "商標登録出願人・住所又は居所"
+    source: company.address
+  - form_field: "法人番号（参考 · 願書本文には通常記載しない）"
+    source: company.corporate_number
+    notes: "内部管理用 · 出願書類本文への転記は不要"

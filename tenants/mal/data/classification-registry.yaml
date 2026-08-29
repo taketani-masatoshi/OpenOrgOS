@@ -57,6 +57,26 @@ agents:
     label: Operations
     max_level: L2
     output_max_level: L1
+  project_management:
+    label: PMO
+    max_level: L1
+    output_max_level: L1
+  data_analytics:
+    label: Data & Analytics
+    max_level: L1
+    output_max_level: L1
+  coo:
+    label: COO
+    max_level: L1
+    output_max_level: L1
+  investor_relations:
+    label: IR
+    max_level: L1
+    output_max_level: L1
+  internal_audit:
+    label: Internal Audit
+    max_level: L1
+    output_max_level: L1
 
 resources:
   - id: RES-BANK-ACCOUNTS
@@ -80,6 +100,15 @@ resources:
     ai_context: auto
     description: 現預金残高（口座番号なし · bank_account_id でリンク）
     read_agents: [finance, executive_steward, compliance, secretary]
+    write_agents: [finance]
+
+  - id: RES-PAYROLL-DETAIL
+    path: data/hr/payroll-detail/**
+    level: L2
+    git: ignore
+    ai_context: on_demand
+    description: 個人別支給明細（氏名 · 口座 · 控除内訳）
+    read_agents: [finance, compliance]
     write_agents: [finance]
 
   - id: RES-KAMEZAWA-SECRETS
@@ -225,6 +254,33 @@ resources:
     ai_context: auto
     description: 会社概要（公開値含む）
     read_agents: [executive_steward, secretary, finance, contract, property_rental, hospitality, compliance, operations]
+
+  - id: RES-PMO-PROJECTS
+    path: data/projects/
+    level: L1
+    git: track
+    ai_context: auto
+    description: PMO ポートフォリオ（案件 id · RAG · リンクのみ。金額・個人名なし）
+    read_agents: [project_management, coo, executive_steward]
+    write_agents: [project_management]
+
+  - id: RES-ANALYTICS
+    path: data/analytics/
+    level: L1
+    git: track
+    ai_context: auto
+    description: KPI メトリクス定義 · FY 目標（実測値は resolver 経由。金額実績の転記禁止）
+    read_agents: [data_analytics, executive_steward, finance]
+    write_agents: [data_analytics]
+
+  - id: RES-IR-DATA
+    path: data/investor-relations/
+    level: L1
+    git: track
+    ai_context: auto
+    description: IR cap table · investor registry · disclosure calendar（L2 連絡先値なし）
+    read_agents: [investor_relations, finance, executive_steward, compliance]
+    write_agents: [investor_relations]
 
 rules:
   - id: RULE-LINK-ONLY

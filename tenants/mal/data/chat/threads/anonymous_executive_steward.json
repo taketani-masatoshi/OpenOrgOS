@@ -1,0 +1,38 @@
+{
+  "thread_id": "anonymous:executive_steward",
+  "tenant": "mal",
+  "created_at": "2026-07-26T04:37:06.350Z",
+  "updated_at": "2026-07-26T15:57:51.076Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Reply with exactly one word: pong",
+      "at": "2026-07-26T04:37:06.350Z"
+    },
+    {
+      "role": "assistant",
+      "content": "No tool results or complex conversational context were provided in this turn to generate a structured JSON schema.\n\n_信頼度: low_",
+      "at": "2026-07-26T04:37:06.350Z"
+    },
+    {
+      "role": "user",
+      "content": "こんにちは。あなたのモデル名を短く答えて。",
+      "at": "2026-07-26T08:46:03.867Z"
+    },
+    {
+      "role": "assistant",
+      "content": "No actionable or structured data was provided in the conversation history or current context turn to populate a JSON schema.\n\n_信頼度: low_",
+      "at": "2026-07-26T08:46:03.867Z"
+    },
+    {
+      "role": "user",
+      "content": "こんにちは。短い日本語で自己紹介して。",
+      "at": "2026-07-26T08:47:27.171Z"
+    },
+    {
+      "role": "assistant",
+      "content": "私は、組織のオペレーションを支援するAIアシスタントです。\n\n複雑な情報やプロセスを整理し、ポリシーに基づいて最適なサポートを提供します。何かお手伝いできることがあれば、お気軽にお申し付けください。\n\n***\n\n*(English translation for context: I am an AI assistant that supports organizational operations. I organize complex information and processes, providing optimal support based on policies. Please feel free to let me know if there is anything I can help you with.)*",
+      "at": "2026-07-26T08:47:27.171Z"
+    }
+  ]
+}

@@ -1,24 +1,44 @@
-as_of: "2026-07-01"
+as_of: "2026-08-29"
 currency: JPY
 entries:
   - id: PAY-2026-07-25
     date: "2026-07-25"
     direction: outflow
-    amount: 320000
+    amount: 300000
     category: 給与
     account_id: BANK-001
     chart_account_id: "5300"
-    description: 三塚給与（7月分 · EMP-003）
+    description: 三塚力 給与（7月分 · EMP-003）
     source: payment-calendar
     status: planned
   - id: PAY-2026-08-25
     date: "2026-08-25"
     direction: outflow
-    amount: 320000
+    amount: 300000
     category: 給与
     account_id: BANK-001
     chart_account_id: "5300"
-    description: 三塚給与（8月分）
+    description: 三塚力 給与（8月分 · EMP-003）
+    source: payment-calendar
+    status: planned
+  - id: PAY-2026-09-25-EMP-003
+    date: "2026-09-25"
+    direction: outflow
+    amount: 300000
+    category: 給与
+    account_id: BANK-001
+    chart_account_id: "5300"
+    description: 三塚力 給与（9月分 · EMP-003）
+    source: payment-calendar
+    status: planned
+  - id: PAY-2026-09-25-EMP-004
+    date: "2026-09-25"
+    direction: outflow
+    amount: 300000
+    category: 給与
+    account_id: BANK-001
+    chart_account_id: "5300"
+    description: 鈴木友也 給与（9月分 · EMP-004）
     source: payment-calendar
     status: planned
   - id: COMM-2026-07-28
@@ -60,5 +80,5 @@ entries:
     source: payment-calendar
     status: planned
 notes: |
-  ダミーデータ — 株式会社MAL FY2026 支払カレンダー。
-  給与25日 · 通信費28日 · 税務は tax-profile filing_calendar と整合。
+  CEO確認 2026-08-29。給与25日。鈴木友也は 8/26 入社のため 9月分から。
+  通信費・税務カレンダーは従来どおり。

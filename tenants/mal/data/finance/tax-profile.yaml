@@ -1,33 +1,32 @@
-# 税務プロファイル — 申告区分・期限・担当（デモ用ダミー確定 · 2026-07-05）
-# 人向け: docs/finance/tax-filing-checklist.md
-
 entity:
   name: 株式会社MAL
   type: 株式会社
   corporate_number: "4010001189530"
-  address: "〒102-0084 東京都千代田区二番町1"
-
+  address: 〒102-0084 東京都千代田区二番町1
 fiscal_year:
   end_month: 1
   label: 第9期
-  period_from: "2026-02-01"
-  period_to: "2027-01-31"
+  period_from: 2026-02-01
+  period_to: 2027-01-31
   calendar_note: 決算月1月。申告期限は原則決算日の翌日から2ヶ月以内
-
 consumption_tax:
   status: 免税事業者
   options:
     - 課税事業者（本則）
     - 課税事業者（簡易課税）
     - 免税事業者
-  invoice_registration_number: "T4010001189530"
+  invoice_registration_number: T4010001189530
   invoice_registered: true
+  base_period_sales_jpy: 7500000
   base_period_sales_threshold: 10000000
+  invoice_exempt_reconciled_basis: |
+    基準期間課税売上750万円（第9期想定 sales 7,500,000円）・閾値1,000万円未満のため免税事業者を暫定選択。
+    インボイス登録番号 T4010001189530 は取引先への登録番号表示義務に対応（法人番号ベース）。
+    税理士確認依頼: fy2026-tax-advisor-checklist #10 · handoff 2026-08-24（暫定 — 確定後に更新）。
   notes: |
     デモ用確定（2026-07-05）: 第9期売上高750万円想定 · 基準期間1,000万円未満のため免税。
     インボイス登録番号は company.yaml に記載済み（免税でも登録番号は表示義務あり）。
     宿泊・賃貸の課税/非課税区分は実申告時に税理士確認。
-
 corporate_tax:
   category: 中小法人
   applicable_rates:
@@ -36,70 +35,182 @@ corporate_tax:
   prior_retained_earnings: 5000000
   estimated_tax_fy2026: 775000
   estimated_tax_status: 暫定
-  notes: |
-    デモ用確定: 資本金850万円 · 発行100株 · 期首繰越利益剰余金+500万円。
-    役員貸付無利息（LOAN-001/002）— みなし利息・貸付金科目の税務処理は税理士確認。
+  notes: >
+    資本金850万円 · 発行100株は CEO確認 2026-08-29（実データ）。
+    期首繰越利益剰余金+500万円は第8期社内再構成（税理士未契約・突合残）。
 
+    期首繰越5,000,000円は第8期計算書類（docs/company/fy2025-keisansyorui.md · 2026-07-28
+    社内再構成）と接続。
+
+    役員貸付無利息（LOAN-001/002）— みなし利息・貸付金科目の税務処理は税理士確認。
 local_tax:
   prefecture: 東京都
+  fixed_asset_tax_annual_jpy: 120000
   municipalities:
     - name: 千代田区
-      assets: [ASSET-001]
-      taxes: [法人住民税, 固定資産税]
+      assets:
+        - ASSET-001
+      taxes:
+        - 法人住民税
+        - 固定資産税
     - name: 墨田区
-      assets: [ASSET-002, ASSET-003]
-      taxes: [法人住民税, 固定資産税, 事業所税]
+      assets:
+        - ASSET-002
+        - ASSET-003
+      taxes:
+        - 法人住民税
+        - 固定資産税
+        - 事業所税
   notes: 法人住民税・事業税は法人税確定後に連動。均等割は資本金850万円想定
-
 filing_calendar:
   - id: hojinzei-kokuzei
     tax: 法人税（国税）
     authority: 国税庁（e-Tax）
-    deadline: "2027-03-31"
+    deadline: 2027-03-31
     status: demo_confirmed
-    attachments: [別表16, 別表4, 勘定科目内訳明細書]
+    attachments:
+      - 別表16
+      - 別表4
+      - 勘定科目内訳明細書
   - id: shohizei
     tax: 消費税
     authority: 国税庁（e-Tax）
-    deadline: "2027-03-31"
+    deadline: 2027-03-31
     status: not_required
     note: 免税事業者 — 申告不要（デモ確定）
   - id: hojin-juminzei
     tax: 法人住民税・法人都民税
     authority: 東京都（eLTAX）
-    deadline: "2027-03-31"
+    deadline: 2027-03-31
     status: demo_confirmed
   - id: jigyozei
     tax: 法人事業税
     authority: 東京都（eLTAX）
-    deadline: "2027-03-31"
+    deadline: 2027-03-31
     status: demo_confirmed
   - id: kotei-shisanzei
     tax: 固定資産税（償却資産申告）
     authority: 千代田区・墨田区
-    deadline: "2027-01-31"
+    deadline: 2027-01-31
     status: demo_confirmed
     note: 毎年1/31申告。評価額は fixed-assets ダミー値参照
   - id: gensen-choutei
     tax: 源泉所得税・法定調書
     authority: 税務署
-    deadline: "2027-01-31"
-    status: 該当なし見込み
-    note: 従業員0・役員報酬0。業務委託180,000円は支払調書要否を税理士確認
-
+    deadline: 2027-01-31
+    status: 該当（概算）
+    note: 正社員2名は源泉対象（payroll.yaml）。役員報酬0。税理士未契約のため率・納付は未確定。
 contacts:
   tax_advisor:
-    name: 山田健一
-    firm: 税理士法人マルパートナーズ
-    email: yamada@maru-partner.example
-  accounting_software: freee会計（デモ用）
-  notes: ダミー連絡先。実務は executive-remaining-tasks 参照。
-
+    status: none
+    note: CEO確認 2026-08-29 — 税理士は未契約。ダミー（マルパートナーズ）は削除
+  legal_counsel:
+    name: 松尾剛行
+    firm: 桃尾・松尾・難波法律事務所
+    preferred_channel: メール
+    email: mmn@mmn-law.gr.jp
+    contact_id: EXT-005
+    note: CEO確認 2026-08-29 — 顧問弁護士。月額5万円（税別）·
+      年額60万円（CTR-022）。個人アドレス非公開のため事務所代表アドレス。社労士・司法書士はなし
+  accounting_software: none（OrgOS file-based GL — see file-based-accounting-runbook.md）
+  notes: 顧問は松尾剛行（桃尾・松尾・難波）のみ。税務顧問は未契約。
 related_docs:
   - docs/company/tax/fy2026-tax-readiness-assessment.md
+  - docs/company/tax/fy2026-tax-advisor-handoff.md
   - docs/company/tax/fy2026/01-hojinzei-shinkoku-yoko.md
   - docs/company/fy2026-tax-advisor-checklist.md
   - docs/finance/tax-filing-checklist.md
-
-demo_confirmed_at: "2026-07-05"
-demo_note: 意図的ダミー — 実登記・実申告との一致は保証しない
+obligation_rhythms:
+  - id: gensen-monthly
+    kind: tax
+    label: 源泉所得税納付
+    cadence: month
+    due_rule: next_month_day_10
+    enabled: true
+    apply_when: has_withholding
+    amount:
+      mode: formula
+      formula: payroll_withholding_rough
+    authority: 税務署
+    cashflow_category: withholding
+    note: 給与支払いの翌月10日（土日祝は翌営業日）
+  - id: shaho-monthly
+    kind: social
+    label: 社会保険料納付
+    cadence: month
+    due_rule: end_of_month
+    enabled: true
+    apply_when: has_social_insurance
+    amount:
+      mode: formula
+      formula: payroll_social_employer_rough
+    authority: 年金事務所
+    cashflow_category: social_insurance
+  - id: nenmatsu
+    kind: hr
+    label: 年末調整
+    cadence: annual
+    due_rule: fixed_md
+    month: 12
+    day: 31
+    enabled: true
+    apply_when: has_withholding
+    status_default: planned
+  - id: hoteichousho
+    kind: hr
+    label: 法定調書提出
+    cadence: annual
+    due_rule: fixed_md
+    month: 1
+    day: 31
+    enabled: true
+    apply_when: has_withholding
+    status_default: planned
+  - id: kotei-shisanzei-quarter
+    kind: tax
+    label: 固定資産税
+    cadence: custom
+    due_rule: custom_mds
+    custom_mds:
+      - month: 6
+        day: 1
+      - month: 9
+        day: 1
+      - month: 12
+        day: 1
+      - month: 3
+        day: 1
+    enabled: true
+    apply_when: has_fixed_assets
+    amount:
+      mode: formula
+      formula: fixed_asset_quarter
+    authority: 区市町村
+    cashflow_category: property_tax
+  - id: hojinzei-kokuzei-rhythm
+    kind: tax
+    label: 法人税（確定）
+    cadence: annual
+    due_rule: fiscal_plus_2_months
+    enabled: true
+    apply_when: always
+    amount:
+      mode: from_profile
+      from_profile_path: corporate_tax.estimated_tax_fy2026
+    authority: 国税庁（e-Tax）
+    cashflow_category: corporate_tax
+  - id: lodging-tax-monthly
+    kind: tax
+    label: 宿泊税
+    cadence: month
+    due_rule: end_of_month
+    enabled: true
+    apply_when: always
+    amount:
+      mode: from_ledger
+      note: hospitality 宿泊税台帳（assessments）
+    authority: 区市町村
+    cashflow_category: lodging_tax
+demo_confirmed_at: 2026-07-05
+demo_note: |
+  申告カレンダー・免税売上想定などはデモ由来が残る。 資本金・株主・顧問（税理士未契約・松尾剛行／桃尾・松尾・難波）は CEO確認 2026-08-29。

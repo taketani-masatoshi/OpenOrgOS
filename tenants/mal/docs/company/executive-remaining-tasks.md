@@ -44,17 +44,15 @@
   - **関連:** [`data/finance/cash-balance.yaml`](../../data/finance/cash-balance.yaml) · [executive-dashboard-guide](../plans/executive-dashboard-guide.md)
   - **工数:** 30分
 
-- [ ] **[P0] B/S 3項目の原資料を入手する（資本金・繰越剰余金・銀行残高）**
-  - **やること:** 登記簿謄本・第8期決算書・全銀行残高証明を取得し税理士へ共有
-  - **なぜ:** 計算書類・e-Tax 第5表の **最大ブロッカー**（3項目すべて TBD）
-  - **関連:** [fy2026-tax-advisor-checklist #1–3](fy2026-tax-advisor-checklist.md) · [fy2026-keisansyorui.md](fy2026-keisansyorui.md)
+- [ ] **[P0] B/S 原資料の税理士突合（銀行残高証明 · 第8期社内案）**
+  - **やること:** 全銀行残高証明を取得。資本金は `company.yaml` 850万円・繰越剰余金は [fy2025-keisansyorui](fy2025-keisansyorui.md) 500万円（社内再構成）を税理士へ共有し突合
+  - **なぜ:** 期末現金は未突合。第8期は社内案まで完了、税理士確定が残
+  - **関連:** [fy2025-keisansyorui.md](fy2025-keisansyorui.md) · [fy2026-tax-advisor-checklist #1–3](fy2026-tax-advisor-checklist.md)
   - **工数:** 1時間（取得）＋税理士待ち
 
-- [ ] **[P1] 株主名簿の TBD を登記簿で確定する**
-  - **やること:** 登記簿謄本・定款から **資本金・発行済株式総数・1株の金額・段燕燕の住所・取得日** を転記 → [shareholder-register.md](shareholder-register.md) 更新
-  - **なぜ:** 会社法第121条の法定記載事項が未充足（持株数・住所 TBD）。teikan-summary・議事録の株主構成（50/50 vs 100%）も登記と同期が必要
-  - **関連:** [shareholder-register.md](shareholder-register.md) · [teikan-summary.md](teikan-summary.md) · [licenses/corporate-registry/](licenses/corporate-registry/)
-  - **工数:** 30分（謄本入手後）
+- [x] **[P1] 株主名簿の TBD を登記簿で確定する**
+  - **完了:** 2026-08-29 CEO確認 — 段燕燕 100% · 100株 · 資本金 850万円。住所は本店所在地を記載
+  - **関連:** [shareholder-register.md](shareholder-register.md) · [teikan-summary.md](teikan-summary.md)
 
 - [ ] **[P0] `kamezawa-secrets.yaml` を実値で作成する**
   - **やること:** `cp kamezawa-secrets.yaml.example kamezawa-secrets.yaml` → スマートロック・Wi-Fi・緊急連絡先・設備位置を記入（gitignore 済み）
@@ -73,8 +71,9 @@
 ## 決算前（P0 / P1）
 
 - [ ] **[P0] 税理士へ `fy2026-tax-advisor-checklist.md` を送付する**
-  - **やること:** チェックリスト10項目＋原資料（上記 B/S 3項目）を税理士へ共有し確認依頼
-  - **なぜ:** 法人税・消費税区分・減価償却・役員貸付等の **税務判断が未了**
+  - **やること:** [tax/fy2026-tax-advisor-handoff.md](tax/fy2026-tax-advisor-handoff.md) のメール下書き＋チェックリスト10項目＋原資料を税理士へ共有
+  - **準備済:** 2026-08-24 · gap 台帳 deferred 整理 · `orgos tax readiness` 100%（機械指標）
+  - **なぜ:** 法人税・消費税区分・減価償却・役員貸付等の **税務判断が未了**（税理士回答待ち）
   - **関連:** [fy2026-tax-advisor-checklist.md](fy2026-tax-advisor-checklist.md) · [tax readiness 推奨 #2](tax/fy2026-tax-readiness-assessment.md)
   - **工数:** 30分（送付）＋税理士待ち
 
