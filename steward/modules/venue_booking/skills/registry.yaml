@@ -1,4 +1,9 @@
 skills:
+  - id: venue_booking
+    file: venue_booking.md
+    runtime: agent
+    description: 会場・会食の予約受付
+    agent_id: operations
   - id: venue_list
     file: venue_list.md
     runtime: cli

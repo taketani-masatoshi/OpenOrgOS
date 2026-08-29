@@ -28,6 +28,7 @@ import { runWithProtocolWriteGuard } from "../src/lib/protocol/protocol-write-gu
 import { writeOutboxProvenance } from "../src/lib/protocol/outbox-provenance.js";
 import type { EventEnvelope } from "../schemas/protocol/org-event.js";
 import { loadCompany } from "../src/lib/data.js";
+import { listActiveOperators } from "../src/lib/org/operators.js";
 import { orgApprovalRegistrySchema } from "../schemas/org/approval.js";
 import { getPendingApprovalsPath } from "../src/lib/org/paths.js";
 import { enqueueWitnessPending } from "../src/lib/protocol/witness-queue.js";
@@ -64,6 +65,18 @@ export const DEMO_EVENT_ID = "a1b2c3d4-e5f6-4789-a012-3456789abcde";
 export const MAL_TENANT = "mal";
 export const VENDOR_TENANT = "southwood";
 const VENDOR_LEGAL_NAME = "株式会社サウスウッド";
+
+
+function resolveApprover(fallbackName: string): { approverId: string; operatorId: string } {
+  const op = listActiveOperators().find((o) => o.role === "ceo" || o.role === "approver");
+  if (!op) {
+    throw new Error("No ceo/approver operator in registry — cannot approve inter-org notice");
+  }
+  return {
+    approverId: op.approver_name || op.display_name || fallbackName,
+    operatorId: op.operator_id,
+  };
+}
 
 function protocolDir(tenantId: string): string {
   return join(getTenantDir(tenantId), "data", "protocol");
@@ -252,7 +265,7 @@ async function seedMalSendOnly(
 
   const { transmission } = approveInterOrgNotice({
     noticeId: notice.notice_id,
-    approverId: company.representative?.split("、")[0] ?? "段燕燕",
+    ...resolveApprover(company.representative?.split("、")[0] ?? "段燕燕"),
     eventId: sharedEventId,
   });
 
@@ -328,7 +341,7 @@ async function seedMalSide(
 
   const { transmission } = approveInterOrgNotice({
     noticeId: notice.notice_id,
-    approverId: company.representative?.split("、")[0] ?? "段燕燕",
+    ...resolveApprover(company.representative?.split("、")[0] ?? "段燕燕"),
     eventId: sharedEventId,
   });
 
@@ -435,7 +448,7 @@ async function seedVendorSide(
 
   const { transmission: ackTx } = approveInterOrgNotice({
     noticeId: ackNotice.notice_id,
-    approverId: company.representative?.replace(/\s/g, "") ?? "南木健一",
+    ...resolveApprover(company.representative?.replace(/\s/g, "") ?? "南木健一"),
   });
 
   writeOutboxCopy("03-vendor-obligation-ack.json", ackTx.envelope);

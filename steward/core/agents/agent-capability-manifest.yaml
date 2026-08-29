@@ -577,6 +577,7 @@ agents:
       - inbox-routing
       - outbox-routing
       - travel-booking
+      - venue-booking
     skills:
       - change_apply
       - change_plan
@@ -617,6 +618,7 @@ agents:
       - travel_policy_check
       - venture_capital_ops
       - venture_capital_validate
+      - venue_booking
       - venue_catalog
       - venue_list
     pulse_checks:

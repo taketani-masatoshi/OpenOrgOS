@@ -40,6 +40,7 @@ describe("wire-trust-registry sync / pin-local", () => {
     writeRegistry(`version: "1"
 nodes:
   - node_id: org.example.co.jp
+    tenant_id: demo
     did: did:ooo:org:demo
     protocol_public_key: ""
     wire_url: http://127.0.0.1:0
@@ -85,6 +86,7 @@ nodes:
     writeRegistry(`version: "1"
 nodes:
   - node_id: org.example.co.jp
+    tenant_id: demo
     did: did:ooo:org:demo
     node_uri: steward://tenant/demo
     protocol_public_key: ""
@@ -103,6 +105,7 @@ nodes:
     writeRegistry(`version: "1"
 nodes:
   - node_id: org.example.co.jp
+    tenant_id: demo
     protocol_public_key: ""
 `);
     process.env.ORGOS_STRICT_TRUST = "1";

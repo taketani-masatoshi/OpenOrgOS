@@ -400,7 +400,7 @@ routes:
   - id: travel-booking
     description: 旅行手配・出張宿泊予約（総務）
     agent: operations
-    skill: travel_booking
+    skill: travel_policy_check
     priority: 62
     resource_paths:
       - data/company.yaml
@@ -418,6 +418,27 @@ routes:
       paths:
         - docs/operations/
         - data/operations/travel-portals.yaml
+
+  - id: venue-booking
+    description: 会食・会場予約（総務）
+    agent: operations
+    skill: venue_booking
+    priority: 62
+    resource_paths:
+      - data/operations/venue-catalog.yaml
+      - data/operations/venue-providers.yaml
+    match:
+      keywords:
+        - 会食予約
+        - 会場予約
+        - 店予約
+        - レストラン予約
+        - 宴会
+        - 食事会
+        - ホットペッパー
+        - 食べログ
+      paths:
+        - data/operations/venue-reservations.yaml
 
   - id: outbox-routing
     description: 出力トレイ・印刷待ち PDF

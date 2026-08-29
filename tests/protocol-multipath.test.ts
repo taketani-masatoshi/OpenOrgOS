@@ -10,6 +10,7 @@ import { deliverProtocolEnvelope } from "../src/lib/protocol/transport.js";
 import { resolvePeerInboundEndpoints } from "../src/lib/protocol/peers.js";
 import { listDeliveryAttempts } from "../src/lib/protocol/delivery-ledger.js";
 import { operatorAttestationSchema } from "../schemas/protocol/operator-attestation.js";
+import { getExecutiveRecordsDir, getMailConfigPath } from "../src/lib/correspondence/paths.js";
 
 function cleanup(): void {
   for (const p of [join(getDataDir(), "protocol"), join(getDocsDir(), "protocol")]) {
@@ -110,9 +111,9 @@ monthly_cost: 50000
     await new Promise<void>((r) => primary.listen(0, "127.0.0.1", () => r()));
     const primaryPort = (primary.address() as { port: number }).port;
 
-    mkdirSync(join(getDataDir(), "..", "records", "executive"), { recursive: true });
+    mkdirSync(getExecutiveRecordsDir(), { recursive: true });
     writeFileSync(
-      join(getDataDir(), "..", "records", "executive", "mail-config.yaml"),
+      getMailConfigPath(),
       `provider: dry_run
 from:
   name: Demo
