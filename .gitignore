@@ -10,6 +10,8 @@ tests/.fixture-restore.lock/
 .tmp-*
 # Locally fetched SiVa validation service (upstream clone + 240MB jars)
 services/siva/
+# L2 mail credentials written by the setup wizard at the repo root
+/records/
 data/.orgos/
 tenants/*/data/.orgos/
 tenants/*/data/chat/answer-memory/
