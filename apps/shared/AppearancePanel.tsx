@@ -1,35 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   applyThemePreference,
   readThemePreference,
   type ThemePreference,
 } from "./theme";
-import { prefersJapaneseLocale } from "./ui-locale";
-
-const COPY = {
-  ja: {
-    heading: "外観",
-    lead: "画面全体のスタイルを切り替えます。この端末に保存され、oorgos.org 配下のサイトでも使われます。",
-    legend: "スタイル",
-    light: "ライト",
-    lightHint: "明るい背景（oorgos.org と同じ）",
-    dark: "ダーク",
-    darkHint: "暗い場所向けの背景",
-    system: "システムデフォルト",
-    systemHint: "この端末のライト／ダーク設定に合わせる",
-  },
-  en: {
-    heading: "Appearance",
-    lead: "Switch the overall style. Saved on this device and reused across oorgos.org sites.",
-    legend: "Style",
-    light: "Light",
-    lightHint: "Bright background, matching oorgos.org",
-    dark: "Dark",
-    darkHint: "Dim background for low light",
-    system: "System default",
-    systemHint: "Follow this device’s light or dark setting",
-  },
-} as const;
+import { SETTINGS_COPY } from "./console-copy";
+import { useCopy } from "./define-copy";
+import { SettingsAccordionItem } from "./SettingsAccordionItem";
 
 const OPTIONS: Array<{
   value: ThemePreference;
@@ -44,7 +21,7 @@ const OPTIONS: Array<{
 
 export function AppearancePanel() {
   const [preference, setPreference] = useState<ThemePreference>("system");
-  const copy = useMemo(() => (prefersJapaneseLocale() ? COPY.ja : COPY.en), []);
+  const copy = useCopy(SETTINGS_COPY);
 
   useEffect(() => {
     setPreference(readThemePreference());
@@ -55,16 +32,16 @@ export function AppearancePanel() {
     applyThemePreference(next);
   }
 
+  const selected = OPTIONS.find((option) => option.value === preference) ?? OPTIONS[2];
+
   return (
-    <section className="passkey-settings-section" aria-labelledby="appearance-heading">
-      <div className="passkey-settings-section-head">
-        <h2 id="appearance-heading" className="passkey-settings-section-title">
-          {copy.heading}
-        </h2>
-        <p className="passkey-settings-section-lead">{copy.lead}</p>
-      </div>
+    <SettingsAccordionItem
+      id="appearance"
+      title={copy.appearance}
+      status={copy[selected.labelKey]}
+    >
       <fieldset className="theme-picker">
-        <legend className="theme-picker-legend">{copy.legend}</legend>
+        <legend className="theme-picker-legend">{copy.appearanceLegend}</legend>
         {OPTIONS.map((option) => (
           <label key={option.value} className="theme-picker-option">
             <input
@@ -82,6 +59,6 @@ export function AppearancePanel() {
           </label>
         ))}
       </fieldset>
-    </section>
+    </SettingsAccordionItem>
   );
 }

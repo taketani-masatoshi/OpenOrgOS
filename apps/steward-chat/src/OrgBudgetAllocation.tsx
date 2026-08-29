@@ -16,6 +16,8 @@ import {
   type OrgBudgetPayload,
   type OrgBudgetReferenceCategory,
 } from "./api";
+import { useCopy } from "@ops-shared/define-copy";
+import { ALLOC_COPY } from "./org-budget-alloc-copy";
 import { isBlockedIncrease } from "./webGuards";
 
 /** Prefer increases_locked; fall back to legacy adjustments_locked. */
@@ -102,6 +104,7 @@ function CurrencyInput({
   disabled?: boolean;
   onChange: (value: string) => void;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   return (
     <div className="currency-input">
       <span aria-hidden="true">¥</span>
@@ -114,7 +117,7 @@ function CurrencyInput({
         disabled={disabled}
         onChange={(event) => onChange(formatYenInput(event.target.value))}
       />
-      <span>円</span>
+      <span>{copy.yen}</span>
     </div>
   );
 }
@@ -122,7 +125,7 @@ function CurrencyInput({
 function DistributionBar({
   total,
   segments,
-  unallocatedLabel = "未分配",
+  unallocatedLabel,
   onSelect,
   selectedId,
 }: {
@@ -132,6 +135,7 @@ function DistributionBar({
   onSelect?: (id: string) => void;
   selectedId?: string | null;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   if (total <= 0) return null;
   const positive = segments.filter((segment) => segment.amount > 0);
   const allocated = positive.reduce((sum, segment) => sum + segment.amount, 0);
@@ -139,11 +143,17 @@ function DistributionBar({
   const all = [
     ...positive,
     ...(unallocated > 0
-      ? [{ id: "unallocated", label: unallocatedLabel, amount: unallocated }]
+      ? [
+          {
+            id: "unallocated",
+            label: unallocatedLabel ?? copy.unallocated,
+            amount: unallocated,
+          },
+        ]
       : []),
   ];
   return (
-    <div className="distribution" aria-label="予算分配">
+    <div className="distribution" aria-label={copy.distribution}>
       <div className="distribution-bar">
         {all.map((segment, index) => (
           <button
@@ -179,7 +189,7 @@ function DistributionBar({
 
 function CategoryTable({
   rows,
-  emptyCopy = "なし",
+  emptyCopy,
   onSelect,
   selectedCode,
 }: {
@@ -188,16 +198,17 @@ function CategoryTable({
   onSelect?: (accountCode: string) => void;
   selectedCode?: string;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   if (!rows.length) {
-    return <p className="empty-copy">{emptyCopy}</p>;
+    return <p className="empty-copy">{emptyCopy ?? copy.none}</p>;
   }
   return (
     <div className="category-table">
       <div className="category-table-head">
-        <span>費目</span>
-        <span>予算</span>
-        <span>実績</span>
-        <span>残額</span>
+        <span>{copy.colCategory}</span>
+        <span>{copy.colBudget}</span>
+        <span>{copy.colActual}</span>
+        <span>{copy.colRemaining}</span>
       </div>
       {rows.map((row) => {
         const interactive = Boolean(onSelect);
@@ -245,18 +256,19 @@ function ReferenceCategoryTable({
 }: {
   rows: OrgBudgetReferenceCategory[];
 }) {
+  const copy = useCopy(ALLOC_COPY);
   if (!rows.length) return null;
   return (
     <details className="alloc-footnote">
       <summary>
-        <WithTip tip="事業計画・資産台帳など、本画面では分配しない参照費目です。">
-          参照費目（分配対象外）
+        <WithTip tip={copy.refCategoriesTip}>
+          {copy.refCategories}
         </WithTip>
       </summary>
       <div className="category-table reference-category-table">
         <div className="category-table-head">
-          <span>費目</span>
-          <span>金額</span>
+          <span>{copy.colCategory}</span>
+          <span>{copy.colAmount}</span>
         </div>
         {rows.map((row) => (
           <div className="category-table-row scope-company" key={row.account_code}>
@@ -287,6 +299,7 @@ function CategoryPoolEditor({
   busy: boolean;
   onSave: (accountCode: string, amountYen: number) => Promise<void>;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   const [accountCode, setAccountCode] = useState(
     options[0]?.account_code ?? "",
   );
@@ -305,7 +318,7 @@ function CategoryPoolEditor({
   }, [accountCode, rows]);
 
   if (!options.length) {
-    return <p className="empty-copy">分配可能な費目がありません</p>;
+    return <p className="empty-copy">{copy.noAllocatableCategories}</p>;
   }
 
   const currentYen =
@@ -316,23 +329,27 @@ function CategoryPoolEditor({
     <div className="alloc-pool">
       <p className="alloc-pool-status">
         <WithTip
-          tip={`予算枠の総額は変えず、費目間で再分配します。未分配 ${yen(unallocatedYen)}${unallocatedYen < 0 ? "（超過）" : ""}。選択費目の上限 ${yen(Math.max(0, roomYen))}。`}
+          tip={copy.poolTip(
+            yen(unallocatedYen),
+            unallocatedYen < 0 ? copy.over : "",
+            yen(Math.max(0, roomYen)),
+          )}
         >
           <span>
-            未分配 <strong>{yen(unallocatedYen)}</strong>
-            {unallocatedYen < 0 ? "（超過）" : ""}
+            {copy.unallocated} <strong>{yen(unallocatedYen)}</strong>
+            {unallocatedYen < 0 ? copy.over : ""}
           </span>
         </WithTip>
       </p>
       <CategoryTable
         rows={rows}
-        emptyCopy="費目未分配"
+        emptyCopy={copy.emptyCategoryAlloc}
         selectedCode={accountCode}
         onSelect={setAccountCode}
       />
       <div className="category-editor-fields alloc-pool-fields">
         <label>
-          費目
+          {copy.colCategory}
           <select
             value={accountCode}
             disabled={busy}
@@ -346,9 +363,9 @@ function CategoryPoolEditor({
           </select>
         </label>
         <label>
-          分配額
+          {copy.allocationAmount}
           <CurrencyInput
-            label="費目の分配額（円）"
+            label={copy.categoryAllocYen}
             value={amount}
             disabled={busy}
             onChange={setAmount}
@@ -360,7 +377,7 @@ function CategoryPoolEditor({
           disabled={busy || !accountCode || amount === ""}
           onClick={() => void onSave(accountCode, parseYenInput(amount))}
         >
-          更新
+          {copy.update}
         </button>
       </div>
     </div>
@@ -394,6 +411,7 @@ function EnvelopeSizeEditor({
   onSubmit: () => void;
   hint: string;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   const submitBlocked =
     busy ||
     disabled ||
@@ -404,31 +422,31 @@ function EnvelopeSizeEditor({
   return (
     <details className="alloc-advanced">
       <summary>
-        <WithTip tip={hint}>執行枠の変更</WithTip>
+        <WithTip tip={hint}>{copy.changeEnvelope}</WithTip>
       </summary>
       {pendingNote && <p className="budget-lock-note">{pendingNote}</p>}
       {increaseBlocked && (
         <p className="budget-lock-note">
-          事業計画が未承認のため、執行枠の増額はできません（縮小・枠内再配分は可）。
+          {copy.increaseBlocked}
         </p>
       )}
       <div className="form-row">
         <label>
           {label}
           <CurrencyInput
-            label={`${label}（円）`}
+            label={copy.yenOf(label)}
             value={amount}
             disabled={busy || disabled}
             onChange={onAmountChange}
           />
         </label>
         <label className="reference-field">
-          理由
+          {copy.reason}
           <input
             type="text"
             value={reference}
             disabled={busy || disabled}
-            placeholder="決裁参照"
+            placeholder={copy.decisionRef}
             onChange={(event) => onReferenceChange(event.target.value)}
           />
         </label>
@@ -438,7 +456,7 @@ function EnvelopeSizeEditor({
           disabled={submitBlocked}
           onClick={onSubmit}
         >
-          変更を申請
+          {copy.requestChange}
         </button>
       </div>
     </details>
@@ -471,6 +489,7 @@ function SliceList({
   editingId?: string | null;
   editSlot?: ReactNode;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   return (
     <div className="alloc-slice-list" role="list">
       {rows.map((row) => (
@@ -494,7 +513,7 @@ function SliceList({
                 ? pct(Math.round((row.amount / total) * 1000) / 10)
                 : "—"}
             </span>
-            <span className="alloc-slice-open">開く</span>
+            <span className="alloc-slice-open">{copy.open}</span>
           </button>
           {onSelectForEdit && (
             <button
@@ -502,7 +521,7 @@ function SliceList({
               className="alloc-slice-edit"
               onClick={() => onSelectForEdit(row.id)}
             >
-              {editingId === row.id ? "閉じる" : "分配額"}
+              {editingId === row.id ? copy.close : copy.allocationAmount}
             </button>
           )}
           {editingId === row.id && editSlot}
@@ -538,6 +557,7 @@ function DepartmentEnvelopeEditor({
   busy: boolean;
   onRun: RunAction;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   const revisionToken = () =>
     (budgetLiveRef.current ?? budget).revision;
   const [amount, setAmount] = useState(
@@ -572,39 +592,37 @@ function DepartmentEnvelopeEditor({
   return (
     <div className="alloc-inline-edit">
       <p className="alloc-pool-status">
-        <WithTip
-          tip={`部門予算枠の変更は上位（CEO等）の承認後に反映。上限の目安 ${yen(Math.max(0, room))}。`}
-        >
-          <span>部門分配額</span>
+        <WithTip tip={copy.deptAllocTip(yen(Math.max(0, room)))}>
+          <span>{copy.deptAllocAmount}</span>
         </WithTip>
       </p>
       {pending && (
         <p className="budget-lock-note">
-          承認待ち {pending.approval_id} · {yen(pending.amount_yen)} · 上位承認
+          {copy.pendingApproval(pending.approval_id, yen(pending.amount_yen))}
         </p>
       )}
       {increaseBlocked && (
         <p className="budget-lock-note">
-          事業計画が未承認のため、部門枠の増額はできません。
+          {copy.deptIncreaseBlocked}
         </p>
       )}
       <div className="form-row">
         <label>
-          分配額
+          {copy.allocationAmount}
           <CurrencyInput
-            label={`${department.org_unit_label}の分配額（円）`}
+            label={copy.deptAllocYen(department.org_unit_label)}
             value={amount}
             disabled={busy}
             onChange={setAmount}
           />
         </label>
         <label className="reference-field">
-          理由
+          {copy.reason}
           <input
             type="text"
             value={reference}
             disabled={busy}
-            placeholder="決裁参照"
+            placeholder={copy.decisionRef}
             onChange={(event) => setReference(event.target.value)}
           />
         </label>
@@ -621,11 +639,11 @@ function DepartmentEnvelopeEditor({
                   reference: reference.trim(),
                   expected_revision: revisionToken(),
                 }),
-              `${department.org_unit_label}の分配額変更を承認に提出しました`,
+              copy.deptChangeSubmitted(department.org_unit_label),
             )
           }
         >
-          変更を申請
+          {copy.requestChange}
         </button>
       </div>
     </div>
@@ -647,6 +665,7 @@ function PersonCategoryEditor({
   onRun: RunAction;
   onPersonChange: (personId: string) => void;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   const candidates = useMemo(() => {
     const byId = new Map<
       string,
@@ -707,7 +726,7 @@ function PersonCategoryEditor({
   if (personCategoryOptions.length === 0) {
     return (
       <p className="empty-copy">
-        個人分配可能な費目がありません。先に部門費目へ分配してください。
+        {copy.noPersonCategories}
       </p>
     );
   }
@@ -715,15 +734,15 @@ function PersonCategoryEditor({
   return (
     <div className="alloc-pool">
       <p className="alloc-pool-status">
-        <WithTip tip="部門の費目分配額から個人へ再分配します。本人の現行額を含む上限です。">
+        <WithTip tip={copy.personPoolTip}>
           <span>
-            分配可能 <strong>{yen(Math.max(0, availableYen))}</strong>
+            {copy.allocatable} <strong>{yen(Math.max(0, availableYen))}</strong>
           </span>
         </WithTip>
       </p>
       <div className="person-editor-grid">
         <label>
-          人員
+          {copy.person}
           <select
             value={personId}
             disabled={busy}
@@ -737,7 +756,7 @@ function PersonCategoryEditor({
           </select>
         </label>
         <label>
-          費目
+          {copy.colCategory}
           <select
             value={category}
             disabled={busy}
@@ -751,9 +770,9 @@ function PersonCategoryEditor({
           </select>
         </label>
         <label>
-          分配額
+          {copy.allocationAmount}
           <CurrencyInput
-            label="個人の費目別分配額（円）"
+            label={copy.personCategoryYen}
             value={amount}
             disabled={busy}
             onChange={setAmount}
@@ -780,11 +799,11 @@ function PersonCategoryEditor({
                 amount_yen: parseYenInput(amount),
                 expected_revision: getExpectedRevision(),
               }),
-            "個人へ分配しました",
+            copy.allocatedToPerson,
           )
         }
       >
-        更新
+        {copy.update}
       </button>
     </div>
   );
@@ -807,6 +826,7 @@ export function OrgBudgetAllocation({
   initialOrgUnitId?: string | null;
   onInitialOrgUnitConsumed?: () => void;
 }) {
+  const copy = useCopy(ALLOC_COPY);
   const revisionToken = () => (budgetLiveRef.current ?? budget).revision;
   const summary = budget.summary!;
   const departments = budget.departments ?? [];
@@ -911,21 +931,20 @@ export function OrgBudgetAllocation({
     <div className="alloc-workspace">
       {increasesLocked && (
         <p className="budget-policy-banner is-locked" role="status">
-          事業計画は {budget.planning.business_plan_status}{" "}
-          のため執行枠の増額はロック中です。枠内の費目・個人再配分は可能です。
+          {copy.planLocked(budget.planning.business_plan_status)}
         </p>
       )}
-      <section className="alloc-monitor" aria-label="実績の要約">
+      <section className="alloc-monitor" aria-label={copy.actualsSummary}>
         <div>
-          <span>全社予算枠</span>
+          <span>{copy.companyEnvelope}</span>
           <strong>{yen(summary.company_budget_yen)}</strong>
         </div>
         <div>
-          <span>実績</span>
+          <span>{copy.actual}</span>
           <strong>{yen(budget.actuals?.actual_yen ?? 0)}</strong>
         </div>
         <div>
-          <span>残高（消化 {pct(burn)}）</span>
+          <span>{copy.remainingBurn(pct(burn))}</span>
           <strong>
             {yen(
               summary.company_budget_yen - (budget.actuals?.actual_yen ?? 0),
@@ -934,7 +953,7 @@ export function OrgBudgetAllocation({
         </div>
       </section>
 
-      <nav className="alloc-breadcrumb" aria-label="分配の階層">
+      <nav className="alloc-breadcrumb" aria-label={copy.allocHierarchy}>
         <button
           type="button"
           className={focus.level === "company" ? "active" : ""}
@@ -943,7 +962,7 @@ export function OrgBudgetAllocation({
             setEditingDeptId(null);
           }}
         >
-          全社
+          {copy.company}
         </button>
         {selectedDepartment && (
           <>
@@ -970,31 +989,31 @@ export function OrgBudgetAllocation({
                 selectedDepartment.candidate_people.find(
                   (p) => p.person_id === focus.personId,
                 )?.display_name ??
-                "個人"}
+                copy.personFallback}
             </button>
           </>
         )}
       </nav>
 
       {focus.level === "company" && (
-        <section className="alloc-level" aria-label="全社の分配">
+        <section className="alloc-level" aria-label={copy.companyAlloc}>
           <header className="alloc-envelope">
             <h2>
-              <WithTip tip="全社予算枠を部門へ分配します。費目分配は各階層の内側で行います。">
-                全社
+              <WithTip tip={copy.companyAllocTip}>
+                {copy.company}
               </WithTip>
             </h2>
             <div className="alloc-envelope-stats">
               <div>
-                <span>予算枠</span>
+                <span>{copy.envelope}</span>
                 <strong>{yen(summary.company_budget_yen)}</strong>
               </div>
               <div>
-                <span>部門分配済</span>
+                <span>{copy.deptAllocated}</span>
                 <strong>{yen(summary.department_allocated_yen)}</strong>
               </div>
               <div>
-                <span>未分配</span>
+                <span>{copy.unallocated}</span>
                 <strong
                   className={
                     summary.company_unallocated_yen < 0 ? "negative" : ""
@@ -1020,20 +1039,20 @@ export function OrgBudgetAllocation({
           />
 
           <h3 className="alloc-section-title">
-            <WithTip tip="部門ごとの分配額です。開くで詳細、分配額で変更申請します。">
-              部門への分配
+            <WithTip tip={copy.deptSlicesTip}>
+              {copy.toDepartments}
             </WithTip>
           </h3>
           <SliceList
             total={summary.company_budget_yen}
             unallocatedYen={summary.company_unallocated_yen}
-            unallocatedLabel="未分配"
+            unallocatedLabel={copy.unallocated}
             selectedId={editingDeptId}
             editingId={editingDeptId}
             rows={departments.map((department) => ({
               id: department.org_unit_id,
               label: department.org_unit_label,
-              meta: `責任者 ${department.head_label}`,
+              meta: copy.head(department.head_label),
               amount: department.allocation_yen,
             }))}
             onOpen={(id) => {
@@ -1072,10 +1091,10 @@ export function OrgBudgetAllocation({
           {budget.viewer.can_set_company && (
             <details className="alloc-inner">
               <summary>
-                <WithTip tip="全社予算枠内の費目再分配です。総額は変わりません。">
-                  費目分配
+                <WithTip tip={copy.companyCategoryTip}>
+                  {copy.categoryAlloc}
                 </WithTip>
-                <span className="muted"> · 未分配 {yen(companyCategoryUnallocated)}</span>
+                <span className="muted">{copy.unallocatedDot(yen(companyCategoryUnallocated))}</span>
               </summary>
               <CategoryPoolEditor
                 rows={budget.company_categories ?? []}
@@ -1093,7 +1112,7 @@ export function OrgBudgetAllocation({
                         amount_yen: amountYen,
                         expected_revision: revisionToken(),
                       }),
-                    "全社の費目分配を更新しました",
+                    copy.companyCategoryUpdated,
                   )
                 }
               />
@@ -1104,7 +1123,7 @@ export function OrgBudgetAllocation({
 
           {budget.viewer.can_set_company && (
             <EnvelopeSizeEditor
-              label="全社予算枠"
+              label={copy.companyEnvelope}
               amount={companyAmount}
               onAmountChange={setCompanyAmount}
               reference={companyReference}
@@ -1114,10 +1133,13 @@ export function OrgBudgetAllocation({
               busy={busy}
               pendingNote={
                 companyPending
-                  ? `承認待ち ${companyPending.approval_id} · ${yen(companyPending.amount_yen)} · 上位承認`
+                  ? copy.pendingApproval(
+                      companyPending.approval_id,
+                      yen(companyPending.amount_yen),
+                    )
                   : null
               }
-              hint="全社予算枠の変更は上位承認後に反映します。"
+              hint={copy.companyEnvelopeHint}
               onSubmit={() =>
                 void onRun(
                   () =>
@@ -1126,7 +1148,7 @@ export function OrgBudgetAllocation({
                       reference: companyReference.trim(),
                       expected_revision: revisionToken(),
                     }),
-                  "全社予算枠の変更承認を提出しました",
+                  copy.companyEnvelopeSubmitted,
                 )
               }
             />
@@ -1135,24 +1157,24 @@ export function OrgBudgetAllocation({
       )}
 
       {focus.level === "department" && selectedDepartment && (
-        <section className="alloc-level" aria-label="部門の分配">
+        <section className="alloc-level" aria-label={copy.deptAllocLevel}>
           <header className="alloc-envelope">
             <h2>
-              <WithTip tip="部門予算枠を個人へ分配します。個人分配できる費目のみ次階層へ進みます。">
+              <WithTip tip={copy.deptToPeopleTip}>
                 {selectedDepartment.org_unit_label}
               </WithTip>
             </h2>
             <div className="alloc-envelope-stats">
               <div>
-                <span>予算枠</span>
+                <span>{copy.envelope}</span>
                 <strong>{yen(selectedDepartment.allocation_yen)}</strong>
               </div>
               <div>
-                <span>個人分配済</span>
+                <span>{copy.peopleAllocated}</span>
                 <strong>{yen(selectedDepartment.member_allocated_yen)}</strong>
               </div>
               <div>
-                <span>未分配</span>
+                <span>{copy.unallocated}</span>
                 <strong
                   className={
                     selectedDepartment.available_to_delegate_yen < 0
@@ -1183,21 +1205,21 @@ export function OrgBudgetAllocation({
           />
 
           <h3 className="alloc-section-title">
-              <WithTip tip="人員ごとの個人経費枠です。報酬・給与は含めません。開くと費目分配を編集できます。">
-              個人への分配
+              <WithTip tip={copy.toPeopleTip}>
+              {copy.toPeople}
             </WithTip>
           </h3>
           <SliceList
             total={selectedDepartment.allocation_yen}
             unallocatedYen={selectedDepartment.available_to_delegate_yen}
-            unallocatedLabel="未分配"
+            unallocatedLabel={copy.unallocated}
             rows={[
               ...selectedDepartment.members.map((member) => ({
                 id: member.person_id,
                 label: member.display_name,
                 meta:
                   member.allocation_status === "over_budget"
-                    ? "経費枠超過"
+                    ? copy.overBudget
                     : undefined,
                 amount: member.allocation_yen,
               })),
@@ -1211,7 +1233,7 @@ export function OrgBudgetAllocation({
                 .map((person) => ({
                   id: person.person_id,
                   label: person.display_name,
-                  meta: "未分配",
+                  meta: copy.unallocated,
                   amount: 0,
                 })),
             ]}
@@ -1227,12 +1249,11 @@ export function OrgBudgetAllocation({
           {(budget.viewer.can_allocate_department || canManagePeople) && (
             <details className="alloc-inner" open>
               <summary>
-                <WithTip tip="部門予算枠内の費目再分配です。総額は変わりません。">
-                  費目分配
+                <WithTip tip={copy.deptCategoryTip}>
+                  {copy.categoryAlloc}
                 </WithTip>
                 <span className="muted">
-                  {" "}
-                  · 未分配{" "}
+                  {copy.unallocatedPrefix}
                   {yen(
                     selectedDepartment.allocation_yen -
                       selectedDepartment.categories.reduce(
@@ -1263,7 +1284,7 @@ export function OrgBudgetAllocation({
                           amount_yen: amountYen,
                           expected_revision: revisionToken(),
                         }),
-                      "部門の費目分配を更新しました",
+                      copy.deptCategoryUpdated,
                     )
                   }
                 />
@@ -1276,8 +1297,8 @@ export function OrgBudgetAllocation({
           {budget.viewer.can_allocate_department && (
             <details className="alloc-advanced">
               <summary>
-                <WithTip tip="部門予算枠の増減は上位役職者の承認が必要です。枠内の費目・個人分配は部門責任者が実施できます。">
-                  部門予算枠の変更
+                <WithTip tip={copy.deptEnvelopeChangeTip}>
+                  {copy.deptEnvelopeChange}
                 </WithTip>
               </summary>
               <DepartmentEnvelopeEditor
@@ -1293,30 +1314,30 @@ export function OrgBudgetAllocation({
       )}
 
       {focus.level === "person" && selectedDepartment && (
-        <section className="alloc-level" aria-label="個人の分配">
+        <section className="alloc-level" aria-label={copy.personAlloc}>
           <header className="alloc-envelope">
             <h2>
               <WithTip
-                tip={`${selectedDepartment.org_unit_label}の費目分配額から個人経費枠へ再分配します（役員報酬・給与は対象外）。`}
+                tip={copy.personAllocTip(selectedDepartment.org_unit_label)}
               >
                 {selectedPerson?.display_name ??
                   selectedDepartment.candidate_people.find(
                     (p) => p.person_id === focus.personId,
                   )?.display_name ??
-                  "個人"}
+                  copy.personFallback}
               </WithTip>
             </h2>
             <div className="alloc-envelope-stats">
               <div>
-                <span>分配済</span>
+                <span>{copy.allocated}</span>
                 <strong>{yen(selectedPerson?.allocation_yen ?? 0)}</strong>
               </div>
               <div>
-                <span>経費実績</span>
+                <span>{copy.expenseActual}</span>
                 <strong>{yen(selectedPerson?.actual_yen ?? 0)}</strong>
               </div>
               <div>
-                <span>残高</span>
+                <span>{copy.balance}</span>
                 <strong
                   className={
                     (selectedPerson?.variance_yen ?? 0) < 0 ? "negative" : ""
@@ -1348,7 +1369,7 @@ export function OrgBudgetAllocation({
               }
             />
           ) : (
-            <p className="empty-copy">この部門の個人分配を変更する権限がありません</p>
+            <p className="empty-copy">{copy.noPersonAllocPermission}</p>
           )}
         </section>
       )}

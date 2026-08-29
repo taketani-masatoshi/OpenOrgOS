@@ -1,3 +1,5 @@
+import { setOrgBudgetSnapshot } from "./orgBudgetSnapshot";
+
 export interface TodayContext {
   tenant: string;
   report_date: string;
@@ -48,6 +50,22 @@ export interface OperatorStructured {
   command_plan?: CommandPlan;
   command_run?: CommandRunResult;
   work_order_ids?: string[];
+  tower_plan?: {
+    plan_id: string;
+    message: string;
+    status: string;
+    reply_preview?: string;
+    assignment?: {
+      work_kind?: string;
+      assignee_employee_id?: string;
+      due_date?: string;
+      to_agent?: string;
+      needs_ceo_pick?: boolean;
+      candidate_employee_ids?: string[];
+      judgment_only?: boolean;
+    };
+    work_order_ids?: string[];
+  };
   [key: string]: unknown;
 }
 
@@ -253,6 +271,43 @@ export interface AuthUser {
   approver_id: string;
   mode: string;
   permissions?: string[];
+  /** Employee seat: only the claim desk is reachable. */
+  claim_only?: boolean;
+}
+
+/** Employee claim desk: own envelope and own claims only. */
+export interface ClaimDeskPayload {
+  ok: true;
+  fiscal_year?: string;
+  claims_revision: string;
+  person_id: string;
+  display_name: string;
+  org_unit_id: string;
+  allocation_yen: number;
+  actual_yen: number;
+  remaining_yen: number;
+  categories: Array<{
+    account_code: string;
+    account_name: string;
+    allocation_yen: number;
+    actual_yen: number;
+    remaining_yen: number;
+  }>;
+  claims: Array<{
+    claim_id: string;
+    status: string;
+    amount_yen: number;
+    account_code: string;
+    account_name: string;
+    recipient_name?: string;
+    transaction_date?: string;
+    due_on?: string;
+    reject_reason?: string;
+  }>;
+}
+
+export async function fetchClaimDesk(): Promise<ClaimDeskPayload> {
+  return chatApi<ClaimDeskPayload>("/chat/v1/org/budget/expense-claim/desk");
 }
 
 const fetchOpts: RequestInit = { credentials: "include" };
@@ -364,6 +419,78 @@ export async function fetchToday(): Promise<TodayContext> {
   return res.json() as Promise<TodayContext>;
 }
 
+export type AssigneeKind = "employee" | "guest" | "ai" | "unassigned";
+
+export type ExecutiveAttentionItem = {
+  id: string;
+  kind: "customer" | "mail" | "scheduling" | "ceo_question" | "approval" | "wire";
+  title: string;
+  status: string;
+  href: string;
+  severity?: "p0" | "p1" | "p2";
+};
+
+export type ExecutiveGapRow = {
+  id: string;
+  title: string;
+  actual_formatted: string;
+  target_formatted: string | null;
+  target_missing: boolean;
+  rag: "green" | "amber" | "red" | "unknown";
+  delta_pct?: number | null;
+  href: string;
+};
+
+export type ExecutiveWorkItem = {
+  id: string;
+  root_id: string;
+  title: string;
+  status: string;
+  assignee_kind: AssigneeKind;
+  assignee_label?: string;
+  agent?: string;
+  due_date?: string;
+  href: string;
+};
+
+export type ExecutiveHome = {
+  ok: true;
+  tenant: string;
+  report_date: string;
+  company_name: string;
+  attention: ExecutiveAttentionItem[];
+  attention_count: number;
+  gaps: ExecutiveGapRow[];
+  gap_summary: {
+    green: number;
+    amber: number;
+    red: number;
+    unknown: number;
+    target_missing: number;
+  };
+  work: {
+    employee: ExecutiveWorkItem[];
+    guest: ExecutiveWorkItem[];
+    ai: ExecutiveWorkItem[];
+    unassigned: ExecutiveWorkItem[];
+  };
+  work_open_count: number;
+  finance_runway_months?: number | null;
+  finance_cash_balance?: number | null;
+  agent_summaries?: Array<{ path: string; label: string }>;
+  variance?: {
+    fiscal_year: string;
+    plan_total: number;
+    actual_total: number;
+    delta_total: number;
+    href: string;
+  };
+};
+
+export async function fetchExecutiveHome(): Promise<ExecutiveHome> {
+  return chatApi<ExecutiveHome>("/chat/v1/executive/home");
+}
+
 export async function fetchOperatorStats(): Promise<OperatorStats> {
   const res = await chatApi<{ ok: boolean } & OperatorStats>(
     "/chat/v1/operator/stats",
@@ -400,6 +527,7 @@ export interface LlmWorkerRow {
   tier: LlmWorkerTier;
   provider: LlmWorkerProvider;
   base_url: string;
+  resolved_base_url?: string;
   model: string;
   max_inflight: number;
   enabled: boolean;
@@ -429,9 +557,12 @@ export interface LlmWorkersSnapshot {
   workers: LlmWorkerRow[];
 }
 
-export async function fetchLlmWorkers(): Promise<LlmWorkersSnapshot> {
+export async function fetchLlmWorkers(opts?: {
+  probe?: boolean;
+}): Promise<LlmWorkersSnapshot> {
+  const q = opts?.probe ? "?probe=1" : "";
   const res = await chatApi<{ ok: boolean } & LlmWorkersSnapshot>(
-    "/chat/v1/llm/workers",
+    `/chat/v1/llm/workers${q}`,
   );
   return {
     file_present: res.file_present,
@@ -927,6 +1058,8 @@ export interface OrgBudgetPayload {
       status: string;
       amount_yen?: number;
       requested_at?: string;
+      /** Date the claimant is told the money comes back. */
+      due_on?: string;
       paid_at?: string;
       paid_by?: string;
       payment_ref?: string;
@@ -1021,11 +1154,33 @@ export async function ingestExpenseClaim(body: {
   });
 }
 
+/**
+ * Employee claim desk ingest. person_id / org_unit_id are pinned server-side
+ * to the session seat, so the desk never sends them.
+ */
+export async function ingestExpenseClaimFromDesk(body: {
+  qr: string;
+  account_code: string;
+  expected_claims_revision: string;
+}): Promise<
+  ClaimDeskPayload & {
+    claim?: { claim_id: string };
+    gate?: { gate?: string; message?: string };
+  }
+> {
+  return chatApi("/chat/v1/org/budget/expense-claim/ingest", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function approveExpenseClaimApi(body: {
   claim_id: string;
   approver_id?: string;
   co_approver_id?: string;
   board_event_id?: string;
+  /** Pay-back date (YYYY-MM-DD); server fills the next Friday when omitted. */
+  due_on?: string;
   fy?: string;
   expected_claim_revision: string;
 }): Promise<OrgBudgetPayload> {
@@ -1267,7 +1422,9 @@ export function receiptPdfUrl(receiptId: string): string {
 
 export async function fetchOrgBudget(fy?: string): Promise<OrgBudgetPayload> {
   const query = fy?.trim() ? `?fy=${encodeURIComponent(fy.trim())}` : "";
-  return chatApi<OrgBudgetPayload>(`/chat/v1/org/budget${query}`);
+  const data = await chatApi<OrgBudgetPayload>(`/chat/v1/org/budget${query}`);
+  if (!fy?.trim()) setOrgBudgetSnapshot(data);
+  return data;
 }
 
 export interface AnalyticsKpiRow {
@@ -1317,12 +1474,1298 @@ export async function fetchAnalyticsDashboard(): Promise<AnalyticsDashboardPaylo
   return chatApi<AnalyticsDashboardPayload>("/chat/v1/analytics/dashboard");
 }
 
+export interface LedgerWorkbenchSnapshot {
+  as_of: string;
+  trial_balance: {
+    balanced: boolean;
+    debit_total_yen: number;
+    credit_total_yen: number;
+    rows: Array<{ account_code: string; account_name: string; balance_yen: number }>;
+  };
+  balance_sheet: {
+    balanced: boolean;
+    total_assets_yen: number;
+    total_liabilities_yen: number;
+    total_equity_yen: number;
+    net_income_yen: number;
+  };
+  cash_flow: {
+    method: string;
+    net_cash_change_yen: number;
+    cash_begin_yen: number;
+    cash_end_yen: number;
+    reconciled: boolean;
+    operating_total_yen: number;
+    investing_total_yen: number;
+    financing_total_yen: number;
+  };
+  prior_compare: {
+    prior_as_of: string;
+    assets: { current: number; prior: number; delta: number };
+    liabilities: { current: number; prior: number; delta: number };
+    equity: { current: number; prior: number; delta: number };
+    net_income: { current: number; prior: number; delta: number };
+    revenue: { current: number; prior: number; delta: number };
+    net_profit: { current: number; prior: number; delta: number };
+  } | null;
+  profit_and_loss_lines: Array<{
+    label: string;
+    amount_yen: number;
+    account_code?: string;
+  }>;
+  profit_and_loss: {
+    revenue_total_yen: number;
+    expense_total_yen: number;
+    net_profit_yen: number;
+  };
+  bank_reconcile: {
+    unmatched_count: number;
+    unmatched: Array<{
+      id: string;
+      date: string;
+      direction: string;
+      amount: number;
+    }>;
+    proposals: Array<{
+      bank_statement_id: string;
+      ar_ap_id: string;
+      amount: number;
+      confidence: string;
+    }>;
+  };
+  export_hint: string;
+  export_urls: {
+    journal_csv: string;
+    trial_balance_csv: string;
+    account_breakdown_csv: string;
+    cash_flow_csv: string;
+  };
+  dencho_search_path: string;
+  journals: Array<{
+    entry_id: string;
+    occurred_at: string;
+    description: string;
+    source_kind: string;
+  }>;
+  subsidiaries: Array<{
+    account_code: string;
+    account_name: string;
+    balanced: boolean;
+    control_balance_yen: number;
+    lines: Array<{ counterparty_id: string; balance_yen: number }>;
+  }>;
+  unposted_months: string[];
+  period_locks: Array<{ month: string; status: string; by: string; at: string }>;
+  monthly_reconcile: {
+    month: string;
+    gl_active: boolean;
+    balanced: boolean;
+    diffs: Array<{ category: string; account_code: string; delta_yen: number }>;
+  };
+  tax_balances: Array<{
+    account_code: string;
+    label: string;
+    balance_yen: number;
+  }>;
+  remittance_calendar: Array<{
+    row_id: string;
+    label: string;
+    deadline: string;
+    obligation: string;
+    amount_estimate_jpy: number | null;
+  }>;
+}
+
+export async function fetchLedgerWorkbench(
+  asOf?: string,
+): Promise<LedgerWorkbenchSnapshot> {
+  const query = asOf ? `?as_of=${encodeURIComponent(asOf)}` : "";
+  return chatApi<LedgerWorkbenchSnapshot>(`/chat/v1/ledger/workbench${query}`);
+}
+
+export interface ElectronicLedgerSearchHit {
+  entry_id: string;
+  occurred_at: string;
+  description: string;
+  account_code: string;
+  line_amount_yen: number;
+  debit_yen: number;
+  credit_yen: number;
+  counterparty_id?: string;
+}
+
+export async function fetchLedgerDenchoSearch(input: {
+  from?: string;
+  to?: string;
+  description?: string;
+  min_amount?: number;
+  max_amount?: number;
+  account?: string;
+  entry_id?: string;
+}): Promise<{ count: number; hits: ElectronicLedgerSearchHit[] }> {
+  const params = new URLSearchParams();
+  if (input.from) params.set("from", input.from);
+  if (input.to) params.set("to", input.to);
+  if (input.description) params.set("description", input.description);
+  if (input.min_amount != null) params.set("min_amount", String(input.min_amount));
+  if (input.max_amount != null) params.set("max_amount", String(input.max_amount));
+  if (input.account) params.set("account", input.account);
+  if (input.entry_id) params.set("entry_id", input.entry_id);
+  const query = params.toString();
+  return chatApi<{ count: number; hits: ElectronicLedgerSearchHit[] }>(
+    `/chat/v1/ledger/dencho/search${query ? `?${query}` : ""}`,
+  );
+}
+
+export type MonthCloseChecklist = {
+  month: string;
+  checked_at: string;
+  ready: boolean;
+  checklist_complete?: boolean;
+  period_locked?: boolean;
+  items: Array<{
+    id: string;
+    label: string;
+    pass: boolean;
+    detail?: string;
+    actions?: string[];
+    scroll_target?: string;
+  }>;
+  integrity_errors?: string[];
+  fix_hints?: string[];
+  unmatched_samples?: Array<{
+    bank_statement_id: string;
+    amount: number;
+    description?: string;
+    suggested_ar_ap_id?: string;
+  }>;
+};
+
+export async function fetchMonthCloseChecklist(
+  month?: string,
+): Promise<MonthCloseChecklist> {
+  const query = month ? `?month=${encodeURIComponent(month)}` : "";
+  const res = await chatApi<{ ok: boolean; checklist: MonthCloseChecklist }>(
+    `/chat/v1/ledger/month-close-checklist${query}`,
+  );
+  return res.checklist;
+}
+
+export async function fetchBankCsvTemplate(preset?: string): Promise<{
+  ok: boolean;
+  filename: string;
+  csv_text: string;
+  suggested_mapping: {
+    date: string;
+    amount: string;
+    description: string;
+    direction?: string;
+    signed_amount?: string;
+    withdrawal_amount?: string;
+    deposit_amount?: string;
+  };
+  presets: Array<{ id: string; label: string }>;
+  preset: string;
+}> {
+  const query = preset ? `?preset=${encodeURIComponent(preset)}` : "";
+  return chatApi(`/chat/v1/ledger/bank-csv-template${query}`);
+}
+
+export type LedgerJournalProposal = {
+  id: string;
+  status: "pending" | "approved" | "rejected";
+  source: string;
+  created_at: string;
+  description: string;
+  debit_account: string;
+  credit_account: string;
+  amount_yen: number;
+  occurred_at?: string;
+  note?: string;
+};
+
+export async function fetchLedgerProposals(): Promise<{
+  ok: boolean;
+  pending: LedgerJournalProposal[];
+  proposals: LedgerJournalProposal[];
+}> {
+  return chatApi("/chat/v1/ledger/proposals");
+}
+
+export async function postLedgerProposalApprove(
+  proposalId: string,
+): Promise<{ ok: boolean; entry_id: string }> {
+  return chatApi("/chat/v1/ledger/proposals/approve", {
+    method: "POST",
+    body: JSON.stringify({ proposal_id: proposalId }),
+  });
+}
+
+export async function postLedgerProposalReject(
+  proposalId: string,
+): Promise<{ ok: boolean }> {
+  return chatApi("/chat/v1/ledger/proposals/reject", {
+    method: "POST",
+    body: JSON.stringify({ proposal_id: proposalId }),
+  });
+}
+
+export async function postLedgerProposalEnqueue(input: {
+  description: string;
+  debit_account: string;
+  credit_account: string;
+  amount_yen: number;
+  source?: "chat" | "ui";
+}): Promise<{ ok: boolean; proposal: LedgerJournalProposal }> {
+  return chatApi("/chat/v1/ledger/proposals", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function fetchProductLegalStatus(): Promise<{
+  ok: boolean;
+  status: "pending" | "signed";
+  counsel_ready: boolean;
+  document_path: string;
+  detail: string;
+}> {
+  return chatApi("/chat/v1/product/legal-status");
+}
+
+export async function fetchDenchoSku(): Promise<{
+  base: { sku: string; claim: string; included_in_ledger: boolean };
+  premium: {
+    sku: string;
+    status: string;
+    claim: string;
+    included_in_ledger: boolean;
+  };
+}> {
+  return chatApi("/chat/v1/ledger/dencho/sku");
+}
+
+export async function fetchDenchoCheck(): Promise<{
+  ok: boolean;
+  entry_count: number;
+  issues: string[];
+  append_only_ok: boolean;
+  search_index_ok: boolean;
+}> {
+  return chatApi("/chat/v1/ledger/dencho/check");
+}
+
+export interface LedgerPlan {
+  id: string;
+  name: string;
+  monthly_jpy: number;
+  journal_limit_per_month: number | null;
+  includes_bank: boolean;
+  trial_days: number;
+}
+
+export interface CustomerAdminInvitePolicy {
+  email_domains: string[];
+  founder_migration_status: string | null;
+  grace_until: string | null;
+  grace_days_remaining: number | null;
+  grandfather_active: boolean;
+  standing_invite_blocked: boolean;
+  standing_invite_block_reason: string | null;
+  tenant_lifecycle: string;
+  guest_invite_allowed: boolean;
+  migration_warnings: string[];
+}
+
+export interface CustomerAdminSnapshot {
+  subscription: {
+    plan: string;
+    status: string;
+    trial_ends_at?: string;
+    current_period_end?: string;
+    stripe_customer_id?: string;
+  } | null;
+  plans: LedgerPlan[];
+  operators: Array<{
+    operator_id: string;
+    display_name: string;
+    role: string;
+    email?: string;
+    status: string;
+    guest_expires_at?: string;
+    guest_expired?: boolean;
+  }>;
+  usage: {
+    journal_entries: number;
+    current_month_entries: number;
+    journal_limit_per_month: number | null;
+    limit_exceeded: boolean;
+    limit_remaining: number | null;
+    plan: string | null;
+  };
+  billing_portal_url: string | null;
+  billing_portal_mode: "live" | "stub" | null;
+  invite_policy: CustomerAdminInvitePolicy;
+  platform_billing_settings?: boolean;
+}
+
+export interface OrgChartChangeProposalRow {
+  change_id: string;
+  approval_id: string;
+  intent: string;
+  action: "add" | "update" | "remove";
+  node_id: string;
+  reason: string;
+  proposed_at: string;
+  proposed_by: string;
+}
+
+export interface OrgChartChangeResult {
+  logical_path: string;
+  before_hash: string;
+  after_hash: string;
+  dry_run: boolean;
+}
+
+export async function fetchOrgChartChanges(): Promise<{
+  proposals: OrgChartChangeProposalRow[];
+}> {
+  return chatApi("/chat/v1/org/chart/change");
+}
+
+export async function postOrgChartChangePropose(input: {
+  approval_id: string;
+  change: unknown;
+}): Promise<{ proposal: OrgChartChangeProposalRow }> {
+  return chatApi("/chat/v1/org/chart/change/propose", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postOrgChartChangeValidate(
+  changeId: string,
+): Promise<{ result: OrgChartChangeResult }> {
+  return chatApi("/chat/v1/org/chart/change/validate", {
+    method: "POST",
+    body: JSON.stringify({ change_id: changeId }),
+  });
+}
+
+export async function postOrgChartChangeApply(
+  changeId: string,
+): Promise<{ result: OrgChartChangeResult }> {
+  return chatApi("/chat/v1/org/chart/change/apply", {
+    method: "POST",
+    body: JSON.stringify({ change_id: changeId }),
+  });
+}
+
+export async function fetchProductAdmin(): Promise<CustomerAdminSnapshot> {
+  return chatApi<CustomerAdminSnapshot>("/chat/v1/product/admin");
+}
+
+export async function fetchProductPlans(): Promise<{ plans: LedgerPlan[] }> {
+  return chatApi<{ plans: LedgerPlan[] }>("/chat/v1/product/plans");
+}
+
+export async function fetchGuestSetup(token: string): Promise<{
+  ok: boolean;
+  tenant_id: string;
+  email: string;
+  operator_id: string;
+  approver_id: string;
+  expires_at: string;
+}> {
+  return chatApi(
+    `/chat/v1/product/guest-setup?token=${encodeURIComponent(token)}`,
+  );
+}
+
+export async function postProductSignup(input: {
+  company_name: string;
+  admin_email: string;
+  plan: string;
+  tenant_id?: string;
+}): Promise<{
+  ok: boolean;
+  signup_id: string;
+  tenant_id: string;
+  checkout_url: string;
+  checkout_mode: "live" | "stub";
+}> {
+  return chatApi("/chat/v1/product/signup", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function fetchProductOpsDashboard(): Promise<{
+  ok: boolean;
+  generated_at: string;
+  control_plane_tenant_count: number;
+  ledger_product_tenant_count: number;
+  tenants: Array<{
+    tenant_id: string;
+    company_name: string;
+    plan: string | null;
+    subscription_status: string | null;
+    host: string | null;
+    onboarding_complete: boolean;
+  }>;
+}> {
+  return chatApi("/chat/v1/product/ops-dashboard");
+}
+
+export interface ProductStripeSettings {
+  ok: boolean;
+  webhook_url: string;
+  webhook_path: string;
+  mode: "stub" | "test" | "live";
+  secret_configured: boolean;
+  webhook_secret_configured: boolean;
+  commercial_ready: boolean;
+  live_ready: boolean;
+  secret_key_hint: string | null;
+  webhook_secret_hint: string | null;
+  price_starter_configured: boolean;
+  price_business_configured: boolean;
+  price_accountant_configured: boolean;
+  storage_path: string;
+  next_steps?: string[];
+  attestation: {
+    status: string;
+    mode: string;
+    checked_at?: string;
+  };
+}
+
+export async function fetchProductStripeSettings(): Promise<ProductStripeSettings> {
+  return chatApi<ProductStripeSettings>("/chat/v1/product/stripe-settings");
+}
+
+export async function updateProductStripeSettings(input: {
+  stripe_secret_key?: string;
+  stripe_webhook_secret?: string;
+  stripe_price_starter?: string;
+  stripe_price_business?: string;
+  stripe_price_accountant?: string;
+}): Promise<ProductStripeSettings> {
+  return chatApi<ProductStripeSettings>("/chat/v1/product/stripe-settings", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export interface ProductInitialSetupReport {
+  pre_production_ready: boolean;
+  commercial_score: number;
+  commercial_ready: boolean;
+  stripe_mode: "stub" | "test" | "live";
+  stripe_configured: boolean;
+  webhook_path: string;
+  storage_path: string;
+  steps: Array<{
+    id: string;
+    label: string;
+    complete: boolean;
+    detail?: string;
+    phase: "pre_production" | "go_live";
+  }>;
+}
+
+export async function fetchProductInitialSetup(): Promise<ProductInitialSetupReport> {
+  return chatApi<ProductInitialSetupReport>("/chat/v1/product/initial-setup");
+}
+
+export interface OnboardingStep {
+  id: string;
+  label: string;
+  complete: boolean;
+  detail?: string;
+}
+
+export interface OnboardingReport {
+  complete: boolean;
+  customer_ready: boolean;
+  completed_count: number;
+  total_count: number;
+  steps: OnboardingStep[];
+  company_name?: string;
+  representative?: string;
+  fiscal_year_end_month?: number;
+}
+
+export async function fetchProductOnboarding(): Promise<OnboardingReport> {
+  return chatApi<OnboardingReport>("/chat/v1/product/onboarding");
+}
+
+export interface TaxReadinessReport {
+  etax_module: {
+    module: string;
+    registered: boolean;
+    xml_draft: boolean;
+    note: string;
+  };
+  ready_for_handoff: boolean;
+  note: string;
+}
+
+export async function fetchProductTaxReadiness(): Promise<TaxReadinessReport> {
+  return chatApi<TaxReadinessReport>("/chat/v1/product/tax-readiness");
+}
+
+export async function postProductOnboardingSetup(input: {
+  company_name?: string;
+  fiscal_year_end_month?: number;
+  representative?: string;
+}): Promise<{ ok: boolean; company_path: string }> {
+  return chatApi("/chat/v1/product/onboarding/setup", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export interface CustomersNavGate {
+  show_tab: boolean;
+  sales_enabled: boolean;
+  customer_success_enabled: boolean;
+  sales_module_installed: boolean;
+  customer_success_module_installed: boolean;
+  sales_agent_grace: boolean;
+}
+
+export async function fetchCustomersNav(): Promise<CustomersNavGate> {
+  const data = await chatApi<{ ok: boolean } & CustomersNavGate>(
+    "/chat/v1/customers/nav",
+  );
+  return data;
+}
+
+type CustomersLocked = {
+  ok: boolean;
+  locked?: boolean;
+  module_id?: string;
+  message?: string;
+  gate?: CustomersNavGate;
+};
+
+export async function fetchCustomersOutbound(): Promise<
+  CustomersLocked & Record<string, unknown>
+> {
+  return chatApi("/chat/v1/customers/outbound");
+}
+
+export async function fetchCustomersInbound(): Promise<
+  CustomersLocked & Record<string, unknown>
+> {
+  return chatApi("/chat/v1/customers/inbound");
+}
+
+export async function fetchCustomersAfterSales(): Promise<
+  CustomersLocked & Record<string, unknown>
+> {
+  return chatApi("/chat/v1/customers/after-sales");
+}
+
+export async function fetchCustomersChurn(): Promise<
+  CustomersLocked & Record<string, unknown>
+> {
+  return chatApi("/chat/v1/customers/churn");
+}
+
+export async function fetchCustomersPipeline(): Promise<
+  CustomersLocked & Record<string, unknown>
+> {
+  return chatApi("/chat/v1/customers/pipeline");
+}
+
+export async function fetchCustomersAccounts(): Promise<
+  CustomersLocked & Record<string, unknown>
+> {
+  return chatApi("/chat/v1/customers/accounts");
+}
+
+export async function postCustomersDealSetStage(body: {
+  deal_id: string;
+  stage: string;
+  lost_reason?: string;
+  reopen?: boolean;
+}): Promise<{ ok: boolean; deal?: { id: string; stage: string } }> {
+  return chatApi("/chat/v1/customers/deals/set-stage", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function postCustomersDealSetNextAction(body: {
+  deal_id: string;
+  next_action: string;
+  next_action_due?: string;
+}): Promise<{
+  ok: boolean;
+  deal?: { id: string; next_action?: string; next_action_due?: string };
+}> {
+  return chatApi("/chat/v1/customers/deals/set-next-action", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function postCustomersInquiryPromote(body: {
+  inquiry_id: string;
+  title?: string;
+}): Promise<{ ok: boolean; deal_id?: string; inquiry_id?: string }> {
+  return chatApi("/chat/v1/customers/inquiry/promote", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export interface AccountantFleetSnapshot {
+  accountant_tenant_id: string;
+  clients: Array<{
+    tenant_id: string;
+    company_name: string;
+    plan?: string | null;
+    host?: string | null;
+  }>;
+  all_product_tenants: Array<{
+    tenant_id: string;
+    company_name: string;
+    plan: string | null;
+    host: string | null;
+  }>;
+}
+
+export async function fetchProductAccountantFleet(): Promise<AccountantFleetSnapshot> {
+  return chatApi<AccountantFleetSnapshot>("/chat/v1/product/accountant-fleet");
+}
+
+export async function postProductOperatorInvite(input: {
+  display_name: string;
+  email: string;
+  role?: "operator" | "readonly" | "approver";
+  guest_expires_at?: string;
+  send_invite_mail?: boolean;
+}): Promise<{
+  ok: boolean;
+  operator_id: string;
+  setup_url?: string;
+  invite_token?: string;
+  guest_expires_at?: string;
+  mail_id?: string;
+}> {
+  return chatApi("/chat/v1/product/admin/operators", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerReverse(input: {
+  entry_id: string;
+  occurred_at?: string;
+}): Promise<{ ok: boolean; entry_id: string }> {
+  return chatApi("/chat/v1/ledger/reverse", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerPeriod(input: {
+  month: string;
+  action: "lock" | "unlock";
+  reason?: string;
+  require_checklist?: boolean;
+}): Promise<{ ok: boolean; month: string; status: string }> {
+  return chatApi("/chat/v1/ledger/period", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerRemittance(input: {
+  period?: string;
+  obligation?: "withholding" | "social_insurance" | "consumption_tax";
+  from_calendar?: string;
+}): Promise<{
+  ok: boolean;
+  entry_id: string | null;
+  settled: boolean;
+  period?: string;
+  obligation?: string;
+}> {
+  return chatApi("/chat/v1/ledger/remittance", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerSource(input: {
+  source: "monthly-pl" | "payroll-payment" | "onboarding-first";
+  month: string;
+}): Promise<{ ok: boolean; entry_ids?: string[]; entry_id?: string | null }> {
+  return chatApi("/chat/v1/ledger/post", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerSettle(input: {
+  kind: "ar-receipt" | "ap-payment";
+  counterparty_id: string;
+  amount_yen: number;
+  month: string;
+}): Promise<{ ok: boolean; entry_id: string }> {
+  return chatApi("/chat/v1/ledger/settle", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerBankReconcile(input: {
+  bank_id: string;
+  ar_ap_id: string;
+  amount: number;
+  reason?: string;
+}): Promise<{ ok: boolean; event_id: string; entry_id: string }> {
+  return chatApi("/chat/v1/ledger/bank-reconcile", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerBankStatementImport(input: {
+  csv_text?: string;
+  csv_base64?: string;
+  encoding?: "utf-8" | "shift_jis" | "auto";
+  write?: boolean;
+  dry_run?: boolean;
+  preset?: string;
+  /** Omit when using preset — server applies preset mapping (preset-preferred). */
+  column_mapping?: {
+    date: string;
+    amount: string;
+    description: string;
+    direction?: string;
+    signed_amount?: string;
+    withdrawal_amount?: string;
+    deposit_amount?: string;
+    category?: string;
+    account_id?: string;
+  };
+}): Promise<{
+  ok: boolean;
+  added: number;
+  duplicate_batch: boolean;
+  batch_id: string;
+  warnings: string[];
+  dry_run?: boolean;
+  preview_rows?: string[];
+  encoding_used?: string;
+}> {
+  return chatApi("/chat/v1/ledger/bank-statements/import", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function fetchLedgerAccounts(): Promise<{
+  ok: boolean;
+  accounts: Array<{ code: string; name: string; type: string }>;
+}> {
+  return chatApi("/chat/v1/ledger/accounts");
+}
+
+export async function postLedgerManualEntry(input: {
+  description: string;
+  debit_account: string;
+  credit_account: string;
+  amount_yen: number;
+  occurred_at?: string;
+}): Promise<{ ok: boolean; entry_id: string }> {
+  return chatApi("/chat/v1/ledger/manual-entry", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerBankReconcileBulkExact(): Promise<{
+  ok: boolean;
+  applied: number;
+}> {
+  return chatApi("/chat/v1/ledger/bank-reconcile/bulk-exact", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function fetchTaxReadiness(): Promise<{
+  ok: boolean;
+  ready_for_handoff: boolean;
+  note: string;
+  boundary: string;
+  etax_module: { xml_draft: boolean; note: string };
+}> {
+  return chatApi("/chat/v1/tax/readiness");
+}
+
+export async function fetchTaxCalendar(): Promise<{
+  ok: boolean;
+  as_of: string;
+  stats: {
+    total: number;
+    due_soon: number;
+    overdue: number;
+    open: number;
+  };
+  rows: Array<{
+    id: string;
+    tax: string;
+    deadline: string;
+    status: string;
+    remaining_text: string;
+    amount_display: string;
+    next_action: string;
+  }>;
+}> {
+  return chatApi("/chat/v1/tax/calendar");
+}
+
+export async function fetchTaxGaps(): Promise<{
+  ok: boolean;
+  total: number;
+  open: number;
+  deferred: number;
+  resolved: number;
+  items: Array<{
+    id: string;
+    severity: string;
+    area: string;
+    message: string;
+    status: string;
+  }>;
+}> {
+  return chatApi("/chat/v1/tax/gaps");
+}
+
+export async function fetchTaxConsumption(): Promise<{
+  ok: boolean;
+  status: string;
+  taxable_by_sales: boolean | null;
+  threshold_jpy: number;
+  base_period_sales_jpy: number | null;
+  invoice_registered: boolean;
+  issues: Array<{ severity: string; code: string; message: string }>;
+}> {
+  return chatApi("/chat/v1/tax/consumption");
+}
+
+export async function postTaxPayrollCalc(input: {
+  month: string;
+  gross_yen: number;
+  dependents?: number;
+}): Promise<{
+  ok: boolean;
+  run: {
+    month: string;
+    gross_yen: number;
+    withholding_yen: number;
+    net_pay_yen: number;
+    social_insurance: {
+      employee_total_yen: number;
+      employer_total_yen: number;
+    };
+  };
+}> {
+  return chatApi("/chat/v1/tax/payroll-calc", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postTaxYeaCompute(fiscalYear?: string): Promise<{
+  ok: boolean;
+  yea: {
+    fiscal_year: string;
+    status: string;
+    employee_count: number;
+    totals: { annual_gross_yen: number; withholding_total_yen: number };
+  };
+}> {
+  return chatApi("/chat/v1/tax/yea/compute", {
+    method: "POST",
+    body: JSON.stringify({ fiscal_year: fiscalYear }),
+  });
+}
+
+export interface TenantMailStatus {
+  ok: boolean;
+  connected: boolean;
+  email?: string;
+  connected_via?: string;
+  expired: boolean;
+  note: string;
+  provider: "smtp" | "gmail_api" | "dry_run";
+  from: { name: string; email: string };
+  smtp?: { host: string; port: number; secure: boolean };
+  platform_ready: boolean;
+  platform_detail: string;
+  community_connections_url: string;
+  configured: boolean;
+  secrets?: MailSecretsSnapshot;
+}
+
+export interface PlatformIntegrationSnapshot {
+  ok: boolean;
+  flags: Record<string, boolean>;
+  community_env: {
+    url: string;
+    reachable: boolean;
+    shipped: boolean;
+    status_code?: number;
+    detail: string;
+  };
+  note: string;
+}
+
+export async function fetchPlatformIntegration(): Promise<PlatformIntegrationSnapshot> {
+  return chatApi("/chat/v1/platform/integration");
+}
+
+export async function putPlatformIntegrationFlag(
+  flag: string,
+  value: boolean,
+): Promise<{ ok: boolean; flags: Record<string, boolean> }> {
+  return chatApi("/chat/v1/platform/integration", {
+    method: "PUT",
+    body: JSON.stringify({ flag, value }),
+  });
+}
+
+export interface HubStatusReport {
+  ok: boolean;
+  ga: {
+    ok: boolean;
+    ready_for_public_relay: boolean;
+    checks: Array<{ id: string; pass: boolean; detail: string }>;
+  };
+  bind: {
+    host: string;
+    public_mode: boolean;
+    public_host: boolean;
+    tls_required: boolean;
+    allowed: boolean;
+    blocked_reason?: string;
+  };
+  tls: {
+    cert_path: string;
+    key_path: string;
+    present: boolean;
+    not_after?: string;
+    expired?: boolean;
+    subject?: string;
+    error?: string;
+  };
+  metrics: { url: string; reachable: boolean; status_code?: number; detail: string };
+}
+
+export async function fetchHubStatus(): Promise<HubStatusReport> {
+  return chatApi("/chat/v1/hub/status");
+}
+
+export interface EsignReadyReport {
+  siva_mode: string;
+  siva_base_url: string | null;
+  siva_configured: boolean;
+  allow_http_loopback: boolean;
+  sidecar: { ok: boolean; reason?: string; ready?: boolean };
+  sidecar_token_configured: boolean;
+  national_complete_requires: string;
+  host_hint: string;
+}
+
+export interface EsignCaseRow {
+  id: string;
+  title: string;
+  status: string;
+  provider_id: string;
+  content_digest?: string;
+  container_digest?: string;
+  unsigned_asice_digest?: string;
+  siva_mode?: string;
+  siva_indication?: string;
+  siva_validated_at?: string;
+  siva_signatures_count?: number;
+  siva_valid_signatures_count?: number;
+  siva_reason?: string;
+  contract_id?: string;
+  approval_id?: string;
+  updated_at: string;
+}
+
+export async function fetchEsignReady(): Promise<{ report: EsignReadyReport }> {
+  return chatApi("/chat/v1/esign/ready");
+}
+
+export async function fetchEsignCases(): Promise<{ cases: EsignCaseRow[] }> {
+  return chatApi("/chat/v1/esign/cases");
+}
+
+export async function postEsignCreate(body: {
+  title: string;
+  filename?: string;
+  pdf_base64: string;
+  contract_id?: string;
+  approval_id?: string;
+}): Promise<{ case: EsignCaseRow }> {
+  return chatApi("/chat/v1/esign/create", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function postEsignPrepare(caseId: string): Promise<{ case: EsignCaseRow }> {
+  return chatApi("/chat/v1/esign/prepare", {
+    method: "POST",
+    body: JSON.stringify({ case_id: caseId }),
+  });
+}
+
+export async function postEsignAttach(body: {
+  case_id: string;
+  asice_base64: string;
+  filename?: string;
+}): Promise<{ case: EsignCaseRow; pdf_digest_matches: boolean | null }> {
+  return chatApi("/chat/v1/esign/attach", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function postEsignVerify(
+  caseId: string,
+): Promise<{ nationally_verified: boolean; case: EsignCaseRow }> {
+  return chatApi("/chat/v1/esign/verify", {
+    method: "POST",
+    body: JSON.stringify({ case_id: caseId }),
+  });
+}
+
+export interface MailSecretsSnapshot {
+  storage_path: string;
+  smtp_user_configured: boolean;
+  smtp_password_configured: boolean;
+  smtp_user_hint: string | null;
+  imap_user_configured: boolean;
+  imap_password_configured: boolean;
+  imap_user_hint: string | null;
+  wire_smtp_password_configured: boolean;
+}
+
+/** Write-only: secrets are stored server-side; only masked hints come back. */
+export async function putMailSecrets(input: {
+  ORGOS_SMTP_USER?: string;
+  ORGOS_SMTP_PASSWORD?: string;
+  ORGOS_IMAP_USER?: string;
+  ORGOS_IMAP_PASSWORD?: string;
+  ORGOS_IMAP_HOST?: string;
+  ORGOS_IMAP_PORT?: string;
+}): Promise<{ ok: boolean; secrets: MailSecretsSnapshot }> {
+  return chatApi("/chat/v1/mail/secrets", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function fetchGmailStatus(): Promise<TenantMailStatus> {
+  return chatApi("/chat/v1/mail/gmail");
+}
+
+export async function postGmailConnect(input?: { expect_email?: string }): Promise<{
+  ok: boolean;
+  tenant_id: string;
+  expires_at: string;
+  connect_url: string;
+  platform_ready: boolean;
+  platform_detail: string;
+}> {
+  return chatApi("/chat/v1/mail/gmail/connect", {
+    method: "POST",
+    body: JSON.stringify(input ?? {}),
+  });
+}
+
+export async function postGmailDisconnect(): Promise<TenantMailStatus & { removed: boolean }> {
+  return chatApi("/chat/v1/mail/gmail/disconnect", { method: "POST", body: "{}" });
+}
+
+export async function putMailConfig(input: {
+  from?: { name?: string; email?: string };
+  provider?: "smtp" | "gmail_api" | "dry_run";
+  smtp?: { host: string; port?: number; secure?: boolean };
+}): Promise<TenantMailStatus> {
+  return chatApi("/chat/v1/mail/config", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function fetchContractStatus(): Promise<{
+  ok: boolean;
+  company_name: string;
+  as_of: string;
+  total: number;
+  by_status: {
+    draft: number;
+    pending_signature: number;
+    executed: number;
+    terminated: number;
+  };
+  alerts: Array<{
+    contractId: string;
+    contractName: string;
+    counterparty: string;
+    alertType: string;
+    deadline: string;
+    daysRemaining: number;
+  }>;
+  exit_opportunities: Array<{
+    contract_id: string;
+    contract_name: string;
+    kind: string;
+    deadline: string;
+    days_remaining: number;
+    summary: string;
+  }>;
+  notes: string[];
+}> {
+  return chatApi("/chat/v1/contracts/status");
+}
+
+export async function fetchHospitalityOpsDue(): Promise<{
+  ok: boolean;
+  module_enabled: boolean;
+  stay_count: number;
+  due: Array<{
+    id: string;
+    severity: string;
+    kind: string;
+    title: string;
+    due_on: string;
+    cli_hint: string;
+  }>;
+}> {
+  return chatApi("/chat/v1/hospitality/ops-due");
+}
+
+export async function postTaxHandoff(fiscalYear?: string): Promise<{
+  ok: boolean;
+  zip_path: string;
+  package_dir: string;
+  submission: string;
+  note: string;
+}> {
+  return chatApi("/chat/v1/tax/handoff", {
+    method: "POST",
+    body: JSON.stringify({ fiscal_year: fiscalYear }),
+  });
+}
+
+export async function postTaxXmlDraft(fiscalYear?: string): Promise<{
+  ok: boolean;
+  relative_path: string;
+  submission: string;
+}> {
+  return chatApi("/chat/v1/tax/xml-draft", {
+    method: "POST",
+    body: JSON.stringify({ fiscal_year: fiscalYear }),
+  });
+}
+
+export async function fetchTaxPayrollYea(): Promise<{
+  ok: boolean;
+  yea_status: string;
+  note: string;
+  ready_for_tax_handoff: boolean;
+}> {
+  return chatApi("/chat/v1/tax/payroll-yea");
+}
+
+export async function postTaxBonusDraft(input: {
+  period: string;
+  gross_yen: number;
+}): Promise<{ ok: boolean; run: { run_id: string; net_yen: number } }> {
+  return chatApi("/chat/v1/tax/bonus-draft", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postLedgerFirstDemoJournal(month: string): Promise<{
+  ok: boolean;
+  entry_ids?: string[];
+}> {
+  return chatApi("/chat/v1/ledger/post", {
+    method: "POST",
+    body: JSON.stringify({ source: "monthly-pl", month }),
+  });
+}
+
+export type BoardColumn = "todo" | "waiting" | "active" | "attention" | "done";
+
+export interface BoardCardDependency {
+  id: string;
+  title: string;
+}
+
+export interface BoardCard {
+  id: string;
+  rootId: string;
+  title: string;
+  column: BoardColumn;
+  status: string;
+  agent: string;
+  work_kind: string | null;
+  due_date?: string;
+  assignee?: string;
+  blocked_on?: string;
+  depends_on: BoardCardDependency[];
+  wave: number;
+  retryable: boolean;
+  cancellable: boolean;
+  closed: boolean;
+  finished_at?: string;
+}
+
+export interface BoardPlanSummary {
+  id: string;
+  title: string;
+  status: "active" | "completed";
+  counts: {
+    total: number;
+    done: number;
+    attention: number;
+    running: number;
+  };
+  cards: BoardCard[];
+}
+
 export interface OrchestrationRunNode {
   id: string;
+  title: string;
+  column: string;
   agent: string;
   status: string;
+  work_kind: string | null;
+  due_date?: string;
+  assignee?: string;
+  blocked_on?: string;
   depends_on: string[];
+  depends_on_labels: BoardCardDependency[];
   wave: number;
+  retryable: boolean;
+  cancellable: boolean;
   aia?: {
     run_id: string;
     state: string;
@@ -1333,6 +2776,7 @@ export interface OrchestrationRunNode {
 export interface OrchestrationRunPayload {
   ok?: boolean;
   rootId: string;
+  planTitle: string;
   nodeCount: number;
   waveCount: number;
   readyCount: number;
@@ -1358,6 +2802,7 @@ export interface OrchestrationRunPayload {
 
 export interface OrchestrationRunsListPayload {
   ok: boolean;
+  plans?: BoardPlanSummary[];
   active_roots: string[];
   completed_roots?: string[];
   count: number;
@@ -1365,9 +2810,15 @@ export interface OrchestrationRunsListPayload {
 
 export async function fetchOrchestrationRuns(opts?: {
   includeCompleted?: boolean;
+  view?: "incomplete" | "completed" | "all";
+  completedSince?: string;
 }): Promise<OrchestrationRunsListPayload> {
-  const q = opts?.includeCompleted ? "?include=completed" : "";
-  return chatApi<OrchestrationRunsListPayload>(`/chat/v1/orchestration/runs${q}`);
+  const params = new URLSearchParams();
+  if (opts?.includeCompleted) params.set("include", "completed");
+  if (opts?.view) params.set("view", opts.view);
+  if (opts?.completedSince) params.set("completed_since", opts.completedSince);
+  const q = params.toString();
+  return chatApi<OrchestrationRunsListPayload>(`/chat/v1/orchestration/runs${q ? `?${q}` : ""}`);
 }
 
 export async function fetchOrchestrationRun(id: string): Promise<OrchestrationRunPayload> {
@@ -1384,6 +2835,24 @@ export async function retryOrchestrationRun(id: string): Promise<OrchestrationRu
 export async function cancelOrchestrationRun(id: string): Promise<OrchestrationRunPayload & { cancelled: string[] }> {
   return chatApi<OrchestrationRunPayload & { cancelled: string[] }>(
     `/chat/v1/orchestration/runs/cancel?id=${encodeURIComponent(id)}`,
+    { method: "POST" },
+  );
+}
+
+export async function completeOrchestrationRun(
+  id: string,
+): Promise<OrchestrationRunPayload & { id: string; status: string }> {
+  return chatApi<OrchestrationRunPayload & { id: string; status: string }>(
+    `/chat/v1/orchestration/runs/complete?id=${encodeURIComponent(id)}`,
+    { method: "POST" },
+  );
+}
+
+export async function reopenOrchestrationRun(
+  id: string,
+): Promise<OrchestrationRunPayload & { id: string; status: string }> {
+  return chatApi<OrchestrationRunPayload & { id: string; status: string }>(
+    `/chat/v1/orchestration/runs/reopen?id=${encodeURIComponent(id)}`,
     { method: "POST" },
   );
 }
@@ -1611,6 +3080,8 @@ export interface SettlementChallengeResponse {
     approve_origin: string;
   };
   allow_credentials: { id: string; type: string }[];
+  ceremony_kind?: "settlement";
+  hints?: Array<"hybrid">;
   code?: string;
   step_up_required?: boolean;
   tier?: string;
@@ -1649,8 +3120,9 @@ export async function completeSettlementChallenge(
     token: challenge.token,
     webauthn_challenge: challenge.webauthn_challenge,
     rp_id: challenge.rp_id,
+    ceremony_kind: challenge.ceremony_kind ?? "settlement",
     allow_credentials: challenge.allow_credentials,
-    hints: ["hybrid"],
+    hints: challenge.hints,
   });
 }
 
@@ -1713,6 +3185,69 @@ export async function fetchApprovals(): Promise<TodayApprovalItem[]> {
     "/chat/v1/approvals",
   );
   return data.approvals ?? [];
+}
+
+export async function postApprovalPropose(input: {
+  subject_type: string;
+  subject_ref?: string;
+  message?: string;
+  amount?: number;
+}): Promise<{ ok: boolean; approval: { approval_id: string; status: string } }> {
+  return chatApi("/chat/v1/approvals/propose", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export type CeoInlineField = {
+  id: string;
+  label: string;
+  type: "yes_no" | "yes_no_unknown" | "text" | "time" | "choice";
+  choices?: string[];
+};
+
+export type CeoInlineQuestion = {
+  id: string;
+  mail_id: string;
+  scheduling_case_id?: string;
+  subject: string;
+  context_l1: string;
+  fields: CeoInlineField[];
+  status: "pending" | "answered" | "dismissed";
+  asked_at: string;
+};
+
+export async function fetchCeoQuestions(): Promise<CeoInlineQuestion[]> {
+  const data = await chatApi<{ ok: boolean; questions: CeoInlineQuestion[] }>(
+    "/chat/v1/ceo-questions",
+  );
+  return data.questions ?? [];
+}
+
+export async function answerCeoQuestion(
+  questionId: string,
+  fields: Record<string, string>,
+): Promise<CeoInlineQuestion> {
+  const data = await chatApi<{ ok: boolean; question: CeoInlineQuestion }>(
+    `/chat/v1/ceo-questions/${encodeURIComponent(questionId)}/answer`,
+    { method: "POST", body: JSON.stringify({ fields }) },
+  );
+  return data.question;
+}
+
+export type SchedulingApprovalPreview = {
+  approval_id: string;
+  draft_id: string;
+  draft_ids: string[];
+  preview: string;
+};
+
+export async function fetchSchedulingApprovalPreview(
+  approvalId: string,
+): Promise<SchedulingApprovalPreview> {
+  return chatApi<SchedulingApprovalPreview>(
+    `/chat/v1/approvals/${encodeURIComponent(approvalId)}/scheduling-preview`,
+  );
 }
 
 export interface TenantConfigPreview {
@@ -1789,21 +3324,34 @@ export async function flushWitnessPending(): Promise<{ flushed: number }> {
   return chatApi("/chat/v1/wire/witness/flush", { method: "POST", body: "{}" });
 }
 
+export type LlmRouteHint = {
+  mode: "auto" | "local" | "cloud";
+  worker_id?: string;
+};
+
 export async function sendMessage(
   message: string,
-  agentId?: "secretary" | "executive_steward"
+  agentId?: "secretary" | "executive_steward",
+  llmRoute?: LlmRouteHint,
 ): Promise<{
   ok: boolean;
   reply: string;
   runtime?: string;
   model?: string;
   structured?: OperatorStructured;
+  assistant_turn_id?: string;
+  faq_served?: boolean;
+  local_error?: boolean;
 }> {
   const res = await fetch("/chat/v1/message", {
     ...fetchOpts,
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, ...(agentId ? { agent_id: agentId } : {}) }),
+    body: JSON.stringify({
+      message,
+      ...(agentId ? { agent_id: agentId } : {}),
+      ...(llmRoute ? { llm_route: llmRoute } : {}),
+    }),
   });
   if (res.status === 401) throw new Error("unauthorized");
   if (!res.ok) {
@@ -1816,7 +3364,54 @@ export async function sendMessage(
     runtime?: string;
     model?: string;
     structured?: OperatorStructured;
+    assistant_turn_id?: string;
+    faq_served?: boolean;
+    local_error?: boolean;
   }>;
+}
+
+export type ChatFeedbackRating = "good" | "bad";
+
+export async function submitChatFeedback(opts: {
+  turnId: string;
+  rating: ChatFeedbackRating;
+  agentId: "secretary" | "executive_steward";
+}): Promise<{ ok: boolean; rating: ChatFeedbackRating }> {
+  const res = await fetch("/chat/v1/feedback", {
+    ...fetchOpts,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      turn_id: opts.turnId,
+      rating: opts.rating,
+      agent_id: opts.agentId,
+    }),
+  });
+  if (res.status === 401) throw new Error("unauthorized");
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error || `feedback ${res.status}`);
+  }
+  return res.json() as Promise<{ ok: boolean; rating: ChatFeedbackRating }>;
+}
+
+export async function buildChatFaqIndex(): Promise<{
+  ok: boolean;
+  indexed: number;
+  entries: number;
+}> {
+  const res = await fetch("/chat/v1/faq/build", {
+    ...fetchOpts,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+  });
+  if (res.status === 401) throw new Error("unauthorized");
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error || `faq build ${res.status}`);
+  }
+  return res.json() as Promise<{ ok: boolean; indexed: number; entries: number }>;
 }
 
 export type ChatHistoryMaxTurns = 5 | 10 | 20;
@@ -1825,6 +3420,9 @@ export type ChatThreadMessage = {
   role: "user" | "assistant";
   content: string;
   at: string;
+  turn_id?: string;
+  feedback?: ChatFeedbackRating;
+  feedback_at?: string;
 };
 
 export async function fetchChatThread(agentId: "secretary" | "executive_steward"): Promise<{
@@ -1848,21 +3446,87 @@ export async function fetchChatThread(agentId: "secretary" | "executive_steward"
   }>;
 }
 
+export type CompanyOrgMember = {
+  name: string;
+  title: string;
+  note?: string;
+  operator_id?: string;
+  role?: string;
+  login_id_ready: boolean;
+  community_login_ready: boolean;
+  login_passkey_ready: boolean;
+  settlement_passkey_ready: boolean;
+  rights: Array<"approve" | "wire" | "transfer" | "chat" | "all_agents">;
+};
+
+export type CompanyOrgUnitRow = {
+  unit_id: string;
+  unit_label: string;
+  kind: "board" | "department";
+  function: string;
+  reports_to_label: string;
+  depth: number;
+  vacant: boolean;
+  collegial: boolean;
+  members: CompanyOrgMember[];
+};
+
+export type CompanyOrgAdvisorRow = {
+  kind: "legal" | "tax" | "technical";
+  status: "engaged" | "none";
+  name?: string;
+  firm?: string;
+  note?: string;
+  contract_id?: string;
+};
+
+export type CompanyOrgUserRow = CompanyOrgMember & {
+  unit_label?: string;
+};
+
+export type OrgChartAgentRow = {
+  id: string;
+  label: string;
+  tier: string;
+  scope?: string;
+  reports_to?: string;
+};
+
+export type OrgChartHistoryRow = {
+  as_of: string;
+  recorded_at?: string;
+  source?: string;
+  change_id?: string;
+  approval_id?: string;
+  notes?: string;
+  current?: boolean;
+};
+
+type OrgChartShared = {
+  ok: true;
+  company_name: string;
+  path: string;
+  agents: {
+    configured: boolean;
+    operational: OrgChartAgentRow[];
+    developer: OrgChartAgentRow[];
+    task: OrgChartAgentRow[];
+  };
+  history: OrgChartHistoryRow[];
+  viewing_as_of?: string;
+  is_historical: boolean;
+  advisors: CompanyOrgAdvisorRow[];
+};
+
 export type OrgChartPayload =
-  | {
-      ok: true;
+  | (OrgChartShared & {
       missing: true;
-      company_name: string;
-      path: string;
       message: string;
-    }
-  | {
-      ok: true;
+    })
+  | (OrgChartShared & {
       missing: false;
-      company_name: string;
       as_of: string;
       notes?: string;
-      path: string;
       nodes: Array<{
         id: string;
         display_name: string;
@@ -1873,6 +3537,8 @@ export type OrgChartPayload =
         reports_to?: string | null;
         employee_id?: string;
       }>;
+      units: CompanyOrgUnitRow[];
+      users: CompanyOrgUserRow[];
       tree_lines: string[];
       diagram: {
         width: number;
@@ -1899,16 +3565,89 @@ export type OrgChartPayload =
           style?: "solid" | "dashed";
         }>;
       };
-    };
+    });
 
-export async function fetchOrgChart(): Promise<OrgChartPayload> {
-  const res = await fetch("/chat/v1/org/chart", { ...fetchOpts });
+export async function fetchOrgChart(asOf?: string): Promise<OrgChartPayload> {
+  const q = asOf ? `?as_of=${encodeURIComponent(asOf)}` : "";
+  const res = await fetch(`/chat/v1/org/chart${q}`, { ...fetchOpts });
   if (res.status === 401) throw new Error("unauthorized");
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;
     throw new Error(body?.error || `org-chart ${res.status}`);
   }
   return res.json() as Promise<OrgChartPayload>;
+}
+
+export type AgentInventoryRow = {
+  id: string;
+  label: string;
+  scope: string;
+  tier: string;
+  enabled: boolean;
+  required: boolean;
+  owner_desk: boolean;
+  locked: boolean;
+  lock_reason?: "owner_desk" | "required" | "module_enabled";
+  reports_to?: string;
+  reports_to_label?: string;
+  request_lane: "owner_to_steward" | "owner_to_secretary" | "via_steward";
+  bound_modules: string[];
+  pending?: { change_id: string; approval_id: string; to_enabled: boolean };
+};
+
+export type ModuleInventoryRow = {
+  id: string;
+  label: string;
+  notes?: string;
+  installed: boolean;
+  enabled: boolean;
+  tier: string;
+  pending?: { change_id: string; approval_id: string; to_enabled: boolean };
+};
+
+export type AgentModuleInventory = {
+  ok: boolean;
+  can_mutate: boolean;
+  can_propose: boolean;
+  agents: AgentInventoryRow[];
+  agents_available: AgentInventoryRow[];
+  modules_installed: ModuleInventoryRow[];
+  modules_catalog: ModuleInventoryRow[];
+  imported?: string;
+  proposed?: boolean;
+  change_id?: string;
+  approval_id?: string;
+};
+
+export async function fetchAgentModuleInventory(): Promise<AgentModuleInventory> {
+  return chatApi<AgentModuleInventory>("/chat/v1/agent-modules");
+}
+
+export async function setAgentEnabled(
+  id: string,
+  enabled: boolean,
+): Promise<AgentModuleInventory> {
+  return chatApi<AgentModuleInventory>(
+    `/chat/v1/agent-modules/agents/${encodeURIComponent(id)}/enabled`,
+    { method: "POST", body: JSON.stringify({ enabled }) },
+  );
+}
+
+export async function importCatalogModule(id: string): Promise<AgentModuleInventory> {
+  return chatApi<AgentModuleInventory>("/chat/v1/agent-modules/modules/import", {
+    method: "POST",
+    body: JSON.stringify({ id }),
+  });
+}
+
+export async function proposeModuleEnabled(
+  id: string,
+  enabled: boolean,
+): Promise<AgentModuleInventory> {
+  return chatApi<AgentModuleInventory>(
+    `/chat/v1/agent-modules/modules/${encodeURIComponent(id)}/enabled`,
+    { method: "POST", body: JSON.stringify({ enabled }) },
+  );
 }
 
 export async function fetchChatSettings(): Promise<{ max_turns: ChatHistoryMaxTurns }> {
@@ -2059,12 +3798,20 @@ export async function sendMessageStream(
     }) => void;
     onError: (error: string) => void;
   },
+  opts?: {
+    agentId?: "secretary" | "executive_steward";
+    llmRoute?: LlmRouteHint;
+  },
 ): Promise<void> {
   const res = await fetch("/chat/v1/message/stream", {
     ...fetchOpts,
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({
+      message,
+      ...(opts?.agentId ? { agent_id: opts.agentId } : {}),
+      ...(opts?.llmRoute ? { llm_route: opts.llmRoute } : {}),
+    }),
   });
 
   if (res.status === 401) throw new Error("unauthorized");

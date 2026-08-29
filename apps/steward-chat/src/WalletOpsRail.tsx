@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
+import { STEWARD_COPY } from "./steward-copy";
 import type { OpsPrompt } from "./walletOps";
 
 type MetaProps = {
@@ -21,13 +23,14 @@ export function WalletOpsMeta({
   refreshing,
   onRefresh,
 }: MetaProps) {
+  const copy = useCopy(STEWARD_COPY);
   return (
     <div className="wallet-ops-meta" aria-live="polite">
       <div className="wallet-ops-meta__facts">
         {fiscalYear ? <span>{fiscalYear}</span> : null}
-        {actualAsOf ? <span>実績〜{actualAsOf}</span> : <span>実績なし</span>}
+        {actualAsOf ? <span>{copy.actualThrough(actualAsOf)}</span> : <span>{copy.noActuals}</span>}
         {revision && revision !== "0" ? (
-          <span title="楽観的同時実行トークン">rev {revision}</span>
+          <span title={copy.revisionTitle}>rev {revision}</span>
         ) : null}
         <span
           className={
@@ -38,8 +41,8 @@ export function WalletOpsMeta({
                 : "wallet-ops-meta__age"
           }
         >
-          取得 {fetchedLabel}
-          {refreshing ? " · 更新中" : ""}
+          {copy.fetched(fetchedLabel)}
+          {refreshing ? copy.refreshing : ""}
         </span>
       </div>
       <button
@@ -48,7 +51,7 @@ export function WalletOpsMeta({
         disabled={refreshing}
         onClick={onRefresh}
       >
-        {refreshing ? "更新中" : stale === "fresh" ? "更新" : "再取得"}
+        {refreshing ? copy.refreshingShort : stale === "fresh" ? copy.refresh : copy.refetch}
       </button>
     </div>
   );
@@ -66,6 +69,7 @@ export function WalletOpsPrompts({
   /** Session-dismiss scope (person+lane etc.). */
   scope?: string;
 }) {
+  const copy = useCopy(STEWARD_COPY);
   const [tick, setTick] = useState(0);
   const visible = useMemo(() => {
     void tick;
@@ -90,7 +94,7 @@ export function WalletOpsPrompts({
   }
 
   return (
-    <section className="wallet-ops-prompts" aria-label="確認事項">
+    <section className="wallet-ops-prompts" aria-label={copy.checklist}>
       {visible.map((prompt) => (
         <article
           key={prompt.id}
@@ -99,10 +103,10 @@ export function WalletOpsPrompts({
           <header className="wallet-ops-prompt__head">
             <span className="wallet-ops-prompt__sev">
               {prompt.severity === "critical"
-                ? "要対応"
+                ? copy.sevCritical
                 : prompt.severity === "warn"
-                  ? "確認"
-                  : "質問"}
+                  ? copy.sevWarn
+                  : copy.sevInfo}
             </span>
             <strong>{prompt.title}</strong>
             <button
@@ -110,7 +114,7 @@ export function WalletOpsPrompts({
               className="wallet-ops-prompt__dismiss"
               onClick={() => dismiss(prompt.id)}
             >
-              閉じる
+              {copy.close}
             </button>
           </header>
           <p className="wallet-ops-prompt__q">{prompt.question}</p>

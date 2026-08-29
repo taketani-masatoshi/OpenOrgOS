@@ -3,6 +3,9 @@
  * No LLM — questions are generated from payload state only.
  */
 
+import type { UiLocale } from "@ops-shared/locale";
+import { walletOpsCopy } from "./wallet-ops-copy";
+
 export type OpsPromptSeverity = "info" | "warn" | "critical";
 
 export type OpsPrompt = {
@@ -72,14 +75,16 @@ export function shouldPollReloadWhileVisible(
 export function formatFetchedLabel(
   fetchedAtMs: number | null,
   nowMs = Date.now(),
+  locale: UiLocale = "ja",
 ): string {
-  if (fetchedAtMs == null) return "未取得";
+  const copy = walletOpsCopy(locale);
+  if (fetchedAtMs == null) return copy.notFetched;
   const ageSec = Math.max(0, Math.round((nowMs - fetchedAtMs) / 1000));
-  if (ageSec < 15) return "たった今";
-  if (ageSec < 60) return `${ageSec}秒前`;
+  if (ageSec < 15) return copy.justNow;
+  if (ageSec < 60) return copy.secondsAgo(ageSec);
   const ageMin = Math.round(ageSec / 60);
-  if (ageMin < 60) return `${ageMin}分前`;
-  return `${Math.round(ageMin / 60)}時間前`;
+  if (ageMin < 60) return copy.minutesAgo(ageMin);
+  return copy.hoursAgo(Math.round(ageMin / 60));
 }
 
 function currentMonth(nowMonth?: string): string {
@@ -100,33 +105,37 @@ export function isActualAsOfLagging(
   return ny * 12 + nm - (ay * 12 + am) >= 2;
 }
 
-export function buildWalletOpsPrompts(input: WalletOpsInput): OpsPrompt[] {
+export function buildWalletOpsPrompts(
+  input: WalletOpsInput,
+  locale: UiLocale = "ja",
+): OpsPrompt[] {
   const prompts: OpsPrompt[] = [];
   const name = input.display_name || input.person_id;
+  const copy = walletOpsCopy(locale);
 
   if (input.lane === "envelope") {
     if (!input.envelope) {
       prompts.push({
         id: "envelope-missing",
         severity: "info",
-        title: "経費枠未設定",
-        question: `${name} への個人経費枠はまだありません。今期の裁量経費を配分しますか？`,
-        hints: ["予算管理 → 個人配布", "費目と金額を決めてから再読込"],
+        title: copy.envelopeMissingTitle,
+        question: copy.envelopeMissingQuestion(name),
+        hints: [copy.envelopeMissingHint1, copy.envelopeMissingHint2],
       });
     } else if (input.envelope.remaining_yen < 0) {
       const cats =
         input.envelope.over_categories.length > 0
-          ? input.envelope.over_categories.join("・")
-          : "一部費目";
+          ? input.envelope.over_categories.join(copy.catJoin)
+          : copy.envelopeOverSome;
       prompts.push({
         id: "envelope-over",
         severity: "critical",
-        title: "経費枠超過",
-        question: `${name} の経費実績が枠を超えています（${cats}）。費目の付け替えですか、枠の増額ですか？`,
+        title: copy.envelopeOverTitle,
+        question: copy.envelopeOverQuestion(name, cats),
         hints: [
-          "月次の category / employee_id を確認",
-          "人件費が経費枠に混入していないか確認",
-          "増額が必要なら個人配布から申請",
+          copy.envelopeOverHint1,
+          copy.envelopeOverHint2,
+          copy.envelopeOverHint3,
         ],
       });
     } else if (
@@ -136,9 +145,9 @@ export function buildWalletOpsPrompts(input: WalletOpsInput): OpsPrompt[] {
       prompts.push({
         id: "envelope-no-actual",
         severity: "info",
-        title: "実績なし",
-        question: `${name} に経費枠はありますが実績が 0 です。未計上の経費がありますか？`,
-        hints: ["月次 YAML の allocations を確認", "対象月の basis が actual か確認"],
+        title: copy.envelopeNoActualTitle,
+        question: copy.envelopeNoActualQuestion(name),
+        hints: [copy.envelopeNoActualHint1, copy.envelopeNoActualHint2],
       });
     }
   }
@@ -149,9 +158,9 @@ export function buildWalletOpsPrompts(input: WalletOpsInput): OpsPrompt[] {
       prompts.push({
         id: "payroll-none",
         severity: "info",
-        title: "人件費対象外",
-        question: `${name} は人件費マスタの対象外です。委託費など別科目で見ますか？`,
-        hints: ["経費枠レーンへ切替", "必要なら payroll.yaml に employee_id を追加"],
+        title: copy.payrollNoneTitle,
+        question: copy.payrollNoneQuestion(name),
+        hints: [copy.payrollNoneHint1, copy.payrollNoneHint2],
       });
     } else if (
       p.expected_monthly_yen > 0 &&
@@ -160,26 +169,23 @@ export function buildWalletOpsPrompts(input: WalletOpsInput): OpsPrompt[] {
       prompts.push({
         id: "payroll-unbooked",
         severity: "warn",
-        title: "人件費未計上",
-        question: `${name} の月額は設定済みですが、実績月がありません。開始月はいつですか？`,
-        hints: [
-          "月次に category: payroll と employee_id を入れる",
-          "対象期間内に月次ファイルがまだ無い場合は開始月を決める",
-        ],
+        title: copy.payrollUnbookedTitle,
+        question: copy.payrollUnbookedQuestion(name),
+        hints: [copy.payrollUnbookedHint1, copy.payrollUnbookedHint2],
       });
     } else if (!p.ok && p.actual_months > 0) {
       const direction =
-        p.actual_variance_yen > 0 ? "計上過多" : "計上不足";
+        p.actual_variance_yen > 0 ? copy.payrollOver : copy.payrollUnder;
       prompts.push({
         id: "payroll-mismatch",
         severity: "warn",
-        title: "人件費突合不一致",
-        question: `${name} の人件費がマスタと一致しません（${direction}）。マスタ改定と月次計上のどちらが正しいですか？`,
+        title: copy.payrollMismatchTitle,
+        question: copy.payrollMismatchQuestion(name, direction),
         hints: [
-          "payroll.yaml の月額を確認",
-          "月次 allocations[].employee_id を確認",
-          "期中の計上 0 円月も不一致に含む",
-          "CLI: orgos finances payroll reconcile",
+          copy.payrollMismatchHint1,
+          copy.payrollMismatchHint2,
+          copy.payrollMismatchHint3,
+          copy.payrollMismatchHint4,
         ],
       });
     } else if (
@@ -190,12 +196,9 @@ export function buildWalletOpsPrompts(input: WalletOpsInput): OpsPrompt[] {
       prompts.push({
         id: "payroll-gaps",
         severity: "info",
-        title: "欠月の可能性",
-        question: `${name} の計上期間の途中に空月が ${holes} あります。計上漏れですか？`,
-        hints: [
-          "タイムラインの「—」月を確認",
-          "期間外・未作成の月は対象外。期中 0 円は通常不一致になる",
-        ],
+        title: copy.payrollGapsTitle,
+        question: copy.payrollGapsQuestion(name, holes),
+        hints: [copy.payrollGapsHint1, copy.payrollGapsHint2],
       });
     }
   }
@@ -204,9 +207,9 @@ export function buildWalletOpsPrompts(input: WalletOpsInput): OpsPrompt[] {
     prompts.push({
       id: "company-payroll-warn",
       severity: "warn",
-      title: "全社人件費に差",
-      question: "全社の人件費突合が一致していません。個人画面の前に全社側を直しますか？",
-      hints: ["予算管理 → 人件費", "orgos finances payroll reconcile"],
+      title: copy.companyPayrollWarnTitle,
+      question: copy.companyPayrollWarnQuestion,
+      hints: [copy.companyPayrollWarnHint1, copy.companyPayrollWarnHint2],
     });
   }
 
@@ -214,9 +217,9 @@ export function buildWalletOpsPrompts(input: WalletOpsInput): OpsPrompt[] {
     prompts.push({
       id: "actuals-lag",
       severity: "warn",
-      title: "実績の鮮度",
-      question: `月次実績の最終月が ${input.actual_as_of} です。当月までの計上は済みですか？`,
-      hints: ["data/finance/monthly/ を更新", "更新後に画面を再読込"],
+      title: copy.actualsLagTitle,
+      question: copy.actualsLagQuestion(input.actual_as_of ?? ""),
+      hints: [copy.actualsLagHint1, copy.actualsLagHint2],
     });
   }
 
@@ -248,37 +251,41 @@ export function countMidSeriesEmptyMonths(
   return holes;
 }
 
-export function buildCompanyPayrollPrompts(input: {
-  ok: boolean;
-  expected_monthly_yen: number;
-  actual_months: number;
-  empty_actual_months: number;
-  actual_variance_yen: number;
-  actual_as_of?: string | null;
-  now_month?: string;
-}): OpsPrompt[] {
+export function buildCompanyPayrollPrompts(
+  input: {
+    ok: boolean;
+    expected_monthly_yen: number;
+    actual_months: number;
+    empty_actual_months: number;
+    actual_variance_yen: number;
+    actual_as_of?: string | null;
+    now_month?: string;
+  },
+  locale: UiLocale = "ja",
+): OpsPrompt[] {
   const prompts: OpsPrompt[] = [];
+  const copy = walletOpsCopy(locale);
+  const yenLocale = locale === "en" ? "en-US" : "ja-JP";
   if (input.expected_monthly_yen > 0 && input.actual_months === 0) {
     prompts.push({
       id: "company-unbooked",
       severity: "warn",
-      title: "全社人件費未計上",
-      question: "マスタ月額はありますが実績月がありません。いつから計上しますか？",
-      hints: [
-        "monthly/*.yaml に category: payroll",
-        "対象期間内に月次ファイルが無い場合は開始月を決める（期中 0 円は不一致）",
-      ],
+      title: copy.companyUnbookedTitle,
+      question: copy.companyUnbookedQuestion,
+      hints: [copy.companyUnbookedHint1, copy.companyUnbookedHint2],
     });
   } else if (!input.ok && input.actual_months > 0) {
     prompts.push({
       id: "company-mismatch",
       severity: "warn",
-      title: "全社人件費不一致",
-      question: `期待と計上に差があります（差額 ¥${Math.round(input.actual_variance_yen).toLocaleString("ja-JP")}）。マスタと月次のどちらを正としますか？`,
+      title: copy.companyMismatchTitle,
+      question: copy.companyMismatchQuestion(
+        `¥${Math.round(input.actual_variance_yen).toLocaleString(yenLocale)}`,
+      ),
       hints: [
-        "orgos finances payroll reconcile",
-        "空月（未計上）も一致判定に含む",
-        "officers[].employee_id を確認",
+        copy.companyMismatchHint1,
+        copy.companyMismatchHint2,
+        copy.companyMismatchHint3,
       ],
     });
   } else if (input.empty_actual_months > 0 && input.expected_monthly_yen > 0) {
@@ -286,18 +293,18 @@ export function buildCompanyPayrollPrompts(input: {
     prompts.push({
       id: "company-gaps",
       severity: "info",
-      title: "空月あり",
-      question: `実績に空月が ${input.empty_actual_months} あります。欠月漏れですか？`,
-      hints: ["タイムラインの「—」を確認", "通常は不一致として先に出ます"],
+      title: copy.companyGapsTitle,
+      question: copy.companyGapsQuestion(input.empty_actual_months),
+      hints: [copy.companyGapsHint1, copy.companyGapsHint2],
     });
   }
   if (isActualAsOfLagging(input.actual_as_of, input.now_month)) {
     prompts.push({
       id: "actuals-lag",
       severity: "warn",
-      title: "実績の鮮度",
-      question: `月次実績の最終月が ${input.actual_as_of} です。当月までの計上は済みですか？`,
-      hints: ["data/finance/monthly/ を更新"],
+      title: copy.actualsLagTitle,
+      question: copy.actualsLagQuestion(input.actual_as_of ?? ""),
+      hints: [copy.actualsLagHint1],
     });
   }
   return prompts.slice(0, 3);

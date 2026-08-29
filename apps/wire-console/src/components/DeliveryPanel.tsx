@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import { api, type DeliveryState } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface Props {
   tenantId: string;
@@ -8,6 +10,7 @@ interface Props {
 }
 
 export function DeliveryPanel({ tenantId, delivery, onDone }: Props) {
+  const copy = useCopy(WIRE_COPY);
   const [peerId, setPeerId] = useState("");
   const [eventId, setEventId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -22,7 +25,7 @@ export function DeliveryPanel({ tenantId, delivery, onDone }: Props) {
         `/console/v1/tenants/${tenantId}/delivery/flush-pending`,
         { method: "POST", body: "{}" }
       );
-      setMessage(`Flushed ${res.flushed} pending delivery(ies)`);
+      setMessage(copy.flushedDeliveries(res.flushed));
       onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -45,8 +48,8 @@ export function DeliveryPanel({ tenantId, delivery, onDone }: Props) {
       );
       setMessage(
         res.delivery.delivered
-          ? `Delivered (${res.delivery.reason})`
-          : `Queued / skipped (${res.delivery.reason})`
+          ? copy.deliveredOk(res.delivery.reason)
+          : copy.queuedSkipped(res.delivery.reason)
       );
       onDone();
     } catch (err) {
@@ -59,27 +62,30 @@ export function DeliveryPanel({ tenantId, delivery, onDone }: Props) {
   return (
     <section className="panel">
       <h3>
-        Delivery{" "}
+        {copy.deliveryTitle}{" "}
         <span className="count">
-          pending {delivery?.pending.length ?? 0} · delivered {delivery?.delivered.length ?? 0}
+          {copy.pendingDelivered(
+            delivery?.pending.length ?? 0,
+            delivery?.delivered.length ?? 0,
+          )}
         </span>
       </h3>
       <div className="row-actions">
-        <button type="button" disabled={busy} onClick={() => void flush()}>
-          Flush pending
+        <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void flush()}>
+          {copy.flushPending}
         </button>
       </div>
       <form className="inline-form" onSubmit={deliver}>
         <label>
-          peer_id
+          {copy.peerId}
           <input value={peerId} onChange={(e) => setPeerId(e.target.value)} placeholder="PEER-002" />
         </label>
         <label className="wide">
-          event_id
+          {copy.eventId}
           <input value={eventId} onChange={(e) => setEventId(e.target.value)} placeholder="uuid" />
         </label>
-        <button type="submit" disabled={busy || !peerId || !eventId}>
-          Deliver
+        <button type="submit" className="btn btn-primary" disabled={busy || !peerId || !eventId}>
+          {copy.send}
         </button>
       </form>
       {delivery?.pending.length ? (

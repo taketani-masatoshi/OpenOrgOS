@@ -1,21 +1,41 @@
+import { useUiLocale } from "@ops-shared/useUiLocale";
+import { dateTimeLocale } from "@ops-shared/locale";
 import type { HumanMessageSummary } from "../api";
 
 interface Props {
   messages: HumanMessageSummary[];
   selectedId?: string;
-  emptyMessage: string;
+  emptyTitle: string;
+  emptyHint?: string;
   onSelect: (id: string) => void;
 }
 
-function formatWhen(iso: string): string {
+function formatWhen(iso: string, locale: "ja" | "en"): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString(dateTimeLocale(locale), {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export function MessageList({ messages, selectedId, emptyMessage, onSelect }: Props) {
+export function MessageList({
+  messages,
+  selectedId,
+  emptyTitle,
+  emptyHint,
+  onSelect,
+}: Props) {
+  const locale = useUiLocale();
   if (!messages.length) {
-    return <p className="mail-empty">{emptyMessage}</p>;
+    return (
+      <div className="empty-state mail-empty">
+        <strong>{emptyTitle}</strong>
+        {emptyHint ? <p>{emptyHint}</p> : null}
+      </div>
+    );
   }
 
   return (
@@ -34,7 +54,7 @@ export function MessageList({ messages, selectedId, emptyMessage, onSelect }: Pr
             </div>
             <div className="message-row-meta">
               <span>{m.counterparty}</span>
-              <span>{formatWhen(m.recorded_at)}</span>
+              <span>{formatWhen(m.recorded_at, locale)}</span>
             </div>
             <p className="message-preview">{m.preview}</p>
           </button>

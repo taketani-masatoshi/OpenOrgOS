@@ -1,4 +1,5 @@
-import { fetchChatThread, sendMessage, type OperatorStructured } from "./api";
+import { fetchChatThread, sendMessage, sendMessageStream, submitChatFeedback, type OperatorStructured } from "./api";
+import { loadLlmRoute } from "./llmRoute";
 import { formatNotificationPreview } from "./notificationPreview";
 
 export type AgentChatRole = "secretary" | "executive_steward";
@@ -8,22 +9,30 @@ export type AgentChatTurn = {
   role: "user" | "assistant";
   content: string;
   at?: string;
+  turnId?: string;
+  feedback?: "good" | "bad";
   error?: boolean;
   /** Optimistic user turn not yet confirmed on disk. */
   pending?: boolean;
   structured?: OperatorStructured;
+  faqServed?: boolean;
 };
 
 type AgentChatState = {
   draft: string;
   turns: AgentChatTurn[];
   busy: boolean;
+  /** Independent 依頼 currently waiting for a reply. */
+  inFlight: number;
   error: string | null;
   loadingHistory: boolean;
   historyLoaded: boolean;
   maxTurns: number;
   notifyPerm: NotificationPermission | "unsupported";
 };
+
+/** Per-agent cap so one chat cannot flood the local LLM. */
+export const MAX_AGENT_CHAT_IN_FLIGHT = 4;
 
 const DRAFT_KEY = (agentId: AgentChatRole) => `orgos.agentChat.draft.${agentId}`;
 const SESSION_KEY = (agentId: AgentChatRole) =>
@@ -40,6 +49,7 @@ function createInitialState(agentId: AgentChatRole): AgentChatState {
   let draft = "";
   let turns: AgentChatTurn[] = [];
   let busy = false;
+  let inFlight = 0;
   let maxTurns = 10;
   try {
     draft = sessionStorage.getItem(DRAFT_KEY(agentId)) ?? "";
@@ -48,19 +58,26 @@ function createInitialState(agentId: AgentChatRole): AgentChatState {
       const parsed = JSON.parse(raw) as {
         turns?: AgentChatTurn[];
         busy?: boolean;
+        inFlight?: number;
         maxTurns?: number;
       };
-      if (Array.isArray(parsed.turns)) turns = parsed.turns;
-      if (typeof parsed.busy === "boolean") busy = parsed.busy;
+      if (Array.isArray(parsed.turns)) {
+        turns = parsed.turns.map((t) =>
+          t.pending ? { ...t, pending: false } : t,
+        );
+      }
       if (typeof parsed.maxTurns === "number") maxTurns = parsed.maxTurns;
     }
   } catch {
     /* private mode */
   }
+  busy = false;
+  inFlight = 0;
   return {
     draft,
     turns,
     busy,
+    inFlight,
     error: null,
     loadingHistory: false,
     // Always sync once from server; merge keeps local pending turns.
@@ -79,6 +96,7 @@ function persistSession(agentId: AgentChatRole): void {
       JSON.stringify({
         turns: state.turns,
         busy: state.busy,
+        inFlight: state.inFlight,
         maxTurns: state.maxTurns,
       }),
     );
@@ -96,6 +114,7 @@ function patch(agentId: AgentChatRole, partial: Partial<AgentChatState>): void {
   if (
     partial.turns !== undefined ||
     partial.busy !== undefined ||
+    partial.inFlight !== undefined ||
     partial.maxTurns !== undefined
   ) {
     persistSession(agentId);
@@ -146,10 +165,12 @@ export async function ensureAgentChatHistory(agentId: AgentChatRole): Promise<vo
             m.role === "user" || m.role === "assistant",
         )
         .map((m, i) => ({
-          id: `${m.at}-${m.role}-${i}`,
+          id: m.turn_id ?? `${m.at}-${m.role}-${i}`,
           role: m.role as "user" | "assistant",
           content: m.content,
           at: m.at,
+          turnId: m.turn_id,
+          feedback: m.feedback,
         }));
       // Prefer local pending turns that are not yet on the server.
       const pendingOnly = next.turns.filter(
@@ -177,10 +198,12 @@ export async function ensureAgentChatHistory(agentId: AgentChatRole): Promise<vo
             m.role === "user" || m.role === "assistant",
         )
         .map((m, i) => ({
-          id: `${m.at}-${m.role}-${i}`,
+          id: m.turn_id ?? `${m.at}-${m.role}-${i}`,
           role: m.role,
           content: m.content,
           at: m.at,
+          turnId: m.turn_id,
+          feedback: m.feedback,
         })),
     });
   } catch (e) {
@@ -225,7 +248,8 @@ function notifyReplyReady(agentTitle: string, reply: string, ok: boolean): void 
 
 /**
  * Send keeps running in the store even if the page unmounts / user switches
- * to the other agent — so concurrent secretary + steward requests both survive.
+ * to the other agent. Several 依頼 on the same agent may run in parallel
+ * up to MAX_AGENT_CHAT_IN_FLIGHT (LLM pool still admits by max_inflight).
  */
 export async function sendAgentChatDraft(
   agentId: AgentChatRole,
@@ -233,7 +257,7 @@ export async function sendAgentChatDraft(
 ): Promise<void> {
   const state = states[agentId];
   const message = state.draft.trim();
-  if (!message || state.busy) return;
+  if (!message || state.inFlight >= MAX_AGENT_CHAT_IN_FLIGHT) return;
 
   if (state.notifyPerm === "default") {
     const perm = await ensureNotifyPermission();
@@ -250,49 +274,128 @@ export async function sendAgentChatDraft(
   };
 
   setAgentChatDraft(agentId, "");
+  const nextInFlight = states[agentId].inFlight + 1;
   patch(agentId, {
     turns: [...states[agentId].turns, userTurn],
     busy: true,
+    inFlight: nextInFlight,
     error: null,
   });
 
   try {
-    const result = await sendMessage(message, agentId);
-    const reply =
-      result.reply?.trim() || (result.ok ? "(empty reply)" : "応答に失敗しました");
-    const maxMessages = states[agentId].maxTurns * 2;
-    const nextTurns: AgentChatTurn[] = [
-      ...states[agentId].turns.map((t) =>
-        t.id === userTurn.id ? { ...t, pending: false } : t,
-      ),
-      {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        content: reply,
-        at: new Date().toISOString(),
-        error: !result.ok,
-        structured: result.structured,
-      },
-    ];
+    const assistantId = `a-${Date.now()}-${userTurn.id}`;
     patch(agentId, {
-      turns:
-        nextTurns.length > maxMessages
-          ? nextTurns.slice(-maxMessages)
-          : nextTurns,
-      busy: false,
+      turns: [
+        ...states[agentId].turns,
+        {
+          id: assistantId,
+          role: "assistant",
+          content: "",
+          at: new Date().toISOString(),
+        },
+      ],
     });
-    notifyReplyReady(title, reply, result.ok);
+
+    let streamed = "";
+    let usedStream = true;
+    try {
+      await sendMessageStream(
+        message,
+        {
+          onDelta: (content) => {
+            streamed += content;
+            patch(agentId, {
+              turns: states[agentId].turns.map((t) =>
+                t.id === assistantId ? { ...t, content: streamed } : t,
+              ),
+            });
+          },
+          onDone: (payload) => {
+            const reply =
+              payload.reply?.trim() ||
+              streamed.trim() ||
+              (payload.ok ? "(empty reply)" : "応答に失敗しました");
+            const maxMessages = states[agentId].maxTurns * 2;
+            const remaining = Math.max(0, states[agentId].inFlight - 1);
+            const nextTurns: AgentChatTurn[] = [
+              ...states[agentId].turns.map((t) => {
+                if (t.id === userTurn.id) return { ...t, pending: false };
+                if (t.id === assistantId) {
+                  return {
+                    ...t,
+                    content: reply,
+                    turnId: undefined,
+                    error: !payload.ok,
+                    structured: payload.structured,
+                  };
+                }
+                return t;
+              }),
+            ];
+            patch(agentId, {
+              turns:
+                nextTurns.length > maxMessages
+                  ? nextTurns.slice(-maxMessages)
+                  : nextTurns,
+              inFlight: remaining,
+              busy: remaining > 0,
+            });
+            notifyReplyReady(title, reply, payload.ok);
+          },
+          onError: (error) => {
+            throw new Error(error);
+          },
+        },
+        { agentId, llmRoute: loadLlmRoute(agentId) },
+      );
+    } catch {
+      usedStream = false;
+    }
+
+    if (!usedStream) {
+      const result = await sendMessage(message, agentId, loadLlmRoute(agentId));
+      const reply =
+        result.reply?.trim() || (result.ok ? "(empty reply)" : "応答に失敗しました");
+      const maxMessages = states[agentId].maxTurns * 2;
+      const remaining = Math.max(0, states[agentId].inFlight - 1);
+      const nextTurns: AgentChatTurn[] = [
+        ...states[agentId].turns
+          .filter((t) => t.id !== assistantId)
+          .map((t) => (t.id === userTurn.id ? { ...t, pending: false } : t)),
+        {
+          id: assistantId,
+          role: "assistant",
+          content: reply,
+          at: new Date().toISOString(),
+          turnId: result.assistant_turn_id,
+          error: !result.ok || result.local_error === true,
+          structured: result.structured,
+          faqServed: result.faq_served,
+        },
+      ];
+      patch(agentId, {
+        turns:
+          nextTurns.length > maxMessages
+            ? nextTurns.slice(-maxMessages)
+            : nextTurns,
+        inFlight: remaining,
+        busy: remaining > 0,
+      });
+      notifyReplyReady(title, reply, result.ok);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    const remaining = Math.max(0, states[agentId].inFlight - 1);
     patch(agentId, {
       error: msg,
-      busy: false,
+      inFlight: remaining,
+      busy: remaining > 0,
       turns: [
         ...states[agentId].turns.map((t) =>
           t.id === userTurn.id ? { ...t, pending: false } : t,
         ),
         {
-          id: `e-${Date.now()}`,
+          id: `e-${Date.now()}-${userTurn.id}`,
           role: "assistant",
           content: msg,
           at: new Date().toISOString(),
@@ -309,4 +412,18 @@ export async function enableAgentChatNotifications(
 ): Promise<void> {
   const perm = await ensureNotifyPermission();
   setAgentChatNotifyPerm(agentId, perm);
+}
+
+export async function rateAgentChatTurn(
+  agentId: AgentChatRole,
+  turnId: string,
+  rating: "good" | "bad",
+): Promise<void> {
+  await submitChatFeedback({ turnId, rating, agentId });
+  const state = states[agentId];
+  patch(agentId, {
+    turns: state.turns.map((t) =>
+      t.turnId === turnId || t.id === turnId ? { ...t, turnId, feedback: rating } : t,
+    ),
+  });
 }

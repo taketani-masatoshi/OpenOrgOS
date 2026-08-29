@@ -1,17 +1,24 @@
+import { SESSION_COPY } from "./console-copy";
+import { DEFAULT_UI_LOCALE, type UiLocale } from "./locale";
+
 /** Human-readable Operator Console session label (header). */
-export function formatOperatorSessionLabel(user: {
-  operator_id: string;
-  approver_id: string;
-  mode: string;
-}): string {
-  const modeJa =
-    user.mode === "dev" ? "開発モード" : user.mode === "prod" ? "本番モード" : user.mode;
+export function formatOperatorSessionLabel(
+  user: {
+    operator_id: string;
+    approver_id: string;
+    mode: string;
+  },
+  locale: UiLocale = DEFAULT_UI_LOCALE,
+): string {
+  const copy = SESSION_COPY[locale];
+  const mode =
+    user.mode === "dev" ? copy.devMode : user.mode === "prod" ? copy.prodMode : user.mode;
 
   const op = user.operator_id?.trim() || "—";
   const approver = user.approver_id?.trim() || "";
 
   if (!approver || approver === op) {
-    return `オペレータ ${op} · ${modeJa}`;
+    return `${copy.operator} ${op} · ${mode}`;
   }
-  return `オペレータ ${op} · 承認者 ${approver} · ${modeJa}`;
+  return `${copy.operator} ${op} · ${copy.approver} ${approver} · ${mode}`;
 }

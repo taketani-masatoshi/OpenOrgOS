@@ -56,7 +56,7 @@ export function resolveCeremonyHints(
     return [...expected];
   }
   const matches = serverHints.filter((h): h is PasskeyCeremonyHint =>
-    expected.includes(h)
+    (expected as readonly PasskeyCeremonyHint[]).includes(h)
   );
   return matches.length > 0 ? matches : [...expected];
 }

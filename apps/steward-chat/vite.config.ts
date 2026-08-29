@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@ops-shared": path.resolve(appsRoot, "shared"),
+      "@wire-console": path.resolve(appsRoot, "wire-console/src"),
     },
   },
   server: {
@@ -21,7 +22,6 @@ export default defineConfig({
     proxy: {
       "/chat": "http://127.0.0.1:9471",
       "/health": "http://127.0.0.1:9471",
-      "/wire": "http://127.0.0.1:9470",
       "/console": "http://127.0.0.1:9470",
     },
   },

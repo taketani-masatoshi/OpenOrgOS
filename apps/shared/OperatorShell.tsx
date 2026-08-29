@@ -1,34 +1,67 @@
 import type { ReactNode } from "react";
+import { LocaleSync } from "./LocaleSync";
 import { ThemeSync } from "./ThemeSync";
+import { ShellLangSelect } from "./ShellLangSelect";
+import { SHELL_COPY } from "./console-copy";
+import { useCopy } from "./define-copy";
 
 export type OperatorShellActive =
+  | "executive"
+  | "ledger"
   | "yojitsu"
+  | "torihiki"
   | "wire"
   | "org"
+  | "approvals"
+  | "customers"
+  | "customers-outbound"
+  | "customers-inbound"
+  | "customers-pipeline"
+  | "customers-accounts"
+  | "customers-after-sales"
+  | "customers-churn"
+  | "runs"
+  | "agents"
   | "secretary"
-  | "steward";
+  | "steward"
+  | "agent-list"
+  | "module-list"
+  | "agent-add"
+  | "module-add";
 
 type Props = {
-  active: OperatorShellActive;
+  /** When omitted, no primary tab is current (settings / other). */
+  active?: OperatorShellActive;
   operatorLabel: string;
   onSignOut: () => void;
   /** PassKey / auth settings page (gear icon). Omit to hide. */
   settingsHref?: string;
   settingsActive?: boolean;
-  /** Combined origin: `/`. */
-  yojitsuHref?: string;
-  /** Combined: `/wire/` · standalone Wire: `/` or Vite BASE_URL. */
-  wireHref?: string;
-  /** Combined: `/org/`. */
-  orgHref?: string;
-  secretaryHref?: string;
-  stewardHref?: string;
+  /** Combined: `/` · executive home. `null` hides the tab. */
+  executiveHref?: string | null;
+  /** Combined: `/?ledger=1`. `null` hides the tab (standalone Wire). */
+  ledgerHref?: string | null;
+  /** Combined: `/?wallet=1`. `null` hides the tab. */
+  yojitsuHref?: string | null;
+  /** Combined: `/?receipt-issue=1`. `null` hides the tab. */
+  torihikiHref?: string | null;
+  /** Combined: `/wire/` · standalone Wire: `/`. `null` hides the tab. */
+  wireHref?: string | null;
+  orgHref?: string | null;
+  /** Combined: `/approvals/` · CEO inbox. `null` hides the tab. */
+  approvalsHref?: string | null;
+  /** Combined: `/customers/` · CRM lifecycle. `null` hides the tab. */
+  customersHref?: string | null;
+  /** Combined: `/runs/` · standalone Wire: `null` hides the tab. */
+  runsHref?: string | null;
+  secretaryHref?: string | null;
+  stewardHref?: string | null;
   children?: ReactNode;
 };
 
 /**
  * Shared top chrome for Operator Console.
- * 予実 `/` · Wire `/wire/` · 組織図 `/org/` · 秘書 `/secretary/` · スチュワード `/steward/`
+ * 経営 `/` · 帳簿 `/?ledger=1` · 予実 `/?wallet=1` · 取引 `/?receipt-issue=1` · Wire `/wire/` · 組織図 `/org/` · 顧客管理 `/customers/` · エージェント `/steward/` · 実行状況 `/runs/`
  */
 function SettingsIcon() {
   return (
@@ -50,65 +83,114 @@ function SettingsIcon() {
   );
 }
 
+function ShellTab({
+  href,
+  current,
+  children,
+}: {
+  href: string | null | undefined;
+  current: boolean;
+  children: ReactNode;
+}) {
+  if (!href) return null;
+  return (
+    <a
+      href={href}
+      className={current ? "ops-shell-tab active" : "ops-shell-tab"}
+      aria-current={current ? "page" : undefined}
+    >
+      {children}
+    </a>
+  );
+}
+
+function isCustomersSection(active?: OperatorShellActive): boolean {
+  return (
+    active === "customers" ||
+    active === "customers-outbound" ||
+    active === "customers-inbound" ||
+    active === "customers-after-sales" ||
+    active === "customers-churn"
+  );
+}
+
+function isAgentsSection(active?: OperatorShellActive): boolean {
+  return (
+    active === "agents" ||
+    active === "secretary" ||
+    active === "steward" ||
+    active === "agent-list" ||
+    active === "module-list" ||
+    active === "agent-add" ||
+    active === "module-add"
+  );
+}
+
 export function OperatorShell({
   active,
   operatorLabel,
   onSignOut,
   settingsHref = "/settings/",
   settingsActive = false,
-  yojitsuHref = "/",
+  executiveHref = "/",
+  ledgerHref = "/?ledger=1",
+  yojitsuHref = "/?wallet=1",
+  torihikiHref = "/?receipt-issue=1",
   wireHref = "/wire/",
   orgHref = "/org/",
+  approvalsHref = null,
+  customersHref = null,
+  runsHref = "/runs/",
   secretaryHref = "/secretary/",
   stewardHref = "/steward/",
   children,
 }: Props) {
+  const copy = useCopy(SHELL_COPY);
+  const agentsHref = stewardHref || secretaryHref;
+
   return (
     <div className="ops-shell">
       <ThemeSync />
+      <LocaleSync />
       <header className="ops-shell-header">
         <div className="ops-shell-brand">OpenOrgOS</div>
-        <nav className="ops-shell-nav" aria-label="Operator Console">
-          <a
-            href={yojitsuHref}
-            className={active === "yojitsu" ? "ops-shell-tab active" : "ops-shell-tab"}
-            aria-current={active === "yojitsu" ? "page" : undefined}
-          >
-            予実
-          </a>
-          <a
-            href={wireHref}
-            className={active === "wire" ? "ops-shell-tab active" : "ops-shell-tab"}
-            aria-current={active === "wire" ? "page" : undefined}
-          >
-            Wire
-          </a>
-          <a
-            href={orgHref}
-            className={active === "org" ? "ops-shell-tab active" : "ops-shell-tab"}
-            aria-current={active === "org" ? "page" : undefined}
-          >
-            組織図
-          </a>
-          <a
-            href={secretaryHref}
-            className={active === "secretary" ? "ops-shell-tab active" : "ops-shell-tab"}
-            aria-current={active === "secretary" ? "page" : undefined}
-          >
-            秘書
-          </a>
-          <a
-            href={stewardHref}
-            className={active === "steward" ? "ops-shell-tab active" : "ops-shell-tab"}
-            aria-current={active === "steward" ? "page" : undefined}
-          >
-            スチュワード
-          </a>
+        <nav className="ops-shell-nav" aria-label={copy.nav}>
+          <ShellTab href={executiveHref} current={active === "executive"}>
+            {copy.executive}
+          </ShellTab>
+          <ShellTab href={ledgerHref} current={active === "ledger"}>
+            {copy.ledger}
+          </ShellTab>
+          <ShellTab href={yojitsuHref} current={active === "yojitsu"}>
+            {copy.yojitsu}
+          </ShellTab>
+          <ShellTab href={torihikiHref} current={active === "torihiki"}>
+            {copy.torihiki}
+          </ShellTab>
+          <ShellTab href={wireHref} current={active === "wire"}>
+            {copy.wire}
+          </ShellTab>
+          <ShellTab href={orgHref} current={active === "org"}>
+            {copy.org}
+          </ShellTab>
+          <ShellTab href={approvalsHref} current={active === "approvals"}>
+            {copy.approvals}
+          </ShellTab>
+          <ShellTab href={customersHref} current={isCustomersSection(active)}>
+            {copy.customers}
+          </ShellTab>
+          <ShellTab href={agentsHref} current={isAgentsSection(active)}>
+            {copy.agents}
+          </ShellTab>
+          <ShellTab href={runsHref} current={active === "runs"}>
+            {copy.runs}
+          </ShellTab>
         </nav>
         <div className="ops-shell-meta">
+          <ShellLangSelect />
           <span
             className="ops-shell-operator"
-            title="ログイン中のオペレータ ID・承認者・実行モード"
+            title={copy.operatorTitle}
           >
             {operatorLabel}
           </span>
@@ -118,15 +200,15 @@ export function OperatorShell({
               className={
                 settingsActive ? "ops-shell-settings is-active" : "ops-shell-settings"
               }
-              aria-label="設定"
-              title="設定"
+              aria-label={copy.settings}
+              title={copy.settings}
               aria-current={settingsActive ? "page" : undefined}
             >
               <SettingsIcon />
             </a>
           ) : null}
           <button type="button" className="ops-shell-signout" onClick={onSignOut}>
-            サインアウト
+            {copy.signOut}
           </button>
         </div>
       </header>

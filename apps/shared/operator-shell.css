@@ -1,12 +1,12 @@
-/* Shared Operator Console top shell — 予実 / Wire / 秘書 / スチュワード */
+/* Shared Operator Console top shell — 予実 / Wire / 組織図 / エージェント */
 
 .ops-shell {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--surface, #f5f5f7);
-  color: var(--ink, #1d1d1f);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 /* Agent chat pages: lock shell to viewport so the composer never scrolls away */
@@ -21,11 +21,11 @@
 .ops-shell-header {
   display: flex;
   align-items: center;
-  gap: var(--space-4, 16px);
-  min-height: 52px;
-  padding: 0 var(--page-gutter, 24px);
-  background: var(--header-bg, rgba(245, 245, 247, 0.86));
-  border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  gap: var(--space-4);
+  min-height: var(--header-h);
+  padding: 0 var(--page-gutter);
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
   backdrop-filter: saturate(180%) blur(16px);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
   position: sticky;
@@ -35,52 +35,39 @@
 
 .ops-shell-brand {
   font-family: var(--font-display, Newsreader, Georgia, serif);
-  font-size: var(--text-lg, 1.125rem);
-  font-weight: var(--weight-display, 500);
-  letter-spacing: var(--tracking-display, -0.03em);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-display);
   flex-shrink: 0;
 }
 
 .ops-shell-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-1, 4px);
+  gap: var(--space-1);
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: var(--space-1);
 }
 
 .ops-shell-tab {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.85rem;
-  border-radius: var(--radius-pill, 980px);
-  font-size: var(--text-sm, 0.875rem);
-  font-weight: var(--weight-ui, 600);
-  color: var(--ink-soft, #6e6e73);
-  text-decoration: none;
-}
-
-.ops-shell-tab:hover {
-  color: var(--ink, #1d1d1f);
-  background: var(--accent-soft, rgba(0, 113, 227, 0.12));
-  text-decoration: none;
-}
-
-.ops-shell-tab.active {
-  color: #fff;
-  background: var(--accent, #0071e3);
+  flex-shrink: 0;
 }
 
 .ops-shell-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-3, 12px);
+  gap: var(--space-3);
   flex-shrink: 0;
 }
 
 .ops-shell-operator {
-  font-size: var(--text-sm, 0.875rem);
-  color: var(--ink-soft, #6e6e73);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -91,22 +78,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-pill, 980px);
-  color: var(--ink-soft, #6e6e73);
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
   text-decoration: none;
 }
 
 .ops-shell-settings:hover {
-  color: var(--ink, #1d1d1f);
-  background: var(--accent-soft, rgba(0, 113, 227, 0.12));
+  color: var(--ink);
+  background: var(--accent-soft);
   text-decoration: none;
 }
 
 .ops-shell-settings.is-active {
-  color: var(--accent, #0071e3);
-  background: var(--accent-soft, rgba(0, 113, 227, 0.12));
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .ops-shell-settings-icon {
@@ -114,19 +101,7 @@
 }
 
 .ops-shell-signout {
-  padding: 0.4rem 0.95rem;
-  border: none;
-  border-radius: var(--radius-pill, 980px);
-  background: var(--accent, #0071e3);
-  color: #fff;
-  font: inherit;
-  font-size: var(--text-sm, 0.875rem);
-  font-weight: var(--weight-ui, 600);
-  cursor: pointer;
-}
-
-.ops-shell-signout:hover {
-  background: var(--accent-hover, #0077ed);
+  flex-shrink: 0;
 }
 
 .ops-shell-body {
@@ -139,8 +114,8 @@
 @media (max-width: 720px) {
   .ops-shell-header {
     flex-wrap: wrap;
-    padding: var(--space-2, 8px) var(--space-3, 12px);
-    gap: var(--space-2, 8px);
+    padding: var(--space-2) var(--page-gutter-sm);
+    gap: var(--space-2);
   }
 
   .ops-shell-nav {

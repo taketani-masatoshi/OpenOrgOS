@@ -8,10 +8,15 @@ import { useCopy } from "./define-copy";
 import { LocaleSync } from "./LocaleSync";
 import { ThemeSync } from "./ThemeSync";
 import { browserSupportsWebAuthn } from "./webauthn-simple";
-import { buildCommunityConsoleStartUrl } from "./community-console-handoff";
+import { buildCommunityConsoleStartUrl, communityConsoleOrigin } from "./community-console-handoff";
 import { inspectWebAuthnPage, type WebAuthnPageInspect } from "./webauthn-page-origin";
 import { WEBAUTHN_COPY } from "./webauthn-copy";
 import { webauthnUserMessage } from "./webauthn-user-error";
+import { ShellLangSelect } from "./ShellLangSelect";
+
+function communityOriginHref(): string {
+  return communityConsoleOrigin();
+}
 
 export type PasskeyAuthPanelProps = {
   operatorId: string;
@@ -33,6 +38,13 @@ export type PasskeyAuthPanelProps = {
   settingsPath?: string;
   /** Settings deep-link: emphasize Community SSO + bootstrap steps before login. */
   emphasizeBootstrapFlow?: boolean;
+  /** Main login: Community SSO is the primary CTA (PassKey secondary). */
+  communityHandoffPrimary?: boolean;
+  /** Local / early bootstrap: ID + password when PassKey cannot be used. */
+  allowPasswordLogin?: boolean;
+  password?: string;
+  onPassword?: (value: string) => void;
+  onPasswordLogin?: () => void;
 };
 
 function pageBanner(
@@ -79,6 +91,11 @@ export function PasskeyAuthPanel({
   communityHandoffUrl,
   settingsPath = "/settings/",
   emphasizeBootstrapFlow = false,
+  communityHandoffPrimary = false,
+  allowPasswordLogin = false,
+  password = "",
+  onPassword,
+  onPasswordLogin,
 }: PasskeyAuthPanelProps) {
   const [pageState, setPageState] = useState<WebAuthnPageInspect>(() =>
     initialPageState(loginOrigin, loginRpId),
@@ -87,17 +104,25 @@ export function PasskeyAuthPanel({
   const errors = useCopy(WEBAUTHN_COPY);
 
   const communityStartUrl =
-    communityHandoffUrl ?? buildCommunityConsoleStartUrl(settingsPath);
+    communityHandoffUrl ?? buildCommunityConsoleStartUrl("/");
 
   const ready = operatorId.trim().length > 0 && approverId.trim().length > 0;
   const firstRegister = showRegister && !showSignIn;
   const showIdFields = firstRegister && !registrationRequiresSession;
   const showLoginRegister = showRegister && !registrationRequiresSession;
   const showHandoff =
-    (showRegister && registrationRequiresSession) || emphasizeBootstrapFlow;
+    (showRegister && registrationRequiresSession && !communityHandoffPrimary) ||
+    emphasizeBootstrapFlow;
+  const showCommunityPrimary =
+    communityHandoffPrimary && communityStartUrl && !emphasizeBootstrapFlow;
   const browserOk = typeof window === "undefined" ? true : browserSupportsWebAuthn();
   const pageBlocked = pageState.status !== "ok";
-  const banner = pageBanner(pageState, errors);
+  const passkeyUnavailableForPage =
+    allowPasswordLogin &&
+    (pageState.status === "origin_mismatch" || pageState.status === "unsupported_browser");
+  const banner = passkeyUnavailableForPage
+    ? copy.passwordWhenPasskeyUnavailable
+    : pageBanner(pageState, errors);
   const hideForm = pageBlocked;
 
   useLayoutEffect(() => {
@@ -116,8 +141,18 @@ export function PasskeyAuthPanel({
       ? new URL(settingsPath, window.location.origin).pathname
       : settingsPath;
 
-  const title = emphasizeBootstrapFlow ? copy.communityFirstTitle : copy.titleMac;
-  const lead = emphasizeBootstrapFlow ? copy.communityFirstLead : copy.macLead;
+  const title = emphasizeBootstrapFlow
+    ? copy.communityFirstTitle
+    : showCommunityPrimary
+      ? copy.consoleLoginTitle
+      : copy.titleMac;
+  const lead = emphasizeBootstrapFlow
+    ? copy.communityFirstLead
+    : showCommunityPrimary
+      ? copy.consoleLoginLead
+      : allowPasswordLogin
+        ? copy.leadPasskeyAndPassword
+        : copy.macLead;
 
   return (
     <div className="auth-page">
@@ -128,6 +163,15 @@ export function PasskeyAuthPanel({
           <a className="auth-brand" href="https://oorgos.org">
             OpenOrgOS
           </a>
+          <nav className="auth-header-nav" aria-label="OpenOrgOS">
+            <a className="auth-header-link" href="https://oorgos.org">
+              {copy.navOverview}
+            </a>
+            <a className="auth-header-link" href={communityOriginHref()}>
+              {copy.navCommunity}
+            </a>
+            <ShellLangSelect />
+          </nav>
         </div>
       </header>
 
@@ -143,7 +187,7 @@ export function PasskeyAuthPanel({
 
         {hideForm ? null : (
           <form className="auth-key-card auth-key-card-solo" onSubmit={onSubmit}>
-            {!emphasizeBootstrapFlow ? (
+            {!emphasizeBootstrapFlow && !showCommunityPrimary ? (
               <>
                 <p className="auth-key-device">{copy.thisMac}</p>
                 <h2 className="auth-key-title">{copy.login}</h2>
@@ -183,7 +227,22 @@ export function PasskeyAuthPanel({
             ) : null}
 
             <div className="auth-actions">
-              {showHandoff ? (
+              {showCommunityPrimary ? (
+                <>
+                  <a className="btn btn-primary" href={communityStartUrl}>
+                    {copy.communityEnter}
+                  </a>
+                  {showSignIn ? (
+                    <button
+                      type="submit"
+                      className="btn btn-ghost"
+                      disabled={busy || pageBlocked || !browserOk}
+                    >
+                      {busy ? copy.checkingBusy : copy.touchIdEnter}
+                    </button>
+                  ) : null}
+                </>
+              ) : showHandoff ? (
                 <div className="auth-handoff">
                   <p className="auth-hint">{copy.handoffHint}</p>
                   <ol className="auth-steps">
@@ -244,9 +303,69 @@ export function PasskeyAuthPanel({
                 </button>
               ) : null}
             </div>
-            {error ? <p className="auth-error">{error}</p> : null}
+            {!allowPasswordLogin && error ? <p className="auth-error">{error}</p> : null}
           </form>
         )}
+
+        {allowPasswordLogin && onPasswordLogin && onPassword ? (
+          <form
+            id="orgos-dev-login"
+            className={
+              hideForm
+                ? "auth-key-card auth-key-card-solo"
+                : "auth-key-card auth-key-card-solo auth-password-fallback"
+            }
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (busy) return;
+              onPasswordLogin();
+            }}
+            aria-label={copy.devLoginLabel}
+          >
+            <p className="auth-key-copy">{copy.orPassword}</p>
+            <label className="auth-field">
+              <span>{copy.operator}</span>
+              <input
+                id="orgos-login-operator"
+                name="operator_id"
+                value={operatorId}
+                onChange={(e) => onOperatorId(e.target.value)}
+                autoComplete="username"
+                placeholder="OP-001"
+                required
+              />
+            </label>
+            <label className="auth-field">
+              <span>{copy.approver}</span>
+              <input
+                id="orgos-login-approver"
+                name="approver_id"
+                value={approverId}
+                onChange={(e) => onApproverId(e.target.value)}
+                autoComplete="name"
+                placeholder={copy.displayNamePlaceholder}
+              />
+            </label>
+            <label className="auth-field">
+              <span>{copy.password}</span>
+              <input
+                id="orgos-login-password"
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e) => onPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <div className="auth-actions">
+              <button id="orgos-login-submit" type="submit" className="btn btn-primary" disabled={busy}>
+                {busy ? copy.checkingBusy : copy.enter}
+              </button>
+            </div>
+            {error ? <p className="auth-error">{error}</p> : null}
+          </form>
+        ) : null}
       </main>
     </div>
   );

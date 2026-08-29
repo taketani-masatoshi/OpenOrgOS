@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
+import { useUiLocale } from "@ops-shared/useUiLocale";
+import { dateTimeLocale } from "@ops-shared/locale";
 import { approveWithSettlementCeremony } from "@ops-shared/settlement-stepup-client";
 import { useSettlementStepUp } from "@ops-shared/use-settlement-stepup";
 import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
 import { api, shortDigest, type EventDetail, type EventWorkflow, type HumanMessageBody } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface Props {
   tenantId: string;
@@ -12,10 +16,10 @@ interface Props {
   onRefresh: () => void;
 }
 
-function formatWhen(iso: string): string {
+function formatWhen(iso: string, locale: "ja" | "en"): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("ja-JP", {
+  return d.toLocaleString(dateTimeLocale(locale), {
     year: "numeric",
     month: "numeric",
     day: "numeric",
@@ -25,6 +29,8 @@ function formatWhen(iso: string): string {
 }
 
 export function MessageReader({ tenantId, messageId, loading, body, onRefresh }: Props) {
+  const copy = useCopy(WIRE_COPY);
+  const locale = useUiLocale();
   const [eventDetail, setEventDetail] = useState<EventDetail | null>(null);
   const [workflow, setWorkflow] = useState<EventWorkflow | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -67,7 +73,10 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
   if (!messageId && !loading) {
     return (
       <aside className="message-reader empty">
-        <p className="hint">メッセージを選択してください</p>
+        <div className="empty-state">
+          <strong>{copy.pickNotice}</strong>
+          <p>{copy.pickNoticeHint}</p>
+        </div>
       </aside>
     );
   }
@@ -75,7 +84,7 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
   if (loading || !body) {
     return (
       <aside className="message-reader">
-        <p className="hint">読み込み中…</p>
+        <p className="hint">{copy.loading}</p>
       </aside>
     );
   }
@@ -83,7 +92,7 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
   async function approve() {
     if (!body?.approval_id) return;
     if (body.co_approver_required && !coApproverId.trim()) {
-      setError("tier B の共同承認者を選択してください");
+      setError(copy.needCoApprover);
       return;
     }
     setBusy(true);
@@ -103,7 +112,7 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
           }),
         runCeremony,
       });
-      setActionMessage("承認しました");
+      setActionMessage(copy.approved);
       onRefresh();
     } catch (err) {
       setError(webauthnUserMessage(err));
@@ -119,9 +128,9 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
     try {
       await api(`/console/v1/tenants/${tenantId}/notices/${body.approval_id}/reject`, {
         method: "POST",
-        body: JSON.stringify({ reason: "Wire Console から差し戻し" }),
+        body: JSON.stringify({ reason: copy.rejectReason }),
       });
-      setActionMessage("差し戻しました");
+      setActionMessage(copy.rejected);
       onRefresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -143,7 +152,7 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
         }
       );
       setActionMessage(
-        res.delivery.delivered ? "相手組織へ送信しました" : "送信を待機しています"
+        res.delivery.delivered ? copy.delivered : copy.deliverWaiting
       );
       onRefresh();
     } catch (err) {
@@ -167,8 +176,8 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
       });
       setActionMessage(
         res.quorum.satisfied
-          ? `公証を登録しました（${res.quorum.matched}/${res.quorum.required}）`
-          : `公証を登録しました。残り ${res.quorum.required - res.quorum.matched} 件`
+          ? copy.witnessOk(res.quorum.matched, res.quorum.required)
+          : copy.witnessPartial(res.quorum.required - res.quorum.matched)
       );
       onRefresh();
     } catch (err) {
@@ -193,8 +202,8 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
       });
       setActionMessage(
         res.quorum.satisfied
-          ? `公証は十分です（${res.quorum.matched}/${res.quorum.required}）`
-          : `公証が不足しています（${res.quorum.matched}/${res.quorum.required}）`
+          ? copy.witnessEnough(res.quorum.matched, res.quorum.required)
+          : copy.witnessShort(res.quorum.matched, res.quorum.required)
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -213,16 +222,16 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
       </header>
       <dl className="reader-meta">
         <div>
-          <dt>差出人</dt>
+          <dt>{copy.from}</dt>
           <dd>{body.from_label}</dd>
         </div>
         <div>
-          <dt>宛先</dt>
+          <dt>{copy.to}</dt>
           <dd>{body.to_label}</dd>
         </div>
         <div>
-          <dt>日時</dt>
-          <dd>{formatWhen(body.recorded_at)}</dd>
+          <dt>{copy.when}</dt>
+          <dd>{formatWhen(body.recorded_at, locale)}</dd>
         </div>
       </dl>
       <div className="reader-body">{body.body_text}</div>
@@ -236,13 +245,13 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
       <div className="reader-actions">
         {body.co_approver_required ? (
           <label className="reader-co-approver">
-            <span>共同承認者（tier B）</span>
+            <span>{copy.coApprover}</span>
             <select
               value={coApproverId}
               disabled={busy}
               onChange={(e) => setCoApproverId(e.target.value)}
             >
-              <option value="">選択してください</option>
+              <option value="">{copy.selectPlease}</option>
               {(body.co_approver_candidates ?? []).map((name) => (
                 <option key={name} value={name}>
                   {name}
@@ -255,36 +264,37 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
           <>
             <button
               type="button"
+              className="btn btn-primary"
               disabled={busy || (body.co_approver_required && !coApproverId.trim())}
               onClick={() => void approve()}
             >
-              承認
+              {copy.approve}
             </button>
-            <button type="button" className="secondary" disabled={busy} onClick={() => void reject()}>
-              差し戻し
+            <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void reject()}>
+              {copy.reject}
             </button>
           </>
         ) : null}
         {body.can_send ? (
-          <button type="button" disabled={busy || !body.peer_id} onClick={() => void deliver()}>
-            送信
+          <button type="button" className="btn btn-primary" disabled={busy || !body.peer_id} onClick={() => void deliver()}>
+            {copy.send}
           </button>
         ) : null}
         {body.can_witness ? (
           <>
-            <button type="button" className="secondary" disabled={busy} onClick={() => void registerWitness("sent")}>
-              公証を登録（送信側）
+            <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void registerWitness("sent")}>
+              {copy.witnessSent}
             </button>
             <button
               type="button"
-              className="secondary"
+              className="btn btn-ghost"
               disabled={busy}
               onClick={() => void registerWitness("received")}
             >
-              公証を登録（受信側）
+              {copy.witnessReceived}
             </button>
-            <button type="button" className="secondary" disabled={busy} onClick={() => void verifyWitness()}>
-              公証を確認
+            <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void verifyWitness()}>
+              {copy.witnessVerify}
             </button>
           </>
         ) : null}
@@ -293,8 +303,8 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
       {error ? <p className="error">{error}</p> : null}
       {body.event_id ? (
         <details className="technical-details">
-          <summary>システム情報（開発者向け）</summary>
-          {detailLoading ? <p className="hint">読み込み中…</p> : null}
+          <summary>{copy.systemInfo}</summary>
+          {detailLoading ? <p className="hint">{copy.loading}</p> : null}
           {eventDetail ? (
             <>
               <dl className="detail-meta">

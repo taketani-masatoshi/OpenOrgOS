@@ -11,6 +11,10 @@ import {
   setOrgCompanyBudget,
   type OrgBudgetPayload,
 } from "./api";
+import { useCopy } from "@ops-shared/define-copy";
+import { useUiLocale } from "@ops-shared/useUiLocale";
+import { dateTimeLocale } from "@ops-shared/locale";
+import { STEWARD_COPY } from "./steward-copy";
 
 type OutlookEnvelopeProposal = NonNullable<
   Awaited<ReturnType<typeof outlookProposeEnvelope>>["proposed_envelope"]
@@ -33,6 +37,7 @@ import {
   buildCompanyPayrollPrompts,
   shouldPollReloadWhileVisible,
 } from "./walletOps";
+import { getOrgBudgetSnapshot } from "./orgBudgetSnapshot";
 
 type View = "people" | "overview" | "plans" | "outlook" | "payroll" | "sources" | "history";
 
@@ -44,11 +49,14 @@ function yen(amount: number): string {
   }).format(amount);
 }
 
-/** `2026-07` → `7月` for denser month tables. */
-function monthShortLabel(month: string): string {
+/** `2026-07` → `7月` / `Jul` for denser month tables. */
+function monthShortLabel(
+  month: string,
+  format: (n: number) => string,
+): string {
   const m = month.match(/-(\d{2})$/)?.[1];
   if (!m) return month;
-  return `${Number(m)}月`;
+  return format(Number(m));
 }
 
 function signedYen(amount: number): string {
@@ -56,15 +64,18 @@ function signedYen(amount: number): string {
   return yen(amount);
 }
 
-function planStatusLabel(planning: OrgBudgetPayload["planning"]): string {
+function planStatusLabel(
+  planning: OrgBudgetPayload["planning"],
+  copy: (typeof STEWARD_COPY)["ja"],
+): string {
   if (planning.business_plan_status === "approved") {
-    return planning.has_board_evidence ? "承認済み・FIX" : "承認済み";
+    return planning.has_board_evidence ? copy.planApprovedFix : copy.planApproved;
   }
   if (planning.business_plan_status === "pending_approval") {
-    return "承認待ち";
+    return copy.planPending;
   }
-  if (planning.business_plan_status === "draft") return "草案";
-  return "未設定";
+  if (planning.business_plan_status === "draft") return copy.planDraft;
+  return copy.unset;
 }
 
 function InfoTip({ label }: { label: string }) {
@@ -92,12 +103,13 @@ function PlanLineTable({
   footerLabel?: string;
   footerYen?: number;
 }) {
+  const copy = useCopy(STEWARD_COPY);
   return (
     <table className="plan-line-table">
       <thead>
         <tr>
-          <th>科目</th>
-          <th>金額</th>
+          <th>{copy.colAccount}</th>
+          <th>{copy.colAmount}</th>
         </tr>
       </thead>
       <tbody>
@@ -121,6 +133,7 @@ function PlanLineTable({
 }
 
 function CorporateExpenseTables({ unit }: { unit: PlanUnitGroup }) {
+  const copy = useCopy(STEWARD_COPY);
   const groups = unit.line_groups ?? [];
   const officer = groups.find((g) => g.group_id === "officer_compensation");
   const personnel = groups.find((g) => g.group_id === "personnel");
@@ -134,7 +147,7 @@ function CorporateExpenseTables({ unit }: { unit: PlanUnitGroup }) {
           <h4>{officer.label}</h4>
           <PlanLineTable
             lines={officer.lines}
-            footerLabel="小計"
+            footerLabel={copy.subtotal}
             footerYen={officer.total_yen}
           />
         </div>
@@ -144,7 +157,7 @@ function CorporateExpenseTables({ unit }: { unit: PlanUnitGroup }) {
           <h4>{personnel.label}</h4>
           <PlanLineTable
             lines={personnel.lines}
-            footerLabel="小計"
+            footerLabel={copy.subtotal}
             footerYen={personnel.total_yen}
           />
         </div>
@@ -153,7 +166,7 @@ function CorporateExpenseTables({ unit }: { unit: PlanUnitGroup }) {
         <table className="plan-line-table plan-personnel-subtotal">
           <tfoot>
             <tr>
-              <th>役員報酬・人件費 小計</th>
+              <th>{copy.officerPayrollSubtotal}</th>
               <td>{yen(personnelSubtotal)}</td>
             </tr>
           </tfoot>
@@ -164,7 +177,7 @@ function CorporateExpenseTables({ unit }: { unit: PlanUnitGroup }) {
           <h4>{other.label}</h4>
           <PlanLineTable
             lines={other.lines}
-            footerLabel="小計"
+            footerLabel={copy.subtotal}
             footerYen={other.total_yen}
           />
         </div>
@@ -172,7 +185,7 @@ function CorporateExpenseTables({ unit }: { unit: PlanUnitGroup }) {
       <table className="plan-line-table">
         <tfoot>
           <tr>
-            <th>全社統括 小計</th>
+            <th>{copy.corporateSubtotal}</th>
             <td>{yen(unit.total_yen)}</td>
           </tr>
         </tfoot>
@@ -186,7 +199,7 @@ function PlanUnitBreakdown({
   units,
   grandTotalYen,
   emptyLabel,
-  corporateLabel = "全社共通経費",
+  corporateLabel,
 }: {
   title: string;
   units: PlanUnitGroup[];
@@ -194,6 +207,8 @@ function PlanUnitBreakdown({
   emptyLabel: string;
   corporateLabel?: string;
 }) {
+  const copy = useCopy(STEWARD_COPY);
+  const sharedLabel = corporateLabel ?? copy.corporateExpense;
   if (units.length === 0) {
     return (
       <div className="plan-line-card">
@@ -216,7 +231,7 @@ function PlanUnitBreakdown({
             <div className="plan-unit-group-header">
               <div>
                 <span className="plan-unit-kind">
-                  {unit.is_corporate ? corporateLabel : "事業ユニット"}
+                  {unit.is_corporate ? sharedLabel : copy.businessUnit}
                 </span>
                 <strong>{unit.label}</strong>
               </div>
@@ -227,7 +242,7 @@ function PlanUnitBreakdown({
             ) : (
               <PlanLineTable
                 lines={unit.lines}
-                footerLabel="小計"
+                footerLabel={copy.subtotal}
                 footerYen={unit.total_yen}
               />
             )}
@@ -237,7 +252,7 @@ function PlanUnitBreakdown({
       <table className="plan-line-table plan-grand-total">
         <tfoot>
           <tr>
-            <th>合計</th>
+            <th>{copy.total}</th>
             <td>{yen(total)}</td>
           </tr>
         </tfoot>
@@ -266,6 +281,7 @@ function CurrencyInput({
   disabled?: boolean;
   onChange: (value: string) => void;
 }) {
+  const copy = useCopy(STEWARD_COPY);
   return (
     <div className="currency-input">
       <span aria-hidden="true">¥</span>
@@ -278,12 +294,13 @@ function CurrencyInput({
         disabled={disabled}
         onChange={(event) => onChange(formatYenInput(event.target.value))}
       />
-      <span>円</span>
+      <span>{copy.yen}</span>
     </div>
   );
 }
 
 function BudgetHistoryList({ budget }: { budget: OrgBudgetPayload }) {
+  const locale = useUiLocale();
   const accountNames = useMemo(() => {
     const map = new Map<string, string>();
     for (const row of budget.company_categories ?? []) {
@@ -337,7 +354,7 @@ function BudgetHistoryList({ budget }: { budget: OrgBudgetPayload }) {
           personLabel: (id) => personNames.get(id),
           operatorLabel: (id) => operatorNames.get(id),
           accountLabel: (code) => accountNames.get(code),
-        });
+        }, { japanese: locale === "ja" });
         return (
           <article key={event.event_id}>
             <span className="event-mark" />
@@ -346,7 +363,7 @@ function BudgetHistoryList({ budget }: { budget: OrgBudgetPayload }) {
               <p>{detail}</p>
             </div>
             <time dateTime={event.occurred_at}>
-              {new Intl.DateTimeFormat("ja-JP", {
+              {new Intl.DateTimeFormat(dateTimeLocale(locale), {
                 month: "numeric",
                 day: "numeric",
                 hour: "2-digit",
@@ -370,7 +387,11 @@ export function OrgBudgetPanel({
   /** App can show a Retry button that calls this. */
   onRetryReady?: (retry: (() => void) | null) => void;
 }) {
-  const [budget, setBudget] = useState<OrgBudgetPayload | null>(null);
+  const copy = useCopy(STEWARD_COPY);
+  const locale = useUiLocale();
+  const [budget, setBudget] = useState<OrgBudgetPayload | null>(() =>
+    getOrgBudgetSnapshot(),
+  );
   const [view, setView] = useState<View>("people");
   const [hierarchyFocusUnit, setHierarchyFocusUnit] = useState<string | null>(
     null,
@@ -432,11 +453,13 @@ export function OrgBudgetPanel({
   }, [applyBudget, onError]);
 
   useEffect(() => {
+    const snap = getOrgBudgetSnapshot();
+    if (snap) applyBudget(snap);
     void reload().catch((error: unknown) => {
       setLoadFailed(true);
       onError(error instanceof Error ? error.message : String(error));
     });
-  }, [onError, reload]);
+  }, [applyBudget, onError, reload]);
 
   useEffect(() => {
     if (!onRetryReady) return;
@@ -473,10 +496,12 @@ export function OrgBudgetPanel({
         if (proposed) {
           setEnvelopeProposal(proposed);
           onToast(
-            `枠提案 ${yen(proposed.suggested_company_budget_yen)}` +
-              (proposed.current_company_budget_yen == null
-                ? ""
-                : `（現行 ${yen(proposed.current_company_budget_yen)}）`),
+            copy.envelopeProposal(
+              yen(proposed.suggested_company_budget_yen),
+              proposed.current_company_budget_yen == null
+                ? null
+                : yen(proposed.current_company_budget_yen),
+            ),
           );
           return;
         }
@@ -484,7 +509,7 @@ export function OrgBudgetPanel({
       } catch (error) {
         if (isBudgetRevisionConflict(error)) {
           const conflictMessage =
-            "他の操作者が先に更新しました。最新を再取得しました。内容を確認して再度操作してください。";
+            copy.conflictOther;
           try {
             // Refresh tokens into shared budgetRef (People/Allocation read
             // budgetLiveRef), then retry once before React re-renders children.
@@ -496,7 +521,7 @@ export function OrgBudgetPanel({
               applyBudget(retried);
               publishBudgetMutation("admin", fingerprintFromBudget(retried));
               lastMutation.current = null;
-              onToast(`${message}（最新を取得して再試行しました）`);
+              onToast(copy.retriedLatest(message));
               return;
             } catch (retryError) {
               if (isBudgetRevisionConflict(retryError)) {
@@ -525,7 +550,7 @@ export function OrgBudgetPanel({
           void withRetry(() => fetchOrgBudget())
             .then((next) => {
               applyBudget(next);
-              setRemoteSyncNotice("他画面の予算更新を反映しました");
+              setRemoteSyncNotice(copy.syncFromOther);
             })
             .catch(() => {
               /* next poll */
@@ -567,8 +592,8 @@ export function OrgBudgetPanel({
       if (shouldSkipBudgetSyncReload(message, current)) return;
       const notice =
         message.source === "admin"
-          ? "他画面の予算更新を反映しました"
-          : "予算データが更新されました";
+          ? copy.syncFromOther
+          : copy.syncBudgetUpdated;
       void softReloadFromRemote(notice);
     });
 
@@ -585,14 +610,14 @@ export function OrgBudgetPanel({
       ) {
         return;
       }
-      void softReloadFromRemote("最新の予算を再取得しました");
+      void softReloadFromRemote(copy.syncReloaded);
     }, syncOpts.pollMs);
 
     function onVisibility() {
       if (document.visibilityState !== "visible") return;
       if (pendingRemoteRef.current) {
         pendingRemoteRef.current = false;
-        void softReloadFromRemote("他画面の予算更新を反映しました");
+        void softReloadFromRemote(copy.syncFromOther);
       }
     }
     document.addEventListener("visibilitychange", onVisibility);
@@ -602,17 +627,17 @@ export function OrgBudgetPanel({
       window.clearInterval(pollId);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [applyBudget]);
+  }, [applyBudget, copy]);
 
   if (!budget && !loadFailed) {
-    return <div className="loading-panel">予算正本を検証しています…</div>;
+    return <div className="loading-panel">{copy.budgetValidating}</div>;
   }
 
   if (!budget && loadFailed) {
     return (
       <section className="empty-panel">
-        <h2>予算データの読込に失敗しました</h2>
-        <p className="meta">ネットワークや認証を確認し、再試行してください。</p>
+        <h2>{copy.budgetLoadFailed}</h2>
+        <p className="meta">{copy.budgetLoadHint}</p>
         <button
           type="button"
           className="primary-button"
@@ -624,14 +649,14 @@ export function OrgBudgetPanel({
             })
           }
         >
-          再試行
+          {copy.retry}
         </button>
       </section>
     );
   }
 
   if (!budget) {
-    return <div className="loading-panel">予算正本を検証しています…</div>;
+    return <div className="loading-panel">{copy.budgetValidating}</div>;
   }
 
   const activeFy =
@@ -646,16 +671,16 @@ export function OrgBudgetPanel({
     return (
       <section className="empty-panel">
         <h2 className="heading-with-info">
-          <span>全社予算が未設定</span>
-          <InfoTip label="年度と全社枠を登録すると開始できます。" />
+          <span>{copy.companyUnset}</span>
+          <InfoTip label={copy.companyUnsetTip} />
         </h2>
         <div className="baseline-strip setup-baseline">
           <div>
-            <span>経費予算</span>
+            <span>{copy.expenseBudget}</span>
             <strong>
               {budget.plan_reference.expense_plan_yen == null &&
               budget.planning.baseline_yen == null
-                ? "未設定"
+                ? copy.unset
                 : yen(
                     budget.plan_reference.expense_plan_yen ??
                       budget.planning.baseline_yen ??
@@ -664,19 +689,19 @@ export function OrgBudgetPanel({
             </strong>
           </div>
           <div>
-            <span>売上予算</span>
+            <span>{copy.revenueBudget}</span>
             <strong>
               {budget.plan_reference.revenue_plan_yen == null
-                ? "未設定"
+                ? copy.unset
                 : yen(budget.plan_reference.revenue_plan_yen)}
             </strong>
           </div>
-          <p>{planStatusLabel(budget.planning)}</p>
+          <p>{planStatusLabel(budget.planning, copy)}</p>
         </div>
         {budget.viewer.can_set_company && (
           <div className="company-setup">
             <CurrencyInput
-              label="全社予算（円）"
+              label={copy.companyBudgetYen}
               value={companyAmount}
               disabled={mutationBusy}
               onChange={setCompanyAmount}
@@ -693,11 +718,11 @@ export function OrgBudgetPanel({
                       fiscal_year: activeFy,
                       expected_revision: budgetRef.current?.revision,
                     }),
-                  "全社予算を設定しました",
+                  copy.companyBudgetSet,
                 )
               }
             >
-              事業計画基準で開始
+              {copy.startFromPlan}
             </button>
           </div>
         )}
@@ -708,10 +733,10 @@ export function OrgBudgetPanel({
   return (
     <>
       {activeFy && (
-        <p className="budget-fy-label" aria-label="会計年度">
+        <p className="budget-fy-label" aria-label={copy.fiscalYear}>
           {activeFy}
           {budget.revision && budget.revision !== "0" ? (
-            <span className="budget-revision-token" title="楽観的同時実行トークン">
+            <span className="budget-revision-token" title={copy.revisionTitle}>
               {" "}
               · rev {budget.revision}
             </span>
@@ -731,20 +756,20 @@ export function OrgBudgetPanel({
             className="wallet-ghost-btn"
             onClick={() => setRemoteSyncNotice(null)}
           >
-            閉じる
+            {copy.close}
           </button>
         </div>
       ) : null}
-      <nav className="view-tabs" aria-label="予算ビュー">
+      <nav className="view-tabs" aria-label={copy.budgetView}>
         {(
           [
-            ["people", "個人配布"],
-            ["overview", "階層分配"],
-            ["plans", "事業計画"],
-            ["outlook", "見通し"],
-            ["payroll", "人件費"],
-            ["sources", "正本"],
-            ["history", "履歴"],
+            ["people", copy.budgetPeople],
+            ["overview", copy.budgetOverview],
+            ["plans", copy.budgetPlans],
+            ["outlook", copy.budgetOutlook],
+            ["payroll", copy.budgetPayroll],
+            ["sources", copy.budgetSources],
+            ["history", copy.budgetHistory],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -786,26 +811,29 @@ export function OrgBudgetPanel({
         <section className="plan-reference-panel outlook-panel">
           <div className="section-heading">
             <div>
-              <h2>期中見通し</h2>
+              <h2>{copy.midOutlook}</h2>
             </div>
           </div>
           <section className="outlook-kpi">
             <div className="outlook-kpi-main">
               <span className="outlook-kpi-label">
-                見通し（経費）
+                {copy.outlookOpex}
                 <InfoTip
-                  label={`利益の目安 ${yen(budget.outlook_reference.outlook.operating_profit_proxy_yen)}（売上 − 経費 − 減価償却）`}
+                  label={copy.outlookProfitTip(
+                    yen(budget.outlook_reference.outlook.operating_profit_proxy_yen),
+                  )}
                 />
               </span>
               <strong>
                 {yen(budget.outlook_reference.outlook.opex_yen)}
               </strong>
               <p className="outlook-kpi-sub">
-                計画{" "}
+                {copy.plan}{" "}
                 {yen(budget.outlook_reference.plan.opex_yen)}
                 {" · "}
-                実績（〜{monthShortLabel(budget.outlook_reference.as_of_month)}
-                ）{" "}
+                {copy.outlookActualThrough(
+                  monthShortLabel(budget.outlook_reference.as_of_month, copy.monthShort),
+                )}{" "}
                 {yen(budget.outlook_reference.actual_ytd.opex_yen)}
               </p>
             </div>
@@ -817,8 +845,8 @@ export function OrgBudgetPanel({
               }
             >
               <span>
-                計画との差
-                <InfoTip label="見通しの経費 − 承認済み計画の経費。プラスは計画超過の見込みです。" />
+                {copy.vsPlan}
+                <InfoTip label={copy.vsPlanTip} />
               </span>
               <strong>
                 {signedYen(
@@ -829,19 +857,19 @@ export function OrgBudgetPanel({
           </section>
           {budget.outlook_reference.gaps.envelope_alert && (
             <p className="outlook-status-note" role="status">
-              見通しの経費が執行枠を超えています。枠の変更は「階層分配」タブ。
+              {copy.outlookOverEnvelope}
             </p>
           )}
           {budget.outlook_reference.department_consistency.alert && (
             <p className="outlook-status-note" role="status">
-              部門合計と全社見通しにずれ（差{" "}
-              {yen(budget.outlook_reference.department_consistency.delta_yen)}
-              ）。
+              {copy.deptOutlookGap(
+                yen(budget.outlook_reference.department_consistency.delta_yen),
+              )}
             </p>
           )}
 
           <div className="outlook-month-head">
-            <h3 className="alloc-section-title">月次（経費）</h3>
+            <h3 className="alloc-section-title">{copy.monthlyOpex}</h3>
             <label className="outlook-month-toggle">
               <input
                 type="checkbox"
@@ -850,7 +878,7 @@ export function OrgBudgetPanel({
                   setOutlookMonthDetail(event.target.checked)
                 }
               />
-              売上・投資・減価も表示
+              {copy.showMoreMonths}
             </label>
           </div>
           <div
@@ -862,29 +890,29 @@ export function OrgBudgetPanel({
           >
             <div className="outlook-month-scroll">
               <div className="category-table-head">
-                <span>月</span>
+                <span>{copy.colMonth}</span>
                 <span>
-                  区分
-                  <InfoTip label="「確定実績」はすでに確定した月、「見込み」は残月の予測です。" />
+                  {copy.colRole}
+                  <InfoTip label={copy.roleTip} />
                 </span>
-                <span>経費</span>
+                <span>{copy.opex}</span>
                 {outlookMonthDetail && (
                   <>
-                    <span>売上</span>
-                    <span>投資</span>
-                    <span>減価</span>
+                    <span>{copy.revenue}</span>
+                    <span>{copy.capex}</span>
+                    <span>{copy.depreciation}</span>
                   </>
                 )}
               </div>
               {budget.outlook_reference.months.map((row) => (
                 <div className="category-table-row" key={row.month}>
                   <strong title={row.month}>
-                    {monthShortLabel(row.month)}
+                    {monthShortLabel(row.month, copy.monthShort)}
                   </strong>
                   <span>
                     {row.role === "actual" || row.role === "actual_missing"
-                      ? "実績"
-                      : "見込み"}
+                      ? copy.actual
+                      : copy.forecast}
                   </span>
                   <span>{yen(row.opex_yen)}</span>
                   {outlookMonthDetail && (
@@ -900,11 +928,11 @@ export function OrgBudgetPanel({
           </div>
           {budget.outlook_reference.department_outlook.length > 0 && (
             <>
-              <h3 className="alloc-section-title">部門の見通し（経費）</h3>
+              <h3 className="alloc-section-title">{copy.deptOutlook}</h3>
               <div className="category-table reference-category-table">
                 <div className="category-table-head">
-                  <span>部門</span>
-                  <span>経費見通し</span>
+                  <span>{copy.department}</span>
+                  <span>{copy.deptOutlookOpex}</span>
                 </div>
                 {budget.outlook_reference.department_outlook.map((row) => {
                   const label =
@@ -923,7 +951,7 @@ export function OrgBudgetPanel({
           )}
 
           <details className="outlook-edit-details">
-            <summary>見込み編集</summary>
+            <summary>{copy.editForecast}</summary>
             <div className="outlook-actions">
               {!budget.outlook_reference.file_exists && (
                 <button
@@ -939,11 +967,11 @@ export function OrgBudgetPanel({
                           expected_outlook_revision:
                             budgetRef.current?.outlook_reference.revision ?? "0",
                         }),
-                      "見通しを初期化しました",
+                      copy.outlookInited,
                     )
                   }
                 >
-                  初期化
+                  {copy.init}
                 </button>
               )}
               {budget.outlook_reference.file_exists && (
@@ -961,11 +989,11 @@ export function OrgBudgetPanel({
                             expected_outlook_revision:
                               budgetRef.current?.outlook_reference.revision ?? "0",
                           }),
-                        "残月を予実から同期しました（公開し直してください）",
+                        copy.outlookSynced,
                       )
                     }
                   >
-                    予実から同期
+                    {copy.syncFromYojitsu}
                   </button>
                   <button
                     type="button"
@@ -978,29 +1006,26 @@ export function OrgBudgetPanel({
                             fiscal_year:
                               budget.outlook_reference.fiscal_year,
                           }),
-                        "枠提案を計算しました",
+                        copy.proposalComputed,
                       )
                     }
                   >
-                    枠提案
+                    {copy.proposal}
                   </button>
                 </>
               )}
             </div>
             {envelopeProposal && (
               <p className="outlook-status-note" role="status">
-                枠提案{" "}
-                {yen(envelopeProposal.suggested_company_budget_yen)}
-                （現行{" "}
-                {envelopeProposal.current_company_budget_yen == null
-                  ? "—"
-                  : yen(envelopeProposal.current_company_budget_yen)}
-                {" · "}
-                差{" "}
-                {envelopeProposal.delta_yen == null
-                  ? "—"
-                  : signedYen(envelopeProposal.delta_yen)}
-                ）。自動では変わりません。変更は「階層分配」タブ。
+                {copy.proposalNote(
+                  yen(envelopeProposal.suggested_company_budget_yen),
+                  envelopeProposal.current_company_budget_yen == null
+                    ? "—"
+                    : yen(envelopeProposal.current_company_budget_yen),
+                  envelopeProposal.delta_yen == null
+                    ? "—"
+                    : signedYen(envelopeProposal.delta_yen),
+                )}
               </p>
             )}
             {budget.outlook_reference.file_exists && (
@@ -1011,7 +1036,7 @@ export function OrgBudgetPanel({
                     event.preventDefault();
                     const asOf = outlookAsOf.trim();
                     if (!asOf) {
-                      onError("基準月を入力してください");
+                      onError(copy.needAsOf);
                       return;
                     }
                     void run(
@@ -1022,17 +1047,17 @@ export function OrgBudgetPanel({
                           expected_outlook_revision:
                             budgetRef.current?.outlook_reference.revision ?? "0",
                         }),
-                      `基準月を ${asOf} に更新しました`,
+                      copy.asOfUpdated(asOf),
                     );
                   }}
                 >
                   <label>
                     <span className="outlook-field-label">
-                      基準月
-                      <InfoTip label="ここまでが確定実績です。これより後の月は見込みとして扱います。" />
+                      {copy.asOfMonth}
+                      <InfoTip label={copy.asOfTip} />
                     </span>
                     <MonthPickerInput
-                      aria-label="基準月"
+                      aria-label={copy.asOfMonth}
                       value={outlookAsOf}
                       onChange={setOutlookAsOf}
                       disabled={mutationBusy}
@@ -1046,7 +1071,7 @@ export function OrgBudgetPanel({
                     className="secondary-button"
                     disabled={mutationBusy}
                   >
-                    更新
+                    {copy.refresh}
                   </button>
                 </form>
                 <form
@@ -1055,7 +1080,7 @@ export function OrgBudgetPanel({
                     event.preventDefault();
                     const month = outlookMonth.trim();
                     if (!month) {
-                      onError("対象月を入力してください");
+                      onError(copy.needTargetMonth);
                       return;
                     }
                     void run(
@@ -1069,17 +1094,17 @@ export function OrgBudgetPanel({
                           expected_outlook_revision:
                             budgetRef.current?.outlook_reference.revision ?? "0",
                         }),
-                      `${month} の見通しを保存しました`,
+                      copy.monthSaved(month),
                     );
                   }}
                 >
                   <label>
                     <span className="outlook-field-label">
-                      対象月
-                      <InfoTip label="見込みを入れる月です。一覧から1つ選んでください。" />
+                      {copy.targetMonth}
+                      <InfoTip label={copy.targetMonthTip} />
                     </span>
                     <MonthPickerInput
-                      aria-label="対象月"
+                      aria-label={copy.targetMonth}
                       value={outlookMonth}
                       onChange={setOutlookMonth}
                       disabled={mutationBusy}
@@ -1093,7 +1118,7 @@ export function OrgBudgetPanel({
                     />
                   </label>
                   <label>
-                    売上
+                    {copy.revenue}
                     <input
                       inputMode="numeric"
                       value={outlookRevenue}
@@ -1103,7 +1128,7 @@ export function OrgBudgetPanel({
                     />
                   </label>
                   <label>
-                    経費
+                    {copy.opex}
                     <input
                       inputMode="numeric"
                       value={outlookOpex}
@@ -1113,7 +1138,7 @@ export function OrgBudgetPanel({
                     />
                   </label>
                   <label>
-                    投資
+                    {copy.capex}
                     <input
                       inputMode="numeric"
                       value={outlookCapex}
@@ -1127,7 +1152,7 @@ export function OrgBudgetPanel({
                     className="secondary-button"
                     disabled={mutationBusy}
                   >
-                    保存
+                    {copy.save}
                   </button>
                 </form>
                 <form
@@ -1135,7 +1160,7 @@ export function OrgBudgetPanel({
                   onSubmit={(event) => {
                     event.preventDefault();
                     if (!outlookPublisherId.trim()) {
-                      onError("承認者を選んでください");
+                      onError(copy.needApprover);
                       return;
                     }
                     void run(
@@ -1146,21 +1171,21 @@ export function OrgBudgetPanel({
                           expected_outlook_revision:
                             budgetRef.current?.outlook_reference.revision ?? "0",
                         }),
-                      "見通しを公開しました",
+                      copy.outlookPublished,
                     );
                   }}
                 >
                   <label>
                     <span className="outlook-field-label">
-                      承認者
-                      <InfoTip label="編集した人以外の、組織上の人（CEO・部門長）を選びます。表示は組織図の氏名です。秘書・エージェントは選べません。" />
+                      {copy.publisher}
+                      <InfoTip label={copy.publisherTip} />
                     </span>
                     <select
                       value={outlookPublisherId}
                       onChange={(e) => setOutlookPublisherId(e.target.value)}
                       disabled={mutationBusy}
                     >
-                      <option value="">選択してください</option>
+                      <option value="">{copy.selectPlease}</option>
                       {(budget.outlook_operators ?? [])
                         .filter(
                           (op) =>
@@ -1187,7 +1212,7 @@ export function OrgBudgetPanel({
                       )
                     }
                   >
-                    公開
+                    {copy.publish}
                   </button>
                 </form>
                 {(budget.outlook_operators ?? []).filter(
@@ -1196,8 +1221,7 @@ export function OrgBudgetPanel({
                     budget.outlook_reference.last_edited_by_operator_id,
                 ).length === 0 && (
                   <p className="outlook-status-note" role="status">
-                    承認できる部門長が他にいません（自己承認不可）。operators
-                    に承認ロールの部門長を登録してください。
+                    {copy.noOtherApprover}
                   </p>
                 )}
               </div>
@@ -1211,8 +1235,8 @@ export function OrgBudgetPanel({
           <div className="section-heading">
             <div>
               <h2 className="heading-with-info">
-                <span>事業計画</span>
-                <InfoTip label="売上・経費の計画参照。予算の分配は「分配」タブ。" />
+                <span>{copy.businessPlan}</span>
+                <InfoTip label={copy.businessPlanTip} />
               </h2>
             </div>
             <span>
@@ -1226,16 +1250,16 @@ export function OrgBudgetPanel({
           <section className="summary-grid">
             <article className="summary-card featured">
               <span className="heading-with-info">
-                売上
+                {copy.revenue}
                 <InfoTip
-                  label={`事業計画 ${
+                  label={`${copy.businessPlanAmount(
                     budget.plan_reference.business_plan_revenue_yen == null
                       ? "—"
-                      : yen(budget.plan_reference.business_plan_revenue_yen)
-                  }${
+                      : yen(budget.plan_reference.business_plan_revenue_yen),
+                  )}${
                     budget.plan_reference.consistency
                       .revenue_matches_business_plan === false
-                      ? " · 不一致"
+                      ? copy.mismatch
                       : ""
                   }`}
                 />
@@ -1248,16 +1272,16 @@ export function OrgBudgetPanel({
             </article>
             <article className="summary-card">
               <span className="heading-with-info">
-                経費
+                {copy.opex}
                 <InfoTip
-                  label={`SGA ${
+                  label={`${copy.sgaPlan(
                     budget.plan_reference.profit_plan_sga_yen == null
                       ? "—"
-                      : yen(budget.plan_reference.profit_plan_sga_yen)
-                  }${
+                      : yen(budget.plan_reference.profit_plan_sga_yen),
+                  )}${
                     budget.plan_reference.consistency
                       .expense_matches_profit_sga === false
-                      ? " · 不一致"
+                      ? copy.mismatch
                       : ""
                   }`}
                 />
@@ -1270,8 +1294,8 @@ export function OrgBudgetPanel({
             </article>
             <article className="summary-card">
               <span className="heading-with-info">
-                営業利益
-                <InfoTip label="損益計算書の営業利益計画（business-plan）。法人税等控除前。税引前当期純利益そのものではない。支払利息は本テナントでは経費（SGA）に含めている。" />
+                {copy.operatingProfit}
+                <InfoTip label={copy.operatingProfitTip} />
               </span>
               <strong>
                 {budget.plan_reference.business_plan_operating_profit_yen ==
@@ -1283,7 +1307,7 @@ export function OrgBudgetPanel({
               </strong>
             </article>
             <article className="summary-card">
-              <span>投資（設備）</span>
+              <span>{copy.capexEquipment}</span>
               <strong>
                 {budget.plan_reference.business_plan_investment_yen == null
                   ? "—"
@@ -1294,24 +1318,24 @@ export function OrgBudgetPanel({
 
           <div className="plan-line-stack">
             <PlanUnitBreakdown
-              title="売上内訳"
+              title={copy.revenueBreakdown}
               units={budget.plan_reference.revenue_units ?? []}
               grandTotalYen={budget.plan_reference.revenue_plan_yen}
-              emptyLabel="なし"
+              emptyLabel={copy.none}
             />
             <PlanUnitBreakdown
-              title="経費内訳"
+              title={copy.expenseBreakdown}
               units={budget.plan_reference.expense_units ?? []}
               grandTotalYen={budget.plan_reference.expense_plan_yen}
-              emptyLabel="なし"
-              corporateLabel="全社共通"
+              emptyLabel={copy.none}
+              corporateLabel={copy.corporateCommon}
             />
           </div>
         </section>
       )}
 
       {view === "payroll" && (
-        <section className="plan-reference-panel payroll-tab" aria-label="人件費">
+        <section className="plan-reference-panel payroll-tab" aria-label={copy.budgetPayroll}>
           {budget.payroll_reference ? (
             <WalletOpsPrompts
               scope="admin-payroll"
@@ -1325,7 +1349,7 @@ export function OrgBudgetPanel({
                 actual_variance_yen:
                   budget.payroll_reference.actual_variance_yen,
                 actual_as_of: budget.actuals?.actual_as_of,
-              })}
+              }, locale)}
             />
           ) : null}
           <PayrollLanePanel
@@ -1340,8 +1364,8 @@ export function OrgBudgetPanel({
           <div className="section-heading">
             <div>
               <h2 className="heading-with-info">
-                <span>正本</span>
-                <InfoTip label="画面から直接編集しない。" />
+                <span>{copy.budgetSources}</span>
+                <InfoTip label={copy.sourcesTip} />
               </h2>
             </div>
             <button
@@ -1349,7 +1373,7 @@ export function OrgBudgetPanel({
               className="quiet-button"
               onClick={() => void reload()}
             >
-              再読込
+              {copy.refresh}
             </button>
           </div>
           <div className="source-list">
@@ -1361,7 +1385,7 @@ export function OrgBudgetPanel({
                   <code>{source.path}</code>
                 </div>
                 <div className="source-meta">
-                  <span>{source.record_count}件</span>
+                  <span>{copy.recordCount(source.record_count)}</span>
                 </div>
               </article>
             ))}
@@ -1373,12 +1397,12 @@ export function OrgBudgetPanel({
         <section className="history-panel">
           <div className="section-heading">
             <div>
-              <h2>履歴</h2>
+              <h2>{copy.budgetHistory}</h2>
             </div>
             <span>{budget.events?.length ?? 0}</span>
           </div>
           {(budget.events?.length ?? 0) === 0 ? (
-            <p className="empty-copy">まだ履歴はありません。</p>
+            <p className="empty-copy">{copy.noHistory}</p>
           ) : (
             <BudgetHistoryList budget={budget} />
           )}

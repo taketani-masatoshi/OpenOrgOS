@@ -1,10 +1,12 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import {
   previewCommand,
   runCommand,
   type CommandPlan,
   type CommandRunResult,
 } from "./api";
+import { STEWARD_COPY } from "./steward-copy";
 
 type Props = {
   plan: CommandPlan;
@@ -12,6 +14,7 @@ type Props = {
 };
 
 export function CommandActionCard({ plan: initial, onUpdated }: Props) {
+  const copy = useCopy(STEWARD_COPY);
   const [plan, setPlan] = useState(initial);
   const [args, setArgs] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
@@ -61,7 +64,7 @@ export function CommandActionCard({ plan: initial, onUpdated }: Props) {
         setOutput(result.output ?? "(empty)");
         onUpdated?.(nextPlan ?? plan, result);
       } else {
-        setError(result.error ?? "実行に失敗しました");
+        setError(result.error ?? copy.commandFailed);
         onUpdated?.(nextPlan ?? plan, result);
       }
     } catch (err) {
@@ -92,7 +95,7 @@ export function CommandActionCard({ plan: initial, onUpdated }: Props) {
   return (
     <div className="command-card">
       <div className="command-card-head">
-        <strong>{plan.label ?? plan.skill_id ?? "コマンド"}</strong>
+        <strong>{plan.label ?? plan.skill_id ?? copy.commandFallback}</strong>
         <span className="command-card-status">{plan.status}</span>
       </div>
       {plan.cli_display && (
@@ -117,7 +120,15 @@ export function CommandActionCard({ plan: initial, onUpdated }: Props) {
       )}
       {plan.status === "approval_gate" && (
         <p className="command-card-hint">
-          人間ゲートです。Wire / 振込 / 承認 UI から実行してください。
+          {copy.commandHumanGate}{" "}
+          {plan.skill_id === "broker_transfer_gate" ? (
+            <a href="/approvals/?broker=1">{copy.brokerTransferTitle}</a>
+          ) : plan.skill_id === "correspondence_send" ||
+            plan.skill_id === "wire_send_gate" ? (
+            <a href="/approvals/">{copy.executiveOpenApprovals}</a>
+          ) : (
+            <a href="/approvals/">{copy.executiveOpenApprovals}</a>
+          )}
         </p>
       )}
       {(plan.missing_args?.length ?? 0) > 0 && (
@@ -145,8 +156,8 @@ export function CommandActionCard({ plan: initial, onUpdated }: Props) {
             onClick={() => void onRun()}
           >
             {plan.kind === "write" || plan.status === "needs_confirmation"
-              ? "実行する"
-              : "再実行"}
+              ? copy.commandRun
+              : copy.commandRerun}
           </button>
         </div>
       )}

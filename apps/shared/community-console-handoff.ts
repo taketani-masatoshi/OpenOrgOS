@@ -15,6 +15,11 @@ export function communityConsoleOrigin(): string {
   return (readViteCommunityOrigin() ?? DEFAULT_COMMUNITY_ORIGIN).replace(/\/+$/, "");
 }
 
+/** Community Connections (Gmail / identity). Fallback when BFF URL is missing. */
+export function communityConnectionsPageUrl(): string {
+  return `${communityConsoleOrigin()}/settings/connections`;
+}
+
 /**
  * Build Community URL that signs the user in and returns to Operator Console `next` path.
  * Matches Community `consoleStartHref` (/ops/console/start?next=…).

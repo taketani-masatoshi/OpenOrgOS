@@ -1,4 +1,6 @@
+import { useCopy } from "@ops-shared/define-copy";
 import type { MailFolder } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface FolderItem {
   id: MailFolder;
@@ -8,22 +10,20 @@ interface FolderItem {
 
 interface Props {
   active: MailFolder;
-  counts: { inbox: number; outbox: number; pending: number; witness: number; threads: number };
-  showWitnessFolder?: boolean;
+  counts: { ours: number; theirs: number };
   onSelect: (folder: MailFolder) => void;
 }
 
-export function MailFolderSidebar({ active, counts, showWitnessFolder, onSelect }: Props) {
+/** 待ちだけを見せる。起案は秘書、完了済みは出さない。 */
+export function MailFolderSidebar({ active, counts, onSelect }: Props) {
+  const copy = useCopy(WIRE_COPY);
   const folders: FolderItem[] = [
-    { id: "inbox", label: "受信", count: counts.inbox },
-    { id: "outbox", label: "送信", count: counts.outbox },
-    { id: "pending", label: "送信待ち", count: counts.pending },
-    ...(showWitnessFolder ? [{ id: "witness" as MailFolder, label: "確認待ち", count: counts.witness }] : []),
-    { id: "threads", label: "スレッド", count: counts.threads },
+    { id: "ours", label: copy.waitingOurs, count: counts.ours },
+    { id: "theirs", label: copy.waitingTheirs, count: counts.theirs },
   ];
 
   return (
-    <nav className="mail-sidebar" aria-label="フォルダ">
+    <nav className="mail-sidebar" aria-label={copy.folders}>
       {folders.map((f) => (
         <button
           key={f.id}

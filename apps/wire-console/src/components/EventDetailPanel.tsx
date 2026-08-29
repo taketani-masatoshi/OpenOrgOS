@@ -34,7 +34,7 @@ export function EventDetailPanel({ tenantId, detail, loading, onClose, onRefresh
     <aside className="detail-panel">
       <div className="detail-header">
         <h3>Event detail</h3>
-        <button type="button" className="secondary" onClick={onClose}>
+        <button type="button" className="btn btn-ghost" onClick={onClose}>
           Close
         </button>
       </div>
@@ -112,7 +112,7 @@ export function EventDetailPanel({ tenantId, detail, loading, onClose, onRefresh
                   {workflow.approval_id ? (
                     <p className="hint mono">approval {workflow.approval_id}</p>
                   ) : null}
-                  <button type="button" className="secondary" onClick={onRefresh}>
+                  <button type="button" className="btn btn-ghost" onClick={onRefresh}>
                     Refresh tenant
                   </button>
                 </>

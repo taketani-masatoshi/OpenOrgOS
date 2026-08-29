@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCopy } from "@ops-shared/define-copy";
+import { STEWARD_COPY } from "./steward-copy";
 import {
   fetchLlmWorkers,
   probeLlmWorker,
@@ -98,10 +100,10 @@ function runtimeFields(): Pick<
   };
 }
 
-function emptyWorker(): LlmWorkerRow {
+function emptyWorker(label: string): LlmWorkerRow {
   return {
     id: `worker-${Date.now().toString(36)}`,
-    label: "新規ワーカー",
+    label,
     tier: "local",
     provider: "openai-compatible",
     base_url: "http://127.0.0.1:11434/v1",
@@ -137,6 +139,7 @@ function fromPreset(preset: WorkerPreset, existing: LlmWorkerRow[]): LlmWorkerRo
  * API keys stay in env — this page only stores env var names.
  */
 export function LlmWorkersPage() {
+  const copy = useCopy(STEWARD_COPY);
   const [snapshot, setSnapshot] = useState<LlmWorkersSnapshot | null>(null);
   const [workers, setWorkers] = useState<LlmWorkerRow[]>([]);
   const [maxQueue, setMaxQueue] = useState(64);
@@ -230,7 +233,7 @@ export function LlmWorkersPage() {
       });
       setSnapshot(data);
       setWorkers(data.workers);
-      setSavedNote("保存しました");
+      setSavedNote(copy.saved);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -262,25 +265,23 @@ export function LlmWorkersPage() {
   return (
     <div className="chat-settings-page llm-workers-page">
       <header className="chat-settings-header">
-        <h1 className="chat-settings-title">LLM ワーカー</h1>
-        <p className="chat-settings-lead">
-          ローカル優先。混雑時のみクラウドへ。キーは環境変数名のみ。
-        </p>
+        <h1 className="chat-settings-title">{copy.workersTitle}</h1>
+        <p className="chat-settings-lead">{copy.workersLead}</p>
       </header>
 
       {loading ? (
-        <p className="chat-settings-muted">読み込み中…</p>
+        <p className="chat-settings-muted">{copy.loading}</p>
       ) : (
         <form className="chat-settings-form" onSubmit={(e) => void onSubmit(e)}>
           <p className="llm-workers-status" aria-live="polite">
-            実行中 {inflight} · 待機 {queued}
+            {copy.workersRunning(inflight, queued)}
           </p>
 
           <fieldset className="chat-settings-fieldset">
-            <legend>キュー</legend>
+            <legend>{copy.workersQueue}</legend>
             <div className="llm-workers-queue-row">
               <label className="llm-workers-field">
-                <span>待ち行列上限</span>
+                <span>{copy.workersQueueLimit}</span>
                 <input
                   type="number"
                   min={1}
@@ -297,11 +298,11 @@ export function LlmWorkersPage() {
                   disabled={busy}
                   onChange={(e) => setOverflowEnabled(e.target.checked)}
                 />
-                <span>クラウド昇格</span>
+                <span>{copy.workersCloudOverflow}</span>
               </label>
               {overflowEnabled && (
                 <label className="llm-workers-field">
-                  <span>待ちしきい値 (ms)</span>
+                  <span>{copy.workersWaitThreshold}</span>
                   <input
                     type="number"
                     min={0}
@@ -316,20 +317,20 @@ export function LlmWorkersPage() {
           </fieldset>
 
           <fieldset className="chat-settings-fieldset">
-            <legend>ワーカー</legend>
+            <legend>{copy.workersTable}</legend>
             <div className="llm-workers-table-wrap">
               <table className="llm-workers-table">
                 <thead>
                   <tr>
-                    <th>状態</th>
-                    <th>名前</th>
-                    <th>種別</th>
+                    <th>{copy.workersColStatus}</th>
+                    <th>{copy.workersColName}</th>
+                    <th>{copy.workersColKind}</th>
                     <th>URL</th>
-                    <th>モデル</th>
-                    <th>同時</th>
-                    <th>キー env</th>
+                    <th>{copy.workersColModel}</th>
+                    <th>{copy.workersColConcurrent}</th>
+                    <th>{copy.workersColKeyEnv}</th>
                     <th>tools</th>
-                    <th>有効</th>
+                    <th>{copy.workersColEnabled}</th>
                     <th />
                   </tr>
                 </thead>
@@ -382,7 +383,7 @@ export function LlmWorkersPage() {
                             })
                           }
                         >
-                          <option value="openai-compatible">OpenAI互換</option>
+                          <option value="openai-compatible">{copy.openaiCompat}</option>
                           <option value="anthropic">Anthropic</option>
                         </select>
                       </td>
@@ -392,6 +393,12 @@ export function LlmWorkersPage() {
                           disabled={busy}
                           onChange={(e) => patchWorker(w.id, { base_url: e.target.value })}
                         />
+                        {w.resolved_base_url &&
+                          w.resolved_base_url !== w.base_url.replace(/\/$/, "") && (
+                            <p className="llm-workers-key-hint is-ok">
+                              {w.resolved_base_url}
+                            </p>
+                          )}
                       </td>
                       <td>
                         <input
@@ -437,10 +444,10 @@ export function LlmWorkersPage() {
                           }
                         >
                           {w.tier === "local" && w.provider === "openai-compatible"
-                            ? "ローカルはキー任意"
+                            ? copy.localKeyOptional
                             : w.key_configured
-                              ? "env 設定済"
-                              : "キーは .env に設定"}
+                              ? copy.envReady
+                              : copy.keyInEnv}
                         </span>
                       </td>
                       <td>
@@ -471,7 +478,7 @@ export function LlmWorkersPage() {
                           disabled={busy || probing === w.id}
                           onClick={() => void onProbe(w.id)}
                         >
-                          疎通
+                          {copy.workersProbe}
                         </button>
                         <button
                           type="button"
@@ -479,7 +486,7 @@ export function LlmWorkersPage() {
                           disabled={busy}
                           onClick={() => removeWorker(w.id)}
                         >
-                          削除
+                          {copy.workersDelete}
                         </button>
                       </td>
                     </tr>
@@ -487,7 +494,7 @@ export function LlmWorkersPage() {
                 </tbody>
               </table>
             </div>
-            <div className="llm-workers-presets" role="group" aria-label="定型追加">
+            <div className="llm-workers-presets" role="group" aria-label={copy.presets}>
               {WORKER_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
@@ -496,7 +503,7 @@ export function LlmWorkersPage() {
                   disabled={busy}
                   title={
                     presetAlreadyAdded(preset)
-                      ? "同種が既にあります（追加可）"
+                      ? copy.presetExists
                       : `${preset.row.base_url} · ${preset.row.model}`
                   }
                   onClick={() => addPreset(preset)}
@@ -508,9 +515,9 @@ export function LlmWorkersPage() {
                 type="button"
                 className="btn btn-ghost btn-sm"
                 disabled={busy}
-                onClick={() => setWorkers((prev) => [...prev, emptyWorker()])}
+                onClick={() => setWorkers((prev) => [...prev, emptyWorker(copy.workersNewLabel)])}
               >
-                + 手動
+                {copy.workersManual}
               </button>
             </div>
           </fieldset>
@@ -526,18 +533,18 @@ export function LlmWorkersPage() {
             </p>
           )}
 
-          <button type="submit" className="agent-chat-send" disabled={busy}>
-            保存
+          <button type="submit" className="btn btn-primary" disabled={busy}>
+            {copy.save}
           </button>
         </form>
       )}
 
       <p className="chat-settings-back">
-        <a href="/steward/">スチュワードに戻る</a>
+        <a href="/steward/">{copy.backSteward}</a>
         {" · "}
-        <a href="/secretary/">秘書に戻る</a>
+        <a href="/secretary/">{copy.backSecretary}</a>
         {" · "}
-        <a href="/cloud-llm/">クラウド接続</a>
+        <a href="/cloud-llm/">{copy.cloudLink}</a>
       </p>
     </div>
   );

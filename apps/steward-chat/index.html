@@ -34,9 +34,17 @@
         el.setAttribute("data-theme-pref", p);
         el.style.colorScheme = r;
         try {
-          var nav = (navigator.language || "").toLowerCase();
-          if (nav.indexOf("ja") === 0) el.lang = "ja";
-          else if (nav) el.lang = nav.split("-")[0];
+          var lk = "oorgos-locale",
+            lp = "ja";
+          var lc = document.cookie.match(/(?:^|; )oorgos-locale=([^;]*)/);
+          if (lc) lp = decodeURIComponent(lc[1]);
+          else {
+            var ls = localStorage.getItem(lk);
+            if (ls) lp = ls;
+          }
+          if (lp !== "ja" && lp !== "en") lp = "ja";
+          el.lang = lp;
+          el.setAttribute("data-locale", lp);
         } catch (e2) {}
       })();
     </script>

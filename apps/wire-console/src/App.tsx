@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { AUTH_COPY, SHELL_COPY } from "@ops-shared/console-copy";
+import { useCopy } from "@ops-shared/define-copy";
 import { OperatorShell } from "@ops-shared/OperatorShell";
 import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
+import { useUiLocale } from "@ops-shared/useUiLocale";
 import { buildCommunityConsoleStartUrl } from "@ops-shared/community-console-handoff";
 import { PasskeyAuthPanel } from "@ops-shared/PasskeyAuthPanel";
 import { PasskeySettingsPage } from "@ops-shared/PasskeySettingsPage";
@@ -10,10 +13,15 @@ import { api, type AuthConfig, type TenantSummary, type User } from "./api";
 import { MailWorkbench } from "./MailWorkbench";
 import { loginWithWebAuthn } from "./webauthn-login";
 import { registerWithWebAuthn, registerSettlementWithWebAuthn } from "./webauthn-register";
+import { isCombinedWireSpa, isPasskeySettingsPath as pathIsPasskeySettings, wireHomeHref } from "@ops-shared/console-hrefs";
+import { canSignInWithPasskey, isWebAuthnIssuanceEnabled } from "@ops-shared/webauthn-issuance";
 
 function isPasskeySettingsPath(): boolean {
-  return typeof window !== "undefined" && window.location.pathname.startsWith("/settings");
+  return typeof window !== "undefined" && pathIsPasskeySettings(window.location.pathname);
 }
+
+const combinedOrigin = isCombinedWireSpa();
+const wireHome = wireHomeHref();
 
 const passkeyApi: PasskeyCredentialsApi = (path, init) =>
   api(path.replace(/^\/chat\/v1/, "/console/v1"), init);
@@ -26,10 +34,13 @@ export function App() {
   const [prodToken, setProdToken] = useState("");
   const [idToken, setIdToken] = useState("");
   const [operatorId, setOperatorId] = useState("OP-001");
-  const [approverId, setApproverId] = useState("段燕燕");
+  const [approverId, setApproverId] = useState("Demo CEO");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [webAuthnBusy, setWebAuthnBusy] = useState(false);
+  const locale = useUiLocale();
+  const copy = useCopy(AUTH_COPY);
+  const shell = useCopy(SHELL_COPY);
 
   const userMsgOpts = {
     expectedOrigin: authConfig?.webauthn?.origin,
@@ -143,6 +154,7 @@ export function App() {
     await api("/console/v1/auth/logout", { method: "POST" });
     setUser(null);
     setTenants([]);
+    await refreshAuthConfig();
   }
 
   if (loading) {
@@ -157,8 +169,8 @@ export function App() {
         </header>
         <section className="auth-hero">
           <div className="auth-hero-inner">
-            <h1>この Mac で入る</h1>
-            <p className="auth-lead">読み込み中…</p>
+            <h1>{copy.titleMac}</h1>
+            <p className="auth-lead">{copy.loading}</p>
           </div>
         </section>
       </div>
@@ -170,7 +182,7 @@ export function App() {
     const oidcMode = prodMode && authConfig?.prod_adapter === "oidc";
     const webAuthnMode = prodMode && authConfig?.prod_adapter === "webauthn";
     const showRegister = webAuthnMode && Boolean(authConfig?.webauthn?.registration_allowed);
-    const showSignIn = webAuthnMode && (authConfig?.webauthn?.credential_count ?? 0) > 0;
+    const showSignIn = canSignInWithPasskey(authConfig);
     const settingsHandoff =
       isPasskeySettingsPath() &&
       Boolean(authConfig?.webauthn?.login_registration_requires_session);
@@ -192,11 +204,37 @@ export function App() {
           registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
           communityHandoffUrl={
             authConfig?.community_handoff
-              ? buildCommunityConsoleStartUrl("/settings/")
+              ? buildCommunityConsoleStartUrl(settingsHandoff ? "/settings/" : "/")
               : undefined
           }
           settingsPath="/settings/"
           emphasizeBootstrapFlow={settingsHandoff}
+          communityHandoffPrimary={Boolean(authConfig?.community_handoff) && !settingsHandoff}
+          allowPasswordLogin={authConfig?.dev_login_allowed === true}
+          password={passkey}
+          onPassword={setPasskey}
+          onPasswordLogin={() => {
+            void (async () => {
+              setWebAuthnBusy(true);
+              setError(null);
+              try {
+                const res = await api<{ ok: boolean; user: User }>("/console/v1/auth/login", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    passkey,
+                    operator_id: operatorId.trim() || "OP-001",
+                    approver_id: approverId.trim() || operatorId.trim() || "OP-001",
+                  }),
+                });
+                setUser(res.user);
+                await loadSession();
+              } catch (err) {
+                setError(err instanceof Error ? err.message : String(err));
+              } finally {
+                setWebAuthnBusy(false);
+              }
+            })();
+          }}
         />
       );
     }
@@ -211,15 +249,29 @@ export function App() {
         </header>
         <section className="auth-hero">
           <div className="auth-hero-inner">
-            <h1>オペレーターとして入る</h1>
-            <p className="auth-lead">コンソールに入るための認証です。</p>
+            <h1>{copy.titleOperator}</h1>
+            <p className="auth-lead">
+              {showSignIn ? copy.leadPasskeyAndPassword : copy.leadGeneric}
+            </p>
           </div>
         </section>
         <main className="auth-main">
-          <form className="auth-card" onSubmit={login}>
+          {showSignIn ? (
+            <div className="auth-card">
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={webAuthnBusy}
+                onClick={() => void loginWebAuthn()}
+              >
+                {webAuthnBusy ? copy.checkingBusy : copy.touchIdEnter}
+              </button>
+            </div>
+          ) : null}
+          <form id="orgos-dev-login" className="auth-card" onSubmit={login}>
             {oidcMode ? (
               <label className="auth-field">
-                <span>OIDC トークン</span>
+                <span>{copy.oidcToken}</span>
                 <input
                   type="password"
                   value={idToken}
@@ -229,7 +281,7 @@ export function App() {
               </label>
             ) : prodMode ? (
               <label className="auth-field">
-                <span>本番トークン</span>
+                <span>{copy.prodToken}</span>
                 <input
                   type="password"
                   value={prodToken}
@@ -239,33 +291,40 @@ export function App() {
               </label>
             ) : (
               <label className="auth-field">
-                <span>開発用パスキー</span>
+                <span>{copy.password}</span>
                 <input
+                  id="orgos-login-password"
+                  name="password"
+                  type="password"
                   value={passkey}
                   onChange={(e) => setPasskey(e.target.value)}
-                  autoComplete="off"
+                  autoComplete="current-password"
                 />
               </label>
             )}
             <label className="auth-field">
-              <span>オペレーター</span>
+              <span>{copy.operator}</span>
               <input
+                id="orgos-login-operator"
+                name="operator_id"
                 value={operatorId}
                 onChange={(e) => setOperatorId(e.target.value)}
                 autoComplete="username"
               />
             </label>
             <label className="auth-field">
-              <span>承認者</span>
+              <span>{copy.approver}</span>
               <input
+                id="orgos-login-approver"
+                name="approver_id"
                 value={approverId}
                 onChange={(e) => setApproverId(e.target.value)}
                 autoComplete="name"
               />
             </label>
             <div className="auth-actions">
-              <button type="submit" className="btn btn-primary">
-                入る
+              <button id="orgos-login-submit" type="submit" className="btn btn-primary">
+                {copy.enter}
               </button>
             </div>
             {error ? <p className="auth-error">{error}</p> : null}
@@ -279,25 +338,25 @@ export function App() {
     <OperatorShell
       active="wire"
       operatorLabel={
-        formatOperatorSessionLabel(user) +
-        (authConfig?.mode === "prod" ? " · 本番認証" : "")
+        formatOperatorSessionLabel(user, locale) +
+        (authConfig?.mode === "prod" ? ` · ${shell.prodAuth}` : "")
       }
       onSignOut={() => void logout()}
       settingsHref="/settings/"
       settingsActive={isPasskeySettingsPath()}
-      yojitsuHref="/"
-      wireHref={
-        import.meta.env.BASE_URL.endsWith("/")
-          ? import.meta.env.BASE_URL
-          : `${import.meta.env.BASE_URL}/`
-      }
-      secretaryHref="/secretary/"
-      stewardHref="/steward/"
-      orgHref="/org/"
+      yojitsuHref={combinedOrigin ? "/?wallet=1" : null}
+      torihikiHref={combinedOrigin ? "/?receipt-issue=1" : null}
+      executiveHref={combinedOrigin ? "/" : null}
+      ledgerHref={combinedOrigin ? "/?ledger=1" : null}
+      wireHref={wireHome}
+      secretaryHref={combinedOrigin ? "/secretary/" : null}
+      stewardHref={combinedOrigin ? "/steward/" : null}
+      orgHref={combinedOrigin ? "/org/" : null}
+      runsHref={combinedOrigin ? "/runs/" : null}
     >
       {isPasskeySettingsPath() ? (
         <PasskeySettingsPage
-          webAuthnMode={authConfig?.mode === "prod" && authConfig.prod_adapter === "webauthn"}
+          webAuthnMode={isWebAuthnIssuanceEnabled(authConfig)}
           api={passkeyApi}
           operatorId={user.operator_id}
           approverId={user.approver_id}
@@ -333,7 +392,6 @@ export function App() {
             }
           }}
           onRefreshAuthConfig={refreshAuthConfig}
-          backLinks={[{ href: "/wire/", label: "Wire に戻る" }]}
           expectedOrigin={authConfig?.webauthn?.origin}
           rpId={authConfig?.webauthn?.rp_id}
         />

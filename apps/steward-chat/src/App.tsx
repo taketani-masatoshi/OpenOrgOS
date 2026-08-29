@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BudgetAuthGate } from "./BudgetAuthGate";
 import { OrgBudgetPanel } from "./OrgBudgetPanel";
 import { PersonalWallet } from "./PersonalWallet";
@@ -9,98 +9,116 @@ import { CloudLlmGuidePage } from "./CloudLlmGuidePage";
 import { ChatSettingsPage } from "./ChatSettingsPage";
 import { LlmWorkersPage } from "./LlmWorkersPage";
 import { OrgChartPage } from "./OrgChartPage";
+import { AgentRosterPage } from "./AgentRosterPage";
+import { ApprovalsQueue } from "./ApprovalsQueue";
 import { AnalyticsDashboardPage } from "./AnalyticsDashboardPage";
 import { OrchestrationRunsPage } from "./OrchestrationRunsPage";
+import { LedgerWorkbenchPage } from "./LedgerWorkbenchPage";
+import { ExecutiveHomePage } from "./ExecutiveHomePage";
+import { CustomerAdminPage } from "./CustomerAdminPage";
+import { PlatformOpsPage } from "./PlatformOpsPage";
+import { EsignPage } from "./EsignPage";
+import { ProductInitialSetupPage } from "./ProductInitialSetupPage";
+import { CustomersWorkbenchPage } from "./CustomersWorkbenchPage";
+import { SignupPage } from "./SignupPage";
+import { GuestSetupPage } from "./GuestSetupPage";
+import { TaxHandoffPage } from "./TaxHandoffPage";
+import { ContractsPage } from "./ContractsPage";
+import { StaysPage } from "./StaysPage";
+import { WireConsolePage } from "./WireConsolePage";
+import { useCopy } from "@ops-shared/define-copy";
 import type { OperatorShellActive } from "@ops-shared/OperatorShell";
+import { STEWARD_COPY } from "./steward-copy";
+import { fetchProductOnboarding } from "./api";
+import { OnboardingPage } from "./OnboardingPage";
+import {
+  applyConsoleViewToUrl,
+  consoleSectionFromView,
+  isSetupGateBypass,
+  notifyConsoleHomeNav,
+  parseConsoleView,
+  shellTabFromView,
+  subscribeConsoleHomeNav,
+  wantsLedgerWorkbench,
+  type ConsoleSection,
+  type ConsoleView,
+} from "./console-nav";
+import {
+  operatorShellTabFromRoute,
+  pathActive,
+  spaPathFromHref,
+  type ShellRoute,
+} from "./console-routing";
+import { prefetchWireWorkbench } from "./wire-prefetch";
 
-type ShellRoute = OperatorShellActive | "cloud-llm" | "chat-settings" | "llm-workers" | "settings";
-type YojitsuView = "wallet" | "admin" | "analytics" | "runs" | "receipt" | "receipt-issue";
-
-function pathActive(): ShellRoute {
-  const path = window.location.pathname.replace(/\/+$/, "") || "/";
-  if (path === "/secretary" || path.startsWith("/secretary/")) return "secretary";
-  if (path === "/steward" || path.startsWith("/steward/")) return "steward";
-  if (path === "/org" || path.startsWith("/org/")) return "org";
-  if (path === "/cloud-llm" || path.startsWith("/cloud-llm/")) return "cloud-llm";
-  if (path === "/llm-workers" || path.startsWith("/llm-workers/")) return "llm-workers";
-  if (path === "/chat-settings" || path.startsWith("/chat-settings/")) {
-    return "chat-settings";
-  }
-  if (path === "/settings" || path.startsWith("/settings/")) return "settings";
-  return "yojitsu";
-}
-
-/** Soft-nav targets inside this SPA (not Wire, which is a separate bundle). */
-function spaPathFromHref(href: string): string | null {
-  try {
-    const url = new URL(href, window.location.origin);
-    if (url.origin !== window.location.origin) return null;
-    const path = url.pathname.replace(/\/+$/, "") || "/";
-    if (
-      path === "/" ||
-      path === "/secretary" ||
-      path === "/steward" ||
-      path === "/org" ||
-      path === "/cloud-llm" ||
-      path === "/llm-workers" ||
-      path === "/chat-settings" ||
-      path === "/settings"
-    ) {
-      return path === "/" ? "/" : `${path}/`;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function initialBudgetView(): YojitsuView {
+function redirectLegacyRunsQuery(): void {
   const params = new URLSearchParams(window.location.search);
-  if (params.get("receipt-issue") === "1") return "receipt-issue";
-  if (params.get("receipt") === "1" || params.get("issuer") === "1") {
-    return "receipt";
-  }
-  if (params.get("analytics") === "1") return "analytics";
-  if (params.get("runs") === "1") return "runs";
-  if (params.get("admin") === "1") return "admin";
-  return "wallet";
+  if (params.get("runs") !== "1") return;
+  params.delete("runs");
+  const qs = params.toString();
+  window.history.replaceState({}, "", `/runs/${qs ? `?${qs}` : ""}`);
 }
 
-function setYojitsuQuery(view: YojitsuView) {
+redirectLegacyRunsQuery();
+
+function redirectRemovedOpsRoute(): void {
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  if (path !== "/ops" && !path.startsWith("/ops/")) return;
+  const params = new URLSearchParams(window.location.search);
+  const qs = params.toString();
+  window.history.replaceState({}, "", `/${qs ? `?${qs}` : ""}`);
+}
+
+redirectRemovedOpsRoute();
+
+function homeShellTab(): OperatorShellActive | undefined {
+  const view = parseConsoleView(window.location.search);
+  return shellTabFromView(view) ?? undefined;
+}
+
+function setConsoleQuery(view: ConsoleView) {
   const url = new URL(window.location.href);
-  url.searchParams.delete("admin");
-  url.searchParams.delete("analytics");
-  url.searchParams.delete("runs");
-  url.searchParams.delete("receipt");
-  url.searchParams.delete("issuer");
-  url.searchParams.delete("receipt-issue");
-  if (view === "admin") url.searchParams.set("admin", "1");
-  if (view === "analytics") url.searchParams.set("analytics", "1");
-  if (view === "runs") url.searchParams.set("runs", "1");
-  if (view === "receipt") url.searchParams.set("receipt", "1");
-  if (view === "receipt-issue") url.searchParams.set("receipt-issue", "1");
+  applyConsoleViewToUrl(url, view);
   window.history.replaceState({}, "", url);
 }
 
-function YojitsuSubNav({
+function ConsoleSubNav({
+  section,
   view,
   onChange,
 }: {
-  view: YojitsuView;
-  onChange: (next: YojitsuView) => void;
+  section: ConsoleSection;
+  view: ConsoleView;
+  onChange: (next: ConsoleView) => void;
 }) {
+  const copy = useCopy(STEWARD_COPY);
+  const items =
+    section === "ledger"
+      ? ([
+          { id: "ledger", label: copy.ledger },
+          { id: "tax", label: copy.tax },
+        ] as const)
+      : section === "budget"
+        ? ([
+            { id: "wallet", label: copy.wallet },
+            { id: "analytics", label: copy.analytics },
+            { id: "admin", label: copy.admin },
+          ] as const)
+        : ([
+            { id: "receipt-issue", label: copy.receiptIssue },
+            { id: "receipt", label: copy.receipt },
+          ] as const);
+
+  const ariaLabel =
+    section === "ledger"
+      ? copy.ledgerMenu
+      : section === "budget"
+        ? copy.yojitsuMenu
+        : copy.transactionsMenu;
+
   return (
-    <nav className="yojitsu-subnav" aria-label="予実メニュー">
-      {(
-        [
-          { id: "wallet", label: "個人予実" },
-          { id: "analytics", label: "分析" },
-          { id: "runs", label: "Run Board" },
-          { id: "admin", label: "予算管理" },
-          { id: "receipt-issue", label: "領収書発行" },
-          { id: "receipt", label: "領収書 claim" },
-        ] as const
-      ).map((item) => (
+    <nav className="yojitsu-subnav" aria-label={ariaLabel}>
+      {items.map((item) => (
         <button
           key={item.id}
           type="button"
@@ -117,48 +135,179 @@ function YojitsuSubNav({
   );
 }
 
-function YojitsuApp() {
-  const [view, setView] = useState<YojitsuView>(initialBudgetView);
+type AgentsSubNavActive =
+  | "secretary"
+  | "steward"
+  | "agent-list"
+  | "module-list"
+  | "agent-add"
+  | "module-add";
+
+function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
+  const copy = useCopy(STEWARD_COPY);
+  const tabs = [
+    { id: "steward" as const, href: "/steward/", label: copy.steward },
+    { id: "secretary" as const, href: "/secretary/", label: copy.secretary },
+    { id: "agent-list" as const, href: "/agents/", label: copy.agentList },
+    { id: "module-list" as const, href: "/modules/", label: copy.moduleList },
+    { id: "agent-add" as const, href: "/agents/add/", label: copy.agentAdd },
+    { id: "module-add" as const, href: "/modules/add/", label: copy.moduleAddTab },
+  ];
+  return (
+    <nav className="yojitsu-subnav" aria-label={copy.agentsMenu}>
+      {tabs.map((tab) => (
+        <a
+          key={tab.id}
+          href={tab.href}
+          className={
+            active === tab.id ? "yojitsu-subnav-tab is-active" : "yojitsu-subnav-tab"
+          }
+          aria-current={active === tab.id ? "page" : undefined}
+        >
+          {tab.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+function CustomersSubNav({
+  active,
+}: {
+  active:
+    | "customers-outbound"
+    | "customers-inbound"
+    | "customers-pipeline"
+    | "customers-accounts"
+    | "customers-after-sales"
+    | "customers-churn";
+}) {
+  const copy = useCopy(STEWARD_COPY);
+  const tabs = [
+    { id: "customers-pipeline" as const, href: "/customers/pipeline/", label: copy.customersPipeline },
+    { id: "customers-accounts" as const, href: "/customers/accounts/", label: copy.customersAccounts },
+    { id: "customers-outbound" as const, href: "/customers/outbound/", label: copy.customersOutbound },
+    { id: "customers-inbound" as const, href: "/customers/inbound/", label: copy.customersInbound },
+    {
+      id: "customers-after-sales" as const,
+      href: "/customers/after-sales/",
+      label: copy.customersAfterSales,
+    },
+    { id: "customers-churn" as const, href: "/customers/churn/", label: copy.customersChurn },
+  ];
+  return (
+    <nav className="yojitsu-subnav" aria-label={copy.customersMenu}>
+      {tabs.map((tab) => (
+        <a
+          key={tab.id}
+          href={tab.href}
+          className={
+            active === tab.id ? "yojitsu-subnav-tab is-active" : "yojitsu-subnav-tab"
+          }
+          aria-current={active === tab.id ? "page" : undefined}
+        >
+          {tab.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+function ConsoleHomeApp() {
+  const copy = useCopy(STEWARD_COPY);
+  const [navRevision, setNavRevision] = useState(0);
+  const view = useMemo(
+    () => parseConsoleView(window.location.search),
+    [navRevision],
+  );
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const section = consoleSectionFromView(view);
 
   function notify(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(null), 3000);
   }
 
-  function changeView(next: YojitsuView) {
-    setYojitsuQuery(next);
-    setView(next);
+  function changeView(next: ConsoleView) {
+    setConsoleQuery(next);
+    notifyConsoleHomeNav();
   }
+
+  useEffect(() => subscribeConsoleHomeNav(() => setNavRevision((r) => r + 1)), []);
+
+  useEffect(() => {
+    const search = window.location.search;
+    if (isSetupGateBypass(search)) return;
+
+    let cancelled = false;
+    void fetchProductOnboarding()
+      .then((report) => {
+        if (cancelled) return;
+        if (!report.customer_ready && wantsLedgerWorkbench(search)) {
+          setConsoleQuery("onboarding");
+          notifyConsoleHomeNav();
+          notify("セットアップ未完了のためワークベンチを開けません");
+          const url = new URL(window.location.href);
+          url.searchParams.delete("ledger");
+          url.searchParams.set("onboarding", "1");
+          url.searchParams.set("setup", "required");
+          window.history.replaceState({}, "", url.toString());
+        }
+      })
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="budget-app">
       {toast && <div className="toast">{toast}</div>}
-      <YojitsuSubNav view={view} onChange={changeView} />
-      {view === "receipt" ? (
-        <ReceiptClaimPage />
-      ) : view === "receipt-issue" ? (
-        <ReceiptIssuePage />
-      ) : view === "analytics" ? (
-        <AnalyticsDashboardPage />
-      ) : view === "runs" ? (
-        <OrchestrationRunsPage />
-      ) : view === "admin" ? (
-        <main className="workspace">
-          <div className="page-heading">
-            <div>
-              <h1 className="ops-page-title">予算管理</h1>
-              <p className="ops-page-lead">
-                部門・配分・見通しを決定論データから操作します。
-              </p>
-            </div>
-          </div>
-          {error && <div className="error-banner">{error}</div>}
-          <OrgBudgetPanel onError={setError} onToast={notify} />
-        </main>
+      {view === "executive" ? (
+        <ExecutiveHomePage />
       ) : (
-        <PersonalWallet />
+        <>
+          {section !== "operations" && section !== "executive" ? (
+            <ConsoleSubNav section={section} view={view} onChange={changeView} />
+          ) : null}
+          {view === "receipt" ? (
+            <ReceiptClaimPage />
+          ) : view === "receipt-issue" ? (
+            <ReceiptIssuePage />
+          ) : view === "analytics" ? (
+            <AnalyticsDashboardPage />
+          ) : view === "ledger" ? (
+            <LedgerWorkbenchPage />
+          ) : view === "tax" ? (
+            <TaxHandoffPage />
+          ) : view === "account" ? (
+            <CustomerAdminPage />
+          ) : view === "onboarding" ? (
+            <OnboardingPage />
+          ) : view === "product-setup" ? (
+            <ProductInitialSetupPage />
+          ) : view === "esign" ? (
+            <EsignPage />
+          ) : view === "platform" ? (
+            <PlatformOpsPage />
+          ) : view === "admin" ? (
+            <main className="workspace">
+              <div className="page-heading">
+                <div>
+                  <h1 className="ops-page-title">{copy.adminTitle}</h1>
+                  <p className="ops-page-lead">{copy.adminLead}</p>
+                </div>
+              </div>
+              {error && <div className="error-banner">{error}</div>}
+              <OrgBudgetPanel onError={setError} onToast={notify} />
+            </main>
+          ) : (
+            <PersonalWallet />
+          )}
+        </>
       )}
     </div>
   );
@@ -166,19 +315,21 @@ function YojitsuApp() {
 
 /**
  * Operator Console (steward-chat SPA):
- * - `/` 予実
- * - `/org/` 組織図
- * - `/secretary/` 秘書チャット
- * - `/steward/` Executive Steward チャット
- *
- * 秘書↔スチュワードは soft-nav + 両方マウント維持で、別々の依頼が消えない。
+ * - `/` 経営ホーム · `/?ledger=1` 帳簿 · `/?wallet=1` 予実 · `/?receipt-issue=1` 取引
+ * - `/org/` 会社組織
+ * - `/runs/` 実行状況（Work Order カンバン）
+ * - `/secretary/` 秘書チャット（ナビは「エージェント」配下）
+ * - `/steward/` Executive Steward チャット（ナビは「エージェント」配下）
  */
 export function App() {
+  const copy = useCopy(STEWARD_COPY);
   const [shellActive, setShellActive] = useState<ShellRoute>(() => pathActive());
+  const [navRevision, setNavRevision] = useState(0);
 
   useEffect(() => {
     function syncRoute() {
       setShellActive(pathActive());
+      setNavRevision((r) => r + 1);
     }
     window.addEventListener("popstate", syncRoute);
 
@@ -205,6 +356,7 @@ export function App() {
         window.history.pushState({}, "", nextUrl);
       }
       syncRoute();
+      notifyConsoleHomeNav();
     }
     document.addEventListener("click", onClick);
     return () => {
@@ -213,15 +365,44 @@ export function App() {
     };
   }, []);
 
-  const shellTab: OperatorShellActive =
-    shellActive === "cloud-llm" ||
-    shellActive === "chat-settings" ||
-    shellActive === "llm-workers" ||
-    shellActive === "settings"
-      ? "steward"
-      : shellActive;
+  useEffect(() => {
+    const idleId =
+      typeof requestIdleCallback !== "undefined"
+        ? requestIdleCallback(() => prefetchWireWorkbench())
+        : window.setTimeout(() => prefetchWireWorkbench(), 2000);
+    return () => {
+      if (typeof idleId === "number") {
+        clearTimeout(idleId);
+      } else {
+        cancelIdleCallback(idleId);
+      }
+    };
+  }, []);
 
-  return (
+  useEffect(() => {
+    function onPointerEnter(event: Event) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('a[href="/wire/"]')) {
+        prefetchWireWorkbench();
+      }
+    }
+    document.addEventListener("pointerenter", onPointerEnter, true);
+    return () => document.removeEventListener("pointerenter", onPointerEnter, true);
+  }, []);
+
+  const shellTab: OperatorShellActive | undefined =
+    shellActive === "yojitsu"
+      ? homeShellTab()
+      : operatorShellTabFromRoute(shellActive);
+
+  return window.location.pathname.replace(/\/+$/, "") === "/signup" ||
+    window.location.pathname.startsWith("/signup/") ? (
+    <SignupPage />
+  ) : window.location.pathname.replace(/\/+$/, "") === "/guest-setup" ||
+    window.location.pathname.startsWith("/guest-setup/") ? (
+    <GuestSetupPage />
+  ) : (
     <BudgetAuthGate active={shellTab}>
       {shellActive === "settings" ? null : shellActive === "cloud-llm" ? (
         <CloudLlmGuidePage />
@@ -231,8 +412,38 @@ export function App() {
         <ChatSettingsPage />
       ) : shellActive === "org" ? (
         <OrgChartPage />
-      ) : shellActive === "secretary" || shellActive === "steward" ? (
-        <>
+      ) : shellActive === "contracts" ? (
+        <ContractsPage />
+      ) : shellActive === "stays" ? (
+        <StaysPage />
+      ) : shellActive === "approvals" ? (
+        <ApprovalsQueue asPage />
+      ) : shellActive === "customers-outbound" ||
+        shellActive === "customers-inbound" ||
+        shellActive === "customers-pipeline" ||
+        shellActive === "customers-accounts" ||
+        shellActive === "customers-after-sales" ||
+        shellActive === "customers-churn" ? (
+        <div className="agent-section">
+          <CustomersSubNav active={shellActive} />
+          <CustomersWorkbenchPage view={shellActive} />
+        </div>
+      ) : shellActive === "runs" ? (
+        <OrchestrationRunsPage />
+      ) : shellActive === "wire" ? (
+        <WireConsolePage />
+      ) : shellActive === "secretary" ||
+        shellActive === "steward" ||
+        shellActive === "agent-list" ||
+        shellActive === "module-list" ||
+        shellActive === "agent-add" ||
+        shellActive === "module-add" ? (
+        <div className="agent-section">
+          <AgentsSubNav active={shellActive} />
+          {shellActive === "agent-list" ? <AgentRosterPage view="agents" /> : null}
+          {shellActive === "module-list" ? <AgentRosterPage view="modules" /> : null}
+          {shellActive === "agent-add" ? <AgentRosterPage view="agents-add" /> : null}
+          {shellActive === "module-add" ? <AgentRosterPage view="modules-add" /> : null}
           <div
             className={
               shellActive === "secretary"
@@ -242,7 +453,7 @@ export function App() {
             hidden={shellActive !== "secretary"}
             aria-hidden={shellActive !== "secretary"}
           >
-            <AgentChatPage agentId="secretary" title="秘書" />
+            <AgentChatPage agentId="secretary" title={copy.secretary} />
           </div>
           <div
             className={
@@ -253,11 +464,11 @@ export function App() {
             hidden={shellActive !== "steward"}
             aria-hidden={shellActive !== "steward"}
           >
-            <AgentChatPage agentId="executive_steward" title="スチュワード" />
+            <AgentChatPage agentId="executive_steward" title={copy.steward} />
           </div>
-        </>
+        </div>
       ) : (
-        <YojitsuApp />
+        <ConsoleHomeApp />
       )}
     </BudgetAuthGate>
   );

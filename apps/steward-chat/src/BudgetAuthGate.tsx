@@ -1,29 +1,36 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { AUTH_COPY, SHELL_COPY } from "@ops-shared/console-copy";
+import { useCopy } from "@ops-shared/define-copy";
 import { OperatorShell, type OperatorShellActive } from "@ops-shared/OperatorShell";
 import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
+import { useUiLocale } from "@ops-shared/useUiLocale";
 import { buildCommunityConsoleStartUrl } from "@ops-shared/community-console-handoff";
 import { PasskeyAuthPanel } from "@ops-shared/PasskeyAuthPanel";
 import { PasskeySettingsPage } from "@ops-shared/PasskeySettingsPage";
 import { registerSettlementPasskey } from "@ops-shared/register-settlement-passkey";
+import { isPasskeySettingsPath as pathIsPasskeySettings } from "@ops-shared/console-hrefs";
+import { canSignInWithPasskey, isWebAuthnIssuanceEnabled } from "@ops-shared/webauthn-issuance";
 import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
 import {
   chatApi,
   fetchAuthConfig,
+  fetchCustomersNav,
   fetchMe,
   loginDev,
   logoutChat,
   type AuthConfig,
   type AuthUser,
 } from "./api";
+import { ClaimDeskPage } from "./ClaimDeskPage";
 import { loginWithWebAuthn } from "./webauthn-login";
 import { registerWithWebAuthn } from "./webauthn-register";
 
 function isPasskeySettingsPath(): boolean {
-  const path = window.location.pathname.replace(/\/+$/, "") || "/";
-  return path === "/settings" || path.startsWith("/settings/");
+  return pathIsPasskeySettings(window.location.pathname);
 }
 
 function PasskeyAuthLoadingShell() {
+  const copy = useCopy(AUTH_COPY);
   return (
     <div className="auth-page auth-loading">
       <header className="auth-header">
@@ -35,8 +42,8 @@ function PasskeyAuthLoadingShell() {
       </header>
       <section className="auth-hero">
         <div className="auth-hero-inner">
-          <h1>この Mac で入る</h1>
-          <p className="auth-lead">読み込み中…</p>
+          <h1>{copy.titleMac}</h1>
+          <p className="auth-lead">{copy.loading}</p>
         </div>
       </section>
     </div>
@@ -49,7 +56,7 @@ function PasskeyAuthLoadingShell() {
  */
 export function BudgetAuthGate({
   children,
-  active = "yojitsu",
+  active,
 }: {
   children: ReactNode;
   active?: OperatorShellActive;
@@ -59,12 +66,17 @@ export function BudgetAuthGate({
   const [error, setError] = useState<string | null>(null);
   const [passkey, setPasskey] = useState("orgos-dev");
   const [operatorId, setOperatorId] = useState("OP-001");
-  const [approverId, setApproverId] = useState("段燕燕");
+  const [approverId, setApproverId] = useState("Demo CEO");
   const [busy, setBusy] = useState(false);
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
+  const [customersNav, setCustomersNav] = useState(false);
+  const locale = useUiLocale();
+  const copy = useCopy(AUTH_COPY);
+  const shell = useCopy(SHELL_COPY);
 
-  const webAuthnMode =
+  const webAuthnLoginMode =
     authConfig?.mode === "prod" && authConfig.prod_adapter === "webauthn";
+  const webAuthnIssuance = isWebAuthnIssuanceEnabled(authConfig);
 
   const settingsPage = isPasskeySettingsPath();
 
@@ -82,12 +94,14 @@ export function BudgetAuthGate({
     let cancelled = false;
     (async () => {
       try {
-        const [me, config] = await Promise.all([
+        const [me, config, customers] = await Promise.all([
           fetchMe().catch(() => null),
           fetchAuthConfig().catch(() => null),
+          fetchCustomersNav().catch(() => ({ show_tab: false })),
         ]);
         if (cancelled) return;
         if (config) setAuthConfig(config);
+        setCustomersNav(customers.show_tab === true);
         setUser(me);
       } catch (e) {
         if (!cancelled) {
@@ -104,8 +118,13 @@ export function BudgetAuthGate({
 
   async function refreshAfterAuth() {
     const me = await fetchMe();
+    if (!me) {
+      throw new Error(copy.sessionPersistFailed);
+    }
     setUser(me);
     await refreshAuthConfig();
+    const customers = await fetchCustomersNav().catch(() => ({ show_tab: false }));
+    setCustomersNav(customers.show_tab === true);
   }
 
   async function onLogin(e: FormEvent) {
@@ -113,13 +132,14 @@ export function BudgetAuthGate({
     setBusy(true);
     setError(null);
     try {
-      const next = await loginDev({
+      await loginDev({
         passkey,
         operator_id: operatorId.trim() || "OP-001",
         approver_id: approverId.trim() || operatorId.trim() || "OP-001",
       });
-      setUser(next);
+      await refreshAfterAuth();
     } catch (err) {
+      setUser(null);
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(false);
@@ -165,6 +185,7 @@ export function BudgetAuthGate({
       /* still clear local session */
     }
     setUser(null);
+    await refreshAuthConfig();
   }
 
   async function enrollSettlementPasskey() {
@@ -185,11 +206,11 @@ export function BudgetAuthGate({
     }
   }
 
-  if (loading && webAuthnMode) {
+  if (loading) {
     return <PasskeyAuthLoadingShell />;
   }
 
-  if (!loading && !user && webAuthnMode) {
+  if (!user && webAuthnLoginMode) {
     const showRegister = Boolean(authConfig?.webauthn?.registration_allowed);
     const showSignIn = (authConfig?.webauthn?.credential_count ?? 0) > 0;
     const emphasizeBootstrapFlow =
@@ -211,25 +232,53 @@ export function BudgetAuthGate({
         registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
         communityHandoffUrl={
           authConfig?.community_handoff
-            ? buildCommunityConsoleStartUrl("/settings/")
+            ? buildCommunityConsoleStartUrl("/")
             : undefined
         }
         settingsPath="/settings/"
         emphasizeBootstrapFlow={emphasizeBootstrapFlow}
+        communityHandoffPrimary={Boolean(authConfig?.community_handoff)}
+        allowPasswordLogin={authConfig?.dev_login_allowed === true}
+        password={passkey}
+        onPassword={setPasskey}
+        onPasswordLogin={() => {
+          void (async () => {
+            setBusy(true);
+            setError(null);
+            try {
+              await loginDev({
+                passkey,
+                operator_id: operatorId.trim() || "OP-001",
+                approver_id: approverId.trim() || operatorId.trim() || "OP-001",
+              });
+              await refreshAfterAuth();
+            } catch (err) {
+              setUser(null);
+              setError(err instanceof Error ? err.message : String(err));
+            } finally {
+              setBusy(false);
+            }
+          })();
+        }}
       />
     );
   }
 
+  // Employee seat: the claim desk replaces the console, whatever the URL says.
+  if (user?.claim_only && !settingsPage) {
+    return <ClaimDeskPage onSignOut={() => void onSignOut()} />;
+  }
+
   const operatorLabel = user
-    ? formatOperatorSessionLabel(user)
+    ? formatOperatorSessionLabel(user, locale)
     : loading
-      ? "認証確認中…"
-      : "未ログイン";
+      ? shell.checkingAuth
+      : shell.signedOut;
 
   const mainContent =
     settingsPage && user ? (
       <PasskeySettingsPage
-        webAuthnMode={webAuthnMode}
+        webAuthnMode={webAuthnIssuance}
         api={chatApi}
         operatorId={user.operator_id}
         approverId={user.approver_id}
@@ -262,17 +311,24 @@ export function BudgetAuthGate({
       onSignOut={() => void onSignOut()}
       settingsHref={user ? "/settings/" : undefined}
       settingsActive={settingsPage}
+      executiveHref="/"
+      ledgerHref="/?ledger=1"
+      yojitsuHref="/?wallet=1"
+      torihikiHref="/?receipt-issue=1"
       wireHref="/wire/"
       orgHref="/org/"
+      approvalsHref="/approvals/"
+      customersHref={customersNav ? "/customers/outbound/" : null}
+      runsHref="/runs/"
       secretaryHref="/secretary/"
       stewardHref="/steward/"
     >
       {loading ? (
-        webAuthnMode ? (
+        webAuthnLoginMode ? (
           <PasskeyAuthLoadingShell />
         ) : (
           <div className="wallet-shell">
-            <div className="wallet-page wallet-loading">認証を確認中…</div>
+            <div className="wallet-page wallet-loading">{copy.checking}</div>
           </div>
         )
       ) : user ? (
@@ -286,20 +342,41 @@ export function BudgetAuthGate({
                   ¥
                 </span>
                 <div>
-                  <h1 className="wallet-title">オペレーター認証</h1>
-                  <p className="wallet-brand-sub">セッションが必要です</p>
+                  <h1 className="wallet-title">{copy.titleSession}</h1>
+                  <p className="wallet-brand-sub">{copy.sessionNeeded}</p>
                 </div>
               </div>
             </header>
 
             {error && <p className="error-banner">{error}</p>}
 
+            {canSignInWithPasskey(authConfig) ? (
+              <section className="wallet-panel" aria-label={copy.passkeyLoginLabel}>
+                <div className="wallet-hero">
+                  <p className="wallet-brand-sub">{copy.leadPasskeyOnly}</p>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    disabled={busy}
+                    onClick={() => void onSignIn()}
+                  >
+                    {busy ? copy.checkingBusy : copy.touchIdEnter}
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
             {authConfig?.dev_login_allowed !== false ? (
-              <form className="wallet-panel" onSubmit={(e) => void onLogin(e)}>
-                <section className="wallet-hero" aria-label="開発ログイン">
+              <form id="orgos-dev-login" className="wallet-panel" onSubmit={(e) => void onLogin(e)}>
+                <section className="wallet-hero" aria-label={copy.devLoginLabel}>
+                  {canSignInWithPasskey(authConfig) ? (
+                    <p className="wallet-brand-sub">{copy.orPassword}</p>
+                  ) : null}
                   <label className="wallet-field">
-                    <span>オペレーター</span>
+                    <span>{copy.operator}</span>
                     <input
+                      id="orgos-login-operator"
+                      name="operator_id"
                       value={operatorId}
                       onChange={(ev) => setOperatorId(ev.target.value)}
                       autoComplete="username"
@@ -307,8 +384,10 @@ export function BudgetAuthGate({
                     />
                   </label>
                   <label className="wallet-field">
-                    <span>開発用パスキー</span>
+                    <span>{copy.password}</span>
                     <input
+                      id="orgos-login-password"
+                      name="password"
                       type="password"
                       value={passkey}
                       onChange={(ev) => setPasskey(ev.target.value)}
@@ -316,14 +395,16 @@ export function BudgetAuthGate({
                       required
                     />
                   </label>
-                  <button type="submit" className="primary-button" disabled={busy}>
-                    {busy ? "確認中…" : "入る"}
+                  <button id="orgos-login-submit" type="submit" className="primary-button" disabled={busy}>
+                    {busy ? copy.checkingBusy : copy.enter}
                   </button>
                 </section>
               </form>
             ) : (
               <p className="empty-copy">
-                この画面では入れません。<a href="/wire/">Wire</a> から Touch ID で入ってください。
+                {copy.useWireInstead}
+                <a href="/wire/">{copy.useWireLink}</a>
+                {copy.useWireAfter}
               </p>
             )}
           </div>

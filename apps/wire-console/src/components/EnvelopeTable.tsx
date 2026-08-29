@@ -1,5 +1,7 @@
+import { useCopy } from "@ops-shared/define-copy";
 import type { EnvelopeListItem } from "../api";
 import { shortDigest, shortId } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface Props {
   title: string;
@@ -10,24 +12,27 @@ interface Props {
 }
 
 export function EnvelopeTable({ title, entries, emptyMessage, onSelect, selectedId }: Props) {
+  const copy = useCopy(WIRE_COPY);
   return (
     <section className="panel">
       <h3>
         {title} <span className="count">{entries.length}</span>
       </h3>
       {entries.length === 0 ? (
-        <p className="hint">{emptyMessage}</p>
+        <div className="empty-state">
+          <strong>{emptyMessage}</strong>
+        </div>
       ) : (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>event</th>
-                <th>type</th>
-                <th>tx type</th>
-                <th>dir</th>
-                <th>digest</th>
-                <th>prov</th>
+                <th>{copy.colNotice}</th>
+                <th>{copy.colKind}</th>
+                <th>{copy.colTxn}</th>
+                <th>{copy.colDirection}</th>
+                <th>{copy.colSummary}</th>
+                <th>{copy.colOrigin}</th>
               </tr>
             </thead>
             <tbody>

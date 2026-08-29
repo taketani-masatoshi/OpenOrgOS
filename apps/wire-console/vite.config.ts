@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appsRoot = path.resolve(__dirname, "..");
 
-/** Combined Operator Console sets VITE_BASE=/wire/ and VITE_OUT_DIR=dist-combined */
+/** Standalone Wire Console build (base `/`). Combined Operator Console embeds Wire in steward-chat. */
 const base = process.env.VITE_BASE?.trim() || "/";
 const outDir = process.env.VITE_OUT_DIR?.trim() || "dist";
 

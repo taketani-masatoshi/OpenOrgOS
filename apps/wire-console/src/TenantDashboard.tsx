@@ -16,13 +16,16 @@ import { EnvelopeTable } from "./components/EnvelopeTable";
 import { EventDetailPanel } from "./components/EventDetailPanel";
 import { ProposeNoticeForm } from "./components/ProposeNoticeForm";
 import { WitnessPanel } from "./components/WitnessPanel";
+import { useCopy } from "@ops-shared/define-copy";
 import { useLiveRefresh } from "./useLiveRefresh";
+import { WIRE_COPY } from "./wire-copy";
 
 interface Props {
   tenants: TenantSummary[];
 }
 
 export function TenantDashboard({ tenants }: Props) {
+  const copy = useCopy(WIRE_COPY);
   const [activeId, setActiveId] = useState(tenants[0]?.id ?? "");
   const [snapshot, setSnapshot] = useState<TenantSnapshot | null>(null);
   const [outbox, setOutbox] = useState<EnvelopeListItem[]>([]);
@@ -121,26 +124,26 @@ export function TenantDashboard({ tenants }: Props) {
             {t.id}
           </button>
         ))}
-        <button type="button" className="tab refresh" onClick={() => refreshTenantAndDetail()}>
-          Refresh
+        <button type="button" className="quiet-button" onClick={() => refreshTenantAndDetail()}>
+          {copy.dashboardRefresh}
         </button>
       </nav>
 
       {error ? <p className="error">{error}</p> : null}
-      {loading ? <p className="hint">Loading {activeId}…</p> : null}
+      {loading ? <p className="hint">{copy.loading}</p> : null}
 
       {snapshot ? (
         <div className="snapshot-bar">
           <span className={snapshot.validation.ok ? "badge ok" : "badge warn"}>
-            validate {snapshot.validation.ok ? "OK" : "ISSUES"}
+            {snapshot.validation.ok ? copy.validationOk : copy.needsReview}
           </span>
-          <span className="badge">outbox {snapshot.counts.outbox}</span>
-          <span className="badge">inbox {snapshot.counts.inbox}</span>
-          <span className="badge">tx {snapshot.counts.transactions}</span>
-          <span className="badge">wire∅ {snapshot.counts.wire_pending}</span>
-          <span className="badge">witness∅ {snapshot.counts.witness_pending}</span>
+          <span className="badge">{copy.outbox(snapshot.counts.outbox)}</span>
+          <span className="badge">{copy.inbox(snapshot.counts.inbox)}</span>
+          <span className="badge">{copy.txns(snapshot.counts.transactions)}</span>
+          <span className="badge">{copy.wirePending(snapshot.counts.wire_pending)}</span>
+          <span className="badge">{copy.witnessPending(snapshot.counts.witness_pending)}</span>
           {snapshot.witness_pool?.enabled ? (
-            <span className="badge">witness hubs {snapshot.witness_pool.hub_count}</span>
+            <span className="badge">{copy.witnessHubs(snapshot.witness_pool.hub_count)}</span>
           ) : null}
           {snapshot.validation.warnings.slice(0, 2).map((w) => (
             <span key={w.code} className="badge warn" title={w.message}>
@@ -171,16 +174,16 @@ export function TenantDashboard({ tenants }: Props) {
           />
 
           <EnvelopeTable
-            title="Outbox"
+            title={copy.outboxTitle}
             entries={outbox}
-            emptyMessage="No outbox envelopes"
+            emptyMessage={copy.outboxEmpty}
             onSelect={(id) => void selectEvent(id)}
             selectedId={selectedEventId}
           />
           <EnvelopeTable
-            title="Inbox"
+            title={copy.inboxTitle}
             entries={inbox}
-            emptyMessage="No inbox envelopes"
+            emptyMessage={copy.inboxEmpty}
             onSelect={(id) => void selectEvent(id)}
             selectedId={selectedEventId}
           />

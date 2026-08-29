@@ -10,6 +10,8 @@ import {
   type OrgBudgetDepartment,
   type OrgBudgetPayload,
 } from "./api";
+import { useCopy } from "@ops-shared/define-copy";
+import { PEOPLE_COPY } from "./org-budget-people-copy";
 
 type ClaimDeskTab = "pending" | "reimbursement" | "done" | "rejected";
 type ExpenseClaimRow = NonNullable<OrgBudgetPayload["expense_claims"]>[number];
@@ -86,6 +88,7 @@ function CurrencyInput({
   disabled?: boolean;
   onChange: (value: string) => void;
 }) {
+  const copy = useCopy(PEOPLE_COPY);
   return (
     <div className="currency-input">
       <span aria-hidden="true">¥</span>
@@ -98,7 +101,7 @@ function CurrencyInput({
         disabled={disabled}
         onChange={(event) => onChange(formatYenInput(event.target.value))}
       />
-      <span>円</span>
+      <span>{copy.yen}</span>
     </div>
   );
 }
@@ -120,6 +123,7 @@ export function OrgBudgetPeople({
   onRun: RunAction;
   onOpenHierarchy: (orgUnitId?: string) => void;
 }) {
+  const copy = useCopy(PEOPLE_COPY);
   const claimRevisionToken = (claimId: string, fallback?: number | string) => {
     const live = budgetLiveRef.current ?? budget;
     return String(
@@ -290,51 +294,48 @@ export function OrgBudgetPeople({
   }
 
   function gateLabel(gate: string | undefined): string {
-    if (gate === "needs_manager") return "上長承認待ち";
-    if (gate === "needs_rep_approval") return "代表者承認待ち（REG-004 A）";
-    if (gate === "needs_late_exception") return "期限超過例外承認待ち";
-    if (gate === "needs_ringi") return "稟議承認待ち（REG-004）";
-    if (gate === "needs_board") return "取締役会証跡待ち（REG-004 C）";
+    if (gate === "needs_manager") return copy.gateManager;
+    if (gate === "needs_rep_approval") return copy.gateRep;
+    if (gate === "needs_late_exception") return copy.gateLate;
+    if (gate === "needs_ringi") return copy.gateRingi;
+    if (gate === "needs_board") return copy.gateBoard;
     return gate ?? "needs_manager";
   }
 
   return (
     <div className="people-workspace">
-      <section className="people-claim-queue" aria-label="経費精算デスク">
+      <section className="people-claim-queue" aria-label={copy.desk}>
         <header>
-          <h3>経費精算デスク</h3>
+          <h3>{copy.desk}</h3>
           <p className="people-desk-note muted">
-            個人枠超過は上長承認（expense.claim.manager）。10万超は稟議（expense.claim.ringi
-            ·
-            REG-004、共同承認者必須）。自己承認は禁止です。部門枠不足の取込はここには出ません
-            — 先に階層分配で枠を増やしてください。
+            {copy.deskLead}
           </p>
           <button
             type="button"
             className="quiet-button"
             onClick={() => onOpenHierarchy(orgUnitId)}
           >
-            階層分配へ（部門枠不足時）
+            {copy.toHierarchyWhenShort}
           </button>
         </header>
-        <nav className="receipt-claim-tabs" aria-label="精算ステータス">
+        <nav className="receipt-claim-tabs" aria-label={copy.claimStatus}>
           {(
             [
               {
                 id: "pending" as const,
-                label: `承認待ち (${pendingClaims.length})`,
+                label: copy.tabPending(pendingClaims.length),
               },
               {
                 id: "reimbursement" as const,
-                label: `弁済待ち (${reimbursementClaims.length})`,
+                label: copy.tabReimburse(reimbursementClaims.length),
               },
               {
                 id: "done" as const,
-                label: `完了 (${doneClaims.length})`,
+                label: copy.tabDone(doneClaims.length),
               },
               {
                 id: "rejected" as const,
-                label: `却下 (${rejectedClaims.length})`,
+                label: copy.tabRejected(rejectedClaims.length),
               },
             ] as const
           ).map((item) => (
@@ -356,7 +357,7 @@ export function OrgBudgetPeople({
       {claimTab === "pending" && (
         <>
           {pendingClaims.length === 0 ? (
-            <p className="muted">承認待ちはありません。</p>
+            <p className="muted">{copy.emptyPending}</p>
           ) : (
           <ul className="people-claim-list">
             {pendingClaims.map((claim) => (
@@ -369,15 +370,15 @@ export function OrgBudgetPeople({
                     {gateLabel(claim.gate)} · {claim.receipt_id}
                     {claim.approval_id ? ` · ${claim.approval_id}` : ""}
                     {claim.deadline_status === "late"
-                      ? ` · ${claim.days_after_transaction}日後提出`
+                      ? copy.lateSubmit(claim.days_after_transaction ?? 0)
                       : ""}
                     {claim.invoice_verification
-                      ? ` · T番号:${claim.invoice_verification.status}`
+                      ? `${copy.invoicePrefix}${claim.invoice_verification.status}`
                       : ""}
                     {claim.notes?.includes(":sent:")
-                      ? " · Wire送信済"
+                      ? copy.wireSent
                       : claim.notes?.includes(":failed:")
-                        ? " · Wire失敗（精算継続）"
+                        ? copy.wireFailed
                         : ""}
                   </span>
                 </div>
@@ -388,13 +389,13 @@ export function OrgBudgetPeople({
                     disabled={busy}
                     onClick={() => void openReceiptDetail(claim.claim_id)}
                   >
-                    領収書詳細
+                    {copy.receiptDetail}
                   </button>
                   {claim.gate === "needs_ringi" ? (
                     <label className="people-claim-co-approver">
-                      共同承認者
+                      {copy.coApprover}
                       <select
-                        aria-label="共同承認者"
+                        aria-label={copy.coApprover}
                         value={coApproverByClaim[claim.claim_id] ?? ""}
                         disabled={busy || !canManage}
                         onChange={(event) =>
@@ -404,7 +405,7 @@ export function OrgBudgetPeople({
                           }))
                         }
                       >
-                        <option value="">選択してください</option>
+                        <option value="">{copy.selectPlease}</option>
                         {representatives.map((row) => (
                           <option key={row.id} value={row.display_name}>
                             {row.display_name}
@@ -415,9 +416,9 @@ export function OrgBudgetPeople({
                   ) : null}
                   {claim.gate === "needs_board" ? (
                     <label className="people-claim-co-approver">
-                      取締役会イベント
+                      {copy.boardEvent}
                       <select
-                        aria-label="取締役会イベント"
+                        aria-label={copy.boardEvent}
                         value={boardEventByClaim[claim.claim_id] ?? ""}
                         disabled={busy || !canManage}
                         onChange={(event) =>
@@ -427,7 +428,7 @@ export function OrgBudgetPeople({
                           }))
                         }
                       >
-                        <option value="">選択してください</option>
+                        <option value="">{copy.selectPlease}</option>
                         {boardEvents.map((event) => (
                           <option key={event.event_id} value={event.event_id}>
                             {event.event_id} · {event.title}
@@ -459,12 +460,12 @@ export function OrgBudgetPeople({
                       if (
                         !window.confirm(
                           [
-                            `${claim.claim_id} を承認しますか？`,
-                            `金額: ${yen(claim.amount_yen)}`,
-                            `gate: ${gateLabel(claim.gate)}`,
-                            co ? `共同承認者: ${co}` : null,
-                            board ? `取締役会: ${board}` : null,
-                            "自己承認は禁止です。",
+                            copy.confirmApprove(claim.claim_id),
+                            copy.confirmAmount(yen(claim.amount_yen)),
+                            copy.confirmGate(gateLabel(claim.gate)),
+                            co ? copy.confirmCo(co) : null,
+                            board ? copy.confirmBoard(board) : null,
+                            copy.noSelfApprove,
                           ]
                             .filter(Boolean)
                             .join("\n"),
@@ -484,11 +485,11 @@ export function OrgBudgetPeople({
                             co_approver_id: co || undefined,
                             board_event_id: board || undefined,
                           }),
-                        `精算 ${claim.claim_id} を承認しました`,
+                        copy.approved(claim.claim_id),
                       );
                     }}
                   >
-                    承認
+                    {copy.approve}
                   </button>
                   <button
                     type="button"
@@ -499,7 +500,7 @@ export function OrgBudgetPeople({
                       setRejectReason("");
                     }}
                   >
-                    却下
+                    {copy.reject}
                   </button>
                 </div>
               </li>
@@ -510,12 +511,11 @@ export function OrgBudgetPeople({
       )}
 
       {claimTab === "reimbursement" && reimbursementClaims.length > 0 && (
-        <section className="people-claim-queue" aria-label="立替弁済待ち">
+        <section className="people-claim-queue" aria-label={copy.reimburseQueue}>
           <header>
-            <h3>立替弁済待ち</h3>
+            <h3>{copy.reimburseQueue}</h3>
             <p className="people-desk-note muted">
-              月次実績へ計上済み。会社から立替者への弁済（REG-005
-              第3条）を記録します。
+              {copy.reimburseLead}
             </p>
           </header>
           <ul className="people-claim-list">
@@ -526,13 +526,13 @@ export function OrgBudgetPeople({
                   {claim.account_code} · {yen(claim.amount_yen)}
                   <br />
                   <span className="muted">
-                    弁済待ち · {claim.receipt_id}
+                    {copy.pendingReimburse} · {claim.receipt_id}
                     {claim.monthly_ref?.month
                       ? ` · monthly ${claim.monthly_ref.month}`
                       : ""}
                     {claim.reimbursement?.broker_evidence_ref
-                      ? ` · 送金準備済 ${claim.reimbursement.broker_evidence_ref}`
-                      : " · 送金未準備"}
+                      ? copy.transferReady(claim.reimbursement.broker_evidence_ref)
+                      : copy.transferNotReady}
                   </span>
                 </div>
                 <div className="people-claim-actions">
@@ -542,10 +542,10 @@ export function OrgBudgetPeople({
                         (key) => (
                           <label key={key} className="people-claim-co-approver">
                             {key === "source"
-                              ? "出金口座ID"
+                              ? copy.sourceAccount
                               : key === "stakeholder"
-                                ? "支払先ID"
-                                : "支払先表示名"}
+                                ? copy.payeeId
+                                : copy.payeeName}
                             <input
                               type="text"
                               value={
@@ -595,21 +595,21 @@ export function OrgBudgetPeople({
                                 stakeholder_id: transfer.stakeholder.trim(),
                                 payee: transfer.payee.trim(),
                               }),
-                            `精算 ${claim.claim_id} の送金指示を準備しました（DRY-RUN）`,
+                            copy.transferPrepared(claim.claim_id),
                           );
                         }}
                       >
-                        送金を準備
+                        {copy.prepareTransfer}
                       </button>
                     </>
                   ) : null}
                   <label className="people-claim-co-approver">
-                    支払参照
+                    {copy.paymentRef}
                     <input
                       type="text"
                       value={paymentRefByClaim[claim.claim_id] ?? ""}
                       disabled={busy || !canManage}
-                      placeholder="振込指示ID"
+                      placeholder={copy.paymentRefPh}
                       onChange={(event) =>
                         setPaymentRefByClaim((prev) => ({
                           ...prev,
@@ -619,9 +619,9 @@ export function OrgBudgetPeople({
                     />
                   </label>
                   <label className="people-claim-co-approver">
-                    銀行明細
+                    {copy.bankLine}
                     <select
-                      aria-label="銀行明細"
+                      aria-label={copy.bankLine}
                       value={bankStatementByClaim[claim.claim_id] ?? ""}
                       disabled={busy || !canManage}
                       onChange={(event) =>
@@ -631,7 +631,7 @@ export function OrgBudgetPeople({
                         }))
                       }
                     >
-                      <option value="">未選択（外部証跡を使う）</option>
+                      <option value="">{copy.bankLineNone}</option>
                       {(settlementCandidates[claim.claim_id] ?? []).map(
                         (row) => (
                           <option
@@ -646,7 +646,7 @@ export function OrgBudgetPeople({
                     </select>
                   </label>
                   <label className="people-claim-co-approver">
-                    外部決済証跡
+                    {copy.externalEvidence}
                     <input
                       type="text"
                       value={settlementEvidenceByClaim[claim.claim_id] ?? ""}
@@ -655,7 +655,7 @@ export function OrgBudgetPeople({
                         !canManage ||
                         Boolean(bankStatementByClaim[claim.claim_id])
                       }
-                      placeholder="銀行明細がない場合の決済証跡参照ID"
+                      placeholder={copy.externalEvidencePh}
                       onChange={(event) =>
                         setSettlementEvidenceByClaim((prev) => ({
                           ...prev,
@@ -699,11 +699,11 @@ export function OrgBudgetPeople({
                                 settlementEvidenceByClaim[claim.claim_id] ?? ""
                               ).trim() || undefined,
                           }),
-                        `精算 ${claim.claim_id} を弁済済にしました`,
+                        copy.reimbursed(claim.claim_id),
                       )
                     }
                   >
-                    弁済済にする
+                    {copy.markReimbursed}
                   </button>
                 </div>
               </li>
@@ -712,13 +712,13 @@ export function OrgBudgetPeople({
         </section>
       )}
       {claimTab === "reimbursement" && reimbursementClaims.length === 0 && (
-        <p className="muted">弁済待ちはありません。</p>
+        <p className="muted">{copy.emptyReimburse}</p>
       )}
 
       {claimTab === "done" && (
         <>
           {doneClaims.length === 0 ? (
-            <p className="muted">完了案件はありません。</p>
+            <p className="muted">{copy.emptyDone}</p>
           ) : (
             <ul className="people-claim-list">
               {doneClaims.map((claim) => (
@@ -728,7 +728,7 @@ export function OrgBudgetPeople({
                     {yen(claim.amount_yen)}
                     <br />
                     <span className="muted">
-                      弁済済 · {claim.receipt_id}
+                      {copy.reimbursedLabel} · {claim.receipt_id}
                       {claim.reimbursement?.paid_at
                         ? ` · ${claim.reimbursement.paid_at}`
                         : ""}
@@ -742,7 +742,7 @@ export function OrgBudgetPeople({
                     className="quiet-button"
                     onClick={() => void openReceiptDetail(claim.claim_id)}
                   >
-                    領収書詳細
+                    {copy.receiptDetail}
                   </button>
                 </li>
               ))}
@@ -754,7 +754,7 @@ export function OrgBudgetPeople({
       {claimTab === "rejected" && (
         <>
           {rejectedClaims.length === 0 ? (
-            <p className="muted">却下案件はありません。</p>
+            <p className="muted">{copy.emptyRejected}</p>
           ) : (
             <ul className="people-claim-list">
               {rejectedClaims.map((claim) => (
@@ -764,7 +764,7 @@ export function OrgBudgetPeople({
                     {yen(claim.amount_yen)}
                     <br />
                     <span className="muted">
-                      却下 · {claim.receipt_id}
+                      {copy.rejectedLabel} · {claim.receipt_id}
                       {claim.reject_reason ? ` · ${claim.reject_reason}` : ""}
                     </span>
                   </div>
@@ -773,7 +773,7 @@ export function OrgBudgetPeople({
                     className="quiet-button"
                     onClick={() => void openReceiptDetail(claim.claim_id)}
                   >
-                    領収書詳細
+                    {copy.receiptDetail}
                   </button>
                 </li>
               ))}
@@ -786,17 +786,17 @@ export function OrgBudgetPeople({
       {rejectTarget && (
         <div className="receipt-claim-modal" role="dialog" aria-modal="true">
           <div className="receipt-claim-modal-card">
-            <h2>精算を却下</h2>
+            <h2>{copy.rejectTitle}</h2>
             <p>
               {rejectTarget.claim_id} · {yen(rejectTarget.amount_yen)}
             </p>
             <label>
-              却下理由
+              {copy.rejectReason}
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={3}
-                placeholder="例: 証憑不備 / 費目不一致"
+                placeholder={copy.rejectReasonPh}
               />
             </label>
             <div className="receipt-issue-actions">
@@ -805,7 +805,7 @@ export function OrgBudgetPeople({
                 className="quiet-button"
                 onClick={() => setRejectTarget(null)}
               >
-                キャンセル
+                {copy.cancel}
               </button>
               <button
                 type="button"
@@ -826,11 +826,11 @@ export function OrgBudgetPeople({
                         ),
                         reason,
                       }),
-                    `精算 ${claim.claim_id} を却下しました`,
+                    copy.rejectedMsg(claim.claim_id),
                   );
                 }}
               >
-                却下する
+                {copy.doReject}
               </button>
             </div>
           </div>
@@ -840,8 +840,8 @@ export function OrgBudgetPeople({
       {receiptDetail && (
         <div className="receipt-claim-modal" role="dialog" aria-modal="true">
           <div className="receipt-claim-modal-card">
-            <h2>領収書詳細 · {receiptDetail.claimId}</h2>
-            {receiptDetail.loading && <p>読み込み中…</p>}
+            <h2>{copy.receiptDetailTitle(receiptDetail.claimId)}</h2>
+            {receiptDetail.loading && <p>{copy.loading}</p>}
             {receiptDetail.error && (
               <p className="error-banner">{receiptDetail.error}</p>
             )}
@@ -852,9 +852,9 @@ export function OrgBudgetPeople({
                   {receiptDetail.body.receipt.issuer.invoice_registration_number}
                 </p>
                 <p className="muted">
-                  取引日 {receiptDetail.body.receipt.transaction_date} · digest{" "}
+                  {copy.txnDate(receiptDetail.body.receipt.transaction_date)} · digest{" "}
                   {(receiptDetail.body.digest ?? "").slice(0, 16)}…
-                  {receiptDetail.body.signature_ok ? " · 署名OK" : ""}
+                  {receiptDetail.body.signature_ok ? copy.sigOk : ""}
                 </p>
                 <ul>
                   {receiptDetail.body.receipt.lines.map((line, i) => (
@@ -865,21 +865,21 @@ export function OrgBudgetPeople({
                   ))}
                 </ul>
                 <p>
-                  合計 {yen(receiptDetail.body.receipt.total_amount)}
+                  {copy.total(yen(receiptDetail.body.receipt.total_amount))}
                 </p>
               </>
             )}
             {!receiptDetail.loading &&
               !receiptDetail.error &&
               !receiptDetail.body?.receipt && (
-                <p className="muted">スナップショットがありません。</p>
+                <p className="muted">{copy.noSnapshot}</p>
               )}
             <button
               type="button"
               className="quiet-button"
               onClick={() => setReceiptDetail(null)}
             >
-              閉じる
+              {copy.close}
             </button>
           </div>
         </div>
@@ -888,16 +888,16 @@ export function OrgBudgetPeople({
       {companyPersonPool.length > 0 && (
         <section
           className="people-pool-strip"
-          aria-label="全社の個人配布可能費目"
+          aria-label={copy.companyPersonPool}
         >
           <header>
-            <h3>個人配布可能な費目</h3>
+            <h3>{copy.personAllocatableCats}</h3>
             <button
               type="button"
               className="quiet-button"
               onClick={() => onOpenHierarchy()}
             >
-              階層分配へ
+              {copy.toHierarchy}
             </button>
           </header>
           <div className="people-pool-grid">
@@ -911,16 +911,16 @@ export function OrgBudgetPeople({
         </section>
       )}
 
-      <section className="people-desk" aria-label="個人枠の編集">
+      <section className="people-desk" aria-label={copy.editEnvelopes}>
         <header className="people-desk-head">
           <div>
-            <h3>個人経費枠</h3>
+            <h3>{copy.personalEnvelope}</h3>
             <p className="people-desk-note muted">
-              建て替え・裁量経費のみ（人件費は別レーン）。
+              {copy.personalEnvelopeNote}
             </p>
           </div>
           <label className="people-dept-select">
-            部門
+            {copy.department}
             <select
               value={orgUnitId}
               disabled={busy || departments.length === 0}
@@ -936,18 +936,18 @@ export function OrgBudgetPeople({
         </header>
 
         {!department ? (
-          <p className="empty-copy">部門がありません。</p>
+          <p className="empty-copy">{copy.noDepartments}</p>
         ) : categories.length === 0 ? (
           <div className="people-empty">
             <p>
-              この部門に個人配布可能な費目がありません。先に階層分配で部門費目へ枠を落としてください。
+              {copy.noDeptPersonCats}
             </p>
             <button
               type="button"
               className="secondary-button"
               onClick={() => onOpenHierarchy(department.org_unit_id)}
             >
-              {department.org_unit_label}の階層分配を開く
+              {copy.openDeptHierarchy(department.org_unit_label)}
             </button>
           </div>
         ) : (
@@ -980,11 +980,11 @@ export function OrgBudgetPeople({
               <table className="people-matrix">
                 <thead>
                   <tr>
-                    <th>人員</th>
+                    <th>{copy.colPerson}</th>
                     {categories.map((row) => (
                       <th key={row.account_code}>{row.account_name}</th>
                     ))}
-                    <th>合計</th>
+                    <th>{copy.colTotal}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1075,13 +1075,13 @@ export function OrgBudgetPeople({
                         expected_revision:
                           (budgetLiveRef.current ?? budget).revision,
                       }),
-                    "個人枠を更新しました",
+                    copy.updatedEnvelope,
                   );
                 }}
               >
                 <div className="people-editor-fields">
                   <label>
-                    人員
+                    {copy.colPerson}
                     <select
                       value={personId}
                       disabled={busy}
@@ -1095,7 +1095,7 @@ export function OrgBudgetPeople({
                     </select>
                   </label>
                   <label>
-                    費目
+                    {copy.category}
                     <select
                       value={accountCode}
                       disabled={busy}
@@ -1109,9 +1109,9 @@ export function OrgBudgetPeople({
                     </select>
                   </label>
                   <label>
-                    金額
+                    {copy.amount}
                     <CurrencyInput
-                      label="個人の費目別分配額（円）"
+                      label={copy.personCategoryYen}
                       value={amount}
                       disabled={busy}
                       onChange={setAmount}
@@ -1120,9 +1120,9 @@ export function OrgBudgetPeople({
                 </div>
                 <div className="people-editor-meta">
                   <p>
-                    上限 <strong>{yen(Math.max(0, availableYen))}</strong>
+                    {copy.cap} <strong>{yen(Math.max(0, availableYen))}</strong>
                     {overCap && (
-                      <span className="negative"> · 部門枠を超えています</span>
+                      <span className="negative">{copy.overDept}</span>
                     )}
                   </p>
                   <button
@@ -1136,14 +1136,13 @@ export function OrgBudgetPeople({
                       overCap
                     }
                   >
-                    {busy ? "反映中…" : "更新"}
+                    {busy ? copy.applying : copy.update}
                   </button>
                 </div>
               </form>
             ) : (
               <p className="empty-copy">
-                この部門の個人配布を変更する権限がありません（部門長または
-                CEO）。
+                {copy.noPermission}
               </p>
             )}
           </>

@@ -9,8 +9,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@ops-shared/*": ["../shared/*"]
+      "@ops-shared/*": ["../shared/*"],
+      "@wire-console/*": ["../wire-console/src/*"]
     }
   },
-  "include": ["src", "../shared"]
+  "include": ["src", "../shared", "../wire-console/src"]
 }

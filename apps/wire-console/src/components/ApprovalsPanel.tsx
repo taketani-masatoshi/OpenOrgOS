@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import { approveWithSettlementCeremony } from "@ops-shared/settlement-stepup-client";
 import { useSettlementStepUp } from "@ops-shared/use-settlement-stepup";
 import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
 import { api, formatWireApprovalStatus, shortId, type WireApproval } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface Props {
   tenantId: string;
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export function ApprovalsPanel({ tenantId, approvals, onDone }: Props) {
+  const copy = useCopy(WIRE_COPY);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { runCeremony, modal } = useSettlementStepUp(api);
@@ -60,20 +63,20 @@ export function ApprovalsPanel({ tenantId, approvals, onDone }: Props) {
       {modal}
       <section className="panel">
         <h3>
-          Wire approvals <span className="count">{approvals.length}</span>
-          {pending.length ? <span className="badge warn">{pending.length} pending</span> : null}
+          {copy.approvals} <span className="count">{approvals.length}</span>
+          {pending.length ? <span className="badge warn">{copy.waitingBadge(pending.length)}</span> : null}
         </h3>
         {error ? <p className="error">{error}</p> : null}
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>id</th>
-                <th>status</th>
-                <th>peer</th>
-                <th>contract</th>
-                <th>wire event</th>
-                <th>actions</th>
+                <th>{copy.colNumber}</th>
+                <th>{copy.colStatus}</th>
+                <th>{copy.colPeer}</th>
+                <th>{copy.colContract}</th>
+                <th>{copy.colNotice}</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -95,6 +98,7 @@ export function ApprovalsPanel({ tenantId, approvals, onDone }: Props) {
                       <>
                         <button
                           type="button"
+                          className="btn btn-primary"
                           disabled={busyId === a.approval_id}
                           onClick={() => void approve(a.approval_id)}
                         >
@@ -102,7 +106,7 @@ export function ApprovalsPanel({ tenantId, approvals, onDone }: Props) {
                         </button>
                         <button
                           type="button"
-                          className="secondary"
+                          className="btn btn-ghost"
                           disabled={busyId === a.approval_id}
                           onClick={() => void reject(a.approval_id)}
                         >

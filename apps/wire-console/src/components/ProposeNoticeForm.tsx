@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import { api, NOTICE_TYPES, type PeerProfile } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface Props {
   tenantId: string;
@@ -8,6 +10,14 @@ interface Props {
 }
 
 export function ProposeNoticeForm({ tenantId, peers, onDone }: Props) {
+  const copy = useCopy(WIRE_COPY);
+  const noticeLabels: Record<string, string> = {
+    "contract.execution.notice": copy.noticeContractExec,
+    "obligation.acknowledged": copy.noticeObligation,
+    "invoice.issued": copy.noticeInvoice,
+    "payment.instructed": copy.noticePayment,
+    "contract.executed": copy.noticeContractDone,
+  };
   const [peerId, setPeerId] = useState(peers[0]?.peer_id ?? "");
   const [txType, setTxType] = useState(NOTICE_TYPES[0]!.value);
   const [contractId, setContractId] = useState("");
@@ -46,10 +56,10 @@ export function ProposeNoticeForm({ tenantId, peers, onDone }: Props) {
 
   return (
     <section className="panel">
-      <h3>Propose notice</h3>
+      <h3>{copy.proposeTitle}</h3>
       <form className="inline-form" onSubmit={submit}>
         <label>
-          peer
+          {copy.composeTo}
           <select value={peerId} onChange={(e) => setPeerId(e.target.value)} required>
             {peers.map((p) => (
               <option key={p.peer_id} value={p.peer_id}>
@@ -59,33 +69,33 @@ export function ProposeNoticeForm({ tenantId, peers, onDone }: Props) {
           </select>
         </label>
         <label>
-          type
+          {copy.composeKind}
           <select value={txType} onChange={(e) => setTxType(e.target.value)}>
             {NOTICE_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
-                {t.label}
+                {noticeLabels[t.value] ?? t.label}
               </option>
             ))}
           </select>
         </label>
         <label>
-          contract_id
+          {copy.composeContract}
           <input value={contractId} onChange={(e) => setContractId(e.target.value)} placeholder="CTR-012" />
         </label>
         <label>
-          correlation_event_id
+          {copy.composeEvent}
           <input
             value={correlationEventId}
             onChange={(e) => setCorrelationEventId(e.target.value)}
-            placeholder="uuid (ack)"
+            placeholder={copy.composeEventPh}
           />
         </label>
         <label className="wide">
-          message
+          {copy.composeBody}
           <input value={message} onChange={(e) => setMessage(e.target.value)} />
         </label>
-        <button type="submit" disabled={busy || !peerId}>
-          {busy ? "Proposing…" : "Propose"}
+        <button type="submit" className="btn btn-primary" disabled={busy || !peerId}>
+          {busy ? copy.proposing : copy.propose}
         </button>
       </form>
       {lastId ? <p className="hint">Created {lastId} — approve below.</p> : null}

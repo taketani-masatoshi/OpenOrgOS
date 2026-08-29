@@ -29,6 +29,11 @@ import {
   isFetchStale,
   shouldPollReloadWhileVisible,
 } from "./walletOps";
+import { useCopy } from "@ops-shared/define-copy";
+import { useUiLocale } from "@ops-shared/useUiLocale";
+import { STEWARD_COPY } from "./steward-copy";
+import { OpsPage } from "./OpsPage";
+import { getOrgBudgetSnapshot } from "./orgBudgetSnapshot";
 
 /**
  * Personal budget vs actual + person-scoped payroll (read-only).
@@ -113,47 +118,53 @@ function parseReceiptQrPreview(raw: string): ParsedReceiptPreview | null {
   }
 }
 
-function expenseClaimGateLabel(gate: string | undefined): string {
+function expenseClaimGateLabel(
+  gate: string | undefined,
+  copy: (typeof STEWARD_COPY)["ja"],
+): string {
   switch (gate) {
     case "allow_immediate":
-      return "枠内・即時精算可";
+      return copy.gateAllowImmediate;
     case "needs_manager":
-      return "上長承認が必要";
+      return copy.gateNeedsManager;
     case "needs_rep_approval":
-      return "代表者承認が必要";
+      return copy.gateNeedsRep;
     case "needs_late_exception":
-      return "期限超過例外承認が必要";
+      return copy.gateNeedsLate;
     case "needs_ringi":
-      return "稟議承認が必要（REG-004）";
+      return copy.gateNeedsRingi;
     case "needs_board":
-      return "取締役会証跡が必要（REG-004 C）";
+      return copy.gateNeedsBoard;
     case "blocked_dept_envelope":
-      return "部門枠不足（先に階層分配へ）";
+      return copy.gateBlockedDept;
     case "blocked_company_envelope":
-      return "全社枠不足";
+      return copy.gateBlockedCompany;
     default:
       return gate ?? "";
   }
 }
 
-function expenseClaimStatusGateShort(gate: string | undefined): string {
+function expenseClaimStatusGateShort(
+  gate: string | undefined,
+  copy: (typeof STEWARD_COPY)["ja"],
+): string {
   switch (gate) {
     case "allow_immediate":
-      return "枠内";
+      return copy.gateShortAllow;
     case "needs_manager":
-      return "上長待ち";
+      return copy.gateShortManager;
     case "needs_rep_approval":
-      return "代表者待ち";
+      return copy.gateShortRep;
     case "needs_late_exception":
-      return "期限例外待ち";
+      return copy.gateShortLate;
     case "needs_ringi":
-      return "稟議待ち";
+      return copy.gateShortRingi;
     case "needs_board":
-      return "取締役会待ち";
+      return copy.gateShortBoard;
     case "blocked_dept_envelope":
-      return "部門枠不足";
+      return copy.gateShortDept;
     case "blocked_company_envelope":
-      return "全社枠不足";
+      return copy.gateShortCompany;
     default:
       return gate ?? "";
   }
@@ -262,9 +273,13 @@ function writeWalletUrl(personId: string, lane: "envelope" | "payroll") {
 }
 
 export function PersonalWallet() {
-  const [budget, setBudget] = useState<OrgBudgetPayload | null>(null);
+  const copy = useCopy(STEWARD_COPY);
+  const locale = useUiLocale();
+  const [budget, setBudget] = useState<OrgBudgetPayload | null>(() =>
+    getOrgBudgetSnapshot(),
+  );
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !getOrgBudgetSnapshot());
   const [refreshing, setRefreshing] = useState(false);
   const [fetchedAt, setFetchedAt] = useState<number | null>(null);
   const [clock, setClock] = useState(() => Date.now());
@@ -334,7 +349,7 @@ export function PersonalWallet() {
   );
 
   useEffect(() => {
-    void reloadStable();
+    void reloadStable({ soft: Boolean(getOrgBudgetSnapshot()) });
   }, [reloadStable]);
 
   useEffect(() => {
@@ -357,14 +372,14 @@ export function PersonalWallet() {
       if (document.visibilityState !== "visible") return;
       if (pendingNotice) {
         pendingNotice = false;
-        setSyncNotice("他画面で予算が更新されました（再取得済み）");
+        setSyncNotice(copy.syncUpdatedElsewhere);
       }
       maybeRefresh();
     }
     function onFocus() {
       if (pendingNotice) {
         pendingNotice = false;
-        setSyncNotice("他画面で予算が更新されました（再取得済み）");
+        setSyncNotice(copy.syncUpdatedElsewhere);
       }
       maybeRefresh();
     }
@@ -381,8 +396,8 @@ export function PersonalWallet() {
       }
       const notice =
         message.source === "admin"
-          ? "管理画面の変更を反映しました"
-          : "予算データが更新されました";
+          ? copy.syncFromAdmin
+          : copy.syncBudgetUpdated;
       // Reload even when the tab is hidden so state is fresh on return.
       if (document.visibilityState === "visible") {
         maybeRefresh({ force: true, notice });
@@ -414,7 +429,7 @@ export function PersonalWallet() {
     };
     // Refs keep poll/stale checks fresh — avoid resubscribing BroadcastChannel
     // on every fetch (that gap dropped cross-tab mutations).
-  }, [reloadStable]);
+  }, [copy, reloadStable]);
 
   useEffect(() => {
     if (!syncNotice) return;
@@ -454,7 +469,7 @@ export function PersonalWallet() {
 
   const personPayroll = budget?.payroll_by_person?.[personId];
   const stale = isFetchStale(fetchedAt, clock);
-  const fetchedLabel = formatFetchedLabel(fetchedAt, clock);
+  const fetchedLabel = formatFetchedLabel(fetchedAt, clock, locale);
 
   const prompts = useMemo(() => {
     if (!budget) return [];
@@ -491,8 +506,8 @@ export function PersonalWallet() {
         : null,
       company_payroll_ok: budget.payroll_reference?.ok,
       actual_as_of: budget.actuals?.actual_as_of ?? null,
-    });
-  }, [budget, lane, personId, personPayroll, wallet, options]);
+    }, locale);
+  }, [budget, lane, locale, personId, personPayroll, wallet, options]);
 
   function selectPerson(nextId: string) {
     startTransition(() => {
@@ -545,7 +560,7 @@ export function PersonalWallet() {
 
   async function submitReceiptIngest() {
     if (!orgUnitId || !qrPayload.trim()) {
-      setIngestMessage("部門と領収書ペイロードが必要です");
+      setIngestMessage(copy.ingestNeedDept);
       return;
     }
     const allocations = splitEnabled
@@ -568,7 +583,7 @@ export function PersonalWallet() {
             row.amount_yen <= 0,
         )
       ) {
-        setIngestMessage("分割配賦は2行以上、各行は正の金額が必要です");
+        setIngestMessage(copy.ingestSplitNeedTwo);
         return;
       }
       const total = allocations.reduce((sum, row) => sum + row.amount_yen, 0);
@@ -576,9 +591,7 @@ export function PersonalWallet() {
         receiptPreview?.total_amount ??
         parseReceiptQrPreview(qrPayload)?.total_amount;
       if (expected != null && total !== expected) {
-        setIngestMessage(
-          `分割配賦の合計 ${total} が領収書総額 ${expected} と一致しません`,
-        );
+        setIngestMessage(copy.ingestSplitMismatch(total, expected));
         return;
       }
     }
@@ -618,13 +631,13 @@ export function PersonalWallet() {
             issuer?: { wire_ready?: boolean };
           };
         }).claim;
-        const gateLabel = expenseClaimGateLabel(gate?.gate);
+        const gateLabel = expenseClaimGateLabel(gate?.gate, copy);
         const wireNote = claim?.notes?.match(
           /wire:steward\.receipt\.claim\.requested:(sent|failed|skipped)[^·]*/,
         )?.[0];
         setIngestMessage(
           [
-            "取込完了",
+            copy.ingestDone,
             claim?.claim_id,
             gateLabel,
             claim?.status,
@@ -642,9 +655,7 @@ export function PersonalWallet() {
         }
       } catch (caught) {
         if (isBudgetRevisionConflict(caught)) {
-          setIngestMessage(
-            "他の操作者が先に精算を更新しました。最新を再取得しました。内容を確認して再度取り込んでください。",
-          );
+          setIngestMessage(copy.ingestConflict);
           void reloadStable({ soft: true });
           return;
         }
@@ -652,7 +663,7 @@ export function PersonalWallet() {
         const blockedDept = message.includes("blocked_dept_envelope");
         setIngestMessage(
           blockedDept
-            ? `${message} — 管理画面の「階層分配へ」から部門枠を先に増やしてください`
+            ? `${message}${copy.ingestBlockedDept}`
             : message,
         );
       } finally {
@@ -664,9 +675,12 @@ export function PersonalWallet() {
   if (loading && !budget) {
     return (
       <div className="wallet-shell">
-        <div className="wallet-page wallet-loading" role="status">
-          個人予実を読み込み中…
-        </div>
+        <OpsPage
+          title={copy.wallet}
+          loading
+          loadingLabel={copy.walletLoading}
+          className="wallet-page-shell"
+        />
       </div>
     );
   }
@@ -681,7 +695,7 @@ export function PersonalWallet() {
             className="primary-button"
             onClick={() => void reloadStable()}
           >
-            再試行
+            {copy.retry}
           </button>
         </div>
       </div>
@@ -697,7 +711,7 @@ export function PersonalWallet() {
               ¥
             </span>
             <div>
-              <h1 className="wallet-title ops-page-title">個人予実</h1>
+              <h1 className="wallet-title ops-page-title">{copy.wallet}</h1>
             </div>
           </div>
         </header>
@@ -725,12 +739,12 @@ export function PersonalWallet() {
               className="wallet-ghost-btn"
               onClick={() => setSyncNotice(null)}
             >
-              閉じる
+              {copy.close}
             </button>
           </div>
         )}
 
-        <div className="wallet-lane-switch" role="tablist" aria-label="表示レーン">
+        <div className="wallet-lane-switch" role="tablist" aria-label={copy.walletLanes}>
           <button
             type="button"
             role="tab"
@@ -740,7 +754,7 @@ export function PersonalWallet() {
             }
             onClick={() => selectLane("envelope")}
           >
-            <span className="wallet-lane-card__title">経費枠</span>
+            <span className="wallet-lane-card__title">{copy.envelope}</span>
           </button>
           <button
             type="button"
@@ -751,7 +765,7 @@ export function PersonalWallet() {
             }
             onClick={() => selectLane("payroll")}
           >
-            <span className="wallet-lane-card__title">人件費</span>
+            <span className="wallet-lane-card__title">{copy.budgetPayroll}</span>
             {personPayroll && personPayroll.kind !== "none" ? (
               <span
                 className={`wallet-lane-card__status ${
@@ -767,18 +781,18 @@ export function PersonalWallet() {
               >
                 {personPayroll.expected_monthly_yen === 0 &&
                 personPayroll.actual_booked_yen === 0
-                  ? "一致"
+                  ? copy.payrollMatch
                   : personPayroll.actual_months === 0
-                    ? "未計上"
+                    ? copy.payrollUnbooked
                     : personPayroll.ok
-                      ? "一致"
-                      : "要確認"}
+                      ? copy.payrollMatch
+                      : copy.payrollCheck}
               </span>
             ) : null}
           </button>
         </div>
 
-        <nav className="wallet-tabs" aria-label="個人の切替">
+        <nav className="wallet-tabs" aria-label={copy.personSwitch}>
           {options.map((option) => {
             const active = option.person_id === personId;
             const over = option.remaining_yen < 0;
@@ -813,13 +827,13 @@ export function PersonalWallet() {
 
         {error && (
           <div className="error-banner error-banner-with-retry">
-            <span>更新失敗 — 表示は前回のままです。{error}</span>
+            <span>{copy.reloadFailed}{error}</span>
             <button
               type="button"
               className="quiet-button"
               onClick={() => void reloadStable({ soft: true })}
             >
-              再試行
+              {copy.retry}
             </button>
           </div>
         )}
@@ -832,7 +846,7 @@ export function PersonalWallet() {
         {lane === "payroll" ? (
           <section
             className={refreshing ? "wallet-panel is-refreshing" : "wallet-panel"}
-            aria-label="人件費"
+            aria-label={copy.budgetPayroll}
             aria-busy={refreshing}
           >
             <PayrollLanePanel
@@ -845,14 +859,14 @@ export function PersonalWallet() {
             />
           </section>
         ) : !wallet ? (
-          <p className="empty-copy">この人への個人経費枠はまだありません。</p>
+          <p className="empty-copy">{copy.noEnvelope}</p>
         ) : (
           <div
             key={wallet.person_id}
             className={refreshing ? "wallet-panel is-refreshing" : "wallet-panel"}
             aria-busy={refreshing}
           >
-            <section className="wallet-hero" aria-label="経費枠要約">
+            <section className="wallet-hero" aria-label={copy.envelopeSummary}>
               <div className="wallet-hero-identity">
                 <h2>{wallet.display_name}</h2>
                 <p>
@@ -860,21 +874,21 @@ export function PersonalWallet() {
                   {budget?.fiscal_year ? ` · ${budget.fiscal_year}` : ""}
                 </p>
               </div>
-              <div className="wallet-abc" aria-label="経費枠と実績">
+              <div className="wallet-abc" aria-label={copy.envelopeAndActual}>
                 <div className="wallet-abc-col is-budget">
-                  <span>経費枠</span>
+                  <span>{copy.envelope}</span>
                   <strong className="wallet-amount">
                     {yen(wallet.allocation_yen)}
                   </strong>
                 </div>
                 <div className="wallet-abc-col is-actual">
-                  <span>経費実績</span>
+                  <span>{copy.envelopeActual}</span>
                   <strong className="wallet-amount">
                     {yen(wallet.actual_yen)}
                   </strong>
                 </div>
                 <div className="wallet-abc-col is-remain">
-                  <span>残額</span>
+                  <span>{copy.remaining}</span>
                   <strong
                     className={
                       wallet.remaining_yen < 0
@@ -887,16 +901,16 @@ export function PersonalWallet() {
                 </div>
               </div>
               {wallet.remaining_yen < 0 ? (
-                <p className="empty-copy">経費枠超過</p>
+                <p className="empty-copy">{copy.envelopeOver}</p>
               ) : null}
             </section>
 
-            <section className="wallet-receipt-ingest" aria-label="領収書取込">
+            <section className="wallet-receipt-ingest" aria-label={copy.receiptIngest}>
               <div className="wallet-section-head">
-                <h2>領収書を取り込む</h2>
+                <h2>{copy.ingestTitle}</h2>
               </div>
               <p className="empty-copy">
-                発行組織の署名付き QR リンクまたは JSON を貼り付け、費目を選んで精算します。
+                {copy.ingestLead}
               </p>
               <label className="wallet-field wallet-split-toggle">
                 <span>
@@ -905,23 +919,23 @@ export function PersonalWallet() {
                     checked={splitEnabled}
                     onChange={(event) => setSplitEnabled(event.target.checked)}
                   />{" "}
-                  複数科目に分割配賦する
+                  {copy.splitAlloc}
                 </span>
               </label>
               {splitEnabled ? (
-                <fieldset className="wallet-split-allocations" aria-label="分割配賦">
+                <fieldset className="wallet-split-allocations" aria-label={copy.splitAlloc}>
                   <legend>
-                    分割配賦（合計＝領収書総額
+                    {copy.splitAllocLegend}
                     {receiptPreview
                       ? ` ${yen(receiptPreview.total_amount)}`
                       : ""}
-                    ）
-                    {splitAutoFilled ? " · QR明細から自動入力" : ""}
+                    {copy.splitAllocClose}
+                    {splitAutoFilled ? copy.splitFromQr : ""}
                   </legend>
                   {splitLines.map((line, index) => (
                     <div key={`split-${index}`} className="wallet-split-row">
                       <label className="wallet-field">
-                        <span>費目 {index + 1}</span>
+                        <span>{copy.categoryN(index + 1)}</span>
                         <select
                           value={line.account_code}
                           onChange={(event) =>
@@ -948,15 +962,15 @@ export function PersonalWallet() {
                           {(budget?.person_account_catalog?.length ?? 0) ===
                           0 ? (
                             <>
-                              <option value="5730">5730 会議費</option>
-                              <option value="5710">5710 交際費</option>
-                              <option value="5720">5720 旅費交通費</option>
+                              <option value="5730">{copy.accountMeeting}</option>
+                              <option value="5710">{copy.accountEntertainment}</option>
+                              <option value="5720">{copy.accountTravel}</option>
                             </>
                           ) : null}
                         </select>
                       </label>
                       <label className="wallet-field">
-                        <span>金額（円）</span>
+                        <span>{copy.amountYen}</span>
                         <input
                           type="number"
                           min={1}
@@ -983,7 +997,7 @@ export function PersonalWallet() {
                             )
                           }
                         >
-                          行を削除
+                          {copy.removeRow}
                         </button>
                       ) : null}
                     </div>
@@ -998,12 +1012,12 @@ export function PersonalWallet() {
                       ])
                     }
                   >
-                    行を追加
+                    {copy.addRow}
                   </button>
                 </fieldset>
               ) : (
                 <label className="wallet-field">
-                  <span>費目</span>
+                  <span>{copy.category}</span>
                   <select
                     value={accountCode}
                     onChange={(event) => setAccountCode(event.target.value)}
@@ -1015,21 +1029,21 @@ export function PersonalWallet() {
                     ))}
                     {(budget?.person_account_catalog?.length ?? 0) === 0 ? (
                       <>
-                        <option value="5730">5730 会議費</option>
-                        <option value="5710">5710 交際費</option>
-                        <option value="5720">5720 旅費交通費</option>
+                        <option value="5730">{copy.accountMeeting}</option>
+                        <option value="5710">{copy.accountEntertainment}</option>
+                        <option value="5720">{copy.accountTravel}</option>
                       </>
                     ) : null}
                   </select>
                 </label>
               )}
               <label className="wallet-field">
-                <span>QR / 署名付きペイロード</span>
+                <span>{copy.qrPayload}</span>
                 <textarea
                   rows={4}
                   value={qrPayload}
                   onChange={(event) => setQrPayload(event.target.value)}
-                  placeholder="https://receipt.oorgos.org/r#v2z.… または JSON"
+                  placeholder={copy.qrPlaceholder}
                 />
               </label>
               <button
@@ -1038,7 +1052,7 @@ export function PersonalWallet() {
                 disabled={ingestBusy || !qrPayload.trim()}
                 onClick={() => void submitReceiptIngest()}
               >
-                {ingestBusy ? "取込中…" : "取り込む"}
+                {ingestBusy ? copy.ingesting : copy.ingest}
               </button>
               {ingestMessage ? (
                 <p className="empty-copy" role="status">
@@ -1048,45 +1062,45 @@ export function PersonalWallet() {
             </section>
 
             {personClaims.length > 0 ? (
-              <section className="wallet-claims" aria-label="精算案件">
+              <section className="wallet-claims" aria-label={copy.claims}>
                 <div className="wallet-section-head">
-                  <h2>精算案件</h2>
+                  <h2>{copy.claims}</h2>
                 </div>
                 <ul className="wallet-claim-list">
                   {personClaims.map((claim) => {
-                    const gateLabel = expenseClaimStatusGateShort(claim.gate);
+                    const gateLabel = expenseClaimStatusGateShort(claim.gate, copy);
                     const statusLabel =
                       claim.status === "pending_reimbursement"
-                        ? "弁済待ち"
+                        ? copy.claimPendingReimburse
                         : claim.status === "reimbursed"
-                          ? "弁済済"
+                          ? copy.claimReimbursed
                           : claim.status === "posted"
-                            ? "計上済"
+                            ? copy.claimPosted
                             : claim.status === "pending_approval"
-                              ? "承認待ち"
+                              ? copy.claimPendingApproval
                               : claim.status === "approved"
-                                ? "承認済"
+                                ? copy.claimApproved
                                 : claim.status === "rejected"
-                                  ? "却下"
+                                  ? copy.claimRejected
                                   : claim.status;
                     const wireStatus = claim.notes?.includes(":sent:")
-                      ? "Wire送信済"
+                      ? copy.wireSent
                       : claim.notes?.includes(":failed:")
-                        ? "Wire失敗（精算継続）"
+                        ? copy.wireFailed
                         : claim.notes?.includes(":skipped")
-                          ? "Wireスキップ"
+                          ? copy.wireSkipped
                           : claim.wire_ready
-                            ? "Wire対象"
-                            : "Wireなし";
+                            ? copy.wireReady
+                            : copy.wireNone;
                     const invoiceStatus =
                       claim.invoice_verification?.status === "format_only"
-                        ? "T番号:format_only"
+                        ? copy.invoiceFormatOnly
                         : claim.invoice_verification?.status === "verified"
-                          ? "T番号:verified"
+                          ? copy.invoiceVerified
                           : null;
                     const lateStatus =
                       claim.deadline_status === "late"
-                        ? `${claim.days_after_transaction ?? "?"}日後提出`
+                        ? copy.lateSubmit(String(claim.days_after_transaction ?? "?"))
                         : null;
                     const allocationLabel =
                       claim.allocations && claim.allocations.length > 1
@@ -1109,20 +1123,20 @@ export function PersonalWallet() {
                         {wireStatus}
                         <br />
                         <span className="muted">
-                          進捗: 取込
+                          {copy.progressIngest}
                           {claim.status === "pending_approval"
-                            ? " → 承認待ち"
+                            ? copy.progressPendingApproval
                             : claim.status === "rejected"
-                              ? " → 却下"
-                              : " → 承認"}
+                              ? copy.progressRejected
+                              : copy.progressApproved}
                           {claim.status === "pending_reimbursement" ||
                           claim.status === "posted"
-                            ? " → 計上 → 弁済待ち"
+                            ? copy.progressPostedPending
                             : claim.status === "reimbursed"
-                              ? " → 計上 → 弁済済"
+                              ? copy.progressReimbursed
                               : ""}
                           {claim.reject_reason
-                            ? ` · 理由: ${claim.reject_reason}`
+                            ? `${copy.reasonPrefix}${claim.reject_reason}`
                             : ""}
                         </span>
                       </li>
@@ -1132,20 +1146,20 @@ export function PersonalWallet() {
               </section>
             ) : null}
 
-            <section className="wallet-categories" aria-label="費目別経費枠">
+            <section className="wallet-categories" aria-label={copy.categoriesTable}>
               <div className="wallet-section-head">
-                <h2>費目</h2>
+                <h2>{copy.categories}</h2>
               </div>
               <div
                 className="wallet-ledger"
                 role="table"
-                aria-label="費目の経費枠・実績・残額"
+                aria-label={copy.categoriesTable}
               >
                 <div className="wallet-ledger-head" role="row">
-                  <span role="columnheader">費目</span>
-                  <span role="columnheader">経費枠</span>
-                  <span role="columnheader">実績</span>
-                  <span role="columnheader">残額</span>
+                  <span role="columnheader">{copy.colCategory}</span>
+                  <span role="columnheader">{copy.colEnvelope}</span>
+                  <span role="columnheader">{copy.colActual}</span>
+                  <span role="columnheader">{copy.colRemaining}</span>
                 </div>
                 {wallet.rows.map((row) => {
                   const usedPct =

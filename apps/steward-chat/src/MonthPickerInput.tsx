@@ -1,4 +1,8 @@
 import { useMemo } from "react";
+import { useCopy } from "@ops-shared/define-copy";
+import { useUiLocale } from "@ops-shared/useUiLocale";
+import type { UiLocale } from "@ops-shared/locale";
+import { STEWARD_COPY } from "./steward-copy";
 
 type Props = {
   value: string;
@@ -13,10 +17,21 @@ type Props = {
   placeholder?: string;
 };
 
-/** `2026-07` → `2026年7月` */
-export function formatMonthOptionLabel(month: string): string {
+/** `2026-07` → `2026年7月` / `Jul 2026` */
+export function formatMonthOptionLabel(
+  month: string,
+  locale: UiLocale = "ja",
+): string {
   const match = month.match(/^(\d{4})-(\d{2})$/);
   if (!match) return month;
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  if (locale === "en") {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      year: "numeric",
+    }).format(new Date(year, monthIndex, 1));
+  }
   return `${match[1]}年${Number(match[2])}月`;
 }
 
@@ -59,8 +74,11 @@ export function MonthPickerInput({
   max,
   months,
   "aria-label": ariaLabel,
-  placeholder = "月を選択",
+  placeholder,
 }: Props) {
+  const copy = useCopy(STEWARD_COPY);
+  const locale = useUiLocale();
+  const placeholderLabel = placeholder ?? copy.monthSelect;
   const options = useMemo(() => {
     if (months && months.length > 0) {
       return [...new Set(months.filter(Boolean))];
@@ -78,10 +96,10 @@ export function MonthPickerInput({
       aria-label={ariaLabel}
       onChange={(event) => onChange(event.target.value)}
     >
-      <option value="">{placeholder}</option>
+      <option value="">{placeholderLabel}</option>
       {options.map((month) => (
         <option key={month} value={month}>
-          {formatMonthOptionLabel(month)}
+          {formatMonthOptionLabel(month, locale)}
         </option>
       ))}
     </select>

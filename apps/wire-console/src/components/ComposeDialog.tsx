@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import { api, NOTICE_TYPES, type PeerProfile } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface Props {
   tenantId: string;
@@ -10,6 +12,14 @@ interface Props {
 }
 
 export function ComposeDialog({ tenantId, peers, open, onClose, onDone }: Props) {
+  const copy = useCopy(WIRE_COPY);
+  const noticeLabels: Record<string, string> = {
+    "contract.execution.notice": copy.noticeContractExec,
+    "obligation.acknowledged": copy.noticeObligation,
+    "invoice.issued": copy.noticeInvoice,
+    "payment.instructed": copy.noticePayment,
+    "contract.executed": copy.noticeContractDone,
+  };
   const [peerId, setPeerId] = useState(peers[0]?.peer_id ?? "");
   const [txType, setTxType] = useState(NOTICE_TYPES[0]!.value);
   const [contractId, setContractId] = useState("");
@@ -58,14 +68,14 @@ export function ComposeDialog({ tenantId, peers, open, onClose, onDone }: Props)
         onClick={(e) => e.stopPropagation()}
       >
         <div className="detail-header">
-          <h3 id="compose-title">新規作成</h3>
-          <button type="button" className="secondary" onClick={onClose}>
-            閉じる
+          <h3 id="compose-title">{copy.composeTitle}</h3>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            {copy.close}
           </button>
         </div>
         <form className="compose-form" onSubmit={submit}>
           <label>
-            宛先
+            {copy.composeTo}
             <select value={peerId} onChange={(e) => setPeerId(e.target.value)} required>
               {peers.map((p) => (
                 <option key={p.peer_id} value={p.peer_id}>
@@ -75,38 +85,38 @@ export function ComposeDialog({ tenantId, peers, open, onClose, onDone }: Props)
             </select>
           </label>
           <label>
-            種別
+            {copy.composeKind}
             <select value={txType} onChange={(e) => setTxType(e.target.value)}>
               {NOTICE_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>
-                  {t.label}
+                  {noticeLabels[t.value] ?? t.label}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            契約 ID
+            {copy.composeContract}
             <input value={contractId} onChange={(e) => setContractId(e.target.value)} placeholder="CTR-012" />
           </label>
           <label>
-            関連イベント ID
+            {copy.composeEvent}
             <input
               value={correlationEventId}
               onChange={(e) => setCorrelationEventId(e.target.value)}
-              placeholder="uuid（返信時）"
+              placeholder={copy.composeEventPh}
             />
           </label>
           <label>
-            本文
+            {copy.composeBody}
             <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} />
           </label>
           <div className="compose-actions">
-            <button type="submit" disabled={busy || !peerId}>
-              {busy ? "送信中…" : "送信申請"}
+            <button type="submit" className="btn btn-primary" disabled={busy || !peerId}>
+              {busy ? copy.sending : copy.sendRequest}
             </button>
           </div>
         </form>
-        {lastId ? <p className="hint">作成しました: {lastId}</p> : null}
+        {lastId ? <p className="hint">{copy.created(lastId)}</p> : null}
         {error ? <p className="error">{error}</p> : null}
       </section>
     </div>
