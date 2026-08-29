@@ -6,3 +6,7 @@ notes: production_ready — shipments + invoice seed
 activation_seeds:
 - shipments.yaml
 - warehouses.yaml
+cli_commands:
+  - show
+  - validate
+  - in-transit

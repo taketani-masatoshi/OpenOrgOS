@@ -1,6 +1,15 @@
 skills:
   - id: software_outsourcing_ops
     file: software_outsourcing_ops.md
-    runtime: cursor-only
-    description: software_outsourcing module operations checklist
+    runtime: cli
+    cli_command: software-out-show
+    handler: software_outsourcing_ops
+    description: software_outsourcing module status (show)
+    agent_id: operations
+  - id: software_outsourcing_validate
+    file: software_outsourcing_validate.md
+    runtime: cli
+    cli_command: software-out-validate
+    handler: software_outsourcing_validate
+    description: software_outsourcing module validate
     agent_id: operations

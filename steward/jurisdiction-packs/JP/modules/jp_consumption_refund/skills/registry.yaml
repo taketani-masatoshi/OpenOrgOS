@@ -1,0 +1,15 @@
+skills:
+  - id: jp_consumption_refund_eligibility
+    file: jp_consumption_refund_eligibility.md
+    runtime: cli
+    cli_command: jp-consumption-refund-eligibility
+    handler: jp_consumption_refund_eligibility
+    description: 消費税還付の種別ゲート（本則差額 · 輸出 · 簡易は既定拒否）
+    agent_id: tax
+  - id: jp_consumption_refund_show
+    file: jp_consumption_refund_show.md
+    runtime: cli
+    cli_command: jp-consumption-refund-show
+    handler: jp_consumption_refund_show
+    description: 消費税還付クレーム一覧
+    agent_id: tax

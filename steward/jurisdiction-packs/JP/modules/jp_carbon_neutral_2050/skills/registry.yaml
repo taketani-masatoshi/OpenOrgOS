@@ -1,0 +1,15 @@
+skills:
+  - id: jp_carbon_neutral_show
+    file: carbon_neutral_show.md
+    runtime: cli
+    cli_command: jp-carbon-neutral-show
+    handler: jp_carbon_neutral_show
+    description: カーボンニュートラル宣言 — 状態 · 目標 · 行動計画サマリ
+    agent_id: compliance
+  - id: jp_carbon_neutral_targets
+    file: carbon_neutral_targets.md
+    runtime: cli
+    cli_command: jp-carbon-neutral-targets
+    handler: jp_carbon_neutral_targets
+    description: 中間目標と対応する削減施策の一覧
+    agent_id: compliance

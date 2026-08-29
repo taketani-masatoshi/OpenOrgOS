@@ -5,3 +5,7 @@ required_seeds:
 notes: production_ready — projects + invoice seed
 activation_seeds:
 - projects.yaml
+cli_commands:
+  - show
+  - validate
+  - project_billing

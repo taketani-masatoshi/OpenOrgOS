@@ -1,0 +1,9 @@
+id: jp_tax_consumption
+required_seeds: []
+activation_seeds:
+  - consumption-tax-prep.yaml.example
+notes: skeleton — 消費税申告準備 · 課税/免税判定 CLI
+cli_commands:
+  - check
+  - calc
+  - eligibility

@@ -6,3 +6,7 @@ notes: production_ready — orders/products + invoice seed · operations ecommer
 activation_seeds:
   - orders.yaml
   - products.yaml
+cli_commands:
+  - show
+  - validate
+  - fulfillment

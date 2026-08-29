@@ -1,6 +1,15 @@
 skills:
   - id: staffing_ops
     file: staffing_ops.md
-    runtime: cursor-only
-    description: staffing module operations checklist
+    runtime: cli
+    cli_command: staffing-show
+    handler: staffing_ops
+    description: staffing module status (show)
+    agent_id: operations
+  - id: staffing_validate
+    file: staffing_validate.md
+    runtime: cli
+    cli_command: staffing-validate
+    handler: staffing_validate
+    description: staffing module validate
     agent_id: operations

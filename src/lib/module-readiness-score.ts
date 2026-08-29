@@ -117,8 +117,13 @@ function scoreCli(moduleId: string): ModuleReadinessAxis {
   };
 }
 
+/**
+ * Catalog-level axis: a module either ships a co-located skill registry or it
+ * does not. Tenant enablement is measured separately by the operational axis,
+ * so the registry is read unscoped here.
+ */
 function scoreSkill(moduleId: string): ModuleReadinessAxis {
-  const skills = loadSkillRegistry(true).filter((s) => s.moduleId === moduleId);
+  const skills = loadSkillRegistry().filter((s) => s.moduleId === moduleId);
   if (skills.length === 0) {
     return {
       id: "skill",

@@ -1,0 +1,8 @@
+id: jp_invoice_qualified
+required_seeds: []
+activation_seeds:
+  - invoice-registration.yaml.example
+notes: skeleton — インボイス（適格請求書）登録 · T 番号整合
+cli_commands:
+  - registration
+  - issue-check

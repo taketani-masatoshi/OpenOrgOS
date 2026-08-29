@@ -9,3 +9,9 @@ optional_regulations:
   - REG-004
   - REG-005
 notes: activation_ready — 補助金募集要項 · 適格性 · 人件費算定 · 申請書ドラフト（JP 法域のみ）
+cli_commands:
+  - show
+  - validate
+  - eligibility
+  - labor-cost
+  - draft

@@ -8,3 +8,7 @@ notes: production_ready — menu/tables + invoice seed
 activation_seeds:
 - menu.yaml
 - tables.yaml
+cli_commands:
+  - show
+  - validate
+  - seating

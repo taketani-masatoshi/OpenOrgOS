@@ -1,0 +1,15 @@
+skills:
+  - id: jp_minpaku_ops
+    file: jp_minpaku_ops.md
+    runtime: cli
+    cli_command: jp-minpaku-gate
+    handler: jp_minpaku_ops
+    description: 民泊許認可ゲート確認
+    agent_id: compliance
+  - id: jp_minpaku_gate
+    file: jp_minpaku_gate.md
+    runtime: cli
+    cli_command: jp-minpaku-gate-check
+    handler: jp_minpaku_gate
+    description: 民泊 / 宿泊 G-01 ブロッカー
+    agent_id: compliance

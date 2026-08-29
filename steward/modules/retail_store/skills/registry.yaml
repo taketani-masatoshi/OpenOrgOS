@@ -1,0 +1,15 @@
+skills:
+  - id: retail_store_margin
+    file: pos_margin_analysis.md
+    runtime: cli
+    cli_command: retail-store-margin
+    handler: retail_store_margin
+    description: 店舗別 SKU 粗利 · 在庫評価 · 欠品警戒
+    agent_id: finance
+  - id: retail_store_show
+    file: pos_margin_analysis.md
+    runtime: cli
+    cli_command: retail-store-show
+    handler: retail_store_show
+    description: 実店舗小売モジュール状態（店舗 · SKU サマリ）
+    agent_id: finance

@@ -6,3 +6,7 @@ notes: production_ready — inventory/sales + invoice seed
 activation_seeds:
 - skus.yaml
 - stores.yaml
+cli_commands:
+  - show
+  - validate
+  - margin

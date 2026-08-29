@@ -6,3 +6,7 @@ notes: production_ready — members/plans + invoice seed · operations membershi
 activation_seeds:
 - members.yaml
 - plans.yaml
+cli_commands:
+  - show
+  - validate
+  - renewals

@@ -1,0 +1,8 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+responses:
+  - id: NPS-2026-001
+    account_id: CUST-2026-001
+    surveyed_on: "2026-07-20"
+    score: 9
+    campaign: "2026-Q2"

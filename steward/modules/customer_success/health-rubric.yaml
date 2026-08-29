@@ -1,0 +1,37 @@
+version: 1
+# Health score rubric — weights and thresholds (SSOT for computeAccountHealth)
+thresholds:
+  healthy_min: 70
+  at_risk_min: 40
+  critical_min: 0
+penalties:
+  contact_recency:
+    max: 25
+    days_healthy: 14
+    days_at_risk: 30
+    days_critical: 60
+  action_overdue:
+    max: 20
+    days_grace: 0
+  renewal_proximity:
+    max: 20
+    days_healthy: 90
+    days_at_risk: 45
+    days_critical: 14
+  usage_index:
+    max: 15
+    healthy_min: 60
+    at_risk_min: 30
+  support_pressure:
+    max: 10
+    tickets_healthy_max: 2
+    tickets_at_risk_max: 5
+    escalations_penalty: 5
+  nps_latest:
+    max: 10
+    promoter_min: 9
+    passive_min: 7
+    detractor_max: 6
+  onboarding_delay:
+    max: 10
+    milestone_overdue_days: 7

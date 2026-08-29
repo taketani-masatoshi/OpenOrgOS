@@ -199,7 +199,7 @@ export function computeCommunityReadiness(): CommunityReadiness {
     ok: tenantMailShipped,
     detail: tenantMailShipped
       ? "Community tenant-mail API export + Steward push route"
-      : "deferred — Gmail tenant-mail connect not shipped (scaffold only)",
+      : "deferred — Community API exists; COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED=1 + tenant_mail_connect_* until CEO ship",
   });
   if (tenantMailShipped) score += 1;
 

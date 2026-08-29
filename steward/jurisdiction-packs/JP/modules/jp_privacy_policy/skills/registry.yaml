@@ -1,0 +1,15 @@
+skills:
+  - id: jp_privacy_policy_show
+    file: privacy_policy_show.md
+    runtime: cli
+    cli_command: jp-privacy-policy-show
+    handler: jp_privacy_policy_show
+    description: 個人情報保護方針 — 版 · 公表状態 · レビュー期限サマリ
+    agent_id: compliance
+  - id: jp_privacy_policy_status
+    file: privacy_policy_status.md
+    runtime: cli
+    cli_command: jp-privacy-policy-status
+    handler: jp_privacy_policy_status
+    description: 公表状態と必須記載事項の充足確認
+    agent_id: compliance

@@ -1,0 +1,15 @@
+skills:
+  - id: education_enrollment
+    file: enrollment_tracking.md
+    runtime: cli
+    cli_command: education-enrollment
+    handler: education_enrollment
+    description: コース別 受講率 · 定員充足
+    agent_id: operations
+  - id: education_show
+    file: enrollment_tracking.md
+    runtime: cli
+    cli_command: education-show
+    handler: education_show
+    description: 教育モジュール状態
+    agent_id: operations

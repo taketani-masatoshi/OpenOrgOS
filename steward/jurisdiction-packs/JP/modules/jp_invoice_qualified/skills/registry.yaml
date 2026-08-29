@@ -1,0 +1,15 @@
+skills:
+  - id: jp_invoice_registration
+    file: jp_invoice_registration.md
+    runtime: cli
+    cli_command: jp-invoice-registration
+    handler: jp_invoice_registration
+    description: インボイス登録番号 · T 番号整合チェック
+    agent_id: tax
+  - id: jp_qualified_invoice_issue
+    file: jp_qualified_invoice_issue.md
+    runtime: cli
+    cli_command: jp-qualified-invoice-issue
+    handler: jp_qualified_invoice_issue
+    description: 適格請求書発行前提チェック
+    agent_id: tax

@@ -27,7 +27,7 @@ npm run orgos -- --tenant mal jp bank cashflow --help
 ```bash
 npm run orgos -- --tenant mal executive scheduling rehearsal --setup-only --json
 # SMTP 未設定時は smtp_credentials で ready=false（想定）
-# 本番: ORGOS_SMTP_USER / ORGOS_SMTP_PASSWORD を設定後 --full
+# 本番: SMTP 資格情報は Console「会社の設定 → メール → SMTP / IMAP の秘密」から保存（env でも可）
 
 npm run test:scheduling
 ```

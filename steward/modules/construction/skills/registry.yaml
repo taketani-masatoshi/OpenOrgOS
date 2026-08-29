@@ -1,0 +1,15 @@
+skills:
+  - id: construction_site_progress
+    file: site_progress_tracking.md
+    runtime: cli
+    cli_command: construction-site-progress
+    handler: construction_site_progress
+    description: 進行中現場 · 工程進捗（sites.yaml × phases.yaml）
+    agent_id: operations
+  - id: construction_show
+    file: site_progress_tracking.md
+    runtime: cli
+    cli_command: construction-show
+    handler: construction_show
+    description: 建設モジュール状態（現場 · 工程サマリ）
+    agent_id: operations

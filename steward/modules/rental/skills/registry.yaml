@@ -3,11 +3,13 @@ skills:
     file: noi_analysis.md
     runtime: cli
     cli_command: rental-rent-roll
+    handler: rental_rent_roll
     description: NOI · 賃料ロール
     agent_id: property_rental
   - id: rental_show
     file: noi_analysis.md
     runtime: cli
     cli_command: rental-show
+    handler: rental_show
     description: 賃貸モジュール状態
     agent_id: property_rental

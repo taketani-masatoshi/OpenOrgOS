@@ -1,6 +1,15 @@
 skills:
   - id: property_management_ops
     file: property_management_ops.md
-    runtime: cursor-only
-    description: property_management module operations checklist
+    runtime: cli
+    cli_command: property-mgmt-show
+    handler: property_management_ops
+    description: property_management module status (show)
+    agent_id: operations
+  - id: property_management_validate
+    file: property_management_validate.md
+    runtime: cli
+    cli_command: property-mgmt-validate
+    handler: property_management_validate
+    description: property_management module validate
     agent_id: operations

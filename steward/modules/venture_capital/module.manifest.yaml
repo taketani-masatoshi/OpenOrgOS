@@ -6,3 +6,7 @@ notes: production_ready — funds/portfolio + invoice seed
 activation_seeds:
 - funds.yaml
 - portfolio.yaml
+cli_commands:
+  - show
+  - validate
+  - ic-summary

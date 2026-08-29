@@ -1,0 +1,15 @@
+skills:
+  - id: logistics_delivery_sla
+    file: delivery_sla_tracking.md
+    runtime: cli
+    cli_command: logistics-delivery-sla
+    handler: logistics_delivery_sla
+    description: 輸送中案件 · 納期 SLA（倉庫別）
+    agent_id: operations
+  - id: logistics_show
+    file: delivery_sla_tracking.md
+    runtime: cli
+    cli_command: logistics-show
+    handler: logistics_show
+    description: 物流モジュール状態（倉庫 · 配送サマリ）
+    agent_id: operations

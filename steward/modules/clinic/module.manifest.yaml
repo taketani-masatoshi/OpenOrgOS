@@ -6,3 +6,7 @@ notes: production_ready — patients/appointments + invoice seed
 activation_seeds:
 - appointments.yaml
 - departments.yaml
+cli_commands:
+  - show
+  - validate
+  - appointments

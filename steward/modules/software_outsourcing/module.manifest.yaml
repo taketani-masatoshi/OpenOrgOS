@@ -10,3 +10,7 @@ activation_seeds:
 - deliverables.yaml
 optional_regulations:
 - REG-007
+cli_commands:
+  - show
+  - validate
+  - milestones-due

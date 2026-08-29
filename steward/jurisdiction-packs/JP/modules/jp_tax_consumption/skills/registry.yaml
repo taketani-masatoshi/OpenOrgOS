@@ -1,0 +1,8 @@
+skills:
+  - id: jp_consumption_tax_return
+    file: jp_consumption_tax_return.md
+    runtime: cli
+    cli_command: jp-consumption-tax-return
+    handler: jp_consumption_tax_return
+    description: 消費税申告準備 — 区分チェック · 期間集計
+    agent_id: tax

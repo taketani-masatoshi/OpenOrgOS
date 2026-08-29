@@ -1,0 +1,15 @@
+skills:
+  - id: event_space_utilization
+    file: utilization_analysis.md
+    runtime: cli
+    cli_command: event-space-utilization
+    handler: event_space_utilization
+    description: スペース別 稼働率 · 収益
+    agent_id: operations
+  - id: event_space_show
+    file: utilization_analysis.md
+    runtime: cli
+    cli_command: event-space-show
+    handler: event_space_show
+    description: イベントスペースモジュール状態
+    agent_id: operations

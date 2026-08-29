@@ -1,0 +1,8 @@
+skills:
+  - id: jp_corporate_tax_return
+    file: jp_corporate_tax_return.md
+    runtime: cli
+    cli_command: jp-corporate-tax-return
+    handler: jp_corporate_tax_return
+    description: 法人税申告準備 — カレンダー · ギャップ · 減価償却検算
+    agent_id: tax

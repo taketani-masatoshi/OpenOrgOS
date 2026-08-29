@@ -3,3 +3,8 @@ activation_seeds:
   - language-bridge.yaml.example
   - minutes-bilingual-template.md.example
 notes: activation_ready — user vs system record language · bilingual minutes scaffold
+cli_commands:
+  - show
+  - validate
+  - header
+  - draft

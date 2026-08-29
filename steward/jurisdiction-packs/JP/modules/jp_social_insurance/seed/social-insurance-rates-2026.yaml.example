@@ -1,0 +1,11 @@
+version: 1
+fiscal_year_label: FY2026
+health_insurance:
+  employee_rate_pct: 5.0
+  employer_rate_pct: 5.0
+pension:
+  employee_rate_pct: 9.15
+  employer_rate_pct: 9.15
+employment_insurance:
+  employer_rate_pct: 0.9
+notes: Copy to tenants/{id}/data/finance/social-insurance-rates.yaml and customize.

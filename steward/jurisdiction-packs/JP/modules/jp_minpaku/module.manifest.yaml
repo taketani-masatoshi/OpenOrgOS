@@ -1,0 +1,9 @@
+id: jp_minpaku
+required_seeds: []
+activation_seeds:
+  - operations-public.yaml.example
+optional_regulations:
+  - REG-012
+notes: skeleton — 住宅宿泊事業（民泊）運用 · 届出は jp_permit_application · 台帳は jp_permit_registry
+cli_commands:
+  - gate

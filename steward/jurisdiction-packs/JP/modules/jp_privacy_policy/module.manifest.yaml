@@ -6,3 +6,7 @@ activation_seeds:
 optional_regulations:
   - REG-010
 notes: activation_ready — 外部向け個人情報保護方針 · REG-010 社内規程と整合
+cli_commands:
+  - show
+  - validate
+  - policy-status

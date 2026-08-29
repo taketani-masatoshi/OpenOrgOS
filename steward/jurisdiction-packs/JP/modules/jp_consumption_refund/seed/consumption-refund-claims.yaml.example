@@ -1,0 +1,12 @@
+entity: example
+as_of: 2026-03-31
+claims:
+  - id: CLAIM-2026-03-simplified
+    kind: simplified
+    period: 2026-03
+    assessment_period: 2026-03
+    amount_yen: 0
+    status: blocked
+    gate: blocked
+    gate_reason: simplified_no_input_credit
+    evidence_paths: []

@@ -61,7 +61,42 @@ import {
   tieOutBankStatements,
 } from "../../../../../../src/lib/jp-bank-corporate/reports.js";
 import { requireCliFinanceReconciliationApproval } from "../../../../../../src/lib/console-auth/cli-operator.js";
+import {
+  postBankReconciliationGl,
+  resolveReconciliationSettleKind,
+  reverseBankReconciliationGl,
+} from "../../../../../../src/lib/finance/bank-reconciliation-gl.js";
 import { computeJpBankInputFingerprint } from "../../../../../../src/lib/jp-bank-corporate/input-fingerprint.js";
+
+function postGlForReconciliationMatch(input: {
+  eventId: string;
+  bankStatementId: string;
+  arApId: string;
+  amountYen: number;
+  occurredAt: string;
+  authorizedBy: string;
+  bankEntries: Array<{ id: string; direction: string }>;
+  arApEntries: Array<{ id: string; kind: string; counterparty?: string }>;
+}): string {
+  const bank = input.bankEntries.find((e) => e.id === input.bankStatementId);
+  const arAp = input.arApEntries.find((e) => e.id === input.arApId);
+  const kind = resolveReconciliationSettleKind({
+    bankDirection: bank?.direction,
+    arApKind: arAp?.kind,
+  });
+  const counterpartyId =
+    (arAp && "counterparty" in arAp && typeof arAp.counterparty === "string"
+      ? arAp.counterparty
+      : null) || input.arApId;
+  return postBankReconciliationGl({
+    eventId: input.eventId,
+    kind,
+    amountYen: input.amountYen,
+    counterpartyId,
+    occurredAt: input.occurredAt,
+    authorizedBy: input.authorizedBy,
+  });
+}
 
 export const MODULE_ID = "jp_bank_corporate";
 
@@ -521,6 +556,21 @@ export function runJpBankReconcileAuto(opts: { json?: boolean }): void {
     added.push(event);
   }
   const result = appendReconciliationEvents(added);
+  for (const event of added) {
+    if (event.type !== "reconciliation.applied") continue;
+    for (const allocation of event.allocations) {
+      postGlForReconciliationMatch({
+        eventId: event.id,
+        bankStatementId: allocation.bank_statement_id,
+        arApId: allocation.ar_ap_id,
+        amountYen: allocation.amount,
+        occurredAt: event.occurred_at,
+        authorizedBy: "system:exact-reference-v1",
+        bankEntries: input.statements.entries,
+        arApEntries: input.ledger.entries,
+      });
+    }
+  }
   if (opts.json) {
     console.log(JSON.stringify({ added: result.added, events: added }, null, 2));
     return;
@@ -570,6 +620,16 @@ export function runJpBankReconcileApply(opts: {
     throw new Error(checked.errors.join("; "));
   }
   appendReconciliationEvents([event]);
+  postGlForReconciliationMatch({
+    eventId: event.id,
+    bankStatementId: opts.bankId,
+    arApId: opts.arApId,
+    amountYen: opts.amount,
+    occurredAt: event.occurred_at,
+    authorizedBy: auth.record.operator_id,
+    bankEntries: input.statements.entries,
+    arApEntries: input.ledger.entries,
+  });
   if (opts.json) {
     console.log(JSON.stringify(event, null, 2));
     return;
@@ -607,11 +667,19 @@ export function runJpBankReconcileReverse(opts: {
     throw new Error(checked.errors.join("; "));
   }
   appendReconciliationEvents([event]);
+  const reversedGl = reverseBankReconciliationGl({
+    targetEventId: opts.eventId,
+    authorizedBy: auth.record.operator_id,
+    occurredAt: event.occurred_at,
+  });
   if (opts.json) {
-    console.log(JSON.stringify(event, null, 2));
+    console.log(JSON.stringify({ ...event, gl_reversal_entry_id: reversedGl }, null, 2));
     return;
   }
-  console.log(`✓ reconciliation reversed — ${event.id}`);
+  console.log(
+    `✓ reconciliation reversed — ${event.id}` +
+      (reversedGl ? ` (GL ${reversedGl})` : " (no GL entry found)"),
+  );
 }
 
 export function runJpBankReconcileList(opts: { json?: boolean }): void {

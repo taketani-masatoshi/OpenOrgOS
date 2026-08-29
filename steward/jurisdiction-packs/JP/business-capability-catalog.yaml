@@ -9,9 +9,8 @@
 schema_version: 1
 jurisdiction: JP
 locale: ja-JP
-updated: "2026-06-25"
+updated: 2026-06-25
 maintainer: steward-os/jp-maintainers
-
 categories:
   - id: corporate_governance
     name_ja: 会社設立・ガバナンス
@@ -43,1036 +42,1184 @@ categories:
   - id: cross_border
     name_ja: 多言語・越境
     name_en: Cross-border & Language
-
 agents:
-  # ── コア（実装済） ──
   - id: executive_steward
     name_ja: 経営統括
     name_en: Executive Steward
     tier: core
     status: implemented
     path: steward/core/agents/executive_steward_agent.md
-    categories: [corporate_governance, tax_finance]
+    categories:
+      - corporate_governance
+      - tax_finance
     scope_ja: 経営判断 · KPI · P0 ブロッカー · ダッシュボード
     priority: P0
-
   - id: secretary
     name_ja: 秘書
     name_en: Secretary
     tier: core
     status: implemented
     path: steward/core/agents/secretary_agent.md
-    categories: [corporate_governance, cross_border]
+    categories:
+      - corporate_governance
+      - cross_border
     scope_ja: スケジュール · 議事録 · 株主総会・取締役会支援 · 対外下書き
     priority: P0
-
   - id: finance
     name_ja: 財務・計画
     name_en: Finance
     tier: core
     status: implemented
     path: steward/core/agents/finance_agent.md
-    categories: [tax_finance, banking_payments]
+    categories:
+      - tax_finance
+      - banking_payments
     scope_ja: 予実 · 決算 · 税務データ · インボイス · CF
     priority: P0
-
   - id: contract
     name_ja: 契約管理
     name_en: Contract
     tier: core
     status: implemented
     path: steward/core/agents/contract_agent.md
-    categories: [compliance_legal, sector_operations]
+    categories:
+      - compliance_legal
+      - sector_operations
     scope_ja: 契約台帳 · 更新 · 下請・NDA · 業務委託
     priority: P0
-
   - id: compliance
     name_ja: コンプライアンス
     name_en: Compliance
     tier: core
     status: implemented
     path: steward/core/agents/compliance_agent.md
-    categories: [compliance_legal, government_programs, intellectual_property]
+    categories:
+      - compliance_legal
+      - government_programs
+      - intellectual_property
     scope_ja: 社内規程 · 許認可 · ISO · 個情法 · 法域 pack
     priority: P0
-
   - id: operations
     name_ja: 業務運用
     name_en: Operations
     tier: core
     status: implemented
     path: steward/core/agents/operations_agent.md
-    categories: [sector_operations, cross_border]
+    categories:
+      - sector_operations
+      - cross_border
     scope_ja: 日次運用 · travel · 業務モジュール横断 CLI
     priority: P1
-
-  # ── 拡張（計画 · 日本ビジネスで実質必要） ──
+  - id: tax
+    name_ja: 税務
+    name_en: Tax
+    tier: extension
+    status: implemented
+    path: steward/core/agents/tax_agent.md
+    categories:
+      - tax_finance
+    scope_ja: 法人税 · 消費税 · 源泉 · 申告準備 · 添付書類
+    priority: P0
+    reports_to: finance
   - id: human_resources
     name_ja: 人事・労務
     name_en: Human Resources
     tier: extension
     status: planned
-    categories: [labor_hr]
+    categories:
+      - labor_hr
     scope_ja: 採用 · 就業規則 · 社保 · 給与 · 36協定 · 労務監督
     priority: P0
     notes: agents/registry.yaml planned · Finance と分担要整理
-
   - id: legal_ip
     name_ja: 法務・知財
     name_en: Legal & IP
     tier: extension
     status: planned
-    categories: [compliance_legal, intellectual_property]
+    categories:
+      - compliance_legal
+      - intellectual_property
     scope_ja: 契約レビュー · 商標・特許出願支援 · 紛争エスカレーション
     priority: P1
     notes: 現状 Compliance proxy（jp_trademark_application 等）
-
   - id: government_affairs
     name_ja: 行政・公的制度
     name_en: Government Affairs
     tier: extension
     status: planned
-    categories: [government_programs]
+    categories:
+      - government_programs
     scope_ja: 補助金 · 交付金 · 認定 · 行政書士連携
     priority: P1
     notes: 現状 Finance/Compliance proxy（jp_subsidy_application）
-
   - id: procurement
     name_ja: 購買・調達
     name_en: Procurement
     tier: extension
     status: planned
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     scope_ja: ベンダー選定 · 発注 · 稟議 REG-004 連動
     priority: P2
-
   - id: risk_insurance
     name_ja: リスク・保険
     name_en: Risk & Insurance
     tier: extension
     status: planned
-    categories: [insurance_risk]
+    categories:
+      - insurance_risk
     scope_ja: 損保 · 賠責 · 許認可 INDEX · 事業継続
     priority: P2
-
   - id: investor_relations
     name_ja: IR・資本政策
     name_en: Investor Relations
     tier: extension
-    status: planned
-    categories: [corporate_governance, tax_finance]
-    scope_ja: 株主対応 · 資金調達 · VC モジュール連動
-    priority: P3
-    binds_modules: [venture_capital]
-
+    status: implemented
+    path: steward/core/agents/investor_relations_agent.md
+    categories:
+      - corporate_governance
+      - tax_finance
+    scope_ja: 株主対応 · cap table · 開示カレンダー · IR 資料
+    priority: P2
+    binds_modules:
+      - investor_relations
 modules:
-  # ── 汎用業務（steward/modules · 実装済） ──
   - id: professional_services
     name_ja: プロフェッショナルサービス
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: professional_services
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P1
-    regulations: [REG-004, REG-005]
-
+    regulations:
+      - REG-004
+      - REG-005
   - id: saas_subscription
     name_ja: SaaS・サブスク
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: finance
-    categories: [sector_operations, tax_finance]
+    categories:
+      - sector_operations
+      - tax_finance
     priority: P1
-    regulations: [REG-010]
-
+    regulations:
+      - REG-010
   - id: software_outsourcing
     name_ja: ソフトウェア受託
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     priority: P1
-    regulations: [REG-004]
-
+    regulations:
+      - REG-004
   - id: ecommerce
     name_ja: EC・通販
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     priority: P2
-    regulations: [REG-022, REG-010]
-
+    regulations:
+      - REG-022
+      - REG-010
   - id: staffing
     name_ja: 人材派遣・SES
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations, labor_hr]
+    categories:
+      - sector_operations
+      - labor_hr
     priority: P2
-    regulations: [REG-020]
-
+    regulations:
+      - REG-020
   - id: real_estate_brokerage
     name_ja: 不動産仲介
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: contract
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     priority: P2
-    regulations: [REG-004]
+    regulations:
+      - REG-004
     notes: 宅建業法 · 重要事項説明は planned skill
-
   - id: property_management
     name_ja: 不動産管理
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: property_rental
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-
   - id: rental
     name_ja: 不動産賃貸
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: property_rental
-    categories: [sector_operations, tax_finance]
+    categories:
+      - sector_operations
+      - tax_finance
     priority: P2
-
   - id: hospitality
     name_ja: 宿泊・旅館
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: hospitality
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     priority: P2
-    regulations: [REG-012]
+    regulations:
+      - REG-012
     notes: 旅館業法 · 民泊は別モジュール候補
-
   - id: restaurant
     name_ja: 飲食
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-    regulations: [REG-017]
-
+    regulations:
+      - REG-017
   - id: clinic
     name_ja: クリニック・医療
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     priority: P3
-    regulations: [REG-018]
-
+    regulations:
+      - REG-018
   - id: construction
     name_ja: 建設・工事
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations, labor_hr]
+    categories:
+      - sector_operations
+      - labor_hr
     priority: P2
-    regulations: [REG-019]
-
+    regulations:
+      - REG-019
   - id: logistics
     name_ja: 物流・倉庫
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-    regulations: [REG-023]
-
+    regulations:
+      - REG-023
   - id: education
     name_ja: 教育・スクール
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-    regulations: [REG-021]
-
+    regulations:
+      - REG-021
   - id: membership
     name_ja: 会員制ビジネス
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: finance
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-    regulations: [REG-024]
-
+    regulations:
+      - REG-024
   - id: event_space
     name_ja: イベントスペース
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-
   - id: event_operations
     name_ja: イベント運営
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-
   - id: retail_store
     name_ja: 小売店舗
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations]
+    categories:
+      - sector_operations
     priority: P2
-
   - id: venture_capital
     name_ja: VC・投資
     status: implemented
     tier: production_ready
     pack: steward/modules
     agent_proxy: finance
-    categories: [sector_operations, corporate_governance]
+    categories:
+      - sector_operations
+      - corporate_governance
     priority: P3
-
+  - id: investor_relations
+    name_ja: 自社 IR
+    status: implemented
+    tier: production_ready
+    pack: steward/modules
+    agent_proxy: investor_relations
+    categories:
+      - corporate_governance
+      - tax_finance
+    priority: P2
   - id: travel_booking
     name_ja: 出張・旅行手配
     status: partial
     tier: production_ready
     pack: steward/modules
     agent_proxy: operations
-    categories: [sector_operations, cross_border]
+    categories:
+      - sector_operations
+      - cross_border
     priority: P1
-    regulations: [REG-008]
-
+    regulations:
+      - REG-008
   - id: language_bridge
     name_ja: 多言語記録・議事録
     status: partial
     tier: activation_ready
     pack: steward/modules
     agent_proxy: secretary
-    categories: [cross_border]
+    categories:
+      - cross_border
     priority: P1
-
-  # ── JP 法域 pack（実装済 · activation_ready） ──
   - id: jp_privacy_policy
     name_ja: プライバシーポリシー（外部向け）
     status: partial
     tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [compliance_legal]
+    categories:
+      - compliance_legal
     priority: P0
-    regulations: [REG-010]
+    regulations:
+      - REG-010
     official_urls:
       - https://www.ppc.go.jp/
-
   - id: jp_subsidy_application
     name_ja: 補助金・助成金申請
     status: partial
     tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: finance
-    categories: [government_programs, tax_finance]
+    categories:
+      - government_programs
+      - tax_finance
     priority: P1
     official_urls:
       - https://www.chusho.meti.go.jp/
-
   - id: jp_trademark_application
     name_ja: 商標出願
     status: partial
     tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [intellectual_property]
+    categories:
+      - intellectual_property
     priority: P1
     official_urls:
       - https://www.jpo.go.jp/system/basic/trademark/index.html
       - https://faq.inpit.go.jp/FAQ/trademark202601.pdf
-
   - id: jp_women_empowerment
     name_ja: 女性活躍・行動計画
     status: partial
     tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [government_programs, labor_hr]
+    categories:
+      - government_programs
+      - labor_hr
     priority: P2
     official_urls:
       - https://www.meti.go.jp/policy/koyou/josei/kigyou_ninni/index.html
-
   - id: jp_carbon_neutral_2050
     name_ja: 2050 カーボンニュートラル宣言
     status: partial
     tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [government_programs, compliance_legal]
+    categories:
+      - government_programs
+      - compliance_legal
     priority: P2
-    regulations: [REG-014]
+    regulations:
+      - REG-014
     official_urls:
       - https://www.meti.go.jp/policy/energy_environment/global_warming/2050_carbon_neutral/
-
-  # ── JP 法域 pack（計画 · 日本ビジネス推進で必要） ──
   - id: jp_corporate_registration
     name_ja: 法人設立・変更登記
     status: partial
     tier: production_ready
     pack: jurisdiction-packs/JP
     agent_proxy: secretary
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P0
     official_urls:
       - https://www.touki.or.jp/
       - https://www.moj.go.jp/homu/homu_06.html
-
   - id: jp_statutory_meetings
     name_ja: 株主総会・取締役会手続
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: secretary
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P0
-    regulations: [REG-002, REG-003, REG-004]
-
+    regulations:
+      - REG-002
+      - REG-003
+      - REG-004
   - id: jp_tax_corporate
     name_ja: 法人税・地方法人税申告
-    status: planned
+    status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
-    agent_proxy: finance
-    categories: [tax_finance]
+    agent_proxy: tax
+    categories:
+      - tax_finance
     priority: P0
     official_urls:
       - https://www.nta.go.jp/
-
   - id: jp_tax_consumption
     name_ja: 消費税申告
-    status: planned
+    status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
-    agent_proxy: finance
-    categories: [tax_finance]
+    agent_proxy: tax
+    categories:
+      - tax_finance
     priority: P0
     official_urls:
       - https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/shohi.htm
-
+  - id: jp_consumption_refund
+    name_ja: 消費税還付申請
+    status: partial
+    tier: activation_ready
+    pack: jurisdiction-packs/JP
+    agent_proxy: tax
+    categories:
+      - tax_finance
+    priority: P1
+    official_urls:
+      - https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/shohi.htm
   - id: jp_invoice_qualified
     name_ja: インボイス（適格請求書）登録・運用
-    status: planned
+    status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
-    agent_proxy: finance
-    categories: [tax_finance]
+    agent_proxy: tax
+    categories:
+      - tax_finance
     priority: P0
     official_urls:
       - https://www.invoice-kohyo.nta.go.jp/
-
   - id: jp_withholding_statutory
     name_ja: 源泉徴収・法定調書
-    status: planned
+    status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
-    agent_proxy: finance
-    categories: [tax_finance, labor_hr]
+    agent_proxy: tax
+    categories:
+      - tax_finance
+      - labor_hr
     priority: P0
-
   - id: jp_social_insurance
     name_ja: 社会保険・労働保険事務
-    status: planned
+    status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
-    categories: [labor_hr, insurance_risk]
+    categories:
+      - labor_hr
+      - insurance_risk
     priority: P0
     official_urls:
       - https://www.nenkin.go.jp/
       - https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_rodou/rodouteiriku/
-
   - id: jp_employment_rules
     name_ja: 就業規則・36協定
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
-    categories: [labor_hr]
+    categories:
+      - labor_hr
     priority: P0
-
   - id: jp_payroll
     name_ja: 給与・賞与・年末調整
-    status: planned
+    status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
-    categories: [labor_hr, tax_finance]
+    categories:
+      - labor_hr
+      - tax_finance
     priority: P0
-
   - id: jp_labor_contract
     name_ja: 雇用契約・労務管理
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
-    categories: [labor_hr, compliance_legal]
+    categories:
+      - labor_hr
+      - compliance_legal
     priority: P0
-
   - id: jp_permit_registry
     name_ja: 許認可・届出台帳
     status: partial
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [compliance_legal, sector_operations]
+    categories:
+      - compliance_legal
+      - sector_operations
     priority: P1
     notes: permit-types-catalog 60+ 種 · obligations · operations permit CLI · gap 分析
-
   - id: jp_subcontractor_act
     name_ja: 下請法コンプライアンス
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: contract
-    categories: [compliance_legal, sector_operations]
+    categories:
+      - compliance_legal
+      - sector_operations
     priority: P1
     official_urls:
       - https://www.chusho.meti.go.jp/policy/shitauke/index.html
-
   - id: jp_data_breach
     name_ja: 個情漏えい報告・記録
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [compliance_legal]
+    categories:
+      - compliance_legal
     priority: P1
-    regulations: [REG-010]
+    regulations:
+      - REG-010
     official_urls:
       - https://www.ppc.go.jp/
-
   - id: jp_patent_application
     name_ja: 特許出願
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [intellectual_property]
+    categories:
+      - intellectual_property
     priority: P2
     official_urls:
       - https://www.jpo.go.jp/system/process/tokkyo/index.html
-
   - id: jp_minpaku
     name_ja: 民泊・住宅宿泊
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: compliance
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     priority: P2
-    binds_modules: [hospitality, rental]
-
+    binds_modules:
+      - hospitality
+      - rental
   - id: jp_takken
     name_ja: 宅地建物取引業
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: contract
-    categories: [sector_operations, compliance_legal]
+    categories:
+      - sector_operations
+      - compliance_legal
     priority: P2
-    binds_modules: [real_estate_brokerage]
-
+    binds_modules:
+      - real_estate_brokerage
   - id: jp_bank_corporate
     name_ja: 法人口座・資金管理
     status: implemented
     tier: activation_ready
     pack: jurisdiction-packs/JP
     agent_proxy: finance
-    categories: [banking_payments, tax_finance]
+    categories:
+      - banking_payments
+      - tax_finance
     priority: P1
     notes: append-only 消込 · 冪等銀行取込 · aging/tie-out · fixture E2E · orgos jp bank CLI
-
   - id: jp_visa_employment
     name_ja: 在留・外国人雇用
     status: planned
     tier: skeleton
     pack: jurisdiction-packs/JP
     agent_proxy: human_resources
-    categories: [labor_hr, cross_border]
+    categories:
+      - labor_hr
+      - cross_border
     priority: P2
     official_urls:
       - https://www.moj.go.jp/isa/applications/procedures/index.html
-
 skills:
-  # ── コア skill（実装済 · steward/core/skills） ──
   - id: daily_ops
     name_ja: 日次運用
     status: implemented
     runtime: cli
     agent_id: executive_steward
     module_id: null
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P0
     cli_command: daily
-
   - id: p0_closing
     name_ja: P0 決算前ブロッカー
     status: implemented
     runtime: cli
     agent_id: executive_steward
-    categories: [corporate_governance, tax_finance]
+    categories:
+      - corporate_governance
+      - tax_finance
     priority: P0
     cli_command: p0
-
   - id: executive_dashboard
     name_ja: 経営ダッシュボード
     status: implemented
     runtime: cli
     agent_id: executive_steward
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P1
     cli_command: dashboard
-
   - id: monthly_close
     name_ja: 月次締め
     status: implemented
     runtime: cli
     agent_id: finance
-    categories: [tax_finance]
+    categories:
+      - tax_finance
     priority: P0
     cli_command: monthly-close
-
   - id: tax_filing_prep
     name_ja: 税務申告準備
     status: implemented
     runtime: cli
-    agent_id: finance
-    categories: [tax_finance]
+    agent_id: tax
+    categories:
+      - tax_finance
     priority: P0
     cli_command: tax-filing-prep
     module_id: jp_tax_corporate
-
   - id: variance_analysis
     name_ja: 予実差異分析
     status: implemented
     runtime: cli
     agent_id: finance
-    categories: [tax_finance]
+    categories:
+      - tax_finance
     priority: P1
     cli_command: variance
-
   - id: cashflow_forecast
     name_ja: キャッシュフロー予測
     status: implemented
     runtime: cli
     agent_id: finance
-    categories: [tax_finance, banking_payments]
+    categories:
+      - tax_finance
+      - banking_payments
     priority: P1
     cli_command: forecast
-
   - id: capex_planning
     name_ja: CAPEX 計画
     status: implemented
     runtime: cli
     agent_id: finance
-    categories: [tax_finance]
+    categories:
+      - tax_finance
     priority: P2
     cli_command: capex-planning
-
   - id: contract_expiry_check
     name_ja: 契約期限アラート
     status: implemented
     runtime: cli
     agent_id: contract
-    categories: [compliance_legal, sector_operations]
+    categories:
+      - compliance_legal
+      - sector_operations
     priority: P0
     cli_command: contract-expiry
-
   - id: contract_register
     name_ja: 契約台帳整備
     status: implemented
     runtime: cli
     agent_id: contract
-    categories: [compliance_legal]
+    categories:
+      - compliance_legal
     priority: P0
     cli_command: contract-register
-
   - id: permit_expiry_check
     name_ja: 許認可・保険期限
     status: implemented
     runtime: cli
     agent_id: compliance
-    categories: [compliance_legal, insurance_risk]
+    categories:
+      - compliance_legal
+      - insurance_risk
     priority: P0
     cli_command: permit-expiry
     module_id: jp_permit_registry
-
   - id: schedule_management
     name_ja: スケジュール管理
     status: implemented
     runtime: cli
     agent_id: secretary
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P1
     cli_command: schedule
-
   - id: one_on_one_prep
     name_ja: 1-on-1 準備
     status: implemented
     runtime: cli
     agent_id: secretary
-    categories: [labor_hr]
+    categories:
+      - labor_hr
     priority: P2
     cli_command: one-on-one
-
   - id: external_correspondence
     name_ja: 社外連絡下書き
     status: partial
     runtime: agent
     agent_id: secretary
-    categories: [cross_border]
+    categories:
+      - cross_border
     priority: P1
-
-  # ── JP モジュール skill（partial · 実装あり） ──
   - id: jp_subsidy_eligibility
     name_ja: 補助金適格性チェック
     status: partial
     runtime: cli
     agent_id: finance
     module_id: jp_subsidy_application
-    categories: [government_programs]
+    categories:
+      - government_programs
     priority: P1
     cli_command: operations subsidy eligibility
-
   - id: jp_subsidy_labor_cost
     name_ja: 補助金人件費算定
     status: partial
     runtime: cli
     agent_id: finance
     module_id: jp_subsidy_application
-    categories: [government_programs, labor_hr]
+    categories:
+      - government_programs
+      - labor_hr
     priority: P1
     cli_command: operations subsidy labor-cost
-
   - id: jp_subsidy_draft
     name_ja: 補助金申請書ドラフト
     status: partial
     runtime: cli
     agent_id: finance
     module_id: jp_subsidy_application
-    categories: [government_programs]
+    categories:
+      - government_programs
     priority: P1
     cli_command: operations subsidy draft
-
   - id: jp_trademark_checklist
     name_ja: 商標出願前チェックリスト
     status: partial
     runtime: cli
     agent_id: compliance
     module_id: jp_trademark_application
-    categories: [intellectual_property]
+    categories:
+      - intellectual_property
     priority: P1
     cli_command: operations trademark checklist
-
   - id: jp_trademark_draft
     name_ja: 商標登録願ドラフト
     status: partial
     runtime: cli
     agent_id: compliance
     module_id: jp_trademark_application
-    categories: [intellectual_property]
+    categories:
+      - intellectual_property
     priority: P1
     cli_command: operations trademark draft
-
-  # ── 計画 skill（日本ビジネス推進） ──
   - id: jp_company_incorporation
     name_ja: 株式会社設立手続ガイド
     status: partial
     runtime: cli
     agent_id: secretary
     module_id: jp_corporate_registration
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P0
     cli_command: operations corporate draft
-
   - id: jp_registry_change
     name_ja: 登記変更（本店移転・役員変更）
     status: partial
     runtime: cli
     agent_id: secretary
     module_id: jp_corporate_registration
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P1
     cli_command: operations corporate draft
-
   - id: jp_shareholder_meeting_pack
     name_ja: 株主総会招集・議事録パック
     status: planned
     runtime: cli
     agent_id: secretary
     module_id: jp_statutory_meetings
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P0
-    regulations: [REG-003]
-
+    regulations:
+      - REG-003
   - id: jp_board_meeting_pack
     name_ja: 取締役会招集・議事録パック
     status: planned
     runtime: cli
     agent_id: secretary
     module_id: jp_statutory_meetings
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P0
-    regulations: [REG-002]
-
+    regulations:
+      - REG-002
   - id: jp_ringi_draft
     name_ja: 稟議書ドラフト
     status: planned
     runtime: cli
     agent_id: secretary
     module_id: jp_statutory_meetings
-    categories: [corporate_governance]
+    categories:
+      - corporate_governance
     priority: P0
-    regulations: [REG-004]
-
+    regulations:
+      - REG-004
   - id: jp_corporate_tax_return
     name_ja: 法人税申告書準備
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: finance
+    agent_id: tax
     module_id: jp_tax_corporate
-    categories: [tax_finance]
+    categories:
+      - tax_finance
     priority: P0
-
+    cli_command: tax-corporate
   - id: jp_consumption_tax_return
     name_ja: 消費税申告準備
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: finance
+    agent_id: tax
     module_id: jp_tax_consumption
-    categories: [tax_finance]
+    categories:
+      - tax_finance
     priority: P0
-
+    cli_command: tax-consumption
+  - id: jp_consumption_refund_eligibility
+    name_ja: 消費税還付適格判定
+    status: partial
+    runtime: cli
+    agent_id: tax
+    module_id: jp_consumption_refund
+    categories:
+      - tax_finance
+    priority: P1
+    cli_command: consumption-refund
+  - id: jp_consumption_refund_show
+    name_ja: 消費税還付クレーム一覧
+    status: partial
+    runtime: cli
+    agent_id: tax
+    module_id: jp_consumption_refund
+    categories:
+      - tax_finance
+    priority: P1
+    cli_command: consumption-refund
   - id: jp_invoice_registration
     name_ja: インボイス登録・番号管理
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: finance
+    agent_id: tax
     module_id: jp_invoice_qualified
-    categories: [tax_finance]
+    categories:
+      - tax_finance
     priority: P0
-
+    cli_command: invoice-qualified
   - id: jp_qualified_invoice_issue
     name_ja: 適格請求書発行チェック
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: finance
+    agent_id: tax
     module_id: jp_invoice_qualified
-    categories: [tax_finance]
+    categories:
+      - tax_finance
     priority: P0
-
+    cli_command: invoice-qualified
   - id: jp_withholding_payment
     name_ja: 源泉徴収税納付・支払調書
-    status: planned
+    status: partial
     runtime: cli
-    agent_id: finance
+    agent_id: tax
     module_id: jp_withholding_statutory
-    categories: [tax_finance, labor_hr]
+    categories:
+      - tax_finance
+      - labor_hr
     priority: P0
-
+    cli_command: withholding
   - id: jp_social_insurance_enroll
     name_ja: 社会保険資格取得・算定
     status: planned
     runtime: cli
     agent_id: human_resources
     module_id: jp_social_insurance
-    categories: [labor_hr]
+    categories:
+      - labor_hr
     priority: P0
-
   - id: jp_labor_insurance_annual
     name_ja: 労働保険年度更新
     status: planned
     runtime: cli
     agent_id: human_resources
     module_id: jp_social_insurance
-    categories: [labor_hr, insurance_risk]
+    categories:
+      - labor_hr
+      - insurance_risk
     priority: P0
-
   - id: jp_work_rules_draft
     name_ja: 就業規則ドラフト
     status: planned
     runtime: cli
     agent_id: human_resources
     module_id: jp_employment_rules
-    categories: [labor_hr]
+    categories:
+      - labor_hr
     priority: P0
-
   - id: jp_36_agreement
     name_ja: 36協定届出準備
     status: planned
     runtime: cli
     agent_id: human_resources
     module_id: jp_employment_rules
-    categories: [labor_hr]
+    categories:
+      - labor_hr
     priority: P1
-
   - id: jp_payroll_run
     name_ja: 給与計算・明細
     status: planned
     runtime: cli
     agent_id: human_resources
     module_id: jp_payroll
-    categories: [labor_hr]
+    categories:
+      - labor_hr
     priority: P0
-
   - id: jp_year_end_adjustment
     name_ja: 年末調整
     status: planned
     runtime: cli
     agent_id: human_resources
     module_id: jp_payroll
-    categories: [labor_hr, tax_finance]
+    categories:
+      - labor_hr
+      - tax_finance
     priority: P0
-
   - id: jp_employment_contract_draft
     name_ja: 雇用契約書ドラフト
     status: planned
     runtime: cli
     agent_id: human_resources
     module_id: jp_labor_contract
-    categories: [labor_hr, compliance_legal]
+    categories:
+      - labor_hr
+      - compliance_legal
     priority: P0
-
   - id: jp_privacy_policy_publish
     name_ja: プライバシーポリシー生成
     status: planned
     runtime: cli
     agent_id: compliance
     module_id: jp_privacy_policy
-    categories: [compliance_legal]
+    categories:
+      - compliance_legal
     priority: P0
-    regulations: [REG-010]
-
+    regulations:
+      - REG-010
   - id: jp_ppc_breach_report
     name_ja: 個情漏えい報告準備
     status: planned
     runtime: cli
     agent_id: compliance
     module_id: jp_data_breach
-    categories: [compliance_legal]
+    categories:
+      - compliance_legal
     priority: P1
-
   - id: jp_subcontractor_checklist
     name_ja: 下請法チェックリスト
     status: planned
     runtime: cli
     agent_id: contract
     module_id: jp_subcontractor_act
-    categories: [compliance_legal]
+    categories:
+      - compliance_legal
     priority: P1
-
   - id: jp_women_plan_draft
     name_ja: 女性活躍行動計画ドラフト
     status: planned
     runtime: cli
     agent_id: compliance
     module_id: jp_women_empowerment
-    categories: [government_programs, labor_hr]
+    categories:
+      - government_programs
+      - labor_hr
     priority: P2
-
   - id: jp_cn2050_declaration
     name_ja: CN2050 宣言・計画ドラフト
     status: planned
     runtime: cli
     agent_id: compliance
     module_id: jp_carbon_neutral_2050
-    categories: [government_programs]
+    categories:
+      - government_programs
     priority: P2
-
   - id: jp_patent_draft
     name_ja: 特許出願書類ドラフト
     status: planned
     runtime: cli
     agent_id: compliance
     module_id: jp_patent_application
-    categories: [intellectual_property]
+    categories:
+      - intellectual_property
     priority: P2
-
   - id: jp_travel_expense_claim
     name_ja: 旅費精算（REG-008）
     status: planned
     runtime: cli
     agent_id: operations
     module_id: travel_booking
-    categories: [tax_finance, sector_operations]
+    categories:
+      - tax_finance
+      - sector_operations
     priority: P1
-    regulations: [REG-008]
-
+    regulations:
+      - REG-008
   - id: jp_bilingual_minutes
     name_ja: 日英議事録生成
     status: planned
     runtime: cli
     agent_id: secretary
     module_id: language_bridge
-    categories: [cross_border]
+    categories:
+      - cross_border
     priority: P1
-
   - id: jp_broker_transfer
     name_ja: 振込実行（broker）
     status: implemented
     runtime: cli
     agent_id: finance
     module_id: jp_bank_corporate
-    categories: [banking_payments]
+    categories:
+      - banking_payments
     priority: P1
     cli_command: broker transfer
     notes: L2 · 口座番号はチャット非出力
-
   - id: jp_sector_invoice
     name_ja: 業種別請求書生成
     status: partial
     runtime: cli
     agent_id: finance
     module_id: null
-    categories: [tax_finance, sector_operations]
+    categories:
+      - tax_finance
+      - sector_operations
     priority: P1
     cli_command: invoice generate
     notes: production_ready モジュール各 seed 連動
-
+  - id: ir_cap_table_review
+    name_ja: Cap table 検証
+    status: implemented
+    runtime: cli
+    agent_id: investor_relations
+    module_id: investor_relations
+    categories:
+      - corporate_governance
+      - tax_finance
+    priority: P2
+    cli_command: operations ir cap-table-review
+  - id: ir_disclosure_calendar
+    name_ja: 開示カレンダー
+    status: implemented
+    runtime: cli
+    agent_id: investor_relations
+    module_id: investor_relations
+    categories:
+      - corporate_governance
+    priority: P2
+    cli_command: operations ir disclosure-calendar
 summary:
   agents:
-    implemented: 6
-    planned: 6
-    total: 12
+    implemented: 8
+    partial: 0
+    planned: 5
+    total: 13
   modules:
-    implemented: 19
-    partial: 7
-    planned: 18
-    total: 44
+    implemented: 21
+    partial: 16
+    planned: 9
+    total: 46
   skills:
-    implemented: 15
-    partial: 8
-    planned: 24
-    total: 47
+    implemented: 16
+    partial: 16
+    planned: 18
+    total: 50
   p0_gaps:
     - human_resources Agent 未実装（就業規則 · 社保 · 給与）
     - jp_statutory_meetings モジュール未実装
-    - jp_tax_corporate · jp_tax_consumption · jp_invoice_qualified モジュール未実装
-    - jp_social_insurance · jp_payroll モジュール未実装
+    - jp_social_insurance · jp_payroll モジュールは集計 CLI まで実装（申告提出は未実装）
+    - 税務モジュールは skeleton — 申告書 XML · e-Tax 提出は未実装（tax-filing-spec 参照）

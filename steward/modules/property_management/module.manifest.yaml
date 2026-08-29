@@ -8,3 +8,7 @@ activation_seeds:
 - management-contracts.yaml
 - fee-schedules.yaml
 - service-requests.yaml
+cli_commands:
+  - show
+  - validate
+  - open-requests

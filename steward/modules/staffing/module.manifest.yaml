@@ -6,3 +6,7 @@ notes: production_ready — assignments/staff + invoice · operations staffing C
 activation_seeds:
 - assignments.yaml
 - staff.yaml
+cli_commands:
+  - show
+  - validate
+  - assignments

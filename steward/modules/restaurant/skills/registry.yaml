@@ -1,0 +1,15 @@
+skills:
+  - id: restaurant_seating
+    file: table_turnover_analysis.md
+    runtime: cli
+    cli_command: restaurant-seating
+    handler: restaurant_seating
+    description: ゾーン別座席キャパ · 提供中メニュー
+    agent_id: operations
+  - id: restaurant_show
+    file: table_turnover_analysis.md
+    runtime: cli
+    cli_command: restaurant-show
+    handler: restaurant_show
+    description: 飲食店モジュール状態（テーブル · メニューサマリ）
+    agent_id: operations

@@ -6,3 +6,7 @@ notes: production_ready — courses/enrollments + invoice seed
 activation_seeds:
 - classes.yaml
 - courses.yaml
+cli_commands:
+  - show
+  - validate
+  - enrollment

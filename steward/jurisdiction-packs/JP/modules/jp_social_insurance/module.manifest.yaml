@@ -1,0 +1,13 @@
+id: jp_social_insurance
+required_seeds:
+  - social-insurance-rates-2026.yaml.example
+activation_seeds:
+  - enrollment-summary.yaml.example
+optional_regulations:
+  - REG-005
+notes: 算定基礎届・月額変更届の準備データ — 料率は seed YAML 正本
+security:
+  limits:
+    concurrent_jobs: 1
+cli_commands:
+  - summary

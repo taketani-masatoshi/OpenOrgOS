@@ -1,0 +1,20 @@
+skills:
+  - id: cs_onboarding_review
+    file: cs_onboarding_review.md
+    runtime: cli
+    cli_command: cs-onboarding-review
+    handler: cs_onboarding_review
+    description: オンボーディング遅延レビュー
+    agent_id: customer_success
+  - id: cs_nps_analysis
+    file: cs_nps_analysis.md
+    runtime: cli
+    cli_command: cs-nps-analysis
+    handler: cs_nps_analysis
+    description: NPS 集計分析
+    agent_id: customer_success
+  - id: cs_qbr_prep
+    file: cs_qbr_prep.md
+    runtime: agent
+    description: QBR 準備文案
+    agent_id: customer_success

@@ -1,0 +1,8 @@
+skills:
+  - id: jp_social_insurance_prep
+    file: jp_social_insurance_prep.md
+    runtime: cli
+    cli_command: jp-social-insurance-prep
+    handler: jp_social_insurance_prep
+    description: 社会保険料算定基礎届準備 — 集計サマリのみ
+    agent_id: human_resources

@@ -1,0 +1,15 @@
+skills:
+  - id: clinic_appointments
+    file: appointment_utilization.md
+    runtime: cli
+    cli_command: clinic-appointments
+    handler: clinic_appointments
+    description: 予約枠 · 診療科名を解決した予約一覧
+    agent_id: operations
+  - id: clinic_show
+    file: appointment_utilization.md
+    runtime: cli
+    cli_command: clinic-show
+    handler: clinic_show
+    description: クリニックモジュール状態
+    agent_id: operations

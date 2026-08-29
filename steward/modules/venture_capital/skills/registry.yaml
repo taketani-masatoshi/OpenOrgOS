@@ -1,6 +1,15 @@
 skills:
   - id: venture_capital_ops
     file: venture_capital_ops.md
-    runtime: cursor-only
-    description: venture_capital module operations checklist
+    runtime: cli
+    cli_command: vc-show
+    handler: venture_capital_ops
+    description: venture_capital module status (show)
+    agent_id: operations
+  - id: venture_capital_validate
+    file: venture_capital_validate.md
+    runtime: cli
+    cli_command: vc-validate
+    handler: venture_capital_validate
+    description: venture_capital module validate
     agent_id: operations

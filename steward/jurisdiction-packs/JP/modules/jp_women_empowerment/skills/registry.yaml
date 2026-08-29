@@ -1,0 +1,15 @@
+skills:
+  - id: jp_women_empowerment_show
+    file: women_empowerment_show.md
+    runtime: cli
+    cli_command: jp-women-empowerment-show
+    handler: jp_women_empowerment_show
+    description: 女性活躍推進 — 計画期間 · 公表状態 · KPI/施策サマリ
+    agent_id: compliance
+  - id: jp_women_empowerment_kpi
+    file: women_empowerment_kpi.md
+    runtime: cli
+    cli_command: jp-women-empowerment-kpi
+    handler: jp_women_empowerment_kpi
+    description: 一般事業主行動計画の KPI 一覧 — 未設定値を明示
+    agent_id: compliance

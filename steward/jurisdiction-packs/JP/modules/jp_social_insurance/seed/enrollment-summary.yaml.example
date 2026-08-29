@@ -1,0 +1,11 @@
+version: 1
+fiscal_year: FY2026
+month: "2026-09"
+employee_count: 1
+standard_remuneration_total_yen: 320000
+health_employee_total_yen: 16000
+health_employer_total_yen: 16000
+pension_employee_total_yen: 29280
+pension_employer_total_yen: 29280
+notes: |
+  算定基礎届準備用集計（L1）。個人別は data/hr/payroll-detail/（L2）。

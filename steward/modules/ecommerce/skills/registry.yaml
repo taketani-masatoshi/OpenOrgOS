@@ -1,6 +1,15 @@
 skills:
   - id: ecommerce_ops
     file: ecommerce_ops.md
-    runtime: cursor-only
-    description: ecommerce module operations checklist
+    runtime: cli
+    cli_command: ecommerce-show
+    handler: ecommerce_ops
+    description: ecommerce module status (show)
+    agent_id: operations
+  - id: ecommerce_validate
+    file: ecommerce_validate.md
+    runtime: cli
+    cli_command: ecommerce-validate
+    handler: ecommerce_validate
+    description: ecommerce module validate
     agent_id: operations

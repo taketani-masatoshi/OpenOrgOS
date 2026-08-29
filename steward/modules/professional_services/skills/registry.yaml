@@ -1,6 +1,15 @@
 skills:
   - id: professional_services_ops
     file: professional_services_ops.md
-    runtime: cursor-only
-    description: professional_services module operations checklist
+    runtime: cli
+    cli_command: ps-show
+    handler: professional_services_ops
+    description: professional_services module status (show)
+    agent_id: operations
+  - id: professional_services_validate
+    file: professional_services_validate.md
+    runtime: cli
+    cli_command: ps-validate
+    handler: professional_services_validate
+    description: professional_services module validate
     agent_id: operations

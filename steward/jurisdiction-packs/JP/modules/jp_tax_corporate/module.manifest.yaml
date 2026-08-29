@@ -1,0 +1,10 @@
+id: jp_tax_corporate
+required_seeds: []
+activation_seeds:
+  - corporate-tax-prep.yaml.example
+notes: skeleton — 法人税 · 地方法人税申告準備 + Phase 5b XML draft（ADR 0046 · 0052 · tax-filing-spec）
+cli_commands:
+  - calendar
+  - gaps
+  - depreciation
+  - xml-draft

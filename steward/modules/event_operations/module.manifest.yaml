@@ -8,3 +8,7 @@ activation_seeds:
 - run_of_show.yaml
 - vendors.yaml
 - staff_shifts.yaml
+cli_commands:
+  - show
+  - validate
+  - runbook

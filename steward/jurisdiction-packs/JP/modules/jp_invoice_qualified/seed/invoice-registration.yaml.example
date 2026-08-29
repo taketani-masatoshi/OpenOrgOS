@@ -1,0 +1,4 @@
+consumption_tax:
+  invoice_registered: false
+  invoice_registration_number: null
+  invoice_exempt_reconciled_basis: null

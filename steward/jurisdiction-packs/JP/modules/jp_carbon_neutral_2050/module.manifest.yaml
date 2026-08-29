@@ -7,3 +7,7 @@ activation_seeds:
 optional_regulations:
   - REG-014
 notes: activation_ready — 2050年カーボンニュートラル宣言 · REG-014 環境エネルギー連携
+cli_commands:
+  - show
+  - validate
+  - targets

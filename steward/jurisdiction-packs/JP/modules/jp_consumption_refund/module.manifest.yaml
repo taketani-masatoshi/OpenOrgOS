@@ -1,0 +1,15 @@
+id: jp_consumption_refund
+required_seeds: []
+activation_seeds:
+  - consumption-refund-claims.yaml.example
+notes: activation_ready — 消費税還付 CLAIM · pack · 入金仕訳。e-Tax は未対応
+cli_commands:
+  - show
+  - validate
+  - eligibility
+  - propose
+  - pack
+  - status
+  - advance
+  - file
+  - receive

@@ -1,6 +1,15 @@
 skills:
   - id: event_operations_ops
     file: event_operations_ops.md
-    runtime: cursor-only
-    description: event_operations module operations checklist
+    runtime: cli
+    cli_command: events-show
+    handler: event_operations_ops
+    description: event_operations module status (show)
+    agent_id: operations
+  - id: event_operations_validate
+    file: event_operations_validate.md
+    runtime: cli
+    cli_command: events-validate
+    handler: event_operations_validate
+    description: event_operations module validate
     agent_id: operations

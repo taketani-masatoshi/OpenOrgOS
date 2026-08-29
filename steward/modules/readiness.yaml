@@ -4,7 +4,10 @@ modules:
     notes: PROP バインド · invoice generate · billing
   hospitality:
     tier: production_ready
-    notes: operations seed · invoice generate · REG-012
+    notes: operations hospitality CLI · stays · lodging tax · OTA import · Today ops-due · REG-012
+  sales:
+    tier: production_ready
+    notes: CRM wave 2b · orgos sales + operations sales · Console customers · mail-link
   restaurant:
     tier: production_ready
     notes: menu · tables · invoice seed
@@ -14,6 +17,12 @@ modules:
   venture_capital:
     tier: production_ready
     notes: funds/portfolio + invoice seed
+  investor_relations:
+    tier: production_ready
+    notes: cap table · investor registry · disclosure calendar · IR materials
+  customer_success:
+    tier: production_ready
+    notes: health score · onboarding · QBR · NPS · churn events · operations customer-success CLI
   saas_subscription:
     tier: production_ready
     notes: plans/subscriptions + invoice · operations saas show|validate|renewals CLI
@@ -61,6 +70,9 @@ modules:
   travel_booking:
     tier: production_ready
     notes: operations travel CLI · REG-008 · browser Phase 0 cursor-only
+  venue_booking:
+    tier: activation_ready
+    notes: channel venue_booking (not Wire) · P0 manual/deep-link · operations venue CLI
   language_bridge:
     tier: production_ready
     notes: user vs system record language · bilingual minutes · Secretary/Compliance
@@ -86,8 +98,45 @@ modules:
     tier: production_ready
     notes: 医療機器 QMS 4階層 · GVP · 台帳 · ISO-13485 control-map · operations medical-device CLI
   jp_permit_registry:
-    tier: skeleton
+    tier: activation_ready
     notes: JP 許認可種別カタログ 60+ · 義務台帳 · operations permit CLI · gap 分析
   jp_bank_corporate:
     tier: production_ready
     notes: JP 法人口座 · append-only 消込 · 冪等銀行取込 · 日次/週次/月次資金繰り · fixture E2E
+  jp_certification:
+    tier: activation_ready
+    notes: ISO/ISMS/CE/FDA 認証 Fulfilment · operations certification CLI · ADR 0012
+  jp_inspection:
+    tier: activation_ready
+    notes: 監査/検査 Fulfilment · operations inspection CLI · ADR 0012
+  jp_minpaku:
+    tier: activation_ready
+    notes: 民泊 gate · operations minpaku CLI
+  jp_permit_application:
+    tier: activation_ready
+    notes: 許認可申請ワークフロー · operations permit-app CLI · ADR 0011
+  jp_tax_corporate:
+    tier: activation_ready
+    notes: 法人税申告準備 · operations tax-corporate CLI（calendar/gaps/depreciation）· ADR 0046 ·
+      申告 XML/e-Tax は未対応のため production_ready ではない
+  jp_tax_consumption:
+    tier: activation_ready
+    notes: 消費税区分チェック · operations tax-consumption CLI（check/calc/eligibility）·
+      申告提出は未対応のため production_ready ではない
+  jp_consumption_refund:
+    tier: activation_ready
+    notes: 消費税還付 CLAIM · pack · 入金仕訳。e-Tax は未対応のため
+      production_ready ではない。mal は点数目的で有効化しない
+  jp_invoice_qualified:
+    tier: activation_ready
+    notes: インボイス登録整合 · operations invoice-qualified CLI（registration/issue-check）
+  jp_withholding_statutory:
+    tier: activation_ready
+    notes: 源泉 · 法定調書 rhythm · operations withholding CLI（calendar）·
+      法定調書提出は未対応のため production_ready ではない
+  jp_payroll:
+    tier: activation_ready
+    notes: payroll calc engine — rates in seed YAML · operations payroll CLI
+  jp_social_insurance:
+    tier: activation_ready
+    notes: 算定基礎届 · 月額変更届準備データ · operations social-insurance CLI

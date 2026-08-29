@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 import type { ModuleCliBundle } from "../../../../src/lib/module-cli-types.js";
+import type { SkillRunOptions } from "../../../../src/commands/skills.js";
 import {
   runLanguageBridgeDraft,
   runLanguageBridgeHeader,
@@ -47,9 +48,22 @@ function registerLanguageBridgeCommands(operationsCmd: Command): void {
     );
 }
 
+
+function runLanguageBridgeShowSkill(opts: SkillRunOptions): void {
+  runLanguageBridgeShow({ json: Boolean(opts.json) });
+}
+
+function runLanguageBridgeValidateSkill(_opts: SkillRunOptions): void {
+  runLanguageBridgeValidate();
+}
+
 export const languageBridgeCli: ModuleCliBundle = {
   moduleId: MODULE_ID,
   register(ctx) {
     registerLanguageBridgeCommands(ctx.operationsCmd);
+  },
+  skillHandlers: {
+    language_bridge: runLanguageBridgeShowSkill,
+    language_bridge_validate: runLanguageBridgeValidateSkill,
   },
 };

@@ -22,9 +22,15 @@ modules:
     operations_public: data/operations/kamezawa-public.yaml
     operations_secrets: data/operations/kamezawa-secrets.yaml
     summary_dir: agent-summaries/prop-002/
+    billing:
+      PROP-002:
+        docs_base: docs/finance/accounting/invoices/kamezawa
+        invoice_number_prefix: STAY
+        template_id: hospitality-monthly
+        sender_email: info@malkk.com
     notes: 亀沢旅館 · 1棟貸し
   - id: professional_services
-    enabled: false
+    enabled: true
     agent: professional_services
     data_root: data/services/
     notes: 受託開発 · コンサル等
@@ -35,6 +41,13 @@ modules:
     data_root: data/venture-capital/
     summary_dir: agent-summaries/venture-capital/
     notes: VC ファンド · ポートフォリオ（MAL では未使用）
+  - id: investor_relations
+    enabled: true
+    agent: investor_relations
+    docs_root: docs/investor-relations/
+    data_root: data/investor-relations/
+    summary_dir: agent-summaries/investor-relations/
+    notes: 自社 IR · cap table · 開示カレンダー
   - id: saas_subscription
     enabled: false
     agent: saas_subscription
@@ -119,16 +132,129 @@ modules:
     docs_root: docs/medical-device/
     data_root: data/medical-device/
     summary_dir: agent-summaries/medical-device-regulatory/
-    notes: 医療機器 QMS · GVP · REG-025/026 · ISO 13485 — MAL では無効（参照のみ）
+    notes: 医療機器 QMS · GVP · REG-025/026 · ISO 13485 · 運用台帳（CAPA/PMS 等）— 品目データはプレースホルダ
   - id: jp_bank_corporate
     enabled: true
     agent: jp_bank_corporate
     docs_root: docs/finance/treasury/
     data_root: data/finance/
     notes: 法人口座 · 資金繰り表 · payment-calendar · AR/AP
+  - id: jp_tax_corporate
+    enabled: true
+    agent: jp_tax_corporate
+    data_root: data/finance/
+    notes: 法人税申告準備 · ADR 0051 Phase 2
+  - id: jp_tax_consumption
+    enabled: true
+    agent: jp_tax_consumption
+    data_root: data/finance/
+    notes: 消費税申告準備 · 課税/免税判定
+  - id: jp_invoice_qualified
+    enabled: true
+    agent: jp_invoice_qualified
+    data_root: data/finance/
+    notes: インボイス登録 · 適格請求書発行前提
+  - id: jp_withholding_statutory
+    enabled: true
+    agent: jp_withholding_statutory
+    data_root: data/finance/
+    notes: 源泉徴収 · 法定調書
+  - id: sales
+    enabled: true
+    agent: sales
+    docs_root: docs/sales/
+    data_root: data/sales/
+    summary_dir: agent-summaries/sales-lead/
+    notes: 商談パイプライン · アウトバウンド · インバウンド
+  - id: customer_success
+    enabled: true
+    agent: customer_success
+    docs_root: docs/customers/
+    data_root: data/customers/
+    summary_dir: agent-summaries/customer-success/
+    notes: 既存顧客ヘルス · オンボーディング · QBR · NPS · 解約イベント
   - id: membership
     enabled: false
     agent: membership
     data_root: data/membership/
     summary_dir: agent-summaries/membership/
     notes: 会員制（MAL では未使用）
+  - id: jp_social_insurance
+    enabled: false
+    agent: jp_social_insurance
+    docs_root: docs/jp-social-insurance/
+    data_root: data/jp-social-insurance/
+    summary_dir: agent-summaries/jp-social-insurance/
+    notes: 算定基礎届・月額変更届の準備データ — 料率は seed YAML 正本
+  - id: language_bridge
+    enabled: true
+    agent: language_bridge
+    docs_root: docs/language-bridge/
+    data_root: data/language-bridge/
+    summary_dir: agent-summaries/language-bridge/
+    notes: activation_ready — user vs system record language · bilingual minutes
+      scaffold
+  - id: jp_carbon_neutral_2050
+    enabled: true
+    agent: jp_carbon_neutral_2050
+    docs_root: docs/jp-carbon-neutral-2050/
+    data_root: data/jp-carbon-neutral-2050/
+    summary_dir: agent-summaries/jp-carbon-neutral-2050/
+    notes: activation_ready — 2050年カーボンニュートラル宣言 · REG-014 環境エネルギー連携
+  - id: jp_certification
+    enabled: true
+    agent: jp_certification
+    docs_root: docs/jp-certification/
+    data_root: data/jp-certification/
+    summary_dir: agent-summaries/jp-certification/
+    notes: skeleton — ISO/ISMS/CE/FDA 等の認証 Fulfilment（ADR 0012）· 取得本体は案件管理
+  - id: jp_inspection
+    enabled: true
+    agent: jp_inspection
+    docs_root: docs/jp-inspection/
+    data_root: data/jp-inspection/
+    summary_dir: agent-summaries/jp-inspection/
+    notes: skeleton — 行政検査・第三者監査の記録 Fulfilment（ADR 0012）
+  - id: jp_minpaku
+    enabled: true
+    agent: jp_minpaku
+    docs_root: docs/jp-minpaku/
+    data_root: data/jp-minpaku/
+    summary_dir: agent-summaries/jp-minpaku/
+    notes: skeleton — 住宅宿泊事業（民泊）運用 · 届出は jp_permit_application · 台帳は
+      jp_permit_registry
+  - id: jp_permit_application
+    enabled: true
+    agent: jp_permit_application
+    docs_root: docs/jp-permit-application/
+    data_root: data/jp-permit-application/
+    summary_dir: agent-summaries/jp-permit-application/
+    notes: skeleton — JP 業免許取得プロジェクト · TeX PDF · handoff · approve→PER
+  - id: jp_permit_registry
+    enabled: true
+    agent: jp_permit_registry
+    docs_root: docs/jp-permit-registry/
+    data_root: data/permit-registry/
+    summary_dir: agent-summaries/jp-permit-registry/
+    notes: skeleton — JP 許認可種別カタログ · 義務台帳 · gap 分析（JP 法域のみ）
+  - id: jp_privacy_policy
+    enabled: true
+    agent: jp_privacy_policy
+    docs_root: docs/jp-privacy-policy/
+    data_root: data/jp-privacy-policy/
+    summary_dir: agent-summaries/jp-privacy-policy/
+    notes: activation_ready — 外部向け個人情報保護方針 · REG-010 社内規程と整合
+  - id: jp_trademark_application
+    enabled: true
+    agent: jp_trademark_application
+    docs_root: docs/jp-trademark-application/
+    data_root: data/trademark/
+    summary_dir: agent-summaries/jp-trademark-application/
+    notes: activation_ready — 商標登録願ひな形 · 指定商品役務 · 出願書類ドラフト（JP 法域のみ）
+  - id: jp_women_empowerment
+    enabled: true
+    agent: jp_women_empowerment
+    docs_root: docs/jp-women-empowerment/
+    data_root: data/jp-women-empowerment/
+    summary_dir: agent-summaries/jp-women-empowerment/
+    notes: activation_ready — 女性活躍推進法 · 一般事業主行動計画 · 応援宣言

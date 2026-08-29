@@ -29,6 +29,13 @@ modules:
     data_root: data/venture-capital/
     summary_dir: agent-summaries/venture-capital/
     notes: サンプル・キャピタル（例 · `.example` をコピーして有効化）
+  - id: investor_relations
+    enabled: false
+    agent: investor_relations
+    data_root: data/investor-relations/
+    docs_root: docs/investor-relations/
+    summary_dir: agent-summaries/investor-relations/
+    notes: 自社 IR · cap table · 開示カレンダー（`.example` をコピーして有効化）
   - id: saas_subscription
     enabled: false
     agent: saas_subscription

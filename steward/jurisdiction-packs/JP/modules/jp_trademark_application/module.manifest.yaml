@@ -12,3 +12,8 @@ activation_seeds:
 optional_regulations:
   - REG-004
 notes: activation_ready — 商標登録願ひな形 · 指定商品役務 · 出願書類ドラフト（JP 法域のみ）
+cli_commands:
+  - show
+  - validate
+  - checklist
+  - draft

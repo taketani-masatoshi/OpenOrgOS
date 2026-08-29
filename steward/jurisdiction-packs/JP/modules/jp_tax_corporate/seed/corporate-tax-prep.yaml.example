@@ -1,0 +1,4 @@
+# Example overlay — merge into tax-profile corporate_tax / obligation_rhythms
+corporate_tax:
+  estimated_tax_status: provisional
+  notes: Copy fields into data/finance/tax-profile.yaml — do not use as sole SSOT

@@ -1,6 +1,15 @@
 skills:
   - id: language_bridge
     file: language_bridge.md
-    runtime: cursor-only
-    description: ユーザー言語 vs システム言語 — 議事録起草チェックリスト
+    runtime: cli
+    cli_command: language-bridge-show
+    handler: language_bridge
+    description: ユーザー言語 vs システム言語 — show
+    agent_id: secretary
+  - id: language_bridge_validate
+    file: language_bridge_validate.md
+    runtime: cli
+    cli_command: language-bridge-validate
+    handler: language_bridge_validate
+    description: language-bridge.yaml validate
     agent_id: secretary

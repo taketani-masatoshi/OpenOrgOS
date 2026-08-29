@@ -1,6 +1,15 @@
 skills:
   - id: saas_subscription_ops
     file: saas_subscription_ops.md
-    runtime: cursor-only
-    description: saas_subscription module operations checklist
+    runtime: cli
+    cli_command: saas-show
+    handler: saas_subscription_ops
+    description: saas_subscription module status (show)
+    agent_id: operations
+  - id: saas_subscription_validate
+    file: saas_subscription_validate.md
+    runtime: cli
+    cli_command: saas-validate
+    handler: saas_subscription_validate
+    description: saas_subscription module validate
     agent_id: operations

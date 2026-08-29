@@ -22,11 +22,11 @@
 - 更新済 正データ YAML（上記）
 - `docs/finance/tax-filing-checklist.md` — 申告チェックリスト
 - `docs/finance/fixed-asset-register.md` — 人向け固定資産台帳
-- `docs/reports/agent-summaries/finance/{YYYY-MM-DD}-tax-prep.md`
+- `docs/reports/agent-summaries/tax/{YYYY-MM-DD}-tax-prep.md`
 
 ## 使用 Agent
 
-Finance Agent（Compliance Agent と申告期限・区分を照合）
+Tax Agent（Finance Agent に数値 SoT を委譲 · Compliance Agent と申告期限・区分を照合）
 
 ## 保存先
 
@@ -34,7 +34,7 @@ Finance Agent（Compliance Agent と申告期限・区分を照合）
 |------|------|
 | 正データ | `data/finance/fixed-assets.yaml` 等 |
 | 人向け | `docs/finance/` |
-| 要約 | `docs/reports/agent-summaries/finance/` |
+| 要約 | `docs/reports/agent-summaries/tax/` |
 
 ## 手順
 
