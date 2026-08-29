@@ -1,0 +1,27 @@
+version: "1"
+judgment_patterns:
+  - pattern: "(?:承認して|稟議|Wire|wire|振込承認|protocol notice)"
+human_act_patterns:
+  - pattern: "(?:電話|現地|押印|相手に|訪問|手渡し)"
+    required_tags:
+      - world.call.counterparty
+aia_draft_patterns:
+  - pattern: "(?:下書き|草案|要約して|ドラフト)"
+    owner_agent: secretary
+fact_gap_tags:
+  finance_metrics:
+    tags:
+      - ssot.fill.finance_monthly
+    blocked_on: data/finance/monthly/
+  hr_headcount:
+    tags:
+      - ssot.fill.finance_monthly
+    blocked_on: data/hr/
+  contract_status:
+    tags:
+      - ssot.fill.finance_monthly
+    blocked_on: data/contracts/
+cashflow_gap:
+  blocked_on: data/finance/cashflow/
+  tags:
+    - ssot.fill.cash_balance

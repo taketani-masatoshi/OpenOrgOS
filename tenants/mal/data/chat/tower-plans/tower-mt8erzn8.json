@@ -1,0 +1,16 @@
+{
+  "plan_id": "tower-mt8erzn8",
+  "message": "今日は何日？",
+  "classification": {
+    "kind": "unknown",
+    "reason": "no_match",
+    "required_tags": []
+  },
+  "assignment": {
+    "work_kind": "unknown",
+    "needs_ceo_pick": true
+  },
+  "status": "needs_confirmation",
+  "expires_at": "2026-08-25T08:49:07.796Z",
+  "reply_preview": "**司令塔プラン（確認待ち）**\n\n種別: **unknown** (no_match)\n依頼: 今日は何日？\n候補が複数またはタグ不足 — CEO が宛先を選んでください。\n\n起票する場合はカードで **実行** を押してください。"
+}
