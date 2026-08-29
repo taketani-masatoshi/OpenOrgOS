@@ -1,8 +1,6 @@
 import { describe, expect, it, beforeAll, afterEach, afterAll } from "vitest";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { startOperatorConsoleServer } from "../src/lib/operator-console/combined-server.js";
-import { STEWARD_CHAT_SPA_DIST } from "../src/lib/steward-chat/server.js";
+import { installSpaDistStub, type SpaDistStub } from "./helpers/spa-dist-stub.js";
 import { assertProdAuthReady } from "../src/lib/console-auth/prod-checklist.js";
 import { installFsGuardStoreForTests, type FsGuardStoreFixture } from "./helpers/fs-guard-store-fixture.js";
 import { mintPasskeyBootstrapToken } from "../src/lib/wire-console/auth/passkey-bootstrap.js";
@@ -11,14 +9,16 @@ describe("prod startup", () => {
   const env = { ...process.env };
   let guard: FsGuardStoreFixture;
 
+  let spaStub: SpaDistStub;
+
   beforeAll(() => {
-    mkdirSync(STEWARD_CHAT_SPA_DIST, { recursive: true });
-    writeFileSync(join(STEWARD_CHAT_SPA_DIST, "index.html"), "<html></html>");
+    spaStub = installSpaDistStub();
     guard = installFsGuardStoreForTests();
   });
 
   afterAll(() => {
     guard.cleanup();
+    spaStub.restore();
   });
 
   afterEach(() => {

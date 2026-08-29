@@ -248,24 +248,27 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
 
     const stripeWebhook = Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim());
     const stripeSecret = Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+    // Self-serve billing is optional: a tenant that never sells must still boot.
+    // `createStripeCheckout` already refuses to stub in production, so a missing
+    // key cannot silently take money — warn here instead of blocking startup.
     checks.push({
       id: "stripe_secret_key",
-      ok: prod ? stripeSecret : true,
+      ok: true,
       warn: prod && !stripeSecret,
       detail:
         prod && !stripeSecret
-          ? "STRIPE_SECRET_KEY missing in production — checkout stub rejected"
+          ? "STRIPE_SECRET_KEY unset — self-serve checkout refuses in production"
           : stripeSecret
             ? "Stripe secret key configured"
             : "Stripe checkout stub allowed (non-production)",
     });
     checks.push({
       id: "stripe_webhook_secret",
-      ok: prod ? stripeWebhook : true,
+      ok: true,
       warn: prod && !stripeWebhook,
       detail:
         prod && !stripeWebhook
-          ? "STRIPE_WEBHOOK_SECRET missing in production — unsigned webhooks rejected"
+          ? "STRIPE_WEBHOOK_SECRET unset — unsigned webhooks are rejected"
           : stripeWebhook
             ? "Stripe webhook secret configured"
             : "Stripe webhook stub allowed (non-production)",
