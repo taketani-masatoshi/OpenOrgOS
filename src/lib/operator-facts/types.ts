@@ -10,7 +10,19 @@ export interface FactResult<V = unknown> {
   /** When set, chat-handler prefers this over format(view). */
   reply?: string;
   /** Legacy structured keys for Steward Chat (finance_metrics / contract_status). */
-  structuredKey?: "finance_metrics" | "contract_status" | "hr_headcount";
+  structuredKey?:
+    | "finance_metrics"
+    | "contract_status"
+    | "hr_headcount"
+    | "analytics_kpi"
+    | "sales_pipeline"
+    | "sales_inbound"
+    | "sales_outbound"
+    | "customer_success"
+    | "ir_briefing"
+    | "pmo_portfolio"
+    | "company_officers"
+    | "cash_counterparties";
 }
 
 export interface FactEscalateHints {

@@ -1,12 +1,30 @@
 import type { FactProvider } from "./types.js";
 import { hrHeadcountProvider } from "./providers/hr-headcount.js";
+import { companyOfficersProvider } from "./providers/company-officers.js";
 import { financeMetricsProvider } from "./providers/finance-metrics.js";
+import { cashCounterpartiesProvider } from "./providers/cash-counterparties.js";
 import { contractStatusProvider } from "./providers/contract-status.js";
+import { salesInboundProvider } from "./providers/sales-inbound.js";
+import { salesOutboundProvider } from "./providers/sales-outbound.js";
+import { salesPipelineProvider } from "./providers/sales-pipeline.js";
+import { customerSuccessProvider } from "./providers/customer-success.js";
+import { analyticsKpiProvider } from "./providers/analytics-kpi.js";
+import { pmoPortfolioProvider } from "./providers/pmo-portfolio.js";
+import { investorRelationsBriefingProvider } from "./providers/investor-relations-briefing.js";
 
 const PROVIDERS: FactProvider[] = [
   hrHeadcountProvider,
+  companyOfficersProvider,
   financeMetricsProvider,
+  cashCounterpartiesProvider,
   contractStatusProvider,
+  analyticsKpiProvider,
+  salesInboundProvider,
+  salesOutboundProvider,
+  salesPipelineProvider,
+  customerSuccessProvider,
+  pmoPortfolioProvider,
+  investorRelationsBriefingProvider,
 ];
 
 let validated = false;

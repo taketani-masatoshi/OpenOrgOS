@@ -4,13 +4,17 @@
  */
 import { handleStewardOrchestrateChatMessage } from "../steward-chat/steward-orchestrate-intent.js";
 import { looksLikeGenericRefusal } from "../steward-chat/contract-status-intent.js";
+import { isLocalLlmErrorReply } from "../operator-runtime/local-llm-error-fallback.js";
 import {
   findProviderById,
   listFactProviders,
   matchProviderByIntent,
   matchProviderByTopic,
 } from "./registry.js";
-import type { FactProvider } from "./types.js";
+import type { FactProvider, FactResult } from "./types.js";
+
+/** Superset of provider structured keys; only the legacy three are attached below. */
+type StructuredKey = FactResult["structuredKey"];
 
 export interface FactChatResult {
   handled: boolean;
@@ -18,7 +22,7 @@ export interface FactChatResult {
   reply?: string;
   providerId?: string;
   view?: unknown;
-  structuredKey?: "finance_metrics" | "contract_status" | "hr_headcount";
+  structuredKey?: StructuredKey;
   work_order_ids?: string[];
   coverage?: string;
 }
@@ -29,7 +33,7 @@ export interface FactRefusalGuardResult {
   guard_kind?: string;
   providerId?: string;
   view?: unknown;
-  structuredKey?: "finance_metrics" | "contract_status" | "hr_headcount";
+  structuredKey?: StructuredKey;
   work_order_ids?: string[];
   finance_metrics?: unknown;
   contract_status?: unknown;
@@ -76,7 +80,7 @@ function escalateForProvider(
  */
 export function handleFactChatMessage(
   message: string,
-  opts?: { fromAgent?: string }
+  opts?: { fromAgent?: string; suppressEscalate?: boolean }
 ): FactChatResult {
   const provider = matchProviderByIntent(message);
   if (!provider) return { handled: false };
@@ -92,6 +96,7 @@ export function handleFactChatMessage(
   const reply = result.reply ?? provider.format(result.view);
 
   if (
+    !opts?.suppressEscalate &&
     result.coverage === "unregistered" &&
     provider.escalateOnUnregistered !== false
   ) {
@@ -163,6 +168,7 @@ export function applyFactRefusalGuard(
   opts?: { fromAgent?: string }
 ): FactRefusalGuardResult {
   if (!reply) return { reply, guarded: false };
+  if (isLocalLlmErrorReply(reply)) return { reply, guarded: false };
 
   const n = reply.normalize("NFKC");
   const isRefusal =
