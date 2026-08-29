@@ -5,13 +5,15 @@ description: 月次宿泊料請求（PDF + メール文案 + EML/MSG）
 pdf:
   title: "請 求 書"
   line_label: "{year_month}分 宿泊料（{property_name}）"
-  line_note: "貸付用家屋の賃貸料（消費税非課税の可能性あり・要税理士確認）"
+  line_note: "宿泊サービス（消費税課税 10%）"
   tax_label: "消費税（10%）"
-  tax_note: "貸付用家屋の賃貸料は原則非課税"
+  tax_note: "宿泊料金は課税10%"
+  tax_mode: taxable_10
+  lodging_tax_label: "宿泊税（都条例）"
   footer_notes: |
     ・振込手数料は貴社にてご負担ください。
+    ・宿泊税は都条例に基づき特別徴収（本請求書に含む場合は明細行参照）。
     ・ご入金確認後、領収書が必要な場合はお申し付けください。
-    ・消費税の課税区分は税理士確認中です。
 
 email:
   subject: "【ご請求】{property_name} {year_month}分宿泊料"
@@ -19,6 +21,6 @@ email:
 
 defaults:
   sender_email: info@example.com
-  tenant_name: "[借主名 TBD]"
+  tenant_name: "[ゲスト名 TBD]"
   tenant_email: "[送付先メール TBD]"
   bank_account: "[振込先口座 TBD]"

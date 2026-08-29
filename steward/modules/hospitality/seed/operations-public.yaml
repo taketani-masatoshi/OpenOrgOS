@@ -1,9 +1,26 @@
-# 宿泊施設 — 公開運用情報（例示）
+# 宿泊施設 — 公開運用情報（seed 例示 · スキーマ適合）
 property_id: PROP-002
-facility_name: "緑丘ゲストハウス"
-check_in_time: "15:00"
-check_out_time: "10:00"
-max_guests: 4
-parking: "なし（近隣コインパーキング案内）"
-house_rules_url: "docs/properties/PROP-002-midori/operations/templates/guest-facing/house-rules.md"
-notes: "公開情報のみ。機密は operations-secrets.yaml"
+name: "Example Guesthouse"
+address:
+  prefecture: 東京都
+  city: 墨田区
+  chome: 亀沢1丁目
+  display_ja: 東京都墨田区亀沢1丁目
+  display_en: Kamezawa 1-chome, Sumida-ku, Tokyo
+  landmark_ja: 両国駅徒歩1分
+check_in: "15:00"
+check_out: "10:00"
+max_guests: 7
+access:
+  station_ja: 両国
+  station_en: Ryogoku
+  exit: A3/A4
+  walk_minutes: 1
+contact:
+  email: info@example.com
+  ota: Airbnb / Booking
+  emergency_note: 緊急連絡は operations-secrets.yaml
+guest_docs:
+  house_rules_en: templates/guest-facing/house-rules.md
+  welcome_sheet: templates/guest-facing/welcome-sheet.md
+notes: 公開情報のみ。機密は operations-secrets.yaml

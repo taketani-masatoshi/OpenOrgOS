@@ -23,7 +23,7 @@
 ## 第3条（記録方法）
 
 1. 様式: [templates/compliance/宿泊者名簿.csv](templates/compliance/宿泊者名簿.csv)
-2. 保存: `lodging/records/{年}/compliance/宿泊者名簿-{年}.csv`（又は月次ファイル）
+2. 保存: `records/{YYYY}/{MM}/宿泊者名簿.csv`（月次。法定フィールドは templates/compliance/ 様式参照）
 3. OTA 予約情報を **チェックイン時** に転記又は確認する
 4. 電磁的記録可。改ざん防止のため **追記型** とし、削除は REG-010 の削除手順に従う
 

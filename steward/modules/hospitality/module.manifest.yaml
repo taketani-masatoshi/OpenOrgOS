@@ -4,8 +4,47 @@ required_seeds:
 - invoice-hospitality-monthly-body.txt
 - operations-public.yaml.example
 - operations-secrets.yaml.example
+- stays.yaml.example
 optional_regulations:
 - REG-012
 notes: production_ready — billing via modules.yaml
 activation_seeds:
 - operations-public.yaml
+cli_commands:
+- stays
+- show
+- stay-upsert
+- check-in
+- check-out
+- register-append
+- register-validate
+- records-check
+- cleaning-order
+- cleaning-complete
+- cleaning-report
+- cleaning-accept
+- cleaning-issue
+- cleaning-message
+- tax-compute
+- tax-status
+- tax-pack
+- tax-filed
+- tax-pay
+- damage-log
+- damage-evidence
+- damage-claim
+- ops-due
+- recurring-list
+- recurring-complete
+- guest-message
+- access-code
+- ota-import
+- id-docs-list
+- id-docs-register
+- id-docs-purge
+- metrics
+- blockers
+- nights-cap
+security:
+  limits:
+    concurrent_jobs: 2

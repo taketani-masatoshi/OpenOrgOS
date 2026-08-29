@@ -1,0 +1,13 @@
+version: 1
+as_of: "2026-08-24"
+stays:
+  - id: STAY-2026-001
+    property_id: PROP-002
+    channel: direct
+    status: booked
+    check_in: "2026-09-01"
+    check_out: "2026-09-03"
+    party_size: 2
+    rate_per_night_jpy: 45000
+    cleaning_status: pending
+    access_code_set: false

@@ -1,0 +1,56 @@
+# Required Compliance — hospitality（ADR 0012）
+# 状態 SSOT は jp_permit_registry。本ファイルは「何が必要か」のみ。
+module_id: hospitality
+as_of: "2026-08-24"
+schema_version: 1
+requirements:
+  - id: rc-hospitality-ryokan-permit
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-ryokan-hotel
+      - pt-ryokan-ryokan
+      - pt-ryokan-shukuhaku
+      - pt-ryokan-geshuku
+    legal_basis: 旅館業法第4条
+    authority_ja: 保健所を経由する市区町村
+    reference_url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000188411.html
+    notes: 簡易宿所を含む 1棟貸しは pt-ryokan-shukuhaku が典型
+  - id: rc-hospitality-fire-compliance
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-fire-compliance-notice
+    legal_basis: 消防法第17条の3
+    authority_ja: 消防署
+    notes: 消防法令適合通知書。取得後 permit-registry に active 登録
+  - id: rc-hospitality-lodging-tax-registration
+    fulfilment: registration
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-lodging-tax-registration
+    legal_basis: 東京都宿泊税条例
+    authority_ja: 東京都主税局
+    notes: 特別徴収義務者登録 · 申告は operations hospitality tax-*
+  - id: rc-hospitality-health-inspection
+    fulfilment: inspection
+    severity: recommended
+    match: any_of
+    compliance_type_ids:
+      - insp-health-center
+    legal_basis: 旅館業法施行規則
+    authority_ja: 保健所
+    notes: 立入検査 · recommended のため G-01 非ブロック
+  - id: rc-hospitality-guest-register
+    fulfilment: record
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - OBL-RYOKAN-GUEST-REGISTER
+    legal_basis: 旅館業法第6条
+    authority_ja: 保健所を経由する市区町村
+    reference_url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000188411.html
+    notes: 宿泊者名簿の備付・保存（5年 · REG-010）。validate は operations hospitality register-validate

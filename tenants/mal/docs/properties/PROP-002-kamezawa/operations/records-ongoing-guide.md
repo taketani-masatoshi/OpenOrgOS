@@ -2,41 +2,52 @@
 
 **対象:** 亀沢旅館 PROP-002 · **gitignore:** 個情詳細は `records/` 配下
 
+**法定帳簿一覧:** [statutory-records-catalog.md](statutory-records-catalog.md)
+
 ---
 
 ## 月次ルーティン
 
 | タイミング | 記録 | 様式 |
 |-----------|------|------|
-| チェックイン後 | 宿泊者名簿 | `templates/compliance/宿泊者名簿.csv` → `records/{YYYY}/{MM}/` |
-| チェックアウト後 | 清掃記録 | `清掃記録.csv` |
-| クレーム発生時 | クレーム | `クレーム記録.csv`（24h 以内一次応答） |
+| チェックイン後 | 宿泊者名簿 | `templates/compliance/宿泊者名簿.csv` → `records/{YYYY}/{MM}/宿泊者名簿.csv` |
+| 外国籍 CI 後24h | 外国人宿泊者届 | `compliance/外国人宿泊者届.csv` |
+| 毎日 | 日次運営記録 | `operations/日次運営記録.csv` |
+| チェックアウト後 | 清掃記録 | `housekeeping/清掃記録.csv` |
+| 月1 | 消防点検・定期点検 | `maintenance/消防点検記録.csv` · `定期点検-{YYYY-MM}.md` |
+| クレーム発生時 | クレーム | `guest-service/クレーム記録.csv`（24h 以内一次応答） |
 
 ```bash
 # 蓄積確認（CLI）
-npm run orgos -- skills run records-check
+STEWARD_TENANT=mal npm run orgos -- operations hospitality records-check
+STEWARD_TENANT=mal npm run orgos -- operations hospitality register-validate
 ```
 
 ---
 
-## ディレクトリ
+## ディレクトリ（2026-08 以降）
 
 ```
 operations/records/
 └── 2026/
     └── 08/
         ├── 宿泊者名簿.csv
-        ├── 清掃記録.csv
-        └── クレーム記録.csv
+        ├── compliance/
+        ├── operations/
+        ├── housekeeping/
+        ├── maintenance/
+        └── guest-service/
 ```
+
+各カテゴリ CSV は **テンプレを月フォルダへコピー** し、年を通して追記する。
 
 ---
 
 ## 個情（REG-010）
 
-- 名簿は **5年** 保管（REG-007 連携）
+- 名簿は **5年** 保管（REG-007 連携 · 法定下限 3年）
 - 清掃委託先に **ゲスト個情を渡さない**（入室日時 · 鍵のみ）
-- 原本スキャンは `records/`（リポジトリ外）— CSV は最小項目のみ Git 可
+- 原本スキャンは `records/`（リポジトリ外）— CSV は最小項目のみ
 
 ---
 
@@ -49,5 +60,6 @@ operations/records/
 
 ## 関連
 
+- [statutory-records-catalog.md](statutory-records-catalog.md)
 - [guest-register-rules.md](../guest-register-rules.md)
 - [daily-operations-guide.md](../daily-operations-guide.md)

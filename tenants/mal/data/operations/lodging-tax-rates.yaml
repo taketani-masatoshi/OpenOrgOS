@@ -1,0 +1,23 @@
+# Tokyo metropolitan lodging tax brackets (宿泊税)
+# Official: https://www.tax.metro.tokyo.lg.jp/kazei/shukuhaku.html
+
+version: 1
+tables:
+  - id: tokyo-metropolitan
+    jurisdiction: JP
+    region: Tokyo
+    name_ja: 東京都宿泊税
+    legal_basis: 東京都宿泊税条例
+    official_url: https://www.tax.metro.tokyo.lg.jp/kazei/shukuhaku.html
+    currency: JPY
+    brackets:
+      - min_per_person_per_night_jpy: 0
+        max_per_person_per_night_jpy: 10000
+        tax_per_person_per_night_jpy: 0
+      - min_per_person_per_night_jpy: 10000
+        max_per_person_per_night_jpy: 15000
+        tax_per_person_per_night_jpy: 100
+      - min_per_person_per_night_jpy: 15000
+        tax_per_person_per_night_jpy: 200
+    notes: |
+      1人1泊あたりの宿泊料金で判定。墨田区の亀沢は都税。

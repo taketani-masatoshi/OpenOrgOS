@@ -4,7 +4,7 @@
 **4 層:** **Module Agent** — 宿泊・施設物件（`data/properties/PROP-*.yaml` · `docs/properties/*/operations/` · `*-secrets.yaml`）を管轄。
 
 **テナント:** `modules.yaml` で `agent: hospitality` · `enabled: true`  
-**例示（架空）:** 株式会社サンプル商事 · PROP-002 緑丘ゲストハウス
+**例示（架空）:** 株式会社サンプル商事 · PROP-002 亀沢旅館（Kamezawa House）
 
 **コア Agent 索引:** [steward/core/agents/00-このフォルダについて.md](../core/agents/00-このフォルダについて.md)
 
@@ -46,4 +46,4 @@
 
 ## コンテキスト（例示 · サンプル商事）
 
-- 施設: 緑丘ゲストハウス（PROP-002）· ADR 45,000円 · 稼働率65%
+- 施設: 亀沢旅館（PROP-002 · 墨田区亀沢）· ADR 45,000円 · 稼働率65%

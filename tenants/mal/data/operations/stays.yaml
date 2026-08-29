@@ -1,0 +1,17 @@
+# L1 stay ledger — no guest PII. Aligns with lodging-tax assessments (STAY-2026-001).
+version: 1
+as_of: 2026-08-03
+stays:
+  - id: STAY-2026-001
+    property_id: PROP-002
+    channel: direct
+    status: checked_out
+    check_in: 2026-08-01
+    check_out: 2026-08-03
+    party_size: 5
+    nights: 2
+    rate_per_night_jpy: 50000
+    cleaning_status: done
+    access_code_set: true
+    created_at: 2026-07-13T15:39:36.919Z
+    updated_at: 2026-08-03T10:00:00.000Z

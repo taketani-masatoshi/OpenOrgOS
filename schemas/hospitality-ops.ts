@@ -251,6 +251,7 @@ export type LodgingTaxLedgerFile = z.infer<typeof lodgingTaxLedgerFileSchema>;
 export type LodgingTaxAssessment = z.infer<typeof lodgingTaxAssessmentSchema>;
 export type LodgingTaxPeriodFiling = z.infer<typeof lodgingTaxPeriodFilingSchema>;
 export type HospitalityAccessCodesFile = z.infer<typeof hospitalityAccessCodesFileSchema>;
+export type HospitalityIdDocEntry = z.infer<typeof hospitalityIdDocEntrySchema>;
 export type HospitalityIdDocIndexFile = z.infer<typeof hospitalityIdDocIndexFileSchema>;
 export type CleaningReport = z.infer<typeof cleaningReportSchema>;
 export type CleaningReportsFile = z.infer<typeof cleaningReportsFileSchema>;

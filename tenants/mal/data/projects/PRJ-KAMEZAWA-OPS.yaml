@@ -1,0 +1,32 @@
+id: PRJ-KAMEZAWA-OPS
+title: 亀沢旅館の稼働安定と許認可
+status: active
+rag: amber
+owner_agent: operations
+sponsor: ceo
+start_date: "2026-04-01"
+target_date: "2026-12-31"
+notes: 物件・許認可はリンクのみ。宿泊モジュール YAML を複製しない。
+milestones:
+  - id: MS-PERMIT-FILE
+    title: 旅館業許可申請の提出
+    due: "2026-09-30"
+    status: open
+  - id: MS-PREOPEN
+    title: 開業前点検の完了
+    due: "2026-11-30"
+    status: open
+risks:
+  - id: RSK-PERMIT-DELAY
+    summary: 許認可の提出が遅れると開業スケジュールがずれる
+    severity: high
+    status: open
+links:
+  contract_ids:
+    - CTR-014
+  work_order_ids: []
+  module_refs:
+    - module: hospitality
+      ref: APP-KAMEZAWA-RYOKAN-001
+  property_ids:
+    - PROP-002
