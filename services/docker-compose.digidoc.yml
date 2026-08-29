@@ -1,0 +1,77 @@
+# OrgOS DigiDoc sidecar (+ notes for self-hosted SiVa)
+#
+# Sidecar: unsigned ASiC-E only (digidoc4j). Signing = DigiDoc4 + card.
+# Validation = SiVa (self-hosted production JAR — official docker compose is test-only).
+#
+#   mkdir -p services/secrets
+#   openssl rand -hex 32 > services/secrets/digidoc-sidecar.token
+#   chmod 600 services/secrets/digidoc-sidecar.token
+#   docker compose -f services/docker-compose.digidoc.yml up --build -d digidoc-sidecar
+#
+#   export ORGOS_DIGIDOC_SIDECAR_URL=http://127.0.0.1:9090
+#   export ORGOS_DIGIDOC_ALLOW_HTTP_LOOPBACK=1
+#   export ORGOS_DIGIDOC_SIDECAR_TOKEN="$(cat services/secrets/digidoc-sidecar.token)"
+#   export ORGOS_SIVA_MODE=live
+#   export ORGOS_SIVA_BASE_URL=https://siva.example.internal   # or http://127.0.0.1:8080 with loopback flag
+
+name: orgos-digidoc
+
+networks:
+  digidoc_internal:
+    driver: bridge
+    internal: false
+
+services:
+  digidoc-sidecar:
+    build:
+      context: ./digidoc-sidecar
+    ports:
+      - "127.0.0.1:9090:9090"
+    environment:
+      PORT: "9090"
+      BIND: "0.0.0.0"
+      ALLOW_UNAUTHENTICATED: "false"
+      DIGIDOC_SIDECAR_TOKEN_FILE: /run/secrets/digidoc_sidecar_token
+      MAX_PDF_BYTES: "26214400"
+      MAX_BODY_BYTES: "36700160"
+    # Prefer file-mounted secret; also inject env from file for Java process
+    secrets:
+      - digidoc_sidecar_token
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -euo pipefail
+        export DIGIDOC_SIDECAR_TOKEN="$$(cat /run/secrets/digidoc_sidecar_token)"
+        exec java -jar /app/sidecar.jar
+    networks:
+      - digidoc_internal
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9090 && printf \"GET /ready HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q 200 <&3'",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 25s
+
+secrets:
+  digidoc_sidecar_token:
+    file: ./secrets/digidoc-sidecar.token
+
+# SiVa: do NOT embed official open-eid test compose here for production.
+# Build/run siva-webapp executable JAR per https://open-eid.github.io/SiVa/
+# and terminate TLS at your reverse proxy. See docs/org-os/pdf-esign-digidoc-runbook.md

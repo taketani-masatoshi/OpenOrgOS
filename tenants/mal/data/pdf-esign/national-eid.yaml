@@ -1,0 +1,6 @@
+version: 1
+# Company seat JP · signing stack EE DigiDoc (e-Residency) — ADR 0014
+active_stack: EE/digidoc
+notes: >
+  MAL Mac hosts SiVa for Track B BP2 (loopback HTTP allowed via digidoc.yaml).
+  Prefer ORGOS_SIVA_BASE_URL env. Card signer: 代表取締役 段.

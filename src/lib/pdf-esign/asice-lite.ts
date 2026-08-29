@@ -94,6 +94,78 @@ function parseLocalFileHeaders(
   return { ok: true, entries: out };
 }
 
+/**
+ * Parse the central directory, which carries authoritative sizes even when the
+ * writer streams entries with data descriptors (digidoc4j does).
+ */
+function parseCentralDirectory(
+  buf: Buffer,
+  opts: { maxEntries: number; maxUncompressed: number }
+): { ok: true; entries: ZipEntry[] } | { ok: false; reason: string; entries: ZipEntry[] } {
+  const out: ZipEntry[] = [];
+  const scanFrom = Math.max(0, buf.length - 66 * 1024);
+  let eocd = -1;
+  for (let i = buf.length - 22; i >= scanFrom; i -= 1) {
+    if (buf.readUInt32LE(i) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) return { ok: false, reason: "zip_eocd_not_found", entries: out };
+
+  const count = buf.readUInt16LE(eocd + 10);
+  let offset = buf.readUInt32LE(eocd + 16);
+  if (count > opts.maxEntries) {
+    return { ok: false, reason: "too_many_zip_entries", entries: out };
+  }
+
+  for (let i = 0; i < count; i += 1) {
+    if (offset + 46 > buf.length || buf.readUInt32LE(offset) !== 0x02014b50) {
+      return { ok: false, reason: "zip_central_directory_corrupt", entries: out };
+    }
+    const flags = buf.readUInt16LE(offset + 8);
+    const method = buf.readUInt16LE(offset + 10);
+    const compSize = buf.readUInt32LE(offset + 20);
+    const uncompSize = buf.readUInt32LE(offset + 24);
+    const nameLen = buf.readUInt16LE(offset + 28);
+    const extraLen = buf.readUInt16LE(offset + 30);
+    const commentLen = buf.readUInt16LE(offset + 32);
+    const localOffset = buf.readUInt32LE(offset + 42);
+    if (nameLen === 0) {
+      return { ok: false, reason: "empty_zip_entry_name", entries: out };
+    }
+    if (uncompSize > opts.maxUncompressed || compSize > opts.maxUncompressed) {
+      return { ok: false, reason: "zip_member_too_large", entries: out };
+    }
+    if (method !== 0 && method !== 8) {
+      return { ok: false, reason: `unsupported_zip_method_${method}`, entries: out };
+    }
+    const name = buf.subarray(offset + 46, offset + 46 + nameLen).toString("utf-8");
+    if (isUnsafeName(name)) {
+      return { ok: false, reason: "unsafe_zip_entry_name", entries: out };
+    }
+    if (localOffset + 30 > buf.length || buf.readUInt32LE(localOffset) !== 0x04034b50) {
+      return { ok: false, reason: "zip_local_header_missing", entries: out };
+    }
+    const localNameLen = buf.readUInt16LE(localOffset + 26);
+    const localExtraLen = buf.readUInt16LE(localOffset + 28);
+    const dataStart = localOffset + 30 + localNameLen + localExtraLen;
+    if (dataStart + compSize > buf.length) {
+      return { ok: false, reason: "zip_truncated", entries: out };
+    }
+    out.push({
+      name,
+      method,
+      flags,
+      compSize,
+      uncompSize,
+      payload: Buffer.from(buf.subarray(dataStart, dataStart + compSize)),
+    });
+    offset += 46 + nameLen + extraLen + commentLen;
+  }
+  return { ok: true, entries: out };
+}
+
 function inflateMember(
   e: ZipEntry,
   maxUncompressed: number
@@ -157,10 +229,13 @@ export function inspectAsiceContainer(
       pdf_member_digests: [],
     };
   }
-  const parsed = parseLocalFileHeaders(buf, {
+  const limits = {
     maxEntries: opts?.maxEntries ?? DEFAULT_MAX_ENTRIES,
     maxUncompressed,
-  });
+  };
+  // Central directory first: streamed writers omit sizes in local headers.
+  const central = parseCentralDirectory(buf, limits);
+  const parsed = central.ok ? central : parseLocalFileHeaders(buf, limits);
   if (!parsed.ok) {
     return {
       ok: false,

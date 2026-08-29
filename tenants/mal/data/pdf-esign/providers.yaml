@@ -1,0 +1,11 @@
+version: 1
+channel: pdf_esign
+default_provider: digidoc
+providers:
+  - id: digidoc
+    name: DigiDoc (Estonian national eID / open-eid)
+    national_eid_stack: EE/digidoc
+    notes: DigiDoc4 + card · .asice · SiVa verify · commercial ESP forbidden (ADR 0014)
+  - id: manual
+    name: Manual / paper fallback
+    notes: Non-electronic only — do not use commercial ESP to fill gaps

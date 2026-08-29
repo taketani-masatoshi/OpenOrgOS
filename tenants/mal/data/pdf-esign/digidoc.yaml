@@ -1,0 +1,12 @@
+version: 1
+# BP2: SiVa on MAL Mac — loopback HTTP OK with env ORGOS_DIGIDOC_ALLOW_HTTP_LOOPBACK=1
+# Prefer setting URLs via env (scripts/setup-siva-mal-mac.sh env).
+# siva_base_url: http://127.0.0.1:8080
+# digidoc_sidecar_url: http://127.0.0.1:9090
+allow_http_loopback: true
+siva_timeout_ms: 30000
+sidecar_timeout_ms: 60000
+max_pdf_bytes: 26214400
+max_asice_bytes: 41943040
+notes: >
+  allow_http_loopback true for MAL Mac local SiVa only — set false when using HTTPS reverse proxy.

@@ -1,0 +1,26 @@
+version: 1
+channel: pdf_esign
+cases:
+  - id: ES-2026-001
+    channel: pdf_esign
+    title: E2E NDA
+    status: failed
+    provider_id: digidoc
+    national_eid_stack: EE/digidoc
+    pdf_path: scratch/e2e.pdf
+    content_digest: cfa3181c1ee36e8bce5e39f84959f4558ea7ba32c0e4539a8ab3c8ce8c716ec6
+    byte_length: 69
+    container_path: tenants/mal/data/pdf-esign/work/ES-2026-001/unsigned.asice
+    container_digest: 9f8866f3c54de9db9949c2f599399cd33b4e503c5bb0047c44e12584cde0339b
+    unsigned_asice_path: /Users/kk/OS_Steward/tenants/mal/data/pdf-esign/work/ES-2026-001/unsigned.asice
+    unsigned_asice_digest: 9f8866f3c54de9db9949c2f599399cd33b4e503c5bb0047c44e12584cde0339b
+    siva_mode: live
+    siva_indication: INDETERMINATE
+    siva_validated_at: 2026-08-29T10:00:39.485Z
+    siva_response_digest: f13de06835964b963957cee005dd5437b1b9b3e8e2e21a4cb251104d84aa7a54
+    siva_signatures_count: 0
+    siva_valid_signatures_count: 0
+    siva_reason: siva_not_total_passed
+    work_dir: /Users/kk/OS_Steward/tenants/mal/data/pdf-esign/work/ES-2026-001
+    created_at: 2026-08-29T09:59:39.438Z
+    updated_at: 2026-08-29T10:00:39.486Z

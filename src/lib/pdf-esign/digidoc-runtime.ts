@@ -6,6 +6,7 @@ import {
   sivaModeSchema,
 } from "../../../schemas/pdf-esign.js";
 import { readYamlFile } from "../utils.js";
+import { hydrateEsignEnvFromStore } from "./esign-secrets-store.js";
 import { loadNationalEidConfig } from "./national-eid.js";
 import {
   getDigidocRuntimeConfigPath,
@@ -108,6 +109,7 @@ export function resolveDigidocSidecarToken(): string | undefined {
 export function resolveDigidocRuntime(opts?: {
   sivaMode?: SivaMode;
 }): ResolvedDigidocRuntime {
+  hydrateEsignEnvFromStore();
   const cfg = mergeRuntime();
   return {
     siva_base_url: resolveSivaBaseUrl(),
