@@ -35,7 +35,12 @@ export function buildComplianceGvpViewModel(opts?: {
       body: "テナントで jp_medical_device を有効化すると GVP ボードが出ます。",
     });
   } else {
-    const hot = s.open_adverse_events + s.open_complaints + s.missing;
+    const hot =
+      s.open_adverse_events +
+      s.open_complaints +
+      s.open_inquiries +
+      s.overdue_gvp_reports +
+      s.missing;
     sections.push({
       type: "callout",
       tone: hot > 0 ? "warning" : "success",
@@ -44,6 +49,8 @@ export function buildComplianceGvpViewModel(opts?: {
         `文書不足 ${s.missing}`,
         `苦情 open ${s.open_complaints}`,
         `AE open ${s.open_adverse_events}`,
+        `照会 open ${s.open_inquiries}`,
+        `報告期限超過 ${s.overdue_gvp_reports}`,
         omitNote(decisions.length, portfolio.rows.length),
       ]
         .filter(Boolean)
@@ -53,9 +60,9 @@ export function buildComplianceGvpViewModel(opts?: {
       type: "stats",
       items: [
         {
-          value: String(s.missing),
-          label: "文書不足",
-          tone: s.missing ? "warning" : "success",
+          value: String(s.overdue_gvp_reports),
+          label: "報告期限超過",
+          tone: s.overdue_gvp_reports ? "danger" : "success",
         },
         {
           value: String(s.open_adverse_events),
@@ -68,9 +75,9 @@ export function buildComplianceGvpViewModel(opts?: {
           tone: s.open_complaints ? "warning" : "neutral",
         },
         {
-          value: `${s.covered}/${s.required}`,
-          label: "文書カバレッジ",
-          tone: "neutral",
+          value: String(s.open_inquiries),
+          label: "照会 open",
+          tone: s.open_inquiries ? "warning" : "neutral",
         },
       ],
     });

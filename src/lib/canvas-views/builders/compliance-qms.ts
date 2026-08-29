@@ -44,6 +44,8 @@ export function buildComplianceQmsViewModel(opts?: {
         `整備済 ${s.covered}`,
         `不足 ${s.missing}`,
         `文書管理台帳 ${s.document_control_entries}件`,
+        `CAPA未閉 ${s.open_capa}`,
+        `変更未閉 ${s.open_changes}`,
         omitNote(decisions.length, portfolio.rows.length),
       ]
         .filter(Boolean)
