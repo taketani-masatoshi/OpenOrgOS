@@ -1,0 +1,8 @@
+staff_shifts:
+  - id: SHF-001
+    event_id: EVT-001
+    role: coordinator
+    staff_name: "スタッフA（例示）"
+    start_time: "2026-07-20T16:00"
+    end_time: "2026-07-20T22:00"
+    hourly_rate_yen: 2500
