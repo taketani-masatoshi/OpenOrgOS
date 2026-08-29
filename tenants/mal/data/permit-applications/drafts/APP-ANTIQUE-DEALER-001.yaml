@@ -1,0 +1,68 @@
+application_id: APP-ANTIQUE-DEALER-001
+permit_type_id: pt-antique-dealer
+form_id: form-antique-dealer
+status: preparing
+prepared_at: 2026-07-14
+auto_filled_from:
+  company: data/company.yaml
+  field_map: field-map.yaml
+fields:
+  applicant_name: 株式会社MAL
+  applicant_address: 〒102-0084 東京都千代田区二番町1
+  corporate_number: "4010001189530"
+  representative_name: 段燕燕
+  representative_address: 〒102-0084 東京都千代田区二番町1
+  directors_list: 段燕燕（代表取締役）、宮城万貴子（代表取締役）
+  share_capital_yen: "8500000"
+  share_capital_yen_ja: 8,500,000円
+  established_date: 2018-02-09
+  website: https://malkk.com/property/
+  contact_email: info@malkk.com
+  employees: "3"
+  business_description: 不動産オーナー向け翻訳・通訳サービス、イベントスペース貸出、旅館運営、
+    業務DX化支援、ソフトウェア開発。自社物件を保有。 日英中等の多言語対応。WeChat・WhatsApp等を活用したコミュニケーション支援。
+  site_name: 株式会社MAL
+  site_address: 〒102-0084 東京都千代田区二番町1
+  room_count: ""
+  building_area_sqm: ""
+  property_structure: ""
+  structure_use: ""
+  business_type: 衣類・本・雑貨・時計・鞄等の日用品、PC・スマホ等の小物（買取は原則1点30万円以下）
+  site_manager_name: 段燕燕
+  license_type: ""
+  filing_date: 令和8年7月14日
+  filing_date_iso: 2026-07-14
+manual_overrides:
+  business_type: 衣類・本・雑貨・時計・鞄等の日用品、PC・スマホ等の小物（買取は原則1点30万円以下）
+  site_manager_name: 段燕燕
+checklist:
+  last_run: 2026-07-14
+  missing: []
+  blank_template_fields: []
+  clarify_questions: []
+  ready_for_export: true
+  procedure_steps:
+    - condition_id: COND-ANTIQUE-OBTAIN-01
+      permit_type_id: pt-antique-dealer
+      phase: obtain
+      title_ja: 古物商許可の申請・取得
+      legal_basis: 古物営業法第4条
+      severity: required
+      evidence_hint: docs/company/licenses/records/
+      source_id: npa-security
+      notes: 営業開始前必須 · 公安委員会
+    - condition_id: COND-ANTIQUE-OBTAIN-02
+      permit_type_id: pt-antique-dealer
+      phase: obtain
+      title_ja: 主たる営業所の届出・標識
+      legal_basis: 古物営業法
+      severity: required
+      evidence_hint: docs/company/licenses/records/
+      source_id: npa-security
+      notes: 許可証・標識の掲示
+  procedure_required_count: 2
+export:
+  md_path: tenants/mal/docs/permit-applications/APP-ANTIQUE-DEALER-001/application.md
+  tex_path: tenants/mal/docs/permit-applications/APP-ANTIQUE-DEALER-001/application.tex
+  pdf_path: tenants/mal/docs/io/outbox/submissions/APP-ANTIQUE-DEALER-001-application.pdf
+  exported_at: 2026-07-14

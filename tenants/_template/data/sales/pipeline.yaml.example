@@ -1,0 +1,16 @@
+# Copy to pipeline.yaml on tenant init · schema: schemas/sales.ts
+version: 1
+updated_at: "2026-08-28T00:00:00+09:00"
+deals:
+  - id: DEAL-2026-001
+    title: Example enterprise deal
+    stage: qualify
+    owner: sales_lead
+    account_id: CUST-2026-001
+    counterparty: Example Corp
+    amount_band: "〜100万円"
+    amount_man: 100
+    probability_pct: 25
+    next_action: Schedule discovery call
+    next_action_due: "2026-07-20"
+    demo: true

@@ -1,0 +1,27 @@
+id: sales
+activation_seeds:
+  - pipeline.yaml.example
+  - outbound/campaigns.yaml.example
+  - inbound/inquiries.yaml.example
+  - quotes.yaml.example
+  - icp.yaml.example
+cli_commands:
+  - summary
+  - forecast
+  - inbound
+  - outbound
+  - migrate-accounts
+  - deal
+  - inquiry-promote
+  - inquiry-set-status
+  - classify
+  - mail-link
+  - mail-link-resolve
+  - follow-up-from-sent
+  - account
+  - handoff-won
+  - quote
+  - demo
+  - draft
+  - crm-dashboard
+notes: production_ready — pipeline · outbound · inbound · CRM wave 2b (write CLI + Console)

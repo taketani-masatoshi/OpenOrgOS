@@ -1,0 +1,9 @@
+version: 1
+preferred_tags:
+  - corporate
+  - hospitality
+  - partnership
+preferred_domains: []
+capital_bands: []
+min_probability_pct: 20
+notes: "Default ICP — tune per tenant."

@@ -1,0 +1,296 @@
+version: 1
+updated_at: 2026-08-27T22:28:02.863Z
+deals:
+  - id: DEAL-2026-001
+    title: 亀沢屋 · 法人泊パッケージ（年間枠）
+    stage: negotiation
+    account_id: CUST-2026-102
+    contact_ids:
+      - CONTACT-2026-001
+    owner: dan
+    owner_name: 段燕燕
+    counterparty: 株式会社ノースブリッジ
+    party:
+      company: 株式会社ノースブリッジ
+      contact_name: 佐藤健
+      contact_title: 総務部長
+      contact_email: sato@northbridge.example.co.jp
+      contact_phone: 03-1234-5601
+      capital_band: 資本金 5,000万円
+      credit: 社内与信 A（延滞なし）
+      location: 東京都港区
+      shareholders: ノースブリッジ・ホールディングス 70% · 創業家 30%
+      notes: 年間枠・四半期精算希望。会議室ニーズあり。
+    amount_band: 〜800万円/年
+    amount_man: 800
+    probability_pct: 60
+    next_action: 先方決裁者向け条件サマリを送付
+    next_action_due: 2026-07-18
+    close_date_target: 2026-08-15
+    stage_entered_on: 2026-06-20
+    tags:
+      - hospitality
+      - corporate
+    priority: high
+    demo: true
+  - id: DEAL-2026-002
+    title: 地域旅行会社 · 送客提携
+    stage: proposal
+    account_id: CUST-2026-103
+    contact_ids:
+      - CONTACT-2026-002
+    owner: miyagi
+    owner_name: 宮城万貴子
+    counterparty: いろはトラベル合同会社
+    party:
+      company: いろはトラベル合同会社
+      contact_name: 鈴木美咲
+      contact_title: 代表社員
+      contact_email: suzuki@iroha-travel.example.co.jp
+      contact_phone: 028-233-1200
+      capital_band: 出資金 300万円
+      credit: 社内与信 B+
+      location: 栃木県日光市
+      shareholders: 鈴木美咲 100%
+      notes: 送客コミッション型。繁忙期の空室フィードが論点。
+    amount_band: 〜200万円/期
+    amount_man: 200
+    probability_pct: 40
+    next_action: 提案方針の確認
+    next_action_due: 2026-07-16
+    close_date_target: 2026-07-31
+    stage_entered_on: 2026-07-01
+    tags:
+      - partnership
+    demo: true
+  - id: DEAL-2026-003
+    title: リネン委託 · 単価改定商談
+    stage: qualify
+    account_id: CUST-2026-101
+    contact_ids:
+      - CONTACT-2026-003
+    owner: dan
+    owner_name: 段燕燕
+    counterparty: 清流リネンサービス
+    party:
+      company: 清流リネンサービス株式会社
+      contact_name: 高橋誠
+      contact_title: 営業課長
+      contact_email: takahashi@seiryu-linen.example.co.jp
+      contact_phone: 0288-22-3400
+      capital_band: 資本金 1,000万円
+      credit: 社内与信 A-（既存取引先）
+      location: 栃木県宇都宮市
+      shareholders: 親会社 清流ホールディングス 80% · 従業員持株 20%
+      notes: 単価改定は 9 月請求分から。品質クレーム歴なし。
+    amount_band: 〜80万円相当
+    amount_man: 80
+    probability_pct: 30
+    next_action: 現行単価と稼働実績を照合
+    next_action_due: 2026-07-22
+    stage_entered_on: 2026-06-28
+    tags:
+      - operations
+      - vendor
+    demo: true
+  - id: DEAL-2026-004
+    title: ウェディング下見 · 休日パッケージ
+    stage: lead
+    account_id: CUST-2026-104
+    contact_ids:
+      - CONTACT-2026-004
+    owner: miyagi
+    owner_name: 宮城万貴子
+    counterparty: ブライダルハウス葵
+    party:
+      company: 株式会社ブライダルハウス葵
+      contact_name: 伊藤彩
+      contact_title: プランナー
+      contact_email: ito@bridal-aoi.example.co.jp
+      contact_phone: 03-5678-1100
+      capital_band: 資本金 2,000万円
+      credit: 新規 · 与信審査中
+      location: 東京都渋谷区
+      shareholders: 創業家伊藤家 100%
+      notes: 下見 2 組想定。金曜チェックイン希望。
+    amount_band: 〜120万円/件
+    amount_man: 120
+    probability_pct: 15
+    next_action: 初回ヒアリング日程を提案
+    next_action_due: 2026-07-17
+    stage_entered_on: 2026-07-10
+    tags:
+      - event
+    priority: normal
+    demo: true
+  - id: DEAL-2026-005
+    title: 地元商工会 · 会員向け優待プラン
+    stage: proposal
+    account_id: CUST-2026-105
+    contact_ids:
+      - CONTACT-2026-005
+    owner: dan
+    owner_name: 段燕燕
+    counterparty: 亀沢商工会
+    party:
+      company: 亀沢商工会
+      contact_name: 渡辺宏
+      contact_title: 事務局長
+      contact_email: office@kamezawa-sci.example.or.jp
+      contact_phone: 0288-77-2100
+      capital_band: （団体 · 該当なし）
+      credit: 公的団体 · 与信不要
+      location: 栃木県日光市
+      shareholders: （会員制団体）
+      notes: 会員向け優待は広報枠とセット提案。
+    amount_band: 〜50万円/期
+    amount_man: 50
+    probability_pct: 45
+    next_action: 会員向けチラシ案を共有
+    next_action_due: 2026-07-21
+    close_date_target: 2026-08-01
+    stage_entered_on: 2026-07-05
+    tags:
+      - local
+    demo: true
+  - id: DEAL-2026-006
+    title: 近隣企業研修合宿（春）
+    stage: won
+    account_id: CUST-2026-001
+    contact_ids:
+      - CONTACT-2026-006
+    owner: miyagi
+    owner_name: 宮城万貴子
+    counterparty: 拓信エンジニアリング
+    party:
+      company: 拓信エンジニアリング株式会社
+      contact_name: 中村亮
+      contact_title: 人事部長
+      contact_email: nakamura@takushin-eng.example.co.jp
+      contact_phone: 028-634-8800
+      capital_band: 資本金 8,000万円
+      credit: 社内与信 A
+      location: 栃木県宇都宮市
+      shareholders: 上場親会社グループ 100%
+      notes: 受注済 · 契約は Contract へハンドオフ。
+    amount_band: 〜350万円
+    amount_man: 350
+    probability_pct: 100
+    next_action: 契約ハンドオフ
+    next_action_due: 2026-07-15
+    close_date_target: 2026-07-10
+    stage_entered_on: 2026-07-10
+    tags:
+      - corporate
+      - closed
+    demo: true
+  - id: DEAL-2026-007
+    title: OTA 季節キャンペーン枠
+    stage: lost
+    account_id: CUST-2026-106
+    contact_ids:
+      - CONTACT-2026-007
+    lost_reason: price
+    owner: dan
+    owner_name: 段燕燕
+    counterparty: 旅窓ドットコム
+    party:
+      company: 株式会社旅窓ドットコム
+      contact_name: 加藤優
+      contact_title: パートナーシップ担当
+      contact_email: kato@tabimado.example.com
+      contact_phone: 03-9876-4400
+      capital_band: 資本金 1億円
+      credit: 大手 · 条件面で見送り
+      location: 東京都千代田区
+      shareholders: ファンドA 55% · 創業チーム 45%
+      notes: 手数料条件が合わず失注。来季再打診可。
+    amount_band: 〜90万円
+    amount_man: 90
+    probability_pct: 0
+    next_action: 失注理由を整理
+    next_action_due: 2026-07-20
+    stage_entered_on: 2026-07-08
+    tags:
+      - ota
+      - closed
+    demo: true
+  - id: DEAL-2026-008
+    title: 写真撮影 · 館内コンテンツ更新
+    stage: qualify
+    account_id: CUST-2026-107
+    contact_ids:
+      - CONTACT-2026-008
+    owner: miyagi
+    owner_name: 宮城万貴子
+    counterparty: アトリエ陽だまり
+    party:
+      company: 合同会社アトリエ陽だまり
+      contact_name: 森下直樹
+      contact_title: 代表
+      contact_email: morishita@hidamari-photo.example.co.jp
+      contact_phone: 0288-55-3300
+      capital_band: 出資金 100万円
+      credit: 社内与信 B
+      location: 栃木県日光市
+      shareholders: 森下直樹 100%
+      notes: 見積回答待ちのまま放置。撮影日候補の再提示が必要。
+    amount_band: 〜40万円
+    amount_man: 40
+    probability_pct: 25
+    next_action: 遅延の謝罪と撮影候補日を再送
+    next_action_due: 2026-07-10
+    stage_entered_on: 2026-07-01
+    tags:
+      - creative
+    priority: normal
+    demo: true
+  - id: DEAL-2026-101
+    title: 亀沢屋 · 企業研修合宿（秋期枠）
+    stage: negotiation
+    account_id: CUST-2026-001
+    owner: dan
+    owner_name: 段燕燕
+    counterparty: 拓信エンジニアリング
+    party:
+      company: 拓信エンジニアリング株式会社
+      capital_band: 資本金 8,000万円
+      credit: 社内与信 A（既存取引先）
+      location: 栃木県宇都宮市
+      notes: 春合宿の継続。秋は 2 泊 3 日 · 40 名想定。
+    amount_band: 〜450万円
+    amount_man: 450
+    probability_pct: 70
+    next_action: 秋期日程と食事プランの最終確認
+    next_action_due: 2026-08-22
+    close_date_target: 2026-09-30
+    stage_entered_on: 2026-08-01
+    tags:
+      - hospitality
+      - corporate
+    priority: high
+    demo: false
+  - id: DEAL-2026-102
+    title: 番町オフィス · 区画賃貸の更新提案
+    stage: proposal
+    account_id: CUST-2026-101
+    owner: miyagi
+    owner_name: 宮城万貴子
+    counterparty: 清流リネンサービス
+    party:
+      company: 清流リネンサービス株式会社
+      capital_band: 資本金 1,000万円
+      credit: 社内与信 A-（既存取引先）
+      location: 栃木県宇都宮市
+      notes: 現行区画の更新 + 隣室拡張の打診。
+    amount_band: 〜120万円/年
+    amount_man: 120
+    probability_pct: 40
+    next_action: 拡張区画の条件比較表を提示
+    next_action_due: 2026-08-29
+    close_date_target: 2026-09-15
+    stage_entered_on: 2026-08-18
+    tags:
+      - rental
+    priority: normal
+    demo: false

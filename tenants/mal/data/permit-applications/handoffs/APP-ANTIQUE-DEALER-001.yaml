@@ -1,0 +1,8 @@
+as_of: 2026-07-14
+handoffs:
+  - id: HO-APP-ANTIQUE-DEALER-001-20260714
+    application_id: APP-ANTIQUE-DEALER-001
+    authority_label_ja: "東京都公安委員会（経由: 麹町警察署）"
+    channel: counter
+    sent_on: 2026-07-14
+    notes: "主たる営業所: 千代田区二番町1 · 所轄推定: 麹町警察署 · OOO内部ひな形を公式様式へ転記予定 · 署の最新様式で要確認"

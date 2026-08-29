@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.openorgos.pipeline-monthly</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/Users/kk/OS_Steward/scripts/pipeline-monthly.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Day</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>4</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/tmp/orgos-pipeline-monthly.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/orgos-pipeline-monthly.stderr.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string>/Users/kk</string>
+    <key>ORGOS_TENANT</key>
+    <string>mal</string>
+    <key>STEWARD_OPERATOR_AUTH</key>
+    <string>1</string>
+    <key>ORGOS_CLI_OPERATOR_ID</key>
+    <string>OP-001</string>
+  </dict>
+</dict>
+</plist>

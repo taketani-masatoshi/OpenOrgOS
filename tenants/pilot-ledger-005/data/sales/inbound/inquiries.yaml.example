@@ -1,0 +1,15 @@
+# Copy to inquiries.yaml on tenant init · schema: schemas/sales.ts
+version: 1
+updated_at: "2026-07-14T00:00:00+09:00"
+inquiries:
+  - id: INQ-2026-001
+    subject: Partnership inquiry
+    status: new
+    source: web-form
+    company: Example Corp
+    owner: sales_inbound
+    received_on: "2026-07-14"
+    next_action: Triage and assign owner
+    next_action_due: "2026-07-16"
+    priority: normal
+    demo: true

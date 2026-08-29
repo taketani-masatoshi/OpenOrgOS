@@ -1,0 +1,15 @@
+skills:
+  - id: sales_crm_summary
+    file: sales_crm_summary.md
+    runtime: cli
+    cli_command: sales-crm-summary
+    handler: sales_crm_summary
+    description: CRM パイプライン要約 · 拡張ダッシュボード
+    agent_id: sales
+  - id: sales_inbound_intake
+    file: sales_inbound_intake.md
+    runtime: cli
+    cli_command: sales-inbound-intake
+    handler: sales_inbound_intake
+    description: メール triage からインバウンド問合せ取込
+    agent_id: sales

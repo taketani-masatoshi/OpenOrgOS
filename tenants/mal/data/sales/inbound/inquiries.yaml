@@ -1,0 +1,38 @@
+version: 1
+updated_at: "2026-08-24T12:00:00+09:00"
+inquiries:
+  - id: INQ-2026-001
+    subject: 法人泊パッケージ問い合わせ
+    status: triaged
+    source: web-form
+    company: 株式会社ノースブリッジ
+    owner: miyagi
+    owner_name: 宮城万貴子
+    received_on: "2026-07-10"
+    next_action: 初回回答下書きを送付
+    next_action_due: "2026-07-18"
+    priority: high
+    tags: [hospitality]
+    demo: true
+
+  - id: INQ-2026-101
+    subject: 企業研修合宿の空室確認
+    status: new
+    source: web-form
+    company: 株式会社フューチャーリゾート
+    owner: dan
+    owner_name: 段燕燕
+    received_on: "2026-08-19"
+    priority: normal
+    tags: [hospitality, corporate]
+
+  - id: INQ-2026-102
+    subject: 宿泊提携の条件確認
+    status: qualified
+    source: email
+    company: 株式会社サンライズ商事
+    owner: miyagi
+    owner_name: 宮城万貴子
+    received_on: "2026-08-10"
+    priority: high
+    tags: [hospitality]

@@ -1,0 +1,7 @@
+# Copy to sales/icp.yaml · schema: schemas/sales.ts
+version: 1
+preferred_tags: []
+preferred_domains: []
+capital_bands: []
+min_probability_pct: 20
+notes: "Tune ICP tags and domains per tenant."

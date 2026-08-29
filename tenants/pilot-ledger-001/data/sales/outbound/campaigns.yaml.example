@@ -1,0 +1,13 @@
+# Copy to campaigns.yaml on tenant init · schema: schemas/sales.ts
+version: 1
+updated_at: "2026-07-14T00:00:00+09:00"
+campaigns:
+  - id: OUT-2026-001
+    name: Q3 hospitality outreach
+    status: draft
+    owner: sales_outbound
+    target_count: 50
+    contacted_count: 0
+    next_action: Finalize target list
+    next_action_due: "2026-07-20"
+    demo: true

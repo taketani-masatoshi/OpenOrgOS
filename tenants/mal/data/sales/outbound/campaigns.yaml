@@ -1,0 +1,38 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+campaigns:
+  - id: OUT-2026-001
+    name: Q3 地域旅行会社アウトリーチ
+    status: active
+    owner: dan
+    owner_name: 段燕燕
+    target_count: 30
+    contacted_count: 12
+    next_action: 未返信リストの再アプローチ
+    next_action_due: "2026-07-20"
+    tags: [partnership]
+    demo: true
+
+  # 実施策（demo: false）— L1 のみ。リスト連絡先は campaigns に持たせない
+  - id: OUT-2026-101
+    name: 秋期 宿泊業向けターゲットリスト
+    status: active
+    owner: dan
+    owner_name: 段燕燕
+    target_count: 80
+    contacted_count: 12
+    next_action: 未返信 68 社への再アプローチ案
+    next_action_due: "2026-08-28"
+    tags: [hospitality, partnership]
+    demo: false
+
+  - id: OUT-2026-102
+    name: 医療機器卸向けリスト（下書き）
+    status: draft
+    owner: dan
+    owner_name: 段燕燕
+    target_count: 40
+    contacted_count: 0
+    next_action: セグメント定義と初回文案の骨子
+    tags: [medical_device]
+    demo: false
