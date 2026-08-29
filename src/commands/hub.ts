@@ -24,6 +24,8 @@ import { join } from "node:path";
 import type { WitnessHubEntry } from "../../schemas/protocol/witness-pool.js";
 import { ensureDevServerTls } from "../lib/protocol/dev-server-tls.js";
 import { getDeployDir } from "../lib/orgos-paths.js";
+import { buildWitnessHubGaReport } from "../lib/hub/ga-check.js";
+import { assertHubPublicBindAllowed } from "../lib/hub/public-bind.js";
 
 export interface HubServeOptions {
   hubId: string;
@@ -38,6 +40,11 @@ export interface HubServeOptions {
 }
 
 export async function runHubServe(opts: HubServeOptions): Promise<void> {
+  assertHubPublicBindAllowed({
+    host: opts.host,
+    tlsCert: opts.tlsCert,
+    tlsKey: opts.tlsKey,
+  });
   mkdirSync(opts.dataDir, { recursive: true });
   await startHubServer({
     hubId: opts.hubId,
@@ -376,4 +383,23 @@ export function runHubTlsInit(opts: HubTlsInitOptions = {}): void {
   }
   console.log(`✓ Witness Hub dev TLS · ${pki.dir}`);
   console.log(`  Next: cd deploy/witness-hub && ${summary.compose}`);
+}
+
+export function runHubGaCheck(opts: { json?: boolean } = {}): void {
+  const report = buildWitnessHubGaReport();
+  if (opts.json) {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+  for (const check of report.checks) {
+    console.log(`${check.pass ? "✓" : "✗"} ${check.id} — ${check.detail}`);
+  }
+  console.log(
+    report.ready_for_public_relay
+      ? "✓ Public relay GA: TLS material present"
+      : report.ok
+        ? "△ File gates pass — generate TLS (`orgos hub tls-init`) before public bind"
+        : "✗ Public relay GA incomplete",
+  );
+  if (!report.ok) process.exitCode = 1;
 }

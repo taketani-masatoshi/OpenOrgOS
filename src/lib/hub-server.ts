@@ -162,10 +162,59 @@ export function startHubServer(options: HubServerOptions): Promise<HubServerHand
   });
 }
 
+function sendPrometheus(
+  res: ServerResponse,
+  snap: {
+    hub_id: string;
+    receipts: number;
+    attestations: number;
+    anchors: number;
+    federation_peers: number;
+    gossip_enabled: boolean;
+  },
+): void {
+  const lines = [
+    "# HELP orgos_hub_receipts Witness receipts stored on this hub",
+    "# TYPE orgos_hub_receipts gauge",
+    `orgos_hub_receipts{hub_id="${snap.hub_id}"} ${snap.receipts}`,
+    "# HELP orgos_hub_attestations Witness attestations stored on this hub",
+    "# TYPE orgos_hub_attestations gauge",
+    `orgos_hub_attestations{hub_id="${snap.hub_id}"} ${snap.attestations}`,
+    "# HELP orgos_hub_anchors Signed Merkle anchors stored on this hub",
+    "# TYPE orgos_hub_anchors gauge",
+    `orgos_hub_anchors{hub_id="${snap.hub_id}"} ${snap.anchors}`,
+    "# HELP orgos_hub_federation_peers Configured gossip peers",
+    "# TYPE orgos_hub_federation_peers gauge",
+    `orgos_hub_federation_peers{hub_id="${snap.hub_id}"} ${snap.federation_peers}`,
+    "# HELP orgos_hub_gossip_enabled 1 if gossip is enabled",
+    "# TYPE orgos_hub_gossip_enabled gauge",
+    `orgos_hub_gossip_enabled{hub_id="${snap.hub_id}"} ${snap.gossip_enabled ? 1 : 0}`,
+  ];
+  res.writeHead(200, { "Content-Type": "text/plain; version=0.0.4; charset=utf-8" });
+  res.end(`${lines.join("\n")}\n`);
+}
+
+function hubMetricsSnapshot() {
+  const federation = loadHubFederation();
+  return {
+    hub_id: getHubId(),
+    receipts: countJsonlRecords(getHubReceiptsPath()),
+    attestations: countJsonlRecords(getHubAttestationsPath()),
+    anchors: countAnchorFiles(),
+    federation_peers: federation.hub_peers.length,
+    gossip_enabled: federation.gossip.enabled,
+  };
+}
+
 async function handleHubRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = req.url ?? "";
   const method = req.method ?? "GET";
   const pathname = url.split("?")[0] ?? url;
+
+  if (method === "GET" && pathname === "/metrics") {
+    sendPrometheus(res, hubMetricsSnapshot());
+    return;
+  }
 
   if (method === "GET" && pathname === "/hub/v1/health") {
     sendJson(res, 200, { ok: true, hub_id: getHubId() });
@@ -173,16 +222,10 @@ async function handleHubRequest(req: IncomingMessage, res: ServerResponse): Prom
   }
 
   if (method === "GET" && pathname === "/hub/v1/metrics") {
-    const federation = loadHubFederation();
     sendJson(res, 200, {
       ok: true,
-      hub_id: getHubId(),
       service: "witness-hub",
-      receipts: countJsonlRecords(getHubReceiptsPath()),
-      attestations: countJsonlRecords(getHubAttestationsPath()),
-      anchors: countAnchorFiles(),
-      federation_peers: federation.hub_peers.length,
-      gossip_enabled: federation.gossip.enabled,
+      ...hubMetricsSnapshot(),
     });
     return;
   }

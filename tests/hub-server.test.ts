@@ -31,6 +31,12 @@ describe("hub server", () => {
     const healthBody = (await health.json()) as { hub_id: string };
     expect(healthBody.hub_id).toBe("HUB-A");
 
+    const prom = await fetch(`${server.url}/metrics`);
+    expect(prom.ok).toBe(true);
+    const promText = await prom.text();
+    expect(promText).toContain("orgos_hub_receipts");
+    expect(prom.headers.get("content-type") ?? "").toContain("text/plain");
+
     const keys = generateProtocolKeyPair();
     const eventId = "44444444-4444-4444-8444-444444444444";
     const attestation = signWitnessAttestation(
