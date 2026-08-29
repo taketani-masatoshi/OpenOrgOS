@@ -365,6 +365,22 @@ routes:
       paths:
         - data/plans/
 
+  - id: finance-noi
+    description: 物件別 NOI（賃料収入 − 運営費）
+    agent: finance
+    skill: noi_analysis
+    priority: 64
+    resource_paths:
+      - data/finance/cash-balance.yaml
+    match:
+      keywords:
+        - NOI
+        - noi
+        - 純収益
+        - 物件収益
+      paths:
+        - data/properties/
+
   - id: inbox-routing
     description: 受信トレイ・未処理書類
     agent: operations
@@ -518,6 +534,23 @@ routes:
       paths:
         - docs/executive/correspondence-drafts/
         - records/executive/mail-config.yaml
+
+  - id: mail-outbound-correspondence-send
+    description: 承認済み社外メール送信（SMTP · 人間ゲート）
+    agent: mail_outbound
+    skill: correspondence_send
+    boundary: executive_data
+    priority: 89
+    resource_paths:
+      - docs/executive/correspondence-drafts/
+    match:
+      keywords:
+        - メールを送信
+        - correspondence send
+        - SMTP送信
+        - 承認済みメール送信
+      paths:
+        - docs/executive/correspondence-drafts/
 
   - id: mail-intake-handoff
     description: 受信メール分類 · Secretary ハンドオフ
@@ -898,6 +931,41 @@ routes:
       paths:
         - docs/compliance/iso/internal-audit-plan-fy2026.md
         - docs/audit/internal/
+
+  - id: iso-internal-audit-run
+    description: 有効 ISO の機械可読マップを検査し監査ログを追記
+    agent: internal_audit
+    skill: iso_internal_audit_run
+    priority: 84
+    resource_paths:
+      - data/compliance/iso-internal-audit.jsonl
+      - data/compliance/controls.yaml
+    match:
+      keywords:
+        - ISO内部監査
+        - 内部監査を実行
+        - ISO audit
+        - 適合検査
+      paths:
+        - data/compliance/iso-internal-audit.jsonl
+        - steward/standards/iso/catalog.yaml
+
+  - id: iso-internal-audit-report
+    description: ISO 内部監査ログから経営レポート
+    agent: internal_audit
+    skill: iso_internal_audit_report
+    priority: 83
+    resource_paths:
+      - data/compliance/iso-internal-audit.jsonl
+      - docs/audit/internal/
+    match:
+      keywords:
+        - ISO監査レポート
+        - 適合状況
+        - 改善提案
+        - 内部監査報告
+      paths:
+        - docs/audit/internal/latest-iso-audit.md
 
   - id: company-events-chain-audit
     description: 会社イベントハッシュチェーン · 改竄検知

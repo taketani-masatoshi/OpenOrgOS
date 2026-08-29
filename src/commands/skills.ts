@@ -34,6 +34,7 @@ import {
   runCorrespondenceSendSkill,
   runSlackNotifySkill,
   runCorrespondenceDraft,
+  runCorrespondenceCompose,
 } from "./secretary-correspondence.js";
 import {
   formatControlStatusReport,
@@ -48,6 +49,7 @@ import {
 import { runExpenseClaimList } from "./expense-claim.js";
 import { runFinancesClose } from "./finances-close.js";
 import {
+  runLedgerExport,
   runLedgerMonthlyReconcile,
   runLedgerPostSource,
   runLedgerTrialBalance,
@@ -93,12 +95,23 @@ import {
   runTreasuryCashPositionSkill,
   runTreasuryLiquidityForecastSkill,
 } from "../lib/finance/treasury-skill-runners.js";
+import {
+  runGovernanceMeetingPrepSkill,
+  runGovernanceRegisterReviewSkill,
+  runPrivacyDataInventorySkill,
+  runPrivacyImpactReviewSkill,
+  runProcurementOrderReviewSkill,
+  runProcurementVendorEvalSkill,
+  runRiskInsuranceRenewalSkill,
+  runRiskRegisterReviewSkill,
+} from "../lib/extension-skill-runners.js";
 import { runScheduleCoordinationSkill } from "./scheduling-coordination.js";
 
 const SKILLS_ALWAYS_WRITE = new Set([
   "dashboard",
   "iso-control-review",
   "internal-audit-scope",
+  "iso-internal-audit-run",
   "company-events-chain-verify",
   "company-events-weekly-attest",
   "company-events-monthly-audit",
@@ -152,6 +165,18 @@ export const SKILL_COMMANDS = [
     description: "CTL ベース内部監査スコープ",
   },
   {
+    id: "iso-internal-audit-run",
+    skill: "iso_internal_audit_run",
+    agent: "Internal Audit",
+    description: "有効 ISO の control-map を検査し監査ログを追記",
+  },
+  {
+    id: "iso-internal-audit-report",
+    skill: "iso_internal_audit_report",
+    agent: "Internal Audit",
+    description: "監査ログから経営向け適合レポート",
+  },
+  {
     id: "company-events-chain-verify",
     skill: "company_events_chain_verify",
     agent: "Records Audit",
@@ -198,6 +223,18 @@ export const SKILL_COMMANDS = [
     skill: "trial_balance",
     agent: "Accounting",
     description: "試算表・月次突合",
+  },
+  {
+    id: "journal-export-csv",
+    skill: "journal_export_csv",
+    agent: "Accounting",
+    description: "仕訳 YAML → CSV ミラー",
+  },
+  {
+    id: "trial-balance-export-csv",
+    skill: "trial_balance_export_csv",
+    agent: "Accounting",
+    description: "試算表 → CSV ミラー",
   },
   {
     id: "depreciation-run",
@@ -384,6 +421,12 @@ export const SKILL_COMMANDS = [
     skill: "correspondence_draft",
     agent: "Mail Outbound",
     description: "対外連絡下書き + 承認起案",
+  },
+  {
+    id: "correspondence-compose",
+    skill: "correspondence_compose",
+    agent: "Mail Outbound",
+    description: "事実パック + LLM 返信下書き（送信しない）",
   },
   {
     id: "mail-intake-triage",
@@ -584,6 +627,11 @@ export interface SkillRunOptions {
   target?: string;
   enabled?: boolean;
   staleDays?: number;
+  write?: boolean;
+  mailId?: string;
+  case?: string;
+  contactRef?: string;
+  iso?: string;
 }
 
 async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promise<void> {
@@ -656,6 +704,27 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       const month = opts.month ?? currentDate().slice(0, 7);
       runLedgerTrialBalance({ asOf: `${month}-28`, json: opts.json });
       runLedgerMonthlyReconcile({ month, json: opts.json });
+      break;
+    }
+    case "journal-export-csv": {
+      const month = opts.month;
+      runLedgerExport({
+        template: "journal-csv",
+        from: month ? `${month}-01` : undefined,
+        to: month ? `${month}-31` : undefined,
+        output: opts.output,
+        dryRun: opts.dryRun,
+      });
+      break;
+    }
+    case "trial-balance-export-csv": {
+      const month = opts.month ?? currentDate().slice(0, 7);
+      runLedgerExport({
+        template: "trial-balance-csv",
+        asOf: `${month}-28`,
+        output: opts.output,
+        dryRun: opts.dryRun,
+      });
       break;
     }
     case "depreciation-run": {
@@ -864,6 +933,16 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       console.log(`✓ ${path}`);
       break;
     }
+    case "iso-internal-audit-run": {
+      const { runIsoAuditRun } = await import("./iso-audit.js");
+      runIsoAuditRun({ json: opts.json, iso: opts.iso, dryRun: opts.dryRun });
+      break;
+    }
+    case "iso-internal-audit-report": {
+      const { runIsoAuditReport } = await import("./iso-audit.js");
+      runIsoAuditReport({ json: opts.json, runId: opts.id });
+      break;
+    }
     case "company-events-chain-verify": {
       const md = formatChainVerifyReport();
       const path = writeMarkdownReport(
@@ -910,6 +989,14 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
         subject: opts.subject,
         body: opts.body,
         slackChannel: opts.slackChannel,
+      });
+      break;
+    case "correspondence-compose":
+      await runCorrespondenceCompose({
+        mailId: opts.mailId ?? opts.id ?? "",
+        caseId: opts.case,
+        to: opts.to,
+        contactRef: opts.contactRef,
       });
       break;
     case "mail-intake-triage": {
@@ -1146,6 +1233,14 @@ const CORE_SKILL_HANDLERS: Readonly<Record<string, SkillHandler>> = {
   ),
   treasury_cash_position: runTreasuryCashPositionSkill,
   treasury_liquidity_forecast: runTreasuryLiquidityForecastSkill,
+  procurement_order_review: runProcurementOrderReviewSkill,
+  procurement_vendor_eval: runProcurementVendorEvalSkill,
+  governance_meeting_prep: runGovernanceMeetingPrepSkill,
+  governance_register_review: runGovernanceRegisterReviewSkill,
+  risk_register_review: runRiskRegisterReviewSkill,
+  risk_insurance_renewal: runRiskInsuranceRenewalSkill,
+  privacy_data_inventory: runPrivacyDataInventorySkill,
+  privacy_impact_review: runPrivacyImpactReviewSkill,
 };
 
 export async function runSkill(id: string, opts: SkillRunOptions = {}): Promise<void> {

@@ -13,6 +13,8 @@ import { findProviderById } from "../operator-facts/registry.js";
 import { getDataDir } from "../utils.js";
 import { argsToSkillRunOptions, resolveCommandPlan } from "./resolve.js";
 import { getSkillById } from "../skill-registry.js";
+import { runWithFsGuardAgentAsync } from "../org/fs-guard/index.js";
+import { stewardMayMutateCompanyData } from "../agent-owner-desks.js";
 
 const PLAN_TTL_MS = 15 * 60_000;
 
@@ -199,7 +201,10 @@ export async function executeCommandPlan(
   });
 
   try {
-    const output = await captureSkillOutput(() => resolution.handler(runOpts));
+    const runHandler = () => captureSkillOutput(() => resolution.handler(runOpts));
+    const output = skill.agent_id
+      ? await runWithFsGuardAgentAsync(skill.agent_id, runHandler)
+      : await runHandler();
     appendAuditEvent({
       event: "route_dispatch",
       ref: plan.plan_id,
@@ -241,6 +246,7 @@ export async function handleChatCommandMessage(opts: {
   operatorId?: string;
   skillId?: string;
   args?: Record<string, string | number | boolean | null>;
+  fromAgent?: string;
 }): Promise<{
   handled: boolean;
   reply?: string;
@@ -273,6 +279,18 @@ export async function handleChatCommandMessage(opts: {
     return {
       handled: true,
       reply: plan.message ?? `権限がありません: ${plan.permission}`,
+      plan,
+    };
+  }
+
+  if (
+    !stewardMayMutateCompanyData(opts.fromAgent) &&
+    (plan.kind === "write" || plan.kind === "approval" || plan.status === "approval_gate")
+  ) {
+    return {
+      handled: true,
+      reply:
+        "会社データの書き換えはオーナーからスチュワードへの直接依頼でのみ行います。秘書窓口からは状況の照会のみ可能です。",
       plan,
     };
   }

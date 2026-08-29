@@ -1,0 +1,17 @@
+version: 1
+tags:
+  - id: ssot.fill.cash_balance
+    label: 現金残高 SSOT 埋め
+    description: 口座残高・confirmed 残高の正本更新
+  - id: ssot.fill.finance_monthly
+    label: 月次財務 SSOT 埋め
+    description: 月次収支・予実の正本更新
+  - id: world.call.counterparty
+    label: 取引先電話
+    description: 相手先への電話・入金確認など現場行為
+  - id: lang.ja_zh
+    label: 日中文
+    description: 日本語・中国語の業務コミュニケーション
+  - id: approve.reg004
+    label: REG-004 稟議承認
+    description: 稟議・決裁規程に基づく承認

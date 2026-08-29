@@ -6,6 +6,15 @@ import {
   loadInvestmentPlan,
   loadTaxProfile,
 } from "./data.js";
+import {
+  writeTaxFilingDocs,
+  writeTaxPrepSummaryMarkdown,
+} from "./finance/tax-filing-docs.js";
+import {
+  formatTaxFilingGapsBriefLines,
+  summarizeTaxFilingGaps,
+  tryLoadTaxFilingGaps,
+} from "./finance/tax-filing-gaps.js";
 import { getDataDir, writeMarkdownReport } from "./utils.js";
 
 const TAX_FILES = [
@@ -38,6 +47,9 @@ export function runTaxFilingPrepSkill(opts: { output?: string; markdown?: boolea
     /* optional */
   }
 
+  const gaps = tryLoadTaxFilingGaps();
+  const gapSummary = summarizeTaxFilingGaps(gaps);
+
   const lines = [
     "# 税務申告準備サマリ",
     "",
@@ -47,18 +59,34 @@ export function runTaxFilingPrepSkill(opts: { output?: string; markdown?: boolea
     ...present.map((f) => `- data/${f}`),
     "",
     "## 未作成",
-    ...(missing.length ? missing.map((f) => `- data/${f}`) : ["- （なし）"]),
+    ...missing.length ? missing.map((f) => `- data/${f}`) : ["- （なし）"],
     "",
     `固定資産: ${assetsCount} 件 · 申告カレンダー: ${filingItems} 件`,
     "",
-    "次: `npm run validate` · `npm run orgos -- deps check --file data/finance/fixed-assets.yaml`",
+    "## 申告ギャップ",
+    ...(gaps
+      ? [
+          `as_of: ${gaps.as_of ?? "—"} · fiscal_year: ${gaps.fiscal_year ?? "—"}`,
+          `open ${gapSummary.open} / total ${gapSummary.total}（blocking ${gapSummary.blocking} · warning ${gapSummary.warning}）`,
+        ]
+      : []),
+    ...formatTaxFilingGapsBriefLines(gaps, 8).map((l) =>
+      l.startsWith("- ") ? l : `- ${l}`,
+    ),
+    "",
+    "次: `npm run validate` · `npm run orgos -- tax calendar` · `npm run orgos -- tax gaps`",
   ];
 
   const md = lines.join("\n");
+  const written = writeTaxFilingDocs();
+  console.log(`Wrote ${written.checklist}`);
+  console.log(`Wrote ${written.register}`);
+
   if (opts.output) {
-    const path = writeMarkdownReport("agent-summaries/finance", opts.output, md);
+    const path = writeMarkdownReport("agent-summaries/tax", opts.output, md);
     console.log(`Wrote ${path}`);
   } else {
+    writeTaxPrepSummaryMarkdown(lines);
     console.log(md);
   }
 }
