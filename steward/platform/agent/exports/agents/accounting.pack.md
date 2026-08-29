@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · accounting
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-24 · **Tenant:** mal
+> **Generated:** 2026-08-29 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent accounting`
 
 ---
@@ -123,6 +123,41 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ---
 
+## 1c. Local LLM ERROR fallback (excerpt)
+
+# Local LLM ERROR Fallback
+
+**版:** 1.0 · **日付:** 2026-08-26
+**ADR:** [0061](../../docs/adr/0061-local-llm-error-fallback.md)
+**実装:** `src/lib/operator-runtime/local-llm-error-fallback.ts`
+
+## 目的
+
+ローカル LLM（Ollama 等 · worker `tier: local`）は、クラウドモデルより grounding が弱い。必要情報が prompt / tool 結果 / 添付に無いとき、拒否エッセイ・「未確認」・プレースホルダを出さず、**機械可読な1行失敗**に統一する。
+
+## 規約
+
+| 条件 | 出力 |
+|------|------|
+| 回答に必要な事実が context に **無い** | `ERROR: <理由>` **1行のみ**（日本語理由可） |
+| 事実が grounded されている | 従来どおり短文 CEO 向け回答 |
+
+例:
+
+```
+ERROR: Today context にバーンレートが含まれていない
+```
+
+## 適用範囲
+
+- Steward Chat（executive_steward · secretary）
+- Work Order dispatch（portable LLM）
+- MCP `steward_ask` · CLI `orgos chat ask`
+
+Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
+
+---
+
 ## 2. Agent · Accounting（経理実務）
 
 # Accounting Operations Agent
@@ -141,6 +176,8 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | パス | 権限 |
 |------|------|
+| `data/finance/journal-entries.yaml` | Primary |
+| `data/finance/opening-balances.yaml` | Primary |
 | `docs/finance/accounting/**` | Primary |
 | `data/finance/invoices/**` | Primary |
 | `data/finance/payment-calendar.yaml` | Primary |
@@ -155,6 +192,11 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 ## 使用 Skill
 
 - monthly_close
+- journal_post
+- trial_balance
+- depreciation_run
+- annual_close
+- expense_claim_ops
 - jp_cashflow_schedule（`jp_bank_corporate` · `runtime: cli`）
 
 ## チャット意図 → CLI
@@ -179,12 +221,13 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ## ワークフロー（月次締め後）
 
-1. `orgos skills run monthly-close --month YYYY-MM`
-2. `orgos jp bank calendar import --from payroll`（dry-run。採用時のみ `--write`）
-3. `data/finance/payment-calendar.yaml` を支払日程の正本として `orgos jp bank calendar validate`
-4. `orgos validate`
-5. `orgos jp bank cashflow generate --granularity weekly --horizon 13w --write`
-6. `required_funding_amount` / `required_funding_by_date` を要約 → `docs/reports/agent-summaries/accounting/{date}-cashflow.md`
+1. `orgos finances close --month YYYY-MM -o YYYY-MM-close.md`
+2. `orgos ledger trial-balance --as-of YYYY-MM-28`
+3. `orgos ledger monthly-reconcile --month YYYY-MM`
+4. `orgos jp bank calendar validate`
+5. `orgos validate`
+6. `orgos jp bank cashflow generate --granularity weekly --horizon 13w --write`
+7. `required_funding_amount` / `required_funding_by_date` を要約 → `docs/reports/agent-summaries/accounting/{date}-cashflow.md`
 
 ## 禁止
 
@@ -197,7 +240,12 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 | 手段 | 内容 |
 |------|------|
 | agent_pulse | `orgos agent pulse --agent accounting` |
-| monthly_close | registry Skill |
+| monthly_close | `orgos finances close --month` |
+| journal_post | `orgos ledger post` |
+| trial_balance | `orgos ledger trial-balance` |
+| depreciation_run | `orgos ledger post --source depreciation` |
+| annual_close | `orgos finances close --fiscal-year` |
+| expense_claim_ops | `orgos expense-claim` |
 | jp_cashflow_schedule | `orgos jp bank cashflow generate` |
 
 ## CLI
@@ -221,6 +269,12 @@ orgos agent dispatch run --agent accounting --task "Generate weekly cashflow sch
 ## 3. Skills（参照）
 
 - `expense_claim_ops` · cli · `steward/core/skills/expense_claim_ops.md`
+- `journal_post` · cli · `steward/core/skills/journal_post.md`
+- `trial_balance` · cli · `steward/core/skills/trial_balance.md`
+- `journal_export_csv` · cli · `steward/core/skills/journal_export_csv.md`
+- `trial_balance_export_csv` · cli · `steward/core/skills/trial_balance_export_csv.md`
+- `depreciation_run` · cli · `steward/core/skills/depreciation_run.md`
+- `annual_close` · cli · `steward/core/skills/annual_close.md`
 
 ---
 

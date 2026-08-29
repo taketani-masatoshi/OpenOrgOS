@@ -158,6 +158,9 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   language_bridge: "secretary",
   iso_cms: "compliance",
   receipt_qr: "finance",
+  investor_relations: "investor_relations",
+  customer_success: "customer_success",
+  sales: "sales_lead",
   jp_carbon_neutral_2050: "compliance",
   jp_women_empowerment: "compliance",
   jp_privacy_policy: "compliance",
@@ -171,6 +174,13 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_certification: "compliance",
   jp_inspection: "compliance",
   jp_bank_corporate: "finance",
+  jp_tax_corporate: "tax",
+  jp_tax_consumption: "tax",
+  jp_consumption_refund: "tax",
+  jp_invoice_qualified: "tax",
+  jp_withholding_statutory: "tax",
+  jp_payroll: "human_resources",
+  jp_social_insurance: "human_resources",
 };
 
 const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
@@ -198,6 +208,9 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "language_bridge",
   "iso_cms",
   "receipt_qr",
+  "investor_relations",
+  "customer_success",
+  "sales",
   "jp_carbon_neutral_2050",
   "jp_women_empowerment",
   "jp_privacy_policy",
@@ -211,6 +224,13 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_certification",
   "jp_inspection",
   "jp_bank_corporate",
+  "jp_tax_corporate",
+  "jp_tax_consumption",
+  "jp_consumption_refund",
+  "jp_invoice_qualified",
+  "jp_withholding_statutory",
+  "jp_payroll",
+  "jp_social_insurance",
 ];
 
 export function modulesFilePath(): string {
@@ -461,6 +481,7 @@ const moduleManifestSchema = z.object({
   required_seeds: z.array(z.string()).default([]),
   activation_seeds: z.array(z.string()).default([]),
   optional_regulations: z.array(z.string()).optional(),
+  cli_commands: z.array(z.string()).optional(),
   notes: z.string().optional(),
   /**
    * Optional isolation permissions (M1).

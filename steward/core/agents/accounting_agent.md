@@ -14,6 +14,8 @@
 
 | パス | 権限 |
 |------|------|
+| `data/finance/journal-entries.yaml` | Primary |
+| `data/finance/opening-balances.yaml` | Primary |
 | `docs/finance/accounting/**` | Primary |
 | `data/finance/invoices/**` | Primary |
 | `data/finance/payment-calendar.yaml` | Primary |
@@ -28,6 +30,11 @@
 ## 使用 Skill
 
 - monthly_close
+- journal_post
+- trial_balance
+- depreciation_run
+- annual_close
+- expense_claim_ops
 - jp_cashflow_schedule（`jp_bank_corporate` · `runtime: cli`）
 
 ## チャット意図 → CLI
@@ -52,12 +59,13 @@
 
 ## ワークフロー（月次締め後）
 
-1. `orgos skills run monthly-close --month YYYY-MM`
-2. `orgos jp bank calendar import --from payroll`（dry-run。採用時のみ `--write`）
-3. `data/finance/payment-calendar.yaml` を支払日程の正本として `orgos jp bank calendar validate`
-4. `orgos validate`
-5. `orgos jp bank cashflow generate --granularity weekly --horizon 13w --write`
-6. `required_funding_amount` / `required_funding_by_date` を要約 → `docs/reports/agent-summaries/accounting/{date}-cashflow.md`
+1. `orgos finances close --month YYYY-MM -o YYYY-MM-close.md`
+2. `orgos ledger trial-balance --as-of YYYY-MM-28`
+3. `orgos ledger monthly-reconcile --month YYYY-MM`
+4. `orgos jp bank calendar validate`
+5. `orgos validate`
+6. `orgos jp bank cashflow generate --granularity weekly --horizon 13w --write`
+7. `required_funding_amount` / `required_funding_by_date` を要約 → `docs/reports/agent-summaries/accounting/{date}-cashflow.md`
 
 ## 禁止
 
@@ -70,7 +78,12 @@
 | 手段 | 内容 |
 |------|------|
 | agent_pulse | `orgos agent pulse --agent accounting` |
-| monthly_close | registry Skill |
+| monthly_close | `orgos finances close --month` |
+| journal_post | `orgos ledger post` |
+| trial_balance | `orgos ledger trial-balance` |
+| depreciation_run | `orgos ledger post --source depreciation` |
+| annual_close | `orgos finances close --fiscal-year` |
+| expense_claim_ops | `orgos expense-claim` |
 | jp_cashflow_schedule | `orgos jp bank cashflow generate` |
 
 ## CLI

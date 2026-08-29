@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · corporate_governance
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-11 · **Tenant:** mal
+> **Generated:** 2026-08-29 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent corporate_governance`
 
 ---
@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -123,11 +123,46 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ---
 
+## 1c. Local LLM ERROR fallback (excerpt)
+
+# Local LLM ERROR Fallback
+
+**版:** 1.0 · **日付:** 2026-08-26
+**ADR:** [0061](../../docs/adr/0061-local-llm-error-fallback.md)
+**実装:** `src/lib/operator-runtime/local-llm-error-fallback.ts`
+
+## 目的
+
+ローカル LLM（Ollama 等 · worker `tier: local`）は、クラウドモデルより grounding が弱い。必要情報が prompt / tool 結果 / 添付に無いとき、拒否エッセイ・「未確認」・プレースホルダを出さず、**機械可読な1行失敗**に統一する。
+
+## 規約
+
+| 条件 | 出力 |
+|------|------|
+| 回答に必要な事実が context に **無い** | `ERROR: <理由>` **1行のみ**（日本語理由可） |
+| 事実が grounded されている | 従来どおり短文 CEO 向け回答 |
+
+例:
+
+```
+ERROR: Today context にバーンレートが含まれていない
+```
+
+## 適用範囲
+
+- Steward Chat（executive_steward · secretary）
+- Work Order dispatch（portable LLM）
+- MCP `steward_ask` · CLI `orgos chat ask`
+
+Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
+
+---
+
 ## 2. Agent · Corporate Governance（コーポレートガバナンス）
 
 # Corporate Governance Agent
 
-**English role:** Corporate Governance · **日本語:** コーポレートガバナンス  
+**English role:** Corporate Governance · **日本語:** コーポレートガバナンス
 **優先度:** P0 · **報告:** executive_steward · **4 層:** **Agent**
 
 ---
@@ -190,7 +225,7 @@ orgos agent pulse --agent corporate_governance
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
 
 
 
@@ -198,8 +233,8 @@ orgos agent pulse --agent corporate_governance
 
 ## 3. Skills（参照）
 
-- `governance_meeting_prep` · agent · `steward/core/skills/extension/governance_meeting_prep.md`
-- `governance_register_review` · agent · `steward/core/skills/extension/governance_register_review.md`
+- `governance_meeting_prep` · cli · `steward/core/skills/extension/governance_meeting_prep.md`
+- `governance_register_review` · cli · `steward/core/skills/extension/governance_register_review.md`
 
 ---
 

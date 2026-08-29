@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · internal_audit
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-07-11 · **Tenant:** mal
+> **Generated:** 2026-08-29 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent internal_audit`
 
 ---
@@ -10,7 +10,7 @@
 
 # OrgOS Operator Policy
 
-**版:** 1.0 · **日付:** 2026-06-28  
+**版:** 1.0 · **日付:** 2026-06-28
 **正本:** 本書（ツール非依存）· データ分類正本: テナント `data/classification-registry.yaml` · [folder_access_policy.md](folder_access_policy.md)
 
 LLM オペレーター（Cursor · Cline · Aider · OpenHands · Steward Chat 等）が OrgOS workspace を操作するときの **必須ルール**。
@@ -76,10 +76,10 @@ orgos escalate complete --id IMP-... --notes "..."
 
 # OpenOrgOS Engineering Constitution
 
-Version: 1.0 · Status: Active  
+Version: 1.0 · Status: Active
 Applies to: All repositories, all languages, all contributors (human and AI)
 
-**Canonical index:** [openorgos-engineering-constitution.md](../openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](../engineering/00-このフォルダについて.md)
+**Canonical index:** [openorgos-engineering-constitution.md](steward/rules/openorgos-engineering-constitution.md) · **Split rules:** [engineering/00-このフォルダについて.md](steward/rules/engineering/00-このフォルダについて.md)
 
 ---
 
@@ -123,18 +123,53 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ---
 
+## 1c. Local LLM ERROR fallback (excerpt)
+
+# Local LLM ERROR Fallback
+
+**版:** 1.0 · **日付:** 2026-08-26
+**ADR:** [0061](../../docs/adr/0061-local-llm-error-fallback.md)
+**実装:** `src/lib/operator-runtime/local-llm-error-fallback.ts`
+
+## 目的
+
+ローカル LLM（Ollama 等 · worker `tier: local`）は、クラウドモデルより grounding が弱い。必要情報が prompt / tool 結果 / 添付に無いとき、拒否エッセイ・「未確認」・プレースホルダを出さず、**機械可読な1行失敗**に統一する。
+
+## 規約
+
+| 条件 | 出力 |
+|------|------|
+| 回答に必要な事実が context に **無い** | `ERROR: <理由>` **1行のみ**（日本語理由可） |
+| 事実が grounded されている | 従来どおり短文 CEO 向け回答 |
+
+例:
+
+```
+ERROR: Today context にバーンレートが含まれていない
+```
+
+## 適用範囲
+
+- Steward Chat（executive_steward · secretary）
+- Work Order dispatch（portable LLM）
+- MCP `steward_ask` · CLI `orgos chat ask`
+
+Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
+
+---
+
 ## 2. Agent · Internal Audit（内部監査）
 
 # Internal Audit Agent
 
-**English role:** Internal Audit · **日本語:** 内部監査  
+**English role:** Internal Audit · **日本語:** 内部監査
 **優先度:** P2 · **報告:** executive_steward · **4 層:** **Agent**
 
 ---
 
 ## 役割
 
-プロセス監査 · ギャップ · 改善提案（独立性）。監査スコープは **統制レジストリ（CTL）** を正本とする。
+有効 ISO の **機械可読 control-map** を読み、証拠と成熟度を検査する。規格ごとの監査 Agent は持たない。規程の改定はしない（独立性）。
 
 ## Primary Folders
 
@@ -142,25 +177,33 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 |------|------|
 | `docs/audit/internal/**` | Primary |
 | `docs/compliance/**` | Primary |
-| `steward/standards/control-framework/**` | Read |
+| `data/compliance/iso-internal-audit.jsonl` | Primary（追記） |
 | `data/compliance/controls.yaml` | Read |
+| `steward/standards/iso/**` | Read（カタログ · control-map） |
+| `steward/standards/control-framework/**` | Read |
 
 ## 使用 Skill
 
 | Skill | ファイル |
 |-------|---------|
+| iso_internal_audit_run | [steward/core/skills/iso_internal_audit_run.md](../skills/iso_internal_audit_run.md) |
+| iso_internal_audit_report | [steward/core/skills/iso_internal_audit_report.md](../skills/iso_internal_audit_report.md) |
 | internal_audit_scope | [steward/core/skills/internal_audit_scope.md](../skills/internal_audit_scope.md) |
 
 ## CLI
 
 ```bash
+orgos iso catalog
+orgos iso maps verify
+orgos iso audit run
+orgos iso audit report
+orgos skills run iso-internal-audit-run
 orgos controls for-agent internal_audit
-orgos controls gap
 ```
 
 ## 要約出力先
 
-`docs/reports/agent-summaries/internal-audit/{YYYY-MM-DD}-{topic}.md`
+`docs/reports/agent-summaries/internal-audit/` · `docs/audit/internal/latest-iso-audit.md`
 
 ## 委譲先
 
@@ -173,37 +216,15 @@ orgos controls gap
 
 - 監査対象の自己承認
 - Compliance 規程改定
-
-## 目的
-
-- 担当領域の監視 · 下書き · 要約（Primary Folder 正本）
-- pulse 後: `docs/reports/agent-summaries/internal-audit/`
-
-## 禁止事項
-
 - 人間承認ゲートの単独実行
 - 担当外 data/docs 編集 · L2/L3 出力
-
-
-## 使用 Skill / CLI
-
-| 手段 | 内容 |
-|------|------|
-| agent_pulse | `orgos agent pulse --agent internal_audit` |
-| internal_audit_scope | registry Skill |
-
-## CLI
-
-```bash
-orgos agent readiness --agent internal_audit
-orgos agent pulse --agent internal_audit
-```
+- ISO 公式本文の都度解釈で仕組みを組み替える
+- 証明書の発行
 
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
-- 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
-
+- 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
 
 
 ---
@@ -211,6 +232,8 @@ orgos agent pulse --agent internal_audit
 ## 3. Skills（参照）
 
 - `internal_audit_scope` · cli · `steward/core/skills/internal_audit_scope.md`
+- `iso_internal_audit_run` · cli · `steward/core/skills/iso_internal_audit_run.md`
+- `iso_internal_audit_report` · cli · `steward/core/skills/iso_internal_audit_report.md`
 
 ---
 

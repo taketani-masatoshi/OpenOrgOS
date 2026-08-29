@@ -10,8 +10,9 @@ import {
   listCatalogModuleIds,
   listTenantScopeCatalogModuleIds,
   loadEnabledModules,
+  MODULE_TO_CLASSIFICATION_AGENT,
+  type ModuleAgentId,
 } from "./modules.js";
-import { loadRegistryFile } from "./utils.js";
 
 export const skillChatArgSchema = z.object({
   name: z.string().min(1),
@@ -61,8 +62,25 @@ function normalizeSkillRuntime(runtime: SkillRegistryEntry["runtime"]): SkillReg
   return runtime === "cursor-only" ? "agent" : runtime;
 }
 
+function remapModuleSkillAgentId(raw: string): string {
+  if (raw in MODULE_TO_CLASSIFICATION_AGENT) {
+    return MODULE_TO_CLASSIFICATION_AGENT[raw as ModuleAgentId];
+  }
+  return raw;
+}
+
 function loadRegistryAt(path: string): SkillRegistryEntry[] {
-  return loadRegistryFile(path, skillRegistrySchema, () => ({ skills: [] })).skills.map((skill) => ({
+  if (!existsSync(path)) return [];
+  const doc = YAML.parse(readFileSync(path, "utf-8")) as {
+    skills?: Array<{ agent_id?: string; [key: string]: unknown }>;
+  };
+  for (const skill of doc.skills ?? []) {
+    if (typeof skill.agent_id === "string") {
+      skill.agent_id = remapModuleSkillAgentId(skill.agent_id);
+    }
+  }
+  const parsed = skillRegistrySchema.parse(doc);
+  return parsed.skills.map((skill) => ({
     ...skill,
     runtime: normalizeSkillRuntime(skill.runtime),
   }));

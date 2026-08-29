@@ -114,7 +114,11 @@ for (const [, , data_paths, docs_paths] of ENTRIES) {
 // acme: minimal yaml for key domains if empty
 const acmeSales = join(acmeRoot, "data/sales/pipeline.yaml");
 if (!existsSync(acmeSales)) {
-  writeFileSync(acmeSales, "version: \"1\"\npipeline: []\n", "utf-8");
+  writeFileSync(
+    acmeSales,
+    'version: "1"\nupdated_at: "2026-07-14T00:00:00+09:00"\ndeals: []\n',
+    "utf-8",
+  );
 }
 
 console.log("✓ _template + acme agent capability seeds");

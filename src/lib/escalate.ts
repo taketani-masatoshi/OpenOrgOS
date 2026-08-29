@@ -26,10 +26,14 @@ import { getTenantId, setTenantId } from "./tenant.js";
 import { currentDate, writeYamlFile, writeTrackedFile } from "./utils.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { createMissionFromWorkOrder, relayWorkOrderComplete } from "./agent-reporting.js";
-import { completeWorkOrderViaState } from "./orchestration/work-order-state.js";
+import { completeWorkOrderViaState, reopenWorkOrderViaState } from "./orchestration/work-order-state.js";
 import { pushQueueEvent } from "./queue-db.js";
 import { assertActiveTenant, assertIntraOrgAgentTarget, assertIntraOrgText } from "./org-boundary.js";
 import { scopesForAgent } from "./org/delegation-scopes.js";
+import {
+  isSecretaryMandate,
+  SECRETARY_CONSULT_NOTE,
+} from "./agent-owner-desks.js";
 
 const PROMPTS_SUBDIR = "prompts";
 
@@ -383,6 +387,40 @@ export function runEscalation(opts: EscalateRunOptions): EscalateRunResult {
   const plan = planWorkOrders(input);
   const fromAgent = opts.fromAgent ?? "executive_steward";
 
+  if (isSecretaryMandate(fromAgent)) {
+    const consultPlan: WorkOrderPlan = {
+      ...plan,
+      agents: ["executive_steward"],
+      multiAgent: false,
+    };
+    if (opts.dryRun) {
+      return { plan: consultPlan, workOrders: [], files: [] };
+    }
+    const id = generateWorkOrderId();
+    const wo = handoffSchema.parse({
+      id,
+      created_at: new Date().toISOString(),
+      from_agent: "secretary",
+      to_agent: "executive_steward",
+      mode: "suggest",
+      task_type: "consult",
+      access: { allowed: true, reason: "secretary consults steward only" },
+      context: { text: input.text ?? input.requirements, path: input.path },
+      status: "pending",
+      subject: input.subject,
+      background: input.background,
+      requirements: input.requirements,
+      deliverables: input.deliverables ?? [],
+      acceptance_criteria: input.acceptance_criteria ?? [],
+      priority: input.priority ?? "P2",
+      tenant: input.tenant,
+      notes: SECRETARY_CONSULT_NOTE,
+    });
+    const files = [writeWorkOrderFiles(wo)];
+    const summaryPath = writeExecutiveSummary(fromAgent, input, [wo]);
+    return { plan: consultPlan, workOrders: [wo], files, summaryPath };
+  }
+
   if (opts.dryRun || plan.agents.length === 0) {
     return { plan, workOrders: [], files: [] };
   }
@@ -535,6 +573,10 @@ export function listWorkOrders(filter?: "pending" | "blocked" | "all"): Handoff[
 
 export function completeWorkOrder(id: string, notes?: string): Handoff {
   return completeWorkOrderViaState(id, notes);
+}
+
+export function reopenWorkOrder(id: string): Handoff {
+  return reopenWorkOrderViaState(id);
 }
 
 export function formatPlanOutput(plan: WorkOrderPlan, dryRun: boolean): string {

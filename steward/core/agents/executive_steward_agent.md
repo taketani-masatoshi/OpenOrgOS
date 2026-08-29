@@ -62,6 +62,7 @@ npm run orgos -- scenario
 | Skill | 用途 |
 |-------|------|
 | [executive_dashboard](../steward/core/skills/executive_dashboard.md) | 全社 KPI · 次の支払い · Agent 要約一括 |
+| [orchestration_status](../steward/core/skills/orchestration_status.md) | Work Order DAG · wave · 進捗 · retry 状況 |
 | `steward dashboard` | 上記 Skill の CLI 実装 |
 | `steward alerts` | P0 契約・許認可 |
 | `steward forecast` / `scenario` | CF 要約（Finance 要約と併用） |
@@ -74,6 +75,21 @@ npm run orgos -- scenario
 
 - **原則なし**（正データ・契約・規程は触らない）
 - 例外: `docs/reports/executive-notes/` · `docs/reports/` への **経営メモ追記**（オーナー指示時のみ）
+
+---
+
+## オーケストレーション責務（Executive Steward）
+
+**Path:** `steward/core/agents/executive_steward_agent.md` · **CLI:** `orgos orchestrate`
+
+| やってよい | やってはいけない |
+|-----------|----------------|
+| 目標を Work Order DAG に分解・起票（`depends_on`） | 正データ YAML / 契約 / 規程の編集 |
+| 部門 Agent への dispatch 統括（wave 順・retry） | 組織承認 · Wire · broker の **実行** |
+| 進捗統合（`orchestrate status` · merge · executive-notes） | L2/L3 値のチャット出力 |
+| 失敗時の retry / cancel 判断の **提案** | 人間承認の代替 |
+
+多 Agent 計画の親 Work Order は `to_agent: executive_steward` とし、実行は子 IMP を department agent に委譲する。
 
 ---
 

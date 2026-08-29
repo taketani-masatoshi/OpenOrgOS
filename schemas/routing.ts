@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { agentId } from "./classification.js";
+import { dateString } from "./common.js";
+import { workKindSchema } from "./dispatch-tower.js";
 
 export const routeBoundarySchema = z.enum(["default", "executive_data", "executive_summaries"]);
 
@@ -121,6 +123,12 @@ export const handoffSchema = z.object({
   tenant: z.string().optional(),
   completion_notes: z.string().optional(),
   invocation: handoffInvocationSchema.optional(),
+  /** Dispatch Tower — work classification and human assignee (ADR 0057). */
+  work_kind: workKindSchema.optional(),
+  assignee_employee_id: z.string().optional(),
+  assignee_operator_id: z.string().optional(),
+  due_date: dateString.optional(),
+  blocked_on: z.string().optional(),
 });
 
 export type HandoffStatus = z.output<typeof handoffStatusSchema>;

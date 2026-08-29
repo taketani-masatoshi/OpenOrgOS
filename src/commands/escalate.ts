@@ -7,6 +7,7 @@ import {
   parseEscalationText,
   planWorkOrders,
   regenerateWorkOrderPrompts,
+  reopenWorkOrder,
   runEscalation,
 } from "../lib/escalate.js";
 import { mergeWorkOrderResults, registerWorkOrderResult } from "../lib/work-order-merge.js";
@@ -159,6 +160,16 @@ export function runEscalateComplete(opts: EscalateCompleteOptions): void {
   }
   console.log(`✓ ${opts.id} → completed`);
   if (opts.notes) console.log(`  notes: ${opts.notes}`);
+}
+
+export interface EscalateReopenOptions {
+  id: string;
+}
+
+export function runEscalateReopen(opts: EscalateReopenOptions): void {
+  requireCliOperator({ permission: "escalate:complete", command: "escalate reopen" });
+  const updated = reopenWorkOrder(opts.id);
+  console.log(`✓ ${opts.id} → ${updated.status}`);
 }
 
 export interface EscalateMergeOptions {

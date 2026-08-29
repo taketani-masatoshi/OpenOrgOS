@@ -11,3 +11,7 @@ Corporate Governance Agent
 ## 出力
 
 `docs/reports/agent-summaries/{slug}/{YYYY-MM-DD}-{topic}.md`
+
+## CLI
+
+`orgos skills run governance_meeting_prep` — `data/governance/meetings.yaml` を集計する。

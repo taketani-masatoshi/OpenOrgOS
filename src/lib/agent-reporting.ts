@@ -10,6 +10,8 @@ import {
   type OrderSource,
 } from "../../schemas/agent-reporting.js";
 import type { Handoff } from "../../schemas/routing.js";
+
+export type { AgentMission } from "../../schemas/agent-reporting.js";
 import { appendAuditEvent } from "./audit-log.js";
 import { ensureAgentWorkspace } from "./agent-workspace.js";
 import { pushQueueEvent } from "./queue-db.js";

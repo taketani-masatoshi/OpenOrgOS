@@ -49,12 +49,15 @@
 
 | 手段 | 内容 |
 |------|------|
+| hr_headcount | `orgos hr headcount` · `orgos hr headcount --json`（L1 在籍人数 · 氏名非出力） |
 | agent_pulse | `orgos agent pulse --agent human_resources` |
 
 
 ## CLI
 
 ```bash
+orgos hr headcount
+orgos hr headcount --json
 orgos agent readiness --agent human_resources
 orgos agent pulse --agent human_resources
 ```
@@ -63,4 +66,5 @@ orgos agent pulse --agent human_resources
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
 - 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
+- Skill: [hr_headcount.md](../skills/hr_headcount.md)
 

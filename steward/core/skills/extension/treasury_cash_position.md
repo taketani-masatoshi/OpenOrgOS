@@ -25,6 +25,7 @@ Treasury Agent
 
 ```bash
 npm run orgos -- jp bank position show
+npm run orgos -- skills run treasury_cash_position
 npm run orgos -- skills run jp-treasury-position
 npm run orgos -- validate
 ```

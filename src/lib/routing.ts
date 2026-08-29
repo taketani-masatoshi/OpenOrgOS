@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import {
@@ -18,11 +18,13 @@ import { MODULE_TO_CLASSIFICATION_AGENT, loadEnabledModules } from "./modules.js
 import { loadSkillRegistry, resolveSkillFilePath } from "./skill-registry.js";
 import { formatSkillReference, isAgentInteractiveSkill } from "./agent-portability.js";
 import { appendAuditEvent } from "./audit-log.js";
-import { currentDate, ensureDocsReportsDir, readYamlFile, writeYamlFile } from "./utils.js";
+import { currentDate, ensureDocsReportsDir, readYamlFile, writeYamlFile, writeTrackedFile } from "./utils.js";
 import { getCatalogAgent, isAgentActive, resolveAgentId } from "./agent-catalog.js";
 
 export { ROUTING_REGISTRY_PATH };
 export const ROUTING_QUEUE_SUBDIR = "routing-queue";
+/** `writeDispatchManifest` co-locates DISP-*.yaml with handoff YAML. */
+export const DISPATCH_MANIFEST_PREFIX = "DISP-";
 
 const EXECUTIVE_DATA_PREFIXES = ["data/executive/", "docs/executive/"];
 
@@ -367,7 +369,7 @@ export function writeHandoffFiles(
   const yamlPath = join(dir, `${handoff.id}.yaml`);
   const mdPath = join(dir, `${handoff.id}.md`);
   writeYamlFile(yamlPath, handoff);
-  writeFileSync(mdPath, formatHandoffMarkdown(handoff, matched), "utf-8");
+  writeTrackedFile(mdPath, formatHandoffMarkdown(handoff, matched));
   if (options.audit !== false) {
     appendAuditEvent({
       event: handoff.task_type === "implement" ? "escalate" : "handoff",
@@ -392,11 +394,16 @@ export function loadHandoffChildren(handoff: Handoff): Handoff[] {
   return (handoff.child_ids ?? []).map((cid) => loadHandoff(cid));
 }
 
+/** Dispatch manifests share the routing-queue dir but are not handoffs. */
+function isHandoffFileName(name: string): boolean {
+  return name.endsWith(".yaml") && !name.startsWith(DISPATCH_MANIFEST_PREFIX);
+}
+
 export function listHandoffs(): Handoff[] {
   const dir = routingQueueDir();
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter((f) => f.endsWith(".yaml"))
+    .filter(isHandoffFileName)
     .map((f) => readYamlFile(join(dir, f), handoffSchema))
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }

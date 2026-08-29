@@ -39,6 +39,30 @@ skills:
     handler: internal_audit_scope
     description: CTL ベース内部監査スコープ
     agent_id: internal_audit
+  - id: iso_internal_audit_run
+    file: iso_internal_audit_run.md
+    runtime: cli
+    cli_command: iso-internal-audit-run
+    handler: iso_internal_audit_run
+    description: 有効 ISO の control-map を検査し監査ログを追記
+    agent_id: internal_audit
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: ISO内部監査を実行
+  - id: iso_internal_audit_report
+    file: iso_internal_audit_report.md
+    runtime: cli
+    cli_command: iso-internal-audit-report
+    handler: iso_internal_audit_report
+    description: 監査ログから経営向け適合レポートを生成
+    agent_id: internal_audit
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: ISO内部監査レポート
   - id: company_events_chain_verify
     file: company_events_chain_verify.md
     runtime: cli
@@ -133,6 +157,20 @@ skills:
     cli_command: trial-balance
     handler: trial_balance
     description: 試算表・月次突合
+    agent_id: accounting
+  - id: journal_export_csv
+    file: journal_export_csv.md
+    runtime: cli
+    cli_command: journal-export-csv
+    handler: journal_export_csv
+    description: 仕訳 YAML → CSV ミラー（records/仕訳一覧.csv）
+    agent_id: accounting
+  - id: trial_balance_export_csv
+    file: trial_balance_export_csv.md
+    runtime: cli
+    cli_command: trial-balance-export-csv
+    handler: trial_balance_export_csv
+    description: 試算表 → CSV ミラー（records/試算表.csv）
     agent_id: accounting
   - id: depreciation_run
     file: depreciation_run.md
@@ -479,6 +517,19 @@ skills:
     required_options: [channel, body]
     description: 対外連絡下書き + 承認起案
     agent_id: mail_outbound
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: 対外連絡下書き
+  - id: correspondence_compose
+    file: correspondence_compose.md
+    runtime: cli
+    cli_command: correspondence-compose
+    handler: correspondence_compose
+    required_options: [mail_id]
+    description: 事実パック + LLM 返信下書き（送信しない）
+    agent_id: mail_outbound
   - id: mail_intake_triage
     file: mail_intake_triage.md
     runtime: cli
@@ -494,6 +545,11 @@ skills:
     required_options: [id]
     description: 承認済みメール送信（SMTP）
     agent_id: mail_outbound
+    chat:
+      enabled: true
+      kind: approval
+      permission: chat:approve
+      label: 承認済みメール送信
   - id: slack_notify
     file: slack_notify.md
     runtime: cli
@@ -716,22 +772,30 @@ skills:
     agent_id: human_resources
   - id: governance_meeting_prep
     file: extension/governance_meeting_prep.md
-    runtime: agent
+    runtime: cli
+    cli_command: governance-meeting-prep
+    handler: governance_meeting_prep
     description: 株主総会 · 取締役会準備
     agent_id: corporate_governance
   - id: governance_register_review
     file: extension/governance_register_review.md
-    runtime: agent
+    runtime: cli
+    cli_command: governance-register-review
+    handler: governance_register_review
     description: ガバナンス台帳
     agent_id: corporate_governance
   - id: procurement_order_review
     file: extension/procurement_order_review.md
-    runtime: agent
+    runtime: cli
+    cli_command: procurement-order-review
+    handler: procurement_order_review
     description: 発注レビュー
     agent_id: procurement
   - id: procurement_vendor_eval
     file: extension/procurement_vendor_eval.md
-    runtime: agent
+    runtime: cli
+    cli_command: procurement-vendor-eval
+    handler: procurement_vendor_eval
     description: 供給者評価
     agent_id: procurement
   - id: gov_subsidy_eligibility
@@ -846,12 +910,16 @@ skills:
     agent_id: recruiting
   - id: risk_register_review
     file: extension/risk_register_review.md
-    runtime: agent
+    runtime: cli
+    cli_command: risk-register-review
+    handler: risk_register_review
     description: リスク台帳
     agent_id: risk_insurance
   - id: risk_insurance_renewal
     file: extension/risk_insurance_renewal.md
-    runtime: agent
+    runtime: cli
+    cli_command: risk-insurance-renewal
+    handler: risk_insurance_renewal
     description: 保険更新
     agent_id: risk_insurance
   - id: analytics_kpi_scorecard
@@ -927,12 +995,16 @@ skills:
     agent_id: esg_sustainability
   - id: privacy_impact_review
     file: extension/privacy_impact_review.md
-    runtime: agent
+    runtime: cli
+    cli_command: privacy-impact-review
+    handler: privacy_impact_review
     description: PIMS · DPIA
     agent_id: privacy_officer
   - id: privacy_data_inventory
     file: extension/privacy_data_inventory.md
-    runtime: agent
+    runtime: cli
+    cli_command: privacy-data-inventory
+    handler: privacy_data_inventory
     description: データ棚卸
     agent_id: privacy_officer
   - id: treasury_cash_position

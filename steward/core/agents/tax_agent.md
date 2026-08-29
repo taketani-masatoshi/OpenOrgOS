@@ -14,7 +14,7 @@
 | パス | 権限 |
 |------|------|
 | `docs/company/tax/**` | Primary |
-| `data/finance/tax-profiles.yaml` | Primary |
+| `data/finance/tax-profile.yaml` | Primary |
 
 ## 要約出力先
 
@@ -23,6 +23,8 @@
 ## 使用 Skill
 
 - tax_filing_prep
+- consumption_tax_calc
+- depreciation_run（固定資産税概算連携）
 
 ## 委譲先
 
@@ -60,6 +62,10 @@
 ```bash
 orgos agent readiness --agent tax
 orgos agent pulse --agent tax
+orgos tax calendar
+orgos tax consumption --period YYYY-MM
+orgos tax consumption-check
+orgos ledger journal backfill-tax
 ```
 
 ## コンテキスト

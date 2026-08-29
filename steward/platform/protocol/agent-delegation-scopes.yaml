@@ -28,6 +28,12 @@ agents:
     - code.implement
   sales_lead:
     - sales.pipeline
+  sales_inbound:
+    - sales.inbound
+  sales_outbound:
+    - sales.outbound
+  customer_success:
+    - customer.success
   marketing_lead:
     - marketing.plan
   legal:
@@ -41,6 +47,10 @@ agents:
   corporate_governance:
     - governance.meeting
     - governance.resolution
+  investor_relations:
+    - ir.cap_table
+    - ir.disclosure
+    - ir.materials.draft
   accounting:
     - accounting.invoice
     - accounting.payment

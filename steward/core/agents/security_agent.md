@@ -32,8 +32,11 @@
 
 ```bash
 npm run orgos -- classification check
+orgos guard list
 orgos controls for-agent security
 ```
+
+Grant 発行・失効は人間（`guard:admin`）。Security は台帳の監査のみ。秘密鍵はチャットに出さない。
 
 ## 要約出力先
 

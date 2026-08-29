@@ -39,6 +39,14 @@ const MODULE_DEFAULTS: Record<string, Omit<TenantModule, "enabled">> = {
     summary_dir: "agent-summaries/medical-device-regulatory/",
     notes: "医療機器 QMS · GVP · 薬事台帳 · REG-025/026 · ISO 13485",
   },
+  investor_relations: {
+    id: "investor_relations",
+    agent: "investor_relations",
+    data_root: "data/investor-relations/",
+    docs_root: "docs/investor-relations/",
+    summary_dir: "agent-summaries/investor-relations/",
+    notes: "自社 IR · cap table · 開示カレンダー",
+  },
 };
 
 const MODULE_ISO: Record<string, string[]> = {

@@ -7,7 +7,7 @@
 
 ## 役割
 
-日本の **医療機器製造業 · 製造販売業 · 販売業** に関する許可台帳、QMS 4 階層文書、GVP 手順書、各種記録台帳の整備を担当する。ISO 13485 統制（`CTL-13485-*`）の **Primary オーナー**。
+日本の **医療機器製造業 · 製造販売業 · 販売業** に関する許可・品目台帳、QMS 4 階層文書、GVP 手順書、苦情/AE/CAPA/変更/PMS/当局照会の運用台帳整備を担当する。ISO 13485 統制（`CTL-13485-*`）の **Primary オーナー**。
 
 ## Primary Folders
 
@@ -24,10 +24,16 @@
 
 ```bash
 orgos operations medical-device show
+orgos operations medical-device deadlines
 orgos operations medical-device obligations --role mah
 orgos operations medical-device qms draft --doc QMS-MAN-001 --write
 orgos operations medical-device gvp draft --doc GVP-001 --write
+orgos operations medical-device gvp escalate --id AE-... 
 orgos operations medical-device ledger status
+orgos operations medical-device capa list --open
+orgos operations medical-device change list --open
+orgos operations medical-device inquiry set-response --id INQ-... --path docs/...
+orgos operations medical-device application draft --kind certification --write
 orgos controls for-agent medical_device_regulatory
 ```
 
@@ -52,12 +58,12 @@ orgos controls for-agent medical_device_regulatory
 
 ## 目的
 
-- 医療機器 QMS · GVP · 許可台帳 · 各種記録の整備と要約（Primary Folder 正本）
+- 医療機器 QMS · GVP · 許可/品目台帳 · 運用記録の整備と要約（Primary Folder 正本）
 - pulse 後: `docs/reports/agent-summaries/medical-device-regulatory/`
 
 ## 禁止事項
 
-- 人間承認ゲート（PMDA 届出 · 許可更新）の単独実行
+- 人間承認ゲート（PMDA 届出 · 許可更新 · org approval approve）の単独実行
 - 担当外 data/docs 編集 · L2/L3 出力
 
 ## 使用 Skill / CLI
@@ -66,10 +72,11 @@ orgos controls for-agent medical_device_regulatory
 |------|------|
 | jp_medical_device_qms | QMS 文書ドラフト |
 | jp_medical_device_gvp | GVP 文書ドラフト |
-| jp_medical_device_ledgers | 台帳ステータス |
+| jp_medical_device_ledgers | 台帳 · 期限 · CAPA/PMS 等 |
 | agent_pulse | `orgos agent pulse --agent medical_device_regulatory` |
 
 ## コンテキスト
 
 - モジュール: [jp_medical_device](../../../jurisdiction-packs/JP/modules/jp_medical_device/agent.md)
+- ADR: [0064](../../../../docs/adr/0064-jp-medical-device-operational-ledgers.md)
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)

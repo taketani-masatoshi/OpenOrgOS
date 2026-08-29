@@ -8,6 +8,7 @@ export type { ModuleCliBundle, ModuleCliContext } from "./module-cli-types.js";
 import { travelBookingCli } from "../../steward/modules/travel_booking/cli/register.js";
 import { hospitalityCli } from "../../steward/modules/hospitality/cli/register.js";
 import { languageBridgeCli } from "../../steward/modules/language_bridge/cli/register.js";
+import { salesCli } from "../../steward/modules/sales/cli/register.js";
 import { professional_servicesCli } from "../../steward/modules/professional_services/cli/register.js";
 import { saas_subscriptionCli } from "../../steward/modules/saas_subscription/cli/register.js";
 import { property_managementCli } from "../../steward/modules/property_management/cli/register.js";
@@ -32,17 +33,30 @@ import { jp_minpakuCli } from "../../steward/jurisdiction-packs/JP/modules/jp_mi
 import { jp_permit_applicationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_permit_application/cli/register.js";
 import { jp_tax_corporateCli } from "../../steward/jurisdiction-packs/JP/modules/jp_tax_corporate/cli/register.js";
 import { jp_tax_consumptionCli } from "../../steward/jurisdiction-packs/JP/modules/jp_tax_consumption/cli/register.js";
+import { jp_consumption_refundCli } from "../../steward/jurisdiction-packs/JP/modules/jp_consumption_refund/cli/register.js";
 import { jp_invoice_qualifiedCli } from "../../steward/jurisdiction-packs/JP/modules/jp_invoice_qualified/cli/register.js";
 import { jp_withholding_statutoryCli } from "../../steward/jurisdiction-packs/JP/modules/jp_withholding_statutory/cli/register.js";
 import { jp_payrollCli } from "../../steward/jurisdiction-packs/JP/modules/jp_payroll/cli/register.js";
 import { jp_social_insuranceCli } from "../../steward/jurisdiction-packs/JP/modules/jp_social_insurance/cli/register.js";
+import { jpCarbonNeutral2050Cli } from "../../steward/jurisdiction-packs/JP/modules/jp_carbon_neutral_2050/cli/register.js";
+import { jpPrivacyPolicyCli } from "../../steward/jurisdiction-packs/JP/modules/jp_privacy_policy/cli/register.js";
+import { jpWomenEmpowermentCli } from "../../steward/jurisdiction-packs/JP/modules/jp_women_empowerment/cli/register.js";
 import { venueBookingCli } from "../../steward/modules/venue_booking/cli/register.js";
 import { rentalCli } from "../../steward/modules/rental/cli/register.js";
+import { constructionCli } from "../../steward/modules/construction/cli/register.js";
+import { logisticsCli } from "../../steward/modules/logistics/cli/register.js";
+import { retailStoreCli } from "../../steward/modules/retail_store/cli/register.js";
+import { restaurantCli } from "../../steward/modules/restaurant/cli/register.js";
+import { clinicCli } from "../../steward/modules/clinic/cli/register.js";
+import { educationCli } from "../../steward/modules/education/cli/register.js";
+import { eventSpaceCli } from "../../steward/modules/event_space/cli/register.js";
+import { pdfEsignCli } from "../../steward/modules/pdf_esign/cli/register.js";
 
 const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   travelBookingCli,
   hospitalityCli,
   languageBridgeCli,
+  salesCli,
   professional_servicesCli,
   saas_subscriptionCli,
   property_managementCli,
@@ -57,6 +71,14 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   event_operationsCli,
   venueBookingCli,
   rentalCli,
+  constructionCli,
+  logisticsCli,
+  retailStoreCli,
+  restaurantCli,
+  clinicCli,
+  educationCli,
+  eventSpaceCli,
+  pdfEsignCli,
   jp_subsidy_applicationCli,
   jp_trademark_applicationCli,
   jp_corporate_registrationCli,
@@ -69,10 +91,14 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   jp_permit_applicationCli,
   jp_tax_corporateCli,
   jp_tax_consumptionCli,
+  jp_consumption_refundCli,
   jp_invoice_qualifiedCli,
   jp_withholding_statutoryCli,
   jp_payrollCli,
   jp_social_insuranceCli,
+  jpCarbonNeutral2050Cli,
+  jpPrivacyPolicyCli,
+  jpWomenEmpowermentCli,
 ];
 
 export function listModuleCliBundles(): ModuleCliBundle[] {

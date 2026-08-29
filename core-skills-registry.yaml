@@ -1,0 +1,1047 @@
+skills:
+  - id: contract_expiry_check
+    file: contract_expiry_check.md
+    runtime: cli
+    cli_command: contract-expiry
+    handler: contract_expiry_check
+    description: 契約期限アラート（90日）
+    agent_id: contract
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 契約期限アラート
+      args:
+        - { name: days, type: number, required: false }
+  - id: permit_expiry_check
+    file: permit_expiry_check.md
+    runtime: cli
+    cli_command: permit-expiry
+    handler: permit_expiry_check
+    description: 許認可 · 保険 INDEX · draft CTR
+    agent_id: compliance
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 許認可・保険期限
+  - id: iso_control_review
+    file: iso_control_review.md
+    runtime: cli
+    cli_command: iso-control-review
+    handler: iso_control_review
+    description: ISO × REG 統制ギャップ · 成熟度
+    agent_id: compliance
+  - id: internal_audit_scope
+    file: internal_audit_scope.md
+    runtime: cli
+    cli_command: internal-audit-scope
+    handler: internal_audit_scope
+    description: CTL ベース内部監査スコープ
+    agent_id: internal_audit
+  - id: company_events_chain_verify
+    file: company_events_chain_verify.md
+    runtime: cli
+    cli_command: company-events-chain-verify
+    handler: company_events_chain_verify
+    description: 会社イベントハッシュチェーン整合検証
+    agent_id: records_audit
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 会社イベントチェーン検証
+  - id: company_events_weekly_attest
+    file: company_events_weekly_attest.md
+    runtime: cli
+    cli_command: company-events-weekly-attest
+    handler: company_events_weekly_attest
+    description: 週次チェーン検証後バッチ電子署名
+    agent_id: records_audit
+  - id: company_events_monthly_audit
+    file: company_events_monthly_audit.md
+    runtime: cli
+    cli_command: company-events-monthly-audit
+    handler: company_events_monthly_audit
+    description: 月次監査レポート + 人間通知
+    agent_id: records_audit
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:approve
+      label: 会社イベント月次監査
+  - id: monthly_close
+    file: monthly_close.md
+    runtime: cli
+    cli_command: monthly-close
+    handler: monthly_close
+    description: 月次締めサマリ
+    agent_id: finance
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 月次締めサマリ
+      args:
+        - { name: month, type: month, required: false }
+  - id: variance_analysis
+    file: variance_analysis.md
+    runtime: cli
+    cli_command: variance
+    handler: variance_analysis
+    description: 予実 vs 月次 YAML 差異
+    agent_id: finance
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 予実差異
+  - id: noi_analysis
+    file: noi_analysis.md
+    runtime: cli
+    cli_command: noi-analysis
+    handler: noi_analysis
+    description: 物件別 NOI（賃料収入 − 運営費）
+    agent_id: finance
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: NOI 分析
+  - id: expense_claim_ops
+    file: expense_claim_ops.md
+    runtime: cli
+    cli_command: expense-claim
+    handler: expense_claim_ops
+    description: 経費精算ワークフロー（取込・承認・精算）
+    agent_id: accounting
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: 経費精算
+  - id: journal_post
+    file: journal_post.md
+    runtime: cli
+    cli_command: journal-post
+    handler: journal_post
+    description: 仕訳起票（手動 YAML / 減価償却）
+    agent_id: accounting
+  - id: trial_balance
+    file: trial_balance.md
+    runtime: cli
+    cli_command: trial-balance
+    handler: trial_balance
+    description: 試算表・月次突合
+    agent_id: accounting
+  - id: journal_export_csv
+    file: journal_export_csv.md
+    runtime: cli
+    cli_command: journal-export-csv
+    handler: journal_export_csv
+    description: 仕訳 YAML → CSV ミラー（records/仕訳一覧.csv）
+    agent_id: accounting
+  - id: trial_balance_export_csv
+    file: trial_balance_export_csv.md
+    runtime: cli
+    cli_command: trial-balance-export-csv
+    handler: trial_balance_export_csv
+    description: 試算表 → CSV ミラー（records/試算表.csv）
+    agent_id: accounting
+  - id: depreciation_run
+    file: depreciation_run.md
+    runtime: cli
+    cli_command: depreciation-run
+    handler: depreciation_run
+    description: 減価償却検算と仕訳起票
+    agent_id: accounting
+  - id: consumption_tax_calc
+    file: consumption_tax_calc.md
+    runtime: cli
+    cli_command: consumption-tax-calc
+    handler: consumption_tax_calc
+    description: 消費税集計
+    agent_id: tax
+  - id: payroll_calc
+    file: payroll_calc.md
+    runtime: cli
+    cli_command: payroll-calc
+    handler: payroll_calc
+    description: 給与計算サマリ
+    agent_id: human_resources
+  - id: annual_close
+    file: annual_close.md
+    runtime: cli
+    cli_command: annual-close
+    handler: annual_close
+    description: 年次決算・GL 連動報告書
+    agent_id: accounting
+  - id: p0_closing
+    file: p0_closing.md
+    runtime: cli
+    cli_command: p0
+    handler: p0_closing
+    description: P0 決算前ブロッカー
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: P0 ブロッカー
+  - id: daily_ops
+    file: daily_ops.md
+    runtime: cli
+    cli_command: daily
+    handler: daily_ops
+    description: 日次運用（成熟度 + P0 + 契約）
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 日次運用
+  - id: executive_dashboard
+    file: executive_dashboard.md
+    runtime: cli
+    cli_command: dashboard
+    handler: executive_dashboard
+    description: 経営ダッシュボード — pipeline/dashboard CLI
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:approve
+      label: 経営ダッシュボード生成
+  - id: tax_filing_prep
+    file: ../../jurisdiction-packs/JP/skills/tax_filing_prep.md
+    runtime: cli
+    cli_command: tax-filing-prep
+    handler: tax_filing_prep
+    description: 税務申告準備（JP 法域 adapter）
+    agent_id: tax
+  - id: cashflow_forecast
+    file: cashflow_forecast.md
+    runtime: cli
+    cli_command: forecast
+    handler: cashflow_forecast
+    description: CF 予測
+    agent_id: finance
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: キャッシュフロー予測
+  - id: change_plan
+    file: change_plan.md
+    runtime: cli
+    cli_command: change-plan
+    handler: change_plan
+    description: 等級付き変更提案（ローカル LLM 向けゲート）
+    agent_id: operations
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 変更プラン
+      keywords:
+        - change plan
+        - 変更提案
+        - grade A
+      args:
+        - { name: body, type: string, required: false }
+  - id: change_apply
+    file: change_apply.md
+    runtime: cli
+    cli_command: change-apply
+    handler: change_apply
+    description: 変更提案の dry-run / apply（確認カード必須）
+    agent_id: operations
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: 変更適用
+      keywords:
+        - change apply
+        - 変更適用
+      args:
+        - { name: id, type: string, required: true }
+        - { name: write, type: boolean, required: false }
+  - id: contract_register
+    file: contract_register.md
+    runtime: cli
+    cli_command: contract-register
+    handler: contract_register
+    description: 契約台帳整備
+    agent_id: contract
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 契約台帳サマリ
+  - id: hr_headcount
+    file: hr_headcount.md
+    runtime: cli
+    cli_command: hr-headcount
+    handler: hr_headcount
+    description: 在籍人員 L1 集計（氏名非出力）
+    agent_id: human_resources
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 在籍人員
+  - id: tenant_config_propose
+    file: tenant_config_propose.md
+    runtime: cli
+    cli_command: tenant-config-propose
+    handler: tenant_config_propose
+    description: modules/standards の有効化変更を承認付きで提案
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: 設定変更の提案
+      args:
+        - { name: target, type: string, required: true }
+        - { name: id, type: string, required: true }
+        - { name: enabled, type: boolean, required: true }
+  - id: capex_planning
+    file: capex_planning.md
+    runtime: cli
+    cli_command: capex-planning
+    handler: capex_planning
+    description: CAPEX 計画
+    agent_id: finance
+  - id: schedule_management
+    file: schedule_management.md
+    runtime: cli
+    cli_command: schedule
+    handler: schedule_management
+    description: スケジュール管理
+    agent_id: secretary
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: カレンダー件数
+  - id: schedule_coordination
+    file: schedule_coordination.md
+    runtime: cli
+    cli_command: schedule-coordination
+    handler: schedule_coordination
+    description: 多者日程調整（メール往復）
+    agent_id: secretary
+  - id: one_on_one_prep
+    file: one_on_one_prep.md
+    runtime: cli
+    cli_command: one-on-one
+    handler: one_on_one_prep
+    description: 1-on-1 準備
+    agent_id: secretary
+  - id: workspace_validate
+    file: workspace_validate.md
+    runtime: cli
+    cli_command: validate
+    handler: workspace_validate
+    description: テナント YAML 検証（read-only レポート）
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: validate
+  - id: workspace_doctor
+    file: workspace_doctor.md
+    runtime: cli
+    cli_command: doctor
+    handler: workspace_doctor
+    description: インストール・本番ゲート診断
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: doctor
+  - id: deps_check
+    file: deps_check.md
+    runtime: cli
+    cli_command: deps-check
+    handler: deps_check
+    description: 依存グラフ整合チェック
+    agent_id: operations
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 依存チェック
+  - id: integrations_status
+    file: integrations_status.md
+    runtime: cli
+    cli_command: integrations-status
+    handler: integrations_status
+    description: 外部連携ステータス
+    agent_id: setup
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 連携ステータス
+  - id: integration_brief
+    file: integration_brief.md
+    runtime: cli
+    cli_command: integration-brief
+    handler: integration_brief
+    description: Integration Agent 未読 module-message ブリーフ
+    agent_id: integration
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: Integration ブリーフ
+      args:
+        - { name: agent, type: string, required: false }
+  - id: agent_pulse_summary
+    file: agent_pulse_summary.md
+    runtime: cli
+    cli_command: agent-pulse
+    handler: agent_pulse_summary
+    description: Agent pulse サマリ
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: Agent pulse
+  - id: escalate_work_order
+    file: escalate_work_order.md
+    runtime: cli
+    cli_command: escalate-run
+    handler: escalate_work_order
+    required_options: [body]
+    description: Work Order 起票（escalate run）
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: write
+      permission: escalate:run
+      label: Work Order 起票
+      args:
+        - { name: body, type: string, required: true }
+  - id: orchestration_status
+    file: orchestration_status.md
+    runtime: cli
+    cli_command: orchestration-status
+    handler: orchestration_status
+    required_options: [id]
+    description: オーケストレーション DAG / 進捗ステータス
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: オーケストレーション進捗
+      args:
+        - { name: id, type: string, required: true }
+  - id: broker_transfer_gate
+    file: broker_transfer_gate.md
+    runtime: cli
+    cli_command: broker-transfer
+    deferred: "broker transfer requires explicit human approval via orgos broker transfer"
+    description: 振込実行（人間ゲート）
+    agent_id: finance
+    chat:
+      enabled: true
+      kind: approval
+      permission: broker:transfer
+      label: 振込実行
+  - id: wire_send_gate
+    file: wire_send_gate.md
+    runtime: cli
+    cli_command: wire-send
+    deferred: "wire send requires explicit human approval via Wire Console or protocol notice approve"
+    description: Wire 送信（人間ゲート）
+    agent_id: secretary
+    chat:
+      enabled: true
+      kind: approval
+      permission: protocol:approve
+      label: Wire 送信
+  - id: org_approval_gate
+    file: org_approval_gate.md
+    runtime: cli
+    cli_command: org-approval-approve
+    deferred: "org approval requires explicit human gate via chat approve or org approval approve"
+    description: 組織承認（人間ゲート）
+    agent_id: executive_steward
+    chat:
+      enabled: true
+      kind: approval
+      permission: chat:approve
+      label: 組織承認
+  - id: external_correspondence
+    file: external_correspondence.md
+    runtime: agent
+    description: 社外連絡下書き
+    agent_id: mail_outbound
+  - id: correspondence_draft
+    file: correspondence_draft.md
+    runtime: cli
+    cli_command: correspondence-draft
+    handler: correspondence_draft
+    required_options: [channel, body]
+    description: 対外連絡下書き + 承認起案
+    agent_id: mail_outbound
+  - id: mail_intake_triage
+    file: mail_intake_triage.md
+    runtime: cli
+    cli_command: mail-intake-triage
+    handler: mail_intake_triage
+    description: 受信メールルール分類 + triage queue
+    agent_id: mail_intake
+  - id: correspondence_send
+    file: correspondence_send.md
+    runtime: cli
+    cli_command: correspondence-send
+    handler: correspondence_send
+    required_options: [id]
+    description: 承認済みメール送信（SMTP）
+    agent_id: mail_outbound
+  - id: slack_notify
+    file: slack_notify.md
+    runtime: cli
+    cli_command: slack-notify
+    handler: slack_notify
+    required_options: [id]
+    description: 承認済み Slack 通知
+    agent_id: mail_outbound
+  - id: tenant_integrations_setup
+    file: tenant_integrations_setup.md
+    runtime: cli
+    cli_command: tenant-integrations-setup
+    handler: tenant_integrations_setup
+    required_options: [answers]
+    description: テナント integrations 初回設定ウィザード
+    agent_id: setup
+  - id: platform_implement_guide
+    file: platform_implement_guide.md
+    runtime: cli
+    cli_command: platform-implement-guide
+    handler: platform_implement_guide
+    description: "Deprecated advisor alias — prefer orgos platform extension-check / registry-verify"
+    agent_id: platform_guide
+  - id: coo_work_order_triage
+    file: extension/coo_work_order_triage.md
+    runtime: cli
+    cli_command: escalate
+    deferred: "parent command; a complete work-order subcommand and arguments are required"
+    description: Work Order 優先度付け
+    agent_id: coo
+  - id: coo_routing_review
+    file: extension/coo_routing_review.md
+    runtime: cli
+    cli_command: routing-queue
+    deferred: "legacy display token has no executable CLI command"
+    description: routing-queue レビュー
+    agent_id: coo
+  - id: cto_architecture_review
+    file: extension/cto_architecture_review.md
+    runtime: agent
+    description: アーキテクチャレビュー
+    agent_id: cto
+  - id: cto_tech_radar
+    file: extension/cto_tech_radar.md
+    runtime: cli
+    cli_command: cto-tech-radar
+    handler: cto_tech_radar
+    description: 技術選定 · 負債スキャン
+    agent_id: cto
+  - id: engineering_code_review
+    file: extension/engineering_code_review.md
+    runtime: agent
+    description: コードレビュー準備
+    agent_id: engineering
+  - id: engineering_standards_check
+    file: extension/engineering_standards_check.md
+    runtime: cli
+    cli_command: platform-registry-verify
+    handler: engineering_standards_check
+    description: コーディング規約整合
+    agent_id: engineering
+  - id: design_lead_review
+    file: extension/design_lead_review.md
+    runtime: agent
+    description: デザインレビュー
+    agent_id: design_lead
+  - id: design_system_audit
+    file: extension/design_system_audit.md
+    runtime: agent
+    description: デザインシステム監査
+    agent_id: design_lead
+  - id: design_asset_inventory
+    file: extension/design_asset_inventory.md
+    runtime: agent
+    description: 素材 · 資産棚卸
+    agent_id: design
+  - id: design_ui_spec_draft
+    file: extension/design_ui_spec_draft.md
+    runtime: agent
+    description: UI 仕様下書き
+    agent_id: design
+  - id: sales_pipeline_review
+    file: extension/sales_pipeline_review.md
+    runtime: cli
+    cli_command: sales-pipeline
+    handler: sales_pipeline_review
+    description: パイプライン分析
+    agent_id: sales_lead
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 営業パイプライン
+  - id: sales_forecast_prep
+    file: extension/sales_forecast_prep.md
+    runtime: cli
+    cli_command: sales-forecast
+    handler: sales_forecast_prep
+    description: 受注予測
+    agent_id: sales_lead
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 受注予測
+  - id: sales_outbound_list_review
+    file: extension/sales_outbound_list_review.md
+    runtime: cli
+    cli_command: sales-outbound
+    handler: sales_outbound_list_review
+    description: リスト精査
+    agent_id: sales_outbound
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: アウトバウンドリスト精査
+  - id: sales_outreach_draft
+    file: extension/sales_outreach_draft.md
+    runtime: agent
+    description: アウトバウンド文案
+    agent_id: sales_outbound
+  - id: sales_inbound_triage
+    file: extension/sales_inbound_triage.md
+    runtime: cli
+    cli_command: sales-inbound
+    handler: sales_inbound_triage
+    description: 問合せトリアージ
+    agent_id: sales_inbound
+  - id: sales_inquiry_response
+    file: extension/sales_inquiry_response.md
+    runtime: agent
+    description: 初回回答下書き
+    agent_id: sales_inbound
+  - id: cs_health_check
+    file: extension/cs_health_check.md
+    runtime: cli
+    cli_command: cs-health
+    handler: cs_health_check
+    description: 顧客ヘルスチェック
+    agent_id: customer_success
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 顧客ヘルス
+  - id: cs_renewal_risk
+    file: extension/cs_renewal_risk.md
+    runtime: cli
+    cli_command: cs-renewal
+    handler: cs_renewal_risk
+    description: 更新リスク
+    agent_id: customer_success
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 更新リスク
+  - id: marketing_content_calendar
+    file: extension/marketing_content_calendar.md
+    runtime: agent
+    description: コンテンツカレンダー
+    agent_id: marketing_lead
+  - id: marketing_campaign_brief
+    file: extension/marketing_campaign_brief.md
+    runtime: agent
+    description: キャンペーン企画書
+    agent_id: marketing_lead
+  - id: social_calendar
+    file: extension/social_calendar.md
+    runtime: agent
+    description: 投稿カレンダー
+    agent_id: social_media
+  - id: social_post_draft
+    file: extension/social_post_draft.md
+    runtime: agent
+    description: 投稿文案
+    agent_id: social_media
+  - id: personal_budget_review
+    file: extension/personal_budget_review.md
+    runtime: agent
+    description: 個人予算レビュー
+    agent_id: personal_finance
+  - id: personal_expense_categorize
+    file: extension/personal_expense_categorize.md
+    runtime: agent
+    description: 支出分類
+    agent_id: personal_finance
+  - id: legal_register_review
+    file: extension/legal_register_review.md
+    runtime: agent
+    description: 法務登記 · 規程整合
+    agent_id: legal
+  - id: legal_clause_check
+    file: extension/legal_clause_check.md
+    runtime: agent
+    description: 契約条項チェック
+    agent_id: legal
+  - id: security_control_review
+    file: extension/security_control_review.md
+    runtime: agent
+    description: 統制レビュー
+    agent_id: security
+  - id: security_classification_audit
+    file: extension/security_classification_audit.md
+    runtime: cli
+    cli_command: classification-check
+    handler: security_classification_audit
+    description: 分類監査
+    agent_id: security
+  - id: hr_policy_review
+    file: extension/hr_policy_review.md
+    runtime: agent
+    description: 就業規則 · HR ポリシー
+    agent_id: human_resources
+  - id: hr_labor_compliance
+    file: extension/hr_labor_compliance.md
+    runtime: agent
+    description: 労務コンプライアンス
+    agent_id: human_resources
+  - id: governance_meeting_prep
+    file: extension/governance_meeting_prep.md
+    runtime: cli
+    cli_command: governance-meeting-prep
+    handler: governance_meeting_prep
+    description: 株主総会 · 取締役会準備
+    agent_id: corporate_governance
+  - id: governance_register_review
+    file: extension/governance_register_review.md
+    runtime: cli
+    cli_command: governance-register-review
+    handler: governance_register_review
+    description: ガバナンス台帳
+    agent_id: corporate_governance
+  - id: procurement_order_review
+    file: extension/procurement_order_review.md
+    runtime: cli
+    cli_command: procurement-order-review
+    handler: procurement_order_review
+    description: 発注レビュー
+    agent_id: procurement
+  - id: procurement_vendor_eval
+    file: extension/procurement_vendor_eval.md
+    runtime: cli
+    cli_command: procurement-vendor-eval
+    handler: procurement_vendor_eval
+    description: 供給者評価
+    agent_id: procurement
+  - id: gov_subsidy_eligibility
+    file: extension/gov_subsidy_eligibility.md
+    runtime: cli
+    cli_command: operations subsidy
+    deferred: "parent command; select a complete subsidy subcommand"
+    description: 補助金適格性
+    agent_id: government_affairs
+  - id: gov_regulatory_watch
+    file: extension/gov_regulatory_watch.md
+    runtime: agent
+    description: 規制動向ウォッチ
+    agent_id: government_affairs
+  - id: ip_portfolio_review
+    file: extension/ip_portfolio_review.md
+    runtime: cli
+    cli_command: operations trademark
+    deferred: "parent command; select checklist or draft"
+    description: IP ポートフォリオ
+    agent_id: intellectual_property
+  - id: ip_trademark_status
+    file: extension/ip_trademark_status.md
+    runtime: agent
+    description: 商標ステータス
+    agent_id: intellectual_property
+  - id: ga_office_ops_check
+    file: extension/ga_office_ops_check.md
+    runtime: agent
+    description: 総務オペ確認
+    agent_id: general_affairs
+  - id: ga_vendor_contract_review
+    file: extension/ga_vendor_contract_review.md
+    runtime: agent
+    description: 業者契約レビュー
+    agent_id: general_affairs
+  - id: pmo_portfolio
+    file: pmo_portfolio.md
+    runtime: cli
+    cli_command: pmo-portfolio
+    handler: pmo_portfolio
+    description: 案件ポートフォリオ · RAG 集計（金額・個人名なし）
+    agent_id: project_management
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 案件状況
+  - id: pm_status_review
+    file: extension/pm_status_review.md
+    runtime: agent
+    description: CEO 向け案件叙述（CLI 結果を添付）
+    agent_id: project_management
+  - id: pm_milestone_tracking
+    file: extension/pm_milestone_tracking.md
+    runtime: cli
+    cli_command: pmo-milestones
+    handler: pm_milestone_tracking
+    description: マイルストーン期限超過 · 間近
+    agent_id: project_management
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: マイルストーン
+  - id: pmo_risks
+    file: pmo_risks.md
+    runtime: cli
+    cli_command: pmo-risks
+    handler: pmo_risks
+    description: open リスク一覧
+    agent_id: project_management
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 案件リスク
+  - id: pmo_show
+    file: pmo_show.md
+    runtime: cli
+    cli_command: pmo-show
+    handler: pmo_show
+    required_options: [id]
+    description: 1 案件の詳細（リンク id のみ）
+    agent_id: project_management
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 案件詳細
+      args:
+        - { name: id, type: id, required: true }
+  - id: pm_roadmap_review
+    file: extension/pm_roadmap_review.md
+    runtime: agent
+    description: ロードマップ
+    agent_id: product_management
+  - id: pm_feature_prioritization
+    file: extension/pm_feature_prioritization.md
+    runtime: agent
+    description: 機能優先度
+    agent_id: product_management
+  - id: recruiting_pipeline_review
+    file: extension/recruiting_pipeline_review.md
+    runtime: agent
+    description: 採用パイプライン
+    agent_id: recruiting
+  - id: recruiting_interview_prep
+    file: extension/recruiting_interview_prep.md
+    runtime: agent
+    description: 面接準備
+    agent_id: recruiting
+  - id: risk_register_review
+    file: extension/risk_register_review.md
+    runtime: cli
+    cli_command: risk-register-review
+    handler: risk_register_review
+    description: リスク台帳
+    agent_id: risk_insurance
+  - id: risk_insurance_renewal
+    file: extension/risk_insurance_renewal.md
+    runtime: cli
+    cli_command: risk-insurance-renewal
+    handler: risk_insurance_renewal
+    description: 保険更新
+    agent_id: risk_insurance
+  - id: analytics_kpi_scorecard
+    file: analytics_kpi_scorecard.md
+    runtime: cli
+    cli_command: analytics-kpi
+    handler: analytics_kpi_scorecard
+    description: KPI スコアカード（目標 vs 実績 · RAG）
+    agent_id: data_analytics
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: KPI スコアカード
+  - id: analytics_metric_catalog
+    file: analytics_metric_catalog.md
+    runtime: cli
+    cli_command: analytics-metrics
+    handler: analytics_metric_catalog
+    description: メトリクス定義一覧 · resolver 検証
+    agent_id: data_analytics
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: メトリクスカタログ
+  - id: analytics_metrics_review
+    file: extension/analytics_metrics_review.md
+    runtime: agent
+    description: KPI · メトリクス（CEO 向け叙述）
+    agent_id: data_analytics
+  - id: analytics_data_quality
+    file: analytics_data_quality.md
+    runtime: cli
+    cli_command: analytics-quality
+    handler: analytics_data_quality
+    description: データ品質（computeDataHealth）
+    agent_id: data_analytics
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: データ品質
+  - id: devops_infra_health
+    file: extension/devops_infra_health.md
+    runtime: agent
+    description: インフラヘルス
+    agent_id: devops
+  - id: devops_deploy_checklist
+    file: extension/devops_deploy_checklist.md
+    runtime: agent
+    description: デプロイチェックリスト
+    agent_id: devops
+  - id: ir_materials_prep
+    file: extension/ir_materials_prep.md
+    runtime: agent
+    description: IR 資料準備
+    agent_id: investor_relations
+  - id: ir_shareholder_comm
+    file: extension/ir_shareholder_comm.md
+    runtime: agent
+    description: 株主コミュニケーション
+    agent_id: investor_relations
+  - id: esg_metrics_review
+    file: extension/esg_metrics_review.md
+    runtime: agent
+    description: ESG 指標
+    agent_id: esg_sustainability
+  - id: esg_report_prep
+    file: extension/esg_report_prep.md
+    runtime: agent
+    description: サステナビリティ報告
+    agent_id: esg_sustainability
+  - id: privacy_impact_review
+    file: extension/privacy_impact_review.md
+    runtime: cli
+    cli_command: privacy-impact-review
+    handler: privacy_impact_review
+    description: PIMS · DPIA
+    agent_id: privacy_officer
+  - id: privacy_data_inventory
+    file: extension/privacy_data_inventory.md
+    runtime: cli
+    cli_command: privacy-data-inventory
+    handler: privacy_data_inventory
+    description: データ棚卸
+    agent_id: privacy_officer
+  - id: treasury_cash_position
+    file: extension/treasury_cash_position.md
+    runtime: cli
+    cli_command: treasury cash position
+    handler: treasury_cash_position
+    description: キャッシュポジション
+    agent_id: treasury
+  - id: treasury_liquidity_forecast
+    file: extension/treasury_liquidity_forecast.md
+    runtime: cli
+    cli_command: treasury liquidity forecast
+    handler: treasury_liquidity_forecast
+    description: 流動性予測
+    agent_id: treasury
+  - id: support_ticket_triage
+    file: extension/support_ticket_triage.md
+    runtime: agent
+    description: チケットトリアージ
+    agent_id: customer_support
+  - id: support_sla_check
+    file: extension/support_sla_check.md
+    runtime: agent
+    description: SLA 確認
+    agent_id: customer_support
+  - id: pr_press_release_draft
+    file: extension/pr_press_release_draft.md
+    runtime: agent
+    description: プレスリリース
+    agent_id: pr_communications
+  - id: pr_media_monitoring
+    file: extension/pr_media_monitoring.md
+    runtime: agent
+    description: メディアモニタリング
+    agent_id: pr_communications
+  - id: ld_training_plan
+    file: extension/ld_training_plan.md
+    runtime: agent
+    description: 研修計画
+    agent_id: learning_development
+  - id: ld_competency_gap
+    file: extension/ld_competency_gap.md
+    runtime: agent
+    description: コンピテンシーギャップ
+    agent_id: learning_development
+  - id: corpdev_ma_screen
+    file: extension/corpdev_ma_screen.md
+    runtime: agent
+    description: M&A スクリーニング
+    agent_id: corporate_development
+  - id: corpdev_partnership_brief
+    file: extension/corpdev_partnership_brief.md
+    runtime: agent
+    description: 提携ブリーフ
+    agent_id: corporate_development
+  - id: qa_nonconformance_triage
+    file: extension/qa_nonconformance_triage.md
+    runtime: cli
+    cli_command: controls gap
+    argv: [controls, gap]
+    description: 不適合初動
+    agent_id: quality_assurance
+  - id: qa_iso9001_controls
+    file: extension/qa_iso9001_controls.md
+    runtime: agent
+    description: ISO 9001 統制
+    agent_id: quality_assurance
+  - id: operations_records_review
+    file: extension/operations_records_review.md
+    runtime: cli
+    cli_command: document-io
+    deferred: "parent command; select a complete document-io subcommand"
+    description: 入出力記録レビュー
+    agent_id: operations
+  - id: operations_travel_booking
+    file: extension/operations_travel_booking.md
+    runtime: cli
+    cli_command: operations travel
+    deferred: "parent command; select a complete travel subcommand"
+    description: 旅費 · 旅行手配
+    agent_id: operations

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
-import { loadOperatorPolicyMarkdown, operatorPolicyExcerpt, engineeringConstitutionExcerpt, rewriteMarkdownLinksForPortableExport } from "./operator-policy.js";
+import { loadOperatorPolicyMarkdown, operatorPolicyExcerpt, engineeringConstitutionExcerpt, localLlmErrorFallbackExcerpt, rewriteMarkdownLinksForPortableExport } from "./operator-policy.js";
 import { loadSkillRegistry, type ResolvedSkillEntry } from "./skill-registry.js";
 import { ROOT_DIR, getTenantId } from "./tenant.js";
 import { currentDate } from "./utils.js";
@@ -106,6 +106,14 @@ export function buildPortableAgentPack(agentId: AgentId, opts?: { fullPolicy?: b
     rewriteMarkdownLinksForPortableExport(engineeringConstitutionExcerpt(45)),
     "",
     "Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules: `steward/rules/engineering/`",
+    "",
+    "---",
+    "",
+    "## 1c. Local LLM ERROR fallback (excerpt)",
+    "",
+    rewriteMarkdownLinksForPortableExport(localLlmErrorFallbackExcerpt(28)),
+    "",
+    "Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061",
     "",
     "---",
     "",

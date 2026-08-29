@@ -20,6 +20,12 @@ export const STEWARD_OPS_SUMMARY_PATH = join(ROOT_DIR, "steward", "rules", "stew
 export const STEWARD_OPS_CURSOR_RULE = ".cursor/rules/steward.mdc";
 export const COMPANY_EVENTS_AI_PATH = join(ROOT_DIR, "steward", "rules", "company-events-ai.md");
 export const COMPANY_EVENTS_CURSOR_RULE = ".cursor/rules/company-events.mdc";
+export const LOCAL_LLM_ERROR_FALLBACK_PATH = join(
+  ROOT_DIR,
+  "steward",
+  "rules",
+  "local-llm-error-fallback.md",
+);
 
 /** Canonical engineering rule stems (00–09). Mirror: `.cursor/rules/{stem}.mdc` */
 export const ENGINEERING_RULE_STEMS = [
@@ -193,6 +199,13 @@ export function engineeringConstitutionExcerpt(maxLines = 55): string {
   const path = join(ENGINEERING_RULES_DIR, "00-engineering-constitution.md");
   const { body } = parseEngineeringRuleFrontmatter(readFileSync(path, "utf-8"));
   return body.split("\n").slice(0, maxLines).join("\n");
+}
+
+export function localLlmErrorFallbackExcerpt(maxLines = 30): string {
+  if (!existsSync(LOCAL_LLM_ERROR_FALLBACK_PATH)) {
+    return "(local LLM error fallback rule not found)";
+  }
+  return readFileSync(LOCAL_LLM_ERROR_FALLBACK_PATH, "utf-8").split("\n").slice(0, maxLines).join("\n");
 }
 
 /** Rewrite relative steward links for portable agent packs (external LLM tools). */

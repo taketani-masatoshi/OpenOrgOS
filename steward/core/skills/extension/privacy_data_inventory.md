@@ -11,3 +11,7 @@ Privacy Officer Agent
 ## 出力
 
 `docs/reports/agent-summaries/{slug}/{YYYY-MM-DD}-{topic}.md`
+
+## CLI
+
+`orgos skills run privacy_data_inventory` — 分類レジストリの件数のみ（L2 値は出さない）。

@@ -13,6 +13,9 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
   software_outsourcing: "data/software-outsourcing",
   real_estate_brokerage: "data/real-estate-brokerage",
   venture_capital: "data/venture-capital",
+  investor_relations: "data/investor-relations",
+  customer_success: "data/customers",
+  sales: "data/sales",
   membership: "data/membership",
   staffing: "data/staffing",
   ecommerce: "data/ecommerce",
@@ -22,6 +25,7 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
   jp_corporate_registration: "data/corporate-registration",
   jp_medical_device: "data/medical-device",
   jp_permit_registry: "data/permit-registry",
+  jp_consumption_refund: "data/tax",
 };
 
 export function isModuleEnabled(moduleId: string): boolean {
@@ -42,17 +46,25 @@ export function resolveModuleDataFile(moduleId: string, filename: string): strin
   return join(getModuleDataDir(moduleId), filename);
 }
 
-export function loadModuleDataFile<T>(
+export type ModuleDataLoadSource = "tenant-live" | "tenant" | "tenant-or-seed";
+
+export function loadModuleDataFile<S extends z.ZodTypeAny>(
   moduleId: string,
   filename: string,
-  schema: z.ZodType<T>
-): { data: T; path: string } | null {
-  const candidates = [
-    resolveModuleDataFile(moduleId, filename),
-    resolveModuleDataFile(moduleId, `${filename}.example`),
-    join(getModuleSeedDir(moduleId), filename),
-    join(getModuleSeedDir(moduleId), `${filename}.example`),
-  ];
+  schema: S,
+  opts: { source?: ModuleDataLoadSource } = {},
+): { data: z.output<S>; path: string } | null {
+  const source = opts.source ?? "tenant-or-seed";
+  const candidates = [resolveModuleDataFile(moduleId, filename)];
+  if (source !== "tenant-live") {
+    candidates.push(resolveModuleDataFile(moduleId, `${filename}.example`));
+  }
+  if (source === "tenant-or-seed") {
+    candidates.push(
+      join(getModuleSeedDir(moduleId), filename),
+      join(getModuleSeedDir(moduleId), `${filename}.example`),
+    );
+  }
 
   for (const path of candidates) {
     if (!existsSync(path)) continue;

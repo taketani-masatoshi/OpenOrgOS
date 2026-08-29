@@ -149,6 +149,11 @@ agents:
     tier: core
     required: false
     scope: テナント integrations 初回設定 · tenant setup ウィザード
+    access:
+      read:
+        - data/integrations/
+      write:
+        - docs/reports/agent-summaries/setup/
 
   finance:
     id: finance
@@ -242,6 +247,12 @@ agents:
     status: active
     reports_to: executive_steward
     scope: Work Order · 進捗 · 担当割当 · 日次オペ統括
+    access:
+      read:
+        - docs/reports/routing-queue/
+        - docs/reports/agent-summaries/
+      write:
+        - docs/reports/agent-summaries/coo/
 
   cto:
     id: cto
@@ -294,6 +305,11 @@ agents:
     status: active
     reports_to: cto
     scope: デザイン方針 · ブランド一貫性 · レビュー
+    access:
+      read:
+        - docs/design/
+      write:
+        - docs/reports/agent-summaries/design-lead/
 
   design:
     id: design
@@ -305,6 +321,11 @@ agents:
     status: active
     reports_to: design_lead
     scope: UI · ビジュアル · 素材制作
+    access:
+      read:
+        - docs/design/assets/
+      write:
+        - docs/reports/agent-summaries/design/
 
   sales_lead:
     id: sales_lead
@@ -316,6 +337,7 @@ agents:
     status: active
     reports_to: coo
     scope: パイプライン · 見積方針 · 営業 KPI
+    binds_modules: [sales]
     access:
       read:
         - data/sales/
@@ -337,6 +359,7 @@ agents:
     status: active
     reports_to: sales_lead
     scope: コールド outreach · リスト · 初回アプローチ下書き
+    binds_modules: [sales]
     access:
       read:
         - data/sales/outbound/
@@ -357,6 +380,7 @@ agents:
     status: active
     reports_to: sales_lead
     scope: 問い合わせ · 提携 · 紹介案件
+    binds_modules: [sales]
     access:
       read:
         - data/sales/inbound/
@@ -378,6 +402,7 @@ agents:
     status: active
     reports_to: coo
     scope: 既存顧客フォロー · 解約防止 · 利用支援
+    binds_modules: [customer_success]
     access:
       read:
         - data/customers/
@@ -398,6 +423,12 @@ agents:
     status: active
     reports_to: coo
     scope: 施策 · コンテンツ計画 · ファネル
+    access:
+      read:
+        - data/marketing/
+        - docs/marketing/
+      write:
+        - docs/reports/agent-summaries/marketing-lead/
 
   social_media:
     id: social_media
@@ -409,6 +440,12 @@ agents:
     status: active
     reports_to: marketing_lead
     scope: 投稿下書き · スケジュール · エンゲージメント要約
+    access:
+      read:
+        - data/marketing/social/
+        - docs/marketing/social/
+      write:
+        - docs/reports/agent-summaries/social-media/
 
   personal_finance:
     id: personal_finance
@@ -420,6 +457,12 @@ agents:
     status: active
     reports_to: executive_steward
     scope: オーナー個人の資産・税務メモ（法人 Finance と分離）
+    access:
+      read:
+        - data/personal-finance/
+        - docs/personal-finance/
+      write:
+        - docs/reports/agent-summaries/personal-finance/
 
   legal:
     id: legal
@@ -496,6 +539,12 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 株主総会 · 取締役会 · 議事録 · 招集
+    access:
+      read:
+        - data/governance/
+        - docs/company/governance/
+      write:
+        - docs/reports/agent-summaries/corporate-governance/
 
   accounting:
     id: accounting
@@ -559,6 +608,12 @@ agents:
     status: active
     reports_to: coo
     scope: ベンダー · 発注 · 稟議 REG-004
+    access:
+      read:
+        - data/procurement/
+        - docs/procurement/
+      write:
+        - docs/reports/agent-summaries/procurement/
 
   government_affairs:
     id: government_affairs
@@ -572,6 +627,12 @@ agents:
     reports_to: executive_steward
     scope: 補助金 · 認定 · 交付金
     binds_modules: [jp_subsidy_application]
+    access:
+      read:
+        - data/government/
+        - docs/government/
+      write:
+        - docs/reports/agent-summaries/government-affairs/
 
   intellectual_property:
     id: intellectual_property
@@ -585,6 +646,12 @@ agents:
     reports_to: legal
     scope: 商標 · 特許 · ライセンス
     binds_modules: [jp_trademark_application]
+    access:
+      read:
+        - data/ip/
+        - docs/ip/
+      write:
+        - docs/reports/agent-summaries/intellectual-property/
 
   general_affairs:
     id: general_affairs
@@ -597,6 +664,12 @@ agents:
     status: active
     reports_to: coo
     scope: 備品 · 社内環境 · 庶務
+    access:
+      read:
+        - data/general-affairs/
+        - docs/general-affairs/
+      write:
+        - docs/reports/agent-summaries/general-affairs/
 
   project_management:
     id: project_management
@@ -630,6 +703,12 @@ agents:
     status: active
     reports_to: cto
     scope: 要件 · ロードマップ · PRD
+    access:
+      read:
+        - data/product/
+        - docs/product/
+      write:
+        - docs/reports/agent-summaries/product-management/
 
   recruiting:
     id: recruiting
@@ -642,6 +721,12 @@ agents:
     status: active
     reports_to: human_resources
     scope: JD · 候補者パイプライン
+    access:
+      read:
+        - data/recruiting/
+        - docs/recruiting/
+      write:
+        - docs/reports/agent-summaries/recruiting/
 
   risk_insurance:
     id: risk_insurance
@@ -654,6 +739,12 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 損保 · BCP · 更新
+    access:
+      read:
+        - data/risk/
+        - docs/risk/
+      write:
+        - docs/reports/agent-summaries/risk-insurance/
 
   data_analytics:
     id: data_analytics
@@ -690,6 +781,12 @@ agents:
     status: active
     reports_to: cto
     scope: CI/CD · インフラ · 監視
+    access:
+      read:
+        - data/devops/
+        - docs/devops/
+      write:
+        - docs/reports/agent-summaries/devops/
 
   investor_relations:
     id: investor_relations
@@ -727,6 +824,12 @@ agents:
     reports_to: compliance
     scope: 非財務開示 · カーボン
     binds_modules: [jp_carbon_neutral_2050]
+    access:
+      read:
+        - data/esg/
+        - docs/esg/
+      write:
+        - docs/reports/agent-summaries/esg-sustainability/
 
   internal_audit:
     id: internal_audit
@@ -739,6 +842,15 @@ agents:
     status: active
     reports_to: executive_steward
     scope: プロセス監査 · 改善提案
+    access:
+      read:
+        - data/compliance/
+        - docs/audit/internal/
+        - docs/compliance/
+      write:
+        - docs/reports/agent-summaries/internal-audit/
+        - docs/audit/internal/
+        - data/compliance/iso-internal-audit.jsonl
 
   records_audit:
     id: records_audit
@@ -751,6 +863,16 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 会社イベントチェーン · 週次署名 · 月次監査通知
+    access:
+      read:
+        - data/company-events.yaml
+        - data/company-events-chain.jsonl
+        - data/company-events-attestations.jsonl
+        - docs/company/events/
+        - docs/audit/records/
+        - docs/reports/agent-summaries/records-audit/
+      write:
+        - docs/reports/agent-summaries/records-audit/
 
   privacy_officer:
     id: privacy_officer
@@ -763,6 +885,12 @@ agents:
     status: active
     reports_to: compliance
     scope: 個情 · DPIA · 越境
+    access:
+      read:
+        - data/classification-registry.yaml
+        - docs/compliance/privacy/
+      write:
+        - docs/reports/agent-summaries/privacy-officer/
 
   treasury:
     id: treasury
@@ -775,6 +903,13 @@ agents:
     status: active
     reports_to: finance
     scope: 資金繰り · 多口座 · FX
+    access:
+      read:
+        - data/finance/cash-balance.yaml
+        - data/finance/loans.yaml
+        - docs/finance/treasury/
+      write:
+        - docs/reports/agent-summaries/treasury/
 
   customer_support:
     id: customer_support
@@ -787,6 +922,12 @@ agents:
     status: active
     reports_to: customer_success
     scope: 問合せ · FAQ · チケット
+    access:
+      read:
+        - data/support/
+        - docs/support/
+      write:
+        - docs/reports/agent-summaries/customer-support/
 
   pr_communications:
     id: pr_communications
@@ -799,6 +940,12 @@ agents:
     status: active
     reports_to: marketing_lead
     scope: プレス · 危機広報
+    access:
+      read:
+        - data/pr/
+        - docs/pr/
+      write:
+        - docs/reports/agent-summaries/pr-communications/
 
   learning_development:
     id: learning_development
@@ -811,6 +958,12 @@ agents:
     status: active
     reports_to: human_resources
     scope: 研修 · オンボーディング
+    access:
+      read:
+        - data/learning/
+        - docs/learning/
+      write:
+        - docs/reports/agent-summaries/learning-development/
 
   corporate_development:
     id: corporate_development
@@ -823,6 +976,12 @@ agents:
     status: active
     reports_to: executive_steward
     scope: 提携 · M&A メモ
+    access:
+      read:
+        - data/corp-dev/
+        - docs/corp-dev/
+      write:
+        - docs/reports/agent-summaries/corporate-development/
 
   quality_assurance:
     id: quality_assurance
@@ -835,6 +994,13 @@ agents:
     status: active
     reports_to: coo
     scope: 品質基準 · 不適合
+    access:
+      read:
+        - data/quality/
+        - docs/quality/
+        - docs/compliance/iso/
+      write:
+        - docs/reports/agent-summaries/quality-assurance/
 
   medical_device_regulatory:
     id: medical_device_regulatory

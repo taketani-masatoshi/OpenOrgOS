@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · tax
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-24 · **Tenant:** mal
+> **Generated:** 2026-08-29 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent tax`
 
 ---
@@ -123,6 +123,41 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ---
 
+## 1c. Local LLM ERROR fallback (excerpt)
+
+# Local LLM ERROR Fallback
+
+**版:** 1.0 · **日付:** 2026-08-26
+**ADR:** [0061](../../docs/adr/0061-local-llm-error-fallback.md)
+**実装:** `src/lib/operator-runtime/local-llm-error-fallback.ts`
+
+## 目的
+
+ローカル LLM（Ollama 等 · worker `tier: local`）は、クラウドモデルより grounding が弱い。必要情報が prompt / tool 結果 / 添付に無いとき、拒否エッセイ・「未確認」・プレースホルダを出さず、**機械可読な1行失敗**に統一する。
+
+## 規約
+
+| 条件 | 出力 |
+|------|------|
+| 回答に必要な事実が context に **無い** | `ERROR: <理由>` **1行のみ**（日本語理由可） |
+| 事実が grounded されている | 従来どおり短文 CEO 向け回答 |
+
+例:
+
+```
+ERROR: Today context にバーンレートが含まれていない
+```
+
+## 適用範囲
+
+- Steward Chat（executive_steward · secretary）
+- Work Order dispatch（portable LLM）
+- MCP `steward_ask` · CLI `orgos chat ask`
+
+Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
+
+---
+
 ## 2. Agent · Tax（税務）
 
 # Tax Agent
@@ -150,6 +185,8 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 ## 使用 Skill
 
 - tax_filing_prep
+- consumption_tax_calc
+- depreciation_run（固定資産税概算連携）
 
 ## 委譲先
 
@@ -187,6 +224,10 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 ```bash
 orgos agent readiness --agent tax
 orgos agent pulse --agent tax
+orgos tax calendar
+orgos tax consumption --period YYYY-MM
+orgos tax consumption-check
+orgos ledger journal backfill-tax
 ```
 
 ## コンテキスト
@@ -200,7 +241,13 @@ orgos agent pulse --agent tax
 
 ## 3. Skills（参照）
 
+- `consumption_tax_calc` · cli · `steward/core/skills/consumption_tax_calc.md`
 - `tax_filing_prep` · cli · `steward/core/skills/../../jurisdiction-packs/JP/skills/tax_filing_prep.md`
+- `jp_invoice_registration` · cli · `steward/jurisdiction-packs/JP/modules/jp_invoice_qualified/skills/jp_invoice_registration.md`
+- `jp_qualified_invoice_issue` · cli · `steward/jurisdiction-packs/JP/modules/jp_invoice_qualified/skills/jp_qualified_invoice_issue.md`
+- `jp_consumption_tax_return` · cli · `steward/jurisdiction-packs/JP/modules/jp_tax_consumption/skills/jp_consumption_tax_return.md`
+- `jp_corporate_tax_return` · cli · `steward/jurisdiction-packs/JP/modules/jp_tax_corporate/skills/jp_corporate_tax_return.md`
+- `jp_withholding_payment` · cli · `steward/jurisdiction-packs/JP/modules/jp_withholding_statutory/skills/jp_withholding_payment.md`
 
 ---
 

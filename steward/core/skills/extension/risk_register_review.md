@@ -11,3 +11,7 @@ Risk & Insurance Agent
 ## 出力
 
 `docs/reports/agent-summaries/{slug}/{YYYY-MM-DD}-{topic}.md`
+
+## CLI
+
+`orgos skills run risk_register_review` — `data/risk/register.yaml` を集計する。

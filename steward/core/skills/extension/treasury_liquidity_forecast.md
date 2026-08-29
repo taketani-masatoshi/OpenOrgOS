@@ -28,6 +28,7 @@ Treasury Agent · Finance Agent（委譲）
 
 ```bash
 npm run orgos -- jp bank cashflow generate --granularity weekly --horizon 13w --write
+npm run orgos -- skills run treasury_liquidity_forecast
 npm run orgos -- skills run jp-cashflow-schedule
 npm run orgos -- validate
 ```

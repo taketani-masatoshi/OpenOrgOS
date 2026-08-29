@@ -11,6 +11,7 @@ import {
 import { loadEnabledRegulationIds } from "./regulations.js";
 import { currentDate, getDocsDir, formatCurrency, formatPercent, writeMarkdownReport } from "./utils.js";
 import { loadEnabledModules, type TenantModule } from "./modules.js";
+import { buildSalesPipelineView } from "./sales-pipeline-view.js";
 import { join } from "node:path";
 import { readdirSync, existsSync } from "node:fs";
 
@@ -25,6 +26,7 @@ export interface ModuleSummaryPath {
 export interface AgentSummaryPaths {
   finance: string;
   contract: string;
+  salesLead?: string;
   compliance: string;
   operations: string;
   executive: string;
@@ -164,6 +166,46 @@ export function formatContractSummary(data: StewardData, report: DashboardReport
     "",
     "- `data/contracts/`",
     "- Skill: [steward/core/skills/contract_expiry_check.md](../../../steward/core/skills/contract_expiry_check.md)",
+    "",
+    `*生成: steward dashboard · ${report.generatedAt}*`,
+  ].join("\n");
+}
+
+export function formatSalesLeadSummary(report: DashboardReport): string {
+  const view = buildSalesPipelineView({ includeDemo: false });
+  const overdue = view.alerts.filter((a) => a.alert_type === "overdue_action");
+
+  return [
+    `# Sales Lead 要約 ${report.reportDate}`,
+    "",
+    "## 結論",
+    "",
+    `- オープン商談 **${view.open_deals}** 件（全 ${view.total_deals} 件）`,
+    `- 加重パイプライン **${view.weighted_pipeline_man}** 万円`,
+    `- アラート **${view.alerts.length}** 件（期限超過 ${overdue.length} 件）`,
+    "",
+    "## KPI / 状態",
+    "",
+    "| ステージ | 件数 |",
+    "|---------|---:|",
+    `| lead | ${view.by_stage.lead} |`,
+    `| qualify | ${view.by_stage.qualify} |`,
+    `| proposal | ${view.by_stage.proposal} |`,
+    `| negotiation | ${view.by_stage.negotiation} |`,
+    `| won | ${view.by_stage.won} |`,
+    `| lost | ${view.by_stage.lost} |`,
+    "",
+    "## 推奨アクション",
+    "",
+    "1. 期限超過 next_action を処理",
+    "2. `npm run orgos -- skills run sales-pipeline --output " +
+      `${report.reportDate}-pipeline.md` +
+      "`",
+    "",
+    "## 根拠",
+    "",
+    "- `data/sales/pipeline.yaml`",
+    "- Skill: [steward/core/skills/extension/sales_pipeline_review.md](../../../steward/core/skills/extension/sales_pipeline_review.md)",
     "",
     `*生成: steward dashboard · ${report.generatedAt}*`,
   ].join("\n");
@@ -425,6 +467,11 @@ export function formatExecutiveSummary(
     "|-------|---------|",
     `| Finance | [${relDocsPath(paths.finance).split("/").pop()}](${reportsRelLink(paths.finance)}) |`,
     `| Contract | [${relDocsPath(paths.contract).split("/").pop()}](${reportsRelLink(paths.contract)}) |`,
+    ...(paths.salesLead
+      ? [
+          `| Sales Lead | [${relDocsPath(paths.salesLead).split("/").pop()}](${reportsRelLink(paths.salesLead)}) |`,
+        ]
+      : []),
     ...paths.modules.map((m) => {
       const label = m.agent.replace(/_/g, " ");
       return `| ${label} (${m.moduleId}) | [${relDocsPath(m.path).split("/").pop()}](${reportsRelLink(m.path)}) |`;
@@ -467,6 +514,18 @@ export function writeAgentSummaries(
     formatContractSummary(d, r)
   );
 
+  let salesLeadPath: string | undefined;
+  try {
+    buildSalesPipelineView({ includeDemo: false });
+    salesLeadPath = writeMarkdownReport(
+      `${AGENT_SUMMARIES_SUBDIR}/sales-lead`,
+      filename,
+      formatSalesLeadSummary(r)
+    );
+  } catch {
+    /* tenant without sales pipeline */
+  }
+
   const modulePaths: ModuleSummaryPath[] = [];
   const enabledModules = loadEnabledModules();
   for (const mod of enabledModules) {
@@ -492,6 +551,7 @@ export function writeAgentSummaries(
   const partialPaths = {
     finance: financePath,
     contract: contractPath,
+    salesLead: salesLeadPath,
     modules: modulePaths,
     prop001: modulePaths.find((m) => m.agent === "rental")?.path,
     prop002: modulePaths.find((m) => m.agent === "hospitality")?.path,
@@ -513,8 +573,8 @@ export function findLatestAgentSummaries(): Partial<AgentSummaryPaths> | null {
   const result: Partial<AgentSummaryPaths> = {};
   let any = false;
 
-  for (const key of ["finance", "contract", "compliance", "operations"] as const) {
-    const dir = join(getDocsDir(), "reports", AGENT_SUMMARIES_SUBDIR, key);
+  for (const key of ["finance", "contract", "salesLead", "compliance", "operations"] as const) {
+    const dir = join(getDocsDir(), "reports", AGENT_SUMMARIES_SUBDIR, key === "salesLead" ? "sales-lead" : key);
     if (!existsSync(dir)) continue;
     const files = readdirSync(dir)
       .filter((f) => f.endsWith(".md") && f.includes("dashboard-sync"))
@@ -570,6 +630,7 @@ export function formatAgentSummariesSection(paths: Partial<AgentSummaryPaths>): 
   const candidateRows: [string, string | undefined][] = [
     ["Finance", paths.finance],
     ["Contract", paths.contract],
+    ["Sales Lead", paths.salesLead],
     ...moduleRows,
     ["Compliance", paths.compliance],
     ["Operations", paths.operations],

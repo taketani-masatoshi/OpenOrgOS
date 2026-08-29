@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · project_management
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-24 · **Tenant:** mal
+> **Generated:** 2026-08-29 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent project_management`
 
 ---
@@ -123,6 +123,41 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 ---
 
+## 1c. Local LLM ERROR fallback (excerpt)
+
+# Local LLM ERROR Fallback
+
+**版:** 1.0 · **日付:** 2026-08-26
+**ADR:** [0061](../../docs/adr/0061-local-llm-error-fallback.md)
+**実装:** `src/lib/operator-runtime/local-llm-error-fallback.ts`
+
+## 目的
+
+ローカル LLM（Ollama 等 · worker `tier: local`）は、クラウドモデルより grounding が弱い。必要情報が prompt / tool 結果 / 添付に無いとき、拒否エッセイ・「未確認」・プレースホルダを出さず、**機械可読な1行失敗**に統一する。
+
+## 規約
+
+| 条件 | 出力 |
+|------|------|
+| 回答に必要な事実が context に **無い** | `ERROR: <理由>` **1行のみ**（日本語理由可） |
+| 事実が grounded されている | 従来どおり短文 CEO 向け回答 |
+
+例:
+
+```
+ERROR: Today context にバーンレートが含まれていない
+```
+
+## 適用範囲
+
+- Steward Chat（executive_steward · secretary）
+- Work Order dispatch（portable LLM）
+- MCP `steward_ask` · CLI `orgos chat ask`
+
+Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
+
+---
+
 ## 2. Agent · Project Management（PMO）
 
 # Project Management Agent
@@ -185,13 +220,22 @@ Full index: `steward/rules/openorgos-engineering-constitution.md` · split rules
 
 | 手段 | 内容 |
 |------|------|
+| pmo_portfolio | `orgos pmo portfolio` · `--json`（RAG 集計 · 金額非出力） |
+| pm_milestone_tracking | `orgos pmo milestones [--days 14]` |
+| pmo_risks | `orgos pmo risks` |
+| pmo_show | `orgos pmo show PRJ-…`（リンク id のみ） |
+| pm_status_review | CEO 向け叙述（上の CLI 結果を添付） |
 | agent_pulse | `orgos agent pulse --agent project_management` |
-| validate | `orgos validate`（ポートフォリオ schema · リンク） |
 
 
 ## CLI
 
 ```bash
+orgos pmo portfolio
+orgos pmo portfolio --json
+orgos pmo milestones --days 14
+orgos pmo risks
+orgos pmo show PRJ-BANCHO-HQ
 orgos agent readiness --agent project_management
 orgos agent pulse --agent project_management
 orgos validate
@@ -201,14 +245,18 @@ orgos validate
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
 - 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
+- Skill: [pmo_portfolio.md](../skills/pmo_portfolio.md)
 
 
 ---
 
 ## 3. Skills（参照）
 
+- `pmo_portfolio` · cli · `steward/core/skills/pmo_portfolio.md`
 - `pm_status_review` · agent · `steward/core/skills/extension/pm_status_review.md`
-- `pm_milestone_tracking` · agent · `steward/core/skills/extension/pm_milestone_tracking.md`
+- `pm_milestone_tracking` · cli · `steward/core/skills/extension/pm_milestone_tracking.md`
+- `pmo_risks` · cli · `steward/core/skills/pmo_risks.md`
+- `pmo_show` · cli · `steward/core/skills/pmo_show.md`
 
 ---
 

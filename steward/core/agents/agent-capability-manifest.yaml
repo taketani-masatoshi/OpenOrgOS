@@ -15,8 +15,10 @@ agents:
       - annual_close
       - depreciation_run
       - expense_claim_ops
+      - journal_export_csv
       - journal_post
       - trial_balance
+      - trial_balance_export_csv
     pulse_checks:
       - type: path_exists
         path: docs/finance/accounting/invoices/
@@ -39,6 +41,12 @@ agents:
       - iso_control_review
       - jp_carbon_neutral_show
       - jp_carbon_neutral_targets
+      - jp_certification_list
+      - jp_certification_types
+      - jp_inspection_list
+      - jp_inspection_types
+      - jp_minpaku_gate
+      - jp_minpaku_ops
       - jp_permit_application_ops
       - jp_permit_gap
       - jp_permit_obligations
@@ -309,6 +317,7 @@ agents:
     route_ids:
       - broker-transfer-gate
       - cashflow-forecast
+      - finance-noi
       - finance-variance
       - monthly-close
     skills:
@@ -425,8 +434,12 @@ agents:
       - docs/compliance/
     route_ids:
       - internal-audit-scope
+      - iso-internal-audit-report
+      - iso-internal-audit-run
     skills:
       - internal_audit_scope
+      - iso_internal_audit_report
+      - iso_internal_audit_run
     pulse_checks:
       - type: path_exists
         path: data/compliance/
@@ -504,8 +517,10 @@ agents:
       - docs/executive/correspondence-drafts/
     route_ids:
       - mail-outbound-correspondence
+      - mail-outbound-correspondence-send
       - secretary-correspondence
     skills:
+      - correspondence_compose
       - correspondence_draft
       - correspondence_send
       - external_correspondence
@@ -571,27 +586,39 @@ agents:
       - construction_site_progress
       - deps_check
       - ecommerce_ops
+      - ecommerce_validate
       - education_enrollment
       - education_show
       - event_operations_ops
+      - event_operations_validate
       - event_space_show
       - event_space_utilization
       - logistics_delivery_sla
       - logistics_show
       - membership_ops
+      - membership_validate
       - operations_records_review
       - operations_travel_booking
       - professional_services_ops
+      - professional_services_validate
       - property_management_ops
+      - property_management_validate
       - real_estate_brokerage_ops
+      - real_estate_brokerage_validate
       - restaurant_seating
       - restaurant_show
       - saas_subscription_ops
+      - saas_subscription_validate
       - software_outsourcing_ops
+      - software_outsourcing_validate
       - staffing_ops
+      - staffing_validate
       - travel_intake_validate
       - travel_policy_check
       - venture_capital_ops
+      - venture_capital_validate
+      - venue_catalog
+      - venue_list
     pulse_checks:
       - type: path_exists
         path: data/document-io.yaml
@@ -817,7 +844,9 @@ agents:
       - sales-forecast
       - sales-pipeline
     skills:
+      - sales_crm_summary
       - sales_forecast_prep
+      - sales_inbound_intake
       - sales_pipeline_review
     pulse_checks:
       - type: path_exists
@@ -856,6 +885,7 @@ agents:
       - jp_company_incorporation
       - jp_registry_change
       - language_bridge
+      - language_bridge_validate
       - one_on_one_prep
       - schedule_coordination
       - schedule_management

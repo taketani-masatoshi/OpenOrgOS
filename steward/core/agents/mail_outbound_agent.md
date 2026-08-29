@@ -53,6 +53,7 @@ Secretary（スケジュール · 経営調整との整合）
 | Skill | 用途 |
 |-------|------|
 | `external_correspondence` | 社外文案下書き（runtime: agent） |
+| `correspondence_compose` | 事実パック + LLM 返信下書き（runtime: cli · 送信しない） |
 | `correspondence_draft` | 下書き + org approval 起案（runtime: cli） |
 | `correspondence_send` | 承認済み SMTP 送信（runtime: cli） |
 | `slack_notify` | 承認済み Slack（runtime: cli） |
@@ -87,12 +88,18 @@ company event 記録
 ## CLI
 
 ```bash
+orgos mail intake thread show --id <gmailThreadOrMSG> [--fetch]
+orgos mail outbound facts verify --mail-id MSG-... --case INQ-...
+orgos mail outbound knowledge search --query "..."
+orgos mail outbound compose --mail-id MSG-... --case INQ-...
 orgos mail outbound correspondence draft --to "..." --subject "..." --body "..."
+orgos mail outbound correspondence style lint --id DRAFT-...
 orgos mail outbound correspondence show --id DRAFT-...
 orgos mail outbound correspondence list
 orgos mail outbound correspondence send --id DRAFT-...   # ceo/approver のみ
 orgos mail outbound mail config
 orgos mail outbound mail setup-guide
+orgos integrations asana status|link|push|pull
 ```
 
 後方互換: `orgos secretary correspondence *` は同一実装のエイリアス。

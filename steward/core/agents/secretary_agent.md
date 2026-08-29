@@ -273,10 +273,13 @@ Mail Intake Agent が `mail intake handoff --id MSG-...` で生成する `inboun
 | ランウェイ・予実・税務数値 | **Executive Steward** → Finance |
 | 契約更新・保険・賃料 | **Executive Steward** → Contract |
 | 許認可・規程 | **Executive Steward** → Compliance |
+| 在籍人員・労務・就業規則（詳細） | **Human Resources**（`data/hr/`） |
 | 宿泊モジュール運用（清掃単価等） | Hospitality（日程は Secretary） |
 | inbox 書類 | Operations |
 
-管轄外（経営 · 財務 · 契約 · **実装依頼** · コンプライアンス · ISO · Git 機密）は **Orchestrator 経由** で Executive Steward へエスカレーションする。**照会**は [secretary_escalation.md](../core/orchestrators/secretary_escalation.md) · **実装**は [delegate_implementation.md](../core/orchestrators/delegate_implementation.md) または `npm run orgos -- escalate run`。依頼文の手動コピーは不要。
+**在籍人数・従業員数の L1 集計**はプラットフォームの決定論パス（`orgos hr headcount` / FactProvider）で即答される。未登録時は Human Resources へ実 Work Order が自動起票される。氏名は出力しない。
+
+管轄外（経営 · 財務 · 契約 · **実装依頼** · コンプライアンス · ISO · Git 機密 · 人事詳細）は **Orchestrator 経由** で Executive Steward / Human Resources へエスカレーションする。**照会**は [secretary_escalation.md](../core/orchestrators/secretary_escalation.md) · **実装**は [delegate_implementation.md](../core/orchestrators/delegate_implementation.md) または `npm run orgos -- escalate run`。依頼文の手動コピーは不要。
 
 ---
 
