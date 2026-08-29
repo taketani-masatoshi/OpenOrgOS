@@ -22,9 +22,11 @@
 
 4. **CLI 正本** — `orgos orchestrate plan|run|status|retry|cancel`。`agent dispatch run` は従来どおり単一バッチ向け。
 
-5. **後方互換** — `depends_on` / `dispatch` 無しの既存 YAML は読める。`escalate complete` は `pending → completed` を許可。
+5. **後方互換** — `depends_on` / `dispatch` 無しの既存 YAML は読める。`escalate complete` は `pending → completed` を許可。人間操作（CLI / Run Board · `escalate:complete`）で `completed → pending` 再開可。
 
 6. **Human approval** — orchestration は承認を代替しない（[ADR 0038](0038-human-approval-context.md)）。
+
+7. **Run Board 完了 UX** — 既定ビューは未完了。cancel 由来 `blocked` と `completed` は閉じた作業として非表示（完了ビューで再表示 · 14 日窓）。
 
 ## Consequences
 

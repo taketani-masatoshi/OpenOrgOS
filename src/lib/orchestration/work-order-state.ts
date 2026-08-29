@@ -17,7 +17,7 @@ const ALLOWED: Record<HandoffStatus, HandoffStatus[]> = {
   dispatched: ["running", "failed", "pending", "completed"],
   running: ["completed", "failed"],
   failed: ["pending", "blocked", "completed"],
-  completed: [],
+  completed: ["pending"],
   blocked: ["pending"],
 };
 
@@ -87,7 +87,7 @@ export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: Transiti
     nextDispatch.finished_at = now;
     nextDispatch.last_error = undefined;
   }
-  if (to === "pending" && handoff.status === "failed") {
+  if (to === "pending" && (handoff.status === "failed" || handoff.status === "completed")) {
     nextDispatch.finished_at = undefined;
     nextDispatch.started_at = undefined;
     nextDispatch.last_error = undefined;
@@ -133,10 +133,25 @@ export function transitionWorkOrder(id: string, to: HandoffStatus, ctx: Transiti
   return updated;
 }
 
+export function isCancelledWorkOrder(handoff: Handoff): boolean {
+  if (handoff.status !== "blocked") return false;
+  return getWorkOrderDispatch(handoff).last_error === WORK_ORDER_CANCEL_BLOCK_REASON;
+}
+
+export function isClosedWorkOrder(handoff: Handoff): boolean {
+  return handoff.status === "completed" || isCancelledWorkOrder(handoff);
+}
+
 export function completeWorkOrderViaState(id: string, notes?: string): Handoff {
   const handoff = loadHandoff(id);
   if (handoff.status === "completed") return handoff;
   return transitionWorkOrder(id, "completed", { completionNotes: notes });
+}
+
+export function reopenWorkOrderViaState(id: string): Handoff {
+  const handoff = loadHandoff(id);
+  if (handoff.status === "pending") return handoff;
+  return transitionWorkOrder(id, "pending");
 }
 
 export function newOrchestrationTraceId(): string {

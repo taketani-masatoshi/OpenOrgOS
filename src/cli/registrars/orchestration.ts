@@ -12,6 +12,7 @@ import {
   runEscalateStatus,
   runEscalateComplete,
   runEscalateMerge,
+  runEscalateReopen,
 } from "../../commands/escalate.js";
 import {
   runOrchestrateCancel,
@@ -150,6 +151,7 @@ import {
   runHubFederationAddPeer,
   runHubGossipSync,
   runHubTlsInit,
+  runHubGaCheck,
 } from "../../commands/hub.js";
 import {
   runWireGatewayServe,
@@ -177,8 +179,25 @@ import {
   runControlsSet,
   runControlsInit,
 } from "../../commands/controls.js";
+import { runControlsMigrateCore } from "../../commands/controls-migrate-core.js";
+import {
+  runIsoCatalog,
+  runIsoMapsVerify,
+  runIsoAuditRun,
+  runIsoAuditReport,
+  runIsoRoadmap,
+} from "../../commands/iso-audit.js";
+import { runIsoScaffold } from "../../commands/iso-scaffold.js";
+import { runIsoTemplates } from "../../commands/iso-templates.js";
+import { runIsoKpi } from "../../commands/iso-kpi.js";
+import { runIsoClauses } from "../../commands/iso-clauses.js";
 import { registerCanonicalWireCommands } from "./wire.js";
 import { registerInternalWebhookCommands } from "./internal-webhook.js";
+import {
+  runTowerAssign,
+  runTowerClassify,
+  runTowerInventory,
+} from "../../commands/tower.js";
 
 export function registerOrchestrationCommands(program: Command): void {
   const routeCmd = program.command("route").description("Agent inter-routing (registry · access · handoff)");
@@ -327,6 +346,11 @@ export function registerOrchestrationCommands(program: Command): void {
     .requiredOption("--id <id>", "Work order id (IMP-...)")
     .option("--notes <text>", "Completion notes / result summary")
     .action((opts) => runEscalateComplete({ id: opts.id, notes: opts.notes }));
+  escalateCmd
+    .command("reopen")
+    .description("Reopen a completed work order (returns to pending)")
+    .requiredOption("--id <id>", "Work order id (IMP-...)")
+    .action((opts) => runEscalateReopen({ id: opts.id }));
   escalateCmd
     .command("merge")
     .description("Merge completed work order results into executive-notes")
@@ -849,6 +873,94 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--tenant <id>", "Tenant id")
     .option("--dry-run", "Print path only")
     .action((opts) => runControlsInit({ tenant: opts.tenant, dryRun: opts.dryRun }));
+  controlsCmd
+    .command("migrate-core")
+    .description("Fold superseded per-standard controls into CTL-CORE-* (keeps maturity)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--write", "Apply the migration (default is dry-run)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runControlsMigrateCore({ tenant: opts.tenant, write: opts.write, json: opts.json })
+    );
+
+  const isoCmd = program
+    .command("iso")
+    .description("ISO catalog · machine-readable maps · internal audit");
+  isoCmd
+    .command("catalog")
+    .description("List ISO pack catalog and control-map load status")
+    .option("--status <status>", "Filter: available | coming_soon")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoCatalog({ status: opts.status, json: opts.json }));
+  isoCmd
+    .command("roadmap")
+    .description("List coming_soon standards by tier")
+    .option("--tier <tier>", "1 | 2 | 3 | 4")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoRoadmap({ tier: opts.tier, json: opts.json }));
+  isoCmd
+    .command("scaffold <id>")
+    .description("Promote a coming_soon standard to a pack shell (core_bindings + index)")
+    .option("--dry-run", "Print the scaffold without writing")
+    .option("--json", "JSON output")
+    .action((id, opts) => runIsoScaffold(id, { dryRun: opts.dryRun, json: opts.json }));
+  isoCmd
+    .command("templates <id>")
+    .description("Copy a pack's blank evidence forms into the tenant (never overwrites)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--write", "Write the forms")
+    .option("--json", "JSON output")
+    .action((id, opts) =>
+      runIsoTemplates(id, { tenant: opts.tenant, write: opts.write, json: opts.json })
+    );
+  isoCmd
+    .command("clauses")
+    .description("List clause references and whether they were checked against the standard text")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Limit to one standard")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoClauses({ tenant: opts.tenant, iso: opts.iso, json: opts.json }));
+  isoCmd
+    .command("kpi")
+    .description("Check the ISO 21401 KPI log and compute per-guest-night intensity")
+    .option("--tenant <id>", "Tenant id")
+    .option("--strict", "Exit 1 when the log has faults")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoKpi({ tenant: opts.tenant, strict: opts.strict, json: opts.json }));
+  isoCmd
+    .command("maps")
+    .description("ISO control-map verification")
+    .command("verify")
+    .description("Parse every catalog control-map (exit 1 on failure)")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoMapsVerify({ json: opts.json }));
+  const isoAuditCmd = isoCmd.command("audit").description("ISO internal audit (single agent · all enabled standards)");
+  isoAuditCmd
+    .command("run")
+    .description("Evaluate enabled ISO maps, append audit log, write management report")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Limit to one standard (e.g. ISO-9001)")
+    .option("--dry-run", "Evaluate without writing log or reports")
+    .option("--strict", "Exit 1 when overall is nonconform")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runIsoAuditRun({
+        tenant: opts.tenant,
+        iso: opts.iso,
+        dryRun: opts.dryRun,
+        strict: opts.strict,
+        json: opts.json,
+      })
+    );
+  isoAuditCmd
+    .command("report")
+    .description("Print management report from the latest (or --run-id) audit log")
+    .option("--tenant <id>", "Tenant id")
+    .option("--run-id <id>", "Audit run id (IAR-...)")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runIsoAuditReport({ tenant: opts.tenant, runId: opts.runId, json: opts.json })
+    );
 
   const protocolCmd = program
     .command("protocol")
@@ -1575,6 +1687,49 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Validate steward/platform/protocol/trusted-operators.yaml")
     .option("--json", "JSON output")
     .action((opts) => runProtocolCommunityOperatorsValidate({ json: opts.json }));
+  const protocolCommunityIntegrationCmd = protocolCommunityCmd
+    .command("integration")
+    .description("Platform shipping flags (publish/protocol/community-integration.json)");
+  protocolCommunityIntegrationCmd
+    .command("list")
+    .description("List shipping flags")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { readCommunityIntegrationFlags } = await import(
+        "../../lib/protocol/community-integration-flags.js"
+      );
+      const flags = readCommunityIntegrationFlags();
+      if (opts.json) {
+        console.log(JSON.stringify({ ok: true, flags }, null, 2));
+        return;
+      }
+      for (const [flag, value] of Object.entries(flags)) {
+        console.log(`${value ? "✓" : "·"} ${flag}`);
+      }
+    });
+  protocolCommunityIntegrationCmd
+    .command("set")
+    .description("Set a shipping flag (replaces hand-editing the JSON)")
+    .requiredOption("--flag <name>", "e.g. tenant_mail_connect_api")
+    .requiredOption("--value <bool>", "true | false")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { isCommunityIntegrationFlag, setCommunityIntegrationFlag } = await import(
+        "../../lib/protocol/community-integration-flags.js"
+      );
+      if (!isCommunityIntegrationFlag(opts.flag)) {
+        console.error(`✗ unknown flag: ${opts.flag}`);
+        process.exit(1);
+      }
+      const value = opts.value === "true";
+      const flags = setCommunityIntegrationFlag(opts.flag, value);
+      if (opts.json) {
+        console.log(JSON.stringify({ ok: true, flags }, null, 2));
+        return;
+      }
+      console.log(`✓ ${opts.flag} = ${value}`);
+    });
+
   protocolCommunityCmd
     .command("check-sla")
     .description("Check revocation SLA for revoked operators")
@@ -1968,6 +2123,48 @@ export function registerOrchestrationCommands(program: Command): void {
       })
     );
 
+  const governanceCmd = program
+    .command("governance")
+    .description("ISO 37000 governance principles (self-declaration, not certification)");
+  const gpCmd = governanceCmd
+    .command("principles")
+    .description("ISO 37000:2021 eleven principles · evidence status");
+  gpCmd
+    .command("status")
+    .description("Assess ISO 37000 self-declaration readiness")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGovernancePrinciplesStatus } = await import("../../commands/governance-principles.js");
+      runGovernancePrinciplesStatus({ tenant: opts.tenant, json: opts.json });
+    });
+  gpCmd
+    .command("init")
+    .description("Write ISO 37000 self-declaration draft (purpose + applicability)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--force", "Overwrite existing declaration YAML")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGovernancePrinciplesInit } = await import("../../commands/governance-principles.js");
+      runGovernancePrinciplesInit({ tenant: opts.tenant, force: opts.force, json: opts.json });
+    });
+  gpCmd
+    .command("declare")
+    .description("Human sign-off: mark self_declared when status is ready")
+    .requiredOption("--signatory <name>", "Signatory name")
+    .option("--role <role>", "Signatory role", "代表取締役")
+    .option("--tenant <id>", "Tenant id")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runGovernancePrinciplesDeclare } = await import("../../commands/governance-principles.js");
+      runGovernancePrinciplesDeclare({
+        tenant: opts.tenant,
+        signatory: opts.signatory,
+        role: opts.role,
+        json: opts.json,
+      });
+    });
+
   const orgCmd = program.command("org").description("Universal org activity root (approval · audit bridge)");
   const orgChartCmd = orgCmd.command("chart").description("Org chart (OCH proposals)");
   const orgChartChangeCmd = orgChartCmd.command("change").description("Org chart change proposals");
@@ -1979,6 +2176,22 @@ export function registerOrchestrationCommands(program: Command): void {
     .action(async (opts) => {
       const { runOrgChartChangeValidate } = await import("../../commands/org-chart-change.js");
       runOrgChartChangeValidate({ file: opts.file, json: opts.json });
+    });
+  orgChartChangeCmd
+    .command("propose")
+    .description("Record an OCH proposal from an intent YAML (no chart mutation)")
+    .requiredOption("--file <path>", "Change input YAML (intent · action · node)")
+    .requiredOption("--approval <id>", "APR id from `org approval propose`")
+    .requiredOption("--operator <id>", "Operator proposing the change")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOrgChartChangePropose } = await import("../../commands/org-chart-change.js");
+      runOrgChartChangePropose({
+        file: opts.file,
+        approval: opts.approval,
+        operator: opts.operator,
+        json: opts.json,
+      });
     });
   orgChartChangeCmd
     .command("apply")
@@ -2133,6 +2346,11 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       })
     );
+  hubCmd
+    .command("ga-check")
+    .description("Public-relay GA checklist (TLS overlay, mTLS, metrics, trusted hubs)")
+    .option("--json", "JSON output")
+    .action((opts) => runHubGaCheck({ json: opts.json }));
 
   const wireGatewayCmd = program
     .command("wire-gateway")
@@ -2475,5 +2693,38 @@ export function registerOrchestrationCommands(program: Command): void {
   hubCmd.description(
     "Compatibility alias for historical Witness Hub CLI; canonical client operations use `orgos wire witness`"
   );
+
+  const towerCmd = program
+    .command("tower")
+    .description("Dispatch Tower — classify · inventory · human/AIA assign (ADR 0057)");
+  towerCmd
+    .command("classify")
+    .description("Deterministic work_kind classification")
+    .requiredOption("--text <text>", "CEO chat message")
+    .option("--json", "JSON output")
+    .action((opts) => runTowerClassify({ text: opts.text, json: opts.json }));
+  towerCmd
+    .command("inventory")
+    .description("AIA roster/runtime and human capacity load")
+    .option("--json", "JSON output")
+    .action((opts) => runTowerInventory({ json: opts.json }));
+  towerCmd
+    .command("assign")
+    .description("Confirm tower plan and create work order")
+    .requiredOption("--plan-id <id>", "tower plan id from chat card")
+    .option("--confirmed", "Required to execute assign")
+    .option("--assignee-employee-id <id>", "Override human assignee")
+    .option("--due-date <date>", "YYYY-MM-DD override")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runTowerAssign({
+        planId: opts.planId,
+        confirmed: opts.confirmed,
+        assigneeEmployeeId: opts.assigneeEmployeeId,
+        dueDate: opts.dueDate,
+        json: opts.json,
+      })
+    );
+
   registerCanonicalWireCommands(program);
 }

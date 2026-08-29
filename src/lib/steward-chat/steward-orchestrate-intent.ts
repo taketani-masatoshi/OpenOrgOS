@@ -1,6 +1,10 @@
 import { runEscalation } from "../escalate.js";
 import { getTenantId } from "../tenant.js";
 import { loadCompany } from "../data.js";
+import {
+  formatSecretaryConsultCeoReply,
+  isSecretaryMandate,
+} from "../agent-owner-desks.js";
 
 export interface StewardOrchestrateResult {
   handled: boolean;
@@ -17,7 +21,39 @@ export interface StewardOrchestrateResult {
  * Operations were prepared in inferRouteHints but never triggered from Web UI.
  */
 const ORCHESTRATE_INTENT =
-  /(?:(?:Finance|ファイナンス|財務|Contract|契約|Compliance|コンプライアンス|コンプラ|Operations|オペレーション|秘書|Secretary|Legal|リーガル|人事|HR|Human\s*Resources|労務)(?:\s*(?:エージェント|Agent|agent))?|(?:他の?エージェント|部門エージェント)).{0,24}(?:に|へ).{0,20}(?:確認|照会|依頼|聞いて|聞い|調査|委譲)|(?:契約書|契約).{0,16}(?:条項|本文|詳細).{0,12}(?:確認|レビュー|読んで|調査)|(?:Work\s*Order|ワーク\s*オーダー|IMP).{0,8}(?:を)?(?:作|起票|作成)|(?:委譲して|オーケストレ(?:ート)?して?)/iu;
+  /(?:(?:Finance|ファイナンス|財務|Contract|契約|Compliance|コンプライアンス|コンプラ|Operations|オペレーション|秘書|Secretary|Legal|リーガル|人事|HR|Human\s*Resources|労務)(?:\s*(?:エージェント|Agent|agent))?|(?:他の?エージェント|部門エージェント)).{0,24}(?:に|へ).{0,20}(?:確認|照会|依頼|聞いて|聞い|調査|委譲|提示)|(?:契約書|契約).{0,16}(?:条項|本文|詳細).{0,12}(?:確認|レビュー|読んで|調査)|(?:Work\s*Order|ワーク\s*オーダー|IMP).{0,8}(?:を)?(?:作|起票|作成)|(?:委譲して|オーケストレ(?:ート)?して?)/iu;
+
+const AGENT_LABEL: Record<string, string> = {
+  contract: "契約",
+  finance: "財務",
+  human_resources: "人事",
+  compliance: "コンプライアンス",
+  operations: "オペレーション",
+  secretary: "秘書",
+  executive_steward: "スチュワード",
+  corporate_governance: "ガバナンス",
+};
+
+function agentLabel(id: string): string {
+  return AGENT_LABEL[id] ?? id;
+}
+
+/** CEO-facing Work Order receipt — no CLI, Path, or implementation lecture. */
+export function formatStewardOrchestrateCeoReply(input: {
+  ok: boolean;
+  rootId?: string;
+  agentIds: string[];
+}): string {
+  if (!input.ok || !input.rootId || input.agentIds.length === 0) {
+    return "担当が見つからず、確認依頼を出せませんでした。部門名を指定して再依頼してください。";
+  }
+  const labels = [...new Set(input.agentIds.map(agentLabel))];
+  const who = labels.join("・");
+  return [
+    `${who}担当に確認を依頼しました（受付 ${input.rootId}）。`,
+    "結果は「委譲と回答」に届きます。",
+  ].join("\n");
+}
 
 export function isStewardOrchestrateIntent(message: string): boolean {
   return ORCHESTRATE_INTENT.test(message.normalize("NFKC").trim());
@@ -31,8 +67,8 @@ function inferRouteHints(message: string): { path?: string; routeBoost: string }
       routeBoost: "月次収支・予実差異の確認",
     };
   }
-  if (/契約|Contract|CTR-|解約|期限アラート|リーガル|Legal/i.test(n)) {
-    return { path: "data/contracts/", routeBoost: "契約台帳・期限・退出窓の確認" };
+  if (/契約|Contract|CTR-|解約|期限アラート|リーガル|Legal|取引先|得意先|仕入先|counterparty/i.test(n)) {
+    return { path: "data/contracts/", routeBoost: "契約台帳・取引先・期限・退出窓の確認" };
   }
   if (/人事|HR|Human\s*Resources|労務|従業員|社員|人員|在籍|headcount/i.test(n)) {
     return { path: "data/hr/", routeBoost: "人事・在籍人員の確認" };
@@ -80,49 +116,30 @@ export function handleStewardOrchestrateChatMessage(
     },
   });
 
-  if (result.workOrders.length === 0) {
+  const workOrders = result.workOrders;
+  const rootId = result.parent?.id ?? workOrders[0]?.id;
+  const assigned = (workOrders.filter((w) => w.parent_id).length
+    ? workOrders.filter((w) => w.parent_id)
+    : workOrders
+  ).map((w) => w.to_agent);
+
+  if (isSecretaryMandate(opts?.fromAgent) && rootId) {
     return {
       handled: true,
-      ok: false,
-      reply: [
-        `# オーケストレーション — ${company.name}`,
-        "",
-        "Work Order を起票できませんでした（マッチする担当エージェントなし）。",
-        "`orgos escalate plan` でルートを確認するか、要件に Path（例: `data/contracts/` · `data/finance/`）を含めてください。",
-        "",
-        "数値や報告書は捏造しません。",
-      ].join("\n"),
+      ok: workOrders.length > 0,
+      work_order_ids: workOrders.map((w) => w.id),
+      reply: formatSecretaryConsultCeoReply(rootId),
     };
   }
 
-  const children = result.workOrders.filter((w) => w.parent_id);
-  const rows = (children.length ? children : result.workOrders).map(
-    (w) => `- **${w.id}** → ${w.to_agent}（${w.status}）`
-  );
-  const rootId = result.parent?.id ?? result.workOrders[0]?.id;
-
   return {
     handled: true,
-    ok: true,
-    work_order_ids: result.workOrders.map((w) => w.id),
-    reply: [
-      `# オーケストレーション — ${company.name}`,
-      "",
-      "Steward が **実在の Work Order** を起票しました（LLM の「委譲したふり」ではありません）。",
-      "",
-      `**親:** ${rootId}`,
-      "**担当:**",
-      ...rows,
-      "",
-      children.length > 1
-        ? `DAG 進捗: \`orgos orchestrate status --id ${rootId}\`（wave · AIA run 含む）`
-        : `進捗: \`orgos orchestrate status --id ${rootId}\` または \`orgos escalate status --pending\``,
-      "",
-      "完了後は「委譲と回答」受信箱に要約が届きます。",
-      `Path: \`docs/reports/routing-queue/\``,
-      "",
-      "経営向けの単純 KPI（契約本数・90日期限・解除窓 / バーン・ランウェイ / 従業員数）は起票せず即答できます。",
-      "例:「契約本数を教えて」「従業員数は何人？」「Contract / 人事 に詳細を確認して」",
-    ].join("\n"),
+    ok: workOrders.length > 0,
+    work_order_ids: workOrders.map((w) => w.id),
+    reply: formatStewardOrchestrateCeoReply({
+      ok: workOrders.length > 0,
+      rootId,
+      agentIds: assigned,
+    }),
   };
 }

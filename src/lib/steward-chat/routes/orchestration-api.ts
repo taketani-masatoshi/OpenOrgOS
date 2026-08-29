@@ -1,12 +1,15 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
+import { requireWireConsolePermission } from "../../console-auth/operator-rbac.js";
 import {
   buildOrchestrationStatusPayload,
   cancelPendingWorkOrders,
+  completeWorkOrderRun,
+  reopenWorkOrderRun,
   retryFailedWorkOrders,
 } from "../../orchestration/orchestrate-actions.js";
-import { listHandoffs } from "../../routing.js";
+import { buildOrchestrationBoardList, type BoardListView } from "../../orchestration/board-view.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -23,18 +26,6 @@ function orchestrationErrorStatus(err: unknown): number {
   return /not found/i.test(message) ? 404 : 400;
 }
 
-function listPlanRoots(includeCompleted: boolean): {
-  active_roots: string[];
-  completed_roots: string[];
-} {
-  const implement = listHandoffs().filter((h) => h.task_type === "implement" && !h.parent_id);
-  const active_roots = [...new Set(implement.filter((h) => h.status !== "completed").map((h) => h.id))].sort();
-  const completed_roots = includeCompleted
-    ? [...new Set(implement.filter((h) => h.status === "completed").map((h) => h.id))].sort()
-    : [];
-  return { active_roots, completed_roots };
-}
-
 /**
  * Run Board API
  * GET  /chat/v1/orchestration/runs[?include=completed]
@@ -42,6 +33,8 @@ function listPlanRoots(includeCompleted: boolean): {
  * GET  /chat/v1/orchestration/runs/stream?id=<IMP-...>
  * POST /chat/v1/orchestration/runs/retry?id=<IMP-...>   (chat:ask)
  * POST /chat/v1/orchestration/runs/cancel?id=<IMP-...>  (chat:ask)
+ * POST /chat/v1/orchestration/runs/complete?id=<IMP-...> (escalate:complete)
+ * POST /chat/v1/orchestration/runs/reopen?id=<IMP-...>   (escalate:complete)
  */
 export async function handleOrchestrationApi(
   req: IncomingMessage,
@@ -80,6 +73,48 @@ export async function handleOrchestrationApi(
     try {
       const cancelled = cancelPendingWorkOrders(id);
       json(res, 200, { ok: true, cancelled, ...buildOrchestrationStatusPayload(id) });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      json(res, orchestrationErrorStatus(err), { ok: false, error: message });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/orchestration/runs/complete" && method === "POST") {
+    if (!requireWireConsolePermission(user, "escalate:complete", res)) return true;
+    if (!id) {
+      json(res, 400, { ok: false, error: "id query required" });
+      return true;
+    }
+    try {
+      const updated = completeWorkOrderRun(id);
+      json(res, 200, {
+        ok: true,
+        id: updated.id,
+        status: updated.status,
+        ...buildOrchestrationStatusPayload(id),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      json(res, orchestrationErrorStatus(err), { ok: false, error: message });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/orchestration/runs/reopen" && method === "POST") {
+    if (!requireWireConsolePermission(user, "escalate:complete", res)) return true;
+    if (!id) {
+      json(res, 400, { ok: false, error: "id query required" });
+      return true;
+    }
+    try {
+      const updated = reopenWorkOrderRun(id);
+      json(res, 200, {
+        ok: true,
+        id: updated.id,
+        status: updated.status,
+        ...buildOrchestrationStatusPayload(id),
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       json(res, orchestrationErrorStatus(err), { ok: false, error: message });
@@ -129,13 +164,26 @@ export async function handleOrchestrationApi(
     }
 
     const includeCompleted = query.get("include") === "completed";
+    const viewParam = query.get("view")?.trim();
+    const view: BoardListView | undefined =
+      viewParam === "completed" || viewParam === "all" || viewParam === "incomplete"
+        ? viewParam
+        : includeCompleted
+          ? "all"
+          : "incomplete";
+    const completedSince = query.get("completed_since")?.trim() || undefined;
     try {
-      const { active_roots, completed_roots } = listPlanRoots(includeCompleted);
+      const board = buildOrchestrationBoardList({
+        includeCompleted,
+        view,
+        completedSince,
+      });
       json(res, 200, {
         ok: true,
-        active_roots,
-        completed_roots,
-        count: active_roots.length,
+        plans: board.plans,
+        active_roots: board.active_roots,
+        completed_roots: board.completed_roots,
+        count: board.count,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

@@ -87,9 +87,16 @@ describe("steward chat orchestration runs HTTP", () => {
 
     const list = await fetch(`${baseUrl}/chat/v1/orchestration/runs`, { headers });
     expect(list.status).toBe(200);
-    const body = (await list.json()) as { active_roots: string[]; count: number };
+    const body = (await list.json()) as {
+      active_roots: string[];
+      count: number;
+      plans: Array<{ id: string; title: string; cards: Array<{ column: string }> }>;
+    };
     expect(body.active_roots).toContain("IMP-HTTP-ACTIVE");
     expect(body.count).toBeGreaterThan(0);
+    expect(body.plans?.some((p) => p.id === "IMP-HTTP-ACTIVE")).toBe(true);
+    const plan = body.plans?.find((p) => p.id === "IMP-HTTP-ACTIVE");
+    expect(plan?.cards[0]?.column).toBe("todo");
 
     const missing = await fetch(`${baseUrl}/chat/v1/orchestration/runs?id=IMP-HTTP-MISSING`, {
       headers,
@@ -110,13 +117,16 @@ describe("steward chat orchestration runs HTTP", () => {
     const payload = (await detail.json()) as {
       ok: boolean;
       rootId: string;
-      nodes: unknown[];
+      planTitle: string;
+      nodes: Array<{ title: string; column: string }>;
       retryableCount: number;
       cancellableCount: number;
     };
     expect(payload.ok).toBe(true);
     expect(payload.rootId).toBe("IMP-HTTP-OPEN");
+    expect(payload.planTitle).toBeTruthy();
     expect(payload.nodes.length).toBeGreaterThan(0);
+    expect(payload.nodes[0]?.column).toBe("todo");
     expect(payload.retryableCount).toBe(0);
     expect(payload.cancellableCount).toBeGreaterThan(0);
 
@@ -174,5 +184,45 @@ describe("steward chat orchestration runs HTTP", () => {
     const body = (await res.json()) as { ok: boolean; cancelled: string[] };
     expect(body.ok).toBe(true);
     expect(body.cancelled).toContain("IMP-HTTP-CANCEL");
+  });
+
+  it("completes and reopens work orders via POST", async () => {
+    seed("IMP-HTTP-COMPLETE", "pending");
+    await start();
+    const { token } = registerSession({
+      operator_id: "OP-001",
+      approver_id: "OP-001",
+      mode: "dev",
+    });
+    const headers = {
+      Cookie: `${WIRE_CONSOLE_SESSION_COOKIE}=${token}`,
+      "Content-Type": "application/json",
+    };
+
+    const complete = await fetch(
+      `${baseUrl}/chat/v1/orchestration/runs/complete?id=IMP-HTTP-COMPLETE`,
+      { method: "POST", headers },
+    );
+    expect(complete.status).toBe(200);
+    const doneBody = (await complete.json()) as { ok: boolean; status: string };
+    expect(doneBody.ok).toBe(true);
+    expect(doneBody.status).toBe("completed");
+
+    const incompleteList = await fetch(`${baseUrl}/chat/v1/orchestration/runs`, { headers });
+    const incomplete = (await incompleteList.json()) as { plans: Array<{ id: string }> };
+    expect(incomplete.plans.some((p) => p.id === "IMP-HTTP-COMPLETE")).toBe(false);
+
+    const reopen = await fetch(
+      `${baseUrl}/chat/v1/orchestration/runs/reopen?id=IMP-HTTP-COMPLETE`,
+      { method: "POST", headers },
+    );
+    expect(reopen.status).toBe(200);
+    const reopenBody = (await reopen.json()) as { ok: boolean; status: string };
+    expect(reopenBody.ok).toBe(true);
+    expect(reopenBody.status).toBe("pending");
+
+    const openAgain = await fetch(`${baseUrl}/chat/v1/orchestration/runs`, { headers });
+    const openBody = (await openAgain.json()) as { plans: Array<{ id: string }> };
+    expect(openBody.plans.some((p) => p.id === "IMP-HTTP-COMPLETE")).toBe(true);
   });
 });

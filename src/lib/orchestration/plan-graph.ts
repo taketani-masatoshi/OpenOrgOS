@@ -180,21 +180,32 @@ function isCancelledBlock(node: Handoff): boolean {
 
 export function syncParentPlanStatus(graph: PlanGraph): Handoff | undefined {
   const root = graph.nodes.get(graph.rootId) ?? loadHandoff(graph.rootId);
-  if (!root.child_ids?.length || root.status === "completed") return undefined;
+  if (!root.child_ids?.length) return undefined;
 
   const children = root.child_ids
     .map((id) => graph.nodes.get(id) ?? loadHandoff(id))
     .filter((node) => node.task_type === "implement" && !(node.child_ids?.length));
 
   if (children.length === 0) return undefined;
-  if (!children.every((child) => child.status === "completed")) return undefined;
 
-  const next = transitionWorkOrder(root.id, "completed", {
-    completionNotes: `all ${children.length} child work order(s) completed`,
-    skipQueueEvent: true,
-  });
-  graph.nodes.set(root.id, next);
-  return next;
+  const allCompleted = children.every((child) => child.status === "completed");
+
+  if (allCompleted && root.status !== "completed") {
+    const next = transitionWorkOrder(root.id, "completed", {
+      completionNotes: `all ${children.length} child work order(s) completed`,
+      skipQueueEvent: true,
+    });
+    graph.nodes.set(root.id, next);
+    return next;
+  }
+
+  if (!allCompleted && root.status === "completed") {
+    const next = transitionWorkOrder(root.id, "pending", { skipQueueEvent: true });
+    graph.nodes.set(root.id, next);
+    return next;
+  }
+
+  return undefined;
 }
 
 export function syncDependencyStatuses(graph: PlanGraph): Handoff[] {

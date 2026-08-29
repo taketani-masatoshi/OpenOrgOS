@@ -7,6 +7,7 @@ import { routingQueueDir, writeHandoffFiles, loadHandoff } from "../src/lib/rout
 import {
   assertTransitionAllowed,
   completeWorkOrderViaState,
+  reopenWorkOrderViaState,
   transitionWorkOrder,
 } from "../src/lib/orchestration/work-order-state.js";
 import { completeWorkOrder } from "../src/lib/escalate.js";
@@ -57,8 +58,12 @@ describe("work-order-state", () => {
     expect(() => assertTransitionAllowed("blocked", "pending")).not.toThrow();
   });
 
+  it("allows completed to pending for reopen", () => {
+    expect(() => assertTransitionAllowed("completed", "pending")).not.toThrow();
+  });
+
   it("rejects invalid transitions", () => {
-    expect(() => assertTransitionAllowed("completed", "pending")).toThrow(/Invalid work order transition/);
+    expect(() => assertTransitionAllowed("completed", "running")).toThrow(/Invalid work order transition/);
   });
 
   it("transitions pending to dispatched and records dispatch metadata", () => {
@@ -77,6 +82,13 @@ describe("work-order-state", () => {
     const updated = completeWorkOrder("IMP-STATE-002", "manual done");
     expect(updated.status).toBe("completed");
     expect(updated.completion_notes).toBe("manual done");
+  });
+
+  it("reopens completed work orders to pending", () => {
+    seedHandoff("IMP-STATE-REOPEN", "completed");
+    const updated = reopenWorkOrderViaState("IMP-STATE-REOPEN");
+    expect(updated.status).toBe("pending");
+    expect(updated.dispatch?.finished_at).toBeUndefined();
   });
 
   it("emits dispatch_requested and work_order_running from the state machine", () => {

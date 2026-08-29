@@ -199,6 +199,20 @@ describe("orchestration DAG", () => {
     expect(graph.nodes.get(parent.id)?.status).toBe("completed");
   });
 
+  it("syncParentPlanStatus reopens parent when a child is reopened", () => {
+    const parent = writeWo("IMP-DAG-PAR-R", {
+      to_agent: "executive_steward",
+      status: "completed",
+      child_ids: ["IMP-DAG-PAR-R-A", "IMP-DAG-PAR-R-B"],
+    });
+    writeWo("IMP-DAG-PAR-R-A", { parent_id: parent.id, status: "completed" });
+    writeWo("IMP-DAG-PAR-R-B", { parent_id: parent.id, status: "pending" });
+
+    const graph = buildPlanGraph(parent.id);
+    syncParentPlanStatus(graph);
+    expect(graph.nodes.get(parent.id)?.status).toBe("pending");
+  });
+
   it("applyDependsToWorkOrders persists depends_on edges", () => {
     const parent = writeWo("IMP-DAG-DEP-P", {
       to_agent: "executive_steward",

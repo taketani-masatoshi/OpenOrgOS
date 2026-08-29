@@ -12,7 +12,14 @@ import {
   retryableFailedWorkOrders,
   syncDependencyStatuses,
 } from "./plan-graph.js";
-import { getWorkOrderDispatch, transitionWorkOrder, WORK_ORDER_CANCEL_BLOCK_REASON } from "./work-order-state.js";
+import { enrichHandoffDisplayFields, resolveWorkOrderTitle } from "./board-view.js";
+import {
+  completeWorkOrderViaState,
+  getWorkOrderDispatch,
+  reopenWorkOrderViaState,
+  transitionWorkOrder,
+  WORK_ORDER_CANCEL_BLOCK_REASON,
+} from "./work-order-state.js";
 
 export function retryFailedWorkOrders(id: string): string[] {
   const rootId = resolvePlanRoot(id);
@@ -45,6 +52,20 @@ export function cancelPendingWorkOrders(id: string): string[] {
   }
 
   return cancelled;
+}
+
+export function completeWorkOrderRun(id: string, notes?: string): ReturnType<typeof completeWorkOrderViaState> {
+  const rootId = resolvePlanRoot(id);
+  const updated = completeWorkOrderViaState(id, notes);
+  syncDependencyStatuses(buildPlanGraph(rootId));
+  return updated;
+}
+
+export function reopenWorkOrderRun(id: string): ReturnType<typeof reopenWorkOrderViaState> {
+  const rootId = resolvePlanRoot(id);
+  const updated = reopenWorkOrderViaState(id);
+  syncDependencyStatuses(buildPlanGraph(rootId));
+  return updated;
 }
 
 export function applyDependsToWorkOrders(
@@ -97,6 +118,7 @@ function formatAiaState(run?: AiaRunRecord): string {
 
 export interface OrchestrationStatusPayload {
   rootId: string;
+  planTitle: string;
   nodeCount: number;
   waveCount: number;
   readyCount: number;
@@ -111,11 +133,20 @@ export interface OrchestrationStatusPayload {
   };
   nodes: Array<{
     id: string;
+    title: string;
+    column: string;
     agent: string;
     status: string;
+    work_kind: string | null;
+    due_date?: string;
+    assignee?: string;
+    blocked_on?: string;
     depends_on: string[];
+    depends_on_labels: Array<{ id: string; title: string }>;
     dispatch: WorkOrderDispatch;
     wave: number;
+    retryable: boolean;
+    cancellable: boolean;
     aia?: {
       run_id: string;
       state: string;
@@ -145,6 +176,8 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
   const aiaConfig = loadAiaRuntimeConfig();
   const aiaMetrics = getSharedAiaScheduler().metrics();
   const aiaLookup = buildAiaRunLookup(loadAiaQueueFile().runs);
+  const retryableIds = new Set(retryable.map((n) => n.id));
+  const rootHandoff = graph.nodes.get(rootId);
 
   const nodes = graph.waves.flatMap((wave, index) =>
     wave.flatMap((nodeId) => {
@@ -152,14 +185,30 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
       if (!node) return [];
       const dispatch = getWorkOrderDispatch(node);
       const aiaRun = resolveAiaRunForNode(node.id, dispatch, aiaLookup);
+      const display = enrichHandoffDisplayFields(node);
       return [
         {
           id: node.id,
+          title: display.title,
+          column: display.column,
           agent: node.to_agent,
           status: node.status,
+          work_kind: display.work_kind,
+          due_date: display.due_date,
+          assignee: display.assignee,
+          blocked_on: display.blocked_on,
           depends_on: node.depends_on,
+          depends_on_labels: node.depends_on.map((depId) => {
+            const dep = graph.nodes.get(depId);
+            return {
+              id: depId,
+              title: dep ? resolveWorkOrderTitle(dep) : depId,
+            };
+          }),
           dispatch,
           wave: index + 1,
+          retryable: retryableIds.has(node.id),
+          cancellable: node.status === "pending" || node.status === "waiting",
           aia: aiaRun
             ? {
                 run_id: aiaRun.run_id,
@@ -190,6 +239,7 @@ export function buildOrchestrationStatusPayload(id: string): OrchestrationStatus
 
   return {
     rootId,
+    planTitle: rootHandoff ? resolveWorkOrderTitle(rootHandoff) : rootId,
     nodeCount: graph.nodes.size,
     waveCount: graph.waves.length,
     readyCount: ready.length,

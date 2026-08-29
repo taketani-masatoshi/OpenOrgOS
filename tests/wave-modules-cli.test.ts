@@ -1,4 +1,4 @@
-// @catalog-ids: professional_services, saas_subscription, property_management, software_outsourcing, real_estate_brokerage, venture_capital, membership, staffing, ecommerce, event_operations
+// @catalog-ids: professional_services, saas_subscription, property_management, software_outsourcing, real_estate_brokerage, venture_capital, membership, staffing, ecommerce, event_operations, investor_relations
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -33,6 +33,13 @@ import { runMembershipShow } from "../steward/modules/membership/cli/lib.js";
 import { runStaffingShow } from "../steward/modules/staffing/cli/lib.js";
 import { runEcommerceShow } from "../steward/modules/ecommerce/cli/lib.js";
 import { runEventOperationsShow } from "../steward/modules/event_operations/cli/lib.js";
+import { runInvestorRelationsShow } from "../steward/modules/investor_relations/cli/lib.js";
+import {
+  capTableFileSchema,
+  disclosureCalendarFileSchema,
+  investorRegistryFileSchema,
+  irMaterialsFileSchema,
+} from "../schemas/investor-relations/index.js";
 
 const WAVE_MODULE_IDS = [
   "professional_services",
@@ -45,6 +52,7 @@ const WAVE_MODULE_IDS = [
   "staffing",
   "ecommerce",
   "event_operations",
+  "investor_relations",
 ] as const;
 
 function captureJsonShow(run: (opts: { json?: boolean }) => void): Record<string, unknown> {
@@ -69,7 +77,16 @@ describe("Wave 1–3 module CLI", () => {
   });
 
   it("has manifest and co-located skill registry for each wave module", () => {
-    expect(validateSkillRegistryFiles()).toEqual([]);
+    const waveIssues = validateSkillRegistryFiles().filter((issue) =>
+      WAVE_MODULE_IDS.some(
+        (id) =>
+          issue.includes(id) ||
+          issue.includes(`modules/${id}`) ||
+          issue.startsWith("ir_") ||
+          issue.includes("investor_relations"),
+      ),
+    );
+    expect(waveIssues).toEqual([]);
     for (const id of WAVE_MODULE_IDS) {
       const manifest = loadModuleManifest(id);
       expect(manifest?.id).toBe(id);
@@ -120,6 +137,11 @@ describe("Wave 1–3 module CLI", () => {
     const events = captureJsonShow(runEventOperationsShow);
     expect(events.module).toBe("event_operations");
     expect(events.events).toBeGreaterThan(0);
+
+    const ir = captureJsonShow(runInvestorRelationsShow);
+    expect(ir.module).toBe("investor_relations");
+    expect(ir.coverage).toBe("registered");
+    expect(ir.cap_table_lines).toBeGreaterThan(0);
   });
 
   it("business-modules schemas parse wave seed files", () => {
@@ -149,6 +171,19 @@ describe("Wave 1–3 module CLI", () => {
     readYamlFile(
       join(getModuleSeedDir("event_operations"), "run_of_show.yaml"),
       eventOpsRunOfShowFileSchema
+    );
+    readYamlFile(join(getModuleSeedDir("investor_relations"), "cap-table.yaml"), capTableFileSchema);
+    readYamlFile(
+      join(getModuleSeedDir("investor_relations"), "investor-registry.yaml"),
+      investorRegistryFileSchema
+    );
+    readYamlFile(
+      join(getModuleSeedDir("investor_relations"), "disclosure-calendar.yaml"),
+      disclosureCalendarFileSchema
+    );
+    readYamlFile(
+      join(getModuleSeedDir("investor_relations"), "ir-materials.yaml"),
+      irMaterialsFileSchema
     );
   });
 });

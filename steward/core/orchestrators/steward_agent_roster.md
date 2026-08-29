@@ -91,7 +91,7 @@ Steward Agent は **正データを編集せず**、本カタログに従い **�
 
 | id | 特性 | 報告線 | 人間承認 |
 |----|------|--------|---------|
-| **investor_relations** | 株主 · VC 向け資料 · **未公開情報厳禁** | executive_steward | 開示 · 説明会 |
+| **investor_relations** | 自社 IR · cap table · 開示カレンダー · **未公開情報厳禁** | executive_steward | 開示 · 説明会 |
 | **esg_sustainability** | ESG · カーボン非財務 | compliance | 報告公開 |
 | **internal_audit** | 監査独立性 · Compliance と役割分離 | executive_steward | 監査報告 |
 | **privacy_officer** | DPIA · 越境 · REG-010 専任 | compliance | ポリシー公開 |
@@ -239,9 +239,9 @@ Growth/一般企業 Agent の要約は **Phase 2 で dashboard 自動連携**（
 |------|-----|------|
 | catalog agents | 51 | `steward/core/agents/registry.yaml` |
 | active agents | 50 | registry `status: active` |
-| skills (registry) | 144 | `steward/core/skills/registry.yaml` + modules |
-| runtime: cli | 68 | registry |
-| runtime: agent | 76 | registry（旧 cursor-only 含む） |
+| skills (registry) | 219 | `steward/core/skills/registry.yaml` + modules |
+| runtime: cli | 173 | registry |
+| runtime: agent | 46 | registry（旧 cursor-only 含む） |
 | テナント有効化 | `orgos agent roster show` | `data/operator/agents.yaml` |
 | pulse 対象 | active roster のみ | `orgos agent pulse --all` |
 <!-- orgos:generated:catalog-stats:end -->
