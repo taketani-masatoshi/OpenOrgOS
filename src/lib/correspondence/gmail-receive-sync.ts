@@ -18,6 +18,7 @@ export interface GmailFetchMessage {
 export interface GmailApiClient {
   listMessageIds(opts: { labelIds?: string[]; afterInternalDate?: number }): Promise<string[]>;
   getMessageRaw(id: string): Promise<GmailFetchMessage | null>;
+  getThreadMessageIds?(threadId: string): Promise<string[]>;
 }
 
 function buildMessageFilename(msg: GmailFetchMessage): string {
@@ -68,6 +69,15 @@ export function createGmailApiClient(accessToken: string): GmailApiClient {
         raw,
       };
     },
+
+    async getThreadMessageIds(threadId) {
+      const res = await fetch(`${base}/threads/${threadId}?format=minimal`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) return [];
+      const body = (await res.json()) as { messages?: Array<{ id: string }> };
+      return (body.messages ?? []).map((m) => m.id);
+    },
   };
 }
 
@@ -111,6 +121,13 @@ export async function syncGmailReceive(opts?: {
     if (opts?.dryRun) continue;
     const filename = buildMessageFilename(msg);
     writeFileSync(join(receivedDir, filename), msg.raw, "utf-8");
+    if (msg.threadId) {
+      writeFileSync(
+        join(receivedDir, `${filename}.meta.json`),
+        JSON.stringify({ gmail_thread_id: msg.threadId, gmail_message_id: msg.id }),
+        "utf-8",
+      );
+    }
     saved.push(filename);
   }
 

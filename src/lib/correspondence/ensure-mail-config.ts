@@ -1,11 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import type { MailConfig } from "../../../schemas/correspondence/mail-config.js";
 import { parseMailConfigFile } from "./mail-config-parse.js";
 import { ensureMailConfigExample } from "./mail-config.js";
 import { getExecutiveRecordsDir, getMailConfigPath } from "./paths.js";
-import { getDataDir } from "../utils.js";
+import { getDataDir, writeYamlFile } from "../utils.js";
 
 export interface EnsureExecutiveMailConfigResult {
   created: boolean;
@@ -62,6 +62,6 @@ export function ensureExecutiveMailConfig(opts?: {
   mkdirSync(getExecutiveRecordsDir(), { recursive: true });
   ensureMailConfigExample();
   const config = buildDefaultExecutiveMailConfig({ dryRunSmtp: opts?.dryRunSmtp !== false });
-  writeFileSync(path, YAML.stringify(config), "utf-8");
+  writeYamlFile(path, config);
   return { created: true, path };
 }

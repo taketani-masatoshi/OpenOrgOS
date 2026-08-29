@@ -102,6 +102,18 @@ export async function sendApprovedCorrespondence(opts: {
     );
   }
 
+  const { assertCorrespondenceStyleLint } = await import("./style-lint.js");
+  const { assertOutboundCorrespondenceDraft } = await import("./claims-assert.js");
+  const { runCorrespondenceOutboundGates } = await import("./correspondence-gate-audit.js");
+  runCorrespondenceOutboundGates(
+    draft,
+    () => {
+      assertCorrespondenceStyleLint(draft);
+      assertOutboundCorrespondenceDraft(draft);
+    },
+    opts.operatorId,
+  );
+
   if (!opts.dryRun) {
     const smtpHost = resolveMailConfig().smtp?.host;
     if (!isDryRunSmtpHost(smtpHost)) {
@@ -171,6 +183,16 @@ export async function sendApprovedCorrespondence(opts: {
       "../scheduling-coordination/lifecycle.js"
     );
     handleSchedulingCorrespondenceSent(draft);
+  }
+
+  const { handleCorrespondenceCaseSent } = await import("./case-status.js");
+  handleCorrespondenceCaseSent(draft, { actor: opts.operatorId });
+
+  try {
+    const { pushAsanaCaseIfLinked } = await import("../integrations/asana-adapter.js");
+    await pushAsanaCaseIfLinked(draft);
+  } catch {
+    /* Asana optional */
   }
 
   return { draft, sendResult, companyEventId: event.id };

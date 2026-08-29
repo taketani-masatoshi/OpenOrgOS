@@ -1,9 +1,9 @@
-import { mkdirSync, writeFileSync } from "node:fs";
 import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triage.js";
 import { pushNotifications } from "../notifications/push.js";
 import { buildTodayContext } from "../steward-chat/today-context.js";
 import { findTriageEntry, upsertTriageEntry } from "./mail-triage-queue.js";
 import { inboundCorrespondenceDraftMdPath } from "./paths.js";
+import { writeTrackedFile } from "../utils.js";
 import { sendInboundSlackDigest } from "./slack-notify.js";
 import { findSenderIdentification } from "./sender-identification-queue.js";
 import { findMailInterpretation } from "./mail-interpretation.js";
@@ -183,7 +183,6 @@ export function formatInboundHandoffMarkdown(entry: MailTriageEntry): string {
 
 export function writeInboundHandoffDraft(entry: MailTriageEntry): string {
   const path = inboundCorrespondenceDraftMdPath(entry.id);
-  mkdirSync(path.replace(/\/[^/]+$/, ""), { recursive: true });
-  writeFileSync(path, formatInboundHandoffMarkdown(entry), "utf-8");
+  writeTrackedFile(path, formatInboundHandoffMarkdown(entry));
   return path;
 }

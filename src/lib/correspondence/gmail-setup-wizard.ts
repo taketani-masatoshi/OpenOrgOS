@@ -1,10 +1,11 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import YAML from "yaml";
 import { mailConfigSchema } from "../../../schemas/correspondence/mail-config.js";
 import { getExecutiveRecordsDir, getMailConfigPath } from "./paths.js";
 import { ensureMailConfigExample, loadMailConfig } from "./mail-config.js";
+import { writeYamlFile } from "../utils.js";
 import {
   getGmailOAuthClientConfig,
   getGmailOAuthClientPath,
@@ -91,7 +92,7 @@ export function writeGmailApiMailConfig(opts: {
       sync: "gmail_api",
     },
   });
-  writeFileSync(path, YAML.stringify(merged), "utf-8");
+  writeYamlFile(path, merged);
   return path;
 }
 

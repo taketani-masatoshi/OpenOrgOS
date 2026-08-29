@@ -1,5 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolveSmtpCredentials } from "./mail-config.js";
+import {
+  hydrateMailEnvFromStore,
+  loadMailSecretsFromFile,
+} from "./mail-secrets-store.js";
 import { getImapEnvPath } from "./paths.js";
 
 export interface ImapCredentials {
@@ -31,7 +35,11 @@ function parseEnvFile(path: string): Record<string, string> {
 }
 
 export function resolveImapCredentials(): ImapCredentials | null {
-  const fileEnv = parseEnvFile(getImapEnvPath());
+  hydrateMailEnvFromStore();
+  const fileEnv = {
+    ...parseEnvFile(getImapEnvPath()),
+    ...loadMailSecretsFromFile(),
+  };
   const smtp = resolveSmtpCredentials();
 
   const user =

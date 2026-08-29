@@ -14,6 +14,12 @@ import { getLlmApiConfig, isLlmMockEnabled, type LlmApiConfig } from "../operato
 import { withLlmWorker } from "../llm-pool/router.js";
 import { hasConfiguredLlmWorkers } from "../llm-pool/registry.js";
 import {
+  applyLocalLlmErrorFallbackToSystem,
+  formatLocalLlmMailErrorFallbackSuffix,
+  isLocalLlmErrorFallbackEnabled,
+  parseLocalLlmErrorReply,
+} from "../operator-runtime/local-llm-error-fallback.js";
+import {
   isMailInterpretEnsembleEnabled,
   majorityVote,
   majorityVoteBoolean,
@@ -85,19 +91,27 @@ async function interpretWithModel(
     return undefined;
   }
 
-  const run = async (base: LlmApiConfig) => {
+  const run = async (base: LlmApiConfig, tier?: "local" | "cloud") => {
     const target: LlmApiConfig = { ...base, model };
+    let systemContent = SYSTEM_PROMPT;
+    if (tier === "local" && isLocalLlmErrorFallbackEnabled()) {
+      systemContent =
+        applyLocalLlmErrorFallbackToSystem(SYSTEM_PROMPT, "local") +
+        formatLocalLlmMailErrorFallbackSuffix();
+    }
     const res = await postLlmChat(
       [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemContent },
         { role: "user", content: userPrompt },
       ],
       { responseFormat: { type: "json_object" }, temperature: 0.2, target }
     );
 
     if (!res.ok || !res.message || typeof res.message.content !== "string") return undefined;
+    const rawText = res.message.content.trim();
+    if (parseLocalLlmErrorReply(rawText).isError) return undefined;
     try {
-      const raw = JSON.parse(res.message.content) as unknown;
+      const raw = JSON.parse(rawText) as unknown;
       const parsed = interpretResponseSchema.parse(raw);
       return { model, ...parsed, confidence: parsed.confidence ?? 0.5 };
     } catch {
@@ -107,7 +121,7 @@ async function interpretWithModel(
 
   if (hasConfiguredLlmWorkers() || isLlmMockEnabled()) {
     try {
-      return await withLlmWorker((lease) => run(lease.target));
+      return await withLlmWorker((lease) => run(lease.target, lease.worker.tier));
     } catch {
       return undefined;
     }

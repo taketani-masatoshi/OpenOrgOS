@@ -3,9 +3,8 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
-  writeFileSync,
 } from "node:fs";
-import { currentDate, readYamlFile, writeYamlFile } from "../utils.js";
+import { currentDate, readYamlFile, writeYamlFile, writeTrackedFile } from "../utils.js";
 import {
   correspondenceDraftSchema,
   type CorrespondenceDraft,
@@ -21,6 +20,9 @@ import {
 } from "./paths.js";
 import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
 import { recordSecretaryDraftEditIfBodyChanged } from "../scheduling-coordination/quality-signals.js";
+import { assertOutboundCorrespondenceDraft } from "./claims-assert.js";
+import { assertCorrespondenceStyleLint } from "./style-lint.js";
+import { runCorrespondenceOutboundGates } from "./correspondence-gate-audit.js";
 
 function nextDraftId(): string {
   const dir = getCorrespondenceDraftsDir();
@@ -66,6 +68,10 @@ export interface CreateCorrespondenceDraftOptions {
   proposeApproval?: boolean;
   /** Skip automatic oversight CC (CEO 等) */
   skipCcDefaults?: boolean;
+  inquiryId?: string;
+  dealId?: string;
+  /** Testing / repair only — do not skip in production paths */
+  skipOutboundAssert?: boolean;
 }
 
 export function saveCorrespondenceDraft(
@@ -74,10 +80,9 @@ export function saveCorrespondenceDraft(
   const parsed = correspondenceDraftSchema.parse(draft);
   mkdirSync(getCorrespondenceDraftsDir(), { recursive: true });
   writeYamlFile(correspondenceDraftYamlPath(parsed.draft_id), parsed);
-  writeFileSync(
+  writeTrackedFile(
     correspondenceDraftMdPath(parsed.draft_id),
     buildCorrespondenceDraftMarkdown(parsed),
-    "utf-8",
   );
   return parsed;
 }
@@ -150,9 +155,22 @@ export function createCorrespondenceDraft(
     body: sanitizeOutboundEmailBody(opts.body),
     slack_channel: opts.slackChannel,
     contact_ref: opts.contactRef,
+    inquiry_id: opts.inquiryId,
+    deal_id: opts.dealId,
     attachment_refs: opts.attachmentRefs ?? [],
     notes: opts.notes,
   };
+
+  if (opts.skipOutboundAssert !== true) {
+    runCorrespondenceOutboundGates(
+      draft,
+      () => {
+        assertOutboundCorrespondenceDraft(draft);
+        assertCorrespondenceStyleLint(draft);
+      },
+      opts.createdBy,
+    );
+  }
 
   let approvalId: string | undefined;
   if (opts.proposeApproval !== false) {

@@ -1,0 +1,6 @@
+# Mail Intake トリアージキュー（L1 · 件名・差出人・分類のみ）
+# 実体: data/executive/mail-triage-queue.yaml（setup wizard で生成）
+# 本文は records/executive/mail-received/*.eml（L2）
+
+version: 1
+entries: []

@@ -23,6 +23,13 @@ import {
   CORRESPONDENCE_CLI,
   DEFAULT_CORRESPONDENCE_AGENT_ID,
 } from "../lib/correspondence/cli-labels.js";
+import {
+  formatStyleLintReport,
+  lintCorrespondenceDraft,
+} from "../lib/correspondence/style-lint.js";
+import { searchCorrespondenceKnowledge } from "../lib/correspondence/knowledge-search.js";
+import { buildFactsVerify } from "../lib/correspondence/facts-verify.js";
+import { composeCorrespondenceReply } from "../lib/correspondence/compose.js";
 
 export interface CorrespondenceDraftCliOptions {
   channel?: string;
@@ -198,6 +205,91 @@ export async function runCorrespondenceSend(opts: CorrespondenceSendCliOptions):
     console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);
   }
+}
+
+export function runCorrespondenceStyleLint(opts: { id: string; json?: boolean }): void {
+  const result = lintCorrespondenceDraft(opts.id);
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(formatStyleLintReport(result));
+  if (!result.ok) process.exitCode = 1;
+}
+
+export async function runCorrespondenceCompose(opts: {
+  mailId: string;
+  caseId?: string;
+  to?: string;
+  contactRef?: string;
+  operator?: string;
+  noApproval?: boolean;
+  json?: boolean;
+}): Promise<void> {
+  requireCliDataWrite({ command: "mail outbound compose", permission: "escalate:plan" });
+  try {
+    const result = await composeCorrespondenceReply({
+      mailId: opts.mailId,
+      caseId: opts.caseId,
+      to: opts.to,
+      contactRef: opts.contactRef,
+      operator: opts.operator,
+      proposeApproval: !opts.noApproval,
+    });
+    auditCliMutation("mail outbound compose", result.draft.draft_id);
+    if (opts.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    console.log(
+      `✓ compose ${result.draft.draft_id} · llm=${result.usedLlm ? "yes" : "fallback"} · ${result.draft.status}`,
+    );
+    if (result.approvalId) {
+      console.log(`  approval: ${result.approvalId}`);
+      console.log(`  next: orgos org approval approve --id ${result.approvalId} --reviewed`);
+    }
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e));
+    process.exit(1);
+  }
+}
+
+export function runCorrespondenceKnowledgeSearch(opts: {
+  query: string;
+  limit?: number;
+  json?: boolean;
+}): void {
+  const hits = searchCorrespondenceKnowledge(opts.query, { limit: opts.limit });
+  if (opts.json) {
+    console.log(JSON.stringify(hits, null, 2));
+    return;
+  }
+  if (!hits.length) {
+    console.log("(no hits)");
+    return;
+  }
+  for (const h of hits) {
+    console.log(`[${h.score}] ${h.path}`);
+    console.log(`  ${h.excerpt.slice(0, 120)}`);
+  }
+}
+
+export function runCorrespondenceFactsVerify(opts: {
+  mailId?: string;
+  caseId?: string;
+  query?: string;
+  json?: boolean;
+}): void {
+  const result = buildFactsVerify({
+    mailId: opts.mailId,
+    caseId: opts.caseId,
+    query: opts.query,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(JSON.stringify(result, null, 2));
 }
 
 export interface SecretaryMailListCliOptions {

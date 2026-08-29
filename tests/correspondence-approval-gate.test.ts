@@ -4,7 +4,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
-import { getExecutiveRecordsDir, getMailConfigPath } from "../src/lib/correspondence/paths.js";
+import { getExecutiveRecordsDir, getMailConfigPath, getMailReceivedDir } from "../src/lib/correspondence/paths.js";
 import {
   createCorrespondenceDraft,
   loadCorrespondenceDraft,
@@ -15,10 +15,21 @@ import {
   CorrespondenceApprovalGateError,
 } from "../src/lib/correspondence/send-gate.js";
 import { CorrespondenceMailSetupError } from "../src/lib/correspondence/mail-setup-readiness.js";
-import {
-  humanApproveOrgApproval,
-} from "../src/lib/org/approval/index.js";
+import { CorrespondenceClaimsError } from "../src/lib/correspondence/claims-assert.js";
+import { humanApproveOrgApproval } from "../src/lib/org/approval/index.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
+
+function seedContact(email: string, id = "EXT-001"): void {
+  const execDir = join(getDataDir(), "executive");
+  mkdirSync(execDir, { recursive: true });
+  writeFileSync(
+    join(execDir, "external-contacts.yaml"),
+    YAML.stringify({
+      contacts: [{ id, name: "Partner", org: "Example", email }],
+    }),
+    "utf-8",
+  );
+}
 
 function seedMailSetupForTests(): void {
   const companyPath = join(getDataDir(), "company.yaml");
@@ -37,7 +48,7 @@ function seedMailSetupForTests(): void {
       smtp: { host: "smtp.test.local", port: 587, secure: false },
       receive: { sync: "stub" },
     }),
-    "utf-8"
+    "utf-8",
   );
   process.env.ORGOS_SMTP_USER = "test-user";
   process.env.ORGOS_SMTP_PASSWORD = "test-pass";
@@ -48,10 +59,12 @@ function cleanup(): void {
     join(getDataDir(), "org", "pending-approvals.yaml"),
     join(getDataDir(), "protocol"),
     join(getDataDir(), "company-events.yaml"),
+    join(getDataDir(), "executive", "external-contacts.yaml"),
     join(getDocsDir(), "executive", "correspondence-drafts"),
     join(getDocsDir(), "company", "events"),
     join(getDocsDir(), "company", "artifacts"),
     getExecutiveRecordsDir(),
+    getMailReceivedDir(),
   ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
@@ -64,9 +77,34 @@ describe("correspondence approval gate", () => {
     setTenantId("demo");
     cleanup();
     ensureProtocolSigningKey();
+    seedContact("partner@example.com");
   });
 
   afterEach(() => cleanup());
+
+  it("blocks draft when body has amounts without verified claims pack", () => {
+    expect(() =>
+      createCorrespondenceDraft({
+        channel: "email",
+        to: "partner@example.com",
+        subject: "Quote",
+        body: "お見積は 500000 円です。",
+        createdBy: "secretary",
+      }),
+    ).toThrow(/amount claim|金額/);
+  });
+
+  it("blocks draft when recipient is not in registry", () => {
+    expect(() =>
+      createCorrespondenceDraft({
+        channel: "email",
+        to: "unknown@nowhere.example",
+        subject: "Test",
+        body: "Hello",
+        createdBy: "secretary",
+      }),
+    ).toThrow(CorrespondenceClaimsError);
+  });
 
   it("blocks send without human approval", async () => {
     const { draft } = createCorrespondenceDraft({
@@ -81,7 +119,7 @@ describe("correspondence approval gate", () => {
     expect(() => assertCorrespondenceApproved(draft)).toThrow(CorrespondenceApprovalGateError);
 
     await expect(
-      sendApprovedCorrespondence({ draftId: draft.draft_id, operatorId: "ceo" })
+      sendApprovedCorrespondence({ draftId: draft.draft_id, operatorId: "ceo" }),
     ).rejects.toThrow(/not approved|human approval required/i);
   });
 
@@ -101,7 +139,7 @@ describe("correspondence approval gate", () => {
       humanReviewConfirmed: true,
     });
     await expect(
-      sendApprovedCorrespondence({ draftId: draft.draft_id, operatorId: "OP-001" })
+      sendApprovedCorrespondence({ draftId: draft.draft_id, operatorId: "OP-001" }),
     ).rejects.toThrow(CorrespondenceMailSetupError);
   });
 
@@ -138,6 +176,7 @@ describe("correspondence approval gate", () => {
   });
 
   it("creates internal approval with correspondence.email subject_type", () => {
+    seedContact("a@b.com", "EXT-002");
     const { draft, approvalId } = createCorrespondenceDraft({
       channel: "email",
       to: "a@b.com",

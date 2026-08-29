@@ -3,7 +3,12 @@ import { z } from "zod";
 export const mailImportanceSchema = z.enum(["p0", "p1", "p2", "p3"]);
 export const mailUrgencySchema = z.enum(["immediate", "today", "week", "none"]);
 export const mailDispositionSchema = z.enum(["ham", "spam", "suspicious", "unknown"]);
-export const mailRoutingSchema = z.enum(["secretary", "archive", "ignore"]);
+export const mailRoutingSchema = z.enum([
+  "secretary",
+  "sales_inbound",
+  "archive",
+  "ignore",
+]);
 export const mailHandoffStatusSchema = z.enum(["pending", "handed_off", "dismissed"]);
 
 export const senderIdentificationStatusSchema = z.enum([
@@ -41,6 +46,8 @@ export const mailTriageEntrySchema = z.object({
   schedule_reply_parsed: z.boolean().optional(),
   /** 関連メールスレッド ID */
   mail_thread_ids: z.array(z.string()).default([]),
+  /** Gmail API thread id for this message */
+  gmail_thread_id: z.string().optional(),
 });
 
 export const mailTriageQueueSchema = z.object({

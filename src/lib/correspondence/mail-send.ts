@@ -1,13 +1,17 @@
 import { createConnection, type Socket } from "node:net";
 import { connect as tlsConnect, type TLSSocket } from "node:tls";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import type { MailConfig } from "../../../schemas/correspondence/mail-config.js";
 import { getMailSentDir } from "./paths.js";
 import { isDryRunSmtpHost, resolveMailConfig, resolveSmtpCredentials } from "./mail-config.js";
 import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
 import { resolveGmailAccessToken } from "./gmail-oauth.js";
+import {
+  isAttachmentPathAllowlisted,
+  resolveTenantLogicalPath,
+} from "./knowledge-search.js";
 
 export interface SendEmailResult {
   mode: "smtp" | "dry_run" | "gmail_api";
@@ -41,6 +45,14 @@ function encodeMimeHeaderUtf8(value: string): string {
     : value;
 }
 
+function foldBase64(base64: string): string {
+  const lines: string[] = [];
+  for (let i = 0; i < base64.length; i += 76) {
+    lines.push(base64.slice(i, i + 76));
+  }
+  return lines.join("\r\n");
+}
+
 function buildMimeMessage(
   draft: CorrespondenceDraft,
   config: MailConfig
@@ -50,17 +62,57 @@ function buildMimeMessage(
   const subject = encodeMimeHeaderUtf8(draft.subject ?? "(no subject)");
   const body = sanitizeOutboundEmailBody(draft.body).trimEnd();
   const cc = draft.cc ? `\r\nCc: ${draft.cc}` : "";
-  return [
+  const attachments = draft.attachment_refs ?? [];
+
+  if (attachments.length === 0) {
+    return [
+      `From: ${from}`,
+      `To: ${to}${cc}`,
+      `Subject: ${subject}`,
+      "MIME-Version: 1.0",
+      'Content-Type: text/plain; charset="UTF-8"',
+      "Content-Transfer-Encoding: 8bit",
+      "",
+      body,
+      "",
+    ].join("\r\n");
+  }
+
+  const boundary = `----=_OrgOS_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const parts: string[] = [
     `From: ${from}`,
     `To: ${to}${cc}`,
     `Subject: ${subject}`,
     "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
     'Content-Type: text/plain; charset="UTF-8"',
     "Content-Transfer-Encoding: 8bit",
     "",
     body,
     "",
-  ].join("\r\n");
+  ];
+
+  for (const ref of attachments) {
+    if (!isAttachmentPathAllowlisted(ref)) continue;
+    const abs = resolveTenantLogicalPath(ref);
+    if (!abs) continue;
+    const filename = basename(abs);
+    const data = readFileSync(abs);
+    const b64 = data.toString("base64");
+    parts.push(
+      `--${boundary}`,
+      `Content-Type: application/octet-stream; name="${filename}"`,
+      "Content-Transfer-Encoding: base64",
+      `Content-Disposition: attachment; filename="${filename}"`,
+      "",
+      foldBase64(b64),
+      "",
+    );
+  }
+  parts.push(`--${boundary}--`, "");
+  return parts.join("\r\n");
 }
 
 async function readResponse(socket: Socket | TLSSocket): Promise<string> {

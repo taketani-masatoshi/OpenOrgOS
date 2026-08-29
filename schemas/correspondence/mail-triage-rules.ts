@@ -13,6 +13,7 @@ export const mailTriageRulesSchema = z.object({
   version: z.literal(1).default(1),
   spam: ruleListSchema,
   suspicious: ruleListSchema,
+  inquiry: ruleListSchema,
   importance: z
     .object({
       p0: ruleListSchema,
@@ -33,6 +34,9 @@ export const mailTriageRulesSchema = z.object({
       spam: z.enum(["ignore", "archive", "secretary"]).default("ignore"),
       suspicious: z.enum(["ignore", "archive", "secretary"]).default("archive"),
       p0_ham: z.enum(["ignore", "archive", "secretary"]).default("secretary"),
+      inquiry_ham: z
+        .enum(["sales_inbound", "secretary", "archive", "ignore"])
+        .default("secretary"),
       default_ham: z.enum(["ignore", "archive", "secretary"]).default("secretary"),
     })
     .optional(),

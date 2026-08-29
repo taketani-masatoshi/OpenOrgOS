@@ -1,0 +1,79 @@
+# JP correspondence style — machine rules
+locale: ja-JP
+formality: high
+language: ja
+
+self_reference:
+  first_mention: "株式会社{company_short_or_legal}の秘書です。"
+  later:
+    - "弊社"
+    - "{company_trade_name}"
+  banned_first_mention_patterns:
+    - "代表・"
+    - "代表取締役"
+    - "CEO"
+
+other_reference:
+  organization: "貴社"
+  person_suffix: "様"
+  organization_only_suffix: "御中"
+
+opener:
+  standard: "お世話になっております。"
+  reply_thanks: "ご返信ありがとうございました。"
+
+closings:
+  request: "何卒よろしくお願い申し上げます。"
+  confirm: "当日は何卒よろしくお願い申し上げます。"
+
+signature:
+  default: |
+    株式会社{company_short_or_legal}
+    秘書
+
+forbidden_phrases:
+  - "送信元:"
+  - "送信元："
+  - "送信元アドレス"
+  - "グループ会社"
+  - "関連会社として"
+  - "予算相談しやすい"
+  - "コスパ"
+  - "安いお店"
+  - "デモのため"
+  - "デモ運用"
+  - "AIが"
+  - "自動送信しました"
+
+speculation_banned: true
+
+required_blocks:
+  scheduling_clarify:
+    - addressee
+    - opener
+    - self_intro_once
+    - purpose
+    - datetime
+    - format_or_venue_area
+    - closing
+    - signature
+  scheduling_confirm:
+    - addressee
+    - opener
+    - self_intro_once
+    - thanks_if_reply
+    - datetime
+    - venue_formal_name
+    - access_if_in_person
+    - closing
+    - signature
+
+in_person_venue:
+  min_options: 3
+  require_first_pick: true
+  require_walking_minutes_when_known: true
+  allow_marketing_tone: false
+
+cost:
+  propose_from_host_when_meal: true
+  phrase_example: "お一人さま税込{amount}円前後を目安とし、当方にてご負担いたします"

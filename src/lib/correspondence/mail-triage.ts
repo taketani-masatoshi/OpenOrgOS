@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { simpleParser } from "mailparser";
@@ -22,7 +23,7 @@ import { identifySenderForTriageEntry } from "./sender-identification.js";
 import { postTriageInterpretAndCeoAsk } from "./mail-triage-interpret.js";
 import { getMailReceivedDir } from "./paths.js";
 import { existsSync, readdirSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { buildThreadIdsFromHeaders } from "../sales-mail-utils.js";
 
 export interface ParsedMailHeaders {
   from: string;
@@ -134,6 +135,7 @@ export function classifyMail(
       ...matchRuleSet(rules.urgency?.[level], parsed.from, parsed.subject, `urgency:${level}`)
     );
   }
+  hits.push(...matchRuleSet(rules.inquiry, parsed.from, parsed.subject, "inquiry"));
 
   let disposition: MailDisposition = "ham";
   if (hits.some((h) => h.startsWith("spam:"))) disposition = "spam";
@@ -161,6 +163,16 @@ export function classifyMail(
           : "archive";
   } else if (importance === "p0") {
     routing = routingRules?.p0_ham === "ignore" ? "ignore" : "secretary";
+  } else if (hits.some((h) => h.startsWith("inquiry:"))) {
+    const target = routingRules?.inquiry_ham ?? "secretary";
+    routing =
+      target === "ignore"
+        ? "ignore"
+        : target === "archive"
+          ? "archive"
+          : target === "sales_inbound"
+            ? "sales_inbound"
+            : "secretary";
   } else {
     routing =
       routingRules?.default_ham === "archive"
@@ -172,7 +184,7 @@ export function classifyMail(
 
   return {
     source_message_id: parsed.messageId,
-    mail_thread_ids: [],
+    mail_thread_ids: parsed.messageId ? [parsed.messageId] : [],
     received_at: parsed.receivedAt,
     from: parsed.from,
     subject: parsed.subject,
@@ -226,6 +238,19 @@ export async function triageEmlFile(
   const id = buildEntryId(filename, parsed);
   const eml_ref = `records/executive/mail-received/${filename}`;
 
+  const raw = readFileSync(emlPath, "utf-8");
+  const threadIds = buildThreadIdsFromHeaders(raw);
+  const metaPath = `${emlPath}.meta.json`;
+  let gmailThreadId: string | undefined;
+  if (existsSync(metaPath)) {
+    try {
+      const meta = JSON.parse(readFileSync(metaPath, "utf-8")) as { gmail_thread_id?: string };
+      gmailThreadId = meta.gmail_thread_id;
+    } catch {
+      /* ignore bad meta */
+    }
+  }
+
   const queue = loadMailTriageQueue();
   const existing = queue.entries.find(
     (e) => e.eml_ref === eml_ref || e.source_message_id === parsed.messageId
@@ -245,7 +270,10 @@ export async function triageEmlFile(
     identification_status: existing?.identification_status,
     scheduling_case_id: existing?.scheduling_case_id,
     schedule_reply_parsed: existing?.schedule_reply_parsed,
-    mail_thread_ids: existing?.mail_thread_ids ?? [],
+    mail_thread_ids: [
+      ...new Set([...(existing?.mail_thread_ids ?? []), ...threadIds]),
+    ],
+    gmail_thread_id: gmailThreadId ?? existing?.gmail_thread_id,
   });
 
   if (opts?.identifySender !== false) {
@@ -290,7 +318,15 @@ export async function triageUnprocessedMail(opts?: {
 export function overrideTriageEntry(
   id: string,
   patch: Partial<
-    Pick<MailTriageEntry, "importance" | "urgency" | "disposition" | "routing" | "handoff_status">
+    Pick<
+      MailTriageEntry,
+      | "importance"
+      | "urgency"
+      | "disposition"
+      | "routing"
+      | "handoff_status"
+      | "handoff_ref"
+    >
   >
 ): MailTriageEntry | undefined {
   const queue = loadMailTriageQueue();

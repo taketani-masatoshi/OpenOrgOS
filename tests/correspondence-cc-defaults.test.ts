@@ -37,11 +37,23 @@ function seedCompanyAndMail(): void {
   );
 }
 
+
+function seedContact(email = "partner@example.com"): void {
+  const execDir = join(getDataDir(), "executive");
+  mkdirSync(execDir, { recursive: true });
+  writeFileSync(
+    join(execDir, "external-contacts.yaml"),
+    YAML.stringify({ contacts: [{ id: "EXT-001", name: "Partner", org: "Example", email }] }),
+    "utf-8",
+  );
+}
+
 function cleanup(): void {
   for (const p of [
     join(getDocsDir(), "executive", "correspondence-drafts"),
     getExecutiveRecordsDir(),
     join(getDataDir(), "company.yaml"),
+    join(getDataDir(), "executive", "external-contacts.yaml"),
   ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
@@ -52,6 +64,7 @@ describe("correspondence cc defaults", () => {
     setTenantId("demo");
     cleanup();
     seedCompanyAndMail();
+    seedContact();
   });
   afterEach(() => cleanup());
 

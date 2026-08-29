@@ -50,6 +50,7 @@ export function loadMailTriageRules(): MailTriageRules {
     version: 1,
     spam: mergeRuleSet(base.spam, tenant.spam),
     suspicious: mergeRuleSet(base.suspicious, tenant.suspicious),
+    inquiry: mergeRuleSet(base.inquiry, tenant.inquiry),
     importance: mergeTierRules(base.importance, tenant.importance),
     urgency: mergeTierRules(base.urgency, tenant.urgency),
     routing: { ...base.routing, ...tenant.routing },

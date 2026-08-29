@@ -35,6 +35,16 @@ importance:
       - "お問い合わせ"
       - "ご連絡"
 
+inquiry:
+  subject_keywords:
+    - "お問い合わせ"
+    - "資料請求"
+    - "見積依頼"
+    - "見積もり"
+    - "提携"
+    - "パートナー"
+    - "ご紹介"
+
 urgency:
   immediate:
     subject_keywords:
@@ -54,4 +64,5 @@ routing:
   spam: ignore
   suspicious: archive
   p0_ham: secretary
+  inquiry_ham: sales_inbound
   default_ham: secretary

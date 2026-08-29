@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import YAML from "yaml";
 import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir, getDocsDir } from "../src/lib/utils.js";
@@ -14,11 +15,23 @@ import {
 } from "../src/lib/correspondence/send-gate.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 
+
+function seedContact(email = "partner@example.com"): void {
+  const execDir = join(getDataDir(), "executive");
+  mkdirSync(execDir, { recursive: true });
+  writeFileSync(
+    join(execDir, "external-contacts.yaml"),
+    YAML.stringify({ contacts: [{ id: "EXT-001", name: "Partner", org: "Example", email }] }),
+    "utf-8",
+  );
+}
+
 function cleanup(): void {
   for (const p of [
     join(getDataDir(), "org", "pending-approvals.yaml"),
     join(getDataDir(), "protocol"),
     join(getDocsDir(), "executive", "correspondence-drafts"),
+    join(getDataDir(), "executive", "external-contacts.yaml"),
   ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
@@ -29,6 +42,7 @@ describe("correspondence human approval gate", () => {
     setTenantId("demo");
     cleanup();
     ensureProtocolSigningKey();
+    seedContact();
   });
   afterEach(() => cleanup());
 

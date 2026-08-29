@@ -1,0 +1,52 @@
+# US correspondence style — machine rules (stub)
+locale: en-US
+formality: medium
+language: en
+
+self_reference:
+  first_mention: "I am writing on behalf of {company}."
+  later:
+    - "we"
+    - "{company}"
+  banned_first_mention_patterns:
+    - "CEO"
+    - "Representative"
+
+other_reference:
+  organization: "your organization"
+  person_suffix: ""
+  organization_only_suffix: ""
+
+opener:
+  standard: ""
+  reply_thanks: "Thank you for your reply."
+
+closings:
+  request: "Thank you,"
+  confirm: "We look forward to meeting you."
+
+signature:
+  default: "{company}"
+
+forbidden_phrases:
+  - "送信元:"
+  - "budget-friendly"
+  - "demo mode"
+  - "AI sent this"
+
+speculation_banned: true
+
+required_blocks:
+  scheduling_confirm:
+    - addressee
+    - self_intro_once
+    - thanks_if_reply
+    - datetime
+    - venue_or_join_url
+    - closing
+    - signature
+
+in_person_venue:
+  min_options: 3
+  require_first_pick: true
+  allow_marketing_tone: false

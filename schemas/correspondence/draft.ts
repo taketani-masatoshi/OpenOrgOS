@@ -29,6 +29,9 @@ export const correspondenceDraftSchema = z.object({
   sent_by: z.string().optional(),
   company_event_id: z.string().optional(),
   contact_ref: z.string().optional(),
+  /** Sales deal or inquiry ref for follow-up tracking */
+  deal_id: z.string().regex(/^DEAL-\d{4}-\d{3}$/).optional(),
+  inquiry_id: z.string().regex(/^INQ-\d{4}-\d{3}$/).optional(),
   /** Tenant-logical docs paths only. Resolved and attached by the mail transport. */
   attachment_refs: z.array(z.string().min(1)).default([]),
   notes: z.string().optional(),
