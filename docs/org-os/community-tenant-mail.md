@@ -1,7 +1,7 @@
 # Community tenant-mail connect (Option B)
 
-> **ステータス: 未出荷（scaffold only）**  
-> Gmail / Community 連携 UI はコード・API スキャフォールドのみ。本番ゲート・`community-integration.json` では `tenant_mail_connect_*: false`。  
+> **ステータス: 実装済 · 既定は未出荷**  
+> API / Connections UI は存在する。`COMMUNITY_TENANT_MAIL_CONNECT_SHIPPED` が無いとき Community は 503。本番ゲート・`community-integration.json` の `tenant_mail_connect_*: false` は CEO 出荷まで維持。  
 > ライブ pilot 時は `ORGOS_EMAIL_WIRE_REQUIRED=1` と mail-config / OAuth 設定後に Phase 4 を実行。  
 > 出荷チェックリスト: [gmail-ship-gate-checklist.md](gmail-ship-gate-checklist.md)
 
@@ -79,6 +79,21 @@ Catalog: `publish/protocol/community-tenant-mail-api.json`
 - `--expect-email` で Community ログインメールを bind 発行時に固定可能
 - Community は refresh token を DB に保存しない — Steward L2 のみ
 - OAuth client ID は push 時に Steward 側で検証（不一致は 422）
+
+## SMTP / IMAP の秘密（Gmail API を使わない場合）
+
+Gmail OAuth を使わないテナントは、SMTP / IMAP の資格情報を **env に書かずに Console から保存できる**。
+
+| 面 | 経路 |
+|---|---|
+| Console | 会社の設定 → メール → 「SMTP / IMAP の秘密」 |
+| BFF | `PUT /chat/v1/mail/secrets`（`chat:approve` · 保存のみ） |
+| 状態 | `GET /chat/v1/mail/gmail` の `secrets`（boolean とマスク済み hint のみ） |
+
+- 保存先は `tenants/{id}/data/secrets/mail-secrets.env`（gitignore · mode 0600）。実装は Stripe と共通の `src/lib/secrets/env-file-store.ts`。
+- **deploy の env が優先**。ストアは env が空のときだけ `process.env` を埋める（`hydrateMailEnvFromStore`）。
+- 生値は API レスポンスにもチャットにも出さない。既存の `records/executive/imap.env` は読取フォールバックとして残る。
+- データ分類上は L2 — [data-classification](../../.cursor/rules/data-classification.mdc) のとおり tracked ファイルに値を書かない。ファイルは gitignore 済み。
 
 ## 関連
 

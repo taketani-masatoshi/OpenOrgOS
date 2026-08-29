@@ -15,6 +15,20 @@
 
 Wire は Org root の **adapter** — 承認 SoT は `data/org/pending-approvals.yaml` のみ。
 
+### 1.1 HumanApprovalContext（ADR 0038）
+
+最終承認はすべて **人間入口が発行するセレモニーオブジェクト** を要する。
+
+| 項目 | 内容 |
+|------|------|
+| 発行元 | `chat_ui` · `wire_ui` · `cli` のみ（LLM / MCP は発行不可） |
+| 中身 | HMAC · nonce · 5 分 TTL · `operator_id` · `subject_digest` · 単回消費 |
+| 追加ゲート | Tier B/C は ADR 0037 settlement PassKey を **追加**で要求 |
+| 秘密 | `ORGOS_HUMAN_APPROVAL_SECRET`（本番 · doctor / prod-checklist） |
+| ヘルパ | `humanApproveOrgApproval` · `schemas/org/human-approval-context.ts` |
+
+自己承認禁止。レジストリ上の active operator のみ。
+
 ---
 
 ## 2. 境界 `@scope`

@@ -146,6 +146,15 @@ flowchart TB
 
 事業計画分解等の **Orchestrator プロンプト** は Agent ではなく [steward/core/orchestrators/](../steward/core/orchestrators/00-このフォルダについて.md)。Executive が委譲する。
 
+**Integration Agent（常設統合）:** モジュール横断の要約・ModuleMessage・WO ハブ。[integration-agent.md](../../docs/org-os/integration-agent.md) · 定義ドラフト `steward/core/agents/integration_agent.md`。Secretary Orchestrator は手順互換として残し、機械統合は Integration に一本化する（ADR 0040）。
+
+## 並行 AIA（10 / 20 / 30）
+
+- 制御: `tenants/{id}/data/org/aia-runtime.yaml` · [aia-parallel-runtime.md](../../docs/org-os/aia-parallel-runtime.md)
+- 隔離: [aia-workspace-isolation.md](../../docs/org-os/aia-workspace-isolation.md)
+- メッセージ: [module-messaging.md](../../docs/org-os/module-messaging.md)
+- Work Order `--parallel` は子バッチ hint。グローバル同時数は runtime が正。
+
 ---
 
 ## Secretary ↔ Steward 境界
@@ -159,3 +168,4 @@ flowchart TB
 - [tool-neutral-development.md](tool-neutral-development.md) — **Cursor 非依存開発（必読）**
 - [docs/agent_architecture.md](../docs/agent_architecture.md) — 現行パス詳細（レガシー索引）
 - [folder_access_policy.md](folder_access_policy.md)
+- [docs/adr/0040-aia-parallel-runtime.md](../docs/adr/0040-aia-parallel-runtime.md)

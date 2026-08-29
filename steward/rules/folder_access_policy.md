@@ -37,7 +37,9 @@
 | L2 vault | `**/records/**` 個情 | **gitignore** | **× blocked** | 明示のみ |
 | L3 禁止出力 | L2 の転記 | — | — | **チャット/docs 不可** |
 
-**3 境界:** `.gitignore`（Git）· `.cursorignore`（AI 自動）· `sanitize-output`（tracked MD 書込）· `steward broker`（振込）。
+**3 境界:** `.gitignore`（Git）· `.cursorignore`（AI 自動）· `sanitize-output`（tracked MD 書込）· `steward broker`（振込）· **`orgos guard`（AIA 正本書込）**。
+
+AIA が正本を書き換えるときは Primary Folders の宣言だけでは足りない。Agent の Ed25519 公開鍵と、発行者署名付き grant 台帳が必要。秘密鍵はホスト上の CLI ランタイムが保持し、LLM には渡さない。正本: [docs/org-os/agent-fs-guard.md](../../docs/org-os/agent-fs-guard.md) · ADR 0039。
 
 正本: `data/classification-registry.yaml` · `.cursor/rules/data-classification.mdc`（alwaysApply）  
 **`src/` · tenant `data/` 編集時:** [engineering/07-security.md](engineering/07-security.md)（glob 適用 · 詳細は本書 §1.3 と operator-policy）
@@ -274,6 +276,30 @@ npm run orgos -- io status
 
 ---
 
+### 2.9 Project Management Agent（PMO）
+
+**目的:** 会社横断の案件ポートフォリオ（RAG · マイルストーン · リスク）。COO の Work Order 割当と業種モジュール YAML は触らない。正本: [ADR 0043](../../docs/adr/0043-pmo-portfolio-ssot.md)
+
+| パス | 権限 |
+|------|------|
+| `data/projects/**` | R/W（Primary · 唯一の書込 SoT） |
+| `docs/projects/**` | R/W（メモ · 報告下書き） |
+| `docs/reports/agent-summaries/project-management/` | W（pulse 要約） |
+| `docs/reports/routing-queue/` | R（WO id リンクのみ） |
+| `data/contracts/**` | R（CTR id 照合のみ） |
+| モジュール YAML（許認可 · 登記 · 宿泊等） | **禁止**（`module_refs` で id リンクのみ） |
+| `data/finance/**` · 口座 · 個人名 | **禁止** |
+
+**やってよい:** 案件の開閉提案、RAG、遅延一覧、ステークホルダー報告の下書き。  
+**やってはいけない:** 契約変更の確定、請求金額の確定、WO の単独承認、モジュール正データの複製、OpenOrgOS 製品ロードマップ（Product Management）。
+
+**編集後チェックリスト:**
+1. `orgos validate`
+2. 索引 `portfolio.yaml` と `PRJ-*.yaml` の id 集合が一致すること
+3. L2（個人名・口座）を YAML に書かない
+
+---
+
 ## 3. エスカレーション経路
 
 ```
@@ -360,6 +386,21 @@ npm run orgos -- io status
 1. **Primary エージェントが優先**（Step 3 権限表）
 2. 跨領域（例: CTR-003 按分）→ Finance 主導 · Property Rental + Compliance レビュー
 3. 解決不能 → Executive が人間に判断材料を提示（両案 + 影響）
+4. **並列 AIA（ADR 0040）:** Primary Folders への並列直書は禁止。中間成果は `scratch/aia-runs/{run_id}/`。SSOT 確定は CAS / 単一 writer / Integration merge（[aia-workspace-isolation.md](../../docs/org-os/aia-workspace-isolation.md)）
+
+### 4.5 機械メッセージ（ModuleMessage）
+
+人向け MD（§4.1–4.3）に加え、スケジューラ / Integration 向けの型付き経路:
+
+- 正本: [module-messaging.md](../../docs/org-os/module-messaging.md) · `schemas/module-message.ts`
+- 格納: `data/org/module-messages/`
+- 機密: **L0/L1 のみ**（L2 禁止）
+- ゲート: manifest `agent_relay` · incomplete モジュールは宛先不可
+- 横断統合の常設役: [Integration Agent](../../docs/org-os/integration-agent.md)（catalog id `integration` · registry 登録は実装 PR）
+
+### 4.6 並行実行枠
+
+テナント `data/org/aia-runtime.yaml` — soft 10 / target 20 / hard 30。LLM バックプレッシャあり。[aia-parallel-runtime.md](../../docs/org-os/aia-parallel-runtime.md)
 
 ---
 
@@ -391,6 +432,10 @@ npm run orgos -- io status
 - [repository_layout.md](repository_layout.md)
 - [steward_os_principles.md](steward_os_principles.md)
 - [agent_skill_architecture.md](agent_skill_architecture.md)
+- [docs/adr/0040-aia-parallel-runtime.md](../../docs/adr/0040-aia-parallel-runtime.md)
+- [docs/org-os/module-messaging.md](../../docs/org-os/module-messaging.md)
+- [docs/org-os/integration-agent.md](../../docs/org-os/integration-agent.md)
 - [steward/core/agents/](../steward/core/agents/00-このフォルダについて.md)
 - [steward/core/skills/](../steward/core/skills/00-このフォルダについて.md)
 - [data/00-README.md](../data/00-README.md)
+- [docs/org-os/agent-fs-guard.md](../../docs/org-os/agent-fs-guard.md) — AIA 正本書込ゲート（`orgos guard`）

@@ -20,6 +20,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0002](0002-engineering-rules-split.md) | Engineering Rules の分割構成 | Accepted |
 | [0003](0003-constitution-code-compliance-roadmap.md) | 憲章とコード準拠ロードマップ | Accepted |
 | [0004](0004-gmail-deferred-opt-in-gate.md) | Gmail / tenant-mail deferred · opt-in 本番ゲート | Accepted |
+| [0024](0024-core-governance-principles-iso-37000.md) | ISO 37000 11原則のコア組み込みと自己宣言 | Accepted |
 | [0027](0027-budget-envelope-governance.md) | 予算執行枠ガバナンス（計画ロック · 調整帯 · 取締役会） | Accepted |
 | [0032](0032-amount-free-receipt-wire-claim.md) | QR 領収書 Wire claim は amount-free | Accepted |
 | [0033](0033-deterministic-fact-provider-registry.md) | 決定論 Fact Provider Registry（HR headcount 含む） | Accepted |
@@ -49,6 +50,11 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0059](0059-chat-answer-memory.md) | Chat answer memory（クラウド回答をローカル LLM の参考注入） | Accepted |
 | [0060](0060-local-llm-change-gates.md) | ローカル LLM 変更ゲート（plan/apply · 等級 A/B/C） | Accepted |
 | [0061](0061-local-llm-error-fallback.md) | ローカル LLM ERROR フォールバック（`ERROR: <理由>` 1行） | Accepted |
+| [0062](0062-sales-crm-lifecycle.md) | 営業 CRM ライフサイクル（Wave 2 · 顧客統合 · 書込み · 監査） | Accepted |
+| [0063](0063-mail-context-compose-pipeline.md) | メール文脈パイプライン（CLI 事実 · LLM 文案 · OOO 実行可否 · Asana レプリカ） | Accepted |
+| [0064](0064-jp-medical-device-operational-ledgers.md) | 医療機器薬事の運用台帳 · org approval · audit.jsonl（文書カタログと分離） | Accepted |
+| [0065](0065-executive-home-console.md) | Operator Console 経営ホーム（`/` · 帳簿は `/?ledger=1`） | Accepted |
+| [0066](0066-iso-internal-audit-control-maps.md) | ISO 内部監査は単一 Agent が control-map を読む | Accepted |
 
 ## 新規 ADR
 

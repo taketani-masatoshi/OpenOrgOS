@@ -13,7 +13,7 @@
 | **社内経営 OS** | Executive Steward | オーナーの経営判断 | dashboard · agent-summaries · executive-remaining-tasks |
 | **社長の行動・時間・対外窓口** | Secretary Agent | スケジュール・タスク・1-on-1・社外調整 | `data/executive/` · `docs/executive/` |
 
-**結論:** Steward は **社内向け**、社外の日程調整・連絡の一次受けは **Secretary が主インターフェース**。財務・契約・コンプライアンスの質問は Secretary が受け、**Executive Steward または専門 Agent へルーティング**する。
+**結論:** Steward は **社内向け**、社外の日程調整・連絡の一次受けは **Secretary が主インターフェース**。財務・契約・コンプライアンスの質問は Secretary が受け、**必ず Executive Steward へルーティング**する（専門 Agent への直接依頼はしない）。
 
 ---
 
@@ -112,6 +112,9 @@ flowchart LR
 4. **L2 秘密・ゲスト PII** → いかなる出力にも含めない。
 5. **external_visible: false** の予定は社外チャットに露出しない。
 6. **peer 横断** — `peers.yaml` 登録相手の L1 連絡先のみ。相手 tenant を `ORGOS_TENANT` 切替で総参照しない。日常は自社 `external-contacts.yaml` を優先。
+7. **既定窓口** — Steward と Secretary はオーナーの既定窓口。テナント roster で Off にできない。
+8. **依頼系統** — オーナー→Steward は社内の全エージェントをオーケストレートして回答する。オーナー→Secretary で社内エージェントが必要な場合は **必ず Steward 経由**。Secretary は Finance / Contract / その他の現場 Agent に直接依頼しない。
+9. **秘書マンデートの制約** — Secretary から Steward への照会では、Steward は L0–L1 の範囲で会社の状況を秘書に共有してよい。**会社 YAML / テナント設定の書き換えはオーナーから Steward への直接依頼でのみ行う。**
 
 ---
 
@@ -124,7 +127,8 @@ flowchart LR
               ├─ 契約・金額・保険 → Executive Steward → Contract Agent
               ├─ 財務・税務 → Executive Steward → Finance Agent
               ├─ 許認可・規程 → Executive Steward → Compliance Agent
-              └─ 旅館運用詳細 → Hospitality Agent（日程のみ Secretary）
+              └─ 旅館運用詳細 → Executive Steward → Operations / Hospitality
+                 （Secretary は Steward を経由し、現場 Agent に直接依頼しない）
 ```
 
 照会フォーマット: [folder_access_policy.md](folder_access_policy.md) §4
@@ -140,7 +144,7 @@ flowchart LR
 | 社外「売上を教えて」 | Secretary | 丁寧に断り、人間または Steward へ誘導 |
 | 社長「ランウェイは？」 | Steward | `steward dashboard` · Finance 要約を読む |
 | 保険 draft 期限 P0 | Steward | Contract 要約 → executive-remaining-tasks と統合 |
-| 宿泊モジュール清掃日程変更 | Secretary + Hospitality | Secretary が日程、Hospitality が運用詳細 |
+| 宿泊モジュール清掃日程変更 | Secretary → Steward → Operations | Secretary は日程、運用詳細は Steward 経由 |
 
 ---
 

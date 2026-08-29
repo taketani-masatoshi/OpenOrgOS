@@ -12,7 +12,7 @@ Steward Chat · Wire Console · MCP の本番 checklist。
 Chat と Wire を別ポートで動かすと **セッション cookie が共有されません**。本番は combined server を使います。
 
 ```bash
-# ビルド（Wire SPA は /wire/ ベース）
+# ビルド（帳簿 SPA に Wire ルート `/wire/` を含む）
 npm run operator-console:build
 
 # 起動
@@ -35,7 +35,7 @@ orgos operator console start --host 0.0.0.0 --port 9470
 | `/` | 予実 · 帳簿 |
 | `/approvals/` | CEO 承認受信箱 |
 | `/steward/` | Steward Chat |
-| `/wire/` | Wire Console SPA |
+| `/wire/` | Wire Console（帳簿 SPA 内クライアントルート · lazy chunk） |
 | `/chat/v1/*` | Chat BFF API |
 | `/console/v1/*` | Wire Console API |
 

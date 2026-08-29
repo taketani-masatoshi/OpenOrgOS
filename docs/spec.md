@@ -288,6 +288,9 @@ npm run orgos -- audit log append --event handoff --ref IMP-... --detail "..."
 npm run orgos -- audit log list
 npm run orgos -- compliance gap [--tenant mal]   # ISO / REG ギャップ + 統制ギャップ
 npm run orgos -- controls list [--iso ISO-9001] [--agent compliance]
+npm run orgos -- governance principles status
+npm run orgos -- governance principles init
+npm run orgos -- governance principles declare --signatory "Name"
 npm run orgos -- controls status
 npm run orgos -- controls gap
 npm run orgos -- controls for-agent compliance

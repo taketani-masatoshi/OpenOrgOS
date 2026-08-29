@@ -22,9 +22,22 @@
 | [wire-gateway-internal-api.md](wire-gateway-internal-api.md) | **Internal API** — Core ↔ Gateway 契約 |
 | [wire-gateway-export-policy.md](wire-gateway-export-policy.md) | **Pull エクスポート** — WG-2 許可判断 |
 | [org-approval-schema.md](org-approval-schema.md) | **Org 承認根幹** — `scope: internal \| wire` · pending-approvals SoT |
+| [passkey-iphone-qr-implementation-plan.md](passkey-iphone-qr-implementation-plan.md) | **iPhone PassKey（業界標準 QR）** — 他社調査と OOO 実装計画 |
 | [inter-org-operator-model.md](inter-org-operator-model.md) | **Operator + CEO 承認ゲート** — Steward は組織間送信しない |
 | [inter-org-two-org-demo.md](inter-org-two-org-demo.md) | **2 組織デモ** — mal ↔ southwood · `npm run demo:inter-org` |
 | [wire-console-plan.md](wire-console-plan.md) | **Wire Console** — SPA + localhost BFF · outbox/inbox 可視化 · 運用 UI チケット |
+| [receipt-qr-spec.md](receipt-qr-spec.md) | **QR 領収書** — 発行 · Wire amount-free claim · 公開 verify |
+| [expense-claim-spec.md](expense-claim-spec.md) | **社内経費精算** — gate · 承認 · 弁済（実装後追い正本） |
+| [org-budget-delegation.md](org-budget-delegation.md) | **予算委譲** — 全社→部門→個人 · ADR 0027 |
+| [org-chart.md](org-chart.md) | **実組織図** — `org-chart.yaml` · Agent カタログ図との区別 |
+| [llm-worker-pool.md](llm-worker-pool.md) | **LLM Worker Pool** — ローカル優先 · ADR 0034 |
+| [chat-command-router.md](chat-command-router.md) | **Chat Command Router** — 決定論 CLI · ADR 0035 |
+| [aia-parallel-runtime.md](aia-parallel-runtime.md) | **AIA 並行** — soft 10 / target 20 / hard 30 · ADR 0040 |
+| [steward-orchestration-uplift-plan.md](steward-orchestration-uplift-plan.md) | **Steward オーケストレーション** — WO DAG · state machine · ADR 0044 |
+| [aia-workspace-isolation.md](aia-workspace-isolation.md) | **AIA 作業スペース隔離** — scratch/aia-runs |
+| [module-messaging.md](module-messaging.md) | **モジュール間メッセージ** — ModuleMessage · agent_relay |
+| [integration-agent.md](integration-agent.md) | **Integration Agent** — 横断統合 · 正データ非編集 |
+| [passkey-production-security-plan.md](passkey-production-security-plan.md) | **PassKey 本番 harden** — Wave 1 実装 · Wave 2 bootstrap（ADR 0039） |
 | [inter-org-three-org-demo.md](inter-org-three-org-demo.md) | **3-org Wire デモ** — CLI + Console 手順 |
 | [resilience-stack.md](resilience-stack.md) | **Resilience R1–R4** — relay worker · multipath · Org C trust PKI · SLA |
 | [witness-hub-requirements.md](witness-hub-requirements.md) | **Witness Hub** — digest のみ · 分散プール · quorum |
