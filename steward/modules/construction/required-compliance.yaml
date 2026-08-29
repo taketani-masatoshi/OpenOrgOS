@@ -1,0 +1,20 @@
+module_id: construction
+as_of: "2026-07-14"
+schema_version: 1
+requirements:
+  - id: rc-construction-permit
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-construction-general
+      - pt-construction-specific
+    legal_basis: 建設業法第3条
+    authority_ja: 都道府県知事
+  - id: rc-construction-iso9001
+    fulfilment: certification
+    severity: recommended
+    match: any_of
+    compliance_type_ids:
+      - cert-iso-9001
+    notes: 公共案件等で要求されがち · recommended のため G-01 非ブロック

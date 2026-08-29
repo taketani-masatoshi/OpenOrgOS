@@ -20,9 +20,61 @@ export const controlDomain = z.enum([
 
 export const controlCheckType = z.enum(["policy", "record", "operation"]);
 
+/**
+ * How evidence_paths are satisfied.
+ * `any` — one existing path is enough (shared artefacts: audit plan, MR minutes).
+ * `all` — every path must exist (per-standard artefacts folded into one control:
+ * each enabled standard still owes its own risk register, policy, scope statement).
+ */
+export const controlEvidenceMode = z.enum(["any", "all"]);
+
+/**
+ * Management-system work types shared across standards.
+ * Keyed by the work itself, not by clause number: the same work is 9.2 under
+ * Annex SL, 8.2.4 under ISO 13485, and renumbered again on each revision.
+ */
+export const controlWork = z.enum([
+  "scope",
+  "policy",
+  "risk_approach",
+  "objectives_monitoring",
+  "competence",
+  "documented_information",
+  "operation",
+  "internal_audit",
+  "management_review",
+  "corrective_action",
+]);
+
+/**
+ * Order in which a tenant should establish the control, declared by the pack
+ * rather than inferred: with a whole standard newly enabled, almost everything
+ * is open at once, and only the pack author knows what the rest depends on.
+ *
+ * P1 — protects people or is legally required, and cannot wait.
+ * P2 — the management-system step other controls build on.
+ * P3 — refinement, reporting, and continual improvement.
+ */
+export const controlPriority = z.enum(["P1", "P2", "P3"]);
+
 export const isoRefSchema = z.object({
   standard: z.string().min(1),
   clause: z.string().min(1),
+  /** Edition year, stamped by the loader from catalog.yaml. */
+  edition: z.string().optional(),
+  /**
+   * Date the clause number was checked against the purchased standard text.
+   * Absent means unverified: ISO text is not redistributable, so a pack ships
+   * the mapping as a working assumption until a licensed copy confirms it.
+   */
+  verified_on: z.string().optional(),
+  /** Who checked it, and against which copy. */
+  verified_by: z.string().optional(),
+});
+
+export const guidanceRefSchema = z.object({
+  standard: z.string().min(1),
+  note: z.string().optional(),
 });
 
 export const regRefSchema = z.object({
@@ -39,14 +91,63 @@ export const controlDefinitionSchema = z.object({
   primary_agent: agentId,
   secondary_agents: z.array(agentId).optional(),
   evidence_paths: z.array(z.string()).default([]),
+  evidence_mode: controlEvidenceMode.default("any"),
+  priority: controlPriority.default("P3"),
   check_type: controlCheckType,
   target_maturity: controlTargetMaturity.default("L2"),
 });
 
+/** Binds one standard clause to a shared core work type. */
+export const coreBindingSchema = z.object({
+  work: controlWork,
+  clause: z.string().min(1),
+  /** See `isoRefSchema.verified_on` — absent means the clause is unverified. */
+  verified_on: z.string().optional(),
+  verified_by: z.string().optional(),
+  /** Evidence paths specific to this standard, unioned with the core defaults. */
+  evidence_paths: z.array(z.string()).default([]),
+  reg_refs: z.array(regRefSchema).default([]),
+});
+
+/**
+ * An empty YAML block (`controls:` followed only by comments) parses to null,
+ * which a plain `.default([])` would reject. A pack that only carries
+ * core_bindings is legitimate, so treat null as empty.
+ */
+function optionalList<T extends z.ZodTypeAny>(item: T) {
+  return z
+    .array(item)
+    .nullish()
+    .transform((v) => v ?? []);
+}
+
 export const controlMapFileSchema = z.object({
   version: z.string().default("1"),
   standard: z.string().min(1),
-  controls: z.array(controlDefinitionSchema),
+  notes: z.string().optional(),
+  core_bindings: optionalList(coreBindingSchema),
+  controls: optionalList(controlDefinitionSchema),
+});
+
+/** A core control has no fixed clause: the loader derives iso_refs from bindings. */
+export const coreControlDefinitionSchema = controlDefinitionSchema
+  .omit({ iso_refs: true })
+  .extend({
+    work: controlWork,
+    /** Per-standard control ids replaced by this core control. */
+    supersedes: z.array(z.string().regex(/^CTL-/)).default([]),
+    /** Guidance standards that describe this work (ISO 31000, ISO 19011, ...). */
+    guidance_refs: z.array(guidanceRefSchema).default([]),
+  });
+
+export const coreControlMapFileSchema = z.object({
+  version: z.string().default("1"),
+  controls: z.array(coreControlDefinitionSchema),
+});
+
+export const coreProfileFileSchema = z.object({
+  version: z.string().default("1"),
+  profiles: z.record(z.string(), z.array(coreBindingSchema)),
 });
 
 export const tenantControlStatusSchema = z.object({
@@ -97,7 +198,15 @@ export const regBindingsSchema = z.object({
 });
 
 export type ControlMaturity = z.output<typeof controlMaturity>;
+export type ControlEvidenceMode = z.output<typeof controlEvidenceMode>;
+export type ControlWork = z.output<typeof controlWork>;
+export type IsoRef = z.output<typeof isoRefSchema>;
+export type CoreBinding = z.output<typeof coreBindingSchema>;
+export type ControlPriority = z.output<typeof controlPriority>;
 export type ControlDefinition = z.output<typeof controlDefinitionSchema>;
+export type CoreControlDefinition = z.output<typeof coreControlDefinitionSchema>;
+export type CoreControlMapFile = z.output<typeof coreControlMapFileSchema>;
+export type CoreProfileFile = z.output<typeof coreProfileFileSchema>;
 export type ControlMapFile = z.output<typeof controlMapFileSchema>;
 export type TenantControlStatus = z.output<typeof tenantControlStatusSchema>;
 export type TenantControlsFile = z.output<typeof tenantControlsFileSchema>;

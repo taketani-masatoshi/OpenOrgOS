@@ -1,0 +1,13 @@
+module_id: restaurant
+as_of: "2026-07-14"
+schema_version: 1
+requirements:
+  - id: rc-restaurant-food-permit
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-food-restaurant
+    legal_basis: 食品衛生法第28条
+    authority_ja: 保健所
+    reference_url: https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/hygiene/

@@ -1,0 +1,15 @@
+module_id: staffing
+as_of: "2026-07-14"
+schema_version: 1
+requirements:
+  - id: rc-staffing-labor-license
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-staffing
+      - pt-job-intro-fee
+      - pt-job-intro-free
+    legal_basis: 労働者派遣法 · 職業安定法
+    authority_ja: 都道府県労働局等
+    notes: 派遣または職業紹介のいずれか（業態に応じる）

@@ -45,6 +45,16 @@ export interface LicenseComplianceGateGroup {
   reference_url?: string;
 }
 
+export interface RegistrationComplianceGateGroup {
+  module_id: string;
+  requirement_id: string;
+  match: "any_of" | "all_of";
+  permit_type_ids: string[];
+  legal_basis?: string;
+  authority_ja?: string;
+  reference_url?: string;
+}
+
 export interface TypedComplianceGateGroup {
   module_id: string;
   requirement_id: string;
@@ -86,6 +96,22 @@ export function listLicenseGateGroups(moduleId: string): LicenseComplianceGateGr
     authority_ja: g.authority_ja,
     reference_url: g.reference_url,
   }));
+}
+
+export function listRegistrationGateGroups(moduleId: string): RegistrationComplianceGateGroup[] {
+  const file = loadRequiredComplianceFile(moduleId);
+  if (!file) return [];
+  return file.requirements
+    .filter((r) => r.severity === "required" && r.fulfilment === "registration")
+    .map((r) => ({
+      module_id: moduleId,
+      requirement_id: r.id,
+      match: r.match,
+      permit_type_ids: [...r.compliance_type_ids],
+      legal_basis: r.legal_basis,
+      authority_ja: r.authority_ja,
+      reference_url: r.reference_url,
+    }));
 }
 
 export function listCertificationGateGroups(moduleId: string): TypedComplianceGateGroup[] {

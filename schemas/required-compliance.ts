@@ -14,6 +14,7 @@ export const complianceFulfilmentKind = z.enum([
   "registration",
   "inspection",
   "specialized",
+  "record",
 ]);
 
 export const complianceMatchMode = z.enum(["any_of", "all_of"]);

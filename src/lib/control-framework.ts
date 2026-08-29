@@ -1,17 +1,23 @@
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentId } from "../../schemas/classification.js";
 import {
   controlMapFileSchema,
+  coreControlMapFileSchema,
+  coreProfileFileSchema,
   tenantControlsFileSchema,
   type ControlDefinition,
   type ControlGapRow,
   type ControlMaturity,
+  type CoreBinding,
+  type CoreControlDefinition,
   type EffectiveControl,
+  type IsoRef,
   type TenantControlStatus,
 } from "../../schemas/control-framework.js";
+import { isoCatalogFileSchema } from "../../schemas/iso-catalog.js";
 import { listEffectiveRegulations } from "./regulations.js";
-import { getIsoStandardDir, STEWARD_STANDARDS_DIR } from "./standards.js";
+import { getIsoStandardDir, STEWARD_ISO_DIR, STEWARD_STANDARDS_DIR } from "./standards.js";
 import { JURISDICTION_PACKS_DIR } from "./steward-paths.js";
 import { loadEnabledIsoIds } from "./tenant-standards.js";
 import { getTenantDir, resolveTenantPath } from "./tenant.js";
@@ -30,19 +36,119 @@ export function getControlMapPath(standardId: string): string {
   return join(getIsoStandardDir(standardId), "control-map.yaml");
 }
 
-export function loadControlMapForStandard(standardId: string): ControlDefinition[] {
-  const path = getControlMapPath(standardId);
+export const CORE_MS_DIR = join(STEWARD_ISO_DIR, "core");
+
+export function coreControlMapPath(): string {
+  return join(CORE_MS_DIR, "control-map.yaml");
+}
+
+export function coreProfilesPath(): string {
+  return join(CORE_MS_DIR, "profiles.yaml");
+}
+
+export function loadCoreControls(): CoreControlDefinition[] {
+  const path = coreControlMapPath();
   if (!existsSync(path)) return [];
-  const file = readYamlFile(path, controlMapFileSchema);
-  return file.controls;
+  return readYamlFile(path, coreControlMapFileSchema).controls;
+}
+
+export function loadCoreProfile(name: string): CoreBinding[] {
+  const path = coreProfilesPath();
+  if (!existsSync(path)) return [];
+  return readYamlFile(path, coreProfileFileSchema).profiles[name] ?? [];
+}
+
+export function loadControlMapFile(standardId: string) {
+  const path = getControlMapPath(standardId);
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, controlMapFileSchema);
+}
+
+export function loadControlMapForStandard(standardId: string): ControlDefinition[] {
+  return loadControlMapFile(standardId)?.controls ?? [];
+}
+
+export function loadCoreBindingsForStandard(standardId: string): CoreBinding[] {
+  return loadControlMapFile(standardId)?.core_bindings ?? [];
+}
+
+/** Edition year per standard, read straight from the catalog to avoid an import cycle. */
+function loadIsoEditions(): Map<string, string> {
+  const path = join(STEWARD_ISO_DIR, "catalog.yaml");
+  if (!existsSync(path)) return new Map();
+  const file = readYamlFile(path, isoCatalogFileSchema);
+  return new Map(file.standards.map((s) => [s.id, s.year]));
+}
+
+/**
+ * Synthesize the core controls that the enabled standards actually bind to.
+ * A core control with no binding is not emitted — no orphans.
+ */
+function synthesizeCoreControls(enabled: string[]): ControlDefinition[] {
+  const core = loadCoreControls();
+  if (core.length === 0) return [];
+  const editions = loadIsoEditions();
+
+  const bindingsByWork = new Map<string, { standard: string; binding: CoreBinding }[]>();
+  for (const isoId of enabled) {
+    for (const binding of loadCoreBindingsForStandard(isoId)) {
+      const list = bindingsByWork.get(binding.work) ?? [];
+      list.push({ standard: isoId, binding });
+      bindingsByWork.set(binding.work, list);
+    }
+  }
+
+  const out: ControlDefinition[] = [];
+  for (const ctrl of core) {
+    const bound = bindingsByWork.get(ctrl.work);
+    if (!bound || bound.length === 0) continue;
+
+    const iso_refs: IsoRef[] = bound.map(({ standard, binding }) => ({
+      standard,
+      clause: binding.clause,
+      ...(editions.get(standard) ? { edition: editions.get(standard) } : {}),
+      ...(binding.verified_on ? { verified_on: binding.verified_on } : {}),
+      ...(binding.verified_by ? { verified_by: binding.verified_by } : {}),
+    }));
+
+    const evidence_paths = [
+      ...new Set([...ctrl.evidence_paths, ...bound.flatMap((b) => b.binding.evidence_paths)]),
+    ];
+
+    const regRefs = new Map<string, { reg_id: string; articles?: string[] }>();
+    for (const ref of [...ctrl.reg_refs, ...bound.flatMap((b) => b.binding.reg_refs)]) {
+      const prev = regRefs.get(ref.reg_id);
+      const articles = [...new Set([...(prev?.articles ?? []), ...(ref.articles ?? [])])];
+      regRefs.set(ref.reg_id, {
+        reg_id: ref.reg_id,
+        ...(articles.length > 0 ? { articles } : {}),
+      });
+    }
+
+    const { work: _work, supersedes: _supersedes, guidance_refs: _guidance, ...rest } = ctrl;
+    out.push({ ...rest, iso_refs, evidence_paths, reg_refs: [...regRefs.values()] });
+  }
+  return out;
 }
 
 export function loadControlMaps(enabledIsoIds?: string[]): ControlDefinition[] {
   const enabled = enabledIsoIds ?? loadEnabledIsoIds();
   const byId = new Map<string, ControlDefinition>();
+  for (const ctrl of synthesizeCoreControls(enabled)) {
+    byId.set(ctrl.id, ctrl);
+  }
+  const editions = loadIsoEditions();
   for (const isoId of enabled) {
     for (const ctrl of loadControlMapForStandard(isoId)) {
-      byId.set(ctrl.id, ctrl);
+      byId.set(ctrl.id, {
+        ...ctrl,
+        iso_refs: ctrl.iso_refs.map((r) => ({
+          ...r,
+          ...(r.edition ?? editions.get(r.standard)
+            ? { edition: r.edition ?? editions.get(r.standard) }
+            : {}),
+        })),
+      });
     }
   }
   return [...byId.values()];
@@ -107,35 +213,87 @@ function listFilesRecursive(dir: string): string[] {
   return out;
 }
 
-/** True if at least one evidence path exists for the tenant. */
+/** Unfilled placeholder token used by pack templates, e.g. `{FACILITY_NAME}`. */
+const TEMPLATE_PLACEHOLDER = /\{[A-Z][A-Z0-9_]*\}/;
+
+/**
+ * A blank form is not evidence.
+ *
+ * Distributing pack templates (`orgos iso templates`) must not flip a control to
+ * conforming, so a record file only counts once it carries content: a CSV needs a
+ * data row, and a Markdown form must have its placeholders replaced.
+ */
+function evidenceFileIsUnfilled(abs: string): boolean {
+  let text: string;
+  try {
+    text = readFileSync(abs, "utf-8");
+  } catch {
+    return false;
+  }
+  if (abs.endsWith(".csv")) {
+    const rows = text
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0);
+    return rows.length <= 1;
+  }
+  if (abs.endsWith(".md")) return TEMPLATE_PLACEHOLDER.test(text);
+  return false;
+}
+
+function evidencePathSatisfied(pattern: string): boolean {
+  if (!pattern.includes("*")) {
+    const abs = resolveTenantPath(pattern);
+    if (!existsSync(abs)) return false;
+    return !statSync(abs).isFile() || !evidenceFileIsUnfilled(abs);
+  }
+
+  const base = pattern
+    .replace(/\/\*\*\/\*$/, "")
+    .replace(/\/\*\*$/, "")
+    .replace(/\*\*$/, "")
+    .replace(/\/$/, "");
+  const absBase = resolveTenantPath(base);
+  if (!existsSync(absBase)) return false;
+
+  const stat = statSync(absBase);
+  if (stat.isFile()) return true;
+
+  const files = listFilesRecursive(absBase);
+  if (files.length === 0) return false;
+  const relFiles = files.map((f) => f.replace(getTenantDir() + "/", "").replace(/\\/g, "/"));
+  if (relFiles.some((f) => matchesGlobPattern(f, pattern))) return true;
+  return pattern.endsWith("/**/*") || pattern.endsWith("/**");
+}
+
+/** Evidence paths declared by the control that do not exist for the tenant. */
+export function missingEvidencePaths(ctrl: ControlDefinition): string[] {
+  return ctrl.evidence_paths.filter((p) => !evidencePathSatisfied(p));
+}
+
+/**
+ * Why each unsatisfied path failed, so an operator knows whether to create the
+ * file or to fill in a form that is already sitting there.
+ */
+export function describeMissingEvidence(ctrl: ControlDefinition): string[] {
+  return missingEvidencePaths(ctrl).map((p) => {
+    if (p.includes("*")) return `${p}（記録なし）`;
+    const abs = resolveTenantPath(p);
+    if (!existsSync(abs)) return `${p}（未作成）`;
+    return `${p}（様式が未記入）`;
+  });
+}
+
+/**
+ * `any` mode — one existing path is enough.
+ * `all` mode — every path must exist, so folding per-standard artefacts into one
+ * core control does not hide a standard that owes its own evidence.
+ */
 export function hasEvidenceForControl(ctrl: ControlDefinition): boolean {
   if (ctrl.evidence_paths.length === 0) return true;
-
-  for (const pattern of ctrl.evidence_paths) {
-    if (!pattern.includes("*")) {
-      if (existsSync(resolveTenantPath(pattern))) return true;
-      continue;
-    }
-
-    const base = pattern
-      .replace(/\/\*\*\/\*$/, "")
-      .replace(/\/\*\*$/, "")
-      .replace(/\*\*$/, "")
-      .replace(/\/$/, "");
-    const absBase = resolveTenantPath(base);
-    if (!existsSync(absBase)) continue;
-
-    const stat = statSync(absBase);
-    if (stat.isFile()) return true;
-
-    const files = listFilesRecursive(absBase);
-    if (files.length > 0) {
-      const relFiles = files.map((f) => f.replace(getTenantDir() + "/", "").replace(/\\/g, "/"));
-      if (relFiles.some((f) => matchesGlobPattern(f, pattern))) return true;
-      if (pattern.endsWith("/**/*") || pattern.endsWith("/**")) return true;
-    }
-  }
-  return false;
+  const missing = missingEvidencePaths(ctrl);
+  return ctrl.evidence_mode === "all"
+    ? missing.length === 0
+    : missing.length < ctrl.evidence_paths.length;
 }
 
 export function listEffectiveControls(): EffectiveControl[] {
@@ -210,7 +368,7 @@ export function computeControlGaps(): ControlGapRow[] {
         control_id: ctrl.id,
         title: ctrl.title,
         gap_type: "doc_missing",
-        detail: `証拠パス未充足: ${ctrl.evidence_paths.join(", ") || "(none)"}`,
+        detail: `証拠パス未充足: ${describeMissingEvidence(ctrl).join(", ") || "(none)"}`,
         primary_agent: ctrl.primary_agent,
       });
     }

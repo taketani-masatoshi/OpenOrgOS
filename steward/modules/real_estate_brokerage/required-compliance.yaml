@@ -1,0 +1,13 @@
+module_id: real_estate_brokerage
+as_of: "2026-07-14"
+schema_version: 1
+requirements:
+  - id: rc-takken-license
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-takken
+    legal_basis: 宅地建物取引業法第4条
+    authority_ja: 都道府県知事（または国土交通大臣）
+    reference_url: https://www.mlit.go.jp/jutakukentiku/house/takken.html

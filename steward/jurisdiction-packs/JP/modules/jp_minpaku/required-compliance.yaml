@@ -1,0 +1,13 @@
+module_id: jp_minpaku
+as_of: "2026-07-14"
+schema_version: 1
+requirements:
+  - id: rc-minpaku-notification
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-minpaku-notification
+    legal_basis: 住宅宿泊事業法第5条
+    authority_ja: 都道府県・保健所設置市等
+    reference_url: https://www.mlit.go.jp/jutakukentiku/house/jutakukentiku_house_tk3_000015.html
