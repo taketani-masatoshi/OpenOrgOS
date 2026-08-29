@@ -1,0 +1,11 @@
+# 許認可申請案件台帳
+
+as_of: "2026-07-10"
+applications:
+  - id: APP-EXAMPLE-001
+    permit_type_id: pt-ryokan-hotel
+    status: preparing
+    property_id: PROP-002
+    field_overrides:
+      structure_use: 旅館業（ホテル業）
+    notes: seed 参照用 — 実テナントでは id・property を差し替え

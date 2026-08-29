@@ -1,0 +1,7 @@
+as_of: 2026-07-14
+inspections:
+  - id: INSP-FIRE-PREVENTION-001
+    inspection_type_id: insp-fire-prevention
+    status: scheduled
+    scheduled_on: 2026-09-01
+    property_id: PROP-002

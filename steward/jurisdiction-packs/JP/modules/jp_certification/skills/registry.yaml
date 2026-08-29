@@ -1,0 +1,15 @@
+skills:
+  - id: jp_certification_list
+    file: jp_certification_list.md
+    runtime: cli
+    cli_command: jp-certification-list
+    handler: jp_certification_list
+    description: CERT-* インスタンス一覧
+    agent_id: compliance
+  - id: jp_certification_types
+    file: jp_certification_types.md
+    runtime: cli
+    cli_command: jp-certification-types
+    handler: jp_certification_types
+    description: 認証タイプ一覧
+    agent_id: compliance

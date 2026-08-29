@@ -1,0 +1,19 @@
+source_id,title,url,org,type,category,reviewed_on,notes
+mhlw-ryokan,旅館業法（厚生労働省）,https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000188411.html,厚生労働省,law,accommodation,2026-07-10,
+mlit-minpaku,住宅宿泊事業法（国土交通省）,https://www.mlit.go.jp/jutakukentiku/house/jutakukentiku_house_tk3_000015.html,国土交通省,law,accommodation,2026-07-10,
+fdma-fire,消防庁 — 消防法関連,https://www.fdma.go.jp/,消防庁,portal,fire_building,2026-07-10,
+mlit-building,国土交通省 — 建築確認,https://www.mlit.go.jp/jutakukentiku/building/,国土交通省,portal,fire_building,2026-07-10,
+mhlw-food,厚生労働省 — 食品衛生,https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/hygiene/,厚生労働省,portal,food_beverage,2026-07-10,
+nta-alcohol,国税庁 — 酒税,https://www.nta.go.jp/taxes/sake/index.htm,国税庁,portal,food_beverage,2026-07-10,
+mlit-takken,国土交通省 — 宅建業,https://www.mlit.go.jp/jutakukentiku/house/takken.html,国土交通省,portal,real_estate,2026-07-10,
+mlit-construction,国土交通省 — 建設業,https://www.mlit.go.jp/jutakukentiku/anzen/kenchiku.html,国土交通省,portal,construction,2026-07-10,
+pmda,PMDA — 医療機器,https://www.pmda.go.jp/,PMDA,portal,medical_health,2026-07-10,
+fsa,金融庁,https://www.fsa.go.jp/,金融庁,portal,finance,2026-07-10,
+npa-security,警察庁 — 警備業,https://www.npa.go.jp/bureau/security/,警察庁,portal,security,2026-07-10,
+ppc,個人情報保護委員会,https://www.ppc.go.jp/,個人情報保護委員会,portal,other,2026-07-10,
+fsa-fiea,金融庁 — 金融商品取引業,https://www.fsa.go.jp/policy/market/,金融庁,portal,finance,2026-07-14,1種・2種・助言・運用
+nta-nta,国税庁,https://www.nta.go.jp/,国税庁,portal,food_beverage,2026-07-14,
+mhlw-pharma,厚生労働省 — 医薬品・化粧品,https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iyakuhin/,厚生労働省,portal,medical_health,2026-07-14,薬機法
+mlit-travel,観光庁 — 旅行業,https://www.mlit.go.jp/kankocho/,観光庁,portal,travel,2026-07-14,
+moenv-animal,環境省 — 動物取扱業,https://www.env.go.jp/nature/dobutsu/aigo/,環境省,portal,animal,2026-07-14,
+caa-tokusho,消費者庁 — 特定商取引法,https://www.caa.go.jp/policies/policy/consumer_transaction/,消費者庁,portal,retail,2026-07-14,

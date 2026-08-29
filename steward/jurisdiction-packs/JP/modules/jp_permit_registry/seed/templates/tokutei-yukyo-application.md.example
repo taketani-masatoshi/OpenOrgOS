@@ -1,0 +1,20 @@
+# 特定遊興飲食店営業許可申請書（内部提出用ひな形）
+
+- 申請 ID: {{application_id}}
+- 種別: {{permit_type_name}}
+- 申請日: {{filing_date}}
+
+## 申請人
+- 名称: {{applicant_name}}
+- 住所: {{applicant_address}}
+
+## 代表者
+- 氏名: {{representative_name}}
+- 住所: {{representative_address}}
+
+## 事業所
+- 名称: {{site_name}}
+- 所在地: {{site_address}}
+- 備考: {{business_type}}
+
+公式: {{official_form_url}}

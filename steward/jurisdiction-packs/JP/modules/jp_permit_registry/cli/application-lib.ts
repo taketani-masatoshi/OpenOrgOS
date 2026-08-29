@@ -44,11 +44,7 @@ export interface ChecklistResult {
 }
 
 function loadDataFile<S extends z.ZodTypeAny>(filename: string, schema: S) {
-  return loadModuleDataFile<z.output<S>>(
-    MODULE_ID,
-    filename,
-    schema as z.ZodType<z.output<S>>
-  );
+  return loadModuleDataFile(MODULE_ID, filename, schema);
 }
 
 function loadCatalogFile<S extends z.ZodTypeAny>(filename: string, schema: S) {

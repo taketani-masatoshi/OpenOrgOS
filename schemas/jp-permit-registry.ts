@@ -160,10 +160,15 @@ export const permitRegistryFileSchema = z.object({
   permits: z.array(permitInstanceEntrySchema).default([]),
 });
 
+/** Why the application exists — first acquisition, change notice, or renewal. */
+export const permitApplicationPhase = z.enum(["obtain", "change", "renew"]);
+
 export const permitApplicationEntrySchema = z.object({
   id: z.string().min(1),
   permit_type_id: z.string().min(1),
   status: permitApplicationStatus.default("draft"),
+  phase: permitApplicationPhase.default("obtain"),
+  handoff_id: z.string().optional(),
   target_permit_id: z.string().optional(),
   property_id: z
     .string()
@@ -227,6 +232,12 @@ export const permitFormEntrySchema = z.object({
   official_form_url: z.string().url().optional(),
   official_form_notes: z.string().optional(),
   output_format: permitFormOutputFormat.default("tex"),
+  submission: z
+    .object({
+      authority_label_ja: z.string().optional(),
+      channel: z.enum(["counter", "mail", "online"]).optional(),
+    })
+    .optional(),
   notes: z.string().optional(),
 });
 
@@ -306,6 +317,7 @@ export type PermitTypesCatalogFile = z.output<typeof permitTypesCatalogFileSchem
 export type PermitObligationEntry = z.output<typeof permitObligationEntrySchema>;
 export type PermitInstanceEntry = z.output<typeof permitInstanceEntrySchema>;
 export type PermitApplicationEntry = z.output<typeof permitApplicationEntrySchema>;
+export type PermitApplicationPhase = z.output<typeof permitApplicationPhase>;
 export type PermitFormEntry = z.output<typeof permitFormEntrySchema>;
 export type PermitFieldMapping = z.output<typeof permitFieldMappingSchema>;
 export type PermitApplicationDraftFile = z.output<typeof permitApplicationDraftFileSchema>;

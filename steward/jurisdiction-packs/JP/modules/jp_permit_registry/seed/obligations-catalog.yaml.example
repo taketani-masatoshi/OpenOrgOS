@@ -19,7 +19,7 @@ obligations:
     frequency: 常時
     evidence_ledger: guest-register
     legal_basis: 旅館業法第6条
-    notes: 保存期間3年
+    notes: 保存期間5年（REG-010 SSOT · 法定3年は下限）
 
   - id: OBL-RYOKAN-PRICE-DISPLAY
     permit_type_ids: [pt-ryokan-hotel, pt-ryokan-ryokan, pt-ryokan-shukuhaku, pt-ryokan-geshuku]
@@ -35,6 +35,14 @@ obligations:
     frequency: 変更時
     lead_days: 14
     legal_basis: 旅館業法施行規則
+
+
+  - id: OBL-LODGING-TAX-REGISTRATION
+    permit_type_ids: [pt-lodging-tax-registration]
+    title: 宿泊税特別徴収義務者登録
+    category: permit
+    legal_basis: 東京都宿泊税条例
+    notes: 登録後 operations hospitality tax-* で申告
 
   - id: OBL-MINPAKU-REGISTER
     permit_type_ids: [pt-minpaku-notification]

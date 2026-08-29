@@ -1,0 +1,8 @@
+skills:
+  - id: jp_permit_application_ops
+    file: jp_permit_application_ops.md
+    runtime: cli
+    cli_command: operations permit-app create
+    argv: [operations, permit-app, create]
+    description: 業免許取得プロジェクト — create · prepare · PDF · handoff · approve
+    agent_id: compliance

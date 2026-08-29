@@ -1,0 +1,22 @@
+as_of: 2026-07-14
+applications:
+  - id: APP-KAMEZAWA-RYOKAN-001
+    permit_type_id: pt-ryokan-shukuhaku
+    status: preparing
+    phase: obtain
+    target_permit_id: PER-RYOKAN-001
+    property_id: PROP-002
+    docs_root: docs/permit-applications/APP-KAMEZAWA-RYOKAN-001/
+    field_overrides:
+      structure_use: 旅館業（簡易宿所）
+    notes: 亀沢旅館 · PROP-002 · 墨田区提出予定 · 種別は保健所確認で確定
+  - id: APP-ANTIQUE-DEALER-001
+    permit_type_id: pt-antique-dealer
+    status: preparing
+    phase: obtain
+    docs_root: docs/permit-applications/APP-ANTIQUE-DEALER-001/
+    handoff_id: HO-APP-ANTIQUE-DEALER-001-20260714
+    notes: "提出先推定: 麹町警察署（千代田区二番町）· 内部ひな形PDF出力済 · 公式様式へ人手転記"
+    field_overrides:
+      business_type: 衣類・本・雑貨・時計・鞄等の日用品、PC・スマホ等の小物（買取は原則1点30万円以下）
+      site_manager_name: 段燕燕

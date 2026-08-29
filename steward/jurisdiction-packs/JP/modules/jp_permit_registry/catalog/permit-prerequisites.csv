@@ -1,0 +1,13 @@
+permit_type_id,prerequisite_type_id,severity,notes
+pt-ryokan-hotel,pt-fire-equip,required,
+pt-ryokan-hotel,pt-building-confirm,required,
+pt-ryokan-ryokan,pt-fire-equip,required,
+pt-ryokan-ryokan,pt-building-confirm,required,
+pt-ryokan-shukuhaku,pt-fire-equip,required,
+pt-building-complete,pt-building-confirm,required,
+pt-alcohol-restaurant,pt-food-restaurant,required,
+pt-cosmetics-mfg,pt-cosmetics-mah,recommended,製販と製造を分ける場合が多い
+pt-pharma-mfg,pt-pharma-mah,recommended,製販許可とセット運用が多い
+pt-quasi-drug-mfg,pt-quasi-drug-mah,recommended,
+pt-alcohol-sales,pt-food-restaurant,recommended,飲食店併設時
+pt-travel-agent,pt-travel-agency-1,recommended,所属旅行業者との契約前提

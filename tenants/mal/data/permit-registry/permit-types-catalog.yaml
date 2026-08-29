@@ -1,0 +1,1138 @@
+jurisdiction: JP
+updated: 2026-07-14
+catalog_version: "2"
+sectors:
+  - id: accommodation
+    name_ja: 宿泊・民泊
+    name_en: Accommodation
+  - id: fire_building
+    name_ja: 消防・建築
+    name_en: Fire & Building
+  - id: food_beverage
+    name_ja: 飲食・酒類
+    name_en: Food & Beverage
+  - id: real_estate
+    name_ja: 不動産
+    name_en: Real Estate
+  - id: construction
+    name_ja: 建設
+    name_en: Construction
+  - id: transport
+    name_ja: 運送・交通
+    name_en: Transport
+  - id: medical_health
+    name_ja: 医療機器・薬事
+    name_en: Pharma & Medical Devices
+    notes: 薬機法 · 医療機器詳細は jp_medical_device
+  - id: pharmacy_clinic
+    name_ja: 医療・薬局
+    name_en: Healthcare & Pharmacy
+  - id: finance
+    name_ja: 金融・決済
+    name_en: Finance
+    notes: 金商法 · 銀行法 · 保険業法 · 資金決済法 · 貸金業法
+  - id: labor
+    name_ja: 労働・人材
+    name_en: Labor & Staffing
+  - id: waste_environment
+    name_ja: 廃棄物・環境
+    name_en: Waste & Environment
+  - id: security
+    name_ja: 警備・探偵
+    name_en: Security
+  - id: telecom_media
+    name_ja: 電気通信・放送
+    name_en: Telecom & Broadcasting
+  - id: import_export
+    name_ja: 輸出入・通関
+    name_en: Import & Export
+  - id: entertainment
+    name_ja: 風営・娯楽
+    name_en: Entertainment
+  - id: retail
+    name_ja: 小売・古物
+    name_en: Retail
+  - id: welfare_care
+    name_ja: 介護・福祉
+    name_en: Welfare & Care
+  - id: education
+    name_ja: 教育・学習
+    name_en: Education
+  - id: agriculture
+    name_ja: 農林水産
+    name_en: Agriculture
+  - id: energy
+    name_ja: エネルギー
+    name_en: Energy
+  - id: other
+    name_ja: その他届出・士業法人
+    name_en: Other
+  - id: travel
+    name_ja: 旅行業
+    name_en: Travel Agency
+    notes: 旅行業法
+  - id: animal
+    name_ja: 動物取扱・獣医
+    name_en: Animal
+  - id: childcare
+    name_ja: 保育・児童
+    name_en: Childcare
+permit_types:
+  - id: pt-ryokan-hotel
+    category: accommodation
+    name_ja: 旅館業（ホテル業）
+    name_en: Hotel business
+    legal_basis: 旅館業法第4条
+    issuer_type: municipal
+    issuer_label_ja: 保健所を経由する市区町村
+    renewal_cycle: 原則無期限（変更届出あり）
+    property_scoped: true
+    site_scoped: false
+    notes: 客室10室以上が目安。営業開始前に許可。
+  - id: pt-ryokan-ryokan
+    category: accommodation
+    name_ja: 旅館業（旅館）
+    legal_basis: 旅館業法第4条
+    issuer_type: municipal
+    renewal_cycle: 原則無期限
+    property_scoped: true
+    site_scoped: false
+  - id: pt-ryokan-shukuhaku
+    category: accommodation
+    name_ja: 旅館業（簡易宿所）
+    legal_basis: 旅館業法第4条
+    issuer_type: municipal
+    property_scoped: true
+    site_scoped: false
+  - id: pt-ryokan-geshuku
+    category: accommodation
+    name_ja: 旅館業（下宿営業）
+    legal_basis: 旅館業法第4条
+    issuer_type: municipal
+    property_scoped: true
+    site_scoped: false
+  - id: pt-minpaku-notification
+    category: accommodation
+    name_ja: 住宅宿泊事業届出（民泊）
+    legal_basis: 住宅宿泊事業法第5条
+    issuer_type: municipal
+    renewal_cycle: 届出（年間日数制限あり）
+    property_scoped: true
+    site_scoped: false
+    notes: 旅館業許可と排他ではないが実務上選択。自治体条例で追加要件。
+  - id: pt-fire-equip
+    category: fire_building
+    name_ja: 消防用設備等配置証明
+    legal_basis: 消防法第17条の3
+    issuer_type: fire_department
+    property_scoped: true
+    site_scoped: false
+  - id: pt-fire-inspect
+    category: fire_building
+    name_ja: 消防用設備等検査（定期）
+    legal_basis: 消防法第17条の4
+    issuer_type: fire_department
+    renewal_cycle: 設備種別により6ヶ月〜1年
+    property_scoped: true
+    site_scoped: false
+  - id: pt-building-confirm
+    category: fire_building
+    name_ja: 建築確認済証
+    legal_basis: 建築基準法第6条
+    issuer_type: prefectural
+    issuer_label_ja: 指定確認検査機関または建築主事
+    property_scoped: true
+    site_scoped: false
+  - id: pt-building-complete
+    category: fire_building
+    name_ja: 検査済証（完了検査）
+    legal_basis: 建築基準法第7条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-building-use-change
+    category: fire_building
+    name_ja: 用途変更確認・届出
+    legal_basis: 建築基準法第6条・第87条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-food-restaurant
+    category: food_beverage
+    name_ja: 飲食店営業許可
+    legal_basis: 食品衛生法第28条
+    issuer_type: health_center
+    renewal_cycle: 原則無期限（変更届出あり）
+    property_scoped: true
+    site_scoped: false
+  - id: pt-alcohol-sales
+    category: food_beverage
+    name_ja: 酒類販売業免許
+    legal_basis: 酒税法第7条
+    issuer_type: tax_office
+    renewal_cycle: 3年
+    property_scoped: true
+    site_scoped: false
+  - id: pt-alcohol-restaurant
+    category: food_beverage
+    name_ja: 酒類飲食店営業免許
+    legal_basis: 酒税法第7条
+    issuer_type: tax_office
+    renewal_cycle: 3年
+    property_scoped: true
+    site_scoped: false
+  - id: pt-food-manufacturing
+    category: food_beverage
+    name_ja: 食品製造業許可
+    legal_basis: 食品衛生法第28条
+    issuer_type: health_center
+    property_scoped: false
+    site_scoped: true
+  - id: pt-takken
+    category: real_estate
+    name_ja: 宅地建物取引業免許
+    legal_basis: 宅地建物取引業法第4条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+    notes: 事業者単位。専任宅建士配置義務。
+  - id: pt-rental-housing-mgmt
+    category: real_estate
+    name_ja: 賃貸住宅管理業者登録
+    legal_basis: 賃貸住宅の管理業務等の適正化に関する法律第6条
+    issuer_type: mlit
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-condo-mgmt
+    category: real_estate
+    name_ja: マンション管理業者登録
+    legal_basis: マンション管理適正化法第6条
+    issuer_type: mlit
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-construction-general
+    category: construction
+    name_ja: 建設業許可（一般建設業）
+    legal_basis: 建設業法第3条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-construction-specific
+    category: construction
+    name_ja: 建設業許可（特定建設業）
+    legal_basis: 建設業法第3条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-architect-office
+    category: construction
+    name_ja: 建築士事務所登録
+    legal_basis: 建築士法第20条の2
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-freight-forwarding
+    category: transport
+    name_ja: 一般貨物自動車運送事業許可
+    legal_basis: 貨物自動車運送事業法第4条
+    issuer_type: mlit_regional
+    renewal_cycle: 原則無期限（事業計画変更届出あり）
+    property_scoped: false
+    site_scoped: false
+  - id: pt-bus-common
+    category: transport
+    name_ja: 一般乗合旅客自動車運送事業許可
+    legal_basis: 道路運送法第4条
+    issuer_type: mlit_regional
+    property_scoped: false
+    site_scoped: false
+  - id: pt-taxi
+    category: transport
+    name_ja: 一般乗用旅客自動車運送事業許可
+    legal_basis: 道路運送法第4条
+    issuer_type: mlit_regional
+    property_scoped: false
+    site_scoped: false
+    notes: タクシー・ハイヤー等
+  - id: pt-medical-device-mfg
+    category: medical_health
+    name_ja: 医療機器製造業許可
+    legal_basis: 薬機法第6条の2
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: true
+    binds_module: jp_medical_device
+  - id: pt-medical-device-mah
+    category: medical_health
+    name_ja: 医療機器製造販売業許可
+    legal_basis: 薬機法第12条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+    binds_module: jp_medical_device
+  - id: pt-medical-device-dist
+    category: medical_health
+    name_ja: 医療機器販売業許可
+    legal_basis: 薬機法第13条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+    binds_module: jp_medical_device
+  - id: pt-medical-device-repair
+    category: medical_health
+    name_ja: 医療機器修理業許可
+    legal_basis: 薬機法第14条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+    binds_module: jp_medical_device
+  - id: pt-clinic
+    category: pharmacy_clinic
+    name_ja: 診療所開設許可
+    legal_basis: 医療法第19条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-hospital
+    category: pharmacy_clinic
+    name_ja: 病院開設許可
+    legal_basis: 医療法第19条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-pharmacy
+    category: pharmacy_clinic
+    name_ja: 薬局開設許可
+    legal_basis: 薬局構造設備規則
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-dental
+    category: pharmacy_clinic
+    name_ja: 歯科診療所開設届出
+    legal_basis: 医療法第19条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-money-lending
+    category: finance
+    name_ja: 貸金業登録
+    legal_basis: 貸金業法第4条
+    issuer_type: prefectural
+    renewal_cycle: 3年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-fund-transfer
+    category: finance
+    name_ja: 資金移動業者登録
+    legal_basis: 資金決済に関する法律第37条
+    issuer_type: national
+    issuer_label_ja: 財務局長
+    property_scoped: false
+    site_scoped: false
+  - id: pt-crypto-exchange
+    category: finance
+    name_ja: 暗号資産交換業登録
+    legal_basis: 資金決済に関する法律第63条
+    issuer_type: national
+    issuer_label_ja: 財務局長
+    property_scoped: false
+    site_scoped: false
+  - id: pt-staffing
+    category: labor
+    name_ja: 労働者派遣事業許可
+    legal_basis: 労働者派遣事業の適正な運営の確保及び派遣労働者の保護等に関する法律第5条
+    issuer_type: prefectural
+    renewal_cycle: 3年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-job-intro-fee
+    category: labor
+    name_ja: 有料職業紹介事業許可
+    legal_basis: 職業安定法第32条の13
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-job-intro-free
+    category: labor
+    name_ja: 無料職業紹介事業届出
+    legal_basis: 職業安定法第32条の11
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-waste-collect
+    category: waste_environment
+    name_ja: 産業廃棄物収集運搬業許可
+    legal_basis: 廃棄物の処理及び清掃に関する法律第7条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-waste-disposal
+    category: waste_environment
+    name_ja: 産業廃棄物処分業許可
+    legal_basis: 廃棄物の処理及び清掃に関する法律第7条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-general-waste
+    category: waste_environment
+    name_ja: 一般廃棄物収集運搬業許可
+    legal_basis: 廃棄物の処理及び清掃に関する法律第7条
+    issuer_type: municipal
+    property_scoped: false
+    site_scoped: false
+  - id: pt-security
+    category: security
+    name_ja: 警備業認定
+    legal_basis: 警備業法第4条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-telecom
+    category: telecom_media
+    name_ja: 電気通信事業届出
+    legal_basis: 電気通信事業法第9条
+    issuer_type: national
+    issuer_label_ja: 総務大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-telecom-registration
+    category: telecom_media
+    name_ja: 電気通信事業登録（基礎的電気通信役務）
+    legal_basis: 電気通信事業法第9条の2
+    issuer_type: national
+    property_scoped: false
+    site_scoped: false
+  - id: pt-broadcast
+    category: telecom_media
+    name_ja: 基幹放送事業許可
+    legal_basis: 放送法第21条
+    issuer_type: national
+    issuer_label_ja: 総務大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-import-declaration
+    category: import_export
+    name_ja: 輸入申告（通関）
+    legal_basis: 関税法第67条
+    issuer_type: customs
+    property_scoped: false
+    site_scoped: false
+    notes: 事業者登録・AEO 等と併用
+  - id: pt-export-declaration
+    category: import_export
+    name_ja: 輸出申告（通関）
+    legal_basis: 関税法第70条
+    issuer_type: customs
+    property_scoped: false
+    site_scoped: false
+  - id: pt-fueiho-1
+    category: entertainment
+    name_ja: 風俗営業第1種（キャバレー・クラブ等）
+    legal_basis: 風俗営業等の規制及び業務の適正化等に関する法律第4条
+    issuer_type: police
+    issuer_label_ja: 公安委員会
+    property_scoped: true
+    site_scoped: false
+  - id: pt-fueiho-2
+    category: entertainment
+    name_ja: 風俗営業第2種（料理店等）
+    legal_basis: 風俗営業等の規制及び業務の適正化等に関する法律第4条
+    issuer_type: police
+    property_scoped: true
+    site_scoped: false
+  - id: pt-tokutei-yukyo
+    category: entertainment
+    name_ja: 特定遊興飲食店営業許可
+    legal_basis: 風俗営業法関連
+    issuer_type: police
+    property_scoped: true
+    site_scoped: false
+  - id: pt-antique-dealer
+    category: retail
+    name_ja: 古物商許可
+    legal_basis: 古物営業法第4条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-tobacco-retail
+    category: retail
+    name_ja: たばこ小売販売業届出
+    legal_basis: たばこ事業法第14条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-home-care
+    category: welfare_care
+    name_ja: 訪問介護事業指定
+    legal_basis: 介護保険法第71条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-day-service
+    category: welfare_care
+    name_ja: 通所介護事業指定
+    legal_basis: 介護保険法第71条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-disability-support
+    category: welfare_care
+    name_ja: 障害福祉サービス事業所指定
+    legal_basis: 障害者総合支援法第71条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-senshu-school
+    category: education
+    name_ja: 専修学校設置認可
+    legal_basis: 学校教育法第82条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-misc-school
+    category: education
+    name_ja: 各種学校設置認可
+    legal_basis: 学校教育法第83条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-farmland-conversion
+    category: agriculture
+    name_ja: 農地転用許可
+    legal_basis: 農地法第4条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-fishery-right
+    category: agriculture
+    name_ja: 漁業権設定・許可
+    legal_basis: 漁業法
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-electricity-retail
+    category: energy
+    name_ja: 小売電気事業登録
+    legal_basis: 電気事業法第2条の11
+    issuer_type: national
+    issuer_label_ja: 経済産業大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-gas-utility
+    category: energy
+    name_ja: ガス事業許可
+    legal_basis: ガス事業法第3条
+    issuer_type: national
+    property_scoped: false
+    site_scoped: false
+  - id: pt-privacy-cross-border
+    category: other
+    name_ja: 個人情報の外国第三者提供に関する届出
+    legal_basis: 個人情報保護法第28条
+    issuer_type: ppc
+    issuer_label_ja: 個人情報保護委員会
+    property_scoped: false
+    site_scoped: false
+  - id: pt-employment-rules
+    category: other
+    name_ja: 就業規則届出
+    legal_basis: 労働基準法第89条
+    issuer_type: prefectural
+    issuer_label_ja: 労働基準監督署
+    property_scoped: false
+    site_scoped: false
+  - id: pt-fiea-type1
+    category: finance
+    name_ja: 第一種金融商品取引業
+    name_en: Type I Financial Instruments Business
+    legal_basis: 金融商品取引法第29条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣（金融庁）
+    renewal_cycle: 登録（更新手続は別途）
+    property_scoped: false
+    site_scoped: false
+    notes: 証券会社等 · 自己資本規制・登録拒否事由あり
+  - id: pt-fiea-type2
+    category: finance
+    name_ja: 第二種金融商品取引業
+    name_en: Type II Financial Instruments Business
+    legal_basis: 金融商品取引法第29条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣（金融庁）
+    property_scoped: false
+    site_scoped: false
+    notes: ファンド持分販売等
+  - id: pt-fiea-investment-advisory
+    category: finance
+    name_ja: 投資助言・代理業
+    legal_basis: 金融商品取引法第29条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣（金融庁）
+    property_scoped: false
+    site_scoped: false
+  - id: pt-fiea-investment-management
+    category: finance
+    name_ja: 投資運用業
+    legal_basis: 金融商品取引法第29条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣（金融庁）
+    property_scoped: false
+    site_scoped: false
+  - id: pt-fiea-registered-financial-institution
+    category: finance
+    name_ja: 登録金融機関業務（金商法）
+    legal_basis: 金融商品取引法第33条の2
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣（金融庁）
+    property_scoped: false
+    site_scoped: false
+    notes: 銀行等が有価証券関連業務を行う場合
+  - id: pt-banking
+    category: finance
+    name_ja: 銀行業免許
+    legal_basis: 銀行法第4条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-insurance
+    category: finance
+    name_ja: 保険業免許
+    legal_basis: 保険業法第3条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-insurance-agent
+    category: finance
+    name_ja: 保険募集人登録
+    legal_basis: 保険業法第276条
+    issuer_type: fsa
+    issuer_label_ja: 財務局長等
+    property_scoped: false
+    site_scoped: false
+  - id: pt-trust
+    category: finance
+    name_ja: 信託業免許・登録
+    legal_basis: 信託業法第3条・第7条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-prepaid-payment
+    category: finance
+    name_ja: 前払式支払手段発行者届出・登録
+    legal_basis: 資金決済に関する法律第7条・第8条
+    issuer_type: fsa
+    issuer_label_ja: 財務局長
+    property_scoped: false
+    site_scoped: false
+  - id: pt-electronic-payment-agency
+    category: finance
+    name_ja: 電子決済等代行業者登録
+    legal_basis: 銀行法第52条の61の2
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-financial-instruments-intermediary
+    category: finance
+    name_ja: 金融商品仲介業登録
+    legal_basis: 金融商品取引法第66条
+    issuer_type: fsa
+    issuer_label_ja: 内閣総理大臣（金融庁）
+    property_scoped: false
+    site_scoped: false
+  - id: pt-credit-card
+    category: finance
+    name_ja: 包括信用購入あっせん業登録
+    legal_basis: 割賦販売法第31条
+    issuer_type: meti
+    issuer_label_ja: 経済産業大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-commodity-derivatives
+    category: finance
+    name_ja: 商品先物取引業者許可
+    legal_basis: 商品先物取引法第190条
+    issuer_type: meti
+    issuer_label_ja: 農林水産大臣・経済産業大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-cosmetics-mah
+    category: medical_health
+    name_ja: 化粧品製造販売業許可
+    legal_basis: 薬機法第12条
+    issuer_type: prefectural
+    issuer_label_ja: 都道府県知事
+    property_scoped: false
+    site_scoped: false
+    notes: GQP/GVP 体制
+  - id: pt-cosmetics-mfg
+    category: medical_health
+    name_ja: 化粧品製造業許可
+    legal_basis: 薬機法第13条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: true
+  - id: pt-quasi-drug-mah
+    category: medical_health
+    name_ja: 医薬部外品製造販売業許可
+    legal_basis: 薬機法第12条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-quasi-drug-mfg
+    category: medical_health
+    name_ja: 医薬部外品製造業許可
+    legal_basis: 薬機法第13条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: true
+  - id: pt-pharma-mah
+    category: medical_health
+    name_ja: 医薬品製造販売業許可
+    legal_basis: 薬機法第12条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+    notes: 品目承認は別手続
+  - id: pt-pharma-mfg
+    category: medical_health
+    name_ja: 医薬品製造業許可
+    legal_basis: 薬機法第13条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: true
+  - id: pt-pharma-wholesale
+    category: medical_health
+    name_ja: 医薬品卸売販売業許可
+    legal_basis: 薬機法第24条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-pharma-store-sales
+    category: medical_health
+    name_ja: 店舗販売業許可（医薬品）
+    legal_basis: 薬機法第24条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-pharma-placement-sales
+    category: medical_health
+    name_ja: 配置販売業許可（医薬品）
+    legal_basis: 薬機法第24条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-poisonous-drug
+    category: medical_health
+    name_ja: 毒物劇物製造業・販売業登録
+    legal_basis: 毒物及び劇物取締法第3条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-narcotics-handler
+    category: medical_health
+    name_ja: 麻薬取扱者免許
+    legal_basis: 麻薬及び向精神薬取締法第3条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-regenerative-mah
+    category: medical_health
+    name_ja: 再生医療等製品製造販売業許可
+    legal_basis: 薬機法第23条の20
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-travel-agency-1
+    category: travel
+    name_ja: 旅行業登録（第1種）
+    legal_basis: 旅行業法第3条
+    issuer_type: mlit
+    issuer_label_ja: 観光庁長官
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+    binds_module: travel_booking
+  - id: pt-travel-agency-2
+    category: travel
+    name_ja: 旅行業登録（第2種）
+    legal_basis: 旅行業法第3条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+    binds_module: travel_booking
+  - id: pt-travel-agency-3
+    category: travel
+    name_ja: 旅行業登録（第3種）
+    legal_basis: 旅行業法第3条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+    binds_module: travel_booking
+  - id: pt-travel-agency-regional
+    category: travel
+    name_ja: 地域限定旅行業登録
+    legal_basis: 旅行業法第3条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-travel-agent
+    category: travel
+    name_ja: 旅行業者代理業登録
+    legal_basis: 旅行業法第3条
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-warehousing
+    category: transport
+    name_ja: 倉庫業登録
+    legal_basis: 倉庫業法第3条
+    issuer_type: mlit_regional
+    issuer_label_ja: 地方運輸局長
+    property_scoped: false
+    site_scoped: false
+  - id: pt-motor-vehicle-maintenance
+    category: transport
+    name_ja: 自動車分解整備事業認証
+    legal_basis: 道路運送車両法第78条
+    issuer_type: mlit_regional
+    property_scoped: true
+    site_scoped: false
+  - id: pt-passenger-bus-charter
+    category: transport
+    name_ja: 一般貸切旅客自動車運送事業許可
+    legal_basis: 道路運送法第4条
+    issuer_type: mlit_regional
+    property_scoped: false
+    site_scoped: false
+  - id: pt-coastal-shipping
+    category: transport
+    name_ja: 内航海運業許可・届出
+    legal_basis: 内航海運業法
+    issuer_type: mlit
+    property_scoped: false
+    site_scoped: false
+  - id: pt-surveying
+    category: construction
+    name_ja: 測量業登録
+    legal_basis: 測量法第55条
+    issuer_type: mlit
+    issuer_label_ja: 国土交通大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-real-estate-appraiser-office
+    category: real_estate
+    name_ja: 不動産鑑定業者登録
+    legal_basis: 不動産の鑑定評価に関する法律第24条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-labor-dispatch-special
+    category: labor
+    name_ja: 特定労働者派遣事業（経過・参照）
+    legal_basis: 労働者派遣法（改正前区分の参照）
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+    notes: 現行は原則許可制 · 歴史データ用 · review 後 deprecated 可
+  - id: pt-employment-placement-special
+    category: labor
+    name_ja: 特別の法人等による無料職業紹介
+    legal_basis: 職業安定法第33条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-secondhand-articles-auction
+    category: retail
+    name_ja: 古物市場主許可
+    legal_basis: 古物営業法第4条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-door-to-door-sales-notify
+    category: retail
+    name_ja: 特定商取引法に基づく表示・届出管理
+    legal_basis: 特定商取引法
+    issuer_type: meti
+    property_scoped: false
+    site_scoped: false
+    notes: 業態により届出・表示義務 · 自治体確認
+  - id: pt-pawnbroker
+    category: retail
+    name_ja: 質屋営業許可
+    legal_basis: 質屋営業法第2条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-used-car-dealer
+    category: retail
+    name_ja: 古物商（自動車）特記
+    legal_basis: 古物営業法第4条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+    notes: pt-antique-dealer の自動車取扱区分 · 実務上別管理
+  - id: pt-animal-handling
+    category: animal
+    name_ja: 第一種動物取扱業登録
+    legal_basis: 動物の愛護及び管理に関する法律第10条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-animal-handling-2
+    category: animal
+    name_ja: 第二種動物取扱業届出
+    legal_basis: 動物の愛護及び管理に関する法律第24条の2
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-veterinary-clinic
+    category: animal
+    name_ja: 動物病院開設届出
+    legal_basis: 獣医療法第3条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-nursery-authorized
+    category: childcare
+    name_ja: 保育所設置認可
+    legal_basis: 児童福祉法第35条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-nursery-unauthorized-notify
+    category: childcare
+    name_ja: 認可外保育施設届出
+    legal_basis: 児童福祉法第59条の2
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-after-school-care
+    category: childcare
+    name_ja: 放課後児童健全育成事業届出
+    legal_basis: 児童福祉法
+    issuer_type: municipal
+    property_scoped: true
+    site_scoped: false
+  - id: pt-nursing-home
+    category: welfare_care
+    name_ja: 介護老人福祉施設開設許可
+    legal_basis: 介護保険法
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-fee-based-home-elderly
+    category: welfare_care
+    name_ja: 有料老人ホーム設置届出
+    legal_basis: 老人福祉法第29条
+    issuer_type: prefectural
+    property_scoped: true
+    site_scoped: false
+  - id: pt-driving-school
+    category: education
+    name_ja: 指定自動車教習所指定
+    legal_basis: 道路交通法第99条
+    issuer_type: police
+    issuer_label_ja: 公安委員会
+    property_scoped: true
+    site_scoped: false
+  - id: pt-cram-school-fire
+    category: education
+    name_ja: 学習塾等の防火対象物届出
+    legal_basis: 消防法
+    issuer_type: fire_department
+    property_scoped: true
+    site_scoped: false
+    notes: 用途・規模により · 自治体確認
+  - id: pt-food-processing-additive
+    category: food_beverage
+    name_ja: 添加物製造業許可
+    legal_basis: 食品衛生法第28条
+    issuer_type: health_center
+    property_scoped: false
+    site_scoped: true
+  - id: pt-meat-processing
+    category: food_beverage
+    name_ja: 食肉製品製造業許可
+    legal_basis: 食品衛生法第28条
+    issuer_type: health_center
+    property_scoped: false
+    site_scoped: true
+  - id: pt-confectionery
+    category: food_beverage
+    name_ja: 菓子製造業許可
+    legal_basis: 食品衛生法第28条
+    issuer_type: health_center
+    property_scoped: false
+    site_scoped: true
+  - id: pt-food-import-notification
+    category: import_export
+    name_ja: 食品等輸入届出
+    legal_basis: 食品衛生法第27条
+    issuer_type: mhlw
+    issuer_label_ja: 検疫所
+    property_scoped: false
+    site_scoped: false
+  - id: pt-mahjong
+    category: entertainment
+    name_ja: 風俗営業第4号（マージャン等）
+    legal_basis: 風俗営業法第2条
+    issuer_type: police
+    property_scoped: true
+    site_scoped: false
+  - id: pt-game-center
+    category: entertainment
+    name_ja: 風俗営業第5号（ゲームセンター等）
+    legal_basis: 風俗営業法第2条
+    issuer_type: police
+    property_scoped: true
+    site_scoped: false
+  - id: pt-late-night-restaurant
+    category: entertainment
+    name_ja: 深夜酒類提供飲食店営業届出
+    legal_basis: 風俗営業法第33条
+    issuer_type: police
+    property_scoped: true
+    site_scoped: false
+  - id: pt-radio-station
+    category: telecom_media
+    name_ja: 無線局免許
+    legal_basis: 電波法第4条
+    issuer_type: national
+    issuer_label_ja: 総務大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-domain-mvno
+    category: telecom_media
+    name_ja: 電気通信事業者届出（MVNO等）
+    legal_basis: 電気通信事業法第16条
+    issuer_type: national
+    issuer_label_ja: 総務大臣
+    property_scoped: false
+    site_scoped: false
+    notes: 届出区分 · pt-telecom と併用整理可
+  - id: pt-heat-supply
+    category: energy
+    name_ja: 熱供給事業登録
+    legal_basis: 熱供給事業法
+    issuer_type: meti
+    issuer_label_ja: 経済産業大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-petroleum-retail
+    category: energy
+    name_ja: 揮発油販売業登録
+    legal_basis: 揮発油等の品質の確保等に関する法律第3条
+    issuer_type: meti
+    property_scoped: true
+    site_scoped: false
+  - id: pt-pcb-waste
+    category: waste_environment
+    name_ja: PCB廃棄物処理業許可
+    legal_basis: PCB特措法
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-industrial-waste-collection-special
+    category: waste_environment
+    name_ja: 特別管理産業廃棄物収集運搬業許可
+    legal_basis: 廃棄物の処理及び清掃に関する法律第14条の4
+    issuer_type: prefectural
+    renewal_cycle: 5年
+    property_scoped: false
+    site_scoped: false
+  - id: pt-detective
+    category: security
+    name_ja: 探偵業届出
+    legal_basis: 探偵業の業務の適正化に関する法律第4条
+    issuer_type: prefectural
+    property_scoped: false
+    site_scoped: false
+  - id: pt-firearms
+    category: security
+    name_ja: 銃砲刀剣類所持許可（事業者）
+    legal_basis: 銃砲刀剣類所持等取締法
+    issuer_type: police
+    property_scoped: false
+    site_scoped: false
+  - id: pt-immigration-support
+    category: labor
+    name_ja: 登録支援機関の登録
+    legal_basis: 出入国管理及び難民認定法
+    issuer_type: national
+    issuer_label_ja: 出入国在留管理庁
+    property_scoped: false
+    site_scoped: false
+  - id: pt-specified-skilled-worker-org
+    category: labor
+    name_ja: 特定技能所属機関届出
+    legal_basis: 出入国管理及び難民認定法
+    issuer_type: national
+    issuer_label_ja: 出入国在留管理庁
+    property_scoped: false
+    site_scoped: false
+  - id: pt-certified-public-accountant-firm
+    category: other
+    name_ja: 監査法人登録
+    legal_basis: 公認会計士法
+    issuer_type: national
+    issuer_label_ja: 金融庁
+    property_scoped: false
+    site_scoped: false
+  - id: pt-judicial-scrivener-office
+    category: other
+    name_ja: 司法書士法人設立認可等
+    legal_basis: 司法書士法
+    issuer_type: moj
+    issuer_label_ja: 法務局
+    property_scoped: false
+    site_scoped: false
+  - id: pt-administrative-scrivener-office
+    category: other
+    name_ja: 行政書士法人設立認可等
+    legal_basis: 行政書士法
+    issuer_type: moj
+    property_scoped: false
+    site_scoped: false
+    notes: 都道府県会経由
+  - id: pt-social-insurance-labor-consultant-office
+    category: other
+    name_ja: 社会保険労務士法人設立認可等
+    legal_basis: 社会保険労務士法
+    issuer_type: national
+    property_scoped: false
+    site_scoped: false
+  - id: pt-patent-attorney-office
+    category: other
+    name_ja: 弁理士法人設立認可等
+    legal_basis: 弁理士法
+    issuer_type: national
+    issuer_label_ja: 経済産業大臣
+    property_scoped: false
+    site_scoped: false
+  - id: pt-tax-accountant-office
+    category: other
+    name_ja: 税理士法人設立認可等
+    legal_basis: 税理士法
+    issuer_type: national
+    issuer_label_ja: 財務大臣
+    property_scoped: false
+    site_scoped: false

@@ -1,0 +1,31 @@
+as_of: "2026-07-14"
+types:
+  - id: cert-iso-27001
+    name_ja: ISO/IEC 27001（ISMS）
+    name_en: ISO/IEC 27001
+    scheme: ISO
+    issuer_label_ja: 認定認証機関
+    reference_url: https://www.iso.org/standard/27001
+  - id: cert-iso-9001
+    name_ja: ISO 9001（品質マネジメント）
+    name_en: ISO 9001
+    scheme: ISO
+    issuer_label_ja: 認定認証機関
+  - id: cert-iso-13485
+    name_ja: ISO 13485（医療機器 QMS）
+    scheme: ISO
+    notes: jp_medical_device と併用可
+  - id: cert-isms-jipdec
+    name_ja: ISMS 認証（国内）
+    scheme: ISMS
+    issuer_label_ja: JIPDEC 等
+  - id: cert-ce-marking
+    name_ja: CE マーキング（適合宣言・認証）
+    name_en: CE marking
+    scheme: CE
+    issuer_label_ja: 通知機関 / 自己適合宣言
+  - id: cert-fda-establishment
+    name_ja: FDA Establishment Registration
+    scheme: FDA
+    issuer_label_ja: U.S. FDA
+    reference_url: https://www.fda.gov/

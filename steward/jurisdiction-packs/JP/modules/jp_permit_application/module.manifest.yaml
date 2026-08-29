@@ -1,0 +1,23 @@
+id: jp_permit_application
+required_seeds: []
+activation_seeds:
+  - application-registry.yaml.example
+optional_regulations:
+  - REG-012
+notes: skeleton — JP 業免許取得プロジェクト · TeX PDF · handoff · approve→PER
+cli_commands:
+  - create
+  - catalog-status
+  - prepare
+  - show
+  - procedures
+  - requirements
+  - intake
+  - checklist
+  - clarify
+  - draft
+  - export-pdf
+  - handoff
+  - submit-mark
+  - approve
+  - gate

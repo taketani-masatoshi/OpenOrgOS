@@ -1,0 +1,15 @@
+permit_type_id,source_id,role,jurisdiction_confirm_required
+pt-ryokan-hotel,mhlw-ryokan,primary,true
+pt-ryokan-ryokan,mhlw-ryokan,primary,true
+pt-ryokan-shukuhaku,mhlw-ryokan,primary,true
+pt-ryokan-geshuku,mhlw-ryokan,primary,true
+pt-minpaku-notification,mlit-minpaku,primary,true
+pt-fire-equip,fdma-fire,primary,true
+pt-building-confirm,mlit-building,primary,true
+pt-food-restaurant,mhlw-food,primary,true
+pt-alcohol-sales,nta-alcohol,primary,true
+pt-takken,mlit-takken,primary,true
+pt-construction-general,mlit-construction,primary,true
+pt-medical-device-mfg,pmda,primary,true
+pt-money-lending,fsa,primary,true
+pt-security,npa-security,primary,true

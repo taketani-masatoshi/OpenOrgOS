@@ -1,0 +1,27 @@
+as_of: "2026-08-24"
+permits:
+  - id: PER-RYOKAN-001
+    permit_type_id: pt-ryokan-shukuhaku
+    status: active
+    property_id: PROP-002
+    issued_on: "2026-07-14"
+    evidence_path: docs/company/licenses/records/ryokan/per-ryokan-001-2026-07-14.pdf
+    notes: intake hospitality.yaml から SSOT 移行
+  - id: PER-FIRE-001
+    permit_type_id: pt-fire-compliance-notice
+    status: active
+    property_id: PROP-002
+    permit_number: FIRE-KAMEZAWA-2026-001
+    issuer: 墨田区消防署
+    issued_on: "2026-08-20"
+    evidence_path: docs/company/licenses/records/fire/per-fire-001-2026-08-20.pdf
+    notes: 消防法令適合通知書（索引のみ · PDF は licenses/records L2）
+  - id: PER-LODG-TAX-001
+    permit_type_id: pt-lodging-tax-registration
+    status: active
+    property_id: PROP-002
+    permit_number: LODGE-TAX-MAL-2026
+    issuer: 東京都主税局
+    issued_on: "2026-08-15"
+    evidence_path: docs/company/licenses/records/tax/lodging-tax-registration-2026-08-15.pdf
+    notes: 宿泊税特別徴収義務者登録（索引のみ · 控えは L2）

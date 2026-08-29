@@ -1,0 +1,20 @@
+as_of: "2026-08-24"
+instances:
+  - id: OBLI-GUEST-REGISTER-001
+    obligation_id: OBL-RYOKAN-GUEST-REGISTER
+    permit_id: PER-RYOKAN-001
+    status: fulfilled
+    last_fulfilled: "2026-08-24"
+    notes: operations hospitality register-validate · STAY-2026-001 記録済
+  - id: OBLI-LODGING-TAX-001
+    obligation_id: OBL-LODGING-TAX-REGISTRATION
+    permit_id: PER-LODG-TAX-001
+    status: fulfilled
+    last_fulfilled: "2026-08-24"
+    notes: PER-LODG-TAX-001 active · 2026-07 零申告 filed/paid
+  - id: OBLI-FIRE-NOTICE-001
+    obligation_id: OBL-FIRE-EQUIP-CERT
+    permit_id: PER-FIRE-001
+    status: fulfilled
+    last_fulfilled: "2026-08-24"
+    notes: PER-FIRE-001 active · 点検記録 templates/records 運用開始

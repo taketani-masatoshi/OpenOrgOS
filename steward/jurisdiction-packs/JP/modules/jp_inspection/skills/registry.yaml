@@ -1,0 +1,15 @@
+skills:
+  - id: jp_inspection_list
+    file: jp_inspection_list.md
+    runtime: cli
+    cli_command: jp-inspection-list
+    handler: jp_inspection_list
+    description: 検査・監査インスタンス一覧
+    agent_id: compliance
+  - id: jp_inspection_types
+    file: jp_inspection_types.md
+    runtime: cli
+    cli_command: jp-inspection-types
+    handler: jp_inspection_types
+    description: 検査タイプ一覧
+    agent_id: compliance

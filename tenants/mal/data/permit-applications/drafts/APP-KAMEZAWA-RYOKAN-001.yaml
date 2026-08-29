@@ -1,0 +1,34 @@
+application_id: APP-KAMEZAWA-RYOKAN-001
+permit_type_id: pt-ryokan-shukuhaku
+form_id: form-ryokan-permit
+property_id: PROP-002
+status: preparing
+prepared_at: 2026-07-14
+auto_filled_from:
+  company: data/company.yaml
+  property: data/properties/PROP-002.yaml
+  field_map: field-map.yaml
+fields:
+  applicant_name: 株式会社MAL
+  applicant_address: 〒102-0084 東京都千代田区二番町1
+  corporate_number: "4010001189530"
+  representative_name: 段燕燕
+  representative_address: 〒102-0084 東京都千代田区二番町1
+  business_description: 不動産オーナー向け翻訳・通訳サービス、イベントスペース貸出、旅館運営、
+    業務DX化支援、ソフトウェア開発。自社物件を保有。 日英中等の多言語対応。WeChat・WhatsApp等を活用したコミュニケーション支援。
+  site_name: 亀沢旅館
+  site_address: 東京都墨田区亀沢1
+  room_count: "3"
+  building_area_sqm: ""
+  structure_use: 旅館業（簡易宿所）
+  business_type: ""
+  license_type: ""
+  filing_date: 令和8年7月14日
+  filing_date_iso: 2026-07-14
+manual_overrides: {}
+checklist:
+  last_run: 2026-07-14
+  missing: []
+  ready_for_export: true
+export:
+  md_path: tenants/mal/docs/permit-applications/APP-KAMEZAWA-RYOKAN-001/application.md

@@ -1,0 +1,12 @@
+id: jp_inspection
+required_seeds: []
+activation_seeds:
+  - inspection-types.yaml.example
+  - inspection-registry.yaml.example
+notes: skeleton — 行政検査・第三者監査の記録 Fulfilment（ADR 0012）
+cli_commands:
+  - types
+  - list
+  - schedule
+  - complete
+  - gate

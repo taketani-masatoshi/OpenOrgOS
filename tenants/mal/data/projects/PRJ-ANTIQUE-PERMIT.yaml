@@ -1,0 +1,26 @@
+id: PRJ-ANTIQUE-PERMIT
+title: 古物商許可の取得
+status: active
+rag: amber
+owner_agent: compliance
+sponsor: ceo
+start_date: "2026-07-01"
+target_date: "2026-12-31"
+notes: 申請 YAML の個人名はコピーしない。リンクは APP id のみ。
+milestones:
+  - id: MS-SUBMIT
+    title: 古物商許可申請の提出
+    due: "2026-10-31"
+    status: open
+risks:
+  - id: RSK-FORM-TRANSFER
+    summary: 内部ひな形から公式様式への転記が遅れる
+    severity: medium
+    status: open
+links:
+  contract_ids: []
+  work_order_ids: []
+  module_refs:
+    - module: jp_permit_application
+      ref: APP-ANTIQUE-DEALER-001
+  property_ids: []

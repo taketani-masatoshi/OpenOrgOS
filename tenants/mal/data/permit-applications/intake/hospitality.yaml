@@ -1,0 +1,26 @@
+module_id: hospitality
+property_id: PROP-002
+as_of: 2026-07-14
+has_declaration: true
+items:
+  - requirement_id: rc-hospitality-ryokan-permit
+    match: any_of
+    permit_type_ids:
+      - pt-ryokan-hotel
+      - pt-ryokan-ryokan
+      - pt-ryokan-shukuhaku
+      - pt-ryokan-geshuku
+    status: satisfied
+    related_permits:
+      - id: PER-RYOKAN-001
+        permit_type_id: pt-ryokan-shukuhaku
+        status: active
+        evidence_path: docs/company/licenses/records/ryokan/per-ryokan-001-2026-07-14.pdf
+    guidance: 充足（PER active）。証跡未格納なら attest --evidence で追記可。
+next_cli:
+  - orgos operations permit-app intake plan --module hospitality
+  - orgos operations permit-app intake attest --module hospitality --type
+    <pt-...> --permit-number <no> --issued-on YYYY-MM-DD --evidence /path/to.pdf
+    --write
+  - orgos operations permit-app intake start-app --module hospitality --type
+    <pt-...> --write

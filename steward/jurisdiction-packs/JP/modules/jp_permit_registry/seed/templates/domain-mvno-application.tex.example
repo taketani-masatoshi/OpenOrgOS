@@ -1,0 +1,47 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage{geometry}
+\geometry{margin=25mm}
+\setmainfont{Hiragino Sans}
+\setCJKmainfont{Hiragino Sans}
+
+\begin{document}
+\begin{center}
+{\Large 電気通信事業者届出（MVNO等）申請書（内部提出用ひな形）}
+\end{center}
+
+\vspace{1em}
+\noindent 申請 ID: {{application_id}} \\
+許認可種別: {{permit_type_name}} \\
+申請日: {{filing_date}}
+
+\section*{申請人}
+\begin{tabular}{ll}
+商号又は名称 & {{applicant_name}} \\
+本店所在地 & {{applicant_address}} \\
+法人番号 & {{corporate_number}} \\
+資本金 & {{share_capital_yen_ja}} \\
+設立年月日 & {{established_date}} \\
+事業の内容 & {{business_description}} \\
+\end{tabular}
+
+\section*{代表者・役員}
+\begin{tabular}{ll}
+代表者氏名 & {{representative_name}} \\
+代表者住所 & {{representative_address}} \\
+役員 & {{directors_list}} \\
+\end{tabular}
+
+\section*{事業所・対象}
+\begin{tabular}{ll}
+名称 & {{site_name}} \\
+所在地 & {{site_address}} \\
+構造・用途 & {{structure_use}} \\
+業態・備考 & {{business_type}} \\
+\end{tabular}
+
+\vfill
+\small 公式参照: {{official_form_url}}
+\par\noindent\small 本ひな形は OpenOrgOS 内部整理用。提出前に管轄機関の最新様式を確認すること。
+\end{document}

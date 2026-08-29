@@ -1,0 +1,18 @@
+as_of: "2026-07-14"
+types:
+  - id: insp-health-center
+    name_ja: 保健所による立入検査
+    legal_basis: 食品衛生法 · 旅館業法 等
+    authority_ja: 保健所
+  - id: insp-fire-prevention
+    name_ja: 防火対象物点検・査察
+    legal_basis: 消防法
+    authority_ja: 消防署
+  - id: insp-labor-standards
+    name_ja: 労働基準監督署の監督
+    legal_basis: 労働基準法
+    authority_ja: 労働基準監督署
+  - id: insp-third-party-audit
+    name_ja: 第三者認証監査（ISO 等）
+    authority_ja: 認定認証機関
+    notes: jp_certification の維持監査と連動可

@@ -1,0 +1,30 @@
+# 添加物製造業許可申請書（内部提出用ひな形）
+
+- 申請 ID: {{application_id}}
+- 種別: {{permit_type_name}}
+- 申請日: {{filing_date}}
+
+## 申請人
+- 名称: {{applicant_name}}
+- 住所: {{applicant_address}}
+- 法人番号: {{corporate_number}}
+- 資本金: {{share_capital_yen_ja}}
+- 設立日: {{established_date}}
+- 事業内容: {{business_description}}
+
+## 代表者・役員
+- 代表者氏名: {{representative_name}}
+- 代表者住所: {{representative_address}}
+- 役員: {{directors_list}}
+
+## 事業所
+- 名称: {{site_name}}
+- 所在地: {{site_address}}
+- 構造・用途: {{structure_use}} / {{property_structure}}
+- 備考: {{business_type}}
+
+## 連絡
+- Web: {{website}}
+- メール: {{contact_email}}
+
+公式: {{official_form_url}}

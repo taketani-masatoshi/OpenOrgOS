@@ -1,0 +1,15 @@
+id: jp_certification
+required_seeds: []
+activation_seeds:
+  - certification-types.yaml.example
+  - certification-registry.yaml.example
+notes: skeleton — ISO/ISMS/CE/FDA 等の認証 Fulfilment（ADR 0012）· 取得本体は案件管理
+cli_commands:
+  - types
+  - list
+  - start
+  - attest
+  - grant
+  - renew
+  - scan-expiry
+  - gate
