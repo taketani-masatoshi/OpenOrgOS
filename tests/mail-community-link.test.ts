@@ -5,7 +5,10 @@ import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
 import {
   buildCommunityMailConnectUrl,
+  communityConnectionsUrl,
   createCommunityGmailBind,
+  getCommunityUrl,
+  verifyCommunityGmailBind,
 } from "../src/lib/protocol/community-gmail-bind.js";
 
 describe("mail setup gmail --community-link helpers", () => {
@@ -35,5 +38,23 @@ describe("mail setup gmail --community-link helpers", () => {
     expect(parsed.searchParams.get("orgos_mail")).toBe("1");
     expect(parsed.searchParams.get("tenant_id")).toBe("mal");
     expect(parsed.searchParams.get("nonce")).toBe(entry.nonce);
+  });
+
+  it("defaults Connections URL to community.oorgos.org", () => {
+    delete process.env.ORGOS_COMMUNITY_URL;
+    expect(communityConnectionsUrl()).toBe(
+      "https://community.oorgos.org/settings/connections",
+    );
+    expect(getCommunityUrl()).toBe("https://community.oorgos.org");
+  });
+
+  it("create then verify bind nonce (community-link dry-run)", () => {
+    const entry = createCommunityGmailBind("demo");
+    const verified = verifyCommunityGmailBind("demo", entry.nonce);
+    expect(verified.ok).toBe(true);
+    if (verified.ok) {
+      expect(verified.entry.tenant_id).toBe("demo");
+      expect(verified.entry.nonce).toBe(entry.nonce);
+    }
   });
 });

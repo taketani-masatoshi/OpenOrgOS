@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
 import { isSkeletonTenant } from "../src/lib/ops-config.js";
 import { computeMaturityReport } from "../src/lib/maturity.js";
+import { assessGovernancePrinciples } from "../src/lib/org/governance-principles.js";
 
 const root = join(import.meta.dirname, "..");
 
@@ -69,6 +70,7 @@ describe("skeleton CLI", () => {
     expect(help).toContain("regulations");
     expect(help).toContain("standards");
     expect(help).toContain("tenant");
+    expect(help).toContain("governance");
   });
 
   it("demo invoice generate --dry-run prints paths without billing", () => {
@@ -128,11 +130,30 @@ describe("skeleton CLI", () => {
 describe("tenant init", () => {
   const acmeDir = join(root, "tenants", "acme-init-test");
 
-  it("creates validate-able tenant from _template", () => {
+  it("creates tenant with ISO 37000 draft that is not ready from skeleton purpose", () => {
     if (existsSync(acmeDir)) rmSync(acmeDir, { recursive: true, force: true });
-    orgos(["tenant", "init", "acme-init-test", "--name", "ACME Test", "--from", "rental"]);
-    expect(existsSync(join(acmeDir, "tenant.yaml"))).toBe(true);
-    orgos(["validate"], "acme-init-test");
-    rmSync(acmeDir, { recursive: true, force: true });
-  }, 30_000);
+    try {
+      orgos([
+        "tenant",
+        "init",
+        "acme-init-test",
+        "--name",
+        "ACME Test",
+        "--from",
+        "rental",
+        "--no-validate",
+      ]);
+      expect(existsSync(join(acmeDir, "tenant.yaml"))).toBe(true);
+      expect(
+        existsSync(join(acmeDir, "data/compliance/iso-37000-self-declaration.yaml")),
+      ).toBe(true);
+      setTenantId("acme-init-test");
+      const status = assessGovernancePrinciples();
+      expect(status.purpose_ok).toBe(false);
+      expect(status.self_declared).toBe(false);
+      expect(status.declaration?.status).not.toBe("self_declared");
+    } finally {
+      rmSync(acmeDir, { recursive: true, force: true });
+    }
+  }, 45_000);
 });

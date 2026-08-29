@@ -71,4 +71,43 @@ describe("rate limit", () => {
       expect(res.status).toBe(200);
     }
   });
+
+  it("isolates counters per X-OrgOS-Tenant", async () => {
+    process.env.ORGOS_RATE_LIMIT_LOGIN_MAX = "2";
+    await start();
+
+    for (let i = 0; i < 2; i++) {
+      const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-OrgOS-Tenant": "tenant-a",
+        },
+        body: JSON.stringify({ passkey: "test-pass" }),
+      });
+      expect(res.status).toBe(200);
+    }
+
+    const blockedA = await fetch(`${baseUrl}/chat/v1/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-OrgOS-Tenant": "tenant-a",
+      },
+      body: JSON.stringify({ passkey: "test-pass" }),
+    });
+    expect(blockedA.status).toBe(429);
+    const body = (await blockedA.json()) as { tenant_id: string | null };
+    expect(body.tenant_id).toBe("tenant-a");
+
+    const allowedB = await fetch(`${baseUrl}/chat/v1/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-OrgOS-Tenant": "tenant-b",
+      },
+      body: JSON.stringify({ passkey: "test-pass" }),
+    });
+    expect(allowedB.status).toBe(200);
+  });
 });

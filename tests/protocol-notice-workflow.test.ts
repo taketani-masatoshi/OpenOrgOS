@@ -71,6 +71,7 @@ monthly_cost: 85000
     const { transmission, notice: done } = approveInterOrgNotice({
       noticeId: notice.notice_id,
       approverId: "Demo CEO",
+      operatorId: "OP-001",
     });
 
     expect(done.status).toBe("transmitted");
@@ -97,6 +98,7 @@ monthly_cost: 85000
     const { transmission } = approveInterOrgNotice({
       noticeId: ackDraft.notice_id,
       approverId: "Demo CEO",
+      operatorId: "OP-001",
     });
     expect(transmission.transaction.transaction_type).toBe("steward.obligation.acknowledged");
   });

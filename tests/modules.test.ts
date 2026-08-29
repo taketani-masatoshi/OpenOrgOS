@@ -30,7 +30,7 @@ describe("modules.yaml", () => {
   it("lists catalog modules", () => {
     const ids = listCatalogModuleIds();
     expect(ids).toContain("jp_permit_registry");
-    expect(ids.length).toBe(30);
+    expect(ids).toContain("jp_consumption_refund");
     expect(new Set(ids).size).toBe(ids.length);
   });
 

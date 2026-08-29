@@ -174,4 +174,40 @@ describe("steward chat today", () => {
     );
     expect(JSON.stringify(ctx)).not.toContain("SENSITIVE-BODY-MUST-NOT-BE-READ");
   });
+
+  it("includes hospitality_ops_due in schema and markdown section", () => {
+    const ctx = todayContextSchema.parse({
+      tenant: "mal",
+      report_date: "2026-08-24",
+      company_name: "テスト株式会社",
+      decisions: [
+        {
+          id: "tax-2026-07",
+          title: "宿泊税 2026-07 申告（期限 2026-08-31）",
+          category: "hospitality",
+          due_date: "2026-08-31",
+          importance: "high",
+        },
+      ],
+      approvals: [],
+      wire_pending_count: 0,
+      inbox_pending: [],
+      escalate_pending_count: 0,
+      kpis: [],
+      hospitality_ops_due: [
+        {
+          id: "tax-2026-07",
+          severity: "p0",
+          kind: "tax",
+          title: "宿泊税 2026-07 申告（期限 2026-08-31）",
+          due_on: "2026-08-31",
+          cli_hint: "operations hospitality tax-status --period 2026-07",
+        },
+      ],
+    });
+    const markdown = formatTodayContextMarkdown(ctx);
+    expect(markdown).toContain("## 旅館運用（期限・事前）");
+    expect(markdown).not.toContain("orgos ");
+    expect(markdown).toContain("operations hospitality tax-status");
+  });
 });

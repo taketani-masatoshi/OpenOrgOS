@@ -3,7 +3,9 @@ import { computeDashboard, selectBasisMonthlyFinance } from "../src/lib/dashboar
 import { loadAllData, loadMonthlyFinance } from "../src/lib/data.js";
 import {
   handleFinanceMetricsChatMessage,
+  isFinanceKpiTopic,
   isFinanceMetricsChatIntent,
+  looksLikeFinancePolicyRefusal,
   parseRequestedFinanceMonth,
 } from "../src/lib/steward-chat/finance-metrics-intent.js";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -17,7 +19,24 @@ describe("finance metrics chat intent", () => {
   it("detects burn rate / runway keywords", () => {
     expect(isFinanceMetricsChatIntent("2026年5月のバーンレートは？")).toBe(true);
     expect(isFinanceMetricsChatIntent("ランウェイは何ヶ月？")).toBe(true);
+    expect(isFinanceMetricsChatIntent("キャッシュフローは？")).toBe(true);
+    expect(isFinanceMetricsChatIntent("Cash Flow を教えて")).toBe(true);
+    expect(isFinanceMetricsChatIntent("資金繰りを教えて")).toBe(true);
+    expect(isFinanceMetricsChatIntent("2026年1月の売り上げを教えて")).toBe(true);
+    expect(isFinanceMetricsChatIntent("売上を教えて")).toBe(true);
+    expect(isFinanceMetricsChatIntent("資金繰り表を出して")).toBe(false);
+    expect(isFinanceMetricsChatIntent("13週資金繰りを生成")).toBe(false);
+    expect(isFinanceMetricsChatIntent("cash flow monthly 3 months write JSON")).toBe(false);
     expect(isFinanceMetricsChatIntent("今日の天気は？")).toBe(false);
+  });
+
+  it("detects policy-refusal essays for post-LLM guard", () => {
+    expect(isFinanceKpiTopic("バーンレートは？")).toBe(true);
+    expect(
+      looksLikeFinancePolicyRefusal(
+        "経営統括エージェントとして直接データにアクセスすることはできません。Finance Agent へ委譲してください。`npm run orgos -- forecast`"
+      )
+    ).toBe(true);
   });
 
   it("parses requested months", () => {
@@ -33,9 +52,12 @@ describe("finance metrics chat intent", () => {
     expect(result.metrics?.burnRate).toBe(expected.burnRate);
     expect(result.metrics?.runwayMonths).toBe(expected.runwayMonths);
     expect(result.metrics?.cashFlowMode).toBe(expected.cashFlowMode);
-    expect(result.reply).toContain(formatCurrency(expected.burnRate));
-    expect(result.reply).toContain("computeDashboard()");
-    expect(result.reply).not.toMatch(/¥XX|シミュレーション|historical_finance/);
+    const leadAmount =
+      expected.cashFlowMode === "surplus"
+        ? expected.monthlyCashSurplus
+        : expected.monthlyNetBurn;
+    expect(result.reply).toContain(formatCurrency(leadAmount));
+    expect(result.reply).not.toMatch(/¥XX|シミュレーション|historical_finance|computeDashboard|決定論/);
     if (expected.cashFlowMode === "surplus") {
       expect(result.reply).toContain("該当なし");
       expect(result.reply).not.toContain("cash-balance.yaml の確定が必要");
@@ -80,10 +102,25 @@ describe("MAL finance metrics (real tenant YAML)", () => {
     expect(result.metrics?.basisMonth).toBe("2026-05");
     expect(result.metrics?.burnRate).toBe(burn);
     expect(result.metrics?.monthlyRevenue).toBe(rev);
-    expect(result.reply).toContain("株式会社MAL");
     expect(result.reply).toContain(formatCurrency(burn));
-    expect(result.reply).toContain("data/finance/monthly/2026-05.yaml");
+    expect(result.reply).not.toMatch(/computeDashboard|決定論|秘書として/);
     expect(expectedBurn).toBe(burn);
+  });
+
+  it("answers January 2026 revenue from monthly YAML (not Today as_of only)", () => {
+    const jan = loadMonthlyFinance("2026-01");
+    expect(jan).toBeDefined();
+    const rev = jan!.revenue.reduce((s, r) => s + r.amount, 0);
+    const result = handleFinanceMetricsChatMessage("2026年1月の売り上げを教えて");
+    expect(result.ok).toBe(true);
+    expect(result.metrics?.company_name).toBe("株式会社MAL");
+    expect(result.metrics?.basisMonth).toBe("2026-01");
+    expect(result.metrics?.monthlyRevenue).toBe(rev);
+    expect(result.metrics?.monthlyRevenue).toBe(100_000);
+    expect(result.reply).toContain("￥100,000");
+    expect(result.reply).toMatch(/2026年1月の売上/);
+    expect(result.reply).not.toContain("売上データは含まれていません");
+    expect(result.reply).not.toMatch(/computeDashboard|決定論/);
   });
 
   it("does not invent numbers when month file is missing", () => {

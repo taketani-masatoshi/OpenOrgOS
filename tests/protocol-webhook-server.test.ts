@@ -56,7 +56,8 @@ monthly_cost: 85000
     });
     const { transmission } = approveInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "CEO",
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
     });
 
     const server = await startWebhookServer({ host: "127.0.0.1", port: 0, drain: false });

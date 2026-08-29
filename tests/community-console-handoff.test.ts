@@ -46,8 +46,10 @@ function captureHandoff(idToken: string): { status: number; location: string; co
       if (headers?.Location) location = headers.Location;
       if (headers?.["Set-Cookie"]) cookie = headers["Set-Cookie"];
     },
-    setHeader(name: string, value: string) {
-      if (name.toLowerCase() === "set-cookie") cookie = value;
+    setHeader(name: string, value: string | string[]) {
+      if (name.toLowerCase() === "set-cookie") {
+        cookie = Array.isArray(value) ? value.join("; ") : value;
+      }
     },
     end(chunk?: string) {
       body = chunk ?? "";
@@ -56,7 +58,7 @@ function captureHandoff(idToken: string): { status: number; location: string; co
   const url = new URL(
     `http://127.0.0.1:9470/auth/community-handoff?token=${encodeURIComponent(idToken)}&next=/wire/`,
   );
-  handleCommunityHandoff({ method: "GET" } as IncomingMessage, res, url);
+  handleCommunityHandoff({ method: "GET", headers: {} } as IncomingMessage, res, url);
   return { status, location, cookie, body };
 }
 

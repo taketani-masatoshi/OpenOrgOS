@@ -22,6 +22,7 @@ import {
   resolveBillingConfig,
 } from "../src/lib/invoice-config.js";
 import { runInvoiceGenerate } from "../src/lib/invoice-generate.js";
+import { loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
 
 describe("invoice dates", () => {
   it("computes month-end issue date", () => {
@@ -112,6 +113,45 @@ describe("invoice generate (MAL bancho)", () => {
     expect(result.files[0].pdf).toContain("bancho/FY2099/output/2099-01-invoice.pdf");
     expect(existsSync(result.files[0].pdf)).toBe(true);
     expect(existsSync(result.files[0].eml)).toBe(true);
+    rmSync(outDir, { recursive: true, force: true });
+  });
+});
+
+describe("invoice generate (MAL kamezawa hospitality)", () => {
+  it("resolves FY2026 kamezawa output path from modules.yaml billing", () => {
+    const billing = resolveBillingConfig("hospitality", "PROP-002");
+    expect(billing.docs_base).toBe("docs/finance/accounting/invoices/kamezawa");
+    expect(billing.invoice_number_prefix).toBe("STAY");
+    const out = invoiceOutputDir(billing.docs_base, "FY2026");
+    expect(out).toContain("finance/accounting/invoices/kamezawa/FY2026/output");
+  });
+
+  it("E2E generates hospitality invoice with consumption-tax journal split", async () => {
+    const billing = resolveBillingConfig("hospitality", "PROP-002");
+    const outDir = invoiceOutputDir(billing.docs_base, "FY2099");
+    const tpl = loadInvoiceTemplate("hospitality", "hospitality-monthly");
+    expect(tpl.pdf.tax_mode).toBe("taxable_10");
+
+    const result = await runInvoiceGenerate({
+      moduleId: "hospitality",
+      propertyId: "PROP-002",
+      from: "2099-01",
+      to: "2099-01",
+      fiscalYear: "FY2099",
+    });
+    expect(result.files).toHaveLength(1);
+    expect(result.files[0].pdf).toContain("kamezawa/FY2099/output/2099-01-invoice.pdf");
+    expect(existsSync(result.files[0].pdf)).toBe(true);
+
+    const entry = loadJournalEntries().entries.find((e) => e.entry_id === "JE-INV-PROP-002-2099-01");
+    expect(entry).toBeTruthy();
+    const ar = entry!.lines.find((l) => l.account_code === "1150");
+    const revenue = entry!.lines.find((l) => l.account_code === "4200");
+    const consumptionTax = entry!.lines.find((l) => l.account_code === "2160");
+    expect(revenue!.credit_yen).toBeLessThan(ar!.debit_yen);
+    expect(consumptionTax!.credit_yen).toBeGreaterThan(0);
+    expect(revenue!.credit_yen + consumptionTax!.credit_yen).toBe(ar!.debit_yen);
+
     rmSync(outDir, { recursive: true, force: true });
   });
 });

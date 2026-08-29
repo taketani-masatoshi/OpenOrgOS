@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   loadFixedAssets,
   loadTaxProfile,
@@ -8,6 +8,7 @@ import {
   validateFixedAssetConsistency,
   validateAll,
 } from "../src/lib/data.js";
+import { setTenantId, getTenantId } from "../src/lib/tenant.js";
 
 describe("fixed assets accounting", () => {
   it("loads fixed-assets.yaml with valid schema", () => {
@@ -58,4 +59,21 @@ describe("fixed assets accounting", () => {
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);
   }, 60_000);
+
+  describe("tax-filing-gaps optional", () => {
+    const prevTenant = getTenantId();
+
+    afterEach(() => {
+      setTenantId(prevTenant);
+    });
+
+    it("passes validateAll when tax-filing-gaps.yaml is absent", () => {
+      setTenantId("southwood");
+      const result = validateAll();
+      const gapErrors = result.errors.filter((e) =>
+        e.file.includes("tax-filing-gaps"),
+      );
+      expect(gapErrors).toHaveLength(0);
+    }, 60_000);
+  });
 });

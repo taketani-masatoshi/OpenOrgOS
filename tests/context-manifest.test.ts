@@ -5,13 +5,19 @@ import {
   loadEnabledIsoIds,
   syncActiveContext,
 } from "../src/lib/context-manifest.js";
+import { loadTenantStandards } from "../src/lib/tenant-standards.js";
 
 describe("context-manifest", () => {
-  it("loads enabled ISO for mal tenant", () => {
+  it("loads only the standards the tenant enabled", () => {
+    // Which standards MAL certifies against is a business decision that can
+    // change, so assert the filter works rather than a fixed list.
     const ids = loadEnabledIsoIds();
-    expect(ids).toContain("ISO-9001");
-    expect(ids).toContain("ISO-27001");
-    expect(ids).not.toContain("ISO-22301");
+    const declared = loadTenantStandards();
+    const enabled = declared.iso.filter((e) => e.enabled).map((e) => e.id);
+    const disabled = declared.iso.filter((e) => !e.enabled).map((e) => e.id);
+    expect(ids.length).toBeGreaterThan(0);
+    expect([...ids].sort()).toEqual([...enabled].sort());
+    for (const id of disabled) expect(ids).not.toContain(id);
   });
 
   it("active context lists enabled modules and forbids disabled", () => {

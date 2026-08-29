@@ -54,4 +54,18 @@ describe("skill invocation resolver", () => {
     expect(resolveRegisteredSkillInvocation("coo_routing_review").status).toBe("deferred");
     expect(resolveRegisteredSkillInvocation("jp_permit_obligations").status).toBe("deferred");
   });
+
+  it("resolves JP tax module skills", () => {
+    for (const id of [
+      "jp_corporate_tax_return",
+      "jp_consumption_tax_return",
+      "jp_invoice_registration",
+      "jp_qualified_invoice_issue",
+      "jp_withholding_payment",
+    ]) {
+      const invocation = resolveRegisteredSkillInvocation(id);
+      expect(invocation.status, id).toBe("ready");
+    }
+    expect(resolveRegisteredSkillInvocation("jp-corporate-tax-return").status).toBe("ready");
+  });
 });

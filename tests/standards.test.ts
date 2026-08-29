@@ -17,6 +17,7 @@ describe("steward/standards/iso", () => {
       "ISO-22000",
       "ISO-22301",
       "ISO-27001",
+      "ISO-37000",
       "ISO-37001",
       "ISO-45001",
       "ISO-50001",

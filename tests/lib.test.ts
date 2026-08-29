@@ -231,7 +231,7 @@ describe("annual reports", () => {
     const rows = buildKessanPlRows(yojitsu!);
     const netRow = rows.find((r) => r.label === "当期純利益");
     expect(netRow?.amount).toBe(3391309);
-    const revenueRow = rows.find((r) => r.label === "売上高 合計");
+    const revenueRow = rows.find((r) => r.label === "売上高合計");
     expect(revenueRow?.amount).toBe(7500000);
   });
 });

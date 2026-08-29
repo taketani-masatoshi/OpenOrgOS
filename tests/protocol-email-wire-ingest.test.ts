@@ -65,6 +65,7 @@ monthly_cost: 50000
     const { transmission } = approveInterOrgNotice({
       noticeId: notice.notice_id,
       approverId: "Demo CEO",
+      operatorId: "OP-001",
       eventId,
     });
     return transmission.envelope;

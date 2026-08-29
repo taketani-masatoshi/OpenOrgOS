@@ -34,6 +34,7 @@ function setupOidcProdEnv(): void {
   process.env.WIRE_CONSOLE_OIDC_HS256_SECRET = "test-oidc-secret";
   delete process.env.WIRE_CONSOLE_OIDC_JWKS_JSON;
   delete process.env.WIRE_CONSOLE_OIDC_JWKS_URL;
+  delete process.env.WIRE_CONSOLE_ALLOW_DEV_LOGIN;
 }
 
 describe("wire console server", () => {
@@ -56,6 +57,8 @@ describe("wire console server", () => {
     webauthnOrigin: process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN,
     oidcJwksUrl: process.env.WIRE_CONSOLE_OIDC_JWKS_URL,
     oidcAllowHs256: process.env.WIRE_CONSOLE_OIDC_ALLOW_HS256,
+    allowDevLogin: process.env.WIRE_CONSOLE_ALLOW_DEV_LOGIN,
+    cookieSecure: process.env.ORGOS_COOKIE_SECURE,
     orgosEnv: process.env.ORGOS_ENV,
     orgosCsrf: process.env.ORGOS_CSRF,
   };
@@ -63,6 +66,8 @@ describe("wire console server", () => {
   beforeEach(() => {
     delete process.env.WIRE_CONSOLE_INCLUDE_TEST_TENANTS;
     process.env.ORGOS_CSRF = "0";
+    process.env.ORGOS_ENV = "development";
+    delete process.env.ORGOS_PROD;
     resetWireConsoleTestTenant();
     resetOidcJwksForTests();
   });
@@ -94,6 +99,8 @@ describe("wire console server", () => {
       WIRE_CONSOLE_WEBAUTHN_ORIGIN: envSnapshot.webauthnOrigin,
       WIRE_CONSOLE_OIDC_JWKS_URL: envSnapshot.oidcJwksUrl,
       WIRE_CONSOLE_OIDC_ALLOW_HS256: envSnapshot.oidcAllowHs256,
+      WIRE_CONSOLE_ALLOW_DEV_LOGIN: envSnapshot.allowDevLogin,
+      ORGOS_COOKIE_SECURE: envSnapshot.cookieSecure,
       ORGOS_ENV: envSnapshot.orgosEnv,
       ORGOS_CSRF: envSnapshot.orgosCsrf,
     };
@@ -294,6 +301,30 @@ describe("wire console server", () => {
       body: JSON.stringify({ passkey: "orgos-dev" }),
     });
     expect(res.status).toBe(403);
+  });
+
+  it("allows dev passkey in prod when WIRE_CONSOLE_ALLOW_DEV_LOGIN=1", async () => {
+    setupOidcProdEnv();
+    process.env.WIRE_CONSOLE_ALLOW_DEV_LOGIN = "1";
+    process.env.ORGOS_COOKIE_SECURE = "1";
+    const server = await startWireConsoleServer({ port: 0 });
+    close = server.close;
+    const res = await fetch(`${server.url}/console/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        passkey: "orgos-dev",
+        operator_id: "OP-001",
+        approver_id: "Demo CEO",
+      }),
+    });
+    expect(res.status).toBe(200);
+    const cookie = res.headers.get("set-cookie") ?? "";
+    expect(cookie).toContain("orgos_wire_session=");
+    expect(cookie).not.toMatch(/;\s*Secure(?:;|$)/i);
+    const cfg = await fetch(`${server.url}/console/v1/auth/config`);
+    const body = (await cfg.json()) as { dev_login_allowed: boolean };
+    expect(body.dev_login_allowed).toBe(true);
   });
 
   it("accepts OIDC id_token login in prod mode (HS256)", async () => {
@@ -589,12 +620,15 @@ describe("wire console server", () => {
       body: JSON.stringify({ id_token: idToken, approver_id: "Demo CEO" }),
     });
     expect(login.status).toBe(200);
-    const cookie = login.headers.get("set-cookie") ?? "";
+    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
+    const { user } = (await login.json()) as {
+      user: { operator_id: string; approver_id: string };
+    };
 
     const regOptions = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
       method: "POST",
       headers: { "Content-Type": "application/json", cookie },
-      body: JSON.stringify({ operator_id: "OP-001", approver_id: "Demo CEO" }),
+      body: JSON.stringify({ operator_id: user.operator_id, approver_id: user.approver_id }),
     });
     expect(regOptions.status).toBe(200);
     const regOpts = (await regOptions.json()) as { challenge: string };
@@ -603,8 +637,8 @@ describe("wire console server", () => {
       rpId: "localhost",
       origin: "http://localhost:9470",
       challenge: regOpts.challenge,
-      operator_id: "OP-001",
-      approver_id: "Demo CEO",
+      operator_id: user.operator_id,
+      approver_id: user.approver_id,
       privateKey,
     });
 
@@ -616,8 +650,8 @@ describe("wire console server", () => {
         credential_id: registration.credential_id,
         client_data_json: registration.client_data_json,
         attestation_object_base64: registration.attestation_object_base64,
-        operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
       }),
     });
     expect(register.status).toBe(200);
@@ -682,12 +716,15 @@ describe("wire console server", () => {
       body: JSON.stringify({ id_token: idToken, approver_id: "Demo CEO" }),
     });
     expect(login.status).toBe(200);
-    const cookie = login.headers.get("set-cookie") ?? "";
+    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
+    const { user } = (await login.json()) as {
+      user: { operator_id: string; approver_id: string };
+    };
 
     const withoutToken = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
       method: "POST",
       headers: { "Content-Type": "application/json", cookie },
-      body: JSON.stringify({ operator_id: "OP-001", approver_id: "Demo CEO" }),
+      body: JSON.stringify({ operator_id: user.operator_id, approver_id: user.approver_id }),
     });
     expect(withoutToken.status).toBeGreaterThanOrEqual(400);
 
@@ -695,8 +732,8 @@ describe("wire console server", () => {
       method: "POST",
       headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({
-        operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
         bootstrap_token: token,
       }),
     });
@@ -707,8 +744,8 @@ describe("wire console server", () => {
       rpId: "localhost",
       origin: "http://localhost:9470",
       challenge: regOpts.challenge,
-      operator_id: "OP-001",
-      approver_id: "Demo CEO",
+      operator_id: user.operator_id,
+      approver_id: user.approver_id,
       privateKey,
     });
     const register = await fetch(`${server.url}/console/v1/auth/webauthn/register`, {
@@ -719,8 +756,8 @@ describe("wire console server", () => {
         credential_id: registration.credential_id,
         client_data_json: registration.client_data_json,
         attestation_object_base64: registration.attestation_object_base64,
-        operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
         bootstrap_token: token,
       }),
     });
@@ -775,14 +812,17 @@ describe("wire console server", () => {
       }),
     });
     expect(login.status).toBe(200);
-    const cookie = login.headers.get("set-cookie") ?? "";
+    const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
+    const { user } = (await login.json()) as {
+      user: { operator_id: string; approver_id: string };
+    };
 
     const regOptions = await fetch(`${server.url}/console/v1/auth/webauthn/register/options`, {
       method: "POST",
       headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({
-        operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
         purpose: "settlement",
       }),
     });
@@ -793,8 +833,8 @@ describe("wire console server", () => {
       rpId: "localhost",
       origin: "http://localhost:9470",
       challenge: regOpts.challenge,
-      operator_id: "OP-001",
-      approver_id: "Demo CEO",
+      operator_id: user.operator_id,
+      approver_id: user.approver_id,
       privateKey,
     });
     const register = await fetch(`${server.url}/console/v1/auth/webauthn/register`, {
@@ -805,8 +845,8 @@ describe("wire console server", () => {
         credential_id: registration.credential_id,
         client_data_json: registration.client_data_json,
         attestation_object_base64: registration.attestation_object_base64,
-        operator_id: "OP-001",
-        approver_id: "Demo CEO",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
         purpose: "settlement",
       }),
     });

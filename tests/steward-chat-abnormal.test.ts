@@ -237,15 +237,12 @@ describe("steward chat abnormal paths", () => {
 
 describe("operator console abnormal paths", () => {
   const env = { ...process.env };
-  const wireCombined = join(process.cwd(), "apps", "wire-console", "dist-combined");
 
   beforeEach(() => {
     setTenantId("demo");
     resetRateLimitState();
     mkdirSync(STEWARD_CHAT_SPA_DIST, { recursive: true });
-    mkdirSync(wireCombined, { recursive: true });
     writeFileSync(join(STEWARD_CHAT_SPA_DIST, "index.html"), "<html></html>");
-    writeFileSync(join(wireCombined, "index.html"), "<html></html>");
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_CSRF = "0";
     process.env.ORGOS_RATE_LIMIT = "0";

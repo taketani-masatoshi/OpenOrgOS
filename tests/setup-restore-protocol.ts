@@ -274,15 +274,32 @@ function restorePreservedPaths(items: Array<{ path: string; backup: string }>): 
 /** Overlay after org restore — keeps uncommitted org-chart.yaml available in tests. */
 const ORG_CHART_FIXTURE_ROOT = join(ROOT_DIR, "tests", "fixtures", "org-charts");
 
+/** Uncommitted `data/org` files (pilot state) the restore would otherwise delete. */
+const ORG_OVERLAY_FILES = [
+  "org-chart.yaml",
+  "org-authority.yaml",
+  "budget-delegations.yaml",
+  "budget-delegations-fy2026.yaml",
+  "operators.yaml",
+] as const;
+
 function overlayOrgChartFixtures(): void {
   if (!existsSync(ORG_CHART_FIXTURE_ROOT)) return;
   for (const tenantId of readdirSync(ORG_CHART_FIXTURE_ROOT, { withFileTypes: true })) {
     if (!tenantId.isDirectory() || tenantId.name.startsWith(".")) continue;
-    const src = join(ORG_CHART_FIXTURE_ROOT, tenantId.name, "org-chart.yaml");
-    if (!existsSync(src)) continue;
-    const dest = join(ROOT_DIR, "tenants", tenantId.name, "data", "org", "org-chart.yaml");
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(src, dest, { force: true });
+    const srcDir = join(ORG_CHART_FIXTURE_ROOT, tenantId.name);
+    const destDir = join(ROOT_DIR, "tenants", tenantId.name, "data", "org");
+    mkdirSync(destDir, { recursive: true });
+    for (const name of ORG_OVERLAY_FILES) {
+      const src = join(srcDir, name);
+      if (existsSync(src)) {
+        cpSync(src, join(destDir, name), { force: true });
+      }
+    }
+    const histSrc = join(srcDir, "org-chart-history");
+    if (existsSync(histSrc)) {
+      cpSync(histSrc, join(destDir, "org-chart-history"), { recursive: true, force: true });
+    }
   }
 }
 

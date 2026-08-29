@@ -14,7 +14,7 @@ import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
 function cleanup(): void {
   for (const p of [
     join(getDataDir(), "protocol"),
-    join(getDataDir(), "org"),
+    join(getDataDir(), "org", "pending-approvals.yaml"),
     join(getDocsDir(), "protocol"),
   ]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
@@ -53,7 +53,8 @@ monthly_cost: 85000
     });
     const { auditEnvelope } = approveInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "CEO",
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
     });
 
     expect(auditEnvelope?.event.type).toBe("org.audit.attested");

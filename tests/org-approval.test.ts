@@ -9,6 +9,7 @@ import {
   humanApproveOrgApproval,
   rejectOrgApproval,
   listOrgApprovals,
+  isSelfApprovalBannedSubject,
 } from "../src/lib/org/approval/index.js";
 import { loadProtocolAuditChain } from "../src/lib/protocol/audit-chain.js";
 import { ensureProtocolSigningKey } from "../src/lib/protocol/signing.js";
@@ -134,5 +135,23 @@ describe("org approval root (internal scope)", () => {
         operatorId: "OP-001",
       })
     ).toThrow(/自己承認は禁止/);
+  });
+
+  it("lets the same CEO confirm tenant.config in the inbox", () => {
+    expect(isSelfApprovalBannedSubject("tenant.config")).toBe(false);
+    const request = proposeOrgApproval({
+      scope: "internal",
+      subjectType: "tenant.config",
+      subjectRef: "CFG-TEST",
+      proposedBy: "OP-001",
+      message: "モジュール有効化",
+    });
+    const { approval } = humanApproveOrgApproval({
+      approvalId: request.approval_id,
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
+      source: "cli",
+    });
+    expect(approval.status).toBe("approved");
   });
 });

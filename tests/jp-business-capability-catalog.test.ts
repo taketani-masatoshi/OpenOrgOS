@@ -37,4 +37,38 @@ describe("JP business capability catalog", () => {
       expect(agentIds.has(skill.agent_id), `${skill.id} → ${skill.agent_id}`).toBe(true);
     }
   });
+
+  it("summary counts match entity rows", () => {
+    const doc = YAML.parse(readFileSync(YAML_PATH, "utf-8"));
+    const tally = (rows: { status: string }[]) => ({
+      implemented: rows.filter((r) => r.status === "implemented").length,
+      partial: rows.filter((r) => r.status === "partial").length,
+      planned: rows.filter((r) => r.status === "planned").length,
+      total: rows.length,
+    });
+    expect(doc.summary.agents).toEqual(tally(doc.agents));
+    expect(doc.summary.modules).toEqual(tally(doc.modules));
+    expect(doc.summary.skills).toEqual(tally(doc.skills));
+  });
+
+  it("CSV mirror has a row per YAML entity", () => {
+    const doc = YAML.parse(readFileSync(YAML_PATH, "utf-8"));
+    const rows = readFileSync(CSV_PATH, "utf-8").trim().split("\n").slice(1);
+    const idsByType = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const [type, id] = row.split(",");
+      if (!idsByType.has(type!)) idsByType.set(type!, new Set());
+      idsByType.get(type!)!.add(id!);
+    }
+    for (const [type, entities] of [
+      ["category", doc.categories],
+      ["agent", doc.agents],
+      ["module", doc.modules],
+      ["skill", doc.skills],
+    ] as const) {
+      for (const entity of entities as { id: string }[]) {
+        expect(idsByType.get(type)?.has(entity.id), `${type} ${entity.id}`).toBe(true);
+      }
+    }
+  });
 });

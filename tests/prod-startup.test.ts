@@ -9,14 +9,11 @@ import { mintPasskeyBootstrapToken } from "../src/lib/wire-console/auth/passkey-
 
 describe("prod startup", () => {
   const env = { ...process.env };
-  const wireCombined = join(process.cwd(), "apps", "wire-console", "dist-combined");
   let guard: FsGuardStoreFixture;
 
   beforeAll(() => {
     mkdirSync(STEWARD_CHAT_SPA_DIST, { recursive: true });
-    mkdirSync(wireCombined, { recursive: true });
     writeFileSync(join(STEWARD_CHAT_SPA_DIST, "index.html"), "<html></html>");
-    writeFileSync(join(wireCombined, "index.html"), "<html></html>");
     guard = installFsGuardStoreForTests();
   });
 

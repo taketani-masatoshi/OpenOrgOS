@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 346
-  static_test_cases: 1356
-  tiered_execution_total: 346
-  catalog_total: 30
-  catalog_cli_registered: 19
+  vitest_total: 536
+  static_test_cases: 2262
+  tiered_execution_total: 536
+  catalog_total: 44
+  catalog_cli_registered: 44
   catalog_gap: 0
-  catalog_dedicated: 12
+  catalog_dedicated: 28
   catalog_bundled: 9
-  catalog_only: 9
+  catalog_only: 7
 platform_domains:
   P01_kernel:
     layer: 1
@@ -30,16 +30,28 @@ platform_domains:
 catalog_modules:
   clinic:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/clinic.test.ts
+      - sector-module-cli-contract.test.ts
   construction:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/construction.test.ts
+      - sector-module-cli-contract.test.ts
+  customer_success:
+    tier: production_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - customer-success-chat.test.ts
+      - customer-success-health-score.test.ts
+      - customer-success-module.test.ts
+      - customer-success-view.test.ts
+      - mal-module-cli-contract.test.ts
   ecommerce:
     tier: production_ready
     coverage_tier: bundled
@@ -49,10 +61,11 @@ catalog_modules:
       - wave-modules-cli.test.ts
   education:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/education.test.ts
+      - sector-module-cli-contract.test.ts
   event_operations:
     tier: production_ready
     coverage_tier: bundled
@@ -62,16 +75,33 @@ catalog_modules:
       - wave-modules-cli.test.ts
   event_space:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/event-space.test.ts
+      - sector-module-cli-contract.test.ts
   hospitality:
+    tier: production_ready
+    coverage_tier: full
+    cli: true
+    tests:
+      - hospitality-guest-register.test.ts
+      - hospitality-module-100.test.ts
+      - hospitality-ops.test.ts
+      - hospitality.test.ts
+      - mal-module-cli-contract.test.ts
+      - module-compliance-onboard.test.ts
+      - permit-opening-gate.test.ts
+      - required-compliance.test.ts
+  investor_relations:
     tier: production_ready
     coverage_tier: dedicated
     cli: true
     tests:
-      - hospitality.test.ts
+      - investor-relations-integration.test.ts
+      - investor-relations.test.ts
+      - mal-module-cli-contract.test.ts
+      - wave-modules-cli.test.ts
   jp_bank_corporate:
     tier: production_ready
     coverage_tier: full
@@ -81,55 +111,136 @@ catalog_modules:
       - jp-bank-corporate-ar-ap.test.ts
       - jp-bank-corporate-cashflow.test.ts
       - jp-bank-corporate-reconciliation.test.ts
+      - mal-module-cli-contract.test.ts
   jp_carbon_neutral_2050:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/jp-carbon-neutral-2050.test.ts
+      - sector-module-cli-contract.test.ts
+  jp_certification:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - catalog/jp-certification.test.ts
+      - certification-inspection-workflow.test.ts
+      - required-compliance.test.ts
+  jp_consumption_refund:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - catalog/jp-consumption-refund.test.ts
+      - consumption-tax-refund.test.ts
   jp_corporate_registration:
     tier: production_ready
     coverage_tier: dedicated
     cli: true
     tests:
       - jp-corporate-registration.test.ts
+      - mal-module-cli-contract.test.ts
+  jp_inspection:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - catalog/jp-inspection.test.ts
+      - certification-inspection-workflow.test.ts
+  jp_invoice_qualified:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-tax-modules.test.ts
   jp_medical_device:
     tier: production_ready
     coverage_tier: dedicated
     cli: true
     tests:
+      - certification-inspection-workflow.test.ts
       - jp-medical-device.test.ts
-  jp_permit_registry:
+      - mal-module-cli-contract.test.ts
+      - required-compliance.test.ts
+  jp_minpaku:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-minpaku.test.ts
+  jp_payroll:
     tier: skeleton
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-payroll-modules.test.ts
+  jp_permit_application:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - jp-permit-application.test.ts
+      - module-compliance-onboard.test.ts
+      - permit-opening-gate.test.ts
+  jp_permit_registry:
+    tier: activation_ready
     coverage_tier: full
     cli: true
     tests:
+      - jp-permit-application.test.ts
       - jp-permit-registry-application.test.ts
       - jp-permit-registry.test.ts
   jp_privacy_policy:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/jp-privacy-policy.test.ts
+      - sector-module-cli-contract.test.ts
+  jp_social_insurance:
+    tier: skeleton
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-payroll-modules.test.ts
   jp_subsidy_application:
     tier: production_ready
     coverage_tier: dedicated
     cli: true
     tests:
       - jp-subsidy-application.test.ts
+  jp_tax_consumption:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-tax-modules.test.ts
+  jp_tax_corporate:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-tax-modules.test.ts
   jp_trademark_application:
     tier: production_ready
     coverage_tier: dedicated
     cli: true
     tests:
       - jp-trademark-application.test.ts
+  jp_withholding_statutory:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-tax-modules.test.ts
   jp_women_empowerment:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/jp-women-empowerment.test.ts
+      - sector-module-cli-contract.test.ts
   language_bridge:
     tier: production_ready
     coverage_tier: dedicated
@@ -138,10 +249,11 @@ catalog_modules:
       - language-bridge.test.ts
   logistics:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/logistics.test.ts
+      - sector-module-cli-contract.test.ts
   membership:
     tier: production_ready
     coverage_tier: bundled
@@ -173,24 +285,27 @@ catalog_modules:
   rental:
     tier: production_ready
     coverage_tier: dedicated
-    cli: false
+    cli: true
     tests:
       - invoice.test.ts
+      - mal-module-cli-contract.test.ts
       - rental.test.ts
       - skeleton.test.ts
   restaurant:
     tier: production_ready
     coverage_tier: dedicated
-    cli: false
+    cli: true
     tests:
       - restaurant.test.ts
+      - sector-module-cli-contract.test.ts
       - skeleton.test.ts
   retail_store:
     tier: production_ready
-    coverage_tier: catalog_only
-    cli: false
+    coverage_tier: dedicated
+    cli: true
     tests:
       - catalog/retail-store.test.ts
+      - sector-module-cli-contract.test.ts
   saas_subscription:
     tier: production_ready
     coverage_tier: bundled
@@ -217,6 +332,7 @@ catalog_modules:
     coverage_tier: dedicated
     cli: true
     tests:
+      - mal-module-cli-contract.test.ts
       - travel-booking.test.ts
   venture_capital:
     tier: production_ready
@@ -225,6 +341,12 @@ catalog_modules:
     tests:
       - venture-capital.test.ts
       - wave-modules-cli.test.ts
+  venue_booking:
+    tier: skeleton
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - venue-booking.test.ts
 ci_suites:
   security-rbac:
     source: .github/workflows/validate.yml
@@ -237,6 +359,7 @@ ci_suites:
       - prod-auth-checklist.test.ts
       - security-validate.test.ts
       - cli-data-write-auth.test.ts
+      - fs-guard.test.ts
       - tenant-registry-coverage.test.ts
       - tenant-agent-roster-coverage.test.ts
       - shell-profile-integrity.test.ts
@@ -308,6 +431,7 @@ ci_suites:
       - wire-console-redact.test.ts
       - wire-console-webauthn-verify.test.ts
       - wire-console-webauthn-register.test.ts
+      - webauthn-origin.test.ts
   scheduling-smoke:
     source: package.json
     files:
@@ -323,6 +447,15 @@ ci_suites:
       - scheduling-secretary-flow.test.ts
       - scheduling-state-reliability.test.ts
 tests:
+  accounting-bank-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I2_protocol_e2e
+  accounting-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   acme-validate.test.ts:
     axis: integration
     kind: integration
@@ -351,10 +484,26 @@ tests:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
+  agent-module-inventory.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-modules-toggle-effect.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-owner-desks.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
   agent-pipeline-check.test.ts:
     axis: meta
     kind: meta
   agent-portability.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  agent-readiness-orchestration.test.ts:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
@@ -381,7 +530,39 @@ tests:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
+  aia-concurrent-jobs-manifest.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  aia-queue-store.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  aia-scheduler.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  analytics-kpi-scorecard-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  annual-close.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  answer-feedback.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  answer-memory.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   approver-registry-mal.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ar-ap-settlement.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -394,10 +575,30 @@ tests:
     kind: integration
     domain: P01_kernel
     integration: I3_workflow
+  bank-csv-fixtures.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  bank-reconciliation-gl.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   broker.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
+  canonical-write-baseline.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  cash-balance-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  cash-flow-statement.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   catalog/bundled-modules-contract.test.ts:
     axis: catalog
     kind: unit
@@ -441,11 +642,45 @@ tests:
     kind: unit
     catalog_ids:
       - jp_carbon_neutral_2050
+  catalog/jp-certification.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_certification
+  catalog/jp-consumption-refund.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_consumption_refund
+  catalog/jp-inspection.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_inspection
+  catalog/jp-minpaku.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_minpaku
+  catalog/jp-payroll-modules.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_payroll
+      - jp_social_insurance
   catalog/jp-privacy-policy.test.ts:
     axis: catalog
     kind: unit
     catalog_ids:
       - jp_privacy_policy
+  catalog/jp-tax-modules.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_tax_corporate
+      - jp_tax_consumption
+      - jp_invoice_qualified
+      - jp_withholding_statutory
   catalog/jp-women-empowerment.test.ts:
     axis: catalog
     kind: unit
@@ -461,6 +696,13 @@ tests:
     kind: unit
     catalog_ids:
       - retail_store
+  certification-inspection-workflow.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_certification
+      - jp_inspection
+      - jp_medical_device
   chat-audit.test.ts:
     axis: platform
     kind: unit
@@ -502,6 +744,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  commercial-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   community-console-handoff-url.test.ts:
     axis: platform
     kind: unit
@@ -521,6 +767,18 @@ tests:
     axis: platform
     kind: shared-state
     domain: P02_business_data
+  company-events-adopt.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  company-events-attestation-sequence.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  company-events-attestation-trust.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   company-events-attestation.test.ts:
     axis: platform
     kind: shared-state
@@ -533,6 +791,14 @@ tests:
     axis: platform
     kind: shared-state
     domain: P02_business_data
+  company-events-cross-tenant.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  company-events-export.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   company-events-lifecycle.test.ts:
     axis: platform
     kind: shared-state
@@ -540,6 +806,18 @@ tests:
   company-events-lint.test.ts:
     axis: platform
     kind: shared-state
+    domain: P02_business_data
+  company-events-monthly-audit.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  company-events-repair-legacy.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  company-events-tamper.test.ts:
+    axis: platform
+    kind: unit
     domain: P02_business_data
   company-events-wire-void.test.ts:
     axis: platform
@@ -549,15 +827,52 @@ tests:
     axis: platform
     kind: shared-state
     domain: P01_kernel
+  company-officers-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  company-org-table.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  comparative-statements.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   compliance-gap.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
+  console-nav.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  console-routing.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  consumption-tax-journal.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  consumption-tax-refund.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_consumption_refund
   context-manifest.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
+  contract-status-steward.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   control-framework.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  control-reconcile.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -578,6 +893,14 @@ tests:
     kind: unit
     domain: P03_correspondence_org
   correspondence-ceo-inline-chat.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-compose-golden.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  correspondence-compose-pipeline.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -617,6 +940,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  correspondence-mail-triage-alert.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   correspondence-mail-triage.test.ts:
     axis: platform
     kind: unit
@@ -637,11 +964,60 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  customer-admin-invite-policy.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  customer-journey-http.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I3_workflow
+  customer-success-chat.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - customer_success
+  customer-success-health-score.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - customer_success
+  customer-success-module.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - customer_success
+  customer-success-view.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - customer_success
+  customer-ux-paths.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  customers-api-sales-rbac.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  customers-api-sales-write.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  customers-nav-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   dashboard.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
   delivery-ledger-jsonl.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  demo-filter.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -659,6 +1035,14 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  dispatch-tower-classify.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  dispatch-tower-registry.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   docs-score-sync.test.ts:
     axis: meta
     kind: meta
@@ -669,6 +1053,10 @@ tests:
   eco-production-evidence.test.ts:
     axis: meta
     kind: meta
+  electronic-ledger.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   escalate.test.ts:
     axis: integration
     kind: integration
@@ -682,16 +1070,48 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  expense-claim.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   extensibility-contract.test.ts:
     axis: contract
     kind: contract
+  extension-skill-runners.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   finance-accounting.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
+  finance-briefing.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-statements.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  fiscal-year.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  fixture-restore-lock.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   folder-housekeeping.test.ts:
     axis: meta
     kind: meta
+  format-operator-session-label.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  founder-migration.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   framework-backlog.test.ts:
     axis: meta
     kind: meta
@@ -715,11 +1135,38 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  hospitality-guest-register.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - hospitality
+  hospitality-module-100.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - hospitality
+  hospitality-opened-date-integrity.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  hospitality-ops.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - hospitality
   hospitality.test.ts:
     axis: catalog
     kind: unit
     catalog_ids:
       - hospitality
+  hr-competence.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  hr-headcount-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   hub-federation.test.ts:
     axis: platform
     kind: unit
@@ -768,6 +1215,44 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  iso-21401-kpi.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-coming-soon.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-core-module.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-internal-audit.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-module-add.test.ts:
+    axis: platform
+    kind: contract
+    domain: P01_kernel
+  iso-pack-contract.test.ts:
+    axis: platform
+    kind: contract
+    domain: P01_kernel
+  iso-templates.test.ts:
+    axis: platform
+    kind: contract
+    domain: P01_kernel
+  investor-relations-integration.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - investor_relations
+  investor-relations.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - investor_relations
   invoice.test.ts:
     axis: catalog
     kind: unit
@@ -777,6 +1262,26 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  journal-audit-backfill.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  journal-entry-schema.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  journal-source-accounts.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  journal-tax-backfill.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  journal-write-guard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   jp-bank-corporate-ar-ap.test.ts:
     axis: catalog
     kind: unit
@@ -800,11 +1305,25 @@ tests:
     kind: unit
     catalog_ids:
       - jp_corporate_registration
+  jp-corporate-tax-xml.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids: []
   jp-medical-device.test.ts:
     axis: catalog
     kind: unit
     catalog_ids:
       - jp_medical_device
+  jp-payroll-cli-privacy.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids: []
+  jp-permit-application.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_permit_application
+      - jp_permit_registry
   jp-permit-registry-application.test.ts:
     axis: catalog
     kind: unit
@@ -846,6 +1365,42 @@ tests:
     kind: unit
     catalog_ids:
       - language_bridge
+  ledger-cutover.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-guest-invite.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-journal-export.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-mail.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-monthly-reconcile.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-offboard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-product.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-tenant-isolation.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-trial-balance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   legacy-webhook-sunset.test.ts:
     axis: contract
     kind: contract
@@ -853,7 +1408,27 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  llm-chat.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  llm-pool.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  llm-route-hint.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  local-llm-error-fallback.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   locale.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  macos-notify-style.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -873,6 +1448,18 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  mal-module-cli-contract.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - hospitality
+      - travel_booking
+      - customer_success
+      - investor_relations
+      - rental
+      - jp_corporate_registration
+      - jp_medical_device
+      - jp_bank_corporate
   mal-peers-trust-registry.test.ts:
     axis: integration
     kind: integration
@@ -919,16 +1506,50 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  medical-device-qms-gvp-canvas.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  module-compliance-onboard.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - hospitality
+      - jp_permit_application
+  module-message.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   module-production-tier.test.ts:
     axis: contract
     kind: contract
+  module-readiness-score.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   modules.test.ts:
     axis: contract
     kind: contract
+  monthly-pl-journal.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  notification-preview.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   notifications-push.test.ts:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  ooo-login-email.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opening-balance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   openorg-did.test.ts:
     axis: platform
     kind: unit
@@ -937,7 +1558,23 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  operator-change.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  operator-commands.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
   operator-dispatch-unified.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  operator-facts-registry.test.ts:
+    axis: platform
+    kind: unit
+    domain: P06_agent_workflow
+  operator-liquidator.test.ts:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
@@ -969,6 +1606,22 @@ tests:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
+  orchestrate-cli.smoke.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  orchestration-board-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  orchestration-dag.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  orchestration-dispatch.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   org-approval.test.ts:
     axis: platform
     kind: unit
@@ -986,6 +1639,14 @@ tests:
     kind: unit
     domain: P03_correspondence_org
   org-cert-witness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  org-chart-api.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  org-chart-change.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -1021,7 +1682,27 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  passkey-ceremony-client.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  passkey-ceremony.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  passkey-field-check-record.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   passkey-prod-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  payroll-jp.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  payroll-remittance-loop.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1033,6 +1714,16 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  period-lock-invoice-dedupe.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  permit-opening-gate.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_permit_application
+      - hospitality
   phase2.test.ts:
     axis: integration
     kind: integration
@@ -1043,6 +1734,10 @@ tests:
     kind: integration
     domain: P06_agent_workflow
     integration: I3_workflow
+  pipeline-records-audit-escalate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   platform-implement-guide.test.ts:
     axis: platform
     kind: unit
@@ -1051,6 +1746,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  pmo-portfolio.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   portability-assessment.test.ts:
     axis: meta
     kind: meta
@@ -1066,6 +1765,14 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  product-initial-setup.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  productability-gaps.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   protocol-api-server.test.ts:
     axis: platform
     kind: server
@@ -1262,6 +1969,14 @@ tests:
   readiness.test.ts:
     axis: contract
     kind: contract
+  receipt-pdf.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  receipt-qr.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   regulations.test.ts:
     axis: platform
     kind: unit
@@ -1270,16 +1985,31 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  remittance-journal.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   rental.test.ts:
     axis: catalog
     kind: unit
     catalog_ids:
       - rental
+  required-compliance.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - hospitality
+      - jp_medical_device
+      - jp_certification
   restaurant.test.ts:
     axis: catalog
     kind: unit
     catalog_ids:
       - restaurant
+  roster-payroll-consistency.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   route-execution.test.ts:
     axis: platform
     kind: unit
@@ -1294,6 +2024,62 @@ tests:
     domain: P06_agent_workflow
     integration: I3_workflow
   runtime-context.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-classify.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-dedupe.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-demo-confirm.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-follow-up-merge.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-inbound-cli.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-inbound-intake.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-inbound-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-inquiry-stage.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-mail-link.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-outbound-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-pipeline-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-quote-handoff.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-stage.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sales-validate.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1378,6 +2164,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  secretary-quality-uplift.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   secretary-sec3.test.ts:
     axis: platform
     kind: unit
@@ -1386,6 +2176,24 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  secretary-today-brief.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  sector-module-cli-contract.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - clinic
+      - education
+      - event_space
+      - construction
+      - logistics
+      - retail_store
+      - restaurant
+      - jp_carbon_neutral_2050
+      - jp_privacy_policy
+      - jp_women_empowerment
   security-validate.test.ts:
     axis: platform
     kind: unit
@@ -1445,6 +2253,14 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  governance-principles-iso37000.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  statutory-filing-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   steward-chat-abnormal.test.ts:
     axis: platform
     kind: server
@@ -1457,11 +2273,27 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-analytics-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-analytics-rbac.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-auth.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-cash-counterparties.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-cashflow-intent.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-company-officers.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -1481,7 +2313,39 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-hr-headcount.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-ledger-rbac.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-operator-stats.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-orchestration-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-orchestration-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-product-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-sales-inbound.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-sales-outbound.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-sales-pipeline.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -1501,10 +2365,54 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  stripe-commercial-guards.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  stripe-ops.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  stripe-secrets-store.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  stripe-webhook.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-calendar-portfolio.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-engines.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-filing-prep.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-gap-admin.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-remittance-integrity.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   tenant-agent-roster-coverage.test.ts:
     axis: meta
     kind: meta
   tenant-agent-roster.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  tenant-config-change.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
@@ -1513,6 +2421,10 @@ tests:
     kind: unit
     domain: P02_business_data
   tenant-guard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  tenant-lifecycle.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
@@ -1535,6 +2447,14 @@ tests:
   testing-registry.test.ts:
     axis: contract
     kind: contract
+  theme-contrast.test.ts:
+    axis: platform
+    kind: unit
+    domain: P05_console_layer
+  theme-preference.test.ts:
+    axis: platform
+    kind: unit
+    domain: P05_console_layer
   three-org-wire-demo.test.ts:
     axis: integration
     kind: integration
@@ -1569,6 +2489,15 @@ tests:
     kind: unit
     catalog_ids:
       - venture_capital
+  venue-booking.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - venue_booking
+  venue-suggest-party-locations.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   wave-modules-cli.test.ts:
     axis: catalog
     kind: bundled
@@ -1583,6 +2512,7 @@ tests:
       - staffing
       - ecommerce
       - event_operations
+      - investor_relations
   webauthn-attestation.test.ts:
     axis: platform
     kind: unit
@@ -1636,6 +2566,10 @@ tests:
     kind: server
     domain: P04_wire_stack
   wire-console-server.test.ts:
+    axis: platform
+    kind: server
+    domain: P04_wire_stack
+  wire-console-tenant-context.test.ts:
     axis: platform
     kind: server
     domain: P04_wire_stack
@@ -1745,6 +2679,10 @@ tests:
     domain: P04_wire_stack
     integration: I2_protocol_e2e
   witness-pending-lifecycle.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  work-order-state.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

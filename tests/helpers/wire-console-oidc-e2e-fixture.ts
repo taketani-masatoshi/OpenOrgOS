@@ -12,7 +12,10 @@ export interface WireConsoleOidcSmokeFixture {
   approver_id: string;
 }
 
-export async function writeWireConsoleOidcSmokeFixture(): Promise<WireConsoleOidcSmokeFixture> {
+export async function writeWireConsoleOidcSmokeFixture(opts?: {
+  operatorId?: string;
+  approverId?: string;
+}): Promise<WireConsoleOidcSmokeFixture> {
   process.env.WIRE_CONSOLE_OIDC_ISSUER = "https://idp.test/orgos";
   process.env.WIRE_CONSOLE_OIDC_AUDIENCE = "wire-console";
 
@@ -24,8 +27,8 @@ export async function writeWireConsoleOidcSmokeFixture(): Promise<WireConsoleOid
   delete process.env.WIRE_CONSOLE_OIDC_JWKS_URL;
   await preloadOidcJwks();
 
-  const operatorId = "E2E OIDC";
-  const approverId = "テスト承認者";
+  const operatorId = opts?.operatorId ?? "E2E OIDC";
+  const approverId = opts?.approverId ?? "テスト承認者";
   const idToken = mintTestOidcIdTokenRs256(privateKey, {
     sub: "oidc-smoke-user",
     kid: "oidc-smoke-rsa",

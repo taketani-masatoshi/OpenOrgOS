@@ -157,6 +157,7 @@ wire_outbound:
     const approved = approveInterOrgNotice({
       noticeId: notice.notice_id,
       approverId: "Demo CEO",
+      operatorId: "OP-001",
       eventId: "77777777-7777-4777-8777-777777777777",
     });
     const eventId = approved.transmission.envelope.event_id;

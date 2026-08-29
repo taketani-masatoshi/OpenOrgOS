@@ -186,6 +186,7 @@ const INTEGRATION_I3 = new Set([
   "routing.test.ts",
   "queue-audit-bridge.test.ts",
   "bank-corporate-cashflow-pipeline-integration.test.ts",
+  "customer-journey-http.test.ts",
 ]);
 
 const INTEGRATION_I4 = new Set([
@@ -245,7 +246,7 @@ function classifyPlatformDomain(base: string): PlatformDomainId {
   ) {
     return "P04_wire_stack";
   }
-  if (/^(steward-chat-|wire-console-|mcp-|chat-|session-persist|rate-limit|csrf-|prod-auth-|prod-startup|prod-wire-|notifications-push|sanitize-output|security-validate)/.test(base)) {
+  if (/^(steward-chat-|wire-console-|mcp-|chat-|session-persist|rate-limit|csrf-|prod-auth-|prod-startup|prod-wire-|notifications-push|sanitize-output|security-validate|theme-)/.test(base)) {
     return "P05_console_layer";
   }
   if (/^(operator-|agent-|shell-|portability-|escalate|routing|phase2|phase3|queue-audit)/.test(base)) {
@@ -259,25 +260,25 @@ function classifyPlatformDomain(base: string): PlatformDomainId {
     return "P03_correspondence_org";
   }
   if (
-    /^(company-events-|finance-|broker|invoice|lib\.|yojitsu-|demo-validate|acme-validate|tenant-|classification|integrations-|dashboard|map\.|io\.|deps\.|skill-registry|skills-cli|modules\.|module-production|context-manifest|agent-summaries|validate-protocol|tenant-document|tenant-setup|tenant-guard|regulations|standards|compliance-|control-framework|wave-modules|travel-|language-bridge|venture-|jp-|readiness|extensibility|skeleton|skill-registry|skills-cli|mail-compose)/.test(
+    /^(company-events-|finance-|broker|invoice|lib\.|yojitsu-|demo-validate|acme-validate|tenant-|classification|integrations-|dashboard|map\.|io\.|deps\.|skill-registry|skills-cli|modules\.|module-production|context-manifest|agent-summaries|validate-protocol|tenant-document|tenant-setup|tenant-guard|regulations|standards|compliance-|control-framework|wave-modules|travel-|language-bridge|venture-|jp-|readiness|extensibility|skeleton|skill-registry|skills-cli|mail-compose|customer-ux-|customer-journey-|ledger-product|commercial-readiness|accounting-bank-|accounting-readiness|stripe-|ledger-guest|ledger-offboard|ledger-mail|productability)/.test(
       base
     )
   ) {
     if (/^jp-/.test(base) && !base.startsWith("jurisdiction")) {
       return "P02_business_data";
     }
-    if (/^(company-events-|finance-|broker|invoice|lib\.|yojitsu-|demo-validate|acme-validate|tenant-|dashboard|map\.|io\.|deps\.|validate-protocol|tenant-document|tenant-setup|tenant-guard)/.test(base)) {
+    if (/^(company-events-|finance-|broker|invoice|lib\.|yojitsu-|demo-validate|acme-validate|tenant-|dashboard|map\.|io\.|deps\.|validate-protocol|tenant-document|tenant-setup|tenant-guard|pmo-)/.test(base)) {
       return "P02_business_data";
     }
   }
   if (
-    /^(integrity|audit\.|locale|regulations|standards|compliance-|control-framework|classification|jurisdiction|jurisdiction-|skill-registry|skills-cli|context-manifest|integrations-schema|integrations-status|mail-compose|approver-registry)/.test(
+    /^(integrity|audit\.|locale|regulations|standards|compliance-|control-framework|iso-|classification|jurisdiction|jurisdiction-|skill-registry|skills-cli|context-manifest|integrations-schema|integrations-status|mail-compose|approver-registry)/.test(
       base
     )
   ) {
     return "P01_kernel";
   }
-  if (/^(company-events-|finance-|broker|invoice|lib\.|yojitsu-|tenant-|dashboard|map\.|io\.|deps\.)/.test(base)) {
+  if (/^(company-events-|finance-|broker|invoice|lib\.|yojitsu-|tenant-|dashboard|map\.|io\.|deps\.|pmo-)/.test(base)) {
     return "P02_business_data";
   }
   if (/^(org-|correspondence-|executive-|secretary-|peer-contact-|mail-)/.test(base)) {
@@ -748,6 +749,7 @@ export function buildRegistryFromDisk(): TestRegistry {
           "prod-auth-checklist.test.ts",
           "security-validate.test.ts",
           "cli-data-write-auth.test.ts",
+          "fs-guard.test.ts",
           "tenant-registry-coverage.test.ts",
           "tenant-agent-roster-coverage.test.ts",
           "shell-profile-integrity.test.ts",
@@ -825,6 +827,7 @@ export function buildRegistryFromDisk(): TestRegistry {
           "wire-console-redact.test.ts",
           "wire-console-webauthn-verify.test.ts",
           "wire-console-webauthn-register.test.ts",
+          "webauthn-origin.test.ts",
         ],
       },
       "scheduling-smoke": {

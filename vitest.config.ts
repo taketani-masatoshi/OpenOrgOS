@@ -1,6 +1,17 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const appsRoot = path.join(__dirname, "apps");
+
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@ops-shared": path.join(appsRoot, "shared"),
+      "@wire-console": path.join(appsRoot, "wire-console/src"),
+    },
+  },
   test: {
     include: ["tests/**/*.test.ts"],
     setupFiles: ["tests/setup-tenant.ts", "tests/setup-restore-protocol.ts"],
