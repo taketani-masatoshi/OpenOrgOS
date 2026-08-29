@@ -1,0 +1,8 @@
+skills:
+  - id: jp_payroll_run
+    file: jp_payroll_run.md
+    runtime: cli
+    cli_command: jp-payroll-run
+    handler: jp_payroll_run
+    description: 給与計算（電子計算の特例）— 集計サマリのみ
+    agent_id: human_resources

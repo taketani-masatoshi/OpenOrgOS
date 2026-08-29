@@ -1,19 +1,31 @@
 officer_compensation_annual: 0
+employee_payroll:
+  monthly_gross_jpy: 600000
+  has_withholding: true
+  has_social_insurance: true
+  employee_ids:
+    - EMP-003
+    - EMP-004
 officers:
   - name: 段燕燕
     role: 代表取締役
+    employee_id: EMP-001
     monthly: 0
     annual: 0
   - name: 宮城万貴子
     role: 代表取締役
+    employee_id: EMP-002
     monthly: 0
     annual: 0
 tax_treatment:
-  withholding: 三塚（EMP-003）分は源泉徴収対象 — 月次経費で計上（ダミー）
-  social_insurance: 三塚分は社保加入想定（ダミー）
+  withholding: EMP-003・EMP-004 は源泉徴収対象（税理士未契約のため率は概算）
+  social_insurance: EMP-003・EMP-004 は社保加入想定（税理士・年金事務所手続は未確認）
   deductible_expense: true
   notes: |
-    役員報酬0円のまま。従業員三塚の給与は monthly/2026-04〜 に personnel 科目で計上（月32万 · ダミー）。
+    役員報酬0円（EMP-001・EMP-002 は employee_ids 対象外）。
+    正社員は各月額 300,000円（CEO確認 2026-08-29 · 取締役会 CTR-025/CTR-026）。
+    payroll.monthly_gross_jpy は二人合計。鈴木友也は 2026-08-26 入社のため
+    8月支払カレンダーは三塚力のみ、9月分から二人。
 account_code: "5300"
 notes: |
-  ダミーデータ — FY2026 人件費試算。三塚入社 2026-04-01。
+  CEO確認 2026-08-29。JE-PAYROLL-2026-09 は旧ダミー額のまま — 再計上は財務クローズで実施。

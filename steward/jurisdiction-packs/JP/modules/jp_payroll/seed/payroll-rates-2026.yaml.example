@@ -1,0 +1,139 @@
+version: 1
+fiscal_year: FY2026
+method: denshi_keisan_tokurei
+salary_income_deduction:
+  - up_to_yen: 162500
+    rate_pct: 40
+    minus_yen: 0
+  - up_to_yen: 180000
+    rate_pct: 40
+    minus_yen: 8333
+  - up_to_yen: 360000
+    rate_pct: 40
+    minus_yen: 8333
+  - up_to_yen: 660000
+    rate_pct: 40
+    minus_yen: 8333
+  - up_to_yen: 850000
+    rate_pct: 45
+    minus_yen: 41667
+  - up_to_yen: 999999999
+    rate_pct: 50
+    minus_yen: 84167
+basic_deduction_monthly_yen: 40000
+dependent_deduction_monthly_yen: 31667
+income_tax_brackets:
+  - up_to_yen: 162500
+    rate_pct: 5.105
+    minus_yen: 0
+  - up_to_yen: 300000
+    rate_pct: 10.21
+    minus_yen: 8290
+  - up_to_yen: 550000
+    rate_pct: 20.42
+    minus_yen: 38920
+  - up_to_yen: 999999999
+    rate_pct: 33.693
+    minus_yen: 111670
+social_insurance:
+  health_employee_rate_pct: 5.0
+  health_employer_rate_pct: 5.0
+  pension_employee_rate_pct: 9.15
+  pension_employer_rate_pct: 9.15
+  employment_employee_rate_pct: 0.6
+  employment_employer_rate_pct: 0.95
+  standard_remuneration_grades:
+    - grade: 1
+      lower_yen: 0
+      upper_yen: 63000
+      monthly_yen: 58000
+    - grade: 2
+      lower_yen: 63001
+      upper_yen: 73000
+      monthly_yen: 68000
+    - grade: 3
+      lower_yen: 73001
+      upper_yen: 83000
+      monthly_yen: 78000
+    - grade: 4
+      lower_yen: 83001
+      upper_yen: 93000
+      monthly_yen: 88000
+    - grade: 5
+      lower_yen: 93001
+      upper_yen: 101000
+      monthly_yen: 98000
+    - grade: 6
+      lower_yen: 101001
+      upper_yen: 107000
+      monthly_yen: 104000
+    - grade: 7
+      lower_yen: 107001
+      upper_yen: 114000
+      monthly_yen: 110000
+    - grade: 8
+      lower_yen: 114001
+      upper_yen: 122000
+      monthly_yen: 118000
+    - grade: 9
+      lower_yen: 122001
+      upper_yen: 130000
+      monthly_yen: 126000
+    - grade: 10
+      lower_yen: 130001
+      upper_yen: 138000
+      monthly_yen: 134000
+    - grade: 11
+      lower_yen: 138001
+      upper_yen: 146000
+      monthly_yen: 142000
+    - grade: 12
+      lower_yen: 146001
+      upper_yen: 155000
+      monthly_yen: 150000
+    - grade: 13
+      lower_yen: 155001
+      upper_yen: 165000
+      monthly_yen: 160000
+    - grade: 14
+      lower_yen: 165001
+      upper_yen: 175000
+      monthly_yen: 170000
+    - grade: 15
+      lower_yen: 175001
+      upper_yen: 185000
+      monthly_yen: 180000
+    - grade: 16
+      lower_yen: 185001
+      upper_yen: 195000
+      monthly_yen: 190000
+    - grade: 17
+      lower_yen: 195001
+      upper_yen: 210000
+      monthly_yen: 200000
+    - grade: 18
+      lower_yen: 210001
+      upper_yen: 230000
+      monthly_yen: 220000
+    - grade: 19
+      lower_yen: 230001
+      upper_yen: 250000
+      monthly_yen: 240000
+    - grade: 20
+      lower_yen: 250001
+      upper_yen: 270000
+      monthly_yen: 260000
+    - grade: 21
+      lower_yen: 270001
+      upper_yen: 290000
+      monthly_yen: 280000
+    - grade: 22
+      lower_yen: 290001
+      upper_yen: 330000
+      monthly_yen: 320000
+    - grade: 23
+      lower_yen: 330001
+      upper_yen: 370000
+      monthly_yen: 350000
+notes: |
+  電子計算の特例（月額）。年度改定時は payroll-rates-2027.yaml を追加。

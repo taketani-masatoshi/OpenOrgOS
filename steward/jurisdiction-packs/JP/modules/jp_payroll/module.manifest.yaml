@@ -1,0 +1,14 @@
+id: jp_payroll
+required_seeds:
+  - payroll-rates-2026.yaml.example
+activation_seeds:
+  - payroll-summary.yaml.example
+optional_regulations:
+  - REG-005
+notes: payroll calc engine — rates in seed YAML · L2 person detail gitignored
+security:
+  limits:
+    concurrent_jobs: 1
+cli_commands:
+  - calc
+  - post-journal

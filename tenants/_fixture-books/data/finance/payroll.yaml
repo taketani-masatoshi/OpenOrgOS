@@ -1,0 +1,6 @@
+officer_compensation_annual: 0
+employee_payroll:
+  monthly_gross_jpy: 280000
+  has_withholding: true
+  has_social_insurance: true
+account_code: "5300"

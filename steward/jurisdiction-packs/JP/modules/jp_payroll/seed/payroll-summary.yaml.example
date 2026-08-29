@@ -1,0 +1,11 @@
+version: 1
+fiscal_year: FY2026
+month: "2026-09"
+employee_count: 1
+gross_total_yen: 320000
+withholding_total_yen: 5775
+social_employer_total_yen: 48320
+social_employee_total_yen: 47200
+net_pay_total_yen: 267025
+notes: |
+  集計サマリのみ（L1）。個人別明細は data/hr/payroll-detail/（L2 · gitignore）。
