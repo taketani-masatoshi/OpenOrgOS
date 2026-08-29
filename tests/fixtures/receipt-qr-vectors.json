@@ -1,0 +1,6 @@
+{
+  "schema": "orgos.jp.receipt.test-vector.v1",
+  "note": "Regenerate via tests/receipt-qr.test.ts (signReceiptForTests). Portal verify uses the same compact expand + canonicalJson + Ed25519 rules.",
+  "portal": "https://receipt.oorgos.org/r",
+  "link_prefix": "v2z."
+}

@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
+import { useUiLocale } from "@ops-shared/useUiLocale";
+import { dateTimeLocale } from "@ops-shared/locale";
+import { OPS_PAGES_COPY } from "./ops-pages-copy";
 import {
   approveReceiptClaimApi,
   fetchMe,
@@ -16,10 +20,10 @@ function yen(n: number | undefined): string {
   return `¥${n.toLocaleString("ja-JP")}`;
 }
 
-function formatWhen(iso?: string): string {
+function formatWhen(iso: string | undefined, locale: "ja" | "en"): string {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleString("ja-JP");
+    return new Date(iso).toLocaleString(dateTimeLocale(locale));
   } catch {
     return iso;
   }
@@ -30,6 +34,8 @@ function formatWhen(iso?: string): string {
  * Amount / lines stay issuer-local — never sent on Wire.
  */
 export function ReceiptClaimPage() {
+  const copy = useCopy(OPS_PAGES_COPY);
+  const locale = useUiLocale();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [rows, setRows] = useState<StoredReceiptRow[]>([]);
   const [tab, setTab] = useState<TabId>("pending");
@@ -97,7 +103,7 @@ export function ReceiptClaimPage() {
     if (busyId) return;
     if (
       !window.confirm(
-        `${row.receipt_id} を承認しますか？\n請求元: ${row.claimed_by_org_id ?? "—"}\nWire には receipt_id と digest のみ送信します（金額は送りません）。`,
+        copy.confirmApprove(row.receipt_id, row.claimed_by_org_id ?? "—"),
       )
     ) {
       return;
@@ -107,7 +113,7 @@ export function ReceiptClaimPage() {
     setMessage("");
     try {
       await approveReceiptClaimApi({ receipt_id: row.receipt_id });
-      setMessage(`${row.receipt_id} を claimed として Wire 送信しました（amount-free）`);
+      setMessage(copy.claimedSent(row.receipt_id));
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -120,7 +126,7 @@ export function ReceiptClaimPage() {
     if (!rejectTarget || busyId) return;
     const reason = rejectReason.trim();
     if (!reason) {
-      setError("却下理由を入力してください");
+      setError(copy.needRejectReason);
       return;
     }
     setBusyId(rejectTarget.receipt_id);
@@ -131,7 +137,7 @@ export function ReceiptClaimPage() {
         receipt_id: rejectTarget.receipt_id,
         reason,
       });
-      setMessage(`${rejectTarget.receipt_id} を却下しました`);
+      setMessage(copy.rejectedMsg(rejectTarget.receipt_id));
       setRejectTarget(null);
       setRejectReason("");
       await refresh();
@@ -151,10 +157,9 @@ export function ReceiptClaimPage() {
     <div className="receipt-claim">
       <header className="receipt-claim-header">
         <div>
-          <h1 className="receipt-claim-title ops-page-title">領収書 claim 承認</h1>
+          <h1 className="receipt-claim-title ops-page-title">{copy.receiptTitle}</h1>
           <p className="receipt-claim-lead ops-page-lead">
-            発行元が請求を受けたあと、承認すると receipt_id と digest
-            のみを Wire で返します。金額・明細は入力も送信もしません。
+            {copy.receiptLead}
           </p>
         </div>
         <button
@@ -172,29 +177,29 @@ export function ReceiptClaimPage() {
               .finally(() => setLoading(false));
           }}
         >
-          再読込
+          {copy.reload}
         </button>
       </header>
 
       {user && (
         <p className="receipt-claim-meta">
-          承認者 <strong>{user.operator_id}</strong>
-          <span className="receipt-claim-badge">amount-free Wire</span>
+          {copy.approver} <strong>{user.operator_id}</strong>
+          <span className="receipt-claim-badge">{copy.noAmount}</span>
           {!canApprove && (
             <span className="receipt-claim-badge receipt-claim-badge-warn">
-              chat:approve が必要
+              {copy.noApprovePerm}
             </span>
           )}
         </p>
       )}
 
-      <nav className="receipt-claim-tabs" aria-label="claim ステータス">
+      <nav className="receipt-claim-tabs" aria-label={copy.claimStatus}>
         {(
           [
-            { id: "pending", label: "承認待ち" },
-            { id: "claimed", label: "承認済" },
-            { id: "rejected", label: "却下" },
-            { id: "all", label: "すべて" },
+            { id: "pending", label: copy.pending },
+            { id: "claimed", label: copy.claimed },
+            { id: "rejected", label: copy.rejected },
+            { id: "all", label: copy.all },
           ] as const
         ).map((item) => (
           <button
@@ -218,10 +223,10 @@ export function ReceiptClaimPage() {
         ))}
       </nav>
 
-      {loading && <p className="receipt-claim-status">読み込み中…</p>}
+      {loading && <p className="receipt-claim-status">{copy.loading}</p>}
 
       {!loading && rows.length === 0 && (
-        <p className="receipt-claim-empty">該当する claim はありません。</p>
+        <p className="receipt-claim-empty">{copy.noClaims}</p>
       )}
 
       {!loading && rows.length > 0 && (
@@ -245,26 +250,26 @@ export function ReceiptClaimPage() {
                       {row.claimed_by_org_id ?? "—"}
                     </span>
                     <span className="receipt-claim-detail">
-                      要求 {formatWhen(row.claim_requested_at)}
+                      {copy.requestedAt(formatWhen(row.claim_requested_at, locale))}
                       {row.claim_approval_id
                         ? ` · ${row.claim_approval_id}`
                         : ""}
                     </span>
                     {row.total_amount != null && (
                       <span className="receipt-claim-local">
-                        発行元ローカル合計 {yen(row.total_amount)}（Wire 非送信）
+                        {copy.issuerLocalTotal(yen(row.total_amount))}
                       </span>
                     )}
                     {row.claim_reject_reason && (
                       <span className="receipt-claim-detail">
-                        却下理由: {row.claim_reject_reason}
+                        {copy.rejectReasonPrefix}{row.claim_reject_reason}
                       </span>
                     )}
                   </button>
                   {open && (
                     <div className="receipt-claim-detail-panel">
                       <p className="muted">
-                        以下は発行元ローカルの明細です。Wire には載せません。
+                        {copy.localLinesHint}
                       </p>
                       <ul>
                         {(row.lines ?? []).map((line, i) => (
@@ -276,7 +281,7 @@ export function ReceiptClaimPage() {
                       </ul>
                       {(row.tax_totals ?? []).map((t, i) => (
                         <p key={i} className="muted">
-                          {t.tax_rate}% 合計 {yen(t.amount_including_tax)}
+                          {copy.taxTotal(t.tax_rate, yen(t.amount_including_tax))}
                         </p>
                       ))}
                     </div>
@@ -292,10 +297,10 @@ export function ReceiptClaimPage() {
                       title={
                         canApprove
                           ? undefined
-                          : "chat:approve 権限が必要です"
+                          : copy.needApprovePerm
                       }
                     >
-                      {busyId === row.receipt_id ? "承認中…" : "承認して claimed"}
+                      {busyId === row.receipt_id ? copy.approving : copy.approveClaimed}
                     </button>
                     <button
                       type="button"
@@ -306,7 +311,7 @@ export function ReceiptClaimPage() {
                       }}
                       disabled={!canApprove || Boolean(busyId)}
                     >
-                      却下
+                      {copy.reject}
                     </button>
                   </div>
                 )}
@@ -319,18 +324,18 @@ export function ReceiptClaimPage() {
       {rejectTarget && (
         <div className="receipt-claim-modal" role="dialog" aria-modal="true">
           <div className="receipt-claim-modal-card">
-            <h2>claim を却下</h2>
+            <h2>{copy.rejectClaim}</h2>
             <p>
               {rejectTarget.receipt_id} · by{" "}
               {rejectTarget.claimed_by_org_id ?? "—"}
             </p>
             <label>
-              却下理由
+              {copy.rejectReason}
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={3}
-                placeholder="例: 対象取引と一致しない"
+                placeholder={copy.rejectPlaceholder}
               />
             </label>
             <div className="receipt-issue-actions">
@@ -339,7 +344,7 @@ export function ReceiptClaimPage() {
                 className="quiet-button"
                 onClick={() => setRejectTarget(null)}
               >
-                キャンセル
+                {copy.cancel}
               </button>
               <button
                 type="button"
@@ -347,7 +352,7 @@ export function ReceiptClaimPage() {
                 disabled={Boolean(busyId)}
                 onClick={() => void submitReject()}
               >
-                却下する
+                {copy.doReject}
               </button>
             </div>
           </div>
@@ -365,7 +370,7 @@ export function ReceiptClaimPage() {
         </p>
       )}
 
-      <p className="receipt-claim-foot">ADR 0032 · 金額入力欄なし · 30秒自動更新</p>
+      <p className="receipt-claim-foot">{copy.foot}</p>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
+import { OPS_PAGES_COPY } from "./ops-pages-copy";
 import {
   fetchReceiptIssuerApi,
   issueReceiptApi,
@@ -25,7 +27,10 @@ function roundTax(excluding: number, rate: number): number {
   return Math.floor((excluding * rate) / 100);
 }
 
-function buildLines(drafts: LineDraft[]): ReceiptIssueBody["lines"] {
+function buildLines(
+  drafts: LineDraft[],
+  defaultItem: string,
+): ReceiptIssueBody["lines"] {
   // Build draft lines with provisional per-line tax, then re-allocate so the
   // sum of line taxes equals floor(sum_excluding * rate/100) once per rate
   // (matches src/lib/receipt-qr.ts calculateTaxTotals).
@@ -37,7 +42,7 @@ function buildLines(drafts: LineDraft[]): ReceiptIssueBody["lines"] {
     const rate = Number(row.tax_rate) as 8 | 10;
     const qty = row.quantity.trim() ? Number(row.quantity) : undefined;
     return {
-      description: row.description.trim() || "品目",
+      description: row.description.trim() || defaultItem,
       quantity: qty && qty > 0 ? qty : undefined,
       tax_rate: rate,
       reduced_tax: row.reduced_tax && rate === 8,
@@ -85,6 +90,7 @@ const emptyLine = (): LineDraft => ({
 });
 
 export function ReceiptIssuePage() {
+  const copy = useCopy(OPS_PAGES_COPY);
   const [documentType, setDocumentType] = useState<
     "qualified_invoice" | "qualified_simplified_invoice"
   >("qualified_invoice");
@@ -101,7 +107,10 @@ export function ReceiptIssuePage() {
   const [preview, setPreview] = useState<ReceiptIssueResponse | null>(null);
   const [issued, setIssued] = useState<ReceiptIssueResponse | null>(null);
 
-  const computed = useMemo(() => buildLines(lines), [lines]);
+  const computed = useMemo(
+    () => buildLines(lines, copy.defaultItem),
+    [copy.defaultItem, lines],
+  );
   const total = computed.reduce((sum, line) => sum + line.amount_including_tax, 0);
 
   useEffect(() => {
@@ -142,10 +151,10 @@ export function ReceiptIssuePage() {
 
   function validateDraft(): string | null {
     if (!issuer?.invoice_registration_number) {
-      return "発行者情報を読み込めません（company.yaml の法人番号を確認してください）";
+      return copy.errIssuer;
     }
     if (documentType === "qualified_invoice" && !recipientName.trim()) {
-      return "適格請求書では宛名を入力してください";
+      return copy.errRecipient;
     }
     if (
       !lines.some(
@@ -154,7 +163,7 @@ export function ReceiptIssuePage() {
           Math.trunc(Number(line.amount_excluding_tax) || 0) > 0,
       )
     ) {
-      return "品目と税抜金額を1行以上入力してください";
+      return copy.errLines;
     }
     return null;
   }
@@ -172,7 +181,7 @@ export function ReceiptIssuePage() {
     try {
       const result = await previewReceiptApi(buildBody());
       setPreview(result);
-      setMessage("プレビューを更新しました（未永続）");
+      setMessage(copy.previewUpdated);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -189,7 +198,7 @@ export function ReceiptIssuePage() {
     }
     if (
       !window.confirm(
-        `この内容で領収書を発行しますか？\n合計 ${yen(total)}\n発行後はレジストリに保存されます。`,
+        copy.confirmIssue(yen(total)),
       )
     ) {
       return;
@@ -201,7 +210,7 @@ export function ReceiptIssuePage() {
       const result = await issueReceiptApi(buildBody());
       setIssued(result);
       setPreview(result);
-      setMessage(`${result.receipt_id} を発行しました`);
+      setMessage(copy.issued(result.receipt_id));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -213,7 +222,7 @@ export function ReceiptIssuePage() {
     const link = issued?.qr_link ?? preview?.qr_link;
     if (!link) return;
     await navigator.clipboard.writeText(link);
-    setMessage("検証リンクをコピーしました");
+    setMessage(copy.linkCopied);
   }
 
   const display = issued ?? preview;
@@ -224,36 +233,36 @@ export function ReceiptIssuePage() {
     <div className="receipt-claim receipt-issue">
       <header className="receipt-claim-header">
         <div>
-          <h1 className="receipt-claim-title ops-page-title">領収書発行</h1>
+          <h1 className="receipt-claim-title ops-page-title">{copy.receiptIssueTitle}</h1>
           <p className="receipt-claim-lead ops-page-lead">
-            適格請求書（または簡易）を署名付き QR 付きで発行します。発行者はテナントの法人番号から自動決定します。
+            {copy.receiptIssueLead}
           </p>
         </div>
       </header>
 
-      <section className="receipt-issue-issuer" aria-label="発行者（自動）">
-        {issuerLoading && <p className="muted">発行者情報を読み込み中…</p>}
+      <section className="receipt-issue-issuer" aria-label={copy.issuerAuto}>
+        {issuerLoading && <p className="muted">{copy.issuerLoading}</p>}
         {!issuerLoading && issuer && (
           <dl className="receipt-issue-issuer-dl">
             <div>
-              <dt>発行者</dt>
+              <dt>{copy.issuer}</dt>
               <dd>{issuer.issuer_name}</dd>
             </div>
             <div>
-              <dt>登録番号</dt>
+              <dt>{copy.registrationNo}</dt>
               <dd>{issuer.invoice_registration_number}</dd>
             </div>
             <div>
-              <dt>法人番号</dt>
+              <dt>{copy.corporateNo}</dt>
               <dd>{issuer.corporate_number}</dd>
             </div>
           </dl>
         )}
       </section>
 
-      <section className="receipt-issue-form" aria-label="発行入力">
+      <section className="receipt-issue-form" aria-label={copy.issueInput}>
         <label>
-          文書種別
+          {copy.documentType}
           <select
             value={documentType}
             disabled={busy}
@@ -265,12 +274,12 @@ export function ReceiptIssuePage() {
               )
             }
           >
-            <option value="qualified_invoice">適格請求書</option>
-            <option value="qualified_simplified_invoice">適格簡易請求書</option>
+            <option value="qualified_invoice">{copy.qualifiedInvoice}</option>
+            <option value="qualified_simplified_invoice">{copy.qualifiedSimplified}</option>
           </select>
         </label>
         <label>
-          取引日
+          {copy.transactionDate}
           <input
             type="date"
             value={transactionDate}
@@ -280,28 +289,28 @@ export function ReceiptIssuePage() {
         </label>
         {documentType === "qualified_invoice" && (
           <label>
-            宛名
+            {copy.recipient}
             <input
               type="text"
               value={recipientName}
               disabled={busy}
               onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="取引先名"
+              placeholder={copy.recipientPlaceholder}
             />
           </label>
         )}
       </section>
 
-      <section className="receipt-issue-lines" aria-label="明細">
+      <section className="receipt-issue-lines" aria-label={copy.lines}>
         <header className="receipt-issue-lines-head">
-          <h2>明細</h2>
+          <h2>{copy.lines}</h2>
           <button
             type="button"
             className="quiet-button"
             disabled={busy}
             onClick={() => setLines((prev) => [...prev, emptyLine()])}
           >
-            行を追加
+            {copy.addLine}
           </button>
         </header>
         <ul>
@@ -309,8 +318,8 @@ export function ReceiptIssuePage() {
             <li key={index} className="receipt-issue-line">
               <input
                 type="text"
-                aria-label={`品目${index + 1}`}
-                placeholder="品目"
+                aria-label={copy.itemN(index + 1)}
+                placeholder={copy.itemPlaceholder}
                 value={line.description}
                 disabled={busy}
                 onChange={(e) =>
@@ -323,8 +332,8 @@ export function ReceiptIssuePage() {
               />
               <input
                 type="number"
-                aria-label={`数量${index + 1}`}
-                placeholder="数量"
+                aria-label={copy.qtyN(index + 1)}
+                placeholder={copy.qtyPlaceholder}
                 min={0}
                 step="any"
                 value={line.quantity}
@@ -338,7 +347,7 @@ export function ReceiptIssuePage() {
                 }
               />
               <select
-                aria-label={`税率${index + 1}`}
+                aria-label={copy.taxN(index + 1)}
                 value={line.tax_rate}
                 disabled={busy}
                 onChange={(e) =>
@@ -374,12 +383,12 @@ export function ReceiptIssuePage() {
                     )
                   }
                 />
-                軽減
+                {copy.reduced}
               </label>
               <input
                 type="number"
-                aria-label={`税抜金額${index + 1}`}
-                placeholder="税抜"
+                aria-label={copy.exN(index + 1)}
+                placeholder={copy.exPlaceholder}
                 min={0}
                 value={line.amount_excluding_tax}
                 disabled={busy}
@@ -394,7 +403,7 @@ export function ReceiptIssuePage() {
                 }
               />
               <span className="muted">
-                税込{" "}
+                {copy.includingTax}{" "}
                 {yen(
                   (() => {
                     const ex = Math.trunc(Number(line.amount_excluding_tax) || 0);
@@ -410,13 +419,13 @@ export function ReceiptIssuePage() {
                   setLines((prev) => prev.filter((_, i) => i !== index))
                 }
               >
-                削除
+                {copy.delete}
               </button>
             </li>
           ))}
         </ul>
         <p className="receipt-issue-total">
-          合計（税込） <strong>{yen(total)}</strong>
+          {copy.totalIncl} <strong>{yen(total)}</strong>
         </p>
       </section>
 
@@ -427,7 +436,7 @@ export function ReceiptIssuePage() {
           disabled={busy}
           onClick={() => void runPreview()}
         >
-          プレビュー
+          {copy.preview}
         </button>
         <button
           type="button"
@@ -435,13 +444,13 @@ export function ReceiptIssuePage() {
           disabled={issueDisabled}
           onClick={() => void runIssue()}
         >
-          {busy ? "処理中…" : "発行する"}
+          {busy ? copy.issuing : copy.issue}
         </button>
       </div>
 
       {display && (
-        <section className="receipt-issue-preview" aria-label="プレビュー結果">
-          <h2>{display.persisted ? "発行結果" : "プレビュー"}</h2>
+        <section className="receipt-issue-preview" aria-label={copy.previewResult}>
+          <h2>{display.persisted ? copy.issueResult : copy.preview}</h2>
           {display.qr_svg && (
             <div
               className="receipt-issue-qr"
@@ -450,7 +459,7 @@ export function ReceiptIssuePage() {
           )}
           <div className="receipt-issue-actions">
             <button type="button" className="quiet-button" onClick={() => void copyLink()}>
-              リンクをコピー
+              {copy.copyLink}
             </button>
             {display.persisted && (
               <a
@@ -458,7 +467,7 @@ export function ReceiptIssuePage() {
                 href={receiptPdfUrl(display.receipt_id)}
                 download={`${display.receipt_id}.pdf`}
               >
-                PDF をダウンロード
+                {copy.downloadPdf}
               </a>
             )}
           </div>
