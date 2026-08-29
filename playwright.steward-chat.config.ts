@@ -10,6 +10,8 @@ export default defineConfig({
     "steward-chat.runboard.spec.ts",
     "steward-chat.wire.spec.ts",
     "steward-chat.witness.spec.ts",
+    "steward-chat-ledger-customer.spec.ts",
+    "steward-chat-esign.spec.ts",
   ],
   timeout: 60_000,
   workers: 1,

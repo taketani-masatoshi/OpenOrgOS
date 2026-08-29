@@ -2,34 +2,37 @@ import { expect, test } from "@playwright/test";
 
 async function login(page: import("@playwright/test").Page): Promise<void> {
   await page.goto("/");
-  await page.getByLabel("Dev passkey").fill("orgos-dev");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+  await page.locator("#orgos-login-operator").fill("OP-001");
+  await page.locator("#orgos-login-password").fill("orgos-dev");
+  await page.locator("#orgos-login-submit").click();
+  await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 test.describe("steward chat smoke", () => {
-  test("login, today panel, streaming ask with mock LLM", async ({ page }) => {
+  test("login shows executive home by default without chat UI", async ({ page }) => {
     await login(page);
 
-    await expect(page.getByRole("heading", { name: "Steward Chat" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "KPI" })).toBeVisible();
-
-    const input = page.getByPlaceholder("来週の支払いリスクは？");
-    await input.fill("来週の支払いリスクは？");
-    await page.getByRole("button", { name: "Send" }).click();
-
-    await expect(page.locator(".msg.assistant").last()).toContainText("モック", {
+    await expect(
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "経営" })
+    ).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("heading", { name: "経営ダッシュボード" })).toBeVisible({
       timeout: 15_000,
     });
-    await expect(
-      page.locator(".msg.assistant").last().locator(".action-list, .msg-meta")
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: "チャット" })).toHaveCount(0);
+    await expect(page.getByPlaceholder("来週の支払いリスクは？")).toHaveCount(0);
   });
 
-  test("shows pipeline complete toast from SSE", async ({ page }) => {
+  test("予実 wallet is reachable from shell tab", async ({ page }) => {
     await login(page);
-    await expect(page.locator(".toast")).toContainText("Daily pipeline 完了", {
-      timeout: 10_000,
-    });
+    await page
+      .getByRole("navigation", { name: "Operator Console" })
+      .getByRole("link", { name: "予実" })
+      .click();
+    await expect(page).toHaveURL(/wallet=1/, { timeout: 5_000 });
+    await expect(
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "予実" })
+    ).toHaveAttribute("aria-current", "page");
   });
 });

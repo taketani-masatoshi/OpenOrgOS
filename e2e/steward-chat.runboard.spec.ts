@@ -6,7 +6,11 @@ const SEED_ID = "IMP-E2E-SEED-001";
 const SEED_FAIL_ID = "IMP-E2E-SEED-FAIL";
 const DEMO_QUEUE = join(process.cwd(), "tenants/demo/docs/reports/routing-queue");
 
-function seedWorkOrder(id: string, status: "pending" | "failed"): void {
+function seedWorkOrder(
+  id: string,
+  status: "pending" | "failed",
+  subject?: string,
+): void {
   mkdirSync(DEMO_QUEUE, { recursive: true });
   writeFileSync(
     join(DEMO_QUEUE, `${id}.yaml`),
@@ -22,12 +26,15 @@ function seedWorkOrder(id: string, status: "pending" | "failed"): void {
       "  reason: e2e run board seed",
       "context:",
       "  text: e2e run board seed",
+      subject ? `subject: ${subject}` : "",
       `status: ${status}`,
       "depends_on: []",
       "deliverables: []",
       "acceptance_criteria: []",
       "",
-    ].join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n"),
     "utf-8",
   );
 }
@@ -48,48 +55,53 @@ async function login(page: import("@playwright/test").Page): Promise<void> {
   });
 }
 
-function runBoardTab(page: import("@playwright/test").Page) {
+function runsTab(page: import("@playwright/test").Page) {
   return page
-    .getByRole("navigation", { name: "予実メニュー" })
-    .getByRole("button", { name: "Run Board" });
+    .getByRole("navigation", { name: "Operator Console" })
+    .getByRole("link", { name: "実行状況" });
 }
 
 test.describe("steward chat run board", () => {
   test("Run Board tab renders orchestration runs from the BFF", async ({ page }) => {
     await login(page);
-    await runBoardTab(page).click();
+    await runsTab(page).click();
 
-    await expect(page.getByRole("heading", { name: "Run Board" })).toBeVisible();
-    await expect(page).toHaveURL(/[?&]runs=1/);
-    await expect(page.getByRole("heading", { name: "アクティブ plan" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "実行状況" })).toBeVisible();
+    await expect(page).toHaveURL(/\/runs\/?$/);
+    await expect(page.getByRole("heading", { name: "進行中の計画" })).toBeVisible();
     await expect(page.locator(".error-banner")).toHaveCount(0);
 
-    // Demo tenant may have no in-flight plan: either the chip list or the empty state is valid.
-    const chips = page.locator(".orchestration-root-chip");
-    const empty = page.locator(".empty-panel");
-    await expect(chips.or(empty).first()).toBeVisible();
+    const cards = page.locator(".orchestration-kanban-card");
+    const empty = page.locator(".empty-state");
+    await expect(cards.or(empty).first()).toBeVisible();
   });
 
-  test("runs=1 deep link opens Run Board directly", async ({ page }) => {
+  test("/runs/ deep link opens Run Board directly", async ({ page }) => {
+    await login(page);
+    await page.goto("/runs/");
+
+    await expect(page.getByRole("heading", { name: "実行状況" })).toBeVisible();
+    await expect(runsTab(page)).toHaveAttribute("aria-current", "page");
+  });
+
+  test("legacy ?runs=1 redirects to /runs/", async ({ page }) => {
     await login(page);
     await page.goto("/?runs=1");
-
-    await expect(page.getByRole("heading", { name: "Run Board" })).toBeVisible();
-    await expect(runBoardTab(page)).toHaveAttribute("aria-current", "page");
+    await expect(page).toHaveURL(/\/runs\/?$/);
   });
 
-  test("seeded pending work order shows as 待機", async ({ page }) => {
-    seedWorkOrder(SEED_ID, "pending");
+  test("seeded pending work order shows in 未着手 column", async ({ page }) => {
+    seedWorkOrder(SEED_ID, "pending", "E2E 予実レビュー");
     try {
       await login(page);
-      await page.goto("/?runs=1");
+      await page.goto("/runs/");
 
-      await expect(page.getByRole("heading", { name: "Run Board" })).toBeVisible();
-      const chip = page.getByRole("button", { name: SEED_ID });
-      await expect(chip).toBeVisible();
-      await chip.click();
+      await expect(page.getByRole("heading", { name: "実行状況" })).toBeVisible();
+      const card = page.getByRole("button", { name: /E2E 予実レビュー/ });
+      await expect(card).toBeVisible();
+      await card.click();
 
-      await expect(page.locator(".orchestration-status").first()).toHaveText("待機");
+      await expect(page.locator(".orchestration-detail-panel")).toBeVisible();
       await expect(page.getByRole("button", { name: "失敗を再試行" })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "未実行を停止" })).toBeVisible();
       await expect(page.getByRole("link", { name: "Steward チャットで開く" })).toBeVisible();
@@ -98,27 +110,62 @@ test.describe("steward chat run board", () => {
     }
   });
 
-  test("retry failed work order moves node to 待機", async ({ page }) => {
+  test("retry failed work order moves node to 未着手", async ({ page }) => {
     seedWorkOrder(SEED_FAIL_ID, "failed");
     try {
       await login(page);
-      await page.goto("/?runs=1");
+      await page.goto("/runs/");
 
-      const chip = page.getByRole("button", { name: SEED_FAIL_ID });
-      await expect(chip).toBeVisible();
-      await chip.click();
+      const card = page.getByRole("button", { name: SEED_FAIL_ID });
+      await expect(card).toBeVisible();
+      await card.click();
 
-      await expect(page.locator(".orchestration-status").first()).toHaveText("失敗");
+      await expect(page.locator(".orchestration-status.is-alert").first()).toBeVisible();
       await expect(page.getByRole("button", { name: "失敗を再試行" })).toBeVisible();
 
       page.once("dialog", (dialog) => dialog.accept());
       await page.getByRole("button", { name: "失敗を再試行" }).click();
 
-      await expect(page.locator(".orchestration-status").first()).toHaveText("待機");
       await expect(page.getByRole("button", { name: "失敗を再試行" })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "未実行を停止" })).toBeVisible();
     } finally {
       removeSeededWorkOrder(SEED_FAIL_ID);
+    }
+  });
+
+  test("complete checkbox hides card from incomplete view", async ({ page }) => {
+    const completeId = "IMP-E2E-SEED-COMPLETE";
+    seedWorkOrder(completeId, "pending", "E2E 完了テスト");
+    try {
+      await login(page);
+      await page.goto("/runs/");
+
+      const card = page.getByRole("button", { name: /E2E 完了テスト/ });
+      await expect(card).toBeVisible();
+
+      page.once("dialog", (dialog) => dialog.accept());
+      await page
+        .locator(".orchestration-kanban-card-wrap")
+        .filter({ has: page.getByRole("button", { name: /E2E 完了テスト/ }) })
+        .getByRole("button", { name: "このタスクを完了" })
+        .click();
+
+      await expect(card).toHaveCount(0);
+
+      await page.getByRole("button", { name: "完了" }).click();
+      await expect(page.getByRole("button", { name: /E2E 完了テスト/ })).toBeVisible();
+
+      page.once("dialog", (dialog) => dialog.accept());
+      await page
+        .locator(".orchestration-kanban-card-wrap")
+        .filter({ has: page.getByRole("button", { name: /E2E 完了テスト/ }) })
+        .getByRole("button", { name: "完了を元に戻す" })
+        .click();
+
+      await page.getByRole("button", { name: "未完了" }).click();
+      await expect(page.getByRole("button", { name: /E2E 完了テスト/ })).toBeVisible();
+    } finally {
+      removeSeededWorkOrder(completeId);
     }
   });
 });
