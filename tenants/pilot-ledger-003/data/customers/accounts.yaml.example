@@ -1,0 +1,15 @@
+# Copy to accounts.yaml on tenant init · schema: schemas/customer-success.ts
+version: 1
+updated_at: "2026-07-14T00:00:00+09:00"
+accounts:
+  - id: CUST-2026-001
+    company: Example Corp
+    owner: customer_success
+    health: healthy
+    renewal_date: "2027-03-31"
+    mrr_band: "〜10万円/月"
+    mrr_man: 10
+    last_contact_on: "2026-07-01"
+    next_action: Quarterly check-in
+    next_action_due: "2026-10-01"
+    demo: true

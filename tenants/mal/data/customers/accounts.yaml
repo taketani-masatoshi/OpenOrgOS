@@ -1,0 +1,140 @@
+version: 1
+updated_at: 2026-08-27T22:28:02.860Z
+accounts:
+  - id: CUST-2026-001
+    company: 拓信エンジニアリング株式会社
+    lifecycle: customer
+    owner: customer_success
+    owner_name: 宮城万貴子
+    health: healthy
+    health_declared_on: 2026-07-10
+    renewal_date: 2027-03-31
+    mrr_band: 〜30万円/月
+    mrr_man: 30
+    last_contact_on: 2026-07-10
+    next_action: 四半期レビュー日程調整
+    next_action_due: 2026-08-01
+    tags:
+      - corporate
+    demo: true
+  - id: CUST-2026-002
+    company: サンプル商事株式会社
+    lifecycle: customer
+    owner: customer_success
+    health: at_risk
+    health_declared_on: 2026-08-01
+    renewal_date: 2026-10-15
+    mrr_band: 〜15万円/月
+    mrr_man: 15
+    last_contact_on: 2026-06-20
+    next_action: 利用状況ヒアリング
+    next_action_due: 2026-08-10
+    segment: smb
+    demo: true
+  - id: CUST-2026-003
+    company: 北陸データサービス合同会社
+    lifecycle: customer
+    owner: customer_success
+    health: critical
+    health_declared_on: 2026-08-15
+    renewal_date: 2026-09-30
+    mrr_band: 〜50万円/月
+    mrr_man: 50
+    last_contact_on: 2026-05-01
+    next_action: 解約防止面談
+    next_action_due: 2026-08-05
+    segment: mid_market
+    demo: true
+  - id: CUST-2026-004
+    company: 緑丘ソリューションズ株式会社
+    lifecycle: customer
+    owner: customer_success
+    health: healthy
+    health_declared_on: 2026-08-20
+    renewal_date: 2027-06-30
+    mrr_band: 〜20万円/月
+    mrr_man: 20
+    last_contact_on: 2026-08-18
+    next_action: QBR 準備
+    next_action_due: 2026-09-01
+    demo: true
+  - id: CUST-2026-101
+    company: 清流リネンサービス株式会社
+    lifecycle: customer
+    owner: customer_success
+    owner_name: 宮城万貴子
+    health: at_risk
+    health_declared_on: 2026-08-20
+    renewal_date: 2026-10-31
+    mrr_band: 〜25万円/月
+    mrr_man: 25
+    last_contact_on: 2026-07-28
+    next_action: 単価改定後の稼働実績レビュー
+    next_action_due: 2026-09-05
+    segment: smb
+    tags:
+      - vendor
+      - rental
+    demo: false
+  - id: CUST-2026-102
+    company: 株式会社ノースブリッジ
+    lifecycle: prospect
+    email_domains:
+      - northbridge.example.co.jp
+    owner: dan
+    owner_name: 段燕燕
+    tags:
+      - hospitality
+      - corporate
+    demo: true
+  - id: CUST-2026-103
+    company: いろはトラベル合同会社
+    lifecycle: prospect
+    email_domains:
+      - iroha-travel.example.co.jp
+    owner: miyagi
+    owner_name: 宮城万貴子
+    tags:
+      - partnership
+    demo: true
+  - id: CUST-2026-104
+    company: ブライダルハウス葵
+    lifecycle: prospect
+    email_domains:
+      - bridal-aoi.example.co.jp
+    owner: miyagi
+    owner_name: 宮城万貴子
+    tags:
+      - event
+    demo: true
+  - id: CUST-2026-105
+    company: 亀沢商工会
+    lifecycle: prospect
+    email_domains:
+      - kamezawa-sci.example.or.jp
+    owner: dan
+    owner_name: 段燕燕
+    tags:
+      - local
+    demo: true
+  - id: CUST-2026-106
+    company: 旅窓ドットコム
+    lifecycle: prospect
+    email_domains:
+      - tabimado.example.com
+    owner: dan
+    owner_name: 段燕燕
+    tags:
+      - ota
+      - closed
+    demo: true
+  - id: CUST-2026-107
+    company: アトリエ陽だまり
+    lifecycle: prospect
+    email_domains:
+      - hidamari-photo.example.co.jp
+    owner: miyagi
+    owner_name: 宮城万貴子
+    tags:
+      - creative
+    demo: true

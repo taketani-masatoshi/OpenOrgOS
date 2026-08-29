@@ -1,0 +1,11 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+signals:
+  - id: CSS-2026-001
+    account_id: CUST-2026-001
+    observed_on: "2026-08-20"
+    usage_index: 72
+    active_users: 12
+    open_tickets: 1
+    escalations_90d: 0
+    sentiment: positive

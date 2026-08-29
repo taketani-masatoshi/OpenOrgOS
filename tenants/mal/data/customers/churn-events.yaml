@@ -1,0 +1,13 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+events:
+  - id: CSE-2026-001
+    account_id: CUST-2026-003
+    event: at_risk_flagged
+    occurred_on: "2026-08-01"
+    reason_code: usage_decline
+  - id: CSE-2026-002
+    account_id: CUST-2026-003
+    event: save_attempt
+    occurred_on: "2026-08-10"
+    reason_code: executive_outreach

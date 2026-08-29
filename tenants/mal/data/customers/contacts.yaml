@@ -1,0 +1,67 @@
+version: 1
+updated_at: 2026-08-27T22:28:02.863Z
+contacts:
+  - id: CONTACT-2026-001
+    account_id: CUST-2026-102
+    name: 佐藤健
+    title: 総務部長
+    email: sato@northbridge.example.co.jp
+    phone: 03-1234-5601
+    primary: true
+    demo: true
+  - id: CONTACT-2026-002
+    account_id: CUST-2026-103
+    name: 鈴木美咲
+    title: 代表社員
+    email: suzuki@iroha-travel.example.co.jp
+    phone: 028-233-1200
+    primary: true
+    demo: true
+  - id: CONTACT-2026-003
+    account_id: CUST-2026-101
+    name: 高橋誠
+    title: 営業課長
+    email: takahashi@seiryu-linen.example.co.jp
+    phone: 0288-22-3400
+    primary: true
+    demo: true
+  - id: CONTACT-2026-004
+    account_id: CUST-2026-104
+    name: 伊藤彩
+    title: プランナー
+    email: ito@bridal-aoi.example.co.jp
+    phone: 03-5678-1100
+    primary: true
+    demo: true
+  - id: CONTACT-2026-005
+    account_id: CUST-2026-105
+    name: 渡辺宏
+    title: 事務局長
+    email: office@kamezawa-sci.example.or.jp
+    phone: 0288-77-2100
+    primary: true
+    demo: true
+  - id: CONTACT-2026-006
+    account_id: CUST-2026-001
+    name: 中村亮
+    title: 人事部長
+    email: nakamura@takushin-eng.example.co.jp
+    phone: 028-634-8800
+    primary: true
+    demo: true
+  - id: CONTACT-2026-007
+    account_id: CUST-2026-106
+    name: 加藤優
+    title: パートナーシップ担当
+    email: kato@tabimado.example.com
+    phone: 03-9876-4400
+    primary: true
+    demo: true
+  - id: CONTACT-2026-008
+    account_id: CUST-2026-107
+    name: 森下直樹
+    title: 代表
+    email: morishita@hidamari-photo.example.co.jp
+    phone: 0288-55-3300
+    primary: true
+    demo: true

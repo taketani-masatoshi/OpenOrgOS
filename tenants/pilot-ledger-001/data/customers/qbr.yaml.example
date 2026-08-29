@@ -1,0 +1,10 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+qbrs:
+  - id: QBR-2026-001
+    account_id: CUST-2026-001
+    period: "2026-Q2"
+    held_on: "2026-07-15"
+    outcomes:
+      - 利用状況良好 · 追加シート検討
+    next_due: "2026-10-15"

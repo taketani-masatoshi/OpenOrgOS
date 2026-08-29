@@ -1,0 +1,23 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+responses:
+  - id: NPS-2026-001
+    account_id: CUST-2026-001
+    surveyed_on: "2026-07-20"
+    score: 9
+    campaign: "2026-Q2"
+  - id: NPS-2026-002
+    account_id: CUST-2026-002
+    surveyed_on: "2026-07-25"
+    score: 6
+    campaign: "2026-Q2"
+  - id: NPS-2026-003
+    account_id: CUST-2026-003
+    surveyed_on: "2026-07-25"
+    score: 4
+    campaign: "2026-Q2"
+  - id: NPS-2026-004
+    account_id: CUST-2026-004
+    surveyed_on: "2026-08-01"
+    score: 8
+    campaign: "2026-Q3"

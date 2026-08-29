@@ -1,0 +1,45 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+signals:
+  - id: CSS-2026-001
+    account_id: CUST-2026-001
+    observed_on: "2026-08-20"
+    usage_index: 72
+    active_users: 12
+    open_tickets: 1
+    escalations_90d: 0
+    sentiment: positive
+  - id: CSS-2026-002
+    account_id: CUST-2026-002
+    observed_on: "2026-08-18"
+    usage_index: 35
+    active_users: 3
+    open_tickets: 4
+    escalations_90d: 1
+    sentiment: neutral
+  - id: CSS-2026-003
+    account_id: CUST-2026-003
+    observed_on: "2026-08-15"
+    usage_index: 18
+    active_users: 2
+    open_tickets: 6
+    escalations_90d: 3
+    sentiment: negative
+  - id: CSS-2026-004
+    account_id: CUST-2026-004
+    observed_on: "2026-08-19"
+    usage_index: 68
+    active_users: 8
+    open_tickets: 0
+    escalations_90d: 0
+    sentiment: positive
+
+  # 実顧客（CUST-2026-101）— 宣言 at_risk の根拠
+  - id: CSS-2026-101
+    account_id: CUST-2026-101
+    observed_on: "2026-08-21"
+    usage_index: 42
+    active_users: 5
+    open_tickets: 4
+    escalations_90d: 1
+    sentiment: neutral
