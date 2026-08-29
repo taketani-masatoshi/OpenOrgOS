@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ServerResponse } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { isCsrfExemptPath } from "../src/lib/console-auth/csrf.js";
 import { setSessionCookie } from "../src/lib/wire-console/auth/session.js";
 import { revokePasskeyForSession } from "../src/lib/wire-console/auth/webauthn-credentials-api.js";
@@ -61,6 +61,51 @@ describe("passkey hardening", () => {
     } as unknown as ServerResponse;
     setSessionCookie(res, "abc");
     expect(String(headers["Set-Cookie"])).toContain("Secure");
+  });
+
+  it("omits Secure on loopback HTTP even when ORGOS_COOKIE_SECURE=1", () => {
+    process.env.ORGOS_COOKIE_SECURE = "1";
+    const headers: Record<string, string | string[] | undefined> = {};
+    const res = {
+      setHeader(name: string, value: string) {
+        headers[name] = value;
+      },
+    } as unknown as ServerResponse;
+    const req = { headers: { host: "127.0.0.1:9470" } } as IncomingMessage;
+    setSessionCookie(res, "abc", req);
+    expect(String(headers["Set-Cookie"])).toContain("orgos_wire_session=");
+    expect(String(headers["Set-Cookie"])).not.toContain("Secure");
+  });
+
+  it("keeps Secure for the public operator host", () => {
+    process.env.ORGOS_COOKIE_SECURE = "1";
+    const headers: Record<string, string | string[] | undefined> = {};
+    const res = {
+      setHeader(name: string, value: string) {
+        headers[name] = value;
+      },
+    } as unknown as ServerResponse;
+    const req = { headers: { host: "operator.oorgos.org" } } as IncomingMessage;
+    setSessionCookie(res, "abc", req);
+    expect(String(headers["Set-Cookie"])).toContain("Secure");
+  });
+
+  it("omits Secure when X-Forwarded-Host is loopback", () => {
+    process.env.ORGOS_COOKIE_SECURE = "1";
+    const headers: Record<string, string | string[] | undefined> = {};
+    const res = {
+      setHeader(name: string, value: string) {
+        headers[name] = value;
+      },
+    } as unknown as ServerResponse;
+    const req = {
+      headers: {
+        host: "operator.oorgos.org",
+        "x-forwarded-host": "localhost:9470",
+      },
+    } as IncomingMessage;
+    setSessionCookie(res, "abc", req);
+    expect(String(headers["Set-Cookie"])).not.toContain("Secure");
   });
 
   it("blocks revoking the only login passkey in production without bootstrap token", () => {

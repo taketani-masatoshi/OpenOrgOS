@@ -25,10 +25,18 @@ import {
   revokePasskeyForSession,
 } from "../wire-console/auth/webauthn-credentials-api.js";
 import { resolveChatPermissions } from "../console-auth/rbac.js";
+import { resolveOperatorFromSessionUser } from "../console-auth/operator-rbac.js";
+import { isClaimOnlySeat } from "../org/operator-claim-person.js";
 import { appendChatAudit } from "./audit.js";
 
 function authUserPayload(user: WireConsoleUser) {
-  return { ...user, permissions: resolveChatPermissions(user) };
+  const record = resolveOperatorFromSessionUser(user);
+  return {
+    ...user,
+    permissions: resolveChatPermissions(user),
+    /** Employee seat: only the claim desk is reachable. */
+    claim_only: record ? isClaimOnlySeat(record) : false,
+  };
 }
 
 export function isStewardChatAuthEnabled(): boolean {
@@ -38,6 +46,10 @@ export function isStewardChatAuthEnabled(): boolean {
 export function isPublicChatPath(pathname: string, method: string): boolean {
   if (pathname === "/health") return true;
   if (pathname.startsWith("/chat/v1/auth/")) return true;
+  if (pathname.startsWith("/chat/v1/product/plans")) return true;
+  if (pathname === "/chat/v1/product/signup" && method === "POST") return true;
+  if (pathname === "/chat/v1/product/guest-setup" && method === "GET") return true;
+  if (pathname === "/chat/v1/product/stripe/webhook" && method === "POST") return true;
   if (pathname.startsWith("/chat/v1/settlement/challenge/") && method === "GET") return true;
   if (pathname === "/chat/v1/settlement/complete" && method === "POST") return true;
   if (method === "OPTIONS" && pathname.startsWith("/chat/v1/settlement/")) return true;
@@ -78,7 +90,8 @@ export async function handleChatAuthApi(
   readBody: (req: IncomingMessage) => Promise<string>
 ): Promise<boolean> {
   function json(status: number, body: unknown): void {
-    res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.writeHead(status);
     res.end(JSON.stringify(body));
   }
 
@@ -134,7 +147,7 @@ export async function handleChatAuthApi(
         json(401, { ok: false, error: result.error });
         return true;
       }
-      setSessionCookie(res, result.token);
+      setSessionCookie(res, result.token, req);
       appendChatAudit({
         action: "login",
         operator_id: result.user.operator_id,
@@ -159,6 +172,7 @@ export async function handleChatAuthApi(
         approver_id?: string;
         purpose?: "login" | "settlement";
         bootstrap_token?: string;
+        guest_invite_token?: string;
       };
       const purpose = body.purpose === "settlement" ? "settlement" : "login";
       const result = createWebAuthnRegisterOptions(
@@ -167,6 +181,7 @@ export async function handleChatAuthApi(
           approver_id: body.approver_id ?? "",
           purpose,
           bootstrap_token: body.bootstrap_token,
+          guest_invite_token: body.guest_invite_token,
         },
         { sessionUser }
       );
@@ -194,6 +209,7 @@ export async function handleChatAuthApi(
           approver_id: body.approver_id ?? "",
           purpose,
           bootstrap_token: (body as { bootstrap_token?: string }).bootstrap_token,
+          guest_invite_token: (body as { guest_invite_token?: string }).guest_invite_token,
         },
         sessionUser
       );
@@ -207,7 +223,7 @@ export async function handleChatAuthApi(
         return true;
       }
       if (result.token && result.user) {
-        setSessionCookie(res, result.token);
+        setSessionCookie(res, result.token, req);
         appendChatAudit({
           action: "webauthn_register",
           operator_id: result.user.operator_id,
@@ -268,7 +284,7 @@ export async function handleChatAuthApi(
         json(result.status, { ok: false, error: result.error });
         return true;
       }
-      setSessionCookie(res, result.token);
+      setSessionCookie(res, result.token, req);
       appendChatAudit({
         action: "login",
         operator_id: result.user.operator_id,

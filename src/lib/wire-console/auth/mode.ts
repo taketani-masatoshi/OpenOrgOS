@@ -18,7 +18,16 @@ export function isLegacyProdTokenAllowed(): boolean {
   );
 }
 
+/**
+ * ID/password (dev passkey) login.
+ * - Always on when `WIRE_CONSOLE_AUTH=dev`
+ * - Also on when `WIRE_CONSOLE_ALLOW_DEV_LOGIN=1` (local / early bootstrap even if auth=prod)
+ * - Explicit `WIRE_CONSOLE_ALLOW_DEV_LOGIN=0` forces off
+ */
 export function isDevLoginAllowed(): boolean {
+  const flag = process.env.WIRE_CONSOLE_ALLOW_DEV_LOGIN;
+  if (flag === "0") return false;
+  if (flag === "1") return true;
   return wireConsoleAuthMode() === "dev";
 }
 
@@ -40,7 +49,7 @@ export function getWireConsoleAuthConfig(): WireConsoleAuthConfig {
   const legacyAllowed = isLegacyProdTokenAllowed();
   return {
     mode,
-    dev_login_allowed: mode === "dev",
+    dev_login_allowed: isDevLoginAllowed(),
     prod_adapter: mode === "prod" ? prodAdapter : "oidc",
     prod_default_adapter: "oidc",
     legacy_token_allowed: mode === "prod" && legacyAllowed,

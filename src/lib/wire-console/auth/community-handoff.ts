@@ -1,7 +1,20 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { verifyOidcIdToken } from "./oidc.js";
-import { registerSession, setSessionCookie } from "./session.js";
+import {
+  parseCookies,
+  registerSession,
+  sessionCookieHeader,
+  cookieSecureForRequest,
+} from "./session.js";
 import { wireConsoleAuthMode } from "./mode.js";
+import {
+  COMMUNITY_LOCALE_COOKIE,
+  LOCALE_STORAGE_KEY,
+  isUiLocale,
+  localeCookieHeaders,
+  uiLocaleFromCommunityCookie,
+  type UiLocale,
+} from "./locale-cookies.js";
 
 function safeNextPath(raw: string | null): string {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
@@ -81,7 +94,21 @@ export function handleCommunityHandoff(
     mode: mode === "prod" ? "prod" : "dev",
   });
 
-  setSessionCookie(res, sessionToken);
+  const uiParam = url.searchParams.get("ui_locale");
+  const jar = parseCookies(req);
+  let uiLocale: UiLocale | null = isUiLocale(uiParam) ? uiParam : null;
+  if (!uiLocale) {
+    uiLocale =
+      uiLocaleFromCommunityCookie(jar[LOCALE_STORAGE_KEY]) ??
+      uiLocaleFromCommunityCookie(jar[COMMUNITY_LOCALE_COOKIE]);
+  }
+
+  const host = (req.headers.host ?? "localhost").split(":")[0] ?? "localhost";
+  const cookies = [sessionCookieHeader(sessionToken, req)];
+  if (uiLocale) {
+    cookies.push(...localeCookieHeaders(uiLocale, host, cookieSecureForRequest(req)));
+  }
+  res.setHeader("Set-Cookie", cookies);
   res.writeHead(302, { Location: next });
   res.end();
   return true;

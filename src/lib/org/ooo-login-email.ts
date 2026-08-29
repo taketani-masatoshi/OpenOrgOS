@@ -46,6 +46,7 @@ const DOMAIN_CHECKED_ROLES = new Set([
   "ceo",
   "approver",
   "operator",
+  "employee",
   "readonly",
   "auditor",
 ]);

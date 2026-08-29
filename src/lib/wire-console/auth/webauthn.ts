@@ -139,6 +139,9 @@ export function verifyWebAuthnLogin(body: {
   const publicKeySpki = cred.public_key_spki_base64;
   const testSecret = process.env.WIRE_CONSOLE_WEBAUTHN_TEST_SECRET;
   const expectedOrigin = resolveExpectedWebAuthnOrigin(clientData.origin);
+  if (!expectedOrigin) {
+    return { error: "webauthn origin not configured" };
+  }
 
   if (testSecret && isWebAuthnTestSecretAllowed() && body.signature_base64) {
     const expected = Buffer.from(testSecret, "utf-8");

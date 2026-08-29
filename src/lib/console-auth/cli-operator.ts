@@ -10,6 +10,7 @@ import {
   requireOperatorPermission,
   type AuthenticatedOperator,
 } from "./operator-rbac.js";
+import { assertFsGuardProdReady } from "../org/fs-guard/store.js";
 
 let cliOperatorContext: AuthenticatedOperator | undefined;
 
@@ -19,6 +20,14 @@ export function setCliOperatorContext(auth: AuthenticatedOperator | undefined): 
 
 export function getCliOperatorContext(): AuthenticatedOperator | undefined {
   return cliOperatorContext;
+}
+
+export function resolveCliOperatorId(): string {
+  return (
+    getCliOperatorContext()?.record.operator_id ??
+    process.env.ORGOS_OPERATOR_ID?.trim() ??
+    "cli"
+  );
 }
 
 export function readOperatorKeyFromFile(operatorId: string): string | undefined {
@@ -41,11 +50,13 @@ export function requireCliOperator(opts: {
   permission: OperatorPermission;
   command: string;
 }): AuthenticatedOperator {
+  assertFsGuardProdReady({ command: opts.command });
   if (!isOperatorAuthRequired()) {
     const fallback: AuthenticatedOperator = {
       record: {
         operator_id: opts.operatorId ?? "dev-bypass",
         display_name: opts.operatorId ?? "dev-bypass",
+        seat_kind: "standard",
         role: "ceo",
         status: "active",
       },
@@ -69,6 +80,7 @@ export function requireCliOperator(opts: {
         "agent:shell",
         "git:write",
         "events:write",
+        "guard:admin",
       ],
     };
     setCliOperatorContext(fallback);

@@ -42,6 +42,7 @@ export function runOperatorInitRegistry(opts: {
   operators.push({
     operator_id: "OP-001",
     display_name: ceoName,
+    seat_kind: "standard",
     role: "ceo",
     status: "active",
     approver_name: ceoName,
@@ -53,6 +54,7 @@ export function runOperatorInitRegistry(opts: {
   operators.push({
     operator_id: "OP-002",
     display_name: "秘書オペレータ",
+    seat_kind: "standard",
     role: "operator",
     status: "active",
     key_hash: hashOperatorKey(opKey),
@@ -66,6 +68,7 @@ export function runOperatorInitRegistry(opts: {
     operators.push({
       operator_id: id,
       display_name: director.name,
+      seat_kind: "standard",
       role: "approver",
       status: "active",
       approver_name: director.name,

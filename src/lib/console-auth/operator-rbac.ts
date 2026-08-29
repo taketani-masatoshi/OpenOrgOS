@@ -73,6 +73,12 @@ export function operatorHasPermission(
   perm: OperatorPermission
 ): boolean {
   if (!record || record.status !== "active") return false;
+  if (
+    record.guest_expires_at &&
+    Date.parse(record.guest_expires_at) < Date.now()
+  ) {
+    return false;
+  }
   return effectiveHasPermission(record, perm);
 }
 
@@ -217,6 +223,13 @@ export function requireWireConsolePermission(
 export function mcpToolPermission(tool: string): OperatorPermission | undefined {
   if (tool === "steward_today") return "chat:read";
   if (tool === "steward_ask") return "chat:ask";
+  if (tool === "ledger_today" || tool === "ledger_trial_balance") return "chat:read";
+  if (
+    tool === "ledger_propose_manual_entry" ||
+    tool === "ledger_propose_bank_match"
+  ) {
+    return "chat:ask";
+  }
   if (tool === "steward_governance_audit") return "audit:read";
   if (tool === "steward_mail_draft") return "escalate:plan";
   if (tool === "steward_mail_send") return "chat:approve";

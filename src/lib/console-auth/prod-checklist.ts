@@ -1,5 +1,9 @@
 import { existsSync } from "node:fs";
-import { operatorsRegistryPath, registryHasApprovers } from "../org/operators.js";
+import {
+  getOperatorLoginPolicy,
+  operatorsRegistryPath,
+  registryHasApprovers,
+} from "../org/operators.js";
 import { validateWebAuthnProdEnv } from "./settlement-passkey-prod.js";
 import {
   hasUnusedPasskeyBootstrapToken,
@@ -176,6 +180,17 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
           ? "STEWARD_OPERATOR_AUTH=0 in production — CLI mutations unauthenticated"
           : "CLI operator auth enabled (default)",
     });
+
+    const loginPolicy = getOperatorLoginPolicy();
+    checks.push({
+      id: "ooo_login_email_domains",
+      ok: true,
+      warn: loginPolicy.email_domains.length === 0,
+      detail:
+        loginPolicy.email_domains.length === 0
+          ? "login_policy.email_domains empty — Community SSO emails are not domain-restricted"
+          : `login_policy.email_domains configured (${loginPolicy.email_domains.length})`,
+    });
   }
 
   if (scope === "chat" || scope === "all") {
@@ -229,6 +244,31 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
           : rateLimitOff
             ? "Rate limit disabled (ok for tests)"
             : "HTTP rate limiting enabled",
+    });
+
+    const stripeWebhook = Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim());
+    const stripeSecret = Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+    checks.push({
+      id: "stripe_secret_key",
+      ok: prod ? stripeSecret : true,
+      warn: prod && !stripeSecret,
+      detail:
+        prod && !stripeSecret
+          ? "STRIPE_SECRET_KEY missing in production — checkout stub rejected"
+          : stripeSecret
+            ? "Stripe secret key configured"
+            : "Stripe checkout stub allowed (non-production)",
+    });
+    checks.push({
+      id: "stripe_webhook_secret",
+      ok: prod ? stripeWebhook : true,
+      warn: prod && !stripeWebhook,
+      detail:
+        prod && !stripeWebhook
+          ? "STRIPE_WEBHOOK_SECRET missing in production — unsigned webhooks rejected"
+          : stripeWebhook
+            ? "Stripe webhook secret configured"
+            : "Stripe webhook stub allowed (non-production)",
     });
   }
 

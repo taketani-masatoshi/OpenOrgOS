@@ -109,7 +109,7 @@ export function getSessionUser(token: string | undefined): WireConsoleUser | und
 }
 
 export function parseCookies(req: IncomingMessage): Record<string, string> {
-  const header = req.headers.cookie ?? "";
+  const header = req.headers?.cookie ?? "";
   const out: Record<string, string> = {};
   for (const part of header.split(";")) {
     const [k, ...rest] = part.trim().split("=");
@@ -123,13 +123,48 @@ export function sessionTokenFromRequest(req: IncomingMessage): string | undefine
   return parseCookies(req)[WIRE_CONSOLE_SESSION_COOKIE];
 }
 
-function sessionCookieBase(tokenValue: string): string {
-  const secure = cookieSecureEnabled() ? "; Secure" : "";
+function firstHeaderValue(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+function cookieHostFromRequest(req: IncomingMessage): string {
+  const forwarded = firstHeaderValue(req.headers["x-forwarded-host"]);
+  const raw = (forwarded || firstHeaderValue(req.headers.host)).split(",")[0]?.trim() ?? "";
+  if (!raw) return "";
+  const lower = raw.toLowerCase();
+  if (lower.startsWith("[")) {
+    const end = lower.indexOf("]");
+    if (end !== -1) return lower.slice(0, end + 1);
+  }
+  return lower.split(":")[0] ?? "";
+}
+
+const LOOPBACK_COOKIE_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+/**
+ * Public HTTPS keeps Secure. Loopback HTTP (Cursor / local :9470) must not,
+ * or the browser drops the session and the next API call is 401.
+ */
+export function cookieSecureForRequest(req?: IncomingMessage): boolean {
+  if (!cookieSecureEnabled()) return false;
+  if (!req) return true;
+  const host = cookieHostFromRequest(req);
+  if (!host) return true;
+  return !LOOPBACK_COOKIE_HOSTS.has(host);
+}
+
+function sessionCookieBase(tokenValue: string, req?: IncomingMessage): string {
+  const secure = cookieSecureForRequest(req) ? "; Secure" : "";
   return `${WIRE_CONSOLE_SESSION_COOKIE}=${tokenValue}; Path=/; HttpOnly; SameSite=Strict${secure}`;
 }
 
-export function setSessionCookie(res: ServerResponse, token: string): void {
-  res.setHeader("Set-Cookie", sessionCookieBase(encodeURIComponent(token)));
+export function sessionCookieHeader(token: string, req?: IncomingMessage): string {
+  return sessionCookieBase(encodeURIComponent(token), req);
+}
+
+export function setSessionCookie(res: ServerResponse, token: string, req?: IncomingMessage): void {
+  res.setHeader("Set-Cookie", sessionCookieHeader(token, req));
 }
 
 export function clearSessionCookie(res: ServerResponse): void {

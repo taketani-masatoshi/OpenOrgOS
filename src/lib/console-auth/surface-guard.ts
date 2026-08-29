@@ -103,6 +103,30 @@ export function requireBudgetSurfacePermission(
   return true;
 }
 
+/** Allow a surface when the seat holds any one of `perms` (e.g. desk vs console). */
+export function requireAnyBudgetSurfacePermission(
+  user: WireConsoleUser,
+  perms: Array<OperatorPermission | ChatPermission>,
+  res: ServerResponse,
+): boolean {
+  if (isAnonymousBudgetIdentity(user)) {
+    return requireBudgetSurfacePermission(user, perms[0]!, res);
+  }
+  const record = resolveOperatorFromSessionUser(user);
+  if (!record || record.status !== "active") {
+    return requireBudgetSurfacePermission(user, perms[0]!, res);
+  }
+  const granted = resolveOperatorPermissions(record);
+  if (perms.some((perm) => granted.includes(perm as OperatorPermission))) {
+    return true;
+  }
+  res.writeHead(403, { "Content-Type": "application/json; charset=utf-8" });
+  res.end(
+    JSON.stringify({ ok: false, error: "forbidden", permission: perms[0] }),
+  );
+  return false;
+}
+
 export function resolveBudgetActor(user: WireConsoleUser): OperatorRecord {
   if (isAnonymousBudgetIdentity(user)) {
     throw new Error("budget surface requires an authenticated operator session");

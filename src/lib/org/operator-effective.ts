@@ -20,6 +20,7 @@ export const DANGEROUS_PERMISSIONS: OperatorPermission[] = [
   "llm:admin",
   "llm:approve",
   "receipt:issue",
+  "guard:admin",
 ];
 
 const ROLE_PERMISSIONS_FULL: Record<
@@ -50,6 +51,8 @@ const ROLE_PERMISSIONS_FULL: Record<
     "llm:approve",
     "receipt:issue",
     "events:write",
+    "guard:admin",
+    "expense:claim",
   ],
   approver: [
     "chat:read",
@@ -66,6 +69,7 @@ const ROLE_PERMISSIONS_FULL: Record<
     "git:write",
     "llm:approve",
     "receipt:issue",
+    "guard:admin",
   ],
   operator: [
     "chat:read",
@@ -79,6 +83,7 @@ const ROLE_PERMISSIONS_FULL: Record<
     "agent:report",
     "events:write",
   ],
+  employee: ["expense:claim"],
   readonly: ["chat:read"],
   mcp_service: ["chat:read", "chat:ask"],
   auditor: ["chat:read", "audit:read"],
