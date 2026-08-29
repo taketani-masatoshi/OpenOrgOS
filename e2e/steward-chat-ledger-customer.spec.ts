@@ -127,7 +127,9 @@ test.describe("steward chat ledger customer journey", () => {
     const wbApi = await request.get("/chat/v1/ledger/workbench", { headers });
     expect(wbApi.ok(), "workbench API must succeed").toBeTruthy();
 
-    // --- UI: workbench via in-app nav (avoids full reload + setup redirect race) ---
+    // The tab was rendered while the tenant was still unready, so the ledger
+    // menu only appears after a reload.
+    await page.reload();
     await page
       .getByRole("navigation", { name: "帳簿メニュー" })
       .getByRole("button", { name: "帳簿", exact: true })
