@@ -1,0 +1,91 @@
+version: 1
+channel: venue_booking
+default_provider: hotpepper_deep_link
+providers:
+  # --- P0 / P1 wired ---
+  - id: manual
+    name: 手動手配（URL フォールバック）
+    base_url: https://www.google.com/
+    supports_api: false
+    supports_deep_link: true
+    notes: 人が予約サイトで確定し confirm --external-ref
+  - id: hotpepper_deep_link
+    name: ホットペッパー（深リンク）
+    base_url: https://www.hotpepper.jp/
+    supports_api: false
+    supports_deep_link: true
+    notes: 検索 URL 生成のみ · 予約確定 API なし · 実装済
+  - id: tabelog_deep_link
+    name: 食べログ（深リンク）
+    base_url: https://tabelog.com/
+    supports_api: false
+    supports_deep_link: true
+    notes: 公開予約 API なし · 実装済
+
+  # --- P1b candidate (search API · no book) ---
+  - id: hotpepper_api
+    name: ホットペッパーグルメサーチ API
+    base_url: https://webservice.recruit.co.jp/doc/hotpepper/
+    supports_api: true
+    supports_deep_link: true
+    notes: "公開 Search のみ · Book なし · クレジット表示義務 · キーは L2。調査: docs/org-os/venue-booking-providers-survey.md"
+
+  # --- P1c deep-link candidates (not wired) ---
+  - id: ikyu_restaurant
+    name: 一休.com レストラン
+    base_url: https://restaurant.ikyu.com/
+    supports_api: false
+    supports_deep_link: true
+    notes: 公開 API なし · 高級会食向け深リンク候補
+  - id: pocket_concierge
+    name: ポケットコンシェルジュ
+    base_url: https://www.pocket-concierge.jp/
+    supports_api: false
+    supports_deep_link: true
+    notes: 高級店 · 事前決済多い · 公開 API なし
+  - id: ozmall
+    name: OZmall レストラン
+    base_url: https://www.ozmall.co.jp/restaurant/
+    supports_api: false
+    supports_deep_link: true
+    notes: 公開 API 未確認 · 深リンク候補
+
+  # --- P2 book candidates (partner required) ---
+  - id: gnavi_reserve
+    name: ぐるなび 席のみ予約 API
+    base_url: https://solution.gnavi.co.jp/service/gnavi_api/
+    supports_api: true
+    supports_deep_link: true
+    notes: 法人提携 · Avail+Book · OrgOS Book 第1候補（国内）
+  - id: gnavi_search
+    name: ぐるなび 情報 API
+    base_url: https://solution.gnavi.co.jp/service/gnavi_api/
+    supports_api: true
+    supports_deep_link: true
+    notes: 法人 · 空席情報あり · 予約は gnavi_reserve
+  - id: tablecheck
+    name: TableCheck
+    base_url: https://www.tablecheck.com/
+    supports_api: true
+    supports_deep_link: true
+    notes: api@tablecheck.com 申請 · Availability/Web Booking · 高級店に多い
+  - id: opentable
+    name: OpenTable
+    base_url: https://www.opentable.com/
+    supports_api: true
+    supports_deep_link: true
+    notes: Affiliate/Partner 審査 · 海外・外資接待向け
+
+  # --- C/D ---
+  - id: retty
+    name: Retty
+    base_url: https://retty.me/
+    supports_api: false
+    supports_deep_link: true
+    notes: 公開予約 API なし
+  - id: hitosara
+    name: ヒトサラ
+    base_url: https://hitosara.com/
+    supports_api: false
+    supports_deep_link: true
+    notes: 公開予約 API なし

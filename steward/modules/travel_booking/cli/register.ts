@@ -10,6 +10,24 @@ import type { SkillRunOptions } from "../../../../src/commands/skills.js";
 
 export const MODULE_ID = "travel_booking";
 
+/** Module-specific skill options passed through `orgos skills run`. */
+type TravelSkillOptions = {
+  budget?: number;
+  role?: string;
+  tripType?: string;
+  flightPreApproved?: boolean;
+  portal?: string;
+  destination?: string;
+  area?: string;
+  checkIn?: string;
+  checkOut?: string;
+  guests?: number;
+  purpose?: string;
+  room?: string;
+  slug?: string;
+  file?: string;
+};
+
 function registerTravelCommands(operationsCmd: Command): void {
   const travelCmd = operationsCmd
     .command("travel")
@@ -122,16 +140,19 @@ export const travelBookingCli: ModuleCliBundle = {
     registerTravelCommands(ctx.operationsCmd);
   },
   skillHandlers: {
-    travel_policy_check: (opts) =>
-      runTravelCheck({
+    travel_policy_check: (raw) => {
+      const opts = raw as SkillRunOptions & TravelSkillOptions;
+      return runTravelCheck({
         budget: opts.budget,
         role: opts.role,
         tripType: opts.tripType,
         flightPreApproved: opts.flightPreApproved,
         json: opts.json,
-      }),
-    travel_intake_validate: (opts) =>
-      runTravelIntake({
+      });
+    },
+    travel_intake_validate: (raw) => {
+      const opts = raw as SkillRunOptions & TravelSkillOptions;
+      return runTravelIntake({
         portal: opts.portal,
         tripType: opts.tripType,
         destination: opts.destination,
@@ -146,6 +167,7 @@ export const travelBookingCli: ModuleCliBundle = {
         slug: opts.slug,
         file: opts.file,
         json: opts.json,
-      }),
+      });
+    },
   },
 };

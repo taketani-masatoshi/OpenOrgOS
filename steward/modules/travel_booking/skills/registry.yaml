@@ -3,11 +3,13 @@ skills:
     file: travel_booking.md
     runtime: cli
     cli_command: travel-check
+    handler: travel_policy_check
     description: REG-008 旅費上限チェック
     agent_id: operations
   - id: travel_intake_validate
     file: travel_booking.md
     runtime: cli
     cli_command: travel-intake
+    handler: travel_intake_validate
     description: Step 0 ヒアリング検証
     agent_id: operations

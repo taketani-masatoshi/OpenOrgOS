@@ -1,0 +1,16 @@
+version: 1
+venues:
+  - id: VENUE-001
+    name: 北大路 新橋茶寮
+    area: 新橋
+    station: 新橋
+    walking_minutes_from_station: 5
+    private_room: true
+    typical_budget_jpy: 12000
+    provider_id: hotpepper_deep_link
+    notes: 会食候補例（テナントで差し替え）
+  - id: VENUE-002
+    name: （未対応店は人手配）
+    area: 都内
+    provider_id: manual
+    notes: provider=manual → 人手配チケット

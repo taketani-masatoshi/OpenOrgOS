@@ -1,0 +1,15 @@
+skills:
+  - id: venue_list
+    file: venue_list.md
+    runtime: cli
+    cli_command: venue-list
+    handler: venue_list
+    description: 会場予約一覧
+    agent_id: operations
+  - id: venue_catalog
+    file: venue_catalog.md
+    runtime: cli
+    cli_command: venue-catalog
+    handler: venue_catalog
+    description: 会場カタログ一覧
+    agent_id: operations

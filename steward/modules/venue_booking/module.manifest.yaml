@@ -1,0 +1,19 @@
+id: venue_booking
+required_seeds:
+  - venue-providers.yaml.example
+  - venue-catalog.yaml.example
+activation_seeds:
+  - venue-reservations.yaml.example
+notes: channel venue_booking (not Wire) · P0 manual/deep-link · operations venue CLI
+cli_commands:
+  - providers
+  - catalog
+  - suggest
+  - apply-suggest
+  - search
+  - reserve
+  - confirm
+  - cancel
+  - list
+  - show
+  - link-case

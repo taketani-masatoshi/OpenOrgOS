@@ -1,0 +1,55 @@
+version: 1
+channel: venue_booking
+reservations:
+  - id: VR-2026-003
+    channel: venue_booking
+    status: confirmed
+    provider_id: hotpepper_deep_link
+    venue_name: なだ万 パレスホテル東京
+    area: 丸の内
+    party_size: 2
+    start_at: 2026-07-14T03:23
+    budget_per_person_jpy: 18000
+    scheduling_case_id: SCH-2026-022
+    request_id: SCH-2026-022-lint-hp-1
+    external_ref: HP-PROOF-20260714-022
+    deep_link_url: https://www.hotpepper.jp/strlist/?keyword=%E4%B8%B8%E3%81%AE%E5%86%85+%E3%81%AA%E3%81%A0%E4%B8%87+%E3%83%91%E3%83%AC%E3%82%B9%E3%83%9B%E3%83%86%E3%83%AB%E6%9D%B1%E4%BA%AC&freeword=%E5%92%8C%E9%A3%9F
+    search_url: https://www.hotpepper.jp/strlist/?keyword=%E4%B8%B8%E3%81%AE%E5%86%85+%E3%81%AA%E3%81%A0%E4%B8%87+%E3%83%91%E3%83%AC%E3%82%B9%E3%83%9B%E3%83%86%E3%83%AB%E6%9D%B1%E4%BA%AC&freeword=%E5%92%8C%E9%A3%9F
+    adapter_message: Hot Pepper 予約番号を登録しました
+    created_at: 2026-07-14T03:23:19.919Z
+    updated_at: 2026-07-14T03:23:27.409Z
+    confirmed_at: 2026-07-14T03:23:27.409Z
+  - id: VR-2026-002
+    channel: venue_booking
+    status: confirmed
+    provider_id: hotpepper_deep_link
+    venue_name: なだ万 パレスホテル東京
+    area: 丸の内
+    party_size: 2
+    start_at: 2026-07-15T18:00:00
+    budget_per_person_jpy: 18000
+    scheduling_case_id: SCH-2026-021
+    request_id: SCH-2026-021-hp-1
+    external_ref: LIVE-MEASURE-20260714-SCH021
+    deep_link_url: https://www.hotpepper.jp/strlist/?keyword=%E4%B8%B8%E3%81%AE%E5%86%85+%E3%81%AA%E3%81%A0%E4%B8%87+%E3%83%91%E3%83%AC%E3%82%B9%E3%83%9B%E3%83%86%E3%83%AB%E6%9D%B1%E4%BA%AC&freeword=%E5%92%8C%E9%A3%9F
+    search_url: https://www.hotpepper.jp/strlist/?keyword=%E4%B8%B8%E3%81%AE%E5%86%85+%E3%81%AA%E3%81%A0%E4%B8%87+%E3%83%91%E3%83%AC%E3%82%B9%E3%83%9B%E3%83%86%E3%83%AB%E6%9D%B1%E4%BA%AC&freeword=%E5%92%8C%E9%A3%9F
+    adapter_message: Hot Pepper 予約番号を登録しました
+    created_at: 2026-07-13T22:44:37.590Z
+    updated_at: 2026-07-13T22:50:26.273Z
+    confirmed_at: 2026-07-13T22:50:26.273Z
+  - id: VR-2026-001
+    channel: venue_booking
+    status: cancelled
+    provider_id: hotpepper_deep_link
+    venue_name: 北大路 新橋茶寮
+    area: 新橋
+    party_size: 2
+    start_at: 2026-08-01T19:00
+    budget_per_person_jpy: 12000
+    request_id: smoke-vb-cli-1
+    deep_link_url: https://www.hotpepper.jp/strlist/?keyword=%E6%96%B0%E6%A9%8B+%E5%8C%97%E5%A4%A7%E8%B7%AF+%E6%96%B0%E6%A9%8B%E8%8C%B6%E5%AF%AE&freeword=%E5%92%8C%E9%A3%9F
+    search_url: https://www.hotpepper.jp/strlist/?keyword=%E6%96%B0%E6%A9%8B+%E5%8C%97%E5%A4%A7%E8%B7%AF+%E6%96%B0%E6%A9%8B%E8%8C%B6%E5%AF%AE&freeword=%E5%92%8C%E9%A3%9F
+    adapter_message: 台帳キャンセル。Hot Pepper 上の取消は人手で実施してください
+    created_at: 2026-07-12T14:30:06.935Z
+    updated_at: 2026-07-12T14:30:43.690Z
+    cancelled_at: 2026-07-12T14:30:43.690Z

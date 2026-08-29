@@ -1,0 +1,38 @@
+version: 1
+venues:
+  - id: VENUE-001
+    name: なだ万 パレスホテル東京
+    area: 丸の内
+    station: 東京
+    walking_minutes_from_station: 5
+    private_room: true
+    typical_budget_jpy: 18000
+    provider_id: hotpepper_deep_link
+    notes: 両社二番町近傍向け · 丸の内クラスタ
+  - id: VENUE-002
+    name: 北大路 新橋茶寮
+    area: 新橋
+    station: 新橋
+    walking_minutes_from_station: 5
+    private_room: true
+    typical_budget_jpy: 12000
+    provider_id: hotpepper_deep_link
+    notes: 銀座・新橋クラスタ
+  - id: VENUE-003
+    name: 人形町今半 本店
+    area: 人形町
+    station: 人形町
+    walking_minutes_from_station: 3
+    private_room: true
+    typical_budget_jpy: 15000
+    provider_id: hotpepper_deep_link
+    notes: 日本橋クラスタ
+  - id: VENUE-004
+    name: 八芳園
+    area: 白金
+    station: 白金高輪
+    walking_minutes_from_station: 8
+    private_room: true
+    typical_budget_jpy: 20000
+    provider_id: hotpepper_deep_link
+    notes: 遠方クラスタ例（スコア低め想定）
