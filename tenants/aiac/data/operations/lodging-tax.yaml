@@ -1,0 +1,27 @@
+version: 1
+rate_table_id: tokyo-metropolitan
+filing:
+  authority: 東京都主税局（千代田都税事務所・宿泊税担当）
+  portal_url: https://www.tax.metro.tokyo.lg.jp/kazei/leisure/shuk/jigyousha
+  eltax_hint: 電子申告は eLTAX。郵送・持参も可。
+  lead_days:
+    - 14
+    - 7
+  due_rule: end_of_next_month_tokyo
+period_filings:
+  - period: 2026-08
+    due_on: 2026-09-30
+    status: pack_ready
+    pack_path: docs/properties/PROP-002-midori/operations/tax-packs/2026-08.md
+assessments:
+  - id: TAX-STAY-2026-001-2026-08
+    stay_id: STAY-2026-001
+    property_id: PROP-002
+    period: 2026-08
+    rate_table_id: tokyo-metropolitan
+    taxable_per_person_per_night_jpy: 10000
+    party_size: 5
+    nights: 2
+    tax_jpy: 1000
+    computed_at: 2026-07-13T16:00:53.553Z
+payments: []

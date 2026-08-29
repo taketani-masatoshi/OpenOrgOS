@@ -1,0 +1,18 @@
+{
+  "thread_id": "f59c47892e4d6f4c23835be0:executive_steward",
+  "tenant": "aiac",
+  "created_at": "2026-07-25T22:56:37.713Z",
+  "updated_at": "2026-07-25T22:56:37.713Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "日本語で回答してください。",
+      "at": "2026-07-25T22:56:37.713Z"
+    },
+    {
+      "role": "assistant",
+      "content": "【OrgOS モック LLM + ツール】\n\nツール `operator_today` を実行しました。\n\n# Today — AIAC株式会社\n**結論:** 判断 0 件 · 承認 0 件 · 再試行 0 件\n**次の操作:** ありません\n\n## Agent roster\n- configured: yes\n- operational (9): executive_steward, secretary, finance, contract, compliance, operations, cto, engineering, security\n- developer (9): executive_steward, secretary, finance, contract, compliance, operations, cto, engineering, security\n- detail: agent roster show\n\n\nご質問「日本語で回答してください。」への回答です。\n\n_信頼度: medium_",
+      "at": "2026-07-25T22:56:37.713Z"
+    }
+  ]
+}
