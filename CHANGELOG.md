@@ -7,6 +7,53 @@ All notable changes to OrgOS Operator Layer are documented here.
 ## [Unreleased]
 
 ### Added
+- **ISO-21401 の実運用化（証拠様式 · KPI 検査 · 着手順序）** — 統制が要求する証拠ファイルに対して空様式11本を `templates/` に整備し、`orgos iso templates <ID> [--write]` でテナントへ配置できるようにした（既存ファイルは上書きしない）。整備状況は `catalog.yaml` の `evidence_forms`（`complete` / `partial`）で宣言し、契約テストが宣言と実態の一致を双方向に検査する（ISO-21401 · 9001 · 13485 · 37000 が complete、残り8件は partial として債務を可視化）。
+- **空の様式を証拠として数えない** — CSV はデータ行が1件以上、Markdown は `{PLACEHOLDER}` の置換を必要とする。様式を配っただけで統制が適合に転じる誤りを防ぐ。ギャップ表示は「未作成」「様式が未記入」「記録なし」を区別する。
+- **`orgos iso kpi`** — ISO 21401 の KPI ログを決定論的に検査し、宿泊人泊あたりの原単位と前月比を計算する。月形式・重複・負値・非数値・稼働0での使用量計上を検出。総量ではなく原単位で評価するため、稼働増による見かけの悪化と実際の非効率を取り違えない。
+- **`orgos iso clauses`** — 条項番号の検証状況を一覧する。ISO 本文は再配布できないためパックの条項は対応表にすぎず、`iso_refs` / `core_bindings` に `verified_on` · `verified_by` が入るまで「未検証」と表示する。内部監査レポートの注記からも参照。
+- **統制の着手順序（`priority` P1/P2/P3）** — 規格を有効化した直後はほぼ全statementが未達になるため、パックが着手順序を宣言する。P1 は人の安全・法令要求、P2 は他が依存する土台、P3 は改善・報告。内部監査の改善提案はこの順に並ぶ。mal / ISO-21401 では不適合17件が P1 4件・P2 7件・P3 6件に整理される。
+- **力量マップ・研修計画・実施記録（ISO 21401 7.2）** — 正本を `data/hr/competence.yaml`（役割 · 要求力量 · 4段階評価）と `data/hr/training.yaml`（研修 · 有効性の判定基準 · 実施結果）に置き、表とギャップは `orgos hr competence map|plan|records [--write]` で導出する（手書きの表を持たない）。`orgos hr competence check` は力量マップの参照整合と、法定要求ギャップが研修計画で受講者まで手当てされているかを検査し、未計画なら異常終了する。評価のない力量はレベル0として扱い、欠落を隠さない。mal: 亀沢旅館（開業 2026-09-18）向けに CMP-01〜09 を REG-012 各条から起こし、開業前研修 TRN-001〜008 と教材7本を整備。
+- **ISO-21401 パックの作り込み** — 未束縛だった4 work（`risk_approach` 6.1 · `documented_information` 7.5 · `operation` 8.1 · `corrective_action` 10.2）を `core_bindings` に追加し、本規格の主題である環境・社会文化・経済の領域統制を新設（領域統制 1 → 14）。`kpi-log.csv` を `env-resources` / `env-waste` の証拠に接続。裏づけのないサステナビリティ訴求を防ぐため、表示の実態一致を `guest-communication` で1統制として扱う。条項番号は規格本文で未検証のため、パック索引に §確認事項 として明示。
+- **ISO 共通コアモジュール + Coming Soon 拡張路** — HLS の器を `steward/standards/iso/core/` に `CTL-CORE-{work}` 10件として集約し、各パックは `core_bindings` で自分の条項番号を結ぶだけにした（内部監査は Annex SL 9.2 / ISO 13485 8.2.4）。`iso_refs.edition` は catalog の `year` から loader が付与。`evidence_mode: all` により、統制を1件に畳んでも規格ごとの証拠欠落が隠れない。`orgos controls migrate-core` が `supersedes` 経由で成熟度を引き継ぐ（mal: 旧 28 ID → コア 9件、内部監査 L3 を保持）。新設7規格に領域統制（危険源 · BIA · HACCP · EnPI · SLA · 贈収賄リスク · 環境側面）を追加。catalog に `status` を導入し、`coming_soon` は verify で skip・テナントで有効化不可。`orgos iso roadmap|scaffold`。ADR 0067
+- **ISO 内部監査ループ** — 単一 `internal_audit` が catalog + control-map を読む。`orgos iso catalog|maps verify|audit run|audit report` · append-only ログ · 経営レポート（現状・問題・課題・適合・改善）。ADR 0066。規格ごとの監査 Agent は作らない。
+- **ISO 37000 自己宣言経路** — 11原則パック · `orgos governance principles status|init|declare` · tenant init で目的ドラフト · ADR 0024。認証ではない。purpose の実文言と ceo/auditor 補償統制を点検する。
+- **Console #23 — できるが未配線だった操作を Console に接続** — 承認受信箱から `POST /chat/v1/approvals/propose` で稟議起案 · 帳簿詳細で逆仕訳・電帳検索/check・補助元帳 · 税モジュールにカレンダーと申告ギャップ（e-Tax 提出は出さない）
+- **Console #24 — 契約・宿泊・消費税・給与計算・WO DAG** — `/contracts/` · `/stays/` · 消費税 assessment · `POST /chat/v1/tax/payroll-calc` · 実行状況の wave DAG（e-Tax 提出・宿泊者氏名は出さない）
+- **Console #25 — 税務 5b XML / 別表ドラフト** — 別表四・五相当と Completeness。提出用ではない（ADR 0052 5c）
+- **Console #26 — 宿泊税 from_ledger** — `lodging-tax.yaml` assessments を税カレンダー金額に接続
+- **Console #27 — 年末調整の決定論計算** — `POST /chat/v1/tax/yea/compute`（個人別は gitignore · e-file なし）
+- **Console #28 — Gmail 接続状態** — `GET /chat/v1/mail/gmail`（トークン非表示）· ADR 0004 は SHIPPED フラグ維持
+- **#29 Witness Hub 公開リレー GA** — `GET /metrics` · `orgos hub ga-check` · mTLS compose overlay
+- **#30 Stripe セルフサーブ live 手順** — settings に `next_steps`（秘密鍵は git に置かない）
+- **Console Wave 1 — 途中=0 の残コード** — Gmail: Console 設定から Community Connections へリンク · Hub: `ORGOS_HUB_REQUIRE_TLS` / `ORGOS_HUB_PUBLIC` で公開 bind の TLS 必須 · Stripe: doctor / commercial の detail を Console `next_steps` と同一文言
+- **テナント設定を Console Web UI へ** — `/?onboarding=1` を「会社の設定」ハブにし、メールカード（送信元・provider・Gmail 連携 / 切断）を追加。`GET /chat/v1/mail/gmail`（provider · from · `platform_ready`）· `POST /chat/v1/mail/gmail/connect|disconnect` · `PUT /chat/v1/mail/config`（ceo/approver）。SMTP パスワードと OAuth トークンは画面に出さず、Google 認可は Community のまま。SHIPPED は運営（CEO）の判断
+- **経費精算の社員席と個人枠（mal 先行）** — role `employee` + 権限 `expense:claim`（Console は開かない）· 社員デスク `GET /chat/v1/org/budget/expense-claim/desk`（自分の枠と自分の申請のみ）· `ClaimDeskPage` で署名 QR をカメラ取込（`person_id` はサーバでセッション席に固定 · 他人の枠は 403）· 承認受信箱に経費精算（誰が・何円・残枠・返す日 / gate 名は非表示）· `reimbursement.due_on`（未指定は次の金曜を決定論で補完）· mal に `org-authority` / `budget-delegations` の個人枠（business-unit 30万・admin-unit 6万）· [expense-claim-spec.md](docs/org-os/expense-claim-spec.md)
+- **Operator Console 組織 — 外部専門家** — `/org/` に顧問弁護士・税理士・技術顧問。正本 `data/company.yaml` `advisors`（メール非表示）。mal は松尾剛行（CTR-022）・税理士/技術顧問は未契約
+- **Operator Console 経営ホーム（ADR 0065）** — `/` を CEO 朝ダッシュボードに（要対応 · 目標ギャップ · 依頼進捗）。帳簿は `/?ledger=1`。`GET /chat/v1/executive/home` · 承認受信箱の CEO 質問/日程 · 対外メール送信 · 振込指示（L1）· TowerActionCard · 会社イベント · デスクトップ通知。mal `kpi-targets` を事業計画・ヘッドカウントに接続
+- **セールス CRM Wave 2b 100点クロージャ** — mal `migrate-accounts` · deal update / inquiry-set-status / follow-up-from-sent / account merge / mail-link-resolve · Console pipeline/inbound 操作 · demo confirm hook · [sales-crm-runbook.md](docs/org-os/sales-crm-runbook.md) · ADR 0062 DoD #2（POST vs CLI-only）
+
+### Fixed
+- **会社イベントパネルの「Invalid month」** — `GET /chat/v1/events` が `parseMonth` に `YYYY-MM-DD` を渡していたのを修正（`YYYY-MM` を導出）
+- **Agent 要約のラベル重複** — ファイル名のみだと全 Agent で同一表示になるため、所属 Agent フォルダ名を付与
+- **目標ギャップ件数** — サマリーが `unknown` を数えず合計が行数と一致しなかったのを修正
+- `events_create` を `chatAuditActionSchema` に登録（監査書き込みの型エラー解消）
+- `mail_gmail_connect` / `mail_gmail_disconnect` / `mail_config_update` を `chatAuditActionSchema` に登録
+
+### Changed
+- **Operator Console コピー整理・UI 統一** — 説明過剰なリード文を削減（承認 · 経営ホーム · 顧客管理 · チャット設定 · クラウド LLM · ワーカー · FAQ）。見出しとボタン/チェックボックスの文言重複を解消。未使用の重複コピーキー（`moduleCatalogSection` / `moduleCatalogLead` / `customersLockedHint`）を削除
+- **RAG · KPI 表示の統一** — 経営ホームと分析ダッシュボードで RAG をローカライズ済みテキストチップに統一（絵文字・生 enum を廃止）。目標値の単位書式を両画面で共通化。要対応カードの生 enum ステータスを削除し、種別をローカライズ
+- **縦リズムとレイアウト修正** — `.outlook-panel` にセクション間余白、`.kpi-value` / `.kpi-label` をグローバル化（経営ホーム・分析の KPI 行崩れ修正）。承認ページの送信待ち/振込パネルをページコンテナ内に収め、メール本文プレビューを `<details>` に格納
+- Operator Console 1段目ナビに **経営**。ホーム default は帳簿から経営へ
+- **Operator Console — Wire を帳簿 SPA に統合** — `/wire/` は steward-chat の soft-nav（`history.pushState`）。別 `dist-combined` / タブ切替フルリロードを廃止。Wire UI は lazy chunk · `/console/v1/*` API は従来どおり。静的 `assets/` JS/CSS は gzip + `Vary: Accept-Encoding`
+
+### Added
+- **医療機器薬事（jp_medical_device）運用強化** — 型付き台帳（苦情分類 · AE/GVP期限 · CAPA · 変更 · PMS · 当局照会 · 文書版）· `deadlines` / `ledger add` · org approval subject（`medical_device.*`）· `audit.jsonl` · 品目申請チェックリストドラフト（提出は人間）· ADR 0064
+- **モジュール公式 readiness 整合** — sales を `MODULE_CLI_BUNDLES` + co-located skills + `production_ready` で **100** に。cursor-only Skill を cli 化（ecommerce 等）· venue/JP 一部の Skill・tier ギャップ修正
+- **メール文脈パイプライン 100点クロージャ** — 金額抽出の堅牢化 · 和暦日付照合 · compose sanitize/ゴールデン回帰 · 知識検索エッジテスト（ADR 定義: 決定論 100）
+- **OOO ゲート横断クロージャ** — Slack correspondence に email 同等の claims/style-lint · 全角数字/万円/在庫すり抜け封じ · 拒否時 `correspondence_gate` 監査 · [ooo-gate-matrix.md](docs/org-os/ooo-gate-matrix.md)
+- **メール文脈パイプライン A+ hardening** — 金額ゲート常時 · style-lint を draft/compose · 納期 SoT 厳密化 · 知識検索再帰/見積構造化 · Gmail thread 注入 E2E · DEAL 送信後タグ · Asana push モック
+- **メール文脈パイプライン hardening** — 手動 draft も宛先 registry 必須 · compose/draft 時点で claims 検証 · retail_store 在庫 / 案件納期の facts · E2E（triage→compose→send→INQ）
+- **メール文脈パイプライン** — Gmail スレッド取得 · facts verify · knowledge search · LLM compose（送信なし）· send-gate に style-lint/claims/添付 · 送信後 INQ/DEAL 更新 · Asana レプリカ（ADR 0063）
 - **ローカル LLM ERROR フォールバック** — worker `tier: local` で必要情報欠落時は `ERROR: <理由>` 1行のみ（未確認・拒否エッセイ禁止）。`tool-loop` 注入 + enforce · ADR 0061 · `ORGOS_LOCAL_LLM_ERROR_FALLBACK=0` で無効
 - **顧客管理タブ** — 1段目 `/customers/`（sales または customer_success モジュール On 時）。2段目: アウトバウンド（施策 + 商談）· インバウンド · アフターセールス · 解約・休眠。`GET /chat/v1/customers/*` · `sales` モジュール catalog · `binds_modules` 同期
 - **Operator Console 情報設計** — 1段目を **帳簿** / **予実**（`/?wallet=1`）/ **取引** に分割。セットアップ・アカウントは設定アコーディオンへ。共通 `OpsPage` と `loading-panel` で読み込み表示を統一
@@ -34,6 +81,9 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **フリート運用 Web UI** — `/ops/` タブ・`FleetOpsPage`・HTTP `GET /chat/v1/product/ops-dashboard` / `ops-available` を廃止。`/ops/` は `/` へリダイレクト。運用は `orgos ledger product ops-dashboard` と runbook のみ
 
 ### Fixed
+- **医療機器薬事 Round 2** — `ae mark-filed`（report_filed_on）· CAPA/照会ゲートを `ledger close` と単一化 · reject が `status_before_approval` 復元 · 苦情→AE 昇格 · change `risk_review` / CAPA `root_cause`+`action` · 文書 `effective_on` は承認時 · integrity に medical-device · 出荷/製造デモ行 · 全 subject E2E
+- **医療機器薬事 100点 uplift** — reject 時台帳巻き戻し · apply 失敗時承認ロールバック · `humanApprove` E2E · active 業許可 `expires_on` 欠落を validate error · 申請充足チェック + `--force` · `audit list` · CAPA 有効性（`schedule/record-effectiveness`）· CLI を ops/draft/application に分割 · ADR 0064 / Skill 更新
+- **医療機器承認閉ループ** — `org approval approve` 後に `medical_device.*` 台帳を反映（CAPA close · 変更実施 · 文書 approved · GVP 報告確認）。苦情/AE↔CAPA 双方向リンク · GVP escalate の Work Order 起票 · 当局照会 `set-response` · mal テスト残骸除去
 - **決済 PassKey `allow_credentials` スコープ** — `settlementAllowCredentialsForOperator()` で名簿 `approver_name`（`boundApproverId`）に一致する決済鍵のみ提示。同一 operator の古い Demo CEO 鍵が混ざり iPhone 承認が「見つかりません」になる問題を修正。スナップショット/復元: `scripts/operator-passkey-snapshot.sh` · [passkey-known-good-baseline.md](docs/org-os/passkey-known-good-baseline.md)
 - **PassKey Ceremony Router** — ログイン（`client-device` / Mac Touch ID）と決済承認（`hybrid` / iPhone QR）の切り替えを `apps/shared/passkey-ceremony.ts` に集約。`usb` トランスポートからの誤った hints 推論を禁止。承認モーダルは手動開始・決済 PassKey 未登録時のガイドを追加
 - Operator Console Docker 統合 — ホスト SPA/CLI dist が古いと Good/Bad・FAQ が :9470 に出ない問題。`start-local-stack.sh` が起動前に dist を自動ビルドし、`--ensure` 時は console を recreate

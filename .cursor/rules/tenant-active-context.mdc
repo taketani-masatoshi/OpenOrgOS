@@ -3,37 +3,67 @@ description: Active tenant modules, ISO, and regulations — token saving
 alwaysApply: true
 ---
 
-# テナント `ee-demo` — アクティブコンテキストのみ読取
+# テナント `mal` — アクティブコンテキストのみ読取
 
-**生成:** `npm run orgos -- modules sync-context` · 正本: `tenants/ee-demo/rules/active_context.md`
+**生成:** `npm run orgos -- modules sync-context` · 正本: `tenants/mal/rules/active_context.md`
 
 ## 禁止（トークン節約）
 
 - `steward/modules/{id}/` のうち **下表にない id** の agent.md · skills · seed
 - `steward/standards/iso/ISO-*` のうち **下表にない規格**
-- `steward/jurisdiction-packs/EE/regulations/templates/**/template.md` のうち **下表にない REG**
+- `steward/jurisdiction-packs/JP/regulations/templates/**/template.md` のうち **下表にない REG**
 - `docs/company/regulations/*.md` のうち **下表にない REG** 施行文
 - 無効 `modules.yaml` エントリの `data_root` · `docs_root`
 - `@folder` で `steward/modules/` · `regulations/` 全体を指定しない
 
 ## 有効業務モジュール
 
-（なし）
+- **rental:** `steward/modules/rental/agent.md`（Skill は必要時のみ同 `skills/`）
+- **hospitality:** `steward/modules/hospitality/agent.md`（Skill は必要時のみ同 `skills/`）
+- **professional_services:** `steward/modules/professional_services/agent.md`（Skill は必要時のみ同 `skills/`）
+- **investor_relations:** `steward/modules/investor_relations/agent.md`（Skill は必要時のみ同 `skills/`）
+- **travel_booking:** `steward/modules/travel_booking/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_corporate_registration:** `steward/jurisdiction-packs/JP/modules/jp_corporate_registration/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_medical_device:** `steward/jurisdiction-packs/JP/modules/jp_medical_device/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_bank_corporate:** `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_tax_corporate:** `steward/jurisdiction-packs/JP/modules/jp_tax_corporate/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_tax_consumption:** `steward/jurisdiction-packs/JP/modules/jp_tax_consumption/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_invoice_qualified:** `steward/jurisdiction-packs/JP/modules/jp_invoice_qualified/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_withholding_statutory:** `steward/jurisdiction-packs/JP/modules/jp_withholding_statutory/agent.md`（Skill は必要時のみ同 `skills/`）
+- **sales:** `steward/modules/sales/agent.md`（Skill は必要時のみ同 `skills/`）
+- **customer_success:** `steward/modules/customer_success/agent.md`（Skill は必要時のみ同 `skills/`）
+- **language_bridge:** `steward/modules/language_bridge/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_carbon_neutral_2050:** `steward/jurisdiction-packs/JP/modules/jp_carbon_neutral_2050/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_certification:** `steward/jurisdiction-packs/JP/modules/jp_certification/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_inspection:** `steward/jurisdiction-packs/JP/modules/jp_inspection/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_minpaku:** `steward/jurisdiction-packs/JP/modules/jp_minpaku/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_permit_application:** `steward/jurisdiction-packs/JP/modules/jp_permit_application/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_permit_registry:** `steward/jurisdiction-packs/JP/modules/jp_permit_registry/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_privacy_policy:** `steward/jurisdiction-packs/JP/modules/jp_privacy_policy/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_trademark_application:** `steward/jurisdiction-packs/JP/modules/jp_trademark_application/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_women_empowerment:** `steward/jurisdiction-packs/JP/modules/jp_women_empowerment/agent.md`（Skill は必要時のみ同 `skills/`）
 
 ## 有効 ISO
 
-（なし — standards.yaml で有効化）
+- **ISO-21401:** テンプレ `steward/standards/iso/ISO-21401/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-21401/`
+- **ISO-37000:** テンプレ `steward/standards/iso/ISO-37000/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-37000/`
 
 ## 有効社内規程
 
-- **REG-EE-001** Officer Compensation Policy: 施行 `docs/company/regulations/officer-compensation-policy.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-001-officer-comp/template.md` は改定時のみ）
-- **REG-EE-002** Board Meeting Procedures: 施行 `docs/company/regulations/board-meeting-procedures.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-002-board-meetings/template.md` は改定時のみ）
-- **REG-EE-003** Shareholder Meeting Procedures: 施行 `docs/company/regulations/shareholder-meeting-procedures.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-003-shareholder-meetings/template.md` は改定時のみ）
-- **REG-EE-004** Approval Authority Policy: 施行 `docs/company/regulations/approval-authority-policy.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-004-approval-authority/template.md` は改定時のみ）
-- **REG-EE-005** Expense Reimbursement Policy: 施行 `docs/company/regulations/expense-reimbursement-policy.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-005-expense-reimbursement/template.md` は改定時のみ）
-- **REG-EE-006** Conflict of Interest Policy: 施行 `docs/company/regulations/conflict-of-interest-policy.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-006-conflict-of-interest/template.md` は改定時のみ）
-- **REG-EE-007** Document Retention Policy: 施行 `docs/company/regulations/document-retention-policy.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-007-document-retention/template.md` は改定時のみ）
-- **REG-EE-008** Travel and Business Expense Policy: 施行 `docs/company/regulations/travel-policy.md`（テンプレ `steward/jurisdiction-packs/EE/regulations/templates/core/REG-EE-008-travel/template.md` は改定時のみ）
+- **REG-001** 役員報酬規程: 施行 `docs/company/regulations/yakuin-hoshu-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-001-yakuin-hoshu/template.md` は改定時のみ）
+- **REG-002** 取締役会議事規則: 施行 `docs/company/regulations/torishimari-kai-gijisho-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-002-torishimari-kai/template.md` は改定時のみ）
+- **REG-003** 株主総会議事規則: 施行 `docs/company/regulations/shukai-gijisho-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-003-shukai-gijisho/template.md` は改定時のみ）
+- **REG-004** 稟議・決裁規程: 施行 `docs/company/regulations/ringi-kessai-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-004-ringi-kessai/template.md` は改定時のみ）
+- **REG-005** 経費精算規程: 施行 `docs/company/regulations/keihi-seisan-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-005-keihi-seisan/template.md` は改定時のみ）
+- **REG-006** 利益相反取引規程: 施行 `docs/company/regulations/riekisohan-torihiki-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-006-riekisohan/template.md` は改定時のみ）
+- **REG-007** 文書管理規程: 施行 `docs/company/regulations/bunsho-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-007-bunsho-kanri/template.md` は改定時のみ）
+- **REG-008** 旅費規程: 施行 `docs/company/regulations/ryohi-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-008-ryohi/template.md` は改定時のみ）
+- **REG-010** 個人情報保護規程: 施行 `docs/company/regulations/kojin-joho-hogo-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-010-kojin-joho/template.md` は改定時のみ）
+- **REG-014** 環境・エネルギー管理規程: 施行 `docs/company/regulations/kankyo-energy-kanri-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-014-kankyo-energy/template.md` は改定時のみ）
+- **REG-016** 内部監査規程: 施行 `docs/company/regulations/naibu-kansa-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/core/REG-016-naibu-kansa/template.md` は改定時のみ）
+- **REG-012** 宿泊運営・サステナビリティ規程: 施行 `docs/company/regulations/shukuhaku-unyo-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/hospitality/REG-012-shukuhaku-unyo/template.md` は改定時のみ）
+- **REG-025** 医療機器QMS規程: 施行 `docs/company/regulations/iryo-kiki-qms-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_medical_device/REG-025-iryo-kiki-qms/template.md` は改定時のみ）
+- **REG-026** 医療機器GVP規程: 施行 `docs/company/regulations/iryo-kiki-gvp-kisoku.md`（テンプレ `steward/jurisdiction-packs/JP/regulations/templates/by-module/jp_medical_device/REG-026-iryo-kiki-gvp/template.md` は改定時のみ）
 
 ## コア Agent（常時）
 
