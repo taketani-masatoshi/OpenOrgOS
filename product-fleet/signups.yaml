@@ -1,0 +1,9 @@
+version: 1
+signups:
+  - signup_id: SIGNUP-demo-signup-001
+    tenant_id: demo-signup-001
+    company_name: デモ申込株式会社
+    admin_email: demo-signup@example.com
+    plan: starter
+    status: provisioned
+    created_at: 2026-08-25T04:45:25.890Z

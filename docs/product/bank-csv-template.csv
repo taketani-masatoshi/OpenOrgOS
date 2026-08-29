@@ -1,0 +1,3 @@
+date,direction,amount,category,description,account_id,reference,counterparty
+2026-06-15,inflow,120000,rent,六月賃料入金,BANK-001,AR-E2E-001,E2E Customer
+2026-06-16,outflow,30000,office,事務用品,BANK-001,,Office Shop

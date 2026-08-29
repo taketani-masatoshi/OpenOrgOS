@@ -1,0 +1,50 @@
+version: 1
+drills:
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: false
+    validated: false
+    at: 2026-08-25T22:30:01.436Z
+    note: drill restore to pilot-ledger-001-drill
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: false
+    validated: false
+    at: 2026-08-25T22:30:18.654Z
+    note: drill restore to pilot-ledger-001-drill
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: false
+    validated: false
+    at: 2026-08-25T22:30:36.830Z
+    note: drill restore to pilot-ledger-001-drill
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: true
+    validated: true
+    at: 2026-08-25T22:31:16.377Z
+    note: drill restore to pilot-ledger-001-drill · full validate=warn
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: true
+    validated: true
+    at: 2026-08-26T12:58:21.493Z
+    note: drill restore to pilot-ledger-001-drill · full validate=warn
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: true
+    validated: true
+    at: 2026-08-26T12:58:30.953Z
+    note: drill restore to pilot-ledger-001-drill · full validate=warn
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: true
+    validated: true
+    at: 2026-08-26T13:00:22.778Z
+    note: drill restore to pilot-ledger-001-drill · full validate=warn
+  - tenant_id: pilot-ledger-001
+    archive_path: .exports/pilot-ledger-001-drill.tar.gz
+    ok: true
+    validated: true
+    at: 2026-08-26T13:00:25.846Z
+    note: drill restore to pilot-ledger-001-drill · full validate=warn

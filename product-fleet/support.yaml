@@ -1,0 +1,6 @@
+version: 1
+email: support@oorgos.org
+hours: "平日 10:00–18:00 JST"
+status_page_url: docs/product/status.md
+escalation_webhook: ""
+# Set escalation_webhook to ops paging URL in production (e.g. Slack / PagerDuty).

@@ -1,0 +1,13 @@
+version: 1
+declared_at: 2026-08-26T14:59:49Z
+declared_by: ceo
+scope: qualified
+commercial_readiness_score: 90
+excluded_checks:
+  - stripe-live
+checklist: docs/product/commercial-claim-checklist.md
+runbook: docs/product/commercial-declaration-runbook.md
+public_statement_ja: |
+  OrgOS Ledger はマネージド単一テナントの法人向けクラウド会計です。電子帳簿は基本要件対応（優良要件は別オプション）。e-Tax 提出は含みません。
+  セルフサーブ課金（Stripe live）は別途投入予定。現時点は招待制・契約ベースの提供とします。
+note: Phase 8 qualified declaration 2026-08-26 — stripe-live deferred by CEO

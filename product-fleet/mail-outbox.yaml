@@ -1,0 +1,10 @@
+version: 1
+messages:
+  - id: MAIL-1787755319261
+    kind: mail_drill
+    to: ai@malkk.com
+    subject: OrgOS Ledger mail drill
+    body: Commercial mail drill at 2026-08-26T14:41:59.260Z
+    sent_at: 2026-08-26T14:41:59.622Z
+    transport: smtp
+    status: sent
