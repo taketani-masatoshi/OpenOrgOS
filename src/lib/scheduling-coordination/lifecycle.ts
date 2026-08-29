@@ -35,6 +35,7 @@ import {
   findSchedulingCase,
   updateSchedulingCase,
 } from "./store.js";
+import { syncSalesDemoDealOnConfirm } from "../sales-demo-confirm.js";
 
 export type SchedulingLifecycleStage =
   | "created"
@@ -154,6 +155,9 @@ export function recordSchedulingLifecycleEvent(
     ],
     updated_at: new Date().toISOString(),
   }));
+  if (stage === "confirmed") {
+    syncSalesDemoDealOnConfirm(current);
+  }
   return current;
 }
 
