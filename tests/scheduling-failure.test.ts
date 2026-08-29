@@ -14,6 +14,10 @@ import {
 import { operatorHasPermission } from "../src/lib/console-auth/operator-rbac.js";
 import { getDataDir, writeYamlFile } from "../src/lib/utils.js";
 import {
+  getExecutiveRecordsDir,
+  getMailConfigPath,
+} from "../src/lib/correspondence/paths.js";
+import {
   cleanupSchedulingTenant,
   schedulingCase,
   seedSchedulingTenant,
@@ -77,13 +81,13 @@ describe("scheduling failure injection", () => {
   });
 
   it("does not mark a scheduling draft sent when the mocked mail provider fails", async () => {
-    writeYamlFile(join(getDataDir(), "../records/executive/mail-config.yaml"), {
+    const recordsDir = getExecutiveRecordsDir();
+    mkdirSync(recordsDir, { recursive: true });
+    writeYamlFile(getMailConfigPath(), {
       provider: "gmail_api",
       from: { name: "Secretary", email: "secretary@example.test" },
       receive: { sync: "stub" },
     });
-    const recordsDir = join(getDataDir(), "../records/executive");
-    mkdirSync(recordsDir, { recursive: true });
     writeFileSync(
       join(recordsDir, "gmail-oauth.json"),
       JSON.stringify({

@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { setTenantId } from "../src/lib/tenant.js";
-import { getDataDir } from "../src/lib/utils.js";
+import { scaffoldMissingTenantData } from "../src/lib/tenant-init.js";
+import {
+  cleanupSchedulingTenant,
+  seedSchedulingContacts,
+  seedSchedulingTenant,
+} from "./helpers/scheduling-fixture.js";
 import {
   loadSchedulingCases,
   upsertSchedulingCase,
@@ -35,30 +37,18 @@ import {
   runSchedulingRespond,
 } from "../src/commands/scheduling-coordination.js";
 
-function seedExecutiveDir(): void {
-  const exec = join(getDataDir(), "executive");
-  mkdirSync(exec, { recursive: true });
-  writeFileSync(join(exec, "scheduling-cases.yaml"), "version: 1\ncases: []\n", "utf-8");
-  writeFileSync(join(exec, "calendar.yaml"), "events: []\n", "utf-8");
-  writeFileSync(join(exec, "mail-triage-queue.yaml"), "version: 1\nentries: []\n", "utf-8");
-  writeFileSync(join(exec, "mail-interpretation-queue.yaml"), "version: 1\nentries: []\n", "utf-8");
-  writeFileSync(join(exec, "ceo-inline-questions.yaml"), "version: 1\nquestions: []\n", "utf-8");
-  writeFileSync(join(exec, "sender-identification-queue.yaml"), "version: 1\nentries: []\n", "utf-8");
-}
-
-function cleanup(): void {
-  const exec = join(getDataDir(), "executive");
-  if (existsSync(exec)) rmSync(exec, { recursive: true, force: true });
-}
+const tenantId = "test-scheduling-coordination";
 
 describe("schedule_coordination", () => {
   beforeEach(() => {
-    setTenantId("demo");
-    cleanup();
-    seedExecutiveDir();
+    seedSchedulingTenant(tenantId);
+    seedSchedulingContacts({ emails: ["a@x.com", "b@x.com", "g@x.com"] });
+    // Building the CEO Today view reads across finance and plans, so the
+    // tenant needs the full skeleton rather than the scheduling files alone.
+    scaffoldMissingTenantData();
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => cleanupSchedulingTenant(tenantId));
 
   it("creates case and proposes slots", () => {
     runSchedulingNew({

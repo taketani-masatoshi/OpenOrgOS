@@ -22,17 +22,24 @@ import { readOperatorKeyFromFile } from "../src/lib/console-auth/cli-operator.js
 import { approveAndSendSchedulingProposals } from "../src/lib/scheduling-coordination/approve-send-proposals.js";
 import { ensureSchedulingCorrespondenceDrafts } from "../src/lib/scheduling-coordination/lifecycle.js";
 import { upsertSchedulingCase } from "../src/lib/scheduling-coordination/store.js";
-import { schedulingCase } from "./helpers/scheduling-fixture.js";
+import {
+  cleanupSchedulingTenant,
+  schedulingCase,
+  seedSchedulingContacts,
+  seedSchedulingTenant,
+} from "./helpers/scheduling-fixture.js";
 import { ensureOperatorAuthEnv } from "../src/lib/org/operator-keys.js";
 import { setCliOperatorContext } from "../src/lib/console-auth/cli-operator.js";
 import { authenticateOperator } from "../src/lib/console-auth/operator-rbac.js";
 
 describe("scheduling operational readiness", () => {
+  const tenantId = "test-scheduling-readiness";
   const keyPath = join(homedir(), ".orgos", "operators", "OP-001.key");
   let keyBackup: string | undefined;
 
   beforeEach(() => {
-    setTenantId("demo");
+    seedSchedulingTenant(tenantId);
+    seedSchedulingContacts();
     const mail = getMailConfigPath();
     if (existsSync(mail)) rmSync(mail);
     writeFileSync(
@@ -72,6 +79,7 @@ describe("scheduling operational readiness", () => {
   });
 
   afterEach(() => {
+    cleanupSchedulingTenant(tenantId);
     clearOperatorsRegistryCacheForTests();
     const mail = getMailConfigPath();
     if (existsSync(mail)) rmSync(mail);

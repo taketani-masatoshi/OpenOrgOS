@@ -4,7 +4,11 @@ import { schedulingCaseSchema, type SchedulingCase } from "../../schemas/executi
 import type { MailTriageEntry } from "../../schemas/correspondence/mail-triage.js";
 import { getTenantsDir, setTenantId } from "../../src/lib/tenant.js";
 import { getDataDir, writeYamlFile } from "../../src/lib/utils.js";
-import { getMailReceivedDir } from "../../src/lib/correspondence/paths.js";
+import {
+  getExecutiveRecordsDir,
+  getMailConfigPath,
+  getMailReceivedDir,
+} from "../../src/lib/correspondence/paths.js";
 import { upsertTriageEntry } from "../../src/lib/correspondence/mail-triage-queue.js";
 import { clearSecretaryDraftToneCacheForTests } from "../../src/lib/secretary/tenant-behavior.js";
 
@@ -14,6 +18,35 @@ export const SCHEDULING_FIXTURE_DIR = join(
   "fixtures",
   "scheduling"
 );
+
+/**
+ * Participants used across the scheduling fixtures. Outbound drafts are refused
+ * unless the recipient is in external-contacts, so the tenant has to know them.
+ */
+export const SCHEDULING_CONTACT_NAMES = ["Alice", "Bob", "Carol", "Dave"] as const;
+
+/**
+ * Register participants as external contacts.
+ *
+ * @param options.dataDir tenant data directory; defaults to the active tenant's.
+ * @param options.emails extra recipients beyond the four fixture participants.
+ */
+export function seedSchedulingContacts(options: { dataDir?: string; emails?: string[] } = {}): void {
+  const dir = options.dataDir ?? getDataDir();
+  const emails = [
+    ...SCHEDULING_CONTACT_NAMES.map((name) => `${name.toLowerCase()}@example.com`),
+    ...(options.emails ?? []),
+  ];
+  mkdirSync(join(dir, "executive"), { recursive: true });
+  writeYamlFile(join(dir, "executive", "external-contacts.yaml"), {
+    contacts: emails.map((email, index) => ({
+      id: `EXT-${String(index + 1).padStart(3, "0")}`,
+      name: email.split("@")[0]!,
+      org: "Scheduling Test Counterparty",
+      email,
+    })),
+  });
+}
 
 export function seedSchedulingTenant(tenantId: string): string {
   clearSecretaryDraftToneCacheForTests();
@@ -53,6 +86,11 @@ export function seedSchedulingTenant(tenantId: string): string {
     join(root, "data", "executive", "sender-identification-queue.yaml"),
     "version: 1\nentries: []\n"
   );
+  seedSchedulingContacts({ dataDir: join(root, "data") });
+  // Writing a tracked draft sanitizes the output, which reads the module list.
+  writeYamlFile(join(root, "modules.yaml"), {
+    modules: [{ id: "professional_services", enabled: false, agent: "professional_services" }],
+  });
   mkdirSync(join(root, "rules"), { recursive: true });
   writeFileSync(
     join(root, "rules", "secretary_behavior.md"),
@@ -102,7 +140,7 @@ export function schedulingCase(
   participantCount = 4
 ): SchedulingCase {
   const now = new Date().toISOString();
-  const names = ["Alice", "Bob", "Carol", "Dave"];
+  const names = SCHEDULING_CONTACT_NAMES;
   return schedulingCaseSchema.parse({
     id,
     title: "統合日程調整",
@@ -175,12 +213,18 @@ export function schedulingTriage(opts: {
 }
 
 export function seedDryRunMailConfig(): void {
-  mkdirSync(join(getDataDir(), "../records/executive"), { recursive: true });
-  writeYamlFile(join(getDataDir(), "../records/executive/mail-config.yaml"), {
+  mkdirSync(getExecutiveRecordsDir(), { recursive: true });
+  writeYamlFile(getMailConfigPath(), {
     provider: "smtp",
     from: { name: "Secretary", email: "ceo@scheduling.test" },
     smtp: { host: "smtp.test.local", port: 587, secure: false },
     receive: { sync: "stub", scheduling_reminder_after_hours: 72 },
+  });
+  // Sending refuses until the tenant records that setup finished.
+  mkdirSync(join(getDataDir(), "integrations"), { recursive: true });
+  writeYamlFile(join(getDataDir(), "integrations", "integrations.yaml"), {
+    version: "1",
+    setup: { completed_at: new Date().toISOString() },
   });
   process.env.ORGOS_SMTP_USER = "ceo@scheduling.test";
   process.env.ORGOS_SMTP_PASSWORD = "test-only";

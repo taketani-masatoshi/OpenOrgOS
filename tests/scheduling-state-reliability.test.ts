@@ -15,6 +15,10 @@ import { processScheduleMailEntry } from "../src/lib/scheduling-coordination/pro
 import { upsertTriageEntry } from "../src/lib/correspondence/mail-triage-queue.js";
 import { loadExecutiveCalendar } from "../src/lib/data.js";
 import { applyCeoInlineAnswerSideEffects } from "../src/lib/correspondence/ceo-inline-question.js";
+import {
+  seedSchedulingContacts,
+  seedSchedulingTenant,
+} from "./helpers/scheduling-fixture.js";
 
 const tenantId = "test-scheduling-reliability";
 const tenantRoot = join(getTenantsDir(), tenantId);
@@ -29,6 +33,7 @@ function seedFiles(): void {
   writeFileSync(join(executiveDir(), "calendar.yaml"), "events: []\n");
   writeFileSync(join(executiveDir(), "mail-triage-queue.yaml"), "version: 1\nentries: []\n");
   writeFileSync(join(executiveDir(), "ceo-inline-questions.yaml"), "version: 1\nquestions: []\n");
+  seedSchedulingContacts();
 }
 
 function baseCase() {
@@ -60,13 +65,7 @@ function baseCase() {
 
 describe("scheduling state reliability", () => {
   beforeEach(() => {
-    rmSync(tenantRoot, { recursive: true, force: true });
-    mkdirSync(tenantRoot, { recursive: true });
-    writeFileSync(
-      join(tenantRoot, "tenant.yaml"),
-      `id: ${tenantId}\nname: Scheduling Reliability Test\nlifecycle: test\n`
-    );
-    setTenantId(tenantId);
+    seedSchedulingTenant(tenantId);
     seedFiles();
     delete process.env.GOOGLE_CALENDAR_ID;
     delete process.env.GOOGLE_CALENDAR_ACCESS_TOKEN;

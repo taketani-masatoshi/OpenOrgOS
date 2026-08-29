@@ -11,6 +11,10 @@ import { processScheduleMailEntry } from "../src/lib/scheduling-coordination/pro
 import { applyNextAction } from "../src/lib/scheduling-coordination/next-action.js";
 import { ensureSchedulingCeoConfirmQuestion } from "../src/lib/scheduling-coordination/ceo-confirm.js";
 import {
+  seedSchedulingContacts,
+  seedSchedulingTenant,
+} from "./helpers/scheduling-fixture.js";
+import {
   markSchedulingReminderDrafted,
   refreshSchedulingReminder,
 } from "../src/lib/scheduling-coordination/workflow.js";
@@ -36,6 +40,7 @@ function seedFiles(): void {
   writeFileSync(join(executive, "mail-triage-queue.yaml"), "version: 1\nentries: []\n");
   writeFileSync(join(executive, "mail-interpretation-queue.yaml"), "version: 1\nentries: []\n");
   writeFileSync(join(executive, "ceo-inline-questions.yaml"), "version: 1\nquestions: []\n");
+  seedSchedulingContacts({ emails: ["a@example.com", "b@example.com"] });
 }
 
 function makeCase(id = "SCH-2026-801") {
@@ -73,13 +78,7 @@ function triage(id: string, caseId: string, from = "A <a@example.com>", subject 
 
 describe("scheduling exceptions and interpretation", () => {
   beforeEach(() => {
-    rmSync(tenantRoot, { recursive: true, force: true });
-    mkdirSync(tenantRoot, { recursive: true });
-    writeFileSync(
-      join(tenantRoot, "tenant.yaml"),
-      `id: ${tenantId}\nname: Scheduling Exceptions Test\nlifecycle: test\n`
-    );
-    setTenantId(tenantId);
+    seedSchedulingTenant(tenantId);
     seedFiles();
   });
 

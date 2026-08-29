@@ -12,6 +12,7 @@ import {
 import { saveMailInterpretation } from "../src/lib/correspondence/mail-interpretation.js";
 import { upsertTriageEntry } from "../src/lib/correspondence/mail-triage-queue.js";
 import { getTenantsDir, setTenantId } from "../src/lib/tenant.js";
+import { seedSchedulingTenant } from "./helpers/scheduling-fixture.js";
 import { getDataDir, writeYamlFile } from "../src/lib/utils.js";
 import {
   ensureSchedulingCorrespondenceDrafts,
@@ -27,12 +28,7 @@ const tenantId = "test-scheduling-secretary-flow";
 const tenantRoot = join(getTenantsDir(), tenantId);
 
 function seed(): void {
-  rmSync(tenantRoot, { recursive: true, force: true });
-  mkdirSync(join(tenantRoot, "data", "executive"), { recursive: true });
-  writeFileSync(
-    join(tenantRoot, "tenant.yaml"),
-    `id: ${tenantId}\nname: Scheduling Secretary Flow Test\nlifecycle: test\n`
-  );
+  seedSchedulingTenant(tenantId);
   writeFileSync(
     join(tenantRoot, "data", "executive", "scheduling-cases.yaml"),
     "version: 1\ncases: []\n"
@@ -65,7 +61,12 @@ function seed(): void {
     ].join("\n")
   );
   writeYamlFile(join(tenantRoot, "data", "executive", "external-contacts.yaml"), {
-    contacts: [{ id: "EXT-001", name: "Bob", email: "bob@example.com" }],
+    contacts: [
+      { id: "EXT-001", name: "Bob", email: "bob@example.com" },
+      // Alice is addressed by email rather than contact_ref, but an outbound
+      // draft still refuses a recipient the tenant does not know.
+      { id: "EXT-002", name: "Alice", email: "alice@example.com" },
+    ],
   });
 }
 

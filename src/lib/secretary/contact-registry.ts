@@ -121,8 +121,16 @@ export function getExternalContactById(extId: string): ExternalContact | undefin
   return file.contacts.find((c) => c.id === extId);
 }
 
+/**
+ * A stored ref carries its file: `data/executive/external-contacts.yaml#EXT-001`.
+ * Callers also pass the bare id, so accept either.
+ */
+function externalContactIdFromRef(contactRef: string): string {
+  return contactRef.match(/\bEXT-\d+\b/i)?.[0]?.toUpperCase() ?? contactRef;
+}
+
 export function resolveEmailFromContactRef(contactRef: string): string | undefined {
-  const ext = getExternalContactById(contactRef);
+  const ext = getExternalContactById(externalContactIdFromRef(contactRef));
   if (ext?.email) return ext.email;
   if (ext?.stakeholder_id) {
     const stk = loadStakeholdersIfExists()?.stakeholders.find((s) => s.id === ext.stakeholder_id);
