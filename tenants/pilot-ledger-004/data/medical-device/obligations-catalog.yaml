@@ -1,0 +1,97 @@
+jurisdiction: JP
+updated: "2026-06-28"
+roles:
+  - id: manufacturing
+    name_ja: 医療機器製造業
+    legal_basis: 薬機法第6条の2 · 医療機器製造業の許可
+    permit_type: 製造業許可（都道府県）
+    qms_basis: 医療機器の製造管理及び品質管理の基準（QMS省令）
+    gvp_required: false
+    record_retention_years: 5
+    official_urls:
+      - https://www.pmda.go.jp/
+    notes: 製造所ごとに許可。ISO 13485 と QMS 省令の両立。
+
+  - id: mah
+    name_ja: 医療機器製造販売業
+    legal_basis: 薬機法第12条 · 製造販売業の許可
+    permit_type: 製造販売業許可（都道府県）
+    qms_basis: 医療機器の製造販売業及び販売業の製造販売業者等の製造管理及び品質管理の基準
+    gvp_required: true
+    record_retention_years: 5
+    official_urls:
+      - https://www.pmda.go.jp/
+    notes: 市販前後の安全管理（GVP）義務。苦情 · 有害事象の収集・評価・報告。
+
+  - id: distribution
+    name_ja: 医療機器販売業
+    legal_basis: 薬機法第13条 · 販売業の許可
+    permit_type: 販売業許可（都道府県）
+    qms_basis: 医療機器の製造販売業及び販売業の販売業者等の製造管理及び品質管理の基準
+    gvp_required: true
+    record_retention_years: 5
+    notes: 出荷記録 · 保管 · 回収対応。製造販売業者との契約に基づく GVP 分担。
+
+obligations:
+  - id: OBL-PERMIT-MFG
+    role_ids: [manufacturing]
+    title: 製造業許可の取得・更新
+    category: permit
+    frequency: 許可更新（5年等）
+    evidence_ledger: license-registry
+    notes: 製造所の名称 · 所在地 · 製造管理者
+
+  - id: OBL-PERMIT-MAH
+    role_ids: [mah]
+    title: 製造販売業許可の取得・更新
+    category: permit
+    frequency: 許可更新
+    evidence_ledger: license-registry
+
+  - id: OBL-PERMIT-DIST
+    role_ids: [distribution]
+    title: 販売業許可の取得・更新
+    category: permit
+    evidence_ledger: license-registry
+
+  - id: OBL-QMS-MANUAL
+    role_ids: [manufacturing, mah, distribution]
+    title: 品質マニュアル（第1階層）の整備・維持
+    category: qms
+    evidence_ledger: document-control
+    iso_refs: [ISO-13485:4.2.2, ISO-13485:5.3]
+
+  - id: OBL-QMS-SOP-MFG
+    role_ids: [manufacturing]
+    title: 製造・検査・出荷 SOP の整備
+    category: qms
+    evidence_ledger: manufacturing_batch
+
+  - id: OBL-GVP-COLLECT
+    role_ids: [mah, distribution]
+    title: 苦情・有害事象の収集
+    category: gvp
+    frequency: 常時
+    evidence_ledger: complaint
+
+  - id: OBL-GVP-REPORT
+    role_ids: [mah]
+    title: 有害事象等の報告（PMDA）
+    category: reporting
+    frequency: 期限厳守
+    evidence_ledger: adverse_event
+    notes: 死亡 · 重篤 · その他報告基準に従う
+
+  - id: OBL-DIST-RECORD
+    role_ids: [distribution, mah]
+    title: 出荷・販売記録の作成・保存
+    category: record
+    evidence_ledger: distribution
+    notes: ロット · 有効期限 · 取引先
+
+  - id: OBL-TRAINING
+    role_ids: [manufacturing, mah, distribution]
+    title: 教育訓練の実施・記録
+    category: qms
+    evidence_ledger: training
+    iso_refs: [ISO-13485:6.2]

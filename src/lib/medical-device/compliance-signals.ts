@@ -46,16 +46,6 @@ export type LedgerSignal = {
   open_count: number;
 };
 
-export type QmsSignals = {
-  enabled: boolean;
-  compliance_type_id: "md-qms";
-  documents: DocCoverage[];
-  missing_required: DocCoverage[];
-  covered: number;
-  required: number;
-  document_control_entries: number;
-};
-
 export type GvpSignals = {
   enabled: boolean;
   compliance_type_id: "md-gvp";
@@ -65,6 +55,20 @@ export type GvpSignals = {
   required: number;
   open_complaints: number;
   open_adverse_events: number;
+  open_inquiries: number;
+  overdue_gvp_reports: number;
+};
+
+export type QmsSignals = {
+  enabled: boolean;
+  compliance_type_id: "md-qms";
+  documents: DocCoverage[];
+  missing_required: DocCoverage[];
+  covered: number;
+  required: number;
+  document_control_entries: number;
+  open_capa: number;
+  open_changes: number;
 };
 
 function listDocBasenames(subdir: "qms" | "gvp"): string[] {
@@ -125,6 +129,8 @@ export function collectQmsSignals(): QmsSignals {
       covered: 0,
       required: 0,
       document_control_entries: 0,
+      open_capa: 0,
+      open_changes: 0,
     };
   }
   const catalog = loadQmsCatalog();
@@ -146,6 +152,8 @@ export function collectQmsSignals(): QmsSignals {
   });
   const missing_required = documents.filter((d) => !d.present);
   let document_control_entries = 0;
+  let open_capa = 0;
+  let open_changes = 0;
   try {
     const ledgers = loadModuleDataFile(
       MODULE_ID,
@@ -154,6 +162,14 @@ export function collectQmsSignals(): QmsSignals {
     );
     const dc = ledgers?.data.ledgers.find((l) => l.type === "document_control");
     if (dc) document_control_entries = loadLedgerEntries(dc.data_file).length;
+    const capa = ledgers?.data.ledgers.find((l) => l.type === "capa");
+    if (capa) {
+      open_capa = loadLedgerEntries(capa.data_file).filter(isOpenEntry).length;
+    }
+    const chg = ledgers?.data.ledgers.find((l) => l.type === "change_control");
+    if (chg) {
+      open_changes = loadLedgerEntries(chg.data_file).filter(isOpenEntry).length;
+    }
   } catch {
     /* */
   }
@@ -165,6 +181,8 @@ export function collectQmsSignals(): QmsSignals {
     covered: documents.filter((d) => d.present).length,
     required: documents.length,
     document_control_entries,
+    open_capa,
+    open_changes,
   };
 }
 
@@ -180,6 +198,8 @@ export function collectGvpSignals(): GvpSignals {
       required: 0,
       open_complaints: 0,
       open_adverse_events: 0,
+      open_inquiries: 0,
+      overdue_gvp_reports: 0,
     };
   }
   const catalog = loadGvpCatalog();
@@ -203,6 +223,9 @@ export function collectGvpSignals(): GvpSignals {
 
   let open_complaints = 0;
   let open_adverse_events = 0;
+  let open_inquiries = 0;
+  let overdue_gvp_reports = 0;
+  const today = new Date().toISOString().slice(0, 10);
   try {
     const ledgers = loadModuleDataFile(
       MODULE_ID,
@@ -214,8 +237,16 @@ export function collectGvpSignals(): GvpSignals {
         open_complaints = loadLedgerEntries(l.data_file).filter(isOpenEntry).length;
       }
       if (l.type === "adverse_event") {
-        open_adverse_events = loadLedgerEntries(l.data_file).filter(isOpenEntry)
-          .length;
+        const aes = loadLedgerEntries(l.data_file);
+        open_adverse_events = aes.filter(isOpenEntry).length;
+        overdue_gvp_reports = aes.filter((e) => {
+          if (!isOpenEntry(e) || e.report_filed_on) return false;
+          const due = e.gvp_due_on ? String(e.gvp_due_on) : "";
+          return due !== "" && due < today;
+        }).length;
+      }
+      if (l.type === "authority_inquiry") {
+        open_inquiries = loadLedgerEntries(l.data_file).filter(isOpenEntry).length;
       }
     }
   } catch {
@@ -231,6 +262,8 @@ export function collectGvpSignals(): GvpSignals {
     required: documents.length,
     open_complaints,
     open_adverse_events,
+    open_inquiries,
+    overdue_gvp_reports,
   };
 }
 

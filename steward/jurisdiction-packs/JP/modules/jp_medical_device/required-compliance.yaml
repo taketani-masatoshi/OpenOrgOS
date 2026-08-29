@@ -1,0 +1,37 @@
+module_id: jp_medical_device
+as_of: "2026-07-14"
+schema_version: 1
+requirements:
+  - id: rc-md-mah-or-mfg
+    fulfilment: license
+    severity: required
+    match: any_of
+    compliance_type_ids:
+      - pt-medical-device-mah
+      - pt-medical-device-mfg
+    legal_basis: 薬機法第12条 · 第6条の2
+    authority_ja: 都道府県知事
+    reference_url: https://www.pmda.go.jp/
+    notes: 詳細義務（GVP/QMS）は jp_medical_device 専門台帳 · 許可取得は permit-app
+  - id: rc-md-qms-gvp
+    fulfilment: specialized
+    severity: required
+    match: all_of
+    compliance_type_ids:
+      - md-qms
+      - md-gvp
+    notes: 専門モジュール内で充足確認（許可ゲートとは別）
+  - id: rc-md-iso-13485
+    fulfilment: certification
+    severity: recommended
+    match: any_of
+    compliance_type_ids:
+      - cert-iso-13485
+    notes: 推奨 · severity=recommended のため G-01 非ブロック · operations certification
+  - id: rc-md-health-insp
+    fulfilment: inspection
+    severity: recommended
+    match: any_of
+    compliance_type_ids:
+      - insp-health-center
+    notes: 推奨立入 · gate は required のみ

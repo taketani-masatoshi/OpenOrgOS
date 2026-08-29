@@ -95,3 +95,33 @@ obligations:
     category: qms
     evidence_ledger: training
     iso_refs: [ISO-13485:6.2]
+
+  - id: OBL-CAPA
+    role_ids: [manufacturing, mah]
+    title: 是正処置・予防処置（CAPA）の実施・記録
+    category: qms
+    evidence_ledger: capa
+    iso_refs: [ISO-13485:8.5.2, ISO-13485:8.5.3]
+
+  - id: OBL-CHANGE
+    role_ids: [manufacturing, mah]
+    title: 設計・工程・文書等の変更管理
+    category: qms
+    evidence_ledger: change_control
+    iso_refs: [ISO-13485:7.3.9]
+
+  - id: OBL-PMS
+    role_ids: [mah]
+    title: 市販後調査計画の策定・レビュー
+    category: post_market
+    frequency: 計画に従う
+    evidence_ledger: pms
+    notes: 市販後の情報収集 · 定期レビュー
+
+  - id: OBL-AUTHORITY-INQUIRY
+    role_ids: [mah]
+    title: 当局照会への回答管理
+    category: reporting
+    evidence_ledger: authority_inquiry
+    notes: 回答ドラフトは社内 · 提出は人間
+

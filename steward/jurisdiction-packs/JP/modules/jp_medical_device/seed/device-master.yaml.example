@@ -2,8 +2,14 @@ devices:
   - id: DEV-001
     name: （医療機器名称）
     class: II
+    general_name: （一般的名称）
     jmdn_code: （JMDN コード）
     approval_number: （承認番号 / 認証番号）
+    regulatory_pathway: certification
+    certification_body: （認証機関名）
+    issued_on: "2024-01-01"
+    expires_on: "2029-01-01"
+    renewal_lead_days: 180
     udi_di: （UDI-DI）
     manufacturer_ref: LIC-MFG-001
     mah_ref: LIC-MAH-001

@@ -9,6 +9,9 @@ GVP マニュアル · 収集 · 評価 · 報告 · 文書管理手順及び様
 ```bash
 npm run orgos -- operations medical-device gvp catalog
 npm run orgos -- operations medical-device gvp draft --doc GVP-001 --write
+npm run orgos -- operations medical-device ae-add --seriousness serious --summary "..."
+npm run orgos -- operations medical-device gvp escalate --id AE-... --propose-approval --proposed-by "薬事担当"
+npm run orgos -- operations medical-device inquiry set-response --id INQ-... --path docs/medical-device/applications/reply.md
 ```
 
 ## 参照

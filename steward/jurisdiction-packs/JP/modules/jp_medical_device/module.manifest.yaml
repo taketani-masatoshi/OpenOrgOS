@@ -13,18 +13,34 @@ activation_seeds:
   - ledgers/adverse-event-records.yaml.example
   - ledgers/training-records.yaml.example
   - ledgers/document-control-records.yaml.example
+  - ledgers/change-control-records.yaml.example
+  - ledgers/capa-records.yaml.example
+  - ledgers/pms-records.yaml.example
+  - ledgers/authority-inquiry-records.yaml.example
 optional_regulations:
   - REG-011
   - REG-025
   - REG-026
-notes: production_ready — 医療機器 製造 · 製造販売 · 販売 · QMS 4階層 · GVP · 台帳（JP 法域のみ）
+notes: production_ready — 医療機器 製造 · 製造販売 · 販売 · QMS/GVP · 運用台帳 · CAPA · PMS · 申請ドラフト（JP）
 cli_commands:
   - show
   - validate
   - obligations
+  - deadlines
   - qms
   - gvp
   - ledger
+  - capa
+  - change
+  - inquiry
+  - pms
+  - application
+  - audit
+  - complaint-add
+  - complaint-promote-ae
+  - ae-add
+  - ae-mark-filed
+  - doc-propose-approval
 security:
   limits:
     concurrent_jobs: 1

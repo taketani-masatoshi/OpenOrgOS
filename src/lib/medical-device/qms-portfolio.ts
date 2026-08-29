@@ -23,6 +23,8 @@ export type QmsPortfolio = {
     covered: number;
     missing: number;
     document_control_entries: number;
+    open_capa: number;
+    open_changes: number;
   };
 };
 
@@ -39,6 +41,8 @@ export function buildQmsPortfolio(opts?: { today?: string }): QmsPortfolio {
         covered: 0,
         missing: 0,
         document_control_entries: 0,
+        open_capa: 0,
+        open_changes: 0,
       },
     };
   }
@@ -68,6 +72,26 @@ export function buildQmsPortfolio(opts?: { today?: string }): QmsPortfolio {
       attention_score: 35,
     });
   }
+  if (sig.open_capa > 0) {
+    rows.push({
+      id: "md-qms-capa-open",
+      title: `CAPA 未クローズ ${sig.open_capa}件`,
+      tier: "—",
+      status: "要対応",
+      next_action: "operations medical-device capa list --open",
+      attention_score: 50,
+    });
+  }
+  if (sig.open_changes > 0) {
+    rows.push({
+      id: "md-qms-change-open",
+      title: `変更管理 未クローズ ${sig.open_changes}件`,
+      tier: "—",
+      status: "要対応",
+      next_action: "operations medical-device change list --open",
+      attention_score: 45,
+    });
+  }
   rows.sort((a, b) => b.attention_score - a.attention_score);
   return {
     as_of: today,
@@ -78,6 +102,8 @@ export function buildQmsPortfolio(opts?: { today?: string }): QmsPortfolio {
       covered: sig.covered,
       missing: sig.missing_required.length,
       document_control_entries: sig.document_control_entries,
+      open_capa: sig.open_capa,
+      open_changes: sig.open_changes,
     },
   };
 }

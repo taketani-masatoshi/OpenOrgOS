@@ -1,2 +1,9 @@
 version: "1"
-entries: []
+entries:
+  - id: MFG-DEMO-001
+    manufactured_on: "2026-05-15"
+    device_id: DEV-001
+    lot: LOT-DEMO-A
+    quantity: 1
+    status: closed
+    notes: L1 demo batch row

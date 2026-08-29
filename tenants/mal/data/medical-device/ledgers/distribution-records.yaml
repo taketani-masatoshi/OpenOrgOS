@@ -1,2 +1,9 @@
 version: "1"
-entries: []
+entries:
+  - id: DIST-DEMO-001
+    shipped_on: "2026-06-01"
+    device_id: DEV-001
+    lot: LOT-DEMO-A
+    quantity: 1
+    status: closed
+    notes: L1 demo shipment row

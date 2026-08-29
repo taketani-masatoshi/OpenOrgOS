@@ -18,5 +18,5 @@ skills:
     runtime: cli
     cli_command: operations medical-device ledger
     argv: [operations, medical-device, ledger]
-    description: 出荷 · 苦情 · 有害事象等の台帳ステータス
+    description: 出荷 · 苦情 · AE · CAPA · PMS · 照会等の台帳 · 期限
     agent_id: medical_device_regulatory

@@ -24,6 +24,8 @@ export type GvpPortfolio = {
     missing: number;
     open_complaints: number;
     open_adverse_events: number;
+    open_inquiries: number;
+    overdue_gvp_reports: number;
   };
 };
 
@@ -41,6 +43,8 @@ export function buildGvpPortfolio(opts?: { today?: string }): GvpPortfolio {
         missing: 0,
         open_complaints: 0,
         open_adverse_events: 0,
+        open_inquiries: 0,
+        overdue_gvp_reports: 0,
       },
     };
   }
@@ -53,6 +57,16 @@ export function buildGvpPortfolio(opts?: { today?: string }): GvpPortfolio {
       status: "文書未整備",
       next_action: `operations medical-device gvp draft --doc ${d.id} --write`,
       attention_score: d.id === "GVP-001" ? 55 : 40,
+    });
+  }
+  if (sig.overdue_gvp_reports > 0) {
+    rows.push({
+      id: "md-gvp-ae-overdue",
+      title: `有害事象 報告期限超過 ${sig.overdue_gvp_reports}件`,
+      kind: "報告",
+      status: "期限超過",
+      next_action: "AE を評価し人間が PMDA 報告（operations medical-device gvp escalate）",
+      attention_score: 70,
     });
   }
   if (sig.open_adverse_events > 0) {
@@ -75,6 +89,16 @@ export function buildGvpPortfolio(opts?: { today?: string }): GvpPortfolio {
       attention_score: 50,
     });
   }
+  if (sig.open_inquiries > 0) {
+    rows.push({
+      id: "md-gvp-inquiry-open",
+      title: `当局照会 未クローズ ${sig.open_inquiries}件`,
+      kind: "照会",
+      status: "要対応",
+      next_action: "operations medical-device inquiry list --open",
+      attention_score: 55,
+    });
+  }
   rows.sort((a, b) => b.attention_score - a.attention_score);
   return {
     as_of: today,
@@ -86,6 +110,8 @@ export function buildGvpPortfolio(opts?: { today?: string }): GvpPortfolio {
       missing: sig.missing_required.length,
       open_complaints: sig.open_complaints,
       open_adverse_events: sig.open_adverse_events,
+      open_inquiries: sig.open_inquiries,
+      overdue_gvp_reports: sig.overdue_gvp_reports,
     },
   };
 }

@@ -39,3 +39,31 @@ ledgers:
     title: 文書管理台帳
     data_file: ledgers/document-control-records.yaml
     retention_years: 5
+
+  - id: change_control
+    type: change_control
+    title: 変更管理台帳
+    data_file: ledgers/change-control-records.yaml
+    retention_years: 5
+    role_ids: [manufacturing, mah]
+
+  - id: capa
+    type: capa
+    title: CAPA（是正・予防処置）台帳
+    data_file: ledgers/capa-records.yaml
+    retention_years: 5
+    role_ids: [manufacturing, mah]
+
+  - id: pms
+    type: pms
+    title: 市販後調査（PMS）台帳
+    data_file: ledgers/pms-records.yaml
+    retention_years: 5
+    role_ids: [mah]
+
+  - id: authority_inquiry
+    type: authority_inquiry
+    title: 当局照会台帳
+    data_file: ledgers/authority-inquiry-records.yaml
+    retention_years: 5
+    role_ids: [mah]

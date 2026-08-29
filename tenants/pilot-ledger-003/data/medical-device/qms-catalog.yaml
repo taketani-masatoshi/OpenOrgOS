@@ -1,0 +1,102 @@
+hierarchy:
+  - tier: "1"
+    label: 品質マニュアル
+    description: QMS 全体の最上位文書
+  - tier: "2"
+    label: 規程
+    description: 文書管理 · 内部監査 · CAPA · リスク管理等
+  - tier: "3"
+    label: 標準業務手順書（SOP）
+    description: 製造 · 購買 · 設計 · 苦情処理等の手順
+  - tier: "4"
+    label: 要領 · 様式 · 記録
+    description: チェックリスト · 台帳 · 記録フォーム
+
+documents:
+  - id: QMS-MAN-001
+    tier: "1"
+    title: 品質マニュアル
+    doc_number: QMS-MAN-001
+    template: templates/qms/tier1-quality-manual.md
+    role_ids: [manufacturing, mah, distribution]
+    iso_refs: [ISO-13485:4.2.2, ISO-13485:5.3]
+    reg_refs: [REG-025]
+
+  - id: QMS-REG-001
+    tier: "2"
+    title: 文書・記録管理規程
+    doc_number: QMS-REG-001
+    template: templates/qms/tier2-document-control-regulation.md
+    role_ids: [manufacturing, mah, distribution]
+    iso_refs: [ISO-13485:4.2.4]
+    reg_refs: [REG-025, REG-007]
+
+  - id: QMS-REG-002
+    tier: "2"
+    title: 内部監査規程
+    doc_number: QMS-REG-002
+    template: templates/qms/tier2-internal-audit-regulation.md
+    role_ids: [manufacturing, mah]
+    iso_refs: [ISO-13485:8.2.4]
+
+  - id: QMS-REG-003
+    tier: "2"
+    title: 是正処置・予防処置（CAPA）規程
+    doc_number: QMS-REG-003
+    template: templates/qms/tier2-capa-regulation.md
+    iso_refs: [ISO-13485:8.5.2, ISO-13485:8.5.3]
+
+  - id: QMS-REG-004
+    tier: "2"
+    title: リスクマネジメント規程
+    doc_number: QMS-REG-004
+    template: templates/qms/tier2-risk-management-regulation.md
+    iso_refs: [ISO-13485:7.1, ISO-14971]
+
+  - id: QMS-REG-005
+    tier: "2"
+    title: 教育訓練規程
+    doc_number: QMS-REG-005
+    template: templates/qms/tier2-training-regulation.md
+    iso_refs: [ISO-13485:6.2]
+
+  - id: QMS-SOP-001
+    tier: "3"
+    title: 製造・組立手順書
+    doc_number: QMS-SOP-001
+    template: templates/qms/tier3-manufacturing-sop.md
+    role_ids: [manufacturing]
+
+  - id: QMS-SOP-002
+    tier: "3"
+    title: 購買・外注管理手順書
+    doc_number: QMS-SOP-002
+    template: templates/qms/tier3-purchasing-sop.md
+    role_ids: [manufacturing, mah]
+
+  - id: QMS-SOP-003
+    tier: "3"
+    title: 苦情・不適合品管理手順書
+    doc_number: QMS-SOP-003
+    template: templates/qms/tier3-complaint-nonconformity-sop.md
+    role_ids: [mah, distribution]
+
+  - id: QMS-FRM-001
+    tier: "4"
+    title: 製造ロット記録様式
+    doc_number: QMS-FRM-001
+    template: templates/qms/tier4-batch-record-form.md
+    role_ids: [manufacturing]
+
+  - id: QMS-FRM-002
+    tier: "4"
+    title: 出荷記録様式
+    doc_number: QMS-FRM-002
+    template: templates/qms/tier4-shipment-record-form.md
+    role_ids: [mah, distribution]
+
+  - id: QMS-FRM-003
+    tier: "4"
+    title: 教育訓練記録様式
+    doc_number: QMS-FRM-003
+    template: templates/qms/tier4-training-record-form.md
