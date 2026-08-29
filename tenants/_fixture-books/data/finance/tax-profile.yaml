@@ -1,0 +1,63 @@
+entity:
+  name: Fixture Books KK
+  type: 株式会社
+
+fiscal_year:
+  end_month: 1
+  period_from: "2026-02-01"
+  period_to: "2027-01-31"
+
+consumption_tax:
+  status: 課税事業者
+  invoice_registered: true
+
+corporate_tax:
+  capital_stock: 1000000
+  prior_retained_earnings: 5293618
+
+contacts:
+  tax_advisor:
+    name: Fixture Advisor
+    firm: Fixture Tax Firm
+    email: advisor@fixture.example
+
+obligation_rhythms:
+  - id: gensen-monthly
+    kind: tax
+    label: 源泉所得税納付
+    cadence: month
+    due_rule: next_month_day_10
+    enabled: true
+    apply_when: has_withholding
+    amount:
+      mode: formula
+      formula: payroll_withholding_rough
+    authority: 税務署
+    cashflow_category: withholding
+
+  - id: shaho-monthly
+    kind: social
+    label: 社会保険料納付
+    cadence: month
+    due_rule: end_of_month
+    enabled: true
+    apply_when: has_social_insurance
+    amount:
+      mode: formula
+      formula: payroll_social_employer_rough
+    authority: 年金事務所
+    cashflow_category: social_insurance
+
+  - id: shohi-annual
+    kind: tax
+    label: 消費税確定申告
+    cadence: annual
+    due_rule: fixed_md
+    month: 3
+    day: 31
+    enabled: true
+    amount:
+      mode: fixed
+      fixed_jpy: 0
+    authority: 税務署
+    cashflow_category: consumption_tax

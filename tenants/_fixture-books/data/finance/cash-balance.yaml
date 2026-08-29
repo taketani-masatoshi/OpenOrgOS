@@ -1,0 +1,7 @@
+as_of: "2026-08-31"
+status: confirmed
+currency: JPY
+accounts:
+  - bank_account_id: BANK-FIX-001
+    amount: 1000000
+total: 1000000

@@ -63,4 +63,9 @@ bridged_audit_ids:
   - AUD-1783636584267-rervbsx4
   - AUD-1783636728666-rhig1pnn
   - AUD-1783636827088-xep9km9s
+  - AUD-1787572197551-1gdbx9pz
+  - AUD-1787574120078-231jppcb
+  - AUD-1787575139798-93uvsnin
+  - AUD-1787576184022-2epqqa48
+  - AUD-1787576264536-o3010nb7
 max_bridged_ids: 5000

@@ -1,0 +1,37 @@
+# Template example — executed insurance (copy to CTR-002.yaml)
+id: CTR-002
+name: "火災保険（サンプル物件）"
+counterparty: "サンプル損害保険株式会社"
+counterparty_type: company
+type: insurance
+status: executed
+start_date: "2026-04-01"
+end_date: "2027-03-31"
+executed_date: "2026-04-01"
+auto_renewal: true
+owner: "CEO"
+property_id: PROP-001
+monthly_cost: 0
+scope_summary: |
+  テンプレート用の締結済保険契約。更新期限でアラート検証に使える。
+documents:
+  executed: "docs/contracts/CTR-002/02-executed.md"
+risk:
+  renewal_deadline: "2027-02-01"
+  risk_level: high
+  notes: "更新90日前に再見積"
+ceo:
+  business_impact: critical
+  impact_note: "物件火災リスクの転嫁。未更新は甚大。"
+  our_obligations:
+    - party: us
+      summary: "保険契約を維持し証券を保管する"
+      impact: critical
+  our_rights:
+    - party: us
+      summary: "保険事故時に約款どおり保険金を請求できる"
+  exit_windows:
+    - kind: renewal_notice
+      deadline: "2027-02-01"
+      summary: "更新意思確認期限"
+      consequence_if_missed: "補償切れまたは不利条件で更新"

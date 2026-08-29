@@ -1,0 +1,12 @@
+inbox_items: []
+outbox_items:
+  - id: OUT-001
+    filename: FY2026-kessan-hokoku.pdf
+    path: docs/io/outbox/corporate/kessan/FY2026-kessan-hokoku.pdf
+    category: corporate
+    purpose: print
+    generated_at: 2026-08-24
+    source: cli
+    source_ref: report kessan --fy FY2026 --basis gl
+    title: FY2026-kessan-hokoku
+notes: 受信・出力トレイの台帳。`steward io` で操作。

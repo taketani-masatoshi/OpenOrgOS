@@ -37,6 +37,7 @@
 - `ISO-22000` — `steward/standards/iso/ISO-22000/` **読まない**
 - `ISO-22301` — `steward/standards/iso/ISO-22301/` **読まない**
 - `ISO-27001` — `steward/standards/iso/ISO-27001/` **読まない**
+- `ISO-37000` — `steward/standards/iso/ISO-37000/` **読まない**
 - `ISO-37001` — `steward/standards/iso/ISO-37001/` **読まない**
 - `ISO-45001` — `steward/standards/iso/ISO-45001/` **読まない**
 - `ISO-50001` — `steward/standards/iso/ISO-50001/` **読まない**
@@ -61,11 +62,13 @@
 
 - `clinic` — `modules.yaml` 未登録 · **読まない**
 - `construction` — `modules.yaml` 未登録 · **読まない**
+- `customer_success` — `modules.yaml` 未登録 · **読まない**
 - `ecommerce` — `modules.yaml` 未登録 · **読まない**
 - `education` — `modules.yaml` 未登録 · **読まない**
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `event_space` — `modules.yaml` 未登録 · **読まない**
 - `hospitality` — `modules.yaml` 未登録 · **読まない**
+- `investor_relations` — `modules.yaml` 未登録 · **読まない**
 - `logistics` — `modules.yaml` 未登録 · **読まない**
 - `membership` — `modules.yaml` 未登録 · **読まない**
 - `professional_services` — `modules.yaml` 未登録 · **読まない**
@@ -74,9 +77,11 @@
 - `restaurant` — `modules.yaml` 未登録 · **読まない**
 - `retail_store` — `modules.yaml` 未登録 · **読まない**
 - `saas_subscription` — `modules.yaml` 未登録 · **読まない**
+- `sales` — `modules.yaml` 未登録 · **読まない**
 - `software_outsourcing` — `modules.yaml` 未登録 · **読まない**
 - `staffing` — `modules.yaml` 未登録 · **読まない**
 - `venture_capital` — `modules.yaml` 未登録 · **読まない**
+- `venue_booking` — `modules.yaml` 未登録 · **読まない**
 
 ## Secretary 読取面（on_demand · @file 明示）
 

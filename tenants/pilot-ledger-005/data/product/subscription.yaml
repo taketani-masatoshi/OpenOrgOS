@@ -1,0 +1,7 @@
+version: 1
+plan: accountant
+status: trialing
+company_name: パイロット会計法人
+admin_email: tax@pilot.example.com
+trial_ends_at: 2026-09-08T05:24:32.746Z
+updated_at: 2026-08-25T05:24:32.747Z

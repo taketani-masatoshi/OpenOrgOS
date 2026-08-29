@@ -1,0 +1,7 @@
+version: 1
+plan: business
+status: trialing
+company_name: パイロット第四株式会社
+admin_email: ceo4@pilot.example.com
+trial_ends_at: 2026-09-08T05:24:25.358Z
+updated_at: 2026-08-25T05:24:25.358Z

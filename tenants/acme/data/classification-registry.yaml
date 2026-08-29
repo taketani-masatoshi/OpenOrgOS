@@ -38,6 +38,10 @@ agents:
     label: Compliance
     max_level: L2
     output_max_level: L1
+  investor_relations:
+    label: IR
+    max_level: L1
+    output_max_level: L1
 resources:
   - id: RES-BANK-ACCOUNTS
     path: data/finance/bank-accounts.yaml
@@ -152,6 +156,19 @@ resources:
       - contract
     write_agents:
       - compliance
+  - id: RES-IR-DATA
+    path: data/investor-relations/
+    level: L1
+    git: track
+    ai_context: auto
+    description: IR cap table · investor registry · disclosure calendar（L2 連絡先値なし）
+    read_agents:
+      - investor_relations
+      - finance
+      - executive_steward
+      - compliance
+    write_agents:
+      - investor_relations
 rules:
   - id: RULE-GITIGNORE
     text: git:ignore の resource は .gitignore にパターン登録必須。

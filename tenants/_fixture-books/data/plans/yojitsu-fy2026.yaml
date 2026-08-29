@@ -1,0 +1,30 @@
+year: 2026
+fiscal_year: FY2026
+period_from: "2026-02"
+period_to: "2027-01"
+schema_version: 2
+closing:
+  status: open
+  basis: gl
+months:
+  - month: "2026-08"
+    plan:
+      lines:
+        - segment: rental
+          kind: revenue
+          amount: 100000
+        - segment: hotel
+          kind: revenue
+          amount: 1050000
+  - month: "2026-09"
+    plan:
+      lines:
+        - segment: rental
+          kind: revenue
+          amount: 100000
+        - segment: hotel
+          kind: revenue
+          amount: 1050000
+summary:
+  revenue_total: 2300000
+  operating_profit: 878316

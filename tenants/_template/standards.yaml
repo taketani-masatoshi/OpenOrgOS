@@ -21,5 +21,7 @@ iso:
     enabled: false
   - id: ISO-37001
     enabled: false
+  - id: ISO-37000
+    enabled: false
   - id: ISO-20000
     enabled: false

@@ -1,0 +1,6 @@
+name: "Fixture Books KK"
+fiscal_year_end_month: 1
+share_capital:
+  amount_yen: 1000000
+  issued_shares: 100
+  par_value_yen: 10000

@@ -1,0 +1,10 @@
+version: "1"
+currency: JPY
+accounts:
+  - code: "1100"
+    name: 現金及び預金
+    type: asset
+    normal_balance: debit
+category_mapping:
+  revenue: {}
+  expense: {}

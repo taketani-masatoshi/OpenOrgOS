@@ -1,0 +1,91 @@
+version: "1"
+currency: JPY
+accounts:
+  - code: "1100"
+    name: 現金及び預金
+    type: asset
+    normal_balance: debit
+    budget_delegation: department
+  - code: "1150"
+    name: 売掛金
+    type: asset
+    normal_balance: debit
+    budget_delegation: department
+  - code: "1290"
+    name: 減価償却累計額
+    type: asset_contra
+    normal_balance: credit
+    budget_delegation: department
+  - code: "2110"
+    name: 買掛金
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+  - code: "2120"
+    name: 預り金-源泉所得税
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+  - code: "2130"
+    name: 預り金-社会保険料
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+  - code: "2140"
+    name: 未払給与
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+  - code: "2160"
+    name: 仮受消費税
+    type: liability
+    normal_balance: credit
+    budget_delegation: department
+  - code: "2170"
+    name: 仮払消費税
+    type: asset
+    normal_balance: debit
+    budget_delegation: department
+  - code: "3200"
+    name: 繰越利益剰余金
+    type: equity
+    normal_balance: credit
+    budget_delegation: department
+  - code: "4100"
+    name: 売上高
+    type: revenue
+    normal_balance: credit
+    statement_section: revenue
+    budget_delegation: department
+  - code: "5100"
+    name: 販売費及び一般管理費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+    budget_delegation: department
+  - code: "5300"
+    name: 役員報酬
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+    budget_delegation: department
+category_mapping:
+  revenue:
+    rent: "4100"
+    other_revenue: "4100"
+  expense:
+    other: "5100"
+    depreciation: "5100"
+journal_source_accounts:
+  bank_control: "1100"
+  accounts_receivable: "1150"
+  withholding_payable: "2120"
+  social_insurance_payable: "2130"
+  payroll_payable: "2140"
+  accounts_payable: "2110"
+  payroll_expense: "5300"
+  depreciation_expense: "5100"
+  accumulated_depreciation: "1290"
+  retained_earnings: "3200"
+  consumption_tax_payable: "2160"
+  consumption_tax_receivable: "2170"

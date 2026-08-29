@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OrgOSCorporateTaxDraft
+  xmlns="urn:openorgos:jp-tax-corporate:draft:1"
+  schemaVersion="1"
+  purpose="advisor-handoff-draft"
+  submission="not-for-etax"
+  generatedAt="2026-08-26T02:10:11.239Z"
+>
+  <Disclaimer>
+    This file is an OrgOS Ledger draft for tax-advisor handoff (ADR 0052 Phase 5b).
+    It is not an official e-Tax / NTA return XML and must not be submitted as-is.
+  </Disclaimer>
+  <Entity>
+    <LegalName>パイロット法人株式会社</LegalName>
+    <DisplayName>パイロット法人株式会社</DisplayName>
+    <FiscalYear>FY2026</FiscalYear>
+    <AsOf>2027-01-31</AsOf>
+  </Entity>
+  <Statements>
+    <BalanceSheet balanced="false">
+      <TotalAssetsYen>1000000</TotalAssetsYen>
+      <TotalLiabilitiesYen>0</TotalLiabilitiesYen>
+      <TotalEquityYen>0</TotalEquityYen>
+      <NetIncomeYen>0</NetIncomeYen>
+    </BalanceSheet>
+    <ProfitLoss>
+      <RevenueYen>0</RevenueYen>
+      <NetProfitYen>0</NetProfitYen>
+    </ProfitLoss>
+    <TrialBalance balanced="false">
+      <DebitTotalYen>1000000</DebitTotalYen>
+      <CreditTotalYen>0</CreditTotalYen>
+      <RowCount>1</RowCount>
+    </TrialBalance>
+  </Statements>
+  <CorporateTaxPrep>
+    <EstimatedTaxStatus>unknown</EstimatedTaxStatus>
+    
+    
+  </CorporateTaxPrep>
+  <AnnexDraft id="betsu-4-like" label="所得の計算（概算）">
+    <Line code="net_income" label="当期純利益">0</Line>
+    <Line code="taxable_income_placeholder" label="課税所得（税理士確定）">TBD</Line>
+  </AnnexDraft>
+</OrgOSCorporateTaxDraft>

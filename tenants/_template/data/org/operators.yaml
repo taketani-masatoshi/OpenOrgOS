@@ -1,5 +1,11 @@
 # Demo tenant operator registry (L1 — test fixture keys only; hashes not secrets)
 # Keys: demo-operator-key (OP-001) · demo-operator-key-2 (OP-002) — tests/cli only
+#
+# Optional company-core SSO gate (empty / omitted = registry match only):
+# login_policy:
+#   email_domains:
+#     - example.com
+#   grandfather_emails: []   # max 1 — must match active ceo if set
 version: "1"
 operators:
   - operator_id: OP-001

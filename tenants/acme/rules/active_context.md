@@ -31,6 +31,7 @@
 - `hospitality` / `hospitality` — `steward/modules/hospitality/` **読まない**
 - `professional_services` / `professional_services` — `steward/modules/professional_services/` **読まない**
 - `venture_capital` / `venture_capital` — `steward/modules/venture_capital/` **読まない**
+- `investor_relations` / `investor_relations` — `steward/modules/investor_relations/` **読まない**
 - `saas_subscription` / `saas_subscription` — `steward/modules/saas_subscription/` **読まない**
 - `event_space` / `event_space` — `steward/modules/event_space/` **読まない**
 - `ecommerce` / `ecommerce` — `steward/modules/ecommerce/` **読まない**
@@ -98,20 +99,32 @@
 
 ## 未バインドカタログ（読取禁止）
 
+- `customer_success` — `modules.yaml` 未登録 · **読まない**
 - `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_bank_corporate` — `modules.yaml` 未登録 · **読まない**
 - `jp_carbon_neutral_2050` — `modules.yaml` 未登録 · **読まない**
+- `jp_certification` — `modules.yaml` 未登録 · **読まない**
 - `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
+- `jp_inspection` — `modules.yaml` 未登録 · **読まない**
+- `jp_invoice_qualified` — `modules.yaml` 未登録 · **読まない**
+- `jp_minpaku` — `modules.yaml` 未登録 · **読まない**
+- `jp_payroll` — `modules.yaml` 未登録 · **読まない**
+- `jp_permit_application` — `modules.yaml` 未登録 · **読まない**
 - `jp_permit_registry` — `modules.yaml` 未登録 · **読まない**
 - `jp_privacy_policy` — `modules.yaml` 未登録 · **読まない**
+- `jp_social_insurance` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
+- `jp_tax_consumption` — `modules.yaml` 未登録 · **読まない**
+- `jp_tax_corporate` — `modules.yaml` 未登録 · **読まない**
 - `jp_trademark_application` — `modules.yaml` 未登録 · **読まない**
+- `jp_withholding_statutory` — `modules.yaml` 未登録 · **読まない**
 - `jp_women_empowerment` — `modules.yaml` 未登録 · **読まない**
 - `language_bridge` — `modules.yaml` 未登録 · **読まない**
 - `property_management` — `modules.yaml` 未登録 · **読まない**
 - `real_estate_brokerage` — `modules.yaml` 未登録 · **読まない**
 - `software_outsourcing` — `modules.yaml` 未登録 · **読まない**
 - `travel_booking` — `modules.yaml` 未登録 · **読まない**
+- `venue_booking` — `modules.yaml` 未登録 · **読まない**
 
 ## Secretary 読取面（on_demand · @file 明示）
 

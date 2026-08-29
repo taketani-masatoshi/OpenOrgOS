@@ -1,0 +1,17 @@
+{
+  "tenant_id": "pilot-ledger-001",
+  "exported_at": "2026-08-26T13:00:19.409Z",
+  "product": "orgos-ledger",
+  "paths": [
+    "tenant.yaml",
+    "modules.yaml",
+    "standards.yaml",
+    "regulations.yaml",
+    "rules",
+    "data/finance",
+    "data/product",
+    "data/org/operators.yaml",
+    "data/plans",
+    "docs/product"
+  ]
+}

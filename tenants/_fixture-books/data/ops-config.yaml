@@ -1,0 +1,7 @@
+skeleton: true
+
+fiscal_year:
+  id: FY2026
+  plan_file: data/plans/yojitsu-fy2026.yaml
+  from: "2026-02"
+  to: "2027-01"

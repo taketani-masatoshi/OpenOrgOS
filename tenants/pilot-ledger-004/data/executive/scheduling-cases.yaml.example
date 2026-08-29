@@ -1,0 +1,23 @@
+# 日程調整案件（テンプレート — Git 追跡）
+# 実データ: cp scheduling-cases.yaml.example scheduling-cases.yaml（gitignore）
+# Secretary · schedule_coordination Skill 正本
+
+version: 1
+cases: []
+# 例:
+# cases:
+#   - id: SCH-2026-001
+#     title: 役員打合せ
+#     status: open
+#     created_at: "2026-07-11T00:00:00.000Z"
+#     updated_at: "2026-07-11T00:00:00.000Z"
+#     duration_minutes: 60
+#     participants:
+#       - id: PART-001
+#         name: 示例太郎
+#         email: example@partner.co.jp
+#         role: external
+#         response: pending
+#     proposed_slots: []
+#     mail_thread_ids: []
+#     next_action: propose_slots

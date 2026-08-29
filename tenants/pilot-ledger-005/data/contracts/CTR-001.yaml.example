@@ -1,0 +1,27 @@
+# Template example — draft outsourcing (copy to CTR-001.yaml on tenant init)
+id: CTR-001
+name: "業務委託契約（サンプル）"
+counterparty: "株式会社サンプル委託先"
+counterparty_type: company
+type: outsourcing
+status: draft
+start_date: "2026-08-01"
+auto_renewal: false
+owner: "CEO"
+scope_summary: |
+  テンプレート用の下書き契約。テナント初期化後に差し替える。
+documents:
+  draft: "docs/contracts/CTR-001/01-draft.md"
+risk:
+  risk_level: medium
+  notes: "締結デモ用 · end_date は締結時に設定"
+ceo:
+  business_impact: medium
+  impact_note: "テンプレ下書き。締結前は義務未発生。"
+  our_obligations:
+    - party: us
+      summary: "締結後は委託対価を支払う"
+      impact: medium
+  our_rights:
+    - party: us
+      summary: "検収基準に照らして成果を求められる"

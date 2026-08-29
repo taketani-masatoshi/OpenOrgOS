@@ -1,0 +1,12 @@
+entity:
+  name: パイロット法人株式会社
+  type: 株式会社
+fiscal_year:
+  end_month: 1
+consumption_tax:
+  status: 免税事業者
+  invoice_registered: false
+  base_period_sales_jpy: 0
+corporate_tax:
+  category: 普通法人
+  capital_stock: 1000000

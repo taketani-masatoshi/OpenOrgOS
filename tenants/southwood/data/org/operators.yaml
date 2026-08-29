@@ -1,12 +1,14 @@
 # Demo tenant operator registry (L1 — test fixture keys only; hashes not secrets)
 # Keys: demo-operator-key (OP-001) · demo-operator-key-2 (OP-002) — tests/cli only
+# Community login m.taketani@southwood.co.jp is linked as OP-001 (CEO) for this tenant.
 version: "1"
 operators:
   - operator_id: OP-001
-    display_name: Demo CEO
+    display_name: 竹谷昌敏
     role: ceo
     status: active
-    approver_name: Demo CEO
+    approver_name: 竹谷昌敏
+    email: m.taketani@southwood.co.jp
     key_hash: sha256:4a7c449d22a99026fac16a47621ff68792ff589f72334ea3950ce186a5615e9a
   - operator_id: OP-002
     display_name: 秘書オペレータ

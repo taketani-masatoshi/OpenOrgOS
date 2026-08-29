@@ -1,0 +1,11 @@
+# テナント統制状態 — 例
+# コピー: tenants/{id}/data/compliance/controls.yaml
+# 生成: orgos controls init
+
+version: "1"
+as_of: YYYY-MM-DD
+controls:
+  - id: CTL-9001-4.3
+    maturity: L0
+  - id: CTL-CORE-doc-control
+    maturity: L0

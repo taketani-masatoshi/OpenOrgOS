@@ -1,0 +1,21 @@
+period: "2026-2028"
+
+vision: |
+  Finance fixture tenant — GL / ledger test books.
+
+segments:
+  - name: "番町ハイム312（賃貸）"
+    description: "Fixture rental"
+    revenue_driver: "月額賃料"
+  - name: "亀沢旅館（1棟貸し）"
+    description: "Fixture hotel"
+    revenue_driver: "宿泊料金"
+
+kpi: []
+
+years:
+  - year: 2026
+    revenue_plan: 2300000
+    operating_profit_plan: 878316
+    investment_plan: 0
+    borrowing_plan: 0

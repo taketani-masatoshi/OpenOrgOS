@@ -1,0 +1,19 @@
+version: 1
+# 正本: data/operator/agents.yaml（agents-enabled.yaml は廃止）
+# 初期化: orgos agent roster init
+# 検証: orgos agent roster validate
+# DEFAULT_CORE には engineering / cto / security も含まれます（platform_guide 委譲先）
+profiles:
+  operational:
+    - compliance
+    - contract
+    - cto
+    - engineering
+    - executive_steward
+    - finance
+    - operations
+    - secretary
+    - security
+  developer:
+    - platform_guide
+disabled: []

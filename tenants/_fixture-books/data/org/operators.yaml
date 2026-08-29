@@ -1,0 +1,13 @@
+version: "1"
+operators:
+  - operator_id: OP-001
+    display_name: Fixture CEO
+    role: ceo
+    status: active
+    approver_name: Fixture CEO
+    key_hash: sha256:fixture-ceo-not-for-prod
+  - operator_id: OP-READONLY
+    display_name: Fixture Readonly
+    role: readonly
+    status: active
+    key_hash: sha256:fixture-readonly-not-for-prod

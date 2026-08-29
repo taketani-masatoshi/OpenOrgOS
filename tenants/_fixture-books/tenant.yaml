@@ -1,0 +1,10 @@
+id: _fixture-books
+name: Finance Books Fixture
+description: Isolated GL / ledger / reconcile fixture tenant for vitest (not for production)
+lifecycle: test
+operation_mode: development
+jurisdiction: JP
+entity_form: kk
+display_language: ja
+locale: ja-JP
+default_currency: JPY

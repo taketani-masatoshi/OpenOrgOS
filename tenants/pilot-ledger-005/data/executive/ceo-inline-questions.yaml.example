@@ -1,0 +1,6 @@
+# CEO インライン質問（L1 · Today / Steward Chat 表示）
+# 実体: data/executive/ceo-inline-questions.yaml（tenant scaffold で生成）
+# 正本 UX: steward/rules/ceo-communication-ux.md
+
+version: 1
+questions: []

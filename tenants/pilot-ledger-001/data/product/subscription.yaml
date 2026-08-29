@@ -1,0 +1,7 @@
+version: 1
+plan: business
+status: trialing
+company_name: パイロット法人株式会社
+admin_email: billing@pilot.example.com
+trial_ends_at: 2026-09-08T04:46:40.322Z
+updated_at: 2026-08-25T04:46:40.322Z
