@@ -1,0 +1,28 @@
+version: 1
+# Fixture FA aligned to opening-balances (1200=5_000_000, 1290=706_382).
+as_of: "2026-08-31"
+fiscal_year: FY2026
+currency: JPY
+
+assets:
+  - id: ASSET-001
+    property_id: PROP-001
+    name: Fixture building
+    category: 建物
+    acquisition_date: "2025-02-10"
+    placed_in_service_month: "2025-02"
+    acquisition_cost: 5000000
+    useful_life_years: 47
+    depreciation_method: 定額法
+    annual_depreciation: 106382
+    fy_depreciation_jpy: 106382
+    accumulated_depreciation: 706382
+    book_value: 4293618
+
+summary:
+  total_acquisition_cost: 5000000
+  total_accumulated_depreciation: 706382
+  total_book_value: 4293618
+  annual_depreciation_fy_current: 106382
+
+notes: Aligned to opening-balances for control-reconcile tests.

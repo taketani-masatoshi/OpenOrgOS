@@ -1,0 +1,10 @@
+version: 1
+fiscal_year_label: FY2026
+declining_balance_rates:
+  - useful_life_years: 47
+    rate_pct: 4.3
+    revised_rate_pct: 4.7
+    guarantee_rate_pct: 0.108
+notes: |
+  定率法の償却率は国税庁「耐用年数別償却率表」相当の seed。
+  実務の最終判断は税理士確認。

@@ -1,0 +1,9 @@
+as_of: "2026-08-31"
+fiscal_year: FY2026
+currency: JPY
+assets: []
+summary:
+  total_acquisition_cost: 0
+  total_accumulated_depreciation: 0
+  total_book_value: 0
+  annual_depreciation_fy_current: 0

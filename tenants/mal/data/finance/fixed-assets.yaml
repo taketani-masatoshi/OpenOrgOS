@@ -14,10 +14,12 @@ assets:
     name: 番町ハイム312（建物）
     category: 建物
     acquisition_date: "2025-02-10"
+    placed_in_service_month: "2025-02"
     acquisition_cost: 16600000
     useful_life_years: 47
     depreciation_method: 定額法
     annual_depreciation: 353191
+    fy_depreciation_jpy: 353191
     accumulated_depreciation: 706382
     book_value: 15893618
     expense_plan_line_id: depreciation
@@ -49,16 +51,19 @@ assets:
     name: 亀沢建物（上置き）
     category: 建物
     acquisition_date: "2026-04-01"
+    placed_in_service_month: "2027-02"
     acquisition_cost: 26000000
     useful_life_years: 34
     depreciation_method: 定額法
-    annual_depreciation: 764706
+    annual_depreciation: 764705
+    fy_depreciation_jpy: 0
     accumulated_depreciation: 0
     book_value: 26000000
     expense_plan_line_id: null
     tax_notes: |
-      耐用年数34年（木造旅館 · デモ確定）。第9期 P/L には減価償却未計上（開業2026/8 · 償却開始第10期想定）。
+      耐用年数34年（木造旅館 · デモ確定）。第9期 P/L には減価償却未計上（供用開始 2027-02 · fy_depreciation_jpy 0）。
       investment-plan（2,600万・2026-03/04）と LOAN-002 建築部分と一致。
+      CIP 振替: 取得 2026-04-01 · 供用 placed_in_service_month 2027-02 — gap fy2025-cip-evidence resolved 2026-08-24。
       償却開始月・中古割増等は税理士確定後に annual_depreciation を更新。
 
 summary:
