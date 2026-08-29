@@ -15,7 +15,7 @@ iso:
     enabled: false
     notes: jp_medical_device On · REG-025/026 は施行中（規格運用は停止）
   - id: ISO-37000
-    enabled: false
+    enabled: true
     notes: 組織ガバナンス Guidance · 自己宣言データは保持（規格運用は停止）
   - id: ISO-22301
     enabled: false

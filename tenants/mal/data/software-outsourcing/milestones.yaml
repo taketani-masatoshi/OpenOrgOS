@@ -1,0 +1,13 @@
+milestones:
+  - id: MS-001
+    sow_id: SOW-001
+    name: "要件定義完了"
+    due_date: "2026-05-15"
+    status: done
+    payment_pct: 20
+  - id: MS-002
+    sow_id: SOW-001
+    name: "UAT 完了"
+    due_date: "2026-08-31"
+    status: in_progress
+    payment_pct: 30

@@ -341,6 +341,8 @@ orgos agent pulse --agent compliance
 - `jp_privacy_policy_status` · cli · `steward/jurisdiction-packs/JP/modules/jp_privacy_policy/skills/privacy_policy_status.md`
 - `jp_trademark_checklist` · cli · `steward/jurisdiction-packs/JP/modules/jp_trademark_application/skills/jp_trademark_application_ops.md`
 - `jp_trademark_draft` · cli · `steward/jurisdiction-packs/JP/modules/jp_trademark_application/skills/jp_trademark_application_ops.md`
+- `jp_women_empowerment_show` · cli · `steward/jurisdiction-packs/JP/modules/jp_women_empowerment/skills/women_empowerment_show.md`
+- `jp_women_empowerment_kpi` · cli · `steward/jurisdiction-packs/JP/modules/jp_women_empowerment/skills/women_empowerment_kpi.md`
 
 ---
 

@@ -3,6 +3,7 @@ dist/
 test-results/
 playwright-report/
 tests/.fixture-snapshot/
+tests/.ooo-e2e-report.json
 tests/.fixture-restore.lock/
 .orgos-ci/
 .orgos/

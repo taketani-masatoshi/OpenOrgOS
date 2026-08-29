@@ -4,7 +4,9 @@ entity:
 fiscal_year:
   end_month: 1
 consumption_tax:
-  status: TBD
+  status: 免税事業者
+  invoice_registered: false
+  base_period_sales_jpy: 0
 corporate_tax:
-  category: TBD
-  capital_stock: TBD
+  category: 普通法人
+  capital_stock: 1000000
