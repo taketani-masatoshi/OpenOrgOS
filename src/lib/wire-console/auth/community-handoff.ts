@@ -9,6 +9,7 @@ import {
 import { wireConsoleAuthMode } from "./mode.js";
 import {
   COMMUNITY_LOCALE_COOKIE,
+  LEGACY_COMMUNITY_LOCALE_COOKIE,
   LOCALE_STORAGE_KEY,
   isUiLocale,
   localeCookieHeaders,
@@ -100,7 +101,8 @@ export function handleCommunityHandoff(
   if (!uiLocale) {
     uiLocale =
       uiLocaleFromCommunityCookie(jar[LOCALE_STORAGE_KEY]) ??
-      uiLocaleFromCommunityCookie(jar[COMMUNITY_LOCALE_COOKIE]);
+      uiLocaleFromCommunityCookie(jar[COMMUNITY_LOCALE_COOKIE]) ??
+      uiLocaleFromCommunityCookie(jar[LEGACY_COMMUNITY_LOCALE_COOKIE]);
   }
 
   const host = (req.headers.host ?? "localhost").split(":")[0] ?? "localhost";

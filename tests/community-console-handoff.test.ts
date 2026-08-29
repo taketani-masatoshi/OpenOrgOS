@@ -35,20 +35,23 @@ function mintWithEmail(claims: {
   return `${signed}.${sig}`;
 }
 
-function captureHandoff(idToken: string): { status: number; location: string; cookie: string; body: string } {
+function captureHandoff(
+  idToken: string,
+  options?: { uiLocale?: string; host?: string; cookie?: string },
+): { status: number; location: string; cookie: string; cookies: string[]; body: string } {
   let status = 0;
   let location = "";
-  let cookie = "";
+  let cookies: string[] = [];
   let body = "";
   const res = {
     writeHead(code: number, headers?: Record<string, string>) {
       status = code;
       if (headers?.Location) location = headers.Location;
-      if (headers?.["Set-Cookie"]) cookie = headers["Set-Cookie"];
+      if (headers?.["Set-Cookie"]) cookies = [headers["Set-Cookie"]];
     },
     setHeader(name: string, value: string | string[]) {
       if (name.toLowerCase() === "set-cookie") {
-        cookie = Array.isArray(value) ? value.join("; ") : value;
+        cookies = Array.isArray(value) ? value : [value];
       }
     },
     end(chunk?: string) {
@@ -58,8 +61,12 @@ function captureHandoff(idToken: string): { status: number; location: string; co
   const url = new URL(
     `http://127.0.0.1:9470/auth/community-handoff?token=${encodeURIComponent(idToken)}&next=/wire/`,
   );
-  handleCommunityHandoff({ method: "GET", headers: {} } as IncomingMessage, res, url);
-  return { status, location, cookie, body };
+  if (options?.uiLocale) url.searchParams.set("ui_locale", options.uiLocale);
+  const headers: Record<string, string> = {};
+  if (options?.host) headers.host = options.host;
+  if (options?.cookie) headers.cookie = options.cookie;
+  handleCommunityHandoff({ method: "GET", headers } as IncomingMessage, res, url);
+  return { status, location, cookie: cookies.join("; "), cookies, body };
 }
 
 describe("Community → Console SSO handoff", () => {
@@ -148,6 +155,32 @@ operators:
     expect(match).toBeTruthy();
     const user = getSessionUser(decodeURIComponent(match![1]!));
     expect(user?.operator_id).toBe("OP-001");
+  });
+
+  it("shares only the Console UI locale across oorgos.org and clears the legacy cookie", () => {
+    const { status, cookies } = captureHandoff(
+      mintWithEmail({ sub: "ooo-user-id", email: "k.lab.masa@gmail.com" }),
+      { uiLocale: "ja", host: "operator.oorgos.org" },
+    );
+    expect(status).toBe(302);
+
+    const shared = cookies.filter((line) => line.includes("Domain=.oorgos.org"));
+    expect(shared.some((line) => line.startsWith("oorgos-locale=ja"))).toBe(true);
+    expect(shared.every((line) => !line.startsWith("oorgos-lang="))).toBe(true);
+    expect(cookies.some((line) => line.startsWith("oorgos-lang=ja"))).toBe(true);
+    expect(
+      cookies.filter((line) => line.startsWith("locale=;") && line.includes("max-age=0")),
+    ).toHaveLength(2);
+  });
+
+  it("falls back to a leftover Community locale cookie", () => {
+    const { status, cookies } = captureHandoff(
+      mintWithEmail({ sub: "ooo-user-id", email: "k.lab.masa@gmail.com" }),
+      { host: "operator.oorgos.org", cookie: "locale=de" },
+    );
+    expect(status).toBe(302);
+    expect(cookies.some((line) => line.startsWith("oorgos-locale=en"))).toBe(true);
+    expect(cookies.some((line) => line.startsWith("locale=;"))).toBe(true);
   });
 
   it("accepts grandfathered personal email on tenant login_policy", () => {

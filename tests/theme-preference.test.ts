@@ -9,8 +9,11 @@ import {
   DEFAULT_UI_LOCALE,
   LOCALE_STORAGE_KEY,
   COMMUNITY_LOCALE_COOKIE,
+  LEGACY_COMMUNITY_LOCALE_COOKIE,
   localeCookieSetter,
   communityLocaleCookieSetter,
+  legacyLocaleExpireCookies,
+  localeCookieHeaders,
   localeFromSources,
   uiLocaleFromCommunityCookie,
 } from "../apps/shared/locale.js";
@@ -81,10 +84,35 @@ describe("ui locale preference", () => {
     expect(uiLocaleFromCommunityCookie(null)).toBeNull();
   });
 
-  it("sets paired Community locale cookie on oorgos.org", () => {
+  it("keeps the Community locale cookie host-only on oorgos.org", () => {
     const cookie = communityLocaleCookieSetter("ja", "operator.oorgos.org", "https:");
+    expect(COMMUNITY_LOCALE_COOKIE).toBe("oorgos-lang");
     expect(cookie).toContain(`${COMMUNITY_LOCALE_COOKIE}=ja`);
-    expect(cookie).toContain("Domain=.oorgos.org");
+    expect(cookie).not.toContain("Domain=");
+  });
+
+  it("expires the legacy locale cookie in both shapes", () => {
+    const lines = legacyLocaleExpireCookies("operator.oorgos.org", "https:");
+    expect(lines).toHaveLength(2);
+    for (const line of lines) {
+      expect(line).toContain(`${LEGACY_COMMUNITY_LOCALE_COOKIE}=;`);
+      expect(line).toContain("max-age=0");
+    }
+    expect(lines.some((line) => line.includes("Domain=.oorgos.org"))).toBe(true);
+    expect(lines.some((line) => !line.includes("Domain="))).toBe(true);
+    expect(legacyLocaleExpireCookies("localhost", "http:")).toHaveLength(1);
+  });
+
+  it("shares only the Console UI cookie across subdomains", () => {
+    const headers = localeCookieHeaders("ja", "operator.oorgos.org", true);
+    const shared = headers.filter((line) => line.includes("Domain=.oorgos.org"));
+    expect(shared.some((line) => line.startsWith(`${LOCALE_STORAGE_KEY}=ja`))).toBe(true);
+    expect(shared.every((line) => !line.startsWith(`${COMMUNITY_LOCALE_COOKIE}=`))).toBe(true);
+    expect(
+      headers.some(
+        (line) => line.startsWith(`${LEGACY_COMMUNITY_LOCALE_COOKIE}=;`) && line.includes("max-age=0"),
+      ),
+    ).toBe(true);
   });
 });
 
