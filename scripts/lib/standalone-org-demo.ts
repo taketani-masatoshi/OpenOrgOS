@@ -20,8 +20,8 @@ import { serializeEventEnvelope } from "../../src/lib/protocol/envelope.js";
 import { getProtocolOutboxDir } from "../../src/lib/protocol/paths.js";
 import { runWithProtocolWriteGuard } from "../../src/lib/protocol/protocol-write-guard.js";
 import { writeOutboxProvenance } from "../../src/lib/protocol/outbox-provenance.js";
-import { proposeOrgApproval, approveOrgApproval } from "../../src/lib/org/approval/index.js";
-import { loadOrgAuthorizedPersons } from "../../src/lib/org/tenant-data.js";
+import { proposeOrgApproval, humanApproveOrgApproval } from "../../src/lib/org/approval/index.js";
+import { listActiveOperators } from "../../src/lib/org/operators.js";
 
 export interface StandaloneOrgDemoResult {
   tenant: string;
@@ -103,11 +103,11 @@ export function runStandaloneOrgDemo(tenant: string): StandaloneOrgDemoResult {
     writeOutboxProvenance(getProtocolOutboxDir(), delegationEnvelope, "standalone-org-demo");
   });
 
-  const persons = loadOrgAuthorizedPersons();
-  const approver =
-    persons.directors[0]?.name ??
-    persons.representative?.split(/[、,]/)[0]?.trim() ??
-    "Director";
+  const approverOp = listActiveOperators().find((o) => o.role === "ceo" || o.role === "approver");
+  if (!approverOp) {
+    throw new Error("No ceo/approver operator in registry — cannot demo human approval");
+  }
+  const approver = approverOp.approver_name || approverOp.display_name;
   const policyRef = resolveJurisdictionApprovalPolicy().policy_ref;
   const request = proposeOrgApproval({
     scope: "internal",
@@ -117,9 +117,11 @@ export function runStandaloneOrgDemo(tenant: string): StandaloneOrgDemoResult {
     amount: { value: 50_000, currency: tenant === "hk-demo" ? "HKD" : "JPY" },
     message: "Standalone internal approval demo",
   });
-  const { auditEnvelope } = approveOrgApproval({
+  const { auditEnvelope } = humanApproveOrgApproval({
     approvalId: request.approval_id,
     approverId: approver,
+    operatorId: approverOp.operator_id,
+    source: "cli",
   });
 
   const audit = verifyProtocolAuditChain();

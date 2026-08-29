@@ -1,21 +1,23 @@
 #!/usr/bin/env node
 /**
- * E2E / combined Operator Console server — seeds demo wire+witness, starts Steward Chat BFF.
+ * E2E Operator Console server — seeds demo wire+witness, then serves the same combined
+ * surface as production (`/chat/v1` + `/console/v1` + SPA) so `/wire/` works in E2E.
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { STEWARD_CHAT_SPA_DIST } from "../src/lib/steward-chat/server.js";
 import {
-  startStewardChatServer,
-  type StewardChatServerHandle,
-  STEWARD_CHAT_SPA_DIST,
-} from "../src/lib/steward-chat/server.js";
+  startOperatorConsoleServer,
+  type OperatorConsoleServerHandle,
+} from "../src/lib/operator-console/combined-server.js";
 import {
   startDemoWitnessHubs,
   type DemoWitnessHubs,
 } from "../tests/helpers/demo-witness-fixture.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { pushQueueEvent } from "../src/lib/queue-db.js";
+import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
 
 async function seedDemo(): Promise<void> {
   const r = spawnSync("node", ["--import", "tsx", "scripts/seed-demo-wire-skeleton.ts"], {
@@ -46,12 +48,16 @@ async function main(): Promise<void> {
   if (process.env.STEWARD_CHAT_E2E_SEED !== "0") {
     await seedDemo();
     setTenantId(process.env.ORGOS_TENANT ?? "demo");
+    ensureLedgerDemoChartOfAccounts();
     pushQueueEvent({
       type: "pipeline_daily_complete",
       ref: "daily",
       status: "done",
       payload: { summary: "E2E demo pipeline complete" },
     });
+  } else {
+    setTenantId(process.env.ORGOS_TENANT ?? "demo");
+    ensureLedgerDemoChartOfAccounts();
   }
 
   let witnessHubs: DemoWitnessHubs | undefined;
@@ -68,7 +74,7 @@ async function main(): Promise<void> {
   }
 
   const port = Number(process.env.STEWARD_CHAT_SMOKE_PORT ?? "9473");
-  let server: StewardChatServerHandle | undefined;
+  let server: OperatorConsoleServerHandle | undefined;
 
   const shutdown = (): void => {
     witnessHubs?.close();
@@ -79,7 +85,7 @@ async function main(): Promise<void> {
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
 
-  server = startStewardChatServer({ host: "127.0.0.1", port });
+  server = await startOperatorConsoleServer({ host: "127.0.0.1", port });
   process.env.STEWARD_CHAT_SMOKE_URL = server.url;
   console.log(`steward-chat e2e server ${server.url} (tenant=${process.env.ORGOS_TENANT})`);
 

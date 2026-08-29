@@ -66,6 +66,7 @@ async function main(): Promise<void> {
   const approved = approveInterOrgNotice({
     noticeId: notice.notice_id,
     approverId: "段燕燕",
+    operatorId: "OP-001",
     eventId,
   });
   const envelope = approved.transmission.envelope;

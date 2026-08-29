@@ -1,0 +1,46 @@
+# OrgOS Ledger — 1 customer · 1 tenant · 1 container
+# Build: docker build -f deploy/operator/Dockerfile -t orgos-ledger:local .
+# Run:   ORGOS_TENANT=acme-corp LEDGER_DATA=./data/acme-corp docker compose up -d
+
+services:
+  ledger:
+    image: orgos-ledger:local
+    build:
+      context: ../..
+      dockerfile: deploy/operator/Dockerfile
+    ports:
+      - "${LEDGER_PORT:-9470}:9470"
+    environment:
+      ORGOS_TENANT: ${ORGOS_TENANT:?set ORGOS_TENANT}
+      ORGOS_ENV: ${ORGOS_ENV:-production}
+      ORGOS_WORKSPACE: /workspace
+      STEWARD_CHAT_AUTH: "1"
+      WIRE_CONSOLE_AUTH: prod
+      ORGOS_COOKIE_SECURE: ${ORGOS_COOKIE_SECURE:-0}
+      ORGOS_CSRF: "1"
+      WIRE_CONSOLE_WEBAUTHN_RP_ID: ${WIRE_CONSOLE_WEBAUTHN_RP_ID:-localhost}
+      WIRE_CONSOLE_WEBAUTHN_ORIGIN: ${WIRE_CONSOLE_WEBAUTHN_ORIGIN:-http://localhost:9470}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_STARTER: ${STRIPE_PRICE_STARTER:-}
+      STRIPE_PRICE_BUSINESS: ${STRIPE_PRICE_BUSINESS:-}
+      STRIPE_PRICE_ACCOUNTANT: ${STRIPE_PRICE_ACCOUNTANT:-}
+      ORGOS_LEDGER_AUTO_PROVISION: ${ORGOS_LEDGER_AUTO_PROVISION:-0}
+      ORGOS_RATE_LIMIT_TENANT_MAX: ${ORGOS_RATE_LIMIT_TENANT_MAX:-60}
+      ORGOS_RATE_LIMIT_TENANT_STARTER_MAX: ${ORGOS_RATE_LIMIT_TENANT_STARTER_MAX:-30}
+      ORGOS_RATE_LIMIT_TENANT_BUSINESS_MAX: ${ORGOS_RATE_LIMIT_TENANT_BUSINESS_MAX:-60}
+      ORGOS_RATE_LIMIT_TENANT_ACCOUNTANT_MAX: ${ORGOS_RATE_LIMIT_TENANT_ACCOUNTANT_MAX:-120}
+    volumes:
+      - ${LEDGER_DATA:?set LEDGER_DATA}:/workspace
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:9470/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 90s

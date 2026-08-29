@@ -59,7 +59,6 @@ WORKDIR /opt/orgos
 COPY --from=build /stage/ /opt/orgos/
 
 # SPA assets (combined-server resolves cwd/apps/... · entrypoint cds to ORGOS_HOME)
-COPY --from=build /src/apps/wire-console/dist-combined /opt/orgos/apps/wire-console/dist-combined
 COPY --from=build /src/apps/steward-chat/dist /opt/orgos/apps/steward-chat/dist
 COPY --from=build /src/deploy/demo/seed /opt/orgos/seed
 COPY deploy/demo/entrypoint.sh /usr/local/bin/orgos-demo-entrypoint.sh
