@@ -22,7 +22,7 @@ export {
   getLlmPoolQueueSnapshot,
   resetLlmPoolRouterForTests,
 } from "./router.js";
-export type { LlmWorkerLease } from "./router.js";
+export type { LlmWorkerLease, LlmRouteHint } from "./router.js";
 
 export {
   snapshotWorkerStats,

@@ -50,3 +50,11 @@ export type LlmQueueConfig = z.output<typeof llmQueueConfigSchema>;
 export type LlmWorkersConfig = z.output<typeof llmWorkersConfigSchema>;
 
 export const llmWorkersConfigUpdateSchema = llmWorkersConfigSchema;
+
+/** Chat / ask routing hint. Auto keeps local-first + optional cloud overflow. */
+export const llmRouteHintSchema = z.object({
+  mode: z.enum(["auto", "local", "cloud"]),
+  worker_id: z.string().min(1).max(80).optional(),
+});
+
+export type LlmRouteHint = z.output<typeof llmRouteHintSchema>;

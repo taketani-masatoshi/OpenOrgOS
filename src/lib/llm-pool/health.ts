@@ -1,5 +1,5 @@
 import type { LlmWorker } from "../../../schemas/llm-workers.js";
-import { resolveWorkerApiKey } from "./registry.js";
+import { resolveWorkerApiKey, resolveWorkerBaseUrl } from "./registry.js";
 
 export type WorkerProbeResult = {
   ok: boolean;
@@ -33,7 +33,7 @@ export async function probeWorker(worker: LlmWorker): Promise<WorkerProbeResult>
     };
   }
 
-  const base = worker.base_url.replace(/\/$/, "");
+  const base = resolveWorkerBaseUrl(worker);
   const url = `${base}/models`;
   try {
     const controller = new AbortController();

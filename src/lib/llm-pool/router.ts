@@ -1,4 +1,8 @@
-import type { LlmWorker, LlmWorkersConfig } from "../../../schemas/llm-workers.js";
+import type {
+  LlmRouteHint,
+  LlmWorker,
+  LlmWorkersConfig,
+} from "../../../schemas/llm-workers.js";
 import type { LlmApiConfig } from "../operator-runtime/llm-api.js";
 import {
   loadLlmWorkersConfig,
@@ -14,6 +18,8 @@ import {
   markWorkerUnhealthy,
   setQueueDepth,
 } from "./stats.js";
+
+export type { LlmRouteHint };
 
 export type LlmWorkerLease = {
   worker: LlmWorker;
@@ -33,6 +39,7 @@ export class LlmPoolError extends Error {
 
 type Waiter = {
   enqueuedAt: number;
+  hint?: LlmRouteHint;
   resolve: (lease: { worker: LlmWorker; queued_ms: number }) => void;
   reject: (err: Error) => void;
   timer: ReturnType<typeof setTimeout>;
@@ -51,18 +58,36 @@ function activeConfig(): LlmWorkersConfig {
   return configOverride ?? loadLlmWorkersConfig();
 }
 
+function matchesHint(worker: LlmWorker, hint?: LlmRouteHint): boolean {
+  if (!hint) return true;
+  if (hint.worker_id && worker.id !== hint.worker_id) return false;
+  if (hint.mode === "local" || hint.mode === "cloud") {
+    return worker.tier === hint.mode;
+  }
+  return true;
+}
+
+function noWorkersMessage(hint?: LlmRouteHint): string {
+  if (hint?.worker_id) return `LLM worker not available: ${hint.worker_id}`;
+  if (hint?.mode === "local") return "No enabled local LLM workers";
+  if (hint?.mode === "cloud") return "No enabled cloud LLM workers";
+  return "No enabled LLM workers";
+}
+
 function eligibleWorkers(
   config: LlmWorkersConfig,
   tier?: "local" | "cloud",
+  hint?: LlmRouteHint,
 ): LlmWorker[] {
   const now = Date.now();
-  return config.workers.filter(
-    (w) =>
-      w.enabled &&
-      (tier ? w.tier === tier : true) &&
-      isWorkerHealthy(w.id, now) &&
-      getWorkerInflight(w.id) < w.max_inflight,
-  );
+  return config.workers.filter((w) => {
+    if (!w.enabled) return false;
+    if (tier && w.tier !== tier) return false;
+    if (!matchesHint(w, hint)) return false;
+    if (getWorkerInflight(w.id) >= w.max_inflight) return false;
+    if (hint?.worker_id === w.id) return true;
+    return isWorkerHealthy(w.id, now);
+  });
 }
 
 function pickLeastInflight(candidates: LlmWorker[]): LlmWorker | null {
@@ -76,22 +101,27 @@ function pickLeastInflight(candidates: LlmWorker[]): LlmWorker | null {
   return sorted[0] ?? null;
 }
 
-function tryAcquire(preferCloud = false): LlmWorker | null {
+function tryAcquire(preferCloud = false, hint?: LlmRouteHint): LlmWorker | null {
   const config = activeConfig();
-  if (preferCloud) {
-    return pickLeastInflight(eligibleWorkers(config, "cloud"));
+  if (hint?.worker_id || hint?.mode === "local" || hint?.mode === "cloud") {
+    return pickLeastInflight(eligibleWorkers(config, undefined, hint));
   }
-  const local = pickLeastInflight(eligibleWorkers(config, "local"));
+  if (preferCloud) {
+    return pickLeastInflight(eligibleWorkers(config, "cloud", hint));
+  }
+  const local = pickLeastInflight(eligibleWorkers(config, "local", hint));
   if (local) return local;
   // No local capacity: only use cloud immediately if there are no local workers at all.
   const anyLocal = config.workers.some((w) => w.enabled && w.tier === "local");
   if (!anyLocal) {
-    return pickLeastInflight(eligibleWorkers(config, "cloud"));
+    return pickLeastInflight(eligibleWorkers(config, "cloud", hint));
   }
   return null;
 }
 
 function cloudOverflowReady(waiter: Waiter, config: LlmWorkersConfig): boolean {
+  if (waiter.hint?.mode === "local" || waiter.hint?.worker_id) return false;
+  if (waiter.hint?.mode === "cloud") return false;
   const overflow = config.queue.cloud_overflow;
   if (!overflow.enabled) return false;
   const waited = Date.now() - waiter.enqueuedAt;
@@ -112,11 +142,11 @@ function drainQueue(): void {
   while (waiters.length > 0) {
     const head = waiters[0]!;
     const preferCloud = cloudOverflowReady(head, config);
-    const worker = tryAcquire(preferCloud);
+    const worker = tryAcquire(preferCloud, head.hint);
     if (!worker) {
       // Local free? Prefer that even if overflow not yet ready.
       if (!preferCloud) {
-        const local = tryAcquire(false);
+        const local = tryAcquire(false, head.hint);
         if (local) {
           waiters.shift();
           clearTimeout(head.timer);
@@ -141,14 +171,16 @@ function drainQueue(): void {
   syncQueueDepth();
 }
 
-async function acquireLease(): Promise<{ worker: LlmWorker; queued_ms: number }> {
+async function acquireLease(
+  hint?: LlmRouteHint,
+): Promise<{ worker: LlmWorker; queued_ms: number }> {
   const config = activeConfig();
-  const enabled = config.workers.filter((w) => w.enabled);
+  const enabled = config.workers.filter((w) => w.enabled && matchesHint(w, hint));
   if (enabled.length === 0) {
-    throw new LlmPoolError("No enabled LLM workers", "no_workers");
+    throw new LlmPoolError(noWorkersMessage(hint), "no_workers");
   }
 
-  const immediate = tryAcquire(false);
+  const immediate = tryAcquire(false, hint);
   if (immediate) {
     beginWorkerInflight(immediate.id);
     return { worker: immediate, queued_ms: 0 };
@@ -177,6 +209,7 @@ async function acquireLease(): Promise<{ worker: LlmWorker; queued_ms: number }>
 
     const waiter: Waiter = {
       enqueuedAt,
+      hint,
       resolve,
       reject,
       timer,
@@ -236,8 +269,9 @@ function isRetryableTransportError(err: unknown): boolean {
  */
 export async function withLlmWorker<T>(
   fn: (lease: LlmWorkerLease) => Promise<T>,
+  hint?: LlmRouteHint,
 ): Promise<T> {
-  const first = await acquireLease();
+  const first = await acquireLease(hint);
   const started = Date.now();
   try {
     const result = await fn({
@@ -256,9 +290,10 @@ export async function withLlmWorker<T>(
       markUnhealthy: retryable,
     });
     if (!retryable) throw err;
+    if (hint?.worker_id) throw err;
 
-    // One retry on a different worker.
-    const second = await acquireLease();
+    // One retry on a different worker (same route hint).
+    const second = await acquireLease(hint);
     if (second.worker.id === first.worker.id) {
       releaseLease(second.worker, {
         ok: false,
