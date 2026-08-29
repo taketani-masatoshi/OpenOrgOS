@@ -1,0 +1,22 @@
+version: 1
+as_of: "2026-08-24"
+claims_revision: 0
+claims:
+  - claim_id: ECL-20260803-001
+    status: draft
+    person_id: business-unit
+    org_unit_id: business-unit
+    account_code: "5200"
+    amount_yen: 11000
+    currency: JPY
+    issuer:
+      org_id: vendor-cleaning-ctr012
+      display_name: 清掃業者（CTR-012 見込）
+      wire_ready: false
+    receipt_id: RCP-STAY-2026-001-CLEAN
+    receipt_digest: sha256:mal-stay-2026-001-cleaning-20260803
+    transaction_date: "2026-08-03"
+    proposed_by: business-unit
+    proposed_at: "2026-08-03T14:00:00.000Z"
+    notes: STAY-2026-001 チェックアウト後清掃（CTR-012 見込 · 経費精算台帳.csv 連携）
+    claim_revision: 0

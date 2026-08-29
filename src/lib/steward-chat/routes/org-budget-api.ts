@@ -4,9 +4,17 @@ import type { OperatorRecord } from "../../../../schemas/org/operator.js";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { resolveOperatorFromSessionUser } from "../../console-auth/operator-rbac.js";
 import {
+  requireAnyBudgetSurfacePermission,
   requireBudgetSurfacePermission,
   resolveBudgetActor,
 } from "../../console-auth/surface-guard.js";
+import {
+  ClaimPersonMismatchError,
+  isClaimOnlySeat,
+  resolveClaimOrgUnitId,
+  resolveIngestPersonId,
+  resolveOperatorClaimPersonId,
+} from "../../org/operator-claim-person.js";
 import {
   InvalidJsonError,
   PayloadTooLargeError,
@@ -483,6 +491,7 @@ export function buildOrgBudgetPayload(
       status: string;
       amount_yen?: number;
       requested_at?: string;
+      due_on?: string;
       paid_at?: string;
       paid_by?: string;
       payment_ref?: string;
@@ -1171,6 +1180,111 @@ export function buildOrgBudgetPayload(
   };
 }
 
+/**
+ * Employee claim desk: the viewer's own envelope and own claims only.
+ * A projection of the console payload — no company or peer figures.
+ */
+export function buildClaimDeskPayload(
+  user: WireConsoleUser,
+  opts?: { fiscalYear?: string },
+):
+  | {
+      ok: true;
+      fiscal_year?: string;
+      claims_revision: string;
+      person_id: string;
+      display_name: string;
+      org_unit_id: string;
+      allocation_yen: number;
+      actual_yen: number;
+      remaining_yen: number;
+      categories: Array<{
+        account_code: string;
+        account_name: string;
+        allocation_yen: number;
+        actual_yen: number;
+        remaining_yen: number;
+      }>;
+      claims: Array<{
+        claim_id: string;
+        status: string;
+        amount_yen: number;
+        account_code: string;
+        account_name: string;
+        recipient_name?: string;
+        transaction_date?: string;
+        due_on?: string;
+        reject_reason?: string;
+      }>;
+    }
+  | { ok: false; error: string; code: "no_envelope" } {
+  const actor = resolveBudgetActor(user);
+  const personId = resolveOperatorClaimPersonId(actor);
+  const payload = buildOrgBudgetPayload(user, opts);
+  if (!personId) {
+    return {
+      ok: false,
+      error: "operator has no personal envelope",
+      code: "no_envelope",
+    };
+  }
+  const departments = payload.departments ?? [];
+  let member: (typeof departments)[number]["members"][number] | undefined;
+  let orgUnitId = "";
+  for (const department of departments) {
+    const hit = department.members.find((row) => row.person_id === personId);
+    if (hit) {
+      member = hit;
+      orgUnitId = department.org_unit_id;
+      break;
+    }
+  }
+  if (!member) {
+    return {
+      ok: false,
+      error: "operator has no personal envelope",
+      code: "no_envelope",
+    };
+  }
+  // Employees see words, not account codes.
+  const accountName = (code: string): string =>
+    member.categories.find((row) => row.account_code === code)?.account_name ??
+    payload.person_account_catalog?.find((row) => row.account_code === code)
+      ?.account_name ??
+    "";
+  return {
+    ok: true,
+    fiscal_year: payload.fiscal_year,
+    claims_revision: payload.claims_revision,
+    person_id: personId,
+    display_name: member.display_name,
+    org_unit_id: orgUnitId,
+    allocation_yen: member.allocation_yen,
+    actual_yen: member.actual_yen,
+    remaining_yen: member.allocation_yen - member.actual_yen,
+    categories: member.categories.map((category) => ({
+      account_code: category.account_code,
+      account_name: category.account_name,
+      allocation_yen: category.allocation_yen,
+      actual_yen: category.actual_yen,
+      remaining_yen: category.allocation_yen - category.actual_yen,
+    })),
+    claims: listExpenseClaims()
+      .filter((claim) => claim.person_id === personId)
+      .map((claim) => ({
+        claim_id: claim.claim_id,
+        status: claim.status,
+        amount_yen: claim.amount_yen,
+        account_code: claim.account_code,
+        account_name: accountName(claim.account_code),
+        recipient_name: claim.recipient_name,
+        transaction_date: claim.transaction_date,
+        due_on: claim.reimbursement?.due_on,
+        reject_reason: claim.reject_reason,
+      })),
+  };
+}
+
 function proposedBudgetApprovalMessage(opts: {
   approvalId: string;
   kind: "company_total" | "department_total";
@@ -1241,8 +1355,35 @@ export async function handleOrgBudgetApi(
     return true;
   }
 
+  if (path === "/expense-claim/desk" && method === "GET") {
+    if (!requireBudgetSurfacePermission(user, "expense:claim", res)) return true;
+    try {
+      const fyParam = new URL(req.url ?? "/", "http://local").searchParams.get(
+        "fy",
+      );
+      const desk = buildClaimDeskPayload(user, {
+        fiscalYear: fyParam ?? undefined,
+      });
+      json(res, desk.ok ? 200 : 404, desk);
+    } catch (error) {
+      json(res, 500, {
+        ok: false,
+        error: formatBudgetDelegationError(error),
+      });
+    }
+    return true;
+  }
+
   if (path === "/expense-claim/ingest" && method === "POST") {
-    if (!requireBudgetSurfacePermission(user, "chat:ask", res)) return true;
+    if (
+      !requireAnyBudgetSurfacePermission(
+        user,
+        ["chat:ask", "expense:claim"],
+        res,
+      )
+    ) {
+      return true;
+    }
     try {
       const body = (await readJsonLimited(req, 256 * 1024)) as Record<
         string,
@@ -1261,10 +1402,21 @@ export async function handleOrgBudgetApi(
       const forceWireFail =
         body.force_wire_fail === true &&
         process.env.ORGOS_ALLOW_TEST_HOOKS === "1";
+      const personId = resolveIngestPersonId(
+        actor,
+        String(body.person_id ?? ""),
+      );
+      const orgUnitId =
+        String(body.org_unit_id ?? "").trim() ||
+        resolveClaimOrgUnitId(
+          personId,
+          typeof body.fy === "string" ? body.fy : undefined,
+        ) ||
+        "";
       const result = await ingestExpenseReceiptQr({
         qrOrJson: String(body.qr ?? body.payload ?? ""),
-        personId: String(body.person_id ?? ""),
-        orgUnitId: String(body.org_unit_id ?? ""),
+        personId,
+        orgUnitId,
         accountCode: String(body.account_code ?? ""),
         allocations: Array.isArray(body.allocations)
           ? body.allocations.map((allocation) =>
@@ -1285,10 +1437,11 @@ export async function handleOrgBudgetApi(
         `expense-claim ingest ${result.claim.claim_id} ${result.gate.gate}`,
         true,
       );
+      const fiscalYear = typeof body.fy === "string" ? body.fy : undefined;
       json(res, 200, {
-        ...buildOrgBudgetPayload(user, {
-          fiscalYear: typeof body.fy === "string" ? body.fy : undefined,
-        }),
+        ...(isClaimOnlySeat(actor)
+          ? buildClaimDeskPayload(user, { fiscalYear })
+          : buildOrgBudgetPayload(user, { fiscalYear })),
         claim: result.claim,
         gate: result.gate,
       });
@@ -1296,6 +1449,11 @@ export async function handleOrgBudgetApi(
       if (isClaimsRevisionConflict(error)) {
         auditMutation(user, pathname, error.message, false);
         jsonRevisionConflict(res, error);
+        return true;
+      }
+      if (error instanceof ClaimPersonMismatchError) {
+        auditMutation(user, pathname, error.message, false);
+        json(res, 403, { ok: false, error: error.message, code: error.code });
         return true;
       }
       json(res, statusForBudgetError(formatBudgetDelegationError(error)), {
@@ -1332,6 +1490,10 @@ export async function handleOrgBudgetApi(
             ? body.board_event_id.trim()
             : undefined,
         operatorId: actor.operator_id,
+        dueOn:
+          typeof body.due_on === "string" && body.due_on.trim()
+            ? body.due_on.trim()
+            : undefined,
         expectedClaimRevision,
       });
       auditMutation(

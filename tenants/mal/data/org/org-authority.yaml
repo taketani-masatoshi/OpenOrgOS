@@ -1,0 +1,27 @@
+version: 1
+fiscal_year: FY2026
+as_of: "2026-08-29"
+notes: |
+  L1 部門権限と計画枠（万円）。部門長は budget-delegations.yaml の head_operator_id と一致させる。
+  共同代表2名体制のため、両部門の責任者は代表（OP-001）が兼務する。
+units:
+  - org_unit_id: business-unit
+    head_operator_id: OP-001
+    allowed_agents:
+      - operations
+      - finance
+    permissions:
+      - escalate:plan
+    budget_plan_man: 298.05
+    budget_actual_man: 0
+    notes: 事業部門（亀沢旅館運営 · EMP-003）。計画枠は expense-plan kamezawa_operations と一致。
+  - org_unit_id: admin-unit
+    head_operator_id: OP-001
+    allowed_agents:
+      - finance
+      - compliance
+    permissions:
+      - escalate:plan
+    budget_plan_man: 12
+    budget_actual_man: 0
+    notes: 管理部門（EMP-004）。雑費の個人枠のみ。

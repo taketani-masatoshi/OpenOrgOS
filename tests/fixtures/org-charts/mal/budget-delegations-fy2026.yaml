@@ -1,0 +1,121 @@
+version: 1
+fiscal_year: FY2026
+currency: JPY
+company_budget_yen: 3513691
+company_budget_approved_by_operator_id: OP-001
+adjustment_policy:
+  company_max_adjustment_pct: 20
+  department_max_adjustment_pct: 20
+  require_adjustment_reference: true
+  person_allocation_mode: strict
+  variance_alert_pct: 20
+company_category_budgets:
+  - account_code: "5200"
+    allocation_yen: 2980500
+  - account_code: "5900"
+    allocation_yen: 120000
+departments:
+  - org_unit_id: business-unit
+    head_operator_id: OP-001
+    allocation_yen: 2980500
+    direct_committed_yen: 0
+    category_budgets:
+      - account_code: "5200"
+        allocation_yen: 2980500
+    allocated_by_operator_id: OP-001
+    approved_by_operator_id: OP-001
+    member_budgets:
+      - person_id: business-unit
+        allocation_yen: 300000
+        committed_yen: 0
+        category_budgets:
+          - account_code: "5200"
+            allocation_yen: 300000
+        allocated_by_operator_id: OP-001
+        purpose: 亀沢旅館の現場費用（EMP-003 三塚力）
+    notes: 事業部門。計画枠は expense-plan kamezawa_operations と一致。
+  - org_unit_id: admin-unit
+    head_operator_id: OP-001
+    allocation_yen: 120000
+    direct_committed_yen: 0
+    category_budgets:
+      - account_code: "5900"
+        allocation_yen: 120000
+    allocated_by_operator_id: OP-001
+    approved_by_operator_id: OP-001
+    member_budgets:
+      - person_id: admin-unit
+        allocation_yen: 60000
+        committed_yen: 0
+        category_budgets:
+          - account_code: "5900"
+            allocation_yen: 60000
+        allocated_by_operator_id: OP-001
+        purpose: 管理部門の雑費（EMP-004 鈴木友也）
+    notes: 管理部門。雑費の個人枠のみ。
+pending_changes: []
+events:
+  - event_id: BDE-000001
+    action: company_budget_set
+    actor_operator_id: OP-001
+    amount_yen: 3513691
+    reference: expense-plan FY2026 total
+    occurred_at: "2026-08-29T00:00:00.000Z"
+  - event_id: BDE-000002
+    action: company_category_set
+    actor_operator_id: OP-001
+    account_code: "5200"
+    amount_yen: 2980500
+    reference: expense-plan kamezawa_operations
+    occurred_at: "2026-08-29T00:01:00.000Z"
+  - event_id: BDE-000003
+    action: company_category_set
+    actor_operator_id: OP-001
+    account_code: "5900"
+    amount_yen: 120000
+    reference: 個人枠の運用開始（精算の即時反映）
+    occurred_at: "2026-08-29T00:02:00.000Z"
+  - event_id: BDE-000004
+    action: department_allocated
+    actor_operator_id: OP-001
+    org_unit_id: business-unit
+    target_operator_id: OP-001
+    amount_yen: 2980500
+    occurred_at: "2026-08-29T00:03:00.000Z"
+  - event_id: BDE-000005
+    action: department_category_set
+    actor_operator_id: OP-001
+    org_unit_id: business-unit
+    account_code: "5200"
+    amount_yen: 2980500
+    occurred_at: "2026-08-29T00:04:00.000Z"
+  - event_id: BDE-000006
+    action: person_category_set
+    actor_operator_id: OP-001
+    org_unit_id: business-unit
+    target_person_id: business-unit
+    account_code: "5200"
+    amount_yen: 300000
+    occurred_at: "2026-08-29T00:05:00.000Z"
+  - event_id: BDE-000007
+    action: department_allocated
+    actor_operator_id: OP-001
+    org_unit_id: admin-unit
+    target_operator_id: OP-001
+    amount_yen: 120000
+    occurred_at: "2026-08-29T00:06:00.000Z"
+  - event_id: BDE-000008
+    action: department_category_set
+    actor_operator_id: OP-001
+    org_unit_id: admin-unit
+    account_code: "5900"
+    amount_yen: 120000
+    occurred_at: "2026-08-29T00:07:00.000Z"
+  - event_id: BDE-000009
+    action: person_category_set
+    actor_operator_id: OP-001
+    org_unit_id: admin-unit
+    target_person_id: admin-unit
+    account_code: "5900"
+    amount_yen: 60000
+    occurred_at: "2026-08-29T00:08:00.000Z"

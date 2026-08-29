@@ -494,6 +494,19 @@ export function evaluateExpenseClaimDeadline(
 }
 
 /**
+ * Default pay-back date shown to the claimant: the next Friday strictly after
+ * `from`. Deterministic so the claimant never has to ask when money returns.
+ */
+export function defaultReimbursementDueOn(from = getClock().now()): string {
+  const day = new Date(
+    Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()),
+  );
+  const daysUntilFriday = ((5 - day.getUTCDay() + 7) % 7) || 7;
+  day.setUTCDate(day.getUTCDate() + daysUntilFriday);
+  return day.toISOString().slice(0, 10);
+}
+
+/**
  * Deterministic budget authority gate for personal expense claims (ADR 0032).
  */
 export function evaluateExpenseClaimGate(input: {
@@ -1136,6 +1149,8 @@ export function approveExpenseClaim(input: {
   boardEventId?: string;
   operatorId?: string;
   autoPost?: boolean;
+  /** Pay-back date entered by the approver; defaults to the next Friday. */
+  dueOn?: string;
   expectedClaimRevision?: string;
 }): ExpenseClaim {
   return withExpenseClaimsLock(() => {
@@ -1184,6 +1199,7 @@ export function approveExpenseClaim(input: {
     if (input.autoPost ?? true) {
       return postExpenseClaim({
         claimId: claim.claim_id,
+        dueOn: input.dueOn,
         expectedClaimRevision: claimRevision(claim),
       });
     }
@@ -1254,6 +1270,8 @@ function defaultBusinessUnitId(orgUnitId: string): string {
  */
 export function postExpenseClaim(input: {
   claimId: string;
+  /** Pay-back date; defaults to the next Friday. */
+  dueOn?: string;
   expectedClaimRevision?: string;
 }): ExpenseClaim {
   return withExpenseClaimsLock(() => {
@@ -1362,11 +1380,20 @@ export function postExpenseClaim(input: {
       status: "pending_reimbursement",
       posted_at: postedAt,
       monthly_ref: { month, note: noteTag },
-      reimbursement: claim.reimbursement ?? {
-        status: "pending",
-        amount_yen: claim.amount_yen,
-        requested_at: getClock().nowIso(),
-      },
+      reimbursement: claim.reimbursement
+        ? {
+            ...claim.reimbursement,
+            due_on:
+              claim.reimbursement.due_on ??
+              input.dueOn ??
+              defaultReimbursementDueOn(),
+          }
+        : {
+            status: "pending",
+            amount_yen: claim.amount_yen,
+            requested_at: getClock().nowIso(),
+            due_on: input.dueOn ?? defaultReimbursementDueOn(),
+          },
       journal_refs: {
         ...claim.journal_refs,
         posting_entry_id: journal.entry_id,
@@ -1423,6 +1450,7 @@ export function postExpenseClaim(input: {
       status: "pending",
       amount_yen: claim.amount_yen,
       requested_at: requestedAt,
+      due_on: input.dueOn ?? defaultReimbursementDueOn(),
     },
     journal_refs: { posting_entry_id: journal.entry_id },
   });
@@ -1553,6 +1581,7 @@ export function markExpenseClaimReimbursed(input: {
       status: "paid",
       amount_yen: claim.reimbursement?.amount_yen ?? claim.amount_yen,
       requested_at: claim.reimbursement?.requested_at ?? claim.posted_at,
+      due_on: claim.reimbursement?.due_on,
       paid_at: paidAt,
       paid_by: input.paidBy,
       payment_ref: input.paymentRef.trim(),

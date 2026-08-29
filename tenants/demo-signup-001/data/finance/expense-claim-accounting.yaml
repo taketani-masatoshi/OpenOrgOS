@@ -1,0 +1,3 @@
+payable_account_code: "2140"
+bank_control_accounts:
+  BANK-FIX-001: "1100"

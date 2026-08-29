@@ -47,6 +47,8 @@ export const expenseClaimIssuerRefSchema = z.object({
 export const expenseClaimReimbursementSchema = z.object({
   status: z.enum(["pending", "paid"]),
   requested_at: z.string().datetime().optional(),
+  /** Date the claimant is told the money comes back (REG-005 運用). */
+  due_on: z.string().date().optional(),
   paid_at: z.string().datetime().optional(),
   paid_by: z.string().optional(),
   /** Broker transfer / payment instruction id — never bank account numbers. */
