@@ -1,0 +1,4 @@
+consumption_tax:
+  status: TBD
+  base_period_sales_threshold: 10000000
+  notes: Set base_period_sales_jpy from closed FY — see tax-filing-spec
