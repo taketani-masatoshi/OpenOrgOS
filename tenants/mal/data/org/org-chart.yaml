@@ -1,0 +1,37 @@
+version: 1
+as_of: "2026-08-29"
+company_label: 株式会社MAL
+notes: |
+  L1 組織単位。人名は employee_id / company.yaml を Console 表で結合する。
+  従業員マスタ: data/hr/employees.yaml
+  CEO確認 2026-08-29 — 共同代表2名・事業 EMP-003 三塚力・管理 EMP-004 鈴木友也。
+nodes:
+  - id: board
+    display_name: 取締役会
+    title: 取締役会
+    function: 統治
+    layer: board
+    board_role: none
+  - id: representative-directors
+    display_name: 代表取締役
+    title: 代表取締役
+    function: 経営
+    layer: board
+    board_role: representative_director
+    reports_to: board
+  - id: business-unit
+    display_name: 事業部門
+    title: 事業部門
+    function: 事業
+    layer: staff
+    board_role: none
+    reports_to: representative-directors
+    employee_id: EMP-003
+  - id: admin-unit
+    display_name: 管理部門
+    title: 管理部門
+    function: 管理
+    layer: staff
+    board_role: none
+    reports_to: representative-directors
+    employee_id: EMP-004

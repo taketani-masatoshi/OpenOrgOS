@@ -1,5 +1,6 @@
 # 従業員マスタ（非個情メタデータ）
 # 個人の住所・生年月日・給与詳細は docs/company/hr/records/ に保管（Git 非追跡）。
+# 給与額の財務正本は data/finance/payroll.yaml。
 
 employees:
   - id: EMP-001
@@ -15,12 +16,22 @@ employees:
     status: active
 
   - id: EMP-003
-    name: "三塚"
+    name: "三塚力"
     hired_date: "2026-04-01"
     job_type: "翻訳・通訳 / 業務DX支援"
+    employment_type: full_time
+    status: active
+
+  - id: EMP-004
+    name: "鈴木友也"
+    hired_date: "2026-08-26"
+    job_type: "管理部門責任者"
+    employment_type: full_time
     status: active
 
 notes: |
-  ダミーデータ（2026-07 時点）— 従業員3名（取締役2名 + 正社員1名）。
-  三塚の氏名詳細・給与明細は docs/company/hr/records/（gitignore）。
+  CEO確認 2026-08-29 — 実在 4名（代表取締役2名・正社員2名）。
+  共同代表は段燕燕・宮城万貴子（退任手続は未完了のため EMP-002 は active のまま）。
+  事業部門: EMP-003 三塚力。管理部門: EMP-004 鈴木友也（org-chart admin-unit）。
+  氏名詳細・給与明細は docs/company/hr/records/（gitignore）。
   マイナンバーは本リポジトリに保存しない。

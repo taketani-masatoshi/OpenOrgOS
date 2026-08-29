@@ -1,0 +1,39 @@
+# Community Google SSO: email must match User.email (NextAuth Google login).
+# Founder Community login (k.lab.masa@gmail.com) → OP-001 for local Operator Console handoff.
+version: "1"
+login_policy:
+  email_domains:
+    - malkk.com
+  grandfather_emails:
+    - k.lab.masa@gmail.com
+  founder_migration:
+    status: grace
+    grace_until: "2026-11-24"
+operators:
+  - operator_id: OP-001
+    display_name: "段燕燕"
+    role: ceo
+    status: active
+    approver_name: "段燕燕"
+    email: k.lab.masa@gmail.com
+    key_hash: sha256:8dd1ff0b5462a59485bb66bb7cf392ec711ede10f0f4bca476a70431f8e2f277
+  - operator_id: OP-002
+    display_name: "秘書オペレータ"
+    role: operator
+    status: active
+    key_hash: sha256:4a7c449d22a99026fac16a47621ff68792ff589f72334ea3950ce186a5615e9a
+  # 社員席（claim 専用）。Operator Console の経営・帳簿・顧客は開かない。
+  - operator_id: OP-003
+    display_name: "三塚力"
+    role: employee
+    status: active
+    email: mitsuzuka@malkk.com
+    org_unit_id: business-unit
+    person_id: business-unit
+  - operator_id: OP-004
+    display_name: "鈴木友也"
+    role: employee
+    status: active
+    email: suzuki@malkk.com
+    org_unit_id: admin-unit
+    person_id: admin-unit

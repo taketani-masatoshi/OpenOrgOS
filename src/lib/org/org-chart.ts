@@ -118,10 +118,13 @@ export function orgChartYamlPath(): string {
   return join(getDataDir(), "org", "org-chart.yaml");
 }
 
-export function loadOrgChart(): OrgChartFile | null {
-  const path = orgChartYamlPath();
+export function loadOrgChartFromFile(path: string): OrgChartFile | null {
   if (!existsSync(path)) return null;
   return orgChartFileSchema.parse(parseYaml(readFileSync(path, "utf-8")));
+}
+
+export function loadOrgChart(): OrgChartFile | null {
+  return loadOrgChartFromFile(orgChartYamlPath());
 }
 
 export function boardNodes(chart: OrgChartFile): OrgChartNode[] {

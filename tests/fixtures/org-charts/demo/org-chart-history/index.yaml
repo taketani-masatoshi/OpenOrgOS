@@ -1,0 +1,12 @@
+version: 1
+entries:
+  - as_of: "2026-01-15"
+    recorded_at: "2026-01-15T00:00:00.000Z"
+    source: board_resolution
+    notes: 設立時の取締役会で定めた組織
+    file: 2026-01-15.yaml
+  - as_of: "2026-08-01"
+    recorded_at: "2026-08-01T00:00:00.000Z"
+    source: board_resolution
+    notes: 事業部門・管理部門の設置
+    file: 2026-08-01.yaml

@@ -4,17 +4,28 @@ profiles:
     - accounting
     - compliance
     - contract
+    - corporate_governance
     - cto
+    - customer_success
+    - data_analytics
     - engineering
     - executive_steward
     - finance
     - hospitality
     - human_resources
+    - internal_audit
+    - investor_relations
     - legal
     - medical_device_regulatory
     - operations
+    - privacy_officer
+    - procurement
     - project_management
     - property_rental
+    - risk_insurance
+    - sales_inbound
+    - sales_lead
+    - sales_outbound
     - secretary
     - security
     - tax

@@ -1,0 +1,19 @@
+version: 1
+as_of: "2026-01-15"
+company_label: デモ株式会社
+notes: |
+  設立時の取締役会で定めた組織。事業部門・管理部門は未設置。
+nodes:
+  - id: board
+    display_name: 取締役会
+    title: 取締役会
+    function: 統治
+    layer: board
+    board_role: none
+  - id: representative-directors
+    display_name: 代表取締役
+    title: 代表取締役
+    function: 経営
+    layer: board
+    board_role: representative_director
+    reports_to: board

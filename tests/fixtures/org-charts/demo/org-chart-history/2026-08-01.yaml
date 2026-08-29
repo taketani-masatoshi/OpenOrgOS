@@ -1,0 +1,33 @@
+version: 1
+as_of: "2026-08-01"
+company_label: デモ株式会社
+notes: |
+  取締役会決議により事業部門・管理部門を設置した現行。
+nodes:
+  - id: board
+    display_name: 取締役会
+    title: 取締役会
+    function: 統治
+    layer: board
+    board_role: none
+  - id: representative-directors
+    display_name: 代表取締役
+    title: 代表取締役
+    function: 経営
+    layer: board
+    board_role: representative_director
+    reports_to: board
+  - id: business-unit
+    display_name: 事業部門
+    title: 事業部門
+    function: 事業
+    layer: staff
+    board_role: none
+    reports_to: representative-directors
+  - id: admin-unit
+    display_name: 管理部門
+    title: 管理部門
+    function: 管理
+    layer: staff
+    board_role: none
+    reports_to: representative-directors

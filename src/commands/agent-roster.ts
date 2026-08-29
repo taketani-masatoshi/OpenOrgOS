@@ -19,6 +19,7 @@ import {
   auditCliMutation,
   requireCliOperator,
 } from "../lib/console-auth/cli-operator.js";
+import { proposeTenantConfigChange } from "../lib/org/tenant-config-change.js";
 import { setTenantId } from "../lib/tenant.js";
 
 interface RosterOptions {
@@ -70,14 +71,38 @@ export function runAgentRosterSet(
   opts: RosterOptions & { agent: string; profile?: string }
 ): void {
   selectTenant(opts.tenant);
-  requireCliOperator({
-    permission: "agent:order",
-    command: `agent roster ${enabled ? "enable" : "disable"}`,
-  });
   const profile = (opts.profile ?? "operational") as AgentRosterProfile;
   if (profile !== "operational" && profile !== "developer" && profile !== "task") {
     throw new Error(`Unknown roster profile: ${profile}`);
   }
+
+  if (enabled && profile === "operational") {
+    const auth = requireCliOperator({
+      permission: "chat:ask",
+      command: "agent roster enable",
+    });
+    const proposed = proposeTenantConfigChange({
+      target: "agents",
+      targetId: opts.agent,
+      enabled: true,
+      proposedBy: auth.record.operator_id,
+    });
+    auditCliMutation("agent roster enable (propose)", `${opts.agent}:${proposed.approval_id}`);
+    if (opts.json) {
+      console.log(JSON.stringify({ proposed: proposed.change, approval_id: proposed.approval_id }, null, 2));
+      return;
+    }
+    console.log(`Proposed ${proposed.change.change_id}`);
+    console.log(`  approval: ${proposed.approval_id}`);
+    console.log(`  agent ${opts.agent}: enable (pending CEO approval)`);
+    console.log(`Preview: orgos tenant-config preview --id ${proposed.approval_id}`);
+    return;
+  }
+
+  requireCliOperator({
+    permission: "agent:order",
+    command: `agent roster ${enabled ? "enable" : "disable"}`,
+  });
   const roster = setTenantAgentEnabled(opts.agent, enabled, profile);
   auditCliMutation(
     `agent roster ${enabled ? "enable" : "disable"}`,

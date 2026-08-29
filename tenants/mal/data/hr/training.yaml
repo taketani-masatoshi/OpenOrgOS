@@ -1,0 +1,121 @@
+# 研修計画・実施記録（ISO 21401:2018 7.2 c/d、REG-012）
+#
+# 正本。計画表・実施記録簿は orgos hr competence plan / records で導出する。
+# 教材は docs/compliance/iso/ISO-21401/competence/materials/ に置く。
+#
+# 亀沢旅館（PROP-002）開業日 2026-09-18 に向けた開業前研修。
+# 法定・安全に関わる TRN-002 / TRN-003 / TRN-004 は開業日までに完了させる。
+
+version: "1"
+fiscal_year: FY2026
+
+notes: |
+  受講対象は data/hr/competence.yaml の役割別要求力量から決めている。
+  実施記録の result は出席の有無ではなく、evaluation で定めた有効性確認の結果を記録する。
+  partial / not_effective は再実施または OJT 延長の対象とし、次回力量評価まで残す。
+
+sessions:
+  - id: TRN-001
+    title: サステナビリティ方針と宿泊運営規程（REG-012）の周知
+    competence_ids: [CMP-06, CMP-08]
+    method: workshop
+    duration_min: 60
+    planned_on: "2026-08-28"
+    audience: [EMP-001, EMP-002, EMP-003, EMP-004]
+    material: docs/compliance/iso/ISO-21401/competence/materials/TRN-001-方針と運営規程.md
+    evaluation: 方針の3要素（地域文化・環境配慮・資源効率）を口頭で説明でき、自分の担当業務との接点を1つ挙げられること
+
+  - id: TRN-002
+    title: 旅館業法・消防法・墨田区条例の要求事項
+    competence_ids: [CMP-01]
+    method: workshop
+    duration_min: 90
+    planned_on: "2026-09-02"
+    audience: [EMP-001, EMP-002, EMP-003, EMP-004]
+    material: docs/compliance/iso/ISO-21401/competence/materials/TRN-002-旅館業法と関係法令.md
+    evaluation: 営業許可の条件・変更届が必要な場面・行政検査時の対応を、確認テスト10問中8問以上で正答すること
+
+  - id: TRN-003
+    title: 消防設備の操作と避難誘導 実地訓練
+    competence_ids: [CMP-02]
+    method: drill
+    duration_min: 120
+    planned_on: "2026-09-05"
+    audience: [EMP-001, EMP-003, EMP-004]
+    material: docs/compliance/iso/ISO-21401/competence/materials/TRN-003-消防避難訓練.md
+    evaluation: 消火器・自動火災報知設備の位置を指示なしで示し、2階客室からの避難誘導を所要5分以内で実演できること
+
+  - id: TRN-004
+    title: 宿泊者名簿の作成・保存と個人情報保護
+    competence_ids: [CMP-04]
+    method: workshop
+    duration_min: 60
+    planned_on: "2026-09-08"
+    audience: [EMP-003, EMP-004]
+    material: docs/compliance/iso/ISO-21401/competence/materials/TRN-004-宿泊者名簿と個人情報.md
+    evaluation: 記載必須項目を漏れなく挙げ、外国人宿泊者の旅券写しの取扱いを含む模擬記帳を誤りなく完了できること
+
+  - id: TRN-005
+    title: 清掃基準の理解と委託先作業の検収（OJT）
+    competence_ids: [CMP-03]
+    method: ojt
+    duration_min: 150
+    planned_on: "2026-09-10"
+    audience: [EMP-003, EMP-004]
+    material: docs/compliance/iso/ISO-21401/competence/materials/TRN-005-清掃基準と検収.md
+    evaluation: CTR-012 のチェックリストを用いて1棟の検収を単独で行い、代表取締役の再点検との差異が2項目以内であること
+
+  - id: TRN-006
+    title: ゲスト対応とクレーム一次応答
+    competence_ids: [CMP-05, CMP-07]
+    method: workshop
+    duration_min: 90
+    planned_on: "2026-09-12"
+    audience: [EMP-003, EMP-004]
+    material: docs/compliance/iso/ISO-21401/competence/materials/TRN-006-ゲスト対応とクレーム.md
+    evaluation: 模擬クレーム3件について24時間以内の一次応答文を作成し、記録様式に必要5項目を記入できること
+
+  - id: TRN-007
+    title: OTA・自社サイト表示の点検（OJT）
+    competence_ids: [CMP-07]
+    method: ojt
+    duration_min: 60
+    planned_on: "2026-09-14"
+    audience: [EMP-003, EMP-004]
+    material: docs/compliance/iso/ISO-21401/competence/materials/TRN-007-OTA表示点検.md
+    evaluation: OTA2社の掲載内容と現況の差異を洗い出し、修正まで完了できること
+
+  - id: TRN-008
+    title: ISO 21401 内部監査員養成（外部研修）
+    competence_ids: [CMP-09]
+    method: external
+    duration_min: 480
+    planned_on: "2026-09-30"
+    audience: [EMP-001, EMP-002, EMP-004]
+    evaluation: 外部機関の修了証を取得し、初回内部監査（FY2026 下期）で監査員として計画・報告を作成できること
+
+records:
+  - session_id: TRN-001
+    employee_id: EMP-001
+    held_on: "2026-08-28"
+    result: effective
+    assessed_level: 2
+    notes: 方針制定を主導しており、担当業務との接点も明確に説明した
+  - session_id: TRN-001
+    employee_id: EMP-002
+    held_on: "2026-08-28"
+    result: effective
+    assessed_level: 2
+    notes: 取締役会での審議内容と整合した説明ができた
+  - session_id: TRN-001
+    employee_id: EMP-003
+    held_on: "2026-08-28"
+    result: partial
+    assessed_level: 1
+    notes: 方針3要素は説明できたが、近隣配慮（CMP-08）は実地の接点を挙げられず。TRN-005 の OJT に同行させる
+  - session_id: TRN-001
+    employee_id: EMP-004
+    held_on: "2026-08-28"
+    result: partial
+    assessed_level: 1
+    notes: 入社直後で環境データの月次記録運用が未把握。REG-014 の様式を用いた OJT を9月中に追加する

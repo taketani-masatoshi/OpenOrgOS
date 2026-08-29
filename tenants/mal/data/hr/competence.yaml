@@ -1,0 +1,300 @@
+# 力量マップ（ISO 21401:2018 7.2）
+#
+# 正本。表・ギャップ分析は orgos hr competence map で導出する（手書きの表を持たない）。
+# レベル: 0 未習得 / 1 知識あり（補助が要る） / 2 単独で遂行できる / 3 指導・改善ができる
+#
+# 対象は亀沢旅館（PROP-002）の宿泊事業。開業日 2026-09-18。
+# 個人の資格証・履歴書等は docs/company/hr/records/（Git 非追跡）に保管する。
+
+version: "1"
+standard: ISO-21401
+as_of: "2026-08-29"
+
+notes: |
+  現状レベルは 2026-08-29 時点の代表取締役による評価。
+  三塚力（EMP-003）・鈴木友也（EMP-004）は 2026 年入社で宿泊業の実務経験がないため、
+  開業前研修（data/hr/training.yaml TRN-001〜007）で法定・安全項目を先に引き上げる。
+
+roles:
+  - id: ROLE-MGMT
+    title: 経営（代表取締役）
+    org_node: representative-directors
+    members: [EMP-001, EMP-002]
+
+  - id: ROLE-OPS
+    title: 事業部門 · 宿泊運営
+    org_node: business-unit
+    members: [EMP-003]
+
+  - id: ROLE-ADMIN
+    title: 管理部門 · 法令記録
+    org_node: admin-unit
+    members: [EMP-004]
+
+competences:
+  - id: CMP-01
+    title: 旅館業法・消防法・条例の要求事項
+    iso_clause: "7.2"
+    reg_refs: [REG-012 第4条1]
+    statutory: true
+    required:
+      ROLE-MGMT: 2
+      ROLE-OPS: 2
+      ROLE-ADMIN: 3
+
+  - id: CMP-02
+    title: 消防設備・避難誘導・緊急時対応
+    iso_clause: "7.2"
+    reg_refs: [REG-012 第4条2, REG-012 第9条, REG-013]
+    statutory: true
+    required:
+      ROLE-MGMT: 1
+      ROLE-OPS: 3
+      ROLE-ADMIN: 2
+
+  - id: CMP-03
+    title: 衛生・清掃基準と委託先の監督
+    iso_clause: "8.1"
+    reg_refs: [REG-012 第4条3, REG-012 第8条, CTR-012]
+    required:
+      ROLE-MGMT: 1
+      ROLE-OPS: 3
+      ROLE-ADMIN: 1
+
+  - id: CMP-04
+    title: 宿泊者名簿の作成・保存と個人情報保護
+    iso_clause: "7.5"
+    reg_refs: [REG-012 第10条2, REG-010]
+    statutory: true
+    required:
+      ROLE-MGMT: 1
+      ROLE-OPS: 2
+      ROLE-ADMIN: 3
+
+  - id: CMP-05
+    title: ゲスト対応・クレーム一次応答（24時間/72時間）
+    iso_clause: "8.1"
+    reg_refs: [REG-012 第5条]
+    required:
+      ROLE-MGMT: 1
+      ROLE-OPS: 3
+      ROLE-ADMIN: 1
+
+  - id: CMP-06
+    title: サステナビリティ方針の理解と環境・資源管理
+    iso_clause: "5.2"
+    reg_refs: [REG-012 第3条, REG-012 第6条, REG-014]
+    required:
+      ROLE-MGMT: 2
+      ROLE-OPS: 2
+      ROLE-ADMIN: 2
+
+  - id: CMP-07
+    title: OTA・自社サイト表示と実態の一致
+    iso_clause: "8.1"
+    reg_refs: [REG-012 第4条4, CTR-010, CTR-011]
+    required:
+      ROLE-MGMT: 1
+      ROLE-OPS: 3
+      ROLE-ADMIN: 1
+
+  - id: CMP-08
+    title: 近隣・地域ステークホルダーへの配慮
+    iso_clause: "4.2"
+    reg_refs: [REG-012 第7条]
+    required:
+      ROLE-MGMT: 2
+      ROLE-OPS: 2
+      ROLE-ADMIN: 1
+
+  - id: CMP-09
+    title: ISO 21401 マネジメントシステムの理解（内部監査・MR）
+    iso_clause: "9.2"
+    reg_refs: [REG-016]
+    required:
+      ROLE-MGMT: 2
+      ROLE-ADMIN: 2
+
+assessments:
+  # --- EMP-001 段燕燕（代表取締役） ---
+  - employee_id: EMP-001
+    competence_id: CMP-01
+    level: 2
+    assessed_on: "2026-08-29"
+    basis: 旅館業許可申請を自ら実施（PROP-002 取得〜開業準備）
+  - employee_id: EMP-001
+    competence_id: CMP-02
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 消防設備の設置は業者対応。避難誘導の実地訓練は未実施
+  - employee_id: EMP-001
+    competence_id: CMP-03
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 清掃委託 CTR-012 を締結。作業基準の検収経験はまだない
+  - employee_id: EMP-001
+    competence_id: CMP-04
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 名簿運用規則を承認。実運用は未開始
+  - employee_id: EMP-001
+    competence_id: CMP-05
+    level: 2
+    assessed_on: "2026-08-29"
+    basis: 賃貸事業（rental）での入居者対応経験
+  - employee_id: EMP-001
+    competence_id: CMP-06
+    level: 2
+    assessed_on: "2026-08-29"
+    basis: REG-012 第3条・REG-014 の制定を主導
+  - employee_id: EMP-001
+    competence_id: CMP-07
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: OTA 契約は締結済み。掲載内容の点検は未着手
+  - employee_id: EMP-001
+    competence_id: CMP-08
+    level: 2
+    assessed_on: "2026-08-29"
+    basis: 墨田区亀沢の近隣挨拶・町会対応を実施
+  - employee_id: EMP-001
+    competence_id: CMP-09
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: ISO 21401 のギャップ分析に参加。内部監査の実施経験はない
+
+  # --- EMP-002 宮城万貴子（代表取締役） ---
+  - employee_id: EMP-002
+    competence_id: CMP-01
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 取締役会で REG-012 を審議・決議
+  - employee_id: EMP-002
+    competence_id: CMP-02
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 規程上の位置づけを理解。実地訓練は未実施
+  - employee_id: EMP-002
+    competence_id: CMP-03
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 委託契約の審議に参加
+  - employee_id: EMP-002
+    competence_id: CMP-04
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: REG-010 の制定に関与
+  - employee_id: EMP-002
+    competence_id: CMP-05
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 規程上の応答時間を把握
+  - employee_id: EMP-002
+    competence_id: CMP-06
+    level: 2
+    assessed_on: "2026-08-29"
+    basis: 環境・エネルギー方針 REG-014 の決議に参加
+  - employee_id: EMP-002
+    competence_id: CMP-07
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: OTA 契約条件を把握
+  - employee_id: EMP-002
+    competence_id: CMP-08
+    level: 2
+    assessed_on: "2026-08-29"
+    basis: 地域配慮を運営ルールに反映する審議を主導
+  - employee_id: EMP-002
+    competence_id: CMP-09
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: マネジメントレビューの実施経験はない
+
+  # --- EMP-003 三塚力（事業部門 · 翻訳通訳/業務DX、2026-04 入社） ---
+  - employee_id: EMP-003
+    competence_id: CMP-01
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 宿泊業の実務経験なし。旅館業法は未学習
+  - employee_id: EMP-003
+    competence_id: CMP-02
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 亀沢旅館の消防設備・避難経路を未確認
+  - employee_id: EMP-003
+    competence_id: CMP-03
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 清掃基準 CTR-012 の内容を未確認
+  - employee_id: EMP-003
+    competence_id: CMP-04
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 宿泊者名簿の法定要件を未学習
+  - employee_id: EMP-003
+    competence_id: CMP-05
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 翻訳・通訳業務で顧客対応の経験あり。宿泊固有の苦情対応は未経験
+  - employee_id: EMP-003
+    competence_id: CMP-06
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: REG-012 第3条を読了
+  - employee_id: EMP-003
+    competence_id: CMP-07
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 業務DX支援で Web 表示の更新経験あり。OTA 管理画面は未操作
+  - employee_id: EMP-003
+    competence_id: CMP-08
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 多言語対応の観点は持つが、近隣対応の実地経験はない
+
+  # --- EMP-004 鈴木友也（管理部門責任者、2026-08 入社） ---
+  - employee_id: EMP-004
+    competence_id: CMP-01
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 管理部門として関係法令を確認中。許認可実務は未経験
+  - employee_id: EMP-004
+    competence_id: CMP-02
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 入社直後。消防計画を未確認
+  - employee_id: EMP-004
+    competence_id: CMP-03
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 委託先監督の実務は未着手
+  - employee_id: EMP-004
+    competence_id: CMP-04
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 個人情報保護の一般知識あり。宿泊者名簿の法定保存要件は未学習
+  - employee_id: EMP-004
+    competence_id: CMP-05
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 一般的な顧客対応経験
+  - employee_id: EMP-004
+    competence_id: CMP-06
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: REG-014 を読了。月次記録の運用は未経験
+  - employee_id: EMP-004
+    competence_id: CMP-07
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: OTA 表示の点検業務は未経験
+  - employee_id: EMP-004
+    competence_id: CMP-08
+    level: 1
+    assessed_on: "2026-08-29"
+    basis: 近隣対応の窓口を担当予定。実施はこれから
+  - employee_id: EMP-004
+    competence_id: CMP-09
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: ISO マネジメントシステムの実務経験なし。内部監査員研修が必要
