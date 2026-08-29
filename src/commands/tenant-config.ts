@@ -1,16 +1,30 @@
 import { requireCliHumanApproval, requireCliOperator } from "../lib/console-auth/cli-operator.js";
 import {
+  findOrgApproval,
+} from "../lib/org/approval/approve.js";
+import {
   applyTenantConfigChange,
   approveAndApplyTenantConfigChange,
   loadTenantConfigChanges,
   previewTenantConfigChange,
   proposeTenantConfigChange,
+  type TenantConfigChangeAction,
   type TenantConfigTarget,
 } from "../lib/org/tenant-config-change.js";
+import {
+  isSettlementStepUpEnabled,
+  settlementAssuranceRequired,
+} from "../lib/org/settlement-stepup.js";
 
 function parseTarget(raw: string): TenantConfigTarget {
-  if (raw === "standards" || raw === "modules") return raw;
-  throw new Error(`--target must be standards or modules (got ${raw})`);
+  if (raw === "standards" || raw === "modules" || raw === "agents") return raw;
+  throw new Error(`--target must be standards, modules, or agents (got ${raw})`);
+}
+
+function parseAction(raw: string | undefined): TenantConfigChangeAction {
+  if (!raw || raw === "set_enabled") return "set_enabled";
+  if (raw === "import_enable") return "import_enable";
+  throw new Error(`--action must be set_enabled or import_enable (got ${raw})`);
 }
 
 export function runTenantConfigPropose(opts: {
@@ -18,22 +32,26 @@ export function runTenantConfigPropose(opts: {
   id: string;
   enabled: boolean;
   message?: string;
+  action?: string;
 }): void {
   const auth = requireCliOperator({
     permission: "chat:ask",
     command: "tenant-config propose",
   });
+  const action = parseAction(opts.action);
   const result = proposeTenantConfigChange({
     target: parseTarget(opts.target),
     targetId: opts.id,
     enabled: opts.enabled,
     proposedBy: auth.record.operator_id,
     message: opts.message,
+    action,
   });
   console.log(`Proposed ${result.change.change_id}`);
   console.log(`  approval: ${result.approval_id}`);
   console.log(
-    `  ${result.change.target} ${result.change.target_id}: ${result.change.from_enabled} → ${result.change.to_enabled}`
+    `  ${result.change.target} ${result.change.target_id}: ${result.change.from_enabled} → ${result.change.to_enabled}` +
+      (action !== "set_enabled" ? ` (${action})` : "")
   );
   console.log(`  message: ${result.change.message}`);
   console.log(`Preview: orgos tenant-config preview --id ${result.approval_id}`);
@@ -72,6 +90,12 @@ export function runTenantConfigApprove(opts: { id: string; reviewed?: boolean })
     console.error("");
     throw new Error(
       "Pass --reviewed after inspecting the preview (orgos tenant-config preview --id APR-...)"
+    );
+  }
+  const approval = findOrgApproval(opts.id);
+  if (approval && settlementAssuranceRequired(approval) && isSettlementStepUpEnabled()) {
+    throw new Error(
+      "This approval requires iPhone Settlement PassKey step-up. Use Operator Console /approvals/ (not CLI)."
     );
   }
   const result = approveAndApplyTenantConfigChange({

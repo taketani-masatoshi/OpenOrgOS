@@ -1,0 +1,16 @@
+# Copy to disclosure-calendar.yaml on `orgos modules activate investor_relations`
+version: 1
+fiscal_year: FY2026
+items:
+  - id: DISC-Q3-EARNINGS
+    label: Q3 earnings briefing (internal draft)
+    category: earnings
+    due_date: "2026-11-15"
+    status: planned
+    notes: Align figures with finance monthly close
+  - id: DISC-AGM-2027
+    label: Annual shareholders meeting materials
+    category: governance
+    due_date: "2027-06-20"
+    status: in_preparation
+    notes: Coordinate with corporate_governance

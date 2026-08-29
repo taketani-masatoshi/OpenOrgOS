@@ -1,0 +1,27 @@
+# OrgOS Ledger product metadata (managed single-tenant · JP corporate)
+version: 1
+sku: orgos-ledger
+target: jp_corporate
+hosting: managed_single_tenant
+
+required:
+  - electronic_ledger_search
+  - journal_export_http
+  - period_locks_append_only
+
+optional_modules:
+  - jp_bank_corporate
+  - jp_tax_corporate
+  - jp_tax_consumption
+
+out_of_scope:
+  - e_tax_filing # ADR 0052 Phase 5
+
+docs:
+  product_readme: docs/product/README.md
+  runbook: docs/product/managed-single-tenant-runbook.md
+  adr: docs/adr/0058-orgos-ledger-product-layer.md
+
+provision:
+  compose: deploy/product/docker-compose.ledger.yaml
+  tenant_seed: tenants/_fixture-books

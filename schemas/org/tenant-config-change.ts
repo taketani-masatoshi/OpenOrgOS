@@ -1,13 +1,15 @@
 import { z } from "zod";
 
-/** Org approval subject_type for tenant modules/standards toggles. */
+/** Org approval subject_type for tenant modules/standards/agents toggles. */
 export const TENANT_CONFIG_SUBJECT = "tenant.config" as const;
 
 export const tenantConfigChangeIdSchema = z
   .string()
   .regex(/^CFG-\d{8}-\d{3}$/);
 
-export const tenantConfigTargetSchema = z.enum(["standards", "modules"]);
+export const tenantConfigTargetSchema = z.enum(["standards", "modules", "agents"]);
+
+export const tenantConfigChangeActionSchema = z.enum(["set_enabled", "import_enable"]);
 
 export const tenantConfigChangeStatusSchema = z.enum([
   "pending_approval",
@@ -20,6 +22,7 @@ export const tenantConfigChangeSchema = z.object({
   change_id: tenantConfigChangeIdSchema,
   target: tenantConfigTargetSchema,
   target_id: z.string().min(1),
+  action: tenantConfigChangeActionSchema.default("set_enabled"),
   from_enabled: z.boolean(),
   to_enabled: z.boolean(),
   status: tenantConfigChangeStatusSchema,
@@ -39,6 +42,7 @@ export const tenantConfigChangeFileSchema = z.object({
 });
 
 export type TenantConfigTarget = z.output<typeof tenantConfigTargetSchema>;
+export type TenantConfigChangeAction = z.output<typeof tenantConfigChangeActionSchema>;
 export type TenantConfigChangeStatus = z.output<typeof tenantConfigChangeStatusSchema>;
 export type TenantConfigChange = z.output<typeof tenantConfigChangeSchema>;
 export type TenantConfigChangeFile = z.output<typeof tenantConfigChangeFileSchema>;

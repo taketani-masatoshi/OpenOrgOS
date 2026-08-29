@@ -1,0 +1,9 @@
+# Operator registry — copy to data/org/operators.yaml and run orgos operator init-registry
+version: "1"
+operators:
+  - operator_id: OP-001
+    display_name: "代表者"
+    role: ceo
+    status: active
+    approver_name: "代表者"
+    # key_hash: sha256:...  # orgos operator registry rotate-key --operator-id OP-001

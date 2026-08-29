@@ -14,7 +14,7 @@ const DISABLE =
 /** Map common aliases → ISO id */
 const ISO_ALIASES: Array<{ re: RegExp; id: string }> = [
   { re: /\bISO-?27001\b|ISMS|情報セキュリティ(?:マネジメント)?/iu, id: "ISO-27001" },
-  { re: /\bISO-?9001\b|品質マネジメント/iu, id: "ISO-9001" },
+  { re: /\bISO-?37000\b|組織統治|ガバナンス.?自己宣言/iu, id: "ISO-37000" },
   { re: /\bISO-?21401\b/iu, id: "ISO-21401" },
   { re: /\bISO-?13485\b/iu, id: "ISO-13485" },
   { re: /\bISO-?22301\b/iu, id: "ISO-22301" },
@@ -89,10 +89,19 @@ export interface TenantConfigChatResult {
 
 export function handleTenantConfigProposeChatMessage(
   message: string,
-  opts: { proposedBy: string }
+  opts: { proposedBy: string; fromAgent?: string }
 ): TenantConfigChatResult {
   const parsed = parseTenantConfigProposeIntent(message);
   if (!parsed) return { handled: false };
+
+  if (opts.fromAgent === "secretary") {
+    return {
+      handled: true,
+      ok: false,
+      reply:
+        "モジュールや規格の On/Off はオーナーからスチュワードへの直接依頼でのみ提案できます。秘書窓口からは会社設定を書き換えません。",
+    };
+  }
 
   try {
     const result = proposeTenantConfigChange({
@@ -113,7 +122,7 @@ export function handleTenantConfigProposeChatMessage(
         `- 変更票: \`${result.change.change_id}\``,
         `- 承認: \`${result.approval_id}\``,
         ``,
-        `CEO は Steward Chat の「設定変更の承認」から差分を確認し、承認してください。`,
+        `CEO は承認受信箱（/approvals/）で差分を確認し、承認してください。`,
       ].join("\n"),
     };
   } catch (err) {

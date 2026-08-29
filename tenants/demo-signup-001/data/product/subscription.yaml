@@ -1,0 +1,7 @@
+version: 1
+plan: starter
+status: trialing
+company_name: デモ申込株式会社
+admin_email: demo-signup@example.com
+trial_ends_at: 2026-09-08T04:46:08.179Z
+updated_at: 2026-08-25T04:46:08.179Z

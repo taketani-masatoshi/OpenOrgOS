@@ -1,0 +1,19 @@
+version: 1
+updated_at: "2026-08-24T00:00:00+09:00"
+onboardings:
+  - id: CSON-2026-001
+    account_id: CUST-2026-001
+    started_on: "2026-07-01"
+    target_go_live: "2026-09-01"
+    milestones:
+      - key: kickoff
+        due: "2026-07-05"
+        done_on: "2026-07-04"
+        status: done
+      - key: admin_training
+        due: "2026-08-01"
+        done_on: "2026-07-28"
+        status: done
+      - key: go_live
+        due: "2026-09-01"
+        status: in_progress

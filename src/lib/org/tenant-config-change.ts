@@ -1,19 +1,23 @@
 /**
- * Tenant config change requests — modules.yaml / standards.yaml enabled toggles
+ * Tenant config change requests — modules.yaml / standards.yaml / agents.yaml
  * gated by org approval (subject_type: tenant.config).
  */
 import { mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
+import type { AgentId } from "../../../schemas/classification.js";
+import type { SettlementWebAuthnAssertion } from "../../../schemas/org/settlement-stepup.js";
 import {
   TENANT_CONFIG_SUBJECT,
   tenantConfigChangeFileSchema,
   tenantConfigChangeSchema,
   type TenantConfigChange,
+  type TenantConfigChangeAction,
   type TenantConfigChangeFile,
   type TenantConfigTarget,
 } from "../../../schemas/org/tenant-config-change.js";
 import { tenantStandardsFileSchema } from "../../../schemas/tenant-standards.js";
 import { modulesFileSchema } from "../../../schemas/modules.js";
+import { getCatalogAgent, resolveAgentId } from "../agent-catalog.js";
 import { proposeOrgApproval } from "./approval/propose.js";
 import {
   humanApproveOrgApproval,
@@ -23,6 +27,7 @@ import { rejectOrgApproval } from "./approval/reject.js";
 import { getTenantConfigChangesPath } from "./paths.js";
 import { getOrgDataDir } from "./paths.js";
 import { loadTenantStandards, STANDARDS_FILE } from "../tenant-standards.js";
+import { findIsoCatalogEntry } from "../iso-catalog.js";
 import { listIsoStandardIds } from "../standards.js";
 import {
   loadModulesFile,
@@ -34,16 +39,23 @@ import { activateTenantModule } from "../agent-workspace.js";
 import { initTenantControlsFile } from "../control-framework.js";
 import { syncActiveContext } from "../context-manifest.js";
 import {
+  isRosterAgentActive,
   loadTenantAgentRoster,
+  setTenantAgentEnabled,
   syncRosterWithModules,
   writeTenantAgentRoster,
 } from "../agent-roster.js";
+import {
+  assertCatalogModuleImportable,
+  importCatalogModule,
+  isModuleInstalled,
+} from "../module-import.js";
 import { getTenantDir } from "../tenant.js";
 import { readYamlFile, writeYamlFile } from "../utils.js";
 import { withYamlFileLock } from "../yaml-atomic.js";
 
 export { TENANT_CONFIG_SUBJECT };
-export type { TenantConfigTarget };
+export type { TenantConfigTarget, TenantConfigChangeAction };
 
 function emptyFile(): TenantConfigChangeFile {
   return tenantConfigChangeFileSchema.parse({ changes: [] });
@@ -83,10 +95,19 @@ function nextChangeId(date = new Date()): string {
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
 }
 
+function changeAction(change: TenantConfigChange): TenantConfigChangeAction {
+  return change.action ?? "set_enabled";
+}
+
 export function readCurrentEnabled(
   target: TenantConfigTarget,
   targetId: string
 ): boolean {
+  if (target === "agents") {
+    const resolved = resolveAgentId(targetId);
+    if (!resolved) return false;
+    return isRosterAgentActive(resolved as AgentId, { profile: "operational" });
+  }
   if (target === "standards") {
     const entry = loadTenantStandards().iso.find((e) => e.id === targetId);
     return entry?.enabled === true;
@@ -97,11 +118,31 @@ export function readCurrentEnabled(
   return mod?.enabled === true;
 }
 
-function assertTargetExists(target: TenantConfigTarget, targetId: string): void {
+function assertTargetExists(
+  target: TenantConfigTarget,
+  targetId: string,
+  action: TenantConfigChangeAction
+): void {
+  if (target === "agents") {
+    const resolved = resolveAgentId(targetId);
+    if (!resolved || !getCatalogAgent(resolved)) {
+      throw new Error(`Unknown agent: ${targetId}`);
+    }
+    return;
+  }
   if (target === "standards") {
+    if (findIsoCatalogEntry(targetId)?.status === "coming_soon") {
+      throw new Error(
+        `${targetId} は未提供です（coming_soon）。orgos iso roadmap を参照し、orgos iso scaffold ${targetId} で昇格してください。`
+      );
+    }
     if (!listIsoStandardIds().includes(targetId)) {
       throw new Error(`Unknown ISO standard: ${targetId}`);
     }
+    return;
+  }
+  if (action === "import_enable") {
+    assertCatalogModuleImportable(targetId);
     return;
   }
   const catalog = listCatalogModuleIds();
@@ -114,15 +155,45 @@ function assertTargetExists(target: TenantConfigTarget, targetId: string): void 
   }
 }
 
+/** True when approval should require settlement PassKey (capability increase). */
+export function isTenantConfigPrivilegeIncrease(change: TenantConfigChange): boolean {
+  const action = changeAction(change);
+  if (action === "import_enable") return true;
+  if (!change.to_enabled) return false;
+  return (
+    change.target === "agents" ||
+    change.target === "modules" ||
+    change.target === "standards"
+  );
+}
+
 export function planSideEffects(
   target: TenantConfigTarget,
   targetId: string,
-  toEnabled: boolean
+  toEnabled: boolean,
+  action: TenantConfigChangeAction = "set_enabled"
 ): string[] {
+  if (target === "agents") {
+    return [
+      `Enable agent ${targetId} in agents.yaml (operational profile)`,
+      "sync-context (best-effort)",
+    ];
+  }
   if (target === "standards") {
     const effects = [`Update ${STANDARDS_FILE} (${targetId} → ${toEnabled})`, "sync-context"];
     if (toEnabled) effects.splice(1, 0, "controls init (if needed)");
     return effects;
+  }
+  if (action === "import_enable") {
+    const importLine = isModuleInstalled(targetId)
+      ? `Module ${targetId} already imported — enable only`
+      : `Import module ${targetId} into ${MODULES_FILE}`;
+    return [
+      importLine,
+      `Activate module ${targetId} (modules.yaml + seeds/scaffold as applicable)`,
+      "sync-context",
+      "agent roster sync (best-effort)",
+    ];
   }
   if (toEnabled) {
     return [
@@ -138,12 +209,31 @@ export function planSideEffects(
   ];
 }
 
+function proposeLabel(
+  target: TenantConfigTarget,
+  targetId: string,
+  enabled: boolean,
+  action: TenantConfigChangeAction
+): string {
+  if (target === "agents") {
+    return `エージェント ${targetId} を追加`;
+  }
+  if (target === "standards") {
+    return `${targetId} を${enabled ? "有効化" : "無効化"}`;
+  }
+  if (action === "import_enable") {
+    return `モジュール ${targetId} を追加して有効化`;
+  }
+  return `モジュール ${targetId} を${enabled ? "有効化" : "無効化"}`;
+}
+
 export interface ProposeTenantConfigChangeInput {
   target: TenantConfigTarget;
   targetId: string;
   enabled: boolean;
   proposedBy: string;
   message?: string;
+  action?: TenantConfigChangeAction;
 }
 
 export interface ProposeTenantConfigChangeResult {
@@ -154,12 +244,32 @@ export interface ProposeTenantConfigChangeResult {
 export function proposeTenantConfigChange(
   input: ProposeTenantConfigChangeInput
 ): ProposeTenantConfigChangeResult {
-  assertTargetExists(input.target, input.targetId);
-  const fromEnabled = readCurrentEnabled(input.target, input.targetId);
-  if (fromEnabled === input.enabled) {
-    throw new Error(
-      `${input.target} ${input.targetId} is already enabled=${input.enabled}`
-    );
+  const action = input.action ?? "set_enabled";
+  assertTargetExists(input.target, input.targetId, action);
+
+  let fromEnabled: boolean;
+  let toEnabled: boolean;
+
+  if (action === "import_enable") {
+    if (input.target !== "modules") {
+      throw new Error("import_enable is only valid for modules");
+    }
+    if (!input.enabled) {
+      throw new Error("import_enable requires enabled=true");
+    }
+    fromEnabled = readCurrentEnabled("modules", input.targetId);
+    if (fromEnabled) {
+      throw new Error(`Module ${input.targetId} is already enabled`);
+    }
+    toEnabled = true;
+  } else {
+    fromEnabled = readCurrentEnabled(input.target, input.targetId);
+    toEnabled = input.enabled;
+    if (fromEnabled === toEnabled) {
+      throw new Error(
+        `${input.target} ${input.targetId} is already enabled=${toEnabled}`
+      );
+    }
   }
 
   return withConfigChangeLock(() => {
@@ -169,7 +279,8 @@ export function proposeTenantConfigChange(
         c.status === "pending_approval" &&
         c.target === input.target &&
         c.target_id === input.targetId &&
-        c.to_enabled === input.enabled
+        changeAction(c) === action &&
+        c.to_enabled === toEnabled
     );
     if (dup) {
       throw new Error(
@@ -178,11 +289,8 @@ export function proposeTenantConfigChange(
     }
 
     const changeId = nextChangeId();
-    const sideEffects = planSideEffects(input.target, input.targetId, input.enabled);
-    const label =
-      input.target === "standards"
-        ? `${input.targetId} を${input.enabled ? "有効化" : "無効化"}`
-        : `モジュール ${input.targetId} を${input.enabled ? "有効化" : "無効化"}`;
+    const sideEffects = planSideEffects(input.target, input.targetId, toEnabled, action);
+    const label = proposeLabel(input.target, input.targetId, toEnabled, action);
     const message = input.message?.trim() || label;
 
     const approval = proposeOrgApproval({
@@ -197,8 +305,9 @@ export function proposeTenantConfigChange(
       change_id: changeId,
       target: input.target,
       target_id: input.targetId,
+      action,
       from_enabled: fromEnabled,
-      to_enabled: input.enabled,
+      to_enabled: toEnabled,
       status: "pending_approval",
       approval_id: approval.approval_id,
       proposed_by: input.proposedBy,
@@ -239,6 +348,17 @@ export interface TenantConfigPreview {
   preview: string;
 }
 
+function formatDiffLine(change: TenantConfigChange): string {
+  const action = changeAction(change);
+  if (change.target === "agents") {
+    return `agent ${change.target_id}: ${change.from_enabled} → ${change.to_enabled}`;
+  }
+  if (action === "import_enable") {
+    return `module ${change.target_id}: import + enable`;
+  }
+  return `${change.target_id}: ${change.from_enabled} → ${change.to_enabled}`;
+}
+
 export function previewTenantConfigChange(approvalId: string): TenantConfigPreview {
   const approval = findOrgApproval(approvalId);
   if (!approval || approval.subject_type !== TENANT_CONFIG_SUBJECT) {
@@ -250,12 +370,14 @@ export function previewTenantConfigChange(approvalId: string): TenantConfigPrevi
   if (!change) {
     throw new Error(`Config change for approval ${approvalId} not found`);
   }
-  const diffLine = `${change.target_id}: ${change.from_enabled} → ${change.to_enabled}`;
+  const diffLine = formatDiffLine(change);
+  const action = changeAction(change);
   const preview = [
     `# テナント設定変更 — ${change.change_id}`,
     "",
     `- 対象: ${change.target}`,
     `- ID: ${change.target_id}`,
+    ...(action !== "set_enabled" ? [`- アクション: ${action}`] : []),
     `- 変更: **${change.from_enabled} → ${change.to_enabled}**`,
     `- 摘要: ${change.message}`,
     "",
@@ -263,7 +385,12 @@ export function previewTenantConfigChange(approvalId: string): TenantConfigPrevi
     ...change.side_effects_plan.map((s) => `- ${s}`),
     "",
     "承認には reviewed=true（差分確認済み）が必要です。",
-  ].join("\n");
+    isTenantConfigPrivilegeIncrease(change)
+      ? "高権限のため iPhone Settlement PassKey が必要です。"
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return {
     approval_id: approvalId,
@@ -341,8 +468,14 @@ export function applyTenantConfigChange(changeId: string): ApplyTenantConfigChan
     }
 
     const warnings: string[] = [];
+    const action = changeAction(change);
 
-    if (change.target === "standards") {
+    if (change.target === "agents") {
+      if (!change.to_enabled) {
+        throw new Error(`Agent disable via tenant.config is not supported (${changeId})`);
+      }
+      setTenantAgentEnabled(change.target_id, true);
+    } else if (change.target === "standards") {
       setStandardEnabled(change.target_id, change.to_enabled);
       if (change.to_enabled) {
         try {
@@ -353,11 +486,30 @@ export function applyTenantConfigChange(changeId: string): ApplyTenantConfigChan
           );
         }
       }
+    } else if (action === "import_enable") {
+      if (!isModuleInstalled(change.target_id)) {
+        try {
+          importCatalogModule(change.target_id);
+        } catch (err) {
+          throw err instanceof Error ? err : new Error(String(err));
+        }
+      }
+      try {
+        activateTenantModule(change.target_id);
+      } catch (err) {
+        try {
+          setModuleEnabledFlag(change.target_id, true);
+          warnings.push(
+            `activate fallback to flag-only: ${err instanceof Error ? err.message : String(err)}`
+          );
+        } catch (err2) {
+          throw err2 instanceof Error ? err2 : err;
+        }
+      }
     } else if (change.to_enabled) {
       try {
         activateTenantModule(change.target_id);
       } catch (err) {
-        // Fall back to flag-only if activate fails (e.g. missing defaults)
         try {
           setModuleEnabledFlag(change.target_id, true);
           warnings.push(
@@ -377,7 +529,7 @@ export function applyTenantConfigChange(changeId: string): ApplyTenantConfigChan
       warnings.push(`sync-context: ${err instanceof Error ? err.message : String(err)}`);
     }
 
-    if (change.target === "modules") {
+    if (change.target === "modules" || change.target === "agents") {
       const rosterWarn = trySyncRoster();
       if (rosterWarn) warnings.push(rosterWarn);
     }
@@ -399,6 +551,10 @@ export interface ApproveAndApplyTenantConfigOptions {
   approverId: string;
   operatorId?: string;
   reviewed?: boolean;
+  settlementAssertion?: SettlementWebAuthnAssertion & {
+    challenge_id: string;
+    token: string;
+  };
 }
 
 export function approveAndApplyTenantConfigChange(
@@ -420,6 +576,7 @@ export function approveAndApplyTenantConfigChange(
     operatorId: opts.operatorId,
     source: "chat_ui",
     humanReviewConfirmed: true,
+    settlementAssertion: opts.settlementAssertion,
   });
   const applied = applyTenantConfigChange(preview.change_id);
   return {

@@ -1,0 +1,13 @@
+version: "1"
+description: |
+  demo-signup-001 テナント — 最小依存グラフ（スケルトン）
+
+nodes:
+  - id: data/company.yaml
+    label: 会社概要
+    category: file
+  - id: data/plans/business-plan.yaml
+    label: 事業計画
+    category: file
+
+edges: []
