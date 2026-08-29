@@ -34,6 +34,9 @@ import {
   assertExpenseClaimRepresentativeApprover,
 } from "../../finance/expense-claim-approver.js";
 import {
+  TENANT_CONFIG_SUBJECT,
+} from "../../../../schemas/org/tenant-config-change.js";
+import {
   assertSettlementAssuranceOrThrow,
   markSettlementChallengeConsumed,
 } from "../settlement-stepup.js";
@@ -41,10 +44,14 @@ import {
   assertHumanApprovalContext,
   issueHumanApprovalContext,
 } from "../human-approval-context.js";
+import {
+  applyMedicalDeviceApproval,
+  isMedicalDeviceApprovalSubject,
+} from "../../medical-device/approvals.js";
 
-/** Subjects that historically listed an extra self-approval ban (ADR 0027). All internal approvals now ban self-approval. */
-export function isSelfApprovalBannedSubject(_subjectType: string): boolean {
-  return true;
+/** Wire / expenditure ban self-approval. tenant.config is a CEO inbox confirmation of the same person's toggle. */
+export function isSelfApprovalBannedSubject(subjectType: string): boolean {
+  return subjectType !== TENANT_CONFIG_SUBJECT;
 }
 
 export function operatorMatchesApproverIdentity(
@@ -119,6 +126,7 @@ export function assertNotSelfApproval(
   approverId: string,
   operatorId?: string,
 ): void {
+  if (!isSelfApprovalBannedSubject(approval.subject_type)) return;
   if (!isSelfApproval(approval, approverId, operatorId)) return;
   throw new Error(
     `自己承認は禁止されています（${approval.subject_type} · proposed_by=${approval.proposed_by}）。` +
@@ -295,12 +303,31 @@ export function approveOrgApproval(opts: ApproveOrgApprovalOptions): ApproveOrgA
     };
     saveOrgApprovalRegistry(registry);
 
+    const approved = registry.approvals[idx]!;
+    if (isMedicalDeviceApprovalSubject(approved.subject_type)) {
+      try {
+        applyMedicalDeviceApproval(approved);
+      } catch (err) {
+        registry.approvals[idx] = {
+          ...approval,
+          status: "pending_approval",
+          approver_id: undefined,
+          co_approver_id: undefined,
+          approval_tier: undefined,
+          approved_at: undefined,
+          audit_event_id: undefined,
+        };
+        saveOrgApprovalRegistry(registry);
+        throw err;
+      }
+    }
+
     if (settlementMeta) {
       markSettlementChallengeConsumed(settlementMeta.settlement_challenge_id);
     }
 
     return {
-      approval: registry.approvals[idx]!,
+      approval: approved,
       gate,
       attestation,
       auditEnvelope,

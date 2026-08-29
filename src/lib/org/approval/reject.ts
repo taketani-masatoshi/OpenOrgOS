@@ -6,6 +6,10 @@ import {
   saveOrgApprovalRegistry,
   withOrgApprovalRegistryLock,
 } from "./registry.js";
+import {
+  isMedicalDeviceApprovalSubject,
+  revertMedicalDeviceApproval,
+} from "../../medical-device/approvals.js";
 
 export interface RejectOrgApprovalOptions {
   approvalId: string;
@@ -63,7 +67,11 @@ export function rejectOrgApproval(opts: RejectOrgApprovalOptions): RejectOrgAppr
       audit_event_id: auditEnvelope?.event_id,
     };
     saveOrgApprovalRegistry(registry);
-    return { approval: registry.approvals[idx]!, auditEnvelope };
+    const rejected = registry.approvals[idx]!;
+    if (isMedicalDeviceApprovalSubject(rejected.subject_type)) {
+      revertMedicalDeviceApproval(rejected);
+    }
+    return { approval: rejected, auditEnvelope };
   });
 }
 
