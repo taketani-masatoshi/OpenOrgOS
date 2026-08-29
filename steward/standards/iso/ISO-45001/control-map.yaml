@@ -1,0 +1,86 @@
+version: "1"
+standard: ISO-45001
+notes: 労働安全衛生。HLS 共通統制は core/。固有は危険源・協議・請負者・労災。
+core_bindings:
+  - work: scope
+    clause: "4.1"
+  - work: policy
+    clause: "5.2"
+  - work: risk_approach
+    clause: "6.1"
+  - work: objectives_monitoring
+    clause: "6.2"
+  - work: objectives_monitoring
+    clause: "9.1"
+  - work: competence
+    clause: "7.2"
+  - work: documented_information
+    clause: "7.5"
+  - work: operation
+    clause: "8.1"
+  - work: internal_audit
+    clause: "9.2"
+  - work: management_review
+    clause: "9.3"
+  - work: corrective_action
+    clause: "10.2"
+controls:
+  - id: CTL-45001-6.1.2
+    title: 危険源の特定及びリスク評価
+    domain: safety
+    iso_refs:
+      - { standard: ISO-45001, clause: "6.1.2" }
+    primary_agent: general_affairs
+    secondary_agents: [risk_insurance, operations]
+    evidence_paths:
+      - docs/compliance/iso/ISO-45001/hazard-register.csv
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-45001-5.4
+    title: 働く人の協議及び参加
+    domain: safety
+    iso_refs:
+      - { standard: ISO-45001, clause: "5.4" }
+    primary_agent: human_resources
+    secondary_agents: [general_affairs]
+    evidence_paths:
+      - docs/compliance/iso/ISO-45001/consultation-records.md
+    check_type: operation
+    target_maturity: L2
+
+  - id: CTL-45001-8.1.4
+    title: 請負者・調達先の安全管理
+    domain: safety
+    iso_refs:
+      - { standard: ISO-45001, clause: "8.1.4" }
+    primary_agent: procurement
+    secondary_agents: [general_affairs]
+    evidence_paths:
+      - docs/compliance/iso/ISO-45001/contractor-safety.md
+    check_type: operation
+    target_maturity: L2
+
+  - id: CTL-45001-8.2
+    title: 緊急事態への準備及び対応
+    domain: safety
+    iso_refs:
+      - { standard: ISO-45001, clause: "8.2" }
+    primary_agent: general_affairs
+    secondary_agents: [operations]
+    evidence_paths:
+      - docs/compliance/iso/ISO-45001/emergency-plan.md
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-45001-10.2.1
+    title: インシデント・労働災害の調査
+    domain: safety
+    iso_refs:
+      - { standard: ISO-45001, clause: "10.2" }
+    primary_agent: general_affairs
+    secondary_agents: [human_resources, internal_audit]
+    evidence_paths:
+      - docs/compliance/iso/ISO-45001/incident-log.csv
+    check_type: record
+    target_maturity: L3

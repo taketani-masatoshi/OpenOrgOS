@@ -1,49 +1,42 @@
 version: "1"
 standard: ISO-27001
-controls:
-  - id: CTL-27001-4.1
-    title: 組織の状況の理解
-    domain: security
-    iso_refs:
-      - { standard: ISO-27001, clause: "4.1" }
+notes: HLS 共通統制は core/ に集約。ここには Annex A と 27001 固有の方法（SoA）だけを置く。
+core_bindings:
+  - work: scope
+    clause: "4.1"
+    evidence_paths: [docs/company/regulations/joho-security-kanri-kisoku.md]
     reg_refs:
       - { reg_id: REG-009, articles: ["第2条"] }
-    primary_agent: security
-    secondary_agents: [compliance]
-    evidence_paths:
-      - docs/company/regulations/joho-security-kanri-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-27001-5.2
-    title: 情報セキュリティ方針
-    domain: security
-    iso_refs:
-      - { standard: ISO-27001, clause: "5.2" }
+  - work: policy
+    clause: "5.2"
+    evidence_paths: [docs/company/regulations/joho-security-kanri-kisoku.md]
     reg_refs:
       - { reg_id: REG-009, articles: ["第3条"] }
-    primary_agent: security
-    secondary_agents: [compliance]
-    evidence_paths:
-      - docs/company/regulations/joho-security-kanri-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-27001-6.1
-    title: リスクアセスメント
-    domain: security
-    iso_refs:
-      - { standard: ISO-27001, clause: "6.1.2" }
+  - work: risk_approach
+    clause: "6.1.2"
+    evidence_paths: [docs/compliance/iso/ISO-27001/risk-register.csv]
     reg_refs:
       - { reg_id: REG-009, articles: ["第4条"] }
-    primary_agent: security
-    evidence_paths:
-      - docs/compliance/iso/ISO-27001/risk-register.csv
-    check_type: record
-    target_maturity: L2
-
+  - work: competence
+    clause: "7.2"
+    evidence_paths: [docs/company/regulations/joho-security-kanri-kisoku.md]
+    reg_refs:
+      - { reg_id: REG-009, articles: ["第5条"] }
+  - work: documented_information
+    clause: "7.5"
+    reg_refs:
+      - { reg_id: REG-007, articles: ["第4条の2"] }
+  - work: internal_audit
+    clause: "9.2"
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第4条"] }
+  - work: management_review
+    clause: "9.3"
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第7条"] }
+controls:
   - id: CTL-27001-6.2
-    title: リスク対応 · 統制選択
+    title: リスク対応 · 統制選択（適用宣言書）
     domain: security
     iso_refs:
       - { standard: ISO-27001, clause: "6.1.3" }
@@ -97,6 +90,8 @@ controls:
     check_type: record
     target_maturity: L2
 
+  # Legacy id kept deliberately: privacy is not a shared MS work, but the id
+  # predates the core pack and carries tenant maturity history.
   - id: CTL-CORE-privacy
     title: 個人情報保護統制
     domain: privacy
@@ -111,32 +106,3 @@ controls:
       - docs/compliance/privacy/
     check_type: policy
     target_maturity: L2
-
-  - id: CTL-27001-9.2
-    title: 内部監査（ISMS）
-    domain: audit
-    iso_refs:
-      - { standard: ISO-27001, clause: "9.2" }
-    reg_refs:
-      - { reg_id: REG-016, articles: ["第4条"] }
-    primary_agent: internal_audit
-    secondary_agents: [security, compliance]
-    evidence_paths:
-      - docs/compliance/iso/internal-audit-plan-fy2026.md
-      - docs/compliance/iso/audit-records/**/*
-    check_type: record
-    target_maturity: L3
-
-  - id: CTL-27001-9.3
-    title: マネジメントレビュー（ISMS）
-    domain: audit
-    iso_refs:
-      - { standard: ISO-27001, clause: "9.3" }
-    reg_refs:
-      - { reg_id: REG-016, articles: ["第7条"] }
-    primary_agent: compliance
-    secondary_agents: [security]
-    evidence_paths:
-      - docs/compliance/iso/management-review-fy2026-template.md
-    check_type: record
-    target_maturity: L3

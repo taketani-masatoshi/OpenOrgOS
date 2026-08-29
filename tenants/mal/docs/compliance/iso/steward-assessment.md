@@ -23,10 +23,9 @@
 
 | 種別 | 有効 ID |
 |------|---------|
-| **ビジネスモジュール** | rental · hospitality · travel_booking |
-| **OFF** | jp_medical_device（REG-025/026 未施行 · ISO-13485 OFF） |
+| **ビジネスモジュール** | rental · hospitality · travel_booking · **jp_medical_device** |
 | **コア Agent** | executive · secretary · finance · operations |
-| **モジュール Agent** | rental · hospitality · travel_booking |
+| **モジュール Agent** | rental · hospitality · travel_booking · medical_device_regulatory |
 | **マニフェスト** | [`data/operator/agents.yaml`](../../data/operator/agents.yaml) |
 
 ---
@@ -49,8 +48,9 @@
 | 標準 | 状態 |
 |------|------|
 | ISO-9001 / 27001 / 21401 | 有効 · controls L2+ |
-| **ISO-13485** | **無効** — jp_medical_device OFF · validate 警告解消 |
-| REG-025 / REG-026 | **未施行** — 参照 MD のみ |
+| **ISO-37000** | **有効** — 11原則自己宣言ドラフト（認証ではない） |
+| **ISO-13485** | **有効** — jp_medical_device On · 品目データはプレースホルダ |
+| REG-025 / REG-026 | **適用** — 運用台帳 · ADR 0064 |
 
 ---
 

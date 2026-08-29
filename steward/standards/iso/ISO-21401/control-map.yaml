@@ -1,100 +1,289 @@
 version: "1"
 standard: ISO-21401
-controls:
-  - id: CTL-21401-4.1
-    title: 宿泊事業の状況理解
-    domain: environment
-    iso_refs:
-      - { standard: ISO-21401, clause: "4.1" }
+notes: |
+  HLS 共通統制は core/ に集約。ここには宿泊事業固有のものだけを置く。
+  領域統制は本規格の主題である「環境・社会文化・経済」の3側面に、
+  ゲスト安全と従業員を加えた5系統で構成する。
+  条項番号（特に 10.2）は 00-このフォルダについて.md の §確認事項 で
+  規格本文と突き合わせてから認証審査に用いること。
+core_bindings:
+  - work: scope
+    clause: "4.1"
+    evidence_paths: [docs/company/regulations/shukuhaku-unyo-kisoku.md]
     reg_refs:
       - { reg_id: REG-012, articles: ["第2条"] }
-    primary_agent: esg_sustainability
-    secondary_agents: [operations]
-    evidence_paths:
-      - docs/company/regulations/shukuhaku-unyo-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-21401-5.2
-    title: サステナビリティ方針
-    domain: environment
-    iso_refs:
-      - { standard: ISO-21401, clause: "5.2" }
+  - work: policy
+    clause: "5.2"
+    evidence_paths: [docs/company/regulations/kankyo-energy-kanri-kisoku.md]
     reg_refs:
       - { reg_id: REG-014, articles: ["第3条"] }
       - { reg_id: REG-012, articles: ["第3条"] }
-    primary_agent: esg_sustainability
-    secondary_agents: [compliance]
-    evidence_paths:
-      - docs/company/regulations/kankyo-energy-kanri-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-21401-6.2
-    title: サステナビリティ目標
-    domain: environment
-    iso_refs:
-      - { standard: ISO-21401, clause: "6.2" }
+  - work: risk_approach
+    clause: "6.1"
+    # 著しい側面（環境・社会文化・経済）とリスク・機会の特定記録。
+    evidence_paths: [docs/compliance/iso/ISO-21401/risk-opportunities.csv]
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第9条"] }
+  - work: objectives_monitoring
+    clause: "6.2"
+    evidence_paths: [docs/compliance/iso/ISO-21401/]
     reg_refs:
       - { reg_id: REG-014, articles: ["第4条"] }
-    primary_agent: esg_sustainability
+  - work: objectives_monitoring
+    clause: "9.1"
+    evidence_paths: [docs/compliance/iso/ISO-21401/]
+    reg_refs:
+      - { reg_id: REG-014, articles: ["第5条"] }
+  - work: competence
+    clause: "7.2"
+    # 7.2 は力量の決定・充足確認・措置・有効性評価の記録を求める。
+    # 運営規程だけでは (b)〜(d) を満たせないため、力量マップと研修記録を証拠にする。
     evidence_paths:
-      - docs/compliance/iso/ISO-21401/
-    check_type: record
-    target_maturity: L2
-
-  - id: CTL-21401-7.2
-    title: 力量 · 宿泊オペレーション
-    domain: operations
-    iso_refs:
-      - { standard: ISO-21401, clause: "7.2" }
+      - docs/compliance/iso/ISO-21401/competence/
     reg_refs:
       - { reg_id: REG-012, articles: ["第4条"] }
-    primary_agent: operations
-    secondary_agents: [learning_development]
-    evidence_paths:
-      - docs/company/regulations/shukuhaku-unyo-kisoku.md
-    check_type: policy
-    target_maturity: L2
+  - work: documented_information
+    clause: "7.5"
+    evidence_paths: [docs/company/regulations/bunsho-kanri-kisoku.md]
+    reg_refs:
+      - { reg_id: REG-007, articles: ["第2条"] }
+      - { reg_id: REG-012, articles: ["第10条"] }
+  - work: operation
+    clause: "8.1"
+    evidence_paths: [docs/company/regulations/shukuhaku-unyo-kisoku.md]
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第4条"] }
+  - work: internal_audit
+    clause: "9.2"
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第4条"] }
+  - work: management_review
+    clause: "9.3"
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第7条"] }
+  - work: corrective_action
+    clause: "10.2"
+    evidence_paths: [docs/compliance/iso/ISO-21401/corrective-actions.csv]
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第6条"] }
 
+controls:
+  # ---- 宿泊サービスの運用 ----
   - id: CTL-21401-8.1
-    title: 運用計画 · ゲスト体験
+    title: 宿泊サービスの運用管理 · ゲスト体験
     domain: operations
     iso_refs:
       - { standard: ISO-21401, clause: "8.1" }
     reg_refs:
       - { reg_id: REG-012, articles: ["第5条"] }
     primary_agent: operations
-    secondary_agents: [quality_assurance]
+    secondary_agents: [quality_assurance, customer_success]
     evidence_paths:
-      - docs/compliance/iso/ISO-21401/
+      - docs/properties/PROP-002-kamezawa/operations/
     check_type: operation
     target_maturity: L2
+    priority: P2
 
-  - id: CTL-21401-9.1
-    title: 監視 · 測定 · エネルギー
+  - id: CTL-21401-hygiene
+    title: 衛生・清掃基準と委託先の監督
+    domain: operations
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第4条", "第8条"] }
+    primary_agent: operations
+    secondary_agents: [procurement, quality_assurance]
+    evidence_paths:
+      - docs/properties/PROP-002-kamezawa/operations/records/
+    check_type: record
+    target_maturity: L3
+    priority: P1
+
+  # ---- 環境側面 ----
+  - id: CTL-21401-env-aspects
+    title: 著しい環境側面の特定と目標設定
+    domain: environment
+    iso_refs:
+      - { standard: ISO-21401, clause: "6.1" }
+    reg_refs:
+      - { reg_id: REG-014, articles: ["第4条"] }
+      - { reg_id: REG-012, articles: ["第6条"] }
+    primary_agent: esg_sustainability
+    secondary_agents: [compliance]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/environmental-aspects.csv
+    check_type: record
+    target_maturity: L2
+    priority: P2
+
+  - id: CTL-21401-env-resources
+    title: エネルギー・水の使用量の測定と削減
     domain: environment
     iso_refs:
       - { standard: ISO-21401, clause: "9.1" }
     reg_refs:
+      - { reg_id: REG-012, articles: ["第6条"] }
       - { reg_id: REG-014, articles: ["第5条"] }
+    primary_agent: esg_sustainability
+    secondary_agents: [general_affairs]
+    # 泊数あたりの原単位で見るため、稼働と資源を同一様式に記録する。
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/kpi-log.csv
+    check_type: record
+    target_maturity: L3
+    priority: P2
+
+  - id: CTL-21401-env-waste
+    title: 廃棄物の分別・減量と事業系ごみの適正処理
+    domain: environment
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第6条"] }
     primary_agent: esg_sustainability
     secondary_agents: [operations]
     evidence_paths:
-      - docs/compliance/iso/ISO-21401/
+      - docs/compliance/iso/ISO-21401/kpi-log.csv
     check_type: record
     target_maturity: L2
+    priority: P2
 
-  - id: CTL-21401-9.2
-    title: 内部監査（宿泊 SMS）
-    domain: audit
+  - id: CTL-21401-env-purchasing
+    title: 環境配慮型の調達（洗剤・アメニティ・消耗品）
+    domain: environment
     iso_refs:
-      - { standard: ISO-21401, clause: "9.2" }
+      - { standard: ISO-21401, clause: "8.1" }
     reg_refs:
-      - { reg_id: REG-016, articles: ["第4条"] }
-    primary_agent: internal_audit
+      - { reg_id: REG-012, articles: ["第6条"] }
+    primary_agent: procurement
     secondary_agents: [esg_sustainability]
     evidence_paths:
-      - docs/compliance/iso/internal-audit-plan-fy2026.md
+      - docs/compliance/iso/ISO-21401/sustainable-purchasing.md
+    check_type: policy
+    target_maturity: L2
+    priority: P3
+
+  # ---- 社会文化側面 ----
+  - id: CTL-21401-soc-community
+    title: 地域・近隣ステークホルダーとの関係管理
+    domain: governance
+    iso_refs:
+      - { standard: ISO-21401, clause: "4.2" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第7条"] }
+    primary_agent: pr_communications
+    secondary_agents: [esg_sustainability, general_affairs]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/stakeholder-register.csv
+    check_type: record
+    target_maturity: L2
+    priority: P2
+
+  - id: CTL-21401-soc-heritage
+    title: 地域文化・景観への配慮と地域資源の活用
+    domain: governance
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第3条", "第7条"] }
+    primary_agent: esg_sustainability
+    secondary_agents: [pr_communications]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/socio-cultural-plan.md
+    check_type: policy
+    target_maturity: L2
+    priority: P3
+
+  - id: CTL-21401-soc-protection
+    title: 差別的取扱いの禁止と児童・青少年の保護
+    domain: governance
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第4条"] }
+    primary_agent: compliance
+    secondary_agents: [legal, human_resources]
+    # 2023年改正旅館業法の宿泊拒否の考え方と接続する。判断基準を文書化する。
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/guest-protection-policy.md
+    check_type: policy
+    target_maturity: L2
+    priority: P1
+
+  - id: CTL-21401-soc-accessibility
+    title: アクセシビリティ対応と正確な情報提供
+    domain: operations
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第4条"] }
+    primary_agent: operations
+    secondary_agents: [customer_success]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/accessibility-statement.md
+    check_type: policy
+    target_maturity: L2
+    priority: P3
+
+  # ---- 経済側面 ----
+  - id: CTL-21401-eco-local
+    title: 地域経済への貢献（地域調達・地域雇用）
+    domain: governance
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第3条"] }
+    primary_agent: procurement
+    secondary_agents: [esg_sustainability, finance]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/local-economy-log.csv
+    check_type: record
+    target_maturity: L2
+    priority: P3
+
+  # ---- ゲスト安全・従業員 ----
+  - id: CTL-21401-guest-safety
+    title: ゲストの安全（消防設備・避難・緊急時対応）
+    domain: safety
+    iso_refs:
+      - { standard: ISO-21401, clause: "8.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第4条", "第9条"] }
+    primary_agent: operations
+    secondary_agents: [risk_insurance, compliance]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/competence/研修実施記録.md
     check_type: record
     target_maturity: L3
+    priority: P1
+
+  - id: CTL-21401-guest-communication
+    title: サステナビリティ情報の提供と表示の実態一致
+    domain: operations
+    iso_refs:
+      - { standard: ISO-21401, clause: "7.4" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第4条"] }
+    primary_agent: pr_communications
+    secondary_agents: [operations, esg_sustainability]
+    # 裏づけのない環境訴求を出さないこと自体が本規格の要求に当たる。
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/guest-communication.md
+    check_type: policy
+    target_maturity: L2
+    priority: P3
+
+  - id: CTL-21401-worker-welfare
+    title: 従業員の労働安全衛生と就業条件
+    domain: safety
+    iso_refs:
+      - { standard: ISO-21401, clause: "7.1" }
+    reg_refs:
+      - { reg_id: REG-012, articles: ["第8条"] }
+    primary_agent: human_resources
+    secondary_agents: [general_affairs]
+    evidence_paths:
+      - docs/compliance/iso/ISO-21401/worker-welfare.md
+    check_type: policy
+    target_maturity: L2
+    priority: P1

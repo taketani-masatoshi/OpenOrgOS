@@ -1,20 +1,56 @@
 version: "1"
 standard: ISO-9001
-controls:
-  - id: CTL-9001-4.3
-    title: QMS スコープの決定・維持
-    domain: quality
-    iso_refs:
-      - { standard: ISO-9001, clause: "4.3" }
+notes: HLS 共通統制は steward/standards/iso/core/ に集約。ここには 9001 固有のものだけを置く。
+core_bindings:
+  - work: scope
+    clause: "4.3"
+    evidence_paths: [docs/company/regulations/hinshitsu-kanri-kisoku.md]
     reg_refs:
       - { reg_id: REG-011, articles: ["第2条"] }
-    primary_agent: quality_assurance
-    secondary_agents: [compliance]
-    evidence_paths:
-      - docs/company/regulations/hinshitsu-kanri-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
+  - work: policy
+    clause: "5.2"
+    evidence_paths: [docs/company/regulations/hinshitsu-kanri-kisoku.md]
+    reg_refs:
+      - { reg_id: REG-011, articles: ["第3条"] }
+  - work: risk_approach
+    clause: "6.1"
+    evidence_paths: [docs/compliance/iso/ISO-9001/risk-opportunities.csv]
+    reg_refs:
+      - { reg_id: REG-011, articles: ["第3条の3"] }
+  - work: objectives_monitoring
+    clause: "6.2"
+    evidence_paths: [docs/compliance/iso/ISO-9001/quality-objectives.md]
+    reg_refs:
+      - { reg_id: REG-011, articles: ["第3条の2"] }
+  - work: objectives_monitoring
+    clause: "9.1"
+    evidence_paths: [docs/compliance/iso/ISO-9001/quality-objectives.md]
+    reg_refs:
+      - { reg_id: REG-011, articles: ["第9条"] }
+  - work: competence
+    clause: "7.2"
+    evidence_paths: [docs/company/regulations/hinshitsu-kanri-kisoku.md]
+    reg_refs:
+      - { reg_id: REG-011, articles: ["第4条の3"] }
+  - work: documented_information
+    clause: "7.5"
+    reg_refs:
+      - { reg_id: REG-007, articles: ["第4条の2"] }
+  - work: internal_audit
+    clause: "9.2"
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第4条", "第5条"] }
+  - work: management_review
+    clause: "9.3"
+    reg_refs:
+      - { reg_id: REG-016, articles: ["第7条"] }
+  - work: corrective_action
+    clause: "10.2"
+    evidence_paths: [docs/compliance/iso/ISO-9001/nonconformance-log.csv]
+    reg_refs:
+      - { reg_id: REG-011, articles: ["第8条"] }
+      - { reg_id: REG-016, articles: ["第6条"] }
+controls:
   - id: CTL-9001-4.4
     title: プロセス及びその相互作用
     domain: quality
@@ -29,78 +65,8 @@ controls:
     check_type: policy
     target_maturity: L2
 
-  - id: CTL-9001-5.2
-    title: 品質方針の確立・維持
-    domain: quality
-    iso_refs:
-      - { standard: ISO-9001, clause: "5.2" }
-    reg_refs:
-      - { reg_id: REG-011, articles: ["第3条"] }
-    primary_agent: quality_assurance
-    secondary_agents: [compliance]
-    evidence_paths:
-      - docs/company/regulations/hinshitsu-kanri-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-9001-6.1
-    title: リスク及び機会への取組み
-    domain: quality
-    iso_refs:
-      - { standard: ISO-9001, clause: "6.1" }
-    reg_refs:
-      - { reg_id: REG-011, articles: ["第3条の3"] }
-    primary_agent: quality_assurance
-    secondary_agents: [compliance]
-    evidence_paths:
-      - docs/compliance/iso/ISO-9001/risk-opportunities.csv
-    check_type: record
-    target_maturity: L2
-
-  - id: CTL-9001-6.2
-    title: 品質目標及び達成の計画
-    domain: quality
-    iso_refs:
-      - { standard: ISO-9001, clause: "6.2" }
-    reg_refs:
-      - { reg_id: REG-011, articles: ["第3条の2"] }
-    primary_agent: quality_assurance
-    evidence_paths:
-      - docs/compliance/iso/ISO-9001/quality-objectives.md
-    check_type: record
-    target_maturity: L2
-
-  - id: CTL-9001-7.2
-    title: 力量
-    domain: quality
-    iso_refs:
-      - { standard: ISO-9001, clause: "7.2" }
-    reg_refs:
-      - { reg_id: REG-011, articles: ["第4条の3"] }
-    primary_agent: human_resources
-    secondary_agents: [quality_assurance]
-    evidence_paths:
-      - docs/company/regulations/hinshitsu-kanri-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-CORE-doc-control
-    title: 文書化された情報の管理
-    domain: governance
-    iso_refs:
-      - { standard: ISO-9001, clause: "7.5" }
-      - { standard: ISO-27001, clause: "7.5" }
-    reg_refs:
-      - { reg_id: REG-007, articles: ["第4条の2"] }
-    primary_agent: compliance
-    secondary_agents: [quality_assurance]
-    evidence_paths:
-      - docs/company/regulations/bunsho-kanri-kisoku.md
-    check_type: policy
-    target_maturity: L2
-
   - id: CTL-9001-8.7
-    title: 不適合の管理
+    title: 不適合な出力の管理
     domain: quality
     iso_refs:
       - { standard: ISO-9001, clause: "8.7" }
@@ -108,64 +74,6 @@ controls:
       - { reg_id: REG-011, articles: ["第8条"] }
     primary_agent: quality_assurance
     secondary_agents: [operations]
-    evidence_paths:
-      - docs/compliance/iso/ISO-9001/nonconformance-log.csv
-    check_type: record
-    target_maturity: L2
-
-  - id: CTL-9001-9.1
-    title: 監視・測定・分析・評価
-    domain: quality
-    iso_refs:
-      - { standard: ISO-9001, clause: "9.1" }
-    reg_refs:
-      - { reg_id: REG-011, articles: ["第9条"] }
-    primary_agent: quality_assurance
-    secondary_agents: [data_analytics]
-    evidence_paths:
-      - docs/compliance/iso/ISO-9001/quality-objectives.md
-    check_type: operation
-    target_maturity: L2
-
-  - id: CTL-9001-9.2
-    title: 内部監査
-    domain: audit
-    iso_refs:
-      - { standard: ISO-9001, clause: "9.2" }
-    reg_refs:
-      - { reg_id: REG-016, articles: ["第4条", "第5条"] }
-    primary_agent: internal_audit
-    secondary_agents: [compliance]
-    evidence_paths:
-      - docs/compliance/iso/internal-audit-plan-fy2026.md
-      - docs/compliance/iso/audit-records/**/*
-    check_type: record
-    target_maturity: L3
-
-  - id: CTL-9001-9.3
-    title: マネジメントレビュー
-    domain: audit
-    iso_refs:
-      - { standard: ISO-9001, clause: "9.3" }
-    reg_refs:
-      - { reg_id: REG-016, articles: ["第7条"] }
-    primary_agent: compliance
-    secondary_agents: [executive_steward]
-    evidence_paths:
-      - docs/compliance/iso/management-review-fy2026-template.md
-    check_type: record
-    target_maturity: L3
-
-  - id: CTL-9001-10.2
-    title: 不適合及び是正措置
-    domain: quality
-    iso_refs:
-      - { standard: ISO-9001, clause: "10.2" }
-    reg_refs:
-      - { reg_id: REG-011, articles: ["第8条"] }
-      - { reg_id: REG-016, articles: ["第6条"] }
-    primary_agent: quality_assurance
-    secondary_agents: [internal_audit]
     evidence_paths:
       - docs/compliance/iso/ISO-9001/nonconformance-log.csv
     check_type: record

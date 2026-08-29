@@ -1,0 +1,86 @@
+version: "1"
+standard: ISO-20000
+notes: IT サービスマネジメント。HLS 共通統制は core/。固有は SLA・インシデント・変更・構成・可用性。
+core_bindings:
+  - work: scope
+    clause: "4.1"
+  - work: policy
+    clause: "5.2"
+  - work: risk_approach
+    clause: "6.1"
+  - work: objectives_monitoring
+    clause: "6.2"
+  - work: objectives_monitoring
+    clause: "9.1"
+  - work: competence
+    clause: "7.2"
+  - work: documented_information
+    clause: "7.5"
+  - work: operation
+    clause: "8.1"
+  - work: internal_audit
+    clause: "9.2"
+  - work: management_review
+    clause: "9.3"
+  - work: corrective_action
+    clause: "10.2"
+controls:
+  - id: CTL-20000-8.3.3
+    title: サービスレベル管理（SLA）
+    domain: operations
+    iso_refs:
+      - { standard: ISO-20000, clause: "8.3.3" }
+    primary_agent: devops
+    secondary_agents: [customer_success, operations]
+    evidence_paths:
+      - docs/compliance/iso/ISO-20000/service-level-agreements.md
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-20000-8.6.1
+    title: インシデント管理
+    domain: operations
+    iso_refs:
+      - { standard: ISO-20000, clause: "8.6.1" }
+    primary_agent: devops
+    secondary_agents: [customer_support]
+    evidence_paths:
+      - docs/compliance/iso/ISO-20000/incident-records/
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-20000-8.5.1
+    title: 変更管理
+    domain: operations
+    iso_refs:
+      - { standard: ISO-20000, clause: "8.5.1" }
+    primary_agent: devops
+    secondary_agents: [engineering]
+    evidence_paths:
+      - docs/compliance/iso/ISO-20000/change-records/
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-20000-8.2.6
+    title: 構成管理（CMDB）
+    domain: operations
+    iso_refs:
+      - { standard: ISO-20000, clause: "8.2.6" }
+    primary_agent: devops
+    secondary_agents: [security]
+    evidence_paths:
+      - docs/compliance/iso/ISO-20000/configuration-items.csv
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-20000-8.7.1
+    title: サービス可用性・継続性
+    domain: operations
+    iso_refs:
+      - { standard: ISO-20000, clause: "8.7.1" }
+    primary_agent: devops
+    secondary_agents: [operations]
+    evidence_paths:
+      - docs/compliance/iso/ISO-20000/availability-plan.md
+    check_type: record
+    target_maturity: L2

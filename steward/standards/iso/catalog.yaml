@@ -1,0 +1,301 @@
+# ISO pack catalog — machine-readable index (not the ISO text).
+# Control maps: steward/standards/iso/ISO-XXXX/control-map.yaml
+# Shared HLS controls: steward/standards/iso/core/control-map.yaml
+# Loader: src/lib/iso-catalog.ts · CLI: orgos iso catalog | roadmap | maps verify | scaffold
+#
+# status: available    — pack folder + control-map.yaml exist and load
+#         coming_soon  — roadmap entry only; cannot be enabled in standards.yaml
+# core_profile: binding profile used by `orgos iso scaffold` (see core/profiles.yaml)
+
+version: "1"
+standards:
+  # ---------------------------------------------------------------- available
+  - id: ISO-9001
+    title: Quality management systems
+    year: "2015"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-27001
+    title: Information security management systems
+    year: "2022"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    annex: true
+    core_profile: hls_full
+  - id: ISO-14001
+    title: Environmental management systems
+    year: "2015"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-45001
+    title: Occupational health and safety management systems
+    year: "2018"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-50001
+    title: Energy management systems
+    year: "2018"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-21401
+    title: Tourism and related services — Sustainability management system for accommodation
+    year: "2018"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-22301
+    title: Business continuity management systems
+    year: "2019"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-20000
+    title: IT service management
+    year: "2018"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-13485
+    title: Medical devices — Quality management systems
+    year: "2016"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: false
+    core_profile: qms_legacy
+    notes: Pre-HLS structure. Internal audit 8.2.4 · MR 5.6 · competence 6.2 · documents 4.2.4.
+  - id: ISO-22000
+    title: Food safety management systems
+    year: "2018"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-37001
+    title: Anti-bribery management systems
+    year: "2016"
+    kind: certifiable_ms
+    encoding: control_map
+    status: available
+    hls: true
+    core_profile: hls_full
+  - id: ISO-37000
+    title: Governance of organizations — Guidance
+    year: "2021"
+    kind: guidance
+    encoding: control_map
+    status: available
+    hls: false
+    notes: Self-declaration path (P-01…P-11). Not a certification scheme, no core bindings.
+
+  # ------------------------------------------------- coming soon · tier 1
+  # OOO の性格上、次に来るもの
+  - id: ISO-42001
+    title: Artificial intelligence management systems
+    year: "2023"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    annex: true
+    core_profile: hls_full
+    tier: "1"
+    relevance: OOO 自身が LLM オペレータで動く。6.1.4 AI システム影響評価が自社適用の筆頭。
+  - id: ISO-37301
+    title: Compliance management systems
+    year: "2021"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "1"
+    relevance: 37000（指針）· 37001（贈収賄）と分離した認証可能な CMS。予約 ID iso_cms の受け皿。
+  - id: ISO-27701
+    title: Privacy information management systems
+    year: "2025"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "1"
+    relevance: 2025 版で 27001 依存が外れ単独認証可になった。CTL-CORE-privacy の行き先。
+
+  # ------------------------------------------------- coming soon · tier 2
+  # 既存モジュールに接続する
+  - id: ISO-55001
+    title: Asset management
+    year: "2024"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "2"
+    relevance: rental モジュールの設備台帳と接続。
+  - id: ISO-20121
+    title: Event sustainability management systems
+    year: "2024"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "2"
+    relevance: hospitality · ISO 21401 と隣接。
+  - id: ISO-41001
+    title: Facility management
+    year: "2018"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "2"
+    relevance: rental · hospitality の建物運営。
+  - id: ISO-30401
+    title: Knowledge management systems
+    year: "2018"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "2"
+    relevance: Agent の知識基盤（steward/ 正本）の管理。
+  - id: ISO-56001
+    title: Innovation management system
+    year: "2024"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "2"
+  - id: ISO-28000
+    title: Security and resilience — Supply chain security management systems
+    year: "2022"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "2"
+  - id: ISO-46001
+    title: Water efficiency management systems
+    year: "2019"
+    kind: certifiable_ms
+    encoding: none
+    status: coming_soon
+    hls: true
+    core_profile: hls_full
+    tier: "2"
+    relevance: ISO 21401 · 14001 と接続。
+
+  # ------------------------------------------------- coming soon · tier 3
+  # ガイダンス — パックにせずコアの guidance_refs で参照する
+  - id: ISO-31000
+    title: Risk management — Guidelines
+    year: "2018"
+    kind: guidance
+    encoding: none
+    status: coming_soon
+    tier: "3"
+    relevance: CTL-CORE-risk-approach の指針。認証規格ではない。
+  - id: ISO-19011
+    title: Guidelines for auditing management systems
+    year: "2018"
+    kind: guidance
+    encoding: none
+    status: coming_soon
+    tier: "3"
+    relevance: CTL-CORE-internal-audit の指針。認証規格ではない。
+  - id: ISO-26000
+    title: Guidance on social responsibility
+    year: "2010"
+    kind: guidance
+    encoding: none
+    status: coming_soon
+    tier: "3"
+    relevance: ISO-37000 P-10 と接続。
+  - id: ISO-22316
+    title: Security and resilience — Organizational resilience
+    year: "2017"
+    kind: guidance
+    encoding: none
+    status: coming_soon
+    tier: "3"
+    relevance: ISO 22301 とコアの補助。
+
+  # ------------------------------------------------- coming soon · tier 4
+  # 管理策集・セクタ拡張 — 単独のマネジメントシステムではない
+  - id: ISO-27002
+    title: Information security controls
+    year: "2022"
+    kind: control_set
+    encoding: none
+    status: coming_soon
+    extends: ISO-27001
+    tier: "4"
+  - id: ISO-27017
+    title: Information security controls for cloud services
+    year: "2015"
+    kind: control_set
+    encoding: none
+    status: coming_soon
+    extends: ISO-27001
+    tier: "4"
+  - id: ISO-27018
+    title: Protection of PII in public clouds
+    year: "2019"
+    kind: control_set
+    encoding: none
+    status: coming_soon
+    extends: ISO-27001
+    tier: "4"
+  - id: ISO-14064
+    title: Greenhouse gases — Quantification and reporting
+    year: "2018"
+    kind: sector_extension
+    encoding: none
+    status: coming_soon
+    extends: ISO-14001
+    tier: "4"
+  - id: ISO-14068
+    title: Climate change management — Carbon neutrality
+    year: "2023"
+    kind: sector_extension
+    encoding: none
+    status: coming_soon
+    extends: ISO-14001
+    tier: "4"
+  - id: ISO-10002
+    title: Quality management — Customer satisfaction — Complaints handling
+    year: "2018"
+    kind: sector_extension
+    encoding: none
+    status: coming_soon
+    extends: ISO-9001
+    tier: "4"

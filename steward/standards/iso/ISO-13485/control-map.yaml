@@ -1,20 +1,42 @@
 version: "1"
 standard: ISO-13485
-controls:
-  - id: CTL-13485-4.1
-    title: QMS 一般要求事項
-    domain: quality
-    iso_refs:
-      - { standard: ISO-13485, clause: "4.1" }
+notes: |
+  ISO 13485 は HLS 以前の構成。共通統制の条項番号は Annex SL と違う（内部監査 8.2.4 ·
+  MR 5.6 · 力量 6.2 · 文書 4.2.4 · リスク 7.1）。core_bindings がその差を吸収する。
+core_bindings:
+  - work: scope
+    clause: "4.1"
+    evidence_paths: [docs/medical-device/qms/]
     reg_refs:
       - { reg_id: REG-025, articles: ["第1条"] }
-    primary_agent: medical_device_regulatory
-    secondary_agents: [compliance, quality_assurance]
-    evidence_paths:
-      - docs/medical-device/qms/
-    check_type: policy
-    target_maturity: L2
-
+  - work: policy
+    clause: "5.3"
+    evidence_paths: [docs/medical-device/qms/]
+  - work: risk_approach
+    clause: "7.1"
+    evidence_paths: [docs/medical-device/qms/]
+  - work: competence
+    clause: "6.2"
+    evidence_paths: [data/medical-device/ledgers/training-records.yaml]
+  - work: documented_information
+    clause: "4.2.4"
+    evidence_paths: [data/medical-device/ledgers/document-control-records.yaml]
+    reg_refs:
+      - { reg_id: REG-025, articles: ["第3条"] }
+      - { reg_id: REG-007, articles: ["第4条の2"] }
+  - work: internal_audit
+    clause: "8.2.4"
+    evidence_paths: [docs/compliance/iso/ISO-13485/]
+  - work: management_review
+    clause: "5.6"
+    evidence_paths: [docs/medical-device/qms/]
+  - work: corrective_action
+    clause: "8.5.2"
+    evidence_paths: [docs/medical-device/qms/]
+  - work: corrective_action
+    clause: "8.5.3"
+    evidence_paths: [docs/medical-device/qms/]
+controls:
   - id: CTL-13485-4.2.2
     title: 品質マニュアル
     domain: quality
@@ -23,56 +45,6 @@ controls:
     reg_refs:
       - { reg_id: REG-025, articles: ["第2条"] }
     primary_agent: medical_device_regulatory
-    evidence_paths:
-      - docs/medical-device/qms/
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-13485-4.2.4
-    title: 文書管理
-    domain: quality
-    iso_refs:
-      - { standard: ISO-13485, clause: "4.2.4" }
-    reg_refs:
-      - { reg_id: REG-025, articles: ["第3条"] }
-      - { reg_id: REG-007, articles: ["第4条の2"] }
-    primary_agent: medical_device_regulatory
-    secondary_agents: [compliance]
-    evidence_paths:
-      - data/medical-device/ledgers/document-control-records.yaml
-    check_type: record
-    target_maturity: L2
-
-  - id: CTL-13485-5.3
-    title: 品質方針
-    domain: quality
-    iso_refs:
-      - { standard: ISO-13485, clause: "5.3" }
-    primary_agent: medical_device_regulatory
-    secondary_agents: [quality_assurance]
-    evidence_paths:
-      - docs/medical-device/qms/
-    check_type: policy
-    target_maturity: L2
-
-  - id: CTL-13485-6.2
-    title: 能力 · 認識 · 教育訓練
-    domain: quality
-    iso_refs:
-      - { standard: ISO-13485, clause: "6.2" }
-    primary_agent: medical_device_regulatory
-    evidence_paths:
-      - data/medical-device/ledgers/training-records.yaml
-    check_type: record
-    target_maturity: L2
-
-  - id: CTL-13485-7.1
-    title: 製品実現の計画 · リスク管理
-    domain: quality
-    iso_refs:
-      - { standard: ISO-13485, clause: "7.1" }
-    primary_agent: medical_device_regulatory
-    secondary_agents: [engineering, quality_assurance]
     evidence_paths:
       - docs/medical-device/qms/
     check_type: policy
@@ -151,39 +123,3 @@ controls:
       - data/medical-device/ledgers/adverse-event-records.yaml
     check_type: record
     target_maturity: L3
-
-  - id: CTL-13485-8.2.4
-    title: 内部監査
-    domain: audit
-    iso_refs:
-      - { standard: ISO-13485, clause: "8.2.4" }
-    primary_agent: internal_audit
-    secondary_agents: [medical_device_regulatory]
-    evidence_paths:
-      - docs/compliance/iso/ISO-13485/
-    check_type: record
-    target_maturity: L3
-
-  - id: CTL-13485-8.5.2
-    title: 是正処置
-    domain: quality
-    iso_refs:
-      - { standard: ISO-13485, clause: "8.5.2" }
-    primary_agent: quality_assurance
-    secondary_agents: [medical_device_regulatory]
-    evidence_paths:
-      - docs/medical-device/qms/
-    check_type: record
-    target_maturity: L2
-
-  - id: CTL-13485-8.5.3
-    title: 予防処置
-    domain: quality
-    iso_refs:
-      - { standard: ISO-13485, clause: "8.5.3" }
-    primary_agent: quality_assurance
-    secondary_agents: [medical_device_regulatory]
-    evidence_paths:
-      - docs/medical-device/qms/
-    check_type: record
-    target_maturity: L2

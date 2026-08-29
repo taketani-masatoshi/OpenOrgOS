@@ -1,0 +1,74 @@
+version: "1"
+standard: ISO-22301
+notes: 事業継続。HLS 共通統制は core/。固有は BIA・BCP・伝達・演習。
+core_bindings:
+  - work: scope
+    clause: "4.1"
+  - work: policy
+    clause: "5.2"
+  - work: risk_approach
+    clause: "6.1"
+  - work: objectives_monitoring
+    clause: "6.2"
+  - work: objectives_monitoring
+    clause: "9.1"
+  - work: competence
+    clause: "7.2"
+  - work: documented_information
+    clause: "7.5"
+  - work: operation
+    clause: "8.1"
+  - work: internal_audit
+    clause: "9.2"
+  - work: management_review
+    clause: "9.3"
+  - work: corrective_action
+    clause: "10.2"
+controls:
+  - id: CTL-22301-8.2.2
+    title: 事業影響度分析（RTO/RPO）
+    domain: continuity
+    iso_refs:
+      - { standard: ISO-22301, clause: "8.2.2" }
+    primary_agent: operations
+    secondary_agents: [risk_insurance, executive_steward]
+    evidence_paths:
+      - docs/compliance/iso/ISO-22301/business-impact-analysis.csv
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-22301-8.4
+    title: 事業継続計画及び手順
+    domain: continuity
+    iso_refs:
+      - { standard: ISO-22301, clause: "8.4" }
+    primary_agent: operations
+    secondary_agents: [devops, compliance]
+    evidence_paths:
+      - docs/compliance/iso/ISO-22301/business-continuity-plan.md
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-22301-8.4.2
+    title: 警報・伝達手順
+    domain: continuity
+    iso_refs:
+      - { standard: ISO-22301, clause: "8.4.2" }
+    primary_agent: operations
+    secondary_agents: [pr_communications]
+    evidence_paths:
+      - docs/compliance/iso/ISO-22301/communication-procedure.md
+    check_type: operation
+    target_maturity: L2
+
+  - id: CTL-22301-8.5
+    title: 演習及び試験
+    domain: continuity
+    iso_refs:
+      - { standard: ISO-22301, clause: "8.5" }
+    primary_agent: operations
+    secondary_agents: [internal_audit]
+    evidence_paths:
+      - docs/compliance/iso/ISO-22301/exercise-records/
+    check_type: record
+    target_maturity: L3

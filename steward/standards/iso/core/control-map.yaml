@@ -1,0 +1,228 @@
+# Core management-system controls — shared across every enabled standard.
+# Keyed by work type, not clause number: the same work is 9.2 under Annex SL,
+# 8.2.4 under ISO 13485, and renumbered again on each revision.
+# Clause numbers live in each pack's `core_bindings`.
+version: "1"
+controls:
+  - id: CTL-CORE-scope
+    title: 適用範囲及び組織の状況
+    work: scope
+    domain: compliance_ms
+    primary_agent: compliance
+    secondary_agents: [executive_steward]
+    evidence_paths: []
+    evidence_mode: all
+    check_type: policy
+    target_maturity: L2
+    priority: P2
+    supersedes:
+      - CTL-9001-4.3
+      - CTL-27001-4.1
+      - CTL-21401-4.1
+      - CTL-13485-4.1
+      - CTL-14001-4-1
+      - CTL-20000-4-1
+      - CTL-22000-4-1
+      - CTL-22301-4-1
+      - CTL-37001-4-1
+      - CTL-45001-4-1
+      - CTL-50001-4-1
+
+  - id: CTL-CORE-policy
+    title: 方針の確立・承認・周知
+    work: policy
+    domain: compliance_ms
+    primary_agent: compliance
+    secondary_agents: [executive_steward]
+    evidence_paths: []
+    evidence_mode: all
+    check_type: policy
+    target_maturity: L2
+    priority: P2
+    supersedes:
+      - CTL-9001-5.2
+      - CTL-27001-5.2
+      - CTL-21401-5.2
+      - CTL-13485-5.3
+      - CTL-14001-5-2
+      - CTL-20000-5-2
+      - CTL-22000-5-2
+      - CTL-22301-5-2
+      - CTL-37001-5-2
+      - CTL-45001-5-2
+      - CTL-50001-5-2
+
+  - id: CTL-CORE-risk-approach
+    title: リスク及び機会への取組み
+    work: risk_approach
+    domain: compliance_ms
+    primary_agent: compliance
+    secondary_agents: [executive_steward]
+    evidence_paths: []
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P2
+    guidance_refs:
+      - { standard: ISO-31000, note: リスクマネジメントの指針（認証規格ではない） }
+    supersedes:
+      - CTL-9001-6.1
+      - CTL-27001-6.1
+      - CTL-13485-7.1
+      - CTL-14001-6-1
+      - CTL-20000-6-1
+      - CTL-22000-6-1
+      - CTL-22301-6-1
+      - CTL-37001-6-1
+      - CTL-45001-6-1
+      - CTL-50001-6-1
+
+  - id: CTL-CORE-objectives-monitoring
+    title: 目標及び監視・測定
+    work: objectives_monitoring
+    domain: compliance_ms
+    primary_agent: compliance
+    secondary_agents: [data_analytics]
+    evidence_paths: []
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P3
+    supersedes:
+      - CTL-9001-6.2
+      - CTL-9001-9.1
+      - CTL-21401-6.2
+      - CTL-21401-9.1
+
+  - id: CTL-CORE-competence
+    title: 力量・認識・教育訓練
+    work: competence
+    domain: compliance_ms
+    primary_agent: human_resources
+    secondary_agents: [learning_development, compliance]
+    evidence_paths: []
+    evidence_mode: any
+    check_type: policy
+    target_maturity: L2
+    priority: P2
+    supersedes:
+      - CTL-9001-7.2
+      - CTL-21401-7.2
+      - CTL-13485-6.2
+
+  - id: CTL-CORE-doc-control
+    title: 文書化された情報の管理
+    work: documented_information
+    domain: governance
+    primary_agent: compliance
+    secondary_agents: [quality_assurance]
+    evidence_paths:
+      - docs/company/regulations/bunsho-kanri-kisoku.md
+    evidence_mode: any
+    check_type: policy
+    target_maturity: L2
+    priority: P2
+    supersedes:
+      - CTL-13485-4.2.4
+      - CTL-14001-7-5
+      - CTL-20000-7-5
+      - CTL-22000-7-5
+      - CTL-22301-7-5
+      - CTL-37001-7-5
+      - CTL-45001-7-5
+      - CTL-50001-7-5
+
+  - id: CTL-CORE-operation
+    title: 運用の計画及び管理
+    work: operation
+    domain: operations
+    primary_agent: operations
+    secondary_agents: [compliance]
+    evidence_paths: []
+    evidence_mode: all
+    check_type: operation
+    target_maturity: L2
+    priority: P2
+    supersedes:
+      - CTL-14001-8-1
+      - CTL-20000-8-1
+      - CTL-22000-8-1
+      - CTL-22301-8-1
+      - CTL-37001-8-1
+      - CTL-45001-8-1
+      - CTL-50001-8-1
+
+  - id: CTL-CORE-internal-audit
+    title: 内部監査
+    work: internal_audit
+    domain: audit
+    primary_agent: internal_audit
+    secondary_agents: [compliance]
+    evidence_paths:
+      - docs/compliance/iso/internal-audit-plan-fy2026.md
+      - docs/compliance/iso/audit-records/**/*
+      - docs/audit/internal/
+    evidence_mode: any
+    check_type: record
+    target_maturity: L3
+    priority: P3
+    guidance_refs:
+      - { standard: ISO-19011, note: マネジメントシステム監査の指針（認証規格ではない） }
+    supersedes:
+      - CTL-9001-9.2
+      - CTL-27001-9.2
+      - CTL-21401-9.2
+      - CTL-13485-8.2.4
+      - CTL-14001-9-2
+      - CTL-20000-9-2
+      - CTL-22000-9-2
+      - CTL-22301-9-2
+      - CTL-37001-9-2
+      - CTL-45001-9-2
+      - CTL-50001-9-2
+
+  - id: CTL-CORE-management-review
+    title: マネジメントレビュー
+    work: management_review
+    domain: audit
+    primary_agent: compliance
+    secondary_agents: [executive_steward]
+    evidence_paths:
+      - docs/compliance/iso/management-review-fy2026-template.md
+    evidence_mode: any
+    check_type: record
+    target_maturity: L3
+    priority: P3
+    supersedes:
+      - CTL-9001-9.3
+      - CTL-27001-9.3
+      - CTL-14001-9-3
+      - CTL-20000-9-3
+      - CTL-22000-9-3
+      - CTL-22301-9-3
+      - CTL-37001-9-3
+      - CTL-45001-9-3
+      - CTL-50001-9-3
+
+  - id: CTL-CORE-corrective-action
+    title: 不適合及び是正処置
+    work: corrective_action
+    domain: compliance_ms
+    primary_agent: quality_assurance
+    secondary_agents: [internal_audit]
+    evidence_paths: []
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P2
+    supersedes:
+      - CTL-9001-10.2
+      - CTL-13485-8.5.2
+      - CTL-13485-8.5.3
+      - CTL-14001-10-2
+      - CTL-20000-10-2
+      - CTL-22000-10-2
+      - CTL-22301-10-2
+      - CTL-37001-10-2
+      - CTL-45001-10-2
+      - CTL-50001-10-2

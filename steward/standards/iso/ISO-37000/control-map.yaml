@@ -1,0 +1,148 @@
+version: "1"
+standard: ISO-37000
+notes: |
+  ISO 37000 is guidance (not a certification scheme).
+  Controls map ISO 37000:2021 principles P-01..P-11 to OrgOS evidence paths.
+  Self-declaration: orgos governance principles init|status|declare
+  Assessment requires at least one evidence path plus principle-specific semantic checks.
+controls:
+  - id: CTL-37000-P-01
+    title: Purpose — 組織の目的の明示
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "purpose" }
+    primary_agent: executive_steward
+    secondary_agents: [corporate_governance]
+    evidence_paths:
+      - data/plans/business-plan.yaml
+      - docs/company/mission-vision.md
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-37000-P-02
+    title: Value generation — 価値創出の計画
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "value_generation" }
+    primary_agent: finance
+    secondary_agents: [executive_steward]
+    evidence_paths:
+      - data/plans/business-plan.yaml
+      - data/plans/revenue-plan.yaml
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-37000-P-03
+    title: Strategy — 戦略と計画ゲート
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "strategy" }
+    primary_agent: executive_steward
+    secondary_agents: [finance]
+    evidence_paths:
+      - data/plans/business-plan.yaml
+    check_type: operation
+    target_maturity: L2
+
+  - id: CTL-37000-P-04
+    title: Oversight — 統治機関の監督記録
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "oversight" }
+    primary_agent: corporate_governance
+    secondary_agents: [executive_steward]
+    evidence_paths:
+      - data/company-events.yaml
+      - data/governance/meetings.yaml
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-37000-P-05
+    title: Accountability — 権限の文書化と職務分離
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "accountability" }
+    primary_agent: compliance
+    secondary_agents: [executive_steward]
+    evidence_paths:
+      - data/org/operators.yaml
+      - data/org/governance-policy.yaml
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-37000-P-06
+    title: Stakeholder engagement — ステークホルダーの識別
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "stakeholder_engagement" }
+    primary_agent: executive_steward
+    secondary_agents: [corporate_governance]
+    evidence_paths:
+      - data/company.yaml
+      - data/governance/register.yaml
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-37000-P-07
+    title: Leadership — 倫理的で実効ある指導
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "leadership" }
+    primary_agent: executive_steward
+    secondary_agents: [compliance]
+    evidence_paths:
+      - data/org/operators.yaml
+      - data/org/governance-policy.yaml
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-37000-P-08
+    title: Data and decisions — データに基づく意思決定
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "data_and_decisions" }
+    primary_agent: executive_steward
+    secondary_agents: [finance]
+    evidence_paths:
+      - data/analytics/metrics.yaml
+      - docs/reports/dashboard
+    check_type: operation
+    target_maturity: L2
+
+  - id: CTL-37000-P-09
+    title: Risk governance — リスクの統治
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "risk_governance" }
+    primary_agent: compliance
+    secondary_agents: [executive_steward]
+    evidence_paths:
+      - data/risk/register.yaml
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-37000-P-10
+    title: Social responsibility — 社会的責任
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "social_responsibility" }
+    primary_agent: compliance
+    secondary_agents: [esg_sustainability]
+    evidence_paths:
+      - docs/company/regulations/kankyo-energy-kanri-kisoku.md
+      - docs/esg/00-README.md
+    check_type: policy
+    target_maturity: L2
+
+  - id: CTL-37000-P-11
+    title: Viability and performance over time — 存続と長期業績
+    domain: governance
+    iso_refs:
+      - { standard: ISO-37000, clause: "viability_and_performance" }
+    primary_agent: finance
+    secondary_agents: [executive_steward]
+    evidence_paths:
+      - data/plans/business-plan.yaml
+      - data/plans/debt-plan.yaml
+    check_type: record
+    target_maturity: L2

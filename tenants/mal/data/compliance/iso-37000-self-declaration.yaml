@@ -1,0 +1,18 @@
+schema_version: 1
+standard: ISO-37000
+status: ready
+company_name: 株式会社MAL
+signatory_role: 代表取締役
+signed_at: null
+review_cycle: annual
+framework_paths:
+  principles_rule: steward/rules/governance-principles.md
+  control_map: steward/standards/iso/ISO-37000/control-map.yaml
+  declaration_md: docs/compliance/iso/ISO-37000/self-declaration.md
+notes: ISO 37000 Guidance に基づく自己宣言ドラフト。第三者認証ではない。署名前に orgos governance
+  principles status を確認。
+last_assessment:
+  assessed_at: 2026-08-29T01:50:56.870Z
+  principles_ok: 11
+  principles_total: 11
+  ready_for_self_declaration: true

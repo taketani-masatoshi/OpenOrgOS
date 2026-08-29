@@ -1,0 +1,74 @@
+version: "1"
+standard: ISO-50001
+notes: エネルギー。HLS 共通統制は core/。固有はエネルギーレビュー・基線・EnPI・設計。
+core_bindings:
+  - work: scope
+    clause: "4.1"
+  - work: policy
+    clause: "5.2"
+  - work: risk_approach
+    clause: "6.1"
+  - work: objectives_monitoring
+    clause: "6.2"
+  - work: objectives_monitoring
+    clause: "9.1"
+  - work: competence
+    clause: "7.2"
+  - work: documented_information
+    clause: "7.5"
+  - work: operation
+    clause: "8.1"
+  - work: internal_audit
+    clause: "9.2"
+  - work: management_review
+    clause: "9.3"
+  - work: corrective_action
+    clause: "10.2"
+controls:
+  - id: CTL-50001-6.3
+    title: エネルギーレビュー
+    domain: environment
+    iso_refs:
+      - { standard: ISO-50001, clause: "6.3" }
+    primary_agent: esg_sustainability
+    secondary_agents: [operations]
+    evidence_paths:
+      - docs/compliance/iso/ISO-50001/energy-review.md
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-50001-6.5
+    title: エネルギーベースライン（EnB）
+    domain: environment
+    iso_refs:
+      - { standard: ISO-50001, clause: "6.5" }
+    primary_agent: esg_sustainability
+    secondary_agents: [data_analytics]
+    evidence_paths:
+      - docs/compliance/iso/ISO-50001/energy-baseline.csv
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-50001-6.4
+    title: エネルギーパフォーマンス指標（EnPI）
+    domain: environment
+    iso_refs:
+      - { standard: ISO-50001, clause: "6.4" }
+    primary_agent: esg_sustainability
+    secondary_agents: [data_analytics]
+    evidence_paths:
+      - docs/compliance/iso/ISO-50001/enpi.csv
+    check_type: record
+    target_maturity: L2
+
+  - id: CTL-50001-8.2
+    title: 設計におけるエネルギー考慮
+    domain: environment
+    iso_refs:
+      - { standard: ISO-50001, clause: "8.2" }
+    primary_agent: esg_sustainability
+    secondary_agents: [engineering, procurement]
+    evidence_paths:
+      - docs/compliance/iso/ISO-50001/design-energy-review.md
+    check_type: operation
+    target_maturity: L2
