@@ -18,6 +18,7 @@ import {
   seedExecutiveYamlFromExamples,
   seedProtocolYamlFromExamples,
 } from "./tenant-scaffold.js";
+import { initIso37000SelfDeclaration } from "./org/governance-principles.js";
 
 export interface TenantInitOptions {
   id: string;
@@ -60,6 +61,14 @@ export function runTenantInit(options: TenantInitOptions): void {
 
   setTenantId(id);
   const seedResult = seedRegulationDocs();
+  try {
+    const iso37000 = initIso37000SelfDeclaration({ force: Boolean(options.force) });
+    console.log(`  ISO 37000 draft: ${iso37000.declaration_path}`);
+  } catch (err) {
+    console.log(
+      `  ISO 37000 init skipped: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   console.log(`✓ Tenant "${id}" initialized at tenants/${id}/`);
   console.log(`  Regulations seeded: ${seedResult.seeded.join(", ") || "(none)"}`);
   if (seedResult.skipped.length) {
@@ -431,8 +440,14 @@ notes: |
 function skeletonBusinessPlan(name: string): string {
   return `period: "2026-2028"
 
+mission: |
+  ${name} — 組織の存在理由をここに書く（人間が確定）
+
 vision: |
   ${name} — スケルトン事業計画
+
+values:
+  - 説明責任
 
 segments:
   - name: "サンプル物件（賃貸）"

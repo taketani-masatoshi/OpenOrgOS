@@ -38,6 +38,7 @@ export const CORE_DOC_DIRS = [
   "legal",
   "compliance",
   "executive",
+  "projects",
   "exports",
   "reports/agent-summaries",
   "reports/routing-queue",
@@ -54,11 +55,14 @@ export const PROPERTY_OPERATIONS_SUBDIRS = [
 /** Default docs_root when modules.yaml omits it */
 export const MODULE_DEFAULT_DOCS_ROOT: Record<string, string> = {
   venture_capital: "docs/venture-capital/",
+  investor_relations: "docs/investor-relations/",
+  customer_success: "docs/customers/",
   jp_medical_device: "docs/medical-device/",
   travel_booking: "docs/operations/",
   jp_carbon_neutral_2050: "docs/compliance/declarations/",
   jp_women_empowerment: "docs/compliance/declarations/",
   jp_privacy_policy: "docs/compliance/privacy/",
+  jp_consumption_refund: "docs/company/tax/refund/",
 };
 
 const PROPERTY_MODULE_AGENTS = new Set(["rental", "hospitality", "property_management"]);
@@ -72,6 +76,8 @@ const CORE_README: Partial<Record<(typeof CORE_DOC_DIRS)[number], string>> = {
   "io/inbox":
     "# inbox\n\n外部受領。Zone A。組織間契約ドラフトは P2 までここ。\n",
   "io/outbox/sent": "# outbox/sent\n\n送付控え。Zone A。\n",
+  projects:
+    "# projects/\n\nPMO メモ · 報告下書き。正本は data/projects/（ADR 0043）。\n",
 };
 
 function tenantDocsPath(...parts: string[]): string {

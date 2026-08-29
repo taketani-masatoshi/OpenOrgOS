@@ -1,6 +1,8 @@
 import type { IncomingMessage } from "node:http";
 
 export class PayloadTooLargeError extends Error {
+  readonly statusCode = 413;
+
   constructor(maxBytes: number) {
     super(`request body exceeds ${maxBytes} bytes`);
     this.name = "PayloadTooLargeError";
@@ -8,6 +10,8 @@ export class PayloadTooLargeError extends Error {
 }
 
 export class InvalidJsonError extends Error {
+  readonly statusCode = 400;
+
   constructor(message = "invalid JSON body") {
     super(message);
     this.name = "InvalidJsonError";

@@ -49,6 +49,7 @@ docs/
 ├── legal/
 ├── compliance/           … ISO · 個情（モジュール無しでも可）
 ├── executive/
+├── projects/             … PMO メモ（正本は data/projects/）
 ├── exports/
 └── reports/
     ├── agent-summaries/  … Zone C（コア Agent 要約）

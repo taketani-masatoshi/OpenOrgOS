@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { assertEventsWriteAuthorized } from "./company-events-write-guard.js";
+import { wrapCanonicalWrite } from "./org/fs-guard/write-hook.js";
 
 /**
  * Shared append-only JSONL store helpers used by the audit log and queue DB.
@@ -8,19 +8,26 @@ import { assertEventsWriteAuthorized } from "./company-events-write-guard.js";
  */
 
 export function appendJsonl<T>(path: string, record: T): void {
-  assertEventsWriteAuthorized(path);
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, JSON.stringify(record) + "\n", "utf-8");
+  wrapCanonicalWrite(path, () => {
+    mkdirSync(dirname(path), { recursive: true });
+    appendFileSync(path, JSON.stringify(record) + "\n", "utf-8");
+  });
 }
 
-export function loadJsonl<T>(path: string, parse: (raw: unknown) => T): T[] {
+export function loadJsonl<T>(
+  path: string,
+  parse: (raw: unknown) => T,
+  opts?: { onCorruptLine?: (lineNo: number, raw: string) => void }
+): T[] {
   if (!existsSync(path)) return [];
   const out: T[] = [];
-  for (const line of readFileSync(path, "utf-8").split("\n").filter(Boolean)) {
+  const lines = readFileSync(path, "utf-8").split("\n").filter(Boolean);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
     try {
       out.push(parse(JSON.parse(line)));
     } catch {
-      // skip corrupt lines
+      opts?.onCorruptLine?.(i + 1, line);
     }
   }
   return out;
@@ -48,7 +55,9 @@ export function updateJsonlLine<T extends { id: string }>(
     return JSON.stringify(updated);
   });
   if (updated) {
-    writeFileSync(path, rewritten.join("\n") + (rewritten.length ? "\n" : ""), "utf-8");
+    wrapCanonicalWrite(path, () => {
+      writeFileSync(path, rewritten.join("\n") + (rewritten.length ? "\n" : ""), "utf-8");
+    });
   }
   return updated;
 }

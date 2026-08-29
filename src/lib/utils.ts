@@ -13,6 +13,7 @@ import {
 } from "./tenant.js";
 import { getClock } from "./runtime-context.js";
 import { assertEventsWriteAuthorized } from "./company-events-write-guard.js";
+import { wrapCanonicalWrite } from "./org/fs-guard/write-hook.js";
 
 export { ROOT_DIR, FRAMEWORK_DOCS_DIR, resolveTenantPath, toLogicalPath, getTenantDir };
 export { getTenantId, setTenantId, loadTenantConfig, listTenantIds } from "./tenant.js";
@@ -99,8 +100,10 @@ export function formatJapaneseDate(iso: string): string {
 
 export function writeYamlFile(path: string, data: unknown): void {
   assertEventsWriteAuthorized(path);
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, YAML.stringify(data), "utf-8");
+  wrapCanonicalWrite(path, () => {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, YAML.stringify(data), "utf-8");
+  });
 }
 
 export function listYamlFiles(dir: string): string[] {
@@ -187,9 +190,31 @@ export function ensureDocsReportsDir(subdir?: string): string {
  * writers should route through this rather than calling writeFileSync directly.
  */
 export function writeTrackedFile(path: string, content: string): string {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, sanitizeForTrackedOutput(content), "utf-8");
-  return path;
+  return wrapCanonicalWrite(path, () => {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, sanitizeForTrackedOutput(content), "utf-8");
+    return path;
+  });
+}
+
+/** Canonical tenant file without L2 sanitization (JSON/JSONL/evidence). */
+export function writeCanonicalFile(
+  path: string,
+  content: string | Buffer,
+  options?: { encoding?: BufferEncoding; flag?: string; mode?: number }
+): void {
+  wrapCanonicalWrite(path, () => {
+    mkdirSync(dirname(path), { recursive: true });
+    if (typeof content === "string") {
+      writeFileSync(path, content, {
+        encoding: options?.encoding ?? "utf-8",
+        flag: options?.flag,
+        mode: options?.mode,
+      });
+      return;
+    }
+    writeFileSync(path, content, { flag: options?.flag, mode: options?.mode });
+  });
 }
 
 /** CLI が生成する Markdown レポート（人向け → docs/reports/ · L1 サニタイズ） */

@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { validateTowerHandoffs } from "./dispatch-tower/validate.js";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { z } from "zod";
@@ -39,10 +40,29 @@ import { getMailConfigPath } from "./correspondence/paths.js";
 import { loadMailTriageQueue } from "./correspondence/mail-triage-queue.js";
 import { resolveImapCredentials } from "./correspondence/imap-credentials.js";
 import { validateExpenseClaimsIntegrity } from "./finance/expense-claim.js";
+import { journalIntegrityIssues, loadJournalEntries } from "./finance/expense-claim-journal.js";
+import { validateDepreciationConsistency } from "./finance/depreciation.js";
+import { trialBalanceIntegrityIssues } from "./finance/ledger/trial-balance.js";
+import { balanceSheetIntegrityIssues } from "./finance/ledger/balance-sheet.js";
+import { subsidiaryLedgerIntegrityIssues } from "./finance/ledger/subsidiary-ledger.js";
+import { periodLockIntegrityIssues } from "./finance/period-lock.js";
+import { openingBalanceIntegrityIssues } from "./finance/ledger/opening-balance.js";
+import { monthlyReconcileIntegrityIssues } from "./finance/ledger/monthly-reconcile.js";
+import { controlAccountIntegrityIssues } from "./finance/ledger/control-reconcile.js";
+import { unpostedMonthlyPlIssues } from "./finance/ledger/unposted-months.js";
+import { electronicLedgerIntegrityIssues } from "./finance/ledger/electronic-ledger.js";
+import { invoiceMplDuplicateIssues } from "./finance/ledger/invoice-mpl-dedupe.js";
+import { statutoryFilingReadinessIssues } from "./finance/statutory-filing-readiness.js";
+import { validateGuestRegisterIntegrity } from "../../steward/modules/hospitality/cli/guest-register.js";
 import { collectHospitalityIntegrityIssues } from "./hospitality/integrity.js";
+import { collectMedicalDeviceIntegrityIssues } from "./medical-device/integrity.js";
 import { validateReceiptRegistryIntegrity } from "./receipt-qr.js";
 import { validateLlmWorkersIntegrity } from "./llm-pool/registry.js";
 import { validateChatCommandCatalog } from "./operator-commands/validate-catalog.js";
+import { collectPmoIntegrityIssues } from "./pmo/integrity.js";
+import { collectIrIntegrityIssues } from "./investor-relations/integrity.js";
+import { collectCustomerSuccessIntegrityIssues } from "./customer-success/integrity.js";
+import { collectAnalyticsIntegrityIssues } from "./analytics/integrity.js";
 import { collectRosterPayrollConsistencyIssues } from "./hr/roster-payroll-consistency.js";
 import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
@@ -863,6 +883,124 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   }
 
   try {
+    for (const message of journalIntegrityIssues()) {
+      issues.push({
+        level: "error",
+        file: "data/finance/journal-entries.yaml",
+        message,
+      });
+    }
+    for (const message of trialBalanceIntegrityIssues()) {
+      issues.push({
+        level: message.includes("balanced") ? "warning" : "error",
+        file: "data/finance/journal-entries.yaml",
+        message,
+      });
+    }
+    for (const message of validateDepreciationConsistency()) {
+      issues.push({
+        level: "warning",
+        file: "data/finance/fixed-assets.yaml",
+        message,
+      });
+    }
+    for (const message of openingBalanceIntegrityIssues()) {
+      issues.push({
+        level: "error",
+        file: "data/finance/opening-balances.yaml",
+        message,
+      });
+    }
+    const reconcileMonth = new Date().toISOString().slice(0, 7);
+    for (const message of monthlyReconcileIntegrityIssues(reconcileMonth)) {
+      issues.push({
+        level: "warning",
+        file: `data/finance/monthly/${reconcileMonth}.yaml`,
+        message,
+      });
+    }
+    for (const message of balanceSheetIntegrityIssues()) {
+      issues.push({
+        level: "error",
+        file: "data/finance/journal-entries.yaml",
+        message: `balance sheet: ${message}`,
+      });
+    }
+    for (const message of subsidiaryLedgerIntegrityIssues()) {
+      issues.push({
+        level: "error",
+        file: "data/finance/journal-entries.yaml",
+        message: `subsidiary ledger: ${message}`,
+      });
+    }
+    for (const message of periodLockIntegrityIssues()) {
+      issues.push({
+        level: "error",
+        file: "data/finance/period-locks.yaml",
+        message,
+      });
+    }
+    for (const issue of controlAccountIntegrityIssues()) {
+      issues.push({
+        level: issue.level,
+        file: "data/finance/journal-entries.yaml",
+        message: `control: ${issue.message}`,
+      });
+    }
+    for (const issue of invoiceMplDuplicateIssues()) {
+      issues.push({
+        level: issue.level,
+        file: "data/finance/journal-entries.yaml",
+        message: `invoice dedupe: ${issue.message}`,
+      });
+    }
+    for (const issue of statutoryFilingReadinessIssues()) {
+      issues.push({
+        level: issue.level,
+        file: "data/finance/journal-entries.yaml",
+        message: `statutory [${issue.domain}]: ${issue.message}`,
+      });
+    }
+    for (const message of electronicLedgerIntegrityIssues()) {
+      issues.push({
+        level: "error",
+        file: "data/finance/journal-entries.yaml",
+        message,
+      });
+    }
+    for (const message of unpostedMonthlyPlIssues()) {
+      issues.push({
+        level: "warning",
+        file: "data/finance/monthly",
+        message,
+      });
+    }
+    for (const entry of loadJournalEntries().entries) {
+      if (!entry.posted_at || !entry.posted_by) {
+        issues.push({
+          level: "error",
+          file: "data/finance/journal-entries.yaml",
+          message: `${entry.entry_id}: missing posted_at/posted_by audit trail`,
+        });
+      }
+    }
+  } catch {
+    /* journal optional */
+  }
+
+  try {
+    for (const issue of validateGuestRegisterIntegrity()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+  } catch {
+    /* guest register optional */
+  }
+
+  try {
     for (const issue of collectHospitalityIntegrityIssues()) {
       issues.push({
         level: issue.level,
@@ -872,6 +1010,18 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch {
     /* hospitality opened_date lint optional */
+  }
+
+  try {
+    for (const issue of collectMedicalDeviceIntegrityIssues()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+  } catch {
+    /* medical-device optional when module data incomplete */
   }
 
   try {
@@ -908,6 +1058,43 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   } catch {
     /* chat command catalog optional during partial checkouts */
+  }
+
+  try {
+    issues.push(
+      ...collectPmoIntegrityIssues({
+        propertyIds,
+        contractIds: new Set(data.contracts.map((c) => c.id)),
+      })
+    );
+  } catch (e) {
+    push("error", "data/projects/", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
+    issues.push(...collectIrIntegrityIssues());
+  } catch (e) {
+    push("error", "data/investor-relations/", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
+    issues.push(...collectCustomerSuccessIntegrityIssues());
+  } catch (e) {
+    push("error", "data/customers/", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
+    issues.push(...collectAnalyticsIntegrityIssues());
+  } catch (e) {
+    push("error", "data/analytics/", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
+    for (const msg of validateTowerHandoffs()) {
+      push("error", "dispatch-tower", msg);
+    }
+  } catch {
+    /* optional during partial checkouts */
   }
 
   return issues;

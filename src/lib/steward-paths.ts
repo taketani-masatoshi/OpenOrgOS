@@ -37,3 +37,5 @@ export const JURISDICTIONS_DIR = steward("jurisdictions");
 
 export const CORE_SKILL_REGISTRY_PATH = join(STEWARD_SKILLS_DIR, "registry.yaml");
 export const ROUTING_REGISTRY_PATH = join(STEWARD_ROUTING_DIR, "registry.yaml");
+export const DISPATCH_TOWER_REGISTRY_PATH = join(STEWARD_CORE_DIR, "dispatch-tower", "registry.yaml");
+export const HUMAN_CAPABILITY_CATALOG_PATH = join(STEWARD_CORE_DIR, "org", "human-capability-catalog.yaml");

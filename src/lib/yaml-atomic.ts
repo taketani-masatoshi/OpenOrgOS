@@ -10,6 +10,7 @@ import {
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import YAML from "yaml";
+import { wrapCanonicalWrite } from "./org/fs-guard/write-hook.js";
 
 export class YamlFileBusyError extends Error {
   readonly code = "yaml_file_busy" as const;
@@ -25,22 +26,24 @@ export class YamlFileBusyError extends Error {
  * (rename is atomic on the same filesystem.)
  */
 export function writeYamlFileAtomic(path: string, data: unknown): void {
-  mkdirSync(dirname(path), { recursive: true });
-  const temp = `${path}.${process.pid}.${randomUUID()}.tmp`;
-  try {
-    writeFileSync(temp, YAML.stringify(data), {
-      encoding: "utf-8",
-      mode: 0o600,
-    });
-    renameSync(temp, path);
-  } catch (error) {
+  wrapCanonicalWrite(path, () => {
+    mkdirSync(dirname(path), { recursive: true });
+    const temp = `${path}.${process.pid}.${randomUUID()}.tmp`;
     try {
-      if (existsSync(temp)) unlinkSync(temp);
-    } catch {
-      // best-effort cleanup
+      writeFileSync(temp, YAML.stringify(data), {
+        encoding: "utf-8",
+        mode: 0o600,
+      });
+      renameSync(temp, path);
+    } catch (error) {
+      try {
+        if (existsSync(temp)) unlinkSync(temp);
+      } catch {
+        // best-effort cleanup
+      }
+      throw error;
     }
-    throw error;
-  }
+  });
 }
 
 function sleepMs(ms: number): void {

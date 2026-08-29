@@ -32,6 +32,8 @@ export function resolveJapaneseFont(): string {
 export interface PdfTableRow {
   label: string;
   amount?: number | string;
+  /** Prior-period column (comparative BS/PL). */
+  priorAmount?: number | string;
   note?: string;
   bold?: boolean;
   indent?: number;
@@ -223,8 +225,12 @@ export function pdfTable(
   rows: PdfTableRow[],
   options?: { labelWidth?: number }
 ): void {
-  const labelWidth = options?.labelWidth ?? w.contentWidth * 0.58;
-  const amountWidth = w.contentWidth - labelWidth;
+  const comparative = rows.some((row) => row.priorAmount !== undefined);
+  const labelWidth =
+    options?.labelWidth ?? w.contentWidth * (comparative ? 0.46 : 0.58);
+  const amountWidth = comparative
+    ? (w.contentWidth - labelWidth) / 2
+    : w.contentWidth - labelWidth;
 
   for (const row of rows) {
     const isSection = row.variant === "section" || (row.bold && row.amount === "");
@@ -257,28 +263,41 @@ export function pdfTable(
       row.variant === "muted" || (row.indent ?? 0) > 0
         ? PDF_THEME.muted
         : PDF_THEME.ink;
+    const textY = isTotal ? y + 5 : y + 3;
 
     w.doc.fillColor(labelColor).fontSize(fontSize);
-    w.doc.text(row.label, w.left + indent, isTotal ? y + 5 : y + 3, {
+    w.doc.text(row.label, w.left + indent, textY, {
       width: labelWidth - indent,
       lineBreak: false,
     });
 
+    const formatCell = (value: number | string | undefined): string => {
+      if (value === undefined) return "";
+      return typeof value === "number" ? formatCurrency(value) : value;
+    };
+
     const amountText =
-      row.amount === undefined
-        ? row.note ?? ""
-        : typeof row.amount === "number"
-          ? formatCurrency(row.amount)
-          : row.amount;
+      row.amount === undefined ? row.note ?? "" : formatCell(row.amount);
 
     w.doc
-      .fillColor(isTotal ? PDF_THEME.ink : PDF_THEME.ink)
+      .fillColor(PDF_THEME.ink)
       .fontSize(fontSize)
-      .text(amountText, w.left + labelWidth, isTotal ? y + 5 : y + 3, {
+      .text(amountText, w.left + labelWidth, textY, {
         width: amountWidth,
         align: "right",
         lineBreak: false,
       });
+
+    if (comparative) {
+      w.doc
+        .fillColor(PDF_THEME.muted)
+        .fontSize(fontSize)
+        .text(formatCell(row.priorAmount), w.left + labelWidth + amountWidth, textY, {
+          width: amountWidth,
+          align: "right",
+          lineBreak: false,
+        });
+    }
 
     if (row.note && row.amount !== undefined) {
       w.doc

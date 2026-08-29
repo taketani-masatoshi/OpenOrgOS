@@ -41,6 +41,10 @@ import {
   policyFinanceCasesFileSchema,
   facilityPublicSchema,
   employeesFileSchema,
+  competenceFileSchema,
+  type CompetenceFile,
+  trainingFileSchema,
+  type TrainingFile,
   laborDocumentsFileSchema,
   documentIoSchema,
   type Company,
@@ -67,6 +71,30 @@ import {
   type OneOnOnesFile,
   type ExternalContactsFile,
   type StakeholdersFile,
+  salesPipelineFileSchema,
+  type SalesPipelineFile,
+  salesInquiriesFileSchema,
+  type SalesInquiriesFile,
+  salesOutboundCampaignsFileSchema,
+  type SalesOutboundCampaignsFile,
+  salesQuotesFileSchema,
+  type SalesQuotesFile,
+  salesIcpSchema,
+  type SalesIcp,
+  customerAccountsFileSchema,
+  type CustomerAccountsFile,
+  customerContactsFileSchema,
+  type CustomerContactsFile,
+  customerHealthSignalsFileSchema,
+  type CustomerHealthSignalsFile,
+  customerOnboardingFileSchema,
+  type CustomerOnboardingFile,
+  customerQbrFileSchema,
+  type CustomerQbrFile,
+  customerNpsFileSchema,
+  type CustomerNpsFile,
+  customerChurnEventsFileSchema,
+  type CustomerChurnEventsFile,
 } from "../../schemas/index.js";
 import { existsSync } from "node:fs";
 import { loadEnabledModules } from "./modules.js";
@@ -76,11 +104,15 @@ import { getPrimaryOperationsPublicRel } from "./ops-config.js";
 import {
   getDataDir,
   readYamlFile,
+  writeYamlFile,
   listYamlFiles,
   getStakeholdersYaml,
   toLogicalPath,
   resolveTenantPath,
 } from "./utils.js";
+import { collectPmoSchemaErrors } from "./pmo/load.js";
+import { collectAnalyticsSchemaErrors } from "./analytics/load.js";
+import { collectSalesIntegrityIssues } from "./sales-integrity.js";
 
 export interface StewardData {
   company: Company;
@@ -121,6 +153,184 @@ export function loadContracts(): Contract[] {
   return listYamlFiles(join(getDataDir(), "contracts")).map((f) =>
     readYamlFile(f, contractSchema),
   );
+}
+
+function salesPipelinePath(): string {
+  return join(getDataDir(), "sales", "pipeline.yaml");
+}
+
+function salesInquiriesPath(): string {
+  return join(getDataDir(), "sales", "inbound", "inquiries.yaml");
+}
+
+function salesOutboundPath(): string {
+  return join(getDataDir(), "sales", "outbound", "campaigns.yaml");
+}
+
+function customerAccountsPath(): string {
+  return join(getDataDir(), "customers", "accounts.yaml");
+}
+
+function customerHealthSignalsPath(): string {
+  return join(getDataDir(), "customers", "health-signals.yaml");
+}
+
+function customerOnboardingPath(): string {
+  return join(getDataDir(), "customers", "onboarding.yaml");
+}
+
+function customerQbrPath(): string {
+  return join(getDataDir(), "customers", "qbr.yaml");
+}
+
+function customerNpsPath(): string {
+  return join(getDataDir(), "customers", "nps.yaml");
+}
+
+function customerChurnEventsPath(): string {
+  return join(getDataDir(), "customers", "churn-events.yaml");
+}
+
+function customerContactsPath(): string {
+  return join(getDataDir(), "customers", "contacts.yaml");
+}
+
+function salesQuotesPath(): string {
+  return join(getDataDir(), "sales", "quotes.yaml");
+}
+
+function salesIcpPath(): string {
+  return join(getDataDir(), "sales", "icp.yaml");
+}
+
+export function loadSalesPipeline(): SalesPipelineFile | undefined {
+  const path = salesPipelinePath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, salesPipelineFileSchema);
+}
+
+export function saveSalesPipeline(file: SalesPipelineFile): void {
+  const parsed = salesPipelineFileSchema.parse({
+    ...file,
+    updated_at: new Date().toISOString(),
+  });
+  writeYamlFile(salesPipelinePath(), parsed);
+}
+
+export function loadSalesInquiries(): SalesInquiriesFile | undefined {
+  const path = salesInquiriesPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, salesInquiriesFileSchema);
+}
+
+export function saveSalesInquiries(file: SalesInquiriesFile): void {
+  writeYamlFile(salesInquiriesPath(), salesInquiriesFileSchema.parse(file));
+}
+
+export function loadSalesOutboundCampaigns():
+  | SalesOutboundCampaignsFile
+  | undefined {
+  const path = salesOutboundPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, salesOutboundCampaignsFileSchema);
+}
+
+export function saveSalesOutboundCampaigns(file: SalesOutboundCampaignsFile): void {
+  writeYamlFile(
+    salesOutboundPath(),
+    salesOutboundCampaignsFileSchema.parse({
+      ...file,
+      updated_at: new Date().toISOString(),
+    }),
+  );
+}
+
+export function loadSalesQuotes(): SalesQuotesFile | undefined {
+  const path = salesQuotesPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, salesQuotesFileSchema);
+}
+
+export function saveSalesQuotes(file: SalesQuotesFile): void {
+  writeYamlFile(
+    salesQuotesPath(),
+    salesQuotesFileSchema.parse({
+      ...file,
+      updated_at: new Date().toISOString(),
+    }),
+  );
+}
+
+export function loadSalesIcp(): SalesIcp | undefined {
+  const path = salesIcpPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, salesIcpSchema);
+}
+
+export function saveSalesIcp(icp: SalesIcp): void {
+  writeYamlFile(salesIcpPath(), salesIcpSchema.parse(icp));
+}
+
+export function loadCustomerAccounts(): CustomerAccountsFile | undefined {
+  const path = customerAccountsPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, customerAccountsFileSchema);
+}
+
+export function saveCustomerAccounts(file: CustomerAccountsFile): void {
+  writeYamlFile(
+    customerAccountsPath(),
+    customerAccountsFileSchema.parse({
+      ...file,
+      updated_at: new Date().toISOString(),
+    }),
+  );
+}
+
+export function loadCustomerContacts(): CustomerContactsFile | undefined {
+  const path = customerContactsPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, customerContactsFileSchema);
+}
+
+export function saveCustomerContacts(file: CustomerContactsFile): void {
+  writeYamlFile(
+    customerContactsPath(),
+    customerContactsFileSchema.parse({
+      ...file,
+      updated_at: new Date().toISOString(),
+    }),
+  );
+}
+
+export function loadCustomerHealthSignals(): CustomerHealthSignalsFile | undefined {
+  const path = customerHealthSignalsPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, customerHealthSignalsFileSchema);
+}
+
+export function loadCustomerOnboarding(): CustomerOnboardingFile | undefined {
+  const path = customerOnboardingPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, customerOnboardingFileSchema);
+}
+
+export function loadCustomerQbr(): CustomerQbrFile | undefined {
+  const path = customerQbrPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, customerQbrFileSchema);
+}
+
+export function loadCustomerNps(): CustomerNpsFile | undefined {
+  const path = customerNpsPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, customerNpsFileSchema);
+}
+
+export function loadCustomerChurnEvents(): CustomerChurnEventsFile | undefined {
+  const path = customerChurnEventsPath();
+  if (!existsSync(path)) return undefined;
+  return readYamlFile(path, customerChurnEventsFileSchema);
 }
 
 export function loadContract(id: string): Contract | undefined {
@@ -325,6 +535,10 @@ export function validateFixedAssetConsistency(): FixedAssetConsistencyIssue[] {
     if (asset.fy_depreciation_jpy == null) continue;
     fyDepreciationCount += 1;
     fyDepreciationSum += asset.fy_depreciation_jpy;
+    if (asset.fy_depreciation_jpy === 0) {
+      // Explicit zero — asset not depreciating this FY (e.g. future placed_in_service_month)
+      continue;
+    }
     const lineId = asset.expense_plan_line_id;
     if (!lineId) {
       issues.push({
@@ -514,6 +728,22 @@ export function loadEmployees(): EmployeesFile {
   );
 }
 
+export function competenceFilePath(): string {
+  return join(getDataDir(), "hr", "competence.yaml");
+}
+
+export function trainingFilePath(): string {
+  return join(getDataDir(), "hr", "training.yaml");
+}
+
+export function loadCompetence(): CompetenceFile {
+  return readYamlFile(competenceFilePath(), competenceFileSchema);
+}
+
+export function loadTraining(): TrainingFile {
+  return readYamlFile(trainingFilePath(), trainingFileSchema);
+}
+
 export function loadExecutiveCalendar(): CalendarFile {
   return readYamlFile(
     join(getDataDir(), "executive", "calendar.yaml"),
@@ -596,7 +826,9 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   tryLoad("data/finance/loans.yaml", () => loadLoans());
   tryLoad("data/finance/fixed-assets.yaml", () => loadFixedAssets());
   tryLoad("data/finance/tax-profile.yaml", () => loadTaxProfile());
-  tryLoad("data/finance/tax-filing-gaps.yaml", () => loadTaxFilingGaps());
+  if (existsSync(join(getDataDir(), "finance", "tax-filing-gaps.yaml"))) {
+    tryLoad("data/finance/tax-filing-gaps.yaml", () => loadTaxFilingGaps());
+  }
   tryLoad("data/finance/chart-of-accounts.yaml", () => loadChartOfAccounts());
   tryLoad("data/plans/business-plan.yaml", () => loadBusinessPlan());
   tryLoad("data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());
@@ -652,6 +884,12 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     }
   }
   tryLoad("data/hr/employees.yaml", () => loadEmployees());
+  if (existsSync(competenceFilePath())) {
+    tryLoad("data/hr/competence.yaml", () => loadCompetence());
+  }
+  if (existsSync(trainingFilePath())) {
+    tryLoad("data/hr/training.yaml", () => loadTraining());
+  }
   const executiveCalendar = join(getDataDir(), "executive", "calendar.yaml");
   if (existsSync(executiveCalendar)) {
     tryLoad("data/executive/calendar.yaml", () => loadExecutiveCalendar());
@@ -743,6 +981,51 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     );
   }
 
+  if (existsSync(salesPipelinePath())) {
+    tryLoad("data/sales/pipeline.yaml", () => loadSalesPipeline());
+  }
+  if (existsSync(salesInquiriesPath())) {
+    tryLoad("data/sales/inbound/inquiries.yaml", () => loadSalesInquiries());
+  }
+  if (existsSync(salesOutboundPath())) {
+    tryLoad("data/sales/outbound/campaigns.yaml", () =>
+      loadSalesOutboundCampaigns(),
+    );
+  }
+  if (existsSync(customerAccountsPath())) {
+    tryLoad("data/customers/accounts.yaml", () => loadCustomerAccounts());
+  }
+  if (existsSync(customerContactsPath())) {
+    tryLoad("data/customers/contacts.yaml", () => loadCustomerContacts());
+  }
+  if (existsSync(customerHealthSignalsPath())) {
+    tryLoad("data/customers/health-signals.yaml", () => loadCustomerHealthSignals());
+  }
+  if (existsSync(customerOnboardingPath())) {
+    tryLoad("data/customers/onboarding.yaml", () => loadCustomerOnboarding());
+  }
+  if (existsSync(customerQbrPath())) {
+    tryLoad("data/customers/qbr.yaml", () => loadCustomerQbr());
+  }
+  if (existsSync(customerNpsPath())) {
+    tryLoad("data/customers/nps.yaml", () => loadCustomerNps());
+  }
+  if (existsSync(customerChurnEventsPath())) {
+    tryLoad("data/customers/churn-events.yaml", () => loadCustomerChurnEvents());
+  }
+  if (existsSync(salesQuotesPath())) {
+    tryLoad("data/sales/quotes.yaml", () => loadSalesQuotes());
+  }
+  if (existsSync(salesIcpPath())) {
+    tryLoad("data/sales/icp.yaml", () => loadSalesIcp());
+  }
+
+  for (const issue of collectSalesIntegrityIssues({
+    strict: process.env.NODE_ENV === "production",
+  })) {
+    errors.push(issue);
+  }
+
   // Cross-reference validation (legacy inline checks)
   if (errors.length === 0) {
     try {
@@ -802,6 +1085,14 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
         message: e instanceof Error ? e.message : String(e),
       });
     }
+  }
+
+  for (const issue of collectPmoSchemaErrors()) {
+    errors.push(issue);
+  }
+
+  for (const issue of collectAnalyticsSchemaErrors()) {
+    errors.push(issue);
   }
 
   return { ok: errors.length === 0, errors };

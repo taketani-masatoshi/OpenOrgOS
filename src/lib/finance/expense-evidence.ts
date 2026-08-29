@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   expenseEvidenceManifestEntrySchema,
@@ -8,7 +8,7 @@ import {
   type ExpenseEvidenceManifestEntry,
 } from "../../../schemas/finance/expense-evidence.js";
 import type { SignedReceiptQrPayload } from "../../../schemas/receipt-qr.js";
-import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
+import { getDataDir, readYamlFile, writeYamlFile, writeCanonicalFile } from "../utils.js";
 import { getClock } from "../runtime-context.js";
 
 const ARCHIVE_REL = "finance/expense-evidence";
@@ -61,7 +61,7 @@ export function archiveExpenseEvidence(input: {
       throw new Error(`Immutable expense evidence differs: ${archiveRel}`);
     }
   } else {
-    writeFileSync(archivePath, content, { encoding: "utf8", flag: "wx" });
+    writeCanonicalFile(archivePath, content, { encoding: "utf8", flag: "wx" });
   }
 
   const manifest = loadExpenseEvidenceManifest();

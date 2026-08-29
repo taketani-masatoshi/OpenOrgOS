@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -121,6 +121,19 @@ export function workspaceConfigPath(): string {
 
 export function isExternalWorkspace(): boolean {
   return resolve(_workspaceRoot) !== resolve(_installRoot);
+}
+
+/**
+ * Framework file under ORGOS_HOME, or the same relative path in the
+ * workspace when the baked install is older than the checkout.
+ */
+export function resolveFrameworkFile(installPath: string): string {
+  if (existsSync(installPath)) return installPath;
+  const rel = relative(getInstallRoot(), installPath);
+  if (!rel || rel.startsWith("..") || rel === installPath) return installPath;
+  const fromWorkspace = join(getWorkspaceRoot(), rel);
+  if (existsSync(fromWorkspace)) return fromWorkspace;
+  return installPath;
 }
 
 /** @deprecated Use getTenantsDir() */

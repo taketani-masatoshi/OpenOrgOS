@@ -19,8 +19,12 @@ import {
   resolveCashBalanceTotal,
 } from "./data.js";
 import { financesSummary } from "./report.js";
+import { buildGlProfitLossSummary } from "./finance/gl-report-basis.js";
+import { formatTaxFilingGapsBriefLines } from "./finance/tax-filing-gaps.js";
 import { currentMonth, formatCurrency } from "./utils.js";
 import { getCashflowTodaySummary } from "../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
+import { collectCapitalRaiseIrCrossCheckIssues } from "./investor-relations/capital-raise-crosscheck.js";
+import { loadIrCapTable } from "./investor-relations/load.js";
 
 export interface TaxEstimateView {
   amount: number | null;
@@ -45,6 +49,7 @@ export interface FinanceBriefing {
     netIncome: number;
   } | null;
   tax: TaxEstimateView;
+  tax_filing_gaps: string[];
   cashflow_schedule: {
     path?: string;
     shortfall_date: string | null;
@@ -70,16 +75,36 @@ function fiscalYearStartMonth(fyId: string, fiscalYearEndMonth: number): string 
 export function resolveTaxEstimate(fiscalYear: string): TaxEstimateView {
   const notes: string[] = [];
   try {
+    const gl = buildGlProfitLossSummary({ fiscalYear });
+    const profile = loadTaxProfile() as {
+      corporate_tax?: { estimated_tax_fy2026?: number; estimated_tax_status?: string };
+    };
+    const estimated = profile.corporate_tax?.estimated_tax_fy2026;
+    if (typeof estimated === "number" && gl.operating_profit > 0) {
+      return {
+        amount: estimated,
+        status: profile.corporate_tax?.estimated_tax_status ?? "gl_derived_estimate",
+        source: "tax-profile + GL operating_profit",
+        notes: [
+          `GL 営業利益 ${formatCurrency(gl.operating_profit)}（as_of ${gl.as_of}）`,
+          "税額は tax-profile 見込（税理士確定申告額ではない）",
+        ],
+      };
+    }
+  } catch {
+    notes.push("GL 損益を読めませんでした");
+  }
+
+  try {
     const yojitsu = loadYojitsuFyPlan(fiscalYear);
     const fromYojitsu = yojitsu?.summary?.tax_estimate;
     if (typeof fromYojitsu === "number") {
       return {
         amount: fromYojitsu,
-        status: "yojitsu.summary.tax_estimate",
+        status: "yojitsu.plan.tax_estimate",
         source: `data/plans/yojitsu-${fiscalYear.toLowerCase()}.yaml`,
         notes: [
-          "予実サマリーの税額見込（税理士確定申告額ではない）",
-          ...(yojitsu?.summary ? [] : []),
+          "予実プランの税額見込（計画値 · GL 実績ではない）",
         ],
       };
     }
@@ -177,6 +202,7 @@ export function buildFinanceBriefing(opts?: {
   }
 
   const tax = resolveTaxEstimate(fiscalYear);
+  const tax_filing_gaps = formatTaxFilingGapsBriefLines();
   const cashflow_schedule = loadCashflowScheduleSummary();
 
   const notes = [...report.cashFlow.notes, ...report.tbdItems.slice(0, 5)];
@@ -191,6 +217,19 @@ export function buildFinanceBriefing(opts?: {
   } catch {
     /* optional */
   }
+  try {
+    const irCap = loadIrCapTable();
+    const irIssues = collectCapitalRaiseIrCrossCheckIssues(irCap?.data ?? null).filter(
+      (issue) => issue.level === "error",
+    );
+    if (irIssues.length) {
+      notes.push(
+        `IR cap table と capital-raise-cases に ${irIssues.length} 件の不整合（orgos finances capital-raise-crosscheck）`,
+      );
+    }
+  } catch {
+    /* optional IR */
+  }
 
   return {
     company_name: report.companyName,
@@ -201,6 +240,7 @@ export function buildFinanceBriefing(opts?: {
     liquidity,
     ytd,
     tax,
+    tax_filing_gaps,
     cashflow_schedule,
     kpis: report.kpis.slice(0, 8).map((k) => ({
       label: k.label,
@@ -264,6 +304,11 @@ export function formatFinanceBriefingMarkdown(brief: FinanceBriefing): string {
   }
   for (const n of brief.tax.notes.slice(0, 3)) {
     lines.push(`- 注記: ${n}`);
+  }
+
+  lines.push("", "## 申告準備ギャップ");
+  for (const g of brief.tax_filing_gaps.slice(0, 6)) {
+    lines.push(g.startsWith("- ") ? g : `- ${g}`);
   }
 
   lines.push("", "## 資金繰り表（生成済みがあれば）");

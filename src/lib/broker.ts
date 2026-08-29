@@ -7,7 +7,9 @@ import {
   checkAgentAccess,
 } from "./classification.js";
 import { loadStakeholders } from "./data.js";
-import { getStakeholdersYaml, SCRATCH_DIR, formatCurrency } from "./utils.js";
+import { getStakeholdersYaml, SCRATCH_DIR, formatCurrency, currentDate } from "./utils.js";
+import { writeTenantContentGuarded } from "./org/fs-guard/guarded-write.js";
+import { currentCanonicalSha256, isFsGuardEnforced } from "./org/fs-guard/index.js";
 
 export type BrokerDisplayMode = "redacted" | "full";
 
@@ -143,18 +145,32 @@ export function formatTransferMarkdown(instr: TransferInstruction): string {
   return lines.join("\n");
 }
 
-/** gitignore 配下 scratch/broker/ に L1 指示書を保存（口座全文なし） */
+/** L1 指示書を保存（口座全文なし）。guard 有効時は runs/broker/ へ。 */
 export function writeTransferInstructionFile(
   instr: TransferInstruction,
   filename?: string
 ): string {
-  const dir = join(SCRATCH_DIR, "broker");
-  mkdirSync(dir, { recursive: true });
   const name =
     filename ??
     `transfer-${instr.from_account_id}-${instr.amount_yen}-${Date.now()}.md`;
+  const content = formatTransferMarkdown(instr);
+
+  if (isFsGuardEnforced()) {
+    const logical = `runs/broker/${name}`;
+    writeTenantContentGuarded({
+      agentId: "finance",
+      logicalPath: logical,
+      content,
+      runId: `broker-transfer-${currentDate()}`,
+      expectedSha256: currentCanonicalSha256(logical),
+    });
+    return logical;
+  }
+
+  const dir = join(SCRATCH_DIR, "broker");
+  mkdirSync(dir, { recursive: true });
   const path = join(dir, name);
-  writeFileSync(path, formatTransferMarkdown(instr), "utf-8");
+  writeFileSync(path, content, "utf-8");
   return path;
 }
 

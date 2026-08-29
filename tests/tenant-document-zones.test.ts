@@ -9,6 +9,7 @@ describe("tenant-document-zones", () => {
   it("defines core doc dirs without property paths", () => {
     const joined = CORE_DOC_DIRS.join(",");
     expect(joined).toContain("contracts");
+    expect(joined).toContain("projects");
     expect(joined).not.toContain("properties/");
   });
 

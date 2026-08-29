@@ -16,6 +16,10 @@ import {
   sumRevenue as sumYojitsuRevenue,
 } from "./yojitsu-normalize.js";
 import { scanContractAlerts, type ContractAlert } from "./alerts.js";
+import { buildSalesPipelineView } from "./sales-pipeline-view.js";
+import { buildSalesInboundView, countAwaitingResponse } from "./sales-inbound-view.js";
+import { buildSalesOutboundView } from "./sales-outbound-view.js";
+import { buildIrBriefingView } from "./investor-relations/briefing-view.js";
 import {
   plannedMonthlyRevenue,
   plannedMonthlyExpenses,
@@ -32,6 +36,7 @@ import {
   monthRange,
   parseMonth,
 } from "./utils.js";
+import { computeStayMetrics } from "../../steward/modules/hospitality/cli/ops-lib.js";
 
 export type TaskUrgency = "high" | "medium";
 export type TaskImportance = "high" | "medium";
@@ -239,12 +244,15 @@ export function selectBasisMonthlyFinance(
   return finances[0];
 }
 
-export function resolveFiscalYear(fiscalYearEndMonth: number, refMonth = currentMonth()): string {
-  const { year, month } = parseMonthParts(refMonth);
-  const fyStartMonth = fiscalYearEndMonth === 12 ? 1 : fiscalYearEndMonth + 1;
-  const fyYear = month >= fyStartMonth ? year : year - 1;
-  return `FY${fyYear}`;
-}
+import { buildGlProfitLossSummary } from "./finance/gl-report-basis.js";
+import {
+  resolveFiscalYear,
+  fiscalYearEndDate,
+  nextFiscalYear,
+  lastDayOfMonth,
+} from "./finance/fiscal-year.js";
+
+export { resolveFiscalYear } from "./finance/fiscal-year.js";
 
 function parseMonthParts(month: string): { year: number; month: number } {
   const [y, m] = month.split("-").map(Number);
@@ -607,6 +615,27 @@ function buildKpis(
   const rentalPlan = data.propertyRevenuePlan.rental[0];
   const liquidity = buildLiquidityOutlook(cashFlow);
 
+  let occupancyLabel = "亀沢 稼働率（計画）";
+  let occupancyValue = hotelPlan ? formatPercent(hotelPlan.occupancy_rate) : "—";
+  let occupancyExplanation = "property-revenue.yaml の目標稼働率。";
+  let occupancyTrend = `ADR ${hotelPlan ? formatCurrency(hotelPlan.adr) : "—"}`;
+  try {
+    const metrics = computeStayMetrics(currentMonth(), "PROP-002");
+    if (metrics.stay_count > 0 || metrics.occupied_nights > 0) {
+      occupancyLabel = "亀沢 稼働率（実績）";
+      occupancyValue = formatPercent(metrics.occupancy);
+      occupancyExplanation = `stays 実績 ${metrics.occupied_nights}/${metrics.available_nights} 泊 · ${metrics.stay_count} 件`;
+      if (hotelPlan) {
+        const delta = metrics.occupancy - hotelPlan.occupancy_rate;
+        occupancyTrend = `計画差 ${delta >= 0 ? "+" : ""}${formatPercent(delta)} · ADR ${formatCurrency(metrics.adr)}`;
+      } else {
+        occupancyTrend = `ADR ${formatCurrency(metrics.adr)} · RevPAR ${formatCurrency(metrics.revpar)}`;
+      }
+    }
+  } catch {
+    /* tenant without hospitality stays */
+  }
+
   const kpis: KpiItem[] = [
     {
       id: "liquidity",
@@ -663,10 +692,10 @@ function buildKpis(
     },
     {
       id: "occupancy",
-      label: "亀沢 稼働率（計画）",
-      value: hotelPlan ? formatPercent(hotelPlan.occupancy_rate) : "—",
-      explanation: "property-revenue.yaml の目標稼働率。",
-      trend: `ADR ${hotelPlan ? formatCurrency(hotelPlan.adr) : "—"}`,
+      label: occupancyLabel,
+      value: occupancyValue,
+      explanation: occupancyExplanation,
+      trend: occupancyTrend,
     },
     {
       id: "vacancy",
@@ -677,11 +706,16 @@ function buildKpis(
     },
     {
       id: "fy_net_profit",
-      label: `${fiscalYear} 当期純利益（予実）`,
-      value: yojitsu?.summary?.net_profit
-        ? formatCurrency(yojitsu.summary.net_profit)
-        : "—",
-      explanation: "yojitsu サマリー。確定ベースは forecast / 月次実績で補完。",
+      label: `${fiscalYear} 当期純利益（GL）`,
+      value: (() => {
+        try {
+          const gl = buildGlProfitLossSummary({ fiscalYear });
+          return gl.operating_profit ? formatCurrency(gl.operating_profit) : "—";
+        } catch {
+          return "—";
+        }
+      })(),
+      explanation: "GL 試算表由来の営業利益（税引前近似）。計画は yojitsu plan。",
     },
     {
       id: "avg_cf",
@@ -690,6 +724,87 @@ function buildKpis(
       explanation: "forecast モジュールによる直近6ヶ月の平均月次純キャッシュフロー。",
     },
   ];
+
+  try {
+    const salesView = buildSalesPipelineView({ includeDemo: false });
+    if (salesView.total_deals > 0 || salesView.open_deals > 0) {
+      kpis.push({
+        id: "sales_pipeline",
+        label: "オープン商談",
+        value: `${salesView.open_deals} 件`,
+        explanation: `加重パイプライン ${salesView.weighted_pipeline_man} 万円 · アラート ${salesView.alerts.length} 件`,
+        trend:
+          salesView.alerts.length > 0
+            ? `期限/停滞 ${salesView.alerts.length} 件`
+            : undefined,
+      });
+    }
+  } catch {
+    /* tenant without sales pipeline */
+  }
+
+  try {
+    const inboundView = buildSalesInboundView({ includeDemo: false });
+    if (inboundView.total_inquiries > 0 || inboundView.open_inquiries > 0) {
+      const awaiting = countAwaitingResponse(inboundView);
+      const stale = inboundView.alerts.filter((a) => a.alert_type === "stale_new");
+      kpis.push({
+        id: "sales_inbound",
+        label: "未対応問合せ",
+        value: `${awaiting} 件`,
+        explanation: `オープン ${inboundView.open_inquiries} 件 · 初動 SLA 超過 ${stale.length} 件`,
+        trend:
+          inboundView.alerts.length > 0
+            ? `アラート ${inboundView.alerts.length} 件`
+            : undefined,
+      });
+    }
+  } catch {
+    /* tenant without inbound inquiries */
+  }
+
+  try {
+    const outboundView = buildSalesOutboundView({ includeDemo: false });
+    if (outboundView.total_campaigns > 0 || outboundView.active_campaigns > 0) {
+      const lowCoverage = outboundView.alerts.filter(
+        (a) => a.alert_type === "low_coverage",
+      );
+      const coverage =
+        outboundView.aggregate_coverage_pct != null
+          ? `${outboundView.aggregate_coverage_pct}%`
+          : "—";
+      kpis.push({
+        id: "sales_outbound",
+        label: "active 施策",
+        value: `${outboundView.active_campaigns} 件`,
+        explanation: `全 ${outboundView.total_campaigns} 件 · 接触率 ${coverage}`,
+        trend:
+          outboundView.alerts.length > 0
+            ? `アラート ${outboundView.alerts.length} 件（接触率低 ${lowCoverage.length}）`
+            : undefined,
+      });
+    }
+  } catch {
+    /* tenant without outbound campaigns */
+  }
+
+  try {
+    const irView = buildIrBriefingView();
+    if (irView.coverage !== "unregistered") {
+      kpis.push({
+        id: "ir_disclosure",
+        label: "開示予定（90日）",
+        value: `${irView.upcoming_disclosures} 件`,
+        explanation: `cap table ${irView.cap_table_lines} 行（${irView.cap_table_ok ? "検証OK" : "要確認"}）· IR 資料 ${irView.materials_count} 件`,
+        trend:
+          irView.overdue_disclosures > 0
+            ? `期限超過 ${irView.overdue_disclosures} 件`
+            : undefined,
+      });
+    }
+  } catch {
+    /* tenant without investor relations */
+  }
 
   return kpis;
 }
@@ -709,23 +824,6 @@ function addDays(date: string, days: number): string {
   const d = new Date(`${date}T12:00:00`);
   d.setDate(d.getDate() + days);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function lastDayOfMonth(month: string): string {
-  const { year, month: m } = parseMonth(month);
-  const d = new Date(year, m, 0);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function fiscalYearEndDate(fiscalYear: string, fiscalYearEndMonth: number): string {
-  const startYear = parseInt(fiscalYear.replace("FY", ""), 10);
-  const endYear = fiscalYearEndMonth === 12 ? startYear : startYear + 1;
-  return lastDayOfMonth(`${endYear}-${String(fiscalYearEndMonth).padStart(2, "0")}`);
-}
-
-function nextFiscalYear(fiscalYear: string): string {
-  const year = parseInt(fiscalYear.replace("FY", ""), 10);
-  return `FY${year + 1}`;
 }
 
 function paymentDaysRemaining(reportDate: string, dueDate: string): number {
@@ -987,7 +1085,8 @@ function formatUpcomingPaymentsTable(payments: UpcomingPayment[]): string {
 
 export function formatDashboardMarkdown(
   report: DashboardReport,
-  agentSummariesSection?: string
+  agentSummariesSection?: string,
+  analyticsAlertLine?: string
 ): string {
   const cf = report.cashFlow;
   const liquidity = buildLiquidityOutlook(cf);
@@ -999,6 +1098,8 @@ export function formatDashboardMarkdown(
     "> 1日1回更新。詳細 KPI 定義は [executive-dashboard-guide.md](../plans/executive-dashboard-guide.md)、キャッシュフロー表は [cashflow-detail.md](../plans/cashflow-detail.md) を参照。",
     "",
     agentSummariesSection ?? "",
+    analyticsAlertLine ? `> ${analyticsAlertLine}` : "",
+    analyticsAlertLine ? "" : "",
     "## サマリー",
     "",
     "| 指標 | 値 | 備考 |",
@@ -1054,6 +1155,12 @@ export function formatDashboardMarkdown(
     "npm run orgos -- forecast",
     "npm run orgos -- alerts",
     "npm run orgos -- status",
+    ...(report.kpis.some((k) => k.id === "ir_disclosure")
+      ? [
+          "npm run orgos -- operations ir briefing",
+          "npm run orgos -- finances capital-raise-crosscheck",
+        ]
+      : []),
     "```",
     "",
     `*生成: \`steward dashboard\` · ${report.generatedAt}*`,
