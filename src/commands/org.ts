@@ -119,6 +119,7 @@ export function runOrgApprovalApprove(opts: OrgApprovalApproveOptions): void {
         /* draft may already be approved */
       }
     }
+    // medical_device.* ledger apply runs inside approveOrgApproval
     if (opts.json) {
       console.log(JSON.stringify(result, null, 2));
       return;

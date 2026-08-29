@@ -68,6 +68,50 @@ export function registerPlatformCommands(program: Command): void {
       runIntegrationsStatus({ json: opts.json });
     });
 
+  const asanaCmd = integrationsCmd.command("asana").description("Asana case replica (OrgOS SoT)");
+  asanaCmd
+    .command("status")
+    .description("Asana token · link counts")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runAsanaStatus } = await import("../../commands/integrations.js");
+      runAsanaStatus({ json: opts.json });
+    });
+  asanaCmd
+    .command("link")
+    .description("Link OrgOS case to Asana task gid")
+    .requiredOption("--case <id>", "INQ- / DEAL- / SCH-")
+    .requiredOption("--task-gid <gid>", "Asana task gid")
+    .option("--project-gid <gid>", "Asana project gid")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runAsanaLink } = await import("../../commands/integrations.js");
+      runAsanaLink({
+        caseId: opts.case,
+        taskGid: opts.taskGid,
+        projectGid: opts.projectGid,
+        json: opts.json,
+      });
+    });
+  asanaCmd
+    .command("push")
+    .description("Push L1 status/due to Asana (never L2)")
+    .requiredOption("--case <id>", "INQ- / DEAL- / SCH-")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runAsanaPush } = await import("../../commands/integrations.js");
+      await runAsanaPush({ caseId: opts.case, json: opts.json });
+    });
+  asanaCmd
+    .command("pull")
+    .description("Pull public notes from Asana (does not overwrite OrgOS status)")
+    .requiredOption("--case <id>", "INQ- / DEAL- / SCH-")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runAsanaPull } = await import("../../commands/integrations.js");
+      await runAsanaPull({ caseId: opts.case, json: opts.json });
+    });
+
   const moduleMessageCmd = program
     .command("module-message")
     .description("Typed inter-module messages (ADR 0040)");
@@ -640,6 +684,7 @@ export function registerPlatformCommands(program: Command): void {
     .option("--answers <jsonPath>", "Answers JSON (tenant-integrations-setup skill)")
     .option("--topic <name>", "Guide topic (platform-implement-guide skill)")
     .option("--json", "JSON output (platform-implement-guide skill)")
+    .option("--iso <id>", "ISO standard id (iso-internal-audit-run)")
     .option("--write", "Write files where supported (hospitality-sync-derived)")
     .action((id, opts) =>
       runSkill(id, {
@@ -659,6 +704,7 @@ export function registerPlatformCommands(program: Command): void {
         topic: opts.topic,
         json: opts.json,
         write: opts.write,
+        iso: opts.iso,
       })
     );
 

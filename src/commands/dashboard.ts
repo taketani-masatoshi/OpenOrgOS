@@ -1,4 +1,5 @@
 import { computeDashboard, formatDashboardMarkdown } from "../lib/dashboard.js";
+import { buildAnalyticsExecutiveAlertLine } from "../lib/analytics/index.js";
 import {
   writeAgentSummaries,
   formatAgentSummariesSection,
@@ -22,7 +23,12 @@ export function runDashboard(options: DashboardOptions = {}): void {
   const summaryPaths = writeAgentSummaries(report);
   const extensionPulses = runExtensionAgentPulses({ suffix: "dashboard-sync" });
   const agentSection = formatAgentSummariesSection(summaryPaths);
-  const content = formatDashboardMarkdown(report, agentSection);
+  const analyticsLine = buildAnalyticsExecutiveAlertLine();
+  const content = formatDashboardMarkdown(
+    report,
+    agentSection,
+    analyticsLine ?? undefined
+  );
   const filename = options.output ?? defaultDashboardFilename();
 
   if (options.markdown !== false) {

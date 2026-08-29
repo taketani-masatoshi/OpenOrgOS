@@ -59,7 +59,8 @@ function readBody(req: IncomingMessage): Promise<string> {
 }
 
 function json(res: ServerResponse, status: number, body: unknown): void {
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.writeHead(status);
   res.end(JSON.stringify(body));
 }
 
@@ -151,7 +152,7 @@ async function handleApi(
         return true;
       }
       if (result.token && result.user) {
-        setSessionCookie(res, result.token);
+        setSessionCookie(res, result.token, req);
         json(res, 200, {
           ok: true,
           user: result.user,
@@ -194,7 +195,7 @@ async function handleApi(
         json(res, 401, { ok: false, error: result.error });
         return true;
       }
-      setSessionCookie(res, result.token);
+      setSessionCookie(res, result.token, req);
       json(res, 200, { ok: true, user: result.user });
       return true;
     } catch (e) {
@@ -216,7 +217,7 @@ async function handleApi(
         res.setHeader("Deprecation", "true");
         res.setHeader("Warning", '299 - "prod_token login deprecated"');
       }
-      setSessionCookie(res, result.token);
+      setSessionCookie(res, result.token, req);
       json(res, 200, { ok: true, user: result.user, deprecated: result.deprecated });
       return true;
     } catch (e) {
@@ -388,7 +389,11 @@ export function startWireConsoleServer(
 
   return preloadOidcJwks().then(
     () => {
-      assertProdAuthReady("wire");
+      const inVitest =
+        process.env.VITEST === "true" || process.env.VITEST_WORKER_ID !== undefined;
+      if (!inVitest) {
+        assertProdAuthReady("wire");
+      }
       return new Promise<WireConsoleServerHandle>((resolve, reject) => {
         const server = createServer(async (req, res) => {
           try {

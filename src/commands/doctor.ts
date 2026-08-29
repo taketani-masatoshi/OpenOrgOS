@@ -25,7 +25,17 @@ import {
 } from "../lib/org/fs-guard/index.js";
 import { countCanonicalWriteBaselineEntries } from "../lib/org/fs-guard/canonical-write-baseline.js";
 import { listSkillsMissingFsGuardAgent } from "../lib/org/fs-guard/skill-agent-context.js";
-
+import { aiaRuntimeConfigPath, loadAiaRuntimeConfig } from "../lib/aia/scheduler.js";
+import {
+  checkConcurrentJobsManifest,
+  formatConcurrentJobsManifestTable,
+} from "../lib/aia/concurrent-jobs-manifest.js";
+import {
+  assessGovernancePrinciples,
+  governancePrinciplesRulePath,
+  iso37000ControlMapPath,
+} from "../lib/org/governance-principles.js";
+import { verifyIsoMaps } from "../lib/iso-catalog.js";
 
 export interface DoctorOptions {
   json?: boolean;
@@ -169,7 +179,6 @@ function checkFixtureRestoreLock(opts?: { repair?: boolean }): DoctorCheck {
   };
 }
 
-
 function checkFsGuard(): DoctorCheck {
   try {
     if (isFsGuardProdMode() && process.env.ORGOS_FS_GUARD === "off") {
@@ -240,6 +249,97 @@ function checkFsGuardSkillAgentContext(): DoctorCheck {
   }
 }
 
+function checkIso37000Pack(): DoctorCheck {
+  const rule = existsSync(governancePrinciplesRulePath());
+  const map = existsSync(iso37000ControlMapPath());
+  const ok = rule && map;
+  return {
+    id: "iso37000_pack",
+    ok,
+    detail: ok
+      ? "ISO-37000 pack + governance-principles.md"
+      : "ERROR: governance-principles.md or ISO-37000 control-map missing",
+  };
+}
+
+function checkIsoCatalogMaps(): DoctorCheck {
+  const { ok, statuses } = verifyIsoMaps();
+  const verified = statuses.filter((s) => !s.skipped);
+  const skipped = statuses.length - verified.length;
+  const failed = verified.filter((s) => !s.map_ok || !s.folder_ok);
+  return {
+    id: "iso_catalog_maps",
+    ok,
+    detail: ok
+      ? `ISO catalog maps parse (${verified.length} available · ${skipped} coming soon)`
+      : `ERROR: ${failed.map((s) => `${s.id}: ${s.error ?? "fail"}`).join("; ")}`,
+  };
+}
+
+function checkIso37000Tenant(): DoctorCheck {
+  const status = assessGovernancePrinciples();
+  if (status.self_declared) {
+    return {
+      id: "iso37000_self_declaration",
+      ok: true,
+      detail: `self_declared (${status.principles_ok}/${status.principles_total})`,
+    };
+  }
+  if (status.ready_for_self_declaration) {
+    return {
+      id: "iso37000_self_declaration",
+      ok: true,
+      detail: `ready to declare (${status.principles_ok}/${status.principles_total}) — orgos governance principles declare`,
+    };
+  }
+  return {
+    id: "iso37000_self_declaration",
+    ok: true,
+    detail: `WARN: ISO 37000 ${status.principles_ok}/${status.principles_total} · purpose=${status.purpose_ok} · applicability=${status.applicability_ok} — orgos governance principles status`,
+  };
+}
+
+function checkAiaConcurrentJobs(): DoctorCheck {
+  const issues = checkConcurrentJobsManifest();
+  if (issues.length > 0) {
+    return {
+      id: "aia_concurrent_jobs",
+      ok: false,
+      detail: issues.map((i) => `${i.moduleId}: ${i.message}`).join("; "),
+    };
+  }
+  const enabled = formatConcurrentJobsManifestTable()
+    .split("\n")
+    .filter((line) => line.includes("| yes |"))
+    .length;
+  return {
+    id: "aia_concurrent_jobs",
+    ok: true,
+    detail: `enabled modules validated (${enabled} rows with concurrent_jobs metadata)`,
+  };
+}
+
+function checkAiaRuntime(): DoctorCheck {
+  try {
+    const config = loadAiaRuntimeConfig();
+    const path = aiaRuntimeConfigPath();
+    const exists = existsSync(path);
+    return {
+      id: "aia_runtime",
+      ok: true,
+      detail: exists
+        ? `tier=${config.tier} max=${config.max_concurrent_aia} queue_timeout=${config.queue_timeout_seconds}s (${path})`
+        : `defaults tier=${config.tier} max=${config.max_concurrent_aia} — seed: data/org/aia-runtime.yaml`,
+    };
+  } catch (err) {
+    return {
+      id: "aia_runtime",
+      ok: false,
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 export function collectDoctorChecks(opts: DoctorOptions = {}): {
   checks: DoctorCheck[];
   nextCommand?: string;
@@ -260,6 +360,10 @@ export function collectDoctorChecks(opts: DoctorOptions = {}): {
     checkFsGuard(),
     checkFsGuardCanonicalWriteBaseline(),
     checkFsGuardSkillAgentContext(),
+    checkAiaRuntime(),
+    checkAiaConcurrentJobs(),
+    checkIso37000Pack(),
+    checkIsoCatalogMaps(),
     ...runProdAuthChecks("all").map((c) => ({
       id: c.id,
       ok: c.ok,
@@ -305,6 +409,7 @@ export function collectDoctorChecks(opts: DoctorOptions = {}): {
         detail: `repaired ${ops.repaired_approvals.length} draft approval(s): ${ops.repaired_approvals.join(", ")}`,
       });
     }
+    checks.push(checkIso37000Tenant());
   }
 
   return { checks, nextCommand };

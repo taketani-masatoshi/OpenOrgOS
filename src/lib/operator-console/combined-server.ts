@@ -1,6 +1,8 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { existsSync, createReadStream, statSync } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join, sep } from "node:path";
+import { pipeline } from "node:stream/promises";
+import { createGzip } from "node:zlib";
 import { assertProdAuthReady } from "../console-auth/prod-checklist.js";
 import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
 import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
@@ -14,12 +16,11 @@ import {
 } from "../steward-chat/auth.js";
 import { STEWARD_CHAT_SPA_DIST } from "../steward-chat/server.js";
 import { handleWireConsoleApi } from "../wire-console/server.js";
-import { WIRE_CONSOLE_SPA_DIST } from "../wire-console/paths.js";
 import { handleCommunityHandoff } from "../wire-console/auth/community-handoff.js";
 import { preloadOidcJwks } from "../wire-console/auth/oidc.js";
 import { sessionTokenFromRequest } from "../wire-console/auth/session.js";
 import { runWithTenantIdAsync } from "../tenant.js";
-import { resolveTenantFromEnv } from "../orgos-cli.js";
+import { resolveTenantFromRequest, isRequestTenantRequired } from "../product/ledger-control-plane.js";
 
 function logDemoSecurityBanner(): void {
   const demoEnv = process.env.ORGOS_ENV === "demo";
@@ -54,15 +55,13 @@ const MIME: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
-function wireConsoleCombinedDist(): string {
-  const combined = join(process.cwd(), "apps", "wire-console", "dist-combined");
-  if (existsSync(join(combined, "index.html"))) return combined;
-  return WIRE_CONSOLE_SPA_DIST;
-}
-
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(body));
+}
+
+function chatSpaReady(): boolean {
+  return existsSync(join(STEWARD_CHAT_SPA_DIST, "index.html"));
 }
 
 /**
@@ -76,6 +75,11 @@ function cacheControlFor(filePath: string): string {
     : "no-cache";
 }
 
+function clientAcceptsGzip(req: IncomingMessage): boolean {
+  const ae = req.headers["accept-encoding"];
+  return typeof ae === "string" && ae.includes("gzip");
+}
+
 function serveFile(res: ServerResponse, filePath: string): void {
   const ext = extname(filePath);
   res.writeHead(200, {
@@ -83,6 +87,31 @@ function serveFile(res: ServerResponse, filePath: string): void {
     "Cache-Control": cacheControlFor(filePath),
   });
   createReadStream(filePath).pipe(res);
+}
+
+async function serveFileMaybeGzip(
+  req: IncomingMessage,
+  res: ServerResponse,
+  filePath: string
+): Promise<void> {
+  const ext = extname(filePath);
+  const compressible =
+    filePath.includes(`${sep}assets${sep}`) &&
+    (ext === ".js" || ext === ".css") &&
+    clientAcceptsGzip(req);
+
+  if (compressible) {
+    res.writeHead(200, {
+      "Content-Type": MIME[ext] ?? "application/octet-stream",
+      "Content-Encoding": "gzip",
+      Vary: "Accept-Encoding",
+      "Cache-Control": cacheControlFor(filePath),
+    });
+    await pipeline(createReadStream(filePath), createGzip(), res);
+    return;
+  }
+
+  serveFile(res, filePath);
 }
 
 async function readBody(req: IncomingMessage): Promise<string> {
@@ -94,29 +123,8 @@ async function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-function serveSpaAtPrefix(res: ServerResponse, distDir: string, pathname: string, prefix: string): boolean {
-  const indexHtml = join(distDir, "index.html");
-  if (!existsSync(indexHtml)) return false;
-
-  if (pathname.startsWith(`${prefix}/assets/`)) {
-    const rel = pathname.slice(prefix.length + 1);
-    const assetPath = join(distDir, rel);
-    if (existsSync(assetPath) && statSync(assetPath).isFile()) {
-      serveFile(res, assetPath);
-      return true;
-    }
-  }
-
-  if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
-    serveFile(res, indexHtml);
-    return true;
-  }
-
-  return false;
-}
-
 /**
- * Combined Operator Console — Steward Chat + Wire Console on one origin (shared session cookie).
+ * Combined Operator Console — Steward Chat SPA (incl. `/wire/` client route) + shared APIs.
  */
 export async function startOperatorConsoleServer(
   opts: OperatorConsoleServerOptions = {}
@@ -127,7 +135,6 @@ export async function startOperatorConsoleServer(
 
   const host = opts.host ?? process.env.OPERATOR_CONSOLE_HOST?.trim() ?? "127.0.0.1";
   const port = opts.port ?? Number(process.env.OPERATOR_CONSOLE_PORT ?? 9470);
-  const wireDist = wireConsoleCombinedDist();
 
   const server = createServer(async (req, res) => {
     try {
@@ -144,12 +151,13 @@ export async function startOperatorConsoleServer(
       }
 
       if (pathname === "/health") {
+        const spa = chatSpaReady();
         json(res, 200, {
           ok: true,
           service: "operator-console",
           auth: isStewardChatAuthEnabled(),
-          wire_spa: existsSync(join(wireDist, "index.html")),
-          chat_spa: existsSync(join(STEWARD_CHAT_SPA_DIST, "index.html")),
+          wire_spa: spa,
+          chat_spa: spa,
         });
         return;
       }
@@ -179,15 +187,21 @@ export async function startOperatorConsoleServer(
       if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
         const user = requireChatAuth(req, res);
         if (!user) return;
-        const homeTenant = resolveTenantFromEnv();
+        const requestTenant = resolveTenantFromRequest(req);
+        if (isRequestTenantRequired() && !requestTenant) {
+          json(res, 400, {
+            ok: false,
+            error: "X-OrgOS-Tenant or tenant host required (ORGOS_REQUIRE_REQUEST_TENANT=1)",
+          });
+          return;
+        }
         const runChat = () =>
           handleChatApi(req, res, pathname, method, {
             user,
             sessionToken: sessionTokenFromRequest(req),
           });
-        // Pin Chat to ORGOS_TENANT even if a prior Wire request polluted sticky setTenantId.
-        const handled = homeTenant
-          ? await runWithTenantIdAsync(homeTenant, runChat)
+        const handled = requestTenant
+          ? await runWithTenantIdAsync(requestTenant, runChat)
           : await runChat();
         if (handled) return;
         json(res, 404, { error: "not found" });
@@ -199,15 +213,11 @@ export async function startOperatorConsoleServer(
         return;
       }
 
-      if (serveSpaAtPrefix(res, wireDist, pathname, "/wire")) {
-        return;
-      }
-
       if (existsSync(STEWARD_CHAT_SPA_DIST)) {
         const rel = pathname === "/" ? "/index.html" : pathname;
         const filePath = join(STEWARD_CHAT_SPA_DIST, rel);
         if (existsSync(filePath) && statSync(filePath).isFile()) {
-          serveFile(res, filePath);
+          await serveFileMaybeGzip(req, res, filePath);
           return;
         }
         const indexHtml = join(STEWARD_CHAT_SPA_DIST, "index.html");

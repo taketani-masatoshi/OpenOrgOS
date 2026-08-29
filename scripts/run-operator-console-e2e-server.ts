@@ -19,13 +19,8 @@ async function seedDemo(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const wireCombined = join(process.cwd(), "apps", "wire-console", "dist-combined", "index.html");
   if (!existsSync(join(STEWARD_CHAT_SPA_DIST, "index.html"))) {
     console.error("Steward Chat SPA not built. Run: npm run operator-console:build");
-    process.exit(1);
-  }
-  if (!existsSync(wireCombined)) {
-    console.error("Wire Console combined SPA not built. Run: npm run operator-console:build");
     process.exit(1);
   }
 

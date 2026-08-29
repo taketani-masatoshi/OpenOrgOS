@@ -29,7 +29,7 @@ export async function runOperatorConsoleStart(opts: OperatorConsoleStartOptions 
   console.log(
     "  Deterministic chat routes: finance-metrics · contract-status · cashflow · steward-orchestrate"
   );
-  console.log(`  Build: npm run operator-console:build  (Wire SPA at /wire/)`);
+  console.log(`  Build: npm run operator-console:build  (single SPA; Wire at /wire/)`);
   console.log("  Press Ctrl+C to stop");
 
   await new Promise<void>((resolve) => {

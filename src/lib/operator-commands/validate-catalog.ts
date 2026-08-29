@@ -32,6 +32,7 @@ const KNOWN_PERMISSIONS = new Set([
   "llm:approve",
   "receipt:issue",
   "events:write",
+  "guard:admin",
 ]);
 
 /**

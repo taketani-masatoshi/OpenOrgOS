@@ -4,6 +4,7 @@ import { runIntegrityChecks, type IntegrityIssue } from "../lib/integrity.js";
 import { appendAuditEvent } from "../lib/audit-log.js";
 import { printStaleDependencyWarnings } from "./deps.js";
 import { runSecurityChecks } from "../lib/security-validate.js";
+import { collectOrgChartChangeValidationIssues } from "./org-chart-change.js";
 import { basename, isAbsolute, relative } from "node:path";
 import { getWorkspaceRoot } from "../lib/tenant.js";
 
@@ -91,6 +92,12 @@ export function runValidateReport(opts: ValidateOptions = {}): ValidateReport {
     ...schema.errors.map((issue) => ({
       severity: "error" as const,
       path: safeReportPath(issue.file),
+      message: safeReportMessage(issue.message),
+      source: "schema" as const,
+    })),
+    ...collectOrgChartChangeValidationIssues().map((issue) => ({
+      severity: "error" as const,
+      path: issue.file,
       message: safeReportMessage(issue.message),
       source: "schema" as const,
     })),

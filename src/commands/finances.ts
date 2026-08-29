@@ -6,7 +6,13 @@ import {
   loadMonthlyFinance,
 } from "../lib/data.js";
 import { monthlyFinanceSchema } from "../../schemas/index.js";
-import { getDataDir, writeYamlFile } from "../lib/utils.js";
+import { writeTenantContentGuarded } from "../lib/org/fs-guard/guarded-write.js";
+import { currentCanonicalSha256, isFsGuardEnforced } from "../lib/org/fs-guard/index.js";
+import {
+  buildPayrollMonthlyReconcile,
+  formatPayrollReconcileMarkdown,
+} from "../lib/finance/payroll-monthly-reconcile.js";
+import { currentDate, writeMarkdownReport, getDataDir, writeYamlFile } from "../lib/utils.js";
 import {
   financesSummary,
   formatFinancesSummaryMarkdown,
@@ -20,7 +26,6 @@ import {
   formatCashBalanceMarkdown,
 } from "../lib/cash-balance-view.js";
 import { computeVarianceReport, formatVarianceMarkdown } from "../lib/variance.js";
-import { writeMarkdownReport } from "../lib/utils.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
 
 export function runFinancesSummary(options: {
@@ -59,10 +64,59 @@ export function runFinancesAdd(options: {
   const parsed = YAML.parse(raw);
   const entry = monthlyFinanceSchema.parse({ ...parsed, month: options.month });
 
+  const logicalPath = `data/finance/monthly/${options.month}.yaml`;
+  const yamlBody = YAML.stringify(entry);
+
+  if (isFsGuardEnforced()) {
+    const result = writeTenantContentGuarded({
+      agentId: "finance",
+      logicalPath,
+      content: yamlBody,
+      runId: `CLI-finances-add-${options.month}`,
+      expectedSha256: currentCanonicalSha256(logicalPath),
+    });
+    auditCliMutation("finances add", options.month);
+    console.log(`✓ Saved ${result} (fs-guard)`);
+    return;
+  }
+
   const path = join(getDataDir(), "finance", "monthly", `${options.month}.yaml`);
   writeYamlFile(path, entry);
   auditCliMutation("finances add", options.month);
   console.log(`✓ Saved ${path}`);
+}
+
+export function runFinancesReconcile(opts: { month?: string; output?: string; json?: boolean }): void {
+  const report = buildPayrollMonthlyReconcile({ asOfYm: opts.month });
+  if (opts.json) {
+    console.log(JSON.stringify(report, null, 2));
+    if (!report.ok) process.exitCode = 1;
+    return;
+  }
+  const md = formatPayrollReconcileMarkdown(report);
+  if (opts.output) {
+    requireCliDataWrite({ command: "finances reconcile", permission: "finance:reconcile" });
+    const logical = `docs/reports/agent-summaries/finance/${opts.output}`;
+    if (isFsGuardEnforced()) {
+      const path = writeTenantContentGuarded({
+        agentId: "finance",
+        logicalPath: logical,
+        content: md,
+        runId: `CLI-finances-reconcile-${opts.month ?? currentDate().slice(0, 7)}`,
+        expectedSha256: currentCanonicalSha256(logical),
+      });
+      auditCliMutation("finances reconcile", opts.output);
+      console.log(`✓ ${path} (fs-guard)`);
+    } else {
+      const path = writeMarkdownReport("agent-summaries/finance", opts.output, md);
+      auditCliMutation("finances reconcile", opts.output);
+      console.log(`✓ ${path}`);
+    }
+    if (!report.ok) process.exitCode = 1;
+    return;
+  }
+  console.log(md);
+  if (!report.ok) process.exitCode = 1;
 }
 
 export function runFinancesList(): void {
@@ -109,3 +163,5 @@ export function runFinancesVariance(opts: { output?: string }): void {
     console.log(md);
   }
 }
+
+export { runFinancesCapitalRaiseCrossCheck } from "./finances-capital-raise-crosscheck.js";

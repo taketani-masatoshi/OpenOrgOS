@@ -2,6 +2,7 @@ import { formatP0Report, listP0Items } from "../lib/p0-status.js";
 import { loadAllData } from "../lib/data.js";
 import { scanContractAlerts, formatAlertsTable } from "../lib/alerts.js";
 import { computeMaturityReport, formatMaturityReport } from "../lib/maturity.js";
+import { buildAnalyticsExecutiveAlertLine } from "../lib/analytics/index.js";
 
 export function runOpsDaily(): void {
   console.log("=== Steward daily (ops) ===\n");
@@ -9,6 +10,12 @@ export function runOpsDaily(): void {
   const maturity = computeMaturityReport();
   console.log(formatMaturityReport(maturity));
   console.log("");
+
+  const analyticsLine = buildAnalyticsExecutiveAlertLine();
+  if (analyticsLine) {
+    console.log(analyticsLine);
+    console.log("");
+  }
 
   console.log(formatP0Report());
   console.log("");

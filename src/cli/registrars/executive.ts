@@ -31,12 +31,17 @@ import {
   runMailIntakeInterpret,
   runMailSetupGmail,
   runMailSetupGmailAuth,
+  runMailIntakeThreadShow,
 } from "../../commands/mail-intake.js";
 import {
   runCorrespondenceDraft,
   runCorrespondenceList,
   runCorrespondenceShow,
   runCorrespondenceSend,
+  runCorrespondenceStyleLint,
+  runCorrespondenceCompose,
+  runCorrespondenceKnowledgeSearch,
+  runCorrespondenceFactsVerify,
   runSecretaryMailList,
   runSecretaryMailConfig,
   runSecretaryMailSetupGuide,
@@ -576,6 +581,23 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--json", "JSON output")
     .action((opts) => runMailIntakeStatus({ json: opts.json }));
 
+  const threadCmd = intakeCmd.command("thread").description("Gmail thread history");
+  threadCmd
+    .command("show")
+    .description("Fetch/show Gmail thread (L1 summaries; body in mail-received)")
+    .requiredOption("--id <threadOrMsgId>", "Gmail thread id or triage MSG-...")
+    .option("--fetch", "Fetch missing messages via Gmail API")
+    .option("--dry-run", "List only without saving")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runMailIntakeThreadShow({
+        id: opts.id,
+        fetch: opts.fetch,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      }),
+    );
+
   intakeCmd
     .command("interpret")
     .description("Run mail interpretation ensemble (+ CEO inline ask on low agreement)")
@@ -777,6 +799,67 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--dry-run", "Validate gate without delivery")
     .option("--json", "JSON output")
     .action(async (opts) => runCorrespondenceSend(opts));
+  const styleCmd = outboundCorrespondence.command("style").description("Correspondence style tools");
+  styleCmd
+    .command("lint")
+    .description("Lint draft body against style contract")
+    .requiredOption("--id <draftId>", "Draft ID")
+    .option("--json", "JSON output")
+    .action((opts) => runCorrespondenceStyleLint({ id: opts.id, json: opts.json }));
+
+  outboundCmd
+    .command("compose")
+    .description("LLM reply draft from verified facts (never sends)")
+    .requiredOption("--mail-id <id>", "Triage entry MSG-...")
+    .option("--case <id>", "INQ- / DEAL- case id")
+    .option("--to <email>", "Override recipient")
+    .option("--contact-ref <id>", "external-contacts ref")
+    .option("--operator <id>", "Created-by operator")
+    .option("--no-approval", "Skip approval proposal")
+    .option("--json", "JSON output")
+    .action(async (opts) =>
+      runCorrespondenceCompose({
+        mailId: opts.mailId,
+        caseId: opts.case,
+        to: opts.to,
+        contactRef: opts.contactRef,
+        operator: opts.operator,
+        noApproval: opts.noApproval,
+        json: opts.json,
+      }),
+    );
+
+  const knowledgeCmd = outboundCmd.command("knowledge").description("L0–L1 knowledge search for compose");
+  knowledgeCmd
+    .command("search")
+    .description("Search allowlisted product/sales docs")
+    .requiredOption("--query <text>", "Search query")
+    .option("--limit <n>", "Max hits", "8")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runCorrespondenceKnowledgeSearch({
+        query: opts.query,
+        limit: opts.limit ? parseInt(opts.limit, 10) : undefined,
+        json: opts.json,
+      }),
+    );
+
+  const factsCmd = outboundCmd.command("facts").description("Fact verification for compose");
+  factsCmd
+    .command("verify")
+    .description("Build verified claims pack")
+    .option("--mail-id <id>", "Triage MSG-...")
+    .option("--case <id>", "INQ- / DEAL- / SCH-")
+    .option("--query <text>", "Knowledge query override")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runCorrespondenceFactsVerify({
+        mailId: opts.mailId,
+        caseId: opts.case,
+        query: opts.query,
+        json: opts.json,
+      }),
+    );
 
   const outboundMail = outboundCmd.command("mail").description("Mail config · archive");
   outboundMail
