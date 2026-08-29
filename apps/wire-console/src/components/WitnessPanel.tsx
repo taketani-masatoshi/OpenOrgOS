@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import { api, type WitnessStatus } from "../api";
+import { WIRE_COPY } from "../wire-copy";
 
 interface Props {
   tenantId: string;
@@ -8,6 +10,7 @@ interface Props {
 }
 
 export function WitnessPanel({ tenantId, selectedEventId, onDone }: Props) {
+  const copy = useCopy(WIRE_COPY);
   const [status, setStatus] = useState<WitnessStatus | null>(null);
   const [eventId, setEventId] = useState(selectedEventId ?? "");
   const [side, setSide] = useState<"sent" | "received">("sent");
@@ -33,7 +36,7 @@ export function WitnessPanel({ tenantId, selectedEventId, onDone }: Props) {
         `/console/v1/tenants/${tenantId}/witness/flush-pending`,
         { method: "POST", body: "{}" }
       );
-      setVerifyResult(`Flushed ${res.flushed} witness attestation(s)`);
+      setVerifyResult(copy.flushedWitness(res.flushed));
       onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -55,9 +58,11 @@ export function WitnessPanel({ tenantId, selectedEventId, onDone }: Props) {
         body: JSON.stringify({ event_id: eventId, side }),
       });
       setVerifyResult(
-        `Registered · quorum ${res.quorum.matched}/${res.quorum.required} ${
-          res.quorum.satisfied ? "OK" : "pending"
-        }`
+        copy.registeredQuorum(
+          res.quorum.matched,
+          res.quorum.required,
+          res.quorum.satisfied,
+        ),
       );
       onDone();
     } catch (err) {
@@ -82,9 +87,12 @@ export function WitnessPanel({ tenantId, selectedEventId, onDone }: Props) {
         body: JSON.stringify({ event_id: eventId }),
       });
       setVerifyResult(
-        `${res.receipts.length} receipt(s) · quorum ${res.quorum.matched}/${res.quorum.required} ${
-          res.quorum.satisfied ? "OK" : "FAIL"
-        }${res.issues.length ? ` · ${res.issues.join("; ")}` : ""}`
+        `${copy.verifyQuorum(
+          res.receipts.length,
+          res.quorum.matched,
+          res.quorum.required,
+          res.quorum.satisfied,
+        )}${res.issues.length ? ` · ${res.issues.join("; ")}` : ""}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -96,45 +104,45 @@ export function WitnessPanel({ tenantId, selectedEventId, onDone }: Props) {
   return (
     <section className="panel">
       <h3>
-        Witness{" "}
+        {copy.witnessTitle}{" "}
         {status?.pool.enabled ? (
           <span className="badge ok">
-            {status.pool.hub_count} hub(s) · {status.pool.quorum_mode}
+            {copy.hubsMode(status.pool.hub_count, status.pool.quorum_mode ?? "")}
           </span>
         ) : (
-          <span className="badge">disabled</span>
+          <span className="badge">{copy.disabled}</span>
         )}
       </h3>
       <div className="row-actions">
-        <button type="button" className="secondary" disabled={busy} onClick={() => void flush()}>
-          Flush pending
+        <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void flush()}>
+          {copy.flushPending}
         </button>
-        <button type="button" className="secondary" disabled={busy || !eventId} onClick={() => void verify()}>
-          Verify event
+        <button type="button" className="btn btn-ghost" disabled={busy || !eventId} onClick={() => void verify()}>
+          {copy.verifyEvent}
         </button>
       </div>
       <form className="inline-form" onSubmit={register}>
         <label className="wide">
-          event_id
+          {copy.eventId}
           <input value={eventId} onChange={(e) => setEventId(e.target.value)} />
         </label>
         <label>
-          side
+          {copy.side}
           <select
             value={side}
             onChange={(e) => setSide(e.target.value as "sent" | "received")}
-            aria-label="side"
+            aria-label={copy.side}
           >
-            <option value="sent">sent</option>
-            <option value="received">received</option>
+            <option value="sent">{copy.sideSent}</option>
+            <option value="received">{copy.sideReceived}</option>
           </select>
         </label>
-        <button type="submit" disabled={busy || !eventId}>
-          Register attestation
+        <button type="submit" className="btn btn-primary" disabled={busy || !eventId}>
+          {copy.registerAttestation}
         </button>
       </form>
       {status?.pending.length ? (
-        <p className="hint">{status.pending.length} witness attestation(s) pending</p>
+        <p className="hint">{copy.pendingWitnessCount(status.pending.length)}</p>
       ) : null}
       {verifyResult ? <p className="hint">{verifyResult}</p> : null}
       {error ? <p className="error">{error}</p> : null}

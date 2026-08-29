@@ -93,7 +93,8 @@ monthly_cost: 85000
     });
     const { transmission } = approveInterOrgNotice({
       noticeId: notice.notice_id,
-      approverId: "DemoCEO",
+      approverId: "Demo CEO",
+      operatorId: "OP-001",
     });
 
     const wireEnvelope = {

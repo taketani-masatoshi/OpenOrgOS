@@ -12,7 +12,7 @@ export interface CompanyEventMarkdownLintIssue {
   severity: "error" | "warning";
 }
 
-function parseFrontmatter(content: string): Record<string, string> | null {
+export function parseCompanyEventFrontmatter(content: string): Record<string, string> | null {
   if (!content.startsWith("---\n")) return null;
   const end = content.indexOf("\n---\n", 4);
   if (end < 0) return null;
@@ -35,7 +35,7 @@ export function lintCompanyEventMarkdown(
   content: string
 ): CompanyEventMarkdownLintIssue[] {
   const issues: CompanyEventMarkdownLintIssue[] = [];
-  const fm = parseFrontmatter(content);
+  const fm = parseCompanyEventFrontmatter(content);
 
   if (!fm) {
     issues.push({
@@ -106,4 +106,11 @@ export function lintCompanyEventMarkdown(
   }
 
   return issues;
+}
+
+export function parseCompanyEventMarkdownTitle(content: string): string | undefined {
+  const bodyStart = content.indexOf("\n---\n", 4);
+  const body = bodyStart >= 0 ? content.slice(bodyStart + 5) : content;
+  const match = body.match(/^#\s+(.+)$/m);
+  return match?.[1]?.trim();
 }

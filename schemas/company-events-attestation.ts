@@ -19,6 +19,8 @@ export const companyEventsAttestationSchema = z.object({
   payload_digest: z.string().regex(/^[a-f0-9]{64}$/),
   signature: z.string().min(1),
   public_key: z.string().min(1),
+  /** Present on attestations signed after signing-meta v2 migration. */
+  key_id: z.string().regex(/^[a-f0-9]{16}$/).optional(),
   signed_at: z.string().min(1),
 });
 

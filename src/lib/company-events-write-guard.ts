@@ -29,6 +29,12 @@ export function isCompanyEventsProtectedPath(path: string): boolean {
     n.endsWith("company-events.yaml") ||
     n.endsWith("/company-events-chain.jsonl") ||
     n.endsWith("company-events-chain.jsonl") ||
+    n.endsWith("/company-events-attestations.jsonl") ||
+    n.endsWith("company-events-attestations.jsonl") ||
+    n.endsWith("/company-events-witness-pin.yaml") ||
+    n.endsWith("company-events-witness-pin.yaml") ||
+    n.endsWith("/company-events-signing-meta.yaml") ||
+    n.endsWith("company-events-signing-meta.yaml") ||
     /\/docs\/company\/events\/\d{4}-\d{2}\/EVT-/.test(n)
   );
 }

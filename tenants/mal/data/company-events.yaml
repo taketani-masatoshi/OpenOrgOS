@@ -9,6 +9,7 @@ events:
     artifact_dir: docs/company/artifacts/2026-07/EVT-20260702-governance-miyagi-director-resignation/
     notes: 辞任届送付準備完了。登記完了まで open。
     created_at: 2026-07-02
+    chain_seq: 1
   - id: EVT-20260712-misc-correspondence-20260712-017-1-mal
     occurred_at: 2026-07-12
     month: 2026-07
@@ -21,7 +22,7 @@ events:
       approval_id: APR-20260712-003
     notes: Sent by OP-001 via mail outbound correspondence (email)
     created_at: 2026-07-12
-    chain_seq: 80
+    chain_seq: 2
   - id: EVT-20260712-misc-correspondence-20260712-018-1-mal
     occurred_at: 2026-07-12
     month: 2026-07
@@ -34,5 +35,63 @@ events:
       approval_id: APR-20260712-004
     notes: Sent by OP-001 via mail outbound correspondence (email)
     created_at: 2026-07-12
-    chain_seq: 81
-schema_version: 2
+    chain_seq: 3
+  - id: EVT-20260819-governance-passkey-hybrid-qr
+    occurred_at: 2026-08-19
+    month: 2026-08
+    kind: governance
+    title: iPhone PassKey を業界標準 QR に寄せる
+    status: open
+    event_path: docs/company/events/2026-08/EVT-20260819-governance-passkey-hybrid-qr.md
+    artifact_dir: docs/company/artifacts/2026-08/EVT-20260819-governance-passkey-hybrid-qr/
+    notes: docs/org-os/passkey-iphone-qr-implementation-plan.md
+    created_at: 2026-08-19
+    chain_seq: 4
+  - id: EVT-20260709-finance-capital-aiac-5m
+    occurred_at: 2026-07-09
+    month: 2026-07
+    kind: finance
+    title: AIACへ資本出資500万円
+    status: open
+    event_path: docs/company/events/2026-07/EVT-20260709-finance-capital-aiac-5m.md
+    artifact_dir: docs/company/artifacts/2026-07/EVT-20260709-finance-capital-aiac-5m/
+    created_at: 2026-07-09
+    chain_seq: 5
+  - id: EVT-20260709-finance-capital-southwood-10m
+    occurred_at: 2026-07-09
+    month: 2026-07
+    kind: finance
+    title: Southwoodへ資本出資1000万円
+    status: open
+    event_path: docs/company/events/2026-07/EVT-20260709-finance-capital-southwood-10m.md
+    artifact_dir: docs/company/artifacts/2026-07/EVT-20260709-finance-capital-southwood-10m/
+    created_at: 2026-07-09
+    chain_seq: 6
+  - id: EVT-20260828-misc-correspondence-20260828-002-message
+    occurred_at: 2026-08-28
+    month: 2026-08
+    kind: misc
+    title: 社外メール送信 — お支払いのお願い
+    status: open
+    event_path: docs/company/events/2026-08/EVT-20260828-misc-correspondence-20260828-002-message.md
+    artifact_dir: docs/company/artifacts/2026-08/EVT-20260828-misc-correspondence-20260828-002-message/
+    related:
+      approval_id: APR-20260828-001
+    notes: Sent by OP-001 via mail outbound correspondence (email)
+    created_at: 2026-08-28
+    chain_seq: 9
+  - id: EVT-20260829-meeting-employment-counsel
+    occurred_at: 2026-08-29
+    month: 2026-08
+    kind: meeting
+    title: 臨時取締役会（雇用契約・顧問弁護士委任）
+    status: open
+    event_path: docs/company/events/2026-08/EVT-20260829-meeting-employment-counsel.md
+    artifact_dir: docs/company/artifacts/2026-08/EVT-20260829-meeting-employment-counsel/
+    related:
+      contract_id: CTR-022
+      meeting_ref: MTG-20260829-board-employment-counsel
+    notes: CTR-022(B 60万) CTR-025/026(C) 取締役会決議
+    created_at: 2026-08-29
+    chain_seq: 10
+schema_version: 3

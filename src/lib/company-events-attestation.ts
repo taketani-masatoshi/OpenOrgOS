@@ -13,6 +13,7 @@ import { loadCompanyEvents } from "./company-events.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import {
   ensureCompanyEventsSigningKey,
+  getTrustedAttestationPublicKeys,
   signAttestationPayload,
   verifyAttestationSignature,
 } from "./company-events-signing.js";
@@ -21,6 +22,7 @@ import { loadNotificationsRegistry } from "./notifications/push.js";
 import { pinCompanyEventChainTail, verifyCompanyEventsWitnessPin } from "./company-events-witness-pin.js";
 import { getTenantId } from "./tenant.js";
 import { sendWebhook } from "./webhook.js";
+import { runWithEventsWriteGuard } from "./company-events-write-guard.js";
 
 const ATTESTATIONS_PATH = () => join(getDataDir(), "company-events-attestations.jsonl");
 
@@ -28,8 +30,21 @@ export function companyEventsAttestationsPath(): string {
   return toLogicalPath(ATTESTATIONS_PATH());
 }
 
+const attestationCorruptLines: number[] = [];
+
+export function resetAttestationCorruptLineTracking(): void {
+  attestationCorruptLines.length = 0;
+}
+
+export function getAttestationCorruptLines(): number[] {
+  return [...attestationCorruptLines];
+}
+
 export function loadCompanyEventsAttestations(): CompanyEventsAttestation[] {
-  return loadJsonl(ATTESTATIONS_PATH(), (raw) => companyEventsAttestationSchema.parse(raw));
+  resetAttestationCorruptLineTracking();
+  return loadJsonl(ATTESTATIONS_PATH(), (raw) => companyEventsAttestationSchema.parse(raw), {
+    onCorruptLine: (lineNo) => attestationCorruptLines.push(lineNo),
+  });
 }
 
 export function getISOWeekParts(date = new Date()): { year: number; week: number } {
@@ -72,8 +87,19 @@ export function assertCompanyEventsChainIntegrity(): ChainIntegrityResult {
   const chain = verifyCompanyEventChain();
   const registry = loadCompanyEvents();
   const cross = validateCompanyEventChainWithRegistry(registry);
+  loadCompanyEventsAttestations();
   const issues = [...chain.issues, ...cross.issues];
-  const ok = chain.ok && cross.ok;
+  for (const lineNo of getAttestationCorruptLines()) {
+    issues.push({
+      code: "attestation-corrupt-line",
+      message: `Corrupt JSONL line ${lineNo} in company-events-attestations.jsonl`,
+    });
+  }
+  const attestations = loadCompanyEventsAttestations();
+  for (const seqIssue of verifyAttestationSequence(attestations)) {
+    issues.push(seqIssue);
+  }
+  const ok = issues.length === 0;
   if (!ok) {
     const summary = issues.map((i) => `${i.code}: ${i.message}`).join("; ");
     throw new Error(`Company events chain integrity check failed: ${summary}`);
@@ -129,11 +155,14 @@ export function runWeeklyCompanyEventsAttestation(opts?: {
     payload_digest: signed.payload_digest,
     signature: signed.signature,
     public_key: signed.public_key,
+    key_id: signed.key_id,
     signed_at: new Date().toISOString(),
   });
 
   mkdirSync(join(ATTESTATIONS_PATH(), ".."), { recursive: true });
-  appendJsonl(ATTESTATIONS_PATH(), attestation);
+  runWithEventsWriteGuard("company-events-weekly-attest", () => {
+    appendJsonl(ATTESTATIONS_PATH(), attestation);
+  });
   try {
     pinCompanyEventChainTail({ hubId: "weekly-attest" });
   } catch {
@@ -142,18 +171,151 @@ export function runWeeklyCompanyEventsAttestation(opts?: {
   return { attestation, path: companyEventsAttestationsPath() };
 }
 
-export function verifyCompanyEventsAttestation(record: CompanyEventsAttestation): boolean {
-  const { signature, public_key, payload_digest, signed_at, ...rest } = record;
+export interface AttestationVerifyResult {
+  ok: boolean;
+  legacy?: boolean;
+  reason?: string;
+}
+
+export function verifyCompanyEventsAttestation(
+  record: CompanyEventsAttestation,
+  opts?: { strictLegacy?: boolean }
+): AttestationVerifyResult {
+  const trustedKeys = getTrustedAttestationPublicKeys();
+  if (trustedKeys.length === 0) {
+    return { ok: false, reason: "unverifiable-no-signing-meta" };
+  }
+
+  const isLegacy = !record.key_id;
+  if (isLegacy) {
+    if (opts?.strictLegacy) {
+      return { ok: false, legacy: true, reason: "attestation-legacy-unpinned-key" };
+    }
+  }
+
+  const { signature, public_key, payload_digest, signed_at, key_id, ...rest } = record;
   void signed_at;
   void signature;
   void public_key;
   void payload_digest;
-  return verifyAttestationSignature({
+  void key_id;
+
+  const signatureOk = verifyAttestationSignature({
     payload: rest,
     payload_digest: record.payload_digest,
     signature: record.signature,
     public_key: record.public_key,
+    trusted_keys: trustedKeys,
   });
+
+  if (!signatureOk) {
+    return { ok: false, legacy: isLegacy, reason: "attestation-signature-invalid" };
+  }
+
+  if (isLegacy) {
+    return { ok: true, legacy: true, reason: "attestation-legacy-unpinned-key" };
+  }
+
+  return { ok: true };
+}
+
+export function verifyCompanyEventsAttestationStrict(record: CompanyEventsAttestation): boolean {
+  return verifyCompanyEventsAttestation(record).ok;
+}
+
+export interface AttestationSequenceIssue {
+  code: string;
+  message: string;
+  attestation_id?: string;
+}
+
+/** Verify prev_attestation_id linkage, monotonic tail seq, and links_since_prev consistency. */
+export function verifyAttestationSequence(
+  attestations: CompanyEventsAttestation[]
+): AttestationSequenceIssue[] {
+  if (attestations.length === 0) return [];
+
+  const issues: AttestationSequenceIssue[] = [];
+  const byId = new Map(attestations.map((a) => [a.attestation_id, a]));
+  const sorted = [...attestations].sort(
+    (a, b) => a.signed_at.localeCompare(b.signed_at) || a.attestation_id.localeCompare(b.attestation_id)
+  );
+
+  const prevFork = new Map<string, number>();
+  for (const att of attestations) {
+    if (!att.prev_attestation_id) continue;
+    prevFork.set(att.prev_attestation_id, (prevFork.get(att.prev_attestation_id) ?? 0) + 1);
+  }
+  for (const [prevId, count] of prevFork) {
+    if (count > 1) {
+      issues.push({
+        code: "attestation-prev-fork",
+        message: `${count} attestations claim prev_attestation_id ${prevId}`,
+        attestation_id: prevId,
+      });
+    }
+  }
+
+  for (let i = 0; i < sorted.length; i++) {
+    const att = sorted[i]!;
+    if (!att.prev_attestation_id) {
+      if (i > 0) {
+        issues.push({
+          code: "attestation-prev-missing",
+          message: `Attestation ${att.attestation_id} missing prev_attestation_id (not first in sequence)`,
+          attestation_id: att.attestation_id,
+        });
+      }
+      continue;
+    }
+
+    const prev = byId.get(att.prev_attestation_id);
+    if (!prev) {
+      issues.push({
+        code: "attestation-prev-orphan",
+        message: `Attestation ${att.attestation_id} references missing prev ${att.prev_attestation_id}`,
+        attestation_id: att.attestation_id,
+      });
+      continue;
+    }
+
+    if (prev.signed_at > att.signed_at) {
+      issues.push({
+        code: "attestation-prev-after-current",
+        message: `Prev attestation ${prev.attestation_id} signed after ${att.attestation_id}`,
+        attestation_id: att.attestation_id,
+      });
+    }
+
+    if (
+      att.chain_tail_seq != null &&
+      prev.chain_tail_seq != null &&
+      att.chain_tail_seq < prev.chain_tail_seq
+    ) {
+      issues.push({
+        code: "attestation-tail-regression",
+        message: `Attestation ${att.attestation_id} chain_tail_seq ${att.chain_tail_seq} < prev ${prev.chain_tail_seq}`,
+        attestation_id: att.attestation_id,
+      });
+    }
+
+    if (
+      att.chain_tail_seq != null &&
+      prev.chain_tail_seq != null &&
+      att.links_since_prev != null
+    ) {
+      const expected = Math.max(0, att.chain_tail_seq - prev.chain_tail_seq);
+      if (att.links_since_prev !== expected) {
+        issues.push({
+          code: "attestation-links-since-prev-mismatch",
+          message: `Attestation ${att.attestation_id} links_since_prev ${att.links_since_prev} != expected ${expected}`,
+          attestation_id: att.attestation_id,
+        });
+      }
+    }
+  }
+
+  return issues;
 }
 
 export interface MonthlyAuditFinding {
@@ -187,6 +349,7 @@ export async function runMonthlyCompanyEventsAudit(opts?: {
   month?: string;
   notify?: boolean;
   output?: string;
+  strictLegacy?: boolean;
 }): Promise<MonthlyAuditResult> {
   const month = opts?.month ?? currentDate().slice(0, 7);
   const bounds = monthBounds(month);
@@ -214,13 +377,30 @@ export async function runMonthlyCompanyEventsAudit(opts?: {
   );
 
   for (const att of attestations) {
-    if (!verifyCompanyEventsAttestation(att)) {
+    const verifyResult = verifyCompanyEventsAttestation(att, {
+      strictLegacy: opts?.strictLegacy,
+    });
+    if (!verifyResult.ok) {
       findings.push({
         severity: "error",
-        code: "attestation-signature-invalid",
-        message: `Attestation ${att.attestation_id} signature verification failed`,
+        code: verifyResult.reason ?? "attestation-signature-invalid",
+        message: `Attestation ${att.attestation_id} verification failed`,
+      });
+    } else if (verifyResult.legacy) {
+      findings.push({
+        severity: "warn",
+        code: "attestation-legacy-unpinned-key",
+        message: `Attestation ${att.attestation_id} is legacy (no key_id) — re-attest after migration`,
       });
     }
+  }
+
+  for (const seqIssue of verifyAttestationSequence(loadCompanyEventsAttestations())) {
+    findings.push({
+      severity: "error",
+      code: seqIssue.code,
+      message: seqIssue.message,
+    });
   }
 
   const weeklyExpected = 4;
@@ -246,18 +426,34 @@ export async function runMonthlyCompanyEventsAudit(opts?: {
     });
   }
 
-  const pin = verifyCompanyEventsWitnessPin();
+  const pin = verifyCompanyEventsWitnessPin({ maxLagLinks: 7 });
   if (!pin.ok) {
+    const severity =
+      pin.code === "witness-pin-mismatch" || pin.code === "witness-pin-missing-chain"
+        ? "error"
+        : "warn";
     findings.push({
-      severity: "error",
+      severity,
       code: pin.code ?? "witness-pin-mismatch",
       message: pin.message ?? "Witness pin does not match chain tail",
+    });
+  } else if (!pin.pin && chainChecked > 0) {
+    findings.push({
+      severity: "warn",
+      code: "witness-pin-absent",
+      message: "No witness pin configured — run orgos events chain pin after attest",
+    });
+  } else if (pin.pin && pin.lag_links && pin.lag_links > 0) {
+    findings.push({
+      severity: "warn",
+      code: "witness-pin-stale",
+      message: `Witness pin is ${pin.lag_links} link(s) behind chain tail`,
     });
   } else if (pin.pin) {
     findings.push({
       severity: "info",
       code: "witness-pin-ok",
-      message: `Witness pin matches chain tail ${pin.pin.chain_tail_digest.slice(0, 12)}… (seq ${pin.pin.chain_tail_seq})`,
+      message: `Witness pin matches chain at seq ${pin.pin.chain_tail_seq}`,
     });
   }
 

@@ -71,6 +71,11 @@ export function setupTempCompanyEventsTenant(): {
     "utf8",
   );
   writeFileSync(
+    join(tenantDir, "modules.yaml"),
+    "modules:\n  - id: rental\n    enabled: false\n    agent: rental\n",
+    "utf8",
+  );
+  writeFileSync(
     join(tenantDir, "data", "org", "operators.yaml"),
     [
       'version: "1"',

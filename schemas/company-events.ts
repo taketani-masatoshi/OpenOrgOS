@@ -86,13 +86,36 @@ export const companyEventsRegistrySchemaV2 = companyEventsRegistryBaseSchema.ext
   schema_version: z.literal(2),
 });
 
+export const companyEventsRegistrySchemaV3 = companyEventsRegistryBaseSchema.extend({
+  schema_version: z.literal(3),
+});
+
+/** Legacy tenants (pre-schema_version) used `version: "1"` + optional `as_of`. */
+export const companyEventsRegistryLegacyVersionSchema = z
+  .object({
+    version: z.union([z.literal("1"), z.literal(1)]),
+    as_of: z.string().optional(),
+    events: z.array(companyEventSchema).default([]),
+    notes: z.string().optional(),
+  })
+  .transform((data) => ({
+    schema_version: 3 as const,
+    events: data.events,
+    notes: data.notes,
+  }));
+
 export const companyEventsRegistrySchema = z
-  .union([companyEventsRegistrySchemaV1, companyEventsRegistrySchemaV2])
+  .union([
+    companyEventsRegistrySchemaV1,
+    companyEventsRegistrySchemaV2,
+    companyEventsRegistrySchemaV3,
+    companyEventsRegistryLegacyVersionSchema,
+  ])
   .transform((data) => ({
     ...data,
-    schema_version: 2 as const,
+    schema_version: 3 as const,
   }));
 
 export type CompanyEvent = z.output<typeof companyEventSchema>;
 export type CompanyEventKind = z.output<typeof companyEventKind>;
-export type CompanyEventsRegistry = z.output<typeof companyEventsRegistrySchemaV2>;
+export type CompanyEventsRegistry = z.output<typeof companyEventsRegistrySchemaV3>;

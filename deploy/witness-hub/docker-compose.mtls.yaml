@@ -1,0 +1,35 @@
+# mTLS overlay — run after TLS material exists:
+#   orgos hub tls-init
+#   docker compose -f docker-compose.yaml -f docker-compose.tls.yaml -f docker-compose.mtls.yaml up
+#
+# Requires CA at ./tls/ca.pem (same bundle as gen-dev-tls / hub tls-init).
+
+x-hub-mtls: &hub-mtls
+  volumes:
+    - ./tls:/tls:ro
+  command: >
+    sh -c "cd /app && npm ci && npm run orgos -- hub serve
+    --hub-id $${HUB_ID}
+    --host 0.0.0.0
+    --port $${HUB_PORT}
+    --data-dir $${HUB_DATA_DIR}
+    --gossip-interval 300
+    --tls-cert /tls/server.pem
+    --tls-key /tls/server.key
+    --tls-ca /tls/ca.pem
+    --mtls-required"
+
+services:
+  hub-a:
+    <<: *hub-mtls
+    environment:
+      HUB_ID: HUB-A
+      HUB_PORT: "9474"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-a
+
+  hub-b:
+    <<: *hub-mtls
+    environment:
+      HUB_ID: HUB-B
+      HUB_PORT: "9475"
+      HUB_DATA_DIR: /app/deploy/witness-hub/data/hub-b

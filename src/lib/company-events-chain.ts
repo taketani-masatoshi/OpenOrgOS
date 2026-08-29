@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   companyEventChainLinkSchema,
@@ -8,7 +8,7 @@ import {
 import type { CompanyEvent, CompanyEventsRegistry } from "../../schemas/company-events.js";
 import { canonicalJson } from "./protocol/canonical.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
-import { getDataDir, toLogicalPath } from "./utils.js";
+import { getDataDir, toLogicalPath, writeCanonicalFile } from "./utils.js";
 import { getClock } from "./runtime-context.js";
 import { runWithEventsWriteGuard } from "./company-events-write-guard.js";
 
@@ -16,12 +16,25 @@ const CHAIN_GENESIS = "genesis";
 
 const CHAIN_PATH = () => join(getDataDir(), "company-events-chain.jsonl");
 
+const chainCorruptLines: number[] = [];
+
+export function resetChainCorruptLineTracking(): void {
+  chainCorruptLines.length = 0;
+}
+
+export function getChainCorruptLines(): number[] {
+  return [...chainCorruptLines];
+}
+
 export function companyEventChainPath(): string {
   return toLogicalPath(CHAIN_PATH());
 }
 
 export function loadCompanyEventChain(): CompanyEventChainLink[] {
-  return loadJsonl(CHAIN_PATH(), (raw) => companyEventChainLinkSchema.parse(raw));
+  resetChainCorruptLineTracking();
+  return loadJsonl(CHAIN_PATH(), (raw) => companyEventChainLinkSchema.parse(raw), {
+    onCorruptLine: (lineNo) => chainCorruptLines.push(lineNo),
+  });
 }
 
 export interface CreateChainPayloadInput {
@@ -126,10 +139,46 @@ export function verifyCompanyEventChainRecords(
   chain: CompanyEventChainLink[]
 ): { ok: boolean; issues: ChainVerifyIssue[]; checked: number } {
   const issues: ChainVerifyIssue[] = [];
+  for (const lineNo of getChainCorruptLines()) {
+    issues.push({
+      code: "chain-corrupt-line",
+      message: `Corrupt JSONL line ${lineNo} in company-events-chain.jsonl`,
+    });
+  }
+
   let expectedSeq = 1;
   let prevDigest: string | null = null;
+  let prevRecordedAt: string | undefined;
 
   for (const link of chain) {
+    if (link.seq === 1 && link.prev_digest !== null) {
+      issues.push({
+        code: "chain-genesis-invalid",
+        message: `Genesis link must have prev_digest null, got ${link.prev_digest}`,
+        seq: link.seq,
+        event_id: link.event_id,
+      });
+    }
+
+    const expectedLinkId = `CEL-${link.seq}`;
+    if (link.link_id !== expectedLinkId) {
+      issues.push({
+        code: "chain-link-id-mismatch",
+        message: `Expected link_id ${expectedLinkId}, got ${link.link_id}`,
+        seq: link.seq,
+        event_id: link.event_id,
+      });
+    }
+
+    if (prevRecordedAt && link.recorded_at < prevRecordedAt) {
+      issues.push({
+        code: "chain-recorded-at-regression",
+        message: `recorded_at ${link.recorded_at} is before previous ${prevRecordedAt}`,
+        seq: link.seq,
+        event_id: link.event_id,
+      });
+    }
+
     if (link.seq !== expectedSeq) {
       issues.push({
         code: "chain-seq-gap",
@@ -168,6 +217,19 @@ export function verifyCompanyEventChainRecords(
       });
     }
 
+    const payloadInput = buildPayloadInputFromLink(link, undefined);
+    if (payloadInput) {
+      const expectedPayloadDigest = buildChainPayloadDigest(payloadInput);
+      if (link.payload_digest !== expectedPayloadDigest) {
+        issues.push({
+          code: "chain-payload-digest-mismatch",
+          message: `payload_digest mismatch at seq ${link.seq}`,
+          seq: link.seq,
+          event_id: link.event_id,
+        });
+      }
+    }
+
     if (link.action === "void" && !link.target_event_id) {
       issues.push({
         code: "chain-void-target-missing",
@@ -179,9 +241,45 @@ export function verifyCompanyEventChainRecords(
 
     expectedSeq = link.seq + 1;
     prevDigest = link.digest;
+    prevRecordedAt = link.recorded_at;
   }
 
   return { ok: issues.length === 0, issues, checked: chain.length };
+}
+
+function buildPayloadInputFromLink(
+  link: CompanyEventChainLink,
+  registryEvent?: CompanyEvent
+): ChainPayloadInput | undefined {
+  if (link.action === "create" && registryEvent) {
+    return {
+      action: "create",
+      event: {
+        id: registryEvent.id,
+        occurred_at: registryEvent.occurred_at,
+        kind: registryEvent.kind,
+        title: registryEvent.title,
+        status: registryEvent.status === "voided" ? "open" : registryEvent.status,
+      },
+    };
+  }
+  if (link.action === "void" && registryEvent?.kind === "void") {
+    return {
+      action: "void",
+      eventId: link.event_id,
+      targetEventId: registryEvent.target_event_id ?? link.target_event_id ?? "",
+      reason: registryEvent.void_reason ?? "",
+    };
+  }
+  if (link.action === "status" && registryEvent) {
+    return {
+      action: "status",
+      eventId: link.event_id,
+      status: registryEvent.status,
+      closed_at: registryEvent.closed_at,
+    };
+  }
+  return undefined;
 }
 
 export function verifyCompanyEventChain(): {
@@ -233,6 +331,46 @@ export function crossCheckChainWithRegistry(
         seq: createLink.seq,
       });
     }
+
+    const createPayload = buildPayloadInputFromLink(createLink, event);
+    if (createPayload) {
+      const expectedDigest = buildChainPayloadDigest(createPayload);
+      if (createLink.payload_digest !== expectedDigest) {
+        issues.push({
+          code: "chain-payload-digest-mismatch",
+          message: `Create link payload_digest does not match registry event ${event.id}`,
+          event_id: event.id,
+          seq: createLink.seq,
+        });
+      }
+    }
+
+    if (event.status === "closed" || event.status === "archived") {
+      const statusLinks = chain.filter(
+        (l) => l.action === "status" && l.event_id === event.id
+      );
+      const latestStatus = statusLinks.at(-1);
+      if (!latestStatus) {
+        issues.push({
+          code: "chain-missing-status",
+          message: `Registry event ${event.id} is ${event.status} but has no status chain link`,
+          event_id: event.id,
+        });
+      } else {
+        const statusPayload = buildPayloadInputFromLink(latestStatus, event);
+        if (statusPayload) {
+          const expectedStatusDigest = buildChainPayloadDigest(statusPayload);
+          if (latestStatus.payload_digest !== expectedStatusDigest) {
+            issues.push({
+              code: "chain-status-link-mismatch",
+              message: `Status link payload_digest does not match registry event ${event.id}`,
+              event_id: event.id,
+              seq: latestStatus.seq,
+            });
+          }
+        }
+      }
+    }
   }
 
   for (const link of createLinks) {
@@ -274,6 +412,22 @@ export function crossCheckChainWithRegistry(
         event_id: targetId,
         seq: link.seq,
       });
+    }
+
+    const voidEvent = registryById.get(link.event_id);
+    if (voidEvent?.kind === "void") {
+      const voidPayload = buildPayloadInputFromLink(link, voidEvent);
+      if (voidPayload) {
+        const expectedVoidDigest = buildChainPayloadDigest(voidPayload);
+        if (link.payload_digest !== expectedVoidDigest) {
+          issues.push({
+            code: "chain-payload-digest-mismatch",
+            message: `Void link payload_digest does not match void event ${link.event_id}`,
+            event_id: link.event_id,
+            seq: link.seq,
+          });
+        }
+      }
     }
   }
 
@@ -335,7 +489,7 @@ export function backfillCompanyEventChain(
         "events chain backfill --force is disabled. Destructive rebuild requires ORGOS_EVENTS_CHAIN_REBUILD=1, a ceo operator, and --i-understand-rebuild. Do not use --force to recover a broken ledger.",
       );
     }
-    writeFileSync(CHAIN_PATH(), "", "utf8");
+    writeCanonicalFile(CHAIN_PATH(), "");
   }
 
   const sorted = [...registry.events].sort(
@@ -365,8 +519,116 @@ export function backfillCompanyEventChain(
       event.chain_seq = seq;
     }
   }
-  registry.schema_version = 2;
+  registry.schema_version = 3;
 
   return { links, events: sorted.length, registry };
+  });
+}
+
+export interface RepairCompanyEventChainResult {
+  links: number;
+  events: number;
+  registry: CompanyEventsRegistry;
+  backup_path?: string;
+  previous_links: number;
+}
+
+/**
+ * Rebuild chain from registry when test pollution or orphan links make verify fail.
+ * Distinct from backfill --force: no ORGOS_EVENTS_CHAIN_REBUILD; backs up prior chain.
+ */
+export function repairCompanyEventChainFromRegistry(
+  registry: CompanyEventsRegistry,
+  opts: { iUnderstandRepair: boolean; backupLabel?: string }
+): RepairCompanyEventChainResult {
+  if (!opts.iUnderstandRepair) {
+    throw new Error(
+      "events chain repair requires --i-understand-repair (backs up existing chain and rebuilds from registry)",
+    );
+  }
+
+  return runWithEventsWriteGuard("events chain repair", () => {
+    const existing = loadCompanyEventChain();
+    let backup_path: string | undefined;
+    if (existing.length > 0) {
+      const label = opts.backupLabel ?? new Date().toISOString().replace(/[:.]/g, "-");
+      backup_path = `${CHAIN_PATH()}.pre-repair-${label}.bak`;
+      copyFileSync(CHAIN_PATH(), backup_path);
+    }
+
+    writeCanonicalFile(CHAIN_PATH(), "");
+
+    const sorted = [...registry.events].sort(
+      (a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)
+    );
+
+    let links = 0;
+    const seqByEventId = new Map<string, number>();
+
+    for (const event of sorted) {
+      if (event.kind === "void") {
+        const createLink = appendChainLink({
+          action: "create",
+          event: {
+            id: event.id,
+            occurred_at: event.occurred_at,
+            kind: event.kind,
+            title: event.title,
+            status: "open",
+          },
+        });
+        seqByEventId.set(event.id, createLink.seq);
+        links += 1;
+        if (event.target_event_id) {
+          appendChainLink({
+            action: "void",
+            eventId: event.id,
+            targetEventId: event.target_event_id,
+            reason: event.void_reason ?? "",
+          });
+          links += 1;
+        }
+        continue;
+      }
+
+      const createLink = appendChainLink({
+        action: "create",
+        event: {
+          id: event.id,
+          occurred_at: event.occurred_at,
+          kind: event.kind,
+          title: event.title,
+          status: event.status === "voided" ? "open" : event.status,
+        },
+      });
+      seqByEventId.set(event.id, createLink.seq);
+      links += 1;
+
+      if (event.status === "closed" || event.status === "archived") {
+        appendChainLink({
+          action: "status",
+          eventId: event.id,
+          status: event.status,
+          closed_at: event.closed_at,
+        });
+        links += 1;
+      }
+    }
+
+    for (const event of registry.events) {
+      const seq = seqByEventId.get(event.id);
+      if (seq !== undefined) {
+        event.chain_seq = seq;
+      }
+    }
+    registry.schema_version = 3;
+
+    return {
+      links,
+      events: sorted.length,
+      registry,
+      backup_path: backup_path ? toLogicalPath(backup_path) : undefined,
+      previous_links: existing.length,
+    };
   });
 }

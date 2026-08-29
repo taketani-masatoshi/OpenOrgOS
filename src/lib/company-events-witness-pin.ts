@@ -73,13 +73,30 @@ export function pinCompanyEventChainTail(opts?: { hubId?: string }): CompanyEven
 
 export function verifyCompanyEventsWitnessPin(opts?: {
   chain?: ReturnType<typeof loadCompanyEventChain>;
-}): { ok: boolean; code?: string; message?: string; pin?: CompanyEventsWitnessPin } {
+  requireTail?: boolean;
+  maxLagLinks?: number;
+}): {
+  ok: boolean;
+  code?: string;
+  message?: string;
+  pin?: CompanyEventsWitnessPin;
+  lag_links?: number;
+} {
   const pin = loadCompanyEventsWitnessPin();
-  if (!pin) {
-    return { ok: true };
-  }
   const chain = opts?.chain ?? loadCompanyEventChain();
   const tail = chain.length > 0 ? chain[chain.length - 1] : undefined;
+
+  if (!pin) {
+    if (opts?.requireTail && tail) {
+      return {
+        ok: false,
+        code: "witness-pin-absent",
+        message: "Witness pin is required but not configured",
+      };
+    }
+    return { ok: true };
+  }
+
   if (!tail) {
     return {
       ok: false,
@@ -88,6 +105,7 @@ export function verifyCompanyEventsWitnessPin(opts?: {
       pin,
     };
   }
+
   const pinned = chain.find((link) => link.seq === pin.chain_tail_seq);
   if (!pinned || pinned.digest !== pin.chain_tail_digest) {
     return {
@@ -97,5 +115,27 @@ export function verifyCompanyEventsWitnessPin(opts?: {
       pin,
     };
   }
-  return { ok: true, pin };
+
+  const lagLinks = tail.seq - pin.chain_tail_seq;
+  if (opts?.requireTail && lagLinks > 0) {
+    return {
+      ok: false,
+      code: "witness-pin-stale",
+      message: `Witness pin is ${lagLinks} link(s) behind chain tail (seq ${tail.seq})`,
+      pin,
+      lag_links: lagLinks,
+    };
+  }
+
+  if (opts?.maxLagLinks !== undefined && lagLinks > opts.maxLagLinks) {
+    return {
+      ok: false,
+      code: "witness-pin-stale",
+      message: `Witness pin lag ${lagLinks} exceeds max ${opts.maxLagLinks}`,
+      pin,
+      lag_links: lagLinks,
+    };
+  }
+
+  return { ok: true, pin, lag_links: lagLinks };
 }

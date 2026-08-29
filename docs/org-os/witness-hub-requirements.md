@@ -364,7 +364,7 @@ sequenceDiagram
 - [x] signed Merkle anchor を第三者が verify 可能（`hub anchor-verify`）
 - [x] `protocol witness reconcile --cross-hub` が drift を検出
 - [x] Docker Compose · systemd 例 · [witness-hub-operations.md](witness-hub-operations.md)
-- [ ] 本番 mTLS / 監視 exporter（運用ガイド推奨のみ）
+- [x] 本番 mTLS overlay · Prometheus `/metrics` · `orgos hub ga-check`（公開 bind は TLS 材が必要）
 
 ---
 
@@ -378,7 +378,7 @@ sequenceDiagram
 | trusted_hub テンプレ pin | **手順化** | `steward/platform/protocol/seed/witness-pool.yaml.example` · テナント `witness-pool.yaml` で `hub_public_key` を固定 |
 | gossip import `skipped` | **説明済** | 再同期分は `skipped` に含まれる · 終状態（receipt 存在）は正 · [runbook-orgos.md](../runbook-orgos.md) §4 |
 | Hub 鍵ローテーション自動化 | 未 | ops 手順のみ · [witness-hub-operations.md](witness-hub-operations.md) |
-| 本番 webhook / relay 常駐 | 未 | backlog スコープ外 |
+| 本番 webhook / relay 常駐 | **手順化** | `orgos hub ga-check` · `docker-compose.tls.yaml` · `docker-compose.mtls.yaml` · `GET /metrics` |
 
 ---
 

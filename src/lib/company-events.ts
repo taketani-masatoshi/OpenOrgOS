@@ -1,9 +1,11 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { join, relative } from "node:path";
 import {
   companyEventsRegistrySchema,
   companyEventKind,
   companyEventSchema,
+  companyEventStatus,
   type CompanyEvent,
   type CompanyEventKind,
   type CompanyEventsRegistry,
@@ -16,8 +18,9 @@ import {
   resolveTenantPath,
   toLogicalPath,
   writeYamlFile,
+  writeCanonicalFile,
 } from "./utils.js";
-import { lintCompanyEventMarkdown } from "./company-events-lint.js";
+import { lintCompanyEventMarkdown, parseCompanyEventFrontmatter, parseCompanyEventMarkdownTitle } from "./company-events-lint.js";
 import { runWithEventsWriteGuard, assertEventsWriteAuthorized } from "./company-events-write-guard.js";
 import {
   appendChainLink,
@@ -28,6 +31,12 @@ import {
   verifyCompanyEventChain,
 } from "./company-events-chain.js";
 import { verifyCompanyEventsWitnessPin } from "./company-events-witness-pin.js";
+import { getWorkspaceRoot } from "./orgos-paths.js";
+import {
+  getAttestationCorruptLines,
+  loadCompanyEventsAttestations,
+  verifyAttestationSequence,
+} from "./company-events-attestation.js";
 
 export const COMPANY_EVENT_KINDS = companyEventKind.options.filter((k) => k !== "void");
 
@@ -81,7 +90,7 @@ export function saveCompanyEvents(data: CompanyEventsRegistry): void {
 export function initCompanyEventsFile(): void {
   const path = REGISTRY_PATH();
   if (!existsSync(path)) {
-    saveCompanyEvents({ schema_version: 2, events: [] });
+    saveCompanyEvents({ schema_version: 3, events: [] });
   }
 }
 
@@ -157,10 +166,9 @@ export function ensureCompanyEventMonth(
 
   const indexPath = join(eventsDir, "_INDEX.md");
   if (!existsSync(indexPath)) {
-    writeFileSync(
+    writeCanonicalFile(
       indexPath,
       `# 会社イベント — ${month}\n\n| Event ID | 日付 | kind | タイトル | 状態 |\n|----------|------|------|----------|------|\n`,
-      "utf8"
     );
   } else if (opts?.refreshIndex) {
     refreshCompanyEventMonthIndex(month);
@@ -227,7 +235,7 @@ function patchEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): vo
   runWithEventsWriteGuard("company-events-md", () => {
   assertEventsWriteAuthorized(absPath);
   if (!existsSync(absPath)) {
-    writeFileSync(absPath, renderEventMarkdown(event), "utf8");
+    writeCanonicalFile(absPath, renderEventMarkdown(event));
     return;
   }
   const content = readFileSync(absPath, "utf8");
@@ -257,7 +265,7 @@ function patchEventMarkdownFrontmatter(absPath: string, event: CompanyEvent): vo
     .filter((line) => line !== null)
     .join("\n");
   const normalizedBody = match ? match[2]! : `\n${content}`;
-  writeFileSync(absPath, `${fm}${normalizedBody.startsWith("\n") ? normalizedBody : `\n${normalizedBody}`}`, "utf8");
+  writeCanonicalFile(absPath, `${fm}${normalizedBody.startsWith("\n") ? normalizedBody : `\n${normalizedBody}`}`);
   });
 }
 
@@ -293,10 +301,9 @@ function refreshMonthIndex(month: string, events: CompanyEvent[]): void {
     .join("\n");
 
   const indexPath = join(getDocsCompanyEventsDir(), month, "_INDEX.md");
-  writeFileSync(
+  writeCanonicalFile(
     indexPath,
     `# 会社イベント — ${month}\n\n| Event ID | 日付 | kind | タイトル | 状態 |\n|----------|------|------|----------|------|\n${rows || "| — | — | — | （イベントなし） | — |"}\n`,
-    "utf8"
   );
 }
 
@@ -317,21 +324,19 @@ function insertCompanyEventRecord(event: CompanyEvent): CompanyEvent {
   mkdirSync(join(artifactDirAbs, "records"), { recursive: true });
   const eventAbs = resolveTenantPath(event.event_path);
   assertEventsWriteAuthorized(eventAbs);
-  writeFileSync(
+  writeCanonicalFile(
     eventAbs,
     renderEventMarkdown(event),
-    "utf8"
   );
-  writeFileSync(
+  writeCanonicalFile(
     join(artifactDirAbs, "00-artifact-index.md"),
     renderArtifactIndex(event),
-    "utf8"
   );
 
   const registry = loadCompanyEvents();
   registry.events.push(event);
-  if (registry.schema_version !== 2) {
-    registry.schema_version = 2;
+  if (registry.schema_version !== 3) {
+    registry.schema_version = 3;
   }
   saveCompanyEvents(registry);
   refreshMonthIndex(event.month, registry.events);
@@ -600,6 +605,20 @@ export function validateCompanyEvents(): {
     });
   }
 
+  loadCompanyEventsAttestations();
+  for (const lineNo of getAttestationCorruptLines()) {
+    issues.push({
+      code: "attestation-corrupt-line",
+      message: `Corrupt JSONL line ${lineNo} in company-events-attestations.jsonl`,
+    });
+  }
+  for (const seqIssue of verifyAttestationSequence(loadCompanyEventsAttestations())) {
+    issues.push({
+      code: seqIssue.code,
+      message: seqIssue.message,
+    });
+  }
+
   const pin = verifyCompanyEventsWitnessPin();
   if (!pin.ok) {
     issues.push({
@@ -641,7 +660,7 @@ ${rows}
 
 \`${event.artifact_dir}records/\` — L2 · gitignore · Privacy Mode 参照のみ
 `;
-  writeFileSync(indexAbs, content, "utf8");
+  writeCanonicalFile(indexAbs, content);
   return event;
 }
 
@@ -741,6 +760,241 @@ export function voidCompanyEvent(targetId: string, reason: string): {
   }
 
   return { voidEvent: updatedVoidEvent, target: updatedTarget };
+}
+
+function monthFromEventId(id: string): string {
+  const match = id.match(/^EVT-(\d{4})(\d{2})\d{2}-/);
+  if (!match) {
+    throw new Error(`Cannot parse month from event id: ${id}`);
+  }
+  return `${match[1]}-${match[2]}`;
+}
+
+function isGitTracked(absPath: string): boolean {
+  const workspaceRoot = getWorkspaceRoot();
+  try {
+    const rel = relative(workspaceRoot, absPath);
+    execFileSync("git", ["ls-files", "--error-unmatch", rel], {
+      cwd: workspaceRoot,
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function registerAdoptedEventRecord(event: CompanyEvent): void {
+  runWithEventsWriteGuard("company-events-adopt", () => {
+    const artifactDirAbs = resolveTenantPath(event.artifact_dir);
+    mkdirSync(join(artifactDirAbs, "records"), { recursive: true });
+    const indexPath = join(artifactDirAbs, "00-artifact-index.md");
+    if (!existsSync(indexPath)) {
+      writeCanonicalFile(indexPath, renderArtifactIndex(event));
+    }
+    const registry = loadCompanyEvents();
+    registry.events.push(event);
+    registry.schema_version = 3;
+    saveCompanyEvents(registry);
+    refreshMonthIndex(event.month, registry.events);
+  });
+}
+
+export interface AdoptCompanyEventResult {
+  event: CompanyEvent;
+  dry_run: boolean;
+  chain_seq?: number;
+}
+
+export function adoptCompanyEventFromMarkdown(
+  id: string,
+  opts?: { dryRun?: boolean }
+): AdoptCompanyEventResult {
+  initCompanyEventsFile();
+  const registry = loadCompanyEvents();
+  if (registry.events.some((e) => e.id === id)) {
+    throw new Error(`Event already in registry: ${id}`);
+  }
+
+  const month = monthFromEventId(id);
+  ensureCompanyEventMonth(month);
+  const eventPathRel = eventPathForId({ id, month });
+  const eventAbs = resolveTenantPath(eventPathRel);
+  if (!existsSync(eventAbs)) {
+    throw new Error(`Event markdown not found: ${eventPathRel}`);
+  }
+
+  const content = readFileSync(eventAbs, "utf-8");
+  const fm = parseCompanyEventFrontmatter(content);
+  if (!fm) {
+    throw new Error(`Missing YAML frontmatter in ${eventPathRel}`);
+  }
+  if (fm.event_id && fm.event_id !== id) {
+    throw new Error(`Frontmatter event_id ${fm.event_id} != requested ${id}`);
+  }
+
+  const title = parseCompanyEventMarkdownTitle(content);
+  if (!title) {
+    throw new Error(`Missing H1 title in ${eventPathRel}`);
+  }
+
+  const kindParsed = companyEventKind.safeParse(fm.kind);
+  if (!kindParsed.success || kindParsed.data === "void") {
+    throw new Error(`Invalid or unsupported kind for adopt: ${fm.kind ?? "missing"}`);
+  }
+
+  const statusParsed = companyEventStatus.safeParse(fm.status ?? "open");
+  if (!statusParsed.success) {
+    throw new Error(`Invalid status in frontmatter: ${fm.status}`);
+  }
+
+  const occurredAt = fm.occurred_at;
+  if (!occurredAt || !/^\d{4}-\d{2}-\d{2}$/.test(occurredAt)) {
+    throw new Error(`Invalid occurred_at in frontmatter: ${occurredAt ?? "missing"}`);
+  }
+
+  const artifactDirRel = fm.artifact_dir
+    ? fm.artifact_dir.endsWith("/")
+      ? fm.artifact_dir
+      : `${fm.artifact_dir}/`
+    : artifactDirForEvent({ id, month });
+
+  const event: CompanyEvent = companyEventSchema.parse({
+    id,
+    occurred_at: occurredAt,
+    month: monthFromDate(occurredAt),
+    kind: kindParsed.data,
+    title,
+    status: statusParsed.data,
+    event_path: eventPathRel,
+    artifact_dir: artifactDirRel,
+    notes: undefined,
+    created_at: occurredAt,
+  });
+
+  const lintIssues = lintCompanyEventMarkdown(event, content).filter((i) => i.severity === "error");
+  if (lintIssues.length > 0) {
+    throw new Error(
+      `Cannot adopt ${id}: ${lintIssues.map((i) => i.message).join("; ")}`,
+    );
+  }
+
+  if (opts?.dryRun) {
+    return { event, dry_run: true };
+  }
+
+  registerAdoptedEventRecord(event);
+
+  const link = appendChainLink({
+    action: "create",
+    event: {
+      id: event.id,
+      occurred_at: event.occurred_at,
+      kind: event.kind,
+      title: event.title,
+      status: event.status === "voided" ? "open" : event.status,
+    },
+  });
+
+  const updatedRegistry = loadCompanyEvents();
+  const idx = updatedRegistry.events.findIndex((e) => e.id === event.id);
+  if (idx >= 0) {
+    updatedRegistry.events[idx] = companyEventSchema.parse({
+      ...updatedRegistry.events[idx],
+      chain_seq: link.seq,
+    });
+    saveCompanyEvents(updatedRegistry);
+    return {
+      event: updatedRegistry.events[idx]!,
+      dry_run: false,
+      chain_seq: link.seq,
+    };
+  }
+
+  return { event: { ...event, chain_seq: link.seq }, dry_run: false, chain_seq: link.seq };
+}
+
+export interface OrphanEventMarkdown {
+  id: string;
+  month: string;
+  event_path: string;
+  git_tracked: boolean;
+}
+
+export function listOrphanEventMarkdown(): OrphanEventMarkdown[] {
+  initCompanyEventsFile();
+  const knownIds = new Set(loadCompanyEvents().events.map((e) => e.id));
+  const orphans: OrphanEventMarkdown[] = [];
+  const eventsRoot = getDocsCompanyEventsDir();
+  if (!existsSync(eventsRoot)) return orphans;
+
+  for (const monthDir of readdirSync(eventsRoot)) {
+    if (!/^\d{4}-\d{2}$/.test(monthDir)) continue;
+    const monthPath = join(eventsRoot, monthDir);
+    for (const file of readdirSync(monthPath)) {
+      if (!file.startsWith("EVT-") || !file.endsWith(".md")) continue;
+      const orphanId = file.replace(/\.md$/, "");
+      if (knownIds.has(orphanId)) continue;
+      const abs = join(monthPath, file);
+      orphans.push({
+        id: orphanId,
+        month: monthDir,
+        event_path: toLogicalPath(abs),
+        git_tracked: isGitTracked(abs),
+      });
+    }
+  }
+
+  return orphans.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export interface PruneOrphanEventMarkdownResult {
+  deleted: string[];
+  skipped_tracked: string[];
+  dry_run: boolean;
+}
+
+export function pruneOrphanEventMarkdown(opts: {
+  dryRun?: boolean;
+  iUnderstandPurge?: boolean;
+}): PruneOrphanEventMarkdownResult {
+  if (!opts.dryRun && !opts.iUnderstandPurge) {
+    throw new Error(
+      "orphan prune requires --i-understand-purge (or use --dry-run to preview)",
+    );
+  }
+
+  const orphans = listOrphanEventMarkdown();
+  const deleted: string[] = [];
+  const skipped_tracked: string[] = [];
+
+  for (const orphan of orphans) {
+    if (orphan.git_tracked) {
+      skipped_tracked.push(orphan.id);
+      continue;
+    }
+    if (opts.dryRun) {
+      deleted.push(orphan.id);
+      continue;
+    }
+    runWithEventsWriteGuard("company-events-orphan-prune", () => {
+      const abs = resolveTenantPath(orphan.event_path);
+      if (existsSync(abs)) {
+        rmSync(abs);
+      }
+    });
+    deleted.push(orphan.id);
+  }
+
+  if (!opts.dryRun && deleted.length > 0) {
+    const months = [...new Set(deleted.map((id) => monthFromEventId(id)))];
+    const registry = loadCompanyEvents();
+    for (const month of months) {
+      refreshMonthIndex(month, registry.events);
+    }
+  }
+
+  return { deleted, skipped_tracked, dry_run: opts.dryRun ?? false };
 }
 
 export {

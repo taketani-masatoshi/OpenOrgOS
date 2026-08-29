@@ -1,0 +1,7 @@
+version: 2
+purpose: company_events_attestation
+active:
+  key_id: aabd84e687d034a3
+  public_key: MCowBQYDK2VwAyEAITDv2j0TS2DF23wZ+XHHkjaEQNylvHRTYerb1xE9JsY=
+  activated_at: 2026-08-24T11:49:00.635Z
+history: []

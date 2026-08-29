@@ -47,6 +47,14 @@
 | FR-27 | `events void-ack` — 相手からの void 許可 Wire 登録後に void 可能 |
 | FR-28 | `events wire-status` · `protocol notice propose --company-event` — EVT ↔ Wire 紐づけ |
 | FR-29 | `records_audit` Agent — 週次 `events chain attest` · 月次 `events audit monthly` + 通知 |
+| FR-30 | トラストアンカー — signing-meta v2（active + history）· attestation は trusted 鍵のみ検証 |
+| FR-31 | 台帳意味照合 — create/void/status link の `payload_digest` を台帳から再計算 |
+| FR-32 | 破損 JSONL 行検知 — `chain-corrupt-line` / `attestation-corrupt-line` |
+| FR-33 | 鍵ローテ — `events chain rotate-key`（ceo · audit log） |
+| FR-34 | 移行 — `events chain migrate`（registry v3 · meta v2 · `--dry-run`） |
+| FR-35 | 第三者検証 — `events chain export` + `verify-bundle.mjs` |
+| FR-36 | 自動化 — `pipeline run weekly`（attest）· `pipeline run monthly`（audit） |
+| FR-37 | Pulse 鮮度 — `pulse_checks.freshness`（週次 ≤8d · 月次 ≤35d） |
 
 ### 2.2 Out of scope（将来）
 
@@ -248,8 +256,10 @@ npm run orgos -- events status
 
 ## 9. マイグレーション（既存テナント）
 
-1. コード更新後: `npm run orgos -- events chain backfill`
-2. 整合確認: `npm run orgos -- events validate` · `events chain verify`
-3. 以降の「削除」: `npm run orgos -- events void <EVT-id> --reason "…"`
+1. コード更新後: `npm run orgos -- events chain migrate --dry-run` → `events chain migrate`
+2. 旧形式台帳（`version: "1"` + `as_of`）は読取時に v3 へ正規化される
+3. チェーン汚染（テスト link 残存・duplicate/orphan）: `events chain repair --i-understand-repair`（ceo · バックアップ付き再構築）
+4. 整合確認: `npm run orgos -- events validate` · `events chain verify`
+5. 以降の「削除」: `npm run orgos -- events void <EVT-id> --reason "…"`
 
-チェーンが既にある場合の再構築は `events chain backfill --force`（通常は不要）。
+`events chain backfill --force` は **空チェーン初期化専用**（`ORGOS_EVENTS_CHAIN_REBUILD=1` + ceo + `--i-understand-rebuild`）。台帳不整合の復旧には **repair** を使う。

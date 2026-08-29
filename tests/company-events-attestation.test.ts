@@ -56,7 +56,7 @@ describe("company-events attestation", () => {
     expect(skipped).toBeFalsy();
     expect(attestation.attestation_id).toMatch(/^CEA-\d{4}-W\d{2}$/);
     expect(attestation.chain_ok).toBe(true);
-    expect(verifyCompanyEventsAttestation(attestation)).toBe(true);
+    expect(verifyCompanyEventsAttestation(attestation).ok).toBe(true);
 
     const stored = loadCompanyEventsAttestations();
     expect(stored.some((a) => a.attestation_id === attestation.attestation_id)).toBe(true);
@@ -65,7 +65,7 @@ describe("company-events attestation", () => {
   it("rejects tampered attestation signature", () => {
     const { attestation } = runWeeklyCompanyEventsAttestation({ force: true });
     const tampered = { ...attestation, chain_checked: attestation.chain_checked + 1 };
-    expect(verifyCompanyEventsAttestation(tampered)).toBe(false);
+    expect(verifyCompanyEventsAttestation(tampered).ok).toBe(false);
   });
 
   it("skips duplicate weekly attestation without force", () => {

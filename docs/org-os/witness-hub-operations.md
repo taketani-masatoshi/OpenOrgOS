@@ -27,8 +27,45 @@ HUB-A ←→ HUB-B  (attestation gossip · hub-federation.yaml)
 cd deploy/witness-hub
 docker compose up -d
 curl http://127.0.0.1:9474/hub/v1/health
-curl http://127.0.0.1:9475/hub/v1/health
+curl http://127.0.0.1:9474/metrics
 ```
+
+公開リレー GA チェック:
+
+```bash
+npm run orgos -- hub ga-check --json
+```
+
+### 運営ビューから確認する（既定）
+
+Operator Console `/?platform=1` の「Witness Hub 運用」に、GA チェック 8 項目・bind（loopback / public）・TLS の有無と期限・`/metrics` 到達性・`ready_for_public_relay` が並ぶ。
+
+| 項目 | BFF |
+|---|---|
+| Hub 状態 | `GET /chat/v1/hub/status`（`chat:read` + 運営許可リスト `ORGOS_PLATFORM_OPERATORS`） |
+
+- TLS が無い / 期限切れのまま公開 bind しようとすると、画面に理由（配置すべきパス）が出る。CLI の `assertHubPublicBindAllowed` と同じ判定。
+- **証明書はアップロードさせない。** 本番証明書は運営が `deploy/witness-hub/tls/server.pem` と `server.key` に配置し、画面は**検証のみ**行う。秘密鍵はブラウザからも API からも送信されず、画面は証明書の有効期間だけを読む。
+- `orgos hub tls-init` は dev 用自己署名。本番証明書の代わりにはしない。
+
+公開 bind（`0.0.0.0`）は平文禁止の opt-in:
+
+```bash
+export ORGOS_HUB_REQUIRE_TLS=1   # または ORGOS_HUB_PUBLIC=1
+# 平文の --host 0.0.0.0 は拒否。ga-check は ORGOS_HUB_PUBLIC=1 のとき tls-material 欠落で fail
+```
+
+TLS / mTLS overlay:
+
+```bash
+npm run orgos -- hub tls-init
+cd deploy/witness-hub
+docker compose -f docker-compose.yaml -f docker-compose.tls.yaml up -d
+# 相互 TLS 必須:
+docker compose -f docker-compose.yaml -f docker-compose.tls.yaml -f docker-compose.mtls.yaml up -d
+```
+
+Prometheus は各 Hub の `GET /metrics`（OpenMetrics text）を scrape する。
 
 各コンテナ:
 
