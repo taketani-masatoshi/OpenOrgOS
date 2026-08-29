@@ -10,6 +10,9 @@ import {
 } from "../../../schemas/finance/journal-entry.js";
 import type { ExpenseClaimAllocation } from "../../../schemas/finance/expense-claim.js";
 import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
+import { assertJournalWriteAllowed } from "./journal-write-guard.js";
+import { assertMonthUnlockedForDate } from "./period-lock.js";
+import { getClock } from "../runtime-context.js";
 
 const JOURNAL_REL = "finance/journal-entries.yaml";
 const ACCOUNTING_REL = "finance/expense-claim-accounting.yaml";
@@ -35,19 +38,57 @@ export function loadExpenseClaimAccounting(): ExpenseClaimAccounting {
   return readYamlFile(path, expenseClaimAccountingSchema);
 }
 
-function appendEntry(entry: JournalEntry): JournalEntry {
-  const file = loadJournalEntries();
-  const existing = file.entries.find((row) => row.entry_id === entry.entry_id);
-  if (existing) {
-    if (JSON.stringify(existing) !== JSON.stringify(entry)) {
-      throw new Error(`Journal entry id collision: ${entry.entry_id}`);
+export function saveJournalEntries(
+  file: JournalEntriesFile,
+  opts?: { mode?: "migration" },
+): void {
+  assertJournalWriteAllowed();
+  if (opts?.mode !== "migration") {
+    const existing = loadJournalEntries();
+    if (existing.entries.length > 0) {
+      throw new Error(
+        "saveJournalEntries is append-only; use appendJournalEntry or migration backfill (mode: migration)",
+      );
     }
-    return existing;
   }
-  file.entries.push(journalEntrySchema.parse(entry));
   mkdirSync(join(getDataDir(), "finance"), { recursive: true });
   writeYamlFile(journalEntriesPath(), journalEntriesFileSchema.parse(file));
-  return entry;
+}
+
+export function appendJournalEntry(
+  entry: JournalEntry,
+  meta?: { postedBy?: string; postedAt?: string },
+): JournalEntry {
+  assertJournalWriteAllowed();
+  assertMonthUnlockedForDate(entry.occurred_at);
+  const file = loadJournalEntries();
+  const existing = file.entries.find((row) => row.entry_id === entry.entry_id);
+  const enriched = journalEntrySchema.parse({
+    ...entry,
+    posted_at: entry.posted_at ?? meta?.postedAt ?? getClock().now().toISOString(),
+    posted_by:
+      entry.posted_by ??
+      meta?.postedBy ??
+      (entry.source?.kind === "manual" ? entry.source.authorized_by : "system"),
+  });
+  if (existing) {
+    const core = (e: JournalEntry) => ({
+      occurred_at: e.occurred_at,
+      description: e.description,
+      source: e.source,
+      lines: e.lines,
+      evidence_refs: e.evidence_refs,
+      reversal_of: e.reversal_of,
+    });
+    if (JSON.stringify(core(existing)) === JSON.stringify(core(enriched))) {
+      return existing;
+    }
+    throw new Error(`Journal entry id collision: ${entry.entry_id}`);
+  }
+  file.entries.push(enriched);
+  mkdirSync(join(getDataDir(), "finance"), { recursive: true });
+  writeYamlFile(journalEntriesPath(), journalEntriesFileSchema.parse(file));
+  return enriched;
 }
 
 export function postExpenseClaimJournal(input: {
@@ -59,7 +100,7 @@ export function postExpenseClaimJournal(input: {
   evidenceArchiveRef?: string;
 }): JournalEntry {
   const accounting = loadExpenseClaimAccounting();
-  return appendEntry(
+  return appendJournalEntry(
     journalEntrySchema.parse({
       entry_id: `JE-${input.claimId}-POST`,
       occurred_at: input.occurredAt,
@@ -107,7 +148,7 @@ export function reimburseExpenseClaimJournal(input: {
       `No bank control account mapping for ${input.sourceBankAccountId}`,
     );
   }
-  return appendEntry(
+  return appendJournalEntry(
     journalEntrySchema.parse({
       entry_id: `JE-${input.claimId}-REIMBURSE`,
       occurred_at: input.occurredAt,

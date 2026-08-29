@@ -1,0 +1,20 @@
+{
+  "as_of": "2027-01-31",
+  "rows": [
+    {
+      "account_code": "1100",
+      "account_name": "現金及び預金",
+      "normal_balance": "debit",
+      "debit_total_yen": 1000000,
+      "credit_total_yen": 0,
+      "balance_yen": 1000000
+    }
+  ],
+  "debit_total_yen": 1000000,
+  "credit_total_yen": 0,
+  "balanced": false,
+  "issues": [
+    "Unknown account code in journal: 3200",
+    "Trial balance not balanced: debit=1000000 credit=0"
+  ]
+}

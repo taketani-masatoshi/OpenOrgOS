@@ -1,0 +1,506 @@
+version: 1
+entries:
+  - entry_id: JE-DEMO-2025-02-REV
+    occurred_at: 2025-02-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-02
+    source:
+      kind: closing
+      period: 2025-02
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.807Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-02
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-02-EXP
+    occurred_at: 2025-02-28T12:30:00.000Z
+    description: Demo monthly expense 2025-02
+    source:
+      kind: closing
+      period: 2025-02
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.809Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-02
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-03-REV
+    occurred_at: 2025-03-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-03
+    source:
+      kind: closing
+      period: 2025-03
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.810Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-03
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-03-EXP
+    occurred_at: 2025-03-28T12:30:00.000Z
+    description: Demo monthly expense 2025-03
+    source:
+      kind: closing
+      period: 2025-03
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.812Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-03
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-04-REV
+    occurred_at: 2025-04-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-04
+    source:
+      kind: closing
+      period: 2025-04
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.813Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-04
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-04-EXP
+    occurred_at: 2025-04-28T12:30:00.000Z
+    description: Demo monthly expense 2025-04
+    source:
+      kind: closing
+      period: 2025-04
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.815Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-04
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-05-REV
+    occurred_at: 2025-05-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-05
+    source:
+      kind: closing
+      period: 2025-05
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.817Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-05
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-05-EXP
+    occurred_at: 2025-05-28T12:30:00.000Z
+    description: Demo monthly expense 2025-05
+    source:
+      kind: closing
+      period: 2025-05
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.819Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-05
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-06-REV
+    occurred_at: 2025-06-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-06
+    source:
+      kind: closing
+      period: 2025-06
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.821Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-06
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-06-EXP
+    occurred_at: 2025-06-28T12:30:00.000Z
+    description: Demo monthly expense 2025-06
+    source:
+      kind: closing
+      period: 2025-06
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.823Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-06
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-07-REV
+    occurred_at: 2025-07-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-07
+    source:
+      kind: closing
+      period: 2025-07
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.827Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-07
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-07-EXP
+    occurred_at: 2025-07-28T12:30:00.000Z
+    description: Demo monthly expense 2025-07
+    source:
+      kind: closing
+      period: 2025-07
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.829Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-07
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-08-REV
+    occurred_at: 2025-08-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-08
+    source:
+      kind: closing
+      period: 2025-08
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.831Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-08
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-08-EXP
+    occurred_at: 2025-08-28T12:30:00.000Z
+    description: Demo monthly expense 2025-08
+    source:
+      kind: closing
+      period: 2025-08
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.834Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-08
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-09-REV
+    occurred_at: 2025-09-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-09
+    source:
+      kind: closing
+      period: 2025-09
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.836Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-09
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-09-EXP
+    occurred_at: 2025-09-28T12:30:00.000Z
+    description: Demo monthly expense 2025-09
+    source:
+      kind: closing
+      period: 2025-09
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.839Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-09
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-10-REV
+    occurred_at: 2025-10-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-10
+    source:
+      kind: closing
+      period: 2025-10
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.842Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-10
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-10-EXP
+    occurred_at: 2025-10-28T12:30:00.000Z
+    description: Demo monthly expense 2025-10
+    source:
+      kind: closing
+      period: 2025-10
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.845Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-10
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-11-REV
+    occurred_at: 2025-11-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-11
+    source:
+      kind: closing
+      period: 2025-11
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.848Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-11
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-11-EXP
+    occurred_at: 2025-11-28T12:30:00.000Z
+    description: Demo monthly expense 2025-11
+    source:
+      kind: closing
+      period: 2025-11
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.851Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-11
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-12-REV
+    occurred_at: 2025-12-28T12:00:00.000Z
+    description: Demo monthly revenue 2025-12
+    source:
+      kind: closing
+      period: 2025-12
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.855Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-12
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2025-12-EXP
+    occurred_at: 2025-12-28T12:30:00.000Z
+    description: Demo monthly expense 2025-12
+    source:
+      kind: closing
+      period: 2025-12
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.858Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2025-12
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2026-01-REV
+    occurred_at: 2026-01-28T12:00:00.000Z
+    description: Demo monthly revenue 2026-01
+    source:
+      kind: closing
+      period: 2026-01
+      adjustment_id: demo-rev
+    posted_at: 2026-08-26T02:28:28.862Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2026-01
+      - seed-demo-year
+    lines:
+      - account_code: "1100"
+        debit_yen: 300000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 300000
+        tax_category: out_of_scope
+  - entry_id: JE-DEMO-2026-01-EXP
+    occurred_at: 2026-01-28T12:30:00.000Z
+    description: Demo monthly expense 2026-01
+    source:
+      kind: closing
+      period: 2026-01
+      adjustment_id: demo-exp
+    posted_at: 2026-08-26T02:28:28.866Z
+    posted_by: seed-demo-year
+    evidence_refs:
+      - demo:2026-01
+      - seed-demo-year
+    lines:
+      - account_code: "5100"
+        debit_yen: 80000
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1100"
+        debit_yen: 0
+        credit_yen: 80000
+        tax_category: out_of_scope

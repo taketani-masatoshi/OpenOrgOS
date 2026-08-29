@@ -1,0 +1,223 @@
+version: 1
+entries:
+  - entry_id: JE-DEP-ASSET-001-2026-08
+    occurred_at: 2026-08-28T00:00:00.000Z
+    description: Depreciation 番町ハイム312（建物） 2026-08
+    source:
+      kind: depreciation
+      asset_id: ASSET-001
+      period: 2026-08
+    posted_at: 2026-08-28T00:00:00.000Z
+    posted_by: depreciation
+    evidence_refs:
+      - fixed-asset:ASSET-001
+      - period:2026-08
+    lines:
+      - account_code: "5100"
+        debit_yen: 29432
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1290"
+        debit_yen: 0
+        credit_yen: 29432
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-08-REV-RENT
+    occurred_at: 2026-08-28T12:00:00.000Z
+    description: Monthly P/L revenue rent 2026-08
+    source:
+      kind: closing
+      period: 2026-08
+      adjustment_id: monthly-pl-rev-rent
+    posted_at: 2026-08-28T12:00:00.000Z
+    posted_by: closing
+    evidence_refs:
+      - monthly:2026-08
+      - category:rent
+    lines:
+      - account_code: "1150"
+        debit_yen: 100000
+        credit_yen: 0
+        counterparty_id: PROP-001
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 100000
+        tax_category: non_taxable
+  - entry_id: JE-MPL-2026-08-REV-HOTEL-REVENUE
+    occurred_at: 2026-08-28T12:00:00.000Z
+    description: Monthly P/L revenue hotel_revenue 2026-08
+    source:
+      kind: closing
+      period: 2026-08
+      adjustment_id: monthly-pl-rev-hotel_revenue
+    posted_at: 2026-08-28T12:00:00.000Z
+    posted_by: closing
+    evidence_refs:
+      - monthly:2026-08
+      - category:hotel_revenue
+    lines:
+      - account_code: "1150"
+        debit_yen: 1050000
+        credit_yen: 0
+        counterparty_id: PROP-002
+        tax_category: out_of_scope
+      - account_code: "4200"
+        debit_yen: 0
+        credit_yen: 954546
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2160"
+        debit_yen: 0
+        credit_yen: 95454
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-08-EXP-OTHER-PROPERTY
+    occurred_at: 2026-08-28T12:00:00.000Z
+    description: Monthly P/L expense other_property 2026-08
+    source:
+      kind: closing
+      period: 2026-08
+      adjustment_id: monthly-pl-exp-other_property
+    posted_at: 2026-08-28T12:00:00.000Z
+    posted_by: closing
+    evidence_refs:
+      - monthly:2026-08
+      - category:other_property
+    lines:
+      - account_code: "5200"
+        debit_yen: 451591
+        credit_yen: 0
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2170"
+        debit_yen: 45159
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "2110"
+        debit_yen: 0
+        credit_yen: 496750
+        counterparty_id: PROP-002
+        tax_category: out_of_scope
+  - entry_id: JE-DEP-ASSET-001-2026-09
+    occurred_at: 2026-09-28T00:00:00.000Z
+    description: Depreciation 番町ハイム312（建物） 2026-09
+    source:
+      kind: depreciation
+      asset_id: ASSET-001
+      period: 2026-09
+    posted_at: 2026-09-28T00:00:00.000Z
+    posted_by: depreciation
+    evidence_refs:
+      - fixed-asset:ASSET-001
+      - period:2026-09
+    lines:
+      - account_code: "5100"
+        debit_yen: 29432
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "1290"
+        debit_yen: 0
+        credit_yen: 29432
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-09-REV-RENT
+    occurred_at: 2026-09-28T12:00:00.000Z
+    description: Monthly P/L revenue rent 2026-09
+    source:
+      kind: closing
+      period: 2026-09
+      adjustment_id: monthly-pl-rev-rent
+    posted_at: 2026-09-28T12:00:00.000Z
+    posted_by: closing
+    evidence_refs:
+      - monthly:2026-09
+      - category:rent
+    lines:
+      - account_code: "1150"
+        debit_yen: 100000
+        credit_yen: 0
+        counterparty_id: PROP-001
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 100000
+        tax_category: non_taxable
+  - entry_id: JE-MPL-2026-09-REV-HOTEL-REVENUE
+    occurred_at: 2026-09-28T12:00:00.000Z
+    description: Monthly P/L revenue hotel_revenue 2026-09
+    source:
+      kind: closing
+      period: 2026-09
+      adjustment_id: monthly-pl-rev-hotel_revenue
+    posted_at: 2026-09-28T12:00:00.000Z
+    posted_by: closing
+    evidence_refs:
+      - monthly:2026-09
+      - category:hotel_revenue
+    lines:
+      - account_code: "1150"
+        debit_yen: 1050000
+        credit_yen: 0
+        counterparty_id: PROP-002
+        tax_category: out_of_scope
+      - account_code: "4200"
+        debit_yen: 0
+        credit_yen: 954546
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2160"
+        debit_yen: 0
+        credit_yen: 95454
+        tax_category: out_of_scope
+  - entry_id: JE-MPL-2026-09-EXP-OTHER-PROPERTY
+    occurred_at: 2026-09-28T12:00:00.000Z
+    description: Monthly P/L expense other_property 2026-09
+    source:
+      kind: closing
+      period: 2026-09
+      adjustment_id: monthly-pl-exp-other_property
+    posted_at: 2026-09-28T12:00:00.000Z
+    posted_by: closing
+    evidence_refs:
+      - monthly:2026-09
+      - category:other_property
+    lines:
+      - account_code: "5200"
+        debit_yen: 451591
+        credit_yen: 0
+        tax_category: taxable_10
+        tax_rate_pct: 10
+      - account_code: "2170"
+        debit_yen: 45159
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "2110"
+        debit_yen: 0
+        credit_yen: 496750
+        counterparty_id: PROP-002
+        tax_category: out_of_scope
+  - entry_id: JE-PAYROLL-2026-09
+    occurred_at: 2026-09-25T00:00:00.000Z
+    description: Payroll 2026-09
+    source:
+      kind: payroll
+      period: 2026-09
+    posted_at: 2026-09-25T00:00:00.000Z
+    posted_by: payroll
+    evidence_refs:
+      - payroll:2026-09
+    lines:
+      - account_code: "5300"
+        debit_yen: 368320
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "2120"
+        debit_yen: 0
+        credit_yen: 5775
+        tax_category: out_of_scope
+      - account_code: "2130"
+        debit_yen: 0
+        credit_yen: 48320
+        tax_category: out_of_scope
+      - account_code: "2140"
+        debit_yen: 0
+        credit_yen: 314225
+        tax_category: out_of_scope

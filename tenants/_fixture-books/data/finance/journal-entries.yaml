@@ -1,0 +1,21 @@
+version: 1
+entries:
+  - entry_id: JE-GUARD-001
+    occurred_at: 2026-09-15T00:00:00.000Z
+    description: guard test
+    source:
+      kind: manual
+      authorized_by: ceo
+    posted_at: 2026-08-29T10:25:35.018Z
+    posted_by: ceo
+    evidence_refs:
+      - test:guard
+    lines:
+      - account_code: "1100"
+        debit_yen: 1
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "4100"
+        debit_yen: 0
+        credit_yen: 1
+        tax_category: out_of_scope
