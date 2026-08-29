@@ -17,6 +17,7 @@ import { findOrgApproval } from "../src/lib/org/approval/approve.js";
 import { isModuleInstalled } from "../src/lib/module-import.js";
 import { isAgentActive } from "../src/lib/agent-catalog.js";
 import { buildAgentModuleInventory } from "../src/lib/steward-chat/agent-module-inventory.js";
+import { preserveTenantSsot } from "./helpers/tenant-ssot-snapshot.js";
 import {
   handleTenantConfigProposeChatMessage,
   parseTenantConfigProposeIntent,
@@ -30,6 +31,8 @@ function cleanupOrgArtifacts(): void {
 }
 
 describe("tenant config change (standards)", () => {
+  preserveTenantSsot("mal");
+
   beforeEach(() => {
     setTenantId("mal");
     cleanupOrgArtifacts();

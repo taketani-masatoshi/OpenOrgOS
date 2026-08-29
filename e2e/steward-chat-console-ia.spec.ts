@@ -1,19 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-async function login(page: import("@playwright/test").Page): Promise<void> {
-  await page.goto("/");
-  const password = page.getByLabel("パスワード", { exact: true });
-  if (await password.isVisible({ timeout: 5_000 }).catch(() => false)) {
-    await password.fill("orgos-dev");
-    await page.getByRole("button", { name: "入る", exact: true }).click();
-  } else {
-    await page.getByLabel("パスワード（dev passkey）").fill("orgos-dev");
-    await page.getByRole("button", { name: "ログイン" }).click();
-  }
-  await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
-    timeout: 15_000,
-  });
-}
+import { loginConsole as login } from "./helpers/console-login";
 
 test.describe("steward chat console IA", () => {
   test("budget subnav excludes ledger, tax, setup, fleet, receipts", async ({ page }) => {
@@ -40,6 +27,8 @@ test.describe("steward chat console IA", () => {
     await page.goto("/settings/");
     await expect(page.getByRole("heading", { name: "設定" })).toBeVisible({ timeout: 15_000 });
 
+    // Links live inside collapsed accordion sections.
+    await page.getByRole("heading", { name: "会社セットアップ" }).click();
     await page.getByRole("link", { name: "セットアップを開く" }).click();
     await expect(page.getByRole("heading", { name: "セットアップ" })).toBeVisible({
       timeout: 15_000,
@@ -47,6 +36,7 @@ test.describe("steward chat console IA", () => {
     await expect(page.getByRole("navigation", { name: "帳簿メニュー" })).toHaveCount(0);
 
     await page.goto("/settings/");
+    await page.getByRole("heading", { name: "アカウント管理" }).click();
     await page.getByRole("link", { name: "アカウントを開く" }).click();
     await expect(page.getByRole("heading", { name: "アカウント" })).toBeVisible({
       timeout: 15_000,

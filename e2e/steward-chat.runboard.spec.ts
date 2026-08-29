@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { loginConsole as login } from "./helpers/console-login";
 
 const SEED_ID = "IMP-E2E-SEED-001";
 const SEED_FAIL_ID = "IMP-E2E-SEED-FAIL";
@@ -39,6 +40,14 @@ function seedWorkOrder(
   );
 }
 
+/**
+ * The plan sidebar and a work order's title both render as buttons, so a bare
+ * name lookup is ambiguous. Board assertions go through the kanban card.
+ */
+function kanbanCard(page: import("@playwright/test").Page, name: string | RegExp) {
+  return page.locator(".orchestration-kanban-card").filter({ hasText: name });
+}
+
 function removeSeededWorkOrder(id: string): void {
   for (const ext of [".yaml", ".md"]) {
     const path = join(DEMO_QUEUE, `${id}${ext}`);
@@ -46,14 +55,6 @@ function removeSeededWorkOrder(id: string): void {
   }
 }
 
-/** Dev login form is pre-filled with OP-001 / orgos-dev by BudgetAuthGate. */
-async function login(page: import("@playwright/test").Page): Promise<void> {
-  await page.goto("/");
-  await page.getByRole("button", { name: "入る" }).click();
-  await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
-    timeout: 15_000,
-  });
-}
 
 function runsTab(page: import("@playwright/test").Page) {
   return page
@@ -63,17 +64,23 @@ function runsTab(page: import("@playwright/test").Page) {
 
 test.describe("steward chat run board", () => {
   test("Run Board tab renders orchestration runs from the BFF", async ({ page }) => {
-    await login(page);
-    await runsTab(page).click();
+    // The plan sidebar only exists when at least one work order is in flight,
+    // and the demo queue is empty on a clean checkout.
+    seedWorkOrder(SEED_ID, "pending", "E2E 予実レビュー");
+    try {
+      await login(page);
+      await runsTab(page).click();
 
-    await expect(page.getByRole("heading", { name: "実行状況" })).toBeVisible();
-    await expect(page).toHaveURL(/\/runs\/?$/);
-    await expect(page.getByRole("heading", { name: "進行中の計画" })).toBeVisible();
-    await expect(page.locator(".error-banner")).toHaveCount(0);
-
-    const cards = page.locator(".orchestration-kanban-card");
-    const empty = page.locator(".empty-state");
-    await expect(cards.or(empty).first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: "実行状況" })).toBeVisible();
+      await expect(page).toHaveURL(/\/runs\/?$/);
+      await expect(page.getByRole("heading", { name: "進行中の計画" })).toBeVisible({
+        timeout: 20_000,
+      });
+      await expect(page.locator(".error-banner")).toHaveCount(0);
+      await expect(kanbanCard(page, "E2E 予実レビュー").first()).toBeVisible();
+    } finally {
+      removeSeededWorkOrder(SEED_ID);
+    }
   });
 
   test("/runs/ deep link opens Run Board directly", async ({ page }) => {
@@ -97,7 +104,7 @@ test.describe("steward chat run board", () => {
       await page.goto("/runs/");
 
       await expect(page.getByRole("heading", { name: "実行状況" })).toBeVisible();
-      const card = page.getByRole("button", { name: /E2E 予実レビュー/ });
+      const card = kanbanCard(page, "E2E 予実レビュー").first();
       await expect(card).toBeVisible();
       await card.click();
 
@@ -111,12 +118,12 @@ test.describe("steward chat run board", () => {
   });
 
   test("retry failed work order moves node to 未着手", async ({ page }) => {
-    seedWorkOrder(SEED_FAIL_ID, "failed");
+    seedWorkOrder(SEED_FAIL_ID, "failed", "E2E 失敗テスト");
     try {
       await login(page);
       await page.goto("/runs/");
 
-      const card = page.getByRole("button", { name: SEED_FAIL_ID });
+      const card = kanbanCard(page, "E2E 失敗テスト").first();
       await expect(card).toBeVisible();
       await card.click();
 
@@ -140,30 +147,36 @@ test.describe("steward chat run board", () => {
       await login(page);
       await page.goto("/runs/");
 
-      const card = page.getByRole("button", { name: /E2E 完了テスト/ });
-      await expect(card).toBeVisible();
+      const card = kanbanCard(page, "E2E 完了テスト");
+      await expect(card.first()).toBeVisible();
+      const wrap = page
+        .locator(".orchestration-kanban-card-wrap")
+        .filter({ hasText: "E2E 完了テスト" });
 
       page.once("dialog", (dialog) => dialog.accept());
-      await page
-        .locator(".orchestration-kanban-card-wrap")
-        .filter({ has: page.getByRole("button", { name: /E2E 完了テスト/ }) })
-        .getByRole("button", { name: "このタスクを完了" })
-        .click();
+      await wrap.getByRole("button", { name: "このタスクを完了" }).click();
 
       await expect(card).toHaveCount(0);
 
-      await page.getByRole("button", { name: "完了" }).click();
-      await expect(page.getByRole("button", { name: /E2E 完了テスト/ })).toBeVisible();
+      await page.locator(".orchestration-filter-chip").filter({ hasText: /^完了$/ }).click();
+      await expect(card.first()).toBeVisible();
 
       page.once("dialog", (dialog) => dialog.accept());
-      await page
-        .locator(".orchestration-kanban-card-wrap")
-        .filter({ has: page.getByRole("button", { name: /E2E 完了テスト/ }) })
-        .getByRole("button", { name: "完了を元に戻す" })
-        .click();
+      await wrap.getByRole("button", { name: "完了を元に戻す" }).click();
 
-      await page.getByRole("button", { name: "未完了" }).click();
-      await expect(page.getByRole("button", { name: /E2E 完了テスト/ })).toBeVisible();
+      // Reopening refetches the board, so the chip row is replaced mid-click.
+      await expect
+        .poll(
+          async () => {
+            const chip = page
+              .locator(".orchestration-filter-chip")
+              .filter({ hasText: /^未完了$/ });
+            await chip.click({ timeout: 5_000 }).catch(() => undefined);
+            return card.count();
+          },
+          { timeout: 30_000 },
+        )
+        .toBeGreaterThan(0);
     } finally {
       removeSeededWorkOrder(completeId);
     }

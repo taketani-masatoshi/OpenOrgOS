@@ -22,6 +22,7 @@ import {
 } from "../src/lib/org/tenant-config-change.js";
 import { buildAgentModuleInventory } from "../src/lib/steward-chat/agent-module-inventory.js";
 import { modulesFileSchema } from "../schemas/modules.js";
+import { preserveTenantSsot } from "./helpers/tenant-ssot-snapshot.js";
 
 function cleanupOrgArtifacts(): void {
   for (const rel of ["org/pending-approvals.yaml", "org/config-change-requests.yaml"]) {
@@ -31,6 +32,8 @@ function cleanupOrgArtifacts(): void {
 }
 
 describe("WebUI agent/module toggles write the tenant SSOT", () => {
+  preserveTenantSsot("mal");
+
   let originalAgents = "";
   let originalModules = "";
 

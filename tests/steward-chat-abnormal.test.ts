@@ -1,8 +1,6 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import {
-  type StewardChatServerHandle,
-  STEWARD_CHAT_SPA_DIST,
-} from "../src/lib/steward-chat/server.js";
+import { describe, expect, it, afterAll, beforeEach, afterEach } from "vitest";
+import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
+import { installSpaDistStub, type SpaDistStub } from "./helpers/spa-dist-stub.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
 import { startOperatorConsoleServer } from "../src/lib/operator-console/combined-server.js";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -11,9 +9,6 @@ import {
   registerSession,
   WIRE_CONSOLE_SESSION_COOKIE,
 } from "../src/lib/wire-console/auth/session.js";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-
 describe("steward chat abnormal paths", () => {
   let handle: StewardChatServerHandle | undefined;
   let baseUrl = "";
@@ -49,7 +44,8 @@ describe("steward chat abnormal paths", () => {
     const res = await fetch(`${baseUrl}/chat/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passkey: "test-pass", operator_id: "CEO", approver_id: "CEO" }),
+      // OP-001 is the demo registry ceo — approval RBAC is checked before existence.
+      body: JSON.stringify({ passkey: "test-pass", operator_id: "OP-001", approver_id: "OP-001" }),
     });
     expect(res.status).toBe(200);
     return res.headers.get("set-cookie") ?? "";
@@ -237,12 +233,16 @@ describe("steward chat abnormal paths", () => {
 
 describe("operator console abnormal paths", () => {
   const env = { ...process.env };
+  let spaStub: SpaDistStub | undefined;
+
+  afterAll(() => {
+    spaStub?.restore();
+  });
 
   beforeEach(() => {
     setTenantId("demo");
     resetRateLimitState();
-    mkdirSync(STEWARD_CHAT_SPA_DIST, { recursive: true });
-    writeFileSync(join(STEWARD_CHAT_SPA_DIST, "index.html"), "<html></html>");
+    spaStub = spaStub ?? installSpaDistStub();
     process.env.STEWARD_CHAT_AUTH = "1";
     process.env.ORGOS_CSRF = "0";
     process.env.ORGOS_RATE_LIMIT = "0";

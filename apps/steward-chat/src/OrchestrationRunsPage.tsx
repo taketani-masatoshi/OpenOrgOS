@@ -420,6 +420,32 @@ export function OrchestrationRunsPage() {
     );
   }
 
+  /**
+   * Rendered both inside the board and in the empty state: completing (or
+   * reopening) the last work order empties the current view, and without the
+   * chips there is no way back to the other one.
+   */
+  const viewModeChips = (
+    <>
+      {(["incomplete", "completed", "all"] as const).map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          className={
+            viewMode === mode ? "orchestration-filter-chip is-active" : "orchestration-filter-chip"
+          }
+          onClick={() => setViewMode(mode)}
+        >
+          {mode === "incomplete"
+            ? copy.viewIncomplete
+            : mode === "completed"
+              ? copy.viewCompleted
+              : copy.viewAll}
+        </button>
+      ))}
+    </>
+  );
+
   const hasAnyPlan = plans.length > 0;
   const hasVisibleCards = filteredCards.length > 0;
   const useSwimlanes = groupMode === "plan" && !selectedPlanId;
@@ -444,6 +470,7 @@ export function OrchestrationRunsPage() {
             <a className="orchestration-inbox-link" href="/steward/">
               {copy.openSteward}
             </a>
+            <div className="orchestration-board-filters">{viewModeChips}</div>
           </div>
         </section>
       ) : null}
@@ -528,39 +555,7 @@ export function OrchestrationRunsPage() {
           <div className="orchestration-board-main">
             <div className="orchestration-board-toolbar">
               <div className="orchestration-board-filters">
-                <button
-                  type="button"
-                  className={
-                    viewMode === "incomplete"
-                      ? "orchestration-filter-chip is-active"
-                      : "orchestration-filter-chip"
-                  }
-                  onClick={() => setViewMode("incomplete")}
-                >
-                  {copy.viewIncomplete}
-                </button>
-                <button
-                  type="button"
-                  className={
-                    viewMode === "completed"
-                      ? "orchestration-filter-chip is-active"
-                      : "orchestration-filter-chip"
-                  }
-                  onClick={() => setViewMode("completed")}
-                >
-                  {copy.viewCompleted}
-                </button>
-                <button
-                  type="button"
-                  className={
-                    viewMode === "all"
-                      ? "orchestration-filter-chip is-active"
-                      : "orchestration-filter-chip"
-                  }
-                  onClick={() => setViewMode("all")}
-                >
-                  {copy.viewAll}
-                </button>
+                {viewModeChips}
                 <span className="orchestration-toolbar-divider" aria-hidden="true" />
                 <label className="orchestration-filter-select">
                   <span className="muted">{copy.groupLabel}</span>

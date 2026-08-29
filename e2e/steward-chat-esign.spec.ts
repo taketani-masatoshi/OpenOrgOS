@@ -1,14 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-async function login(page: import("@playwright/test").Page): Promise<void> {
-  await page.goto("/");
-  await page.locator("#orgos-login-operator").fill("OP-001");
-  await page.locator("#orgos-login-password").fill("orgos-dev");
-  await page.locator("#orgos-login-submit").click();
-  await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
-    timeout: 15_000,
-  });
-}
+import { loginConsole as login } from "./helpers/console-login";
 
 const PDF = Buffer.from(
   "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n",

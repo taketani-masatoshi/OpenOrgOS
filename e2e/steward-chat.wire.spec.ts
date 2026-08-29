@@ -1,62 +1,76 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import { loginAndOpenWire } from "./helpers/console-login";
+import { reseedDemoWire } from "./helpers/demo-seed";
 
-/** 予実は Codex 個人予実 UI。Wire 操作は /wire/ へ。 */
-async function loginAndOpenWire(page: import("@playwright/test").Page): Promise<void> {
-  await page.goto("/");
-  await page.locator("#orgos-login-operator").fill("OP-001");
-  await page.locator("#orgos-login-password").fill("orgos-dev");
-  await page.locator("#orgos-login-submit").click();
-  await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
-    timeout: 15_000,
+/**
+ * Proposed against `aiac`, not `demo`: unit tests restore `tenants/demo/data`
+ * from git before every test, while `aiac` is one of the operational tenants
+ * whose committed peers survive restore. `invoice.issued` needs no contract
+ * fixture, so this only exercises the approval path.
+ *
+ * Proposed as OP-002 because self-approval is refused — the browser session
+ * (OP-001, ceo) has to be a different person than the proposer.
+ */
+async function proposePendingNotice(request: APIRequestContext): Promise<string> {
+  const login = await request.post("/chat/v1/auth/login", {
+    data: { passkey: "orgos-dev", operator_id: "OP-002", approver_id: "OP-002" },
   });
-  await page.goto("/wire/");
-  await expect(page.getByRole("button", { name: "承認待ち" })).toBeVisible({ timeout: 15_000 });
+  expect(login.status(), await login.text()).toBe(200);
+
+  const invoiceId = `INV-E2E-${Date.now()}`;
+  const res = await request.post("/console/v1/tenants/aiac/notices/propose", {
+    data: {
+      peer_id: "PEER-001",
+      transaction_type: "invoice.issued",
+      invoice_id: invoiceId,
+      message: "E2E — 承認待ちの通知",
+    },
+  });
+  expect(res.status(), await res.text()).toBe(200);
+  return invoiceId;
 }
 
 test.describe("steward chat wire", () => {
   test.describe.configure({ mode: "serial" });
 
+  test.beforeAll(() => {
+    reseedDemoWire();
+  });
+
   test("shows approval-wait folder after login", async ({ page }) => {
     await loginAndOpenWire(page);
-    await expect(page.getByRole("button", { name: "相手送信待ち" })).toBeVisible();
+    await expect(page.locator("button.mail-folder").filter({ hasText: "相手送信待ち" })).toBeVisible();
   });
 
   test("flushes wire delivery queue from advanced panel", async ({ page }) => {
     await loginAndOpenWire(page);
     await page.getByText("配送・公証（オペレータ向け）").click();
-    const deliveryPanel = page.locator("section.panel").filter({ hasText: "Delivery" });
-    const flushBtn = deliveryPanel.getByRole("button", { name: "Flush pending" });
-    if (!(await flushBtn.isVisible().catch(() => false))) {
-      test.skip();
-      return;
-    }
+    const deliveryPanel = page.locator("section.panel").filter({ hasText: "配送" }).first();
+    const flushBtn = deliveryPanel.getByRole("button", { name: "未送信を処理" }).first();
+    await expect(flushBtn).toBeVisible({ timeout: 10_000 });
 
     await Promise.all([
       page.waitForResponse(
-        (r) =>
-          (r.url().includes("/chat/v1/wire/flush") ||
-            r.url().includes("/console/v1/") && r.url().includes("flush")) &&
-          r.request().method() === "POST"
+        (r) => r.url().includes("/delivery/flush-pending") && r.request().method() === "POST",
       ),
       flushBtn.click(),
     ]);
   });
 
-  test("approve wire pending from 承認待ち folder", async ({ page }) => {
+  test("approve wire pending from 承認待ち folder", async ({ page, request }) => {
+    const invoiceId = await proposePendingNotice(request);
     await loginAndOpenWire(page);
-    await page.getByRole("button", { name: "承認待ち" }).click();
-    const pendingRow = page.locator(".message-row").filter({ hasText: "承認待ち" }).first();
-    await expect(pendingRow).toBeVisible({ timeout: 15_000 });
-    const countBefore = await page.locator(".message-row").filter({ hasText: "承認待ち" }).count();
+    await page.reload();
+    const oursFolder = page.locator("button.mail-folder").filter({ hasText: "承認待ち" });
+    await expect(oursFolder).toBeVisible({ timeout: 20_000 });
+    await oursFolder.click();
 
-    await pendingRow.click();
-    await page.getByRole("button", { name: "承認" }).click();
-    await expect(page.getByText("承認しました").or(page.getByText("送信済み"))).toBeVisible({
-      timeout: 15_000,
-    });
+    const row = page.locator(".message-row").filter({ hasText: invoiceId });
+    await expect(row).toBeVisible({ timeout: 20_000 });
 
-    await expect
-      .poll(async () => page.locator(".message-row").filter({ hasText: "承認待ち" }).count())
-      .toBeLessThanOrEqual(countBefore);
+    await row.click();
+    await page.getByRole("button", { name: "承認", exact: true }).click();
+
+    await expect(row).toHaveCount(0, { timeout: 20_000 });
   });
 });

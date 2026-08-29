@@ -11,31 +11,10 @@ import { listEffectiveRegulations } from "../src/lib/regulations.js";
 import { loadEnabledIsoIds } from "../src/lib/tenant-standards.js";
 import { getTenantDir, setTenantId } from "../src/lib/tenant.js";
 import { resolveTenantPath } from "../src/lib/utils.js";
-
-/**
- * activateTenantModule writes to the tenant SSOT. Without a restore, a plain
- * `vitest run` would leave the company's enabled standards and regulations
- * changed — the test would be editing real compliance configuration.
- */
-const MUTATED_SSOT = ["standards.yaml", "modules.yaml", "regulations.yaml"];
+import { preserveTenantSsot } from "./helpers/tenant-ssot-snapshot.js";
 
 describe("agent workspace init", () => {
-  let snapshot: Map<string, string>;
-
-  beforeEach(() => {
-    setTenantId("mal");
-    snapshot = new Map();
-    // These live at the tenant root, which resolveTenantPath does not map.
-    for (const rel of MUTATED_SSOT) {
-      const path = join(getTenantDir(), rel);
-      if (!existsSync(path)) throw new Error(`missing tenant SSOT: ${rel}`);
-      snapshot.set(path, readFileSync(path, "utf-8"));
-    }
-  });
-
-  afterEach(() => {
-    for (const [path, content] of snapshot) writeFileSync(path, content, "utf-8");
-  });
+  preserveTenantSsot("mal");
 
   it("creates medical_device_regulatory folders on agent order hook path", () => {
     const quality = resolveTenantPath("docs/quality");

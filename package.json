@@ -89,6 +89,8 @@
     "steward-chat:smoke": "vitest run tests/steward-chat-today.test.ts tests/steward-chat-auth.test.ts tests/steward-chat-stream.test.ts tests/steward-chat-cashflow-intent.test.ts tests/steward-chat-events-stream.test.ts tests/steward-chat-flush.test.ts tests/chat-thread.test.ts tests/session-persist.test.ts tests/operator-dispatch-unified.test.ts tests/operator-runtime-shell.test.ts tests/operator-runtime-llm.test.ts tests/operator-runtime-tools.test.ts tests/operator-runtime-structured.test.ts tests/operator-runtime-telemetry.test.ts tests/mcp-auth-audit.test.ts tests/mcp-steward.test.ts tests/mcp-http.test.ts tests/mcp-abnormal.test.ts tests/rate-limit.test.ts tests/prod-auth-checklist.test.ts tests/prod-startup.test.ts tests/notifications-push.test.ts tests/csrf-guard.test.ts tests/chat-audit.test.ts tests/chat-rbac.test.ts tests/steward-chat-witness.test.ts tests/steward-chat-operator-stats.test.ts tests/steward-chat-abnormal.test.ts tests/package-release.test.ts",
     "steward-chat:release-check": "npm run steward-chat:smoke && npm run steward-chat:e2e && npm run steward-chat:webauthn-e2e && npm run operator-console:e2e",
     "steward-chat:e2e": "npm run steward-chat:build && playwright test --config=playwright.steward-chat.config.ts",
+    "ooo:e2e": "npm run steward-chat:build && node --import tsx scripts/ooo-e2e.ts",
+    "ooo:score": "node --import tsx scripts/ooo-score.ts",
     "steward-chat:webauthn-e2e": "npm run steward-chat:build && playwright test --config=playwright.steward-chat-webauthn.config.ts",
     "operator-console:e2e": "npm run operator-console:build && playwright test --config=playwright.operator-console.config.ts",
     "operator-console:build": "npm run steward-chat:build",

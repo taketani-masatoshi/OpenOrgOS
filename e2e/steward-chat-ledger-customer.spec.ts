@@ -1,22 +1,12 @@
 import { expect, test } from "@playwright/test";
+import { loginConsole } from "./helpers/console-login";
 
 /**
  * Ledger customer journey — UI-first commercial evidence.
  * Soft 403 toleration removed: fixture tenant must grant CEO/operator rights.
  */
 async function login(page: import("@playwright/test").Page): Promise<void> {
-  await page.goto("/");
-  const password = page.getByLabel("パスワード", { exact: true });
-  if (await password.isVisible({ timeout: 5_000 }).catch(() => false)) {
-    await password.fill("orgos-dev");
-    await page.getByRole("button", { name: "入る", exact: true }).click();
-  } else {
-    await page.getByLabel("パスワード（dev passkey）").fill("orgos-dev");
-    await page.getByRole("button", { name: "ログイン" }).click();
-  }
-  await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
-    timeout: 15_000,
-  });
+  await loginConsole(page);
   await expect(page.getByText("未ログイン")).toHaveCount(0, { timeout: 15_000 });
   await page
     .getByRole("navigation", { name: "Operator Console" })
@@ -44,7 +34,7 @@ test.describe("steward chat ledger customer journey", () => {
     await expect(
       page.getByRole("heading", { name: "Passkey（ログイン必須）" }),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/ログインには Passkey が必須/)).toBeVisible({
+    await expect(page.locator("p.ops-page-meta").filter({ hasText: /ログインには Passkey が必須/ })).toBeVisible({
       timeout: 10_000,
     });
     await expect(page.getByRole("button", { name: "Passkey を登録" })).toBeVisible({
