@@ -2,6 +2,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node
 import { join } from "node:path";
 import YAML from "yaml";
 import { runTenantInit } from "../tenant-init.js";
+import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { getInstallRoot, getTenantsDir } from "../orgos-paths.js";
 import { setTenantId } from "../tenant.js";
 import { upsertLedgerSubscription } from "./ledger-subscription.js";
@@ -59,20 +60,18 @@ function seedFinanceFromFixture(tenantId: string): void {
   }
   const fixedAssetsDest = join(destRoot, "fixed-assets.yaml");
   if (existsSync(fixedAssetsDest)) {
-    writeFileSync(
-      fixedAssetsDest,
-      `as_of: "2026-08-31"
-fiscal_year: FY2026
-currency: JPY
-assets: []
-summary:
-  total_acquisition_cost: 0
-  total_accumulated_depreciation: 0
-  total_book_value: 0
-  annual_depreciation_fy_current: 0
-`,
-      "utf-8",
-    );
+    writeYamlFileAtomic(fixedAssetsDest, {
+      as_of: "2026-08-31",
+      fiscal_year: "FY2026",
+      currency: "JPY",
+      assets: [],
+      summary: {
+        total_acquisition_cost: 0,
+        total_accumulated_depreciation: 0,
+        total_book_value: 0,
+        annual_depreciation_fy_current: 0,
+      },
+    });
   }
   const monthlySeed = join(seedRoot, "monthly");
   const monthlyDest = join(destRoot, "monthly");

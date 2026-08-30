@@ -172,15 +172,24 @@ export function getTenantOperationMode(
   return config.lifecycle === "test" ? "development" : "tenant";
 }
 
+/** `"data"` and `"data/finance"` both belong to the tenant; `"database"` does not. */
+function hasZonePrefix(normalized: string, zone: string): boolean {
+  return normalized === zone || normalized.startsWith(`${zone}/`);
+}
+
 export function resolveTenantPath(logicalPath: string): string {
   const normalized = logicalPath.replace(/\\/g, "/").replace(/^\.\//, "");
-  if (normalized.startsWith("tenants/")) {
+  if (hasZonePrefix(normalized, "tenants")) {
     return resolve(getWorkspaceRoot(), normalized);
   }
-  if (normalized.startsWith("steward/") || normalized.startsWith("schemas/")) {
+  if (hasZonePrefix(normalized, "steward") || hasZonePrefix(normalized, "schemas")) {
     return resolve(getInstallRoot(), normalized);
   }
-  if (normalized.startsWith("data/") || normalized.startsWith("docs/") || normalized.startsWith("records/")) {
+  if (
+    hasZonePrefix(normalized, "data") ||
+    hasZonePrefix(normalized, "docs") ||
+    hasZonePrefix(normalized, "records")
+  ) {
     if (isVaultLogicalPath(normalized)) {
       return resolveVaultLogicalPath({
         tenantId: getTenantId(),

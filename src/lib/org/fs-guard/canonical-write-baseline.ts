@@ -44,6 +44,7 @@ export const CANONICAL_WRITE_BASELINE: CanonicalWriteBaselineEntry[] = [
   { file: "src/lib/correspondence/mail-receive-sync.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/correspondence/mail-send.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/dispatch-tower/assign.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
+  { file: "src/lib/integrations/connector-store.ts", symbol: "writeFileSync", count: 1, note: "connector OAuth token in the records vault — needs mode 0600, which the canonical writers do not set" },
   { file: "src/lib/document-io.ts", symbol: "copyFileSync", count: 4, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/document-io.ts", symbol: "renameSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/finance/jp-corporate-tax-xml.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },

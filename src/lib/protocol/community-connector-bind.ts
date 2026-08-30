@@ -11,12 +11,13 @@
  * so already-issued binds and existing tests stay valid.
  */
 import { randomBytes, randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
 import { connectorProviderSchema, type ConnectorProvider } from "../../../schemas/connectors.js";
 import { getDataDir } from "../utils.js";
+import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import {
   claimCommunityGmailBind,
   createCommunityGmailBind,
@@ -69,7 +70,7 @@ function loadBindRegistry(): z.output<typeof bindRegistrySchema> {
 
 function saveBindRegistry(registry: z.output<typeof bindRegistrySchema>): void {
   mkdirSync(join(getDataDir(), "protocol"), { recursive: true });
-  writeFileSync(bindRegistryPath(), YAML.stringify(registry), "utf-8");
+  writeYamlFileAtomic(bindRegistryPath(), registry);
 }
 
 export function createConnectorBind(
