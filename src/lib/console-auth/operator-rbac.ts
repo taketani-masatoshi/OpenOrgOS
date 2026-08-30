@@ -105,6 +105,10 @@ export function resolveChatPermissionsFromRegistry(user: WireConsoleUser): ChatP
     );
   }
 
+  // In production the registry is the source of truth (a missing registry is
+  // already a startup failure), so an id that is not in it gets nothing.
+  if (isProdSecurityMode()) return [];
+
   const legacy: ChatPermission[] = ["chat:read", "chat:ask"];
   if (isLegacyAuthorizedApprover(user.approver_id)) {
     legacy.push("chat:approve", "chat:wire");

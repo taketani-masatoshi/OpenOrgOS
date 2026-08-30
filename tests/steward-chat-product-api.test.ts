@@ -114,6 +114,28 @@ describe("steward chat product api", () => {
     expect(body.platform_billing_settings).toBe(true);
   });
 
+  it("refuses stripe settings to a session that is not the representative", async () => {
+    await start();
+    process.env.ORGOS_PROD = "1";
+    const res = await fetch(`${baseUrl}/chat/v1/product/stripe-settings`, {
+      headers: { Cookie: cookieFor("OP-002") },
+    });
+    expect([401, 403]).toContain(res.status);
+  });
+
+  it("refuses a stripe webhook whose signature does not verify", async () => {
+    await start();
+    const res = await fetch(`${baseUrl}/chat/v1/product/stripe/webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "t=1,v1=not-a-real-signature",
+      },
+      body: JSON.stringify({ type: "checkout.session.completed" }),
+    });
+    expect([400, 401, 403, 422]).toContain(res.status);
+  });
+
   it("saves stripe settings for ceo without echoing secrets", async () => {
     await start();
     const getRes = await fetch(`${baseUrl}/chat/v1/product/stripe-settings`, {

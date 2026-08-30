@@ -81,7 +81,8 @@ export async function handleTaxApi(
   }
 
   if (pathname === "/chat/v1/tax/xml-draft" && method === "POST") {
-    if (!requireChatPermission(user, "chat:ask", res)) return true;
+    // Writes a draft file into the tenant: same tier as any other books write.
+    if (!requireBudgetSurfacePermission(user, "finance:reconcile", res)) return true;
     try {
       const body = (await readJsonLimited(req)) as { fiscal_year?: string };
       const draft = writeCorporateTaxXmlDraft({
@@ -131,7 +132,8 @@ export async function handleTaxApi(
   }
 
   if (pathname === "/chat/v1/tax/bonus-draft" && method === "POST") {
-    if (!requireChatPermission(user, "chat:ask", res)) return true;
+    // `saveBonusDraft` persists the run; a read-tier session must not do that.
+    if (!requireBudgetSurfacePermission(user, "finance:reconcile", res)) return true;
     try {
       const body = (await readJsonLimited(req)) as {
         period?: string;
@@ -198,7 +200,8 @@ export async function handleTaxApi(
   }
 
   if (pathname === "/chat/v1/tax/yea/ready" && method === "POST") {
-    if (!requireChatPermission(user, "chat:ask", res)) return true;
+    // Marking a year-end adjustment ready for handoff is a state change.
+    if (!requireBudgetSurfacePermission(user, "finance:reconcile", res)) return true;
     try {
       const body = (await readJsonLimited(req)) as { fiscal_year?: string };
       const fy = body.fiscal_year?.trim() || resolveDefaultFiscalYear();

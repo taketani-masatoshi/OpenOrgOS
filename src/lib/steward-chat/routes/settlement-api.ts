@@ -14,6 +14,7 @@ import {
   verifySettlementAssertionAndConsume,
 } from "../../org/settlement-stepup.js";
 import { boundApproverId } from "../../org/operators.js";
+import { requireChatPermission } from "../../console-auth/rbac.js";
 import { isTenantConfigApprovalSubject } from "../../org/tenant-config-change.js";
 import { approveFromStewardChat } from "../wire-approve.js";
 import { appendChatAudit } from "../audit.js";
@@ -77,6 +78,9 @@ export async function handleSettlementApi(
       json(res, 401, { ok: false, error: "unauthorized" });
       return true;
     }
+    // Opening a settlement ceremony is the first half of an approval, so it
+    // takes the approval permission — not merely a session.
+    if (!requireChatPermission(opts.user, "chat:approve", res)) return true;
     try {
       const raw = await opts.readBody(req);
       const body = JSON.parse(raw || "{}") as {

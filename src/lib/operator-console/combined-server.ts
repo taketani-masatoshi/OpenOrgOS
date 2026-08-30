@@ -8,6 +8,7 @@ import { rejectCsrfOriginMismatch } from "../console-auth/csrf.js";
 import { rejectRateLimitExceeded } from "../console-auth/rate-limit.js";
 import { handleChatApi } from "../steward-chat/routes/chat-api.js";
 import { handleSettlementApi } from "../steward-chat/routes/settlement-api.js";
+import { handleProductApi } from "../steward-chat/routes/product-api.js";
 import {
   handleChatAuthApi,
   isPublicChatPath,
@@ -177,6 +178,14 @@ export async function startOperatorConsoleServer(
           readBody,
           hostFallback: req.headers.host ?? `${host}:${port}`,
         });
+        if (handled) return;
+      }
+
+      // Signup, plans and the Stripe webhook have no session. Without this the
+      // SPA fallback answers them with HTML 200 and Stripe treats the delivery
+      // as accepted.
+      if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/product/")) {
+        const handled = await handleProductApi(req, res, pathname, method, undefined);
         if (handled) return;
       }
 

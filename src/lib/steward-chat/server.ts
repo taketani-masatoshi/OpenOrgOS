@@ -55,75 +55,90 @@ async function readBody(req: IncomingMessage): Promise<string> {
 }
 
 function createStewardChatHttpServer(host: string, fallbackPort: number) {
-  return createServer(async (req, res) => {
-    const url = new URL(req.url ?? "/", `http://${host}`);
-    const pathname = url.pathname;
-    const method = req.method ?? "GET";
-
-    if (rejectCsrfOriginMismatch(req, res, req.headers.host ?? `${host}:${fallbackPort}`)) {
-      return;
-    }
-
-    if (rejectRateLimitExceeded(req, res)) {
-      return;
-    }
-
-    if (pathname === "/health") {
-      json(res, 200, {
-        ok: true,
-        service: "steward-chat",
-        auth: isStewardChatAuthEnabled(),
-      });
-      return;
-    }
-
-    if (await handleChatAuthApi(req, res, pathname, method, readBody)) {
-      return;
-    }
-
-    // Settlement public routes (iPhone QR) — no session cookie
-    if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/settlement/")) {
-      const handled = await handleSettlementApi(req, res, pathname, method, {
-        user: null,
-        readBody,
-        hostFallback: req.headers.host ?? `${host}:${fallbackPort}`,
-      });
-      if (handled) return;
-    }
-
-    if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/product/")) {
-      const handled = await handleProductApi(req, res, pathname, method, undefined);
-      if (handled) return;
-    }
-
-    if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
-      const user = requireChatAuth(req, res);
-      if (!user) return;
-      const handled = await handleChatApi(req, res, pathname, method, {
-        user,
-        sessionToken: sessionTokenFromRequest(req),
-      });
-      if (handled) return;
-      json(res, 404, { error: "not found" });
-      return;
-    }
-
-    if (existsSync(STEWARD_CHAT_SPA_DIST)) {
-      const rel = pathname === "/" ? "/index.html" : pathname;
-      const filePath = join(STEWARD_CHAT_SPA_DIST, rel);
-      if (existsSync(filePath) && statSync(filePath).isFile()) {
-        serveStatic(res, filePath);
-        return;
-      }
-      const indexHtml = join(STEWARD_CHAT_SPA_DIST, "index.html");
-      if (existsSync(indexHtml)) {
-        serveStatic(res, indexHtml);
-        return;
-      }
-    }
-
-    json(res, 404, { error: "not found" });
+  return createServer((req, res) => {
+    // A throw inside an async request handler is an unhandled rejection, which
+    // takes the whole console down. One bad tenant file must not do that.
+    void handleRequest(host, fallbackPort, req, res).catch((error) => {
+      console.error("steward-chat request failed:", error);
+      if (!res.headersSent) json(res, 500, { ok: false, error: "internal error" });
+      else res.end();
+    });
   });
+}
+
+async function handleRequest(
+  host: string,
+  fallbackPort: number,
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
+  const url = new URL(req.url ?? "/", `http://${host}`);
+  const pathname = url.pathname;
+  const method = req.method ?? "GET";
+
+  if (rejectCsrfOriginMismatch(req, res, req.headers.host ?? `${host}:${fallbackPort}`)) {
+    return;
+  }
+
+  if (rejectRateLimitExceeded(req, res)) {
+    return;
+  }
+
+  if (pathname === "/health") {
+    json(res, 200, {
+      ok: true,
+      service: "steward-chat",
+      auth: isStewardChatAuthEnabled(),
+    });
+    return;
+  }
+
+  if (await handleChatAuthApi(req, res, pathname, method, readBody)) {
+    return;
+  }
+
+  // Settlement public routes (iPhone QR) — no session cookie
+  if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/settlement/")) {
+    const handled = await handleSettlementApi(req, res, pathname, method, {
+      user: null,
+      readBody,
+      hostFallback: req.headers.host ?? `${host}:${fallbackPort}`,
+    });
+    if (handled) return;
+  }
+
+  if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/product/")) {
+    const handled = await handleProductApi(req, res, pathname, method, undefined);
+    if (handled) return;
+  }
+
+  if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
+    const user = requireChatAuth(req, res);
+    if (!user) return;
+    const handled = await handleChatApi(req, res, pathname, method, {
+      user,
+      sessionToken: sessionTokenFromRequest(req),
+    });
+    if (handled) return;
+    json(res, 404, { error: "not found" });
+    return;
+  }
+
+  if (existsSync(STEWARD_CHAT_SPA_DIST)) {
+    const rel = pathname === "/" ? "/index.html" : pathname;
+    const filePath = join(STEWARD_CHAT_SPA_DIST, rel);
+    if (existsSync(filePath) && statSync(filePath).isFile()) {
+      serveStatic(res, filePath);
+      return;
+    }
+    const indexHtml = join(STEWARD_CHAT_SPA_DIST, "index.html");
+    if (existsSync(indexHtml)) {
+      serveStatic(res, indexHtml);
+      return;
+    }
+  }
+
+  json(res, 404, { error: "not found" });
 }
 
 export async function startStewardChatServerAsync(
