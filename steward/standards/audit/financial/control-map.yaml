@@ -1,0 +1,78 @@
+# 会計アサーションの内部検査枠。外部会計監査人の代替ではない。
+# ISO 本文・ISA 本文は転記しない。
+
+version: "1"
+standard: financial
+notes: |
+  実在・網羅・評価・期間帰属・表示を、GL / 補助元帳 / period-lock / 月次締めチェックリストへ載せる。
+core_bindings: []
+controls:
+  - id: CTL-FIN-existence
+    title: 実在 — 仕訳の金額・日付・勘定が型を満たし、証憑を参照する
+    domain: audit
+    iso_refs:
+      - { standard: financial, clause: "existence" }
+    primary_agent: finance
+    secondary_agents: [internal_audit]
+    evidence_paths:
+      - data/finance/journal-entries.yaml
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P1
+
+  - id: CTL-FIN-completeness
+    title: 網羅 — 補助元帳と統括勘定の件数突合
+    domain: audit
+    iso_refs:
+      - { standard: financial, clause: "completeness" }
+    primary_agent: finance
+    secondary_agents: [internal_audit]
+    evidence_paths:
+      - docs/compliance/audit/financial/subledger-tie-out.csv
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P1
+
+  - id: CTL-FIN-valuation
+    title: 評価 — 税・減価償却など決定論計算との一致
+    domain: audit
+    iso_refs:
+      - { standard: financial, clause: "valuation" }
+    primary_agent: finance
+    secondary_agents: [internal_audit]
+    evidence_paths:
+      - docs/compliance/audit/financial/valuation-check.csv
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P2
+
+  - id: CTL-FIN-cutoff
+    title: 期間帰属 — ロック後の通常仕訳禁止とロック証跡の鮮度
+    domain: audit
+    iso_refs:
+      - { standard: financial, clause: "cut-off" }
+    primary_agent: finance
+    secondary_agents: [internal_audit]
+    evidence_paths:
+      - data/finance/period-locks.yaml
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P1
+
+  - id: CTL-FIN-presentation
+    title: 表示 — 月次締めチェックリスト
+    domain: audit
+    iso_refs:
+      - { standard: financial, clause: "presentation" }
+    primary_agent: finance
+    secondary_agents: [internal_audit]
+    evidence_paths:
+      - docs/compliance/audit/financial/month-close-checklist.md
+    evidence_mode: all
+    check_type: record
+    target_maturity: L2
+    priority: P2

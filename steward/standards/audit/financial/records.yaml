@@ -1,0 +1,89 @@
+# 会計アサーションの記録仕様。語彙は ISO records.yaml と同じ閉じた集合。
+
+version: "1"
+standard: financial
+
+records:
+  - file: journal-entries.yaml
+    kind: yaml
+    title: 総勘定元帳仕訳
+    tenant_path: data/finance/journal-entries.yaml
+    list_key: entries
+    rules:
+      - kind: non_empty
+        message: 仕訳が1件もありません。実在のアサーションを裏付ける記録がありません。
+
+  - file: period-locks.yaml
+    kind: yaml
+    title: 会計期間ロック
+    tenant_path: data/finance/period-locks.yaml
+    list_key: locks
+    rules:
+      - kind: non_empty
+        message: 期間ロックの記録がありません。期間帰属を裏付ける証跡がありません。
+
+  - file: subledger-tie-out.csv
+    kind: csv
+    title: 補助元帳と統括の突合
+    tenant_path: docs/compliance/audit/financial/subledger-tie-out.csv
+    columns:
+      - { name: id, required: true }
+      - { name: subledger, required: true }
+      - { name: gl_count, type: number, required: true, min: 0 }
+      - { name: sl_count, type: number, required: true, min: 0 }
+      - { name: difference, type: number, required: true }
+      - { name: explanation }
+    rules:
+      - kind: non_empty
+        message: 補助元帳突合が1件もありません。
+      - kind: unique
+        columns: [id]
+        message: 突合 ID が重複しています。
+      - kind: comparison
+        left: gl_count
+        operator: lte
+        right: sl_count
+        message: 統括件数が補助元帳件数を上回っています。
+      - kind: comparison
+        left: sl_count
+        operator: lte
+        right: gl_count
+        message: 補助元帳件数が統括件数を上回っています。
+
+  - file: valuation-check.csv
+    kind: csv
+    title: 評価の決定論突合
+    tenant_path: docs/compliance/audit/financial/valuation-check.csv
+    columns:
+      - { name: id, required: true }
+      - { name: item, required: true }
+      - { name: book_amount, type: number, required: true }
+      - { name: computed_amount, type: number, required: true }
+      - { name: difference, type: number, required: true }
+    rules:
+      - kind: non_empty
+        message: 評価突合が1件もありません。
+      - kind: unique
+        columns: [id]
+        message: 評価突合 ID が重複しています。
+      - kind: comparison
+        left: book_amount
+        operator: lte
+        right: computed_amount
+        message: 帳簿評価が決定論計算を上回っています。
+      - kind: comparison
+        left: computed_amount
+        operator: lte
+        right: book_amount
+        message: 決定論計算が帳簿評価を上回っています。
+
+  - file: month-close-checklist.md
+    kind: markdown
+    title: 月次締めチェックリスト
+    tenant_path: docs/compliance/audit/financial/month-close-checklist.md
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings: ["銀行消込", "期間ロック", "validate"]
+        message: 必須の節が欠けています。

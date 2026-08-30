@@ -1,0 +1,31 @@
+# 会計アサーション要求事項。ISA / 会計基準の本文転記ではない。
+
+version: "1"
+standard: financial
+
+requirements:
+  - id: REQ-FIN-existence-a
+    clause: existence
+    statement: 仕訳は金額・日付・勘定の型を満たし、証憑（receipt id 等）を参照する
+    source: paraphrase
+    controls: [CTL-FIN-existence]
+  - id: REQ-FIN-completeness-a
+    clause: completeness
+    statement: 売上・買掛などの補助元帳件数と統括勘定を突合し、差額を説明する
+    source: paraphrase
+    controls: [CTL-FIN-completeness]
+  - id: REQ-FIN-valuation-a
+    clause: valuation
+    statement: 税額・減価償却など決定論計算の結果と帳簿評価が一致する
+    source: paraphrase
+    controls: [CTL-FIN-valuation]
+  - id: REQ-FIN-cutoff-a
+    clause: cut-off
+    statement: 期間ロック後に通常仕訳を起票せず、ロック証跡を保持する
+    source: paraphrase
+    controls: [CTL-FIN-cutoff]
+  - id: REQ-FIN-presentation-a
+    clause: presentation
+    statement: 月次締めチェックリスト（銀行未消込・未ロック・validate）を完了する
+    source: paraphrase
+    controls: [CTL-FIN-presentation]
