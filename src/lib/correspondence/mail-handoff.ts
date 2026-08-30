@@ -1,5 +1,10 @@
 import type { MailTriageEntry } from "../../../schemas/correspondence/mail-triage.js";
+import { displayMacOSNotification } from "../notifications/macos-notify.js";
 import { pushNotifications } from "../notifications/push.js";
+import {
+  formatMailTriageDesktopAlert,
+  formatMailTriagePriorityLabel,
+} from "./mail-triage-alert.js";
 import { buildTodayContext } from "../steward-chat/today-context.js";
 import { findTriageEntry, upsertTriageEntry } from "./mail-triage-queue.js";
 import { inboundCorrespondenceDraftMdPath } from "./paths.js";
@@ -14,18 +19,32 @@ import { nextActionLabel } from "../scheduling-coordination/next-action.js";
 export async function notifyMailTriageHighPriority(ids: string[]): Promise<number> {
   if (!ids.length) return 0;
   const ctx = buildTodayContext();
-  let notified = 0;
+  const alerted: MailTriageEntry[] = [];
 
   for (const id of ids) {
     const entry = findTriageEntry(id);
     if (!entry) continue;
     try {
-      await pushNotifications("mail_triage_high", ctx);
-      upsertTriageEntry({
-        ...entry,
-        notified_at: new Date().toISOString(),
+      await displayMacOSNotification(formatMailTriageDesktopAlert(entry));
+    } catch {
+      // desktop banner is best effort
+    }
+    upsertTriageEntry({
+      ...entry,
+      notified_at: new Date().toISOString(),
+    });
+    alerted.push(entry);
+  }
+
+  if (alerted.length) {
+    try {
+      await pushNotifications("mail_triage_high", ctx, {
+        mail_triage: alerted.map((entry) => ({
+          id: entry.id,
+          subject: entry.subject,
+          priority: formatMailTriagePriorityLabel(entry),
+        })),
       });
-      notified += 1;
     } catch {
       // notification channel optional
     }
@@ -37,7 +56,7 @@ export async function notifyMailTriageHighPriority(ids: string[]): Promise<numbe
     // slack optional
   }
 
-  return notified;
+  return alerted.length;
 }
 
 function formatSenderSection(mailId: string): string[] {

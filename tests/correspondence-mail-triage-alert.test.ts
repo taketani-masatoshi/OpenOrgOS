@@ -14,9 +14,10 @@ import { findTriageEntry } from "../src/lib/correspondence/mail-triage-queue.js"
 import * as macosNotify from "../src/lib/notifications/macos-notify.js";
 import * as push from "../src/lib/notifications/push.js";
 
+/** Only the queue this test writes — the rest of data/executive is tracked seed data. */
 function cleanup(): void {
-  const exec = join(getDataDir(), "executive");
-  if (existsSync(exec)) rmSync(exec, { recursive: true, force: true });
+  const queue = join(getDataDir(), "executive", "mail-triage-queue.yaml");
+  if (existsSync(queue)) rmSync(queue, { force: true });
 }
 
 describe("correspondence mail triage alert", () => {

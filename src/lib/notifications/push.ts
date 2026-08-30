@@ -24,11 +24,14 @@ export interface PushNotificationResult {
 
 export async function pushNotifications(
   event: string,
-  ctx: TodayContext
+  ctx: TodayContext,
+  /** Event-specific fields (L1 only) merged into the payload, e.g. mail_triage subjects. */
+  extra?: Record<string, unknown>
 ): Promise<PushNotificationResult> {
   const registry = loadNotificationsRegistry();
   const sent: PushNotificationResult["sent"] = [];
   const payload = {
+    ...extra,
     event,
     tenant: getTenantId(),
     report_date: ctx.report_date,

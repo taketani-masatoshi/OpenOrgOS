@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -25,9 +25,23 @@ function cleanup(): void {
 }
 
 describe("correspondence approval registry repair", () => {
+  let contactsBackup: string | null = null;
+
   beforeEach(() => {
     setTenantId("demo");
     cleanup();
+    const contactsPath = join(getDataDir(), "executive", "external-contacts.yaml");
+    contactsBackup = existsSync(contactsPath) ? readFileSync(contactsPath, "utf-8") : null;
+    writeFileSync(
+      contactsPath,
+      YAML.stringify({
+        contacts: [
+          { id: "EXT-901", name: "Partner A", org: "Example", email: "a@example.com" },
+          { id: "EXT-902", name: "Partner B", org: "Example", email: "b@example.com" },
+        ],
+      }),
+      "utf-8"
+    );
     writeFileSync(
       join(getDataDir(), "company.yaml"),
       YAML.stringify({
@@ -39,7 +53,13 @@ describe("correspondence approval registry repair", () => {
     mkdirSync(getExecutiveRecordsDir(), { recursive: true });
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    const contactsPath = join(getDataDir(), "executive", "external-contacts.yaml");
+    if (contactsBackup === null) rmSync(contactsPath, { force: true });
+    else writeFileSync(contactsPath, contactsBackup, "utf-8");
+    contactsBackup = null;
+  });
 
   it("rebuilds a missing approval row from draft metadata", () => {
     const { draft, approvalId } = createCorrespondenceDraft({
