@@ -37,10 +37,6 @@ export interface ResolvedLanguageBridge {
   recordStrategy: RecordLanguageStrategy;
 }
 
-function moduleExamplePath(): string {
-  return join(getModuleSeedDir(MODULE_ID), "language-bridge.yaml.example");
-}
-
 export function languageBridgeConfigPath(): string {
   return resolveTenantPath(CONFIG_REL);
 }
@@ -57,10 +53,8 @@ export function loadLanguageBridgeConfig(): LanguageBridgeConfig | null {
   for (const path of [languageBridgeConfigPath(), languageBridgeExamplePath()]) {
     if (existsSync(path)) return readYamlFile(path, languageBridgeConfigSchema);
   }
-  if (isLanguageBridgeEnabled()) {
-    const moduleEx = moduleExamplePath();
-    if (existsSync(moduleEx)) return readYamlFile(moduleEx, languageBridgeConfigSchema);
-  }
+  // The module seed is a template to copy, not configuration: a tenant that
+  // never filled it in keeps its own language rather than the sample's.
   return null;
 }
 

@@ -239,9 +239,11 @@ export function handleFinanceMetricsChatMessage(message: string): FinanceMetrics
 
   const cash =
     cf.cashBalance == null ? "現預金未設定" : `現預金 ${formatCurrency(cf.cashBalance)}`;
+  // The burn rate is quoted even in surplus months: it is what was asked for,
+  // and a negative figure is the honest answer.
   const burnOrSurplus =
     cf.cashFlowMode === "surplus"
-      ? `月次キャッシュ増 ${formatCurrency(cf.monthlyCashSurplus)}`
+      ? `月次キャッシュ増 ${formatCurrency(cf.monthlyCashSurplus)}（バーンレート ${formatCurrency(cf.burnRate)}）`
       : `ネットバーン ${formatCurrency(cf.monthlyNetBurn)}`;
   const reply = [
     `${cash} · ${formatModeJa(cf.cashFlowMode)}（${cf.basisMonth}）。`,
