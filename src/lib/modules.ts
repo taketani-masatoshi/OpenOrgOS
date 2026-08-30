@@ -251,6 +251,15 @@ export function loadModulesFile(): ModulesFile {
   return readYamlFile(path, modulesFileSchema);
 }
 
+/** Returns an empty file when modules.yaml is missing or invalid (minimal tenants). */
+export function loadModulesFileSafe(): ModulesFile {
+  try {
+    return loadModulesFile();
+  } catch {
+    return { version: 1, modules: [] } as ModulesFile;
+  }
+}
+
 export function loadEnabledModules(): TenantModule[] {
   return loadModulesFile().modules.filter((m) => m.enabled);
 }

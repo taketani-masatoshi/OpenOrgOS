@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { z } from "zod";
-import { getModuleSeedDir, loadEnabledModules } from "./modules.js";
+import { getModuleSeedDir, loadEnabledModules, loadEnabledModulesSafe } from "./modules.js";
 import { resolveTenantPath } from "./utils.js";
 import { readYamlFile } from "./utils.js";
 
@@ -29,7 +29,7 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
 };
 
 export function isModuleEnabled(moduleId: string): boolean {
-  return loadEnabledModules().some((m) => m.agent === moduleId);
+  return loadEnabledModulesSafe().some((m) => m.agent === moduleId);
 }
 
 export function getModuleDataDir(moduleId: string): string {

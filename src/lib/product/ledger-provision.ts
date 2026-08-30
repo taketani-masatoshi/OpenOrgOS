@@ -17,7 +17,6 @@ import { upsertControlPlaneTenant } from "./ledger-control-plane.js";
 const FINANCE_SEED_FILES = [
   "chart-of-accounts.yaml",
   "expense-claim-accounting.yaml",
-  "journal-entries.yaml",
   "period-locks.yaml",
   "tax-profile.yaml",
   "opening-balances.yaml",
@@ -54,6 +53,10 @@ function seedFinanceFromFixture(tenantId: string): void {
     cpSync(src, dest);
   }
   writeFileSync(join(destRoot, "opening-balances.yaml"), CASH_ONLY_OPENING, "utf-8");
+  const journalDest = join(destRoot, "journal-entries.yaml");
+  if (!existsSync(journalDest)) {
+    writeFileSync(journalDest, "version: 1\nentries: []\n", "utf-8");
+  }
   const fixedAssetsDest = join(destRoot, "fixed-assets.yaml");
   if (existsSync(fixedAssetsDest)) {
     writeFileSync(

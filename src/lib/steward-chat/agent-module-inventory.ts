@@ -15,7 +15,7 @@ import {
   listTenantScopeCatalogModuleIds,
   loadEnabledModulesSafe,
   loadModuleManifest,
-  loadModulesFile,
+  loadModulesFileSafe,
   MODULE_TO_CLASSIFICATION_AGENT,
   type ModuleAgentId,
 } from "../modules.js";
@@ -174,7 +174,9 @@ export function buildAgentModuleInventory(): AgentModuleInventory {
       ...(loaded.roster.disabled ?? []),
     ])
   );
-  const tenantModules = loadModulesFile().modules;
+  // A minimal or half-provisioned tenant may have no modules.yaml at all; that
+  // is an empty inventory, not a reason to fail the request.
+  const tenantModules = loadModulesFileSafe().modules;
   const installedIds = new Set(tenantModules.map((m) => m.id));
   const enabledIds = new Set(loadEnabledModulesSafe().map((m) => m.id));
   const pendingModules = pendingByModule();
