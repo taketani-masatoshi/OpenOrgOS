@@ -35,7 +35,9 @@ import {
   governancePrinciplesRulePath,
   iso37000ControlMapPath,
 } from "../lib/org/governance-principles.js";
-import { verifyIsoMaps } from "../lib/iso-catalog.js";
+import { listAvailableIsoIds, verifyIsoMaps } from "../lib/iso-catalog.js";
+import { loadRecordSpecs } from "../lib/iso-records.js";
+import { loadRequirements } from "../lib/iso-requirements.js";
 
 export interface DoctorOptions {
   json?: boolean;
@@ -262,6 +264,24 @@ function checkIso37000Pack(): DoctorCheck {
   };
 }
 
+function checkIsoRegisters(): DoctorCheck {
+  const missing: string[] = [];
+  for (const id of listAvailableIsoIds()) {
+    const reqs = loadRequirements(id)?.requirements ?? [];
+    const recs = loadRecordSpecs(id)?.records ?? [];
+    if (reqs.length === 0) missing.push(`${id} requirements empty`);
+    if (recs.length === 0) missing.push(`${id} records empty`);
+  }
+  return {
+    id: "iso_registers",
+    ok: missing.length === 0,
+    detail:
+      missing.length === 0
+        ? `ISO registers filled (${listAvailableIsoIds().length} available packs)`
+        : `ERROR: ${missing.join("; ")}`,
+  };
+}
+
 function checkIsoCatalogMaps(): DoctorCheck {
   const { ok, statuses } = verifyIsoMaps();
   const verified = statuses.filter((s) => !s.skipped);
@@ -364,6 +384,7 @@ export function collectDoctorChecks(opts: DoctorOptions = {}): {
     checkAiaConcurrentJobs(),
     checkIso37000Pack(),
     checkIsoCatalogMaps(),
+    checkIsoRegisters(),
     ...runProdAuthChecks("all").map((c) => ({
       id: c.id,
       ok: c.ok,
