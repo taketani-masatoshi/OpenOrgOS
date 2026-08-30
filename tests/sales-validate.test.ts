@@ -1,3 +1,4 @@
+// @catalog-ids: sales
 import { describe, expect, it, beforeEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
 import {

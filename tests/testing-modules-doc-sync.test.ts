@@ -35,10 +35,11 @@ describe("testing-modules doc sync", () => {
     }
   });
 
-  it("documents 30 catalog modules", () => {
+  it("documents the catalog module count from the registry", () => {
     const text = readFileSync(docPath, "utf-8");
-    expect(text).toMatch(/業務 catalog module[^\n]*\*\*30\*\*/);
-    expect(loadTestRegistry().stats.catalog_total).toBe(30);
+    const match = text.match(/業務 catalog module[^\n]*\*\*(\d+)\*\*/);
+    expect(match, "testing-modules.md should table **NNN** catalog modules").toBeTruthy();
+    expect(Number(match![1])).toBe(loadTestRegistry().stats.catalog_total);
   });
 
   it("documents catalog tier counts matching registry stats", () => {

@@ -102,6 +102,7 @@
 - `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
 - `jp_inspection` — `modules.yaml` 未登録 · **読まない**
 - `jp_invoice_qualified` — `modules.yaml` 未登録 · **読まない**
+- `jp_jsox` — `modules.yaml` 未登録 · **読まない**
 - `jp_medical_device` — `modules.yaml` 未登録 · **読まない**
 - `jp_minpaku` — `modules.yaml` 未登録 · **読まない**
 - `jp_payroll` — `modules.yaml` 未登録 · **読まない**

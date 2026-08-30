@@ -11,14 +11,14 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 
 | 指標 | 値 |
 |------|-----|
-| Vitest テストファイル | **528**（`tests/**/*.test.ts` · registry 含む） |
-| テストケース（静的 `it`/`test` **2262**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
-| 業務 catalog module | **30**（core 21 + JP pack 9） |
-| production_ready | **28** |
+| Vitest テストファイル | **577**（`tests/**/*.test.ts` · registry 含む） |
+| テストケース（静的 `it`/`test` **2636**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
+| 業務 catalog module | **46**（readiness.yaml 正本 · core + JP pack） |
+| production_ready | **32** |
 | skeleton | **1**（`jp_permit_registry`） |
-| CLI 登録（`MODULE_CLI_BUNDLES`） | **44** |
+| CLI 登録（`MODULE_CLI_BUNDLES`） | **47** |
 | catalog coverage gap | **0** |
-| catalog dedicated (+ full) | **28** |
+| catalog dedicated (+ full) | **30** |
 | catalog bundled | **9** |
 | catalog_only | **7** |
 
@@ -62,7 +62,7 @@ npm run test:platform -- P04_wire_stack
 | tier | 件数 | 説明 |
 |------|------|------|
 | full | 3 | 専用テスト 2 ファイル以上（`jp_permit_registry` · `jp_bank_corporate`） |
-| dedicated | 25 | 単一 module 向けテスト（`jp-*` · travel · rental · hospitality 等） |
+| dedicated | 27 | 単一 module 向けテスト（`jp-*` · travel · rental · hospitality 等） |
 | bundled | 9 | `wave-modules-cli.test.ts` + `catalog/bundled-modules-contract.test.ts` |
 | catalog_only | 9 | CLI なし module — `tests/catalog/{id}.test.ts` 各 1 ファイル |
 | gap | 0 | 未カバー — **禁止**（registry check で検出） |
