@@ -10,3 +10,6 @@ cli_commands:
   - schedule
   - complete
   - gate
+security:
+  limits:
+    concurrent_jobs: 1

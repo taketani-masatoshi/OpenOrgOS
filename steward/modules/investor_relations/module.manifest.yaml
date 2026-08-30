@@ -11,3 +11,6 @@ cli_commands:
   - cap-table-review
   - disclosure-calendar
 notes: production_ready — cap table · investor registry · disclosure calendar · IR materials index
+security:
+  limits:
+    concurrent_jobs: 2

@@ -5,3 +5,6 @@ activation_seeds:
 notes: skeleton — 源泉徴収 · 法定調書 · 社保 rhythm
 cli_commands:
   - calendar
+security:
+  limits:
+    concurrent_jobs: 1

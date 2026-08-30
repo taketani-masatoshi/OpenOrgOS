@@ -6,3 +6,6 @@ notes: skeleton — インボイス（適格請求書）登録 · T 番号整合
 cli_commands:
   - registration
   - issue-check
+security:
+  limits:
+    concurrent_jobs: 1

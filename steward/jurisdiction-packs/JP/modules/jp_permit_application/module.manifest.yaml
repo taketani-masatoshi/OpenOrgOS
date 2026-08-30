@@ -21,3 +21,6 @@ cli_commands:
   - submit-mark
   - approve
   - gate
+security:
+  limits:
+    concurrent_jobs: 1

@@ -17,3 +17,6 @@ cli_commands:
   - validate
   - checklist
   - draft
+security:
+  limits:
+    concurrent_jobs: 1

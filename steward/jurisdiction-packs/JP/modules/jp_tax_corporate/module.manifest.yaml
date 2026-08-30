@@ -8,3 +8,6 @@ cli_commands:
   - gaps
   - depreciation
   - xml-draft
+security:
+  limits:
+    concurrent_jobs: 1

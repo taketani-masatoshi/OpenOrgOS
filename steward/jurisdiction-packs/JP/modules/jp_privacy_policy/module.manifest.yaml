@@ -10,3 +10,6 @@ cli_commands:
   - show
   - validate
   - policy-status
+security:
+  limits:
+    concurrent_jobs: 1

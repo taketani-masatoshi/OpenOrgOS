@@ -11,3 +11,6 @@ cli_commands:
   - show
   - validate
   - targets
+security:
+  limits:
+    concurrent_jobs: 1

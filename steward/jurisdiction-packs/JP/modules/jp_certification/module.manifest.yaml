@@ -13,3 +13,6 @@ cli_commands:
   - renew
   - scan-expiry
   - gate
+security:
+  limits:
+    concurrent_jobs: 1

@@ -25,3 +25,6 @@ cli_commands:
   - draft
   - crm-dashboard
 notes: production_ready — pipeline · outbound · inbound · CRM wave 2b (write CLI + Console)
+security:
+  limits:
+    concurrent_jobs: 2

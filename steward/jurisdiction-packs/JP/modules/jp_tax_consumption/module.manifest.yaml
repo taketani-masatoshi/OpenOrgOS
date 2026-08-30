@@ -7,3 +7,6 @@ cli_commands:
   - check
   - calc
   - eligibility
+security:
+  limits:
+    concurrent_jobs: 1

@@ -19,3 +19,6 @@ cli_commands:
   - obligations
   - gap
   - application
+security:
+  limits:
+    concurrent_jobs: 1

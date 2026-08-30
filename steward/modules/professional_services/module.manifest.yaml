@@ -9,3 +9,6 @@ cli_commands:
   - show
   - validate
   - project_billing
+security:
+  limits:
+    concurrent_jobs: 2

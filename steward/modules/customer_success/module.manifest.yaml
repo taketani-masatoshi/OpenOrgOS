@@ -12,3 +12,6 @@ cli_commands:
   - onboarding
   - nps
 notes: production_ready — customer health score · onboarding · QBR · NPS · churn events
+security:
+  limits:
+    concurrent_jobs: 2

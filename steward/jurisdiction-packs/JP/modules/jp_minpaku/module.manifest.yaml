@@ -7,3 +7,6 @@ optional_regulations:
 notes: skeleton — 住宅宿泊事業（民泊）運用 · 届出は jp_permit_application · 台帳は jp_permit_registry
 cli_commands:
   - gate
+security:
+  limits:
+    concurrent_jobs: 1
