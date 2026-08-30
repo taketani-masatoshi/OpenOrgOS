@@ -12,7 +12,10 @@ iso:
     notes: 情報セキュリティ · REG-009 は施行中
   - id: ISO-13485
     enabled: true
-    notes: jp_medical_device On · REG-025/026 は施行中
+    notes: >-
+      jp_medical_device On · REG-025/026 は施行中。認証・自己宣言は追わず、
+      成熟度は L0 のまま台帳と規程の運用に限る（2026-08-30 CEO 判断）。
+      事前検査の不適合は「認証準備の未了」であり、規制対応の欠落ではない。
   - id: ISO-37000
     enabled: true
     notes: 組織ガバナンス Guidance · 自己宣言経路

@@ -52,4 +52,4 @@
 | 償却累計 | ￥0 |
 | 帳簿価額 | ￥26,000,000 |
 
-*生成: orgos skills run tax-filing-prep · 2026-08-29*
+*生成: orgos skills run tax-filing-prep · 2026-08-30*

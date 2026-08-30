@@ -42,4 +42,4 @@ npm run orgos -- tax gaps
 npm run orgos -- report kessan
 ```
 
-*生成: orgos skills run tax-filing-prep · 2026-08-29*
+*生成: orgos skills run tax-filing-prep · 2026-08-30*

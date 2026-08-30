@@ -1,18 +1,1 @@
-transactions:
-  - transaction_id: TX-20260830-001
-    direction: outbound
-    our_org:
-      org_id: wire-console-test
-      org_uri: steward://tenant/wire-console-test
-    counterparty:
-      org_id: PEER-001
-    transaction_type: steward.payment.instructed
-    amount:
-      value: 250000
-      currency: JPY
-    refs:
-      broker_instruction: BRO-E2E-SETTLE-001
-    event_id: 37c48a5a-cfc3-41f6-b493-e519cb6301b3
-    recorded_at: 2026-08-30T01:04:33.734Z
-    notes: E2E settlement step-up tier B
-as_of: 2026-08-30
+transactions: []

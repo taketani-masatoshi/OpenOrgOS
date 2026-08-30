@@ -1,6 +1,6 @@
-# ISO 適合性の事前検査 — IAR-1788052161987-p6khcd6o
+# ISO 適合性の事前検査 — IAR-1788071158877-x67widpb
 
-**日時:** 2026-08-30T01:09:21.987Z
+**日時:** 2026-08-30T06:25:58.877Z
 **テナント:** mal
 **実施:** internal_audit（決定論検査 · 人間署名ではない）
 **位置づけ:** 本検査は ISO 19011 の内部監査ではない。証拠の存在と記録の仕様適合を機械的に確認するもので、要求事項ごとの判定は `orgos iso audit plan create` 以降で監査員が行う。
@@ -12,7 +12,7 @@
 |------|----------|------|------|--------|------------|
 | 不適合 | 71 | 5 | 2 | 64 | 0 |
 
-前回 IAR-1788047544962-uuvmgdq6（2026-08-29）総合 nonconform · 不適合 64 件。
+前回 IAR-1788069201950-lwrbns6v（2026-08-30）総合 nonconform · 不適合 64 件。
 
 ## 適合状況（規格別）
 
@@ -33,10 +33,10 @@
 
 | CTL | 規格 | 内容 | 併記 | 担当 |
 |-----|------|------|------|------|
-| CTL-CORE-risk-approach | ISO-13485 7.1 | 証拠パス未充足: docs/compliance/iso/ISO-21401/risk-opportunities.csv（様式が未記入）, docs/compliance/iso/ISO-9001/risk-opportunities.csv（未作成） | record_invalid: 記録の内容が仕様を満たしません — docs/compliance/iso/ISO-21401/risk-opportunities.csv: 1 件の不備, docs/compliance/iso/ISO-27001/risk-register.csv: 3 件の不備, docs/compliance/iso/ISO-9001/risk-opportunities.csv: 1 件の不備 | compliance |
+| CTL-CORE-risk-approach | ISO-13485 7.1 | 証拠パス未充足: docs/compliance/iso/ISO-21401/risk-opportunities.csv（様式が未記入） | record_invalid: 記録の内容が仕様を満たしません — docs/compliance/iso/ISO-21401/risk-opportunities.csv: 1 件の不備, docs/compliance/iso/ISO-27001/risk-register.csv: 3 件の不備 | compliance |
 | CTL-CORE-operation | ISO-14001 8.1 | 現在 L0 · 目標 L2 | — | operations |
 | CTL-CORE-management-review | ISO-13485 5.6 | 現在 L2 · 目標 L3 | — | compliance |
-| CTL-CORE-corrective-action | ISO-13485 8.5.2 | 証拠パス未充足: docs/compliance/iso/ISO-21401/corrective-actions.csv（様式が未記入）, docs/compliance/iso/ISO-9001/nonconformance-log.csv（未作成） | record_invalid: 記録の内容が仕様を満たしません — docs/compliance/iso/ISO-9001/nonconformance-log.csv: 1 件の不備 | quality_assurance |
+| CTL-CORE-corrective-action | ISO-13485 8.5.2 | 証拠パス未充足: docs/compliance/iso/ISO-21401/corrective-actions.csv（様式が未記入） | — | quality_assurance |
 | CTL-13485-4.2.2 | ISO-13485 4.2.2 | 現在 L0 · 目標 L2 | — | medical_device_regulatory |
 | CTL-13485-7.3 | ISO-13485 7.3 | 現在 L0 · 目標 L2 | — | engineering |
 | CTL-13485-7.4 | ISO-13485 7.4 | 現在 L0 · 目標 L2 | — | medical_device_regulatory |
@@ -116,7 +116,7 @@
 - **P2 CTL-21401-env-waste**（廃棄物の分別・減量と事業系ごみの適正処理）: 成熟度を目標まで上げ、運用記録を docs/compliance/iso/ISO-21401/kpi-log.csv に残す。 あわせて: 記録の内容を仕様に合わせる: docs/compliance/iso/ISO-21401/kpi-log.csv
 - **P2 CTL-21401-soc-community**（地域・近隣ステークホルダーとの関係管理）: 成熟度を目標まで上げ、運用記録を docs/compliance/iso/ISO-21401/stakeholder-register.csv に残す。 あわせて: 記録の内容を仕様に合わせる: docs/compliance/iso/ISO-21401/stakeholder-register.csv
 - **P2 CTL-CORE-competence**（力量・認識・教育訓練）: 記録の内容を仕様に合わせる: data/medical-device/ledgers/training-records.yaml · docs/compliance/iso/ISO-21401/competence/ · docs/company/regulations/joho-security-kanri-kisoku.md · docs/company/regulations/hinshitsu-kanri-kisoku.md
-- **P2 CTL-CORE-corrective-action**（不適合及び是正処置）: 証拠ファイルを用意する: docs/medical-device/qms/ · docs/compliance/iso/ISO-21401/corrective-actions.csv · docs/compliance/iso/ISO-9001/nonconformance-log.csv あわせて: 記録の内容を仕様に合わせる: docs/medical-device/qms/ · docs/compliance/iso/ISO-21401/corrective-actions.csv · docs/compliance/iso/ISO-9001/nonconformance-log.csv
+- **P2 CTL-CORE-corrective-action**（不適合及び是正処置）: 証拠ファイルを用意する: docs/medical-device/qms/ · docs/compliance/iso/ISO-21401/corrective-actions.csv · docs/compliance/iso/ISO-9001/nonconformance-log.csv
 - **P2 CTL-CORE-doc-control**（文書化された情報の管理）: 記録の内容を仕様に合わせる: docs/company/regulations/bunsho-kanri-kisoku.md · data/medical-device/ledgers/document-control-records.yaml
 - **P2 CTL-CORE-operation**（運用の計画及び管理）: 成熟度を目標まで上げ、運用記録を docs/company/regulations/shukuhaku-unyo-kisoku.md に残す。
 - **P2 CTL-CORE-risk-approach**（リスク及び機会への取組み）: 証拠ファイルを用意する: docs/medical-device/qms/ · docs/compliance/iso/ISO-21401/risk-opportunities.csv · docs/compliance/iso/ISO-27001/risk-register.csv · docs/compliance/iso/ISO-9001/risk-opportunities.csv あわせて: 記録の内容を仕様に合わせる: docs/medical-device/qms/ · docs/compliance/iso/ISO-21401/risk-opportunities.csv · docs/compliance/iso/ISO-27001/risk-register.csv · docs/compliance/iso/ISO-9001/risk-opportunities.csv
