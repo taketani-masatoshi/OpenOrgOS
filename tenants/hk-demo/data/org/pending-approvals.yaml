@@ -3,7 +3,7 @@ approvals:
   - approval_id: APR-20260830-001
     scope: internal
     status: approved
-    proposed_at: 2026-08-30T06:27:43.829Z
+    proposed_at: 2026-08-30T06:52:13.827Z
     proposed_by: secretary
     subject_type: regulation.amendment
     subject_ref: REG-HK-004
@@ -14,5 +14,5 @@ approvals:
     approval_policy_ref: REG-HK-004
     approval_tier: A
     approver_id: Demo CEO
-    approved_at: 2026-08-30T06:27:43.834Z
-    audit_event_id: fdddca50-eaa1-4d9e-ae40-bd6c00c3d1e7
+    approved_at: 2026-08-30T06:52:13.832Z
+    audit_event_id: 91de8be9-f2a4-4a76-a4f7-5c4a5a645a82

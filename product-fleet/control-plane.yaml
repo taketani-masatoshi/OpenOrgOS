@@ -8,7 +8,7 @@ tenants:
     subscription_status: trialing
     accountant_parent_id: pilot-ledger-005
     host: pilot-ledger-003.ledger.localhost
-    updated_at: 2026-08-30T06:30:33.280Z
+    updated_at: 2026-08-30T06:54:28.911Z
   - tenant_id: pilot-ledger-004
     company_name: パイロット第四株式会社
     host_slug: pilot-ledger-004
@@ -17,7 +17,7 @@ tenants:
     subscription_status: trialing
     accountant_parent_id: pilot-ledger-005
     host: pilot-ledger-004.ledger.localhost
-    updated_at: 2026-08-30T06:30:33.282Z
+    updated_at: 2026-08-30T06:54:28.913Z
   - tenant_id: pilot-ledger-005
     company_name: パイロット会計法人
     host_slug: pilot-ledger-005
@@ -25,7 +25,7 @@ tenants:
     status: active
     subscription_status: trialing
     host: pilot-ledger-005.ledger.localhost
-    updated_at: 2026-08-30T06:30:33.284Z
+    updated_at: 2026-08-30T06:54:28.915Z
   - tenant_id: demo-signup-001
     company_name: デモ申込株式会社
     host_slug: demo-signup-001
@@ -33,7 +33,7 @@ tenants:
     status: active
     subscription_status: trialing
     host: demo-signup-001.ledger.localhost
-    updated_at: 2026-08-30T06:30:33.268Z
+    updated_at: 2026-08-30T06:54:28.901Z
   - tenant_id: pilot-ledger-001
     company_name: パイロット法人株式会社
     host_slug: pilot-ledger-001
@@ -41,7 +41,7 @@ tenants:
     status: active
     subscription_status: trialing
     host: pilot-ledger-001.ledger.localhost
-    updated_at: 2026-08-30T06:30:33.274Z
+    updated_at: 2026-08-30T06:54:28.907Z
   - tenant_id: pilot-ledger-001-drill
     company_name: パイロット法人株式会社
     host_slug: pilot-ledger-001-drill
@@ -49,4 +49,4 @@ tenants:
     status: active
     subscription_status: trialing
     host: pilot-ledger-001-drill.ledger.localhost
-    updated_at: 2026-08-30T06:30:33.277Z
+    updated_at: 2026-08-30T06:54:28.909Z

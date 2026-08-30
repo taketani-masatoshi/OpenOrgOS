@@ -234,3 +234,9 @@ invites:
     operator_id: OP-GUEST01
     expires_at: 2026-08-31T06:34:37.839Z
     created_at: 2026-08-30T06:34:37.851Z
+  - token: 3646d54370d469ccdf037cb970bb673f.b94868bb2061095a1d7546c241752b77
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T06:59:25.586Z
+    created_at: 2026-08-30T06:59:25.599Z
