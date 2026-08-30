@@ -23,6 +23,7 @@ const SOURCE_GLOBS = [
   "src/lib/steward-chat/*.ts",
   "src/lib/steward-chat/routes/*.ts",
   "src/lib/wire-console/routes/*.ts",
+  "src/lib/protocol/community-*-api.ts",
 ];
 
 export interface RouteRef {
@@ -160,16 +161,15 @@ export function extractRoutes(source: string, text: string): RouteRef[] {
 
     const guard = line.match(PATH_GUARD);
     if (guard) {
-      const block = lines.slice(i, i + 30).join("\n");
-      found.push({
-        method:
-          block.match(METHOD_IN_BLOCK)?.[1] ??
-          block.match(METHOD_GUARD_IN_BLOCK)?.[1] ??
-          "ANY",
-        path: guard[1],
-        source,
-        line: lineNo,
-      });
+      // The guard hands the rest of the handler one path, and each method is
+      // asserted further down. Reading only the first one hides the writes.
+      const rest = lines.slice(i).join("\n");
+      const methods = [...rest.matchAll(new RegExp(METHOD_IN_BLOCK, "g"))].map((m) => m[1]!);
+      const distinct = [...new Set(methods)];
+      if (distinct.length === 0) {
+        distinct.push(rest.match(METHOD_GUARD_IN_BLOCK)?.[1] ?? "ANY");
+      }
+      for (const method of distinct) found.push({ method, path: guard[1]!, source, line: lineNo });
       return;
     }
 

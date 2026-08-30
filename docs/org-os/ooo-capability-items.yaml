@@ -306,6 +306,11 @@ items:
     unit: [ tests/remittance-journal.test.ts, tests/steward-chat-broker-http.test.ts ]
     http: { tests: [ tests/steward-chat-broker-http.test.ts ], route: /chat/v1/broker }
     e2e: [ e2e/steward-chat.money.spec.ts ]
+    # 90 未達（79）。原因は製品ではなく E2E の状態共有で、他の spec の
+    # プロビジョン操作が demo テナントの data/finance/bank-accounts.yaml
+    # （L2・git 管理外）を消すため通しで赤になる。単独実行では緑。
+    # テナントを spec 単位に分けるまで、この点は上げない。
+    shortfall: e2e-shared-tenant
 
   - id: OOO-15
     domain: tax
@@ -1103,3 +1108,83 @@ items:
     unit: [ tests/ledger-tenant-isolation.test.ts, tests/ledger-product.test.ts ]
     http: { tests: [ tests/steward-chat-platform-tenant-http.test.ts ], route: /chat/v1/product/control-plane }
     e2e: [ e2e/steward-chat.product.spec.ts ]
+  - id: OOO-54
+    domain: ops
+    act: 外部連携ハブ（接続・切断・送り先の設定）
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/connectors.md ]
+      mentions:
+        - "POST /chat/v1/integrations/:provider/connect"
+        - "承認権の無い席が接続・送信"
+        - "秘密の GET"
+    impl:
+      sources:
+        - src/lib/steward-chat/routes/integrations-api.ts
+        - src/lib/integrations/connector-hub.ts
+        - src/lib/integrations/connector-store.ts
+        - src/lib/protocol/community-connectors-api.ts
+      routes:
+        - GET /chat/v1/integrations
+        - POST /chat/v1/integrations/:provider/connect
+        - POST /chat/v1/integrations/:provider/disconnect
+        - PUT /chat/v1/integrations/:provider/settings
+        - PUT /chat/v1/integrations/secrets
+    unit: [ tests/connector-store.test.ts, tests/connector-bind.test.ts ]
+    http: { tests: [ tests/steward-chat-integrations-http.test.ts ], route: /chat/v1/integrations }
+    e2e: [ e2e/steward-chat.integrations.spec.ts ]
+  - id: OOO-55
+    domain: ops
+    act: Slack へ承認付きで投稿する
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/connectors.md ]
+      mentions:
+        - "POST /chat/v1/integrations/slack/send"
+        - "未接続のまま送信・push・格納"
+        - "送信先（チャンネル / プロジェクト / フォルダ）が未設定"
+    impl:
+      sources:
+        - src/lib/steward-chat/routes/integrations-api.ts
+        - src/lib/integrations/slack-connector.ts
+        - src/lib/correspondence/slack-send.ts
+      routes:
+        - POST /chat/v1/integrations/slack/send
+    unit: [ tests/slack-connector.test.ts, tests/connector-store.test.ts ]
+    http: { tests: [ tests/steward-chat-integrations-http.test.ts ], route: /chat/v1/integrations/slack/send }
+    e2e: [ e2e/steward-chat.integrations.spec.ts ]
+  - id: OOO-56
+    domain: ops
+    act: Work Order と社長タスクを Asana に複製する
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/connectors.md ]
+      mentions:
+        - "POST /chat/v1/integrations/asana/push"
+        - "Asana へ出すのは id・件名・状態・期限だけ"
+        - "未接続のまま送信・push・格納"
+    impl:
+      sources:
+        - src/lib/steward-chat/routes/integrations-api.ts
+        - src/lib/integrations/asana-adapter.ts
+      routes:
+        - POST /chat/v1/integrations/asana/push
+    unit: [ tests/asana-target-payload.test.ts, tests/connector-store.test.ts ]
+    http: { tests: [ tests/steward-chat-integrations-http.test.ts ], route: /chat/v1/integrations/asana/push }
+    e2e: [ e2e/steward-chat.integrations.spec.ts ]
+  - id: OOO-57
+    domain: ops
+    act: 正本を PDF にして Google Drive へ格納する
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/connectors.md ]
+      mentions:
+        - "POST /chat/v1/integrations/gdrive/export"
+        - "許可リスト外のパスを Drive へ出す"
+        - "対応台帳は `data/integrations/gdrive-exports.yaml`"
+    impl:
+      sources:
+        - src/lib/steward-chat/routes/integrations-api.ts
+        - src/lib/integrations/gdrive-export.ts
+      routes:
+        - POST /chat/v1/integrations/gdrive/export
+        - GET /chat/v1/integrations/gdrive/exports
+    unit: [ tests/gdrive-export-allowlist.test.ts, tests/connector-store.test.ts ]
+    http: { tests: [ tests/steward-chat-integrations-http.test.ts ], route: /chat/v1/integrations/gdrive/export }
+    e2e: [ e2e/steward-chat.integrations.spec.ts ]

@@ -21,6 +21,7 @@
 | `POST /chat/v1/events` | `events:write` | 会社イベントの起票 |
 | `GET /chat/v1/events/chain/verify` | `chat:read` | イベント連鎖の検証 |
 | `GET /chat/v1/org/chart` | `chat:read` | 組織図 |
+| `GET /chat/v1/org/chart/change` | `chat:read` | 提案中の組織図変更 |
 | `POST /chat/v1/org/chart/change/propose` | `chat:ask` | 組織図変更の提案 |
 | `POST /chat/v1/org/chart/change/apply` | `chat:approve` | 承認後の適用 |
 | `POST /chat/v1/product/onboarding/setup` | `ceo` のみ | 会社名・決算月・代表者 |

@@ -20,6 +20,7 @@
 | `POST /chat/v1/tax/bonus-draft` | `finance:reconcile` | 賞与ドラフト |
 | `POST /chat/v1/tax/bonus-post` | `finance:reconcile` | 給与・賞与仕訳の起票 |
 | `POST /chat/v1/tax/yea/ready` | `finance:reconcile` | 年末調整の確定ドラフト |
+| `GET /chat/v1/receipts` | `chat:read` | 発行済み領収書の一覧 |
 | `POST /chat/v1/receipts/preview` | `chat:ask` | QR 領収書の下書き |
 | `GET /chat/v1/org/budget` | `chat:read` | 予算枠と消化の一覧 |
 | `POST /chat/v1/org/budget/expense-claim/gate` | `chat:ask` | 立替の可否判定（申請の入口） |

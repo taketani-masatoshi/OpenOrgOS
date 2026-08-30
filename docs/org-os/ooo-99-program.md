@@ -1,6 +1,6 @@
 # OOO 99点プログラム — チケット台帳
 
-90点プログラム（[ooo-90-program.md](ooo-90-program.md)）の続き。同じ 53 件を、
+90点プログラム（[ooo-90-program.md](ooo-90-program.md)）の続き。当初の 53 件（現在 57 件）を、
 今度は **99 点** まで引き上げる。1 件ずつ「洗い出し → 対策比較 → 選定 → 実装 →
 テスト → 再採点」を回す方針は変えていない。
 
@@ -68,14 +68,40 @@
 | [ooo-surfaces/ops.md](ooo-surfaces/ops.md) | OOO-24〜28 · 37〜39 対話と運用 |
 | [ooo-surfaces/mail.md](ooo-surfaces/mail.md) | OOO-29〜36 通信 |
 | [ooo-surfaces/product.md](ooo-surfaces/product.md) | OOO-47〜53 営業と製品 |
+| [ooo-surfaces/connectors.md](ooo-surfaces/connectors.md) | OOO-54〜57 外部連携ハブ |
 
 ## 完了時点の全体
 
-**53 件すべて 99 点以上 · 平均 100.0。**
+**57 件すべて 99 点以上 · 平均 100.0**（2026-08-30 実測。外部連携ハブの
+OOO-54〜57 を加えたあとの再採点）。
 
 - E2E 緑 23 本。`npm run ooo:e2e` で再現
 - `npm run ooo:score -- --gate 99` が exit 0
 - 4 軸すべてが証跡から算出される。YAML に点数の欄はもう無い
+
+### 再採点で落ちた分と、その原因
+
+能力を4件足した直後の採点は **平均 78.9 · 99点以上 1 件** だった。落ちた理由は
+実装の劣化ではなく証跡側の2つで、どちらも採点器が正しく拾った欠陥である。
+
+1. **E2E の緑記録が一部しか無かった** — 前回の実行が中断し、
+   `tests/.ooo-e2e-green.json` に passkey 系6本だけが残っていた。取り直すと
+   主 config が「ポート 9473 使用中」で起動できず、残骸サーバーを落として
+   再実行して緑 23 本に戻した（赤 1 本 `steward-chat.runboard.spec.ts` は
+   採点対象の能力に紐づいていない）。
+2. **文書と経路のずれ 5 件** — `POST /chat/v1/correspondence/send` は現物が
+   `POST /chat/v1/correspondence/:id/send`。`GET /chat/v1/receipts` ·
+   `GET /chat/v1/org/chart/change` · `GET /chat/v1/ledger/bank-csv-template`
+   は実装にあって文書に無かった。`GET /chat/v1/mail/secrets` は
+   「読み出す API を持たない」ことを拒否表に書いていたのを、経路の宣言と
+   読み違えないよう書き換えた。
+3. **走査側の検出漏れ 1 件** — `if (pathname !== "/x") return false;` で
+   1経路を占有し、メソッドを下で分岐する書き方では最初の1メソッドしか
+   拾えず、`PUT /chat/v1/platform/integration` が「文書にあって実装に無い」
+   と出ていた。ブロック全体から全メソッドを集めるようにした（`scripts/ooo-routes.ts`）。
+
+つまり点は、能力を足すたびに文書・E2E 記録・走査の3点を揃え直さないと
+戻らない。これは仕組みの意図どおりである。
 
 残っている限界も書いておく。ガードの検出は正規表現なので、「権限ガードが
 **在る**」ことは言えても「**正しい権限**が掛かっている」ことまでは言えない。

@@ -16,6 +16,7 @@
 | `POST /chat/v1/ledger/post` | `finance:reconcile` | 仕訳の追記 |
 | `POST /chat/v1/ledger/reverse` | `finance:reconcile` | 逆仕訳の追記 |
 | `POST /chat/v1/ledger/period` | `finance:reconcile` | 月次 lock / unlock |
+| `GET /chat/v1/ledger/bank-csv-template` | `chat:read` | 取込用 CSV の様式 |
 | `POST /chat/v1/ledger/bank-statements/import` | `finance:reconcile` | 銀行 CSV 取込 |
 | `POST /chat/v1/ledger/bank-reconcile` | `finance:reconcile` | 消込 |
 | `POST /chat/v1/broker/transfer` | `broker:transfer` | 振込指示の生成 |

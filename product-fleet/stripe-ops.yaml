@@ -2,5 +2,5 @@ version: 1
 status: configured
 mode: test
 webhook_path: /chat/v1/product/stripe/webhook
-checked_at: 2026-08-30T01:09:46.951Z
+checked_at: 2026-08-30T02:14:58.997Z
 note: Saved via Operator Console stripe settings

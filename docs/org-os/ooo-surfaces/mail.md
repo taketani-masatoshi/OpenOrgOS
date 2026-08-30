@@ -12,7 +12,7 @@
 | 経路 | 権限 | 用途 |
 |---|---|---|
 | `GET /chat/v1/correspondence/pending` | `chat:read` | 承認待ちの下書き |
-| `POST /chat/v1/correspondence/send` | `chat:approve` | 承認後の SMTP / Slack 送信 |
+| `POST /chat/v1/correspondence/:id/send` | `chat:approve` | 承認後の SMTP / Slack 送信 |
 | `GET /chat/v1/mail/gmail` | `chat:read` | Gmail 連携の状態 |
 | `POST /chat/v1/mail/gmail/connect` | `chat:approve` | Gmail 連携の開始 |
 | `POST /chat/v1/mail/gmail/disconnect` | `chat:approve` | 連携の解除 |
@@ -33,7 +33,7 @@
 | 未承認の下書きを送ろうとする | 拒否。承認ゲートを通っていない下書きは送らない |
 | OOO（不在）ゲートに当たる宛先 | 保留。黙って送らない |
 | provider が未設定のまま送信 | 422。宛先も送信元も無いまま送らない |
-| `GET /chat/v1/mail/secrets` | 返さない。**投入はできるが取り出せない** |
+| 秘密の読み出し | `/chat/v1/mail/secrets` は PUT だけ。**投入はできるが取り出せない** |
 | Gmail 連携が SHIPPED ゲート外 | 403。opt-in のテナントだけ |
 | プラットフォーム運用者でない席がフラグ切替 | 403 |
 | 想定外の例外 | catch して JSON |

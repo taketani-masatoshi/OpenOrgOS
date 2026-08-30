@@ -186,3 +186,51 @@ invites:
     operator_id: OP-GUEST01
     expires_at: 2026-08-31T00:50:04.782Z
     created_at: 2026-08-30T00:50:04.795Z
+  - token: 28ac8ac9f756509dbd93fc6837ac0705.e0fd4604a31c48494982253f27b0ae96
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T01:30:13.401Z
+    created_at: 2026-08-30T01:30:13.417Z
+  - token: d9e9cce71427a7be695289026d05cff0.9cd4af9a6eb64332c40cdec826d1c683
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T01:33:51.056Z
+    created_at: 2026-08-30T01:33:51.077Z
+  - token: 0e29cae4d1430d383a88a14428fdadf1.4d95ea000cc208e1d8db6db110751250
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T01:57:42.325Z
+    created_at: 2026-08-30T01:57:42.351Z
+  - token: 350bc1c1726a2b366807c5ec85487512.228aae7c5ff9288f7b6a78932da5d1a4
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T02:15:38.306Z
+    created_at: 2026-08-30T02:15:38.321Z
+  - token: e49b8d461485572daf6e521cd83172a5.cee794306b855837088e2804636ced4c
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T05:30:01.043Z
+    created_at: 2026-08-30T05:30:01.057Z
+  - token: 1fa02da19da5ef8a43ffe9a56bf6cb66.36bd5a7e320fb684c1d95c7e29a564c3
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T06:05:36.163Z
+    created_at: 2026-08-30T06:05:36.178Z
+  - token: 7a572aa4cbc0a795cc1bae9036b5219a.ff83a9fd83dfdc668e4f89758472aca2
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T06:05:44.139Z
+    created_at: 2026-08-30T06:05:44.153Z
+  - token: 6d8188ef392314d3c3233382547468f6.74a52e8e608b03451af405ecde588b41
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T06:34:37.839Z
+    created_at: 2026-08-30T06:34:37.851Z
