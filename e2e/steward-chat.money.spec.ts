@@ -34,6 +34,12 @@ let bankBackup: string | undefined;
 test.beforeAll(() => {
   // L2 file, so it is never committed; the spec owns a throwaway copy.
   bankBackup = existsSync(BANK_PATH) ? readFileSync(BANK_PATH, "utf-8") : undefined;
+});
+
+// Provisioning acts elsewhere in the suite re-init the demo tenant and take the
+// finance folder with them, so the fixture is restored before every test rather
+// than once.
+test.beforeEach(() => {
   writeFileSync(BANK_PATH, BANK_FIXTURE, "utf-8");
 });
 

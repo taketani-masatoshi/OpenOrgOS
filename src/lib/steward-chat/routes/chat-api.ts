@@ -90,6 +90,7 @@ import { handleTowerChatMessage } from "../../dispatch-tower/chat-handler.js";
 import { handleAgentInboxApi } from "./agent-inbox-api.js";
 import { buildExecutiveHome } from "../../executive-home/build-home.js";
 import { handleCorrespondenceApi } from "./correspondence-api.js";
+import { handleIntegrationsApi } from "./integrations-api.js";
 import { handleBrokerApi } from "./broker-api.js";
 import { handleEventsApi } from "./events-api.js";
 import { handleAgentModulesApi } from "./agent-modules-api.js";
@@ -744,6 +745,8 @@ export async function handleChatApi(
   if (await handleTowerApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleCorrespondenceApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleIntegrationsApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleBrokerApi(req, res, pathname, method, ctx.user))
     return true;

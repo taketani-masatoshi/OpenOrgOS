@@ -96,11 +96,20 @@ export function registerPlatformCommands(program: Command): void {
   asanaCmd
     .command("push")
     .description("Push L1 status/due to Asana (never L2)")
-    .requiredOption("--case <id>", "INQ- / DEAL- / SCH-")
+    .option("--case <id>", "INQ- / DEAL- / SCH-")
+    .option("--work-order <id>", "Work order id (IMP-…)")
+    .option("--task <id>", "Executive task id (TASK-…)")
+    .option("--project-gid <gid>", "Target project (defaults to connector setting)")
     .option("--json", "JSON output")
     .action(async (opts) => {
       const { runAsanaPush } = await import("../../commands/integrations.js");
-      await runAsanaPush({ caseId: opts.case, json: opts.json });
+      await runAsanaPush({
+        caseId: opts.case,
+        workOrderId: opts.workOrder,
+        taskId: opts.task,
+        projectGid: opts.projectGid,
+        json: opts.json,
+      });
     });
   asanaCmd
     .command("pull")
@@ -110,6 +119,56 @@ export function registerPlatformCommands(program: Command): void {
     .action(async (opts) => {
       const { runAsanaPull } = await import("../../commands/integrations.js");
       await runAsanaPull({ caseId: opts.case, json: opts.json });
+    });
+
+  const connectorsCmd = integrationsCmd
+    .command("connectors")
+    .description("Console SaaS connectors (Slack · Asana · Gmail · Drive)");
+  connectorsCmd
+    .command("status")
+    .description("Connection state per provider (no secrets)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runConnectorStatus } = await import("../../commands/integrations.js");
+      runConnectorStatus({ json: opts.json });
+    });
+
+  const slackCmd = integrationsCmd.command("slack").description("Slack outbound (L0/L1 only)");
+  slackCmd
+    .command("send")
+    .description("Post a message to Slack")
+    .requiredOption("--text <text>", "Message body (no L2 values)")
+    .option("--channel <id>", "Channel id (defaults to connector setting)")
+    .option("--dry-run", "Report the transport without sending")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runSlackSend } = await import("../../commands/integrations.js");
+      await runSlackSend({
+        text: opts.text,
+        channel: opts.channel,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      });
+    });
+
+  const driveCmd = integrationsCmd
+    .command("gdrive")
+    .description("Google Drive export (human-readable PDF copies)");
+  driveCmd
+    .command("export")
+    .description("Render a canonical record to PDF and store it in Drive")
+    .requiredOption("--kind <kind>", "receipt | document | work_order | executive_tasks")
+    .option("--id <id>", "Receipt id, docs-relative path or work order id")
+    .option("--folder-id <id>", "Drive folder (defaults to connector setting)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runDriveExport } = await import("../../commands/integrations.js");
+      await runDriveExport({
+        kind: opts.kind,
+        id: opts.id,
+        folderId: opts.folderId,
+        json: opts.json,
+      });
     });
 
   const moduleMessageCmd = program

@@ -2611,6 +2611,155 @@ export async function putMailConfig(input: {
   });
 }
 
+export type ConnectorProvider = "gmail" | "slack" | "asana" | "gdrive";
+
+export interface ConnectorCard {
+  provider: ConnectorProvider;
+  label: string;
+  connected: boolean;
+  account_label?: string;
+  connected_via?: string;
+  connected_at?: string;
+  expired: boolean;
+  fallback_configured: boolean;
+  usable: boolean;
+  platform_ready: boolean;
+  platform_detail: string;
+  settings: {
+    default_channel_id?: string;
+    default_channel_name?: string;
+    default_project_gid?: string;
+    default_folder_id?: string;
+  };
+}
+
+export interface ConnectorSecretsSnapshot {
+  storage_path: string;
+  slack_webhook_configured: boolean;
+  slack_webhook_hint: string | null;
+  asana_pat_configured: boolean;
+  asana_pat_hint: string | null;
+}
+
+export interface ConnectorHubSnapshot {
+  ok: boolean;
+  connectors: ConnectorCard[];
+  secrets: ConnectorSecretsSnapshot;
+  community_connections_url: string;
+}
+
+export async function fetchConnectorHub(): Promise<ConnectorHubSnapshot> {
+  return chatApi("/chat/v1/integrations");
+}
+
+export async function postConnectorConnect(
+  provider: ConnectorProvider,
+  input?: { expect_email?: string },
+): Promise<{
+  ok: boolean;
+  provider: ConnectorProvider;
+  connect_url: string;
+  expires_at: string;
+  tenant_id: string;
+}> {
+  return chatApi(`/chat/v1/integrations/${provider}/connect`, {
+    method: "POST",
+    body: JSON.stringify(input ?? {}),
+  });
+}
+
+export async function postConnectorDisconnect(
+  provider: ConnectorProvider,
+): Promise<{ ok: boolean; removed: boolean; connector: ConnectorCard }> {
+  return chatApi(`/chat/v1/integrations/${provider}/disconnect`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function putConnectorSettings(
+  provider: ConnectorProvider,
+  input: {
+    default_channel_id?: string;
+    default_channel_name?: string;
+    default_project_gid?: string;
+    default_folder_id?: string;
+    notes?: string;
+  },
+): Promise<{ ok: boolean; connector: ConnectorCard }> {
+  return chatApi(`/chat/v1/integrations/${provider}/settings`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+/** Write-only — the server never returns these values. */
+export async function putConnectorSecrets(input: {
+  ORGOS_SLACK_WEBHOOK_URL?: string;
+  ORGOS_ASANA_PAT?: string;
+}): Promise<{ ok: boolean; secrets: ConnectorSecretsSnapshot }> {
+  return chatApi("/chat/v1/integrations/secrets", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postSlackMessage(input: {
+  text: string;
+  channel?: string;
+  dry_run?: boolean;
+}): Promise<{ ok: boolean; sent: boolean; reason: string; transport: string; channel?: string }> {
+  return chatApi("/chat/v1/integrations/slack/send", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postAsanaPush(input: {
+  kind: "work_order" | "executive_task" | "case";
+  id: string;
+  project_gid?: string;
+}): Promise<{ ok: boolean; reason?: string; task_gid?: string; created?: boolean }> {
+  return chatApi("/chat/v1/integrations/asana/push", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postDriveExport(input: {
+  kind: "receipt" | "document" | "work_order" | "executive_tasks";
+  id?: string;
+  folder_id?: string;
+}): Promise<{
+  ok: boolean;
+  reason?: string;
+  file_id?: string;
+  file_name?: string;
+  folder_id?: string;
+}> {
+  return chatApi("/chat/v1/integrations/gdrive/export", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export interface DriveExportRecord {
+  kind: string;
+  source_ref: string;
+  file_id: string;
+  file_name: string;
+  folder_id?: string;
+  exported_at: string;
+  exported_by?: string;
+}
+
+export async function fetchDriveExports(): Promise<{
+  ok: boolean;
+  exports: DriveExportRecord[];
+}> {
+  return chatApi("/chat/v1/integrations/gdrive/exports");
+}
+
 export async function fetchContractStatus(): Promise<{
   ok: boolean;
   company_name: string;

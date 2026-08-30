@@ -9,8 +9,19 @@ import { getTenantDir } from "../tenant.js";
 import { loadCorrespondenceCaseRef, parseCaseRefFromDraft } from "../correspondence/case-status.js";
 import type { CorrespondenceDraft } from "../../../schemas/correspondence/draft.js";
 import { loadIntegrations } from "../integrations.js";
+import { loadConnectorSettings, loadConnectorToken } from "./connector-store.js";
+import { hydrateConnectorEnvFromStore } from "./connector-secrets-store.js";
+import { loadHandoff } from "../routing.js";
+import { loadExecutiveTasks } from "../data.js";
+
+/** What the Asana task mirrors. `case` is the original (and default) kind. */
+export const asanaTargetKindSchema = z.enum(["case", "work_order", "executive_task"]);
+
+export type AsanaTargetKind = z.output<typeof asanaTargetKindSchema>;
 
 const asanaLinkSchema = z.object({
+  kind: asanaTargetKindSchema.default("case"),
+  /** OrgOS id of the mirrored record (case / work order / executive task). */
   case_id: z.string().min(1),
   task_gid: z.string().min(1),
   project_gid: z.string().optional(),
@@ -50,6 +61,13 @@ export function findAsanaLink(caseId: string): AsanaLink | undefined {
   return loadAsanaLinks().links.find((l) => l.case_id === caseId);
 }
 
+export function findAsanaLinkForTarget(
+  kind: AsanaTargetKind,
+  id: string,
+): AsanaLink | undefined {
+  return loadAsanaLinks().links.find((l) => l.kind === kind && l.case_id === id);
+}
+
 export function linkAsanaCase(opts: {
   caseId: string;
   taskGid: string;
@@ -60,6 +78,7 @@ export function linkAsanaCase(opts: {
   }
   const file = loadAsanaLinks();
   const link: AsanaLink = {
+    kind: "case",
     case_id: opts.caseId,
     task_gid: opts.taskGid,
     project_gid: opts.projectGid,
@@ -72,7 +91,10 @@ export function linkAsanaCase(opts: {
 }
 
 export function resolveAsanaPat(): string | undefined {
+  hydrateConnectorEnvFromStore();
   if (process.env.ORGOS_ASANA_PAT?.trim()) return process.env.ORGOS_ASANA_PAT.trim();
+  const oauth = loadConnectorToken("asana");
+  if (oauth?.access_token) return oauth.access_token;
   if (!existsSync(tokenPath())) return undefined;
   try {
     const raw = JSON.parse(readFileSync(tokenPath(), "utf-8")) as {
@@ -201,6 +223,148 @@ export async function pushAsanaCaseIfLinked(
   if (!ref) return;
   if (!findAsanaLink(ref.id)) return;
   await pushAsanaCase(ref.id);
+}
+
+export interface AsanaTaskPayload {
+  name: string;
+  notes: string;
+  due_on?: string;
+}
+
+const SOT_FOOTER = "Source of truth: OrgOS (Asana is a replica).";
+
+/**
+ * L1-only payload for any mirrored record. Deliberately narrow: id, title,
+ * status and due date. Requirements text, mail bodies and amounts stay in OrgOS.
+ */
+export function buildAsanaTargetPayload(
+  kind: AsanaTargetKind,
+  id: string,
+): AsanaTaskPayload {
+  if (kind === "case") return buildAsanaPushPayload(id);
+
+  if (kind === "work_order") {
+    const handoff = loadHandoff(id);
+    const title = handoff.subject ?? handoff.skill ?? handoff.to_agent;
+    return {
+      name: `${handoff.id} · ${title}`.slice(0, 200),
+      notes: [
+        `OrgOS work order: ${handoff.id}`,
+        `Status: ${handoff.status}`,
+        `Agent: ${handoff.to_agent}`,
+        handoff.work_kind ? `Kind: ${handoff.work_kind}` : "",
+        SOT_FOOTER,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      due_on: handoff.due_date,
+    };
+  }
+
+  const task = loadExecutiveTasks().tasks.find((t) => t.id === id);
+  if (!task) throw new Error(`Executive task ${id} not found`);
+  return {
+    name: `${task.id} · ${task.title}`.slice(0, 200),
+    notes: [
+      `OrgOS executive task: ${task.id}`,
+      `Status: ${task.status}`,
+      `Priority: ${task.priority}`,
+      SOT_FOOTER,
+    ].join("\n"),
+    due_on: task.due ?? undefined,
+  };
+}
+
+export interface AsanaPushResult {
+  ok: boolean;
+  reason?: string;
+  task_gid?: string;
+  created?: boolean;
+}
+
+function resolveAsanaProjectGid(explicit?: string): string | undefined {
+  return explicit?.trim() || loadConnectorSettings("asana")?.default_project_gid?.trim() || undefined;
+}
+
+/**
+ * Mirror an OrgOS record into Asana. Creates the task on first push and
+ * updates it afterwards; the OrgOS record is never modified here.
+ */
+export async function pushAsanaTarget(opts: {
+  kind: AsanaTargetKind;
+  id: string;
+  projectGid?: string;
+  fetchImpl?: typeof fetch;
+}): Promise<AsanaPushResult> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const pat = resolveAsanaPat();
+  if (!pat) {
+    return { ok: false, reason: "Asana が未接続です。連携設定から接続してください。" };
+  }
+
+  let payload: AsanaTaskPayload;
+  try {
+    payload = buildAsanaTargetPayload(opts.kind, opts.id);
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : String(err) };
+  }
+
+  const link = findAsanaLinkForTarget(opts.kind, opts.id);
+  const headers = {
+    Authorization: `Bearer ${pat}`,
+    "Content-Type": "application/json",
+  };
+  const data: Record<string, unknown> = {
+    name: payload.name,
+    notes: payload.notes,
+    ...(payload.due_on ? { due_on: payload.due_on } : {}),
+  };
+
+  if (!link) {
+    const projectGid = resolveAsanaProjectGid(opts.projectGid);
+    if (!projectGid) {
+      return {
+        ok: false,
+        reason: "Asana のプロジェクトが未設定です。連携設定で既定プロジェクトを選んでください。",
+      };
+    }
+    const res = await fetchImpl("https://app.asana.com/api/1.0/tasks", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ data: { ...data, projects: [projectGid] } }),
+    });
+    if (!res.ok) return { ok: false, reason: `asana_http_${res.status}` };
+    const json = (await res.json()) as { data?: { gid?: string } };
+    const gid = json.data?.gid;
+    if (!gid) return { ok: false, reason: "asana_missing_task_gid" };
+    const file = loadAsanaLinks();
+    file.links.push(
+      asanaLinkSchema.parse({
+        kind: opts.kind,
+        case_id: opts.id,
+        task_gid: gid,
+        project_gid: projectGid,
+        last_pushed_at: new Date().toISOString(),
+      }),
+    );
+    saveAsanaLinks(file);
+    return { ok: true, task_gid: gid, created: true };
+  }
+
+  const res = await fetchImpl(`https://app.asana.com/api/1.0/tasks/${link.task_gid}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data }),
+  });
+  if (!res.ok) return { ok: false, reason: `asana_http_${res.status}` };
+
+  const file = loadAsanaLinks();
+  const idx = file.links.findIndex((l) => l.kind === opts.kind && l.case_id === opts.id);
+  if (idx >= 0) {
+    file.links[idx] = { ...file.links[idx]!, last_pushed_at: new Date().toISOString() };
+    saveAsanaLinks(file);
+  }
+  return { ok: true, task_gid: link.task_gid, created: false };
 }
 
 /** Ensure integrations.yaml can mention asana without requiring it. */

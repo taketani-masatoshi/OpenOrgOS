@@ -10,6 +10,7 @@ export type ConsoleView =
   | "admin"
   | "account"
   | "onboarding"
+  | "integrations"
   | "product-setup"
   | "analytics"
   | "ledger"
@@ -37,6 +38,7 @@ const QUERY_KEYS = [
   "tax",
   "account",
   "onboarding",
+  "integrations",
   "product-setup",
   "receipt",
   "issuer",
@@ -58,6 +60,7 @@ export function parseConsoleView(search: string): ConsoleView {
   if (params.get("tax") === "1") return "tax";
   if (params.get("account") === "1") return "account";
   if (params.get("onboarding") === "1") return "onboarding";
+  if (params.get("integrations") === "1") return "integrations";
   if (params.get("product-setup") === "1") return "product-setup";
   if (params.get("esign") === "1") return "esign";
   if (params.get("platform") === "1") return "platform";
@@ -92,6 +95,7 @@ export function buildConsoleSearch(view: ConsoleView): string {
   if (view === "tax") params.set("tax", "1");
   if (view === "account") params.set("account", "1");
   if (view === "onboarding") params.set("onboarding", "1");
+  if (view === "integrations") params.set("integrations", "1");
   if (view === "product-setup") params.set("product-setup", "1");
   if (view === "receipt") params.set("receipt", "1");
   if (view === "receipt-issue") params.set("receipt-issue", "1");

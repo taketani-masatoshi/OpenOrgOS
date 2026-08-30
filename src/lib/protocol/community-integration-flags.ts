@@ -25,6 +25,9 @@ export const COMMUNITY_INTEGRATION_FLAGS = [
   "vocabulary_i18n",
   "tenant_mail_connect_api",
   "tenant_mail_connect_ui",
+  "connector_slack",
+  "connector_asana",
+  "connector_gdrive",
 ] as const;
 
 export type CommunityIntegrationFlag = (typeof COMMUNITY_INTEGRATION_FLAGS)[number];

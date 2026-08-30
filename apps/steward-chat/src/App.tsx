@@ -31,6 +31,7 @@ import type { OperatorShellActive } from "@ops-shared/OperatorShell";
 import { STEWARD_COPY } from "./steward-copy";
 import { fetchProductOnboarding } from "./api";
 import { OnboardingPage } from "./OnboardingPage";
+import { IntegrationsHubPage } from "./IntegrationsHubPage";
 import {
   applyConsoleViewToUrl,
   consoleSectionFromView,
@@ -287,6 +288,8 @@ function ConsoleHomeApp() {
             <CustomerAdminPage />
           ) : view === "onboarding" ? (
             <OnboardingPage />
+          ) : view === "integrations" ? (
+            <IntegrationsHubPage />
           ) : view === "product-setup" ? (
             <ProductInitialSetupPage />
           ) : view === "esign" ? (

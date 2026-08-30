@@ -6,6 +6,7 @@ import {
   fetchOrchestrationRun,
   fetchOrchestrationRuns,
   reopenOrchestrationRun,
+  postAsanaPush,
   retryOrchestrationRun,
   type BoardCard,
   type BoardColumn,
@@ -117,7 +118,10 @@ export function OrchestrationRunsPage() {
   const [payload, setPayload] = useState<OrchestrationRunPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<"retry" | "cancel" | "complete" | "reopen" | null>(null);
+  const [busy, setBusy] = useState<
+    "retry" | "cancel" | "complete" | "reopen" | "asana" | null
+  >(null);
+  const [asanaNote, setAsanaNote] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("incomplete");
   const [groupMode, setGroupMode] = useState<GroupMode>("plan");
   const [filterMode, setFilterMode] = useState<"all" | "attention">("all");
@@ -307,6 +311,25 @@ export function OrchestrationRunsPage() {
       await loadBoard();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /** Asana is an L1 replica for sharing — the OrgOS work order stays canonical. */
+  async function pushToAsana(card: BoardCard) {
+    if (busy) return;
+    setBusy("asana");
+    setAsanaNote(null);
+    try {
+      const res = await postAsanaPush({ kind: "work_order", id: card.id });
+      setAsanaNote(
+        res.ok
+          ? `Asana に${res.created ? "作成" : "更新"}しました（${res.task_gid}）`
+          : `出せません: ${res.reason}`,
+      );
+    } catch (e) {
+      setAsanaNote(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(null);
     }
@@ -697,7 +720,16 @@ export function OrchestrationRunsPage() {
                         ? copy.reopenTask
                         : copy.completeTask}
                 </button>
+                <button
+                  type="button"
+                  className="orchestration-action"
+                  disabled={busy !== null}
+                  onClick={() => void pushToAsana(selectedCard)}
+                >
+                  {busy === "asana" ? "Asana に送信中" : "Asana に出す"}
+                </button>
               </div>
+              {asanaNote && <p className="page-desc muted">{asanaNote}</p>}
               <dl className="orchestration-detail-meta">
                 <div>
                   <dt>{copy.colStatus}</dt>

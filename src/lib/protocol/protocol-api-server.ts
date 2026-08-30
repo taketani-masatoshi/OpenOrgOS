@@ -268,7 +268,16 @@ async function handleProtocolApiRequest(
     );
     if (wire) return wire;
     const { handleCommunityTenantMailApiRoute } = await import("./community-tenant-mail-api.js");
-    return handleCommunityTenantMailApiRoute(
+    const mail = await handleCommunityTenantMailApiRoute(
+      req.method ?? "GET",
+      url.pathname,
+      raw,
+      req,
+      url.searchParams
+    );
+    if (mail) return mail;
+    const { handleCommunityConnectorsApiRoute } = await import("./community-connectors-api.js");
+    return handleCommunityConnectorsApiRoute(
       req.method ?? "GET",
       url.pathname,
       raw,

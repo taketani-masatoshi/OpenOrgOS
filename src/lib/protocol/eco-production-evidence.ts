@@ -40,6 +40,9 @@ export type CommunityIntegrationStatus = {
   vocabulary_i18n?: boolean;
   tenant_mail_connect_api?: boolean;
   tenant_mail_connect_ui?: boolean;
+  connector_slack?: boolean;
+  connector_asana?: boolean;
+  connector_gdrive?: boolean;
   readiness_score?: number;
 };
 

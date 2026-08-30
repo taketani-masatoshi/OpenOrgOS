@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { mailConfigSchema, type MailConfig } from "../../../schemas/correspondence/mail-config.js";
 import { parseMailConfigFile } from "./mail-config-parse.js";
 import { hydrateMailEnvFromStore } from "./mail-secrets-store.js";
+import { hydrateConnectorEnvFromStore } from "../integrations/connector-secrets-store.js";
 import { getMailConfigExamplePath, getMailConfigPath } from "./paths.js";
 
 export function loadMailConfig(): MailConfig | null {
@@ -150,6 +151,7 @@ export function resolveWireOutboundConfig(): WireOutboundConfig {
 }
 
 export function resolveSlackWebhookUrl(): string | undefined {
+  hydrateConnectorEnvFromStore();
   return process.env.ORGOS_SLACK_WEBHOOK_URL?.trim() || undefined;
 }
 

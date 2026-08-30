@@ -297,6 +297,13 @@ export const chatAuditActionSchema = z.enum([
   "esign_prepare",
   "esign_attach",
   "esign_verify",
+  "connector_connect",
+  "connector_disconnect",
+  "connector_settings_update",
+  "connector_secrets_update",
+  "connector_slack_send",
+  "connector_asana_push",
+  "connector_gdrive_export",
 ]);
 
 export type ChatAuditAction = z.output<typeof chatAuditActionSchema>;
