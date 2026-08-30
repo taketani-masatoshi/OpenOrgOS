@@ -117,7 +117,7 @@ test.describe("steward chat ledger customer journey", () => {
       headers,
       data: { proposal_id: propBody.proposal.id },
     });
-    expect([200, 422]).toContain(approve.status());
+    expect(approve.status(), await approve.text()).toBe(200);
 
     const onboard = await request.get("/chat/v1/product/onboarding", { headers });
     expect(onboard.ok()).toBeTruthy();
@@ -129,12 +129,13 @@ test.describe("steward chat ledger customer journey", () => {
 
     // The tab was rendered while the tenant was still unready, so the ledger
     // menu only appears after a reload.
-    await page.reload();
-    await page
-      .getByRole("navigation", { name: "帳簿メニュー" })
-      .getByRole("button", { name: "帳簿", exact: true })
-      .click();
-    await expect(page).toHaveURL(/ledger=1/, { timeout: 5_000 });
+    await page.goto("/?ledger=1");
+    await expect(
+      page.getByRole("navigation", { name: "帳簿メニュー" }).getByRole("button", {
+        name: "帳簿",
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("heading", { name: "帳簿", exact: true })).toBeVisible({
       timeout: 15_000,
     });

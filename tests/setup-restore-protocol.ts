@@ -20,6 +20,7 @@ import {
   type FixtureLockOwner,
 } from "./helpers/fixture-restore-lock.js";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
+import { resetStripeSecretsHydrationForTest } from "../src/lib/product/stripe-secrets-store.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
 
@@ -47,7 +48,46 @@ const FIXTURE_PATHS = [
   "tenants/demo/data",
   "tenants/mal/data/org",
   ...OPERATIONAL_PROTOCOL_TENANTS.map((id) => `tenants/${id}/data/protocol`),
+  // Ledger suites post journals into the books fixture; keep the committed
+  // ledger empty so each test starts from the same opening state.
+  "tenants/_fixture-books/data/finance",
+  // Company events span a Markdown body under docs/ and a registry plus hash
+  // chain under data/. Restoring only one half leaves a second run refusing to
+  // create the event it already has.
+  "tenants/demo/docs/company/events",
+  "tenants/_fixture-books/docs/company/events",
+  "tenants/_fixture-books/data/company-events.yaml",
+  "tenants/_fixture-books/data/company-events-chain.jsonl",
 ] as const;
+
+/**
+ * Environment variables that change how the product behaves (production mode,
+ * Stripe stubs, LLM tools). A test that sets one and forgets to restore it
+ * silently rewrites the rules for every test that runs after it in the worker.
+ */
+const VOLATILE_ENV_PREFIXES = ["ORGOS_", "STRIPE_", "WIRE_CONSOLE_"] as const;
+
+let envSnapshot: Record<string, string | undefined> = {};
+
+function captureEnv(): void {
+  envSnapshot = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (VOLATILE_ENV_PREFIXES.some((prefix) => key.startsWith(prefix))) {
+      envSnapshot[key] = value;
+    }
+  }
+}
+
+function restoreEnv(): void {
+  for (const key of Object.keys(process.env)) {
+    if (!VOLATILE_ENV_PREFIXES.some((prefix) => key.startsWith(prefix))) continue;
+    if (!(key in envSnapshot)) delete process.env[key];
+  }
+  for (const [key, value] of Object.entries(envSnapshot)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
+}
 
 /** Overlay after demo/data restore — demo/data wipe does not include operator/agents.yaml. */
 const TENANT_ROSTER_FIXTURE_ROOT = join(ROOT_DIR, "tests", "fixtures", "tenant-rosters");
@@ -367,6 +407,13 @@ function resetMalExecutiveMailTriageQueue(): void {
 function resetTenantCaches(): void {
   clearOperatorsRegistryCacheForTests();
   clearWireGovernanceCacheForTests();
+  resetStripeSecretsHydrationForTest();
+}
+
+/** The per-run Stripe store is scratch state; no test may inherit another's keys. */
+function resetStripeSecretsStore(): void {
+  const path = process.env.ORGOS_STRIPE_SECRETS_FILE;
+  if (path) rmSync(path, { force: true });
 }
 
 beforeAll(() => {
@@ -376,10 +423,12 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  captureEnv();
   acquireFixtureRestoreLock();
   try {
     restoreCommittedTenantFixtures();
     resetMalExecutiveMailTriageQueue();
+    resetStripeSecretsStore();
     resetTenantCaches();
   } catch (error) {
     releaseFixtureRestoreLock();
@@ -388,6 +437,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  restoreEnv();
   releaseFixtureRestoreLock();
 });
 

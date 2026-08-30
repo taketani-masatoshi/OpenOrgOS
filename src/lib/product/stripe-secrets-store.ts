@@ -41,7 +41,14 @@ export type StripeSettingsSnapshot = {
 
 let hydrated = false;
 
+/**
+ * Secrets normally live in the workspace, but tests must never read or write a
+ * real operator's file: a key saved by one test would hydrate into every later
+ * process and silently switch the product out of stub mode.
+ */
 export function stripeSecretsFilePath(): string {
+  const override = process.env.ORGOS_STRIPE_SECRETS_FILE?.trim();
+  if (override) return override;
   return join(getWorkspaceRoot(), "data", "product", "stripe-secrets.env");
 }
 
