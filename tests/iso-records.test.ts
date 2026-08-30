@@ -4,7 +4,7 @@
  * stops catching something fails here rather than in an audit.
  */
 
-import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { isoRecordSpecSchema } from "../schemas/iso-record-spec.js";
@@ -461,6 +461,18 @@ describe("pack records registers", () => {
         const pack = join(packTemplatesDir(id), spec.file);
         const core = join(CORE_TEMPLATES_DIR, spec.file);
         expect(existsSync(pack) || existsSync(core), `${id}/${spec.file} has no template`).toBe(true);
+      }
+    }
+  });
+
+  it("gives every pack template a spec row so no form is distributed unchecked", () => {
+    for (const id of listAvailableIsoIds()) {
+      const dir = packTemplatesDir(id);
+      if (!existsSync(dir)) continue;
+      const specFiles = new Set((loadRecordSpecs(id)?.records ?? []).map((r) => r.file));
+      for (const file of readdirSync(dir)) {
+        if (file.startsWith("00-")) continue;
+        expect(specFiles.has(file), `${id}/templates/${file} has no records.yaml row`).toBe(true);
       }
     }
   });

@@ -1,0 +1,229 @@
+as_of: 2026-08-30T01:09:25.744Z
+plans:
+  - plan_id: IAP-001
+    standard: ISO-21401
+    status: draft
+    framework: iso
+    auditor_operator_id: OP-002
+    auditor_name: 秘書オペレータ
+    period_start: 2026-04
+    period_end: 2027-03
+    scope_controls: []
+    criteria:
+      - ISO-21401 paraphrase
+      - REG-012
+      - REG-016
+    sampling: 各様式から直近3件、是正は全件
+    created_at: 2026-08-30T01:09:13.844Z
+    created_by: OP-002
+    findings:
+      - requirement_id: REQ-21401-4.1-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/stakeholder-register.csv
+        sample: "stakeholder-register.csv: 利害関係者が1件も登録されていません。4.2 は関連する要求事項の決定を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.628Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-4.2-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/stakeholder-register.csv
+        sample: "stakeholder-register.csv: 利害関係者が1件も登録されていません。4.2 は関連する要求事項の決定を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.634Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-4.3-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/stakeholder-register.csv
+        sample: "stakeholder-register.csv: 利害関係者が1件も登録されていません。4.2 は関連する要求事項の決定を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.638Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-5.2-b
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/guest-communication.md
+        sample: "guest-communication.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME}
+          {APPROVAL_DATE} {CONTENT} {MEDIUM} {WHERE} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.641Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-6.1-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/risk-opportunities.csv
+          - docs/compliance/iso/ISO-21401/environmental-aspects.csv
+        sample: "risk-opportunities.csv: リスク及び機会が1件も登録されていません。6.1 は決定した結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.645Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-6.1-b
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/environmental-aspects.csv
+        sample: "environmental-aspects.csv: 環境側面が1件も登録されていません。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.648Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-6.1-c
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/risk-opportunities.csv
+        sample: "risk-opportunities.csv: リスク及び機会が1件も登録されていません。6.1 は決定した結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.653Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-6.2-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/kpi-log.csv
+        sample: "kpi-log.csv: KPI の測定記録がありません。9.1 は監視・測定の結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.657Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-6.2-b
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/kpi-log.csv
+        sample: "kpi-log.csv: KPI の測定記録がありません。9.1 は監視・測定の結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.660Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-7.3-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/worker-welfare.md
+        sample: "worker-welfare.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME} {APPROVAL_DATE}
+          {COUNT} {CONTENT} {DOCUMENT} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.664Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-7.4-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/guest-communication.md
+        sample: "guest-communication.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME}
+          {APPROVAL_DATE} {CONTENT} {MEDIUM} {WHERE} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.668Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-c
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/kpi-log.csv
+        sample: "kpi-log.csv: KPI の測定記録がありません。9.1 は監視・測定の結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.673Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-d
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/kpi-log.csv
+        sample: "kpi-log.csv: KPI の測定記録がありません。9.1 は監視・測定の結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.677Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-e
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/sustainable-purchasing.md
+        sample: "sustainable-purchasing.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME}
+          {APPROVAL_DATE} {REVISION} {CRITERIA} {PRODUCT} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.681Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-f
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/local-economy-log.csv
+          - docs/compliance/iso/ISO-21401/stakeholder-register.csv
+        sample: "local-economy-log.csv: 地域経済の記録がありません。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.687Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-g
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/socio-cultural-plan.md
+        sample: "socio-cultural-plan.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME}
+          {APPROVAL_DATE} {RESOURCE} {TYPE} {LOCATION} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.691Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-h
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/guest-protection-policy.md
+        sample: "guest-protection-policy.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME}
+          {APPROVAL_DATE} {VERIFIED_ON} {PROCEDURE} {CONTACT} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.696Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-i
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/accessibility-statement.md
+        sample: "accessibility-statement.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME}
+          {SURVEY_DATE} {STATUS} {DIMENSION} {YES_NO} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.701Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-8.1-j
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/worker-welfare.md
+        sample: "worker-welfare.md: 様式のプレースホルダが未置換です。（{FACILITY_NAME} {APPROVAL_DATE}
+          {COUNT} {CONTENT} {DOCUMENT} ほか）"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.706Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-9.1-a
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/kpi-log.csv
+        sample: "kpi-log.csv: KPI の測定記録がありません。9.1 は監視・測定の結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.712Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-9.1-b
+        verdict: nonconform_minor
+        evidence:
+          - docs/compliance/iso/ISO-21401/kpi-log.csv
+        sample: "kpi-log.csv: KPI の測定記録がありません。9.1 は監視・測定の結果の保持を求めます。"
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.717Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-10.2-a
+        verdict: conform
+        evidence:
+          - docs/compliance/iso/ISO-21401/corrective-actions.csv
+        sample: 関連記録 1 件を事前検査し、仕様不備は検出されなかった
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.723Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-10.2-b
+        verdict: conform
+        evidence:
+          - docs/compliance/iso/ISO-21401/corrective-actions.csv
+        sample: 関連記録 1 件を事前検査し、仕様不備は検出されなかった
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.729Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-10.2-c
+        verdict: conform
+        evidence:
+          - docs/compliance/iso/ISO-21401/corrective-actions.csv
+        sample: 関連記録 1 件を事前検査し、仕様不備は検出されなかった
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.737Z
+        recorded_by: OP-002
+      - requirement_id: REQ-21401-10.3-a
+        verdict: conform
+        evidence:
+          - docs/compliance/iso/ISO-21401/corrective-actions.csv
+        sample: 関連記録 1 件を事前検査し、仕様不備は検出されなかった
+        note: 事前検査（決定論）による提案。監査員が確認すること。
+        recorded_at: 2026-08-30T01:09:25.742Z
+        recorded_by: OP-002
