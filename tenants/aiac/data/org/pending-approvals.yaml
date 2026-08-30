@@ -351,3 +351,60 @@ approvals:
       invoice_id: INV-E2E-1788047461869
       transaction_id: TX-20260830-003
       wire_event_id: 06eef030-8a23-400b-b7aa-c04a41ff97b4
+  - approval_id: NOTICE-20260830-019
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-30T00:55:15.995Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788051315987
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-30T00:55:23.631Z
+    audit_event_id: f18ba242-b2fa-4644-ae57-34bb68a35114
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788051315987
+      transaction_id: TX-20260830-002
+      wire_event_id: d980904d-8b74-4e6d-8597-0ceeba1ad71c
+  - approval_id: NOTICE-20260830-020
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-30T01:03:40.646Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788051820637
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-30T01:03:48.568Z
+    audit_event_id: c137e137-d1ef-4297-b2e6-ac467bcced00
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788051820637
+      transaction_id: TX-20260830-003
+      wire_event_id: 917dc356-5432-4d4a-96d7-898ab8f2f4cb
+  - approval_id: NOTICE-20260830-021
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-30T01:10:01.454Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788052201443
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-30T01:10:08.882Z
+    audit_event_id: dda141eb-b90e-4f2e-acf1-a0c0099c6cd2
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788052201443
+      transaction_id: TX-20260830-004
+      wire_event_id: ea310c45-51c4-420d-ac52-664178edd115

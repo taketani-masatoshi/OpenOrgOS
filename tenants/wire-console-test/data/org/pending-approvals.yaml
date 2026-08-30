@@ -1,1 +1,24 @@
-approvals: []
+as_of: 2026-08-30
+approvals:
+  - approval_id: NOTICE-20260830-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-30T01:04:22.725Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    amount:
+      value: 250000
+      currency: JPY
+    message: E2E settlement step-up tier B
+    approval_policy_ref: REG-004
+    approval_tier: B
+    approver_id: 段燕燕
+    co_approver_id: テスト承認者
+    approved_at: 2026-08-30T01:04:33.731Z
+    audit_event_id: 899ba16d-6102-4357-af3f-b0df49254aff
+    wire:
+      peer_id: PEER-001
+      transaction_type: payment.instructed
+      broker_instruction: BRO-E2E-SETTLE-001
+      transaction_id: TX-20260830-001
+      wire_event_id: 37c48a5a-cfc3-41f6-b493-e519cb6301b3

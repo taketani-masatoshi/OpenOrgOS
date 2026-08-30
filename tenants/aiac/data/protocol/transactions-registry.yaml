@@ -1,3 +1,4 @@
+as_of: 2026-08-30
 transactions:
   - transaction_id: TX-20260830-001
     direction: inbound
@@ -16,4 +17,54 @@ transactions:
     event_id: 42f9ad1c-a155-407b-a340-20b449195000
     recorded_at: 2026-08-30T00:43:03.793Z
     notes: inbound webhook · attested by 段燕燕
-as_of: 2026-08-30
+  - transaction_id: TX-20260830-002
+    direction: outbound
+    our_org:
+      org_id: aiac
+      org_uri: steward://tenant/aiac
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/mal
+    transaction_type: steward.invoice.issued
+    amount:
+      value: 0
+      currency: JPY
+    refs:
+      invoice_id: INV-E2E-1788051315987
+    event_id: d980904d-8b74-4e6d-8597-0ceeba1ad71c
+    recorded_at: 2026-08-30T00:55:23.636Z
+    notes: E2E — 承認待ちの通知
+  - transaction_id: TX-20260830-003
+    direction: outbound
+    our_org:
+      org_id: aiac
+      org_uri: steward://tenant/aiac
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/mal
+    transaction_type: steward.invoice.issued
+    amount:
+      value: 0
+      currency: JPY
+    refs:
+      invoice_id: INV-E2E-1788051820637
+    event_id: 917dc356-5432-4d4a-96d7-898ab8f2f4cb
+    recorded_at: 2026-08-30T01:03:48.572Z
+    notes: E2E — 承認待ちの通知
+  - transaction_id: TX-20260830-004
+    direction: outbound
+    our_org:
+      org_id: aiac
+      org_uri: steward://tenant/aiac
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/mal
+    transaction_type: steward.invoice.issued
+    amount:
+      value: 0
+      currency: JPY
+    refs:
+      invoice_id: INV-E2E-1788052201443
+    event_id: ea310c45-51c4-420d-ac52-664178edd115
+    recorded_at: 2026-08-30T01:10:08.888Z
+    notes: E2E — 承認待ちの通知
