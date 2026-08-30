@@ -1,3 +1,4 @@
+as_of: 2026-08-30
 approvals:
   - approval_id: APR-20260710-001
     scope: internal
@@ -8,4 +9,345 @@ approvals:
     subject_ref: DRAFT-20260710-001-aiac-orgos
     message: 【AIAC】OrgOS テストメールのご連絡
     approval_policy_ref: REG-004
-as_of: 2026-07-10
+  - approval_id: NOTICE-20260830-001
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T15:28:23.612Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788017303610
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T15:28:28.911Z
+    audit_event_id: 8bf32fa5-3d4b-4cb8-9195-feb622e273ca
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788017303610
+      transaction_id: TX-20260830-001
+      wire_event_id: 1732ce5e-7f7b-4968-9840-04472f01634c
+  - approval_id: NOTICE-20260830-002
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T15:39:05.077Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788017945074
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T15:39:09.374Z
+    audit_event_id: 8f8b108c-731c-478a-a234-b1ff2c997d3e
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788017945074
+      transaction_id: TX-20260830-002
+      wire_event_id: 44e45a0e-fa79-44c6-ad76-a61d5729e206
+  - approval_id: NOTICE-20260830-003
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T15:46:51.084Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788018411082
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T15:46:56.386Z
+    audit_event_id: f0b23ad7-8035-442b-843c-632d447738d0
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788018411082
+      transaction_id: TX-20260830-003
+      wire_event_id: c1e00da9-bdff-457a-bf8c-8fd26cbb7c5a
+  - approval_id: NOTICE-20260830-004
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T16:53:14.696Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788022394694
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T16:53:18.971Z
+    audit_event_id: ebf8ae80-4507-44db-9a42-6acad99e3b95
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788022394694
+      transaction_id: TX-20260830-004
+      wire_event_id: 70601952-e02b-42cc-a374-4c73650c92d6
+  - approval_id: NOTICE-20260830-005
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T16:55:29.214Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788022529211
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T16:55:33.511Z
+    audit_event_id: 1e194608-ab5c-41a2-8468-bbda45d9ca26
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788022529211
+      transaction_id: TX-20260830-005
+      wire_event_id: e8af2c9f-e358-408a-9ac8-50a341b84e35
+  - approval_id: NOTICE-20260830-006
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T16:58:06.902Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788022686900
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T16:58:11.153Z
+    audit_event_id: c5477a31-aab9-4b69-a209-e216c4b04875
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788022686900
+      transaction_id: TX-20260830-006
+      wire_event_id: 558e1548-eb9a-47a6-8788-a6f78a06824f
+  - approval_id: NOTICE-20260830-007
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T17:05:21.176Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788023121174
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T17:05:26.496Z
+    audit_event_id: cf3c02eb-71fe-4970-9996-9903974eae95
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788023121174
+      transaction_id: TX-20260830-007
+      wire_event_id: ebb7aae8-568b-46c9-8f24-1c7206cbbe9b
+  - approval_id: NOTICE-20260830-008
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T17:10:09.457Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788023409455
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T17:10:14.798Z
+    audit_event_id: 2466fbac-7b28-4342-8d94-f7464514b8b9
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788023409455
+      transaction_id: TX-20260830-008
+      wire_event_id: cdc30807-a66e-420f-9ef9-670fed98c4ee
+  - approval_id: NOTICE-20260830-009
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T17:13:04.062Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788023584060
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T17:13:08.303Z
+    audit_event_id: a7b5fb2a-24d2-4364-805f-0cf1949530b0
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788023584060
+      transaction_id: TX-20260830-009
+      wire_event_id: 96d2d202-7f1f-47b3-8c80-fb81ffcf02a6
+  - approval_id: NOTICE-20260830-010
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T17:15:31.847Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788023731845
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T17:15:36.116Z
+    audit_event_id: b96b36fd-f677-42fa-a352-6a3f7b4ab128
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788023731845
+      transaction_id: TX-20260830-010
+      wire_event_id: 8e97ec4d-b264-4e05-a0a6-edb01b193f3e
+  - approval_id: NOTICE-20260830-011
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T17:18:09.088Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788023889084
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T17:18:13.343Z
+    audit_event_id: 2923ef35-1d72-441a-9719-a81a1303aa41
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788023889084
+      transaction_id: TX-20260830-011
+      wire_event_id: d133b2d2-c6d1-4f1a-a1e9-f131c644f1e8
+  - approval_id: NOTICE-20260830-012
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T17:58:45.037Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788026325034
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T17:58:50.442Z
+    audit_event_id: cd2d1d05-5c3a-469e-9dd2-178431f6c429
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788026325034
+      transaction_id: TX-20260830-012
+      wire_event_id: 5cb6644e-7b0b-4782-89f0-1be7e863e2bc
+  - approval_id: NOTICE-20260830-013
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T22:28:39.179Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788042519176
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T22:28:44.458Z
+    audit_event_id: 427d1f61-7ae2-41e1-8dc8-65fd106ebcbd
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788042519176
+      transaction_id: TX-20260830-001
+      wire_event_id: 06d9df6c-d0e1-4677-8df1-ee912066dccc
+  - approval_id: NOTICE-20260830-014
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T22:45:22.151Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788043522144
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T22:45:28.935Z
+    audit_event_id: 7d5b6428-50dd-4a84-9382-f0b6c4c5a84c
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788043522144
+      transaction_id: TX-20260830-002
+      wire_event_id: b792f058-6282-4c3e-9abe-e24de585f20f
+  - approval_id: NOTICE-20260830-015
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T22:50:36.266Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788043836260
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T22:50:44.067Z
+    audit_event_id: aac88ade-8bf8-4fac-8f6b-55d53c7e37b6
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788043836260
+      transaction_id: TX-20260830-001
+      wire_event_id: e6f40aa9-10d6-4865-8530-4b96a213b7a6
+  - approval_id: NOTICE-20260830-016
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T22:51:33.454Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788043893447
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T22:51:39.704Z
+    audit_event_id: 0c407429-2c77-4638-9024-398abe085984
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788043893447
+      transaction_id: TX-20260830-002
+      wire_event_id: 9402d2a4-e98d-411f-83a8-2704755fb39d
+  - approval_id: NOTICE-20260830-017
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T23:13:02.900Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788045182892
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T23:13:09.733Z
+    audit_event_id: 39aec41e-eed1-4b64-bbac-874b2efd1311
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788045182892
+      transaction_id: TX-20260830-002
+      wire_event_id: 0624b7bb-2dd7-4def-b14b-a5ec827db31c
+  - approval_id: NOTICE-20260830-018
+    scope: wire
+    status: completed
+    proposed_at: 2026-08-29T23:51:01.876Z
+    proposed_by: OP-002
+    subject_type: wire.outbound
+    subject_ref: INV-E2E-1788047461869
+    message: E2E — 承認待ちの通知
+    approval_policy_ref: REG-004
+    approval_tier: A
+    approver_id: Demo CEO
+    approved_at: 2026-08-29T23:51:09.436Z
+    audit_event_id: 43163fe1-1ddf-4ce2-8b0a-68ac079e1ca1
+    wire:
+      peer_id: PEER-001
+      transaction_type: invoice.issued
+      invoice_id: INV-E2E-1788047461869
+      transaction_id: TX-20260830-003
+      wire_event_id: 06eef030-8a23-400b-b7aa-c04a41ff97b4

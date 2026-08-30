@@ -1,0 +1,19 @@
+transactions:
+  - transaction_id: TX-20260830-001
+    direction: inbound
+    our_org:
+      org_id: aiac
+      org_uri: steward://tenant/aiac
+    counterparty:
+      org_id: PEER-001
+      org_uri: steward://tenant/mal
+    transaction_type: steward.contract.execution.notice
+    amount:
+      value: 85000
+      currency: JPY
+    refs:
+      contract_id: CTR-012
+    event_id: 42f9ad1c-a155-407b-a340-20b449195000
+    recorded_at: 2026-08-30T00:43:03.793Z
+    notes: inbound webhook · attested by 段燕燕
+as_of: 2026-08-30

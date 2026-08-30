@@ -7,6 +7,15 @@ All notable changes to OrgOS Operator Layer are documented here.
 ## [Unreleased]
 
 ### Added
+- **医療機器台帳の読み取り面** — `GET /chat/v1/compliance/medical-device` が QMS / GVP 台帳・許可期限・未承認の決定・監査を射影する。GET 以外は 405、YAML 破損は 422。書き込みは CLI + org approval のままで、コンソールから台帳を書き換える経路は作らない
+- **面ごとの証跡テスト** — money / books / mail / stripe / claims / governance / tax / ops / product の E2E 9本（`e2e/helpers/api-login.ts` 経由の BFF ログイン）と、面別 HTTP 単体テスト15本。各面で「入れる席」と「断られる席」の両方を主張する。Stripe 鍵はテスト用ファイルへ隔離し（`ORGOS_STRIPE_SECRETS_FILE`）、テストが実運用の鍵を読み書きしない
+- **採点を証跡から出す（`npm run ooo:unit` / `ooo:routes`）** — 能力53件の仕様20点・実装30点を、YAML の手書き数字ではなくソース走査（権限ガード · 入力検証 · 例外封じ込め）と「緑になった Vitest の記録」から算出する。緑の記録に無いテストには点を与えない。`docs/org-os/ooo-surfaces/` が仕様側の証跡、[ooo-99-program.md](docs/org-os/ooo-99-program.md) が手順
+- **2ハブ統合ドリル（`npm run ooo:integration`）** — `deploy/integration/docker-compose.yaml` の2ハブ構成に対して、組織間の登録・通知・承認・受領までを1コマンドで通す
+- **モジュールの同時実行上限** — 業務・JP パック18件の manifest が `security.limits.concurrent_jobs` を宣言し、AIA が無制限に並列実行しない
+- **所見に副次ギャップを併記** — 1つの統制に複数のギャップが立つとき、判定の根拠になった1件しか所見に出ていなかった。`other_gaps` を所見に追加し、レポートの問題点・課題表に「併記」列、改善提案に「あわせて」を出す。様式が未記入（`doc_missing`）で不適合と判定されたとき、その裏で記録内容も仕様を満たしていない（`record_invalid`）ことが担当者に届くようになる。
+- **適合ドリル（`scripts/iso-conformity-drill.ts`）** — 使い捨てテナントに「適合するダミー」と「規則ごとに壊したダミー」を生成し、期待した重大度・メッセージで指摘されるかを照合する（14 枠 327 ケース）。第2段では `iso audit run` の総合判定とギャップ種別まで確認する。ダミーは証拠ではなく、実行後にテナントを破棄する。
+- **監査枠組みの展開（ADR 0069）** — available 12 ISO の空レジスタを禁止し、HLS コア REQ + 領域記録を充填。`apply-precheck` / `brief` / `follow-up`。計画に `framework: iso|financial|jsox`。mal は 12 規格を enabled、ISO-22000 は適用除外。会計アサーションパックと JP モジュール `jp_jsox`（内部統制報告書・EDINET は出さない）。LLM は判定しない。
+- **ISO 適合性検査の深化（記録内容 · 要求事項 · ISO 19011 · 署名）** — 証拠の「存在」しか見ていなかった検査を4層に分けた。**A層**: パックが `records.yaml` で記録ごとの仕様を宣言し（`computed` · `conditional_required` · `comparison` · `freshness` · `unique` · `non_empty` · `required_sections` · `no_placeholders` の**閉じた**語彙。式パーサは作らない）、`orgos iso records check` と `orgos validate` が検査する（`validate` は整合性ゲートなので warning、適合性のゲートは `records check --strict`）。`computeControlGaps` に `record_invalid` を追加し、「作られていない」と「内容が仕様を満たさない」を区別。根本原因と有効性確認のない「是正済み」は通らない。KPI ログの構造検査は `records.yaml` へ移し、`iso-kpi.ts` は原単位計算に縮めた。**B層**: `requirements.yaml`（ISO-21401 は39件、他パックは器）と `orgos iso requirements` で統制との被覆を双方向に検査（未被覆 · 孤立統制 · 参照切れ · 未検証）。ISO 本文は再配布できないため statement は言い換えであり、`verified_on` が埋まるまで結果は「規格への網羅性」ではなく「想定した要求事項への網羅性」だと明示する。**C層**: `orgos iso audit run` を**適合性の事前検査**と位置づけ直し、`orgos iso audit plan create` / `finding set` / `conclude` で ISO 19011 の監査を別に置いた。未判定の要求事項が1件でもあれば `conclude` は拒否し、不適合の判定には監査員の記述を要求する。**D層**: 新しい暗号処理は作らず、`subject_type: iso.internal_audit.signoff` で org approval に載せて `humanApproveOrgApproval()` を通す（`audit:sign` 権限を `auditor` 既定に追加）。署名後に所見を書き換えると digest 照合が落ちる。監査員の独立性（`allowed_agents` と監査範囲の交差）と力量（`CMP-10`）を計画作成のゲートにし、`orgos iso audit programme` で期間内に一度も監査されていない要求事項を出す。**LLM は判定に関与しない。** ADR 0068
 - **ISO-21401 の実運用化（証拠様式 · KPI 検査 · 着手順序）** — 統制が要求する証拠ファイルに対して空様式11本を `templates/` に整備し、`orgos iso templates <ID> [--write]` でテナントへ配置できるようにした（既存ファイルは上書きしない）。整備状況は `catalog.yaml` の `evidence_forms`（`complete` / `partial`）で宣言し、契約テストが宣言と実態の一致を双方向に検査する（ISO-21401 · 9001 · 13485 · 37000 が complete、残り8件は partial として債務を可視化）。
 - **空の様式を証拠として数えない** — CSV はデータ行が1件以上、Markdown は `{PLACEHOLDER}` の置換を必要とする。様式を配っただけで統制が適合に転じる誤りを防ぐ。ギャップ表示は「未作成」「様式が未記入」「記録なし」を区別する。
 - **`orgos iso kpi`** — ISO 21401 の KPI ログを決定論的に検査し、宿泊人泊あたりの原単位と前月比を計算する。月形式・重複・負値・非数値・稼働0での使用量計上を検出。総量ではなく原単位で評価するため、稼働増による見かけの悪化と実際の非効率を取り違えない。
@@ -33,6 +42,16 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **セールス CRM Wave 2b 100点クロージャ** — mal `migrate-accounts` · deal update / inquiry-set-status / follow-up-from-sent / account merge / mail-link-resolve · Console pipeline/inbound 操作 · demo confirm hook · [sales-crm-runbook.md](docs/org-os/sales-crm-runbook.md) · ADR 0062 DoD #2（POST vs CLI-only）
 
 ### Fixed
+- **決済儀式が読み取り席でも始められた** — `POST /chat/v1/settlement/challenge` がセッションの有無しか見ていなかったため、承認権限のない席でも step-up を開始できた。`chat:approve` を必須にした
+- **税務の書き込み経路が `chat:ask` で通っていた** — `xml-draft` / `bonus-draft` / `yea/ready` の3経路を `finance:reconcile` に引き上げた
+- **本番で名簿外の operator に既定権限が付いていた** — 本番モードでは登録簿が正本（登録簿の欠落は起動時に失敗）なので、名簿に無い id には権限を一切与えない
+- **公開 product 経路が SPA フォールバックで HTML 200 を返していた** — signup / plans / Stripe webhook がセッション無しだと画面 HTML を返し、Stripe が配信成功と誤認していた。公開経路はフォールバック前に API へ通す
+- **非同期ハンドラの例外でチャットサーバが落ちていた** — throw が unhandled rejection になりプロセスごと終了していたのを、500 応答に閉じ込めた
+- **`modules.yaml` の無いテナントでコンソールが落ちた** — モジュール目録・業務データ読み込みを欠落に耐える形にした（`loadModulesFileSafe`）
+- **壊れたセッションからログアウトできなかった** — teardown が失敗してもブラウザの Cookie は必ず落とす
+- **PassKey ハンドオフの戻り先** — 常に `/` へ戻していたため、設定画面から登録すると画面が変わっていた。要求した画面へ戻す
+- **適用除外の規格に記録 warning が出ていた** — `orgos validate` の記録検査が `enabled` だけを見ていたのを、適用対象（excluded を除く）に合わせた
+- **`required_sections` が文書タイトルを節として数えていた** — 本文全体の部分一致だったため、必須節を削っても表題に同じ語が含まれていれば適合になっていた（ISO-21401 `guest-protection-policy.md` · ISO-22000 `applicability.md`）。見出し行（`##` 以上）に限定。番号付き見出し（`## 3. 労働条件`）は従来どおり通る
 - **会社イベントパネルの「Invalid month」** — `GET /chat/v1/events` が `parseMonth` に `YYYY-MM-DD` を渡していたのを修正（`YYYY-MM` を導出）
 - **Agent 要約のラベル重複** — ファイル名のみだと全 Agent で同一表示になるため、所属 Agent フォルダ名を付与
 - **目標ギャップ件数** — サマリーが `unknown` を数えず合計が行数と一致しなかったのを修正

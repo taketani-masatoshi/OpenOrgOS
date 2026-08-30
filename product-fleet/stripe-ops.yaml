@@ -2,5 +2,5 @@ version: 1
 status: configured
 mode: test
 webhook_path: /chat/v1/product/stripe/webhook
-checked_at: 2026-08-25T22:30:02.380Z
-note: pilot workspace attestation
+checked_at: 2026-08-29T23:50:33.917Z
+note: Saved via Operator Console stripe settings

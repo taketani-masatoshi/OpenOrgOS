@@ -114,3 +114,75 @@ invites:
     operator_id: OP-GUEST01
     expires_at: 2026-08-30T10:25:49.984Z
     created_at: 2026-08-29T10:25:49.990Z
+  - token: e7a4ed62a2771df52d88615d6bb12875.4d3886185d2a8e568205757cf8b21bdb
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T18:47:12.628Z
+    created_at: 2026-08-29T18:47:12.640Z
+  - token: 5ad8e20407ec842ef3b47a61dc5533ad.1df3792ea8307bed9beb79140782b7d5
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T18:47:44.921Z
+    created_at: 2026-08-29T18:47:44.932Z
+  - token: 9e0c7e2ff1cae25a2825781d0767392f.10f129857b4c9883c9d4b8513908b2fa
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T18:49:02.704Z
+    created_at: 2026-08-29T18:49:02.715Z
+  - token: 47d8765b17779cfa6a7e08332e0478bd.91721c32cf95a4066531824565a6022e
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T19:10:35.073Z
+    created_at: 2026-08-29T19:10:35.083Z
+  - token: 696ca4b536a7eba22a58fea2d65088fd.b8b9b12f944e64bb3c8f27ff14fa2028
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T19:16:16.885Z
+    created_at: 2026-08-29T19:16:16.893Z
+  - token: 6a606e8b14b08242fdda085334b1e8a4.074e6be75ce3e00e182c13edbeef21dd
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T22:05:58.217Z
+    created_at: 2026-08-29T22:05:58.223Z
+  - token: 19cda88b5f03f09359e4b78c1dd472aa.eec4e3064f6eecad3d157413182d0c2e
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T22:21:21.675Z
+    created_at: 2026-08-29T22:21:21.688Z
+  - token: 5aeef9ace5ab1439a76106ad2ec7aba7.273da73f56c9adf7e799e4f43c35064f
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T22:27:23.450Z
+    created_at: 2026-08-29T22:27:23.465Z
+  - token: c4a3021f1ff1c39a5b09fc4022ff448f.f19769fbd6ecc015d4248e385dce7b0a
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T23:07:20.017Z
+    created_at: 2026-08-29T23:07:20.032Z
+  - token: 2214e51db499ea00b337973f0ad704f7.3de70427689dd09a5f6aff876f7bf47e
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T23:10:10.226Z
+    created_at: 2026-08-29T23:10:10.241Z
+  - token: b364fd259b1c19ea2597d68d82be0f46.44a8e1cc1281cfc39044dad574e5b7c0
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-30T23:14:23.351Z
+    created_at: 2026-08-29T23:14:23.365Z
+  - token: 1662b35c3e96bc03f412c6954abfa594.401782ea68b5b96d44d9f4bbf3822905
+    tenant_id: pilot-ledger-001
+    email: guest@example.com
+    operator_id: OP-GUEST01
+    expires_at: 2026-08-31T00:50:04.782Z
+    created_at: 2026-08-30T00:50:04.795Z
