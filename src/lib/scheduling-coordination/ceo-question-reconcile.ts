@@ -1,8 +1,4 @@
-import {
-  dismissPendingSchedulingQuestions,
-  loadCeoInlineQueue,
-  saveCeoInlineQueue,
-} from "../correspondence/ceo-inline-question.js";
+import { loadCeoInlineQueue, saveCeoInlineQueue } from "../correspondence/ceo-inline-question.js";
 import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { caseNeedsCeoIntake, SCHEDULE_INTAKE_PENDING } from "./ceo-gates.js";
@@ -67,7 +63,6 @@ export function isSupersededSchedulingCeoQuestion(
 export function reconcileStaleSchedulingCeoQuestions(): string[] {
   const queue = loadCeoInlineQueue();
   const dismissed: string[] = [];
-  const terminalCaseIds = new Set<string>();
   let changed = false;
 
   queue.questions = queue.questions.map((question) => {
@@ -78,12 +73,6 @@ export function reconcileStaleSchedulingCeoQuestions(): string[] {
     const caseRow = findSchedulingCase(caseId);
     if (!caseRow) return question;
 
-    if (isTerminalSchedulingCase(caseRow)) {
-      terminalCaseIds.add(caseId);
-      dismissed.push(question.id);
-      return question;
-    }
-
     if (!isSupersededSchedulingCeoQuestion(question, caseRow)) return question;
     dismissed.push(question.id);
     changed = true;
@@ -91,10 +80,6 @@ export function reconcileStaleSchedulingCeoQuestions(): string[] {
   });
 
   if (changed) saveCeoInlineQueue(queue);
-
-  for (const caseId of terminalCaseIds) {
-    dismissPendingSchedulingQuestions(caseId);
-  }
 
   return [...new Set(dismissed)];
 }

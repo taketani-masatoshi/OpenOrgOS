@@ -25,7 +25,12 @@ import {
 } from "../secretary/contact-registry.js";
 import { currentDate } from "../utils.js";
 import { writeSchedulingActionCard } from "./action-card.js";
+import { buildSchedulingClarifyText } from "./clarify-text.js";
+import { extractAmounts } from "../correspondence/claims-assert.js";
+import type { CorrespondenceClaim } from "../correspondence/facts-verify.js";
+import { proposeSlotsOntoSchedulingCase } from "./propose-case.js";
 import {
+  assertMealCostForOutboundDraft,
   buildSchedulingDraftText,
   type SchedulingDraftKind,
 } from "./draft-text.js";
@@ -161,6 +166,27 @@ export function recordSchedulingLifecycleEvent(
   return current;
 }
 
+/**
+ * The meal cost in the body comes from `cost_estimate`, which only a human can
+ * set (`orgos executive scheduling set-cost`). Carry it as a verified claim so
+ * the outbound amount gate can see where the figure came from.
+ */
+function schedulingCostClaimNote(caseRow: SchedulingCase, body: string): string[] {
+  const estimate = caseRow.cost_estimate?.trim();
+  if (!estimate) return [];
+  const amounts = extractAmounts(body);
+  if (!amounts.length) return [];
+  const claims: CorrespondenceClaim[] = amounts.map((value, index) => ({
+    id: `${caseRow.id}-cost-${index + 1}`,
+    kind: "amount",
+    label: "会食費用の目安",
+    value,
+    source: `data/executive/scheduling-cases.yaml#${caseRow.id}.cost_estimate`,
+    verified: true,
+  }));
+  return [`claims-json:${JSON.stringify(claims)}`];
+}
+
 export function ensureSchedulingCorrespondenceDrafts(
   caseId: string,
   kind: SchedulingDraftKind,
@@ -168,6 +194,7 @@ export function ensureSchedulingCorrespondenceDrafts(
 ): SchedulingCase {
   let current = findSchedulingCase(caseId);
   if (!current) throw new Error(`Scheduling case ${caseId} not found`);
+  assertMealCostForOutboundDraft(current, kind);
   const resolved = resolveSchedulingCaseContacts(current);
   const targets = externalTargets(resolved, kind);
   const unresolved = targets.filter((participant) => !participant.email);
@@ -215,7 +242,12 @@ export function ensureSchedulingCorrespondenceDrafts(
     );
     if (exists) continue;
 
-    const { subject, body } = buildSchedulingDraftText(current, kind, target);
+    // A clarify asks about the venue before any date exists, so it has its own
+    // body: the generic draft text would fail the clarify style lint.
+    const { subject, body } =
+      kind === "clarify"
+        ? buildSchedulingClarifyText(current, target)
+        : buildSchedulingDraftText(current, kind, target);
     const recipients = resolveSchedulingRecipients(current, kind, target.id);
     if (!recipients.to) {
       throw new Error(`Scheduling participant ${target.id} has no resolved recipient`);
@@ -229,11 +261,14 @@ export function ensureSchedulingCorrespondenceDrafts(
       contactRef: target.contact_ref,
       createdBy,
       notes: [
-        `scheduling-case:${current.id}`,
-        `kind:${kind}`,
-        `participant:${target.id}`,
-        `revision:${current.proposal_revision}`,
-      ].join(" "),
+        [
+          `scheduling-case:${current.id}`,
+          `kind:${kind}`,
+          `participant:${target.id}`,
+          `revision:${current.proposal_revision}`,
+        ].join(" "),
+        ...schedulingCostClaimNote(current, body),
+      ].join("\n"),
       proposeApproval: true,
     });
     writeSchedulingActionCard({ caseRow: current, draft, kind, approvalId });
@@ -306,7 +341,7 @@ export function handleSchedulingCorrespondenceSent(
 ): SchedulingCase | undefined {
   const notes = draft.notes ?? "";
   const caseId = notes.match(/\bscheduling-case:(SCH-\d{4}-\d{3})\b/)?.[1];
-  const kind = notes.match(/\bkind:(proposal|reminder|confirm)\b/)?.[1] as
+  const kind = notes.match(/\bkind:(clarify|proposal|reminder|confirm)\b/)?.[1] as
     | SchedulingDraftKind
     | undefined;
   const participantId = notes.match(/\bparticipant:(PART-\d{3})\b/)?.[1];
@@ -334,6 +369,10 @@ export function handleSchedulingCorrespondenceSent(
   }
 
   if (!allExternalSent(current, kind)) return current;
+  if (kind === "clarify") {
+    // The venue question has gone out; dates can now be offered.
+    return proposeSlotsOntoSchedulingCase(current.id);
+  }
   if (kind === "proposal") {
     if (current.status !== "awaiting_responses") {
       current = updateSchedulingCase(current.id, current.revision, (row) =>

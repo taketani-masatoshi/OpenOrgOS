@@ -1,6 +1,7 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { resolveMailConfig } from "../correspondence/mail-config.js";
 import { ensureSchedulingCeoConfirmQuestion } from "./ceo-confirm.js";
+import { ensureSchedulingCorrespondenceDrafts } from "./lifecycle.js";
 import { applyNextAction } from "./next-action.js";
 import { findSchedulingCase, updateSchedulingCase } from "./store.js";
 
@@ -100,6 +101,13 @@ export function advanceSchedulingWorkflow(caseId: string, now = new Date()): Sch
           ...next,
           updated_at: new Date().toISOString(),
         }));
+
+  if (persisted.next_action === "send_clarify") {
+    // The venue question goes out before any date is offered, so nothing else
+    // in the pipeline would draft it.
+    ensureSchedulingCorrespondenceDrafts(persisted.id, "clarify");
+    return findSchedulingCase(caseId) ?? persisted;
+  }
 
   if (persisted.next_action !== "ceo_confirm") return persisted;
   ensureSchedulingCeoConfirmQuestion(persisted);

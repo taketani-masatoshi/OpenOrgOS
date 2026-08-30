@@ -181,6 +181,28 @@ export function resolveSenderByEmail(email: string, displayName?: string): Sende
   return { known: false };
 }
 
+/**
+ * Addresses the company itself sends from — the officer list only covers named
+ * people, so a tenant that declares just a representative address still needs
+ * its own mail recognised as ours.
+ */
+export function isOwnMailAddress(email: string): boolean {
+  const target = norm(email);
+  if (!target) return false;
+  const path = join(getDataDir(), "company.yaml");
+  if (!existsSync(path)) return false;
+  try {
+    const doc = YAML.parse(readFileSync(path, "utf-8")) as {
+      public_disclosure?: { representative_email?: string; contact_email?: string };
+    };
+    return [doc.public_disclosure?.representative_email, doc.public_disclosure?.contact_email]
+      .filter(Boolean)
+      .some((own) => norm(own as string) === target);
+  } catch {
+    return false;
+  }
+}
+
 function loadCompanyOfficers(): ContactLookupMatch[] {
   const path = join(getDataDir(), "company.yaml");
   if (!existsSync(path)) return [];

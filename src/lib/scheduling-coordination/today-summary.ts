@@ -1,6 +1,8 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import { findPendingApprovalForCase } from "./ceo-confirm.js";
 import { findUnanimousAcceptedSlot } from "./slots.js";
+import { hasUnsentSchedulingDraft } from "./today-attention.js";
+import { SCHEDULE_VENUE_RESERVATION_PENDING } from "./venue-gate.js";
 
 function pendingNames(caseRow: SchedulingCase): string {
   return caseRow.participants
@@ -98,6 +100,21 @@ export function buildSchedulingTodayItem(caseRow: SchedulingCase): {
         visible_to_ceo: caseRow.calendar_sync === "failed",
       };
     default:
+      if (caseRow.exception_reason === SCHEDULE_VENUE_RESERVATION_PENDING) {
+        return {
+          headline: `${caseRow.title} — 会場の予約番号待ち`,
+          detail: `${caseRow.location ?? "会場"} · 予約番号を登録すると確定通知に進みます`,
+          visible_to_ceo: true,
+        };
+      }
+      if (hasUnsentSchedulingDraft(caseRow)) {
+        return {
+          headline: `${caseRow.title} — 未送信の下書きがあります`,
+          detail: "承認・送信が止まっています",
+          approval_id: approvalId,
+          visible_to_ceo: true,
+        };
+      }
       return {
         headline: caseRow.title,
         detail: `状態: ${caseRow.status}`,

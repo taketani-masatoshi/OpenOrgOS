@@ -16,6 +16,7 @@ import {
   loadCeoInlineQueue,
 } from "../correspondence/ceo-inline-question.js";
 import { applyNextAction } from "./next-action.js";
+import { isOwnMailAddress, resolveSenderByEmail } from "../secretary/contact-registry.js";
 import { extractEmailAddress } from "./reply-parse.js";
 import { interpretScheduleReply } from "./reply-interpret.js";
 import { proposeExecutiveSlots } from "./slots.js";
@@ -60,26 +61,49 @@ async function readMailBody(entry: MailTriageEntry): Promise<string> {
   }
 }
 
+/** Every message id that ties this mail to a thread we already know about. */
+function entryThreadIds(entry: MailTriageEntry): string[] {
+  return [
+    entry.id,
+    entry.source_message_id,
+    entry.in_reply_to,
+    ...(entry.mail_thread_ids ?? []),
+    ...(entry.references ?? []),
+  ].filter(Boolean) as string[];
+}
+
+/** A copy of mail we sent ourselves — its subject is one we generated. */
+function isOwnOutboundCopy(entry: MailTriageEntry): boolean {
+  const sender = (entry.sender_email ?? extractEmailAddress(entry.from) ?? "").trim();
+  if (!sender) return false;
+  try {
+    return isOwnMailAddress(sender) || resolveSenderByEmail(sender).match?.scope === "self";
+  } catch {
+    return false;
+  }
+}
+
 export function findCaseForMailEntry(entry: MailTriageEntry): SchedulingCase | undefined {
   if (entry.scheduling_case_id) {
     return findSchedulingCase(entry.scheduling_case_id);
   }
 
   const cases = listSchedulingCases({ activeOnly: true });
-  if (entry.mail_thread_ids?.length) {
-    const matches = cases.filter((caseRow) =>
-      caseRow.mail_thread_ids.some((id) => entry.mail_thread_ids!.includes(id))
-    );
-    if (matches.length === 1) return matches[0];
-    if (matches.length > 1) return undefined;
+  const threadIds = entryThreadIds(entry);
+  const matches = cases.filter((caseRow) =>
+    caseRow.mail_thread_ids.some((id) => threadIds.includes(id))
+  );
+  if (matches.length === 1) return matches[0];
+  if (matches.length > 1) return undefined;
+
+  // Subject matching is only safe for our own outbound copies: an inbound
+  // subject can be forwarded or reused, but we wrote this one.
+  if (isOwnOutboundCopy(entry)) {
+    const subject = normalizeSubject(entry.subject);
+    const bySubject = cases.filter((caseRow) => normalizeSubject(caseRow.title) === subject);
+    if (bySubject.length === 1) return bySubject[0];
   }
 
-  const messageIds = [entry.id, entry.source_message_id].filter(Boolean) as string[];
-  const matches = cases.filter((c) => messageIds.some((id) => c.mail_thread_ids.includes(id)));
-  if (matches.length === 1) return matches[0];
-
-  // Subject and sender-only matching is intentionally excluded: forwarded or
-  // repeated meeting subjects are ambiguous and must be linked explicitly.
   return undefined;
 }
 

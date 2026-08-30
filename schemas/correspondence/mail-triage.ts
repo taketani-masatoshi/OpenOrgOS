@@ -46,6 +46,10 @@ export const mailTriageEntrySchema = z.object({
   schedule_reply_parsed: z.boolean().optional(),
   /** 関連メールスレッド ID */
   mail_thread_ids: z.array(z.string()).default([]),
+  /** RFC 5322 In-Reply-To — 返信元メッセージ ID */
+  in_reply_to: z.string().optional(),
+  /** RFC 5322 References — スレッド上流のメッセージ ID */
+  references: z.array(z.string()).optional(),
   /** Gmail API thread id for this message */
   gmail_thread_id: z.string().optional(),
 });

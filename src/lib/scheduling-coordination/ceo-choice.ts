@@ -1,5 +1,6 @@
 import type { SchedulingCase } from "../../../schemas/executive/scheduling-cases.js";
 import type { CeoInlineQuestion } from "../../../schemas/correspondence/ceo-inline-question.js";
+import { SCHEDULE_VENUE_CLARIFY, SCHEDULE_VENUE_PENDING } from "./ceo-gates.js";
 
 export type ParsedSchedulingCeoChoice =
   | { kind: "confirm_slot"; slotId: string }
@@ -55,6 +56,30 @@ export function buildSchedulingCeoChoices(caseRow: SchedulingCase): {
           (slot) => `${slot.id} ${slot.label ?? slot.start}（確定・通知）`
         ),
         "再提案",
+        "中止",
+      ],
+    };
+  }
+
+  if (caseRow.exception_reason === SCHEDULE_VENUE_CLARIFY) {
+    return {
+      fieldId: "schedule_ceo_choice",
+      label: "候補日前に会場を先方へ確認します。第一候補にする案を選んでください",
+      choices: [
+        ...caseRow.venue_options.map((option) => `${option.id} ${option.name}`),
+        "会場を再検討",
+        "中止",
+      ],
+    };
+  }
+
+  if (caseRow.exception_reason === SCHEDULE_VENUE_PENDING) {
+    return {
+      fieldId: "schedule_ceo_choice",
+      label: "提案/確定前に会場が未確定です。店舗名を決めるか、追って連絡にしてください",
+      choices: [
+        ...caseRow.venue_options.map((option) => `${option.id} ${option.name}`),
+        "追って連絡",
         "中止",
       ],
     };
