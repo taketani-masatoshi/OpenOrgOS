@@ -623,7 +623,10 @@ export function formatTodayContextMarkdown(ctx: TodayContext): string {
       `- 在籍（active+leave）: ${ctx.hr_on_roster ?? 0} 名（active ${ctx.hr_active ?? 0} · leave ${ctx.hr_on_leave ?? 0}）`,
       `- 登録総数: ${ctx.hr_total ?? 0} · 被覆: ${ctx.hr_coverage}`,
       `- Path: \`${ctx.hr_source_path ?? "data/hr/employees.yaml"}\``,
-      "- 従業員数・在籍人数は Today / 決定論パス（`orgos hr headcount`）で述べてよい。氏名は出力しない。未登録時は Human Resources へ実 IMP。"
+      // The CEO surface carries no operator CLI; the deterministic path is
+      // `hr headcount`, named without the executable so the view stays a
+      // reading surface rather than an instruction sheet.
+      "- 従業員数・在籍人数は Today / 決定論パス（`hr headcount`）で述べてよい。氏名は出力しない。未登録時は Human Resources へ実 IMP。"
     );
   } else {
     try {
