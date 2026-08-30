@@ -18,6 +18,16 @@ export const isoAuditOverall = z.enum([
 /** Mirrors the control's declared `priority` — see `controlPriority`. */
 export const isoAuditPriority = z.enum(["P1", "P2", "P3"]);
 
+/**
+ * A gap the verdict did not come from. One control can owe several things at
+ * once — the form is missing *and* the register it replaces is malformed — and
+ * an operator who only sees the deciding gap fixes half the problem.
+ */
+export const isoAuditGapNoteSchema = z.object({
+  gap_type: z.enum(CONTROL_GAP_TYPES),
+  detail: z.string().min(1),
+});
+
 export const isoInternalAuditFindingSchema = z.object({
   priority: isoAuditPriority.default("P3"),
   control_id: z.string(),
@@ -27,6 +37,8 @@ export const isoInternalAuditFindingSchema = z.object({
   verdict: isoAuditVerdict,
   gap_type: z.enum(CONTROL_GAP_TYPES).optional(),
   detail: z.string().min(1),
+  /** Remaining gaps on the same control, in the order they were computed. */
+  other_gaps: z.array(isoAuditGapNoteSchema).default([]),
   primary_agent: agentId,
   improvement: z.string().min(1),
 });
@@ -53,6 +65,7 @@ export const isoInternalAuditRunSchema = z.object({
 export type IsoAuditPriority = z.output<typeof isoAuditPriority>;
 export type IsoAuditVerdict = z.output<typeof isoAuditVerdict>;
 export type IsoAuditOverall = z.output<typeof isoAuditOverall>;
+export type IsoAuditGapNote = z.output<typeof isoAuditGapNoteSchema>;
 export type IsoInternalAuditFinding = z.output<typeof isoInternalAuditFindingSchema>;
 export type IsoInternalAuditSummary = z.output<typeof isoInternalAuditSummarySchema>;
 export type IsoInternalAuditRun = z.output<typeof isoInternalAuditRunSchema>;
