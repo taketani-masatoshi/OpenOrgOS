@@ -1,6 +1,6 @@
 import type { IntegrityIssue } from "./integrity.js";
 import { checkRecordsForStandard, loadRecordSpecs, recordRelPath } from "./iso-records.js";
-import { loadEnabledIsoIds } from "./tenant-standards.js";
+import { loadApplicableIsoIds } from "./tenant-standards.js";
 
 /**
  * Surface record faults in `orgos validate`, so a register that no longer meets
@@ -9,7 +9,7 @@ import { loadEnabledIsoIds } from "./tenant-standards.js";
  */
 export function collectIsoRecordIntegrityIssues(): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
-  for (const standard of loadEnabledIsoIds()) {
+  for (const standard of loadApplicableIsoIds()) {
     const spec = loadRecordSpecs(standard);
     if (!spec) continue;
     for (const report of checkRecordsForStandard(standard)) {

@@ -62,22 +62,16 @@ describe("tenant config change (standards)", () => {
     expect(parseTenantConfigProposeIntent("こんにちは")).toBeNull();
   });
 
-  it("proposes, previews, and applies ISO enable after reviewed approve", () => {
-    const wasEnabled = loadEnabledIsoIds().includes("ISO-22301");
-    // Ensure starting false for this test path
-    if (wasEnabled) {
-      // Flip off via a propose/apply cycle first would pollute; skip if already on
-      // Use ISO-50001 which is typically false on mal
-    }
+  it("proposes, previews, and applies ISO disable then restore after reviewed approve", () => {
     const targetId = "ISO-50001";
-    expect(loadEnabledIsoIds().includes(targetId)).toBe(false);
+    expect(loadEnabledIsoIds().includes(targetId)).toBe(true);
 
     const proposed = proposeTenantConfigChange({
       target: "standards",
       targetId,
-      enabled: true,
+      enabled: false,
       proposedBy: "op-steward",
-      message: "Enable energy ISO for test",
+      message: "Disable energy ISO for test",
     });
     expect(proposed.change.status).toBe("pending_approval");
     expect(findOrgApproval(proposed.approval_id)?.subject_type).toBe("tenant.config");
@@ -86,13 +80,13 @@ describe("tenant config change (standards)", () => {
       proposeTenantConfigChange({
         target: "standards",
         targetId,
-        enabled: true,
+        enabled: false,
         proposedBy: "op-steward",
       })
     ).toThrow(/Pending change already exists/);
 
     const preview = previewTenantConfigChange(proposed.approval_id);
-    expect(preview.diff_line).toContain("false → true");
+    expect(preview.diff_line).toContain("true → false");
     expect(preview.side_effects_plan.some((s) => s.includes("sync-context"))).toBe(true);
 
     expect(() =>
@@ -111,29 +105,28 @@ describe("tenant config change (standards)", () => {
       reviewed: true,
     });
     expect(applied.change.status).toBe("applied");
-    expect(loadEnabledIsoIds()).toContain(targetId);
+    expect(loadEnabledIsoIds()).not.toContain(targetId);
 
-    // Restore
-    const disable = proposeTenantConfigChange({
+    const restore = proposeTenantConfigChange({
       target: "standards",
       targetId,
-      enabled: false,
+      enabled: true,
       proposedBy: "op-steward",
     });
     approveAndApplyTenantConfigChange({
-      approvalId: disable.approval_id,
+      approvalId: restore.approval_id,
       approverId: "段燕燕",
       operatorId: "OP-001",
       reviewed: true,
     });
-    expect(loadEnabledIsoIds()).not.toContain(targetId);
+    expect(loadEnabledIsoIds()).toContain(targetId);
   });
 
   it("rejects pending change without applying", () => {
     const proposed = proposeTenantConfigChange({
       target: "standards",
       targetId: "ISO-37001",
-      enabled: true,
+      enabled: false,
       proposedBy: "op-steward",
     });
     rejectTenantConfigChange({
@@ -143,11 +136,11 @@ describe("tenant config change (standards)", () => {
     });
     const change = findTenantConfigChangeByApproval(proposed.approval_id);
     expect(change?.status).toBe("rejected");
-    expect(loadEnabledIsoIds()).not.toContain("ISO-37001");
+    expect(loadEnabledIsoIds()).toContain("ISO-37001");
   });
 
   it("chat intent proposes without applying", () => {
-    const result = handleTenantConfigProposeChatMessage("ISO-20000 を有効にして", {
+    const result = handleTenantConfigProposeChatMessage("ISO-20000 を無効にして", {
       proposedBy: "op-steward",
     });
     expect(result.handled).toBe(true);
@@ -155,16 +148,16 @@ describe("tenant config change (standards)", () => {
     expect(result.approval_id).toMatch(/^APR-/);
     expect(result.reply).toMatch(/承認待ち/);
     expect(result.reply).toMatch(/\/approvals\//);
-    expect(loadEnabledIsoIds()).not.toContain("ISO-20000");
+    expect(loadEnabledIsoIds()).toContain("ISO-20000");
   });
 
   it("lets the proposing CEO confirm tenant.config (inbox, not a second person)", () => {
     const targetId = "ISO-37001";
-    expect(loadEnabledIsoIds().includes(targetId)).toBe(false);
+    expect(loadEnabledIsoIds().includes(targetId)).toBe(true);
     const proposed = proposeTenantConfigChange({
       target: "standards",
       targetId,
-      enabled: true,
+      enabled: false,
       proposedBy: "OP-001",
     });
     expect(() =>
@@ -183,21 +176,21 @@ describe("tenant config change (standards)", () => {
       reviewed: true,
     });
     expect(applied.change.status).toBe("applied");
-    expect(loadEnabledIsoIds()).toContain(targetId);
+    expect(loadEnabledIsoIds()).not.toContain(targetId);
 
-    const disable = proposeTenantConfigChange({
+    const restore = proposeTenantConfigChange({
       target: "standards",
       targetId,
-      enabled: false,
+      enabled: true,
       proposedBy: "OP-001",
     });
     approveAndApplyTenantConfigChange({
-      approvalId: disable.approval_id,
+      approvalId: restore.approval_id,
       approverId: "段燕燕",
       operatorId: "OP-001",
       reviewed: true,
     });
-    expect(loadEnabledIsoIds()).not.toContain(targetId);
+    expect(loadEnabledIsoIds()).toContain(targetId);
   });
 
   it("proposes agent enable and import_enable module changes", () => {
