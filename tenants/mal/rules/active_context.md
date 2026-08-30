@@ -174,13 +174,6 @@
 - docs: `docs/jp-women-empowerment/`
 - 要約: `docs/reports/agent-summaries/jp-women-empowerment/`
 
-### `event_operations` (`event_operations`)
-
-- Agent: `steward/modules/event_operations/agent.md`
-- data: `data/event-operations/`
-- docs: `docs/event-operations/`
-- 要約: `docs/reports/agent-summaries/event-operations/`
-
 ## 無効業務モジュール（読取禁止）
 
 - `venture_capital` / `venture_capital` — `steward/modules/venture_capital/` **読まない**
@@ -253,6 +246,7 @@
 
 ## 未バインドカタログ（読取禁止）
 
+- `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_consumption_refund` — `modules.yaml` 未登録 · **読まない**
 - `jp_payroll` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**

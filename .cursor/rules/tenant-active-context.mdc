@@ -43,7 +43,6 @@ alwaysApply: true
 - **jp_privacy_policy:** `steward/jurisdiction-packs/JP/modules/jp_privacy_policy/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_trademark_application:** `steward/jurisdiction-packs/JP/modules/jp_trademark_application/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_women_empowerment:** `steward/jurisdiction-packs/JP/modules/jp_women_empowerment/agent.md`（Skill は必要時のみ同 `skills/`）
-- **event_operations:** `steward/modules/event_operations/agent.md`（Skill は必要時のみ同 `skills/`）
 
 ## 有効 ISO
 
