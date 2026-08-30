@@ -1,9 +1,9 @@
 {
   "product": "orgos",
   "channel": "beta",
-  "latest": "0.8.0-beta.3",
-  "minSupported": "0.8.0-beta.2",
-  "releasedAt": "2026-08-24T03:30:00.000Z",
+  "latest": "0.9.0-beta.1",
+  "minSupported": "0.8.0-beta.3",
+  "releasedAt": "2026-08-30T06:30:00.000Z",
   "image": "ghcr.io/taketani-masatoshi/orgos-demo",
   "cliPackage": "@orgos/cli",
   "releasesUrl": "https://github.com/taketani-masatoshi/OpenOrgOS/releases",

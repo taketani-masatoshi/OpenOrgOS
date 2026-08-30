@@ -13,8 +13,8 @@
 ### Try the beta demo (Docker)
 
 ```bash
-docker pull ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.3
-docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.8.0-beta.3
+docker pull ghcr.io/taketani-masatoshi/orgos-demo:0.9.0-beta.1
+docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.9.0-beta.1
 # http://127.0.0.1:9470/  ·  Wire: http://127.0.0.1:9470/wire/
 ```
 

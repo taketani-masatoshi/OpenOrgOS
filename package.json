@@ -1,6 +1,6 @@
 {
   "name": "orgos-reference",
-  "version": "0.8.0",
+  "version": "0.9.0-beta.1",
   "description": "OrgOS — Organizational OS reference implementation (tenant-separated management framework)",
   "type": "module",
   "workspaces": [

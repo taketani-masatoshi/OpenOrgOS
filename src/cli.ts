@@ -24,7 +24,7 @@ const program = new Command();
 program
   .name(ORGOS_CLI_NAME)
   .description(`${ORGOS_PRODUCT_NAME} — ${ORGOS_PRODUCT_TAGLINE}`)
-  .version("0.8.0")
+  .version("0.9.0-beta.1")
   .option(
     "--tenant <id>",
     `Tenant instance (env: ${ORGOS_TENANT_ENV} or ${LEGACY_TENANT_ENV}; default from tenant.yaml)`

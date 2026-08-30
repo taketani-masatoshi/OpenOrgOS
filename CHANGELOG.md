@@ -6,10 +6,13 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+## [0.9.0-beta.1] — 2026-08-30
+
 ### Added
+- **外部連携ハブ（Slack / Asana / Gmail / Google Drive）** — コンソールの `/?integrations=1` から社外ツールを繋ぐ面。OAuth は Community が仲介し（`/protocol/v1/community/connectors/*`）、トークンは `tenants/{id}/records/integrations/*-oauth.json`（gitignore · L2）に落ちる。Slack は Bot Token 優先で Incoming Webhook をフォールバックに残し、Asana は Work Order と社長タスクを id・件名・状態・期限だけの L1 レプリカとして複製、Drive は許可リスト内の人向け文書を `drive.file` で PDF 格納して対応台帳（`data/integrations/gdrive-exports.yaml`）に控える。**OrgOS の YAML / MD が正本のままで、外部の変更は取り込まない。** 接続・切断・送り先設定・外へ出す操作はすべて `chat:approve`、未接続・宛先未設定・許可リスト外は 422、未出荷プロバイダは 403（ADR 0004 と同じ出荷ゲート）。秘密は投入できても読み出す経路を持たない。CLI が先（`orgos integrations status|slack send|asana push|drive export`）、コンソールは同じ lib を呼ぶ薄い BFF。ADR 0070 · 面文書 [connectors.md](docs/org-os/ooo-surfaces/connectors.md) · OOO-54〜57
 - **医療機器台帳の読み取り面** — `GET /chat/v1/compliance/medical-device` が QMS / GVP 台帳・許可期限・未承認の決定・監査を射影する。GET 以外は 405、YAML 破損は 422。書き込みは CLI + org approval のままで、コンソールから台帳を書き換える経路は作らない
 - **面ごとの証跡テスト** — money / books / mail / stripe / claims / governance / tax / ops / product の E2E 9本（`e2e/helpers/api-login.ts` 経由の BFF ログイン）と、面別 HTTP 単体テスト15本。各面で「入れる席」と「断られる席」の両方を主張する。Stripe 鍵はテスト用ファイルへ隔離し（`ORGOS_STRIPE_SECRETS_FILE`）、テストが実運用の鍵を読み書きしない
-- **採点を証跡から出す（`npm run ooo:unit` / `ooo:routes`）** — 能力53件の仕様20点・実装30点を、YAML の手書き数字ではなくソース走査（権限ガード · 入力検証 · 例外封じ込め）と「緑になった Vitest の記録」から算出する。緑の記録に無いテストには点を与えない。`docs/org-os/ooo-surfaces/` が仕様側の証跡、[ooo-99-program.md](docs/org-os/ooo-99-program.md) が手順
+- **採点を証跡から出す（`npm run ooo:unit` / `ooo:routes`）** — 能力57件の仕様20点・実装30点を、YAML の手書き数字ではなくソース走査（権限ガード · 入力検証 · 例外封じ込め）と「緑になった Vitest の記録」から算出する。緑の記録に無いテストには点を与えない。`docs/org-os/ooo-surfaces/` が仕様側の証跡、[ooo-99-program.md](docs/org-os/ooo-99-program.md) が手順
 - **2ハブ統合ドリル（`npm run ooo:integration`）** — `deploy/integration/docker-compose.yaml` の2ハブ構成に対して、組織間の登録・通知・承認・受領までを1コマンドで通す
 - **モジュールの同時実行上限** — 業務・JP パック18件の manifest が `security.limits.concurrent_jobs` を宣言し、AIA が無制限に並列実行しない
 - **所見に副次ギャップを併記** — 1つの統制に複数のギャップが立つとき、判定の根拠になった1件しか所見に出ていなかった。`other_gaps` を所見に追加し、レポートの問題点・課題表に「併記」列、改善提案に「あわせて」を出す。様式が未記入（`doc_missing`）で不適合と判定されたとき、その裏で記録内容も仕様を満たしていない（`record_invalid`）ことが担当者に届くようになる。
@@ -42,6 +45,13 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **セールス CRM Wave 2b 100点クロージャ** — mal `migrate-accounts` · deal update / inquiry-set-status / follow-up-from-sent / account merge / mail-link-resolve · Console pipeline/inbound 操作 · demo confirm hook · [sales-crm-runbook.md](docs/org-os/sales-crm-runbook.md) · ADR 0062 DoD #2（POST vs CLI-only）
 
 ### Fixed
+- **会場を確認する日程案件が候補日を出す前に止まっていた** — `send_clarify` の下書きを誰も起こしていなかった。ワークフローが clarify を起案し、送信で候補日を提案するところまで繋いだ。会食の費用目安（CEO が `set-cost` で入れた値）は verified な amount claim として下書きに同行する
+- **返信メールが案件に紐付かなかった** — In-Reply-To / References を見ていなかった。自社が送った控えは件名一致でも安全なので、その場合に限り件名で結ぶ
+- **高優先メールでデスクトップ通知が出ていなかった** — 整形関数はあったが呼び出しが無く、webhook にしか届いていなかった。push の payload にも件名を載せる
+- **`records/` がリポジトリ直下に解決されていた** — ゾーン判定が末尾スラッシュ付きしか見ておらず、メール設定がテナント外に書かれていた
+- **外部連携トークンが別テナントから読めなくなっていた** — token push が `ORGOS_TENANT` からテナントを復元しており、実際に動作していたテナントと食い違うことがあった
+- **language_bridge の見本が設定として読まれていた** — モジュールを有効化しただけのテナントが、見本の繁体字公式記録を継承していた
+- **黒字の月にバーンレートの数字が出なかった** — 「バーンレートは？」への答えとして、黒字時も金額を併記する
 - **決済儀式が読み取り席でも始められた** — `POST /chat/v1/settlement/challenge` がセッションの有無しか見ていなかったため、承認権限のない席でも step-up を開始できた。`chat:approve` を必須にした
 - **税務の書き込み経路が `chat:ask` で通っていた** — `xml-draft` / `bonus-draft` / `yea/ready` の3経路を `finance:reconcile` に引き上げた
 - **本番で名簿外の operator に既定権限が付いていた** — 本番モードでは登録簿が正本（登録簿の欠落は起動時に失敗）なので、名簿に無い id には権限を一切与えない
