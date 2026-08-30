@@ -1,0 +1,15 @@
+id: jp_jsox
+required_seeds: []
+activation_seeds:
+  - scope.yaml.example
+  - processes.yaml.example
+  - itgc.yaml.example
+notes: skeleton — 財務報告内部統制の内部評価（J-SOX 実施基準の型）。内部統制報告書・EDINET は出さない。
+cli_commands:
+  - status
+  - scope
+  - gaps
+  - evaluate
+security:
+  limits:
+    concurrent_jobs: 1

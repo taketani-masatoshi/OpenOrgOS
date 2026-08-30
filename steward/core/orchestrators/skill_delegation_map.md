@@ -179,6 +179,8 @@ npm run orgos -- skills run monthly-close
 | integration-brief | `integration` | `integration_brief` |
 | integrations-status | `setup` | `integrations_status` |
 | internal-audit-scope | `internal_audit` | `internal_audit_scope` |
+| iso-audit-brief | `internal_audit` | `iso_audit_brief` |
+| iso-audit-follow-up | `internal_audit` | `iso_audit_follow_up` |
 | iso-internal-audit-report | `internal_audit` | `iso_internal_audit_report` |
 | iso-internal-audit-run | `internal_audit` | `iso_internal_audit_run` |
 | jp-consumption-tax | `tax` | `jp_consumption_tax_return` |
@@ -186,6 +188,9 @@ npm run orgos -- skills run monthly-close
 | jp-invoice-registration | `tax` | `jp_invoice_registration` |
 | jp-qualified-invoice | `tax` | `jp_qualified_invoice_issue` |
 | jp-withholding-payment | `tax` | `jp_withholding_payment` |
+| jsox-evaluate | `internal_audit` | `jsox_evaluate` |
+| jsox-gaps | `internal_audit` | `jsox_gaps` |
+| jsox-scope | `internal_audit` | `jsox_scope` |
 | mail-intake-handoff | `mail_intake` | `mail_intake_triage` |
 | mail-outbound-correspondence | `mail_outbound` | `correspondence_draft` |
 | mail-outbound-correspondence-send | `mail_outbound` | `correspondence_send` |
@@ -208,6 +213,7 @@ npm run orgos -- skills run monthly-close
 | tenant-config-propose | `executive_steward` | `tenant_config_propose` |
 | tenant-setup | `setup` | `tenant_integrations_setup` |
 | travel-booking | `operations` | `travel_booking` |
+| venue-booking | `operations` | `venue_booking` |
 | wire-send-gate | `secretary` | `wire_send_gate` |
 | workspace-doctor | `executive_steward` | `workspace_doctor` |
 | workspace-validate | `executive_steward` | `workspace_validate` |
@@ -318,6 +324,8 @@ Skill id / CLI が指定された
 | `ir_disclosure_calendar` | cli | `investor_relations` | `operations ir disclosure-calendar` | investor_relations |
 | `ir_materials_prep` | agent | `investor_relations` | — | core |
 | `ir_shareholder_comm` | agent | `investor_relations` | — | core |
+| `iso_audit_brief` | cli | `internal_audit` | `iso-audit-brief` | core |
+| `iso_audit_follow_up` | cli | `internal_audit` | `iso-audit-follow-up` | core |
 | `iso_control_review` | cli | `compliance` | `iso-control-review` | core |
 | `iso_internal_audit_report` | cli | `internal_audit` | `iso-internal-audit-report` | core |
 | `iso_internal_audit_run` | cli | `internal_audit` | `iso-internal-audit-run` | core |
@@ -359,6 +367,9 @@ Skill id / CLI が指定された
 | `jp_women_empowerment_show` | cli | `compliance` | `jp-women-empowerment-show` | jp_women_empowerment |
 | `jp-cashflow-schedule` | cli | `finance` | `jp bank cashflow generate` | jp_bank_corporate |
 | `jp-treasury-position` | cli | `finance` | `jp bank position show` | jp_bank_corporate |
+| `jsox_evaluate` | cli | `internal_audit` | `jsox-evaluate` | jp_jsox |
+| `jsox_gaps` | cli | `internal_audit` | `jsox-gaps` | jp_jsox |
+| `jsox_scope` | cli | `internal_audit` | `jsox-scope` | jp_jsox |
 | `language_bridge` | cli | `secretary` | `language-bridge-show` | language_bridge |
 | `language_bridge_validate` | cli | `secretary` | `language-bridge-validate` | language_bridge |
 | `ld_competency_gap` | agent | `learning_development` | — | core |
@@ -444,6 +455,7 @@ Skill id / CLI が指定された
 | `tax_filing_prep` | cli | `tax` | `tax-filing-prep` | core |
 | `tenant_config_propose` | cli | `executive_steward` | `tenant-config-propose` | core |
 | `tenant_integrations_setup` | cli | `setup` | `tenant-integrations-setup` | core |
+| `travel_booking` | agent | `operations` | — | travel_booking |
 | `travel_intake_validate` | cli | `operations` | `travel-intake` | travel_booking |
 | `travel_policy_check` | cli | `operations` | `travel-check` | travel_booking |
 | `treasury_cash_position` | cli | `treasury` | `treasury cash position` | core |
@@ -453,6 +465,7 @@ Skill id / CLI が指定された
 | `variance_analysis` | cli | `finance` | `variance` | core |
 | `venture_capital_ops` | cli | `operations` | `vc-show` | venture_capital |
 | `venture_capital_validate` | cli | `operations` | `vc-validate` | venture_capital |
+| `venue_booking` | agent | `operations` | — | venue_booking |
 | `venue_catalog` | cli | `operations` | `venue-catalog` | venue_booking |
 | `venue_list` | cli | `operations` | `venue-list` | venue_booking |
 | `wire_send_gate` | cli | `secretary` | `wire-send` | core |

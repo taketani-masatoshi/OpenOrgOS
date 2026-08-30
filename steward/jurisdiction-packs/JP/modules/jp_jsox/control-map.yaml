@@ -1,0 +1,58 @@
+version: "1"
+standard: jsox
+notes: 財務報告内部統制の評価項目。実施基準の本文転記ではない。
+core_bindings: []
+controls:
+  - id: CTL-JSOX-entity
+    title: 全社的内部統制（統制環境・リスク・情報と伝達・モニタリング）
+    domain: governance
+    iso_refs:
+      - { standard: jsox, clause: "entity" }
+    primary_agent: internal_audit
+    secondary_agents: [executive_steward]
+    evidence_paths:
+      - data/org/operators.yaml
+      - data/jp-jsox/scope.yaml
+    check_type: policy
+    target_maturity: L2
+    priority: P1
+
+  - id: CTL-JSOX-close
+    title: 決算・財務報告プロセス（GL 締め · period-lock · 表示）
+    domain: audit
+    iso_refs:
+      - { standard: jsox, clause: "close" }
+    primary_agent: finance
+    secondary_agents: [internal_audit]
+    evidence_paths:
+      - data/finance/period-locks.yaml
+      - docs/compliance/audit/financial/month-close-checklist.md
+    check_type: record
+    target_maturity: L2
+    priority: P1
+
+  - id: CTL-JSOX-process
+    title: 業務プロセス（販売・購買・給与・経費の既存記録を参照）
+    domain: operations
+    iso_refs:
+      - { standard: jsox, clause: "process" }
+    primary_agent: internal_audit
+    secondary_agents: [finance]
+    evidence_paths:
+      - data/jp-jsox/processes.yaml
+    check_type: record
+    target_maturity: L2
+    priority: P2
+
+  - id: CTL-JSOX-itgc
+    title: IT 全般統制（アクセス · 変更 · 運用）
+    domain: security
+    iso_refs:
+      - { standard: jsox, clause: "itgc" }
+    primary_agent: internal_audit
+    secondary_agents: [security]
+    evidence_paths:
+      - data/jp-jsox/itgc.yaml
+    check_type: record
+    target_maturity: L2
+    priority: P2

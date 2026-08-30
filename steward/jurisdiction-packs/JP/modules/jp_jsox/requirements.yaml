@@ -1,0 +1,28 @@
+# J-SOX 評価項目。実施基準の本文転記ではない。内部統制報告書は出さない。
+
+version: "1"
+standard: jsox
+
+requirements:
+  - id: REQ-JSOX-entity-a
+    clause: entity
+    statement: 統制環境（operators / 37000）とリスク・情報伝達・モニタリングを評価範囲に含める
+    source: paraphrase
+    controls: [CTL-JSOX-entity]
+    note: 自己宣言経路の 37000 と operators を参照。二重台帳を作らない。
+  - id: REQ-JSOX-close-a
+    clause: close
+    statement: 決算・財務報告プロセスを GL 締めと period-lock と表示チェックリストで評価する
+    source: paraphrase
+    controls: [CTL-JSOX-close]
+    note: framework financial のアサーションを参照する。
+  - id: REQ-JSOX-process-a
+    clause: process
+    statement: 販売・購買・給与・経費の既存モジュール記録を評価項目から参照する
+    source: paraphrase
+    controls: [CTL-JSOX-process]
+  - id: REQ-JSOX-itgc-a
+    clause: itgc
+    statement: IT 全般統制としてアクセス（operators / passkey）と 27001 附属書への参照を評価する
+    source: paraphrase
+    controls: [CTL-JSOX-itgc]

@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · sales_inbound
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-29 · **Tenant:** mal
+> **Generated:** 2026-08-30 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent sales_inbound`
 
 ---

@@ -1,0 +1,18 @@
+version: "1"
+processes:
+  - id: sales
+    title: 販売
+    module: sales
+    records: data/sales/
+  - id: purchasing
+    title: 購買
+    module: professional_services
+    records: data/finance/
+  - id: payroll
+    title: 給与
+    module: jp_payroll
+    records: data/jp-payroll/
+  - id: expense
+    title: 経費
+    module: hospitality
+    records: data/finance/expense-claims.yaml

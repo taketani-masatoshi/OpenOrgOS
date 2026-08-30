@@ -11,6 +11,7 @@ export const JP_PACK_MODULE_IDS = [
   "jp_permit_application",
   "jp_minpaku",
   "jp_certification",
+  "jp_jsox",
   "jp_inspection",
   "jp_bank_corporate",
   "jp_tax_corporate",

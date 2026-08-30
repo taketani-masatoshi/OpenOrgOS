@@ -208,6 +208,13 @@ modules:
     data_root: data/jp-certification/
     summary_dir: agent-summaries/jp-certification/
     notes: skeleton — ISO/ISMS/CE/FDA 等の認証 Fulfilment（ADR 0012）· 取得本体は案件管理
+  - id: jp_jsox
+    enabled: true
+    agent: jp_jsox
+    docs_root: docs/jp-jsox/
+    data_root: data/jp-jsox/
+    summary_dir: agent-summaries/jp-jsox/
+    notes: 財務報告内部統制の内部評価（内部統制報告書・EDINET は出さない）
   - id: jp_inspection
     enabled: true
     agent: jp_inspection

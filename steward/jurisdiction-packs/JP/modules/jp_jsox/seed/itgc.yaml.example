@@ -1,0 +1,11 @@
+version: "1"
+checks:
+  - id: ITGC-access
+    title: アクセス管理（operators / passkey）
+    ref: data/org/operators.yaml
+  - id: ITGC-change
+    title: 変更管理
+    ref: steward/standards/iso/ISO-27001
+  - id: ITGC-ops
+    title: 運用（バックアップ・インシデント）
+    ref: docs/compliance/iso/ISO-27001/operations-log.md

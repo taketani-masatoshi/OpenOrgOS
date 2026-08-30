@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · internal_audit
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-29 · **Tenant:** mal
+> **Generated:** 2026-08-30 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent internal_audit`
 
 ---
@@ -188,6 +188,11 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 |-------|---------|
 | iso_internal_audit_run | [steward/core/skills/iso_internal_audit_run.md](../skills/iso_internal_audit_run.md) |
 | iso_internal_audit_report | [steward/core/skills/iso_internal_audit_report.md](../skills/iso_internal_audit_report.md) |
+| iso_audit_brief | [steward/core/skills/iso_audit_brief.md](../skills/iso_audit_brief.md) |
+| iso_audit_follow_up | [steward/core/skills/iso_audit_follow_up.md](../skills/iso_audit_follow_up.md) |
+| jsox_scope | [steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_scope.md](steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_scope.md) |
+| jsox_gaps | [steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_gaps.md](steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_gaps.md) |
+| jsox_evaluate | [steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_evaluate.md](steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_evaluate.md) |
 | internal_audit_scope | [steward/core/skills/internal_audit_scope.md](../skills/internal_audit_scope.md) |
 
 ## CLI
@@ -197,6 +202,11 @@ orgos iso catalog
 orgos iso maps verify
 orgos iso audit run
 orgos iso audit report
+orgos iso audit plan create
+orgos iso audit apply-precheck
+orgos iso audit brief
+orgos iso audit follow-up
+orgos operations jsox status
 orgos skills run iso-internal-audit-run
 orgos controls for-agent internal_audit
 ```
@@ -234,6 +244,11 @@ orgos controls for-agent internal_audit
 - `internal_audit_scope` · cli · `steward/core/skills/internal_audit_scope.md`
 - `iso_internal_audit_run` · cli · `steward/core/skills/iso_internal_audit_run.md`
 - `iso_internal_audit_report` · cli · `steward/core/skills/iso_internal_audit_report.md`
+- `iso_audit_brief` · cli · `steward/core/skills/iso_audit_brief.md`
+- `iso_audit_follow_up` · cli · `steward/core/skills/iso_audit_follow_up.md`
+- `jsox_scope` · cli · `steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_scope.md`
+- `jsox_gaps` · cli · `steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_gaps.md`
+- `jsox_evaluate` · cli · `steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_evaluate.md`
 
 ---
 

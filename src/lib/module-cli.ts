@@ -28,6 +28,7 @@ import { jp_medical_deviceCli } from "../../steward/jurisdiction-packs/JP/module
 import { jp_permit_registryCli } from "../../steward/jurisdiction-packs/JP/modules/jp_permit_registry/cli/register.js";
 import { jp_bank_corporateCli } from "../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/register.js";
 import { jp_certificationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_certification/cli/register.js";
+import { jp_jsoxCli } from "../../steward/jurisdiction-packs/JP/modules/jp_jsox/cli/register.js";
 import { jp_inspectionCli } from "../../steward/jurisdiction-packs/JP/modules/jp_inspection/cli/register.js";
 import { jp_minpakuCli } from "../../steward/jurisdiction-packs/JP/modules/jp_minpaku/cli/register.js";
 import { jp_permit_applicationCli } from "../../steward/jurisdiction-packs/JP/modules/jp_permit_application/cli/register.js";
@@ -86,6 +87,7 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   jp_permit_registryCli,
   jp_bank_corporateCli,
   jp_certificationCli,
+  jp_jsoxCli,
   jp_inspectionCli,
   jp_minpakuCli,
   jp_permit_applicationCli,

@@ -35,6 +35,7 @@ alwaysApply: true
 - **language_bridge:** `steward/modules/language_bridge/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_carbon_neutral_2050:** `steward/jurisdiction-packs/JP/modules/jp_carbon_neutral_2050/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_certification:** `steward/jurisdiction-packs/JP/modules/jp_certification/agent.md`（Skill は必要時のみ同 `skills/`）
+- **jp_jsox:** `steward/jurisdiction-packs/JP/modules/jp_jsox/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_inspection:** `steward/jurisdiction-packs/JP/modules/jp_inspection/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_minpaku:** `steward/jurisdiction-packs/JP/modules/jp_minpaku/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_permit_application:** `steward/jurisdiction-packs/JP/modules/jp_permit_application/agent.md`（Skill は必要時のみ同 `skills/`）
@@ -42,11 +43,22 @@ alwaysApply: true
 - **jp_privacy_policy:** `steward/jurisdiction-packs/JP/modules/jp_privacy_policy/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_trademark_application:** `steward/jurisdiction-packs/JP/modules/jp_trademark_application/agent.md`（Skill は必要時のみ同 `skills/`）
 - **jp_women_empowerment:** `steward/jurisdiction-packs/JP/modules/jp_women_empowerment/agent.md`（Skill は必要時のみ同 `skills/`）
+- **event_operations:** `steward/modules/event_operations/agent.md`（Skill は必要時のみ同 `skills/`）
 
 ## 有効 ISO
 
+- **ISO-13485:** テンプレ `steward/standards/iso/ISO-13485/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-13485/`
+- **ISO-14001:** テンプレ `steward/standards/iso/ISO-14001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-14001/`
+- **ISO-20000:** テンプレ `steward/standards/iso/ISO-20000/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-20000/`
 - **ISO-21401:** テンプレ `steward/standards/iso/ISO-21401/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-21401/`
+- **ISO-22000:** テンプレ `steward/standards/iso/ISO-22000/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-22000/`
+- **ISO-22301:** テンプレ `steward/standards/iso/ISO-22301/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-22301/`
+- **ISO-27001:** テンプレ `steward/standards/iso/ISO-27001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-27001/`
 - **ISO-37000:** テンプレ `steward/standards/iso/ISO-37000/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-37000/`
+- **ISO-37001:** テンプレ `steward/standards/iso/ISO-37001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-37001/`
+- **ISO-45001:** テンプレ `steward/standards/iso/ISO-45001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-45001/`
+- **ISO-50001:** テンプレ `steward/standards/iso/ISO-50001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-50001/`
+- **ISO-9001:** テンプレ `steward/standards/iso/ISO-9001/00-このフォルダについて.md` · 記録 `docs/compliance/iso/ISO-9001/`
 
 ## 有効社内規程
 

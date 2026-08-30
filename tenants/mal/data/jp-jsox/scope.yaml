@@ -1,0 +1,15 @@
+version: "1"
+areas:
+  - id: entity
+    title: 全社的内部統制
+    in_scope: true
+  - id: close
+    title: 決算・財務報告プロセス
+    in_scope: true
+    cross_ref: financial
+  - id: process
+    title: 業務プロセス
+    in_scope: true
+  - id: itgc
+    title: IT 全般統制
+    in_scope: true

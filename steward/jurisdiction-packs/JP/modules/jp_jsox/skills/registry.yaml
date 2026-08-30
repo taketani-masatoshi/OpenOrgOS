@@ -1,0 +1,22 @@
+skills:
+  - id: jsox_scope
+    file: jsox_scope.md
+    runtime: cli
+    cli_command: jsox-scope
+    handler: jsox_scope
+    description: J-SOX 評価範囲
+    agent_id: internal_audit
+  - id: jsox_gaps
+    file: jsox_gaps.md
+    runtime: cli
+    cli_command: jsox-gaps
+    handler: jsox_gaps
+    description: J-SOX 評価ギャップ
+    agent_id: internal_audit
+  - id: jsox_evaluate
+    file: jsox_evaluate.md
+    runtime: cli
+    cli_command: jsox-evaluate
+    handler: jsox_evaluate
+    description: J-SOX 評価（finance 自己評価は拒否）
+    agent_id: internal_audit

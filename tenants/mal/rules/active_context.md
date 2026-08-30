@@ -118,6 +118,13 @@
 - docs: `docs/jp-certification/`
 - 要約: `docs/reports/agent-summaries/jp-certification/`
 
+### `jp_jsox` (`jp_jsox`)
+
+- Agent: `steward/jurisdiction-packs/JP/modules/jp_jsox/agent.md`
+- data: `data/jp-jsox/`
+- docs: `docs/jp-jsox/`
+- 要約: `docs/reports/agent-summaries/jp-jsox/`
+
 ### `jp_inspection` (`jp_inspection`)
 
 - Agent: `steward/jurisdiction-packs/JP/modules/jp_inspection/agent.md`
@@ -167,6 +174,13 @@
 - docs: `docs/jp-women-empowerment/`
 - 要約: `docs/reports/agent-summaries/jp-women-empowerment/`
 
+### `event_operations` (`event_operations`)
+
+- Agent: `steward/modules/event_operations/agent.md`
+- data: `data/event-operations/`
+- docs: `docs/event-operations/`
+- 要約: `docs/reports/agent-summaries/event-operations/`
+
 ## 無効業務モジュール（読取禁止）
 
 - `venture_capital` / `venture_capital` — `steward/modules/venture_capital/` **読まない**
@@ -186,21 +200,21 @@
 
 ## 有効 ISO 標準
 
+- **ISO-13485** — テンプレ: `steward/standards/iso/ISO-13485/` · 記録: `docs/compliance/iso/ISO-13485/`
+- **ISO-14001** — テンプレ: `steward/standards/iso/ISO-14001/` · 記録: `docs/compliance/iso/ISO-14001/`
+- **ISO-20000** — テンプレ: `steward/standards/iso/ISO-20000/` · 記録: `docs/compliance/iso/ISO-20000/`
 - **ISO-21401** — テンプレ: `steward/standards/iso/ISO-21401/` · 記録: `docs/compliance/iso/ISO-21401/`
+- **ISO-22000** — テンプレ: `steward/standards/iso/ISO-22000/` · 記録: `docs/compliance/iso/ISO-22000/`
+- **ISO-22301** — テンプレ: `steward/standards/iso/ISO-22301/` · 記録: `docs/compliance/iso/ISO-22301/`
+- **ISO-27001** — テンプレ: `steward/standards/iso/ISO-27001/` · 記録: `docs/compliance/iso/ISO-27001/`
 - **ISO-37000** — テンプレ: `steward/standards/iso/ISO-37000/` · 記録: `docs/compliance/iso/ISO-37000/`
+- **ISO-37001** — テンプレ: `steward/standards/iso/ISO-37001/` · 記録: `docs/compliance/iso/ISO-37001/`
+- **ISO-45001** — テンプレ: `steward/standards/iso/ISO-45001/` · 記録: `docs/compliance/iso/ISO-45001/`
+- **ISO-50001** — テンプレ: `steward/standards/iso/ISO-50001/` · 記録: `docs/compliance/iso/ISO-50001/`
+- **ISO-9001** — テンプレ: `steward/standards/iso/ISO-9001/` · 記録: `docs/compliance/iso/ISO-9001/`
 
 ## 無効 ISO 標準（読取禁止）
 
-- `ISO-13485` — `steward/standards/iso/ISO-13485/` **読まない**
-- `ISO-14001` — `steward/standards/iso/ISO-14001/` **読まない**
-- `ISO-20000` — `steward/standards/iso/ISO-20000/` **読まない**
-- `ISO-22000` — `steward/standards/iso/ISO-22000/` **読まない**
-- `ISO-22301` — `steward/standards/iso/ISO-22301/` **読まない**
-- `ISO-27001` — `steward/standards/iso/ISO-27001/` **読まない**
-- `ISO-37001` — `steward/standards/iso/ISO-37001/` **読まない**
-- `ISO-45001` — `steward/standards/iso/ISO-45001/` **読まない**
-- `ISO-50001` — `steward/standards/iso/ISO-50001/` **読まない**
-- `ISO-9001` — `steward/standards/iso/ISO-9001/` **読まない**
 
 ## 有効社内規程
 
@@ -239,7 +253,6 @@
 
 ## 未バインドカタログ（読取禁止）
 
-- `event_operations` — `modules.yaml` 未登録 · **読まない**
 - `jp_consumption_refund` — `modules.yaml` 未登録 · **読まない**
 - `jp_payroll` — `modules.yaml` 未登録 · **読まない**
 - `jp_subsidy_application` — `modules.yaml` 未登録 · **読まない**
@@ -251,10 +264,13 @@
 
 **正本:** `data/compliance/controls.yaml` · **フレームワーク:** `steward/standards/control-framework/` · **CLI:** `orgos controls for-agent <id>`
 
-- **compliance** — `CTL-CORE-scope`, `CTL-CORE-policy`, `CTL-CORE-risk-approach`, `CTL-CORE-objectives-monitoring`, `CTL-CORE-competence`, `CTL-CORE-doc-control`, `CTL-CORE-operation`, `CTL-CORE-internal-audit`, `CTL-CORE-management-review`, `CTL-21401-env-aspects`, `CTL-21401-soc-protection`, `CTL-21401-guest-safety` · 他 4 件は `orgos controls for-agent compliance`
-- **internal_audit** — `CTL-CORE-internal-audit`, `CTL-CORE-corrective-action`
-- **quality_assurance** — `CTL-CORE-doc-control`, `CTL-CORE-corrective-action`, `CTL-21401-8.1`, `CTL-21401-hygiene`
-- **esg_sustainability** — `CTL-21401-env-aspects`, `CTL-21401-env-resources`, `CTL-21401-env-waste`, `CTL-21401-env-purchasing`, `CTL-21401-soc-community`, `CTL-21401-soc-heritage`, `CTL-21401-eco-local`, `CTL-21401-guest-communication`, `CTL-37000-P-10`
+- **compliance** — `CTL-CORE-scope`, `CTL-CORE-policy`, `CTL-CORE-risk-approach`, `CTL-CORE-objectives-monitoring`, `CTL-CORE-competence`, `CTL-CORE-doc-control`, `CTL-CORE-operation`, `CTL-CORE-internal-audit`, `CTL-CORE-management-review`, `CTL-13485-8.2.3`, `CTL-14001-6.1.3`, `CTL-14001-9.1.2` · 他 15 件は `orgos controls for-agent compliance`
+- **internal_audit** — `CTL-CORE-internal-audit`, `CTL-CORE-corrective-action`, `CTL-22301-8.5`, `CTL-37001-4.5`, `CTL-37001-8.10`, `CTL-45001-10.2.1`
+- **quality_assurance** — `CTL-CORE-doc-control`, `CTL-CORE-corrective-action`, `CTL-13485-7.5`, `CTL-21401-8.1`, `CTL-21401-hygiene`
+- **medical_device_regulatory** — `CTL-13485-4.2.2`, `CTL-13485-7.3`, `CTL-13485-7.4`, `CTL-13485-7.5`, `CTL-13485-7.5.9`, `CTL-13485-8.2.2`, `CTL-13485-8.2.3`
+- **security** — `CTL-20000-8.2.6`, `CTL-27001-A.5.10`, `CTL-CORE-privacy`
+- **privacy_officer** — `CTL-CORE-privacy`
+- **esg_sustainability** — `CTL-14001-6.1.2`, `CTL-14001-6.1.3`, `CTL-14001-8.2`, `CTL-14001-9.1.2`, `CTL-21401-env-aspects`, `CTL-21401-env-resources`, `CTL-21401-env-waste`, `CTL-21401-env-purchasing`, `CTL-21401-soc-community`, `CTL-21401-soc-heritage`, `CTL-21401-eco-local`, `CTL-21401-guest-communication` · 他 5 件は `orgos controls for-agent esg_sustainability`
 
 
 ## Secretary 読取面（on_demand · @file 明示）

@@ -1,0 +1,30 @@
+version: "1"
+standard: jsox
+
+records:
+  - file: scope.yaml
+    kind: yaml
+    title: J-SOX 評価範囲
+    tenant_path: data/jp-jsox/scope.yaml
+    list_key: areas
+    rules:
+      - kind: non_empty
+        message: 評価範囲が1件もありません。
+
+  - file: processes.yaml
+    kind: yaml
+    title: 業務プロセス評価項目（既存モジュールへの参照）
+    tenant_path: data/jp-jsox/processes.yaml
+    list_key: processes
+    rules:
+      - kind: non_empty
+        message: 業務プロセスの評価項目がありません。
+
+  - file: itgc.yaml
+    kind: yaml
+    title: IT 全般統制チェックリスト
+    tenant_path: data/jp-jsox/itgc.yaml
+    list_key: checks
+    rules:
+      - kind: non_empty
+        message: ITGC チェック項目がありません。

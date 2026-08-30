@@ -63,6 +63,35 @@ skills:
       kind: read
       permission: chat:read
       label: ISO内部監査レポート
+  - id: iso_audit_brief
+    file: iso_audit_brief.md
+    runtime: cli
+    cli_command: iso-audit-brief
+    handler: iso_audit_brief
+    description: 要求事項の言い換えと事前検査ギャップの解説（判定しない）
+    agent_id: internal_audit
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 監査ブリーフィング
+      args:
+        - { name: plan, type: string, required: true }
+        - { name: req, type: string, required: true }
+  - id: iso_audit_follow_up
+    file: iso_audit_follow_up.md
+    runtime: cli
+    cli_command: iso-audit-follow-up
+    handler: iso_audit_follow_up
+    description: 不適合のフォローアップと是正の有効性
+    agent_id: internal_audit
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: 監査フォローアップ
+      args:
+        - { name: plan, type: string, required: true }
   - id: company_events_chain_verify
     file: company_events_chain_verify.md
     runtime: cli

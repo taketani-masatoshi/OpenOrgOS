@@ -106,6 +106,9 @@ modules:
   jp_certification:
     tier: activation_ready
     notes: ISO/ISMS/CE/FDA 認証 Fulfilment · operations certification CLI · ADR 0012
+  jp_jsox:
+    tier: activation_ready
+    notes: 財務報告内部統制の内部評価 · operations jsox CLI · 内部統制報告書・EDINET は出さない
   jp_inspection:
     tier: activation_ready
     notes: 監査/検査 Fulfilment · operations inspection CLI · ADR 0012

@@ -133,6 +133,14 @@ modules:
     data_root: data/education/
     summary_dir: agent-summaries/education/
 
+  - id: jp_jsox
+    enabled: false
+    agent: jp_jsox
+    data_root: data/jp-jsox/
+    docs_root: docs/jp-jsox/
+    summary_dir: agent-summaries/jp-jsox/
+    notes: 財務報告内部統制の内部評価（既定オフ）
+
   - id: membership
     enabled: false
     agent: membership

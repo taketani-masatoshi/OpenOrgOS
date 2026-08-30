@@ -57,6 +57,7 @@
 - `ISO-22000` — `steward/standards/iso/ISO-22000/` **読まない**
 - `ISO-22301` — `steward/standards/iso/ISO-22301/` **読まない**
 - `ISO-27001` — `steward/standards/iso/ISO-27001/` **読まない**
+- `ISO-37000` — `steward/standards/iso/ISO-37000/` **読まない**
 - `ISO-37001` — `steward/standards/iso/ISO-37001/` **読まない**
 - `ISO-45001` — `steward/standards/iso/ISO-45001/` **読まない**
 - `ISO-50001` — `steward/standards/iso/ISO-50001/` **読まない**
@@ -104,9 +105,11 @@
 - `jp_bank_corporate` — `modules.yaml` 未登録 · **読まない**
 - `jp_carbon_neutral_2050` — `modules.yaml` 未登録 · **読まない**
 - `jp_certification` — `modules.yaml` 未登録 · **読まない**
+- `jp_consumption_refund` — `modules.yaml` 未登録 · **読まない**
 - `jp_corporate_registration` — `modules.yaml` 未登録 · **読まない**
 - `jp_inspection` — `modules.yaml` 未登録 · **読まない**
 - `jp_invoice_qualified` — `modules.yaml` 未登録 · **読まない**
+- `jp_jsox` — `modules.yaml` 未登録 · **読まない**
 - `jp_minpaku` — `modules.yaml` 未登録 · **読まない**
 - `jp_payroll` — `modules.yaml` 未登録 · **読まない**
 - `jp_permit_application` — `modules.yaml` 未登録 · **読まない**
@@ -122,6 +125,7 @@
 - `language_bridge` — `modules.yaml` 未登録 · **読まない**
 - `property_management` — `modules.yaml` 未登録 · **読まない**
 - `real_estate_brokerage` — `modules.yaml` 未登録 · **読まない**
+- `sales` — `modules.yaml` 未登録 · **読まない**
 - `software_outsourcing` — `modules.yaml` 未登録 · **読まない**
 - `travel_booking` — `modules.yaml` 未登録 · **読まない**
 - `venue_booking` — `modules.yaml` 未登録 · **読まない**

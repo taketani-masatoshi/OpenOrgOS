@@ -3,13 +3,13 @@
 
 version: 2
 stats:
-  vitest_total: 536
-  static_test_cases: 2262
-  tiered_execution_total: 536
-  catalog_total: 44
-  catalog_cli_registered: 44
+  vitest_total: 577
+  static_test_cases: 2636
+  tiered_execution_total: 577
+  catalog_total: 46
+  catalog_cli_registered: 47
   catalog_gap: 0
-  catalog_dedicated: 28
+  catalog_dedicated: 30
   catalog_bundled: 9
   catalog_only: 7
 platform_domains:
@@ -154,6 +154,13 @@ catalog_modules:
     cli: true
     tests:
       - catalog/jp-tax-modules.test.ts
+  jp_jsox:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - catalog/jp-jsox.test.ts
+      - jp-jsox.test.ts
   jp_medical_device:
     tier: production_ready
     coverage_tier: dedicated
@@ -170,7 +177,7 @@ catalog_modules:
     tests:
       - catalog/jp-minpaku.test.ts
   jp_payroll:
-    tier: skeleton
+    tier: activation_ready
     coverage_tier: catalog_only
     cli: true
     tests:
@@ -199,7 +206,7 @@ catalog_modules:
       - catalog/jp-privacy-policy.test.ts
       - sector-module-cli-contract.test.ts
   jp_social_insurance:
-    tier: skeleton
+    tier: activation_ready
     coverage_tier: catalog_only
     cli: true
     tests:
@@ -313,6 +320,12 @@ catalog_modules:
     tests:
       - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
+  sales:
+    tier: production_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - sales-validate.test.ts
   software_outsourcing:
     tier: production_ready
     coverage_tier: bundled
@@ -342,7 +355,7 @@ catalog_modules:
       - venture-capital.test.ts
       - wave-modules-cli.test.ts
   venue_booking:
-    tier: skeleton
+    tier: activation_ready
     coverage_tier: dedicated
     cli: true
     tests:
@@ -657,6 +670,11 @@ tests:
     kind: unit
     catalog_ids:
       - jp_inspection
+  catalog/jp-jsox.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_jsox
   catalog/jp-minpaku.test.ts:
     axis: catalog
     kind: unit
@@ -715,6 +733,10 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  claim-desk.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   classification-registry-align.test.ts:
     axis: platform
     kind: unit
@@ -948,6 +970,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  correspondence-ooo-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   correspondence-review-gate.test.ts:
     axis: platform
     kind: unit
@@ -1062,11 +1088,23 @@ tests:
     kind: integration
     domain: P06_agent_workflow
     integration: I3_workflow
+  esign-secrets-store.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   executive-cli.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
   executive-data.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  executive-home-assignee.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  executive-home.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
@@ -1135,6 +1173,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  governance-principles-iso37000.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   hospitality-guest-register.test.ts:
     axis: catalog
     kind: unit
@@ -1187,6 +1229,10 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  hub-public-bind.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   hub-registry.test.ts:
     axis: platform
     kind: unit
@@ -1194,6 +1240,14 @@ tests:
   hub-server.test.ts:
     axis: platform
     kind: server
+    domain: P04_wire_stack
+  hub-status.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
+  hub-tls-init.test.ts:
+    axis: platform
+    kind: unit
     domain: P04_wire_stack
   hub-verify-remote.test.ts:
     axis: platform
@@ -1215,34 +1269,6 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
-  iso-21401-kpi.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  iso-coming-soon.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  iso-core-module.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  iso-internal-audit.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
-  iso-module-add.test.ts:
-    axis: platform
-    kind: contract
-    domain: P01_kernel
-  iso-pack-contract.test.ts:
-    axis: platform
-    kind: contract
-    domain: P01_kernel
-  iso-templates.test.ts:
-    axis: platform
-    kind: contract
-    domain: P01_kernel
   investor-relations-integration.test.ts:
     axis: catalog
     kind: unit
@@ -1262,6 +1288,54 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  iso-21401-kpi.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-audit-plan.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-audit-precheck.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-coming-soon.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-core-module.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-financial-audit.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-internal-audit.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-module-add.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-pack-contract.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-records.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-requirements.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  iso-templates.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   journal-audit-backfill.test.ts:
     axis: platform
     kind: unit
@@ -1309,6 +1383,11 @@ tests:
     axis: catalog
     kind: unit
     catalog_ids: []
+  jp-jsox.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_jsox
   jp-medical-device.test.ts:
     axis: catalog
     kind: unit
@@ -1448,6 +1527,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  mail-secrets-store.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   mal-module-cli-contract.test.ts:
     axis: catalog
     kind: unit
@@ -1543,6 +1626,10 @@ tests:
     kind: unit
     domain: P05_console_layer
   ooo-login-email.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ooo-score.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1703,6 +1790,14 @@ tests:
     kind: unit
     domain: P01_kernel
   payroll-remittance-loop.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  payroll-yea-compute.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  pdf-esign-digidoc.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2080,9 +2175,10 @@ tests:
     kind: unit
     domain: P01_kernel
   sales-validate.test.ts:
-    axis: platform
+    axis: catalog
     kind: unit
-    domain: P01_kernel
+    catalog_ids:
+      - sales
   sanitize-output.test.ts:
     axis: platform
     kind: unit
@@ -2253,10 +2349,6 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
-  governance-principles-iso37000.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
   statutory-filing-readiness.test.ts:
     axis: platform
     kind: unit
@@ -2285,6 +2377,10 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-broker-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-cash-counterparties.test.ts:
     axis: platform
     kind: server
@@ -2293,11 +2389,31 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-commands-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-company-officers.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-correspondence-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-esign-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-events-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-events-stream.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-expense-claim-http.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -2309,7 +2425,15 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-governance-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-grounding.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-guest-invite-http.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -2317,11 +2441,31 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-ledger-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-ledger-rbac.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-local-llm-error-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-mail-secrets-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-medical-device-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-operator-stats.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-ops-http.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -2333,7 +2477,27 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-org-chart-change-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-platform-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-platform-tenant-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-product-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-receipt-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-sales-http.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -2349,7 +2513,15 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-settlement-http.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-stream.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-tax-http.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer
@@ -2424,7 +2596,15 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  tenant-iso-applicability.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   tenant-lifecycle.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  tenant-mail-console.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
