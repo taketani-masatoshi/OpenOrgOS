@@ -149,12 +149,14 @@ export async function handleIntegrationsApi(
 ): Promise<boolean> {
   if (!pathname.startsWith("/chat/v1/integrations")) return false;
 
+  // @ooo-route GET /chat/v1/integrations
   if (pathname === "/chat/v1/integrations" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
     json(res, 200, { ok: true, ...buildConnectorHubSnapshot() });
     return true;
   }
 
+  // @ooo-route PUT /chat/v1/integrations/secrets
   if (pathname === "/chat/v1/integrations/secrets" && method === "PUT") {
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
@@ -184,6 +186,7 @@ export async function handleIntegrationsApi(
     return true;
   }
 
+  // @ooo-route GET /chat/v1/integrations/gdrive/exports
   if (pathname === "/chat/v1/integrations/gdrive/exports" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
     json(res, 200, { ok: true, exports: listDriveExports() });
@@ -200,6 +203,7 @@ export async function handleIntegrationsApi(
     return true;
   }
 
+  // @ooo-route POST /chat/v1/integrations/:provider/connect
   if (action === "connect" && method === "POST") {
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
@@ -239,6 +243,7 @@ export async function handleIntegrationsApi(
     return true;
   }
 
+  // @ooo-route POST /chat/v1/integrations/:provider/disconnect
   if (action === "disconnect" && method === "POST") {
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
@@ -259,6 +264,7 @@ export async function handleIntegrationsApi(
     return true;
   }
 
+  // @ooo-route PUT /chat/v1/integrations/:provider/settings
   if (action === "settings" && method === "PUT") {
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
@@ -280,6 +286,7 @@ export async function handleIntegrationsApi(
     return true;
   }
 
+  // @ooo-route POST /chat/v1/integrations/slack/send
   if (provider === "slack" && action === "send" && method === "POST") {
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
@@ -314,6 +321,7 @@ export async function handleIntegrationsApi(
     return true;
   }
 
+  // @ooo-route POST /chat/v1/integrations/asana/push
   if (provider === "asana" && action === "push" && method === "POST") {
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {
@@ -347,6 +355,7 @@ export async function handleIntegrationsApi(
     return true;
   }
 
+  // @ooo-route POST /chat/v1/integrations/gdrive/export
   if (provider === "gdrive" && action === "export" && method === "POST") {
     if (!requireChatPermission(user, "chat:approve", res)) return true;
     try {

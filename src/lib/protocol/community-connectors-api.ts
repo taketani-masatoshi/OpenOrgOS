@@ -13,7 +13,7 @@ import {
   connectorTokenSchema,
   type ConnectorProvider,
 } from "../../../schemas/connectors.js";
-import { setTenantId } from "../tenant.js";
+import { getTenantId, setTenantId } from "../tenant.js";
 import { saveConnectorToken } from "../integrations/connector-store.js";
 import {
   claimConnectorBind,
@@ -122,7 +122,9 @@ export function handleConnectorTokenPush(body: unknown, authorized: boolean): Co
   const gmailRejection = rejectsGmailTokenPush(provider);
   if (gmailRejection) return gmailRejection;
 
-  const previousTenant = process.env.ORGOS_TENANT;
+  // Restore the tenant that was actually active, which is not necessarily the
+  // one named in the environment.
+  const previousTenant = getTenantId();
   setTenantId(tenantId);
   try {
     const claimed = claimConnectorBind(provider, tenantId, nonce, {
@@ -150,7 +152,7 @@ export function handleConnectorTokenPush(body: unknown, authorized: boolean): Co
       error: err instanceof Error ? err.message : "invalid connector token payload",
     };
   } finally {
-    if (previousTenant) setTenantId(previousTenant);
+    setTenantId(previousTenant);
   }
 }
 

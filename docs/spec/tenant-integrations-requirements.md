@@ -36,6 +36,11 @@ Secretary Agent は社長の **社外窓口** として、メール下書き・�
 | FR-TI-06 | メール送信 — `provider: smtp \| gmail_compose` |
 | FR-TI-07 | webhook シークレット — テナント `integrations.webhooks[]` |
 | FR-TI-08 | `orgos integrations status` · `doctor` 連携 |
+| FR-TI-09 | Gmail API 送信（Community OAuth · 承認後のみ · ADR 0004 の出荷ゲート） |
+| FR-TI-10 | 外部連携ハブ — Slack / Asana / Google の接続・切断・送り先設定（[connectors.md](../org-os/ooo-surfaces/connectors.md) · OOO-54） |
+| FR-TI-11 | Slack 投稿（Bot Token · Webhook フォールバック · `chat:approve`。OOO-55） |
+| FR-TI-12 | Asana へ Work Order / 社長タスクを L1 複製（OOO-56） |
+| FR-TI-13 | Google Drive へ許可リスト内の PDF を格納（`drive.file` · OOO-57） |
 
 ### 2.2 Out of scope
 
@@ -43,8 +48,10 @@ Secretary Agent は社長の **社外窓口** として、メール下書き・�
 |------|------|
 | Wire human-mail UI | Wire Console · [wire-console-plan.md](../org-os/wire-console-plan.md) |
 | 請求 `.eml` / `.msg` 生成 | Finance · [invoice.md](invoice.md) |
-| Gmail API プログラム送信 | v2 backlog（FR-TI-09） |
-| LINE / Slack 自動送信 | 将来 |
+| Slack Events API での双方向同期 | 将来 |
+| Asana Webhook から OrgOS 正本を書き換えること | 将来 |
+| Drive 全ファイル同期 · YAML の Drive ホスティング | 将来 |
+| LINE · Microsoft 365 · Calendar | 将来 |
 
 ---
 

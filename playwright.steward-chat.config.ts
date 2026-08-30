@@ -17,6 +17,7 @@ export default defineConfig({
     "steward-chat.money.spec.ts",
     "steward-chat.books.spec.ts",
     "steward-chat.mail.spec.ts",
+    "steward-chat.integrations.spec.ts",
     "steward-chat.stripe.spec.ts",
     "steward-chat.claims.spec.ts",
     "steward-chat.governance.spec.ts",
