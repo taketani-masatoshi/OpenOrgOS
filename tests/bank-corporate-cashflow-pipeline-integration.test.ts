@@ -8,6 +8,7 @@ import {
 import { runJpBankCorporatePipelineCashflow } from "../src/lib/jp-bank-corporate/pipeline.js";
 import { getCashflowTodaySummary } from "../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/lib.js";
 import { resolveTenantPath } from "../src/lib/tenant.js";
+import { getWorkspaceRoot } from "../src/lib/orgos-paths.js";
 import {
   reconciliationEventFileSchema,
   cashflowScheduleSchema,
@@ -37,7 +38,7 @@ describe("jp_bank_corporate dummy tenant pipeline", () => {
     expect(result.ran).toBe(true);
     expect(result.output_paths).toHaveLength(3);
     for (const path of result.output_paths) {
-      expect(existsSync(join(process.cwd(), path))).toBe(true);
+      expect(existsSync(join(getWorkspaceRoot(), path))).toBe(true);
     }
 
     const events = reconciliationEventFileSchema.parse(
@@ -59,7 +60,7 @@ describe("jp_bank_corporate dummy tenant pipeline", () => {
 
     const jsonPath = result.output_paths.find((path) => path.endsWith(".json"))!;
     const schedule = cashflowScheduleSchema.parse(
-      JSON.parse(readFileSync(join(process.cwd(), jsonPath), "utf-8"))
+      JSON.parse(readFileSync(join(getWorkspaceRoot(), jsonPath), "utf-8"))
     );
     expect(schedule.horizon_start).toBe("2026-07-13");
     expect(schedule.input_fingerprint).toMatch(/^[a-f0-9]{64}$/);

@@ -71,6 +71,7 @@ describe("protocol email_wire approve-to-inbox roundtrip", () => {
     const tenantDir = join(getTenantsDir(), TEST_TENANT);
     removeTestTenant();
     mkdirSync(join(tenantDir, "data", "contracts"), { recursive: true });
+    mkdirSync(join(tenantDir, "data", "org"), { recursive: true });
     mkdirSync(join(tenantDir, "records", "executive"), { recursive: true });
     writeFileSync(
       join(tenantDir, "tenant.yaml"),
@@ -80,6 +81,11 @@ describe("protocol email_wire approve-to-inbox roundtrip", () => {
     copyFileSync(
       join(getTenantsDir(), "demo", "data", "company.yaml"),
       join(tenantDir, "data", "company.yaml")
+    );
+    // Wire approval binds the approver to an active operator record.
+    copyFileSync(
+      join(getTenantsDir(), "demo", "data", "org", "operators.yaml"),
+      join(tenantDir, "data", "org", "operators.yaml")
     );
     writeFileSync(
       join(tenantDir, "data", "contracts", "CTR-905.yaml"),

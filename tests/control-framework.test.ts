@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { setTenantId } from "../src/lib/tenant.js";
+import { getDocsDir } from "../src/lib/utils.js";
 import {
   listEffectiveControls,
   controlsForAgent,
@@ -56,12 +59,17 @@ describe("control framework", () => {
     }
   });
 
-  it("evidence_mode all keeps a per-standard gap visible after folding", () => {
+  it("evidence_mode all keeps every standard's evidence path after folding", () => {
     const ctrl = loadControlMaps(MULTI).find((c) => c.id === "CTL-CORE-risk-approach");
     expect(ctrl?.evidence_mode).toBe("all");
-    // ISO-27001 has a risk register but ISO-9001 does not: folding must not hide that.
+    // One folded control, but each standard keeps its own record: under mode
+    // "all" a single missing file must still count as missing evidence.
     expect(ctrl?.evidence_paths).toContain("docs/compliance/iso/ISO-27001/risk-register.csv");
-    expect(hasEvidenceForControl(ctrl!)).toBe(false);
+    expect(ctrl?.evidence_paths).toContain("docs/compliance/iso/ISO-9001/risk-opportunities.csv");
+    const missing = ctrl!.evidence_paths.filter(
+      (path) => !existsSync(join(getDocsDir(), path.replace(/^docs\//, "")))
+    );
+    expect(hasEvidenceForControl(ctrl!)).toBe(missing.length === 0);
   });
 
   it("hasEvidenceForControl finds existing regulation doc", () => {

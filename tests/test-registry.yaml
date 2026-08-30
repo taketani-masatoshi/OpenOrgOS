@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 577
-  static_test_cases: 2636
-  tiered_execution_total: 577
+  vitest_total: 583
+  static_test_cases: 2669
+  tiered_execution_total: 583
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -579,6 +579,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  asana-target-payload.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   audit.test.ts:
     axis: platform
     kind: unit
@@ -862,6 +866,14 @@ tests:
     kind: unit
     domain: P01_kernel
   compliance-gap.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  connector-bind.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  connector-store.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1158,6 +1170,10 @@ tests:
     kind: unit
     domain: P01_kernel
   fs-guard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  gdrive-export-allowlist.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2340,6 +2356,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  slack-connector.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   standalone-org-demo.test.ts:
     axis: integration
     kind: integration
@@ -2441,6 +2461,11 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-integrations-http.test.ts:
+    axis: integration
+    kind: integration
+    domain: P05_console_layer
+    integration: I2_protocol_e2e
   steward-chat-ledger-http.test.ts:
     axis: platform
     kind: server

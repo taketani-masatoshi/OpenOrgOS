@@ -1,0 +1,14 @@
+# Test-only fictional profile. The template leaves these TBD, which validate
+# reports as a blocking consumption-tax finding.
+entity:
+  name: JP Bank Fixture Company
+  type: 株式会社
+fiscal_year:
+  end_month: 12
+consumption_tax:
+  status: 課税事業者
+  base_period_sales_jpy: 12000000
+  invoice_registered: false
+corporate_tax:
+  category: 中小法人
+  capital_stock: 10000000

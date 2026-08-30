@@ -23,6 +23,7 @@ import {
 } from "../src/lib/invoice-config.js";
 import { runInvoiceGenerate } from "../src/lib/invoice-generate.js";
 import { loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
+import { setupMalWorkspaceCopy } from "./helpers/mal-workspace-copy.js";
 
 describe("invoice dates", () => {
   it("computes month-end issue date", () => {
@@ -100,6 +101,7 @@ describe("invoice generate (MAL bancho)", () => {
   });
 
   it("E2E generates single-month invoice to bancho FY path", async () => {
+    const workspace = setupMalWorkspaceCopy();
     const billing = resolveBillingConfig("rental", "PROP-001");
     const outDir = invoiceOutputDir(billing.docs_base, "FY2099");
     const result = await runInvoiceGenerate({
@@ -114,6 +116,7 @@ describe("invoice generate (MAL bancho)", () => {
     expect(existsSync(result.files[0].pdf)).toBe(true);
     expect(existsSync(result.files[0].eml)).toBe(true);
     rmSync(outDir, { recursive: true, force: true });
+    workspace.restore();
   });
 });
 
@@ -127,6 +130,7 @@ describe("invoice generate (MAL kamezawa hospitality)", () => {
   });
 
   it("E2E generates hospitality invoice with consumption-tax journal split", async () => {
+    const workspace = setupMalWorkspaceCopy();
     const billing = resolveBillingConfig("hospitality", "PROP-002");
     const outDir = invoiceOutputDir(billing.docs_base, "FY2099");
     const tpl = loadInvoiceTemplate("hospitality", "hospitality-monthly");
@@ -153,5 +157,6 @@ describe("invoice generate (MAL kamezawa hospitality)", () => {
     expect(revenue!.credit_yen + consumptionTax!.credit_yen).toBe(ar!.debit_yen);
 
     rmSync(outDir, { recursive: true, force: true });
+    workspace.restore();
   });
 });
