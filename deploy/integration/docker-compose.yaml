@@ -1,0 +1,95 @@
+# OrgOS integration environment — real external services, one compose file.
+#
+# The E2E suite runs against stubs by design: it is fast and hermetic. That
+# leaves four claims unverified, because a stub cannot fail the way the real
+# thing fails — a Stripe signature, an SMTP handshake, an eID validation
+# verdict, and a relay bound to a public interface.
+#
+#   cp deploy/integration/.env.example deploy/integration/.env   # fill in keys
+#   docker compose -f deploy/integration/docker-compose.yaml up -d
+#   npm run ooo:integration
+#
+# See deploy/integration/README.md for what each service proves.
+
+name: orgos-integration
+
+services:
+  # Real SMTP. Accepts mail like a server, holds it, and exposes an API so a
+  # test can assert what was actually delivered instead of a dry-run flag.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "127.0.0.1:1025:1025" # SMTP
+      - "127.0.0.1:8025:8025" # HTTP API / UI
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8025/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Forwards live Stripe test events to the local webhook, signed with the
+  # secret Stripe itself issues. This is the only way to exercise signature
+  # verification rather than assert around it.
+  stripe-cli:
+    image: stripe/stripe-cli:v1.21.8
+    depends_on:
+      - mailpit
+    environment:
+      STRIPE_API_KEY: ${STRIPE_SECRET_KEY:?set STRIPE_SECRET_KEY in deploy/integration/.env}
+    network_mode: host
+    command:
+      - listen
+      - --forward-to
+      - ${ORGOS_INTEGRATION_BASE_URL:-http://127.0.0.1:9473}/chat/v1/product/stripe/webhook
+      - --skip-verify
+
+  # Estonian signature validation. The official test compose is not a
+  # production artefact, so the JAR is built by scripts/setup-siva-mal-mac.sh
+  # and mounted here; this service only runs it.
+  siva:
+    image: eclipse-temurin:17-jre
+    volumes:
+      - ../../services/siva/jars:/app:ro
+    working_dir: /app
+    command: ["java", "-jar", "/app/siva-webapp.jar", "--server.port=8080"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
+
+  # Unsigned ASiC-E container assembly, reused from the existing sidecar.
+  digidoc-sidecar:
+    build:
+      context: ../../services/digidoc-sidecar
+    ports:
+      - "127.0.0.1:9090:9090"
+    environment:
+      PORT: "9090"
+      BIND: "0.0.0.0"
+      ALLOW_UNAUTHENTICATED: "false"
+      DIGIDOC_SIDECAR_TOKEN_FILE: /run/secrets/digidoc_sidecar_token
+    secrets:
+      - digidoc_sidecar_token
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -euo pipefail
+        export DIGIDOC_SIDECAR_TOKEN="$$(cat /run/secrets/digidoc_sidecar_token)"
+        exec java -jar /app/sidecar.jar
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  digidoc_sidecar_token:
+    file: ../../services/secrets/digidoc-sidecar.token
