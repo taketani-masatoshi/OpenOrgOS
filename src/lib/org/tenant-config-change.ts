@@ -410,7 +410,7 @@ function setStandardEnabled(isoId: string, enabled: boolean): void {
   const file = loadTenantStandards();
   let entry = file.iso.find((e) => e.id === isoId);
   if (!entry) {
-    entry = { id: isoId, enabled };
+    entry = { id: isoId, enabled, applicability: "applicable" };
     file.iso.push(entry);
   } else {
     entry.enabled = enabled;

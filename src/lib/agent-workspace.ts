@@ -155,7 +155,7 @@ function enableIsoStandards(ids: string[]): string[] {
   for (const id of ids) {
     let entry = file.iso.find((r) => r.id === id);
     if (!entry) {
-      entry = { id, enabled: true };
+      entry = { id, enabled: true, applicability: "applicable" };
       file.iso.push(entry);
     } else if (!entry.enabled) {
       entry.enabled = true;
