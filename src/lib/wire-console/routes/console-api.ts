@@ -88,6 +88,12 @@ function actionErrorStatus(message: string): number {
   return 500;
 }
 
+/**
+ * Tenant-scoped routes are matched by splitting the path into a tenant id and a
+ * trailing section, so the route catalog needs the base to rebuild full paths.
+ *
+ * @ooo-route-section-base /console/v1/tenants/:tenant
+ */
 const TENANT_BASE = /^\/console\/v1\/tenants\/([a-z0-9_-]+)(?:\/(.*))?\/?$/;
 
 export async function handleConsoleApi(

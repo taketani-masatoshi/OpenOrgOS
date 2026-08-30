@@ -3,454 +3,1103 @@
 # 採点は `npm run ooo:score`（scripts/ooo-score.ts）が実際の tests / e2e /
 # playwright config を走査して算出する。手で点は書かない。
 #
-# 100 = spec 20 + impl 30 + test 30 + verify 20
-#   spec   ... ADR / runbook が現物と一致し、やらない境界も書かれている（手入力 0-20）
-#   impl   ... RBAC · 監査 · 秘密の非返却 · 失敗時の扱い（手入力 0-30）
+# 100 = spec 20 + impl 30 + test 30 + verify 20。4軸すべて証跡から算出する。
+#   spec   ... docs 実在 8 + mentions 命中 4 点 ×最大3
+#   impl   ... sources 実在 6 + 権限ガード 6 + 入力検証 6 + 例外封じ込め 6 + 拒否テスト 6
 #   test   ... unit（厚10 / 薄5 / 無0）+ http 8 + e2e（緑12 / 登録のみ3 / 未登録1 / 無0）
-#   verify ... e2e が config に登録され CI で再現可能なら 20、部分 12、build のみ 5
+#   verify ... e2e が config に登録され CI で再現可能なら 20、部分 8、それ以外 0
 #
-# unit:  その行為の分岐・失敗系を押さえる tests/*.test.ts（2本以上で「厚」）
-# http:  BFF を HTTP で叩くテスト。route はそのテストが実際に触る経路の一部
-# e2e:   spec ファイル名。playwright config の testMatch に載っていなければ減点
+# spec.docs     ... その行為の仕様文書。docs/org-os/ooo-surfaces/ 配下
+# spec.mentions ... 文書が必ず含む文字列。慣例として「経路 · 必要権限 · 拒否条件」の3つ
+# impl.sources  ... その行為を実際に担うソース。ガードはここを走査して検出する
+# unit          ... その行為の分岐・失敗系を押さえる tests/*.test.ts（2本以上で「厚」）
+# http          ... BFF を HTTP で叩くテスト。route はそのテストが実際に触る経路の一部
+# e2e           ... spec ファイル名。playwright config の testMatch に載っていなければ減点
 version: 1
 items:
   - id: OOO-01
     domain: auth
     act: Community SSO で Console に入る
-    spec: 17
-    impl: 22
-    unit: [tests/ooo-login-email.test.ts, tests/operator-rbac.test.ts]
-    http: { tests: [tests/steward-chat-auth.test.ts], route: /chat/v1/auth }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/auth.md ]
+      mentions: [ "/chat/v1/auth/login", "login_policy", "401 `unauthorized`" ]
+    impl:
+      sources:
+        - src/lib/steward-chat/auth.ts
+        - src/lib/org/ooo-login-email.ts
+      routes:
+        - GET /chat/v1/auth/me
+        - POST /chat/v1/auth/login
+        - POST /chat/v1/auth/logout
+    unit: [ tests/ooo-login-email.test.ts, tests/operator-rbac.test.ts ]
+    http: { tests: [ tests/steward-chat-platform-tenant-http.test.ts ], route: /chat/v1/auth }
+    e2e: [ e2e/steward-chat.product.spec.ts ]
   - id: OOO-02
     domain: auth
     act: ログイン PassKey（端末最大2）
-    spec: 18
-    impl: 23
-    unit: [tests/passkey-bootstrap-http.test.ts, tests/wire-console-server.test.ts]
-    http: { tests: [tests/passkey-bootstrap-http.test.ts], route: /console/v1/auth }
-    e2e: [e2e/steward-chat-webauthn.smoke.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/auth.md ]
+      mentions: [ "/chat/v1/auth/me", "第2鍵", "403 `WebAuthn registration disabled`" ]
+    impl:
+      sources:
+        - src/lib/steward-chat/auth.ts
+        - src/lib/console-auth/operator-rbac.ts
+      routes:
+        - GET /chat/v1/auth/me
+        - POST /chat/v1/auth/login
+        - POST /chat/v1/auth/logout
+    unit: [ tests/passkey-bootstrap-http.test.ts, tests/wire-console-server.test.ts ]
+    http: { tests: [ tests/passkey-bootstrap-http.test.ts ], route: /chat/v1/auth }
+    e2e: [ e2e/steward-chat-webauthn.smoke.spec.ts ]
   - id: OOO-03
     domain: auth
     act: 決済 step-up PassKey
-    spec: 17
-    impl: 22
-    unit: [tests/wire-console-server.test.ts]
-    http: { tests: [tests/wire-console-server.test.ts], route: /chat/v1/settlement }
-    e2e: [e2e/wire-console-settlement-stepup.smoke.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/auth.md ]
+      mentions:
+        - "/chat/v1/settlement/challenge"
+        - "chat:approve"
+        - "422 `approval_id required`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/settlement-api.ts ]
+      routes:
+        - POST /chat/v1/settlement/challenge
+        - POST /chat/v1/settlement/complete
+        - POST /chat/v1/settlement/enroll
+    unit: [ tests/steward-chat-settlement-http.test.ts, tests/settlement-stepup.test.ts, tests/settlement-passkey-prod.test.ts ]
+    http: { tests: [ tests/steward-chat-settlement-http.test.ts ], route: /chat/v1/settlement }
+    e2e: [ e2e/wire-console-settlement-stepup.smoke.spec.ts ]
 
   - id: OOO-04
     domain: approval
     act: 区分 A を CLI / Console で承認
-    spec: 16
-    impl: 19
-    unit: [tests/org-approval.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/approvals/decide"
+        - "chat:approve"
+        - "403 `forbidden`"
+    impl:
+      sources:
+        - src/lib/steward-chat/routes/chat-api.ts
+        - src/lib/steward-chat/routes/org-budget-api.ts
+      routes:
+        - GET /chat/v1/approvals
+        - POST /chat/v1/approvals/:id/approve
+        - POST /chat/v1/approvals/:id/reject
+        - POST /chat/v1/approvals/propose
+    unit: [ tests/org-approval.test.ts, tests/steward-chat-governance-http.test.ts ]
+    http: { tests: [ tests/steward-chat-governance-http.test.ts ], route: /chat/v1/approvals }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-05
     domain: approval
     act: 区分 B を両代表で承認
-    spec: 15
-    impl: 17
-    unit: [tests/org-approval.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "**区分 B** — 両代表"
+        - "chat:approve"
+        - "自己承認"
+    impl:
+      sources:
+        - src/lib/steward-chat/routes/chat-api.ts
+        - src/lib/steward-chat/routes/org-budget-api.ts
+      routes:
+        - GET /chat/v1/approvals
+        - POST /chat/v1/approvals/:id/approve
+        - POST /chat/v1/approvals/:id/reject
+        - POST /chat/v1/approvals/propose
+    unit: [ tests/org-approval.test.ts, tests/steward-chat-governance-http.test.ts ]
+    http: { tests: [ tests/steward-chat-governance-http.test.ts ], route: /chat/v1/approvals }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-06
     domain: approval
     act: 秘書が org approval propose
-    spec: 14
-    impl: 16
-    unit: [tests/org-approval.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/approvals/propose"
+        - "chat:ask"
+        - "422 `approval_id is required`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/chat-api.ts ]
+      routes:
+        - GET /chat/v1/approvals
+        - POST /chat/v1/approvals/:id/approve
+        - POST /chat/v1/approvals/:id/reject
+        - POST /chat/v1/approvals/propose
+    unit: [ tests/org-approval.test.ts, tests/steward-chat-governance-http.test.ts ]
+    http: { tests: [ tests/steward-chat-governance-http.test.ts ], route: /chat/v1/approvals/propose }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-07
     domain: approval
     act: 等級 A の change apply（dry-run 後）
-    spec: 17
-    impl: 20
-    unit: [tests/operator-change.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/commands/preview"
+        - "chat:ask"
+        - "**等級 A / B / C**"
+    impl:
+      sources: [ src/lib/steward-chat/routes/command-api.ts ]
+      routes:
+        - GET /chat/v1/commands
+        - POST /chat/v1/commands/:id/run
+        - POST /chat/v1/commands/preview
+    unit: [ tests/operator-change.test.ts, tests/steward-chat-commands-http.test.ts ]
+    http: { tests: [ tests/steward-chat-commands-http.test.ts ], route: /chat/v1/commands }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-08
     domain: approval
     act: 等級 B の change apply
-    spec: 15
-    impl: 17
-    unit: [tests/operator-change.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/commands/apply"
+        - "chat:approve"
+        - "等級 C の change apply"
+    impl:
+      sources: [ src/lib/steward-chat/routes/command-api.ts ]
+      routes:
+        - GET /chat/v1/commands
+        - POST /chat/v1/commands/:id/run
+        - POST /chat/v1/commands/preview
+    unit: [ tests/operator-change.test.ts, tests/steward-chat-commands-http.test.ts ]
+    http: { tests: [ tests/steward-chat-commands-http.test.ts ], route: /chat/v1/commands }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
 
   - id: OOO-09
     domain: ledger
     act: 仕訳・試算表・BS/PL・補助元帳
-    spec: 18
-    impl: 23
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ledger.md ]
+      mentions:
+        - "/chat/v1/ledger/post"
+        - "finance:reconcile"
+        - "422 `month YYYY-MM is required`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/ledger-api.ts ]
+      routes:
+        - GET /chat/v1/ledger/dencho/search
+        - GET /chat/v1/ledger/export
+        - GET /chat/v1/ledger/workbench
+        - POST /chat/v1/ledger/bank-reconcile
+        - POST /chat/v1/ledger/bank-statements/import
+        - POST /chat/v1/ledger/period
+        - POST /chat/v1/ledger/post
+        - POST /chat/v1/ledger/reverse
     unit:
       - tests/finance-statements.test.ts
       - tests/ledger-trial-balance.test.ts
       - tests/control-reconcile.test.ts
-    http: { tests: [tests/steward-chat-ledger-rbac.test.ts], route: /chat/v1/ledger }
-    e2e: [e2e/steward-chat-ledger-customer.spec.ts]
+    http: { tests: [ tests/steward-chat-ledger-http.test.ts ], route: /chat/v1/ledger }
+    e2e: [ e2e/steward-chat-ledger-customer.spec.ts, e2e/steward-chat.books.spec.ts ]
   - id: OOO-10
     domain: ledger
     act: 月次 lock / 理由付き unlock
-    spec: 17
-    impl: 21
-    unit: [tests/period-lock-invoice-dedupe.test.ts]
-    http: { tests: [tests/steward-chat-ledger-rbac.test.ts], route: /chat/v1/ledger/period }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ledger.md ]
+      mentions:
+        - "/chat/v1/ledger/period"
+        - "finance:reconcile"
+        - "422 `reason is required to unlock`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/ledger-api.ts ]
+      routes:
+        - GET /chat/v1/ledger/dencho/search
+        - GET /chat/v1/ledger/export
+        - GET /chat/v1/ledger/workbench
+        - POST /chat/v1/ledger/bank-reconcile
+        - POST /chat/v1/ledger/bank-statements/import
+        - POST /chat/v1/ledger/period
+        - POST /chat/v1/ledger/post
+        - POST /chat/v1/ledger/reverse
+    unit: [ tests/period-lock-invoice-dedupe.test.ts, tests/steward-chat-ledger-http.test.ts ]
+    http: { tests: [ tests/steward-chat-ledger-http.test.ts ], route: /chat/v1/ledger/period }
+    e2e: [ e2e/steward-chat.books.spec.ts ]
   - id: OOO-11
     domain: ledger
     act: 誤りの訂正（逆仕訳）
-    spec: 16
-    impl: 19
-    unit: [tests/journal-write-guard.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ledger.md ]
+      mentions:
+        - "/chat/v1/ledger/reverse"
+        - "finance:reconcile"
+        - "422 `entry_id is required`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/ledger-api.ts ]
+      routes:
+        - GET /chat/v1/ledger/dencho/search
+        - GET /chat/v1/ledger/export
+        - GET /chat/v1/ledger/workbench
+        - POST /chat/v1/ledger/bank-reconcile
+        - POST /chat/v1/ledger/bank-statements/import
+        - POST /chat/v1/ledger/period
+        - POST /chat/v1/ledger/post
+        - POST /chat/v1/ledger/reverse
+    unit: [ tests/journal-write-guard.test.ts, tests/steward-chat-ledger-http.test.ts ]
+    http: { tests: [ tests/steward-chat-ledger-http.test.ts ], route: /chat/v1/ledger/reverse }
+    e2e: [ e2e/steward-chat.books.spec.ts ]
   - id: OOO-12
     domain: ledger
     act: 電子帳簿の日付・金額・相手先検索
-    spec: 14
-    impl: 17
-    unit: [tests/electronic-ledger.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs:
+        - docs/org-os/ooo-surfaces/ledger.md
+        - docs/org-os/electronic-ledger-search.md
+      mentions:
+        - "/chat/v1/ledger/dencho/search"
+        - "chat:read"
+        - "403 `forbidden`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/ledger-api.ts ]
+      routes:
+        - GET /chat/v1/ledger/dencho/search
+        - GET /chat/v1/ledger/export
+        - GET /chat/v1/ledger/workbench
+        - POST /chat/v1/ledger/bank-reconcile
+        - POST /chat/v1/ledger/bank-statements/import
+        - POST /chat/v1/ledger/period
+        - POST /chat/v1/ledger/post
+        - POST /chat/v1/ledger/reverse
+    unit: [ tests/electronic-ledger.test.ts, tests/steward-chat-ledger-http.test.ts ]
+    http: { tests: [ tests/steward-chat-ledger-http.test.ts ], route: /chat/v1/ledger/dencho/search }
+    e2e: [ e2e/steward-chat.books.spec.ts ]
   - id: OOO-13
     domain: ledger
     act: 銀行 CSV 取込・消込
-    spec: 16
-    impl: 20
-    unit: [tests/bank-reconciliation-gl.test.ts, tests/accounting-bank-e2e.test.ts]
-    http: null
-    e2e: [e2e/steward-chat-ledger-customer.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ledger.md ]
+      mentions:
+        - "/chat/v1/ledger/bank-statements/import"
+        - "finance:reconcile"
+        - "401 `unauthorized`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/ledger-api.ts ]
+      routes:
+        - GET /chat/v1/ledger/bank-csv-template
+        - GET /chat/v1/ledger/dencho/search
+        - GET /chat/v1/ledger/export
+        - GET /chat/v1/ledger/workbench
+        - POST /chat/v1/ledger/bank-reconcile
+        - POST /chat/v1/ledger/bank-statements/import
+        - POST /chat/v1/ledger/period
+        - POST /chat/v1/ledger/post
+        - POST /chat/v1/ledger/reverse
+    unit: [ tests/bank-reconciliation-gl.test.ts, tests/accounting-bank-e2e.test.ts ]
+    http: { tests: [ tests/steward-chat-ledger-http.test.ts ], route: /chat/v1/ledger/bank-csv-template }
+    e2e: [ e2e/steward-chat-ledger-customer.spec.ts ]
   - id: OOO-14
     domain: ledger
     act: 振込指示の生成（口座はマスク）
-    spec: 17
-    impl: 20
-    unit: [tests/remittance-journal.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ledger.md ]
+      mentions:
+        - "/chat/v1/broker/transfer"
+        - "broker:transfer"
+        - "口座番号そのものを HTTP・チャット・監査ログのいずれにも書かない"
+    impl:
+      sources: [ src/lib/steward-chat/routes/broker-api.ts ]
+      routes:
+        - GET /chat/v1/broker/accounts
+        - POST /chat/v1/broker/transfer
+    unit: [ tests/remittance-journal.test.ts, tests/steward-chat-broker-http.test.ts ]
+    http: { tests: [ tests/steward-chat-broker-http.test.ts ], route: /chat/v1/broker }
+    e2e: [ e2e/steward-chat.money.spec.ts ]
 
   - id: OOO-15
     domain: tax
     act: 申告カレンダー・gap・readiness・handoff ZIP
-    spec: 16
-    impl: 20
-    unit: [tests/statutory-filing-readiness.test.ts, tests/tax-remittance-integrity.test.ts]
-    http: { tests: [tests/steward-chat-ledger-rbac.test.ts], route: /chat/v1/tax }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/tax/handoff"
+        - "chat:ask"
+        - "e-Tax / eLTAX への自動提出"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tax-api.ts ]
+      routes:
+        - GET /chat/v1/tax/calendar
+        - GET /chat/v1/tax/consumption
+        - GET /chat/v1/tax/gaps
+        - GET /chat/v1/tax/readiness
+        - POST /chat/v1/tax/bonus-draft
+        - POST /chat/v1/tax/bonus-post
+        - POST /chat/v1/tax/handoff
+        - POST /chat/v1/tax/payroll-calc
+        - POST /chat/v1/tax/xml-draft
+        - POST /chat/v1/tax/yea/ready
+    unit: [ tests/statutory-filing-readiness.test.ts, tests/steward-chat-tax-http.test.ts ]
+    http: { tests: [ tests/steward-chat-tax-http.test.ts ], route: /chat/v1/tax/calendar }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
   - id: OOO-16
     domain: tax
     act: 消費税の本則差額集計（assessment）
-    spec: 17
-    impl: 19
-    unit: [tests/consumption-tax-journal.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/tax/consumption"
+        - "chat:read"
+        - "税額の最終判断"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tax-api.ts ]
+      routes:
+        - GET /chat/v1/tax/calendar
+        - GET /chat/v1/tax/consumption
+        - GET /chat/v1/tax/gaps
+        - GET /chat/v1/tax/readiness
+        - POST /chat/v1/tax/bonus-draft
+        - POST /chat/v1/tax/bonus-post
+        - POST /chat/v1/tax/handoff
+        - POST /chat/v1/tax/payroll-calc
+        - POST /chat/v1/tax/xml-draft
+        - POST /chat/v1/tax/yea/ready
+    unit: [ tests/consumption-tax-journal.test.ts, tests/steward-chat-tax-http.test.ts ]
+    http: { tests: [ tests/steward-chat-tax-http.test.ts ], route: /chat/v1/tax/consumption }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
   - id: OOO-17
     domain: tax
     act: 申告書 XML / 別表ドラフト生成
-    spec: 15
-    impl: 17
-    unit: [tests/jp-corporate-tax-xml.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/tax/xml-draft"
+        - "finance:reconcile"
+        - "読み取り権限だけで XML / 賞与 / 年調確定を呼ぶ"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tax-api.ts ]
+      routes:
+        - GET /chat/v1/tax/calendar
+        - GET /chat/v1/tax/consumption
+        - GET /chat/v1/tax/gaps
+        - GET /chat/v1/tax/readiness
+        - POST /chat/v1/tax/bonus-draft
+        - POST /chat/v1/tax/bonus-post
+        - POST /chat/v1/tax/handoff
+        - POST /chat/v1/tax/payroll-calc
+        - POST /chat/v1/tax/xml-draft
+        - POST /chat/v1/tax/yea/ready
+    unit: [ tests/jp-corporate-tax-xml.test.ts, tests/steward-chat-tax-http.test.ts ]
+    http: { tests: [ tests/steward-chat-tax-http.test.ts ], route: /chat/v1/tax/xml-draft }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
   - id: OOO-18
     domain: tax
     act: 宿泊税を台帳からカレンダー展開
-    spec: 14
-    impl: 16
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/tax/calendar"
+        - "chat:read"
+        - "401 `unauthorized`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tax-api.ts ]
+      routes:
+        - GET /chat/v1/tax/calendar
+        - GET /chat/v1/tax/consumption
+        - GET /chat/v1/tax/gaps
+        - GET /chat/v1/tax/readiness
+        - POST /chat/v1/tax/bonus-draft
+        - POST /chat/v1/tax/bonus-post
+        - POST /chat/v1/tax/handoff
+        - POST /chat/v1/tax/payroll-calc
+        - POST /chat/v1/tax/xml-draft
+        - POST /chat/v1/tax/yea/ready
+    unit: [ tests/tax-calendar-portfolio.test.ts, tests/steward-chat-tax-http.test.ts ]
+    http: { tests: [ tests/steward-chat-tax-http.test.ts ], route: /chat/v1/tax/calendar }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
 
   - id: OOO-19
     domain: pay
     act: 給与集計 YAML と給与仕訳の起票
-    spec: 16
-    impl: 20
-    unit: [tests/payroll-jp.test.ts, tests/payroll-remittance-loop.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/tax/bonus-post"
+        - "finance:reconcile"
+        - "422 `run_id required`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tax-api.ts ]
+      routes:
+        - GET /chat/v1/tax/calendar
+        - GET /chat/v1/tax/consumption
+        - GET /chat/v1/tax/gaps
+        - GET /chat/v1/tax/readiness
+        - POST /chat/v1/tax/bonus-draft
+        - POST /chat/v1/tax/bonus-post
+        - POST /chat/v1/tax/handoff
+        - POST /chat/v1/tax/payroll-calc
+        - POST /chat/v1/tax/xml-draft
+        - POST /chat/v1/tax/yea/ready
+    unit: [ tests/payroll-jp.test.ts, tests/payroll-remittance-loop.test.ts ]
+    http: { tests: [ tests/steward-chat-tax-http.test.ts ], route: /chat/v1/tax/bonus-post }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
   - id: OOO-20
     domain: pay
     act: 料率に基づく決定論計算
-    spec: 17
-    impl: 21
-    unit: [tests/payroll-jp.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/tax/payroll-calc"
+        - "chat:ask"
+        - "422 `month YYYY-MM and gross_yen are required`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tax-api.ts ]
+      routes:
+        - GET /chat/v1/tax/calendar
+        - GET /chat/v1/tax/consumption
+        - GET /chat/v1/tax/gaps
+        - GET /chat/v1/tax/readiness
+        - POST /chat/v1/tax/bonus-draft
+        - POST /chat/v1/tax/bonus-post
+        - POST /chat/v1/tax/handoff
+        - POST /chat/v1/tax/payroll-calc
+        - POST /chat/v1/tax/xml-draft
+        - POST /chat/v1/tax/yea/ready
+    unit: [ tests/payroll-jp.test.ts, tests/steward-chat-tax-http.test.ts ]
+    http: { tests: [ tests/steward-chat-tax-http.test.ts ], route: /chat/v1/tax/payroll-calc }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
   - id: OOO-21
     domain: pay
     act: 年末調整の決定論ドラフト（提出なし）
-    spec: 16
-    impl: 20
-    unit: [tests/jp-payroll-cli-privacy.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/tax/yea/ready"
+        - "finance:reconcile"
+        - "個人の給与明細をチャットへ出すこと"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tax-api.ts ]
+      routes:
+        - GET /chat/v1/tax/calendar
+        - GET /chat/v1/tax/consumption
+        - GET /chat/v1/tax/gaps
+        - GET /chat/v1/tax/readiness
+        - POST /chat/v1/tax/bonus-draft
+        - POST /chat/v1/tax/bonus-post
+        - POST /chat/v1/tax/handoff
+        - POST /chat/v1/tax/payroll-calc
+        - POST /chat/v1/tax/xml-draft
+        - POST /chat/v1/tax/yea/ready
+    unit: [ tests/jp-payroll-cli-privacy.test.ts, tests/steward-chat-tax-http.test.ts ]
+    http: { tests: [ tests/steward-chat-tax-http.test.ts ], route: /chat/v1/tax/yea/ready }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
   - id: OOO-22
     domain: pay
     act: QR 領収書の発行と claim
-    spec: 16
-    impl: 19
-    unit: []
-    http: null
-    e2e: [e2e/steward-chat.receipt.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/receipts/preview"
+        - "chat:ask"
+        - "適格請求書に法人番号が無いテナント"
+    impl:
+      sources: [ src/lib/steward-chat/routes/receipt-api.ts ]
+      routes:
+        - GET /chat/v1/receipts
+        - POST /chat/v1/receipts/preview
+    unit: [ tests/steward-chat-receipt-http.test.ts, tests/receipt-qr.test.ts ]
+    http: { tests: [ tests/steward-chat-receipt-http.test.ts ], route: /chat/v1/receipts }
+    e2e: [ e2e/steward-chat.receipt.spec.ts, e2e/steward-chat.claims.spec.ts ]
   - id: OOO-23
     domain: pay
     act: 経費精算ゲート〜弁済記録
-    spec: 16
-    impl: 18
-    unit: [tests/expense-claim.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/tax-pay.md ]
+      mentions:
+        - "/chat/v1/org/budget/expense-claim"
+        - "expense:claim"
+        - "404 `claim_not_found`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/org-budget-api.ts ]
+      routes:
+        - GET /api/v1/org/budget
+        - GET /api/v1/org/budget/expense-claim/desk
+        - GET /chat/v1/org/budget
+        - GET /chat/v1/org/budget/expense-claim/:id/receipt
+        - GET /chat/v1/org/budget/expense-claim/desk
+        - POST /api/v1/org/budget/expense-claim/approve
+        - POST /api/v1/org/budget/expense-claim/gate
+        - POST /api/v1/org/budget/expense-claim/ingest
+        - POST /api/v1/org/budget/expense-claim/prepare-transfer
+        - POST /api/v1/org/budget/expense-claim/reimburse
+        - POST /api/v1/org/budget/expense-claim/reject
+        - POST /chat/v1/org/budget/expense-claim/approve
+        - POST /chat/v1/org/budget/expense-claim/gate
+        - POST /chat/v1/org/budget/expense-claim/ingest
+        - POST /chat/v1/org/budget/expense-claim/prepare-transfer
+        - POST /chat/v1/org/budget/expense-claim/reimburse
+        - POST /chat/v1/org/budget/expense-claim/reject
+    unit: [ tests/expense-claim.test.ts, tests/steward-chat-expense-claim-http.test.ts ]
+    http: { tests: [ tests/steward-chat-expense-claim-http.test.ts ], route: /chat/v1/org/budget/expense-claim }
+    e2e: [ e2e/steward-chat.claims.spec.ts ]
 
   - id: OOO-24
     domain: chat
     act: Today / Ask（ローカル / クラウド LLM）
-    spec: 15
-    impl: 20
-    unit: [tests/steward-chat-today.test.ts, tests/steward-chat-grounding.test.ts]
-    http: { tests: [tests/steward-chat-today.test.ts], route: /chat/v1/today }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ops.md ]
+      mentions:
+        - "/chat/v1/today"
+        - "chat:read"
+        - "Today に L2 の値"
+    impl:
+      sources: [ src/lib/steward-chat/routes/chat-api.ts ]
+      routes:
+        - GET /chat/v1/today
+        - GET /chat/v1/today.md
+        - POST /chat/v1/message
+    unit: [ tests/steward-chat-today.test.ts, tests/steward-chat-grounding.test.ts ]
+    http: { tests: [ tests/steward-chat-ops-http.test.ts ], route: /chat/v1/today }
+    e2e: [ e2e/steward-chat.ops.spec.ts ]
   - id: OOO-25
     domain: chat
     act: 依頼を CLI に落とす command router
-    spec: 15
-    impl: 16
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs:
+        - docs/org-os/ooo-surfaces/ops.md
+        - docs/org-os/ooo-surfaces/governance.md
+      mentions:
+        - "/chat/v1/commands/preview"
+        - "chat:ask"
+        - "黙って書き換えること"
+    impl:
+      sources: [ src/lib/steward-chat/routes/command-api.ts ]
+      routes:
+        - GET /chat/v1/commands
+        - POST /chat/v1/commands/:id/run
+        - POST /chat/v1/commands/preview
+    unit: [ tests/operator-commands.test.ts, tests/steward-chat-commands-http.test.ts ]
+    http: { tests: [ tests/steward-chat-commands-http.test.ts ], route: /chat/v1/commands }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-26
     domain: chat
     act: 司令塔の分類と割当（確認後）
-    spec: 15
-    impl: 17
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ops.md ]
+      mentions:
+        - "/chat/v1/tower/assign"
+        - "chat:ask"
+        - "読み取り権限だけで割当・再実行"
+    impl:
+      sources: [ src/lib/steward-chat/routes/tower-api.ts ]
+      routes:
+        - GET /chat/v1/tower/inventory
+        - POST /chat/v1/tower/assign
+        - POST /chat/v1/tower/classify
+    unit: [ tests/dispatch-tower-classify.test.ts, tests/steward-chat-ops-http.test.ts ]
+    http: { tests: [ tests/steward-chat-ops-http.test.ts ], route: /chat/v1/tower/assign }
+    e2e: [ e2e/steward-chat.ops.spec.ts ]
   - id: OOO-27
     domain: chat
     act: ローカル LLM の根拠不足を ERROR 1 行に
-    spec: 17
-    impl: 18
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ops.md ]
+      mentions:
+        - "/chat/v1/message"
+        - "chat:ask"
+        - "`ERROR: <理由>` の1行だけ"
+    impl:
+      sources:
+        - src/lib/operator-runtime/local-llm-error-fallback.ts
+        - src/lib/steward-chat/routes/chat-api.ts
+      routes:
+        - GET /chat/v1/today
+        - GET /chat/v1/today.md
+        - POST /chat/v1/message
+    unit: [ tests/local-llm-error-fallback.test.ts, tests/steward-chat-local-llm-error-http.test.ts ]
+    http: { tests: [ tests/steward-chat-local-llm-error-http.test.ts ], route: /chat/v1/message }
+    e2e: [ e2e/steward-chat.ops.spec.ts ]
   - id: OOO-28
     domain: chat
     act: Work Order DAG の実行状況を見る
-    spec: 15
-    impl: 18
-    unit: [tests/steward-chat-orchestration-api.test.ts]
-    http: { tests: [tests/steward-chat-orchestration-http.test.ts], route: /chat/v1/orchestration }
-    e2e: [e2e/steward-chat.runboard.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ops.md ]
+      mentions:
+        - "/chat/v1/orchestration/runs"
+        - "chat:read"
+        - "存在しない Work Order"
+    impl:
+      sources: [ src/lib/steward-chat/routes/orchestration-api.ts ]
+      routes:
+        - GET /chat/v1/orchestration/runs
+        - POST /chat/v1/orchestration/runs/retry
+    unit: [ tests/steward-chat-orchestration-api.test.ts, tests/orchestration-dag.test.ts ]
+    http: { tests: [ tests/steward-chat-ops-http.test.ts ], route: /chat/v1/orchestration }
+    e2e: [ e2e/steward-chat.runboard.spec.ts, e2e/steward-chat.ops.spec.ts ]
 
   - id: OOO-29
     domain: mail
     act: メール / Slack 下書きと OOO ゲート
-    spec: 17
-    impl: 21
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "/chat/v1/correspondence/pending"
+        - "chat:read"
+        - "OOO（不在）ゲートに当たる宛先"
+    impl:
+      sources: [ src/lib/steward-chat/routes/correspondence-api.ts ]
+      routes:
+        - GET /chat/v1/correspondence/pending
+        - GET /chat/v1/mail/gmail
+        - POST /chat/v1/mail/gmail/connect
+        - POST /chat/v1/mail/gmail/disconnect
+        - PUT /chat/v1/mail/config
+        - PUT /chat/v1/mail/secrets
     unit:
       - tests/correspondence-ooo-gate.test.ts
       - tests/correspondence-approval-gate.test.ts
       - tests/correspondence-compose-pipeline.test.ts
-    http: null
-    e2e: []
+    http: { tests: [ tests/steward-chat-correspondence-http.test.ts ], route: /chat/v1/correspondence/pending }
+    e2e: [ e2e/steward-chat.mail.spec.ts ]
   - id: OOO-30
     domain: mail
     act: 承認後の SMTP / Slack 送信
-    spec: 16
-    impl: 19
-    unit: [tests/correspondence-human-approval-gate.test.ts, tests/correspondence-gmail-send.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "/chat/v1/correspondence/send"
+        - "chat:approve"
+        - "AI による無承認送信"
+    impl:
+      sources: [ src/lib/steward-chat/routes/correspondence-api.ts ]
+      routes:
+        - GET /chat/v1/correspondence/pending
+        - GET /chat/v1/mail/gmail
+        - POST /chat/v1/mail/gmail/connect
+        - POST /chat/v1/mail/gmail/disconnect
+        - PUT /chat/v1/mail/config
+        - PUT /chat/v1/mail/secrets
+    unit: [ tests/correspondence-human-approval-gate.test.ts, tests/correspondence-gmail-send.test.ts ]
+    http: { tests: [ tests/steward-chat-correspondence-http.test.ts ], route: /send }
+    e2e: [ e2e/steward-chat.mail.spec.ts ]
   - id: OOO-31
     domain: mail
     act: Gmail OAuth 経路（opt-in · SHIPPED ゲート）
-    spec: 16
-    impl: 18
-    unit: [tests/correspondence-gmail-oauth.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "/chat/v1/mail/gmail"
+        - "chat:approve"
+        - "Gmail 連携が SHIPPED ゲート外"
+    impl:
+      sources: [ src/lib/steward-chat/routes/correspondence-api.ts ]
+      routes:
+        - GET /chat/v1/correspondence/pending
+        - GET /chat/v1/mail/gmail
+        - POST /chat/v1/mail/gmail/connect
+        - POST /chat/v1/mail/gmail/disconnect
+        - PUT /chat/v1/mail/config
+        - PUT /chat/v1/mail/secrets
+    unit: [ tests/correspondence-gmail-oauth.test.ts, tests/steward-chat-correspondence-http.test.ts ]
+    http: { tests: [ tests/steward-chat-correspondence-http.test.ts ], route: /chat/v1/mail/gmail }
+    e2e: [ e2e/steward-chat.mail.spec.ts ]
   - id: OOO-32
     domain: mail
     act: 送信元名 / アドレス・provider を画面で設定
-    spec: 15
-    impl: 18
-    unit: [tests/correspondence-mail-setup-readiness.test.ts]
-    http: { tests: [tests/steward-chat-mail-secrets-api.test.ts], route: /chat/v1/mail }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "/chat/v1/mail/config"
+        - "chat:approve"
+        - "provider が未設定のまま送信"
+    impl:
+      sources: [ src/lib/steward-chat/routes/correspondence-api.ts ]
+      routes:
+        - GET /chat/v1/correspondence/pending
+        - GET /chat/v1/mail/gmail
+        - POST /chat/v1/mail/gmail/connect
+        - POST /chat/v1/mail/gmail/disconnect
+        - PUT /chat/v1/mail/config
+        - PUT /chat/v1/mail/secrets
+    unit: [ tests/correspondence-mail-setup-readiness.test.ts, tests/steward-chat-correspondence-http.test.ts ]
+    http: { tests: [ tests/steward-chat-correspondence-http.test.ts ], route: /chat/v1/mail/config }
+    e2e: [ e2e/steward-chat.mail.spec.ts ]
   - id: OOO-33
     domain: mail
     act: 画面から Gmail 連携を開始 / 解除する
-    spec: 15
-    impl: 17
-    unit: [tests/correspondence-gmail-setup-wizard.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "/chat/v1/mail/gmail/disconnect"
+        - "chat:approve"
+        - "403 `forbidden`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/correspondence-api.ts ]
+      routes:
+        - GET /chat/v1/correspondence/pending
+        - GET /chat/v1/mail/gmail
+        - POST /chat/v1/mail/gmail/connect
+        - POST /chat/v1/mail/gmail/disconnect
+        - PUT /chat/v1/mail/config
+        - PUT /chat/v1/mail/secrets
+    unit: [ tests/correspondence-gmail-setup-wizard.test.ts, tests/steward-chat-correspondence-http.test.ts ]
+    http: { tests: [ tests/steward-chat-correspondence-http.test.ts ], route: /chat/v1/mail/gmail }
+    e2e: [ e2e/steward-chat.mail.spec.ts ]
   - id: OOO-34
     domain: mail
     act: SMTP / IMAP パスワードを画面で入力する
-    spec: 18
-    impl: 23
-    unit: [tests/mail-secrets-store.test.ts]
-    http: { tests: [tests/steward-chat-mail-secrets-api.test.ts], route: /chat/v1/mail/secrets }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "/chat/v1/mail/secrets"
+        - "chat:approve"
+        - "投入はできるが取り出せない"
+    impl:
+      sources: [ src/lib/steward-chat/routes/correspondence-api.ts ]
+      routes:
+        - GET /chat/v1/correspondence/pending
+        - GET /chat/v1/mail/gmail
+        - POST /chat/v1/mail/gmail/connect
+        - POST /chat/v1/mail/gmail/disconnect
+        - PUT /chat/v1/mail/config
+        - PUT /chat/v1/mail/secrets
+    unit: [ tests/mail-secrets-store.test.ts, tests/steward-chat-correspondence-http.test.ts ]
+    http: { tests: [ tests/steward-chat-mail-secrets-api.test.ts ], route: /chat/v1/mail/secrets }
+    e2e: [ e2e/steward-chat.mail.spec.ts ]
   - id: OOO-35
     domain: mail
     act: Gmail / tenant-mail を既定出荷する
-    spec: 16
-    impl: 20
-    unit: []
-    http: { tests: [tests/steward-chat-platform-api.test.ts], route: /chat/v1/platform/integration }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "/chat/v1/platform/integration"
+        - "platform operator"
+        - "プラットフォーム運用者でない席がフラグ切替"
+    impl:
+      sources: [ src/lib/steward-chat/routes/platform-api.ts ]
+      routes:
+        - GET /chat/v1/platform/integration
+    unit: [ tests/steward-chat-platform-api.test.ts, tests/steward-chat-platform-tenant-http.test.ts ]
+    http: { tests: [ tests/steward-chat-platform-tenant-http.test.ts ], route: /chat/v1/platform/integration }
+    e2e: [ e2e/steward-chat.product.spec.ts ]
   - id: OOO-36
     domain: mail
     act: Community の tenant-mail 連携 UI
-    spec: 14
-    impl: 16
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/mail.md ]
+      mentions:
+        - "PUT /chat/v1/platform/integration"
+        - "chat:read"
+        - "L2 本文をチャットに転記すること"
+    impl:
+      sources: [ src/lib/steward-chat/routes/platform-api.ts ]
+      routes:
+        - GET /chat/v1/platform/integration
+    unit: [ tests/steward-chat-platform-api.test.ts, tests/steward-chat-platform-tenant-http.test.ts ]
+    http: { tests: [ tests/steward-chat-platform-tenant-http.test.ts ], route: /chat/v1/platform/integration }
+    e2e: [ e2e/steward-chat.product.spec.ts ]
 
   - id: OOO-37
     domain: wire
     act: Wire notice の起票・承認・送信
-    spec: 18
-    impl: 21
-    unit: [tests/wire-console-server.test.ts, tests/protocol-validate-abnormal.test.ts]
-    http: null
-    e2e: [e2e/steward-chat.wire.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ops.md ]
+      mentions:
+        - "/notices/propose"
+        - "protocol:approve"
+        - "Wire の自己承認"
+    impl:
+      sources: [ src/lib/wire-console/routes/console-api.ts ]
+      routes:
+        - GET /console/v1/tenants
+        - POST /console/v1/tenants/:id/approvals
+        - POST /console/v1/tenants/:id/inbox
+        - POST /console/v1/tenants/:id/notices/propose
+        - POST /console/v1/tenants/:id/outbox
+        - POST /console/v1/tenants/:id/scenario
+        - POST /console/v1/tenants/:id/snapshot
+    unit: [ tests/wire-console-server.test.ts, tests/protocol-validate-abnormal.test.ts ]
+    http: { tests: [ tests/wire-console-server.test.ts ], route: /notices/propose }
+    e2e: [ e2e/steward-chat.wire.spec.ts ]
   - id: OOO-38
     domain: wire
     act: Witness Hub 参照実装
-    spec: 17
-    impl: 21
-    unit: [tests/steward-chat-witness.test.ts]
-    http: { tests: [tests/steward-chat-platform-api.test.ts], route: /chat/v1/hub/status }
-    e2e: [e2e/steward-chat.witness.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ops.md ]
+      mentions:
+        - "/chat/v1/hub/status"
+        - "platform operator"
+        - "プラットフォーム運用者でない席が hub/status"
+    impl:
+      sources: [ src/lib/steward-chat/routes/platform-api.ts ]
+      routes:
+        - GET /chat/v1/hub/status
+    unit: [ tests/steward-chat-witness.test.ts, tests/steward-chat-platform-api.test.ts ]
+    http: { tests: [ tests/steward-chat-platform-api.test.ts ], route: /chat/v1/hub/status }
+    e2e: [ e2e/steward-chat.witness.spec.ts, e2e/steward-chat.ops.spec.ts ]
   - id: OOO-39
     domain: wire
     act: 公開リレーを本番 bind する
-    spec: 17
-    impl: 20
-    unit: []
-    http: { tests: [tests/steward-chat-platform-api.test.ts], route: /chat/v1/hub/status }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/ops.md ]
+      mentions:
+        - "公開リレー"
+        - "chat:read"
+        - "Wire notice の LLM による承認・送信"
+    impl:
+      sources: [ src/lib/steward-chat/routes/platform-api.ts ]
+      routes:
+        - GET /chat/v1/hub/status
+    unit: [ tests/steward-chat-platform-api.test.ts, tests/steward-chat-ops-http.test.ts ]
+    http: { tests: [ tests/steward-chat-platform-api.test.ts ], route: /chat/v1/hub/status }
+    e2e: [ e2e/steward-chat.ops.spec.ts ]
 
   - id: OOO-40
     domain: gov
     act: 会社イベントを起票する（new）
-    spec: 18
-    impl: 22
-    unit: [tests/steward-chat-events-api.test.ts, tests/steward-chat-events-stream.test.ts]
-    http: { tests: [tests/steward-chat-events-api.test.ts], route: /chat/v1/events }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "POST /chat/v1/events"
+        - "events:write"
+        - "会社イベントの物理削除"
+    impl:
+      sources: [ src/lib/steward-chat/routes/events-api.ts ]
+      routes:
+        - GET /chat/v1/events/chain/verify
+        - POST /chat/v1/events
+    unit: [ tests/steward-chat-events-api.test.ts, tests/steward-chat-events-stream.test.ts ]
+    http: { tests: [ tests/steward-chat-events-api.test.ts ], route: /chat/v1/events }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-41
     domain: gov
     act: 会社イベントの close / archive / void / chain 検証
-    spec: 18
-    impl: 23
-    unit: [tests/steward-chat-events-api.test.ts]
-    http: { tests: [tests/steward-chat-events-api.test.ts], route: /chat/v1/events }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/events/chain/verify"
+        - "events:write"
+        - "chain backfill --force"
+    impl:
+      sources: [ src/lib/steward-chat/routes/events-api.ts ]
+      routes:
+        - GET /chat/v1/events/chain/verify
+        - POST /chat/v1/events
+    unit: [ tests/steward-chat-events-api.test.ts, tests/steward-chat-governance-http.test.ts ]
+    http: { tests: [ tests/steward-chat-events-api.test.ts ], route: /chat/v1/events }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-42
     domain: gov
     act: 組織図変更の提案と承認後 apply
-    spec: 17
-    impl: 21
-    unit: [tests/org-chart-change.test.ts]
-    http: { tests: [tests/steward-chat-org-chart-change-api.test.ts], route: /chat/v1/org/chart/change }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/org/chart/change/apply"
+        - "chat:approve"
+        - "422 `change_id is required`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/org-chart-api.ts ]
+      routes:
+        - GET /chat/v1/org/chart
+        - GET /chat/v1/org/chart/change
+        - POST /chat/v1/org/chart/change/apply
+        - POST /chat/v1/org/chart/change/propose
+    unit: [ tests/org-chart-change.test.ts, tests/steward-chat-governance-http.test.ts ]
+    http: { tests: [ tests/steward-chat-governance-http.test.ts ], route: /chat/v1/org/chart/change }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-43
     domain: gov
     act: 会社名・決算月・代表者を画面で設定
-    spec: 14
-    impl: 17
-    unit: [tests/steward-chat-company-officers.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/product/onboarding/setup"
+        - "`ceo` のみ"
+        - "会社名設定を代表以外が呼ぶ"
+    impl:
+      sources: [ src/lib/steward-chat/routes/product-api.ts ]
+      routes:
+        - POST /chat/v1/product/onboarding/setup
+    unit: [ tests/steward-chat-company-officers.test.ts, tests/steward-chat-product-api.test.ts ]
+    http: { tests: [ tests/steward-chat-governance-http.test.ts ], route: /chat/v1/product/onboarding/setup }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-44
     domain: gov
     act: 契約台帳の list / show
-    spec: 13
-    impl: 15
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/contracts"
+        - "chat:read"
+        - "契約本文の全文をチャットへ出す"
+    impl:
+      sources: [ src/lib/steward-chat/routes/chat-api.ts ]
+      routes:
+        - GET /chat/v1/approvals
+        - POST /chat/v1/approvals/:id/approve
+        - POST /chat/v1/approvals/:id/reject
+        - POST /chat/v1/approvals/propose
+    unit: [ tests/contract-status-steward.test.ts, tests/steward-chat-governance-http.test.ts ]
+    http: { tests: [ tests/steward-chat-governance-http.test.ts ], route: /chat/v1/contracts }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
   - id: OOO-45
     domain: gov
     act: 国家 eID（DigiDoc / SiVa）で検証する
-    spec: 18
-    impl: 22
-    unit: [tests/pdf-esign-digidoc.test.ts, tests/esign-secrets-store.test.ts]
-    http: { tests: [tests/steward-chat-esign-api.test.ts], route: /chat/v1/esign }
-    e2e: [e2e/steward-chat-esign.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/esign/create"
+        - "chat:approve"
+        - "eID 検証が失敗・鍵が無い"
+    impl:
+      sources: [ src/lib/steward-chat/routes/esign-api.ts ]
+      routes:
+        - GET /chat/v1/esign/cases
+        - POST /chat/v1/esign/create
+    unit: [ tests/pdf-esign-digidoc.test.ts, tests/esign-secrets-store.test.ts ]
+    http: { tests: [ tests/steward-chat-esign-api.test.ts ], route: /chat/v1/esign }
+    e2e: [ e2e/steward-chat-esign.spec.ts ]
   - id: OOO-46
     domain: gov
     act: 医療機器の運用台帳と承認
-    spec: 16
-    impl: 17
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/governance.md ]
+      mentions:
+        - "/chat/v1/compliance/medical-device"
+        - "chat:read"
+        - "医療機器台帳への書き込み"
+    impl:
+      sources: [ src/lib/steward-chat/routes/medical-device-api.ts ]
+      read_only: true
+      routes:
+        - GET /chat/v1/compliance/medical-device
+    unit: [ tests/jp-medical-device.test.ts, tests/steward-chat-medical-device-http.test.ts ]
+    http: { tests: [ tests/steward-chat-medical-device-http.test.ts ], route: /chat/v1/compliance/medical-device }
+    e2e: [ e2e/steward-chat.governance.spec.ts ]
 
   - id: OOO-47
     domain: sales
     act: パイプライン・顧客・問合せの決定論 CLI
-    spec: 16
-    impl: 20
-    unit: [tests/steward-chat-sales-pipeline.test.ts, tests/steward-chat-sales-inbound.test.ts]
-    http: { tests: [tests/customers-api-sales-rbac.test.ts], route: /chat/v1/customers }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/product.md ]
+      mentions:
+        - "/chat/v1/customers/pipeline"
+        - "sales panel"
+        - "sales panel の無いテナントで営業面"
+    impl:
+      sources: [ src/lib/steward-chat/routes/customers-api.ts ]
+      routes:
+        - GET /chat/v1/customers/nav
+        - GET /chat/v1/customers/pipeline
+        - POST /chat/v1/customers/deals/set-stage
+        - POST /chat/v1/customers/inquiry/promote
+    unit: [ tests/steward-chat-sales-pipeline.test.ts, tests/steward-chat-sales-http.test.ts ]
+    http: { tests: [ tests/steward-chat-sales-http.test.ts ], route: /chat/v1/customers }
+    e2e: [ e2e/steward-chat.product.spec.ts ]
   - id: OOO-48
     domain: sales
     act: 宿泊 L1 台帳（stays）と運営 CLI
-    spec: 13
-    impl: 15
-    unit: []
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/product.md ]
+      mentions:
+        - "/chat/v1/hospitality/ops-due"
+        - "chat:read"
+        - "401 `unauthorized`"
+    impl:
+      sources: [ src/lib/steward-chat/routes/domain-ops-api.ts ]
+      routes:
+        - GET /chat/v1/hospitality/ops-due
+    unit: [ tests/hospitality-ops.test.ts, tests/steward-chat-sales-http.test.ts ]
+    http: { tests: [ tests/steward-chat-sales-http.test.ts ], route: /chat/v1/hospitality/ops-due }
+    e2e: [ e2e/steward-chat.product.spec.ts ]
 
   - id: OOO-49
     domain: product
     act: テナントプロビジョンと Ledger ワークベンチ
-    spec: 15
-    impl: 17
-    unit: []
-    http: null
-    e2e: [e2e/steward-chat-ledger-customer.spec.ts]
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/product.md ]
+      mentions:
+        - "/chat/v1/product/control-plane"
+        - "`ceo` のみ"
+        - "代表以外が control-plane / stripe-settings"
+    impl:
+      sources: [ src/lib/steward-chat/routes/product-api.ts ]
+      routes:
+        - GET /chat/v1/product/control-plane
+        - GET /chat/v1/product/plans
+        - GET /chat/v1/product/stripe-settings
+        - GET /chat/v1/product/subscription
+        - POST /chat/v1/product/signup
+    unit: [ tests/ledger-product.test.ts, tests/steward-chat-platform-tenant-http.test.ts ]
+    http: { tests: [ tests/steward-chat-platform-tenant-http.test.ts ], route: /chat/v1/product/control-plane }
+    e2e: [ e2e/steward-chat-ledger-customer.spec.ts, e2e/steward-chat.product.spec.ts ]
   - id: OOO-50
     domain: product
     act: Stripe Checkout / Portal / webhook
-    spec: 17
-    impl: 21
-    unit: [tests/stripe-ops.test.ts, tests/stripe-webhook.test.ts]
-    http: { tests: [tests/steward-chat-product-api.test.ts], route: /chat/v1/product }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/product.md ]
+      mentions:
+        - "/chat/v1/product/stripe/webhook"
+        - "署名検証"
+        - "Stripe webhook の署名が不正"
+    impl:
+      sources: [ src/lib/steward-chat/routes/product-api.ts ]
+      routes:
+        - GET /chat/v1/product/control-plane
+        - GET /chat/v1/product/plans
+        - GET /chat/v1/product/stripe-settings
+        - GET /chat/v1/product/subscription
+        - POST /chat/v1/product/signup
+    unit: [ tests/stripe-ops.test.ts, tests/stripe-webhook.test.ts ]
+    http: { tests: [ tests/steward-chat-product-api.test.ts ], route: /chat/v1/product }
+    e2e: [ e2e/steward-chat.stripe.spec.ts ]
   - id: OOO-51
     domain: product
     act: Stripe live 鍵でセルフサーブを開く
-    spec: 17
-    impl: 22
-    unit: [tests/stripe-commercial-guards.test.ts, tests/commercial-readiness.test.ts]
-    http: { tests: [tests/steward-chat-product-api.test.ts], route: /chat/v1/product/stripe }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/product.md ]
+      mentions:
+        - "/chat/v1/product/stripe-settings"
+        - "`ceo` のみ"
+        - "未設定の Stripe で本番課金を開くこと"
+    impl:
+      sources: [ src/lib/steward-chat/routes/product-api.ts ]
+      routes:
+        - GET /chat/v1/product/control-plane
+        - GET /chat/v1/product/plans
+        - GET /chat/v1/product/stripe-settings
+        - GET /chat/v1/product/subscription
+        - POST /chat/v1/product/signup
+    unit: [ tests/stripe-commercial-guards.test.ts, tests/commercial-readiness.test.ts ]
+    http: { tests: [ tests/steward-chat-product-api.test.ts ], route: /chat/v1/product/stripe }
+    e2e: [ e2e/steward-chat.stripe.spec.ts ]
   - id: OOO-52
     domain: product
     act: 税理士ゲスト（期限付き readonly）
-    spec: 15
-    impl: 18
-    unit: [tests/ledger-guest-invite.test.ts]
-    http: null
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/product.md ]
+      mentions:
+        - "/chat/v1/product/guest-setup"
+        - "招待トークン"
+        - "税理士ゲストを常勤席に昇格させること"
+    impl:
+      sources: [ src/lib/steward-chat/routes/product-api.ts ]
+      routes:
+        - GET /chat/v1/product/control-plane
+        - GET /chat/v1/product/plans
+        - GET /chat/v1/product/stripe-settings
+        - GET /chat/v1/product/subscription
+        - POST /chat/v1/product/signup
+    unit: [ tests/ledger-guest-invite.test.ts, tests/steward-chat-guest-invite-http.test.ts ]
+    http: { tests: [ tests/steward-chat-guest-invite-http.test.ts ], route: /chat/v1/product/guest-setup }
+    e2e: [ e2e/steward-chat.tax.spec.ts ]
   - id: OOO-53
     domain: product
     act: 共有コントロールプレーンのテナント隔離
-    spec: 18
-    impl: 24
-    unit: [tests/ledger-tenant-isolation.test.ts, tests/ledger-product.test.ts]
-    http: { tests: [tests/customer-journey-http.test.ts], route: /chat/v1/product }
-    e2e: []
+    spec:
+      docs: [ docs/org-os/ooo-surfaces/product.md ]
+      mentions:
+        - "GET /chat/v1/product/control-plane"
+        - "`ceo` のみ"
+        - "他テナントの ID を指したリクエスト"
+    impl:
+      sources: [ src/lib/steward-chat/routes/product-api.ts ]
+      routes:
+        - GET /chat/v1/product/control-plane
+        - GET /chat/v1/product/plans
+        - GET /chat/v1/product/stripe-settings
+        - GET /chat/v1/product/subscription
+        - POST /chat/v1/product/signup
+    unit: [ tests/ledger-tenant-isolation.test.ts, tests/ledger-product.test.ts ]
+    http: { tests: [ tests/steward-chat-platform-tenant-http.test.ts ], route: /chat/v1/product/control-plane }
+    e2e: [ e2e/steward-chat.product.spec.ts ]

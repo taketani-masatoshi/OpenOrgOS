@@ -5,6 +5,10 @@ playwright-report/
 tests/.fixture-snapshot/
 tests/.ooo-e2e-green.json
 tests/.ooo-e2e-report.json
+tests/.ooo-unit-green.json
+tests/.ooo-unit-report.json
+tests/.ooo-integration-green.json
+tests/.ooo-integration-report.json
 tests/.fixture-restore.lock/
 .orgos-ci/
 .orgos/

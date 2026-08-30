@@ -90,6 +90,8 @@
     "steward-chat:release-check": "npm run steward-chat:smoke && npm run steward-chat:e2e && npm run steward-chat:webauthn-e2e && npm run operator-console:e2e",
     "steward-chat:e2e": "npm run steward-chat:build && playwright test --config=playwright.steward-chat.config.ts",
     "ooo:e2e": "npm run steward-chat:build && node --import tsx scripts/ooo-e2e.ts",
+    "ooo:unit": "node --import tsx scripts/ooo-unit.ts",
+    "ooo:routes": "node --import tsx scripts/ooo-routes.ts",
     "ooo:score": "node --import tsx scripts/ooo-score.ts",
     "steward-chat:webauthn-e2e": "npm run steward-chat:build && playwright test --config=playwright.steward-chat-webauthn.config.ts",
     "operator-console:e2e": "npm run operator-console:build && playwright test --config=playwright.operator-console.config.ts",

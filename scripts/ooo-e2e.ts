@@ -30,13 +30,22 @@ function collect(suite: PwSuite, out: Map<string, boolean>): void {
   for (const child of suite.suites ?? []) collect({ ...child, file: child.file ?? suite.file }, out);
 }
 
-function main(): void {
-  mkdirSync(dirname(REPORT_PATH), { recursive: true });
-  rmSync(REPORT_PATH, { force: true });
+/**
+ * Configs whose specs count as reproducible verification. The webauthn suite is
+ * separate because it needs a virtual authenticator, but it is the only place
+ * PassKey acts are actually exercised.
+ */
+const CONFIGS = [
+  "playwright.steward-chat.config.ts",
+  "playwright.steward-chat-webauthn.config.ts",
+  "playwright.webauthn.config.ts",
+];
 
+function runConfig(config: string, files: Map<string, boolean>): void {
+  rmSync(REPORT_PATH, { force: true });
   const run = spawnSync(
     "npx",
-    ["playwright", "test", "--config=playwright.steward-chat.config.ts", "--reporter=json"],
+    ["playwright", "test", `--config=${config}`, "--reporter=json"],
     {
       cwd: ROOT_DIR,
       env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_NAME: REPORT_PATH },
@@ -54,13 +63,19 @@ function main(): void {
     if (start < 0) {
       console.error(run.stdout ?? "");
       console.error(run.stderr ?? "");
-      throw new Error("playwright produced no JSON report");
+      throw new Error(`playwright produced no JSON report for ${config}`);
     }
     report = JSON.parse(run.stdout!.slice(start)) as { suites?: PwSuite[] };
   }
 
-  const files = new Map<string, boolean>();
   for (const suite of report.suites ?? []) collect(suite, files);
+}
+
+function main(): void {
+  mkdirSync(dirname(REPORT_PATH), { recursive: true });
+
+  const files = new Map<string, boolean>();
+  for (const config of CONFIGS) runConfig(config, files);
 
   const green = [...files.entries()].filter(([, ok]) => ok).map(([file]) => file).sort();
   const red = [...files.entries()].filter(([, ok]) => !ok).map(([file]) => file).sort();

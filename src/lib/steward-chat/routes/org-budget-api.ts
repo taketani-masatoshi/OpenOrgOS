@@ -166,6 +166,12 @@ function jsonRevisionConflict(
   });
 }
 
+/**
+ * This module is mounted under two prefixes and matches on the remainder, so
+ * the route catalog cannot read the full paths off the comparisons below.
+ *
+ * @ooo-route-prefix /chat/v1/org/budget,/api/v1/org/budget
+ */
 function relativePath(pathname: string): string | null {
   for (const prefix of ["/chat/v1/org/budget", "/api/v1/org/budget"]) {
     if (pathname === prefix) return "/";
@@ -1522,6 +1528,7 @@ export async function handleOrgBudgetApi(
     return true;
   }
 
+  // @ooo-route GET /chat/v1/org/budget/expense-claim/:id/receipt
   const expenseReceiptMatch = path.match(
     /^\/expense-claim\/([^/]+)\/receipt$/,
   );
@@ -1709,6 +1716,21 @@ export async function handleOrgBudgetApi(
     return true;
   }
 
+  // Budget mutations share one handler, so each is declared for the catalog.
+  // @ooo-route POST /chat/v1/org/budget/set-company
+  // @ooo-route POST /chat/v1/org/budget/set-company-category
+  // @ooo-route POST /chat/v1/org/budget/allocate-department
+  // @ooo-route POST /chat/v1/org/budget/allocate-department-category
+  // @ooo-route POST /chat/v1/org/budget/allocate-member
+  // @ooo-route POST /chat/v1/org/budget/allocate-person-category
+  // @ooo-route POST /chat/v1/org/budget/commit-member
+  // @ooo-route POST /chat/v1/org/budget/outlook/init
+  // @ooo-route POST /chat/v1/org/budget/outlook/set-remaining
+  // @ooo-route POST /chat/v1/org/budget/outlook/set-as-of
+  // @ooo-route POST /chat/v1/org/budget/outlook/publish
+  // @ooo-route POST /chat/v1/org/budget/outlook/sync-yojitsu
+  // @ooo-route POST /chat/v1/org/budget/outlook/set-department
+  // @ooo-route POST /chat/v1/org/budget/outlook/propose-envelope
   const mutationPaths = new Set([
     "/set-company",
     "/set-company-category",
