@@ -83,6 +83,8 @@ export async function handleOrgChartApi(
     return true;
   }
 
+  // @ooo-route POST /chat/v1/org/chart/change/validate
+  // @ooo-route POST /chat/v1/org/chart/change/apply
   const isValidate = pathname === "/chat/v1/org/chart/change/validate";
   const isApply = pathname === "/chat/v1/org/chart/change/apply";
   if ((isValidate || isApply) && method === "POST") {

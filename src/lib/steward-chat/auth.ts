@@ -268,6 +268,8 @@ export async function handleChatAuthApi(
   }
 
   if (method === "POST" && pathname === "/chat/v1/auth/login") {
+    // @ooo-route-public このルートが入口そのもので、認可する呼び手がまだ居ない。
+    // 席の照合は authenticateWireConsoleLogin（名簿・ドメイン・寿命）が行う。
     try {
       const raw = await readBody(req);
       const body = JSON.parse(raw || "{}") as Parameters<typeof authenticateWireConsoleLogin>[0];
@@ -338,9 +340,18 @@ export async function handleChatAuthApi(
   }
 
   if (method === "POST" && pathname === "/chat/v1/auth/logout") {
+    // @ooo-route-public 席を捨てる操作に権限を要求すると、壊れたセッションを
+    // 捨てられなくなる。持っているトークンだけを無効化するので害がない。
     const user = getChatSessionUser(req);
-    destroySession(sessionTokenFromRequest(req));
-    clearSessionCookie(res);
+    try {
+      destroySession(sessionTokenFromRequest(req));
+      clearSessionCookie(res);
+    } catch (error) {
+      // A failed teardown must still end with the browser losing its cookie.
+      clearSessionCookie(res);
+      json(200, { ok: true, warning: error instanceof Error ? error.message : String(error) });
+      return true;
+    }
     if (user) {
       appendChatAudit({
         action: "logout",
