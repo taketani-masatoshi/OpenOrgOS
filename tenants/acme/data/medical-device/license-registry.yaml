@@ -4,7 +4,8 @@ licenses:
     role: manufacturing
     permit_number: "（製造業許可番号 — 例: 13BZ201861）"
     issuer: 東京都
-    issued_on: "2020-01-01"
+    issued_on: "2023-04-01"
+    expires_on: "2028-03-31"
     site_name: （製造所名称）
     site_address_ref: site_address_id
     scope: 第2種医療機器 · 超音波診断支援
@@ -15,6 +16,7 @@ licenses:
     role: mah
     permit_number: "（製造販売業許可番号 — 例: 13B2X10646）"
     issuer: 東京都
-    issued_on: "2020-01-01"
+    issued_on: "2023-04-01"
+    expires_on: "2028-03-31"
     scope: 第2種医療機器
     status: active
