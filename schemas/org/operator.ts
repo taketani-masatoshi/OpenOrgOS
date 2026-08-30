@@ -33,6 +33,8 @@ export const operatorPermissionSchema = z.enum([
   "agent:shell",
   "git:write",
   "audit:read",
+  /** Sign off a concluded ISO internal audit. Human seats only; never LLM/MCP. */
+  "audit:sign",
   "llm:admin",
   "llm:approve",
   "receipt:issue",

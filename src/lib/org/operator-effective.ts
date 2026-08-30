@@ -86,7 +86,7 @@ const ROLE_PERMISSIONS_FULL: Record<
   employee: ["expense:claim"],
   readonly: ["chat:read"],
   mcp_service: ["chat:read", "chat:ask"],
-  auditor: ["chat:read", "audit:read"],
+  auditor: ["chat:read", "audit:read", "audit:sign"],
 };
 
 /** Approver base under ceo_concentrated — dangerous ops only via explicit permissions / grants. */

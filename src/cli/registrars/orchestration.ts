@@ -193,6 +193,19 @@ import { runIsoKpi } from "../../commands/iso-kpi.js";
 import { runIsoClauses } from "../../commands/iso-clauses.js";
 import { runIsoRecordsCheck } from "../../commands/iso-records.js";
 import { runIsoRequirements } from "../../commands/iso-requirements.js";
+import {
+  runIsoAuditApplyPrecheck,
+  runIsoAuditBrief,
+  runIsoAuditConclude,
+  runIsoAuditEligibility,
+  runIsoAuditFindingSet,
+  runIsoAuditFollowUp,
+  runIsoAuditPlanCreate,
+  runIsoAuditPlanList,
+  runIsoAuditPlanShow,
+  runIsoAuditProgramme,
+} from "../../commands/iso-audit-plan.js";
+import { runIsoAuditSign } from "../../commands/iso-audit-sign.js";
 import { registerCanonicalWireCommands } from "./wire.js";
 import { registerInternalWebhookCommands } from "./internal-webhook.js";
 import {
@@ -971,10 +984,12 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Parse every catalog control-map (exit 1 on failure)")
     .option("--json", "JSON output")
     .action((opts) => runIsoMapsVerify({ json: opts.json }));
-  const isoAuditCmd = isoCmd.command("audit").description("ISO internal audit (single agent · all enabled standards)");
+  const isoAuditCmd = isoCmd
+    .command("audit")
+    .description("ISO internal audit — deterministic pre-check (run) and ISO 19011 audit (plan)");
   isoAuditCmd
     .command("run")
-    .description("Evaluate enabled ISO maps, append audit log, write management report")
+    .description("Pre-check: evaluate enabled ISO maps and evidence. Not an internal audit by itself")
     .option("--tenant <id>", "Tenant id")
     .option("--iso <id>", "Limit to one standard (e.g. ISO-9001)")
     .option("--dry-run", "Evaluate without writing log or reports")
@@ -989,9 +1004,117 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       })
     );
+  const isoAuditPlanCmd = isoAuditCmd
+    .command("plan")
+    .description("ISO 19011 audit plans — scope, criteria, auditor, period");
+  isoAuditPlanCmd
+    .command("create")
+    .description("Create an audit plan (refuses an auditor who lacks independence or competence)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Standard to audit")
+    .option("--auditor <operator-id>", "Auditor operator id")
+    .option("--period <range>", "YYYY-MM..YYYY-MM")
+    .option("--scope <ids>", "Comma-separated control ids (default: all in-scope)")
+    .option("--criteria <refs>", "Comma-separated audit criteria")
+    .option("--sampling <text>", "Sampling policy")
+    .option("--precheck-run-id <id>", "iso audit run id attached as input")
+    .option("--framework <name>", "iso | financial | jsox (default iso)")
+    .option("--operator-id <id>", "Operator recording the plan")
+    .option("--force", "Record despite an eligibility failure")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditPlanCreate(opts));
+  isoAuditPlanCmd
+    .command("list")
+    .description("List audit plans and judgement progress")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Limit to one standard")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditPlanList(opts));
+  isoAuditPlanCmd
+    .command("show")
+    .description("Print one audit plan with its findings")
+    .option("--tenant <id>", "Tenant id")
+    .option("--plan <id>", "Plan id (IAP-...)")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditPlanShow(opts));
+  const isoAuditFindingCmd = isoAuditCmd
+    .command("finding")
+    .description("Auditor judgements, one requirement at a time");
+  isoAuditFindingCmd
+    .command("set")
+    .description("Record the auditor's verdict on one requirement")
+    .option("--tenant <id>", "Tenant id")
+    .option("--plan <id>", "Plan id (IAP-...)")
+    .option("--req <id>", "Requirement id (REQ-...)")
+    .option("--verdict <v>", "conform | nonconform_minor | nonconform_major | observation | not_applicable")
+    .option("--evidence <path...>", "Evidence path the auditor examined")
+    .option("--sample <text>", "What was sampled, and how much")
+    .option("--note <text>", "Auditor's own description (required for nonconformity)")
+    .option("--operator-id <id>", "Auditor operator id")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditFindingSet(opts));
+  isoAuditCmd
+    .command("conclude")
+    .description("Close an audit (refuses while any requirement is unjudged)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--plan <id>", "Plan id (IAP-...)")
+    .option("--summary <text>", "Audit conclusion")
+    .option("--operator-id <id>", "Auditor operator id")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditConclude(opts));
+  isoAuditCmd
+    .command("sign")
+    .description("Sign a concluded audit via org approval (human ceo/approver only)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--plan <id>", "Plan id (IAP-...)")
+    .option("--approver <name>", "Approver name to record")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditSign(opts));
+  isoAuditCmd
+    .command("eligibility")
+    .description("Check an auditor's independence and competence before planning")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Standard to audit")
+    .option("--auditor <operator-id>", "Auditor operator id")
+    .option("--scope <ids>", "Comma-separated control ids")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditEligibility(opts));
+  isoAuditCmd
+    .command("programme")
+    .description("Check whether every requirement was audited within the window")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Standard")
+    .option("--framework <name>", "iso | financial | jsox")
+    .option("--months <n>", "Window in months (default 12)")
+    .option("--strict", "Exit 1 when a requirement was never audited")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditProgramme(opts));
+  isoAuditCmd
+    .command("apply-precheck")
+    .description("Propose findings from A+B pre-check (does not set major or not_applicable)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--plan <id>", "Plan id (IAP-...)")
+    .option("--operator-id <id>", "Auditor operator id")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditApplyPrecheck(opts));
+  isoAuditCmd
+    .command("brief")
+    .description("Explain one requirement from paraphrase + pre-check gaps (does not judge)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--plan <id>", "Plan id (IAP-...)")
+    .option("--req <id>", "Requirement id (REQ-...)")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditBrief(opts));
+  isoAuditCmd
+    .command("follow-up")
+    .description("Follow up nonconformities and corrective-action effectiveness")
+    .option("--tenant <id>", "Tenant id")
+    .option("--plan <id>", "Plan id (IAP-...)")
+    .option("--json", "JSON output")
+    .action((opts) => runIsoAuditFollowUp(opts));
   isoAuditCmd
     .command("report")
-    .description("Print management report from the latest (or --run-id) audit log")
+    .description("Print management report from the latest (or --run-id) pre-check log")
     .option("--tenant <id>", "Tenant id")
     .option("--run-id <id>", "Audit run id (IAR-...)")
     .option("--json", "JSON output")

@@ -115,6 +115,15 @@ competences:
       ROLE-MGMT: 2
       ROLE-ADMIN: 2
 
+  # 監査を実施する者の力量。9.2 は監査員の客観性・公平性を求めるため、
+  # 内部監査計画の作成時（orgos iso audit plan create）に評価の有無が確認される。
+  - id: CMP-10
+    title: 内部監査の実施（ISO 19011 · 監査計画・所見・報告）
+    iso_clause: "9.2"
+    reg_refs: [REG-016]
+    required:
+      ROLE-ADMIN: 2
+
 assessments:
   # --- EMP-001 段燕燕（代表取締役） ---
   - employee_id: EMP-001
@@ -298,3 +307,16 @@ assessments:
     level: 0
     assessed_on: "2026-08-29"
     basis: ISO マネジメントシステムの実務経験なし。内部監査員研修が必要
+
+  # --- 内部監査員の力量（CMP-10） ---
+  # 現時点で内部監査員研修を修了した者はいない。研修修了後に評価を追加する。
+  - employee_id: EMP-001
+    competence_id: CMP-10
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 内部監査員研修は未受講。ISO 19011 に基づく監査の実施経験なし
+  - employee_id: EMP-004
+    competence_id: CMP-10
+    level: 0
+    assessed_on: "2026-08-29"
+    basis: 内部監査員研修は未受講（TRN-008 で 2026-09-30 に受講予定）

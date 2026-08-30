@@ -26,6 +26,11 @@
 |-------|---------|
 | iso_internal_audit_run | [steward/core/skills/iso_internal_audit_run.md](../skills/iso_internal_audit_run.md) |
 | iso_internal_audit_report | [steward/core/skills/iso_internal_audit_report.md](../skills/iso_internal_audit_report.md) |
+| iso_audit_brief | [steward/core/skills/iso_audit_brief.md](../skills/iso_audit_brief.md) |
+| iso_audit_follow_up | [steward/core/skills/iso_audit_follow_up.md](../skills/iso_audit_follow_up.md) |
+| jsox_scope | [steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_scope.md](../../jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_scope.md) |
+| jsox_gaps | [steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_gaps.md](../../jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_gaps.md) |
+| jsox_evaluate | [steward/jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_evaluate.md](../../jurisdiction-packs/JP/modules/jp_jsox/skills/jsox_evaluate.md) |
 | internal_audit_scope | [steward/core/skills/internal_audit_scope.md](../skills/internal_audit_scope.md) |
 
 ## CLI
@@ -35,6 +40,11 @@ orgos iso catalog
 orgos iso maps verify
 orgos iso audit run
 orgos iso audit report
+orgos iso audit plan create
+orgos iso audit apply-precheck
+orgos iso audit brief
+orgos iso audit follow-up
+orgos operations jsox status
 orgos skills run iso-internal-audit-run
 orgos controls for-agent internal_audit
 ```

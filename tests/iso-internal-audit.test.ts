@@ -15,7 +15,7 @@ import {
   loadIsoInternalAuditRuns,
   persistIsoInternalAuditRun,
 } from "../src/lib/iso-internal-audit.js";
-import { loadEnabledIsoIds } from "../src/lib/tenant-standards.js";
+import { loadApplicableIsoIds, loadEnabledIsoIds } from "../src/lib/tenant-standards.js";
 
 describe("ISO catalog maps", () => {
   it("every available standard has a loadable map", () => {
@@ -71,7 +71,7 @@ describe("ISO internal audit loop", () => {
     expect(run.actor).toBe("internal_audit");
     // Audits exactly what the tenant enabled — not a fixed list, since the set
     // of certification targets is the tenant's decision.
-    expect(run.standards).toEqual(loadEnabledIsoIds());
+    expect(run.standards).toEqual(loadApplicableIsoIds());
     expect(run.standards.length).toBeGreaterThan(0);
     expect(run.findings.length).toBeGreaterThan(0);
     expect(run.summary.total).toBe(run.findings.length);
@@ -97,10 +97,29 @@ describe("ISO internal audit loop", () => {
     expect(md).toContain(second.id);
   });
 
+  it("carries the gaps the verdict did not come from", () => {
+    const run = evaluateIsoInternalAudit();
+    // A control can owe several things at once; the deciding gap must not be
+    // the only one the operator is told about.
+    const withOthers = run.findings.filter((f) => f.other_gaps.length > 0);
+    for (const finding of withOthers) {
+      expect(finding.other_gaps.map((g) => g.gap_type)).not.toContain(finding.gap_type);
+      expect(finding.improvement).toContain("あわせて");
+    }
+    for (const finding of run.findings) {
+      if (finding.verdict === "conform") expect(finding.other_gaps).toEqual([]);
+    }
+
+    const md = formatIsoInternalAuditReport(run);
+    if (run.findings.some((f) => f.verdict === "nonconformity")) {
+      expect(md).toContain("| CTL | 規格 | 内容 | 併記 | 担当 |");
+    }
+  });
+
   it("disabled standard is reported as map_missing", () => {
-    const run = evaluateIsoInternalAudit({ iso: "ISO-14001" });
+    const run = evaluateIsoInternalAudit({ iso: "ISO-42001" });
     expect(run.standards).toEqual([]);
-    expect(run.findings.some((f) => f.verdict === "map_missing" && f.standard === "ISO-14001")).toBe(
+    expect(run.findings.some((f) => f.verdict === "map_missing" && f.standard === "ISO-42001")).toBe(
       true
     );
   });

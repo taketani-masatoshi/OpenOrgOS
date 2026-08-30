@@ -26,7 +26,7 @@ import { findIsoCatalogEntry, listIsoCatalogEntries } from "./iso-catalog.js";
 import { appendJsonl, loadJsonl } from "./jsonl-store.js";
 import { getClock, getIdGenerator } from "./runtime-context.js";
 import { getTenantId, tenantDataPath } from "./tenant.js";
-import { loadEnabledIsoIds } from "./tenant-standards.js";
+import { loadApplicableIsoIds, loadEnabledIsoIds } from "./tenant-standards.js";
 import { getDocsDir, writeMarkdownReport, writeTrackedFile } from "./utils.js";
 
 export const ISO_INTERNAL_AUDIT_LOG_REL = "data/compliance/iso-internal-audit.jsonl";
@@ -45,7 +45,7 @@ export function isoInternalAuditLatestReportPath(): string {
 }
 
 function enabledStandards(filter?: string): string[] {
-  const enabled = loadEnabledIsoIds();
+  const enabled = filter ? loadEnabledIsoIds() : loadApplicableIsoIds();
   if (!filter) return enabled;
   return enabled.filter((id) => id === filter);
 }
@@ -75,9 +75,7 @@ function pickVerdict(gaps: ControlGapRow[]): {
   return { verdict: "observation", gap: gaps[0] };
 }
 
-function improvementFor(gap: ControlGapRow | undefined, evidencePaths: string[]): string {
-  if (!gap) return "現行の証拠パスを維持し、次回ランで再確認する。";
-  const paths = evidencePaths.join(" · ") || "(パス未設定)";
+function improvementForGap(gap: ControlGapRow, paths: string): string {
   switch (gap.gap_type) {
     case "maturity_below_target":
       return `成熟度を目標まで上げ、運用記録を ${paths} に残す。`;
@@ -85,11 +83,28 @@ function improvementFor(gap: ControlGapRow | undefined, evidencePaths: string[])
       return `証拠ファイルを用意する: ${paths}`;
     case "evidence_stale":
       return "最終レビューから1年超。記録を見直して last_reviewed を更新する。";
-    case "reg_not_effective":
-      return gap.detail;
+    case "record_invalid":
+      return `記録の内容を仕様に合わせる: ${paths}`;
     default:
       return gap.detail;
   }
+}
+
+/**
+ * The deciding gap leads, the rest follow. Without them a "form is missing"
+ * finding hides that the register behind it is also malformed, and the operator
+ * comes back a second time.
+ */
+function improvementFor(
+  gap: ControlGapRow | undefined,
+  others: ControlGapRow[],
+  evidencePaths: string[],
+): string {
+  if (!gap) return "現行の証拠パスを維持し、次回ランで再確認する。";
+  const paths = evidencePaths.join(" · ") || "(パス未設定)";
+  const lead = improvementForGap(gap, paths);
+  if (others.length === 0) return lead;
+  return `${lead} あわせて: ${others.map((g) => improvementForGap(g, paths)).join(" / ")}`;
 }
 
 function summarize(findings: IsoInternalAuditFinding[]): IsoInternalAuditSummary {
@@ -124,6 +139,7 @@ export function evaluateIsoInternalAudit(opts: { iso?: string } = {}): IsoIntern
         title: `${opts.iso} はテナントで無効`,
         verdict: "map_missing",
         detail: "standards.yaml で enabled: true になっていない",
+        other_gaps: [],
         primary_agent: "internal_audit",
         improvement: `${opts.iso} を有効化するか、有効な規格で監査する。`,
       },
@@ -155,6 +171,7 @@ export function evaluateIsoInternalAudit(opts: { iso?: string } = {}): IsoIntern
         title: `${standard} が ISO カタログにない`,
         verdict: "map_missing",
         detail: "steward/standards/iso/catalog.yaml に id が無い",
+        other_gaps: [],
         primary_agent: "internal_audit",
         improvement: "カタログへ規格を追加し、control-map.yaml を置く。",
       });
@@ -169,6 +186,7 @@ export function evaluateIsoInternalAudit(opts: { iso?: string } = {}): IsoIntern
         title: `${standard} は未提供（coming_soon）`,
         verdict: "map_missing",
         detail: "カタログ登録のみでパックが無い。監査対象にできない",
+        other_gaps: [],
         primary_agent: "internal_audit",
         improvement: `orgos iso scaffold ${standard} でパック雛形を作り、領域統制を書く。`,
       });
@@ -187,6 +205,7 @@ export function evaluateIsoInternalAudit(opts: { iso?: string } = {}): IsoIntern
         title: `${standard} の機械可読マップがない`,
         verdict: "map_missing",
         detail: `${mapPath} が無い、または統制・core_bindings が 0 件`,
+        other_gaps: [],
         primary_agent: "internal_audit",
         improvement: "core_bindings と領域統制を持つ control-map.yaml をパックに追加する。",
       });
@@ -211,6 +230,7 @@ export function evaluateIsoInternalAudit(opts: { iso?: string } = {}): IsoIntern
     seen.add(ctrl.id);
     const ctrlGaps = gaps.get(ctrl.id) ?? [];
     const picked = pickVerdict(ctrlGaps);
+    const otherGaps = ctrlGaps.filter((g) => g !== picked.gap);
     const clause = matchedRef?.clause ?? "—";
     findings.push({
       priority: ctrl.priority,
@@ -224,8 +244,9 @@ export function evaluateIsoInternalAudit(opts: { iso?: string } = {}): IsoIntern
         picked.verdict === "conform"
           ? `証拠・成熟度は目標 ${ctrl.target_maturity} に対し ${ctrl.tenant_maturity}`
           : (picked.gap?.detail ?? "ギャップあり"),
+      other_gaps: otherGaps.map((g) => ({ gap_type: g.gap_type, detail: g.detail })),
       primary_agent: ctrl.primary_agent,
-      improvement: improvementFor(picked.gap, ctrl.evidence_paths),
+      improvement: improvementFor(picked.gap, otherGaps, ctrl.evidence_paths),
     });
   }
 
@@ -276,6 +297,11 @@ export function persistIsoInternalAuditRun(
   return { logPath, reportPaths };
 }
 
+function describeOtherGaps(finding: IsoInternalAuditFinding): string {
+  if (finding.other_gaps.length === 0) return "—";
+  return finding.other_gaps.map((g) => `${g.gap_type}: ${g.detail}`).join(" · ");
+}
+
 export function formatIsoInternalAuditReport(
   run: IsoInternalAuditRun,
   previous?: IsoInternalAuditRun
@@ -301,11 +327,13 @@ export function formatIsoInternalAuditReport(
   const improvements = run.findings.filter((f) => f.verdict !== "conform");
 
   const lines = [
-    `# ISO 内部監査レポート — ${run.id}`,
+    `# ISO 適合性の事前検査 — ${run.id}`,
     "",
     `**日時:** ${run.timestamp}`,
     `**テナント:** ${run.tenant}`,
     `**実施:** ${run.actor}（決定論検査 · 人間署名ではない）`,
+    "**位置づけ:** 本検査は ISO 19011 の内部監査ではない。証拠の存在と記録の仕様適合を機械的に確認するもので、" +
+      "要求事項ごとの判定は `orgos iso audit plan create` 以降で監査員が行う。",
     `**対象規格:** ${run.standards.join(", ") || "（有効 ISO なし）"}`,
     "",
     "## 現状",
@@ -343,10 +371,12 @@ export function formatIsoInternalAuditReport(
   if (problems.length === 0) {
     lines.push("不適合なし。", "");
   } else {
-    lines.push("| CTL | 規格 | 内容 | 担当 |");
-    lines.push("|-----|------|------|------|");
+    lines.push("| CTL | 規格 | 内容 | 併記 | 担当 |");
+    lines.push("|-----|------|------|------|------|");
     for (const f of problems) {
-      lines.push(`| ${f.control_id} | ${f.standard} ${f.clause} | ${f.detail} | ${f.primary_agent} |`);
+      lines.push(
+        `| ${f.control_id} | ${f.standard} ${f.clause} | ${f.detail} | ${describeOtherGaps(f)} | ${f.primary_agent} |`,
+      );
     }
     lines.push("");
   }
@@ -355,10 +385,10 @@ export function formatIsoInternalAuditReport(
   if (issues.length === 0) {
     lines.push("観察・マップ欠落なし。", "");
   } else {
-    lines.push("| CTL | 種別 | 内容 |");
-    lines.push("|-----|------|------|");
+    lines.push("| CTL | 種別 | 内容 | 併記 |");
+    lines.push("|-----|------|------|------|");
     for (const f of issues) {
-      lines.push(`| ${f.control_id} | ${f.verdict} | ${f.detail} |`);
+      lines.push(`| ${f.control_id} | ${f.verdict} | ${f.detail} | ${describeOtherGaps(f)} |`);
     }
     lines.push("");
   }

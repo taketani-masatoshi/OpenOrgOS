@@ -87,7 +87,7 @@ sessions:
 
   - id: TRN-008
     title: ISO 21401 内部監査員養成（外部研修）
-    competence_ids: [CMP-09]
+    competence_ids: [CMP-09, CMP-10]
     method: external
     duration_min: 480
     planned_on: "2026-09-30"

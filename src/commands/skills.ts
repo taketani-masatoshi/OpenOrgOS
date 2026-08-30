@@ -177,6 +177,18 @@ export const SKILL_COMMANDS = [
     description: "監査ログから経営向け適合レポート",
   },
   {
+    id: "iso-audit-brief",
+    skill: "iso_audit_brief",
+    agent: "Internal Audit",
+    description: "要求事項の言い換えと事前検査ギャップの解説（判定しない）",
+  },
+  {
+    id: "iso-audit-follow-up",
+    skill: "iso_audit_follow_up",
+    agent: "Internal Audit",
+    description: "不適合のフォローアップと是正の有効性",
+  },
+  {
     id: "company-events-chain-verify",
     skill: "company_events_chain_verify",
     agent: "Records Audit",
@@ -632,6 +644,9 @@ export interface SkillRunOptions {
   case?: string;
   contactRef?: string;
   iso?: string;
+  operatorId?: string;
+  plan?: string;
+  req?: string;
 }
 
 async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promise<void> {
@@ -941,6 +956,16 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     case "iso-internal-audit-report": {
       const { runIsoAuditReport } = await import("./iso-audit.js");
       runIsoAuditReport({ json: opts.json, runId: opts.id });
+      break;
+    }
+    case "iso-audit-brief": {
+      const { runIsoAuditBrief } = await import("./iso-audit-plan.js");
+      runIsoAuditBrief({ json: opts.json, plan: opts.plan, req: opts.req ?? opts.id });
+      break;
+    }
+    case "iso-audit-follow-up": {
+      const { runIsoAuditFollowUp } = await import("./iso-audit-plan.js");
+      runIsoAuditFollowUp({ json: opts.json, plan: opts.plan ?? opts.id });
       break;
     }
     case "company-events-chain-verify": {

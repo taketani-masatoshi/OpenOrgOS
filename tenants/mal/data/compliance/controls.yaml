@@ -1,5 +1,5 @@
 version: "1"
-as_of: 2026-08-29
+as_of: 2026-08-30
 controls:
   - id: CTL-CORE-scope
     maturity: L2
@@ -51,6 +51,24 @@ controls:
     maturity: L0
   - id: CTL-13485-8.2.3
     maturity: L0
+  - id: CTL-14001-6.1.2
+    maturity: L0
+  - id: CTL-14001-6.1.3
+    maturity: L0
+  - id: CTL-14001-8.2
+    maturity: L0
+  - id: CTL-14001-9.1.2
+    maturity: L0
+  - id: CTL-20000-8.3.3
+    maturity: L0
+  - id: CTL-20000-8.6.1
+    maturity: L0
+  - id: CTL-20000-8.5.1
+    maturity: L0
+  - id: CTL-20000-8.2.6
+    maturity: L0
+  - id: CTL-20000-8.7.1
+    maturity: L0
   - id: CTL-21401-8.1
     maturity: L2
     last_reviewed: 2026-06-28
@@ -81,6 +99,24 @@ controls:
     maturity: L0
   - id: CTL-21401-worker-welfare
     maturity: L0
+  - id: CTL-22301-8.2.2
+    maturity: L0
+  - id: CTL-22301-8.4
+    maturity: L0
+  - id: CTL-22301-8.4.2
+    maturity: L0
+  - id: CTL-22301-8.5
+    maturity: L0
+  - id: CTL-27001-6.2
+    maturity: L0
+  - id: CTL-27001-A.5.1
+    maturity: L0
+  - id: CTL-27001-A.5.10
+    maturity: L0
+  - id: CTL-27001-A.8.1
+    maturity: L0
+  - id: CTL-CORE-privacy
+    maturity: L0
   - id: CTL-37000-P-01
     maturity: L0
   - id: CTL-37000-P-02
@@ -102,4 +138,36 @@ controls:
   - id: CTL-37000-P-10
     maturity: L0
   - id: CTL-37000-P-11
+    maturity: L0
+  - id: CTL-37001-4.5
+    maturity: L0
+  - id: CTL-37001-8.2
+    maturity: L0
+  - id: CTL-37001-8.7
+    maturity: L0
+  - id: CTL-37001-8.9
+    maturity: L0
+  - id: CTL-37001-8.10
+    maturity: L0
+  - id: CTL-45001-6.1.2
+    maturity: L0
+  - id: CTL-45001-5.4
+    maturity: L0
+  - id: CTL-45001-8.1.4
+    maturity: L0
+  - id: CTL-45001-8.2
+    maturity: L0
+  - id: CTL-45001-10.2.1
+    maturity: L0
+  - id: CTL-50001-6.3
+    maturity: L0
+  - id: CTL-50001-6.5
+    maturity: L0
+  - id: CTL-50001-6.4
+    maturity: L0
+  - id: CTL-50001-8.2
+    maturity: L0
+  - id: CTL-9001-4.4
+    maturity: L0
+  - id: CTL-9001-8.7
     maturity: L0
