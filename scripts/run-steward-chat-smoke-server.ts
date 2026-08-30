@@ -18,6 +18,40 @@ import {
 import { setTenantId } from "../src/lib/tenant.js";
 import { pushQueueEvent } from "../src/lib/queue-db.js";
 import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
+import { writeFileSync } from "node:fs";
+import { ROOT_DIR } from "../src/lib/tenant.js";
+
+/**
+ * `bank-accounts.yaml` is L2 and therefore gitignored, so a fresh checkout has
+ * none and every money surface answers "file missing". The committed example is
+ * a template full of REPLACE_ME, so seed an explicit demo account instead: the
+ * digits are fake and what is under test is that they come back masked.
+ */
+const DEMO_BANK_ACCOUNTS = [
+  "entity: Demo Corp",
+  'as_of: "2026-08-01"',
+  "status: active",
+  "accounts:",
+  "  - id: BANK-001",
+  "    bank: デモ銀行",
+  '    bank_code: "0009"',
+  "    branch: デモ支店",
+  '    branch_code: "001"',
+  "    account_type: 普通",
+  '    account_number: "1234567"',
+  "    holder: Demo Corp",
+  "    purpose: デモ用",
+  "    ib_enabled: true",
+  "    notes: null",
+  "",
+].join("\n");
+
+function ensureDemoBankAccounts(): void {
+  const target = join(ROOT_DIR, "tenants/demo/data/finance/bank-accounts.yaml");
+  if (existsSync(target)) return;
+  writeFileSync(target, DEMO_BANK_ACCOUNTS, "utf-8");
+  console.log(`seeded demo bank accounts at ${target}`);
+}
 
 async function seedDemo(): Promise<void> {
   const r = spawnSync("node", ["--import", "tsx", "scripts/seed-demo-wire-skeleton.ts"], {
@@ -44,11 +78,19 @@ async function main(): Promise<void> {
   process.env.ORGOS_SESSION_PERSIST = process.env.ORGOS_SESSION_PERSIST ?? "0";
   process.env.ORGOS_CSRF = process.env.ORGOS_CSRF ?? "0";
   process.env.ORGOS_RATE_LIMIT = process.env.ORGOS_RATE_LIMIT ?? "0";
+  // With a webhook secret present the endpoint enforces signatures, so the E2E
+  // suite exercises the refusal that production depends on instead of the
+  // permissive stub path.
+  process.env.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "whsec_e2e_smoke";
+  // The E2E operator is the platform operator here, so platform surfaces are
+  // exercised for real instead of only ever answering 403.
+  process.env.ORGOS_PLATFORM_OPERATORS = process.env.ORGOS_PLATFORM_OPERATORS ?? "OP-001";
 
   if (process.env.STEWARD_CHAT_E2E_SEED !== "0") {
     await seedDemo();
     setTenantId(process.env.ORGOS_TENANT ?? "demo");
     ensureLedgerDemoChartOfAccounts();
+    ensureDemoBankAccounts();
     pushQueueEvent({
       type: "pipeline_daily_complete",
       ref: "daily",
@@ -58,6 +100,7 @@ async function main(): Promise<void> {
   } else {
     setTenantId(process.env.ORGOS_TENANT ?? "demo");
     ensureLedgerDemoChartOfAccounts();
+    ensureDemoBankAccounts();
   }
 
   let witnessHubs: DemoWitnessHubs | undefined;
