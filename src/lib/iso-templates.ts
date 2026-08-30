@@ -3,10 +3,12 @@ import { dirname, join } from "node:path";
 import { STEWARD_ISO_DIR } from "./standards.js";
 import { findIsoCatalogEntry } from "./iso-catalog.js";
 import type { IsoCatalogEntry } from "../../schemas/iso-catalog.js";
+import { loadRecordSpecs } from "./iso-records.js";
 import { resolveTenantPath } from "./tenant.js";
 
 /** Where a pack keeps blank evidence forms. */
 export const PACK_TEMPLATES_DIR = "templates";
+export const CORE_TEMPLATES_DIR = join(STEWARD_ISO_DIR, "core", "templates");
 
 export type IsoTemplateAction = "create" | "keep";
 
@@ -48,25 +50,31 @@ export function planIsoTemplateSync(standard: string): IsoTemplatePlan {
       `${standard} は status=${entry.status} です。先に orgos iso scaffold ${standard} を実行してください。`,
     );
   }
-  const dir = packTemplatesDir(standard);
-  if (!existsSync(dir)) {
-    return {
-      standard,
-      target_dir: tenantEvidenceRel(standard),
-      evidence_forms: entry.evidence_forms,
-      rows: [],
-    };
-  }
   const targetRelDir = tenantEvidenceRel(standard);
-  const rows = readdirSync(dir)
-    .filter((f) => !f.startsWith("."))
-    .sort()
-    .map((file): IsoTemplatePlanRow => {
+  const sources = new Map<string, string>();
+  const packDir = packTemplatesDir(standard);
+  if (existsSync(packDir)) {
+    for (const file of readdirSync(packDir).filter((f) => !f.startsWith("."))) {
+      sources.set(file, join(packDir, file));
+    }
+  }
+  if (existsSync(CORE_TEMPLATES_DIR)) {
+    const specs = loadRecordSpecs(standard)?.records ?? [];
+    for (const spec of specs) {
+      if (spec.tenant_path) continue;
+      if (sources.has(spec.file)) continue;
+      const core = join(CORE_TEMPLATES_DIR, spec.file);
+      if (existsSync(core)) sources.set(spec.file, core);
+    }
+  }
+  const rows = [...sources.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([file, source]): IsoTemplatePlanRow => {
       const target_rel = `${targetRelDir}/${file}`;
       const target = resolveTenantPath(target_rel);
       return {
         file,
-        source: join(dir, file),
+        source,
         target,
         target_rel,
         action: existsSync(target) ? "keep" : "create",

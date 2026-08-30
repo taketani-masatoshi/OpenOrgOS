@@ -1,0 +1,53 @@
+# 記録の内容仕様
+#
+# 証拠ファイルが「ある」ことと、その記録が要求事項を満たすことは別問題である。
+# 語彙は閉じている（式言語は作らない）。ここで表現できない適合性は監査員の判断。
+#
+# 生成: node --import tsx scripts/generate-iso-registers.ts
+# 検査: orgos iso records check --iso ISO-37000
+
+version: "1"
+standard: ISO-37000
+records:
+  - file: internal-audit-plan.md
+    kind: markdown
+    title: 内部監査計画
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - 適用範囲
+          - 監査基準
+          - サンプリング方針
+        message: 必須の節が欠けています。
+  - file: management-review.md
+    kind: markdown
+    title: マネジメントレビュー議事
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - インプット
+          - アウトプット
+          - 決定事項
+        message: 必須の節が欠けています。
+  - file: principles-applicability.md
+    kind: markdown
+    title: ISO 37000 原則適用表
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+  - file: oversight-log.md
+    kind: markdown
+    title: 統治機関の監督記録
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - 開催
+          - 決議
+          - フォローアップ
+        message: 必須の節が欠けています。

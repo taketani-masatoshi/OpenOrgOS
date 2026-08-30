@@ -217,6 +217,7 @@ export type RegBindings = z.output<typeof regBindingsSchema>;
 export const CONTROL_GAP_TYPES = [
   "reg_not_effective",
   "doc_missing",
+  "record_invalid",
   "maturity_below_target",
   "evidence_stale",
 ] as const;

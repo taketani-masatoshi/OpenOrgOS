@@ -1,0 +1,156 @@
+# 要求事項レジスタ
+#
+# ⚠ statement は ISO 本文の転記ではなく、パック作成者による言い換えである。
+#   ISO 本文は再配布できないため、規格票と突合するまで source: paraphrase・
+#   verified_on 未記入のままとする。被覆検査の結果は「規格への網羅性」ではなく
+#   「私たちが想定した要求事項への網羅性」である。
+#
+# 生成: node --import tsx scripts/generate-iso-registers.ts
+# 検査: orgos iso requirements --iso ISO-37000
+
+version: "1"
+standard: ISO-37000
+requirements:
+  - id: REQ-37000-purpose-a
+    clause: purpose
+    statement: Purpose — 組織の目的の明示。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-01
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-purpose-b
+    clause: purpose
+    statement: Purpose — 組織の目的の明示の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-01
+  - id: REQ-37000-value_generation-a
+    clause: value_generation
+    statement: Value generation — 価値創出の計画。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-02
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-value_generation-b
+    clause: value_generation
+    statement: Value generation — 価値創出の計画の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-02
+  - id: REQ-37000-strategy-a
+    clause: strategy
+    statement: Strategy — 戦略と計画ゲート。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-03
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-strategy-b
+    clause: strategy
+    statement: Strategy — 戦略と計画ゲートの証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-03
+  - id: REQ-37000-oversight-a
+    clause: oversight
+    statement: Oversight — 統治機関の監督記録。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-04
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-oversight-b
+    clause: oversight
+    statement: Oversight — 統治機関の監督記録の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-04
+  - id: REQ-37000-accountability-a
+    clause: accountability
+    statement: Accountability — 権限の文書化と職務分離。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-05
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-accountability-b
+    clause: accountability
+    statement: Accountability — 権限の文書化と職務分離の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-05
+  - id: REQ-37000-stakeholder_engagement-a
+    clause: stakeholder_engagement
+    statement: Stakeholder engagement — ステークホルダーの識別。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-06
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-stakeholder_engagement-b
+    clause: stakeholder_engagement
+    statement: Stakeholder engagement — ステークホルダーの識別の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-06
+  - id: REQ-37000-leadership-a
+    clause: leadership
+    statement: Leadership — 倫理的で実効ある指導。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-07
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-leadership-b
+    clause: leadership
+    statement: Leadership — 倫理的で実効ある指導の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-07
+  - id: REQ-37000-data_and_decisions-a
+    clause: data_and_decisions
+    statement: Data and decisions — データに基づく意思決定。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-08
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-data_and_decisions-b
+    clause: data_and_decisions
+    statement: Data and decisions — データに基づく意思決定の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-08
+  - id: REQ-37000-risk_governance-a
+    clause: risk_governance
+    statement: Risk governance — リスクの統治。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-09
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-risk_governance-b
+    clause: risk_governance
+    statement: Risk governance — リスクの統治の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-09
+  - id: REQ-37000-social_responsibility-a
+    clause: social_responsibility
+    statement: Social responsibility — 社会的責任。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-10
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-social_responsibility-b
+    clause: social_responsibility
+    statement: Social responsibility — 社会的責任の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-10
+  - id: REQ-37000-viability_and_performance-a
+    clause: viability_and_performance
+    statement: Viability and performance over time — 存続と長期業績。認証規格ではなく自己宣言の経路で適用する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-11
+    note: guidance · self-declaration（ADR 0024）
+  - id: REQ-37000-viability_and_performance-b
+    clause: viability_and_performance
+    statement: Viability and performance over time — 存続と長期業績の証拠を保持し、適用／除外を原則適用表に記録する
+    source: paraphrase
+    controls:
+      - CTL-37000-P-11

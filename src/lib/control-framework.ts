@@ -16,10 +16,11 @@ import {
   type TenantControlStatus,
 } from "../../schemas/control-framework.js";
 import { isoCatalogFileSchema } from "../../schemas/iso-catalog.js";
+import { invalidRecordPaths } from "./iso-records.js";
 import { listEffectiveRegulations } from "./regulations.js";
 import { getIsoStandardDir, STEWARD_ISO_DIR, STEWARD_STANDARDS_DIR } from "./standards.js";
 import { JURISDICTION_PACKS_DIR } from "./steward-paths.js";
-import { loadEnabledIsoIds } from "./tenant-standards.js";
+import { loadApplicableIsoIds } from "./tenant-standards.js";
 import { getTenantDir, resolveTenantPath } from "./tenant.js";
 import { readYamlFile, writeYamlFile } from "./utils.js";
 
@@ -33,6 +34,12 @@ export function controlsFilePath(): string {
 }
 
 export function getControlMapPath(standardId: string): string {
+  if (standardId === "financial") {
+    return join(STEWARD_STANDARDS_DIR, "audit", "financial", "control-map.yaml");
+  }
+  if (standardId === "jsox") {
+    return join(JURISDICTION_PACKS_DIR, "JP", "modules", "jp_jsox", "control-map.yaml");
+  }
   return join(getIsoStandardDir(standardId), "control-map.yaml");
 }
 
@@ -132,7 +139,7 @@ function synthesizeCoreControls(enabled: string[]): ControlDefinition[] {
 }
 
 export function loadControlMaps(enabledIsoIds?: string[]): ControlDefinition[] {
-  const enabled = enabledIsoIds ?? loadEnabledIsoIds();
+  const enabled = enabledIsoIds ?? loadApplicableIsoIds();
   const byId = new Map<string, ControlDefinition>();
   for (const ctrl of synthesizeCoreControls(enabled)) {
     byId.set(ctrl.id, ctrl);
@@ -297,7 +304,7 @@ export function hasEvidenceForControl(ctrl: ControlDefinition): boolean {
 }
 
 export function listEffectiveControls(): EffectiveControl[] {
-  const enabledIso = loadEnabledIsoIds();
+  const enabledIso = loadApplicableIsoIds();
   const effectiveRegs = listEffectiveRegulations().filter((r) => r.effective);
   const effectiveRegIds = new Set(effectiveRegs.map((r) => r.id));
   const statusMap = loadTenantControlStatus();
@@ -328,6 +335,7 @@ export function controlsForAgent(agentId: AgentId): EffectiveControl[] {
 
 export function computeControlGaps(): ControlGapRow[] {
   const gaps: ControlGapRow[] = [];
+  const invalidRecords = invalidRecordPaths(loadApplicableIsoIds());
   const effectiveRegs = listEffectiveRegulations();
   const effectiveRegIds = new Set(
     effectiveRegs.filter((r) => r.effective).map((r) => r.id)
@@ -369,6 +377,22 @@ export function computeControlGaps(): ControlGapRow[] {
         title: ctrl.title,
         gap_type: "doc_missing",
         detail: `証拠パス未充足: ${describeMissingEvidence(ctrl).join(", ") || "(none)"}`,
+        primary_agent: ctrl.primary_agent,
+      });
+    }
+
+    // A record that exists but fails its spec is not evidence. Reported apart
+    // from doc_missing so the operator can tell "write it" from "fix it".
+    const faulty = ctrl.evidence_paths.filter((p) => invalidRecords.has(p));
+    if (faulty.length > 0) {
+      const detail = faulty
+        .map((p) => `${p}: ${invalidRecords.get(p)?.length ?? 0} 件の不備`)
+        .join(", ");
+      gaps.push({
+        control_id: ctrl.id,
+        title: ctrl.title,
+        gap_type: "record_invalid",
+        detail: `記録の内容が仕様を満たしません — ${detail}`,
         primary_agent: ctrl.primary_agent,
       });
     }
@@ -441,7 +465,7 @@ export function initTenantControlsFile(opts: { dryRun?: boolean } = {}): {
   path: string;
   count: number;
 } {
-  const enabledIso = loadEnabledIsoIds();
+  const enabledIso = loadApplicableIsoIds();
   const controls = loadControlMaps(enabledIso);
   const existing = loadTenantControlStatus();
   const entries: TenantControlStatus[] = controls.map((c) => {

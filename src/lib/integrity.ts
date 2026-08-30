@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { validateTowerHandoffs } from "./dispatch-tower/validate.js";
+import { collectIsoRecordIntegrityIssues } from "./iso-records-integrity.js";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { z } from "zod";
@@ -1087,6 +1088,12 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     issues.push(...collectAnalyticsIntegrityIssues());
   } catch (e) {
     push("error", "data/analytics/", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
+    issues.push(...collectIsoRecordIntegrityIssues());
+  } catch (e) {
+    push("error", "steward/standards/iso/", e instanceof Error ? e.message : String(e));
   }
 
   try {

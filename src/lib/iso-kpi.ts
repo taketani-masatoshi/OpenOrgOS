@@ -7,6 +7,11 @@ import { resolveTenantPath } from "./tenant.js";
  * nights. Intensity, not absolute volume, is what an accommodation can steer:
  * a busy month legitimately consumes more, so only per-guest-night figures are
  * comparable across periods.
+ *
+ * Structural validity of the log (columns, month format, duplicates, ranges) is
+ * declared in the pack's `records.yaml` and checked by `orgos iso records check`.
+ * This module computes; rows it cannot compute from are skipped rather than
+ * reported twice.
  */
 export const KPI_LOG_REL = "docs/compliance/iso/ISO-21401/kpi-log.csv";
 
@@ -36,7 +41,10 @@ export interface KpiIntensityRow extends KpiRow {
 export interface KpiReport {
   path: string;
   exists: boolean;
+  /** Only faults that stop the computation. Structural faults belong to records check. */
   errors: string[];
+  /** Rows dropped because they could not be parsed into a comparable month. */
+  skipped: number;
   rows: KpiIntensityRow[];
   totals: { occupancy_nights: number } & Record<KpiMetric, number>;
   average_intensity: Record<KpiMetric, number | null>;
@@ -44,19 +52,11 @@ export interface KpiReport {
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-function parseNumber(raw: string, column: string, month: string, errors: string[]): number {
-  const value = raw.trim();
+function parseNumber(raw: string): number | undefined {
+  const value = (raw ?? "").trim();
   if (value === "") return 0;
   const n = Number(value);
-  if (!Number.isFinite(n)) {
-    errors.push(`${month}: ${column} が数値ではありません（"${value}"）`);
-    return 0;
-  }
-  if (n < 0) {
-    errors.push(`${month}: ${column} が負の値です（${n}）`);
-    return 0;
-  }
-  return n;
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
 }
 
 function emptyMetrics<T>(value: T): Record<KpiMetric, T> {
@@ -68,10 +68,7 @@ function ratio(current: number | null, previous: number | null): number | null {
   return (current - previous) / previous;
 }
 
-/**
- * Read and check the KPI log. Structural problems are collected rather than
- * thrown so an operator sees every fault in one pass.
- */
+/** Read the KPI log and derive per-guest-night intensity and month-on-month change. */
 export function buildKpiReport(relPath: string = KPI_LOG_REL): KpiReport {
   const path = resolveTenantPath(relPath);
   const errors: string[] = [];
@@ -81,6 +78,7 @@ export function buildKpiReport(relPath: string = KPI_LOG_REL): KpiReport {
       path: relPath,
       exists: false,
       errors: [`${relPath} がありません。orgos iso templates ISO-21401 --write で配置してください。`],
+      skipped: 0,
       rows: [],
       totals,
       average_intensity: emptyMetrics(null),
@@ -88,41 +86,42 @@ export function buildKpiReport(relPath: string = KPI_LOG_REL): KpiReport {
   }
 
   const { header, rows } = parseCsv(readFileSync(path, "utf-8"));
-  for (const column of KPI_COLUMNS) {
-    if (!header.includes(column)) errors.push(`列 ${column} がありません。`);
-  }
   const index = (c: string): number => header.indexOf(c);
 
   const seen = new Set<string>();
   const parsed: KpiRow[] = [];
+  let skipped = 0;
   for (const raw of rows) {
     const month = (raw[index("month")] ?? "").trim();
     if (month === "") continue;
-    if (!MONTH.test(month)) {
-      errors.push(`month は YYYY-MM 形式で記入してください（"${month}"）`);
+    if (!MONTH.test(month) || seen.has(month)) {
+      skipped += 1;
       continue;
     }
-    if (seen.has(month)) {
-      errors.push(`${month}: 同じ月が重複しています。`);
+    const nights = parseNumber(raw[index("occupancy_nights")] ?? "");
+    const metrics = emptyMetrics(0);
+    let usable = nights !== undefined;
+    for (const metric of KPI_METRICS) {
+      const value = parseNumber(raw[index(metric)] ?? "");
+      if (value === undefined) usable = false;
+      else metrics[metric] = value;
+    }
+    if (!usable) {
+      skipped += 1;
       continue;
     }
     seen.add(month);
-    const nights = parseNumber(raw[index("occupancy_nights")] ?? "", "occupancy_nights", month, errors);
-    const metrics = emptyMetrics(0);
-    for (const metric of KPI_METRICS) {
-      metrics[metric] = parseNumber(raw[index(metric)] ?? "", metric, month, errors);
-    }
-    if (nights === 0 && KPI_METRICS.some((m) => metrics[m] > 0)) {
-      errors.push(`${month}: 宿泊人泊が 0 なのに使用量が記録されています。原単位を計算できません。`);
-    }
     const notes = (raw[index("notes")] ?? "").trim();
-    parsed.push({ month, occupancy_nights: nights, ...metrics, notes: notes || undefined });
+    parsed.push({ month, occupancy_nights: nights as number, ...metrics, notes: notes || undefined });
   }
 
   parsed.sort((a, b) => a.month.localeCompare(b.month));
 
   const out: KpiIntensityRow[] = [];
   for (const [i, row] of parsed.entries()) {
+    if (row.occupancy_nights === 0 && KPI_METRICS.some((m) => row[m] > 0)) {
+      errors.push(`${row.month}: 宿泊人泊が 0 なのに使用量が記録されています。原単位を計算できません。`);
+    }
     const intensity = emptyMetrics<number | null>(null);
     for (const metric of KPI_METRICS) {
       intensity[metric] = row.occupancy_nights > 0 ? row[metric] / row.occupancy_nights : null;
@@ -143,11 +142,7 @@ export function buildKpiReport(relPath: string = KPI_LOG_REL): KpiReport {
       totals.occupancy_nights > 0 ? totals[metric] / totals.occupancy_nights : null;
   }
 
-  if (out.length === 0 && errors.length === 0) {
-    errors.push(`${relPath} に測定記録がありません。月次で記入してください。`);
-  }
-
-  return { path: relPath, exists: true, errors, rows: out, totals, average_intensity };
+  return { path: relPath, exists: true, errors, skipped, rows: out, totals, average_intensity };
 }
 
 const METRIC_LABELS: Record<KpiMetric, string> = {
@@ -174,7 +169,16 @@ export function formatKpiReport(report: KpiReport): string {
     for (const e of report.errors) lines.push(`- ✗ ${e}`);
     lines.push("");
   }
-  if (report.rows.length === 0) return lines.join("\n");
+  if (report.skipped > 0) {
+    lines.push(
+      `${report.skipped} 行を集計から除外しました。構造の不備は orgos iso records check --iso ISO-21401 で確認してください。`,
+      "",
+    );
+  }
+  if (report.rows.length === 0) {
+    lines.push("集計できる測定記録がありません。");
+    return lines.join("\n");
+  }
 
   lines.push("## 原単位（1人泊あたり）", "");
   lines.push(`| 月 | 人泊 | ${KPI_METRICS.map((m) => METRIC_LABELS[m]).join(" | ")} |`);

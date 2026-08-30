@@ -1,0 +1,226 @@
+# ISO 21401 — 要求事項レジスタ
+#
+# 統制より細かい単位。「リスクアプローチの統制がある」ことと
+# 「6.1 の各要求が満たされている」ことは別であり、箇条レベルの被覆では
+# 個々の shall が落ちていても見えない。
+#
+# ⚠ statement は ISO 本文の転記ではなく、パック作成者による言い換えである。
+#   ISO 本文は再配布できないため、規格票と突合するまで source: paraphrase・
+#   verified_on 未記入のままとする。この状態での被覆検査の結果は
+#   「規格への網羅性」ではなく「私たちが想定した要求事項への網羅性」である。
+#
+# 検査: orgos iso requirements --iso ISO-21401
+# 未検証の一覧: orgos iso requirements --iso ISO-21401 --unverified
+
+version: "1"
+standard: ISO-21401
+
+requirements:
+  # --- 4 組織の状況 ---
+  - id: REQ-21401-4.1-a
+    clause: "4.1"
+    statement: マネジメントシステムの意図した成果に影響する外部及び内部の課題を決定する
+    source: paraphrase
+    controls: [CTL-CORE-scope]
+  - id: REQ-21401-4.2-a
+    clause: "4.2"
+    statement: 利害関係者及びその関連するニーズ・期待を決定する
+    source: paraphrase
+    controls: [CTL-CORE-scope]
+  - id: REQ-21401-4.3-a
+    clause: "4.3"
+    statement: マネジメントシステムの適用範囲を決定し、文書化した情報として維持する
+    source: paraphrase
+    controls: [CTL-CORE-scope]
+
+  # --- 5 リーダーシップ ---
+  - id: REQ-21401-5.1-a
+    clause: "5.1"
+    statement: トップマネジメントはマネジメントシステムに関するリーダーシップ及びコミットメントを実証する
+    source: paraphrase
+    controls: [CTL-CORE-policy]
+  - id: REQ-21401-5.2-a
+    clause: "5.2"
+    statement: 環境・社会文化・経済の持続可能性を含む方針を確立し、文書化した情報として維持する
+    source: paraphrase
+    controls: [CTL-CORE-policy]
+  - id: REQ-21401-5.2-b
+    clause: "5.2"
+    statement: 方針を組織内に伝達し、必要に応じて利害関係者が入手できるようにする
+    source: paraphrase
+    controls: [CTL-CORE-policy, CTL-21401-guest-communication]
+  - id: REQ-21401-5.3-a
+    clause: "5.3"
+    statement: 関連する役割に対して責任及び権限を割り当て、伝達する
+    source: paraphrase
+    controls: [CTL-CORE-policy]
+
+  # --- 6 計画 ---
+  - id: REQ-21401-6.1-a
+    clause: "6.1"
+    statement: 環境・社会文化・経済の各側面についてリスク及び機会を決定する
+    source: paraphrase
+    controls: [CTL-CORE-risk-approach, CTL-21401-env-aspects]
+  - id: REQ-21401-6.1-b
+    clause: "6.1"
+    statement: 施設の活動に伴う環境側面を特定し、著しい環境側面を決定する基準を定めて適用する
+    source: paraphrase
+    controls: [CTL-21401-env-aspects]
+  - id: REQ-21401-6.1-c
+    clause: "6.1"
+    statement: リスク及び機会への取組みを計画し、その結果を文書化した情報として保持する
+    source: paraphrase
+    controls: [CTL-CORE-risk-approach]
+  - id: REQ-21401-6.2-a
+    clause: "6.2"
+    statement: 関連する機能・階層で持続可能性の目標を確立し、測定可能な形で文書化する
+    source: paraphrase
+    controls: [CTL-CORE-objectives-monitoring]
+  - id: REQ-21401-6.2-b
+    clause: "6.2"
+    statement: 目標の達成計画（実施事項・資源・責任者・期限・評価方法）を決定する
+    source: paraphrase
+    controls: [CTL-CORE-objectives-monitoring]
+
+  # --- 7 支援 ---
+  - id: REQ-21401-7.1-a
+    clause: "7.1"
+    statement: マネジメントシステムに必要な資源を決定し、提供する
+    source: paraphrase
+    controls: [CTL-CORE-operation]
+  - id: REQ-21401-7.2-a
+    clause: "7.2"
+    statement: 業務を行う人に必要な力量を決定し、教育訓練等によって力量を確保する
+    source: paraphrase
+    controls: [CTL-CORE-competence]
+  - id: REQ-21401-7.2-b
+    clause: "7.2"
+    statement: 力量の証拠として適切な文書化した情報を保持する
+    source: paraphrase
+    controls: [CTL-CORE-competence]
+  - id: REQ-21401-7.3-a
+    clause: "7.3"
+    statement: 従業者が方針・自らの貢献・不適合の意味を認識するようにする
+    source: paraphrase
+    controls: [CTL-CORE-competence, CTL-21401-worker-welfare]
+  - id: REQ-21401-7.4-a
+    clause: "7.4"
+    statement: 内部及び外部のコミュニケーション（対象・時期・方法・実施者）を決定する
+    source: paraphrase
+    controls: [CTL-21401-guest-communication]
+  - id: REQ-21401-7.5-a
+    clause: "7.5"
+    statement: 規格が要求する文書化した情報及び有効性に必要と判断した情報を維持する
+    source: paraphrase
+    controls: [CTL-CORE-doc-control]
+  - id: REQ-21401-7.5-b
+    clause: "7.5"
+    statement: 文書化した情報の作成・更新・管理（配付・アクセス・保管・変更管理）を行う
+    source: paraphrase
+    controls: [CTL-CORE-doc-control]
+
+  # --- 8 運用 ---
+  - id: REQ-21401-8.1-a
+    clause: "8.1"
+    statement: 要求事項を満たすために必要なプロセスを計画し、実施し、管理する
+    source: paraphrase
+    controls: [CTL-CORE-operation, CTL-21401-8.1]
+  - id: REQ-21401-8.1-b
+    clause: "8.1"
+    statement: ゲスト及び従業者の健康・衛生・安全を確保する運用管理を行う
+    source: paraphrase
+    controls: [CTL-21401-hygiene, CTL-21401-guest-safety]
+  - id: REQ-21401-8.1-c
+    clause: "8.1"
+    statement: エネルギー・水の使用を管理し、削減の取組みを実施する
+    source: paraphrase
+    controls: [CTL-21401-env-resources]
+  - id: REQ-21401-8.1-d
+    clause: "8.1"
+    statement: 廃棄物の発生抑制・分別・適正処理を行う
+    source: paraphrase
+    controls: [CTL-21401-env-waste]
+  - id: REQ-21401-8.1-e
+    clause: "8.1"
+    statement: 持続可能性の基準を含む調達を行い、供給者を評価する
+    source: paraphrase
+    controls: [CTL-21401-env-purchasing]
+  - id: REQ-21401-8.1-f
+    clause: "8.1"
+    statement: 地域社会との関係を構築し、地域の経済に貢献する取組みを実施する
+    source: paraphrase
+    controls: [CTL-21401-soc-community, CTL-21401-eco-local]
+  - id: REQ-21401-8.1-g
+    clause: "8.1"
+    statement: 地域の文化遺産・景観を尊重し、悪影響を防ぐ配慮を行う
+    source: paraphrase
+    controls: [CTL-21401-soc-heritage]
+  - id: REQ-21401-8.1-h
+    clause: "8.1"
+    statement: 差別的取扱いを禁止し、児童及び青少年の搾取を防止する措置をとる
+    source: paraphrase
+    controls: [CTL-21401-soc-protection]
+  - id: REQ-21401-8.1-i
+    clause: "8.1"
+    statement: 障害のある人を含むゲストのアクセシビリティに関する情報を提供する
+    source: paraphrase
+    controls: [CTL-21401-soc-accessibility]
+  - id: REQ-21401-8.1-j
+    clause: "8.1"
+    statement: 従業者の労働条件・処遇を適切に管理し、意見・苦情の申出手段を提供する
+    source: paraphrase
+    controls: [CTL-21401-worker-welfare]
+
+  # --- 9 パフォーマンス評価 ---
+  - id: REQ-21401-9.1-a
+    clause: "9.1"
+    statement: 監視・測定の対象、方法、実施時期及び評価時期を決定する
+    source: paraphrase
+    controls: [CTL-CORE-objectives-monitoring]
+  - id: REQ-21401-9.1-b
+    clause: "9.1"
+    statement: 監視・測定の結果を証拠として文書化した情報を保持し、パフォーマンスを評価する
+    source: paraphrase
+    controls: [CTL-CORE-objectives-monitoring]
+  - id: REQ-21401-9.2-a
+    clause: "9.2"
+    statement: 内部監査プログラムを計画し、頻度・方法・責任・報告を定めて実施する
+    source: paraphrase
+    controls: [CTL-CORE-internal-audit]
+  - id: REQ-21401-9.2-b
+    clause: "9.2"
+    statement: 監査プロセスの客観性及び公平性を確保する監査員を選定する
+    source: paraphrase
+    controls: [CTL-CORE-internal-audit]
+  - id: REQ-21401-9.3-a
+    clause: "9.3"
+    statement: トップマネジメントが定めた間隔でマネジメントシステムをレビューする
+    source: paraphrase
+    controls: [CTL-CORE-management-review]
+  - id: REQ-21401-9.3-b
+    clause: "9.3"
+    statement: マネジメントレビューの結果の証拠として文書化した情報を保持する
+    source: paraphrase
+    controls: [CTL-CORE-management-review]
+
+  # --- 10 改善 ---
+  - id: REQ-21401-10.2-a
+    clause: "10.2"
+    statement: 不適合が発生した場合、処置をとり、結果を管理し、影響に対処する
+    source: paraphrase
+    controls: [CTL-CORE-corrective-action]
+  - id: REQ-21401-10.2-b
+    clause: "10.2"
+    statement: 不適合の原因を除去するため、原因をレビューし、是正処置の必要性を評価する
+    source: paraphrase
+    controls: [CTL-CORE-corrective-action]
+  - id: REQ-21401-10.2-c
+    clause: "10.2"
+    statement: とった是正処置の有効性をレビューし、不適合の性質と処置の結果を文書化して保持する
+    source: paraphrase
+    controls: [CTL-CORE-corrective-action]
+  - id: REQ-21401-10.3-a
+    clause: "10.3"
+    statement: マネジメントシステムの適切性・妥当性・有効性を継続的に改善する
+    source: paraphrase
+    controls: [CTL-CORE-management-review, CTL-CORE-corrective-action]

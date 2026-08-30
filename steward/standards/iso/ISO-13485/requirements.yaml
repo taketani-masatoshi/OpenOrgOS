@@ -1,0 +1,213 @@
+# 要求事項レジスタ
+#
+# ⚠ statement は ISO 本文の転記ではなく、パック作成者による言い換えである。
+#   ISO 本文は再配布できないため、規格票と突合するまで source: paraphrase・
+#   verified_on 未記入のままとする。被覆検査の結果は「規格への網羅性」ではなく
+#   「私たちが想定した要求事項への網羅性」である。
+#
+# 生成: node --import tsx scripts/generate-iso-registers.ts
+# 検査: orgos iso requirements --iso ISO-13485
+
+version: "1"
+standard: ISO-13485
+requirements:
+  - id: REQ-13485-4.1-a
+    clause: "4.1"
+    statement: マネジメントシステムの意図した成果に影響する外部及び内部の課題を決定する
+    source: paraphrase
+    controls:
+      - CTL-CORE-scope
+  - id: REQ-13485-4.1-b
+    clause: "4.1"
+    statement: 利害関係者及びその関連するニーズ・期待を決定する
+    source: paraphrase
+    controls:
+      - CTL-CORE-scope
+  - id: REQ-13485-4.1-c
+    clause: "4.1"
+    statement: マネジメントシステムの適用範囲を決定し、文書化した情報として維持する
+    source: paraphrase
+    controls:
+      - CTL-CORE-scope
+  - id: REQ-13485-5.3-a
+    clause: "5.3"
+    statement: トップマネジメントはマネジメントシステムに関するリーダーシップ及びコミットメントを実証する
+    source: paraphrase
+    controls:
+      - CTL-CORE-policy
+  - id: REQ-13485-5.3-b
+    clause: "5.3"
+    statement: 方針を確立し、文書化した情報として維持する
+    source: paraphrase
+    controls:
+      - CTL-CORE-policy
+  - id: REQ-13485-5.3-c
+    clause: "5.3"
+    statement: 方針を組織内に伝達し、必要に応じて利害関係者が入手できるようにする
+    source: paraphrase
+    controls:
+      - CTL-CORE-policy
+  - id: REQ-13485-5.3-d
+    clause: "5.3"
+    statement: 関連する役割に対して責任及び権限を割り当て、伝達する
+    source: paraphrase
+    controls:
+      - CTL-CORE-policy
+  - id: REQ-13485-7.1-a
+    clause: "7.1"
+    statement: リスク及び機会を決定する
+    source: paraphrase
+    controls:
+      - CTL-CORE-risk-approach
+  - id: REQ-13485-7.1-b
+    clause: "7.1"
+    statement: リスク及び機会への取組みを計画し、その結果を文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-CORE-risk-approach
+  - id: REQ-13485-6.2-a
+    clause: "6.2"
+    statement: 業務を行う人に必要な力量を決定し、教育訓練等によって力量を確保する
+    source: paraphrase
+    controls:
+      - CTL-CORE-competence
+  - id: REQ-13485-6.2-b
+    clause: "6.2"
+    statement: 力量の証拠として適切な文書化した情報を保持する
+    source: paraphrase
+    controls:
+      - CTL-CORE-competence
+  - id: REQ-13485-6.2-c
+    clause: "6.2"
+    statement: 従業者が方針・自らの貢献・不適合の意味を認識するようにする
+    source: paraphrase
+    controls:
+      - CTL-CORE-competence
+  - id: REQ-13485-4.2.4-a
+    clause: 4.2.4
+    statement: 規格が要求する文書化した情報及び有効性に必要と判断した情報を維持する
+    source: paraphrase
+    controls:
+      - CTL-CORE-doc-control
+  - id: REQ-13485-4.2.4-b
+    clause: 4.2.4
+    statement: 文書化した情報の作成・更新・管理（配付・アクセス・保管・変更管理）を行う
+    source: paraphrase
+    controls:
+      - CTL-CORE-doc-control
+  - id: REQ-13485-8.2.4-a
+    clause: 8.2.4
+    statement: 内部監査プログラムを計画し、頻度・方法・責任・報告を定めて実施する
+    source: paraphrase
+    controls:
+      - CTL-CORE-internal-audit
+  - id: REQ-13485-8.2.4-b
+    clause: 8.2.4
+    statement: 監査プロセスの客観性及び公平性を確保する監査員を選定する
+    source: paraphrase
+    controls:
+      - CTL-CORE-internal-audit
+  - id: REQ-13485-5.6-a
+    clause: "5.6"
+    statement: トップマネジメントが定めた間隔でマネジメントシステムをレビューする
+    source: paraphrase
+    controls:
+      - CTL-CORE-management-review
+  - id: REQ-13485-5.6-b
+    clause: "5.6"
+    statement: マネジメントレビューの結果の証拠として文書化した情報を保持する
+    source: paraphrase
+    controls:
+      - CTL-CORE-management-review
+      - CTL-CORE-corrective-action
+  - id: REQ-13485-8.5.2-a
+    clause: 8.5.2
+    statement: 不適合が発生した場合、処置をとり、結果を管理し、影響に対処する
+    source: paraphrase
+    controls:
+      - CTL-CORE-corrective-action
+  - id: REQ-13485-8.5.2-b
+    clause: 8.5.2
+    statement: 不適合の原因を除去するため、原因をレビューし、是正処置の必要性を評価する
+    source: paraphrase
+    controls:
+      - CTL-CORE-corrective-action
+  - id: REQ-13485-8.5.2-c
+    clause: 8.5.2
+    statement: とった是正処置の有効性をレビューし、不適合の性質と処置の結果を文書化して保持する
+    source: paraphrase
+    controls:
+      - CTL-CORE-corrective-action
+  - id: REQ-13485-8.5.3-a
+    clause: 8.5.3
+    statement: 不適合の再発防止に加え、潜在的な不適合の原因を除去する予防の必要性を評価する
+    source: paraphrase
+    controls:
+      - CTL-CORE-corrective-action
+  - id: REQ-13485-5.6-c
+    clause: "5.6"
+    statement: マネジメントシステムの適切性・妥当性・有効性を継続的に改善する
+    source: paraphrase
+    controls:
+      - CTL-CORE-management-review
+      - CTL-CORE-corrective-action
+  - id: REQ-13485-4.2.2-a
+    clause: 4.2.2
+    statement: 品質マニュアルを実施し、文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-4.2.2
+  - id: REQ-13485-7.3-a
+    clause: "7.3"
+    statement: 設計・開発を実施し、文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-7.3
+  - id: REQ-13485-7.4-a
+    clause: "7.4"
+    statement: 購買を実施し、文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-7.4
+  - id: REQ-13485-7.5-a
+    clause: "7.5"
+    statement: 製造及びサービス提供を実施し、文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-7.5
+  - id: REQ-13485-7.5.9-a
+    clause: 7.5.9
+    statement: トレーサビリティを実施し、文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-7.5.9
+  - id: REQ-13485-8.2.2-a
+    clause: 8.2.2
+    statement: 苦情処理を実施し、文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-8.2.2
+  - id: REQ-13485-8.2.3-a
+    clause: 8.2.3
+    statement: 規制当局への報告を実施し、文書化した情報として保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-8.2.3
+  - id: REQ-13485-7.5-b
+    clause: "7.5"
+    statement: 製造バッチを識別し、出荷まで追跡できる記録を保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-7.5
+  - id: REQ-13485-8.2.2-b
+    clause: 8.2.2
+    statement: 苦情を調査し、是正が必要かを評価する
+    source: paraphrase
+    controls:
+      - CTL-13485-8.2.2
+  - id: REQ-13485-8.2.3-b
+    clause: 8.2.3
+    statement: 規制報告の要否を判断し、報告した場合は記録を保持する
+    source: paraphrase
+    controls:
+      - CTL-13485-8.2.3

@@ -1,0 +1,125 @@
+# 記録の内容仕様
+#
+# 証拠ファイルが「ある」ことと、その記録が要求事項を満たすことは別問題である。
+# 語彙は閉じている（式言語は作らない）。ここで表現できない適合性は監査員の判断。
+#
+# 生成: node --import tsx scripts/generate-iso-registers.ts
+# 検査: orgos iso records check --iso ISO-50001
+
+version: "1"
+standard: ISO-50001
+records:
+  - file: internal-audit-plan.md
+    kind: markdown
+    title: 内部監査計画
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - 適用範囲
+          - 監査基準
+          - サンプリング方針
+        message: 必須の節が欠けています。
+  - file: management-review.md
+    kind: markdown
+    title: マネジメントレビュー議事
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - インプット
+          - アウトプット
+          - 決定事項
+        message: 必須の節が欠けています。
+  - file: corrective-actions.csv
+    kind: csv
+    title: 不適合及び是正処置の記録
+    columns:
+      - name: id
+        required: true
+        pattern: ^CA-[0-9]{3}$
+      - name: raised_on
+        type: date
+        required: true
+      - name: source
+        required: true
+      - name: description
+        required: true
+      - name: immediate_action
+        required: true
+      - name: status
+        required: true
+        values:
+          - open
+          - in_progress
+          - closed
+    rules:
+      - kind: unique
+        columns:
+          - id
+        message: 是正処置の ID が重複しています。
+      - kind: conditional_required
+        column: status
+        equals:
+          - open
+          - in_progress
+        require:
+          - owner
+          - due
+        message: 未完了の是正処置には責任者と期限が必要です。
+      - kind: conditional_required
+        column: status
+        equals:
+          - closed
+        require:
+          - root_cause
+          - corrective_action
+          - effectiveness_checked_on
+          - result
+        message: 完了した是正処置には根本原因・是正処置・有効性確認日・結果が必要です。
+      - kind: comparison
+        left: raised_on
+        operator: lte
+        right: effectiveness_checked_on
+        message: 有効性確認日が発生日より前になっています。
+    note: 10.2 相当。閉じた是正に有効性確認が無い行は通さない。
+  - file: enpi-log.csv
+    kind: csv
+    title: エネルギーパフォーマンス指標（EnPI）
+    columns:
+      - name: month
+        type: month
+        required: true
+      - name: energy_kwh
+        type: number
+        required: true
+        min: 0
+      - name: output
+        type: number
+        required: true
+        min: 0
+      - name: enpi
+        type: number
+        required: true
+        min: 0
+    rules:
+      - kind: non_empty
+        message: EnPI の測定記録がありません。
+      - kind: unique
+        columns:
+          - month
+        message: 同じ月の EnPI が重複しています。
+  - file: energy-review.md
+    kind: markdown
+    title: エネルギーレビュー
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - エネルギー使用
+          - ベースライン
+          - 改善機会
+        message: 必須の節が欠けています。

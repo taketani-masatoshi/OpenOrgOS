@@ -46,7 +46,9 @@ describe("ISO 21401 KPI log", () => {
     const report = buildKpiReport();
     expect(report.exists).toBe(true);
     expect(report.rows).toEqual([]);
-    expect(report.errors.join()).toContain("測定記録がありません");
+    // The complaint about an empty register belongs to the record spec
+    // (records.yaml non_empty), not to the intensity computation.
+    expect(report.errors).toEqual([]);
   });
 
   it("computes intensity per guest night and month-on-month change", () => {
@@ -68,15 +70,14 @@ describe("ISO 21401 KPI log", () => {
     expect(buildKpiReport().rows.map((r) => r.month)).toEqual(["2026-04", "2026-05"]);
   });
 
-  it("flags duplicate months, bad month format, and non-numeric values", () => {
+  it("drops rows it cannot compute from, leaving the diagnosis to the record spec", () => {
     writeLog(
       `${HEADER}2026-04,100,200,1000,50,300,\n2026-04,10,1,1,1,1,dup\n2026-13,10,1,1,1,1,bad\n2026-06,100,-5,abc,10,10,bad numbers\n`,
     );
-    const joined = buildKpiReport().errors.join("\n");
-    expect(joined).toContain("重複");
-    expect(joined).toContain("YYYY-MM");
-    expect(joined).toContain("負の値");
-    expect(joined).toContain("数値ではありません");
+    const report = buildKpiReport();
+    expect(report.rows.map((r) => r.month)).toEqual(["2026-04"]);
+    expect(report.skipped).toBe(3);
+    expect(report.errors).toEqual([]);
   });
 
   it("flags usage recorded against zero guest nights", () => {

@@ -1,0 +1,131 @@
+# 記録の内容仕様
+#
+# 証拠ファイルが「ある」ことと、その記録が要求事項を満たすことは別問題である。
+# 語彙は閉じている（式言語は作らない）。ここで表現できない適合性は監査員の判断。
+#
+# 生成: node --import tsx scripts/generate-iso-registers.ts
+# 検査: orgos iso records check --iso ISO-20000
+
+version: "1"
+standard: ISO-20000
+records:
+  - file: internal-audit-plan.md
+    kind: markdown
+    title: 内部監査計画
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - 適用範囲
+          - 監査基準
+          - サンプリング方針
+        message: 必須の節が欠けています。
+  - file: management-review.md
+    kind: markdown
+    title: マネジメントレビュー議事
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - インプット
+          - アウトプット
+          - 決定事項
+        message: 必須の節が欠けています。
+  - file: corrective-actions.csv
+    kind: csv
+    title: 不適合及び是正処置の記録
+    columns:
+      - name: id
+        required: true
+        pattern: ^CA-[0-9]{3}$
+      - name: raised_on
+        type: date
+        required: true
+      - name: source
+        required: true
+      - name: description
+        required: true
+      - name: immediate_action
+        required: true
+      - name: status
+        required: true
+        values:
+          - open
+          - in_progress
+          - closed
+    rules:
+      - kind: unique
+        columns:
+          - id
+        message: 是正処置の ID が重複しています。
+      - kind: conditional_required
+        column: status
+        equals:
+          - open
+          - in_progress
+        require:
+          - owner
+          - due
+        message: 未完了の是正処置には責任者と期限が必要です。
+      - kind: conditional_required
+        column: status
+        equals:
+          - closed
+        require:
+          - root_cause
+          - corrective_action
+          - effectiveness_checked_on
+          - result
+        message: 完了した是正処置には根本原因・是正処置・有効性確認日・結果が必要です。
+      - kind: comparison
+        left: raised_on
+        operator: lte
+        right: effectiveness_checked_on
+        message: 有効性確認日が発生日より前になっています。
+    note: 10.2 相当。閉じた是正に有効性確認が無い行は通さない。
+  - file: sla-register.md
+    kind: markdown
+    title: サービスレベル管理
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings:
+          - 対象サービス
+          - 目標
+          - 実績
+        message: 必須の節が欠けています。
+  - file: incident-log.csv
+    kind: csv
+    title: インシデント管理
+    columns:
+      - name: id
+        required: true
+      - name: opened_on
+        type: date
+        required: true
+      - name: description
+        required: true
+      - name: status
+        required: true
+        values:
+          - open
+          - in_progress
+          - closed
+    rules:
+      - kind: non_empty
+        message: インシデント記録がありません。
+      - kind: unique
+        columns:
+          - id
+        message: インシデント ID が重複しています。
+      - kind: conditional_required
+        column: status
+        equals:
+          - closed
+        require:
+          - closed_on
+          - resolution
+        message: クローズしたインシデントには完了日と解決内容が必要です。

@@ -191,6 +191,8 @@ import { runIsoScaffold } from "../../commands/iso-scaffold.js";
 import { runIsoTemplates } from "../../commands/iso-templates.js";
 import { runIsoKpi } from "../../commands/iso-kpi.js";
 import { runIsoClauses } from "../../commands/iso-clauses.js";
+import { runIsoRecordsCheck } from "../../commands/iso-records.js";
+import { runIsoRequirements } from "../../commands/iso-requirements.js";
 import { registerCanonicalWireCommands } from "./wire.js";
 import { registerInternalWebhookCommands } from "./internal-webhook.js";
 import {
@@ -927,6 +929,41 @@ export function registerOrchestrationCommands(program: Command): void {
     .option("--strict", "Exit 1 when the log has faults")
     .option("--json", "JSON output")
     .action((opts) => runIsoKpi({ tenant: opts.tenant, strict: opts.strict, json: opts.json }));
+  isoCmd
+    .command("requirements")
+    .description("Check requirement-to-control coverage in both directions")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Limit to one standard")
+    .option("--unverified", "List requirements whose wording is unchecked")
+    .option("--strict", "Exit 1 on uncovered or dangling requirements")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runIsoRequirements({
+        tenant: opts.tenant,
+        iso: opts.iso,
+        unverified: opts.unverified,
+        strict: opts.strict,
+        json: opts.json,
+      })
+    );
+  const isoRecordsCmd = isoCmd
+    .command("records")
+    .description("Check tenant records against the pack's record specification");
+  isoRecordsCmd
+    .command("check")
+    .description("Evaluate every record declared in records.yaml (exit 1 with --strict)")
+    .option("--tenant <id>", "Tenant id")
+    .option("--iso <id>", "Limit to one standard")
+    .option("--strict", "Exit 1 when a record has faults")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runIsoRecordsCheck({
+        tenant: opts.tenant,
+        iso: opts.iso,
+        strict: opts.strict,
+        json: opts.json,
+      })
+    );
   isoCmd
     .command("maps")
     .description("ISO control-map verification")

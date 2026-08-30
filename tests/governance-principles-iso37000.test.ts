@@ -58,11 +58,12 @@ describe("governance principles · ISO 37000 (ADR 0024)", () => {
   });
 
   it("does not enable neighboring ISO ids when flipping ISO-37000", () => {
+    const before = new Set(loadEnabledIsoIds());
     ensureIso37000EnabledInStandards();
-    const ids = loadEnabledIsoIds();
-    expect(ids).toContain("ISO-37000");
-    expect(ids).not.toContain("ISO-20000");
-    expect(ids).not.toContain("ISO-37001");
+    const after = loadEnabledIsoIds();
+    expect(after).toContain("ISO-37000");
+    const added = after.filter((id) => !before.has(id));
+    expect(added.filter((id) => id !== "ISO-37000")).toEqual([]);
   });
 
   it("doctor pack check finds ISO-37000", () => {

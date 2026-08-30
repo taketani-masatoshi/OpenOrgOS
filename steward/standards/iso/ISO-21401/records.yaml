@@ -1,0 +1,267 @@
+# ISO 21401 — 記録の内容仕様
+#
+# 証拠ファイルが「ある」ことと、その記録が要求事項を満たすことは別問題である。
+# 本ファイルは、審査員が記録を見るときに確認する構造と内部整合を宣言し、
+# 決定論で検査できる範囲をパック側の責任として固定する。
+#
+# 検査: orgos iso records check --iso ISO-21401
+# 実装: src/lib/iso-records.ts · 語彙: schemas/iso-record-spec.ts
+#
+# 語彙は閉じている（式言語は作らない）。ここで表現できない適合性は
+# 監査員の判断であり、内部監査の所見（orgos iso audit finding set）に記録する。
+
+version: "1"
+standard: ISO-21401
+
+records:
+  # --- 6.1 リスク及び機会 ---
+  - file: risk-opportunities.csv
+    kind: csv
+    title: リスク及び機会の一覧
+    columns:
+      - { name: id, required: true, pattern: "^RO-[0-9]{3}$" }
+      - { name: identified_on, type: date, required: true }
+      - { name: aspect, required: true }
+      - { name: description, required: true }
+      - { name: type, required: true, values: [risk, opportunity] }
+      - { name: likelihood, type: number, required: true, min: 1, max: 5 }
+      - { name: impact, type: number, required: true, min: 1, max: 5 }
+      - { name: rating, type: number, required: true, min: 1, max: 25 }
+      - { name: status, required: true, values: [open, in_progress, closed] }
+      - { name: reviewed_on, type: date }
+    rules:
+      - kind: non_empty
+        message: リスク及び機会が1件も登録されていません。6.1 は決定した結果の保持を求めます。
+      - kind: unique
+        columns: [id]
+        message: リスク及び機会の ID が重複しています。
+      - kind: computed
+        target: rating
+        operation: product
+        factors: [likelihood, impact]
+        message: rating が likelihood × impact と一致しません。
+      - kind: conditional_required
+        column: type
+        equals: [risk]
+        require: [action, owner, due]
+        message: リスクには取組み・責任者・期限が必要です。
+      - kind: comparison
+        left: identified_on
+        operator: lte
+        right: due
+        message: 期限が特定日より前になっています。
+      - kind: freshness
+        column: reviewed_on
+        max_age_days: 365
+        severity: warning
+        message: 見直しから1年以上経過しています。
+
+  # --- 6.1 環境側面 ---
+  - file: environmental-aspects.csv
+    kind: csv
+    title: 環境側面の特定と著しさの評価
+    columns:
+      - { name: id, required: true, pattern: "^EA-[0-9]{3}$" }
+      - { name: activity, required: true }
+      - { name: aspect, required: true }
+      - { name: impact, required: true }
+      - { name: condition, required: true, values: [normal, abnormal, emergency] }
+      - { name: severity, type: number, required: true, min: 1, max: 5 }
+      - { name: frequency, type: number, required: true, min: 1, max: 5 }
+      - { name: score, type: number, required: true, min: 1, max: 25 }
+      - { name: significant, required: true, values: [yes, no] }
+      - { name: reviewed_on, type: date }
+    rules:
+      - kind: non_empty
+        message: 環境側面が1件も登録されていません。
+      - kind: unique
+        columns: [id]
+        message: 環境側面の ID が重複しています。
+      - kind: computed
+        target: score
+        operation: product
+        factors: [severity, frequency]
+        message: score が severity × frequency と一致しません。
+      - kind: conditional_required
+        column: significant
+        equals: [yes]
+        require: [control, objective]
+        message: 著しい環境側面には管理方法と目標が必要です。
+      - kind: freshness
+        column: reviewed_on
+        max_age_days: 365
+        severity: warning
+        message: 環境側面の見直しから1年以上経過しています。
+
+  # --- 9.1 監視・測定 ---
+  - file: kpi-log.csv
+    kind: csv
+    title: サステナビリティ KPI 測定記録
+    note: >-
+      構造検査は本仕様が担う。src/lib/iso-kpi.ts は原単位と前月比の算出に専念する。
+    columns:
+      - { name: month, type: month, required: true }
+      - { name: occupancy_nights, type: number, required: true, min: 0 }
+      - { name: garbage_kg, type: number, min: 0 }
+      - { name: electricity_kwh, type: number, min: 0 }
+      - { name: gas_m3, type: number, min: 0 }
+      - { name: water_m3, type: number, min: 0 }
+    rules:
+      - kind: non_empty
+        message: KPI の測定記録がありません。9.1 は監視・測定の結果の保持を求めます。
+      - kind: unique
+        columns: [month]
+        message: 同じ月の測定記録が重複しています。
+
+  # --- 8.1 地域経済 ---
+  - file: local-economy-log.csv
+    kind: csv
+    title: 地域経済への貢献の記録
+    columns:
+      - { name: month, type: month, required: true }
+      - { name: local_supplier_count, type: number, required: true, min: 0 }
+      - { name: total_supplier_count, type: number, required: true, min: 0 }
+      - { name: local_spend_yen, type: number, required: true, min: 0 }
+      - { name: total_spend_yen, type: number, required: true, min: 0 }
+      - { name: local_employee_count, type: number, required: true, min: 0 }
+      - { name: total_employee_count, type: number, required: true, min: 0 }
+    rules:
+      - kind: non_empty
+        message: 地域経済の記録がありません。
+      - kind: unique
+        columns: [month]
+        message: 同じ月の記録が重複しています。
+      - kind: comparison
+        left: local_supplier_count
+        operator: lte
+        right: total_supplier_count
+        message: 地域供給者数が総供給者数を超えています。
+      - kind: comparison
+        left: local_spend_yen
+        operator: lte
+        right: total_spend_yen
+        message: 地域調達額が総調達額を超えています。
+      - kind: comparison
+        left: local_employee_count
+        operator: lte
+        right: total_employee_count
+        message: 地域雇用者数が総雇用者数を超えています。
+
+  # --- 4.2 利害関係者 ---
+  - file: stakeholder-register.csv
+    kind: csv
+    title: 利害関係者とそのニーズ
+    columns:
+      - { name: id, required: true, pattern: "^SH-[0-9]{3}$" }
+      - { name: stakeholder, required: true }
+      - { name: category, required: true }
+      - { name: needs_expectations, required: true }
+      - { name: communication_method, required: true }
+      - { name: owner, required: true }
+      - { name: last_contact_on, type: date }
+    rules:
+      - kind: non_empty
+        message: 利害関係者が1件も登録されていません。4.2 は関連する要求事項の決定を求めます。
+      - kind: unique
+        columns: [id]
+        message: 利害関係者の ID が重複しています。
+      - kind: freshness
+        column: last_contact_on
+        max_age_days: 365
+        severity: warning
+        message: 最終接触から1年以上経過しています。
+
+  # --- 10.2 不適合及び是正処置 ---
+  - file: corrective-actions.csv
+    kind: csv
+    title: 不適合及び是正処置の記録
+    note: >-
+      根本原因と有効性確認のない「是正済み」を通さない。10.2 は原因の除去と
+      とった処置の有効性のレビューを明示的に求める。
+    columns:
+      - { name: id, required: true, pattern: "^CA-[0-9]{3}$" }
+      - { name: raised_on, type: date, required: true }
+      - { name: source, required: true }
+      - { name: description, required: true }
+      - { name: immediate_action, required: true }
+      - { name: status, required: true, values: [open, in_progress, closed] }
+    rules:
+      - kind: unique
+        columns: [id]
+        message: 是正処置の ID が重複しています。
+      - kind: conditional_required
+        column: status
+        equals: [open, in_progress]
+        require: [owner, due]
+        message: 未完了の是正処置には責任者と期限が必要です。
+      - kind: conditional_required
+        column: status
+        equals: [closed]
+        require: [root_cause, corrective_action, effectiveness_checked_on, result]
+        message: 完了した是正処置には根本原因・是正処置・有効性確認日・結果が必要です。
+      - kind: comparison
+        left: raised_on
+        operator: lte
+        right: effectiveness_checked_on
+        message: 有効性確認日が発生日より前になっています。
+
+  # --- 文書化した情報（Markdown 様式） ---
+  - file: guest-protection-policy.md
+    kind: markdown
+    title: 差別的取扱いの禁止・児童青少年の保護方針
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings: ["差別的取扱いの禁止", "児童・青少年の保護", "従業者への周知", "苦情・違反の申出"]
+        message: 必須の節が欠けています。
+
+  - file: worker-welfare.md
+    kind: markdown
+    title: 従業者の労働環境・処遇
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings: ["雇用の状況", "労働条件", "教育訓練", "意見・苦情の申出"]
+        message: 必須の節が欠けています。
+
+  - file: accessibility-statement.md
+    kind: markdown
+    title: アクセシビリティ情報
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings: ["施設設備の現況", "提供できる支援", "対応できないこと", "公表先"]
+        message: 必須の節が欠けています。
+
+  - file: socio-cultural-plan.md
+    kind: markdown
+    title: 地域文化・景観への配慮計画
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings: ["地域の文化資源", "景観への配慮", "地域資源の活用", "ゲストへの伝達"]
+        message: 必須の節が欠けています。
+
+  - file: sustainable-purchasing.md
+    kind: markdown
+    title: 持続可能な調達基準
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings: ["適用範囲", "調達方針", "品目別の基準", "供給者の評価"]
+        message: 必須の節が欠けています。
+
+  - file: guest-communication.md
+    kind: markdown
+    title: ゲストへの周知・協力依頼
+    rules:
+      - kind: no_placeholders
+        message: 様式のプレースホルダが未置換です。
+      - kind: required_sections
+        headings: ["周知事項", "使用言語", "ゲストからの意見の受付"]
+        message: 必須の節が欠けています。

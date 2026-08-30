@@ -1,0 +1,128 @@
+# HLS 仕事型ごとの言い換えテンプレ。
+# 各パックの core_bindings.clause で条項番号だけ差し込む。
+# ISO 本文の転記ではない（source: paraphrase）。
+#
+# 再生成: npx tsx scripts/generate-iso-registers.ts
+# 生成物は git にコミットする（実行時生成にしない）。
+
+version: "1"
+
+work_control:
+  scope: CTL-CORE-scope
+  policy: CTL-CORE-policy
+  risk_approach: CTL-CORE-risk-approach
+  objectives_monitoring: CTL-CORE-objectives-monitoring
+  competence: CTL-CORE-competence
+  documented_information: CTL-CORE-doc-control
+  operation: CTL-CORE-operation
+  internal_audit: CTL-CORE-internal-audit
+  management_review: CTL-CORE-management-review
+  corrective_action: CTL-CORE-corrective-action
+
+# 同じ work に複数 binding があるときは hls_hint で振り分ける。
+templates:
+  - work: scope
+    items:
+      - letter: a
+        statement: マネジメントシステムの意図した成果に影響する外部及び内部の課題を決定する
+      - letter: b
+        statement: 利害関係者及びその関連するニーズ・期待を決定する
+      - letter: c
+        statement: マネジメントシステムの適用範囲を決定し、文書化した情報として維持する
+
+  - work: policy
+    items:
+      - letter: a
+        statement: トップマネジメントはマネジメントシステムに関するリーダーシップ及びコミットメントを実証する
+      - letter: b
+        statement: 方針を確立し、文書化した情報として維持する
+      - letter: c
+        statement: 方針を組織内に伝達し、必要に応じて利害関係者が入手できるようにする
+      - letter: d
+        statement: 関連する役割に対して責任及び権限を割り当て、伝達する
+
+  - work: risk_approach
+    items:
+      - letter: a
+        statement: リスク及び機会を決定する
+      - letter: b
+        statement: リスク及び機会への取組みを計画し、その結果を文書化した情報として保持する
+
+  - work: objectives_monitoring
+    hls_hint: "6."
+    items:
+      - letter: a
+        statement: 関連する機能・階層で目標を確立し、測定可能な形で文書化する
+      - letter: b
+        statement: 目標の達成計画（実施事項・資源・責任者・期限・評価方法）を決定する
+
+  - work: objectives_monitoring
+    hls_hint: "9."
+    items:
+      - letter: a
+        statement: 監視・測定の対象、方法、実施時期及び評価時期を決定する
+      - letter: b
+        statement: 監視・測定の結果を証拠として文書化した情報を保持し、パフォーマンスを評価する
+
+  - work: competence
+    items:
+      - letter: a
+        statement: 業務を行う人に必要な力量を決定し、教育訓練等によって力量を確保する
+      - letter: b
+        statement: 力量の証拠として適切な文書化した情報を保持する
+      - letter: c
+        statement: 従業者が方針・自らの貢献・不適合の意味を認識するようにする
+
+  - work: documented_information
+    items:
+      - letter: a
+        statement: 規格が要求する文書化した情報及び有効性に必要と判断した情報を維持する
+      - letter: b
+        statement: 文書化した情報の作成・更新・管理（配付・アクセス・保管・変更管理）を行う
+
+  - work: operation
+    items:
+      - letter: a
+        statement: 要求事項を満たすために必要なプロセスを計画し、実施し、管理する
+      - letter: b
+        statement: マネジメントシステムに必要な資源を決定し、提供する
+
+  - work: internal_audit
+    items:
+      - letter: a
+        statement: 内部監査プログラムを計画し、頻度・方法・責任・報告を定めて実施する
+      - letter: b
+        statement: 監査プロセスの客観性及び公平性を確保する監査員を選定する
+
+  - work: management_review
+    items:
+      - letter: a
+        statement: トップマネジメントが定めた間隔でマネジメントシステムをレビューする
+      - letter: b
+        statement: マネジメントレビューの結果の証拠として文書化した情報を保持する
+
+  - work: corrective_action
+    hls_hint: "10.2"
+    items:
+      - letter: a
+        statement: 不適合が発生した場合、処置をとり、結果を管理し、影響に対処する
+      - letter: b
+        statement: 不適合の原因を除去するため、原因をレビューし、是正処置の必要性を評価する
+      - letter: c
+        statement: とった是正処置の有効性をレビューし、不適合の性質と処置の結果を文書化して保持する
+
+  - work: corrective_action
+    hls_hint: "8.5.2"
+    items:
+      - letter: a
+        statement: 不適合が発生した場合、処置をとり、結果を管理し、影響に対処する
+      - letter: b
+        statement: 不適合の原因を除去するため、原因をレビューし、是正処置の必要性を評価する
+      - letter: c
+        statement: とった是正処置の有効性をレビューし、不適合の性質と処置の結果を文書化して保持する
+
+  - work: corrective_action
+    hls_hint: "8.5.3"
+    items:
+      - letter: a
+        statement: 不適合の再発防止に加え、潜在的な不適合の原因を除去する予防の必要性を評価する
