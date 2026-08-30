@@ -50,7 +50,9 @@ async function main(): Promise<void> {
   writeWireConsoleWebAuthnSmokeFixture();
   await writeWireConsoleOidcSmokeFixture();
 
-  const server = await startWireConsoleServer({ host: "localhost", port });
+  // The canonical-host redirect can only be exercised if 127.0.0.1 also
+  // answers; binding "localhost" resolves to ::1 alone on some machines.
+  const server = await startWireConsoleServer({ host: "0.0.0.0", port });
   console.log(`wire-console webauthn smoke server ${server.url}`);
 
   const shutdown = (): void => server.close();

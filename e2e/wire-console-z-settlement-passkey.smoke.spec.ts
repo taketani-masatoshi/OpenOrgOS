@@ -23,7 +23,7 @@ test.describe("wire console settlement passkey smoke", () => {
 
     await page.goto("/settings/");
     await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible();
-    await expandSettingsSection(page, "決済 PassKey");
+    await expandSettingsSection(page, "決済 PassKey（iPhone）");
 
     await page.getByRole("button", { name: "iPhone で登録" }).click();
     await expect(page.getByRole("cell", { name: "iPhone（決済）" })).toBeVisible({

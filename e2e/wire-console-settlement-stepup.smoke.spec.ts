@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expandSettingsSection } from "./helpers/settings-accordion";
 import {
   installHybridVirtualAuthenticator,
   installWebAuthnVirtualCredential,
@@ -19,12 +20,27 @@ test.describe("wire console settlement step-up smoke", () => {
       { timeout: 15_000 },
     );
 
+    // Hold the options call open so the busy state is observable rather than
+    // racing the round trip.
+    await page.route("**/webauthn/register/options", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+      await route.continue();
+    });
+
     await page.goto("/settings/");
+    await expandSettingsSection(page, "決済 PassKey（iPhone）");
     await page.getByRole("button", { name: /^iPhone で登録$|^別の iPhone で登録$/ }).click();
     await expect(page.locator(".passkey-manage-panel[data-busy='true']")).toBeVisible({
       timeout: 5_000,
     });
-    await expect(page.getByRole("button", { name: /^iPhone で登録$|^別の iPhone で登録$/ })).toBeDisabled();
+    // While the ceremony runs the button relabels to the QR wording and locks.
+    await expect(
+      page
+        .locator("details.settings-accordion-item")
+        .filter({ has: page.getByRole("heading", { name: "決済 PassKey（iPhone）", exact: true }) })
+        .locator(".settings-accordion-body button")
+        .first(),
+    ).toBeDisabled();
     await expect(page.getByRole("cell", { name: "iPhone（決済）" })).toBeVisible({
       timeout: 20_000,
     });
@@ -58,6 +74,7 @@ test.describe("wire console settlement step-up smoke", () => {
       timeout: 15_000,
     });
     await expect(page.getByText("250,000 JPY")).toBeVisible();
+    await page.getByRole("button", { name: "iPhone で承認を開始" }).click();
     await expect(page.getByText("承認しました")).toBeVisible({ timeout: 30_000 });
   });
 });

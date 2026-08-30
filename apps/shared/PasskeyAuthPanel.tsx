@@ -104,7 +104,10 @@ export function PasskeyAuthPanel({
   const errors = useCopy(WEBAUTHN_COPY);
 
   const communityStartUrl =
-    communityHandoffUrl ?? buildCommunityConsoleStartUrl("/");
+    communityHandoffUrl ??
+    buildCommunityConsoleStartUrl(
+      typeof window !== "undefined" ? window.location.pathname : "/",
+    );
 
   const ready = operatorId.trim().length > 0 && approverId.trim().length > 0;
   const firstRegister = showRegister && !showSignIn;

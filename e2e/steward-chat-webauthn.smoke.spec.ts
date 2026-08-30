@@ -93,7 +93,7 @@ test.describe("steward chat webauthn smoke", () => {
     await expect(page.getByRole("heading", { name: "ログイン PassKey" })).toBeVisible({
       timeout: 15_000,
     });
-    await expandSettingsSection(page, "決済 PassKey");
+    await expandSettingsSection(page, "決済 PassKey（iPhone）");
 
     const registerBtn = page.getByRole("button", { name: "iPhone で登録" });
     await registerBtn.click();

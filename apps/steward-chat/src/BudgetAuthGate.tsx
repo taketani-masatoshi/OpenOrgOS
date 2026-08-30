@@ -232,7 +232,7 @@ export function BudgetAuthGate({
         registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
         communityHandoffUrl={
           authConfig?.community_handoff
-            ? buildCommunityConsoleStartUrl("/")
+            ? buildCommunityConsoleStartUrl(settingsPage ? "/settings/" : "/")
             : undefined
         }
         settingsPath="/settings/"

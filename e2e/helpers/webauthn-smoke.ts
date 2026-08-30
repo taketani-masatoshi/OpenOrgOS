@@ -64,8 +64,35 @@ export async function installWebAuthnVirtualCredential(page: Page): Promise<void
   }
 }
 
-/** Cross-platform / hybrid authenticator for settlement passkey registration. */
+/**
+ * Cross-platform / hybrid authenticator for settlement passkey registration.
+ *
+ * Chrome's virtual authenticator cannot speak the hybrid (phone-over-Bluetooth)
+ * transport, and the settlement ceremony deliberately restricts itself to
+ * hybrid/internal. The init script drops that restriction in the browser only,
+ * so the assertion reaches the virtual authenticator; everything the server
+ * verifies is unchanged.
+ */
 export async function installHybridVirtualAuthenticator(page: Page): Promise<string> {
+  await page.addInitScript(() => {
+    const originalGet = navigator.credentials.get.bind(navigator.credentials);
+    navigator.credentials.get = (options?: CredentialRequestOptions) => {
+      const publicKey = options?.publicKey as
+        | (PublicKeyCredentialRequestOptions & { hints?: string[] })
+        | undefined;
+      // Login (client-device / internal) must keep its transports so it still
+      // routes to the platform authenticator; only the hybrid ask is relaxed.
+      if (!publicKey?.hints?.includes("hybrid")) return originalGet(options);
+      const { hints: _hints, ...rest } = publicKey;
+      const relaxed = {
+        ...rest,
+        allowCredentials: (publicKey.allowCredentials ?? []).map(
+          ({ transports: _transports, ...cred }) => cred,
+        ),
+      };
+      return originalGet({ ...options, publicKey: relaxed });
+    };
+  });
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("WebAuthn.enable");
   const { authenticatorId } = await cdp.send("WebAuthn.addVirtualAuthenticator", {
