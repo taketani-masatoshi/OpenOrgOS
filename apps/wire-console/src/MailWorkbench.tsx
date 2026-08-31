@@ -16,7 +16,6 @@ import { DeliveryPanel } from "./components/DeliveryPanel";
 import { MailFolderSidebar } from "./components/MailFolderSidebar";
 import { MessageList } from "./components/MessageList";
 import { MessageReader } from "./components/MessageReader";
-import { ScenarioGuide } from "./components/ScenarioGuide";
 import { WitnessPanel } from "./components/WitnessPanel";
 import { useCopy } from "@ops-shared/define-copy";
 import { useLiveRefresh } from "./useLiveRefresh";
@@ -159,16 +158,11 @@ export function MailWorkbench({ tenants }: Props) {
     scenario?.anchors.inter_org_event_id;
 
   if (!tenants.length) {
-    return (
-      <div className="empty-state">
-        <strong>{copy.noTenants}</strong>
-        <p>{copy.noTenantsHint}</p>
-      </div>
-    );
+    return <div className="empty-state">{copy.noTenants}</div>;
   }
 
   return (
-    <div className="mail-workbench">
+    <div className="mail-workbench" aria-busy={loading}>
       <div className="wire-secondary-bar">
         <nav className="tenant-tabs" aria-label={copy.tenants}>
           {tenants.map((t) => (
@@ -184,14 +178,8 @@ export function MailWorkbench({ tenants }: Props) {
           ))}
         </nav>
         <div className="wire-secondary-actions">
-          {snapshot ? (
-            <div className="snapshot-bar">
-              <span className={snapshot.validation.ok ? "badge ok" : "badge warn"}>
-                {snapshot.validation.ok ? copy.integrityOk : copy.needsReview}
-              </span>
-              <span className="badge">{copy.waitingOursCount(counts.ours)}</span>
-              <span className="badge">{copy.waitingTheirsCount(counts.theirs)}</span>
-            </div>
+          {snapshot && !snapshot.validation.ok ? (
+            <span className="badge warn">{copy.needsReview}</span>
           ) : null}
           <button type="button" className="quiet-button" onClick={() => refreshTenant({ silent: false })}>
             {copy.refresh}
@@ -205,9 +193,6 @@ export function MailWorkbench({ tenants }: Props) {
       </div>
 
       {error ? <p className="error">{error}</p> : null}
-      {loading ? <p className="hint">{copy.loading}</p> : null}
-
-      {scenario ? <ScenarioGuide scenario={scenario} activeFolder={folder} /> : null}
 
       <div className="mail-layout">
         <MailFolderSidebar
@@ -226,9 +211,6 @@ export function MailWorkbench({ tenants }: Props) {
             selectedId={selectedMessageId}
             emptyTitle={
               folder === "ours" ? copy.emptyOurs : copy.emptyTheirs
-            }
-            emptyHint={
-              folder === "ours" ? copy.emptyOursHint : copy.emptyTheirsHint
             }
             onSelect={(id) => void selectMessage(id)}
           />

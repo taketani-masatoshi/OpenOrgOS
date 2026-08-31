@@ -1,7 +1,12 @@
+.ops-shell-body:has(.wire-workspace) {
+  overflow: hidden;
+}
+
 .wire-workspace {
   flex: 1;
   min-height: 0;
-  padding: var(--space-4) var(--page-gutter) var(--space-6);
+  display: flex;
+  flex-direction: column;
   width: 100%;
   box-sizing: border-box;
 }
@@ -9,8 +14,8 @@
 .mail-workbench {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  min-height: calc(100vh - 52px - var(--space-6) * 2);
+  flex: 1;
+  min-height: 0;
 }
 
 .wire-secondary-bar {
@@ -19,8 +24,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) 0;
+  padding: var(--space-3) var(--page-gutter);
   border-bottom: 1px solid var(--border);
+  background: var(--surface-elevated);
 }
 
 .wire-secondary-actions {
@@ -28,6 +34,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+}
+
+.mail-workbench > .error {
+  margin: 0;
+  padding: var(--space-2) var(--page-gutter);
 }
 
 .wire-workspace label,
@@ -295,15 +306,18 @@
 
 .mail-layout {
   display: grid;
-  grid-template-columns: 160px minmax(280px, 360px) 1fr;
-  gap: var(--space-3);
-  min-height: 520px;
+  grid-template-columns: 180px minmax(240px, 320px) 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
   align-items: stretch;
+  background: var(--surface-elevated);
 }
 
 @media (max-width: 1024px) {
   .mail-layout {
     grid-template-columns: 1fr;
+    overflow: auto;
   }
 }
 
@@ -311,9 +325,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-3);
+  border-right: 1px solid var(--border);
   background: var(--surface);
 }
 
@@ -337,32 +350,28 @@
 
 .mail-folder-count {
   font-size: var(--text-xs);
-  background: var(--border);
-  border-radius: var(--radius-pill);
-  padding: var(--space-1) var(--space-2);
+  color: var(--ink-soft);
+  min-width: 1.25em;
+  text-align: right;
 }
 
 .mail-list-pane,
 .message-reader {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
   background: var(--surface-elevated);
   overflow: auto;
-  max-height: calc(100vh - 14rem);
+  min-height: 0;
 }
 
 .mail-list-pane {
-  padding: var(--space-1);
+  border-right: 1px solid var(--border);
 }
 
 .message-reader {
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-6);
 }
 
 .message-reader.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--surface);
 }
 
 .message-list,
@@ -377,9 +386,9 @@
   width: 100%;
   text-align: left;
   border: none;
-  border-bottom: 1px solid var(--surface);
-  background: var(--surface-elevated);
-  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
 }
 
@@ -405,6 +414,12 @@
   font-weight: 600;
 }
 
+.message-when {
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
 .message-row-meta {
   display: flex;
   justify-content: space-between;
@@ -414,14 +429,8 @@
   margin-top: var(--space-1);
 }
 
-.message-preview {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-sm);
-  color: var(--ink-soft);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.message-status {
+  white-space: nowrap;
 }
 
 .status-pill {
@@ -463,18 +472,7 @@
   font-family: inherit;
   font-size: var(--text-md);
   line-height: 1.6;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  margin: 0 0 var(--space-4);
-}
-
-.reader-workflow {
-  margin: 0 0 var(--space-4);
-  padding-left: var(--space-5);
-  font-size: var(--text-sm);
-  color: var(--ink-soft);
+  margin: 0 0 var(--space-5);
 }
 
 .reader-actions {
@@ -526,16 +524,19 @@
 }
 
 .advanced-panel {
-  margin-top: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-4) var(--space-4);
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  padding: var(--space-2) var(--page-gutter);
   background: var(--surface);
 }
 
 .advanced-panel summary {
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
   margin-bottom: var(--space-2);
 }
 
@@ -545,52 +546,11 @@
 
 .mail-empty {
   padding: var(--space-6) var(--space-4);
-  text-align: center;
   color: var(--ink-soft);
-}
-
-.scenario-guide {
-  margin-bottom: 0;
-}
-
-.scenario-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  cursor: pointer;
-  list-style: none;
-}
-
-.scenario-summary::-webkit-details-marker {
-  display: none;
-}
-
-.scenario-summary-title {
-  font-size: var(--text-md);
-  font-weight: 600;
-}
-
-.scenario-body {
-  margin-top: var(--space-3);
-}
-
-.scenario-flow {
-  margin: var(--space-2) 0;
-  padding-left: var(--space-5);
-  font-size: var(--text-sm);
-  color: var(--ink-soft);
-}
-
-.scenario-folder-hint {
-  margin: var(--space-2) 0 0;
-  padding: var(--space-2) var(--space-3);
-  background: var(--accent-soft);
-  border-radius: var(--radius-sm);
   font-size: var(--text-sm);
 }
 
-.scenario-witness {
-  margin-top: var(--space-2);
-  margin-bottom: 0;
+.empty-state {
+  padding: var(--space-6) var(--page-gutter);
+  color: var(--ink-soft);
 }

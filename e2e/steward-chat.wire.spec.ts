@@ -44,7 +44,7 @@ test.describe("steward chat wire", () => {
 
   test("flushes wire delivery queue from advanced panel", async ({ page }) => {
     await loginAndOpenWire(page);
-    await page.getByText("配送・公証（オペレータ向け）").click();
+    await page.getByText("配送・公証").click();
     const deliveryPanel = page.locator("section.panel").filter({ hasText: "配送" }).first();
     const flushBtn = deliveryPanel.getByRole("button", { name: "未送信を処理" }).first();
     await expect(flushBtn).toBeVisible({ timeout: 10_000 });

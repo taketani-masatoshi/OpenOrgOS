@@ -6,7 +6,6 @@ interface Props {
   messages: HumanMessageSummary[];
   selectedId?: string;
   emptyTitle: string;
-  emptyHint?: string;
   onSelect: (id: string) => void;
 }
 
@@ -25,17 +24,11 @@ export function MessageList({
   messages,
   selectedId,
   emptyTitle,
-  emptyHint,
   onSelect,
 }: Props) {
   const locale = useUiLocale();
   if (!messages.length) {
-    return (
-      <div className="empty-state mail-empty">
-        <strong>{emptyTitle}</strong>
-        {emptyHint ? <p>{emptyHint}</p> : null}
-      </div>
-    );
+    return <div className="mail-empty">{emptyTitle}</div>;
   }
 
   return (
@@ -50,13 +43,12 @@ export function MessageList({
           >
             <div className="message-row-top">
               <strong className="message-subject">{m.subject}</strong>
-              <span className={`status-pill tone-${m.status_tone}`}>{m.status_label}</span>
+              <span className="message-when">{formatWhen(m.recorded_at, locale)}</span>
             </div>
             <div className="message-row-meta">
               <span>{m.counterparty}</span>
-              <span>{formatWhen(m.recorded_at, locale)}</span>
+              <span className={`message-status tone-${m.status_tone}`}>{m.status_label}</span>
             </div>
-            <p className="message-preview">{m.preview}</p>
           </button>
         </li>
       ))}

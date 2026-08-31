@@ -71,14 +71,7 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
   }, [tenantId, body?.event_id]);
 
   if (!messageId && !loading) {
-    return (
-      <aside className="message-reader empty">
-        <div className="empty-state">
-          <strong>{copy.pickNotice}</strong>
-          <p>{copy.pickNoticeHint}</p>
-        </div>
-      </aside>
-    );
+    return <aside className="message-reader empty" aria-label={copy.pickNotice} />;
   }
 
   if (loading || !body) {
@@ -235,13 +228,6 @@ export function MessageReader({ tenantId, messageId, loading, body, onRefresh }:
         </div>
       </dl>
       <div className="reader-body">{body.body_text}</div>
-      {body.workflow_summary.length ? (
-        <ol className="reader-workflow">
-          {body.workflow_summary.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ol>
-      ) : null}
       <div className="reader-actions">
         {body.co_approver_required ? (
           <label className="reader-co-approver">

@@ -6,7 +6,7 @@ test.describe("steward chat witness", () => {
 
   test("witness controls available in advanced panel", async ({ page }) => {
     await loginAndOpenWire(page);
-    await page.getByText("配送・公証（オペレータ向け）").click();
+    await page.getByText("配送・公証").click();
     const witnessPanel = page.locator("section.panel").filter({ hasText: "公証" }).first();
     await expect(witnessPanel).toBeVisible({ timeout: 10_000 });
     await expect(witnessPanel.getByRole("button", { name: "公証を登録" })).toBeVisible();

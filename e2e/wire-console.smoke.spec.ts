@@ -42,7 +42,7 @@ test.describe("wire console smoke", () => {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     );
 
-    await page.getByText("配送・公証（オペレータ向け）").click();
+    await page.getByText("配送・公証").click();
     const deliveryPanel = page.locator("section.panel").filter({ hasText: "Delivery" });
     await expect(deliveryPanel.getByText(/pending [1-9]/)).toBeVisible({ timeout: 15_000 });
     await deliveryPanel.getByRole("button", { name: "Flush pending" }).click();
