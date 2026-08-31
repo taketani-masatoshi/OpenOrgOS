@@ -165,6 +165,7 @@ packages/orgos-cli/apps/
 .env
 .env.*
 !.env.example
+!*.example
 
 # Ephemeral / local verify tenants (not product SSOT)
 tenants/phase4-restore-test/
