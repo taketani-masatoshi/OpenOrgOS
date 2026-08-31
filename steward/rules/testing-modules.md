@@ -12,7 +12,7 @@ Vitest テストを **3 軸**（Catalog · Platform · Integration）で分類�
 | 指標 | 値 |
 |------|-----|
 | Vitest テストファイル | **583**（`tests/**/*.test.ts` · registry 含む） |
-| テストケース（静的 `it`/`test` **2669**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
+| テストケース（静的 `it`/`test` **2671**） | registry の決定論カウント。動的生成を含む実行件数は `npm test` 結果を参照 |
 | 業務 catalog module | **46**（readiness.yaml 正本 · core + JP pack） |
 | production_ready | **32** |
 | skeleton | **1**（`jp_permit_registry`） |

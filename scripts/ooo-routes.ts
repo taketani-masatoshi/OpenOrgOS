@@ -14,8 +14,9 @@
  *   // @ooo-route-section-base /console/v1/tenants/:tenant
  *   // @ooo-route POST /chat/v1/org/budget/expense-claim/approve
  */
-import { globSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { globFilesSync } from "../src/lib/glob-files.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
 
 /** Files that answer HTTP requests. Everything else is out of scope. */
@@ -221,7 +222,7 @@ function widestPerRoute(routes: RouteRef[]): RouteRef[] {
 export function routeCatalog(): RouteRef[] {
   const routes: RouteRef[] = [];
   for (const pattern of SOURCE_GLOBS) {
-    for (const file of globSync(pattern, { cwd: ROOT_DIR }).sort()) {
+    for (const file of globFilesSync(pattern, { cwd: ROOT_DIR }).sort()) {
       const source = relative(ROOT_DIR, join(ROOT_DIR, file));
       routes.push(...extractRoutes(source, readFileSync(join(ROOT_DIR, file), "utf-8")));
     }

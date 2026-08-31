@@ -4,10 +4,11 @@
  * Regenerate: npm run test:registry:sync
  */
 
-import { existsSync, globSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { globFilesSync } from "../src/lib/glob-files.js";
 import { listModuleCliBundles } from "../src/lib/module-cli.js";
 import { getModuleSeedDir } from "../src/lib/modules.js";
 
@@ -367,7 +368,7 @@ export function classifyTestFile(filename: string): TestEntry {
 }
 
 export function listTestFilesOnDisk(): string[] {
-  return globSync("**/*.test.ts", { cwd: REGISTRY_DIR })
+  return globFilesSync("**/*.test.ts", { cwd: REGISTRY_DIR })
     .map((f) => f.replace(/\\/g, "/"))
     .sort();
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync, globSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { globFilesSync } from "../src/lib/glob-files.js";
 
 const root = join(import.meta.dirname, "..");
 
@@ -11,7 +12,7 @@ describe("docs score sync", () => {
     expect(match, "framework-assessment should mention **NNN tests**").toBeTruthy();
     const docCount = Number(match![1]);
     let actual = 0;
-    for (const rel of globSync("tests/**/*.test.ts", { cwd: root })) {
+    for (const rel of globFilesSync("tests/**/*.test.ts", { cwd: root })) {
       const body = readFileSync(join(root, rel), "utf-8");
       actual += (body.match(/\b(it|test)\s*\(/g) ?? []).length;
     }
