@@ -178,3 +178,4 @@ data/product/stripe-secrets.env
 # Mail secrets (L2 — SMTP / IMAP passwords saved from the Console)
 tenants/*/data/secrets/
 data/secrets/
+tests/fixtures/tenant-rosters/sch-verify/
