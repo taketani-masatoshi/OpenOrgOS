@@ -14,6 +14,7 @@ import {
   verifyWebAuthnLogin,
 } from "./webauthn.js";
 import { isWebAuthnE2eLoginEnabled } from "./webauthn-e2e.js";
+import { loginBootstrapIdentity } from "../../org/operators.js";
 
 export interface WireConsoleLoginBody {
   passkey?: string;
@@ -156,6 +157,7 @@ export function getWireConsoleAuthConfigResponse() {
     webauthn,
     webauthn_e2e_login: base.mode === "prod" && isWebAuthnE2eLoginEnabled(),
     community_handoff: oidcReady,
+    login_defaults: loginBootstrapIdentity(),
   };
 }
 

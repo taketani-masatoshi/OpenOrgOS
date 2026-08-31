@@ -264,6 +264,7 @@ export interface AuthConfig {
   };
   webauthn_e2e_login?: boolean;
   community_handoff?: boolean;
+  login_defaults?: { operator_id: string; approver_id: string };
 }
 
 export interface AuthUser {

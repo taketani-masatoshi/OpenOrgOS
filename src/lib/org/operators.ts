@@ -261,6 +261,20 @@ export function boundApproverId(operatorId: string, fallback = ""): string {
   return op.approver_name?.trim() || op.display_name.trim() || fallback.trim();
 }
 
+/** Unauthenticated login form defaults — first active CEO, never a hardcoded Demo CEO. */
+export function loginBootstrapIdentity():
+  | { operator_id: string; approver_id: string }
+  | undefined {
+  const ops = listActiveOperators().filter(
+    (o) => o.role === "ceo" || o.role === "approver",
+  );
+  const ceo = ops.find((o) => o.role === "ceo") ?? ops[0];
+  if (!ceo) return undefined;
+  const approver_id = ceo.approver_name?.trim() || ceo.display_name.trim();
+  if (!approver_id) return undefined;
+  return { operator_id: ceo.operator_id, approver_id };
+}
+
 export function findOperatorByKey(key: string): OperatorRecord | undefined {
   return listActiveOperators().find((o) => verifyOperatorKey(o.key_hash, key));
 }

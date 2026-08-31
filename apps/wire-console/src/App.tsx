@@ -34,7 +34,7 @@ export function App() {
   const [prodToken, setProdToken] = useState("");
   const [idToken, setIdToken] = useState("");
   const [operatorId, setOperatorId] = useState("OP-001");
-  const [approverId, setApproverId] = useState("Demo CEO");
+  const [approverId, setApproverId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [webAuthnBusy, setWebAuthnBusy] = useState(false);
@@ -87,6 +87,13 @@ export function App() {
       cancelled = true;
     };
   }, [loadSession]);
+
+  useEffect(() => {
+    const d = authConfig?.login_defaults;
+    if (!d) return;
+    setOperatorId((prev) => (prev === "OP-001" || prev === "" ? d.operator_id : prev));
+    setApproverId((prev) => (prev === "Demo CEO" || prev === "" ? d.approver_id : prev));
+  }, [authConfig]);
 
   async function login(e: React.FormEvent) {
     e.preventDefault();

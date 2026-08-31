@@ -96,7 +96,10 @@ export function webauthnUserMessage(err: unknown, opts?: WebAuthnUserMessageOpts
   if (/authenticated session required|session required/i.test(text)) {
     return copy.sessionRequired;
   }
-  if (/mismatch|does not belong|unknown operator/i.test(text)) {
+  if (/not authorized for operator|unknown operator/i.test(raw)) {
+    return copy.mismatch;
+  }
+  if (/mismatch|does not belong/i.test(text)) {
     return copy.mismatch;
   }
   if (/unauthorized|401/.test(text)) {

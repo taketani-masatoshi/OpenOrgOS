@@ -8,6 +8,7 @@ import {
 } from "../src/lib/wire-console/auth/session.js";
 import { sessionStorePath } from "../src/lib/console-auth/session-store.js";
 import { setTenantId } from "../src/lib/tenant.js";
+import { getWireConsoleAuthConfigResponse } from "../src/lib/wire-console/auth/login.js";
 
 describe("session persistence", () => {
   const env = { ...process.env };
@@ -61,5 +62,13 @@ describe("session persistence", () => {
     expect(created.user.operator_id).toBe("OP-001");
     expect(created.user.approver_id).not.toBe("Demo CEO");
     expect(getSessionUser(created.token)?.approver_id).toBe(created.user.approver_id);
+  });
+
+  it("exposes mal registry names as login_defaults instead of Demo CEO", () => {
+    setTenantId("mal");
+    const cfg = getWireConsoleAuthConfigResponse();
+    expect(cfg.login_defaults?.operator_id).toBe("OP-001");
+    expect(cfg.login_defaults?.approver_id).toBeTruthy();
+    expect(cfg.login_defaults?.approver_id).not.toBe("Demo CEO");
   });
 });

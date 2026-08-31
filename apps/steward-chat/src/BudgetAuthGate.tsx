@@ -66,7 +66,7 @@ export function BudgetAuthGate({
   const [error, setError] = useState<string | null>(null);
   const [passkey, setPasskey] = useState("orgos-dev");
   const [operatorId, setOperatorId] = useState("OP-001");
-  const [approverId, setApproverId] = useState("Demo CEO");
+  const [approverId, setApproverId] = useState("");
   const [busy, setBusy] = useState(false);
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [customersNav, setCustomersNav] = useState(false);
@@ -100,7 +100,13 @@ export function BudgetAuthGate({
           fetchCustomersNav().catch(() => ({ show_tab: false })),
         ]);
         if (cancelled) return;
-        if (config) setAuthConfig(config);
+        if (config) {
+          setAuthConfig(config);
+          if (config.login_defaults) {
+            setOperatorId(config.login_defaults.operator_id);
+            setApproverId(config.login_defaults.approver_id);
+          }
+        }
         setCustomersNav(customers.show_tab === true);
         setUser(me);
       } catch (e) {
@@ -115,6 +121,13 @@ export function BudgetAuthGate({
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const d = authConfig?.login_defaults;
+    if (!d) return;
+    setOperatorId((prev) => (prev === "OP-001" || prev === "" ? d.operator_id : prev));
+    setApproverId((prev) => (prev === "Demo CEO" || prev === "" ? d.approver_id : prev));
+  }, [authConfig]);
 
   async function refreshAfterAuth() {
     const me = await fetchMe();

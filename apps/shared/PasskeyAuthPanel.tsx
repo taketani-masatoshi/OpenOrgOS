@@ -109,15 +109,15 @@ export function PasskeyAuthPanel({
       typeof window !== "undefined" ? window.location.pathname : "/",
     );
 
+  const showCommunityPrimary =
+    communityHandoffPrimary && communityStartUrl && !emphasizeBootstrapFlow;
   const ready = operatorId.trim().length > 0 && approverId.trim().length > 0;
   const firstRegister = showRegister && !showSignIn;
-  const showIdFields = firstRegister && !registrationRequiresSession;
+  const showIdFields = firstRegister && !registrationRequiresSession && !showCommunityPrimary;
   const showLoginRegister = showRegister && !registrationRequiresSession;
   const showHandoff =
     (showRegister && registrationRequiresSession && !communityHandoffPrimary) ||
     emphasizeBootstrapFlow;
-  const showCommunityPrimary =
-    communityHandoffPrimary && communityStartUrl && !emphasizeBootstrapFlow;
   const browserOk = typeof window === "undefined" ? true : browserSupportsWebAuthn();
   const pageBlocked = pageState.status !== "ok";
   const passkeyUnavailableForPage =
@@ -188,6 +188,14 @@ export function PasskeyAuthPanel({
       <main className="auth-main">
         {banner ? <p className="auth-status-banner">{banner}</p> : null}
 
+        {showCommunityPrimary && communityStartUrl && hideForm ? (
+          <div className="auth-key-card auth-key-card-solo">
+            <a className="btn btn-primary" href={communityStartUrl}>
+              {copy.communityEnter}
+            </a>
+          </div>
+        ) : null}
+
         {hideForm ? null : (
           <form className="auth-key-card auth-key-card-solo" onSubmit={onSubmit}>
             {!emphasizeBootstrapFlow && !showCommunityPrimary ? (
@@ -242,6 +250,14 @@ export function PasskeyAuthPanel({
                       disabled={busy || pageBlocked || !browserOk}
                     >
                       {busy ? copy.checkingBusy : copy.touchIdEnter}
+                    </button>
+                  ) : showLoginRegister ? (
+                    <button
+                      type="submit"
+                      className="btn btn-ghost"
+                      disabled={busy || pageBlocked || !browserOk || !ready}
+                    >
+                      {busy ? copy.registering : copy.touchIdRegister}
                     </button>
                   ) : null}
                 </>
