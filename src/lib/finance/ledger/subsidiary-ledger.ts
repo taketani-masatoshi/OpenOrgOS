@@ -4,6 +4,7 @@ import {
 } from "../../../../schemas/finance/journal-entry.js";
 import { loadChartOfAccounts, loadFixedAssets } from "../../data.js";
 import { loadJournalEntries } from "../expense-claim-journal.js";
+import { loadOpeningBalances } from "./opening-balance.js";
 import { buildTrialBalance } from "./trial-balance.js";
 
 export type SubsidiaryLedgerLine = {
@@ -24,6 +25,8 @@ export type SubsidiaryLedgerReport = {
 };
 
 const DEFAULT_CONTROL_ACCOUNTS = ["1150", "2110"];
+/** Carried-over control balance from the GL cutover — it has no counterparty detail. */
+const OPENING_COUNTERPARTY = "_opening";
 
 export function buildSubsidiaryLedger(input: {
   accountCode: string;
@@ -36,10 +39,30 @@ export function buildSubsidiaryLedger(input: {
     throw new Error(`Unknown account code: ${input.accountCode}`);
   }
 
+  const opening = loadOpeningBalances();
+  const openingAsOf = opening?.as_of;
+  const includeOpening = Boolean(opening && openingAsOf && asOf >= openingAsOf);
+
   const byCounterparty = new Map<string, { balance: number; oldest?: string }>();
+  if (includeOpening && opening) {
+    for (const line of opening.lines) {
+      if (line.account_code !== input.accountCode) continue;
+      const delta =
+        account.normal_balance === "debit"
+          ? line.debit_yen - line.credit_yen
+          : line.credit_yen - line.debit_yen;
+      if (delta === 0) continue;
+      const bucket = byCounterparty.get(OPENING_COUNTERPARTY) ?? { balance: 0 };
+      bucket.balance += delta;
+      bucket.oldest = openingAsOf;
+      byCounterparty.set(OPENING_COUNTERPARTY, bucket);
+    }
+  }
   for (const raw of loadJournalEntries().entries) {
     const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
     if (entry.occurred_at.slice(0, 10) > asOf) continue;
+    // Cutover: opening already reflects activity through opening.as_of.
+    if (includeOpening && openingAsOf && entry.occurred_at.slice(0, 10) <= openingAsOf) continue;
     for (const line of entry.lines) {
       if (line.account_code !== input.accountCode) continue;
       const cp = line.counterparty_id ?? "_unassigned";
