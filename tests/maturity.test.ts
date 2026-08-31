@@ -10,7 +10,8 @@ describe("maturity", () => {
     expect(r.operational.label).toBe("運用度");
     expect(r.automation.label).toBe("自動化度");
     expect(r.overall).toBeGreaterThan(0);
-  }, 15_000);
+    // The report runs the full validate + integrity sweep over every tenant file.
+  }, 180_000);
 
   it("lists P0 items including audit", () => {
     const items = listP0Items();

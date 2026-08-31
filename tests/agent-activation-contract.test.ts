@@ -1,4 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { refreshOrgOsPaths } from "../src/lib/orgos-paths.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { validateAgentActivationContract } from "../src/lib/agent-activation-verify.js";
 import { isAgentActive, listCatalogAgents, resolveAgentId } from "../src/lib/agent-catalog.js";
@@ -67,13 +71,31 @@ describe("agent activation contract", () => {
   });
 
   it("unconfigured tenants fall back to core-only, not full catalog", () => {
-    setTenantId("phase4-restore-test");
-    const active = listActiveTenantAgents("operational");
-    expect(active.length).toBeLessThanOrEqual(DEFAULT_CORE_OPERATIONAL_AGENTS.length);
-    for (const id of DEFAULT_CORE_OPERATIONAL_AGENTS) {
-      expect(active).toContain(id);
+    const previousWorkspace = process.env.ORGOS_WORKSPACE;
+    const workspace = mkdtempSync(join(tmpdir(), "orgos-unconfigured-tenant-"));
+    const tenantId = "unconfigured-tenant";
+    mkdirSync(join(workspace, "tenants", tenantId), { recursive: true });
+    writeFileSync(
+      join(workspace, "tenants", tenantId, "tenant.yaml"),
+      `id: ${tenantId}\nname: Unconfigured\nlifecycle: skeleton\njurisdiction: JP\nlocale: ja-JP\ndefault_currency: JPY\n`,
+      "utf-8"
+    );
+    process.env.ORGOS_WORKSPACE = workspace;
+    refreshOrgOsPaths();
+    try {
+      setTenantId(tenantId);
+      const active = listActiveTenantAgents("operational");
+      expect(active.length).toBeLessThanOrEqual(DEFAULT_CORE_OPERATIONAL_AGENTS.length);
+      for (const id of DEFAULT_CORE_OPERATIONAL_AGENTS) {
+        expect(active).toContain(id);
+      }
+      expect(isAgentActive("coo", { profile: "operational" })).toBe(false);
+    } finally {
+      if (previousWorkspace === undefined) delete process.env.ORGOS_WORKSPACE;
+      else process.env.ORGOS_WORKSPACE = previousWorkspace;
+      refreshOrgOsPaths();
+      rmSync(workspace, { recursive: true, force: true });
+      setTenantId("acme");
     }
-    expect(isAgentActive("coo", { profile: "operational" })).toBe(false);
-    setTenantId("acme");
   });
 });
