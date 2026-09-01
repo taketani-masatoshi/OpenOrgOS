@@ -87,18 +87,8 @@ export function AgentChatPage({ agentId, title }: Props) {
 
   return (
     <div className="agent-chat">
-      <header className="page-heading">
-        <div>
-          <h1 className="agent-chat-title ops-page-title">{title}</h1>
-          <p className="ops-page-lead">{copy.chatLead}</p>
-          <p className="muted">
-            帳簿操作は{" "}
-            <a href="/?ledger=1">Ledger ワークベンチ</a>
-            で承認・投稿します（AI は提案まで）。
-          </p>
-        </div>
-        <LlmRoutePicker agentId={agentId} />
-      </header>
+      {/* Nav tab already names the agent; keep the heading for assistive tech only. */}
+      <h1 className="agent-chat-title agent-chat-label-sr">{title}</h1>
       <LedgerProposeCard />
       <form className="agent-chat-composer" onSubmit={(e) => void onSubmit(e)}>
         <label className="agent-chat-label-sr" htmlFor={inputId}>
@@ -119,28 +109,31 @@ export function AgentChatPage({ agentId, title }: Props) {
             }
             aria-keyshortcuts="Meta+Enter Control+Enter"
           />
-        </div>
-        <div className="agent-chat-actions">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={
-              state.loadingHistory ||
-              state.inFlight >= MAX_AGENT_CHAT_IN_FLIGHT ||
-              !state.draft.trim()
-            }
-          >
-            {copy.send}
-          </button>
-          {state.notifyPerm === "default" && (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => void enableAgentChatNotifications(agentId)}
-            >
-              {copy.notify}
-            </button>
-          )}
+          <div className="agent-chat-composer-bar">
+            <LlmRoutePicker agentId={agentId} compact />
+            <div className="agent-chat-actions">
+              {state.notifyPerm === "default" && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => void enableAgentChatNotifications(agentId)}
+                >
+                  {copy.notify}
+                </button>
+              )}
+              <button
+                type="submit"
+                className="btn btn-primary btn-sm"
+                disabled={
+                  state.loadingHistory ||
+                  state.inFlight >= MAX_AGENT_CHAT_IN_FLIGHT ||
+                  !state.draft.trim()
+                }
+              >
+                {copy.send}
+              </button>
+            </div>
+          </div>
         </div>
       </form>
 

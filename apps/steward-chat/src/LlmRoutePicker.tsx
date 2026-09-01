@@ -12,6 +12,8 @@ import {
 
 type Props = {
   agentId: string;
+  /** Cursor-style chip inside the composer (no status line). */
+  compact?: boolean;
 };
 
 function sanitizeHint(hint: LlmRouteHint, workers: LlmWorkerRow[]): LlmRouteHint {
@@ -21,7 +23,7 @@ function sanitizeHint(hint: LlmRouteHint, workers: LlmWorkerRow[]): LlmRouteHint
   return { mode: found.tier, worker_id: found.id };
 }
 
-export function LlmRoutePicker({ agentId }: Props) {
+export function LlmRoutePicker({ agentId, compact = false }: Props) {
   const copy = useCopy(STEWARD_COPY);
   const [workers, setWorkers] = useState<LlmWorkerRow[]>([]);
   const [loadState, setLoadState] = useState<"loading" | "ok" | "error">("loading");
@@ -94,41 +96,64 @@ export function LlmRoutePicker({ agentId }: Props) {
           : statusWorker.healthy
             ? copy.llmRouteStatusConnected(statusWorker.label || statusWorker.id)
             : copy.llmRouteStatusDisconnected(statusWorker.label || statusWorker.id);
+  const statusOk =
+    loadState === "ok" && Boolean(statusWorker?.healthy);
+
+  const select = (
+    <select
+      className={
+        compact ? "llm-route-picker-select" : "locale-picker-select"
+      }
+      value={encodeLlmRouteSelect(hint)}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={copy.llmRouteLabel}
+      title={statusText}
+    >
+      <option value="auto">{copy.llmRouteAuto}</option>
+      <option value="local">{copy.llmRouteLocalAny}</option>
+      {localWorkers.length > 0 && (
+        <optgroup label={copy.llmRouteGroupLocal}>
+          {localWorkers.map((w) => (
+            <option key={w.id} value={`local:${w.id}`}>
+              {w.label || w.id}
+            </option>
+          ))}
+        </optgroup>
+      )}
+      <option value="cloud">{copy.llmRouteCloudAny}</option>
+      {cloudWorkers.length > 0 && (
+        <optgroup label={copy.llmRouteGroupCloud}>
+          {cloudWorkers.map((w) => (
+            <option key={w.id} value={`cloud:${w.id}`}>
+              {w.label || w.id}
+            </option>
+          ))}
+        </optgroup>
+      )}
+    </select>
+  );
+
+  if (compact) {
+    return (
+      <div
+        className={
+          statusOk
+            ? "llm-route-picker is-compact is-ok"
+            : "llm-route-picker is-compact is-warn"
+        }
+      >
+        {select}
+      </div>
+    );
+  }
 
   return (
     <label className="llm-route-picker">
       <span className="llm-route-picker-label">{copy.llmRouteLabel}</span>
-      <select
-        className="locale-picker-select"
-        value={encodeLlmRouteSelect(hint)}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={copy.llmRouteLabel}
-      >
-        <option value="auto">{copy.llmRouteAuto}</option>
-        <option value="local">{copy.llmRouteLocalAny}</option>
-        {localWorkers.length > 0 && (
-          <optgroup label={copy.llmRouteGroupLocal}>
-            {localWorkers.map((w) => (
-              <option key={w.id} value={`local:${w.id}`}>
-                {w.label || w.id}
-              </option>
-            ))}
-          </optgroup>
-        )}
-        <option value="cloud">{copy.llmRouteCloudAny}</option>
-        {cloudWorkers.length > 0 && (
-          <optgroup label={copy.llmRouteGroupCloud}>
-            {cloudWorkers.map((w) => (
-              <option key={w.id} value={`cloud:${w.id}`}>
-                {w.label || w.id}
-              </option>
-            ))}
-          </optgroup>
-        )}
-      </select>
+      {select}
       <span
         className={
-          loadState === "ok" && statusWorker?.healthy
+          statusOk
             ? "llm-route-picker-status is-ok"
             : "llm-route-picker-status is-warn"
         }
