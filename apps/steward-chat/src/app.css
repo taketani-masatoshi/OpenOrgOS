@@ -877,6 +877,13 @@ html[data-theme="dark"] .budget-app .people-desk {
   align-self: flex-end;
 }
 
+.llm-route-picker.is-compact {
+  display: block;
+  min-width: 0;
+  flex: 0 1 auto;
+  align-self: center;
+}
+
 .llm-route-picker-label {
   margin: 0;
   color: var(--ink-soft);
@@ -886,6 +893,29 @@ html[data-theme="dark"] .budget-app .people-desk {
 
 .llm-route-picker .locale-picker-select {
   width: 100%;
+}
+
+.llm-route-picker-select {
+  max-width: 14rem;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.llm-route-picker-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.llm-route-picker.is-compact.is-warn .llm-route-picker-select {
+  border-color: var(--danger, var(--border-strong));
 }
 
 .llm-route-picker-status {
@@ -2203,7 +2233,7 @@ h4.heading-with-info {
     gap: var(--space-3);
   }
 
-  .llm-route-picker {
+  .llm-route-picker:not(.is-compact) {
     align-self: stretch;
     flex: 1 1 auto;
     min-width: 0;
@@ -4585,6 +4615,27 @@ h4.heading-with-info {
 
 .agent-chat-input-wrap {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  overflow: hidden;
+}
+
+.agent-chat-input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.agent-chat-composer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .agent-chat-input {
@@ -4592,16 +4643,14 @@ h4.heading-with-info {
   resize: vertical;
   min-height: 4.5rem;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
+  border: none;
+  border-radius: 0;
   font: inherit;
-  background: var(--surface-elevated);
+  background: transparent;
 }
 
 .agent-chat-input:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: var(--focus-ring);
 }
 
 .agent-chat-input::placeholder {
@@ -4612,7 +4661,8 @@ h4.heading-with-info {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-4);
+  gap: var(--space-2);
+  margin-left: auto;
 }
 
 .agent-chat-bubble.agent {
@@ -4639,6 +4689,10 @@ h4.heading-with-info {
 
   .agent-chat-bubble.user {
     max-width: 92%;
+  }
+
+  .agent-chat-composer-bar {
+    flex-wrap: wrap;
   }
 
   .agent-chat-actions {
