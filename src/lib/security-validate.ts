@@ -20,6 +20,7 @@ import { checkAgentAccess, loadClassificationRegistry } from "./classification.j
 import { loadAgentCapabilityManifest } from "./agent-capability.js";
 import { getTenantLifecycleStatus } from "./org/tenant-lifecycle.js";
 import { ROOT_DIR } from "./tenant.js";
+import { runModuleTrustPolicyChecks } from "./module-trust-policy.js";
 
 export interface SecurityIssue {
   level: "error" | "warning";
@@ -214,6 +215,14 @@ export function runSecurityChecks(): SecurityIssue[] {
 
   issues.push(...runAgentFolderPolicyChecks());
   issues.push(...runTenantOperatorRegistryChecks());
+
+  for (const m of runModuleTrustPolicyChecks()) {
+    issues.push({
+      level: isProdSecurityMode() ? "error" : "warning",
+      file: m.file,
+      message: m.message,
+    });
+  }
 
   return issues;
 }
