@@ -332,6 +332,49 @@ describe("operator runtime tool loop", () => {
     expect(result.usage.total_tokens).toBe(45);
   });
 
+  it("supports one plain inference with tools and structured retry disabled", async () => {
+    process.env.ORGOS_LLM_STRUCTURED = "1";
+    const fetchMock = vi.fn(async (_url, init) => {
+      const body = JSON.parse(String(init?.body)) as {
+        tools?: unknown[];
+        response_format?: unknown;
+      };
+      expect(body.tools).toBeUndefined();
+      expect(body.response_format).toBeUndefined();
+      return {
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  role: "assistant",
+                  content: "検索結果を確認しました。",
+                },
+              },
+            ],
+            usage: {
+              prompt_tokens: 10,
+              completion_tokens: 5,
+              total_tokens: 15,
+            },
+          }),
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { runLlmWithTools } = await import("../src/lib/operator-runtime/tool-loop.js");
+    const result = await runLlmWithTools("system", "最新情報は？", undefined, {}, undefined, {
+      allowTools: false,
+      allowStructuredOutput: false,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.tool_calls).toBe(0);
+    expect(result.structured).toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
   it("propagates operator context through the tool loop", async () => {
     let call = 0;
     let toolResultContent = "";

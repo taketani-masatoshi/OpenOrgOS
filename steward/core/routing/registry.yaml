@@ -128,6 +128,24 @@ routes:
       paths:
         - data/hr/
 
+  - id: hr-onboard
+    description: 入社手続き（L1 名簿）
+    agent: human_resources
+    skill: hr_onboard
+    priority: 77
+    resource_paths:
+      - data/hr/
+    match:
+      keywords:
+        - 入社手続き
+        - 入社した
+        - 雇用を開始
+        - 新規採用
+        - hr onboard
+        - new hire
+      paths:
+        - data/hr/
+
   - id: tenant-config-propose
     description: テナント設定変更の提案
     agent: executive_steward

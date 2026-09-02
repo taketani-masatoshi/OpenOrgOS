@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · human_resources
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-30 · **Tenant:** mal
+> **Generated:** 2026-09-03 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent human_resources`
 
 ---
@@ -212,6 +212,7 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 | 手段 | 内容 |
 |------|------|
 | hr_headcount | `orgos hr headcount` · `orgos hr headcount --json`（L1 在籍人数 · 氏名非出力） |
+| hr_onboard | `orgos hr onboard --name …` · 確認後 `--write`（L1 名簿追記 + 残作業 Work Order）。契約・給与・社保は人間。チャットで完了したと言わない |
 | agent_pulse | `orgos agent pulse --agent human_resources` |
 
 
@@ -220,6 +221,8 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 ```bash
 orgos hr headcount
 orgos hr headcount --json
+orgos hr onboard --name 大谷
+orgos hr onboard --name 大谷 --hired-date 2026-09-01 --write
 orgos agent readiness --agent human_resources
 orgos agent pulse --agent human_resources
 ```
@@ -228,7 +231,7 @@ orgos agent pulse --agent human_resources
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
 - 統括: [steward_agent_roster.md](steward/orchestrators/steward_agent_roster.md)
-- Skill: [hr_headcount.md](../skills/hr_headcount.md)
+- Skill: [hr_headcount.md](../skills/hr_headcount.md) · [hr_onboard.md](../skills/hr_onboard.md)
 
 
 
@@ -238,6 +241,7 @@ orgos agent pulse --agent human_resources
 
 - `payroll_calc` · cli · `steward/core/skills/payroll_calc.md`
 - `hr_headcount` · cli · `steward/core/skills/hr_headcount.md`
+- `hr_onboard` · cli · `steward/core/skills/hr_onboard.md`
 - `hr_policy_review` · agent · `steward/core/skills/extension/hr_policy_review.md`
 - `hr_labor_compliance` · agent · `steward/core/skills/extension/hr_labor_compliance.md`
 

@@ -69,6 +69,22 @@ const WORKER_PRESETS: WorkerPreset[] = [
     },
   },
   {
+    id: "ollama-cloud",
+    buttonLabel: "Ollama Cloud",
+    row: {
+      id: "cloud-ollama",
+      label: "Ollama Cloud",
+      tier: "cloud",
+      provider: "openai-compatible",
+      base_url: "https://ollama.com/v1",
+      model: "gpt-oss:20b",
+      max_inflight: 2,
+      enabled: true,
+      api_key_env: "OLLAMA_API_KEY",
+      supports_tools: true,
+    },
+  },
+  {
     id: "lmstudio",
     buttonLabel: "LM Studio",
     row: {
@@ -427,9 +443,11 @@ export function LlmWorkersPage() {
                           placeholder={
                             w.provider === "anthropic"
                               ? "ANTHROPIC_API_KEY"
-                              : w.tier === "cloud"
-                                ? "OPENAI_API_KEY"
-                                : "ORGOS_LLM_API_KEY"
+                              : /ollama\.com/i.test(w.base_url)
+                                ? "OLLAMA_API_KEY"
+                                : w.tier === "cloud"
+                                  ? "OPENAI_API_KEY"
+                                  : "ORGOS_LLM_API_KEY"
                           }
                           disabled={busy}
                           onChange={(e) =>

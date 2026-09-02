@@ -50,6 +50,7 @@ export function AgentChatPage({ agentId, title }: Props) {
   const inputId = `agent-chat-input-${agentId}`;
   const [faqBusy, setFaqBusy] = useState(false);
   const [faqNote, setFaqNote] = useState<string | null>(null);
+  const [webSearch, setWebSearch] = useState(false);
 
   useEffect(() => {
     void ensureAgentChatHistory(agentId);
@@ -61,14 +62,18 @@ export function AgentChatPage({ agentId, title }: Props) {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    void sendAgentChatDraft(agentId, title);
+    void sendAgentChatDraft(agentId, title, {
+      webSearch,
+    });
   }
 
   /** ⌘/Ctrl+Enter sends; plain Enter keeps newline in the textarea. */
   function onComposerKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key !== "Enter" || (!e.metaKey && !e.ctrlKey)) return;
     e.preventDefault();
-    void sendAgentChatDraft(agentId, title);
+    void sendAgentChatDraft(agentId, title, {
+      webSearch,
+    });
   }
 
   async function onRebuildFaq() {
@@ -110,7 +115,34 @@ export function AgentChatPage({ agentId, title }: Props) {
             aria-keyshortcuts="Meta+Enter Control+Enter"
           />
           <div className="agent-chat-composer-bar">
-            <LlmRoutePicker agentId={agentId} compact />
+            <div className="agent-chat-route-controls">
+              <LlmRoutePicker
+                agentId={agentId}
+                compact
+                forcedLocal={webSearch}
+              />
+              <label
+                className={
+                  webSearch
+                    ? "agent-chat-web-search-toggle is-on"
+                    : "agent-chat-web-search-toggle"
+                }
+              >
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={webSearch}
+                  onChange={(e) => setWebSearch(e.target.checked)}
+                />
+                <span>Web検索</span>
+                <strong>{webSearch ? "ON" : "OFF"}</strong>
+              </label>
+              {webSearch && (
+                <small className="agent-chat-web-search-notice">
+                  入力内容を公開Web検索へ送信します
+                </small>
+              )}
+            </div>
             <div className="agent-chat-actions">
               {state.notifyPerm === "default" && (
                 <button

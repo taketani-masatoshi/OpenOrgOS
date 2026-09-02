@@ -4638,6 +4638,48 @@ h4.heading-with-info {
   background: var(--surface);
 }
 
+.agent-chat-route-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.agent-chat-web-search-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.agent-chat-web-search-toggle.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.agent-chat-web-search-toggle input {
+  width: 0.9rem;
+  height: 0.9rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.agent-chat-web-search-toggle strong {
+  font-size: 0.68rem;
+}
+
+.agent-chat-web-search-notice {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
 .agent-chat-input {
   width: 100%;
   resize: vertical;
@@ -5918,4 +5960,3 @@ h4.heading-with-info {
     text-align: left;
   }
 }
-

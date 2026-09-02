@@ -17,3 +17,14 @@ workers:
     max_inflight: 2
     enabled: true
     api_key_env: ORGOS_LLM_API_KEY
+  # Key lives in OS_Community/.env as OLLAMA_API_KEY — never in this file.
+  - id: cloud-ollama
+    label: Ollama Cloud
+    tier: cloud
+    provider: openai-compatible
+    base_url: https://ollama.com/v1
+    model: gpt-oss:20b
+    max_inflight: 2
+    enabled: true
+    api_key_env: OLLAMA_API_KEY
+    supports_tools: true

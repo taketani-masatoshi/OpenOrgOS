@@ -615,6 +615,15 @@ export async function probeLlmWorker(
   );
 }
 
+export async function fetchLlmWorkerModels(
+  workerId: string,
+): Promise<string[]> {
+  const res = await chatApi<{ ok: boolean; models: string[] }>(
+    `/chat/v1/llm/workers/${encodeURIComponent(workerId)}/models`,
+  );
+  return res.models;
+}
+
 export async function decideLlmRequest(
   requestId: string,
   decision: "approve" | "reject",
@@ -3477,12 +3486,19 @@ export async function flushWitnessPending(): Promise<{ flushed: number }> {
 export type LlmRouteHint = {
   mode: "auto" | "local" | "cloud";
   worker_id?: string;
+  model?: string;
+};
+
+export type WebSearchRequest = {
+  enabled: boolean;
+  query?: string;
 };
 
 export async function sendMessage(
   message: string,
   agentId?: "secretary" | "executive_steward",
   llmRoute?: LlmRouteHint,
+  webSearch?: WebSearchRequest,
 ): Promise<{
   ok: boolean;
   reply: string;
@@ -3501,6 +3517,10 @@ export async function sendMessage(
       message,
       ...(agentId ? { agent_id: agentId } : {}),
       ...(llmRoute ? { llm_route: llmRoute } : {}),
+      web_search: webSearch?.enabled === true,
+      ...(webSearch?.enabled
+        ? { web_search_query: webSearch.query }
+        : {}),
     }),
   });
   if (res.status === 401) throw new Error("unauthorized");
@@ -3951,6 +3971,7 @@ export async function sendMessageStream(
   opts?: {
     agentId?: "secretary" | "executive_steward";
     llmRoute?: LlmRouteHint;
+    webSearch?: WebSearchRequest;
   },
 ): Promise<void> {
   const res = await fetch("/chat/v1/message/stream", {
@@ -3961,6 +3982,10 @@ export async function sendMessageStream(
       message,
       ...(opts?.agentId ? { agent_id: opts.agentId } : {}),
       ...(opts?.llmRoute ? { llm_route: opts.llmRoute } : {}),
+      web_search: opts?.webSearch?.enabled === true,
+      ...(opts?.webSearch?.enabled
+        ? { web_search_query: opts.webSearch.query }
+        : {}),
     }),
   });
 
