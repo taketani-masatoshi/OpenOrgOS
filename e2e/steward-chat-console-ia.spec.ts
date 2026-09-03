@@ -3,23 +3,27 @@ import { expect, test } from "@playwright/test";
 import { loginConsole as login } from "./helpers/console-login";
 
 test.describe("steward chat console IA", () => {
-  test("budget subnav excludes ledger, tax, setup, fleet, receipts", async ({ page }) => {
+  test("finance subnav groups recurring finance work", async ({ page }) => {
     await login(page);
     await page
       .getByRole("navigation", { name: "Operator Console" })
-      .getByRole("link", { name: "予実" })
+      .getByRole("link", { name: "財務" })
       .click();
-    await expect(page).toHaveURL(/wallet=1/, { timeout: 5_000 });
+    await expect(page).toHaveURL(/ledger=1/, { timeout: 5_000 });
 
-    const budgetNav = page.getByRole("navigation", { name: "予実メニュー" });
-    await expect(budgetNav.getByRole("button", { name: "個人予実" })).toBeVisible();
-    await expect(budgetNav.getByRole("button", { name: "分析" })).toBeVisible();
-    await expect(budgetNav.getByRole("button", { name: "予算管理" })).toBeVisible();
-    await expect(budgetNav.getByRole("button", { name: "帳簿", exact: true })).toHaveCount(0);
-    await expect(budgetNav.getByRole("button", { name: "税務" })).toHaveCount(0);
-    await expect(budgetNav.getByRole("button", { name: "セットアップ" })).toHaveCount(0);
-    await expect(budgetNav.getByRole("button", { name: "フリート運用" })).toHaveCount(0);
-    await expect(budgetNav.getByRole("button", { name: "領収書発行" })).toHaveCount(0);
+    const financeNav = page.getByRole("navigation", { name: "財務メニュー" });
+    for (const label of [
+      "帳簿",
+      "税務",
+      "個人予実",
+      "分析",
+      "予算管理",
+      "領収書発行",
+      "領収書受け取り",
+    ]) {
+      await expect(financeNav.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+    await expect(financeNav.getByRole("link", { name: "セットアップ" })).toHaveCount(0);
   });
 
   test("settings accordion links open setup and account pages", async ({ page }) => {
@@ -50,7 +54,7 @@ test.describe("steward chat console IA", () => {
     await expect(
       page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", {
         name: "フリート運用",
-      }),
+      })
     ).toHaveCount(0);
   });
 
@@ -58,9 +62,9 @@ test.describe("steward chat console IA", () => {
     await login(page);
     await page.goto("/?tax=1");
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "帳簿" })
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "財務" })
     ).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("navigation", { name: "帳簿メニュー" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "財務メニュー" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "税務" })).toBeVisible({ timeout: 15_000 });
   });
 });

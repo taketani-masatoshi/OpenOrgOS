@@ -25,7 +25,7 @@ test.describe("wire console oidc smoke", () => {
     await page.getByLabel("Approver").fill(fixture.approver_id);
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    await expect(page.getByRole("link", { name: "Wire", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "連携", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
       { timeout: 15_000 }

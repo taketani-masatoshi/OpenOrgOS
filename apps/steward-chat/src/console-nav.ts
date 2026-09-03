@@ -28,7 +28,12 @@ export type ConsoleSection =
   | "transactions"
   | "operations";
 
-export type ConsoleShellTab = "executive" | "ledger" | "yojitsu" | "torihiki";
+export type ConsoleShellTab =
+  | "executive"
+  | "ledger"
+  | "yojitsu"
+  | "torihiki"
+  | "integrations";
 
 const QUERY_KEYS = [
   "wallet",
@@ -83,6 +88,7 @@ export function shellTabFromView(view: ConsoleView): ConsoleShellTab | null {
   if (section === "ledger") return "ledger";
   if (section === "budget") return "yojitsu";
   if (section === "transactions") return "torihiki";
+  if (view === "integrations") return "integrations";
   return null;
 }
 

@@ -33,6 +33,7 @@ describe("console-nav", () => {
     expect(shellTabFromView("tax")).toBe("ledger");
     expect(shellTabFromView("receipt")).toBe("torihiki");
     expect(shellTabFromView("onboarding")).toBeNull();
+    expect(shellTabFromView("integrations")).toBe("integrations");
   });
 
   it("detects ledger workbench only with explicit query", () => {

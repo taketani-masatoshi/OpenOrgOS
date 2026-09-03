@@ -42,7 +42,6 @@ import {
   shellTabFromView,
   subscribeConsoleHomeNav,
   wantsLedgerWorkbench,
-  type ConsoleSection,
   type ConsoleView,
 } from "./console-nav";
 import {
@@ -84,56 +83,63 @@ function setConsoleQuery(view: ConsoleView) {
   window.history.replaceState({}, "", url);
 }
 
-function ConsoleSubNav({
-  section,
-  view,
-  onChange,
+type SectionNavItem = { id: string; href: string; label: string };
+
+function SectionSubNav({
+  active,
+  ariaLabel,
+  items,
 }: {
-  section: ConsoleSection;
-  view: ConsoleView;
-  onChange: (next: ConsoleView) => void;
+  active: string;
+  ariaLabel: string;
+  items: SectionNavItem[];
 }) {
-  const copy = useCopy(STEWARD_COPY);
-  const items =
-    section === "ledger"
-      ? ([
-          { id: "ledger", label: copy.ledger },
-          { id: "tax", label: copy.tax },
-        ] as const)
-      : section === "budget"
-        ? ([
-            { id: "wallet", label: copy.wallet },
-            { id: "analytics", label: copy.analytics },
-            { id: "admin", label: copy.admin },
-          ] as const)
-        : ([
-            { id: "receipt-issue", label: copy.receiptIssue },
-            { id: "receipt", label: copy.receipt },
-          ] as const);
-
-  const ariaLabel =
-    section === "ledger"
-      ? copy.ledgerMenu
-      : section === "budget"
-        ? copy.yojitsuMenu
-        : copy.transactionsMenu;
-
   return (
     <nav className="yojitsu-subnav" aria-label={ariaLabel}>
       {items.map((item) => (
-        <button
+        <a
           key={item.id}
-          type="button"
-          className={
-            view === item.id ? "yojitsu-subnav-tab is-active" : "yojitsu-subnav-tab"
-          }
-          aria-current={view === item.id ? "page" : undefined}
-          onClick={() => onChange(item.id)}
+          href={item.href}
+          className={active === item.id ? "yojitsu-subnav-tab is-active" : "yojitsu-subnav-tab"}
+          aria-current={active === item.id ? "page" : undefined}
         >
           {item.label}
-        </button>
+        </a>
       ))}
     </nav>
+  );
+}
+
+function FinanceSubNav({ view }: { view: ConsoleView }) {
+  const copy = useCopy(STEWARD_COPY);
+  return (
+    <SectionSubNav
+      active={view}
+      ariaLabel={copy.financeMenu}
+      items={[
+        { id: "ledger", href: "/?ledger=1", label: copy.ledger },
+        { id: "tax", href: "/?tax=1", label: copy.tax },
+        { id: "wallet", href: "/?wallet=1", label: copy.wallet },
+        { id: "analytics", href: "/?analytics=1", label: copy.analytics },
+        { id: "admin", href: "/?admin=1", label: copy.admin },
+        { id: "receipt-issue", href: "/?receipt-issue=1", label: copy.receiptIssue },
+        { id: "receipt", href: "/?receipt=1", label: copy.receipt },
+      ]}
+    />
+  );
+}
+
+function ExecutiveSubNav({ active }: { active: "overview" | "approvals" }) {
+  const copy = useCopy(STEWARD_COPY);
+  return (
+    <SectionSubNav
+      active={active}
+      ariaLabel={copy.executiveMenu}
+      items={[
+        { id: "overview", href: "/", label: copy.executiveOverview },
+        { id: "approvals", href: "/approvals/", label: copy.approvalsTitle },
+      ]}
+    />
   );
 }
 
@@ -142,9 +148,7 @@ type AgentsSubNavActive =
   | "steward"
   | "handoffs"
   | "agent-list"
-  | "module-list"
-  | "agent-add"
-  | "module-add";
+  | "runs";
 
 function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
   const copy = useCopy(STEWARD_COPY);
@@ -153,12 +157,10 @@ function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
     { id: "secretary" as const, href: "/secretary/", label: copy.secretary },
     { id: "handoffs" as const, href: "/handoffs/", label: copy.handoffs },
     { id: "agent-list" as const, href: "/agents/", label: copy.agentList },
-    { id: "module-list" as const, href: "/modules/", label: copy.moduleList },
-    { id: "agent-add" as const, href: "/agents/add/", label: copy.agentAdd },
-    { id: "module-add" as const, href: "/modules/add/", label: copy.moduleAddTab },
+    { id: "runs" as const, href: "/runs/", label: copy.runs },
   ];
   return (
-    <nav className="yojitsu-subnav" aria-label={copy.agentsMenu}>
+    <nav className="yojitsu-subnav" aria-label={copy.aiTeamMenu}>
       {tabs.map((tab) => (
         <a
           key={tab.id}
@@ -175,7 +177,7 @@ function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
   );
 }
 
-function CustomersSubNav({
+function BusinessSubNav({
   active,
 }: {
   active:
@@ -184,7 +186,8 @@ function CustomersSubNav({
     | "customers-pipeline"
     | "customers-accounts"
     | "customers-after-sales"
-    | "customers-churn";
+    | "customers-churn"
+    | "stays";
 }) {
   const copy = useCopy(STEWARD_COPY);
   const tabs = [
@@ -198,9 +201,10 @@ function CustomersSubNav({
       label: copy.customersAfterSales,
     },
     { id: "customers-churn" as const, href: "/customers/churn/", label: copy.customersChurn },
+    { id: "stays" as const, href: "/stays/", label: copy.businessStays },
   ];
   return (
-    <nav className="yojitsu-subnav" aria-label={copy.customersMenu}>
+    <nav className="yojitsu-subnav" aria-label={copy.businessMenu}>
       {tabs.map((tab) => (
         <a
           key={tab.id}
@@ -214,6 +218,62 @@ function CustomersSubNav({
         </a>
       ))}
     </nav>
+  );
+}
+
+function OrganizationSubNav({ active }: { active: "org" | "contracts" }) {
+  const copy = useCopy(STEWARD_COPY);
+  return (
+    <SectionSubNav
+      active={active}
+      ariaLabel={copy.organizationMenu}
+      items={[
+        { id: "org", href: "/org/", label: copy.organizationChart },
+        { id: "contracts", href: "/contracts/", label: copy.organizationContracts },
+      ]}
+    />
+  );
+}
+
+function ConnectionsSubNav({ active }: { active: "wire" | "integrations" }) {
+  const copy = useCopy(STEWARD_COPY);
+  return (
+    <SectionSubNav
+      active={active}
+      ariaLabel={copy.connectionsMenu}
+      items={[
+        { id: "wire", href: "/wire/", label: copy.connectionsWire },
+        { id: "integrations", href: "/?integrations=1", label: copy.connectionsServices },
+      ]}
+    />
+  );
+}
+
+type SettingsNavActive =
+  | "settings"
+  | "company"
+  | "account"
+  | "agent-add"
+  | "module-list"
+  | "llm-workers"
+  | "chat-settings";
+
+function SettingsSubNav({ active }: { active: SettingsNavActive }) {
+  const copy = useCopy(STEWARD_COPY);
+  return (
+    <SectionSubNav
+      active={active}
+      ariaLabel={copy.settingsMenu}
+      items={[
+        { id: "settings", href: "/settings/", label: copy.settingsOverview },
+        { id: "company", href: "/?onboarding=1", label: copy.settingsCompany },
+        { id: "account", href: "/?account=1", label: copy.settingsAccount },
+        { id: "agent-add", href: "/agents/add/", label: copy.settingsAgents },
+        { id: "module-list", href: "/modules/", label: copy.settingsModules },
+        { id: "llm-workers", href: "/llm-workers/", label: copy.settingsLlm },
+        { id: "chat-settings", href: "/chat-settings/", label: copy.settingsChat },
+      ]}
+    />
   );
 }
 
@@ -231,11 +291,6 @@ function ConsoleHomeApp() {
   function notify(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(null), 3000);
-  }
-
-  function changeView(next: ConsoleView) {
-    setConsoleQuery(next);
-    notifyConsoleHomeNav();
   }
 
   useEffect(() => subscribeConsoleHomeNav(() => setNavRevision((r) => r + 1)), []);
@@ -271,11 +326,20 @@ function ConsoleHomeApp() {
     <div className="budget-app">
       {toast && <div className="toast">{toast}</div>}
       {view === "executive" ? (
-        <ExecutiveHomePage />
+        <>
+          <ExecutiveSubNav active="overview" />
+          <ExecutiveHomePage />
+        </>
       ) : (
         <>
-          {section !== "operations" && section !== "executive" ? (
-            <ConsoleSubNav section={section} view={view} onChange={changeView} />
+          {section === "ledger" || section === "budget" || section === "transactions" ? (
+            <FinanceSubNav view={view} />
+          ) : view === "integrations" ? (
+            <ConnectionsSubNav active="integrations" />
+          ) : view === "onboarding" || view === "product-setup" ? (
+            <SettingsSubNav active="company" />
+          ) : view === "account" ? (
+            <SettingsSubNav active="account" />
           ) : null}
           {view === "receipt" ? (
             <ReceiptClaimPage />
@@ -321,11 +385,8 @@ function ConsoleHomeApp() {
 
 /**
  * Operator Console (steward-chat SPA):
- * - `/` 経営ホーム · `/?ledger=1` 帳簿 · `/?wallet=1` 予実 · `/?receipt-issue=1` 取引
- * - `/org/` 会社組織
- * - `/runs/` 実行状況（Work Order カンバン）
- * - `/secretary/` 秘書チャット（ナビは「エージェント」配下）
- * - `/steward/` Executive Steward チャット（ナビは「エージェント」配下）
+ * Primary navigation remains stable as capabilities grow:
+ * 経営 · 財務 · 業務 · 組織 · AIチーム · 連携, with one-time configuration under settings.
  */
 export function App() {
   const copy = useCopy(STEWARD_COPY);
@@ -397,10 +458,22 @@ export function App() {
     return () => document.removeEventListener("pointerenter", onPointerEnter, true);
   }, []);
 
-  const shellTab: OperatorShellActive | undefined =
-    shellActive === "yojitsu"
-      ? homeShellTab()
-      : operatorShellTabFromRoute(shellActive);
+  const homePath = (window.location.pathname.replace(/\/+$/, "") || "/") === "/";
+  const homeView = parseConsoleView(window.location.search);
+  const shellTab: OperatorShellActive | undefined = homePath
+    ? homeShellTab()
+    : operatorShellTabFromRoute(shellActive);
+  const settingsArea =
+    shellActive === "settings" ||
+    shellActive === "cloud-llm" ||
+    shellActive === "llm-workers" ||
+    shellActive === "chat-settings" ||
+    shellActive === "module-list" ||
+    shellActive === "module-add" ||
+    shellActive === "agent-add" ||
+    homeView === "onboarding" ||
+    homeView === "product-setup" ||
+    homeView === "account";
 
   return window.location.pathname.replace(/\/+$/, "") === "/signup" ||
     window.location.pathname.startsWith("/signup/") ? (
@@ -409,21 +482,46 @@ export function App() {
     window.location.pathname.startsWith("/guest-setup/") ? (
     <GuestSetupPage />
   ) : (
-    <BudgetAuthGate active={shellTab}>
+    <BudgetAuthGate
+      active={shellTab}
+      settingsArea={settingsArea}
+      settingsNavigation={<SettingsSubNav active="settings" />}
+    >
       {shellActive === "settings" ? null : shellActive === "cloud-llm" ? (
-        <CloudLlmGuidePage />
+        <div className="agent-section">
+          <SettingsSubNav active="llm-workers" />
+          <CloudLlmGuidePage />
+        </div>
       ) : shellActive === "llm-workers" ? (
-        <LlmWorkersPage />
+        <div className="agent-section">
+          <SettingsSubNav active="llm-workers" />
+          <LlmWorkersPage />
+        </div>
       ) : shellActive === "chat-settings" ? (
-        <ChatSettingsPage />
+        <div className="agent-section">
+          <SettingsSubNav active="chat-settings" />
+          <ChatSettingsPage />
+        </div>
       ) : shellActive === "org" ? (
-        <OrgChartPage />
+        <div className="agent-section">
+          <OrganizationSubNav active="org" />
+          <OrgChartPage />
+        </div>
       ) : shellActive === "contracts" ? (
-        <ContractsPage />
+        <div className="agent-section">
+          <OrganizationSubNav active="contracts" />
+          <ContractsPage />
+        </div>
       ) : shellActive === "stays" ? (
-        <StaysPage />
+        <div className="agent-section">
+          <BusinessSubNav active="stays" />
+          <StaysPage />
+        </div>
       ) : shellActive === "approvals" ? (
-        <ApprovalsQueue asPage />
+        <div className="agent-section">
+          <ExecutiveSubNav active="approvals" />
+          <ApprovalsQueue asPage />
+        </div>
       ) : shellActive === "customers-outbound" ||
         shellActive === "customers-inbound" ||
         shellActive === "customers-pipeline" ||
@@ -431,27 +529,36 @@ export function App() {
         shellActive === "customers-after-sales" ||
         shellActive === "customers-churn" ? (
         <div className="agent-section">
-          <CustomersSubNav active={shellActive} />
+          <BusinessSubNav active={shellActive} />
           <CustomersWorkbenchPage view={shellActive} />
         </div>
       ) : shellActive === "runs" ? (
-        <OrchestrationRunsPage />
+        <div className="agent-section">
+          <AgentsSubNav active="runs" />
+          <OrchestrationRunsPage />
+        </div>
       ) : shellActive === "wire" ? (
-        <WireConsolePage />
+        <div className="agent-section">
+          <ConnectionsSubNav active="wire" />
+          <WireConsolePage />
+        </div>
+      ) : shellActive === "module-list" ||
+        shellActive === "module-add" ||
+        shellActive === "agent-add" ? (
+        <div className="agent-section">
+          <SettingsSubNav active={shellActive === "agent-add" ? "agent-add" : "module-list"} />
+          {shellActive === "module-list" ? <AgentRosterPage view="modules" /> : null}
+          {shellActive === "agent-add" ? <AgentRosterPage view="agents-add" /> : null}
+          {shellActive === "module-add" ? <AgentRosterPage view="modules-add" /> : null}
+        </div>
       ) : shellActive === "secretary" ||
         shellActive === "steward" ||
         shellActive === "handoffs" ||
-        shellActive === "agent-list" ||
-        shellActive === "module-list" ||
-        shellActive === "agent-add" ||
-        shellActive === "module-add" ? (
+        shellActive === "agent-list" ? (
         <div className="agent-section">
           <AgentsSubNav active={shellActive} />
           {shellActive === "handoffs" ? <HandoffsInboxPage /> : null}
           {shellActive === "agent-list" ? <AgentRosterPage view="agents" /> : null}
-          {shellActive === "module-list" ? <AgentRosterPage view="modules" /> : null}
-          {shellActive === "agent-add" ? <AgentRosterPage view="agents-add" /> : null}
-          {shellActive === "module-add" ? <AgentRosterPage view="modules-add" /> : null}
           <div
             className={
               shellActive === "secretary"

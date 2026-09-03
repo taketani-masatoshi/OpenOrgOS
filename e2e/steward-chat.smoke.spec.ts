@@ -23,15 +23,20 @@ test.describe("steward chat smoke", () => {
     await expect(page.getByPlaceholder("来週の支払いリスクは？")).toHaveCount(0);
   });
 
-  test("予実 wallet is reachable from shell tab", async ({ page }) => {
+  test("個人予実 is reachable from the finance group", async ({ page }) => {
     await login(page);
     await page
       .getByRole("navigation", { name: "Operator Console" })
-      .getByRole("link", { name: "予実" })
+      .getByRole("link", { name: "財務" })
+      .click();
+    await expect(page).toHaveURL(/ledger=1/, { timeout: 5_000 });
+    await page
+      .getByRole("navigation", { name: "財務メニュー" })
+      .getByRole("link", { name: "個人予実" })
       .click();
     await expect(page).toHaveURL(/wallet=1/, { timeout: 5_000 });
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "予実" })
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "財務" })
     ).toHaveAttribute("aria-current", "page");
   });
 

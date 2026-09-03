@@ -10,7 +10,7 @@ test.describe("wire console webauthn smoke", () => {
     await expect(page.getByRole("button", { name: "Touch ID で入る" })).toBeVisible();
     await page.getByRole("button", { name: "Touch ID で入る" }).click();
 
-    await expect(page.getByRole("link", { name: "Wire", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "連携", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
       { timeout: 15_000 }

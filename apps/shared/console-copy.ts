@@ -4,6 +4,11 @@ export const SHELL_COPY = defineCopy(
   {
     nav: "Operator Console",
     executive: "経営",
+    finance: "財務",
+    business: "業務",
+    organization: "組織",
+    aiTeam: "AIチーム",
+    connections: "連携",
     ledger: "帳簿",
     yojitsu: "予実",
     torihiki: "取引",
@@ -25,6 +30,11 @@ export const SHELL_COPY = defineCopy(
   {
     nav: "Operator Console",
     executive: "Home",
+    finance: "Finance",
+    business: "Operations",
+    organization: "Organization",
+    aiTeam: "AI team",
+    connections: "Connections",
     ledger: "Ledger",
     yojitsu: "Budget",
     torihiki: "Transactions",

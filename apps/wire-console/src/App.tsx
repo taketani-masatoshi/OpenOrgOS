@@ -348,15 +348,12 @@ export function App() {
       onSignOut={() => void logout()}
       settingsHref="/settings/"
       settingsActive={isPasskeySettingsPath()}
-      yojitsuHref={combinedOrigin ? "/?wallet=1" : null}
-      torihikiHref={combinedOrigin ? "/?receipt-issue=1" : null}
       executiveHref={combinedOrigin ? "/" : null}
-      ledgerHref={combinedOrigin ? "/?ledger=1" : null}
-      wireHref={wireHome}
-      secretaryHref={combinedOrigin ? "/secretary/" : null}
-      stewardHref={combinedOrigin ? "/steward/" : null}
-      orgHref={combinedOrigin ? "/org/" : null}
-      runsHref={combinedOrigin ? "/runs/" : null}
+      financeHref={combinedOrigin ? "/?ledger=1" : null}
+      businessHref={combinedOrigin ? "/customers/pipeline/" : null}
+      organizationHref={combinedOrigin ? "/org/" : null}
+      aiTeamHref={combinedOrigin ? "/steward/" : null}
+      connectionsHref={wireHome}
     >
       {isPasskeySettingsPath() ? (
         <PasskeySettingsPage

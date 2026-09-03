@@ -79,12 +79,16 @@ export function operatorShellTabFromRoute(
   route: ShellRoute,
 ): OperatorShellActive | undefined {
   if (route === "settings") return undefined;
-  if (route === "cloud-llm" || route === "chat-settings" || route === "llm-workers") {
-    return "steward";
+  if (
+    route === "cloud-llm" ||
+    route === "chat-settings" ||
+    route === "llm-workers" ||
+    route === "module-list" ||
+    route === "module-add" ||
+    route === "agent-add"
+  ) {
+    return undefined;
   }
-  if (route === "handoffs") return "steward";
-  if (route === "contracts") return "org";
-  if (route === "stays") return "executive";
   return route;
 }
 

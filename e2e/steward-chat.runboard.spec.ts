@@ -7,11 +7,7 @@ const SEED_ID = "IMP-E2E-SEED-001";
 const SEED_FAIL_ID = "IMP-E2E-SEED-FAIL";
 const DEMO_QUEUE = join(process.cwd(), "tenants/demo/docs/reports/routing-queue");
 
-function seedWorkOrder(
-  id: string,
-  status: "pending" | "failed",
-  subject?: string,
-): void {
+function seedWorkOrder(id: string, status: "pending" | "failed", subject?: string): void {
   mkdirSync(DEMO_QUEUE, { recursive: true });
   writeFileSync(
     join(DEMO_QUEUE, `${id}.yaml`),
@@ -36,7 +32,7 @@ function seedWorkOrder(
     ]
       .filter(Boolean)
       .join("\n"),
-    "utf-8",
+    "utf-8"
   );
 }
 
@@ -55,10 +51,9 @@ function removeSeededWorkOrder(id: string): void {
   }
 }
 
-
 function runsTab(page: import("@playwright/test").Page) {
   return page
-    .getByRole("navigation", { name: "Operator Console" })
+    .getByRole("navigation", { name: "AIチームメニュー" })
     .getByRole("link", { name: "実行状況" });
 }
 
@@ -69,6 +64,10 @@ test.describe("steward chat run board", () => {
     seedWorkOrder(SEED_ID, "pending", "E2E 予実レビュー");
     try {
       await login(page);
+      await page
+        .getByRole("navigation", { name: "Operator Console" })
+        .getByRole("link", { name: "AIチーム" })
+        .click();
       await runsTab(page).click();
 
       await expect(page.getByRole("heading", { name: "実行状況" })).toBeVisible();
@@ -158,7 +157,10 @@ test.describe("steward chat run board", () => {
 
       await expect(card).toHaveCount(0);
 
-      await page.locator(".orchestration-filter-chip").filter({ hasText: /^完了$/ }).click();
+      await page
+        .locator(".orchestration-filter-chip")
+        .filter({ hasText: /^完了$/ })
+        .click();
       await expect(card.first()).toBeVisible();
 
       page.once("dialog", (dialog) => dialog.accept());
@@ -168,13 +170,11 @@ test.describe("steward chat run board", () => {
       await expect
         .poll(
           async () => {
-            const chip = page
-              .locator(".orchestration-filter-chip")
-              .filter({ hasText: /^未完了$/ });
+            const chip = page.locator(".orchestration-filter-chip").filter({ hasText: /^未完了$/ });
             await chip.click({ timeout: 5_000 }).catch(() => undefined);
             return card.count();
           },
-          { timeout: 30_000 },
+          { timeout: 30_000 }
         )
         .toBeGreaterThan(0);
     } finally {

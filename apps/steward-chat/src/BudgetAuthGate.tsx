@@ -57,9 +57,13 @@ function PasskeyAuthLoadingShell() {
 export function BudgetAuthGate({
   children,
   active,
+  settingsNavigation,
+  settingsArea = false,
 }: {
   children: ReactNode;
   active?: OperatorShellActive;
+  settingsNavigation?: ReactNode;
+  settingsArea?: boolean;
 }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -290,29 +294,32 @@ export function BudgetAuthGate({
 
   const mainContent =
     settingsPage && user ? (
-      <PasskeySettingsPage
-        webAuthnMode={webAuthnIssuance}
-        api={chatApi}
-        operatorId={user.operator_id}
-        approverId={user.approver_id}
-        policy={{
-          login_registration_bootstrap: authConfig?.webauthn?.login_registration_bootstrap,
-          bootstrap_token_required: authConfig?.webauthn?.bootstrap_token_required,
-          registration_allowed: authConfig?.webauthn?.registration_allowed,
-          settlement_registration_allowed: authConfig?.webauthn?.settlement_registration_allowed,
-          additional_login_registration_allowed:
-            authConfig?.webauthn?.additional_login_registration_allowed,
-          credential_count: authConfig?.webauthn?.credential_count,
-          settlement_count: authConfig?.webauthn?.settlement_count,
-        }}
-        busy={busy}
-        error={error}
-        onRegisterLogin={(opts) => onRegister(opts)}
-        onRegisterSettlement={() => void enrollSettlementPasskey()}
-        onRefreshAuthConfig={refreshAuthConfig}
-        expectedOrigin={authConfig?.webauthn?.origin}
-        rpId={authConfig?.webauthn?.rp_id}
-      />
+      <>
+        {settingsNavigation}
+        <PasskeySettingsPage
+          webAuthnMode={webAuthnIssuance}
+          api={chatApi}
+          operatorId={user.operator_id}
+          approverId={user.approver_id}
+          policy={{
+            login_registration_bootstrap: authConfig?.webauthn?.login_registration_bootstrap,
+            bootstrap_token_required: authConfig?.webauthn?.bootstrap_token_required,
+            registration_allowed: authConfig?.webauthn?.registration_allowed,
+            settlement_registration_allowed: authConfig?.webauthn?.settlement_registration_allowed,
+            additional_login_registration_allowed:
+              authConfig?.webauthn?.additional_login_registration_allowed,
+            credential_count: authConfig?.webauthn?.credential_count,
+            settlement_count: authConfig?.webauthn?.settlement_count,
+          }}
+          busy={busy}
+          error={error}
+          onRegisterLogin={(opts) => onRegister(opts)}
+          onRegisterSettlement={() => void enrollSettlementPasskey()}
+          onRefreshAuthConfig={refreshAuthConfig}
+          expectedOrigin={authConfig?.webauthn?.origin}
+          rpId={authConfig?.webauthn?.rp_id}
+        />
+      </>
     ) : (
       children
     );
@@ -323,18 +330,13 @@ export function BudgetAuthGate({
       operatorLabel={operatorLabel}
       onSignOut={() => void onSignOut()}
       settingsHref={user ? "/settings/" : undefined}
-      settingsActive={settingsPage}
+      settingsActive={settingsPage || settingsArea}
       executiveHref="/"
-      ledgerHref="/?ledger=1"
-      yojitsuHref="/?wallet=1"
-      torihikiHref="/?receipt-issue=1"
-      wireHref="/wire/"
-      orgHref="/org/"
-      approvalsHref="/approvals/"
-      customersHref={customersNav ? "/customers/outbound/" : null}
-      runsHref="/runs/"
-      secretaryHref="/secretary/"
-      stewardHref="/steward/"
+      financeHref="/?ledger=1"
+      businessHref={customersNav ? "/customers/pipeline/" : "/stays/"}
+      organizationHref="/org/"
+      aiTeamHref="/steward/"
+      connectionsHref="/wire/"
     >
       {loading ? (
         webAuthnLoginMode ? (

@@ -10,7 +10,7 @@ async function login(page: import("@playwright/test").Page): Promise<void> {
   await expect(page.getByText("未ログイン")).toHaveCount(0, { timeout: 15_000 });
   await page
     .getByRole("navigation", { name: "Operator Console" })
-    .getByRole("link", { name: "帳簿" })
+    .getByRole("link", { name: "財務" })
     .click();
   await expect(page).toHaveURL(/ledger=1/, { timeout: 5_000 });
 }
@@ -31,10 +31,12 @@ test.describe("steward chat ledger customer journey", () => {
     await expect(page.getByRole("heading", { name: "セットアップ" })).toBeVisible({
       timeout: 15_000,
     });
+    await expect(page.getByRole("heading", { name: "Passkey（ログイン必須）" })).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(
-      page.getByRole("heading", { name: "Passkey（ログイン必須）" }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("p.ops-page-meta").filter({ hasText: /ログインには Passkey が必須/ })).toBeVisible({
+      page.locator("p.ops-page-meta").filter({ hasText: /ログインには Passkey が必須/ })
+    ).toBeVisible({
       timeout: 10_000,
     });
     await expect(page.getByRole("button", { name: "Passkey を登録" })).toBeVisible({
@@ -134,7 +136,7 @@ test.describe("steward chat ledger customer journey", () => {
       page.getByRole("navigation", { name: "帳簿メニュー" }).getByRole("button", {
         name: "帳簿",
         exact: true,
-      }),
+      })
     ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("heading", { name: "帳簿", exact: true })).toBeVisible({
       timeout: 15_000,

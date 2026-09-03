@@ -345,8 +345,21 @@ export function AgentRosterPage({ view }: { view: RosterView }) {
 
   return (
     <div className="org-chart-page">
-      <h1 className="org-chart-section-title">{heading.title}</h1>
-      <p className="org-chart-muted roster-lead">{heading.lead}</p>
+      <div className="page-heading roster-page-heading">
+        <div>
+          <h1 className="org-chart-section-title">{heading.title}</h1>
+          <p className="org-chart-muted roster-lead">{heading.lead}</p>
+        </div>
+        {view === "agents" ? (
+          <a className="btn btn-primary" href="/agents/add/">{copy.agentAdd}</a>
+        ) : view === "agents-add" ? (
+          <a className="btn btn-secondary" href="/agents/">{copy.agentList}</a>
+        ) : view === "modules" ? (
+          <a className="btn btn-primary" href="/modules/add/">{copy.moduleAddTab}</a>
+        ) : (
+          <a className="btn btn-secondary" href="/modules/">{copy.moduleList}</a>
+        )}
+      </div>
       {loading && <p className="org-chart-muted">{copy.loading}</p>}
       {error && (
         <p className="org-chart-error" role="alert">

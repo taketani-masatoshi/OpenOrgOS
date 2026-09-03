@@ -20,10 +20,14 @@ export type OperatorShellActive =
   | "customers-accounts"
   | "customers-after-sales"
   | "customers-churn"
+  | "contracts"
+  | "stays"
+  | "integrations"
   | "runs"
   | "agents"
   | "secretary"
   | "steward"
+  | "handoffs"
   | "agent-list"
   | "module-list"
   | "agent-add"
@@ -39,29 +43,18 @@ type Props = {
   settingsActive?: boolean;
   /** Combined: `/` · executive home. `null` hides the tab. */
   executiveHref?: string | null;
-  /** Combined: `/?ledger=1`. `null` hides the tab (standalone Wire). */
-  ledgerHref?: string | null;
-  /** Combined: `/?wallet=1`. `null` hides the tab. */
-  yojitsuHref?: string | null;
-  /** Combined: `/?receipt-issue=1`. `null` hides the tab. */
-  torihikiHref?: string | null;
-  /** Combined: `/wire/` · standalone Wire: `/`. `null` hides the tab. */
-  wireHref?: string | null;
-  orgHref?: string | null;
-  /** Combined: `/approvals/` · CEO inbox. `null` hides the tab. */
-  approvalsHref?: string | null;
-  /** Combined: `/customers/` · CRM lifecycle. `null` hides the tab. */
-  customersHref?: string | null;
-  /** Combined: `/runs/` · standalone Wire: `null` hides the tab. */
-  runsHref?: string | null;
-  secretaryHref?: string | null;
-  stewardHref?: string | null;
+  /** Stable task-oriented groups. `null` hides a group in standalone surfaces. */
+  financeHref?: string | null;
+  businessHref?: string | null;
+  organizationHref?: string | null;
+  aiTeamHref?: string | null;
+  connectionsHref?: string | null;
   children?: ReactNode;
 };
 
 /**
  * Shared top chrome for Operator Console.
- * 経営 `/` · 帳簿 `/?ledger=1` · 予実 `/?wallet=1` · 取引 `/?receipt-issue=1` · Wire `/wire/` · 組織図 `/org/` · 顧客管理 `/customers/` · エージェント `/steward/` · 実行状況 `/runs/`
+ * Stable information architecture: 経営 · 財務 · 業務 · 組織 · AIチーム · 連携.
  */
 function SettingsIcon() {
   return (
@@ -109,9 +102,27 @@ function isCustomersSection(active?: OperatorShellActive): boolean {
     active === "customers" ||
     active === "customers-outbound" ||
     active === "customers-inbound" ||
+    active === "customers-pipeline" ||
+    active === "customers-accounts" ||
     active === "customers-after-sales" ||
     active === "customers-churn"
   );
+}
+
+function isFinanceSection(active?: OperatorShellActive): boolean {
+  return active === "ledger" || active === "yojitsu" || active === "torihiki";
+}
+
+function isBusinessSection(active?: OperatorShellActive): boolean {
+  return isCustomersSection(active) || active === "stays";
+}
+
+function isOrganizationSection(active?: OperatorShellActive): boolean {
+  return active === "org" || active === "contracts";
+}
+
+function isConnectionsSection(active?: OperatorShellActive): boolean {
+  return active === "wire" || active === "integrations";
 }
 
 function isAgentsSection(active?: OperatorShellActive): boolean {
@@ -119,10 +130,9 @@ function isAgentsSection(active?: OperatorShellActive): boolean {
     active === "agents" ||
     active === "secretary" ||
     active === "steward" ||
+    active === "handoffs" ||
     active === "agent-list" ||
-    active === "module-list" ||
-    active === "agent-add" ||
-    active === "module-add"
+    active === "runs"
   );
 }
 
@@ -133,21 +143,14 @@ export function OperatorShell({
   settingsHref = "/settings/",
   settingsActive = false,
   executiveHref = "/",
-  ledgerHref = "/?ledger=1",
-  yojitsuHref = "/?wallet=1",
-  torihikiHref = "/?receipt-issue=1",
-  wireHref = "/wire/",
-  orgHref = "/org/",
-  approvalsHref = null,
-  customersHref = null,
-  runsHref = "/runs/",
-  secretaryHref = "/secretary/",
-  stewardHref = "/steward/",
+  financeHref = "/?ledger=1",
+  businessHref = null,
+  organizationHref = "/org/",
+  aiTeamHref = "/steward/",
+  connectionsHref = "/wire/",
   children,
 }: Props) {
   const copy = useCopy(SHELL_COPY);
-  const agentsHref = stewardHref || secretaryHref;
-
   return (
     <div className="ops-shell">
       <ThemeSync />
@@ -155,35 +158,26 @@ export function OperatorShell({
       <header className="ops-shell-header">
         <div className="ops-shell-brand">OpenOrgOS</div>
         <nav className="ops-shell-nav" aria-label={copy.nav}>
-          <ShellTab href={executiveHref} current={active === "executive"}>
+          <ShellTab
+            href={executiveHref}
+            current={active === "executive" || active === "approvals"}
+          >
             {copy.executive}
           </ShellTab>
-          <ShellTab href={ledgerHref} current={active === "ledger"}>
-            {copy.ledger}
+          <ShellTab href={financeHref} current={isFinanceSection(active)}>
+            {copy.finance}
           </ShellTab>
-          <ShellTab href={yojitsuHref} current={active === "yojitsu"}>
-            {copy.yojitsu}
+          <ShellTab href={businessHref} current={isBusinessSection(active)}>
+            {copy.business}
           </ShellTab>
-          <ShellTab href={torihikiHref} current={active === "torihiki"}>
-            {copy.torihiki}
+          <ShellTab href={organizationHref} current={isOrganizationSection(active)}>
+            {copy.organization}
           </ShellTab>
-          <ShellTab href={wireHref} current={active === "wire"}>
-            {copy.wire}
+          <ShellTab href={aiTeamHref} current={isAgentsSection(active)}>
+            {copy.aiTeam}
           </ShellTab>
-          <ShellTab href={orgHref} current={active === "org"}>
-            {copy.org}
-          </ShellTab>
-          <ShellTab href={approvalsHref} current={active === "approvals"}>
-            {copy.approvals}
-          </ShellTab>
-          <ShellTab href={customersHref} current={isCustomersSection(active)}>
-            {copy.customers}
-          </ShellTab>
-          <ShellTab href={agentsHref} current={isAgentsSection(active)}>
-            {copy.agents}
-          </ShellTab>
-          <ShellTab href={runsHref} current={active === "runs"}>
-            {copy.runs}
+          <ShellTab href={connectionsHref} current={isConnectionsSection(active)}>
+            {copy.connections}
           </ShellTab>
         </nav>
         <div className="ops-shell-meta">

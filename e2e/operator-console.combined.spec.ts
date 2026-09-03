@@ -2,17 +2,19 @@ import { expect, test } from "@playwright/test";
 import { expandSettingsSection } from "./helpers/settings-accordion";
 
 async function login(page: import("@playwright/test").Page): Promise<void> {
+  const sendLogin = () =>
+    page.request.post("/chat/v1/auth/login", {
+      data: { passkey: "orgos-dev", operator_id: "OP-001", approver_id: "OP-001" },
+    });
+  let loginResponse;
+  try {
+    loginResponse = await sendLogin();
+  } catch {
+    loginResponse = await sendLogin();
+  }
+  expect(loginResponse.ok(), await loginResponse.text()).toBeTruthy();
   await page.goto("/");
   const shell = page.getByRole("navigation", { name: "Operator Console" });
-  if (await shell.isVisible().catch(() => false)) return;
-
-  const pass = page.getByRole("textbox", { name: "パスワード" });
-  if (await pass.count()) {
-    await pass.fill("orgos-dev");
-  } else {
-    await page.getByLabel("パスワード", { exact: true }).fill("orgos-dev");
-  }
-  await page.getByRole("button", { name: "入る", exact: true }).click();
   await expect(shell).toBeVisible({
     timeout: 15_000,
   });
@@ -53,26 +55,28 @@ test.describe("operator console combined", () => {
     expect(title.length).toBeGreaterThan(0);
   });
 
-  test("shows executive shell and wire console link on combined origin", async ({ page }) => {
+  test("shows stable task-oriented navigation on combined origin", async ({ page }) => {
     await login(page);
     await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "Wire" })
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "連携" })
     ).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "経営" })
     ).toHaveAttribute("aria-current", "page");
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "帳簿" })
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "財務" })
     ).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "予実" })
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "業務" })
     ).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "取引" })
+      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "組織" })
     ).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Operator Console" }).getByRole("link", { name: "実行状況" })
+      page
+        .getByRole("navigation", { name: "Operator Console" })
+        .getByRole("link", { name: "AIチーム" })
     ).toBeVisible();
   });
 
@@ -97,7 +101,10 @@ test.describe("operator console combined", () => {
     };
     page.on("request", onAuthMe);
 
-    await page.getByRole("link", { name: "Wire" }).click();
+    await page
+      .getByRole("navigation", { name: "Operator Console" })
+      .getByRole("link", { name: "連携" })
+      .click();
     await page.waitForURL("**/wire/**");
     await expect(page.getByRole("button", { name: "承認待ち" })).toBeVisible({
       timeout: 15_000,
@@ -109,7 +116,10 @@ test.describe("operator console combined", () => {
     expect(navEntriesAfterWire).toBe(navEntriesBefore);
 
     const authMeBeforeLedger = authMeCount;
-    await page.getByRole("link", { name: "帳簿" }).click();
+    await page
+      .getByRole("navigation", { name: "Operator Console" })
+      .getByRole("link", { name: "財務" })
+      .click();
     await expect(page).toHaveURL(/ledger=1/);
     expect(authMeCount).toBe(authMeBeforeLedger);
 
@@ -172,22 +182,29 @@ test.describe("operator console combined", () => {
     await expect(page.getByText("ログイン PassKey").first()).toBeVisible();
   });
 
-  test("agent list lives under the agents tab", async ({ page }) => {
+  test("agent inventory is operational and additions live in settings", async ({ page }) => {
     await login(page);
-    await page.goto("/agents/");
+    await page
+      .getByRole("navigation", { name: "Operator Console" })
+      .getByRole("link", { name: "AIチーム" })
+      .click();
+    await page
+      .getByRole("navigation", { name: "AIチームメニュー" })
+      .getByRole("link", { name: "エージェント一覧" })
+      .click();
     await expect(page.getByRole("heading", { name: "エージェント一覧" })).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByRole("link", { name: "モジュール一覧" })).toBeVisible();
     await expect(page.getByRole("link", { name: "エージェント追加" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "モジュール追加" })).toBeVisible();
-    await expect(page.getByRole("switch", { name: "秘書 を使う" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "取り込み済みモジュール" })).toHaveCount(0);
-    await page.getByRole("link", { name: "モジュール一覧" }).click();
+    await page.getByRole("link", { name: "設定" }).click();
+    await page
+      .getByRole("navigation", { name: "設定メニュー" })
+      .getByRole("link", { name: "モジュール管理" })
+      .click();
     await expect(page.getByRole("heading", { name: "モジュール一覧" })).toBeVisible();
     await page.getByRole("link", { name: "モジュール追加" }).click();
     await expect(page.getByRole("heading", { name: "モジュール追加" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "追加" }).first()).toBeVisible();
   });
 
   test("settings defaults to Japanese and offers PassKey issuance", async ({ page }) => {
