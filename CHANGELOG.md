@@ -6,6 +6,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- 医療機器モジュールの QMS / GVP 文書テンプレートと REG-025 / REG-026 を、会社名プレースホルダ付きの施行可能な規程・手順に揃えた。テナントへは `qms/gvp draft --all` と `regulations seed` で商号だけ差し込む。
+
 ### Changed
 
 - 組織ページから組織変更（OCH）の提案フォームを外した。組織変更は稟議（APR）の一種で、承認は承認キューから行う。
