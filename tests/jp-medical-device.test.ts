@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { describe, expect, it, vi, beforeAll, beforeEach, afterEach } from "vitest";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadModuleManifest } from "../src/lib/modules.js";
 import { listModuleCliBundles } from "../src/lib/module-cli.js";
@@ -59,26 +59,37 @@ import { currentDate, resolveTenantPath } from "../src/lib/utils.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
 const EMPTY_LEDGER = `version: "1"\nentries: []\n`;
+const MUTATION_LEDGERS = [
+  "ledgers/adverse-event-records.yaml",
+  "ledgers/capa-records.yaml",
+  "ledgers/complaint-records.yaml",
+  "ledgers/authority-inquiry-records.yaml",
+  "ledgers/change-control-records.yaml",
+  "ledgers/document-control-records.yaml",
+] as const;
 
 function ledgerAbs(rel: string): string {
   return resolveTenantPath(`data/medical-device/${rel}`);
 }
 
-function restoreEmptyLedgers(): void {
-  for (const f of [
-    "ledgers/adverse-event-records.yaml",
-    "ledgers/capa-records.yaml",
-    "ledgers/complaint-records.yaml",
-    "ledgers/authority-inquiry-records.yaml",
-    "ledgers/change-control-records.yaml",
-    "ledgers/document-control-records.yaml",
-  ]) {
+const ledgerSnapshots = new Map<string, string>();
+
+function isolateMutationLedgers(): void {
+  for (const f of MUTATION_LEDGERS) {
     const p = ledgerAbs(f);
     mkdirSync(join(p, ".."), { recursive: true });
     writeFileSync(p, EMPTY_LEDGER, "utf-8");
   }
   const audit = ledgerAbs("audit.jsonl");
   if (existsSync(audit)) rmSync(audit);
+}
+
+function restoreMutationLedgers(): void {
+  for (const f of MUTATION_LEDGERS) {
+    const p = ledgerAbs(f);
+    mkdirSync(join(p, ".."), { recursive: true });
+    writeFileSync(p, ledgerSnapshots.get(f) ?? EMPTY_LEDGER, "utf-8");
+  }
 }
 
 describe("jp_medical_device module", () => {
@@ -155,14 +166,23 @@ describe("jp_medical_device module", () => {
 });
 
 describe("jp_medical_device ledger mutations (isolated restore)", () => {
+  beforeAll(() => {
+    process.env.STEWARD_TENANT = "mal";
+    setTenantId("mal");
+    for (const f of MUTATION_LEDGERS) {
+      const p = ledgerAbs(f);
+      ledgerSnapshots.set(f, existsSync(p) ? readFileSync(p, "utf-8") : EMPTY_LEDGER);
+    }
+  });
+
   beforeEach(() => {
     process.env.STEWARD_TENANT = "mal";
     setTenantId("mal");
-    restoreEmptyLedgers();
+    isolateMutationLedgers();
   });
 
   afterEach(() => {
-    restoreEmptyLedgers();
+    restoreMutationLedgers();
   });
 
   it("adds AE, links CAPA bidirectionally, closes both", () => {

@@ -1,8 +1,8 @@
 # 教育訓練記録様式（第4階層）
 
-**様式番号:** {{doc_number}}  
-**会社名:** {{company.name}}  
-**制定:** {{effective_date}}
+**様式番号:** QMS-FRM-003  
+**会社名:** 株式会社MAL  
+**制定:** 2026-09-06
 
 1 回の訓練ごとに記入する。正本要約は `ledgers/training-records.yaml`（受講者は `attendee_refs`）。文書改訂後の再教育も本様式で残す。
 

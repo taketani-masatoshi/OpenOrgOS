@@ -1,9 +1,9 @@
 # 是正処置・予防処置（CAPA）規程（第2階層）
 
-**文書番号:** {{doc_number}}  
+**文書番号:** QMS-REG-003  
 **版:** 1.0  
-**制定:** {{effective_date}}  
-**会社名:** {{company.name}}
+**制定:** 2026-09-06  
+**会社名:** 株式会社MAL
 
 ---
 
@@ -13,7 +13,7 @@
 
 ## 第2条（適用）
 
-{{company.name}} の QMS · GVP で検知した問題に適用する。ソース種別は `complaint` · `ae` · `audit` · `change` · `pms` とする。
+株式会社MAL の QMS · GVP で検知した問題に適用する。ソース種別は `complaint` · `ae` · `audit` · `change` · `pms` とする。
 
 ## 第3条（起票）
 
