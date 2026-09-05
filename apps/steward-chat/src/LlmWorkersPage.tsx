@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useCopy } from "@ops-shared/define-copy";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import { STEWARD_COPY } from "./steward-copy";
 import {
   fetchLlmWorkers,
@@ -286,7 +287,7 @@ export function LlmWorkersPage() {
       </header>
 
       {loading ? (
-        <p className="chat-settings-muted">{copy.loading}</p>
+        <LoadingStatus label={copy.loading} />
       ) : (
         <form className="chat-settings-form" onSubmit={(e) => void onSubmit(e)}>
           <p className="llm-workers-status" aria-live="polite">

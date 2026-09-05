@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import { STEWARD_COPY } from "./steward-copy";
 import { CompanyEventsPanel } from "./CompanyEventsPanel";
 import {
@@ -189,7 +190,7 @@ export function ExecutiveHomePage() {
         </div>
       </div>
 
-      {loading && !data ? <div className="loading-panel">…</div> : null}
+      {loading && !data ? <LoadingStatus /> : null}
       {error ? <div className="error-banner">{error}</div> : null}
 
       {data ? (

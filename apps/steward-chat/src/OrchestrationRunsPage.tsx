@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import {
   cancelOrchestrationRun,
   completeOrchestrationRun,
@@ -482,7 +483,7 @@ export function OrchestrationRunsPage() {
         </div>
       </div>
 
-      {loading && <div className="loading-panel">{copy.loading}</div>}
+      {loading && <LoadingStatus label={copy.loading} />}
       {error && <div className="error-banner">{error}</div>}
 
       {!loading && !hasAnyPlan ? (

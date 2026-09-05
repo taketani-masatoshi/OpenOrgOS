@@ -375,20 +375,27 @@ export async function fetchHealth(): Promise<HealthInfo> {
   return res.json() as Promise<HealthInfo>;
 }
 
-export async function fetchAuthConfig(): Promise<AuthConfig> {
-  return chatApi<AuthConfig>("/chat/v1/auth/config");
+export async function fetchAuthConfig(signal?: AbortSignal): Promise<AuthConfig> {
+  return chatApi<AuthConfig>("/chat/v1/auth/config", signal ? { signal } : undefined);
 }
 
 export async function logoutChat(): Promise<void> {
   await chatApi("/chat/v1/auth/logout", { method: "POST", body: "{}" });
 }
 
-export async function fetchMe(): Promise<AuthUser | null> {
-  const res = await fetch("/chat/v1/auth/me", fetchOpts);
-  if (res.status === 401) return null;
-  if (!res.ok) throw new Error(`auth me ${res.status}`);
-  const body = (await res.json()) as { user: AuthUser };
-  return body.user;
+export async function fetchMe(signal?: AbortSignal): Promise<AuthUser | null> {
+  try {
+    const res = await fetch("/chat/v1/auth/me", { ...fetchOpts, signal });
+    if (res.status === 401) return null;
+    if (!res.ok) throw new Error(`auth me ${res.status}`);
+    const body = (await res.json()) as { user: AuthUser };
+    return body.user;
+  } catch (e) {
+    if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
+      return null;
+    }
+    throw e;
+  }
 }
 
 export async function loginDev(body: {
@@ -1819,58 +1826,6 @@ export interface CustomerAdminSnapshot {
   platform_billing_settings?: boolean;
 }
 
-export interface OrgChartChangeProposalRow {
-  change_id: string;
-  approval_id: string;
-  intent: string;
-  action: "add" | "update" | "remove";
-  node_id: string;
-  reason: string;
-  proposed_at: string;
-  proposed_by: string;
-}
-
-export interface OrgChartChangeResult {
-  logical_path: string;
-  before_hash: string;
-  after_hash: string;
-  dry_run: boolean;
-}
-
-export async function fetchOrgChartChanges(): Promise<{
-  proposals: OrgChartChangeProposalRow[];
-}> {
-  return chatApi("/chat/v1/org/chart/change");
-}
-
-export async function postOrgChartChangePropose(input: {
-  approval_id: string;
-  change: unknown;
-}): Promise<{ proposal: OrgChartChangeProposalRow }> {
-  return chatApi("/chat/v1/org/chart/change/propose", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export async function postOrgChartChangeValidate(
-  changeId: string,
-): Promise<{ result: OrgChartChangeResult }> {
-  return chatApi("/chat/v1/org/chart/change/validate", {
-    method: "POST",
-    body: JSON.stringify({ change_id: changeId }),
-  });
-}
-
-export async function postOrgChartChangeApply(
-  changeId: string,
-): Promise<{ result: OrgChartChangeResult }> {
-  return chatApi("/chat/v1/org/chart/change/apply", {
-    method: "POST",
-    body: JSON.stringify({ change_id: changeId }),
-  });
-}
-
 export async function fetchProductAdmin(): Promise<CustomerAdminSnapshot> {
   return chatApi<CustomerAdminSnapshot>("/chat/v1/product/admin");
 }
@@ -2045,9 +2000,12 @@ export interface CustomersNavGate {
   sales_agent_grace: boolean;
 }
 
-export async function fetchCustomersNav(): Promise<CustomersNavGate> {
+export async function fetchCustomersNav(
+  signal?: AbortSignal,
+): Promise<CustomersNavGate> {
   const data = await chatApi<{ ok: boolean } & CustomersNavGate>(
     "/chat/v1/customers/nav",
+    signal ? { signal } : undefined,
   );
   return data;
 }

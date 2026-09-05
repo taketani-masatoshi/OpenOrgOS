@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import {
   fetchAnalyticsDashboard,
   type AnalyticsDashboardPayload,
@@ -100,7 +101,7 @@ export function AnalyticsDashboardPage() {
         </div>
       </div>
 
-      {loading && <div className="loading-panel">{copy.loading}</div>}
+      {loading && <LoadingStatus label={copy.loading} />}
       {error && <div className="error-banner">{error}</div>}
 
       {kpi && (

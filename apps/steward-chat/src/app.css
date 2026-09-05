@@ -2081,9 +2081,11 @@ h4.heading-with-info {
 
 .loading-panel,
 .app-loading {
-  display: grid;
-  place-items: center;
-  min-height: 240px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 0;
+  padding: var(--space-4) 0;
   color: var(--muted);
   font-size: var(--text-sm);
 }
@@ -4316,6 +4318,34 @@ h4.heading-with-info {
   font-size: var(--text-md);
   margin: 0 0 var(--space-3);
   flex-shrink: 0;
+}
+
+/* Keep this out of .lf-card: display:grid on <details> plus flex shrink
+   under .agent-chat { overflow: hidden } clips the control to 0 height. */
+.agent-chat-propose {
+  display: block;
+  flex-shrink: 0;
+  margin: 0 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+}
+
+.agent-chat-propose > summary {
+  cursor: pointer;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-md);
+  font-weight: var(--weight-ui);
+  color: var(--ink);
+}
+
+.agent-chat-propose[open] > :not(summary) {
+  margin-left: var(--space-4);
+  margin-right: var(--space-4);
+}
+
+.agent-chat-propose[open] .ledger-actions {
+  margin-bottom: var(--space-4);
 }
 
 .agent-chat-composer {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import {
   ackAgentInbox,
   fetchAgentInbox,
@@ -90,7 +91,7 @@ export function HandoffsInboxPage() {
           </h2>
         </div>
         {!snap ? (
-          <p className="agent-inbox-empty muted">{copy.loading}</p>
+          <LoadingStatus label={copy.loading} />
         ) : snap.items.length === 0 ? (
           <p className="agent-inbox-empty muted">{copy.handoffsAnswersEmpty}</p>
         ) : (
@@ -156,7 +157,7 @@ export function HandoffsInboxPage() {
           </h2>
         </div>
         {!snap ? (
-          <p className="agent-inbox-empty muted">{copy.loading}</p>
+          <LoadingStatus label={copy.loading} />
         ) : snap.pending_orders.length === 0 ? (
           <p className="agent-inbox-empty muted">{copy.handoffsPendingEmpty}</p>
         ) : (

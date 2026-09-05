@@ -55,11 +55,11 @@ export function LedgerProposeCard() {
 
   return (
     <details
-      className="lf-card"
+      className="agent-chat-propose"
       open={open}
       onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
     >
-      <summary className="section-title">チャットから仕訳を提案</summary>
+      <summary>チャットから仕訳を提案</summary>
       <p className="muted page-desc">
         科目を選んで仕訳案をキューに積みます。投稿はワークベンチで承認してください。
       </p>

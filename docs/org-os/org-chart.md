@@ -1,7 +1,7 @@
 # Org Chart（実組織図）
 
-**版:** 1.2 · **日付:** 2026-08-29  
-**状態:** 読取 UI/API 実装済み · 履歴スナップショット · 外部専門家（company.yaml）· OCH は Console から propose / validate / apply 可能
+**版:** 1.3 · **日付:** 2026-09-05  
+**状態:** 読取 UI/API 実装済み · 履歴スナップショット · 外部専門家（company.yaml）· OCH は稟議（APR）承認後に CLI / BFF で適用
 
 ## 目的と区別
 
@@ -47,11 +47,11 @@ GET `/chat/v1/org/chart?as_of=YYYY-MM-DD` で過去の記録を返す。UI の�
 
 ## 変更申請（OCH）
 
-`schemas/org/org-chart-change.ts`（`OCH-…` · REG 参照 · approve フロー）。
+組織変更は変更稟議の一種である。`schemas/org/org-chart-change.ts`（`OCH-…` · REG 参照）。承認は承認キュー（APR）から行い、組織ページは現行の図を見る面だけにする。
 
-既定は Console。組織ページ下部の「組織変更（OCH）」で提案 → 差分確認 → 適用まで行う。CLI と同じ lib（`src/lib/org/org-chart-change.ts`）を通る。
+CLI と BFF は同じ lib（`src/lib/org/org-chart-change.ts`）を通る。
 
-| 操作 | Console（BFF） | CLI | 権限 |
+| 操作 | BFF | CLI | 権限 |
 |---|---|---|---|
 | 提案 | `POST /chat/v1/org/chart/change/propose` | `orgos org chart change propose --file … --approval APR-… --operator OP-001` | `chat:ask` |
 | 一覧 | `GET /chat/v1/org/chart/change` | — | `chat:read` |
@@ -60,7 +60,7 @@ GET `/chat/v1/org/chart?as_of=YYYY-MM-DD` で過去の記録を返す。UI の�
 
 - 提案は `data/org/org-chart-changes/OCH-YYYYMMDD-NNN.yaml` に保存され、`org_chart.change.proposed` を監査に残す。
 - 適用は `approval_id` の APR が承認済みでなければ拒否される（承認は承認キュー / `orgos org approval approve`）。適用時に before/after ハッシュと履歴スナップショットを残す。
-- `remove` は、そのノードを `reports_to` にしている部門が残っていると lib が拒否する。画面には理由がそのまま出る。
+- `remove` は、そのノードを `reports_to` にしている部門が残っていると lib が拒否する。
 
 実装: `src/lib/org/org-chart-change.ts` · 監査 `data/org/org-chart-change-audit.jsonl`（`proposed` / `applied`）
 
