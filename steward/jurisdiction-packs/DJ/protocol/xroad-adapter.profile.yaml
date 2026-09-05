@@ -1,12 +1,11 @@
-profile_id: xroad_v7
-jurisdiction: EE
+profile_id: xroad_v7_dj
+jurisdiction: DJ
 native_standard: X-Road
 version: "7"
 
 transport:
   protocol: https
   styles: [rest]
-  # SOAP declared historically; OpenOrgOS MVP implements REST only.
   security_server_required: true
 
 message_format:
@@ -40,4 +39,4 @@ witness:
   native_audit_log: xroad_message_log_id
 
 substance:
-  notes: タリン Hub（HUB-EU-EE）と同一法域で Security Server · 契約を維持
+  notes: Djibouti X-Road v7 — reuses EE core adapter (xroad_v7_dj)

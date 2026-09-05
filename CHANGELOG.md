@@ -6,6 +6,11 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **Direct HTTP / OData outbound（ADR 0071）** — Community OAuth を使わず財務 L1（`finance.monthly` · `invoice.issued`）を REST / OData v4 へ送る。設定は `data/integrations/http-outbound.yaml`、秘密は `data/secrets/http-outbound.env`（書込のみ）。CLI `orgos integrations http status|export`、コンソール Direct HTTP 区画、BFF `/chat/v1/integrations/http/*`（外向きは `chat:approve`）。
+- **X-Road REST Producer** — Security Server 向け `orgos protocol gov-gateway serve`。ネイティブ `X-Road-*` ヘッダ + OpenOrgOS MIME を受信し Wire ingest、成功時に notice-ack。未知 client は 403、decode 失敗は 422。OpenAPI `publish/protocol/xroad-notice-deliver.openapi.yaml`。SOAP は対象外。
+
 ### Fixed
 
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

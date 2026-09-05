@@ -47,6 +47,18 @@ import {
 import { sendConsoleSlackMessage } from "../../integrations/slack-connector.js";
 import { pushAsanaTarget } from "../../integrations/asana-adapter.js";
 import { exportToGoogleDrive, listDriveExports } from "../../integrations/gdrive-export.js";
+import {
+  exportHttpOutbound,
+  httpOutboundSettingsPatchSchema,
+  httpOutboundStatus,
+  loadHttpOutboundConfig,
+  saveHttpOutboundConfig,
+} from "../../integrations/http-outbound-adapter.js";
+import {
+  buildHttpOutboundSecretsSnapshot,
+  HTTP_OUTBOUND_ENV_KEYS,
+  saveHttpOutboundSecrets,
+} from "../../integrations/http-outbound-secrets.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -97,6 +109,22 @@ const driveExportSchema = z
     kind: z.enum(["receipt", "document", "work_order", "executive_tasks"]),
     id: z.string().min(1).optional(),
     folder_id: z.string().min(1).optional(),
+  })
+  .strict();
+
+const httpSecretsSchema = z
+  .object(
+    Object.fromEntries(
+      HTTP_OUTBOUND_ENV_KEYS.map((key) => [key, z.string().min(1).optional()]),
+    ) as Record<(typeof HTTP_OUTBOUND_ENV_KEYS)[number], z.ZodOptional<z.ZodString>>,
+  )
+  .strict();
+
+const httpExportSchema = z
+  .object({
+    kind: z.enum(["monthly", "invoice"]),
+    id: z.string().min(1),
+    dry_run: z.boolean().optional(),
   })
   .strict();
 
@@ -152,7 +180,117 @@ export async function handleIntegrationsApi(
   // @ooo-route GET /chat/v1/integrations
   if (pathname === "/chat/v1/integrations" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
-    json(res, 200, { ok: true, ...buildConnectorHubSnapshot() });
+    json(res, 200, {
+      ok: true,
+      ...buildConnectorHubSnapshot(),
+      http_outbound: httpOutboundStatus(),
+    });
+    return true;
+  }
+
+  // @ooo-route GET /chat/v1/integrations/http
+  if (pathname === "/chat/v1/integrations/http" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    json(res, 200, {
+      ok: true,
+      status: httpOutboundStatus(),
+      config: loadHttpOutboundConfig(),
+    });
+    return true;
+  }
+
+  // @ooo-route PUT /chat/v1/integrations/http/settings
+  if (pathname === "/chat/v1/integrations/http/settings" && method === "PUT") {
+    if (!requireChatPermission(user, "chat:approve", res)) return true;
+    try {
+      const body = httpOutboundSettingsPatchSchema.parse((await readJsonLimited(req)) ?? {});
+      const saved = saveHttpOutboundConfig(body, user.operator_id);
+      appendChatAudit({
+        action: "http_outbound_settings_update",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
+        ok: true,
+        path: pathname,
+        detail: saved.dialect,
+      });
+      json(res, 200, { ok: true, config: saved, status: httpOutboundStatus() });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      appendChatAudit({
+        action: "http_outbound_settings_update",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
+        ok: false,
+        path: pathname,
+        detail: message,
+      });
+      json(res, errorStatus(err), { ok: false, error: message });
+    }
+    return true;
+  }
+
+  // @ooo-route PUT /chat/v1/integrations/http/secrets
+  if (pathname === "/chat/v1/integrations/http/secrets" && method === "PUT") {
+    if (!requireChatPermission(user, "chat:approve", res)) return true;
+    try {
+      const body = httpSecretsSchema.parse((await readJsonLimited(req)) ?? {});
+      saveHttpOutboundSecrets(body);
+      appendChatAudit({
+        action: "http_outbound_secrets_update",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
+        ok: true,
+        path: pathname,
+        detail: Object.keys(body).join(","),
+      });
+      json(res, 200, { ok: true, secrets: buildHttpOutboundSecretsSnapshot() });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      appendChatAudit({
+        action: "http_outbound_secrets_update",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
+        ok: false,
+        path: pathname,
+        detail: message,
+      });
+      json(res, errorStatus(err), { ok: false, error: message });
+    }
+    return true;
+  }
+
+  // @ooo-route POST /chat/v1/integrations/http/export
+  if (pathname === "/chat/v1/integrations/http/export" && method === "POST") {
+    if (!requireChatPermission(user, "chat:approve", res)) return true;
+    try {
+      const body = httpExportSchema.parse((await readJsonLimited(req)) ?? {});
+      const result = await exportHttpOutbound({
+        kind: body.kind,
+        id: body.id,
+        dryRun: body.dry_run === true,
+        operatorId: user.operator_id,
+      });
+      appendChatAudit({
+        action: "http_outbound_export",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
+        ok: result.ok,
+        path: pathname,
+        detail: `${body.kind}:${body.id}`,
+      });
+      json(res, result.ok ? 200 : 422, { ...result, ok: result.ok });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      appendChatAudit({
+        action: "http_outbound_export",
+        operator_id: user.operator_id,
+        approver_id: user.approver_id,
+        ok: false,
+        path: pathname,
+        detail: message,
+      });
+      json(res, errorStatus(err), { ok: false, error: message });
+    }
     return true;
   }
 

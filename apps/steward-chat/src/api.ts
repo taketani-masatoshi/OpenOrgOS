@@ -2656,10 +2656,77 @@ export interface ConnectorHubSnapshot {
   connectors: ConnectorCard[];
   secrets: ConnectorSecretsSnapshot;
   community_connections_url: string;
+  http_outbound?: HttpOutboundStatus;
+}
+
+export interface HttpOutboundStatus {
+  enabled: boolean;
+  configured: boolean;
+  usable: boolean;
+  base_url: string | null;
+  auth_kind: "none" | "bearer" | "basic" | "oauth2_client_credentials";
+  dialect: "rest" | "odata_v4" | "odata_v2";
+  route_count: number;
+  export_count: number;
+  secrets: {
+    storage_path: string;
+    bearer_configured: boolean;
+    bearer_hint: string | null;
+    basic_configured: boolean;
+    basic_user_hint: string | null;
+    oauth2_configured: boolean;
+    client_id_hint: string | null;
+  };
+  detail: string;
 }
 
 export async function fetchConnectorHub(): Promise<ConnectorHubSnapshot> {
   return chatApi("/chat/v1/integrations");
+}
+
+export async function putHttpOutboundSettings(input: {
+  enabled?: boolean;
+  base_url?: string;
+  auth_kind?: HttpOutboundStatus["auth_kind"];
+  dialect?: "rest" | "odata_v4";
+  token_url?: string;
+  odata_service_path?: string;
+  notes?: string;
+}): Promise<{ ok: boolean; status: HttpOutboundStatus }> {
+  return chatApi("/chat/v1/integrations/http/settings", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function putHttpOutboundSecrets(input: {
+  ORGOS_HTTP_OUTBOUND_BEARER?: string;
+  ORGOS_HTTP_OUTBOUND_BASIC_USER?: string;
+  ORGOS_HTTP_OUTBOUND_BASIC_PASSWORD?: string;
+  ORGOS_HTTP_OUTBOUND_CLIENT_ID?: string;
+  ORGOS_HTTP_OUTBOUND_CLIENT_SECRET?: string;
+}): Promise<{ ok: boolean; secrets: HttpOutboundStatus["secrets"] }> {
+  return chatApi("/chat/v1/integrations/http/secrets", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postHttpOutboundExport(input: {
+  kind: "monthly" | "invoice";
+  id: string;
+  dry_run?: boolean;
+}): Promise<{
+  ok: boolean;
+  dry_run: boolean;
+  reason: string;
+  url?: string;
+  export_id?: string;
+}> {
+  return chatApi("/chat/v1/integrations/http/export", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export async function postConnectorConnect(

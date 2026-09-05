@@ -324,6 +324,9 @@ export const chatAuditActionSchema = z.enum([
   "connector_slack_send",
   "connector_asana_push",
   "connector_gdrive_export",
+  "http_outbound_settings_update",
+  "http_outbound_secrets_update",
+  "http_outbound_export",
 ]);
 
 export type ChatAuditAction = z.output<typeof chatAuditActionSchema>;

@@ -82,6 +82,11 @@ export const govGatewayConfigSchema = z.object({
   hub_pool_ref: z.string().optional(),
   audit_bridge: govGatewayAuditBridgeSchema.optional(),
   profiles: z.array(govGatewayProfileBindingSchema).default([]),
+  /**
+   * Extra X-Road-Client identities allowed to call the producer listener.
+   * Peers with gov_gateway.member_code and profile bindings are trusted automatically.
+   */
+  trusted_xroad_clients: z.array(z.string().min(1)).default([]),
 });
 
 export const govGatewayRegistryEntrySchema = z.object({

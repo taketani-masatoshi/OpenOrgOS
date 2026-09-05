@@ -69,6 +69,7 @@ Slack Webhook と Asana PAT は `data/secrets/connector-secrets.env`（0600 · g
 - Slack Events API での双方向同期、Asana Webhook から OrgOS を書き換えること
 - Drive の全ファイル同期、YAML の Drive ホスティング
 - LLM / MCP による接続・送信・格納
+- Direct HTTP / OData（財務 L1）は [ADR 0071](../../adr/0071-direct-http-outbound-connectors.md) — Community OAuth 外の別区画
 
 ## テスト
 

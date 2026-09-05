@@ -11,6 +11,7 @@ Operator-owned credentials · do not commit tokens. CI uses `GOV_GATEWAY_TRANSPO
 | **2 Authenticated health** | Same + `GOV_*_TOKEN` accepted (not 401) | set token env · `--live --json` | Rotate token · check Authorization scheme |
 | **3 Encode dry-run** | Native message encodes | `gov-gateway encode --event-id … --profile …` | Envelope missing · profile binding |
 | **4 Deliver** | HTTP 2xx / correlation id | `protocol deliver --peer … --file …` | Peer `transport: gov_gateway` · SS routing |
+| **5 Producer** | SS → OrgOS notice-deliver ingest | `gov-gateway serve --bind 127.0.0.1:9474` · POST OpenOrgOS MIME | Unknown `X-Road-Client` → 403 · bad MIME → 422 |
 
 ## Setup steps
 
@@ -21,7 +22,9 @@ Operator-owned credentials · do not commit tokens. CI uses `GOV_GATEWAY_TRANSPO
 5. `GOV_GATEWAY_TRANSPORT=live`
 6. Peer: `transport: gov_gateway` + `gov_gateway.profile_id`
 7. Validate → health `--live` → encode → deliver
+8. Producer: register SS service → `orgos protocol gov-gateway serve` → POST `/r1/...` with X-Road headers
 
+OpenAPI: `publish/protocol/xroad-notice-deliver.openapi.yaml` · Spec §7.2: [gov-gateway-adapter-spec.md](gov-gateway-adapter-spec.md)
 ## Recording
 
 Copy [gov-gateway-live-pilot-log.md.example](gov-gateway-live-pilot-log.md.example) per pilot run. **Never** paste secrets or full tokens into the log.
