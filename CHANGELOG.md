@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- 同じ chrome で LLM モデル選択が幅 0 / ドロップダウン欠落になっていた。composer 内の compact picker は縮めず、入力枠の overflow でネイティブ select を切らない。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 
 ## [0.9.0-beta.1] — 2026-08-30

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   decodeLlmRouteSelect,
   encodeLlmRouteSelect,
+  localWorkerModelOptions,
   parseLlmRouteHint,
 } from "../apps/steward-chat/src/llmRoute.ts";
 
@@ -12,6 +13,13 @@ describe("llm route hint", () => {
     expect(encodeLlmRouteSelect({ mode: "cloud", worker_id: "openai-01" })).toBe(
       "cloud:openai-01",
     );
+    expect(
+      encodeLlmRouteSelect({
+        mode: "local",
+        worker_id: "local-01",
+        model: "qwen2.5:14b",
+      }),
+    ).toBe("local:local-01|qwen2.5%3A14b");
   });
 
   it("decodes select values", () => {
@@ -21,7 +29,30 @@ describe("llm route hint", () => {
       mode: "cloud",
       worker_id: "openai-01",
     });
+    expect(decodeLlmRouteSelect("local:local-01|qwen2.5%3A14b")).toEqual({
+      mode: "local",
+      worker_id: "local-01",
+      model: "qwen2.5:14b",
+    });
     expect(decodeLlmRouteSelect("nope")).toEqual({ mode: "auto" });
+  });
+
+  it("lists local model options the compact picker renders", () => {
+    const rows = localWorkerModelOptions(
+      [
+        { id: "local-01", model: "fallback" },
+        { id: "local-02", model: "only-default" },
+      ],
+      { "local-01": ["qwen2.5:14b", "gemma4:12b"] },
+    );
+    expect(rows.map((row) => row.model)).toEqual([
+      "qwen2.5:14b",
+      "gemma4:12b",
+      "only-default",
+    ]);
+    expect(
+      rows.every((row) => decodeLlmRouteSelect(row.value).model === row.model),
+    ).toBe(true);
   });
 
   it("ignores worker_id on auto", () => {

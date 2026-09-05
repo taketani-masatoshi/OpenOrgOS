@@ -10,6 +10,7 @@ import {
   decodeLlmRouteSelect,
   encodeLlmRouteSelect,
   loadLlmRoute,
+  localWorkerModelOptions,
   saveLlmRoute,
   type LlmRouteHint,
 } from "./llmRoute";
@@ -162,21 +163,11 @@ export function LlmRoutePicker({
       <option value="local">{copy.llmRouteLocalAny}</option>
       {localWorkers.length > 0 && (
         <optgroup label={copy.llmRouteGroupLocal}>
-          {localWorkers.flatMap((w) => {
-            const models = modelsByWorker[w.id] ?? [w.model];
-            return models.map((model) => (
-              <option
-                key={`${w.id}:${model}`}
-                value={encodeLlmRouteSelect({
-                  mode: "local",
-                  worker_id: w.id,
-                  model,
-                })}
-              >
-                {model}
-              </option>
-            ));
-          })}
+          {localWorkerModelOptions(localWorkers, modelsByWorker).map((row) => (
+            <option key={`${row.workerId}:${row.model}`} value={row.value}>
+              {row.model}
+            </option>
+          ))}
         </optgroup>
       )}
       {!forcedLocal && <option value="cloud">{copy.llmRouteCloudAny}</option>}

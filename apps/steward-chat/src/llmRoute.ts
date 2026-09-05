@@ -62,6 +62,25 @@ export function encodeLlmRouteSelect(hint: LlmRouteHint): string {
   return hint.mode;
 }
 
+/** Compact picker entries for local workers (value must match encodeLlmRouteSelect). */
+export function localWorkerModelOptions(
+  workers: Array<{ id: string; model: string }>,
+  modelsByWorker: Record<string, string[]>,
+): Array<{ workerId: string; model: string; value: string }> {
+  return workers.flatMap((worker) => {
+    const models = modelsByWorker[worker.id] ?? [worker.model];
+    return models.map((model) => ({
+      workerId: worker.id,
+      model,
+      value: encodeLlmRouteSelect({
+        mode: "local",
+        worker_id: worker.id,
+        model,
+      }),
+    }));
+  });
+}
+
 export function decodeLlmRouteSelect(value: string): LlmRouteHint {
   if (value === "auto" || value === "local" || value === "cloud") {
     return { mode: value };

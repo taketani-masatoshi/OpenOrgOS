@@ -1,6 +1,27 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 
 import { loginConsole as login } from "./helpers/console-login";
+import { LOCAL_MODELS, mockLlmRouteCatalog } from "./helpers/llm-route-mock";
+
+async function expectLlmRoutePickerVisible(
+  root: Locator,
+  opts?: { forcedLocal?: boolean },
+): Promise<void> {
+  const picker = root.locator(".llm-route-picker-select");
+  await expect(picker).toBeVisible();
+  await expect(picker).toBeEnabled();
+  await expect(picker.locator("option[value='local']")).toHaveCount(1);
+  if (opts?.forcedLocal) {
+    await expect(picker.locator("option[value='auto']")).toHaveCount(0);
+    await expect(picker.locator("option[value='cloud']")).toHaveCount(0);
+  } else {
+    await expect(picker.locator("option[value='auto']")).toHaveCount(1);
+    await expect(picker.locator("option[value='cloud']")).toHaveCount(1);
+  }
+  for (const model of LOCAL_MODELS) {
+    await expect(picker.locator("option", { hasText: model })).toHaveCount(1);
+  }
+}
 
 test.describe("steward chat smoke", () => {
   test("ログイン中の表示は氏名だけにする", async ({ page }) => {
@@ -36,30 +57,44 @@ test.describe("steward chat smoke", () => {
   });
 
   test("秘書とスチュワードのチャットにWeb検索スイッチを表示する", async ({ page }) => {
+    await mockLlmRouteCatalog(page);
     await login(page);
 
     await page.goto("/secretary/");
-    const secretarySwitch = page.getByRole("switch", { name: /Web検索/ });
+    const secretaryPane = page.locator(".agent-chat-pane").filter({
+      has: page.locator("#agent-chat-input-secretary"),
+    });
+    await expect(page.locator("#agent-chat-input-secretary")).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(secretaryPane.getByText("チャットから仕訳を提案")).toBeVisible();
+    const secretarySwitch = secretaryPane.getByRole("switch", { name: /Web検索/ });
     await expect(secretarySwitch).toBeVisible();
     await expect(secretarySwitch).not.toBeChecked();
+    await expect(page.locator("#agent-chat-input-secretary")).toHaveCount(1);
+    await expectLlmRoutePickerVisible(secretaryPane);
     await secretarySwitch.check();
     await expect(secretarySwitch).toBeChecked();
     await expect(page.getByRole("searchbox")).toHaveCount(0);
-    await expect(page.getByText("入力内容を公開Web検索へ送信します")).toBeVisible();
-    await expect(page.locator("#agent-chat-input-secretary")).toHaveCount(1);
-    const modelPicker = page.getByRole("combobox", { name: "LLM" });
-    await expect(modelPicker).toBeEnabled();
-    for (const model of ["qwen2.5:14b", "gemma4:12b", "gemma4:latest", "llama3.2:1b"]) {
-      await expect(modelPicker.locator("option", { hasText: model })).toHaveCount(1);
-    }
+    await expect(secretaryPane.getByText("入力内容を公開Web検索へ送信します")).toBeVisible();
+    await expectLlmRoutePickerVisible(secretaryPane, { forcedLocal: true });
 
     await page.goto("/steward/");
-    const stewardSwitch = page.getByRole("switch", { name: /Web検索/ });
+    const stewardPane = page.locator(".agent-chat-pane").filter({
+      has: page.locator("#agent-chat-input-executive_steward"),
+    });
+    await expect(page.locator("#agent-chat-input-executive_steward")).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(stewardPane.getByText("チャットから仕訳を提案")).toBeVisible();
+    const stewardSwitch = stewardPane.getByRole("switch", { name: /Web検索/ });
     await expect(stewardSwitch).toBeVisible();
     await expect(stewardSwitch).not.toBeChecked();
+    await expectLlmRoutePickerVisible(stewardPane);
   });
 
   test("同じ入力欄をWeb検索スイッチで送信先へ振り分ける", async ({ page }) => {
+    await mockLlmRouteCatalog(page);
     await login(page);
     await page.goto("/secretary/");
 
