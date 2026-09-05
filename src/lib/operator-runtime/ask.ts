@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { isLlmApiConfigured, type LlmHistoryTurn } from "./llm-api.js";
 import { operatorPolicyExcerpt } from "../operator-policy.js";
 import { runShellAsk, runShellDispatch, type ShellDispatchResult } from "./shell.js";
-import { runLlmWithTools } from "./tool-loop.js";
+import { runLlmWithTools, type LlmToolLoopOptions } from "./tool-loop.js";
 import type { OperatorResponse } from "../../../schemas/operator-response.js";
 import type { LlmTelemetryEntry } from "./telemetry.js";
 import type { OperatorToolContext } from "./tools.js";
@@ -146,6 +146,7 @@ async function runLlmOperatorAsk(
   history?: OperatorHistoryTurn[],
   toolContext: OperatorToolContext = {},
   hint?: LlmRouteHint,
+  options: LlmToolLoopOptions = {}
 ): Promise<OperatorAskResult> {
   const llm = await runLlmWithTools(
     systemContext,
@@ -153,6 +154,7 @@ async function runLlmOperatorAsk(
     history,
     toolContext,
     hint,
+    options
   );
   return {
     ok: llm.ok,
@@ -218,6 +220,8 @@ export async function runOperatorAsk(
     operatorId?: string;
     approverId?: string;
     llmRoute?: LlmRouteHint;
+    allowTools?: boolean;
+    allowStructuredOutput?: boolean;
   }
 ): Promise<OperatorAskResult> {
   const profile = resolveShellProfileName(opts?.profile);
@@ -233,6 +237,10 @@ export async function runOperatorAsk(
         agentId: getFsGuardAgent(),
       },
       opts?.llmRoute,
+      {
+        allowTools: opts?.allowTools,
+        allowStructuredOutput: opts?.allowStructuredOutput,
+      }
     );
     if (llm.ok) return llm;
     // Configured workers / API must not fall through to the "LLM 未設定" shell stub.
@@ -258,6 +266,8 @@ export async function* runOperatorAskStream(
     operatorId?: string;
     approverId?: string;
     llmRoute?: LlmRouteHint;
+    allowTools?: boolean;
+    allowStructuredOutput?: boolean;
   }
 ): AsyncGenerator<
   { type: "delta"; content: string },
@@ -275,6 +285,10 @@ export async function* runOperatorAskStream(
         agentId: getFsGuardAgent(),
       },
       opts?.llmRoute,
+      {
+        allowTools: opts?.allowTools,
+        allowStructuredOutput: opts?.allowStructuredOutput,
+      }
     );
     if (batch.reply) {
       for (const word of batch.reply.split(/(\s+)/)) {

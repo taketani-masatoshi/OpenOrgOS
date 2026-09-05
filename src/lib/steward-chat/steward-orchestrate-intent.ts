@@ -49,9 +49,11 @@ export function formatStewardOrchestrateCeoReply(input: {
   }
   const labels = [...new Set(input.agentIds.map(agentLabel))];
   const who = labels.join("・");
+  const runsHref = `/runs/?id=${encodeURIComponent(input.rootId)}`;
   return [
     `${who}担当に確認を依頼しました（受付 ${input.rootId}）。`,
-    "結果は「委譲と回答」に届きます。",
+    "進捗は「実行状況」、結果は「委譲と回答」に届きます。",
+    `[実行状況](${runsHref}) · [委譲と回答](/handoffs/)`,
   ].join("\n");
 }
 

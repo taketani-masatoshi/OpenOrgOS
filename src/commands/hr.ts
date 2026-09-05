@@ -4,6 +4,7 @@ import {
   buildHeadcountView,
   formatHeadcountMarkdown,
 } from "../lib/hr/headcount-view.js";
+import { applyHrOnboard } from "../lib/hr/onboard.js";
 import {
   assessTrainingCoverage,
   buildCompetenceMatrix,
@@ -22,6 +23,35 @@ export function runHrHeadcount(options?: { json?: boolean }): void {
     return;
   }
   console.log(formatHeadcountMarkdown(view));
+}
+
+export function runHrOnboard(options: {
+  name?: string;
+  hired_date?: string;
+  write?: boolean;
+  json?: boolean;
+  fromAgent?: string;
+}): void {
+  const name = options.name?.trim();
+  if (!name) {
+    throw new Error("hr onboard requires --name <氏名>");
+  }
+  const input = options.hired_date
+    ? { name, hired_date: options.hired_date }
+    : { name };
+  const result = applyHrOnboard(input, {
+    write: Boolean(options.write),
+    fromAgent: options.fromAgent,
+  });
+  if (options.json) {
+    console.log(JSON.stringify(result, null, 2));
+  } else {
+    console.log(result.reply);
+    if (result.work_order_ids.length) {
+      console.log(`Work Orders: ${result.work_order_ids.join(", ")}`);
+    }
+  }
+  if (!result.ok && options.write) process.exitCode = 1;
 }
 
 /** Evidence folder for ISO 21401 7.2. Generated documents live here. */

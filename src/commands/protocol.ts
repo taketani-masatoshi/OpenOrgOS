@@ -2110,6 +2110,62 @@ export async function runProtocolGovGatewaySandboxInit(
   console.log("  Live ping: orgos protocol gov-gateway health --profile xroad_v7 --live");
 }
 
+export interface ProtocolGovGatewayServeOptions {
+  profile?: string;
+  bind?: string;
+  tenant?: string;
+  trustAll?: boolean;
+  once?: boolean;
+}
+
+export async function runProtocolGovGatewayServe(
+  opts: ProtocolGovGatewayServeOptions = {},
+): Promise<void> {
+  applyProtocolTenant(opts.tenant);
+  const { govGatewayProfileIdSchema } = await import(
+    "../../schemas/protocol/gov-gateway-adapter.js"
+  );
+  const { startGovGatewayProducerServer } = await import(
+    "../lib/wire/gov-gateway/producer-server.js"
+  );
+
+  const profileId = govGatewayProfileIdSchema.parse(opts.profile ?? "xroad_v7");
+  const bind = opts.bind ?? "127.0.0.1:9474";
+  const [hostPart, portPart] = bind.split(":");
+  const host = hostPart || "127.0.0.1";
+  const port = Number(portPart || "9474");
+  if (!Number.isFinite(port)) {
+    console.error(`Invalid --bind ${bind} (expected host:port)`);
+    process.exit(1);
+  }
+
+  const handle = await startGovGatewayProducerServer({
+    host,
+    port,
+    profileId,
+    trustAllClients: opts.trustAll === true,
+  });
+
+  if (opts.once) {
+    const res = await fetch(`${handle.url}/health`);
+    handle.close();
+    if (!res.ok) {
+      console.error(`Health check failed: HTTP ${res.status}`);
+      process.exit(1);
+    }
+    console.log("✓ gov-gateway producer health ok");
+    return;
+  }
+
+  console.log("Press Ctrl+C to stop");
+  await new Promise<void>((resolve) => {
+    process.on("SIGINT", () => {
+      handle.close();
+      resolve();
+    });
+  });
+}
+
 export interface ProtocolTrustedHubsSyncKeysOptions {
   jurisdiction?: string;
   hubUrl?: string;

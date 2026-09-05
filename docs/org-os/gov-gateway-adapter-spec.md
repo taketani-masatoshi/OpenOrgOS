@@ -112,7 +112,7 @@ Fixtures: `tests/fixtures/gov-gateway/{xroad,jp,ge}/`
 
 ## 7. 受信 ingest
 
-Webhook body 形式:
+### 7.1 ラップ JSON（後方互換 · 内部 webhook）
 
 ```json
 {
@@ -125,6 +125,29 @@ Webhook body 形式:
 
 または `Content-Type: application/vnd.openorgos.envelope+json` で envelope 直送（e-Gov 互換）。
 
+### 7.2 ネイティブ REST Producer（本番 Security Server）
+
+Security Server が OrgOS の producer listener に届ける形式（ラップなし）:
+
+| 項目 | 値 |
+|------|-----|
+| Method | `POST` |
+| Path | `/r1/{instance}/{memberClass}/{memberCode}/{subsystem}/{service}` または `/protocol/v1/gov-gateway/producer/{service_code}` |
+| Headers | `X-Road-Client` · `X-Road-Service` · `X-Request-Id` · `Content-Type: application/vnd.openorgos.envelope+json` |
+| Body | OpenOrgOS MIME（canonical EventEnvelope JSON） |
+
+拒否条件:
+
+- 未知の `X-Road-Client`（peer / member_code に無い）→ **403**（ingest しない）
+- MIME / envelope decode 失敗 → **422**（Wire 正本は書き換えない）
+- 成功 → inbox ingest のうえ **200** で `notice-ack` 相当（OpenOrgOS MIME · `X-Request-Id` 相関）
+
+TLS: 本 MVP は loopback HTTP + SS または reverse proxy 終端（`WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY`）。OrgOS 内 HTTPS 待受は次フェーズ。**SOAP は実装しない**（profile YAML の `styles` に soap があっても rest のみ）。
+
+CLI: `orgos protocol gov-gateway serve --profile xroad_v7 --bind 127.0.0.1:9474`
+
+OpenAPI: [`publish/protocol/xroad-notice-deliver.openapi.yaml`](../../publish/protocol/xroad-notice-deliver.openapi.yaml)
+
 ---
 
 ## 8. CLI
@@ -135,6 +158,7 @@ Webhook body 形式:
 | `orgos protocol gov-gateway encode --event-id --profile` | 国家形式ダンプ |
 | `orgos protocol gov-gateway decode --file` | 逆変換 |
 | `orgos protocol gov-gateway health --profile` | adapter 到達性 |
+| `orgos protocol gov-gateway serve` | X-Road REST producer listener（loopback） |
 
 ---
 
@@ -143,3 +167,4 @@ Webhook body 形式:
 | 日付 | 内容 |
 |------|------|
 | 2026-07-07 | P0 実装正本 — xroad_v7 · jp_egov_central · ge_gov_gateway_3g |
+| 2026-09-06 | Native REST producer ingest · serve CLI · notice-ack（SOAP 除外） |

@@ -50,6 +50,7 @@ export function AgentChatPage({ agentId, title }: Props) {
   const inputId = `agent-chat-input-${agentId}`;
   const [faqBusy, setFaqBusy] = useState(false);
   const [faqNote, setFaqNote] = useState<string | null>(null);
+  const [webSearch, setWebSearch] = useState(false);
 
   useEffect(() => {
     void ensureAgentChatHistory(agentId);
@@ -61,14 +62,18 @@ export function AgentChatPage({ agentId, title }: Props) {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    void sendAgentChatDraft(agentId, title);
+    void sendAgentChatDraft(agentId, title, {
+      webSearch,
+    });
   }
 
   /** ⌘/Ctrl+Enter sends; plain Enter keeps newline in the textarea. */
   function onComposerKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key !== "Enter" || (!e.metaKey && !e.ctrlKey)) return;
     e.preventDefault();
-    void sendAgentChatDraft(agentId, title);
+    void sendAgentChatDraft(agentId, title, {
+      webSearch,
+    });
   }
 
   async function onRebuildFaq() {
@@ -87,18 +92,8 @@ export function AgentChatPage({ agentId, title }: Props) {
 
   return (
     <div className="agent-chat">
-      <header className="page-heading">
-        <div>
-          <h1 className="agent-chat-title ops-page-title">{title}</h1>
-          <p className="ops-page-lead">{copy.chatLead}</p>
-          <p className="muted">
-            帳簿操作は{" "}
-            <a href="/?ledger=1">Ledger ワークベンチ</a>
-            で承認・投稿します（AI は提案まで）。
-          </p>
-        </div>
-        <LlmRoutePicker agentId={agentId} />
-      </header>
+      {/* Nav tab already names the agent; keep the heading for assistive tech only. */}
+      <h1 className="agent-chat-title agent-chat-label-sr">{title}</h1>
       <LedgerProposeCard />
       <form className="agent-chat-composer" onSubmit={(e) => void onSubmit(e)}>
         <label className="agent-chat-label-sr" htmlFor={inputId}>
@@ -119,28 +114,58 @@ export function AgentChatPage({ agentId, title }: Props) {
             }
             aria-keyshortcuts="Meta+Enter Control+Enter"
           />
-        </div>
-        <div className="agent-chat-actions">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={
-              state.loadingHistory ||
-              state.inFlight >= MAX_AGENT_CHAT_IN_FLIGHT ||
-              !state.draft.trim()
-            }
-          >
-            {copy.send}
-          </button>
-          {state.notifyPerm === "default" && (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => void enableAgentChatNotifications(agentId)}
-            >
-              {copy.notify}
-            </button>
-          )}
+          <div className="agent-chat-composer-bar">
+            <div className="agent-chat-route-controls">
+              <LlmRoutePicker
+                agentId={agentId}
+                compact
+                forcedLocal={webSearch}
+              />
+              <label
+                className={
+                  webSearch
+                    ? "agent-chat-web-search-toggle is-on"
+                    : "agent-chat-web-search-toggle"
+                }
+              >
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={webSearch}
+                  onChange={(e) => setWebSearch(e.target.checked)}
+                />
+                <span>Web検索</span>
+                <strong>{webSearch ? "ON" : "OFF"}</strong>
+              </label>
+              {webSearch && (
+                <small className="agent-chat-web-search-notice">
+                  入力内容を公開Web検索へ送信します
+                </small>
+              )}
+            </div>
+            <div className="agent-chat-actions">
+              {state.notifyPerm === "default" && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => void enableAgentChatNotifications(agentId)}
+                >
+                  {copy.notify}
+                </button>
+              )}
+              <button
+                type="submit"
+                className="btn btn-primary btn-sm"
+                disabled={
+                  state.loadingHistory ||
+                  state.inFlight >= MAX_AGENT_CHAT_IN_FLIGHT ||
+                  !state.draft.trim()
+                }
+              >
+                {copy.send}
+              </button>
+            </div>
+          </div>
         </div>
       </form>
 

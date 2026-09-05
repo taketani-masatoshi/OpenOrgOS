@@ -180,6 +180,7 @@ import {
   runHrCompetence,
   runHrCompetenceCheck,
   runHrHeadcount,
+  runHrOnboard,
   type CompetenceView,
 } from "../../commands/hr.js";
 import {
@@ -215,11 +216,27 @@ export function registerDomainCommands(program: Command): void {
   sync.command("all").description("Sync all plan CSVs and contract ledger").action(runSyncAll);
   sync.command("contracts").description("Sync 契約管理表.csv only").action(runSyncContracts);
 
-  const hr = program.command("hr").description("HR master (L1 headcount)");
+  const hr = program.command("hr").description("HR master (L1 headcount · onboard)");
   hr.command("headcount")
     .description("Deterministic headcount from data/hr/employees.yaml (no names)")
     .option("--json", "Print JSON")
     .action((opts: { json?: boolean }) => runHrHeadcount({ json: Boolean(opts.json) }));
+
+  hr.command("onboard")
+    .description("L1 hire: plan or apply employees.yaml append + HR/Finance Work Orders")
+    .requiredOption("--name <name>", "Employee display name (L1)")
+    .option("--hired-date <date>", "Hired date YYYY-MM-DD")
+    .option("--write", "Apply roster append and file Work Orders (default: dry-run plan)")
+    .option("--json", "Print JSON")
+    .action(
+      (opts: { name: string; hiredDate?: string; write?: boolean; json?: boolean }) =>
+        runHrOnboard({
+          name: opts.name,
+          hired_date: opts.hiredDate,
+          write: Boolean(opts.write),
+          json: Boolean(opts.json),
+        })
+    );
 
   const competence = hr
     .command("competence")

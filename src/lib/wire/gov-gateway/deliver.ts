@@ -58,9 +58,26 @@ export async function deliverEnvelopeViaGovGateway(options: {
   };
 
   const native = await adapter.encode(options.envelope, encodeCtx);
+  let endpointUrl = options.endpoint.url;
+  try {
+    if (profileId.startsWith("xroad")) {
+      const { resolveXRoadDeliverUrl } = await import("./xroad-r1.js");
+      endpointUrl = resolveXRoadDeliverUrl({
+        peerUrl: options.endpoint.url,
+        securityServerUrl: merged.security_server_url,
+        serviceCode: merged.service_code,
+      });
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      reason: err instanceof Error ? err.message : String(err),
+      endpoint: options.endpoint.url,
+    };
+  }
   const target: GatewayTarget = {
     profile_id: profileId,
-    endpoint_url: options.endpoint.url,
+    endpoint_url: endpointUrl,
     service_code: merged.service_code,
     member_code: merged.member_code,
     subsystem_code: merged.subsystem_code,
@@ -83,7 +100,7 @@ export async function deliverEnvelopeViaGovGateway(options: {
       ok: true,
       reason: receipt.detail ?? "ok",
       httpStatus: receipt.http_status,
-      endpoint: options.endpoint.url,
+      endpoint: endpointUrl,
       correlationId: receipt.correlation_id,
     };
   }
@@ -92,7 +109,7 @@ export async function deliverEnvelopeViaGovGateway(options: {
     ok: false,
     reason: receipt.detail ?? "gov gateway deliver failed",
     httpStatus: receipt.http_status,
-    endpoint: options.endpoint.url,
+    endpoint: endpointUrl,
   };
 }
 

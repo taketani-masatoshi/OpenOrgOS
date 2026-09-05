@@ -396,6 +396,7 @@ ci_suites:
       - gov-gateway-adapter.test.ts
       - gov-gateway-sandbox.test.ts
       - gov-gateway-live.test.ts
+      - xroad-producer.test.ts
       - prod-wire-gate.test.ts
       - mal-wire-pilot-gate.test.ts
       - mal-wire-peer-deliver.test.ts
@@ -1189,6 +1190,14 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
+  xroad-producer.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
+  http-outbound-adapter.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   governance-principles-iso37000.test.ts:
     axis: platform
     kind: unit

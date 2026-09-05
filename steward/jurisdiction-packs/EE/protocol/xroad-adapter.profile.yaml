@@ -5,7 +5,8 @@ version: "7"
 
 transport:
   protocol: https
-  styles: [rest, soap]
+  styles: [rest]
+  # SOAP declared historically; OpenOrgOS MVP implements REST only.
   security_server_required: true
 
 message_format:

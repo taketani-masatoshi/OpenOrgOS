@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · security
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-30 · **Tenant:** mal
+> **Generated:** 2026-09-03 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent security`
 
 ---

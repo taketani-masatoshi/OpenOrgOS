@@ -100,17 +100,71 @@ export function nativeMessageFromXRoadWire(body: {
 
 const XROAD_PROFILES = new Set<string>(["xroad_v7", "xroad_v6", "xroad_v7_dj"]);
 
+/**
+ * Parse inbound X-Road body.
+ * Supports:
+ * 1. Wrapped: `{ format: "gov_gateway", profile_id, headers, body }`
+ * 2. Native REST: `{ profile_id?, headers: { X-Road-* }, body }` (no format wrapper)
+ */
 export function parseXRoadInboundBody(raw: unknown): NativeMessage | undefined {
   if (typeof raw !== "object" || raw === null) return undefined;
   const obj = raw as Record<string, unknown>;
-  if (obj.format !== "gov_gateway") return undefined;
-  const profileId = obj.profile_id;
-  if (typeof profileId !== "string" || !XROAD_PROFILES.has(profileId)) return undefined;
-  if (!obj.body) return undefined;
+
+  if (obj.format === "gov_gateway") {
+    const profileId = obj.profile_id;
+    if (typeof profileId !== "string" || !XROAD_PROFILES.has(profileId)) return undefined;
+    if (!obj.body) return undefined;
+    return nativeMessageFromXRoadWire({
+      profile_id: profileId as GovGatewayProfileId,
+      headers: (obj.headers as Record<string, string>) ?? {},
+      body: obj.body as string | Record<string, unknown>,
+    });
+  }
+
+  const headers = (obj.headers as Record<string, string> | undefined) ?? undefined;
+  const hasXRoad =
+    headers &&
+    (Boolean(headers["X-Road-Client"] ?? headers["x-road-client"]) ||
+      Boolean(headers["X-Road-Service"] ?? headers["x-road-service"]));
+  if (!hasXRoad || obj.body === undefined) return undefined;
+
+  const profileRaw = obj.profile_id;
+  const profileId =
+    typeof profileRaw === "string" && XROAD_PROFILES.has(profileRaw)
+      ? (profileRaw as GovGatewayProfileId)
+      : ("xroad_v7" as GovGatewayProfileId);
+
   return nativeMessageFromXRoadWire({
-    profile_id: profileId as GovGatewayProfileId,
-    headers: (obj.headers as Record<string, string>) ?? {},
+    profile_id: profileId,
+    headers,
     body: obj.body as string | Record<string, unknown>,
+  });
+}
+
+/** Build native message from HTTP request headers + raw body (producer listener). */
+export function nativeMessageFromXRoadHttpRequest(opts: {
+  profileId?: GovGatewayProfileId;
+  headers: Record<string, string | string[] | undefined>;
+  bodyText: string;
+}): NativeMessage {
+  const pick = (name: string): string | undefined => {
+    const lower = name.toLowerCase();
+    for (const [k, v] of Object.entries(opts.headers)) {
+      if (k.toLowerCase() === lower) {
+        return Array.isArray(v) ? v[0] : v;
+      }
+    }
+    return undefined;
+  };
+  const headers: Record<string, string> = {};
+  for (const key of ["X-Road-Client", "X-Road-Service", "X-Request-Id", "Content-Type"]) {
+    const value = pick(key);
+    if (value) headers[key] = value;
+  }
+  return nativeMessageFromXRoadWire({
+    profile_id: opts.profileId ?? "xroad_v7",
+    headers,
+    body: opts.bodyText,
   });
 }
 

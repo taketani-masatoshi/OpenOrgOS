@@ -17,6 +17,11 @@ export function CloudLlmGuidePage() {
         <h2>{copy.cloudStep1}</h2>
         <ul>
           <li>
+            <a href="https://ollama.com/settings/keys" target="_blank" rel="noopener noreferrer">
+              Ollama Cloud
+            </a>
+          </li>
+          <li>
             <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">
               OpenAI（ChatGPT）
             </a>
@@ -31,6 +36,9 @@ export function CloudLlmGuidePage() {
 
       <section className="cloud-llm-section">
         <h2>{copy.cloudStep2}</h2>
+        <p>{copy.cloudExampleOllama}</p>
+        <pre className="cloud-llm-code">{`# OS_Community/.env
+OLLAMA_API_KEY=`}</pre>
         <p>{copy.cloudExampleOpenai}</p>
         <pre className="cloud-llm-code">{`ORGOS_USE_OLLAMA=0
 ORGOS_LLM_MOCK=0

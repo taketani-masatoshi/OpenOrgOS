@@ -1,4 +1,4 @@
-as_of: 2026-08-30
+as_of: 2026-09-01
 approvals:
   - approval_id: APR-20260710-001
     scope: internal
@@ -467,7 +467,7 @@ approvals:
       wire_event_id: f8f073eb-5f82-4f4d-a4d7-d4b2cbdf22fd
   - approval_id: NOTICE-20260830-025
     scope: wire
-    status: pending_approval
+    status: rejected
     proposed_at: 2026-08-30T02:00:57.625Z
     proposed_by: OP-002
     subject_type: wire.outbound
@@ -475,8 +475,11 @@ approvals:
     message: E2E — 承認待ちの通知
     approval_policy_ref: REG-004
     approval_tier: A
-    approver_id: Demo CEO
+    approver_id: 段燕燕
     approved_at: 2026-08-30T02:01:37.448Z
+    rejected_at: 2026-09-01T13:24:16.424Z
+    reject_reason: Wire Console から差し戻し
+    audit_event_id: 669a0126-a746-4828-9fa1-ddb03ad89e89
     wire:
       peer_id: PEER-001
       transaction_type: invoice.issued
