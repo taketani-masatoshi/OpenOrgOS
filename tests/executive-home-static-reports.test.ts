@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync, existsSync, readdirSync, renameSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -60,14 +60,31 @@ describe("executive home static reports", () => {
 
   it("falls back to monthly-audit when monthly/ is empty", () => {
     setTenantId("mal");
-    writeReport(
-      "agent-summaries/records-audit/monthly-audit-2099-03.md",
-      "# Audit March\n\nok\n",
-    );
-    const slots = loadExecutiveStaticReports();
-    expect(slots.monthly.as_of).toBe("2099-03");
-    expect(slots.monthly.title).toBe("Audit March");
-    expect(slots.monthly.path).toMatch(/monthly-audit-2099-03\.md$/);
+    const monthlyDir = join(getDocsReportsDir(), "monthly");
+    const hidden: { from: string; to: string }[] = [];
+    if (existsSync(monthlyDir)) {
+      for (const name of readdirSync(monthlyDir)) {
+        if (!/^\d{4}-\d{2}\.md$/.test(name)) continue;
+        const from = join(monthlyDir, name);
+        const to = join(monthlyDir, `.test-hide-${name}`);
+        renameSync(from, to);
+        hidden.push({ from, to });
+      }
+    }
+    try {
+      writeReport(
+        "agent-summaries/records-audit/monthly-audit-2099-03.md",
+        "# Audit March\n\nok\n",
+      );
+      const slots = loadExecutiveStaticReports();
+      expect(slots.monthly.as_of).toBe("2099-03");
+      expect(slots.monthly.title).toBe("Audit March");
+      expect(slots.monthly.path).toMatch(/monthly-audit-2099-03\.md$/);
+    } finally {
+      for (const { from, to } of hidden) {
+        if (existsSync(to)) renameSync(to, from);
+      }
+    }
   });
 
   it("returns empty slots with CLI hints when files are missing", () => {
