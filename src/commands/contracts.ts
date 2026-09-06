@@ -108,7 +108,7 @@ export function runContractsDigest(opts?: {
     return;
   }
   const markdown = buildContractsDigestMarkdown({ days: opts?.days, period });
-  if (opts.json) {
+  if (opts?.json) {
     console.log(JSON.stringify({ ok: true, as_of: currentDate(), markdown, period }, null, 2));
     return;
   }
