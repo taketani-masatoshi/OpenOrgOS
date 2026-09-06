@@ -333,7 +333,16 @@ export const STEWARD_COPY = defineCopy(
     cloudNotesBody:
       "クラウドに送る文脈はデータ分類（L0–L3）と Operator Policy に従ってください。給与・原価・個情などは載せないでください。",
     adminTitle: "予算管理",
-    adminLead: "部門・配分・見通しを決定論データから操作します。",
+    adminLead: "CLI 週次・月次ダイジェストを主表示。部門・配分・見通しは下段で遅延読込。",
+    budgetDigestTitle: "予算ダイジェスト",
+    budgetDigestLead: "CLI 週次・月次ダイジェストを主表示。ライブ予実は下段で遅延読込。",
+    budgetDigestWeekly: "週次",
+    budgetDigestMonthly: "月次",
+    budgetDigestWeeklyEmpty:
+      "週次がありません。orgos budget digest --period weekly --write",
+    budgetDigestMonthlyEmpty:
+      "月次がありません。orgos budget digest --period monthly --write",
+    budgetLiveLabel: "ライブ予算",
     executiveTitle: "経営ダッシュボード",
     executiveLead: "週次・月次の静的レポート。ライブ状況は折りたたみ。",
     executiveReports: "経営レポート",
@@ -1027,7 +1036,16 @@ export const STEWARD_COPY = defineCopy(
     cloudNotesBody:
       "Follow data classification (L0–L3) and the Operator Policy for anything sent to the cloud. Do not include payroll, cost, or personal data.",
     adminTitle: "Budget admin",
-    adminLead: "Operate departments, allocation, and outlook from deterministic data.",
+    adminLead: "CLI weekly/monthly digests are primary. Departments, allocation, and outlook load below on scroll.",
+    budgetDigestTitle: "Budget digest",
+    budgetDigestLead: "CLI weekly/monthly digests are primary. Live budget vs actual loads below on scroll.",
+    budgetDigestWeekly: "Weekly",
+    budgetDigestMonthly: "Monthly",
+    budgetDigestWeeklyEmpty:
+      "No weekly digest. orgos budget digest --period weekly --write",
+    budgetDigestMonthlyEmpty:
+      "No monthly digest. orgos budget digest --period monthly --write",
+    budgetLiveLabel: "Live budget",
     executiveTitle: "Executive home",
     executiveLead: "Weekly and monthly static reports. Live status is collapsed.",
     executiveReports: "Executive reports",

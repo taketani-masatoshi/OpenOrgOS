@@ -6,6 +6,7 @@ import {
   type AnalyticsKpiRow,
   type ExecutiveStaticReportSlot,
 } from "./api";
+import { LiveSection } from "./LiveSection";
 import { OPS_PAGES_COPY } from "./ops-pages-copy";
 import { StaticReportPanel } from "./StaticReportPanel";
 
@@ -181,18 +182,19 @@ export function AnalyticsDashboardPage() {
           </section>
 
           {latestMd ? (
-            <details className="outlook-panel">
-              <summary className="section-title">{copy.analyticsLatestMd}</summary>
+            <section className="outlook-panel">
+              <h2 className="section-title">{copy.analyticsLatestMd}</h2>
               <StaticReportPanel
                 slot={latestMd}
                 emptyLabel={copy.analyticsSnapshotsEmpty}
               />
-            </details>
+            </section>
           ) : null}
 
+          <LiveSection aria-label={copy.analyticsLiveKpi}>
           {kpi ? (
-            <details className="executive-live-details outlook-panel" open={monthly.length === 0}>
-              <summary className="section-title">{copy.analyticsLiveKpi}</summary>
+            <section className="outlook-panel">
+              <h2 className="section-title">{copy.analyticsLiveKpi}</h2>
 
               <section className="outlook-panel" style={{ boxShadow: "none" }}>
                 <h3 className="section-title">{copy.summary}</h3>
@@ -267,8 +269,11 @@ export function AnalyticsDashboardPage() {
                   ))}
                 </div>
               </section>
-            </details>
-          ) : null}
+            </section>
+          ) : (
+            <div className="loading-panel">{copy.loading}</div>
+          )}
+          </LiveSection>
         </>
       )}
     </main>

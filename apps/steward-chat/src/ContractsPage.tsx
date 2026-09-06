@@ -1,52 +1,69 @@
-import { useEffect, useState } from "react";
-import { fetchContractStatus, type ExecutiveStaticReportSlot } from "./api";
+import { useCallback, useEffect, useState } from "react";
+import {
+  fetchContractStatus,
+  type ExecutiveStaticReportSlot,
+} from "./api";
+import { emptyDigestSlots } from "./digestSlots";
+import { LiveSection } from "./LiveSection";
 import { OpsPage } from "./OpsPage";
-import { StaticReportPanel } from "./StaticReportPanel";
+import { StaticDigestHeader } from "./StaticDigestHeader";
 
 type Status = Awaited<ReturnType<typeof fetchContractStatus>>;
 
+const EMPTY = emptyDigestSlots(
+  "契約ステータス",
+  "orgos contracts digest --period weekly --write",
+  "orgos contracts digest --period monthly --write",
+);
+
 /**
- * L1 contract portfolio — CLI digest MD primary; live counts secondary.
+ * L1 contract portfolio — CLI digest MD primary; live counts via LiveSection.
  */
 export function ContractsPage() {
+  const [slots, setSlots] = useState<{
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  }>(EMPTY);
   const [payload, setPayload] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [staticReady, setStaticReady] = useState(false);
 
   useEffect(() => {
+    void fetchContractStatus()
+      .then((data) => {
+        setSlots(data.static_reports ?? EMPTY);
+        setStaticReady(true);
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : String(e));
+        setStaticReady(true);
+      });
+  }, []);
+
+  const loadLive = useCallback(() => {
     void fetchContractStatus()
       .then(setPayload)
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, []);
 
-  const slot: ExecutiveStaticReportSlot | null = payload?.static_report ?? null;
-
   return (
     <OpsPage
       title="契約"
-      lead="CLI ダイジェストを主表示。件数・期限・退出窓のライブ面は二次。契約本文は出しません。"
+      lead="CLI 週次・月次ダイジェストを主表示。件数・期限・退出窓のライブ面は下段で遅延読込。"
       error={error}
-      loading={!payload && !error}
+      loading={!staticReady && !error}
     >
-      {payload ? (
-        <>
-          <section className="ops-card outlook-panel">
-            <h2 className="section-title">契約ステータス</h2>
-            <StaticReportPanel
-              slot={
-                slot ?? {
-                  path: null,
-                  title: "契約ステータス",
-                  as_of: null,
-                  markdown: null,
-                  generate_hint: "orgos contracts digest --write",
-                }
-              }
-              emptyLabel="ダイジェストがありません。orgos contracts digest --write を実行してください。"
-            />
-          </section>
+      <StaticDigestHeader
+        title="契約ステータス"
+        slots={slots}
+        weeklyEmptyLabel="週次ダイジェストがありません。orgos contracts digest --period weekly --write"
+        monthlyEmptyLabel="月次ダイジェストがありません。orgos contracts digest --period monthly --write"
+      />
 
-          <details className="ops-card executive-live-details">
-            <summary className="section-title">ライブ契約ポートフォリオ</summary>
+      <LiveSection aria-label="ライブ契約ポートフォリオ" onVisible={loadLive}>
+        {payload ? (
+          <section className="ops-card outlook-panel">
+            <h2 className="section-title">ライブ契約ポートフォリオ</h2>
             <section>
               <h3 className="section-title">{payload.company_name}</h3>
               <p className="ops-page-meta">
@@ -88,15 +105,17 @@ export function ContractsPage() {
                 </ul>
               )}
             </section>
-          </details>
+          </section>
+        ) : (
+          <div className="loading-panel">ライブ読込中…</div>
+        )}
+      </LiveSection>
 
-          <p className="section-cta">
-            <a className="btn btn-ghost btn-sm" href="/org/">
-              組織へ
-            </a>
-          </p>
-        </>
-      ) : null}
+      <p className="section-cta">
+        <a className="btn btn-ghost btn-sm" href="/org/">
+          組織へ
+        </a>
+      </p>
     </OpsPage>
   );
 }

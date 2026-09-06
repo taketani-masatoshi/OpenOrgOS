@@ -35,7 +35,15 @@ export const OPS_PAGES_COPY = defineCopy(
     colMom: "前月比",
     ledgerTitle: "帳簿",
     ledgerLead:
-      "試算表・貸借対照表・仕訳・補助元帳と、月次起票・消込・納付の操作です。",
+      "CLI 週次・月次ダイジェストを主表示。仕訳・試算・消込・締めは下段で遅延読込。",
+    ledgerDigestTitle: "帳簿ダイジェスト",
+    ledgerDigestWeekly: "週次",
+    ledgerDigestMonthly: "月次",
+    ledgerDigestWeeklyEmpty:
+      "週次がありません。orgos ledger digest --period weekly --write",
+    ledgerDigestMonthlyEmpty:
+      "月次がありません。orgos ledger digest --period monthly --write",
+    ledgerLiveLabel: "ライブ帳簿ワークベンチ",
     asOf: "基準日",
     opsMonth: "操作月",
     reload: "再読込",
@@ -314,7 +322,15 @@ export const OPS_PAGES_COPY = defineCopy(
     colMom: "MoM",
     ledgerTitle: "Ledger",
     ledgerLead:
-      "Trial balance, balance sheet, journals, subledgers, and monthly post / settle / remittance.",
+      "CLI weekly/monthly digests are primary. Journals, trial, reconcile, and close load below on scroll.",
+    ledgerDigestTitle: "Ledger digest",
+    ledgerDigestWeekly: "Weekly",
+    ledgerDigestMonthly: "Monthly",
+    ledgerDigestWeeklyEmpty:
+      "No weekly digest. orgos ledger digest --period weekly --write",
+    ledgerDigestMonthlyEmpty:
+      "No monthly digest. orgos ledger digest --period monthly --write",
+    ledgerLiveLabel: "Live ledger workbench",
     asOf: "As of",
     opsMonth: "Ops month",
     reload: "Reload",

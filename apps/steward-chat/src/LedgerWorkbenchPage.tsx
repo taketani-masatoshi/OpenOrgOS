@@ -3,6 +3,7 @@ import { useCopy } from "@ops-shared/define-copy";
 import {
   fetchBankCsvTemplate,
   fetchLedgerAccounts,
+  fetchLedgerDigest,
   fetchLedgerProposals,
   fetchLedgerWorkbench,
   fetchMonthCloseChecklist,
@@ -19,15 +20,24 @@ import {
   postLedgerReverse,
   postLedgerSource,
   type ElectronicLedgerSearchHit,
+  type ExecutiveStaticReportSlot,
   type LedgerJournalProposal,
   type LedgerWorkbenchSnapshot,
   type MonthCloseChecklist,
 } from "./api";
+import { emptyDigestSlots } from "./digestSlots";
+import { LiveSection } from "./LiveSection";
 import { OPS_PAGES_COPY } from "./ops-pages-copy";
-import { OpsPage } from "./OpsPage";
+import { StaticDigestHeader } from "./StaticDigestHeader";
+
+const EMPTY_LEDGER = emptyDigestSlots(
+  "帳簿ダイジェスト",
+  "orgos ledger digest --period weekly --write",
+  "orgos ledger digest --period monthly --write",
+);
 
 /**
- * Ledger workbench — 4 primary blocks: Today / Trial+PL / Reconcile / Close.
+ * Ledger workbench — CLI digest MD primary; live Today/Trial/Reconcile/Close via LiveSection.
  */
 export function LedgerWorkbenchPage() {
   const copy = useCopy(OPS_PAGES_COPY);
@@ -35,11 +45,16 @@ export function LedgerWorkbenchPage() {
     return copy.yen(value.toLocaleString());
   }
 
+  const [slots, setSlots] = useState<{
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  }>(EMPTY_LEDGER);
+  const [liveReady, setLiveReady] = useState(false);
   const [asOfInput, setAsOfInput] = useState("");
   const [payload, setPayload] = useState<LedgerWorkbenchSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [opsMonth, setOpsMonth] = useState("");
   const [unlockReason, setUnlockReason] = useState("");
@@ -178,14 +193,22 @@ export function LedgerWorkbenchPage() {
   }, []);
 
   useEffect(() => {
+    void fetchLedgerDigest()
+      .then((r) => setSlots(r.static_reports ?? EMPTY_LEDGER))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+  }, []);
+
+  useEffect(() => {
     void fetchBankCsvTemplate("generic")
       .then((tpl) => setBankPresets(tpl.presets ?? []))
       .catch(() => undefined);
   }, []);
 
-  useEffect(() => {
+  const loadLive = useCallback(() => {
+    if (liveReady) return;
+    setLiveReady(true);
     void load();
-  }, [load]);
+  }, [liveReady, load]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.hash === "#proposals") {
@@ -273,25 +296,14 @@ export function LedgerWorkbenchPage() {
     }
   }
 
-  if (loading && !payload) {
-    return (
-      <OpsPage
-        title={copy.ledgerTitle ?? "帳簿"}
-        lead="今日の仕訳・試算表・銀行消込・月次締めをこの画面で進めます。"
-        loading
-        loadingLabel={copy.loading}
-        className="ledger-workbench"
-      />
-    );
-  }
-
   return (
     <main className="workspace ops-page ledger-workbench">
       <div className="page-heading">
         <div>
           <h1 className="ops-page-title">{copy.ledgerTitle ?? "帳簿"}</h1>
           <p className="ops-page-lead">
-            今日の仕訳・試算表・銀行消込・月次締めをこの画面で進めます。
+            {copy.ledgerLead ??
+              "CLI 週次・月次ダイジェストを主表示。仕訳・試算・消込・締めは下段で遅延読込。"}
           </p>
         </div>
       </div>
@@ -301,6 +313,28 @@ export function LedgerWorkbenchPage() {
         <pre className="error-banner" style={{ whiteSpace: "pre-wrap" }}>{bankImportHelp}</pre>
       )}
 
+      <StaticDigestHeader
+        title={copy.ledgerDigestTitle ?? "帳簿ダイジェスト"}
+        slots={slots}
+        weeklyEmptyLabel={
+          copy.ledgerDigestWeeklyEmpty ??
+          "週次がありません。orgos ledger digest --period weekly --write"
+        }
+        monthlyEmptyLabel={
+          copy.ledgerDigestMonthlyEmpty ??
+          "月次がありません。orgos ledger digest --period monthly --write"
+        }
+        weeklyTabLabel={copy.ledgerDigestWeekly ?? "週次"}
+        monthlyTabLabel={copy.ledgerDigestMonthly ?? "月次"}
+      />
+
+      <LiveSection
+        aria-label={copy.ledgerLiveLabel ?? "ライブ帳簿ワークベンチ"}
+        onVisible={loadLive}
+      >
+        {loading && !payload ? (
+          <div className="loading-panel">{copy.loading}</div>
+        ) : null}
       {payload && (
         <>
           <section className="ledger-panel" data-section="sectionToday">
@@ -1172,6 +1206,7 @@ export function LedgerWorkbenchPage() {
           )}
         </>
       )}
+      </LiveSection>
     </main>
   );
 }

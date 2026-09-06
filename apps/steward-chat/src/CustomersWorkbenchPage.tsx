@@ -15,9 +15,17 @@ import {
   type CustomersNavGate,
   type ExecutiveStaticReportSlot,
 } from "./api";
+import { emptyDigestSlots } from "./digestSlots";
+import { LiveSection } from "./LiveSection";
 import { OpsPage } from "./OpsPage";
-import { StaticReportPanel } from "./StaticReportPanel";
+import { StaticDigestHeader } from "./StaticDigestHeader";
 import { STEWARD_COPY } from "./steward-copy";
+
+const EMPTY_SALES = emptyDigestSlots(
+  "営業ダイジェスト",
+  "orgos sales digest --period weekly --write",
+  "orgos sales digest --period monthly --write",
+);
 
 export type CustomersWorkbenchView =
   | "customers-outbound"
@@ -69,26 +77,38 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
   const copy = useCopy(STEWARD_COPY);
   const [gate, setGate] = useState<CustomersNavGate | null>(null);
   const [payload, setPayload] = useState<unknown>(null);
-  const [staticReport, setStaticReport] = useState<ExecutiveStaticReportSlot | null>(
-    null,
-  );
+  const [slots, setSlots] = useState(EMPTY_SALES);
   const [error, setError] = useState<string | null>(null);
+  const [liveArmed, setLiveArmed] = useState(false);
 
-  const load = useCallback(async () => {
+  const loadStatic = useCallback(async () => {
     setError(null);
     try {
       const nav = await fetchCustomersNav();
       setGate(nav);
       if (!nav.show_tab) {
         setPayload(null);
-        setStaticReport(null);
         return;
       }
       try {
         const crm = await fetchCustomersCrmDashboard();
-        setStaticReport(crm.static_report ?? null);
+        setSlots(crm.static_reports ?? EMPTY_SALES);
       } catch {
-        setStaticReport(null);
+        setSlots(EMPTY_SALES);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }, []);
+
+  const loadLive = useCallback(async () => {
+    setError(null);
+    try {
+      const nav = gate ?? (await fetchCustomersNav());
+      setGate(nav);
+      if (!nav.show_tab) {
+        setPayload(null);
+        return;
       }
       if (view === "customers-outbound") {
         setPayload(await fetchCustomersOutbound());
@@ -106,11 +126,13 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [view]);
+  }, [view, gate]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void loadStatic();
+    setLiveArmed(false);
+    setPayload(null);
+  }, [loadStatic, view]);
 
   const title =
     view === "customers-outbound"
@@ -149,21 +171,12 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
       {gate?.sales_agent_grace && view.startsWith("customers-") && !gate.sales_module_installed ? (
         <p className="ops-card muted">{copy.customersSalesGrace}</p>
       ) : null}
-      <section className="ops-card outlook-panel">
-        <h2 className="section-title">営業ダイジェスト</h2>
-        <StaticReportPanel
-          slot={
-            staticReport ?? {
-              path: null,
-              title: "営業ダイジェスト",
-              as_of: null,
-              markdown: null,
-              generate_hint: "orgos sales digest --write",
-            }
-          }
-          emptyLabel="ダイジェストがありません。orgos sales digest --write を実行してください。"
-        />
-      </section>
+      <StaticDigestHeader
+        title="営業ダイジェスト"
+        slots={slots}
+        weeklyEmptyLabel="週次がありません。orgos sales digest --period weekly --write"
+        monthlyEmptyLabel="月次がありません。orgos sales digest --period monthly --write"
+      />
       {locked ? (
         <section className="ops-card">
           <p>{(payload as LockedPayload).message ?? copy.customersModuleLocked}</p>
@@ -172,11 +185,25 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
           </p>
         </section>
       ) : null}
-      {!locked && payload ? (
-        <details className="ops-card executive-live-details" open>
-          <summary className="section-title">ライブボード</summary>
-          <CustomersPanel view={view} payload={payload} copy={copy} onReload={load} />
-        </details>
+      {!locked ? (
+        <LiveSection
+          aria-label="ライブボード"
+          onVisible={() => {
+            if (!liveArmed) {
+              setLiveArmed(true);
+              void loadLive();
+            }
+          }}
+        >
+          {payload ? (
+            <section className="ops-card outlook-panel">
+              <h2 className="section-title">ライブボード</h2>
+              <CustomersPanel view={view} payload={payload} copy={copy} onReload={loadLive} />
+            </section>
+          ) : (
+            <div className="loading-panel">{copy.loading}</div>
+          )}
+        </LiveSection>
       ) : null}
       <p className="section-cta">
         <a href="/steward/" className="btn btn-ghost btn-sm">

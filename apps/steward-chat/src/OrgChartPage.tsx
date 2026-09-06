@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import {
   fetchOrgChart,
   fetchOrgChartChanges,
+  fetchOrgDigest,
   postOrgChartChangeApply,
   postOrgChartChangePropose,
   postOrgChartChangeValidate,
+  type ExecutiveStaticReportSlot,
   type OrgChartChangeProposalRow,
   type CompanyOrgAdvisorRow,
   type CompanyOrgMember,
@@ -13,10 +15,26 @@ import {
   type OrgChartPayload,
 } from "./api";
 import { useUiLocale } from "@ops-shared/useUiLocale";
+import { emptyDigestSlots } from "./digestSlots";
+import { LiveSection } from "./LiveSection";
+import { StaticDigestHeader } from "./StaticDigestHeader";
+
+const EMPTY_ORG = emptyDigestSlots(
+  "組織ダイジェスト",
+  "orgos org digest --period weekly --write",
+  "orgos org digest --period monthly --write",
+);
 
 const COPY = {
   ja: {
     pageTitle: "組織",
+    pageLead: "CLI 週次・月次ダイジェストを主表示。組織図・変更は下段で遅延読込。",
+    digestTitle: "組織ダイジェスト",
+    digestWeekly: "週次",
+    digestMonthly: "月次",
+    digestWeeklyEmpty: "週次がありません。orgos org digest --period weekly --write",
+    digestMonthlyEmpty: "月次がありません。orgos org digest --period monthly --write",
+    liveLabel: "ライブ組織図",
     usersTitle: "ユーザー",
     advisorsTitle: "外部専門家",
     advisorsLead: "顧問契約の有無。コンソールのユーザーではありません。",
@@ -96,6 +114,13 @@ const COPY = {
   },
   en: {
     pageTitle: "Organization",
+    pageLead: "CLI weekly/monthly digests are primary. Org chart and changes load below on scroll.",
+    digestTitle: "Organization digest",
+    digestWeekly: "Weekly",
+    digestMonthly: "Monthly",
+    digestWeeklyEmpty: "No weekly digest. orgos org digest --period weekly --write",
+    digestMonthlyEmpty: "No monthly digest. orgos org digest --period monthly --write",
+    liveLabel: "Live organization chart",
     usersTitle: "Users",
     advisorsTitle: "External specialists",
     advisorsLead: "Retained advisors. They are not console users.",
@@ -671,12 +696,24 @@ function OrgChartChangePanel({ copy }: { copy: Copy }) {
  */
 export function OrgChartPage() {
   const copy = COPY[useUiLocale()];
+  const [slots, setSlots] = useState<{
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  }>(EMPTY_ORG);
+  const [liveReady, setLiveReady] = useState(false);
   const [payload, setPayload] = useState<OrgChartPayload | null>(null);
   const [asOf, setAsOf] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    void fetchOrgDigest()
+      .then((r) => setSlots(r.static_reports ?? EMPTY_ORG))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+  }, []);
+
+  useEffect(() => {
+    if (!liveReady) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -693,7 +730,12 @@ export function OrgChartPage() {
     return () => {
       cancelled = true;
     };
-  }, [asOf]);
+  }, [asOf, liveReady]);
+
+  const armLive = useCallback(() => {
+    if (liveReady) return;
+    setLiveReady(true);
+  }, [liveReady]);
 
   const history = payload?.history ?? [];
   const units = payload && !payload.missing ? payload.units : [];
@@ -705,6 +747,18 @@ export function OrgChartPage() {
       <p className="org-chart-muted">
         <a href="/?onboarding=1">{copy.companySettings}</a>
       </p>
+      <p className="org-chart-muted">{copy.pageLead}</p>
+
+      <StaticDigestHeader
+        title={copy.digestTitle}
+        slots={slots}
+        weeklyEmptyLabel={copy.digestWeeklyEmpty}
+        monthlyEmptyLabel={copy.digestMonthlyEmpty}
+        weeklyTabLabel={copy.digestWeekly}
+        monthlyTabLabel={copy.digestMonthly}
+      />
+
+      <LiveSection aria-label={copy.liveLabel} onVisible={armLive}>
       {loading && <p className="org-chart-muted">{copy.loading}</p>}
       {error && (
         <p className="org-chart-error" role="alert">
@@ -789,6 +843,7 @@ export function OrgChartPage() {
       ) : null}
 
       <OrgChartChangePanel copy={copy} />
+      </LiveSection>
     </div>
   );
 }

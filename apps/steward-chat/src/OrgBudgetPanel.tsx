@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  fetchBudgetDigest,
   fetchOrgBudget,
   isBudgetRevisionConflict,
   outlookInit,
@@ -9,12 +10,22 @@ import {
   outlookSetRemaining,
   outlookSyncYojitsu,
   setOrgCompanyBudget,
+  type ExecutiveStaticReportSlot,
   type OrgBudgetPayload,
 } from "./api";
 import { useCopy } from "@ops-shared/define-copy";
 import { useUiLocale } from "@ops-shared/useUiLocale";
 import { dateTimeLocale } from "@ops-shared/locale";
+import { emptyDigestSlots } from "./digestSlots";
+import { LiveSection } from "./LiveSection";
+import { StaticDigestHeader } from "./StaticDigestHeader";
 import { STEWARD_COPY } from "./steward-copy";
+
+const EMPTY_BUDGET = emptyDigestSlots(
+  "予算ダイジェスト",
+  "orgos budget digest --period weekly --write",
+  "orgos budget digest --period monthly --write",
+);
 
 type OutlookEnvelopeProposal = NonNullable<
   Awaited<ReturnType<typeof outlookProposeEnvelope>>["proposed_envelope"]
@@ -389,6 +400,11 @@ export function OrgBudgetPanel({
 }) {
   const copy = useCopy(STEWARD_COPY);
   const locale = useUiLocale();
+  const [slots, setSlots] = useState<{
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  }>(EMPTY_BUDGET);
+  const [liveReady, setLiveReady] = useState(false);
   const [budget, setBudget] = useState<OrgBudgetPayload | null>(() =>
     getOrgBudgetSnapshot(),
   );
@@ -453,13 +469,23 @@ export function OrgBudgetPanel({
   }, [applyBudget, onError]);
 
   useEffect(() => {
+    void fetchBudgetDigest()
+      .then((r) => setSlots(r.static_reports ?? EMPTY_BUDGET))
+      .catch((error: unknown) => {
+        onError(error instanceof Error ? error.message : String(error));
+      });
+  }, [onError]);
+
+  const armLive = useCallback(() => {
+    if (liveReady) return;
+    setLiveReady(true);
     const snap = getOrgBudgetSnapshot();
     if (snap) applyBudget(snap);
     void reload().catch((error: unknown) => {
       setLoadFailed(true);
       onError(error instanceof Error ? error.message : String(error));
     });
-  }, [applyBudget, onError, reload]);
+  }, [applyBudget, liveReady, onError, reload]);
 
   useEffect(() => {
     if (!onRetryReady) return;
@@ -569,6 +595,7 @@ export function OrgBudgetPanel({
   }, [remoteSyncNotice]);
 
   useEffect(() => {
+    if (!liveReady) return;
     const syncOpts = readBudgetSyncRuntimeOptions();
 
     async function softReloadFromRemote(notice: string) {
@@ -627,14 +654,22 @@ export function OrgBudgetPanel({
       window.clearInterval(pollId);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [applyBudget, copy]);
+  }, [applyBudget, copy, liveReady]);
 
-  if (!budget && !loadFailed) {
-    return <div className="loading-panel">{copy.budgetValidating}</div>;
-  }
+  const activeFy = budget
+    ? (budget.active_fiscal_year ??
+      budget.fiscal_year ??
+      budget.available_fiscal_years?.[0])
+    : undefined;
+  // Mutations only against the active envelope (API may still expose ?fy=).
+  const fyMutable = budget ? budget.fy_is_active !== false : false;
+  const mutationBusy = busy || !fyMutable;
 
-  if (!budget && loadFailed) {
-    return (
+  let liveBody: ReactNode;
+  if (!liveReady || (!budget && !loadFailed)) {
+    liveBody = <div className="loading-panel">{copy.budgetValidating}</div>;
+  } else if (!budget && loadFailed) {
+    liveBody = (
       <section className="empty-panel">
         <h2>{copy.budgetLoadFailed}</h2>
         <p className="meta">{copy.budgetLoadHint}</p>
@@ -653,22 +688,10 @@ export function OrgBudgetPanel({
         </button>
       </section>
     );
-  }
-
-  if (!budget) {
-    return <div className="loading-panel">{copy.budgetValidating}</div>;
-  }
-
-  const activeFy =
-    budget.active_fiscal_year ??
-    budget.fiscal_year ??
-    budget.available_fiscal_years?.[0];
-  // Mutations only against the active envelope (API may still expose ?fy=).
-  const fyMutable = budget.fy_is_active !== false;
-  const mutationBusy = busy || !fyMutable;
-
-  if (!budget.initialized || !budget.summary) {
-    return (
+  } else if (!budget) {
+    liveBody = <div className="loading-panel">{copy.budgetValidating}</div>;
+  } else if (!budget.initialized || !budget.summary) {
+    liveBody = (
       <section className="empty-panel">
         <h2 className="heading-with-info">
           <span>{copy.companyUnset}</span>
@@ -728,9 +751,8 @@ export function OrgBudgetPanel({
         )}
       </section>
     );
-  }
-
-  return (
+  } else {
+    liveBody = (
     <>
       {activeFy && (
         <p className="budget-fy-label" aria-label={copy.fiscalYear}>
@@ -1408,6 +1430,32 @@ export function OrgBudgetPanel({
           )}
         </section>
       )}
+    </>
+    );
+  }
+
+  return (
+    <>
+      <StaticDigestHeader
+        title={copy.budgetDigestTitle ?? "予算ダイジェスト"}
+        slots={slots}
+        weeklyEmptyLabel={
+          copy.budgetDigestWeeklyEmpty ??
+          "週次がありません。orgos budget digest --period weekly --write"
+        }
+        monthlyEmptyLabel={
+          copy.budgetDigestMonthlyEmpty ??
+          "月次がありません。orgos budget digest --period monthly --write"
+        }
+        weeklyTabLabel={copy.budgetDigestWeekly ?? "週次"}
+        monthlyTabLabel={copy.budgetDigestMonthly ?? "月次"}
+      />
+      <LiveSection
+        aria-label={copy.budgetLiveLabel ?? "ライブ予算管理"}
+        onVisible={armLive}
+      >
+        {liveBody}
+      </LiveSection>
     </>
   );
 }

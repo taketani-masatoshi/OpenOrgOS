@@ -8,9 +8,11 @@ import {
   type CSSProperties,
 } from "react";
 import {
+  fetchBudgetDigest,
   fetchOrgBudget,
   ingestExpenseClaim,
   isBudgetRevisionConflict,
+  type ExecutiveStaticReportSlot,
   type OrgBudgetPayload,
 } from "./api";
 import { PayrollLanePanel } from "./PayrollLanePanel";
@@ -31,9 +33,17 @@ import {
 } from "./walletOps";
 import { useCopy } from "@ops-shared/define-copy";
 import { useUiLocale } from "@ops-shared/useUiLocale";
+import { emptyDigestSlots } from "./digestSlots";
+import { LiveSection } from "./LiveSection";
 import { STEWARD_COPY } from "./steward-copy";
-import { OpsPage } from "./OpsPage";
+import { StaticDigestHeader } from "./StaticDigestHeader";
 import { getOrgBudgetSnapshot } from "./orgBudgetSnapshot";
+
+const EMPTY_BUDGET = emptyDigestSlots(
+  "予算ダイジェスト",
+  "orgos budget digest --period weekly --write",
+  "orgos budget digest --period monthly --write",
+);
 
 /**
  * Personal budget vs actual + person-scoped payroll (read-only).
@@ -275,11 +285,16 @@ function writeWalletUrl(personId: string, lane: "envelope" | "payroll") {
 export function PersonalWallet() {
   const copy = useCopy(STEWARD_COPY);
   const locale = useUiLocale();
+  const [slots, setSlots] = useState<{
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  }>(EMPTY_BUDGET);
+  const [liveReady, setLiveReady] = useState(false);
   const [budget, setBudget] = useState<OrgBudgetPayload | null>(() =>
     getOrgBudgetSnapshot(),
   );
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(() => !getOrgBudgetSnapshot());
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [fetchedAt, setFetchedAt] = useState<number | null>(null);
   const [clock, setClock] = useState(() => Date.now());
@@ -349,15 +364,25 @@ export function PersonalWallet() {
   );
 
   useEffect(() => {
-    void reloadStable({ soft: Boolean(getOrgBudgetSnapshot()) });
-  }, [reloadStable]);
-
-  useEffect(() => {
-    const id = window.setInterval(() => setClock(Date.now()), 30_000);
-    return () => window.clearInterval(id);
+    void fetchBudgetDigest()
+      .then((r) => setSlots(r.static_reports ?? EMPTY_BUDGET))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, []);
 
+  const armLive = useCallback(() => {
+    if (liveReady) return;
+    setLiveReady(true);
+    void reloadStable({ soft: Boolean(getOrgBudgetSnapshot()) });
+  }, [liveReady, reloadStable]);
+
   useEffect(() => {
+    if (!liveReady) return;
+    const id = window.setInterval(() => setClock(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, [liveReady]);
+
+  useEffect(() => {
+    if (!liveReady) return;
     let pendingNotice = false;
     const syncOpts = readBudgetSyncRuntimeOptions();
     function maybeRefresh(opts?: { force?: boolean; notice?: string }) {
@@ -429,7 +454,7 @@ export function PersonalWallet() {
     };
     // Refs keep poll/stale checks fresh — avoid resubscribing BroadcastChannel
     // on every fetch (that gap dropped cross-tab mutations).
-  }, [copy, reloadStable]);
+  }, [copy, liveReady, reloadStable]);
 
   useEffect(() => {
     if (!syncNotice) return;
@@ -672,36 +697,6 @@ export function PersonalWallet() {
     });
   }
 
-  if (loading && !budget) {
-    return (
-      <div className="wallet-shell">
-        <OpsPage
-          title={copy.wallet}
-          loading
-          loadingLabel={copy.walletLoading}
-          className="wallet-page-shell"
-        />
-      </div>
-    );
-  }
-
-  if (error && !budget) {
-    return (
-      <div className="wallet-shell">
-        <div className="wallet-page">
-          <p className="error-banner">{error}</p>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => void reloadStable()}
-          >
-            {copy.retry}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="wallet-shell">
       <div className="wallet-page">
@@ -712,10 +707,48 @@ export function PersonalWallet() {
             </span>
             <div>
               <h1 className="wallet-title ops-page-title">{copy.wallet}</h1>
+              <p className="ops-page-lead muted">
+                {copy.budgetDigestLead ??
+                  "CLI 週次・月次ダイジェストを主表示。ライブ予実は下段で遅延読込。"}
+              </p>
             </div>
           </div>
         </header>
 
+        <StaticDigestHeader
+          title={copy.budgetDigestTitle ?? "予算ダイジェスト"}
+          slots={slots}
+          weeklyEmptyLabel={
+            copy.budgetDigestWeeklyEmpty ??
+            "週次がありません。orgos budget digest --period weekly --write"
+          }
+          monthlyEmptyLabel={
+            copy.budgetDigestMonthlyEmpty ??
+            "月次がありません。orgos budget digest --period monthly --write"
+          }
+          weeklyTabLabel={copy.budgetDigestWeekly ?? "週次"}
+          monthlyTabLabel={copy.budgetDigestMonthly ?? "月次"}
+        />
+
+        <LiveSection
+          aria-label={copy.budgetLiveLabel ?? "ライブ個人予実"}
+          onVisible={armLive}
+        >
+        {!liveReady || (loading && !budget) ? (
+          <div className="loading-panel">{copy.walletLoading ?? copy.loading}</div>
+        ) : error && !budget ? (
+          <div>
+            <p className="error-banner">{error}</p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => void reloadStable()}
+            >
+              {copy.retry}
+            </button>
+          </div>
+        ) : (
+          <>
         <WalletOpsMeta
           fiscalYear={budget?.fiscal_year}
           actualAsOf={budget?.actuals?.actual_as_of}
@@ -1208,6 +1241,9 @@ export function PersonalWallet() {
             </section>
           </div>
         )}
+          </>
+        )}
+        </LiveSection>
       </div>
     </div>
   );

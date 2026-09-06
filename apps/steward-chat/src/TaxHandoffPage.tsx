@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
 import {
   fetchTaxCalendar,
@@ -14,9 +14,17 @@ import {
   postTaxXmlDraft,
   postTaxYeaCompute,
 } from "./api";
+import { emptyDigestSlots } from "./digestSlots";
+import { LiveSection } from "./LiveSection";
 import { OpsPage } from "./OpsPage";
-import { StaticReportPanel } from "./StaticReportPanel";
+import { StaticDigestHeader } from "./StaticDigestHeader";
 import { STEWARD_COPY } from "./steward-copy";
+
+const EMPTY_TAX = emptyDigestSlots(
+  "税務ダイジェスト",
+  "orgos tax digest --period weekly --write",
+  "orgos tax digest --period monthly --write",
+);
 
 /**
  * Tax module surface — accounting workbench links here.
@@ -24,7 +32,11 @@ import { STEWARD_COPY } from "./steward-copy";
  */
 export function TaxHandoffPage() {
   const copy = useCopy(STEWARD_COPY);
-  const [staticReport, setStaticReport] = useState<ExecutiveStaticReportSlot | null>(null);
+  const [slots, setSlots] = useState<{
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  }>(EMPTY_TAX);
+  const [liveReady, setLiveReady] = useState(false);
   const [readiness, setReadiness] = useState<string | null>(null);
   const [yea, setYea] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -59,8 +71,13 @@ export function TaxHandoffPage() {
 
   useEffect(() => {
     void fetchTaxDigest()
-      .then((r) => setStaticReport(r.static_report))
+      .then((r) => setSlots(r.static_reports ?? EMPTY_TAX))
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+  }, []);
+
+  const loadLive = useCallback(() => {
+    if (liveReady) return;
+    setLiveReady(true);
     void fetchTaxReadiness()
       .then((r) =>
         setReadiness(
@@ -97,7 +114,7 @@ export function TaxHandoffPage() {
         setConsumptionIssues(r.issues);
       })
       .catch(() => setConsumption(null));
-  }, []);
+  }, [liveReady]);
 
   async function run<T>(fn: () => Promise<T>, okMsg: (result: T) => string) {
     setBusy(true);
@@ -116,7 +133,7 @@ export function TaxHandoffPage() {
   return (
     <OpsPage
       title={copy.tax}
-      lead="CLI ダイジェストを主表示。ライブ操作は折りたたみ。e-Tax / eLTAX 本番提出は行いません（ADR 0052）。"
+      lead="CLI 週次・月次ダイジェストを主表示。ライブ操作は下段で遅延読込。e-Tax / eLTAX 本番提出は行いません（ADR 0052）。"
       error={error}
       className="tax-handoff-page"
     >
@@ -125,20 +142,16 @@ export function TaxHandoffPage() {
       </p>
       {message && <p className="ops-page-meta">{message}</p>}
 
-      <section className="ops-card outlook-panel">
-        <h2 className="section-title">税務ダイジェスト</h2>
-        {staticReport ? (
-          <StaticReportPanel
-            slot={staticReport}
-            emptyLabel="ダイジェストがありません。orgos tax digest --write を実行してください。"
-          />
-        ) : (
-          <p className="muted">{copy.loading}</p>
-        )}
-      </section>
+      <StaticDigestHeader
+        title="税務ダイジェスト"
+        slots={slots}
+        weeklyEmptyLabel="週次がありません。orgos tax digest --period weekly --write"
+        monthlyEmptyLabel="月次がありません。orgos tax digest --period monthly --write"
+      />
 
-      <details className="ops-card executive-live-details">
-        <summary className="section-title">ライブ税務オペレーション</summary>
+      <LiveSection aria-label="ライブ税務オペレーション" onVisible={loadLive}>
+        <div className="ops-card outlook-panel">
+        <h2 className="section-title">ライブ税務オペレーション</h2>
 
       <section className="ops-card">
         <h2 className="section-title">税カレンダー</h2>
@@ -332,7 +345,8 @@ export function TaxHandoffPage() {
         </div>
       </section>
 
-      </details>
+        </div>
+      </LiveSection>
 
       <p className="section-cta">
         <a href="/?ledger=1">帳簿ワークベンチへ戻る</a>
