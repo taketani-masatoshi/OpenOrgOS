@@ -19,6 +19,7 @@
 - 空スロットは `generate_hint` で CLI を案内する（経営タブと同型）。
 - ダイジェスト書込は `requireCliReportWrite`（`agent:report`）。
 - ライブ取得はスクロール到達まで遅延し、初回のみ（`once`）。
+- `pipeline run weekly` / `monthly` が Scope A 6面の静的ダイジェストを書く（soft-fail; attest 失敗が exit を支配）。本番 cron は `agent:report` / operator 認証が必要。
 
 ## Related
 

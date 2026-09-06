@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **Pipeline Scope A static digests** — `pipeline run weekly` / `monthly` が tax / contracts / sales / ledger / budget / org の静的ダイジェストを書く（soft-fail）。月次は `report monthly` と `analytics snapshot` も soft-fail で実行。`npm run monthly` を追加。
 - **Console static-top + live-scroll（Scope A 完了）** — 帳簿・予実/財布・予算管理・組織図も Tax/Contracts と同型。上段 `StaticDigestHeader`（週次/月次 MD）、下段 `LiveSection`（IntersectionObserver・遅延読込）。`orgos {ledger|budget|org} digest --period weekly|monthly --write` → `docs/reports/{ledger,budget,org}/`。BFF `GET …/digest` に `static_reports`。ADR 0072。
 - **Console 静的 CLI タブ（分析 → 税務 → 契約 → 営業）** — 経営タブと同型の **CLI → MD/YAML → WebUI**。分析は `snapshot-history` 月次表を主表示（ライブ KPI は二次・`orgos analytics snapshot` ヒント）。税務 `orgos tax digest --write` → `docs/reports/tax/`、契約 `orgos contracts digest --write` → `docs/reports/contracts/`、営業 `orgos sales digest --write` → `docs/reports/sales/`。BFF に `static_report` スロット。inbox allowlist に `tax/` · `contracts/` · `sales/` · `docs/analytics/snapshots/`。ADR 0046 追記 · 0072。
 - **Executive Home 静的レポート一次面（ADR 0065）** — パイプラインは **CLI → 静的 MD → WebUI 表示**。主タブは **週次・月次のみ**（既定は週次）。`orgos executive brief` / `orgos report monthly` が書いた MD を表示し、日次ダッシュボードは API スロットのみ（ライブ合成は折りたたみ）。`GET /chat/v1/executive/home` に `static_reports` を同梱。
@@ -16,6 +17,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **CLI `pipeline run monthly`** — registrar に monthly 分岐が無く unknown になっていたのを修正（`runPipelineMonthly` を登録）。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 
 ## [0.9.0-beta.1] — 2026-08-30

@@ -13,6 +13,9 @@ import { ORGOS_TENANT_ENV, LEGACY_TENANT_ENV } from "../lib/orgos-cli.js";
 import { runEventsChainAttest } from "./company-events.js";
 import { runEventsAuditMonthly } from "./company-events.js";
 import { runIsoAuditRun } from "./iso-audit.js";
+import { runReportMonthly } from "./report.js";
+import { runAnalyticsSnapshot } from "./analytics.js";
+import { runScopeAStaticDigests } from "../lib/pipeline-static-digests.js";
 
 export interface PipelineRunOptions {
   tenant?: string;
@@ -65,8 +68,8 @@ export function runPipelineList(): void {
   console.log("| name | steps |");
   console.log("|------|-------|");
   console.log("| daily | validate → ops daily → dashboard → jp bank cashflow (if enabled) |");
-  console.log("| weekly | daily + routing-queue pending + audit log + ISO internal audit + events chain attest + executive backup |");
-  console.log("| monthly | daily + company events monthly audit (records_audit) |");
+  console.log("| weekly | daily + routing-queue pending + audit log + ISO internal audit + events chain attest + executive backup + Scope A digests |");
+  console.log("| monthly | daily + company events monthly audit (records_audit) + Scope A digests + report monthly + analytics snapshot |");
   console.log("\n例: npm run orgos -- pipeline run daily");
   console.log("     npm run orgos -- pipeline run weekly");
   console.log("     npm run orgos -- pipeline run monthly");
@@ -180,6 +183,26 @@ export function runPipelineWeekly(options: PipelineRunOptions = {}): void {
     runExecutiveBrief({ markdown: true });
   }
 
+  // Digests soft-fail so attest failure still dominates exit.
+  const softFailures: Array<{ step: string; message: string }> = [];
+  console.log("\n→ Scope A static digests (weekly)");
+  const digests = runScopeAStaticDigests("weekly");
+  if (!digests.ok) {
+    for (const err of digests.errors) {
+      console.warn(`⚠ digest: ${err}`);
+      softFailures.push({ step: "scope-a digests", message: err });
+    }
+  } else {
+    console.log("✓ Scope A static digests (weekly)");
+  }
+
+  if (softFailures.length > 0) {
+    console.warn(`\n⚠ Weekly soft failures (${softFailures.length}; digests do not exit 1):`);
+    for (const f of softFailures) {
+      console.warn(`  · ${f.step}: ${f.message}`);
+    }
+  }
+
   if (failures.length > 0) {
     console.error(`\n✗ Weekly pipeline failed (${failures.length} step(s))`);
     for (const f of failures) {
@@ -194,6 +217,8 @@ export function runPipelineWeekly(options: PipelineRunOptions = {}): void {
 export async function runPipelineMonthly(options: PipelineRunOptions = {}): Promise<void> {
   runPipelineDaily(options);
   const failures: Array<{ step: string; message: string }> = [];
+  // Digests / report / snapshot soft-fail so attest failure still dominates exit.
+  const softFailures: Array<{ step: string; message: string }> = [];
 
   console.log("\n→ events audit monthly (records_audit)");
   try {
@@ -207,6 +232,46 @@ export async function runPipelineMonthly(options: PipelineRunOptions = {}): Prom
       message,
       tenant: options.tenant,
     });
+  }
+
+  console.log("\n→ Scope A static digests (monthly)");
+  const digests = runScopeAStaticDigests("monthly");
+  if (!digests.ok) {
+    for (const err of digests.errors) {
+      console.warn(`⚠ digest: ${err}`);
+      softFailures.push({ step: "scope-a digests", message: err });
+    }
+  } else {
+    console.log("✓ Scope A static digests (monthly)");
+  }
+
+  console.log("\n→ report monthly");
+  try {
+    runReportMonthly({});
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.warn(`⚠ report monthly: ${message}`);
+    softFailures.push({ step: "report monthly", message });
+  }
+
+  console.log("\n→ analytics snapshot");
+  try {
+    runAnalyticsSnapshot({});
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (/already exists/i.test(message)) {
+      console.log(`✓ analytics snapshot skipped (already exists): ${message}`);
+    } else {
+      console.warn(`⚠ analytics snapshot: ${message}`);
+      softFailures.push({ step: "analytics snapshot", message });
+    }
+  }
+
+  if (softFailures.length > 0) {
+    console.warn(`\n⚠ Monthly soft failures (${softFailures.length}; digests/report/snapshot do not exit 1):`);
+    for (const f of softFailures) {
+      console.warn(`  · ${f.step}: ${f.message}`);
+    }
   }
 
   if (failures.length > 0) {

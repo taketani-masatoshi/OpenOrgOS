@@ -136,6 +136,8 @@ cd audit-bundle-YYYY-MM && node verify-bundle.mjs
 
 `pipeline run weekly` / `monthly` は `events:write` が必要。CEO または専用 operator で:
 
+週次・月次 pipeline は Scope A 静的ダイジェスト（tax / contracts / sales / ledger / budget / org）も書く（soft-fail）。本番 cron では `agent:report` / operator 認証も必要。
+
 ```bash
 export ORGOS_TENANT=mal
 export ORGOS_OPERATOR_ID=OP-001

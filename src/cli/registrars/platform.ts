@@ -10,7 +10,12 @@ import {
 } from "../../commands/modules.js";
 import { runTenantScaffoldDocs } from "../../commands/tenant-scaffold-docs.js";
 import { runMapList, runMapResolve, runMapTree } from "../../commands/map.js";
-import { runPipelineDaily, runPipelineList, runPipelineWeekly } from "../../commands/pipeline.js";
+import {
+  runPipelineDaily,
+  runPipelineList,
+  runPipelineMonthly,
+  runPipelineWeekly,
+} from "../../commands/pipeline.js";
 import { runTenantInitCommand, runTenantScaffoldData, runTenantAlignClassification } from "../../commands/tenant.js";
 import {
   runRegulationsList,
@@ -384,16 +389,20 @@ export function registerPlatformCommands(program: Command): void {
   pipelineCmd.command("list").description("List available pipelines").action(runPipelineList);
   pipelineCmd
     .command("run <name>")
-    .description("Run a pipeline (daily | weekly)")
+    .description("Run a pipeline (daily | weekly | monthly)")
     .option("--tenant <id>", "Tenant id")
     .option("--skip-validate", "Skip validate step")
-    .action((name, opts) => {
+    .action(async (name, opts) => {
       if (name === "daily") {
         runPipelineDaily({ tenant: opts.tenant, skipValidate: opts.skipValidate });
         return;
       }
       if (name === "weekly") {
         runPipelineWeekly({ tenant: opts.tenant, skipValidate: opts.skipValidate });
+        return;
+      }
+      if (name === "monthly") {
+        await runPipelineMonthly({ tenant: opts.tenant, skipValidate: opts.skipValidate });
         return;
       }
       console.error(`Unknown pipeline: ${name}`);
