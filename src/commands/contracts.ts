@@ -5,6 +5,13 @@ import {
 } from "../lib/contract-status-view.js";
 import type { ContractType } from "../../schemas/index.js";
 
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+import {
+  buildContractsDigestMarkdown,
+  writeContractsDigest,
+} from "../lib/contracts/contracts-digest.js";
+import { currentDate } from "../lib/utils.js";
+
 export function runContractsList(options: {
   type?: string;
   property?: string;
@@ -82,3 +89,26 @@ export const CONTRACT_TYPES: ContractType[] = [
   "nda",
   "partnership",
 ];
+export function runContractsDigest(opts?: {
+  write?: boolean;
+  days?: number;
+  json?: boolean;
+}): void {
+  if (opts?.write) {
+    requireCliReportWrite("contracts digest");
+    const result = writeContractsDigest({ days: opts.days });
+    if (opts.json) {
+      console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+      return;
+    }
+    console.log(`✓ Contracts digest: ${result.path}`);
+    console.log(result.markdown);
+    return;
+  }
+  const markdown = buildContractsDigestMarkdown({ days: opts?.days });
+  if (opts.json) {
+    console.log(JSON.stringify({ ok: true, as_of: currentDate(), markdown }, null, 2));
+    return;
+  }
+  console.log(markdown);
+}

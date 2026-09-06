@@ -10,6 +10,7 @@ import {
   listHospitalityOpsDue,
   loadStays,
 } from "../../../../steward/modules/hospitality/cli/ops-lib.js";
+import { getContractsStaticReportSlot } from "../../contracts/contracts-digest.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -41,6 +42,7 @@ export async function handleDomainOpsApi(
               ? horizonDays
               : undefined,
         }),
+        static_report: getContractsStaticReportSlot(),
       });
     } catch (error) {
       json(res, 422, {
