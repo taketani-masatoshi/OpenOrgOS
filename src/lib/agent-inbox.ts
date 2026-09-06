@@ -44,8 +44,20 @@ export interface AgentInboxSnapshot {
 }
 
 const DEFAULT_ITEM_LIMIT = 50;
-const SUMMARY_BODY_MAX_BYTES = 20 * 1024;
-const ALLOWED_SUMMARY_PREFIXES = ["agent-summaries/", "routing-queue/"] as const;
+/** Shared with Executive Home static reports (dashboard / brief can be larger). */
+export const DOCS_REPORT_BODY_MAX_BYTES = 64 * 1024;
+const SUMMARY_BODY_MAX_BYTES = DOCS_REPORT_BODY_MAX_BYTES;
+/**
+ * L1 report paths readable via inbox summary API and Executive Home static slots.
+ * Excludes executive-notes/ and other L2-adjacent human note trees.
+ */
+export const ALLOWED_SUMMARY_PREFIXES = [
+  "agent-summaries/",
+  "routing-queue/",
+  "dashboard/",
+  "executive-brief/",
+  "monthly/",
+] as const;
 
 function repoRelativePath(absPath: string): string {
   return relative(getWorkspaceRoot(), absPath).replace(/\\/g, "/");
@@ -199,8 +211,8 @@ export function formatAgentInboxMarkdown(
 }
 
 /**
- * Read L1 agent summary / routing-queue markdown.
- * Only paths under docs/reports/{agent-summaries,routing-queue}/ are allowed.
+ * Read L1 docs/reports markdown (agent summaries, routing queue, dashboard, briefs).
+ * Path must stay under an allowlisted prefix; executive-notes and traversal are rejected.
  */
 export function readAgentSummaryBody(relPath: string): string {
   const normalized = relPath.replace(/\\/g, "/").replace(/^\.\//, "").trim();
@@ -220,7 +232,7 @@ export function readAgentSummaryBody(relPath: string): string {
 
   if (!ALLOWED_SUMMARY_PREFIXES.some((p) => underReports.startsWith(p))) {
     throw new Error(
-      "summary path must be under docs/reports/agent-summaries/ or docs/reports/routing-queue/"
+      "summary path must be under docs/reports/{agent-summaries,routing-queue,dashboard,executive-brief,monthly}/"
     );
   }
 

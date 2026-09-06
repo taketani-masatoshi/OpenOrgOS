@@ -27,6 +27,7 @@ import { buildAgentInbox } from "../agent-inbox.js";
 import { loadOperatorRegistry } from "../org/operators.js";
 import { isClosedWorkOrder } from "../orchestration/work-order-state.js";
 import { assigneeKind, assigneeLabel } from "./assignee-kind.js";
+import { loadExecutiveStaticReports } from "./static-reports.js";
 
 const MAX_ATTENTION = 24;
 const MAX_WORK_PER_KIND = 12;
@@ -313,6 +314,7 @@ export function buildExecutiveHome(): ExecutiveHome {
     tenant: today.tenant,
     report_date: today.report_date,
     company_name: today.company_name,
+    static_reports: loadExecutiveStaticReports(),
     attention,
     attention_count: attention.length,
     gaps,

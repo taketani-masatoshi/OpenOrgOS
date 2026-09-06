@@ -424,7 +424,14 @@ export type AssigneeKind = "employee" | "guest" | "ai" | "unassigned";
 
 export type ExecutiveAttentionItem = {
   id: string;
-  kind: "customer" | "mail" | "scheduling" | "ceo_question" | "approval" | "wire";
+  kind:
+    | "customer"
+    | "mail"
+    | "scheduling"
+    | "ceo_question"
+    | "approval"
+    | "wire"
+    | "handoff";
   title: string;
   status: string;
   href: string;
@@ -454,11 +461,24 @@ export type ExecutiveWorkItem = {
   href: string;
 };
 
+export type ExecutiveStaticReportSlot = {
+  path: string | null;
+  title: string;
+  as_of: string | null;
+  markdown: string | null;
+  generate_hint: string;
+};
+
 export type ExecutiveHome = {
   ok: true;
   tenant: string;
   report_date: string;
   company_name: string;
+  static_reports: {
+    daily: ExecutiveStaticReportSlot;
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  };
   attention: ExecutiveAttentionItem[];
   attention_count: number;
   gaps: ExecutiveGapRow[];

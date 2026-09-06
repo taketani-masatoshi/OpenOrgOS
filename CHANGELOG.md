@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **Executive Home 静的レポート一次面（ADR 0065）** — パイプラインは **CLI → 静的 MD → WebUI 表示**。`orgos dashboard` / `orgos executive brief` / `orgos report monthly` が書いた日次・週次・月次を Operator Console `/` の主タブで表示（ライブ合成は折りたたみ）。`GET /chat/v1/executive/home` に `static_reports` を同梱。
 - **Direct HTTP / OData outbound（ADR 0071）** — Community OAuth を使わず財務 L1（`finance.monthly` · `invoice.issued`）を REST / OData v4 へ送る。設定は `data/integrations/http-outbound.yaml`、秘密は `data/secrets/http-outbound.env`（書込のみ）。CLI `orgos integrations http status|export`、コンソール Direct HTTP 区画、BFF `/chat/v1/integrations/http/*`（外向きは `chat:approve`）。
 - **X-Road REST Producer** — Security Server 向け `orgos protocol gov-gateway serve`。ネイティブ `X-Road-*` ヘッダ + OpenOrgOS MIME を受信し Wire ingest、成功時に notice-ack。未知 client は 403、decode 失敗は 422。OpenAPI `publish/protocol/xroad-notice-deliver.openapi.yaml`。SOAP は対象外。
 

@@ -2,16 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
 import { STEWARD_COPY } from "./steward-copy";
 import { CompanyEventsPanel } from "./CompanyEventsPanel";
+import { MarkdownBody } from "./MarkdownBody";
 import {
   fetchAgentSummary,
   fetchExecutiveHome,
   type ExecutiveAttentionItem,
   type ExecutiveGapRow,
   type ExecutiveHome,
+  type ExecutiveStaticReportSlot,
   type ExecutiveWorkItem,
 } from "./api";
 
 const NOTIFY_KEY = "orgos.executiveHome.notify";
+
+type ReportTab = "daily" | "weekly" | "monthly";
 
 function maybeNotifyAttention(count: number) {
   if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -54,6 +58,10 @@ function kindLabel(kind: ExecutiveAttentionItem["kind"], copy: Copy): string {
       return copy.executiveKindApproval;
     case "wire":
       return copy.executiveKindWire;
+    case "handoff":
+      return copy.executiveKindHandoff;
+    default:
+      return kind;
   }
 }
 
@@ -133,8 +141,41 @@ function WorkColumn({
   );
 }
 
+function StaticReportPanel({
+  slot,
+  emptyLabel,
+}: {
+  slot: ExecutiveStaticReportSlot;
+  emptyLabel: string;
+}) {
+  if (!slot.markdown) {
+    return (
+      <div className="executive-report-empty">
+        <p className="page-desc muted">{emptyLabel}</p>
+        <p className="page-desc">
+          <code className="executive-report-hint">{slot.generate_hint}</code>
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="executive-report-body">
+      <div className="executive-report-meta muted">
+        <span>{slot.title}</span>
+        {slot.as_of ? <span> · {slot.as_of}</span> : null}
+        {slot.path ? <span> · {slot.path}</span> : null}
+      </div>
+      <MarkdownBody className="executive-report-md">{slot.markdown}</MarkdownBody>
+      <p className="page-desc muted executive-report-regen">
+        <code className="executive-report-hint">{slot.generate_hint}</code>
+      </p>
+    </div>
+  );
+}
+
 /**
- * CEO morning home — attention / gaps / delegated work.
+ * CEO morning home — static dashboard/brief MD primary; live KPI secondary.
  * ADR 0065 · GET /chat/v1/executive/home
  */
 export function ExecutiveHomePage() {
@@ -142,6 +183,7 @@ export function ExecutiveHomePage() {
   const [data, setData] = useState<ExecutiveHome | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reportTab, setReportTab] = useState<ReportTab>("daily");
   const [summaryMd, setSummaryMd] = useState<Record<string, string>>({});
   const [summaryBusy, setSummaryBusy] = useState<string | null>(null);
 
@@ -162,6 +204,22 @@ export function ExecutiveHomePage() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  const slot =
+    data == null
+      ? null
+      : reportTab === "daily"
+        ? data.static_reports.daily
+        : reportTab === "weekly"
+          ? data.static_reports.weekly
+          : data.static_reports.monthly;
+
+  const emptyLabel =
+    reportTab === "daily"
+      ? copy.executiveReportDailyEmpty
+      : reportTab === "weekly"
+        ? copy.executiveReportWeeklyEmpty
+        : copy.executiveReportMonthlyEmpty;
 
   return (
     <main className="workspace executive-home">
@@ -192,174 +250,204 @@ export function ExecutiveHomePage() {
       {loading && !data ? <div className="loading-panel">…</div> : null}
       {error ? <div className="error-banner">{error}</div> : null}
 
-      {data ? (
+      {data && slot ? (
         <>
-          {(data.finance_runway_months != null ||
-            data.finance_cash_balance != null ||
-            data.variance) && (
-            <section className="outlook-panel" aria-label="KPI">
-              <div className="outlook-kpi summary-grid">
-                {data.finance_runway_months != null ? (
-                  <div>
-                    <span className="kpi-value">
-                      {data.finance_runway_months}
-                    </span>
-                    <span className="kpi-label">{copy.executiveRunway}</span>
-                  </div>
-                ) : null}
-                {data.finance_cash_balance != null ? (
-                  <div>
-                    <span className="kpi-value">
-                      {formatYen(data.finance_cash_balance)}
-                    </span>
-                    <span className="kpi-label">{copy.executiveCash}</span>
-                  </div>
-                ) : null}
-                {data.variance ? (
-                  <div>
-                    <span className="kpi-value">
-                      {formatYen(data.variance.delta_total)}
-                    </span>
-                    <span className="kpi-label">
-                      {copy.executiveVariance} ({data.variance.fiscal_year})
-                    </span>
-                  </div>
-                ) : null}
-                <div>
-                  <span className="kpi-value">{data.attention_count}</span>
-                  <span className="kpi-label">{copy.executiveAttention}</span>
-                </div>
-                <div>
-                  <span className="kpi-value">{data.work_open_count}</span>
-                  <span className="kpi-label">{copy.executiveWork}</span>
-                </div>
-              </div>
-            </section>
-          )}
-
-          <section className="outlook-panel" aria-labelledby="exec-attention">
-            <h2 id="exec-attention" className="section-title">
-              {copy.executiveAttention}
+          <section className="outlook-panel" aria-labelledby="exec-reports">
+            <h2 id="exec-reports" className="section-title">
+              {copy.executiveReports}
             </h2>
-            {data.attention.length === 0 ? (
-              <p className="page-desc muted">{copy.executiveAttentionEmpty}</p>
-            ) : (
-              <div className="executive-card-grid">
-                {data.attention.map((item) => (
-                  <AttentionCard key={item.id} item={item} copy={copy} />
-                ))}
-              </div>
-            )}
+            <nav className="view-tabs" aria-label={copy.executiveReports}>
+              {(
+                [
+                  ["daily", copy.executiveReportDaily],
+                  ["weekly", copy.executiveReportWeekly],
+                  ["monthly", copy.executiveReportMonthly],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={reportTab === id ? "active" : ""}
+                  onClick={() => setReportTab(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+            <StaticReportPanel slot={slot} emptyLabel={emptyLabel} />
           </section>
 
-          <section className="outlook-panel" aria-labelledby="exec-gaps">
-            <h2 id="exec-gaps" className="section-title">
-              {copy.executiveGaps}
-            </h2>
-            <p className="page-desc muted">
-              {copy.executiveRagGreen} {data.gap_summary.green} ·{" "}
-              {copy.executiveRagAmber} {data.gap_summary.amber} ·{" "}
-              {copy.executiveRagRed} {data.gap_summary.red} ·{" "}
-              {copy.executiveRagUnknown} {data.gap_summary.unknown}
-            </p>
-            {data.gaps.length === 0 ? (
-              <p className="page-desc muted">{copy.executiveGapsEmpty}</p>
-            ) : (
-              <div className="executive-gap-list">
-                <div className="executive-gap-head" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span>{copy.executiveGapActual}</span>
-                  <span>{copy.executiveGapTarget}</span>
-                </div>
-                {data.gaps.map((row) => (
-                  <GapRow key={row.id} row={row} copy={copy} />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="outlook-panel" aria-labelledby="exec-work">
-            <h2 id="exec-work" className="section-title">
-              {copy.executiveWork}
-            </h2>
-            {data.work_open_count === 0 ? (
-              <p className="page-desc muted">{copy.executiveWorkEmpty}</p>
-            ) : (
-              <div className="executive-work-grid">
-                <WorkColumn
-                  label={copy.executiveWorkEmployee}
-                  items={data.work.employee}
-                  empty={copy.executiveWorkEmpty}
-                />
-                <WorkColumn
-                  label={copy.executiveWorkGuest}
-                  items={data.work.guest}
-                  empty={copy.executiveWorkEmpty}
-                />
-                <WorkColumn
-                  label={copy.executiveWorkAi}
-                  items={data.work.ai}
-                  empty={copy.executiveWorkEmpty}
-                />
-                <WorkColumn
-                  label={copy.executiveWorkUnassigned}
-                  items={data.work.unassigned}
-                  empty={copy.executiveWorkEmpty}
-                />
-              </div>
-            )}
-            {(data.agent_summaries?.length ?? 0) > 0 ? (
-              <div className="executive-summaries">
-                <h3 className="executive-work-col-title">
-                  {copy.executiveAgentSummaries}
-                </h3>
-                <ul className="executive-summary-list">
-                  {data.agent_summaries!.map((s) => (
-                    <li key={s.path}>
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        disabled={summaryBusy === s.path}
-                        onClick={() => {
-                          if (summaryMd[s.path]) {
-                            setSummaryMd((prev) => {
-                              const next = { ...prev };
-                              delete next[s.path];
-                              return next;
-                            });
-                            return;
-                          }
-                          setSummaryBusy(s.path);
-                          void fetchAgentSummary(s.path)
-                            .then((r) => {
-                              setSummaryMd((prev) => ({
-                                ...prev,
-                                [s.path]: r.markdown,
-                              }));
-                            })
-                            .catch((err) => {
-                              setError(
-                                err instanceof Error ? err.message : String(err),
-                              );
-                            })
-                            .finally(() => setSummaryBusy(null));
-                        }}
-                      >
-                        {s.label}
-                      </button>
-                      {summaryMd[s.path] ? (
-                        <pre className="approvals-sched-preview">
-                          {summaryMd[s.path]}
-                        </pre>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </section>
           <CompanyEventsPanel />
+
+          <details className="executive-live-details outlook-panel">
+            <summary className="section-title">{copy.executiveLiveStatus}</summary>
+
+            {(data.finance_runway_months != null ||
+              data.finance_cash_balance != null ||
+              data.variance) && (
+              <section className="executive-live-kpi" aria-label="KPI">
+                <div className="outlook-kpi summary-grid">
+                  {data.finance_runway_months != null ? (
+                    <div>
+                      <span className="kpi-value">
+                        {data.finance_runway_months}
+                      </span>
+                      <span className="kpi-label">{copy.executiveRunway}</span>
+                    </div>
+                  ) : null}
+                  {data.finance_cash_balance != null ? (
+                    <div>
+                      <span className="kpi-value">
+                        {formatYen(data.finance_cash_balance)}
+                      </span>
+                      <span className="kpi-label">{copy.executiveCash}</span>
+                    </div>
+                  ) : null}
+                  {data.variance ? (
+                    <div>
+                      <span className="kpi-value">
+                        {formatYen(data.variance.delta_total)}
+                      </span>
+                      <span className="kpi-label">
+                        {copy.executiveVariance} ({data.variance.fiscal_year})
+                      </span>
+                    </div>
+                  ) : null}
+                  <div>
+                    <span className="kpi-value">{data.attention_count}</span>
+                    <span className="kpi-label">{copy.executiveAttention}</span>
+                  </div>
+                  <div>
+                    <span className="kpi-value">{data.work_open_count}</span>
+                    <span className="kpi-label">{copy.executiveWork}</span>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            <section aria-labelledby="exec-attention">
+              <h3 id="exec-attention" className="executive-work-col-title">
+                {copy.executiveAttention}
+              </h3>
+              {data.attention.length === 0 ? (
+                <p className="page-desc muted">{copy.executiveAttentionEmpty}</p>
+              ) : (
+                <div className="executive-card-grid">
+                  {data.attention.map((item) => (
+                    <AttentionCard key={item.id} item={item} copy={copy} />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section aria-labelledby="exec-gaps">
+              <h3 id="exec-gaps" className="executive-work-col-title">
+                {copy.executiveGaps}
+              </h3>
+              <p className="page-desc muted">
+                {copy.executiveRagGreen} {data.gap_summary.green} ·{" "}
+                {copy.executiveRagAmber} {data.gap_summary.amber} ·{" "}
+                {copy.executiveRagRed} {data.gap_summary.red} ·{" "}
+                {copy.executiveRagUnknown} {data.gap_summary.unknown}
+              </p>
+              {data.gaps.length === 0 ? (
+                <p className="page-desc muted">{copy.executiveGapsEmpty}</p>
+              ) : (
+                <div className="executive-gap-list">
+                  <div className="executive-gap-head" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span>{copy.executiveGapActual}</span>
+                    <span>{copy.executiveGapTarget}</span>
+                  </div>
+                  {data.gaps.map((row) => (
+                    <GapRow key={row.id} row={row} copy={copy} />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section aria-labelledby="exec-work">
+              <h3 id="exec-work" className="executive-work-col-title">
+                {copy.executiveWork}
+              </h3>
+              {data.work_open_count === 0 ? (
+                <p className="page-desc muted">{copy.executiveWorkEmpty}</p>
+              ) : (
+                <div className="executive-work-grid">
+                  <WorkColumn
+                    label={copy.executiveWorkEmployee}
+                    items={data.work.employee}
+                    empty={copy.executiveWorkEmpty}
+                  />
+                  <WorkColumn
+                    label={copy.executiveWorkGuest}
+                    items={data.work.guest}
+                    empty={copy.executiveWorkEmpty}
+                  />
+                  <WorkColumn
+                    label={copy.executiveWorkAi}
+                    items={data.work.ai}
+                    empty={copy.executiveWorkEmpty}
+                  />
+                  <WorkColumn
+                    label={copy.executiveWorkUnassigned}
+                    items={data.work.unassigned}
+                    empty={copy.executiveWorkEmpty}
+                  />
+                </div>
+              )}
+              {(data.agent_summaries?.length ?? 0) > 0 ? (
+                <div className="executive-summaries">
+                  <h3 className="executive-work-col-title">
+                    {copy.executiveAgentSummaries}
+                  </h3>
+                  <ul className="executive-summary-list">
+                    {data.agent_summaries!.map((s) => (
+                      <li key={s.path}>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={summaryBusy === s.path}
+                          onClick={() => {
+                            if (summaryMd[s.path]) {
+                              setSummaryMd((prev) => {
+                                const next = { ...prev };
+                                delete next[s.path];
+                                return next;
+                              });
+                              return;
+                            }
+                            setSummaryBusy(s.path);
+                            void fetchAgentSummary(s.path)
+                              .then((r) => {
+                                setSummaryMd((prev) => ({
+                                  ...prev,
+                                  [s.path]: r.markdown,
+                                }));
+                              })
+                              .catch((err) => {
+                                setError(
+                                  err instanceof Error ? err.message : String(err),
+                                );
+                              })
+                              .finally(() => setSummaryBusy(null));
+                          }}
+                        >
+                          {s.label}
+                        </button>
+                        {summaryMd[s.path] ? (
+                          <MarkdownBody className="executive-summary-md">
+                            {summaryMd[s.path]}
+                          </MarkdownBody>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </section>
+          </details>
         </>
       ) : null}
     </main>

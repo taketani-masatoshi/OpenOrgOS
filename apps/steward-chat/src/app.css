@@ -5960,3 +5960,47 @@ h4.heading-with-info {
     text-align: left;
   }
 }
+
+.executive-report-meta {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+
+.executive-report-empty {
+  padding: var(--space-4) 0;
+}
+
+.executive-report-hint {
+  font-size: var(--text-sm);
+}
+
+.executive-report-regen {
+  margin-top: var(--space-5);
+}
+
+.executive-report-md.md-body {
+  max-width: 52rem;
+}
+
+.executive-live-details {
+  margin-top: var(--space-6);
+}
+
+.executive-live-details > summary {
+  cursor: pointer;
+  list-style-position: outside;
+}
+
+.executive-live-details > summary.section-title {
+  margin-bottom: var(--space-4);
+}
+
+.executive-live-kpi {
+  margin-bottom: var(--space-5);
+}
+
+.executive-summary-md.md-body {
+  margin-top: var(--space-2);
+  max-width: 40rem;
+}

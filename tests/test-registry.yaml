@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 583
-  static_test_cases: 2670
-  tiered_execution_total: 583
+  vitest_total: 588
+  static_test_cases: 2709
+  tiered_execution_total: 588
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -396,7 +396,6 @@ ci_suites:
       - gov-gateway-adapter.test.ts
       - gov-gateway-sandbox.test.ts
       - gov-gateway-live.test.ts
-      - xroad-producer.test.ts
       - prod-wire-gate.test.ts
       - mal-wire-pilot-gate.test.ts
       - mal-wire-peer-deliver.test.ts
@@ -1117,6 +1116,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  executive-home-static-reports.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   executive-home.test.ts:
     axis: platform
     kind: unit
@@ -1190,14 +1193,6 @@ tests:
     axis: platform
     kind: unit
     domain: P04_wire_stack
-  xroad-producer.test.ts:
-    axis: platform
-    kind: unit
-    domain: P04_wire_stack
-  http-outbound-adapter.test.ts:
-    axis: platform
-    kind: unit
-    domain: P01_kernel
   governance-principles-iso37000.test.ts:
     axis: platform
     kind: unit
@@ -1231,6 +1226,14 @@ tests:
     kind: unit
     domain: P01_kernel
   hr-headcount-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  hr-onboard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  http-outbound-adapter.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2563,6 +2566,10 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-web-search.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-chat-witness.test.ts:
     axis: platform
     kind: server
@@ -2897,6 +2904,10 @@ tests:
     kind: unit
     domain: P01_kernel
   work-order-state.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  xroad-producer.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

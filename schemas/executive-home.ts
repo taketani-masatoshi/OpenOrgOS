@@ -55,11 +55,28 @@ export const executiveWorkItemSchema = z.object({
   href: z.string(),
 });
 
+/** One static MD slot (daily dashboard / weekly brief / monthly report). */
+export const executiveStaticReportSlotSchema = z.object({
+  path: z.string().nullable(),
+  title: z.string(),
+  as_of: z.string().nullable(),
+  markdown: z.string().nullable(),
+  generate_hint: z.string(),
+});
+
+export const executiveStaticReportsSchema = z.object({
+  daily: executiveStaticReportSlotSchema,
+  weekly: executiveStaticReportSlotSchema,
+  monthly: executiveStaticReportSlotSchema,
+});
+
 export const executiveHomeSchema = z.object({
   ok: z.literal(true),
   tenant: z.string(),
   report_date: z.string(),
   company_name: z.string(),
+  /** Primary Web surface — latest CLI-generated dashboard / brief MD. */
+  static_reports: executiveStaticReportsSchema,
   attention: z.array(executiveAttentionItemSchema),
   attention_count: z.number().int().nonnegative(),
   gaps: z.array(executiveGapRowSchema),
@@ -102,3 +119,5 @@ export type ExecutiveHome = z.infer<typeof executiveHomeSchema>;
 export type ExecutiveAttentionItem = z.infer<typeof executiveAttentionItemSchema>;
 export type ExecutiveGapRow = z.infer<typeof executiveGapRowSchema>;
 export type ExecutiveWorkItem = z.infer<typeof executiveWorkItemSchema>;
+export type ExecutiveStaticReportSlot = z.infer<typeof executiveStaticReportSlotSchema>;
+export type ExecutiveStaticReports = z.infer<typeof executiveStaticReportsSchema>;

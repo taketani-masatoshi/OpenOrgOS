@@ -41,6 +41,8 @@
 
 `docs/reports/dashboard/YYYY-MM-DD.md`（日付ファイル · 上書き防止）
 
+Operator Console `/`（Executive Home）は **この静的 MD を表示するのみ**（WebUI がライブ再合成しない）。週次は `orgos executive brief` → `docs/reports/executive-brief/`、月次は `orgos report monthly` → `docs/reports/monthly/`（ADR 0065）。
+
 ## CLI
 
 ```bash

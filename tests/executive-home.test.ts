@@ -32,6 +32,18 @@ describe("buildExecutiveHome", () => {
         home.work.ai.length +
         home.work.unassigned.length,
     );
+    expect(home.static_reports).toMatchObject({
+      daily: expect.objectContaining({
+        generate_hint: expect.stringContaining("orgos dashboard"),
+        title: expect.any(String),
+      }),
+      weekly: expect.objectContaining({
+        generate_hint: expect.stringContaining("orgos executive brief"),
+      }),
+      monthly: expect.objectContaining({
+        generate_hint: expect.stringContaining("orgos report monthly"),
+      }),
+    });
     // P4: business-plan / headcount connected — not left as unknown for core metrics
     const byId = Object.fromEntries(home.gaps.map((g) => [g.id, g]));
     expect(byId["MET-MONTHLY-PROFIT"]?.target_missing).toBe(false);
