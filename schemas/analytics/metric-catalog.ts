@@ -127,3 +127,25 @@ export const snapshotHistoryFileSchema = z
 
 export type SnapshotHistoryEntry = z.output<typeof snapshotHistoryEntrySchema>;
 export type SnapshotHistoryFile = z.output<typeof snapshotHistoryFileSchema>;
+
+export const annualSnapshotEntrySchema = z
+  .object({
+    fiscal_year: z.string().min(1),
+    as_of: z.string().min(1),
+    months: z.array(z.string().regex(/^\d{4}-\d{2}$/)).default([]),
+    values: z.record(analyticsMetricId, z.number()),
+    notes: z.array(z.string()).default([]),
+    /** Optional demo/synthetic marker — ignored by Console (L1 counts only). */
+    data_kind: z.string().optional(),
+  })
+  .strict();
+
+export const annualSnapshotFileSchema = z
+  .object({
+    version: z.literal(1),
+    entries: z.array(annualSnapshotEntrySchema).default([]),
+  })
+  .strict();
+
+export type AnnualSnapshotEntry = z.output<typeof annualSnapshotEntrySchema>;
+export type AnnualSnapshotFile = z.output<typeof annualSnapshotFileSchema>;

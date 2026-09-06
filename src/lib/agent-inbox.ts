@@ -12,7 +12,7 @@ import {
 } from "./agent-reporting.js";
 import { listWorkOrders } from "./escalate.js";
 import { getWorkspaceRoot } from "./orgos-paths.js";
-import { getDocsReportsDir } from "./utils.js";
+import { getDocsDir, getDocsReportsDir } from "./utils.js";
 
 export type AgentInboxScope = "executive_steward" | "secretary";
 
@@ -57,7 +57,13 @@ export const ALLOWED_SUMMARY_PREFIXES = [
   "dashboard/",
   "executive-brief/",
   "monthly/",
+  "tax/",
+  "contracts/",
+  "sales/",
 ] as const;
+
+/** Flat MD under tenant docs/analytics/snapshots/ (`orgos analytics snapshot`). */
+export const ANALYTICS_SNAPSHOTS_DOCS_PREFIX = "docs/analytics/snapshots/";
 
 function repoRelativePath(absPath: string): string {
   return relative(getWorkspaceRoot(), absPath).replace(/\\/g, "/");
@@ -211,8 +217,9 @@ export function formatAgentInboxMarkdown(
 }
 
 /**
- * Read L1 docs/reports markdown (agent summaries, routing queue, dashboard, briefs).
- * Path must stay under an allowlisted prefix; executive-notes and traversal are rejected.
+ * Read L1 markdown for inbox / static Console slots.
+ * Allowlisted under docs/reports/{prefixes} or docs/analytics/snapshots/ (flat files).
+ * Executive-notes and path traversal are rejected.
  */
 export function readAgentSummaryBody(relPath: string): string {
   const normalized = relPath.replace(/\\/g, "/").replace(/^\.\//, "").trim();
@@ -221,6 +228,35 @@ export function readAgentSummaryBody(relPath: string): string {
   }
   if (normalized.includes("..")) {
     throw new Error("summary path must not contain ..");
+  }
+
+  const analyticsMarker = `/${ANALYTICS_SNAPSHOTS_DOCS_PREFIX}`;
+  let underAnalytics: string | null = null;
+  if (normalized.startsWith(ANALYTICS_SNAPSHOTS_DOCS_PREFIX)) {
+    underAnalytics = normalized.slice(ANALYTICS_SNAPSHOTS_DOCS_PREFIX.length);
+  } else {
+    const idx = normalized.indexOf(analyticsMarker);
+    if (idx >= 0) {
+      underAnalytics = normalized.slice(idx + analyticsMarker.length);
+    }
+  }
+  if (underAnalytics != null) {
+    if (!underAnalytics || underAnalytics.includes("/") || underAnalytics.includes("\\")) {
+      throw new Error("analytics snapshot path must be a flat file under docs/analytics/snapshots/");
+    }
+    const abs = resolve(getDocsDir(), "analytics", "snapshots", underAnalytics);
+    const root = resolve(getDocsDir(), "analytics", "snapshots");
+    if (!abs.startsWith(root + "/") && abs !== root) {
+      throw new Error("summary path escapes docs/analytics/snapshots");
+    }
+    if (!existsSync(abs)) {
+      throw new Error(`summary not found: ${normalized}`);
+    }
+    const raw = readFileSync(abs, "utf-8");
+    if (Buffer.byteLength(raw, "utf-8") > SUMMARY_BODY_MAX_BYTES) {
+      return raw.slice(0, SUMMARY_BODY_MAX_BYTES) + "\n\n…(truncated)";
+    }
+    return raw;
   }
 
   const reportsRel = repoRelativePath(getDocsReportsDir()).replace(/\\/g, "/");
@@ -232,7 +268,7 @@ export function readAgentSummaryBody(relPath: string): string {
 
   if (!ALLOWED_SUMMARY_PREFIXES.some((p) => underReports.startsWith(p))) {
     throw new Error(
-      "summary path must be under docs/reports/{agent-summaries,routing-queue,dashboard,executive-brief,monthly}/"
+      "summary path must be under docs/reports/{agent-summaries,routing-queue,dashboard,executive-brief,monthly,tax,contracts,sales}/ or docs/analytics/snapshots/"
     );
   }
 

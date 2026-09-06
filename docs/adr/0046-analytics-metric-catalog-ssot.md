@@ -26,6 +26,7 @@
 - metrics カタログがあるのに `data_analytics` が operational roster に無いテナントは validate 警告になる（readiness が黙って下がるのを防ぐ）。
 - `orgos analytics kpi|quality|metrics|snapshot` と Skill `runtime: cli` が KPI の単一 CLI 入口になる。
 - Steward Chat は `/chat/v1/analytics/dashboard` で canvas-view 互換 JSON を返す（P3）。payload 全体に L2 パターンガードを通す。
+- **Operator Console（`/?analytics=1`）の主表示は `snapshot-history.yaml`（月次表）と任意の年次要約**。ライブ KPI バー／表は二次面。空のときは `orgos analytics snapshot` を `generate_hint` で案内する。最新 `docs/analytics/snapshots/*.md` は折りたたみ読取（inbox allowlist）。
 - コンソールの鮮度はスナップショット運用に依存する。月次 `orgos analytics snapshot` を回さないと高コスト指標は「未計算」のままになる。
 - 外部 BI 連携は本 ADR の非対象。
 

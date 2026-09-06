@@ -1,20 +1,153 @@
 /**
  * Analytics KPI dashboard — canvas-view compatible sections for Steward Chat.
+ * Console primary surface is snapshot-history (ADR 0046); live KPI is secondary.
  */
 import type { CanvasViewModel } from "../../../../schemas/canvas-view.js";
+import {
+  annualSnapshotFileSchema,
+  snapshotHistoryFileSchema,
+} from "../../../../schemas/analytics/metric-catalog.js";
+import { existsSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
+import { readAgentSummaryBody } from "../../agent-inbox.js";
 import { buildKpiScorecardView } from "../../analytics/kpi-scorecard-view.js";
 import {
   createMetricResolverCache,
+  evaluateMetricRag,
   type ExpensiveResolverMode,
 } from "../../analytics/resolvers.js";
+import { getWorkspaceRoot } from "../../orgos-paths.js";
 import { getTenantId } from "../../tenant.js";
-import { currentDate } from "../../utils.js";
+import { currentDate, getDataDir, getDocsDir, readYamlFile } from "../../utils.js";
+import type { StaticReportSlot } from "../../static-report-slot.js";
+import { emptyStaticReportSlot } from "../../static-report-slot.js";
+
+const HINT_SNAPSHOT = "orgos analytics snapshot";
+const MONTHLY_MD = /^(\d{4}-\d{2})\.md$/;
 
 export interface AnalyticsDashboardPayload {
   view_model: CanvasViewModel;
   kpi: ReturnType<typeof buildKpiScorecardView>;
   /** null when the expensive data-health scan was skipped and never snapshotted. */
   data_quality_overall: number | null;
+  annual_snapshot: {
+    fiscal_year: string;
+    as_of: string;
+    months_recorded: number;
+    metric_count: number;
+  } | null;
+  monthly_snapshots: Array<{
+    month: string;
+    metric_count: number;
+    compared_count: number;
+    attention_count: number;
+  }>;
+  annual_snapshots: Array<{
+    fiscal_year: string;
+    as_of: string;
+    months_recorded: number;
+    metric_count: number;
+  }>;
+  generate_hint: string;
+  /** Optional foldable MD from docs/analytics/snapshots/*.md */
+  latest_md: StaticReportSlot;
+}
+
+function resolveAnnualSnapshots(): AnalyticsDashboardPayload["annual_snapshots"] {
+  const path = join(getDataDir(), "analytics", "annual-snapshots.yaml");
+  if (!existsSync(path)) return [];
+  const file = readYamlFile(path, annualSnapshotFileSchema);
+  return file.entries
+    .map((entry) => ({
+      fiscal_year: entry.fiscal_year,
+      as_of: entry.as_of,
+      months_recorded: entry.months.length,
+      metric_count: Object.keys(entry.values).length,
+    }))
+    .sort((a, b) => b.fiscal_year.localeCompare(a.fiscal_year));
+}
+
+function previousMonth(month: string): string {
+  const [year, value] = month.split("-").map(Number);
+  const date = new Date(Date.UTC(year!, value! - 2, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+function resolveMonthlySnapshots(
+  kpi: ReturnType<typeof buildKpiScorecardView>
+): AnalyticsDashboardPayload["monthly_snapshots"] {
+  const path = join(getDataDir(), "analytics", "snapshot-history.yaml");
+  if (!existsSync(path)) return [];
+  const file = readYamlFile(path, snapshotHistoryFileSchema);
+  const byMonth = new Map(file.entries.map((entry) => [entry.month, entry]));
+  const rowsById = new Map(kpi.rows.map((row) => [row.metric.id, row]));
+  return file.entries
+    .map((entry) => {
+      const previous = byMonth.get(previousMonth(entry.month));
+      let attentionCount = 0;
+      for (const [metricId, actual] of Object.entries(entry.values)) {
+        const row = rowsById.get(metricId);
+        if (!row) continue;
+        const rag = evaluateMetricRag({
+          direction: row.metric.direction,
+          actual,
+          target: row.target_value,
+          thresholdWarningPct: row.metric.threshold_warning_pct,
+          thresholdCriticalPct: row.metric.threshold_critical_pct,
+        });
+        if (rag === "amber" || rag === "red") attentionCount += 1;
+      }
+      return {
+        month: entry.month,
+        metric_count: Object.keys(entry.values).length,
+        compared_count: previous
+          ? Object.keys(entry.values).filter((metricId) => previous.values[metricId] !== undefined)
+              .length
+          : 0,
+        attention_count: attentionCount,
+      };
+    })
+    .sort((a, b) => b.month.localeCompare(a.month));
+}
+
+function loadLatestAnalyticsSnapshotMd(): StaticReportSlot {
+  const absDir = join(getDocsDir(), "analytics", "snapshots");
+  if (!existsSync(absDir)) {
+    return emptyStaticReportSlot("月次 KPI スナップショット", HINT_SNAPSHOT);
+  }
+  const files: Array<{ asOf: string; abs: string; name: string }> = [];
+  for (const name of readdirSync(absDir, { withFileTypes: true })) {
+    if (!name.isFile()) continue;
+    const m = name.name.match(MONTHLY_MD);
+    if (!m) continue;
+    files.push({ asOf: m[1]!, abs: join(absDir, name.name), name: name.name });
+  }
+  files.sort((a, b) => (a.asOf < b.asOf ? 1 : a.asOf > b.asOf ? -1 : 0));
+  const latest = files[0];
+  if (!latest) {
+    return emptyStaticReportSlot("月次 KPI スナップショット", HINT_SNAPSHOT);
+  }
+  const repoRel = relative(getWorkspaceRoot(), latest.abs).replace(/\\/g, "/");
+  // Prefer docs/-relative path so L2 path guard does not treat tenants/{id}/ as leakage.
+  const docsRel = (() => {
+    const marker = "/docs/";
+    const idx = repoRel.indexOf(marker);
+    if (idx >= 0) return `docs/${repoRel.slice(idx + marker.length)}`;
+    return repoRel.startsWith("docs/") ? repoRel : `docs/analytics/snapshots/${latest.name}`;
+  })();
+  try {
+    const markdown = readAgentSummaryBody(docsRel);
+    const titleMatch = markdown.match(/^#\s+(.+)$/m);
+    return {
+      path: docsRel,
+      title: titleMatch?.[1]?.trim() || `KPI スナップショット — ${latest.asOf}`,
+      as_of: latest.asOf,
+      markdown,
+      generate_hint: HINT_SNAPSHOT,
+    };
+  } catch {
+    return emptyStaticReportSlot("月次 KPI スナップショット", HINT_SNAPSHOT);
+  }
 }
 
 function resolveDataQualityOverall(
@@ -136,7 +269,7 @@ export function buildAnalyticsDashboardViewModel(opts?: {
     subtitle: kpi.fiscal_year,
     sections,
     links: {
-      present_cmd: "orgos analytics kpi",
+      present_cmd: HINT_SNAPSHOT,
       cursor_hint: "docs/analytics/",
     },
   };
@@ -150,10 +283,17 @@ export function buildAnalyticsDashboardPayload(opts?: {
 }): AnalyticsDashboardPayload {
   const cache = createMetricResolverCache({ expensive: opts?.expensive });
   const kpi = buildKpiScorecardView({ asOf: opts?.reportDate, cache });
+  const annualSnapshots = resolveAnnualSnapshots();
   const payload: AnalyticsDashboardPayload = {
     view_model: buildAnalyticsDashboardViewModel({ ...opts, kpi }),
     kpi,
     data_quality_overall: resolveDataQualityOverall(kpi),
+    annual_snapshot:
+      annualSnapshots.find((snapshot) => snapshot.fiscal_year === kpi.fiscal_year) ?? null,
+    monthly_snapshots: resolveMonthlySnapshots(kpi),
+    annual_snapshots: annualSnapshots,
+    generate_hint: HINT_SNAPSHOT,
+    latest_md: loadLatestAnalyticsSnapshotMd(),
   };
   assertAnalyticsDashboardNoL2(payload);
   return payload;

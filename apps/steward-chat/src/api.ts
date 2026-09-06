@@ -1498,6 +1498,26 @@ export interface AnalyticsDashboardPayload {
     summary: { green: number; amber: number; red: number; unknown: number };
   };
   data_quality_overall: AnalyticsDataQualityOverall;
+  annual_snapshot: {
+    fiscal_year: string;
+    as_of: string;
+    months_recorded: number;
+    metric_count: number;
+  } | null;
+  monthly_snapshots: Array<{
+    month: string;
+    metric_count: number;
+    compared_count: number;
+    attention_count: number;
+  }>;
+  annual_snapshots: Array<{
+    fiscal_year: string;
+    as_of: string;
+    months_recorded: number;
+    metric_count: number;
+  }>;
+  generate_hint: string;
+  latest_md: ExecutiveStaticReportSlot;
 }
 
 export async function fetchAnalyticsDashboard(): Promise<AnalyticsDashboardPayload> {
@@ -2080,6 +2100,15 @@ type CustomersLocked = {
   gate?: CustomersNavGate;
 };
 
+export async function fetchCustomersCrmDashboard(): Promise<
+  CustomersLocked & {
+    view?: Record<string, unknown>;
+    static_report?: ExecutiveStaticReportSlot;
+  }
+> {
+  return chatApi("/chat/v1/customers/crm-dashboard");
+}
+
 export async function fetchCustomersOutbound(): Promise<
   CustomersLocked & Record<string, unknown>
 > {
@@ -2336,8 +2365,17 @@ export async function fetchTaxReadiness(): Promise<{
   note: string;
   boundary: string;
   etax_module: { xml_draft: boolean; note: string };
+  static_report?: ExecutiveStaticReportSlot;
 }> {
   return chatApi("/chat/v1/tax/readiness");
+}
+
+export async function fetchTaxDigest(): Promise<{
+  ok: boolean;
+  static_report: ExecutiveStaticReportSlot;
+  boundary?: string;
+}> {
+  return chatApi("/chat/v1/tax/digest");
 }
 
 export async function fetchTaxCalendar(): Promise<{
@@ -2885,6 +2923,7 @@ export async function fetchContractStatus(): Promise<{
     summary: string;
   }>;
   notes: string[];
+  static_report?: ExecutiveStaticReportSlot;
 }> {
   return chatApi("/chat/v1/contracts/status");
 }

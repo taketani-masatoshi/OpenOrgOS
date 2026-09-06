@@ -62,6 +62,9 @@ describe("analytics dashboard payload", () => {
     expect(payload.view_model.view_id).toBe("analytics-dashboard");
     expect(payload.kpi.rows.length).toBeGreaterThan(0);
     expect(payload).toHaveProperty("data_quality_overall");
+    expect(payload).toHaveProperty("monthly_snapshots");
+    expect(payload).toHaveProperty("annual_snapshots");
+    expect(payload.generate_hint).toContain("orgos analytics snapshot");
     expect(payload.view_model.sections.some((s) => s.type === "table")).toBe(true);
     expect(() => assertAnalyticsDashboardNoL2(payload)).not.toThrow();
   });

@@ -4,8 +4,10 @@ import {
   fetchAnalyticsDashboard,
   type AnalyticsDashboardPayload,
   type AnalyticsKpiRow,
+  type ExecutiveStaticReportSlot,
 } from "./api";
 import { OPS_PAGES_COPY } from "./ops-pages-copy";
+import { StaticReportPanel } from "./StaticReportPanel";
 
 function pctBar(actual: number, target: number): number {
   if (target <= 0) return 0;
@@ -29,7 +31,10 @@ function momSummary(rows: AnalyticsKpiRow[]): string {
 function formatMom(row: AnalyticsKpiRow): string {
   if (row.mom_delta === null) return "—";
   const sign = row.mom_delta > 0 ? "+" : "";
-  const pct = row.mom_delta_pct === null ? "" : ` (${row.mom_delta_pct > 0 ? "+" : ""}${row.mom_delta_pct}%)`;
+  const pct =
+    row.mom_delta_pct === null
+      ? ""
+      : ` (${row.mom_delta_pct > 0 ? "+" : ""}${row.mom_delta_pct}%)`;
   return `${sign}${Math.round(row.mom_delta * 10) / 10}${pct}`;
 }
 
@@ -87,92 +92,183 @@ export function AnalyticsDashboardPage() {
   }, []);
 
   const kpi = payload?.kpi;
-  const stats = payload?.view_model.sections.find((s) => s.type === "stats");
+  const monthly = payload?.monthly_snapshots ?? [];
+  const annual = payload?.annual_snapshots ?? [];
+  const annualCurrent = payload?.annual_snapshot;
+  const latestMd: ExecutiveStaticReportSlot | null = payload?.latest_md ?? null;
+  const hint = payload?.generate_hint ?? "orgos analytics snapshot";
 
   return (
     <main className="workspace analytics-dashboard">
       <div className="page-heading">
         <div>
           <h1 className="ops-page-title">{copy.analyticsTitle}</h1>
-          <p className="ops-page-lead">
-            {copy.analyticsLead}
-          </p>
+          <p className="ops-page-lead">{copy.analyticsLead}</p>
         </div>
       </div>
 
       {loading && <div className="loading-panel">{copy.loading}</div>}
       {error && <div className="error-banner">{error}</div>}
 
-      {kpi && (
+      {payload && (
         <>
-          <section className="outlook-panel">
-            <h2 className="section-title">{copy.summary}</h2>
-            <div className="outlook-kpi summary-grid">
-              <div>
-                <span className="kpi-value">{kpi.summary.green}</span>
-                <span className="kpi-label">{copy.kpiGreen}</span>
+          <section className="outlook-panel" aria-labelledby="analytics-snapshots">
+            <h2 id="analytics-snapshots" className="section-title">
+              {copy.analyticsSnapshots}
+            </h2>
+            {monthly.length === 0 ? (
+              <div className="executive-report-empty">
+                <p className="page-desc muted">{copy.analyticsSnapshotsEmpty}</p>
+                <p className="page-desc">
+                  <code className="executive-report-hint">{hint}</code>
+                </p>
               </div>
-              <div>
-                <span className="kpi-value">{kpi.summary.amber}</span>
-                <span className="kpi-label">{copy.kpiAmber}</span>
-              </div>
-              <div>
-                <span className="kpi-value">{kpi.summary.red}</span>
-                <span className="kpi-label">{copy.kpiRed}</span>
-              </div>
-              <div>
-                <span className="kpi-value">{payload?.data_quality_overall ?? "—"}</span>
-                <span className="kpi-label">{copy.dataQuality}</span>
-              </div>
-              <div>
-                <span className="kpi-value">{momSummary(kpi.rows)}</span>
-                <span className="kpi-label">{copy.momPresent}</span>
-              </div>
-            </div>
-          </section>
-
-          <section className="outlook-panel">
-            <h2 className="section-title">{copy.attainment}</h2>
-            {kpi.rows.map((row) => (
-              <KpiBar key={row.metric.id} row={row} />
-            ))}
-            {kpi.rows.length === 0 && (
-              <div className="empty-state">
-                <strong>{copy.noMetrics}</strong>
-                <p>{copy.noMetricsHint}</p>
-              </div>
+            ) : (
+              <>
+                {annualCurrent ? (
+                  <p className="ops-page-meta">
+                    {copy.analyticsAnnualSummary}: {annualCurrent.fiscal_year} ·{" "}
+                    {copy.analyticsMonthsRecorded} {annualCurrent.months_recorded} ·{" "}
+                    {copy.analyticsMetricCount} {annualCurrent.metric_count} · as of{" "}
+                    {annualCurrent.as_of}
+                  </p>
+                ) : null}
+                <div className="category-table">
+                  <div className="category-table-head analytics-table-head analytics-snap-head">
+                    <span>{copy.analyticsColMonth}</span>
+                    <span>{copy.analyticsMetricCount}</span>
+                    <span>{copy.analyticsCompared}</span>
+                    <span>{copy.analyticsAttention}</span>
+                  </div>
+                  {monthly.map((row) => (
+                    <div
+                      key={row.month}
+                      className="category-table-row analytics-table-row analytics-snap-row"
+                    >
+                      <span>{row.month}</span>
+                      <span>{row.metric_count}</span>
+                      <span>{row.compared_count}</span>
+                      <span>{row.attention_count}</span>
+                    </div>
+                  ))}
+                </div>
+                {annual.length > 0 ? (
+                  <div className="category-table" style={{ marginTop: "1rem" }}>
+                    <div className="category-table-head analytics-table-head analytics-snap-head">
+                      <span>{copy.analyticsColFiscalYear}</span>
+                      <span>{copy.analyticsMonthsRecorded}</span>
+                      <span>{copy.analyticsMetricCount}</span>
+                      <span>as of</span>
+                    </div>
+                    {annual.map((row) => (
+                      <div
+                        key={row.fiscal_year}
+                        className="category-table-row analytics-table-row analytics-snap-row"
+                      >
+                        <span>{row.fiscal_year}</span>
+                        <span>{row.months_recorded}</span>
+                        <span>{row.metric_count}</span>
+                        <span>{row.as_of}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                <p className="page-desc muted executive-report-regen">
+                  <code className="executive-report-hint">{hint}</code>
+                </p>
+              </>
             )}
           </section>
 
-          <section className="outlook-panel">
-            <h2 className="section-title">{copy.kpiList}</h2>
-            <div className="category-table">
-              <div className="category-table-head analytics-table-head">
-                <span>{copy.colRag}</span>
-                <span>{copy.colMetric}</span>
-                <span>{copy.colActual}</span>
-                <span>{copy.colTarget}</span>
-                <span>{copy.colMom}</span>
-              </div>
-              {kpi.rows.map((row) => (
-                <div key={row.metric.id} className="category-table-row analytics-table-row">
-                  <span className={`executive-rag executive-rag-${row.rag}`}>
-                    {row.rag === "green"
-                      ? copy.kpiGreen
-                      : row.rag === "amber"
-                        ? copy.kpiAmber
-                        : row.rag === "red"
-                          ? copy.kpiRed
-                          : copy.kpiUnknown}
-                  </span>
-                  <span>{row.metric.title}</span>
-                  <span>{row.actual.formatted}</span>
-                  <span>{formatTarget(row.target_value, row.metric.unit)}</span>
-                  <span className="muted">{formatMom(row)}</span>
+          {latestMd ? (
+            <details className="outlook-panel">
+              <summary className="section-title">{copy.analyticsLatestMd}</summary>
+              <StaticReportPanel
+                slot={latestMd}
+                emptyLabel={copy.analyticsSnapshotsEmpty}
+              />
+            </details>
+          ) : null}
+
+          {kpi ? (
+            <details className="executive-live-details outlook-panel" open={monthly.length === 0}>
+              <summary className="section-title">{copy.analyticsLiveKpi}</summary>
+
+              <section className="outlook-panel" style={{ boxShadow: "none" }}>
+                <h3 className="section-title">{copy.summary}</h3>
+                <div className="outlook-kpi summary-grid">
+                  <div>
+                    <span className="kpi-value">{kpi.summary.green}</span>
+                    <span className="kpi-label">{copy.kpiGreen}</span>
+                  </div>
+                  <div>
+                    <span className="kpi-value">{kpi.summary.amber}</span>
+                    <span className="kpi-label">{copy.kpiAmber}</span>
+                  </div>
+                  <div>
+                    <span className="kpi-value">{kpi.summary.red}</span>
+                    <span className="kpi-label">{copy.kpiRed}</span>
+                  </div>
+                  <div>
+                    <span className="kpi-value">
+                      {payload.data_quality_overall ?? "—"}
+                    </span>
+                    <span className="kpi-label">{copy.dataQuality}</span>
+                  </div>
+                  <div>
+                    <span className="kpi-value">{momSummary(kpi.rows)}</span>
+                    <span className="kpi-label">{copy.momPresent}</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </section>
+              </section>
+
+              <section className="outlook-panel" style={{ boxShadow: "none" }}>
+                <h3 className="section-title">{copy.attainment}</h3>
+                {kpi.rows.map((row) => (
+                  <KpiBar key={row.metric.id} row={row} />
+                ))}
+                {kpi.rows.length === 0 && (
+                  <div className="empty-state">
+                    <strong>{copy.noMetrics}</strong>
+                    <p>{copy.noMetricsHint}</p>
+                  </div>
+                )}
+              </section>
+
+              <section className="outlook-panel" style={{ boxShadow: "none" }}>
+                <h3 className="section-title">{copy.kpiList}</h3>
+                <div className="category-table">
+                  <div className="category-table-head analytics-table-head">
+                    <span>{copy.colRag}</span>
+                    <span>{copy.colMetric}</span>
+                    <span>{copy.colActual}</span>
+                    <span>{copy.colTarget}</span>
+                    <span>{copy.colMom}</span>
+                  </div>
+                  {kpi.rows.map((row) => (
+                    <div
+                      key={row.metric.id}
+                      className="category-table-row analytics-table-row"
+                    >
+                      <span className={`executive-rag executive-rag-${row.rag}`}>
+                        {row.rag === "green"
+                          ? copy.kpiGreen
+                          : row.rag === "amber"
+                            ? copy.kpiAmber
+                            : row.rag === "red"
+                              ? copy.kpiRed
+                              : copy.kpiUnknown}
+                      </span>
+                      <span>{row.metric.title}</span>
+                      <span>{row.actual.formatted}</span>
+                      <span>{formatTarget(row.target_value, row.metric.unit)}</span>
+                      <span className="muted">{formatMom(row)}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </details>
+          ) : null}
         </>
       )}
     </main>
