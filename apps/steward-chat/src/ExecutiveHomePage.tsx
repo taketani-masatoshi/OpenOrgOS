@@ -15,7 +15,7 @@ import {
 
 const NOTIFY_KEY = "orgos.executiveHome.notify";
 
-type ReportTab = "daily" | "weekly" | "monthly";
+type ReportTab = "weekly" | "monthly";
 
 function maybeNotifyAttention(count: number) {
   if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -183,7 +183,7 @@ export function ExecutiveHomePage() {
   const [data, setData] = useState<ExecutiveHome | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [reportTab, setReportTab] = useState<ReportTab>("daily");
+  const [reportTab, setReportTab] = useState<ReportTab>("weekly");
   const [summaryMd, setSummaryMd] = useState<Record<string, string>>({});
   const [summaryBusy, setSummaryBusy] = useState<string | null>(null);
 
@@ -208,18 +208,14 @@ export function ExecutiveHomePage() {
   const slot =
     data == null
       ? null
-      : reportTab === "daily"
-        ? data.static_reports.daily
-        : reportTab === "weekly"
-          ? data.static_reports.weekly
-          : data.static_reports.monthly;
+      : reportTab === "weekly"
+        ? data.static_reports.weekly
+        : data.static_reports.monthly;
 
   const emptyLabel =
-    reportTab === "daily"
-      ? copy.executiveReportDailyEmpty
-      : reportTab === "weekly"
-        ? copy.executiveReportWeeklyEmpty
-        : copy.executiveReportMonthlyEmpty;
+    reportTab === "weekly"
+      ? copy.executiveReportWeeklyEmpty
+      : copy.executiveReportMonthlyEmpty;
 
   return (
     <main className="workspace executive-home">
@@ -259,7 +255,6 @@ export function ExecutiveHomePage() {
             <nav className="view-tabs" aria-label={copy.executiveReports}>
               {(
                 [
-                  ["daily", copy.executiveReportDaily],
                   ["weekly", copy.executiveReportWeekly],
                   ["monthly", copy.executiveReportMonthly],
                 ] as const

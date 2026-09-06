@@ -55,7 +55,7 @@ export const executiveWorkItemSchema = z.object({
   href: z.string(),
 });
 
-/** One static MD slot (daily dashboard / weekly brief / monthly report). */
+/** One static MD slot (weekly brief / monthly report; daily kept in API for CLI pipeline). */
 export const executiveStaticReportSlotSchema = z.object({
   path: z.string().nullable(),
   title: z.string(),
@@ -75,7 +75,7 @@ export const executiveHomeSchema = z.object({
   tenant: z.string(),
   report_date: z.string(),
   company_name: z.string(),
-  /** Primary Web surface — latest CLI-generated dashboard / brief MD. */
+  /** Static report slots — WebUI primary tabs are weekly + monthly (default weekly). */
   static_reports: executiveStaticReportsSchema,
   attention: z.array(executiveAttentionItemSchema),
   attention_count: z.number().int().nonnegative(),

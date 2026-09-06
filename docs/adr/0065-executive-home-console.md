@@ -11,7 +11,7 @@ Operator Console の `/` は帳簿ワークベンチだった。CEO の日次入
 
 ## Decision
 
-1. **`/` は経営ホーム（Executive Home）** — **一次面は CLI が生成した静的 Markdown**（日次 `docs/reports/dashboard/YYYY-MM-DD.md` · 週次 `docs/reports/executive-brief/weekly-brief-*.md` · 月次 `docs/reports/monthly/YYYY-MM.md` または `agent-summaries/records-audit/monthly-audit-*.md`）。ライブ合成の要対応・ギャップ・依頼進捗は折りたたみ（「ライブ状況」）に残す。
+1. **`/` は経営ホーム（Executive Home）** — **一次面は CLI が生成した静的 Markdown の週次・月次**（既定タブは週次 `docs/reports/executive-brief/weekly-brief-*.md` · 月次 `docs/reports/monthly/YYYY-MM.md` または `agent-summaries/records-audit/monthly-audit-*.md`）。日次 `docs/reports/dashboard/YYYY-MM-DD.md` は API `static_reports.daily` に残すが主タブには出さない。ライブ合成の要対応・ギャップ・依頼進捗は折りたたみ（「ライブ状況」）に残す。
 2. **帳簿は `/?ledger=1`** — シェル1段目の「帳簿」タブ。ホーム default ではない。
 3. **集約 API** — `GET /chat/v1/executive/home`（`chat:read`）。`static_reports` と Today · customers · analytics · orchestration board を compose するだけ。Today schema は肥大化させない。正本 YAML は増やさない（新規 OKR 層なし）。
 4. **実行は Console** — 承認 · メール · 振込 · Tower 割当は Console / BFF。Cursor は実装 IDE のまま運用 UI にしない。
@@ -19,7 +19,7 @@ Operator Console の `/` は帳簿ワークベンチだった。CEO の日次入
 
 ## Consequences
 
-- **生成パイプライン** — CLI（`orgos dashboard` · `orgos executive brief` · `orgos report monthly`）が MD を書き、WebUI は `static_reports` で読むだけ。空スロットは generate_hint で CLI を案内する。
+- **生成パイプライン** — CLI（`orgos executive brief` · `orgos report monthly` · 任意で `orgos dashboard`）が MD を書き、WebUI 主タブは週次・月次のみ（`static_reports`）。空スロットは generate_hint で CLI を案内する。
 - 既存 E2E / ナビ前提（`/` = 帳簿）を更新する。
 - Analytics `kpi-targets` が空の指標は UI で「未設定」と明示する（目標を捏造しない）。
 - Work Order の `assignee_kind`（employee / guest / ai / unassigned）は派生表示。handoff スキーマの必須化はしない。
