@@ -3,9 +3,11 @@ import { useCopy } from "@ops-shared/define-copy";
 import {
   fetchTaxCalendar,
   fetchTaxConsumption,
+  fetchTaxDigest,
   fetchTaxGaps,
   fetchTaxPayrollYea,
   fetchTaxReadiness,
+  type ExecutiveStaticReportSlot,
   postTaxBonusDraft,
   postTaxHandoff,
   postTaxPayrollCalc,
@@ -13,6 +15,7 @@ import {
   postTaxYeaCompute,
 } from "./api";
 import { OpsPage } from "./OpsPage";
+import { StaticReportPanel } from "./StaticReportPanel";
 import { STEWARD_COPY } from "./steward-copy";
 
 /**
@@ -21,6 +24,7 @@ import { STEWARD_COPY } from "./steward-copy";
  */
 export function TaxHandoffPage() {
   const copy = useCopy(STEWARD_COPY);
+  const [staticReport, setStaticReport] = useState<ExecutiveStaticReportSlot | null>(null);
   const [readiness, setReadiness] = useState<string | null>(null);
   const [yea, setYea] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -54,6 +58,9 @@ export function TaxHandoffPage() {
   const [payDependents, setPayDependents] = useState("0");
 
   useEffect(() => {
+    void fetchTaxDigest()
+      .then((r) => setStaticReport(r.static_report))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
     void fetchTaxReadiness()
       .then((r) =>
         setReadiness(
@@ -109,7 +116,7 @@ export function TaxHandoffPage() {
   return (
     <OpsPage
       title={copy.tax}
-      lead="会計（帳簿）から分離した申告・給与年末の handoff です。e-Tax / eLTAX への本番提出は行いません（ADR 0052）。"
+      lead="CLI ダイジェストを主表示。ライブ操作は折りたたみ。e-Tax / eLTAX 本番提出は行いません（ADR 0052）。"
       error={error}
       className="tax-handoff-page"
     >
@@ -117,6 +124,21 @@ export function TaxHandoffPage() {
         <span className="badge warn">e-Tax 提出不可</span>
       </p>
       {message && <p className="ops-page-meta">{message}</p>}
+
+      <section className="ops-card outlook-panel">
+        <h2 className="section-title">税務ダイジェスト</h2>
+        {staticReport ? (
+          <StaticReportPanel
+            slot={staticReport}
+            emptyLabel="ダイジェストがありません。orgos tax digest --write を実行してください。"
+          />
+        ) : (
+          <p className="muted">{copy.loading}</p>
+        )}
+      </section>
+
+      <details className="ops-card executive-live-details">
+        <summary className="section-title">ライブ税務オペレーション</summary>
 
       <section className="ops-card">
         <h2 className="section-title">税カレンダー</h2>
@@ -309,6 +331,8 @@ export function TaxHandoffPage() {
           </button>
         </div>
       </section>
+
+      </details>
 
       <p className="section-cta">
         <a href="/?ledger=1">帳簿ワークベンチへ戻る</a>

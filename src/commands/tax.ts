@@ -39,6 +39,9 @@ import {
 } from "../lib/finance/tax-filing-gaps.js";
 import { currentDate } from "../lib/utils.js";
 
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+import { buildTaxDigestMarkdown, writeTaxDigest } from "../lib/tax/tax-digest.js";
+
 export function runTaxCalendar(opts?: { today?: string; json?: boolean }): void {
   const today = opts?.today ?? currentDate();
   const portfolio = buildTaxCalendarPortfolio({ today });
@@ -224,4 +227,23 @@ export function runTaxGapResolveCommand(opts: {
   json?: boolean;
 }): void {
   runTaxGapResolve(opts);
+}
+export function runTaxDigest(opts?: { write?: boolean; today?: string; json?: boolean }): void {
+  if (opts?.write) {
+    requireCliReportWrite("tax digest");
+    const result = writeTaxDigest({ today: opts.today });
+    if (opts.json) {
+      console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+      return;
+    }
+    console.log(`✓ Tax digest: ${result.path}`);
+    console.log(result.markdown);
+    return;
+  }
+  const markdown = buildTaxDigestMarkdown({ today: opts?.today });
+  if (opts?.json) {
+    console.log(JSON.stringify({ ok: true, markdown }, null, 2));
+    return;
+  }
+  console.log(markdown);
 }
