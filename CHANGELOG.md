@@ -9,6 +9,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 ### Added
 
 - 医療機器モジュールの QMS / GVP 文書テンプレートと REG-025 / REG-026 を、会社名プレースホルダ付きの施行可能な規程・手順に揃えた。テナントへは `qms/gvp draft --all` と `regulations seed` で商号だけ差し込む。
+- 経営ホームと分析は、`orgos dashboard` が書いた週次・月次 JSON を先に出し、現預金だけ現金台帳の最新合計で上書きする。認証・LLM モデル選択の経路は変えない。
 
 ### Changed
 
@@ -19,6 +20,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- 経営ホームの即表示 JSON が、7桁の円合計を `[REDACTED-L2]` にして壊し、毎回 YAML 再構成に落ちていた。gitignore のレポート JSON は数値のまま書く。
 - 秘書・Steward チャットの「チャットから仕訳を提案」が、chrome 簡素化の `overflow: hidden` で高さ 0 になっていた。カードはチャットに残し、縮めない。
 - 同じ chrome で LLM モデル選択が幅 0 / ドロップダウン欠落になっていた。composer 内の compact picker は縮めず、入力枠の overflow でネイティブ select を切らない。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

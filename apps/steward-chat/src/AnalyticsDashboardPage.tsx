@@ -64,27 +64,21 @@ export function AnalyticsDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function load(live = false) {
+    try {
+      setLoading(true);
+      const data = await fetchAnalyticsDashboard({ live });
+      setPayload(data);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await fetchAnalyticsDashboard();
-        if (!cancelled) {
-          setPayload(data);
-          setError(null);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : String(e));
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    void load(false);
   }, []);
 
   const kpi = payload?.kpi;
@@ -98,10 +92,25 @@ export function AnalyticsDashboardPage() {
           <p className="ops-page-lead">
             {copy.analyticsLead}
           </p>
+          {payload?.served_from === "snapshot" && payload.generated_at ? (
+            <p className="page-desc muted">
+              {copy.analyticsSnapshotAsOf(payload.generated_at)}
+            </p>
+          ) : null}
+        </div>
+        <div className="section-actions">
+          <button
+            type="button"
+            className="quiet-button"
+            disabled={loading}
+            onClick={() => void load(true)}
+          >
+            {copy.reload}
+          </button>
         </div>
       </div>
 
-      {loading && <LoadingStatus label={copy.loading} />}
+      {loading && !payload ? <LoadingStatus label={copy.loading} /> : null}
       {error && <div className="error-banner">{error}</div>}
 
       {kpi && (

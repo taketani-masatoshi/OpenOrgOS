@@ -88,7 +88,7 @@ import { handleCommandApi } from "./command-api.js";
 import { handleTowerApi } from "./tower-api.js";
 import { handleTowerChatMessage } from "../../dispatch-tower/chat-handler.js";
 import { handleAgentInboxApi } from "./agent-inbox-api.js";
-import { buildExecutiveHome } from "../../executive-home/build-home.js";
+import { serveExecutiveHome } from "../../executive-home/console-snapshot.js";
 import { handleCorrespondenceApi } from "./correspondence-api.js";
 import { handleIntegrationsApi } from "./integrations-api.js";
 import { handleBrokerApi } from "./broker-api.js";
@@ -996,7 +996,9 @@ export async function handleChatApi(
   if (pathname === "/chat/v1/executive/home" && method === "GET") {
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     try {
-      json(res, 200, buildExecutiveHome());
+      const live =
+        new URL(req.url ?? "/", "http://local").searchParams.get("live") === "1";
+      json(res, 200, serveExecutiveHome({ live }));
     } catch (err) {
       json(res, 500, {
         ok: false,

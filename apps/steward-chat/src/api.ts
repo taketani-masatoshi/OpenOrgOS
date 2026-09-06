@@ -493,10 +493,15 @@ export type ExecutiveHome = {
     delta_total: number;
     href: string;
   };
+  served_from?: "snapshot" | "live";
+  generated_at?: string;
 };
 
-export async function fetchExecutiveHome(): Promise<ExecutiveHome> {
-  return chatApi<ExecutiveHome>("/chat/v1/executive/home");
+export async function fetchExecutiveHome(opts?: {
+  live?: boolean;
+}): Promise<ExecutiveHome> {
+  const q = opts?.live ? "?live=1" : "";
+  return chatApi<ExecutiveHome>(`/chat/v1/executive/home${q}`);
 }
 
 export async function fetchOperatorStats(): Promise<OperatorStats> {
@@ -1485,10 +1490,15 @@ export interface AnalyticsDashboardPayload {
     summary: { green: number; amber: number; red: number; unknown: number };
   };
   data_quality_overall: AnalyticsDataQualityOverall;
+  served_from?: "snapshot" | "live";
+  generated_at?: string;
 }
 
-export async function fetchAnalyticsDashboard(): Promise<AnalyticsDashboardPayload> {
-  return chatApi<AnalyticsDashboardPayload>("/chat/v1/analytics/dashboard");
+export async function fetchAnalyticsDashboard(opts?: {
+  live?: boolean;
+}): Promise<AnalyticsDashboardPayload> {
+  const q = opts?.live ? "?live=1" : "";
+  return chatApi<AnalyticsDashboardPayload>(`/chat/v1/analytics/dashboard${q}`);
 }
 
 export interface LedgerWorkbenchSnapshot {

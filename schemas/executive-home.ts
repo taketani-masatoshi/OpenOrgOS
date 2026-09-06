@@ -96,6 +96,9 @@ export const executiveHomeSchema = z.object({
       href: z.string(),
     })
     .optional(),
+  /** snapshot = last `orgos dashboard` file; live = composed on this request. */
+  served_from: z.enum(["snapshot", "live"]).optional(),
+  generated_at: z.string().optional(),
 });
 
 export type ExecutiveHome = z.infer<typeof executiveHomeSchema>;
