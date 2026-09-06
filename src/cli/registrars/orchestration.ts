@@ -2344,6 +2344,27 @@ export function registerOrchestrationCommands(program: Command): void {
     });
 
   const orgCmd = program.command("org").description("Universal org activity root (approval · audit bridge)");
+  orgCmd
+    .command("digest")
+    .description("Write L1 org digest under docs/reports/org/")
+    .option("--period <weekly|monthly>", "Digest period (default weekly)", "weekly")
+    .option("--as-of <YYYY-MM-DD>", "As-of date")
+    .option("--write", "Persist markdown report")
+    .option("--json", "Print JSON")
+    .action(async (opts: {
+      period?: string;
+      asOf?: string;
+      write?: boolean;
+      json?: boolean;
+    }) => {
+      const { runOrgDigest } = await import("../../commands/org.js");
+      runOrgDigest({
+        period: opts.period === "monthly" ? "monthly" : "weekly",
+        asOf: opts.asOf,
+        write: Boolean(opts.write),
+        json: Boolean(opts.json),
+      });
+    });
   const orgChartCmd = orgCmd.command("chart").description("Org chart (OCH proposals)");
   const orgChartChangeCmd = orgChartCmd.command("change").description("Org chart change proposals");
   orgChartChangeCmd

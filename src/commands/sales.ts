@@ -589,10 +589,15 @@ export const SALES_DEAL_STAGES: SalesDealStage[] = [
   "won",
   "lost",
 ];
-export function runSalesDigest(opts?: { write?: boolean; json?: boolean }): void {
+export function runSalesDigest(opts?: {
+  write?: boolean;
+  json?: boolean;
+  period?: "weekly" | "monthly";
+}): void {
+  const period = opts?.period ?? "weekly";
   if (opts?.write) {
     requireCliReportWrite("sales digest");
-    const result = writeSalesDigest();
+    const result = writeSalesDigest({ period });
     if (opts.json) {
       console.log(JSON.stringify({ ok: true, ...result }, null, 2));
       return;
@@ -601,9 +606,9 @@ export function runSalesDigest(opts?: { write?: boolean; json?: boolean }): void
     console.log(result.markdown);
     return;
   }
-  const markdown = buildSalesDigestMarkdown();
+  const markdown = buildSalesDigestMarkdown({ period });
   if (opts?.json) {
-    console.log(JSON.stringify({ ok: true, markdown }, null, 2));
+    console.log(JSON.stringify({ ok: true, markdown, period }, null, 2));
     return;
   }
   console.log(markdown);

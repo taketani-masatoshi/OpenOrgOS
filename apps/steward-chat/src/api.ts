@@ -508,8 +508,22 @@ export type ExecutiveHome = {
   };
 };
 
-export async function fetchExecutiveHome(): Promise<ExecutiveHome> {
-  return chatApi<ExecutiveHome>("/chat/v1/executive/home");
+export type ExecutiveHomeStatic = {
+  ok: true;
+  tenant: string;
+  report_date: string;
+  company_name: string;
+  static_reports: ExecutiveHome["static_reports"];
+};
+
+export type ExecutiveHomeLive = Omit<ExecutiveHome, "static_reports">;
+
+export async function fetchExecutiveHome(): Promise<ExecutiveHomeStatic> {
+  return chatApi<ExecutiveHomeStatic>("/chat/v1/executive/home");
+}
+
+export async function fetchExecutiveHomeLive(): Promise<ExecutiveHomeLive> {
+  return chatApi<ExecutiveHomeLive>("/chat/v1/executive/home/live");
 }
 
 export async function fetchOperatorStats(): Promise<OperatorStats> {
@@ -2104,6 +2118,10 @@ export async function fetchCustomersCrmDashboard(): Promise<
   CustomersLocked & {
     view?: Record<string, unknown>;
     static_report?: ExecutiveStaticReportSlot;
+    static_reports?: {
+      weekly: ExecutiveStaticReportSlot;
+      monthly: ExecutiveStaticReportSlot;
+    };
   }
 > {
   return chatApi("/chat/v1/customers/crm-dashboard");
@@ -2373,9 +2391,46 @@ export async function fetchTaxReadiness(): Promise<{
 export async function fetchTaxDigest(): Promise<{
   ok: boolean;
   static_report: ExecutiveStaticReportSlot;
+  static_reports?: {
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  };
   boundary?: string;
 }> {
   return chatApi("/chat/v1/tax/digest");
+}
+
+export async function fetchLedgerDigest(): Promise<{
+  ok: boolean;
+  static_report: ExecutiveStaticReportSlot;
+  static_reports: {
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  };
+}> {
+  return chatApi("/chat/v1/ledger/digest");
+}
+
+export async function fetchBudgetDigest(): Promise<{
+  ok: boolean;
+  static_report: ExecutiveStaticReportSlot;
+  static_reports: {
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  };
+}> {
+  return chatApi("/chat/v1/org/budget/digest");
+}
+
+export async function fetchOrgDigest(): Promise<{
+  ok: boolean;
+  static_report: ExecutiveStaticReportSlot;
+  static_reports: {
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  };
+}> {
+  return chatApi("/chat/v1/org/digest");
 }
 
 export async function fetchTaxCalendar(): Promise<{
@@ -2924,6 +2979,10 @@ export async function fetchContractStatus(): Promise<{
   }>;
   notes: string[];
   static_report?: ExecutiveStaticReportSlot;
+  static_reports?: {
+    weekly: ExecutiveStaticReportSlot;
+    monthly: ExecutiveStaticReportSlot;
+  };
 }> {
   return chatApi("/chat/v1/contracts/status");
 }

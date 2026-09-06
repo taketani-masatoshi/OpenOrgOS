@@ -70,13 +70,21 @@ export const executiveStaticReportsSchema = z.object({
   monthly: executiveStaticReportSlotSchema,
 });
 
-export const executiveHomeSchema = z.object({
+const executiveHomeMetaSchema = z.object({
   ok: z.literal(true),
   tenant: z.string(),
   report_date: z.string(),
   company_name: z.string(),
+});
+
+/** Lightweight home — static MD slots only (ADR 0072 static-top). */
+export const executiveHomeStaticSchema = executiveHomeMetaSchema.extend({
   /** Static report slots — WebUI primary tabs are weekly + monthly (default weekly). */
   static_reports: executiveStaticReportsSchema,
+});
+
+/** Live KPI / attention / work — fetched after scroll (GET …/home/live). */
+export const executiveHomeLiveSchema = executiveHomeMetaSchema.extend({
   attention: z.array(executiveAttentionItemSchema),
   attention_count: z.number().int().nonnegative(),
   gaps: z.array(executiveGapRowSchema),
@@ -115,7 +123,14 @@ export const executiveHomeSchema = z.object({
     .optional(),
 });
 
+/** Full compose (tests / CLI). Prefer static + live endpoints for Console. */
+export const executiveHomeSchema = executiveHomeStaticSchema.and(
+  executiveHomeLiveSchema.omit({ ok: true, tenant: true, report_date: true, company_name: true }),
+);
+
 export type ExecutiveHome = z.infer<typeof executiveHomeSchema>;
+export type ExecutiveHomeStatic = z.infer<typeof executiveHomeStaticSchema>;
+export type ExecutiveHomeLive = z.infer<typeof executiveHomeLiveSchema>;
 export type ExecutiveAttentionItem = z.infer<typeof executiveAttentionItemSchema>;
 export type ExecutiveGapRow = z.infer<typeof executiveGapRowSchema>;
 export type ExecutiveWorkItem = z.infer<typeof executiveWorkItemSchema>;

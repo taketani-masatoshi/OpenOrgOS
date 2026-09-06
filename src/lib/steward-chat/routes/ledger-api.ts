@@ -8,6 +8,10 @@ import {
 import { readJsonLimited } from "../../http/read-json-limited.js";
 import { appendChatAudit } from "../audit.js";
 import { buildLedgerWorkbench } from "../../finance/ledger/workbench.js";
+import {
+  getLedgerStaticReportSlot,
+  getLedgerStaticReportSlots,
+} from "../../ledger/ledger-digest.js";
 import { reverseJournalEntry } from "../../finance/journal-reverse.js";
 import { appendJournalEntry } from "../../finance/expense-claim-journal.js";
 import { lockMonth, unlockMonth } from "../../finance/period-lock.js";
@@ -79,11 +83,25 @@ export async function handleLedgerApi(
 ): Promise<boolean> {
   if (!pathname.startsWith("/chat/v1/ledger/")) return false;
 
+  if (pathname === "/chat/v1/ledger/digest" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    json(res, 200, {
+      ok: true,
+      static_report: getLedgerStaticReportSlot(),
+      static_reports: getLedgerStaticReportSlots(),
+    });
+    return true;
+  }
+
   if (pathname === "/chat/v1/ledger/workbench" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
     const url = new URL(req.url ?? "/", "http://localhost");
     const asOf = url.searchParams.get("as_of") ?? undefined;
-    json(res, 200, buildLedgerWorkbench({ asOf }));
+    json(res, 200, {
+      ...buildLedgerWorkbench({ asOf }),
+      static_report: getLedgerStaticReportSlot(),
+      static_reports: getLedgerStaticReportSlots(),
+    });
     return true;
   }
 

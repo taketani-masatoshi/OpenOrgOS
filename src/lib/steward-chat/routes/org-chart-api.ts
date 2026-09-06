@@ -14,6 +14,10 @@ import {
   loadOrgChartChangeProposal,
   proposeOrgChartChange,
 } from "../../org/org-chart-change.js";
+import {
+  getOrgStaticReportSlot,
+  getOrgStaticReportSlots,
+} from "../../org/org-digest.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -38,10 +42,24 @@ export async function handleOrgChartApi(
   method: string,
   user: WireConsoleUser
 ): Promise<boolean> {
+  if (pathname === "/chat/v1/org/digest" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    json(res, 200, {
+      ok: true,
+      static_report: getOrgStaticReportSlot(),
+      static_reports: getOrgStaticReportSlots(),
+    });
+    return true;
+  }
+
   if (pathname === "/chat/v1/org/chart" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
     const asOf = new URL(req.url ?? "/", "http://localhost").searchParams.get("as_of")?.trim();
-    json(res, 200, buildOrgChartApiPayload({ asOf: asOf || undefined }));
+    json(res, 200, {
+      ...buildOrgChartApiPayload({ asOf: asOf || undefined }),
+      static_report: getOrgStaticReportSlot(),
+      static_reports: getOrgStaticReportSlots(),
+    });
     return true;
   }
 

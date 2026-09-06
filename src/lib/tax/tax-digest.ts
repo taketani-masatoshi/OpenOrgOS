@@ -8,16 +8,32 @@ import {
   tryLoadTaxFilingGaps,
 } from "../finance/tax-filing-gaps.js";
 import { currentDate, writeMarkdownReport } from "../utils.js";
-import { loadTaxDigestSlot, type StaticReportSlot } from "../static-report-slot.js";
+import {
+  loadTaxDigestSlot,
+  loadTaxDigestSlots,
+  type StaticReportSlot,
+} from "../static-report-slot.js";
+import {
+  monthTokenFromAsOf,
+  periodDigestFilename,
+  type DigestPeriod,
+} from "../period-digest-slot.js";
 
-export function buildTaxDigestMarkdown(opts?: { today?: string }): string {
+export function buildTaxDigestMarkdown(opts?: {
+  today?: string;
+  period?: DigestPeriod;
+}): string {
   const today = opts?.today?.trim() || currentDate();
+  const period = opts?.period ?? "weekly";
   const portfolio = buildTaxCalendarPortfolio({ today });
   const readiness = computeTaxReadiness();
   const gaps = tryLoadTaxFilingGaps();
+  const label = period === "weekly" ? "税務週次" : "税務月次";
 
   const lines: string[] = [
-    `# 税務ダイジェスト — ${today}`,
+    `# ${label} — ${today}`,
+    "",
+    `**期間:** ${period}`,
     "",
     "**境界:** L1 のみ · e-Tax / eLTAX 本番提出は行わない（ADR 0052）。",
     "",
@@ -53,17 +69,31 @@ export function buildTaxDigestMarkdown(opts?: { today?: string }): string {
   return lines.join("\n");
 }
 
-export function writeTaxDigest(opts?: { today?: string }): {
+export function writeTaxDigest(opts?: {
+  today?: string;
+  period?: DigestPeriod;
+}): {
   path: string;
   as_of: string;
   markdown: string;
+  period: DigestPeriod;
 } {
   const as_of = opts?.today?.trim() || currentDate();
-  const markdown = buildTaxDigestMarkdown({ today: as_of });
-  const path = writeMarkdownReport("tax", `tax-digest-${as_of}.md`, markdown);
-  return { path, as_of, markdown };
+  const period = opts?.period ?? "weekly";
+  const markdown = buildTaxDigestMarkdown({ today: as_of, period });
+  const token = period === "monthly" ? monthTokenFromAsOf(as_of) : as_of;
+  const filename = periodDigestFilename(period, token);
+  const path = writeMarkdownReport("tax", filename, markdown);
+  return { path, as_of: token, markdown, period };
 }
 
 export function getTaxStaticReportSlot(): StaticReportSlot {
   return loadTaxDigestSlot();
+}
+
+export function getTaxStaticReportSlots(): {
+  weekly: StaticReportSlot;
+  monthly: StaticReportSlot;
+} {
+  return loadTaxDigestSlots();
 }

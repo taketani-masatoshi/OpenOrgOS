@@ -98,11 +98,13 @@ import {
 import {
   runBudgetAllocateDepartment,
   runBudgetAllocateMember,
+  runBudgetDigest,
   runBudgetRollover,
   runBudgetSetCompanyCategory,
   runBudgetShow,
 } from "../../commands/budget.js";
 import {
+  runLedgerDigest,
   runLedgerGl,
   runLedgerExport,
   runLedgerJournalBackfillTax,
@@ -357,11 +359,13 @@ export function registerDomainCommands(program: Command): void {
     .command("digest")
     .description("Write L1 contract status digest under docs/reports/contracts/")
     .option("--days <n>", "Horizon days (default 90)", "90")
+    .option("--period <weekly|monthly>", "Digest period (default weekly)", "weekly")
     .option("--write", "Persist markdown report")
     .option("--json", "Print JSON")
-    .action((opts: { days?: string; write?: boolean; json?: boolean }) =>
+    .action((opts: { days?: string; period?: string; write?: boolean; json?: boolean }) =>
       runContractsDigest({
         days: opts.days ? Number(opts.days) : 90,
+        period: opts.period === "monthly" ? "monthly" : "weekly",
         write: Boolean(opts.write),
         json: Boolean(opts.json),
       })
@@ -534,10 +538,12 @@ export function registerDomainCommands(program: Command): void {
   sales
     .command("digest")
     .description("Write L1 sales CRM digest under docs/reports/sales/")
+    .option("--period <weekly|monthly>", "Digest period (default weekly)", "weekly")
     .option("--write", "Persist markdown report")
     .option("--json", "Print JSON")
-    .action((opts: { write?: boolean; json?: boolean }) =>
+    .action((opts: { period?: string; write?: boolean; json?: boolean }) =>
       runSalesDigest({
+        period: opts.period === "monthly" ? "monthly" : "weekly",
         write: Boolean(opts.write),
         json: Boolean(opts.json),
       }),
@@ -1092,11 +1098,13 @@ export function registerDomainCommands(program: Command): void {
     .command("digest")
     .description("L1 tax digest (calendar + gaps + readiness) under docs/reports/tax/")
     .option("--today <YYYY-MM-DD>", "As-of date")
+    .option("--period <weekly|monthly>", "Digest period (default weekly)", "weekly")
     .option("--write", "Persist markdown report")
     .option("--json", "Print JSON")
-    .action((opts: { today?: string; write?: boolean; json?: boolean }) =>
+    .action((opts: { today?: string; period?: string; write?: boolean; json?: boolean }) =>
       runTaxDigest({
         today: opts.today,
+        period: opts.period === "monthly" ? "monthly" : "weekly",
         write: Boolean(opts.write),
         json: Boolean(opts.json),
       }),
@@ -1308,6 +1316,26 @@ export function registerDomainCommands(program: Command): void {
 
   const budget = program.command("budget").description("Budget envelope delegation");
   budget
+    .command("digest")
+    .description("Write L1 budget digest under docs/reports/budget/")
+    .option("--period <weekly|monthly>", "Digest period (default weekly)", "weekly")
+    .option("--fiscal-year <fy>", "Fiscal year label")
+    .option("--write", "Persist markdown report")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      period?: string;
+      fiscalYear?: string;
+      write?: boolean;
+      json?: boolean;
+    }) =>
+      runBudgetDigest({
+        period: opts.period === "monthly" ? "monthly" : "weekly",
+        fiscalYear: opts.fiscalYear,
+        write: Boolean(opts.write),
+        json: Boolean(opts.json),
+      }),
+    );
+  budget
     .command("show")
     .description("Show budget delegation summary")
     .option("--fiscal-year <fy>", "Fiscal year label")
@@ -1379,6 +1407,26 @@ export function registerDomainCommands(program: Command): void {
     }) => runBudgetRollover(opts));
 
   const ledger = program.command("ledger").description("General ledger and trial balance");
+  ledger
+    .command("digest")
+    .description("Write L1 ledger digest under docs/reports/ledger/")
+    .option("--period <weekly|monthly>", "Digest period (default weekly)", "weekly")
+    .option("--as-of <YYYY-MM-DD>", "As-of date")
+    .option("--write", "Persist markdown report")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      period?: string;
+      asOf?: string;
+      write?: boolean;
+      json?: boolean;
+    }) =>
+      runLedgerDigest({
+        period: opts.period === "monthly" ? "monthly" : "weekly",
+        asOf: opts.asOf,
+        write: Boolean(opts.write),
+        json: Boolean(opts.json),
+      }),
+    );
   const ledgerJournal = ledger.command("journal").description("Journal commands");
   ledgerJournal
     .command("list")

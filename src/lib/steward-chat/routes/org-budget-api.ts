@@ -60,6 +60,10 @@ import {
 import { loadOrgAuthority } from "../../org/org-authority.js";
 import { loadOrgChart } from "../../org/org-chart.js";
 import {
+  getBudgetStaticReportSlot,
+  getBudgetStaticReportSlots,
+} from "../../budget/budget-digest.js";
+import {
   listActiveOperators,
   listOutlookPublishCandidates,
 } from "../../org/operators.js";
@@ -1318,6 +1322,16 @@ export async function handleOrgBudgetApi(
 ): Promise<boolean> {
   const path = relativePath(pathname);
   if (path === null) return false;
+
+  if (path === "/digest" && method === "GET") {
+    if (!requireBudgetSurfacePermission(user, "chat:read", res)) return true;
+    json(res, 200, {
+      ok: true,
+      static_report: getBudgetStaticReportSlot(),
+      static_reports: getBudgetStaticReportSlots(),
+    });
+    return true;
+  }
 
   if (path === "/" && method === "GET") {
     if (!requireBudgetSurfacePermission(user, "chat:read", res)) return true;

@@ -93,10 +93,12 @@ export function runContractsDigest(opts?: {
   write?: boolean;
   days?: number;
   json?: boolean;
+  period?: "weekly" | "monthly";
 }): void {
+  const period = opts?.period ?? "weekly";
   if (opts?.write) {
     requireCliReportWrite("contracts digest");
-    const result = writeContractsDigest({ days: opts.days });
+    const result = writeContractsDigest({ days: opts.days, period });
     if (opts.json) {
       console.log(JSON.stringify({ ok: true, ...result }, null, 2));
       return;
@@ -105,9 +107,9 @@ export function runContractsDigest(opts?: {
     console.log(result.markdown);
     return;
   }
-  const markdown = buildContractsDigestMarkdown({ days: opts?.days });
+  const markdown = buildContractsDigestMarkdown({ days: opts?.days, period });
   if (opts.json) {
-    console.log(JSON.stringify({ ok: true, as_of: currentDate(), markdown }, null, 2));
+    console.log(JSON.stringify({ ok: true, as_of: currentDate(), markdown, period }, null, 2));
     return;
   }
   console.log(markdown);

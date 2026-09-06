@@ -13,7 +13,12 @@ import {
   auditCliMutation,
   requireCliHumanApproval,
   requireCliOperator,
+  requireCliReportWrite,
 } from "../lib/console-auth/cli-operator.js";
+import {
+  buildBudgetDigestMarkdown,
+  writeBudgetDigest,
+} from "../lib/budget/budget-digest.js";
 
 function printJson(value: unknown): void {
   console.log(JSON.stringify(value, null, 2));
@@ -156,4 +161,39 @@ export function runBudgetRollover(opts: {
     return;
   }
   console.log(`✓ rolled over to ${result.to}`);
+}
+
+export function runBudgetDigest(opts?: {
+  write?: boolean;
+  asOf?: string;
+  fiscalYear?: string;
+  json?: boolean;
+  period?: "weekly" | "monthly";
+}): void {
+  const period = opts?.period ?? "weekly";
+  if (opts?.write) {
+    requireCliReportWrite("budget digest");
+    const result = writeBudgetDigest({
+      asOf: opts.asOf,
+      period,
+      fiscalYear: opts.fiscalYear,
+    });
+    if (opts.json) {
+      console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+      return;
+    }
+    console.log(`✓ Budget digest: ${result.path}`);
+    console.log(result.markdown);
+    return;
+  }
+  const markdown = buildBudgetDigestMarkdown({
+    asOf: opts?.asOf,
+    period,
+    fiscalYear: opts?.fiscalYear,
+  });
+  if (opts?.json) {
+    console.log(JSON.stringify({ ok: true, markdown, period }, null, 2));
+    return;
+  }
+  console.log(markdown);
 }

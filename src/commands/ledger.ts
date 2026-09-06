@@ -43,7 +43,11 @@ import {
   buildElectronicLedgerComplianceReport,
   searchElectronicLedger,
 } from "../lib/finance/ledger/electronic-ledger.js";
-import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
+import { auditCliMutation, requireCliDataWrite, requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+import {
+  buildLedgerDigestMarkdown,
+  writeLedgerDigest,
+} from "../lib/ledger/ledger-digest.js";
 import {
   fiscalYearEndDate,
   fiscalYearStartMonth,
@@ -602,4 +606,30 @@ export function runLedgerDenchoCheck(opts: { json?: boolean }): void {
   for (const issue of report.issues) {
     console.log(`⚠ ${issue}`);
   }
+}
+
+export function runLedgerDigest(opts?: {
+  write?: boolean;
+  asOf?: string;
+  json?: boolean;
+  period?: "weekly" | "monthly";
+}): void {
+  const period = opts?.period ?? "weekly";
+  if (opts?.write) {
+    requireCliReportWrite("ledger digest");
+    const result = writeLedgerDigest({ asOf: opts.asOf, period });
+    if (opts.json) {
+      console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+      return;
+    }
+    console.log(`✓ Ledger digest: ${result.path}`);
+    console.log(result.markdown);
+    return;
+  }
+  const markdown = buildLedgerDigestMarkdown({ asOf: opts?.asOf, period });
+  if (opts?.json) {
+    console.log(JSON.stringify({ ok: true, markdown, period }, null, 2));
+    return;
+  }
+  console.log(markdown);
 }

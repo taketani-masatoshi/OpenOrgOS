@@ -30,7 +30,10 @@ import { buildTaxCalendarPortfolio } from "../../finance/tax-calendar-portfolio.
 import { summarizeTaxFilingGaps, tryLoadTaxFilingGaps } from "../../finance/tax-filing-gaps.js";
 import { runConsumptionTaxCheck } from "../../finance/consumption-tax.js";
 import { computePayrollMonth } from "../../finance/payroll-jp.js";
-import { getTaxStaticReportSlot } from "../../tax/tax-digest.js";
+import {
+  getTaxStaticReportSlot,
+  getTaxStaticReportSlots,
+} from "../../tax/tax-digest.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -52,20 +55,24 @@ export async function handleTaxApi(
 
   if (pathname === "/chat/v1/tax/readiness" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
+    const static_reports = getTaxStaticReportSlots();
     json(res, 200, {
       ok: true,
       ...buildTaxReadinessReport(),
       boundary: taxModuleBoundaryNote(),
       static_report: getTaxStaticReportSlot(),
+      static_reports,
     });
     return true;
   }
 
   if (pathname === "/chat/v1/tax/digest" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
+    const static_reports = getTaxStaticReportSlots();
     json(res, 200, {
       ok: true,
       static_report: getTaxStaticReportSlot(),
+      static_reports,
       boundary: taxModuleBoundaryNote(),
     });
     return true;
@@ -127,12 +134,14 @@ export async function handleTaxApi(
 
   if (pathname === "/chat/v1/tax/handoff" && method === "GET") {
     if (!requireChatPermission(user, "chat:read", res)) return true;
+    const static_reports = getTaxStaticReportSlots();
     json(res, 200, {
       ok: true,
       boundary: taxModuleBoundaryNote(),
       readiness: buildTaxReadinessReport(),
       submission: "not-for-etax",
       static_report: getTaxStaticReportSlot(),
+      static_reports,
     });
     return true;
   }

@@ -1,21 +1,24 @@
-# ADR 0072 — Console static CLI tabs (tax / contracts / sales)
+# ADR 0072 — Console static CLI tabs + static-top live-scroll
 
-- **Status:** Accepted
+- **Status:** Accepted (amended)
 - **Date:** 2026-09-06
-- **Context:** Operator Console の税務・契約・顧客タブはライブ JSON 中心で、経営ホーム（ADR 0065）のような CLI→MD 一次面が無かった。分析は既に `orgos analytics snapshot` がある（ADR 0046）。
+- **Context:** Operator Console の税務・契約・顧客タブはライブ JSON 中心で、経営ホーム（ADR 0065）のような CLI→MD 一次面が無かった。分析は既に `orgos analytics snapshot` がある（ADR 0046）。一次面追加後もライブ面を `<details>` 折りたたみに閉じると、スクロール到達までは読み取らないが UI 上は隠れているだけだった。
 
 ## Decision
 
-1. **税務** — `orgos tax digest [--write]` が `docs/reports/tax/tax-digest-YYYY-MM-DD.md` を書く（calendar + gaps + readiness、L1）。`GET /chat/v1/tax/digest`（および readiness/handoff）に `static_report`。TaxHandoff は MD 主面、ライブ操作は折りたたみ。
-2. **契約** — `orgos contracts digest [--write]` → `docs/reports/contracts/status-YYYY-MM-DD.md`。`GET /chat/v1/contracts/status` に `static_report`。ContractsPage は MD 主面。
-3. **営業 CRM** — `orgos sales digest --write` → `docs/reports/sales/digest-YYYY-MM-DD.md`。`GET /chat/v1/customers/crm-dashboard` に `static_report`。CustomersWorkbench は概要 MD 主面、各ボードはライブ二次。
-4. **Allowlist** — `readAgentSummaryBody` が `docs/reports/{tax,contracts,sales}/` と `docs/analytics/snapshots/`（flat）を許可。executive-notes 等は拒否のまま。
+1. **税務** — `orgos tax digest [--period weekly|monthly] [--write]` が `docs/reports/tax/{weekly|monthly}-…` を書く（旧 `tax-digest-YYYY-MM-DD.md` は後方互換で読む）。`GET /chat/v1/tax/digest`（および readiness/handoff）に `static_report` + `static_reports`（weekly/monthly）。
+2. **契約** — `orgos contracts digest [--period …] [--write]` → `docs/reports/contracts/`。`GET /chat/v1/contracts/status` に静的スロット。
+3. **営業 CRM** — `orgos sales digest [--period …] --write` → `docs/reports/sales/`。`GET /chat/v1/customers/crm-dashboard` に静的スロット。
+4. **帳簿 / 予算 / 組織** — 同型の `orgos {ledger|budget|org} digest --period weekly|monthly --write` → `docs/reports/{ledger,budget,org}/`。
+5. **Allowlist** — `readAgentSummaryBody` が `docs/reports/{tax,contracts,sales,analytics,ledger,budget,org}/` と `docs/analytics/snapshots/`（flat）を許可。executive-notes 等は拒否のまま。
+6. **Static-top + live-scroll（Scope A）** — 対象ページ（経営・帳簿・税・予実/財布・契約・顧客・組織図）は **上段** に週次/月次 MD（`StaticDigestHeader` + `StaticReportPanel`）、**下段** に `LiveSection`（IntersectionObserver・一度だけ取得）。ライブ面の `<details>` 折りたたみは外す。除外: 承認・Wire・チャット・取引・実行（runs）。
+7. **経営ホーム API 分割** — `GET /chat/v1/executive/home` は `static_reports` + 軽量メタ。`GET /chat/v1/executive/home/live` が attention / gaps / work / KPI / variance。
 
 ## Consequences
 
 - 空スロットは `generate_hint` で CLI を案内する（経営タブと同型）。
 - ダイジェスト書込は `requireCliReportWrite`（`agent:report`）。
-- 帳簿・承認・Wire 等の mutation 面は対象外。
+- ライブ取得はスクロール到達まで遅延し、初回のみ（`once`）。
 
 ## Related
 

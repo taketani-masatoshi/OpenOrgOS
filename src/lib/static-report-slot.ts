@@ -8,6 +8,13 @@ import type { ExecutiveStaticReportSlot } from "../../schemas/executive-home.js"
 import { readAgentSummaryBody } from "./agent-inbox.js";
 import { getWorkspaceRoot } from "./orgos-paths.js";
 import { getDocsReportsDir } from "./utils.js";
+import {
+  loadPeriodDigestSlots,
+  preferPeriodSlot,
+  type DigestPeriod,
+} from "./period-digest-slot.js";
+
+export type { DigestPeriod };
 
 export type StaticReportSlot = ExecutiveStaticReportSlot;
 
@@ -90,32 +97,113 @@ export function loadLatestDatedReportSlot(opts: {
   }
 }
 
-export function loadTaxDigestSlot(): StaticReportSlot {
-  return loadLatestDatedReportSlot({
+export function loadTaxDigestSlots(): { weekly: StaticReportSlot; monthly: StaticReportSlot } {
+  return loadPeriodDigestSlots({
     reportsSubdir: "tax",
-    pattern: /^tax-digest-(\d{4}-\d{2}-\d{2})\.md$/,
     emptyTitle: "税務ダイジェスト",
-    generate_hint: "orgos tax digest --write",
-    titleFallback: (asOf) => `税務ダイジェスト — ${asOf}`,
+    generateHintWeekly: "orgos tax digest --period weekly --write",
+    generateHintMonthly: "orgos tax digest --period monthly --write",
+    titleFallback: (period, asOf) =>
+      period === "weekly" ? `税務週次 — ${asOf}` : `税務月次 — ${asOf}`,
+    legacyPatterns: [/^tax-digest-(\d{4}-\d{2}-\d{2})\.md$/],
+    legacyHint: "orgos tax digest --write",
+  });
+}
+
+export function loadTaxDigestSlot(): StaticReportSlot {
+  return preferPeriodSlot(loadTaxDigestSlots());
+}
+
+export function loadContractsDigestSlots(): {
+  weekly: StaticReportSlot;
+  monthly: StaticReportSlot;
+} {
+  return loadPeriodDigestSlots({
+    reportsSubdir: "contracts",
+    emptyTitle: "契約ステータス",
+    generateHintWeekly: "orgos contracts digest --period weekly --write",
+    generateHintMonthly: "orgos contracts digest --period monthly --write",
+    titleFallback: (period, asOf) =>
+      period === "weekly" ? `契約週次 — ${asOf}` : `契約月次 — ${asOf}`,
+    legacyPatterns: [/^status-(\d{4}-\d{2}-\d{2})\.md$/],
+    legacyHint: "orgos contracts digest --write",
   });
 }
 
 export function loadContractsDigestSlot(): StaticReportSlot {
-  return loadLatestDatedReportSlot({
-    reportsSubdir: "contracts",
-    pattern: /^status-(\d{4}-\d{2}-\d{2})\.md$/,
-    emptyTitle: "契約ステータス",
-    generate_hint: "orgos contracts digest --write",
-    titleFallback: (asOf) => `契約ステータス — ${asOf}`,
+  return preferPeriodSlot(loadContractsDigestSlots());
+}
+
+export function loadSalesDigestSlots(): {
+  weekly: StaticReportSlot;
+  monthly: StaticReportSlot;
+} {
+  return loadPeriodDigestSlots({
+    reportsSubdir: "sales",
+    emptyTitle: "営業ダイジェスト",
+    generateHintWeekly: "orgos sales digest --period weekly --write",
+    generateHintMonthly: "orgos sales digest --period monthly --write",
+    titleFallback: (period, asOf) =>
+      period === "weekly" ? `営業週次 — ${asOf}` : `営業月次 — ${asOf}`,
+    legacyPatterns: [/^digest-(\d{4}-\d{2}-\d{2})\.md$/],
+    legacyHint: "orgos sales digest --write",
   });
 }
 
 export function loadSalesDigestSlot(): StaticReportSlot {
-  return loadLatestDatedReportSlot({
-    reportsSubdir: "sales",
-    pattern: /^digest-(\d{4}-\d{2}-\d{2})\.md$/,
-    emptyTitle: "営業ダイジェスト",
-    generate_hint: "orgos sales digest --write",
-    titleFallback: (asOf) => `営業ダイジェスト — ${asOf}`,
+  return preferPeriodSlot(loadSalesDigestSlots());
+}
+
+export function loadLedgerDigestSlots(): {
+  weekly: StaticReportSlot;
+  monthly: StaticReportSlot;
+} {
+  return loadPeriodDigestSlots({
+    reportsSubdir: "ledger",
+    emptyTitle: "帳簿ダイジェスト",
+    generateHintWeekly: "orgos ledger digest --period weekly --write",
+    generateHintMonthly: "orgos ledger digest --period monthly --write",
+    titleFallback: (period, asOf) =>
+      period === "weekly" ? `帳簿週次 — ${asOf}` : `帳簿月次 — ${asOf}`,
   });
+}
+
+export function loadLedgerDigestSlot(): StaticReportSlot {
+  return preferPeriodSlot(loadLedgerDigestSlots());
+}
+
+export function loadBudgetDigestSlots(): {
+  weekly: StaticReportSlot;
+  monthly: StaticReportSlot;
+} {
+  return loadPeriodDigestSlots({
+    reportsSubdir: "budget",
+    emptyTitle: "予算ダイジェスト",
+    generateHintWeekly: "orgos budget digest --period weekly --write",
+    generateHintMonthly: "orgos budget digest --period monthly --write",
+    titleFallback: (period, asOf) =>
+      period === "weekly" ? `予算週次 — ${asOf}` : `予算月次 — ${asOf}`,
+  });
+}
+
+export function loadBudgetDigestSlot(): StaticReportSlot {
+  return preferPeriodSlot(loadBudgetDigestSlots());
+}
+
+export function loadOrgDigestSlots(): {
+  weekly: StaticReportSlot;
+  monthly: StaticReportSlot;
+} {
+  return loadPeriodDigestSlots({
+    reportsSubdir: "org",
+    emptyTitle: "組織ダイジェスト",
+    generateHintWeekly: "orgos org digest --period weekly --write",
+    generateHintMonthly: "orgos org digest --period monthly --write",
+    titleFallback: (period, asOf) =>
+      period === "weekly" ? `組織週次 — ${asOf}` : `組織月次 — ${asOf}`,
+  });
+}
+
+export function loadOrgDigestSlot(): StaticReportSlot {
+  return preferPeriodSlot(loadOrgDigestSlots());
 }

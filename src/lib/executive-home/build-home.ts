@@ -4,10 +4,14 @@
  * ADR: docs/adr/0065-executive-home-console.md
  */
 import {
+  executiveHomeLiveSchema,
   executiveHomeSchema,
+  executiveHomeStaticSchema,
   type ExecutiveAttentionItem,
   type ExecutiveGapRow,
   type ExecutiveHome,
+  type ExecutiveHomeLive,
+  type ExecutiveHomeStatic,
   type ExecutiveWorkItem,
 } from "../../../schemas/executive-home.js";
 import { buildTodayContext } from "../steward-chat/today-context.js";
@@ -279,7 +283,18 @@ function collectWork(): ExecutiveHome["work"] {
   return buckets;
 }
 
-export function buildExecutiveHome(): ExecutiveHome {
+export function buildExecutiveHomeStatic(): ExecutiveHomeStatic {
+  const today = buildTodayContext();
+  return executiveHomeStaticSchema.parse({
+    ok: true as const,
+    tenant: today.tenant,
+    report_date: today.report_date,
+    company_name: today.company_name,
+    static_reports: loadExecutiveStaticReports(),
+  });
+}
+
+export function buildExecutiveHomeLive(): ExecutiveHomeLive {
   const today = buildTodayContext();
   const attention = collectAttention(today);
   const kpi = buildKpiScorecardView({
@@ -294,7 +309,7 @@ export function buildExecutiveHome(): ExecutiveHome {
     work.ai.length +
     work.unassigned.length;
 
-  let variance: ExecutiveHome["variance"];
+  let variance: ExecutiveHomeLive["variance"];
   try {
     const fy = kpi.fiscal_year || "FY2026";
     const report = computeVarianceReport(fy);
@@ -309,12 +324,11 @@ export function buildExecutiveHome(): ExecutiveHome {
     variance = undefined;
   }
 
-  return executiveHomeSchema.parse({
+  return executiveHomeLiveSchema.parse({
     ok: true as const,
     tenant: today.tenant,
     report_date: today.report_date,
     company_name: today.company_name,
-    static_reports: loadExecutiveStaticReports(),
     attention,
     attention_count: attention.length,
     gaps,
@@ -328,5 +342,15 @@ export function buildExecutiveHome(): ExecutiveHome {
       label: agentSummaryLabel(path),
     })),
     variance,
+  });
+}
+
+/** Full compose for tests / callers that still want one shot. */
+export function buildExecutiveHome(): ExecutiveHome {
+  const staticHome = buildExecutiveHomeStatic();
+  const live = buildExecutiveHomeLive();
+  return executiveHomeSchema.parse({
+    ...staticHome,
+    ...live,
   });
 }

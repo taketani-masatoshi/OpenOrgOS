@@ -60,6 +60,10 @@ export const ALLOWED_SUMMARY_PREFIXES = [
   "tax/",
   "contracts/",
   "sales/",
+  "analytics/",
+  "ledger/",
+  "budget/",
+  "org/",
 ] as const;
 
 /** Flat MD under tenant docs/analytics/snapshots/ (`orgos analytics snapshot`). */
@@ -268,7 +272,7 @@ export function readAgentSummaryBody(relPath: string): string {
 
   if (!ALLOWED_SUMMARY_PREFIXES.some((p) => underReports.startsWith(p))) {
     throw new Error(
-      "summary path must be under docs/reports/{agent-summaries,routing-queue,dashboard,executive-brief,monthly,tax,contracts,sales}/ or docs/analytics/snapshots/"
+      "summary path must be under docs/reports/{agent-summaries,routing-queue,dashboard,executive-brief,monthly,tax,contracts,sales,analytics,ledger,budget,org}/ or docs/analytics/snapshots/"
     );
   }
 

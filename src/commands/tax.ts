@@ -228,10 +228,16 @@ export function runTaxGapResolveCommand(opts: {
 }): void {
   runTaxGapResolve(opts);
 }
-export function runTaxDigest(opts?: { write?: boolean; today?: string; json?: boolean }): void {
+export function runTaxDigest(opts?: {
+  write?: boolean;
+  today?: string;
+  json?: boolean;
+  period?: "weekly" | "monthly";
+}): void {
+  const period = opts?.period ?? "weekly";
   if (opts?.write) {
     requireCliReportWrite("tax digest");
-    const result = writeTaxDigest({ today: opts.today });
+    const result = writeTaxDigest({ today: opts.today, period });
     if (opts.json) {
       console.log(JSON.stringify({ ok: true, ...result }, null, 2));
       return;
@@ -240,9 +246,9 @@ export function runTaxDigest(opts?: { write?: boolean; today?: string; json?: bo
     console.log(result.markdown);
     return;
   }
-  const markdown = buildTaxDigestMarkdown({ today: opts?.today });
+  const markdown = buildTaxDigestMarkdown({ today: opts?.today, period });
   if (opts?.json) {
-    console.log(JSON.stringify({ ok: true, markdown }, null, 2));
+    console.log(JSON.stringify({ ok: true, markdown, period }, null, 2));
     return;
   }
   console.log(markdown);

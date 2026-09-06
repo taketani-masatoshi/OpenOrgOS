@@ -12,10 +12,23 @@ import {
   formatSalesPipelineMarkdown,
 } from "../sales-pipeline-view.js";
 import { currentDate, writeMarkdownReport } from "../utils.js";
-import { loadSalesDigestSlot, type StaticReportSlot } from "../static-report-slot.js";
+import {
+  loadSalesDigestSlot,
+  loadSalesDigestSlots,
+  type StaticReportSlot,
+} from "../static-report-slot.js";
+import {
+  monthTokenFromAsOf,
+  periodDigestFilename,
+  type DigestPeriod,
+} from "../period-digest-slot.js";
 
-export function buildSalesDigestMarkdown(opts?: { asOf?: string }): string {
+export function buildSalesDigestMarkdown(opts?: {
+  asOf?: string;
+  period?: DigestPeriod;
+}): string {
   const as_of = opts?.asOf?.trim() || currentDate();
+  const period = opts?.period ?? "weekly";
   const pipeline = buildSalesPipelineView({ includeDemo: false });
   const inbound = buildSalesInboundView({ includeDemo: false });
   const crm = buildSalesCrmDashboardView();
@@ -25,9 +38,12 @@ export function buildSalesDigestMarkdown(opts?: { asOf?: string }): string {
   } catch {
     csBlock = "_顧客成功ビューは未利用またはモジュール未導入。_";
   }
+  const label = period === "weekly" ? "営業週次" : "営業月次";
 
   const lines = [
-    `# 営業ダイジェスト — ${as_of}`,
+    `# ${label} — ${as_of}`,
+    "",
+    `**期間:** ${period}`,
     "",
     "**境界:** L1 件数・段階・期限のみ。本文・個人連絡先は含めない。",
     "",
@@ -50,17 +66,31 @@ export function buildSalesDigestMarkdown(opts?: { asOf?: string }): string {
   return lines.join("\n");
 }
 
-export function writeSalesDigest(opts?: { asOf?: string }): {
+export function writeSalesDigest(opts?: {
+  asOf?: string;
+  period?: DigestPeriod;
+}): {
   path: string;
   as_of: string;
   markdown: string;
+  period: DigestPeriod;
 } {
   const as_of = opts?.asOf?.trim() || currentDate();
-  const markdown = buildSalesDigestMarkdown({ asOf: as_of });
-  const path = writeMarkdownReport("sales", `digest-${as_of}.md`, markdown);
-  return { path, as_of, markdown };
+  const period = opts?.period ?? "weekly";
+  const markdown = buildSalesDigestMarkdown({ asOf: as_of, period });
+  const token = period === "monthly" ? monthTokenFromAsOf(as_of) : as_of;
+  const filename = periodDigestFilename(period, token);
+  const path = writeMarkdownReport("sales", filename, markdown);
+  return { path, as_of: token, markdown, period };
 }
 
 export function getSalesStaticReportSlot(): StaticReportSlot {
   return loadSalesDigestSlot();
+}
+
+export function getSalesStaticReportSlots(): {
+  weekly: StaticReportSlot;
+  monthly: StaticReportSlot;
+} {
+  return loadSalesDigestSlots();
 }

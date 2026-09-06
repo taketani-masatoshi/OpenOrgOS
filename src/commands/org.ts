@@ -17,7 +17,11 @@ import { getOrgAuditBridgeConfigPath } from "../lib/org/paths.js";
 import { listAuditEvents } from "../lib/audit-log.js";
 import { orgAuditBridgeConfigSchema, orgAuditBridgeRecommendedConfig } from "../../schemas/org/audit-bridge.js";
 import { writeYamlFile } from "../lib/utils.js";
-import { requireCliConfigWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
+import { requireCliConfigWrite, requireCliHumanApproval, requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+import {
+  buildOrgDigestMarkdown,
+  writeOrgDigest,
+} from "../lib/org/org-digest.js";
 import {
   assertCorrespondenceReviewAcknowledged,
   CorrespondenceReviewRequiredError,
@@ -260,4 +264,31 @@ export function runOrgAuditBridge(opts: OrgAuditBridgeOptions): void {
     return;
   }
   console.log(`✓ bridged ${bridged}/${events.length} operational audit event(s) to audit-chain`);
+}
+
+
+export function runOrgDigest(opts?: {
+  write?: boolean;
+  asOf?: string;
+  json?: boolean;
+  period?: "weekly" | "monthly";
+}): void {
+  const period = opts?.period ?? "weekly";
+  if (opts?.write) {
+    requireCliReportWrite("org digest");
+    const result = writeOrgDigest({ asOf: opts.asOf, period });
+    if (opts.json) {
+      console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+      return;
+    }
+    console.log(`✓ Org digest: ${result.path}`);
+    console.log(result.markdown);
+    return;
+  }
+  const markdown = buildOrgDigestMarkdown({ asOf: opts?.asOf, period });
+  if (opts?.json) {
+    console.log(JSON.stringify({ ok: true, markdown, period }, null, 2));
+    return;
+  }
+  console.log(markdown);
 }
