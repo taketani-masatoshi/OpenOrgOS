@@ -43,6 +43,9 @@ import { mergeCustomerAccounts } from "../lib/sales-account-merge.js";
 import { loadMailTriageQueue } from "../lib/correspondence/mail-triage-queue.js";
 import type { SalesInquiryStatus } from "../../schemas/sales.js";
 
+import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+import { buildSalesDigestMarkdown, writeSalesDigest } from "../lib/sales/sales-digest.js";
+
 export function runSalesList(options?: {
   stage?: string;
   openOnly?: boolean;
@@ -586,3 +589,22 @@ export const SALES_DEAL_STAGES: SalesDealStage[] = [
   "won",
   "lost",
 ];
+export function runSalesDigest(opts?: { write?: boolean; json?: boolean }): void {
+  if (opts?.write) {
+    requireCliReportWrite("sales digest");
+    const result = writeSalesDigest();
+    if (opts.json) {
+      console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+      return;
+    }
+    console.log(`✓ Sales digest: ${result.path}`);
+    console.log(result.markdown);
+    return;
+  }
+  const markdown = buildSalesDigestMarkdown();
+  if (opts?.json) {
+    console.log(JSON.stringify({ ok: true, markdown }, null, 2));
+    return;
+  }
+  console.log(markdown);
+}

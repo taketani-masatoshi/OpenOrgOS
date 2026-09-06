@@ -14,6 +14,7 @@ import {
   runContractsList,
   runContractsShow,
   runContractsSummary,
+  runContractsDigest,
   CONTRACT_TYPES,
 } from "../../commands/contracts.js";
 import {
@@ -48,6 +49,7 @@ import {
   runSalesCrmDashboard,
   runSalesFollowUpFromSent,
   runSalesAccountMerge,
+  runSalesDigest,
   SALES_DEAL_STAGES,
 } from "../../commands/sales.js";
 import {
@@ -80,6 +82,7 @@ import {
   runTaxInvoiceRegistrationCheck,
   runTaxQualifiedInvoiceCheck,
   runTaxReadiness,
+  runTaxDigest,
 } from "../../commands/tax.js";
 import {
   runExpenseClaimApprove,
@@ -350,6 +353,19 @@ export function registerDomainCommands(program: Command): void {
         json: Boolean(opts.json),
       })
     );
+  contracts
+    .command("digest")
+    .description("Write L1 contract status digest under docs/reports/contracts/")
+    .option("--days <n>", "Horizon days (default 90)", "90")
+    .option("--write", "Persist markdown report")
+    .option("--json", "Print JSON")
+    .action((opts: { days?: string; write?: boolean; json?: boolean }) =>
+      runContractsDigest({
+        days: opts.days ? Number(opts.days) : 90,
+        write: Boolean(opts.write),
+        json: Boolean(opts.json),
+      })
+    );
 
   const sales = program.command("sales").description("Sales pipeline and CRM SoT");
   sales
@@ -514,6 +530,18 @@ export function registerDomainCommands(program: Command): void {
     .description("Extended CRM dashboard (lead class, lost reasons, mail queue)")
     .option("--json", "Print JSON")
     .action((opts: { json?: boolean }) => runSalesCrmDashboard({ json: Boolean(opts.json) }));
+
+  sales
+    .command("digest")
+    .description("Write L1 sales CRM digest under docs/reports/sales/")
+    .option("--write", "Persist markdown report")
+    .option("--json", "Print JSON")
+    .action((opts: { write?: boolean; json?: boolean }) =>
+      runSalesDigest({
+        write: Boolean(opts.write),
+        json: Boolean(opts.json),
+      }),
+    );
 
   sales
     .command("migrate-accounts")
@@ -1059,6 +1087,20 @@ export function registerDomainCommands(program: Command): void {
     .description("Tax module practical readiness score (distinct from agent-readiness)")
     .option("--json", "Print JSON")
     .action((opts: { json?: boolean }) => runTaxReadiness({ json: Boolean(opts.json) }));
+
+  tax
+    .command("digest")
+    .description("L1 tax digest (calendar + gaps + readiness) under docs/reports/tax/")
+    .option("--today <YYYY-MM-DD>", "As-of date")
+    .option("--write", "Persist markdown report")
+    .option("--json", "Print JSON")
+    .action((opts: { today?: string; write?: boolean; json?: boolean }) =>
+      runTaxDigest({
+        today: opts.today,
+        write: Boolean(opts.write),
+        json: Boolean(opts.json),
+      }),
+    );
 
   tax
     .command("handoff")

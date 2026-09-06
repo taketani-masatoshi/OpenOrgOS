@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **Console 静的 CLI タブ（分析 → 税務 → 契約 → 営業）** — 経営タブと同型の **CLI → MD/YAML → WebUI**。分析は `snapshot-history` 月次表を主表示（ライブ KPI は二次・`orgos analytics snapshot` ヒント）。税務 `orgos tax digest --write` → `docs/reports/tax/`、契約 `orgos contracts digest --write` → `docs/reports/contracts/`、営業 `orgos sales digest --write` → `docs/reports/sales/`。BFF に `static_report` スロット。inbox allowlist に `tax/` · `contracts/` · `sales/` · `docs/analytics/snapshots/`。ADR 0046 追記 · 0072。
 - **Executive Home 静的レポート一次面（ADR 0065）** — パイプラインは **CLI → 静的 MD → WebUI 表示**。主タブは **週次・月次のみ**（既定は週次）。`orgos executive brief` / `orgos report monthly` が書いた MD を表示し、日次ダッシュボードは API スロットのみ（ライブ合成は折りたたみ）。`GET /chat/v1/executive/home` に `static_reports` を同梱。
 - **Direct HTTP / OData outbound（ADR 0071）** — Community OAuth を使わず財務 L1（`finance.monthly` · `invoice.issued`）を REST / OData v4 へ送る。設定は `data/integrations/http-outbound.yaml`、秘密は `data/secrets/http-outbound.env`（書込のみ）。CLI `orgos integrations http status|export`、コンソール Direct HTTP 区画、BFF `/chat/v1/integrations/http/*`（外向きは `chat:approve`）。
 - **X-Road REST Producer** — Security Server 向け `orgos protocol gov-gateway serve`。ネイティブ `X-Road-*` ヘッダ + OpenOrgOS MIME を受信し Wire ingest、成功時に notice-ack。未知 client は 403、decode 失敗は 422。OpenAPI `publish/protocol/xroad-notice-deliver.openapi.yaml`。SOAP は対象外。

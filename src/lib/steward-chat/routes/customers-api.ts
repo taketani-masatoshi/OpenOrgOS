@@ -19,6 +19,7 @@ import { readJsonLimited } from "../../http/read-json-limited.js";
 import { setDealStage, setDealNextAction } from "../../sales-deal-service.js";
 import { promoteInquiryToDeal } from "../../sales-handoff.js";
 import type { SalesDealStage, SalesLostReason } from "../../../../schemas/sales.js";
+import { getSalesStaticReportSlot } from "../../sales/sales-digest.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -111,6 +112,7 @@ export async function handleCustomersApi(
       ok: true,
       gate: gatePayload(),
       view: buildSalesCrmDashboardView(),
+      static_report: getSalesStaticReportSlot(),
     });
     return true;
   }

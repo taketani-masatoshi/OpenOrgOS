@@ -3,6 +3,7 @@ import { useCopy } from "@ops-shared/define-copy";
 import {
   fetchCustomersAfterSales,
   fetchCustomersChurn,
+  fetchCustomersCrmDashboard,
   fetchCustomersInbound,
   fetchCustomersNav,
   fetchCustomersOutbound,
@@ -12,8 +13,10 @@ import {
   postCustomersDealSetStage,
   postCustomersInquiryPromote,
   type CustomersNavGate,
+  type ExecutiveStaticReportSlot,
 } from "./api";
 import { OpsPage } from "./OpsPage";
+import { StaticReportPanel } from "./StaticReportPanel";
 import { STEWARD_COPY } from "./steward-copy";
 
 export type CustomersWorkbenchView =
@@ -66,6 +69,9 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
   const copy = useCopy(STEWARD_COPY);
   const [gate, setGate] = useState<CustomersNavGate | null>(null);
   const [payload, setPayload] = useState<unknown>(null);
+  const [staticReport, setStaticReport] = useState<ExecutiveStaticReportSlot | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -75,7 +81,14 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
       setGate(nav);
       if (!nav.show_tab) {
         setPayload(null);
+        setStaticReport(null);
         return;
+      }
+      try {
+        const crm = await fetchCustomersCrmDashboard();
+        setStaticReport(crm.static_report ?? null);
+      } catch {
+        setStaticReport(null);
       }
       if (view === "customers-outbound") {
         setPayload(await fetchCustomersOutbound());
@@ -136,6 +149,21 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
       {gate?.sales_agent_grace && view.startsWith("customers-") && !gate.sales_module_installed ? (
         <p className="ops-card muted">{copy.customersSalesGrace}</p>
       ) : null}
+      <section className="ops-card outlook-panel">
+        <h2 className="section-title">営業ダイジェスト</h2>
+        <StaticReportPanel
+          slot={
+            staticReport ?? {
+              path: null,
+              title: "営業ダイジェスト",
+              as_of: null,
+              markdown: null,
+              generate_hint: "orgos sales digest --write",
+            }
+          }
+          emptyLabel="ダイジェストがありません。orgos sales digest --write を実行してください。"
+        />
+      </section>
       {locked ? (
         <section className="ops-card">
           <p>{(payload as LockedPayload).message ?? copy.customersModuleLocked}</p>
@@ -145,7 +173,10 @@ export function CustomersWorkbenchPage({ view }: { view: CustomersWorkbenchView 
         </section>
       ) : null}
       {!locked && payload ? (
-        <CustomersPanel view={view} payload={payload} copy={copy} onReload={load} />
+        <details className="ops-card executive-live-details" open>
+          <summary className="section-title">ライブボード</summary>
+          <CustomersPanel view={view} payload={payload} copy={copy} onReload={load} />
+        </details>
       ) : null}
       <p className="section-cta">
         <a href="/steward/" className="btn btn-ghost btn-sm">

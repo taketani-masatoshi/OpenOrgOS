@@ -59,6 +59,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0069](0069-audit-framework-iso-financial-jsox.md) | 監査枠組みの展開（ISO 全 available · 会計アサーション · J-SOX） | Accepted |
 | [0070](0070-console-saas-connectors.md) | Operator Console の SaaS コネクタ（Slack / Asana / Gmail / Drive） | Accepted |
 | [0071](0071-direct-http-outbound-connectors.md) | Direct HTTP / OData outbound（財務 L1 · Community OAuth 非経由） | Accepted |
+| [0072](0072-console-static-cli-tabs.md) | Console 静的 CLI タブ（税務 · 契約 · 営業 digest · 分析 snapshot 主面） | Accepted |
 
 ## 新規 ADR
 
