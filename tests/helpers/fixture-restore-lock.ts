@@ -51,3 +51,23 @@ export function shouldPruneSnapshotDir(
   if (Number.isInteger(pid) && pid > 0 && pid === opts.selfPid) return "keep-self";
   return "prune";
 }
+
+/**
+ * Shared tenant fixtures are not isolated per vitest process. A second live
+ * run on the same worktree must be refused (or explicitly allowed).
+ */
+export function concurrentVitestPolicy(
+  foreignPids: number[],
+  allowConcurrent = process.env.ORGOS_TEST_ALLOW_CONCURRENT === "1",
+): "ok" | "warn" | "refuse" {
+  if (foreignPids.length === 0) return "ok";
+  return allowConcurrent ? "warn" : "refuse";
+}
+
+export function concurrentVitestMessage(foreignPids: number[]): string {
+  return [
+    `${foreignPids.length} other vitest run(s) active on this worktree (pid ${foreignPids.join(", ")}).`,
+    "Shared tenant fixtures are not isolated — finish the other run, use a dedicated worktree,",
+    "or set ORGOS_TEST_ALLOW_CONCURRENT=1 to continue with a warning.",
+  ].join(" ");
+}

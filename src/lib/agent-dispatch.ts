@@ -346,6 +346,8 @@ async function runCursorTask(
             ...baseOpts,
             cloud: { repository: cloudCfg.cloud.repository, ref: cloudCfg.cloud.ref ?? "main" },
           })
+        // Business AIA on the tenant workspace. This is not a development
+        // Agent checkout: do not redirect to a Git worktree here.
         : await Agent.prompt(prompt, { ...baseOpts, local: { cwd: ROOT_DIR } });
 
     pushQueueEvent({

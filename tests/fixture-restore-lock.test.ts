@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  concurrentVitestPolicy,
   isLockAbandoned,
   parseLockOwnerText,
   shouldPruneSnapshotDir,
@@ -78,5 +79,11 @@ describe("fixture restore lock helpers", () => {
         processExists: () => false,
       }),
     ).toBe("prune");
+  });
+
+  it("refuses a second live vitest unless explicitly allowed", () => {
+    expect(concurrentVitestPolicy([])).toBe("ok");
+    expect(concurrentVitestPolicy([12, 34], false)).toBe("refuse");
+    expect(concurrentVitestPolicy([12], true)).toBe("warn");
   });
 });

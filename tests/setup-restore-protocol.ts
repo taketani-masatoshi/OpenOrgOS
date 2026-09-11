@@ -14,6 +14,8 @@ import {
 import { dirname, join, relative } from "node:path";
 import { threadId } from "node:worker_threads";
 import {
+  concurrentVitestMessage,
+  concurrentVitestPolicy,
   isLockAbandoned,
   parseLockOwnerText,
   shouldPruneSnapshotDir,
@@ -239,16 +241,18 @@ function pruneOrphanSnapshots(): number[] {
 }
 
 /**
- * Fixture restore is serialized, but test bodies are not: two vitest runs on one
- * worktree still race on shared tenant files. Surface it instead of leaving
- * unexplained cross-run failures.
+ * Fixture restore is serialized, but test bodies still share tenant files.
+ * Refuse a second live run unless ORGOS_TEST_ALLOW_CONCURRENT=1.
  */
-function warnOnConcurrentRuns(foreignPids: number[]): void {
-  if (foreignPids.length === 0) return;
-  console.warn(
-    `⚠ ${foreignPids.length} other vitest run(s) active on this worktree (pid ${foreignPids.join(", ")}). ` +
-      "Shared tenant fixtures may race — run suites sequentially for reliable results."
-  );
+function refuseConcurrentRuns(foreignPids: number[]): void {
+  const policy = concurrentVitestPolicy(foreignPids);
+  if (policy === "ok") return;
+  const message = concurrentVitestMessage(foreignPids);
+  if (policy === "warn") {
+    console.warn(`⚠ ${message}`);
+    return;
+  }
+  throw new Error(message);
 }
 
 /** Tenants whose generated agent-mission YAML must not accumulate across tests. */
@@ -417,7 +421,7 @@ function resetStripeSecretsStore(): void {
 }
 
 beforeAll(() => {
-  warnOnConcurrentRuns(pruneOrphanSnapshots());
+  refuseConcurrentRuns(pruneOrphanSnapshots());
   buildFixtureSnapshot();
   cleanGeneratedAgentMissions();
 });
