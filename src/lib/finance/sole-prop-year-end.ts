@@ -109,8 +109,33 @@ export function unlockedCalendarMonths(
   });
 }
 
+/** CY remittance JEs that debit 預り金 (source.kind=remittance · obligation=withholding). */
+export function remittedWithholdingYen(year: number, payableCode: string): number {
+  let sum = 0;
+  for (const e of loadJournalEntries().entries) {
+    const src = e.source;
+    if (src?.kind !== "remittance" || src.obligation !== "withholding") continue;
+    const day = businessCalendarDay(e.occurred_at);
+    if (!day.startsWith(`${year}-`)) continue;
+    for (const line of e.lines) {
+      if (line.account_code === payableCode) sum += line.debit_yen;
+    }
+  }
+  return sum;
+}
+
+/**
+ * Unpaid withholding: YAML accruals minus remittance JEs, vs GL 預り金.
+ * Does not prove that expense-side accrual JEs exist.
+ */
 export function reconcileWithholdingVsGl(year: number): {
+  yaml_accrued_yen: number;
+  /** @deprecated alias of yaml_accrued_yen */
   yaml_total_yen: number;
+  remitted_yen: number;
+  expected_unpaid_yen: number;
+  gl_unpaid_yen: number;
+  /** @deprecated alias of gl_unpaid_yen */
   gl_yen: number;
   delta_yen: number;
   payable_code: string;
@@ -118,15 +143,22 @@ export function reconcileWithholdingVsGl(year: number): {
   const coa = loadChartOfAccounts();
   const payable_code = coa.journal_source_accounts?.withholding_payable ?? "2120";
   const payments = filterPaymentsForYear(loadWithholdingPayments(), year);
-  const yaml_total_yen = payments.reduce(
+  const yaml_accrued_yen = payments.reduce(
     (s, p) => s + resolvePaymentAmounts(p).withholding_yen,
     0,
   );
-  const gl_yen = tbBalanceYen(payable_code, `${year}-12-31`);
+  const remitted_yen = remittedWithholdingYen(year, payable_code);
+  const expected_unpaid_yen = yaml_accrued_yen - remitted_yen;
+  const rawGl = tbBalanceYen(payable_code, `${year}-12-31`);
+  const gl_unpaid_yen = rawGl === 0 ? 0 : rawGl;
   return {
-    yaml_total_yen,
-    gl_yen,
-    delta_yen: yaml_total_yen - gl_yen,
+    yaml_accrued_yen,
+    yaml_total_yen: yaml_accrued_yen,
+    remitted_yen,
+    expected_unpaid_yen,
+    gl_unpaid_yen,
+    gl_yen: gl_unpaid_yen,
+    delta_yen: expected_unpaid_yen - gl_unpaid_yen,
     payable_code,
   };
 }
@@ -204,8 +236,8 @@ export function assessSolePropYearEnd(calendarYear?: number): {
       code: "withholding_yaml_gl_mismatch",
       level: "warning",
       file: "data/finance/withholding-payments.yaml",
-      message: `源泉 YAML 合計 ${withholding.yaml_total_yen} vs GL ${withholding.payable_code} ${withholding.gl_yen}（差 ${withholding.delta_yen}）`,
-      hint: `orgos operations withholding reconcile --year ${year}`,
+      message: `源泉未納付 期待 ${withholding.expected_unpaid_yen} vs GL ${withholding.payable_code} ${withholding.gl_unpaid_yen}（発生 YAML ${withholding.yaml_accrued_yen} − 納付 JE ${withholding.remitted_yen}、差 ${withholding.delta_yen}）`,
+      hint: `orgos operations withholding reconcile --year ${year}（納付は source.kind=remittance）`,
     });
   }
 

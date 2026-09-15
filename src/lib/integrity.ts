@@ -72,6 +72,7 @@ import { collectCustomerSuccessIntegrityIssues } from "./customer-success/integr
 import { collectAnalyticsIntegrityIssues } from "./analytics/integrity.js";
 import { collectRosterPayrollConsistencyIssues } from "./hr/roster-payroll-consistency.js";
 import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
+import { loadTenantConfig } from "./tenant.js";
 import {
   listOperationsModules,
   resolveModuleSecretsPath,
@@ -569,19 +570,30 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   const push = (level: IntegrityIssue["level"], file: string, message: string) =>
     issues.push({ level, file, message });
 
-  let data;
+  let data: ReturnType<typeof loadAllData> | undefined;
   try {
     data = loadAllData();
   } catch (e) {
-    push("error", "cross-reference", e instanceof Error ? e.message : String(e));
-    return issues;
+    let soleProp = false;
+    try {
+      soleProp = loadTenantConfig().entity_form === "sole_proprietorship";
+    } catch {
+      soleProp = false;
+    }
+    push(
+      soleProp ? "warning" : "error",
+      "cross-reference",
+      e instanceof Error ? e.message : String(e),
+    );
+    if (!soleProp) return issues;
   }
 
-  const propertyIds = new Set(data.properties.map((p) => p.id));
-  const propertyById = new Map(data.properties.map((p) => [p.id, p]));
-  const contractById = new Map(data.contracts.map((c) => [c.id, c]));
-  const loanById = new Map(data.loans.loans.map((l) => [l.id, l]));
+  const propertyIds = new Set(data?.properties.map((p) => p.id) ?? []);
+  const propertyById = new Map(data?.properties.map((p) => [p.id, p]) ?? []);
+  const contractById = new Map(data?.contracts.map((c) => [c.id, c]) ?? []);
+  const loanById = new Map(data?.loans.loans.map((l) => [l.id, l]) ?? []);
 
+  if (data) {
   for (const c of data.contracts) {
     if (c.property_id && !propertyIds.has(c.property_id)) {
       push("error", `data/contracts/${c.id}.yaml`, `property_id ${c.property_id} not found`);
@@ -630,6 +642,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
 
   for (const loan of data.loans.loans) {
     checkLoanRefs(loan, contractById, propertyById, push);
+  }
   }
 
   const yojitsu2026 = loadYojitsuPlan(2026);
@@ -722,10 +735,16 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   try {
     readYamlFile(getClassificationRegistryYaml(), classificationRegistrySchema);
   } catch (e) {
+    let soleProp = false;
+    try {
+      soleProp = loadTenantConfig().entity_form === "sole_proprietorship";
+    } catch {
+      soleProp = false;
+    }
     push(
-      "error",
+      soleProp ? "warning" : "error",
       "data/classification-registry.yaml",
-      e instanceof Error ? e.message : String(e)
+      e instanceof Error ? e.message : String(e),
     );
   }
 
@@ -813,8 +832,10 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   }
 
-  for (const ci of runClassificationChecks()) {
-    push(ci.severity, "data/classification-registry.yaml", ci.message);
+  if (existsSync(join(getDataDir(), "classification-registry.yaml"))) {
+    for (const ci of runClassificationChecks()) {
+      push(ci.severity, "data/classification-registry.yaml", ci.message);
+    }
   }
 
   for (const pci of validatePeerContactRegistry()) {
@@ -1098,7 +1119,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     issues.push(
       ...collectPmoIntegrityIssues({
         propertyIds,
-        contractIds: new Set(data.contracts.map((c) => c.id)),
+        contractIds: new Set((data?.contracts ?? []).map((c) => c.id)),
       })
     );
   } catch (e) {

@@ -29,7 +29,7 @@ ORGOS_TAX_RULES_WATCH=1 orgos operations sole-prop-blue rules-watch
 
 ## 期末（year-end）
 
-暦年の空月・未 lock・消費税仮受/仮払残・源泉 YAML↔GL は **warning**（季節・デモは `journal_coverage.acknowledge_empty_months: true`）。
+暦年の空月・未 lock・消費税仮受/仮払残・源泉 **未納付残**（YAML 発生 − `source.kind=remittance` 納付 JE vs GL 預り金）は **warning**（季節・デモは `journal_coverage.acknowledge_empty_months: true`）。
 
 ```bash
 orgos operations sole-prop-blue year-end-status --year YYYY

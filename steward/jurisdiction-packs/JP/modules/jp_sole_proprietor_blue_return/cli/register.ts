@@ -477,7 +477,7 @@ export const jp_sole_proprietor_blue_returnCli: ModuleCliBundle = {
           `  consumption net ${s.consumption.net_payable_yen} taxable=${s.consumption.taxable} reclass=${s.consumption.reclass_posted}`,
         );
         console.log(
-          `  withholding YAML ${s.withholding.yaml_total_yen} vs GL ${s.withholding.gl_yen} skipped=${s.withholding.skipped}`,
+          `  withholding unpaid expected ${s.withholding.expected_unpaid_yen} vs GL ${s.withholding.gl_unpaid_yen} (accrued ${s.withholding.yaml_accrued_yen} − remitted ${s.withholding.remitted_yen}) skipped=${s.withholding.skipped}`,
         );
         console.log(
           `  deductions missing=${s.deductions_missing} · baseline=${s.baseline_present}`,

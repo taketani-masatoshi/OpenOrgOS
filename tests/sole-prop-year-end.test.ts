@@ -16,18 +16,22 @@ import { unmappedBlueReturnExpenseCodes } from "../src/lib/finance/sole-propriet
 describe("sole-prop year-end process", () => {
   const setupRel = "data/finance/blue-return-setup.yaml";
   const journalRel = "data/finance/journal-entries.yaml";
+  const whRel = "data/finance/withholding-payments.yaml";
   let setupBackup: string;
   let journalBackup: string;
+  let whBackup: string;
 
   beforeEach(() => {
     setTenantId("_fixture-sole-prop");
     setupBackup = readFileSync(join(getTenantDir(), setupRel), "utf-8");
     journalBackup = readFileSync(join(getTenantDir(), journalRel), "utf-8");
+    whBackup = readFileSync(join(getTenantDir(), whRel), "utf-8");
   });
 
   afterEach(() => {
     writeFileSync(join(getTenantDir(), setupRel), setupBackup, "utf-8");
     writeFileSync(join(getTenantDir(), journalRel), journalBackup, "utf-8");
+    writeFileSync(join(getTenantDir(), whRel), whBackup, "utf-8");
   });
 
   it("lists Jan–Dec from books_start", () => {
@@ -118,11 +122,113 @@ describe("sole-prop year-end process", () => {
     expect(s.issues.every((i) => i.level === "warning")).toBe(true);
   });
 
-  it("reconciles withholding YAML vs GL as a numeric delta", () => {
+  it("reconciles unpaid withholding as YAML minus remittance vs GL", () => {
     const r = reconcileWithholdingVsGl(2026);
-    expect(typeof r.yaml_total_yen).toBe("number");
-    expect(typeof r.gl_yen).toBe("number");
-    expect(r.delta_yen).toBe(r.yaml_total_yen - r.gl_yen);
+    expect(r.expected_unpaid_yen).toBe(r.yaml_accrued_yen - r.remitted_yen);
+    expect(r.delta_yen).toBe(r.expected_unpaid_yen - r.gl_unpaid_yen);
+    expect(r.yaml_total_yen).toBe(r.yaml_accrued_yen);
+    expect(r.gl_yen).toBe(r.gl_unpaid_yen);
+  });
+
+  it("treats remittance JEs as reducing expected unpaid withholding", () => {
+    const setupPath = join(getTenantDir(), setupRel);
+    const whPath = join(getTenantDir(), whRel);
+    writeFileSync(
+      setupPath,
+      setupBackup.replace(
+        "has_withholding_outsourcing: false",
+        "has_withholding_outsourcing: true",
+      ),
+      "utf-8",
+    );
+    writeFileSync(
+      whPath,
+      `version: 1
+calendar_year: 2026
+payments:
+  - payment_id: WP-2026-TEST
+    payee_name: テスト外注
+    category: reward_fee
+    paid_at: "2026-06-10"
+    gross_yen: 10000
+    withholding_yen: 1021
+    expense_account_code: "5100"
+`,
+      "utf-8",
+    );
+
+    const yamlOnly = assessSolePropYearEnd(2026);
+    expect(yamlOnly.withholding.yaml_accrued_yen).toBe(1021);
+    expect(yamlOnly.withholding.remitted_yen).toBe(0);
+    expect(yamlOnly.issues.some((i) => i.code === "withholding_yaml_gl_mismatch")).toBe(
+      true,
+    );
+
+    appendJournalEntry(
+      journalEntrySchema.parse({
+        entry_id: "JE-WH-ACCRUE-TEST",
+        occurred_at: "2026-06-10T03:00:00.000Z",
+        description: "withholding accrue test",
+        source: { kind: "manual", authorized_by: "test" },
+        evidence_refs: ["test:wh-accrue"],
+        lines: [
+          {
+            account_code: "5100",
+            debit_yen: 1021,
+            credit_yen: 0,
+            tax_category: "out_of_scope",
+          },
+          {
+            account_code: "2120",
+            debit_yen: 0,
+            credit_yen: 1021,
+            tax_category: "out_of_scope",
+          },
+        ],
+      }),
+      { postedBy: "test" },
+    );
+    const accrued = reconcileWithholdingVsGl(2026);
+    expect(accrued.expected_unpaid_yen).toBe(1021);
+    expect(accrued.gl_unpaid_yen).toBe(1021);
+    expect(accrued.delta_yen).toBe(0);
+    expect(
+      assessSolePropYearEnd(2026).issues.some((i) => i.code === "withholding_yaml_gl_mismatch"),
+    ).toBe(false);
+
+    appendJournalEntry(
+      journalEntrySchema.parse({
+        entry_id: "JE-WH-REMIT-TEST",
+        occurred_at: "2026-07-10T03:00:00.000Z",
+        description: "withholding remit test",
+        source: {
+          kind: "remittance",
+          period: "2026-07",
+          obligation: "withholding",
+        },
+        evidence_refs: ["test:wh-remit"],
+        lines: [
+          {
+            account_code: "2120",
+            debit_yen: 1021,
+            credit_yen: 0,
+            tax_category: "out_of_scope",
+          },
+          {
+            account_code: "1100",
+            debit_yen: 0,
+            credit_yen: 1021,
+            tax_category: "out_of_scope",
+          },
+        ],
+      }),
+      { postedBy: "test" },
+    );
+    const afterRemit = reconcileWithholdingVsGl(2026);
+    expect(afterRemit.remitted_yen).toBe(1021);
+    expect(afterRemit.expected_unpaid_yen).toBe(0);
+    expect(afterRemit.gl_unpaid_yen).toBe(0);
+    expect(afterRemit.delta_yen).toBe(0);
   });
 
   it("warns expense CoA codes missing from blue-return map", () => {

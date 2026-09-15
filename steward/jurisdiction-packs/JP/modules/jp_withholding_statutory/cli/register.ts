@@ -84,7 +84,7 @@ export const jp_withholding_statutoryCli: ModuleCliBundle = {
 
     cmd
       .command("reconcile")
-      .description("Compare withholding-payments YAML totals vs GL 預り金 (read-only)")
+      .description("Compare unpaid withholding (YAML − remittance JE) vs GL 預り金")
       .option("--year <YYYY>", "Calendar year")
       .option("--json")
       .action((opts: { year?: string; json?: boolean }) => {
@@ -95,7 +95,7 @@ export const jp_withholding_statutoryCli: ModuleCliBundle = {
           return;
         }
         console.log(
-          `year ${year} · YAML ${r.yaml_total_yen.toLocaleString("ja-JP")} · GL ${r.payable_code} ${r.gl_yen.toLocaleString("ja-JP")} · 差 ${r.delta_yen.toLocaleString("ja-JP")}`,
+          `year ${year} · 発生 YAML ${r.yaml_accrued_yen.toLocaleString("ja-JP")} · 納付 ${r.remitted_yen.toLocaleString("ja-JP")} · 未納付期待 ${r.expected_unpaid_yen.toLocaleString("ja-JP")} · GL ${r.payable_code} ${r.gl_unpaid_yen.toLocaleString("ja-JP")} · 差 ${r.delta_yen.toLocaleString("ja-JP")}`,
         );
       });
   },

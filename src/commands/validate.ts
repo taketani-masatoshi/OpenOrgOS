@@ -61,18 +61,16 @@ export function runValidateReport(opts: ValidateOptions = {}): ValidateReport {
     };
   }
   let integrity: IntegrityIssue[] = [];
-  if (schema.ok) {
-    try {
-      integrity = runIntegrityChecks();
-    } catch (error) {
-      integrity = [
-        {
-          level: "error",
-          file: "cross-reference",
-          message: error instanceof Error ? error.message : String(error),
-        },
-      ];
-    }
+  try {
+    integrity = runIntegrityChecks();
+  } catch (error) {
+    integrity = [
+      {
+        level: "warning",
+        file: "cross-reference",
+        message: error instanceof Error ? error.message : String(error),
+      },
+    ];
   }
   let security: ReturnType<typeof runSecurityChecks> = [];
   if (opts.security) {
@@ -166,6 +164,15 @@ export function runValidate(opts: ValidateOptions = {}): void {
   for (const err of allErrors) {
     console.error(`  ${err.path}: ${err.message}`);
   }
+  printWarnings(
+    report.issues
+      .filter((issue) => issue.source === "integrity" && issue.severity === "warning")
+      .map((issue) => ({
+        level: "warning" as const,
+        file: issue.path,
+        message: issue.message,
+      })),
+  );
   process.exit(1);
 }
 

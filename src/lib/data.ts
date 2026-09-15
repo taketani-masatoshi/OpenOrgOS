@@ -113,6 +113,7 @@ import {
 import { collectPmoSchemaErrors } from "./pmo/load.js";
 import { collectAnalyticsSchemaErrors } from "./analytics/load.js";
 import { collectSalesIntegrityIssues } from "./sales-integrity.js";
+import { loadTenantConfig } from "./tenant.js";
 
 export interface StewardData {
   company: Company;
@@ -437,10 +438,17 @@ export interface FixedAssetConsistencyIssue {
 
 export function validateFixedAssetConsistency(): FixedAssetConsistencyIssue[] {
   const issues: FixedAssetConsistencyIssue[] = [];
+  if (!existsSync(join(getDataDir(), "finance", "fixed-assets.yaml"))) {
+    return issues;
+  }
   const fixedAssets = loadFixedAssets();
-  const expensePlan = loadExpensePlan();
+  const expensePlan = existsSync(join(getDataDir(), "plans", "expense-plan.yaml"))
+    ? loadExpensePlan()
+    : { years: [] as ReturnType<typeof loadExpensePlan>["years"] };
   const properties = loadProperties();
-  const loans = loadLoans();
+  const loans = existsSync(join(getDataDir(), "finance", "loans.yaml"))
+    ? loadLoans()
+    : { loans: [] as ReturnType<typeof loadLoans>["loans"] };
 
   const propertyById = new Map(properties.map((p) => [p.id, p]));
   const loanById = new Map(loans.loans.map((l) => [l.id, l]));
@@ -806,6 +814,19 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     }
   };
 
+  let soleProp = false;
+  try {
+    soleProp = loadTenantConfig().entity_form === "sole_proprietorship";
+  } catch {
+    soleProp = false;
+  }
+
+  /** Corp-oriented files: required for KK, optional when missing on sole-prop tenants. */
+  const tryLoadCorpFile = (file: string, relFromData: string, fn: () => void) => {
+    if (soleProp && !existsSync(join(getDataDir(), relFromData))) return;
+    tryLoad(file, fn);
+  };
+
   tryLoad("data/company.yaml", () => loadCompany());
 
   for (const f of listYamlFiles(join(getDataDir(), "properties"))) {
@@ -820,23 +841,37 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     tryLoad(toLogicalPath(f), () => readYamlFile(f, monthlyFinanceSchema));
   }
 
-  tryLoad("data/finance/fixed-costs.yaml", () => loadFixedCosts());
-  tryLoad("data/finance/payroll.yaml", () => loadPayroll());
+  tryLoadCorpFile("data/finance/fixed-costs.yaml", "finance/fixed-costs.yaml", () =>
+    loadFixedCosts(),
+  );
+  tryLoadCorpFile("data/finance/payroll.yaml", "finance/payroll.yaml", () => loadPayroll());
   tryLoad("data/finance/cash-balance.yaml", () => loadCashBalance());
-  tryLoad("data/finance/loans.yaml", () => loadLoans());
+  tryLoadCorpFile("data/finance/loans.yaml", "finance/loans.yaml", () => loadLoans());
   tryLoad("data/finance/fixed-assets.yaml", () => loadFixedAssets());
-  tryLoad("data/finance/tax-profile.yaml", () => loadTaxProfile());
+  tryLoadCorpFile("data/finance/tax-profile.yaml", "finance/tax-profile.yaml", () =>
+    loadTaxProfile(),
+  );
   if (existsSync(join(getDataDir(), "finance", "tax-filing-gaps.yaml"))) {
     tryLoad("data/finance/tax-filing-gaps.yaml", () => loadTaxFilingGaps());
   }
   tryLoad("data/finance/chart-of-accounts.yaml", () => loadChartOfAccounts());
-  tryLoad("data/plans/business-plan.yaml", () => loadBusinessPlan());
-  tryLoad("data/plans/property-revenue.yaml", () => loadPropertyRevenuePlan());
-  tryLoad("data/plans/revenue-plan.yaml", () => loadRevenuePlan());
-  tryLoad("data/plans/profit-plan.yaml", () => loadProfitPlan());
-  tryLoad("data/plans/expense-plan.yaml", () => loadExpensePlan());
-  tryLoad("data/plans/investment-plan.yaml", () => loadInvestmentPlan());
-  tryLoad("data/plans/debt-plan.yaml", () => loadDebtPlan());
+  tryLoadCorpFile("data/plans/business-plan.yaml", "plans/business-plan.yaml", () =>
+    loadBusinessPlan(),
+  );
+  tryLoadCorpFile("data/plans/property-revenue.yaml", "plans/property-revenue.yaml", () =>
+    loadPropertyRevenuePlan(),
+  );
+  tryLoadCorpFile("data/plans/revenue-plan.yaml", "plans/revenue-plan.yaml", () =>
+    loadRevenuePlan(),
+  );
+  tryLoadCorpFile("data/plans/profit-plan.yaml", "plans/profit-plan.yaml", () => loadProfitPlan());
+  tryLoadCorpFile("data/plans/expense-plan.yaml", "plans/expense-plan.yaml", () =>
+    loadExpensePlan(),
+  );
+  tryLoadCorpFile("data/plans/investment-plan.yaml", "plans/investment-plan.yaml", () =>
+    loadInvestmentPlan(),
+  );
+  tryLoadCorpFile("data/plans/debt-plan.yaml", "plans/debt-plan.yaml", () => loadDebtPlan());
   if (existsSync(join(getDataDir(), "finance", "bank-financing-cases.yaml"))) {
     tryLoad("data/finance/bank-financing-cases.yaml", () =>
       loadBankFinancingCasesFile(),
@@ -883,7 +918,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
       );
     }
   }
-  tryLoad("data/hr/employees.yaml", () => loadEmployees());
+  tryLoadCorpFile("data/hr/employees.yaml", "hr/employees.yaml", () => loadEmployees());
   if (existsSync(competenceFilePath())) {
     tryLoad("data/hr/competence.yaml", () => loadCompetence());
   }
@@ -925,11 +960,14 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
       loadSchedulingCases(),
     );
   }
-  tryLoad("data/classification-registry.yaml", () =>
-    readYamlFile(
-      join(getDataDir(), "classification-registry.yaml"),
-      classificationRegistrySchema,
-    ),
+  tryLoadCorpFile(
+    "data/classification-registry.yaml",
+    "classification-registry.yaml",
+    () =>
+      readYamlFile(
+        join(getDataDir(), "classification-registry.yaml"),
+        classificationRegistrySchema,
+      ),
   );
   const budgetDelegations = join(
     getDataDir(),
@@ -960,7 +998,7 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
     errors.push({ file: issue.file, message: issue.message });
   }
 
-  tryLoad("data/document-io.yaml", () =>
+  tryLoadCorpFile("data/document-io.yaml", "document-io.yaml", () =>
     readYamlFile(join(getDataDir(), "document-io.yaml"), documentIoSchema),
   );
 
@@ -1028,34 +1066,38 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
 
   // Cross-reference validation (legacy inline checks)
   if (errors.length === 0) {
+    const skipCorpCrossRef =
+      soleProp && !existsSync(join(getDataDir(), "plans", "property-revenue.yaml"));
     try {
-      const data = loadAllData();
-      const propertyIds = new Set(data.properties.map((p) => p.id));
+      if (!skipCorpCrossRef) {
+        const data = loadAllData();
+        const propertyIds = new Set(data.properties.map((p) => p.id));
 
-      for (const c of data.contracts) {
-        if (c.property_id && !propertyIds.has(c.property_id)) {
-          errors.push({
-            file: `data/contracts/${c.id}.yaml`,
-            message: `property_id ${c.property_id} not found`,
-          });
+        for (const c of data.contracts) {
+          if (c.property_id && !propertyIds.has(c.property_id)) {
+            errors.push({
+              file: `data/contracts/${c.id}.yaml`,
+              message: `property_id ${c.property_id} not found`,
+            });
+          }
         }
-      }
 
-      for (const plan of data.propertyRevenuePlan.rental) {
-        if (!propertyIds.has(plan.property_id)) {
-          errors.push({
-            file: "data/plans/property-revenue.yaml",
-            message: `rental plan references unknown property ${plan.property_id}`,
-          });
+        for (const plan of data.propertyRevenuePlan.rental) {
+          if (!propertyIds.has(plan.property_id)) {
+            errors.push({
+              file: "data/plans/property-revenue.yaml",
+              message: `rental plan references unknown property ${plan.property_id}`,
+            });
+          }
         }
-      }
 
-      for (const plan of data.propertyRevenuePlan.hotel) {
-        if (!propertyIds.has(plan.property_id)) {
-          errors.push({
-            file: "data/plans/property-revenue.yaml",
-            message: `hotel plan references unknown property ${plan.property_id}`,
-          });
+        for (const plan of data.propertyRevenuePlan.hotel) {
+          if (!propertyIds.has(plan.property_id)) {
+            errors.push({
+              file: "data/plans/property-revenue.yaml",
+              message: `hotel plan references unknown property ${plan.property_id}`,
+            });
+          }
         }
       }
 
