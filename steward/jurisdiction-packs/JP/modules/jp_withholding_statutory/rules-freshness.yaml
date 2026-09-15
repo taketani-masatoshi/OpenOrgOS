@@ -1,0 +1,9 @@
+# jp_withholding_statutory — 源泉徴収ルール鮮度
+version: 1
+reviewed_on: "2026-03-01"
+review_interval_months: 12
+source_urls:
+  - https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2792.htm
+notes: |
+  確認観点: 報酬・料金 10.21% / 20.42% 等。
+  定数: src/lib/finance/withholding-payments.ts · schemas/finance/withholding-payments.ts

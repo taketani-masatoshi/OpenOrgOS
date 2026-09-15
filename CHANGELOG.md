@@ -8,6 +8,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **個人事業主 year-end 処理** — 暦月仕訳カバレッジ・period-lock 網羅・消費税期末振替（`JE-CT-YE-{year}` → 2180 未払）・源泉 YAML↔GL 突合を warning で検知。`sole-prop-blue year-end-status` · `tax-consumption year-end-reclass` · `withholding reconcile`。空月は `journal_coverage.acknowledge_empty_months` で抑制。KLab 固有仕訳は追加しない。
+- **税務品質ハードニング** — `resolveSolePropCalendarYear` で setup 年 SSOT。所得控除の年不一致は Form B/BFF に金額を載せない。journal_hash 正規化 · Asia/Tokyo 業務日。presentation-sanity / TaxHandoff の silent catch 廃止。青・消費・源泉 `rules-freshness`（12か月 · source_urls）と `sole-prop-blue rules-watch`（checksum 検知のみ · 税率自動適用なし）。
 - **Console 税務（監査が気づく面）** — `/?tax=1` で任意所得控除（`optional_questions` + `GET …/income-deductions`）と presentation-sanity の baseline 状態を表示。baseline 更新は CLI のみ。klab に 2025 baseline snapshot を取得。
 - **個人青色・財務監査 4本柱** — (1) 表示健全性（`financial-audit presentation-sanity`）＋個人 BS で事業主貸を資産正に一本化 (2) expense-intake `timing` 実仕訳・一括 `depreciation post-year` (3) Tax Chat に setup/clarify/表示健全性面 (4) Form B 所得控除 YAML。e-Tax 送信は範囲外のまま。
 - **個人青色 P0–P3** — expense-intake apply が仕訳・固定資産台帳・按分 YAML を副作用で書く（`--no-journal` 可）。報酬源泉は100万超で 20.42% 累進。setup 未充足は `orgos validate` error。Form B に配当等（setup.other_income）。Chat `GET /tax/sole-prop/setup|expense-intake`。65万証跡 CLI `filing evidence`。源泉納付 `withholding remittance-post`。消費税 check は売上/経費行のみ tax_category 必須（集計と整合）。seed 正名 `blue-return-expense-map`。e-Tax 送信は ADR 0052 どおり範囲外。

@@ -67,6 +67,12 @@ export const blueReturnSetupSchema = z.object({
   has_withholding_outsourcing: z.boolean().optional(),
   other_income: blueReturnOtherIncomeSchema.optional(),
   tax_advisor_handoff: blueReturnTaxAdvisorHandoffSchema.optional(),
+  /** Seasonal / demo: skip empty-journal-month coverage warnings. */
+  journal_coverage: z
+    .object({
+      acknowledge_empty_months: z.boolean().optional(),
+    })
+    .optional(),
   notes: z.string().optional(),
 });
 

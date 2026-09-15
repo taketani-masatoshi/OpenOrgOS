@@ -12,6 +12,8 @@ import {
   loadBlueReturnSetup,
 } from "./sole-proprietor-clarify.js";
 import { assessRulesFreshness } from "./sole-prop-rules-freshness.js";
+import { assessSolePropYearEnd } from "./sole-prop-year-end.js";
+import { unmappedBlueReturnExpenseCodes } from "./sole-proprietor-blue-return.js";
 
 export type SolePropIntegrityIssue = {
   level: "error" | "warning";
@@ -74,6 +76,24 @@ export function solePropBlueReturnIntegrityIssues(): SolePropIntegrityIssue[] {
       level: f.level,
       file: f.file,
       message: f.message,
+    });
+  }
+
+  const yearEnd = assessSolePropYearEnd();
+  for (const i of yearEnd.issues) {
+    issues.push({
+      level: i.level,
+      file: i.file,
+      message: i.hint ? `${i.message} — ${i.hint}` : i.message,
+    });
+  }
+
+  const unmapped = unmappedBlueReturnExpenseCodes();
+  if (unmapped.length > 0) {
+    issues.push({
+      level: "warning",
+      file: "data/finance/blue-return-expense-map.yaml",
+      message: `経費科目が決算書マップ未記載（雑費へ集約）: ${unmapped.join(", ")}`,
     });
   }
 

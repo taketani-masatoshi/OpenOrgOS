@@ -1,0 +1,11 @@
+# jp_tax_consumption — 消費税ルール鮮度
+# 税率定数の自動適用はしない。公開ページ変化は rules-watch で検知し人手反映。
+version: 1
+reviewed_on: "2026-03-01"
+review_interval_months: 12
+source_urls:
+  - https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/shohi.htm
+  - https://www.invoice-kohyo.nta.go.jp/
+notes: |
+  確認観点: 標準 10% / 軽減 8% · インボイス · 課税事業者判定。
+  定数: src/lib/finance/consumption-tax.ts

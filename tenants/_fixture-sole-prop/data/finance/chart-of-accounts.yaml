@@ -42,6 +42,10 @@ accounts:
     name: 仮払消費税
     type: asset
     normal_balance: debit
+  - code: "2180"
+    name: 未払消費税
+    type: liability
+    normal_balance: credit
   - code: "3100"
     name: 元入金
     type: equity
@@ -92,3 +96,4 @@ journal_source_accounts:
   retained_earnings: "3100"
   consumption_tax_payable: "2160"
   consumption_tax_receivable: "2170"
+  consumption_tax_unpaid: "2180"

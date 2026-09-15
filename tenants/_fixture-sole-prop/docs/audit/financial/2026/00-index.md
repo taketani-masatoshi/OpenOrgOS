@@ -6,7 +6,6 @@
 - 外部会計監査人の意見・保証ではない（ADR 0069）。内部ワークペーパー。
 - J-SOX / ISO 内部監査と混同しないこと。
 - warning: 2026 年の period-locks が 0 件 — 締めロック未実施の可能性
-- warning: [presentation_total_jump_journals_unchanged] 仕訳ハッシュ不変なのに資産合計が変化（baseline -40000 → -50000）。表示再分類の疑い
 
 ## アサーション
 
@@ -16,14 +15,14 @@
 | 網羅性 Completeness | 期間仕訳件数・締めロック | |
 | 評価 Valuation | 資産評価・減価償却（別紙） | |
 | 期間帰属 Cut-off | 期末前後の仕訳カットオフ | |
-| 表示 Presentation | 主要科目 · 表示健全性（error 0 / warning 1） | |
+| 表示 Presentation | 主要科目 · 表示健全性（error 0 / warning 0） | |
 
 ## 機械サマリ
 
-- CoA 科目数: 17
-- 試算表行数: 3
+- CoA 科目数: 18
+- 試算表行数: 0
 - 試算貸借一致: はい
-- 期間内仕訳件数: 2
+- 期間内仕訳件数: 0
 - 期間内 period-locks 件数: 0
 
 ## 署名

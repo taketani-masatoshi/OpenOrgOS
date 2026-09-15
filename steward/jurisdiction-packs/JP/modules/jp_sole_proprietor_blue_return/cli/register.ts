@@ -25,6 +25,14 @@ import {
 import { applyExpenseIntakeSideEffects } from "../../../../../../src/lib/finance/sole-proprietor-expense-apply.js";
 import { postSolePropDepreciationYear } from "../../../../../../src/lib/finance/sole-prop-depreciation.js";
 import { postPrepaidYearTransfers } from "../../../../../../src/lib/finance/sole-prop-prepaid-transfer.js";
+import {
+  assessRulesFreshness,
+  FRESHNESS_RELS,
+  loadRulesFreshnessDoc,
+  watchTaxRulesSources,
+} from "../../../../../../src/lib/finance/sole-prop-rules-freshness.js";
+import { resolveSolePropCalendarYear } from "../../../../../../src/lib/finance/sole-prop-year.js";
+import { assessSolePropYearEnd } from "../../../../../../src/lib/finance/sole-prop-year-end.js";
 
 export const MODULE_ID = "jp_sole_proprietor_blue_return";
 
@@ -428,11 +436,12 @@ export const jp_sole_proprietor_blue_returnCli: ModuleCliBundle = {
       .option("--year <YYYY>", "Calendar year")
       .option("--json")
       .action((opts: { year?: string; json?: boolean }) => {
-        const year = parseYear(opts.year) ?? new Date().getFullYear();
+        const year = resolveSolePropCalendarYear({ explicit: opts.year });
         const { deductions, missing } = loadBlueReturnIncomeDeductions(year);
-        const capped = deductions
-          ? sumCappedIncomeDeductions(deductions)
-          : { total: 0, lines: [] };
+        const capped =
+          deductions && !missing
+            ? sumCappedIncomeDeductions(deductions)
+            : { total: 0, lines: [] as Array<{ label: string; amount_yen: number }> };
         if (opts.json) {
           console.log(JSON.stringify({ year, missing, deductions, capped }, null, 2));
           return;
@@ -443,6 +452,97 @@ export const jp_sole_proprietor_blue_returnCli: ModuleCliBundle = {
         for (const l of capped.lines) {
           console.log(`  ${l.label}: ${l.amount_yen.toLocaleString("ja-JP")}`);
         }
+      });
+
+    cmd
+      .command("year-end-status")
+      .description("Calendar-year readiness: coverage, locks, VAT, withholding, deductions")
+      .option("--year <YYYY>", "Calendar year")
+      .option("--json")
+      .action((opts: { year?: string; json?: boolean }) => {
+        const year = resolveSolePropCalendarYear({ explicit: opts.year });
+        const s = assessSolePropYearEnd(year);
+        if (opts.json) {
+          console.log(JSON.stringify(s, null, 2));
+          return;
+        }
+        console.log(`year-end ${s.year} · setup ${s.setup_ready ? "ready" : "not-ready"}`);
+        console.log(
+          `  empty months: ${s.empty_months.length ? s.empty_months.join(", ") : "none"}`,
+        );
+        console.log(
+          `  unlocked months: ${s.unlocked_months.length ? s.unlocked_months.join(", ") : "none"}`,
+        );
+        console.log(
+          `  consumption net ${s.consumption.net_payable_yen} taxable=${s.consumption.taxable} reclass=${s.consumption.reclass_posted}`,
+        );
+        console.log(
+          `  withholding YAML ${s.withholding.yaml_total_yen} vs GL ${s.withholding.gl_yen} skipped=${s.withholding.skipped}`,
+        );
+        console.log(
+          `  deductions missing=${s.deductions_missing} · baseline=${s.baseline_present}`,
+        );
+        for (const i of s.issues) {
+          console.log(`  [${i.level}] ${i.code}: ${i.message}`);
+          if (i.hint) console.log(`    hint: ${i.hint}`);
+        }
+        if (s.issues.length === 0) console.log("  ✓ no year-end warnings");
+      });
+
+    cmd
+      .command("rules-freshness")
+      .description("Show JP tax rules-freshness review dates (no network)")
+      .option("--as-of <YYYY-MM-DD>", "Assessment date")
+      .option("--json")
+      .action((opts: { asOf?: string; json?: boolean }) => {
+        const asOf = opts.asOf ? new Date(`${opts.asOf}T00:00:00Z`) : new Date();
+        const issues = assessRulesFreshness(asOf);
+        const docs = FRESHNESS_RELS.map((rel) => ({
+          file: rel,
+          doc: loadRulesFreshnessDoc(rel),
+        }));
+        if (opts.json) {
+          console.log(JSON.stringify({ as_of: asOf.toISOString(), issues, docs }, null, 2));
+          return;
+        }
+        for (const { file, doc } of docs) {
+          console.log(
+            `${file}: reviewed_on=${doc?.reviewed_on ?? "—"} interval=${doc?.review_interval_months ?? "—"}m urls=${doc?.source_urls?.length ?? 0}`,
+          );
+          for (const p of doc?.known_pending_changes ?? []) {
+            console.log(`  pending: ${p}`);
+          }
+        }
+        if (issues.length === 0) console.log("✓ freshness ok");
+        for (const i of issues) console.log(`  [${i.level}] ${i.message}`);
+      });
+
+    cmd
+      .command("rules-watch")
+      .description(
+        "Fetch NTA source_urls checksums (opt-in network). Does not apply rates — human review only.",
+      )
+      .option("--dry-run", "Compare without writing cache")
+      .option("--json")
+      .action(async (opts: { dryRun?: boolean; json?: boolean }) => {
+        if (process.env.ORGOS_TAX_RULES_WATCH !== "1" && !opts.json) {
+          console.log(
+            "hint: set ORGOS_TAX_RULES_WATCH=1 in CI; CLI always runs when invoked.",
+          );
+        }
+        const { results, issues } = await watchTaxRulesSources({
+          writeCache: !opts.dryRun,
+        });
+        if (opts.json) {
+          console.log(JSON.stringify({ results, issues }, null, 2));
+          return;
+        }
+        for (const r of results) {
+          console.log(`[${r.status}] ${r.url}`);
+          if (r.error) console.log(`  error: ${r.error}`);
+        }
+        for (const i of issues) console.log(`  [${i.level}] ${i.message}`);
+        if (issues.length === 0) console.log("✓ no source changes detected (or first cache fill)");
       });
   },
   skillHandlers: {

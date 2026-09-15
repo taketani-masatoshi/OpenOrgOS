@@ -180,3 +180,6 @@ data/product/stripe-secrets.env
 tenants/*/data/secrets/
 data/secrets/
 tests/fixtures/tenant-rosters/sch-verify/
+
+# Tax rules-watch checksum cache (tenant-local)
+tenants/*/data/audit/tax-rules-watch-cache.yaml

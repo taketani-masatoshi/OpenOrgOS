@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -31,12 +31,24 @@ describe("sole-prop BS owner draw unification", () => {
 });
 
 describe("presentation sanity", () => {
+  const snapRel = "data/audit/presentation-snapshot.yaml";
+  let snapBackup: string | null = null;
+
+  beforeEach(() => {
+    setTenantId("_fixture-sole-prop");
+    const snapPath = join(getTenantDir(), snapRel);
+    snapBackup = existsSync(snapPath) ? readFileSync(snapPath, "utf-8") : null;
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+    const snapPath = join(getTenantDir(), snapRel);
+    if (snapBackup != null) {
+      writeFileSync(snapPath, snapBackup, "utf-8");
+    }
   });
 
   it("runs without error findings on fixture sole prop", () => {
-    setTenantId("_fixture-sole-prop");
     const first = assessPresentationSanity({ period: "2026", updateBaseline: true });
     expect(first.findings.some((f) => f.code === "owner_draw_still_negative_on_corp_bs")).toBe(
       false,
@@ -58,7 +70,6 @@ describe("presentation sanity", () => {
   });
 
   it("flags negative owner draw on blue assets", () => {
-    setTenantId("_fixture-sole-prop");
     vi.spyOn(balanceSheetMod, "buildBalanceSheet").mockReturnValue({
       as_of: "2026-12-31",
       assets: [
@@ -83,11 +94,10 @@ describe("presentation sanity", () => {
   });
 
   it("changes journal hash when a prior-year journal changes (≤ asOf scope)", () => {
-    setTenantId("_fixture-sole-prop");
     const journalPath = join(getTenantDir(), "data/finance/journal-entries.yaml");
     const original = readFileSync(journalPath, "utf-8");
     try {
-      const before = computeJournalHash("2026");
+      const before = computeJournalHash("2026").hash;
       writeFileSync(
         journalPath,
         `version: 1
@@ -112,7 +122,7 @@ entries:
 `,
         "utf-8",
       );
-      const after = computeJournalHash("2026");
+      const after = computeJournalHash("2026").hash;
       expect(after).not.toBe(before);
     } finally {
       writeFileSync(journalPath, original, "utf-8");
@@ -120,13 +130,11 @@ entries:
   });
 
   it("resolvePresentationSanityPeriodForValidate uses setup calendar_year", () => {
-    setTenantId("_fixture-sole-prop");
     expect(resolvePresentationSanityPeriodForValidate()).toBe("2026");
   });
 
   it("workpapers include presentation-sanity.md without writing baseline", () => {
-    setTenantId("_fixture-sole-prop");
-    const snapPath = join(getTenantDir(), "data/audit/presentation-snapshot.yaml");
+    const snapPath = join(getTenantDir(), snapRel);
     const before = existsSync(snapPath) ? readFileSync(snapPath, "utf-8") : null;
     const beforeFile = loadPresentationSnapshots();
     const result = writeFinancialAuditWorkpapers("2026");

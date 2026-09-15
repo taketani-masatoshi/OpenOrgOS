@@ -258,5 +258,13 @@ describe("steward chat tax and payroll HTTP", () => {
     expect(sanityBody.metrics?.journal_hash).toBeTruthy();
     const after = existsSync(snapPath) ? readFileSync(snapPath, "utf-8") : null;
     expect(after).toBe(before);
+
+    const sanityDefault = await fetch(
+      `${baseUrl}/chat/v1/tax/sole-prop/presentation-sanity`,
+      { headers: { Cookie: cookie } },
+    );
+    expect(sanityDefault.status).toBe(200);
+    const defBody = (await sanityDefault.json()) as { period: string };
+    expect(defBody.period).toBe("2026");
   });
 });

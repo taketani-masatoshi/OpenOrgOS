@@ -158,6 +158,30 @@ export function currentDate(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+/** YYYY-MM-DD in Asia/Tokyo (business calendar day for JP tax/ledger). */
+export function tokyoCalendarDate(date: Date = getClock().now()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+/**
+ * Business day from a date-only string or ISO timestamp.
+ * Date-only (YYYY-MM-DD) is used as-is; instants are converted via Asia/Tokyo.
+ */
+export function businessCalendarDay(isoOrDate: string): string {
+  const trimmed = isoOrDate.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed) || trimmed.endsWith("Z")) {
+    return tokyoCalendarDate(new Date(trimmed));
+  }
+  const day = trimmed.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : tokyoCalendarDate(new Date(trimmed));
+}
+
 export function daysBetween(from: string, to: string): number {
   const a = new Date(from);
   const b = new Date(to);

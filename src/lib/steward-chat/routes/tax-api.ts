@@ -46,6 +46,10 @@ import {
   loadBlueReturnIncomeDeductions,
   sumCappedIncomeDeductions,
 } from "../../finance/sole-proprietor-blue-return.js";
+import {
+  resolveSolePropCalendarYear,
+  resolveSolePropPeriod,
+} from "../../finance/sole-prop-year.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -345,15 +349,12 @@ export async function handleTaxApi(
     try {
       const url = new URL(req.url ?? "/", "http://localhost");
       const yearRaw = url.searchParams.get("year");
-      const setupYear = loadBlueReturnSetup()?.calendar_year;
-      const year =
-        yearRaw && Number.isFinite(Number.parseInt(yearRaw, 10))
-          ? Number.parseInt(yearRaw, 10)
-          : (setupYear ?? new Date().getFullYear());
+      const year = resolveSolePropCalendarYear({ explicit: yearRaw });
       const { deductions, missing } = loadBlueReturnIncomeDeductions(year);
-      const capped = deductions
-        ? sumCappedIncomeDeductions(deductions)
-        : { total: 0, lines: [] as Array<{ label: string; amount_yen: number }> };
+      const capped =
+        deductions && !missing
+          ? sumCappedIncomeDeductions(deductions)
+          : { total: 0, lines: [] as Array<{ label: string; amount_yen: number }> };
       json(res, 200, {
         ok: true,
         year,
@@ -380,7 +381,9 @@ export async function handleTaxApi(
     if (!requireChatPermission(user, "chat:read", res)) return true;
     try {
       const url = new URL(req.url ?? "/", "http://localhost");
-      const period = url.searchParams.get("period") ?? String(new Date().getFullYear());
+      const period = resolveSolePropPeriod({
+        explicit: url.searchParams.get("period"),
+      });
       const result = assessPresentationSanity({ period, updateBaseline: false });
       json(res, 200, {
         ok: true,

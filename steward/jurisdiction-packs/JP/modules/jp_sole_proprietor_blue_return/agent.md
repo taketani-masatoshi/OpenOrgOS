@@ -16,6 +16,30 @@
 
 **e-Tax / 行政提出はしない。** 提出は税理士 · 事業主（ADR 0052 · 意図的範囲外）。
 
+## 法令鮮度（人手反映）
+
+正本: `rules-freshness.yaml`（青・消費・源泉）。`reviewed_on` を年次更新する。
+
+```bash
+orgos operations sole-prop-blue rules-freshness
+ORGOS_TAX_RULES_WATCH=1 orgos operations sole-prop-blue rules-watch
+```
+
+`rules-watch` は NTA 等の `source_urls` の本文ハッシュ変化を検知するだけ。税率・控除の**自動適用はしない**。差分があれば定数 TS/YAML を人手で直し、`reviewed_on` を更新する。
+
+## 期末（year-end）
+
+暦年の空月・未 lock・消費税仮受/仮払残・源泉 YAML↔GL は **warning**（季節・デモは `journal_coverage.acknowledge_empty_months: true`）。
+
+```bash
+orgos operations sole-prop-blue year-end-status --year YYYY
+orgos operations tax-consumption year-end-reclass --year YYYY
+orgos operations withholding reconcile --year YYYY
+orgos ledger period lock --month YYYY-MM
+```
+
+消費税期末振替は `JE-CT-YE-{year}`（冪等）。CoA に 2180 未払消費税（`consumption_tax_unpaid`）が必要。税率の自動適用・e-Tax 送信はしない。
+
 ## 確認質問（必須）
 
 `setup clarify` / `expense-intake clarify` に **未充足（missing）があるとき**は、決算・申告ドラフトを **提出可能・確定とみなさない**。`orgos validate` は setup 未充足を **error** にする。
@@ -61,6 +85,7 @@ orgos operations sole-prop-blue kessan --year 2025
 orgos operations sole-prop-blue shinkoku-b --year 2025
 orgos operations sole-prop-blue deduction-gate --year 2025
 orgos operations sole-prop-blue handoff --year 2025
+orgos operations sole-prop-blue year-end-status --year 2025
 ```
 
 ## 範囲外

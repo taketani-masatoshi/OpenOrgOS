@@ -6,6 +6,8 @@ import {
   writeWithholdingPaymentJournalDrafts,
   postWithholdingRemittanceJournal,
 } from "../../../../../../src/lib/finance/withholding-payments.js";
+import { reconcileWithholdingVsGl } from "../../../../../../src/lib/finance/sole-prop-year-end.js";
+import { resolveSolePropCalendarYear } from "../../../../../../src/lib/finance/sole-prop-year.js";
 
 export const MODULE_ID = "jp_withholding_statutory";
 
@@ -79,6 +81,23 @@ export const jp_withholding_statutoryCli: ModuleCliBundle = {
           }
         },
       );
+
+    cmd
+      .command("reconcile")
+      .description("Compare withholding-payments YAML totals vs GL 預り金 (read-only)")
+      .option("--year <YYYY>", "Calendar year")
+      .option("--json")
+      .action((opts: { year?: string; json?: boolean }) => {
+        const year = resolveSolePropCalendarYear({ explicit: opts.year });
+        const r = reconcileWithholdingVsGl(year);
+        if (opts.json) {
+          console.log(JSON.stringify({ year, ...r }, null, 2));
+          return;
+        }
+        console.log(
+          `year ${year} · YAML ${r.yaml_total_yen.toLocaleString("ja-JP")} · GL ${r.payable_code} ${r.gl_yen.toLocaleString("ja-JP")} · 差 ${r.delta_yen.toLocaleString("ja-JP")}`,
+        );
+      });
   },
   skillHandlers: {
     jp_withholding_payment: runJpWithholdingPaymentSkill,

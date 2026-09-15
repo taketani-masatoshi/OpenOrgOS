@@ -8,6 +8,7 @@ import {
   assessPresentationSanity,
   formatPresentationSanityMarkdown,
 } from "../../../../../../src/lib/finance/financial-presentation-sanity.js";
+import { resolveSolePropPeriod } from "../../../../../../src/lib/finance/sole-prop-year.js";
 import { getDocsDir, writeTrackedFile } from "../../../../../../src/lib/utils.js";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -60,15 +61,16 @@ export const jp_financial_auditCli: ModuleCliBundle = {
     cmd
       .command("presentation-sanity")
       .description("Display sanity: owner-draw sign, total jump vs journal hash")
-      .requiredOption("--period <YYYY|YYYY-MM>", "Calendar year or month")
+      .option("--period <YYYY|YYYY-MM>", "Calendar year or month (default: setup.calendar_year)")
       .option("--update-baseline", "Write presentation-snapshot.yaml")
       .option("--json")
-      .action((opts: { period: string; updateBaseline?: boolean; json?: boolean }) => {
+      .action((opts: { period?: string; updateBaseline?: boolean; json?: boolean }) => {
+        const period = resolveSolePropPeriod({ explicit: opts.period });
         const result = assessPresentationSanity({
-          period: opts.period,
+          period,
           updateBaseline: Boolean(opts.updateBaseline),
         });
-        const dir = join(getDocsDir(), "audit", "financial", opts.period);
+        const dir = join(getDocsDir(), "audit", "financial", period);
         mkdirSync(dir, { recursive: true });
         const path = writeTrackedFile(
           join(dir, "presentation-sanity.md"),

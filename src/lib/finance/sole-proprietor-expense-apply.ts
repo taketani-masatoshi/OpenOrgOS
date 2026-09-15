@@ -12,7 +12,7 @@ import type { FixedAsset, FixedAssets } from "../../../schemas/finance/types.js"
 import { journalEntrySchema } from "../../../schemas/finance/journal-entry.js";
 import type { BlueReturnExpenseIntake } from "../../../schemas/finance/blue-return-expense-intake.js";
 import { loadChartOfAccounts } from "../data.js";
-import { getDataDir, writeYamlFile } from "../utils.js";
+import { getDataDir, writeYamlFile, tokyoCalendarDate } from "../utils.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
 import { computeRewardFeeWithholdingYen } from "./withholding-payments.js";
 
@@ -87,7 +87,7 @@ function loadFixedAssetsFile(): FixedAssets {
   const path = join(getDataDir(), "finance", "fixed-assets.yaml");
   if (!existsSync(path)) {
     return fixedAssetsSchema.parse({
-      as_of: new Date().toISOString().slice(0, 10),
+      as_of: tokyoCalendarDate(),
       currency: "JPY",
       assets: [],
       summary: {

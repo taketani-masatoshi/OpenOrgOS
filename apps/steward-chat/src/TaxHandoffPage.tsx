@@ -168,17 +168,26 @@ export function TaxHandoffPage() {
               lines: d.capped.lines,
             });
           })
-          .catch(() => {
+          .catch((e) => {
             setDeductionsCard(null);
+            setError(
+              `所得控除読込失敗: ${e instanceof Error ? e.message : String(e)}`,
+            );
           });
-        return fetchPresentationSanity(period);
+        void fetchPresentationSanity(period)
+          .then((sanity) => {
+            applySanityResult(sanity);
+          })
+          .catch((e) => {
+            setSanityBaselineLine(
+              `表示健全性読込失敗: ${e instanceof Error ? e.message : String(e)}`,
+            );
+          });
       })
-      .then((r) => {
-        if (!r) return;
-        applySanityResult(r);
-      })
-      .catch(() => {
-        setSoleSetup(null);
+      .catch((e) => {
+        setSoleSetup(
+          `setup 読込失敗: ${e instanceof Error ? e.message : String(e)}`,
+        );
         setSoleOptionalQuestions([]);
       });
   }, [liveReady, sanityPeriod]);

@@ -1,8 +1,8 @@
 version: 1
 by_period:
   "2025":
-    captured_at: 2026-09-15T05:40:16.083Z
-    journal_hash: 5d1f59bfebbb1cb844eff47e69a1ce5dc69f47470d3db138d29cca25745334bf
+    captured_at: 2026-09-15T08:00:20.806Z
+    journal_hash: 3f1624245cccff5287ebdbe4458c830c95d5c66a4faaae4ad9d4252471a52d00
     corporate_total_assets_yen: 405308
     blue_total_assets_yen: 405308
     owner_draw_yen: 255000

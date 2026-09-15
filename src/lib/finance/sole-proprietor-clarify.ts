@@ -22,10 +22,11 @@ import {
 } from "../../../schemas/finance/blue-return-expense-intake.js";
 import { getDataDir, getDocsDir, readYamlFile, writeTrackedFile, writeYamlFile } from "../utils.js";
 import { loadTaxProfile } from "../data.js";
+import { resolveSolePropCalendarYear } from "./sole-prop-year.js";
 
-/** Avoid circular import with sole-proprietor-blue-return.ts */
+/** Year label helper — calendar year via sole-prop SSOT when omitted. */
 function yearContext(calendarYear?: number): { calendar_year: number; year_label: string } {
-  const year = calendarYear ?? new Date().getFullYear();
+  const year = resolveSolePropCalendarYear({ explicit: calendarYear });
   return { calendar_year: year, year_label: `令和${year - 2018}年分` };
 }
 

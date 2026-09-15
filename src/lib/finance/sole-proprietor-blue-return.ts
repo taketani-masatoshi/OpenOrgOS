@@ -23,6 +23,7 @@ import { loadTenantConfig } from "../tenant.js";
 import { buildConsumptionTaxDraftReturn } from "./consumption-tax.js";
 import { assessEntityModuleMismatches } from "./entity-module-guards.js";
 import { collectSetupGateWarnings, loadBlueReturnSetup } from "./sole-proprietor-clarify.js";
+import { resolveSolePropCalendarYear } from "./sole-prop-year.js";
 import {
   blueReturnIncomeDeductionsSchema,
   EARTHQUAKE_INSURANCE_DEDUCTION_CAP_YEN,
@@ -65,7 +66,7 @@ const DEFAULT_EXPENSE_MAP: Record<string, string> = {
 
 /** 現金・預金は 1100（合算）または 1110/1120（分割）いずれでも BS に載せる。事業主貸は BS 資産側。 */
 const MAJOR_ASSET_CODES = ["1100", "1110", "1120", "1150", "1210", "2170", "3210"] as const;
-const MAJOR_LIABILITY_CODES = ["2110", "2120", "2160"] as const;
+const MAJOR_LIABILITY_CODES = ["2110", "2120", "2160", "2180"] as const;
 /** 事業主貸(3210)は資産の部（buildBalanceSheet と一本化）。資本の部には載せない。 */
 const MAJOR_EQUITY_CODES = ["3100", "3220"] as const;
 
@@ -123,8 +124,11 @@ export type BlueReturnYearContext = {
   fiscal_year_label: string;
 };
 
-export function resolveBlueReturnYear(calendarYear?: number): BlueReturnYearContext {
-  const year = calendarYear ?? new Date().getFullYear();
+export function resolveBlueReturnYear(
+  calendarYear?: number,
+  clock?: Date,
+): BlueReturnYearContext {
+  const year = resolveSolePropCalendarYear({ explicit: calendarYear, clock });
   return {
     calendar_year: year,
     period_from: `${year}-01-01`,
@@ -174,6 +178,22 @@ function loadExpenseLineMap(): z.output<typeof expenseLineMapSchema> {
     });
   }
   return readYamlFile(path, expenseLineMapSchema);
+}
+
+/** Expense CoA codes that fall through to default 雑費 (mapping gap). */
+export function unmappedBlueReturnExpenseCodes(): string[] {
+  const map = loadExpenseLineMap();
+  const coa = loadChartOfAccounts();
+  return coa.accounts
+    .filter(
+      (a) =>
+        a.type === "expense" &&
+        a.statement_section !== "cogs" &&
+        a.code !== "5000",
+    )
+    .filter((a) => map.lines[a.code] == null)
+    .map((a) => a.code)
+    .sort();
 }
 
 export function loadBlueReturnAllocation(calendarYear?: number): {
@@ -742,7 +762,8 @@ export function loadBlueReturnIncomeDeductions(
   }
   const raw = readYamlFile(path, blueReturnIncomeDeductionsSchema);
   if (calendarYear != null && raw.calendar_year !== calendarYear) {
-    return { deductions: raw, missing: true };
+    // Year mismatch must not leak amounts into Form B / BFF capped totals.
+    return { deductions: null, missing: true };
   }
   return { deductions: raw, missing: false };
 }
@@ -785,7 +806,8 @@ export function buildFormBDraft(calendarYear?: number): FormBDraft {
   let interest_income_yen = 0;
   let miscellaneous_income_yen = 0;
   const setup = loadBlueReturnSetup();
-  if (setup?.other_income) {
+  // other_income only when setup calendar_year matches the draft year.
+  if (setup?.other_income && setup.calendar_year === kessan.calendar_year) {
     dividend_income_yen = setup.other_income.dividend_yen ?? 0;
     interest_income_yen = setup.other_income.interest_yen ?? 0;
     miscellaneous_income_yen = setup.other_income.miscellaneous_yen ?? 0;
@@ -798,9 +820,10 @@ export function buildFormBDraft(calendarYear?: number): FormBDraft {
   const { deductions, missing: income_deductions_missing } = loadBlueReturnIncomeDeductions(
     kessan.calendar_year,
   );
-  const capped = deductions
-    ? sumCappedIncomeDeductions(deductions)
-    : { total: 0, lines: [] as Array<{ label: string; amount_yen: number }> };
+  const capped =
+    deductions && !income_deductions_missing
+      ? sumCappedIncomeDeductions(deductions)
+      : { total: 0, lines: [] as Array<{ label: string; amount_yen: number }> };
   const taxable = truncateTaxableIncomeYen(
     totalIncome - BASIC_DEDUCTION_YEN - capped.total,
   );

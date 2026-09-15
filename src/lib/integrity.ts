@@ -987,8 +987,12 @@ export function runIntegrityChecks(): IntegrityIssue[] {
             message: `presentation-sanity [${f.code}]: ${f.message}`,
           });
         }
-      } catch {
-        /* journals optional */
+      } catch (e) {
+        issues.push({
+          level: "warning",
+          file: "data/audit/presentation-snapshot.yaml",
+          message: `presentation-sanity failed: ${e instanceof Error ? e.message : String(e)}`,
+        });
       }
     }
     for (const message of electronicLedgerIntegrityIssues()) {

@@ -76,6 +76,8 @@ export const journalSourceAccountsSchema = z.object({
   retained_earnings: z.string().regex(/^\d{4}$/),
   consumption_tax_payable: z.string().regex(/^\d{4}$/).optional(),
   consumption_tax_receivable: z.string().regex(/^\d{4}$/).optional(),
+  /** Year-end net VAT settlement (未払消費税). */
+  consumption_tax_unpaid: z.string().regex(/^\d{4}$/).optional(),
   lodging_tax_payable: z.string().regex(/^\d{4}$/).optional(),
 });
 

@@ -1,9 +1,16 @@
 # jp_sole_proprietor_blue_return — 法令・手続レビュー鮮度
-# OrgOS は e-Tax を送信しない（ADR 0052）。税率・控除額・特例の変更は人間が見直す。
+# OrgOS は e-Tax を送信しない（ADR 0052）。税率・控除額の変更は人間が見直し、定数を PR する。
+# NTA HTML の自動適用はしない（rules-watch は変更検知のみ）。
 version: 1
 reviewed_on: "2026-03-01"
-review_interval_months: 18
+review_interval_months: 12
+source_urls:
+  - https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm
+  - https://www.nta.go.jp/taxes/shiraberu/shinkoku/kojin_jigyo/kichou03.pdf
+known_pending_changes:
+  - "令和9年分以後の青色特別控除（電子申告等で最高75万円等）は未実装 — future_note 参照"
 notes: |
   確認観点: 青色特別控除 55/65 · 基礎控除 · 報酬源泉 10.21/20.42 ·
   少額減価 / 一括償却 / 中小30万特例 · 消費税インボイス。
-  見直し後に reviewed_on を更新する。
+  見直し後に reviewed_on を更新し、必要なら src/lib/finance/sole-proprietor-blue-return.ts 定数を変更する。
+  変更検知: ORGOS_TAX_RULES_WATCH=1 orgos operations sole-prop-blue rules-watch

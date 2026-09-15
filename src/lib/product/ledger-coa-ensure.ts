@@ -66,6 +66,12 @@ const DEMO_ACCOUNTS: Array<Record<string, unknown>> = [
     normal_balance: "debit",
   },
   {
+    code: "2180",
+    name: "未払消費税",
+    type: "liability",
+    normal_balance: "credit",
+  },
+  {
     code: "3200",
     name: "繰越利益剰余金",
     type: "equity",
@@ -107,6 +113,7 @@ const DEFAULT_JOURNAL_SOURCE = {
   retained_earnings: "3200",
   consumption_tax_payable: "2160",
   consumption_tax_receivable: "2170",
+  consumption_tax_unpaid: "2180",
 };
 
 function coaPath(): string {

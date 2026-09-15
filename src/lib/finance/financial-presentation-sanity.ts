@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { getDataDir, writeYamlFile } from "../utils.js";
+import { getDataDir, writeYamlFile, businessCalendarDay } from "../utils.js";
 import { loadTenantConfig } from "../tenant.js";
 import { loadEnabledModulesSafe } from "../modules.js";
 import { loadJournalEntries } from "./expense-claim-journal.js";
@@ -16,7 +16,7 @@ import {
 } from "./ledger/balance-sheet.js";
 import { loadOpeningBalances } from "./ledger/opening-balance.js";
 import { normalizeJournalEntry } from "../../../schemas/finance/journal-entry.js";
-import { loadBlueReturnSetup } from "./sole-proprietor-clarify.js";
+import { resolveSolePropPeriod } from "./sole-prop-year.js";
 
 export type PresentationSanityLevel = "error" | "warning" | "info";
 
@@ -94,18 +94,47 @@ export function savePresentationSnapshot(
 
 type JournalEntryRow = ReturnType<typeof loadJournalEntries>["entries"][number];
 
+function normalizeLinesForHash(
+  lines: Array<{
+    account_code: string;
+    debit_yen?: number;
+    credit_yen?: number;
+    tax_category?: string;
+  }>,
+): string {
+  const norm = lines
+    .map((l) => ({
+      account_code: l.account_code,
+      debit_yen: l.debit_yen ?? 0,
+      credit_yen: l.credit_yen ?? 0,
+      tax_category: l.tax_category ?? "",
+    }))
+    .sort(
+      (a, b) =>
+        a.account_code.localeCompare(b.account_code) ||
+        a.debit_yen - b.debit_yen ||
+        a.credit_yen - b.credit_yen,
+    );
+  return JSON.stringify(norm);
+}
+
 /**
  * Fingerprint aligned with trial balance / BS: journals with occurred_at ≤ asOf
  * (excluding dates ≤ opening.as_of when opening is in force) plus opening lines.
  */
-export function computeJournalHash(period: string): string {
+export function computeJournalHash(period: string): {
+  hash: string;
+  journals_load_error: string | null;
+} {
   const { asOf } = periodAsOf(period);
   const toDay = asOf.slice(0, 10);
   let entries: JournalEntryRow[] = [];
+  let journals_load_error: string | null = null;
   try {
     entries = loadJournalEntries().entries;
-  } catch {
+  } catch (e) {
     entries = [];
+    journals_load_error = e instanceof Error ? e.message : String(e);
   }
 
   const opening = loadOpeningBalances();
@@ -114,7 +143,7 @@ export function computeJournalHash(period: string): string {
 
   const rows = entries
     .filter((e) => {
-      const d = e.occurred_at.slice(0, 10);
+      const d = businessCalendarDay(e.occurred_at);
       if (d > toDay) return false;
       if (includeOpening && openingAsOf && d <= openingAsOf) return false;
       return true;
@@ -123,34 +152,27 @@ export function computeJournalHash(period: string): string {
     .sort((a, b) => a.entry_id.localeCompare(b.entry_id));
 
   const journalPayload = rows
-    .map((e) => `${e.entry_id}|${e.occurred_at}|${JSON.stringify(e.lines)}`)
+    .map(
+      (e) =>
+        `${e.entry_id}|${businessCalendarDay(e.occurred_at)}|${normalizeLinesForHash(e.lines)}`,
+    )
     .join("\n");
 
   let openingPayload = "";
   if (includeOpening && opening) {
-    const lines = [...opening.lines].sort((a, b) =>
-      a.account_code.localeCompare(b.account_code),
-    );
-    openingPayload = `opening|${opening.as_of}|${JSON.stringify(lines)}`;
+    openingPayload = `opening|${opening.as_of}|${normalizeLinesForHash(opening.lines)}`;
   }
 
   const payload = [openingPayload, journalPayload].filter(Boolean).join("\n");
-  return createHash("sha256").update(payload).digest("hex");
+  return {
+    hash: createHash("sha256").update(payload).digest("hex"),
+    journals_load_error,
+  };
 }
 
 /** Period used by orgos validate: blue-return-setup.calendar_year when sole-prop. */
 export function resolvePresentationSanityPeriodForValidate(): string {
-  if (isSoleProp()) {
-    try {
-      const year = loadBlueReturnSetup()?.calendar_year;
-      if (typeof year === "number" && Number.isFinite(year)) {
-        return String(year);
-      }
-    } catch {
-      /* setup optional */
-    }
-  }
-  return String(new Date().getFullYear());
+  return resolveSolePropPeriod();
 }
 
 function isSoleProp(): boolean {
@@ -185,9 +207,10 @@ export function assessPresentationSanity(input: {
     owner_draw_section = "equity";
   }
 
+  const hashResult = computeJournalHash(input.period);
   const metrics: PresentationSnapshot = {
     captured_at: new Date().toISOString(),
-    journal_hash: computeJournalHash(input.period),
+    journal_hash: hashResult.hash,
     corporate_total_assets_yen: bs.total_assets_yen,
     blue_total_assets_yen: sole_prop ? bs.total_assets_yen : null,
     owner_draw_yen,
@@ -195,6 +218,13 @@ export function assessPresentationSanity(input: {
   };
 
   const findings: PresentationSanityFinding[] = [];
+  if (hashResult.journals_load_error) {
+    findings.push({
+      code: "journals_load_failed",
+      level: "warning",
+      message: `仕訳読込失敗（空集合としてハッシュ算出）: ${hashResult.journals_load_error}`,
+    });
+  }
   const file = loadPresentationSnapshots();
   const baseline = file.by_period[input.period] ?? null;
 
