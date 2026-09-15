@@ -60,6 +60,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0070](0070-console-saas-connectors.md) | Operator Console の SaaS コネクタ（Slack / Asana / Gmail / Drive） | Accepted |
 | [0071](0071-direct-http-outbound-connectors.md) | Direct HTTP / OData outbound（財務 L1 · Community OAuth 非経由） | Accepted |
 | [0072](0072-console-static-cli-tabs.md) | Console 静的 CLI タブ（税務 · 契約 · 営業 digest · 分析 snapshot 主面） | Accepted |
+| [0073](0073-finance-ingest-pipeline.md) | 帳簿インプット取込（docs/io/inbox → staging → journal） | Accepted |
 
 ## 新規 ADR
 

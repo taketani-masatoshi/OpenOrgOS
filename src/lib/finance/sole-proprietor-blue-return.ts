@@ -1571,7 +1571,7 @@ export function writeTaxReportIndex(
     consumptionNet =
       draft.summary != null
         ? `${yen(draft.summary.net_tax_yen)}（${
-            draft.summary.direction === "payable" ? "納付" : draft.summary.direction === "refund" ? "還付" : draft.summary.direction
+            draft.summary.direction === "payable" ? "納付" : draft.summary.direction === "refund_candidate" ? "還付候補" : draft.summary.direction
           }）`
         : draft.exempt
           ? "申告不要"

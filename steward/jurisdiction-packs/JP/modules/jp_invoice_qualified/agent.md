@@ -11,3 +11,5 @@
 ```bash
 orgos operations invoice-qualified check
 ```
+
+帳簿投入口は Core の `docs/io/inbox/`（`orgos ingest` · ADR 0073）。activate 時に scaffold。

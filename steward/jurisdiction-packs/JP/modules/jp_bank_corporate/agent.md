@@ -22,6 +22,19 @@ JP 法人口座の **資金繰り表** · **キャッシュポジション** · 
 
 `data/finance/payment-calendar.yaml` が支払日程の正本。`calendar import` は既定 dry-run で、`--write` 後に `orgos validate` を実行する。
 
+## 明細投入（帳簿インプット）
+
+銀行 CSV は `docs/io/inbox/bank/` → `orgos ingest`（共有標準）。従来の `jp bank` 明細 import も同じ CSV パーサを利用。activate 時に inbox を scaffold する。
+
+```bash
+orgos ingest scaffold
+orgos ingest scan --write
+orgos ingest parse --source bank --write
+orgos ingest post --batch <id> --write
+```
+
+俯瞰: `steward/platform/finance/00-README.md`
+
 ## CLI
 
 ```bash

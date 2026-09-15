@@ -555,7 +555,9 @@ export function buildConsumptionTaxDraftReturn(input?: {
       tax_free_sales_yen: journal.taxFreeSales,
       taxable_purchases_10_yen: journal.purchases10,
       taxable_purchases_8_yen: journal.purchases8,
-      deemed_purchase_rate_pct: deemed,
+      ...(deemed != null
+        ? { deemed_purchase_rate_pct: deemed as 40 | 50 | 60 | 70 | 80 | 90 }
+        : {}),
     },
   });
   // Override period label for annual
@@ -572,8 +574,8 @@ export function buildConsumptionTaxDraftReturn(input?: {
   const directionJa =
     annualSummary.direction === "payable"
       ? "納付"
-      : annualSummary.direction === "refund"
-        ? "還付"
+      : annualSummary.direction === "refund_candidate"
+        ? "還付候補"
         : String(annualSummary.direction);
 
   const markdown = [

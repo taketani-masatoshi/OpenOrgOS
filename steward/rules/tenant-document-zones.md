@@ -45,7 +45,13 @@ docs/
 │   ├── quotes/           … 経理索引（任意）
 │   ├── templates/        … 領収書索引 CSV 等
 │   └── records/          … 証憑索引（MD のみ · スキャンは tenant records/）
-├── io/inbox/ · io/outbox/sent/
+├── io/
+│   ├── 00-README.md
+│   ├── inbox/            … **帳簿インプット**（個人・法人共通）
+│   │   ├── bank/ · card/ · transit/ · wallet/
+│   │   ├── marketplace/ · sales/ · receipts/ · contracts/
+│   │   └── （licenses / applications / corporate / misc は非仕訳）
+│   └── outbox/sent/
 ├── legal/
 ├── compliance/           … ISO · 個情（モジュール無しでも可）
 ├── executive/
@@ -68,6 +74,21 @@ records/                  … L2 スキャン正本（Git 非推跡推奨）
 | 医療機器 QMS | jp_medical_device | Extension |
 | Wire / protocol | wire_console テナント | Platform（下記） |
 | 出張手配 | travel_booking 有効時 | Extension |
+
+### 帳簿インプット（Core · 個人・法人共通）
+
+`docs/io/inbox/{bank,card,transit,wallet,marketplace,sales,receipts,contracts}/` は **業種に依存しない Core**。仕訳正本は常に `data/finance/journal-entries.yaml`（ADR 0041）。
+
+| 項目 | 正本 |
+|------|------|
+| カテゴリ README テンプレ | `steward/platform/finance/ingest-inbox/` |
+| 取込 CLI | `orgos ingest {scaffold\|scan\|parse\|classify\|review\|post}` |
+| staging / rules | `data/finance/ingest-staging.yaml` · `ingest-rules.yaml` |
+| 俯瞰 | [platform/finance/00-README.md](../platform/finance/00-README.md) · ADR 0073 |
+
+`tenant scaffold-docs` と財務系 `modules activate`（青色 · 法人税 · 銀行 · 消費 · 監査 · 適格請求 · 源泉 · 給与）で自動確保する。モジュール seed に inbox を重複コピーしない。
+
+決算・申告の **生成物**だけがエンティティ別 Extension（`docs/finance/blue-return/` · `docs/company/tax/` · `docs/audit/financial/` 等）。
 
 ---
 
@@ -168,3 +189,5 @@ data/protocol/
 - [company-document-layout.md](company-document-layout.md) — 書類種別マトリクス
 - [inter-org-contract-workflow.md](inter-org-contract-workflow.md) — 組織間契約
 - [folder_access_policy.md](folder_access_policy.md) — Agent 別 R/W
+- [platform/finance/00-README.md](../platform/finance/00-README.md) — 帳簿インプット俯瞰（個人・法人）
+- [ADR 0073](../../docs/adr/0073-finance-ingest-pipeline.md) — ingest パイプライン

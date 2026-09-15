@@ -1,0 +1,37 @@
+version: 1
+batches:
+  - batch_id: ING-CARD-001
+    source_kind: card
+    file_fingerprint: 3ed4f6d10d2003de6a5b17f34290ab34f2764e43084e6cd77b1b2aafea6a2c8b
+    imported_at: 2026-09-15T13:42:42.411Z
+    logical_path: docs/io/inbox/card/demo-card-2025-06.csv
+    row_ids:
+      - ING-CARD-001-R001
+    notes: []
+rows:
+  - row_id: ING-CARD-001-R001
+    fingerprint: eb01d5a959229ecb1e825949d0630fd8f2e5d32e15fb27ce46e5a64d7f5272ce
+    batch_id: ING-CARD-001
+    source_kind: card
+    occurred_on: 2025-06-15
+    direction: outflow
+    amount_yen: 2200
+    payee: アスクル
+    description: 文房具
+    category_hint: 消耗品費
+    account_code: "5280"
+    cash_account_code: "1120"
+    tax_category: taxable_10
+    business_pct: 100
+    status: posted
+    evidence_refs:
+      - inbox:docs/io/inbox/card/demo-card-2025-06.csv
+      - sha256:3ed4f6d10d2003de6a5b17f34290ab34f2764e43084e6cd77b1b2aafea6a2c8b
+    entry_id: JE-ING-EB01D5A95922
+    review_notes: []
+    raw:
+      date: 2025-06-15
+      amount: "2200"
+      description: 文房具
+      payee: アスクル
+      category: 消耗品費

@@ -1,0 +1,43 @@
+version: 1
+default_cash_account_code: "1120"
+default_revenue_account_code: "4100"
+asset_intake_threshold_yen: 100000
+rules:
+  - id: transit-fare
+    match:
+      source_kind: transit
+    account_code: "5140"
+    tax_category: taxable_10
+    business_pct: 100
+    priority: 10
+  - id: telecom
+    match:
+      contains: ドコモ
+    account_code: "5150"
+    tax_category: taxable_10
+    business_pct: 100
+    priority: 20
+  - id: amazon-supplies
+    match:
+      source_kind: marketplace
+      contains: Amazon
+    account_code: "5200"
+    tax_category: taxable_10
+    business_pct: 100
+    priority: 30
+  - id: card-default-expense
+    match:
+      source_kind: card
+      direction: outflow
+    account_code: "5280"
+    tax_category: taxable_10
+    business_pct: 100
+    priority: 80
+  - id: bank-outflow-misc
+    match:
+      source_kind: bank
+      direction: outflow
+    account_code: "5280"
+    tax_category: taxable_10
+    business_pct: 100
+    priority: 90

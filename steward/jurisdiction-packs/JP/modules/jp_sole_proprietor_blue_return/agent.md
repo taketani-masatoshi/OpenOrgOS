@@ -70,7 +70,22 @@ orgos ledger period lock --month YYYY-MM
 | `data/finance/journal-entries.yaml` | 複式仕訳正本（既存 GL） |
 | `data/finance/chart-of-accounts.yaml` | 個人事業主科目（元入金 · 事業主貸借） |
 | `data/finance/blue-return-filing.yaml` | e-Tax / 優良電帳の人証跡（任意） |
+| `data/finance/ingest-staging.yaml` | 明細取込ステージング（`orgos ingest`） |
+| `data/finance/ingest-rules.yaml` | 摘要→科目ルール |
+| `docs/io/inbox/{bank,card,...}/` | 明細・証憑の投入フォルダ |
 | `docs/finance/blue-return/{year}/` | 帳簿 · 決算 · 申告 · clarify 出力 |
+
+## 明細投入（orgos ingest）
+
+銀行・カード・Suica・PayPay・Amazon・売上・領収書 MD を inbox に置き、仕訳化する。PDF は外部で CSV/MD 化してから投入（ADR 0073）。
+
+```bash
+orgos ingest scan --write
+orgos ingest parse --source card --write
+orgos ingest classify --write
+orgos ingest review
+orgos ingest post --batch ING-CARD-001 --write
+```
 
 ## CLI
 

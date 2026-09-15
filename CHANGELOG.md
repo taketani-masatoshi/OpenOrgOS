@@ -6,6 +6,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **帳簿インプット取込 (`orgos ingest`)** — `docs/io/inbox/{bank,card,transit,wallet,marketplace,sales,receipts,contracts}/` に CSV/MD を置き、scan → parse → classify → review → `post --write` で仕訳化。staging / rules YAML、PDF は外部変換前提（新依存なし）。個人・法人で同一 Core 標準（`ensureFinanceIngestInboxScaffold` · `tenant scaffold-docs` / 財務モジュール activate / Ledger provision）。テンプレ正本 `steward/platform/finance/ingest-inbox/`。ADR 0073。
+
 ### Changed
 
 - **税務ドラフト Markdown** — 相対リンク・目次・メタ表・日本語ラベル（本則/納付等）で確定申告書B・控除ゲート・handoff・消費税・支払調書・帳簿 README・税務報告書インデックスを読みやすく。JSON丸出しや `status:` / `payable` 生値をやめる。

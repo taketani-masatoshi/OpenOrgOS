@@ -8,6 +8,7 @@ import type { TenantModule } from "../../schemas/modules.js";
 import { loadEnabledModules, loadModulesFile } from "./modules.js";
 import { MODULE_DEFAULT_DATA_ROOT } from "./module-business-data.js";
 import { getTenantDir } from "./tenant.js";
+import { ensureFinanceIngestInboxScaffold } from "./finance/ingest/scaffold.js";
 
 export interface ScaffoldResult {
   created: string[];
@@ -74,7 +75,7 @@ const CORE_README: Partial<Record<(typeof CORE_DOC_DIRS)[number], string>> = {
   contracts:
     "# 契約書\n\nCTR-XXX/。Zone A。組織間: steward/rules/inter-org-contract-workflow.md\n",
   "io/inbox":
-    "# inbox\n\n外部受領。Zone A。組織間契約ドラフトは P2 までここ。\n",
+    "# inbox\n\n外部受領 · 帳簿インプット（bank/card/…）。Zone A。`orgos ingest` · ADR 0073。\n",
   "io/outbox/sent": "# outbox/sent\n\n送付控え。Zone A。\n",
   projects:
     "# projects/\n\nPMO メモ · 報告下書き。正本は data/projects/（ADR 0043）。\n",
@@ -118,9 +119,11 @@ export function coreTenantDocsIndex(tenantId: string): string {
 | procurement/ | 受領見積 · 発注 |
 | sales/quotes/ | 提出見積 |
 | finance/accounting/ | 請求 · 領収書索引 |
-| io/ | 受領 · 送付 |
+| io/ | 受領 · 送付 · **帳簿インプット**（inbox/bank|card|… → \`orgos ingest\`） |
 | legal/ · compliance/ · executive/ | 法務 · コンプライアンス · 秘書 |
 | reports/ | Agent 生成物（Zone C） |
+
+**帳簿インプット:** \`docs/io/inbox/{bank,card,transit,wallet,marketplace,sales,receipts,contracts}/\`（個人・法人共通 · ADR 0073）
 
 **領収書スキャン:** \`records/receipts/\`（テナント直下 · Git 非推跡推奨）
 `;
@@ -162,6 +165,16 @@ export function scaffoldCoreTenantDocs(): ScaffoldResult {
     "# records — スキャン正本（L2）\n\n領収書: records/receipts/{年}/\nZone A 索引は docs/finance/accounting/templates/\n",
     result
   );
+
+  const ingest = ensureFinanceIngestInboxScaffold();
+  for (const d of ingest.dirs_created) {
+    if (!result.created.includes(d) && !result.skipped.includes(d)) {
+      result.created.push(d);
+    }
+  }
+  for (const r of ingest.readmes_copied) {
+    result.created.push(r);
+  }
 
   return result;
 }

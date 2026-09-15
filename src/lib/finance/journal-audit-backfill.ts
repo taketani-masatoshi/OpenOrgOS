@@ -16,6 +16,7 @@ function inferPostedBy(entry: JournalEntry): string {
   if (source?.kind === "ar_ap") return "ar_ap";
   if (source?.kind === "consumption_tax_refund") return "accounting";
   if (source?.kind === "remittance") return "remittance";
+  if (source?.kind === "ingest") return source.authorized_by || "ingest";
   return "migration-backfill";
 }
 

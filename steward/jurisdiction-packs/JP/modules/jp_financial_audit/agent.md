@@ -26,3 +26,9 @@ orgos operations financial-audit conclude-stub --period 2026
 | `presentation_total_jump_journals_unchanged` | warning |
 
 出力: `docs/audit/financial/{period}/` · snapshot: `data/audit/presentation-snapshot.yaml`
+
+## 仕訳の投入元
+
+GL 正本は `data/finance/journal-entries.yaml`。外部明細は Core の `docs/io/inbox/` → `orgos ingest`（個人・法人共通）。本モジュールは audit ワークペーパーのみ — inbox seed は持たない（activate 時 scaffold）。
+
+俯瞰: `steward/platform/finance/00-README.md`

@@ -25,6 +25,7 @@
 - 物件別収益前提（Property / Hospitality からの入力）を計画 YAML へ反映
 - 編集後の `validate` と `sync all` の実行
 - **Skill 実行後** `docs/reports/agent-summaries/finance/` に要約を書く
+- **帳簿インプット** — `docs/io/inbox/` → `orgos ingest`（個人・法人共通 · [platform/finance](../../platform/finance/00-README.md)）
 
 ---
 
@@ -56,6 +57,7 @@
 | `docs/plans/**` | R/W |
 | `docs/exports/*.csv` | R/W |
 | `docs/finance/accounting/**` | R/W |
+| `docs/io/inbox/**` | R（明細投入 · Operations と協調 · `orgos ingest`） |
 | `data/properties/**` | Read（減価・収益） |
 | `data/contracts/**` | Read（費用按分 CTR-003 等） |
 | `docs/company/tax/**` | Read |

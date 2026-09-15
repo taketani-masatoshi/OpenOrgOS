@@ -12,6 +12,7 @@ import {
   mergeBankStatementEntries,
   parseBankStatementCsv,
 } from "../../../steward/jurisdiction-packs/JP/modules/jp_bank_corporate/cli/bank-statement-import.js";
+import { splitCsvLine, csvEscape } from "./ingest/csv.js";
 
 export type BankCsvColumnMapping = {
   date: string;
@@ -185,37 +186,6 @@ function normalizeDirection(value: string): "inflow" | "outflow" {
   if (["inflow", "in", "deposit", "入金"].includes(normalized)) return "inflow";
   if (["outflow", "out", "withdrawal", "出金"].includes(normalized)) return "outflow";
   throw new Error(`方向「${value}」は inflow/outflow（入金/出金）で指定してください`);
-}
-
-function splitCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const ch = line[i]!;
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i += 1;
-      } else {
-        inQuotes = !inQuotes;
-      }
-      continue;
-    }
-    if (ch === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-      continue;
-    }
-    current += ch;
-  }
-  result.push(current);
-  return result;
-}
-
-function csvEscape(value: string): string {
-  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
-  return value;
 }
 
 const DEFAULT_BANK_CSV_TEMPLATE = `date,direction,amount,category,description,account_id,reference,counterparty

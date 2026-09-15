@@ -10,4 +10,9 @@
 
 ```bash
 orgos operations tax-consumption check
+orgos operations tax-consumption year-end-reclass --year YYYY
 ```
+
+## 明細投入
+
+売上・経費の元データは `docs/io/inbox/{sales,card,receipts,…}/` → `orgos ingest`（Core 標準 · ADR 0073）。activate 時に inbox を scaffold する。

@@ -7,6 +7,7 @@ import type {
 } from "../../../../../../schemas/jp-bank-corporate.js";
 import type { ChartOfAccounts } from "../../../../../../schemas/finance/types.js";
 import { currentDate } from "../../../../../../src/lib/utils.js";
+import { parseCsvLine } from "../../../../../../src/lib/finance/ingest/csv.js";
 import { resolveDefaultAccountId } from "./calendar-import.js";
 import { resolveChartAccountId } from "./chart-account.js";
 
@@ -63,40 +64,6 @@ const CSV_HEADER = [
   "reference",
   "counterparty",
 ] as const;
-
-function parseCsvLine(line: string): string[] {
-  const cells: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') {
-          current += '"';
-          i += 1;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        current += ch;
-      }
-      continue;
-    }
-    if (ch === '"') {
-      inQuotes = true;
-      continue;
-    }
-    if (ch === ",") {
-      cells.push(current.trim());
-      current = "";
-      continue;
-    }
-    current += ch;
-  }
-  cells.push(current.trim());
-  return cells;
-}
 
 function normalizeDirection(value: string): "inflow" | "outflow" {
   const normalized = value.trim().toLowerCase();

@@ -1,0 +1,11 @@
+inbox_items:
+  - id: INB-001
+    filename: sample-card.csv
+    path: docs/io/inbox/card/sample-card.csv
+    category: card
+    status: pending
+    received_at: 2026-09-15
+    source: download
+    title: sample-card
+    notes: orgos ingest scan
+outbox_items: []

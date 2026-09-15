@@ -14,6 +14,7 @@ import {
 } from "../org/operators.js";
 import { operatorRegistrySchema } from "../../../schemas/org/operator.js";
 import { upsertControlPlaneTenant } from "./ledger-control-plane.js";
+import { ensureFinanceIngestInboxScaffold } from "../finance/ingest/scaffold.js";
 
 const FINANCE_SEED_FILES = [
   "chart-of-accounts.yaml",
@@ -133,6 +134,7 @@ export function provisionLedgerTenant(input: {
   seedFinanceFromFixture(tenantId);
   writeLedgerProductMeta(tenantId);
   setTenantId(tenantId);
+  ensureFinanceIngestInboxScaffold();
   ensureCeoOperator({
     companyName: input.companyName,
     adminEmail: input.adminEmail,

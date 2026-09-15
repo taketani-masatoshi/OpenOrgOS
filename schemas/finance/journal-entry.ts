@@ -62,6 +62,12 @@ export const journalSourceSchema = z.discriminatedUnion("kind", [
     claim_id: z.string().regex(/^CLAIM-\d{4}-\d{2}-[a-z_]+$/),
     event: z.literal("refund_received"),
   }),
+  z.object({
+    kind: z.literal("ingest"),
+    batch_id: z.string().min(1),
+    row_fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+    authorized_by: z.string().min(1),
+  }),
 ]);
 
 export type JournalSource = z.output<typeof journalSourceSchema>;

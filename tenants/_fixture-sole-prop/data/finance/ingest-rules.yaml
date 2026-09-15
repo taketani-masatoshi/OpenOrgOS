@@ -1,0 +1,13 @@
+version: 1
+default_cash_account_code: "1120"
+default_revenue_account_code: "4100"
+asset_intake_threshold_yen: 100000
+rules:
+  - id: card-misc
+    match:
+      source_kind: card
+      direction: outflow
+    account_code: "5280"
+    tax_category: taxable_10
+    business_pct: 100
+    priority: 50

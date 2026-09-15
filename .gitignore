@@ -30,12 +30,17 @@ apps/wire-console/dist/
 scratch/*
 !scratch/00-README.md
 tenants/*/docs/reports/*
+# inbox/outbox の生ファイルは無視。カテゴリ README のみ追跡（親 dir の否定が必要）
 tenants/*/docs/io/inbox/**
+!tenants/*/docs/io/inbox/
+!tenants/*/docs/io/inbox/*/
 !tenants/*/docs/io/inbox/00-このフォルダについて.md
-!tenants/*/docs/io/inbox/**/00-このフォルダについて.md
+!tenants/*/docs/io/inbox/*/00-このフォルダについて.md
 tenants/*/docs/io/outbox/**
+!tenants/*/docs/io/outbox/
+!tenants/*/docs/io/outbox/*/
 !tenants/*/docs/io/outbox/00-このフォルダについて.md
-!tenants/*/docs/io/outbox/**/00-このフォルダについて.md
+!tenants/*/docs/io/outbox/*/00-このフォルダについて.md
 tenants/*/docs/company/pdf/*
 !tenants/*/docs/company/pdf/00-このフォルダについて.md
 # L2/個情 records vault — 全テナント・全ゾーン横断（registry RES-PII-RECORDS · **/records/**）

@@ -123,6 +123,15 @@ import {
   runLedgerDenchoCheck,
 } from "../../commands/ledger.js";
 import {
+  runIngestStatus,
+  runIngestScan,
+  runIngestParse,
+  runIngestClassify,
+  runIngestReview,
+  runIngestPost,
+  runIngestScaffold,
+} from "../../commands/ingest.js";
+import {
   runReceiptInit,
   runReceiptIssue,
   runReceiptList,
@@ -1407,6 +1416,56 @@ export function registerDomainCommands(program: Command): void {
     }) => runBudgetRollover(opts));
 
   const ledger = program.command("ledger").description("General ledger and trial balance");
+
+  const ingest = program
+    .command("ingest")
+    .description("Finance drop-folder ingest (CSV/MD → staging → journal)");
+  ingest
+    .command("status")
+    .description("Inbox dirs and staging row counts")
+    .option("--json")
+    .action((opts: { json?: boolean }) => runIngestStatus(opts));
+  ingest
+    .command("scaffold")
+    .description("Ensure docs/io/inbox finance categories + READMEs (corporate & sole-prop)")
+    .option("--json")
+    .action((opts: { json?: boolean }) => runIngestScaffold(opts));
+  ingest
+    .command("scan")
+    .description("Discover new files under docs/io/inbox finance categories")
+    .option("--write", "Register into document-io.yaml")
+    .option("--json")
+    .action((opts: { write?: boolean; json?: boolean }) => runIngestScan(opts));
+  ingest
+    .command("parse")
+    .description("Parse inbox file(s) into data/finance/ingest-staging.yaml")
+    .option("--source <kind>", "bank|card|transit|wallet|marketplace|sales|receipts|contracts")
+    .option("--file <path>", "Single file (requires --source)")
+    .option("--write", "Persist staging rows")
+    .option("--json")
+    .action((opts: { source?: string; file?: string; write?: boolean; json?: boolean }) =>
+      runIngestParse(opts),
+    );
+  ingest
+    .command("classify")
+    .description("Apply data/finance/ingest-rules.yaml to staging rows")
+    .option("--write")
+    .option("--json")
+    .action((opts: { write?: boolean; json?: boolean }) => runIngestClassify(opts));
+  ingest
+    .command("review")
+    .description("Write needs-review report under docs/reports/ingest/")
+    .option("--period <YYYY-MM>")
+    .option("--json")
+    .action((opts: { period?: string; json?: boolean }) => runIngestReview(opts));
+  ingest
+    .command("post")
+    .description("Post classified staging rows as journal entries")
+    .requiredOption("--batch <id>", "Staging batch_id")
+    .option("--write", "Append to journal-entries.yaml")
+    .option("--json")
+    .action((opts: { batch: string; write?: boolean; json?: boolean }) => runIngestPost(opts));
+
   ledger
     .command("digest")
     .description("Write L1 ledger digest under docs/reports/ledger/")

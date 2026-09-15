@@ -394,3 +394,25 @@ entries:
         debit_yen: 0
         credit_yen: 5000
         tax_category: out_of_scope
+  - entry_id: JE-ING-EB01D5A95922
+    occurred_at: 2025-06-15T03:00:00.000Z
+    description: "card: 文房具"
+    source:
+      kind: ingest
+      batch_id: ING-CARD-001
+      row_fingerprint: eb01d5a959229ecb1e825949d0630fd8f2e5d32e15fb27ce46e5a64d7f5272ce
+      authorized_by: dev-bypass
+    posted_at: 2026-09-15T13:42:45.029Z
+    posted_by: dev-bypass
+    evidence_refs:
+      - inbox:docs/io/inbox/card/demo-card-2025-06.csv
+      - sha256:3ed4f6d10d2003de6a5b17f34290ab34f2764e43084e6cd77b1b2aafea6a2c8b
+    lines:
+      - account_code: "5280"
+        debit_yen: 2200
+        credit_yen: 0
+        tax_category: taxable_10
+      - account_code: "1120"
+        debit_yen: 0
+        credit_yen: 2200
+        tax_category: out_of_scope

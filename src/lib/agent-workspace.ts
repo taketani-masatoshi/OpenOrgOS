@@ -18,6 +18,10 @@ import { getTenantDir, getTenantTemplateDir } from "./tenant.js";
 import { loadTenantStandards, STANDARDS_FILE } from "./tenant-standards.js";
 import { resolveTenantPath, writeYamlFile } from "./utils.js";
 import { scaffoldModuleExtensionDocs } from "./tenant-document-zones.js";
+import {
+  ensureFinanceIngestInboxScaffold,
+  moduleNeedsFinanceIngestScaffold,
+} from "./finance/ingest/scaffold.js";
 import { tenantRegulationsFileSchema } from "../../schemas/tenant-regulations.js";
 import { tenantStandardsFileSchema } from "../../schemas/tenant-standards.js";
 
@@ -179,6 +183,7 @@ export interface ActivateModuleResult {
   isoEnabled: string[];
   regulationsSeeded: string[];
   controlsInitialized: number;
+  financeIngestScaffolded?: boolean;
 }
 
 export interface ActivateModuleOptions {
@@ -210,6 +215,12 @@ export function activateTenantModule(
   }
 
   scaffoldModuleExtensionDocs(moduleId);
+
+  let financeIngestScaffolded = false;
+  if (moduleNeedsFinanceIngestScaffold(moduleId)) {
+    ensureFinanceIngestInboxScaffold();
+    financeIngestScaffolded = true;
+  }
 
   const agentId = MODULE_AGENT[moduleId];
   const workspace = agentId ? ensureAgentWorkspace(agentId) : { created: [], skipped: [] };
@@ -243,6 +254,7 @@ export function activateTenantModule(
     isoEnabled,
     regulationsSeeded,
     controlsInitialized,
+    financeIngestScaffolded,
   };
 }
 
@@ -254,6 +266,9 @@ export function formatActivateModuleResult(result: ActivateModuleResult): string
   ];
   if (result.seedsCopied.length) {
     lines.push(`  seeds: ${result.seedsCopied.join(", ")}`);
+  }
+  if (result.financeIngestScaffolded) {
+    lines.push("  finance ingest inbox: docs/io/inbox/{bank,card,…} ensured");
   }
   if (result.workspace.created.length) {
     lines.push(`  workspace created: ${result.workspace.created.join(", ")}`);

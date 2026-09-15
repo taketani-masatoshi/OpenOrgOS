@@ -90,6 +90,9 @@ function exportNotes(entry: JournalEntry): string {
   if (entry.source?.kind === "expense_claim") {
     return entry.source.claim_id;
   }
+  if (entry.source?.kind === "ingest") {
+    return `${entry.source.batch_id}:${entry.source.row_fingerprint.slice(0, 12)}`;
+  }
   if (entry.claim_id) return entry.claim_id;
   return "";
 }

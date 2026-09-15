@@ -16,7 +16,7 @@
 | **MD が索引・要約** | Git 追跡するのは L0〜L1 の MD / CSV。PDF スキャンは `records/`（非追跡） |
 | **YAML が台帳** | 契約 ID・イベント・稟議は `data/` が正本 |
 | **種別でフォルダ分け** | 見積・契約・規程を混在させない |
-| **受領と起票を分離** | 外部受領 → `docs/io/inbox/`。自社起票 → 各ドメインフォルダ |
+| **受領と起票を分離** | 外部受領 → `docs/io/inbox/`。自社起票 → 各ドメインフォルダ。**帳簿明細**（銀行・カード等）も同 inbox → `orgos ingest`（個人・法人共通 · [platform/finance](../platform/finance/00-README.md)） |
 | **組織間契約** | P2 まで起票側のみ `docs/contracts/`（[inter-org-contract-workflow.md](inter-org-contract-workflow.md)） |
 
 ---

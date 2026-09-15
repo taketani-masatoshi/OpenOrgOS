@@ -31,6 +31,24 @@ export const INBOX_CATEGORIES: InboxCategory[] = [
   "receipts",
   "corporate",
   "misc",
+  "bank",
+  "card",
+  "transit",
+  "wallet",
+  "marketplace",
+  "sales",
+];
+
+/** Categories used by `orgos ingest` finance pipeline. */
+export const FINANCE_INGEST_INBOX_CATEGORIES: InboxCategory[] = [
+  "bank",
+  "card",
+  "transit",
+  "wallet",
+  "marketplace",
+  "sales",
+  "receipts",
+  "contracts",
 ];
 
 export const OUTBOX_CATEGORIES: OutboxCategory[] = [
@@ -117,6 +135,39 @@ export function addInboxItem(opts: AddInboxOptions): InboxItem {
     source: opts.source ?? "scan",
     title: opts.title,
     related_id: opts.relatedId,
+    notes: opts.notes,
+  };
+  data.inbox_items.push(item);
+  saveDocumentIo(data);
+  return item;
+}
+
+/** Register a file already under docs/io/inbox/{category}/ without copying. */
+export function registerInboxItemInPlace(opts: {
+  absPath: string;
+  category: InboxCategory;
+  title: string;
+  source?: InboxItem["source"];
+  notes?: string;
+}): InboxItem {
+  if (!existsSync(opts.absPath)) {
+    throw new Error(`Source file not found: ${opts.absPath}`);
+  }
+  const relPath = toLogicalPath(opts.absPath);
+  const data = loadDocumentIo();
+  if (data.inbox_items.some((i) => i.path === relPath)) {
+    const existing = data.inbox_items.find((i) => i.path === relPath)!;
+    return existing;
+  }
+  const item: InboxItem = {
+    id: nextId("INB", data.inbox_items),
+    filename: basename(opts.absPath),
+    path: relPath,
+    category: opts.category,
+    status: "pending",
+    received_at: currentDate(),
+    source: opts.source ?? "download",
+    title: opts.title,
     notes: opts.notes,
   };
   data.inbox_items.push(item);

@@ -8,6 +8,13 @@ export const inboxCategory = z.enum([
   "receipts",
   "corporate",
   "misc",
+  /** Finance ingest drop folders (orgos ingest) */
+  "bank",
+  "card",
+  "transit",
+  "wallet",
+  "marketplace",
+  "sales",
 ]);
 
 export const inboxStatus = z.enum(["pending", "processing", "done", "rejected"]);
