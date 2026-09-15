@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getTenantDir, setTenantId } from "../src/lib/tenant.js";
+import { loadChartOfAccounts } from "../src/lib/data.js";
 import {
   assessSolePropYearEnd,
   calendarMonthsInYear,
@@ -44,7 +45,14 @@ describe("sole-prop year-end process", () => {
     expect(isConsumptionTaxableStatus("免税事業者")).toBe(false);
   });
 
-  it("warns on empty journal months unless acknowledged", () => {
+  it("warns on empty / unlocked months unless acknowledged", () => {
+    writeFileSync(
+      join(getTenantDir(), setupRel),
+      setupBackup
+        .replace(/\njournal_coverage:[\s\S]*$/m, "")
+        .trimEnd() + "\n",
+      "utf-8",
+    );
     const warned = assessSolePropYearEnd(2026);
     expect(warned.empty_months.length).toBeGreaterThan(0);
     expect(warned.issues.some((i) => i.code === "journal_months_empty")).toBe(true);
@@ -52,11 +60,20 @@ describe("sole-prop year-end process", () => {
 
     writeFileSync(
       join(getTenantDir(), setupRel),
-      `${setupBackup.trimEnd()}\njournal_coverage:\n  acknowledge_empty_months: true\n`,
+      `${setupBackup.trimEnd()}\n`,
       "utf-8",
     );
     const acked = assessSolePropYearEnd(2026);
     expect(acked.issues.some((i) => i.code === "journal_months_empty")).toBe(false);
+    expect(acked.issues.some((i) => i.code === "period_locks_incomplete")).toBe(false);
+  });
+
+  it("klab CoA maps consumption_tax_unpaid to 2180", () => {
+    setTenantId("klab");
+    const coa = loadChartOfAccounts();
+    expect(coa.accounts.some((a) => a.code === "2180")).toBe(true);
+    expect(coa.journal_source_accounts?.consumption_tax_unpaid).toBe("2180");
+    setTenantId("_fixture-sole-prop");
   });
 
   it("posts VAT year-end reclass idempotently when taxable", () => {

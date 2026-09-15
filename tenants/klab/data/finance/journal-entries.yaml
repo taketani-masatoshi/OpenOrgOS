@@ -1,14 +1,15 @@
 version: 1
 entries:
-  # 期首普通預金は opening-balances.yaml（as_of 2024-12-31）
   - entry_id: JE-2025-002
-    occurred_at: "2025-01-04T03:00:00.000Z"
+    occurred_at: 2025-01-04T03:00:00.000Z
     description: 本日の現金売上
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-04T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:cash-book"
+      - source:cash-book
     lines:
       - account_code: "1110"
         debit_yen: 110000
@@ -22,15 +23,16 @@ entries:
         debit_yen: 0
         credit_yen: 10000
         tax_category: out_of_scope
-
   - entry_id: JE-2025-003
-    occurred_at: "2025-01-04T03:00:00.000Z"
+    occurred_at: 2025-01-04T03:00:00.000Z
     description: 事業主借 · 普通預金へ預け入れ
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-04T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
+      - source:bank-passbook
     lines:
       - account_code: "1120"
         debit_yen: 50000
@@ -40,15 +42,16 @@ entries:
         debit_yen: 0
         credit_yen: 50000
         tax_category: out_of_scope
-
   - entry_id: JE-2025-004
-    occurred_at: "2025-01-05T03:00:00.000Z"
+    occurred_at: 2025-01-05T03:00:00.000Z
     description: 本日の現金売上
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-05T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:cash-book"
+      - source:cash-book
     lines:
       - account_code: "1110"
         debit_yen: 150000
@@ -62,15 +65,16 @@ entries:
         debit_yen: 0
         credit_yen: 13636
         tax_category: out_of_scope
-
   - entry_id: JE-2025-005
-    occurred_at: "2025-01-05T03:00:00.000Z"
+    occurred_at: 2025-01-05T03:00:00.000Z
     description: 広告宣伝費 · 名刺作成（個人カード）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-05T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:expense-ledger"
+      - source:expense-ledger
     lines:
       - account_code: "5160"
         debit_yen: 3000
@@ -84,15 +88,16 @@ entries:
         debit_yen: 0
         credit_yen: 3300
         tax_category: out_of_scope
-
   - entry_id: JE-2025-006
-    occurred_at: "2025-01-06T03:00:00.000Z"
+    occurred_at: 2025-01-06T03:00:00.000Z
     description: 事業主持ち帰り
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-06T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:cash-book"
+      - source:cash-book
     lines:
       - account_code: "3210"
         debit_yen: 200000
@@ -102,15 +107,16 @@ entries:
         debit_yen: 0
         credit_yen: 200000
         tax_category: out_of_scope
-
   - entry_id: JE-2025-007
-    occurred_at: "2025-01-08T03:00:00.000Z"
+    occurred_at: 2025-01-08T03:00:00.000Z
     description: A社 マット交換（衛生費→消耗品費）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-08T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:cash-book"
+      - source:cash-book
     lines:
       - account_code: "5200"
         debit_yen: 1818
@@ -124,15 +130,16 @@ entries:
         debit_yen: 0
         credit_yen: 2000
         tax_category: out_of_scope
-
   - entry_id: JE-2025-008
-    occurred_at: "2025-01-08T03:00:00.000Z"
+    occurred_at: 2025-01-08T03:00:00.000Z
     description: 旅費交通費 · 青色申告会往復（スイカ）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-08T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:expense-ledger"
+      - source:expense-ledger
     lines:
       - account_code: "5140"
         debit_yen: 1273
@@ -146,16 +153,17 @@ entries:
         debit_yen: 0
         credit_yen: 1400
         tax_category: out_of_scope
-
   - entry_id: JE-2025-009
-    occurred_at: "2025-01-10T03:00:00.000Z"
+    occurred_at: 2025-01-10T03:00:00.000Z
     description: 外注工賃 · Bデザイン事務所（源泉差引後振込）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-10T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
-      - "withholding:WP-2025-001"
+      - source:bank-passbook
+      - withholding:WP-2025-001
     lines:
       - account_code: "5240"
         debit_yen: 30171
@@ -173,15 +181,16 @@ entries:
         debit_yen: 0
         credit_yen: 3388
         tax_category: out_of_scope
-
   - entry_id: JE-2025-010
-    occurred_at: "2025-01-10T03:00:00.000Z"
+    occurred_at: 2025-01-10T03:00:00.000Z
     description: 支払手数料 · C銀行 振込手数料
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-10T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
+      - source:bank-passbook
     lines:
       - account_code: "5280"
         debit_yen: 182
@@ -195,15 +204,16 @@ entries:
         debit_yen: 0
         credit_yen: 200
         tax_category: out_of_scope
-
   - entry_id: JE-2025-011
-    occurred_at: "2025-01-15T03:00:00.000Z"
+    occurred_at: 2025-01-15T03:00:00.000Z
     description: 消耗品費 · H店 電卓購入（PayPay）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-15T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:expense-ledger"
+      - source:expense-ledger
     lines:
       - account_code: "5200"
         debit_yen: 1000
@@ -217,15 +227,16 @@ entries:
         debit_yen: 0
         credit_yen: 1100
         tax_category: out_of_scope
-
   - entry_id: JE-2025-012
-    occurred_at: "2025-01-19T03:00:00.000Z"
+    occurred_at: 2025-01-19T03:00:00.000Z
     description: 荷造運賃 · J宅配便 大阪出張分（個人現金）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-19T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:expense-ledger"
+      - source:expense-ledger
     lines:
       - account_code: "5120"
         debit_yen: 2000
@@ -239,15 +250,16 @@ entries:
         debit_yen: 0
         credit_yen: 2200
         tax_category: out_of_scope
-
   - entry_id: JE-2025-013
-    occurred_at: "2025-01-20T03:00:00.000Z"
+    occurred_at: 2025-01-20T03:00:00.000Z
     description: A社 売上振込
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-20T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
+      - source:bank-passbook
     lines:
       - account_code: "1120"
         debit_yen: 100000
@@ -261,15 +273,16 @@ entries:
         debit_yen: 0
         credit_yen: 9091
         tax_category: out_of_scope
-
   - entry_id: JE-2025-014
-    occurred_at: "2025-01-25T03:00:00.000Z"
+    occurred_at: 2025-01-25T03:00:00.000Z
     description: 事業主貸 · D生命保険（個人）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-25T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
+      - source:bank-passbook
     lines:
       - account_code: "3210"
         debit_yen: 30000
@@ -279,16 +292,17 @@ entries:
         debit_yen: 0
         credit_yen: 30000
         tax_category: out_of_scope
-
   - entry_id: JE-2025-015
-    occurred_at: "2025-01-31T03:00:00.000Z"
+    occurred_at: 2025-01-31T03:00:00.000Z
     description: 通信費 · 携帯電話（事業50%・家事50%）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-01-31T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
-      - "allocation:phone-50pct"
+      - source:bank-passbook
+      - allocation:phone-50pct
     lines:
       - account_code: "5150"
         debit_yen: 4545
@@ -306,16 +320,17 @@ entries:
         debit_yen: 0
         credit_yen: 10000
         tax_category: out_of_scope
-
   - entry_id: JE-2025-016
-    occurred_at: "2025-02-10T03:00:00.000Z"
+    occurred_at: 2025-02-10T03:00:00.000Z
     description: クレジットカード引落し（旅費・消耗品・個人使用分）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-02-10T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
-      - "source:card-breakdown"
+      - source:bank-passbook
+      - source:card-breakdown
     lines:
       - account_code: "5140"
         debit_yen: 9091
@@ -341,15 +356,16 @@ entries:
         debit_yen: 0
         credit_yen: 39800
         tax_category: out_of_scope
-
   - entry_id: JE-2025-017
-    occurred_at: "2025-02-15T03:00:00.000Z"
+    occurred_at: 2025-02-15T03:00:00.000Z
     description: 事業主貸 · 預金機引出
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-02-15T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
+      - source:bank-passbook
     lines:
       - account_code: "3210"
         debit_yen: 10000
@@ -359,15 +375,16 @@ entries:
         debit_yen: 0
         credit_yen: 10000
         tax_category: out_of_scope
-
   - entry_id: JE-2025-018
-    occurred_at: "2025-02-25T03:00:00.000Z"
+    occurred_at: 2025-02-25T03:00:00.000Z
     description: 事業主借 · F証券 配当（事業外）
     source:
       kind: manual
       authorized_by: owner
+    posted_at: 2025-02-25T03:00:00.000Z
+    posted_by: owner
     evidence_refs:
-      - "source:bank-passbook"
+      - source:bank-passbook
     lines:
       - account_code: "1120"
         debit_yen: 5000
@@ -377,4 +394,3 @@ entries:
         debit_yen: 0
         credit_yen: 5000
         tax_category: out_of_scope
-

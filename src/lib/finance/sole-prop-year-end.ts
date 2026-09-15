@@ -53,7 +53,8 @@ export function isConsumptionTaxableStatus(status?: string): boolean {
 
 function tbBalanceYen(code: string, asOf: string): number {
   const row = buildTrialBalance({ asOf }).rows.find((r) => r.account_code === code);
-  return row?.balance_yen ?? 0;
+  const raw = row?.balance_yen ?? 0;
+  return raw === 0 ? 0 : raw;
 }
 
 export function consumptionTaxNetPayableYen(year: number): {
@@ -71,10 +72,11 @@ export function consumptionTaxNetPayableYen(year: number): {
   const asOf = `${year}-12-31`;
   const output_yen = tbBalanceYen(output_code, asOf);
   const input_yen = tbBalanceYen(input_code, asOf);
+  const net = output_yen - input_yen;
   return {
     output_yen,
     input_yen,
-    net_payable_yen: output_yen - input_yen,
+    net_payable_yen: net === 0 ? 0 : net,
     output_code,
     input_code,
     unpaid_code,
@@ -210,14 +212,14 @@ export function assessSolePropYearEnd(calendarYear?: number): {
     });
   }
 
-  if (unlocked_months.length > 0) {
+  if (unlocked_months.length > 0 && setup?.journal_coverage?.acknowledge_unlocked_months !== true) {
     const shown = unlocked_months.slice(0, 12).join(", ");
     issues.push({
       code: "period_locks_incomplete",
       level: "warning",
       file: "data/finance/period-locks.yaml",
       message: `${year} 年の未 lock 月: ${shown}`,
-      hint: "orgos ledger period lock --month YYYY-MM",
+      hint: "orgos ledger period lock --month YYYY-MM · journal_coverage.acknowledge_unlocked_months: true で抑制",
     });
   }
 

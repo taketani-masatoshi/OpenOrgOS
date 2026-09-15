@@ -567,6 +567,12 @@ export function validateAgentCatalogIntegrity(): IntegrityIssue[] {
 export function runIntegrityChecks(): IntegrityIssue[] {
   const issues: IntegrityIssue[] = validateAgentCatalogIntegrity();
   const skeleton = isSkeletonTenant();
+  let soleProp = false;
+  try {
+    soleProp = loadTenantConfig().entity_form === "sole_proprietorship";
+  } catch {
+    soleProp = false;
+  }
   const push = (level: IntegrityIssue["level"], file: string, message: string) =>
     issues.push({ level, file, message });
 
@@ -574,18 +580,11 @@ export function runIntegrityChecks(): IntegrityIssue[] {
   try {
     data = loadAllData();
   } catch (e) {
-    let soleProp = false;
-    try {
-      soleProp = loadTenantConfig().entity_form === "sole_proprietorship";
-    } catch {
-      soleProp = false;
+    // Sole-prop tenants intentionally omit corp plan/payroll YAML — continue without noise.
+    if (!soleProp) {
+      push("error", "cross-reference", e instanceof Error ? e.message : String(e));
+      return issues;
     }
-    push(
-      soleProp ? "warning" : "error",
-      "cross-reference",
-      e instanceof Error ? e.message : String(e),
-    );
-    if (!soleProp) return issues;
   }
 
   const propertyIds = new Set(data?.properties.map((p) => p.id) ?? []);
@@ -711,15 +710,23 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     push("warning", "data/finance/cash-balance.yaml", e instanceof Error ? e.message : String(e));
   }
 
-  try {
-    const hr = loadEmployees();
-    for (const emp of hr.employees) {
-      if (emp.contract_id && !contractById.has(emp.contract_id)) {
-        push("error", "data/hr/employees.yaml", `${emp.id} references unknown contract ${emp.contract_id}`);
+  if (!soleProp || existsSync(join(getDataDir(), "hr", "employees.yaml"))) {
+    try {
+      const hr = loadEmployees();
+      for (const emp of hr.employees) {
+        if (emp.contract_id && !contractById.has(emp.contract_id)) {
+          push(
+            "error",
+            "data/hr/employees.yaml",
+            `${emp.id} references unknown contract ${emp.contract_id}`,
+          );
+        }
+      }
+    } catch (e) {
+      if (!soleProp) {
+        push("warning", "data/hr/employees.yaml", e instanceof Error ? e.message : String(e));
       }
     }
-  } catch (e) {
-    push("warning", "data/hr/employees.yaml", e instanceof Error ? e.message : String(e));
   }
 
   for (const soft of collectRosterPayrollConsistencyIssues()) {
@@ -732,20 +739,18 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     });
   }
 
-  try {
-    readYamlFile(getClassificationRegistryYaml(), classificationRegistrySchema);
-  } catch (e) {
-    let soleProp = false;
+  if (!soleProp || existsSync(join(getDataDir(), "classification-registry.yaml"))) {
     try {
-      soleProp = loadTenantConfig().entity_form === "sole_proprietorship";
-    } catch {
-      soleProp = false;
+      readYamlFile(getClassificationRegistryYaml(), classificationRegistrySchema);
+    } catch (e) {
+      if (!soleProp) {
+        push(
+          "error",
+          "data/classification-registry.yaml",
+          e instanceof Error ? e.message : String(e),
+        );
+      }
     }
-    push(
-      soleProp ? "warning" : "error",
-      "data/classification-registry.yaml",
-      e instanceof Error ? e.message : String(e),
-    );
   }
 
   const executiveYaml = [
@@ -756,15 +761,17 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     "stakeholders.yaml",
     "mail-triage-queue.yaml",
   ] as const;
-  for (const name of executiveYaml) {
-    const rel = `data/executive/${name}`;
-    const abs = resolveTenantPath(rel);
-    if (!existsSync(abs)) {
-      push(
-        "warning",
-        rel,
-        `未作成 — \`cp ${name.replace(".yaml", ".yaml.example")} ${name}\`（[data/executive/00-README.md](data/executive/00-README.md)）`
-      );
+  if (!soleProp) {
+    for (const name of executiveYaml) {
+      const rel = `data/executive/${name}`;
+      const abs = resolveTenantPath(rel);
+      if (!existsSync(abs)) {
+        push(
+          "warning",
+          rel,
+          `未作成 — \`cp ${name.replace(".yaml", ".yaml.example")} ${name}\`（[data/executive/00-README.md](data/executive/00-README.md)）`,
+        );
+      }
     }
   }
 
@@ -809,7 +816,7 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   }
 
-  if (process.platform === "darwin") {
+  if (!soleProp && process.platform === "darwin") {
     try {
       const out = execFileSync("tmutil", ["latestbackup"], { encoding: "utf-8" }).trim();
       if (out) {
@@ -838,8 +845,10 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   }
 
-  for (const pci of validatePeerContactRegistry()) {
-    push(pci.level, pci.file, pci.message);
+  if (!soleProp) {
+    for (const pci of validatePeerContactRegistry()) {
+      push(pci.level, pci.file, pci.message);
+    }
   }
 
   try {

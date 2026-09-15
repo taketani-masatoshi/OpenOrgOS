@@ -23,3 +23,6 @@ tax_advisor_handoff:
 notes: |
   2025-source-notes.md の方針を初期セットアップとして固定。
   65万円証跡は提出後に blue-return-filing.yaml へ記入。
+journal_coverage:
+  acknowledge_empty_months: true
+  acknowledge_unlocked_months: true

@@ -19,3 +19,6 @@ tax_advisor_handoff:
   deadline: "2027-03-15"
   owner: fixture
 notes: Fixture setup — validate hard-fail 回避用。
+journal_coverage:
+  acknowledge_empty_months: true
+  acknowledge_unlocked_months: true
