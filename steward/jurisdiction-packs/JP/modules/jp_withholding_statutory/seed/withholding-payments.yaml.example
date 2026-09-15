@@ -1,0 +1,10 @@
+version: 1
+calendar_year: 2026
+payments: []
+# 例:
+# - payment_id: WP-2026-001
+#   payee_name: 外注太郎
+#   category: reward_fee
+#   paid_at: "2026-06-15"
+#   gross_yen: 1000000
+#   expense_account_code: "5100"

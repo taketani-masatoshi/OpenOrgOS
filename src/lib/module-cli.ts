@@ -39,6 +39,8 @@ import { jp_invoice_qualifiedCli } from "../../steward/jurisdiction-packs/JP/mod
 import { jp_withholding_statutoryCli } from "../../steward/jurisdiction-packs/JP/modules/jp_withholding_statutory/cli/register.js";
 import { jp_payrollCli } from "../../steward/jurisdiction-packs/JP/modules/jp_payroll/cli/register.js";
 import { jp_social_insuranceCli } from "../../steward/jurisdiction-packs/JP/modules/jp_social_insurance/cli/register.js";
+import { jp_sole_proprietor_blue_returnCli } from "../../steward/jurisdiction-packs/JP/modules/jp_sole_proprietor_blue_return/cli/register.js";
+import { jp_financial_auditCli } from "../../steward/jurisdiction-packs/JP/modules/jp_financial_audit/cli/register.js";
 import { jpCarbonNeutral2050Cli } from "../../steward/jurisdiction-packs/JP/modules/jp_carbon_neutral_2050/cli/register.js";
 import { jpPrivacyPolicyCli } from "../../steward/jurisdiction-packs/JP/modules/jp_privacy_policy/cli/register.js";
 import { jpWomenEmpowermentCli } from "../../steward/jurisdiction-packs/JP/modules/jp_women_empowerment/cli/register.js";
@@ -98,6 +100,8 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   jp_withholding_statutoryCli,
   jp_payrollCli,
   jp_social_insuranceCli,
+  jp_sole_proprietor_blue_returnCli,
+  jp_financial_auditCli,
   jpCarbonNeutral2050Cli,
   jpPrivacyPolicyCli,
   jpWomenEmpowermentCli,

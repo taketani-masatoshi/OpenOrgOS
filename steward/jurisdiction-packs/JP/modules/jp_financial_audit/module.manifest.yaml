@@ -1,0 +1,13 @@
+id: jp_financial_audit
+required_seeds: []
+activation_seeds: []
+notes: |
+  財務アサーション内部ワークペーパー（ADR 0069）。外部会計監査の代替ではない。
+  J-SOX / ISO 内部監査と別系統。
+cli_commands:
+  - plan
+  - workpapers
+  - conclude-stub
+security:
+  limits:
+    concurrent_jobs: 1

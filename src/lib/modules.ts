@@ -182,6 +182,8 @@ export const MODULE_TO_CLASSIFICATION_AGENT: Record<ModuleAgentId, AgentId> = {
   jp_withholding_statutory: "tax",
   jp_payroll: "human_resources",
   jp_social_insurance: "human_resources",
+  jp_sole_proprietor_blue_return: "tax",
+  jp_financial_audit: "internal_audit",
 };
 
 const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
@@ -233,6 +235,8 @@ const NON_PROPERTY_AGENTS: ModuleAgentId[] = [
   "jp_withholding_statutory",
   "jp_payroll",
   "jp_social_insurance",
+  "jp_sole_proprietor_blue_return",
+  "jp_financial_audit",
 ];
 
 export function modulesFilePath(): string {

@@ -1,0 +1,8 @@
+skills:
+  - id: jp_sole_prop_blue_return_pack
+    file: jp_sole_prop_blue_return_pack.md
+    runtime: cli
+    cli_command: jp-sole-prop-blue-return-pack
+    handler: jp_sole_prop_blue_return_pack
+    description: 個人事業主青色申告 — 帳簿パック · 決算 · 申告書B · 控除ゲート
+    agent_id: tax

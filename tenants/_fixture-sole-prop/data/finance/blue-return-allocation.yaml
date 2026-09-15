@@ -1,0 +1,5 @@
+version: 1
+calendar_year: 2026
+default_business_pct: 100
+by_account: {}
+by_entry: {}

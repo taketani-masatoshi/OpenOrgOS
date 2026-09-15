@@ -1,0 +1,77 @@
+version: "1"
+currency: JPY
+notes: 所得税青色申告決算書（一般用）向け複式科目 · 暦年。
+accounts:
+  - code: "1100"
+    name: 現金及び預金
+    type: asset
+    normal_balance: debit
+  - code: "1150"
+    name: 売掛金
+    type: asset
+    normal_balance: debit
+  - code: "1210"
+    name: 棚卸資産
+    type: asset
+    normal_balance: debit
+  - code: "2110"
+    name: 買掛金
+    type: liability
+    normal_balance: credit
+  - code: "2120"
+    name: 預り金-源泉所得税
+    type: liability
+    normal_balance: credit
+  - code: "2160"
+    name: 仮受消費税
+    type: liability
+    normal_balance: credit
+  - code: "2170"
+    name: 仮払消費税
+    type: asset
+    normal_balance: debit
+  - code: "3100"
+    name: 元入金
+    type: equity
+    normal_balance: credit
+  - code: "3210"
+    name: 事業主貸
+    type: equity
+    normal_balance: debit
+  - code: "3220"
+    name: 事業主借
+    type: equity
+    normal_balance: credit
+  - code: "4100"
+    name: 売上高
+    type: revenue
+    normal_balance: credit
+    statement_section: revenue
+  - code: "5000"
+    name: 仕入高
+    type: expense
+    normal_balance: debit
+    statement_section: cogs
+  - code: "5100"
+    name: 経費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+category_mapping:
+  revenue:
+    other_revenue: "4100"
+  expense:
+    other: "5100"
+journal_source_accounts:
+  bank_control: "1100"
+  accounts_receivable: "1150"
+  withholding_payable: "2120"
+  social_insurance_payable: "2120"
+  payroll_payable: "2110"
+  accounts_payable: "2110"
+  payroll_expense: "5100"
+  depreciation_expense: "5100"
+  accumulated_depreciation: "1100"
+  retained_earnings: "3100"
+  consumption_tax_payable: "2160"
+  consumption_tax_receivable: "2170"

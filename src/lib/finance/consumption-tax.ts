@@ -12,6 +12,9 @@ import {
 import { loadChartOfAccounts, loadTaxProfile } from "../data.js";
 import { loadJournalEntries } from "./expense-claim-journal.js";
 import type { TaxCategory } from "../../../schemas/finance/journal-entry.js";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { getDocsDir, writeTrackedFile } from "../utils.js";
 
 const TAX_RATE_10 = 0.1;
 const TAX_RATE_8 = 0.08;
@@ -388,4 +391,202 @@ export function formatConsumptionTaxCheckMarkdown(
     ),
   ];
   return lines.join("\n");
+}
+
+function aggregateFromJournalYear(calendarYear: number): ReturnType<typeof emptyJournalTotals> {
+  const totals = emptyJournalTotals();
+  const prefix = `${calendarYear}-`;
+  try {
+    const coa = loadChartOfAccounts();
+    const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
+    for (const raw of loadJournalEntries().entries) {
+      const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
+      if (!entry.occurred_at.startsWith(prefix)) continue;
+      for (const line of entry.lines) {
+        if (!line.tax_category) continue;
+        const account = accountByCode.get(line.account_code);
+        if (!account) continue;
+        if (account.type !== "revenue" && account.type !== "expense") continue;
+        const amount = line.debit_yen || line.credit_yen;
+        if (account.type === "revenue" && line.tax_category === "exempt") {
+          totals.exemptSales += amount;
+        }
+        if (account.type === "revenue" && line.tax_category === "tax_free") {
+          totals.taxFreeSales += amount;
+        }
+        if (line.tax_category === "taxable_10") {
+          if (account.type === "expense") totals.purchases10 += amount;
+          if (account.type === "revenue") totals.sales10 += amount;
+        }
+        if (line.tax_category === "taxable_8") {
+          if (account.type === "expense") totals.purchases8 += amount;
+          if (account.type === "revenue") totals.sales8 += amount;
+        }
+      }
+    }
+  } catch {
+    /* optional */
+  }
+  return totals;
+}
+
+export type ConsumptionTaxDraftReturn = {
+  calendar_year: number;
+  status: string;
+  exempt: boolean;
+  method: ConsumptionTaxMethod;
+  summary: ConsumptionTaxSummary | null;
+  check: ConsumptionTaxCheckResult;
+  missing_tax_category_on_revenue: number;
+  notes: string[];
+  markdown: string;
+};
+
+/** 年次消費税申告金額ドラフト（e-Tax XML なし）。免税は申告不要ページ。 */
+export function buildConsumptionTaxDraftReturn(input?: {
+  calendarYear?: number;
+  method?: ConsumptionTaxMethod;
+  deemedPurchaseRatePct?: number;
+}): ConsumptionTaxDraftReturn {
+  const calendar_year = input?.calendarYear ?? new Date().getFullYear();
+  const profile = loadTaxProfile() as TaxProfileConsumptionSlice;
+  const check = assessConsumptionTaxProfile(profile);
+  const status = check.status;
+  const exempt =
+    status.includes("免税") ||
+    (check.taxable_by_sales === false && !status.includes("課税"));
+  const notes: string[] = [
+    "行政様式・e-Tax XML ではない。税理士転記用ドラフト。",
+  ];
+
+  let missing_tax_category_on_revenue = 0;
+  try {
+    const coa = loadChartOfAccounts();
+    const byCode = new Map(coa.accounts.map((a) => [a.code, a]));
+    const prefix = `${calendar_year}-`;
+    for (const raw of loadJournalEntries().entries) {
+      const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
+      if (!entry.occurred_at.startsWith(prefix)) continue;
+      for (const line of entry.lines) {
+        const account = byCode.get(line.account_code);
+        if (account?.type === "revenue" && !line.tax_category) {
+          missing_tax_category_on_revenue += 1;
+        }
+      }
+    }
+  } catch {
+    /* optional */
+  }
+  if (!exempt && missing_tax_category_on_revenue > 0) {
+    notes.push(
+      `warning: 売上科目に tax_category 未設定が ${missing_tax_category_on_revenue} 行（課税時は要設定）`,
+    );
+  }
+
+  if (exempt) {
+    const markdown = [
+      `# 消費税申告ドラフト — ${calendar_year}年分（免税）`,
+      "",
+      `- status: **${status}**`,
+      `- 基準期間課税売上: ${
+        check.base_period_sales_jpy != null
+          ? `${check.base_period_sales_jpy.toLocaleString("ja-JP")} 円`
+          : "未設定"
+      }`,
+      `- 閾値: ${check.threshold_jpy.toLocaleString("ja-JP")} 円`,
+      "",
+      "## 結論",
+      "",
+      "**消費税の申告・納付は不要（免税事業者）** と機械判定。税理士の最終確認を要する。",
+      "",
+      "## 所見",
+      ...check.issues.map((i) => `- [${i.severity}] ${i.code}: ${i.message}`),
+      "",
+      ...notes.map((n) => `- ${n}`),
+    ].join("\n");
+    return {
+      calendar_year,
+      status,
+      exempt: true,
+      method: "standard",
+      summary: null,
+      check,
+      missing_tax_category_on_revenue,
+      notes,
+      markdown,
+    };
+  }
+
+  const journal = aggregateFromJournalYear(calendar_year);
+  const method = resolveConsumptionTaxMethod(profile, input?.method);
+  const deemed =
+    input?.deemedPurchaseRatePct ??
+    resolveDeemedPurchaseRatePct(profile, undefined);
+  const summary = buildConsumptionTaxSummary({
+    period: `${calendar_year}-12`,
+    method,
+    deemedPurchaseRatePct: deemed,
+    manual: {
+      taxable_sales_10_yen: journal.sales10,
+      taxable_sales_8_yen: journal.sales8,
+      exempt_sales_yen: journal.exemptSales,
+      tax_free_sales_yen: journal.taxFreeSales,
+      taxable_purchases_10_yen: journal.purchases10,
+      taxable_purchases_8_yen: journal.purchases8,
+      deemed_purchase_rate_pct: deemed,
+    },
+  });
+  // Override period label for annual
+  const annualSummary = { ...summary, period: `${calendar_year}` };
+
+  const markdown = [
+    `# 消費税及び地方消費税 申告金額ドラフト — ${calendar_year}年分`,
+    "",
+    `- status: **${status}**`,
+    `- 方式: ${annualSummary.method}${
+      annualSummary.deemed_purchase_rate_pct
+        ? ` · みなし仕入率 ${annualSummary.deemed_purchase_rate_pct}%`
+        : ""
+    }`,
+    "",
+    "| 区分 | 金額（円） |",
+    "|------|----------:|",
+    `| 課税標準（10%） | ${journal.sales10.toLocaleString("ja-JP")} |`,
+    `| 課税標準（8%） | ${journal.sales8.toLocaleString("ja-JP")} |`,
+    `| 売上税額 | ${annualSummary.output_tax_yen.toLocaleString("ja-JP")} |`,
+    `| 仕入税額控除 | ${annualSummary.input_tax_yen.toLocaleString("ja-JP")} |`,
+    `| 差引税額 | ${annualSummary.net_tax_yen.toLocaleString("ja-JP")} |`,
+    `| 方向 | ${annualSummary.direction} |`,
+    `| 非課税売上 | ${annualSummary.exempt_sales_yen.toLocaleString("ja-JP")} |`,
+    `| 輸出免税売上 | ${annualSummary.tax_free_sales_yen.toLocaleString("ja-JP")} |`,
+    "",
+    "## 区分チェック",
+    ...check.issues.map((i) => `- [${i.severity}] ${i.code}: ${i.message}`),
+    "",
+    ...notes.map((n) => `- ${n}`),
+  ].join("\n");
+
+  return {
+    calendar_year,
+    status,
+    exempt: false,
+    method,
+    summary: annualSummary,
+    check,
+    missing_tax_category_on_revenue,
+    notes,
+    markdown,
+  };
+}
+
+export function writeConsumptionTaxDraftReturn(calendarYear?: number): {
+  path: string;
+  draft: ConsumptionTaxDraftReturn;
+} {
+  const draft = buildConsumptionTaxDraftReturn({ calendarYear });
+  const dir = join(getDocsDir(), "finance", "tax", "consumption", String(draft.calendar_year));
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, "consumption-tax-draft-return.md");
+  writeTrackedFile(path, draft.markdown);
+  return { path, draft };
 }

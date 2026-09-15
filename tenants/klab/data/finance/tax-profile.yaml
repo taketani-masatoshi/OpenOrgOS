@@ -1,0 +1,31 @@
+entity:
+  name: KLab
+  type: 個人事業主
+  address: TBD
+fiscal_year:
+  end_month: 12
+  label: 令和8年分
+  period_from: "2026-01-01"
+  period_to: "2026-12-31"
+  calendar_note: 個人事業主は暦年。仕訳0件のドラフト。
+consumption_tax:
+  status: 免税事業者
+  invoice_registered: false
+  base_period_sales_jpy: 0
+  base_period_fy: 令和6年分
+  notes: 基準期間課税売上0円のため免税。消費税申告書は提出不要。
+corporate_tax:
+  category: n/a
+  capital_stock: 0
+  notes: 個人事業主 — 法人税対象外
+filing_calendar:
+  - id: income-tax-2026
+    tax: 所得税及び復興特別所得税
+    deadline: "2027-03-15"
+    authority: 所轄税務署
+    status: draft
+  - id: consumption-tax-2026
+    tax: 消費税
+    deadline: "2027-03-31"
+    authority: 所轄税務署
+    status: not_required

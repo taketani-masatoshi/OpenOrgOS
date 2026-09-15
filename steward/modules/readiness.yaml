@@ -135,11 +135,20 @@ modules:
     notes: インボイス登録整合 · operations invoice-qualified CLI（registration/issue-check）
   jp_withholding_statutory:
     tier: activation_ready
-    notes: 源泉 · 法定調書 rhythm · operations withholding CLI（calendar）·
+    notes: 源泉 · 法定調書 rhythm · operations withholding CLI（calendar / payment-slips）·
       法定調書提出は未対応のため production_ready ではない
+  jp_financial_audit:
+    tier: activation_ready
+    notes: 財務アサーション内部ワークペーパー · operations financial-audit ·
+      外部会計監査の代替ではない（ADR 0069）
   jp_payroll:
     tier: activation_ready
     notes: payroll calc engine — rates in seed YAML · operations payroll CLI
   jp_social_insurance:
     tier: activation_ready
     notes: 算定基礎届 · 月額変更届準備データ · operations social-insurance CLI
+  jp_sole_proprietor_blue_return:
+    tier: activation_ready
+    notes: >
+      個人事業主 青色申告（一般用）· 複式法定帳簿パック · 青色決算書/確定申告書B ドラフト ·
+      55/65万円ゲート。e-Tax送信はしない（ADR 0052）

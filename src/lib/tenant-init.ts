@@ -57,7 +57,9 @@ export function runTenantInit(options: TenantInitOptions): void {
   const displayName = options.name ?? id;
   writeTenantYaml(dest, id, displayName, options);
   applyModuleBindings(dest, options.fromModules);
-  writeSkeletonData(dest, id, displayName, options.fromModules);
+  writeSkeletonData(dest, id, displayName, options.fromModules, {
+    entityForm: options.entityForm,
+  });
 
   setTenantId(id);
   const seedResult = seedRegulationDocs();
@@ -182,11 +184,15 @@ export function scaffoldMissingTenantData(): ScaffoldTenantDataResult {
   const enabledModules = loadModulesFile()
     .modules.filter((m) => m.enabled)
     .map((m) => m.id);
-  return writeSkeletonData(dest, id, name, enabledModules, { skipExisting: true });
+  return writeSkeletonData(dest, id, name, enabledModules, {
+    skipExisting: true,
+    entityForm: cfg.entity_form,
+  });
 }
 
 interface WriteSkeletonOptions {
   skipExisting?: boolean;
+  entityForm?: string;
 }
 
 function writeSkeletonData(
@@ -197,8 +203,8 @@ function writeSkeletonData(
   options?: WriteSkeletonOptions
 ): ScaffoldTenantDataResult {
   const dataDir = join(dest, "data");
-  const docsDir = join(dest, "docs");
   const result: ScaffoldTenantDataResult = { created: [], skipped: [] };
+  const soleProp = options?.entityForm === "sole_proprietorship";
 
   const put = (rel: string, content: string) => {
     const abs = join(dest, rel);
@@ -210,7 +216,7 @@ function writeSkeletonData(
     result.created.push(rel);
   };
 
-  put("data/company.yaml", skeletonCompany(name, id));
+  put("data/company.yaml", skeletonCompany(name, id, soleProp));
   put("data/ops-config.yaml", skeletonOpsConfig());
   put("data/classification-registry.yaml", skeletonClassificationRegistry());
   put("data/document-io.yaml", "inbox_items: []\noutbox_items: []\n");
@@ -230,22 +236,36 @@ function writeSkeletonData(
   put("data/finance/loans.yaml", "loans: []\n");
   put(
     "data/finance/fixed-assets.yaml",
-    `as_of: "2027-01-31"\nfiscal_year: FY2026\ncurrency: JPY\nassets: []\nsummary:\n  total_acquisition_cost: 0\n  total_accumulated_depreciation: 0\n  total_book_value: 0\n  annual_depreciation_fy_current: 0\n`
+    soleProp
+      ? `as_of: "2026-12-31"\nfiscal_year: CY2026\ncurrency: JPY\nassets: []\nsummary:\n  total_acquisition_cost: 0\n  total_accumulated_depreciation: 0\n  total_book_value: 0\n  annual_depreciation_fy_current: 0\n`
+      : `as_of: "2027-01-31"\nfiscal_year: FY2026\ncurrency: JPY\nassets: []\nsummary:\n  total_acquisition_cost: 0\n  total_accumulated_depreciation: 0\n  total_book_value: 0\n  annual_depreciation_fy_current: 0\n`
   );
   put(
     "data/finance/tax-profile.yaml",
-    `entity:\n  name: "${name}"\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: TBD\ncorporate_tax:\n  category: TBD\n  capital_stock: TBD\n`
+    soleProp
+      ? skeletonSolePropTaxProfile(name)
+      : `entity:\n  name: "${name}"\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: TBD\ncorporate_tax:\n  category: TBD\n  capital_stock: TBD\n`
   );
   put(
     "data/finance/chart-of-accounts.yaml",
-    `version: "1"\ncurrency: JPY\naccounts:\n  - code: "1100"\n    name: 現金及び預金\n    type: asset\n    normal_balance: debit\ncategory_mapping:\n  revenue: {}\n  expense: {}\n`
+    soleProp ? skeletonSolePropChartOfAccounts() : skeletonCorpChartOfAccounts(),
   );
+  put("data/finance/journal-entries.yaml", "version: 1\nentries: []\n");
+  if (soleProp) {
+    put(
+      "data/finance/blue-return-filing.yaml",
+      `version: 1\ncalendar_year: ${new Date().getFullYear()}\nnotes: |\n  65万円には etax_submitted_at または denshi_yuryo_notified_at を記入\n`,
+    );
+  }
 
   mkdirSync(join(dataDir, "finance", "monthly"), { recursive: true });
   mkdirSync(join(dataDir, "contracts"), { recursive: true });
 
-  const rentalEnabled =
-    fromModules === undefined ? true : fromModules.includes("rental");
+  const rentalEnabled = soleProp
+    ? false
+    : fromModules === undefined
+      ? true
+      : fromModules.includes("rental");
   if (rentalEnabled) {
     mkdirSync(join(dataDir, "properties"), { recursive: true });
     put("data/properties/PROP-001.yaml", skeletonProperty(name));
@@ -330,13 +350,116 @@ function writeFile(path: string, content: string): void {
   writeFileSync(path, content, "utf-8");
 }
 
-function skeletonCompany(name: string, tenantId: string): string {
+function skeletonCompany(name: string, tenantId: string, soleProp = false): string {
   return `name: "${name}"
-fiscal_year_end_month: 1
+fiscal_year_end_month: ${soleProp ? 12 : 1}
 business_description: |
-  スケルトン — 事業概要を記載
+  ${soleProp ? "個人事業主スケルトン — 事業概要を記載" : "スケルトン — 事業概要を記載"}
 public_disclosure:
   representative_email: ceo@${tenantId}.orgos.local
+`;
+}
+
+function skeletonCorpChartOfAccounts(): string {
+  return `version: "1"
+currency: JPY
+accounts:
+  - code: "1100"
+    name: 現金及び預金
+    type: asset
+    normal_balance: debit
+category_mapping:
+  revenue: {}
+  expense: {}
+`;
+}
+
+function skeletonSolePropChartOfAccounts(): string {
+  return `version: "1"
+currency: JPY
+notes: 所得税青色申告決算書（一般用）向け複式科目 · 暦年。
+accounts:
+  - code: "1100"
+    name: 現金及び預金
+    type: asset
+    normal_balance: debit
+  - code: "1150"
+    name: 売掛金
+    type: asset
+    normal_balance: debit
+  - code: "1210"
+    name: 棚卸資産
+    type: asset
+    normal_balance: debit
+  - code: "2110"
+    name: 買掛金
+    type: liability
+    normal_balance: credit
+  - code: "3100"
+    name: 元入金
+    type: equity
+    normal_balance: credit
+  - code: "3210"
+    name: 事業主貸
+    type: equity
+    normal_balance: debit
+  - code: "3220"
+    name: 事業主借
+    type: equity
+    normal_balance: credit
+  - code: "4100"
+    name: 売上高
+    type: revenue
+    normal_balance: credit
+    statement_section: revenue
+  - code: "5000"
+    name: 仕入高
+    type: expense
+    normal_balance: debit
+    statement_section: cogs
+  - code: "5100"
+    name: 経費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+category_mapping:
+  revenue:
+    other_revenue: "4100"
+  expense:
+    other: "5100"
+journal_source_accounts:
+  bank_control: "1100"
+  accounts_receivable: "1150"
+  withholding_payable: "2110"
+  social_insurance_payable: "2110"
+  payroll_payable: "2110"
+  accounts_payable: "2110"
+  payroll_expense: "5100"
+  depreciation_expense: "5100"
+  accumulated_depreciation: "1100"
+  retained_earnings: "3100"
+`;
+}
+
+function skeletonSolePropTaxProfile(name: string): string {
+  const year = new Date().getFullYear();
+  return `entity:
+  name: "${name}"
+  type: 個人事業主
+fiscal_year:
+  end_month: 12
+  label: 暦年
+  period_from: "${year}-01-01"
+  period_to: "${year}-12-31"
+  calendar_note: 個人事業主は暦年。
+consumption_tax:
+  status: 免税事業者
+  invoice_registered: false
+  base_period_sales_jpy: 0
+corporate_tax:
+  category: n/a
+  capital_stock: 0
+  notes: 個人事業主 — 法人税モジュール対象外
 `;
 }
 

@@ -1,0 +1,12 @@
+id: klab
+name: KLab
+legal_name: KLab
+display_name: KLab
+description: 個人事業主 KLab — 複式簿記（青色申告）
+default: false
+lifecycle: skeleton
+jurisdiction: JP
+entity_form: sole_proprietorship
+display_language: ja
+locale: ja-JP
+default_currency: JPY

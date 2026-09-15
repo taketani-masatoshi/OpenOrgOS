@@ -1,0 +1,4 @@
+version: 1
+lines:
+  "5100": 雑費
+default_expense_line: 雑費

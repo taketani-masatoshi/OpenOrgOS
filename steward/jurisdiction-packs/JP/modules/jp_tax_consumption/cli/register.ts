@@ -3,6 +3,7 @@ import { runJpConsumptionTaxReturnSkill } from "../../../../../../src/lib/financ
 import {
   runTaxConsumptionCalc,
   runTaxConsumptionCheck,
+  runTaxConsumptionDraftReturn,
   runTaxConsumptionEligibility,
 } from "../../../../../../src/commands/tax.js";
 
@@ -66,6 +67,15 @@ export const jp_tax_consumptionCli: ModuleCliBundle = {
           deemedRate: opts.deemedRate,
           json: Boolean(opts.json),
         }),
+      );
+
+    cmd
+      .command("draft-return")
+      .description("Annual consumption tax amount draft (not e-Tax XML)")
+      .option("--year <YYYY>", "Calendar year")
+      .option("--json")
+      .action((opts: { year?: string; json?: boolean }) =>
+        runTaxConsumptionDraftReturn({ year: opts.year, json: Boolean(opts.json) }),
       );
   },
   skillHandlers: {

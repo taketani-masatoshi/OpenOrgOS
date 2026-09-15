@@ -1,0 +1,17 @@
+# 家事・事業按分（青色申告）
+# 仕訳が総額のとき business_pct で事業分のみを決算・経費帳へ載せる。
+# 既に事業分のみ仕訳している科目は 100 のまま（二重控除防止）。
+# 家事分の自動・事業主貸振替は行わない。
+version: 1
+# calendar_year: 2026
+default_business_pct: 100
+by_account: {}
+  # "5100":
+  #   business_pct: 60
+  #   method: floor_area
+  #   notes: "自宅兼事務所・床面積"
+by_entry: {}
+  # JE-2026-002:
+  #   business_pct: 50
+notes: |
+  仕訳正本は journal-entries.yaml。本ファイルは青色モジュールの表示・所得計算用。

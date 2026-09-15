@@ -569,6 +569,28 @@ modules:
       - tax_finance
       - labor_hr
     priority: P0
+  - id: jp_sole_proprietor_blue_return
+    name_ja: 個人事業主・青色申告（一般用）
+    status: partial
+    tier: activation_ready
+    pack: jurisdiction-packs/JP
+    agent_proxy: tax
+    categories:
+      - tax_finance
+    priority: P0
+    official_urls:
+      - https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm
+      - https://www.nta.go.jp/taxes/shiraberu/shinkoku/kojin_jigyo/kichou03.pdf
+  - id: jp_financial_audit
+    name_ja: 財務アサーション監査ワークペーパー
+    status: partial
+    tier: activation_ready
+    pack: jurisdiction-packs/JP
+    agent_proxy: internal_audit
+    categories:
+      - tax_finance
+      - governance
+    priority: P1
   - id: jp_social_insurance
     name_ja: 社会保険・労働保険事務
     status: partial
@@ -1014,6 +1036,27 @@ skills:
       - labor_hr
     priority: P0
     cli_command: withholding
+  - id: jp_sole_prop_blue_return_pack
+    name_ja: 個人事業主青色申告（帳簿・決算・申告書Bドラフト）
+    status: partial
+    runtime: cli
+    agent_id: tax
+    module_id: jp_sole_proprietor_blue_return
+    categories:
+      - tax_finance
+    priority: P0
+    cli_command: sole-prop-blue
+  - id: jp_financial_audit_workpapers
+    name_ja: 財務アサーションワークペーパー
+    status: partial
+    runtime: cli
+    agent_id: internal_audit
+    module_id: jp_financial_audit
+    categories:
+      - tax_finance
+      - governance
+    priority: P1
+    cli_command: financial-audit
   - id: jp_social_insurance_enroll
     name_ja: 社会保険資格取得・算定
     status: planned
@@ -1210,14 +1253,14 @@ summary:
     total: 13
   modules:
     implemented: 21
-    partial: 16
+    partial: 17
     planned: 9
-    total: 46
+    total: 47
   skills:
     implemented: 16
-    partial: 16
+    partial: 17
     planned: 18
-    total: 50
+    total: 51
   p0_gaps:
     - human_resources Agent 未実装（就業規則 · 社保 · 給与）
     - jp_statutory_meetings モジュール未実装

@@ -1,0 +1,10 @@
+id: _fixture-sole-prop
+name: Sole Prop Blue Return Fixture
+description: Isolated sole-proprietorship fixture for blue-return vitest (not for production)
+lifecycle: test
+operation_mode: development
+jurisdiction: JP
+entity_form: sole_proprietorship
+display_language: ja
+locale: ja-JP
+default_currency: JPY

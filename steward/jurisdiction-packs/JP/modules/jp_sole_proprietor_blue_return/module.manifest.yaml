@@ -1,0 +1,18 @@
+id: jp_sole_proprietor_blue_return
+required_seeds: []
+activation_seeds:
+  - chart-of-accounts.yaml.example
+  - expense-line-map.yaml.example
+  - blue-return-filing.yaml.example
+notes: >
+  activation_ready — 個人事業主 青色申告（一般用）。複式法定帳簿パック ·
+  青色申告決算書 / 確定申告書B ドラフト · 55/65万円ゲート。e-Tax送信はしない（ADR 0052）。
+cli_commands:
+  - books
+  - kessan
+  - shinkoku-b
+  - deduction-gate
+  - handoff
+security:
+  limits:
+    concurrent_jobs: 1

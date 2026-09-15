@@ -1,0 +1,14 @@
+# 個人事業主 KLab — 青色申告（一般用）複式帳簿。法人向け業種モジュールはオフ。
+modules:
+  - id: rental
+    enabled: false
+    agent: rental
+    notes: 個人事業主テナントでは未使用
+
+  - id: jp_sole_proprietor_blue_return
+    enabled: true
+    agent: jp_sole_proprietor_blue_return
+    data_root: data/finance/
+    docs_root: docs/finance/blue-return/
+    summary_dir: agent-summaries/tax/sole-prop-blue/
+    notes: 個人事業主 青色申告（一般用）· 複式帳簿 · 確定申告書B ドラフト

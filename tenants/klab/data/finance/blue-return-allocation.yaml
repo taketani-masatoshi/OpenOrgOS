@@ -1,0 +1,8 @@
+# 家事・事業按分（KLab）— 空帳。必要なら by_account に事業割合を追加。
+version: 1
+calendar_year: 2026
+default_business_pct: 100
+by_account: {}
+by_entry: {}
+notes: |
+  仕訳が総額のとき business_pct で事業分のみを決算へ。家事分は事業主貸で記帳推奨（自動振替なし）。

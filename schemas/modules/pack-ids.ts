@@ -21,6 +21,8 @@ export const JP_PACK_MODULE_IDS = [
   "jp_withholding_statutory",
   "jp_payroll",
   "jp_social_insurance",
+  "jp_sole_proprietor_blue_return",
+  "jp_financial_audit",
 ] as const;
 
 export type JpPackModuleId = (typeof JP_PACK_MODULE_IDS)[number];

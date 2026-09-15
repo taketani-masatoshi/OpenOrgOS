@@ -1,0 +1,5 @@
+version: 1
+calendar_year: 2026
+notes: |
+  65万円には etax_submitted_at または denshi_yuryo_notified_at を記入。
+  現状は未提出のため控除ゲートは55万円。

@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 588
-  static_test_cases: 2709
-  tiered_execution_total: 588
-  catalog_total: 46
-  catalog_cli_registered: 47
+  vitest_total: 598
+  static_test_cases: 2752
+  tiered_execution_total: 598
+  catalog_total: 48
+  catalog_cli_registered: 49
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 7
+  catalog_only: 9
 platform_domains:
   P01_kernel:
     layer: 1
@@ -141,6 +141,12 @@ catalog_modules:
     tests:
       - jp-corporate-registration.test.ts
       - mal-module-cli-contract.test.ts
+  jp_financial_audit:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-financial-audit.test.ts
   jp_inspection:
     tier: activation_ready
     coverage_tier: dedicated
@@ -211,6 +217,12 @@ catalog_modules:
     cli: true
     tests:
       - catalog/jp-payroll-modules.test.ts
+  jp_sole_proprietor_blue_return:
+    tier: activation_ready
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-sole-proprietor-blue-return.test.ts
   jp_subsidy_application:
     tier: production_ready
     coverage_tier: dedicated
@@ -669,6 +681,11 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  catalog/jp-financial-audit.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_financial_audit
   catalog/jp-inspection.test.ts:
     axis: catalog
     kind: unit
@@ -695,6 +712,11 @@ tests:
     kind: unit
     catalog_ids:
       - jp_privacy_policy
+  catalog/jp-sole-proprietor-blue-return.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_sole_proprietor_blue_return
   catalog/jp-tax-modules.test.ts:
     axis: catalog
     kind: unit
@@ -1147,6 +1169,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  financial-audit-workpapers.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   fiscal-year.test.ts:
     axis: platform
     kind: unit
@@ -1515,6 +1541,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  live-section.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   llm-chat.test.ts:
     axis: platform
     kind: unit
@@ -1858,6 +1888,10 @@ tests:
     domain: P06_agent_workflow
     integration: I3_workflow
   pipeline-records-audit-escalate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  pipeline-static-digests.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2372,12 +2406,25 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  sole-proprietor-blue-return-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I2_protocol_e2e
+  sole-proprietor-blue-return-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   standalone-org-demo.test.ts:
     axis: integration
     kind: integration
     domain: P01_kernel
     integration: I2_protocol_e2e
   standards.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  static-cli-digests.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2595,6 +2642,10 @@ tests:
     kind: unit
     domain: P01_kernel
   tax-calendar-portfolio.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-consumption-draft-return.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2899,6 +2950,10 @@ tests:
     kind: integration
     domain: P04_wire_stack
     integration: I2_protocol_e2e
+  withholding-payments.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   witness-pending-lifecycle.test.ts:
     axis: platform
     kind: unit

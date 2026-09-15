@@ -10,6 +10,7 @@ import {
   resolveConsumptionTaxMethod,
   resolveDeemedPurchaseRatePct,
   runConsumptionTaxCheck,
+  writeConsumptionTaxDraftReturn,
 } from "../lib/finance/consumption-tax.js";
 import {
   assessConsumptionRefundEligibility,
@@ -183,6 +184,23 @@ export function runTaxConsumptionEligibility(opts: {
     return;
   }
   console.log(formatConsumptionTaxEligibilityMarkdown(eligibility));
+}
+
+export function runTaxConsumptionDraftReturn(opts: {
+  year?: string;
+  json?: boolean;
+}): void {
+  const year = opts.year ? Number.parseInt(opts.year, 10) : undefined;
+  if (opts.year && (!Number.isFinite(year) || year! < 2000 || year! > 2100)) {
+    throw new Error(`Invalid --year ${opts.year}`);
+  }
+  const { path, draft } = writeConsumptionTaxDraftReturn(year);
+  if (opts.json) {
+    console.log(JSON.stringify({ path, draft: { ...draft, markdown: undefined } }, null, 2));
+    return;
+  }
+  console.log(`✓ 消費税申告ドラフト → ${path}`);
+  console.log(draft.exempt ? "  免税 · 申告不要" : `  差引 ${draft.summary?.net_tax_yen ?? 0}`);
 }
 
 export function runTaxInvoiceRegistrationCheck(opts?: { json?: boolean }): void {

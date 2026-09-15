@@ -1,0 +1,9 @@
+# 青色申告特別控除 65万円のための人証跡（OrgOS は e-Tax を送信しない）
+# いずれかを記入すると deduction-gate が eligible_cap_yen: 650000 を返す。
+version: 1
+calendar_year: 2026
+# etax_submitted_at: "2027-03-10T12:00:00+09:00"
+# denshi_yuryo_notified_at: "2027-03-01T09:00:00+09:00"
+notes: |
+  65万円: 期限内 e-Tax（申告書＋青色決算書）または優良電子帳簿＋届出。
+  証跡未記入時は複式+BS/PL でも 55万円まで。

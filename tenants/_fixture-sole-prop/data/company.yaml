@@ -1,0 +1,4 @@
+name: "Fixture Sole Prop"
+fiscal_year_end_month: 12
+business_description: |
+  Vitest 用個人事業主フィクスチャ。

@@ -1,0 +1,6 @@
+modules:
+  - id: jp_sole_proprietor_blue_return
+    enabled: true
+    agent: jp_sole_proprietor_blue_return
+    data_root: data/finance/
+    docs_root: docs/finance/blue-return/
