@@ -6,6 +6,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **税務ドラフト Markdown** — 相対リンク・目次・メタ表・日本語ラベル（本則/納付等）で確定申告書B・控除ゲート・handoff・消費税・支払調書・帳簿 README・税務報告書インデックスを読みやすく。JSON丸出しや `status:` / `payable` 生値をやめる。
+
 ### Added
 
 - **個人事業主 year-end 処理** — 暦月仕訳カバレッジ・period-lock 網羅・消費税期末振替（`JE-CT-YE-{year}` → 2180 未払）・源泉 **未納付残**（YAML 発生 − remittance JE vs GL 預り金）を warning で検知。`sole-prop-blue year-end-status` · `tax-consumption year-end-reclass` · `withholding reconcile`。空月・未 lock は `journal_coverage.acknowledge_empty_months` / `acknowledge_unlocked_months` で抑制。個人事業主テナントは法人向け必須 YAML・executive/peers 未作成を integrity ノイズにしない。KLab 仕訳に電帳 audit を backfill。KLab 固有の足りない月の仕訳は追加しない。

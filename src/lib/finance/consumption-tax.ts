@@ -379,24 +379,33 @@ export function formatConsumptionTaxCheckMarkdown(
   const lines = [
     "# 消費税区分チェック",
     "",
-    `- status: **${result.status}**`,
-    `- 基準期間売上: ${
+    "| 項目 | 内容 |",
+    "|------|------|",
+    `| 判定 | **${result.status}** |`,
+    `| 基準期間売上 | ${
       result.base_period_sales_jpy != null
         ? `${result.base_period_sales_jpy.toLocaleString("ja-JP")} 円`
         : "未設定"
-    }`,
-    `- 閾値: ${result.threshold_jpy.toLocaleString("ja-JP")} 円`,
-    `- 売上ベース課税判定: ${
+    } |`,
+    `| 閾値 | ${result.threshold_jpy.toLocaleString("ja-JP")} 円 |`,
+    `| 売上ベース課税判定 | ${
       result.taxable_by_sales == null ? "—" : result.taxable_by_sales ? "課税" : "免税"
-    }`,
-    `- インボイス登録: ${result.invoice_registered ? "あり" : "なし"}`,
+    } |`,
+    `| インボイス登録 | ${result.invoice_registered ? "あり" : "なし"} |`,
     "",
     "## 所見",
+    "",
     ...result.issues.map(
-      (i) => `- [${i.severity}] ${i.code}: ${i.message}`,
+      (i) => `- ${severityJa(i.severity)}: ${i.message}`,
     ),
   ];
   return lines.join("\n");
+}
+
+function severityJa(severity: string): string {
+  if (severity === "error") return "要対応";
+  if (severity === "warning") return "注意";
+  return "情報";
 }
 
 function aggregateFromJournalYear(calendarYear: number): ReturnType<typeof emptyJournalTotals> {
@@ -493,20 +502,27 @@ export function buildConsumptionTaxDraftReturn(input?: {
     const markdown = [
       `# 消費税申告ドラフト — ${calendar_year}年分（免税）`,
       "",
-      `- status: **${status}**`,
-      `- 基準期間課税売上: ${
+      "| 項目 | 内容 |",
+      "|------|------|",
+      `| 判定 | **${status}** |`,
+      `| 基準期間課税売上 | ${
         check.base_period_sales_jpy != null
           ? `${check.base_period_sales_jpy.toLocaleString("ja-JP")} 円`
           : "未設定"
-      }`,
-      `- 閾値: ${check.threshold_jpy.toLocaleString("ja-JP")} 円`,
+      } |`,
+      `| 免税判定閾値 | ${check.threshold_jpy.toLocaleString("ja-JP")} 円 |`,
+      `| 関連 | [税務報告書インデックス](../../../statements/${calendar_year}/tax-report-index.md) · [税理士引き渡し](../../../blue-return/${calendar_year}/handoff.md) |`,
       "",
       "## 結論",
       "",
       "**消費税の申告・納付は不要（免税事業者）** と機械判定。税理士の最終確認を要する。",
       "",
       "## 所見",
-      ...check.issues.map((i) => `- [${i.severity}] ${i.code}: ${i.message}`),
+      "",
+      ...check.issues.map(
+        (i) =>
+          `- ${severityJa(i.severity)}: ${i.message}`,
+      ),
       "",
       ...notes.map((n) => `- ${n}`),
     ].join("\n");
@@ -545,15 +561,31 @@ export function buildConsumptionTaxDraftReturn(input?: {
   // Override period label for annual
   const annualSummary = { ...summary, period: `${calendar_year}` };
 
+  const methodJa =
+    annualSummary.method === "simplified"
+      ? `簡易課税${
+          annualSummary.deemed_purchase_rate_pct
+            ? `（みなし仕入率 ${annualSummary.deemed_purchase_rate_pct}%）`
+            : ""
+        }`
+      : "本則課税";
+  const directionJa =
+    annualSummary.direction === "payable"
+      ? "納付"
+      : annualSummary.direction === "refund"
+        ? "還付"
+        : String(annualSummary.direction);
+
   const markdown = [
     `# 消費税及び地方消費税 申告金額ドラフト — ${calendar_year}年分`,
     "",
-    `- status: **${status}**`,
-    `- 方式: ${annualSummary.method}${
-      annualSummary.deemed_purchase_rate_pct
-        ? ` · みなし仕入率 ${annualSummary.deemed_purchase_rate_pct}%`
-        : ""
-    }`,
+    "| 項目 | 内容 |",
+    "|------|------|",
+    `| 判定 | **${status}** |`,
+    `| 方式 | ${methodJa} |`,
+    `| 関連 | [税務報告書インデックス](../../../statements/${calendar_year}/tax-report-index.md) · [税理士引き渡し](../../../blue-return/${calendar_year}/handoff.md) · [損益計算書](../../../statements/${calendar_year}/pl.md) |`,
+    "",
+    "## 申告金額",
     "",
     "| 区分 | 金額（円） |",
     "|------|----------:|",
@@ -561,13 +593,16 @@ export function buildConsumptionTaxDraftReturn(input?: {
     `| 課税標準（8%） | ${journal.sales8.toLocaleString("ja-JP")} |`,
     `| 売上税額 | ${annualSummary.output_tax_yen.toLocaleString("ja-JP")} |`,
     `| 仕入税額控除 | ${annualSummary.input_tax_yen.toLocaleString("ja-JP")} |`,
-    `| 差引税額 | ${annualSummary.net_tax_yen.toLocaleString("ja-JP")} |`,
-    `| 方向 | ${annualSummary.direction} |`,
+    `| **差引税額** | **${annualSummary.net_tax_yen.toLocaleString("ja-JP")}** |`,
+    `| 納付 / 還付 | ${directionJa} |`,
     `| 非課税売上 | ${annualSummary.exempt_sales_yen.toLocaleString("ja-JP")} |`,
     `| 輸出免税売上 | ${annualSummary.tax_free_sales_yen.toLocaleString("ja-JP")} |`,
     "",
     "## 区分チェック",
-    ...check.issues.map((i) => `- [${i.severity}] ${i.code}: ${i.message}`),
+    "",
+    ...check.issues.map(
+      (i) => `- ${severityJa(i.severity)}: ${i.message}`,
+    ),
     "",
     ...notes.map((n) => `- ${n}`),
   ].join("\n");

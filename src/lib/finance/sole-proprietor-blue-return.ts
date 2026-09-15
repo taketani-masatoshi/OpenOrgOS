@@ -1188,12 +1188,25 @@ export function writeBooksPack(calendarYear?: number): { paths: string[]; period
         "国税庁「帳簿の記帳のしかた」に沿う保存用ドラフト（7年保存対象の主要簿・補助簿）。",
         "行政提出・e-Tax 送信ファイルではない。",
         "",
-        "- shiwakecho.md — 仕訳帳",
-        "- sokanjomotocho.md — 総勘定元帳",
-        "- shisanhyo.md — 試算表",
-        "- hojobo.md — 補助簿（GL連動）",
-        "- koteishisan.md — 固定資産台帳",
-        "- tanaoroshi.md — 棚卸表",
+        "## 主要簿・補助簿",
+        "",
+        "| 書類 | リンク |",
+        "|------|--------|",
+        "| 仕訳帳 | [shiwakecho.md](./shiwakecho.md) |",
+        "| 総勘定元帳 | [sokanjomotocho.md](./sokanjomotocho.md) |",
+        "| 試算表 | [shisanhyo.md](./shisanhyo.md) |",
+        "| 補助簿（GL連動） | [hojobo.md](./hojobo.md) |",
+        "| 固定資産台帳 | [koteishisan.md](./koteishisan.md) |",
+        "| 棚卸表 | [tanaoroshi.md](./tanaoroshi.md) |",
+        "",
+        "## 税務書類",
+        "",
+        "| 書類 | リンク |",
+        "|------|--------|",
+        "| 青色申告決算書 | [aoiro-kessansho.md](./aoiro-kessansho.md) |",
+        "| 確定申告書B | [kakutei-shinkoku-b.md](./kakutei-shinkoku-b.md) |",
+        "| 税理士引き渡し | [handoff.md](./handoff.md) |",
+        `| 税務報告書インデックス | [tax-report-index.md](../../statements/${ctx.calendar_year}/tax-report-index.md) |`,
       ].join("\n"),
     ),
   );
@@ -1205,12 +1218,24 @@ export function writeKessanDraft(calendarYear?: number): { path: string; kessan:
   const kessan = buildBlueReturnKessan(calendarYear);
   const cfg = loadTenantConfig();
   const lines = [
-    `# 所得税青色申告決算書（一般用）ドラフト — ${kessan.year_label}`,
+    `# 青色申告決算書（一般用）ドラフト — ${kessan.year_label}`,
     "",
-    `屋号/氏名: ${cfg.name}`,
-    `期間: ${kessan.period_from} 〜 ${kessan.period_to}`,
+    "| 項目 | 内容 |",
+    "|------|------|",
+    `| 屋号 / 氏名 | ${cfg.name} |`,
+    `| 期間 | ${kessan.period_from} 〜 ${kessan.period_to} |`,
+    "| 位置づけ | 行政様式 PDF / e-Tax ではない。税理士転記用 |",
     "",
-    "行政様式 PDF / e-Tax データではない。税理士転記用。",
+    "## 関連書類",
+    "",
+    "| 書類 | リンク |",
+    "|------|--------|",
+    "| 確定申告書B | [kakutei-shinkoku-b.md](./kakutei-shinkoku-b.md) |",
+    "| 控除ゲート | [deduction-gate.md](./deduction-gate.md) |",
+    "| 税理士引き渡し | [handoff.md](./handoff.md) |",
+    `| 損益計算書（GL） | [pl.md](../../statements/${kessan.calendar_year}/pl.md) |`,
+    `| 貸借対照表（GL） | [bs.md](../../statements/${kessan.calendar_year}/bs.md) |`,
+    `| 税務報告書インデックス | [tax-report-index.md](../../statements/${kessan.calendar_year}/tax-report-index.md) |`,
     "",
     "## 損益計算書",
     "",
@@ -1291,13 +1316,24 @@ export function writeFormBDraft(calendarYear?: number): { path: string; draft: F
     draft.calendar_year,
     "kakutei-shinkoku-b.md",
     [
-      `# 所得税及び復興特別所得税の確定申告書B（ドラフト）— ${draft.year_label}`,
+      `# 確定申告書B（ドラフト）— ${draft.year_label}`,
       "",
-      `納税者: ${cfg.name}`,
+      "| 項目 | 内容 |",
+      "|------|------|",
+      `| 納税者 | ${cfg.name} |`,
+      `| 対象年 | ${draft.year_label} |`,
+      "| 文書の位置づけ | 第一表の金額欄ドラフト（行政様式・e-Tax XML ではない） |",
       "",
-      "第一表の金額欄のみ。行政様式・e-Tax XML ではない。",
-      "青色申告特別控除は青色申告決算書側で所得から差し引き済み（第一表の事業所得に反映）。",
-      "税額は国税庁速算表レベル（課税所得は千円未満切捨て）。提出用ではない。",
+      "## 目次",
+      "",
+      "- [収入・所得](#収入所得)",
+      "- [所得控除](#所得控除)",
+      "- [税金の計算](#税金の計算)",
+      "- [関連書類](#関連書類)",
+      "",
+      "> 青色申告特別控除は [青色申告決算書](./aoiro-kessansho.md) 側で差し引き済み。税額は国税庁速算表レベル（課税所得は千円未満切捨て）。提出用ではない。",
+      "",
+      "## 収入・所得",
       "",
       "| 区分 | 項目 | 金額（円） |",
       "|------|------|----------:|",
@@ -1312,30 +1348,52 @@ export function writeFormBDraft(calendarYear?: number): { path: string; draft: F
       ...(draft.miscellaneous_income_yen > 0
         ? [`| 所得金額 | 雑 | ${yen(draft.miscellaneous_income_yen)} |`]
         : []),
-      `| 所得金額 | 合計 | ${yen(draft.total_income_yen)} |`,
-      `| 所得控除 | 基礎控除 | ${yen(draft.basic_deduction_yen)} |`,
-      ...draft.income_deduction_lines.map(
-        (l) => `| 所得控除 | ${l.label} | ${yen(l.amount_yen)} |`,
-      ),
-      `| 所得控除 | 所得控除合計（基礎除く） | ${yen(draft.income_deductions_yen)} |`,
-      `| （参考） | 青色申告特別控除（決算書適用額） | ${yen(draft.blue_deduction_yen)} |`,
-      `| 税金の計算 | 課税される所得金額（千円未満切捨て） | ${yen(draft.taxable_income_yen)} |`,
-      `| 税金の計算 | 所得税 | ${yen(draft.income_tax_yen)} |`,
-      `| 税金の計算 | 復興特別所得税 | ${yen(draft.reconstruction_surtax_yen)} |`,
-      `| 税金の計算 | 申告納税額 | ${yen(draft.tax_payable_yen)} |`,
+      `| 所得金額 | **合計** | **${yen(draft.total_income_yen)}** |`,
+      "",
+      "## 所得控除",
+      "",
+      "| 項目 | 金額（円） |",
+      "|------|----------:|",
+      `| 基礎控除 | ${yen(draft.basic_deduction_yen)} |`,
+      ...draft.income_deduction_lines.map((l) => `| ${l.label} | ${yen(l.amount_yen)} |`),
+      `| 所得控除合計（基礎除く） | ${yen(draft.income_deductions_yen)} |`,
+      `| （参考）青色申告特別控除（決算書適用額） | ${yen(draft.blue_deduction_yen)} |`,
       "",
       draft.income_deductions_missing
-        ? "注: `data/finance/blue-return-income-deductions.yaml` 未整備または年不一致 — 所得控除は基礎のみ。"
-        : "所得控除は YAML 手入力（ドラフト用 cap）。法令の完全判定ではない。",
+        ? "> 注: `data/finance/blue-return-income-deductions.yaml` 未整備または年不一致 — 所得控除は基礎のみ。"
+        : "> 所得控除は YAML 手入力（ドラフト用）。法令の完全判定ではない。",
       "",
-      "## 青色申告特別控除ゲート",
+      "## 税金の計算",
+      "",
+      "| 項目 | 金額（円） |",
+      "|------|----------:|",
+      `| 課税される所得金額（千円未満切捨て） | ${yen(draft.taxable_income_yen)} |`,
+      `| 所得税 | ${yen(draft.income_tax_yen)} |`,
+      `| 復興特別所得税 | ${yen(draft.reconstruction_surtax_yen)} |`,
+      `| **申告納税額** | **${yen(draft.tax_payable_yen)}** |`,
+      "",
+      "## 関連書類",
+      "",
+      "| 書類 | リンク |",
+      "|------|--------|",
+      "| 青色申告決算書 | [aoiro-kessansho.md](./aoiro-kessansho.md) |",
+      "| 青色特別控除ゲート | [deduction-gate.md](./deduction-gate.md) |",
+      "| 税理士引き渡し | [handoff.md](./handoff.md) |",
+      "| 損益計算書（GL） | [pl.md](../../statements/" + String(draft.calendar_year) + "/pl.md) |",
+      "| 貸借対照表（GL） | [bs.md](../../statements/" + String(draft.calendar_year) + "/bs.md) |",
+      "",
+      "### 控除ゲート要約",
+      "",
+      "| 項目 | 金額（円） |",
+      "|------|----------:|",
+      `| 適用上限（cap） | ${yen(draft.deduction_gate.eligible_cap_yen)} |`,
+      `| 適用額 | ${yen(draft.deduction_gate.applied_deduction_yen)} |`,
       "",
       ...draft.deduction_gate.notes.map((n) => `- ${n}`),
       "",
-      `- eligible_cap_yen: ${draft.deduction_gate.eligible_cap_yen}`,
-      `- applied_deduction_yen: ${draft.deduction_gate.applied_deduction_yen}`,
-      "",
       draft.deduction_gate.future_note,
+      "",
+      "出典: [国税庁 No.2072 青色申告特別控除](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm)",
     ].join("\n"),
   );
   return { path, draft };
@@ -1361,17 +1419,44 @@ export function writeDeductionGateReport(calendarYear?: number): {
     hasBalanceSheet: true,
     hasProfitLoss: true,
   });
+  const yesNo = (v: boolean) => (v ? "はい" : "いいえ");
   const path = writeBlueDoc(
     gate.calendar_year,
     "deduction-gate.md",
     [
-      `# 青色申告特別控除ゲート — ${gate.calendar_year}`,
+      `# 青色申告特別控除ゲート — ${gate.calendar_year}年分`,
       "",
-      "出典: 国税庁 タックスアンサー No.2072",
+      `| 項目 | 内容 |`,
+      `|------|------|`,
+      `| 出典 | [国税庁 No.2072 青色申告特別控除](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm) |`,
+      `| 関連 | [青色申告決算書](./aoiro-kessansho.md) · [確定申告書B](./kakutei-shinkoku-b.md) · [handoff](./handoff.md) |`,
       "",
-      "```json",
-      JSON.stringify(gate, null, 2),
-      "```",
+      "## 判定結果",
+      "",
+      "| 項目 | 金額（円） |",
+      "|------|----------:|",
+      `| 事業所得（控除前） | ${yen(gate.business_income_yen)} |`,
+      `| 適用上限（cap） | ${yen(gate.eligible_cap_yen)} |`,
+      `| **適用額** | **${yen(gate.applied_deduction_yen)}** |`,
+      "",
+      "## 要件チェック",
+      "",
+      "| 要件 | 判定 |",
+      "|------|------|",
+      `| 複式簿記（正規の簿記） | ${yesNo(gate.double_entry)} |`,
+      `| 個人事業主エンティティ | ${yesNo(gate.entity_ok)} |`,
+      `| 帳簿パック準備 | ${yesNo(gate.books_ready)} |`,
+      `| 貸借対照表あり | ${yesNo(gate.has_balance_sheet)} |`,
+      `| 損益計算書あり | ${yesNo(gate.has_profit_loss)} |`,
+      `| e-Tax 証跡 | ${yesNo(gate.etax_evidence)} |`,
+      `| 優良電子帳簿証跡 | ${yesNo(gate.denshi_yuryo_evidence)} |`,
+      `| 申告年不一致 | ${yesNo(gate.year_mismatch)} |`,
+      "",
+      "## 所見",
+      "",
+      ...gate.notes.map((n) => `- ${n}`),
+      "",
+      gate.future_note,
     ].join("\n"),
   );
   return { path, gate };
@@ -1381,63 +1466,173 @@ export function writeHandoffChecklist(calendarYear?: number): { path: string } {
   const ctx = resolveBlueReturnYear(calendarYear);
   const gate = writeDeductionGateReport(ctx.calendar_year).gate;
   const kessan = buildBlueReturnKessan(ctx.calendar_year);
-  let consumptionBlock = "| 消費税 | tax-profile 未読取 |";
+  const y = ctx.calendar_year;
+  let consumptionRow =
+    "| 消費税 | — | tax-profile 未読取 |";
   try {
-    const draft = buildConsumptionTaxDraftReturn({ calendarYear: ctx.calendar_year });
-    const draftPath = `docs/finance/tax/consumption/${ctx.calendar_year}/consumption-tax-draft-return.md`;
-    consumptionBlock = `| 消費税 | ${draft.status} · ${draft.exempt ? "申告不要" : "課税ドラフト要確認"} · \`${draftPath}\` |`;
+    const draft = buildConsumptionTaxDraftReturn({ calendarYear: y });
+    const label = draft.exempt ? "申告不要（免税）" : "課税ドラフト要確認";
+    consumptionRow = `| 消費税 | [${label}](../../tax/consumption/${y}/consumption-tax-draft-return.md) | ${draft.status} |`;
   } catch {
-    consumptionBlock = "| 消費税 | 集計不可（モジュール/プロファイル確認） |";
+    consumptionRow = "| 消費税 | — | 集計不可（モジュール/プロファイル確認） |";
   }
+  const moduleWarns = assessEntityModuleMismatches();
+  const setupWarns = collectSetupGateWarnings(y);
   const path = writeBlueDoc(
-    ctx.calendar_year,
+    y,
     "handoff.md",
     [
       `# 税理士引き渡しチェックリスト — ${ctx.year_label}`,
       "",
-      "| 項目 | 状態 |",
+      "| 項目 | 内容 |",
       "|------|------|",
-      "| 仕訳帳 · 総勘定元帳 | `books` 出力を確認 |",
-      "| 青色申告決算書（一般用） | `kessan` ドラフト |",
-      "| 確定申告書B | `shinkoku-b` ドラフト |",
-      `| 青色特別控除 cap | ${gate.eligible_cap_yen} 円 |`,
-      `| 家事按分（事業分経費） | ${kessan.expenses_yen.toLocaleString("ja-JP")} 円（総額 ${kessan.expenses_gross_yen.toLocaleString("ja-JP")}） |`,
-      consumptionBlock,
-      "| e-Tax 送信 | **人間 / 税理士**（OrgOS 範囲外） |",
+      `| 対象年 | ${ctx.year_label}（${ctx.period_from} 〜 ${ctx.period_to}） |`,
+      "| 提出 | **人間 / 税理士**（OrgOS は e-Tax を送信しない） |",
+      "| 提出期限の目安 | 翌年 3月15日 |",
+      `| 税務報告書インデックス | [tax-report-index.md](../../statements/${y}/tax-report-index.md) |`,
       "",
-      "提出期限の目安: 翌年3月15日。65万円には期限内 e-Tax または優良電子帳簿届出が必要。",
+      "## 目次",
+      "",
+      "- [引き渡し一覧](#引き渡し一覧)",
+      "- [家事按分](#家事按分)",
+      "- [留意事項](#留意事項)",
+      "",
+      "## 引き渡し一覧",
+      "",
+      "| 書類 | リンク | 状態 |",
+      "|------|--------|------|",
+      `| 仕訳帳 | [shiwakecho.md](./shiwakecho.md) | 確認 |`,
+      `| 総勘定元帳 | [sokanjomotocho.md](./sokanjomotocho.md) | 確認 |`,
+      `| 試算表 | [shisanhyo.md](./shisanhyo.md) | 確認 |`,
+      `| 青色申告決算書 | [aoiro-kessansho.md](./aoiro-kessansho.md) | ドラフト |`,
+      `| 確定申告書B | [kakutei-shinkoku-b.md](./kakutei-shinkoku-b.md) | ドラフト |`,
+      `| 青色特別控除 | [deduction-gate.md](./deduction-gate.md) | cap ${yen(gate.eligible_cap_yen)} · 適用 ${yen(gate.applied_deduction_yen)} |`,
+      `| 損益計算書（GL） | [pl.md](../../statements/${y}/pl.md) | 参照 |`,
+      `| 貸借対照表（GL） | [bs.md](../../statements/${y}/bs.md) | 参照 |`,
+      `| 家事按分（事業分経費） | — | ${yen(kessan.expenses_yen)} 円（総額 ${yen(kessan.expenses_gross_yen)}） |`,
+      consumptionRow,
+      `| 支払調書 | [payment-slips-draft.md](../../tax/withholding/${y}/payment-slips-draft.md) | ドラフト |`,
+      "| e-Tax 送信 | — | **人間 / 税理士**（OrgOS 範囲外） |",
+      "",
+      "> 65万円控除には期限内 e-Tax または優良電子帳簿届出が必要。[国税庁 No.2072](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm)",
       "",
       "## 家事按分",
       "",
-      "- 設定: `data/finance/blue-return-allocation.yaml`",
-      "- 家事分は **事業主貸** での記帳を推奨。本モジュールは自動振替しない。",
-      "- 仕訳が既に事業分のみのときは `business_pct: 100`（二重控除防止）。",
+      "- 設定ファイル: `data/finance/blue-return-allocation.yaml`",
+      "- 家事分は **事業主貸** での記帳を推奨（本モジュールは自動振替しない）",
+      "- 仕訳が既に事業分のみのときは `business_pct: 100`（二重控除防止）",
       ...kessan.allocation.notes.map((n) => `- ${n}`),
       "",
-      "## 消費税",
+      "## 留意事項",
       "",
-      "- `orgos operations tax-consumption draft-return --year " +
-        String(ctx.calendar_year) +
-        "` で年次ドラフトを再生成。",
-      "- 課税事業者は売上仕訳に `tax_category` を付与すること。",
+      "### 消費税",
       "",
-      "## モジュール整合",
+      `- 年次ドラフト: [consumption-tax-draft-return.md](../../tax/consumption/${y}/consumption-tax-draft-return.md)`,
+      "- 課税事業者は売上仕訳に `tax_category` を付与すること",
       "",
-      ...assessEntityModuleMismatches().map((w) => `- ${w}`),
+      ...(moduleWarns.length
+        ? ["### モジュール整合", "", ...moduleWarns.map((w) => `- ${w}`), ""]
+        : []),
+      "### 初期セットアップ / 支出 intake",
       "",
-      "## 初期セットアップ / 支出 intake",
+      ...(setupWarns.length
+        ? setupWarns.map((line) => `- ${line}`)
+        : ["- setup ready · 未完了 intake なし"]),
       "",
-      ...(() => {
-        const w = collectSetupGateWarnings(ctx.calendar_year);
-        return w.length
-          ? w.map((line) => `- ${line}`)
-          : ["- setup ready · 未完了 intake なし"];
-      })(),
+      "再生成例:",
       "",
-      "- `orgos operations sole-prop-blue setup clarify --year " +
-        String(ctx.calendar_year) +
-        "`",
-      "- `orgos operations sole-prop-blue expense-intake clarify --amount <yen>`",
+      "```bash",
+      `orgos operations sole-prop-blue handoff --year ${y}`,
+      `orgos operations tax-consumption draft-return --year ${y}`,
+      "```",
+    ].join("\n"),
+  );
+  writeTaxReportIndex(y, { kessan, gate });
+  return { path };
+}
+
+/** 税務報告書のハブ（相対リンク付き）。handoff から呼び出す。 */
+export function writeTaxReportIndex(
+  calendarYear: number,
+  input?: {
+    kessan?: BlueReturnKessan;
+    gate?: BlueReturnDeductionGate;
+  },
+): { path: string } {
+  const y = calendarYear;
+  const kessan = input?.kessan ?? buildBlueReturnKessan(y);
+  const gate = input?.gate ?? writeDeductionGateReport(y).gate;
+  const cfg = loadTenantConfig();
+  let consumptionNet = "—";
+  let consumptionStatus = "—";
+  try {
+    const draft = buildConsumptionTaxDraftReturn({ calendarYear: y });
+    consumptionStatus = draft.status;
+    consumptionNet =
+      draft.summary != null
+        ? `${yen(draft.summary.net_tax_yen)}（${
+            draft.summary.direction === "payable" ? "納付" : draft.summary.direction === "refund" ? "還付" : draft.summary.direction
+          }）`
+        : draft.exempt
+          ? "申告不要"
+          : "—";
+  } catch {
+    /* optional */
+  }
+  const dir = join(getDocsDir(), "finance", "statements", String(y));
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, "tax-report-index.md");
+  writeTrackedFile(
+    path,
+    [
+      `# ${y}年分 税務報告書パック`,
+      "",
+      "| 項目 | 内容 |",
+      "|------|------|",
+      `| 屋号 / 氏名 | ${cfg.name} |`,
+      `| 期間 | ${kessan.period_from} 〜 ${kessan.period_to} |`,
+      "| 位置づけ | 税理士転記用ドラフト（提出・e-Tax 送信は人間） |",
+      "",
+      "## 目次",
+      "",
+      "- [サマリ](#サマリ)",
+      "- [書類一覧](#書類一覧)",
+      "- [留意事項](#留意事項)",
+      "",
+      "## サマリ",
+      "",
+      "| 項目 | 金額（円） |",
+      "|------|----------:|",
+      `| 売上（収入） | ${yen(kessan.revenue_yen)} |`,
+      `| 経費計（事業分） | ${yen(kessan.expenses_yen)} |`,
+      `| 所得（青色控除前） | ${yen(kessan.income_before_blue_deduction_yen)} |`,
+      `| 青色申告特別控除 | ${yen(kessan.blue_deduction_yen)} |`,
+      `| 事業所得（控除後） | ${yen(kessan.business_income_yen)} |`,
+      `| 控除上限（cap） | ${yen(gate.eligible_cap_yen)} |`,
+      `| 消費税（${consumptionStatus}） | ${consumptionNet} |`,
+      "",
+      "## 書類一覧",
+      "",
+      "| 区分 | 書類 | リンク |",
+      "|------|------|--------|",
+      `| 財務諸表 | 損益計算書 | [pl.md](./pl.md) |`,
+      `| 財務諸表 | 貸借対照表 | [bs.md](./bs.md) |`,
+      `| 所得税 | 青色申告決算書 | [aoiro-kessansho.md](../../blue-return/${y}/aoiro-kessansho.md) |`,
+      `| 所得税 | 確定申告書B | [kakutei-shinkoku-b.md](../../blue-return/${y}/kakutei-shinkoku-b.md) |`,
+      `| 所得税 | 青色特別控除ゲート | [deduction-gate.md](../../blue-return/${y}/deduction-gate.md) |`,
+      `| 所得税 | 税理士引き渡し | [handoff.md](../../blue-return/${y}/handoff.md) |`,
+      `| 帳簿 | 複式帳簿パック | [00-README.md](../../blue-return/${y}/00-README.md) |`,
+      `| 消費税 | 申告金額ドラフト | [consumption-tax-draft-return.md](../../tax/consumption/${y}/consumption-tax-draft-return.md) |`,
+      `| 源泉 | 支払調書ドラフト | [payment-slips-draft.md](../../tax/withholding/${y}/payment-slips-draft.md) |`,
+      "",
+      "## 留意事項",
+      "",
+      "- 空月・未ロック月は setup の acknowledge を前提とする（デモは年初仕訳が中心）",
+      "- 消費税の期末振替 JE が無い場合は仮受/仮払残高が残る",
+      "- e-Tax XML / 行政提出ファイルは生成しない",
+      "",
+      "出典: [国税庁 No.2072](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm)",
+      "",
     ].join("\n"),
   );
   return { path };

@@ -206,17 +206,29 @@ export function buildPaymentSlipsDraft(calendarYear: number): {
   const markdown = [
     `# 支払調書（報酬・料金等）ドラフト — ${calendarYear}年分`,
     "",
-    "法定調書の提出 XML / e-Tax ではない。税理士転記用。",
+    "| 項目 | 内容 |",
+    "|------|------|",
+    "| 位置づけ | 法定調書の提出 XML / e-Tax ではない。税理士転記用 |",
+    `| 関連 | [税務報告書インデックス](../../../statements/${calendarYear}/tax-report-index.md) · [税理士引き渡し](../../../blue-return/${calendarYear}/handoff.md) |`,
     "",
-    "| 支払先 | 件数 | 支払金額 | 源泉徴収税額 |",
-    "|--------|-----:|--------:|------------:|",
+    "## 支払先一覧",
+    "",
+    "| 支払先 | 件数 | 支払金額（円） | 源泉徴収税額（円） |",
+    "|--------|-----:|-------------:|-----------------:|",
     ...rows.map(
       (r) =>
         `| ${r.payee_name} | ${r.payment_count} | ${r.gross_yen.toLocaleString("ja-JP")} | ${r.withholding_yen.toLocaleString("ja-JP")} |`,
     ),
     `| **合計** | ${payments.length} | **${total_gross.toLocaleString("ja-JP")}** | **${total_withholding.toLocaleString("ja-JP")}** |`,
     "",
-    ...(issues.length ? ["## 突合", ...issues.map((i) => `- ${i}`)] : []),
+    ...(issues.length
+      ? [
+          "## 突合",
+          "",
+          ...issues.map((i) => `- ${i.replace(/^注記:\s*/, "")}`),
+          "",
+        ]
+      : []),
   ].join("\n");
 
   return {
