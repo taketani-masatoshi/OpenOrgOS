@@ -1,8 +1,9 @@
-# 家事・事業按分（KLab）— 空帳。必要なら by_account に事業割合を追加。
+# 家事・事業按分 — 電話は仕訳時点で 50% を事業主貸へ分離済みのため 100%。
 version: 1
-calendar_year: 2026
+calendar_year: 2025
 default_business_pct: 100
 by_account: {}
 by_entry: {}
 notes: |
-  仕訳が総額のとき business_pct で事業分のみを決算へ。家事分は事業主貸で記帳推奨（自動振替なし）。
+  携帯電話（JE-2025-012）は支払総額の 50% を事業主貸として記帳済み。
+  決算側の二重控除を避けるため by_account 按分は使わない。

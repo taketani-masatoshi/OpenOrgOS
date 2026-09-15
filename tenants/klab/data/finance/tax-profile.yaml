@@ -4,28 +4,36 @@ entity:
   address: TBD
 fiscal_year:
   end_month: 12
-  label: 令和8年分
-  period_from: "2026-01-01"
-  period_to: "2026-12-31"
-  calendar_note: 個人事業主は暦年。仕訳0件のドラフト。
+  label: 令和7年分
+  period_from: "2025-01-01"
+  period_to: "2025-12-31"
+  calendar_note: 個人事業主は暦年。教材ベースの1–2月取引のみで全年デモ記帳。
 consumption_tax:
-  status: 免税事業者
+  status: 課税事業者（本則）
+  method: standard
   invoice_registered: false
-  base_period_sales_jpy: 0
-  base_period_fy: 令和6年分
-  notes: 基準期間課税売上0円のため免税。消費税申告書は提出不要。
+  base_period_sales_jpy: 10000000
+  base_period_fy: 令和5年分
+  notes: |
+    デモ前提で課税事業者。税込表示の取引を本体＋仮受/仮払に分離して記帳。
+    インボイス登録番号は未設定（要人確認）。
 corporate_tax:
   category: n/a
   capital_stock: 0
   notes: 個人事業主 — 法人税対象外
 filing_calendar:
-  - id: income-tax-2026
+  - id: income-tax-2025
     tax: 所得税及び復興特別所得税
-    deadline: "2027-03-15"
+    deadline: "2026-03-16"
     authority: 所轄税務署
     status: draft
-  - id: consumption-tax-2026
-    tax: 消費税
-    deadline: "2027-03-31"
+  - id: consumption-tax-2025
+    tax: 消費税及び地方消費税
+    deadline: "2026-03-31"
     authority: 所轄税務署
-    status: not_required
+    status: draft
+  - id: withholding-2025
+    tax: 源泉所得税（報酬・料金）
+    deadline: "2026-01-20"
+    authority: 所轄税務署
+    status: draft

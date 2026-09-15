@@ -56,8 +56,9 @@ const DEFAULT_EXPENSE_MAP: Record<string, string> = {
   "5100": "雑費",
 };
 
-const MAJOR_ASSET_CODES = ["1100", "1150", "1210"] as const;
-const MAJOR_LIABILITY_CODES = ["2110"] as const;
+/** 現金・預金は 1100（合算）または 1110/1120（分割）いずれでも BS に載せる。 */
+const MAJOR_ASSET_CODES = ["1100", "1110", "1120", "1150", "1210", "2170"] as const;
+const MAJOR_LIABILITY_CODES = ["2110", "2120", "2160"] as const;
 const MAJOR_EQUITY_CODES = ["3100", "3210", "3220"] as const;
 
 const blueReturnFilingSchema = z.object({
@@ -549,13 +550,15 @@ function balanceLinesForCodes(
   const fromBs =
     section === "asset" ? bs.assets : section === "liability" ? bs.liabilities : bs.equity;
   const byCode = new Map(fromBs.map((l) => [l.account_code, l.balance_yen]));
-  return codes.map((code) => {
-    const account = coa.accounts.find((a) => a.code === code);
-    return {
-      label: account?.name ?? code,
-      amount_yen: byCode.get(code) ?? 0,
-    };
-  });
+  return codes
+    .filter((code) => coa.accounts.some((a) => a.code === code))
+    .map((code) => {
+      const account = coa.accounts.find((a) => a.code === code);
+      return {
+        label: account?.name ?? code,
+        amount_yen: byCode.get(code) ?? 0,
+      };
+    });
 }
 
 export type BlueReturnKessan = {
@@ -767,19 +770,21 @@ function accountBalanceAsOf(asOf: string, accountCode: string): number {
   return row?.balance_yen ?? 0;
 }
 
-function buildCashBookMd(
+function buildCashDepositBookSection(
+  title: string,
+  accountCode: string,
   entries: JournalEntry[],
   coa: ChartOfAccounts,
   periodFrom: string,
   priorAsOf: string,
 ): string {
   const lines: string[] = [
-    "## 現金・預金出納帳（1100）",
+    `## ${title}（${accountCode}）`,
     "",
     "| 日付 | 相手科目 | 摘要 | 収入 | 支出 | 残高 |",
     "|------|----------|------|-----:|-----:|-----:|",
   ];
-  let balance = accountBalanceAsOf(priorAsOf, "1100");
+  let balance = accountBalanceAsOf(priorAsOf, accountCode);
   lines.push(
     `| ${priorAsOf} | — | 期首繰越 | 0 | 0 | ${yen(balance)} |`,
   );
@@ -787,12 +792,12 @@ function buildCashBookMd(
   let rows = 0;
   for (const entry of sorted) {
     for (const line of entry.lines) {
-      if (line.account_code !== "1100") continue;
+      if (line.account_code !== accountCode) continue;
       const income = line.debit_yen;
       const expense = line.credit_yen;
       balance += income - expense;
       lines.push(
-        `| ${entry.occurred_at.slice(0, 10)} | ${counterpartLabel(entry, "1100", coa)} | ${entry.description} | ${yen(income)} | ${yen(expense)} | ${yen(balance)} |`,
+        `| ${entry.occurred_at.slice(0, 10)} | ${counterpartLabel(entry, accountCode, coa)} | ${entry.description} | ${yen(income)} | ${yen(expense)} | ${yen(balance)} |`,
       );
       rows += 1;
     }
@@ -801,6 +806,33 @@ function buildCashBookMd(
     lines.push(`| ${periodFrom} | — | 当期発生なし | 0 | 0 | ${yen(balance)} |`);
   }
   return lines.join("\n");
+}
+
+function buildCashBookMd(
+  entries: JournalEntry[],
+  coa: ChartOfAccounts,
+  periodFrom: string,
+  priorAsOf: string,
+): string {
+  const codes = new Set(coa.accounts.map((a) => a.code));
+  const sections: string[] = [];
+  if (codes.has("1110") || codes.has("1120")) {
+    if (codes.has("1110")) {
+      sections.push(
+        buildCashDepositBookSection("現金出納帳", "1110", entries, coa, periodFrom, priorAsOf),
+      );
+    }
+    if (codes.has("1120")) {
+      sections.push(
+        buildCashDepositBookSection("預金出納帳", "1120", entries, coa, periodFrom, priorAsOf),
+      );
+    }
+  } else {
+    sections.push(
+      buildCashDepositBookSection("現金・預金出納帳", "1100", entries, coa, periodFrom, priorAsOf),
+    );
+  }
+  return sections.join("\n\n");
 }
 
 function buildSubLedgerMd(

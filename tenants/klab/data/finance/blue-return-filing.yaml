@@ -1,5 +1,8 @@
 version: 1
-calendar_year: 2026
+calendar_year: 2025
+# 65万円控除には次のいずれかが必要（人記入）。未記入時ゲートは 55万円。
+# etax_submitted_at: "2026-03-10T12:00:00+09:00"
+# denshi_yuryo_notified_at: "2026-02-01T09:00:00+09:00"
 notes: |
-  65万円には etax_submitted_at または denshi_yuryo_notified_at を記入。
-  現状は未提出のため控除ゲートは55万円。
+  目標は青色申告特別控除 65万円（e-Tax 期限内提出、または優良電子帳簿＋届出）。
+  OrgOS は e-Tax を送信しない。提出後に上記証跡日時を記入すること。

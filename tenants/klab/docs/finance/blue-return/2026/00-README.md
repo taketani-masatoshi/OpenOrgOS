@@ -1,11 +1,8 @@
-# 令和8年分 複式帳簿パック
+# 旧ドラフト（令和8年分 / 2026）
 
-国税庁「帳簿の記帳のしかた」に沿う保存用ドラフト（7年保存対象の主要簿・補助簿）。
-行政提出・e-Tax 送信ファイルではない。
+**非正本。** 現行の記帳・申告ドラフトは **令和7年分（2025）** を正とする。
 
-- shiwakecho.md — 仕訳帳
-- sokanjomotocho.md — 総勘定元帳
-- shisanhyo.md — 試算表
-- hojobo.md — 補助簿（GL連動）
-- koteishisan.md — 固定資産台帳
-- tanaoroshi.md — 棚卸表
+- 正本データ: `data/finance/journal-entries.yaml`（2025取引）
+- 生成物: `docs/finance/blue-return/2025/`
+
+本フォルダ（2026）は空帳時代の生成物の残置。参照しないこと。

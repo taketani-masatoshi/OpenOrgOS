@@ -12,3 +12,24 @@ modules:
     docs_root: docs/finance/blue-return/
     summary_dir: agent-summaries/tax/sole-prop-blue/
     notes: 個人事業主 青色申告（一般用）· 複式帳簿 · 確定申告書B ドラフト
+
+  - id: jp_tax_consumption
+    enabled: true
+    agent: jp_tax_consumption
+    data_root: data/finance/
+    docs_root: docs/finance/tax/consumption/
+    notes: 課税事業者 · 消費税申告ドラフト（送信なし）
+
+  - id: jp_withholding_statutory
+    enabled: true
+    agent: jp_withholding_statutory
+    data_root: data/finance/
+    docs_root: docs/finance/tax/withholding/
+    notes: 報酬・料金の源泉 · 支払調書ドラフト
+
+  - id: jp_financial_audit
+    enabled: true
+    agent: jp_financial_audit
+    data_root: data/finance/
+    docs_root: docs/audit/financial/
+    notes: 内部会計監査 WP（外部監査代替ではない）

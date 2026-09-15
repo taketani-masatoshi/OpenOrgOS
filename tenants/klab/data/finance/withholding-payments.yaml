@@ -1,3 +1,15 @@
 version: 1
-calendar_year: 2026
-payments: []
+calendar_year: 2025
+payments:
+  - payment_id: WP-2025-001
+    payee_name: Bデザイン事務所
+    category: reward_fee
+    paid_at: "2025-01-10"
+    gross_yen: 33188
+    withholding_rate_pct: 10.21
+    withholding_yen: 3388
+    expense_account_code: "5240"
+    notes: |
+      通帳引出 29,800 円は源泉差引後。
+      総額 33,188 = 差引 29,800 + 源泉 3,388（10.21%・端数切捨て）。
+      消費税は外注工賃本体に含め税込→本体/仮払へ分離（仕訳 JE-2025-008）。

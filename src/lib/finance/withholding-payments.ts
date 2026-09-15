@@ -145,9 +145,20 @@ export function buildPaymentSlipsDraft(calendarYear: number): {
     if (outsourcing_expense_yen > 0 || total_gross > 0) {
       variance_vs_outsourcing_line = total_gross - outsourcing_expense_yen;
       if (Math.abs(variance_vs_outsourcing_line) > 0) {
-        issues.push(
-          `外注工賃（決算 ${outsourcing_expense_yen}）と支払調書総額（${total_gross}）が不一致（差 ${variance_vs_outsourcing_line}）`,
-        );
+        // 税抜記帳では決算の外注工賃＝本体、支払調書＝税込総額になり得る。
+        const explainedByInclusiveTax =
+          Math.round(outsourcing_expense_yen * 0.1) === variance_vs_outsourcing_line ||
+          Math.round(outsourcing_expense_yen / 10) === variance_vs_outsourcing_line ||
+          Math.abs(outsourcing_expense_yen + Math.round(outsourcing_expense_yen * 0.1) - total_gross) <= 1;
+        if (explainedByInclusiveTax) {
+          issues.push(
+            `注記: 外注工賃（税抜決算 ${outsourcing_expense_yen}）と支払調書総額（税込相当 ${total_gross}）の差 ${variance_vs_outsourcing_line} は消費税分離による想定差`,
+          );
+        } else {
+          issues.push(
+            `外注工賃（決算 ${outsourcing_expense_yen}）と支払調書総額（${total_gross}）が不一致（差 ${variance_vs_outsourcing_line}）`,
+          );
+        }
       }
     }
   } catch {

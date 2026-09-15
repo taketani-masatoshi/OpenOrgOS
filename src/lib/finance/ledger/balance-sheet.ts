@@ -42,8 +42,17 @@ function classifyRow(row: TrialBalanceRow, coa: ChartOfAccounts): BalanceSheetLi
           ? "equity"
           : null;
   if (!section) return null;
-  const balance =
-    account.type === "asset_contra" ? -Math.abs(row.balance_yen) : row.balance_yen;
+  // 試算の balance は正常残高側が正。BS 集計は資産=借方正、負債・純資産=貸方正。
+  // 事業主貸など借方正常の純資産は控除（負数）として載せる。
+  let balance = row.balance_yen;
+  if (account.type === "asset_contra") {
+    balance = -Math.abs(row.balance_yen);
+  } else if (
+    (account.type === "equity" || account.type === "liability") &&
+    account.normal_balance === "debit"
+  ) {
+    balance = -Math.abs(row.balance_yen);
+  }
   return {
     account_code: row.account_code,
     account_name: row.account_name,

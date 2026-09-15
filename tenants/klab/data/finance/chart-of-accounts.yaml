@@ -1,9 +1,15 @@
 version: "1"
 currency: JPY
-notes: 所得税青色申告決算書（一般用）向け複式科目。仕訳は未起票。
+notes: |
+  KLab 個人事業主 · 令和7年分（2025）教材ベース記帳。
+  現金/普通預金を分離。経費は青色申告決算書の行に対応する明細科目。
 accounts:
-  - code: "1100"
-    name: 現金及び預金
+  - code: "1110"
+    name: 現金
+    type: asset
+    normal_balance: debit
+  - code: "1120"
+    name: 普通預金
     type: asset
     normal_balance: debit
   - code: "1150"
@@ -52,8 +58,43 @@ accounts:
     type: expense
     normal_balance: debit
     statement_section: cogs
+  - code: "5120"
+    name: 荷造運賃
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+  - code: "5140"
+    name: 旅費交通費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+  - code: "5150"
+    name: 通信費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+  - code: "5160"
+    name: 広告宣伝費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+  - code: "5200"
+    name: 消耗品費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+  - code: "5240"
+    name: 外注工賃
+    type: expense
+    normal_balance: debit
+    statement_section: sga
+  - code: "5280"
+    name: 支払手数料
+    type: expense
+    normal_balance: debit
+    statement_section: sga
   - code: "5100"
-    name: 経費
+    name: 雑費
     type: expense
     normal_balance: debit
     statement_section: sga
@@ -63,7 +104,7 @@ category_mapping:
   expense:
     other: "5100"
 journal_source_accounts:
-  bank_control: "1100"
+  bank_control: "1120"
   accounts_receivable: "1150"
   withholding_payable: "2120"
   social_insurance_payable: "2120"
@@ -71,7 +112,7 @@ journal_source_accounts:
   accounts_payable: "2110"
   payroll_expense: "5100"
   depreciation_expense: "5100"
-  accumulated_depreciation: "1100"
+  accumulated_depreciation: "1110"
   retained_earnings: "3100"
   consumption_tax_payable: "2160"
   consumption_tax_receivable: "2170"

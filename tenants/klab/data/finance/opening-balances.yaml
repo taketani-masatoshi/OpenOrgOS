@@ -1,0 +1,13 @@
+version: 1
+fiscal_year: CY2025
+period_start: "2025-01"
+as_of: "2024-12-31"
+currency: JPY
+lines:
+  - account_code: "1120"
+    debit_yen: 50000
+    credit_yen: 0
+  - account_code: "3100"
+    debit_yen: 0
+    credit_yen: 50000
+notes: 普通預金期首残高（通帳・教材）。現金期首は 0。
