@@ -1,0 +1,28 @@
+# 個人事業主・青色申告 初期セットアップ（回答例）
+# Path: data/finance/blue-return-setup.yaml
+# apply: orgos operations sole-prop-blue setup apply --from data/finance/blue-return-setup.yaml
+version: 1
+calendar_year: 2025
+opened_on: "2025-01-01"
+blue_return_approved: true
+books_start_month: "2025-01"
+deduction_target: "650000"
+deduction_path: etax
+consumption:
+  status: 課税事業者（本則）
+  method: standard
+  invoice_registered: false
+  notes: インボイス登録番号は未設定なら invoice_registered: false のまま
+home_office:
+  has_home_office: false
+  allocation_method: n_a
+accounts_separated: true
+has_blue_special_family_employees: false
+depreciation_policy: immediate_under_100k
+has_withholding_outsourcing: true
+tax_advisor_handoff:
+  deadline: "2026-03-16"
+  owner: owner
+notes: |
+  65万円は証跡（etax_submitted_at / denshi_yuryo_notified_at）を
+  blue-return-filing.yaml に提出後記入する。

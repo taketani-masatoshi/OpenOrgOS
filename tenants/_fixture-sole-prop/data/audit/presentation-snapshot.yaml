@@ -1,0 +1,9 @@
+version: 1
+by_period:
+  "2026":
+    captured_at: 2026-09-15T05:17:24.894Z
+    journal_hash: 91c5f87101c615672678330fc5d5f6ef244934440a23a42d4240ecd653cf38c7
+    corporate_total_assets_yen: -40000
+    blue_total_assets_yen: -40000
+    owner_draw_yen: null
+    owner_draw_section: missing

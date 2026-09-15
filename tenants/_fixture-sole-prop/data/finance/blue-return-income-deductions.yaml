@@ -1,0 +1,8 @@
+version: 1
+calendar_year: 2026
+social_insurance_yen: 0
+life_insurance_yen: 0
+earthquake_insurance_yen: 0
+spouse_special_yen: 0
+dependents_yen: 0
+small_enterprise_mutual_yen: 0

@@ -1,0 +1,21 @@
+version: 1
+calendar_year: 2026
+opened_on: "2026-01-01"
+blue_return_approved: true
+books_start_month: "2026-01"
+deduction_target: "550000"
+deduction_path: unset
+consumption:
+  status: 免税事業者
+  invoice_registered: false
+home_office:
+  has_home_office: false
+  allocation_method: n_a
+accounts_separated: true
+has_blue_special_family_employees: false
+depreciation_policy: immediate_under_100k
+has_withholding_outsourcing: false
+tax_advisor_handoff:
+  deadline: "2027-03-15"
+  owner: fixture
+notes: Fixture setup — validate hard-fail 回避用。

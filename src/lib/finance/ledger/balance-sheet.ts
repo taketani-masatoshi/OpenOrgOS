@@ -7,6 +7,7 @@ import {
   resolveCompanyFiscalYearEndMonth,
 } from "../fiscal-year.js";
 import { loadChartOfAccounts } from "../../data.js";
+import { loadTenantConfig } from "../../tenant.js";
 import type { PdfTableRow } from "../../pdf.js";
 
 export type BalanceSheetLine = {
@@ -29,10 +30,36 @@ export type BalanceSheetReport = {
   issues: string[];
 };
 
-function classifyRow(row: TrialBalanceRow, coa: ChartOfAccounts): BalanceSheetLine | null {
+/** 個人事業主の事業主貸（国税庁様式: 資産の部に正数）。 */
+export const OWNER_DRAW_ACCOUNT_CODE = "3210";
+
+function isSoleProprietorship(): boolean {
+  try {
+    return loadTenantConfig().entity_form === "sole_proprietorship";
+  } catch {
+    return false;
+  }
+}
+
+function classifyRow(
+  row: TrialBalanceRow,
+  coa: ChartOfAccounts,
+  soleProp: boolean,
+): BalanceSheetLine | null {
   const account = coa.accounts.find((a) => a.code === row.account_code);
   if (!account) return null;
   if (account.type === "revenue" || account.type === "expense") return null;
+
+  // 個人: 事業主貸は資産の部・正数（青色申告決算書と一本化）
+  if (soleProp && account.code === OWNER_DRAW_ACCOUNT_CODE) {
+    return {
+      account_code: row.account_code,
+      account_name: row.account_name,
+      section: "asset",
+      balance_yen: Math.abs(row.balance_yen),
+    };
+  }
+
   const section =
     account.type === "asset" || account.type === "asset_contra"
       ? "asset"
@@ -43,7 +70,7 @@ function classifyRow(row: TrialBalanceRow, coa: ChartOfAccounts): BalanceSheetLi
           : null;
   if (!section) return null;
   // 試算の balance は正常残高側が正。BS 集計は資産=借方正、負債・純資産=貸方正。
-  // 事業主貸など借方正常の純資産は控除（負数）として載せる。
+  // 法人等: 事業主貸など借方正常の純資産は控除（負数）として載せる。
   let balance = row.balance_yen;
   if (account.type === "asset_contra") {
     balance = -Math.abs(row.balance_yen);
@@ -68,6 +95,7 @@ export function buildBalanceSheet(input?: {
 }): BalanceSheetReport {
   const asOf = input?.asOf ?? new Date().toISOString().slice(0, 10);
   const coa = input?.coa ?? loadChartOfAccounts();
+  const soleProp = isSoleProprietorship();
   const trial = buildTrialBalance({ asOf, coa });
   const issues: string[] = [...trial.issues];
 
@@ -76,7 +104,7 @@ export function buildBalanceSheet(input?: {
   const equity: BalanceSheetLine[] = [];
 
   for (const row of trial.rows) {
-    const line = classifyRow(row, coa);
+    const line = classifyRow(row, coa, soleProp);
     if (!line) continue;
     if (line.section === "asset") assets.push(line);
     if (line.section === "liability") liabilities.push(line);

@@ -29,5 +29,5 @@ export const withholdingPaymentsFileSchema = z.object({
 export type WithholdingPayment = z.output<typeof withholdingPaymentSchema>;
 export type WithholdingPaymentsFile = z.output<typeof withholdingPaymentsFileSchema>;
 
-/** 所得税法上の報酬・料金等（復興含む概算）。100万円以下は原則 10.21%。 */
+/** 所得税法上の報酬・料金等（復興含む概算）。100万円以下は原則 10.21%。超過分は 20.42%（computeRewardFeeWithholdingYen）。 */
 export const DEFAULT_REWARD_FEE_WITHHOLDING_RATE_PCT = 10.21;

@@ -1169,7 +1169,15 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  blue-return-income-deductions.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   financial-audit-workpapers.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  financial-presentation-sanity.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2412,6 +2420,14 @@ tests:
     domain: P01_kernel
     integration: I2_protocol_e2e
   sole-proprietor-blue-return-gate.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sole-proprietor-clarify.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  sole-proprietor-expense-apply.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

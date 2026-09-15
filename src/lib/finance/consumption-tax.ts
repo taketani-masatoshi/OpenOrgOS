@@ -349,16 +349,22 @@ export function runConsumptionTaxCheck(): ConsumptionTaxCheckResult {
     loadTaxProfile() as TaxProfileConsumptionSlice,
   );
   try {
+    const coa = loadChartOfAccounts();
+    const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
     for (const raw of loadJournalEntries().entries) {
       const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
       for (const line of entry.lines) {
-        if (!line.tax_category) {
-          result.issues.push({
-            severity: "blocking",
-            code: "journal_tax_category",
-            message: `${entry.entry_id}: account ${line.account_code} missing tax_category`,
-          });
+        if (line.tax_category) continue;
+        const account = accountByCode.get(line.account_code);
+        // aggregateFromJournal* also skips non-revenue/expense — align check with aggregate
+        if (!account || (account.type !== "revenue" && account.type !== "expense")) {
+          continue;
         }
+        result.issues.push({
+          severity: "blocking",
+          code: "journal_tax_category",
+          message: `${entry.entry_id}: account ${line.account_code} (${account.type}) missing tax_category`,
+        });
       }
     }
   } catch {

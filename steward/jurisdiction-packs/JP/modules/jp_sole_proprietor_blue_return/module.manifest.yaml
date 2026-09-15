@@ -2,12 +2,24 @@ id: jp_sole_proprietor_blue_return
 required_seeds: []
 activation_seeds:
   - chart-of-accounts.yaml.example
+  - blue-return-expense-map.yaml.example
   - expense-line-map.yaml.example
   - blue-return-filing.yaml.example
+  - blue-return-allocation.yaml.example
+  - blue-return-setup.yaml.example
+  - blue-return-expense-intake.yaml.example
+  - blue-return-income-deductions.yaml.example
 notes: >
-  activation_ready — 個人事業主 青色申告（一般用）。複式法定帳簿パック ·
-  青色申告決算書 / 確定申告書B ドラフト · 55/65万円ゲート。e-Tax送信はしない（ADR 0052）。
+  activation_ready — 個人事業主 青色申告（一般用）。setup/expense-intake 確認質問 ·
+  複式法定帳簿パック · 青色申告決算書 / 確定申告書B ドラフト · 55/65万円ゲート。
+  expense-intake apply は仕訳・固定資産・按分の副作用あり。
+  e-Tax送信はしない（ADR 0052 · 意図的範囲外）。
 cli_commands:
+  - setup
+  - expense-intake
+  - filing
+  - depreciation
+  - deductions
   - books
   - kessan
   - shinkoku-b

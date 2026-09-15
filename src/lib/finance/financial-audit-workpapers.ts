@@ -10,6 +10,11 @@ import { loadJournalEntries } from "./expense-claim-journal.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { loadPeriodLocks } from "./period-lock.js";
+import {
+  assessPresentationSanity,
+  formatPresentationSanityMarkdown,
+} from "./financial-presentation-sanity.js";
 
 export type FinancialAuditWorkpapers = {
   period: string;
@@ -62,6 +67,36 @@ export function writeFinancialAuditWorkpapers(period: string): FinancialAuditWor
     entryCount = 0;
   }
 
+  let periodLockCount = 0;
+  try {
+    const prefix = bounds.from.slice(0, 4);
+    periodLockCount = loadPeriodLocks().locks.filter((l) =>
+      l.month.startsWith(prefix),
+    ).length;
+  } catch {
+    periodLockCount = 0;
+  }
+  if (periodLockCount === 0 && /^\d{4}$/.test(period)) {
+    notes.push(
+      `warning: ${period} 年の period-locks が 0 件 — 締めロック未実施の可能性`,
+    );
+  }
+
+  // Baseline is never written from workpapers — only CLI --update-baseline.
+  const sanity = assessPresentationSanity({ period, updateBaseline: false });
+  for (const f of sanity.findings) {
+    if (f.code === "journal_hash_baseline_missing") {
+      notes.push(
+        `info: [${f.code}] ${f.message} — 更新は orgos operations financial-audit presentation-sanity --period ${period} --update-baseline`,
+      );
+      continue;
+    }
+    if (f.level === "info") continue;
+    notes.push(`${f.level}: [${f.code}] ${f.message}`);
+  }
+  const sanityErrors = sanity.findings.filter((f) => f.level === "error").length;
+  const sanityWarnings = sanity.findings.filter((f) => f.level === "warning").length;
+
   const indexMd = [
     `# 財務アサーション ワークペーパー — ${bounds.label}`,
     "",
@@ -78,7 +113,7 @@ export function writeFinancialAuditWorkpapers(period: string): FinancialAuditWor
     "| 網羅性 Completeness | 期間仕訳件数・締めロック | |",
     "| 評価 Valuation | 資産評価・減価償却（別紙） | |",
     "| 期間帰属 Cut-off | 期末前後の仕訳カットオフ | |",
-    "| 表示 Presentation | 主要科目の表示・注記 | |",
+    `| 表示 Presentation | 主要科目 · 表示健全性（error ${sanityErrors} / warning ${sanityWarnings}） | |`,
     "",
     "## 機械サマリ",
     "",
@@ -86,6 +121,7 @@ export function writeFinancialAuditWorkpapers(period: string): FinancialAuditWor
     `- 試算表行数: ${trial.rows.length}`,
     `- 試算貸借一致: ${trial.balanced ? "はい" : "いいえ"}`,
     `- 期間内仕訳件数: ${entryCount}`,
+    `- 期間内 period-locks 件数: ${periodLockCount}`,
     "",
     "## 署名",
     "",
@@ -95,8 +131,16 @@ export function writeFinancialAuditWorkpapers(period: string): FinancialAuditWor
     "| レビュー | | |",
     "",
     "テンプレ原本: `steward/standards/audit/financial/templates/`",
+    "",
+    "ISO 内部監査との境界: 本 WP は財務アサーション（ADR 0069 financial）。ISO 記録検査は `orgos iso records check`。",
   ].join("\n");
   paths.push(writeTrackedFile(join(dir, "00-index.md"), indexMd));
+  paths.push(
+    writeTrackedFile(
+      join(dir, "presentation-sanity.md"),
+      formatPresentationSanityMarkdown(sanity),
+    ),
+  );
 
   const tbMd = [
     `# 試算表タイアウト — ${bounds.to.slice(0, 10)}`,

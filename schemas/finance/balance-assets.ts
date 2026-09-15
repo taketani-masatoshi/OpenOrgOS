@@ -29,7 +29,10 @@ export const depreciationMethodTax = z.enum(["定額法", "定率法", "非償�
 export const fixedAssetSchema = z
   .object({
     id: z.string().regex(/^ASSET-\d{3,}$/),
-    property_id: z.string().regex(/^PROP-\d{3,}$/),
+    /** Required for property-linked assets. Omit when sole_prop_equipment=true. */
+    property_id: z.string().regex(/^PROP-\d{3,}$/).optional(),
+    /** Personal / business equipment not tied to a PROP-* (sole proprietorship). */
+    sole_prop_equipment: z.boolean().optional(),
     loan_id: z.string().regex(/^LOAN-\d{3,}$/).optional(),
     contract_id: z.string().regex(/^CTR-\d{3,}$/).optional(),
     name: z.string().min(1),
@@ -69,10 +72,19 @@ export const fixedAssetSchema = z
       })
       .optional(),
     tax_notes: z.string().optional(),
+    /** Sole-prop special amortization (e.g. 一括償却 3年). */
+    amortization_scheme: z.enum(["lump_sum_3y", "ordinary", "none"]).optional(),
   })
   .refine((asset) => asset.acquisition_date != null || asset.acquisition_month != null, {
     message: "fixed asset requires acquisition_date or acquisition_month",
-  });
+  })
+  .refine(
+    (asset) => Boolean(asset.property_id) || asset.sole_prop_equipment === true,
+    {
+      message:
+        "fixed asset requires property_id, or sole_prop_equipment=true for sole-prop equipment",
+    },
+  );
 
 export const fixedAssetsSummarySchema = z.object({
   total_acquisition_cost: z.number().nonnegative(),

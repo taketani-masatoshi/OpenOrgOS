@@ -8,6 +8,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **個人青色・財務監査 4本柱** — (1) 表示健全性（`financial-audit presentation-sanity`）＋個人 BS で事業主貸を資産正に一本化 (2) expense-intake `timing` 実仕訳・一括 `depreciation post-year` (3) Tax Chat に setup/clarify/表示健全性面 (4) Form B 所得控除 YAML。e-Tax 送信は範囲外のまま。
+- **個人青色 P0–P3** — expense-intake apply が仕訳・固定資産台帳・按分 YAML を副作用で書く（`--no-journal` 可）。報酬源泉は100万超で 20.42% 累進。setup 未充足は `orgos validate` error。Form B に配当等（setup.other_income）。Chat `GET /tax/sole-prop/setup|expense-intake`。65万証跡 CLI `filing evidence`。源泉納付 `withholding remittance-post`。消費税 check は売上/経費行のみ tax_category 必須（集計と整合）。seed 正名 `blue-return-expense-map`。e-Tax 送信は ADR 0052 どおり範囲外。
 - **Pipeline Scope A static digests** — `pipeline run weekly` / `monthly` が tax / contracts / sales / ledger / budget / org の静的ダイジェストを書く（soft-fail）。月次は `report monthly` と `analytics snapshot` も soft-fail で実行。`npm run monthly` を追加。
 - **Console static-top + live-scroll（Scope A 完了）** — 帳簿・予実/財布・予算管理・組織図も Tax/Contracts と同型。上段 `StaticDigestHeader`（週次/月次 MD）、下段 `LiveSection`（IntersectionObserver・遅延読込）。`orgos {ledger|budget|org} digest --period weekly|monthly --write` → `docs/reports/{ledger,budget,org}/`。BFF `GET …/digest` に `static_reports`。ADR 0072。
 - **Console 静的 CLI タブ（分析 → 税務 → 契約 → 営業）** — 経営タブと同型の **CLI → MD/YAML → WebUI**。分析は `snapshot-history` 月次表を主表示（ライブ KPI は二次・`orgos analytics snapshot` ヒント）。税務 `orgos tax digest --write` → `docs/reports/tax/`、契約 `orgos contracts digest --write` → `docs/reports/contracts/`、営業 `orgos sales digest --write` → `docs/reports/sales/`。BFF に `static_report` スロット。inbox allowlist に `tax/` · `contracts/` · `sales/` · `docs/analytics/snapshots/`。ADR 0046 追記 · 0072。
@@ -17,6 +19,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **表示健全性・前払 timing（90pt）** — journal_hash を BS と同じ ≤ asOf（＋ opening）に揃え、workpapers は baseline 非更新（CLI `--update-baseline` のみ）。integrity の sanity 対象年は `blue-return-setup.calendar_year` 優先。prepaid は家事按分（1180/3210）。`sole-prop-blue prepaid transfer-year` で期末費用化。klab CoA に 1180/1300/1410/5210。
 - **CLI `pipeline run monthly`** — registrar に monthly 分岐が無く unknown になっていたのを修正（`runPipelineMonthly` を登録）。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 

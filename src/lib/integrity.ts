@@ -54,6 +54,12 @@ import { unpostedMonthlyPlIssues } from "./finance/ledger/unposted-months.js";
 import { electronicLedgerIntegrityIssues } from "./finance/ledger/electronic-ledger.js";
 import { invoiceMplDuplicateIssues } from "./finance/ledger/invoice-mpl-dedupe.js";
 import { statutoryFilingReadinessIssues } from "./finance/statutory-filing-readiness.js";
+import { solePropBlueReturnIntegrityIssues } from "./finance/sole-prop-integrity.js";
+import {
+  assessPresentationSanity,
+  resolvePresentationSanityPeriodForValidate,
+  shouldRunPresentationSanityInValidate,
+} from "./finance/financial-presentation-sanity.js";
 import { validateGuestRegisterIntegrity } from "../../steward/modules/hospitality/cli/guest-register.js";
 import { collectHospitalityIntegrityIssues } from "./hospitality/integrity.js";
 import { collectMedicalDeviceIntegrityIssues } from "./medical-device/integrity.js";
@@ -961,6 +967,29 @@ export function runIntegrityChecks(): IntegrityIssue[] {
         file: "data/finance/journal-entries.yaml",
         message: `statutory [${issue.domain}]: ${issue.message}`,
       });
+    }
+    for (const issue of solePropBlueReturnIntegrityIssues()) {
+      issues.push({
+        level: issue.level,
+        file: issue.file,
+        message: issue.message,
+      });
+    }
+    if (shouldRunPresentationSanityInValidate()) {
+      const period = resolvePresentationSanityPeriodForValidate();
+      try {
+        const sanity = assessPresentationSanity({ period, updateBaseline: false });
+        for (const f of sanity.findings) {
+          if (f.level === "info") continue;
+          issues.push({
+            level: f.level === "error" ? "error" : "warning",
+            file: "data/audit/presentation-snapshot.yaml",
+            message: `presentation-sanity [${f.code}]: ${f.message}`,
+          });
+        }
+      } catch {
+        /* journals optional */
+      }
     }
     for (const message of electronicLedgerIntegrityIssues()) {
       issues.push({

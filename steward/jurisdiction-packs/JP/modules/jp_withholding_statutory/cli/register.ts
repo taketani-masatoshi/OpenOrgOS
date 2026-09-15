@@ -4,6 +4,7 @@ import { runTaxCalendar } from "../../../../../../src/commands/tax.js";
 import {
   writePaymentSlipsDraft,
   writeWithholdingPaymentJournalDrafts,
+  postWithholdingRemittanceJournal,
 } from "../../../../../../src/lib/finance/withholding-payments.js";
 
 export const MODULE_ID = "jp_withholding_statutory";
@@ -50,6 +51,34 @@ export const jp_withholding_statutoryCli: ModuleCliBundle = {
           for (const i of draft.issues) console.warn(`  ⚠ ${i}`);
         }
       });
+
+    cmd
+      .command("remittance-post")
+      .description("Append withholding remittance journal (預り金 Dr / 預金 Cr)")
+      .requiredOption("--payment-id <id>", "withholding-payments.yaml payment_id")
+      .requiredOption("--remitted-at <YYYY-MM-DD>", "Remittance date")
+      .option("--authorized-by <id>", "Poster id", "withholding-remit")
+      .option("--json")
+      .action(
+        (opts: {
+          paymentId: string;
+          remittedAt: string;
+          authorizedBy?: string;
+          json?: boolean;
+        }) => {
+          const result = postWithholdingRemittanceJournal({
+            paymentId: opts.paymentId,
+            remittedAt: opts.remittedAt,
+            authorizedBy: opts.authorizedBy,
+          });
+          if (opts.json) console.log(JSON.stringify(result, null, 2));
+          else {
+            console.log(
+              `✓ ${result.posted ? "posted" : "already exists"} ${result.entry_id} · 源泉 ${result.withholding_yen.toLocaleString("ja-JP")} 円`,
+            );
+          }
+        },
+      );
   },
   skillHandlers: {
     jp_withholding_payment: runJpWithholdingPaymentSkill,

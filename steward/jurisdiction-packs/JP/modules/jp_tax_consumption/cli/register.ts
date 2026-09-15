@@ -72,10 +72,14 @@ export const jp_tax_consumptionCli: ModuleCliBundle = {
     cmd
       .command("draft-return")
       .description("Annual consumption tax amount draft (not e-Tax XML)")
-      .option("--year <YYYY>", "Calendar year")
+      .option("--year <YYYY>", "Calendar year (personal / CY)")
+      .option("--fy <YYYY>", "Alias of --year for corp FY end calendar year")
       .option("--json")
-      .action((opts: { year?: string; json?: boolean }) =>
-        runTaxConsumptionDraftReturn({ year: opts.year, json: Boolean(opts.json) }),
+      .action((opts: { year?: string; fy?: string; json?: boolean }) =>
+        runTaxConsumptionDraftReturn({
+          year: opts.year ?? opts.fy,
+          json: Boolean(opts.json),
+        }),
       );
   },
   skillHandlers: {

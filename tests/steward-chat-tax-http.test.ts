@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
-import { setTenantId } from "../src/lib/tenant.js";
+import { getTenantDir, setTenantId } from "../src/lib/tenant.js";
 
 /**
  * Tax and payroll over HTTP. Two properties matter here and neither is visible
@@ -62,6 +64,9 @@ describe("steward chat tax and payroll HTTP", () => {
       "/chat/v1/tax/gaps",
       "/chat/v1/tax/consumption",
       "/chat/v1/tax/payroll-yea",
+      "/chat/v1/tax/sole-prop/setup",
+      "/chat/v1/tax/sole-prop/expense-intake",
+      "/chat/v1/tax/sole-prop/presentation-sanity",
     ]) {
       const res = await fetch(`${baseUrl}${path}`);
       expect(res.status, path).toBe(401);
@@ -186,5 +191,44 @@ describe("steward chat tax and payroll HTTP", () => {
       const res = await post(path, cookie, { fiscal_year: "FY2026" });
       expect([401, 403], path).toContain(res.status);
     }
+  });
+
+  it("exposes sole-prop setup / expense-intake / presentation-sanity as read surfaces", async () => {
+    setTenantId("_fixture-sole-prop");
+    const cookie = await login();
+
+    const setup = await fetch(`${baseUrl}/chat/v1/tax/sole-prop/setup`, {
+      headers: { Cookie: cookie },
+    });
+    expect(setup.status, await setup.clone().text()).toBe(200);
+    const setupBody = (await setup.json()) as {
+      ok: boolean;
+      assessment?: { optional_questions?: unknown[] };
+    };
+    expect(setupBody.ok).toBe(true);
+    expect(setupBody.assessment).toBeTruthy();
+
+    const missingAmount = await fetch(`${baseUrl}/chat/v1/tax/sole-prop/expense-intake`, {
+      headers: { Cookie: cookie },
+    });
+    expect(missingAmount.status).toBe(422);
+
+    const intake = await fetch(`${baseUrl}/chat/v1/tax/sole-prop/expense-intake?amount=150000`, {
+      headers: { Cookie: cookie },
+    });
+    expect(intake.status, await intake.clone().text()).toBe(200);
+    expect(((await intake.json()) as { ok: boolean }).ok).toBe(true);
+
+    const snapPath = join(getTenantDir(), "data/audit/presentation-snapshot.yaml");
+    const before = existsSync(snapPath) ? readFileSync(snapPath, "utf-8") : null;
+    const sanity = await fetch(
+      `${baseUrl}/chat/v1/tax/sole-prop/presentation-sanity?period=2026`,
+      { headers: { Cookie: cookie } },
+    );
+    expect(sanity.status, await sanity.clone().text()).toBe(200);
+    const sanityBody = (await sanity.json()) as { ok: boolean; findings?: unknown[] };
+    expect(sanityBody.ok).toBe(true);
+    const after = existsSync(snapPath) ? readFileSync(snapPath, "utf-8") : null;
+    expect(after).toBe(before);
   });
 });

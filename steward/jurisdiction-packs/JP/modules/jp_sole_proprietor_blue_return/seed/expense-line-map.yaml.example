@@ -1,3 +1,4 @@
+# DEPRECATED alias — use blue-return-expense-map.yaml.example (tenant: data/finance/blue-return-expense-map.yaml)
 # GL account_code → 青色申告決算書（一般用）経費行ラベル
 # 未マップの expense 科目は default_expense_line（雑費）に集約する。
 version: 1

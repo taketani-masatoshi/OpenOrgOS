@@ -2484,6 +2484,57 @@ export async function fetchTaxConsumption(): Promise<{
   return chatApi("/chat/v1/tax/consumption");
 }
 
+export async function fetchSolePropSetup(year?: number): Promise<{
+  ok: boolean;
+  assessment: {
+    ready: boolean;
+    missing: string[];
+    clarify_questions: Array<{ id: string; prompt: string; hint?: string }>;
+    file_missing: boolean;
+  };
+  boundary: string;
+}> {
+  const q = year != null ? `?year=${year}` : "";
+  return chatApi(`/chat/v1/tax/sole-prop/setup${q}`);
+}
+
+export async function fetchSolePropExpenseIntakeClarify(input: {
+  amount: number;
+  year?: number;
+  id?: string;
+}): Promise<{
+  ok: boolean;
+  assessment: {
+    complete: boolean;
+    missing: string[];
+    clarify_questions: Array<{ id: string; prompt: string; hint?: string }>;
+    amount_band: string;
+  };
+  boundary: string;
+}> {
+  const params = new URLSearchParams({ amount: String(input.amount) });
+  if (input.year != null) params.set("year", String(input.year));
+  if (input.id) params.set("id", input.id);
+  return chatApi(`/chat/v1/tax/sole-prop/expense-intake?${params}`);
+}
+
+export async function fetchPresentationSanity(period?: string): Promise<{
+  ok: boolean;
+  period: string;
+  sole_prop: boolean;
+  findings: Array<{ code: string; level: string; message: string }>;
+  metrics: {
+    journal_hash: string;
+    corporate_total_assets_yen: number;
+    owner_draw_yen: number | null;
+    owner_draw_section: string | null;
+  };
+  boundary: string;
+}> {
+  const q = period ? `?period=${encodeURIComponent(period)}` : "";
+  return chatApi(`/chat/v1/tax/sole-prop/presentation-sanity${q}`);
+}
+
 export async function postTaxPayrollCalc(input: {
   month: string;
   gross_yen: number;

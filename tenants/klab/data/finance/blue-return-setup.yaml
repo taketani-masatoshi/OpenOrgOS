@@ -1,0 +1,25 @@
+version: 1
+calendar_year: 2025
+opened_on: "2025-01-01"
+blue_return_approved: true
+books_start_month: "2025-01"
+deduction_target: "650000"
+deduction_path: etax
+consumption:
+  status: 課税事業者（本則）
+  method: standard
+  invoice_registered: false
+  notes: デモ課税。インボイス登録番号は未設定。
+home_office:
+  has_home_office: false
+  allocation_method: n_a
+accounts_separated: true
+has_blue_special_family_employees: false
+depreciation_policy: immediate_under_100k
+has_withholding_outsourcing: true
+tax_advisor_handoff:
+  deadline: "2026-03-16"
+  owner: owner
+notes: |
+  2025-source-notes.md の方針を初期セットアップとして固定。
+  65万円証跡は提出後に blue-return-filing.yaml へ記入。

@@ -34,6 +34,14 @@ import {
   getTaxStaticReportSlot,
   getTaxStaticReportSlots,
 } from "../../tax/tax-digest.js";
+import {
+  assessBlueReturnSetup,
+  assessExpenseIntake,
+  loadBlueReturnSetup,
+  writeExpenseIntakeClarifyReport,
+  writeSetupClarifyReport,
+} from "../../finance/sole-proprietor-clarify.js";
+import { assessPresentationSanity } from "../../finance/financial-presentation-sanity.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -42,6 +50,7 @@ function json(res: ServerResponse, status: number, body: unknown): void {
 
 /**
  * GET  /chat/v1/tax/readiness | /handoff | /digest | /payroll-yea | /calendar | /gaps | /consumption
+ * GET  /chat/v1/tax/sole-prop/setup | /sole-prop/expense-intake
  * POST /chat/v1/tax/xml-draft | /handoff | /bonus-draft | /yea/ready | /yea/compute | /payroll-calc
  */
 export async function handleTaxApi(
@@ -242,6 +251,107 @@ export async function handleTaxApi(
     if (!requireChatPermission(user, "chat:read", res)) return true;
     try {
       json(res, 200, { ok: true, ...runConsumptionTaxCheck() });
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/sole-prop/setup" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const yearRaw = url.searchParams.get("year");
+      const year = yearRaw ? Number.parseInt(yearRaw, 10) : undefined;
+      const write = url.searchParams.get("write") === "1";
+      const assessment = assessBlueReturnSetup(loadBlueReturnSetup());
+      const report = write ? writeSetupClarifyReport(year) : null;
+      json(res, 200, {
+        ok: true,
+        assessment,
+        report_path: report?.path ?? null,
+        boundary:
+          "e-Tax送信はしない（ADR 0052）。apply は CLI: sole-prop-blue setup apply",
+      });
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/sole-prop/expense-intake" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const amount = Number.parseInt(url.searchParams.get("amount") ?? "", 10);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        json(res, 422, { ok: false, error: "query amount (positive yen) is required" });
+        return true;
+      }
+      const yearRaw = url.searchParams.get("year");
+      const year = yearRaw ? Number.parseInt(yearRaw, 10) : undefined;
+      const write = url.searchParams.get("write") === "1";
+      const intakeId = url.searchParams.get("id") ?? undefined;
+      if (write) {
+        const { path, assessment } = writeExpenseIntakeClarifyReport({
+          calendarYear: year,
+          amountYen: amount,
+          intakeId,
+        });
+        json(res, 200, {
+          ok: true,
+          assessment,
+          report_path: path,
+          boundary: "apply は CLI: sole-prop-blue expense-intake apply --from …",
+        });
+      } else {
+        const assessment = assessExpenseIntake(
+          {
+            amount_yen: amount,
+            intake_id: intakeId ?? `EI-${year ?? new Date().getFullYear()}-DRAFT`,
+            reported_at: new Date().toISOString(),
+            tax_inclusive: true,
+          },
+          loadBlueReturnSetup(),
+        );
+        json(res, 200, {
+          ok: true,
+          assessment,
+          report_path: null,
+          boundary: "apply は CLI: sole-prop-blue expense-intake apply --from …",
+        });
+      }
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (
+    (pathname === "/chat/v1/tax/sole-prop/presentation-sanity" ||
+      pathname === "/chat/v1/tax/financial-audit/presentation-sanity") &&
+    method === "GET"
+  ) {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const period = url.searchParams.get("period") ?? String(new Date().getFullYear());
+      const result = assessPresentationSanity({ period, updateBaseline: false });
+      json(res, 200, {
+        ok: true,
+        ...result,
+        boundary:
+          "機械ルールのみ。baseline 更新は orgos operations financial-audit presentation-sanity --period … --update-baseline（workpapers は非更新）",
+      });
     } catch (error) {
       json(res, 422, {
         ok: false,

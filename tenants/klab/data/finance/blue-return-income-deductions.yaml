@@ -1,0 +1,9 @@
+version: 1
+calendar_year: 2025
+social_insurance_yen: 0
+life_insurance_yen: 0
+earthquake_insurance_yen: 0
+spouse_special_yen: 0
+dependents_yen: 0
+small_enterprise_mutual_yen: 0
+notes: KLab 2025 — 所得控除は未入力（基礎のみ）。

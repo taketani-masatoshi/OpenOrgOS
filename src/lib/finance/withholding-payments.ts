@@ -9,9 +9,11 @@ import {
   type WithholdingPayment,
   type WithholdingPaymentsFile,
 } from "../../../schemas/finance/withholding-payments.js";
+import { journalEntrySchema } from "../../../schemas/finance/journal-entry.js";
 import { getDataDir, getDocsDir, readYamlFile, writeTrackedFile } from "../utils.js";
 import { loadChartOfAccounts } from "../data.js";
 import { buildBlueReturnKessan } from "./sole-proprietor-blue-return.js";
+import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
 
 export function computeWithholdingYen(
   grossYen: number,
@@ -20,13 +22,49 @@ export function computeWithholdingYen(
   return Math.floor((Math.max(0, grossYen) * ratePct) / 100);
 }
 
+/**
+ * 報酬・料金等の源泉（復興特別所得税含む概算）。
+ * 支払金額が100万円以下: 10.21%、100万円超: 100万×10.21% + 超過分×20.42%。
+ * 明示の withholding_rate_pct / withholding_yen がある場合は resolvePaymentAmounts 側で優先。
+ */
+export function computeRewardFeeWithholdingYen(grossYen: number): number {
+  const gross = Math.max(0, grossYen);
+  if (gross <= 1_000_000) {
+    return computeWithholdingYen(gross, DEFAULT_REWARD_FEE_WITHHOLDING_RATE_PCT);
+  }
+  const base = computeWithholdingYen(1_000_000, DEFAULT_REWARD_FEE_WITHHOLDING_RATE_PCT);
+  const excess = computeWithholdingYen(gross - 1_000_000, 20.42);
+  return base + excess;
+}
+
 export function resolvePaymentAmounts(p: WithholdingPayment): {
   rate_pct: number;
   withholding_yen: number;
   net_yen: number;
 } {
-  const rate_pct = p.withholding_rate_pct ?? DEFAULT_REWARD_FEE_WITHHOLDING_RATE_PCT;
-  const withholding_yen = p.withholding_yen ?? computeWithholdingYen(p.gross_yen, rate_pct);
+  if (p.withholding_yen != null) {
+    const rate_pct =
+      p.withholding_rate_pct ??
+      (p.gross_yen > 0 ? Math.round((p.withholding_yen / p.gross_yen) * 10000) / 100 : 0);
+    return {
+      rate_pct,
+      withholding_yen: p.withholding_yen,
+      net_yen: p.gross_yen - p.withholding_yen,
+    };
+  }
+  if (p.withholding_rate_pct != null) {
+    const withholding_yen = computeWithholdingYen(p.gross_yen, p.withholding_rate_pct);
+    return {
+      rate_pct: p.withholding_rate_pct,
+      withholding_yen,
+      net_yen: p.gross_yen - withholding_yen,
+    };
+  }
+  const withholding_yen = computeRewardFeeWithholdingYen(p.gross_yen);
+  const rate_pct =
+    p.gross_yen > 0
+      ? Math.round((withholding_yen / p.gross_yen) * 10000) / 100
+      : DEFAULT_REWARD_FEE_WITHHOLDING_RATE_PCT;
   return {
     rate_pct,
     withholding_yen,
@@ -202,4 +240,57 @@ export function writePaymentSlipsDraft(calendarYear: number): {
   const path = join(dir, "payment-slips-draft.md");
   writeTrackedFile(path, draft.markdown);
   return { path, draft };
+}
+
+/**
+ * 源泉預り金の納付仕訳を append（預り金 Dr / 預金 Cr）。
+ * 支払時仕訳（経費計上）とは別。entry_id: JE-WH-REMIT-{payment_id}
+ */
+export function postWithholdingRemittanceJournal(input: {
+  paymentId: string;
+  remittedAt: string;
+  authorizedBy?: string;
+}): { entry_id: string; posted: boolean; withholding_yen: number } {
+  const file = loadWithholdingPayments();
+  const payment = file.payments.find((p) => p.payment_id === input.paymentId);
+  if (!payment) throw new Error(`withholding payment not found: ${input.paymentId}`);
+  const amounts = resolvePaymentAmounts(payment);
+  const entryId = `JE-WH-REMIT-${payment.payment_id.replace(/[^A-Z0-9-]/gi, "-").toUpperCase()}`;
+  if (loadJournalEntries().entries.some((e) => e.entry_id === entryId)) {
+    return { entry_id: entryId, posted: false, withholding_yen: amounts.withholding_yen };
+  }
+  const coa = loadChartOfAccounts();
+  const whCode = coa.journal_source_accounts?.withholding_payable ?? "2120";
+  const bank = coa.journal_source_accounts?.bank_control ?? "1120";
+  const day = input.remittedAt.slice(0, 10);
+  const authorizedBy = input.authorizedBy ?? "withholding-remit";
+  appendJournalEntry(
+    journalEntrySchema.parse({
+      entry_id: entryId,
+      occurred_at: `${day}T03:00:00.000Z`,
+      description: `源泉所得税納付 · ${payment.payee_name} · ${payment.payment_id}`,
+      source: {
+        kind: "remittance",
+        period: day.slice(0, 7),
+        obligation: "withholding",
+      },
+      evidence_refs: [`withholding:${payment.payment_id}`, `remitted:${day}`],
+      lines: [
+        {
+          account_code: whCode,
+          debit_yen: amounts.withholding_yen,
+          credit_yen: 0,
+          tax_category: "out_of_scope",
+        },
+        {
+          account_code: bank,
+          debit_yen: 0,
+          credit_yen: amounts.withholding_yen,
+          tax_category: "out_of_scope",
+        },
+      ],
+    }),
+    { postedBy: authorizedBy },
+  );
+  return { entry_id: entryId, posted: true, withholding_yen: amounts.withholding_yen };
 }

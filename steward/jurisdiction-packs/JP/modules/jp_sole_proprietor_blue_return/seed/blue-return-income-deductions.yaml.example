@@ -1,0 +1,13 @@
+# 所得控除（確定申告書B ドラフト用・手入力）
+# 扶養・配偶者の人数判定はしない。控除額を人が記入する。
+version: 1
+calendar_year: 2026
+social_insurance_yen: 0
+life_insurance_yen: 0
+earthquake_insurance_yen: 0
+spouse_special_yen: 0
+dependents_yen: 0
+small_enterprise_mutual_yen: 0
+notes: |
+  生命保険・地震保険は lib 側で簡易 cap（12万 / 5万）。
+  tenant へ: data/finance/blue-return-income-deductions.yaml

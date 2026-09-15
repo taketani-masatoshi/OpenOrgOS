@@ -977,6 +977,7 @@ agents:
       - jp_corporate_tax_return
       - jp_invoice_registration
       - jp_qualified_invoice_issue
+      - jp_sole_prop_blue_return_pack
       - jp_withholding_payment
       - tax_filing_prep
     pulse_checks:

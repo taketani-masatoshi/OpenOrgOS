@@ -68,6 +68,14 @@ orgos tax consumption-check
 orgos ledger journal backfill-tax
 ```
 
+## 個人事業主（sole_proprietorship）
+
+テナントが個人事業主のときは **`jp_sole_proprietor_blue_return`** を優先する。
+
+- 初期・支出の確認質問: `orgos operations sole-prop-blue setup|expense-intake clarify`
+- 未充足のまま「申告準備完了」と報告しない（モジュール agent.md の確認質問ルールに従う）
+- Path: `steward/jurisdiction-packs/JP/modules/jp_sole_proprietor_blue_return/agent.md`
+
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)

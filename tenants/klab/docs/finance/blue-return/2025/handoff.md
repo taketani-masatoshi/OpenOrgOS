@@ -25,3 +25,11 @@
 - 課税事業者は売上仕訳に `tax_category` を付与すること。
 
 ## モジュール整合
+
+
+## 初期セットアップ / 支出 intake
+
+- setup ready · 未完了 intake なし
+
+- `orgos operations sole-prop-blue setup clarify --year 2025`
+- `orgos operations sole-prop-blue expense-intake clarify --amount <yen>`

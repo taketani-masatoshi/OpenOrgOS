@@ -5,7 +5,8 @@
 
 ## 役割
 
-GL・試算・締めチェックから **内部** 財務アサーションのワークペーパーを生成する。
+GL・試算・締めチェックから **内部** 財務アサーションのワークペーパーを生成する。  
+**表示健全性**（事業主貸の符号・仕訳不変での合計ジャンプ）は機械ルール。
 
 **外部会計監査人の意見・保証は出さない。** J-SOX / ISO 内部監査と混同しない。
 
@@ -14,7 +15,14 @@ GL・試算・締めチェックから **内部** 財務アサーションのワ
 ```bash
 orgos operations financial-audit plan --period 2026
 orgos operations financial-audit workpapers --period 2026
+orgos operations financial-audit presentation-sanity --period 2026 [--update-baseline]
 orgos operations financial-audit conclude-stub --period 2026
 ```
 
-出力: `docs/audit/financial/{period}/`
+| code | level |
+|------|-------|
+| `owner_draw_negative_on_blue` | error |
+| `owner_draw_still_negative_on_corp_bs` | error |
+| `presentation_total_jump_journals_unchanged` | warning |
+
+出力: `docs/audit/financial/{period}/` · snapshot: `data/audit/presentation-snapshot.yaml`

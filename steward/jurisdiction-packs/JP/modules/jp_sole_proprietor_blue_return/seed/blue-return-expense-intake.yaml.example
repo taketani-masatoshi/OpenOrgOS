@@ -1,0 +1,22 @@
+# 支出 intake 単票の例（expense-intake apply --from に渡す）
+# 完成後 status: complete。一覧正本は data/finance/blue-return-expense-intakes.yaml
+intake_id: EI-2025-001
+reported_at: "2025-02-10T03:00:00.000Z"
+amount_yen: 19800
+tax_inclusive: true
+business_use: business_only
+amount_band: under_100k
+depreciation_choice: expense
+occurred_on: "2025-02-01"
+paid_on: "2025-02-10"
+expense_line: 消耗品費
+account_code: "5200"
+evidence_refs:
+  - "source:card-breakdown"
+invoice_qualified: false
+withholding_applicable: false
+bundle_or_split_purchase: false
+repair_vs_capex: repair
+timing: current_expense
+status: complete
+notes: G店 パソコンケーブル（クレカ明細）

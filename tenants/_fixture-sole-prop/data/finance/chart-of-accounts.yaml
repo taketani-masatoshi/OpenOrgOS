@@ -10,8 +10,20 @@ accounts:
     name: 売掛金
     type: asset
     normal_balance: debit
+  - code: "1180"
+    name: 前払費用
+    type: asset
+    normal_balance: debit
   - code: "1210"
     name: 棚卸資産
+    type: asset
+    normal_balance: debit
+  - code: "1300"
+    name: 一括償却資産
+    type: asset
+    normal_balance: debit
+  - code: "1410"
+    name: 器具備品
     type: asset
     normal_balance: debit
   - code: "2110"
@@ -57,6 +69,11 @@ accounts:
     type: expense
     normal_balance: debit
     statement_section: sga
+  - code: "5210"
+    name: 減価償却費
+    type: expense
+    normal_balance: debit
+    statement_section: sga
 category_mapping:
   revenue:
     other_revenue: "4100"
@@ -70,8 +87,8 @@ journal_source_accounts:
   payroll_payable: "2110"
   accounts_payable: "2110"
   payroll_expense: "5100"
-  depreciation_expense: "5100"
-  accumulated_depreciation: "1100"
+  depreciation_expense: "5210"
+  accumulated_depreciation: "1300"
   retained_earnings: "3100"
   consumption_tax_payable: "2160"
   consumption_tax_receivable: "2170"

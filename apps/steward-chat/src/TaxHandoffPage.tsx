@@ -7,6 +7,9 @@ import {
   fetchTaxGaps,
   fetchTaxPayrollYea,
   fetchTaxReadiness,
+  fetchSolePropSetup,
+  fetchSolePropExpenseIntakeClarify,
+  fetchPresentationSanity,
   type ExecutiveStaticReportSlot,
   postTaxBonusDraft,
   postTaxHandoff,
@@ -68,6 +71,17 @@ export function TaxHandoffPage() {
   const [payMonth, setPayMonth] = useState("2026-08");
   const [payGross, setPayGross] = useState("300000");
   const [payDependents, setPayDependents] = useState("0");
+  const [soleSetup, setSoleSetup] = useState<string | null>(null);
+  const [soleQuestions, setSoleQuestions] = useState<
+    Array<{ id: string; prompt: string }>
+  >([]);
+  const [expenseAmount, setExpenseAmount] = useState("11000");
+  const [expenseClarify, setExpenseClarify] = useState<string | null>(null);
+  const [sanityPeriod, setSanityPeriod] = useState(String(new Date().getFullYear()));
+  const [sanityFindings, setSanityFindings] = useState<
+    Array<{ code: string; level: string; message: string }>
+  >([]);
+  const [sanityMeta, setSanityMeta] = useState<string | null>(null);
 
   useEffect(() => {
     void fetchTaxDigest()
@@ -114,7 +128,27 @@ export function TaxHandoffPage() {
         setConsumptionIssues(r.issues);
       })
       .catch(() => setConsumption(null));
-  }, [liveReady]);
+    void fetchSolePropSetup()
+      .then((r) => {
+        setSoleSetup(
+          r.assessment.ready
+            ? "setup ready"
+            : `setup 未充足 · missing ${r.assessment.missing.length}`,
+        );
+        setSoleQuestions(
+          r.assessment.clarify_questions.map((q) => ({ id: q.id, prompt: q.prompt })),
+        );
+      })
+      .catch(() => setSoleSetup(null));
+    void fetchPresentationSanity(sanityPeriod)
+      .then((r) => {
+        setSanityMeta(
+          `${r.period} · assets ${r.metrics.corporate_total_assets_yen.toLocaleString("ja-JP")} · 事業主貸 ${r.metrics.owner_draw_yen ?? "—"} (${r.metrics.owner_draw_section ?? "—"})`,
+        );
+        setSanityFindings(r.findings);
+      })
+      .catch(() => setSanityMeta(null));
+  }, [liveReady, sanityPeriod]);
 
   async function run<T>(fn: () => Promise<T>, okMsg: (result: T) => string) {
     setBusy(true);
@@ -241,6 +275,98 @@ export function TaxHandoffPage() {
             出力パス: <code>{lastHandoffPath}</code>（e-Tax 提出不可）
           </p>
         )}
+      </section>
+
+      <section className="ops-card">
+        <h2 className="section-title">個人青色 · 表示健全性</h2>
+        <p className="ops-page-meta">
+          apply は CLI のみ。Chat は確認質問と機械 findings の表示。
+        </p>
+        <p className="ops-page-meta" role="status">
+          {soleSetup ?? "setup 未読込（個人以外は無視可）"}
+        </p>
+        {soleQuestions.length > 0 && (
+          <ul className="ops-list">
+            {soleQuestions.slice(0, 8).map((q) => (
+              <li key={q.id}>
+                <code>{q.id}</code> — {q.prompt}
+              </li>
+            ))}
+          </ul>
+        )}
+        <label className="wallet-field">
+          支出確認金額（円）
+          <input
+            type="number"
+            value={expenseAmount}
+            onChange={(e) => setExpenseAmount(e.target.value)}
+          />
+        </label>
+        <div className="section-actions">
+          <button
+            type="button"
+            className="primary-button"
+            disabled={busy}
+            onClick={() =>
+              void run(
+                () =>
+                  fetchSolePropExpenseIntakeClarify({
+                    amount: Number(expenseAmount),
+                  }),
+                (r) => {
+                  setExpenseClarify(
+                    `band ${r.assessment.amount_band} · complete ${r.assessment.complete ? "yes" : "no"} · Q ${r.assessment.clarify_questions.length}`,
+                  );
+                  return r.boundary;
+                },
+              )
+            }
+          >
+            支出 clarify
+          </button>
+        </div>
+        {expenseClarify && <p className="ops-page-meta">{expenseClarify}</p>}
+        <label className="wallet-field">
+          表示健全性 period
+          <input
+            value={sanityPeriod}
+            onChange={(e) => setSanityPeriod(e.target.value)}
+          />
+        </label>
+        <div className="section-actions">
+          <button
+            type="button"
+            className="primary-button"
+            disabled={busy}
+            onClick={() =>
+              void run(
+                () => fetchPresentationSanity(sanityPeriod),
+                (r) => {
+                  setSanityMeta(
+                    `${r.period} · assets ${r.metrics.corporate_total_assets_yen.toLocaleString("ja-JP")}`,
+                  );
+                  setSanityFindings(r.findings);
+                  return `findings ${r.findings.length}`;
+                },
+              )
+            }
+          >
+            表示健全性を再読込
+          </button>
+        </div>
+        {sanityMeta && <p className="ops-page-meta">{sanityMeta}</p>}
+        {sanityFindings.length > 0 && (
+          <ul className="ops-list">
+            {sanityFindings.map((f) => (
+              <li key={f.code}>
+                [{f.level}] <code>{f.code}</code> — {f.message}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="ops-page-meta">
+          WP: <code>orgos operations financial-audit workpapers --period {sanityPeriod}</code>
+        </p>
       </section>
 
       <section className="ops-card">

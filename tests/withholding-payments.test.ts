@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   buildPaymentSlipsDraft,
+  computeRewardFeeWithholdingYen,
   computeWithholdingYen,
   writeWithholdingPaymentJournalDrafts,
 } from "../src/lib/finance/withholding-payments.js";
@@ -39,6 +40,12 @@ payments:
 
   it("computes statutory-ish rate on 1M yen", () => {
     expect(computeWithholdingYen(1_000_000, 10.21)).toBe(102_100);
+    expect(computeRewardFeeWithholdingYen(1_000_000)).toBe(102_100);
+  });
+
+  it("applies progressive 20.42% above 1M", () => {
+    // 1_000_000 * 10.21% + 500_000 * 20.42%
+    expect(computeRewardFeeWithholdingYen(1_500_000)).toBe(102_100 + 102_100);
   });
 
   it("builds payment slips and journal drafts", () => {

@@ -10,7 +10,7 @@ import { loadChartOfAccounts, loadFixedAssets } from "../data.js";
 import { loadJournalEntries } from "./expense-claim-journal.js";
 import { buildGeneralLedger } from "./ledger/general-ledger.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
-import { buildBalanceSheet } from "./ledger/balance-sheet.js";
+import { buildBalanceSheet, OWNER_DRAW_ACCOUNT_CODE } from "./ledger/balance-sheet.js";
 import { periodPlMovementByAccount } from "./gl-report-basis.js";
 import {
   journalEntrySchema,
@@ -22,6 +22,13 @@ import { getDataDir, getDocsDir, readYamlFile, writeTrackedFile } from "../utils
 import { loadTenantConfig } from "../tenant.js";
 import { buildConsumptionTaxDraftReturn } from "./consumption-tax.js";
 import { assessEntityModuleMismatches } from "./entity-module-guards.js";
+import { collectSetupGateWarnings, loadBlueReturnSetup } from "./sole-proprietor-clarify.js";
+import {
+  blueReturnIncomeDeductionsSchema,
+  EARTHQUAKE_INSURANCE_DEDUCTION_CAP_YEN,
+  LIFE_INSURANCE_DEDUCTION_CAP_YEN,
+  type BlueReturnIncomeDeductions,
+} from "../../../schemas/finance/blue-return-income-deductions.js";
 
 export const BLUE_RETURN_DEDUCTION_55 = 550_000;
 export const BLUE_RETURN_DEDUCTION_65 = 650_000;
@@ -56,10 +63,11 @@ const DEFAULT_EXPENSE_MAP: Record<string, string> = {
   "5100": "雑費",
 };
 
-/** 現金・預金は 1100（合算）または 1110/1120（分割）いずれでも BS に載せる。 */
-const MAJOR_ASSET_CODES = ["1100", "1110", "1120", "1150", "1210", "2170"] as const;
+/** 現金・預金は 1100（合算）または 1110/1120（分割）いずれでも BS に載せる。事業主貸は BS 資産側。 */
+const MAJOR_ASSET_CODES = ["1100", "1110", "1120", "1150", "1210", "2170", "3210"] as const;
 const MAJOR_LIABILITY_CODES = ["2110", "2120", "2160"] as const;
-const MAJOR_EQUITY_CODES = ["3100", "3210", "3220"] as const;
+/** 事業主貸(3210)は資産の部（buildBalanceSheet と一本化）。資本の部には載せない。 */
+const MAJOR_EQUITY_CODES = ["3100", "3220"] as const;
 
 const blueReturnFilingSchema = z.object({
   version: z.union([z.number(), z.string()]).optional(),
@@ -651,12 +659,23 @@ export function buildBlueReturnKessan(calendarYear?: number): BlueReturnKessan {
       `貸借不一致: 資産 ${totalAssets} vs 負債・資本 ${totalLE}（控除前所得の転記を確認）`,
     );
   }
+  const drawOnEquity = bs.equity.find((l) => l.account_code === "3210");
+  if (drawOnEquity && drawOnEquity.balance_yen < 0) {
+    issues.push(
+      "事業主貸が純資産側で負表示のまま（buildBalanceSheet 一本化の回帰）",
+    );
+  }
+  const drawByCode = bs.assets.find((l) => l.account_code === "3210");
+  if (drawByCode && drawByCode.balance_yen < 0) {
+    issues.push(`事業主貸が資産側で負: ${drawByCode.balance_yen}`);
+  }
   const incomeOnBs = incomeLine.amount_yen;
   if (Math.abs(incomeOnBs - incomeBefore) > 0) {
     issues.push(
       `BS 所得金額（${incomeOnBs}）と PL 控除前所得（${incomeBefore}）が不一致`,
     );
   }
+  issues.push(...collectSetupGateWarnings(ctx.calendar_year));
 
   return {
     calendar_year: ctx.calendar_year,
@@ -698,8 +717,14 @@ export type FormBDraft = {
   year_label: string;
   business_revenue_yen: number;
   business_income_yen: number;
+  dividend_income_yen: number;
+  interest_income_yen: number;
+  miscellaneous_income_yen: number;
   total_income_yen: number;
   basic_deduction_yen: number;
+  income_deductions_yen: number;
+  income_deduction_lines: Array<{ label: string; amount_yen: number }>;
+  income_deductions_missing: boolean;
   blue_deduction_yen: number;
   taxable_income_yen: number;
   income_tax_yen: number;
@@ -707,6 +732,37 @@ export type FormBDraft = {
   tax_payable_yen: number;
   deduction_gate: BlueReturnDeductionGate;
 };
+
+export function loadBlueReturnIncomeDeductions(
+  calendarYear?: number,
+): { deductions: BlueReturnIncomeDeductions | null; missing: boolean } {
+  const path = join(getDataDir(), "finance", "blue-return-income-deductions.yaml");
+  if (!existsSync(path)) {
+    return { deductions: null, missing: true };
+  }
+  const raw = readYamlFile(path, blueReturnIncomeDeductionsSchema);
+  if (calendarYear != null && raw.calendar_year !== calendarYear) {
+    return { deductions: raw, missing: true };
+  }
+  return { deductions: raw, missing: false };
+}
+
+export function sumCappedIncomeDeductions(
+  d: BlueReturnIncomeDeductions,
+): { total: number; lines: Array<{ label: string; amount_yen: number }> } {
+  const life = Math.min(d.life_insurance_yen, LIFE_INSURANCE_DEDUCTION_CAP_YEN);
+  const quake = Math.min(d.earthquake_insurance_yen, EARTHQUAKE_INSURANCE_DEDUCTION_CAP_YEN);
+  const lines = [
+    { label: "社会保険料控除", amount_yen: d.social_insurance_yen },
+    { label: "生命保険料控除（cap 後）", amount_yen: life },
+    { label: "地震保険料控除（cap 後）", amount_yen: quake },
+    { label: "配偶者（特別）控除", amount_yen: d.spouse_special_yen },
+    { label: "扶養控除", amount_yen: d.dependents_yen },
+    { label: "小規模企業共済等掛金控除", amount_yen: d.small_enterprise_mutual_yen },
+  ].filter((l) => l.amount_yen > 0);
+  const total = lines.reduce((s, l) => s + l.amount_yen, 0);
+  return { total, lines };
+}
 
 export function buildFormBDraft(calendarYear?: number): FormBDraft {
   const kessan = buildBlueReturnKessan(calendarYear);
@@ -725,8 +781,29 @@ export function buildFormBDraft(calendarYear?: number): FormBDraft {
     hasBalanceSheet: true,
     hasProfitLoss: true,
   });
-  const totalIncome = kessan.business_income_yen;
-  const taxable = truncateTaxableIncomeYen(totalIncome - BASIC_DEDUCTION_YEN);
+  let dividend_income_yen = 0;
+  let interest_income_yen = 0;
+  let miscellaneous_income_yen = 0;
+  const setup = loadBlueReturnSetup();
+  if (setup?.other_income) {
+    dividend_income_yen = setup.other_income.dividend_yen ?? 0;
+    interest_income_yen = setup.other_income.interest_yen ?? 0;
+    miscellaneous_income_yen = setup.other_income.miscellaneous_yen ?? 0;
+  }
+  const totalIncome =
+    kessan.business_income_yen +
+    dividend_income_yen +
+    interest_income_yen +
+    miscellaneous_income_yen;
+  const { deductions, missing: income_deductions_missing } = loadBlueReturnIncomeDeductions(
+    kessan.calendar_year,
+  );
+  const capped = deductions
+    ? sumCappedIncomeDeductions(deductions)
+    : { total: 0, lines: [] as Array<{ label: string; amount_yen: number }> };
+  const taxable = truncateTaxableIncomeYen(
+    totalIncome - BASIC_DEDUCTION_YEN - capped.total,
+  );
   const income_tax_yen = computeIncomeTaxYen(taxable);
   const reconstruction_surtax_yen = computeReconstructionSurtaxYen(income_tax_yen);
   return {
@@ -734,8 +811,14 @@ export function buildFormBDraft(calendarYear?: number): FormBDraft {
     year_label: kessan.year_label,
     business_revenue_yen: kessan.revenue_yen,
     business_income_yen: kessan.business_income_yen,
+    dividend_income_yen,
+    interest_income_yen,
+    miscellaneous_income_yen,
     total_income_yen: totalIncome,
     basic_deduction_yen: BASIC_DEDUCTION_YEN,
+    income_deductions_yen: capped.total,
+    income_deduction_lines: capped.lines,
+    income_deductions_missing,
     blue_deduction_yen: gate.applied_deduction_yen,
     taxable_income_yen: taxable,
     income_tax_yen,
@@ -1197,13 +1280,30 @@ export function writeFormBDraft(calendarYear?: number): { path: string; draft: F
       "|------|------|----------:|",
       `| 収入金額等 | 事業（営業等） | ${yen(draft.business_revenue_yen)} |`,
       `| 所得金額 | 事業（青色控除後） | ${yen(draft.business_income_yen)} |`,
+      ...(draft.dividend_income_yen > 0
+        ? [`| 所得金額 | 配当 | ${yen(draft.dividend_income_yen)} |`]
+        : []),
+      ...(draft.interest_income_yen > 0
+        ? [`| 所得金額 | 利子 | ${yen(draft.interest_income_yen)} |`]
+        : []),
+      ...(draft.miscellaneous_income_yen > 0
+        ? [`| 所得金額 | 雑 | ${yen(draft.miscellaneous_income_yen)} |`]
+        : []),
       `| 所得金額 | 合計 | ${yen(draft.total_income_yen)} |`,
       `| 所得控除 | 基礎控除 | ${yen(draft.basic_deduction_yen)} |`,
+      ...draft.income_deduction_lines.map(
+        (l) => `| 所得控除 | ${l.label} | ${yen(l.amount_yen)} |`,
+      ),
+      `| 所得控除 | 所得控除合計（基礎除く） | ${yen(draft.income_deductions_yen)} |`,
       `| （参考） | 青色申告特別控除（決算書適用額） | ${yen(draft.blue_deduction_yen)} |`,
       `| 税金の計算 | 課税される所得金額（千円未満切捨て） | ${yen(draft.taxable_income_yen)} |`,
       `| 税金の計算 | 所得税 | ${yen(draft.income_tax_yen)} |`,
       `| 税金の計算 | 復興特別所得税 | ${yen(draft.reconstruction_surtax_yen)} |`,
       `| 税金の計算 | 申告納税額 | ${yen(draft.tax_payable_yen)} |`,
+      "",
+      draft.income_deductions_missing
+        ? "注: `data/finance/blue-return-income-deductions.yaml` 未整備または年不一致 — 所得控除は基礎のみ。"
+        : "所得控除は YAML 手入力（ドラフト用 cap）。法令の完全判定ではない。",
       "",
       "## 青色申告特別控除ゲート",
       "",
@@ -1301,6 +1401,20 @@ export function writeHandoffChecklist(calendarYear?: number): { path: string } {
       "## モジュール整合",
       "",
       ...assessEntityModuleMismatches().map((w) => `- ${w}`),
+      "",
+      "## 初期セットアップ / 支出 intake",
+      "",
+      ...(() => {
+        const w = collectSetupGateWarnings(ctx.calendar_year);
+        return w.length
+          ? w.map((line) => `- ${line}`)
+          : ["- setup ready · 未完了 intake なし"];
+      })(),
+      "",
+      "- `orgos operations sole-prop-blue setup clarify --year " +
+        String(ctx.calendar_year) +
+        "`",
+      "- `orgos operations sole-prop-blue expense-intake clarify --amount <yen>`",
     ].join("\n"),
   );
   return { path };

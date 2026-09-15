@@ -119,17 +119,22 @@ export function buildGeneralLedger(input: {
 
   const opening = input.opening ?? loadOpeningBalances();
   const journal = loadJournalEntries().entries;
-  const rows = [
-    ...openingRows(opening, input.accountCode),
-    ...flattenEntries(journal).filter(
-      (row) => row.account_code === input.accountCode,
-    ),
-  ].filter((row) => {
+  // 期首: from より前（または同日）の opening は期間元帳の繰越として必ず載せる。
+  // 仕訳: from〜to のみ。
+  const openingPart = openingRows(opening, input.accountCode).filter((row) => {
+    const date = row.occurred_at.slice(0, 10);
+    if (input.to && date > input.to) return false;
+    if (input.from && date > input.from) return false;
+    return true;
+  });
+  const journalPart = flattenEntries(journal).filter((row) => {
+    if (row.account_code !== input.accountCode) return false;
     const date = row.occurred_at.slice(0, 10);
     if (input.from && date < input.from) return false;
     if (input.to && date > input.to) return false;
     return true;
   });
+  const rows = [...openingPart, ...journalPart];
 
   let running = 0;
   const lines: LedgerLine[] = rows.map((row) => {

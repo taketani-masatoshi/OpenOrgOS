@@ -22,4 +22,8 @@ export * from "./journal-entry.js";
 export * from "./opening-balances.js";
 export * from "./expense-evidence.js";
 export * from "./property-scenarios.js";
+export * from "./withholding-payments.js";
+export * from "./blue-return-setup.js";
+export * from "./blue-return-expense-intake.js";
+export * from "./blue-return-income-deductions.js";
 export * from "./types.js";

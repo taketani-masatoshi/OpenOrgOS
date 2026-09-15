@@ -7,7 +7,7 @@ const VITEST_JOURNAL_GUARD =
   process.env.NODE_ENV === "test";
 
 /** Tenants that may receive journal-entries.yaml writes during vitest. */
-const VITEST_JOURNAL_WRITE_TENANTS = new Set(["_fixture-books"]);
+const VITEST_JOURNAL_WRITE_TENANTS = new Set(["_fixture-books", "_fixture-sole-prop"]);
 
 /**
  * Block vitest from mutating production tenant ledgers (e.g. mal).

@@ -1,0 +1,9 @@
+# jp_sole_proprietor_blue_return — 法令・手続レビュー鮮度
+# OrgOS は e-Tax を送信しない（ADR 0052）。税率・控除額・特例の変更は人間が見直す。
+version: 1
+reviewed_on: "2026-03-01"
+review_interval_months: 18
+notes: |
+  確認観点: 青色特別控除 55/65 · 基礎控除 · 報酬源泉 10.21/20.42 ·
+  少額減価 / 一括償却 / 中小30万特例 · 消費税インボイス。
+  見直し後に reviewed_on を更新する。

@@ -4,6 +4,13 @@ import {
   writeFinancialAuditPlanStub,
   writeFinancialAuditWorkpapers,
 } from "../../../../../../src/lib/finance/financial-audit-workpapers.js";
+import {
+  assessPresentationSanity,
+  formatPresentationSanityMarkdown,
+} from "../../../../../../src/lib/finance/financial-presentation-sanity.js";
+import { getDocsDir, writeTrackedFile } from "../../../../../../src/lib/utils.js";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 
 export const MODULE_ID = "jp_financial_audit";
 
@@ -48,6 +55,33 @@ export const jp_financial_auditCli: ModuleCliBundle = {
         const { path } = writeFinancialAuditConcludeStub(opts.period);
         if (opts.json) console.log(JSON.stringify({ path }, null, 2));
         else console.log(`✓ conclude stub → ${path}`);
+      });
+
+    cmd
+      .command("presentation-sanity")
+      .description("Display sanity: owner-draw sign, total jump vs journal hash")
+      .requiredOption("--period <YYYY|YYYY-MM>", "Calendar year or month")
+      .option("--update-baseline", "Write presentation-snapshot.yaml")
+      .option("--json")
+      .action((opts: { period: string; updateBaseline?: boolean; json?: boolean }) => {
+        const result = assessPresentationSanity({
+          period: opts.period,
+          updateBaseline: Boolean(opts.updateBaseline),
+        });
+        const dir = join(getDocsDir(), "audit", "financial", opts.period);
+        mkdirSync(dir, { recursive: true });
+        const path = writeTrackedFile(
+          join(dir, "presentation-sanity.md"),
+          formatPresentationSanityMarkdown(result),
+        );
+        if (opts.json) {
+          console.log(JSON.stringify({ path, result }, null, 2));
+          return;
+        }
+        console.log(`✓ presentation-sanity → ${path}`);
+        for (const f of result.findings) {
+          console.log(`  [${f.level}] ${f.code}: ${f.message}`);
+        }
       });
   },
   skillHandlers: {},
