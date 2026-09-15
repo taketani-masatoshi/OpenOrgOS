@@ -66,6 +66,7 @@ describe("steward chat tax and payroll HTTP", () => {
       "/chat/v1/tax/payroll-yea",
       "/chat/v1/tax/sole-prop/setup",
       "/chat/v1/tax/sole-prop/expense-intake",
+      "/chat/v1/tax/sole-prop/income-deductions",
       "/chat/v1/tax/sole-prop/presentation-sanity",
     ]) {
       const res = await fetch(`${baseUrl}${path}`);
@@ -203,10 +204,14 @@ describe("steward chat tax and payroll HTTP", () => {
     expect(setup.status, await setup.clone().text()).toBe(200);
     const setupBody = (await setup.json()) as {
       ok: boolean;
-      assessment?: { optional_questions?: unknown[] };
+      assessment?: {
+        optional_questions?: unknown[];
+        clarify_questions?: unknown[];
+      };
     };
     expect(setupBody.ok).toBe(true);
     expect(setupBody.assessment).toBeTruthy();
+    expect(Array.isArray(setupBody.assessment?.optional_questions)).toBe(true);
 
     const missingAmount = await fetch(`${baseUrl}/chat/v1/tax/sole-prop/expense-intake`, {
       headers: { Cookie: cookie },
@@ -219,6 +224,22 @@ describe("steward chat tax and payroll HTTP", () => {
     expect(intake.status, await intake.clone().text()).toBe(200);
     expect(((await intake.json()) as { ok: boolean }).ok).toBe(true);
 
+    const deductions = await fetch(
+      `${baseUrl}/chat/v1/tax/sole-prop/income-deductions?year=2026`,
+      { headers: { Cookie: cookie } },
+    );
+    expect(deductions.status, await deductions.clone().text()).toBe(200);
+    const dedBody = (await deductions.json()) as {
+      ok: boolean;
+      year: number;
+      missing: boolean;
+      capped: { total: number };
+    };
+    expect(dedBody.ok).toBe(true);
+    expect(dedBody.year).toBe(2026);
+    expect(typeof dedBody.missing).toBe("boolean");
+    expect(typeof dedBody.capped.total).toBe("number");
+
     const snapPath = join(getTenantDir(), "data/audit/presentation-snapshot.yaml");
     const before = existsSync(snapPath) ? readFileSync(snapPath, "utf-8") : null;
     const sanity = await fetch(
@@ -226,8 +247,15 @@ describe("steward chat tax and payroll HTTP", () => {
       { headers: { Cookie: cookie } },
     );
     expect(sanity.status, await sanity.clone().text()).toBe(200);
-    const sanityBody = (await sanity.json()) as { ok: boolean; findings?: unknown[] };
+    const sanityBody = (await sanity.json()) as {
+      ok: boolean;
+      findings?: unknown[];
+      baseline: unknown;
+      metrics?: { journal_hash?: string };
+    };
     expect(sanityBody.ok).toBe(true);
+    expect("baseline" in sanityBody).toBe(true);
+    expect(sanityBody.metrics?.journal_hash).toBeTruthy();
     const after = existsSync(snapPath) ? readFileSync(snapPath, "utf-8") : null;
     expect(after).toBe(before);
   });

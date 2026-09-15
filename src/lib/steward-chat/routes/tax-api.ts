@@ -42,6 +42,10 @@ import {
   writeSetupClarifyReport,
 } from "../../finance/sole-proprietor-clarify.js";
 import { assessPresentationSanity } from "../../finance/financial-presentation-sanity.js";
+import {
+  loadBlueReturnIncomeDeductions,
+  sumCappedIncomeDeductions,
+} from "../../finance/sole-proprietor-blue-return.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -50,7 +54,7 @@ function json(res: ServerResponse, status: number, body: unknown): void {
 
 /**
  * GET  /chat/v1/tax/readiness | /handoff | /digest | /payroll-yea | /calendar | /gaps | /consumption
- * GET  /chat/v1/tax/sole-prop/setup | /sole-prop/expense-intake
+ * GET  /chat/v1/tax/sole-prop/setup | /sole-prop/expense-intake | /sole-prop/income-deductions | /sole-prop/presentation-sanity
  * POST /chat/v1/tax/xml-draft | /handoff | /bonus-draft | /yea/ready | /yea/compute | /payroll-calc
  */
 export async function handleTaxApi(
@@ -327,6 +331,38 @@ export async function handleTaxApi(
           boundary: "apply は CLI: sole-prop-blue expense-intake apply --from …",
         });
       }
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/sole-prop/income-deductions" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const yearRaw = url.searchParams.get("year");
+      const setupYear = loadBlueReturnSetup()?.calendar_year;
+      const year =
+        yearRaw && Number.isFinite(Number.parseInt(yearRaw, 10))
+          ? Number.parseInt(yearRaw, 10)
+          : (setupYear ?? new Date().getFullYear());
+      const { deductions, missing } = loadBlueReturnIncomeDeductions(year);
+      const capped = deductions
+        ? sumCappedIncomeDeductions(deductions)
+        : { total: 0, lines: [] as Array<{ label: string; amount_yen: number }> };
+      json(res, 200, {
+        ok: true,
+        year,
+        missing,
+        deductions,
+        capped,
+        boundary:
+          "読取のみ。YAML 更新は手編集または CLI: sole-prop-blue deductions status --year",
+      });
     } catch (error) {
       json(res, 422, {
         ok: false,

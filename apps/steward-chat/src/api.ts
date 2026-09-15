@@ -2490,7 +2490,9 @@ export async function fetchSolePropSetup(year?: number): Promise<{
     ready: boolean;
     missing: string[];
     clarify_questions: Array<{ id: string; prompt: string; hint?: string }>;
+    optional_questions: Array<{ id: string; prompt: string; hint?: string }>;
     file_missing: boolean;
+    setup: { calendar_year?: number } | null;
   };
   boundary: string;
 }> {
@@ -2518,21 +2520,50 @@ export async function fetchSolePropExpenseIntakeClarify(input: {
   return chatApi(`/chat/v1/tax/sole-prop/expense-intake?${params}`);
 }
 
+export type PresentationSanitySnapshot = {
+  captured_at: string;
+  journal_hash: string;
+  corporate_total_assets_yen: number;
+  blue_total_assets_yen: number | null;
+  owner_draw_yen: number | null;
+  owner_draw_section: string | null;
+};
+
 export async function fetchPresentationSanity(period?: string): Promise<{
   ok: boolean;
   period: string;
+  as_of: string;
   sole_prop: boolean;
   findings: Array<{ code: string; level: string; message: string }>;
-  metrics: {
-    journal_hash: string;
-    corporate_total_assets_yen: number;
-    owner_draw_yen: number | null;
-    owner_draw_section: string | null;
-  };
+  metrics: PresentationSanitySnapshot;
+  baseline: PresentationSanitySnapshot | null;
   boundary: string;
 }> {
   const q = period ? `?period=${encodeURIComponent(period)}` : "";
   return chatApi(`/chat/v1/tax/sole-prop/presentation-sanity${q}`);
+}
+
+export async function fetchSolePropIncomeDeductions(year?: number): Promise<{
+  ok: boolean;
+  year: number;
+  missing: boolean;
+  deductions: {
+    calendar_year: number;
+    social_insurance_yen: number;
+    life_insurance_yen: number;
+    earthquake_insurance_yen: number;
+    spouse_special_yen: number;
+    dependents_yen: number;
+    small_enterprise_mutual_yen: number;
+  } | null;
+  capped: {
+    total: number;
+    lines: Array<{ label: string; amount_yen: number }>;
+  };
+  boundary: string;
+}> {
+  const q = year != null ? `?year=${year}` : "";
+  return chatApi(`/chat/v1/tax/sole-prop/income-deductions${q}`);
 }
 
 export async function postTaxPayrollCalc(input: {

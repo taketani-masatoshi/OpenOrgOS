@@ -15,8 +15,6 @@ import {
 } from "../src/lib/finance/financial-presentation-sanity.js";
 import { getTenantDir, setTenantId } from "../src/lib/tenant.js";
 import { writeFinancialAuditWorkpapers } from "../src/lib/finance/financial-audit-workpapers.js";
-import { loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
-import { writeYamlFile } from "../src/lib/utils.js";
 
 describe("sole-prop BS owner draw unification", () => {
   it("puts 3210 on assets as positive for sole prop", () => {
@@ -90,18 +88,30 @@ describe("presentation sanity", () => {
     const original = readFileSync(journalPath, "utf-8");
     try {
       const before = computeJournalHash("2026");
-      const file = loadJournalEntries();
-      file.entries.push({
-        entry_id: "JE-HASH-PRIOR-TEST",
-        occurred_at: "2025-06-15T00:00:00.000Z",
-        description: "prior-year hash probe",
-        evidence_refs: ["test:hash"],
-        lines: [
-          { account_code: "1100", debit_yen: 1, credit_yen: 0 },
-          { account_code: "3100", debit_yen: 0, credit_yen: 1 },
-        ],
-      });
-      writeYamlFile(journalPath, file);
+      writeFileSync(
+        journalPath,
+        `version: 1
+entries:
+  - entry_id: JE-HASH-PRIOR-TEST
+    occurred_at: "2025-06-15T00:00:00.000Z"
+    description: prior-year hash probe
+    source:
+      kind: manual
+      authorized_by: hash-test
+    evidence_refs:
+      - test:hash
+    lines:
+      - account_code: "1100"
+        debit_yen: 1
+        credit_yen: 0
+        tax_category: out_of_scope
+      - account_code: "3100"
+        debit_yen: 0
+        credit_yen: 1
+        tax_category: out_of_scope
+`,
+        "utf-8",
+      );
       const after = computeJournalHash("2026");
       expect(after).not.toBe(before);
     } finally {

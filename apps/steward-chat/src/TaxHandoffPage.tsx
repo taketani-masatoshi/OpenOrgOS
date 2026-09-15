@@ -9,8 +9,10 @@ import {
   fetchTaxReadiness,
   fetchSolePropSetup,
   fetchSolePropExpenseIntakeClarify,
+  fetchSolePropIncomeDeductions,
   fetchPresentationSanity,
   type ExecutiveStaticReportSlot,
+  type PresentationSanitySnapshot,
   postTaxBonusDraft,
   postTaxHandoff,
   postTaxPayrollCalc,
@@ -75,6 +77,9 @@ export function TaxHandoffPage() {
   const [soleQuestions, setSoleQuestions] = useState<
     Array<{ id: string; prompt: string }>
   >([]);
+  const [soleOptionalQuestions, setSoleOptionalQuestions] = useState<
+    Array<{ id: string; prompt: string; hint?: string }>
+  >([]);
   const [expenseAmount, setExpenseAmount] = useState("11000");
   const [expenseClarify, setExpenseClarify] = useState<string | null>(null);
   const [sanityPeriod, setSanityPeriod] = useState(String(new Date().getFullYear()));
@@ -82,6 +87,13 @@ export function TaxHandoffPage() {
     Array<{ code: string; level: string; message: string }>
   >([]);
   const [sanityMeta, setSanityMeta] = useState<string | null>(null);
+  const [sanityBaselineLine, setSanityBaselineLine] = useState<string | null>(null);
+  const [deductionsCard, setDeductionsCard] = useState<{
+    year: number;
+    missing: boolean;
+    total: number;
+    lines: Array<{ label: string; amount_yen: number }>;
+  } | null>(null);
 
   useEffect(() => {
     void fetchTaxDigest()
@@ -138,17 +150,65 @@ export function TaxHandoffPage() {
         setSoleQuestions(
           r.assessment.clarify_questions.map((q) => ({ id: q.id, prompt: q.prompt })),
         );
+        setSoleOptionalQuestions(r.assessment.optional_questions ?? []);
+        const setupYear = r.assessment.setup?.calendar_year;
+        const period =
+          typeof setupYear === "number" && Number.isFinite(setupYear)
+            ? String(setupYear)
+            : sanityPeriod;
+        if (period !== sanityPeriod) setSanityPeriod(period);
+        void fetchSolePropIncomeDeductions(
+          typeof setupYear === "number" ? setupYear : undefined,
+        )
+          .then((d) => {
+            setDeductionsCard({
+              year: d.year,
+              missing: d.missing || !d.deductions,
+              total: d.capped.total,
+              lines: d.capped.lines,
+            });
+          })
+          .catch(() => {
+            setDeductionsCard(null);
+          });
+        return fetchPresentationSanity(period);
       })
-      .catch(() => setSoleSetup(null));
-    void fetchPresentationSanity(sanityPeriod)
       .then((r) => {
-        setSanityMeta(
-          `${r.period} · assets ${r.metrics.corporate_total_assets_yen.toLocaleString("ja-JP")} · 事業主貸 ${r.metrics.owner_draw_yen ?? "—"} (${r.metrics.owner_draw_section ?? "—"})`,
-        );
-        setSanityFindings(r.findings);
+        if (!r) return;
+        applySanityResult(r);
       })
-      .catch(() => setSanityMeta(null));
+      .catch(() => {
+        setSoleSetup(null);
+        setSoleOptionalQuestions([]);
+      });
   }, [liveReady, sanityPeriod]);
+
+  function applySanityResult(r: {
+    period: string;
+    findings: Array<{ code: string; level: string; message: string }>;
+    metrics: PresentationSanitySnapshot;
+    baseline: PresentationSanitySnapshot | null;
+  }) {
+    setSanityMeta(
+      `${r.period} · assets ${r.metrics.corporate_total_assets_yen.toLocaleString("ja-JP")} · 事業主貸 ${r.metrics.owner_draw_yen ?? "—"} (${r.metrics.owner_draw_section ?? "—"})`,
+    );
+    setSanityFindings(r.findings);
+    if (r.baseline == null) {
+      setSanityBaselineLine(
+        `baseline 未作成 · 検知オフ — orgos operations financial-audit presentation-sanity --period ${r.period} --update-baseline`,
+      );
+    } else {
+      const hashNow = r.metrics.journal_hash.slice(0, 12);
+      const hashBase = r.baseline.journal_hash.slice(0, 12);
+      const assetsMatch =
+        Math.abs(
+          r.baseline.corporate_total_assets_yen - r.metrics.corporate_total_assets_yen,
+        ) <= 1;
+      setSanityBaselineLine(
+        `baseline あり · hash ${hashBase}→${hashNow} · assets ${r.baseline.corporate_total_assets_yen.toLocaleString("ja-JP")}→${r.metrics.corporate_total_assets_yen.toLocaleString("ja-JP")} (${assetsMatch ? "一致" : "差あり"}) · 事業主貸 ${r.baseline.owner_draw_yen ?? "—"}→${r.metrics.owner_draw_yen ?? "—"}`,
+      );
+    }
+  }
 
   async function run<T>(fn: () => Promise<T>, okMsg: (result: T) => string) {
     setBusy(true);
@@ -280,7 +340,7 @@ export function TaxHandoffPage() {
       <section className="ops-card">
         <h2 className="section-title">個人青色 · 表示健全性</h2>
         <p className="ops-page-meta">
-          apply は CLI のみ。Chat は確認質問と機械 findings の表示。
+          apply / baseline 更新は CLI のみ。Console は確認質問と機械 findings の表示。
         </p>
         <p className="ops-page-meta" role="status">
           {soleSetup ?? "setup 未読込（個人以外は無視可）"}
@@ -293,6 +353,61 @@ export function TaxHandoffPage() {
               </li>
             ))}
           </ul>
+        )}
+        {soleOptionalQuestions.length > 0 && (
+          <>
+            <p className="ops-page-meta">任意（ready 非低下）</p>
+            <ul className="ops-list">
+              {soleOptionalQuestions.map((q) => (
+                <li key={q.id}>
+                  <code>{q.id}</code> — {q.prompt}
+                  {q.hint ? (
+                    <>
+                      {" "}
+                      (<code>{q.hint}</code>)
+                    </>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {deductionsCard && (
+          <>
+            <h3 className="section-title">所得控除（Form B · 任意）</h3>
+            <p className="ops-page-meta">読取のみ。YAML 更新は手編集 / CLI</p>
+            {deductionsCard.missing ? (
+              <>
+                <p className="ops-page-meta">
+                  YAML 未整備または対象年不一致（{deductionsCard.year}年）
+                </p>
+                <p className="ops-page-meta">
+                  <code>
+                    orgos operations sole-prop-blue deductions status --year{" "}
+                    {deductionsCard.year}
+                  </code>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="ops-page-meta">
+                  cap 後合計 {deductionsCard.total.toLocaleString("ja-JP")} 円 ·{" "}
+                  {deductionsCard.year}年分
+                </p>
+                {deductionsCard.lines.length > 0 ? (
+                  <ul className="ops-list">
+                    {deductionsCard.lines.map((l) => (
+                      <li key={l.label}>
+                        {l.label}: {l.amount_yen.toLocaleString("ja-JP")} 円
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="ops-page-meta">行金額はすべて 0（基礎のみ）</p>
+                )}
+              </>
+            )}
+          </>
         )}
         <label className="wallet-field">
           支出確認金額（円）
@@ -342,10 +457,7 @@ export function TaxHandoffPage() {
               void run(
                 () => fetchPresentationSanity(sanityPeriod),
                 (r) => {
-                  setSanityMeta(
-                    `${r.period} · assets ${r.metrics.corporate_total_assets_yen.toLocaleString("ja-JP")}`,
-                  );
-                  setSanityFindings(r.findings);
+                  applySanityResult(r);
                   return `findings ${r.findings.length}`;
                 },
               )
@@ -355,6 +467,7 @@ export function TaxHandoffPage() {
           </button>
         </div>
         {sanityMeta && <p className="ops-page-meta">{sanityMeta}</p>}
+        {sanityBaselineLine && <p className="ops-page-meta">{sanityBaselineLine}</p>}
         {sanityFindings.length > 0 && (
           <ul className="ops-list">
             {sanityFindings.map((f) => (
@@ -366,6 +479,13 @@ export function TaxHandoffPage() {
         )}
         <p className="ops-page-meta">
           WP: <code>orgos operations financial-audit workpapers --period {sanityPeriod}</code>
+        </p>
+        <p className="ops-page-meta">
+          baseline 更新:{" "}
+          <code>
+            orgos operations financial-audit presentation-sanity --period {sanityPeriod}{" "}
+            --update-baseline
+          </code>
         </p>
       </section>
 
