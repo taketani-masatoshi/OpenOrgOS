@@ -28,5 +28,9 @@ export default defineConfig({
     // hookTimeout must stay above that so beforeAll is not killed first.
     hookTimeout: 120_000,
     testTimeout: 60_000,
+    // Forwarding every passing test's console output over the worker RPC made
+    // CI fail with `Timeout calling "onTaskUpdate"` even though all tests
+    // passed. Failing tests still print their output.
+    silent: "passed-only",
   },
 });
