@@ -1,0 +1,215 @@
+.workflow-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 28rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse 70% 50% at 0% 0%, var(--accent-soft), transparent 55%),
+    var(--surface);
+}
+
+.workflow-canvas .react-flow {
+  font-family: var(--font-sans);
+}
+
+.workflow-canvas .react-flow__controls {
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-elevated);
+}
+
+.workflow-canvas .react-flow__controls-button {
+  width: 2rem;
+  height: 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-elevated);
+  fill: var(--ink);
+}
+
+.workflow-canvas .react-flow__controls-button:hover {
+  background: var(--section-alt);
+}
+
+.workflow-canvas .react-flow__minimap {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-card);
+}
+
+.workflow-canvas .react-flow__attribution {
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+  background: transparent;
+}
+
+.workflow-canvas .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-width: 1.75;
+}
+
+.workflow-canvas .react-flow__edge.selected .react-flow__edge-path,
+.workflow-canvas .react-flow__edge:focus .react-flow__edge-path {
+  stroke: var(--accent-hover);
+}
+
+.workflow-canvas .react-flow__edge-text {
+  fill: var(--ink-soft);
+  font-size: 0.7rem;
+}
+
+.workflow-canvas .react-flow__connection-line {
+  stroke: var(--accent);
+}
+
+.wf-handle {
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--surface-elevated);
+  background: var(--accent-fill);
+}
+
+.wf-node {
+  min-width: 13.5rem;
+  max-width: 16.5rem;
+  padding: 0.85rem 1rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-card);
+  color: var(--ink);
+}
+
+.wf-node.is-selected {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring), var(--shadow-card);
+}
+
+.wf-node-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wf-node-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 650;
+  line-height: var(--leading-tight);
+}
+
+.wf-node-desc {
+  margin: 0.35rem 0 0;
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.wf-node-meta {
+  margin: 0.5rem 0 0;
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+}
+
+.wf-node--aia_agent {
+  border-left: 4px solid var(--accent-fill);
+}
+
+.wf-node--business_task {
+  border-left: 4px solid var(--chart-1);
+}
+
+.wf-node--system_module {
+  border-left: 4px solid var(--ink);
+}
+
+.wf-node--aia_agent .wf-handle {
+  background: var(--accent-fill);
+}
+
+.wf-node--business_task .wf-handle {
+  background: var(--chart-1);
+}
+
+.wf-node--system_module .wf-handle {
+  background: var(--ink);
+}
+
+.workspace.workflow-canvas-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  padding-bottom: var(--space-4);
+}
+
+.workflow-canvas-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.workflow-canvas-frame {
+  min-height: 0;
+}
+
+.workflow-canvas-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.workflow-canvas-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.workflow-canvas-json {
+  flex: 1;
+  min-height: 14rem;
+  margin: 0;
+  padding: var(--space-3);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--code-bg);
+  color: var(--code-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.workflow-canvas-hint {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.workflow-canvas-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 960px) {
+  .workflow-canvas-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(22rem, 55vh) auto;
+  }
+}

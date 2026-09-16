@@ -50,6 +50,7 @@ export * from "./org/index.js";
 export * from "./jurisdiction/index.js";
 export * from "./required-compliance.js";
 export * from "./canvas-view.js";
+export * from "./workflow-canvas.js";
 export * from "./attention-midterm.js";
 export * from "./sales.js";
 export * from "./customer-success/index.js";

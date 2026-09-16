@@ -160,6 +160,19 @@ export const STEWARD_COPY = defineCopy(
     moduleMaturityLink: "成熟度パネルで詳細を見る",
     moduleReadiness: "成熟度",
     maturityNav: "成熟度パネル",
+    workflowNav: "構成キャンバス",
+    workflowTitle: "ワークフローキャンバス",
+    workflowLead:
+      "AIA・業務タスク・システムモジュールのつながりを置き、JSON で AI と双方向に渡せます。",
+    workflowJsonHint:
+      "キャンバスの nodes / edges です。AI が生成した JSON を貼って「JSON を反映」できます。",
+    workflowJsonLabel: "ワークフロー JSON",
+    workflowLoadSystem: "システム構成",
+    workflowLoadBusiness: "業務フロー例",
+    workflowExport: "キャンバスを書き出す",
+    workflowApplyJson: "JSON を反映",
+    workflowNodeCount: (nodes: number, edges: number) =>
+      `ノード ${nodes} · エッジ ${edges}`,
     maturityTitle: "モジュール成熟度",
     maturityLead:
       "catalog の tier と、秘書・メール・タスク・Wire・物件のコア能力レーンを分けて見ます。",
@@ -1005,6 +1018,19 @@ export const STEWARD_COPY = defineCopy(
     moduleMaturityLink: "Open maturity panel",
     moduleReadiness: "Readiness",
     maturityNav: "Maturity panel",
+    workflowNav: "Workflow canvas",
+    workflowTitle: "Workflow canvas",
+    workflowLead:
+      "Place AIA agents, business tasks, and system modules, then round-trip the graph as JSON with an AI.",
+    workflowJsonHint:
+      "Plain nodes / edges for this canvas. Paste AI-generated JSON and apply it.",
+    workflowJsonLabel: "Workflow JSON",
+    workflowLoadSystem: "System map",
+    workflowLoadBusiness: "Business flow",
+    workflowExport: "Export canvas",
+    workflowApplyJson: "Apply JSON",
+    workflowNodeCount: (nodes: number, edges: number) =>
+      `${nodes} nodes · ${edges} edges`,
     maturityTitle: "Module maturity",
     maturityLead:
       "Catalog tiers plus core lanes (secretary, mail, task, wire, property ops).",

@@ -27,6 +27,7 @@ import { ContractsPage } from "./ContractsPage";
 import { StaysPage } from "./StaysPage";
 import { PropertyOpsPage } from "./PropertyOpsPage";
 import { ModuleMaturityPage } from "./ModuleMaturityPage";
+import { WorkflowCanvasPage } from "./WorkflowCanvasPage";
 import { WireConsolePage } from "./WireConsolePage";
 import { WireDemoPage } from "./WireDemoPage";
 import { SecretaryWorkbenchPage } from "./SecretaryWorkbenchPage";
@@ -146,6 +147,7 @@ type AgentsSubNavActive =
   | "agent-list"
   | "module-list"
   | "module-maturity"
+  | "workflow"
   | "agent-add"
   | "module-add";
 
@@ -161,6 +163,7 @@ function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
       href: "/modules/maturity/",
       label: copy.maturityNav,
     },
+    { id: "workflow" as const, href: "/workflow/", label: copy.workflowNav },
     { id: "agent-add" as const, href: "/agents/add/", label: copy.agentAdd },
     { id: "module-add" as const, href: "/modules/add/", label: copy.moduleAddTab },
   ];
@@ -397,6 +400,7 @@ function ConsoleHomeApp({ malOps }: { malOps: boolean }) {
  * Operator Console (steward-chat SPA):
  * - `/` 経営ホーム · `/?ledger=1` 帳簿 · `/?wallet=1` 予実 · `/?receipt-issue=1` 取引
  * - `/org/` 会社組織
+ * - `/workflow/` AIA / モジュール構成キャンバス
  * - `/runs/` 実行状況（Work Order カンバン）
  * - `/secretary/` 秘書チャット（ナビは「エージェント」配下）
  * - `/steward/` Executive Steward チャット（ナビは「エージェント」配下）
@@ -536,6 +540,11 @@ export function App() {
         <div className="agent-section">
           <AgentsSubNav active="module-maturity" />
           <ModuleMaturityPage />
+        </div>
+      ) : shellActive === "workflow" ? (
+        <div className="agent-section">
+          <AgentsSubNav active="workflow" />
+          <WorkflowCanvasPage />
         </div>
       ) : shellActive === "secretary" ||
         shellActive === "steward" ||

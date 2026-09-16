@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appsRoot = path.resolve(__dirname, "..");
+const coreRoot = path.resolve(appsRoot, "..");
 
 export default defineConfig({
   plugins: [react()],
@@ -12,12 +13,13 @@ export default defineConfig({
     alias: {
       "@ops-shared": path.resolve(appsRoot, "shared"),
       "@wire-console": path.resolve(appsRoot, "wire-console/src"),
+      "@orgos/workflow-canvas": path.resolve(coreRoot, "src/lib/workflow-canvas/index.ts"),
     },
   },
   server: {
     port: 5174,
     fs: {
-      allow: [appsRoot],
+      allow: [appsRoot, coreRoot],
     },
     proxy: {
       "/chat": "http://127.0.0.1:9471",
