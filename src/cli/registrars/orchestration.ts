@@ -1784,7 +1784,7 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Submit wire node governance request (Community registry onboarding)")
     .requiredOption("--tenant <id>", "Tenant id")
     .option("--wire-email <email>", "Wire SMTP delivery address")
-    .option("--public-id <value>", "public_ids e.g. corporate_number:4010001189530")
+    .option("--public-id <value>", "public_ids e.g. corporate_number:1234567890123")
     .option("--requested-by <id>", "Operator id")
     .option("--wire-url <url>", "Wire gateway public URL")
     .option("--json", "JSON output")

@@ -70,7 +70,7 @@ orgos operator founder-email retire
 
 ```bash
 OOO_LOGIN_EMAIL_DOMAINS=malkk.com
-OOO_LOGIN_EMAIL_GRANDFATHER=k.lab.masa@gmail.com
+OOO_LOGIN_EMAIL_GRANDFATHER=<founder-gmail>
 ```
 
 ---

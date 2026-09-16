@@ -1,4 +1,4 @@
-entity: "株式会社MAL"
+entity: "株式会社サンプル"
 as_of: "2026-06-26"
 cases:
   - id: INC-2026-001
@@ -34,8 +34,8 @@ cases:
     registry_office: 東京法務局
     trade_name_change:
       resolution_date: "2026-06-20"
-      old_name: 株式会社ほんとのあなた
-      new_name: 株式会社MAL
+      old_name: 株式会社旧サンプル商号
+      new_name: 株式会社サンプル
 
   - id: CHG-2026-002
     procedure_id: head_office_relocation_same_bureau
@@ -45,8 +45,8 @@ cases:
     registry_office: 東京法務局
     head_office_change:
       resolution_date: "2026-06-18"
-      old_address: 東京都文京区小石川3丁目28番13号
-      new_address: 東京都千代田区二番町1
+      old_address: 東京都新宿区西新宿二丁目8番1号
+      new_address: 東京都千代田区丸の内一丁目1番1号
       cross_bureau: false
 
   - id: CHG-2026-003
@@ -59,11 +59,11 @@ cases:
       resolution_date: "2026-07-01"
       resolution_body: shareholders
       appointing:
-        - name: 段燕燕
-          address: 東京都千代田区二番町1
+        - name: 山田太郎
+          address: 東京都千代田区丸の内一丁目1番1号
           role: 代表取締役
-        - name: 宮城万貴子
-          address: 東京都千代田区二番町1
+        - name: 鈴木花子
+          address: 東京都千代田区丸の内一丁目1番1号
           role: 代表取締役
 
   - id: CHG-2026-004
@@ -75,9 +75,9 @@ cases:
     officer_change:
       resolution_date: "2026-07-01"
       appointing:
-        - name: 段燕燕
+        - name: 山田太郎
           role: 代表取締役
-          address: 東京都千代田区二番町1
+          address: 東京都千代田区丸の内一丁目1番1号
 
   - id: CHG-2026-005
     procedure_id: purpose_change
@@ -119,8 +119,8 @@ cases:
     docs_root: docs/corporate-registration/CHG-2026-008
     branch_change:
       resolution_date: "2026-08-20"
-      branch_name: 亀沢支店
-      branch_address: 東京都墨田区亀沢（要確定）
+      branch_name: サンプル支店
+      branch_address: 東京都墨田区（例示 · 要確定）
       action: establish
 
   - id: CHG-2026-009
@@ -130,8 +130,8 @@ cases:
     docs_root: docs/corporate-registration/CHG-2026-009
     branch_change:
       resolution_date: "2026-08-20"
-      branch_name: 亀沢支店
-      branch_address: 東京都墨田区亀沢（要確定）
+      branch_name: サンプル支店
+      branch_address: 東京都墨田区（例示 · 要確定）
       action: abolish
 
   - id: CHG-2026-010
@@ -150,7 +150,7 @@ cases:
       appointing:
         - name: 監査役氏名
           role: 監査役
-          address: 東京都千代田区二番町1
+          address: 東京都千代田区丸の内一丁目1番1号
 
   - id: CHG-2026-012
     procedure_id: stock_transfer_restriction
@@ -167,7 +167,7 @@ cases:
       resolution_date: "2026-10-01"
       reorg_type: merger
       counterparty_name: 株式会社相手方
-      surviving_entity: 株式会社MAL
+      surviving_entity: 株式会社サンプル
 
   - id: REORG-2026-002
     procedure_id: company_split
@@ -187,8 +187,8 @@ cases:
     dissolution:
       resolution_date: "2026-11-15"
       liquidator:
-        name: 段燕燕
-        address: 東京都千代田区二番町1
+        name: 山田太郎
+        address: 東京都千代田区丸の内一丁目1番1号
         role: 清算人
       reason: 株主総会の決議による解散
 
@@ -200,8 +200,8 @@ cases:
     liquidation_completion:
       resolution_date: "2027-05-15"
       liquidator:
-        name: 段燕燕
-        address: 東京都千代田区二番町1
+        name: 山田太郎
+        address: 東京都千代田区丸の内一丁目1番1号
         role: 清算人
 
   - id: CHG-2026-013
@@ -211,6 +211,6 @@ cases:
     docs_root: docs/corporate-registration/CHG-2026-013
     head_office_change:
       resolution_date: "2026-09-01"
-      old_address: 東京都千代田区二番町1
+      old_address: 東京都千代田区丸の内一丁目1番1号
       new_address: 大阪府大阪市北区（例示 · 管轄変更）
       cross_bureau: true

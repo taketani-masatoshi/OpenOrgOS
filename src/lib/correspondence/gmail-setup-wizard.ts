@@ -108,7 +108,7 @@ export async function runGmailSetupWizard(
     let fromEmail = opts.fromEmail?.trim();
     const fromName = opts.fromName?.trim() ?? "OrgOS Secretary";
     if (!fromEmail && !opts.nonInteractive) {
-      fromEmail = await promptLine("送信元 Gmail アドレス", "k.lab.masa@gmail.com");
+      fromEmail = await promptLine("送信元 Gmail アドレス");
     }
     if (!fromEmail) {
       throw new Error("--from <email> を指定するか、対話モードで実行してください");

@@ -55,7 +55,7 @@ describe("correspondence gmail oauth", () => {
         if (url.includes("gmail.googleapis.com/gmail/v1/users/me/profile")) {
           return {
             ok: true,
-            json: async () => ({ emailAddress: "k.lab.masa@gmail.com" }),
+            json: async () => ({ emailAddress: "founder@example.com" }),
           };
         }
         return { ok: false, status: 404, text: async () => "not found" };
@@ -65,10 +65,10 @@ describe("correspondence gmail oauth", () => {
     const token = await exchangeGmailOAuthCode("auth-code-xyz");
     expect(token.access_token).toBe("access-123");
     expect(token.refresh_token).toBe("refresh-456");
-    expect(token.email).toBe("k.lab.masa@gmail.com");
+    expect(token.email).toBe("founder@example.com");
     expect(token.connected_via).toBe("cli");
     expect(existsSync(getGmailOAuthTokenPath())).toBe(true);
-    expect(loadGmailOAuthToken()?.email).toBe("k.lab.masa@gmail.com");
+    expect(loadGmailOAuthToken()?.email).toBe("founder@example.com");
     expect(loadGmailOAuthToken()?.connected_via).toBe("cli");
   });
 });

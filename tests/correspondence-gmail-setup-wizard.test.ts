@@ -20,7 +20,7 @@ describe("gmail setup wizard", () => {
 
   it("writes gmail_api mail-config", () => {
     writeGmailApiMailConfig({
-      fromEmail: "k.lab.masa@gmail.com",
+      fromEmail: "founder@example.com",
       fromName: "KK Lab",
     });
     const config = YAML.parse(readFileSync(getMailConfigPath(), "utf-8")) as {
@@ -29,7 +29,7 @@ describe("gmail setup wizard", () => {
       receive: { sync: string };
     };
     expect(config.provider).toBe("gmail_api");
-    expect(config.from.email).toBe("k.lab.masa@gmail.com");
+    expect(config.from.email).toBe("founder@example.com");
     expect(config.receive.sync).toBe("gmail_api");
   });
 });

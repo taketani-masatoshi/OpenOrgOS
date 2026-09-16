@@ -41,7 +41,7 @@ npm run orgos -- protocol api serve
 export ORGOS_TENANT=mal
 export ORGOS_COMMUNITY_URL=https://community.oorgos.org
 npm run orgos -- mail setup gmail --community-link \
-  --expect-email k.lab.masa@gmail.com \
+  --expect-email <founder-gmail> \
   --json
 ```
 
