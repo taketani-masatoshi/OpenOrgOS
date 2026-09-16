@@ -15,6 +15,8 @@ export interface AnalyticsDashboardPayload {
   kpi: ReturnType<typeof buildKpiScorecardView>;
   /** null when the expensive data-health scan was skipped and never snapshotted. */
   data_quality_overall: number | null;
+  served_from?: "snapshot" | "live";
+  generated_at?: string;
 }
 
 function resolveDataQualityOverall(

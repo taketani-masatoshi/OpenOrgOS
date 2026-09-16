@@ -134,8 +134,7 @@ export function initLlmWorkersConfig(options?: { force?: boolean }): string {
 
 export function resolveWorkerApiKey(worker: LlmWorker): string {
   if (worker.api_key_env?.trim()) {
-    const fromNamed = process.env[worker.api_key_env.trim()]?.trim();
-    if (fromNamed) return fromNamed;
+    return process.env[worker.api_key_env.trim()]?.trim() || "";
   }
   if (worker.provider === "anthropic") {
     return (
@@ -177,14 +176,20 @@ export function resolveWorkerBaseUrl(worker: LlmWorker): string {
   return base;
 }
 
-export function workerToLlmApiConfig(worker: LlmWorker): LlmApiConfig {
+export function workerToLlmApiConfig(
+  worker: LlmWorker,
+  modelOverride?: string,
+): LlmApiConfig {
+  if (modelOverride && worker.tier !== "local") {
+    throw new Error("Model override is only allowed for local workers");
+  }
   const provider: LlmProvider =
     worker.provider === "anthropic" ? "anthropic" : "openai-compatible";
   return {
     provider,
     baseUrl: resolveWorkerBaseUrl(worker),
     apiKey: resolveWorkerApiKey(worker) || "missing",
-    model: worker.model,
+    model: modelOverride?.trim() || worker.model,
   };
 }
 

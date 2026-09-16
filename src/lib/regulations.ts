@@ -215,12 +215,18 @@ export interface SeedRegulationsResult {
   missing: string[];
 }
 
-function applyRegulationPlaceholders(content: string, companyName: string): string {
-  return content
+/** Substitute the tenant legal name. Complete templates use `{{company.name}}`. */
+export function applyRegulationPlaceholders(content: string, companyName: string): string {
+  const complete = content.includes("{{company.name}}");
+  let out = content
+    .replaceAll("{{company.name}}", companyName)
     .replace(/株式会社サンプル商事/g, companyName)
-    .replace(/株式会社サンプル/g, companyName)
-    .replace(/例示:.*/g, `例示: ${companyName}`)
-    .concat("\n\n---\n\n> [TBD] 施行日・条項詳細はテナント側で確定してください。\n");
+    .replace(/株式会社サンプル/g, companyName);
+  out = out.replace(/^(\*\*例示:\*\*).*$/m, `$1 ${companyName}`);
+  if (!complete && !/第6条/.test(content)) {
+    out += "\n\n---\n\n> [TBD] 施行日・条項詳細はテナント側で確定してください。\n";
+  }
+  return out;
 }
 
 export function seedRegulationDocs(
@@ -230,16 +236,15 @@ export function seedRegulationDocs(
   const result: SeedRegulationsResult = { seeded: [], skipped: [], missing: [] };
 
   const idsToSeed = new Set<string>();
-  if (options.includeDisabled) {
+  if (options.ids?.length) {
+    for (const id of options.ids) idsToSeed.add(id);
+  } else if (options.includeDisabled) {
     for (const entry of loadTenantRegulationsFile().regulations) {
       if (getCatalogRegulation(entry.id)) idsToSeed.add(entry.id);
     }
   } else {
     const effective = listEffectiveRegulations().filter((r) => r.effective);
     for (const reg of effective) idsToSeed.add(reg.id);
-  }
-  if (options.ids?.length) {
-    for (const id of options.ids) idsToSeed.add(id);
   }
 
   for (const id of [...idsToSeed].sort()) {

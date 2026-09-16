@@ -166,6 +166,7 @@ test.describe("operator console combined", () => {
     await expect(page.getByRole("heading", { name: "ユーザー" })).toBeVisible();
     await expect(page.getByLabel("表示する時点")).toBeVisible();
     await expect(page.getByRole("heading", { name: "組織図", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "組織変更（OCH）" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "稼働中のエージェント" })).toHaveCount(0);
     await page.getByText("段燕燕", { exact: true }).first().click();
     await expect(page.getByText("ログインID").first()).toBeVisible();
@@ -213,7 +214,7 @@ test.describe("operator console combined", () => {
     });
     const body = (await cfg.json()) as { webauthn?: { credential_count?: number } };
     await page.getByRole("button", { name: "サインアウト" }).click();
-    await expect(page.getByRole("heading", { name: "オペレーター認証" })).toBeVisible({
+    await expect(page.getByRole("heading", { name: /会社コンソールに入る|この Mac で入る/ })).toBeVisible({
       timeout: 15_000,
     });
     if ((body.webauthn?.credential_count ?? 0) > 0) {

@@ -375,20 +375,27 @@ export async function fetchHealth(): Promise<HealthInfo> {
   return res.json() as Promise<HealthInfo>;
 }
 
-export async function fetchAuthConfig(): Promise<AuthConfig> {
-  return chatApi<AuthConfig>("/chat/v1/auth/config");
+export async function fetchAuthConfig(signal?: AbortSignal): Promise<AuthConfig> {
+  return chatApi<AuthConfig>("/chat/v1/auth/config", signal ? { signal } : undefined);
 }
 
 export async function logoutChat(): Promise<void> {
   await chatApi("/chat/v1/auth/logout", { method: "POST", body: "{}" });
 }
 
-export async function fetchMe(): Promise<AuthUser | null> {
-  const res = await fetch("/chat/v1/auth/me", fetchOpts);
-  if (res.status === 401) return null;
-  if (!res.ok) throw new Error(`auth me ${res.status}`);
-  const body = (await res.json()) as { user: AuthUser };
-  return body.user;
+export async function fetchMe(signal?: AbortSignal): Promise<AuthUser | null> {
+  try {
+    const res = await fetch("/chat/v1/auth/me", { ...fetchOpts, signal });
+    if (res.status === 401) return null;
+    if (!res.ok) throw new Error(`auth me ${res.status}`);
+    const body = (await res.json()) as { user: AuthUser };
+    return body.user;
+  } catch (e) {
+    if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
+      return null;
+    }
+    throw e;
+  }
 }
 
 export async function loginDev(body: {
@@ -486,10 +493,15 @@ export type ExecutiveHome = {
     delta_total: number;
     href: string;
   };
+  served_from?: "snapshot" | "live";
+  generated_at?: string;
 };
 
-export async function fetchExecutiveHome(): Promise<ExecutiveHome> {
-  return chatApi<ExecutiveHome>("/chat/v1/executive/home");
+export async function fetchExecutiveHome(opts?: {
+  live?: boolean;
+}): Promise<ExecutiveHome> {
+  const q = opts?.live ? "?live=1" : "";
+  return chatApi<ExecutiveHome>(`/chat/v1/executive/home${q}`);
 }
 
 export async function fetchOperatorStats(): Promise<OperatorStats> {
@@ -613,6 +625,15 @@ export async function probeLlmWorker(
     `/chat/v1/llm/workers/${encodeURIComponent(workerId)}/probe`,
     { method: "POST", body: "{}" },
   );
+}
+
+export async function fetchLlmWorkerModels(
+  workerId: string,
+): Promise<string[]> {
+  const res = await chatApi<{ ok: boolean; models: string[] }>(
+    `/chat/v1/llm/workers/${encodeURIComponent(workerId)}/models`,
+  );
+  return res.models;
 }
 
 export async function decideLlmRequest(
@@ -1469,10 +1490,15 @@ export interface AnalyticsDashboardPayload {
     summary: { green: number; amber: number; red: number; unknown: number };
   };
   data_quality_overall: AnalyticsDataQualityOverall;
+  served_from?: "snapshot" | "live";
+  generated_at?: string;
 }
 
-export async function fetchAnalyticsDashboard(): Promise<AnalyticsDashboardPayload> {
-  return chatApi<AnalyticsDashboardPayload>("/chat/v1/analytics/dashboard");
+export async function fetchAnalyticsDashboard(opts?: {
+  live?: boolean;
+}): Promise<AnalyticsDashboardPayload> {
+  const q = opts?.live ? "?live=1" : "";
+  return chatApi<AnalyticsDashboardPayload>(`/chat/v1/analytics/dashboard${q}`);
 }
 
 export interface LedgerWorkbenchSnapshot {
@@ -1810,58 +1836,6 @@ export interface CustomerAdminSnapshot {
   platform_billing_settings?: boolean;
 }
 
-export interface OrgChartChangeProposalRow {
-  change_id: string;
-  approval_id: string;
-  intent: string;
-  action: "add" | "update" | "remove";
-  node_id: string;
-  reason: string;
-  proposed_at: string;
-  proposed_by: string;
-}
-
-export interface OrgChartChangeResult {
-  logical_path: string;
-  before_hash: string;
-  after_hash: string;
-  dry_run: boolean;
-}
-
-export async function fetchOrgChartChanges(): Promise<{
-  proposals: OrgChartChangeProposalRow[];
-}> {
-  return chatApi("/chat/v1/org/chart/change");
-}
-
-export async function postOrgChartChangePropose(input: {
-  approval_id: string;
-  change: unknown;
-}): Promise<{ proposal: OrgChartChangeProposalRow }> {
-  return chatApi("/chat/v1/org/chart/change/propose", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export async function postOrgChartChangeValidate(
-  changeId: string,
-): Promise<{ result: OrgChartChangeResult }> {
-  return chatApi("/chat/v1/org/chart/change/validate", {
-    method: "POST",
-    body: JSON.stringify({ change_id: changeId }),
-  });
-}
-
-export async function postOrgChartChangeApply(
-  changeId: string,
-): Promise<{ result: OrgChartChangeResult }> {
-  return chatApi("/chat/v1/org/chart/change/apply", {
-    method: "POST",
-    body: JSON.stringify({ change_id: changeId }),
-  });
-}
-
 export async function fetchProductAdmin(): Promise<CustomerAdminSnapshot> {
   return chatApi<CustomerAdminSnapshot>("/chat/v1/product/admin");
 }
@@ -2036,9 +2010,12 @@ export interface CustomersNavGate {
   sales_agent_grace: boolean;
 }
 
-export async function fetchCustomersNav(): Promise<CustomersNavGate> {
+export async function fetchCustomersNav(
+  signal?: AbortSignal,
+): Promise<CustomersNavGate> {
   const data = await chatApi<{ ok: boolean } & CustomersNavGate>(
     "/chat/v1/customers/nav",
+    signal ? { signal } : undefined,
   );
   return data;
 }
@@ -3477,12 +3454,19 @@ export async function flushWitnessPending(): Promise<{ flushed: number }> {
 export type LlmRouteHint = {
   mode: "auto" | "local" | "cloud";
   worker_id?: string;
+  model?: string;
+};
+
+export type WebSearchRequest = {
+  enabled: boolean;
+  query?: string;
 };
 
 export async function sendMessage(
   message: string,
   agentId?: "secretary" | "executive_steward",
   llmRoute?: LlmRouteHint,
+  webSearch?: WebSearchRequest,
 ): Promise<{
   ok: boolean;
   reply: string;
@@ -3501,6 +3485,10 @@ export async function sendMessage(
       message,
       ...(agentId ? { agent_id: agentId } : {}),
       ...(llmRoute ? { llm_route: llmRoute } : {}),
+      web_search: webSearch?.enabled === true,
+      ...(webSearch?.enabled
+        ? { web_search_query: webSearch.query }
+        : {}),
     }),
   });
   if (res.status === 401) throw new Error("unauthorized");
@@ -3951,6 +3939,7 @@ export async function sendMessageStream(
   opts?: {
     agentId?: "secretary" | "executive_steward";
     llmRoute?: LlmRouteHint;
+    webSearch?: WebSearchRequest;
   },
 ): Promise<void> {
   const res = await fetch("/chat/v1/message/stream", {
@@ -3961,6 +3950,10 @@ export async function sendMessageStream(
       message,
       ...(opts?.agentId ? { agent_id: opts.agentId } : {}),
       ...(opts?.llmRoute ? { llm_route: opts.llmRoute } : {}),
+      web_search: opts?.webSearch?.enabled === true,
+      ...(opts?.webSearch?.enabled
+        ? { web_search_query: opts.webSearch.query }
+        : {}),
     }),
   });
 

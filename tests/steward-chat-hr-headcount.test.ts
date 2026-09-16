@@ -22,6 +22,22 @@ describe("steward chat HR headcount fact provider", () => {
     expect(matchProviderByIntent("今日の天気は？")).toBeUndefined();
   });
 
+  it("does not steal hire / onboarding as headcount", () => {
+    const hire = "社員が入社した。名前は大谷です。手続きを進めてほしい。";
+    expect(matchProviderByIntent(hire)).toBeUndefined();
+    expect(handleFactChatMessage(hire).handled).toBe(false);
+
+    expect(matchProviderByIntent("従業員を採用したい")).toBeUndefined();
+    expect(matchProviderByIntent("退職手続きを進めて")).toBeUndefined();
+    expect(matchProviderByIntent("社員の氏名を教えて")).toBeUndefined();
+
+    const fake =
+      "（システムが決定論パスを通じて情報を取得し、応答します。）\n\n現在の在籍人数は **XX名** です。";
+    const guarded = applyFactRefusalGuard(hire, fake);
+    expect(guarded.reply).not.toBe("4名");
+    expect(guarded.guarded).toBe(false);
+  });
+
   it("answers deterministically for mal with registered headcount", () => {
     const result = handleFactChatMessage("従業員数は何人？");
     expect(result.handled).toBe(true);

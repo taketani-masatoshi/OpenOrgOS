@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 583
-  static_test_cases: 2670
-  tiered_execution_total: 583
+  vitest_total: 588
+  static_test_cases: 2697
+  tiered_execution_total: 588
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -587,6 +587,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  auth-bootstrap.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   bank-corporate-cashflow-pipeline-integration.test.ts:
     axis: integration
     kind: integration
@@ -878,6 +882,10 @@ tests:
     kind: unit
     domain: P01_kernel
   console-nav.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  console-page-snapshot.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1225,6 +1233,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  hr-onboard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   hub-federation.test.ts:
     axis: platform
     kind: unit
@@ -1404,6 +1416,10 @@ tests:
     kind: unit
     catalog_ids:
       - jp_jsox
+  jp-medical-device-templates.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids: []
   jp-medical-device.test.ts:
     axis: catalog
     kind: unit
@@ -2551,6 +2567,10 @@ tests:
     kind: server
     domain: P05_console_layer
   steward-chat-today.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
+  steward-chat-web-search.test.ts:
     axis: platform
     kind: server
     domain: P05_console_layer

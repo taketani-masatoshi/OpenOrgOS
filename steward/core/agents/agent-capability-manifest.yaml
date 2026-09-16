@@ -384,9 +384,11 @@ agents:
     route_ids:
       - hr-headcount
       - hr-labor
+      - hr-onboard
     skills:
       - hr_headcount
       - hr_labor_compliance
+      - hr_onboard
       - hr_policy_review
       - jp_payroll_run
       - jp_social_insurance_prep

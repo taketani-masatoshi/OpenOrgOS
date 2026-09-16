@@ -5,7 +5,7 @@ import {
   medicalDeviceQmsCatalogFileSchema,
 } from "../../../../../../schemas/jp-medical-device.js";
 import { recordDocumentControlRevision } from "../../../../../../src/lib/medical-device/ledger-ops.js";
-import { getDocsDir, writeTrackedFile } from "../../../../../../src/lib/utils.js";
+import { getDocsDir, toLogicalPath, writeTrackedFile } from "../../../../../../src/lib/utils.js";
 import {
   buildTemplateVars,
   fillTemplate,
@@ -85,7 +85,7 @@ function draftDocument(
       recordDocumentControlRevision({
         docId: entry.id,
         title: entry.title,
-        path: outPath,
+        path: toLogicalPath(outPath),
       });
     } catch (err) {
       console.error(`document_control: ${err instanceof Error ? err.message : String(err)}`);

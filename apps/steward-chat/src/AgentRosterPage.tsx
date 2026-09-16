@@ -9,6 +9,7 @@ import {
   type ModuleInventoryRow,
 } from "./api";
 import { useCopy } from "@ops-shared/define-copy";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import { STEWARD_COPY } from "./steward-copy";
 
 export type RosterView = "agents" | "modules" | "agents-add" | "modules-add";
@@ -347,7 +348,7 @@ export function AgentRosterPage({ view }: { view: RosterView }) {
     <div className="org-chart-page">
       <h1 className="org-chart-section-title">{heading.title}</h1>
       <p className="org-chart-muted roster-lead">{heading.lead}</p>
-      {loading && <p className="org-chart-muted">{copy.loading}</p>}
+      {loading && <LoadingStatus label={copy.loading} />}
       {error && (
         <p className="org-chart-error" role="alert">
           {error}

@@ -20,37 +20,36 @@ describe("medical-device QMS/GVP canvas (1A+2C)", () => {
     setTenantId("mal");
   });
 
-  it("collects QMS signals with missing tier1–2 docs", () => {
+  it("collects QMS signals with tier1–2 docs on file", () => {
     const sig = collectQmsSignals();
     expect(sig.enabled).toBe(true);
     expect(sig.compliance_type_id).toBe("md-qms");
     expect(sig.required).toBeGreaterThan(0);
-    expect(sig.missing_required.length).toBeGreaterThan(0);
+    expect(sig.missing_required).toHaveLength(0);
+    expect(sig.covered).toBe(sig.required);
   });
 
-  it("collects GVP signals with missing procedure docs", () => {
+  it("collects GVP signals with procedure docs on file", () => {
     const sig = collectGvpSignals();
     expect(sig.enabled).toBe(true);
     expect(sig.compliance_type_id).toBe("md-gvp");
-    expect(sig.missing_required.length).toBeGreaterThan(0);
+    expect(sig.missing_required).toHaveLength(0);
+    expect(sig.covered).toBe(sig.required);
   });
 
   it("builds QMS/GVP portfolios without L2", () => {
     const qms = buildQmsPortfolio({ today: "2026-07-14" });
     const gvp = buildGvpPortfolio({ today: "2026-07-14" });
-    expect(qms.stats.missing).toBeGreaterThan(0);
-    expect(gvp.stats.missing).toBeGreaterThan(0);
+    expect(qms.stats.missing).toBe(0);
+    expect(gvp.stats.missing).toBe(0);
     const blob = JSON.stringify({ qms, gvp });
     expect(blob).not.toMatch(/許可番号|〒\d{3}/);
   });
 
-  it("merges qms/gvp into obligations portfolio", () => {
+  it("merges qms/gvp coverage stats into the obligations portfolio", () => {
     const obl = buildObligationsPortfolio({ today: "2026-07-14" });
-    const sources = new Set(obl.rows.map((r) => r.source));
-    expect(sources.has("qms") || sources.has("gvp")).toBe(true);
-    expect(
-      obl.rows.some((r) => r.permit_id === "md-qms" || r.permit_id === "md-gvp")
-    ).toBe(true);
+    expect(obl.stats.qms_missing).toBe(0);
+    expect(obl.stats.gvp_missing).toBe(0);
   });
 
   it("presents compliance/qms and compliance/gvp", () => {

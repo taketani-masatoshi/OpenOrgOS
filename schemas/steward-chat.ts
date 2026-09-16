@@ -201,14 +201,34 @@ export type TodayContext = z.output<typeof todayContextSchema>;
 
 export const chatAgentIdSchema = z.enum(["secretary", "executive_steward"]);
 
-export const chatMessageRequestSchema = z.object({
-  message: z.string().min(1),
-  refresh: z.boolean().optional(),
-  /** Optional agent role — attaches steward/core/agents/{id}_agent.md to system prompt. */
-  agent_id: chatAgentIdSchema.optional(),
-  /** Auto / local-only / cloud-only / pin a registered worker. */
-  llm_route: llmRouteHintSchema.optional(),
-});
+export const chatMessageRequestSchema = z
+  .object({
+    message: z.string().min(1),
+    refresh: z.boolean().optional(),
+    /** Optional agent role — attaches steward/core/agents/{id}_agent.md to system prompt. */
+    agent_id: chatAgentIdSchema.optional(),
+    /** Auto / local-only / cloud-only / pin a registered worker. */
+    llm_route: llmRouteHintSchema.optional(),
+    /** Explicit opt-in. Only web_search_query is sent to the search provider. */
+    web_search: z.boolean().default(false),
+    web_search_query: z.string().trim().min(1).max(500).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.web_search && !value.web_search_query) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["web_search_query"],
+        message: "web_search_query is required when web_search is enabled",
+      });
+    }
+    if (value.web_search && value.llm_route?.mode !== "local") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["llm_route"],
+        message: "Web search requires a local LLM route",
+      });
+    }
+  });
 
 export const chatSettingsUpdateSchema = z.object({
   max_turns: z.union([z.literal(5), z.literal(10), z.literal(20)]),

@@ -1,2 +1,116 @@
 version: "1"
-entries: []
+entries:
+  - id: DOC-20260906-001
+    doc_id: QMS-MAN-001
+    version: "1"
+    title: 品質マニュアル
+    status: draft
+    path: docs/medical-device/qms/qms-man-001-品質マニュアル.md
+  - id: DOC-20260906-002
+    doc_id: QMS-REG-001
+    version: "1"
+    title: 文書・記録管理規程
+    status: draft
+    path: docs/medical-device/qms/qms-reg-001-文書・記録管理規程.md
+  - id: DOC-20260906-003
+    doc_id: QMS-REG-002
+    version: "1"
+    title: 内部監査規程
+    status: draft
+    path: docs/medical-device/qms/qms-reg-002-内部監査規程.md
+  - id: DOC-20260906-004
+    doc_id: QMS-REG-003
+    version: "1"
+    title: 是正処置・予防処置（CAPA）規程
+    status: draft
+    path: docs/medical-device/qms/qms-reg-003-是正処置・予防処置-CAPA-規程.md
+  - id: DOC-20260906-005
+    doc_id: QMS-REG-004
+    version: "1"
+    title: リスクマネジメント規程
+    status: draft
+    path: docs/medical-device/qms/qms-reg-004-リスクマネジメント規程.md
+  - id: DOC-20260906-006
+    doc_id: QMS-REG-005
+    version: "1"
+    title: 教育訓練規程
+    status: draft
+    path: docs/medical-device/qms/qms-reg-005-教育訓練規程.md
+  - id: DOC-20260906-007
+    doc_id: QMS-SOP-001
+    version: "1"
+    title: 製造・組立手順書
+    status: draft
+    path: docs/medical-device/qms/qms-sop-001-製造・組立手順書.md
+  - id: DOC-20260906-008
+    doc_id: QMS-SOP-002
+    version: "1"
+    title: 購買・外注管理手順書
+    status: draft
+    path: docs/medical-device/qms/qms-sop-002-購買・外注管理手順書.md
+  - id: DOC-20260906-009
+    doc_id: QMS-SOP-003
+    version: "1"
+    title: 苦情・不適合品管理手順書
+    status: draft
+    path: docs/medical-device/qms/qms-sop-003-苦情・不適合品管理手順書.md
+  - id: DOC-20260906-010
+    doc_id: QMS-FRM-001
+    version: "1"
+    title: 製造ロット記録様式
+    status: draft
+    path: docs/medical-device/qms/qms-frm-001-製造ロット記録様式.md
+  - id: DOC-20260906-011
+    doc_id: QMS-FRM-002
+    version: "1"
+    title: 出荷記録様式
+    status: draft
+    path: docs/medical-device/qms/qms-frm-002-出荷記録様式.md
+  - id: DOC-20260906-012
+    doc_id: QMS-FRM-003
+    version: "1"
+    title: 教育訓練記録様式
+    status: draft
+    path: docs/medical-device/qms/qms-frm-003-教育訓練記録様式.md
+  - id: DOC-20260906-013
+    doc_id: GVP-001
+    version: "1"
+    title: 医療機器安全管理手順書（GVP マニュアル）
+    status: draft
+    path: docs/medical-device/gvp/gvp-001-医療機器安全管理手順書-GVP-マニュアル-.md
+  - id: DOC-20260906-014
+    doc_id: GVP-002
+    version: "1"
+    title: 苦情・有害事象等の収集手順
+    status: draft
+    path: docs/medical-device/gvp/gvp-002-苦情・有害事象等の収集手順.md
+  - id: DOC-20260906-015
+    doc_id: GVP-003
+    version: "1"
+    title: 苦情・有害事象等の評価手順
+    status: draft
+    path: docs/medical-device/gvp/gvp-003-苦情・有害事象等の評価手順.md
+  - id: DOC-20260906-016
+    doc_id: GVP-004
+    version: "1"
+    title: 苦情・有害事象等の報告手順
+    status: draft
+    path: docs/medical-device/gvp/gvp-004-苦情・有害事象等の報告手順.md
+  - id: DOC-20260906-017
+    doc_id: GVP-005
+    version: "1"
+    title: 安全管理に関する文書・記録管理手順
+    status: draft
+    path: docs/medical-device/gvp/gvp-005-安全管理に関する文書・記録管理手順.md
+  - id: DOC-20260906-018
+    doc_id: GVP-FRM-001
+    version: "1"
+    title: 苦情受付記録様式
+    status: draft
+    path: docs/medical-device/gvp/gvp-frm-001-苦情受付記録様式.md
+  - id: DOC-20260906-019
+    doc_id: GVP-FRM-002
+    version: "1"
+    title: 有害事象報告記録様式
+    status: draft
+    path: docs/medical-device/gvp/gvp-frm-002-有害事象報告記録様式.md

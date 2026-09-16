@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import { STEWARD_COPY } from "./steward-copy";
 import { CompanyEventsPanel } from "./CompanyEventsPanel";
 import {
@@ -145,11 +146,11 @@ export function ExecutiveHomePage() {
   const [summaryMd, setSummaryMd] = useState<Record<string, string>>({});
   const [summaryBusy, setSummaryBusy] = useState<string | null>(null);
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (live = false) => {
     setLoading(true);
     setError(null);
     try {
-      const home = await fetchExecutiveHome();
+      const home = await fetchExecutiveHome({ live });
       setData(home);
       maybeNotifyAttention(home.attention_count);
     } catch (err) {
@@ -160,7 +161,7 @@ export function ExecutiveHomePage() {
   }, []);
 
   useEffect(() => {
-    void reload();
+    void reload(false);
   }, [reload]);
 
   return (
@@ -179,7 +180,7 @@ export function ExecutiveHomePage() {
             type="button"
             className="quiet-button"
             disabled={loading}
-            onClick={() => void reload()}
+            onClick={() => void reload(true)}
           >
             {copy.executiveRefresh}
           </button>
@@ -189,8 +190,14 @@ export function ExecutiveHomePage() {
         </div>
       </div>
 
-      {loading && !data ? <div className="loading-panel">…</div> : null}
+      {loading && !data ? <LoadingStatus /> : null}
       {error ? <div className="error-banner">{error}</div> : null}
+      {data?.served_from === "snapshot" && data.generated_at ? (
+        <p className="page-desc muted">{copy.executiveSnapshotAsOf(data.generated_at)}</p>
+      ) : null}
+      {data?.served_from === "live" ? (
+        <p className="page-desc muted">{copy.executiveLiveNow}</p>
+      ) : null}
 
       {data ? (
         <>

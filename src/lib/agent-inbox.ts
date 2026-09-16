@@ -146,7 +146,7 @@ export function formatAgentInboxMarkdown(
   const limit = Math.max(1, opts?.limit ?? 8);
   const summaryMax = Math.max(40, opts?.summaryMaxChars ?? 400);
   const lines: string[] = [
-    "## Agent inbox",
+    "## 委譲と回答",
     "",
     `**Scope:** ${snapshot.for} · **未読:** ${snapshot.unread_count} · **回答:** ${snapshot.items.length} · **依頼中:** ${snapshot.pending_orders.length}`,
     "",
@@ -155,7 +155,7 @@ export function formatAgentInboxMarkdown(
   if (snapshot.for === "secretary" && snapshot.items.length === 0 && snapshot.pending_orders.length === 0) {
     lines.push(
       "秘書スコープは `order.from_actor === \"secretary\"` の案件のみです。",
-      "Steward 受信箱（全 field agent 報告）とは別軸です。",
+      "Steward の委譲と回答（全 field agent 報告）とは別軸です。",
       ""
     );
   }

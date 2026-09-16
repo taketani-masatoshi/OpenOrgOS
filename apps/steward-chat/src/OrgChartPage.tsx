@@ -1,11 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   fetchOrgChart,
-  fetchOrgChartChanges,
-  postOrgChartChangeApply,
-  postOrgChartChangePropose,
-  postOrgChartChangeValidate,
-  type OrgChartChangeProposalRow,
   type CompanyOrgAdvisorRow,
   type CompanyOrgMember,
   type CompanyOrgUnitRow,
@@ -13,6 +8,7 @@ import {
   type OrgChartPayload,
 } from "./api";
 import { useUiLocale } from "@ops-shared/useUiLocale";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 
 const COPY = {
   ja: {
@@ -73,26 +69,6 @@ const COPY = {
     personName: "氏名",
     firm: "事務所",
     contract: "契約",
-    changeTitle: "組織変更（OCH）",
-    changeLead:
-      "変更は稟議（APR）が承認済みであることが前提です。承認は承認キューから行います。",
-    changeApprovalId: "稟議ID（APR-…）",
-    changeIntent: "変更の意図",
-    changeAction: "操作",
-    changeNodeId: "ノードID",
-    changeReason: "理由",
-    changeRegId: "規程ID（REG-…）",
-    changeClause: "条項",
-    changeArtifact: "根拠文書パス",
-    changeDisplayName: "表示名（update 時）",
-    changeReportsTo: "報告先（update 時）",
-    changePropose: "提案を記録",
-    changeValidate: "差分を確認（dry-run）",
-    changeApply: "適用（承認済みのみ）",
-    changeApprovalQueue: "承認キューへ",
-    changeEmpty: "提案はありません。",
-    changeRemoveNote:
-      "remove は、そのノードを報告先にしている部門が残っていると拒否されます。",
   },
   en: {
     pageTitle: "Organization",
@@ -152,26 +128,6 @@ const COPY = {
     personName: "Name",
     firm: "Firm",
     contract: "Contract",
-    changeTitle: "Org chart change (OCH)",
-    changeLead:
-      "Apply requires an approved internal approval (APR). Approve it in the approvals queue.",
-    changeApprovalId: "Approval id (APR-…)",
-    changeIntent: "Intent",
-    changeAction: "Action",
-    changeNodeId: "Node id",
-    changeReason: "Reason",
-    changeRegId: "Regulation id (REG-…)",
-    changeClause: "Clause",
-    changeArtifact: "Evidence path",
-    changeDisplayName: "Display name (update)",
-    changeReportsTo: "Reports to (update)",
-    changePropose: "Record proposal",
-    changeValidate: "Preview diff (dry-run)",
-    changeApply: "Apply (approved only)",
-    changeApprovalQueue: "Approvals queue",
-    changeEmpty: "No proposals.",
-    changeRemoveNote:
-      "Remove is rejected while another unit still reports to that node.",
   },
 } as const;
 
@@ -448,224 +404,6 @@ function AdvisorsSection({
   );
 }
 
-const CHANGE_INTENTS = [
-  "display_correction",
-  "canonical_name_change",
-  "org_structure_change",
-] as const;
-
-const CHANGE_ACTIONS = ["add", "update", "remove"] as const;
-
-function OrgChartChangePanel({ copy }: { copy: Copy }) {
-  const [proposals, setProposals] = useState<OrgChartChangeProposalRow[]>([]);
-  const [approvalId, setApprovalId] = useState("");
-  const [intent, setIntent] =
-    useState<(typeof CHANGE_INTENTS)[number]>("display_correction");
-  const [action, setAction] = useState<(typeof CHANGE_ACTIONS)[number]>("update");
-  const [nodeId, setNodeId] = useState("");
-  const [reason, setReason] = useState("");
-  const [regId, setRegId] = useState("REG-002");
-  const [clause, setClause] = useState("");
-  const [artifact, setArtifact] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [reportsTo, setReportsTo] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const reload = useCallback(async () => {
-    try {
-      const res = await fetchOrgChartChanges();
-      setProposals(res.proposals ?? []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  }, []);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
-
-  async function run(fn: () => Promise<string>) {
-    setBusy(true);
-    setError(null);
-    try {
-      setNote(await fn());
-      await reload();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function buildChange(): unknown {
-    const changes: Record<string, unknown> = {};
-    if (displayName.trim()) changes.display_name = displayName.trim();
-    if (reportsTo.trim()) changes.reports_to = reportsTo.trim();
-    return {
-      intent,
-      action,
-      node_id: nodeId.trim(),
-      reason: reason.trim(),
-      regulation_ref: {
-        reg_id: regId.trim(),
-        clause: clause.trim(),
-        artifact_path: artifact.trim(),
-      },
-      ...(action === "update" ? { changes } : {}),
-    };
-  }
-
-  return (
-    <section className="org-chart-section" aria-labelledby="org-change-title">
-      <h2 id="org-change-title" className="org-chart-section-title">
-        {copy.changeTitle}
-      </h2>
-      <p className="org-chart-muted roster-lead">{copy.changeLead}</p>
-      <p className="org-chart-muted">{copy.changeRemoveNote}</p>
-      {error ? (
-        <p className="org-chart-error" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {note ? <p className="org-chart-muted">{note}</p> : null}
-
-      <div className="approvals-ceo-fields">
-        <label className="approvals-ceo-field">
-          <span>{copy.changeApprovalId}</span>
-          <input value={approvalId} onChange={(e) => setApprovalId(e.target.value)} />
-        </label>
-        <label className="approvals-ceo-field">
-          <span>{copy.changeIntent}</span>
-          <select
-            value={intent}
-            onChange={(e) => setIntent(e.target.value as (typeof CHANGE_INTENTS)[number])}
-          >
-            {CHANGE_INTENTS.map((i) => (
-              <option key={i} value={i}>
-                {i}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="approvals-ceo-field">
-          <span>{copy.changeAction}</span>
-          <select
-            value={action}
-            onChange={(e) => setAction(e.target.value as (typeof CHANGE_ACTIONS)[number])}
-          >
-            {CHANGE_ACTIONS.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="approvals-ceo-field">
-          <span>{copy.changeNodeId}</span>
-          <input value={nodeId} onChange={(e) => setNodeId(e.target.value)} />
-        </label>
-        <label className="approvals-ceo-field">
-          <span>{copy.changeReason}</span>
-          <input value={reason} onChange={(e) => setReason(e.target.value)} />
-        </label>
-        <label className="approvals-ceo-field">
-          <span>{copy.changeRegId}</span>
-          <input value={regId} onChange={(e) => setRegId(e.target.value)} />
-        </label>
-        <label className="approvals-ceo-field">
-          <span>{copy.changeClause}</span>
-          <input value={clause} onChange={(e) => setClause(e.target.value)} />
-        </label>
-        <label className="approvals-ceo-field">
-          <span>{copy.changeArtifact}</span>
-          <input value={artifact} onChange={(e) => setArtifact(e.target.value)} />
-        </label>
-        {action === "update" ? (
-          <>
-            <label className="approvals-ceo-field">
-              <span>{copy.changeDisplayName}</span>
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-            </label>
-            <label className="approvals-ceo-field">
-              <span>{copy.changeReportsTo}</span>
-              <input value={reportsTo} onChange={(e) => setReportsTo(e.target.value)} />
-            </label>
-          </>
-        ) : null}
-      </div>
-
-      <div className="approvals-queue-actions">
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          disabled={busy || !approvalId.trim() || !nodeId.trim() || !reason.trim()}
-          onClick={() =>
-            void run(async () => {
-              const res = await postOrgChartChangePropose({
-                approval_id: approvalId.trim(),
-                change: buildChange(),
-              });
-              return res.proposal.change_id;
-            })
-          }
-        >
-          {copy.changePropose}
-        </button>
-        <a className="btn btn-ghost btn-sm" href="/approvals/">
-          {copy.changeApprovalQueue}
-        </a>
-      </div>
-
-      {proposals.length === 0 ? (
-        <p className="org-chart-muted">{copy.changeEmpty}</p>
-      ) : (
-        <div className="org-card-list">
-          {proposals.map((p) => (
-            <div key={p.change_id} className="org-card">
-              <div className="org-card-heading">
-                <span className="org-card-title">{p.change_id}</span>
-                <span className="org-card-overview">
-                  {p.action} · {p.node_id} · {p.approval_id}
-                </span>
-              </div>
-              <div className="approvals-queue-actions">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  disabled={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      const res = await postOrgChartChangeValidate(p.change_id);
-                      return `${res.result.before_hash.slice(0, 18)}… → ${res.result.after_hash.slice(0, 18)}…`;
-                    })
-                  }
-                >
-                  {copy.changeValidate}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  disabled={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      const res = await postOrgChartChangeApply(p.change_id);
-                      return res.result.logical_path;
-                    })
-                  }
-                >
-                  {copy.changeApply}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
 /**
  * Company organization — collapsed overview, expand for login / PassKey readiness.
  */
@@ -705,7 +443,7 @@ export function OrgChartPage() {
       <p className="org-chart-muted">
         <a href="/?onboarding=1">{copy.companySettings}</a>
       </p>
-      {loading && <p className="org-chart-muted">{copy.loading}</p>}
+      {loading && <LoadingStatus label={copy.loading} />}
       {error && (
         <p className="org-chart-error" role="alert">
           {error}
@@ -787,8 +525,6 @@ export function OrgChartPage() {
       {!loading && !error && payload && advisors.length > 0 ? (
         <AdvisorsSection advisors={advisors} copy={copy} />
       ) : null}
-
-      <OrgChartChangePanel copy={copy} />
     </div>
   );
 }
