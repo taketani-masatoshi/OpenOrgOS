@@ -1,0 +1,24 @@
+version: 1
+rate_table_id: tokyo-metropolitan
+filing:
+  authority: 都道府県税事務所（宿泊税担当）
+  due_rule: end_of_next_month_tokyo
+  lead_days:
+    - 14
+    - 7
+period_filings:
+  - period: 2026-08
+    due_on: 2026-09-30
+    status: pack_ready
+assessments:
+  - id: TAX-STAY-FIXTURE-2026-08
+    stay_id: STAY-FIXTURE-001
+    property_id: PROP-002
+    period: 2026-08
+    rate_table_id: tokyo-metropolitan
+    taxable_per_person_per_night_jpy: 10000
+    party_size: 5
+    nights: 2
+    tax_jpy: 1000
+    computed_at: 2026-09-01T00:00:00.000Z
+payments: []

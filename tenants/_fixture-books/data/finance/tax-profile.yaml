@@ -61,3 +61,18 @@ obligation_rhythms:
       fixed_jpy: 0
     authority: 税務署
     cashflow_category: consumption_tax
+
+  # from_ledger coverage: the amount is read from data/operations/lodging-tax.yaml
+  # rather than a formula, so the ledger and this rhythm are edited together.
+  - id: lodging-tax-monthly
+    kind: tax
+    label: 宿泊税
+    cadence: month
+    due_rule: end_of_month
+    enabled: true
+    apply_when: always
+    amount:
+      mode: from_ledger
+      note: 宿泊税台帳（assessments）
+    authority: 区市町村
+    cashflow_category: lodging_tax
