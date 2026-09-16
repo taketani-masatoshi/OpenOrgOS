@@ -18,7 +18,10 @@ jobs:
       - run: npm run check:tenant-tip
       - run: npm run generated:check
       - run: npm run agent:pipeline:check
+      # Pin the tenant so the gates never fall back to an operator's real tenant.
       - run: npm run check
+        env:
+          ORGOS_TENANT: demo
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run test:registry:sync

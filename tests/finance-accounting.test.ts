@@ -8,7 +8,13 @@ import {
   validateFixedAssetConsistency,
   validateAll,
 } from "../src/lib/data.js";
-import { setTenantId, getTenantId } from "../src/lib/tenant.js";
+import { setTenantId, getTenantId, resolveTenantPath } from "../src/lib/tenant.js";
+import { existsSync } from "node:fs";
+
+// payroll.yaml carries real names and salaries, so it stays out of the tip
+// (docs/org-os/tenant-github-tip-policy.md). validateAll needs it, so the
+// whole-tenant assertion only runs where the operator has the local file.
+const hasLocalPayroll = existsSync(resolveTenantPath("data/finance/payroll.yaml"));
 
 describe("fixed assets accounting", () => {
   it("loads fixed-assets.yaml with valid schema", () => {
@@ -54,7 +60,7 @@ describe("fixed assets accounting", () => {
     expect(issues).toHaveLength(0);
   });
 
-  it("passes validateAll including fixed assets", () => {
+  it.skipIf(!hasLocalPayroll)("passes validateAll including fixed assets", () => {
     const result = validateAll();
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);

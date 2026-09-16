@@ -22,6 +22,13 @@ drop_allowed() {
     || true
 }
 
+# Demo / CI seed tenants keep fixture ledgers on tip; the gates validate them.
+drop_fixture_tenants() {
+  drop_allowed | grep -v -E \
+    '^tenants/(demo|[a-z]{2}-demo|demo-signup-[0-9]+|acme|pilot-ledger-[0-9a-z-]+)/' \
+    || true
+}
+
 errors=0
 
 report() {
@@ -56,11 +63,11 @@ report "tenant chat/records runtime is tracked on the tip" \
   "runtime is regenerated locally; do not commit it"
 
 # 4. Sensitive finance ledgers outside template / fixture tenants.
-report "tenant finance ledgers are tracked outside _template / _fixture-books" \
+report "tenant finance ledgers are tracked outside template / fixture / demo tenants" \
   "$(ls_files \
        'tenants/*/data/finance/payroll.yaml' \
        'tenants/*/data/finance/bank-accounts.yaml' \
-       'tenants/*/data/finance/bank-statements.yaml' 2>/dev/null | drop_allowed)" \
+       'tenants/*/data/finance/bank-statements.yaml' 2>/dev/null | drop_fixture_tenants)" \
   "git rm --cached <path> and keep the ledger local"
 
 if [[ "$errors" -ne 0 ]]; then
