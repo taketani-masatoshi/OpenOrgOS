@@ -492,6 +492,66 @@ export async function fetchExecutiveHome(): Promise<ExecutiveHome> {
   return chatApi<ExecutiveHome>("/chat/v1/executive/home");
 }
 
+export type SecretaryWorkbench = {
+  ok: true;
+  tenant: string;
+  report_date: string;
+  company_name: string;
+  mail: Array<{
+    id: string;
+    subject: string;
+    from_label: string;
+    importance: "p0" | "p1" | "p2" | "p3";
+    urgency: string;
+    href: string;
+    severity: "p0" | "p1" | "p2";
+  }>;
+  drafts: Array<{
+    id: string;
+    subject: string;
+    to_label: string;
+    status: string;
+    created_at: string;
+    href: string;
+  }>;
+  tasks: Array<{
+    id: string;
+    title: string;
+    priority: "p0" | "p1" | "p2" | "p3";
+    status: string;
+    due?: string | null;
+    next_action?: string;
+    property_id?: string;
+    module_id?: string;
+    asana_task_gid?: string;
+    href: string;
+    severity: "p0" | "p1" | "p2";
+    candidate: boolean;
+    candidate_kind?: "mail" | "work_order" | "approval";
+  }>;
+  approvals: Array<{
+    id: string;
+    title: string;
+    status: string;
+    href: string;
+    severity: "p0" | "p1" | "p2";
+  }>;
+  company: {
+    cash_balance?: number | null;
+    runway_months?: number | null;
+    mail_pending: number;
+    mail_action_required: number;
+    approvals_pending: number;
+    tasks_open: number;
+    tasks_p0: number;
+    candidates: number;
+  };
+};
+
+export async function fetchSecretaryWorkbench(): Promise<SecretaryWorkbench> {
+  return chatApi<SecretaryWorkbench>("/chat/v1/secretary/workbench");
+}
+
 export async function fetchOperatorStats(): Promise<OperatorStats> {
   const res = await chatApi<{ ok: boolean } & OperatorStats>(
     "/chat/v1/operator/stats",

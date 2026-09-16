@@ -89,6 +89,7 @@ import { handleTowerApi } from "./tower-api.js";
 import { handleTowerChatMessage } from "../../dispatch-tower/chat-handler.js";
 import { handleAgentInboxApi } from "./agent-inbox-api.js";
 import { buildExecutiveHome } from "../../executive-home/build-home.js";
+import { buildSecretaryWorkbench } from "../../secretary-workbench/build-workbench.js";
 import { handleCorrespondenceApi } from "./correspondence-api.js";
 import { handleIntegrationsApi } from "./integrations-api.js";
 import { handleBrokerApi } from "./broker-api.js";
@@ -770,6 +771,19 @@ export async function handleChatApi(
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     try {
       json(res, 200, buildExecutiveHome());
+    } catch (err) {
+      json(res, 500, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/secretary/workbench" && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    try {
+      json(res, 200, buildSecretaryWorkbench());
     } catch (err) {
       json(res, 500, {
         ok: false,

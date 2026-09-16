@@ -8,6 +8,11 @@ import {
   wantsExecutiveHome,
   wantsLedgerWorkbench,
 } from "../apps/steward-chat/src/console-nav";
+import {
+  operatorShellTabFromRoute,
+  pathActive,
+  spaPathFromHref,
+} from "../apps/steward-chat/src/console-routing";
 
 describe("console-nav", () => {
   it("defaults to executive home on empty search", () => {
@@ -41,5 +46,17 @@ describe("console-nav", () => {
     expect(wantsLedgerWorkbench("?wallet=1")).toBe(false);
     expect(wantsLedgerWorkbench("?tax=1")).toBe(false);
     expect(parseConsoleView("?ledger=1")).toBe("ledger");
+  });
+});
+
+describe("console-routing secretary workbench", () => {
+  it("resolves /secretary/workbench/ before /secretary/", () => {
+    expect(pathActive("/secretary/workbench")).toBe("secretary-workbench");
+    expect(pathActive("/secretary/workbench/")).toBe("secretary-workbench");
+    expect(pathActive("/secretary/")).toBe("secretary");
+    expect(operatorShellTabFromRoute("secretary-workbench")).toBe("secretary");
+    expect(spaPathFromHref("/secretary/workbench/", "http://localhost")).toBe(
+      "/secretary/workbench/",
+    );
   });
 });

@@ -26,6 +26,7 @@ import { TaxHandoffPage } from "./TaxHandoffPage";
 import { ContractsPage } from "./ContractsPage";
 import { StaysPage } from "./StaysPage";
 import { WireConsolePage } from "./WireConsolePage";
+import { SecretaryWorkbenchPage } from "./SecretaryWorkbenchPage";
 import { useCopy } from "@ops-shared/define-copy";
 import type { OperatorShellActive } from "@ops-shared/OperatorShell";
 import { STEWARD_COPY } from "./steward-copy";
@@ -137,6 +138,7 @@ function ConsoleSubNav({
 }
 
 type AgentsSubNavActive =
+  | "secretary-workbench"
   | "secretary"
   | "steward"
   | "agent-list"
@@ -147,6 +149,11 @@ type AgentsSubNavActive =
 function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
   const copy = useCopy(STEWARD_COPY);
   const tabs = [
+    {
+      id: "secretary-workbench" as const,
+      href: "/secretary/workbench/",
+      label: copy.secretaryWorkbench,
+    },
     { id: "steward" as const, href: "/steward/", label: copy.steward },
     { id: "secretary" as const, href: "/secretary/", label: copy.secretary },
     { id: "agent-list" as const, href: "/agents/", label: copy.agentList },
@@ -435,6 +442,11 @@ export function App() {
         <OrchestrationRunsPage />
       ) : shellActive === "wire" ? (
         <WireConsolePage />
+      ) : shellActive === "secretary-workbench" ? (
+        <div className="agent-section">
+          <AgentsSubNav active="secretary-workbench" />
+          <SecretaryWorkbenchPage />
+        </div>
       ) : shellActive === "secretary" ||
         shellActive === "steward" ||
         shellActive === "agent-list" ||
