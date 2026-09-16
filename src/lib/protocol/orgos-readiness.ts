@@ -85,7 +85,9 @@ function computeFormUnificationChecks(): ReadinessCheck[] {
     fileOk("tests/protocol-external-verify.test.ts", "external verify"),
     fileOk("src/lib/company-events-wire.ts", "company-events wire linkage"),
     fileOk("tests/company-events-wire-void.test.ts", "company-events wire void"),
-    fileOk("tenants/mal/data/org/audit-bridge-state.yaml", "audit-bridge state (mal)"),
+    // The state file itself is per-tenant runtime and gitignored, so score the
+    // product capability that writes it instead of one operator's tenant.
+    fileOk("src/lib/org/audit-bridge-state.ts", "audit-bridge state store"),
     fileOk("docs/org-os/orgos-interface-spec.md", "I1/I2/I3 interface spec"),
   ];
 }
