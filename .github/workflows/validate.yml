@@ -29,7 +29,10 @@ jobs:
       - run: npm run test:registry:check
       - run: npm run test:tiered:verify
       - run: npm run test:contract
-      - run: npm run test:finance
+      # Split so one vitest run stays short: a 180s run made the worker RPC
+      # time out on the runner even with every test passing.
+      - run: npm run test:finance:books
+      - run: npm run test:finance:product
       - run: ORGOS_TENANT=_fixture-books FINANCE_LOOP_ROUNDS=1 bash scripts/finance-accuracy-loops.sh
       - run: '/usr/bin/time -f "npm test elapsed: %E" npm test'
   console-build:
