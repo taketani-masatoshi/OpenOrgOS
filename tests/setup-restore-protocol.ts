@@ -446,8 +446,18 @@ afterEach(() => {
   releaseFixtureRestoreLock();
 });
 
-afterAll(() => {
+afterAll(async () => {
   releaseFixtureRestoreLock();
   cleanGeneratedAgentMissions();
+  // beforeEach repairs whatever the previous test did, so damage from the *last*
+  // test in a file was never undone: a suite that deletes committed tenant
+  // fixtures left them deleted in the worktree. Restore once more on the way out
+  // so a test run is not a working-tree mutation.
+  await acquireFixtureRestoreLock();
+  try {
+    restoreCommittedTenantFixtures();
+  } finally {
+    releaseFixtureRestoreLock();
+  }
   rmSync(SNAPSHOT_ROOT, { recursive: true, force: true });
 });

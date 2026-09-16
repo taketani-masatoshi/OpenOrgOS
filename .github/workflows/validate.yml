@@ -36,6 +36,11 @@ jobs:
       - run: npm run test:finance:journeys
       - run: ORGOS_TENANT=_fixture-books FINANCE_LOOP_ROUNDS=1 bash scripts/finance-accuracy-loops.sh
       - run: '/usr/bin/time -f "npm test elapsed: %E" npm test'
+      # A test run must not be a working-tree mutation. Runs last so it sees the
+      # damage from every suite above, and with always() so a failing suite does
+      # not hide fixtures it destroyed on the way out.
+      - if: always()
+        run: npm run check:fixture-integrity
   console-build:
     runs-on: ubuntu-latest
     steps:
