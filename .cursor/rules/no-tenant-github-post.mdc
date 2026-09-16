@@ -17,6 +17,7 @@ alwaysApply: true
 
 - `tenants/_template/` および明示 fixture（実テナント名・秘密を混ぜない）
 - `*.example` / `*.example.yaml`
+- ignore 済みの運用ファイル（payroll.yaml、audit-bridge-state、company artifacts 等）は tip に載せない。履歴 rewrite はしない
 
 ## 履歴
 
