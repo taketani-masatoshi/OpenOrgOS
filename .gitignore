@@ -53,6 +53,15 @@ tenants/*/data/finance/year-end-adjustment/
 tenants/*/data/integrations/integrations.yaml
 tenants/*/data/protocol/signing-key.pem
 tenants/*/data/protocol/signing-key.pem.bak-*
+# Org PDF signing keys (private material — tip must not track)
+tenants/*/data/org-signing/
+# Chat runtime (threads / plans) — local only
+tenants/*/data/chat/threads/
+tenants/*/data/chat/command-plans/
+tenants/*/data/chat/tower-plans/
+# Sensitive finance operational files (examples may remain tracked)
+tenants/*/data/finance/payroll.yaml
+tenants/*/data/finance/bank-statements.yaml
 data/hub-*/signing-key.pem
 data/hub-*/witness-*.jsonl
 data/proposal3-pki/
