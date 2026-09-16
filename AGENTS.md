@@ -302,3 +302,22 @@ orgos operator sync-policy --emit engineering
 ```
 
 Canonical: `steward/rules/operator-policy.md`
+
+## Cursor Cloud specific instructions
+
+npm-workspaces TypeScript monorepo (Node >=20; VM has Node 22). The CLI/servers run via `tsx` — there is **no compile step** needed to run anything. Dependencies: `npm install`. No database or external service is required; all persistence is local YAML/Markdown under `tenants/{id}/`.
+
+### Run the web app (Operator Console)
+The main end-to-end product surface is the combined Operator Console (Steward Chat at `/` + Wire Console at `/wire/`). Build SPAs then start the server with dev/demo env (auth off, mock LLM — no API key needed):
+
+```bash
+npm run operator-console:build
+STEWARD_CHAT_AUTH=0 WIRE_CONSOLE_AUTH=dev ORGOS_MCP_AUTH=0 ORGOS_LLM_MOCK=1 ORGOS_CSRF=0 ORGOS_RATE_LIMIT=0 \
+  npm run orgos -- operator console start --host 127.0.0.1 --port 9470 --tenant demo
+```
+Verify: `curl -s http://127.0.0.1:9470/health` → `{"ok":true,...,"wire_spa":true,"chat_spa":true}`. Chat API smoke: `curl -s -X POST http://127.0.0.1:9470/chat/v1/message -H 'Content-Type: application/json' -d '{"message":"今日の状況を教えて"}'`. Standalone dev servers with HMR: `npm run steward-chat:dev` / `npm run wire-console:dev`. Rebuild SPAs after editing `apps/*` before restarting the combined server (it serves the built `dist`/`dist-combined`).
+
+### Lint / validate / test
+- `npm run validate` (default tenant `mal`) and `npm run check` (all tenants). Warnings about `未作成` example files are expected in a fresh clone (see below) and do not fail validation.
+- `npm test` (Vitest via `scripts/run-tests.ts`). In a fresh clone **5 tests fail** because they need gitignored L2/L3 vault files that are intentionally absent (`data/finance/bank-accounts.yaml`, `data/operations/kamezawa-secrets.yaml`, and the `data/executive/*.yaml` created from `*.example`). These are data-dependent, not code/env regressions — do not create those sensitive files to make them pass.
+- `npx tsc --noEmit` currently reports pre-existing type errors under `steward/modules/**/cli` and `steward/jurisdiction-packs/**/modules/**/cli`. These do not affect running the app (runtime is `tsx`); treat as a known baseline, not something introduced by setup.
