@@ -1,0 +1,15 @@
+month: 2026-01
+revenue:
+  - property_id: PROP-001
+    category: rent
+    amount: 100000
+expenses:
+  - property_id: PROP-001
+    category: depreciation
+    amount: 8865
+    notes: 減価償却費 · floor(floor(5000000/47)/12)
+  - property_id: PROP-001
+    category: loan_payment
+    amount: 42000
+    notes: 借入返済（元金＋利息）
+notes: フィクスチャ · 単月売上 100,000 を固定（steward-chat 財務メトリクスの検証用）

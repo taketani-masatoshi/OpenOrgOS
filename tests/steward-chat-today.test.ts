@@ -45,7 +45,10 @@ describe("steward chat today", () => {
   });
 
   it("includes tenant agent roster summary (L1 ids only)", () => {
-    setTenantId("mal");
+    // The assertion is about roster shape, not about one tenant's data. demo's
+    // roster fixture carries executive_steward and demo keeps a committed
+    // payroll, so this no longer needs an operator's real tenant on disk.
+    setTenantId("demo");
     const ctx = buildTodayContext();
     expect(ctx.agent_roster_configured).toBe(true);
     expect(ctx.agent_roster_operational_count).toBeGreaterThan(0);
