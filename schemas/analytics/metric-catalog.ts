@@ -115,6 +115,9 @@ export const snapshotHistoryEntrySchema = z
   .object({
     month: z.string().regex(/^\d{4}-\d{2}$/, "month must be YYYY-MM"),
     values: z.record(analyticsMetricId, z.number()),
+    notes: z.array(z.string()).default([]),
+    /** Optional demo/synthetic marker — ignored by Console (L1 counts only). */
+    data_kind: z.string().optional(),
   })
   .strict();
 

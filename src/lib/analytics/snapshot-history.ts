@@ -76,7 +76,7 @@ export function recordSnapshotHistory(
   const without = file.entries.filter((e) => e.month !== label);
   const next: SnapshotHistoryFile = {
     version: 1,
-    entries: [...without, { month: label, values }].sort((a, b) =>
+    entries: [...without, { month: label, values, notes: [] }].sort((a, b) =>
       a.month.localeCompare(b.month)
     ),
   };
