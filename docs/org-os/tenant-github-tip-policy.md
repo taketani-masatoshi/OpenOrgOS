@@ -21,6 +21,16 @@ History rewrite is out of scope. This document defines what may remain on the **
 
 If a path matches `.gitignore` but is still tracked, run `git rm --cached` (no history rewrite).
 
+## Enforcement
+
+| Layer | Command |
+|-------|---------|
+| Local hook | `scripts/install-hooks.sh` once per clone, then `pre-commit` / `pre-push` |
+| Manual | `npm run check:tenant-tip` |
+| CI | `validate` workflow runs `check:tenant-tip` before the other gates |
+
+The check fails on gitignored-but-tracked paths, key material, chat/records runtime, and finance ledgers outside `_template` / `_fixture-books`.
+
 ## Local-only
 
 Live operator data belongs on the machine under the active tenant workspace. Do not promote it to GitHub.
