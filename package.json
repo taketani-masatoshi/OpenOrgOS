@@ -6,6 +6,7 @@
   "workspaces": [
     "apps/steward-chat",
     "apps/wire-console",
+    "apps/module-flow",
     "packages/*"
   ],
   "bin": {
@@ -78,6 +79,8 @@
     "proposal3:party-relay": "node --import tsx scripts/run-proposal3-party-relay.ts",
     "demo:standalone-org": "node --import tsx scripts/seed-standalone-org-demo.ts",
     "demo:mal-standalone": "node --import tsx scripts/seed-mal-standalone-demo.ts",
+    "module-flow:dev": "npm run dev -w @orgos/module-flow",
+    "module-flow:build": "npm run build -w @orgos/module-flow",
     "wire-console:dev": "npm run dev -w @orgos/wire-console",
     "wire-console:build": "npm run build -w @orgos/wire-console",
     "wire-console:smoke": "npm run wire-console:build && playwright test e2e/wire-console.smoke.spec.ts && playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts",

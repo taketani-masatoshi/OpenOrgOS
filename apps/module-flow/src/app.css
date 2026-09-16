@@ -1,0 +1,171 @@
+:root {
+  color-scheme: dark;
+  --bg: #101114;
+  --bg-elevated: #17181d;
+  --stroke: #2c3038;
+  --text: #ececec;
+  --text-muted: #9aa0aa;
+  --accent: #8bb4ff;
+  --node-bg: #1c1e24;
+  font-family: "Hiragino Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr;
+  height: 100%;
+}
+
+.app-shell.has-detail {
+  grid-template-columns: 1fr 280px;
+}
+
+.app-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+}
+
+.app-bar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.app-bar p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.view-tabs button {
+  appearance: none;
+  border: 1px solid var(--stroke);
+  background: transparent;
+  color: var(--text);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.view-tabs button.is-active {
+  background: var(--accent);
+  color: #101114;
+  border-color: var(--accent);
+}
+
+.app-main {
+  min-width: 0;
+  min-height: 0;
+}
+
+.detail-panel {
+  border-left: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  padding: 16px;
+  overflow: auto;
+}
+
+.detail-panel h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.detail-kind,
+.detail-id {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.detail-panel ul {
+  padding-left: 16px;
+  font-size: 13px;
+}
+
+.flow-node {
+  width: 176px;
+  padding: 8px 10px;
+  background: var(--node-bg);
+  border: 1px solid var(--stroke);
+  color: var(--text);
+}
+
+.flow-node.is-muted {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.flow-node-kind {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.flow-node-label {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.flow-node-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kind-agent {
+  border-color: #4d648a;
+}
+
+.kind-iso {
+  border-color: #3e6b52;
+}
+
+.kind-reg {
+  border-color: #6b5a3e;
+}
+
+.kind-product,
+.kind-workspace,
+.kind-human {
+  border-color: var(--accent);
+}
+
+.react-flow {
+  --xy-background-color: var(--bg);
+  --xy-node-border-radius: 0;
+  --xy-controls-button-background-color: var(--bg-elevated);
+  --xy-controls-button-color: var(--text);
+  --xy-controls-button-border-color: var(--stroke);
+  --xy-minimap-background-color: var(--bg-elevated);
+  --xy-edge-label-background-color: var(--bg);
+  --xy-edge-label-color: var(--text-muted);
+}
