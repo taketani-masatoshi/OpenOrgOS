@@ -69,9 +69,12 @@ describe("finance metrics chat intent", () => {
   });
 });
 
-describe("MAL finance metrics (real tenant YAML)", () => {
+// Read against a fixture tenant rather than an operator's real one: the assertions
+// derive their expected values from the loaded YAML, so they only need months with
+// revenue, expenses and a loan_payment — not real books that policy keeps off the tip.
+describe("finance metrics from tenant YAML", () => {
   beforeEach(() => {
-    setTenantId("mal");
+    setTenantId("_fixture-books");
   });
 
   it("uses latest month on or before calendar month — not future stubs", () => {
@@ -98,7 +101,7 @@ describe("MAL finance metrics (real tenant YAML)", () => {
 
     const result = handleFinanceMetricsChatMessage("2026年5月のバーンレートを教えて");
     expect(result.ok).toBe(true);
-    expect(result.metrics?.company_name).toBe("株式会社MAL");
+    expect(result.metrics?.company_name).toBe("Fixture Books KK");
     expect(result.metrics?.basisMonth).toBe("2026-05");
     expect(result.metrics?.burnRate).toBe(burn);
     expect(result.metrics?.monthlyRevenue).toBe(rev);
@@ -113,7 +116,7 @@ describe("MAL finance metrics (real tenant YAML)", () => {
     const rev = jan!.revenue.reduce((s, r) => s + r.amount, 0);
     const result = handleFinanceMetricsChatMessage("2026年1月の売り上げを教えて");
     expect(result.ok).toBe(true);
-    expect(result.metrics?.company_name).toBe("株式会社MAL");
+    expect(result.metrics?.company_name).toBe("Fixture Books KK");
     expect(result.metrics?.basisMonth).toBe("2026-01");
     expect(result.metrics?.monthlyRevenue).toBe(rev);
     expect(result.metrics?.monthlyRevenue).toBe(100_000);
