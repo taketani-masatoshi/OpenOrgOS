@@ -167,7 +167,7 @@ export function scaffoldCoreTenantDocs(): ScaffoldResult {
   );
 
   const ingest = ensureFinanceIngestInboxScaffold();
-  for (const d of ingest.dirs_created) {
+  for (const d of ingest.dirs_ensured) {
     if (!result.created.includes(d) && !result.skipped.includes(d)) {
       result.created.push(d);
     }

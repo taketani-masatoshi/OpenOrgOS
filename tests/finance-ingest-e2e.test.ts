@@ -21,14 +21,14 @@ describe("finance ingest e2e (sole-prop fixture)", () => {
     saveIngestStaging({ version: 1, batches: [], rows: [] });
     writeYamlFile(join(getTenantDir(), "data/finance/ingest-rules.yaml"), {
       version: 1,
-      default_cash_account_code: "1120",
+      default_cash_account_code: "1100",
       default_revenue_account_code: "4100",
       asset_intake_threshold_yen: 100000,
       rules: [
         {
-          id: "card-misc",
-          match: { source_kind: "card", direction: "outflow" },
-          account_code: "5280",
+          id: "stationery",
+          match: { contains: "文具" },
+          account_code: "5210",
           tax_category: "taxable_10",
           business_pct: 100,
           priority: 50,

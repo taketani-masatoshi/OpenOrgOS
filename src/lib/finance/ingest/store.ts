@@ -23,6 +23,7 @@ import {
   type IngestStagingFile,
 } from "../../../../schemas/finance/ingest.js";
 import { ensureFinanceIngestInboxScaffold } from "./scaffold.js";
+import { decodeBankCsvBytes } from "../bank-statement-import-service.js";
 
 const STAGING_REL = "finance/ingest-staging.yaml";
 const RULES_REL = "finance/ingest-rules.yaml";
@@ -66,7 +67,7 @@ export function loadIngestRules(): IngestRulesFile {
 
 export function ensureIngestInboxDirs(): string[] {
   const scaffold = ensureFinanceIngestInboxScaffold();
-  return scaffold.dirs_created;
+  return scaffold.dirs_ensured;
 }
 
 export function categoryToSourceKind(category: InboxCategory): IngestSourceKind | null {
@@ -141,11 +142,23 @@ export function readInboxFileContent(logicalOrAbs: string): {
   fileName: string;
   absPath: string;
   bytes: Buffer;
+  encoding_used?: "utf-8" | "shift_jis";
 } {
   const resolved = logicalOrAbs.startsWith("/")
     ? logicalOrAbs
     : resolveTenantPath(logicalOrAbs);
   const bytes = readFileSync(resolved);
+  const ext = extname(resolved).toLowerCase();
+  if (ext === ".csv" || ext === ".tsv") {
+    const decoded = decodeBankCsvBytes(new Uint8Array(bytes));
+    return {
+      content: decoded.text,
+      fileName: basename(resolved),
+      absPath: resolved,
+      bytes,
+      encoding_used: decoded.encoding_used,
+    };
+  }
   return {
     content: bytes.toString("utf-8"),
     fileName: basename(resolved),

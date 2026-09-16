@@ -8,3 +8,5 @@ export {
   moduleNeedsFinanceIngestScaffold,
   FINANCE_INGEST_SCAFFOLD_MODULES,
 } from "./scaffold.js";
+export { financeIngestIntegrityIssues } from "./integrity.js";
+export { dateToJournalOccurredAt } from "./journal-time.js";

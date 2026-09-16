@@ -37,11 +37,12 @@ describe("finance ingest scaffold (module standard)", () => {
     }
 
     const result = ensureFinanceIngestInboxScaffold();
-    expect(result.dirs_created.some((p) => p.includes("inbox/bank"))).toBe(true);
+    expect(result.dirs_ensured.some((p) => p.includes("inbox/bank"))).toBe(true);
     expect(existsSync(salesReadme)).toBe(true);
 
     const again = ensureFinanceIngestInboxScaffold();
     expect(again.readmes_copied).toEqual([]);
+    expect(again.dirs_created).toEqual([]);
 
     if (!hadRules && existsSync(rulesPath)) {
       rmSync(rulesPath);

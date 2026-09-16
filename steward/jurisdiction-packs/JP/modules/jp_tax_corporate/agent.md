@@ -31,6 +31,8 @@ orgos ingest post --batch <id> --write
 
 俯瞰: `steward/platform/finance/00-README.md`
 
+資産帯（高額）は法人では固定資産台帳・経理確認（`needs_review`）。個人青色の expense-intake へは誘導しない。
+
 ## CLI
 
 ```bash

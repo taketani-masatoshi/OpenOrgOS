@@ -260,6 +260,9 @@ export function importBankStatementCsvText(input: {
   closingBalance?: number;
   adapter?: string;
   columnMapping?: BankCsvColumnMapping;
+  /** When set, skip if an import_batch already has this source file fingerprint */
+  sourceFileFingerprint?: string;
+  ingestBatchId?: string;
 }): {
   added: number;
   duplicate_batch: boolean;
@@ -288,14 +291,24 @@ export function importBankStatementCsvText(input: {
     adapter: input.adapter ?? "generic-csv",
     openingBalance: input.openingBalance,
     closingBalance: input.closingBalance,
+    importBatchId: input.ingestBatchId
+      ? `INGEST-${input.ingestBatchId}`
+      : undefined,
   });
+  const batch = {
+    ...built.batch,
+    ...(input.sourceFileFingerprint
+      ? { source_file_fingerprint: input.sourceFileFingerprint }
+      : {}),
+    ...(input.ingestBatchId ? { ingest_batch_id: input.ingestBatchId } : {}),
+  };
   const path = join(getDataDir(), "finance", "bank-statements.yaml");
   const isDryRun = input.dry_run === true || input.write === false;
   if (isDryRun) {
     return {
       added: built.entries.length,
       duplicate_batch: false,
-      batch_id: built.batch.id,
+      batch_id: batch.id,
       warnings: built.warnings,
       entry_ids: built.entries.map((row) => row.id),
       dry_run: true,
@@ -310,16 +323,53 @@ export function importBankStatementCsvText(input: {
         entries: [],
         import_batches: [],
       });
-  const merged = mergeBankStatementEntries(file, built.entries, built.batch);
+
+  if (
+    input.sourceFileFingerprint &&
+    file.import_batches.some(
+      (b) => b.source_file_fingerprint === input.sourceFileFingerprint,
+    )
+  ) {
+    return {
+      added: 0,
+      duplicate_batch: true,
+      batch_id: batch.id,
+      warnings: built.warnings,
+      entry_ids: built.entries.map((row) => row.id),
+      dry_run: false,
+    };
+  }
+
+  const merged = mergeBankStatementEntries(file, built.entries, batch);
   if (!merged.duplicate_batch) {
     writeYamlFile(path, merged.file);
   }
   return {
     added: merged.added,
     duplicate_batch: merged.duplicate_batch,
-    batch_id: built.batch.id,
+    batch_id: batch.id,
     warnings: built.warnings,
     entry_ids: built.entries.map((row) => row.id),
     dry_run: false,
+  };
+}
+
+/** Statements-only upsert after ingest journal post (no second journal path). */
+export function upsertBankStatementsFromIngest(input: {
+  csvText: string;
+  ingestBatchId: string;
+  sourceFileFingerprint: string;
+}): { added: number; duplicate_batch: boolean; batch_id: string } {
+  const result = importBankStatementCsvText({
+    csvText: input.csvText,
+    write: true,
+    adapter: `ingest:${input.ingestBatchId}`,
+    sourceFileFingerprint: input.sourceFileFingerprint,
+    ingestBatchId: input.ingestBatchId,
+  });
+  return {
+    added: result.added,
+    duplicate_batch: result.duplicate_batch,
+    batch_id: result.batch_id,
   };
 }

@@ -127,6 +127,9 @@ export const bankStatementFileSchema = z.object({
         opening_balance: z.number().nonnegative().optional(),
         closing_balance: z.number().nonnegative().optional(),
         entry_ids: z.array(z.string().min(1)).default([]),
+        /** SHA-256 of source CSV bytes when imported via orgos ingest */
+        source_file_fingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+        ingest_batch_id: z.string().min(1).optional(),
       })
     )
     .default([]),

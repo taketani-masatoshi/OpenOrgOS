@@ -6,7 +6,6 @@ import {
 import {
   classifyIngestStaging,
   ensureFinanceIngestInboxScaffold,
-  ensureIngestInboxDirs,
   loadIngestStaging,
   parseIngestFile,
   parseIngestPending,
@@ -20,17 +19,12 @@ function printJson(value: unknown): void {
 }
 
 export function runIngestStatus(opts: { json?: boolean }): void {
-  const scaffold = ensureFinanceIngestInboxScaffold();
-  const dirs = scaffold.dirs_created;
   const staging = loadIngestStaging();
   const byStatus: Record<string, number> = {};
   for (const row of staging.rows) {
     byStatus[row.status] = (byStatus[row.status] ?? 0) + 1;
   }
   const result = {
-    inbox_dirs: dirs,
-    readmes_copied: scaffold.readmes_copied,
-    rules_seeded: scaffold.rules_seeded,
     batches: staging.batches.length,
     rows: staging.rows.length,
     by_status: byStatus,
@@ -40,10 +34,6 @@ export function runIngestStatus(opts: { json?: boolean }): void {
     return;
   }
   console.log(`# ingest status`);
-  console.log(`dirs: ${dirs.length}`);
-  if (scaffold.readmes_copied.length) {
-    console.log(`readmes: ${scaffold.readmes_copied.length} ensured`);
-  }
   console.log(`batches: ${result.batches} · rows: ${result.rows}`);
   for (const [k, v] of Object.entries(byStatus)) {
     console.log(`  ${k}: ${v}`);
@@ -57,7 +47,7 @@ export function runIngestScaffold(opts: { json?: boolean }): void {
     return;
   }
   console.log(
-    `✓ finance ingest scaffold · dirs ${result.dirs_created.length} · readmes ${result.readmes_copied.length} · rules ${result.rules_seeded ? "seeded" : "kept"}`,
+    `✓ finance ingest scaffold · ensured ${result.dirs_ensured.length} · created ${result.dirs_created.length} · readmes ${result.readmes_copied.length} · rules ${result.rules_seeded ? "seeded" : "kept"}`,
   );
   for (const p of result.readmes_copied.slice(0, 20)) {
     console.log(`  ${p}`);
@@ -163,7 +153,10 @@ export function runIngestPost(opts: {
     `✓ ingest post ${result.dry_run ? "dry-run" : "wrote"} · posted ${result.posted} · skipped ${result.skipped}`,
   );
   for (const id of result.redirected_to_intake) {
-    console.warn(`  → expense-intake: ${id}`);
+    console.warn(`  → asset-band review: ${id}`);
+  }
+  if (result.bank_statements_added != null) {
+    console.log(`  bank-statements +${result.bank_statements_added}`);
   }
   for (const e of result.errors) console.error(`  ✗ ${e}`);
 }

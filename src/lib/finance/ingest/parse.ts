@@ -42,7 +42,7 @@ export function parseIngestFile(input: {
   filePath: string;
   write?: boolean;
 }): IngestParseResult {
-  const { content, fileName, absPath, bytes } = readInboxFileContent(input.filePath);
+  const { content, fileName, absPath, bytes, encoding_used } = readInboxFileContent(input.filePath);
   const logical = toLogicalPath(absPath);
   const fp = fileFingerprint(bytes);
   const staging = loadIngestStaging();
@@ -58,6 +58,14 @@ export function parseIngestFile(input: {
   }
 
   const parsed = parseIngestSource(input.source, content, fileName);
+  const encodingNote = encoding_used ? [`encoding_used: ${encoding_used}`] : [];
+  if (parsed.notes.length === 0 && parsed.rows.length === 0) {
+    parsed.notes.push("no data rows parsed (check headers: date/amount)");
+  }
+  const skippedSummary = parsed.notes.filter((n) => n.includes("skipped")).length;
+  if (skippedSummary > 0) {
+    parsed.notes.push(`summary: ${skippedSummary} row(s) skipped — see notes above`);
+  }
   const batch_id = nextBatchId(
     input.source,
     staging.batches.map((b) => b.batch_id),
@@ -75,7 +83,7 @@ export function parseIngestFile(input: {
       amount_yen: row.amount_yen,
       payee: row.payee,
       description: row.description,
-      logical_path: logical,
+      reference: row.raw?.reference,
     });
     if (existingFp.has(fingerprint)) {
       skipped_duplicate_rows += 1;
@@ -110,7 +118,7 @@ export function parseIngestFile(input: {
     imported_at: getClock().now().toISOString(),
     logical_path: logical,
     row_ids: rows.map((r) => r.row_id),
-    notes: parsed.notes,
+    notes: [...encodingNote, ...parsed.notes],
   });
 
   if (!input.write) {

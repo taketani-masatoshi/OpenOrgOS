@@ -1,7 +1,6 @@
 # docs/io/inbox — 書類・明細の投入口（モジュール標準）
 
 **正本（テンプレ）:** `steward/platform/finance/ingest-inbox/`  
-`_template` へ: `npm run finance:ingest-inbox:sync`  
 テナントへは `orgos ingest scaffold` / `tenant scaffold-docs` / 財務モジュール activate で複製する。
 
 紙・スキャン・ダウンロードしたファイルをカテゴリ別に置き、`orgos io` / `orgos ingest` で台帳登録します。**個人事業主・法人で同一構成**です。

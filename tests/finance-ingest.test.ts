@@ -40,7 +40,7 @@ describe("ingest adapters", () => {
     expect(r.rows[0]!.payee).toContain("ドコモ");
   });
 
-  it("fingerprints stably", () => {
+  it("fingerprints stably without file path", () => {
     const a = rowFingerprint({
       source_kind: "card",
       occurred_on: "2025-01-01",
@@ -48,7 +48,6 @@ describe("ingest adapters", () => {
       amount_yen: 100,
       payee: "A",
       description: "x",
-      logical_path: "docs/io/inbox/card/a.csv",
     });
     const b = rowFingerprint({
       source_kind: "card",
@@ -57,10 +56,24 @@ describe("ingest adapters", () => {
       amount_yen: 100,
       payee: "A",
       description: "x",
-      logical_path: "docs/io/inbox/card/a.csv",
     });
     expect(a).toBe(b);
     expect(a).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("rejects broad rules without allow_broad", () => {
+    expect(() =>
+      ingestRulesFileSchema.parse({
+        version: 1,
+        rules: [
+          {
+            id: "too-broad",
+            match: { source_kind: "card", direction: "outflow" },
+            account_code: "5280",
+          },
+        ],
+      }),
+    ).toThrow(/allow_broad/);
   });
 });
 
@@ -92,5 +105,52 @@ describe("ingest classify rules", () => {
       review_notes: [],
     });
     expect(rule?.account_code).toBe("5150");
+  });
+});
+
+describe("bank statements from ingest", () => {
+  it("upserts statements with source_file_fingerprint (idempotent)", async () => {
+    const { setTenantId, getTenantDir } = await import("../src/lib/tenant.js");
+    const { upsertBankStatementsFromIngest } = await import(
+      "../src/lib/finance/bank-statement-import-service.js"
+    );
+    const { existsSync, readFileSync, rmSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const YAML = (await import("yaml")).default;
+    setTenantId("_fixture-books");
+    const path = join(getTenantDir(), "data/finance/bank-statements.yaml");
+    const had = existsSync(path);
+    const prev = had ? readFileSync(path, "utf-8") : null;
+    const csv = `date,direction,amount,category,description,account_id,reference,counterparty
+2025-06-01,outflow,1000,office,事務,BANK-001,REF-1,Shop
+`;
+    const fp = "f".repeat(64);
+    const a = upsertBankStatementsFromIngest({
+      csvText: csv,
+      ingestBatchId: "ING-BANK-901",
+      sourceFileFingerprint: fp,
+    });
+    expect(a.duplicate_batch).toBe(false);
+    expect(a.added).toBeGreaterThan(0);
+    const b = upsertBankStatementsFromIngest({
+      csvText: csv,
+      ingestBatchId: "ING-BANK-901",
+      sourceFileFingerprint: fp,
+    });
+    expect(b.duplicate_batch).toBe(true);
+    const file = YAML.parse(readFileSync(path, "utf-8")) as {
+      import_batches: Array<{ source_file_fingerprint?: string; ingest_batch_id?: string }>;
+    };
+    expect(
+      file.import_batches.some(
+        (x) => x.source_file_fingerprint === fp && x.ingest_batch_id === "ING-BANK-901",
+      ),
+    ).toBe(true);
+    if (prev) {
+      const { writeFileSync } = await import("node:fs");
+      writeFileSync(path, prev, "utf-8");
+    } else if (existsSync(path)) {
+      rmSync(path);
+    }
   });
 });

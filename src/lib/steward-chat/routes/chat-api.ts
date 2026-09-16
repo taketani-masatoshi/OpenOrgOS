@@ -77,6 +77,7 @@ import { handleEsignApi } from "./esign-api.js";
 import { handleAnalyticsApi } from "./analytics-api.js";
 import { handleMedicalDeviceApi } from "./medical-device-api.js";
 import { handleLedgerApi } from "./ledger-api.js";
+import { handleFinanceIngestApi } from "./finance-ingest-api.js";
 import { handleProductApi } from "./product-api.js";
 import { handleCustomersApi } from "./customers-api.js";
 import { handleTaxApi } from "./tax-api.js";
@@ -957,6 +958,8 @@ export async function handleChatApi(
   if (await handleMedicalDeviceApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleLedgerApi(req, res, pathname, method, ctx.user))
+    return true;
+  if (await handleFinanceIngestApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleTaxApi(req, res, pathname, method, ctx.user))
     return true;

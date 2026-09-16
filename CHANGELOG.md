@@ -8,7 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
-- **帳簿インプット取込 (`orgos ingest`)** — `docs/io/inbox/{bank,card,transit,wallet,marketplace,sales,receipts,contracts}/` に CSV/MD を置き、scan → parse → classify → review → `post --write` で仕訳化。staging / rules YAML、PDF は外部変換前提（新依存なし）。個人・法人で同一 Core 標準（`ensureFinanceIngestInboxScaffold` · `tenant scaffold-docs` / 財務モジュール activate / Ledger provision）。テンプレ正本 `steward/platform/finance/ingest-inbox/`。ADR 0073。
+- **帳簿インプット取込 (`orgos ingest`)** — `docs/io/inbox/{bank,card,transit,wallet,marketplace,sales,receipts,contracts}/` に CSV/MD を置き、scan → parse → classify → review → `post --write` で仕訳化。個人・法人で同一 Core 標準（scaffold · CoA プレフライト · エンティティ分岐 · bank は statements も更新）。テンプレ正本 `steward/platform/finance/ingest-inbox/`。読取 BFF `GET /chat/v1/finance/ingest`。ADR 0073。
 
 ### Changed
 

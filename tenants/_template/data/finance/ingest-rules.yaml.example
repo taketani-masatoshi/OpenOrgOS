@@ -6,6 +6,7 @@ rules:
   - id: transit-fare
     match:
       source_kind: transit
+    allow_broad: true
     account_code: "5140"
     tax_category: taxable_10
     business_pct: 100
@@ -25,19 +26,17 @@ rules:
     tax_category: taxable_10
     business_pct: 100
     priority: 30
-  - id: card-default-expense
+  - id: stationery-askul
     match:
-      source_kind: card
-      direction: outflow
+      contains: アスクル
     account_code: "5280"
     tax_category: taxable_10
     business_pct: 100
-    priority: 80
-  - id: bank-outflow-misc
+    priority: 40
+  - id: stationery-generic
     match:
-      source_kind: bank
-      direction: outflow
+      contains: 文具
     account_code: "5280"
     tax_category: taxable_10
     business_pct: 100
-    priority: 90
+    priority: 45

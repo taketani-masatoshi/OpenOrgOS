@@ -62,6 +62,10 @@ orgos ingest review
 orgos ingest post --batch <id> --write
 ```
 
+`ingest status` は読取のみ（フォルダを作らない）。README 正本の編集は `steward/platform/finance/ingest-inbox/` → `node --import tsx scripts/sync-finance-ingest-inbox.ts`。
+
+デモ例: `tenants/klab/docs/io/examples/demo-card-2025-06.csv` を `inbox/card/` にコピーしてから取込。
+
 仕訳後の生成はエンティティ別:
 
 | エンティティ | 続き |

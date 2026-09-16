@@ -42,7 +42,8 @@ export function rowFingerprint(input: {
   amount_yen: number;
   payee: string;
   description: string;
-  logical_path: string;
+  /** Optional bank/reference disambiguation (not file path). */
+  reference?: string;
 }): string {
   return sha256Hex(
     [
@@ -52,7 +53,7 @@ export function rowFingerprint(input: {
       String(input.amount_yen),
       normalizeText(input.payee).toLowerCase(),
       normalizeText(input.description).toLowerCase(),
-      input.logical_path,
+      normalizeText(input.reference).toLowerCase(),
     ].join("|"),
   );
 }

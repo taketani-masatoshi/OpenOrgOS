@@ -1,6 +1,5 @@
 /**
- * Finance ingest staging + classification rules (orgos ingest).
- * Drop files under docs/io/inbox/{bank,card,...}; post requires --write.
+ * Finance ingest rules / staging schema (orgos ingest).
  */
 import { z } from "zod";
 import { dateString } from "../common.js";
@@ -72,21 +71,45 @@ export const ingestRuleMatchSchema = z.object({
   direction: ingestDirectionSchema.optional(),
 });
 
-export const ingestRuleSchema = z.object({
-  id: z.string().min(1),
-  match: ingestRuleMatchSchema,
-  account_code: z.string().regex(/^\d{4}$/),
-  cash_account_code: z.string().regex(/^\d{4}$/).optional(),
-  tax_category: taxCategorySchema.optional(),
-  business_pct: z.number().min(0).max(100).optional(),
-  priority: z.number().int().default(100),
-});
+export const ingestRuleSchema = z
+  .object({
+    id: z.string().min(1),
+    match: ingestRuleMatchSchema,
+    account_code: z.string().regex(/^\d{4}$/),
+    cash_account_code: z.string().regex(/^\d{4}$/).optional(),
+    tax_category: taxCategorySchema.optional(),
+    business_pct: z.number().min(0).max(100).optional(),
+    priority: z.number().int().default(100),
+    /**
+     * Broad rules (source_kind ± direction only, no contains) require explicit opt-in.
+     * Default example rules must not use this.
+     */
+    allow_broad: z.boolean().optional(),
+  })
+  .superRefine((rule, ctx) => {
+    const { contains, source_kind, direction } = rule.match;
+    const hasAnchor = Boolean(contains);
+    const broadShape = Boolean(source_kind) && !hasAnchor;
+    if (broadShape && !rule.allow_broad) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `rule ${rule.id}: source_kind-only match requires allow_broad: true (prefer contains)`,
+      });
+    }
+    if (!contains && !source_kind && !direction) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `rule ${rule.id}: match must set contains, source_kind, or direction`,
+      });
+    }
+    void direction;
+  });
 
 export const ingestRulesFileSchema = z.object({
   version: z.literal(1).default(1),
   default_cash_account_code: z.string().regex(/^\d{4}$/).default("1120"),
   default_revenue_account_code: z.string().regex(/^\d{4}$/).default("4100"),
-  /** Outflow amount at or above this → skip post, suggest expense-intake */
+  /** Outflow amount at or above this → needs_review (sole-prop: expense-intake) */
   asset_intake_threshold_yen: z.number().int().positive().default(100_000),
   rules: z.array(ingestRuleSchema).default([]),
 });

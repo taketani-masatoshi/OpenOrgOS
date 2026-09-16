@@ -1,9 +1,6 @@
 /**
  * Shared finance drop-folder scaffold (Zone A docs/io/inbox).
- * Used by sole-prop and corporate bookkeeping modules — not duplicated per module seed.
- *
  * Template SSOT: steward/platform/finance/ingest-inbox/
- * (tenant _template/docs/io is a mirror for human browsing)
  */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -28,6 +25,9 @@ export const FINANCE_INGEST_SCAFFOLD_MODULES = new Set([
 ]);
 
 export type FinanceIngestScaffoldResult = {
+  /** All category dirs after ensure (existing + new) */
+  dirs_ensured: string[];
+  /** Newly created category dirs only */
   dirs_created: string[];
   readmes_copied: string[];
   rules_seeded: boolean;
@@ -75,6 +75,7 @@ function ingestRulesSource(): string | null {
  * Idempotent — never overwrites existing README/rules.
  */
 export function ensureFinanceIngestInboxScaffold(): FinanceIngestScaffoldResult {
+  const dirs_ensured: string[] = [];
   const dirs_created: string[] = [];
   const readmes_copied: string[] = [];
   const skipped: string[] = [];
@@ -89,9 +90,12 @@ export function ensureFinanceIngestInboxScaffold(): FinanceIngestScaffoldResult 
   }
 
   for (const cat of FINANCE_INGEST_INBOX_CATEGORIES) {
+    const absBefore = join(getDocsDir(), "io", "inbox", cat);
+    const existed = existsSync(absBefore);
     const dir = ensureInboxCategoryDir(cat);
     const logical = toLogicalPath(dir);
-    dirs_created.push(logical);
+    dirs_ensured.push(logical);
+    if (!existed) dirs_created.push(logical);
 
     const destReadme = join(dir, CATEGORY_README);
     if (existsSync(destReadme)) {
@@ -122,7 +126,7 @@ export function ensureFinanceIngestInboxScaffold(): FinanceIngestScaffoldResult 
     rules_seeded = true;
   }
 
-  return { dirs_created, readmes_copied, rules_seeded, skipped };
+  return { dirs_ensured, dirs_created, readmes_copied, rules_seeded, skipped };
 }
 
 export function moduleNeedsFinanceIngestScaffold(moduleId: string): boolean {

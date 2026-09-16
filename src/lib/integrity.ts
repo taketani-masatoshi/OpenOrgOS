@@ -55,6 +55,7 @@ import { electronicLedgerIntegrityIssues } from "./finance/ledger/electronic-led
 import { invoiceMplDuplicateIssues } from "./finance/ledger/invoice-mpl-dedupe.js";
 import { statutoryFilingReadinessIssues } from "./finance/statutory-filing-readiness.js";
 import { solePropBlueReturnIntegrityIssues } from "./finance/sole-prop-integrity.js";
+import { financeIngestIntegrityIssues } from "./finance/ingest/integrity.js";
 import {
   assessPresentationSanity,
   resolvePresentationSanityPeriodForValidate,
@@ -1002,6 +1003,13 @@ export function runIntegrityChecks(): IntegrityIssue[] {
       issues.push({
         level: issue.level,
         file: issue.file,
+        message: issue.message,
+      });
+    }
+    for (const issue of financeIngestIntegrityIssues()) {
+      issues.push({
+        level: issue.level,
+        file: "data/finance/ingest-staging.yaml",
         message: issue.message,
       });
     }
