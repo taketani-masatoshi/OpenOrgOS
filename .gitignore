@@ -192,3 +192,10 @@ data/product/stripe-secrets.env
 tenants/*/data/secrets/
 data/secrets/
 tests/fixtures/tenant-rosters/sch-verify/
+
+# Ops secret setup notes (local only)
+tenants/*/docs/**/secrets-setup.md
+
+# Ephemeral debug tenants
+tenants/debug-reminder/
+tenants/debug-reminder2/

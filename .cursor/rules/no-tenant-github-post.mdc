@@ -6,18 +6,21 @@ alwaysApply: true
 # テナント情報を GitHub に載せない
 
 対象: OpenOrgOS（このリポ）および傘 OOO / OS_Community。
+詳細: `docs/org-os/tenant-github-tip-policy.md`
 
 ## 禁止（先端 tip）
 
 - `tenants/<id>/` の秘密（`*.pem`、`*.key`、実 `.env`、signing keys）
 - チャット threads / command-plans、records vault、payroll 明細など runtime・個情
+- 運用手順に実秘密が混ざるドキュメント（例: `**/secrets-setup.md`）
 - コミット依頼があっても上記は stage / commit / push しない
 
-## 例外
+## 例外（tip に残してよい）
 
-- `tenants/_template/` および明示 fixture（実テナント名・秘密を混ぜない）
+- `tenants/_template/` · `tenants/_fixture-books/`
+- 製品デモ / CI 用テナント（`mal` · `*-demo` · `pilot-ledger-*` 等）の **非秘密** シード
 - `*.example` / `*.example.yaml`
-- ignore 済みの運用ファイル（payroll.yaml、audit-bridge-state、company artifacts 等）は tip に載せない。履歴 rewrite はしない
+- `.gitignore` 済みの運用ファイルは tip に載せない（tracked のまま残っていたら `git rm --cached`）
 
 ## 履歴
 
