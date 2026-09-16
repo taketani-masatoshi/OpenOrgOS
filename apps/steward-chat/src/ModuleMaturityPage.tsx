@@ -24,6 +24,46 @@ function levelLabel(level: CoreLane["level"], copy: Copy): string {
   return copy.maturityLaneMissing;
 }
 
+function laneLabel(key: string, copy: Copy): string {
+  if (key === "lane.secretary") return copy.maturityLaneSecretary;
+  if (key === "lane.mail") return copy.maturityLaneMail;
+  if (key === "lane.task") return copy.maturityLaneTask;
+  if (key === "lane.wire") return copy.maturityLaneWire;
+  if (key === "lane.property") return copy.maturityLaneProperty;
+  return key;
+}
+
+function laneSummary(key: string, copy: Copy): string {
+  const map: Record<string, string> = {
+    "secretary.missing": copy.maturitySumSecretaryMissing,
+    "secretary.active": copy.maturitySumSecretaryActive,
+    "secretary.idle": copy.maturitySumSecretaryIdle,
+    "mail.missing": copy.maturitySumMailMissing,
+    "mail.closed": copy.maturitySumMailClosed,
+    "mail.active": copy.maturitySumMailActive,
+    "mail.idle": copy.maturitySumMailIdle,
+    "task.missing": copy.maturitySumTaskMissing,
+    "task.closed": copy.maturitySumTaskClosed,
+    "task.active": copy.maturitySumTaskActive,
+    "task.idle": copy.maturitySumTaskIdle,
+    "wire.missing": copy.maturitySumWireMissing,
+    "wire.no_peers": copy.maturitySumWireNoPeers,
+    "wire.active": copy.maturitySumWireActive,
+    "wire.idle": copy.maturitySumWireIdle,
+    "property.missing": copy.maturitySumPropertyMissing,
+    "property.empty": copy.maturitySumPropertyEmpty,
+    "property.active": copy.maturitySumPropertyActive,
+    "property.idle": copy.maturitySumPropertyIdle,
+  };
+  return map[key] ?? key;
+}
+
+function riskLabel(row: ModuleMaturityRow, copy: Copy): string {
+  if (row.risk_severity === "skeleton_enabled") return copy.maturityRiskSkeleton;
+  if (row.risk_severity === "activation_enabled") return copy.maturityRiskActivation;
+  return copy.maturityRiskBadge;
+}
+
 export function ModuleMaturityPage() {
   const copy = useCopy(STEWARD_COPY);
   const [data, setData] = useState<ModuleMaturityPanel | null>(null);
@@ -63,13 +103,15 @@ export function ModuleMaturityPage() {
               </div>
               <div>
                 <span className="kpi-value">
-                  {data.summary.enabled_activation_ready}
+                  {data.summary.risk_skeleton_count}
                 </span>
-                <span className="kpi-label">{copy.maturityTierActivation}</span>
+                <span className="kpi-label">{copy.maturityRiskSkeleton}</span>
               </div>
               <div>
-                <span className="kpi-value">{data.summary.risk_count}</span>
-                <span className="kpi-label">{copy.maturityRisks}</span>
+                <span className="kpi-value">
+                  {data.summary.risk_activation_count}
+                </span>
+                <span className="kpi-label">{copy.maturityRiskActivation}</span>
               </div>
             </div>
           </section>
@@ -81,11 +123,18 @@ export function ModuleMaturityPage() {
               {data.lanes.map((row) => (
                 <li key={row.id}>
                   <a href={row.href}>
-                    [{levelLabel(row.level, copy)}] {row.label} — {row.summary}
+                    [{levelLabel(row.level, copy)}] {laneLabel(row.label_key, copy)}{" "}
+                    — {laneSummary(row.summary_key, copy)}
                   </a>
-                  {row.signals.length > 0 ? (
-                    <p className="muted">{row.signals.join(" · ")}</p>
-                  ) : null}
+                  <p className="muted">
+                    {copy.maturitySurface}: {row.surface} · {copy.maturityLoad}:{" "}
+                    {row.load === "active"
+                      ? copy.maturityLoadActive
+                      : copy.maturityLoadIdle}
+                    {row.signals.length > 0
+                      ? ` · ${row.signals.join(" · ")}`
+                      : ""}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -100,11 +149,13 @@ export function ModuleMaturityPage() {
                   <li key={row.id}>
                     {row.href ? (
                       <a href={row.href}>
-                        {row.label} ({row.id}) · {tierLabel(row.tier, copy)}
+                        {row.label} ({row.id}) · {tierLabel(row.tier, copy)} ·{" "}
+                        {riskLabel(row, copy)}
                       </a>
                     ) : (
                       <span>
-                        {row.label} ({row.id}) · {tierLabel(row.tier, copy)}
+                        {row.label} ({row.id}) · {tierLabel(row.tier, copy)} ·{" "}
+                        {riskLabel(row, copy)}
                       </span>
                     )}
                   </li>
@@ -120,19 +171,11 @@ export function ModuleMaturityPage() {
                 .filter((m) => m.installed || m.enabled)
                 .map((row) => (
                   <li key={row.id}>
-                    {row.href ? (
-                      <a href={row.href}>
-                        {row.label} · {tierLabel(row.tier, copy)}
-                        {row.enabled ? "" : ` · ${copy.maturityOff}`}
-                        {row.risk ? ` · ${copy.maturityRiskBadge}` : ""}
-                      </a>
-                    ) : (
-                      <span>
-                        {row.label} · {tierLabel(row.tier, copy)}
-                        {row.enabled ? "" : ` · ${copy.maturityOff}`}
-                        {row.risk ? ` · ${copy.maturityRiskBadge}` : ""}
-                      </span>
-                    )}
+                    <span>
+                      {row.label} · {tierLabel(row.tier, copy)}
+                      {row.enabled ? "" : ` · ${copy.maturityOff}`}
+                      {row.risk ? ` · ${riskLabel(row, copy)}` : ""}
+                    </span>
                   </li>
                 ))}
             </ul>

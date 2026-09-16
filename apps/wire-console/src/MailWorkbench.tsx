@@ -164,6 +164,11 @@ export function MailWorkbench({ tenants }: Props) {
   return (
     <div className="mail-workbench" aria-busy={loading}>
       <p className="ops-page-lead muted">{copy.workbenchLead}</p>
+      <p className="section-cta">
+        <a className="btn btn-ghost btn-sm" href="/secretary/workbench/">
+          {copy.composeSecretaryHint}
+        </a>
+      </p>
       <div className="wire-secondary-bar">
         <nav className="tenant-tabs" aria-label={copy.tenants}>
           {tenants.map((t) => (

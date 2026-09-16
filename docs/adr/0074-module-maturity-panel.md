@@ -15,11 +15,11 @@ MAL では enabled モジュールに skeleton / activation_ready が混在す�
 ## Decision
 
 1. **`GET /chat/v1/modules/maturity`**（`chat:read`）でパネルを合成する。
-2. **UI は `/modules/maturity/`** — Agents / MAL ops サブナビから辿れる。
+2. **UI は `/modules/maturity/`** — 完成度の正本。`/modules/` 一覧は On/Off 操作面。
 3. **二軸:**
-   - Catalog: enabled × readiness tier。`enabled && tier !== production_ready` を risk。
-   - Core lanes: secretary / mail / task / wire / property_ops を
-     missing · thin · operational · closed で評価。
+   - Catalog: enabled × readiness tier。`risk_severity` で skeleton / activation を分離。
+   - Core lanes: secretary / mail / task / wire / property_ops。
+     `surface`（面の有無）と `load`（idle/active）を分離し、件数0でも operational としうる。
 4. 正本は既存 `readiness.yaml` · `modules.yaml` · Phase1–3 の合成面。新モジュールは増やさない。
 
 ## Consequences

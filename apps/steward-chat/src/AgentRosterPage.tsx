@@ -157,24 +157,12 @@ function InstalledModuleRow({
       <div className="roster-row-main">
         <h3 className="roster-row-title">{row.label}</h3>
         <p className="roster-row-id">
-          {row.id}
-          {row.readiness_pct != null
-            ? ` · ${copy.moduleReadiness} ${row.tier} ${row.readiness_pct}%`
-            : ` · ${row.tier}`}
+          {row.id} · {row.tier}
         </p>
         {row.notes ? <p className="org-chart-muted">{row.notes}</p> : null}
-        {row.gaps && row.gaps.length > 0 ? (
-          <p className="roster-row-hint">
-            {copy.moduleGaps}: {row.gaps.join(" · ")}
-          </p>
-        ) : (
-          <p className="org-chart-muted">{copy.moduleNoGaps}</p>
-        )}
-        {row.next_action ? (
-          <p className="roster-row-hint">
-            {copy.moduleNextAction}: {row.next_action}
-          </p>
-        ) : null}
+        <p className="roster-row-hint">
+          <a href="/modules/maturity/">{copy.moduleMaturityLink}</a>
+        </p>
         {pending ? (
           <p className="roster-row-hint">
             <a href="/approvals/">{pending}</a>

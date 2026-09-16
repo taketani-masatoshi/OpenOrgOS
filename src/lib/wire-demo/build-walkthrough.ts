@@ -4,6 +4,7 @@
  * ADR: docs/adr/0075-wire-demo-walkthrough.md
  *
  * Read-only L1 surface — does not run seed-inter-org-demo (mutates protocol scratch).
+ * Step titles/summaries are neutral English keys for console i18n.
  */
 import {
   wireDemoWalkthroughSchema,
@@ -16,20 +17,19 @@ import {
   peerHasDeliveryPath,
 } from "../protocol/peers.js";
 import { listWirePending } from "../protocol/wire-queue.js";
-import { getTenantId } from "../tenant.js";
+import { getTenantId, getTenantDir } from "../tenant.js";
 import { currentDate } from "../utils.js";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { getTenantDir } from "../tenant.js";
 
-const SOUTHWOOD_MARKERS = ["southwood", "サウスウッド", "PEER-001"];
+const SOUTHWOOD_MARKERS = ["southwood", "サウスウッド"];
 
-function isSouthwoodPeer(peer: {
+export function isSouthwoodPeer(peer: {
   peer_id: string;
   display_name: string;
   org_uri?: string;
 }): boolean {
-  const blob = `${peer.peer_id} ${peer.display_name} ${peer.org_uri ?? ""}`.toLowerCase();
+  const blob = `${peer.display_name} ${peer.org_uri ?? ""}`.toLowerCase();
   return SOUTHWOOD_MARKERS.some((m) => blob.includes(m.toLowerCase()));
 }
 
@@ -54,7 +54,7 @@ export function buildWireDemoWalkthrough(): WireDemoWalkthrough {
   }));
 
   const southwood = peers.find((p) => isSouthwoodPeer(p));
-  const counterparty = southwood?.display_name ?? "Southwood（未登録）";
+  const counterparty = southwood?.display_name ?? "Southwood (not registered)";
 
   let wirePending = 0;
   try {
@@ -73,72 +73,63 @@ export function buildWireDemoWalkthrough(): WireDemoWalkthrough {
     approvalsPending = 0;
   }
 
-  const hasPeersFile = protocolFilePresent("peers.yaml");
   const hasGateway = protocolFilePresent("wire-gateway.yaml");
   const hasWitness = protocolFilePresent("witness-pool.yaml");
 
   const steps: WireDemoStep[] = [
     {
       id: "peer",
-      title: "1. 相手組織（Southwood）を peers に載せる",
+      title: "step.peer.title",
       summary: southwood
-        ? `${southwood.display_name}（${southwood.peer_id}）が登録済み`
-        : "peers.yaml に Southwood 相当の peer が無い",
+        ? `registered:${southwood.display_name}:${southwood.peer_id}`
+        : "missing_peer",
       status: southwood
         ? southwood.has_delivery_path
           ? "ready"
           : "pending"
-        : hasPeersFile
-          ? "missing"
-          : "missing",
-      href: "/wire/demo/",
+        : "missing",
+      href: "/wire/",
       detail: southwood
         ? southwood.has_delivery_path
-          ? "配送パスあり"
-          : "peer はあるが inbound 配送パスが無い"
-        : "CLI: orgos protocol peers または seed-inter-org-demo",
+          ? "delivery_ok"
+          : "delivery_missing"
+        : "peer_cli_hint",
     },
     {
       id: "propose",
-      title: "2. 組織間通知を起案する",
-      summary: "契約・請求などの notice を Wire で propose",
+      title: "step.propose.title",
+      summary: hasGateway ? "gateway_ready" : "gateway_missing",
       status: hasGateway ? "ready" : "missing",
-      href: "/wire/",
-      detail: hasGateway
-        ? "wire-gateway.yaml あり — Console の Wire から起案"
-        : "wire-gateway.yaml が無い",
+      href: "/secretary/workbench/",
+      detail: hasGateway ? "propose_via_secretary" : "need_gateway",
     },
     {
       id: "approve",
-      title: "3. 人間が承認する",
+      title: "step.approve.title",
       summary:
         approvalsPending > 0
-          ? `Wire 承認待ち ${approvalsPending} 件`
-          : "いま Wire 承認待ちは無い（起案後ここに出る）",
+          ? `approvals_pending:${approvalsPending}`
+          : "approvals_idle",
       status: approvalsPending > 0 ? "pending" : "info",
       href: "/approvals/",
-      detail: "承認キュー /approvals/（scope=wire）",
+      detail: "approvals_wire_scope",
     },
     {
       id: "deliver",
-      title: "4. 配送・受信（MAL → Southwood）",
+      title: "step.deliver.title",
       summary:
-        wirePending > 0
-          ? `wire-pending ${wirePending} 件`
-          : "pending 無し — flush 済みか未起案",
+        wirePending > 0 ? `wire_pending:${wirePending}` : "wire_idle",
       status: wirePending > 0 ? "pending" : southwood ? "info" : "missing",
       href: "/wire/",
-      detail: "POST /chat/v1/wire/flush または Wire Console",
+      detail: "flush_via_wire",
     },
     {
       id: "ack",
-      title: "5. 相手側 ack / 証跡",
-      summary: hasWitness
-        ? "witness-pool 設定あり — 証跡レーン準備済み"
-        : "witness-pool.yaml が無い",
+      title: "step.ack.title",
+      summary: hasWitness ? "witness_ready" : "witness_missing",
       status: hasWitness ? "ready" : "pending",
       href: "/wire/",
-      detail: "フル E2E は scripts/seed-inter-org-demo.ts（テスト用・状態を書き換える）",
+      detail: "seed_cli_destructive",
     },
   ];
 
@@ -146,16 +137,14 @@ export function buildWireDemoWalkthrough(): WireDemoWalkthrough {
     ok: true as const,
     tenant,
     report_date: currentDate(),
-    story_title: "MAL ↔ Southwood — 請求通知の一本道",
-    story_lead:
-      "起案 → 承認 → 配送 → 受信 ack → 証跡。Wire 全機能ではなく、この1本だけを Console で追う。",
+    story_title: "story.title",
+    story_lead: "story.lead",
     counterparty,
     peers,
     steps,
     wire_pending_count: wirePending,
     approvals_pending_count: approvalsPending,
-    cli_hint:
-      "フル再生（破壊的）: npx tsx scripts/seed-inter-org-demo.ts — CI / ローカル検証用。本番テナントでは使わない。",
+    cli_hint: "cli.hint",
     wire_console_href: "/wire/",
     approvals_href: "/approvals/",
   });

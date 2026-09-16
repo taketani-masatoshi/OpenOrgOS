@@ -19,13 +19,9 @@ import {
   MODULE_TO_CLASSIFICATION_AGENT,
   type ModuleAgentId,
 } from "../modules.js";
-import { buildPropertyOpsDashboard } from "../property-ops/build-dashboard.js";
-import { buildSecretaryWorkbench } from "../secretary-workbench/build-workbench.js";
-import { buildTaskView } from "../tasks/task-view.js";
-import { getTenantId, getTenantDir } from "../tenant.js";
+import { collectOpsLaneCounts } from "../ops-lane-counts.js";
+import { getTenantId } from "../tenant.js";
 import { currentDate } from "../utils.js";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 
 function moduleLabel(catalogId: string): string {
   const own = getCatalogAgent(catalogId);
@@ -40,7 +36,7 @@ function moduleHref(id: string, enabled: boolean): string | undefined {
   if (id === "hospitality" || id === "rental") return "/properties/";
   if (id === "sales") return "/customers/";
   if (!enabled) return "/modules/";
-  return undefined;
+  return "/modules/maturity/";
 }
 
 function collectModules(): ModuleMaturityRow[] {
@@ -57,6 +53,12 @@ function collectModules(): ModuleMaturityRow[] {
       loadModuleManifest(id)?.notes?.trim() ||
       undefined;
     const risk = enabled && tier !== "production_ready";
+    const risk_severity =
+      risk && tier === "skeleton"
+        ? ("skeleton_enabled" as const)
+        : risk && tier === "activation_ready"
+          ? ("activation_enabled" as const)
+          : undefined;
     rows.push({
       id,
       label: moduleLabel(id),
@@ -64,12 +66,19 @@ function collectModules(): ModuleMaturityRow[] {
       installed,
       enabled,
       risk,
+      risk_severity,
       notes,
       href: moduleHref(id, enabled),
     });
   }
   rows.sort((a, b) => {
-    if (a.risk !== b.risk) return a.risk ? -1 : 1;
+    const sev = (r: ModuleMaturityRow) =>
+      r.risk_severity === "skeleton_enabled"
+        ? 0
+        : r.risk_severity === "activation_enabled"
+          ? 1
+          : 2;
+    if (sev(a) !== sev(b)) return sev(a) - sev(b);
     if (a.enabled !== b.enabled) return a.enabled ? -1 : 1;
     return a.id.localeCompare(b.id);
   });
@@ -78,177 +87,181 @@ function collectModules(): ModuleMaturityRow[] {
 
 function lane(
   id: CoreLane["id"],
-  label: string,
+  label_key: string,
   level: LaneLevel,
-  summary: string,
+  surface: CoreLane["surface"],
+  load: CoreLane["load"],
+  summary_key: string,
   href: string,
   signals: string[],
 ): CoreLane {
-  return { id, label, level, summary, href, signals };
+  return { id, label_key, level, surface, load, summary_key, href, signals };
 }
 
 function collectLanes(): CoreLane[] {
+  const c = collectOpsLaneCounts();
   const lanes: CoreLane[] = [];
 
-  let wb: ReturnType<typeof buildSecretaryWorkbench> | null = null;
-  try {
-    wb = buildSecretaryWorkbench();
-  } catch {
-    wb = null;
-  }
-
-  if (wb) {
-    const signals = [
-      `mail=${wb.mail.length}`,
-      `drafts=${wb.drafts.length}`,
-      `tasks=${wb.tasks.length}`,
-      `approvals=${wb.approvals.length}`,
-    ];
-    const hasOps =
-      wb.mail.length + wb.drafts.length + wb.tasks.length + wb.approvals.length >
-      0;
+  // Secretary
+  if (!c.workbench_ok) {
     lanes.push(
       lane(
         "secretary",
-        "秘書ワークベンチ",
-        hasOps ? "operational" : "thin",
-        hasOps
-          ? "受信・下書き・タスク・承認を一画面で集約"
-          : "画面はあるがキューが空（または未取込）",
-        "/secretary/workbench/",
-        signals,
-      ),
-    );
-
-    const mailN = wb.mail.length;
-    const draftN = wb.drafts.length;
-    const mailLevel: LaneLevel =
-      mailN > 0 && draftN > 0
-        ? "closed"
-        : mailN > 0 || draftN > 0
-          ? "operational"
-          : "thin";
-    lanes.push(
-      lane(
-        "mail",
-        "メール運用",
-        mailLevel,
-        mailLevel === "closed"
-          ? "受信と下書きが両方つながっている"
-          : mailLevel === "operational"
-            ? "受信または下書きが動いている"
-            : "MailWorkbench / triage 面はあるが件数ゼロ",
-        "/wire/",
-        [`mail=${mailN}`, `drafts=${draftN}`],
-      ),
-    );
-  } else {
-    lanes.push(
-      lane(
-        "secretary",
-        "秘書ワークベンチ",
+        "lane.secretary",
         "missing",
-        "Workbench を合成できない",
+        "missing",
+        "idle",
+        "secretary.missing",
         "/secretary/workbench/",
         [],
       ),
     );
+  } else {
+    const active = c.mail + c.drafts + c.tasks_open > 0;
     lanes.push(
-      lane("mail", "メール運用", "missing", "メール面を評価できない", "/wire/", []),
+      lane(
+        "secretary",
+        "lane.secretary",
+        "operational",
+        "ready",
+        active ? "active" : "idle",
+        active ? "secretary.active" : "secretary.idle",
+        "/secretary/workbench/",
+        [`mail=${c.mail}`, `drafts=${c.drafts}`, `tasks=${c.tasks_open}`],
+      ),
+    );
+  }
+
+  // Mail
+  if (!c.workbench_ok) {
+    lanes.push(
+      lane("mail", "lane.mail", "missing", "missing", "idle", "mail.missing", "/wire/", []),
+    );
+  } else {
+    const closed = c.mail > 0 && c.drafts > 0;
+    const active = c.mail > 0 || c.drafts > 0;
+    lanes.push(
+      lane(
+        "mail",
+        "lane.mail",
+        closed ? "closed" : "operational",
+        "ready",
+        active ? "active" : "idle",
+        closed ? "mail.closed" : active ? "mail.active" : "mail.idle",
+        "/wire/",
+        [`mail=${c.mail}`, `drafts=${c.drafts}`],
+      ),
     );
   }
 
   // Task
-  try {
-    const view = buildTaskView();
-    const open = view.counts.open;
-    const p0 = view.counts.p0;
-    const candidates = view.candidates.length;
-    const mirrored = view.tasks.filter((t) => t.links?.asana_task_gid).length;
-    let level: LaneLevel = "thin";
-    if (open > 0 && (mirrored > 0 || candidates > 0)) level = "closed";
-    else if (open > 0 || candidates > 0) level = "operational";
+  if (!c.tasks_ok) {
     lanes.push(
       lane(
         "task",
-        "タスク正本",
-        level,
-        level === "closed"
-          ? "tasks.yaml 正本と候補／Asana 写しが接続"
-          : level === "operational"
-            ? "正本または候補に未完了がある"
-            : "正本は読めるが未完了が空",
-        "/secretary/workbench/",
-        [`open=${open}`, `p0=${p0}`, `candidates=${candidates}`, `asana=${mirrored}`],
-      ),
-    );
-  } catch {
-    lanes.push(
-      lane(
-        "task",
-        "タスク正本",
+        "lane.task",
         "missing",
-        "tasks.yaml を読めない",
+        "missing",
+        "idle",
+        "task.missing",
         "/secretary/workbench/",
         [],
+      ),
+    );
+  } else {
+    let level: LaneLevel = "operational";
+    if (c.tasks_open > 0 && (c.asana_mirrored > 0 || c.candidates > 0)) {
+      level = "closed";
+    }
+    const active = c.tasks_open > 0 || c.candidates > 0;
+    lanes.push(
+      lane(
+        "task",
+        "lane.task",
+        level,
+        "ready",
+        active ? "active" : "idle",
+        level === "closed" ? "task.closed" : active ? "task.active" : "task.idle",
+        "/secretary/workbench/",
+        [
+          `open=${c.tasks_open}`,
+          `p0=${c.tasks_p0}`,
+          `candidates=${c.candidates}`,
+          `asana=${c.asana_mirrored}`,
+        ],
       ),
     );
   }
 
   // Wire
-  try {
-    const peersPath = join(getTenantDir(), "data", "protocol", "peers.yaml");
-    const hasPeers = existsSync(peersPath);
-    const level: LaneLevel = hasPeers ? "thin" : "missing";
+  if (!c.wire_ok) {
     lanes.push(
       lane(
         "wire",
-        "Wire（組織間）",
-        level,
-        hasPeers
-          ? "peers.yaml あり。デモ導線は /wire/demo/"
-          : "peers.yaml が無くデモ導線が弱い",
+        "lane.wire",
+        "missing",
+        "missing",
+        "idle",
+        "wire.missing",
         "/wire/demo/",
-        [hasPeers ? "peers=present" : "peers=missing"],
+        [],
       ),
     );
-  } catch {
+  } else if (!c.peers_present) {
     lanes.push(
-      lane("wire", "Wire（組織間）", "missing", "Wire 状態を評価できない", "/wire/demo/", []),
+      lane(
+        "wire",
+        "lane.wire",
+        "thin",
+        "ready",
+        "idle",
+        "wire.no_peers",
+        "/wire/demo/",
+        ["peers=missing"],
+      ),
+    );
+  } else {
+    const active = c.wire_pending > 0;
+    lanes.push(
+      lane(
+        "wire",
+        "lane.wire",
+        "operational",
+        "ready",
+        active ? "active" : "idle",
+        active ? "wire.active" : "wire.idle",
+        "/wire/demo/",
+        [`peers=${c.peers_count}`, `pending=${c.wire_pending}`],
+      ),
     );
   }
 
-  // Property ops
-  try {
-    const dash = buildPropertyOpsDashboard();
-    const dueP0 = dash.properties.reduce((s, p) => s + p.due_p0, 0);
-    const level: LaneLevel =
-      dash.properties.length > 0
-        ? dueP0 > 0
-          ? "operational"
-          : "thin"
-        : "missing";
+  // Property
+  if (!c.property_ok || c.property_count === 0) {
     lanes.push(
       lane(
         "property_ops",
-        "物件運営",
-        level,
-        dash.properties.length > 0
-          ? `物件 ${dash.properties.length} 件 · P0 ${dueP0}`
-          : "物件カードが無い",
-        "/properties/",
-        dash.properties.map((p) => `${p.property_id}:${p.due_p0}`),
-      ),
-    );
-  } catch {
-    lanes.push(
-      lane(
-        "property_ops",
-        "物件運営",
-        "missing",
-        "Property Ops を合成できない",
+        "lane.property",
+        c.property_ok ? "thin" : "missing",
+        c.property_ok ? "ready" : "missing",
+        "idle",
+        c.property_ok ? "property.empty" : "property.missing",
         "/properties/",
         [],
+      ),
+    );
+  } else {
+    const active = c.property_due_p0 > 0;
+    lanes.push(
+      lane(
+        "property_ops",
+        "lane.property",
+        "operational",
+        "ready",
+        active ? "active" : "idle",
+        active ? "property.active" : "property.idle",
+        "/properties/",
+        c.property_signals,
       ),
     );
   }
@@ -260,6 +273,12 @@ export function buildModuleMaturityPanel(): ModuleMaturityPanel {
   const modules = collectModules();
   const enabled = modules.filter((m) => m.enabled);
   const risks = modules.filter((m) => m.risk);
+  const risk_skeleton_count = risks.filter(
+    (r) => r.risk_severity === "skeleton_enabled",
+  ).length;
+  const risk_activation_count = risks.filter(
+    (r) => r.risk_severity === "activation_enabled",
+  ).length;
   const summary = {
     catalog_total: modules.length,
     installed: modules.filter((m) => m.installed).length,
@@ -270,6 +289,8 @@ export function buildModuleMaturityPanel(): ModuleMaturityPanel {
       .length,
     enabled_skeleton: enabled.filter((m) => m.tier === "skeleton").length,
     risk_count: risks.length,
+    risk_skeleton_count,
+    risk_activation_count,
   };
 
   return moduleMaturityPanelSchema.parse({

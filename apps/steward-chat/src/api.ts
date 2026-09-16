@@ -2968,6 +2968,7 @@ export type PropertyOpsCard = {
   };
   open_tasks: number;
   href: string;
+  next_actions?: Array<{ id: string; label: string; href: string }>;
 };
 
 export type PropertyOpsDashboard = {
@@ -2994,15 +2995,18 @@ export type ModuleMaturityRow = {
   installed: boolean;
   enabled: boolean;
   risk: boolean;
+  risk_severity?: "skeleton_enabled" | "activation_enabled";
   notes?: string;
   href?: string;
 };
 
 export type CoreLane = {
   id: "secretary" | "mail" | "task" | "wire" | "property_ops";
-  label: string;
+  label_key: string;
   level: "missing" | "thin" | "operational" | "closed";
-  summary: string;
+  surface: "ready" | "missing";
+  load: "idle" | "active";
+  summary_key: string;
   href: string;
   signals: string[];
 };
@@ -3019,6 +3023,8 @@ export type ModuleMaturityPanel = {
     enabled_activation_ready: number;
     enabled_skeleton: number;
     risk_count: number;
+    risk_skeleton_count: number;
+    risk_activation_count: number;
   };
   lanes: CoreLane[];
   modules: ModuleMaturityRow[];
