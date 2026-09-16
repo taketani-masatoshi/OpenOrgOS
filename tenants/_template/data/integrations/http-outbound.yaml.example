@@ -1,0 +1,24 @@
+# Direct HTTP / OData outbound (L1) — copy to http-outbound.yaml
+# Secrets: data/secrets/http-outbound.env (never commit)
+# ADR: docs/adr/0071-direct-http-outbound-connectors.md
+#
+version: 1
+enabled: false
+# base_url: https://erp.example.com
+auth_kind: none
+dialect: rest
+# token_url: https://idp.example.com/oauth/token
+# odata_service_path: /odata/v4/Finance
+routes:
+  - id: monthly_post
+    source: finance.monthly
+    method: POST
+    path: /api/finance/monthly/{month}
+  - id: invoice_post
+    source: invoice.issued
+    method: POST
+    path: /api/finance/invoices/{invoice_id}
+notes: |
+  Enable with enabled: true after base_url and secrets are set.
+  CLI: orgos integrations http status
+  CLI: orgos integrations http export --kind monthly --id 2026-05 --dry-run

@@ -1,0 +1,42 @@
+profile_id: xroad_v7_dj
+jurisdiction: DJ
+native_standard: X-Road
+version: "7"
+
+transport:
+  protocol: https
+  styles: [rest]
+  security_server_required: true
+
+message_format:
+  openorgos_envelope:
+    mime: application/vnd.openorgos.envelope+json
+    canonical: schemas/protocol/org-event.ts#eventEnvelopeSchema
+  fallback:
+    mime: application/json
+
+xroad:
+  member_class: COM
+  subsystem_suffix: wire
+  service_codes:
+    notice_deliver: "{member_code}/{subsystem_code}/notice-deliver"
+    notice_ack: "{member_code}/{subsystem_code}/notice-ack"
+  headers:
+    required:
+      - X-Road-Client
+      - X-Road-Service
+      - X-Request-Id
+  correlation:
+    request_id: event_id
+    correlation_id: correlation_id
+
+identity_mapping:
+  org_id_to: xroad_member_subsystem
+  org_uri_to: registry_code
+
+witness:
+  recommended_mode: orgos_hub
+  native_audit_log: xroad_message_log_id
+
+substance:
+  notes: Djibouti X-Road v7 — reuses EE core adapter (xroad_v7_dj)

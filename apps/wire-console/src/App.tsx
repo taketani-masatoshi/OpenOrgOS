@@ -344,10 +344,7 @@ export function App() {
   return (
     <OperatorShell
       active="wire"
-      operatorLabel={
-        formatOperatorSessionLabel(user, locale) +
-        (authConfig?.mode === "prod" ? ` · ${shell.prodAuth}` : "")
-      }
+      operatorLabel={formatOperatorSessionLabel(user, locale)}
       onSignOut={() => void logout()}
       settingsHref="/settings/"
       settingsActive={isPasskeySettingsPath()}

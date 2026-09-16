@@ -38,6 +38,8 @@ describe("steward orchestrate intent", () => {
     expect(result.work_order_ids?.length).toBeGreaterThan(0);
     expect(result.reply).toMatch(/財務担当に確認を依頼しました/);
     expect(result.reply).toMatch(/IMP-\d{8}-\d+/);
+    expect(result.reply).toMatch(/委譲と回答/);
+    expect(result.reply).toMatch(/実行状況/);
     expect(result.reply).not.toMatch(/orgos |Path:|委譲したふり|シミュレーション|¥XX|historical_finance/);
   });
 

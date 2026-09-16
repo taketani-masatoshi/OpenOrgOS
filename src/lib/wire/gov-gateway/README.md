@@ -25,7 +25,8 @@ types.ts
 - OpenOrgOS MIME encode/decode
 - Mock transport · deliver via `transport.ts` `gov_gateway` branch
 - Webhook ingest decode (`format: gov_gateway`)
-- CLI: `orgos protocol gov-gateway validate|encode|decode|health`
+- Native X-Road REST producer (`producer-server.ts` · `gov-gateway serve`)
+- CLI: `orgos protocol gov-gateway validate|encode|decode|health|serve`
 
 ## Profiles
 

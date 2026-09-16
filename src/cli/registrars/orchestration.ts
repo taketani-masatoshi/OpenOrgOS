@@ -127,6 +127,7 @@ import {
   runProtocolGovGatewayDecode,
   runProtocolGovGatewayHealth,
   runProtocolGovGatewaySandboxInit,
+  runProtocolGovGatewayServe,
   runProtocolTrustedHubsSyncKeys,
   runProtocolTrustRegistryValidate,
   runProtocolTrustRegistryList,
@@ -1640,6 +1641,23 @@ export function registerOrchestrationCommands(program: Command): void {
         tenant: opts.tenant,
         force: opts.force,
         json: opts.json,
+      })
+    );
+  protocolGovGatewayCmd
+    .command("serve")
+    .description("X-Road REST producer listener (loopback · notice-deliver ingest)")
+    .option("--profile <id>", "Profile id", "xroad_v7")
+    .option("--bind <host:port>", "Listen address", "127.0.0.1:9474")
+    .option("--tenant <id>", "Tenant id")
+    .option("--trust-all", "Skip X-Road-Client trust check (tests only)")
+    .option("--once", "Health check then exit")
+    .action((opts) =>
+      runProtocolGovGatewayServe({
+        profile: opts.profile,
+        bind: opts.bind,
+        tenant: opts.tenant,
+        trustAll: opts.trustAll,
+        once: opts.once,
       })
     );
 

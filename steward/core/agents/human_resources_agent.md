@@ -50,6 +50,7 @@
 | 手段 | 内容 |
 |------|------|
 | hr_headcount | `orgos hr headcount` · `orgos hr headcount --json`（L1 在籍人数 · 氏名非出力） |
+| hr_onboard | `orgos hr onboard --name …` · 確認後 `--write`（L1 名簿追記 + 残作業 Work Order）。契約・給与・社保は人間。チャットで完了したと言わない |
 | agent_pulse | `orgos agent pulse --agent human_resources` |
 
 
@@ -58,6 +59,8 @@
 ```bash
 orgos hr headcount
 orgos hr headcount --json
+orgos hr onboard --name 大谷
+orgos hr onboard --name 大谷 --hired-date 2026-09-01 --write
 orgos agent readiness --agent human_resources
 orgos agent pulse --agent human_resources
 ```
@@ -66,5 +69,5 @@ orgos agent pulse --agent human_resources
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
 - 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
-- Skill: [hr_headcount.md](../skills/hr_headcount.md)
+- Skill: [hr_headcount.md](../skills/hr_headcount.md) · [hr_onboard.md](../skills/hr_onboard.md)
 

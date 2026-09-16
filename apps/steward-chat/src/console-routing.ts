@@ -8,6 +8,7 @@ export type ShellRoute =
   | "cloud-llm"
   | "chat-settings"
   | "llm-workers"
+  | "handoffs"
   | "settings";
 
 export function pathActive(pathname = window.location.pathname): ShellRoute {
@@ -15,6 +16,7 @@ export function pathActive(pathname = window.location.pathname): ShellRoute {
   if (path === "/signup" || path.startsWith("/signup/")) return "ledger";
   if (path === "/secretary" || path.startsWith("/secretary/")) return "secretary";
   if (path === "/steward" || path.startsWith("/steward/")) return "steward";
+  if (path === "/handoffs" || path.startsWith("/handoffs/")) return "handoffs";
   if (path === "/agents/add" || path.startsWith("/agents/add/")) return "agent-add";
   if (path === "/modules/add" || path.startsWith("/modules/add/")) return "module-add";
   if (path === "/modules" || path.startsWith("/modules/")) return "module-list";
@@ -80,6 +82,7 @@ export function operatorShellTabFromRoute(
   if (route === "cloud-llm" || route === "chat-settings" || route === "llm-workers") {
     return "steward";
   }
+  if (route === "handoffs") return "steward";
   if (route === "contracts") return "org";
   if (route === "stays") return "executive";
   return route;
@@ -96,6 +99,7 @@ export function spaPathFromHref(href: string, origin = window.location.origin): 
       path === "/wire" ||
       path === "/secretary" ||
       path === "/steward" ||
+      path === "/handoffs" ||
       path === "/agents" ||
       path === "/agents/add" ||
       path === "/modules" ||

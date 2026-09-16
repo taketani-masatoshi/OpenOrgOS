@@ -107,6 +107,8 @@ import {
 } from "../../operator-facts/index.js";
 import { handleTenantConfigProposeChatMessage } from "../tenant-config-intent.js";
 import { handleStewardOrchestrateChatMessage } from "../steward-orchestrate-intent.js";
+import { handleHrOnboardChatMessage } from "../hr-onboard-intent.js";
+import { applyFakeDelegationGuard } from "../fake-delegation-guard.js";
 import { handleChatCommandMessage } from "../../operator-commands/index.js";
 import {
   resolveOperatorFromSessionUser,
@@ -116,6 +118,12 @@ import { readAgentDefinition } from "../../agent-capability.js";
 import { formatOwnerDeskChatRules } from "../../agent-owner-desks.js";
 import type { AgentId } from "../../../../schemas/classification.js";
 import type { LlmRouteHint } from "../../../../schemas/llm-workers.js";
+import {
+  appendStewardWebSearchSources,
+  formatStewardWebSearchContext,
+  searchWebForSteward,
+  type StewardWebSearchResult,
+} from "../web-search.js";
 
 export interface ChatApiContext {
   user: WireConsoleUser;
@@ -123,6 +131,14 @@ export interface ChatApiContext {
 }
 
 type ChatAgentId = "secretary" | "executive_steward";
+
+type ChatMessagePayload = {
+  message: string;
+  agent_id?: ChatAgentId;
+  llm_route?: LlmRouteHint;
+  web_search: boolean;
+  web_search_query?: string;
+};
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -212,7 +228,12 @@ function agentInboxBlock(agentId?: ChatAgentId): string {
   }
 }
 
-function buildChatSystem(threadId: string, agentId?: ChatAgentId, userMessage?: string) {
+function buildChatSystem(
+  threadId: string,
+  agentId?: ChatAgentId,
+  userMessage?: string,
+  webSearch?: StewardWebSearchResult
+) {
   const ctx = buildTodayContext();
   const thread = loadOrMigrateAgentThread(threadId, getTenantId(), agentId);
   const historyBlock =
@@ -237,6 +258,7 @@ function buildChatSystem(threadId: string, agentId?: ChatAgentId, userMessage?: 
       formatCeoReplyStyleBlock(),
       formatChatGroundingBlock(),
       memoryBlock,
+      webSearch ? formatStewardWebSearchContext(webSearch) : "",
       "",
       "## Today context",
       formatTodayContextMarkdown(ctx),
@@ -252,14 +274,19 @@ function persistLlmChatTurn(
   userMessage: string,
   assistantReply: string,
   result: { runtime: string; model?: string; tier?: "local" | "cloud"; worker_id?: string },
-  sourceOverride?: "faq"
+  sourceOverride?: "faq",
+  rememberResult = true
 ): string | undefined {
   const meta =
     sourceOverride === "faq"
       ? { source: "faq" as const }
       : chatMetaFromLlmResult(result);
   const saved = appendChatTurn(threadId, getTenantId(), userMessage, assistantReply, meta);
-  if (meta.source && meta.source !== "deterministic") {
+  if (
+    rememberResult &&
+    meta.source &&
+    meta.source !== "deterministic"
+  ) {
     rememberAnswer({
       query: userMessage,
       answer: assistantReply,
@@ -348,8 +375,135 @@ function formatHistoryMarkdown(thread: ReturnType<typeof loadChatThread>): strin
     .join("\n");
 }
 
+async function handleWebSearchChatMessage(
+  parsed: ChatMessagePayload,
+  res: ServerResponse,
+  stream: boolean,
+  ctx: ChatApiContext,
+  threadId: string
+): Promise<boolean> {
+  const agentId = parsed.agent_id;
+  const webSearch = await searchWebForSteward(parsed.web_search_query ?? "");
+  const { system, history } = buildChatSystem(threadId, agentId, undefined, webSearch);
+  const llmOptions = {
+    history,
+    operatorId: ctx.user.operator_id,
+    approverId: ctx.user.approver_id,
+    llmRoute: { mode: "local" as const },
+    allowTools: false,
+    allowStructuredOutput: false,
+  };
+
+  if (!stream) {
+    const result = await runOperatorAsk(parsed.message, system, llmOptions);
+    const finalReply = result.reply
+      ? appendStewardWebSearchSources(result.reply, webSearch)
+      : result.reply;
+    let assistantTurnId: string | undefined;
+    if (result.ok && finalReply) {
+      assistantTurnId = persistLlmChatTurn(
+        threadId,
+        agentId,
+        parsed.message,
+        finalReply,
+        result,
+        undefined,
+        false
+      );
+    }
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: result.ok,
+      path: "/chat/v1/message",
+      detail: `agent:${agentId ?? "operator"} web_search:${webSearch.status}`,
+    });
+    json(res, 200, {
+      ok: result.ok,
+      reply: finalReply,
+      runtime: result.runtime,
+      model: result.model,
+      setup_required: result.setup_required,
+      local_error: result.local_error === true,
+      telemetry: result.telemetry,
+      thread_id: threadId,
+      assistant_turn_id: assistantTurnId,
+    });
+    return true;
+  }
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+  sseWrite(res, { type: "connected", thread_id: threadId });
+
+  try {
+    const gen = runOperatorAskStream(parsed.message, system, llmOptions);
+    let step = await gen.next();
+    while (!step.done) {
+      sseWrite(res, step.value);
+      step = await gen.next();
+    }
+    const result = step.value;
+    const finalReply = result.reply
+      ? appendStewardWebSearchSources(result.reply, webSearch)
+      : result.reply;
+    let assistantTurnId: string | undefined;
+    if (result.ok && finalReply) {
+      assistantTurnId = persistLlmChatTurn(
+        threadId,
+        agentId,
+        parsed.message,
+        finalReply,
+        result,
+        undefined,
+        false
+      );
+    }
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: result.ok,
+      path: "/chat/v1/message/stream",
+      detail: `agent:${agentId ?? "operator"} web_search:${webSearch.status}`,
+    });
+    sseWrite(res, {
+      type: "done",
+      ok: result.ok,
+      reply: finalReply,
+      runtime: result.runtime,
+      model: result.model,
+      setup_required: result.setup_required,
+      local_error: result.local_error === true,
+      telemetry: result.telemetry,
+      thread_id: threadId,
+      assistant_turn_id: assistantTurnId,
+    });
+  } catch (error) {
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: false,
+      path: "/chat/v1/message/stream",
+      detail: "web_search:error",
+    });
+    sseWrite(res, {
+      type: "error",
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  res.end();
+  return true;
+}
+
 async function handleChatMessage(
-  parsed: { message: string; agent_id?: ChatAgentId; llm_route?: LlmRouteHint },
+  parsed: ChatMessagePayload,
   res: ServerResponse,
   stream: boolean,
   ctx: ChatApiContext
@@ -358,6 +512,10 @@ async function handleChatMessage(
   const threadId = resolveThreadId(ctx, agentId);
   // Persist 依頼 before long LLM work so switching agent pages cannot lose it.
   appendChatUserMessage(threadId, getTenantId(), parsed.message);
+
+  if (parsed.web_search) {
+    return handleWebSearchChatMessage(parsed, res, stream, ctx, threadId);
+  }
 
   const scheduling = handleSchedulingChatMessage(threadId, parsed.message);
   if (scheduling.handled && scheduling.reply) {
@@ -499,6 +657,37 @@ async function handleChatMessage(
     }
   }
 
+  const operatorRecordForOnboard = resolveOperatorFromSessionUser(ctx.user);
+  const onboard = await handleHrOnboardChatMessage(parsed.message, {
+    fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+    operatorId: ctx.user.operator_id,
+    permissions: operatorRecordForOnboard
+      ? resolveOperatorPermissions(operatorRecordForOnboard)
+      : undefined,
+  });
+  if (onboard.handled && onboard.reply) {
+    const assistantTurnId = persistDeterministicTurn(threadId, parsed.message, onboard.reply);
+    appendChatAudit({
+      action: "message",
+      operator_id: ctx.user.operator_id,
+      approver_id: ctx.user.approver_id,
+      ok: onboard.ok !== false,
+      path: stream ? "/chat/v1/message/stream" : "/chat/v1/message",
+      detail: `hr-onboard:${onboard.plan?.status ?? "n/a"}`,
+    });
+    respondChatDone(res, stream, threadId, {
+      ok: onboard.ok !== false,
+      reply: onboard.reply,
+      assistant_turn_id: assistantTurnId,
+      structured: {
+        command_plan: onboard.plan,
+        command_run: onboard.run,
+        work_order_ids: onboard.work_order_ids,
+      },
+    });
+    return true;
+  }
+
   const orchestrate = handleStewardOrchestrateChatMessage(parsed.message, {
     fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
   });
@@ -587,7 +776,13 @@ async function handleChatMessage(
     const guarded = applyFactRefusalGuard(parsed.message, result.reply, {
       fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
     });
-    const finalReply = guarded.reply;
+    const operatorRecord = resolveOperatorFromSessionUser(ctx.user);
+    const fakeGuard = await applyFakeDelegationGuard(parsed.message, guarded.reply, {
+      fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+      operatorId: ctx.user.operator_id,
+      permissions: operatorRecord ? resolveOperatorPermissions(operatorRecord) : undefined,
+    });
+    const finalReply = fakeGuard.reply;
     let assistantTurnId: string | undefined;
     if (result.ok && finalReply) {
       assistantTurnId = persistLlmChatTurn(threadId, agentId, parsed.message, finalReply, result);
@@ -601,11 +796,23 @@ async function handleChatMessage(
       detail: [
         agentId ? `agent:${agentId}` : null,
         guarded.guarded ? `${guarded.guard_kind ?? "fact"}_guard` : null,
+        fakeGuard.guarded ? fakeGuard.guard_kind ?? "fake_delegation" : null,
         auditChatMessage(parsed.message),
       ]
         .filter(Boolean)
         .join(" "),
     });
+    const structuredBase = buildGuardedStructured(guarded, result.structured);
+    const structured =
+      fakeGuard.guarded && fakeGuard.plan
+        ? {
+            ...(typeof structuredBase === "object" && structuredBase
+              ? (structuredBase as Record<string, unknown>)
+              : {}),
+            command_plan: fakeGuard.plan,
+            work_order_ids: fakeGuard.work_order_ids,
+          }
+        : structuredBase;
     json(res, 200, {
       ok: result.ok,
       reply: finalReply,
@@ -613,7 +820,7 @@ async function handleChatMessage(
       model: result.model,
       setup_required: result.setup_required,
       local_error: result.local_error === true,
-      structured: buildGuardedStructured(guarded, result.structured),
+      structured,
       telemetry: result.telemetry,
       thread_id: threadId,
       assistant_turn_id: assistantTurnId,
@@ -646,7 +853,15 @@ async function handleChatMessage(
     const guarded = applyFactRefusalGuard(parsed.message, result.reply, {
       fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
     });
-    const finalReply = guarded.reply;
+    const operatorRecordStream = resolveOperatorFromSessionUser(ctx.user);
+    const fakeGuard = await applyFakeDelegationGuard(parsed.message, guarded.reply, {
+      fromAgent: agentId === "secretary" ? "secretary" : "executive_steward",
+      operatorId: ctx.user.operator_id,
+      permissions: operatorRecordStream
+        ? resolveOperatorPermissions(operatorRecordStream)
+        : undefined,
+    });
+    const finalReply = fakeGuard.reply;
     let assistantTurnId: string | undefined;
     if (result.ok && finalReply) {
       assistantTurnId = persistLlmChatTurn(threadId, agentId, parsed.message, finalReply, result);
@@ -660,11 +875,23 @@ async function handleChatMessage(
       detail: [
         agentId ? `agent:${agentId}` : null,
         guarded.guarded ? `${guarded.guard_kind ?? "fact"}_guard` : null,
+        fakeGuard.guarded ? fakeGuard.guard_kind ?? "fake_delegation" : null,
         auditChatMessage(parsed.message),
       ]
         .filter(Boolean)
         .join(" "),
     });
+    const structuredBase = buildGuardedStructured(guarded, result.structured);
+    const structured =
+      fakeGuard.guarded && fakeGuard.plan
+        ? {
+            ...(typeof structuredBase === "object" && structuredBase
+              ? (structuredBase as Record<string, unknown>)
+              : {}),
+            command_plan: fakeGuard.plan,
+            work_order_ids: fakeGuard.work_order_ids,
+          }
+        : structuredBase;
     sseWrite(res, {
       type: "done",
       ok: result.ok,
@@ -673,7 +900,7 @@ async function handleChatMessage(
       model: result.model,
       setup_required: result.setup_required,
       local_error: result.local_error === true,
-      structured: buildGuardedStructured(guarded, result.structured),
+      structured,
       telemetry: result.telemetry,
       thread_id: threadId,
       assistant_turn_id: assistantTurnId,
@@ -1230,12 +1457,7 @@ export async function handleChatApi(
   ) {
     if (!requireChatPermission(ctx.user, "chat:ask", res)) return true;
     const raw = await readBody(req);
-    let parsed: {
-      message: string;
-      refresh?: boolean;
-      agent_id?: ChatAgentId;
-      llm_route?: LlmRouteHint;
-    };
+    let parsed: ChatMessagePayload & { refresh?: boolean };
     try {
       parsed = chatMessageRequestSchema.parse(JSON.parse(raw));
     } catch {

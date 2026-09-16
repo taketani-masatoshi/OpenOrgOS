@@ -344,6 +344,21 @@ skills:
       kind: read
       permission: chat:read
       label: 在籍人員
+  - id: hr_onboard
+    file: hr_onboard.md
+    runtime: cli
+    cli_command: hr-onboard
+    handler: hr_onboard
+    description: 入社 L1 名簿追記 + HR/Finance Work Order
+    agent_id: human_resources
+    chat:
+      enabled: true
+      kind: write
+      permission: chat:ask
+      label: 入社手続き
+      args:
+        - { name: name, type: string, required: true }
+        - { name: hired_date, type: string, required: false }
   - id: tenant_config_propose
     file: tenant_config_propose.md
     runtime: cli

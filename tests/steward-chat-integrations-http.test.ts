@@ -128,6 +128,26 @@ describe("steward chat integrations HTTP", () => {
     expect(get.status).not.toBe(200);
   });
 
+  it("requires chat:approve for HTTP outbound export", async () => {
+    // OP-002 is a plain operator: it may propose, never send outbound.
+    const operator = await login("OP-002");
+    process.env.ORGOS_PROD = "1";
+    const res = await fetch(`${baseUrl}/chat/v1/integrations/http/export`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: operator },
+      body: JSON.stringify({ kind: "monthly", id: "2026-05", dry_run: true }),
+    });
+    expect([401, 403]).toContain(res.status);
+  });
+
+  it("includes http_outbound on the hub snapshot", async () => {
+    const res = await fetch(`${baseUrl}/chat/v1/integrations`, { headers: { Cookie: cookie } });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { http_outbound?: { enabled: boolean } };
+    expect(body.http_outbound).toBeDefined();
+    expect(typeof body.http_outbound?.enabled).toBe("boolean");
+  });
+
   it("refuses to post to Slack while it is unconnected", async () => {
     const res = await fetch(`${baseUrl}/chat/v1/integrations/slack/send`, {
       method: "POST",
