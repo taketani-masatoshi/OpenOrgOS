@@ -25,12 +25,15 @@ import { GuestSetupPage } from "./GuestSetupPage";
 import { TaxHandoffPage } from "./TaxHandoffPage";
 import { ContractsPage } from "./ContractsPage";
 import { StaysPage } from "./StaysPage";
+import { PropertyOpsPage } from "./PropertyOpsPage";
+import { ModuleMaturityPage } from "./ModuleMaturityPage";
 import { WireConsolePage } from "./WireConsolePage";
+import { WireDemoPage } from "./WireDemoPage";
 import { SecretaryWorkbenchPage } from "./SecretaryWorkbenchPage";
+import { fetchAgentModuleInventory, fetchProductOnboarding } from "./api";
 import { useCopy } from "@ops-shared/define-copy";
 import type { OperatorShellActive } from "@ops-shared/OperatorShell";
 import { STEWARD_COPY } from "./steward-copy";
-import { fetchProductOnboarding } from "./api";
 import { OnboardingPage } from "./OnboardingPage";
 import { IntegrationsHubPage } from "./IntegrationsHubPage";
 import {
@@ -138,26 +141,26 @@ function ConsoleSubNav({
 }
 
 type AgentsSubNavActive =
-  | "secretary-workbench"
   | "secretary"
   | "steward"
   | "agent-list"
   | "module-list"
+  | "module-maturity"
   | "agent-add"
   | "module-add";
 
 function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
   const copy = useCopy(STEWARD_COPY);
   const tabs = [
-    {
-      id: "secretary-workbench" as const,
-      href: "/secretary/workbench/",
-      label: copy.secretaryWorkbench,
-    },
     { id: "steward" as const, href: "/steward/", label: copy.steward },
     { id: "secretary" as const, href: "/secretary/", label: copy.secretary },
     { id: "agent-list" as const, href: "/agents/", label: copy.agentList },
     { id: "module-list" as const, href: "/modules/", label: copy.moduleList },
+    {
+      id: "module-maturity" as const,
+      href: "/modules/maturity/",
+      label: copy.maturityNav,
+    },
     { id: "agent-add" as const, href: "/agents/add/", label: copy.agentAdd },
     { id: "module-add" as const, href: "/modules/add/", label: copy.moduleAddTab },
   ];
@@ -177,6 +180,84 @@ function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
       ))}
     </nav>
   );
+}
+
+type MalOpsSubNavActive =
+  | "home"
+  | "properties"
+  | "secretary-workbench"
+  | "module-maturity"
+  | "wire-demo"
+  | "contracts"
+  | "stays";
+
+function MalOpsSubNav({ active }: { active: MalOpsSubNavActive }) {
+  const copy = useCopy(STEWARD_COPY);
+  const tabs = [
+    { id: "home" as const, href: "/", label: copy.executiveTitle },
+    {
+      id: "properties" as const,
+      href: "/properties/",
+      label: copy.propertyOpsTitle,
+    },
+    {
+      id: "secretary-workbench" as const,
+      href: "/secretary/workbench/",
+      label: copy.secretaryWorkbench,
+    },
+    {
+      id: "module-maturity" as const,
+      href: "/modules/maturity/",
+      label: copy.maturityNav,
+    },
+    {
+      id: "wire-demo" as const,
+      href: "/wire/demo/",
+      label: copy.wireDemoNav,
+    },
+    { id: "contracts" as const, href: "/contracts/", label: copy.contractsNav },
+    { id: "stays" as const, href: "/stays/", label: copy.propertyOpsOpenStays },
+  ];
+  return (
+    <nav className="yojitsu-subnav" aria-label={copy.malOpsMenu}>
+      {tabs.map((tab) => (
+        <a
+          key={tab.id}
+          href={tab.href}
+          className={
+            active === tab.id ? "yojitsu-subnav-tab is-active" : "yojitsu-subnav-tab"
+          }
+          aria-current={active === tab.id ? "page" : undefined}
+        >
+          {tab.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+function useMalOpsCluster(): boolean {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchAgentModuleInventory()
+      .then((inv) => {
+        if (cancelled) return;
+        const on = new Set(
+          (inv.modules_installed ?? [])
+            .filter((m) => m.enabled)
+            .map((m) => m.id),
+        );
+        setEnabled(on.has("rental") || on.has("hospitality"));
+      })
+      .catch(() => {
+        if (!cancelled) setEnabled(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return enabled;
 }
 
 function CustomersSubNav({
@@ -221,7 +302,7 @@ function CustomersSubNav({
   );
 }
 
-function ConsoleHomeApp() {
+function ConsoleHomeApp({ malOps }: { malOps: boolean }) {
   const copy = useCopy(STEWARD_COPY);
   const [navRevision, setNavRevision] = useState(0);
   const view = useMemo(
@@ -275,7 +356,10 @@ function ConsoleHomeApp() {
     <div className="budget-app">
       {toast && <div className="toast">{toast}</div>}
       {view === "executive" ? (
-        <ExecutiveHomePage />
+        <>
+          {malOps ? <MalOpsSubNav active="home" /> : null}
+          <ExecutiveHomePage />
+        </>
       ) : (
         <>
           {section !== "operations" && section !== "executive" ? (
@@ -334,7 +418,8 @@ function ConsoleHomeApp() {
 export function App() {
   const copy = useCopy(STEWARD_COPY);
   const [shellActive, setShellActive] = useState<ShellRoute>(() => pathActive());
-  const [navRevision, setNavRevision] = useState(0);
+  const [, setNavRevision] = useState(0);
+  const malOps = useMalOpsCluster();
 
   useEffect(() => {
     function syncRoute() {
@@ -423,9 +508,20 @@ export function App() {
       ) : shellActive === "org" ? (
         <OrgChartPage />
       ) : shellActive === "contracts" ? (
-        <ContractsPage />
+        <div className="agent-section">
+          {malOps ? <MalOpsSubNav active="contracts" /> : null}
+          <ContractsPage />
+        </div>
       ) : shellActive === "stays" ? (
-        <StaysPage />
+        <div className="agent-section">
+          {malOps ? <MalOpsSubNav active="stays" /> : null}
+          <StaysPage />
+        </div>
+      ) : shellActive === "properties" ? (
+        <div className="agent-section">
+          {malOps ? <MalOpsSubNav active="properties" /> : null}
+          <PropertyOpsPage />
+        </div>
       ) : shellActive === "approvals" ? (
         <ApprovalsQueue asPage />
       ) : shellActive === "customers-outbound" ||
@@ -442,10 +538,28 @@ export function App() {
         <OrchestrationRunsPage />
       ) : shellActive === "wire" ? (
         <WireConsolePage />
+      ) : shellActive === "wire-demo" ? (
+        <div className="agent-section">
+          {malOps ? <MalOpsSubNav active="wire-demo" /> : null}
+          <WireDemoPage />
+        </div>
       ) : shellActive === "secretary-workbench" ? (
         <div className="agent-section">
-          <AgentsSubNav active="secretary-workbench" />
+          {malOps ? (
+            <MalOpsSubNav active="secretary-workbench" />
+          ) : (
+            <AgentsSubNav active="secretary" />
+          )}
           <SecretaryWorkbenchPage />
+        </div>
+      ) : shellActive === "module-maturity" ? (
+        <div className="agent-section">
+          {malOps ? (
+            <MalOpsSubNav active="module-maturity" />
+          ) : (
+            <AgentsSubNav active="module-maturity" />
+          )}
+          <ModuleMaturityPage />
         </div>
       ) : shellActive === "secretary" ||
         shellActive === "steward" ||
@@ -483,7 +597,7 @@ export function App() {
           </div>
         </div>
       ) : (
-        <ConsoleHomeApp />
+        <ConsoleHomeApp malOps={malOps} />
       )}
     </BudgetAuthGate>
   );

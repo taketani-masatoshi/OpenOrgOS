@@ -2,6 +2,7 @@
  * Compose Executive Home for Operator Console `/`.
  * Path: src/lib/executive-home/build-home.ts
  * ADR: docs/adr/0065-executive-home-console.md
+ * ADR: docs/adr/0073-executive-home-mal-lanes.md
  */
 import {
   executiveHomeSchema,
@@ -26,9 +27,16 @@ import { listHandoffs } from "../routing.js";
 import { loadOperatorRegistry } from "../org/operators.js";
 import { isClosedWorkOrder } from "../orchestration/work-order-state.js";
 import { assigneeKind, assigneeLabel } from "./assignee-kind.js";
+import { buildTaskView } from "../tasks/task-view.js";
+import { buildPropertyOpsDashboard } from "../property-ops/build-dashboard.js";
+import { computeModuleReadiness } from "../module-readiness-score.js";
+import { loadEnabledModulesSafe } from "../modules.js";
+import { getTenantId } from "../tenant.js";
 
 const MAX_ATTENTION = 24;
 const MAX_WORK_PER_KIND = 12;
+/** Cap sales/CS noise so MAL ops stay visible on the morning home. */
+const MAX_CUSTOMER_ATTENTION = 4;
 
 function formatTarget(
   value: number | null,
@@ -56,9 +64,65 @@ function agentSummaryLabel(path: string): string {
 function collectAttention(today: ReturnType<typeof buildTodayContext>): ExecutiveAttentionItem[] {
   const items: ExecutiveAttentionItem[] = [];
 
+  // --- MAL lanes first (secretary / tasks / property ops) ---
+  try {
+    const view = buildTaskView();
+    for (const t of view.tasks.filter((x) => x.priority === "p0" || x.priority === "p1").slice(0, 8)) {
+      items.push({
+        id: `task:${t.id}`,
+        kind: "task",
+        title: t.title,
+        status: `${t.priority}/${t.status}`,
+        href: "/secretary/workbench/",
+        severity: t.priority === "p0" ? "p0" : "p1",
+      });
+    }
+    for (const c of view.candidates
+      .filter((x) => x.priority === "p0" || x.priority === "p1")
+      .slice(0, 4)) {
+      items.push({
+        id: `cand:${c.kind}:${c.id}`,
+        kind: "task",
+        title: c.title,
+        status: `candidate/${c.kind}`,
+        href: c.href,
+        severity: c.priority === "p0" ? "p0" : "p1",
+      });
+    }
+  } catch {
+    /* tasks optional */
+  }
+
+  try {
+    const props = buildPropertyOpsDashboard();
+    for (const card of props.properties) {
+      if (card.due_p0 <= 0) continue;
+      items.push({
+        id: `prop:${card.property_id}`,
+        kind: "property",
+        title: `${card.name}: P0 未対応 ${card.due_p0} 件`,
+        status: `due_p0=${card.due_p0}`,
+        href: card.href,
+        severity: "p0",
+      });
+      for (const d of card.due.filter((x) => x.severity === "p0").slice(0, 3)) {
+        items.push({
+          id: `propdue:${card.property_id}:${d.id}`,
+          kind: "property",
+          title: `${card.name}: ${d.title}`,
+          status: d.kind,
+          href: d.href,
+          severity: "p0",
+        });
+      }
+    }
+  } catch {
+    /* property ops optional */
+  }
+
   try {
     const pipeline = buildSalesPipelineView({ includeDemo: false });
-    for (const a of pipeline.alerts.slice(0, 6)) {
+    for (const a of pipeline.alerts.slice(0, 2)) {
       items.push({
         id: `deal:${a.deal_id}`,
         kind: "customer",
@@ -74,7 +138,7 @@ function collectAttention(today: ReturnType<typeof buildTodayContext>): Executiv
 
   try {
     const inbound = buildSalesInboundView({ includeDemo: false });
-    for (const a of inbound.alerts.slice(0, 4)) {
+    for (const a of inbound.alerts.slice(0, 1)) {
       items.push({
         id: `inq:${a.inquiry_id}`,
         kind: "customer",
@@ -90,7 +154,7 @@ function collectAttention(today: ReturnType<typeof buildTodayContext>): Executiv
 
   try {
     const cs = buildCustomerSuccessView({ includeDemo: false });
-    for (const a of cs.renewal_alerts.slice(0, 4)) {
+    for (const a of cs.renewal_alerts.slice(0, 1)) {
       items.push({
         id: `renewal:${a.account_id}`,
         kind: "customer",
@@ -98,16 +162,6 @@ function collectAttention(today: ReturnType<typeof buildTodayContext>): Executiv
         status: "renewal",
         href: "/customers/after-sales/",
         severity: a.days_remaining <= 30 ? "p0" : "p1",
-      });
-    }
-    for (const a of cs.onboarding_overdue.slice(0, 3)) {
-      items.push({
-        id: `onboard:${a.onboarding_id}`,
-        kind: "customer",
-        title: `${a.company}: オンボ遅延 ${a.days_overdue} 日`,
-        status: "onboarding_overdue",
-        href: "/customers/after-sales/",
-        severity: "p1",
       });
     }
   } catch {
@@ -118,7 +172,7 @@ function collectAttention(today: ReturnType<typeof buildTodayContext>): Executiv
     const churn = buildCustomerChurnView({ includeDemo: false });
     for (const row of churn.accounts
       .filter((a) => a.reason === "at_risk" || a.reason === "critical" || a.reason === "dormant")
-      .slice(0, 4)) {
+      .slice(0, 1)) {
       items.push({
         id: `churn:${row.account_id}`,
         kind: "customer",
@@ -132,13 +186,21 @@ function collectAttention(today: ReturnType<typeof buildTodayContext>): Executiv
     /* optional */
   }
 
+  // Cap customer noise after MAL items
+  const mal = items.filter((i) => i.kind !== "customer");
+  const customer = items
+    .filter((i) => i.kind === "customer")
+    .slice(0, MAX_CUSTOMER_ATTENTION);
+  items.length = 0;
+  items.push(...mal, ...customer);
+
   for (const m of today.mail_intake_pending.slice(0, 5)) {
     items.push({
       id: `mail:${m.id}`,
       kind: "mail",
       title: m.subject,
       status: `${m.importance}/${m.urgency}`,
-      href: "/approvals/",
+      href: "/secretary/workbench/",
       severity: m.importance === "p0" ? "p0" : "p1",
     });
   }
@@ -190,12 +252,84 @@ function collectAttention(today: ReturnType<typeof buildTodayContext>): Executiv
   }
 
   const severityRank = { p0: 0, p1: 1, p2: 2 } as const;
-  items.sort(
-    (a, b) =>
+  const kindBoost = (kind: ExecutiveAttentionItem["kind"]): number => {
+    if (kind === "task" || kind === "property" || kind === "mail" || kind === "approval") {
+      return 0;
+    }
+    if (kind === "ceo_question" || kind === "wire" || kind === "scheduling") return 1;
+    return 2;
+  };
+  items.sort((a, b) => {
+    const pr =
       (severityRank[a.severity ?? "p2"] ?? 2) -
-      (severityRank[b.severity ?? "p2"] ?? 2),
-  );
+      (severityRank[b.severity ?? "p2"] ?? 2);
+    if (pr !== 0) return pr;
+    return kindBoost(a.kind) - kindBoost(b.kind);
+  });
   return items.slice(0, MAX_ATTENTION);
+}
+
+function collectMalLanes(today: {
+  mail_intake_action_required_count?: number;
+  wire_pending?: Array<{ id: string }>;
+}): ExecutiveHome["lanes"] {
+  try {
+    const view = buildTaskView();
+    let props;
+    try {
+      props = buildPropertyOpsDashboard();
+    } catch {
+      props = null;
+    }
+    const propertyDueP0 =
+      props?.properties.reduce((sum, p) => sum + p.due_p0, 0) ?? 0;
+    let modulesUnset = 0;
+    try {
+      const tenantId = getTenantId();
+      for (const mod of loadEnabledModulesSafe()) {
+        if (!mod.enabled) continue;
+        const ready = computeModuleReadiness(mod.id, { tenantId });
+        if (ready.gaps.length > 0) modulesUnset += 1;
+      }
+    } catch {
+      modulesUnset = 0;
+    }
+    return {
+      secretary_href: "/secretary/workbench/",
+      properties_href: "/properties/",
+      wire_href: "/wire/",
+      modules_href: "/modules/",
+      tasks_p0: view.counts.p0,
+      tasks_open: view.counts.open,
+      mail_action_required: today.mail_intake_action_required_count ?? 0,
+      approvals_pending: view.candidates.filter((c) => c.kind === "approval")
+        .length,
+      property_due_p0: propertyDueP0,
+      wire_pending: today.wire_pending?.length ?? 0,
+      modules_unset: modulesUnset,
+      properties: (props?.properties ?? []).map((p) => ({
+        property_id: p.property_id,
+        name: p.name,
+        due_p0: p.due_p0,
+        href: p.href,
+      })),
+    };
+  } catch {
+    return {
+      secretary_href: "/secretary/workbench/",
+      properties_href: "/properties/",
+      wire_href: "/wire/",
+      modules_href: "/modules/",
+      tasks_p0: 0,
+      tasks_open: 0,
+      mail_action_required: today.mail_intake_action_required_count ?? 0,
+      approvals_pending: 0,
+      property_due_p0: 0,
+      wire_pending: today.wire_pending?.length ?? 0,
+      modules_unset: 0,
+      properties: [],
+    };
+  }
 }
 
 function collectGaps(
@@ -298,6 +432,7 @@ export function buildExecutiveHome(): ExecutiveHome {
     company_name: today.company_name,
     attention,
     attention_count: attention.length,
+    lanes: collectMalLanes(today),
     gaps,
     gap_summary: summary,
     work,

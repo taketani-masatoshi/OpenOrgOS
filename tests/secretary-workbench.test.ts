@@ -27,11 +27,18 @@ describe("buildSecretaryWorkbench", () => {
       expect(row).toHaveProperty("subject");
       expect(row).toHaveProperty("from_label");
       expect(row).not.toHaveProperty("body");
+      expect(row.href.startsWith("/secretary/workbench")).toBe(true);
+      expect(row.href.includes("/wire/")).toBe(false);
     }
     for (const row of wb.drafts) {
       expect(row).toHaveProperty("subject");
       expect(row).toHaveProperty("to_label");
       expect(row).not.toHaveProperty("body");
+      expect(row.href.includes("/wire/")).toBe(false);
+    }
+    if (wb.mail_setup) {
+      expect(typeof wb.mail_setup.ready).toBe("boolean");
+      expect(Array.isArray(wb.mail_setup.issues)).toBe(true);
     }
   });
 });

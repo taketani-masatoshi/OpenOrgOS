@@ -58,6 +58,11 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0068](0068-iso-conformity-depth.md) | ISO 適合性検査を「存在」から「妥当性」へ（記録内容 · 要求事項 · ISO 19011） | Accepted |
 | [0069](0069-audit-framework-iso-financial-jsox.md) | 監査枠組みの展開（ISO 全 available · 会計アサーション · J-SOX） | Accepted |
 | [0071](0071-executive-tasks-ssot-secretary-workbench.md) | Executive tasks.yaml SSOT + Secretary Workbench | Accepted |
+| [0072](0072-property-ops-dashboard.md) | Property Operations Dashboard（物件運営） | Accepted |
+| [0073](0073-executive-home-mal-lanes.md) | Executive Home MAL 実務再配線（lanes · task/property） | Accepted |
+| [0074](0074-module-maturity-panel.md) | Module Maturity Panel（catalog + コア能力レーン） | Accepted |
+| [0075](0075-wire-demo-walkthrough.md) | Wire Demo Walkthrough（MAL ↔ Southwood 一本道） | Accepted |
+| [0076](0076-public-web-mal-usecase.md) | Public Web 実ユースケース訴求（oorgos.org） | Accepted |
 
 ## 新規 ADR
 

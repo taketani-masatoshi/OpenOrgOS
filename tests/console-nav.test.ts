@@ -54,7 +54,7 @@ describe("console-routing secretary workbench", () => {
     expect(pathActive("/secretary/workbench")).toBe("secretary-workbench");
     expect(pathActive("/secretary/workbench/")).toBe("secretary-workbench");
     expect(pathActive("/secretary/")).toBe("secretary");
-    expect(operatorShellTabFromRoute("secretary-workbench")).toBe("secretary");
+    expect(operatorShellTabFromRoute("secretary-workbench")).toBe("executive");
     expect(spaPathFromHref("/secretary/workbench/", "http://localhost")).toBe(
       "/secretary/workbench/",
     );

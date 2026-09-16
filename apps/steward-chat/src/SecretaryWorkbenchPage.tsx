@@ -122,6 +122,28 @@ export function SecretaryWorkbenchPage() {
 
       {asanaMsg ? <p className="ops-page-meta">{asanaMsg}</p> : null}
 
+      <p className="muted">{copy.secretaryHumanMailNote}</p>
+
+      {data.mail_setup && !data.mail_setup.ready ? (
+        <section className="executive-section ops-card">
+          <h2 className="section-title">{copy.secretaryMailSetup}</h2>
+          <p className="page-desc muted">{copy.secretaryMailSetupLead}</p>
+          <ul>
+            {data.mail_setup.issues.map((issue) => (
+              <li key={issue.id}>
+                {issue.message}
+                {issue.fix ? ` → ${issue.fix}` : ""}
+              </li>
+            ))}
+          </ul>
+          <p className="section-cta">
+            <a className="btn btn-primary btn-sm" href={data.mail_setup.href}>
+              {copy.secretaryMailSetupFix}
+            </a>
+          </p>
+        </section>
+      ) : null}
+
       <section className="executive-section">
         <h2 className="section-title">{copy.secretaryPanelMail}</h2>
         {data.mail.length === 0 ? (
@@ -231,11 +253,17 @@ export function SecretaryWorkbenchPage() {
         <a className="btn btn-ghost btn-sm" href="/secretary/">
           {copy.secretary}
         </a>{" "}
-        <a className="btn btn-ghost btn-sm" href="/wire/">
-          Wire / Mail
+        <a className="btn btn-ghost btn-sm" href="/?integrations=1">
+          {copy.secretaryOpenIntegrations}
+        </a>{" "}
+        <a className="btn btn-ghost btn-sm" href="/properties/">
+          {copy.propertyOpsTitle}
         </a>{" "}
         <a className="btn btn-ghost btn-sm" href="/approvals/">
           {copy.secretaryPanelApprovals}
+        </a>{" "}
+        <a className="btn btn-ghost btn-sm" href="/wire/">
+          {copy.executiveKindWire}
         </a>
       </p>
     </main>

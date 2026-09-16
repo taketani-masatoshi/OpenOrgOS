@@ -163,6 +163,7 @@ export function MailWorkbench({ tenants }: Props) {
 
   return (
     <div className="mail-workbench" aria-busy={loading}>
+      <p className="ops-page-lead muted">{copy.workbenchLead}</p>
       <div className="wire-secondary-bar">
         <nav className="tenant-tabs" aria-label={copy.tenants}>
           {tenants.map((t) => (
@@ -184,11 +185,6 @@ export function MailWorkbench({ tenants }: Props) {
           <button type="button" className="quiet-button" onClick={() => refreshTenant({ silent: false })}>
             {copy.refresh}
           </button>
-          {peers.length ? (
-            <button type="button" className="btn btn-primary" onClick={() => setShowCompose(true)}>
-              {copy.compose}
-            </button>
-          ) : null}
         </div>
       </div>
 
@@ -227,6 +223,24 @@ export function MailWorkbench({ tenants }: Props) {
 
       <details className="advanced-panel">
         <summary>{copy.opsPanel}</summary>
+        <p className="muted">{copy.composeSecretaryHint}</p>
+        <p className="section-cta">
+          <a className="btn btn-ghost btn-sm" href="/secretary/workbench/">
+            Secretary
+          </a>
+          {peers.length ? (
+            <>
+              {" "}
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowCompose(true)}
+              >
+                {copy.composeAdvanced}
+              </button>
+            </>
+          ) : null}
+        </p>
         <DeliveryPanel
           tenantId={activeId}
           delivery={delivery}

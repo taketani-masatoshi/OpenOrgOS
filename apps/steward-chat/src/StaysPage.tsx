@@ -49,6 +49,9 @@ export function StaysPage() {
           <p className="section-cta">
             <a className="btn btn-ghost btn-sm" href="/?tax=1">
               税務モジュール
+            </a>{" "}
+            <a className="btn btn-ghost btn-sm" href="/properties/">
+              物件運営
             </a>
           </p>
         </>

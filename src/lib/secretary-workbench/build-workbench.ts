@@ -14,6 +14,7 @@ import {
 import type { TodayContext } from "../../../schemas/steward-chat.js";
 import { listCorrespondenceDrafts } from "../correspondence/draft.js";
 import { listTriageEntries } from "../correspondence/mail-triage-queue.js";
+import { assessMailSetupReadiness } from "../correspondence/mail-setup-readiness.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { buildTodayContext } from "../steward-chat/today-context.js";
 import { buildTaskView } from "../tasks/task-view.js";
@@ -24,6 +25,8 @@ const MAX_MAIL = 12;
 const MAX_DRAFTS = 12;
 const MAX_TASKS = 24;
 const MAX_APPROVALS = 12;
+const SECRETARY_MAIL_HREF = "/secretary/workbench/";
+const MAIL_SETUP_HREF = "/?integrations=1";
 
 function fromLabel(from: string): string {
   const angle = /<([^>]+)>/.exec(from);
@@ -68,7 +71,7 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
         from_label: fromLabel(entry.from),
         importance: entry.importance,
         urgency: entry.urgency,
-        href: "/wire/",
+        href: `${SECRETARY_MAIL_HREF}?mail=${encodeURIComponent(entry.id)}`,
         severity,
       });
     }
@@ -88,7 +91,10 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
         to_label: toLabel(d.to),
         status: d.status,
         created_at: d.created_at,
-        href: "/wire/",
+        href:
+          d.status === "pending_approval"
+            ? `/approvals/`
+            : `${SECRETARY_MAIL_HREF}?draft=${encodeURIComponent(d.draft_id)}`,
       });
     }
   } catch {
@@ -121,7 +127,7 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
       priority: c.priority,
       status: c.status,
       due: c.due ?? null,
-      href: c.href,
+      href: c.href.startsWith("/wire/") ? SECRETARY_MAIL_HREF : c.href,
       severity: c.priority === "p0" ? "p0" : c.priority === "p1" ? "p1" : "p2",
       candidate: true,
       candidate_kind: c.kind,
@@ -147,6 +153,26 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
     /* optional */
   }
 
+  let mail_setup: SecretaryWorkbench["mail_setup"];
+  try {
+    const readiness = assessMailSetupReadiness("email");
+    mail_setup = {
+      ready: readiness.ready,
+      issues: readiness.issues
+        .filter((i) => i.severity === "error")
+        .slice(0, 4)
+        .map((i) => ({
+          id: i.id,
+          severity: i.severity,
+          message: i.message,
+          fix: i.fix,
+        })),
+      href: MAIL_SETUP_HREF,
+    };
+  } catch {
+    mail_setup = undefined;
+  }
+
   return secretaryWorkbenchSchema.parse({
     ok: true,
     tenant: getTenantId(),
@@ -166,5 +192,6 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
       tasks_p0: view.counts.p0,
       candidates: view.counts.candidates,
     },
+    mail_setup,
   });
 }

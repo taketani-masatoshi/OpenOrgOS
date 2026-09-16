@@ -61,6 +61,13 @@ export const secretaryCompanyStateSchema = z.object({
   candidates: z.number().int().nonnegative(),
 });
 
+export const secretaryMailSetupIssueSchema = z.object({
+  id: z.string(),
+  severity: z.enum(["error", "warning"]),
+  message: z.string(),
+  fix: z.string(),
+});
+
 export const secretaryWorkbenchSchema = z.object({
   ok: z.literal(true),
   tenant: z.string(),
@@ -71,6 +78,13 @@ export const secretaryWorkbenchSchema = z.object({
   tasks: z.array(secretaryTaskRowSchema),
   approvals: z.array(secretaryApprovalRowSchema),
   company: secretaryCompanyStateSchema,
+  mail_setup: z
+    .object({
+      ready: z.boolean(),
+      issues: z.array(secretaryMailSetupIssueSchema),
+      href: z.string(),
+    })
+    .optional(),
 });
 
 export type SecretaryWorkbench = z.infer<typeof secretaryWorkbenchSchema>;

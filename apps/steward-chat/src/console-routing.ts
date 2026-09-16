@@ -9,7 +9,10 @@ export type ShellRoute =
   | "chat-settings"
   | "llm-workers"
   | "settings"
-  | "secretary-workbench";
+  | "secretary-workbench"
+  | "properties"
+  | "module-maturity"
+  | "wire-demo";
 
 export function pathActive(pathname = window.location.pathname): ShellRoute {
   const path = pathname.replace(/\/+$/, "") || "/";
@@ -21,12 +24,18 @@ export function pathActive(pathname = window.location.pathname): ShellRoute {
   if (path === "/steward" || path.startsWith("/steward/")) return "steward";
   if (path === "/agents/add" || path.startsWith("/agents/add/")) return "agent-add";
   if (path === "/modules/add" || path.startsWith("/modules/add/")) return "module-add";
+  if (path === "/modules/maturity" || path.startsWith("/modules/maturity/")) {
+    return "module-maturity";
+  }
   if (path === "/modules" || path.startsWith("/modules/")) return "module-list";
   if (path === "/agents" || path.startsWith("/agents/")) return "agent-list";
   if (path === "/org" || path.startsWith("/org/")) return "org";
   if (path === "/contracts" || path.startsWith("/contracts/")) return "contracts";
+  if (path === "/properties" || path.startsWith("/properties/")) return "properties";
   if (path === "/stays" || path.startsWith("/stays/")) return "stays";
   if (path === "/approvals" || path.startsWith("/approvals/")) return "approvals";
+  if (path === "/wire/demo" || path.startsWith("/wire/demo/")) return "wire-demo";
+  if (path === "/wire" || path.startsWith("/wire/")) return "wire";
   if (path === "/customers/churn" || path.startsWith("/customers/churn/")) {
     return "customers-churn";
   }
@@ -53,7 +62,6 @@ export function pathActive(pathname = window.location.pathname): ShellRoute {
     return "chat-settings";
   }
   if (isPasskeySettingsPath(pathname)) return "settings";
-  if (path === "/wire" || path.startsWith("/wire/")) return "wire";
   const search =
     typeof window !== "undefined" ? window.location.search : "";
   const params = new URLSearchParams(search);
@@ -85,8 +93,16 @@ export function operatorShellTabFromRoute(
     return "steward";
   }
   if (route === "contracts") return "org";
-  if (route === "stays") return "executive";
-  if (route === "secretary-workbench") return "secretary";
+  // MAL ops cluster (properties / stays / secretary workbench) lives under 経営
+  if (
+    route === "stays" ||
+    route === "properties" ||
+    route === "secretary-workbench"
+  ) {
+    return "executive";
+  }
+  if (route === "module-maturity") return "module-list";
+  if (route === "wire-demo") return "wire";
   return route;
 }
 
@@ -99,6 +115,7 @@ export function spaPathFromHref(href: string, origin = window.location.origin): 
     if (
       path === "/" ||
       path === "/wire" ||
+      path === "/wire/demo" ||
       path === "/secretary" ||
       path === "/secretary/workbench" ||
       path === "/steward" ||
@@ -106,9 +123,11 @@ export function spaPathFromHref(href: string, origin = window.location.origin): 
       path === "/agents/add" ||
       path === "/modules" ||
       path === "/modules/add" ||
+      path === "/modules/maturity" ||
       path === "/org" ||
       path === "/contracts" ||
       path === "/stays" ||
+      path === "/properties" ||
       path === "/approvals" ||
       path === "/customers" ||
       path === "/customers/outbound" ||
