@@ -33,6 +33,7 @@ jobs:
       # time out on the runner even with every test passing.
       - run: npm run test:finance:books
       - run: npm run test:finance:product
+      - run: npm run test:finance:journeys
       - run: ORGOS_TENANT=_fixture-books FINANCE_LOOP_ROUNDS=1 bash scripts/finance-accuracy-loops.sh
       - run: '/usr/bin/time -f "npm test elapsed: %E" npm test'
   console-build:
