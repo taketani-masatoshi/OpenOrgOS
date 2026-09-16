@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { getDocsDir, getDataDir } from "../utils.js";
 import { loadSalesQuotes } from "../data.js";
 import { handleContractStatusChatMessage } from "../steward-chat/contract-status-intent.js";
+import { buildTenantBusinessKnowledgeHits } from "./tenant-business-context.js";
 
 export interface KnowledgeHit {
   path: string;
@@ -41,13 +42,20 @@ function excerptAroundMatch(text: string, queryTerms: string[], maxLen = 240): s
     const idx = lower.indexOf(term.toLowerCase());
     if (idx >= 0) {
       const start = Math.max(0, idx - 80);
-      return text.slice(start, start + maxLen).replace(/\s+/g, " ").trim();
+      return text
+        .slice(start, start + maxLen)
+        .replace(/\s+/g, " ")
+        .trim();
     }
   }
   return text.slice(0, maxLen).replace(/\s+/g, " ").trim();
 }
 
-function searchFile(absPath: string, logicalPath: string, queryTerms: string[]): KnowledgeHit | undefined {
+function searchFile(
+  absPath: string,
+  logicalPath: string,
+  queryTerms: string[]
+): KnowledgeHit | undefined {
   if (!isAllowlisted(logicalPath)) return undefined;
   if (!existsSync(absPath)) return undefined;
   const text = readFileSync(absPath, "utf-8");
@@ -67,7 +75,7 @@ function walkMarkdown(
   baseLogical: string,
   queryTerms: string[],
   out: KnowledgeHit[],
-  depth = 0,
+  depth = 0
 ): void {
   if (!existsSync(dir) || depth > 4) return;
   for (const name of readdirSync(dir)) {
@@ -110,9 +118,7 @@ function addStructuredQuoteHits(queryTerms: string[], out: KnowledgeHit[]): void
       (queryTerms.some((t) => /見積|quote|価格/i.test(t)) && q.status === "accepted" ? 1 : 0);
     if (!boosted) continue;
     out.push({
-      path: q.doc_ref?.startsWith("docs/")
-        ? q.doc_ref
-        : `data/sales/quotes.yaml#${q.id}`,
+      path: q.doc_ref?.startsWith("docs/") ? q.doc_ref : `data/sales/quotes.yaml#${q.id}`,
       title: q.id,
       excerpt: [
         `status=${q.status}`,
@@ -143,14 +149,17 @@ function addContractPortfolioHit(queryTerms: string[], out: KnowledgeHit[]): voi
   }
 }
 
-export function searchCorrespondenceKnowledge(query: string, opts?: { limit?: number }): KnowledgeHit[] {
+export function searchCorrespondenceKnowledge(
+  query: string,
+  opts?: { limit?: number }
+): KnowledgeHit[] {
   const terms = query
     .split(/\s+/)
     .map((t) => t.trim())
     .filter((t) => t.length >= 2);
   if (!terms.length) return [];
 
-  const hits: KnowledgeHit[] = [];
+  const hits: KnowledgeHit[] = buildTenantBusinessKnowledgeHits(query);
   walkMarkdown(join(getDocsDir(), "product"), "docs/product", terms, hits);
   walkMarkdown(join(getDocsDir(), "sales"), "docs/sales", terms, hits);
 

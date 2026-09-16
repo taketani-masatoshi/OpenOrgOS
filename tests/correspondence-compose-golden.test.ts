@@ -25,10 +25,7 @@ import {
 } from "../src/lib/correspondence/knowledge-search.js";
 
 function cleanup(): void {
-  for (const p of [
-    join(getDocsDir(), "product"),
-    join(getDataDir(), "sales"),
-  ]) {
+  for (const p of [join(getDocsDir(), "product"), join(getDataDir(), "sales")]) {
     if (existsSync(p)) rmSync(p, { recursive: true, force: true });
   }
 }
@@ -75,7 +72,7 @@ describe("correspondence compose golden (100-point)", () => {
         "参考資料: docs/product/overview.md",
         "",
         "何卒よろしくお願い申し上げます。",
-      ].join("\n"),
+      ].join("\n")
     );
     expect(reply.attachment_refs).toEqual(["docs/product/overview.md"]);
     expect(reply.body).not.toMatch(/在庫|納期|円|¥/);
@@ -125,12 +122,10 @@ describe("correspondence compose golden (100-point)", () => {
         verified: true,
       },
     ];
-    expect(() =>
-      assertDatesAgainstClaims("納期は 10月1日 です。", claims),
-    ).toThrow(CorrespondenceClaimsError);
-    expect(() =>
-      assertDatesAgainstClaims("納期は 9月15日 です。", claims),
-    ).not.toThrow();
+    expect(() => assertDatesAgainstClaims("納期は 10月1日 です。", claims)).toThrow(
+      CorrespondenceClaimsError
+    );
+    expect(() => assertDatesAgainstClaims("納期は 9月15日 です。", claims)).not.toThrow();
   });
 
   it("amount band claims accept endpoint values", () => {
@@ -144,9 +139,11 @@ describe("correspondence compose golden (100-point)", () => {
         verified: true,
       },
     ];
-    expect(() => assertAmountsRequireVerifiedClaims("ご提示は 100 万円です。", claims)).not.toThrow();
+    expect(() =>
+      assertAmountsRequireVerifiedClaims("ご提示は 100 万円です。", claims)
+    ).not.toThrow();
     expect(() => assertAmountsRequireVerifiedClaims("ご提示は 999 万円です。", claims)).toThrow(
-      /一致しません|金額/,
+      /一致しません|金額/
     );
   });
 
@@ -180,9 +177,61 @@ describe("correspondence compose golden (100-point)", () => {
           },
         ],
       }),
-      "utf-8",
+      "utf-8"
     );
     const quoteHits = searchCorrespondenceKnowledge("見積");
     expect(quoteHits.some((h) => String(h.title).includes("QUOTE-2026-099"))).toBe(true);
+  });
+
+  it("tenant business context uses enabled modules without widening attachment allowlist", () => {
+    const hits = searchCorrespondenceKnowledge("賃貸 物件 見積");
+    const text = hits.map((h) => h.excerpt).join("\n");
+    const paths = hits.map((h) => h.path);
+
+    expect(text).toMatch(/rental/);
+    expect(text).not.toMatch(/hospitality/);
+    expect(text).not.toMatch(/jp_medical_device/);
+    expect(text).not.toMatch(/主事業として断定しない/);
+    expect(paths).toContain("tenant.yaml");
+
+    expect(isAttachmentPathAllowlisted("tenant.yaml")).toBe(false);
+    expect(isAttachmentPathAllowlisted("data/properties/PROP-001.yaml")).toBe(false);
+    expect(isAttachmentPathAllowlisted("data/finance/")).toBe(false);
+    expect(isAttachmentPathAllowlisted("data/finance/loans.yaml")).toBe(false);
+    expect(isAttachmentPathAllowlisted("docs/product/guides/setup.md")).toBe(true);
+  });
+
+  it("tenant business context summarizes MAL without exposing finance amounts as usable facts", () => {
+    setTenantId("mal");
+    try {
+      const hits = searchCorrespondenceKnowledge("MAL 旅館 不動産 SaMD 土地 借入");
+      const text = hits.map((h) => `${h.path}\n${h.excerpt}`).join("\n");
+
+      expect(text).toMatch(/不動産賃貸|旅館業/);
+      expect(text).toMatch(/rental/);
+      expect(text).toMatch(/hospitality/);
+      const overview = hits.find((h) => h.path === "tenant.yaml")?.excerpt ?? "";
+      const primaryChunk = overview.split("補助・規制対応")[0] ?? overview;
+      expect(primaryChunk).toMatch(/rental/);
+      expect(primaryChunk).toMatch(/hospitality/);
+      expect(primaryChunk).toMatch(/professional_services/);
+      expect(primaryChunk).not.toMatch(/jp_medical_device/);
+      expect(overview).toMatch(/jp_medical_device.*主事業として断定しない/);
+      expect(text).toMatch(/財務数値.*個別に検証済みclaimがない限り金額を記載しない/);
+      expect(text).not.toMatch(/96000000|70000000|16600000|9,600|7,000|1,660/);
+      expect(text).not.toMatch(/万円|円/);
+      expect(hits.some((h) => h.path.startsWith("data/properties/"))).toBe(true);
+      for (const h of hits) {
+        if (
+          h.path === "tenant.yaml" ||
+          h.path.startsWith("data/properties/") ||
+          h.path.startsWith("data/finance")
+        ) {
+          expect(isAttachmentPathAllowlisted(h.path)).toBe(false);
+        }
+      }
+    } finally {
+      setTenantId("demo");
+    }
   });
 });
