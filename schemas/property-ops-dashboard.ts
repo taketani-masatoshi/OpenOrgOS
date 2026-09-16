@@ -82,6 +82,15 @@ export const propertyOpsCardSchema = z.object({
   facility: propertyOpsFacilitySchema.optional(),
   open_tasks: z.number().int().nonnegative(),
   href: z.string(),
+  next_actions: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        href: z.string(),
+      }),
+    )
+    .default([]),
 });
 
 export const propertyOpsDashboardSchema = z.object({

@@ -368,6 +368,31 @@ function buildCard(
   );
   const due = dueForProperty(property.id, hospitalityIds, today);
   const facility = loadFacilityForProperty(property.id);
+  const insurance = insuranceForProperty(property, today);
+  const register = registerForProperty(property.id, hospitalityIds);
+  const dueP0 = due.filter((d) => d.severity === "p0");
+  const next_actions: PropertyOpsCard["next_actions"] = [];
+  if (dueP0.length > 0) {
+    next_actions.push({
+      id: "due_p0",
+      label: `P0 due → secretary`,
+      href: "/secretary/workbench/",
+    });
+  }
+  if (insurance.length === 0) {
+    next_actions.push({
+      id: "insurance",
+      label: "Insurance unset — register via CLI/docs",
+      href: "/properties/",
+    });
+  }
+  if (register && !register.ok) {
+    next_actions.push({
+      id: "register",
+      label: "Guest register issues",
+      href: register.href,
+    });
+  }
   return {
     property_id: property.id,
     name: property.name,
@@ -375,12 +400,12 @@ function buildCard(
     type: property.type,
     module_ids: moduleIds,
     due,
-    due_p0: due.filter((d) => d.severity === "p0").length,
-    insurance: insuranceForProperty(property, today),
+    due_p0: dueP0.length,
+    insurance,
     permits: permitsForProperty(property.id),
     bulletins: bulletinsForProperty(property.id, mod?.docs_root),
     finance: financeForProperty(property, today),
-    register: registerForProperty(property.id, hospitalityIds),
+    register,
     facility: facility
       ? {
           check_in: facility.check_in,
@@ -390,6 +415,7 @@ function buildCard(
       : undefined,
     open_tasks: listTasks().filter((t) => t.property_id === property.id).length,
     href: `/properties/?id=${encodeURIComponent(property.id)}`,
+    next_actions,
   };
 }
 

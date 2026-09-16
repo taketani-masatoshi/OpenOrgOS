@@ -33,6 +33,7 @@ import { computeModuleReadiness } from "../module-readiness-score.js";
 import { loadEnabledModulesSafe } from "../modules.js";
 import { listOrgApprovals } from "../org/approval/reject.js";
 import { getTenantId } from "../tenant.js";
+import { currentDate } from "../utils.js";
 
 const MAX_ATTENTION = 24;
 const MAX_WORK_PER_KIND = 12;
@@ -402,53 +403,119 @@ function collectWork(): ExecutiveHome["work"] {
 }
 
 export function buildExecutiveHome(): ExecutiveHome {
-  const today = buildTodayContext();
-  const attention = collectAttention(today);
-  const kpi = buildKpiScorecardView({
-    asOf: today.report_date,
-    cache: createMetricResolverCache({ expensive: "cached" }),
-  });
-  const { gaps, summary } = collectGaps(kpi);
-  const work = collectWork();
+  const tenant = getTenantId();
+  let today: ReturnType<typeof buildTodayContext> | null = null;
+  try {
+    today = buildTodayContext();
+  } catch {
+    today = null;
+  }
+
+  const todayOrEmpty = today ?? {
+    tenant,
+    report_date: currentDate(),
+    company_name: tenant,
+    decisions: [],
+    approvals: [],
+    wire_pending_count: 0,
+    wire_pending: [],
+    wire_delivery_pending_count: 0,
+    wire_delivery: [],
+    email_wire_pending_count: 0,
+    email_wire_pending: [],
+    witness_pending: [],
+    witness_pending_count: 0,
+    inbox_pending: [],
+    mail_intake_pending_count: 0,
+    mail_intake_action_required_count: 0,
+    mail_intake_pending: [],
+    sender_identification_pending_count: 0,
+    sender_identification_pending: [],
+    ceo_inline_questions_pending_count: 0,
+    ceo_inline_questions_pending: [],
+    scheduling_cases_active_count: 0,
+    scheduling_cases_action_count: 0,
+    scheduling_cases_pending: [],
+    escalate_pending_count: 0,
+    agent_coo_relay_count: 0,
+    agent_coo_relay: [],
+    agent_steward_inbox_count: 0,
+    agent_steward_inbox: [],
+    kpis: [],
+    agent_summary_paths: [],
+  };
+
+  const attention = collectAttention(todayOrEmpty as ReturnType<typeof buildTodayContext>);
+
+  let gaps: ExecutiveGapRow[] = [];
+  let summary: ExecutiveHome["gap_summary"] = {
+    green: 0,
+    amber: 0,
+    red: 0,
+    unknown: 0,
+    target_missing: 0,
+  };
+  let variance: ExecutiveHome["variance"];
+  try {
+    const kpi = buildKpiScorecardView({
+      asOf: todayOrEmpty.report_date,
+      cache: createMetricResolverCache({ expensive: "cached" }),
+    });
+    ({ gaps, summary } = collectGaps(kpi));
+    try {
+      const fy = kpi.fiscal_year || "FY2026";
+      const report = computeVarianceReport(fy);
+      variance = {
+        fiscal_year: report.fiscalYear,
+        plan_total: report.planTotal,
+        actual_total: report.actualTotal,
+        delta_total: report.deltaTotal,
+        href: "/?wallet=1",
+      };
+    } catch {
+      variance = undefined;
+    }
+  } catch {
+    variance = undefined;
+  }
+
+  let work: ExecutiveHome["work"] = {
+    employee: [],
+    guest: [],
+    ai: [],
+    unassigned: [],
+  };
+  try {
+    work = collectWork();
+  } catch {
+    /* optional */
+  }
   const work_open_count =
     work.employee.length +
     work.guest.length +
     work.ai.length +
     work.unassigned.length;
 
-  let variance: ExecutiveHome["variance"];
-  try {
-    const fy = kpi.fiscal_year || "FY2026";
-    const report = computeVarianceReport(fy);
-    variance = {
-      fiscal_year: report.fiscalYear,
-      plan_total: report.planTotal,
-      actual_total: report.actualTotal,
-      delta_total: report.deltaTotal,
-      href: "/?wallet=1",
-    };
-  } catch {
-    variance = undefined;
-  }
-
   return executiveHomeSchema.parse({
     ok: true as const,
-    tenant: today.tenant,
-    report_date: today.report_date,
-    company_name: today.company_name,
+    tenant: todayOrEmpty.tenant,
+    report_date: todayOrEmpty.report_date,
+    company_name: todayOrEmpty.company_name,
     attention,
     attention_count: attention.length,
-    lanes: collectMalLanes(today),
+    lanes: collectMalLanes(todayOrEmpty),
     gaps,
     gap_summary: summary,
     work,
     work_open_count,
-    finance_runway_months: today.finance_runway_months ?? null,
-    finance_cash_balance: today.finance_cash_balance ?? null,
-    agent_summaries: (today.agent_summary_paths ?? []).slice(0, 8).map((path) => ({
-      path,
-      label: agentSummaryLabel(path),
-    })),
+    finance_runway_months: todayOrEmpty.finance_runway_months ?? null,
+    finance_cash_balance: todayOrEmpty.finance_cash_balance ?? null,
+    agent_summaries: (todayOrEmpty.agent_summary_paths ?? [])
+      .slice(0, 8)
+      .map((path) => ({
+        path,
+        label: agentSummaryLabel(path),
+      })),
     variance,
   });
 }

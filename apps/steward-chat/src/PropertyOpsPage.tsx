@@ -55,6 +55,16 @@ function PropertyCard({
         </dl>
       </header>
 
+      {(card.next_actions?.length ?? 0) > 0 ? (
+        <p className="section-cta">
+          {card.next_actions!.map((a) => (
+            <a key={a.id} className="btn btn-ghost btn-sm" href={a.href}>
+              {a.label}
+            </a>
+          ))}
+        </p>
+      ) : null}
+
       <div className="property-ops-grid">
         <div>
           <h3 className="section-title">{copy.propertyOpsDue}</h3>

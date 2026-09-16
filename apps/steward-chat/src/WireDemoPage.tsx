@@ -17,6 +17,53 @@ function statusLabel(status: WireDemoStep["status"], copy: Copy): string {
   return copy.wireDemoInfo;
 }
 
+function stepTitle(id: string, copy: Copy): string {
+  if (id === "peer") return copy.wireDemoStepPeer;
+  if (id === "propose") return copy.wireDemoStepPropose;
+  if (id === "approve") return copy.wireDemoStepApprove;
+  if (id === "deliver") return copy.wireDemoStepDeliver;
+  if (id === "ack") return copy.wireDemoStepAck;
+  return id;
+}
+
+function stepSummary(summary: string, copy: Copy): string {
+  if (summary.startsWith("registered:")) {
+    const parts = summary.split(":");
+    return copy.wireDemoSummaryRegistered(parts[1] ?? "", parts[2] ?? "");
+  }
+  if (summary.startsWith("approvals_pending:")) {
+    return copy.wireDemoSummaryApprovals(Number(summary.split(":")[1] ?? 0));
+  }
+  if (summary.startsWith("wire_pending:")) {
+    return copy.wireDemoSummaryWirePending(Number(summary.split(":")[1] ?? 0));
+  }
+  const map: Record<string, string> = {
+    missing_peer: copy.wireDemoSummaryMissingPeer,
+    gateway_ready: copy.wireDemoSummaryGatewayReady,
+    gateway_missing: copy.wireDemoSummaryGatewayMissing,
+    approvals_idle: copy.wireDemoSummaryApprovalsIdle,
+    wire_idle: copy.wireDemoSummaryWireIdle,
+    witness_ready: copy.wireDemoSummaryWitnessReady,
+    witness_missing: copy.wireDemoSummaryWitnessMissing,
+  };
+  return map[summary] ?? summary;
+}
+
+function stepDetail(detail: string | undefined, copy: Copy): string | null {
+  if (!detail) return null;
+  const map: Record<string, string> = {
+    delivery_ok: copy.wireDemoDetailDeliveryOk,
+    delivery_missing: copy.wireDemoDetailDeliveryMissing,
+    peer_cli_hint: copy.wireDemoDetailPeerCli,
+    propose_via_secretary: copy.wireDemoDetailProposeSecretary,
+    need_gateway: copy.wireDemoDetailNeedGateway,
+    approvals_wire_scope: copy.wireDemoDetailApprovals,
+    flush_via_wire: copy.wireDemoDetailFlush,
+    seed_cli_destructive: copy.wireDemoDetailSeed,
+  };
+  return map[detail] ?? detail;
+}
+
 export function WireDemoPage() {
   const copy = useCopy(STEWARD_COPY);
   const [data, setData] = useState<WireDemoWalkthrough | null>(null);
@@ -42,8 +89,8 @@ export function WireDemoPage() {
           </p>
 
           <section className="outlook-panel">
-            <h2 className="section-title">{data.story_title}</h2>
-            <p className="page-desc muted">{data.story_lead}</p>
+            <h2 className="section-title">{copy.wireDemoStoryTitle}</h2>
+            <p className="page-desc muted">{copy.wireDemoStoryLead}</p>
             <div className="outlook-kpi summary-grid">
               <div>
                 <span className="kpi-value">{data.peers.length}</span>
@@ -65,17 +112,20 @@ export function WireDemoPage() {
             <ol className="executive-work-list">
               {data.steps.map((step) => (
                 <li key={step.id}>
+                  <p>
+                    [{statusLabel(step.status, copy)}] {stepTitle(step.id, copy)}
+                  </p>
+                  <p className="muted">{stepSummary(step.summary, copy)}</p>
+                  {stepDetail(step.detail, copy) ? (
+                    <p className="muted">{stepDetail(step.detail, copy)}</p>
+                  ) : null}
                   {step.href ? (
-                    <a href={step.href}>
-                      [{statusLabel(step.status, copy)}] {step.title}
-                    </a>
-                  ) : (
-                    <span>
-                      [{statusLabel(step.status, copy)}] {step.title}
-                    </span>
-                  )}
-                  <p className="muted">{step.summary}</p>
-                  {step.detail ? <p className="muted">{step.detail}</p> : null}
+                    <p className="section-cta">
+                      <a className="btn btn-primary btn-sm" href={step.href}>
+                        {copy.wireDemoOpenNext}
+                      </a>
+                    </p>
+                  ) : null}
                 </li>
               ))}
             </ol>
@@ -97,7 +147,10 @@ export function WireDemoPage() {
             </section>
           ) : null}
 
-          <p className="muted">{data.cli_hint}</p>
+          <details className="advanced-panel">
+            <summary>{copy.wireDemoCliSummary}</summary>
+            <p className="muted">{copy.wireDemoCliHint}</p>
+          </details>
 
           <p className="section-cta">
             <a className="btn btn-primary btn-sm" href={data.wire_console_href}>
