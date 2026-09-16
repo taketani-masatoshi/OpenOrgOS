@@ -1,0 +1,25 @@
+---
+description: 実テナント・秘密を GitHub に載せない（tip 隔離・履歴 rewrite なし）
+alwaysApply: true
+---
+
+# テナント情報を GitHub に載せない
+
+対象: OpenOrgOS（このリポ）および傘 OOO / OS_Community。
+
+## 禁止（先端 tip）
+
+- `tenants/<id>/` の秘密（`*.pem`、`*.key`、実 `.env`、signing keys）
+- チャット threads / command-plans、records vault、payroll 明細など runtime・個情
+- コミット依頼があっても上記は stage / commit / push しない
+
+## 例外
+
+- `tenants/_template/` および明示 fixture（実テナント名・秘密を混ぜない）
+- `*.example` / `*.example.yaml`
+
+## 履歴
+
+過去コミットに残る秘密の history rewrite はしない。先端から外し、再発を `.gitignore` で止める。
+
+迷ったら載せない。
