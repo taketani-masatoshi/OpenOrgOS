@@ -7,10 +7,6 @@ import {
   type SecretaryWorkbench,
 } from "./api";
 
-function formatYen(n: number): string {
-  return `${Math.round(n).toLocaleString("ja-JP")} 円`;
-}
-
 function RowSeverity({ severity }: { severity: "p0" | "p1" | "p2" }) {
   return (
     <span className={`executive-severity executive-severity-${severity}`}>
@@ -139,12 +135,6 @@ export function SecretaryWorkbenchPage() {
             <dt>{copy.secretaryStatApprovals}</dt>
             <dd>{company.approvals_pending}</dd>
           </div>
-          {company.cash_balance != null ? (
-            <div>
-              <dt>{copy.secretaryStatCash}</dt>
-              <dd>{formatYen(company.cash_balance)}</dd>
-            </div>
-          ) : null}
         </dl>
       </header>
 

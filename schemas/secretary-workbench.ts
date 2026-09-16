@@ -50,9 +50,8 @@ export const secretaryApprovalRowSchema = z.object({
   severity: secretaryRowSeveritySchema,
 });
 
+/** Company lane counts only — no finance KPIs (Secretary must not read data/finance/**). */
 export const secretaryCompanyStateSchema = z.object({
-  cash_balance: z.number().nullable().optional(),
-  runway_months: z.number().nullable().optional(),
   mail_pending: z.number().int().nonnegative(),
   mail_action_required: z.number().int().nonnegative(),
   approvals_pending: z.number().int().nonnegative(),

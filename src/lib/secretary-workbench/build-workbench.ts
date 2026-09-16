@@ -60,9 +60,7 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
       const severity =
         entry.importance === "p0"
           ? "p0"
-          : entry.importance === "p1" ||
-              entry.urgency === "immediate" ||
-              entry.urgency === "today"
+          : entry.importance === "p1" || entry.urgency === "immediate" || entry.urgency === "today"
             ? "p1"
             : "p2";
       mail.push({
@@ -82,7 +80,7 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
   const drafts: SecretaryDraftRow[] = [];
   try {
     const pending = listCorrespondenceDrafts().filter(
-      (d) => d.status === "draft" || d.status === "pending_approval",
+      (d) => d.status === "draft" || d.status === "pending_approval"
     );
     for (const d of pending.slice(0, MAX_DRAFTS)) {
       drafts.push({
@@ -103,8 +101,7 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
 
   const tasks: SecretaryTaskRow[] = [];
   for (const t of view.tasks.slice(0, MAX_TASKS)) {
-    const severity =
-      t.priority === "p0" ? "p0" : t.priority === "p1" ? "p1" : "p2";
+    const severity = t.priority === "p0" ? "p0" : t.priority === "p1" ? "p1" : "p2";
     tasks.push({
       id: t.id,
       title: t.title,
@@ -136,10 +133,7 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
 
   const approvals: SecretaryApprovalRow[] = [];
   try {
-    for (const a of listOrgApprovals({ status: "pending_approval" }).slice(
-      0,
-      MAX_APPROVALS,
-    )) {
+    for (const a of listOrgApprovals({ status: "pending_approval" }).slice(0, MAX_APPROVALS)) {
       if (!a.approval_id) continue;
       approvals.push({
         id: a.approval_id,
@@ -183,8 +177,6 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
     tasks,
     approvals,
     company: {
-      cash_balance: today?.finance_cash_balance ?? null,
-      runway_months: today?.finance_runway_months ?? null,
       mail_pending: today?.mail_intake_pending_count ?? mail.length,
       mail_action_required: today?.mail_intake_action_required_count ?? 0,
       approvals_pending: approvals.length,

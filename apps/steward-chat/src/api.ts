@@ -564,8 +564,6 @@ export type SecretaryWorkbench = {
     severity: "p0" | "p1" | "p2";
   }>;
   company: {
-    cash_balance?: number | null;
-    runway_months?: number | null;
     mail_pending: number;
     mail_action_required: number;
     approvals_pending: number;

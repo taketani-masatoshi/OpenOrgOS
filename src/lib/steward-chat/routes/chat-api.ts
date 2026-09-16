@@ -63,6 +63,10 @@ import {
 } from "../wire-witness.js";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
+import {
+  operatorMayViewFinanceSummary,
+  redactFinanceSummaryFields,
+} from "../../console-auth/finance-summary-access.js";
 import { appendChatAudit, auditChatMessage } from "../audit.js";
 import { buildOperatorStats } from "../operator-stats.js";
 import {
@@ -763,14 +767,23 @@ export async function handleChatApi(
   if (pathname === "/chat/v1/today" && method === "GET") {
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     const today = buildTodayContext();
-    json(res, 200, today);
+    json(
+      res,
+      200,
+      redactFinanceSummaryFields(today, operatorMayViewFinanceSummary(ctx.user)),
+    );
     return true;
   }
 
   if (pathname === "/chat/v1/executive/home" && method === "GET") {
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     try {
-      json(res, 200, buildExecutiveHome());
+      const home = buildExecutiveHome();
+      json(
+        res,
+        200,
+        redactFinanceSummaryFields(home, operatorMayViewFinanceSummary(ctx.user)),
+      );
     } catch (err) {
       json(res, 500, {
         ok: false,
@@ -795,7 +808,10 @@ export async function handleChatApi(
 
   if (pathname === "/chat/v1/today.md" && method === "GET") {
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
-    const today = buildTodayContext();
+    const today = redactFinanceSummaryFields(
+      buildTodayContext(),
+      operatorMayViewFinanceSummary(ctx.user),
+    );
     res.writeHead(200, { "Content-Type": "text/markdown; charset=utf-8" });
     res.end(formatTodayContextMarkdown(today));
     return true;

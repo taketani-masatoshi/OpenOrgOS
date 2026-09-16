@@ -55,7 +55,8 @@ export function collectOpsLaneCounts(): OpsLaneCounts {
     out.mail = listTriageEntries({ unprocessed: true, limit: 50 }).filter(
       (e) => e.disposition !== "spam",
     ).length;
-    out.drafts = listCorrespondenceDrafts({ limit: 50 }).length;
+    // Real draft count for maturity signals (not a display cap).
+    out.drafts = listCorrespondenceDrafts().length;
     out.workbench_ok = true;
   } catch {
     out.workbench_ok = false;

@@ -443,6 +443,8 @@ export function buildExecutiveHome(): ExecutiveHome {
     agent_steward_inbox: [],
     kpis: [],
     agent_summary_paths: [],
+    finance_runway_months: null,
+    finance_cash_balance: null,
   };
 
   const attention = collectAttention(todayOrEmpty as ReturnType<typeof buildTodayContext>);

@@ -22,6 +22,8 @@ describe("buildSecretaryWorkbench", () => {
       tasks_p0: expect.any(Number),
       candidates: expect.any(Number),
     });
+    expect(wb.company).not.toHaveProperty("cash_balance");
+    expect(wb.company).not.toHaveProperty("runway_months");
     // L1 surface: no body fields on mail/draft rows
     for (const row of wb.mail) {
       expect(row).toHaveProperty("subject");
