@@ -137,8 +137,8 @@ function collectLanes(): CoreLane[] {
           ? "受信と下書きが両方つながっている"
           : mailLevel === "operational"
             ? "受信または下書きが動いている"
-            : "MailWorkbench / triage 面はあるが件数ゼロ",
-        "/wire/",
+            : "秘書ワークベンチはあるが件数ゼロ",
+        "/secretary/workbench/",
         [`mail=${mailN}`, `drafts=${draftN}`],
       ),
     );
@@ -154,7 +154,14 @@ function collectLanes(): CoreLane[] {
       ),
     );
     lanes.push(
-      lane("mail", "メール運用", "missing", "メール面を評価できない", "/wire/", []),
+      lane(
+        "mail",
+        "メール運用",
+        "missing",
+        "メール面を評価できない",
+        "/secretary/workbench/",
+        [],
+      ),
     );
   }
 

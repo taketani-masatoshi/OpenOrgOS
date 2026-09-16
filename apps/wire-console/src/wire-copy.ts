@@ -16,8 +16,10 @@ export const WIRE_COPY = defineCopy(
     opsPanel: "技術者向け（配送・公証）",
     workbenchLead:
       "契約・請求・支払を、相手会社へ署名付きで伝え、第三者公証で確かめる画面です。",
-    composeSecretaryHint: "起案は秘書ワークベンチで行います。ここは承認・送信・公証が本線です。",
-    composeAdvanced: "上級: 新規作成",
+    composeSecretaryHint:
+      "組織間の正式通知の起案は上級パネルから。日常は承認・送信・公証が本線です。人間メールは秘書ワークベンチへ。",
+    composeAdvanced: "上級: 組織間通知を起案",
+    humanMailLink: "秘書ワークベンチ",
     approvals: "承認",
     waitingBadge: (n: number) => `待ち ${n}`,
     colNumber: "番号",
@@ -134,8 +136,9 @@ export const WIRE_COPY = defineCopy(
     workbenchLead:
       "Send signed contract, invoice, and payment notices to counterpart orgs — then verify with independent witness.",
     composeSecretaryHint:
-      "Draft in Secretary Workbench. This screen is for approve, send, and witness.",
-    composeAdvanced: "Advanced: compose",
+      "Compose org-to-org notices from Advanced. Day-to-day work here is approve, send, and witness. Human email belongs in Secretary Workbench.",
+    composeAdvanced: "Advanced: compose org notice",
+    humanMailLink: "Secretary Workbench",
     approvals: "Approvals",
     waitingBadge: (n: number) => `Waiting ${n}`,
     colNumber: "No.",

@@ -34,6 +34,8 @@ export function pathActive(pathname = window.location.pathname): ShellRoute {
   if (path === "/properties" || path.startsWith("/properties/")) return "properties";
   if (path === "/stays" || path.startsWith("/stays/")) return "stays";
   if (path === "/approvals" || path.startsWith("/approvals/")) return "approvals";
+  // PassKey settings before /wire — `/wire/settings` must not be swallowed by Wire.
+  if (isPasskeySettingsPath(pathname)) return "settings";
   if (path === "/wire/demo" || path.startsWith("/wire/demo/")) return "wire-demo";
   if (path === "/wire" || path.startsWith("/wire/")) return "wire";
   if (path === "/customers/churn" || path.startsWith("/customers/churn/")) {
@@ -61,7 +63,6 @@ export function pathActive(pathname = window.location.pathname): ShellRoute {
   if (path === "/chat-settings" || path.startsWith("/chat-settings/")) {
     return "chat-settings";
   }
-  if (isPasskeySettingsPath(pathname)) return "settings";
   const search =
     typeof window !== "undefined" ? window.location.search : "";
   const params = new URLSearchParams(search);

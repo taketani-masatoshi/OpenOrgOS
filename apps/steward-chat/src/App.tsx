@@ -186,9 +186,6 @@ type MalOpsSubNavActive =
   | "home"
   | "properties"
   | "secretary-workbench"
-  | "module-maturity"
-  | "wire-demo"
-  | "contracts"
   | "stays";
 
 function MalOpsSubNav({ active }: { active: MalOpsSubNavActive }) {
@@ -205,17 +202,6 @@ function MalOpsSubNav({ active }: { active: MalOpsSubNavActive }) {
       href: "/secretary/workbench/",
       label: copy.secretaryWorkbench,
     },
-    {
-      id: "module-maturity" as const,
-      href: "/modules/maturity/",
-      label: copy.maturityNav,
-    },
-    {
-      id: "wire-demo" as const,
-      href: "/wire/demo/",
-      label: copy.wireDemoNav,
-    },
-    { id: "contracts" as const, href: "/contracts/", label: copy.contractsNav },
     { id: "stays" as const, href: "/stays/", label: copy.propertyOpsOpenStays },
   ];
   return (
@@ -508,10 +494,7 @@ export function App() {
       ) : shellActive === "org" ? (
         <OrgChartPage />
       ) : shellActive === "contracts" ? (
-        <div className="agent-section">
-          {malOps ? <MalOpsSubNav active="contracts" /> : null}
-          <ContractsPage />
-        </div>
+        <ContractsPage />
       ) : shellActive === "stays" ? (
         <div className="agent-section">
           {malOps ? <MalOpsSubNav active="stays" /> : null}
@@ -539,10 +522,7 @@ export function App() {
       ) : shellActive === "wire" ? (
         <WireConsolePage />
       ) : shellActive === "wire-demo" ? (
-        <div className="agent-section">
-          {malOps ? <MalOpsSubNav active="wire-demo" /> : null}
-          <WireDemoPage />
-        </div>
+        <WireDemoPage />
       ) : shellActive === "secretary-workbench" ? (
         <div className="agent-section">
           {malOps ? (
@@ -554,11 +534,7 @@ export function App() {
         </div>
       ) : shellActive === "module-maturity" ? (
         <div className="agent-section">
-          {malOps ? (
-            <MalOpsSubNav active="module-maturity" />
-          ) : (
-            <AgentsSubNav active="module-maturity" />
-          )}
+          <AgentsSubNav active="module-maturity" />
           <ModuleMaturityPage />
         </div>
       ) : shellActive === "secretary" ||

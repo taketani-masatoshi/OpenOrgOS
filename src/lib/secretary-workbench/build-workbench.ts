@@ -127,7 +127,7 @@ export function buildSecretaryWorkbench(): SecretaryWorkbench {
       priority: c.priority,
       status: c.status,
       due: c.due ?? null,
-      href: c.href.startsWith("/wire/") ? SECRETARY_MAIL_HREF : c.href,
+      href: c.href,
       severity: c.priority === "p0" ? "p0" : c.priority === "p1" ? "p1" : "p2",
       candidate: true,
       candidate_kind: c.kind,

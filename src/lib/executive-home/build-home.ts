@@ -31,6 +31,7 @@ import { buildTaskView } from "../tasks/task-view.js";
 import { buildPropertyOpsDashboard } from "../property-ops/build-dashboard.js";
 import { computeModuleReadiness } from "../module-readiness-score.js";
 import { loadEnabledModulesSafe } from "../modules.js";
+import { listOrgApprovals } from "../org/approval/reject.js";
 import { getTenantId } from "../tenant.js";
 
 const MAX_ATTENTION = 24;
@@ -298,12 +299,17 @@ function collectMalLanes(today: {
       secretary_href: "/secretary/workbench/",
       properties_href: "/properties/",
       wire_href: "/wire/",
-      modules_href: "/modules/",
+      modules_href: "/modules/maturity/",
       tasks_p0: view.counts.p0,
       tasks_open: view.counts.open,
       mail_action_required: today.mail_intake_action_required_count ?? 0,
-      approvals_pending: view.candidates.filter((c) => c.kind === "approval")
-        .length,
+      approvals_pending: (() => {
+        try {
+          return listOrgApprovals({ status: "pending_approval" }).length;
+        } catch {
+          return 0;
+        }
+      })(),
       property_due_p0: propertyDueP0,
       wire_pending: today.wire_pending?.length ?? 0,
       modules_unset: modulesUnset,
@@ -319,7 +325,7 @@ function collectMalLanes(today: {
       secretary_href: "/secretary/workbench/",
       properties_href: "/properties/",
       wire_href: "/wire/",
-      modules_href: "/modules/",
+      modules_href: "/modules/maturity/",
       tasks_p0: 0,
       tasks_open: 0,
       mail_action_required: today.mail_intake_action_required_count ?? 0,

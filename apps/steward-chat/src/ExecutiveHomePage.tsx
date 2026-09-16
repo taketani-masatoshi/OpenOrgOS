@@ -244,7 +244,7 @@ export function ExecutiveHomePage() {
                 </div>
                 {(data.lanes.modules_unset ?? 0) > 0 ? (
                   <div>
-                    <a href={data.lanes.modules_href ?? "/modules/"}>
+                    <a href={data.lanes.modules_href ?? "/modules/maturity/"}>
                       <span className="kpi-value">{data.lanes.modules_unset}</span>
                       <span className="kpi-label">{copy.executiveLaneModulesUnset}</span>
                     </a>

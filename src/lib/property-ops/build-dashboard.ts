@@ -105,7 +105,8 @@ function insuranceForProperty(
       (property.type === "rental" && /賃貸|番町|bancho|rent/.test(blob))
     );
   });
-  const rows = (matched.length > 0 ? matched : policies).map((p) => {
+  // No all-policy fallback — unmatched properties show empty insurance.
+  const rows = matched.map((p) => {
     let severity: "p0" | "p1" | "p2" | undefined;
     if (p.renews_on) {
       const days = daysBetween(today, p.renews_on);
@@ -239,12 +240,14 @@ function dueForProperty(
   })();
   const stayProp = new Map(stays.map((s) => [s.id, s.property_id]));
 
+  const tenantHospitalityId = defaultHospitalityPropertyId();
   const items: PropertyOpsDueRow[] = [];
   try {
     for (const d of listHospitalityOpsDue(today)) {
       let belongs = false;
       if (d.kind === "tax" || d.kind === "register" || d.kind === "nights_cap") {
-        belongs = true;
+        // Tenant-level hospitality due → default hospitality property only.
+        belongs = propertyId === tenantHospitalityId;
       } else if (
         d.kind === "stay" ||
         d.kind === "cleaning" ||
@@ -255,9 +258,7 @@ function dueForProperty(
           /STAY-\d{4}-\d+/i.exec(d.id)?.[0] ??
           /STAY-\d{4}-\d+/i.exec(d.title)?.[0];
         const pid = stayId ? stayProp.get(stayId) : undefined;
-        belongs = !pid || pid === propertyId;
-      } else {
-        belongs = true;
+        belongs = pid === propertyId;
       }
       if (!belongs) continue;
       items.push({
@@ -333,6 +334,8 @@ function financeForProperty(property: Property, today: string) {
 
 function registerForProperty(propertyId: string, hospitalityIds: Set<string>) {
   if (!hospitalityIds.has(propertyId)) return undefined;
+  // Guest register is tenant-level — surface only on the default hospitality property.
+  if (propertyId !== defaultHospitalityPropertyId()) return undefined;
   try {
     const result = validateGuestRegister();
     const errors = result.issues.filter((i) => i.level === "error").length;

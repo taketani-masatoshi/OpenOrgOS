@@ -226,7 +226,7 @@ export function MailWorkbench({ tenants }: Props) {
         <p className="muted">{copy.composeSecretaryHint}</p>
         <p className="section-cta">
           <a className="btn btn-ghost btn-sm" href="/secretary/workbench/">
-            Secretary
+            {copy.humanMailLink}
           </a>
           {peers.length ? (
             <>

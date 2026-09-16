@@ -94,7 +94,7 @@ export function buildTaskView(opts?: { includeClosed?: boolean }): TaskView {
         title: entry.subject || "(no subject)",
         priority,
         status: `${entry.importance}/${entry.urgency}`,
-        href: "/wire/",
+        href: `/secretary/workbench/?mail=${encodeURIComponent(entry.id)}`,
       });
     }
   } catch {
