@@ -59,7 +59,19 @@ describe("inspectWebAuthnPage loopback", () => {
 
   it("does not call replace twice for the same target URL", () => {
     const target = "http://localhost:9470/";
-    storage.orgos_webauthn_loopback_redirect = target;
+    storage = { orgos_webauthn_loopback_redirect: target };
+    // Re-install so the storage binding is unambiguous after mutation.
+    installWindow(
+      {
+        hostname: "127.0.0.1",
+        origin: "http://127.0.0.1:9470",
+        href: "http://127.0.0.1:9470/",
+        protocol: "http:",
+        port: "9470",
+        replace,
+      },
+      storage,
+    );
 
     const result = inspectWebAuthnPage({
       expectedOrigin: "http://localhost:9470",
