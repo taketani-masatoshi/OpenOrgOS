@@ -15,6 +15,7 @@ import { sendLedgerMail } from "./ledger-mail.js";
 import { mintPasskeyBootstrapToken } from "../wire-console/auth/passkey-bootstrap.js";
 import type { LedgerPlanId, LedgerSubscriptionStatus } from "../../../schemas/product/ledger-product.js";
 import type { StripeWebhookEvent } from "./stripe-checkout.js";
+import { buildProvisionSetupUrl } from "./ledger-public-url.js";
 
 export function findTenantIdByStripeCustomer(customerId: string): string | null {
   const needle = customerId.trim();
@@ -93,18 +94,17 @@ export function handleStripeWebhookEvent(event: StripeWebhookEvent): {
         companyName: signup.company_name,
         adminEmail: signup.admin_email,
         plan: signup.plan,
+        signupId: signup.signup_id,
         stripeCustomerId: object.customer as string | undefined,
         stripeSubscriptionId: object.subscription as string | undefined,
       });
-      setLedgerSignupStatus(signupId, "provisioned");
       const bootstrap = runWithTenantId(signup.tenant_id, () =>
         mintPasskeyBootstrapToken({ operatorId: provisioned.ceo_operator_id, ttl: "72h" }),
       );
-      const publicBase =
-        process.env.ORGOS_PUBLIC_BASE_URL?.trim() ||
-        process.env.STEWARD_CHAT_PUBLIC_URL?.trim() ||
-        "http://127.0.0.1:8787";
-      const setupUrl = `${publicBase.replace(/\/$/, "")}/?onboarding=1&bootstrap=${encodeURIComponent(bootstrap.token)}`;
+      const setupUrl = buildProvisionSetupUrl({
+        tenantId: signup.tenant_id,
+        bootstrapToken: bootstrap.token,
+      });
       void sendLedgerMail({
         kind: "provision_complete",
         to: signup.admin_email,

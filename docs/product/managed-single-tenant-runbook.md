@@ -60,14 +60,24 @@ export WIRE_CONSOLE_WEBAUTHN_ORIGIN=https://ledger.acme.example.com
 
 正本: `deploy/product/docker-compose.ledger.yaml`
 
+`LEDGER_DATA` は **テナントディレクトリ**（`tenant.yaml` がある場所）。Compose はそれを `/workspace/tenants/$ORGOS_TENANT` にマウントし、workspace 本体は名前付き volume を使う。
+
 ```bash
 cd deploy/product
-export ORGOS_TENANT=acme-corp
-export LEDGER_HOST=ledger.acme.example.com
-docker compose -f docker-compose.ledger.yaml up -d
-orgos doctor   # prod_* チェック
-curl -fsS "https://${LEDGER_HOST}/chat/v1/health"
+cp .env.ledger.example .env.ledger
+# 編集: ORGOS_TENANT / LEDGER_DATA / ORGOS_PUBLIC_BASE_URL / ORGOS_LEDGER_HOST_SUFFIX / WebAuthn
+docker compose --env-file .env.ledger -f docker-compose.ledger.yaml up -d
+orgos doctor   # prod_* · public_base_url · WebAuthn 整合
+curl -fsS "${ORGOS_PUBLIC_BASE_URL}/health"
 ```
+
+### 公開ドメイン通し確認
+
+- [ ] DNS が `ORGOS_PUBLIC_BASE_URL` / control-plane `host` を指す
+- [ ] TLS 終端（逆プロキシ）が https で応答する
+- [ ] `WIRE_CONSOLE_WEBAUTHN_RP_ID` が公開ホストの suffix、`ORIGIN` が公開 URL と一致
+- [ ] 案内メールのセットアップ URL がブラウザで開ける（localhost に落ちていない）
+- [ ] CEO Passkey 登録が成功する
 
 ## 3. 顧客オンボードチェックリスト
 

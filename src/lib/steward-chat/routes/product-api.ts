@@ -2,12 +2,9 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
 import { readJsonLimited } from "../../http/read-json-limited.js";
-import { listLedgerPlans, resolveLedgerPlan } from "../../product/ledger-plans.js";
-import {
-  createLedgerSignup,
-  updateLedgerSignup,
-} from "../../product/ledger-fleet.js";
-import { createLedgerCheckoutSession, parseStripeWebhookEvent, verifyStripeWebhookSignature } from "../../product/stripe-checkout.js";
+import { listLedgerPlans } from "../../product/ledger-plans.js";
+import { startLedgerSignupCheckout } from "../../product/ledger-signup-checkout.js";
+import { parseStripeWebhookEvent, verifyStripeWebhookSignature } from "../../product/stripe-checkout.js";
 import {
   buildStripeSettingsSnapshot,
   saveStripeSecrets,
@@ -134,45 +131,23 @@ export async function handleProductApi(
         json(res, 422, { ok: false, error: "company_name and admin_email required" });
         return true;
       }
-      const plan = resolveLedgerPlan(planId);
-      const slug = companyName
-        .toLowerCase()
-        .replace(/株式会社|合同会社/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 24);
-      const tenantId =
-        body.tenant_id?.trim().toLowerCase() ?? (slug || `ledger-${Date.now()}`);
-      const signup = createLedgerSignup({
-        tenantId,
+      const origin = publicOrigin(req);
+      const result = await startLedgerSignupCheckout({
         companyName,
         adminEmail,
-        plan: plan.id,
-      });
-      const origin = publicOrigin(req);
-      const checkout = await createLedgerCheckoutSession({
-        signupId: signup.signup_id,
-        email: adminEmail,
-        plan,
-        successUrl: `${origin}/signup?success=1&signup_id=${signup.signup_id}`,
+        plan: planId,
+        tenantId: body.tenant_id?.trim().toLowerCase(),
+        successUrl: `${origin}/signup?success=1`,
         cancelUrl: `${origin}/signup?cancelled=1`,
-      });
-      updateLedgerSignup(signup.signup_id, {
-        status: "checkout",
-        stripe_checkout_session_id: checkout.session_id,
-      });
-      void sendLedgerMail({
-        kind: "signup_received",
-        to: adminEmail,
-        tenantId,
-        companyName,
+        sendSignupMail: true,
       });
       json(res, 200, {
         ok: true,
-        signup_id: signup.signup_id,
-        tenant_id: signup.tenant_id,
-        checkout_url: checkout.url,
-        checkout_mode: checkout.mode,
+        signup_id: result.signup.signup_id,
+        tenant_id: result.signup.tenant_id,
+        checkout_url: result.checkout_url,
+        checkout_mode: result.checkout_mode,
+        resumed: result.resumed,
       });
     } catch (error) {
       json(res, 422, {

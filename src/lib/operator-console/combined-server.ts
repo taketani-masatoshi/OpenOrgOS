@@ -21,7 +21,31 @@ import { handleCommunityHandoff } from "../wire-console/auth/community-handoff.j
 import { preloadOidcJwks } from "../wire-console/auth/oidc.js";
 import { sessionTokenFromRequest } from "../wire-console/auth/session.js";
 import { runWithTenantIdAsync } from "../tenant.js";
-import { resolveTenantFromRequest, isRequestTenantRequired } from "../product/ledger-control-plane.js";
+import {
+  resolveTenantFromRequest,
+  isRequestTenantRequired,
+} from "../product/ledger-control-plane.js";
+import {
+  matchSessionTenant,
+  resolveLoginTenantId,
+} from "../console-auth/session-tenant.js";
+
+async function withLoginTenantAsync<T>(
+  req: IncomingMessage,
+  res: ServerResponse,
+  fn: () => Promise<T>,
+): Promise<T | undefined> {
+  const tenantId = resolveLoginTenantId(req);
+  if (isRequestTenantRequired() && !tenantId) {
+    json(res, 400, {
+      ok: false,
+      error: "X-OrgOS-Tenant or tenant host required (ORGOS_REQUIRE_REQUEST_TENANT=1)",
+    });
+    return undefined;
+  }
+  if (tenantId) return runWithTenantIdAsync(tenantId, fn);
+  return fn();
+}
 
 function logDemoSecurityBanner(): void {
   const demoEnv = process.env.ORGOS_ENV === "demo";
@@ -164,12 +188,30 @@ export async function startOperatorConsoleServer(
       }
 
       if (pathname === "/auth/community-handoff") {
-        handleCommunityHandoff(req, res, url);
+        const tenantId = resolveLoginTenantId(req);
+        if (isRequestTenantRequired() && !tenantId) {
+          json(res, 400, {
+            ok: false,
+            error: "X-OrgOS-Tenant or tenant host required (ORGOS_REQUIRE_REQUEST_TENANT=1)",
+          });
+          return;
+        }
+        if (tenantId) {
+          await runWithTenantIdAsync(tenantId, async () => {
+            handleCommunityHandoff(req, res, url);
+          });
+        } else {
+          handleCommunityHandoff(req, res, url);
+        }
         return;
       }
 
-      if (await handleChatAuthApi(req, res, pathname, method, readBody)) {
-        return;
+      {
+        const authHandled = await withLoginTenantAsync(req, res, () =>
+          handleChatAuthApi(req, res, pathname, method, readBody),
+        );
+        if (authHandled === undefined) return;
+        if (authHandled) return;
       }
 
       if (isPublicChatPath(pathname, method) && pathname.startsWith("/chat/v1/settlement/")) {
@@ -189,29 +231,29 @@ export async function startOperatorConsoleServer(
         if (handled) return;
       }
 
-      if (await handleWireConsoleApi(req, res, pathname, method, url.searchParams)) {
-        return;
+      {
+        const wireHandled = await withLoginTenantAsync(req, res, () =>
+          handleWireConsoleApi(req, res, pathname, method, url.searchParams),
+        );
+        if (wireHandled === undefined) return;
+        if (wireHandled) return;
       }
 
       if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
         const user = requireChatAuth(req, res);
         if (!user) return;
         const requestTenant = resolveTenantFromRequest(req);
-        if (isRequestTenantRequired() && !requestTenant) {
-          json(res, 400, {
-            ok: false,
-            error: "X-OrgOS-Tenant or tenant host required (ORGOS_REQUIRE_REQUEST_TENANT=1)",
-          });
+        const match = matchSessionTenant(user, requestTenant);
+        if (!match.ok) {
+          json(res, match.status, { ok: false, error: match.error });
           return;
         }
-        const runChat = () =>
+        const handled = await runWithTenantIdAsync(match.tenantId, () =>
           handleChatApi(req, res, pathname, method, {
             user,
             sessionToken: sessionTokenFromRequest(req),
-          });
-        const handled = requestTenant
-          ? await runWithTenantIdAsync(requestTenant, runChat)
-          : await runChat();
+          }),
+        );
         if (handled) return;
         json(res, 404, { error: "not found" });
         return;
