@@ -66,7 +66,7 @@ export async function handleWorkflowApi(
           : evaluateWorkflowDocumentWithOptionalLlm(body.document, {
               llm_proposal: body.llm_proposal,
             });
-      json(res, 200, { ok: result.ok, ...result });
+      json(res, 200, result);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       json(res, errorStatus(err), { ok: false, error: message });

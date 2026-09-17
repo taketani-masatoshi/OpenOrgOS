@@ -132,9 +132,9 @@ export function evaluateWorkflowDocument(input: unknown): WorkflowEvaluateResult
 
   let rosterActive: Set<string> | null = null;
   try {
-    const roster = loadTenantAgentRoster();
+    const { roster } = loadTenantAgentRoster();
     rosterActive = new Set(
-      roster.agents.filter((a) => isRosterAgentActive(a)).map((a) => a.id),
+      roster.profiles.operational.filter((id) => isRosterAgentActive(id)),
     );
   } catch {
     rosterActive = null;

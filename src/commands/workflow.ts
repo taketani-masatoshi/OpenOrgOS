@@ -110,7 +110,7 @@ export function runWorkflowEvaluate(opts: {
       : evaluateWorkflowDocumentWithOptionalLlm(input, { llm_proposal });
 
   if (opts.json) {
-    console.log(JSON.stringify({ ok: result.ok, ...result }, null, 2));
+    console.log(JSON.stringify(result, null, 2));
     if (!result.ok) process.exitCode = 1;
     return;
   }
