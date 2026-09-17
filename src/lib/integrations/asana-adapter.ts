@@ -13,6 +13,7 @@ import { loadConnectorSettings, loadConnectorToken } from "./connector-store.js"
 import { hydrateConnectorEnvFromStore } from "./connector-secrets-store.js";
 import { loadHandoff } from "../routing.js";
 import { loadExecutiveTasks } from "../data.js";
+import { setTaskAsanaGid } from "../tasks/store.js";
 
 /** What the Asana task mirrors. `case` is the original (and default) kind. */
 export const asanaTargetKindSchema = z.enum(["case", "work_order", "executive_task"]);
@@ -288,7 +289,8 @@ function resolveAsanaProjectGid(explicit?: string): string | undefined {
 
 /**
  * Mirror an OrgOS record into Asana. Creates the task on first push and
- * updates it afterwards; the OrgOS record is never modified here.
+ * updates it afterwards. For `executive_task`, also stores `links.asana_task_gid`
+ * on tasks.yaml (SSOT remains OrgOS; Asana is a mirror).
  */
 export async function pushAsanaTarget(opts: {
   kind: AsanaTargetKind;
@@ -348,6 +350,13 @@ export async function pushAsanaTarget(opts: {
       }),
     );
     saveAsanaLinks(file);
+    if (opts.kind === "executive_task") {
+      try {
+        setTaskAsanaGid(opts.id, gid);
+      } catch {
+        /* tasks.yaml optional for other kinds */
+      }
+    }
     return { ok: true, task_gid: gid, created: true };
   }
 
@@ -363,6 +372,13 @@ export async function pushAsanaTarget(opts: {
   if (idx >= 0) {
     file.links[idx] = { ...file.links[idx]!, last_pushed_at: new Date().toISOString() };
     saveAsanaLinks(file);
+  }
+  if (opts.kind === "executive_task") {
+    try {
+      setTaskAsanaGid(opts.id, link.task_gid);
+    } catch {
+      /* ignore */
+    }
   }
   return { ok: true, task_gid: link.task_gid, created: false };
 }

@@ -424,7 +424,15 @@ export type AssigneeKind = "employee" | "guest" | "ai" | "unassigned";
 
 export type ExecutiveAttentionItem = {
   id: string;
-  kind: "customer" | "mail" | "scheduling" | "ceo_question" | "approval" | "wire";
+  kind:
+    | "customer"
+    | "mail"
+    | "scheduling"
+    | "ceo_question"
+    | "approval"
+    | "wire"
+    | "task"
+    | "property";
   title: string;
   status: string;
   href: string;
@@ -461,6 +469,25 @@ export type ExecutiveHome = {
   company_name: string;
   attention: ExecutiveAttentionItem[];
   attention_count: number;
+  lanes?: {
+    secretary_href: string;
+    properties_href: string;
+    wire_href?: string;
+    modules_href?: string;
+    tasks_p0: number;
+    tasks_open: number;
+    mail_action_required: number;
+    approvals_pending: number;
+    property_due_p0: number;
+    wire_pending?: number;
+    modules_unset?: number;
+    properties: Array<{
+      property_id: string;
+      name: string;
+      due_p0: number;
+      href: string;
+    }>;
+  };
   gaps: ExecutiveGapRow[];
   gap_summary: {
     green: number;
@@ -490,6 +517,76 @@ export type ExecutiveHome = {
 
 export async function fetchExecutiveHome(): Promise<ExecutiveHome> {
   return chatApi<ExecutiveHome>("/chat/v1/executive/home");
+}
+
+export type SecretaryWorkbench = {
+  ok: true;
+  tenant: string;
+  report_date: string;
+  company_name: string;
+  mail: Array<{
+    id: string;
+    subject: string;
+    from_label: string;
+    importance: "p0" | "p1" | "p2" | "p3";
+    urgency: string;
+    href: string;
+    severity: "p0" | "p1" | "p2";
+  }>;
+  drafts: Array<{
+    id: string;
+    subject: string;
+    to_label: string;
+    status: string;
+    created_at: string;
+    href: string;
+  }>;
+  tasks: Array<{
+    id: string;
+    title: string;
+    priority: "p0" | "p1" | "p2" | "p3";
+    status: string;
+    due?: string | null;
+    next_action?: string;
+    property_id?: string;
+    module_id?: string;
+    asana_task_gid?: string;
+    href: string;
+    severity: "p0" | "p1" | "p2";
+    candidate: boolean;
+    candidate_kind?: "mail" | "work_order" | "approval";
+  }>;
+  approvals: Array<{
+    id: string;
+    title: string;
+    status: string;
+    href: string;
+    severity: "p0" | "p1" | "p2";
+  }>;
+  company: {
+    cash_balance?: number | null;
+    runway_months?: number | null;
+    mail_pending: number;
+    mail_action_required: number;
+    approvals_pending: number;
+    tasks_open: number;
+    tasks_p0: number;
+    candidates: number;
+  };
+  mail_setup?: {
+    ready: boolean;
+    issues: Array<{
+      id: string;
+      severity: "error" | "warning";
+      message: string;
+      fix: string;
+    }>;
+    href: string;
+  };
+};
+
+export async function fetchSecretaryWorkbench(): Promise<SecretaryWorkbench> {
+  return chatApi<SecretaryWorkbench>("/chat/v1/secretary/workbench");
 }
 
 export async function fetchOperatorStats(): Promise<OperatorStats> {
@@ -1862,6 +1959,112 @@ export async function postOrgChartChangeApply(
   });
 }
 
+export interface WorkflowDocumentRow {
+  version: 1;
+  workflow_id: string;
+  kind: string;
+  title: string;
+  description?: string;
+  nodes: unknown[];
+  edges: unknown[];
+}
+
+export interface WorkflowFindingRow {
+  code: string;
+  severity: "error" | "warning" | "info";
+  message: string;
+  node_id?: string;
+  edge_id?: string;
+}
+
+export interface WorkflowEvaluateResponse {
+  ok: boolean;
+  document: WorkflowDocumentRow;
+  findings: WorkflowFindingRow[];
+  proposed_document: WorkflowDocumentRow;
+  used_llm?: boolean;
+  llm_error?: string;
+}
+
+export interface WorkflowStructureProposalRow {
+  change_id: string;
+  approval_id: string;
+  workflow_id: string;
+  grade: "A" | "B" | "C";
+  reason: string;
+  proposed_at: string;
+  proposed_by: string;
+  findings: WorkflowFindingRow[];
+  draft_document: WorkflowDocumentRow;
+  proposed_document: WorkflowDocumentRow;
+  regulation_ref?: {
+    reg_id: string;
+    clause: string;
+    artifact_path: string;
+  };
+}
+
+export interface WorkflowChangeResult {
+  logical_path: string;
+  before_hash: string;
+  after_hash: string;
+  dry_run: boolean;
+}
+
+export async function fetchWorkflows(): Promise<{ documents: WorkflowDocumentRow[] }> {
+  return chatApi("/chat/v1/workflow");
+}
+
+export async function fetchWorkflow(
+  workflowId: string,
+): Promise<{ document: WorkflowDocumentRow }> {
+  return chatApi(`/chat/v1/workflow/${encodeURIComponent(workflowId)}`);
+}
+
+export async function postWorkflowEvaluate(input: {
+  document: unknown;
+  llm_proposal?: unknown;
+}): Promise<WorkflowEvaluateResponse> {
+  return chatApi("/chat/v1/workflow/evaluate", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function fetchWorkflowChanges(): Promise<{
+  proposals: WorkflowStructureProposalRow[];
+}> {
+  return chatApi("/chat/v1/workflow/change");
+}
+
+export async function postWorkflowChangePropose(input: {
+  approval_id: string;
+  change: unknown;
+}): Promise<{ proposal: WorkflowStructureProposalRow }> {
+  return chatApi("/chat/v1/workflow/change/propose", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postWorkflowChangeValidate(
+  changeId: string,
+): Promise<{ result: WorkflowChangeResult }> {
+  return chatApi("/chat/v1/workflow/change/validate", {
+    method: "POST",
+    body: JSON.stringify({ change_id: changeId }),
+  });
+}
+
+export async function postWorkflowChangeApply(
+  changeId: string,
+): Promise<{ result: WorkflowChangeResult }> {
+  return chatApi("/chat/v1/workflow/change/apply", {
+    method: "POST",
+    body: JSON.stringify({ change_id: changeId }),
+  });
+}
+
 export async function fetchProductAdmin(): Promise<CustomerAdminSnapshot> {
   return chatApi<CustomerAdminSnapshot>("/chat/v1/product/admin");
 }
@@ -2809,6 +3012,169 @@ export async function fetchHospitalityOpsDue(): Promise<{
   return chatApi("/chat/v1/hospitality/ops-due");
 }
 
+export type PropertyOpsCard = {
+  property_id: string;
+  name: string;
+  location: string;
+  type: "rental" | "hotel" | "mixed";
+  module_ids: string[];
+  due: Array<{
+    id: string;
+    kind: string;
+    title: string;
+    due_on: string;
+    severity: "p0" | "p1" | "p2";
+    href: string;
+  }>;
+  due_p0: number;
+  insurance: Array<{
+    id: string;
+    name: string;
+    status?: string;
+    renews_on?: string;
+    severity?: "p0" | "p1" | "p2";
+  }>;
+  permits: Array<{
+    id: string;
+    permit_type_id: string;
+    status: string;
+    issued_on?: string;
+    expires_on?: string;
+    severity?: "p0" | "p1" | "p2";
+  }>;
+  bulletins: Array<{
+    id: string;
+    label: string;
+    path: string;
+    present: boolean;
+    href?: string;
+  }>;
+  finance: {
+    monthly_revenue?: number | null;
+    annual_revenue?: number | null;
+    noi?: number | null;
+    monthly_rent?: number | null;
+    vacancy_rate?: number | null;
+    occupancy?: number | null;
+    adr?: number | null;
+    revpar?: number | null;
+    stay_count?: number;
+  };
+  register?: {
+    row_count: number;
+    issue_count: number;
+    error_count: number;
+    ok: boolean;
+    href: string;
+  };
+  facility?: {
+    check_in?: string;
+    check_out?: string;
+    max_guests?: number;
+  };
+  open_tasks: number;
+  href: string;
+  next_actions?: Array<{ id: string; label: string; href: string }>;
+};
+
+export type PropertyOpsDashboard = {
+  ok: true;
+  tenant: string;
+  report_date: string;
+  company_name: string;
+  properties: PropertyOpsCard[];
+};
+
+export async function fetchPropertyOpsDashboard(
+  propertyId?: string,
+): Promise<PropertyOpsDashboard> {
+  const q = propertyId
+    ? `?property_id=${encodeURIComponent(propertyId)}`
+    : "";
+  return chatApi<PropertyOpsDashboard>(`/chat/v1/properties/ops${q}`);
+}
+
+export type ModuleMaturityRow = {
+  id: string;
+  label: string;
+  tier: "skeleton" | "activation_ready" | "production_ready";
+  installed: boolean;
+  enabled: boolean;
+  risk: boolean;
+  risk_severity?: "skeleton_enabled" | "activation_enabled";
+  notes?: string;
+  href?: string;
+};
+
+export type CoreLane = {
+  id: "secretary" | "mail" | "task" | "wire" | "property_ops";
+  label_key: string;
+  level: "missing" | "thin" | "operational" | "closed";
+  surface: "ready" | "missing";
+  load: "idle" | "active";
+  summary_key: string;
+  href: string;
+  signals: string[];
+};
+
+export type ModuleMaturityPanel = {
+  ok: true;
+  tenant: string;
+  report_date: string;
+  summary: {
+    catalog_total: number;
+    installed: number;
+    enabled: number;
+    enabled_production_ready: number;
+    enabled_activation_ready: number;
+    enabled_skeleton: number;
+    risk_count: number;
+    risk_skeleton_count: number;
+    risk_activation_count: number;
+  };
+  lanes: CoreLane[];
+  modules: ModuleMaturityRow[];
+  risks: ModuleMaturityRow[];
+};
+
+export async function fetchModuleMaturityPanel(): Promise<ModuleMaturityPanel> {
+  return chatApi<ModuleMaturityPanel>("/chat/v1/modules/maturity");
+}
+
+export type WireDemoStep = {
+  id: string;
+  title: string;
+  summary: string;
+  status: "ready" | "pending" | "missing" | "info";
+  href?: string;
+  detail?: string;
+};
+
+export type WireDemoWalkthrough = {
+  ok: true;
+  tenant: string;
+  report_date: string;
+  story_title: string;
+  story_lead: string;
+  counterparty: string;
+  peers: Array<{
+    peer_id: string;
+    display_name: string;
+    org_uri?: string;
+    has_delivery_path: boolean;
+  }>;
+  steps: WireDemoStep[];
+  wire_pending_count: number;
+  approvals_pending_count: number;
+  cli_hint: string;
+  wire_console_href: string;
+  approvals_href: string;
+};
+
+export async function fetchWireDemoWalkthrough(): Promise<WireDemoWalkthrough> {
+  return chatApi<WireDemoWalkthrough>("/chat/v1/wire/demo");
+}
+
 export async function postTaxHandoff(fiscalYear?: string): Promise<{
   ok: boolean;
   zip_path: string;
@@ -3752,6 +4118,9 @@ export type ModuleInventoryRow = {
   installed: boolean;
   enabled: boolean;
   tier: string;
+  readiness_pct?: number;
+  gaps?: string[];
+  next_action?: string;
   pending?: { change_id: string; approval_id: string; to_enabled: boolean };
 };
 

@@ -72,6 +72,7 @@ import { runValidateReport } from "../../../commands/validate.js";
 import { handleCashflowChatMessage } from "../../jp-bank-corporate/cashflow-chat-intent.js";
 import { handleOrgBudgetApi } from "./org-budget-api.js";
 import { handleOrgChartApi } from "./org-chart-api.js";
+import { handleWorkflowApi } from "./workflow-api.js";
 import { handlePlatformApi } from "./platform-api.js";
 import { handleEsignApi } from "./esign-api.js";
 import { handleAnalyticsApi } from "./analytics-api.js";
@@ -89,6 +90,7 @@ import { handleTowerApi } from "./tower-api.js";
 import { handleTowerChatMessage } from "../../dispatch-tower/chat-handler.js";
 import { handleAgentInboxApi } from "./agent-inbox-api.js";
 import { buildExecutiveHome } from "../../executive-home/build-home.js";
+import { buildSecretaryWorkbench } from "../../secretary-workbench/build-workbench.js";
 import { handleCorrespondenceApi } from "./correspondence-api.js";
 import { handleIntegrationsApi } from "./integrations-api.js";
 import { handleBrokerApi } from "./broker-api.js";
@@ -718,6 +720,8 @@ export async function handleChatApi(
     return true;
   if (await handleOrgChartApi(req, res, pathname, method, ctx.user))
     return true;
+  if (await handleWorkflowApi(req, res, pathname, method, ctx.user))
+    return true;
   if (await handlePlatformApi(req, res, pathname, method, ctx.user))
     return true;
   if (await handleEsignApi(req, res, pathname, method, ctx.user))
@@ -770,6 +774,19 @@ export async function handleChatApi(
     if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
     try {
       json(res, 200, buildExecutiveHome());
+    } catch (err) {
+      json(res, 500, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/secretary/workbench" && method === "GET") {
+    if (!requireChatPermission(ctx.user, "chat:read", res)) return true;
+    try {
+      json(res, 200, buildSecretaryWorkbench());
     } catch (err) {
       json(res, 500, {
         ok: false,

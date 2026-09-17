@@ -340,6 +340,10 @@ function overlayOrgChartFixtures(): void {
     if (existsSync(histSrc)) {
       cpSync(histSrc, join(destDir, "org-chart-history"), { recursive: true, force: true });
     }
+    const workflowsSrc = join(srcDir, "workflows");
+    if (existsSync(workflowsSrc)) {
+      cpSync(workflowsSrc, join(destDir, "workflows"), { recursive: true, force: true });
+    }
   }
 }
 

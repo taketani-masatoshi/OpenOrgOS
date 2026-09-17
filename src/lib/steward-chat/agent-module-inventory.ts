@@ -11,6 +11,7 @@ import {
 } from "../agent-owner-desks.js";
 import { isRosterAgentActive, loadTenantAgentRoster } from "../agent-roster.js";
 import { getModuleTier } from "../module-readiness.js";
+import { computeModuleReadiness } from "../module-readiness-score.js";
 import {
   listTenantScopeCatalogModuleIds,
   loadEnabledModulesSafe,
@@ -21,6 +22,8 @@ import {
 } from "../modules.js";
 import { listPendingTenantConfigChanges } from "../org/tenant-config-change.js";
 import { DEFAULT_CORE_OPERATIONAL_AGENTS } from "../tenant-roster-bootstrap.js";
+import { listTasks } from "../tasks/store.js";
+import { getTenantId } from "../tenant.js";
 
 export type { AgentLockReason, AgentRequestLane };
 
@@ -54,6 +57,9 @@ export interface ModuleInventoryRow {
   installed: boolean;
   enabled: boolean;
   tier: string;
+  readiness_pct?: number;
+  gaps?: string[];
+  next_action?: string;
   pending?: ModulePendingChange;
 }
 
@@ -216,7 +222,7 @@ export function buildAgentModuleInventory(): AgentModuleInventory {
   agents_available.sort((a, b) => a.label.localeCompare(b.label, "ja"));
 
   const modules_installed: ModuleInventoryRow[] = tenantModules
-    .map((mod) => ({
+    .map((mod) => enrichModuleRow({
       id: mod.id,
       label: moduleLabel(mod.id),
       notes: moduleNotes(mod.id, mod.notes),
@@ -225,20 +231,58 @@ export function buildAgentModuleInventory(): AgentModuleInventory {
       tier: getModuleTier(mod.id),
       pending: pendingModules.get(mod.id),
     }))
-    .sort((a, b) => a.label.localeCompare(b.label, "ja"));
+    .sort(sortModulesByReadiness);
 
   const modules_catalog: ModuleInventoryRow[] = listTenantScopeCatalogModuleIds()
     .filter((id) => !installedIds.has(id))
-    .map((id) => ({
-      id,
-      label: moduleLabel(id),
-      notes: moduleNotes(id),
-      installed: false,
-      enabled: false,
-      tier: getModuleTier(id),
-      pending: pendingModules.get(id),
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label, "ja"));
+    .map((id) =>
+      enrichModuleRow({
+        id,
+        label: moduleLabel(id),
+        notes: moduleNotes(id),
+        installed: false,
+        enabled: false,
+        tier: getModuleTier(id),
+        pending: pendingModules.get(id),
+      }),
+    )
+    .sort(sortModulesByReadiness);
 
   return { agents, agents_available, modules_installed, modules_catalog };
+}
+
+function enrichModuleRow(row: ModuleInventoryRow): ModuleInventoryRow {
+  try {
+    const ready = computeModuleReadiness(row.id, { tenantId: getTenantId() });
+    const gaps = ready.gaps.slice(0, 2);
+    const openTask = listTasks().find(
+      (t) =>
+        t.module_id === row.id &&
+        t.status !== "done" &&
+        t.status !== "cancelled",
+    );
+    const next_action =
+      openTask?.next_action ||
+      openTask?.title ||
+      gaps[0] ||
+      undefined;
+    return {
+      ...row,
+      readiness_pct: ready.pct,
+      gaps,
+      next_action,
+    };
+  } catch {
+    return row;
+  }
+}
+
+function sortModulesByReadiness(a: ModuleInventoryRow, b: ModuleInventoryRow): number {
+  const aGap = (a.gaps?.length ?? 0) > 0 || Boolean(a.next_action) ? 0 : 1;
+  const bGap = (b.gaps?.length ?? 0) > 0 || Boolean(b.next_action) ? 0 : 1;
+  if (aGap !== bGap) return aGap - bGap;
+  const aPct = a.readiness_pct ?? 100;
+  const bPct = b.readiness_pct ?? 100;
+  if (aPct !== bPct) return aPct - bPct;
+  return a.label.localeCompare(b.label, "ja");
 }

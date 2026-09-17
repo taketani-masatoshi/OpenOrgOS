@@ -1,10 +1,13 @@
 /**
- * Console surfaces for contract portfolio and hospitality ops-due (L1).
+ * Console surfaces for contract portfolio, hospitality ops-due, property ops, and module maturity (L1).
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
 import { requireChatPermission } from "../../console-auth/rbac.js";
 import { buildContractStatusView } from "../../contract-status-view.js";
+import { buildModuleMaturityPanel } from "../../module-maturity/build-panel.js";
+import { buildPropertyOpsDashboard } from "../../property-ops/build-dashboard.js";
+import { buildWireDemoWalkthrough } from "../../wire-demo/build-walkthrough.js";
 import {
   hospitalityModuleEnabled,
   listHospitalityOpsDue,
@@ -19,6 +22,9 @@ function json(res: ServerResponse, status: number, body: unknown): void {
 /**
  * GET /chat/v1/contracts/status
  * GET /chat/v1/hospitality/ops-due
+ * GET /chat/v1/properties/ops
+ * GET /chat/v1/modules/maturity
+ * GET /chat/v1/wire/demo
  */
 export async function handleDomainOpsApi(
   req: IncomingMessage,
@@ -67,6 +73,48 @@ export async function handleDomainOpsApi(
             : listHospitalityOpsDue()
           : [],
       });
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/properties/ops" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const propertyId = url.searchParams.get("property_id") ?? undefined;
+      const today = url.searchParams.get("today") ?? undefined;
+      json(res, 200, buildPropertyOpsDashboard({ propertyId, today }));
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/modules/maturity" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      json(res, 200, buildModuleMaturityPanel());
+    } catch (error) {
+      json(res, 422, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/wire/demo" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      json(res, 200, buildWireDemoWalkthrough());
     } catch (error) {
       json(res, 422, {
         ok: false,

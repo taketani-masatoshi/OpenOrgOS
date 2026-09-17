@@ -321,6 +321,12 @@ export const SKILL_COMMANDS = [
     description: "変更提案の dry-run / apply",
   },
   {
+    id: "workflow-evaluate",
+    skill: "workflow_evaluate",
+    agent: "Operations",
+    description: "ワークフロー構成案の決定論評価",
+  },
+  {
     id: "hr-headcount",
     skill: "hr_headcount",
     agent: "Human Resources",
@@ -815,6 +821,30 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
         dryRun: !opts.write,
         json: opts.json,
       });
+      break;
+    }
+    case "workflow-evaluate": {
+      const { runWorkflowEvaluate } = await import("./workflow.js");
+      const { writeFileSync, mkdtempSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const { tmpdir } = await import("node:os");
+      if (opts.body) {
+        const dir = mkdtempSync(join(tmpdir(), "orgos-wf-eval-"));
+        let raw: unknown;
+        try {
+          raw = JSON.parse(opts.body);
+        } catch {
+          const YAML = (await import("yaml")).default;
+          raw = YAML.parse(opts.body);
+        }
+        const file = join(dir, "draft.json");
+        writeFileSync(file, JSON.stringify(raw));
+        runWorkflowEvaluate({ file, json: opts.json ?? true });
+      } else if (opts.id) {
+        runWorkflowEvaluate({ id: opts.id, json: opts.json ?? true });
+      } else {
+        throw new Error("workflow-evaluate requires --id <workflow_id> or --body <document>");
+      }
       break;
     }
     case "hr-headcount":
