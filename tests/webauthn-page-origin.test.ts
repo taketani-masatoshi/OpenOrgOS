@@ -16,15 +16,18 @@ type MockLocation = {
 };
 
 function installWindow(location: MockLocation, storage: Record<string, string> = {}): void {
+  const sessionStorage = {
+    getItem: (key: string) => storage[key] ?? null,
+    setItem: (key: string, value: string) => {
+      storage[key] = value;
+    },
+  };
   vi.stubGlobal("window", {
     location,
-    sessionStorage: {
-      getItem: (key: string) => storage[key] ?? null,
-      setItem: (key: string, value: string) => {
-        storage[key] = value;
-      },
-    },
+    sessionStorage,
   });
+  // Also expose as a free binding — production browsers do; Node tests may not.
+  vi.stubGlobal("sessionStorage", sessionStorage);
 }
 
 describe("inspectWebAuthnPage loopback", () => {
