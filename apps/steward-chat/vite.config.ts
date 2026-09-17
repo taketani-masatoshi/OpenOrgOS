@@ -13,7 +13,7 @@ export default defineConfig({
     alias: {
       "@ops-shared": path.resolve(appsRoot, "shared"),
       "@wire-console": path.resolve(appsRoot, "wire-console/src"),
-      "@orgos/workflow-canvas": path.resolve(coreRoot, "src/lib/workflow-canvas/index.ts"),
+      "@orgos/workflow-canvas": path.resolve(coreRoot, "src/lib/workflow-canvas/browser.ts"),
     },
   },
   server: {

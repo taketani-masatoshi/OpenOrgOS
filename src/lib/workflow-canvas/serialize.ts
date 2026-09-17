@@ -18,6 +18,7 @@ const NODE_TYPE_SET = new Set<string>(WORKFLOW_NODE_TYPES);
 
 export const DEFAULT_WORKFLOW_META: WorkflowDocumentMeta = {
   version: 1,
+  workflow_id: "WF-untitled",
   kind: "system_map",
   title: "Untitled workflow",
 };
@@ -132,6 +133,7 @@ export function exportToJSON(
 
   return workflowDocumentSchema.parse({
     version: 1,
+    workflow_id: meta.workflow_id,
     kind: meta.kind,
     title: meta.title,
     ...(meta.description ? { description: meta.description } : {}),

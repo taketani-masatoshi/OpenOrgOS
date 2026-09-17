@@ -1,9 +1,13 @@
 /**
  * Operator Console — when to show 顧客管理 tab and sub-panels.
+ *
+ * Must stay cheap: BudgetAuthGate awaits `/chat/v1/customers/nav` on every
+ * login. Do not call buildAgentModuleInventory() here — that walks readiness
+ * for every installed module (~seconds on mal).
  */
 import { isRosterAgentActive } from "./agent-roster.js";
-import { buildAgentModuleInventory } from "./steward-chat/agent-module-inventory.js";
 import { isModuleEnabled } from "./module-business-data.js";
+import { loadModulesFileSafe } from "./modules.js";
 
 export const SALES_MODULE_ID = "sales";
 export const CS_MODULE_ID = "customer_success";
@@ -20,13 +24,12 @@ export interface CustomersNavGate {
   sales_agent_grace: boolean;
 }
 
-export function resolveCustomersNavGate(
-  inventory = buildAgentModuleInventory(),
-): CustomersNavGate {
-  const salesMod = inventory.modules_installed.find((m) => m.id === SALES_MODULE_ID);
-  const csMod = inventory.modules_installed.find((m) => m.id === CS_MODULE_ID);
-  const sales_module_installed = Boolean(salesMod);
-  const customer_success_module_installed = Boolean(csMod);
+export function resolveCustomersNavGate(): CustomersNavGate {
+  const tenantModules = loadModulesFileSafe().modules;
+  const sales_module_installed = tenantModules.some((m) => m.id === SALES_MODULE_ID);
+  const customer_success_module_installed = tenantModules.some(
+    (m) => m.id === CS_MODULE_ID,
+  );
   const sales_enabled = isModuleEnabled(SALES_MODULE_ID);
   const customer_success_enabled = isModuleEnabled(CS_MODULE_ID);
   const sales_agent_grace =

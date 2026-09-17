@@ -11,7 +11,7 @@
     "paths": {
       "@ops-shared/*": ["../shared/*"],
       "@wire-console/*": ["../wire-console/src/*"],
-      "@orgos/workflow-canvas": ["../../src/lib/workflow-canvas/index.ts"]
+      "@orgos/workflow-canvas": ["../../src/lib/workflow-canvas/browser.ts"]
     }
   },
   "include": ["src", "../shared", "../wire-console/src"]

@@ -24,7 +24,7 @@ export type FlowEdgeLike = {
 
 export type WorkflowDocumentMeta = Pick<
   WorkflowDocument,
-  "version" | "kind" | "title" | "description"
+  "version" | "workflow_id" | "kind" | "title" | "description"
 >;
 
 export type FlowNodeData = WorkflowNodePayload & {

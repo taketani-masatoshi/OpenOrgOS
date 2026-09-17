@@ -207,6 +207,74 @@
   font-size: var(--text-sm);
 }
 
+.workflow-canvas-role {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.workflow-canvas-role--canonical {
+  background: color-mix(in srgb, var(--accent, #004a94) 12%, transparent);
+}
+
+.workflow-canvas-role--draft {
+  background: color-mix(in srgb, var(--ink-soft) 10%, transparent);
+}
+
+.workflow-canvas-role--proposed {
+  background: color-mix(in srgb, #18794e 12%, transparent);
+}
+
+.workflow-canvas-role--recorded {
+  background: color-mix(in srgb, #8a5a00 12%, transparent);
+}
+
+.workflow-canvas-section-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.workflow-canvas-findings ul,
+.workflow-canvas-proposal-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: var(--text-sm);
+}
+
+.wf-finding--error {
+  color: var(--danger);
+}
+
+.wf-finding--warning {
+  color: #8a5a00;
+}
+
+.wf-finding--info {
+  color: var(--ink-soft);
+}
+
+.workflow-canvas-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.workflow-canvas-field input {
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.workflow-canvas-proposal {
+  margin-bottom: var(--space-3);
+}
+
 @media (max-width: 960px) {
   .workflow-canvas-layout {
     grid-template-columns: 1fr;

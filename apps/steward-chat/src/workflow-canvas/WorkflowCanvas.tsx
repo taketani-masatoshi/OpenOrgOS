@@ -59,6 +59,7 @@ const MINIMAP_COLOR: Record<string, string> = {
 function metaOf(document: WorkflowDocument): WorkflowDocumentMeta {
   return {
     version: document.version,
+    workflow_id: document.workflow_id,
     kind: document.kind,
     title: document.title,
     ...(document.description ? { description: document.description } : {}),
@@ -166,5 +167,3 @@ export const WorkflowCanvas = forwardRef<WorkflowCanvasHandle, Props>(
     );
   },
 );
-
-export { exportToJSON };

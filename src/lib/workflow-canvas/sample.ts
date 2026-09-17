@@ -118,6 +118,7 @@ const SYSTEM_MAP_EDGES = [
 
 export const SYSTEM_MAP_SAMPLE: WorkflowDocument = {
   version: 1,
+  workflow_id: "WF-system-map",
   kind: "system_map",
   title: "OpenOrgOS システム構成",
   description: "AIA 同士と Steward Chat / モジュールの連携面。",
@@ -210,6 +211,7 @@ const BOOKING_EDGES = [
 
 export const BUSINESS_WORKFLOW_SAMPLE: WorkflowDocument = {
   version: 1,
+  workflow_id: "WF-booking-confirm",
   kind: "business_workflow",
   title: "予約から滞在確定",
   description: "自然言語の業務フローを nodes / edges に落とした例。",

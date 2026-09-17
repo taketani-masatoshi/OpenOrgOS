@@ -31,6 +31,7 @@ describe("workflow canvas document", () => {
     const flow = documentToFlow(SYSTEM_MAP_SAMPLE);
     const exported = exportToJSON(flow.nodes, flow.edges, {
       version: SYSTEM_MAP_SAMPLE.version,
+      workflow_id: SYSTEM_MAP_SAMPLE.workflow_id,
       kind: SYSTEM_MAP_SAMPLE.kind,
       title: SYSTEM_MAP_SAMPLE.title,
       description: SYSTEM_MAP_SAMPLE.description,
@@ -60,7 +61,7 @@ describe("workflow canvas document", () => {
           selected: true,
         },
       ],
-      { version: 1, kind: "business_workflow", title: "Strip test" },
+      { version: 1, workflow_id: "WF-strip-test", kind: "business_workflow", title: "Strip test" },
     );
     expect(exported.nodes[0]).toEqual({
       id: "n1",
@@ -85,9 +86,22 @@ describe("workflow canvas document", () => {
     expect(() =>
       parseWorkflowDocument({
         version: 1,
+        workflow_id: "WF-broken",
         kind: "system_map",
         title: "broken",
         nodes: [{ id: "x", position: { x: 0, y: 0 }, sources: [], targets: [] }],
+        edges: [],
+      }),
+    ).toThrow();
+  });
+
+  it("requires workflow_id", () => {
+    expect(() =>
+      parseWorkflowDocument({
+        version: 1,
+        kind: "system_map",
+        title: "missing id",
+        nodes: [],
         edges: [],
       }),
     ).toThrow();

@@ -63,8 +63,14 @@ export const workflowEdgeSchema = z.object({
   kind: workflowEdgeKindSchema.optional(),
 });
 
+export const workflowIdSchema = z
+  .string()
+  .min(1)
+  .regex(/^WF-[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
 export const workflowDocumentSchema = z.object({
   version: workflowDocumentVersion,
+  workflow_id: workflowIdSchema,
   kind: workflowKindSchema,
   title: z.string().min(1),
   description: z.string().optional(),
