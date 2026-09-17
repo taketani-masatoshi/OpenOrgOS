@@ -1,10 +1,10 @@
 import {
-  createLedgerSignup,
   findLedgerSignup,
   listFleetTenantStatus,
   listLedgerSignups,
   setLedgerSignupStatus,
 } from "../lib/product/ledger-fleet.js";
+import { startLedgerSignupCheckout } from "../lib/product/ledger-signup-checkout.js";
 import { buildFleetHealthReport } from "../lib/product/ledger-fleet-health.js";
 import { listLedgerPlans, resolveLedgerPlan } from "../lib/product/ledger-plans.js";
 import { buildProductReadinessReport } from "../lib/product/ledger-product-readiness.js";
@@ -15,7 +15,6 @@ import { buildCustomerUxReadinessReport } from "../lib/product/ledger-customer-u
 import { provisionLedgerTenant } from "../lib/product/ledger-provision.js";
 import { loadLedgerSubscription } from "../lib/product/ledger-subscription.js";
 import { exportLedgerTenantArchive } from "../lib/product/ledger-tenant-export.js";
-import { createLedgerCheckoutSession } from "../lib/product/stripe-checkout.js";
 import {
   linkAccountantClient,
   loadControlPlane,
@@ -56,33 +55,24 @@ export async function runLedgerProductSignup(opts: {
   successUrl?: string;
   cancelUrl?: string;
 }): Promise<void> {
-  const plan = resolveLedgerPlan(opts.plan ?? "starter");
-  const signup = createLedgerSignup({
-    tenantId:
-      opts.tenantId ??
-      opts.companyName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 24),
+  const result = await startLedgerSignupCheckout({
     companyName: opts.companyName,
     adminEmail: opts.adminEmail,
-    plan: plan.id,
-  });
-  const checkout = await createLedgerCheckoutSession({
-    signupId: signup.signup_id,
-    email: signup.admin_email,
-    plan,
+    plan: opts.plan ?? "starter",
+    tenantId: opts.tenantId,
     successUrl: opts.successUrl ?? `http://localhost:9470/signup?success=1`,
     cancelUrl: opts.cancelUrl ?? `http://localhost:9470/signup?cancelled=1`,
+    sendSignupMail: false,
   });
   console.log(
     JSON.stringify(
       {
-        signup_id: signup.signup_id,
-        tenant_id: signup.tenant_id,
-        checkout_url: checkout.url,
-        checkout_mode: checkout.mode,
+        signup_id: result.signup.signup_id,
+        tenant_id: result.signup.tenant_id,
+        checkout_url: result.checkout_url,
+        checkout_mode: result.checkout_mode,
+        resumed: result.resumed,
+        stripe_checkout_session_id: result.signup.stripe_checkout_session_id,
       },
       null,
       2,
@@ -113,9 +103,9 @@ export function runLedgerProductActivateSignup(opts: { signupId: string }): void
     companyName: signup.company_name,
     adminEmail: signup.admin_email,
     plan: signup.plan,
+    signupId: signup.signup_id,
     stripeCustomerId: signup.stripe_customer_id,
   });
-  setLedgerSignupStatus(signup.signup_id, "provisioned");
   console.log(`✓ Activated signup ${signup.signup_id} → tenants/${signup.tenant_id}`);
 }
 

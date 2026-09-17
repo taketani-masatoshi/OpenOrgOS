@@ -9,11 +9,14 @@ import {
   type PersistedSessionRecord,
 } from "../../console-auth/session-store.js";
 import { boundApproverId, findOperatorById } from "../../org/operators.js";
+import { getTenantId } from "../../tenant.js";
 
 export interface WireConsoleUser {
   operator_id: string;
   approver_id: string;
   mode: "dev" | "prod";
+  /** Bound at login; authenticated requests must match this tenant. */
+  tenant_id?: string;
 }
 
 interface SessionRecord {
@@ -48,7 +51,17 @@ function devPasskeyExpected(): string {
   return process.env.WIRE_CONSOLE_DEV_PASSKEY ?? "orgos-dev";
 }
 
-function bindSessionUser(user: WireConsoleUser): WireConsoleUser {
+function resolveTenantIdForSession(user: WireConsoleUser): string {
+  const explicit = user.tenant_id?.trim().toLowerCase();
+  if (explicit) return explicit;
+  try {
+    return getTenantId();
+  } catch {
+    throw new Error("tenant_id required to register session");
+  }
+}
+
+function bindApproverOnly(user: WireConsoleUser): WireConsoleUser {
   try {
     return {
       ...user,
@@ -57,6 +70,13 @@ function bindSessionUser(user: WireConsoleUser): WireConsoleUser {
   } catch {
     return user;
   }
+}
+
+function bindSessionUser(user: WireConsoleUser): WireConsoleUser {
+  return bindApproverOnly({
+    ...user,
+    tenant_id: resolveTenantIdForSession(user),
+  });
 }
 
 export function registerSession(user: WireConsoleUser): { token: string; user: WireConsoleUser } {
@@ -105,7 +125,7 @@ export function destroySession(token: string | undefined): void {
 export function getSessionUser(token: string | undefined): WireConsoleUser | undefined {
   if (!token) return undefined;
   const user = sessions.get(token)?.user;
-  return user ? bindSessionUser(user) : undefined;
+  return user ? bindApproverOnly(user) : undefined;
 }
 
 export function parseCookies(req: IncomingMessage): Record<string, string> {
