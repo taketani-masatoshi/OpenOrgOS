@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 584
-  static_test_cases: 2675
-  tiered_execution_total: 584
+  vitest_total: 585
+  static_test_cases: 2677
+  tiered_execution_total: 585
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -1485,6 +1485,10 @@ tests:
     kind: unit
     domain: P01_kernel
   ledger-product.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-support-monitor.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
