@@ -265,7 +265,7 @@ async function seedMalSendOnly(
 
   const { transmission } = approveInterOrgNotice({
     noticeId: notice.notice_id,
-    ...resolveApprover(company.representative?.split("、")[0] ?? "段燕燕"),
+    ...resolveApprover(company.representative?.split("、")[0] ?? "山田太郎"),
     eventId: sharedEventId,
   });
 
@@ -341,7 +341,7 @@ async function seedMalSide(
 
   const { transmission } = approveInterOrgNotice({
     noticeId: notice.notice_id,
-    ...resolveApprover(company.representative?.split("、")[0] ?? "段燕燕"),
+    ...resolveApprover(company.representative?.split("、")[0] ?? "山田太郎"),
     eventId: sharedEventId,
   });
 

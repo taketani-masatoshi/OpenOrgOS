@@ -80,7 +80,7 @@ Set `WIRE_GATEWAY_TLS_TERMINATED_EXTERNALLY=1` and `PUBLIC_BASE_URL=https://wire
 
 Phase 2–3（Wire Gateway + witness）のみで `./scripts/prod-validate-wire.sh mal` は **デフォルト PASS**（email_wire は deferred）。
 
-Phase 4（`ai@malkk.com` · Xserver SMTP/IMAP）を **blocking ゲート**にする場合:
+Phase 4（`ops@example.com` · Xserver SMTP/IMAP）を **blocking ゲート**にする場合:
 
 ```bash
 export ORGOS_EMAIL_WIRE_REQUIRED=1
@@ -92,7 +92,7 @@ Setup:
 ```bash
 # 1. L2 credentials (gitignore)
 cp deploy/mal-pilot/env/mail-wire-mal.env.example deploy/mal-pilot/env/.env.mail-wire
-# ORGOS_SMTP_USER=ai@malkk.com · password を設定
+# ORGOS_SMTP_USER=ops@example.com · password を設定
 
 # 2. mail-config（script が example から自動作成可）
 cp tenants/mal/records/executive/mail-config.yaml.example \
@@ -101,11 +101,11 @@ cp tenants/mal/records/executive/mail-config.yaml.example \
 # 3. readiness + doctor
 ./scripts/phase4-mal-email-wire-live.sh mal check
 
-# 4. live roundtrip（ai@malkk.com → ai+wireloop@malkk.com → IMAP → wire-scan）
+# 4. live roundtrip（ops@example.com → ai+wireloop@example.com → IMAP → wire-scan）
 ./scripts/phase4-mal-email-wire-live.sh mal live
 ```
 
-**前提:** Wire Gateway 起動中（`./scripts/phase2-mal-wire-live.sh mal`）· Vitest 停止 · `info@malkk.com` は使用しない。
+**前提:** Wire Gateway 起動中（`./scripts/phase2-mal-wire-live.sh mal`）· Vitest 停止 · `info@example.com` は使用しない。
 
 Registry 衛生（orphan outbound · envelope/receipt なし）:
 

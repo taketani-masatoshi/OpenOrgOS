@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   delete process.env.WIRE_CONSOLE_WEBAUTHN_CREDENTIALS;
 
   writeWireConsoleWebAuthnBootstrapSmokeFixture();
-  await writeWireConsoleOidcSmokeFixture({ operatorId: "OP-001", approverId: "段燕燕" });
+  await writeWireConsoleOidcSmokeFixture({ operatorId: "OP-001", approverId: "山田太郎" });
 
   const server = await startWireConsoleServer({ host: "localhost", port });
   console.log(`wire-console webauthn bootstrap smoke server ${server.url}`);

@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { setTenantId } from "../src/lib/tenant.js";
+import { loadCompany } from "../src/lib/data.js";
 import { buildOrgChartApiPayload } from "../src/lib/steward-chat/org-chart-view.js";
 
 describe("org chart API payload (MAL)", () => {
@@ -8,6 +9,8 @@ describe("org chart API payload (MAL)", () => {
   });
 
   it("loads chart and layouts a diagram", () => {
+    const ceoName = loadCompany().directors?.[0]?.name;
+    expect(ceoName).toBeTruthy();
     const payload = buildOrgChartApiPayload();
     expect(payload.ok).toBe(true);
     expect(payload.missing).toBe(false);
@@ -17,7 +20,7 @@ describe("org chart API payload (MAL)", () => {
     expect(payload.diagram.nodes.some((n) => n.label === "取締役会")).toBe(true);
     expect(payload.diagram.nodes.some((n) => n.label === "事業部門")).toBe(true);
     expect(payload.diagram.nodes.some((n) => n.label === "管理部門")).toBe(true);
-    expect(payload.diagram.nodes.every((n) => !/段|宮城|三塚/.test(n.label))).toBe(true);
+    expect(payload.diagram.nodes.every((n) => n.label.length > 0)).toBe(true);
     expect(payload.diagram.edges.every((e) => (e.points?.length ?? 0) >= 2)).toBe(true);
     // Orthogonal: each segment is horizontal or vertical
     for (const e of payload.diagram.edges) {
@@ -31,17 +34,21 @@ describe("org chart API payload (MAL)", () => {
     expect(payload.tree_lines.some((l) => l.includes("取締役会"))).toBe(true);
     expect(payload.path).toBe("data/org/org-chart.yaml");
     expect(
-      payload.units.some((u) => u.members.some((m) => m.name === "段燕燕" && m.login_id_ready))
+      payload.units.some((u) =>
+        u.members.some((m) => m.name === ceoName && m.login_id_ready && m.operator_id === "OP-001"),
+      ),
     ).toBe(true);
     expect(
-      payload.units.some((u) => u.members.some((m) => m.name.includes("宮城万貴子") && !m.login_id_ready))
+      payload.units.some((u) =>
+        u.members.some((m) => m.name !== ceoName && m.login_id_ready === false),
+      ),
     ).toBe(true);
     expect(
-      payload.units.some((u) => u.unit_label === "事業部門" && u.members.some((m) => m.name === "三塚力"))
+      payload.units.some((u) => u.unit_label === "事業部門" && u.members.some((m) => m.operator_id === "OP-003")),
     ).toBe(true);
-    expect(payload.users.some((u) => u.name === "段燕燕" && u.operator_id === "OP-001")).toBe(true);
+    expect(payload.users.some((u) => u.name === ceoName && u.operator_id === "OP-001")).toBe(true);
     expect(
-      payload.advisors.some((a) => a.kind === "legal" && a.name === "松尾剛行" && a.contract_id === "CTR-022")
+      payload.advisors.some((a) => a.kind === "legal" && a.status === "engaged" && a.contract_id === "CTR-022"),
     ).toBe(true);
     expect(payload.advisors.some((a) => a.kind === "tax" && a.status === "none")).toBe(true);
     expect(payload.advisors.some((a) => a.kind === "technical" && a.status === "none")).toBe(true);

@@ -44,8 +44,8 @@ describe("invoice dates", () => {
 
 describe("invoice content", () => {
   it("builds registration number from corporate number", () => {
-    expect(companyInvoiceRegistrationNumber("4010001189530")).toBe("T4010001189530");
-    expect(companyInvoiceRegistrationNumber("T4010001189530")).toBe("T4010001189530");
+    expect(companyInvoiceRegistrationNumber("9999999999999")).toBe("T9999999999999");
+    expect(companyInvoiceRegistrationNumber("T9999999999999")).toBe("T9999999999999");
   });
 
   it("builds rent rows with non-taxable note", () => {
@@ -54,10 +54,10 @@ describe("invoice content", () => {
       monthlyRent: 100_000,
       tenantName: TENANT_NAME_PLACEHOLDER,
       propertyName: "番町ハイム312",
-      propertyLocation: "東京都千代田区二番町",
+      propertyLocation: "東京都千代田区サンプル",
       companyName: "株式会社MAL",
-      companyAddress: "〒102-0084",
-      invoiceRegistrationNumber: "T4010001189530",
+      companyAddress: "〒100-0001",
+      invoiceRegistrationNumber: "T9999999999999",
       bankAccount: "[振込先口座 TBD]",
       invoiceNumberPrefix: "BANCHO",
     });
@@ -73,7 +73,7 @@ describe("invoice content", () => {
       tenantName: TENANT_NAME_PLACEHOLDER,
       tenantEmail: "[送付先メール TBD]",
       companyName: "株式会社MAL",
-      senderEmail: "info@malkk.com",
+      senderEmail: "info@example.com",
       monthlyRent: 100_000,
     };
     expect(buildInvoiceEmailSubject(input)).toBe(

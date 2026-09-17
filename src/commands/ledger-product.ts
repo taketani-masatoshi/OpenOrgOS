@@ -416,9 +416,11 @@ export function runLedgerProductRestoreDrill(opts: {
 export async function runLedgerProductMonitor(opts?: {
   json?: boolean;
   failOnUnhealthy?: boolean;
+  alertDryRun?: boolean;
 }): Promise<void> {
   const snapshot = await runFleetMonitor({
     failOnUnhealthy: opts?.failOnUnhealthy,
+    alertDryRun: opts?.alertDryRun,
   });
   if (opts?.json) {
     console.log(JSON.stringify(snapshot, null, 2));
@@ -429,6 +431,13 @@ export async function runLedgerProductMonitor(opts?: {
   );
   if (snapshot.billing_issues.issues.length > 0) {
     console.log(`  billing issues: ${snapshot.billing_issues.issues.length}`);
+  }
+  if (snapshot.alert_dry_run) {
+    console.log(
+      snapshot.alert_dry_run.would_post
+        ? `  alert dry-run: payload ready for ${snapshot.alert_dry_run.webhook}`
+        : "  alert dry-run: no webhook configured (set escalation_webhook or ORGOS_LEDGER_ALERT_WEBHOOK)",
+    );
   }
 }
 
@@ -477,11 +486,20 @@ export function runTaxModuleHandoffPackage(opts?: {
   console.log(`✓ Tax handoff package → ${pack.zip_path}`);
 }
 
-export async function runLedgerProductMailDrill(opts: { to: string; json?: boolean }): Promise<void> {
-  const result = await runLedgerMailDrill(opts.to);
+export async function runLedgerProductMailDrill(opts: {
+  to: string;
+  json?: boolean;
+  customerId?: string;
+}): Promise<void> {
+  const result = await runLedgerMailDrill(opts.to, {
+    customerId: opts.customerId,
+  });
   if (opts.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify({ ...result, customer_id: opts.customerId }, null, 2));
     return;
   }
-  console.log(`✓ Mail drill ${result.status} via ${result.transport} · id=${result.id}`);
+  console.log(
+    `✓ Mail drill ${result.status} via ${result.transport} id=${result.id}` +
+      (opts.customerId ? ` customer=${opts.customerId}` : ""),
+  );
 }

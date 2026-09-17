@@ -124,7 +124,7 @@ describe("pmo cli views", () => {
     expect(view.overdue_milestones).toBeGreaterThanOrEqual(1);
     const md = formatPmoPortfolioMarkdown(view);
     expect(md).toContain("PRJ-CORP-REG");
-    expect(md).not.toMatch(/段燕燕|宮城|三塚/);
+    expect(md).not.toMatch(/\u6bb5\u71d5\u71d5|\u5bae\u57ce|\u4e09\u585a/);
     expect(formatPmoCeoReply(view)).toMatch(/5件/);
   });
 

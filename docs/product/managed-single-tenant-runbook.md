@@ -7,7 +7,12 @@
 
 ## 1. プロビジョン（新規顧客）
 
-### A. セルフサインアップ（P1）
+### A. 契約ベース（現行 · 推奨）
+
+1. 契約締結後、運用チームがテナントをプロビジョン（下記 B）
+2. 請求は請求書 · 銀行振込（[pricing.md](pricing.md)）。Stripe セルフチェックアウトは**現時点非提供**
+
+### A′. セルフサインアップ + Stripe（将来オプション · 現時点非提供）
 
 1. 顧客が `https://<ledger-host>/signup` から申込
 2. Stripe Checkout 完了 → Webhook `POST /chat/v1/product/stripe/webhook`

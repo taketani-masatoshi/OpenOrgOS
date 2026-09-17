@@ -1,6 +1,6 @@
 /**
  * Phase 4 — mal email_wire live roundtrip
- * Outbound SMTP (ai@malkk.com) → ai+wireloop@malkk.com → IMAP sync → wire scan ingest
+ * Outbound SMTP (ops@example.com) → ai+wireloop@example.com → IMAP sync → wire scan ingest
  */
 import { randomUUID } from "node:crypto";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -19,13 +19,13 @@ import { loadMailConfig } from "../src/lib/correspondence/mail-config.js";
 
 const TENANT = process.env.ORGOS_TENANT ?? "mal";
 const LOOP_PEER = "PEER-003";
-const LOOP_WIRE_EMAIL = process.env.PHASE4_LOOP_WIRE_EMAIL ?? "ai+wireloop@malkk.com";
+const LOOP_WIRE_EMAIL = process.env.PHASE4_LOOP_WIRE_EMAIL ?? "ai+wireloop@example.com";
 
 setTenantId(TENANT);
 
 async function main(): Promise<void> {
   const mail = loadMailConfig();
-  const wireFrom = mail?.wire_outbound?.from?.email ?? "ai@malkk.com";
+  const wireFrom = mail?.wire_outbound?.from?.email ?? "ops@example.com";
   if (wireFrom.toLowerCase() === LOOP_WIRE_EMAIL.toLowerCase()) {
     throw new Error(
       `PHASE4_LOOP_WIRE_EMAIL must differ from wire_outbound.from (${wireFrom}) — E12 self-delivery`
@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   });
   const approved = approveInterOrgNotice({
     noticeId: notice.notice_id,
-    approverId: "段燕燕",
+    approverId: "山田太郎",
     operatorId: "OP-001",
     eventId,
   });
@@ -101,7 +101,7 @@ async function main(): Promise<void> {
 
   if (scan.ingested < 1) {
     throw new Error(
-      "ingest count 0 — verify ai+wireloop@malkk.com delivery and ai@malkk.com IMAP sync"
+      "ingest count 0 — verify ai+wireloop@example.com delivery and ops@example.com IMAP sync"
     );
   }
   console.log("✓ Phase 4 email_wire roundtrip OK");

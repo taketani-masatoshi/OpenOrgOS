@@ -2,12 +2,12 @@
 
 **地位:** 対外「商用」宣言の直前に人手で全項確認する。  
 **手順書:** [commercial-declaration-runbook.md](./commercial-declaration-runbook.md)（Phase 0–8 · 承認ゲート付き）  
-**エンジニアリング:** `--commercial` が偽緑なしで通ること（live Stripe・counsel 記録・SMTP drill・prod-checklist・restore 品質）。
+**エンジニアリング:** `--commercial` が偽緑なしで通ること（counsel 記録・SMTP drill·prod-checklist·restore 品質）。`stripe-live` は契約ベース提供のため除外可。
 
 | 項 | 合格条件 | 状態 |
 |----|----------|------|
 | Legal | `counsel_reviewed` 記録 + ToS/DPA 顧客送付可（非ドラフト） | [x] eng |
-| Stripe | live キー + webhook 本番 + `past_due` UX（Portal CTA） | [—] **保留**（CEO 判断） |
+| Stripe | live キー + webhook 本番 + `past_due` UX（Portal CTA） | [—] **契約ベース専用 · 非提供**（CEO 判断 · `stripe-ops.yaml` status=deferred） |
 | Mail | SMTP 実送信ドリル成功（`orgos ledger product mail-drill --to …`） | [x] eng |
 | UX | UI 主導 E2E 緑（`e2e/steward-chat-ledger-customer.spec.ts`） | [x] eng |
 | Docs | security / sla / pricing 非ドラフト · support `status_page_url` | [x] eng |
@@ -25,7 +25,7 @@
 ## 対外文言（限定宣言 · 採用）
 
 > OrgOS Ledger はマネージド単一テナントの法人向けクラウド会計です。電子帳簿は基本要件対応（優良要件は別オプション）。e-Tax 提出は含みません。  
-> セルフサーブ課金（Stripe live）は別途投入予定。現時点は招待制・契約ベースの提供とします。
+> セルフサーブ課金（Stripe live）は提供しません。招待制・契約ベース（請求書 · 銀行振込）で提供します。
 
 ## 対外文言テンプレ（フル · Stripe 完了後）
 

@@ -6,7 +6,7 @@
 
 | テナント ID | 法人（L1 ダミー） | 役割 |
 |-------------|-------------------|------|
-| `mal` | 株式会社 MAL | **貸主** · 本社ビル（千代田区二番町1）オーナー |
+| `mal` | 株式会社 MAL | **貸主** · 本社ビル（千代田区サンプル1）オーナー |
 | `southwood` | 株式会社サウスウッド | **借主** · MAL 本社内オフィス区画を賃借 |
 
 シナリオ: **CTR-012 オフィス賃貸借契約**（既締結）に基づく **実行通知**（`contract.execution.notice`）を、**オペレータ起案 → CEO 承認** の後に相手 Org へ送る。
@@ -75,7 +75,7 @@ npm run orgos -- --tenant southwood protocol audit verify
 npm run orgos -- --tenant mal protocol notice propose \
   --peer PEER-001 --contract CTR-012 --operator "秘書オペレータ"
 npm run orgos -- --tenant mal protocol notice approve \
-  --id NOTICE-YYYYMMDD-001 --approver "段燕燕"
+  --id NOTICE-YYYYMMDD-001 --approver "山田太郎"
 ```
 
 ## 3. Outbox（送信用 Envelope）
@@ -109,7 +109,7 @@ npm run orgos -- --tenant mal protocol notice propose \
   --peer PEER-001 --contract CTR-012 --operator "秘書オペレータ"
 
 npm run orgos -- --tenant mal protocol notice approve \
-  --id NOTICE-YYYYMMDD-001 --approver "段燕燕"
+  --id NOTICE-YYYYMMDD-001 --approver "山田太郎"
 ```
 
 `CTR-012` は `status: executed` である必要あり。詳細: [inter-org-operator-model.md](inter-org-operator-model.md)

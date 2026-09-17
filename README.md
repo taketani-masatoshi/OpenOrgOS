@@ -2,7 +2,7 @@
 
 **Organizational OS — 組織 OS 参照実装**。業務モジュール・ISO 標準はフレームワーク側（`steward/`）に初期定義し、会社データは **テナント**（`tenants/`）で接続・分離する。
 
-> **Public beta (`0.8.0-beta.x`)** — expect frequent updates.  
+> **Public beta (`0.9.0-beta.x`)** — expect frequent updates.  
 > Run only on infrastructure **you control** (dedicated host, localhost demo bind, tenant data isolated).  
 > Ops: [`docs/org-os/beta-operations.md`](docs/org-os/beta-operations.md) · Update feed: [`channel/latest.json`](channel/latest.json)
 
@@ -19,6 +19,14 @@ docker run --rm -p 127.0.0.1:9470:9470 ghcr.io/taketani-masatoshi/orgos-demo:0.9
 ```
 
 OpenOrgOS **Community** (module registry / committees / OOO certification portal) is a **separate** repository: [OS_Community](https://github.com/taketani-masatoshi/OS_Community).
+
+
+## ライセンスと商用境界
+
+- **コード:** [Unlicense](LICENSE)（`package.json` の `license` フィールドと一致）
+- **OrgOS Ledger（マネージド単一テナント）:** 招待制 · **契約ベース**（請求書 · 銀行振込）。価格は [docs/product/pricing.md](docs/product/pricing.md)、対外宣言は [`product-fleet/commercial-declaration.yaml`](product-fleet/commercial-declaration.yaml)
+- Stripe セルフチェックアウトは将来オプションであり、現時点では提供しません
+
 
 ---
 
@@ -48,8 +56,8 @@ src/ · schemas/ · docs/     CLI · 検証 · 仕様
 | モジュール seed | `steward/modules/rental/seed/` |
 | ISO 標準文 | `steward/standards/iso/ISO-9001/` |
 | 規程テンプレ | `steward/jurisdiction-packs/JP/regulations/`（法域 pack） |
-| テナント ISO 記録 | `tenants/mal/docs/compliance/iso/` |
-| テナント規程施行文 | `tenants/mal/docs/company/regulations/` |
+| テナント ISO 記録 | `tenants/demo/docs/compliance/iso/`（例） |
+| テナント規程施行文 | `tenants/acme/docs/company/regulations/`（例） |
 
 ```bash
 npm run orgos -- modules list
@@ -61,17 +69,16 @@ npm run orgos -- modules list
 
 | テナント | 法人 | パス | 用途 |
 |---------|------|------|------|
-| **mal**（既定） | 株式会社MAL | [`tenants/mal/`](tenants/mal/) | 本番運用参照 |
+| **demo**（既定 · 公開参照） | デモ株式会社 | [`tenants/demo/`](tenants/demo/) | **スケルトン参照**（validate 必須 · CI） |
 | **acme** | ACME Corp | [`tenants/acme/`](tenants/acme/) | **第3参照**（tenant init · validate） |
-| **demo** | デモ株式会社 | [`tenants/demo/`](tenants/demo/) | **スケルトン参照**（validate 必須） |
+| **mal** | （内部パイロット） | [`tenants/mal/`](tenants/mal/) | 本番運用の非公開参照 · tip 縮小対象 |
 
 ```bash
 # 新規テナント（スケルトン）
 npm run orgos -- tenant init acme --name "ACME Corp" --from rental
 
-export ORGOS_TENANT=mal
-npm run orgos -- --tenant mal validate
-npm run orgos -- --tenant demo validate   # CI ゲート
+export ORGOS_TENANT=demo
+npm run orgos -- --tenant demo validate   # CI ゲート · 既定参照
 npm run orgos -- --tenant acme validate   # CI ゲート（第3テナント）
 npm run check                               # validate · demo · acme · modules · classification
 ```

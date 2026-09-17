@@ -66,7 +66,7 @@ export function writeWireConsoleWebAuthnSmokeFixture(): WireConsoleWebAuthnSmoke
     credential_id_base64: rawId.toString("base64"),
     private_key_base64: privateKey.export({ type: "pkcs8", format: "der" }).toString("base64"),
     operator_id: "OP-001",
-    approver_id: "段燕燕",
+    approver_id: "山田太郎",
   };
 
   mkdirSync(ORGOS_STATE_DIR, { recursive: true });

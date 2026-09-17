@@ -14,7 +14,7 @@
 | 電子帳簿 | 基本要件 · **優良（TSA）は別 SKU** `dencho-premium` |
 | 二重防止 | invoice / JE-MPL は **property 単位** · 重複は validate error |
 | UI | Workbench · HTTP CSV export · **セルフサインアップ** `/signup` · **税務** `/?tax=1` · **アカウント** `/?account=1`（設定からも） |
-| 課金 | Stripe Checkout · Customer Portal · `product/subscription.yaml` |
+| 課金 | **契約ベース**（請求書 · 銀行振込）。Stripe Checkout は将来オプション · 現時点非提供 · `product/subscription.yaml` |
 | 顧客 admin | オペレーター招待 · **税理士ゲスト（期限付き readonly）** · 利用上限表示 |
 | 法定準備 | 消費税 assessment · 納付期限 · 給与 accrual/payment |
 | 運用 | Runbook · **フリート health / backup** · readiness スコア |
@@ -40,7 +40,7 @@
 | [fleet-operations.md](fleet-operations.md) | 5 社フリート運用 |
 | [onboarding.md](onboarding.md) | オンボーディングチェックリスト |
 | [control-plane.md](control-plane.md) | 共有コントロールプレーン（P3） |
-| [deploy/product/stripe.md](../../deploy/product/stripe.md) | Stripe 設定 |
+| [deploy/product/stripe.md](../../deploy/product/stripe.md) | Stripe 設定（**将来オプション · 現時点非提供**） |
 
 ## 製品性スコア目標
 

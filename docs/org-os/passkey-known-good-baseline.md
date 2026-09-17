@@ -41,13 +41,13 @@ npm run passkey:field-check -- --url http://localhost:9470
 | `WIRE_CONSOLE_WEBAUTHN_ORIGIN` | `http://localhost:9470` |
 | `ORGOS_SETTLEMENT_STEPUP` | `1` |
 | operator | `OP-001` |
-| 名簿 `approver_name` | `段燕燕`（`tenants/mal/data/org/operators.yaml`） |
+| 名簿 `approver_name` | `山田太郎`（`tenants/mal/data/org/operators.yaml`） |
 
 ### 決済 PassKey（2026-08-27 時点 · credential_id のみ）
 
 | purpose | credential_id | approver_id | 備考 |
 |---------|---------------|-------------|------|
-| **settlement（有効）** | `YNmGaVAyQW95iJcSXHIkBAEtrjg` | 段燕燕 | iPhone hybrid · 承認に使用 |
+| **settlement（有効）** | `YNmGaVAyQW95iJcSXHIkBAEtrjg` | 山田太郎 | iPhone hybrid · 承認に使用 |
 | settlement（旧・除外対象） | `kcVWJytF6kZXhQCrfvb0td8Sln8` | Demo CEO | `allow_credentials` から除外。設定画面で revoke 推奨 |
 | login | `pYolVLt9efx6e-DBxwbFhIVW11c` | Demo CEO | Mac Touch ID |
 

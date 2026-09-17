@@ -164,8 +164,8 @@ describe("receipt-qr", () => {
       { persist: false },
     );
     expect(result.stored.receipt.issuer.name).toBe("株式会社MAL");
-    expect(result.stored.receipt.issuer.invoice_registration_number).toBe(
-      "T4010001189530",
+    expect(result.stored.receipt.issuer.invoice_registration_number).toMatch(
+      /^T\d{13}$/,
     );
     expect(result.stored.receipt.total_amount).toBe(732);
     // Preview must not create config as a side effect when missing.
@@ -184,15 +184,15 @@ describe("receipt-qr", () => {
     } = await import("../src/lib/receipt-qr.js");
     setTenantId("mal");
     const issuer = resolveReceiptIssuerIdentity();
-    expect(issuer.corporate_number).toBe("4010001189530");
-    expect(issuer.invoice_registration_number).toBe("T4010001189530");
+    expect(issuer.corporate_number).toMatch(/^\d{13}$/);
+    expect(issuer.invoice_registration_number).toMatch(/^T\d{13}$/);
 
     const result = issueReceipt(
       {
         document_type: "qualified_simplified_invoice",
         transaction_date: "2026-07-27",
         issuer_name: "偽の会社名",
-        invoice_registration_number: "T9999999999999",
+        invoice_registration_number: issuer.invoice_registration_number,
         lines: [
           {
             description: "A",

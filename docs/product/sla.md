@@ -37,13 +37,15 @@ Business 以上は P1 初動 **2 営業時間**。
 
 | 指標 | 手段 | 頻度 |
 |------|------|------|
-| 稼働率 | `orgos ledger product monitor --fail-on-unhealthy`（cron / launchd） | 5 分 |
+| 稼働率 | `orgos ledger product monitor --fail-on-unhealthy`（cron / [launchd](../../deploy/launchd/com.openorgos.ledger-monitor.plist)） | 5 分 |
 | アラート | `product-fleet/support.yaml` の `escalation_webhook` | unhealthy / past_due 時 |
 | 復旧ドリル | restore drill（連続成功 2 回品質ゲート） | 四半期以上 |
 | 商用ゲート | `orgos ledger product readiness --commercial` | 対外宣言前 |
+| オンコール | [oncall.md](oncall.md) · `monitor --alert-dry-run` | 初動 · 疎通 |
 
 ## 関連
 
 - [status.md](status.md)
+- [oncall.md](oncall.md)
 - [security-overview.md](security-overview.md)
 - [managed-single-tenant-runbook.md](managed-single-tenant-runbook.md)

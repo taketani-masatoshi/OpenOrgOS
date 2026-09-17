@@ -38,7 +38,7 @@ npm run orgos -- --tenant <id> protocol approvers
 
 ```bash
 npm run orgos -- --tenant <id> protocol notice approve \
-  --id NOTICE-* --approver "段燕燕"
+  --id NOTICE-* --approver "山田太郎"
 ```
 
 5. 相手 Org が webhook ingest · ack draft → approve

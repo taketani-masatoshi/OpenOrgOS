@@ -110,7 +110,8 @@
     "package:publish-check": "node scripts/package-publish-check.mjs",
     "build:package": "node scripts/build-orgos-package.mjs",
     "package:pack": "npm run build:package && npm pack -w @orgos/cli",
-    "ooo:claim-routes": "node --import tsx scripts/ooo-claim-routes.ts"
+    "ooo:claim-routes": "node --import tsx scripts/ooo-claim-routes.ts",
+    "check:pii": "bash scripts/check-pii.sh"
   },
   "dependencies": {
     "@independentsoft/msg": "^1.0.2",
@@ -141,5 +142,11 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "license": "Unlicense",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taketani-masatoshi/OpenOrgOS.git"
   }
 }

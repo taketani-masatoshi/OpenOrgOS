@@ -162,12 +162,12 @@ test.describe("operator console combined", () => {
       timeout: 15_000,
     });
     await expect(page.getByText("取締役会").first()).toBeVisible();
-    await expect(page.getByText("段燕燕").first()).toBeVisible();
+    await expect(page.getByText("山田太郎").first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "ユーザー" })).toBeVisible();
     await expect(page.getByLabel("表示する時点")).toBeVisible();
     await expect(page.getByRole("heading", { name: "組織図", exact: true })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "稼働中のエージェント" })).toHaveCount(0);
-    await page.getByText("段燕燕", { exact: true }).first().click();
+    await page.getByText("山田太郎", { exact: true }).first().click();
     await expect(page.getByText("ログインID").first()).toBeVisible();
     await expect(page.getByText("ログイン PassKey").first()).toBeVisible();
   });

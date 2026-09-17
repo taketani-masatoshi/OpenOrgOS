@@ -21,7 +21,7 @@ describe("hr headcount view", () => {
     const md = formatHeadcountMarkdown(view);
     expect(md).toContain("**4**");
     expect(md).toContain("警告と修正案");
-    expect(md).not.toMatch(/段燕燕|宮城|三塚|鈴木/);
+    expect(md).not.toMatch(/\u6bb5\u71d5\u71d5|\u5bae\u57ce|\u4e09\u585a|\u9234\u6728/);
   });
 
   it("marks southwood as unregistered when employees.yaml is empty", () => {

@@ -218,3 +218,7 @@ tenants/*/docs/**/secrets-setup.md
 # Ephemeral debug tenants
 tenants/debug-reminder/
 tenants/debug-reminder2/
+
+# Per-customer production secrets + verify evidence
+deploy/customers/*/production.env
+deploy/customers/*/verify-evidence/

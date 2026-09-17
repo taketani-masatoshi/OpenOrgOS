@@ -9,7 +9,8 @@ import { hydrateStripeEnvFromStore } from "./stripe-secrets-store.js";
 const stripeOpsSchema = z.object({
   version: z.literal(1).default(1),
   /** Secrets live in env / secret manager — never stored here. */
-  status: z.enum(["pending", "configured"]),
+  /** deferred = contract-only billing; self-serve Stripe is not offered yet. */
+  status: z.enum(["pending", "configured", "deferred"]),
   mode: z.enum(["stub", "test", "live"]).default("stub"),
   webhook_path: z.string().default("/chat/v1/product/stripe/webhook"),
   checked_at: z.string().datetime().optional(),
