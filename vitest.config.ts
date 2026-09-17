@@ -14,6 +14,7 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.test.ts"],
+    globalSetup: ["tests/global-setup-mal-payroll.ts"],
     setupFiles: ["tests/setup-tenant.ts", "tests/setup-restore-protocol.ts"],
     env: {
       // ADR 0037 — default off in unit tests; settlement-stepup.test.ts enables it.
