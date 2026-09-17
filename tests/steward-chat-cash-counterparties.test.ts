@@ -9,7 +9,7 @@ import { setTenantId } from "../src/lib/tenant.js";
 
 describe("steward chat cash counterparties", () => {
   beforeEach(() => {
-    setTenantId("mal");
+    setTenantId("_fixture-books");
   });
 
   it("matches CEO list phrasing and not finance KPI or agent handoff", () => {
@@ -25,16 +25,16 @@ describe("steward chat cash counterparties", () => {
     expect(matchProviderByIntent("Contract に確認して")?.id).toBeUndefined();
   });
 
-  it("answers mal cash counterparties without filing a Work Order", () => {
+  it("answers cash counterparties without filing a Work Order", () => {
     const result = handleFactChatMessage(
       "取引先一覧を提示してください。具体的には、当社に入金したり、出金したりしている相手の一覧を出してください。"
     );
     expect(result.handled).toBe(true);
     expect(result.providerId).toBe("cash_counterparties");
     expect(result.coverage).toBe("registered");
-    expect(result.reply).toMatch(/宿泊OTA/);
-    expect(result.reply).toMatch(/番町テナント/);
-    expect(result.reply).toMatch(/竹谷/);
+    expect(result.reply).toMatch(/サンプル物販株式会社/);
+    expect(result.reply).toMatch(/サンプル保守サービス/);
+    expect(result.reply).toMatch(/山田太郎/);
     expect(result.reply).not.toMatch(/BANK-|orgos |Path:|IMP-|委譲したふり|オーケストレーション/);
     expect(result.work_order_ids).toBeUndefined();
   });
@@ -50,7 +50,7 @@ describe("steward chat cash counterparties", () => {
   it("injects L1 counterparties into Today without account numbers", () => {
     const markdown = formatTodayContextMarkdown(buildTodayContext());
     expect(markdown).toContain("## 入出金相手（売掛・買掛・通帳 · 決定論 · L1）");
-    expect(markdown).toMatch(/竹谷/);
-    expect(markdown).not.toMatch(/BANK-001/);
+    expect(markdown).toMatch(/サンプル物販株式会社/);
+    expect(markdown).not.toMatch(/BANK-901/);
   });
 });

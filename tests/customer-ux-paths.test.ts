@@ -1,8 +1,6 @@
 import { describe, expect, it, afterEach } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { refreshOrgOsPaths } from "../src/lib/orgos-paths.js";
 import { setTenantId } from "../src/lib/tenant.js";
@@ -36,7 +34,14 @@ describe("customer UX paths", () => {
   const env = { ...process.env };
   let workspace = "";
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Every test provisions a whole tenant synchronously and this tears it down
+    // again, so without an await the file is one uninterrupted block of fs work
+    // and the worker never services its RPC replies. That stayed under birpc's
+    // 60s timeout locally (~24s) but not on a CI runner (~60s), where the run
+    // failed with `Timeout calling "onTaskUpdate"` even though all 11 tests
+    // passed. Yielding here splits the block so replies land as they arrive.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     if (workspace) rmSync(workspace, { recursive: true, force: true });
     process.env = { ...env };
     refreshOrgOsPaths();

@@ -147,11 +147,6 @@ export function getTenantId(): string {
     }
   }
 
-  if (existsSync(join(getTenantsDir(), "mal", "tenant.yaml"))) {
-    _tenantId = "mal";
-    return _tenantId;
-  }
-
   throw new Error(
     `No tenant configured. Set ${ORGOS_TENANT_ENV} (or ${LEGACY_TENANT_ENV}) or run: orgos tenant init <id>`
   );
