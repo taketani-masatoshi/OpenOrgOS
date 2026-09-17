@@ -8,15 +8,17 @@ export const LOCAL_WEBAUTHN_CANONICAL_HOST = "localhost";
 
 function redirectLoopback(next: URL): WebAuthnHostCheck {
   if (typeof window === "undefined") return "redirecting";
+  const target = next.toString();
   try {
-    if (sessionStorage.getItem(REDIRECT_GUARD_KEY) === next.toString()) {
+    const prior = sessionStorage.getItem(REDIRECT_GUARD_KEY);
+    if (prior === target) {
       return "redirecting";
     }
-    sessionStorage.setItem(REDIRECT_GUARD_KEY, next.toString());
+    sessionStorage.setItem(REDIRECT_GUARD_KEY, target);
   } catch {
     /* ignore */
   }
-  window.location.replace(next.toString());
+  window.location.replace(target);
   return "redirecting";
 }
 
