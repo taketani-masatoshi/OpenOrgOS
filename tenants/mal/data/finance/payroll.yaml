@@ -1,0 +1,9 @@
+# Synthetic payroll for the GitHub tip. Real figures stay in the local
+# workspace only — see docs/org-os/tenant-github-tip-policy.md.
+# Kept on tip because ~19 test files read this path; the numbers are invented.
+officer_compensation_annual: 0
+employee_payroll:
+  monthly_gross_jpy: 280000
+  has_withholding: true
+  has_social_insurance: true
+account_code: "5300"
