@@ -12,7 +12,7 @@ import { modulesFileSchema } from "../../schemas/modules.js";
 import { seedRegulationDocs } from "./regulations.js";
 import { getModuleSeedDir, listModuleSeedFiles, loadModulesFile } from "./modules.js";
 import { getTenantsDir } from "./orgos-paths.js";
-import { setTenantId, loadTenantConfig, getTenantTemplateDir, getTenantDir } from "./tenant.js";
+import { setTenantId, loadTenantConfig, getTenantTemplateDir, getTenantDir, runWithTenantId } from "./tenant.js";
 import { ensureExecutiveMailConfig } from "./correspondence/ensure-mail-config.js";
 import {
   seedExecutiveYamlFromExamples,
@@ -30,6 +30,8 @@ export interface TenantInitOptions {
   displayLanguage?: string;
   legalSubdivision?: string;
   wireConsole?: boolean;
+  /** Ledger product: no rental sample · no assumed FY end month. */
+  productSkeleton?: boolean;
 }
 
 export function runTenantInit(options: TenantInitOptions): void {
@@ -51,24 +53,31 @@ export function runTenantInit(options: TenantInitOptions): void {
   mkdirSync(dest, { recursive: true });
   cpSync(templateDir, dest, {
     recursive: true,
-    filter: (src) => shouldCopyTemplateEntry(src, templateDir),
+    filter: (src) =>
+      shouldCopyTemplateEntry(src, templateDir, {
+        productSkeleton: Boolean(options.productSkeleton),
+      }),
   });
 
   const displayName = options.name ?? id;
   writeTenantYaml(dest, id, displayName, options);
   applyModuleBindings(dest, options.fromModules);
-  writeSkeletonData(dest, id, displayName, options.fromModules);
+  writeSkeletonData(dest, id, displayName, options.fromModules, {
+    productSkeleton: options.productSkeleton,
+  });
 
-  setTenantId(id);
-  const seedResult = seedRegulationDocs();
-  try {
-    const iso37000 = initIso37000SelfDeclaration({ force: Boolean(options.force) });
-    console.log(`  ISO 37000 draft: ${iso37000.declaration_path}`);
-  } catch (err) {
-    console.log(
-      `  ISO 37000 init skipped: ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
+  const seedResult = runWithTenantId(id, () => {
+    const seeded = seedRegulationDocs();
+    try {
+      const iso37000 = initIso37000SelfDeclaration({ force: Boolean(options.force) });
+      console.log(`  ISO 37000 draft: ${iso37000.declaration_path}`);
+    } catch (err) {
+      console.log(
+        `  ISO 37000 init skipped: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+    return seeded;
+  });
   console.log(`✓ Tenant "${id}" initialized at tenants/${id}/`);
   console.log(`  Regulations seeded: ${seedResult.seeded.join(", ") || "(none)"}`);
   if (seedResult.skipped.length) {
@@ -85,73 +94,54 @@ export function runTenantInit(options: TenantInitOptions): void {
 
 function writeTenantYaml(dest: string, id: string, name: string, options: TenantInitOptions): void {
   const path = join(dest, "tenant.yaml");
-  let raw = readFileSync(path, "utf-8");
-  raw = raw
-    .replace(/^id:.*$/m, `id: ${id}`)
-    .replace(/^name:.*$/m, `name: ${name}`)
-    .replace(/^legal_name:.*$/m, `legal_name: ${name}`)
-    .replace(/^display_name:.*$/m, `display_name: ${name}`)
-    .replace(/^description:.*$/m, `description: ${name} — OrgOS スケルトン`);
-  if (!raw.includes("lifecycle:")) {
-    raw += "\nlifecycle: skeleton\n";
+  const raw = readFileSync(path, "utf-8");
+  const doc = YAML.parseDocument(raw);
+  doc.set("id", id);
+  doc.set("name", name);
+  doc.set("legal_name", name);
+  doc.set("display_name", name);
+  doc.set("description", `${name} — OrgOS スケルトン`);
+  if (!doc.has("lifecycle")) {
+    doc.set("lifecycle", "skeleton");
   }
   const jurisdiction = options.jurisdiction ?? "JP";
-  if (/^jurisdiction:.*$/m.test(raw)) {
-    raw = raw.replace(/^jurisdiction:.*$/m, `jurisdiction: ${jurisdiction}`);
-  } else {
-    raw += `jurisdiction: ${jurisdiction}\n`;
-  }
+  doc.set("jurisdiction", jurisdiction);
   if (options.entityForm) {
-    if (/^entity_form:.*$/m.test(raw)) {
-      raw = raw.replace(/^entity_form:.*$/m, `entity_form: ${options.entityForm}`);
-    } else {
-      raw += `entity_form: ${options.entityForm}\n`;
-    }
+    doc.set("entity_form", options.entityForm);
   }
   if (jurisdiction === "US") {
-    if (!/^locale:.*$/m.test(raw)) raw += "locale: en-US\n";
-    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: USD\n";
+    if (!doc.has("locale")) doc.set("locale", "en-US");
+    if (!doc.has("default_currency")) doc.set("default_currency", "USD");
   }
   if (jurisdiction === "SG") {
-    if (!/^locale:.*$/m.test(raw)) raw += "locale: en-SG\n";
-    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: SGD\n";
+    if (!doc.has("locale")) doc.set("locale", "en-SG");
+    if (!doc.has("default_currency")) doc.set("default_currency", "SGD");
   }
   if (jurisdiction === "EE") {
-    if (!/^locale:.*$/m.test(raw)) raw += "locale: et-EE\n";
-    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: EUR\n";
+    if (!doc.has("locale")) doc.set("locale", "et-EE");
+    if (!doc.has("default_currency")) doc.set("default_currency", "EUR");
   }
   if (jurisdiction === "HK") {
-    if (!/^locale:.*$/m.test(raw)) raw += "locale: en-HK\n";
-    if (!/^default_currency:.*$/m.test(raw)) raw += "default_currency: HKD\n";
+    if (!doc.has("locale")) doc.set("locale", "en-HK");
+    if (!doc.has("default_currency")) doc.set("default_currency", "HKD");
   }
   if (options.displayLanguage) {
-    if (/^display_language:.*$/m.test(raw)) {
-      raw = raw.replace(/^display_language:.*$/m, `display_language: ${options.displayLanguage}`);
-    } else {
-      raw += `display_language: ${options.displayLanguage}\n`;
-    }
+    doc.set("display_language", options.displayLanguage);
   }
   if (options.legalSubdivision) {
-    if (/^legal_subdivision:.*$/m.test(raw)) {
-      raw = raw.replace(/^legal_subdivision:.*$/m, `legal_subdivision: ${options.legalSubdivision}`);
-    } else {
-      raw += `legal_subdivision: ${options.legalSubdivision}\n`;
-    }
-  } else if (jurisdiction === "US") {
-    if (!/^legal_subdivision:.*$/m.test(raw)) raw += "legal_subdivision: DE\n";
+    doc.set("legal_subdivision", options.legalSubdivision);
+  } else if (jurisdiction === "US" && !doc.has("legal_subdivision")) {
+    doc.set("legal_subdivision", "DE");
   }
   if (options.wireConsole) {
-    if (/^wire_console:.*$/m.test(raw)) {
-      raw = raw.replace(/^wire_console:.*$/m, "wire_console: true");
-    } else {
-      raw += "wire_console: true\n";
-    }
+    doc.set("wire_console", true);
   }
-  writeFileSync(path, raw, "utf-8");
+  writeFileSync(path, String(doc), "utf-8");
 }
 
 function applyModuleBindings(dest: string, fromModules?: string[]): void {
-  if (!fromModules?.length) return;
+  // undefined = leave template defaults; [] = disable all listed modules
+  if (fromModules === undefined) return;
 
   const path = join(dest, "modules.yaml");
   const file = readYamlFileRaw(path);
@@ -187,6 +177,7 @@ export function scaffoldMissingTenantData(): ScaffoldTenantDataResult {
 
 interface WriteSkeletonOptions {
   skipExisting?: boolean;
+  productSkeleton?: boolean;
 }
 
 function writeSkeletonData(
@@ -199,6 +190,7 @@ function writeSkeletonData(
   const dataDir = join(dest, "data");
   const docsDir = join(dest, "docs");
   const result: ScaffoldTenantDataResult = { created: [], skipped: [] };
+  const productSkeleton = Boolean(options?.productSkeleton);
 
   const put = (rel: string, content: string) => {
     const abs = join(dest, rel);
@@ -210,8 +202,8 @@ function writeSkeletonData(
     result.created.push(rel);
   };
 
-  put("data/company.yaml", skeletonCompany(name, id));
-  put("data/ops-config.yaml", skeletonOpsConfig());
+  put("data/company.yaml", skeletonCompany(name, id, { productSkeleton }));
+  put("data/ops-config.yaml", skeletonOpsConfig({ productSkeleton }));
   put("data/classification-registry.yaml", skeletonClassificationRegistry());
   put("data/document-io.yaml", "inbox_items: []\noutbox_items: []\n");
   put("data/dependency-graph.yaml", skeletonDependencyGraph(id));
@@ -225,16 +217,49 @@ function writeSkeletonData(
   put("data/finance/payroll.yaml", "officer_compensation_annual: 0\n");
   put(
     "data/finance/cash-balance.yaml",
-    `as_of: "2027-01-31"\nstatus: template\ncurrency: JPY\naccounts: []\ntotal: null\nnotes: |\n  スケルトン — 残高入力後 status: confirmed\n`
+    YAML.stringify({
+      as_of: null,
+      status: "template",
+      currency: "JPY",
+      accounts: [],
+      total: null,
+      notes: "スケルトン — 残高入力後 status: confirmed",
+    }),
   );
   put("data/finance/loans.yaml", "loans: []\n");
   put(
     "data/finance/fixed-assets.yaml",
-    `as_of: "2027-01-31"\nfiscal_year: FY2026\ncurrency: JPY\nassets: []\nsummary:\n  total_acquisition_cost: 0\n  total_accumulated_depreciation: 0\n  total_book_value: 0\n  annual_depreciation_fy_current: 0\n`
+    YAML.stringify({
+      as_of: null,
+      fiscal_year: productSkeleton ? "TBD" : "FY2026",
+      status: "template",
+      currency: "JPY",
+      assets: [],
+      summary: {
+        total_acquisition_cost: 0,
+        total_accumulated_depreciation: 0,
+        total_book_value: 0,
+        annual_depreciation_fy_current: 0,
+      },
+    }),
   );
   put(
     "data/finance/tax-profile.yaml",
-    `entity:\n  name: "${name}"\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: TBD\ncorporate_tax:\n  category: TBD\n  capital_stock: TBD\n`
+    YAML.stringify(
+      productSkeleton
+        ? {
+            entity: { name, type: "株式会社" },
+            fiscal_year: { status: "template" },
+            consumption_tax: { status: "TBD" },
+            corporate_tax: { category: "TBD", capital_stock: "TBD" },
+          }
+        : {
+            entity: { name, type: "株式会社" },
+            fiscal_year: { end_month: 1 },
+            consumption_tax: { status: "TBD" },
+            corporate_tax: { category: "TBD", capital_stock: "TBD" },
+          },
+    ),
   );
   put(
     "data/finance/chart-of-accounts.yaml",
@@ -267,7 +292,9 @@ function writeSkeletonData(
   put("data/plans/expense-plan.yaml", skeletonExpensePlan());
   put("data/plans/investment-plan.yaml", skeletonYearPlan("investment"));
   put("data/plans/debt-plan.yaml", skeletonDebtPlan());
-  put("data/plans/yojitsu-fy2026.yaml", skeletonYojitsu(name));
+  if (!productSkeleton) {
+    put("data/plans/yojitsu-fy2026.yaml", skeletonYojitsu(name));
+  }
 
   copyModuleSeeds(dest, fromModules);
   return result;
@@ -276,9 +303,17 @@ function writeSkeletonData(
 /** Real operator registry must never be copied into new tenants (demo keys). */
 const TEMPLATE_EXCLUDED_PATHS = new Set(["data/org/operators.yaml"]);
 
-function shouldCopyTemplateEntry(src: string, templateDir: string): boolean {
+function shouldCopyTemplateEntry(
+  src: string,
+  templateDir: string,
+  opts?: { productSkeleton?: boolean },
+): boolean {
   const rel = relative(templateDir, src).split(sep).join("/");
   if (TEMPLATE_EXCLUDED_PATHS.has(rel)) return false;
+  if (opts?.productSkeleton) {
+    if (rel === "data/properties" || rel.startsWith("data/properties/")) return false;
+    if (rel === "docs/properties" || rel.startsWith("docs/properties/")) return false;
+  }
   if (rel.endsWith(".DS_Store") || rel.includes("/.DS_Store")) return false;
   const base = rel.split("/").pop() ?? "";
   if (base.endsWith(".yaml.example")) return true;
@@ -322,10 +357,16 @@ function seedExecutiveRecordsFromExample(
   }
   const tenantId = basename(dest);
   const prevTenant = process.env.ORGOS_TENANT;
+  const hadTenantEnv = Object.prototype.hasOwnProperty.call(process.env, "ORGOS_TENANT");
   process.env.ORGOS_TENANT = tenantId;
-  setTenantId(tenantId);
-  ensureExecutiveMailConfig({ dryRunSmtp: true, force: !skipExisting });
-  if (prevTenant) process.env.ORGOS_TENANT = prevTenant;
+  runWithTenantId(tenantId, () => {
+    ensureExecutiveMailConfig({ dryRunSmtp: true, force: !skipExisting });
+  });
+  if (hadTenantEnv && prevTenant !== undefined) {
+    process.env.ORGOS_TENANT = prevTenant;
+  } else {
+    delete process.env.ORGOS_TENANT;
+  }
   if (existsSync(target)) {
     result?.created.push(rel);
   }
@@ -336,17 +377,48 @@ function writeFile(path: string, content: string): void {
   writeFileSync(path, content, "utf-8");
 }
 
-function skeletonCompany(name: string, tenantId: string): string {
-  return `name: "${name}"
-fiscal_year_end_month: 1
-business_description: |
-  スケルトン — 事業概要を記載
-public_disclosure:
-  representative_email: ceo@${tenantId}.orgos.local
-`;
+function skeletonCompany(
+  name: string,
+  tenantId: string,
+  opts?: { productSkeleton?: boolean },
+): string {
+  const body: Record<string, unknown> = {
+    name,
+    business_description: "スケルトン — 事業概要を記載",
+    public_disclosure: {
+      representative_email: `ceo@${tenantId}.orgos.local`,
+    },
+  };
+  if (!opts?.productSkeleton) {
+    body.fiscal_year_end_month = 1;
+  }
+  return YAML.stringify(body);
 }
 
-function skeletonOpsConfig(): string {
+function skeletonOpsConfig(opts?: { productSkeleton?: boolean }): string {
+  if (opts?.productSkeleton) {
+    return `# 運用設定 — スケルトン（製品）
+
+skeleton: true
+status: template
+
+fiscal_year:
+  id: TBD
+  status: template
+  plan_file: null
+  from: null
+  to: null
+
+p0:
+  contracts: []
+  secrets: []
+  cash_balance:
+    enabled: true
+    blocker: false
+  records: []
+  audits: []
+`;
+  }
   return `# 運用設定 — スケルトン
 
 skeleton: true

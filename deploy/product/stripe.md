@@ -1,5 +1,7 @@
 # Stripe 環境変数（OrgOS Ledger P1）
 
+> **現時点の商用提供は契約ベース専用です。** Stripe Checkout / Customer Portal は将来オプションであり、本番では有効化していません（`product-fleet/stripe-ops.yaml` の `status: deferred` · [pricing.md](../../docs/product/pricing.md)）。以下は live 投入時の技術手順です。
+
 | 変数 | 用途 |
 |------|------|
 | `STRIPE_SECRET_KEY` | Checkout Session 作成 |

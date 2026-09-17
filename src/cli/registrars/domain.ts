@@ -1742,10 +1742,15 @@ export function registerDomainCommands(program: Command): void {
     .command("mail-drill")
     .description("Send a real SMTP drill mail (requires ORGOS_MAIL_SMTP_URL)")
     .requiredOption("--to <email>", "Recipient address")
+    .option("--customer <id>", "Fleet customer id recorded on the outbox row")
     .option("--json", "Print JSON")
-    .action(async (opts: { to: string; json?: boolean }) => {
+    .action(async (opts: { to: string; customer?: string; json?: boolean }) => {
       const { runLedgerProductMailDrill } = await import("../../commands/ledger-product.js");
-      await runLedgerProductMailDrill(opts);
+      await runLedgerProductMailDrill({
+        to: opts.to,
+        customerId: opts.customer,
+        json: opts.json,
+      });
     });
   ledgerProduct
     .command("billing-issues")
@@ -1813,10 +1818,20 @@ export function registerDomainCommands(program: Command): void {
     .description("Fleet health monitor (optional alert webhook)")
     .option("--json", "Print JSON")
     .option("--fail-on-unhealthy", "Exit non-zero when unhealthy")
-    .action(async (opts: { json?: boolean; failOnUnhealthy?: boolean }) => {
-      const { runLedgerProductMonitor } = await import("../../commands/ledger-product.js");
-      await runLedgerProductMonitor(opts);
-    });
+    .option(
+      "--alert-dry-run",
+      "Assemble a test alert payload even when healthy (POST only if ORGOS_ALERT_DRY_RUN_POST=1)",
+    )
+    .action(
+      async (opts: {
+        json?: boolean;
+        failOnUnhealthy?: boolean;
+        alertDryRun?: boolean;
+      }) => {
+        const { runLedgerProductMonitor } = await import("../../commands/ledger-product.js");
+        await runLedgerProductMonitor(opts);
+      },
+    );
   ledgerProduct
     .command("mail-outbox")
     .description("List customer mail outbox (dev / audit)")

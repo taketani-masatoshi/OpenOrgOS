@@ -18,10 +18,14 @@
 
 ## 課金
 
-- Stripe セルフチェックアウト（`STRIPE_SECRET_KEY` · [stripe.md](../../deploy/product/stripe.md)）
-- `past_due` 時は Billing Portal から支払方法更新
+- **契約ベース専用**（請求書 · 銀行振込）。セルフサーブの Stripe Checkout は現時点では提供しません
+- 申込は招待制。契約締結後に運用チームがテナントをプロビジョンします
+- 支払い遅延時は請求書の案内に従い、サポート（`support@oorgos.org`）へ連絡してください
+- 対外宣言: [`product-fleet/commercial-declaration.yaml`](../../product-fleet/commercial-declaration.yaml)（`stripe-live` は CEO 判断で除外）
+- Stripe を将来オプションとして投入する場合の技術手順: [stripe.md](../../deploy/product/stripe.md)（本番未提供）
 
 ## 関連
 
 - [terms-of-service.md](legal/terms-of-service.md)
 - [dencho-sales-claim.md](dencho-sales-claim.md)
+- [commercial-claim-checklist.md](commercial-claim-checklist.md)

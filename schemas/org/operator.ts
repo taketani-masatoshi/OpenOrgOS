@@ -84,7 +84,7 @@ export const founderMigrationSchema = z.object({
 });
 
 export const operatorLoginPolicySchema = z.object({
-  /** Company domains allowed for Community SSO / operator email (e.g. malkk.com). Empty = no extra domain gate. */
+  /** Company domains allowed for Community SSO / operator email (e.g. example.com). Empty = no extra domain gate. */
   email_domains: z.array(z.string().min(1)).default([]),
   /** Founder migration seat only — at most one personal email (must match active ceo). Do not add new ones. */
   grandfather_emails: z.array(z.string().email()).max(1).default([]),

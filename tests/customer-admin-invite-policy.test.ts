@@ -27,7 +27,7 @@ describe("customer admin invite policy", () => {
     provisionLedgerTenant({
       tenantId: "mal-invite-ui",
       companyName: "MAL Invite UI KK",
-      adminEmail: "ceo@malkk.com",
+      adminEmail: "ceo@example.com",
       plan: "business",
     });
     setTenantId("mal-invite-ui");
@@ -38,7 +38,7 @@ describe("customer admin invite policy", () => {
       YAML.stringify({
         version: "1",
         login_policy: {
-          email_domains: ["malkk.com"],
+          email_domains: ["example.com"],
           grandfather_emails: ["founder@gmail.com"],
           founder_migration: { status: "open", grace_until: "2099-12-31" },
         },
@@ -67,7 +67,7 @@ describe("customer admin invite policy", () => {
 
   it("reports standing invite blocked while grandfather is active", () => {
     const policy = buildCustomerAdminInvitePolicy();
-    expect(policy.email_domains).toEqual(["malkk.com"]);
+    expect(policy.email_domains).toEqual(["example.com"]);
     expect(policy.grandfather_active).toBe(true);
     expect(policy.standing_invite_blocked).toBe(true);
     expect(policy.standing_invite_block_reason).toContain("retired");
@@ -79,7 +79,7 @@ describe("customer admin invite policy", () => {
     expect(() =>
       inviteLedgerOperator({
         displayName: "三塚",
-        email: "mitsuka@malkk.com",
+        email: "guest@example.com",
         role: "operator",
       }),
     ).toThrow(/retired/);

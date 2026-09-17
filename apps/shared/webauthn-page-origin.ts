@@ -8,15 +8,19 @@ export const LOCAL_WEBAUTHN_CANONICAL_HOST = "localhost";
 
 function redirectLoopback(next: URL): WebAuthnHostCheck {
   if (typeof window === "undefined") return "redirecting";
+  const target = next.toString();
+  // Prefer window.sessionStorage — bare `sessionStorage` is missing in Node
+  // Vitest (CI), so a try/catch would skip the guard and always replace().
+  const store = window.sessionStorage;
   try {
-    if (sessionStorage.getItem(REDIRECT_GUARD_KEY) === next.toString()) {
+    if (store?.getItem(REDIRECT_GUARD_KEY) === target) {
       return "redirecting";
     }
-    sessionStorage.setItem(REDIRECT_GUARD_KEY, next.toString());
+    store?.setItem(REDIRECT_GUARD_KEY, target);
   } catch {
-    /* ignore */
+    /* ignore quota / private-mode failures */
   }
-  window.location.replace(next.toString());
+  window.location.replace(target);
   return "redirecting";
 }
 

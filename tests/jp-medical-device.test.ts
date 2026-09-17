@@ -277,7 +277,7 @@ describe("jp_medical_device ledger mutations (isolated restore)", () => {
 
     const { approval } = humanApproveOrgApproval({
       approvalId: proposed.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       source: "cli",
     });
@@ -311,7 +311,7 @@ describe("jp_medical_device ledger mutations (isolated restore)", () => {
     });
     rejectOrgApproval({
       approvalId: proposed2.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       reason: "need more root cause",
     });
     expect(
@@ -339,7 +339,7 @@ describe("jp_medical_device ledger mutations (isolated restore)", () => {
     });
     humanApproveOrgApproval({
       approvalId: chgProp.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       source: "cli",
     });
@@ -365,7 +365,7 @@ describe("jp_medical_device ledger mutations (isolated restore)", () => {
     });
     humanApproveOrgApproval({
       approvalId: docProp.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       source: "cli",
     });
@@ -392,7 +392,7 @@ describe("jp_medical_device ledger mutations (isolated restore)", () => {
     });
     humanApproveOrgApproval({
       approvalId: gvpProp.approval_id,
-      approverId: "段燕燕",
+      approverId: "山田太郎",
       operatorId: "OP-001",
       source: "cli",
     });
@@ -413,7 +413,7 @@ describe("jp_medical_device ledger mutations (isolated restore)", () => {
     expect(() =>
       humanApproveOrgApproval({
         approvalId: proposed.approval_id,
-        approverId: "段燕燕",
+        approverId: "山田太郎",
         operatorId: "OP-001",
         source: "cli",
       })

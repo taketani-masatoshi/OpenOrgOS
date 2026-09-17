@@ -36,7 +36,7 @@ npm run orgos -- secretary mail setup-guide
 npm run orgos -- secretary correspondence show --id DRAFT-20260709-001
 
 # 2. 承認（--reviewed 必須 · 上記全文を読んだ後）
-npm run orgos -- org approval approve --id APR-20260709-001 --approver "段燕燕" --reviewed
+npm run orgos -- org approval approve --id APR-20260709-001 --approver "山田太郎" --reviewed
 
 # 3. 送信（ceo/approver · STEWARD_OPERATOR_AUTH=1 + operator キー）
 npm run orgos -- secretary correspondence send --id DRAFT-20260709-001 --operator-id OP-001

@@ -5,22 +5,26 @@ import {
   formatCompanyOfficersCeoReply,
   formatCompanyOfficersTodayLines,
 } from "../src/lib/company-officers-view.js";
+import { loadCompany } from "../src/lib/data.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
 describe("company officers view", () => {
   it("reads MAL representative directors from company.yaml without address", () => {
     setTenantId("mal");
+    const company = loadCompany();
+    const expectedNames = (company.directors ?? []).map((d) => d.name);
+    expect(expectedNames.length).toBeGreaterThanOrEqual(1);
+
     const view = buildCompanyOfficersView();
     expect(view.coverage).toBe("registered");
-    expect(view.officers.map((o) => o.name)).toEqual(["段燕燕", "宮城万貴子"]);
+    expect(view.officers.map((o) => o.name)).toEqual(expectedNames);
     expect(view.officers.every((o) => o.role === "代表取締役")).toBe(true);
     const reply = formatCompanyOfficersCeoReply(view);
-    expect(reply).toContain("段燕燕");
-    expect(reply).toContain("宮城万貴子");
-    expect(reply).toContain("株式会社MAL");
+    for (const name of expectedNames) expect(reply).toContain(name);
+    expect(reply).toContain(company.name);
     expect(reply).not.toMatch(/〒|千代田区|二番町/);
     const today = formatCompanyOfficersTodayLines(view).join("\n");
-    expect(today).toContain("段燕燕");
+    expect(today).toContain(expectedNames[0]!);
     expect(today).not.toMatch(/〒|千代田区/);
   });
 
@@ -46,7 +50,7 @@ describe("company officers view", () => {
   it("ignores address-like representative values", () => {
     const officers = extractCompanyOfficers({
       name: "テスト株式会社",
-      representative: "〒102-0084 東京都千代田区二番町1",
+      representative: "〒100-0001 東京都千代田区サンプル1",
     });
     expect(officers).toEqual([]);
   });

@@ -18,6 +18,7 @@
     "validate": "node --import tsx src/cli.ts validate",
     "validate:demo": "node --import tsx src/cli.ts --tenant demo validate",
     "check:canonical-writes": "node --import tsx scripts/check-canonical-writes.ts",
+    "check:tenant-tip": "bash scripts/check-tenant-tip.sh",
     "check": "npm run validate && npm run check:canonical-writes && npm run orgos -- --tenant demo validate && npm run orgos -- --tenant demo events validate && npm run orgos -- --tenant acme validate && npm run orgos -- --tenant us-demo validate && npm run orgos -- --tenant sg-demo validate && npm run orgos -- --tenant ee-demo validate && npm run orgos -- --tenant hk-demo validate && npm run orgos -- --tenant au-demo validate && npm run orgos -- --tenant tw-demo validate && npm run orgos -- --tenant my-demo validate && npm run orgos -- --tenant cn-demo validate && npm run orgos -- --tenant ae-demo validate && npm run orgos -- --tenant ru-demo validate && npm run orgos -- --tenant eu-demo validate && npm run validate:protocol:tenants && npm run orgos -- modules check --all && npm run orgos -- classification check && npm run agent:pipeline:check",
     "validate:protocol:tenants": "node --import tsx scripts/validate-protocol-tenants.ts",
     "daily": "npm run check && npm run orgos -- pipeline run daily",
@@ -50,7 +51,12 @@
     "test:registry:scaffold": "node --import tsx scripts/scaffold-catalog-test.ts",
     "test:registry:check": "vitest run tests/testing-registry.test.ts",
     "test:contract": "node --import tsx scripts/run-tiered-tests.ts contract",
-    "test:finance": "vitest run --fileParallelism=false tests/fiscal-year.test.ts tests/finance-statements.test.ts tests/consumption-tax-journal.test.ts tests/journal-write-guard.test.ts tests/journal-audit-backfill.test.ts tests/ledger-cutover.test.ts tests/ledger-journal-export.test.ts tests/ledger-monthly-reconcile.test.ts tests/ledger-trial-balance.test.ts tests/journal-source-accounts.test.ts tests/journal-entry-schema.test.ts tests/monthly-pl-journal.test.ts tests/annual-close.test.ts tests/opening-balance.test.ts tests/payroll-jp.test.ts tests/jp-payroll-cli-privacy.test.ts tests/remittance-journal.test.ts tests/control-reconcile.test.ts tests/ar-ap-settlement.test.ts tests/payroll-remittance-loop.test.ts tests/steward-chat-ledger-rbac.test.ts tests/bank-reconciliation-gl.test.ts tests/comparative-statements.test.ts tests/period-lock-invoice-dedupe.test.ts tests/tax-remittance-integrity.test.ts tests/electronic-ledger.test.ts tests/statutory-filing-readiness.test.ts tests/ledger-product.test.ts tests/steward-chat-product-api.test.ts tests/cash-flow-statement.test.ts tests/ledger-tenant-isolation.test.ts tests/jp-corporate-tax-xml.test.ts tests/stripe-ops.test.ts tests/commercial-readiness.test.ts tests/stripe-webhook.test.ts tests/ledger-mail.test.ts tests/ledger-guest-invite.test.ts tests/ledger-offboard.test.ts tests/stripe-commercial-guards.test.ts tests/productability-gaps.test.ts tests/accounting-bank-e2e.test.ts tests/accounting-readiness.test.ts tests/customer-ux-paths.test.ts tests/customer-journey-http.test.ts",
+    "test:finance": "npm run test:finance:books && npm run test:finance:product && npm run test:finance:journeys",
+    "test:finance:books": "vitest run --fileParallelism=false tests/fiscal-year.test.ts tests/finance-statements.test.ts tests/consumption-tax-journal.test.ts tests/journal-write-guard.test.ts tests/journal-audit-backfill.test.ts tests/ledger-cutover.test.ts tests/ledger-journal-export.test.ts tests/ledger-monthly-reconcile.test.ts tests/ledger-trial-balance.test.ts tests/journal-source-accounts.test.ts tests/journal-entry-schema.test.ts tests/monthly-pl-journal.test.ts tests/annual-close.test.ts tests/opening-balance.test.ts tests/payroll-jp.test.ts tests/jp-payroll-cli-privacy.test.ts tests/remittance-journal.test.ts tests/control-reconcile.test.ts tests/ar-ap-settlement.test.ts tests/payroll-remittance-loop.test.ts tests/bank-reconciliation-gl.test.ts tests/comparative-statements.test.ts tests/period-lock-invoice-dedupe.test.ts tests/tax-remittance-integrity.test.ts tests/electronic-ledger.test.ts tests/statutory-filing-readiness.test.ts tests/cash-flow-statement.test.ts tests/ledger-tenant-isolation.test.ts tests/jp-corporate-tax-xml.test.ts",
+    "test:finance:product": "vitest run --fileParallelism=false tests/steward-chat-ledger-rbac.test.ts tests/ledger-product.test.ts tests/steward-chat-product-api.test.ts tests/stripe-ops.test.ts tests/commercial-readiness.test.ts tests/stripe-webhook.test.ts tests/ledger-mail.test.ts tests/ledger-guest-invite.test.ts tests/ledger-offboard.test.ts tests/stripe-commercial-guards.test.ts tests/productability-gaps.test.ts tests/accounting-bank-e2e.test.ts tests/accounting-readiness.test.ts",
+    "test:finance:journeys": "npm run test:finance:journeys:ux && npm run test:finance:journeys:http",
+    "test:finance:journeys:ux": "vitest run --fileParallelism=false --reporter=dot tests/customer-ux-paths.test.ts",
+    "test:finance:journeys:http": "vitest run --fileParallelism=false --reporter=dot tests/customer-journey-http.test.ts",
     "test:platform": "node --import tsx scripts/run-tiered-tests.ts platform",
     "test:catalog": "node --import tsx scripts/run-tiered-tests.ts catalog",
     "test:integration": "node --import tsx scripts/run-tiered-tests.ts integration",
@@ -104,7 +110,8 @@
     "package:publish-check": "node scripts/package-publish-check.mjs",
     "build:package": "node scripts/build-orgos-package.mjs",
     "package:pack": "npm run build:package && npm pack -w @orgos/cli",
-    "ooo:claim-routes": "node --import tsx scripts/ooo-claim-routes.ts"
+    "ooo:claim-routes": "node --import tsx scripts/ooo-claim-routes.ts",
+    "check:pii": "bash scripts/check-pii.sh"
   },
   "dependencies": {
     "@independentsoft/msg": "^1.0.2",
@@ -135,5 +142,11 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "license": "Unlicense",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taketani-masatoshi/OpenOrgOS.git"
   }
 }

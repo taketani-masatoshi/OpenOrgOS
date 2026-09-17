@@ -907,7 +907,7 @@ export function registerPlatformCommands(program: Command): void {
   loginDomainCmd
     .command("set")
     .description("Add company email domain and open founder migration grace if needed")
-    .requiredOption("--domain <domain>", "Company domain (e.g. malkk.com)")
+    .requiredOption("--domain <domain>", "Company domain (e.g. example.com)")
     .option("--json", "JSON output")
     .action(async (opts) => {
       const { runOperatorLoginDomainSet } = await import("../../commands/operator-login-policy.js");

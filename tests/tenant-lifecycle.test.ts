@@ -35,21 +35,21 @@ describe("tenant lifecycle", () => {
       display_name: "CEO",
       role: "ceo",
       status: "active",
-      email: "ceo@malkk.com",
+      email: "ceo@example.com",
     };
     const operator: OperatorRecord = {
       operator_id: "OP-002",
       display_name: "Ops",
       role: "operator",
       status: "active",
-      email: "ops@malkk.com",
+      email: "ops@example.com",
     };
     const liquidator: OperatorRecord = {
       operator_id: "OP-LIQ-001",
       display_name: "Liquidator",
       role: "readonly",
       status: "active",
-      email: "liquidator@malkk.com",
+      email: "liquidator@example.com",
       guest_expires_at: "2099-12-31",
       seat_kind: "liquidator",
     };

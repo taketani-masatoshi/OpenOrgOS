@@ -16,15 +16,18 @@ type MockLocation = {
 };
 
 function installWindow(location: MockLocation, storage: Record<string, string> = {}): void {
+  const sessionStorage = {
+    getItem: (key: string) => storage[key] ?? null,
+    setItem: (key: string, value: string) => {
+      storage[key] = value;
+    },
+  };
   vi.stubGlobal("window", {
     location,
-    sessionStorage: {
-      getItem: (key: string) => storage[key] ?? null,
-      setItem: (key: string, value: string) => {
-        storage[key] = value;
-      },
-    },
+    sessionStorage,
   });
+  // Also expose as a free binding — production browsers do; Node tests may not.
+  vi.stubGlobal("sessionStorage", sessionStorage);
 }
 
 describe("inspectWebAuthnPage loopback", () => {
@@ -59,7 +62,19 @@ describe("inspectWebAuthnPage loopback", () => {
 
   it("does not call replace twice for the same target URL", () => {
     const target = "http://localhost:9470/";
-    storage.orgos_webauthn_loopback_redirect = target;
+    storage = { orgos_webauthn_loopback_redirect: target };
+    // Re-install so the storage binding is unambiguous after mutation.
+    installWindow(
+      {
+        hostname: "127.0.0.1",
+        origin: "http://127.0.0.1:9470",
+        href: "http://127.0.0.1:9470/",
+        protocol: "http:",
+        port: "9470",
+        replace,
+      },
+      storage,
+    );
 
     const result = inspectWebAuthnPage({
       expectedOrigin: "http://localhost:9470",

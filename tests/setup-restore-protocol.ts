@@ -151,11 +151,16 @@ function breakLock(): void {
   rmSync(RESTORE_LOCK_DIR, { recursive: true, force: true });
 }
 
-function backoff(): void {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+/**
+ * Yield instead of blocking the thread: a synchronous wait here freezes the
+ * worker event loop, and vitest then fails the run with
+ * `Timeout calling "onTaskUpdate"` even though every test passed.
+ */
+async function backoff(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 25));
 }
 
-function acquireFixtureRestoreLock(): void {
+async function acquireFixtureRestoreLock(): Promise<void> {
   const startedWaiting = Date.now();
   const deadline = startedWaiting + LOCK_TIMEOUT_MS;
   let markerMissingSince = 0;
@@ -168,7 +173,7 @@ function acquireFixtureRestoreLock(): void {
         restoreLockHeld = true;
         return;
       }
-      backoff();
+      await backoff();
       continue;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
@@ -193,7 +198,7 @@ function acquireFixtureRestoreLock(): void {
         continue;
       }
     }
-    backoff();
+    await backoff();
   }
 
   throw new Error(
@@ -422,9 +427,9 @@ beforeAll(() => {
   cleanGeneratedAgentMissions();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   captureEnv();
-  acquireFixtureRestoreLock();
+  await acquireFixtureRestoreLock();
   try {
     restoreCommittedTenantFixtures();
     resetMalExecutiveMailTriageQueue();
@@ -436,7 +441,11 @@ beforeEach(() => {
   }
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // Catalog and other sync-heavy suites can starve the vitest worker RPC
+  // (`Timeout calling "onTaskUpdate"`) even when every assertion passed.
+  // Yield once per file teardown so replies flush on slow CI runners.
+  await new Promise((resolve) => setTimeout(resolve, 0));
   restoreEnv();
   releaseFixtureRestoreLock();
 });

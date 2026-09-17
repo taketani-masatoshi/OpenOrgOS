@@ -32,7 +32,7 @@ Wire ログイン画面の ID は、登録時に使った値と一致させる�
 | 項目 | 正本 |
 |------|------|
 | operator_id | `tenants/mal/data/org/operators.yaml`（例: `OP-001`） |
-| approver_id | 同ファイルの `approver_name`（例: `段燕燕`） |
+| approver_id | 同ファイルの `approver_name`（例: `山田太郎`） |
 
 ### 2.1 登録ゲート（2026-08-24）
 

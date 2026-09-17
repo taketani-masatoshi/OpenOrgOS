@@ -10,7 +10,7 @@ if [ -f "$MAIL_CFG" ]; then
 provider: smtp
 from:
   name: MAL
-  email: ai@malkk.com
+  email: ops@example.com
 smtp:
   host: smtp.test.local
   port: 587
@@ -71,7 +71,7 @@ console.log(drafts.join('\n'));
   DRAFT_JSON=$("${ORGOS[@]}" mail outbound correspondence show "$DRAFT_ID" --json)
   APR_ID=$(node -e "console.log(JSON.parse(process.argv[1]).approval_id)" "$DRAFT_JSON")
   echo "  approve+send $DRAFT_ID ($APR_ID)"
-  "${ORGOS[@]}" org approval approve --id "$APR_ID" --approver "段燕燕" --reviewed
+  "${ORGOS[@]}" org approval approve --id "$APR_ID" --approver "山田太郎" --reviewed
   "${ORGOS[@]}" mail outbound correspondence send --id "$DRAFT_ID"
 done
 

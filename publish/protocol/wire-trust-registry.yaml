@@ -28,7 +28,7 @@ nodes:
     protocol_public_key: MCowBQYDK2VwAyEA8b0x7YSDfF/4SlWfBxS4opPLdhDnDZiyGEpNhqvaEzI=
     wire_url: https://wire.oorgos.org
     witness_jurisdiction: JP
-    corporate_number: "4010001189530"
+    corporate_number: "9999999999999"
     notes: pk-DID derived from protocol_public_key (formerly did:ooo:org:mal)
 
   - node_id: southwood

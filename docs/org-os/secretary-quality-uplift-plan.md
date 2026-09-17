@@ -196,7 +196,7 @@ CEO
 | 会食 `cost_estimate` 起案必須 | ✅（`set-cost` / `--cost-estimate` · proposal/confirm 起案前ゲート） |
 | VR 計測番号の本番拒否 | ✅（`--allow-measurement-ref` 明示時のみ） |
 | 対面 rehearsal で style-lint PASS 断言 | ✅（sent drafts + `style_lint_pass_count`） |
-| 次ライブ1件で lint PASS（実 SMTP） | ✅ **`SCH-2026-022` closed** · `style_lint_pass_count=3` · warnings=0 · 宛先 `ai@malkk.com` |
+| 次ライブ1件で lint PASS（実 SMTP） | ✅ **`SCH-2026-022` closed** · `style_lint_pass_count=3` · warnings=0 · 宛先 `ops@example.com` |
 | VR 証明番号を measurement 扱いに統一 | ✅ `HP-PROOF` / `REH-` / `PROOF-` → VR confirm + style-lint **error**（`--allow-measurement-ref` のみ） |
 | 連続 lint-clean KPI | ✅ `countConsecutiveLintCleanClosedCases` · Today 表示（目標3 · 現状は SCH-022 起点） |
 | live_proof 正本 | ✅ `executive scheduling quality proof --partner/--accept-path/--venue-ref-kind` |
@@ -206,7 +206,7 @@ CEO
 
 ### ライブ `SCH-2026-022`（2026-07-14）— lint 証明
 
-**案件:** 会食（lintライブ証明）· `ai@malkk.com` 自己往復 · なだ万第一候補 · **`status=closed`**
+**案件:** 会食（lintライブ証明）· `ops@example.com` 自己往復 · なだ万第一候補 · **`status=closed`**
 
 | 工程 | 状態 | 正本メモ |
 |------|------|----------|

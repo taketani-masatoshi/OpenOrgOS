@@ -27,6 +27,8 @@ import {
 import { resolveChatPermissions } from "../console-auth/rbac.js";
 import { resolveOperatorFromSessionUser } from "../console-auth/operator-rbac.js";
 import { isClaimOnlySeat } from "../org/operator-claim-person.js";
+import { resolveTenantFromRequest } from "../product/ledger-control-plane.js";
+import { getTenantId } from "../tenant.js";
 import { appendChatAudit } from "./audit.js";
 
 function authUserPayload(user: WireConsoleUser) {
@@ -66,10 +68,19 @@ export function requireChatAuth(
   res: ServerResponse
 ): WireConsoleUser | null {
   if (!isStewardChatAuthEnabled()) {
+    let tenantId = resolveTenantFromRequest(req) ?? undefined;
+    if (!tenantId) {
+      try {
+        tenantId = getTenantId();
+      } catch {
+        tenantId = undefined;
+      }
+    }
     return {
       operator_id: "dev-bypass",
       approver_id: "dev-bypass",
       mode: "dev",
+      tenant_id: tenantId,
     };
   }
 

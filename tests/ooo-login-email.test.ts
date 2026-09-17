@@ -16,13 +16,13 @@ function registry(partial: Partial<OperatorRegistry> & { operators: OperatorRegi
 
 describe("OOO login email policy", () => {
   const policy = normalizeOooLoginEmailPolicy({
-    email_domains: ["malkk.com"],
+    email_domains: ["example.com"],
     grandfather_emails: ["founder@gmail.com"],
   });
 
   it("allows company domain and subdomains", () => {
-    expect(isOooLoginEmailAllowed("ceo@malkk.com", policy)).toBe(true);
-    expect(isOooLoginEmailAllowed("ceo@mail.malkk.com", policy)).toBe(true);
+    expect(isOooLoginEmailAllowed("ceo@example.com", policy)).toBe(true);
+    expect(isOooLoginEmailAllowed("ceo@mail.example.com", policy)).toBe(true);
   });
 
   it("allows grandfathered personal email only", () => {
@@ -31,8 +31,8 @@ describe("OOO login email policy", () => {
   });
 
   it("does not treat lookalike domains as a match", () => {
-    expect(isOooLoginEmailAllowed("ceo@notmalkk.com", policy)).toBe(false);
-    expect(isOooLoginEmailAllowed("ceo@malkk.com.evil.test", policy)).toBe(false);
+    expect(isOooLoginEmailAllowed("ceo@notexample.com", policy)).toBe(false);
+    expect(isOooLoginEmailAllowed("ceo@example.com.evil.test", policy)).toBe(false);
   });
 
   it("allows any valid email when domains are unset", () => {
@@ -51,7 +51,7 @@ describe("OOO login email policy", () => {
   it("lists active human operators whose email is off-policy", () => {
     const outside = listOperatorEmailsOutsideLoginPolicy(
       registry({
-        login_policy: { email_domains: ["malkk.com"], grandfather_emails: [] },
+        login_policy: { email_domains: ["example.com"], grandfather_emails: [] },
         operators: [
           {
             operator_id: "OP-001",
@@ -80,7 +80,7 @@ describe("founder grandfather policy", () => {
     const issues = assertFounderGrandfatherPolicy(
       registry({
         login_policy: {
-          email_domains: ["malkk.com"],
+          email_domains: ["example.com"],
           grandfather_emails: ["a@gmail.com", "b@gmail.com"],
         },
         operators: [
@@ -101,7 +101,7 @@ describe("founder grandfather policy", () => {
     const issues = assertFounderGrandfatherPolicy(
       registry({
         login_policy: {
-          email_domains: ["malkk.com"],
+          email_domains: ["example.com"],
           grandfather_emails: ["other@gmail.com"],
         },
         operators: [
@@ -110,7 +110,7 @@ describe("founder grandfather policy", () => {
             display_name: "CEO",
             role: "ceo",
             status: "active",
-            email: "ceo@malkk.com",
+            email: "ceo@example.com",
           },
         ],
       }),
@@ -122,7 +122,7 @@ describe("founder grandfather policy", () => {
     const issues = assertFounderGrandfatherPolicy(
       registry({
         login_policy: {
-          email_domains: ["malkk.com"],
+          email_domains: ["example.com"],
           grandfather_emails: ["ceo@gmail.com"],
         },
         operators: [
@@ -201,7 +201,7 @@ describe("founder grandfather policy", () => {
     const issues = assertFounderGrandfatherPolicy(
       registry({
         login_policy: {
-          email_domains: ["malkk.com"],
+          email_domains: ["example.com"],
           grandfather_emails: ["ceo@gmail.com"],
         },
         operators: [
@@ -217,7 +217,7 @@ describe("founder grandfather policy", () => {
             display_name: "Ops",
             role: "operator",
             status: "active",
-            email: "ops@malkk.com",
+            email: "ops@example.com",
           },
         ],
       }),
@@ -282,7 +282,7 @@ describe("standing operator email collisions", () => {
             display_name: "CEO",
             role: "ceo",
             status: "active",
-            email: "ceo@malkk.com",
+            email: "ceo@example.com",
           },
         ],
       }),
@@ -291,7 +291,7 @@ describe("standing operator email collisions", () => {
       {
         tenantId: "mal",
         operator_id: "OP-001",
-        email: "ceo@malkk.com",
+        email: "ceo@example.com",
         role: "ceo",
         status: "active",
         guest: false,

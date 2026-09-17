@@ -38,7 +38,7 @@ load_env_file "$IMAP_ENV"
 if [[ ! -f "$MAIL_ENV" ]]; then
   echo "⚠ $MAIL_ENV missing"
   echo "  cp $MAIL_ENV_EXAMPLE $MAIL_ENV"
-  echo "  # set ORGOS_SMTP_USER/PASSWORD + ORGOS_IMAP_USER/PASSWORD (ai@malkk.com only)"
+  echo "  # set ORGOS_SMTP_USER/PASSWORD + ORGOS_IMAP_USER/PASSWORD (ops@example.com only)"
 fi
 
 echo "=== Phase 4: stop Vitest ==="
@@ -61,7 +61,7 @@ mkdir -p "$(dirname "$MAIL_CFG")"
 if [[ ! -f "$MAIL_CFG" ]] || ! grep -q 'sync: imap' "$MAIL_CFG" 2>/dev/null; then
   if [[ -f "$MAIL_EXAMPLE" ]]; then
     cp "$MAIL_EXAMPLE" "$MAIL_CFG"
-    echo "✓ Wrote $MAIL_CFG from mal-pilot example (Xserver + ai@malkk.com)"
+    echo "✓ Wrote $MAIL_CFG from mal-pilot example (Xserver + ops@example.com)"
   elif [[ -f "$MAIL_EXAMPLE_FALLBACK" ]]; then
     cp "$MAIL_EXAMPLE_FALLBACK" "$MAIL_CFG"
     echo "⚠ Created $MAIL_CFG from generic example — set receive.sync: imap for Phase 4"

@@ -180,8 +180,8 @@ describe("settlement step-up (ADR 0037)", () => {
   });
 
   it("excludes stale settlement credentials when registry approver differs", () => {
-    const bound = boundApproverId("OP-001", "段燕燕");
-    expect(bound).toBe("段燕燕");
+    const bound = boundApproverId("OP-001", "山田太郎");
+    expect(bound).toBe("山田太郎");
     setWebAuthnCredentialsForTests([
       {
         credential_id: "stale-demo-ceo",

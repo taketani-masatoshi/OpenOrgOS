@@ -11,7 +11,7 @@
 | CEO | OP-001 | 創業者 Gmail（grandfather） | Community SSO 本鍵 |
 | 秘書 AIA | OP-002 | なし | 人間 SSO 対象外 |
 
-`login_policy.email_domains`: `malkk.com`  
+`login_policy.email_domains`: `example.com`  
 `grandfather_emails`: 創業者1席（CEO と一致）
 
 ---
@@ -26,11 +26,11 @@
 
 ---
 
-## 三塚さん（常勤 @malkk.com）を追加する順序
+## 三塚さん（常勤 @example.com）を追加する順序
 
 ### 1. 創業者の会社メール移行（retire 前）
 
-1. OP-001 の `email` を `ceo@malkk.com` 等に更新（`operators.yaml`）
+1. OP-001 の `email` を `ceo@example.com` 等に更新（`operators.yaml`）
 2. Community でも同じ Google / メールでログインできることを確認
 3. CLI（人間のみ）:
 
@@ -41,7 +41,7 @@ orgos operator founder-email retire
 ### 2. Console で招待
 
 1. `http://127.0.0.1:9470/?account=1`（または My Page 経由）
-2. 表示名・`mitsuka@malkk.com`・ロール「経理担当」または「承認者」
+2. 表示名・`guest@example.com`・ロール「経理担当」または「承認者」
 3. UI の login_policy セクションでブロックされていないことを確認
 
 ### 3. 三塚さん側（Community）
@@ -69,7 +69,7 @@ orgos operator founder-email retire
 `.env` で Steward `login_policy` と揃える:
 
 ```bash
-OOO_LOGIN_EMAIL_DOMAINS=malkk.com
+OOO_LOGIN_EMAIL_DOMAINS=example.com
 OOO_LOGIN_EMAIL_GRANDFATHER=k.lab.masa@gmail.com
 ```
 

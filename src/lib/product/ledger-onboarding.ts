@@ -34,7 +34,16 @@ export function isCompanySetupComplete(): boolean {
   try {
     const company = readYamlFile(path, companySchema);
     const name = company.name?.trim() ?? "";
-    return name.length > 0 && name !== "株式会社未設定";
+    const representative = company.representative?.trim() ?? "";
+    const fy = company.fiscal_year_end_month;
+    return (
+      name.length > 0 &&
+      name !== "株式会社未設定" &&
+      representative.length > 0 &&
+      typeof fy === "number" &&
+      fy >= 1 &&
+      fy <= 12
+    );
   } catch {
     return false;
   }

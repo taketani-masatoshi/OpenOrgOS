@@ -88,7 +88,7 @@ export function buildFleetHealthReport(
     scope,
     tenants,
     signups_pending: signups.filter((row) =>
-      ["pending", "checkout", "paid"].includes(row.status),
+      ["pending", "checkout", "paid", "provisioning"].includes(row.status),
     ).length,
     signups_past_due: signups.filter((row) => row.status === "cancelled").length,
   };

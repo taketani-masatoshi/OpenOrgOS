@@ -135,7 +135,7 @@ worker `tier: local` の LLM 応答で、必要情報が prompt / tool 結果 / 
 
 | 項目 | 意味 |
 |------|------|
-| `email_domains` | 人間オペレータの SSO メールが属する会社ドメイン（例: `malkk.com`） |
+| `email_domains` | 人間オペレータの SSO メールが属する会社ドメイン（例: `example.com`） |
 | `grandfather_emails` | **創業者1席のみ**（最大1件）。active ceo の email と一致必須。新規追加しない |
 | `founder_migration` | 創業者 Gmail → 会社ドメイン移行枠（`status` · `grace_until` · `closed_at`） |
 
@@ -152,7 +152,7 @@ worker `tier: local` の LLM 応答で、必要情報が prompt / tool 結果 / 
 ### 創業者ドメイン移行（CLI · 人間のみ）
 
 ```bash
-orgos operator login-domain set --domain malkk.com   # 初回 domain 設定時 grace 90日
+orgos operator login-domain set --domain example.com   # 初回 domain 設定時 grace 90日
 orgos operator founder-email status
 orgos operator founder-email retire                 # ceo が会社メール SSO 確認後
 ```
@@ -168,7 +168,7 @@ orgos operator founder-email retire                 # ceo が会社メール SSO
 
 ```bash
 orgos tenant lifecycle declare-winding-down --operator-id OP-001
-orgos operator liquidator add --email liquidator@malkk.com --until 2027-06-30 --display-name "清算人"
+orgos operator liquidator add --email liquidator@example.com --until 2027-06-30 --display-name "清算人"
 orgos operator liquidator extend --operator-id OP-LIQ-001 --until 2027-12-31 --reason "..."
 ```
 

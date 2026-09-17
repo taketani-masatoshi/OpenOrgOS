@@ -30,7 +30,7 @@ const SENDER = "mal";
 const RECEIVER = "southwood";
 const PEER_ID = "PEER-001";
 const CROSS_NOTIFY_EMAIL =
-  process.env.PHASE4_CROSS_NOTIFY_EMAIL ?? "ai+sw-notify@malkk.com";
+  process.env.PHASE4_CROSS_NOTIFY_EMAIL ?? "ai+sw-notify@example.com";
 
 function writeEvidence(payload: Record<string, unknown>): string {
   const dir = join(ROOT_DIR, "scratch");
@@ -137,7 +137,7 @@ async function main(): Promise<void> {
   });
   const approved = approveInterOrgNotice({
     noticeId: notice.notice_id,
-    approverId: "段燕燕",
+    approverId: "山田太郎",
     eventId,
   });
   const envelope = approved.transmission.envelope;

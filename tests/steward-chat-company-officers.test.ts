@@ -13,11 +13,11 @@ import { setTenantId } from "../src/lib/tenant.js";
 
 describe("steward chat company officers fact provider", () => {
   beforeEach(() => {
-    setTenantId("mal");
+    setTenantId("_fixture-books");
   });
 
   it("matches representative-director identity questions", () => {
-    expect(matchProviderByIntent("株式会社MALの代表取締役は誰？")?.id).toBe(
+    expect(matchProviderByIntent("Fixture Books KKの代表取締役は誰？")?.id).toBe(
       "company_officers"
     );
     expect(matchProviderByIntent("代表取締役の名前は？")?.id).toBe(
@@ -25,7 +25,7 @@ describe("steward chat company officers fact provider", () => {
     );
     expect(
       matchProviderByIntent(
-        "rules/company_context.md　を参照して、株式会社MALの代表取締役の氏名を教えて。"
+        "rules/company_context.md　を参照して、Fixture Books KKの代表取締役の氏名を教えて。"
       )?.id
     ).toBe("company_officers");
     expect(
@@ -46,31 +46,31 @@ describe("steward chat company officers fact provider", () => {
     );
   });
 
-  it("answers deterministically for mal without address", () => {
-    const result = handleFactChatMessage("株式会社MALの代表取締役は誰？");
+  it("answers deterministically without address", () => {
+    const result = handleFactChatMessage("Fixture Books KKの代表取締役は誰？");
     expect(result.handled).toBe(true);
     expect(result.providerId).toBe("company_officers");
     expect(result.coverage).toBe("registered");
-    expect(result.reply).toMatch(/段燕燕/);
-    expect(result.reply).toMatch(/宮城万貴子/);
+    expect(result.reply).toMatch(/山田太郎/);
+    expect(result.reply).toMatch(/鈴木花子/);
     expect(result.reply).not.toMatch(/〒|千代田区|確認できません|コンテキスト/);
     expect(result.work_order_ids).toBeUndefined();
   });
 
   it("recovers the current LLM refusal via the fact guard", () => {
     const fake = "現在のコンテキストからは、代表取締役様の氏名は確認できません。";
-    const guarded = applyFactRefusalGuard("株式会社MALの代表取締役は誰？", fake);
+    const guarded = applyFactRefusalGuard("Fixture Books KKの代表取締役は誰？", fake);
     expect(guarded.guarded).toBe(true);
-    expect(guarded.reply).toMatch(/段燕燕/);
+    expect(guarded.reply).toMatch(/山田太郎/);
     expect(guarded.reply).not.toMatch(/確認できません/);
   });
 
   it("injects L0 officers into Today so the LLM path is also grounded", () => {
     const markdown = formatTodayContextMarkdown(buildTodayContext());
     expect(markdown).toContain("## 会社概要（loadCompany · 決定論 · L0）");
-    expect(markdown).toContain("段燕燕");
-    expect(markdown).toContain("宮城万貴子");
-    expect(markdown).not.toMatch(/〒102|千代田区二番町/);
+    expect(markdown).toContain("山田太郎");
+    expect(markdown).toContain("鈴木花子");
+    expect(markdown).not.toMatch(/〒100|千代田区サンプル/);
   });
 
   it("returns 未登録 for demo without filing a Work Order", () => {

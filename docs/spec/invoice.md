@@ -28,7 +28,7 @@ modules:
         docs_base: docs/finance/accounting/invoices/bancho
         invoice_number_prefix: BANCHO
         template_id: rent-monthly
-        sender_email: info@malkk.com
+        sender_email: info@example.com
         tenant_name: "[借主名 TBD]"
         tenant_email: "[送付先メール TBD]"
         bank_account: "[振込先口座 TBD]"

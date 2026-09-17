@@ -1,0 +1,8 @@
+currency: JPY
+years:
+  - fiscal_year: FY2026
+    period_from: "2026-02"
+    period_to: "2027-01"
+    items: []
+    total: 0
+notes: investment plan skeleton
