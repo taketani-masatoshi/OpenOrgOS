@@ -70,9 +70,6 @@ tenants/*/data/finance/payroll.yaml
 !tenants/demo-signup-*/data/finance/payroll.yaml
 !tenants/acme/data/finance/payroll.yaml
 !tenants/pilot-ledger-*/data/finance/payroll.yaml
-# mal keeps a synthetic payroll on tip: many suites read this path, and the
-# tracked copy carries invented figures only. Real payroll is local-only.
-!tenants/mal/data/finance/payroll.yaml
 tenants/*/data/finance/bank-statements.yaml
 data/hub-*/signing-key.pem
 data/hub-*/witness-*.jsonl
