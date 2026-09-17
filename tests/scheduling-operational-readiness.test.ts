@@ -36,6 +36,7 @@ describe("scheduling operational readiness", () => {
   const tenantId = "test-scheduling-readiness";
   const keyPath = join(homedir(), ".orgos", "operators", "OP-001.key");
   let keyBackup: string | undefined;
+  let createdKeyForTest = false;
 
   beforeEach(() => {
     seedSchedulingTenant(tenantId);
@@ -60,7 +61,11 @@ describe("scheduling operational readiness", () => {
       writeFileSync(join(getDataDir(), "executive", file[0]), file[1], "utf-8");
     }
     writeFileSync(join(getDataDir(), "org", "pending-approvals.yaml"), "version: \"1\"\napprovals: []\n", "utf-8");
-    if (existsSync(keyPath)) keyBackup = readFileSync(keyPath, "utf-8");
+    // CI runners have no ~/.orgos/operators/; create the dir and a synthetic
+    // key when missing. Restore the previous file (or delete ours) in afterEach.
+    createdKeyForTest = !existsSync(keyPath);
+    if (!createdKeyForTest) keyBackup = readFileSync(keyPath, "utf-8");
+    mkdirSync(join(homedir(), ".orgos", "operators"), { recursive: true });
     clearOperatorsRegistryCacheForTests();
     saveOperatorRegistry({
       version: "1",
@@ -83,7 +88,13 @@ describe("scheduling operational readiness", () => {
     clearOperatorsRegistryCacheForTests();
     const mail = getMailConfigPath();
     if (existsSync(mail)) rmSync(mail);
-    if (keyBackup !== undefined) writeFileSync(keyPath, keyBackup, { mode: 0o600 });
+    if (keyBackup !== undefined) {
+      writeFileSync(keyPath, keyBackup, { mode: 0o600 });
+    } else if (createdKeyForTest && existsSync(keyPath)) {
+      rmSync(keyPath, { force: true });
+    }
+    keyBackup = undefined;
+    createdKeyForTest = false;
     delete process.env.STEWARD_OPERATOR_AUTH;
     delete process.env.ORGOS_OPERATOR_KEY;
     vi.restoreAllMocks();
