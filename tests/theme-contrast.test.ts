@@ -12,6 +12,7 @@ const APP_CSS = [
   "apps/steward-chat/src/app.css",
   "apps/steward-chat/src/orchestration-runs.css",
   "apps/steward-chat/src/receipt.css",
+  "apps/steward-chat/src/workflow-canvas/workflow-canvas.css",
   "apps/wire-console/src/app.css",
 ];
 

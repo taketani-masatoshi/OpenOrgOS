@@ -1957,6 +1957,112 @@ export async function postOrgChartChangeApply(
   });
 }
 
+export interface WorkflowDocumentRow {
+  version: 1;
+  workflow_id: string;
+  kind: string;
+  title: string;
+  description?: string;
+  nodes: unknown[];
+  edges: unknown[];
+}
+
+export interface WorkflowFindingRow {
+  code: string;
+  severity: "error" | "warning" | "info";
+  message: string;
+  node_id?: string;
+  edge_id?: string;
+}
+
+export interface WorkflowEvaluateResponse {
+  ok: boolean;
+  document: WorkflowDocumentRow;
+  findings: WorkflowFindingRow[];
+  proposed_document: WorkflowDocumentRow;
+  used_llm?: boolean;
+  llm_error?: string;
+}
+
+export interface WorkflowStructureProposalRow {
+  change_id: string;
+  approval_id: string;
+  workflow_id: string;
+  grade: "A" | "B" | "C";
+  reason: string;
+  proposed_at: string;
+  proposed_by: string;
+  findings: WorkflowFindingRow[];
+  draft_document: WorkflowDocumentRow;
+  proposed_document: WorkflowDocumentRow;
+  regulation_ref?: {
+    reg_id: string;
+    clause: string;
+    artifact_path: string;
+  };
+}
+
+export interface WorkflowChangeResult {
+  logical_path: string;
+  before_hash: string;
+  after_hash: string;
+  dry_run: boolean;
+}
+
+export async function fetchWorkflows(): Promise<{ documents: WorkflowDocumentRow[] }> {
+  return chatApi("/chat/v1/workflow");
+}
+
+export async function fetchWorkflow(
+  workflowId: string,
+): Promise<{ document: WorkflowDocumentRow }> {
+  return chatApi(`/chat/v1/workflow/${encodeURIComponent(workflowId)}`);
+}
+
+export async function postWorkflowEvaluate(input: {
+  document: unknown;
+  llm_proposal?: unknown;
+}): Promise<WorkflowEvaluateResponse> {
+  return chatApi("/chat/v1/workflow/evaluate", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function fetchWorkflowChanges(): Promise<{
+  proposals: WorkflowStructureProposalRow[];
+}> {
+  return chatApi("/chat/v1/workflow/change");
+}
+
+export async function postWorkflowChangePropose(input: {
+  approval_id: string;
+  change: unknown;
+}): Promise<{ proposal: WorkflowStructureProposalRow }> {
+  return chatApi("/chat/v1/workflow/change/propose", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function postWorkflowChangeValidate(
+  changeId: string,
+): Promise<{ result: WorkflowChangeResult }> {
+  return chatApi("/chat/v1/workflow/change/validate", {
+    method: "POST",
+    body: JSON.stringify({ change_id: changeId }),
+  });
+}
+
+export async function postWorkflowChangeApply(
+  changeId: string,
+): Promise<{ result: WorkflowChangeResult }> {
+  return chatApi("/chat/v1/workflow/change/apply", {
+    method: "POST",
+    body: JSON.stringify({ change_id: changeId }),
+  });
+}
+
 export async function fetchProductAdmin(): Promise<CustomerAdminSnapshot> {
   return chatApi<CustomerAdminSnapshot>("/chat/v1/product/admin");
 }

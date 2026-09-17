@@ -12,6 +12,7 @@ export type ShellRoute =
   | "secretary-workbench"
   | "properties"
   | "module-maturity"
+  | "workflow"
   | "wire-demo";
 
 export function pathActive(pathname = window.location.pathname): ShellRoute {
@@ -27,6 +28,7 @@ export function pathActive(pathname = window.location.pathname): ShellRoute {
   if (path === "/modules/maturity" || path.startsWith("/modules/maturity/")) {
     return "module-maturity";
   }
+  if (path === "/workflow" || path.startsWith("/workflow/")) return "workflow";
   if (path === "/modules" || path.startsWith("/modules/")) return "module-list";
   if (path === "/agents" || path.startsWith("/agents/")) return "agent-list";
   if (path === "/org" || path.startsWith("/org/")) return "org";
@@ -102,7 +104,7 @@ export function operatorShellTabFromRoute(
   ) {
     return "executive";
   }
-  if (route === "module-maturity") return "module-list";
+  if (route === "module-maturity" || route === "workflow") return "module-list";
   if (route === "wire-demo") return "wire";
   return route;
 }
@@ -125,6 +127,7 @@ export function spaPathFromHref(href: string, origin = window.location.origin): 
       path === "/modules" ||
       path === "/modules/add" ||
       path === "/modules/maturity" ||
+      path === "/workflow" ||
       path === "/org" ||
       path === "/contracts" ||
       path === "/stays" ||
