@@ -22,6 +22,37 @@ import { join } from "node:path";
 
 export const OPERATORS_REGISTRY_REL = "org/operators.yaml";
 
+/**
+ * Published fixture / demo key hashes — never valid in production.
+ * Keys: demo-operator-key · demo-operator-key-2 · fixture-* placeholders
+ */
+export const PUBLISHED_OPERATOR_KEY_HASHES = new Set([
+  "sha256:4a7c449d22a99026fac16a47621ff68792ff589f72334ea3950ce186a5615e9a",
+  "sha256:3208155dec05b6b2f99cae407527ad4926b0bd4f5bdae38cd28bc5e7c26559ff",
+  "sha256:fixture-ceo-not-for-prod",
+  "sha256:fixture-readonly-not-for-prod",
+]);
+
+export function isPublishedOperatorKeyHash(hash: string | undefined): boolean {
+  if (!hash?.trim()) return false;
+  return PUBLISHED_OPERATOR_KEY_HASHES.has(hash.trim());
+}
+
+export function registryHasPublishedOperatorKeys(
+  registry: OperatorRegistry | undefined = loadOperatorRegistry(),
+): boolean {
+  if (!registry) return false;
+  return registry.operators.some((op) => isPublishedOperatorKeyHash(op.key_hash));
+}
+
+function isProdSecurityModeLocal(): boolean {
+  return (
+    process.env.ORGOS_ENV === "production" ||
+    process.env.ORGOS_PROD === "1" ||
+    process.env.NODE_ENV === "production"
+  );
+}
+
 let cachedRegistryTenant: string | undefined;
 let cachedRegistry: OperatorRegistry | undefined;
 
@@ -40,6 +71,9 @@ export function hashOperatorKey(key: string): string {
 
 export function verifyOperatorKey(storedHash: string | undefined, key: string): boolean {
   if (!storedHash?.trim() || !key?.trim()) return false;
+  if (isProdSecurityModeLocal() && isPublishedOperatorKeyHash(storedHash)) {
+    return false;
+  }
   const expected = hashOperatorKey(key);
   const a = Buffer.from(storedHash.trim(), "utf-8");
   const b = Buffer.from(expected, "utf-8");

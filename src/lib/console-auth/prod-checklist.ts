@@ -3,6 +3,7 @@ import {
   getOperatorLoginPolicy,
   operatorsRegistryPath,
   registryHasApprovers,
+  registryHasPublishedOperatorKeys,
 } from "../org/operators.js";
 import { validateWebAuthnProdEnv } from "./settlement-passkey-prod.js";
 import {
@@ -170,6 +171,14 @@ export function runProdAuthChecks(scope: "chat" | "wire" | "all" = "all"): ProdA
           ? "Operator registry with approver role configured"
           : "operators.yaml exists but no ceo/approver — add at least one approver"
         : "data/org/operators.yaml missing — run: orgos operator init-registry",
+    });
+
+    checks.push({
+      id: "operator_registry_no_published_keys",
+      ok: !registryHasPublishedOperatorKeys(),
+      detail: registryHasPublishedOperatorKeys()
+        ? "operators.yaml contains published demo/fixture key hashes — rotate keys before production"
+        : "No published demo/fixture operator key hashes",
     });
 
     checks.push({

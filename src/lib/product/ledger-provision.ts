@@ -1,6 +1,5 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import YAML from "yaml";
 import { runTenantInit } from "../tenant-init.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { getInstallRoot, getTenantsDir } from "../orgos-paths.js";
@@ -15,51 +14,45 @@ import {
 import { operatorRegistrySchema } from "../../../schemas/org/operator.js";
 import { upsertControlPlaneTenant } from "./ledger-control-plane.js";
 
-const FINANCE_SEED_FILES = [
-  "chart-of-accounts.yaml",
-  "expense-claim-accounting.yaml",
-  "period-locks.yaml",
-  "tax-profile.yaml",
-  "opening-balances.yaml",
-  "cash-balance.yaml",
-  "payroll.yaml",
-] as const;
+/** Product-only finance files not covered by tenant-init skeleton. */
+const FINANCE_ENSURE_FILES = ["period-locks.yaml"] as const;
 
-const CASH_ONLY_OPENING = `version: 1
-fiscal_year: FY2026
-period_start: "2026-09"
-as_of: "2026-08-31"
-currency: JPY
-
-lines:
-  - account_code: "1100"
-    debit_yen: 1000000
-    credit_yen: 0
-  - account_code: "3200"
-    debit_yen: 0
-    credit_yen: 1000000
-
-notes: OrgOS Ledger product seed — cash-only opening (no fixed-asset register).
+const EMPTY_PERIOD_LOCKS = `version: 1
+locks: []
 `;
 
-function seedFinanceFromFixture(tenantId: string): void {
+const NEUTRAL_EXPENSE_CLAIM = `payable_account_code: "2140"
+bank_control_accounts: {}
+`;
+
+function ensureLedgerFinanceSkeleton(tenantId: string): void {
   const seedRoot = join(getInstallRoot(), "tenants/_fixture-books/data/finance");
   const destRoot = join(getTenantsDir(), tenantId, "data/finance");
   mkdirSync(destRoot, { recursive: true });
-  for (const file of FINANCE_SEED_FILES) {
-    const src = join(seedRoot, file);
+
+  for (const file of FINANCE_ENSURE_FILES) {
     const dest = join(destRoot, file);
-    if (!existsSync(src)) continue;
-    if (existsSync(dest) && file !== "opening-balances.yaml") continue;
-    cpSync(src, dest);
+    if (existsSync(dest)) continue;
+    const src = join(seedRoot, file);
+    if (existsSync(src)) {
+      writeFileSync(dest, readFileSync(src, "utf-8"), "utf-8");
+    } else if (file === "period-locks.yaml") {
+      writeFileSync(dest, EMPTY_PERIOD_LOCKS, "utf-8");
+    }
   }
-  writeFileSync(join(destRoot, "opening-balances.yaml"), CASH_ONLY_OPENING, "utf-8");
+
   const journalDest = join(destRoot, "journal-entries.yaml");
   if (!existsSync(journalDest)) {
     writeFileSync(journalDest, "version: 1\nentries: []\n", "utf-8");
   }
+
+  const expenseClaimDest = join(destRoot, "expense-claim-accounting.yaml");
+  if (!existsSync(expenseClaimDest)) {
+    writeFileSync(expenseClaimDest, NEUTRAL_EXPENSE_CLAIM, "utf-8");
+  }
+
   const fixedAssetsDest = join(destRoot, "fixed-assets.yaml");
-  if (existsSync(fixedAssetsDest)) {
+  if (!existsSync(fixedAssetsDest)) {
     writeYamlFileAtomic(fixedAssetsDest, {
       as_of: "2026-08-31",
       fiscal_year: "FY2026",
@@ -73,11 +66,8 @@ function seedFinanceFromFixture(tenantId: string): void {
       },
     });
   }
-  const monthlySeed = join(seedRoot, "monthly");
-  const monthlyDest = join(destRoot, "monthly");
-  if (existsSync(monthlySeed) && !existsSync(monthlyDest)) {
-    cpSync(monthlySeed, monthlyDest, { recursive: true });
-  }
+
+  mkdirSync(join(destRoot, "monthly"), { recursive: true });
 }
 
 function writeLedgerProductMeta(tenantId: string): void {
@@ -87,28 +77,64 @@ function writeLedgerProductMeta(tenantId: string): void {
     getInstallRoot(),
     "tenants/_template/data/product/ledger.yaml",
   );
-  if (existsSync(metaSrc)) {
-    cpSync(metaSrc, join(productDir, "ledger.yaml"));
+  const metaDest = join(productDir, "ledger.yaml");
+  if (existsSync(metaSrc) && !existsSync(metaDest)) {
+    writeFileSync(metaDest, readFileSync(metaSrc, "utf-8"), "utf-8");
   }
 }
 
-function ensureCeoOperator(input: {
-  companyName: string;
+function nextOperatorId(existingIds: string[]): string {
+  const nums = existingIds
+    .map((id) => /^OP-(\d+)$/.exec(id)?.[1])
+    .filter(Boolean)
+    .map((n) => Number.parseInt(n!, 10));
+  const next = nums.length ? Math.max(...nums) + 1 : 1;
+  return `OP-${String(next).padStart(3, "0")}`;
+}
+
+/**
+ * Ensure an active CEO bound to the signup admin email.
+ * Returns the CEO operator_id for PassKey bootstrap.
+ * Throws if a different active CEO already exists (do not mint setup links for strangers).
+ */
+export function ensureCeoOperator(input: {
   adminEmail: string;
-}): void {
+}): string {
+  const adminEmail = input.adminEmail.trim().toLowerCase();
+  if (!adminEmail) throw new Error("adminEmail required for CEO provisioning");
+
   const existing = loadOperatorRegistry();
   const registry = existing ?? operatorRegistrySchema.parse({ version: "1", operators: [] });
-  if (registry.operators.some((op) => op.role === "ceo")) return;
+
+  const matchingCeo = registry.operators.find(
+    (op) =>
+      op.role === "ceo" &&
+      op.status === "active" &&
+      op.email?.trim().toLowerCase() === adminEmail,
+  );
+  if (matchingCeo) return matchingCeo.operator_id;
+
+  const otherCeo = registry.operators.find(
+    (op) => op.role === "ceo" && op.status === "active",
+  );
+  if (otherCeo) {
+    throw new Error(
+      `Active CEO ${otherCeo.operator_id} exists with a different email — refuse to provision signup admin as CEO`,
+    );
+  }
+
+  const operatorId = nextOperatorId(registry.operators.map((op) => op.operator_id));
   registry.operators.push({
-    operator_id: "OP-CEO",
-    display_name: input.companyName,
-    approver_name: input.companyName,
+    operator_id: operatorId,
+    display_name: "代表者",
+    approver_name: "代表者",
     seat_kind: "standard",
     role: "ceo",
     status: "active",
-    email: input.adminEmail,
+    email: adminEmail,
   });
   saveOperatorRegistry(registry);
+  return operatorId;
 }
 
 export function provisionLedgerTenant(input: {
@@ -119,7 +145,7 @@ export function provisionLedgerTenant(input: {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   accountantParentId?: string;
-}): { tenant_id: string; path: string } {
+}): { tenant_id: string; path: string; ceo_operator_id: string } {
   const tenantId = input.tenantId.trim().toLowerCase();
   const dest = join(getTenantsDir(), tenantId);
   if (!existsSync(dest)) {
@@ -130,11 +156,10 @@ export function provisionLedgerTenant(input: {
       entityForm: "kk",
     });
   }
-  seedFinanceFromFixture(tenantId);
+  ensureLedgerFinanceSkeleton(tenantId);
   writeLedgerProductMeta(tenantId);
   setTenantId(tenantId);
-  ensureCeoOperator({
-    companyName: input.companyName,
+  const ceoOperatorId = ensureCeoOperator({
     adminEmail: input.adminEmail,
   });
   const trialEnds = new Date(getClock().now());
@@ -163,5 +188,5 @@ export function provisionLedgerTenant(input: {
     status: "active",
     accountantParentId: input.accountantParentId,
   });
-  return { tenant_id: tenantId, path: dest };
+  return { tenant_id: tenantId, path: dest, ceo_operator_id: ceoOperatorId };
 }

@@ -6,7 +6,7 @@ import {
   readdirSync,
   writeFileSync,
 } from "node:fs";
-import { join, basename } from "node:path";
+import { join, basename, relative, sep } from "node:path";
 import YAML from "yaml";
 import { modulesFileSchema } from "../../schemas/modules.js";
 import { seedRegulationDocs } from "./regulations.js";
@@ -51,7 +51,7 @@ export function runTenantInit(options: TenantInitOptions): void {
   mkdirSync(dest, { recursive: true });
   cpSync(templateDir, dest, {
     recursive: true,
-    filter: (src) => shouldCopyTemplateEntry(src),
+    filter: (src) => shouldCopyTemplateEntry(src, templateDir),
   });
 
   const displayName = options.name ?? id;
@@ -273,8 +273,14 @@ function writeSkeletonData(
   return result;
 }
 
-function shouldCopyTemplateEntry(src: string): boolean {
-  const base = src.split(/[/\\]/).pop() ?? "";
+/** Real operator registry must never be copied into new tenants (demo keys). */
+const TEMPLATE_EXCLUDED_PATHS = new Set(["data/org/operators.yaml"]);
+
+function shouldCopyTemplateEntry(src: string, templateDir: string): boolean {
+  const rel = relative(templateDir, src).split(sep).join("/");
+  if (TEMPLATE_EXCLUDED_PATHS.has(rel)) return false;
+  if (rel.endsWith(".DS_Store") || rel.includes("/.DS_Store")) return false;
+  const base = rel.split("/").pop() ?? "";
   if (base.endsWith(".yaml.example")) return true;
   if (base.endsWith(".example.md")) return true;
   if (base.endsWith(".example")) return false;
