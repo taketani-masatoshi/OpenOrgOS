@@ -441,7 +441,11 @@ beforeEach(async () => {
   }
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // Catalog and other sync-heavy suites can starve the vitest worker RPC
+  // (`Timeout calling "onTaskUpdate"`) even when every assertion passed.
+  // Yield once per file teardown so replies flush on slow CI runners.
+  await new Promise((resolve) => setTimeout(resolve, 0));
   restoreEnv();
   releaseFixtureRestoreLock();
 });
