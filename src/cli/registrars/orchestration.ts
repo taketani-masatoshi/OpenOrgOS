@@ -2391,6 +2391,21 @@ export function registerOrchestrationCommands(program: Command): void {
       runWorkflowGet({ id: opts.id, json: opts.json });
     });
   workflowCmd
+    .command("render")
+    .description("Project SSOT to json | table | mermaid (read-only)")
+    .requiredOption("--id <workflow_id>", "Workflow id (e.g. WF-system-map)")
+    .requiredOption("--format <format>", "json | table | mermaid")
+    .action(async (opts) => {
+      const format = String(opts.format).toLowerCase();
+      if (format !== "json" && format !== "table" && format !== "mermaid") {
+        console.error("--format must be json, table, or mermaid");
+        process.exitCode = 1;
+        return;
+      }
+      const { runWorkflowRender } = await import("../../commands/workflow.js");
+      runWorkflowRender({ id: opts.id, format });
+    });
+  workflowCmd
     .command("evaluate")
     .description("Deterministic evaluate of a draft (no YAML write)")
     .option("--file <path>", "Draft YAML or JSON")

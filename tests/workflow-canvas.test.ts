@@ -3,6 +3,8 @@ import { workflowDocumentSchema } from "../schemas/workflow-canvas.js";
 import {
   BUSINESS_WORKFLOW_SAMPLE,
   documentToFlow,
+  documentToMermaid,
+  documentToTable,
   exportToJSON,
   parseWorkflowDocument,
   SYSTEM_MAP_SAMPLE,
@@ -105,5 +107,54 @@ describe("workflow canvas document", () => {
         edges: [],
       }),
     ).toThrow();
+  });
+});
+
+describe("workflow projections", () => {
+  it("projects a stable table without position columns", () => {
+    const table = documentToTable(SYSTEM_MAP_SAMPLE);
+    expect(table.nodes).toHaveLength(SYSTEM_MAP_SAMPLE.nodes.length);
+    expect(table.edges).toHaveLength(SYSTEM_MAP_SAMPLE.edges.length);
+    const ids = table.nodes.map((row) => row.id);
+    expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
+    for (const row of table.nodes) {
+      expect(row).not.toHaveProperty("position");
+    }
+    expect(table.nodes[0]?.id).toBeTruthy();
+    expect(table.edges.every((e) => e.source && e.target)).toBe(true);
+  });
+
+  it("projects mermaid with every node id and edge endpoints", () => {
+    const mermaid = documentToMermaid(SYSTEM_MAP_SAMPLE);
+    expect(mermaid.startsWith("flowchart LR\n")).toBe(true);
+    expect(mermaid).toContain(SYSTEM_MAP_SAMPLE.workflow_id);
+    for (const node of SYSTEM_MAP_SAMPLE.nodes) {
+      expect(mermaid).toContain(node.id);
+    }
+    for (const edge of SYSTEM_MAP_SAMPLE.edges) {
+      expect(mermaid).toContain(`${edge.source} `);
+      expect(mermaid).toContain(` ${edge.target}`);
+    }
+  });
+
+  it("escapes quotes in mermaid labels", () => {
+    const doc = parseWorkflowDocument({
+      ...SYSTEM_MAP_SAMPLE,
+      workflow_id: "WF-quote-test",
+      nodes: [
+        {
+          id: "n1",
+          type: "business_task",
+          label: 'Say "hello"',
+          position: { x: 0, y: 0 },
+          sources: [],
+          targets: [],
+        },
+      ],
+      edges: [],
+    });
+    const mermaid = documentToMermaid(doc);
+    expect(mermaid).toContain("Say 'hello'");
+    expect(mermaid).not.toContain('Say "hello"');
   });
 });

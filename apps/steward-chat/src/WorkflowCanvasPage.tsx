@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCopy } from "@ops-shared/define-copy";
 import {
   BUSINESS_WORKFLOW_SAMPLE,
+  documentToMermaid,
+  documentToTable,
+  parseWorkflowDocument,
   stringifyWorkflowDocument,
   SYSTEM_MAP_SAMPLE,
   type WorkflowDocument,
@@ -24,6 +27,7 @@ import {
 } from "./workflow-canvas/WorkflowCanvas";
 
 type CanvasRole = "canonical" | "draft" | "proposed" | "recorded";
+type ViewMode = "table" | "canvas" | "mermaid";
 
 const DEFAULT_WORKFLOW_ID = "WF-system-map";
 
@@ -33,6 +37,7 @@ export function WorkflowCanvasPage() {
   const [document, setDocument] = useState<WorkflowDocument>(SYSTEM_MAP_SAMPLE);
   const [draft, setDraft] = useState(() => stringifyWorkflowDocument(SYSTEM_MAP_SAMPLE));
   const [role, setRole] = useState<CanvasRole>("draft");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -40,8 +45,11 @@ export function WorkflowCanvasPage() {
   const [proposed, setProposed] = useState<WorkflowDocument | null>(null);
   const [approvalId, setApprovalId] = useState("");
   const [proposals, setProposals] = useState<WorkflowStructureProposalRow[]>([]);
+  const [mermaidCopied, setMermaidCopied] = useState(false);
 
   const jsonText = useMemo(() => stringifyWorkflowDocument(document), [document]);
+  const table = useMemo(() => documentToTable(document), [document]);
+  const mermaidSource = useMemo(() => documentToMermaid(document), [document]);
 
   const roleLabel =
     role === "canonical"
@@ -51,6 +59,33 @@ export function WorkflowCanvasPage() {
         : role === "recorded"
           ? copy.workflowRoleRecorded
           : copy.workflowRoleDraft;
+
+  const flushCanvas = useCallback((): WorkflowDocument => {
+    const next = canvasRef.current?.exportToJSON();
+    if (!next) return document;
+    setDocument(next);
+    setDraft(stringifyWorkflowDocument(next));
+    return next;
+  }, [document]);
+
+  const setDocumentState = useCallback((next: WorkflowDocument, nextRole?: CanvasRole) => {
+    setDocument(next);
+    setDraft(stringifyWorkflowDocument(next));
+    if (nextRole) setRole(nextRole);
+    canvasRef.current?.importFromJSON(next);
+  }, []);
+
+  const switchViewMode = useCallback(
+    (next: ViewMode) => {
+      if (next === viewMode) return;
+      if (viewMode === "canvas") {
+        flushCanvas();
+      }
+      setViewMode(next);
+      setMermaidCopied(false);
+    },
+    [flushCanvas, viewMode],
+  );
 
   const reloadProposals = useCallback(async () => {
     try {
@@ -67,23 +102,17 @@ export function WorkflowCanvasPage() {
     try {
       const res = await fetchWorkflow(DEFAULT_WORKFLOW_ID);
       const next = res.document as WorkflowDocument;
-      canvasRef.current?.importFromJSON(next);
-      setDocument(next);
-      setDraft(stringifyWorkflowDocument(next));
-      setRole("canonical");
+      setDocumentState(next, "canonical");
       setFindings([]);
       setProposed(null);
       setNote(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
-      canvasRef.current?.importFromJSON(SYSTEM_MAP_SAMPLE);
-      setDocument(SYSTEM_MAP_SAMPLE);
-      setDraft(stringifyWorkflowDocument(SYSTEM_MAP_SAMPLE));
-      setRole("draft");
+      setDocumentState(SYSTEM_MAP_SAMPLE, "draft");
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [setDocumentState]);
 
   useEffect(() => {
     void loadCanonical();
@@ -91,19 +120,15 @@ export function WorkflowCanvasPage() {
   }, [loadCanonical, reloadProposals]);
 
   function syncFromCanvas() {
-    const next = canvasRef.current?.exportToJSON();
-    if (!next) return;
-    setDocument(next);
-    setDraft(stringifyWorkflowDocument(next));
+    if (viewMode !== "canvas") return;
+    const next = flushCanvas();
     setRole("draft");
     setError(null);
+    setNote(`exported ${next.nodes.length} nodes`);
   }
 
   function loadSample(sample: WorkflowDocument) {
-    canvasRef.current?.importFromJSON(sample);
-    setDocument(sample);
-    setDraft(stringifyWorkflowDocument(sample));
-    setRole("draft");
+    setDocumentState(sample, "draft");
     setFindings([]);
     setProposed(null);
     setError(null);
@@ -111,12 +136,8 @@ export function WorkflowCanvasPage() {
 
   function applyDraft() {
     try {
-      const parsed: unknown = JSON.parse(draft);
-      const next = canvasRef.current?.importFromJSON(parsed);
-      if (!next) return;
-      setDocument(next);
-      setDraft(stringifyWorkflowDocument(next));
-      setRole("draft");
+      const parsed = parseWorkflowDocument(JSON.parse(draft) as unknown);
+      setDocumentState(parsed, "draft");
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -128,13 +149,11 @@ export function WorkflowCanvasPage() {
     setError(null);
     setNote(null);
     try {
-      const current = canvasRef.current?.exportToJSON() ?? document;
+      const current = viewMode === "canvas" ? flushCanvas() : document;
       const res = await postWorkflowEvaluate({ document: current });
-      setDocument(res.document as WorkflowDocument);
-      setDraft(stringifyWorkflowDocument(res.document as WorkflowDocument));
+      setDocumentState(res.document as WorkflowDocument, "draft");
       setFindings(res.findings);
       setProposed(res.proposed_document as WorkflowDocument);
-      setRole("draft");
       setNote(
         res.ok
           ? `evaluate ok · findings ${res.findings.length}`
@@ -149,10 +168,8 @@ export function WorkflowCanvasPage() {
 
   function loadProposedOntoCanvas() {
     if (!proposed) return;
-    canvasRef.current?.importFromJSON(proposed);
-    setDocument(proposed);
-    setDraft(stringifyWorkflowDocument(proposed));
-    setRole("proposed");
+    setDocumentState(proposed, "proposed");
+    setViewMode("canvas");
     setError(null);
   }
 
@@ -168,7 +185,7 @@ export function WorkflowCanvasPage() {
     setBusy(true);
     setError(null);
     try {
-      const current = canvasRef.current?.exportToJSON() ?? document;
+      const current = viewMode === "canvas" ? flushCanvas() : document;
       const res = await postWorkflowChangePropose({
         approval_id: approvalId.trim(),
         change: {
@@ -198,6 +215,15 @@ export function WorkflowCanvasPage() {
     }
   }
 
+  async function copyMermaid() {
+    try {
+      await navigator.clipboard.writeText(mermaidSource);
+      setMermaidCopied(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
   return (
     <OpsPage
       className="workflow-canvas-page"
@@ -207,19 +233,140 @@ export function WorkflowCanvasPage() {
       <p className={`workflow-canvas-role workflow-canvas-role--${role}`} role="status">
         {roleLabel}
       </p>
+
+      <div
+        className="workflow-canvas-view-tabs"
+        role="tablist"
+        aria-label={copy.workflowViewModesLabel}
+      >
+        {(
+          [
+            ["table", copy.workflowViewTable],
+            ["canvas", copy.workflowViewCanvas],
+            ["mermaid", copy.workflowViewMermaid],
+          ] as const
+        ).map(([mode, label]) => (
+          <button
+            key={mode}
+            type="button"
+            role="tab"
+            aria-selected={viewMode === mode}
+            className={`btn btn-sm${viewMode === mode ? " btn-primary" : ""}`}
+            onClick={() => switchViewMode(mode)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <p className="workflow-canvas-hint">{copy.workflowViewHint}</p>
+
       <div className="workflow-canvas-layout">
         <div className="workflow-canvas-frame">
-          <WorkflowCanvas
-            ref={canvasRef}
-            initialDocument={SYSTEM_MAP_SAMPLE}
-            onDocumentChange={(next) => {
-              setDocument(next);
-              setDraft(stringifyWorkflowDocument(next));
-              setRole((prev) => (prev === "canonical" ? "draft" : prev === "proposed" ? "draft" : prev));
-              setError(null);
-            }}
-          />
+          {viewMode === "canvas" ? (
+            <WorkflowCanvas
+              key={document.workflow_id}
+              ref={canvasRef}
+              initialDocument={document}
+              onDocumentChange={(next) => {
+                setDocument(next);
+                setDraft(stringifyWorkflowDocument(next));
+                setRole((prev) =>
+                  prev === "canonical" ? "draft" : prev === "proposed" ? "draft" : prev,
+                );
+                setError(null);
+              }}
+            />
+          ) : null}
+
+          {viewMode === "table" ? (
+            <div className="workflow-canvas-tables" role="tabpanel">
+              <section aria-labelledby="wf-nodes-title">
+                <h2 id="wf-nodes-title" className="workflow-canvas-section-title">
+                  {copy.workflowTableNodes}
+                </h2>
+                <div className="workflow-canvas-table-wrap">
+                  <table className="workflow-canvas-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">id</th>
+                        <th scope="col">type</th>
+                        <th scope="col">label</th>
+                        <th scope="col">sources</th>
+                        <th scope="col">targets</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {table.nodes.map((row) => (
+                        <tr key={row.id}>
+                          <td>
+                            <code>{row.id}</code>
+                          </td>
+                          <td>{row.type}</td>
+                          <td>{row.label}</td>
+                          <td>
+                            <code>{row.sources.join(", ") || "—"}</code>
+                          </td>
+                          <td>
+                            <code>{row.targets.join(", ") || "—"}</code>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section aria-labelledby="wf-edges-title">
+                <h2 id="wf-edges-title" className="workflow-canvas-section-title">
+                  {copy.workflowTableEdges}
+                </h2>
+                <div className="workflow-canvas-table-wrap">
+                  <table className="workflow-canvas-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">id</th>
+                        <th scope="col">source</th>
+                        <th scope="col">target</th>
+                        <th scope="col">kind</th>
+                        <th scope="col">label</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {table.edges.map((row) => (
+                        <tr key={row.id}>
+                          <td>
+                            <code>{row.id}</code>
+                          </td>
+                          <td>
+                            <code>{row.source}</code>
+                          </td>
+                          <td>
+                            <code>{row.target}</code>
+                          </td>
+                          <td>{row.kind ?? "—"}</td>
+                          <td>{row.label ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+          ) : null}
+
+          {viewMode === "mermaid" ? (
+            <div className="workflow-canvas-mermaid" role="tabpanel">
+              <div className="workflow-canvas-toolbar">
+                <button type="button" className="btn btn-sm" onClick={() => void copyMermaid()}>
+                  {mermaidCopied ? copy.workflowMermaidCopied : copy.workflowMermaidCopy}
+                </button>
+              </div>
+              <pre className="workflow-canvas-mermaid-source" aria-label={copy.workflowViewMermaid}>
+                {mermaidSource}
+              </pre>
+            </div>
+          ) : null}
         </div>
+
         <aside className="workflow-canvas-side">
           <p className="workflow-canvas-hint">{copy.workflowJsonHint}</p>
           <div className="workflow-canvas-toolbar">
@@ -245,7 +392,12 @@ export function WorkflowCanvasPage() {
             >
               {copy.workflowLoadBusiness}
             </button>
-            <button type="button" className="btn btn-sm" onClick={syncFromCanvas}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={viewMode !== "canvas"}
+              onClick={syncFromCanvas}
+            >
               {copy.workflowExport}
             </button>
             <button type="button" className="btn btn-sm" onClick={applyDraft}>

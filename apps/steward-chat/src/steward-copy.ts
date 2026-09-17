@@ -190,6 +190,16 @@ export const STEWARD_COPY = defineCopy(
     workflowEmptyProposals: "提案はまだありません。",
     workflowNodeCount: (nodes: number, edges: number) =>
       `ノード ${nodes} · エッジ ${edges}`,
+    workflowViewModesLabel: "表示モード",
+    workflowViewTable: "表",
+    workflowViewCanvas: "キャンバス",
+    workflowViewMermaid: "テキスト図",
+    workflowViewHint:
+      "正本は YAML 文書だけです。表と Mermaid は投影、キャンバスは議論用（外部ブラウザ推奨）。",
+    workflowTableNodes: "ノード一覧",
+    workflowTableEdges: "エッジ一覧",
+    workflowMermaidCopy: "Mermaid をコピー",
+    workflowMermaidCopied: "コピーしました",
     maturityTitle: "モジュール成熟度",
     maturityLead:
       "catalog の tier と、秘書・メール・タスク・Wire・物件のコア能力レーンを分けて見ます。",
@@ -1065,6 +1075,16 @@ export const STEWARD_COPY = defineCopy(
     workflowEmptyProposals: "No proposals yet.",
     workflowNodeCount: (nodes: number, edges: number) =>
       `${nodes} nodes · ${edges} edges`,
+    workflowViewModesLabel: "View mode",
+    workflowViewTable: "Table",
+    workflowViewCanvas: "Canvas",
+    workflowViewMermaid: "Text diagram",
+    workflowViewHint:
+      "SSOT is the YAML document only. Table and Mermaid are projections; canvas is for discussion (prefer an external browser).",
+    workflowTableNodes: "Nodes",
+    workflowTableEdges: "Edges",
+    workflowMermaidCopy: "Copy Mermaid",
+    workflowMermaidCopied: "Copied",
     maturityTitle: "Module maturity",
     maturityLead:
       "Catalog tiers plus core lanes (secretary, mail, task, wire, property ops).",

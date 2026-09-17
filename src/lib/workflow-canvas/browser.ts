@@ -29,6 +29,15 @@ export {
   stringifyWorkflowDocument,
 } from "./serialize.js";
 
+export {
+  documentToMermaid,
+  documentToTable,
+  formatWorkflowTableText,
+  type WorkflowTableEdgeRow,
+  type WorkflowTableNodeRow,
+  type WorkflowTableProjection,
+} from "./projections.js";
+
 export { BUSINESS_WORKFLOW_SAMPLE, SYSTEM_MAP_SAMPLE } from "./sample.js";
 
 export type {

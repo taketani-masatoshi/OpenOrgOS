@@ -3,18 +3,23 @@ import YAML from "yaml";
 import {
   applyWorkflowStructureChangeProposal,
   describeWorkflowStructureChangeProposal,
+  documentToMermaid,
   evaluateWorkflowDocument,
   evaluateWorkflowDocumentWithOptionalLlm,
+  formatWorkflowTableText,
   listWorkflowDocuments,
   listWorkflowStructureChangeProposals,
   loadWorkflowDocument,
   loadWorkflowStructureChangeProposal,
   proposeWorkflowStructureChange,
+  stringifyWorkflowDocument,
   validateWorkflowStructureChangeProposal,
   workflowChangesDir,
 } from "../lib/workflow-canvas/index.js";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
+
+export type WorkflowRenderFormat = "json" | "table" | "mermaid";
 
 export function runWorkflowList(opts?: { json?: boolean }): void {
   const documents = listWorkflowDocuments();
@@ -45,6 +50,28 @@ export function runWorkflowGet(opts: { id: string; json?: boolean }): void {
     return;
   }
   console.log(YAML.stringify(document));
+}
+
+/** Read-only projection for agents / audits (does not mutate SSOT). */
+export function runWorkflowRender(opts: {
+  id: string;
+  format: WorkflowRenderFormat;
+}): void {
+  const document = loadWorkflowDocument(opts.id);
+  if (!document) {
+    console.error(`workflow not found: ${opts.id}`);
+    process.exitCode = 1;
+    return;
+  }
+  if (opts.format === "json") {
+    process.stdout.write(stringifyWorkflowDocument(document));
+    return;
+  }
+  if (opts.format === "table") {
+    process.stdout.write(formatWorkflowTableText(document));
+    return;
+  }
+  process.stdout.write(documentToMermaid(document));
 }
 
 export function runWorkflowEvaluate(opts: {
