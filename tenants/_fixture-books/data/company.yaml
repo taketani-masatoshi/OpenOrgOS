@@ -1,4 +1,12 @@
 name: "Fixture Books KK"
+representative: "山田太郎、鈴木花子"
+directors:
+  - name: "山田太郎"
+    role: "代表取締役"
+  - name: "鈴木花子"
+    role: "代表取締役"
+# L2 field: the officers view and Today context must never emit this.
+address: "〒100-0001 東京都千代田区サンプル1-1"
 fiscal_year_end_month: 1
 share_capital:
   amount_yen: 1000000
