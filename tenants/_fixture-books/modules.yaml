@@ -1,0 +1,3 @@
+# Fixture tenant: no business modules. Kept minimal so tests that only need
+# company/finance fixtures do not pull in module data roots.
+modules: []
