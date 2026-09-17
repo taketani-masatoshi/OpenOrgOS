@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import {
@@ -10,11 +10,32 @@ import {
 import { getWorkspaceRoot, getTenantsDir } from "../orgos-paths.js";
 import { getClock } from "../runtime-context.js";
 import { listLedgerProductTenantIds } from "./ledger-product-tenant.js";
+import { findControlPlaneTenant } from "./ledger-control-plane.js";
 
 const FLEET_DIR = "product-fleet";
+const TENANT_ID_LOCK = ".tenant-id-allocation.lock";
 
 function fleetDir(): string {
   return join(getWorkspaceRoot(), FLEET_DIR);
+}
+
+/** Serialize signup reservations and the final create check across processes. */
+export function withLedgerTenantAllocationLock<T>(operation: () => T): T {
+  mkdirSync(fleetDir(), { recursive: true });
+  const lockPath = join(fleetDir(), TENANT_ID_LOCK);
+  try {
+    mkdirSync(lockPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
+      throw new Error("Tenant ID allocation is already in progress");
+    }
+    throw error;
+  }
+  try {
+    return operation();
+  } finally {
+    rmdirSync(lockPath);
+  }
 }
 
 function signupsPath(): string {
@@ -42,6 +63,19 @@ export function findLedgerSignup(signupId: string): LedgerSignup | undefined {
   return listLedgerSignups().find((row) => row.signup_id === signupId);
 }
 
+/** A signup must never claim an existing tenant or a control-plane reservation. */
+export function assertLedgerTenantIdUnoccupied(tenantId: string): void {
+  if (!/^[a-z][a-z0-9-]*$/.test(tenantId)) {
+    throw new Error(`Invalid tenant id "${tenantId}"`);
+  }
+  if (existsSync(join(getTenantsDir(), tenantId))) {
+    throw new Error(`Tenant "${tenantId}" already exists`);
+  }
+  if (findControlPlaneTenant(tenantId)) {
+    throw new Error(`Tenant "${tenantId}" is reserved in the control plane`);
+  }
+}
+
 export function createLedgerSignup(input: {
   tenantId: string;
   companyName: string;
@@ -52,22 +86,64 @@ export function createLedgerSignup(input: {
   if (!/^[a-z][a-z0-9-]*$/.test(tenantId)) {
     throw new Error(`Invalid tenant id "${tenantId}"`);
   }
-  const file = loadSignupsFile();
-  if (file.signups.some((row) => row.tenant_id === tenantId)) {
-    throw new Error(`Signup already exists for tenant "${tenantId}"`);
-  }
-  const signup: LedgerSignup = ledgerSignupSchema.parse({
-    signup_id: `SIGNUP-${tenantId}`,
-    tenant_id: tenantId,
-    company_name: input.companyName.trim(),
-    admin_email: input.adminEmail.trim().toLowerCase(),
-    plan: input.plan,
-    status: "pending",
-    created_at: getClock().now().toISOString(),
+  return withLedgerTenantAllocationLock(() => {
+    const file = loadSignupsFile();
+    if (file.signups.some((row) => row.tenant_id === tenantId)) {
+      throw new Error(`Signup already exists for tenant "${tenantId}"`);
+    }
+    assertLedgerTenantIdUnoccupied(tenantId);
+    const signup: LedgerSignup = ledgerSignupSchema.parse({
+      signup_id: `SIGNUP-${tenantId}`,
+      tenant_id: tenantId,
+      company_name: input.companyName.trim(),
+      admin_email: input.adminEmail.trim().toLowerCase(),
+      plan: input.plan,
+      status: "pending",
+      created_at: getClock().now().toISOString(),
+    });
+    file.signups.push(signup);
+    saveSignupsFile(file);
+    return signup;
   });
-  file.signups.push(signup);
-  saveSignupsFile(file);
-  return signup;
+}
+
+/** Resume only the same applicant while checkout has not completed. */
+export function reserveOrResumeLedgerSignup(input: {
+  tenantId: string;
+  companyName: string;
+  adminEmail: string;
+  plan: LedgerSignup["plan"];
+}): LedgerSignup {
+  const tenantId = input.tenantId.trim().toLowerCase();
+  return withLedgerTenantAllocationLock(() => {
+    const file = loadSignupsFile();
+    const existing = file.signups.find((row) => row.tenant_id === tenantId);
+    if (existing) {
+      if (
+        existing.company_name !== input.companyName.trim() ||
+        existing.admin_email !== input.adminEmail.trim().toLowerCase() ||
+        existing.plan !== input.plan ||
+        !["pending", "checkout"].includes(existing.status)
+      ) {
+        throw new Error(`Signup already exists for tenant "${tenantId}"`);
+      }
+      assertLedgerTenantIdUnoccupied(tenantId);
+      return existing;
+    }
+    assertLedgerTenantIdUnoccupied(tenantId);
+    const signup = ledgerSignupSchema.parse({
+      signup_id: `SIGNUP-${tenantId}`,
+      tenant_id: tenantId,
+      company_name: input.companyName.trim(),
+      admin_email: input.adminEmail.trim().toLowerCase(),
+      plan: input.plan,
+      status: "pending",
+      created_at: getClock().now().toISOString(),
+    });
+    file.signups.push(signup);
+    saveSignupsFile(file);
+    return signup;
+  });
 }
 
 export function updateLedgerSignup(
@@ -77,17 +153,22 @@ export function updateLedgerSignup(
       LedgerSignup,
       | "status"
       | "stripe_checkout_session_id"
+      | "stripe_checkout_url"
+      | "stripe_checkout_mode"
       | "stripe_customer_id"
+      | "welcome_sent_at"
     >
   >,
 ): LedgerSignup {
-  const file = loadSignupsFile();
-  const index = file.signups.findIndex((row) => row.signup_id === signupId);
-  if (index < 0) throw new Error(`Signup not found: ${signupId}`);
-  const next = ledgerSignupSchema.parse({ ...file.signups[index]!, ...patch });
-  file.signups[index] = next;
-  saveSignupsFile(file);
-  return next;
+  return withLedgerTenantAllocationLock(() => {
+    const file = loadSignupsFile();
+    const index = file.signups.findIndex((row) => row.signup_id === signupId);
+    if (index < 0) throw new Error(`Signup not found: ${signupId}`);
+    const next = ledgerSignupSchema.parse({ ...file.signups[index]!, ...patch });
+    file.signups[index] = next;
+    saveSignupsFile(file);
+    return next;
+  });
 }
 
 export function setLedgerSignupStatus(

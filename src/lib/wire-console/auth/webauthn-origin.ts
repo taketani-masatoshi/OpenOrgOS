@@ -1,4 +1,11 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+const requestOrigin = new AsyncLocalStorage<string>();
+
+export function runWithWebAuthnOrigin<T>(origin: string, action: () => T): T {
+  return requestOrigin.run(origin, action);
+}
 
 function parseOrigin(value: string): URL | null {
   try {
@@ -9,6 +16,8 @@ function parseOrigin(value: string): URL | null {
 }
 
 export function configuredWebAuthnOrigin(): string | undefined {
+  const tenantOrigin = requestOrigin.getStore();
+  if (tenantOrigin) return tenantOrigin;
   const value = (process.env.WIRE_CONSOLE_WEBAUTHN_ORIGIN ?? "").trim().replace(/\/$/, "");
   return value || undefined;
 }

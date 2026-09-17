@@ -19,7 +19,10 @@ export const ledgerSignupSchema = z.object({
   status: ledgerSignupStatusSchema,
   created_at: z.string(),
   stripe_checkout_session_id: z.string().optional(),
+  stripe_checkout_url: z.string().url().optional(),
+  stripe_checkout_mode: z.enum(["live", "stub"]).optional(),
   stripe_customer_id: z.string().optional(),
+  welcome_sent_at: z.string().optional(),
 });
 
 export const ledgerSignupsFileSchema = z.object({

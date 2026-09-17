@@ -22,6 +22,7 @@ import { ProductInitialSetupPage } from "./ProductInitialSetupPage";
 import { CustomersWorkbenchPage } from "./CustomersWorkbenchPage";
 import { SignupPage } from "./SignupPage";
 import { GuestSetupPage } from "./GuestSetupPage";
+import { FounderSetupPage } from "./FounderSetupPage";
 import { TaxHandoffPage } from "./TaxHandoffPage";
 import { ContractsPage } from "./ContractsPage";
 import { StaysPage } from "./StaysPage";
@@ -487,6 +488,9 @@ export function App() {
   ) : window.location.pathname.replace(/\/+$/, "") === "/guest-setup" ||
     window.location.pathname.startsWith("/guest-setup/") ? (
     <GuestSetupPage />
+  ) : window.location.pathname.replace(/\/+$/, "") === "/founder-setup" ||
+    window.location.pathname.startsWith("/founder-setup/") ? (
+    <FounderSetupPage />
   ) : (
     <BudgetAuthGate active={shellTab}>
       {shellActive === "settings" ? null : shellActive === "cloud-llm" ? (

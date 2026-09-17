@@ -4,7 +4,7 @@ import { requireChatPermission } from "../../console-auth/rbac.js";
 import { readJsonLimited } from "../../http/read-json-limited.js";
 import { listLedgerPlans, resolveLedgerPlan } from "../../product/ledger-plans.js";
 import {
-  createLedgerSignup,
+  reserveOrResumeLedgerSignup,
   updateLedgerSignup,
 } from "../../product/ledger-fleet.js";
 import { createLedgerCheckoutSession, parseStripeWebhookEvent, verifyStripeWebhookSignature } from "../../product/stripe-checkout.js";
@@ -24,7 +24,7 @@ import {
   markStripeWebhookEventProcessed,
 } from "../../product/ledger-stripe-webhook-idempotency.js";
 import { handleStripeWebhookEvent } from "../../product/stripe-webhook.js";
-import { sendLedgerMail } from "../../product/ledger-mail.js";
+import { listLedgerMailOutbox, sendLedgerMail } from "../../product/ledger-mail.js";
 import { loadLedgerSubscription } from "../../product/ledger-subscription.js";
 import {
   buildCustomerAdminSnapshot,
@@ -143,14 +143,20 @@ export async function handleProductApi(
         .slice(0, 24);
       const tenantId =
         body.tenant_id?.trim().toLowerCase() ?? (slug || `ledger-${Date.now()}`);
-      const signup = createLedgerSignup({
+      const signup = reserveOrResumeLedgerSignup({
         tenantId,
         companyName,
         adminEmail,
         plan: plan.id,
       });
       const origin = publicOrigin(req);
-      const checkout = await createLedgerCheckoutSession({
+      const checkout = signup.stripe_checkout_url && signup.stripe_checkout_session_id
+        ? {
+            url: signup.stripe_checkout_url,
+            session_id: signup.stripe_checkout_session_id,
+            mode: signup.stripe_checkout_mode ?? "live" as const,
+          }
+        : await createLedgerCheckoutSession({
         signupId: signup.signup_id,
         email: adminEmail,
         plan,
@@ -160,13 +166,25 @@ export async function handleProductApi(
       updateLedgerSignup(signup.signup_id, {
         status: "checkout",
         stripe_checkout_session_id: checkout.session_id,
+        stripe_checkout_url: checkout.url,
+        stripe_checkout_mode: checkout.mode,
       });
-      void sendLedgerMail({
-        kind: "signup_received",
-        to: adminEmail,
-        tenantId,
-        companyName,
-      });
+      const receiptSent = listLedgerMailOutbox().some((mail) =>
+        mail.kind === "signup_received" && mail.tenant_id === tenantId &&
+        mail.to.toLowerCase() === adminEmail.toLowerCase() && mail.status === "sent",
+      );
+      if (!receiptSent) {
+        try {
+          await sendLedgerMail({
+            kind: "signup_received",
+            to: adminEmail,
+            tenantId,
+            companyName,
+          });
+        } catch {
+          // Checkout remains usable; an identical signup retries the receipt.
+        }
+      }
       json(res, 200, {
         ok: true,
         signup_id: signup.signup_id,
@@ -205,7 +223,7 @@ export async function handleProductApi(
         json(res, 200, { ok: true, duplicate: true, event_id: event.id });
         return true;
       }
-      const result = handleStripeWebhookEvent(event);
+      const result = await handleStripeWebhookEvent(event);
       if (event.id && result.handled) {
         markStripeWebhookEventProcessed(event.id);
       }

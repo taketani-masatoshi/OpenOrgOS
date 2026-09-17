@@ -204,6 +204,7 @@ export function assertBootstrapTokenForLoginRegistration(
 export function assertLoginPasskeyRegistrationGate(
   sessionUser: WireConsoleUser | undefined,
   bootstrapToken?: string,
+  operatorId?: string,
 ): { error: string; status: number } | null {
   if (process.env.WIRE_CONSOLE_WEBAUTHN_DISABLE_REGISTER === "1") {
     return { error: "webauthn registration disabled", status: 403 };
@@ -221,11 +222,10 @@ export function assertLoginPasskeyRegistrationGate(
 
   if (bootstrap) {
     if (!sessionUser && !isOpenBootstrapWithoutSessionAllowed()) {
-      return {
-        error:
-          "authenticated session required — sign in with Community SSO before registering your first passkey",
-        status: 401,
-      };
+      const verified = verifyPasskeyBootstrapToken(bootstrapToken, operatorId ?? "");
+      if (!verified.ok) {
+        return { error: verified.error, status: verified.error === "bootstrap token required" ? 401 : 403 };
+      }
     }
     const tokenGate = assertBootstrapTokenForLoginRegistration(sessionUser, bootstrapToken);
     if (tokenGate) return tokenGate;
@@ -315,7 +315,7 @@ export function authorizeWebAuthnRegistration(
       );
       if (guestGate) return guestGate;
     } else {
-      const gate = assertLoginPasskeyRegistrationGate(sessionUser, body.bootstrap_token);
+      const gate = assertLoginPasskeyRegistrationGate(sessionUser, body.bootstrap_token, body.operator_id);
       if (gate) return gate;
     }
   } else {
