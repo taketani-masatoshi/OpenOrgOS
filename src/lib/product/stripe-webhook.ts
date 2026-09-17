@@ -88,7 +88,7 @@ export function handleStripeWebhookEvent(event: StripeWebhookEvent): {
     }
     setLedgerSignupStatus(signupId, "paid");
     if (process.env.ORGOS_LEDGER_AUTO_PROVISION === "1") {
-      provisionLedgerTenant({
+      const provisioned = provisionLedgerTenant({
         tenantId: signup.tenant_id,
         companyName: signup.company_name,
         adminEmail: signup.admin_email,
@@ -98,7 +98,7 @@ export function handleStripeWebhookEvent(event: StripeWebhookEvent): {
       });
       setLedgerSignupStatus(signupId, "provisioned");
       const bootstrap = runWithTenantId(signup.tenant_id, () =>
-        mintPasskeyBootstrapToken({ operatorId: "OP-CEO", ttl: "72h" }),
+        mintPasskeyBootstrapToken({ operatorId: provisioned.ceo_operator_id, ttl: "72h" }),
       );
       const publicBase =
         process.env.ORGOS_PUBLIC_BASE_URL?.trim() ||

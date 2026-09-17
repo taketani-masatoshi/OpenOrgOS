@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
+import { findOperatorById } from "../../org/operators.js";
 import { ensureOrgOsStateDir, getOrgOsStateDir } from "../paths.js";
 
 const STORE_FILENAME = "passkey-bootstrap.json";
@@ -92,6 +93,12 @@ export function mintPasskeyBootstrapToken(opts: {
 }): { token: string; expires_at: string } {
   const operatorId = opts.operatorId.trim();
   if (!operatorId) throw new Error("operator_id required");
+  const operator = findOperatorById(operatorId);
+  if (!operator || operator.status !== "active") {
+    throw new Error(
+      `Cannot mint PassKey bootstrap for unknown or inactive operator "${operatorId}"`,
+    );
+  }
   const ttlMs = parseTtl(opts.ttl ?? "24h");
   const token = `${TOKEN_PREFIX}${randomBytes(32).toString("base64url")}`;
   const expiresAt = new Date(Date.now() + ttlMs).toISOString();
