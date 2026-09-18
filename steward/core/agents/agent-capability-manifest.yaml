@@ -588,6 +588,7 @@ agents:
       - outbox-routing
       - travel-booking
       - venue-booking
+      - workflow-evaluate
     skills:
       - change_apply
       - change_plan
@@ -632,6 +633,7 @@ agents:
       - venue_booking
       - venue_catalog
       - venue_list
+      - workflow_evaluate
     pulse_checks:
       - type: path_exists
         path: data/document-io.yaml
