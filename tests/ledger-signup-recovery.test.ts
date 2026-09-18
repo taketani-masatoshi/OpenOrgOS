@@ -5,7 +5,7 @@ import { Readable } from "node:stream";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { refreshOrgOsPaths } from "../src/lib/orgos-paths.js";
-import { findLedgerSignup, listLedgerSignups, createLedgerSignup, updateLedgerSignup } from "../src/lib/product/ledger-fleet.js";
+import { findLedgerSignup, listLedgerSignups, createLedgerSignup, setLedgerSignupStatus, updateLedgerSignup } from "../src/lib/product/ledger-fleet.js";
 import { listLedgerMailOutbox } from "../src/lib/product/ledger-mail.js";
 import { handleProductApi } from "../src/lib/steward-chat/routes/product-api.js";
 import { handleStripeWebhookEvent } from "../src/lib/product/stripe-webhook.js";
@@ -72,6 +72,26 @@ describe("ledger signup recovery", () => {
     expect(listLedgerMailOutbox().filter((mail) => mail.kind === "signup_received")).toHaveLength(1);
     expect((await signupRequest("other@recover.example")).status).toBe(422);
   });
+
+  it.each(["paid", "provisioned"] as const)(
+    "does not rewind %s when the webhook arrives before checkout returns",
+    async (advancedStatus) => {
+      setup();
+      process.env.STRIPE_SECRET_KEY = "sk_test_recovery";
+      vi.spyOn(globalThis, "fetch").mockImplementationOnce(async () => {
+        setLedgerSignupStatus("SIGNUP-recover-one", advancedStatus);
+        return new Response(JSON.stringify({
+          id: "cs_early", url: "https://checkout.stripe.test/early",
+        }), { status: 200 });
+      });
+
+      expect((await signupRequest()).status).toBe(200);
+      expect(findLedgerSignup("SIGNUP-recover-one")).toMatchObject({
+        status: advancedStatus,
+        stripe_checkout_session_id: "cs_early",
+      });
+    },
+  );
 
   it("retries only the welcome mail after tenant creation, preserving finance files", async () => {
     setup();

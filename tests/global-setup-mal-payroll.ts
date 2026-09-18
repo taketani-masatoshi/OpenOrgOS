@@ -1,6 +1,7 @@
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT_DIR } from "../src/lib/tenant.js";
+import { assertDisposableTestWorkspace } from "./helpers/test-workspace-guard.js";
 
 /**
  * mal is the default test tenant, and ~19 suites reach computeDashboard /
@@ -28,6 +29,7 @@ account_code: "5300"
 `;
 
 export default function setup(): (() => void) | void {
+  assertDisposableTestWorkspace(ROOT_DIR);
   if (existsSync(PAYROLL)) return;
   writeFileSync(PAYROLL, SYNTHETIC);
   return () => {

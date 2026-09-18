@@ -5,6 +5,7 @@ import { readJsonLimited } from "../../http/read-json-limited.js";
 import { listLedgerPlans, resolveLedgerPlan } from "../../product/ledger-plans.js";
 import {
   reserveOrResumeLedgerSignup,
+  recordLedgerCheckoutSession,
   updateLedgerSignup,
 } from "../../product/ledger-fleet.js";
 import { createLedgerCheckoutSession, parseStripeWebhookEvent, verifyStripeWebhookSignature } from "../../product/stripe-checkout.js";
@@ -163,12 +164,7 @@ export async function handleProductApi(
         successUrl: `${origin}/signup?success=1&signup_id=${signup.signup_id}`,
         cancelUrl: `${origin}/signup?cancelled=1`,
       });
-      updateLedgerSignup(signup.signup_id, {
-        status: "checkout",
-        stripe_checkout_session_id: checkout.session_id,
-        stripe_checkout_url: checkout.url,
-        stripe_checkout_mode: checkout.mode,
-      });
+      recordLedgerCheckoutSession(signup.signup_id, checkout);
       const receiptSent = listLedgerMailOutbox().some((mail) =>
         mail.kind === "signup_received" && mail.tenant_id === tenantId &&
         mail.to.toLowerCase() === adminEmail.toLowerCase() && mail.status === "sent",

@@ -171,6 +171,33 @@ export function updateLedgerSignup(
   });
 }
 
+/** A webhook may complete before the checkout API returns; never rewind payment state. */
+export function recordLedgerCheckoutSession(
+  signupId: string,
+  checkout: { session_id: string; url: string; mode: "live" | "stub" },
+): LedgerSignup {
+  return withLedgerTenantAllocationLock(() => {
+    const file = loadSignupsFile();
+    const index = file.signups.findIndex((row) => row.signup_id === signupId);
+    if (index < 0) throw new Error(`Signup not found: ${signupId}`);
+    const current = file.signups[index]!;
+    if (current.status === "cancelled") throw new Error(`Signup cancelled: ${signupId}`);
+    if (current.stripe_checkout_session_id && current.stripe_checkout_session_id !== checkout.session_id) {
+      throw new Error(`Checkout session does not match signup ${signupId}`);
+    }
+    const next = ledgerSignupSchema.parse({
+      ...current,
+      status: current.status === "pending" ? "checkout" : current.status,
+      stripe_checkout_session_id: checkout.session_id,
+      stripe_checkout_url: checkout.url,
+      stripe_checkout_mode: checkout.mode,
+    });
+    file.signups[index] = next;
+    saveSignupsFile(file);
+    return next;
+  });
+}
+
 export function setLedgerSignupStatus(
   signupId: string,
   status: LedgerSignupStatus,
