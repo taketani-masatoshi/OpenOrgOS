@@ -62,6 +62,7 @@
     "test:docker": "bash deploy/test/run.sh",
     "test:docker:smoke": "docker compose -f deploy/test/docker-compose.yaml --profile smoke run --rm --build smoke",
     "demo:docker:up": "docker compose -f deploy/demo/docker-compose.yaml up --build",
+    "integrations:opendesk:verify": "node --import tsx src/cli.ts integrations opendesk verify",
     "demo:docker:down": "docker compose -f deploy/demo/docker-compose.yaml down",
     "demo:docker:accept": "bash deploy/demo/acceptance.sh",
     "demo:docker:verify-ghcr": "bash deploy/demo/verify-ghcr.sh",

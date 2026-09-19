@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 594
-  static_test_cases: 2706
-  tiered_execution_total: 594
+  vitest_total: 606
+  static_test_cases: 2755
+  tiered_execution_total: 606
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -873,6 +873,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  connector-catalog.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   connector-store.test.ts:
     axis: platform
     kind: unit
@@ -1476,6 +1480,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  ledger-founder-passkey-flow.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   ledger-guest-invite.test.ts:
     axis: platform
     kind: unit
@@ -1497,6 +1505,14 @@ tests:
     kind: unit
     domain: P01_kernel
   ledger-product.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-signup-recovery.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-tenant-id-collision.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1662,6 +1678,18 @@ tests:
     kind: unit
     domain: P01_kernel
   ooo-score.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opendesk-ox-inclusion.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opendesk-ports.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opendesk-verify.live.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2342,6 +2370,10 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  session-tenant-binding.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   settlement-passkey-prod.test.ts:
     axis: platform
     kind: unit
@@ -2586,6 +2618,10 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-workflow-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-orchestrate-intent.test.ts:
     axis: platform
     kind: unit
@@ -2686,6 +2722,10 @@ tests:
   test-suite-status.test.ts:
     axis: meta
     kind: meta
+  test-workspace-guard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   testing-modules-doc-sync.test.ts:
     axis: meta
     kind: meta
@@ -2932,6 +2972,14 @@ tests:
     kind: unit
     domain: P01_kernel
   work-order-state.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  workflow-canvas.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  workflow-structure-change.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

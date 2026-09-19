@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **openDesk ファーストのコネクタ Port** — オフィススイートの正本面は Matrix / Nextcloud / Keycloak。公開イメージは `deploy/opendesk-verify` で疎通確認する。Open-Xchange は無認証 CE イメージが取れるまでスタブ。Slack / Gmail / Drive / Microsoft 365 は互換出口（L1 の写し）のまま残す。ADR 0078 · [connectors.md](docs/org-os/ooo-surfaces/connectors.md)
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 

@@ -28,6 +28,11 @@ export const COMMUNITY_INTEGRATION_FLAGS = [
   "connector_slack",
   "connector_asana",
   "connector_gdrive",
+  "connector_matrix",
+  "connector_nextcloud",
+  "connector_ox",
+  "connector_keycloak",
+  "connector_m365",
 ] as const;
 
 export type CommunityIntegrationFlag = (typeof COMMUNITY_INTEGRATION_FLAGS)[number];

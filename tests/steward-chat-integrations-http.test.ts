@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { existsSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
-import { setTenantId } from "../src/lib/tenant.js";
+import { getRootDir, setTenantId } from "../src/lib/tenant.js";
 import {
   connectorTokenPath,
   connectorsFilePath,
@@ -30,6 +31,8 @@ describe("steward chat integrations HTTP", () => {
     process.env.ORGOS_SESSION_PERSIST = "0";
     process.env.WIRE_CONSOLE_DEV_PASSKEY = "test-pass";
     process.env.ORGOS_CSRF = "0";
+    delete process.env.ORGOS_SLACK_WEBHOOK_URL;
+    delete process.env.ORGOS_ASANA_PAT;
     handle = await startStewardChatForTest();
     baseUrl = handle.url;
     cookie = await login("OP-001");
@@ -45,9 +48,13 @@ describe("steward chat integrations HTTP", () => {
       connectorTokenPath("slack"),
       connectorsFilePath(),
       connectorSecretsFilePath(),
+      join(getRootDir(), "tenants/demo/data/secrets/connector-secrets.env"),
+      join(getRootDir(), "tenants/mal/data/secrets/connector-secrets.env"),
     ]) {
       if (existsSync(path)) rmSync(path);
     }
+    delete process.env.ORGOS_SLACK_WEBHOOK_URL;
+    delete process.env.ORGOS_ASANA_PAT;
     process.env = { ...env };
     resetConnectorSecretsHydrationForTest();
   });
@@ -81,8 +88,27 @@ describe("steward chat integrations HTTP", () => {
       "asana",
       "gdrive",
       "gmail",
+      "keycloak",
+      "m365",
+      "matrix",
+      "nextcloud",
+      "ox",
       "slack",
     ]);
+  });
+
+  it("refuses Matrix and Microsoft 365 connect until the platform ships them", async () => {
+    for (const provider of ["matrix", "m365"]) {
+      const res = await fetch(`${baseUrl}/chat/v1/integrations/${provider}/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: cookie },
+        body: "{}",
+      });
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { ok: boolean; platform_ready: boolean };
+      expect(body.ok).toBe(false);
+      expect(body.platform_ready).toBe(false);
+    }
   });
 
   it("refuses to connect a provider the platform has not shipped", async () => {

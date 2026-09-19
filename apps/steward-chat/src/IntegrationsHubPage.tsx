@@ -17,6 +17,8 @@ import {
 import { OpsPage } from "./OpsPage";
 
 function statusLabel(card: ConnectorCard): string {
+  if (card.inclusion === "stub_unconfirmed") return "未確定・出荷待ち";
+  if (card.inclusion === "confirmed_live" && card.usable) return "疎通確認済み";
   if (card.connected && card.expired) return "接続済み（期限切れ）";
   if (card.connected) return "接続済み";
   if (card.fallback_configured) return "簡易接続（webhook / PAT）";
@@ -145,13 +147,30 @@ export function IntegrationsHubPage() {
   return (
     <OpsPage
       title="連携設定"
-      lead="Slack · Asana · Gmail · Google Drive。正本は OrgOS のまま、外部には写しだけを出します。"
+      lead="正本は社内です。openDesk（Matrix / Nextcloud）が主権スタック、Google や Microsoft、Slack は写しです。"
       loading={!hub}
       loadingLabel="読み込み中"
       error={error}
       className="integrations-page"
     >
       {note && <p className="ops-page-meta">{note}</p>}
+
+      <h2 className="section-title">主権スタック（openDesk）</h2>
+      <p className="ops-page-meta">
+        現場の窓口は日本語のままです。チャットは Matrix、ファイルは Nextcloud。未確定の部品は外へ出しません。
+      </p>
+      {hub?.connectors
+        .filter((c) => c.connector_class === "sovereign")
+        .map((c) => (
+          <section className="ops-card" key={c.provider}>
+            {renderCardHeader(c.provider)}
+          </section>
+        ))}
+
+      <h2 className="section-title">互換出口</h2>
+      <p className="ops-page-meta">
+        Google / Microsoft / Slack は写しです。正本にはしません。Gmail の送信元は会社の設定に残します。
+      </p>
 
       <section className="ops-card">
         {renderCardHeader("slack")}
@@ -312,7 +331,7 @@ export function IntegrationsHubPage() {
       <section className="ops-card">
         {renderCardHeader("gmail")}
         <p className="ops-page-meta">
-          送信元や SMTP の設定は会社の設定にあります。送信は承認済みの下書きだけです。
+          送信元や SMTP の設定は会社の設定にあります。Gmail は互換出口です。送信は承認済みの下書きだけです。
         </p>
         <p className="section-cta">
           <a className="btn btn-primary btn-sm" href="/?onboarding=1">
@@ -394,6 +413,13 @@ export function IntegrationsHubPage() {
             </ul>
           </>
         )}
+      </section>
+
+      <section className="ops-card">
+        {renderCardHeader("m365")}
+        <p className="ops-page-meta">
+          Microsoft 365 は互換出口です。Windows から捨てるものではありません。出荷前は外へ出しません。
+        </p>
       </section>
     </OpsPage>
   );

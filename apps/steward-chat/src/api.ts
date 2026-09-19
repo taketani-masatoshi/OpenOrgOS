@@ -2813,11 +2813,23 @@ export async function putMailConfig(input: {
   });
 }
 
-export type ConnectorProvider = "gmail" | "slack" | "asana" | "gdrive";
+export type ConnectorProvider =
+  | "matrix"
+  | "nextcloud"
+  | "ox"
+  | "keycloak"
+  | "gmail"
+  | "slack"
+  | "asana"
+  | "gdrive"
+  | "m365";
 
 export interface ConnectorCard {
   provider: ConnectorProvider;
   label: string;
+  connector_class?: "sovereign" | "compat";
+  capability?: "chat" | "files" | "mail" | "calendar" | "tasks" | "iam";
+  inclusion?: "confirmed_live" | "stub_unconfirmed" | "compat_egress";
   connected: boolean;
   account_label?: string;
   connected_via?: string;

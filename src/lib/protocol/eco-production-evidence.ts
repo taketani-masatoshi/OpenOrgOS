@@ -43,6 +43,11 @@ export type CommunityIntegrationStatus = {
   connector_slack?: boolean;
   connector_asana?: boolean;
   connector_gdrive?: boolean;
+  connector_matrix?: boolean;
+  connector_nextcloud?: boolean;
+  connector_ox?: boolean;
+  connector_keycloak?: boolean;
+  connector_m365?: boolean;
   readiness_score?: number;
 };
 
