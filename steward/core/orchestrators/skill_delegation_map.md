@@ -158,7 +158,6 @@ npm run orgos -- skills run monthly-close
 | cashflow-forecast | `finance` | `cashflow_forecast` |
 | change-apply | `operations` | `change_apply` |
 | change-plan | `operations` | `change_plan` |
-| workflow-evaluate | `operations` | `workflow_evaluate` |
 | company-events-chain-audit | `records_audit` | `company_events_chain_verify` |
 | company-events-monthly-audit | `records_audit` | `company_events_monthly_audit` |
 | company-events-weekly-attest | `records_audit` | `company_events_weekly_attest` |
@@ -216,6 +215,7 @@ npm run orgos -- skills run monthly-close
 | travel-booking | `operations` | `travel_booking` |
 | venue-booking | `operations` | `venue_booking` |
 | wire-send-gate | `secretary` | `wire_send_gate` |
+| workflow-evaluate | `operations` | `workflow_evaluate` |
 | workspace-doctor | `executive_steward` | `workspace_doctor` |
 | workspace-validate | `executive_steward` | `workspace_validate` |
 <!-- orgos:generated:routing-skill-index:end -->
@@ -257,7 +257,6 @@ Skill id / CLI が指定された
 | `cashflow_forecast` | cli | `finance` | `forecast` | core |
 | `change_apply` | cli | `operations` | `change-apply` | core |
 | `change_plan` | cli | `operations` | `change-plan` | core |
-| `workflow_evaluate` | cli | `operations` | `workflow-evaluate` | core |
 | `clinic_appointments` | cli | `operations` | `clinic-appointments` | clinic |
 | `clinic_show` | cli | `operations` | `clinic-show` | clinic |
 | `company_events_chain_verify` | cli | `records_audit` | `company-events-chain-verify` | core |
@@ -471,6 +470,7 @@ Skill id / CLI が指定された
 | `venue_catalog` | cli | `operations` | `venue-catalog` | venue_booking |
 | `venue_list` | cli | `operations` | `venue-list` | venue_booking |
 | `wire_send_gate` | cli | `secretary` | `wire-send` | core |
+| `workflow_evaluate` | cli | `operations` | `workflow-evaluate` | core |
 | `workspace_doctor` | cli | `executive_steward` | `doctor` | core |
 | `workspace_validate` | cli | `executive_steward` | `validate` | core |
 <!-- orgos:generated:skill-registry-index:end -->
