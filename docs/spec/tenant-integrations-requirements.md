@@ -51,7 +51,10 @@ Secretary Agent は社長の **社外窓口** として、メール下書き・�
 | Slack Events API での双方向同期 | 将来 |
 | Asana Webhook から OrgOS 正本を書き換えること | 将来 |
 | Drive 全ファイル同期 · YAML の Drive ホスティング | 将来 |
-| LINE · Microsoft 365 · Calendar | 将来 |
+| openDesk Matrix / Nextcloud / Keycloak | [ADR 0078](../adr/0078-opendesk-first-connector-ports.md) · `deploy/opendesk-verify` |
+| Open-Xchange | probe が公開 CE イメージを確認するまでスタブ |
+| Microsoft 365 · Windows クライアント | 互換出口。排除しない。Windows は Docker Desktop で verify |
+| LINE | 対象外 |
 
 ---
 

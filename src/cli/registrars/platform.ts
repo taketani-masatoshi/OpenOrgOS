@@ -171,6 +171,41 @@ export function registerPlatformCommands(program: Command): void {
       });
     });
 
+  const opendeskCmd = integrationsCmd
+    .command("opendesk")
+    .description("openDesk verify stack (Matrix · Nextcloud · Keycloak · OX probe)");
+  opendeskCmd
+    .command("up")
+    .description("Start the localhost verify compose (core profile)")
+    .option("--groupware", "Also start the OX profile after a confirmed public image")
+    .action(async (opts) => {
+      const { runOpendeskUp } = await import("../../commands/opendesk-integrations.js");
+      runOpendeskUp({ groupware: opts.groupware === true });
+    });
+  opendeskCmd
+    .command("down")
+    .description("Stop the localhost verify compose")
+    .action(async () => {
+      const { runOpendeskDown } = await import("../../commands/opendesk-integrations.js");
+      runOpendeskDown();
+    });
+  opendeskCmd
+    .command("probe")
+    .description("Inspect public CE images and record OX inclusion")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOpendeskProbe } = await import("../../commands/opendesk-integrations.js");
+      await runOpendeskProbe({ json: opts.json });
+    });
+  opendeskCmd
+    .command("verify")
+    .description("Call Matrix, Nextcloud, Keycloak, and OX ports (L1 only)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runOpendeskVerify } = await import("../../commands/opendesk-integrations.js");
+      await runOpendeskVerify({ json: opts.json });
+    });
+
   const moduleMessageCmd = program
     .command("module-message")
     .description("Typed inter-module messages (ADR 0040)");

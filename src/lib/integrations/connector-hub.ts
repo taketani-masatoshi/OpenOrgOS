@@ -2,50 +2,58 @@
  * Connector hub snapshot for the Operator Console integrations page.
  * Path: src/lib/integrations/connector-hub.ts
  *
- * One place answers "what is connected, what can be connected, and what is
- * still waiting on the platform". Shipping is a platform decision (ADR 0004),
- * so a tenant only ever reads `platform_ready` — it cannot flip it.
+ * Sovereign openDesk ports are listed first. Shipping is still a platform
+ * decision (ADR 0004 / 0078): a tenant only reads `platform_ready`.
+ * A local verify environment can make a confirmed_live port usable without
+ * Community OAuth. Connect stays behind the shipping flag.
  */
-import type { ConnectorProvider } from "../../../schemas/connectors.js";
-import { CONNECTOR_PROVIDERS } from "../../../schemas/connectors.js";
-import {
-  loadCommunityIntegration,
-  type CommunityIntegrationStatus,
-} from "../protocol/eco-production-evidence.js";
+import type { ConnectorCapability, ConnectorClass, ConnectorInclusion, ConnectorProvider } from "../../../schemas/connectors.js";
+import { catalogEntry, orderedConnectorProviders } from "./connector-catalog.js";
+import { loadCommunityIntegration } from "../protocol/eco-production-evidence.js";
 import { communityConnectionsUrl } from "../protocol/community-gmail-bind.js";
+import { effectiveOxInclusion, loadProbeResult } from "./opendesk-probe.js";
 import { buildConnectorSecretsSnapshot, type ConnectorSecretsSnapshot } from "./connector-secrets-store.js";
 import { readConnectorStatus, type ConnectorStatus } from "./connector-store.js";
-
-/** Community flag that gates each provider's connect flow. */
-const PROVIDER_SHIPPING_FLAG: Record<ConnectorProvider, keyof CommunityIntegrationStatus> = {
-  gmail: "tenant_mail_connect_api",
-  slack: "connector_slack",
-  asana: "connector_asana",
-  gdrive: "connector_gdrive",
-};
-
-const PROVIDER_LABEL: Record<ConnectorProvider, string> = {
-  gmail: "Gmail",
-  slack: "Slack",
-  asana: "Asana",
-  gdrive: "Google Drive",
-};
 
 export interface ConnectorPlatformReadiness {
   ready: boolean;
   detail: string;
 }
 
+export function sovereignLocalConfigured(
+  provider: ConnectorProvider,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  if (provider === "matrix") {
+    const base = Boolean(env.ORGOS_MATRIX_BASE_URL?.trim());
+    const auth = Boolean(env.ORGOS_MATRIX_ACCESS_TOKEN?.trim() || env.ORGOS_MATRIX_PASSWORD?.trim());
+    return base && auth;
+  }
+  if (provider === "nextcloud") {
+    return Boolean(
+      env.ORGOS_NEXTCLOUD_BASE_URL?.trim() &&
+        env.ORGOS_NEXTCLOUD_USER?.trim() &&
+        env.ORGOS_NEXTCLOUD_APP_PASSWORD?.trim(),
+    );
+  }
+  if (provider === "keycloak") return Boolean(env.ORGOS_KEYCLOAK_BASE_URL?.trim());
+  if (provider === "ox") {
+    return effectiveOxInclusion(loadProbeResult()) === "confirmed_live" && Boolean(env.ORGOS_OX_BASE_URL?.trim());
+  }
+  return false;
+}
+
 export function connectorPlatformReadiness(
   provider: ConnectorProvider,
 ): ConnectorPlatformReadiness {
-  const flag = PROVIDER_SHIPPING_FLAG[provider];
-  const shipped = loadCommunityIntegration()?.[flag] === true;
+  const entry = catalogEntry(provider);
+  const shipped = loadCommunityIntegration()?.[entry.shippingFlag] === true;
+  if (shipped) {
+    return { ready: true, detail: `Community ${entry.label} connect shipped` };
+  }
   return {
-    ready: shipped,
-    detail: shipped
-      ? `Community ${PROVIDER_LABEL[provider]} connect shipped`
-      : `${PROVIDER_LABEL[provider]} 連携は運営側が未出荷です。出荷後に接続できます。`,
+    ready: false,
+    detail: `${entry.label} 連携は運営側が未出荷です。出荷後に接続できます。`,
   };
 }
 
@@ -59,21 +67,33 @@ function fallbackConfigured(provider: ConnectorProvider): boolean {
 
 export interface ConnectorCard extends ConnectorStatus {
   label: string;
+  connector_class: ConnectorClass;
+  capability: ConnectorCapability;
+  inclusion: ConnectorInclusion;
   platform_ready: boolean;
   platform_detail: string;
   /** True when the console can act (send / push / upload) right now. */
   usable: boolean;
 }
 
-export function buildConnectorCard(provider: ConnectorProvider): ConnectorCard {
+export function buildConnectorCard(
+  provider: ConnectorProvider,
+  oxInclusion?: ConnectorInclusion,
+): ConnectorCard {
+  const entry = catalogEntry(provider);
   const platform = connectorPlatformReadiness(provider);
   const status = readConnectorStatus(provider, fallbackConfigured(provider));
+  const inclusion = provider === "ox" ? (oxInclusion ?? effectiveOxInclusion(loadProbeResult())) : entry.inclusion;
+  const localReady = inclusion === "confirmed_live" && sovereignLocalConfigured(provider);
   return {
     ...status,
-    label: PROVIDER_LABEL[provider],
+    label: entry.label,
+    connector_class: entry.connectorClass,
+    capability: entry.capability,
+    inclusion,
     platform_ready: platform.ready,
     platform_detail: platform.detail,
-    usable: (status.connected && !status.expired) || status.fallback_configured,
+    usable: (status.connected && !status.expired) || status.fallback_configured || localReady,
   };
 }
 
@@ -84,8 +104,9 @@ export interface ConnectorHubSnapshot {
 }
 
 export function buildConnectorHubSnapshot(): ConnectorHubSnapshot {
+  const oxInclusion = effectiveOxInclusion(loadProbeResult());
   return {
-    connectors: CONNECTOR_PROVIDERS.map(buildConnectorCard),
+    connectors: orderedConnectorProviders().map((provider) => buildConnectorCard(provider, oxInclusion)),
     secrets: buildConnectorSecretsSnapshot(),
     community_connections_url: communityConnectionsUrl(),
   };

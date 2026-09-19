@@ -6,6 +6,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **openDesk ファーストのコネクタ Port** — オフィススイートの正本面は Matrix / Nextcloud / Keycloak。公開イメージは `deploy/opendesk-verify` で疎通確認する。Open-Xchange は無認証 CE イメージが取れるまでスタブ。Slack / Gmail / Drive / Microsoft 365 は互換出口（L1 の写し）のまま残す。ADR 0078 · [connectors.md](docs/org-os/ooo-surfaces/connectors.md)
+
 ### Fixed
 
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
