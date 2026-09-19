@@ -6,6 +6,7 @@ import type { FixedAsset } from "../../../schemas/finance/types.js";
 import { loadFixedAssets } from "../data.js";
 import { ROOT_DIR } from "../utils.js";
 import { appendJournalEntry } from "./expense-claim-journal.js";
+import { lastDayOfMonth } from "./fiscal-year.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 
 const MONTHS_PER_YEAR = 12;
@@ -216,7 +217,7 @@ export function postDepreciationJournalEntries(input: {
     const entryId = `JE-DEP-${line.asset_id}-${input.period}`;
     appendJournalEntry({
       entry_id: entryId,
-      occurred_at: `${input.period}-28T00:00:00.000Z`,
+      occurred_at: `${lastDayOfMonth(input.period)}T00:00:00.000Z`,
       description: `Depreciation ${line.asset_name} ${input.period}`,
       source: {
         kind: "depreciation",

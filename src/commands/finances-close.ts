@@ -1,17 +1,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadChartOfAccounts, loadYojitsuFyPlan } from "../lib/data.js";
-import { postDepreciationJournalEntries } from "../lib/finance/depreciation.js";
 import { buildMonthlyReconcileReport } from "../lib/finance/ledger/monthly-reconcile.js";
 import { buildTrialBalance } from "../lib/finance/ledger/trial-balance.js";
-import { postPayrollJournalEntry, postMonthlyPlJournalEntries } from "../lib/finance/journal-sources.js";
-import { appendJournalEntry, loadJournalEntries } from "../lib/finance/expense-claim-journal.js";
+import { appendJournalEntry } from "../lib/finance/expense-claim-journal.js";
 import { getDocsReportsDir } from "../lib/utils.js";
-import { lockMonth } from "../lib/finance/period-lock.js";
 import { resolveJournalSourceAccounts } from "../lib/finance/journal-source-accounts.js";
-import { resolveCloseAdjustmentAmountFromCoa } from "../lib/finance/close-adjustments.js";
-import { computePayrollMonth } from "../lib/finance/payroll-jp.js";
-import { loadPayroll } from "../lib/data.js";
+import { closeAccountingMonth } from "../lib/finance/monthly-close.js";
 import {
   buildOpeningBalancesFromTrialBalance,
   saveOpeningBalances,
@@ -24,29 +19,6 @@ import {
   nextFiscalYear,
   resolveCompanyFiscalYearEndMonth,
 } from "../lib/finance/fiscal-year.js";
-
-function hasDuplicateCloseLines(input: {
-  debit: string;
-  credit: string;
-  amount: number;
-}): boolean {
-  const entries = loadJournalEntries().entries;
-  return entries.some((entry) => {
-    const dr = entry.lines.some(
-      (line) =>
-        line.account_code === input.debit &&
-        line.debit_yen === input.amount &&
-        line.credit_yen === 0,
-    );
-    const cr = entry.lines.some(
-      (line) =>
-        line.account_code === input.credit &&
-        line.credit_yen === input.amount &&
-        line.debit_yen === 0,
-    );
-    return dr && cr;
-  });
-}
 
 export function runFinancesClose(opts: {
   month?: string;
@@ -72,112 +44,35 @@ export function runFinancesClose(opts: {
     process.exit(1);
   }
 
-  const coa = loadChartOfAccounts();
-  const posted: string[] = [];
-
-  if (opts.postDepreciation ?? true) {
-    posted.push(
-      ...postDepreciationJournalEntries({
-        period: month,
-        authorizedBy: auth.record.operator_id,
-      }),
-    );
-  }
-
-  if (opts.postPayroll ?? true) {
-    const payroll = loadPayroll();
-    const gross = payroll.employee_payroll?.monthly_gross_jpy ?? 0;
-    const computed = computePayrollMonth({ month, grossYen: gross });
-    const payrollEntry = postPayrollJournalEntry({
-      period: month,
-      authorizedBy: auth.record.operator_id,
-      grossYen: computed.gross_yen,
-      withholdingYen: computed.withholding_yen,
-      socialEmployerYen: computed.social_insurance.employer_total_yen,
-    });
-    if (payrollEntry) posted.push(payrollEntry);
-  }
-
-  posted.push(
-    ...postMonthlyPlJournalEntries({
-      period: month,
-      authorizedBy: auth.record.operator_id,
-    }),
+  const closed = closeAccountingMonth({
+    month,
+    operatorId: auth.record.operator_id,
+    postDepreciation: opts.postDepreciation,
+    postPayroll: opts.postPayroll,
+  });
+  const trialItem = closed.evaluation.items.find((item) => item.id === "trial-balance");
+  const reconcileItem = closed.evaluation.items.find(
+    (item) => item.id === "monthly-reconcile",
   );
-
-  for (const adjustment of coa.monthly_close_adjustments ?? []) {
-    const amount = resolveCloseAdjustmentAmountFromCoa(
-      adjustment.amount_source,
-      month,
-    );
-    if (amount <= 0) continue;
-    if (
-      hasDuplicateCloseLines({
-        debit: adjustment.debit,
-        credit: adjustment.credit,
-        amount,
-      })
-    ) {
-      continue;
-    }
-    const entryId = `JE-CLOSE-${month}-${adjustment.trigger}`;
-    appendJournalEntry({
-      entry_id: entryId,
-      occurred_at: `${month}-28T12:00:00.000Z`,
-      description: `Monthly close ${adjustment.trigger}`,
-      source: {
-        kind: "closing",
-        period: month,
-        adjustment_id: adjustment.trigger,
-      },
-      evidence_refs: [`close:${month}:${adjustment.trigger}`],
-      lines: [
-        {
-          account_code: adjustment.debit,
-          debit_yen: amount,
-          credit_yen: 0,
-          tax_category: "out_of_scope",
-        },
-        {
-          account_code: adjustment.credit,
-          debit_yen: 0,
-          credit_yen: amount,
-          tax_category: "out_of_scope",
-        },
-      ],
-    });
-    posted.push(entryId);
-  }
-
-  const trial = buildTrialBalance({ asOf: `${month}-28` });
-  const reconcile = buildMonthlyReconcileReport({ month });
   const lines = [
     `# 月次決算 ${month}`,
     "",
-    `posted_entries: ${posted.length}`,
-    `trial_balanced: ${trial.balanced}`,
-    `monthly_reconcile_balanced: ${reconcile.balanced}`,
+    `as_of: ${closed.evaluation.as_of}`,
+    `posted_entries: ${closed.posted_entry_ids.length}`,
+    `trial_balanced: ${trialItem?.pass === true}`,
+    `monthly_reconcile_balanced: ${reconcileItem?.pass === true}`,
+    `can_lock: ${closed.evaluation.can_lock}`,
+    `locked: ${closed.locked}`,
     "",
     "## Posted",
-    ...posted.map((id) => `- ${id}`),
+    ...closed.posted_entry_ids.map((id) => `- ${id}`),
     "",
-    "## Trial balance issues",
-    ...trial.issues.map((issue) => `- ${issue}`),
+    "## Gate errors",
+    ...closed.evaluation.errors.map((issue) => `- ${issue}`),
     "",
-    "## Monthly reconcile diffs",
-    ...reconcile.diffs.map(
-      (diff) =>
-        `- ${diff.category} (${diff.account_code}): delta ${diff.delta_yen}`,
-    ),
+    "## Warnings",
+    ...closed.evaluation.warnings.map((issue) => `- ${issue}`),
   ];
-  // Lock on trial balance only — monthly YAML reconcile is a variance memo (warning).
-  if (trial.balanced) {
-    lockMonth({
-      month,
-      lockedBy: auth.record.operator_id,
-      reason: "finances close",
-    });
-  }
   const md = lines.join("\n");
   if (opts.output) {
     const dir = join(getDocsReportsDir(), "agent-summaries", "accounting");

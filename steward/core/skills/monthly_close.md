@@ -5,59 +5,56 @@
 
 ## 目的
 
-指定月の収支を締め、月次 YAML と要約 MD を更新する。
+指定月の総勘定元帳を締め、統一ゲートを満たしたときだけ期間ロックする。実績の正本は `journal-entries.yaml`（ADR 0053）。月次 YAML は計画・突合メモであり、不一致は警告であってロック条件ではない。
 
 ## 入力
 
-- `data/finance/monthly/{YYYY-MM}.yaml`
-- `data/finance/fixed-assets.yaml`（減価償却整理仕訳）
-- `data/finance/chart-of-accounts.yaml`（科目マッピング）
-- 領収書・経費データ（`docs/finance/accounting/`）
-- 物件 Agent からの収益前提（賃貸 · 宿泊モジュール）
+- `data/finance/journal-entries.yaml`
+- `data/finance/opening-balances.yaml`
+- `data/finance/chart-of-accounts.yaml`
+- `data/finance/monthly/{YYYY-MM}.yaml`（月次損益の起票元。突合は警告）
+- `data/finance/fixed-assets.yaml`（減価償却がある月）
+- `data/finance/payroll.yaml`（給与発生がある月）
+- `data/finance/bank-statements.yaml`（ファイルがある月だけ、当月未消込ゼロ）
 
 ## 出力
 
-- 更新済 `finances/monthly/{YYYY-MM}.yaml`
-- `docs/reports/agent-summaries/finance/{YYYY-MM}-close.md`
-- （任意）`docs/reports/monthly/` 連携
+- 追記された仕訳（減価償却・給与発生・月次損益・決算整理）
+- `data/finance/period-locks.yaml`（ゲート通過時のみ lock）
+- 任意で `docs/reports/agent-summaries/accounting/{YYYY-MM}-close.md`
+
+## ロック条件
+
+次がすべて error なし:
+
+- 必要な自動仕訳が計上済み
+- 月末日の試算表と貸借対照表が一致
+- 補助元帳（1150 / 2110）が統制勘定と一致し、未割当残高がない
+- 銀行明細ファイルがある場合、対象月の未消込が 0（ファイルが無ければスキップ）
+- 消費税集計が例外なく返る（納付仕訳・申告は月次ロック条件にしない）
+- `orgos validate` のうち `data/finance/` の error が 0（warning と帳簿外の error はロック条件にしない）
+
+## 訂正
+
+ロック済み月には起票しない。理由付き unlock → 同月の逆仕訳 → 再 close。
 
 ## 使用 Agent
 
-Finance Agent
-
-## 保存先
-
-| 種別 | パス |
-|------|------|
-| 正データ | `data/finance/monthly/` |
-| 要約 | `docs/reports/agent-summaries/finance/` |
+Accounting Agent（Finance へ予実解釈を委譲）
 
 ## CLI
 
 ```bash
 npm run orgos -- finances close --month YYYY-MM -o YYYY-MM-close.md
-npm run orgos -- ledger trial-balance --as-of YYYY-MM-28
+npm run orgos -- ledger trial-balance --as-of YYYY-MM-DD
 npm run orgos -- ledger monthly-reconcile --month YYYY-MM
-npm run orgos -- deps check --file data/finance/monthly/YYYY-MM.yaml
 npm run validate
-npm run orgos -- jp bank cashflow generate --granularity weekly --write
 ```
 
-## JP 資金繰り（月次締め後）
-
-Accounting Agent と連携し `jp_bank_corporate` で詳細表を生成:
-
-```bash
-npm run orgos -- jp bank calendar validate
-npm run orgos -- jp bank cashflow generate --granularity weekly --write
-npm run orgos -- validate
-```
-
-支払日程の正本は `data/finance/payment-calendar.yaml`。出力要約には `required_funding_amount` / `required_funding_by_date` を含める。Chat では `operator_validate_status`（`chat:read`）で validate 状態を確認できる。
-
-Path: `steward/jurisdiction-packs/JP/modules/jp_bank_corporate/skills/jp_cashflow_schedule.md`
+基準日は対象月の末日。`YYYY-MM-28` では月末仕訳が試算表から落ちる。
 
 ## 禁止
 
 - 契約条項の変更
 - 経営判断（投資優先度等）
+- ロック中の直接訂正（逆仕訳以外の書換）
