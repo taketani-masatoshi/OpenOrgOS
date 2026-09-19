@@ -1,4 +1,4 @@
-import { describe, expect, it, afterEach } from "vitest";
+import { describe, expect, it, afterEach, vi } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,7 +8,25 @@ import {
   listLedgerMailOutbox,
   hasRecentSuccessfulSmtpMail,
   runLedgerMailDrill,
+  deliverSmtpMail,
 } from "../src/lib/product/ledger-mail.js";
+
+vi.mock("node:net", async () => {
+  const { EventEmitter } = await import("node:events");
+  return {
+    connect: () => {
+      const socket = new EventEmitter() as EventEmitter & {
+        destroy: (error?: Error) => void;
+      };
+      socket.destroy = (error?: Error) => {
+        if (error) socket.emit("error", error);
+        socket.emit("close");
+      };
+      process.nextTick(() => socket.emit("connect"));
+      return socket;
+    },
+  };
+});
 
 describe("ledger mail outbox", () => {
   const env = { ...process.env };
@@ -46,5 +64,12 @@ describe("ledger mail outbox", () => {
     const result = await runLedgerMailDrill("ops@example.com");
     expect(result.transport).toBe("smtp");
     expect(hasRecentSuccessfulSmtpMail()).toBe(true);
+  });
+
+  it("times out when an SMTP server stops responding", async () => {
+    delete process.env.ORGOS_MAIL_SMTP_MOCK;
+    process.env.ORGOS_MAIL_SMTP_URL = "smtp://127.0.0.1:2525";
+    await expect(deliverSmtpMail({ to: "ceo@example.com", subject: "test", body: "test" }, 100))
+      .rejects.toThrow("SMTP delivery timed out");
   });
 });

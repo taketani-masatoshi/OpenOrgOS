@@ -10,10 +10,12 @@ export default defineConfig({
     alias: {
       "@ops-shared": path.join(appsRoot, "shared"),
       "@wire-console": path.join(appsRoot, "wire-console/src"),
+      "@orgos/workflow-canvas": path.join(__dirname, "src/lib/workflow-canvas/index.ts"),
     },
   },
   test: {
     include: ["tests/**/*.test.ts"],
+    globalSetup: ["tests/global-setup-mal-payroll.ts"],
     setupFiles: ["tests/setup-tenant.ts", "tests/setup-restore-protocol.ts"],
     env: {
       // ADR 0037 — default off in unit tests; settlement-stepup.test.ts enables it.

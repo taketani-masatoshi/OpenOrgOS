@@ -821,7 +821,10 @@ export function validateAll(): { ok: boolean; errors: ValidationError[] } {
   }
 
   tryLoad("data/finance/fixed-costs.yaml", () => loadFixedCosts());
-  tryLoad("data/finance/payroll.yaml", () => loadPayroll());
+  // payroll.yaml is local-only on tip (gitignore); skip when absent so clean CI checkouts pass.
+  if (existsSync(join(getDataDir(), "finance", "payroll.yaml"))) {
+    tryLoad("data/finance/payroll.yaml", () => loadPayroll());
+  }
   tryLoad("data/finance/cash-balance.yaml", () => loadCashBalance());
   tryLoad("data/finance/loans.yaml", () => loadLoans());
   tryLoad("data/finance/fixed-assets.yaml", () => loadFixedAssets());

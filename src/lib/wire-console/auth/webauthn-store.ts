@@ -6,15 +6,18 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
-import { ensureOrgOsStateDir, WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH } from "../paths.js";
+import { ensureOrgOsStateDir, getWireConsoleWebauthnCredentialsPath } from "../paths.js";
 import type { WebAuthnCredentialPurpose } from "../../../../schemas/org/settlement-stepup.js";
 import {
   readEnvManagedSignCount,
   writeEnvManagedSignCount,
 } from "./webauthn-env-sign-count.js";
 import { rpId } from "./webauthn-shared.js";
+import { getTenantId } from "../../tenant.js";
+import { isLedgerProductTenant } from "../../product/ledger-product-tenant.js";
 
 export interface StoredWebAuthnCredential {
+  tenant_id?: string;
   credential_id: string;
   public_key_spki_base64: string;
   operator_id: string;
@@ -42,8 +45,8 @@ let memoryOverride: StoredWebAuthnCredential[] | undefined;
 
 function hardenStoreMode(): void {
   try {
-    if (existsSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH)) {
-      chmodSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, 0o600);
+    if (existsSync(getWireConsoleWebauthnCredentialsPath())) {
+      chmodSync(getWireConsoleWebauthnCredentialsPath(), 0o600);
     }
   } catch {
     /* best-effort on platforms that ignore mode */
@@ -51,11 +54,11 @@ function hardenStoreMode(): void {
 }
 
 function readStoreFile(): StoredWebAuthnCredential[] {
-  if (!existsSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH)) return [];
+  if (!existsSync(getWireConsoleWebauthnCredentialsPath())) return [];
   hardenStoreMode();
   let raw: string;
   try {
-    raw = readFileSync(WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH, "utf-8");
+    raw = readFileSync(getWireConsoleWebauthnCredentialsPath(), "utf-8");
   } catch (error) {
     throw new WebAuthnCredentialStoreCorruptError(
       error instanceof Error ? error.message : "credential store unreadable",
@@ -82,7 +85,7 @@ function readStoreFile(): StoredWebAuthnCredential[] {
 function writeStoreFile(credentials: StoredWebAuthnCredential[]): void {
   ensureOrgOsStateDir();
   const doc: CredentialStoreDocument = { credentials };
-  const target = WIRE_CONSOLE_WEBAUTHN_CREDENTIALS_PATH;
+  const target = getWireConsoleWebauthnCredentialsPath();
   const tmp = join(dirname(target), `.webauthn-credentials.${process.pid}.tmp`);
   writeFileSync(tmp, JSON.stringify(doc, null, 2), { encoding: "utf-8", mode: 0o600 });
   renameSync(tmp, target);
@@ -106,6 +109,15 @@ function applyEnvSignCount(c: StoredWebAuthnCredential): StoredWebAuthnCredentia
 
 function normalizeCredential(c: StoredWebAuthnCredential): StoredWebAuthnCredential {
   return applyEnvSignCount(normalizeCredentialBase(c));
+}
+
+function currentProductTenant(): string | null {
+  try {
+    const tenantId = getTenantId();
+    return isLedgerProductTenant(tenantId) ? tenantId : null;
+  } catch {
+    return null;
+  }
 }
 
 function loadEnvCredentials(): StoredWebAuthnCredential[] {
@@ -148,12 +160,13 @@ export function credentialPurpose(c: StoredWebAuthnCredential): WebAuthnCredenti
 }
 
 export function listWebAuthnCredentials(): StoredWebAuthnCredential[] {
+  const tenantId = currentProductTenant();
   const file = memoryOverride ?? readStoreFile();
   const env = loadEnvCredentials();
   const byId = new Map<string, StoredWebAuthnCredential>();
   for (const cred of file) byId.set(cred.credential_id, normalizeCredential(cred));
   for (const cred of env) byId.set(cred.credential_id, normalizeCredential(cred));
-  return [...byId.values()];
+  return [...byId.values()].filter((credential) => !tenantId || credential.tenant_id === tenantId);
 }
 
 export function listWebAuthnCredentialsByPurpose(
@@ -177,6 +190,7 @@ export function saveWebAuthnCredential(credential: StoredWebAuthnCredential): vo
   const next = file.filter((c) => c.credential_id !== credential.credential_id);
   next.push({
     ...normalizeCredential(credential),
+    tenant_id: currentProductTenant() ?? credential.tenant_id,
     created_at: credential.created_at ?? new Date().toISOString(),
   });
   if (memoryOverride !== undefined) {
@@ -187,6 +201,7 @@ export function saveWebAuthnCredential(credential: StoredWebAuthnCredential): vo
 }
 
 export function updateWebAuthnSignCount(credentialId: string, signCount: number): void {
+  if (!findWebAuthnCredential(credentialId)) return;
   if (isEnvManagedWebAuthnCredential(credentialId)) {
     writeEnvManagedSignCount(credentialId, signCount);
     return;
@@ -221,6 +236,7 @@ export function deleteWebAuthnCredential(credentialId: string): {
   ok: boolean;
   error?: string;
 } {
+  if (!findWebAuthnCredential(credentialId)) return { ok: false, error: "passkey not found" };
   if (isEnvManagedWebAuthnCredential(credentialId)) {
     return {
       ok: false,

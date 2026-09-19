@@ -9,12 +9,15 @@ import {
 import { join } from "node:path";
 import { isProdSecurityMode } from "../../console-auth/operator-rbac.js";
 import { findOperatorById } from "../../org/operators.js";
+import { getTenantId } from "../../tenant.js";
+import { isLedgerProductTenant } from "../../product/ledger-product-tenant.js";
 import { ensureOrgOsStateDir, getOrgOsStateDir } from "../paths.js";
 
 const STORE_FILENAME = "passkey-bootstrap.json";
 const TOKEN_PREFIX = "pkb_";
 
 interface BootstrapTokenRecord {
+  tenant_id?: string;
   operator_id: string;
   token_hash: string;
   expires_at: string;
@@ -24,6 +27,12 @@ interface BootstrapTokenRecord {
 
 interface BootstrapStoreDocument {
   tokens: BootstrapTokenRecord[];
+}
+
+function tokenMatchesCurrentTenant(record: BootstrapTokenRecord): boolean {
+  const tenantId = getTenantId();
+  return record.tenant_id === tenantId ||
+    (!record.tenant_id && !isLedgerProductTenant(tenantId));
 }
 
 export class PasskeyBootstrapStoreError extends Error {
@@ -104,9 +113,10 @@ export function mintPasskeyBootstrapToken(opts: {
   const expiresAt = new Date(Date.now() + ttlMs).toISOString();
   const doc = readStore();
   doc.tokens = doc.tokens.filter(
-    (t) => t.operator_id !== operatorId || Boolean(t.used_at),
+    (t) => t.tenant_id !== getTenantId() || t.operator_id !== operatorId || Boolean(t.used_at),
   );
   doc.tokens.push({
+    tenant_id: getTenantId(),
     operator_id: operatorId,
     token_hash: hashToken(token),
     expires_at: expiresAt,
@@ -131,6 +141,7 @@ export function verifyPasskeyBootstrapToken(
   const record = doc.tokens.find(
     (t) =>
       t.operator_id === operatorId &&
+      tokenMatchesCurrentTenant(t) &&
       !t.used_at &&
       t.token_hash === hash &&
       new Date(t.expires_at).getTime() > Date.now(),
@@ -139,6 +150,19 @@ export function verifyPasskeyBootstrapToken(
     return { ok: false, error: "bootstrap token invalid, expired, or already used" };
   }
   return { ok: true, operator_id: operatorId };
+}
+
+/** Resolve the operator only after validating the one-time bearer token. */
+export function resolvePasskeyBootstrapOperator(token: string): string | null {
+  if (!token?.startsWith(TOKEN_PREFIX)) return null;
+  const hash = hashToken(token.trim());
+  const record = readStore().tokens.find(
+    (entry) => tokenMatchesCurrentTenant(entry) && !entry.used_at && entry.token_hash === hash &&
+      new Date(entry.expires_at).getTime() > Date.now(),
+  );
+  if (!record) return null;
+  const operator = findOperatorById(record.operator_id);
+  return operator?.status === "active" ? operator.operator_id : null;
 }
 
 export function reservePasskeyBootstrapChallenge(opts: {
@@ -152,7 +176,7 @@ export function reservePasskeyBootstrapChallenge(opts: {
   const hash = hashToken(opts.token.trim());
   const challengeHash = hashToken(opts.challenge);
   const idx = doc.tokens.findIndex(
-    (t) => t.operator_id === opts.operatorId && t.token_hash === hash && !t.used_at,
+    (t) => tokenMatchesCurrentTenant(t) && t.operator_id === opts.operatorId && t.token_hash === hash && !t.used_at,
   );
   if (idx < 0) {
     return { ok: false, error: "bootstrap token not found" };
@@ -176,6 +200,7 @@ export function consumePasskeyBootstrapToken(opts: {
   const idx = doc.tokens.findIndex(
     (t) =>
       t.operator_id === opts.operatorId &&
+      tokenMatchesCurrentTenant(t) &&
       t.token_hash === hash &&
       !t.used_at &&
       new Date(t.expires_at).getTime() > Date.now(),
@@ -210,6 +235,7 @@ export function hasUnusedPasskeyBootstrapToken(operatorId?: string): boolean {
   const now = Date.now();
   return doc.tokens.some(
     (t) =>
+      tokenMatchesCurrentTenant(t) &&
       (!operatorId || t.operator_id === operatorId) &&
       !t.used_at &&
       new Date(t.expires_at).getTime() > now,

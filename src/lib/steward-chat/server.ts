@@ -14,7 +14,16 @@ import {
   isStewardChatAuthEnabled,
   requireChatAuth,
 } from "./auth.js";
-import { sessionTokenFromRequest } from "../wire-console/auth/session.js";
+import { getSessionUser, sessionTokenFromRequest } from "../wire-console/auth/session.js";
+import { runWithTenantIdAsync } from "../tenant.js";
+import {
+  isRequestTenantRequired,
+  resolveTenantFromRequest,
+} from "../product/ledger-control-plane.js";
+import {
+  matchSessionTenant,
+  resolveLoginTenantId,
+} from "../console-auth/session-tenant.js";
 
 export const STEWARD_CHAT_SPA_DIST = join(process.cwd(), "apps", "steward-chat", "dist");
 
@@ -93,8 +102,34 @@ async function handleRequest(
     return;
   }
 
-  if (await handleChatAuthApi(req, res, pathname, method, readBody)) {
-    return;
+  {
+    const loginTenant = resolveLoginTenantId(req);
+    const sessionUser = getSessionUser(sessionTokenFromRequest(req));
+    let authTenant = loginTenant;
+    if (sessionUser && pathname.startsWith("/chat/v1/auth/")) {
+      const match = matchSessionTenant(sessionUser, loginTenant);
+      if (!match.ok) {
+        json(res, match.status, { ok: false, error: match.error });
+        return;
+      }
+      authTenant = match.tenantId;
+    }
+    if (
+      isRequestTenantRequired() &&
+      !loginTenant &&
+      pathname.startsWith("/chat/v1/auth/")
+    ) {
+      json(res, 400, {
+        ok: false,
+        error: "X-OrgOS-Tenant or tenant host required (ORGOS_REQUIRE_REQUEST_TENANT=1)",
+      });
+      return;
+    }
+    const authFn = () => handleChatAuthApi(req, res, pathname, method, readBody);
+    const authHandled = authTenant
+      ? await runWithTenantIdAsync(authTenant, authFn)
+      : await authFn();
+    if (authHandled) return;
   }
 
   // Settlement public routes (iPhone QR) — no session cookie
@@ -115,10 +150,17 @@ async function handleRequest(
   if (pathname.startsWith("/chat/v1/") && !isPublicChatPath(pathname, method)) {
     const user = requireChatAuth(req, res);
     if (!user) return;
-    const handled = await handleChatApi(req, res, pathname, method, {
-      user,
-      sessionToken: sessionTokenFromRequest(req),
-    });
+    const match = matchSessionTenant(user, resolveTenantFromRequest(req));
+    if (!match.ok) {
+      json(res, match.status, { ok: false, error: match.error });
+      return;
+    }
+    const handled = await runWithTenantIdAsync(match.tenantId, () =>
+      handleChatApi(req, res, pathname, method, {
+        user,
+        sessionToken: sessionTokenFromRequest(req),
+      }),
+    );
     if (handled) return;
     json(res, 404, { error: "not found" });
     return;

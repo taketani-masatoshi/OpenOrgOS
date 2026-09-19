@@ -1,6 +1,9 @@
 # OrgOS Ledger — 1 customer · 1 tenant · 1 container
 # Build: docker build -f deploy/operator/Dockerfile -t orgos-ledger:local .
-# Run:   ORGOS_TENANT=acme-corp LEDGER_DATA=./data/acme-corp docker compose up -d
+# Run:   ORGOS_TENANT=acme-corp LEDGER_DATA=/path/to/tenants/acme-corp docker compose --env-file .env.ledger up -d
+#
+# LEDGER_DATA = tenant directory (contains tenant.yaml). Mounted at /workspace/tenants/$ORGOS_TENANT.
+# Named volume holds workspace root (orgos.yaml, product-fleet, sessions).
 
 services:
   ledger:
@@ -16,10 +19,14 @@ services:
       ORGOS_WORKSPACE: /workspace
       STEWARD_CHAT_AUTH: "1"
       WIRE_CONSOLE_AUTH: prod
-      ORGOS_COOKIE_SECURE: ${ORGOS_COOKIE_SECURE:-0}
+      ORGOS_COOKIE_SECURE: ${ORGOS_COOKIE_SECURE:-1}
       ORGOS_CSRF: "1"
-      WIRE_CONSOLE_WEBAUTHN_RP_ID: ${WIRE_CONSOLE_WEBAUTHN_RP_ID:-localhost}
-      WIRE_CONSOLE_WEBAUTHN_ORIGIN: ${WIRE_CONSOLE_WEBAUTHN_ORIGIN:-http://localhost:9470}
+      ORGOS_REQUIRE_REQUEST_TENANT: ${ORGOS_REQUIRE_REQUEST_TENANT:-1}
+      ORGOS_PUBLIC_BASE_URL: ${ORGOS_PUBLIC_BASE_URL:?set ORGOS_PUBLIC_BASE_URL}
+      STEWARD_CHAT_PUBLIC_URL: ${STEWARD_CHAT_PUBLIC_URL:-${ORGOS_PUBLIC_BASE_URL}}
+      ORGOS_LEDGER_HOST_SUFFIX: ${ORGOS_LEDGER_HOST_SUFFIX:?set ORGOS_LEDGER_HOST_SUFFIX}
+      WIRE_CONSOLE_WEBAUTHN_RP_ID: ${WIRE_CONSOLE_WEBAUTHN_RP_ID:?set WIRE_CONSOLE_WEBAUTHN_RP_ID}
+      WIRE_CONSOLE_WEBAUTHN_ORIGIN: ${WIRE_CONSOLE_WEBAUTHN_ORIGIN:?set WIRE_CONSOLE_WEBAUTHN_ORIGIN}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       STRIPE_PRICE_STARTER: ${STRIPE_PRICE_STARTER:-}
@@ -31,7 +38,21 @@ services:
       ORGOS_RATE_LIMIT_TENANT_BUSINESS_MAX: ${ORGOS_RATE_LIMIT_TENANT_BUSINESS_MAX:-60}
       ORGOS_RATE_LIMIT_TENANT_ACCOUNTANT_MAX: ${ORGOS_RATE_LIMIT_TENANT_ACCOUNTANT_MAX:-120}
     volumes:
-      - ${LEDGER_DATA:?set LEDGER_DATA}:/workspace
+      - ledger_workspace:/workspace
+      - ${LEDGER_DATA:?set LEDGER_DATA}:/workspace/tenants/${ORGOS_TENANT}
+    command:
+      [
+        "orgos",
+        "operator",
+        "console",
+        "start",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "9470",
+        "--tenant",
+        "${ORGOS_TENANT}",
+      ]
     healthcheck:
       test:
         [
@@ -44,3 +65,6 @@ services:
       timeout: 5s
       retries: 8
       start_period: 90s
+
+volumes:
+  ledger_workspace:

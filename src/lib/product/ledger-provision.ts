@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { runTenantInit } from "../tenant-init.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 import { getInstallRoot, getTenantsDir } from "../orgos-paths.js";
-import { setTenantId } from "../tenant.js";
-import { upsertLedgerSubscription } from "./ledger-subscription.js";
+import { runWithTenantId, setTenantId } from "../tenant.js";
+import { loadLedgerSubscription, upsertLedgerSubscription } from "./ledger-subscription.js";
 import type { LedgerPlanId } from "../../../schemas/product/ledger-product.js";
 import { getClock } from "../runtime-context.js";
 import {
@@ -12,7 +12,13 @@ import {
   saveOperatorRegistry,
 } from "../org/operators.js";
 import { operatorRegistrySchema } from "../../../schemas/org/operator.js";
-import { upsertControlPlaneTenant } from "./ledger-control-plane.js";
+import { findControlPlaneTenant, upsertControlPlaneTenant } from "./ledger-control-plane.js";
+import { isLedgerProductTenant } from "./ledger-product-tenant.js";
+import {
+  assertLedgerTenantIdUnoccupied,
+  listLedgerSignups,
+  withLedgerTenantAllocationLock,
+} from "./ledger-fleet.js";
 
 /** Product-only finance files not covered by tenant-init skeleton. */
 const FINANCE_ENSURE_FILES = ["period-locks.yaml"] as const;
@@ -142,19 +148,65 @@ export function provisionLedgerTenant(input: {
   companyName: string;
   adminEmail: string;
   plan: LedgerPlanId;
+  signupId?: string;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   accountantParentId?: string;
 }): { tenant_id: string; path: string; ceo_operator_id: string } {
   const tenantId = input.tenantId.trim().toLowerCase();
   const dest = join(getTenantsDir(), tenantId);
-  if (!existsSync(dest)) {
+  const existingCeoId = withLedgerTenantAllocationLock(() => {
+    const reservation = listLedgerSignups().find((row) => row.tenant_id === tenantId);
+    if (reservation) {
+      if (
+        reservation.signup_id !== input.signupId ||
+        reservation.company_name !== input.companyName.trim() ||
+        reservation.admin_email !== input.adminEmail.trim().toLowerCase() ||
+        reservation.plan !== input.plan ||
+        !["paid", "provisioned"].includes(reservation.status)
+      ) {
+        throw new Error(`Tenant "${tenantId}" is reserved for another signup`);
+      }
+    } else if (input.signupId) {
+      throw new Error(`Signup reservation not found for tenant "${tenantId}"`);
+    }
+
+    if (existsSync(dest)) {
+      const control = findControlPlaneTenant(tenantId);
+      if (
+        !isLedgerProductTenant(tenantId) || !control ||
+        control.company_name !== input.companyName.trim() || control.plan !== input.plan
+      ) {
+        throw new Error(`Tenant "${tenantId}" already exists with different or incomplete product data`);
+      }
+      const ceoId = runWithTenantId(tenantId, () => {
+        const sub = loadLedgerSubscription();
+        if (
+          sub?.company_name !== input.companyName.trim() || sub.plan !== input.plan ||
+          sub.admin_email?.toLowerCase() !== input.adminEmail.trim().toLowerCase()
+        ) return null;
+        return loadOperatorRegistry()?.operators.find((op) =>
+          op.role === "ceo" && op.status === "active" &&
+          op.email?.toLowerCase() === input.adminEmail.trim().toLowerCase(),
+        )?.operator_id ?? null;
+      });
+      if (!ceoId) throw new Error(`Tenant "${tenantId}" already exists with different or incomplete product data`);
+      return ceoId;
+    }
+    if (reservation?.status === "provisioned") {
+      throw new Error(`Provisioned tenant "${tenantId}" is missing its directory`);
+    }
+    assertLedgerTenantIdUnoccupied(tenantId);
     runTenantInit({
       id: tenantId,
       name: input.companyName,
       jurisdiction: "JP",
       entityForm: "kk",
     });
+    return null;
+  });
+  if (existingCeoId) {
+    return { tenant_id: tenantId, path: dest, ceo_operator_id: existingCeoId };
   }
   ensureLedgerFinanceSkeleton(tenantId);
   writeLedgerProductMeta(tenantId);

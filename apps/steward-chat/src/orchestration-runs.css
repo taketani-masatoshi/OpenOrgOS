@@ -342,10 +342,6 @@
   display: grid;
   gap: var(--space-1);
 }
-  margin: 0;
-  padding-left: var(--space-5);
-  color: var(--muted);
-}
 
 .orchestration-runs .orchestration-actions {
   display: flex;

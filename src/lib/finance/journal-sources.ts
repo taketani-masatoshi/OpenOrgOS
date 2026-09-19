@@ -7,6 +7,7 @@ import {
   splitInclusiveConsumptionTax,
 } from "./consumption-tax.js";
 import type { TaxCategory } from "../../../schemas/finance/journal-entry.js";
+import { lastDayOfMonth } from "./fiscal-year.js";
 import {
   shouldSkipInvoiceJournal,
 } from "./ledger/invoice-mpl-dedupe.js";
@@ -203,7 +204,7 @@ export function postMonthlyPlJournalEntries(input: {
     const taxCategory = monthlyPlTaxCategory("revenue", bucket.category);
     appendJournalEntry({
       entry_id: entryId,
-      occurred_at: `${input.period}-28T12:00:00.000Z`,
+      occurred_at: `${lastDayOfMonth(input.period)}T12:00:00.000Z`,
       description: `Monthly P/L revenue ${bucket.category} ${input.period}`,
       source: {
         kind: "closing",
@@ -233,7 +234,7 @@ export function postMonthlyPlJournalEntries(input: {
     const taxCategory = monthlyPlTaxCategory("expense", bucket.category);
     appendJournalEntry({
       entry_id: entryId,
-      occurred_at: `${input.period}-28T12:00:00.000Z`,
+      occurred_at: `${lastDayOfMonth(input.period)}T12:00:00.000Z`,
       description: `Monthly P/L expense ${bucket.category} ${input.period}`,
       source: {
         kind: "closing",

@@ -320,6 +320,25 @@ skills:
       args:
         - { name: id, type: string, required: true }
         - { name: write, type: boolean, required: false }
+  - id: workflow_evaluate
+    file: workflow_evaluate.md
+    runtime: cli
+    cli_command: workflow-evaluate
+    handler: workflow_evaluate
+    description: ワークフロー構成案の決定論評価（正本は書かない）
+    agent_id: operations
+    chat:
+      enabled: true
+      kind: read
+      permission: chat:read
+      label: ワークフロー評価
+      keywords:
+        - workflow evaluate
+        - 構成案
+        - ワークフロー評価
+      args:
+        - { name: id, type: string, required: false }
+        - { name: body, type: string, required: false }
   - id: contract_register
     file: contract_register.md
     runtime: cli

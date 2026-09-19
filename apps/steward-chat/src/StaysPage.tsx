@@ -20,7 +20,7 @@ export function StaysPage() {
   return (
     <OpsPage
       title="宿泊"
-      lead="期限と滞在件数のみ。宿泊者の氏名・連絡先は出しません。"
+      lead="期限と滞在件数のみ。詳細な物件運営は /properties/。宿泊者の氏名・連絡先は出しません。"
       error={error}
       loading={!payload && !error}
     >
@@ -49,6 +49,9 @@ export function StaysPage() {
           <p className="section-cta">
             <a className="btn btn-ghost btn-sm" href="/?tax=1">
               税務モジュール
+            </a>{" "}
+            <a className="btn btn-ghost btn-sm" href="/properties/">
+              物件運営
             </a>
           </p>
         </>
