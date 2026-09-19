@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 603
-  static_test_cases: 2758
-  tiered_execution_total: 603
+  vitest_total: 604
+  static_test_cases: 2766
+  tiered_execution_total: 604
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -2627,6 +2627,10 @@ tests:
     kind: unit
     domain: P01_kernel
   stripe-webhook.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  talent-hiring-pipeline.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
