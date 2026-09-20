@@ -16,7 +16,7 @@ Human Resources Agent
 
 ```bash
 npm run orgos -- hr dismissal-readiness --ledger <file> --json
-npm run orgos -- hr dismissal-readiness --ledger <file> --prepare --json
+npm run orgos -- hr dismissal-readiness --ledger <file> --prepare --write --json
 ```
 
 ## 入力（会社単位）

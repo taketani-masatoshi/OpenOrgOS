@@ -301,6 +301,8 @@ export function createSettlementChallenge(opts: {
   approverId: string;
   coApproverId?: string;
   apiOrigin: string;
+  /** Talent hiring may require settlement regardless of amount tier. */
+  force?: boolean;
 }): {
   challenge: SettlementChallengeRecord;
   qr: SettlementQrFragment;
@@ -309,7 +311,13 @@ export function createSettlementChallenge(opts: {
   hints: readonly ["hybrid"];
   ceremony_kind: "settlement";
 } {
-  if (!settlementAssuranceRequired(opts.approval)) {
+  if (opts.force) {
+    if (!isSettlementStepUpEnabled()) {
+      throw new Error(
+        `Approval ${opts.approval.approval_id} cannot mint settlement while step-up is disabled`,
+      );
+    }
+  } else if (!settlementAssuranceRequired(opts.approval)) {
     throw new Error(
       `Approval ${opts.approval.approval_id} does not require settlement step-up`
     );

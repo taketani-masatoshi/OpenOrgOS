@@ -1,3 +1,5 @@
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join } from "node:path";
 import {
   dismissalReadinessLedgerSchema,
   type DismissalReadinessAction,
@@ -58,21 +60,64 @@ const OPTIONAL_ITEMS: Array<{
   },
 ];
 
+export interface DismissalReadinessOptions {
+  docsRoot?: string;
+}
+
 function forbiddenKeys(value: unknown): string[] {
   if (!value || typeof value !== "object" || Array.isArray(value)) return [];
   return FORBIDDEN_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(value, key));
 }
 
-function isPresent(ledger: DismissalReadinessLedger, id: keyof DismissalReadinessLedger): boolean {
-  const value = ledger[id];
-  if (id === "dismissal_ground_refs") {
-    return Array.isArray(value) && value.length > 0;
-  }
-  if (id === "notice_procedure") return value === "thirty_day_notice" || value === "notice_allowance";
-  return typeof value === "string" && value.length > 0;
+function resolveRefPath(ref: string, docsRoot?: string): string {
+  if (isAbsolute(ref)) return ref;
+  if (!docsRoot) return ref;
+  if (ref.startsWith("docs/")) return join(docsRoot, ref.slice("docs/".length));
+  return join(docsRoot, ref);
 }
 
-export function evaluateDismissalReadiness(input: unknown): DismissalReadinessResult {
+function fileRefPresent(ref: string, docsRoot?: string): boolean {
+  if (!docsRoot) return ref.length > 0;
+  return existsSync(resolveRefPath(ref, docsRoot));
+}
+
+function isPresent(
+  ledger: DismissalReadinessLedger,
+  id: keyof DismissalReadinessLedger,
+  docsRoot?: string,
+): boolean {
+  const value = ledger[id];
+  if (id === "dismissal_ground_refs") {
+    if (!Array.isArray(value) || value.length === 0) return false;
+    const groundsFile = REQUIRED_ITEMS.find((item) => item.id === "dismissal_ground_refs")!.defaultRef;
+    return docsRoot ? fileRefPresent(groundsFile, docsRoot) : true;
+  }
+  if (id === "notice_procedure") {
+    if (value !== "thirty_day_notice" && value !== "notice_allowance") return false;
+    const noticeFile = REQUIRED_ITEMS.find((item) => item.id === "notice_procedure")!.defaultRef;
+    return docsRoot ? fileRefPresent(noticeFile, docsRoot) : true;
+  }
+  if (typeof value !== "string" || value.length === 0) return false;
+  return fileRefPresent(value, docsRoot);
+}
+
+function shellBody(title: string, purpose: string): string {
+  return [
+    `# ${title}`,
+    "",
+    "## 目的",
+    purpose,
+    "",
+    "## 本文",
+    "（未記入。手続き本文や手当計算はここには書かない。）",
+    "",
+  ].join("\n");
+}
+
+export function evaluateDismissalReadiness(
+  input: unknown,
+  options: DismissalReadinessOptions = {},
+): DismissalReadinessResult {
   const forbidden = forbiddenKeys(input);
   if (forbidden.length > 0) {
     return {
@@ -90,12 +135,12 @@ export function evaluateDismissalReadiness(input: unknown): DismissalReadinessRe
   const items: DismissalReadinessItem[] = [
     ...REQUIRED_ITEMS.map((item) => ({
       id: item.id,
-      present: isPresent(ledger, item.id),
+      present: isPresent(ledger, item.id, options.docsRoot),
       required: true,
     })),
     ...OPTIONAL_ITEMS.map((item) => ({
       id: item.id,
-      present: isPresent(ledger, item.id),
+      present: isPresent(ledger, item.id, options.docsRoot),
       required: false,
     })),
   ];
@@ -121,23 +166,22 @@ export function evaluateDismissalReadiness(input: unknown): DismissalReadinessRe
   };
 }
 
-export function prepareDismissalReadinessChecklist(input: unknown): DismissalReadinessChecklist {
-  const evaluation = evaluateDismissalReadiness(input);
+export function prepareDismissalReadinessChecklist(
+  input: unknown,
+  options: DismissalReadinessOptions = {},
+): DismissalReadinessChecklist {
+  const evaluation = evaluateDismissalReadiness(input, options);
   if (evaluation.status === "rejected") {
-    return {
-      actions: [],
-      notes: [evaluation.reason],
-    };
+    return { actions: [], notes: [evaluation.reason] };
   }
 
-  const ledger =
-    dismissalReadinessLedgerSchema.safeParse(input ?? {}).success
-      ? dismissalReadinessLedgerSchema.parse(input ?? {})
-      : {};
+  const ledger = dismissalReadinessLedgerSchema.safeParse(input ?? {}).success
+    ? dismissalReadinessLedgerSchema.parse(input ?? {})
+    : {};
 
   const catalog = [...REQUIRED_ITEMS, ...OPTIONAL_ITEMS];
   const actions: DismissalReadinessAction[] = catalog
-    .filter((item) => !isPresent(ledger, item.id))
+    .filter((item) => !isPresent(ledger, item.id, options.docsRoot))
     .map((item) => ({
       id: item.id,
       ref: item.defaultRef,
@@ -151,4 +195,53 @@ export function prepareDismissalReadinessChecklist(input: unknown): DismissalRea
       "対象者が決まる前に会社側の書類を揃えるためのチェックリストである。",
     ],
   };
+}
+
+export function writeDismissalReadinessShells(input: {
+  ledger?: unknown;
+  docsRoot: string;
+}): { ledger: DismissalReadinessLedger; written: string[] } {
+  const base = dismissalReadinessLedgerSchema.safeParse(input.ledger ?? {}).success
+    ? dismissalReadinessLedgerSchema.parse(input.ledger ?? {})
+    : {};
+
+  const written: string[] = [];
+  const next: DismissalReadinessLedger = { ...base };
+
+  for (const item of [...REQUIRED_ITEMS, ...OPTIONAL_ITEMS]) {
+    if (item.id === "notice_procedure") {
+      next.notice_procedure = next.notice_procedure ?? "thirty_day_notice";
+      const path = resolveRefPath(item.defaultRef, input.docsRoot);
+      if (!existsSync(path)) {
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, shellBody("予告手続き", item.purpose), "utf8");
+        written.push(item.defaultRef);
+      }
+      continue;
+    }
+    if (item.id === "dismissal_ground_refs") {
+      next.dismissal_ground_refs = next.dismissal_ground_refs?.length
+        ? next.dismissal_ground_refs
+        : ["WR-PLACEHOLDER"];
+      const path = resolveRefPath(item.defaultRef, input.docsRoot);
+      if (!existsSync(path)) {
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, shellBody("解雇事由参照", item.purpose), "utf8");
+        written.push(item.defaultRef);
+      }
+      continue;
+    }
+
+    const current = next[item.id];
+    const ref = typeof current === "string" && current.length > 0 ? current : item.defaultRef;
+    (next as Record<string, unknown>)[item.id] = ref;
+    const path = resolveRefPath(ref, input.docsRoot);
+    if (!existsSync(path)) {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, shellBody(item.id, item.purpose), "utf8");
+      written.push(ref);
+    }
+  }
+
+  return { ledger: next, written };
 }

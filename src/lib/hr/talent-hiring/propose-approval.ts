@@ -1,15 +1,22 @@
 import type { OrgApprovalRequest } from "../../../../schemas/org/approval.js";
 import type {
   ContractTerms,
+  EngagementKind,
   PassKeyApprovalPayload,
   RegularPrerequisites,
 } from "../../../../schemas/talent-hiring.js";
 import { proposeOrgApproval } from "../../org/approval/propose.js";
 import {
   createSettlementChallenge,
-  settlementAssuranceRequired,
+  isSettlementStepUpEnabled,
 } from "../../org/settlement-stepup.js";
 import { payloadHash, talentApprovalPayload } from "./passkey-payload.js";
+
+const SUBJECT_TYPE: Record<EngagementKind, string> = {
+  contractor: "talent_contractor",
+  fixed_term: "talent_fixed_term",
+  regular: "talent_regular",
+};
 
 export interface ProposeShortTermTalentInput {
   title: string;
@@ -46,14 +53,14 @@ export function proposeShortTermTalentApproval(
   const hash = payloadHash(payload);
   const approval = proposeOrgApproval({
     scope: "internal",
-    subjectType: "short_term_talent",
+    subjectType: SUBJECT_TYPE[input.terms.engagement],
     proposedBy: input.proposedBy,
     subjectRef: hash,
     message: input.title,
     amount: { value: input.terms.max_total, currency: input.terms.currency },
   });
 
-  if (!settlementAssuranceRequired(approval)) {
+  if (!isSettlementStepUpEnabled()) {
     return {
       approval,
       payload,
@@ -67,6 +74,7 @@ export function proposeShortTermTalentApproval(
     operatorId: input.operatorId,
     approverId: input.approverId,
     apiOrigin: input.apiOrigin,
+    force: true,
   });
 
   return {

@@ -19,14 +19,23 @@ import { recommendEngagement } from "../lib/hr/talent-hiring/recommend-engagemen
 import {
   evaluateDismissalReadiness,
   prepareDismissalReadinessChecklist,
+  writeDismissalReadinessShells,
 } from "../lib/hr/dismissal-readiness.js";
+import { loadRecruitingJobFromPath } from "../lib/hr/recruiting-job.js";
+import { runTalentFlow } from "../lib/hr/talent-flow.js";
+import { runTalentPack } from "../lib/hr/talent-pack.js";
 import { shortlistForPosting, type TalentShortlistResult } from "../lib/hr/talent-shortlist.js";
 import type {
   DismissalReadinessChecklist,
   DismissalReadinessResult,
   EngagementDiscussResult,
+  EngagementKind,
+  HiringPack,
   JobHearingResult,
+  JobPosting,
 } from "../../schemas/talent-hiring.js";
+import { engagementKindSchema, jobPostingSchema } from "../../schemas/talent-hiring.js";
+import { getDocsDir } from "../lib/utils.js";
 import { resolveTenantPath } from "../lib/tenant.js";
 
 export function runHrHeadcount(options?: { json?: boolean }): void {
@@ -124,18 +133,58 @@ export function runHrTalentDiscuss(options: {
 export function runHrDismissalReadiness(options: {
   ledger: unknown;
   prepare?: boolean;
+  write?: boolean;
+  docsRoot?: string;
   json?: boolean;
 }): DismissalReadinessResult | (DismissalReadinessResult & { checklist: DismissalReadinessChecklist }) {
-  const result = evaluateDismissalReadiness(options.ledger);
-  if (options.prepare) {
-    const checklist = prepareDismissalReadinessChecklist(options.ledger);
-    const combined =
-      result.status === "ready"
-        ? { ...result, checklist }
-        : { ...result, checklist };
+  const docsRoot = options.docsRoot;
+  let ledger = options.ledger;
+  if (options.write) {
+    if (!docsRoot) throw new Error("dismissal-readiness --write requires docsRoot");
+    const written = writeDismissalReadinessShells({ ledger, docsRoot });
+    ledger = written.ledger;
+  }
+  const result = evaluateDismissalReadiness(ledger, { docsRoot });
+  if (options.prepare || options.write) {
+    const checklist = prepareDismissalReadinessChecklist(ledger, { docsRoot });
+    const combined = { ...result, checklist };
     if (options.json) console.log(JSON.stringify(combined, null, 2));
     return combined;
   }
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentPack(options: {
+  posting: unknown;
+  engagement: unknown;
+  director: string;
+  writeDir?: string;
+  json?: boolean;
+}): HiringPack & { written_path?: string } {
+  const posting = jobPostingSchema.parse(options.posting);
+  const engagement = engagementKindSchema.parse(options.engagement) as EngagementKind;
+  const pack = runTalentPack({
+    posting: posting as JobPosting,
+    engagement,
+    director: options.director,
+    writeDir: options.writeDir,
+  });
+  if (options.json) console.log(JSON.stringify(pack, null, 2));
+  return pack;
+}
+
+export function runHrTalentFlow(options: {
+  job: unknown;
+  docsRoot?: string;
+  packWriteDir?: string;
+  json?: boolean;
+}) {
+  const result = runTalentFlow({
+    job: options.job,
+    docsRoot: options.docsRoot,
+    packWriteDir: options.packWriteDir,
+  });
   if (options.json) console.log(JSON.stringify(result, null, 2));
   return result;
 }
@@ -146,6 +195,7 @@ export function runHrTalentShortlist(options: {
   terms: unknown;
   prerequisites?: unknown;
   company_readiness?: unknown;
+  docsRoot?: string;
   proposedBy: string;
   operatorId: string;
   approverId: string;
@@ -160,3 +210,5 @@ export function runHrTalentShortlist(options: {
 export function loadTalentHearAnswers(path: string): unknown {
   return YAML.parse(readFileSync(path, "utf8"));
 }
+
+export { loadRecruitingJobFromPath, getDocsDir };

@@ -30,6 +30,7 @@ export interface TalentShortlistInput {
   operatorId: string;
   approverId: string;
   apiOrigin: string;
+  docsRoot?: string;
 }
 
 function forbiddenKeys(value: unknown): string[] {
@@ -96,7 +97,9 @@ export function shortlistForPosting(input: TalentShortlistInput): TalentShortlis
 
   let prerequisites;
   if (terms.data.engagement === "regular") {
-    const company = evaluateDismissalReadiness(input.company_readiness ?? {});
+    const company = evaluateDismissalReadiness(input.company_readiness ?? {}, {
+      docsRoot: input.docsRoot,
+    });
     if (company.status === "rejected") {
       return { status: "rejected", reason: company.reason };
     }

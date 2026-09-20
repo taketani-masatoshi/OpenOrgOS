@@ -182,9 +182,13 @@ import {
   runHrHeadcount,
   runHrDismissalReadiness,
   runHrTalentDiscuss,
+  runHrTalentFlow,
   runHrTalentHear,
+  runHrTalentPack,
   runHrTalentShortlist,
   loadTalentHearAnswers,
+  loadRecruitingJobFromPath,
+  getDocsDir,
   type CompetenceView,
 } from "../../commands/hr.js";
 import {
@@ -278,11 +282,21 @@ export function registerDomainCommands(program: Command): void {
     .description("解雇対象が決まる前の会社側書類準備度を評価する。解雇は実行しない")
     .requiredOption("--ledger <file>", "会社単位の解雇準備台帳 YAML")
     .option("--prepare", "不足書類の置き場所チェックリストも出す")
+    .option("--write", "不足シェル MD を docs に書く")
+    .option("--docs-root <dir>", "書類ルート（省略時はテナント docs）")
     .option("--json", "Print JSON")
-    .action((opts: { ledger: string; prepare?: boolean; json?: boolean }) => {
+    .action((opts: {
+      ledger: string;
+      prepare?: boolean;
+      write?: boolean;
+      docsRoot?: string;
+      json?: boolean;
+    }) => {
       const result = runHrDismissalReadiness({
         ledger: loadTalentHearAnswers(opts.ledger),
         prepare: Boolean(opts.prepare),
+        write: Boolean(opts.write),
+        docsRoot: opts.docsRoot ?? getDocsDir(),
         json: Boolean(opts.json),
       });
       if (opts.json) return;
@@ -300,6 +314,73 @@ export function registerDomainCommands(program: Command): void {
         }
       }
       if (!result.documents_present) process.exitCode = 1;
+    });
+
+  hr.command("talent-pack")
+    .description("選ばれた形態の社内職務概要を作る。解雇手順は書かない")
+    .requiredOption("--posting <file>", "求人票 YAML")
+    .requiredOption("--engagement <kind>", "contractor|fixed_term|regular")
+    .requiredOption("--director <name>", "指示者")
+    .option("--write-dir <dir>", "書き出し先（例: docs/recruiting）")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      posting: string;
+      engagement: string;
+      director: string;
+      writeDir?: string;
+      json?: boolean;
+    }) => {
+      const result = runHrTalentPack({
+        posting: loadTalentHearAnswers(opts.posting),
+        engagement: opts.engagement,
+        director: opts.director,
+        writeDir: opts.writeDir,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      console.log(result.internal_job_summary);
+      console.log(`出口: ${result.exit_name}`);
+      if (result.written_path) console.log(result.written_path);
+    });
+
+  hr.command("talent-flow")
+    .description("採用ジョブ YAML から pack と署名待ち稟議まで進める。承認はしない")
+    .requiredOption("--job <file>", "data/recruiting ジョブ YAML")
+    .option("--docs-root <dir>", "解雇準備書類ルート")
+    .option("--pack-write-dir <dir>", "社内職務概要の書き出し先")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      job: string;
+      docsRoot?: string;
+      packWriteDir?: string;
+      json?: boolean;
+    }) => {
+      const loaded = loadRecruitingJobFromPath(opts.job);
+      if (loaded.status === "rejected") {
+        console.log(loaded.reason);
+        process.exitCode = 1;
+        return;
+      }
+      const result = runHrTalentFlow({
+        job: loaded.job,
+        docsRoot: opts.docsRoot,
+        packWriteDir: opts.packWriteDir,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_prerequisites") {
+        for (const item of result.missing) console.log(`- ${item}`);
+        process.exitCode = 1;
+        return;
+      }
+      console.log(result.pack.exit_name);
+      console.log(result.shortlist.approval.status);
+      if (result.shortlist.settlement) console.log(result.shortlist.settlement.challenge_id);
     });
 
   hr.command("talent-shortlist")

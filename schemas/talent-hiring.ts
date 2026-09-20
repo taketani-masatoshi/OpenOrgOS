@@ -204,3 +204,22 @@ export type JobHearingResult =
   | { status: "need_answers"; questions: JobHearingQuestion[] }
   | { status: "rejected"; reason: string }
   | { status: "ready"; posting: JobPosting };
+
+export const recruitingJobSchema = z
+  .object({
+    job_id: z.string().min(1),
+    posting: jobPostingSchema,
+    engagement: engagementKindSchema,
+    director: z.string().min(1),
+    candidates: z.array(talentCandidateSchema),
+    terms: contractTermsSchema,
+    company_readiness: dismissalReadinessLedgerSchema.optional(),
+    prerequisites: regularPrerequisitesSchema.optional(),
+    proposed_by: z.string().min(1).default("recruiting"),
+    operator_id: z.string().min(1),
+    approver_id: z.string().min(1),
+    api_origin: z.string().url(),
+  })
+  .strict();
+
+export type RecruitingJob = z.output<typeof recruitingJobSchema>;

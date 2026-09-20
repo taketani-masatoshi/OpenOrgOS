@@ -49,6 +49,8 @@ JD · 候補者パイプライン · 面接調整下書き。
 |------|------|
 | agent_pulse | `orgos agent pulse --agent recruiting` |
 | recruiting_engagement_discuss | `orgos hr talent-discuss`（契約形態の候補と理由。決定・承認しない · `runtime: cli`） |
+| recruiting_talent_pack | `orgos hr talent-pack`（社内職務概要。解雇手順は書かない · `runtime: cli`） |
+| recruiting_talent_flow | `orgos hr talent-flow`（ジョブ YAML から署名待ちまで。承認しない · `runtime: cli`） |
 
 
 ## CLI
@@ -57,6 +59,8 @@ JD · 候補者パイプライン · 面接調整下書き。
 orgos agent readiness --agent recruiting
 orgos agent pulse --agent recruiting
 orgos hr talent-discuss --answers <file> --json
+orgos hr talent-pack --posting <file> --engagement fixed_term --director <name> --json
+orgos hr talent-flow --job <file> --json
 ```
 
 ## 禁止（採用フロー）

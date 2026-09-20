@@ -7,7 +7,7 @@ import { humanApprovalSubjectDigest } from "../src/lib/org/human-approval-contex
 import { canonicalJson } from "../src/lib/protocol/canonical.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { runHrTalentDiscuss, runHrTalentHear, runHrTalentShortlist } from "../src/commands/hr.js";
+import { runHrTalentDiscuss, runHrTalentHear, runHrTalentPack, runHrTalentShortlist } from "../src/commands/hr.js";
 import {
   buildHiringPack,
   filterCandidates,
@@ -143,7 +143,7 @@ describe("proposeShortTermTalentApproval", () => {
     };
 
     expect(result.approval.status).toBe("pending_approval");
-    expect(result.approval.subject_type).toBe("short_term_talent");
+    expect(result.approval.subject_type).toBe("talent_fixed_term");
     expect(result.approval.scope).toBe("internal");
     expect(result.payload.candidate_ids).toEqual(["C-001", "C-002"]);
     expect(result.payload.rfp_title).toBe("AI advisor");
@@ -159,15 +159,16 @@ describe("proposeShortTermTalentApproval", () => {
     ).not.toBe(humanApprovalSubjectDigest(result.approval));
   });
 
-  it("does not mint a settlement challenge at or under the tier A cap", () => {
+  it("mints a settlement challenge even at or under the former tier A cap", () => {
     const result = propose(100_000);
 
     expect(result.approval.status).toBe("pending_approval");
-    expect(result.settlement_required).toBe(false);
-    expect(result.settlement).toBeUndefined();
+    expect(result.settlement_required).toBe(true);
+    expect(result.settlement?.challenge_id).toMatch(/^SCH-/);
+    expect(result.settlement?.webauthn_challenge.length).toBeGreaterThan(0);
   });
 
-  it("mints the existing settlement challenge above the tier A cap", () => {
+  it("mints the existing settlement challenge above the former tier A cap", () => {
     const result = propose(100_001);
 
     expect(result.approval.status).toBe("pending_approval");
@@ -359,15 +360,15 @@ describe("talent shortlist", () => {
     expect(after).toEqual(before);
   });
 
-  it("returns the shortlist and skips settlement at or under the tier A cap", () => {
+  it("returns the shortlist and always mints settlement at or under the former tier A cap", () => {
     const result = runHrTalentShortlist(input(100_000));
 
     expect(result.status).toBe("ready");
     if (result.status !== "ready") return;
     expect(result.shortlist.map((row) => row.candidate_id)).toEqual(["C-020"]);
     expect(result.approval.status).toBe("pending_approval");
-    expect(result.settlement_required).toBe(false);
-    expect(result.settlement).toBeUndefined();
+    expect(result.settlement_required).toBe(true);
+    expect(result.settlement?.challenge_id).toMatch(/^SCH-/);
   });
 
   it("mints a settlement challenge above the tier A cap", () => {
@@ -479,5 +480,26 @@ describe("buildHiringPack", () => {
     expect(
       buildHiringPack({ posting: machinePosting, engagement: "fixed_term", director: "現場担当" }).exit_name,
     ).toBe("期間満了・更新しない");
+  });
+
+  it("returns the same pack from the hr command and can write under docs/recruiting", () => {
+    const writeDir = mkdtempSync(join(tmpdir(), "orgos-talent-pack-"));
+    try {
+      const pack = runHrTalentPack({
+        posting: machinePosting,
+        engagement: "regular",
+        director: "現場担当",
+        writeDir,
+      });
+      expect(pack.exit_name).toBe("解雇");
+      expect(pack.notes.join("\n")).toContain("事実の記録");
+      expect(pack.written_path).toBeTruthy();
+      const body = readFileSync(pack.written_path!, "utf8");
+      expect(body).toContain(machinePosting.duties);
+      for (const check of machinePosting.checks) expect(body).toContain(check);
+      expect(body).not.toMatch(/解雇の実行手順|予告手当の計算/);
+    } finally {
+      rmSync(writeDir, { recursive: true, force: true });
+    }
   });
 });

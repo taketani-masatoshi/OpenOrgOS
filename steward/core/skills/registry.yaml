@@ -823,6 +823,16 @@ skills:
     runtime: cli
     description: 対象者決定前の解雇準備度評価（実行しない）
     agent_id: human_resources
+  - id: hr_talent_hear
+    file: extension/hr_talent_hear.md
+    runtime: cli
+    description: 求人票ヒアリング（年齢・性別拒否）
+    agent_id: human_resources
+  - id: hr_talent_shortlist
+    file: extension/hr_talent_shortlist.md
+    runtime: cli
+    description: 実演選考と署名待ち稟議（承認しない）
+    agent_id: human_resources
   - id: governance_meeting_prep
     file: extension/governance_meeting_prep.md
     runtime: cli
@@ -960,6 +970,16 @@ skills:
     file: extension/recruiting_engagement_discuss.md
     runtime: cli
     description: 契約形態の候補と理由（決定・承認しない）
+    agent_id: recruiting
+  - id: recruiting_talent_pack
+    file: extension/recruiting_talent_pack.md
+    runtime: cli
+    description: 社内職務概要（解雇手順は書かない）
+    agent_id: recruiting
+  - id: recruiting_talent_flow
+    file: extension/recruiting_talent_flow.md
+    runtime: cli
+    description: 採用ジョブから署名待ちまで（承認しない）
     agent_id: recruiting
   - id: recruiting_interview_prep
     file: extension/recruiting_interview_prep.md
