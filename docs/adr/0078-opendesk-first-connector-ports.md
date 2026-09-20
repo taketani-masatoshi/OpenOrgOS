@@ -51,11 +51,15 @@ verify が送る本文は `opendesk verify` のみ。`data/` は Nextcloud の a
 
 Core は Unlicense。AGPL / GPL の上流ソースは同梱しない。compose はイメージ参照のみ。将来 OpenCode に出す `openDesk-extension-ooo` は別パッケージ（Apache-2.0 想定）。境界: [opendesk-extension-boundary.md](../org-os/opendesk-extension-boundary.md)。
 
-### 5. 今回やらないこと
+### 5. 秘書メールは MailPort
+
+Secretary の受信・送信は `MailPort`（`fetchSince` / `sendMime`）を経由する。Gmail は互換実装。Open-Xchange は同じ口のスタブで、`inclusion !== confirmed_live` のときネットワークへ出ない。IMAP / SMTP は当面 Port 外。送信の最終承認は従来どおり `send-gate` と `chat:approve`。L1 の triage 件数要約は任意で Nextcloud allowlist へ写せる（`orgos mail intake sync --nextcloud-l1`）。
+
+### 6. 今回やらないこと
 
 次はゲートとして残す。この変更では実装しない。
 
-- Open-Xchange のメールとカレンダー。公開 CE イメージが無認証で取れるまでスタブのまま、ネットワークへ出さない
+- Open-Xchange のメールとカレンダーの実 HTTP。公開 CE イメージが無認証で取れるまでスタブのまま
 - 公式 Helmfile / Kubernetes スイートの同梱と、このリポジトリ上での再現。回帰 CI（`.github/workflows/opendesk-verify.yml`）は ubuntu x64 で同じ公開 API を再実行するだけである。出荷前に、人が x64 の Community Edition へ `ORGOS_*_BASE_URL` を向ける
 - 出荷フラグ（`connector_matrix` など）を立てること。既定は false。ローカル疎通では `platform_ready` を立てない。フラグを変えるのは人間
 - Keycloak でのユーザー作成、Nubus（OpenLDAP）、Community SSO の置き換え。Keycloak は OIDC discovery のみ

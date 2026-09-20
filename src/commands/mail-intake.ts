@@ -58,6 +58,7 @@ export async function runMailIntakeSync(opts: {
   watch?: boolean;
   dryRun?: boolean;
   json?: boolean;
+  nextcloudL1?: boolean;
 }): Promise<void> {
   if (opts.watch) {
     const poller = createMailReceivePoller();
@@ -96,7 +97,15 @@ export async function runMailIntakeSync(opts: {
     wireScan = await scanMailReceivedForWire({ sinceDays: 1 });
   }
 
-  const payload = { sync: result, triage, wire_scan: wireScan };
+  let nextcloudL1: { ok: boolean; reason: string } | undefined;
+  if (opts.nextcloudL1 && !opts.dryRun) {
+    const { mirrorSecretaryL1ToNextcloud } = await import(
+      "../lib/integrations/secretary-l1-mirror.js"
+    );
+    nextcloudL1 = await mirrorSecretaryL1ToNextcloud();
+  }
+
+  const payload = { sync: result, triage, wire_scan: wireScan, nextcloud_l1: nextcloudL1 };
   if (opts.json) {
     console.log(JSON.stringify(payload, null, 2));
     return;
@@ -110,6 +119,13 @@ export async function runMailIntakeSync(opts: {
   if (wireScan) {
     console.log(
       `Wire scan: scanned ${wireScan.scanned} · ingested ${wireScan.ingested} · skipped ${wireScan.skipped}`
+    );
+  }
+  if (nextcloudL1) {
+    console.log(
+      nextcloudL1.ok
+        ? `Nextcloud L1 mirror: ${nextcloudL1.reason}`
+        : `Nextcloud L1 mirror skipped: ${nextcloudL1.reason}`,
     );
   }
 }

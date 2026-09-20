@@ -48,6 +48,7 @@ export ORGOS_KEYCLOAK_REALM=master
 - `connector_matrix` などの出荷フラグは既定 false です。ローカル疎通ではコンソール接続（`platform_ready`）は開きません。フラグを変えるのは人間です
 - Keycloak は OIDC discovery のみです。ユーザー作成、Nubus、Community SSO の置き換えはしません
 - 人の画面は Steward Chat のままです。Element、OpenProject、Jitsi、Collabora は入れません
+- 秘書メールは Core の `MailPort` 経由です。Gmail は互換、OX はスタブ。L1 件数要約は `orgos mail intake sync --nextcloud-l1`
 
 ## 境界
 

@@ -8,7 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
-- **openDesk ファーストのコネクタ Port** — オフィススイートの正本面は Matrix / Nextcloud / Keycloak。公開イメージは `deploy/opendesk-verify` で疎通確認する。版は Synapse `v1.161.0`、Nextcloud `34.0.4`、Keycloak `26.3.5`。回帰は ubuntu x64 の `.github/workflows/opendesk-verify.yml`（公式 Helm ではない）。Open-Xchange は無認証 CE イメージが取れるまでスタブ。Slack / Gmail / Drive / Microsoft 365 は互換出口（L1 の写し）のまま残す。ADR 0078 · [connectors.md](docs/org-os/ooo-surfaces/connectors.md)
+- **openDesk ファーストのコネクタ Port** — オフィススイートの正本面は Matrix / Nextcloud / Keycloak。公開イメージは `deploy/opendesk-verify` で疎通確認する。版は Synapse `v1.161.0`、Nextcloud `34.0.4`、Keycloak `26.3.5`。回帰は ubuntu x64 の `.github/workflows/opendesk-verify.yml`（公式 Helm ではない）。Open-Xchange は無認証 CE イメージが取れるまでスタブ。Slack / Gmail / Drive / Microsoft 365 は互換出口（L1 の写し）のまま残す。秘書メールは `MailPort`（Gmail 互換 · OX スタブ）。L1 triage 要約は `orgos mail intake sync --nextcloud-l1`。ADR 0078 · [connectors.md](docs/org-os/ooo-surfaces/connectors.md)
 
 ### Fixed
 

@@ -527,9 +527,15 @@ export function registerExecutiveCommands(program: Command): void {
     .description("Fetch new mail via IMAP/Gmail (receive.sync)")
     .option("--watch", "Poll on poll_interval_sec until interrupted")
     .option("--dry-run", "Fetch without saving")
+    .option("--nextcloud-l1", "Mirror L1 triage counts to Nextcloud (needs ORGOS_NEXTCLOUD_*)")
     .option("--json", "JSON output")
     .action(async (opts) =>
-      runMailIntakeSync({ watch: opts.watch, dryRun: opts.dryRun, json: opts.json })
+      runMailIntakeSync({
+        watch: opts.watch,
+        dryRun: opts.dryRun,
+        json: opts.json,
+        nextcloudL1: opts.nextcloudL1,
+      })
     );
   intakeCmd
     .command("wire-scan")

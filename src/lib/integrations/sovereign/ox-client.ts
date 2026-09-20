@@ -3,7 +3,12 @@
  * Path: src/lib/integrations/sovereign/ox-client.ts
  */
 import type { ConnectorInclusion } from "../../../../schemas/connectors.js";
-import type { MailPort, PortResult } from "../ports.js";
+import type {
+  MailFetchResult,
+  MailPort,
+  MailSendResult,
+  PortResult,
+} from "../ports.js";
 import { STUB_DOES_NOT_LEAVE } from "../ports.js";
 
 export interface OxConfig {
@@ -48,11 +53,33 @@ export async function pingOx(input: {
   return { ok: true, reason: "ok" };
 }
 
-export function oxMailPort(inclusion: ConnectorInclusion, config: OxConfig | null, fetchImpl?: typeof fetch): MailPort {
+export function oxMailPort(
+  inclusion: ConnectorInclusion,
+  config: OxConfig | null,
+  fetchImpl?: typeof fetch,
+): MailPort {
   return {
     provider: "ox",
     async ping() {
       return pingOx({ inclusion, config, fetchImpl });
+    },
+    async fetchSince(): Promise<MailFetchResult> {
+      if (inclusion !== "confirmed_live") {
+        return { ...oxStubResult(), messages: [], fetched: 0 };
+      }
+      return {
+        ok: false,
+        reason: "Open-Xchange fetch はまだ実装していません。外へは出しません",
+        messages: [],
+        fetched: 0,
+      };
+    },
+    async sendMime(): Promise<MailSendResult> {
+      if (inclusion !== "confirmed_live") return oxStubResult();
+      return {
+        ok: false,
+        reason: "Open-Xchange send はまだ実装していません。外へは出しません",
+      };
     },
   };
 }

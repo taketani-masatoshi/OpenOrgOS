@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 588
-  static_test_cases: 2687
-  tiered_execution_total: 588
+  vitest_total: 589
+  static_test_cases: 2691
+  tiered_execution_total: 589
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -2289,6 +2289,10 @@ tests:
     kind: unit
     domain: P01_kernel
   secretary-contact-registry.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
+  secretary-mail-port.test.ts:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
