@@ -30,8 +30,15 @@ code_wire="$(curl -s -o /dev/null -w '%{http_code}' "${BASE}/wire/")"
 echo "✓ A2 Chat UI"
 echo "✓ A3 Wire UI"
 
-code_today="$(curl -s -o /dev/null -w '%{http_code}' "${BASE}/chat/v1/today")"
-[[ "${code_today}" == "200" ]] || { echo "FAIL: Chat API /today HTTP ${code_today}" >&2; exit 1; }
+today_body="$(mktemp)"
+code_today="$(curl -s -o "${today_body}" -w '%{http_code}' "${BASE}/chat/v1/today")"
+if [[ "${code_today}" != "200" ]]; then
+  echo "FAIL: Chat API /today HTTP ${code_today}" >&2
+  cat "${today_body}" >&2 || true
+  rm -f "${today_body}"
+  exit 1
+fi
+rm -f "${today_body}"
 echo "✓ A4 Chat API /today (unauthenticated demo)"
 
 code_wire_me="$(curl -s -o /dev/null -w '%{http_code}' "${BASE}/console/v1/auth/me")"
