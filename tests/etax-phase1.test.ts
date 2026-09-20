@@ -33,15 +33,18 @@ const fixtureMatrix: EtaxProcedureMatrix = {
 
 describe("etax ReturnPackage hash", () => {
   it("is stable for the same canonical content", () => {
-    const pkg = createReturnPackage({
-      taxpayerId: "TP-1",
-      procedureCode: "TEST-CORP",
-      taxYear: "FY2026",
-      revision: 0,
-      payload: { amount: 1, nested: { b: 2, a: 1 } },
-      createdBy: "test",
-      specVersion: "KSK2-2026-08-28",
-    }, { id: "ETAX-PKG-fixed", now: "2026-09-20T00:00:00.000Z" });
+    const pkg = createReturnPackage(
+      {
+        taxpayerId: "TP-1",
+        procedureCode: "TEST-CORP",
+        taxYear: "FY2026",
+        revision: 0,
+        payload: { amount: 1, nested: { b: 2, a: 1 } },
+        createdBy: "test",
+        specVersion: "KSK2-2026-08-28",
+      },
+      { id: "ETAX-PKG-fixed", now: "2026-09-20T00:00:00.000Z" }
+    );
     expect(pkg.contentHash).toBe(recomputeContentHash(pkg));
     const again = hashReturnPackageContent({
       taxpayerId: pkg.taxpayerId,
@@ -56,24 +59,30 @@ describe("etax ReturnPackage hash", () => {
   });
 
   it("changes when one payload byte changes", () => {
-    const base = createReturnPackage({
-      taxpayerId: "TP-1",
-      procedureCode: "TEST-CORP",
-      taxYear: "FY2026",
-      revision: 0,
-      payload: { amount: 100 },
-      createdBy: "test",
-      specVersion: "KSK2-2026-08-28",
-    }, { id: "ETAX-PKG-a", now: "2026-09-20T00:00:00.000Z" });
-    const mutated = createReturnPackage({
-      taxpayerId: "TP-1",
-      procedureCode: "TEST-CORP",
-      taxYear: "FY2026",
-      revision: 0,
-      payload: { amount: 101 },
-      createdBy: "test",
-      specVersion: "KSK2-2026-08-28",
-    }, { id: "ETAX-PKG-a", now: "2026-09-20T00:00:00.000Z" });
+    const base = createReturnPackage(
+      {
+        taxpayerId: "TP-1",
+        procedureCode: "TEST-CORP",
+        taxYear: "FY2026",
+        revision: 0,
+        payload: { amount: 100 },
+        createdBy: "test",
+        specVersion: "KSK2-2026-08-28",
+      },
+      { id: "ETAX-PKG-a", now: "2026-09-20T00:00:00.000Z" }
+    );
+    const mutated = createReturnPackage(
+      {
+        taxpayerId: "TP-1",
+        procedureCode: "TEST-CORP",
+        taxYear: "FY2026",
+        revision: 0,
+        payload: { amount: 101 },
+        createdBy: "test",
+        specVersion: "KSK2-2026-08-28",
+      },
+      { id: "ETAX-PKG-a", now: "2026-09-20T00:00:00.000Z" }
+    );
     expect(mutated.contentHash).not.toBe(base.contentHash);
   });
 });
@@ -122,29 +131,32 @@ describe("etax idempotency identity", () => {
 
 describe("etax procedure fail-closed", () => {
   it("refuses unknown procedures", () => {
-    expect(() =>
-      assertProcedureAllowed("HOC-UNKNOWN", "mock", fixtureMatrix),
-    ).toThrow(/not in the OpenOrgOS supported matrix/);
+    expect(() => assertProcedureAllowed("HOC-UNKNOWN", "mock", fixtureMatrix)).toThrow(
+      /not in the OpenOrgOS supported matrix/
+    );
   });
 
   it("refuses EXPERIMENTAL in production", () => {
-    expect(() =>
-      assertProcedureAllowed("TEST-CORP", "production", fixtureMatrix),
-    ).toThrow(/production requires SUPPORTED/);
+    expect(() => assertProcedureAllowed("TEST-CORP", "production", fixtureMatrix)).toThrow(
+      /production requires SUPPORTED/
+    );
   });
 });
 
 describe("etax XML generator", () => {
-  it("is SPEC_BLOCKED until official XSD is registered", () => {
-    const pkg = createReturnPackage({
-      taxpayerId: "TP-1",
-      procedureCode: "TEST-CORP",
-      taxYear: "FY2026",
-      revision: 0,
-      payload: {},
-      createdBy: "test",
-      specVersion: "KSK2-2026-08-28",
-    }, { id: "ETAX-PKG-xml", now: "2026-09-20T00:00:00.000Z" });
+  it("is SPEC_BLOCKED until an official envelope mapping exists", () => {
+    const pkg = createReturnPackage(
+      {
+        taxpayerId: "TP-1",
+        procedureCode: "TEST-CORP",
+        taxYear: "FY2026",
+        revision: 0,
+        payload: {},
+        createdBy: "test",
+        specVersion: "KSK2-2026-08-28",
+      },
+      { id: "ETAX-PKG-xml", now: "2026-09-20T00:00:00.000Z" }
+    );
     try {
       generateOfficialXml(pkg);
       throw new Error("expected SPEC_BLOCKED");
@@ -162,7 +174,10 @@ describe("etax production gate", () => {
     try {
       const reasons = productionSubmitBlockedReasons("production");
       expect(reasons.length).toBeGreaterThan(0);
-      expect(reasons.join(" ")).toMatch(/ORGOS_ETAX_PRODUCTION=1 is ignored|production_feature_gate/);
+      expect(new Set(reasons).size).toBe(reasons.length);
+      expect(reasons).toContain("production_submission_enabled=false");
+      expect(reasons).toContain("production_feature_gate_released=false");
+      expect(reasons.join(" ")).toMatch(/ORGOS_ETAX_PRODUCTION=1 is ignored/);
       expect(ETAX_PRODUCTION_BANNER).toContain("NOT CERTIFIED");
     } finally {
       if (previous === undefined) delete process.env.ORGOS_ETAX_PRODUCTION;
@@ -208,8 +223,24 @@ describe("etax buildReturnPackage", () => {
         createdBy: "test",
         specVersion: "KSK2-2026-08-28",
       },
-      { persist: false, procedureMatrix: fixtureMatrix },
+      { persist: false, procedureMatrix: fixtureMatrix }
     );
     expect(pkg.contentHash.startsWith("sha256:")).toBe(true);
+  });
+
+  it("allows DRAFT for unknown procedures; XML/submit stay fail-closed", () => {
+    const pkg = buildReturnPackage(
+      {
+        taxpayerId: "TP-1",
+        procedureCode: "HOC-UNKNOWN",
+        taxYear: "FY2026",
+        revision: 0,
+        payload: {},
+        createdBy: "test",
+        specVersion: "KSK2-2026-08-28",
+      },
+      { persist: false }
+    );
+    expect(pkg.procedureCode).toBe("HOC-UNKNOWN");
   });
 });

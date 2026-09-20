@@ -1,5 +1,9 @@
 import type { ReturnPackage } from "../../../schemas/etax/return-package.js";
-import type { EtaxEnvironment, EtaxSubmissionStatus } from "../../../schemas/etax/submission-state.js";
+import type {
+  EtaxEnvironment,
+  EtaxSubmissionStatus,
+} from "../../../schemas/etax/submission-state.js";
+import type { EtaxSignatureProviderId } from "../../../schemas/etax/signature.js";
 import { etaxError } from "../../../schemas/etax/errors.js";
 import { getIdGenerator } from "../runtime-context.js";
 import { createReturnPackage, assertContentHash, recomputeContentHash } from "./return-package.js";
@@ -15,17 +19,17 @@ import {
 } from "./store.js";
 import { invalidateAfterContentChange, transitionStatus } from "./state-machine.js";
 import { appendEtaxAudit } from "./audit.js";
-import { assertProcedureAllowed } from "./procedures.js";
 import { assertProductionSubmitAllowed } from "./production-gate.js";
 import { generateOfficialXml } from "./xml-generator.js";
+import { bindSignatureToSubmission, signDocument, xmlHashOf } from "./signature.js";
+import type { SignatureResult } from "./adapters.js";
 import type { ReturnPackageCreateInput } from "../../../schemas/etax/return-package.js";
 import type { EtaxProcedureMatrix } from "../../../schemas/etax/procedures.js";
 
 export function buildReturnPackage(
   input: ReturnPackageCreateInput,
-  opts?: { persist?: boolean; actor?: string; procedureMatrix?: EtaxProcedureMatrix },
+  opts?: { persist?: boolean; actor?: string; procedureMatrix?: EtaxProcedureMatrix }
 ): ReturnPackage {
-  assertProcedureAllowed(input.procedureCode, "mock", opts?.procedureMatrix);
   const pkg = createReturnPackage(input);
   if (opts?.persist === false) return pkg;
   saveReturnPackage(pkg);
@@ -96,20 +100,23 @@ export function assertBoundHash(pkg: ReturnPackage, sub: EtaxSubmissionRecord): 
 export function applyContentMutation(
   packageId: string,
   payload: unknown,
-  actor: string,
+  actor: string
 ): { package: ReturnPackage; submission: EtaxSubmissionRecord } {
   const pkg = requireReturnPackage(packageId);
   const sub = submissionForPackage(packageId);
-  const nextPkg = createReturnPackage({
-    taxpayerId: pkg.taxpayerId,
-    procedureCode: pkg.procedureCode,
-    taxYear: pkg.taxYear,
-    revision: pkg.revision,
-    payload,
-    createdBy: pkg.createdBy,
-    sourceReferences: pkg.sourceReferences,
-    specVersion: pkg.specVersion,
-  }, { id: pkg.id, now: pkg.createdAt });
+  const nextPkg = createReturnPackage(
+    {
+      taxpayerId: pkg.taxpayerId,
+      procedureCode: pkg.procedureCode,
+      taxYear: pkg.taxYear,
+      revision: pkg.revision,
+      payload,
+      createdBy: pkg.createdBy,
+      sourceReferences: pkg.sourceReferences,
+      specVersion: pkg.specVersion,
+    },
+    { id: pkg.id, now: pkg.createdAt }
+  );
   const nextStatus = invalidateAfterContentChange(sub.status);
   const nextSub: EtaxSubmissionRecord = {
     ...sub,
@@ -119,6 +126,7 @@ export function applyContentMutation(
     approvalId: undefined,
     approvalContentHash: undefined,
     signatureRef: undefined,
+    signatureProvider: undefined,
     identityKey: identityKeyFor(nextPkg, nextPkg.contentHash),
   };
   saveReturnPackage(nextPkg);
@@ -137,7 +145,58 @@ export function applyContentMutation(
 
 export function buildOfficialXml(packageId: string): never {
   const pkg = requireReturnPackage(packageId);
+  submissionForPackage(packageId);
   generateOfficialXml(pkg);
+}
+
+export async function signSubmission(opts: {
+  submissionId: string;
+  env: EtaxEnvironment;
+  provider?: EtaxSignatureProviderId;
+  document: Buffer;
+  actor: string;
+  persist?: boolean;
+}): Promise<{ submission: EtaxSubmissionRecord; signature: SignatureResult }> {
+  const sub = requireSubmission(opts.submissionId);
+  const pkg = requireReturnPackage(sub.packageId);
+  assertBoundHash(pkg, sub);
+  if (!sub.xmlHash) {
+    throw etaxError({
+      code: "ETAX_SIGN_NO_XML",
+      field: "xmlHash",
+      blocked: "SPEC_BLOCKED",
+      message: "Official XML is not bound (xmlHash missing). Cannot sign.",
+    });
+  }
+  const liveXml = xmlHashOf(opts.document);
+  if (liveXml !== sub.xmlHash) {
+    throw etaxError({
+      code: "ETAX_SIGNATURE_XML_HASH_MISMATCH",
+      field: "xmlHash",
+      blocked: "HASH_MISMATCH",
+      message: "Provided XML does not match the submission xmlHash",
+    });
+  }
+  const signature = await signDocument({
+    env: opts.env,
+    provider: opts.provider,
+    document: opts.document,
+    documentHash: sub.xmlHash,
+  });
+  const next = bindSignatureToSubmission(sub, signature, opts.env);
+  if (opts.persist !== false) {
+    saveSubmission(next);
+    appendEtaxAudit({
+      actor: opts.actor,
+      action: "ETAX_SIGNATURE_CREATED",
+      objectId: next.id,
+      contentHash: next.contentHash,
+      specVersion: next.specVersion,
+      result: "ok",
+      detail: `provider=${signature.provider} legal=${signature.legal} method=${signature.method ?? "unknown"}`,
+    });
+  }
+  return { submission: next, signature };
 }
 
 export function requestProductionSubmit(opts: {
@@ -155,7 +214,7 @@ export function requestProductionSubmit(opts: {
 
 export function transitionSubmission(
   submissionId: string,
-  to: EtaxSubmissionStatus,
+  to: EtaxSubmissionStatus
 ): EtaxSubmissionRecord {
   const sub = requireSubmission(submissionId);
   const next = { ...sub, status: transitionStatus(sub.status, to) };

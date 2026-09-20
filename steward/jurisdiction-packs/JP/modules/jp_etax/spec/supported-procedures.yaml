@@ -3,6 +3,7 @@ specFamily: ksk2
 defaultSupport: UNSUPPORTED
 procedures: []
 notes: >
-  SPEC_BLOCKED until KSK2 手続一覧・手続内帳票対応表・対象帳票一覧 (e-tax07.CAB)
-  is retrieved, unpacked, and explicitly mapped. Empty list is intentional.
-  Production may send SUPPORTED rows only. Do not invent NTA procedure codes.
+  e-tax07.CAB is retrieved locally (gitignored vendor). OpenOrgOS still lists
+  no procedures until a human/operator maps NTA codes explicitly.
+  Empty list is intentional. Production may send SUPPORTED rows only.
+  Do not invent NTA procedure codes.

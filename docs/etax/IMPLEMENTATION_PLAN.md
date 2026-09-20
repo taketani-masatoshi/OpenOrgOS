@@ -1,7 +1,7 @@
 # e-Tax Integration — Implementation Plan
 
-**Status:** Phase 1 in progress · **EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION**  
-**Date:** 2026-09-20 · **ADR:** [0078](../adr/0078-etax-integration.md)
+**Status:** Phase 3 in progress · **EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION**  
+**Date:** 2026-09-21 · **ADR:** [0078](../adr/0078-etax-integration.md)
 
 This document is the repository investigation record and the phased plan. It is not a claim that OpenOrgOS is e-Tax certified.
 
@@ -82,7 +82,11 @@ Hub: https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo.htm
 | Transmission test | Apply via NTA “電子メールによるお問い合わせ” on the KSK2 hub |
 | Manifest | `steward/jurisdiction-packs/JP/modules/jp_etax/spec/manifest.json` |
 
-Phase 1 retrieved `e-tax05.CAB` (signature module interface). NTA table said ~15.4KB; retrieved size was 16,241,315 bytes. SHA-256 is in the manifest. That size mismatch is recorded; we do not “fix” it by guessing. Other CABs remain `listed` / `SPEC_BLOCKED` until fetched. Official XSD (`e-tax19.CAB`) is **not** unpacked; XML generation is refused.
+Phase 1 retrieved `e-tax05.CAB` (signature module interface). NTA table said ~15.4KB; retrieved size was 16,241,315 bytes. SHA-256 is in the manifest. That size mismatch is recorded; we do not “fix” it by guessing.
+
+Phase 2 retrieved and hashed `e-tax01`, `e-tax07`, `e-tax08`, `e-tax19` (official XSD, ~17k files). CAB filenames are Shift-JIS; unpacker writes ASCII-safe paths (`hojin/HOA110-001.xsd`). Official XML **generation** remains `SPEC_BLOCKED` until a procedure mapping YAML exists (e-tax10/e-tax11 field specs). The OpenOrgOS procedure matrix stays empty — retrieving 手続一覧 Excel is not the same as marking a procedure `SUPPORTED`.
+
+Phase 3 unpacked `e-tax05` (57 files) and catalogued the official signature module: Windows COM `nta.CLCXtxSigner` / `CLISignature.SignToReport`, Cocoa `CLISignature.SignToReport`. The native host is **not bound**. Mock signatures exist for `--env mock` only, are labeled `legal: false`, and must not be treated as e-Tax signatures. PIN/password are never CLI flags or YAML fields.
 
 ---
 
@@ -120,21 +124,21 @@ Environments: `mock` | `test` | `production`. Production is disabled until every
 | **7** | NTA transmission test + evidence | disabled |
 | **8** | Production enablement review | enable only after checklist |
 
-This repository change is Phase 1. Later phases must not skip SPEC_BLOCKED items by inventing schema.
+This repository change is Phase 3 (signature adapters: mock + official catalog, host unbound). Later phases must not skip SPEC_BLOCKED items by inventing schema, a COM CLI, or homegrown XML-DSig. Production stays disabled.
 
 ---
 
 ## 7. SPEC_BLOCKED (do not guess)
 
-Until the corresponding KSK2 CAB is retrieved **and** unpacked:
+Until the corresponding KSK2 CAB is retrieved **and** turned into OpenOrgOS data:
 
-- Official XML element names, namespaces, and field IDs
-- Procedure codes and form combinations
-- Inter-form dependency rules
-- Reception-system and API wire format
-- Official signature module CLI/COM contract
-- Send/receive module contract
-- Receipt XML field map
-- Sample/golden XML from NTA (if any exist inside the packs)
+- Official XML **generation** (field maps from e-tax10 / e-tax11) — XSD pack is unpacked; mapper stays `SPEC_BLOCKED` without a registered YAML
+- Procedure codes marked `SUPPORTED` (e-tax07 Excel is local; the OpenOrgOS matrix stays empty)
+- Inter-form dependency rules (e-tax08 Excel is local; not loaded as data)
+- Reception-system and API wire format (e-tax02 / e-tax02-1)
+- Official signature native host (e-tax05 catalogued: COM `nta.CLCXtxSigner.SignToReport` / Cocoa `CLISignature.SignToReport`; hostBound=false)
+- Send/receive module contract (e-tax04)
+- Receipt XML field map (e-tax18)
+- Sample/golden XML from NTA (none found in e-tax19)
 
-Phase 1 therefore creates packages and state only. `orgos etax build` will not emit KSK2 XML. `orgos etax submit --env production` fails closed.
+`orgos etax build` will not emit KSK2 XML until a mapping file exists. `orgos etax submit --env production` fails closed.

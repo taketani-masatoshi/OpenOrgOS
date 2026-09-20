@@ -21,6 +21,7 @@ export const etaxSubmissionRecordSchema = z.object({
   approvalId: z.string().optional(),
   approvalContentHash: z.string().optional(),
   signatureRef: z.string().optional(),
+  signatureProvider: z.enum(["mock", "official"]).optional(),
   environment: z.enum(["mock", "test", "production"]).optional(),
   specVersion: z.string(),
 });

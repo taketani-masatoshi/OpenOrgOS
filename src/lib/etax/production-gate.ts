@@ -16,7 +16,7 @@ export function etaxProductionGatePath(): string {
     getInstallRoot(),
     "steward/jurisdiction-packs/JP/modules",
     ETAX_MODULE_ID,
-    "production-gate.yaml",
+    "production-gate.yaml"
   );
 }
 
@@ -34,14 +34,14 @@ export function loadEtaxProductionGate(): EtaxProductionGate {
 
 export function productionSubmitBlockedReasons(
   env: EtaxEnvironment,
-  gate = loadEtaxProductionGate(),
+  gate = loadEtaxProductionGate()
 ): string[] {
   const reasons: string[] = [];
   if (env !== "production") return reasons;
 
   const req = gate.requirements;
   if (!gate.production_submission_enabled) {
-    reasons.push("production_feature_gate_released=false");
+    reasons.push("production_submission_enabled=false");
   }
   if (!req.ksk2_spec_registered || !ksk2SpecRegistered()) {
     reasons.push("ksk2_spec_registered=false");

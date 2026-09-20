@@ -5,3 +5,6 @@ export * from "./spec-registry.js";
 export * from "./production-gate.js";
 export * from "./events.js";
 export * from "./procedures.js";
+export * from "./mapping.js";
+export * from "./validation.js";
+export * from "./signature.js";

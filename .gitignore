@@ -212,6 +212,7 @@ steward/jurisdiction-packs/JP/modules/jp_etax/spec/vendor/**
 # Tenant e-Tax credentials / signed blobs / PINs
 tenants/*/data/etax/credentials/
 tenants/*/data/etax/signed/
+tenants/*/data/etax/generated/
 tenants/*/data/etax/*.key
 tenants/*/data/etax/*.pem
 tenants/*/data/etax/audit.jsonl

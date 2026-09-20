@@ -1,0 +1,40 @@
+schema_version: 1
+specFamily: ksk2
+specArtifactId: e-tax05
+hostBound: false
+notes: >
+  Method names are taken from the KSK2 e-tax05 pack (ActiveX CLISignature
+  spec + SignerSample.cpp, Cocoa CLISignature.h). OrgOS does not invent a
+  CLI around this COM/ObjC module and does not implement XML-DSig itself.
+  hostBound remains false until a native host is reviewed.
+windows:
+  dll: CLXtxSigner.dll
+  progid: nta.CLCXtxSigner
+  clsid: "{AA8655A7-73CC-4567-8263-4BFAAACC0A24}"
+  typelib: "{EA078DEC-AEF8-4DFC-B806-108DBFCFCA31}"
+  namespace: CLXTXSIGNERLib
+  source: ActiveX/SignerSample/SignerSample.cpp and ActiveX/2_CLISignature.docx
+  reportMethod: SignToReport
+  methods:
+    - SetCertificate
+    - SetCertificateICCard
+    - SignToReport
+    - SignToReportFromData
+    - SignToCertificateRegistration
+    - SignToCertificateRegistrationFromData
+    - SignToThirdPersonCertificate
+    - SignToThirdPersonCertificateFromData
+    - VerifyResponse
+    - VerifyResponseFromData
+cocoa:
+  framework: CLXtxSigner.framework
+  interface: CLISignature
+  source: CLXtxSigner.framework Headers/CLISignature.h
+  reportMethod: SignToReport
+  methods:
+    - SetCertificateP12
+    - SetCertificateICCard
+    - SignToReport
+    - SignToReportEltax
+    - SignToCertificateRegistration
+    - clearData

@@ -1,6 +1,6 @@
 # e-Tax Integration Threat Model
 
-**Module:** `jp_etax` · **Status:** Phase 1 · **Date:** 2026-09-20
+**Module:** `jp_etax` · **Status:** Phase 3 · **Date:** 2026-09-21
 
 Production submission is disabled. This model still applies to mock/test paths so secrets cannot leak before Phase 8.
 
@@ -26,7 +26,7 @@ Production submission is disabled. This model still applies to mock/test paths s
 - Enabling production with a single environment variable
 - Using `not-for-etax` advisor XML as if it were KSK2
 
-## Controls (Phase 1 implemented)
+## Controls (Phase 1–3 implemented)
 
 | Threat | Control |
 |--------|---------|
@@ -38,13 +38,16 @@ Production submission is disabled. This model still applies to mock/test paths s
 | Secrets in logs | `redactEtaxRecord` / private-key block strip |
 | Mixing spec families | manifest `mix_legacy_specs: false`; KSK2 URLs only |
 | LLM approval | `requireCliHumanApproval`; ADR 0038 (wired in Phase 6; CLI already refuses) |
+| XXE | `xmllint --nonet` + DOCTYPE reject (Phase 2) |
+| Homegrown XML-DSig / invented COM CLI | e-tax05 catalog only; official adapter `SPEC_BLOCKED` until hostBound |
+| Mock treated as legal signature | `legal: false`; mock forbidden outside `--env mock`; production still disabled |
+| PIN in YAML/CLI | credentials example has no password field; `--password` is not a CLI flag |
 
 ## Controls (later phases)
 
 | Threat | Planned control |
 |--------|-----------------|
-| XXE | Disable external entities in the XSD engine (Phase 2) |
-| TLS / cert validation | Official module + platform TLS; no custom crypto (Phase 3–4) |
+| TLS / cert validation | Official send/receive module + platform TLS (Phase 4) |
 | Blind retry | Receipt lookup before resend (Phase 5) |
 | Replay | Request ids + identity key (Phase 5) |
 | Least privilege | Dedicated production credentials, separate from test (Phase 8) |

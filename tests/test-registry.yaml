@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 609
-  static_test_cases: 2796
-  tiered_execution_total: 609
+  vitest_total: 611
+  static_test_cases: 2813
+  tiered_execution_total: 611
   catalog_total: 47
   catalog_cli_registered: 48
   catalog_gap: 0
@@ -1124,6 +1124,14 @@ tests:
     kind: unit
     domain: P01_kernel
   etax-phase1.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  etax-phase2.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  etax-phase3.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

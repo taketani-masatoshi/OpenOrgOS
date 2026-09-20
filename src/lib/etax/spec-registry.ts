@@ -8,6 +8,7 @@ import {
 import { getInstallRoot } from "../orgos-paths.js";
 import { ETAX_BASELINE_SPEC_VERSION, ETAX_SPEC_RELATIVE_DIR } from "./constants.js";
 import { etaxError } from "../../../schemas/etax/errors.js";
+import { officialXsdAvailable } from "./spec-paths.js";
 
 export function etaxSpecDir(): string {
   return join(getInstallRoot(), ETAX_SPEC_RELATIVE_DIR);
@@ -52,12 +53,14 @@ export function specStatusReport(): {
   family: "ksk2";
   baseline: EtaxSpecManifest["baseline"];
   ksk2Registered: boolean;
+  officialXsdUnpacked: boolean;
   artifacts: Array<{
     id: string;
     title: string;
     publishedOn: string;
     sha256: string | null;
     status: EtaxSpecArtifact["status"];
+    unpackedFileCount?: number;
     codeChangeRequired: boolean;
   }>;
 } {
@@ -66,12 +69,14 @@ export function specStatusReport(): {
     family: "ksk2",
     baseline: manifest.baseline,
     ksk2Registered: ksk2SpecRegistered(),
+    officialXsdUnpacked: officialXsdAvailable(),
     artifacts: manifest.artifacts.map((row) => ({
       id: row.id,
       title: row.title,
       publishedOn: row.publishedOn,
       sha256: row.sha256,
       status: row.status,
+      unpackedFileCount: row.unpackedFileCount,
       codeChangeRequired: row.codeChangeRequired,
     })),
   };

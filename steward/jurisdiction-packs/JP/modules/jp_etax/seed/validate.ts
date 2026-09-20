@@ -5,6 +5,7 @@ export function validateModuleSeeds(seedDir: string): void {
   for (const name of [
     "packages.yaml.example",
     "submissions.yaml.example",
+    "credentials.yaml.example",
     "00-README.md",
   ]) {
     if (!existsSync(join(seedDir, name))) {

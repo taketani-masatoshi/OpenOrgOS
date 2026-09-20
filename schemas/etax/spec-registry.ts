@@ -16,10 +16,14 @@ export const etaxSpecArtifactSchema = z.object({
   publishedOn: z.string().min(1),
   receptionStartsOn: z.string().min(1),
   source: z.string().url(),
-  sha256: z.string().regex(/^[a-f0-9]{64}$/).nullable(),
+  sha256: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
   retrievedAt: z.string().nullable(),
   listedSize: z.string().optional(),
   retrievedBytes: z.number().int().nonnegative().nullable().optional(),
+  unpackedFileCount: z.number().int().nonnegative().optional(),
   status: etaxSpecArtifactStatusSchema,
   notes: z.string().optional(),
   codeChangeRequired: z.boolean(),

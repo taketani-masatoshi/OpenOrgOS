@@ -1,8 +1,6 @@
 {
   "schema_version": 1,
   "family": "ksk2",
-  "mix_legacy_specs": false,
-  "retrieved_at_note": "CAB binaries are gitignored under spec/vendor/. Hashes are recorded only after a successful local retrieve. Do not copy hashes from the current e-Tax listing (shiyo3.htm).",
   "baseline": {
     "label": "KSK2-2026-08-28",
     "listingPublishedOn": "2026-08-28",
@@ -13,6 +11,8 @@
     "correctionNoticeUrl": "https://www.e-tax.nta.go.jp/topics/2026/topics_20260910.htm",
     "termsUrl": "https://www.e-tax.nta.go.jp/shiyo/index.htm#anc04"
   },
+  "mix_legacy_specs": false,
+  "retrieved_at_note": "CAB binaries are gitignored under spec/vendor/. Hashes are recorded only after a successful local retrieve. Do not copy hashes from the current e-Tax listing (shiyo3.htm).",
   "artifacts": [
     {
       "id": "e-taxall",
@@ -26,8 +26,8 @@
       "listedSize": "about 126MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "Bundle only. Prefer individual CABs for hashing."
+      "notes": "Bundle only. Prefer individual CABs for hashing.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax01",
@@ -36,13 +36,14 @@
       "publishedOn": "2026-01-30",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax01.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "d0d89641e57e13480a542561170572e6a2ce2eeb7366a429f16140796e6cabc0",
+      "retrievedAt": "2026-09-21T00:00:00.000Z",
       "listedSize": "about 772KB",
-      "retrievedBytes": null,
-      "status": "listed",
-      "codeChangeRequired": true,
-      "notes": "Encoding / namespace / well-formedness rules. Code for XML parser flags; field lists are data."
+      "retrievedBytes": 791078,
+      "unpackedFileCount": 6,
+      "status": "retrieved",
+      "notes": "Encoding / namespace / well-formedness rules. Code for XML parser flags; field lists are data.",
+      "codeChangeRequired": true
     },
     {
       "id": "e-tax02",
@@ -56,8 +57,8 @@
       "listedSize": "about 9.2MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": true,
-      "notes": "Transport adapter. SPEC_BLOCKED until unpacked. 2026-09-10 correction may apply."
+      "notes": "Transport adapter. SPEC_BLOCKED until unpacked. 2026-09-10 correction may apply.",
+      "codeChangeRequired": true
     },
     {
       "id": "e-tax02-1",
@@ -71,8 +72,8 @@
       "listedSize": "about 2.5MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": true,
-      "notes": "API transport adapter. Do not guess endpoints."
+      "notes": "API transport adapter. Do not guess endpoints.",
+      "codeChangeRequired": true
     },
     {
       "id": "e-tax03",
@@ -100,8 +101,8 @@
       "listedSize": "about 6.4MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": true,
-      "notes": "Official send/receive module CLI/COM interface. Adapter-only."
+      "notes": "Official send/receive module CLI/COM interface. Adapter-only.",
+      "codeChangeRequired": true
     },
     {
       "id": "e-tax05",
@@ -115,8 +116,9 @@
       "listedSize": "about 15.4KB (NTA table)",
       "retrievedBytes": 16241315,
       "status": "retrieved",
+      "notes": "Interface catalogued from SignerSample.cpp / CLISignature.h (nta.CLCXtxSigner SignToReport). Native COM/ObjC host remains unbound — OrgOS does not invent a CLI or XML-DSig. Listed size (15.4KB) disagrees with retrieved 16241315 bytes.",
       "codeChangeRequired": true,
-      "notes": "SPEC_BLOCKED for adapter wiring until CAB is unpacked. Listed size (15.4KB) disagrees with retrieved 16241315 bytes — do not assume the table size is authoritative. 2026-09-10 correction notice may apply to sibling artifacts."
+      "unpackedFileCount": 57
     },
     {
       "id": "e-tax06",
@@ -130,8 +132,8 @@
       "listedSize": "about 13.6MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": true,
-      "notes": "Out of Phase 1–5 core path (XML, not CSV)."
+      "notes": "Out of Phase 1–5 core path (XML, not CSV).",
+      "codeChangeRequired": true
     },
     {
       "id": "e-tax07",
@@ -140,13 +142,14 @@
       "publishedOn": "2026-08-28",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax07.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "3190e9a936c58e75eae4dfe121b2d1b96314ffa90fdd29d92b2b8e9fd8411b9d",
+      "retrievedAt": "2026-09-21T00:00:00.000Z",
       "listedSize": "about 8.9MB",
-      "retrievedBytes": null,
-      "status": "SPEC_BLOCKED",
-      "codeChangeRequired": false,
-      "notes": "Data-driven procedure matrix. Empty supported-procedures.yaml until unpacked."
+      "retrievedBytes": 9340285,
+      "unpackedFileCount": 207,
+      "status": "retrieved",
+      "notes": "Data-driven procedure matrix. Empty supported-procedures.yaml until unpacked.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax08",
@@ -155,13 +158,14 @@
       "publishedOn": "2026-08-12",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax08.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "1cba3f10f4b7e2173facd23f3a913af2ed87c8264b81c2da833e665d995595c3",
+      "retrievedAt": "2026-09-21T00:00:00.000Z",
       "listedSize": "about 1.2MB",
-      "retrievedBytes": null,
-      "status": "SPEC_BLOCKED",
-      "codeChangeRequired": false,
-      "notes": "Layer 2 inter-form rules. Data after unpack."
+      "retrievedBytes": 1295395,
+      "unpackedFileCount": 97,
+      "status": "retrieved",
+      "notes": "Layer 2 inter-form rules. Data after unpack.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax09",
@@ -175,8 +179,8 @@
       "listedSize": "about 8.1MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "UNSUPPORTED until explicitly added to the procedure matrix."
+      "notes": "UNSUPPORTED until explicitly added to the procedure matrix.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax10",
@@ -190,8 +194,8 @@
       "listedSize": "about 35.1MB",
       "retrievedBytes": null,
       "status": "SPEC_BLOCKED",
-      "codeChangeRequired": false,
-      "notes": "Corporate tax mapper is data-driven from this pack. Phase 2."
+      "notes": "Corporate tax mapper is data-driven from this pack. Phase 2.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax11",
@@ -205,8 +209,8 @@
       "listedSize": "about 2.2MB",
       "retrievedBytes": null,
       "status": "SPEC_BLOCKED",
-      "codeChangeRequired": false,
-      "notes": "Consumption tax mapper is data-driven from this pack. Phase 2."
+      "notes": "Consumption tax mapper is data-driven from this pack. Phase 2.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax12",
@@ -220,8 +224,8 @@
       "listedSize": "about 2.6MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "UNSUPPORTED"
+      "notes": "UNSUPPORTED",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax13",
@@ -235,8 +239,8 @@
       "listedSize": "about 511KB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "UNSUPPORTED"
+      "notes": "UNSUPPORTED",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax14",
@@ -250,8 +254,8 @@
       "listedSize": "about 621KB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "UNSUPPORTED"
+      "notes": "UNSUPPORTED",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax15",
@@ -265,8 +269,8 @@
       "listedSize": "about 1.0KB (NTA table; verify on retrieve)",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "UNSUPPORTED. Table size looks implausible — treat as SPEC_BLOCKED until hashed."
+      "notes": "UNSUPPORTED. Table size looks implausible — treat as SPEC_BLOCKED until hashed.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax16",
@@ -280,8 +284,8 @@
       "listedSize": "about 1.5MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "UNSUPPORTED"
+      "notes": "UNSUPPORTED",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax17",
@@ -295,8 +299,8 @@
       "listedSize": "about 4.6MB",
       "retrievedBytes": null,
       "status": "listed",
-      "codeChangeRequired": false,
-      "notes": "UNSUPPORTED"
+      "notes": "UNSUPPORTED",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax18",
@@ -310,8 +314,8 @@
       "listedSize": "about 1.3MB",
       "retrievedBytes": null,
       "status": "SPEC_BLOCKED",
-      "codeChangeRequired": false,
-      "notes": "Receipt XML. Phase 5 adapter maps fields from this spec; do not invent receipt schema."
+      "notes": "Receipt XML. Phase 5 adapter maps fields from this spec; do not invent receipt schema.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax19",
@@ -320,13 +324,14 @@
       "publishedOn": "2026-08-28",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax19.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "48dc25a89a2b82a2b629f021e1779240cb2fe9f7e0c173e23239793feb4dfb55",
+      "retrievedAt": "2026-09-21T00:00:00.000Z",
       "listedSize": "about 9.4MB",
-      "retrievedBytes": null,
-      "status": "SPEC_BLOCKED",
-      "codeChangeRequired": false,
-      "notes": "Official XSD. Layer 1 validation is blocked until this CAB is retrieved and unpacked. codeChangeRequired=false once a generic XSD engine is in place."
+      "retrievedBytes": 9924091,
+      "unpackedFileCount": 17151,
+      "status": "retrieved",
+      "notes": "Official XSD. Layer 1 validation is blocked until this CAB is retrieved and unpacked. codeChangeRequired=false once a generic XSD engine is in place.",
+      "codeChangeRequired": false
     },
     {
       "id": "e-tax20",

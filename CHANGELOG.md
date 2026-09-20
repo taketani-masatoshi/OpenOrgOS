@@ -9,11 +9,13 @@ All notable changes to OrgOS Operator Layer are documented here.
 ### Added
 
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
-- **e-Tax 独立連携モジュール（KSK2 · Phase 1）** — 税計算/`not-for-etax` と送信を分離。`jp_etax` · `orgos etax spec status`。本番送信は fail-closed。ADR 0078 · [docs/etax/README.md](docs/etax/README.md)
+- **e-Tax 独立連携モジュール（KSK2 · Phase 3）** — 公式署名インターフェイスを e-tax05 から catalog（Windows COM `nta.CLCXtxSigner.SignToReport` / Cocoa `CLISignature`）。ネイティブホスト未接続は `SPEC_BLOCKED`（CLI や XML-DSig を自作しない）。mock 署名は `--env mock` のみ・`legal: false`。PIN は CLI/YAML に置かない。本番送信は fail-closed。ADR 0078
+- **e-Tax 独立連携モジュール（KSK2 · Phase 2）** — 公式 CAB 展開（MSZIP）· Layer 1 XSD（`xmllint --nonet` · XXE 拒否）· データ駆動 mapper。フィールドマップ未登録の公式 XML は引き続き `SPEC_BLOCKED`。本番送信は fail-closed。ADR 0078
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 
 ### Fixed
 
+- **e-Tax Phase 1–2** — フィールド一覧を form ルートで包む仮 XML 生成を廃止。CAB 展開の `..` パスを拒否。production gate の重複理由を分離。`etax validate` が Layer fail を握りつぶさない。DRAFT 作成は手続マトリクス非加入でも可（XML/送信は fail-closed）。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
