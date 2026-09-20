@@ -37,6 +37,35 @@ function basicAuth(user: string, password: string): string {
   return `Basic ${Buffer.from(`${user}:${password}`).toString("base64")}`;
 }
 
+function davFileUrl(config: NextcloudConfig, path: string): string {
+  const encoded = path
+    .replace(/^\/+/, "")
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `${config.baseUrl}/remote.php/dav/files/${encodeURIComponent(config.user)}/${encoded}`;
+}
+
+/** Nextcloud returns 404 when a parent collection is missing. 405 means it already exists. */
+async function ensureParentCollections(
+  config: NextcloudConfig,
+  path: string,
+  fetchImpl: typeof fetch,
+): Promise<PortResult | null> {
+  const parents = path.replace(/^\/+/, "").split("/").slice(0, -1);
+  let acc = "";
+  for (const part of parents) {
+    acc = acc ? `${acc}/${part}` : part;
+    const res = await fetchImpl(davFileUrl(config, acc), {
+      method: "MKCOL",
+      headers: { Authorization: basicAuth(config.user, config.password) },
+    });
+    if (res.ok || res.status === 405) continue;
+    return { ok: false, reason: `nextcloud_http_${res.status}` };
+  }
+  return null;
+}
+
 export async function pingNextcloud(
   config: NextcloudConfig,
   fetchImpl: typeof fetch = fetch,
@@ -53,13 +82,9 @@ export async function putNextcloudFile(
   fetchImpl: typeof fetch = fetch,
 ): Promise<PortResult> {
   assertOpenDeskFilePath(path);
-  const encoded = path
-    .replace(/^\/+/, "")
-    .split("/")
-    .map((part) => encodeURIComponent(part))
-    .join("/");
-  const url = `${config.baseUrl}/remote.php/dav/files/${encodeURIComponent(config.user)}/${encoded}`;
-  const res = await fetchImpl(url, {
+  const parent = await ensureParentCollections(config, path, fetchImpl);
+  if (parent) return parent;
+  const res = await fetchImpl(davFileUrl(config, path), {
     method: "PUT",
     headers: {
       Authorization: basicAuth(config.user, config.password),
