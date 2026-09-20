@@ -1,0 +1,27 @@
+schema_version: 1
+specFamily: ksk2
+specArtifactId: e-tax04
+hostBound: false
+notes: >
+  Method names are taken from the KSK2 e-tax04 pack (ActiveX 2_CLICommunication.docx
+  + TestCommVC01.cpp + Sample.CLCommunication.manifest). OrgOS does not invent
+  HTTP endpoints, request IDs (XU00Sxxx / SU00Sxxx), or a CLI around this COM
+  module. Filing request IDs stay SPEC_BLOCKED until mapped from the official
+  interface table. hostBound remains false until a native host is reviewed.
+windows:
+  dll: CLCommunication.dll
+  progid: nta.CLCCommunication
+  clsid: "{9739DAD2-AA6F-11D6-B71D-000103451488}"
+  typelib: "{9739DAC5-AA6F-11D6-B71D-000103451488}"
+  source: ActiveX 2_CLICommunication.docx and TestCommVC01.cpp
+  submitMethod: Send
+  receiptMethod: GetResponse
+  methods:
+    - CreateRequest
+    - Send
+    - GetResponse
+    - GetErrorResponse
+    - GetHttpStatusCode
+    - SaveResponseXml
+    - GetResponseXmlData
+    - GetJSONResponse

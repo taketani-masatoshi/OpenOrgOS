@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { EtaxException } from "../schemas/etax/errors.js";
 import type { EtaxProcedureMatrix } from "../schemas/etax/procedures.js";
 import { createReturnPackage, recomputeContentHash } from "../src/lib/etax/return-package.js";
-import { hashReturnPackageContent, submissionIdentityKey } from "../src/lib/etax/hash.js";
+import { hashReturnPackageContent, submissionSlotKey } from "../src/lib/etax/hash.js";
 import {
   canTransition,
   invalidateAfterContentChange,
@@ -93,6 +93,11 @@ describe("etax state machine", () => {
     expect(() => transitionStatus("DRAFT", "SUBMITTED")).toThrow(EtaxException);
   });
 
+  it("allows READY_TO_SUBMIT → TRANSPORT_ERROR", () => {
+    expect(canTransition("READY_TO_SUBMIT", "TRANSPORT_ERROR")).toBe(true);
+    expect(transitionStatus("READY_TO_SUBMIT", "TRANSPORT_ERROR")).toBe("TRANSPORT_ERROR");
+  });
+
   it("invalidates approval-class states back to DRAFT on content change", () => {
     expect(invalidateAfterContentChange("APPROVED")).toBe("DRAFT");
     expect(invalidateAfterContentChange("SIGNED")).toBe("DRAFT");
@@ -102,27 +107,24 @@ describe("etax state machine", () => {
 });
 
 describe("etax idempotency identity", () => {
-  it("is derived from taxpayer, procedure, year, revision, document hash", () => {
-    const a = submissionIdentityKey({
+  it("slot key is taxpayer, procedure, year, revision (no content hash)", () => {
+    const a = submissionSlotKey({
       taxpayerId: "TP-1",
       procedureCode: "TEST-CORP",
       taxYear: "FY2026",
       revision: 0,
-      documentHash: "sha256:aaa",
     });
-    const b = submissionIdentityKey({
+    const b = submissionSlotKey({
       taxpayerId: "TP-1",
       procedureCode: "TEST-CORP",
       taxYear: "FY2026",
       revision: 0,
-      documentHash: "sha256:aaa",
     });
-    const c = submissionIdentityKey({
+    const c = submissionSlotKey({
       taxpayerId: "TP-1",
       procedureCode: "TEST-CORP",
       taxYear: "FY2026",
       revision: 1,
-      documentHash: "sha256:aaa",
     });
     expect(a).toBe(b);
     expect(c).not.toBe(a);

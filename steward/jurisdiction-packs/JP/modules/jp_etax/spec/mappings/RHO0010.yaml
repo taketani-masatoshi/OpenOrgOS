@@ -1,0 +1,48 @@
+schema_version: 1
+specFamily: ksk2
+procedureCode: RHO0010
+formId: HOA110
+schemaRelativePath: hojin/RHO0010-150.xsd
+specArtifactId: e-tax19
+envelope:
+  rootElement: DATA
+  targetNamespace: http://xml.e-tax.nta.go.jp/XSD/hojin
+  generalNamespace: http://xml.e-tax.nta.go.jp/XSD/general
+  rdfNamespace: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  procedureElement: RHO0010
+  procedureVersion: "15.0.2"
+  itVersion: "1.5"
+  requiredForms:
+    - element: HOA110
+      version: "14.0"
+  softNM: OpenOrgOS-jp_etax
+  sakuseiNM: OpenOrgOS-jp_etax
+  sakuseiDaySource: it.sakuseiDay
+fields:
+  - sourcePath: it.zeimushoCd
+    xmlLocalName: zeimusho_CD
+    xmlPath: ZEIMUSHO.zeimusho_CD
+    required: true
+  - sourcePath: it.zeimushoNm
+    xmlLocalName: zeimusho_NM
+    xmlPath: ZEIMUSHO.zeimusho_NM
+    required: true
+  - sourcePath: it.nozeishaId
+    xmlLocalName: NOZEISHA_ID
+    required: true
+  - sourcePath: it.nozeishaNm
+    xmlLocalName: NOZEISHA_NM
+    required: true
+  - sourcePath: it.nozeishaAdr
+    xmlLocalName: NOZEISHA_ADR
+    required: true
+  - sourcePath: it.procedureCd
+    xmlLocalName: procedure_CD
+    xmlPath: TETSUZUKI.procedure_CD
+    required: true
+notes: >
+  Envelope and element local names extracted from official e-tax19 XSD:
+  DATA / RHO0010 / CATALOG / CONTENTS / IT / HOA110 (RHO0010-150.xsd,
+  ITdefinition.xsd, HOA110-014.xsd, General FormAttribute).
+  e-tax10 field workbook remains the human-readable field dictionary; this
+  mapping binds only XSD-proven local names. EXPERIMENTAL / not production.

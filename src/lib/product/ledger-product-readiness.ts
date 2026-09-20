@@ -245,7 +245,7 @@ export function buildProductReadinessReport(
       pass: fileExists(
         "steward/jurisdiction-packs/JP/modules/jp_etax/module.manifest.yaml",
       ),
-      detail: "Independent KSK2 module (ADR 0078). Production submission DISABLED.",
+      detail: "Independent KSK2 module registered (ADR 0078). Production submission DISABLED — not e-Tax certified.",
     },
     {
       id: "tax-readiness",

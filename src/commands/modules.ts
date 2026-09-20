@@ -32,6 +32,7 @@ import {
 function countTiers(): Record<ReadinessTier, number> {
   const counts: Record<ReadinessTier, number> = {
     skeleton: 0,
+    experimental: 0,
     activation_ready: 0,
     production_ready: 0,
   };
@@ -62,7 +63,7 @@ export function runModulesCheckAll(): void {
   if (issues.length === 0 && extIssues.length === 0) {
     const c = countTiers();
     console.log(
-      `✓ All ${catalogIds.length} catalog modules OK (${c.production_ready} production_ready · ${c.activation_ready} activation_ready · ${c.skeleton} skeleton)`
+      `✓ All ${catalogIds.length} catalog modules OK (${c.production_ready} production_ready · ${c.activation_ready} activation_ready · ${c.experimental} experimental · ${c.skeleton} skeleton)`
     );
     process.exit(0);
   }

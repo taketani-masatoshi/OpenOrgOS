@@ -1,0 +1,9 @@
+schema_version: 1
+specFamily: ksk2
+unloadedFormsWithRules: []
+formsWithNoDependencies:
+  - HOA110
+notes: >
+  e-tax08.CAB is retrieved locally. OpenOrgOS has not loaded inter-form
+  dependency rows as data yet. HOA110 alone (minimal RHO0010 CONTENTS) is
+  treated as having no additional form dependencies for Layer 2.

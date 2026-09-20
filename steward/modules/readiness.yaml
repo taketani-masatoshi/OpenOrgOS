@@ -123,9 +123,11 @@ modules:
     notes: 法人税申告準備 · operations tax-corporate CLI（calendar/gaps/depreciation）· ADR 0046 ·
       申告 XML ドラフトは not-for-etax。e-Tax 送信は jp_etax 専用モジュール（ADR 0078）
   jp_etax:
-    tier: skeleton
-    notes: NTA e-Tax KSK2 integration. EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION.
-      Tax calculation is out of scope (ADR 0078).
+    tier: experimental
+    notes: >
+      NTA e-Tax KSK2 integration (ADR 0078). EXPERIMENTAL / NOT FOR PRODUCTION.
+      First procedure RHO0010 mock path only. Production gate disabled.
+      Tax calculation remains out of scope.
   jp_tax_consumption:
     tier: activation_ready
     notes: 消費税区分チェック · operations tax-consumption CLI（check/calc/eligibility）·

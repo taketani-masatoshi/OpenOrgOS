@@ -52,13 +52,14 @@
       "publishedOn": "2026-08-28",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax02.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "7215f16d67a637f49299b76ab8b30f7f9ae62e418fe808db6817ee89d105e07f",
+      "retrievedAt": "2026-09-20T20:24:07.612Z",
       "listedSize": "about 9.2MB",
-      "retrievedBytes": null,
-      "status": "listed",
+      "retrievedBytes": 9652179,
+      "status": "retrieved",
       "notes": "Transport adapter. SPEC_BLOCKED until unpacked. 2026-09-10 correction may apply.",
-      "codeChangeRequired": true
+      "codeChangeRequired": true,
+      "unpackedFileCount": 11
     },
     {
       "id": "e-tax02-1",
@@ -67,13 +68,14 @@
       "publishedOn": "2026-08-12",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax02-1.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "a7698272e39bd04477b5f4359b012f30a29fb636d123fcb015f112ddbe53691f",
+      "retrievedAt": "2026-09-20T20:24:07.612Z",
       "listedSize": "about 2.5MB",
-      "retrievedBytes": null,
-      "status": "listed",
+      "retrievedBytes": 2572143,
+      "status": "retrieved",
       "notes": "API transport adapter. Do not guess endpoints.",
-      "codeChangeRequired": true
+      "codeChangeRequired": true,
+      "unpackedFileCount": 98
     },
     {
       "id": "e-tax03",
@@ -82,12 +84,13 @@
       "publishedOn": "2026-06-15",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax03.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "c983963eb7c0d3996bedc102fad64dc88ca86ee78adce5498b30f2200990a9dc",
+      "retrievedAt": "2026-09-20T20:24:07.612Z",
       "listedSize": "about 106KB",
-      "retrievedBytes": null,
-      "status": "listed",
-      "codeChangeRequired": true
+      "retrievedBytes": 109566,
+      "status": "retrieved",
+      "codeChangeRequired": true,
+      "unpackedFileCount": 3
     },
     {
       "id": "e-tax04",
@@ -96,12 +99,13 @@
       "publishedOn": "2026-08-28",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax04.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "fcb7ec7b90242a5bb16845e94f22d8ad7984a2def32e26d82ff0d15d809d73eb",
+      "retrievedAt": "2026-09-20T15:54:00.932Z",
       "listedSize": "about 6.4MB",
-      "retrievedBytes": null,
-      "status": "listed",
-      "notes": "Official send/receive module CLI/COM interface. Adapter-only.",
+      "retrievedBytes": 6741506,
+      "unpackedFileCount": 29,
+      "status": "retrieved",
+      "notes": "Interface catalogued from TestCommVC01.cpp / 2_CLICommunication.docx (nta.CLCCommunication Send / GetResponse). Native COM host remains unbound — OrgOS does not invent HTTP endpoints or request IDs. Receipt field map is e-tax18 (still listed).",
       "codeChangeRequired": true
     },
     {
@@ -115,10 +119,10 @@
       "retrievedAt": "2026-09-20T14:51:00Z",
       "listedSize": "about 15.4KB (NTA table)",
       "retrievedBytes": 16241315,
+      "unpackedFileCount": 57,
       "status": "retrieved",
       "notes": "Interface catalogued from SignerSample.cpp / CLISignature.h (nta.CLCXtxSigner SignToReport). Native COM/ObjC host remains unbound — OrgOS does not invent a CLI or XML-DSig. Listed size (15.4KB) disagrees with retrieved 16241315 bytes.",
-      "codeChangeRequired": true,
-      "unpackedFileCount": 57
+      "codeChangeRequired": true
     },
     {
       "id": "e-tax06",
@@ -189,13 +193,14 @@
       "publishedOn": "2026-08-12",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax10.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "1a2b619fd47abfc22b366ba0444dbff9f1518c35ec87786f5e6eaa8a3b03ae1c",
+      "retrievedAt": "2026-09-20T20:24:07.612Z",
       "listedSize": "about 35.1MB",
-      "retrievedBytes": null,
-      "status": "SPEC_BLOCKED",
-      "notes": "Corporate tax mapper is data-driven from this pack. Phase 2.",
-      "codeChangeRequired": false
+      "retrievedBytes": 36852863,
+      "status": "retrieved",
+      "notes": "Corporate tax field workbook. OpenOrgOS first mapping RHO0010 binds XSD local names from e-tax19 (RHO0010-150 / HOA110-014); e-tax10 remains the human-readable dictionary.",
+      "codeChangeRequired": false,
+      "unpackedFileCount": 70
     },
     {
       "id": "e-tax11",
@@ -309,13 +314,14 @@
       "publishedOn": "2026-06-15",
       "receptionStartsOn": "2026-09-24",
       "source": "https://www.e-tax.nta.go.jp/shiyo/ksk2/download/e-tax18.CAB",
-      "sha256": null,
-      "retrievedAt": null,
+      "sha256": "5c59d93d1b9ee32f546ed9ec96ef0be7b0f71234034bf4a4170544ec80a1c3ce",
+      "retrievedAt": "2026-09-20T20:24:07.612Z",
       "listedSize": "about 1.3MB",
-      "retrievedBytes": null,
-      "status": "SPEC_BLOCKED",
+      "retrievedBytes": 1409055,
+      "status": "retrieved",
       "notes": "Receipt XML. Phase 5 adapter maps fields from this spec; do not invent receipt schema.",
-      "codeChangeRequired": false
+      "codeChangeRequired": false,
+      "unpackedFileCount": 10
     },
     {
       "id": "e-tax19",

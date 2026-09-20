@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 611
-  static_test_cases: 2813
-  tiered_execution_total: 611
+  vitest_total: 613
+  static_test_cases: 2827
+  tiered_execution_total: 613
   catalog_total: 47
   catalog_cli_registered: 48
   catalog_gap: 0
@@ -142,7 +142,7 @@ catalog_modules:
       - jp-corporate-registration.test.ts
       - mal-module-cli-contract.test.ts
   jp_etax:
-    tier: skeleton
+    tier: experimental
     coverage_tier: catalog_only
     cli: true
     tests:
@@ -1123,6 +1123,11 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  etax-lifecycle-e2e.test.ts:
+    axis: integration
+    kind: integration
+    domain: P01_kernel
+    integration: I2_protocol_e2e
   etax-phase1.test.ts:
     axis: platform
     kind: unit
@@ -1132,6 +1137,10 @@ tests:
     kind: unit
     domain: P01_kernel
   etax-phase3.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  etax-phase4-8.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

@@ -21,7 +21,16 @@ import {
 } from "./spec-paths.js";
 import { etaxSpecManifestPath, loadEtaxSpecManifest } from "./spec-registry.js";
 
-const PHASE2_DEFAULT_IDS = ["e-tax01", "e-tax07", "e-tax08", "e-tax19"] as const;
+const PHASE2_DEFAULT_IDS = [
+  "e-tax01",
+  "e-tax03",
+  "e-tax07",
+  "e-tax08",
+  "e-tax10",
+  "e-tax18",
+  "e-tax19",
+] as const;
+
 
 export function resolveOfficialXsd(relativePath: string): string {
   const dest = join(officialXsdRoot(), relativePath);

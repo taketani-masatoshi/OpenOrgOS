@@ -75,6 +75,9 @@ export function bindSignatureToSubmission(
     status: transitionStatus(sub.status, "SIGNED"),
     signatureRef: `${signature.provider}:${signature.signatureHash}`,
     signatureProvider: signature.provider,
+    signatureLegal: signature.legal,
+    signatureDocumentHash: signature.documentHash,
+    signatureHash: signature.signatureHash,
     environment: env,
   };
 }

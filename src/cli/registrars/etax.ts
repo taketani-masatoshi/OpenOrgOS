@@ -1,7 +1,11 @@
 import type { Command } from "commander";
 import {
   runEtaxApprove,
+  runEtaxApprovePropose,
   runEtaxBuild,
+  runEtaxProductionEnable,
+  runEtaxProductionReview,
+  runEtaxReady,
   runEtaxReceipt,
   runEtaxSign,
   runEtaxSpecFetch,
@@ -9,6 +13,7 @@ import {
   runEtaxSpecUnpack,
   runEtaxStatus,
   runEtaxSubmit,
+  runEtaxTransmissionTestStatus,
   runEtaxValidate,
 } from "../../commands/etax.js";
 import type { EtaxEnvironment } from "../../../schemas/etax/submission-state.js";
@@ -39,7 +44,7 @@ export function registerEtaxCommandTree(parent: Command): void {
     .description("Retrieve listed KSK2 CABs into gitignored spec/vendor and record SHA-256")
     .option(
       "--ids <csv>",
-      "Comma-separated artifact ids (default: e-tax01,e-tax07,e-tax08,e-tax19)"
+      "Comma-separated artifact ids (default: e-tax01,03,07,08,10,18,19)"
     )
     .option("--no-unpack", "Hash only; do not unpack")
     .option("--force", "Re-download even if the CAB is already present")
@@ -75,9 +80,10 @@ export function registerEtaxCommandTree(parent: Command): void {
     .command("build")
     .description("Create ReturnPackage from JSON (official XML needs mapping + unpacked XSD)")
     .option("--from <path>", "Return package JSON")
+    .option("--out <path>", "Write generated official XML here")
     .option("--json", "JSON output")
-    .action((opts: { from?: string; json?: boolean }) =>
-      runEtaxBuild({ from: opts.from, json: Boolean(opts.json) })
+    .action((opts: { from?: string; out?: string; json?: boolean }) =>
+      runEtaxBuild({ from: opts.from, out: opts.out, json: Boolean(opts.json) })
     );
 
   etax
@@ -100,11 +106,31 @@ export function registerEtaxCommandTree(parent: Command): void {
 
   etax
     .command("approve")
-    .description("Human approval bound to contentHash (Phase 6)")
+    .description("Grant hash-bound org approval (ADR 0038). Propose first.")
+    .argument("<submission-id>")
+    .option("--approval-id <id>", "Pending or granted org approval id (APR-*)")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { approvalId?: string; json?: boolean }) =>
+      runEtaxApprove({ id, approvalId: opts.approvalId, json: Boolean(opts.json) })
+    );
+
+  etax
+    .command("approve-propose")
+    .description("Propose an org approval bound to the ReturnPackage contentHash")
     .argument("<submission-id>")
     .option("--json", "JSON output")
     .action((id: string, opts: { json?: boolean }) =>
-      runEtaxApprove({ id, json: Boolean(opts.json) })
+      runEtaxApprovePropose({ id, json: Boolean(opts.json) })
+    );
+
+  etax
+    .command("ready")
+    .description("Mark a SIGNED submission READY_TO_SUBMIT (hash-bound)")
+    .argument("<submission-id>")
+    .option("--env <mock|test|production>", "Environment", "mock")
+    .option("--json", "JSON output")
+    .action((id: string, opts: { env?: string; json?: boolean }) =>
+      runEtaxReady({ id, env: parseEnv(opts.env), json: Boolean(opts.json) })
     );
 
   etax
@@ -134,25 +160,48 @@ export function registerEtaxCommandTree(parent: Command): void {
 
   etax
     .command("submit")
-    .description("Submit to e-Tax transport. Production is fail-closed.")
+    .description("Submit to e-Tax transport. Production is fail-closed. Mock is not NTA.")
     .argument("<submission-id>")
     .option("--env <mock|test|production>", "Transport environment", "mock")
+    .option("--xml <path>", "Official XML instance to submit (hash-bound)")
     .option("--json", "JSON output")
-    .action((id: string, opts: { env?: string; json?: boolean }) =>
+    .action((id: string, opts: { env?: string; xml?: string; json?: boolean }) =>
       runEtaxSubmit({
         id,
         env: parseEnv(opts.env),
+        xml: opts.xml,
         json: Boolean(opts.json),
       })
     );
 
   etax
     .command("receipt")
-    .description("Fetch e-Tax receipt (Phase 5)")
+    .description("Fetch e-Tax receipt. RECEIVED_BY_ETAX is not tax-correctness.")
     .argument("<submission-id>")
+    .option("--env <mock|test|production>", "Transport environment", "mock")
     .option("--json", "JSON output")
-    .action((id: string, opts: { json?: boolean }) =>
-      runEtaxReceipt({ id, json: Boolean(opts.json) })
+    .action((id: string, opts: { env?: string; json?: boolean }) =>
+      runEtaxReceipt({ id, env: parseEnv(opts.env), json: Boolean(opts.json) })
+    );
+
+  const production = etax.command("production").description("Production enablement (fail-closed)");
+  production
+    .command("review")
+    .description("Show the Phase 8 checklist. Does not enable production.")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => runEtaxProductionReview({ json: Boolean(opts.json) }));
+  production
+    .command("enable")
+    .description("Refused: CLI cannot flip production-gate.yaml")
+    .action(() => runEtaxProductionEnable());
+
+  etax
+    .command("transmission-test")
+    .description("NTA KSK2 transmission test status (Phase 7). Not executed.")
+    .command("status")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) =>
+      runEtaxTransmissionTestStatus({ json: Boolean(opts.json) })
     );
 
   etax

@@ -9,46 +9,53 @@ import { getIdGenerator } from "../runtime-context.js";
 import { createReturnPackage, assertContentHash, recomputeContentHash } from "./return-package.js";
 import {
   identityKeyFor,
-  findSubmissionByIdentity,
+  findActiveSubmissionInSlot,
   loadSubmissions,
   saveReturnPackage,
   saveSubmission,
   requireReturnPackage,
   requireSubmission,
   type EtaxSubmissionRecord,
+  type EtaxXmlProvenance,
 } from "./store.js";
 import { invalidateAfterContentChange, transitionStatus } from "./state-machine.js";
 import { appendEtaxAudit } from "./audit.js";
 import { assertProductionSubmitAllowed } from "./production-gate.js";
 import { generateOfficialXml } from "./xml-generator.js";
 import { bindSignatureToSubmission, signDocument, xmlHashOf } from "./signature.js";
+import { bindApprovalToSubmission } from "./approval.js";
+import { markReadyToSubmit, pullReceipt, sendSignedSubmission } from "./submit.js";
 import type { SignatureResult } from "./adapters.js";
+import type { ReceiptResult, SubmissionResult } from "./adapters.js";
 import type { ReturnPackageCreateInput } from "../../../schemas/etax/return-package.js";
 import type { EtaxProcedureMatrix } from "../../../schemas/etax/procedures.js";
+import { validateEtaxDocument } from "./validate-layers.js";
+import { xmlContentHash } from "./xml-validate.js";
 
 export function buildReturnPackage(
   input: ReturnPackageCreateInput,
-  opts?: { persist?: boolean; actor?: string; procedureMatrix?: EtaxProcedureMatrix }
+  opts?: { persist?: boolean; actor?: string; procedureMatrix?: EtaxProcedureMatrix },
 ): ReturnPackage {
   const pkg = createReturnPackage(input);
   if (opts?.persist === false) return pkg;
   saveReturnPackage(pkg);
+  const slotKey = identityKeyFor(pkg);
+  const dup = findActiveSubmissionInSlot(slotKey);
+  if (dup) {
+    throw etaxError({
+      code: "ETAX_DUPLICATE_SUBMISSION",
+      blocked: "DUPLICATE_SUBMISSION",
+      message: `Active submission already exists for this filing slot as ${dup.id} (status=${dup.status})`,
+    });
+  }
   const sub: EtaxSubmissionRecord = {
     id: getIdGenerator().uniqueId("ETAX-SUB"),
     packageId: pkg.id,
     status: "DRAFT",
     contentHash: pkg.contentHash,
-    identityKey: identityKeyFor(pkg, pkg.contentHash),
+    identityKey: slotKey,
     specVersion: pkg.specVersion,
   };
-  const dup = findSubmissionByIdentity(sub.identityKey);
-  if (dup && dup.status !== "DRAFT" && dup.status !== "REJECTED_BY_ETAX") {
-    throw etaxError({
-      code: "ETAX_DUPLICATE_SUBMISSION",
-      blocked: "DUPLICATE_SUBMISSION",
-      message: `Identical submission identity already exists as ${dup.id}`,
-    });
-  }
   saveSubmission(sub);
   appendEtaxAudit({
     actor: opts?.actor ?? input.createdBy,
@@ -100,10 +107,19 @@ export function assertBoundHash(pkg: ReturnPackage, sub: EtaxSubmissionRecord): 
 export function applyContentMutation(
   packageId: string,
   payload: unknown,
-  actor: string
+  actor: string,
 ): { package: ReturnPackage; submission: EtaxSubmissionRecord } {
   const pkg = requireReturnPackage(packageId);
   const sub = submissionForPackage(packageId);
+  if (sub.status !== "DRAFT" && sub.status !== "GENERATED" && sub.status !== "SCHEMA_VALID" && sub.status !== "BUSINESS_RULE_VALID") {
+    if (sub.status === "APPROVED" || sub.status === "SIGNED" || sub.status === "READY_TO_SUBMIT") {
+      throw etaxError({
+        code: "ETAX_MUTATION_REQUIRES_NEW_REVISION",
+        field: "revision",
+        message: `Cannot mutate ${sub.status} in place; open a new revision`,
+      });
+    }
+  }
   const nextPkg = createReturnPackage(
     {
       taxpayerId: pkg.taxpayerId,
@@ -115,7 +131,7 @@ export function applyContentMutation(
       sourceReferences: pkg.sourceReferences,
       specVersion: pkg.specVersion,
     },
-    { id: pkg.id, now: pkg.createdAt }
+    { id: pkg.id, now: pkg.createdAt },
   );
   const nextStatus = invalidateAfterContentChange(sub.status);
   const nextSub: EtaxSubmissionRecord = {
@@ -123,11 +139,18 @@ export function applyContentMutation(
     status: nextStatus,
     contentHash: nextPkg.contentHash,
     xmlHash: undefined,
+    xmlProvenance: undefined,
     approvalId: undefined,
     approvalContentHash: undefined,
     signatureRef: undefined,
     signatureProvider: undefined,
-    identityKey: identityKeyFor(nextPkg, nextPkg.contentHash),
+    signatureLegal: undefined,
+    signatureDocumentHash: undefined,
+    signatureHash: undefined,
+    requestId: undefined,
+    receiptNumber: undefined,
+    receiptHash: undefined,
+    identityKey: identityKeyFor(nextPkg),
   };
   saveReturnPackage(nextPkg);
   saveSubmission(nextSub);
@@ -143,10 +166,129 @@ export function applyContentMutation(
   return { package: nextPkg, submission: nextSub };
 }
 
-export function buildOfficialXml(packageId: string): never {
+export function bindOfficialXml(
+  submissionId: string,
+  xml: string,
+  provenance: EtaxXmlProvenance,
+  actor: string,
+): { submission: EtaxSubmissionRecord; xmlHash: string } {
+  const sub = requireSubmission(submissionId);
+  const pkg = requireReturnPackage(sub.packageId);
+  assertBoundHash(pkg, sub);
+  if (provenance === "imported-validated" && sub.environment === "production") {
+    throw etaxError({
+      code: "ETAX_IMPORT_FORBIDDEN_IN_PRODUCTION",
+      blocked: "PRODUCTION_DISABLED",
+      message: "imported-validated XML cannot bind a production submission",
+    });
+  }
+  const hash = xmlContentHash(xml);
+  let status = sub.status;
+  if (status === "DRAFT") {
+    status = transitionStatus("DRAFT", "GENERATED");
+  } else if (status !== "GENERATED" && status !== "SCHEMA_VALID" && status !== "BUSINESS_RULE_VALID") {
+    throw etaxError({
+      code: "ETAX_BIND_XML_BAD_STATUS",
+      field: "status",
+      message: `Cannot bind XML in status ${sub.status}`,
+    });
+  }
+  const next: EtaxSubmissionRecord = {
+    ...sub,
+    status,
+    xmlHash: hash,
+    xmlProvenance: provenance,
+  };
+  saveSubmission(next);
+  appendEtaxAudit({
+    actor,
+    action: "ETAX_XML_GENERATED",
+    objectId: next.id,
+    contentHash: next.contentHash,
+    specVersion: next.specVersion,
+    result: "ok",
+    detail: `provenance=${provenance} xmlHash=${hash}`,
+  });
+  return { submission: next, xmlHash: hash };
+}
+
+export function buildOfficialXml(
+  packageId: string,
+  opts?: { persist?: boolean; actor?: string },
+): { xml: string; submission: EtaxSubmissionRecord; xmlHash: string } {
   const pkg = requireReturnPackage(packageId);
-  submissionForPackage(packageId);
-  generateOfficialXml(pkg);
+  const sub = submissionForPackage(packageId);
+  const xml = generateOfficialXml(pkg);
+  if (opts?.persist === false) {
+    return { xml, submission: sub, xmlHash: xmlContentHash(xml) };
+  }
+  const bound = bindOfficialXml(sub.id, xml, "generated", opts?.actor ?? "system");
+  return { xml, submission: bound.submission, xmlHash: bound.xmlHash };
+}
+
+/**
+ * Validate XML and advance GENERATED → SCHEMA_VALID → BUSINESS_RULE_VALID when all layers pass.
+ */
+export function validateAndAdvance(opts: {
+  submissionId: string;
+  xml: string;
+  env?: EtaxEnvironment;
+  actor: string;
+  persist?: boolean;
+}): { report: ReturnType<typeof validateEtaxDocument>; submission: EtaxSubmissionRecord } {
+  const sub = requireSubmission(opts.submissionId);
+  const pkg = requireReturnPackage(sub.packageId);
+  assertBoundHash(pkg, sub);
+  if (!sub.xmlHash) {
+    throw etaxError({
+      code: "ETAX_VALIDATE_NO_XML",
+      field: "xmlHash",
+      blocked: "SPEC_BLOCKED",
+      message: "Bind official XML before validateAndAdvance",
+    });
+  }
+  const liveHash = xmlContentHash(opts.xml);
+  if (liveHash !== sub.xmlHash) {
+    throw etaxError({
+      code: "ETAX_XML_HASH_MISMATCH",
+      blocked: "HASH_MISMATCH",
+      message: "Validate XML does not match bound xmlHash",
+    });
+  }
+  const report = validateEtaxDocument({
+    pkg,
+    submission: sub,
+    env: opts.env ?? "mock",
+    xml: opts.xml,
+  });
+  let next = sub;
+  if (report.ok) {
+    const status = statusAfterSuccessfulValidation(sub.status);
+    next = { ...sub, status };
+    if (opts.persist !== false) {
+      saveSubmission(next);
+      appendEtaxAudit({
+        actor: opts.actor,
+        action: "ETAX_VALIDATION_COMPLETED",
+        objectId: next.id,
+        contentHash: next.contentHash,
+        specVersion: next.specVersion,
+        result: "ok",
+        detail: `status=${next.status}`,
+      });
+    }
+  }
+  return { report, submission: next };
+}
+
+/** Pure status advance used by validateAndAdvance when all layers pass. */
+export function statusAfterSuccessfulValidation(
+  from: EtaxSubmissionStatus,
+): EtaxSubmissionStatus {
+  let status = from;
+  if (status === "GENERATED") status = transitionStatus(status, "SCHEMA_VALID");
+  if (status === "SCHEMA_VALID") status = transitionStatus(status, "BUSINESS_RULE_VALID");
+  return status;
 }
 
 export async function signSubmission(opts: {
@@ -199,22 +341,167 @@ export async function signSubmission(opts: {
   return { submission: next, signature };
 }
 
+function signatureFromSubmission(sub: EtaxSubmissionRecord): SignatureResult {
+  if (!sub.signatureRef || !sub.signatureProvider || !sub.signatureHash) {
+    throw etaxError({
+      code: "ETAX_SUBMIT_NO_SIGNATURE",
+      field: "signatureRef",
+      message: "Cannot submit without a bound signatureRef",
+    });
+  }
+  return {
+    provider: sub.signatureProvider,
+    legal: sub.signatureLegal ?? false,
+    certificateId:
+      sub.signatureProvider === "mock"
+        ? "orgos-mock-not-an-nta-certificate"
+        : "nta-official-certificate-ref",
+    certificateValid: sub.signatureLegal === true,
+    signingTime: new Date(0).toISOString(),
+    documentHash: (sub.signatureDocumentHash ?? sub.xmlHash ?? sub.contentHash) as `sha256:${string}`,
+    signatureHash: sub.signatureHash as `sha256:${string}`,
+  };
+}
+
+export function applyHashBoundApproval(opts: {
+  submissionId: string;
+  approvalId: string;
+  actor: string;
+  persist?: boolean;
+}): EtaxSubmissionRecord {
+  const sub = requireSubmission(opts.submissionId);
+  const pkg = requireReturnPackage(sub.packageId);
+  assertBoundHash(pkg, sub);
+  const next = bindApprovalToSubmission(sub, {
+    approvalId: opts.approvalId,
+    contentHash: pkg.contentHash,
+  });
+  if (opts.persist !== false) {
+    saveSubmission(next);
+    appendEtaxAudit({
+      actor: opts.actor,
+      action: "ETAX_APPROVAL_GRANTED",
+      objectId: next.id,
+      contentHash: next.contentHash,
+      specVersion: next.specVersion,
+      result: "ok",
+      detail: `approvalId=${opts.approvalId}`,
+    });
+  }
+  return next;
+}
+
+export function markSubmissionReady(opts: {
+  submissionId: string;
+  env: EtaxEnvironment;
+  actor: string;
+  persist?: boolean;
+}): EtaxSubmissionRecord {
+  const sub = requireSubmission(opts.submissionId);
+  const pkg = requireReturnPackage(sub.packageId);
+  assertBoundHash(pkg, sub);
+  const next = markReadyToSubmit(sub, opts.env);
+  if (opts.persist !== false) {
+    saveSubmission(next);
+    appendEtaxAudit({
+      actor: opts.actor,
+      action: "ETAX_SUBMISSION_REQUESTED",
+      objectId: next.id,
+      contentHash: next.contentHash,
+      specVersion: next.specVersion,
+      result: "ok",
+      detail: `status=${next.status} env=${opts.env}`,
+    });
+  }
+  return next;
+}
+
+export async function submitToEtax(opts: {
+  submissionId: string;
+  env: EtaxEnvironment;
+  document: Buffer;
+  actor: string;
+  persist?: boolean;
+}): Promise<{ submission: EtaxSubmissionRecord; result: SubmissionResult }> {
+  const sub = requireSubmission(opts.submissionId);
+  const pkg = requireReturnPackage(sub.packageId);
+  assertBoundHash(pkg, sub);
+  if (sub.xmlHash && xmlHashOf(opts.document) !== sub.xmlHash) {
+    throw etaxError({
+      code: "ETAX_SUBMIT_XML_HASH_MISMATCH",
+      field: "xmlHash",
+      blocked: "HASH_MISMATCH",
+      message: "Provided XML does not match the submission xmlHash",
+    });
+  }
+  const sent = await sendSignedSubmission({
+    sub,
+    env: opts.env,
+    document: opts.document,
+    signature: signatureFromSubmission(sub),
+  });
+  if (opts.persist !== false) {
+    saveSubmission(sent.submission);
+    appendEtaxAudit({
+      actor: opts.actor,
+      action: sent.result.transportStatus === "sent" ? "ETAX_SUBMISSION_SENT" : "ETAX_TRANSPORT_ERROR",
+      objectId: sent.submission.id,
+      contentHash: sent.submission.contentHash,
+      specVersion: sent.submission.specVersion,
+      result: sent.result.transportStatus === "sent" ? "ok" : "failed",
+      detail: `requestId=${sent.result.requestId ?? "none"} env=${opts.env}`,
+    });
+  }
+  return sent;
+}
+
+export async function fetchEtaxReceipt(opts: {
+  submissionId: string;
+  env: EtaxEnvironment;
+  actor: string;
+  persist?: boolean;
+}): Promise<{ submission: EtaxSubmissionRecord; receipt: ReceiptResult }> {
+  const sub = requireSubmission(opts.submissionId);
+  const pkg = requireReturnPackage(sub.packageId);
+  assertBoundHash(pkg, sub);
+  const pulled = await pullReceipt({ sub, env: opts.env });
+  if (opts.persist !== false) {
+    saveSubmission(pulled.submission);
+    appendEtaxAudit({
+      actor: opts.actor,
+      action:
+        pulled.receipt.status === "RECEIVED_BY_ETAX"
+          ? "ETAX_RECEIPT_RECEIVED"
+          : pulled.receipt.status === "REJECTED_BY_ETAX"
+            ? "ETAX_SUBMISSION_REJECTED"
+            : "ETAX_TRANSPORT_ERROR",
+      objectId: pulled.submission.id,
+      contentHash: pulled.submission.contentHash,
+      specVersion: pulled.submission.specVersion,
+      result: pulled.receipt.status === "RECEIVED_BY_ETAX" ? "ok" : "failed",
+      detail: `receiptNumber=${pulled.receipt.receiptNumber ?? "none"}`,
+    });
+  }
+  return pulled;
+}
+
 export function requestProductionSubmit(opts: {
   submissionId: string;
   env: EtaxEnvironment;
 }): never {
-  assertProductionSubmitAllowed(opts.env);
   requireSubmission(opts.submissionId);
+  assertProductionSubmitAllowed("production");
   throw etaxError({
-    code: "ETAX_SUBMIT_PHASE_BLOCKED",
-    blocked: "PHASE_NOT_IMPLEMENTED",
+    code: "ETAX_PRODUCTION_DISABLED",
+    blocked: "PRODUCTION_DISABLED",
     message: "NTA transport is not certified. Production remains disabled.",
   });
 }
 
+/** Test-only / internal. Prefer validateAndAdvance and lifecycle writers. */
 export function transitionSubmission(
   submissionId: string,
-  to: EtaxSubmissionStatus
+  to: EtaxSubmissionStatus,
 ): EtaxSubmissionRecord {
   const sub = requireSubmission(submissionId);
   const next = { ...sub, status: transitionStatus(sub.status, to) };

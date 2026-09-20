@@ -1,11 +1,16 @@
 # KSK2 field mappings
 
-This directory holds **data-driven** procedure→XSD maps extracted from official
-packs (`e-tax10` 法人税, `e-tax11` 消費税, …).
+This directory holds **data-driven** procedure→XSD maps. Element local names must
+come from official packs (`e-tax19` XSD and/or `e-tax10` / `e-tax11` field specs).
 
-OpenOrgOS must not invent element names or wrap payload fields in a guessed
-form root. Until a YAML file **and** an official envelope binding exist,
-`orgos etax build` stays `SPEC_BLOCKED` even if XSD files are unpacked.
+OpenOrgOS must not invent element names. Until a YAML file **and** an official
+envelope binding exist, `orgos etax build` stays `SPEC_BLOCKED`.
 
-Do not commit NTA field dumps copied from Excel without an explicit OpenOrgOS
-procedure row (`EXPERIMENTAL` / `SUPPORTED`).
+## First procedure
+
+| File | Procedure | Support |
+|------|-----------|---------|
+| [RHO0010.yaml](RHO0010.yaml) | 普通法人の確定申告（青色） | EXPERIMENTAL |
+
+Do not commit NTA field dumps without an explicit OpenOrgOS procedure row
+(`EXPERIMENTAL` / `SUPPORTED`).

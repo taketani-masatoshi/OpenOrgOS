@@ -1,8 +1,8 @@
 # e-Tax Integration Threat Model
 
-**Module:** `jp_etax` · **Status:** Phase 3 · **Date:** 2026-09-21
+**Module:** `jp_etax` · **Status:** Implementation-100 (production disabled) · **Date:** 2026-09-21
 
-Production submission is disabled. This model still applies to mock/test paths so secrets cannot leak before Phase 8.
+Production submission is disabled. This model still applies to mock/test paths so secrets cannot leak before certification.
 
 ## Assets
 
@@ -34,23 +34,26 @@ Production submission is disabled. This model still applies to mock/test paths s
 | Guessed XML | `generateOfficialXml` throws `SPEC_BLOCKED` |
 | Unsupported procedure | Empty matrix + fail-closed `UNSUPPORTED` |
 | Hash swap after approve | `contentHash` recompute; mismatch invalidates approval/signature/ready |
-| Duplicate identity | identity key = taxpayer+procedure+year+revision+document hash |
+| Duplicate identity | Filing **slot** key = taxpayer+procedure+year+revision (no hash); contentHash binds approval/signature/ready |
 | Secrets in logs | `redactEtaxRecord` / private-key block strip |
 | Mixing spec families | manifest `mix_legacy_specs: false`; KSK2 URLs only |
-| LLM approval | `requireCliHumanApproval`; ADR 0038 (wired in Phase 6; CLI already refuses) |
-| XXE | `xmllint --nonet` + DOCTYPE reject (Phase 2) |
-| Homegrown XML-DSig / invented COM CLI | e-tax05 catalog only; official adapter `SPEC_BLOCKED` until hostBound |
+| LLM approval | `requireCliHumanApproval`; ADR 0038; `org approval` applies etax with rollback |
+| XXE | `xmllint --nonet` + DOCTYPE reject |
+| Homegrown XML-DSig / invented COM CLI | e-tax05 catalog only; official adapter `SPEC_BLOCKED` until hostBound ([HOST_CONTRACT.md](HOST_CONTRACT.md)) |
 | Mock treated as legal signature | `legal: false`; mock forbidden outside `--env mock`; production still disabled |
 | PIN in YAML/CLI | credentials example has no password field; `--password` is not a CLI flag |
+| Invented send/receive HTTP | e-tax04 catalog only; official transport `SPEC_BLOCKED` until hostBound |
+| Duplicate submit after timeout | slot key + stored requestId replay; `RECEIVED_BY_ETAX` refuses resend |
+| Approval replay after XML change | org approval message binds `contentHash`; mismatch fails |
+| CLI production enable | `etax production enable` cannot write `production-gate.yaml` |
+| Manifest-only “registered” | `ksk2SpecRegistered` requires on-disk SHA match for the required CAB set |
 
-## Controls (later phases)
+## Controls (later / external)
 
-| Threat | Planned control |
-|--------|-----------------|
-| TLS / cert validation | Official send/receive module + platform TLS (Phase 4) |
-| Blind retry | Receipt lookup before resend (Phase 5) |
-| Replay | Request ids + identity key (Phase 5) |
-| Least privilege | Dedicated production credentials, separate from test (Phase 8) |
+| Threat | Control |
+|--------|---------|
+| TLS / cert validation | Official send/receive module once the COM host is bound |
+| Least privilege | Dedicated production credentials, separate from test (human Phase 8) |
 
 ## Residual risk
 

@@ -1,144 +1,99 @@
 # e-Tax Integration — Implementation Plan
 
-**Status:** Phase 3 in progress · **EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION**  
+**Status:** Implementation-100 in progress · production **DISABLED** · **NOT e-Tax対応完了**  
 **Date:** 2026-09-21 · **ADR:** [0078](../adr/0078-etax-integration.md)
 
-This document is the repository investigation record and the phased plan. It is not a claim that OpenOrgOS is e-Tax certified.
+This document is the scorecard for `jp_etax`. It must not claim e-Tax certification.
 
 ---
 
-## 1. Architecture findings (pre-code)
+## 100-point definition (two lanes)
 
-OpenOrgOS is a 4-layer OrgOS: Executive Steward → Agent → Skill + CLI → YAML/MD data. Business modules live in `steward/modules/` or `steward/jurisdiction-packs/JP/modules/`, with runtime enablement in tenant `modules.yaml`. CLI is `orgos` (not `ooo`). Commands go `CLI → src/commands/ → src/lib/ → YAML`.
+### Implementation-100 (this plan’s goal)
 
-Relevant existing pieces:
+- CLI / library path can reach `DRAFT → … → RECEIVED_BY_ETAX` on `--env mock` **without hand-placed status or hand-written xmlHash**
+- Official XML for the first procedure comes only from a registered mapping YAML + KSK2 XSD
+- Production stays `NOT CERTIFIED / DISABLED`; env vars cannot enable it
+- Docs, readiness, and tests state the same facts
 
-| Area | Where | Implication |
-|------|--------|-------------|
-| Module architecture | `steward/jurisdiction-packs/JP/modules/*/`, `src/lib/module-cli.ts` | New module `jp_etax`, not a new framework |
-| CLI | `src/cli.ts` · `src/cli/registrars/` · `orgos tax` / `orgos operations tax-corporate` | Public surface is `orgos etax`; module alias `orgos operations etax` |
-| Approval | ADR 0038 `HumanApprovalContext` · `src/lib/org/approval/` | Reuse org approval; do not invent a second ceremony |
-| Action execution | Chat command router ADR 0035 · CLI `requireCliHumanApproval` | Production submit uses the human CLI/UI path |
-| Event / audit | `docs/company/events/` · `schemas/audit-log.ts` (closed enum) · module `audit.jsonl` (medical-device pattern) | e-Tax events go to `data/etax/audit.jsonl` |
-| Identity | `tenants/*/data/org/operators.yaml` · PassKey / SSO | Taxpayer identity is a ReturnPackage field, not a new IdP |
-| Secrets | gitignore · `tenants/*/data/secrets/` · no private keys in YAML | Certificates stay outside the DB; only ids/hashes in audit |
-| Tax / accounting | `jp_tax_corporate` · `jp_tax_consumption` · `tax-handoff-package` · `jp-corporate-tax-xml.ts` | Stay `not-for-etax`. Do not add submit there |
-| Feature gates | ADR 0004 Gmail (env + shipped flag) | e-Tax production is **stricter**: catalog `production-gate.yaml` AND seven requirements. `ORGOS_ETAX_PRODUCTION=1` is ignored |
-| Tests | Vitest 3-axis · catalog harness · `npm run test:registry:sync` | Dedicated `tests/etax-*.test.ts` + `tests/catalog/jp-etax.test.ts` |
+### Certification-100 (separate; not claimed here)
 
-Command naming: `orgos <domain> <verb>`. Environment flags: `--json`. Mutation: `--operator-id`. Human approval: `chat:approve` + ceo/approver, no dev bypass.
+- Windows COM host bound (`hostBound: true`)
+- NTA transmission test evidence on disk
+- `production-gate.yaml` all true after human review
+- Only then is “e-Tax対応完了” a candidate claim
 
-Database: there is no application SQL database for this path. Tenant YAML + JSONL is SSOT.
+Scaffolding Phases 1–8 alone is **not** implementation-100.
 
 ---
 
-## 2. Related ADRs / policy / product
+## Scorecard
 
-| Document | Current statement | This work |
-|----------|-------------------|-----------|
-| ADR 0052 | Phase 5c e-Tax submit is human/税理士; OrgOS does not implement 5c | **Amended:** 5c stays out of tax-calc modules. Dedicated `jp_etax` may implement transmission after NTA test |
-| ADR 0051 | 申告書 XML · e-Tax 提出はスコープ外 | Tax **skills** remain CLI-only and non-submitting. `jp_etax` is a different module |
-| ADR 0058 | e-Tax is a separate SKU, not bundled in Ledger | Unchanged. `jp_etax` is that module |
-| ADR 0056 | 還付 Fulfilment は人間記録まで。e-Tax しない | Unchanged for `jp_consumption_refund`. Filing over e-Tax would be `jp_etax` later |
-| ADR 0014 | National eID first; no commercial ESP; PIN stays on device | e-Tax signature uses NTA official module adapter, same “no private key in OrgOS” rule |
-| ADR 0038 | HumanApprovalContext for every final approval | Production submit binds this to `contentHash` (Phase 6) |
-| [tax-filing-spec.md](../org-os/tax-filing-spec.md) | e-Tax 本番提出はスコープ外 | Amended: out of tax-prep; in `jp_etax` only |
-| [terms-of-service.md](../product/legal/terms-of-service.md) | e-Tax は標準範囲に含まない | Unchanged; optional module, production disabled |
-| Commercial declaration | “e-Tax 提出は含みません” | Unchanged until Phase 8 |
-
-Existing XML (`OrgOSCorporateTaxDraft`, `submission="not-for-etax"`) is **not** KSK2 XML and must never be submitted.
+| Lane | Focus | Status |
+|------|--------|--------|
+| A | Contract repair (state machine, xmlHash provenance, slot identity, approval rollback, disk SHA gate) | Required |
+| B | First procedure RHO0010 (e-tax19 envelope + mapping; e-tax10 retrieved) | Required |
+| C | Mock E2E without hand-placed status | Required |
+| D | Host contract docs; `hostBound: false` on Darwin | Required |
+| E | Honest docs / readiness `experimental` | Required |
+| Cert | COM bind + NTA test + production gate | Out of scope |
 
 ---
 
-## 3. Intended files (Phase 1+)
-
-| Path | Role |
-|------|------|
-| `docs/etax/**` | Plan, threat model, operator docs, gates |
-| `docs/adr/0078-etax-integration.md` | Decision |
-| `steward/jurisdiction-packs/JP/modules/jp_etax/**` | Catalog module, spec manifest, production gate |
-| `schemas/etax/**` | ReturnPackage, status, errors |
-| `src/lib/etax/**` | Domain |
-| `src/commands/etax.ts` · `src/cli/registrars/etax.ts` | CLI |
-| `tests/etax-*.test.ts` · `tests/catalog/jp-etax.test.ts` | Tests |
-
-Tax-calc files (`src/lib/finance/jp-corporate-tax-xml.ts`, `src/lib/tax/tax-handoff-package.ts`) are **not** given submit methods.
-
----
-
-## 4. KSK2 spec retrieval (2026-09-20)
-
-Authoritative listing: https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo3.htm  
-Hub: https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo.htm  
-**Do not use** https://www.e-tax.nta.go.jp/shiyo/shiyo3.htm as the KSK2 baseline (that is the currently operating e-Tax pack, last bulk update 2026-05-18).
-
-| Fact | Value |
-|------|--------|
-| Family | KSK2 |
-| Listing published | 2026-08-28 |
-| Reception start (this drop) | 2026-09-24 |
-| Correction | 2026-09-10 — some 8/28 files were the **previous** version; re-download required |
-| Terms | Downloading CABs = agree to NTA 仕様公開注意事項 |
-| Transmission test | Apply via NTA “電子メールによるお問い合わせ” on the KSK2 hub |
-| Manifest | `steward/jurisdiction-packs/JP/modules/jp_etax/spec/manifest.json` |
-
-Phase 1 retrieved `e-tax05.CAB` (signature module interface). NTA table said ~15.4KB; retrieved size was 16,241,315 bytes. SHA-256 is in the manifest. That size mismatch is recorded; we do not “fix” it by guessing.
-
-Phase 2 retrieved and hashed `e-tax01`, `e-tax07`, `e-tax08`, `e-tax19` (official XSD, ~17k files). CAB filenames are Shift-JIS; unpacker writes ASCII-safe paths (`hojin/HOA110-001.xsd`). Official XML **generation** remains `SPEC_BLOCKED` until a procedure mapping YAML exists (e-tax10/e-tax11 field specs). The OpenOrgOS procedure matrix stays empty — retrieving 手続一覧 Excel is not the same as marking a procedure `SUPPORTED`.
-
-Phase 3 unpacked `e-tax05` (57 files) and catalogued the official signature module: Windows COM `nta.CLCXtxSigner` / `CLISignature.SignToReport`, Cocoa `CLISignature.SignToReport`. The native host is **not bound**. Mock signatures exist for `--env mock` only, are labeled `legal: false`, and must not be treated as e-Tax signatures. PIN/password are never CLI flags or YAML fields.
-
----
-
-## 5. Proposed architecture
+## Architecture
 
 ```text
 jp_tax_* / handoff          jp_etax                         NTA
 calculation, drafts   →     spec-registry                   e-Tax
-not-for-etax XML            mapper (Phase 2)
+not-for-etax XML            mapper (RHO0010)
 Approved ReturnPackage  →   xml-generator (XSD)      →      KSK2 XML
                             validator L1/L2/L3
                             org approval (hash-bound)
                             SignatureProvider adapter →     official signature module
-                            EtaxTransport adapter     →     send/receive module / API
+                            EtaxTransport adapter     →     send/receive module
                             receipt-adapter           ←     受付発行 XML
                             submission-state + audit
 ```
 
-`jp_etax` must not compute tax. `GENERATED` is not an official return. `RECEIVED_BY_ETAX` is not tax-correctness.
-
-Environments: `mock` | `test` | `production`. Production is disabled until every row in `production-gate.yaml` is true **and** NTA evidence exists. An env var cannot enable it.
-
----
-
-## 6. Implementation phases
-
-| Phase | Scope | Production |
-|-------|--------|------------|
-| **1** | Investigation, ADR, spec registry, ReturnPackage, state machine, CLI surface, fail-closed gates | disabled |
-| **2** | Mapper, official XML, XSD validation, local tests | disabled |
-| **3** | Signature adapters (mock + official module) | disabled |
-| **4** | Transport adapters (mock + test env) | disabled |
-| **5** | Receipt, retry/idempotency, audit completeness | disabled |
-| **6** | Org approval + CLI/Web (hash-bound) | disabled |
-| **7** | NTA transmission test + evidence | disabled |
-| **8** | Production enablement review | enable only after checklist |
-
-This repository change is Phase 3 (signature adapters: mock + official catalog, host unbound). Later phases must not skip SPEC_BLOCKED items by inventing schema, a COM CLI, or homegrown XML-DSig. Production stays disabled.
+Filing **slot** identity = `taxpayer|procedure|year|revision` (no content hash).  
+`contentHash` binds approval, signature, and ready only.
 
 ---
 
-## 7. SPEC_BLOCKED (do not guess)
+## KSK2 baseline
 
-Until the corresponding KSK2 CAB is retrieved **and** turned into OpenOrgOS data:
+| Fact | Value |
+|------|--------|
+| Family | KSK2 |
+| Listing | https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo3.htm |
+| Do not use | https://www.e-tax.nta.go.jp/shiyo/shiyo3.htm (current soft) |
+| Manifest | `steward/jurisdiction-packs/JP/modules/jp_etax/spec/manifest.json` |
+| Required CABs for `ksk2SpecRegistered` | e-tax01, 04, 05, 07, 08, 10, 19 (on-disk SHA == manifest) |
 
-- Official XML **generation** (field maps from e-tax10 / e-tax11) — XSD pack is unpacked; mapper stays `SPEC_BLOCKED` without a registered YAML
-- Procedure codes marked `SUPPORTED` (e-tax07 Excel is local; the OpenOrgOS matrix stays empty)
-- Inter-form dependency rules (e-tax08 Excel is local; not loaded as data)
-- Reception-system and API wire format (e-tax02 / e-tax02-1)
-- Official signature native host (e-tax05 catalogued: COM `nta.CLCXtxSigner.SignToReport` / Cocoa `CLISignature.SignToReport`; hostBound=false)
-- Send/receive module contract (e-tax04)
-- Receipt XML field map (e-tax18)
-- Sample/golden XML from NTA (none found in e-tax19)
+First OpenOrgOS procedure: **RHO0010** (普通法人の確定申告・青色) — `EXPERIMENTAL`, `productionEligible: false`.
 
-`orgos etax build` will not emit KSK2 XML until a mapping file exists. `orgos etax submit --env production` fails closed.
+---
+
+## SPEC_BLOCKED (must stay honest)
+
+- Full e-tax10 field workbook → complete mapping for every form
+- e-tax08 inter-form rules as loaded data (HOA110 treated as no-dependency for minimal path)
+- Official signature / transport **host bind**
+- e-tax18 receipt field map as OpenOrgOS data
+- NTA transmission test evidence
+- `production_submission_enabled`
+
+See also [HOST_CONTRACT.md](HOST_CONTRACT.md).
+
+---
+
+## Related ADR / policy
+
+| Document | Role |
+|----------|------|
+| ADR 0078 | Independent `jp_etax` module |
+| ADR 0052 / 0051 | Tax-calc modules stay not-for-etax |
+| ADR 0038 | Hash-bound human approval |
+| ADR 0014 | No private key / PIN in OrgOS |
+
+Tax-calc files must not gain submit methods.

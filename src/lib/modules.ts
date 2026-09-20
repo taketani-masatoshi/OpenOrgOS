@@ -596,7 +596,7 @@ export function checkModuleCatalogOnly(catalogId: string, tier: ReadinessTier): 
 export function checkModuleByTier(catalogId: string, tier?: ReadinessTier): ModuleCheckIssue[] {
   const t = tier ?? getModuleTier(catalogId);
   const catalogIssues = checkModuleCatalogOnly(catalogId, t);
-  if (t === "skeleton") return catalogIssues;
+  if (t === "skeleton" || t === "experimental") return catalogIssues;
   const manifest = loadModuleManifest(catalogId);
   if (!manifest) return catalogIssues;
   return [...catalogIssues, ...checkModuleTenantBinds(catalogId, manifest)];

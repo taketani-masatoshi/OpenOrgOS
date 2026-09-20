@@ -8,11 +8,15 @@ cli_commands:
   - spec
   - build
   - validate
+  - approve-propose
   - approve
   - sign
+  - ready
   - submit
   - receipt
   - status
+  - production
+  - transmission-test
 security:
   limits:
     concurrent_jobs: 1

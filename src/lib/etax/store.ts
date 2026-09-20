@@ -9,7 +9,9 @@ import { wrapCanonicalWrite } from "../org/fs-guard/write-hook.js";
 import { readYamlFile } from "../utils.js";
 import { resolveModuleDataFile } from "../module-business-data.js";
 import { ETAX_MODULE_ID } from "./constants.js";
-import { submissionIdentityKey } from "./hash.js";
+import { submissionSlotKey } from "./hash.js";
+
+export const etaxXmlProvenanceSchema = z.enum(["generated", "imported-validated"]);
 
 export const etaxSubmissionRecordSchema = z.object({
   id: z.string().regex(/^ETAX-SUB-[A-Za-z0-9_-]+$/),
@@ -17,16 +19,25 @@ export const etaxSubmissionRecordSchema = z.object({
   status: etaxSubmissionStatusSchema,
   contentHash: z.string(),
   xmlHash: z.string().optional(),
+  xmlProvenance: etaxXmlProvenanceSchema.optional(),
+  /** Slot key = taxpayer|procedure|year|revision (no content hash). */
   identityKey: z.string(),
   approvalId: z.string().optional(),
   approvalContentHash: z.string().optional(),
   signatureRef: z.string().optional(),
   signatureProvider: z.enum(["mock", "official"]).optional(),
+  signatureLegal: z.boolean().optional(),
+  signatureDocumentHash: z.string().optional(),
+  signatureHash: z.string().optional(),
   environment: z.enum(["mock", "test", "production"]).optional(),
+  requestId: z.string().optional(),
+  receiptNumber: z.string().optional(),
+  receiptHash: z.string().optional(),
   specVersion: z.string(),
 });
 
 export type EtaxSubmissionRecord = z.output<typeof etaxSubmissionRecordSchema>;
+export type EtaxXmlProvenance = z.output<typeof etaxXmlProvenanceSchema>;
 
 const packageFileSchema = z.object({
   packages: z.array(returnPackageSchema).default([]),
@@ -35,6 +46,18 @@ const packageFileSchema = z.object({
 const submissionFileSchema = z.object({
   submissions: z.array(etaxSubmissionRecordSchema).default([]),
 });
+
+const ACTIVE_SLOT_STATUSES = new Set([
+  "GENERATED",
+  "SCHEMA_VALID",
+  "BUSINESS_RULE_VALID",
+  "APPROVED",
+  "SIGNED",
+  "READY_TO_SUBMIT",
+  "SUBMITTED",
+  "RECEIVED_BY_ETAX",
+  "TRANSPORT_ERROR",
+]);
 
 export function etaxPackagesPath(): string {
   return resolveModuleDataFile(ETAX_MODULE_ID, "packages.yaml");
@@ -89,6 +112,12 @@ export function findSubmissionByIdentity(identityKey: string): EtaxSubmissionRec
   return loadSubmissions().find((row) => row.identityKey === identityKey);
 }
 
+export function findActiveSubmissionInSlot(slotKey: string): EtaxSubmissionRecord | undefined {
+  return loadSubmissions().find(
+    (row) => row.identityKey === slotKey && ACTIVE_SLOT_STATUSES.has(row.status),
+  );
+}
+
 export function requireReturnPackage(id: string): ReturnPackage {
   const pkg = findReturnPackage(id);
   if (!pkg) {
@@ -113,12 +142,12 @@ export function requireSubmission(id: string): EtaxSubmissionRecord {
   return row;
 }
 
-export function identityKeyFor(pkg: ReturnPackage, documentHash: string): string {
-  return submissionIdentityKey({
+/** Slot key for duplicate detection (no document hash). */
+export function identityKeyFor(pkg: ReturnPackage): string {
+  return submissionSlotKey({
     taxpayerId: pkg.taxpayerId,
     procedureCode: pkg.procedureCode,
     taxYear: pkg.taxYear,
     revision: pkg.revision,
-    documentHash,
   });
 }

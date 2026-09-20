@@ -4,7 +4,13 @@ import { z } from "zod";
 import { STEWARD_MODULES_DIR } from "./steward-paths.js";
 import { readYamlFile } from "./utils.js";
 
-export const READINESS_TIERS = ["skeleton", "activation_ready", "production_ready"] as const;
+export const READINESS_TIERS = [
+  "skeleton",
+  "experimental",
+  "activation_ready",
+  "production_ready",
+] as const;
+
 export type ReadinessTier = (typeof READINESS_TIERS)[number];
 
 const readinessSchema = z.object({

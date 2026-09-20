@@ -49,6 +49,22 @@ export function hashReturnPackageContent(input: {
   );
 }
 
+/**
+ * Filing slot key (no content hash). One active submission per slot.
+ * contentHash binds approval/signature/ready separately.
+ */
+export function submissionSlotKey(input: {
+  taxpayerId: string;
+  procedureCode: string;
+  taxYear: string;
+  revision: number;
+}): string {
+  return sha256Hex(
+    [input.taxpayerId, input.procedureCode, input.taxYear, String(input.revision)].join("|"),
+  );
+}
+
+/** @deprecated Prefer submissionSlotKey for duplicate detection. Kept for hash-bound audits. */
 export function submissionIdentityKey(input: {
   taxpayerId: string;
   procedureCode: string;

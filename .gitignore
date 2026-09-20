@@ -213,6 +213,8 @@ steward/jurisdiction-packs/JP/modules/jp_etax/spec/vendor/**
 tenants/*/data/etax/credentials/
 tenants/*/data/etax/signed/
 tenants/*/data/etax/generated/
+tenants/*/data/etax/transmission-test/
+data/etax/
 tenants/*/data/etax/*.key
 tenants/*/data/etax/*.pem
 tenants/*/data/etax/audit.jsonl

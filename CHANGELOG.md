@@ -8,7 +8,9 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **e-Tax 実装100（契約修復 · RHO0010 · mock E2E）** — 状態機械と CLI 経路を一致（`validateAndAdvance` · xmlHash provenance · filing slot 重複検出 · org approval の etax 適用+rollback）。第一手続 `RHO0010` を公式 XSD 由来 mapping で生成し Layer 1 通過。mock で RECEIVED_BY_ETAX まで手置き xmlHash なし。COM ホストは未接続（[HOST_CONTRACT.md](docs/etax/HOST_CONTRACT.md)）。本番・NTA 送信試験は未実施。**e-Tax対応完了ではない。** ADR 0078
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
+- **e-Tax 独立連携モジュール（KSK2 · Phases 4–8 scaffolding）** — 送受信 catalog（e-tax04 COM `nta.CLCCommunication.Send`、ホスト未接続）。mock 送信・受付は NTA ではない。再送は requestId で冪等、`RECEIVED_BY_ETAX` は再送拒否。承認は `contentHash` 拘束（ADR 0038）。NTA 送信試験は未実施。`etax production enable` は catalog を書き換えない。本番送信は fail-closed。ADR 0078
 - **e-Tax 独立連携モジュール（KSK2 · Phase 3）** — 公式署名インターフェイスを e-tax05 から catalog（Windows COM `nta.CLCXtxSigner.SignToReport` / Cocoa `CLISignature`）。ネイティブホスト未接続は `SPEC_BLOCKED`（CLI や XML-DSig を自作しない）。mock 署名は `--env mock` のみ・`legal: false`。PIN は CLI/YAML に置かない。本番送信は fail-closed。ADR 0078
 - **e-Tax 独立連携モジュール（KSK2 · Phase 2）** — 公式 CAB 展開（MSZIP）· Layer 1 XSD（`xmllint --nonet` · XXE 拒否）· データ駆動 mapper。フィールドマップ未登録の公式 XML は引き続き `SPEC_BLOCKED`。本番送信は fail-closed。ADR 0078
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。

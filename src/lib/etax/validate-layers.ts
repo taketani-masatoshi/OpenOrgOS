@@ -5,6 +5,7 @@ import { assertProcedureAllowed, loadProcedureMatrix } from "./procedures.js";
 import { officialXsdAvailable } from "./spec-paths.js";
 import { resolveOfficialXsd } from "./spec-fetch.js";
 import { loadProcedureMapping } from "./xml-mapper.js";
+import { checkInterFormRules } from "./inter-form.js";
 import {
   assertWellFormedXml,
   rejectUnsafeXml,
@@ -23,6 +24,7 @@ export function validateEtaxDocument(opts: {
   const layers: EtaxValidationReport["layers"] = [];
   let xmlHash: string | undefined;
   let schemaPath: string | undefined;
+  const mapping = loadProcedureMapping(opts.pkg.procedureCode);
 
   if (!opts.xml) {
     layers.push({
@@ -35,7 +37,6 @@ export function validateEtaxDocument(opts: {
       rejectUnsafeXml(opts.xml);
       assertWellFormedXml(opts.xml);
       xmlHash = xmlContentHash(opts.xml);
-      const mapping = loadProcedureMapping(opts.pkg.procedureCode);
       if (!officialXsdAvailable()) {
         layers.push({
           layer: "structural",
@@ -68,12 +69,20 @@ export function validateEtaxDocument(opts: {
 
   try {
     assertProcedureAllowed(opts.pkg.procedureCode, opts.env ?? "mock", loadProcedureMatrix());
-    layers.push({
-      layer: "specification",
-      status: "SPEC_BLOCKED",
-      detail:
-        "Procedure is allowed in OpenOrgOS matrix, but e-tax08 inter-form rules are not loaded as data",
-    });
+    if (!mapping) {
+      layers.push({
+        layer: "specification",
+        status: "SPEC_BLOCKED",
+        detail: "Procedure is in the OpenOrgOS matrix, but no field mapping YAML is registered",
+      });
+    } else {
+      const inter = checkInterFormRules(mapping.formId);
+      layers.push({
+        layer: "specification",
+        status: inter.status,
+        detail: inter.detail,
+      });
+    }
   } catch (error) {
     const blocked = error instanceof EtaxException ? error.etax.blocked : undefined;
     layers.push({
@@ -90,6 +99,18 @@ export function validateEtaxDocument(opts: {
         code: "ETAX_CONTENT_HASH_MISMATCH",
         blocked: "HASH_MISMATCH",
         message: "Submission contentHash does not match package",
+      });
+    }
+    if (
+      opts.submission?.xmlHash &&
+      xmlHash &&
+      opts.submission.xmlHash !== xmlHash &&
+      opts.xml
+    ) {
+      throw etaxError({
+        code: "ETAX_XML_HASH_MISMATCH",
+        blocked: "HASH_MISMATCH",
+        message: "Provided XML does not match the bound submission xmlHash",
       });
     }
     layers.push({

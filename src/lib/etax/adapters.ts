@@ -130,20 +130,10 @@ export interface EtaxTransport {
   getReceipt(id: string): Promise<ReceiptResult>;
 }
 
-export class MockEtaxTransport implements EtaxTransport {
-  async submit(): Promise<SubmissionResult> {
-    throw etaxError({
-      code: "ETAX_TRANSPORT_PHASE_BLOCKED",
-      blocked: "PHASE_NOT_IMPLEMENTED",
-      message: "Transport adapter is Phase 4. Mock transport is not NTA transmission.",
-    });
-  }
+export {
+  MockEtaxTransport,
+  EtaxOfficialTransport,
+  createTransportAdapter,
+  resolveTransportProviderId,
+} from "./transport.js";
 
-  async getReceipt(): Promise<ReceiptResult> {
-    throw etaxError({
-      code: "ETAX_RECEIPT_PHASE_BLOCKED",
-      blocked: "PHASE_NOT_IMPLEMENTED",
-      message: "Receipt adapter is Phase 5.",
-    });
-  }
-}

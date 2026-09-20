@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { EtaxException } from "../../schemas/etax/errors.js";
 import {
   ETAX_COMPATIBILITY_STATUS,
@@ -14,14 +15,25 @@ import {
   specStatusReport,
   submissionForPackage,
   signSubmission,
-  validateEtaxDocument,
+  markSubmissionReady,
+  submitToEtax,
+  fetchEtaxReceipt,
+  evaluateProductionEnablement,
+  assertProductionEnableRefused,
+  validateAndAdvance,
   fetchAndUnpackEtaxSpecs,
   officialXsdAvailable,
+  contentHashMessage,
+  ETAX_APPROVAL_SUBJECT,
+  parseContentHashMessage,
 } from "../lib/etax/index.js";
+import { getWorkspaceRoot } from "../lib/orgos-paths.js";
 import type { EtaxSignatureProviderId } from "../../schemas/etax/signature.js";
 import type { EtaxEnvironment } from "../../schemas/etax/submission-state.js";
 import { requireCliDataWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
 import { resolveCliOperatorId } from "../lib/console-auth/cli-operator.js";
+import { proposeOrgApproval } from "../lib/org/approval/propose.js";
+import { findOrgApproval, humanApproveOrgApproval } from "../lib/org/approval/approve.js";
 
 function printJson(value: unknown): void {
   console.log(JSON.stringify(value, null, 2));
@@ -56,22 +68,32 @@ export function runEtaxSpecStatus(opts: { json?: boolean }): void {
   console.log(`listing: ${report.spec.baseline.listingUrl}`);
   console.log(`KSK2 spec registered: ${report.spec.ksk2Registered ? "yes" : "no"}`);
   console.log(`official XSD unpacked: ${report.spec.officialXsdUnpacked ? "yes" : "no"}`);
+  for (const row of report.spec.requiredChecks ?? []) {
+    console.log(
+      `  required ${row.id}: disk=${row.diskSha256 ? row.diskSha256.slice(0, 12) : "missing"} match=${row.match}`,
+    );
+  }
   for (const row of report.spec.artifacts) {
     const hash = row.sha256 ? row.sha256.slice(0, 12) : "not-retrieved";
     const unpacked = row.unpackedFileCount != null ? ` files=${row.unpackedFileCount}` : "";
-    console.log(`- ${row.id}: ${row.status} sha256=${hash}${unpacked}`);
+    const req = row.required ? " [required]" : "";
+    console.log(`- ${row.id}: ${row.status} sha256=${hash}${unpacked}${req}`);
   }
   console.log(`production blockers: ${report.productionBlockers.join("; ") || "(none)"}`);
 }
 
-export function runEtaxBuild(opts: { from?: string; json?: boolean }): void {
+function defaultGeneratedXmlPath(submissionId: string): string {
+  return join(getWorkspaceRoot(), "data", "etax", "generated", `${submissionId}.xml`);
+}
+
+export function runEtaxBuild(opts: { from?: string; out?: string; json?: boolean }): void {
   try {
     requireCliDataWrite({ command: "etax build", permission: "escalate:plan" });
     if (!opts.from || !existsSync(opts.from)) {
       throw new EtaxException({
         code: "ETAX_BUILD_INPUT_MISSING",
         blocked: "SPEC_BLOCKED",
-        message: "etax build requires --from <return-package.json> until official mapper exists",
+        message: "etax build requires --from <return-package.json>",
       });
     }
     const raw = JSON.parse(readFileSync(opts.from, "utf-8")) as {
@@ -91,23 +113,45 @@ export function runEtaxBuild(opts: { from?: string; json?: boolean }): void {
       createdBy: resolveCliOperatorId(),
       sourceReferences: raw.sourceReferences ?? [],
     });
-    const result = {
-      ok: true,
-      banner: banner(),
-      package: pkg,
-      xml: "SPEC_BLOCKED",
-    };
+    const sub = submissionForPackage(pkg.id);
     try {
-      buildOfficialXml(pkg.id);
+      const built = buildOfficialXml(pkg.id, { actor: resolveCliOperatorId() });
+      const outPath = opts.out ?? defaultGeneratedXmlPath(built.submission.id);
+      mkdirSync(dirname(outPath), { recursive: true });
+      writeFileSync(outPath, built.xml, "utf-8");
+      const payload = {
+        ok: true,
+        banner: banner(),
+        package: pkg,
+        submissionId: built.submission.id,
+        status: built.submission.status,
+        xmlHash: built.xmlHash,
+        xmlPath: outPath,
+      };
+      if (opts.json) printJson(payload);
+      else {
+        console.log(banner());
+        console.log(
+          `ReturnPackage ${pkg.id} submission=${built.submission.id} status=${built.submission.status}`,
+        );
+        console.log(`xmlHash=${built.xmlHash}`);
+        console.log(`wrote ${outPath}`);
+      }
     } catch (error) {
       if (!(error instanceof EtaxException) || error.etax.blocked !== "SPEC_BLOCKED") {
         fail(error);
       }
+      const result = {
+        ok: true,
+        banner: banner(),
+        package: pkg,
+        submissionId: sub.id,
+        status: sub.status,
+        xml: "SPEC_BLOCKED",
+        xmlBlocked: error instanceof EtaxException ? error.etax : String(error),
+      };
       if (opts.json) {
-        printJson({
-          ...result,
-          xmlBlocked: error instanceof EtaxException ? error.etax : String(error),
-        });
+        printJson(result);
         return;
       }
       console.log(banner());
@@ -115,9 +159,8 @@ export function runEtaxBuild(opts: { from?: string; json?: boolean }): void {
       console.log(
         officialXsdAvailable()
           ? "Official XML: SPEC_BLOCKED (KSK2 envelope/field mapping not registered)"
-          : "Official XML: SPEC_BLOCKED (KSK2 XSD not unpacked)"
+          : "Official XML: SPEC_BLOCKED (KSK2 XSD not unpacked)",
       );
-      return;
     }
   } catch (error) {
     fail(error);
@@ -131,6 +174,7 @@ export function runEtaxValidate(opts: {
   json?: boolean;
 }): void {
   try {
+    requireCliDataWrite({ command: "etax validate", permission: "escalate:plan" });
     const sub = findSubmission(opts.id) ?? submissionForPackage(opts.id);
     const pkg = findReturnPackage(sub.packageId);
     if (!pkg) {
@@ -139,38 +183,52 @@ export function runEtaxValidate(opts: {
         message: `ReturnPackage missing for ${opts.id}`,
       });
     }
-    const xml = opts.xml && existsSync(opts.xml) ? readFileSync(opts.xml, "utf-8") : undefined;
-    if (opts.xml && xml === undefined) {
+    const defaultXml = defaultGeneratedXmlPath(sub.id);
+    const xmlPath =
+      opts.xml && existsSync(opts.xml)
+        ? opts.xml
+        : existsSync(defaultXml)
+          ? defaultXml
+          : undefined;
+    if (opts.xml && !existsSync(opts.xml)) {
       throw new EtaxException({
         code: "ETAX_VALIDATE_XML_MISSING",
         message: `XML file not found: ${opts.xml}`,
       });
     }
-    const report = validateEtaxDocument({
-      pkg,
-      submission: sub,
-      env: opts.env ?? "mock",
+    if (!xmlPath) {
+      throw new EtaxException({
+        code: "ETAX_VALIDATE_XML_MISSING",
+        blocked: "SPEC_BLOCKED",
+        message: "etax validate requires --xml or a generated file from etax build",
+      });
+    }
+    const xml = readFileSync(xmlPath, "utf-8");
+    const { report, submission } = validateAndAdvance({
+      submissionId: sub.id,
       xml,
+      env: opts.env ?? "mock",
+      actor: resolveCliOperatorId(),
     });
     const payload = {
       ok: report.ok,
       banner: banner(),
-      submissionId: sub.id,
-      status: sub.status,
+      submissionId: submission.id,
+      status: submission.status,
       contentHash: pkg.contentHash,
       layers: Object.fromEntries(
-        report.layers.map((row) => [row.layer, { status: row.status, note: row.detail }])
+        report.layers.map((row) => [row.layer, { status: row.status, note: row.detail }]),
       ),
     };
     if (opts.json) printJson(payload);
     else {
       console.log(banner());
-      console.log(`submission ${sub.id} status=${sub.status}`);
+      console.log(`submission ${submission.id} status=${submission.status}`);
       for (const row of report.layers) {
         console.log(`Layer ${row.layer}: ${row.status} — ${row.detail}`);
       }
     }
-    if (report.layers.some((row) => row.status === "fail")) {
+    if (report.layers.some((row) => row.status === "fail") || !report.ok) {
       throw new EtaxException({
         code: "ETAX_VALIDATION_FAILED",
         message: "e-Tax validation failed on one or more layers",
@@ -231,14 +289,131 @@ export async function runEtaxSpecUnpack(opts: { ids?: string[]; json?: boolean }
   }
 }
 
-export function runEtaxApprove(_opts: { id: string; json?: boolean }): void {
+export function runEtaxApprovePropose(opts: { id: string; json?: boolean }): void {
   try {
-    requireCliHumanApproval("etax approve");
-    throw new EtaxException({
-      code: "ETAX_APPROVE_PHASE_BLOCKED",
-      blocked: "PHASE_NOT_IMPLEMENTED",
-      message: "Org approval binding is Phase 6. Hash-bound approval is not yet wired.",
+    requireCliDataWrite({ command: "etax approve propose", permission: "escalate:plan" });
+    const sub = findSubmission(opts.id) ?? submissionForPackage(opts.id);
+    const pkg = findReturnPackage(sub.packageId);
+    if (!pkg) {
+      throw new EtaxException({
+        code: "ETAX_PACKAGE_NOT_FOUND",
+        message: `ReturnPackage missing for ${opts.id}`,
+      });
+    }
+    const approval = proposeOrgApproval({
+      scope: "internal",
+      subjectType: ETAX_APPROVAL_SUBJECT,
+      proposedBy: resolveCliOperatorId(),
+      subjectRef: sub.id,
+      message: contentHashMessage(pkg.contentHash),
     });
+    const payload = {
+      ok: true,
+      banner: banner(),
+      approvalId: approval.approval_id,
+      submissionId: sub.id,
+      contentHash: pkg.contentHash,
+      note: "Grant with orgos etax approve --approval-id (ceo/approver). Self-approval is forbidden.",
+    };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(`proposed ${approval.approval_id} for ${sub.id} hash=${pkg.contentHash}`);
+    }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export function runEtaxApprove(opts: { id: string; approvalId?: string; json?: boolean }): void {
+  try {
+    const auth = requireCliHumanApproval("etax approve");
+    const sub = findSubmission(opts.id) ?? submissionForPackage(opts.id);
+    const pkg = findReturnPackage(sub.packageId);
+    if (!pkg) {
+      throw new EtaxException({
+        code: "ETAX_PACKAGE_NOT_FOUND",
+        message: `ReturnPackage missing for ${opts.id}`,
+      });
+    }
+    const approvalId = opts.approvalId;
+    if (!approvalId) {
+      throw new EtaxException({
+        code: "ETAX_APPROVAL_ID_REQUIRED",
+        message: "etax approve requires --approval-id from etax approve propose (ADR 0038)",
+      });
+    }
+    const pending = findOrgApproval(approvalId);
+    if (!pending) {
+      throw new EtaxException({
+        code: "ETAX_ORG_APPROVAL_NOT_FOUND",
+        message: `Org approval ${approvalId} not found`,
+      });
+    }
+    if (pending.subject_type !== ETAX_APPROVAL_SUBJECT || pending.subject_ref !== sub.id) {
+      throw new EtaxException({
+        code: "ETAX_ORG_APPROVAL_MISMATCH",
+        message: `Org approval ${approvalId} is not bound to submission ${sub.id}`,
+      });
+    }
+    const bound = parseContentHashMessage(pending.message);
+    if (bound !== pkg.contentHash) {
+      throw new EtaxException({
+        code: "ETAX_APPROVAL_HASH_MISMATCH",
+        blocked: "HASH_MISMATCH",
+        message: "Org approval contentHash does not match the live ReturnPackage",
+      });
+    }
+    if (pending.status === "pending_approval") {
+      humanApproveOrgApproval({
+        approvalId,
+        approverId: auth.record.display_name,
+        operatorId: auth.record.operator_id,
+        source: "cli",
+      });
+    }
+    // applyEtaxApproval runs inside humanApproveOrgApproval (atomic with rollback).
+    const next = findSubmission(sub.id) ?? submissionForPackage(sub.packageId);
+    if (next.status !== "APPROVED") {
+      throw new EtaxException({
+        code: "ETAX_APPROVAL_NOT_APPLIED",
+        message: `Org approval ${approvalId} did not advance submission to APPROVED (status=${next.status})`,
+      });
+    }
+    const payload = {
+      ok: true,
+      banner: banner(),
+      submissionId: next.id,
+      status: next.status,
+      approvalId: next.approvalId,
+      contentHash: next.contentHash,
+    };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(`${next.id} status=${next.status} approval=${next.approvalId}`);
+    }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export function runEtaxReady(opts: { id: string; env?: EtaxEnvironment; json?: boolean }): void {
+  try {
+    requireCliDataWrite({ command: "etax ready", permission: "chat:approve" });
+    const env = opts.env ?? "mock";
+    const sub = findSubmission(opts.id) ?? submissionForPackage(opts.id);
+    const next = markSubmissionReady({
+      submissionId: sub.id,
+      env,
+      actor: resolveCliOperatorId(),
+    });
+    const payload = { ok: true, banner: banner(), submissionId: next.id, status: next.status };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(`${next.id} status=${next.status}`);
+    }
   } catch (error) {
     fail(error);
   }
@@ -305,32 +480,112 @@ export async function runEtaxSign(opts: {
   }
 }
 
-export function runEtaxSubmit(opts: { id: string; env: EtaxEnvironment; json?: boolean }): void {
+export async function runEtaxSubmit(opts: {
+  id: string;
+  env: EtaxEnvironment;
+  xml?: string;
+  json?: boolean;
+}): Promise<void> {
   try {
     if (opts.env === "production") {
       assertProductionSubmitAllowed("production");
     }
     requireCliHumanApproval("etax submit");
-    throw new EtaxException({
-      code: "ETAX_SUBMIT_PHASE_BLOCKED",
-      blocked: "PHASE_NOT_IMPLEMENTED",
-      message: `Transport is Phase 4. env=${opts.env}. ${ETAX_PRODUCTION_BANNER}`,
+    if (!opts.xml || !existsSync(opts.xml)) {
+      throw new EtaxException({
+        code: "ETAX_SUBMIT_NO_XML",
+        field: "xml",
+        blocked: "SPEC_BLOCKED",
+        message: "etax submit requires --xml <official-xml> bound to xmlHash",
+      });
+    }
+    const sub = findSubmission(opts.id) ?? submissionForPackage(opts.id);
+    const { submission, result } = await submitToEtax({
+      submissionId: sub.id,
+      env: opts.env,
+      document: readFileSync(opts.xml),
+      actor: resolveCliOperatorId(),
     });
+    const payload = {
+      ok: result.ok,
+      banner: banner(),
+      submissionId: submission.id,
+      status: submission.status,
+      requestId: result.requestId,
+      transportStatus: result.transportStatus,
+      message: result.message,
+    };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(
+        `${submission.id} status=${submission.status} requestId=${result.requestId ?? "none"}`
+      );
+      console.log(result.message);
+    }
   } catch (error) {
     fail(error);
   }
 }
 
-export function runEtaxReceipt(_opts: { id: string; json?: boolean }): void {
+export async function runEtaxReceipt(opts: {
+  id: string;
+  env?: EtaxEnvironment;
+  json?: boolean;
+}): Promise<void> {
   try {
-    throw new EtaxException({
-      code: "ETAX_RECEIPT_PHASE_BLOCKED",
-      blocked: "PHASE_NOT_IMPLEMENTED",
-      message: "Receipt adapter is Phase 5.",
+    const env = opts.env ?? "mock";
+    const sub = findSubmission(opts.id) ?? submissionForPackage(opts.id);
+    const { submission, receipt } = await fetchEtaxReceipt({
+      submissionId: sub.id,
+      env,
+      actor: resolveCliOperatorId(),
     });
+    const payload = {
+      ok: true,
+      banner: banner(),
+      submissionId: submission.id,
+      status: submission.status,
+      receiptNumber: receipt.receiptNumber,
+      receiptStatus: receipt.status,
+      note: "RECEIVED_BY_ETAX is not tax-correctness.",
+    };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(
+        `${submission.id} status=${submission.status} receipt=${receipt.receiptNumber ?? "none"}`
+      );
+    }
   } catch (error) {
     fail(error);
   }
+}
+
+export function runEtaxProductionReview(opts: { json?: boolean }): void {
+  const review = evaluateProductionEnablement();
+  if (opts.json) {
+    printJson({ ok: true, ...review });
+    return;
+  }
+  console.log(review.banner);
+  console.log(`certified=${review.certified}`);
+  console.log(`NTA transmission test completed=${review.nta_transmission_test.completed}`);
+  console.log(`evidence present=${review.nta_transmission_test.evidence_present}`);
+  console.log(`blockers: ${review.blockers.join("; ")}`);
+}
+
+export function runEtaxProductionEnable(): void {
+  try {
+    requireCliHumanApproval("etax production enable");
+    assertProductionEnableRefused();
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export function runEtaxTransmissionTestStatus(opts: { json?: boolean }): void {
+  runEtaxProductionReview(opts);
 }
 
 export function runEtaxStatus(opts: { id?: string; json?: boolean }): void {
