@@ -59,6 +59,11 @@ export interface ToolLoopResult {
 
 type ChatMessage = LlmChatMessage;
 
+export interface LlmToolLoopOptions {
+  allowTools?: boolean;
+  allowStructuredOutput?: boolean;
+}
+
 function maxToolRounds(): number {
   const raw = Number(process.env.ORGOS_LLM_TOOLS_MAX_ROUNDS ?? "5");
   return Number.isFinite(raw) && raw > 0 ? raw : 5;
@@ -186,7 +191,8 @@ async function runMockToolLoop(
   systemContext: string,
   userMessage: string,
   toolContext: OperatorToolContext,
-  lease?: LlmWorkerLease
+  lease?: LlmWorkerLease,
+  options: LlmToolLoopOptions = {}
 ): Promise<ToolLoopResult> {
   const cfg = lease?.target ?? getLlmApiConfig()!;
   const started = Date.now();
@@ -194,7 +200,7 @@ async function runMockToolLoop(
   let toolRounds = 0;
   const meta = leaseMeta(lease);
 
-  if (isOperatorToolsEnabled()) {
+  if (options.allowTools !== false && isOperatorToolsEnabled()) {
     const mockCall = mockToolCallForMessage(userMessage);
     if (mockCall) {
       toolRounds = 1;
@@ -215,7 +221,10 @@ async function runMockToolLoop(
       ].join("\n");
 
       let structured: OperatorResponse | undefined;
-      if (isStructuredOutputEnabled()) {
+      if (
+        options.allowStructuredOutput !== false &&
+        isStructuredOutputEnabled()
+      ) {
         structured = operatorResponseSchema.parse({
           summary: content,
           risks: [],
@@ -296,22 +305,31 @@ async function runLlmWithToolsOnTarget(
   userMessage: string,
   history: LlmHistoryTurn[] | undefined,
   toolContext: OperatorToolContext,
-  lease: LlmWorkerLease
+  lease: LlmWorkerLease,
+  options: LlmToolLoopOptions
 ): Promise<ToolLoopResult> {
   const cfg = lease.target;
   const meta = leaseMeta(lease);
 
   if (isLlmMockEnabled() || cfg.baseUrl.startsWith("mock://")) {
-    return runMockToolLoop(systemContext, userMessage, toolContext, lease);
+    return runMockToolLoop(
+      systemContext,
+      userMessage,
+      toolContext,
+      lease,
+      options,
+    );
   }
 
   const started = Date.now();
   let usage = emptyUsage();
   let toolRounds = 0;
   let toolCalls = 0;
-  const tools = isOperatorToolsEnabled({ supportsTools: lease.worker.supports_tools })
-    ? listOperatorToolDefinitions(toolContext)
-    : [];
+  const tools =
+    options.allowTools !== false &&
+    isOperatorToolsEnabled({ supportsTools: lease.worker.supports_tools })
+      ? listOperatorToolDefinitions(toolContext)
+      : [];
 
   const system = applyLocalLlmErrorFallbackToSystem(systemContext, lease.worker.tier);
   const messages: ChatMessage[] = [{ role: "system", content: system }];
@@ -405,7 +423,10 @@ async function runLlmWithToolsOnTarget(
         });
       }
 
-      if (isStructuredOutputEnabled()) {
+      if (
+        options.allowStructuredOutput !== false &&
+        isStructuredOutputEnabled()
+      ) {
         messages.push({
           role: "assistant",
           content: assistantText || "(tool results above)",
@@ -568,6 +589,7 @@ export async function runLlmWithTools(
   history?: LlmHistoryTurn[],
   toolContext: OperatorToolContext = {},
   hint?: LlmRouteHint,
+  options: LlmToolLoopOptions = {}
 ): Promise<ToolLoopResult> {
   if (!hasConfiguredLlmWorkers() && !getLlmApiConfig() && !isLlmMockEnabled()) {
     return {
@@ -583,13 +605,26 @@ export async function runLlmWithTools(
   }
 
   if (isLlmMockEnabled() && !hasConfiguredLlmWorkers()) {
-    return runMockToolLoop(systemContext, userMessage, toolContext);
+    return runMockToolLoop(
+      systemContext,
+      userMessage,
+      toolContext,
+      undefined,
+      options,
+    );
   }
 
   try {
     return await withLlmWorker(
       (lease) =>
-        runLlmWithToolsOnTarget(systemContext, userMessage, history, toolContext, lease),
+        runLlmWithToolsOnTarget(
+          systemContext,
+          userMessage,
+          history,
+          toolContext,
+          lease,
+          options,
+        ),
       hint,
     );
   } catch (err) {

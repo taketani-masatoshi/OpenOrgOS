@@ -17,7 +17,7 @@ import { runAnalyzeProperty } from "./analyze.js";
 import { loadMonthlyFinance } from "../lib/data.js";
 import { runDashboard } from "./dashboard.js";
 import { runForecast } from "./forecast.js";
-import { runHrHeadcount } from "./hr.js";
+import { runHrHeadcount, runHrOnboard } from "./hr.js";
 import {
   runPmoMilestones,
   runPmoPortfolio,
@@ -325,6 +325,12 @@ export const SKILL_COMMANDS = [
     skill: "hr_headcount",
     agent: "Human Resources",
     description: "在籍人員 L1 集計（氏名非出力）",
+  },
+  {
+    id: "hr-onboard",
+    skill: "hr_onboard",
+    agent: "Human Resources",
+    description: "入社 L1 名簿追記 + Work Order",
   },
   {
     id: "pmo-portfolio",
@@ -647,6 +653,8 @@ export interface SkillRunOptions {
   operatorId?: string;
   plan?: string;
   req?: string;
+  name?: string;
+  hired_date?: string;
 }
 
 async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promise<void> {
@@ -819,6 +827,14 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     }
     case "hr-headcount":
       runHrHeadcount({ json: opts.json });
+      break;
+    case "hr-onboard":
+      runHrOnboard({
+        name: opts.name,
+        hired_date: opts.hired_date,
+        write: Boolean(opts.write),
+        json: opts.json,
+      });
       break;
     case "pmo-portfolio":
       runPmoPortfolio({ json: opts.json });

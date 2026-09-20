@@ -10,7 +10,10 @@
 npm run orgos -- operations medical-device qms catalog --tier 1
 npm run orgos -- operations medical-device qms draft --doc QMS-MAN-001 --write
 npm run orgos -- operations medical-device qms draft --all --write
+npm run orgos -- regulations seed --id REG-025 --id REG-026 --force
 ```
+
+テンプレート正本は `seed/templates/`。会社名は `{{company.name}}` のみ差し込む。
 
 ## 参照
 

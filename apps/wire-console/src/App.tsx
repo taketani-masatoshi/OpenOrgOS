@@ -15,6 +15,10 @@ import { loginWithWebAuthn } from "./webauthn-login";
 import { registerWithWebAuthn, registerSettlementWithWebAuthn } from "./webauthn-register";
 import { isCombinedWireSpa, isPasskeySettingsPath as pathIsPasskeySettings, wireHomeHref } from "@ops-shared/console-hrefs";
 import { canSignInWithPasskey, isWebAuthnIssuanceEnabled } from "@ops-shared/webauthn-issuance";
+import {
+  AUTH_LOGIN_FALLBACK_MS,
+  authBootstrapSignal,
+} from "@ops-shared/auth-bootstrap";
 
 function isPasskeySettingsPath(): boolean {
   return typeof window !== "undefined" && pathIsPasskeySettings(window.location.pathname);
@@ -37,6 +41,7 @@ export function App() {
   const [approverId, setApproverId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginFallback, setShowLoginFallback] = useState(false);
   const [webAuthnBusy, setWebAuthnBusy] = useState(false);
   const locale = useUiLocale();
   const copy = useCopy(AUTH_COPY);
@@ -53,10 +58,16 @@ export function App() {
   }, []);
 
   const loadSession = useCallback(async () => {
+    const signal = authBootstrapSignal();
     try {
-      const me = await api<{ ok: boolean; user: User }>("/console/v1/auth/me");
+      const me = await api<{ ok: boolean; user: User }>("/console/v1/auth/me", {
+        signal,
+      });
       setUser(me.user);
-      const t = await api<{ ok: boolean; tenants: TenantSummary[] }>("/console/v1/tenants");
+      const t = await api<{ ok: boolean; tenants: TenantSummary[] }>(
+        "/console/v1/tenants",
+        { signal },
+      );
       setTenants(t.tenants);
       setError(null);
     } catch {
@@ -68,8 +79,17 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(
+      () => setShowLoginFallback(true),
+      AUTH_LOGIN_FALLBACK_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
-    void api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config")
+    const signal = authBootstrapSignal();
+    void api<{ ok: boolean } & AuthConfig>("/console/v1/auth/config", { signal })
       .then((cfg) => {
         if (!cancelled) setAuthConfig(cfg);
       })
@@ -164,27 +184,10 @@ export function App() {
     await refreshAuthConfig();
   }
 
-  if (loading) {
-    return (
-      <div className="auth-page">
-        <header className="auth-header">
-          <div className="auth-header-inner">
-            <a className="auth-brand" href="https://oorgos.org">
-              OpenOrgOS
-            </a>
-          </div>
-        </header>
-        <section className="auth-hero">
-          <div className="auth-hero-inner">
-            <h1>{copy.titleMac}</h1>
-            <p className="auth-lead">{copy.loading}</p>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
   if (!user) {
+    if (loading && !showLoginFallback) {
+      return <div className="auth-page" aria-busy="true" />;
+    }
     const prodMode = authConfig?.mode === "prod";
     const oidcMode = prodMode && authConfig?.prod_adapter === "oidc";
     const webAuthnMode = prodMode && authConfig?.prod_adapter === "webauthn";
@@ -344,10 +347,7 @@ export function App() {
   return (
     <OperatorShell
       active="wire"
-      operatorLabel={
-        formatOperatorSessionLabel(user, locale) +
-        (authConfig?.mode === "prod" ? ` · ${shell.prodAuth}` : "")
-      }
+      operatorLabel={formatOperatorSessionLabel(user, locale)}
       onSignOut={() => void logout()}
       settingsHref="/settings/"
       settingsActive={isPasskeySettingsPath()}

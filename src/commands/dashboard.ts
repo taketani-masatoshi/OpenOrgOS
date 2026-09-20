@@ -7,6 +7,7 @@ import {
 import { runExtensionAgentPulses } from "../lib/agent-pulse.js";
 import { currentDate, writeMarkdownReport } from "../lib/utils.js";
 import { requireCliReportWrite } from "../lib/console-auth/cli-operator.js";
+import { writeConsolePageSnapshots } from "../lib/executive-home/console-snapshot.js";
 
 export interface DashboardOptions {
   markdown?: boolean;
@@ -36,6 +37,10 @@ export function runDashboard(options: DashboardOptions = {}): void {
     console.log(`✓ 経営ダッシュボード: ${path}`);
     console.log(`✓ Agent 要約 7 件 + 拡張 ${extensionPulses.length} 件: docs/reports/agent-summaries/ · executive-notes/`);
   }
+
+  const pages = writeConsolePageSnapshots();
+  console.log(`✓ Console 即表示: ${pages.home}`);
+  console.log(`✓ Console 分析: ${pages.analytics}`);
 
   console.log(content);
 }

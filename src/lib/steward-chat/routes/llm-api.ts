@@ -15,7 +15,7 @@ import {
   resolveWorkerBaseUrl,
   saveLlmWorkersConfig,
 } from "../../llm-pool/registry.js";
-import { probeWorker } from "../../llm-pool/health.js";
+import { listWorkerModels, probeWorker } from "../../llm-pool/health.js";
 import {
   getLlmPoolQueueSnapshot,
   setLlmPoolConfigOverride,
@@ -158,6 +158,26 @@ export async function handleLlmApi(
         worker_id: worker.id,
         probe: result,
       });
+    } catch (error) {
+      json(res, 422, { ok: false, error: formatRouteError(error) });
+    }
+    return true;
+  }
+
+  const modelsMatch = pathname.match(/^\/chat\/v1\/llm\/workers\/([^/]+)\/models$/);
+  if (modelsMatch && method === "GET") {
+    if (!requireBudgetSurfacePermission(user, "chat:read", res)) return true;
+    const workerId = decodeURIComponent(modelsMatch[1]!);
+    try {
+      const worker = loadLlmWorkersConfig().workers.find(
+        (candidate) => candidate.id === workerId && candidate.enabled,
+      );
+      if (!worker) {
+        json(res, 404, { ok: false, error: `worker not found: ${workerId}` });
+        return true;
+      }
+      const result = await listWorkerModels(worker);
+      json(res, 200, { ok: true, worker_id: worker.id, models: result.models });
     } catch (error) {
       json(res, 422, { ok: false, error: formatRouteError(error) });
     }

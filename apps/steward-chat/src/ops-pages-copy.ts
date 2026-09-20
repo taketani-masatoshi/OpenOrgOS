@@ -3,7 +3,8 @@ import { defineCopy } from "@ops-shared/define-copy";
 export const OPS_PAGES_COPY = defineCopy(
   {
     analyticsTitle: "分析ダッシュボード",
-    analyticsLead: "KPI スコアカードとデータ品質。",
+    analyticsLead: "KPI スコアカードとデータ品質。月次スナップショットを先に出し、更新で再計算します。",
+    analyticsSnapshotAsOf: (at: string) => `月次スナップショット ${at.slice(0, 10)}`,
     loading: "読み込み中…",
     summary: "サマリー",
     kpiGreen: "正常",
@@ -179,6 +180,7 @@ export const OPS_PAGES_COPY = defineCopy(
     cancelBusy: "停止中…",
     cancelPending: "未実行を停止",
     openSteward: "Steward チャットで開く",
+    openHandoffs: "委譲と回答を開く",
     statusPending: "待機",
     statusWaiting: "依存待ち",
     statusDispatched: "送出",
@@ -270,7 +272,8 @@ export const OPS_PAGES_COPY = defineCopy(
   },
   {
     analyticsTitle: "Analytics dashboard",
-    analyticsLead: "KPI scorecards and data quality.",
+    analyticsLead: "KPI scorecards and data quality. Monthly snapshot first; Refresh recomputes.",
+    analyticsSnapshotAsOf: (at: string) => `Monthly snapshot ${at.slice(0, 10)}`,
     loading: "Loading…",
     summary: "Summary",
     kpiGreen: "On track",
@@ -446,6 +449,7 @@ export const OPS_PAGES_COPY = defineCopy(
     cancelBusy: "Stopping…",
     cancelPending: "Stop pending",
     openSteward: "Open in Steward chat",
+    openHandoffs: "Open handoffs & replies",
     statusPending: "Pending",
     statusWaiting: "Waiting",
     statusDispatched: "Dispatched",

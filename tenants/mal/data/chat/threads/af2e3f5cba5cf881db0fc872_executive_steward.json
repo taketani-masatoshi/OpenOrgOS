@@ -1,0 +1,64 @@
+{
+  "thread_id": "af2e3f5cba5cf881db0fc872:executive_steward",
+  "tenant": "mal",
+  "created_at": "2026-09-05T05:55:17.610Z",
+  "updated_at": "2026-09-05T05:58:21.140Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "今日は何日？",
+      "at": "2026-09-05T05:55:17.610Z",
+      "turn_id": "e5a45e46-bb92-438f-8662-006db1b0f25d"
+    },
+    {
+      "role": "assistant",
+      "content": "【OrgOS モック LLM + ツール】\n\nツール `operator_today` を実行しました。\n\n# Today — 株式会社MAL\n**結論:** 判断 2 件 · 承認 0 件 · 再試行 0 件\n**次の操作:** 以下の Chat 操作だけ実行できます\n\n## 会社概要（loadCompany · 決定論 · L0）\n- 商号: 株式会社MAL\n- 代表取締役: 段燕燕（代表取締役）、宮城万貴子（代表取締役）\n- Path: `data/company.yaml`\n- 注記: 宮城万貴子は辞任手続中\n- 代表取締役の氏名は Today / 決定論パスで述べてよい。住所・個情は出さない。\n\n## 入出金相手（売掛・買掛・通帳 · 決定論 · L1）\n- 入金: 宿泊OTA(7月分)、番町テナント\n- 出金: 清掃・OTA手数料、竹谷(Steward OS)\n- 入出金の相手先一覧は Today / 決定論パスで述べてよい。口座番号は出さない。\n\n## Agent roster\n- configured: yes\n- operational (26): executive_steward, secretary, finance, contract, compliance, operations, cto, engineering, sales_lead, sales_outbound, sales_inbound, customer_success, legal, security, human_resources, corporate_governance, accounting, tax, procurement, project_management, risk_insurance, data_analytics, investor_relations, internal_audit, privacy_officer, medical_device_regul\n\nご質問「今日は何日？」への回答です。\n\n_信頼度: medium_",
+      "at": "2026-09-05T05:55:18.070Z",
+      "turn_id": "30542fc4-79e8-423c-b07f-ade2e4c02c89",
+      "source": "local",
+      "model": "gemma4:latest",
+      "worker_id": "local-01"
+    },
+    {
+      "role": "user",
+      "content": "今日は何日？",
+      "at": "2026-09-05T05:55:29.524Z",
+      "turn_id": "83b31060-29f6-47b1-815a-320843147d7e"
+    },
+    {
+      "role": "assistant",
+      "content": "【OrgOS モック LLM + ツール】\n\nツール `operator_today` を実行しました。\n\n# Today — 株式会社MAL\n**結論:** 判断 2 件 · 承認 0 件 · 再試行 0 件\n**次の操作:** 以下の Chat 操作だけ実行できます\n\n## 会社概要（loadCompany · 決定論 · L0）\n- 商号: 株式会社MAL\n- 代表取締役: 段燕燕（代表取締役）、宮城万貴子（代表取締役）\n- Path: `data/company.yaml`\n- 注記: 宮城万貴子は辞任手続中\n- 代表取締役の氏名は Today / 決定論パスで述べてよい。住所・個情は出さない。\n\n## 入出金相手（売掛・買掛・通帳 · 決定論 · L1）\n- 入金: 宿泊OTA(7月分)、番町テナント\n- 出金: 清掃・OTA手数料、竹谷(Steward OS)\n- 入出金の相手先一覧は Today / 決定論パスで述べてよい。口座番号は出さない。\n\n## Agent roster\n- configured: yes\n- operational (26): executive_steward, secretary, finance, contract, compliance, operations, cto, engineering, sales_lead, sales_outbound, sales_inbound, customer_success, legal, security, human_resources, corporate_governance, accounting, tax, procurement, project_management, risk_insurance, data_analytics, investor_relations, internal_audit, privacy_officer, medical_device_regul\n\nご質問「今日は何日？」への回答です。\n\n_信頼度: medium_",
+      "at": "2026-09-05T05:55:29.916Z",
+      "turn_id": "566c8619-5317-49ac-b95d-33c6d810dcca",
+      "source": "cloud",
+      "model": "gpt-oss:20b",
+      "worker_id": "cloud-ollama"
+    },
+    {
+      "role": "user",
+      "content": "社長は誰？",
+      "at": "2026-09-05T05:55:35.216Z",
+      "turn_id": "c3fa46c0-5991-4ae5-ac86-ce96d5d8f9b7"
+    },
+    {
+      "role": "assistant",
+      "content": "株式会社MALの代表取締役は段燕燕、宮城万貴子です。\n宮城万貴子は辞任手続中。",
+      "at": "2026-09-05T05:55:35.219Z",
+      "turn_id": "e1e47efe-01de-4fa4-a052-6c97730d25c8",
+      "source": "deterministic"
+    },
+    {
+      "role": "user",
+      "content": "社員は何人いて、誰？",
+      "at": "2026-09-05T05:58:21.123Z",
+      "turn_id": "26042c9b-7ed9-4b4b-bbe5-6ef4afdfd231"
+    },
+    {
+      "role": "assistant",
+      "content": "4名",
+      "at": "2026-09-05T05:58:21.140Z",
+      "turn_id": "186c928f-ccac-4731-abbb-3cd9797f5a6b",
+      "source": "deterministic"
+    }
+  ]
+}

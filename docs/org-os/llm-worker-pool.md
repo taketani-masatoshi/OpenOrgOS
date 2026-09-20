@@ -44,6 +44,16 @@ workers:
     enabled: true
     api_key_env: OPENAI_API_KEY
     supports_tools: true
+  - id: cloud-ollama
+    label: Ollama Cloud
+    tier: cloud
+    provider: openai-compatible
+    base_url: https://ollama.com/v1
+    model: gpt-oss:20b
+    max_inflight: 2
+    enabled: true
+    api_key_env: OLLAMA_API_KEY
+    supports_tools: true
 ```
 
 ファイルが無い場合は従来の `ORGOS_LLM_*` / `OPENAI_*` / `ANTHROPIC_*` から 1 worker を合成する。
@@ -60,12 +70,13 @@ worker `tier: local` では、prompt / tool 結果に必要情報が無いとき
 
 ## UI
 
-秘書・スチュワードの見出し右で経路を選ぶ。エージェント別に端末へ保存し、送信ごとに `llm_route` を付ける。
+秘書・スチュワードの入力欄で経路を選ぶ。エージェント別に端末へ保存し、送信ごとに `llm_route` を付ける。ローカルの OpenAI 互換ワーカーは `/models` を参照し、Ollama等に導入済みのモデルを自動表示する。モデルごとのワーカー重複登録は不要。
 
 | 選択 | 動作 |
 |------|------|
 | 自動（ローカル優先） | 現行どおり。ローカル → 待ち超過時のみクラウド昇格 |
 | ローカル（任意） / 各ローカル | その tier / ワーカーのみ。クラウドへ溢れない |
+| Ollamaの導入済みモデル | 選択したローカルワーカーの接続先は変えず、その送信だけモデルを切り替える |
 | クラウド（任意） / 各クラウド | その tier / ワーカーのみ。ローカルへ戻さない |
 
 登録簿・キュー: `/llm-workers/`（フッターからリンク）
@@ -79,8 +90,11 @@ worker `tier: local` では、prompt / tool 結果に必要情報が無いとき
 |--------|------|
 | GET/PUT | `/chat/v1/llm/workers` |
 | POST | `/chat/v1/llm/workers/:id/probe` |
+| GET | `/chat/v1/llm/workers/:id/models`（ローカル OpenAI 互換のみ） |
 | GET | `/chat/v1/llm/dashboard`（互換スタブ） |
-| POST | `/chat/v1/message` · `llm_route?: { mode: auto\|local\|cloud, worker_id? }` |
+| POST | `/chat/v1/message` · `llm_route?: { mode: auto\|local\|cloud, worker_id?, model? }` |
+
+`model` は `mode: local` かつ `worker_id` 指定時だけ許可し、クラウドモデルの任意上書きには使用できない。
 
 ## CLI
 

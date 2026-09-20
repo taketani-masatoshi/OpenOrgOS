@@ -13,6 +13,7 @@ import { AgentRosterPage } from "./AgentRosterPage";
 import { ApprovalsQueue } from "./ApprovalsQueue";
 import { AnalyticsDashboardPage } from "./AnalyticsDashboardPage";
 import { OrchestrationRunsPage } from "./OrchestrationRunsPage";
+import { HandoffsInboxPage } from "./HandoffsInboxPage";
 import { LedgerWorkbenchPage } from "./LedgerWorkbenchPage";
 import { ExecutiveHomePage } from "./ExecutiveHomePage";
 import { CustomerAdminPage } from "./CustomerAdminPage";
@@ -139,6 +140,7 @@ function ConsoleSubNav({
 type AgentsSubNavActive =
   | "secretary"
   | "steward"
+  | "handoffs"
   | "agent-list"
   | "module-list"
   | "agent-add"
@@ -149,6 +151,7 @@ function AgentsSubNav({ active }: { active: AgentsSubNavActive }) {
   const tabs = [
     { id: "steward" as const, href: "/steward/", label: copy.steward },
     { id: "secretary" as const, href: "/secretary/", label: copy.secretary },
+    { id: "handoffs" as const, href: "/handoffs/", label: copy.handoffs },
     { id: "agent-list" as const, href: "/agents/", label: copy.agentList },
     { id: "module-list" as const, href: "/modules/", label: copy.moduleList },
     { id: "agent-add" as const, href: "/agents/add/", label: copy.agentAdd },
@@ -437,12 +440,14 @@ export function App() {
         <WireConsolePage />
       ) : shellActive === "secretary" ||
         shellActive === "steward" ||
+        shellActive === "handoffs" ||
         shellActive === "agent-list" ||
         shellActive === "module-list" ||
         shellActive === "agent-add" ||
         shellActive === "module-add" ? (
         <div className="agent-section">
           <AgentsSubNav active={shellActive} />
+          {shellActive === "handoffs" ? <HandoffsInboxPage /> : null}
           {shellActive === "agent-list" ? <AgentRosterPage view="agents" /> : null}
           {shellActive === "module-list" ? <AgentRosterPage view="modules" /> : null}
           {shellActive === "agent-add" ? <AgentRosterPage view="agents-add" /> : null}

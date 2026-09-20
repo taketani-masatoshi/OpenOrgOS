@@ -34,6 +34,10 @@ type AgentChatState = {
 /** Per-agent cap so one chat cannot flood the local LLM. */
 export const MAX_AGENT_CHAT_IN_FLIGHT = 4;
 
+export type AgentChatSendOptions = {
+  webSearch?: boolean;
+};
+
 const DRAFT_KEY = (agentId: AgentChatRole) => `orgos.agentChat.draft.${agentId}`;
 const SESSION_KEY = (agentId: AgentChatRole) =>
   `orgos.agentChat.session.${agentId}`;
@@ -254,10 +258,22 @@ function notifyReplyReady(agentTitle: string, reply: string, ok: boolean): void 
 export async function sendAgentChatDraft(
   agentId: AgentChatRole,
   title: string,
+  options: AgentChatSendOptions = {},
 ): Promise<void> {
   const state = states[agentId];
   const message = state.draft.trim();
   if (!message || state.inFlight >= MAX_AGENT_CHAT_IN_FLIGHT) return;
+
+  const savedRoute = loadLlmRoute(agentId);
+  const llmRoute = options.webSearch
+    ? savedRoute.mode === "local"
+      ? savedRoute
+      : { mode: "local" as const }
+    : savedRoute;
+  const webSearch = {
+    enabled: options.webSearch === true,
+    query: options.webSearch ? message.slice(0, 500) : undefined,
+  };
 
   if (state.notifyPerm === "default") {
     const perm = await ensureNotifyPermission();
@@ -346,14 +362,14 @@ export async function sendAgentChatDraft(
             throw new Error(error);
           },
         },
-        { agentId, llmRoute: loadLlmRoute(agentId) },
+        { agentId, llmRoute, webSearch },
       );
     } catch {
       usedStream = false;
     }
 
     if (!usedStream) {
-      const result = await sendMessage(message, agentId, loadLlmRoute(agentId));
+      const result = await sendMessage(message, agentId, llmRoute, webSearch);
       const reply =
         result.reply?.trim() || (result.ok ? "(empty reply)" : "応答に失敗しました");
       const maxMessages = states[agentId].maxTurns * 2;

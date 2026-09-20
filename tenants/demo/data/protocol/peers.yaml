@@ -1,2 +1,4 @@
-as_of: "2026-07-10"
-peers: []
+peers:
+  - peer_id: PEER-001
+    display_name: Demo Partner Co.
+    jurisdiction: JP

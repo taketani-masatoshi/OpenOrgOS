@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 
 type OpsPageProps = {
   title: string;
@@ -33,13 +34,8 @@ export function OpsPage({
         </div>
       </div>
       {error ? <div className="error-banner">{error}</div> : null}
-      {loading ? (
-        <div className="loading-panel" role="status">
-          {loadingLabel}
-        </div>
-      ) : (
-        children
-      )}
+      {loading ? <LoadingStatus label={loadingLabel} /> : null}
+      {loading ? null : children}
     </main>
   );
 }

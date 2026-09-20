@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { AUTH_COPY, SHELL_COPY } from "@ops-shared/console-copy";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { AUTH_COPY } from "@ops-shared/console-copy";
 import { useCopy } from "@ops-shared/define-copy";
 import { OperatorShell, type OperatorShellActive } from "@ops-shared/OperatorShell";
 import { formatOperatorSessionLabel } from "@ops-shared/formatOperatorSessionLabel";
@@ -9,8 +9,12 @@ import { PasskeyAuthPanel } from "@ops-shared/PasskeyAuthPanel";
 import { PasskeySettingsPage } from "@ops-shared/PasskeySettingsPage";
 import { registerSettlementPasskey } from "@ops-shared/register-settlement-passkey";
 import { isPasskeySettingsPath as pathIsPasskeySettings } from "@ops-shared/console-hrefs";
-import { canSignInWithPasskey, isWebAuthnIssuanceEnabled } from "@ops-shared/webauthn-issuance";
+import { isWebAuthnIssuanceEnabled } from "@ops-shared/webauthn-issuance";
 import { webauthnUserMessage } from "@ops-shared/webauthn-user-error";
+import {
+  AUTH_LOGIN_FALLBACK_MS,
+  authBootstrapSignal,
+} from "@ops-shared/auth-bootstrap";
 import {
   chatApi,
   fetchAuthConfig,
@@ -29,30 +33,9 @@ function isPasskeySettingsPath(): boolean {
   return pathIsPasskeySettings(window.location.pathname);
 }
 
-function PasskeyAuthLoadingShell() {
-  const copy = useCopy(AUTH_COPY);
-  return (
-    <div className="auth-page auth-loading">
-      <header className="auth-header">
-        <div className="auth-header-inner">
-          <a className="auth-brand" href="https://oorgos.org">
-            OpenOrgOS
-          </a>
-        </div>
-      </header>
-      <section className="auth-hero">
-        <div className="auth-hero-inner">
-          <h1>{copy.titleMac}</h1>
-          <p className="auth-lead">{copy.loading}</p>
-        </div>
-      </section>
-    </div>
-  );
-}
-
 /**
  * Zero-trust gate for budget / agent-chat SPA.
- * WebAuthn uses the same PassKey screen as Wire. Dev login stays in OperatorShell.
+ * Unauthenticated users always see Community, PassKey, and ID/password on one screen.
  */
 export function BudgetAuthGate({
   children,
@@ -70,12 +53,10 @@ export function BudgetAuthGate({
   const [busy, setBusy] = useState(false);
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [customersNav, setCustomersNav] = useState(false);
+  const [showLoginFallback, setShowLoginFallback] = useState(false);
   const locale = useUiLocale();
   const copy = useCopy(AUTH_COPY);
-  const shell = useCopy(SHELL_COPY);
 
-  const webAuthnLoginMode =
-    authConfig?.mode === "prod" && authConfig.prod_adapter === "webauthn";
   const webAuthnIssuance = isWebAuthnIssuanceEnabled(authConfig);
 
   const settingsPage = isPasskeySettingsPath();
@@ -91,13 +72,22 @@ export function BudgetAuthGate({
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(
+      () => setShowLoginFallback(true),
+      AUTH_LOGIN_FALLBACK_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
+    const signal = authBootstrapSignal();
     (async () => {
       try {
         const [me, config, customers] = await Promise.all([
-          fetchMe().catch(() => null),
-          fetchAuthConfig().catch(() => null),
-          fetchCustomersNav().catch(() => ({ show_tab: false })),
+          fetchMe(signal).catch(() => null),
+          fetchAuthConfig(signal).catch(() => null),
+          fetchCustomersNav(signal).catch(() => ({ show_tab: false })),
         ]);
         if (cancelled) return;
         if (config) {
@@ -140,8 +130,7 @@ export function BudgetAuthGate({
     setCustomersNav(customers.show_tab === true);
   }
 
-  async function onLogin(e: FormEvent) {
-    e.preventDefault();
+  async function loginWithPassword() {
     setBusy(true);
     setError(null);
     try {
@@ -219,11 +208,10 @@ export function BudgetAuthGate({
     }
   }
 
-  if (loading) {
-    return <PasskeyAuthLoadingShell />;
-  }
-
-  if (!user && webAuthnLoginMode) {
+  if (!user) {
+    if (loading && !showLoginFallback) {
+      return <div className="auth-page" aria-busy="true" />;
+    }
     const showRegister = Boolean(authConfig?.webauthn?.registration_allowed);
     const showSignIn = (authConfig?.webauthn?.credential_count ?? 0) > 0;
     const emphasizeBootstrapFlow =
@@ -243,86 +231,57 @@ export function BudgetAuthGate({
         loginOrigin={authConfig?.webauthn?.origin}
         loginRpId={authConfig?.webauthn?.rp_id}
         registrationRequiresSession={authConfig?.webauthn?.login_registration_requires_session}
-        communityHandoffUrl={
-          authConfig?.community_handoff
-            ? buildCommunityConsoleStartUrl(settingsPage ? "/settings/" : "/")
-            : undefined
-        }
+        communityHandoffUrl={buildCommunityConsoleStartUrl(settingsPage ? "/settings/" : "/")}
         settingsPath="/settings/"
         emphasizeBootstrapFlow={emphasizeBootstrapFlow}
-        communityHandoffPrimary={Boolean(authConfig?.community_handoff)}
-        allowPasswordLogin={authConfig?.dev_login_allowed === true}
+        communityHandoffPrimary
+        allowPasswordLogin={authConfig?.dev_login_allowed !== false}
         password={passkey}
         onPassword={setPasskey}
-        onPasswordLogin={() => {
-          void (async () => {
-            setBusy(true);
-            setError(null);
-            try {
-              await loginDev({
-                passkey,
-                operator_id: operatorId.trim() || "OP-001",
-                approver_id: approverId.trim() || operatorId.trim() || "OP-001",
-              });
-              await refreshAfterAuth();
-            } catch (err) {
-              setUser(null);
-              setError(err instanceof Error ? err.message : String(err));
-            } finally {
-              setBusy(false);
-            }
-          })();
-        }}
+        onPasswordLogin={() => void loginWithPassword()}
       />
     );
   }
 
   // Employee seat: the claim desk replaces the console, whatever the URL says.
-  if (user?.claim_only && !settingsPage) {
+  if (user.claim_only && !settingsPage) {
     return <ClaimDeskPage onSignOut={() => void onSignOut()} />;
   }
 
-  const operatorLabel = user
-    ? formatOperatorSessionLabel(user, locale)
-    : loading
-      ? shell.checkingAuth
-      : shell.signedOut;
-
-  const mainContent =
-    settingsPage && user ? (
-      <PasskeySettingsPage
-        webAuthnMode={webAuthnIssuance}
-        api={chatApi}
-        operatorId={user.operator_id}
-        approverId={user.approver_id}
-        policy={{
-          login_registration_bootstrap: authConfig?.webauthn?.login_registration_bootstrap,
-          bootstrap_token_required: authConfig?.webauthn?.bootstrap_token_required,
-          registration_allowed: authConfig?.webauthn?.registration_allowed,
-          settlement_registration_allowed: authConfig?.webauthn?.settlement_registration_allowed,
-          additional_login_registration_allowed:
-            authConfig?.webauthn?.additional_login_registration_allowed,
-          credential_count: authConfig?.webauthn?.credential_count,
-          settlement_count: authConfig?.webauthn?.settlement_count,
-        }}
-        busy={busy}
-        error={error}
-        onRegisterLogin={(opts) => onRegister(opts)}
-        onRegisterSettlement={() => void enrollSettlementPasskey()}
-        onRefreshAuthConfig={refreshAuthConfig}
-        expectedOrigin={authConfig?.webauthn?.origin}
-        rpId={authConfig?.webauthn?.rp_id}
-      />
-    ) : (
-      children
-    );
+  const mainContent = settingsPage ? (
+    <PasskeySettingsPage
+      webAuthnMode={webAuthnIssuance}
+      api={chatApi}
+      operatorId={user.operator_id}
+      approverId={user.approver_id}
+      policy={{
+        login_registration_bootstrap: authConfig?.webauthn?.login_registration_bootstrap,
+        bootstrap_token_required: authConfig?.webauthn?.bootstrap_token_required,
+        registration_allowed: authConfig?.webauthn?.registration_allowed,
+        settlement_registration_allowed: authConfig?.webauthn?.settlement_registration_allowed,
+        additional_login_registration_allowed:
+          authConfig?.webauthn?.additional_login_registration_allowed,
+        credential_count: authConfig?.webauthn?.credential_count,
+        settlement_count: authConfig?.webauthn?.settlement_count,
+      }}
+      busy={busy}
+      error={error}
+      onRegisterLogin={(opts) => onRegister(opts)}
+      onRegisterSettlement={() => void enrollSettlementPasskey()}
+      onRefreshAuthConfig={refreshAuthConfig}
+      expectedOrigin={authConfig?.webauthn?.origin}
+      rpId={authConfig?.webauthn?.rp_id}
+    />
+  ) : (
+    children
+  );
 
   return (
     <OperatorShell
       active={active}
-      operatorLabel={operatorLabel}
+      operatorLabel={formatOperatorSessionLabel(user, locale)}
       onSignOut={() => void onSignOut()}
-      settingsHref={user ? "/settings/" : undefined}
+      settingsHref="/settings/"
       settingsActive={settingsPage}
       executiveHref="/"
       ledgerHref="/?ledger=1"
@@ -336,93 +295,7 @@ export function BudgetAuthGate({
       secretaryHref="/secretary/"
       stewardHref="/steward/"
     >
-      {loading ? (
-        webAuthnLoginMode ? (
-          <PasskeyAuthLoadingShell />
-        ) : (
-          <div className="wallet-shell">
-            <div className="wallet-page wallet-loading">{copy.checking}</div>
-          </div>
-        )
-      ) : user ? (
-        mainContent
-      ) : (
-        <div className="wallet-shell">
-          <div className="wallet-page">
-            <header className="wallet-topbar">
-              <div className="wallet-brand">
-                <span className="wallet-brand-mark" aria-hidden="true">
-                  ¥
-                </span>
-                <div>
-                  <h1 className="wallet-title">{copy.titleSession}</h1>
-                  <p className="wallet-brand-sub">{copy.sessionNeeded}</p>
-                </div>
-              </div>
-            </header>
-
-            {error && <p className="error-banner">{error}</p>}
-
-            {canSignInWithPasskey(authConfig) ? (
-              <section className="wallet-panel" aria-label={copy.passkeyLoginLabel}>
-                <div className="wallet-hero">
-                  <p className="wallet-brand-sub">{copy.leadPasskeyOnly}</p>
-                  <button
-                    type="button"
-                    className="primary-button"
-                    disabled={busy}
-                    onClick={() => void onSignIn()}
-                  >
-                    {busy ? copy.checkingBusy : copy.touchIdEnter}
-                  </button>
-                </div>
-              </section>
-            ) : null}
-
-            {authConfig?.dev_login_allowed !== false ? (
-              <form id="orgos-dev-login" className="wallet-panel" onSubmit={(e) => void onLogin(e)}>
-                <section className="wallet-hero" aria-label={copy.devLoginLabel}>
-                  {canSignInWithPasskey(authConfig) ? (
-                    <p className="wallet-brand-sub">{copy.orPassword}</p>
-                  ) : null}
-                  <label className="wallet-field">
-                    <span>{copy.operator}</span>
-                    <input
-                      id="orgos-login-operator"
-                      name="operator_id"
-                      value={operatorId}
-                      onChange={(ev) => setOperatorId(ev.target.value)}
-                      autoComplete="username"
-                      required
-                    />
-                  </label>
-                  <label className="wallet-field">
-                    <span>{copy.password}</span>
-                    <input
-                      id="orgos-login-password"
-                      name="password"
-                      type="password"
-                      value={passkey}
-                      onChange={(ev) => setPasskey(ev.target.value)}
-                      autoComplete="current-password"
-                      required
-                    />
-                  </label>
-                  <button id="orgos-login-submit" type="submit" className="primary-button" disabled={busy}>
-                    {busy ? copy.checkingBusy : copy.enter}
-                  </button>
-                </section>
-              </form>
-            ) : (
-              <p className="empty-copy">
-                {copy.useWireInstead}
-                <a href="/wire/">{copy.useWireLink}</a>
-                {copy.useWireAfter}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+      {mainContent}
     </OperatorShell>
   );
 }

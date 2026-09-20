@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import type { TenantSummary } from "@wire-console/api";
 import { fetchWireTenants } from "./wire-api";
 import { loadMailWorkbench, prefetchWireWorkbench } from "./wire-prefetch";
+import { LoadingStatus } from "@ops-shared/LoadingStatus";
 import "@wire-console/wire-mail.css";
 
 const MailWorkbench = lazy(() => loadMailWorkbench());
@@ -34,9 +35,7 @@ export function WireConsolePage() {
   if (loading) {
     return (
       <div className="wire-workspace">
-        <div className="loading-panel" role="status">
-          読み込み中…
-        </div>
+        <LoadingStatus />
       </div>
     );
   }
@@ -52,11 +51,7 @@ export function WireConsolePage() {
   return (
     <div className="wire-workspace">
       <Suspense
-        fallback={
-          <div className="loading-panel" role="status">
-            読み込み中…
-          </div>
-        }
+        fallback={<LoadingStatus />}
       >
         <MailWorkbench tenants={tenants} />
       </Suspense>
