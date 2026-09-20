@@ -115,6 +115,16 @@ function classifyFileRemote(url: string, depth: number): TenantGitRemoteVerdict 
   };
 }
 
+/** Remotes of a git worktree at the tenant root. Null when that directory is not a repo. */
+export function classifyRepoRemotes(repoPath: string): TenantGitRemoteVerdict | null {
+  if (!existsSync(join(repoPath, ".git"))) return null;
+  for (const remote of gitRemoteUrls(repoPath)) {
+    const verdict = classifyTenantGitRemote(remote);
+    if (verdict.classification === "forbidden") return verdict;
+  }
+  return null;
+}
+
 export function classifyTenantGitRemote(url: string, depth = 0): TenantGitRemoteVerdict {
   const trimmed = url.trim();
   if (!trimmed) {

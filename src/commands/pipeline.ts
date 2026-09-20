@@ -25,21 +25,25 @@ export function escalatePipelineFailure(opts: {
   step: string;
   message: string;
   tenant?: string;
+  requirements?: string[];
 }): void {
   try {
+    const requirements =
+      opts.requirements ??
+      [
+        `Investigate: ${opts.message}`,
+        "Run: orgos events chain verify",
+        opts.pipeline === "weekly"
+          ? "Retry: orgos events chain attest"
+          : "Retry: orgos events audit monthly",
+      ];
     const result = runEscalation({
       fromAgent: "records_audit",
       tenant: opts.tenant ?? getTenantId(),
       input: {
         subject: `Pipeline ${opts.pipeline} FAIL: ${opts.step}`,
         background: `Automated ${opts.pipeline} pipeline failed during records_audit step.`,
-        requirements: [
-          `Investigate: ${opts.message}`,
-          "Run: orgos events chain verify",
-          opts.pipeline === "weekly"
-            ? "Retry: orgos events chain attest"
-            : "Retry: orgos events audit monthly",
-        ].join("\n"),
+        requirements: requirements.join("\n"),
         path: "docs/org-os/records-audit-runbook.md",
         text: `records_audit pipeline ${opts.pipeline} ${opts.step}`,
       },
@@ -180,12 +184,19 @@ export function runPipelineWeekly(options: PipelineRunOptions = {}): void {
   const tenantBackup = checkTenantBackupForWeekly(getTenantDir());
   console.log(tenantBackup.ok ? `✓ ${tenantBackup.message}` : `⚠ ${tenantBackup.message}`);
   if (!tenantBackup.ok) {
+    const publicRemote = tenantBackup.message.includes("使えません");
     recordPipelineFailure(failures, "tenant backup", tenantBackup.message);
     escalatePipelineFailure({
       pipeline: "weekly",
       step: "tenant backup",
       message: tenantBackup.message,
       tenant: options.tenant,
+      requirements: [
+        `Investigate: ${tenantBackup.message}`,
+        publicRemote
+          ? "Retry: orgos tenant git-remote check"
+          : "Retry: orgos tenant backup snapshot",
+      ],
     });
   }
 

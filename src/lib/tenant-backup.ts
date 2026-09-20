@@ -26,12 +26,12 @@ import {
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
-import { classifyTenantGitRemote } from "./tenant-git-remote.js";
+import { classifyRepoRemotes, classifyTenantGitRemote } from "./tenant-git-remote.js";
 
 export const TENANT_BACKUP_MAX_AGE_DAYS = 7;
 export const TENANT_BACKUP_STAMP_FILE = "tenant-backup-last.txt";
 
-const ARCHIVE_EXCLUDES = ["scratch/aia-runs", "node_modules"] as const;
+const ARCHIVE_EXCLUDES = ["scratch/aia-runs", "data/scratch/aia-runs", "node_modules"] as const;
 
 export const backupTargetSchema = z.object({
   version: z.literal(1),
@@ -223,6 +223,10 @@ export function snapshotTenantBackup(opts: {
     throw new Error(`テナントディレクトリがありません: ${opts.tenantDir}`);
   }
   const target = requireReadyTarget(tenantDir);
+  const localGit = classifyRepoRemotes(tenantDir);
+  if (localGit?.classification === "forbidden") {
+    throw new Error(localGit.message);
+  }
   const destination = canonicalPath(target.destination);
   if (sameOrInside(tenantDir, destination) || sameOrInside(destination, tenantDir)) {
     throw new Error("退避先はテナントディレクトリの外にしてください");
@@ -338,6 +342,12 @@ export function restoreTenantBackup(opts: {
   return { extractedTo: into };
 }
 
+export function tenantBackupStampAgeDays(tenantDir: string, now = new Date()): number | null {
+  const stamp = readTenantBackupStamp(tenantDir);
+  if (!stamp) return null;
+  return stampAgeDays(stamp, now);
+}
+
 export function checkTenantBackupForWeekly(
   tenantDir: string,
   now = new Date(),
@@ -357,6 +367,10 @@ export function checkTenantBackupForWeekly(
     if (remote.classification === "forbidden") {
       return { ok: false, message: remote.message };
     }
+  }
+  const localGit = classifyRepoRemotes(tenantDir);
+  if (localGit?.classification === "forbidden") {
+    return { ok: false, message: localGit.message };
   }
   const stamp = readTenantBackupStamp(tenantDir);
   if (!stamp) {

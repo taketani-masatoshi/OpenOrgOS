@@ -32,7 +32,7 @@ export const STEWARD_COPY = defineCopy(
     storeDriveBody:
       "社員が常用している間、AI が作った資料の写しを上げます。社員のファイルは消しません。",
     storeFlow:
-      "このマシンに書く → NAS へ退避する → 台帳になったものだけ NAS 上の Git に残す → Drive へは AI 作と明示した写しだけ。",
+      "このマシンに書く → NAS へ退避する → 台帳になったものだけ NAS 上の Git に残す → Drive へは AI 作と明示した写しだけ。退避は orgos tenant backup で、この画面では実行しません。",
     driveFolderLabel: "保存先フォルダ ID（AIA 用の配達フォルダ）",
     driveFolderSaved: "配達フォルダを保存しました。",
     driveExportTitle: "AIA 成果物としてアップロード",
@@ -737,7 +737,7 @@ export const STEWARD_COPY = defineCopy(
     storeDriveBody:
       "While people still live in Drive, we upload labeled AIA copies. Human files are never deleted.",
     storeFlow:
-      "Write on this machine → copy to the NAS → keep ledger history in Git on the NAS → upload only labeled AIA copies to Drive.",
+      "Write on this machine → copy to the NAS → keep ledger history in Git on the NAS → upload only labeled AIA copies to Drive. Backup is orgos tenant backup. This screen does not run it.",
     driveFolderLabel: "Destination folder ID (AIA delivery folder)",
     driveFolderSaved: "Saved the delivery folder.",
     driveExportTitle: "Upload as an AIA artifact",

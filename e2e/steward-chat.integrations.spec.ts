@@ -25,6 +25,7 @@ test.describe("steward chat integrations", () => {
       page.getByText("社員が置いたファイルは削除・上書きしません", { exact: false }),
     ).toBeVisible();
     await expect(page.getByText("ファイル名は AIA- で始まり", { exact: false })).toBeVisible();
+    await expect(page.getByText("この画面では実行しません")).toBeVisible();
   });
 
   test("company setup links across to the hub", async ({ page }) => {

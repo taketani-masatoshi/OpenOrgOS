@@ -65,7 +65,8 @@ import { collectIrIntegrityIssues } from "./investor-relations/integrity.js";
 import { collectCustomerSuccessIntegrityIssues } from "./customer-success/integrity.js";
 import { collectAnalyticsIntegrityIssues } from "./analytics/integrity.js";
 import { collectRosterPayrollConsistencyIssues } from "./hr/roster-payroll-consistency.js";
-import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
+import { checkTenantBackupForWeekly, loadBackupTarget } from "./tenant-backup.js";
+import { getDataDir, getTenantDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
   resolveModuleSecretsPath,
@@ -740,6 +741,14 @@ export function runIntegrityChecks(): IntegrityIssue[] {
         rel,
         `未作成 — \`cp ${name.replace(".yaml", ".yaml.example")} ${name}\`（[data/executive/00-README.md](data/executive/00-README.md)）`
       );
+    }
+  }
+
+  const tenantBackup = loadBackupTarget(getTenantDir());
+  if (tenantBackup.state !== "missing") {
+    const check = checkTenantBackupForWeekly(getTenantDir());
+    if (!check.ok) {
+      push("warning", "data/org/backup-target.yaml", check.message);
     }
   }
 

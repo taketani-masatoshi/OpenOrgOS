@@ -1,4 +1,6 @@
 import { getTenantDir, getTenantId } from "../lib/tenant.js";
+import { isOperatorAuthBypassed } from "../lib/console-auth/operator-rbac.js";
+import { requireCliOperator } from "../lib/console-auth/cli-operator.js";
 import {
   checkTenantBackupForWeekly,
   restoreTenantBackup,
@@ -21,6 +23,16 @@ function fail(message: string): never {
   process.exit(1);
 }
 
+function requireTenantBackupOperator(command: string): void {
+  if (isOperatorAuthBypassed()) return;
+  const auth = requireCliOperator({ permission: "chat:approve", command });
+  if (auth.record.role !== "ceo" && auth.record.role !== "approver") {
+    throw new Error(
+      `${command} requires ceo or approver role (got ${auth.record.role}).`,
+    );
+  }
+}
+
 export function runTenantBackupStatus(opts: { json?: boolean } = {}): void {
   const tenantDir = getTenantDir();
   const check = checkTenantBackupForWeekly(tenantDir);
@@ -39,6 +51,7 @@ export function runTenantBackupStatus(opts: { json?: boolean } = {}): void {
 
 export function runTenantBackupSnapshot(opts: { json?: boolean } = {}): void {
   try {
+    requireTenantBackupOperator("orgos tenant backup snapshot");
     const result = snapshotTenantBackup({
       tenantDir: getTenantDir(),
       tenantId: getTenantId(),
@@ -58,6 +71,7 @@ export function runTenantBackupRestore(opts: {
   json?: boolean;
 }): void {
   try {
+    requireTenantBackupOperator("orgos tenant backup restore");
     const result = restoreTenantBackup({
       archivePath: opts.archive,
       intoDir: opts.into,

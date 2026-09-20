@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   classifyTenantGitRemote,
   fileUrlForLocalPath,
@@ -22,6 +22,18 @@ import {
   tenantBackupStampPath,
   type VolumeEncryption,
 } from "../src/lib/tenant-backup.js";
+import {
+  runTenantBackupRestore,
+  runTenantBackupSnapshot,
+  runTenantBackupStatus,
+} from "../src/commands/tenant-backup.js";
+import {
+  HA_CEO_ID,
+  HA_CEO_KEY,
+  HA_OP_ID,
+  HA_OP_KEY,
+  setupTempCompanyEventsTenant,
+} from "./helpers/temp-company-events-tenant.js";
 
 const roots: string[] = [];
 const quiet = { volumeProbe: (): VolumeEncryption => "unknown" };
@@ -97,16 +109,40 @@ describe("tenant backup", () => {
     expect(remote.message).toContain("github.com");
   });
 
+  it("refuses snapshot when the tenant directory itself tracks a public forge", () => {
+    const root = tempRoot();
+    const tenantDir = join(root, "acme");
+    const nas = join(root, "nas");
+    mkdirSync(join(tenantDir, "data"), { recursive: true });
+    writeFileSync(join(tenantDir, "data", "keep.txt"), "ledger");
+    writeTarget(tenantDir, nas);
+    execFileSync("git", ["init"], { cwd: tenantDir });
+    execFileSync("git", ["remote", "add", "origin", "git@github.com:org/acme.git"], {
+      cwd: tenantDir,
+    });
+
+    expect(() =>
+      snapshotTenantBackup({ tenantDir, tenantId: "acme", ...quiet }),
+    ).toThrow(/github\.com/);
+    expect(existsSync(tenantBackupStampPath(tenantDir))).toBe(false);
+    const weekly = checkTenantBackupForWeekly(tenantDir);
+    expect(weekly.ok).toBe(false);
+    expect(weekly.message).toContain("github.com");
+  });
+
   it("snapshots without in-flight drafts and stamps only after tar succeeds", () => {
     const root = tempRoot();
     const tenantDir = join(root, "acme");
     const nas = join(root, "nas");
     mkdirSync(join(tenantDir, "data"), { recursive: true });
     mkdirSync(join(tenantDir, "scratch", "aia-runs"), { recursive: true });
+    mkdirSync(join(tenantDir, "data", "scratch", "aia-runs"), { recursive: true });
     mkdirSync(join(tenantDir, "node_modules", "pkg"), { recursive: true });
     writeFileSync(join(tenantDir, "data", "keep.txt"), "ledger");
     writeFileSync(join(tenantDir, "scratch", "aia-runs", "draft.txt"), "in-flight");
+    writeFileSync(join(tenantDir, "data", "scratch", "aia-runs", "live.txt"), "live-draft");
     writeFileSync(join(tenantDir, "node_modules", "pkg", "index.js"), "skip");
+    execFileSync("git", ["init"], { cwd: tenantDir });
     writeTarget(tenantDir, join(tenantDir, "inside"));
 
     expect(() =>
@@ -136,7 +172,9 @@ describe("tenant backup", () => {
 
     const listing = execFileSync("tar", ["-tzf", snap.archivePath], { encoding: "utf8" });
     expect(listing).toContain("acme/data/keep.txt");
+    expect(listing).toContain(".git/");
     expect(listing).not.toContain("aia-runs");
+    expect(listing).not.toContain("live.txt");
     expect(listing).not.toContain("node_modules");
 
     expect(() =>
@@ -302,5 +340,67 @@ describe("tenant git remote", () => {
     });
     const weekly = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(weekly.ok).toBe(true);
+  });
+});
+
+describe("tenant backup CLI roles", () => {
+  const env = { ...process.env };
+  let restore: (() => void) | undefined;
+
+  beforeEach(() => {
+    restore = setupTempCompanyEventsTenant().restore;
+    process.env.STEWARD_OPERATOR_AUTH = "1";
+    delete process.env.ORGOS_ENV;
+    delete process.env.ORGOS_OPERATOR_KEY;
+    delete process.env.ORGOS_CLI_OPERATOR_ID;
+  });
+
+  afterEach(() => {
+    process.env = { ...env };
+    restore?.();
+  });
+
+  function deniedMessage(): string {
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("process.exit");
+    }) as never);
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      runTenantBackupSnapshot();
+    } catch (e) {
+      expect((e as Error).message).toBe("process.exit");
+    }
+    exitSpy.mockRestore();
+    const text = err.mock.calls.map((c) => String(c[0])).join("\n");
+    err.mockRestore();
+    return text;
+  }
+
+  it("lets status run without an operator", () => {
+    expect(() => runTenantBackupStatus()).not.toThrow();
+  });
+
+  it("refuses snapshot and restore for an operator who is not ceo or approver", () => {
+    process.env.ORGOS_CLI_OPERATOR_ID = HA_OP_ID;
+    process.env.ORGOS_OPERATOR_KEY = HA_OP_KEY;
+    expect(deniedMessage()).toMatch(/lacks permission|ceo or approver/);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("process.exit");
+    }) as never);
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(() =>
+      runTenantBackupRestore({ archive: "/tmp/none.tar.gz", into: "/tmp/empty-restore" }),
+    ).toThrow("process.exit");
+    expect(err.mock.calls.map((c) => String(c[0])).join("\n")).toMatch(
+      /lacks permission|ceo or approver/,
+    );
+    exitSpy.mockRestore();
+    err.mockRestore();
+  });
+
+  it("lets a ceo reach snapshot, which then stops on a missing target", () => {
+    process.env.ORGOS_CLI_OPERATOR_ID = HA_CEO_ID;
+    process.env.ORGOS_OPERATOR_KEY = HA_CEO_KEY;
+    expect(deniedMessage()).toContain("退避先が未設定");
   });
 });
