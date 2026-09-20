@@ -16,6 +16,7 @@ import {
 } from "./fiscal-year.js";
 import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
+import { equityChangeAmounts } from "./ledger/balance-sheet.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 
 const AUTO_IDS = new Set(["depreciation_excess", "entertainment_excess"]);
@@ -40,6 +41,13 @@ export type TaxAdjustmentWorksheet = {
   additions_yen: number | null;
   subtractions_yen: number | null;
   taxable_income_yen: number | null;
+  retained_rollforward: {
+    opening_yen: number;
+    net_income_yen: number;
+    dividend_yen: number;
+    capital_yen: number;
+    closing_yen: number;
+  } | null;
   errors: string[];
 };
 
@@ -180,6 +188,27 @@ export function evaluateTaxAdjustment(fiscalYear: string): TaxAdjustmentWorkshee
       additions_yen: null,
       subtractions_yen: null,
       taxable_income_yen: null,
+      retained_rollforward: null,
+      errors,
+    };
+  }
+
+  const equity = equityChangeAmounts({ asOf, fiscalYear });
+  const retainedRow = equity.components.find((row) => row.equity_class === "retained");
+  if (!retainedRow?.balanced) {
+    errors.push("betsu-5 retained mismatch");
+  }
+  if (errors.length > 0) {
+    return {
+      fiscal_year: fiscalYear,
+      as_of: asOf,
+      can_compute: false,
+      starting_profit_yen: null,
+      lines: [],
+      additions_yen: null,
+      subtractions_yen: null,
+      taxable_income_yen: null,
+      retained_rollforward: null,
       errors,
     };
   }
@@ -197,6 +226,13 @@ export function evaluateTaxAdjustment(fiscalYear: string): TaxAdjustmentWorkshee
     additions_yen: additions,
     subtractions_yen: subtractions,
     taxable_income_yen: starting + additions - subtractions,
+    retained_rollforward: {
+      opening_yen: retainedRow!.opening_yen,
+      net_income_yen: retainedRow!.net_income_yen,
+      dividend_yen: retainedRow!.dividend_yen,
+      capital_yen: retainedRow!.capital_yen,
+      closing_yen: retainedRow!.closing_yen,
+    },
     errors: [],
   };
 }

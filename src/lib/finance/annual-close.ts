@@ -1,8 +1,8 @@
 /**
  * Annual accounting close.
- * Every month in the company fiscal year must already satisfy the monthly gates and be locked.
- * The P/L transfer is the only journal allowed into the locked final month.
- * The live opening-balances.yaml cutover is never replaced. The next opening is a side file.
+ * Every month must already be locked, and the statements, tax worksheets, and year-end
+ * declarations must agree with the books. A failed close posts nothing and does not
+ * switch the live opening balances.
  */
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -20,8 +20,11 @@ import {
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import { buildOpeningBalancesFromTrialBalance, saveOpeningBalances } from "./ledger/opening-balance.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
+import { equityChangeAmounts, buildIndividualNotesReport } from "./ledger/balance-sheet.js";
 import { evaluateMonthlyCloseGates } from "./monthly-close.js";
 import { isMonthLocked } from "./period-lock.js";
+import { evaluateTaxAdjustment } from "./tax-adjustment.js";
+import { evaluateYearEndDeclaration } from "./year-end-declaration.js";
 
 export type AnnualCloseMonthGate = {
   month: string;
@@ -89,6 +92,17 @@ export function evaluateAnnualCloseGates(fiscalYear: string): AnnualCloseEvaluat
       errors.push(...gates.errors.map((issue) => `${month}: ${issue}`));
     }
     monthGates.push({ month, locked, can_lock: gates.can_lock });
+  }
+  errors.push(...evaluateYearEndDeclaration(fiscalYear).errors);
+  const equity = equityChangeAmounts({ asOf, fiscalYear });
+  if (!equity.balanced) {
+    errors.push(...(equity.issues.length > 0 ? equity.issues : ["equity change unbalanced"]));
+  }
+  const notes = buildIndividualNotesReport({ asOf, fiscalYear });
+  if (!notes.ready) errors.push(...notes.errors);
+  const tax = evaluateTaxAdjustment(fiscalYear);
+  if (!tax.can_compute) {
+    errors.push(...tax.errors.map((issue) => `tax-adjustment: ${issue}`));
   }
   return {
     fiscal_year: fiscalYear,

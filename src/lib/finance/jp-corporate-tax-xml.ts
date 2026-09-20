@@ -107,6 +107,24 @@ export function buildCorporateTaxXmlDraft(input?: {
     : `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
     <AdvisorPending>${escapeXml(worksheet.errors.join(","))}</AdvisorPending>
   </AnnexDraft>`;
+  const roll = worksheet.retained_rollforward;
+  const betsu5 = roll
+    ? `<AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益剰余金">
+    <Line code="opening_retained" label="期首利益剰余金">${roll.opening_yen}</Line>
+    <Line code="net_income" label="当期純利益">${roll.net_income_yen}</Line>
+    <Line code="dividends" label="配当">${roll.dividend_yen}</Line>
+    <Line code="capital" label="資本取引">${roll.capital_yen}</Line>
+    <Line code="closing_retained" label="期末利益剰余金">${roll.closing_yen}</Line>
+  </AnnexDraft>`
+    : `<AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益剰余金">
+    <AdvisorPending>${escapeXml(worksheet.errors.join(","))}</AdvisorPending>
+  </AnnexDraft>`;
+  const completenessFilled = worksheet.can_compute
+    ? "entity,statements,betsu-4,betsu-5-retained"
+    : "entity,statements";
+  const completenessPending = worksheet.can_compute
+    ? "official_form_mapping"
+    : escapeXml(worksheet.errors.join(","));
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <OrgOSCorporateTaxDraft
@@ -153,13 +171,10 @@ export function buildCorporateTaxXmlDraft(input?: {
     ${corp.notes ? `<Notes>${escapeXml(corp.notes)}</Notes>` : ""}
   </CorporateTaxPrep>
   ${annex}
-  <AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益積立金（概算）">
-    <Line code="total_equity" label="純資産合計">${sheet.total_equity_yen}</Line>
-    <Line code="retained_placeholder" label="利益積立金内訳（税理士確定）">${sheet.total_equity_yen}</Line>
-  </AnnexDraft>
+  ${betsu5}
   <Completeness>
-    <Filled>entity,statements,betsu-4-estimate,betsu-5-equity</Filled>
-    <AdvisorPending>add_backs,subtractions,retained_breakdown,official_form_mapping</AdvisorPending>
+    <Filled>${completenessFilled}</Filled>
+    <AdvisorPending>${completenessPending}</AdvisorPending>
     <Submission>not-for-etax</Submission>
   </Completeness>
 </OrgOSCorporateTaxDraft>

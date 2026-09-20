@@ -142,7 +142,7 @@ function missingTaxCategories(month: string): string[] {
   return missing;
 }
 
-function inventoryGate(month: string, asOf: string): MonthlyCloseGate {
+export function evaluateInventoryCloseGate(month: string, asOf: string): MonthlyCloseGate {
   const path = join(getDataDir(), "finance", "inventory.yaml");
   if (!existsSync(path)) {
     return gate("inventory-cogs", "棚卸と売上原価", true, "skip", "no inventory");
@@ -379,7 +379,7 @@ export function evaluateMonthlyCloseGates(
     );
   }
 
-  items.push(inventoryGate(month, asOf));
+  items.push(evaluateInventoryCloseGate(month, asOf));
 
   const missingTax = missingTaxCategories(month);
   let taxDetail = "ok";
