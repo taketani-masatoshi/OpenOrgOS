@@ -1,0 +1,21 @@
+worksite_id: WS-bancho-heim-312
+display_name: 番町ハイム312
+address:
+  prefecture: 東京都
+  city: 千代田区
+  line1: 二番町1-2
+  building: 番町ハイム
+  unit: "312"
+  postal_code: "102-0084"
+access:
+  nearest_stations:
+    - line: 東京メトロ有楽町線
+      station: 麹町
+      walk_minutes: 2
+      exit: 5番出口
+  entry_method: 312のインターフォンを鳴らす
+passive_smoking_fact: 喫煙所なし。室内禁煙などの制限・掲示なし
+passive_smoking_choice: indoor_smoke_free
+suggested_job_category: light_work
+job_category_choice: light_work
+confirmed_at: "2026-09-20"

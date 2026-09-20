@@ -28,4 +28,9 @@ describe("console-routing", () => {
     expect(spaPathFromHref("/contracts/", "http://127.0.0.1:9470")).toBe("/contracts/");
     expect(spaPathFromHref("/stays/", "http://127.0.0.1:9470")).toBe("/stays/");
   });
+
+  it("maps /workflow/ to the canvas route", () => {
+    expect(pathActive("/workflow/")).toBe("workflow");
+    expect(spaPathFromHref("/workflow/", "http://127.0.0.1:9470")).toBe("/workflow/");
+  });
 });

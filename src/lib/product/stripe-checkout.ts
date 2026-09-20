@@ -64,6 +64,7 @@ export async function createLedgerCheckoutSession(input: {
     headers: {
       Authorization: `Bearer ${secret}`,
       "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": `orgos-ledger-checkout-${input.signupId}`,
     },
     body: body.toString(),
   });

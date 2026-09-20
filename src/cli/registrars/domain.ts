@@ -180,6 +180,18 @@ import {
   runHrCompetence,
   runHrCompetenceCheck,
   runHrHeadcount,
+  runHrDismissalReadiness,
+  runHrTalentDiscuss,
+  runHrTalentFlow,
+  runHrTalentHear,
+  runHrTalentPack,
+  runHrTalentPlatforms,
+  runHrTalentReach,
+  runHrTalentShortlist,
+  runHrWorksiteConfirm,
+  loadTalentHearAnswers,
+  loadRecruitingJobFromPath,
+  getDocsDir,
   type CompetenceView,
 } from "../../commands/hr.js";
 import {
@@ -220,6 +232,317 @@ export function registerDomainCommands(program: Command): void {
     .description("Deterministic headcount from data/hr/employees.yaml (no names)")
     .option("--json", "Print JSON")
     .action((opts: { json?: boolean }) => runHrHeadcount({ json: Boolean(opts.json) }));
+
+  hr.command("talent-hear")
+    .description("仕事の回答から求人票を作る。不足があれば質問だけ返す")
+    .requiredOption("--answers <file>", "仕事の回答 YAML")
+    .option("--json", "Print JSON")
+    .action((opts: { answers: string; json?: boolean }) => {
+      const result = runHrTalentHear({
+        answers: loadTalentHearAnswers(opts.answers),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "ready") {
+        console.log(result.posting.body);
+        return;
+      }
+      if (result.status === "need_answers") {
+        for (const item of result.questions) console.log(`- ${item.prompt}`);
+        return;
+      }
+      console.log(result.reason);
+      process.exitCode = 1;
+    });
+
+  hr.command("worksite-confirm")
+    .description("就業拠点の確認。受動喫煙・業種はカタログ選択。承認・外部掲載はしない")
+    .requiredOption("--worksite <file>", "拠点 YAML")
+    .option("--passive-smoking <id>", "受動喫煙区分のカタログ id")
+    .option("--job-category <id>", "業種・職種のカタログ id")
+    .option("--write <file>", "確定後の書き出し先")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      worksite: string;
+      passiveSmoking?: string;
+      jobCategory?: string;
+      write?: string;
+      json?: boolean;
+    }) => {
+      const result = runHrWorksiteConfirm({
+        worksite: loadTalentHearAnswers(opts.worksite),
+        passiveSmoking: opts.passiveSmoking,
+        jobCategory: opts.jobCategory,
+        writePath: opts.write,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_choices") {
+        console.log("次から番号（id）で選んでください。自由記述は不要です。");
+        if (result.recommended?.passive_smoking_choice) {
+          console.log(`推奨 受動喫煙: ${result.recommended.passive_smoking_choice}`);
+        }
+        if (result.recommended?.job_category_choice) {
+          console.log(`推奨 業種: ${result.recommended.job_category_choice}`);
+        }
+        for (const row of result.passive_smoking_options) {
+          console.log(`- passive_smoking ${row.id}: ${row.label}`);
+        }
+        for (const row of result.job_category_options) {
+          console.log(`- job_category ${row.id}: ${row.label}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`worksite_id: ${result.worksite.worksite_id}`);
+      console.log(`passive_smoking: ${result.worksite.passive_smoking_choice}`);
+      console.log(`job_category: ${result.worksite.job_category_choice}`);
+      if (opts.write) console.log(opts.write);
+    });
+
+  hr.command("talent-platforms")
+    .description("3〜6ヶ月の業務委託を4媒体向けに整える。外部投稿と承認はしない")
+    .requiredOption("--facts <file>", "掲載事実 YAML")
+    .option("--json", "Print JSON")
+    .action((opts: { facts: string; json?: boolean }) => {
+      const result = runHrTalentPlatforms({
+        facts: loadTalentHearAnswers(opts.facts),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected" || result.status === "use_employment") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_answers") {
+        for (const item of result.questions) {
+          const recommended = item.recommended ? ` 推奨: ${item.recommended}` : "";
+          console.log(`- ${item.prompt}${recommended}`);
+          for (const option of item.options ?? []) console.log(`  - ${option.id}: ${option.label}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`coverage: ${result.coverage}`);
+      console.log(result.fallback_note);
+      for (const row of result.listings) {
+        console.log(`## ${row.platform} (${row.status})`);
+        if (row.body) console.log(row.body);
+        if (row.reason) console.log(row.reason);
+      }
+    });
+
+  hr.command("talent-reach")
+    .description("届いてほしい層に近い媒体を提案する。求人票に年齢・性別は書かない")
+    .requiredOption("--wish <text>", "ユーザーの希望")
+    .option("--json", "Print JSON")
+    .action((opts: { wish: string; json?: boolean }) => {
+      const result = runHrTalentReach({ wish: opts.wish, json: Boolean(opts.json) });
+      if (opts.json) return;
+      if (result.status === "need_answers") {
+        for (const item of result.questions) {
+          console.log(`- ${item.prompt}`);
+          for (const option of item.options ?? []) console.log(`  - ${option.id}: ${option.label}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
+      for (const row of result.proposals) console.log(`- ${row.name}: ${row.why}`);
+      for (const line of result.withheld) console.log(`守ること: ${line}`);
+    });
+
+  hr.command("talent-discuss")
+    .description("仕事の事実から契約形態の候補と理由を返す。形態の決定はしない")
+    .requiredOption("--answers <file>", "指揮命令・期間・成果物の回答 YAML")
+    .option("--json", "Print JSON")
+    .action((opts: { answers: string; json?: boolean }) => {
+      const result = runHrTalentDiscuss({
+        answers: loadTalentHearAnswers(opts.answers),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "ready") {
+        console.log(`recommended: ${result.recommended}`);
+        for (const row of result.options) {
+          const flag = row.requires_prerequisites ? " (prerequisites)" : "";
+          console.log(`- ${row.engagement}${flag}: ${row.reasons.join("; ")}`);
+        }
+        return;
+      }
+      if (result.status === "need_answers") {
+        for (const item of result.questions) console.log(`- ${item.prompt}`);
+        return;
+      }
+      console.log(result.reason);
+      process.exitCode = 1;
+    });
+
+  hr.command("dismissal-readiness")
+    .description("解雇対象が決まる前の会社側書類準備度を評価する。解雇は実行しない")
+    .requiredOption("--ledger <file>", "会社単位の解雇準備台帳 YAML")
+    .option("--prepare", "不足書類の置き場所チェックリストも出す")
+    .option("--write", "不足シェル MD を docs に書く")
+    .option("--docs-root <dir>", "書類ルート（省略時はテナント docs）")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      ledger: string;
+      prepare?: boolean;
+      write?: boolean;
+      docsRoot?: string;
+      json?: boolean;
+    }) => {
+      const result = runHrDismissalReadiness({
+        ledger: loadTalentHearAnswers(opts.ledger),
+        prepare: Boolean(opts.prepare),
+        write: Boolean(opts.write),
+        docsRoot: opts.docsRoot ?? getDocsDir(),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`score: ${result.score}`);
+      console.log(`verdict: ${result.verdict}`);
+      for (const id of result.missing) console.log(`- missing: ${id}`);
+      if ("checklist" in result && result.checklist) {
+        for (const action of result.checklist.actions) {
+          console.log(`- prepare: ${action.id} -> ${action.ref}`);
+        }
+      }
+      if (!result.documents_present) process.exitCode = 1;
+    });
+
+  hr.command("talent-pack")
+    .description("選ばれた形態の社内職務概要を作る。解雇手順は書かない")
+    .requiredOption("--posting <file>", "求人票 YAML")
+    .requiredOption("--engagement <kind>", "contractor|fixed_term|regular")
+    .requiredOption("--director <name>", "指示者")
+    .option("--write-dir <dir>", "書き出し先（例: docs/recruiting）")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      posting: string;
+      engagement: string;
+      director: string;
+      writeDir?: string;
+      json?: boolean;
+    }) => {
+      const result = runHrTalentPack({
+        posting: loadTalentHearAnswers(opts.posting),
+        engagement: opts.engagement,
+        director: opts.director,
+        writeDir: opts.writeDir,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      console.log(result.internal_job_summary);
+      console.log(`出口: ${result.exit_name}`);
+      if (result.written_path) console.log(result.written_path);
+    });
+
+  hr.command("talent-flow")
+    .description("採用ジョブ YAML から pack と署名待ち稟議まで進める。承認はしない")
+    .requiredOption("--job <file>", "data/recruiting ジョブ YAML")
+    .option("--docs-root <dir>", "解雇準備書類ルート")
+    .option("--pack-write-dir <dir>", "社内職務概要の書き出し先")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      job: string;
+      docsRoot?: string;
+      packWriteDir?: string;
+      json?: boolean;
+    }) => {
+      const loaded = loadRecruitingJobFromPath(opts.job);
+      if (loaded.status === "rejected") {
+        console.log(loaded.reason);
+        process.exitCode = 1;
+        return;
+      }
+      const result = runHrTalentFlow({
+        job: loaded.job,
+        docsRoot: opts.docsRoot,
+        packWriteDir: opts.packWriteDir,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_prerequisites") {
+        for (const item of result.missing) console.log(`- ${item}`);
+        process.exitCode = 1;
+        return;
+      }
+      console.log(result.pack.exit_name);
+      console.log(result.shortlist.approval.status);
+      if (result.shortlist.settlement) console.log(result.shortlist.settlement.challenge_id);
+    });
+
+  hr.command("talent-shortlist")
+    .description("求人票と実演結果から選考し、署名待ちの稟議まで作る")
+    .requiredOption("--posting <file>", "求人票 YAML")
+    .requiredOption("--candidates <file>", "候補者 YAML")
+    .requiredOption("--terms <file>", "契約条件 YAML（engagement 必須）")
+    .option("--prerequisites <file>", "regular のときだけ雇入前提 YAML")
+    .option("--company-readiness <file>", "regular のときだけ会社単位の解雇準備台帳 YAML")
+    .requiredOption("--operator-id <id>", "操作者 ID")
+    .requiredOption("--approver-id <id>", "承認者 ID")
+    .requiredOption("--api-origin <url>", "Settlement の API origin")
+    .option("--proposed-by <id>", "起票者", "recruiting")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      posting: string;
+      candidates: string;
+      terms: string;
+      prerequisites?: string;
+      companyReadiness?: string;
+      operatorId: string;
+      approverId: string;
+      apiOrigin: string;
+      proposedBy: string;
+      json?: boolean;
+    }) => {
+      const result = runHrTalentShortlist({
+        posting: loadTalentHearAnswers(opts.posting),
+        candidates: loadTalentHearAnswers(opts.candidates),
+        terms: loadTalentHearAnswers(opts.terms),
+        prerequisites: opts.prerequisites
+          ? loadTalentHearAnswers(opts.prerequisites)
+          : undefined,
+        company_readiness: opts.companyReadiness
+          ? loadTalentHearAnswers(opts.companyReadiness)
+          : undefined,
+        proposedBy: opts.proposedBy,
+        operatorId: opts.operatorId,
+        approverId: opts.approverId,
+        apiOrigin: opts.apiOrigin,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_prerequisites") {
+        for (const item of result.missing) console.log(`- ${item}`);
+        process.exitCode = 1;
+        return;
+      }
+      for (const row of result.shortlist) console.log(row.candidate_id);
+      console.log(result.approval.status);
+      if (result.settlement) console.log(result.settlement.challenge_id);
+    });
 
   const competence = hr
     .command("competence")

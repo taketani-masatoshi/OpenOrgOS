@@ -728,6 +728,36 @@ skills:
     runtime: agent
     description: 労務コンプライアンス
     agent_id: human_resources
+  - id: hr_dismissal_readiness
+    file: extension/hr_dismissal_readiness.md
+    runtime: cli
+    description: 対象者決定前の解雇準備度評価（実行しない）
+    agent_id: human_resources
+  - id: hr_talent_hear
+    file: extension/hr_talent_hear.md
+    runtime: cli
+    description: 求人票ヒアリング（年齢・性別拒否）
+    agent_id: human_resources
+  - id: recruiting_worksite_confirm
+    file: extension/recruiting_worksite_confirm.md
+    runtime: cli
+    description: 就業拠点の確認（調査→選択→保存。自由記述を減らす）
+    agent_id: recruiting
+  - id: recruiting_platform_listings
+    file: extension/recruiting_platform_listings.md
+    runtime: cli
+    description: 3〜6ヶ月の業務委託を4媒体向けに整える（外部投稿しない）
+    agent_id: recruiting
+  - id: recruiting_reach_proposal
+    file: extension/recruiting_reach_proposal.md
+    runtime: cli
+    description: 届き先の媒体提案（求人票に年齢・性別は書かない）
+    agent_id: recruiting
+  - id: hr_talent_shortlist
+    file: extension/hr_talent_shortlist.md
+    runtime: cli
+    description: 実演選考と署名待ち稟議（承認しない）
+    agent_id: human_resources
   - id: governance_meeting_prep
     file: extension/governance_meeting_prep.md
     runtime: cli
@@ -860,6 +890,21 @@ skills:
     file: extension/recruiting_pipeline_review.md
     runtime: agent
     description: 採用パイプライン
+    agent_id: recruiting
+  - id: recruiting_engagement_discuss
+    file: extension/recruiting_engagement_discuss.md
+    runtime: cli
+    description: 契約形態の候補と理由（決定・承認しない）
+    agent_id: recruiting
+  - id: recruiting_talent_pack
+    file: extension/recruiting_talent_pack.md
+    runtime: cli
+    description: 社内職務概要（解雇手順は書かない）
+    agent_id: recruiting
+  - id: recruiting_talent_flow
+    file: extension/recruiting_talent_flow.md
+    runtime: cli
+    description: 採用ジョブから署名待ちまで（承認しない）
     agent_id: recruiting
   - id: recruiting_interview_prep
     file: extension/recruiting_interview_prep.md

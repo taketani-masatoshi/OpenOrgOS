@@ -54,6 +54,10 @@ function kindLabel(kind: ExecutiveAttentionItem["kind"], copy: Copy): string {
       return copy.executiveKindApproval;
     case "wire":
       return copy.executiveKindWire;
+    case "task":
+      return copy.executiveKindTask;
+    case "property":
+      return copy.executiveKindProperty;
   }
 }
 
@@ -186,6 +190,15 @@ export function ExecutiveHomePage() {
           <a className="btn btn-primary btn-sm" href="/steward/">
             {copy.executiveAskSteward}
           </a>
+          <a className="btn btn-ghost btn-sm" href="/secretary/workbench/">
+            {copy.secretaryWorkbench}
+          </a>
+          <a className="btn btn-ghost btn-sm" href="/properties/">
+            {copy.propertyOpsTitle}
+          </a>
+          <a className="btn btn-ghost btn-sm" href="/modules/maturity/">
+            {copy.maturityNav}
+          </a>
         </div>
       </div>
 
@@ -194,6 +207,64 @@ export function ExecutiveHomePage() {
 
       {data ? (
         <>
+          {data.lanes ? (
+            <section className="outlook-panel" aria-label={copy.executiveMalLanes}>
+              <h2 className="section-title">{copy.executiveMalLanes}</h2>
+              <p className="page-desc muted">{copy.executiveMalLanesLead}</p>
+              <div className="outlook-kpi summary-grid">
+                <div>
+                  <a href="/approvals/">
+                    <span className="kpi-value">{data.lanes.approvals_pending}</span>
+                    <span className="kpi-label">{copy.executiveLaneApprovals}</span>
+                  </a>
+                </div>
+                <div>
+                  <a href={data.lanes.secretary_href}>
+                    <span className="kpi-value">{data.lanes.mail_action_required}</span>
+                    <span className="kpi-label">{copy.executiveLaneMail}</span>
+                  </a>
+                </div>
+                <div>
+                  <a href={data.lanes.wire_href ?? "/wire/"}>
+                    <span className="kpi-value">{data.lanes.wire_pending ?? 0}</span>
+                    <span className="kpi-label">{copy.executiveLaneWire}</span>
+                  </a>
+                </div>
+                <div>
+                  <a href={data.lanes.properties_href}>
+                    <span className="kpi-value">{data.lanes.property_due_p0}</span>
+                    <span className="kpi-label">{copy.executiveLanePropertyP0}</span>
+                  </a>
+                </div>
+                <div>
+                  <a href={data.lanes.secretary_href}>
+                    <span className="kpi-value">{data.lanes.tasks_p0}</span>
+                    <span className="kpi-label">{copy.executiveLaneTasksP0}</span>
+                  </a>
+                </div>
+                {(data.lanes.modules_unset ?? 0) > 0 ? (
+                  <div>
+                    <a href={data.lanes.modules_href ?? "/modules/maturity/"}>
+                      <span className="kpi-value">{data.lanes.modules_unset}</span>
+                      <span className="kpi-label">{copy.executiveLaneModulesUnset}</span>
+                    </a>
+                  </div>
+                ) : null}
+              </div>
+              {data.lanes.properties.length > 0 ? (
+                <ul className="executive-work-list">
+                  {data.lanes.properties.map((p) => (
+                    <li key={p.property_id}>
+                      <a href={p.href}>
+                        {p.name} · P0 {p.due_p0}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          ) : null}
+
           {(data.finance_runway_months != null ||
             data.finance_cash_balance != null ||
             data.variance) && (

@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 583
-  static_test_cases: 2670
-  tiered_execution_total: 583
+  vitest_total: 605
+  static_test_cases: 2792
+  tiered_execution_total: 605
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -1073,6 +1073,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  dismissal-readiness.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   dispatch-tower-classify.test.ts:
     axis: platform
     kind: unit
@@ -1120,6 +1124,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  executive-tasks-schema.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   expense-claim.test.ts:
     axis: platform
     kind: unit
@@ -1140,6 +1148,14 @@ tests:
     kind: unit
     domain: P02_business_data
   finance-statements.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-summary-access.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  finance-summary-http-rbac.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data
@@ -1464,6 +1480,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  ledger-founder-passkey-flow.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   ledger-guest-invite.test.ts:
     axis: platform
     kind: unit
@@ -1485,6 +1505,14 @@ tests:
     kind: unit
     domain: P01_kernel
   ledger-product.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-signup-recovery.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  ledger-tenant-id-collision.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -1615,6 +1643,10 @@ tests:
     catalog_ids:
       - hospitality
       - jp_permit_application
+  module-maturity.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   module-message.test.ts:
     axis: platform
     kind: unit
@@ -1629,6 +1661,10 @@ tests:
   modules.test.ts:
     axis: contract
     kind: contract
+  monthly-close-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   monthly-pl-journal.test.ts:
     axis: platform
     kind: unit
@@ -1709,6 +1745,10 @@ tests:
     axis: platform
     kind: unit
     domain: P06_agent_workflow
+  ops-lane-counts.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   orchestrate-cli.smoke.test.ts:
     axis: platform
     kind: unit
@@ -1881,6 +1921,10 @@ tests:
     kind: unit
     domain: P01_kernel
   productability-gaps.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  property-ops-dashboard.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2292,6 +2336,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  secretary-workbench.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   sector-module-cli-contract.test.ts:
     axis: catalog
     kind: unit
@@ -2314,6 +2362,10 @@ tests:
     axis: platform
     kind: unit
     domain: P05_console_layer
+  session-tenant-binding.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   settlement-passkey-prod.test.ts:
     axis: platform
     kind: unit
@@ -2558,6 +2610,10 @@ tests:
     axis: platform
     kind: server
     domain: P05_console_layer
+  steward-chat-workflow-api.test.ts:
+    axis: platform
+    kind: server
+    domain: P05_console_layer
   steward-orchestrate-intent.test.ts:
     axis: platform
     kind: unit
@@ -2575,6 +2631,26 @@ tests:
     kind: unit
     domain: P01_kernel
   stripe-webhook.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  hiring-worksite.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  talent-platform-listings.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  talent-reach.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  talent-hiring-pipeline.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tasks-view.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2633,6 +2709,10 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  tenant-provision-clean.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   tenant-registry-coverage.test.ts:
     axis: meta
     kind: meta
@@ -2643,9 +2723,17 @@ tests:
     axis: platform
     kind: unit
     domain: P02_business_data
+  tenant-tip-paths.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
   test-suite-status.test.ts:
     axis: meta
     kind: meta
+  test-workspace-guard.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   testing-modules-doc-sync.test.ts:
     axis: meta
     kind: meta
@@ -2786,6 +2874,10 @@ tests:
     axis: platform
     kind: server
     domain: P04_wire_stack
+  wire-demo-walkthrough.test.ts:
+    axis: platform
+    kind: unit
+    domain: P04_wire_stack
   wire-federation-gossip.test.ts:
     axis: platform
     kind: unit
@@ -2888,6 +2980,14 @@ tests:
     kind: unit
     domain: P01_kernel
   work-order-state.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  workflow-canvas.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  workflow-structure-change.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

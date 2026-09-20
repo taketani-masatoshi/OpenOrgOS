@@ -7,6 +7,8 @@ export interface PersistedSessionRecord {
     operator_id: string;
     approver_id: string;
     mode: "dev" | "prod";
+    /** Bound at login — must match request tenant on shared hosts. */
+    tenant_id?: string;
   };
   created_at: string;
   expires_at?: string;

@@ -5692,6 +5692,11 @@ h4.heading-with-info {
   border-color: var(--accent);
 }
 
+.executive-card.is-focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
 .executive-severity {
   font-size: var(--text-xs);
   font-weight: 650;

@@ -27,7 +27,12 @@ import {
 import { resolveChatPermissions } from "../console-auth/rbac.js";
 import { resolveOperatorFromSessionUser } from "../console-auth/operator-rbac.js";
 import { isClaimOnlySeat } from "../org/operator-claim-person.js";
+import { resolveTenantFromRequest } from "../product/ledger-control-plane.js";
+import { getTenantId } from "../tenant.js";
 import { appendChatAudit } from "./audit.js";
+import { resolvePasskeyBootstrapOperator } from "../wire-console/auth/passkey-bootstrap.js";
+import { findOperatorById } from "../org/operators.js";
+import { isLoginPasskeyBootstrap } from "../wire-console/auth/webauthn-register-gate.js";
 
 function authUserPayload(user: WireConsoleUser) {
   const record = resolveOperatorFromSessionUser(user);
@@ -66,10 +71,19 @@ export function requireChatAuth(
   res: ServerResponse
 ): WireConsoleUser | null {
   if (!isStewardChatAuthEnabled()) {
+    let tenantId = resolveTenantFromRequest(req) ?? undefined;
+    if (!tenantId) {
+      try {
+        tenantId = getTenantId();
+      } catch {
+        tenantId = undefined;
+      }
+    }
     return {
       operator_id: "dev-bypass",
       approver_id: "dev-bypass",
       mode: "dev",
+      tenant_id: tenantId,
     };
   }
 
@@ -93,6 +107,26 @@ export async function handleChatAuthApi(
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.writeHead(status);
     res.end(JSON.stringify(body));
+  }
+
+  if (method === "POST" && pathname === "/chat/v1/auth/webauthn/bootstrap") {
+    try {
+      const body = JSON.parse(await readBody(req) || "{}") as { bootstrap_token?: string };
+      const operatorId = resolvePasskeyBootstrapOperator(body.bootstrap_token ?? "");
+      const operator = operatorId ? findOperatorById(operatorId) : undefined;
+      if (!operator || !isLoginPasskeyBootstrap()) {
+        json(403, { ok: false, error: "bootstrap token invalid, expired, or already used" });
+        return true;
+      }
+      json(200, {
+        ok: true,
+        operator_id: operator.operator_id,
+        approver_id: operator.approver_name?.trim() || operator.display_name.trim(),
+      });
+    } catch {
+      json(400, { ok: false, error: "invalid bootstrap request" });
+    }
+    return true;
   }
 
   if (method === "GET" && pathname === "/chat/v1/auth/config") {

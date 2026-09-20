@@ -6,6 +6,11 @@ import {
   runExecutiveCalendarPush,
   runExecutiveCalendarPull,
   runExecutiveTasksArchive,
+  runExecutiveTasksList,
+  runExecutiveTasksAdd,
+  runExecutiveTasksClose,
+  runExecutiveTasksIntake,
+  runExecutiveTasksImportP0,
 } from "../../commands/executive.js";
 import { runSecretaryEscalate } from "../../commands/secretary.js";
 import { runContactsResolve, runContactsRegister } from "../../commands/secretary-contacts.js";
@@ -131,6 +136,85 @@ export function registerExecutiveCommands(program: Command): void {
     );
 
   const executiveTasks = executiveCmd.command("tasks").description("Executive tasks.yaml");
+  executiveTasks
+    .command("list")
+    .description("List tasks.yaml + candidate sources")
+    .option("--priority <p0|p1|p2|p3>", "Filter by priority")
+    .option("--status <status>", "Filter by status")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runExecutiveTasksList({
+        priority: opts.priority,
+        status: opts.status,
+        json: opts.json,
+      }),
+    );
+  executiveTasks
+    .command("add")
+    .description("Add a task to tasks.yaml")
+    .requiredOption("--title <title>", "Task title")
+    .option("--due <YYYY-MM-DD>", "Due date")
+    .option("--priority <p0|p1|p2|p3>", "Priority", "p2")
+    .option("--property <PROP-id>", "Property id")
+    .option("--module <module_id>", "Module id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runExecutiveTasksAdd({
+        title: opts.title,
+        due: opts.due,
+        priority: opts.priority,
+        property: opts.property,
+        module: opts.module,
+        json: opts.json,
+      }),
+    );
+  executiveTasks
+    .command("close")
+    .description("Mark a task done (or cancelled)")
+    .requiredOption("--id <TASK-id>", "TASK-001")
+    .option("--notes <text>", "Completion note")
+    .option("--cancel", "Set status cancelled instead of done")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runExecutiveTasksClose({
+        id: opts.id,
+        notes: opts.notes,
+        cancel: opts.cancel,
+        json: opts.json,
+      }),
+    );
+  executiveTasks
+    .command("intake")
+    .description("Promote a candidate (triage / work-order / approval) into tasks.yaml")
+    .option("--triage <id>", "Mail triage entry id")
+    .option("--work-order <id>", "Work order / handoff id")
+    .option("--approval <id>", "Pending approval id")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runExecutiveTasksIntake({
+        triage: opts.triage,
+        workOrder: opts.workOrder,
+        approval: opts.approval,
+        json: opts.json,
+      }),
+    );
+  executiveTasks
+    .command("import-p0")
+    .description(
+      "One-shot import from docs/company/executive-remaining-tasks.md (default dry-run)",
+    )
+    .option("--file <path>", "Markdown checklist path")
+    .option("--write", "Write into tasks.yaml (default dry-run)")
+    .option("--dry-run", "Force dry-run even with --write")
+    .option("--json", "JSON output")
+    .action((opts) =>
+      runExecutiveTasksImportP0({
+        file: opts.file,
+        write: opts.write,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      }),
+    );
   executiveTasks
     .command("archive")
     .description("Migrate cancelled → archived（Secretary 一覧ノイズ除去）")

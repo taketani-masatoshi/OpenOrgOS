@@ -156,8 +156,13 @@ function InstalledModuleRow({
     <li className="roster-row">
       <div className="roster-row-main">
         <h3 className="roster-row-title">{row.label}</h3>
-        <p className="roster-row-id">{row.id}</p>
+        <p className="roster-row-id">
+          {row.id} · {row.tier}
+        </p>
         {row.notes ? <p className="org-chart-muted">{row.notes}</p> : null}
+        <p className="roster-row-hint">
+          <a href="/modules/maturity/">{copy.moduleMaturityLink}</a>
+        </p>
         {pending ? (
           <p className="roster-row-hint">
             <a href="/approvals/">{pending}</a>

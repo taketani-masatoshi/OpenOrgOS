@@ -149,7 +149,7 @@ export async function deliverSmtpMail(input: {
   to: string;
   subject: string;
   body: string;
-}): Promise<void> {
+}, timeoutMs = 30_000): Promise<void> {
   if (process.env.ORGOS_MAIL_SMTP_MOCK === "1") {
     return;
   }
@@ -168,14 +168,15 @@ export async function deliverSmtpMail(input: {
     user ||
     `noreply@${host || "localhost"}`;
 
-  const socket = await new Promise<Socket | TLSSocket>((resolve, reject) => {
-    const conn = secure
-      ? tlsConnect({ host, port, servername: host }, () => resolve(conn))
-      : netConnect({ host, port }, () => resolve(conn));
-    conn.on("error", reject);
-  });
-
+  const socket = secure
+    ? tlsConnect({ host, port, servername: host })
+    : netConnect({ host, port });
+  const timeout = setTimeout(() => socket.destroy(new Error("SMTP delivery timed out")), timeoutMs);
   try {
+    await new Promise<void>((resolve, reject) => {
+      socket.once(secure ? "secureConnect" : "connect", () => resolve());
+      socket.once("error", reject);
+    });
     await expectSmtpCode(socket, 220);
     socket.write(encodeSmtp("EHLO orgos-ledger"));
     await expectSmtpCode(socket, 250);
@@ -207,7 +208,8 @@ export async function deliverSmtpMail(input: {
     await expectSmtpCode(socket, 250);
     socket.write(encodeSmtp("QUIT"));
   } finally {
-    socket.end();
+    clearTimeout(timeout);
+    socket.destroy();
   }
 }
 

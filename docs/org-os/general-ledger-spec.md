@@ -38,6 +38,25 @@
 | `ledger subsidiary --account` | 補助元帳（統制勘定） |
 | `ledger reverse --entry-id` | 逆仕訳（訂正の唯一経路） |
 | `ledger period lock/unlock` | 月次締め後ロック（unlock は理由必須の履歴） |
+| `finances close --month` | 自動仕訳のあと統一ゲートを満たせば期間ロック |
+
+## 月次決算ゲート
+
+`orgos finances close --month` と Workbench の month-close checklist（`ready`）は同じ判定（`evaluateMonthlyCloseGates`）を使う。基準日は対象月の末日。
+
+ロックしてよいのは、次が error でないときだけである。
+
+| ゲート | ロック |
+|--------|--------|
+| 減価償却・給与発生・月次損益（データがある月） | 未計上なら拒否 |
+| 試算表・貸借対照表 | 不一致なら拒否 |
+| 補助元帳 1150 / 2110 | 統制不一致または未割当残高なら拒否 |
+| 銀行明細 | ファイルがある月だけ、その月の未消込が 0。ファイルが無ければスキップ |
+| 消費税 | 集計が返ること。納付仕訳と申告は条件にしない |
+| `validate` | `data/finance/` の error が 0。モジュール名簿など帳簿外の error と warning はロックしない |
+| 月次 YAML 突合 | **警告のみ。ロックしない理由にしない** |
+
+期間ロック済みかどうかは checklist の `period_locked` であり、`ready` には含めない。ロック済み月の訂正は、理由付き unlock → 同月の逆仕訳 → 再 close。ロックは解除しないまま失敗ゲートを再評価しても、既存ロックは残す。
 
 ## 期間ロック（Console 前提）
 

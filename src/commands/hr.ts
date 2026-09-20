@@ -1,5 +1,6 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import YAML from "yaml";
 import {
   buildHeadcountView,
   formatHeadcountMarkdown,
@@ -13,6 +14,44 @@ import {
   formatTrainingPlanMarkdown,
   formatTrainingRecordsMarkdown,
 } from "../lib/hr/competence-view.js";
+import { buildPlatformListings } from "../lib/hr/talent-hiring/platform-listings.js";
+import { proposeReach } from "../lib/hr/talent-hiring/reach-proposal.js";
+import { hearJobRequest } from "../lib/hr/talent-hiring/hear-job.js";
+import { recommendEngagement } from "../lib/hr/talent-hiring/recommend-engagement.js";
+import {
+  evaluateDismissalReadiness,
+  prepareDismissalReadinessChecklist,
+  writeDismissalReadinessShells,
+} from "../lib/hr/dismissal-readiness.js";
+import {
+  confirmHiringWorksite,
+  writeHiringWorksite,
+} from "../lib/hr/hiring-worksite.js";
+import { loadRecruitingJobFromPath } from "../lib/hr/recruiting-job.js";
+import { runTalentFlow } from "../lib/hr/talent-flow.js";
+import { runTalentPack } from "../lib/hr/talent-pack.js";
+import { shortlistForPosting, type TalentShortlistResult } from "../lib/hr/talent-shortlist.js";
+import type {
+  DismissalReadinessChecklist,
+  DismissalReadinessResult,
+  EngagementDiscussResult,
+  EngagementKind,
+  HiringPack,
+  JobCategoryChoiceId,
+  JobHearingResult,
+  JobPosting,
+  PassiveSmokingChoiceId,
+  PlatformListingResult,
+  ReachProposalResult,
+  WorksiteConfirmResult,
+} from "../../schemas/talent-hiring.js";
+import {
+  engagementKindSchema,
+  jobCategoryChoiceIdSchema,
+  jobPostingSchema,
+  passiveSmokingChoiceIdSchema,
+} from "../../schemas/talent-hiring.js";
+import { getDocsDir } from "../lib/utils.js";
 import { resolveTenantPath } from "../lib/tenant.js";
 
 export function runHrHeadcount(options?: { json?: boolean }): void {
@@ -91,3 +130,144 @@ export function runHrCompetenceCheck(options: { json?: boolean } = {}): void {
   }
   if (!result.ok) process.exitCode = 1;
 }
+
+export function runHrTalentHear(options: { answers: unknown; json?: boolean }): JobHearingResult {
+  const result = hearJobRequest(options.answers);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrWorksiteConfirm(options: {
+  worksite: unknown;
+  passiveSmoking?: string;
+  jobCategory?: string;
+  writePath?: string;
+  json?: boolean;
+}): WorksiteConfirmResult | { status: "rejected"; reason: string } {
+  const choices: {
+    passive_smoking_choice?: PassiveSmokingChoiceId;
+    job_category_choice?: JobCategoryChoiceId;
+  } = {};
+  if (options.passiveSmoking) {
+    choices.passive_smoking_choice = passiveSmokingChoiceIdSchema.parse(options.passiveSmoking);
+  }
+  if (options.jobCategory) {
+    choices.job_category_choice = jobCategoryChoiceIdSchema.parse(options.jobCategory);
+  }
+  const result = confirmHiringWorksite(options.worksite, choices);
+  if (result.status === "ready" && options.writePath) {
+    writeHiringWorksite(options.writePath, result.worksite);
+  }
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentPlatforms(options: {
+  facts: unknown;
+  json?: boolean;
+}): PlatformListingResult {
+  const result = buildPlatformListings(options.facts);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentReach(options: {
+  wish: unknown;
+  json?: boolean;
+}): ReachProposalResult {
+  const result = proposeReach(options.wish);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentDiscuss(options: {
+  answers: unknown;
+  json?: boolean;
+}): EngagementDiscussResult {
+  const result = recommendEngagement(options.answers);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrDismissalReadiness(options: {
+  ledger: unknown;
+  prepare?: boolean;
+  write?: boolean;
+  docsRoot?: string;
+  json?: boolean;
+}): DismissalReadinessResult | (DismissalReadinessResult & { checklist: DismissalReadinessChecklist }) {
+  const docsRoot = options.docsRoot;
+  let ledger = options.ledger;
+  if (options.write) {
+    if (!docsRoot) throw new Error("dismissal-readiness --write requires docsRoot");
+    const written = writeDismissalReadinessShells({ ledger, docsRoot });
+    ledger = written.ledger;
+  }
+  const result = evaluateDismissalReadiness(ledger, { docsRoot });
+  if (options.prepare || options.write) {
+    const checklist = prepareDismissalReadinessChecklist(ledger, { docsRoot });
+    const combined = { ...result, checklist };
+    if (options.json) console.log(JSON.stringify(combined, null, 2));
+    return combined;
+  }
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentPack(options: {
+  posting: unknown;
+  engagement: unknown;
+  director: string;
+  writeDir?: string;
+  json?: boolean;
+}): HiringPack & { written_path?: string } {
+  const posting = jobPostingSchema.parse(options.posting);
+  const engagement = engagementKindSchema.parse(options.engagement) as EngagementKind;
+  const pack = runTalentPack({
+    posting: posting as JobPosting,
+    engagement,
+    director: options.director,
+    writeDir: options.writeDir,
+  });
+  if (options.json) console.log(JSON.stringify(pack, null, 2));
+  return pack;
+}
+
+export function runHrTalentFlow(options: {
+  job: unknown;
+  docsRoot?: string;
+  packWriteDir?: string;
+  json?: boolean;
+}) {
+  const result = runTalentFlow({
+    job: options.job,
+    docsRoot: options.docsRoot,
+    packWriteDir: options.packWriteDir,
+  });
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentShortlist(options: {
+  posting: unknown;
+  candidates: unknown;
+  terms: unknown;
+  prerequisites?: unknown;
+  company_readiness?: unknown;
+  docsRoot?: string;
+  proposedBy: string;
+  operatorId: string;
+  approverId: string;
+  apiOrigin: string;
+  json?: boolean;
+}): TalentShortlistResult {
+  const result = shortlistForPosting(options);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function loadTalentHearAnswers(path: string): unknown {
+  return YAML.parse(readFileSync(path, "utf8"));
+}
+
+export { loadRecruitingJobFromPath, getDocsDir };
