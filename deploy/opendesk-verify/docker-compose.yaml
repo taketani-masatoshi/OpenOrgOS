@@ -40,7 +40,7 @@ services:
       - synapse-db:/var/lib/postgresql/data
 
   synapse:
-    image: matrixdotorg/synapse:latest
+    image: matrixdotorg/synapse:v1.161.0
     depends_on:
       synapse-db:
         condition: service_healthy
@@ -78,7 +78,7 @@ services:
       retries: 20
 
   nextcloud:
-    image: nextcloud:stable
+    image: nextcloud:34.0.4
     depends_on:
       nextcloud-db:
         condition: service_healthy
@@ -102,7 +102,7 @@ services:
       start_period: 60s
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.3
+    image: quay.io/keycloak/keycloak:26.3.5
     command: ["start-dev", "--http-port=8080"]
     ports:
       - "127.0.0.1:8082:8080"

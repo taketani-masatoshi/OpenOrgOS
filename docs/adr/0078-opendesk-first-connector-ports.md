@@ -29,15 +29,15 @@ Windows と Google は排除しない。Windows は Docker Desktop 上の検証�
 
 `orgos integrations opendesk probe` が `docker manifest inspect` で公開イメージを確認する。
 
-2026-09-19 の確認:
+2026-09-20 に手元の ARM で疎通した版を固定する。浮動タグ（`latest` / `stable`）は使わない。
 
 | イメージ | 結果 |
 |---|---|
-| `matrixdotorg/synapse:latest` | 公開マニフェストあり |
-| `nextcloud:stable` | 公開マニフェストあり |
-| `quay.io/keycloak/keycloak:26.3` | 公開マニフェストあり |
+| `matrixdotorg/synapse:v1.161.0` | 公開マニフェストあり。メッセージ送信まで確認 |
+| `nextcloud:34.0.4` | 公開マニフェストあり。WebDAV 書き込みまで確認 |
+| `quay.io/keycloak/keycloak:26.3.5` | 公開マニフェストあり。OIDC discovery まで確認 |
 | `registry.opencode.de/bmi/opendesk/components/ox-app-suite:latest` | 無認証では取れない |
-| `registry.opencode.de/zendis/opendesk/ox-appsuite:latest` | 候補。probe が成功するまで `stub_unconfirmed` |
+| `registry.opencode.de/zendis/opendesk/ox-appsuite:latest` | 2026-09-20 も `access forbidden`。`stub_unconfirmed` のまま |
 
 OX App Suite のコンテナは Open-Xchange の認証付き registry が本線で、openDesk CE の chart は openCode にある。無認証 pull と HTTP 2xx の両方が揃うまで `groupware` profile は既定 off、`pingOx` はネットワークへ出ない。
 
@@ -50,6 +50,16 @@ verify が送る本文は `opendesk verify` のみ。`data/` は Nextcloud の a
 ### 4. ライセンス境界
 
 Core は Unlicense。AGPL / GPL の上流ソースは同梱しない。compose はイメージ参照のみ。将来 OpenCode に出す `openDesk-extension-ooo` は別パッケージ（Apache-2.0 想定）。境界: [opendesk-extension-boundary.md](../org-os/opendesk-extension-boundary.md)。
+
+### 5. 今回やらないこと
+
+次はゲートとして残す。この変更では実装しない。
+
+- Open-Xchange のメールとカレンダー。公開 CE イメージが無認証で取れるまでスタブのまま、ネットワークへ出さない
+- 公式 Helmfile / Kubernetes スイートの同梱と、このリポジトリ上での再現。回帰 CI（`.github/workflows/opendesk-verify.yml`）は ubuntu x64 で同じ公開 API を再実行するだけである。出荷前に、人が x64 の Community Edition へ `ORGOS_*_BASE_URL` を向ける
+- 出荷フラグ（`connector_matrix` など）を立てること。既定は false。ローカル疎通では `platform_ready` を立てない。フラグを変えるのは人間
+- Keycloak でのユーザー作成、Nubus（OpenLDAP）、Community SSO の置き換え。Keycloak は OIDC discovery のみ
+- Element、OpenProject、Jitsi、Collabora。人の画面は Steward Chat のまま
 
 ## Consequences
 

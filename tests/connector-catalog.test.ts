@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CONNECTOR_PROVIDERS } from "../schemas/connectors.js";
 import {
@@ -30,6 +33,18 @@ describe("connector catalog", () => {
     expect(catalogEntry("m365").inclusion).toBe("compat_egress");
     expect(catalogEntry("matrix").inclusion).toBe("confirmed_live");
     expect(catalogEntry("ox").inclusion).toBe("stub_unconfirmed");
+    const compose = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "../deploy/opendesk-verify/docker-compose.yaml"),
+      "utf8",
+    );
+    expect(catalogEntry("matrix").verifyImage).toBe("matrixdotorg/synapse:v1.161.0");
+    expect(catalogEntry("nextcloud").verifyImage).toBe("nextcloud:34.0.4");
+    expect(catalogEntry("keycloak").verifyImage).toBe("quay.io/keycloak/keycloak:26.3.5");
+    for (const provider of ["matrix", "nextcloud", "keycloak"] as const) {
+      const image = catalogEntry(provider).verifyImage ?? "";
+      expect(image).not.toMatch(/:(latest|stable)$/);
+      expect(compose).toContain(`image: ${image}`);
+    }
     expect(
       effectiveOxInclusion({
         probed_at: "2026-09-19T00:00:00.000Z",

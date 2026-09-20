@@ -37,7 +37,17 @@ export ORGOS_KEYCLOAK_REALM=master
 
 ## OX
 
-`probe` が無認証で CE イメージを引けたときだけ `inclusion` が `confirmed_live` になります。引けなければスタブのまま、`--groupware` は使いません。2026-09-19 の確認では公開マニフェストは取れませんでした。
+`probe` が無認証で CE イメージを引けたときだけ `inclusion` が `confirmed_live` になります。引けなければスタブのまま、`--groupware` は使いません。2026-09-20 の確認では `registry.opencode.de` が無認証を拒否し、メールとカレンダーは未接続です。スタブはネットワークへ出ません。
+
+## ゲート
+
+この compose と CI は公式 openDesk ではありません。
+
+- 回帰は `.github/workflows/opendesk-verify.yml` です。`ubuntu-latest`（x64）で groupware なしの同じ公開 API を再実行します。イメージは Synapse `v1.161.0`、Nextcloud `34.0.4`、Keycloak `26.3.5` に固定しています
+- 出荷前に、人が x64 Linux 上の Community Edition へ `ORGOS_*_BASE_URL` を向けます。公式 Helmfile はこのリポジトリに置きません
+- `connector_matrix` などの出荷フラグは既定 false です。ローカル疎通ではコンソール接続（`platform_ready`）は開きません。フラグを変えるのは人間です
+- Keycloak は OIDC discovery のみです。ユーザー作成、Nubus、Community SSO の置き換えはしません
+- 人の画面は Steward Chat のままです。Element、OpenProject、Jitsi、Collabora は入れません
 
 ## 境界
 

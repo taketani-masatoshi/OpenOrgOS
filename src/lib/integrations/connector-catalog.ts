@@ -36,7 +36,7 @@ const CATALOG: readonly ConnectorCatalogEntry[] = [
     capability: "chat",
     inclusion: "confirmed_live",
     shippingFlag: "connector_matrix",
-    verifyImage: "matrixdotorg/synapse:latest",
+    verifyImage: "matrixdotorg/synapse:v1.161.0",
   },
   {
     provider: "nextcloud",
@@ -45,7 +45,7 @@ const CATALOG: readonly ConnectorCatalogEntry[] = [
     capability: "files",
     inclusion: "confirmed_live",
     shippingFlag: "connector_nextcloud",
-    verifyImage: "nextcloud:stable",
+    verifyImage: "nextcloud:34.0.4",
   },
   {
     provider: "ox",
@@ -62,7 +62,7 @@ const CATALOG: readonly ConnectorCatalogEntry[] = [
     capability: "iam",
     inclusion: "confirmed_live",
     shippingFlag: "connector_keycloak",
-    verifyImage: "quay.io/keycloak/keycloak:26.3",
+    verifyImage: "quay.io/keycloak/keycloak:26.3.5",
   },
   {
     provider: "gmail",
