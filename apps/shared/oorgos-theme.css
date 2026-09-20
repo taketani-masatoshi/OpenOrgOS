@@ -715,6 +715,53 @@ textarea:focus-visible {
   background: var(--surface-elevated);
 }
 
+.store-planes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+}
+
+.store-plane {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.store-plane.is-canonical {
+  border-color: var(--accent);
+}
+
+.store-plane-role {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.store-plane-title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+.store-plane-body,
+.store-planes-flow {
+  margin: 0;
+}
+
+.store-planes-flow {
+  margin-bottom: var(--space-5);
+}
+
+.integrations-page .ops-page-lead {
+  max-width: 46rem;
+}
+
 .section-title {
   margin: 0;
   font-size: var(--text-lg);

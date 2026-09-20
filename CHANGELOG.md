@@ -6,6 +6,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **連携ハブの置き場説明** — コンソール `/?integrations=1` に「このマシン（最新）· Git（履歴）· Drive（AIA 成果物の配達口）」を明示。Drive は社員ファイルを消さない写しで、正本はテナント YAML / MD。セットアップ画面からも同じ説明でハブへ送る。
+
 ### Fixed
 
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

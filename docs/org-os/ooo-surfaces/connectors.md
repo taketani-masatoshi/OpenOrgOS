@@ -50,6 +50,12 @@ Community 側（governance Bearer + bind nonce の二重）:
 | 秘密の GET | 経路が無い。**投入はできるが取り出せない** |
 | 想定外の例外 | catch して JSON |
 
+## コンソール
+
+`/?integrations=1` の先頭に **このマシン（最新）· Git（履歴）· Drive（配達口）** を置く。
+Drive カードは AIA 成果物のアップロード面で、社員が置いたファイルは削除・上書きしないと明示する。
+セットアップ（`/?onboarding=1`）からも同じ説明でハブへ送る。
+
 ## 正本とレプリカ
 
 - 書き込み正本は OrgOS の YAML / MD。Asana の status も Drive の PDF も戻さない。

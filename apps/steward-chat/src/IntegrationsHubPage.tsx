@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useCopy } from "@ops-shared/define-copy";
 import {
   fetchConnectorHub,
   fetchDriveExports,
@@ -15,6 +16,7 @@ import {
   type DriveExportRecord,
 } from "./api";
 import { OpsPage } from "./OpsPage";
+import { STEWARD_COPY } from "./steward-copy";
 
 function statusLabel(card: ConnectorCard): string {
   if (card.connected && card.expired) return "接続済み（期限切れ）";
@@ -24,6 +26,7 @@ function statusLabel(card: ConnectorCard): string {
 }
 
 export function IntegrationsHubPage() {
+  const copy = useCopy(STEWARD_COPY);
   const [hub, setHub] = useState<ConnectorHubSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -142,16 +145,54 @@ export function IntegrationsHubPage() {
     );
   }
 
+  const storePlanes = [
+    {
+      id: "mac",
+      role: copy.storeMacRole,
+      title: copy.storeMacTitle,
+      body: copy.storeMacBody,
+      canonical: true,
+    },
+    {
+      id: "git",
+      role: copy.storeGitRole,
+      title: copy.storeGitTitle,
+      body: copy.storeGitBody,
+      canonical: false,
+    },
+    {
+      id: "drive",
+      role: copy.storeDriveRole,
+      title: copy.storeDriveTitle,
+      body: copy.storeDriveBody,
+      canonical: false,
+    },
+  ] as const;
+
   return (
     <OpsPage
-      title="連携設定"
-      lead="Slack · Asana · Gmail · Google Drive。正本は OrgOS のまま、外部には写しだけを出します。"
+      title={copy.integrationsTitle}
+      lead={copy.integrationsLead}
       loading={!hub}
       loadingLabel="読み込み中"
       error={error}
       className="integrations-page"
     >
       {note && <p className="ops-page-meta">{note}</p>}
+
+      <section className="store-planes" aria-label={copy.storePlanesLabel}>
+        {storePlanes.map((plane) => (
+          <article
+            key={plane.id}
+            className={plane.canonical ? "store-plane is-canonical" : "store-plane"}
+          >
+            <p className="store-plane-role">{plane.role}</p>
+            <h2 className="store-plane-title">{plane.title}</h2>
+            <p className="store-plane-body">{plane.body}</p>
+          </article>
+        ))}
+      </section>
+      <p className="ops-page-meta store-planes-flow">{copy.storeFlow}</p>
 
       <section className="ops-card">
         {renderCardHeader("slack")}
@@ -323,8 +364,9 @@ export function IntegrationsHubPage() {
 
       <section className="ops-card">
         {renderCardHeader("gdrive")}
+        <p className="ops-page-meta">{copy.driveNoTouch}</p>
         <label className="wallet-field">
-          保存先フォルダ ID
+          {copy.driveFolderLabel}
           <input value={driveFolder} onChange={(e) => setDriveFolder(e.target.value)} />
         </label>
         <div className="section-actions">
@@ -335,7 +377,7 @@ export function IntegrationsHubPage() {
             onClick={() =>
               void run(async () => {
                 await putConnectorSettings("gdrive", { default_folder_id: driveFolder.trim() });
-                return "保存先フォルダを保存しました。";
+                return copy.driveFolderSaved;
               })
             }
           >
@@ -343,12 +385,10 @@ export function IntegrationsHubPage() {
           </button>
         </div>
 
-        <h3 className="section-title">正本を PDF にして格納する</h3>
-        <p className="ops-page-meta">
-          出せるのは人が読む文書だけです（docs/company · docs/compliance · docs/reports の一部）。
-        </p>
+        <h3 className="section-title">{copy.driveExportTitle}</h3>
+        <p className="ops-page-meta">{copy.driveExportLead}</p>
         <label className="wallet-field">
-          文書パス（例 company/regulations/ringi-kessai-kisoku.md）
+          {copy.driveDocPathLabel}
           <input value={driveDocPath} onChange={(e) => setDriveDocPath(e.target.value)} />
         </label>
         <div className="section-actions">
@@ -360,11 +400,13 @@ export function IntegrationsHubPage() {
               void run(async () => {
                 const res = await postDriveExport({ kind: "document", id: driveDocPath.trim() });
                 await loadExports();
-                return res.ok ? `Drive に格納しました（${res.file_name}）` : `格納できません: ${res.reason}`;
+                return res.ok
+                  ? copy.driveStoredOk(res.file_name ?? "")
+                  : copy.driveStoreFail(res.reason ?? "");
               })
             }
           >
-            文書を格納
+            {copy.driveExportDoc}
           </button>
           <button
             type="button"
@@ -374,17 +416,19 @@ export function IntegrationsHubPage() {
               void run(async () => {
                 const res = await postDriveExport({ kind: "executive_tasks" });
                 await loadExports();
-                return res.ok ? `Drive に格納しました（${res.file_name}）` : `格納できません: ${res.reason}`;
+                return res.ok
+                  ? copy.driveStoredOk(res.file_name ?? "")
+                  : copy.driveStoreFail(res.reason ?? "");
               })
             }
           >
-            社長タスク一覧を格納
+            {copy.driveExportTasks}
           </button>
         </div>
 
         {driveExports.length > 0 && (
           <>
-            <h3 className="section-title">格納済み</h3>
+            <h3 className="section-title">{copy.driveStoredList}</h3>
             <ul className="ops-page-meta">
               {driveExports.slice(-10).map((e) => (
                 <li key={`${e.kind}:${e.source_ref}`}>

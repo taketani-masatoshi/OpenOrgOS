@@ -11,6 +11,40 @@ export const STEWARD_COPY = defineCopy(
     ledger: "帳簿",
     tax: "税務",
     onboarding: "セットアップ",
+    integrationsTitle: "連携設定",
+    integrationsLead:
+      "最新は会社のテナント（このマシン）です。Git は台帳の履歴。Google Drive は AIA 成果物の配達口で、正本ではありません。",
+    storePlanesLabel: "正本の置き場",
+    storeMacRole: "最新の正本",
+    storeMacTitle: "このマシン",
+    storeMacBody:
+      "テナントの YAML / MD が作業の実体です。AIA の下書きもまずここに落ちます。",
+    storeGitRole: "履歴",
+    storeGitTitle: "Git",
+    storeGitBody: "会社の記録（L0–L1）の版管理。秘密と実行中の下書きは載せません。",
+    storeDriveRole: "配達口",
+    storeDriveTitle: "Drive（配達）",
+    storeDriveBody:
+      "社員が常用している間、AI が作った資料の写しを上げます。社員のファイルは消しません。",
+    storeFlow:
+      "流れは常に同じです。このマシンに書く → 台帳になったものだけ Git に残す → Drive へは AI 作と明示した写しだけ。",
+    driveFolderLabel: "保存先フォルダ ID（AIA 用の配達フォルダ）",
+    driveFolderSaved: "配達フォルダを保存しました。",
+    driveExportTitle: "AIA 成果物としてアップロード",
+    driveExportLead:
+      "出せるのは人が読む文書だけです（docs/company · docs/compliance · docs/reports の一部）。Drive 側の編集は正本に戻りません。",
+    driveNoTouch:
+      "社員が置いたファイルは削除・上書きしません。ここは AIA 用の配達フォルダです。",
+    driveDocPathLabel: "文書パス（例 company/regulations/ringi-kessai-kisoku.md）",
+    driveExportDoc: "文書をアップロード",
+    driveExportTasks: "社長タスク一覧をアップロード",
+    driveStoredOk: (name: string) => `Drive に写しを置きました（${name}）`,
+    driveStoreFail: (reason: string) => `置けません: ${reason}`,
+    driveStoredList: "アップロード済み（写し）",
+    integrationsOnboardingTitle: "外部サービス連携",
+    integrationsOnboardingLead:
+      "Google Drive は正本ではなく、AIA 成果物の配達口です。接続と保存先は連携設定にまとめています。",
+    openIntegrations: "連携設定を開く",
     customers: "顧客管理",
     customersMenu: "顧客管理メニュー",
     customersOutbound: "アウトバウンド",
@@ -677,6 +711,40 @@ export const STEWARD_COPY = defineCopy(
     ledger: "Ledger",
     tax: "Tax",
     onboarding: "Setup",
+    integrationsTitle: "Integrations",
+    integrationsLead:
+      "The tenant on this machine is the latest copy. Git keeps ledger history. Google Drive is a delivery tray for AIA artifacts, not the source of truth.",
+    storePlanesLabel: "Where records live",
+    storeMacRole: "Latest canonical",
+    storeMacTitle: "This machine",
+    storeMacBody:
+      "Tenant YAML / MD is the working copy. AIA drafts land here first.",
+    storeGitRole: "History",
+    storeGitTitle: "Git",
+    storeGitBody: "Versioned L0–L1 company records. Secrets and in-flight drafts stay off Git.",
+    storeDriveRole: "Delivery",
+    storeDriveTitle: "Drive (delivery)",
+    storeDriveBody:
+      "While people still live in Drive, we upload labeled AIA copies. Human files are never deleted.",
+    storeFlow:
+      "The flow never changes: write on this machine → keep ledger history in Git → upload only labeled AIA copies to Drive.",
+    driveFolderLabel: "Destination folder ID (AIA delivery folder)",
+    driveFolderSaved: "Saved the delivery folder.",
+    driveExportTitle: "Upload as an AIA artifact",
+    driveExportLead:
+      "Only human-readable documents (parts of docs/company · docs/compliance · docs/reports). Edits in Drive do not change the canonical record.",
+    driveNoTouch:
+      "Files people put in Drive are never deleted or overwritten. This folder is the AIA delivery tray.",
+    driveDocPathLabel: "Document path (e.g. company/regulations/ringi-kessai-kisoku.md)",
+    driveExportDoc: "Upload document",
+    driveExportTasks: "Upload executive task list",
+    driveStoredOk: (name: string) => `Placed a Drive copy (${name})`,
+    driveStoreFail: (reason: string) => `Could not place: ${reason}`,
+    driveStoredList: "Uploaded copies",
+    integrationsOnboardingTitle: "External services",
+    integrationsOnboardingLead:
+      "Google Drive is a delivery tray for AIA artifacts, not the canonical store. Connect and set destinations in Integrations.",
+    openIntegrations: "Open integrations",
     customers: "Customers",
     customersMenu: "Customer management menu",
     customersOutbound: "Outbound",
