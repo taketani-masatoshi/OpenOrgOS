@@ -236,6 +236,16 @@ describe("T-A5 receipt map (e-tax18)", () => {
     expect(parsed.procedureName).toBe("RHO0010");
     expect(parsed.receiptNumber?.startsWith("MOCK-NOT-NTA-")).toBe(false);
   });
+
+  it("fails closed on unknown receipt root (fix #8)", () => {
+    try {
+      parseReceiptXml(`<?xml version="1.0"?><NOTUMB><UMB00050>1</UMB00050></NOTUMB>`);
+      throw new Error("expected refuse");
+    } catch (error) {
+      expect(error).toBeInstanceOf(EtaxException);
+      expect((error as EtaxException).etax.code).toBe("ETAX_RECEIPT_XML_ROOT_MISMATCH");
+    }
+  });
 });
 
 describe("T-A6 slot / hash", () => {
@@ -470,5 +480,51 @@ describe("host bind refuses off Windows", () => {
     } catch (error) {
       expect((error as EtaxException).etax.code).toBe("ETAX_HOST_BIND_NOT_WINDOWS");
     }
+  });
+});
+
+describe("fixes 1–16 A-layer contracts", () => {
+  it("tip catalogs stay hostBound=false (fix #14 · Darwin-safe)", () => {
+    expect(loadSignatureCatalog().hostBound).toBe(false);
+    expect(loadTransportCatalog().hostBound).toBe(false);
+    expect(officialSignatureHostBound()).toBe(false);
+    expect(officialTransportHostBound()).toBe(false);
+  });
+
+  it("credential layout contract holds without inventing secrets (fix #6)", async () => {
+    const { evaluateCredentialLayoutContract } = await import(
+      "../src/lib/etax/credentials-contract.js"
+    );
+    const r = evaluateCredentialLayoutContract();
+    expect(r.ok, r.blockers.join("; ")).toBe(true);
+  });
+
+  it("official receipt policy refuses MOCK-NOT-NTA- (fix #13)", async () => {
+    const { officialReceiptRefusesMockPrefix, assertOfficialReceiptNumberNotMock } = await import(
+      "../src/lib/etax/receipt-policy.js"
+    );
+    expect(officialReceiptRefusesMockPrefix("MOCK-NOT-NTA-deadbeef")).toBe(true);
+    expect(() => assertOfficialReceiptNumberNotMock("MOCK-NOT-NTA-x")).toThrow(EtaxException);
+  });
+
+  it("isStubOrNonNtaHealth labels stub hosts (fix #1)", async () => {
+    const { isStubOrNonNtaHealth, StubEtaxHostClient } = await import(
+      "../src/lib/etax/host-client.js"
+    );
+    const health = await new StubEtaxHostClient().health();
+    expect(isStubOrNonNtaHealth(health)).toBe(true);
+  });
+
+  it("B-layer suite is gated — unset ETAX_D18_ACCEPTANCE means not accepted (fix #4/#15)", () => {
+    // This A-layer file always runs; B-layer file skips without the env flag.
+    expect(process.env.ETAX_D18_ACCEPTANCE === "1").toBe(false);
+    expect(evaluateProductionEnablement().certified).toBe(false);
+  });
+
+  it("D4 stays incomplete on tip without inventing NTA evidence (fix #5/#12)", async () => {
+    const { evaluateD4 } = await import("../src/lib/etax/acceptance.js");
+    const r = evaluateD4();
+    expect(r.ok).toBe(false);
+    expect(r.blockers.length).toBeGreaterThan(0);
   });
 });

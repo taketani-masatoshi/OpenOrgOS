@@ -50,14 +50,31 @@ export type ParsedReceipt = {
 /**
  * Extract receipt fields by local element names from the e-tax18 map.
  * Uses simple tag scan — no invented schema; NTA-secret values never hardcoded.
+ * Unknown root elements fail closed (mapping rootElement is required).
  */
 export function parseReceiptXml(
   xml: string,
   mapping = loadReceiptMapping(),
 ): ParsedReceipt {
   const out: ParsedReceipt = {};
-  const rootMatch = xml.match(/<([A-Za-z0-9_]+)[\s>]/);
-  if (rootMatch) out.rootElement = rootMatch[1];
+  const rootMatch = xml.match(/<(?:[A-Za-z0-9_]+:)?([A-Za-z0-9_]+)[\s>]/);
+  if (!rootMatch?.[1]) {
+    throw etaxError({
+      code: "ETAX_RECEIPT_XML_NO_ROOT",
+      blocked: "SPEC_BLOCKED",
+      message: "Receipt XML has no parseable root element",
+    });
+  }
+  out.rootElement = rootMatch[1];
+  if (out.rootElement !== mapping.rootElement) {
+    throw etaxError({
+      code: "ETAX_RECEIPT_XML_ROOT_MISMATCH",
+      blocked: "SPEC_BLOCKED",
+      message:
+        `Receipt XML root ${out.rootElement} does not match e-tax18 map root ${mapping.rootElement}. ` +
+        "Refusing to invent alternate receipt schemas.",
+    });
+  }
 
   for (const field of mapping.fields) {
     const re = new RegExp(

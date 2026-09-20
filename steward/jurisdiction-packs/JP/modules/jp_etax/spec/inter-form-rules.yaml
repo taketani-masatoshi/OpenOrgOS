@@ -11,7 +11,10 @@ rules:
     notes: >
       Minimal RHO0010 CONTENTS uses HOA110 alone. e-tax08 confirms no additional
       form dependency rows required for this OpenOrgOS first-procedure path.
+      This is not a claim that all corporate return forms are inter-form complete —
+      only HOA110 for the RHO0010 OpenOrgOS slice.
 notes: >
   e-tax08.CAB is retrieved locally. HOA110 is registered as loaded with an empty
-  dependsOn list (explicit no-dependency). Other forms remain unloaded until
-  their e-tax08 rows are transcribed as data.
+  dependsOn list (explicit no-dependency for the RHO0010 first path only).
+  Other forms remain unloaded until their e-tax08 rows are transcribed as data.
+  Do not read this catalog as full e-tax08 coverage.

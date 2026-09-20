@@ -1,17 +1,19 @@
 /**
  * Record T-O2 / NTA completion evidence under gitignored transmission-test/.
  * Never sets production-gate completed flags — human edits gate yaml.
- * Promote RHO0010 only after D4 evaluates ok.
+ * Promote RHO0010 only after D4 evaluates ok. Uses YAML parse/stringify (no brittle replace).
  */
 
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import YAML from "yaml";
 import {
   etaxNtaCompletionEvidenceSchema,
   etaxTransmissionEvidenceSchema,
   type EtaxNtaCompletionEvidence,
   type EtaxTransmissionEvidence,
 } from "../../../schemas/etax/transmission-evidence.js";
+import { etaxProcedureMatrixSchema } from "../../../schemas/etax/procedures.js";
 import { etaxError } from "../../../schemas/etax/errors.js";
 import { getInstallRoot, getWorkspaceRoot } from "../orgos-paths.js";
 import { evaluateD4, evaluateD5, evaluateD6, transmissionTestDir } from "./acceptance.js";
@@ -58,27 +60,23 @@ export function promoteRho0010Supported(opts: { actor: string }): { path: string
       message: `supported-procedures.yaml missing: ${procPath}`,
     });
   }
-  let text = readFileSync(procPath, "utf-8");
-  if (!text.includes("procedureCode: RHO0010")) {
+  const matrix = etaxProcedureMatrixSchema.parse(YAML.parse(readFileSync(procPath, "utf-8")));
+  const row = matrix.procedures.find((p) => p.procedureCode === "RHO0010");
+  if (!row) {
     throw etaxError({
       code: "ETAX_RHO0010_MISSING",
       message: "RHO0010 row missing",
     });
   }
-  text = text
-    .replace(/support: EXPERIMENTAL/, "support: SUPPORTED")
-    .replace(/productionEligible: false/, "productionEligible: true")
-    .replace(
-      /title: 普通法人の確定申告（青色）— OpenOrgOS EXPERIMENTAL first procedure/,
-      "title: 普通法人の確定申告（青色）— OpenOrgOS SUPPORTED (RHO0010)",
-    );
-  if (!text.includes("support: SUPPORTED") || !text.includes("productionEligible: true")) {
-    throw etaxError({
-      code: "ETAX_PROMOTE_REPLACE_FAILED",
-      message: "Failed to rewrite RHO0010 support flags",
-    });
-  }
-  writeFileSync(procPath, text, "utf-8");
+  row.support = "SUPPORTED";
+  row.productionEligible = true;
+  row.title = "普通法人の確定申告（青色）— OpenOrgOS SUPPORTED (RHO0010)";
+  row.notes =
+    (row.notes ?? "") +
+    " Promoted after D4 NTA transmission evidence. Other procedures remain UNSUPPORTED.";
+  matrix.notes =
+    "RHO0010 may be SUPPORTED after NTA evidence. Do not invent NTA codes or flip other procedures.";
+  writeFileSync(procPath, `${YAML.stringify(matrix)}\n`, "utf-8");
   const audit = join(transmissionTestDir(), "promote-log.txt");
   mkdirSync(dirname(audit), { recursive: true });
   writeFileSync(
@@ -105,6 +103,8 @@ export function syncProductCopyForRho0010(opts: { actor: string }): {
   }
   const tosPath = join(getInstallRoot(), "docs/product/legal/terms-of-service.md");
   const commercialPath = join(getInstallRoot(), "product-fleet/commercial-declaration.yaml");
+  const readinessPath = join(getInstallRoot(), "steward/modules/readiness.yaml");
+
   let tos = readFileSync(tosPath, "utf-8");
   const tosClause =
     "3. e-Tax 申告・法定申告書の提出機能は本サービスの標準範囲に**含まない**。専用モジュール `jp_etax` は実験的であり、国税庁送信試験と production gate 完了まで本番送信を行わない。";
@@ -117,12 +117,36 @@ export function syncProductCopyForRho0010(opts: { actor: string }): {
   }
   writeFileSync(tosPath, tos.endsWith("\n") ? tos : `${tos}\n`, "utf-8");
 
-  let commercial = readFileSync(commercialPath, "utf-8");
-  commercial = commercial.replace(
-    /e-Tax 提出は含みません。/,
-    "e-Tax 提出は jp_etax の RHO0010（production-gate certified）に限定。他手続は含みません。",
+  const commercialDoc = YAML.parse(readFileSync(commercialPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  const statementKey = ["public_statement_ja", "claim", "summary"].find(
+    (k) => typeof commercialDoc[k] === "string",
   );
-  writeFileSync(commercialPath, commercial.endsWith("\n") ? commercial : `${commercial}\n`, "utf-8");
+  if (statementKey) {
+    const claim = String(commercialDoc[statementKey]);
+    if (!claim.includes("RHO0010")) {
+      commercialDoc[statementKey] = claim.replace(
+        /e-Tax 提出は含みません。?/,
+        "e-Tax 提出は jp_etax の RHO0010（production-gate certified）に限定。他手続は含みません。",
+      );
+    }
+  } else {
+    commercialDoc.public_statement_ja =
+      "e-Tax 提出は jp_etax の RHO0010（production-gate certified）に限定。他手続は含みません。";
+  }
+  writeFileSync(commercialPath, `${YAML.stringify(commercialDoc)}\n`, "utf-8");
+
+  const readinessDoc = YAML.parse(readFileSync(readinessPath, "utf-8")) as {
+    modules?: Record<string, { tier?: string; notes?: string }>;
+  };
+  if (readinessDoc.modules?.jp_etax) {
+    readinessDoc.modules.jp_etax.tier = "activation_ready";
+    readinessDoc.modules.jp_etax.notes =
+      "NTA e-Tax KSK2 (ADR 0078). RHO0010 production-eligible after certified gate. Other procedures unsupported.";
+  }
+  writeFileSync(readinessPath, `${YAML.stringify(readinessDoc)}\n`, "utf-8");
 
   const audit = join(getWorkspaceRoot(), "data", "etax", "transmission-test", "product-copy-log.txt");
   mkdirSync(dirname(audit), { recursive: true });

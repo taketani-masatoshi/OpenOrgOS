@@ -24,7 +24,8 @@ import {
   productionSubmitBlockedReasons,
 } from "./production-gate.js";
 import { evaluateProductionEnablement } from "./production-review.js";
-import { loadReceiptMapping } from "./receipt-mapping.js";
+import { loadReceiptMapping, parseReceiptXml } from "./receipt-mapping.js";
+import { officialReceiptRefusesMockPrefix } from "./receipt-policy.js";
 import { officialSignatureHostBound } from "./signature-catalog.js";
 import { resolveOfficialXsd } from "./spec-fetch.js";
 import { officialXsdAvailable } from "./spec-paths.js";
@@ -37,6 +38,7 @@ import { validateXmlAgainstXsd, xmlLintAvailable } from "./xml-validate.js";
 import {
   resolveSignatureProviderId,
 } from "./adapters.js";
+import { evaluateCredentialLayoutContract } from "./credentials-contract.js";
 import { resolveTransportProviderId } from "./transport.js";
 import { EtaxException } from "../../../schemas/etax/errors.js";
 
@@ -183,6 +185,20 @@ export function evaluateD3(): DxResult {
   } catch (error) {
     blockers.push(error instanceof Error ? error.message : String(error));
   }
+
+  if (!officialReceiptRefusesMockPrefix("MOCK-NOT-NTA-deadbeef")) {
+    blockers.push("official receipt policy must refuse MOCK-NOT-NTA- prefix");
+  }
+
+  // Structural sample with mapped local names must parse a receipt number.
+  try {
+    const sample = `<?xml version="1.0"?><UMB00000><UMB00050>202609210001</UMB00050></UMB00000>`;
+    const parsed = parseReceiptXml(sample);
+    if (!parsed.receiptNumber) blockers.push("receipt map failed to parse UMB00050 sample");
+  } catch (error) {
+    blockers.push(error instanceof Error ? error.message : String(error));
+  }
+
   const submit = findLatestTransmissionSubmitEvidence();
   if (!submit) {
     blockers.push("no valid T-O2 transmission-test JSON under data/etax/transmission-test/");
@@ -208,12 +224,12 @@ export function evaluateD4(): DxResult {
     if (!existsSync(abs)) blockers.push(`evidence file missing: ${gate.nta_transmission_test.evidence_path}`);
     else {
       try {
-        const raw = readFileSync(abs, "utf-8");
-        // Accept JSON completion schema or plain L1 text with reference + date.
-        if (raw.trim().startsWith("{")) {
+        const raw = readFileSync(abs, "utf-8").trim();
+        // Fix #12: require structured JSON completion evidence (no weak plain-text pass).
+        if (!raw.startsWith("{")) {
+          blockers.push("NTA completion evidence must be JSON (etaxNtaCompletionEvidenceSchema)");
+        } else {
           etaxNtaCompletionEvidenceSchema.parse(JSON.parse(raw));
-        } else if (!/20\d{2}-\d{2}-\d{2}/.test(raw) || raw.length < 20) {
-          blockers.push("evidence L1 text must include ISO date and non-trivial reference");
         }
       } catch (error) {
         blockers.push(
@@ -359,6 +375,9 @@ export function evaluateD8(): DxResult {
   if (/--pin\b/i.test(registrar) || /password.*=/.test(registrar)) {
     blockers.push("etax CLI appears to accept PIN/password flags");
   }
+
+  const creds = evaluateCredentialLayoutContract();
+  blockers.push(...creds.blockers);
 
   return {
     id: "D8",

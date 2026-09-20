@@ -8,7 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
-- **e-Tax D1–D8 実オペレータ受け入れ** — `orgos etax acceptance report` · B層 `tests/etax-d1-d8-acceptance.test.ts`（`ETAX_D18_ACCEPTANCE=1`）。`host bind` · transmission-test record · `procedure promote-rho0010` · `product-copy sync` は証跡/ゲート条件を満たすまで拒否。tip は未 certified。**e-Tax対応完了ではない。** [ACCEPTANCE.md](docs/etax/ACCEPTANCE.md)
+- **e-Tax D1–D8 実オペレータ受け入れ** — `orgos etax acceptance report` · B層 `tests/etax-d1-d8-acceptance.test.ts`（`ETAX_D18_ACCEPTANCE=1`）。`host bind` · transmission-test record · `procedure promote-rho0010` · `product-copy sync` は証跡/ゲート条件を満たすまで拒否。tip は未 certified。**e-Tax対応完了ではない（オペレータ未達）。** [ACCEPTANCE.md](docs/etax/ACCEPTANCE.md)
 - **e-Tax 認証レーン（対応完了の定義・ホスト・自動テスト）** — D1–D8 と [CERTIFICATION_CHECKLIST.md](docs/etax/CERTIFICATION_CHECKLIST.md)（T-O*）。Windows `tools/etax-host`（SignToReport / Send / GetResponse、JSON-RPC/stdio）。e-tax18 `receipt-mapping.yaml` · e-tax08 inter-form 正式行 · RHO0010 IT 任意フィールド拡充。`tests/etax-certification.test.ts`（T-A1–T-A10）。`orgos etax production release --approval-id`（`etax.production_enable`）と `etax host status`。本番 gate tip は false のまま。**e-Tax対応完了ではない**（NTA 送信試験・human release·RHO0010 SUPPORTED 後に宣言）。ADR 0078
 - **e-Tax 実装100（契約修復 · RHO0010 · mock E2E）** — 状態機械と CLI 経路を一致（`validateAndAdvance` · xmlHash provenance · filing slot 重複検出 · org approval の etax 適用+rollback）。第一手続 `RHO0010` を公式 XSD 由来 mapping で生成し Layer 1 通過。mock で RECEIVED_BY_ETAX まで手置き xmlHash なし。COM ホストは未接続（[HOST_CONTRACT.md](docs/etax/HOST_CONTRACT.md)）。本番・NTA 送信試験は未実施。**e-Tax対応完了ではない。** ADR 0078
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
@@ -19,6 +19,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- **e-Tax 問題点 1–16（コード口の正直化）** — stub/non-NTA での tip `hostBound` 拒否 · host RPC タイムアウト · COM 失敗の正直 unbound · release の承認順序修正 · receipt root fail-closed · D3 MOCK 拒否 · D4 completion JSON 必須 · promote/ToS の YAML 構造化更新 · tip `hostBound===false` A層固定 · credential 配置契約 · B層は `workflow_dispatch` のみ（通常 CI 緑 ≠ 対応完了）。tip production-gate / RHO0010 は未達のまま。**e-Tax対応完了ではない（コード口のみ）。** [FIXES_1_16.md](docs/etax/FIXES_1_16.md) · [ACCEPTANCE.md](docs/etax/ACCEPTANCE.md)
 - **e-Tax Phase 1–2** — フィールド一覧を form ルートで包む仮 XML 生成を廃止。CAB 展開の `..` パスを拒否。production gate の重複理由を分離。`etax validate` が Layer fail を握りつぶさない。DRAFT 作成は手続マトリクス非加入でも可（XML/送信は fail-closed）。
 - Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 

@@ -1,5 +1,6 @@
 /**
  * Bind tip signature/transport catalogs to hostBound=true after Windows host health.
+ * Stub / non-NTA health must never flip tip catalogs.
  */
 
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -7,7 +8,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 import { etaxError } from "../../../schemas/etax/errors.js";
 import { getWorkspaceRoot } from "../orgos-paths.js";
-import { probeEtaxHostBound } from "./host-client.js";
+import { isStubOrNonNtaHealth, probeEtaxHostBound } from "./host-client.js";
 import {
   etaxSignatureCatalogPath,
   loadSignatureCatalog,
@@ -40,11 +41,20 @@ export async function bindOfficialHostCatalogs(opts: {
     });
   }
   const probe = await probeEtaxHostBound();
-  if (!probe.reachable || !probe.health?.signatureBound || !probe.health?.transportBound) {
+  if (!probe.health || isStubOrNonNtaHealth(probe.health)) {
+    throw etaxError({
+      code: "ETAX_HOST_BIND_STUB_FORBIDDEN",
+      blocked: "SPEC_BLOCKED",
+      message:
+        `Refusing to bind tip catalogs to a stub/non-NTA host ` +
+        `(${probe.error ?? probe.health?.detail ?? "stub"}). Use ORGOS_ETAX_HOST_MODE=com with NTA modules.`,
+    });
+  }
+  if (!probe.reachable || !probe.health.signatureBound || !probe.health.transportBound) {
     throw etaxError({
       code: "ETAX_HOST_BIND_UNHEALTHY",
       blocked: "SPEC_BLOCKED",
-      message: `etax-host health failed: ${probe.error ?? probe.health?.detail ?? "unreachable"}`,
+      message: `etax-host health failed: ${probe.error ?? probe.health.detail ?? "unreachable"}`,
     });
   }
 

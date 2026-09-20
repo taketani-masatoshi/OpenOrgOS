@@ -5,7 +5,8 @@ sourceWorkbook: XMLVer1x.xlsx
 notes: >
   Local element names taken from KSK2 e-tax18 帳票フィールド一覧 (XMLVer1x.xlsx
   shared strings). UMB00050 = 受付番号. Structural fixture parsing only —
-  OpenOrgOS does not invent NTA receipt schemas.
+  OpenOrgOS does not invent NTA receipt schemas. parseReceiptXml fails closed
+  when the XML root is not UMB00000 (mapping.rootElement).
 rootElement: UMB00000
 fields:
   - localName: UMB00050

@@ -34,9 +34,8 @@ function requirementsReadyForRelease(gate: EtaxProductionGate): string[] {
   if (!req.production_credentials_configured) {
     missing.push("production_credentials_configured");
   }
-  if (!req.orgos_human_approval_recorded) {
-    missing.push("orgos_human_approval_recorded");
-  }
+  // orgos_human_approval_recorded is set by release itself after approved APR —
+  // do not require it beforehand (avoids chicken-and-egg with yaml edits).
   return missing;
 }
 

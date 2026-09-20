@@ -121,6 +121,7 @@ export class EtaxOfficialTransport implements EtaxTransport {
     }
     const { getEtaxHostClient } = await import("./host-client.js");
     const { parseReceiptXml } = await import("./receipt-mapping.js");
+    const { assertOfficialReceiptNumberNotMock } = await import("./receipt-policy.js");
     const host = getEtaxHostClient();
     const health = await host.health();
     if (!health.ok || !health.transportBound) {
@@ -137,13 +138,7 @@ export class EtaxOfficialTransport implements EtaxTransport {
       const parsed = parseReceiptXml(raw.receiptXml);
       receiptNumber = parsed.receiptNumber;
     }
-    if (receiptNumber?.startsWith("MOCK-NOT-NTA-")) {
-      throw etaxError({
-        code: "ETAX_OFFICIAL_RECEIPT_MOCK_PREFIX",
-        blocked: "SPEC_BLOCKED",
-        message: "Official receipt path must not return MOCK-NOT-NTA- prefixed numbers",
-      });
-    }
+    assertOfficialReceiptNumberNotMock(receiptNumber);
     return {
       submissionId: id,
       requestId: raw.requestId,

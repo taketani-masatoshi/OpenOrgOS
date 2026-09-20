@@ -162,10 +162,36 @@ export class StdioEtaxHostClient implements EtaxHostClient {
     const child = this.ensureStarted();
     const id = this.nextId++;
     const req: JsonRpcRequest = { jsonrpc: "2.0", id, method, params };
+    const timeoutMs = Number(process.env.ORGOS_ETAX_HOST_TIMEOUT_MS ?? "5000");
     return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
+      const timer = setTimeout(() => {
+        if (!this.pending.has(id)) return;
+        this.pending.delete(id);
+        try {
+          this.close();
+        } catch {
+          /* ignore */
+        }
+        reject(
+          new Error(
+            `etax-host RPC timeout after ${timeoutMs}ms (method=${method}). Host may be unbound or hung.`,
+          ),
+        );
+      }, Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 5000);
+
+      this.pending.set(id, {
+        resolve: (v) => {
+          clearTimeout(timer);
+          resolve(v);
+        },
+        reject: (e) => {
+          clearTimeout(timer);
+          reject(e);
+        },
+      });
       child.stdin.write(`${JSON.stringify(req)}\n`, (err) => {
         if (err) {
+          clearTimeout(timer);
           this.pending.delete(id);
           reject(err);
         }
@@ -322,14 +348,40 @@ export async function probeEtaxHostBound(): Promise<{
   health?: EtaxHostHealth;
   error?: string;
 }> {
+  let client: EtaxHostClient | null = null;
   try {
-    const client = getEtaxHostClient();
+    client = getEtaxHostClient();
     const health = await client.health();
-    return { reachable: health.ok && health.signatureBound && health.transportBound, health };
+    const stubLike = isStubOrNonNtaHealth(health);
+    return {
+      reachable: health.ok && health.signatureBound && health.transportBound && !stubLike,
+      health,
+      error: stubLike
+        ? `host reports stub/non-NTA health (${health.detail ?? "no detail"})`
+        : undefined,
+    };
   } catch (error) {
     return {
       reachable: false,
       error: error instanceof Error ? error.message : String(error),
     };
+  } finally {
+    try {
+      client?.close();
+    } catch {
+      /* ignore */
+    }
   }
+}
+
+/** Stub / labeled non-NTA hosts must not satisfy bind or D1. */
+export function isStubOrNonNtaHealth(health: EtaxHostHealth): boolean {
+  const mode = (process.env.ORGOS_ETAX_HOST_MODE ?? "").trim().toLowerCase();
+  if (mode === "stub") return true;
+  if (process.env.ORGOS_ETAX_HOST_STUB === "1") return true;
+  const detail = (health.detail ?? "").toLowerCase();
+  if (detail.includes("stub") || detail.includes("not nta") || detail.includes("not-nta")) {
+    return true;
+  }
+  return false;
 }

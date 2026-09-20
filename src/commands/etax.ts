@@ -39,11 +39,7 @@ import {
 } from "../lib/etax/index.js";
 import { getWorkspaceRoot } from "../lib/orgos-paths.js";
 import { getModuleTier } from "../lib/module-readiness.js";
-import { readFileSync as readFs, writeFileSync as writeFs } from "node:fs";
-import { join as pathJoin } from "node:path";
-import { getInstallRoot } from "../lib/orgos-paths.js";
-import type { EtaxSignatureProviderId } from "../../schemas/etax/signature.js";
-import type { EtaxEnvironment } from "../../schemas/etax/submission-state.js";
+import type { EtaxSignatureProviderId } from "../../schemas/etax/signature.js";import type { EtaxEnvironment } from "../../schemas/etax/submission-state.js";
 import { requireCliDataWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
 import { resolveCliOperatorId } from "../lib/console-auth/cli-operator.js";
 import { proposeOrgApproval } from "../lib/org/approval/propose.js";
@@ -758,20 +754,12 @@ export function runEtaxProductCopySync(opts: { json?: boolean }): void {
   try {
     requireCliHumanApproval("etax product-copy sync");
     const result = syncProductCopyForRho0010({ actor: resolveCliOperatorId() });
-    // readiness bump only when D5+D6 already ok (enforced inside sync)
-    const readinessPath = pathJoin(getInstallRoot(), "steward/modules/readiness.yaml");
-    let readiness = readFs(readinessPath, "utf-8");
-    readiness = readiness.replace(
-      /jp_etax:\n\s+tier: experimental/,
-      "jp_etax:\n    tier: activation_ready",
-    );
-    writeFs(readinessPath, readiness, "utf-8");
     const payload = { ok: true, banner: banner(), readiness: "activation_ready", ...result };
     if (opts.json) printJson(payload);
     else {
       console.log(`updated ${result.tosPath}`);
       console.log(`updated ${result.commercialPath}`);
-      console.log("jp_etax readiness → activation_ready");
+      console.log("jp_etax readiness → activation_ready (YAML structured write)");
     }
   } catch (error) {
     fail(error);

@@ -268,6 +268,8 @@ jobs:
           ORGOS_ETAX_HOST_MODE: stub
 
   etax-d18-acceptance:
+    # B-layer only: NOT part of normal PR CI. Success here means tip D1–D8;
+    # job absence / skip must never be read as “e-Tax accepted”.
     if: github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     needs: validate
@@ -278,7 +280,7 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
-      - name: B-layer D1–D8 tip acceptance
+      - name: B-layer D1–D8 tip acceptance (operator-complete only)
         run: npm test -- tests/etax-d1-d8-acceptance.test.ts
         env:
           ETAX_D18_ACCEPTANCE: "1"

@@ -45,6 +45,7 @@ async function tryLoadCom() {
   if (process.platform !== "win32" || MODE !== "com") return null;
   try {
     // Optional dependency — operators install winax on Windows hosts with NTA modules.
+    // Method arity follows catalog names only; if COM throws, stay unbound (do not invent).
     const winax = await import("winax");
     const ActiveXObject = winax.default?.Object ?? winax.Object ?? winax.default;
     if (!ActiveXObject) return null;
@@ -101,16 +102,25 @@ async function signToReport(params) {
   }
   const com = await tryLoadCom();
   if (com?.signer) {
-    // PIN via OS dialog inside SignToReport — do not pass PIN here.
-    const signed = com.signer.SignToReport(document.toString("binary"));
-    return {
-      certificateId: String(com.signer.CertificateId ?? "nta-com-certificate"),
-      certificateValid: true,
-      signingTime: new Date().toISOString(),
-      signatureHash: sha256Digest(Buffer.from(String(signed))),
-      method: "SignToReport",
-      moduleId: "CLXtxSigner.dll",
-    };
+    try {
+      // PIN via OS dialog inside SignToReport — do not pass PIN here.
+      // Argument shape is provisional pending e-tax05 sample verification on operator Windows.
+      const signed = com.signer.SignToReport(document.toString("binary"));
+      return {
+        certificateId: String(com.signer.CertificateId ?? "nta-com-certificate"),
+        certificateValid: true,
+        signingTime: new Date().toISOString(),
+        signatureHash: sha256Digest(Buffer.from(String(signed))),
+        method: "SignToReport",
+        moduleId: "CLXtxSigner.dll",
+      };
+    } catch (error) {
+      throw new Error(
+        `COM SignToReport failed (verify e-tax05 sample arity on this host): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
   if (MODE === "stub") {
     return {
@@ -133,17 +143,25 @@ async function send(params) {
   }
   const com = await tryLoadCom();
   if (com?.comm) {
-    // CreateRequest / Send — request id from COM only.
-    const requestId = String(com.comm.Send(document.toString("binary")));
-    if (requestId === "XU00S010") {
-      throw new Error("refusing sample login request id XU00S010 as filing id");
+    try {
+      // CreateRequest / Send — request id from COM only. Arity provisional (e-tax04 sample).
+      const requestId = String(com.comm.Send(document.toString("binary")));
+      if (requestId === "XU00S010") {
+        throw new Error("refusing sample login request id XU00S010 as filing id");
+      }
+      return {
+        ok: true,
+        requestId,
+        transportStatus: "sent",
+        message: "COM Send",
+      };
+    } catch (error) {
+      throw new Error(
+        `COM Send failed (verify e-tax04 sample arity on this host): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
-    return {
-      ok: true,
-      requestId,
-      transportStatus: "sent",
-      message: "COM Send",
-    };
   }
   if (MODE === "stub") {
     const requestId = `host:stub:${String(params.submissionId ?? "x").slice(0, 20)}`;
@@ -160,14 +178,22 @@ async function send(params) {
 async function getResponse(params) {
   const com = await tryLoadCom();
   if (com?.comm) {
-    const xml = String(com.comm.GetResponse(params.requestId ?? ""));
-    return {
-      requestId: params.requestId,
-      receiptXml: xml,
-      receivedAt: new Date().toISOString(),
-      responseHash: sha256Digest(xml),
-      status: "RECEIVED_BY_ETAX",
-    };
+    try {
+      const xml = String(com.comm.GetResponse(params.requestId ?? ""));
+      return {
+        requestId: params.requestId,
+        receiptXml: xml,
+        receivedAt: new Date().toISOString(),
+        responseHash: sha256Digest(xml),
+        status: "RECEIVED_BY_ETAX",
+      };
+    } catch (error) {
+      throw new Error(
+        `COM GetResponse failed (verify e-tax04 sample arity on this host): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
   if (MODE === "stub") {
     const receiptNumber = `HOST-STUB-${String(params.submissionId ?? "x").slice(-8)}`;

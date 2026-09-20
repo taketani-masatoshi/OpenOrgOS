@@ -24,6 +24,8 @@ export * from "./spec-paths.js";
 export * from "./spec-fetch.js";
 export * from "./inter-form.js";
 export * from "./receipt-mapping.js";
+export * from "./receipt-policy.js";
+export * from "./credentials-contract.js";
 export * from "./host-client.js";
 export * from "./production-release.js";
 export * from "./acceptance.js";
