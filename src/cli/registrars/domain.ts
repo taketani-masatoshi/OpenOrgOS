@@ -186,6 +186,7 @@ import {
   runHrTalentHear,
   runHrTalentPack,
   runHrTalentPlatforms,
+  runHrTalentReach,
   runHrTalentShortlist,
   runHrWorksiteConfirm,
   loadTalentHearAnswers,
@@ -335,6 +336,25 @@ export function registerDomainCommands(program: Command): void {
         if (row.body) console.log(row.body);
         if (row.reason) console.log(row.reason);
       }
+    });
+
+  hr.command("talent-reach")
+    .description("届いてほしい層に近い媒体を提案する。求人票に年齢・性別は書かない")
+    .requiredOption("--wish <text>", "ユーザーの希望")
+    .option("--json", "Print JSON")
+    .action((opts: { wish: string; json?: boolean }) => {
+      const result = runHrTalentReach({ wish: opts.wish, json: Boolean(opts.json) });
+      if (opts.json) return;
+      if (result.status === "need_answers") {
+        for (const item of result.questions) {
+          console.log(`- ${item.prompt}`);
+          for (const option of item.options ?? []) console.log(`  - ${option.id}: ${option.label}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
+      for (const row of result.proposals) console.log(`- ${row.name}: ${row.why}`);
+      for (const line of result.withheld) console.log(`守ること: ${line}`);
     });
 
   hr.command("talent-discuss")

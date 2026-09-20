@@ -305,6 +305,26 @@ export const recruitingJobSchema = z
 
 export type RecruitingJob = z.output<typeof recruitingJobSchema>;
 
+/** 届いてほしい層。求人票の条件にはしない。 */
+export const reachAudienceSchema = z.enum(["women", "twenties"]);
+
+export type ReachAudience = z.output<typeof reachAudienceSchema>;
+
+export interface ReachProposal {
+  id: string;
+  name: string;
+  why: string;
+}
+
+export type ReachProposalResult =
+  | { status: "need_answers"; questions: PlatformListingQuestion[] }
+  | {
+      status: "ready";
+      audiences: ReachAudience[];
+      proposals: ReachProposal[];
+      withheld: string[];
+    };
+
 /** 3〜6ヶ月の業務委託を出す媒体。外部へは投稿しない。 */
 export const platformListingIdSchema = z.enum([
   "workship",

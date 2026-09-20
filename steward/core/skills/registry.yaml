@@ -838,6 +838,11 @@ skills:
     runtime: cli
     description: 3〜6ヶ月の業務委託を4媒体向けに整える（外部投稿しない）
     agent_id: recruiting
+  - id: recruiting_reach_proposal
+    file: extension/recruiting_reach_proposal.md
+    runtime: cli
+    description: 届き先の媒体提案（求人票に年齢・性別は書かない）
+    agent_id: recruiting
   - id: hr_talent_shortlist
     file: extension/hr_talent_shortlist.md
     runtime: cli

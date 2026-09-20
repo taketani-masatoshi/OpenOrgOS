@@ -51,6 +51,7 @@ JD · 候補者パイプライン · 面接調整下書き。
 | recruiting_engagement_discuss | `orgos hr talent-discuss`（契約形態の候補と理由。決定・承認しない · `runtime: cli`） |
 | recruiting_worksite_confirm | `orgos hr worksite-confirm`（拠点の調査確認とカタログ選択。自由記述を減らす · `runtime: cli`） |
 | recruiting_platform_listings | `orgos hr talent-platforms`（3〜6ヶ月の業務委託を4媒体向けに整える。外部投稿しない · `runtime: cli`） |
+| recruiting_reach_proposal | `orgos hr talent-reach`（届き先の媒体を提案する。求人票に年齢・性別は書かない · `runtime: cli`） |
 | recruiting_talent_pack | `orgos hr talent-pack`（社内職務概要。解雇手順は書かない · `runtime: cli`） |
 | recruiting_talent_flow | `orgos hr talent-flow`（ジョブ YAML から署名待ちまで。承認しない · `runtime: cli`） |
 
@@ -63,9 +64,18 @@ orgos agent pulse --agent recruiting
 orgos hr talent-discuss --answers <file> --json
 orgos hr worksite-confirm --worksite <file> --json
 orgos hr talent-platforms --facts <file> --json
+orgos hr talent-reach --wish "女子を取りたい" --json
 orgos hr talent-pack --posting <file> --engagement fixed_term --director <name> --json
 orgos hr talent-flow --job <file> --json
 ```
+
+## 行動原理
+
+正本: [agent_skill_architecture.md](../../rules/agent_skill_architecture.md) の「Agent の分け方」。採用 Agent を法律係・提案係・実態係に分けない。
+
+1. 求人票と選考条件に年齢・性別を書かない。来た人を年齢・性別では落とさない。
+2. その範囲で、届きやすい媒体を提案する。拒否だけで終わらない。
+3. 期間と契約形態に合う媒体だけを残す。1日の軽作業を、エンジニア向けの業務委託サイトには出さない。
 
 ## 操作方針（キーボード削減）
 
@@ -82,5 +92,6 @@ orgos hr talent-flow --job <file> --json
 ## コンテキスト
 
 - 能力正本: [agent-capability-manifest.yaml](agent-capability-manifest.yaml)
+- 人が動く募集の点検: [recruiting-listing-attractiveness.md](../../rules/recruiting-listing-attractiveness.md)
 - 統括: [steward_agent_roster.md](../orchestrators/steward_agent_roster.md)
 

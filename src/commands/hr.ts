@@ -15,6 +15,7 @@ import {
   formatTrainingRecordsMarkdown,
 } from "../lib/hr/competence-view.js";
 import { buildPlatformListings } from "../lib/hr/talent-hiring/platform-listings.js";
+import { proposeReach } from "../lib/hr/talent-hiring/reach-proposal.js";
 import { hearJobRequest } from "../lib/hr/talent-hiring/hear-job.js";
 import { recommendEngagement } from "../lib/hr/talent-hiring/recommend-engagement.js";
 import {
@@ -41,6 +42,7 @@ import type {
   JobPosting,
   PassiveSmokingChoiceId,
   PlatformListingResult,
+  ReachProposalResult,
   WorksiteConfirmResult,
 } from "../../schemas/talent-hiring.js";
 import {
@@ -165,6 +167,15 @@ export function runHrTalentPlatforms(options: {
   json?: boolean;
 }): PlatformListingResult {
   const result = buildPlatformListings(options.facts);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentReach(options: {
+  wish: unknown;
+  json?: boolean;
+}): ReachProposalResult {
+  const result = proposeReach(options.wish);
   if (options.json) console.log(JSON.stringify(result, null, 2));
   return result;
 }

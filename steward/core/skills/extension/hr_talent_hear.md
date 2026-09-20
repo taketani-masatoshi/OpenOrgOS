@@ -15,7 +15,8 @@ Human Resources Agent · Recruiting Agent
 ## 方針
 
 不足項目は自由記述を求めず、分かっている事実は選択肢・推奨付きで確認する。  
-就業場所の駅・入館などは `recruiting_worksite_confirm` に委譲する。
+就業場所の駅・入館などは `recruiting_worksite_confirm` に委譲する。  
+「女性を増やしたい」「20代がいい」は求人票に書かず、`recruiting_reach_proposal` で媒体を提案する。
 
 ## CLI
 

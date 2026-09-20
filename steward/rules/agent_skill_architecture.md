@@ -148,6 +148,18 @@ flowchart TB
 
 **Integration Agent（常設統合）:** モジュール横断の要約・ModuleMessage・WO ハブ。[integration-agent.md](../../docs/org-os/integration-agent.md) · 定義ドラフト `steward/core/agents/integration_agent.md`。Secretary Orchestrator は手順互換として残し、機械統合は Integration に一本化する（ADR 0040）。
 
+## Agent の分け方
+
+Agent は役割（担当フォルダ）で分ける。同じ問いに、法律係・攻めの提案係・実態係を並行させない。三つの見方は、一つの Agent の手順である。
+
+1. 法律・レギュレーションで書けないことは出さない。年齢・性別を選考条件にしない。
+2. その範囲で、ユーザーの希望に近づく提案をする。拒否だけで終わらない。
+3. 期間・契約形態・仕事内容に合う提案だけを残す。合わない媒体は落とす。
+
+別作業（拠点の確認と媒体提案など）は並行してよい。同じ問いへの人格の並行はしない。出す答えは、1 から 3 を通した一つである。
+
+下の並行 AIA は作業の同時実行であり、この分け方とは別である。
+
 ## 並行 AIA（10 / 20 / 30）
 
 - 制御: `tenants/{id}/data/org/aia-runtime.yaml` · [aia-parallel-runtime.md](../../docs/org-os/aia-parallel-runtime.md)

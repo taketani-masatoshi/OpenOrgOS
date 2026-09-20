@@ -2642,6 +2642,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  talent-reach.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   talent-hiring-pipeline.test.ts:
     axis: platform
     kind: unit

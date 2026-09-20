@@ -1,0 +1,17 @@
+horizon: medium
+role_family: engineer
+specialty: cloud
+duration_months: 1
+days_per_week: 5
+constraint_hours_per_day: 8
+break_hours_per_day: 1
+work_style: onsite
+worksite_id: WS-bancho-heim-312
+company_directs_daily: false
+engagement: contractor
+contract_form: quasi_mandate
+monthly_jpy: 300000
+currency: JPY
+channels:
+  - fukugyo_cloud
+  - crowdsourcing
