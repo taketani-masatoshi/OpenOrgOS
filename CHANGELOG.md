@@ -8,7 +8,9 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
-- **連携ハブの置き場説明** — コンソール `/?integrations=1` に「このマシン（最新）· Git（履歴）· Drive（AIA 成果物の配達口）」を明示。Drive は社員ファイルを消さない写しで、正本はテナント YAML / MD。セットアップ画面からも同じ説明でハブへ送る。
+- **テナントの復元用コピー** — `orgos tenant backup snapshot|restore|status`。最新は Mac のまま、NAS は暗号化ボリュームへの退避（ツールは鍵を作らない）。作業中の `scratch/aia-runs` は含めず、スタンプは成功後だけ。未設定のテナントは週次を失敗にしない。`orgos tenant git-remote check` はテナント履歴のリモートを `file://` または社内 ssh に限り、github.com / gitlab.com / bitbucket.org を拒否する（製品リポジトリの origin は見ない）。[tenant-backup.md](docs/org-os/tenant-backup.md)
+- **Drive の配達名** — アップロードするファイル名を `AIA-` で始め、説明に「写し。正本ではない」を付ける。削除も、Drive から正本へ戻す取り込みもしない。
+- **連携ハブの置き場説明** — コンソール `/?integrations=1` に「このマシン（最新）· NAS（復元）· Git（NAS 上の履歴。GitHub には実テナントを出さない）· Drive（AIA 成果物の配達口）」を明示。Drive は社員ファイルを消さない写しで、正本はテナント YAML / MD。セットアップ画面からも同じ説明でハブへ送る。
 
 ### Fixed
 

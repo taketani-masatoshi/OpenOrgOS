@@ -13,13 +13,18 @@ test.describe("steward chat integrations", () => {
     for (const label of ["Slack", "Asana", "Gmail", "Google Drive"]) {
       await expect(page.getByRole("heading", { name: label })).toBeVisible();
     }
-    await expect(page.getByRole("region", { name: "正本の置き場" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "記録の置き場" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "このマシン" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "NAS" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Git" })).toBeVisible();
+    await expect(
+      page.getByText("リモートは NAS。GitHub には実テナントを出しません"),
+    ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Drive（配達）" })).toBeVisible();
     await expect(
       page.getByText("社員が置いたファイルは削除・上書きしません", { exact: false }),
     ).toBeVisible();
+    await expect(page.getByText("ファイル名は AIA- で始まり", { exact: false })).toBeVisible();
   });
 
   test("company setup links across to the hub", async ({ page }) => {

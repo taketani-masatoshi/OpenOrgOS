@@ -154,6 +154,13 @@ export function IntegrationsHubPage() {
       canonical: true,
     },
     {
+      id: "nas",
+      role: copy.storeNasRole,
+      title: copy.storeNasTitle,
+      body: copy.storeNasBody,
+      canonical: false,
+    },
+    {
       id: "git",
       role: copy.storeGitRole,
       title: copy.storeGitTitle,

@@ -1,0 +1,9 @@
+# テナントの復元用コピー先。正本ではありません。
+# このファイルを backup-target.yaml にコピーしてから編集する。
+# destination はテナントディレクトリの外の絶対パス。
+# volume_encrypted: true は「退避先のボリュームが既に暗号化されている」という宣言。
+# このツールはアーカイブ自体を暗号化しない。
+version: 1
+destination: /Volumes/OrgNAS/orgos-restore/REPLACE_TENANT
+volume_encrypted: true
+# git_remote: file:///Volumes/OrgNAS/git/REPLACE_TENANT.git

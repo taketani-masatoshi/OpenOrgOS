@@ -13,26 +13,31 @@ export const STEWARD_COPY = defineCopy(
     onboarding: "セットアップ",
     integrationsTitle: "連携設定",
     integrationsLead:
-      "最新は会社のテナント（このマシン）です。Git は台帳の履歴。Google Drive は AIA 成果物の配達口で、正本ではありません。",
-    storePlanesLabel: "正本の置き場",
+      "最新はこのマシンです。NAS は復元用のコピー。Git の履歴は NAS 上に置き、GitHub には実テナントを出しません。Google Drive は AIA 成果物の配達口で、正本ではありません。",
+    storePlanesLabel: "記録の置き場",
     storeMacRole: "最新の正本",
     storeMacTitle: "このマシン",
     storeMacBody:
       "テナントの YAML / MD が作業の実体です。AIA の下書きもまずここに落ちます。",
+    storeNasRole: "復元",
+    storeNasTitle: "NAS",
+    storeNasBody:
+      "Mac が使えなくなったときの暗号化コピーです。秘密も含みますが、ここを正本にはしません。",
     storeGitRole: "履歴",
     storeGitTitle: "Git",
-    storeGitBody: "会社の記録（L0–L1）の版管理。秘密と実行中の下書きは載せません。",
+    storeGitBody:
+      "会社の記録（L0–L1）の版管理です。リモートは NAS。GitHub には実テナントを出しません。",
     storeDriveRole: "配達口",
     storeDriveTitle: "Drive（配達）",
     storeDriveBody:
       "社員が常用している間、AI が作った資料の写しを上げます。社員のファイルは消しません。",
     storeFlow:
-      "流れは常に同じです。このマシンに書く → 台帳になったものだけ Git に残す → Drive へは AI 作と明示した写しだけ。",
+      "このマシンに書く → NAS へ退避する → 台帳になったものだけ NAS 上の Git に残す → Drive へは AI 作と明示した写しだけ。",
     driveFolderLabel: "保存先フォルダ ID（AIA 用の配達フォルダ）",
     driveFolderSaved: "配達フォルダを保存しました。",
     driveExportTitle: "AIA 成果物としてアップロード",
     driveExportLead:
-      "出せるのは人が読む文書だけです（docs/company · docs/compliance · docs/reports の一部）。Drive 側の編集は正本に戻りません。",
+      "出せるのは人が読む文書だけです（docs/company · docs/compliance · docs/reports の一部）。ファイル名は AIA- で始まり、説明は「写し・正本ではない」です。Drive 側の編集は正本に戻りません。",
     driveNoTouch:
       "社員が置いたファイルは削除・上書きしません。ここは AIA 用の配達フォルダです。",
     driveDocPathLabel: "文書パス（例 company/regulations/ringi-kessai-kisoku.md）",
@@ -713,26 +718,31 @@ export const STEWARD_COPY = defineCopy(
     onboarding: "Setup",
     integrationsTitle: "Integrations",
     integrationsLead:
-      "The tenant on this machine is the latest copy. Git keeps ledger history. Google Drive is a delivery tray for AIA artifacts, not the source of truth.",
+      "This machine holds the latest tenant. NAS is the restore copy. Git history lives on the NAS, and real tenant data is not pushed to GitHub. Google Drive is a delivery tray for AIA artifacts, not the source of truth.",
     storePlanesLabel: "Where records live",
     storeMacRole: "Latest canonical",
     storeMacTitle: "This machine",
     storeMacBody:
       "Tenant YAML / MD is the working copy. AIA drafts land here first.",
+    storeNasRole: "Restore",
+    storeNasTitle: "NAS",
+    storeNasBody:
+      "An encrypted copy for when this Mac is unavailable. It may include secrets, and it is not the working canonical.",
     storeGitRole: "History",
     storeGitTitle: "Git",
-    storeGitBody: "Versioned L0–L1 company records. Secrets and in-flight drafts stay off Git.",
+    storeGitBody:
+      "Versioned L0–L1 company records. The remote is the NAS. Real tenant data is not pushed to GitHub.",
     storeDriveRole: "Delivery",
     storeDriveTitle: "Drive (delivery)",
     storeDriveBody:
       "While people still live in Drive, we upload labeled AIA copies. Human files are never deleted.",
     storeFlow:
-      "The flow never changes: write on this machine → keep ledger history in Git → upload only labeled AIA copies to Drive.",
+      "Write on this machine → copy to the NAS → keep ledger history in Git on the NAS → upload only labeled AIA copies to Drive.",
     driveFolderLabel: "Destination folder ID (AIA delivery folder)",
     driveFolderSaved: "Saved the delivery folder.",
     driveExportTitle: "Upload as an AIA artifact",
     driveExportLead:
-      "Only human-readable documents (parts of docs/company · docs/compliance · docs/reports). Edits in Drive do not change the canonical record.",
+      "Only human-readable documents (parts of docs/company · docs/compliance · docs/reports). The file name starts with AIA- and the description says it is a copy, not the canonical record. Edits in Drive do not come back.",
     driveNoTouch:
       "Files people put in Drive are never deleted or overwritten. This folder is the AIA delivery tray.",
     driveDocPathLabel: "Document path (e.g. company/regulations/ringi-kessai-kisoku.md)",

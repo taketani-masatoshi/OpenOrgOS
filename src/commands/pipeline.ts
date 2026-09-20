@@ -3,11 +3,12 @@ import { join } from "node:path";
 import { runDashboard } from "./dashboard.js";
 import { runOpsDaily } from "./ops.js";
 import { runExecutiveBrief } from "./executive.js";
-import { getTenantId } from "../lib/tenant.js";
+import { getTenantDir, getTenantId } from "../lib/tenant.js";
 import { ROOT_DIR } from "../lib/tenant.js";
 import { listWorkOrders, runEscalation } from "../lib/escalate.js";
 import { listAuditEvents } from "../lib/audit-log.js";
 import { checkExecutiveBackupForWeekly } from "../lib/executive-backup.js";
+import { checkTenantBackupForWeekly } from "../lib/tenant-backup.js";
 import { runJpBankCorporatePipelineCashflow } from "../lib/jp-bank-corporate/pipeline.js";
 import { ORGOS_TENANT_ENV, LEGACY_TENANT_ENV } from "../lib/orgos-cli.js";
 import { runEventsChainAttest } from "./company-events.js";
@@ -65,7 +66,7 @@ export function runPipelineList(): void {
   console.log("| name | steps |");
   console.log("|------|-------|");
   console.log("| daily | validate → ops daily → dashboard → jp bank cashflow (if enabled) |");
-  console.log("| weekly | daily + routing-queue pending + audit log + ISO internal audit + events chain attest + executive backup |");
+  console.log("| weekly | daily + routing-queue pending + audit log + ISO internal audit + events chain attest + executive backup + tenant backup (when configured) |");
   console.log("| monthly | daily + company events monthly audit (records_audit) |");
   console.log("\n例: npm run orgos -- pipeline run daily");
   console.log("     npm run orgos -- pipeline run weekly");
@@ -171,6 +172,19 @@ export function runPipelineWeekly(options: PipelineRunOptions = {}): void {
       pipeline: "weekly",
       step: "executive backup",
       message: backup.message,
+      tenant: options.tenant,
+    });
+  }
+
+  console.log("\n=== Tenant NAS backup (weekly) ===");
+  const tenantBackup = checkTenantBackupForWeekly(getTenantDir());
+  console.log(tenantBackup.ok ? `✓ ${tenantBackup.message}` : `⚠ ${tenantBackup.message}`);
+  if (!tenantBackup.ok) {
+    recordPipelineFailure(failures, "tenant backup", tenantBackup.message);
+    escalatePipelineFailure({
+      pipeline: "weekly",
+      step: "tenant backup",
+      message: tenantBackup.message,
       tenant: options.tenant,
     });
   }
