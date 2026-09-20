@@ -14,25 +14,21 @@ CAB は gitignore。`tenants/mal` は触らない。PIN / 秘密鍵を YAML・�
 
 | ID | 手順 | 合格の証拠 | evidence パス（例） | 状態 |
 |----|------|------------|---------------------|------|
-| T-O1 | Windows に NTA 署名・送受信モジュール導入。`etax-host` が `SignToReport` / `Send` / `GetResponse` を呼ぶ | ホストログ（秘密なし）。catalog 実行時 `hostBound` がヘルス成功時のみ true | `data/etax/transmission-test/host-bind-log.txt`（gitignore） | 未実施 |
-| T-O2 | `--env test` で RHO0010: build→validate→approve→sign→ready→submit→receipt | 実 受付番号（`MOCK-NOT-NTA-` でない）。ハッシュ付き記録 | `data/etax/transmission-test/test-submit-*.json` | 未実施 |
-| T-O3 | NTA ソフトウェアベンダー送信試験の申請・実施 | NTA 試験完了の参照 ID + 日付（L1）。gate の `evidence_path` が実在ファイルを指す | `data/etax/transmission-test/nta-completion.txt` → `production-gate.yaml` の `evidence_path` | 未実施 |
-| T-O4 | 本番 credential 分離 | test と production の `certificate_ref` が別。PIN が YAML/ログに無い監査サンプル | `data/etax/credentials/*.example` のみ tip。実鍵は gitignore | 未実施 |
-| T-O5 | 人間レビュー（ceo/approver） | ADR 0038 subject `etax.production_enable` の承認 | org approval id → `orgos etax production release --approval-id` | 未実施 |
-| T-O6 | バナー確認 | `orgos etax production review` が `certified=true`。submit `--env production` がゲート通過 | review JSON + 運用判断での実送信 | 未実施 |
+| T-O1 | Windows に NTA 署名・送受信モジュール導入。`etax-host` が `SignToReport` / `Send` / `GetResponse` を呼ぶ | ホストログ（秘密なし）。`orgos etax host bind --i-understand-windows` 後 tip `hostBound: true` | `data/etax/transmission-test/host-bind-log.txt`（gitignore） | 未実施 |
+| T-O2 | `--env test` で RHO0010: build→validate→approve→sign→ready→submit→receipt | 実 受付番号。`orgos etax transmission-test record --from` | `data/etax/transmission-test/rho0010-test-submit-*.json` | 未実施 |
+| T-O3 | NTA ソフトウェアベンダー送信試験の申請・実施 | NTA 試験完了の参照 ID + 日付（L1）。gate の `evidence_path` が実在ファイルを指す | `nta-completion.json` → 人間が `production-gate.yaml` を編集 | 未実施 |
+| T-O4 | 本番 credential 分離 | test と production の `certificate_ref` が別。PIN が YAML/ログに無い | gitignore credentials | 未実施 |
+| T-O5 | 人間レビュー（ceo/approver） | subject `etax.production_enable` → `orgos etax production release --approval-id` | org approval | 未実施 |
+| T-O6 | バナー確認 | `orgos etax acceptance report` が全 D PASS。`product-copy sync` 後 CERTIFIED | review JSON | 未実施 |
 
----
-
-## 機械的ゲート
+## 機械ゲート
 
 ```bash
-orgos etax production review --json
-# certified === true かつ blockers 空
-# T-O2–T-O5 の evidence ファイルが揃っていること
+orgos etax acceptance report --json
+ETAX_D18_ACCEPTANCE=1 npx vitest run tests/etax-d1-d8-acceptance.test.ts
 ```
 
-`orgos etax production enable` は yaml を書かない（拒否）。  
-**解放は** `orgos etax production release --approval-id <APR-*>` のみ（承認バインド済み・要件充足時）。
+順序: T-O1 → T-O2/T-O3 → gate 要件 true（人間）→ `procedure promote-rho0010` → release → `product-copy sync` → CHANGELOG 対応完了。
 
 ---
 

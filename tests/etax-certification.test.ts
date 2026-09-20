@@ -395,6 +395,39 @@ describe("T-A10 readiness / banner", () => {
     expect(row?.support).toBe("EXPERIMENTAL");
     expect(row?.productionEligible).toBe(false);
   });
+
+  it("when tip certified, D6/D7 must not contradict (regression)", async () => {
+    const review = evaluateProductionEnablement();
+    if (!review.certified) return;
+    const { evaluateD6, evaluateD7 } = await import("../src/lib/etax/acceptance.js");
+    expect(evaluateD6().ok).toBe(true);
+    expect(evaluateD7().ok).toBe(true);
+  });
+});
+
+describe("transmission evidence schema (A-layer structure)", () => {
+  it("accepts structural T-O2 fixture and rejects MOCK prefix", async () => {
+    const { etaxTransmissionEvidenceSchema } = await import(
+      "../schemas/etax/transmission-evidence.js"
+    );
+    const ok = etaxTransmissionEvidenceSchema.parse({
+      schema_version: 1,
+      procedureCode: "RHO0010",
+      env: "test",
+      receiptNumber: "202609210001",
+      requestId: "host:example-request",
+      xmlHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      submittedAt: "2026-09-21T00:00:00.000Z",
+      hostMethodsCalled: ["SignToReport", "Send", "GetResponse"],
+    });
+    expect(ok.receiptNumber).toBe("202609210001");
+    expect(() =>
+      etaxTransmissionEvidenceSchema.parse({
+        ...ok,
+        receiptNumber: "MOCK-NOT-NTA-deadbeef",
+      }),
+    ).toThrow();
+  });
 });
 
 describe("stub host path", () => {
@@ -412,5 +445,30 @@ describe("stub host path", () => {
     });
     expect(sent.requestId).not.toBe("XU00S010");
     expect(sent.requestId.startsWith("host:")).toBe(true);
+  });
+});
+
+describe("operator promotion refuses without D4", () => {
+  it("promoteRho0010Supported is blocked on tip without NTA evidence", async () => {
+    const { promoteRho0010Supported } = await import("../src/lib/etax/transmission-evidence-io.js");
+    try {
+      promoteRho0010Supported({ actor: "test" });
+      throw new Error("expected refuse");
+    } catch (error) {
+      expect((error as EtaxException).etax.code).toBe("ETAX_PROMOTE_REQUIRES_D4");
+    }
+  });
+});
+
+describe("host bind refuses off Windows", () => {
+  it("bindOfficialHostCatalogs fails on non-win32", async () => {
+    if (process.platform === "win32") return;
+    const { bindOfficialHostCatalogs } = await import("../src/lib/etax/host-bind.js");
+    try {
+      await bindOfficialHostCatalogs({ actor: "test", iUnderstandWindows: true });
+      throw new Error("expected refuse");
+    } catch (error) {
+      expect((error as EtaxException).etax.code).toBe("ETAX_HOST_BIND_NOT_WINDOWS");
+    }
   });
 });

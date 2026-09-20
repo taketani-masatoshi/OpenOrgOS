@@ -1132,6 +1132,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  etax-d1-d8-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   etax-phase1.test.ts:
     axis: platform
     kind: unit

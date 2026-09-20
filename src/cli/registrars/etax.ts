@@ -1,12 +1,16 @@
 import type { Command } from "commander";
 import {
+  runEtaxAcceptanceReport,
   runEtaxApprove,
   runEtaxApprovePropose,
   runEtaxBuild,
+  runEtaxHostBind,
   runEtaxHostStatus,
   runEtaxProductionEnable,
   runEtaxProductionRelease,
   runEtaxProductionReview,
+  runEtaxProductCopySync,
+  runEtaxPromoteRho0010,
   runEtaxReady,
   runEtaxReceipt,
   runEtaxSign,
@@ -15,6 +19,7 @@ import {
   runEtaxSpecUnpack,
   runEtaxStatus,
   runEtaxSubmit,
+  runEtaxTransmissionEvidenceRecord,
   runEtaxTransmissionTestStatus,
   runEtaxValidate,
 } from "../../commands/etax.js";
@@ -215,15 +220,62 @@ export function registerEtaxCommandTree(parent: Command): void {
     .action(async (opts: { json?: boolean }) => {
       await runEtaxHostStatus({ json: Boolean(opts.json) });
     });
+  host
+    .command("bind")
+    .description("Windows only: set tip catalog hostBound=true after healthy etax-host")
+    .option("--i-understand-windows", "Confirm NTA COM modules are installed on Windows")
+    .option("--json", "JSON output")
+    .action(async (opts: { iUnderstandWindows?: boolean; json?: boolean }) => {
+      await runEtaxHostBind({
+        iUnderstandWindows: Boolean(opts.iUnderstandWindows),
+        json: Boolean(opts.json),
+      });
+    });
 
-  etax
+  const acceptance = etax
+    .command("acceptance")
+    .description("D1–D8 tip acceptance report (real-operator track)");
+  acceptance
+    .command("report")
+    .description("Evaluate D1–D8 against tip (does not invent evidence)")
+    .option("--json", "JSON output")
+    .action(async (opts: { json?: boolean }) => {
+      await runEtaxAcceptanceReport({ json: Boolean(opts.json) });
+    });
+
+  const transmission = etax
     .command("transmission-test")
-    .description("NTA KSK2 transmission test status (Phase 7). Not executed.")
+    .description("NTA KSK2 transmission test status / evidence record");
+  transmission
     .command("status")
     .option("--json", "JSON output")
     .action((opts: { json?: boolean }) =>
-      runEtaxTransmissionTestStatus({ json: Boolean(opts.json) })
+      runEtaxTransmissionTestStatus({ json: Boolean(opts.json) }),
     );
+  transmission
+    .command("record")
+    .description("Write gitignored T-O2 or NTA completion JSON (does not flip gate yaml)")
+    .requiredOption("--from <path>", "Evidence JSON path")
+    .option("--json", "JSON output")
+    .action((opts: { from: string; json?: boolean }) =>
+      runEtaxTransmissionEvidenceRecord({ from: opts.from, json: Boolean(opts.json) }),
+    );
+
+  etax
+    .command("procedure")
+    .description("Procedure matrix maintenance")
+    .command("promote-rho0010")
+    .description("Promote RHO0010 to SUPPORTED after D4 evidence (refuses otherwise)")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => runEtaxPromoteRho0010({ json: Boolean(opts.json) }));
+
+  etax
+    .command("product-copy")
+    .description("ToS / commercial sync for certified RHO0010")
+    .command("sync")
+    .description("Update ToS + commercial + readiness after D5+D6 (refuses otherwise)")
+    .option("--json", "JSON output")
+    .action((opts: { json?: boolean }) => runEtaxProductCopySync({ json: Boolean(opts.json) }));
 
   etax
     .command("status")

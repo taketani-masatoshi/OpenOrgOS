@@ -17,7 +17,10 @@ cli_commands:
   - status
   - production
   - host
+  - acceptance
   - transmission-test
+  - procedure
+  - product-copy
 security:
   limits:
     concurrent_jobs: 1

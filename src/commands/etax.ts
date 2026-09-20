@@ -29,8 +29,19 @@ import {
   ETAX_APPROVAL_SUBJECT,
   parseContentHashMessage,
   probeEtaxHostBound,
+  evaluateAllDx,
+  bindOfficialHostCatalogs,
+  readCatalogHostBoundTip,
+  writeTransmissionSubmitEvidence,
+  writeNtaCompletionEvidence,
+  promoteRho0010Supported,
+  syncProductCopyForRho0010,
 } from "../lib/etax/index.js";
 import { getWorkspaceRoot } from "../lib/orgos-paths.js";
+import { getModuleTier } from "../lib/module-readiness.js";
+import { readFileSync as readFs, writeFileSync as writeFs } from "node:fs";
+import { join as pathJoin } from "node:path";
+import { getInstallRoot } from "../lib/orgos-paths.js";
 import type { EtaxSignatureProviderId } from "../../schemas/etax/signature.js";
 import type { EtaxEnvironment } from "../../schemas/etax/submission-state.js";
 import { requireCliDataWrite, requireCliHumanApproval } from "../lib/console-auth/cli-operator.js";
@@ -623,6 +634,7 @@ export function runEtaxProductionRelease(opts: { approvalId?: string; json?: boo
 
 export async function runEtaxHostStatus(opts: { json?: boolean }): Promise<void> {
   try {
+    const tip = readCatalogHostBoundTip();
     const probe = await probeEtaxHostBound();
     const payload = {
       ok: true,
@@ -630,13 +642,16 @@ export async function runEtaxHostStatus(opts: { json?: boolean }): Promise<void>
       reachable: probe.reachable,
       health: probe.health,
       error: probe.error,
-      tipCatalogHostBound: false,
-      note: "Repo tip keeps hostBound false until operator sets catalogs after Windows health.",
+      tipCatalogHostBound: tip,
+      note: tip.signature && tip.transport
+        ? "Tip catalogs hostBound=true"
+        : "Repo tip keeps hostBound false until orgos etax host bind on Windows",
     };
     if (opts.json) printJson(payload);
     else {
       console.log(banner());
       console.log(`host reachable=${probe.reachable}`);
+      console.log(`tip hostBound signature=${tip.signature} transport=${tip.transport}`);
       if (probe.health) {
         console.log(
           `signatureBound=${probe.health.signatureBound} transportBound=${probe.health.transportBound}`,
@@ -644,6 +659,119 @@ export async function runEtaxHostStatus(opts: { json?: boolean }): Promise<void>
         console.log(probe.health.detail ?? "");
       }
       if (probe.error) console.log(probe.error);
+    }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export async function runEtaxHostBind(opts: {
+  iUnderstandWindows?: boolean;
+  json?: boolean;
+}): Promise<void> {
+  try {
+    requireCliHumanApproval("etax host bind");
+    const result = await bindOfficialHostCatalogs({
+      actor: resolveCliOperatorId(),
+      iUnderstandWindows: Boolean(opts.iUnderstandWindows),
+    });
+    const payload = { ok: true, banner: banner(), ...result };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(`bound signature=${result.signaturePath}`);
+      console.log(`bound transport=${result.transportPath}`);
+      console.log(result.healthDetail);
+    }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export async function runEtaxAcceptanceReport(opts: { json?: boolean }): Promise<void> {
+  try {
+    const report = await evaluateAllDx();
+    const payload = {
+      ok: report.ok,
+      banner: banner(),
+      certified: report.certified,
+      results: report.results,
+      readiness: getModuleTier("jp_etax"),
+    };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(`acceptance ok=${report.ok} certified=${report.certified}`);
+      for (const row of report.results) {
+        console.log(`${row.id} ${row.ok ? "PASS" : "FAIL"} — ${row.detail}`);
+        if (!row.ok) console.log(`  blockers: ${row.blockers.join("; ")}`);
+      }
+    }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export function runEtaxTransmissionEvidenceRecord(opts: {
+  from?: string;
+  json?: boolean;
+}): void {
+  try {
+    requireCliDataWrite({ command: "etax transmission-test record", permission: "escalate:plan" });
+    if (!opts.from || !existsSync(opts.from)) {
+      throw new EtaxException({
+        code: "ETAX_TRANSMISSION_EVIDENCE_MISSING",
+        blocked: "SPEC_BLOCKED",
+        message: "etax transmission-test record requires --from <evidence.json>",
+      });
+    }
+    const raw = JSON.parse(readFileSync(opts.from, "utf-8")) as Record<string, unknown>;
+    if (raw.kind === "nta_transmission_test_completion") {
+      const written = writeNtaCompletionEvidence(raw as never);
+      const payload = { ok: true, banner: banner(), ...written, note: "Gate yaml still human-edited" };
+      if (opts.json) printJson(payload);
+      else console.log(`wrote ${written.path}`);
+      return;
+    }
+    const written = writeTransmissionSubmitEvidence(raw as never);
+    const payload = { ok: true, banner: banner(), ...written };
+    if (opts.json) printJson(payload);
+    else console.log(`wrote ${written.path}`);
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export function runEtaxPromoteRho0010(opts: { json?: boolean }): void {
+  try {
+    requireCliHumanApproval("etax procedure promote");
+    const result = promoteRho0010Supported({ actor: resolveCliOperatorId() });
+    const payload = { ok: true, banner: banner(), ...result };
+    if (opts.json) printJson(payload);
+    else console.log(`promoted RHO0010 SUPPORTED at ${result.path}`);
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export function runEtaxProductCopySync(opts: { json?: boolean }): void {
+  try {
+    requireCliHumanApproval("etax product-copy sync");
+    const result = syncProductCopyForRho0010({ actor: resolveCliOperatorId() });
+    // readiness bump only when D5+D6 already ok (enforced inside sync)
+    const readinessPath = pathJoin(getInstallRoot(), "steward/modules/readiness.yaml");
+    let readiness = readFs(readinessPath, "utf-8");
+    readiness = readiness.replace(
+      /jp_etax:\n\s+tier: experimental/,
+      "jp_etax:\n    tier: activation_ready",
+    );
+    writeFs(readinessPath, readiness, "utf-8");
+    const payload = { ok: true, banner: banner(), readiness: "activation_ready", ...result };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(`updated ${result.tosPath}`);
+      console.log(`updated ${result.commercialPath}`);
+      console.log("jp_etax readiness → activation_ready");
     }
   } catch (error) {
     fail(error);

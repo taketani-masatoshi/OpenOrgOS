@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, master, "cursor/**"]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -265,3 +266,19 @@ jobs:
       - run: npm test -- tests/etax-certification.test.ts
         env:
           ORGOS_ETAX_HOST_MODE: stub
+
+  etax-d18-acceptance:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: B-layer D1–D8 tip acceptance
+        run: npm test -- tests/etax-d1-d8-acceptance.test.ts
+        env:
+          ETAX_D18_ACCEPTANCE: "1"
