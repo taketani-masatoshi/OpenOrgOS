@@ -2638,6 +2638,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  talent-platform-listings.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   talent-hiring-pipeline.test.ts:
     axis: platform
     kind: unit

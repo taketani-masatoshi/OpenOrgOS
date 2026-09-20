@@ -304,3 +304,80 @@ export const recruitingJobSchema = z
   .strict();
 
 export type RecruitingJob = z.output<typeof recruitingJobSchema>;
+
+/** 3〜6ヶ月の業務委託を出す媒体。外部へは投稿しない。 */
+export const platformListingIdSchema = z.enum([
+  "workship",
+  "fukugyo_cloud",
+  "crowdsourcing",
+  "it_agent",
+]);
+
+export const platformRoleFamilySchema = z.enum([
+  "engineer",
+  "designer",
+  "marketer",
+  "editor",
+  "other",
+]);
+
+export const monthlyHoursBandSchema = z.enum(["40", "96", "160"]);
+
+export const platformContractFormSchema = z.enum(["quasi_mandate", "contract_for_work"]);
+
+export const platformWorkStyleSchema = z.enum(["remote", "hybrid", "onsite"]);
+
+export const platformListingInputSchema = z
+  .object({
+    title: z.string().min(1).optional(),
+    scope: z.string().min(1).optional(),
+    deliverables: z.string().min(1).optional(),
+    starts_on: dateString.optional(),
+    max_months: z.union([z.literal(3), z.literal(6)]).optional(),
+    contract_form: platformContractFormSchema.optional(),
+    company_directs_daily: z.boolean().optional(),
+    monthly_jpy: z.number().positive().optional(),
+    days_per_week: z.number().int().min(1).max(5).optional(),
+    hours_per_day: z.number().positive().max(8).optional(),
+    monthly_hours_band: monthlyHoursBandSchema.optional(),
+    work_style: platformWorkStyleSchema.optional(),
+    worksite_id: z.string().min(1).optional(),
+    skills: z.array(z.string().min(1)).min(1).optional(),
+    role_family: platformRoleFamilySchema.optional(),
+  })
+  .strict();
+
+export type PlatformListingId = z.output<typeof platformListingIdSchema>;
+export type PlatformRoleFamily = z.output<typeof platformRoleFamilySchema>;
+export type MonthlyHoursBand = z.output<typeof monthlyHoursBandSchema>;
+export type PlatformContractForm = z.output<typeof platformContractFormSchema>;
+export type PlatformWorkStyle = z.output<typeof platformWorkStyleSchema>;
+export type PlatformListingInput = z.output<typeof platformListingInputSchema>;
+
+export interface PlatformListingQuestion {
+  field: string;
+  prompt: string;
+  options?: CatalogChoice<string>[];
+  recommended?: string;
+}
+
+export interface PlatformListingDraft {
+  platform: PlatformListingId;
+  targets: string[];
+  status: "ready" | "not_applicable";
+  body?: string;
+  reason?: string;
+}
+
+export type PlatformListingResult =
+  | { status: "rejected"; reason: string }
+  | { status: "use_employment"; engagement: "fixed_term"; reason: string }
+  | { status: "need_answers"; questions: PlatformListingQuestion[] }
+  | {
+      status: "ready";
+      engagement: "contractor";
+      coverage: "all" | "partial";
+      assumed: Array<{ field: string; value: string }>;
+      fallback_note: string;
+      listings: PlatformListingDraft[];
+    };

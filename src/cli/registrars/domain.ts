@@ -185,6 +185,7 @@ import {
   runHrTalentFlow,
   runHrTalentHear,
   runHrTalentPack,
+  runHrTalentPlatforms,
   runHrTalentShortlist,
   runHrWorksiteConfirm,
   loadTalentHearAnswers,
@@ -301,6 +302,39 @@ export function registerDomainCommands(program: Command): void {
       console.log(`passive_smoking: ${result.worksite.passive_smoking_choice}`);
       console.log(`job_category: ${result.worksite.job_category_choice}`);
       if (opts.write) console.log(opts.write);
+    });
+
+  hr.command("talent-platforms")
+    .description("3〜6ヶ月の業務委託を4媒体向けに整える。外部投稿と承認はしない")
+    .requiredOption("--facts <file>", "掲載事実 YAML")
+    .option("--json", "Print JSON")
+    .action((opts: { facts: string; json?: boolean }) => {
+      const result = runHrTalentPlatforms({
+        facts: loadTalentHearAnswers(opts.facts),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected" || result.status === "use_employment") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_answers") {
+        for (const item of result.questions) {
+          const recommended = item.recommended ? ` 推奨: ${item.recommended}` : "";
+          console.log(`- ${item.prompt}${recommended}`);
+          for (const option of item.options ?? []) console.log(`  - ${option.id}: ${option.label}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`coverage: ${result.coverage}`);
+      console.log(result.fallback_note);
+      for (const row of result.listings) {
+        console.log(`## ${row.platform} (${row.status})`);
+        if (row.body) console.log(row.body);
+        if (row.reason) console.log(row.reason);
+      }
     });
 
   hr.command("talent-discuss")

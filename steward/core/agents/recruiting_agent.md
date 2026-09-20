@@ -50,6 +50,7 @@ JD · 候補者パイプライン · 面接調整下書き。
 | agent_pulse | `orgos agent pulse --agent recruiting` |
 | recruiting_engagement_discuss | `orgos hr talent-discuss`（契約形態の候補と理由。決定・承認しない · `runtime: cli`） |
 | recruiting_worksite_confirm | `orgos hr worksite-confirm`（拠点の調査確認とカタログ選択。自由記述を減らす · `runtime: cli`） |
+| recruiting_platform_listings | `orgos hr talent-platforms`（3〜6ヶ月の業務委託を4媒体向けに整える。外部投稿しない · `runtime: cli`） |
 | recruiting_talent_pack | `orgos hr talent-pack`（社内職務概要。解雇手順は書かない · `runtime: cli`） |
 | recruiting_talent_flow | `orgos hr talent-flow`（ジョブ YAML から署名待ちまで。承認しない · `runtime: cli`） |
 
@@ -61,6 +62,7 @@ orgos agent readiness --agent recruiting
 orgos agent pulse --agent recruiting
 orgos hr talent-discuss --answers <file> --json
 orgos hr worksite-confirm --worksite <file> --json
+orgos hr talent-platforms --facts <file> --json
 orgos hr talent-pack --posting <file> --engagement fixed_term --director <name> --json
 orgos hr talent-flow --job <file> --json
 ```

@@ -833,6 +833,11 @@ skills:
     runtime: cli
     description: 就業拠点の確認（調査→選択→保存。自由記述を減らす）
     agent_id: recruiting
+  - id: recruiting_platform_listings
+    file: extension/recruiting_platform_listings.md
+    runtime: cli
+    description: 3〜6ヶ月の業務委託を4媒体向けに整える（外部投稿しない）
+    agent_id: recruiting
   - id: hr_talent_shortlist
     file: extension/hr_talent_shortlist.md
     runtime: cli

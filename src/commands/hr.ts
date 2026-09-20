@@ -14,6 +14,7 @@ import {
   formatTrainingPlanMarkdown,
   formatTrainingRecordsMarkdown,
 } from "../lib/hr/competence-view.js";
+import { buildPlatformListings } from "../lib/hr/talent-hiring/platform-listings.js";
 import { hearJobRequest } from "../lib/hr/talent-hiring/hear-job.js";
 import { recommendEngagement } from "../lib/hr/talent-hiring/recommend-engagement.js";
 import {
@@ -39,6 +40,7 @@ import type {
   JobHearingResult,
   JobPosting,
   PassiveSmokingChoiceId,
+  PlatformListingResult,
   WorksiteConfirmResult,
 } from "../../schemas/talent-hiring.js";
 import {
@@ -154,6 +156,15 @@ export function runHrWorksiteConfirm(options: {
   if (result.status === "ready" && options.writePath) {
     writeHiringWorksite(options.writePath, result.worksite);
   }
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentPlatforms(options: {
+  facts: unknown;
+  json?: boolean;
+}): PlatformListingResult {
+  const result = buildPlatformListings(options.facts);
   if (options.json) console.log(JSON.stringify(result, null, 2));
   return result;
 }
