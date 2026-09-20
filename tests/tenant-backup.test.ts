@@ -5,20 +5,26 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { classifyTenantGitRemote } from "../src/lib/tenant-git-remote.js";
+import {
+  classifyTenantGitRemote,
+  fileUrlForLocalPath,
+} from "../src/lib/tenant-git-remote.js";
 import {
   checkTenantBackupForWeekly,
   restoreTenantBackup,
   snapshotTenantBackup,
   tenantBackupStampPath,
+  type VolumeEncryption,
 } from "../src/lib/tenant-backup.js";
 
 const roots: string[] = [];
+const quiet = { volumeProbe: (): VolumeEncryption => "unknown" };
 
 function tempRoot(): string {
   const root = mkdtempSync(join(tmpdir(), "orgos-tenant-backup-"));
@@ -50,19 +56,45 @@ describe("tenant backup", () => {
     expect(check.message).toContain("未設定");
   });
 
-  it("fails weekly when a destination is configured and the stamp is missing or old", () => {
+  it("fails weekly for a date-only stamp, a stale stamp, or a public git remote", () => {
     const root = tempRoot();
     const tenantDir = join(root, "demo");
-    mkdirSync(tenantDir, { recursive: true });
-    writeTarget(tenantDir, join(root, "nas"));
+    const nas = join(root, "nas");
+    mkdirSync(join(tenantDir, "data"), { recursive: true });
+    writeFileSync(join(tenantDir, "data", "keep.txt"), "ledger");
+    writeTarget(tenantDir, nas);
     const missing = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(missing.ok).toBe(false);
 
     mkdirSync(join(tenantDir, "scratch"), { recursive: true });
     writeFileSync(tenantBackupStampPath(tenantDir), "2026-09-01\n");
+    const dateOnly = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
+    expect(dateOnly.ok).toBe(false);
+    expect(dateOnly.message).toContain("日付だけ");
+
+    const snap = snapshotTenantBackup({
+      tenantDir,
+      tenantId: "demo",
+      now: new Date("2026-09-21T12:00:00"),
+      ...quiet,
+    });
+    const stamped = readFileSync(tenantBackupStampPath(tenantDir), "utf8").replace(
+      "stamped_at: 2026-09-21",
+      "stamped_at: 2026-09-01",
+    );
+    writeFileSync(tenantBackupStampPath(tenantDir), stamped);
     const stale = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(stale.ok).toBe(false);
     expect(stale.message).toContain("7 日");
+    expect(existsSync(snap.archivePath)).toBe(true);
+
+    writeFileSync(
+      join(tenantDir, "data", "org", "backup-target.yaml"),
+      `version: 1\ndestination: ${nas}\nvolume_encrypted: true\ngit_remote: git@github.com:org/demo.git\n`,
+    );
+    const remote = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
+    expect(remote.ok).toBe(false);
+    expect(remote.message).toContain("github.com");
   });
 
   it("snapshots without in-flight drafts and stamps only after tar succeeds", () => {
@@ -82,18 +114,25 @@ describe("tenant backup", () => {
         tenantDir,
         tenantId: "acme",
         now: new Date("2026-09-21T15:04:05"),
+        ...quiet,
       }),
     ).toThrow(/外/);
     expect(existsSync(tenantBackupStampPath(tenantDir))).toBe(false);
 
     writeTarget(tenantDir, nas);
-    const snap = snapshotTenantBackup({
-      tenantDir,
-      tenantId: "acme",
-      now: new Date("2026-09-21T15:04:05"),
-    });
+    const now = new Date("2026-09-21T15:04:05.123");
+    const snap = snapshotTenantBackup({ tenantDir, tenantId: "acme", now, ...quiet });
+    const again = snapshotTenantBackup({ tenantDir, tenantId: "acme", now, ...quiet });
+    expect(snap.archivePath).not.toBe(again.archivePath);
     expect(existsSync(snap.archivePath)).toBe(true);
-    expect(readFileSync(tenantBackupStampPath(tenantDir), "utf8").trim()).toBe("2026-09-21");
+    expect(existsSync(again.archivePath)).toBe(true);
+    expect(statSync(snap.archivePath).mode & 0o777).toBe(0o600);
+    expect(statSync(nas).mode & 0o777).toBe(0o700);
+    const stamp = readFileSync(tenantBackupStampPath(tenantDir), "utf8");
+    expect(stamp).toContain("stamped_at: 2026-09-21");
+    expect(stamp).toContain("encryption: declared");
+    expect(stamp).toContain(`archive: ${again.archivePath}`);
+    expect(existsSync(`${snap.archivePath}.partial`)).toBe(false);
 
     const listing = execFileSync("tar", ["-tzf", snap.archivePath], { encoding: "utf8" });
     expect(listing).toContain("acme/data/keep.txt");
@@ -139,31 +178,129 @@ describe("tenant backup", () => {
     writeFileSync(join(tenantDir, "data", "keep.txt"), "ledger");
     writeTarget(tenantDir, join(root, "missing-volume", "restore"));
     expect(() =>
-      snapshotTenantBackup({ tenantDir, tenantId: "acme", now: new Date("2026-09-21T12:00:00") }),
+      snapshotTenantBackup({
+        tenantDir,
+        tenantId: "acme",
+        now: new Date("2026-09-21T12:00:00"),
+        ...quiet,
+      }),
     ).toThrow(/親ディレクトリ/);
     expect(existsSync(tenantBackupStampPath(tenantDir))).toBe(false);
+  });
+
+  it("refuses a volume that reports itself unencrypted and records a verified volume", () => {
+    const root = tempRoot();
+    const tenantDir = join(root, "acme");
+    const nas = join(root, "nas");
+    mkdirSync(join(tenantDir, "data"), { recursive: true });
+    writeFileSync(join(tenantDir, "data", "keep.txt"), "ledger");
+    writeTarget(tenantDir, nas);
+    expect(() =>
+      snapshotTenantBackup({
+        tenantDir,
+        tenantId: "acme",
+        now: new Date("2026-09-21T12:00:00"),
+        volumeProbe: () => "unencrypted",
+      }),
+    ).toThrow(/暗号化されていない/);
+    expect(existsSync(nas)).toBe(false);
+    expect(existsSync(tenantBackupStampPath(tenantDir))).toBe(false);
+
+    const snap = snapshotTenantBackup({
+      tenantDir,
+      tenantId: "acme",
+      now: new Date("2026-09-21T12:00:01"),
+      volumeProbe: () => "encrypted",
+    });
+    expect(snap.encryption).toBe("verified");
+    expect(readFileSync(tenantBackupStampPath(tenantDir), "utf8")).toContain("encryption: verified");
+  });
+
+  it("does not extract an archive that contains a parent segment", () => {
+    const root = tempRoot();
+    const tenantDir = join(root, "live");
+    const into = join(root, "restore");
+    const archive = join(root, "escape.tar.gz");
+    mkdirSync(tenantDir, { recursive: true });
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        [
+          "import tarfile, io, os",
+          "path, outside = os.environ['ARCHIVE'], os.environ['OUTSIDE']",
+          "os.makedirs(outside, exist_ok=True)",
+          "with tarfile.open(path, 'w:gz') as tf:",
+          "    data = b'pwned\\n'",
+          "    info = tarfile.TarInfo(name='../outside/pwned.txt')",
+          "    info.size = len(data)",
+          "    tf.addfile(info, io.BytesIO(data))",
+          "    ok = b'ok\\n'",
+          "    info2 = tarfile.TarInfo(name='ok/note.txt')",
+          "    info2.size = len(ok)",
+          "    tf.addfile(info2, io.BytesIO(ok))",
+        ].join("\n"),
+      ],
+      { env: { ...process.env, ARCHIVE: archive, OUTSIDE: join(root, "outside") } },
+    );
+    expect(() =>
+      restoreTenantBackup({
+        archivePath: archive,
+        intoDir: into,
+        liveTenantDir: tenantDir,
+      }),
+    ).toThrow(/展開しません|メンバーを読めません/);
+    expect(existsSync(into)).toBe(false);
+    expect(existsSync(join(root, "outside", "pwned.txt"))).toBe(false);
+    expect(existsSync(`${into}.partial-${process.pid}`)).toBe(false);
   });
 });
 
 describe("tenant git remote", () => {
-  it("allows a NAS file or ssh remote and refuses public forges", () => {
-    expect(classifyTenantGitRemote("file:///Volumes/OrgNAS/git/acme.git").classification).toBe(
-      "nas",
-    );
+  it("refuses public forge aliases and allows a private https host", () => {
+    for (const url of [
+      "ssh://git@ssh.github.com/org/tenant.git",
+      "git@ssh.github.com:org/tenant.git",
+      "git@github.com.:org/tenant.git",
+      "ssh://git@github.com./org/tenant.git",
+      "git@ssh.gitlab.com:org/tenant.git",
+      "git@altssh.bitbucket.org:org/tenant.git",
+      "git@github.com:org/acme.git",
+      "https://github.com/org/acme.git",
+    ]) {
+      expect(classifyTenantGitRemote(url).classification, url).toBe("forbidden");
+    }
+    expect(classifyTenantGitRemote("https://nas.local/acme.git").classification).toBe("nas");
     expect(classifyTenantGitRemote("ssh://git@nas.local/acme.git").classification).toBe("nas");
     expect(classifyTenantGitRemote("git@nas.local:acme.git").classification).toBe("nas");
-    expect(classifyTenantGitRemote("git@github.com:org/acme.git").classification).toBe(
-      "forbidden",
-    );
-    expect(classifyTenantGitRemote("https://github.com/org/acme.git").classification).toBe(
-      "forbidden",
-    );
-    expect(classifyTenantGitRemote("https://gitlab.com/org/acme.git").classification).toBe(
-      "forbidden",
-    );
-    expect(classifyTenantGitRemote("https://bitbucket.org/org/acme.git").classification).toBe(
-      "forbidden",
-    );
-    expect(classifyTenantGitRemote("https://nas.local/acme.git").classification).toBe("unknown");
+  });
+
+  it("inspects remotes inside a reachable file URL and leaves a missing path unverified", () => {
+    const root = tempRoot();
+    const missing = classifyTenantGitRemote("file:///Volumes/OrgNAS/git/acme.git");
+    expect(missing.classification).toBe("unverified");
+
+    const bare = join(root, "local.git");
+    mkdirSync(bare);
+    expect(classifyTenantGitRemote(fileUrlForLocalPath(bare)).classification).toBe("nas");
+
+    const repo = join(root, "clone");
+    execFileSync("git", ["init", repo]);
+    execFileSync("git", ["-C", repo, "remote", "add", "origin", "git@github.com:org/acme.git"]);
+    expect(classifyTenantGitRemote(fileUrlForLocalPath(repo)).classification).toBe("forbidden");
+
+    const tenantDir = join(root, "demo");
+    const nas = join(root, "nas");
+    mkdirSync(join(tenantDir, "data"), { recursive: true });
+    writeFileSync(join(tenantDir, "data", "keep.txt"), "ledger");
+    writeTarget(tenantDir, nas, "git_remote: file:///Volumes/OrgNAS/git/missing.git\n");
+    snapshotTenantBackup({
+      tenantDir,
+      tenantId: "demo",
+      now: new Date("2026-09-21T12:00:00"),
+      volumeProbe: () => "unknown",
+    });
+    const weekly = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
+    expect(weekly.ok).toBe(true);
   });
 });

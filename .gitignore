@@ -29,6 +29,7 @@ tenants/*/data/*.pre-repair-*.bak
 apps/wire-console/dist/
 scratch/*
 !scratch/00-README.md
+tenants/*/scratch/tenant-backup-last.txt
 tenants/*/docs/reports/*
 tenants/*/docs/io/inbox/**
 !tenants/*/docs/io/inbox/00-このフォルダについて.md

@@ -80,7 +80,7 @@ export function runTenantGitRemoteCheck(opts: { url?: string; json?: boolean } =
     if (loaded.state === "invalid") fail(loaded.message);
     if (loaded.state === "missing" || !loaded.target.git_remote) {
       emit(Boolean(opts.json), { ok: true, configured: false, message: "git_remote は未設定です" }, [
-        "✓ git_remote は未設定です。設定するときは NAS の file:// または社内 ssh にしてください。",
+        "✓ git_remote は未設定です。設定するときは NAS の file://、社内 ssh、または公開フォージ以外の https にしてください。",
       ]);
       return;
     }
@@ -89,6 +89,10 @@ export function runTenantGitRemoteCheck(opts: { url?: string; json?: boolean } =
   const verdict = classifyTenantGitRemote(url);
   const ok = verdict.classification === "nas";
   const payload = { ok, url, ...verdict };
+  if (verdict.classification === "unverified") {
+    emit(Boolean(opts.json), payload, [`⚠ ${verdict.message}`]);
+    return;
+  }
   if (!ok) {
     if (opts.json) {
       console.log(JSON.stringify(payload, null, 2));

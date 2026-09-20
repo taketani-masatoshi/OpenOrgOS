@@ -3,21 +3,30 @@
  * The Mac tenant stays the working canonical. This archive is a restore copy
  * on a volume the operator already encrypted — the tool does not invent keys.
  * In-flight AIA drafts (scratch/aia-runs) are left out. The stamp is written
- * only after tar succeeds.
+ * only after the archive is in place, mode 0600, and hashed.
  */
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
+  chmodSync,
+  closeSync,
   existsSync,
   mkdirSync,
+  openSync,
   readdirSync,
   readFileSync,
+  readSync,
   realpathSync,
+  renameSync as renameIntoPlace,
+  rmSync,
   statSync,
+  unlinkSync,
   writeFileSync as writeScratchStamp,
 } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
+import { classifyTenantGitRemote } from "./tenant-git-remote.js";
 
 export const TENANT_BACKUP_MAX_AGE_DAYS = 7;
 export const TENANT_BACKUP_STAMP_FILE = "tenant-backup-last.txt";
@@ -37,6 +46,16 @@ export type BackupTargetLoad =
   | { state: "missing" }
   | { state: "invalid"; message: string }
   | { state: "ready"; target: BackupTarget };
+
+export type VolumeEncryption = "encrypted" | "unencrypted" | "unknown";
+
+export type TenantBackupStamp = {
+  stamped_at: string;
+  archive: string;
+  bytes: number;
+  sha256: string;
+  encryption: "declared" | "verified";
+};
 
 export function backupTargetPath(tenantDir: string): string {
   return join(tenantDir, "data", "org", "backup-target.yaml");
@@ -99,16 +118,70 @@ function compactStamp(now: Date): string {
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
   const ss = String(now.getSeconds()).padStart(2, "0");
-  return `${formatDay(now).replace(/-/g, "")}T${hh}${mm}${ss}`;
+  const ms = String(now.getMilliseconds()).padStart(3, "0");
+  return `${formatDay(now).replace(/-/g, "")}T${hh}${mm}${ss}${ms}`;
 }
 
-export function tenantBackupStampAgeDays(tenantDir: string, now = new Date()): number | null {
+function sha256File(path: string): string {
+  const hash = createHash("sha256");
+  const fd = openSync(path, "r");
+  try {
+    const buf = Buffer.alloc(1024 * 1024);
+    let n = 0;
+    while ((n = readSync(fd, buf, 0, buf.length, null)) > 0) {
+      hash.update(buf.subarray(0, n));
+    }
+  } finally {
+    closeSync(fd);
+  }
+  return hash.digest("hex");
+}
+
+export function formatTenantBackupStamp(stamp: TenantBackupStamp): string {
+  return [
+    `stamped_at: ${stamp.stamped_at}`,
+    `archive: ${stamp.archive}`,
+    `bytes: ${stamp.bytes}`,
+    `sha256: ${stamp.sha256}`,
+    `encryption: ${stamp.encryption}`,
+    "",
+  ].join("\n");
+}
+
+export function readTenantBackupStamp(tenantDir: string): TenantBackupStamp | null {
   const path = tenantBackupStampPath(tenantDir);
   if (!existsSync(path)) return null;
-  const day = readFileSync(path, "utf8").trim().slice(0, 10);
-  const lastMs = Date.parse(`${day}T12:00:00`);
+  const fields = new Map<string, string>();
+  for (const line of readFileSync(path, "utf8").split("\n")) {
+    const idx = line.indexOf(": ");
+    if (idx <= 0) continue;
+    fields.set(line.slice(0, idx), line.slice(idx + 2).trim());
+  }
+  const stampedAt = fields.get("stamped_at") ?? "";
+  const archive = fields.get("archive") ?? "";
+  const bytes = Number(fields.get("bytes"));
+  const sha256 = fields.get("sha256") ?? "";
+  const encryption = fields.get("encryption");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(stampedAt)) return null;
+  if (!archive || !Number.isFinite(bytes) || !/^[a-f0-9]{64}$/.test(sha256)) return null;
+  if (encryption !== "declared" && encryption !== "verified") return null;
+  return { stamped_at: stampedAt, archive, bytes, sha256, encryption };
+}
+
+function stampAgeDays(stamp: TenantBackupStamp, now: Date): number | null {
+  const lastMs = Date.parse(`${stamp.stamped_at}T12:00:00`);
   if (Number.isNaN(lastMs)) return null;
   return Math.floor((now.getTime() - lastMs) / 86_400_000);
+}
+
+export function probeVolumeEncryption(destination: string): VolumeEncryption {
+  if (process.platform !== "darwin") return "unknown";
+  const probe = spawnSync("diskutil", ["info", destination], { encoding: "utf8" });
+  if (probe.status !== 0 || !probe.stdout) return "unknown";
+  if (/^\s*Encrypted:\s+Yes\s*$/im.test(probe.stdout)) return "encrypted";
+  if (/^\s*FileVault:\s+Yes\s*$/im.test(probe.stdout)) return "encrypted";
+  if (/^\s*Encrypted:\s+No\s*$/im.test(probe.stdout)) return "unencrypted";
+  return "unknown";
 }
 
 function requireReadyTarget(tenantDir: string): BackupTarget {
@@ -122,11 +195,28 @@ function requireReadyTarget(tenantDir: string): BackupTarget {
   return loaded.target;
 }
 
+function safeTenantId(tenantId: string): string {
+  const cleaned = tenantId.replace(/[^A-Za-z0-9._-]+/g, "_");
+  return cleaned || "tenant";
+}
+
+function uniqueArchivePath(destination: string, tenantId: string, now: Date): string {
+  const base = `${safeTenantId(tenantId)}-${compactStamp(now)}`;
+  let path = join(destination, `${base}.tar.gz`);
+  let n = 2;
+  while (existsSync(path)) {
+    path = join(destination, `${base}-${n}.tar.gz`);
+    n += 1;
+  }
+  return path;
+}
+
 export function snapshotTenantBackup(opts: {
   tenantDir: string;
   tenantId: string;
   now?: Date;
-}): { archivePath: string; stampedAt: string } {
+  volumeProbe?: (destination: string) => VolumeEncryption;
+}): { archivePath: string; stampedAt: string; encryption: "declared" | "verified" } {
   const now = opts.now ?? new Date();
   const tenantDir = canonicalPath(opts.tenantDir);
   if (!existsSync(tenantDir) || !statSync(tenantDir).isDirectory()) {
@@ -141,28 +231,71 @@ export function snapshotTenantBackup(opts: {
   if (!existsSync(parent)) {
     throw new Error(`退避先の親ディレクトリがありません（マウントを確認してください）: ${parent}`);
   }
-  mkdirSync(destination, { recursive: true });
+  const probed = (opts.volumeProbe ?? probeVolumeEncryption)(destination);
+  if (probed === "unencrypted") {
+    throw new Error(
+      "退避先のボリュームは暗号化されていないと読めます。暗号化された NAS を指定してください",
+    );
+  }
+  const createdDest = !existsSync(destination);
+  if (createdDest) mkdirSync(destination, { mode: 0o700 });
 
   const folderName = basename(tenantDir);
-  const archivePath = join(destination, `${opts.tenantId}-${compactStamp(now)}.tar.gz`);
+  const archivePath = uniqueArchivePath(destination, opts.tenantId, now);
+  const tempPath = `${archivePath}.partial`;
   const args = [
     "-czf",
-    archivePath,
+    tempPath,
     ...ARCHIVE_EXCLUDES.flatMap((rel) => ["--exclude", `${folderName}/${rel}`]),
     "-C",
     dirname(tenantDir),
     folderName,
   ];
-  const tar = spawnSync("tar", args, { encoding: "utf8" });
-  if (tar.status !== 0 || !existsSync(archivePath) || statSync(archivePath).size === 0) {
-    throw new Error(`テナントの退避に失敗しました: ${tar.stderr?.trim() || "tar exited non-zero"}`);
+  try {
+    const tar = spawnSync("tar", args, { encoding: "utf8" });
+    if (tar.status !== 0 || !existsSync(tempPath) || statSync(tempPath).size === 0) {
+      throw new Error(`テナントの退避に失敗しました: ${tar.stderr?.trim() || "tar exited non-zero"}`);
+    }
+    chmodSync(tempPath, 0o600);
+    renameIntoPlace(tempPath, archivePath);
+  } catch (err) {
+    if (existsSync(tempPath)) unlinkSync(tempPath);
+    throw err;
   }
 
   const stampedAt = formatDay(now);
+  const encryption = probed === "encrypted" ? "verified" : "declared";
+  const stamp: TenantBackupStamp = {
+    stamped_at: stampedAt,
+    archive: archivePath,
+    bytes: statSync(archivePath).size,
+    sha256: sha256File(archivePath),
+    encryption,
+  };
   const stampPath = tenantBackupStampPath(tenantDir);
   mkdirSync(dirname(stampPath), { recursive: true });
-  writeScratchStamp(stampPath, `${stampedAt}\n`);
-  return { archivePath, stampedAt };
+  writeScratchStamp(stampPath, formatTenantBackupStamp(stamp));
+  return { archivePath, stampedAt, encryption };
+}
+
+function archiveMemberUnsafe(name: string): boolean {
+  if (!name || name.includes("\0")) return true;
+  if (name.startsWith("/") || name.startsWith("\\")) return true;
+  return name.split("/").some((part) => part === "..");
+}
+
+function assertArchiveMembersSafe(archivePath: string): void {
+  const listed = spawnSync("tar", ["-tzf", archivePath], { encoding: "utf8" });
+  const names = (listed.stdout ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (names.some(archiveMemberUnsafe)) {
+    throw new Error("アーカイブに絶対パスまたは .. があるため展開しません");
+  }
+  if (listed.status !== 0 || names.length === 0) {
+    throw new Error(`アーカイブのメンバーを読めません: ${listed.stderr?.trim() || "tar exited non-zero"}`);
+  }
 }
 
 export function restoreTenantBackup(opts: {
@@ -187,10 +320,20 @@ export function restoreTenantBackup(opts: {
   if (existsSync(into) && readdirSync(into).length > 0) {
     throw new Error("復元先が空ではありません。上書きしません");
   }
-  mkdirSync(into, { recursive: true });
-  const tar = spawnSync("tar", ["-xzf", opts.archivePath, "-C", into], { encoding: "utf8" });
-  if (tar.status !== 0) {
-    throw new Error(`復元に失敗しました: ${tar.stderr?.trim() || "tar exited non-zero"}`);
+  assertArchiveMembersSafe(opts.archivePath);
+
+  const partial = `${into}.partial-${process.pid}-${Date.now()}`;
+  mkdirSync(partial, { recursive: true });
+  try {
+    const tar = spawnSync("tar", ["-xzf", opts.archivePath, "-C", partial], { encoding: "utf8" });
+    if (tar.status !== 0) {
+      throw new Error(`復元に失敗しました: ${tar.stderr?.trim() || "tar exited non-zero"}`);
+    }
+    if (existsSync(into)) rmSync(into, { recursive: true, force: true });
+    renameIntoPlace(partial, into);
+  } catch (err) {
+    rmSync(partial, { recursive: true, force: true });
+    throw err;
   }
   return { extractedTo: into };
 }
@@ -209,18 +352,37 @@ export function checkTenantBackupForWeekly(
   if (loaded.state === "invalid") {
     return { ok: false, message: loaded.message };
   }
-  const age = tenantBackupStampAgeDays(tenantDir, now);
-  if (age === null) {
+  if (loaded.target.git_remote) {
+    const remote = classifyTenantGitRemote(loaded.target.git_remote);
+    if (remote.classification === "forbidden") {
+      return { ok: false, message: remote.message };
+    }
+  }
+  const stamp = readTenantBackupStamp(tenantDir);
+  if (!stamp) {
     return {
       ok: false,
-      message: "テナント退避先は設定済みだがスタンプがありません — orgos tenant backup snapshot",
+      message:
+        "テナント退避のスタンプが無い、または日付だけです — orgos tenant backup snapshot",
     };
   }
-  if (age > TENANT_BACKUP_MAX_AGE_DAYS) {
+  if (
+    !existsSync(stamp.archive) ||
+    statSync(stamp.archive).size !== stamp.bytes ||
+    sha256File(stamp.archive) !== stamp.sha256
+  ) {
     return {
       ok: false,
-      message: `テナント退避が ${age} 日前 — 7 日を超えています（orgos tenant backup snapshot）`,
+      message: "テナント退避のスタンプとアーカイブが一致しません — orgos tenant backup snapshot",
     };
   }
-  return { ok: true, message: `テナント退避 OK（${age} 日前）` };
+  const age = stampAgeDays(stamp, now);
+  if (age === null || age > TENANT_BACKUP_MAX_AGE_DAYS) {
+    return {
+      ok: false,
+      message: `テナント退避が ${age ?? "不明"} 日前 — 7 日を超えています（orgos tenant backup snapshot）`,
+    };
+  }
+  const proof = stamp.encryption === "verified" ? "暗号化を確認" : "暗号化は宣言のみ";
+  return { ok: true, message: `テナント退避 OK（${age} 日前、${proof}）` };
 }
