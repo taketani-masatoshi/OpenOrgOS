@@ -304,7 +304,7 @@ export function equityChangeAmounts(input?: {
     openingFile.as_of <= asOf
       ? openingFile.as_of
       : dayBeforeStart;
-  const opening = buildBalanceSheet({ asOf: openingAsOf, fiscalYear });
+  const opening = buildBalanceSheet({ asOf: openingAsOf });
   const closing = buildBalanceSheet({ asOf, fiscalYear });
   const coa = loadChartOfAccounts();
   let retainedCode: string | null = null;
@@ -375,12 +375,12 @@ export function equityChangeAmounts(input?: {
 
   const components: EquityComponentChange[] = classes.map((name) => {
     const bucket = buckets.get(name)!;
-    const unclosed = name === "retained" ? closing.net_income_yen : 0;
-    const net_income_yen = unclosed + (name === "retained" ? transferredToRetained : 0);
-    const opening_yen =
-      bucket.opening +
-      (name === "retained" && openingAsOf === dayBeforeStart ? opening.net_income_yen : 0);
-    const closing_yen = bucket.closing + unclosed;
+    const openingNi = name === "retained" ? opening.net_income_yen : 0;
+    const closingNi = name === "retained" ? closing.net_income_yen : 0;
+    const transferred = name === "retained" ? transferredToRetained : 0;
+    const net_income_yen = closingNi - openingNi + transferred;
+    const opening_yen = bucket.opening + openingNi;
+    const closing_yen = bucket.closing + closingNi;
     const balanced =
       closing_yen === opening_yen + net_income_yen - bucket.dividend + bucket.capital;
     if (!balanced) issues.push(`equity rollforward ${name}`);

@@ -55,11 +55,13 @@ describe("customer UX paths", () => {
     setTenantId(id);
   }
 
-  it("fails month-close checklist without bank import", () => {
+  it("skips bank reconciliation when the tenant has no bank file", () => {
     provisionTemp("cux-cl-001");
     const checklist = buildMonthCloseChecklist("2026-06");
-    expect(checklist.items.find((i) => i.id === "bank-imported")?.pass).toBe(false);
-    expect(checklist.ready).toBe(false);
+    expect(checklist.items.find((i) => i.id === "bank-imported")).toMatchObject({
+      pass: true,
+      detail: "no bank file",
+    });
     expect(Array.isArray(checklist.integrity_errors)).toBe(true);
   });
 

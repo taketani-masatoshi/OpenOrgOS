@@ -130,6 +130,11 @@ export function postExpenseClaimJournal(input: {
           credit_yen: 0,
           org_unit_id: allocation.org_unit_id,
           person_id: allocation.person_id,
+          tax_category: allocation.tax_category,
+          tax_amount_yen: allocation.tax_amount_yen,
+          invoice_status: allocation.invoice_status,
+          purchase_use: allocation.purchase_use,
+          tax_rounding: allocation.tax_rounding,
         })),
         {
           account_code: accounting.payable_account_code,

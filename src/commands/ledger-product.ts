@@ -193,7 +193,7 @@ export function runLedgerProductReadiness(opts?: {
       return;
     }
     console.log(
-      `Accounting commercial readiness: ${report.score}/100 (gate ~${report.gate_estimate})`,
+      `Accounting scoped readiness: ${report.score}/100 (gate ~${report.gate_estimate}; statutory filing excluded)`,
     );
     for (const check of report.checks.filter((row) => row.weight > 0)) {
       console.log(

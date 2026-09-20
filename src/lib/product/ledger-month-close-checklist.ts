@@ -1,7 +1,7 @@
 /**
  * Month-close checklist for Workbench.
  * `ready` matches evaluateMonthlyCloseGates().can_lock (period lock is separate).
- * Missing bank file is not a lock blocker: detail stays "bank statements not imported".
+ * Missing bank file is not a lock blocker and is represented as a skipped gate.
  */
 import { listBankReconciliationWorkbench } from "../finance/bank-reconcile-apply.js";
 import { evaluateMonthlyCloseGates } from "../finance/monthly-close.js";
@@ -70,7 +70,7 @@ export function buildMonthCloseChecklist(month?: string): MonthCloseChecklist {
   const integrityErrors = evaluation.validate_errors.slice(0, 12);
   const fixHints = buildFixHints(integrityErrors);
   const bankImported = evaluation.items.find((item) => item.id === "bank-imported");
-  const bankMissing = bankImported?.detail === "bank statements not imported";
+  const bankMissing = bankImported?.level === "skip";
   const workbench = bankMissing
     ? { unmatched_count: 0, unmatched: [], proposals: [] }
     : listBankReconciliationWorkbench(evaluation.as_of);

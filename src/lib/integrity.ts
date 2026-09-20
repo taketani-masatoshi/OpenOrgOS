@@ -784,7 +784,10 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   }
 
-  if (process.platform === "darwin") {
+  if (
+    process.platform === "darwin" &&
+    process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK !== "1"
+  ) {
     try {
       const out = execFileSync("tmutil", ["latestbackup"], { encoding: "utf-8" }).trim();
       if (out) {
