@@ -57,6 +57,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0066](0066-iso-internal-audit-control-maps.md) | ISO 内部監査は単一 Agent が control-map を読む | Accepted |
 | [0068](0068-iso-conformity-depth.md) | ISO 適合性検査を「存在」から「妥当性」へ（記録内容 · 要求事項 · ISO 19011） | Accepted |
 | [0069](0069-audit-framework-iso-financial-jsox.md) | 監査枠組みの展開（ISO 全 available · 会計アサーション · J-SOX） | Accepted |
+| [0078](0078-opendesk-first-connector-ports.md) | openDesk ファーストのコネクタ Port と OSS verify | Accepted |
 
 ## 新規 ADR
 

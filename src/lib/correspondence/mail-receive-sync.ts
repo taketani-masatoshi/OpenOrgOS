@@ -18,7 +18,7 @@ export interface FetchedMailMessage {
 }
 
 export interface MailReceiveSyncResult {
-  mode: "stub" | "imap" | "gmail_api" | "skipped";
+  mode: "stub" | "imap" | "gmail_api" | "ox" | "skipped";
   fetched: number;
   saved: string[];
   last_uid: number;
@@ -78,6 +78,20 @@ export async function syncMailReceive(opts?: {
   if (syncMode === "gmail_api") {
     const { syncGmailReceive } = await import("./gmail-receive-sync.js");
     return syncGmailReceive(opts);
+  }
+
+  if (syncMode === "ox") {
+    const { currentOxInclusion } = await import("../integrations/opendesk-probe.js");
+    const { oxConfigFromEnv, oxMailPort } = await import("../integrations/sovereign/ox-client.js");
+    const port = oxMailPort(currentOxInclusion(), oxConfigFromEnv());
+    const fetched = await port.fetchSince({ dryRun: opts?.dryRun });
+    return {
+      mode: "ox",
+      fetched: 0,
+      saved: [],
+      last_uid: loadMailReceiveState().last_uid,
+      message: fetched.reason,
+    };
   }
 
   const creds = resolveImapCredentials();

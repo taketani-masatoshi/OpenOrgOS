@@ -1,0 +1,34 @@
+name: opendesk-verify
+
+on:
+  pull_request:
+    paths:
+      - "deploy/opendesk-verify/**"
+      - "src/lib/integrations/**"
+      - ".github/workflows/opendesk-verify.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Start the public-API verify stack
+        run: docker compose -f deploy/opendesk-verify/docker-compose.yaml up -d --wait
+      - name: Verify Matrix, Nextcloud, and Keycloak
+        run: node --import tsx src/cli.ts integrations opendesk verify
+        env:
+          ORGOS_MATRIX_BASE_URL: http://127.0.0.1:8008
+          ORGOS_MATRIX_USER: ooo-verify
+          ORGOS_MATRIX_PASSWORD: opendesk-verify
+          ORGOS_MATRIX_SHARED_SECRET: opendesk-verify-shared
+          ORGOS_NEXTCLOUD_BASE_URL: http://127.0.0.1:8081
+          ORGOS_NEXTCLOUD_USER: admin
+          ORGOS_NEXTCLOUD_APP_PASSWORD: opendesk-verify
+          ORGOS_KEYCLOAK_BASE_URL: http://127.0.0.1:8082
+          ORGOS_KEYCLOAK_REALM: master

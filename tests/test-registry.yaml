@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 583
-  static_test_cases: 2670
-  tiered_execution_total: 583
+  vitest_total: 590
+  static_test_cases: 2699
+  tiered_execution_total: 590
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -873,6 +873,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  connector-catalog.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   connector-store.test.ts:
     axis: platform
     kind: unit
@@ -1649,6 +1653,22 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  opendesk-api-contract.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opendesk-ox-inclusion.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opendesk-ports.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opendesk-verify.live.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   opening-balance.test.ts:
     axis: platform
     kind: unit
@@ -2276,6 +2296,10 @@ tests:
     axis: platform
     kind: unit
     domain: P03_correspondence_org
+  secretary-mail-port.test.ts:
+    axis: platform
+    kind: unit
+    domain: P03_correspondence_org
   secretary-quality-uplift.test.ts:
     axis: platform
     kind: unit
@@ -2630,6 +2654,10 @@ tests:
     kind: unit
     domain: P02_business_data
   tenant-mail-console.test.ts:
+    axis: platform
+    kind: unit
+    domain: P02_business_data
+  tenant-provision-clean.test.ts:
     axis: platform
     kind: unit
     domain: P02_business_data

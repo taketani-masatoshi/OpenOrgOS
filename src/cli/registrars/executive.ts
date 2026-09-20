@@ -391,6 +391,7 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--operator <id>", "Proposed-by operator id")
     .option("--no-approval", "Skip approval proposal (testing only)")
     .option("--no-cc-defaults", "Skip automatic oversight CC (CEO 等)")
+    .option("--nextcloud-l1", "Optionally copy a counts-only L1 note to Nextcloud")
     .option("--json", "JSON output")
     .action((opts) => runCorrespondenceDraft(opts));
 
@@ -527,9 +528,15 @@ export function registerExecutiveCommands(program: Command): void {
     .description("Fetch new mail via IMAP/Gmail (receive.sync)")
     .option("--watch", "Poll on poll_interval_sec until interrupted")
     .option("--dry-run", "Fetch without saving")
+    .option("--nextcloud-l1", "Mirror L1 triage counts to Nextcloud (needs ORGOS_NEXTCLOUD_*)")
     .option("--json", "JSON output")
     .action(async (opts) =>
-      runMailIntakeSync({ watch: opts.watch, dryRun: opts.dryRun, json: opts.json })
+      runMailIntakeSync({
+        watch: opts.watch,
+        dryRun: opts.dryRun,
+        json: opts.json,
+        nextcloudL1: opts.nextcloudL1,
+      })
     );
   intakeCmd
     .command("wire-scan")
@@ -776,6 +783,7 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--operator <id>", "Proposed-by operator id")
     .option("--no-approval", "Skip approval proposal (testing only)")
     .option("--no-cc-defaults", "Skip automatic oversight CC (CEO 等)")
+    .option("--nextcloud-l1", "Optionally copy a counts-only L1 note to Nextcloud")
     .option("--json", "JSON output")
     .action((opts) => runCorrespondenceDraft(opts));
   outboundCorrespondence

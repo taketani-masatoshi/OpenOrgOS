@@ -7,14 +7,17 @@ import type { MailConfig } from "../../../schemas/correspondence/mail-config.js"
 import { getMailSentDir } from "./paths.js";
 import { isDryRunSmtpHost, resolveMailConfig, resolveSmtpCredentials } from "./mail-config.js";
 import { sanitizeOutboundEmailBody } from "./body-sanitize.js";
-import { resolveGmailAccessToken } from "./gmail-oauth.js";
+import { gmailMailPort } from "../integrations/compat-ports.js";
+import { smtpMailPort } from "../integrations/compat/smtp-mail-port.js";
+import { currentOxInclusion } from "../integrations/opendesk-probe.js";
+import { oxConfigFromEnv, oxMailPort } from "../integrations/sovereign/ox-client.js";
 import {
   isAttachmentPathAllowlisted,
   resolveTenantLogicalPath,
 } from "./knowledge-search.js";
 
 export interface SendEmailResult {
-  mode: "smtp" | "dry_run" | "gmail_api";
+  mode: "smtp" | "dry_run" | "gmail_api" | "ox";
   messageId?: string;
   artifactPath?: string;
 }
@@ -133,14 +136,14 @@ async function sendSmtpCommand(
 async function sendViaSmtp(
   draft: CorrespondenceDraft,
   config: MailConfig,
-  creds: { user: string; pass: string }
+  creds: { user: string; pass: string },
+  message = buildMimeMessage(draft, config),
 ): Promise<SendEmailResult> {
   const smtp = config.smtp;
   if (!smtp?.host) {
     throw new Error("SMTP host not configured");
   }
 
-  const message = buildMimeMessage(draft, config);
   const socket: Socket | TLSSocket = smtp.secure
     ? tlsConnect({ host: smtp.host, port: smtp.port, rejectUnauthorized: true })
     : createConnection({ host: smtp.host, port: smtp.port });
@@ -214,62 +217,38 @@ async function authenticateAndSend(
 
 async function sendViaGmailApi(
   draft: CorrespondenceDraft,
-  config: MailConfig
+  config: MailConfig,
 ): Promise<SendEmailResult> {
-  const accessToken = await resolveGmailAccessToken();
-  if (!accessToken) {
-    throw new Error("Gmail API token missing — run orgos mail setup gmail");
-  }
   const mime = buildMimeMessage(draft, config);
-  const raw = Buffer.from(mime)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-
-  const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ raw }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gmail API send failed: ${res.status} ${err.slice(0, 200)}`);
+  const result = await gmailMailPort().sendMime({ mime });
+  if (!result.ok) {
+    throw new Error(result.reason);
   }
-  const body = (await res.json()) as { id?: string };
-  return { mode: "gmail_api", messageId: body.id ?? `${Date.now()}@gmail-api` };
+  return { mode: "gmail_api", messageId: result.messageId ?? `${Date.now()}@gmail-api` };
+}
+
+async function sendViaOxApi(
+  draft: CorrespondenceDraft,
+  config: MailConfig,
+): Promise<SendEmailResult> {
+  const mime = buildMimeMessage(draft, config);
+  const result = await oxMailPort(currentOxInclusion(), oxConfigFromEnv()).sendMime({ mime });
+  if (!result.ok) {
+    throw new Error(result.reason);
+  }
+  return { mode: "ox", messageId: result.messageId ?? `${Date.now()}@ox` };
 }
 
 async function sendRawViaGmailApi(opts: {
   mime: string;
   fromEmail: string;
 }): Promise<SendEmailResult> {
-  const accessToken = await resolveGmailAccessToken();
-  if (!accessToken) {
-    throw new Error("Gmail API token missing");
+  void opts.fromEmail;
+  const result = await gmailMailPort().sendMime({ mime: opts.mime });
+  if (!result.ok) {
+    throw new Error(result.reason);
   }
-  const raw = Buffer.from(opts.mime)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-  const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ raw }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gmail API raw send failed: ${res.status} ${err.slice(0, 200)}`);
-  }
-  const body = (await res.json()) as { id?: string };
-  return { mode: "gmail_api", messageId: body.id ?? `${Date.now()}@gmail-api` };
+  return { mode: "gmail_api", messageId: result.messageId ?? `${Date.now()}@gmail-api` };
 }
 
 function writeDryRunEml(draft: CorrespondenceDraft, config: MailConfig): string {
@@ -297,6 +276,10 @@ export async function sendCorrespondenceEmail(
     return sendViaGmailApi(draft, config);
   }
 
+  if (config.provider === "ox") {
+    return sendViaOxApi(draft, config);
+  }
+
   if (opts?.dryRun || config.provider === "dry_run" || !creds) {
     const artifactPath = writeDryRunEml(draft, config);
     return { mode: "dry_run", artifactPath };
@@ -307,7 +290,13 @@ export async function sendCorrespondenceEmail(
     return { mode: "dry_run", artifactPath };
   }
 
-  return sendViaSmtp(draft, config, creds);
+  const message = buildMimeMessage(draft, config);
+  const result = await smtpMailPort(async (mime) => {
+    const sent = await sendViaSmtp(draft, config, creds, mime);
+    return { messageId: sent.messageId };
+  }).sendMime({ mime: message });
+  if (!result.ok) throw new Error(result.reason);
+  return { mode: "smtp", messageId: result.messageId ?? `${Date.now()}@orgos` };
 }
 
 export interface RawMimeSendOptions {
@@ -325,6 +314,15 @@ export async function sendRawMimeEmail(opts: RawMimeSendOptions): Promise<SendEm
     return sendRawViaGmailApi({ mime: opts.mime, fromEmail: opts.fromEmail });
   }
 
+  const result = await smtpMailPort(async (mime) => {
+    const messageId = await deliverSmtpMime({ ...opts, mime });
+    return { messageId };
+  }).sendMime({ mime: opts.mime });
+  if (!result.ok) throw new Error(result.reason);
+  return { mode: "smtp", messageId: result.messageId ?? `${Date.now()}@orgos-wire` };
+}
+
+async function deliverSmtpMime(opts: RawMimeSendOptions): Promise<string> {
   const socket: Socket | TLSSocket = opts.smtp.secure
     ? tlsConnect({ host: opts.smtp.host, port: opts.smtp.port, rejectUnauthorized: true })
     : createConnection({ host: opts.smtp.host, port: opts.smtp.port });
@@ -357,7 +355,7 @@ export async function sendRawMimeEmail(opts: RawMimeSendOptions): Promise<SendEm
     socket.end();
   }
 
-  return { mode: "smtp", messageId: `${Date.now()}@orgos-wire` };
+  return `${Date.now()}@orgos-wire`;
 }
 
 async function authenticateAndSendRaw(

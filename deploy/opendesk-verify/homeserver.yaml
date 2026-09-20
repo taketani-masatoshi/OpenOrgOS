@@ -1,0 +1,30 @@
+# Localhost verify only. Do not reuse these secrets.
+server_name: "localhost"
+pid_file: /data/homeserver.pid
+listeners:
+  - port: 8008
+    tls: false
+    type: http
+    x_forwarded: true
+    resources:
+      - names: [client]
+        compress: false
+database:
+  name: psycopg2
+  args:
+    user: synapse
+    password: opendesk-verify
+    database: synapse
+    host: synapse-db
+    cp_min: 1
+    cp_max: 5
+log_config: "/data/localhost.log.config"
+media_store_path: /data/media_store
+registration_shared_secret: "opendesk-verify-shared"
+report_stats: false
+macaroon_secret_key: "opendesk-verify-macaroon-secret-key"
+form_secret: "opendesk-verify-form-secret"
+signing_key_path: "/data/localhost.signing.key"
+suppress_key_server_warning: true
+trusted_key_servers: []
+enable_registration: false

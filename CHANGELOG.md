@@ -6,6 +6,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **openDesk ファーストのコネクタ Port** — オフィススイートの正本面は Matrix / Nextcloud / Keycloak。公開イメージは `deploy/opendesk-verify` で疎通確認する。版は Synapse `v1.161.0`、Nextcloud `34.0.4`、Keycloak `26.3.5`。回帰は ubuntu x64 の `.github/workflows/opendesk-verify.yml`（公式 Helm ではない）。公開 API の URL 契約は単体テストで固定する。Open-Xchange は無認証 CE イメージが取れるまでスタブで、`confirmed_live` のときだけ App Suite HTTP を使う。Slack / Gmail / Drive / Microsoft 365 は互換出口（L1 の写し）のまま残す。秘書メールは `MailPort`（Gmail 互換 · 一般 SMTP は `smtpMailPort` · OX はゲート付き）。L1 triage 要約は `orgos mail intake sync --nextcloud-l1` と下書きの `--nextcloud-l1`。コンソールは未出荷とスタブを成功と表示しない。ADR 0078 · [connectors.md](docs/org-os/ooo-surfaces/connectors.md)
+
 ### Fixed
 
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。

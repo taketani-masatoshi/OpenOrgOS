@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const mailProviderSchema = z.enum(["smtp", "gmail_api", "dry_run"]);
+export const mailProviderSchema = z.enum(["smtp", "gmail_api", "dry_run", "ox"]);
 
 export const mailConfigSchema = z.object({
   provider: mailProviderSchema.default("dry_run"),
@@ -18,7 +18,7 @@ export const mailConfigSchema = z.object({
   receive: z
     .object({
       /** IMAP/API 受信同期（docs/io/inbox · Wire protocol/inbox とは別） */
-      sync: z.enum(["stub", "imap", "gmail_api"]).default("stub"),
+      sync: z.enum(["stub", "imap", "gmail_api", "ox"]).default("stub"),
       imap_host: z.string().optional(),
       imap_port: z.number().int().positive().optional(),
       imap_mailbox: z.string().default("INBOX"),

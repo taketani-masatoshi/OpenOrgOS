@@ -10,7 +10,7 @@ test.describe("steward chat integrations", () => {
     await expect(page.getByRole("heading", { name: "連携設定" })).toBeVisible({
       timeout: 20_000,
     });
-    for (const label of ["Slack", "Asana", "Gmail", "Google Drive"]) {
+    for (const label of ["主権スタック（openDesk）", "互換出口", "Slack", "Asana", "Gmail", "Google Drive"]) {
       await expect(page.getByRole("heading", { name: label })).toBeVisible();
     }
   });

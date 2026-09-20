@@ -1,0 +1,129 @@
+# openDesk-shaped verify stack (not the official Helmfile)
+#
+# Same public APIs as openDesk Community Edition components we can pull
+# without a private registry. Official openDesk is Kubernetes + Helmfile
+# (https://docs.opendesk.eu/operations/introduction/) and is not vendored here.
+#
+#   docker compose -f deploy/opendesk-verify/docker-compose.yaml up -d
+#   orgos integrations opendesk up
+#   orgos integrations opendesk probe
+#   orgos integrations opendesk verify
+#   orgos integrations opendesk down
+#
+# Profiles:
+#   core (default services): Synapse + Postgres, Nextcloud + MariaDB, Keycloak
+#   groupware: Open-Xchange — off unless `probe` records a public CE image
+#
+# Bind addresses are 127.0.0.1 only. Docker Desktop on Mac, Windows, and Linux
+# is a first-class client for this stack. Passwords in this folder are for
+# localhost verification only. Do not reuse them.
+#
+# Point the same ports at a customer's openDesk by setting the ORGOS_*_BASE_URL
+# variables. Community SSO is not replaced by Keycloak.
+
+name: orgos-opendesk-verify
+
+services:
+  synapse-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: synapse
+      POSTGRES_PASSWORD: opendesk-verify
+      POSTGRES_DB: synapse
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse -d synapse"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - synapse-db:/var/lib/postgresql/data
+
+  synapse:
+    image: matrixdotorg/synapse:v1.161.0
+    depends_on:
+      synapse-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8008:8008"
+    environment:
+      SYNAPSE_SERVER_NAME: localhost
+      SYNAPSE_REPORT_STATS: "no"
+    entrypoint: ["/bin/sh", "/bootstrap/synapse-bootstrap.sh"]
+    volumes:
+      - synapse-data:/data
+      - ./synapse-bootstrap.sh:/bootstrap/synapse-bootstrap.sh:ro
+      - ./homeserver.yaml:/bootstrap/homeserver.yaml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8008/_matrix/client/versions')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  nextcloud-db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: opendesk-verify
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: opendesk-verify
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - nextcloud-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  nextcloud:
+    image: nextcloud:34.0.4
+    depends_on:
+      nextcloud-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8081:80"
+    environment:
+      MYSQL_HOST: nextcloud-db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: opendesk-verify
+      NEXTCLOUD_ADMIN_USER: admin
+      NEXTCLOUD_ADMIN_PASSWORD: opendesk-verify
+      NEXTCLOUD_TRUSTED_DOMAINS: "localhost 127.0.0.1"
+    volumes:
+      - nextcloud-data:/var/www/html
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/status.php')?0:1);"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.5
+    command: ["start-dev", "--http-port=8080"]
+    ports:
+      - "127.0.0.1:8082:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: opendesk-verify
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  ox:
+    profiles: ["groupware"]
+    image: ${ORGOS_OX_IMAGE:-registry.opencode.de/bmi/opendesk/components/ox-app-suite:latest}
+    ports:
+      - "127.0.0.1:8083:80"
+
+volumes:
+  synapse-db:
+  synapse-data:
+  nextcloud-db:
+  nextcloud-data:

@@ -1,13 +1,25 @@
-# 外部連携の面（OOO-54〜OOO-57）
+# 外部連携の面（OOO-54〜OOO-57 · openDesk Port）
 
 **実装:** `src/lib/steward-chat/routes/integrations-api.ts` ·
-`src/lib/integrations/{connector-store,connector-hub,slack-connector,asana-adapter,gdrive-export}.ts` ·
+`src/lib/integrations/{connector-store,connector-hub,connector-catalog,ports}.ts` ·
+`src/lib/integrations/sovereign/` · `src/lib/integrations/compat-ports.ts` ·
 `src/lib/protocol/{community-connector-bind,community-connectors-api}.ts`
 **採点:** `docs/org-os/ooo-capability-items.yaml` の OOO-54〜OOO-57
+**ADR:** [0070](../../adr/0070-console-saas-connectors.md) · [0078](../../adr/0078-opendesk-first-connector-ports.md)
 
-Slack · Asana · Gmail · Google Drive をコンソールから接続し、社外へ出す面。
-**正本は OrgOS の YAML / MD** のままで、外部サービスに置くものは L1 の写しに限る。
+正本は OrgOS の YAML / MD。外部に置くものは L1 の写し。
+
+| 段 | 中身 | 扱い |
+|---|---|---|
+| 主権スタック（openDesk） | Matrix · Nextcloud · Keycloak · Open-Xchange | オフィススイートの正本面。公開イメージがあるものは `deploy/opendesk-verify` で疎通確認 |
+| 互換出口 | Slack · Asana · Gmail · Google Drive · Microsoft 365 | 写し。排除しない。双方向同期しない |
+
+Open-Xchange は公開 CE イメージが取れるまでスタブで、外へ出さない。Windows は Docker Desktop 上の検証クライアントとして第一級。Keycloak は OIDC discovery のみで、Community SSO は置き換えない。
+
+秘書メール（intake / correspondence send）は `MailPort` 経由。Gmail は互換実装。一般 SMTP 送信は `smtpMailPort`（受信 IMAP は Port 外）。Open-Xchange は `confirmed_live` のときだけ App Suite HTTP を使い、それ以外は外へ出さない。送信承認は従来どおり `chat:approve`。件数だけの L1 要約は `orgos mail intake sync --nextcloud-l1` または `orgos mail outbound correspondence draft --nextcloud-l1` で Nextcloud の allowlist へ任意写しできる（メール本文は出さない）。コンソールの未出荷とスタブは成功表示にしない。
+
 OAuth は Community が仲介し、トークンは gitignore 下のテナント records に入る。
+
 
 ## 経路と必要権限
 

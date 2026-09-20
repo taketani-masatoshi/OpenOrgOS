@@ -61,12 +61,20 @@ tenants/*/data/chat/command-plans/
 tenants/*/data/chat/tower-plans/
 # Sensitive finance operational files (template / fixture examples stay tracked)
 tenants/*/data/finance/payroll.yaml
+# Product demo / CI seed tenants keep their fixture payroll on tip — the gates
+# validate them. See docs/org-os/tenant-github-tip-policy.md.
 !tenants/_template/data/finance/payroll.yaml
 !tenants/_fixture-books/data/finance/payroll.yaml
+!tenants/demo/data/finance/payroll.yaml
+!tenants/*-demo/data/finance/payroll.yaml
+!tenants/demo-signup-*/data/finance/payroll.yaml
+!tenants/acme/data/finance/payroll.yaml
+!tenants/pilot-ledger-*/data/finance/payroll.yaml
 tenants/*/data/finance/bank-statements.yaml
 data/hub-*/signing-key.pem
 data/hub-*/witness-*.jsonl
 data/proposal3-pki/
+deploy/opendesk-verify/probe-result.json
 # Dev TLS material (orgos wire-gateway tls-init · hub tls-init — never commit private keys)
 deploy/wire-gateway/tls/
 deploy/witness-hub/tls/
