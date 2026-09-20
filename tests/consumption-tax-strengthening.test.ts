@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
@@ -7,6 +7,8 @@ import { assessPurchaseAllocationContinuity, assessSimplifiedTaxEligibility, bui
 import { consumptionTaxFilingDraftSchema } from "../schemas/finance/consumption-tax-filing.js";
 import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/finance-fixture.js";
 import { getDataDir } from "../src/lib/utils.js";
+import { recordConsumptionTaxAdvisorReview, verifyConsumptionTaxAdvisorReviewAudit } from "../src/lib/finance/consumption-tax-advisor-review.js";
+import { setupTempCompanyEventsTenant } from "./helpers/temp-company-events-tenant.js";
 
 describe("consumption tax strengthening", () => {
   beforeEach(() => resetFixtureJournalEntries());
@@ -251,7 +253,7 @@ describe("consumption tax strengthening", () => {
     expect(profile.incomplete_assets).toEqual(["ASSET-999"]);
   });
 
-  it("carries ledger-derived annual adjustments into the filing draft", () => {
+  it("combines import tax, annual adjustments, and interim payment in a full-year filing draft", () => {
     useFinanceFixtureTenant();
     const financeDir = join(getDataDir(), "finance");
     const fixedPath = join(financeDir, "fixed-assets.yaml");
@@ -263,7 +265,7 @@ describe("consumption tax strengthening", () => {
     try {
       writeFileSync(fixedPath, `version: 1\nas_of: "2029-01-31"\nfiscal_year: FY2028\ncurrency: JPY\nassets:\n  - id: ASSET-900\n    property_id: PROP-001\n    name: Adjustment machine\n    category: 器具備品\n    acquisition_date: "2025-04-01"\n    acquisition_cost: 5500000\n    depreciation_method: 定額法\n    annual_depreciation: 500000\n    accumulated_depreciation: 1500000\n    book_value: 4000000\n    consumption_tax:\n      tax_exclusive_cost_yen: 5000000\n      acquisition_input_tax_yen: 500000\n      allocation_method: proportional\n      evidence_ref: invoice:ASSET-900\n`, "utf-8");
       writeFileSync(inventoryPath, `version: 1\nmonths:\n  - month: "2029-01"\n    account_code: "1300"\n    ending_inventory_yen: 0\n    consumption_tax_adjustment:\n      direction: taxable_to_exempt\n      input_tax_yen: 20000\n      evidence_ref: inventory:FY2028\n`, "utf-8");
-      writeFileSync(profilePath, `entity:\n  name: Fixture Books KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\n  taxpayer_basis: base_period\n  purchase_allocation_method: proportional\n  prior_period_national_tax_yen: 0\n  interim_filing_frequency: none\ncorporate_tax: {}\n`, "utf-8");
+      writeFileSync(profilePath, `entity:\n  name: Fixture Books KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\n  taxpayer_basis: base_period\n  purchase_allocation_method: proportional\n  prior_period_national_tax_yen: 500000\n  interim_filing_frequency: annual_1\ncorporate_tax: {}\n`, "utf-8");
       for (const [id, occurredAt, taxable, exempt] of [["ACQ", "2025-04-01T00:00:00.000Z", 400000, 600000], ["THIRD", "2028-04-01T00:00:00.000Z", 2400000, 600000]] as const) {
         appendJournalEntry({ entry_id: `JE-TAX-E2E-${id}-T`, occurred_at: occurredAt, description: id, source: { kind: "manual", authorized_by: "test" }, evidence_refs: [`test:${id}:taxable`], lines: [
           { account_code: "1100", debit_yen: taxable, credit_yen: 0, tax_category: "out_of_scope" },
@@ -274,7 +276,17 @@ describe("consumption tax strengthening", () => {
           { account_code: "4200", debit_yen: 0, credit_yen: exempt, tax_category: "exempt" },
         ] });
       }
+      appendJournalEntry({ entry_id: "JE-TAX-E2E-IMPORT", occurred_at: "2028-04-15T00:00:00.000Z", description: "customs import", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["permit:FY2028"], lines: [
+        { account_code: "5100", debit_yen: 100000, credit_yen: 0, tax_category: "taxable_10", tax_transaction: "import", tax_amount_yen: 10000, customs_evidence_ref: "permit:FY2028", import_date: "2028-04-15", customs_declaration_ref: "declaration:FY2028", customs_payment_evidence_ref: "payment:FY2028", import_national_tax_yen: 7800, import_local_tax_yen: 2200, purchase_use: "taxable_only" },
+        { account_code: "1100", debit_yen: 0, credit_yen: 100000, tax_category: "out_of_scope" },
+      ] });
+      appendJournalEntry({ entry_id: "JE-TAX-E2E-INTERIM", occurred_at: "2028-09-30T00:00:00.000Z", description: "interim remittance", source: { kind: "remittance", period: "2028-07", obligation: "consumption_tax", filing_kind: "interim", tax_fiscal_year: "FY2028" }, evidence_refs: ["receipt:FY2028-interim"], lines: [
+        { account_code: "2160", debit_yen: 320500, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "1100", debit_yen: 0, credit_yen: 320500, tax_category: "out_of_scope" },
+      ] });
       const draft = buildConsumptionTaxFilingDraft("FY2028");
+      expect(draft.interim_reconciliation).toMatchObject({ expected_frequency: "annual_1", paid_count: 1, paid_yen: 320500 });
+      expect(draft.schedules).toContainEqual({ id: "interim-payments", complete: true });
       expect(draft.input_tax_adjustment_yen).toBe(130000);
       expect(draft.annual_adjustments).toEqual(expect.arrayContaining([
         expect.objectContaining({ kind: "fixed_asset_ratio", amount_yen: 150000 }),
@@ -293,16 +305,49 @@ describe("consumption tax strengthening", () => {
 
   it("applies reverse charge only under standard tax with a ratio below 95 percent", () => {
     useFinanceFixtureTenant();
+    appendJournalEntry({ entry_id: "JE-TAX-RC-SALE-TAXABLE", occurred_at: "2026-09-20T00:00:00.000Z", description: "taxable sale", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["contract:sale"], lines: [
+      { account_code: "1100", debit_yen: 80000, credit_yen: 0, tax_category: "out_of_scope" },
+      { account_code: "4100", debit_yen: 0, credit_yen: 80000, tax_category: "taxable_10" },
+    ] });
+    appendJournalEntry({ entry_id: "JE-TAX-RC-SALE-EXEMPT", occurred_at: "2026-09-20T00:00:00.000Z", description: "exempt sale", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["contract:exempt"], lines: [
+      { account_code: "1100", debit_yen: 20000, credit_yen: 0, tax_category: "out_of_scope" },
+      { account_code: "4200", debit_yen: 0, credit_yen: 20000, tax_category: "exempt" },
+    ] });
     appendJournalEntry({ entry_id: "JE-TAX-RC-001", occurred_at: "2026-09-20T00:00:00.000Z", description: "digital service", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["contract:rc"], lines: [
       { account_code: "5100", debit_yen: 100000, credit_yen: 0, tax_category: "taxable_10", tax_transaction: "reverse_charge", tax_amount_yen: 10000, purchase_use: "common" },
       { account_code: "1100", debit_yen: 0, credit_yen: 100000, tax_category: "out_of_scope" },
     ] });
-    const below = buildConsumptionTaxSummary({ period: "2026-09", profile: { consumption_tax: { status: "課税事業者", method: "standard", taxable_sales_ratio_override_pct: 80 } } });
+    const below = buildConsumptionTaxSummary({ period: "2026-09", profile: { consumption_tax: { status: "課税事業者", method: "standard", purchase_allocation_method: "individual", taxable_sales_ratio_override_pct: 70, taxable_sales_ratio_override_evidence_ref: "approval:ratio", taxable_sales_ratio_override_evidence_sha256: "a".repeat(64) } } });
+    expect(below.taxable_sales_ratio_pct).toBe(80);
+    expect(below.input_tax_allocation_ratio_pct).toBe(70);
     expect(below.reverse_charge_tax_yen).toBe(10000);
-    expect(below.input_tax_yen).toBe(8000);
-    const excluded = buildConsumptionTaxSummary({ period: "2026-09", profile: { consumption_tax: { status: "課税事業者", method: "standard", taxable_sales_ratio_override_pct: 95 } } });
-    expect(excluded.reverse_charge_tax_yen).toBe(0);
-    expect(excluded.input_tax_yen).toBe(0);
+    expect(below.input_tax_yen).toBe(7000);
+  });
+
+  it("does not use an approved ratio for the 95-percent test or proportional allocation", () => {
+    useFinanceFixtureTenant();
+    appendJournalEntry({ entry_id: "JE-TAX-RATIO-SALE-TAXABLE", occurred_at: "2026-09-20T00:00:00.000Z", description: "taxable sale", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["test:sale"], lines: [
+      { account_code: "1100", debit_yen: 90000, credit_yen: 0, tax_category: "out_of_scope" },
+      { account_code: "4100", debit_yen: 0, credit_yen: 90000, tax_category: "taxable_10" },
+    ] });
+    appendJournalEntry({ entry_id: "JE-TAX-RATIO-SALE-EXEMPT", occurred_at: "2026-09-20T00:00:00.000Z", description: "exempt sale", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["test:exempt"], lines: [
+      { account_code: "1100", debit_yen: 10000, credit_yen: 0, tax_category: "out_of_scope" },
+      { account_code: "4200", debit_yen: 0, credit_yen: 10000, tax_category: "exempt" },
+    ] });
+    appendJournalEntry({ entry_id: "JE-TAX-RATIO-BUY", occurred_at: "2026-09-20T00:00:00.000Z", description: "common purchase", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["test:purchase"], lines: [
+      { account_code: "5100", debit_yen: 100000, credit_yen: 0, tax_category: "taxable_10", tax_amount_yen: 10000, invoice_status: "qualified", purchase_use: "common" },
+      { account_code: "1100", debit_yen: 0, credit_yen: 100000, tax_category: "out_of_scope" },
+    ] });
+    const fullCredit = buildConsumptionTaxSummary({ period: "2026-09", profile: { consumption_tax: { status: "課税事業者", method: "standard", purchase_allocation_method: "full_credit_95_rule", taxable_sales_ratio_override_pct: 100, taxable_sales_ratio_override_evidence_ref: "approval:ratio", taxable_sales_ratio_override_evidence_sha256: "a".repeat(64) } } });
+    expect(fullCredit.taxable_sales_ratio_pct).toBe(90);
+    expect(fullCredit.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "taxable_sales_ratio_override_not_applicable" }),
+      expect.objectContaining({ code: "full_credit_95_rule_ineligible" }),
+    ]));
+
+    const proportional = buildConsumptionTaxSummary({ period: "2026-09", profile: { consumption_tax: { status: "課税事業者", method: "standard", purchase_allocation_method: "proportional", taxable_sales_ratio_override_pct: 100, taxable_sales_ratio_override_evidence_ref: "approval:ratio", taxable_sales_ratio_override_evidence_sha256: "a".repeat(64) } } });
+    expect(proportional.input_tax_allocation_ratio_pct).toBe(90);
+    expect(proportional.input_tax_yen).toBe(9000);
   });
 
   it.each(["proportional", "full_credit_95_rule"] as const)(
@@ -362,7 +407,7 @@ describe("consumption tax strengthening", () => {
       taxable_sales_10_yen: 1_234_567,
       taxable_sales_8_yen: 234_567,
       deductible_input_tax_yen: 12_345,
-    })).toEqual({
+    })).toMatchObject({
       taxable_base_10_yen: 1_234_000,
       taxable_base_8_yen: 234_000,
       national_output_tax_yen: 110_853,
@@ -371,6 +416,89 @@ describe("consumption tax strengthening", () => {
       local_consumption_tax_yen: 28_500,
       combined_tax_yen: 129_700,
     });
+  });
+
+  it("carries reverse-charge output tax into national and local filing amounts", () => {
+    expect(calculateConsumptionTaxFilingAmounts({
+      taxable_sales_10_yen: 0,
+      taxable_sales_8_yen: 0,
+      deductible_input_tax_yen: 0,
+      reverse_charge_output_tax_yen: 10_000,
+    })).toMatchObject({
+      national_output_tax_yen: 7_800,
+      national_tax_yen: 7_800,
+      local_consumption_tax_yen: 2_200,
+      combined_tax_yen: 10_000,
+    });
+  });
+
+  it("collects a negative annual input adjustment as recapture tax", () => {
+    expect(calculateConsumptionTaxFilingAmounts({
+      taxable_sales_10_yen: 0,
+      taxable_sales_8_yen: 0,
+      deductible_input_tax_yen: 0,
+      input_tax_recapture_yen: 20_000,
+    })).toMatchObject({
+      national_output_tax_yen: 15_600,
+      national_input_tax_yen: 0,
+      national_tax_yen: 15_600,
+      local_consumption_tax_yen: 4_400,
+      combined_tax_yen: 20_000,
+    });
+  });
+
+  it("rejects an unaudited advisor approval and stale calculation digest", () => {
+    useFinanceFixtureTenant();
+    const profilePath = join(getDataDir(), "finance", "tax-profile.yaml");
+    const profileBackup = readFileSync(profilePath, "utf-8");
+    const baseProfile = `entity:\n  name: Fixture Books KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\n  taxpayer_basis: base_period\n  purchase_allocation_method: proportional\n  prior_period_national_tax_yen: 0\n  interim_filing_frequency: none\ncorporate_tax: {}\n`;
+    try {
+      writeFileSync(profilePath, baseProfile, "utf-8");
+      const pending = buildConsumptionTaxFilingDraft("FY2026");
+      expect(pending.calculation_sha256).toMatch(/^[a-f0-9]{64}$/);
+
+      writeFileSync(profilePath, baseProfile.replace("corporate_tax: {}", `  advisor_reviews:\n    - fiscal_year: FY2026\n      status: approved\n      reviewer_ref: advisor:fixture\n      reviewed_at: 2027-03-01T00:00:00.000Z\n      evidence_ref: review:FY2026\n      evidence_sha256: ${"b".repeat(64)}\n      calculation_sha256: ${pending.calculation_sha256}\n      audit_event_id: EVT-20270301-compliance-fake-review\ncorporate_tax: {}`), "utf-8");
+      const approved = buildConsumptionTaxFilingDraft("FY2026");
+      expect(approved.advisor_review).toMatchObject({ status: "approved", matches_calculation: true, audit_verified: false });
+      expect(approved.blockers).toEqual(expect.arrayContaining([expect.stringContaining("tax advisor review audit invalid")]));
+
+      appendJournalEntry({ entry_id: "JE-TAX-AFTER-REVIEW", occurred_at: "2026-09-20T00:00:00.000Z", description: "late sale", source: { kind: "manual", authorized_by: "test" }, evidence_refs: ["invoice:late"], lines: [
+        { account_code: "1100", debit_yen: 100000, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "4100", debit_yen: 0, credit_yen: 100000, tax_category: "taxable_10" },
+      ] });
+      const stale = buildConsumptionTaxFilingDraft("FY2026");
+      expect(stale.advisor_review.matches_calculation).toBe(false);
+      expect(stale.blockers).toContain("tax advisor review calculation hash mismatch for FY2026");
+    } finally {
+      writeFileSync(profilePath, profileBackup, "utf-8");
+      resetFixtureJournalEntries();
+    }
+  });
+
+  it("records an advisor decision in the verifiable company-event chain", () => {
+    const isolated = setupTempCompanyEventsTenant();
+    try {
+      const tenantConfigPath = join(isolated.dir, "tenants", isolated.tenantId, "tenant.yaml");
+      writeFileSync(tenantConfigPath, `${readFileSync(tenantConfigPath, "utf-8")}jurisdiction: JP\n`, "utf-8");
+      const financeDir = join(getDataDir(), "finance");
+      mkdirSync(financeDir, { recursive: true });
+      writeFileSync(join(financeDir, "tax-profile.yaml"), `entity:\n  name: Audit Fixture KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\ncorporate_tax: {}\n`, "utf-8");
+      const payload = {
+        fiscal_year: "FY2026",
+        status: "approved" as const,
+        reviewer_ref: "advisor:licensed-001",
+        reviewed_at: "2027-03-01T00:00:00.000Z",
+        evidence_ref: "review:FY2026",
+        evidence_sha256: "b".repeat(64),
+        calculation_sha256: "c".repeat(64),
+      };
+      const recorded = recordConsumptionTaxAdvisorReview(payload);
+      expect(verifyConsumptionTaxAdvisorReviewAudit({ ...payload, ...recorded })).toEqual({ ok: true });
+      expect(() => recordConsumptionTaxAdvisorReview(payload)).toThrow(/already recorded/);
+    } finally {
+      isolated.restore();
+      useFinanceFixtureTenant();
+    }
   });
 
   it("rejects a filing draft whose totals do not reconcile", () => {

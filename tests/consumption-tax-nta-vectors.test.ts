@@ -18,6 +18,15 @@ type Fixture = {
     expected_local_yen: number;
     expected_combined_yen: number;
   }>;
+  filing_adjustments: Array<{
+    label: string;
+    reverse_charge_output_tax_yen: number;
+    input_tax_recapture_yen: number;
+    taxable_sales_10_yen?: number;
+    output_tax_adjustment_yen?: number;
+    deductible_input_tax_yen?: number;
+    expected_combined_yen: number;
+  }>;
 };
 
 const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("./fixtures/consumption-tax/nta-statutory-vectors.json", import.meta.url)), "utf-8")) as Fixture;
@@ -41,6 +50,18 @@ describe("NTA-backed consumption-tax statutory vectors", () => {
     });
     expect(actual.national_tax_yen).toBe(row.expected_national_yen);
     expect(actual.local_consumption_tax_yen).toBe(row.expected_local_yen);
+    expect(actual.combined_tax_yen).toBe(row.expected_combined_yen);
+  });
+
+  it.each(fixture.filing_adjustments)("matches $label", (row) => {
+    const actual = calculateConsumptionTaxFilingAmounts({
+      taxable_sales_10_yen: row.taxable_sales_10_yen ?? 0,
+      taxable_sales_8_yen: 0,
+      deductible_input_tax_yen: row.deductible_input_tax_yen ?? 0,
+      reverse_charge_output_tax_yen: row.reverse_charge_output_tax_yen,
+      input_tax_recapture_yen: row.input_tax_recapture_yen,
+      output_tax_adjustment_yen: row.output_tax_adjustment_yen,
+    });
     expect(actual.combined_tax_yen).toBe(row.expected_combined_yen);
   });
 });

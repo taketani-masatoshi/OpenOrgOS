@@ -13,7 +13,9 @@ export const consumptionTaxFilingDraftSchema = z
     policy_id: z.string().min(1),
     calculation_method: z.enum(["standard", "simplified", "two_tenths"]),
     output_tax_yen: z.number().int().nonnegative(),
+    reverse_charge_output_tax_yen: z.number().int().nonnegative().default(0),
     deductible_input_tax_yen: z.number().int().nonnegative(),
+    input_tax_recapture_yen: z.number().int().nonnegative().default(0),
     net_tax_yen: z.number().int(),
     taxable_base_10_yen: z.number().int().nonnegative(),
     taxable_base_8_yen: z.number().int().nonnegative(),
@@ -39,6 +41,29 @@ export const consumptionTaxFilingDraftSchema = z
       reviewer_ref: z.string().optional(),
       reviewed_at: z.string().datetime().optional(),
       evidence_ref: z.string().optional(),
+      evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+      calculation_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+      audit_event_id: z.string().optional(),
+      audit_verified: z.boolean(),
+      matches_calculation: z.boolean(),
+    }),
+    calculation_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+    filing_workpaper: z.object({
+      revision: z.literal("orgos-jp-consumption-tax-workpaper-v1"),
+      rate_lines: z.array(z.object({
+        rate: z.enum(["10", "8"]),
+        taxable_base_yen: z.number().int().nonnegative(),
+        national_output_tax_yen: z.number().int().nonnegative(),
+      })).length(2),
+      reverse_charge_national_tax_yen: z.number().int().nonnegative(),
+      input_recapture_national_tax_yen: z.number().int().nonnegative(),
+      output_adjustment_national_tax_yen: z.number().int().nonnegative(),
+      deductible_national_input_tax_yen: z.number().int().nonnegative(),
+      national_balance_before_rounding_yen: z.number().int(),
+      national_payable_or_refund_yen: z.number().int(),
+      local_payable_or_refund_yen: z.number().int(),
+      interim_remitted_yen: z.number().int().nonnegative(),
+      final_remaining_yen: z.number().int(),
     }),
     interim_reconciliation: z.object({
       expected_frequency: z.enum(["none", "annual_1", "annual_3", "annual_11"]),
@@ -77,6 +102,10 @@ export const consumptionTaxFilingDraftSchema = z
     }
     if ((draft.blockers.length === 0) !== (draft.status === "ready_for_advisor_review")) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["status"], message: "status and blockers do not agree" });
+    }
+    const workpaper = draft.filing_workpaper;
+    if (workpaper.national_payable_or_refund_yen !== draft.national_tax_yen || workpaper.local_payable_or_refund_yen !== draft.local_consumption_tax_yen || workpaper.final_remaining_yen !== draft.remaining_yen) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["filing_workpaper"], message: "filing workpaper does not reconcile to draft totals" });
     }
   });
 

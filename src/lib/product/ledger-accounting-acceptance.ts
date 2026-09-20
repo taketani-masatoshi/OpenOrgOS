@@ -204,6 +204,18 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
       taxable_sales_8_yen: 0,
       deductible_input_tax_yen: 0,
     });
+    const reverseCharge = calculateConsumptionTaxFilingAmounts({
+      taxable_sales_10_yen: 0,
+      taxable_sales_8_yen: 0,
+      deductible_input_tax_yen: 0,
+      reverse_charge_output_tax_yen: 10_000,
+    });
+    const annualRecapture = calculateConsumptionTaxFilingAmounts({
+      taxable_sales_10_yen: 0,
+      taxable_sales_8_yen: 0,
+      deductible_input_tax_yen: 0,
+      input_tax_recapture_yen: 20_000,
+    });
     const filingDraft = buildConsumptionTaxFilingDraft(fiscalYear);
     result.consumption_tax = {
       pass:
@@ -216,10 +228,13 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
         filingRounding.taxable_base_10_yen === 1_234_000 &&
         filingRounding.national_tax_yen === 96_200 &&
         filingRounding.local_consumption_tax_yen === 27_100 &&
+        reverseCharge.combined_tax_yen === 10_000 &&
+        annualRecapture.combined_tax_yen === 20_000 &&
         filingDraft.status === "ready_for_advisor_review" &&
         filingDraft.submission === "not-for-etax" &&
+        /^[a-f0-9]{64}$/.test(filingDraft.calculation_sha256) &&
         filingDraft.blockers.length === 0,
-      detail: `10%=${standard10.combined_tax_yen}, 8%=${reduced8.combined_tax_yen}, rounded=${filingRounding.combined_tax_yen}, filing=${filingDraft.status}`,
+      detail: `10%=${standard10.combined_tax_yen}, 8%=${reduced8.combined_tax_yen}, rounded=${filingRounding.combined_tax_yen}, reverse=${reverseCharge.combined_tax_yen}, recapture=${annualRecapture.combined_tax_yen}, filing=${filingDraft.status}`,
     };
     return result;
   } catch (error) {

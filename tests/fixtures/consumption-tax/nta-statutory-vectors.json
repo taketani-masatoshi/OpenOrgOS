@@ -29,6 +29,46 @@
       "expected_national_yen": 624000,
       "expected_local_yen": 176000,
       "expected_combined_yen": 800000
+    },
+    {
+      "label": "mixed-standard-and-reduced-rate",
+      "taxable_sales_10_yen": 1000000,
+      "taxable_sales_8_yen": 1000000,
+      "expected_national_yen": 140400,
+      "expected_local_yen": 39600,
+      "expected_combined_yen": 180000
+    }
+  ],
+  "filing_adjustments": [
+    {
+      "label": "reverse-charge-output",
+      "reverse_charge_output_tax_yen": 10000,
+      "input_tax_recapture_yen": 0,
+      "expected_combined_yen": 10000
+    },
+    {
+      "label": "negative-input-adjustment-recapture",
+      "reverse_charge_output_tax_yen": 0,
+      "input_tax_recapture_yen": 20000,
+      "expected_combined_yen": 20000
+    },
+    {
+      "label": "sales-return-output-adjustment",
+      "taxable_sales_10_yen": 1000000,
+      "output_tax_adjustment_yen": 10000,
+      "reverse_charge_output_tax_yen": 0,
+      "input_tax_recapture_yen": 0,
+      "deductible_input_tax_yen": 0,
+      "expected_combined_yen": 90000
+    },
+    {
+      "label": "deductible-input-tax",
+      "taxable_sales_10_yen": 1000000,
+      "output_tax_adjustment_yen": 0,
+      "reverse_charge_output_tax_yen": 0,
+      "input_tax_recapture_yen": 0,
+      "deductible_input_tax_yen": 20000,
+      "expected_combined_yen": 80000
     }
   ]
 }

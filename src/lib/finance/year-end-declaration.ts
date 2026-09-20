@@ -52,7 +52,12 @@ export function evaluateYearEndDeclaration(fiscalYear: string): { errors: string
   if (declaration.value.consumption_tax !== "exempt") {
     const filing = buildConsumptionTaxFilingDraft(fiscalYear);
     errors.push(...filing.blockers.map((issue) => `consumption tax: ${issue}`));
-    if (declaration.value.consumption_tax === "settled" && filing.remaining_yen !== 0) errors.push(`consumption tax settlement mismatch ${filing.remaining_yen} yen`);
+    if (declaration.value.consumption_tax === "settled") {
+      if (filing.remaining_yen !== 0) errors.push(`consumption tax settlement mismatch ${filing.remaining_yen} yen`);
+      if (filing.advisor_review.status !== "approved" || !filing.advisor_review.matches_calculation || !filing.advisor_review.audit_verified) {
+        errors.push("consumption tax settled declaration requires advisor approval for the current calculation hash");
+      }
+    }
   }
   if (declaration.value.consumption_tax === "settled") {
     let payable: string | undefined;

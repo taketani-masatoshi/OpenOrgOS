@@ -87,6 +87,8 @@ export const taxProfileConsumptionTaxSchema = z.object({
     evidence_ref: z.string().min(1),
   })).optional(),
   taxable_sales_ratio_override_pct: z.number().min(0).max(100).optional(),
+  taxable_sales_ratio_override_evidence_ref: z.string().min(1).optional(),
+  taxable_sales_ratio_override_evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   interim_filing_frequency: z.enum(["none", "annual_1", "annual_3", "annual_11"]).optional(),
   prior_period_national_tax_yen: z.number().int().nonnegative().optional(),
   voluntary_interim_filing: z.boolean().optional(),
@@ -125,11 +127,20 @@ export const taxProfileConsumptionTaxSchema = z.object({
     reviewer_ref: z.string().min(1).optional(),
     reviewed_at: z.string().datetime().optional(),
     evidence_ref: z.string().min(1).optional(),
+    evidence_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+    calculation_sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+    audit_event_id: z.string().regex(/^EVT-\d{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
   }).superRefine((review, ctx) => {
-    if (review.status === "approved" && (!review.reviewer_ref || !review.reviewed_at || !review.evidence_ref)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "approved advisor review requires reviewer_ref, reviewed_at, and evidence_ref" });
+    if (review.status !== "pending" && (!review.reviewer_ref || !review.reviewed_at || !review.evidence_ref || !review.evidence_sha256 || !review.calculation_sha256 || !review.audit_event_id)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "completed advisor review requires reviewer, evidence digest, calculation digest, and audit event" });
     }
-  })).optional(),
+  })).superRefine((reviews, ctx) => {
+    const years = new Set<string>();
+    reviews.forEach((review, index) => {
+      if (years.has(review.fiscal_year)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [index, "fiscal_year"], message: "advisor review fiscal year must be unique" });
+      years.add(review.fiscal_year);
+    });
+  }).optional(),
   notes: z.string().optional(),
 });
 

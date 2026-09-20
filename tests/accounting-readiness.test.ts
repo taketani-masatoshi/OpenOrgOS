@@ -21,6 +21,7 @@ describe("accounting readiness", () => {
     refreshOrgOsPaths();
     const report = buildAccountingReadinessReport();
     expect(report.mode).toBe("accounting");
+    expect(report.score_kind).toBe("scoped_implementation_readiness");
     expect(report.max_score).toBe(100);
     expect(report.acceptance.isolated).toBe(true);
     expect(report.scope.excluded).toContain("e-Tax / eLTAXへの提出");
@@ -37,5 +38,6 @@ describe("accounting readiness", () => {
     expect(consumptionTax?.pass, consumptionTax?.detail).toBe(true);
     // Without pilots in empty workspace, runtime health checks fail → non-100
     expect(report.score).toBeLessThan(100);
+    expect(report.gate_estimate).not.toBe("A3");
   }, 120_000);
 });

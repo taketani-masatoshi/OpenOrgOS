@@ -92,7 +92,7 @@ export function buildAccountingReadinessChecks(
     {
       id: "runtime-consumption-tax",
       gate: "A2",
-      label: "Consumption tax: statutory rates, national/local split, and filing rounding",
+      label: "Consumption tax: filing draft, statutory rates, adjustments, national/local split, and rounding",
       weight: 15,
       pass: acceptance.consumption_tax.pass,
       detail: acceptance.consumption_tax.detail,
@@ -133,8 +133,7 @@ export function buildAccountingReadinessReport() {
   const score = total > 0 ? Math.round((earned / total) * 100) : 0;
 
   let gate = "A0";
-  if (score >= 100) gate = "A3";
-  else if (score >= 95) gate = "A2";
+  if (score >= 95) gate = "A2";
   else if (score >= 85) gate = "A1";
 
   return {
@@ -142,6 +141,7 @@ export function buildAccountingReadinessReport() {
     max_score: 100 as const,
     gate_estimate: gate,
     mode: "accounting" as const,
+    score_kind: "scoped_implementation_readiness" as const,
     checked_at: new Date().toISOString(),
     checks,
     acceptance,
@@ -155,6 +155,6 @@ export function buildAccountingReadinessReport() {
         "税理士または代表者による最終確認・署名",
       ],
     },
-    note: "スコープ限定会計readiness。100点は法定申告や電子提出の完了を意味しません。",
+    note: "スコープ限定の実装readiness。100点でもA2を上限とし、法定申告、専門家承認、電子提出の完了を意味しません。",
   };
 }

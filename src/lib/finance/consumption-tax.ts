@@ -67,6 +67,8 @@ export type TaxProfileConsumptionSlice = {
     taxpayer_basis?: string;
     purchase_allocation_method?: "individual" | "proportional" | "full_credit_95_rule";
     taxable_sales_ratio_override_pct?: number;
+    taxable_sales_ratio_override_evidence_ref?: string;
+    taxable_sales_ratio_override_evidence_sha256?: string;
   };
 };
 
@@ -332,14 +334,26 @@ export function buildConsumptionTaxSummary(input: {
     journal.inputTaxTaxableOnly + journal.inputTaxCommon + journal.inputTaxNonTaxable;
   const salesNumerator = periodInput.taxable_sales_10_yen + periodInput.taxable_sales_8_yen + periodInput.tax_free_sales_yen;
   const salesDenominator = salesNumerator + periodInput.exempt_sales_yen + journal.nonTaxableSales;
-  const ratioPct = profile?.consumption_tax?.taxable_sales_ratio_override_pct ?? (salesDenominator > 0 ? (salesNumerator / salesDenominator) * 100 : 100);
-  const reverseChargeApplies = method === "standard" && ratioPct < 95;
+  const actualRatioPct = salesDenominator > 0 ? (salesNumerator / salesDenominator) * 100 : 100;
+  const allocation = profile?.consumption_tax?.purchase_allocation_method ?? "individual";
+  const approvedRatio = profile?.consumption_tax?.taxable_sales_ratio_override_pct;
+  const approvedRatioEvidence = profile?.consumption_tax?.taxable_sales_ratio_override_evidence_ref;
+  const approvedRatioEvidenceSha256 = profile?.consumption_tax?.taxable_sales_ratio_override_evidence_sha256;
+  const allocationRatioPct = allocation === "individual" && approvedRatio != null && approvedRatioEvidence && approvedRatioEvidenceSha256
+    ? approvedRatio
+    : actualRatioPct;
+  if (approvedRatio != null && (!approvedRatioEvidence || !approvedRatioEvidenceSha256)) {
+    journal.issues.push({ severity: "error", code: "taxable_sales_ratio_override_evidence_missing", message: "approved taxable-sales ratio requires evidence reference and SHA-256 digest" });
+  }
+  if (approvedRatio != null && allocation !== "individual") {
+    journal.issues.push({ severity: "error", code: "taxable_sales_ratio_override_not_applicable", message: "approved taxable-sales ratio is available only for the individual allocation method" });
+  }
+  const reverseChargeApplies = method === "standard" && actualRatioPct < 95;
   const reverseChargeOutput = reverseChargeApplies ? journal.reverseChargeTax : 0;
   const outputTax = output10 + output8 + journal.outputTaxAdditions - journal.outputTaxDeductions + reverseChargeOutput;
-  const allocation = profile?.consumption_tax?.purchase_allocation_method ?? "individual";
-  const fullCreditEligible = salesNumerator <= 500_000_000 && ratioPct >= 95;
+  const fullCreditEligible = salesNumerator <= 500_000_000 && actualRatioPct >= 95;
   let actualInput = journal.transactions > 0
-    ? journal.inputTaxTaxableOnly + Math.floor((journal.inputTaxCommon * ratioPct) / 100)
+    ? journal.inputTaxTaxableOnly + Math.floor((journal.inputTaxCommon * allocationRatioPct) / 100)
     : grossInput;
   if (allocation === "full_credit_95_rule" && fullCreditEligible) {
     actualInput = journal.transactions > 0 ? invoiceEligibleInput : grossInput;
@@ -348,12 +362,12 @@ export function buildConsumptionTaxSummary(input: {
     journal.issues.push({
       severity: "error",
       code: "full_credit_95_rule_ineligible",
-      message: `full-credit rule requires taxable sales of 500,000,000 yen or less and a taxable-sales ratio of at least 95% (sales=${salesNumerator}, ratio=${ratioPct})`,
+      message: `full-credit rule requires taxable sales of 500,000,000 yen or less and an actual taxable-sales ratio of at least 95% (sales=${salesNumerator}, ratio=${actualRatioPct})`,
     });
   }
   if (allocation === "proportional") {
     actualInput = Math.floor(
-      ((journal.transactions > 0 ? invoiceEligibleInput : grossInput) * ratioPct) / 100,
+      ((journal.transactions > 0 ? invoiceEligibleInput : grossInput) * actualRatioPct) / 100,
     );
   }
   if (periodInput.transitional_deduction_rate_pct) {
@@ -363,7 +377,7 @@ export function buildConsumptionTaxSummary(input: {
   }
   actualInput -= periodInput.non_deductible_purchase_tax_yen;
   if (reverseChargeApplies) {
-    actualInput += journal.reverseChargeTaxableOnly + Math.floor((journal.reverseChargeCommon * ratioPct) / 100);
+    actualInput += journal.reverseChargeTaxableOnly + Math.floor((journal.reverseChargeCommon * allocationRatioPct) / 100);
   }
   actualInput = Math.max(0, actualInput);
 
@@ -415,7 +429,8 @@ export function buildConsumptionTaxSummary(input: {
     exempt_sales_yen: periodInput.exempt_sales_yen,
     tax_free_sales_yen: periodInput.tax_free_sales_yen,
     deemed_purchase_rate_pct: deemedRate,
-    taxable_sales_ratio_pct: Math.round(ratioPct * 100) / 100,
+    taxable_sales_ratio_pct: Math.round(actualRatioPct * 100) / 100,
+    input_tax_allocation_ratio_pct: Math.round(allocationRatioPct * 100) / 100,
     gross_input_tax_yen: grossInput,
     non_deductible_input_tax_yen: Math.max(0, grossInput - deductibleInput),
     transaction_count: journal.transactions,

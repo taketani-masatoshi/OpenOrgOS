@@ -48,6 +48,7 @@ export const consumptionTaxSummarySchema = z.object({
   tax_free_sales_yen: z.number().int().nonnegative().default(0),
   deemed_purchase_rate_pct: deemedPurchaseRatePctSchema.optional(),
   taxable_sales_ratio_pct: z.number().min(0).max(100).optional(),
+  input_tax_allocation_ratio_pct: z.number().min(0).max(100).optional(),
   gross_input_tax_yen: z.number().int().nonnegative().optional(),
   non_deductible_input_tax_yen: z.number().int().nonnegative().optional(),
   transaction_count: z.number().int().nonnegative().optional(),

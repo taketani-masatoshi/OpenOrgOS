@@ -1,5 +1,6 @@
 /** Advisor-reviewable workpaper; never an official return or e-Tax payload. */
 import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import YAML from "yaml";
 import { loadFixedAssets, loadTaxProfile } from "../data.js";
@@ -12,15 +13,34 @@ import { fiscalYearEndDate, fiscalYearStartDate, fiscalYearStartMonth, resolveCo
 import { consumptionTaxFilingDraftSchema } from "../../../schemas/finance/consumption-tax-filing.js";
 import { JP_CONSUMPTION_TAX_POLICY } from "./consumption-tax-policy.js";
 import type { ConsumptionTaxSummary } from "../../../schemas/finance/consumption-tax.js";
+import { verifyConsumptionTaxAdvisorReviewAudit } from "./consumption-tax-advisor-review.js";
 
 function floorTo(value: number, unit: number): number {
   return Math.floor(value / unit) * unit;
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .filter(([, child]) => child !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function sha256(value: unknown): string {
+  return createHash("sha256").update(canonicalJson(value)).digest("hex");
 }
 
 export function calculateConsumptionTaxFilingAmounts(input: {
   taxable_sales_10_yen: number;
   taxable_sales_8_yen: number;
   deductible_input_tax_yen: number;
+  reverse_charge_output_tax_yen?: number;
+  input_tax_recapture_yen?: number;
   output_tax_adjustment_yen?: number;
   two_tenths_relief?: boolean;
 }) {
@@ -29,7 +49,13 @@ export function calculateConsumptionTaxFilingAmounts(input: {
   const taxableBase8 = floorTo(input.taxable_sales_8_yen, policy.filing_rounding.taxable_base_unit_yen);
   const nationalOutputBeforeAdjustments =
     Math.floor((taxableBase10 * policy.rates.taxable_10.national_rate_numerator) / policy.rates.taxable_10.national_rate_denominator) +
-    Math.floor((taxableBase8 * policy.rates.taxable_8.national_rate_numerator) / policy.rates.taxable_8.national_rate_denominator);
+    Math.floor((taxableBase8 * policy.rates.taxable_8.national_rate_numerator) / policy.rates.taxable_8.national_rate_denominator) +
+    Math.floor(((input.reverse_charge_output_tax_yen ?? 0) * policy.invoice_tax_national_ratio.numerator) / policy.invoice_tax_national_ratio.denominator) +
+    Math.floor(((input.input_tax_recapture_yen ?? 0) * policy.invoice_tax_national_ratio.numerator) / policy.invoice_tax_national_ratio.denominator);
+  const nationalOutput10 = Math.floor((taxableBase10 * policy.rates.taxable_10.national_rate_numerator) / policy.rates.taxable_10.national_rate_denominator);
+  const nationalOutput8 = Math.floor((taxableBase8 * policy.rates.taxable_8.national_rate_numerator) / policy.rates.taxable_8.national_rate_denominator);
+  const reverseChargeNational = Math.floor(((input.reverse_charge_output_tax_yen ?? 0) * policy.invoice_tax_national_ratio.numerator) / policy.invoice_tax_national_ratio.denominator);
+  const inputRecaptureNational = Math.floor(((input.input_tax_recapture_yen ?? 0) * policy.invoice_tax_national_ratio.numerator) / policy.invoice_tax_national_ratio.denominator);
   const nationalAdjustment = Math.floor(
     ((input.output_tax_adjustment_yen ?? 0) * policy.invoice_tax_national_ratio.numerator) /
       policy.invoice_tax_national_ratio.denominator,
@@ -52,6 +78,17 @@ export function calculateConsumptionTaxFilingAmounts(input: {
     national_tax_yen: nationalTax,
     local_consumption_tax_yen: localTax,
     combined_tax_yen: nationalTax + localTax,
+    workpaper: {
+      rate_lines: [
+        { rate: "10" as const, taxable_base_yen: taxableBase10, national_output_tax_yen: nationalOutput10 },
+        { rate: "8" as const, taxable_base_yen: taxableBase8, national_output_tax_yen: nationalOutput8 },
+      ],
+      reverse_charge_national_tax_yen: reverseChargeNational,
+      input_recapture_national_tax_yen: inputRecaptureNational,
+      output_adjustment_national_tax_yen: nationalAdjustment,
+      deductible_national_input_tax_yen: nationalInput,
+      national_balance_before_rounding_yen: nationalRaw,
+    },
   };
 }
 
@@ -474,24 +511,61 @@ export function buildConsumptionTaxFilingDraft(fiscalYear: string) {
   const outputAdjustment = summaries.reduce((sum, row) => sum + (row.output_tax_adjustment_yen ?? 0), 0);
   const effectiveInputBeforeFloor = twoTenthsRequested && twoTenthsEligible ? Math.floor(output * 0.8) : input + annualAdjustment.total_yen;
   const effectiveInput = Math.max(0, effectiveInputBeforeFloor);
+  const inputTaxRecapture = Math.max(0, -effectiveInputBeforeFloor);
   const advisorReviews = Array.isArray(consumption?.advisor_reviews)
-    ? consumption.advisor_reviews as Array<{ fiscal_year: string; status: "pending" | "approved" | "rejected"; reviewer_ref?: string; reviewed_at?: string; evidence_ref?: string }>
+    ? consumption.advisor_reviews as Array<{ fiscal_year: string; status: "pending" | "approved" | "rejected"; reviewer_ref?: string; reviewed_at?: string; evidence_ref?: string; evidence_sha256?: string; calculation_sha256?: string; audit_event_id?: string }>
     : [];
   const advisorReview = advisorReviews.find((review) => review.fiscal_year === fiscalYear) ?? { fiscal_year: fiscalYear, status: "pending" as const };
-  if (advisorReview.status !== "approved") warnings.push(`tax advisor review ${advisorReview.status} for ${fiscalYear}`);
   const filed = calculateConsumptionTaxFilingAmounts({
     taxable_sales_10_yen: taxableSales10,
     taxable_sales_8_yen: taxableSales8,
     deductible_input_tax_yen: effectiveInput,
+    reverse_charge_output_tax_yen: annualSummary.reverse_charge_tax_yen ?? 0,
+    input_tax_recapture_yen: inputTaxRecapture,
     output_tax_adjustment_yen: outputAdjustment,
     two_tenths_relief: twoTenthsRequested && twoTenthsEligible,
   });
+  const { advisor_reviews: _advisorReviews, ...profileWithoutReviews } = consumption ?? {};
+  const calculationSha256 = sha256({
+    fiscal_year: fiscalYear,
+    period: { from: taxPeriodFrom, to },
+    policy_id: JP_CONSUMPTION_TAX_POLICY.id,
+    profile: profileWithoutReviews,
+    journal_entries: loadJournalEntries().entries.filter((entry) => {
+      const date = entry.occurred_at.slice(0, 10);
+      return date >= taxPeriodFrom && date <= to;
+    }),
+    annual_summary: annualSummary,
+    annual_adjustment: annualAdjustment,
+    interim_reconciliation: interim,
+    consumption_tax_remittances: consumptionTaxRemittances,
+    remitted_yen: remitted,
+    filing_amounts: filed,
+  });
+  const advisorReviewMatches = advisorReview.calculation_sha256 === calculationSha256;
+  const advisorAudit = advisorReview.status === "pending" || !advisorReview.reviewer_ref || !advisorReview.reviewed_at || !advisorReview.evidence_ref || !advisorReview.evidence_sha256 || !advisorReview.calculation_sha256
+    ? { ok: false, reason: "advisor review incomplete" }
+    : verifyConsumptionTaxAdvisorReviewAudit({
+        fiscal_year: fiscalYear,
+        status: advisorReview.status,
+        reviewer_ref: advisorReview.reviewer_ref,
+        reviewed_at: advisorReview.reviewed_at,
+        evidence_ref: advisorReview.evidence_ref,
+        evidence_sha256: advisorReview.evidence_sha256,
+        calculation_sha256: advisorReview.calculation_sha256,
+        audit_event_id: advisorReview.audit_event_id,
+      });
+  if (advisorReview.status === "rejected") blockers.push(`tax advisor review rejected for ${fiscalYear}`);
+  else if (advisorReview.status === "approved" && !advisorReviewMatches) blockers.push(`tax advisor review calculation hash mismatch for ${fiscalYear}`);
+  else if (advisorReview.status === "approved" && !advisorAudit.ok) blockers.push(`tax advisor review audit invalid for ${fiscalYear}: ${advisorAudit.reason}`);
+  else if (advisorReview.status !== "approved") warnings.push(`tax advisor review ${advisorReview.status} for ${fiscalYear}`);
   return consumptionTaxFilingDraftSchema.parse({
     fiscal_year: fiscalYear, submission: "not-for-etax" as const,
     status: blockers.length === 0 ? "ready_for_advisor_review" as const : "blocked" as const,
     policy_id: JP_CONSUMPTION_TAX_POLICY.id,
     calculation_method: twoTenthsRequested && twoTenthsEligible ? "two_tenths" as const : summaries[0]?.method ?? "standard",
-    output_tax_yen: output, deductible_input_tax_yen: effectiveInput, net_tax_yen: filed.combined_tax_yen,
+    output_tax_yen: output, reverse_charge_output_tax_yen: annualSummary.reverse_charge_tax_yen ?? 0,
+    deductible_input_tax_yen: effectiveInput, input_tax_recapture_yen: inputTaxRecapture, net_tax_yen: filed.combined_tax_yen,
     ...filed,
     remitted_yen: remitted, remaining_yen: filed.combined_tax_yen - remitted,
     taxable_sales_ratio_pct: Math.round(ratio * 100) / 100,
@@ -503,7 +577,7 @@ export function buildConsumptionTaxFilingDraft(fiscalYear: string) {
       { id: "taxable-sales-ratio", complete: Number.isFinite(ratio) },
       { id: "interim-payments", complete: interim.paid_count === interim.expected_count && interim.paid_yen === interim.expected_yen },
       { id: "annual-adjustments", complete: (automaticProfile.incomplete_assets ?? []).length === 0 },
-      { id: "advisor-review", complete: advisorReview.status === "approved" },
+      { id: "advisor-review", complete: advisorReview.status === "approved" && advisorReviewMatches && advisorAudit.ok },
     ],
     blockers: [...new Set(blockers)], warnings: [...new Set(warnings)],
     advisor_review: {
@@ -511,6 +585,20 @@ export function buildConsumptionTaxFilingDraft(fiscalYear: string) {
       reviewer_ref: advisorReview.reviewer_ref,
       reviewed_at: advisorReview.reviewed_at,
       evidence_ref: advisorReview.evidence_ref,
+      evidence_sha256: advisorReview.evidence_sha256,
+      calculation_sha256: advisorReview.calculation_sha256,
+      audit_event_id: advisorReview.audit_event_id,
+      audit_verified: advisorAudit.ok,
+      matches_calculation: advisorReviewMatches,
+    },
+    calculation_sha256: calculationSha256,
+    filing_workpaper: {
+      revision: "orgos-jp-consumption-tax-workpaper-v1" as const,
+      ...filed.workpaper,
+      national_payable_or_refund_yen: filed.national_tax_yen,
+      local_payable_or_refund_yen: filed.local_consumption_tax_yen,
+      interim_remitted_yen: remitted,
+      final_remaining_yen: filed.combined_tax_yen - remitted,
     },
     interim_reconciliation: interim,
   });
