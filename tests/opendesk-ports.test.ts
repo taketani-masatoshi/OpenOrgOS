@@ -69,8 +69,10 @@ describe("opendesk ports", () => {
       fetchImpl,
     );
     expect(result.ok).toBe(true);
-    expect(calls[0]?.method).toBe("PUT");
-    expect(calls[0]?.url).toContain("/remote.php/dav/files/admin/opendesk-verify/l1-note.txt");
+    expect(calls[0]?.method).toBe("MKCOL");
+    expect(calls[0]?.url).toContain("/remote.php/dav/files/admin/opendesk-verify");
+    expect(calls[1]?.method).toBe("PUT");
+    expect(calls[1]?.url).toContain("/remote.php/dav/files/admin/opendesk-verify/l1-note.txt");
     expect(() => assertOpenDeskFilePath("data/finance/bank-accounts.yaml")).toThrow(/not exportable/);
   });
 
