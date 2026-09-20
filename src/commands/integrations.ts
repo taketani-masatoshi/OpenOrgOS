@@ -12,6 +12,11 @@ import {
   exportToGoogleDrive,
   type DriveExportKind,
 } from "../lib/integrations/gdrive-export.js";
+import {
+  exportHttpOutbound,
+  httpOutboundStatus,
+  type HttpOutboundExportKind,
+} from "../lib/integrations/http-outbound-adapter.js";
 
 export function runIntegrationsStatus(opts: { json?: boolean }): void {
   const report = computeIntegrationsStatus(getTenantId());
@@ -174,4 +179,44 @@ export async function runAsanaPull(opts: { caseId: string; json?: boolean }): Pr
   if (result.public_notes) {
     console.log(`  notes: ${result.public_notes.slice(0, 200)}`);
   }
+}
+
+export function runHttpOutboundStatus(opts: { json?: boolean }): void {
+  const status = httpOutboundStatus();
+  if (opts.json) {
+    console.log(JSON.stringify(status, null, 2));
+    return;
+  }
+  console.log(
+    `HTTP outbound · enabled=${status.enabled} · usable=${status.usable} · dialect=${status.dialect}`,
+  );
+  console.log(`  ${status.detail}`);
+  if (status.base_url) console.log(`  base_url: ${status.base_url}`);
+  console.log(`  routes: ${status.route_count} · exports: ${status.export_count}`);
+}
+
+export async function runHttpOutboundExport(opts: {
+  kind: HttpOutboundExportKind;
+  id: string;
+  dryRun?: boolean;
+  json?: boolean;
+}): Promise<void> {
+  const result = await exportHttpOutbound({
+    kind: opts.kind,
+    id: opts.id,
+    dryRun: opts.dryRun === true,
+  });
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+  if (!result.ok) {
+    console.error(`HTTP outbound export failed: ${result.reason}`);
+    process.exit(1);
+  }
+  console.log(
+    `✓ HTTP outbound ${opts.kind} ${opts.id}${result.dry_run ? " (dry-run)" : ""} → ${result.url}`,
+  );
+  if (result.export_id) console.log(`  ledger: ${result.export_id}`);
 }

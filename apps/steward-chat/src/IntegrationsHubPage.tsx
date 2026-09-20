@@ -6,9 +6,12 @@ import {
   postConnectorConnect,
   postConnectorDisconnect,
   postDriveExport,
+  postHttpOutboundExport,
   postSlackMessage,
   putConnectorSecrets,
   putConnectorSettings,
+  putHttpOutboundSecrets,
+  putHttpOutboundSettings,
   type ConnectorCard,
   type ConnectorHubSnapshot,
   type ConnectorProvider,
@@ -41,6 +44,10 @@ export function IntegrationsHubPage() {
   const [driveFolder, setDriveFolder] = useState("");
   const [driveDocPath, setDriveDocPath] = useState("");
   const [driveExports, setDriveExports] = useState<DriveExportRecord[]>([]);
+  const [httpBaseUrl, setHttpBaseUrl] = useState("");
+  const [httpBearer, setHttpBearer] = useState("");
+  const [httpExportId, setHttpExportId] = useState("");
+  const [httpEnabled, setHttpEnabled] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -53,6 +60,8 @@ export function IntegrationsHubPage() {
       setSlackChannel(slack?.settings.default_channel_id ?? "");
       setAsanaProject(asana?.settings.default_project_gid ?? "");
       setDriveFolder(drive?.settings.default_folder_id ?? "");
+      setHttpBaseUrl(next.http_outbound?.base_url ?? "");
+      setHttpEnabled(next.http_outbound?.enabled ?? false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -145,13 +154,129 @@ export function IntegrationsHubPage() {
   return (
     <OpsPage
       title="連携設定"
-      lead="Slack · Asana · Gmail · Google Drive。正本は OrgOS のまま、外部には写しだけを出します。"
+      lead="Slack · Asana · Gmail · Google Drive · Direct HTTP。正本は OrgOS のまま、外部には写しだけを出します。"
       loading={!hub}
       loadingLabel="読み込み中"
       error={error}
       className="integrations-page"
     >
       {note && <p className="ops-page-meta">{note}</p>}
+
+      <section className="ops-card">
+        <h2 className="section-title">Direct HTTP / OData</h2>
+        <p className="ops-page-meta">
+          ERP 等への財務 L1 出力（Community OAuth なし）。口座番号は出しません。
+        </p>
+        <p className="ops-page-meta">
+          {hub?.http_outbound
+            ? `${hub.http_outbound.usable ? "利用可" : "未準備"} · ${hub.http_outbound.detail}`
+            : "状態未取得"}
+        </p>
+        <label className="wallet-field">
+          <span>
+            <input
+              type="checkbox"
+              checked={httpEnabled}
+              onChange={(e) => setHttpEnabled(e.target.checked)}
+            />{" "}
+            有効にする
+          </span>
+        </label>
+        <label className="wallet-field">
+          Base URL
+          <input value={httpBaseUrl} onChange={(e) => setHttpBaseUrl(e.target.value)} />
+        </label>
+        <label className="wallet-field">
+          Bearer トークン（保存後は非表示）
+          <input
+            type="password"
+            autoComplete="off"
+            value={httpBearer}
+            onChange={(e) => setHttpBearer(e.target.value)}
+          />
+        </label>
+        <p className="ops-page-meta">
+          {hub?.http_outbound?.secrets.bearer_configured
+            ? `Bearer 設定済み（${hub.http_outbound.secrets.bearer_hint}）`
+            : "Bearer 未設定"}
+        </p>
+        <div className="section-actions">
+          <button
+            type="button"
+            className="primary-button"
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                await putHttpOutboundSettings({
+                  enabled: httpEnabled,
+                  base_url: httpBaseUrl.trim() || undefined,
+                  auth_kind:
+                    httpBearer.trim() || hub?.http_outbound?.secrets.bearer_configured
+                      ? "bearer"
+                      : "none",
+                  dialect: "rest",
+                });
+                if (httpBearer.trim()) {
+                  await putHttpOutboundSecrets({
+                    ORGOS_HTTP_OUTBOUND_BEARER: httpBearer.trim(),
+                  });
+                  setHttpBearer("");
+                }
+                return "HTTP outbound の設定を保存しました。";
+              })
+            }
+          >
+            保存
+          </button>
+        </div>
+        <h3 className="section-title">財務を送る</h3>
+        <label className="wallet-field">
+          月（YYYY-MM）または請求 ID
+          <input value={httpExportId} onChange={(e) => setHttpExportId(e.target.value)} />
+        </label>
+        <div className="section-actions">
+          <button
+            type="button"
+            className="quiet-button"
+            disabled={busy || !httpExportId.trim()}
+            onClick={() =>
+              void run(async () => {
+                const kind = /^\d{4}-\d{2}$/.test(httpExportId.trim()) ? "monthly" : "invoice";
+                const res = await postHttpOutboundExport({
+                  kind,
+                  id: httpExportId.trim(),
+                  dry_run: true,
+                });
+                return res.ok
+                  ? `確認: ${res.reason} → ${res.url ?? ""}`
+                  : `確認失敗: ${res.reason}`;
+              })
+            }
+          >
+            送信前チェック
+          </button>
+          <button
+            type="button"
+            className="primary-button"
+            disabled={busy || !httpExportId.trim()}
+            onClick={() =>
+              void run(async () => {
+                const kind = /^\d{4}-\d{2}$/.test(httpExportId.trim()) ? "monthly" : "invoice";
+                const res = await postHttpOutboundExport({
+                  kind,
+                  id: httpExportId.trim(),
+                  dry_run: false,
+                });
+                return res.ok
+                  ? `送信しました（${res.export_id}）`
+                  : `送信できません: ${res.reason}`;
+              })
+            }
+          >
+            送信
+          </button>
+        </div>
+      </section>
 
       <section className="ops-card">
         {renderCardHeader("slack")}

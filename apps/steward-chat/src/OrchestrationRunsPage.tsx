@@ -490,8 +490,8 @@ export function OrchestrationRunsPage() {
           <div className="empty-state">
             <strong>{copy.noActive}</strong>
             <p>{copy.noActiveHint}</p>
-            <a className="orchestration-inbox-link" href="/steward/">
-              {copy.openSteward}
+            <a className="orchestration-inbox-link" href="/handoffs/">
+              {copy.openHandoffs}
             </a>
             <div className="orchestration-board-filters">{viewModeChips}</div>
           </div>
@@ -807,8 +807,8 @@ export function OrchestrationRunsPage() {
                     {busy === "cancel" ? copy.cancelBusy : copy.cancelPending}
                   </button>
                 ) : null}
-                <a className="orchestration-inbox-link" href="/steward/">
-                  {copy.openSteward}
+                <a className="orchestration-inbox-link" href="/handoffs/">
+                  {copy.openHandoffs}
                 </a>
               </div>
 

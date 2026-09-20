@@ -133,6 +133,39 @@ export function registerPlatformCommands(program: Command): void {
       runConnectorStatus({ json: opts.json });
     });
 
+  const httpOutboundCmd = integrationsCmd
+    .command("http")
+    .description("Direct HTTP / OData outbound (finance L1 · ADR 0071)");
+  httpOutboundCmd
+    .command("status")
+    .description("HTTP outbound readiness (no secrets)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runHttpOutboundStatus } = await import("../../commands/integrations.js");
+      runHttpOutboundStatus({ json: opts.json });
+    });
+  httpOutboundCmd
+    .command("export")
+    .description("Export finance.monthly or invoice.issued L1 payload")
+    .requiredOption("--kind <kind>", "monthly | invoice")
+    .requiredOption("--id <id>", "Month YYYY-MM or invoice id")
+    .option("--dry-run", "Build payload and ledger without HTTP fetch")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const kind = String(opts.kind);
+      if (kind !== "monthly" && kind !== "invoice") {
+        console.error("--kind must be monthly or invoice");
+        process.exit(1);
+      }
+      const { runHttpOutboundExport } = await import("../../commands/integrations.js");
+      await runHttpOutboundExport({
+        kind,
+        id: opts.id,
+        dryRun: opts.dryRun,
+        json: opts.json,
+      });
+    });
+
   const slackCmd = integrationsCmd.command("slack").description("Slack outbound (L0/L1 only)");
   slackCmd
     .command("send")

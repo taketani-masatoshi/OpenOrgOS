@@ -1,0 +1,99 @@
+openapi: 3.0.3
+info:
+  title: OpenOrgOS X-Road notice-deliver (REST Producer)
+  version: "1.0.0"
+  description: |
+    Security Server registers this service against an OrgOS producer listener
+    (`orgos protocol gov-gateway serve`). Body is OpenOrgOS MIME
+    (`application/vnd.openorgos.envelope+json`). SOAP is out of scope.
+servers:
+  - url: http://127.0.0.1:9474
+    description: Loopback producer (TLS at SS / reverse proxy)
+paths:
+  /health:
+    get:
+      summary: Producer health
+      responses:
+        "200":
+          description: Ready
+  /r1/{service_path}:
+    post:
+      summary: X-Road REST notice-deliver
+      parameters:
+        - name: service_path
+          in: path
+          required: true
+          schema:
+            type: string
+          description: e.g. EE/COM/PARTNER/wire/notice-deliver
+        - name: X-Road-Client
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Road-Service
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.openorgos.envelope+json:
+            schema:
+              type: object
+              description: Canonical EventEnvelope JSON
+      responses:
+        "200":
+          description: notice-ack OpenOrgOS MIME
+          content:
+            application/vnd.openorgos.envelope+json:
+              schema:
+                type: object
+        "403":
+          description: Unknown X-Road-Client
+        "422":
+          description: Decode or ingest failed (Wire SoT unchanged)
+  /protocol/v1/gov-gateway/producer/{service_code}:
+    post:
+      summary: Alias path for the same producer ingest
+      parameters:
+        - name: service_code
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Road-Client
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Road-Service
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: X-Request-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/vnd.openorgos.envelope+json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: notice-ack
+        "403":
+          description: Unknown X-Road-Client
+        "422":
+          description: Decode or ingest failed

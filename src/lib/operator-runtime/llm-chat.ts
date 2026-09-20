@@ -96,14 +96,51 @@ function toAnthropicMessages(messages: LlmChatMessage[]): Array<{ role: "user" |
   return out;
 }
 
-export function llmMaxTokens(): number {
-  const raw = Number(process.env.ORGOS_LLM_MAX_TOKENS ?? "2048");
-  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 2048;
+const LOCAL_SYSTEM_TRUNCATE_NOTE = "\n\n[system truncated for local LLM]";
+
+export function isLocalLlmUrl(url: string): boolean {
+  return /127\.0\.0\.1|localhost|host\.docker\.internal/i.test(url);
 }
 
-export function llmTimeoutMs(): number {
-  const raw = Number(process.env.ORGOS_LLM_TIMEOUT_MS ?? "120000");
-  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 120_000;
+function parsePositiveInt(raw: string | undefined, fallback: number): number {
+  const n = Number(raw ?? "");
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
+}
+
+/** Host / Docker Ollama cannot prefill a full Today prompt within 120s. */
+export function llmMaxTokens(cfg?: { baseUrl: string } | null): number {
+  const envTokens = parsePositiveInt(process.env.ORGOS_LLM_MAX_TOKENS, 2048);
+  if (cfg && isLocalLlmUrl(cfg.baseUrl)) {
+    const cap = parsePositiveInt(process.env.ORGOS_LLM_LOCAL_MAX_TOKENS, 512);
+    return Math.min(envTokens, cap);
+  }
+  if (cfg) {
+    return parsePositiveInt(process.env.ORGOS_LLM_CLOUD_MAX_TOKENS, 2048);
+  }
+  return envTokens;
+}
+
+export function llmTimeoutMs(cfg?: { baseUrl: string } | null): number {
+  if (cfg && isLocalLlmUrl(cfg.baseUrl) && process.env.ORGOS_LLM_LOCAL_TIMEOUT_MS) {
+    return parsePositiveInt(process.env.ORGOS_LLM_LOCAL_TIMEOUT_MS, 600_000);
+  }
+  return parsePositiveInt(process.env.ORGOS_LLM_TIMEOUT_MS, 120_000);
+}
+
+export function compactMessagesForLocalLlm(
+  messages: LlmChatMessage[],
+  baseUrl: string,
+): LlmChatMessage[] {
+  if (!isLocalLlmUrl(baseUrl)) return messages;
+  const limit = parsePositiveInt(process.env.ORGOS_LLM_LOCAL_SYSTEM_CHARS, 6000);
+  return messages.map((m) => {
+    if (m.role !== "system" || !("content" in m) || typeof m.content !== "string") {
+      return m;
+    }
+    if (m.content.length <= limit) return m;
+    const budget = Math.max(0, limit - LOCAL_SYSTEM_TRUNCATE_NOTE.length);
+    return { ...m, content: `${m.content.slice(0, budget)}${LOCAL_SYSTEM_TRUNCATE_NOTE}` };
+  });
 }
 
 async function fetchWithTimeout(
@@ -134,11 +171,12 @@ async function postOpenAiChat(
     return { ok: false, usage: {}, detail: "LLM API not configured", model: "" };
   }
 
+  const outbound = compactMessagesForLocalLlm(messages, cfg.baseUrl);
   const body: Record<string, unknown> = {
     model: cfg.model,
-    messages,
+    messages: outbound,
     temperature: opts?.temperature ?? 0.3,
-    max_tokens: llmMaxTokens(),
+    max_tokens: llmMaxTokens(cfg),
   };
   if (opts?.tools?.length) {
     body.tools = opts.tools;
@@ -146,6 +184,11 @@ async function postOpenAiChat(
   }
   if (opts?.responseFormat) {
     body.response_format = opts.responseFormat;
+  }
+  if (isLocalLlmUrl(cfg.baseUrl)) {
+    // Gemma 4 thinking can spend the whole budget before any visible tokens.
+    body.think = false;
+    body.options = { num_ctx: 8192 };
   }
 
   const url = `${cfg.baseUrl}/chat/completions`;
@@ -161,7 +204,7 @@ async function postOpenAiChat(
         },
         body: JSON.stringify(body),
       },
-      llmTimeoutMs(),
+      llmTimeoutMs(cfg),
     );
   } catch (err) {
     return {
@@ -239,7 +282,7 @@ async function postAnthropicChat(
         },
         body: JSON.stringify(body),
       },
-      llmTimeoutMs(),
+      llmTimeoutMs(cfg),
     );
   } catch (err) {
     return {

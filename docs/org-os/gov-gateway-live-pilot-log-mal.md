@@ -34,9 +34,20 @@ node --import tsx src/cli.ts --tenant mal protocol gov-gateway encode --event-id
 node --import tsx src/cli.ts --tenant mal protocol deliver --peer PEER-081 --file tenants/mal/docs/protocol/outbox/691e54e9-7fbb-41cd-9aee-496d86963b53.json
 ```
 
-## Production SS next steps
+## Production SS next steps (Producer)
 
-1. Set `GOV_XROAD_SECURITY_SERVER_URL` to operator Security Server
-2. Set `GOV_XROAD_TOKEN` if required
-3. Update `gov-gateway.yaml` member/subsystem/service codes for registered subsystem
-4. Point peer at POST-capable notice-deliver REST path on production SS
+1. Set `GOV_XROAD_SECURITY_SERVER_URL` to the operator Security Server
+2. Set `GOV_XROAD_TOKEN` if required (consumer outbound)
+3. Update `gov-gateway.yaml` member/subsystem/service codes for the registered subsystem
+4. Register OrgOS as REST producer service `notice-deliver` on the SS
+5. Point SS producer URL at OrgOS listener (loopback or reverse-proxied):
+
+```bash
+orgos protocol gov-gateway serve --profile xroad_v7 --bind 127.0.0.1:9474
+```
+
+6. Add peer `inbound_endpoints` with `transport: gov_gateway` and matching `member_code`,
+   or list clients under `trusted_xroad_clients` in `gov-gateway.yaml`
+7. Contract: [publish/protocol/xroad-notice-deliver.openapi.yaml](../../publish/protocol/xroad-notice-deliver.openapi.yaml)
+
+**SOAP is not implemented** — REST OpenOrgOS MIME only.

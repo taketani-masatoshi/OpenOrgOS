@@ -276,7 +276,7 @@ export async function withLlmWorker<T>(
   try {
     const result = await fn({
       worker: first.worker,
-      target: workerToLlmApiConfig(first.worker),
+      target: workerToLlmApiConfig(first.worker, hint?.model),
       queued_ms: first.queued_ms,
     });
     releaseLease(first.worker, { ok: true, latencyMs: Date.now() - started });
@@ -306,7 +306,7 @@ export async function withLlmWorker<T>(
     try {
       const result = await fn({
         worker: second.worker,
-        target: workerToLlmApiConfig(second.worker),
+        target: workerToLlmApiConfig(second.worker, hint?.model),
         queued_ms: first.queued_ms + second.queued_ms,
       });
       releaseLease(second.worker, { ok: true, latencyMs: Date.now() - started2 });

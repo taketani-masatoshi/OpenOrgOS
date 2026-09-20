@@ -359,6 +359,19 @@ describe("llm-pool registry key resolution", () => {
     expect(JSON.stringify(w)).not.toContain("sk-secret-value");
   });
 
+  it("does not fall back to ORGOS_LLM_API_KEY when api_key_env is named but empty", () => {
+    process.env.ORGOS_LLM_API_KEY = "ollama";
+    delete process.env.OLLAMA_API_KEY;
+    const w = worker({
+      id: "cloud-ollama",
+      tier: "cloud",
+      api_key_env: "OLLAMA_API_KEY",
+      base_url: "https://ollama.com/v1",
+    });
+    expect(resolveWorkerApiKey(w)).toBe("");
+    expect(isWorkerKeyConfigured(w)).toBe(false);
+  });
+
   it("treats local openai-compatible as key-configured without env", () => {
     delete process.env.ORGOS_LLM_API_KEY;
     delete process.env.OPENAI_API_KEY;
@@ -392,6 +405,23 @@ describe("llm-pool registry key resolution", () => {
     expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(
       "http://host.docker.internal:11434/v1/models",
     );
+    fetchSpy.mockRestore();
+  });
+
+  it("does not probe Ollama Cloud until OLLAMA_API_KEY is set", async () => {
+    delete process.env.OLLAMA_API_KEY;
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const result = await probeWorker(
+      worker({
+        id: "cloud-ollama",
+        tier: "cloud",
+        api_key_env: "OLLAMA_API_KEY",
+        base_url: "https://ollama.com/v1",
+      }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.detail).toMatch(/OLLAMA_API_KEY/);
+    expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 });

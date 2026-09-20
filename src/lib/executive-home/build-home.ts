@@ -23,6 +23,7 @@ import {
   resolveWorkOrderTitle,
 } from "../orchestration/board-view.js";
 import { listHandoffs } from "../routing.js";
+import { buildAgentInbox } from "../agent-inbox.js";
 import { loadOperatorRegistry } from "../org/operators.js";
 import { isClosedWorkOrder } from "../orchestration/work-order-state.js";
 import { assigneeKind, assigneeLabel } from "./assignee-kind.js";
@@ -187,6 +188,22 @@ function collectAttention(today: ReturnType<typeof buildTodayContext>): Executiv
       href: "/wire/",
       severity: "p1",
     });
+  }
+
+  try {
+    const inbox = buildAgentInbox({ for: "executive_steward", limit: 20 });
+    for (const item of inbox.items.filter((i) => i.unread).slice(0, 4)) {
+      items.push({
+        id: `handoff:${item.mission_id}`,
+        kind: "handoff",
+        title: `${item.agent_label}: ${item.subject}`,
+        status: "unread",
+        href: "/handoffs/",
+        severity: "p1",
+      });
+    }
+  } catch {
+    /* inbox optional */
   }
 
   const severityRank = { p0: 0, p1: 1, p2: 2 } as const;

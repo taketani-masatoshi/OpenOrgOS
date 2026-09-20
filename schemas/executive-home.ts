@@ -20,6 +20,7 @@ export const executiveAttentionKindSchema = z.enum([
   "ceo_question",
   "approval",
   "wire",
+  "handoff",
 ]);
 
 export const executiveAttentionItemSchema = z.object({

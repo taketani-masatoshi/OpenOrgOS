@@ -9,14 +9,20 @@ describe("formatOperatorSessionLabel", () => {
   };
 
   it("keeps Japanese as the default", () => {
-    expect(formatOperatorSessionLabel(user)).toBe(
-      "オペレータ OP-001 · 承認者 Demo CEO · 開発モード",
-    );
+    expect(formatOperatorSessionLabel(user)).toBe("Demo CEO");
   });
 
-  it("renders English without leftover Japanese chrome", () => {
-    expect(formatOperatorSessionLabel(user, "en")).toBe(
-      "Operator OP-001 · Approver Demo CEO · Dev mode",
-    );
+  it("uses the same human name in English", () => {
+    expect(formatOperatorSessionLabel(user, "en")).toBe("Demo CEO");
+  });
+
+  it("falls back to the operator id when no distinct name exists", () => {
+    expect(
+      formatOperatorSessionLabel({
+        operator_id: "OP-001",
+        approver_id: "OP-001",
+        mode: "prod",
+      }),
+    ).toBe("OP-001");
   });
 });

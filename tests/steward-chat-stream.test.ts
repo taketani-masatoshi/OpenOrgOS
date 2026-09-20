@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { createServer, type Server } from "node:http";
 import { type StewardChatServerHandle } from "../src/lib/steward-chat/server.js";
 import { startStewardChatForTest } from "./helpers/steward-chat-test-server.js";
@@ -40,6 +40,8 @@ describe("steward chat message stream", () => {
     }
     schedulingSnapshots.clear();
     process.env = { ...env };
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   async function start() {
@@ -96,5 +98,49 @@ describe("steward chat message stream", () => {
     expect(text).toContain('"type":"done"');
     expect(text).toContain('"scheduling_draft_status":"completed"');
     expect(text).toMatch(/SCH-\d{4}-\d{3}/);
+  });
+
+  it("adds Web sources to a local LLM response without tools", async () => {
+    process.env.ORGOS_LLM_STRUCTURED = "1";
+    process.env.ORGOS_LLM_TELEMETRY = "1";
+    await start();
+    const nativeFetch = globalThis.fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const url = String(input);
+        if (url.startsWith("https://api.duckduckgo.com/")) {
+          return new Response(
+            JSON.stringify({
+              Heading: "OrgOS",
+              AbstractText: "OrgOS public reference summary.",
+              AbstractURL: "https://oorgos.org/",
+              RelatedTopics: [],
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          );
+        }
+        return nativeFetch(input, init);
+      })
+    );
+
+    const response = await fetch(`${baseUrl}/chat/v1/message/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: "OrgOSの公開情報を確認して",
+        agent_id: "secretary",
+        llm_route: { mode: "local" },
+        web_search: true,
+        web_search_query: "OrgOS 公開情報",
+      }),
+    });
+    const text = await response.text();
+
+    expect(text).toContain('"type":"done"');
+    expect(text).toContain("Web検索の参照元");
+    expect(text).toContain("https://oorgos.org/");
+    expect(text).toContain('"tool_calls":0');
+    expect(text).not.toContain('"structured"');
   });
 });
