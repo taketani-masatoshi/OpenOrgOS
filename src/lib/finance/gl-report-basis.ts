@@ -8,7 +8,7 @@ import { loadJournalEntries } from "./expense-claim-journal.js";
 import { loadYojitsuFyPlan } from "../data.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import type { PdfTableRow } from "../pdf.js";
-import { resolveFiscalYearEndAsOf } from "./fiscal-year.js";
+import { lastDayOfMonth, resolveFiscalYearEndAsOf } from "./fiscal-year.js";
 import type { StatementSection } from "../../../schemas/finance/chart-of-accounts.js";
 
 export type GlPlRow = {
@@ -68,7 +68,7 @@ export function periodPlMovementByAccount(
 ): Map<string, number> {
   const chart = coa ?? loadChartOfAccounts();
   const start = `${month}-01`;
-  const end = `${month}-31`;
+  const end = lastDayOfMonth(month);
   const movement = new Map<string, number>();
   const plAccounts = new Set(
     chart.accounts

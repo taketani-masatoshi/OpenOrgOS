@@ -48,6 +48,7 @@ import {
 } from "../lib/company-events-attestation.js";
 import { runExpenseClaimList } from "./expense-claim.js";
 import { runFinancesClose } from "./finances-close.js";
+import { lastDayOfMonth } from "../lib/finance/fiscal-year.js";
 import {
   runLedgerExport,
   runLedgerMonthlyReconcile,
@@ -723,7 +724,8 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     }
     case "trial-balance": {
       const month = opts.month ?? currentDate().slice(0, 7);
-      runLedgerTrialBalance({ asOf: `${month}-28`, json: opts.json });
+      const asOf = lastDayOfMonth(month);
+      runLedgerTrialBalance({ asOf, json: opts.json });
       runLedgerMonthlyReconcile({ month, json: opts.json });
       break;
     }
@@ -732,7 +734,7 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       runLedgerExport({
         template: "journal-csv",
         from: month ? `${month}-01` : undefined,
-        to: month ? `${month}-31` : undefined,
+        to: month ? lastDayOfMonth(month) : undefined,
         output: opts.output,
         dryRun: opts.dryRun,
       });
@@ -742,7 +744,7 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       const month = opts.month ?? currentDate().slice(0, 7);
       runLedgerExport({
         template: "trial-balance-csv",
-        asOf: `${month}-28`,
+        asOf: lastDayOfMonth(month),
         output: opts.output,
         dryRun: opts.dryRun,
       });

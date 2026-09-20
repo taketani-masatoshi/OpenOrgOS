@@ -22,6 +22,7 @@ import {
 import { backfillJournalTaxCategories } from "../lib/finance/journal-tax-backfill.js";
 import { backfillJournalAuditTrail } from "../lib/finance/journal-audit-backfill.js";
 import { postDepreciationJournalEntries } from "../lib/finance/depreciation.js";
+import { lastDayOfMonth } from "../lib/finance/fiscal-year.js";
 import {
   postMonthlyPlJournalEntries,
   postRemittanceJournalEntry,
@@ -250,7 +251,7 @@ export function runLedgerPostSource(opts: {
       `${opts.source === "ar-receipt" ? "AR" : "AP"}-${opts.counterparty}-${stamp}-${amountYen}`
         .toUpperCase()
         .replace(/[^A-Z0-9-]/g, "-");
-    const occurredAt = `${opts.month}-28T12:00:00.000Z`;
+    const occurredAt = `${lastDayOfMonth(opts.month)}T12:00:00.000Z`;
     const posted =
       opts.source === "ar-receipt"
         ? postArReceiptJournalEntry({

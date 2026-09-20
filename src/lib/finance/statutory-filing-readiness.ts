@@ -3,6 +3,7 @@
  * Assessment · remittance · payroll payable — not XML / 申告送信.
  */
 import { loadJournalEntries } from "./expense-claim-journal.js";
+import { lastDayOfMonth } from "./fiscal-year.js";
 import { runConsumptionTaxCheck } from "./consumption-tax.js";
 import { remittanceIntegrityIssues } from "./remittance-integrity.js";
 
@@ -51,7 +52,8 @@ export function payrollAccrualPaymentReadinessIssues(input?: {
     const match = entry.entry_id.match(/^JE-PAYROLL-(\d{4}-\d{2})$/);
     if (!match) continue;
     const period = match[1]!;
-    if (`${period}-28` > asOf) continue;
+    const elapsedOn = lastDayOfMonth(period);
+    if (elapsedOn > asOf) continue;
     const paid = entries.some((row) => row.entry_id === `JE-PAYROLL-PAY-${period}`);
     if (!paid) {
       issues.push({

@@ -57,6 +57,12 @@ export const chartAccountSchema = z.object({
    */
   budget_mutability: budgetMutabilitySchema.optional(),
   note: z.string().optional(),
+  /** Current/noncurrent for the balance sheet. Code thresholds are not a substitute. */
+  bs_class: z.enum(["current", "noncurrent"]).optional(),
+  /** Cash-flow role. Prefix matching is not a substitute. */
+  cf_role: z
+    .enum(["cash", "receivable", "payable", "fixed_asset", "loan", "equity"])
+    .optional(),
 });
 
 export type StatementSection = z.output<typeof statementSectionSchema>;

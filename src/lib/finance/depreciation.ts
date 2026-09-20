@@ -87,6 +87,7 @@ export function computeAssetMonthlyDepreciation(
   asset: FixedAsset,
   period: string,
 ): number {
+  if (asset.small_amount) return 0;
   if (!monthsInService(asset, period)) return 0;
   if (asset.depreciation_method === "非償却") return 0;
   if (asset.depreciation_method === "定額法") {

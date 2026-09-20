@@ -2,11 +2,13 @@ import type { ChartOfAccounts } from "../../../../schemas/finance/types.js";
 import { buildTrialBalance, type TrialBalanceRow } from "./trial-balance.js";
 import { buildGlProfitLossSummary } from "../gl-report-basis.js";
 import {
+  fiscalYearEndDate,
   fiscalYearStartDate,
   resolveFiscalYear,
   resolveCompanyFiscalYearEndMonth,
 } from "../fiscal-year.js";
 import { loadChartOfAccounts } from "../../data.js";
+import { loadJournalEntries } from "../expense-claim-journal.js";
 import type { PdfTableRow } from "../../pdf.js";
 
 export type BalanceSheetLine = {
@@ -72,6 +74,15 @@ export function buildBalanceSheet(input?: {
     if (line.section === "asset") assets.push(line);
     if (line.section === "liability") liabilities.push(line);
     if (line.section === "equity") equity.push(line);
+    if (
+      (line.section === "asset" || line.section === "liability") &&
+      line.balance_yen !== 0
+    ) {
+      const account = coa.accounts.find((item) => item.code === line.account_code);
+      if (account && inferBsClass(account) === "unclassified") {
+        issues.push(`${line.account_code} missing bs_class`);
+      }
+    }
   }
 
   const total_assets_yen = assets.reduce((s, l) => s + l.balance_yen, 0);
@@ -112,15 +123,13 @@ export function balanceSheetIntegrityIssues(input?: {
 }
 
 export function inferBsClass(
-  account: { code: string; type: string },
-): "current" | "noncurrent" | "equity" {
+  account: { code: string; type: string; bs_class?: "current" | "noncurrent" },
+): "current" | "noncurrent" | "equity" | "unclassified" {
   if (account.type === "equity") return "equity";
-  const n = Number.parseInt(account.code, 10);
-  if (account.type === "asset" || account.type === "asset_contra") {
-    return n < 1200 ? "current" : "noncurrent";
+  if (account.bs_class === "current" || account.bs_class === "noncurrent") {
+    return account.bs_class;
   }
-  if (account.code === "2100") return "noncurrent";
-  return "current";
+  return "unclassified";
 }
 
 export function buildGlKessanBsRows(input?: {
@@ -238,30 +247,78 @@ export function buildGlKessanBsRows(input?: {
   return rows;
 }
 
-export function buildGlEquityChangeRows(input?: {
+export function equityChangeAmounts(input?: {
   asOf?: string;
   fiscalYear?: string;
-}): PdfTableRow[] {
+}): {
+  opening_yen: number;
+  net_income_yen: number;
+  dividend_yen: number;
+  capital_yen: number;
+  closing_yen: number;
+  balanced: boolean;
+} {
   const asOf = input?.asOf ?? new Date().toISOString().slice(0, 10);
   const endMonth = resolveCompanyFiscalYearEndMonth();
   const fiscalYear =
     input?.fiscalYear ?? resolveFiscalYear(endMonth, asOf.slice(0, 7));
   const openingAsOf = (() => {
     const start = fiscalYearStartDate(fiscalYear, endMonth);
-    const d = new Date(`${start}T00:00:00Z`);
-    d.setUTCDate(d.getUTCDate() - 1);
-    return d.toISOString().slice(0, 10);
+    const date = new Date(`${start}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() - 1);
+    return date.toISOString().slice(0, 10);
   })();
   const opening = buildBalanceSheet({ asOf: openingAsOf, fiscalYear });
   const closing = buildBalanceSheet({ asOf, fiscalYear });
-  const openingEquity = opening.total_equity_yen + opening.net_income_yen;
+  const opening_yen = opening.total_equity_yen + opening.net_income_yen;
+  const closing_yen = closing.total_equity_yen + closing.net_income_yen;
+  const start = fiscalYearStartDate(fiscalYear, endMonth);
+  const end = fiscalYearEndDate(fiscalYear, endMonth);
+  let dividend_yen = 0;
+  let capital_yen = 0;
+  for (const entry of loadJournalEntries().entries) {
+    const date = entry.occurred_at.slice(0, 10);
+    if (date < start || date > end) continue;
+    const amount = entry.lines.reduce((sum, line) => sum + line.debit_yen, 0);
+    if (entry.source?.kind === "dividend") dividend_yen += amount;
+    if (entry.source?.kind === "capital") capital_yen += amount;
+  }
+  const balanced = closing_yen === opening_yen + closing.net_income_yen - dividend_yen + capital_yen;
+  return {
+    opening_yen,
+    net_income_yen: closing.net_income_yen,
+    dividend_yen,
+    capital_yen,
+    closing_yen,
+    balanced,
+  };
+}
+
+export function buildIndividualNotes(input?: {
+  asOf?: string;
+  fiscalYear?: string;
+}): string[] {
+  const change = equityChangeAmounts(input);
+  const movement =
+    change.dividend_yen === 0 && change.capital_yen === 0
+      ? "配当・資本取引: 該当なし"
+      : `配当 ${change.dividend_yen} 円、資本取引 ${change.capital_yen} 円`;
   return [
-    { label: "期首純資産", amount: openingEquity, variant: "muted" },
-    { label: "当期純利益", amount: closing.net_income_yen, indent: 1, variant: "emphasis" },
-    {
-      label: "期末純資産",
-      amount: closing.total_equity_yen + closing.net_income_yen,
-      variant: "total",
-    },
+    "会計方針: 減価償却は定額法により計上する。収益および費用は発生主義で認識する。",
+    movement,
+  ];
+}
+
+export function buildGlEquityChangeRows(input?: {
+  asOf?: string;
+  fiscalYear?: string;
+}): PdfTableRow[] {
+  const change = equityChangeAmounts(input);
+  return [
+    { label: "期首純資産", amount: change.opening_yen, variant: "muted" },
+    { label: "当期純利益", amount: change.net_income_yen, indent: 1, variant: "emphasis" },
+    { label: "配当", amount: change.dividend_yen, indent: 1 },
+    { label: "資本取引", amount: change.capital_yen, indent: 1 },
+    { label: "期末純資産", amount: change.closing_yen, variant: "total" },
   ];
 }

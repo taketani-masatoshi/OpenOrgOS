@@ -58,6 +58,14 @@ export const journalSourceSchema = z.discriminatedUnion("kind", [
     obligation: z.enum(["withholding", "social_insurance", "consumption_tax"]),
   }),
   z.object({
+    kind: z.literal("dividend"),
+    period: monthString,
+  }),
+  z.object({
+    kind: z.literal("capital"),
+    period: monthString,
+  }),
+  z.object({
     kind: z.literal("consumption_tax_refund"),
     claim_id: z.string().regex(/^CLAIM-\d{4}-\d{2}-[a-z_]+$/),
     event: z.literal("refund_received"),
@@ -131,18 +139,6 @@ export const journalEntrySchema = z
           message: "source conflicts with legacy claim_id/event",
         });
       }
-    }
-    const legacyOnly = hasLegacy && !hasSource;
-    if (hasSource && !legacyOnly) {
-      entry.lines.forEach((line, index) => {
-        if (!line.tax_category) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["lines", index, "tax_category"],
-            message: "tax_category is required for source-based entries",
-          });
-        }
-      });
     }
   });
 

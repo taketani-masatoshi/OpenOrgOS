@@ -1,9 +1,11 @@
 /**
  * Monthly accounting close — one gate for CLI and Workbench.
- * Lock only when error-level gates pass. YAML reconcile is a warning.
+ * Lock only when error-level gates pass.
+ * A month without bank rows or a monthly plan cannot lock.
  */
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 import { runValidateReport } from "../../commands/validate.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { getDataDir } from "../utils.js";
@@ -12,6 +14,7 @@ import { resolveCloseAdjustmentAmountFromCoa } from "./close-adjustments.js";
 import { buildDepreciationSchedule, postDepreciationJournalEntries } from "./depreciation.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
 import {
+  fiscalYearStartMonth,
   lastDayOfMonth,
   resolveCompanyFiscalYearEndMonth,
   resolveFiscalYear,
@@ -102,6 +105,102 @@ function payrollPosted(month: string): boolean {
   );
 }
 
+function previousMonth(month: string): string {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const date = new Date(year!, monthNumber! - 2, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function isFirstFiscalMonth(month: string): boolean {
+  const endMonth = resolveCompanyFiscalYearEndMonth();
+  const fiscalYear = resolveFiscalYear(endMonth, month);
+  return fiscalYearStartMonth(fiscalYear, endMonth) === month;
+}
+
+function bankRowsForMonth(month: string): number | "missing" | "unreadable" {
+  if (!bankFileExists()) return "missing";
+  const lite = loadBankStatementsLite();
+  if (!lite) return "unreadable";
+  return lite.entries.filter((row) => row.date.slice(0, 7) === month).length;
+}
+
+function missingTaxCategories(month: string): string[] {
+  const types = new Map(
+    loadChartOfAccounts().accounts.map((account) => [account.code, account.type]),
+  );
+  const missing: string[] = [];
+  for (const entry of loadJournalEntries().entries) {
+    if (!entry.occurred_at.startsWith(month)) continue;
+    for (const line of entry.lines) {
+      const type = types.get(line.account_code);
+      if (type !== "revenue" && type !== "expense") continue;
+      if (!line.tax_category) {
+        missing.push(`${entry.entry_id}:${line.account_code}`);
+      }
+    }
+  }
+  return missing;
+}
+
+function inventoryGate(month: string, asOf: string): MonthlyCloseGate {
+  const path = join(getDataDir(), "finance", "inventory.yaml");
+  if (!existsSync(path)) {
+    return gate("inventory-cogs", "棚卸と売上原価", true, "skip", "no inventory");
+  }
+  let months: Array<{
+    month?: string;
+    account_code?: string;
+    ending_inventory_yen?: number;
+    cogs_account_code?: string;
+    cogs_yen?: number;
+  }> = [];
+  try {
+    const raw = YAML.parse(readFileSync(path, "utf-8")) as {
+      months?: typeof months;
+    };
+    months = raw?.months ?? [];
+  } catch (error) {
+    return gate(
+      "inventory-cogs",
+      "棚卸と売上原価",
+      false,
+      "error",
+      error instanceof Error ? error.message : "inventory unreadable",
+    );
+  }
+  const row = months.find((item) => item.month === month);
+  if (!row?.account_code || row.ending_inventory_yen == null) {
+    return gate("inventory-cogs", "棚卸と売上原価", false, "error", "inventory count missing");
+  }
+  const trial = buildTrialBalance({ asOf });
+  const inventory =
+    trial.rows.find((item) => item.account_code === row.account_code)?.balance_yen ?? 0;
+  if (inventory !== row.ending_inventory_yen) {
+    return gate(
+      "inventory-cogs",
+      "棚卸と売上原価",
+      false,
+      "error",
+      `inventory ${inventory} != ${row.ending_inventory_yen}`,
+    );
+  }
+  if (row.cogs_account_code && row.cogs_yen != null) {
+    const cogs = Math.abs(
+      trial.rows.find((item) => item.account_code === row.cogs_account_code)?.balance_yen ?? 0,
+    );
+    if (cogs !== row.cogs_yen) {
+      return gate(
+        "inventory-cogs",
+        "棚卸と売上原価",
+        false,
+        "error",
+        `cogs ${cogs} != ${row.cogs_yen}`,
+      );
+    }
+  }
+  return gate("inventory-cogs", "棚卸と売上原価", true, "error", "ok");
+}
+
 function bankFileExists(): boolean {
   return existsSync(join(getDataDir(), "finance", "bank-statements.yaml"));
 }
@@ -188,6 +287,20 @@ export function evaluateMonthlyCloseGates(
     ),
   );
 
+  if (!isFirstFiscalMonth(month) && !isMonthLocked(previousMonth(month))) {
+    items.push(
+      gate(
+        "prior-month-locked",
+        "直前の月がロック済み",
+        false,
+        "error",
+        `${previousMonth(month)} unlocked`,
+      ),
+    );
+  } else {
+    items.push(gate("prior-month-locked", "直前の月がロック済み", true, "error", "ok"));
+  }
+
   const trial = buildTrialBalance({ asOf });
   items.push(
     gate(
@@ -201,15 +314,16 @@ export function evaluateMonthlyCloseGates(
 
   const fiscalYear = resolveFiscalYear(resolveCompanyFiscalYearEndMonth(), month);
   const balanceSheet = buildBalanceSheet({ asOf, fiscalYear });
+  const bsPass =
+    balanceSheet.balanced &&
+    !balanceSheet.issues.some((issue) => issue.includes("missing bs_class"));
   items.push(
     gate(
       "balance-sheet",
       "貸借対照表が一致",
-      balanceSheet.balanced,
+      bsPass,
       "error",
-      balanceSheet.balanced
-        ? "balanced"
-        : balanceSheet.issues.join("; ") || "unbalanced",
+      bsPass ? "balanced" : balanceSheet.issues.join("; ") || "unbalanced",
     ),
   );
 
@@ -224,15 +338,15 @@ export function evaluateMonthlyCloseGates(
     ),
   );
 
-  const unmatched = unmatchedBankCountForMonth(month);
-  if (unmatched == null) {
+  const rows = bankRowsForMonth(month);
+  if (rows === "missing" || rows === 0) {
     items.push(
       gate(
         "bank-imported",
         "銀行明細を取込済み",
         false,
-        "skip",
-        "bank statements not imported",
+        "error",
+        rows === "missing" ? "bank statements not imported" : "no bank rows for month",
       ),
     );
     items.push(
@@ -240,11 +354,19 @@ export function evaluateMonthlyCloseGates(
         "bank-unmatched",
         "銀行明細の未消込なし",
         false,
-        "skip",
-        "bank statements not imported",
+        "error",
+        rows === "missing" ? "bank statements not imported" : "no bank rows for month",
       ),
     );
+  } else if (rows === "unreadable") {
+    items.push(
+      gate("bank-imported", "銀行明細を取込済み", false, "error", "bank statements unreadable"),
+    );
+    items.push(
+      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "bank statements unreadable"),
+    );
   } else {
+    const unmatched = unmatchedBankCountForMonth(month);
     items.push(gate("bank-imported", "銀行明細を取込済み", true, "error", "ok"));
     items.push(
       gate(
@@ -252,13 +374,17 @@ export function evaluateMonthlyCloseGates(
         "銀行明細の未消込なし",
         unmatched === 0,
         "error",
-        Number.isFinite(unmatched) ? `${unmatched} unmatched` : "bank statements unreadable",
+        `${unmatched} unmatched`,
       ),
     );
   }
 
+  items.push(inventoryGate(month, asOf));
+
+  const missingTax = missingTaxCategories(month);
   let taxDetail = "ok";
-  let taxPass = true;
+  let taxPass = missingTax.length === 0;
+  if (!taxPass) taxDetail = `missing tax_category ${missingTax.join(", ")}`;
   try {
     buildConsumptionTaxSummary({ period: month });
   } catch (error) {
@@ -286,19 +412,22 @@ export function evaluateMonthlyCloseGates(
     ),
   );
 
+  const plan = loadMonthlyFinances().find((row) => row.month === month);
   const reconcile = buildMonthlyReconcileReport({ month });
-  const reconcileDetail = reconcile.balanced
-    ? "balanced"
-    : reconcile.diffs
-        .map((diff) => `${diff.category} delta ${diff.delta_yen}`)
-        .join("; ");
+  const reconcileDetail = !plan
+    ? "monthly plan not imported"
+    : reconcile.balanced
+      ? "balanced"
+      : reconcile.diffs
+          .map((diff) => `${diff.category} delta ${diff.delta_yen}`)
+          .join("; ") || "variance";
   items.push(
     gate(
       "monthly-reconcile",
       "月次YAML突合",
-      reconcile.balanced,
-      "warning",
-      reconcileDetail || "variance",
+      Boolean(plan) && reconcile.balanced,
+      "error",
+      reconcileDetail,
     ),
   );
 
@@ -330,7 +459,7 @@ function postCloseAdjustments(month: string): string[] {
       month,
     );
     if (amount <= 0) continue;
-    const entryId = `JE-CLOSE-${month}-${adjustment.trigger}`;
+    const entryId = `JE-CLOSE-${month}-${adjustment.trigger}`.toUpperCase();
     appendJournalEntry({
       entry_id: entryId,
       occurred_at: `${asOf}T18:00:00.000Z`,

@@ -5,8 +5,8 @@ import {
 } from "../../data.js";
 import { periodPlMovementByAccount } from "../gl-report-basis.js";
 import { loadJournalEntries } from "../expense-claim-journal.js";
-import { buildTrialBalance } from "./trial-balance.js";
 import { loadOpeningBalances } from "./opening-balance.js";
+import { lastDayOfMonth } from "../fiscal-year.js";
 
 const SKIP_RECONCILE_EXPENSE = new Set(["loan_payment", "capex"]);
 
@@ -78,7 +78,7 @@ function periodInclusivePlByAccount(
   }
 
   const start = `${month}-01`;
-  const end = `${month}-31`;
+  const end = lastDayOfMonth(month);
   for (const entry of loadJournalEntries().entries) {
     const date = entry.occurred_at.slice(0, 10);
     if (date < start || date > end) continue;
@@ -112,8 +112,6 @@ export function buildMonthlyReconcileReport(input: {
   const coa = input.coa ?? loadChartOfAccounts();
   const finances = loadMonthlyFinances();
   const periodByAccount = periodInclusivePlByAccount(input.month, coa);
-  // Trial balance retained for integrity / CLI diagnostics only.
-  void buildTrialBalance({ asOf: `${input.month}-31` });
 
   const diffs: MonthlyReconcileDiff[] = [];
   const expenseCategories = monthlyExpenseByCategory(finances, input.month);

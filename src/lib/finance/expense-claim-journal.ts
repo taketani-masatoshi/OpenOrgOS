@@ -55,12 +55,23 @@ export function saveJournalEntries(
   writeYamlFile(journalEntriesPath(), journalEntriesFileSchema.parse(file));
 }
 
+function isAnnualPlTransfer(entry: JournalEntry): boolean {
+  const source = entry.source;
+  return (
+    source?.kind === "closing" &&
+    source.adjustment_id === "pl-transfer" &&
+    /^JE-CLOSE-FY\d{4}-PL-TRANSFER$/.test(entry.entry_id)
+  );
+}
+
 export function appendJournalEntry(
   entry: JournalEntry,
-  meta?: { postedBy?: string; postedAt?: string },
+  meta?: { postedBy?: string; postedAt?: string; allowAnnualPlTransfer?: boolean },
 ): JournalEntry {
   assertJournalWriteAllowed();
-  assertMonthUnlockedForDate(entry.occurred_at);
+  if (!(meta?.allowAnnualPlTransfer && isAnnualPlTransfer(entry))) {
+    assertMonthUnlockedForDate(entry.occurred_at);
+  }
   const file = loadJournalEntries();
   const existing = file.entries.find((row) => row.entry_id === entry.entry_id);
   const enriched = journalEntrySchema.parse({

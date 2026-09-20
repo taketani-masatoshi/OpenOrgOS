@@ -16,6 +16,7 @@ import { buildBalanceSheet } from "./ledger/balance-sheet.js";
 import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
+import { evaluateTaxAdjustment } from "./tax-adjustment.js";
 
 export type CorporateTaxXmlDraft = {
   fiscal_year: string;
@@ -95,6 +96,17 @@ export function buildCorporateTaxXmlDraft(input?: {
   }
   const corp = loadCorporateTaxSlice();
   const generatedAt = getClock().now().toISOString();
+  const worksheet = evaluateTaxAdjustment(fiscalYear);
+  const annex = worksheet.can_compute
+    ? `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
+    <Line code="current_net_income" label="当期純利益">${worksheet.starting_profit_yen}</Line>
+    <Line code="add_backs" label="加算">${worksheet.additions_yen}</Line>
+    <Line code="subtractions" label="減算">${worksheet.subtractions_yen}</Line>
+    <Line code="taxable_income_estimate" label="課税所得">${worksheet.taxable_income_yen}</Line>
+  </AnnexDraft>`
+    : `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
+    <AdvisorPending>${escapeXml(worksheet.errors.join(","))}</AdvisorPending>
+  </AnnexDraft>`;
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <OrgOSCorporateTaxDraft
@@ -140,12 +152,7 @@ export function buildCorporateTaxXmlDraft(input?: {
     }
     ${corp.notes ? `<Notes>${escapeXml(corp.notes)}</Notes>` : ""}
   </CorporateTaxPrep>
-  <AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算（概算）">
-    <Line code="current_net_income" label="当期純利益">${sheet.net_income_yen}</Line>
-    <Line code="add_backs" label="加算（税理士確定）">0</Line>
-    <Line code="subtractions" label="減算（税理士確定）">0</Line>
-    <Line code="taxable_income_estimate" label="課税所得の見積">${sheet.net_income_yen}</Line>
-  </AnnexDraft>
+  ${annex}
   <AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益積立金（概算）">
     <Line code="total_equity" label="純資産合計">${sheet.total_equity_yen}</Line>
     <Line code="retained_placeholder" label="利益積立金内訳（税理士確定）">${sheet.total_equity_yen}</Line>

@@ -502,7 +502,8 @@ export function postRemittanceJournalEntry(input: {
   authorizedBy: string;
 }): string | null {
   const accounts = resolveJournalSourceAccounts();
-  const asOf = `${input.period}-31`;
+  const asOf = lastDayOfMonth(input.period);
+  const occurredAt = `${asOf}T15:00:00.000Z`;
   const trial = buildTrialBalance({ asOf });
   const cash = accounts.bank_control;
   const entryId = `JE-REMIT-${input.obligation.replace(/_/g, "-").toUpperCase()}-${input.period}`;
@@ -587,7 +588,7 @@ export function postRemittanceJournalEntry(input: {
 
   appendJournalEntry({
     entry_id: entryId,
-    occurred_at: `${input.period}-28T15:00:00.000Z`,
+    occurred_at: occurredAt,
     description: `Remittance ${input.obligation} ${input.period}`,
     source: {
       kind: "remittance",
@@ -607,7 +608,8 @@ export function postPayrollPaymentJournalEntry(input: {
   amountYen?: number;
 }): string | null {
   const accounts = resolveJournalSourceAccounts();
-  const asOf = `${input.period}-31`;
+  const asOf = lastDayOfMonth(input.period);
+  const occurredAt = `${asOf}T16:00:00.000Z`;
   const trial = buildTrialBalance({ asOf });
   const payable =
     trial.rows.find((row) => row.account_code === accounts.payroll_payable)
@@ -617,7 +619,7 @@ export function postPayrollPaymentJournalEntry(input: {
   const entryId = `JE-PAYROLL-PAY-${input.period}`;
   appendJournalEntry({
     entry_id: entryId,
-    occurred_at: `${input.period}-28T16:00:00.000Z`,
+    occurred_at: occurredAt,
     description: `Payroll payment ${input.period}`,
     source: { kind: "payroll", period: input.period },
     evidence_refs: [`payroll-payment:${input.period}`],

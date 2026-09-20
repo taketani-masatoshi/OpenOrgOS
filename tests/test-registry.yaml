@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 603
-  static_test_cases: 2758
-  tiered_execution_total: 603
+  vitest_total: 605
+  static_test_cases: 2777
+  tiered_execution_total: 605
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -556,6 +556,10 @@ tests:
     kind: unit
     domain: P01_kernel
   analytics-kpi-scorecard-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  annual-close-acceptance.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel
@@ -2631,6 +2635,10 @@ tests:
     kind: unit
     domain: P01_kernel
   tasks-view.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  tax-adjustment-acceptance.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

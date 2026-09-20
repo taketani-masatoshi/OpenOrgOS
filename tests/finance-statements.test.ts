@@ -12,15 +12,22 @@ import {
 import {
   buildGlEquityChangeRows,
   buildGlKessanBsRows,
+  buildIndividualNotes,
+  inferBsClass,
 } from "../src/lib/finance/ledger/balance-sheet.js";
 import {
   buildGlKessanPlRows,
   buildGlProfitLossSummary,
 } from "../src/lib/finance/gl-report-basis.js";
 import {
+  applyFixtureStatementRoles,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
+
+beforeEach(() => {
+  applyFixtureStatementRoles();
+});
 
 describe("balance sheet", () => {
   beforeEach(() => resetFixtureJournalEntries());
@@ -142,6 +149,33 @@ describe("kessan PL rows", () => {
     expect(bs.some((r) => r.label === "資産合計")).toBe(true);
     const equity = buildGlEquityChangeRows({ fiscalYear: "FY2026", asOf: "2026-08-31" });
     expect(equity.some((r) => r.label === "期首純資産")).toBe(true);
+    expect(equity.some((r) => r.label === "配当")).toBe(true);
+    expect(equity.some((r) => r.label === "資本取引")).toBe(true);
     expect(equity.some((r) => r.label === "期末純資産")).toBe(true);
+    expect(inferBsClass({ code: "1100", type: "asset", bs_class: "noncurrent" })).toBe(
+      "noncurrent",
+    );
+    const notes = buildIndividualNotes({ fiscalYear: "FY2026", asOf: "2026-08-31" });
+    expect(notes.some((note) => note.includes("該当なし") || note.includes("配当"))).toBe(true);
+  });
+
+  it("puts a dividend journal on the dividend row only", () => {
+    resetFixtureJournalEntries();
+    appendJournalEntry({
+      entry_id: "JE-DIV-2026-09",
+      occurred_at: "2026-09-15T00:00:00.000Z",
+      description: "dividend",
+      source: { kind: "dividend", period: "2026-09" },
+      evidence_refs: ["test:dividend"],
+      lines: [
+        { account_code: "3200", debit_yen: 40, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "1100", debit_yen: 0, credit_yen: 40, tax_category: "out_of_scope" },
+      ],
+    });
+    const equity = buildGlEquityChangeRows({ fiscalYear: "FY2026", asOf: "2026-09-30" });
+    expect(equity.find((row) => row.label === "配当")?.amount).toBe(40);
+    expect(equity.find((row) => row.label === "資本取引")?.amount).toBe(0);
+    expect(equity.find((row) => row.label === "当期純利益")?.amount).toBe(0);
+    resetFixtureJournalEntries();
   });
 });

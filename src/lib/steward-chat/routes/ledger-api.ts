@@ -11,6 +11,7 @@ import { buildLedgerWorkbench } from "../../finance/ledger/workbench.js";
 import { reverseJournalEntry } from "../../finance/journal-reverse.js";
 import { appendJournalEntry } from "../../finance/expense-claim-journal.js";
 import { lockMonth, unlockMonth } from "../../finance/period-lock.js";
+import { lastDayOfMonth } from "../../finance/fiscal-year.js";
 import { postDepreciationJournalEntries } from "../../finance/depreciation.js";
 import {
   postApPaymentJournalEntry,
@@ -432,7 +433,7 @@ export async function handleLedgerApi(
       const occurredAt =
         typeof body.occurred_at === "string"
           ? body.occurred_at
-          : `${month}-28T12:00:00.000Z`;
+          : `${lastDayOfMonth(month)}T12:00:00.000Z`;
       const posted =
         kind === "ar-receipt"
           ? postArReceiptJournalEntry({

@@ -27,10 +27,7 @@ export type CashFlowStatement = {
   issues: string[];
 };
 
-const CASH_CODE = "1100";
-const WORKING_CAPITAL_ASSET_PREFIXES = ["1150", "1300"];
-const FIXED_ASSET_PREFIXES = ["1200", "1210"];
-const LIABILITY_PREFIXES = ["2100", "3100", "3200"];
+const CASH_ROLE = "cash";
 
 function balanceAt(
   asOf: string,
@@ -42,15 +39,15 @@ function balanceAt(
   return row?.balance_yen ?? 0;
 }
 
-function sumPrefixBalances(
-  asOf: string,
-  prefixes: string[],
-  coa: ChartOfAccounts,
-): number {
-  const trial = buildTrialBalance({ asOf, coa });
-  return trial.rows
-    .filter((row) => prefixes.some((prefix) => row.account_code.startsWith(prefix)))
-    .reduce((sum, row) => sum + row.balance_yen, 0);
+function codesForRole(coa: ChartOfAccounts, role: string): string[] {
+  return coa.accounts.filter((account) => account.cf_role === role).map((account) => account.code);
+}
+
+function sumRoleBalances(asOf: string, role: string, coa: ChartOfAccounts): number {
+  return codesForRole(coa, role).reduce(
+    (sum, code) => sum + balanceAt(asOf, code, coa),
+    0,
+  );
 }
 
 export function buildCashFlowStatement(input?: {
@@ -85,22 +82,37 @@ export function buildCashFlowStatement(input?: {
   );
   const depreciationAddback = Math.max(0, depAtEnd - depAtStart);
 
-  const wcAssetsStart = sumPrefixBalances(periodStart, WORKING_CAPITAL_ASSET_PREFIXES, coa);
-  const wcAssetsEnd = sumPrefixBalances(asOf, WORKING_CAPITAL_ASSET_PREFIXES, coa);
-  const wcLiabStart = sumPrefixBalances(periodStart, ["3100"], coa);
-  const wcLiabEnd = sumPrefixBalances(asOf, ["3100"], coa);
-  const workingCapitalChange =
-    (wcAssetsStart - wcAssetsEnd) + (wcLiabEnd - wcLiabStart);
+  const cashCodes = codesForRole(coa, CASH_ROLE);
+  if (cashCodes.length === 0) issues.push("cash role missing");
 
-  const fixedStart = sumPrefixBalances(periodStart, FIXED_ASSET_PREFIXES, coa);
-  const fixedEnd = sumPrefixBalances(asOf, FIXED_ASSET_PREFIXES, coa);
+  const wcAssetsStart = sumRoleBalances(periodStart, "receivable", coa);
+  const wcAssetsEnd = sumRoleBalances(asOf, "receivable", coa);
+  const wcLiabStart = sumRoleBalances(periodStart, "payable", coa);
+  const wcLiabEnd = sumRoleBalances(asOf, "payable", coa);
+  const workingCapitalChange = wcAssetsStart - wcAssetsEnd + (wcLiabEnd - wcLiabStart);
+
+  const fixedStart = sumRoleBalances(periodStart, "fixed_asset", coa);
+  const fixedEnd = sumRoleBalances(asOf, "fixed_asset", coa);
   const investingCash = -(fixedEnd - fixedStart);
 
-  const equityStart = sumPrefixBalances(periodStart, ["3200"], coa);
-  const equityEnd = sumPrefixBalances(asOf, ["3200"], coa);
-  const loanStart = sumPrefixBalances(periodStart, ["2100"], coa);
-  const loanEnd = sumPrefixBalances(asOf, ["2100"], coa);
-  const financingCash = (equityEnd - equityStart) + (loanEnd - loanStart) - netIncome;
+  const equityStart = sumRoleBalances(periodStart, "equity", coa);
+  const equityEnd = sumRoleBalances(asOf, "equity", coa);
+  const loanStart = sumRoleBalances(periodStart, "loan", coa);
+  const loanEnd = sumRoleBalances(asOf, "loan", coa);
+  const financingCash = equityEnd - equityStart + (loanEnd - loanStart) - netIncome;
+
+  const startTrial = buildTrialBalance({ asOf: periodStart, coa });
+  const endTrial = buildTrialBalance({ asOf, coa });
+  for (const row of endTrial.rows) {
+    const account = coa.accounts.find((item) => item.code === row.account_code);
+    if (!account) continue;
+    if (account.type === "revenue" || account.type === "expense") continue;
+    if (account.cf_role) continue;
+    const start = startTrial.rows.find((item) => item.account_code === row.account_code)?.balance_yen ?? 0;
+    if (row.balance_yen !== start) {
+      issues.push(`${row.account_code} missing cf_role`);
+    }
+  }
 
   const operating: CashFlowLine[] = [
     { label: "当期純利益", amount_yen: netIncome },
@@ -119,8 +131,8 @@ export function buildCashFlowStatement(input?: {
     investing.reduce((s, row) => s + row.amount_yen, 0) +
     financing.reduce((s, row) => s + row.amount_yen, 0);
 
-  const cashBegin = balanceAt(periodStart, CASH_CODE, coa);
-  const cashEnd = balanceAt(asOf, CASH_CODE, coa);
+  const cashBegin = cashCodes.reduce((sum, code) => sum + balanceAt(periodStart, code, coa), 0);
+  const cashEnd = cashCodes.reduce((sum, code) => sum + balanceAt(asOf, code, coa), 0);
   const reconciled = cashBegin + netCashChange === cashEnd;
 
   if (!reconciled) {

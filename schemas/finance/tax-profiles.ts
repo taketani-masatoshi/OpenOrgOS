@@ -77,6 +77,10 @@ export const taxProfileCorporateTaxSchema = z.object({
    */
   estimated_tax_basis: z.string().optional(),
   notes: z.string().optional(),
+  /** Account whose fiscal-year balance is entertainment expense. Not a hardcoded code. */
+  entertainment_account_code: z.string().regex(/^\d{4}$/).optional(),
+  /** Deductible cap in yen. The excess over this cap is an add-back. Not a statutory table. */
+  entertainment_cap_yen: z.number().int().nonnegative().optional(),
 });
 
 export const taxProfileFilingCalendarItemSchema = z.object({
