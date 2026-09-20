@@ -17,6 +17,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 
 ## [0.9.0-beta.1] — 2026-08-30
