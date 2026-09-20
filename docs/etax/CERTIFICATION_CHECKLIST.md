@@ -30,6 +30,9 @@ ETAX_D18_ACCEPTANCE=1 npx vitest run tests/etax-d1-d8-acceptance.test.ts
 
 順序: T-O1 → T-O2/T-O3 → gate 要件 true（人間）→ `procedure promote-rho0010` → release → `product-copy sync` → CHANGELOG 対応完了。
 
+**コード口（agent 完了）:** 証跡スキーマ · `transmission-test record` · D3/D4 評価 · promote/release/product-copy の拒否ゲートは tip 上で稼働中。  
+**オペレータ未達:** tip `production-gate` は全 false · RHO0010 は EXPERIMENTAL · B層 D3–D7 は意図的 fail。evidence 捏造で緑化しない。
+
 ---
 
 ## 対応完了に含めないもの

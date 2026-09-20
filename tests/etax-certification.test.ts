@@ -527,4 +527,31 @@ describe("fixes 1–16 A-layer contracts", () => {
     expect(r.ok).toBe(false);
     expect(r.blockers.length).toBeGreaterThan(0);
   });
+
+  it("uncertified tip keeps ToS/commercial exclusion snippets (P1 D7 scanner)", async () => {
+    const {
+      ETAX_TOS_EXCLUSION_SNIPPET,
+      ETAX_COMMERCIAL_EXCLUSION_SNIPPET,
+      ETAX_TOS_RELATIVE_PATH,
+      ETAX_COMMERCIAL_RELATIVE_PATH,
+    } = await import("../src/lib/etax/constants.js");
+    const tos = readFileSync(ETAX_TOS_RELATIVE_PATH, "utf-8");
+    const commercial = readFileSync(ETAX_COMMERCIAL_RELATIVE_PATH, "utf-8");
+    expect(evaluateProductionEnablement().certified).toBe(false);
+    expect(tos).toContain(ETAX_TOS_EXCLUSION_SNIPPET);
+    expect(tos.includes("RHO0010")).toBe(false);
+    expect(commercial).toContain(ETAX_COMMERCIAL_EXCLUSION_SNIPPET);
+    expect(commercial.includes("RHO0010")).toBe(false);
+  });
+
+  it("D3 code contracts hold while T-O2 evidence remains operator-blocked (P1 vs P3)", async () => {
+    const { evaluateD3 } = await import("../src/lib/etax/acceptance.js");
+    const { officialReceiptRefusesMockPrefix } = await import("../src/lib/etax/receipt-policy.js");
+    const map = loadReceiptMapping();
+    expect(map.specArtifactId).toBe("e-tax18");
+    expect(officialReceiptRefusesMockPrefix("MOCK-NOT-NTA-x")).toBe(true);
+    const r = evaluateD3();
+    expect(r.ok).toBe(false);
+    expect(r.blockers.some((b) => b.includes("transmission-test"))).toBe(true);
+  });
 });

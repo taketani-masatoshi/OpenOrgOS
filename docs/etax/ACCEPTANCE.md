@@ -52,7 +52,7 @@ ORGOS_TEST_DISPOSABLE_ROOT=$PWD npx vitest run \
 
 ### B層（受け入れ · 明示実行のみ）
 
-CI では `workflow_dispatch` の `etax-d18-acceptance` のみ（通常 PR では動かない）。
+CI では `workflow_dispatch` または PR ラベル `etax-acceptance` の `etax-d18-acceptance` のみ（通常 PR では動かない）。
 
 ```bash
 ETAX_D18_ACCEPTANCE=1 ORGOS_TEST_DISPOSABLE_ROOT=$PWD \

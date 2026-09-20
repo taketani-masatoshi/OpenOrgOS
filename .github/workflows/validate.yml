@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, master, "cursor/**"]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
 jobs:
@@ -270,7 +271,11 @@ jobs:
   etax-d18-acceptance:
     # B-layer only: NOT part of normal PR CI. Success here means tip D1–D8;
     # job absence / skip must never be read as “e-Tax accepted”.
-    if: github.event_name == 'workflow_dispatch'
+    # Triggers: workflow_dispatch, or PR label `etax-acceptance` (plan §2.1).
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       contains(join(github.event.pull_request.labels.*.name, ','), 'etax-acceptance'))
     runs-on: windows-latest
     needs: validate
     steps:

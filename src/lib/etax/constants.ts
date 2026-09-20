@@ -13,6 +13,16 @@ export const ETAX_PRODUCTION_BANNER =
 export const ETAX_PRODUCTION_BANNER_CERTIFIED =
   "e-Tax production submission: CERTIFIED / ENABLED (RHO0010)";
 
+/** Tip ToS exclusion while jp_etax is not operator-complete (D7 scanner). */
+export const ETAX_TOS_EXCLUSION_SNIPPET =
+  "e-Tax 申告・法定申告書の提出機能は本サービスの標準範囲に**含まない**";
+
+/** Tip commercial exclusion while jp_etax is not operator-complete (D7 scanner). */
+export const ETAX_COMMERCIAL_EXCLUSION_SNIPPET = "e-Tax 提出は含みません";
+
+export const ETAX_TOS_RELATIVE_PATH = "docs/product/legal/terms-of-service.md";
+export const ETAX_COMMERCIAL_RELATIVE_PATH = "product-fleet/commercial-declaration.yaml";
+
 export const ETAX_SPEC_RELATIVE_DIR =
   "steward/jurisdiction-packs/JP/modules/jp_etax/spec";
 

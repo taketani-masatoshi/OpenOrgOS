@@ -14,6 +14,10 @@ import { getModuleTier } from "../module-readiness.js";
 import {
   ETAX_MODULE_ID,
   ETAX_PRODUCTION_BANNER_CERTIFIED,
+  ETAX_TOS_EXCLUSION_SNIPPET,
+  ETAX_COMMERCIAL_EXCLUSION_SNIPPET,
+  ETAX_TOS_RELATIVE_PATH,
+  ETAX_COMMERCIAL_RELATIVE_PATH,
 } from "./constants.js";
 import { checkInterFormRules } from "./inter-form.js";
 import { probeEtaxHostBound } from "./host-client.js";
@@ -51,11 +55,10 @@ export type DxResult = {
   blockers: string[];
 };
 
-const TOS_PATH = "docs/product/legal/terms-of-service.md";
-const COMMERCIAL_PATH = "product-fleet/commercial-declaration.yaml";
-/** When certified, ToS must not claim e-Tax filing is entirely out of scope for jp_etax. */
-const TOS_EXCLUSION_SNIPPET = "e-Tax 申告・法定申告書の提出機能は本サービスの標準範囲に**含まない**";
-const COMMERCIAL_EXCLUSION_SNIPPET = "e-Tax 提出は含みません";
+const TOS_PATH = ETAX_TOS_RELATIVE_PATH;
+const COMMERCIAL_PATH = ETAX_COMMERCIAL_RELATIVE_PATH;
+const TOS_EXCLUSION_SNIPPET = ETAX_TOS_EXCLUSION_SNIPPET;
+const COMMERCIAL_EXCLUSION_SNIPPET = ETAX_COMMERCIAL_EXCLUSION_SNIPPET;
 
 export function transmissionTestDir(): string {
   return join(getWorkspaceRoot(), "data", "etax", "transmission-test");
