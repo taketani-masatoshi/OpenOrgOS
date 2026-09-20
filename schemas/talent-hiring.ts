@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { dateString } from "./common.js";
 
 export const projectBudgetSchema = z.object({
   max_hourly_rate: z.number().nonnegative(),
@@ -47,14 +48,6 @@ export const passKeyApprovalPayloadSchema = z.object({
   terms: contractTermsSchema,
 });
 
-export const passKeyApprovalRequestSchema = z.object({
-  request_id: z.string().min(1),
-  ceremony_kind: z.literal("settlement"),
-  created_at: z.string().min(1),
-  payload: passKeyApprovalPayloadSchema,
-  payload_hash: z.string().regex(/^[0-9a-f]{64}$/),
-});
-
 export type ProjectBudget = z.output<typeof projectBudgetSchema>;
 export type ProjectRequirement = z.output<typeof projectRequirementSchema>;
 export type StructuredRFP = z.output<typeof structuredRfpSchema>;
@@ -62,7 +55,6 @@ export type TalentCandidate = z.output<typeof talentCandidateSchema>;
 export type ScoredCandidate = z.output<typeof scoredCandidateSchema>;
 export type ContractTerms = z.output<typeof contractTermsSchema>;
 export type PassKeyApprovalPayload = z.output<typeof passKeyApprovalPayloadSchema>;
-export type PassKeyApprovalRequest = z.output<typeof passKeyApprovalRequestSchema>;
 
 export interface RfpEnrichment {
   title?: string;
@@ -81,10 +73,55 @@ export interface GenerateRfpDeps {
   enricher?: RfpEnricher;
 }
 
-export interface BuildPassKeyPayloadInput {
-  rfp: StructuredRFP;
-  shortlist: ScoredCandidate[];
-  terms: ContractTerms;
-  clock?: () => string;
-  id?: string;
+export const jobHearingAnswersSchema = z
+  .object({
+    work_summary: z.string().min(1).optional(),
+    starts_on: dateString.optional(),
+    duration_days: z.number().int().positive().optional(),
+    headcount: z.number().int().positive().optional(),
+    max_hourly_rate: z.number().positive().optional(),
+    currency: z.string().regex(/^[A-Z]{3}$/).optional(),
+  })
+  .strict();
+
+export const jobHearingQuestionFieldSchema = z.enum([
+  "work_summary",
+  "starts_on",
+  "duration_days",
+  "headcount",
+  "pay",
+]);
+
+export const practicalCheckSchema = z.enum([
+  "説明のあと、手順を一人で1サイクル完了できる",
+  "指示者の年齢や役職に関係なく、担当者の指示どおりに動ける",
+  "作業中の手順変更1つに合わせられる",
+  "わからないことと異常をその場で報告できる",
+  "指定の服装で、髪・爪・装飾が作業の妨げにならない",
+]);
+
+export const jobPostingSchema = z.object({
+  title: z.string().min(1),
+  starts_on: dateString,
+  duration_days: z.number().int().positive(),
+  headcount: z.number().int().positive(),
+  max_hourly_rate: z.number().positive(),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  duties: z.string().min(1),
+  checks: z.array(practicalCheckSchema).length(5),
+  body: z.string().min(1),
+});
+
+export type JobHearingAnswers = z.output<typeof jobHearingAnswersSchema>;
+export type JobHearingQuestionField = z.output<typeof jobHearingQuestionFieldSchema>;
+export type JobPosting = z.output<typeof jobPostingSchema>;
+
+export interface JobHearingQuestion {
+  field: JobHearingQuestionField;
+  prompt: string;
 }
+
+export type JobHearingResult =
+  | { status: "need_answers"; questions: JobHearingQuestion[] }
+  | { status: "rejected"; reason: string }
+  | { status: "ready"; posting: JobPosting };

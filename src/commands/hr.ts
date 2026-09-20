@@ -1,5 +1,6 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import YAML from "yaml";
 import {
   buildHeadcountView,
   formatHeadcountMarkdown,
@@ -13,6 +14,8 @@ import {
   formatTrainingPlanMarkdown,
   formatTrainingRecordsMarkdown,
 } from "../lib/hr/competence-view.js";
+import { hearJobRequest } from "../lib/hr/talent-hiring/hear-job.js";
+import type { JobHearingResult } from "../../schemas/talent-hiring.js";
 import { resolveTenantPath } from "../lib/tenant.js";
 
 export function runHrHeadcount(options?: { json?: boolean }): void {
@@ -90,4 +93,14 @@ export function runHrCompetenceCheck(options: { json?: boolean } = {}): void {
     console.log(result.ok ? "✓ 力量マップと研修計画は整合している" : "✗ 是正が必要");
   }
   if (!result.ok) process.exitCode = 1;
+}
+
+export function runHrTalentHear(options: { answers: unknown; json?: boolean }): JobHearingResult {
+  const result = hearJobRequest(options.answers);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function loadTalentHearAnswers(path: string): unknown {
+  return YAML.parse(readFileSync(path, "utf8"));
 }

@@ -1,14 +1,15 @@
 export {
-  buildPassKeyPayload,
   filterCandidates,
   generateRFP,
+  hearJobRequest,
+  proposeShortTermTalentApproval,
 } from "./talent-hiring/index.js";
 export type {
-  BuildPassKeyPayloadInput,
   ContractTerms,
   GenerateRfpDeps,
+  JobHearingResult,
+  JobPosting,
   PassKeyApprovalPayload,
-  PassKeyApprovalRequest,
   ProjectBudget,
   ProjectRequirement,
   RfpEnricher,

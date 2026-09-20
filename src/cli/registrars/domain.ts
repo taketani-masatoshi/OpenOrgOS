@@ -180,6 +180,8 @@ import {
   runHrCompetence,
   runHrCompetenceCheck,
   runHrHeadcount,
+  runHrTalentHear,
+  loadTalentHearAnswers,
   type CompetenceView,
 } from "../../commands/hr.js";
 import {
@@ -220,6 +222,28 @@ export function registerDomainCommands(program: Command): void {
     .description("Deterministic headcount from data/hr/employees.yaml (no names)")
     .option("--json", "Print JSON")
     .action((opts: { json?: boolean }) => runHrHeadcount({ json: Boolean(opts.json) }));
+
+  hr.command("talent-hear")
+    .description("仕事の回答から求人票を作る。不足があれば質問だけ返す")
+    .requiredOption("--answers <file>", "仕事の回答 YAML")
+    .option("--json", "Print JSON")
+    .action((opts: { answers: string; json?: boolean }) => {
+      const result = runHrTalentHear({
+        answers: loadTalentHearAnswers(opts.answers),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "ready") {
+        console.log(result.posting.body);
+        return;
+      }
+      if (result.status === "need_answers") {
+        for (const item of result.questions) console.log(`- ${item.prompt}`);
+        return;
+      }
+      console.log(result.reason);
+      process.exitCode = 1;
+    });
 
   const competence = hr
     .command("competence")
