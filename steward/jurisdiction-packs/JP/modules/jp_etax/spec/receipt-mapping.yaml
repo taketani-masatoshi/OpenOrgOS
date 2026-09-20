@@ -1,0 +1,22 @@
+schema_version: 1
+specFamily: ksk2
+specArtifactId: e-tax18
+sourceWorkbook: XMLVer1x.xlsx
+notes: >
+  Local element names taken from KSK2 e-tax18 帳票フィールド一覧 (XMLVer1x.xlsx
+  shared strings). UMB00050 = 受付番号. Structural fixture parsing only —
+  OpenOrgOS does not invent NTA receipt schemas.
+rootElement: UMB00000
+fields:
+  - localName: UMB00050
+    meaning: 受付番号
+    role: receiptNumber
+  - localName: UMB00020
+    meaning: 受付日時（日付側・帳票定義）
+    role: receivedAt
+  - localName: UMB00040
+    meaning: 時分
+    role: receivedTime
+  - localName: UMB00070
+    meaning: 手続名
+    role: procedureName

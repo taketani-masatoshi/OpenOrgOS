@@ -107,6 +107,29 @@ function buildDataEnvelopeXml(pkg: ReturnPackage, mapping: EtaxProcedureMapping)
   }
 
   // All local names below are taken from official RHO0010 / HOA110 / ITdefinition XSD.
+  const optionalItLocals = new Set([
+    "NOZEISHA_ZIP",
+    "NOZEISHA_TEL",
+    "NOZEISHA_NM_KN",
+    "DAIHYO_NM",
+    "DAIHYO_ADR",
+    "KAZEI_KIKAN_FROM",
+    "KAZEI_KIKAN_TO",
+    "JIGYO_NENDO_FROM",
+    "JIGYO_NENDO_TO",
+    "KESSAN_DAY",
+  ]);
+  const optionalItLines: string[] = [];
+  for (const field of mapping.fields) {
+    if (field.required) continue;
+    if (!optionalItLocals.has(field.xmlLocalName)) continue;
+    const value = readPayloadPath(payload, field.sourcePath);
+    if (typeof value !== "string" || value.trim() === "") continue;
+    optionalItLines.push(
+      `        <${field.xmlLocalName} ID="o${optionalItLines.length + 1}">${escapeXml(value.trim())}</${field.xmlLocalName}>`,
+    );
+  }
+
   const lines = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<DATA xmlns="${env.targetNamespace}" xmlns:gen="${env.generalNamespace}" xmlns:rdf="${env.rdfNamespace}" id="data1">`,
@@ -123,6 +146,7 @@ function buildDataEnvelopeXml(pkg: ReturnPackage, mapping: EtaxProcedureMapping)
     `        <NOZEISHA_ID ID="n1">${escapeXml(nozeishaId)}</NOZEISHA_ID>`,
     `        <NOZEISHA_NM ID="n2">${escapeXml(nozeishaNm)}</NOZEISHA_NM>`,
     `        <NOZEISHA_ADR ID="n3">${escapeXml(nozeishaAdr)}</NOZEISHA_ADR>`,
+    ...optionalItLines,
     `        <TETSUZUKI ID="t1">`,
     `          <procedure_CD>${escapeXml(procedureCd)}</procedure_CD>`,
     `        </TETSUZUKI>`,

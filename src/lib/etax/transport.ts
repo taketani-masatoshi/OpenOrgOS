@@ -68,29 +68,94 @@ export class MockEtaxTransport implements EtaxTransport {
 }
 
 export class EtaxOfficialTransport implements EtaxTransport {
-  async submit(): Promise<SubmissionResult> {
+  async submit(request: SignedSubmission): Promise<SubmissionResult> {
     const catalog = loadTransportCatalog();
-    throw etaxError({
-      code: "ETAX_OFFICIAL_TRANSPORT_HOST_UNBOUND",
-      blocked: "SPEC_BLOCKED",
-      specVersion: catalog.specArtifactId,
-      message:
-        `Official NTA send/receive host is not bound (hostBound=${catalog.hostBound}). ` +
-        `Catalogued call is COM ${catalog.windows.progid}.${catalog.windows.submitMethod} (${catalog.windows.dll}). ` +
-        "Refusing to invent HTTP endpoints, request IDs, or a CLI. Receipt XML mapping (e-tax18) remains SPEC_BLOCKED.",
+    if (!catalog.hostBound) {
+      throw etaxError({
+        code: "ETAX_OFFICIAL_TRANSPORT_HOST_UNBOUND",
+        blocked: "SPEC_BLOCKED",
+        specVersion: catalog.specArtifactId,
+        message:
+          `Official NTA send/receive host is not bound (hostBound=${catalog.hostBound}). ` +
+          `Catalogued call is COM ${catalog.windows.progid}.${catalog.windows.submitMethod} (${catalog.windows.dll}). ` +
+          "Refusing to invent HTTP endpoints, request IDs, or a CLI.",
+      });
+    }
+    const { getEtaxHostClient } = await import("./host-client.js");
+    const host = getEtaxHostClient();
+    const health = await host.health();
+    if (!health.ok || !health.transportBound) {
+      throw etaxError({
+        code: "ETAX_OFFICIAL_TRANSPORT_HOST_UNHEALTHY",
+        blocked: "SPEC_BLOCKED",
+        specVersion: catalog.specArtifactId,
+        message: `hostBound=true but etax-host transport unbound (${health.detail ?? "no detail"})`,
+      });
+    }
+    const result = await host.send({
+      submissionId: request.submissionId,
+      document: request.xml,
+      documentHash: request.xmlHash,
+      signatureHash: request.signature.signatureHash,
     });
+    return {
+      ok: result.ok,
+      requestId: result.requestId,
+      transportStatus: result.transportStatus,
+      message: result.message,
+    };
   }
 
-  async getReceipt(): Promise<ReceiptResult> {
+  async getReceipt(id: string): Promise<ReceiptResult> {
     const catalog = loadTransportCatalog();
-    throw etaxError({
-      code: "ETAX_OFFICIAL_RECEIPT_HOST_UNBOUND",
-      blocked: "SPEC_BLOCKED",
-      specVersion: catalog.specArtifactId,
-      message:
-        `Official NTA receipt host is not bound (hostBound=${catalog.hostBound}). ` +
-        `Catalogued call is COM ${catalog.windows.progid}.${catalog.windows.receiptMethod}. ` +
-        "e-tax18 receipt field map is not registered. Refusing to invent 受付番号 parsing.",
-    });
+    if (!catalog.hostBound) {
+      throw etaxError({
+        code: "ETAX_OFFICIAL_RECEIPT_HOST_UNBOUND",
+        blocked: "SPEC_BLOCKED",
+        specVersion: catalog.specArtifactId,
+        message:
+          `Official NTA receipt host is not bound (hostBound=${catalog.hostBound}). ` +
+          `Catalogued call is COM ${catalog.windows.progid}.${catalog.windows.receiptMethod}. ` +
+          "Refusing to invent 受付番号 parsing without host + e-tax18 map.",
+      });
+    }
+    const { getEtaxHostClient } = await import("./host-client.js");
+    const { parseReceiptXml } = await import("./receipt-mapping.js");
+    const host = getEtaxHostClient();
+    const health = await host.health();
+    if (!health.ok || !health.transportBound) {
+      throw etaxError({
+        code: "ETAX_OFFICIAL_RECEIPT_HOST_UNHEALTHY",
+        blocked: "SPEC_BLOCKED",
+        specVersion: catalog.specArtifactId,
+        message: `hostBound=true but etax-host transport unbound (${health.detail ?? "no detail"})`,
+      });
+    }
+    const raw = await host.getResponse({ submissionId: id });
+    let receiptNumber = raw.receiptNumber;
+    if (!receiptNumber && raw.receiptXml) {
+      const parsed = parseReceiptXml(raw.receiptXml);
+      receiptNumber = parsed.receiptNumber;
+    }
+    if (receiptNumber?.startsWith("MOCK-NOT-NTA-")) {
+      throw etaxError({
+        code: "ETAX_OFFICIAL_RECEIPT_MOCK_PREFIX",
+        blocked: "SPEC_BLOCKED",
+        message: "Official receipt path must not return MOCK-NOT-NTA- prefixed numbers",
+      });
+    }
+    return {
+      submissionId: id,
+      requestId: raw.requestId,
+      receiptNumber,
+      receivedAt: raw.receivedAt,
+      status:
+        raw.status === "REJECTED_BY_ETAX"
+          ? "REJECTED_BY_ETAX"
+          : raw.status === "PENDING"
+            ? "UNKNOWN"
+            : "RECEIVED_BY_ETAX",
+      responseHash: raw.responseHash,
+    };
   }
 }

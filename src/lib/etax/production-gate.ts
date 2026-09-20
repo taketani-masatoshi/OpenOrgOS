@@ -7,7 +7,7 @@ import {
 } from "../../../schemas/etax/production-gate.js";
 import { etaxError } from "../../../schemas/etax/errors.js";
 import { getInstallRoot, getWorkspaceRoot } from "../orgos-paths.js";
-import { ETAX_MODULE_ID, ETAX_PRODUCTION_BANNER } from "./constants.js";
+import { ETAX_MODULE_ID, ETAX_PRODUCTION_BANNER, ETAX_PRODUCTION_BANNER_CERTIFIED } from "./constants.js";
 import { ksk2SpecRegistered } from "./spec-registry.js";
 import type { EtaxEnvironment } from "../../../schemas/etax/submission-state.js";
 
@@ -84,5 +84,6 @@ export function assertProductionSubmitAllowed(env: EtaxEnvironment): void {
 }
 
 export function productionStatusLine(): string {
-  return ETAX_PRODUCTION_BANNER;
+  const reasons = productionSubmitBlockedReasons("production");
+  return reasons.length === 0 ? ETAX_PRODUCTION_BANNER_CERTIFIED : ETAX_PRODUCTION_BANNER;
 }

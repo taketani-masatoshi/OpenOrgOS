@@ -18,7 +18,8 @@ export const etaxTransportCatalogSchema = z.object({
     receiptMethod: z.string(),
     methods: z.array(z.string().min(1)),
   }),
-  hostBound: z.literal(false),
+  /** Tip stays false until operator confirms Windows host health. */
+  hostBound: z.boolean(),
 });
 
 export type EtaxTransportCatalog = z.output<typeof etaxTransportCatalogSchema>;

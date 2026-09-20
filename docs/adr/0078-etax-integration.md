@@ -56,14 +56,20 @@ Unknown NTA rules are `SPEC_BLOCKED`. The implementation must not invent XML.
 
 Implementation complete ≠ e-Tax対応完了.
 
+**e-Tax対応完了** (RHO0010 only) means `evaluateProductionEnablement().certified === true` **and** RHO0010 is `SUPPORTED` with `productionEligible: true`, after Windows host bind, e-tax18 receipt map, NTA transmission evidence, and human `etax production release --approval-id`. See [IMPLEMENTATION_PLAN.md](../etax/IMPLEMENTATION_PLAN.md) D1–D8 and [CERTIFICATION_CHECKLIST.md](../etax/CERTIFICATION_CHECKLIST.md).
+
 ```text
 implementation → local conformance → NTA transmission test → evidence
-  → production enablement review → production
+  → production enablement review → production release → production
 ```
 
-Until Phase 8, CLI/UI must show:
+Until certified, CLI/UI must show:
 
 `e-Tax production submission: NOT CERTIFIED / DISABLED`
+
+When certified (derived, never hard-coded true in tip without gate evidence):
+
+`e-Tax production submission: CERTIFIED / ENABLED (RHO0010)`
 
 ## Consequences
 

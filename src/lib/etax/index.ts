@@ -23,5 +23,8 @@ export * from "./cab-unpack.js";
 export * from "./spec-paths.js";
 export * from "./spec-fetch.js";
 export * from "./inter-form.js";
+export * from "./receipt-mapping.js";
+export * from "./host-client.js";
+export * from "./production-release.js";
 export * from "./approval-apply.js";
 export * from "./lifecycle.js";

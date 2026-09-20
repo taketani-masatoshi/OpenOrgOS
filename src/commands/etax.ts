@@ -3,7 +3,6 @@ import { dirname, join } from "node:path";
 import { EtaxException } from "../../schemas/etax/errors.js";
 import {
   ETAX_COMPATIBILITY_STATUS,
-  ETAX_PRODUCTION_BANNER,
   assertProductionSubmitAllowed,
   buildOfficialXml,
   buildReturnPackage,
@@ -12,6 +11,7 @@ import {
   findSubmission,
   loadEtaxProductionGate,
   productionSubmitBlockedReasons,
+  productionStatusLine,
   specStatusReport,
   submissionForPackage,
   signSubmission,
@@ -20,12 +20,15 @@ import {
   fetchEtaxReceipt,
   evaluateProductionEnablement,
   assertProductionEnableRefused,
+  releaseProductionSubmission,
+  ETAX_PRODUCTION_ENABLE_SUBJECT,
   validateAndAdvance,
   fetchAndUnpackEtaxSpecs,
   officialXsdAvailable,
   contentHashMessage,
   ETAX_APPROVAL_SUBJECT,
   parseContentHashMessage,
+  probeEtaxHostBound,
 } from "../lib/etax/index.js";
 import { getWorkspaceRoot } from "../lib/orgos-paths.js";
 import type { EtaxSignatureProviderId } from "../../schemas/etax/signature.js";
@@ -40,7 +43,7 @@ function printJson(value: unknown): void {
 }
 
 function banner(): string {
-  return `${ETAX_PRODUCTION_BANNER}\n${ETAX_COMPATIBILITY_STATUS}`;
+  return `${productionStatusLine()}\n${ETAX_COMPATIBILITY_STATUS}`;
 }
 
 function fail(error: unknown): never {
@@ -579,6 +582,69 @@ export function runEtaxProductionEnable(): void {
   try {
     requireCliHumanApproval("etax production enable");
     assertProductionEnableRefused();
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export function runEtaxProductionRelease(opts: { approvalId?: string; json?: boolean }): void {
+  try {
+    requireCliHumanApproval("etax production release");
+    if (!opts.approvalId) {
+      throw new EtaxException({
+        code: "ETAX_PRODUCTION_RELEASE_NO_APPROVAL",
+        blocked: "PRODUCTION_DISABLED",
+        message: `etax production release requires --approval-id (subject ${ETAX_PRODUCTION_ENABLE_SUBJECT})`,
+      });
+    }
+    const result = releaseProductionSubmission({
+      approvalId: opts.approvalId,
+      actor: resolveCliOperatorId(),
+    });
+    const payload = {
+      ok: true,
+      banner: result.banner,
+      certified: result.certified,
+      path: result.path,
+      approvalId: opts.approvalId,
+      note: result.certified
+        ? "Production gate released. Confirm RHO0010 SUPPORTED + ToS sync before commercial 対応完了 claim."
+        : "Gate flags written; certified still false — check blockers via production review.",
+    };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(result.banner);
+      console.log(`certified=${result.certified} wrote ${result.path}`);
+    }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+export async function runEtaxHostStatus(opts: { json?: boolean }): Promise<void> {
+  try {
+    const probe = await probeEtaxHostBound();
+    const payload = {
+      ok: true,
+      banner: banner(),
+      reachable: probe.reachable,
+      health: probe.health,
+      error: probe.error,
+      tipCatalogHostBound: false,
+      note: "Repo tip keeps hostBound false until operator sets catalogs after Windows health.",
+    };
+    if (opts.json) printJson(payload);
+    else {
+      console.log(banner());
+      console.log(`host reachable=${probe.reachable}`);
+      if (probe.health) {
+        console.log(
+          `signatureBound=${probe.health.signatureBound} transportBound=${probe.health.transportBound}`,
+        );
+        console.log(probe.health.detail ?? "");
+      }
+      if (probe.error) console.log(probe.error);
+    }
   } catch (error) {
     fail(error);
   }

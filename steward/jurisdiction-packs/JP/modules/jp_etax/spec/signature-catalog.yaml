@@ -6,7 +6,8 @@ notes: >
   Method names are taken from the KSK2 e-tax05 pack (ActiveX CLISignature
   spec + SignerSample.cpp, Cocoa CLISignature.h). OrgOS does not invent a
   CLI around this COM/ObjC module and does not implement XML-DSig itself.
-  hostBound remains false until a native host is reviewed.
+  Repo tip keeps hostBound false (Darwin/CI). Operators set true only after
+  tools/etax-host health reports signatureBound on Windows.
 windows:
   dll: CLXtxSigner.dll
   progid: nta.CLCXtxSigner

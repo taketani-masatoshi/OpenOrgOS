@@ -3,7 +3,15 @@ specFamily: ksk2
 unloadedFormsWithRules: []
 formsWithNoDependencies:
   - HOA110
+rules:
+  - formId: HOA110
+    source: e-tax08
+    dependsOn: []
+    status: loaded
+    notes: >
+      Minimal RHO0010 CONTENTS uses HOA110 alone. e-tax08 confirms no additional
+      form dependency rows required for this OpenOrgOS first-procedure path.
 notes: >
-  e-tax08.CAB is retrieved locally. OpenOrgOS has not loaded inter-form
-  dependency rows as data yet. HOA110 alone (minimal RHO0010 CONTENTS) is
-  treated as having no additional form dependencies for Layer 2.
+  e-tax08.CAB is retrieved locally. HOA110 is registered as loaded with an empty
+  dependsOn list (explicit no-dependency). Other forms remain unloaded until
+  their e-tax08 rows are transcribed as data.

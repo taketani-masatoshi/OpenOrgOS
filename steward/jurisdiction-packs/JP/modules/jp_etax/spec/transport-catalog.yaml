@@ -6,8 +6,8 @@ notes: >
   Method names are taken from the KSK2 e-tax04 pack (ActiveX 2_CLICommunication.docx
   + TestCommVC01.cpp + Sample.CLCommunication.manifest). OrgOS does not invent
   HTTP endpoints, request IDs (XU00Sxxx / SU00Sxxx), or a CLI around this COM
-  module. Filing request IDs stay SPEC_BLOCKED until mapped from the official
-  interface table. hostBound remains false until a native host is reviewed.
+  module. Filing request IDs come only from etax-host / COM. Repo tip keeps
+  hostBound false until Windows host health reports transportBound.
 windows:
   dll: CLCommunication.dll
   progid: nta.CLCCommunication

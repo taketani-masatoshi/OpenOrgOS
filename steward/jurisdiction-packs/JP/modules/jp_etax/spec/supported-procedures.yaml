@@ -16,4 +16,6 @@ procedures:
       test and production-gate review.
 notes: >
   e-tax07.CAB is retrieved locally (gitignored vendor). Rows not listed here
-  remain UNSUPPORTED. Only RHO0010 is EXPERIMENTAL. Do not invent NTA codes.
+  remain UNSUPPORTED. Only RHO0010 is EXPERIMENTAL until NTA transmission test
+  (T-O3) succeeds — then promote to SUPPORTED + productionEligible: true by
+  human edit. Do not invent NTA codes or flip eligibility without evidence.

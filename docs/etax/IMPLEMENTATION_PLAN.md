@@ -1,29 +1,49 @@
 # e-Tax Integration — Implementation Plan
 
-**Status:** Implementation-100 in progress · production **DISABLED** · **NOT e-Tax対応完了**  
-**Date:** 2026-09-21 · **ADR:** [0078](../adr/0078-etax-integration.md)
+**Status:** Implementation-100 achieved (mock) · Certification lane in progress · production **DISABLED** · **NOT e-Tax対応完了**  
+**Date:** 2026-09-21 · **ADR:** [0078](../adr/0078-etax-integration.md)  
+**Operator checklist:** [CERTIFICATION_CHECKLIST.md](CERTIFICATION_CHECKLIST.md)
 
-This document is the scorecard for `jp_etax`. It must not claim e-Tax certification.
+This document is the scorecard for `jp_etax`. It must not claim e-Tax certification until D1–D8 are all true.
+
+---
+
+## e-Tax対応完了（D1–D8）
+
+次をすべて満たしたときだけ、製品・文書で **e-Tax対応完了** と書いてよい。スコープは第一手続 **RHO0010** に限定する（全税目対応ではない）。
+
+| # | 条件 | 意味 |
+|---|------|------|
+| D1 | 公式パスが到達可能 | Windows 上で `official` 署名＋送受信ホストが `hostBound: true`。`--env test` が mock に落ちない |
+| D2 | 公式 XML が本番品質 | RHO0010 生成 XML が e-tax19 XSD Layer1 pass。e-tax08 依存が data 化済み、または「依存なし」が明示 |
+| D3 | 受付が公式 | e-tax18 受付フィールドマップで 受付番号をパース。`MOCK-NOT-NTA-` を本番経路で使わない |
+| D4 | NTA 送信試験 | 国税庁ソフトウェアベンダー送信試験を実施し、gitignore 下の evidence が存在 |
+| D5 | production-gate 全 true | `production-gate.yaml` の 7 requirements + `production_submission_enabled` + evidence_path。人間レビュー記録あり |
+| D6 | 手続が SUPPORTED | `supported-procedures.yaml` の RHO0010 が `SUPPORTED` + `productionEligible: true` |
+| D7 | 製品文言一致 | readiness ≥ `activation_ready`（本番提出 SKU）、CLI/UI バナーが CERTIFIED/ENABLED、ToS・商業宣言を同期 |
+| D8 | 安全不変条件 | PIN/秘密鍵非保存、env 単独で本番不可、税計算モジュールに submit なし、shiyo3 非混在 |
+
+**明示的に含めないもの:** 他手続、macOS 単独本番提出、税額の正しさ（`RECEIVED_BY_ETAX` ≠ 税務正しさ）。
 
 ---
 
 ## 100-point definition (two lanes)
 
-### Implementation-100 (this plan’s goal)
+### Implementation-100 (achieved)
 
 - CLI / library path can reach `DRAFT → … → RECEIVED_BY_ETAX` on `--env mock` **without hand-placed status or hand-written xmlHash**
 - Official XML for the first procedure comes only from a registered mapping YAML + KSK2 XSD
 - Production stays `NOT CERTIFIED / DISABLED`; env vars cannot enable it
 - Docs, readiness, and tests state the same facts
 
-### Certification-100 (separate; not claimed here)
+### Certification-100 / 対応完了 (D1–D8)
 
-- Windows COM host bound (`hostBound: true`)
+- Windows COM host bound (`hostBound: true` after health)
 - NTA transmission test evidence on disk
-- `production-gate.yaml` all true after human review
-- Only then is “e-Tax対応完了” a candidate claim
+- `production-gate.yaml` all true after human review + `etax production release`
+- Only then is “e-Tax対応完了（RHO0010）” allowed in CHANGELOG / commercial copy
 
-Scaffolding Phases 1–8 alone is **not** implementation-100.
+Scaffolding Phases 1–8 alone is **not** 対応完了.
 
 ---
 
@@ -31,12 +51,18 @@ Scaffolding Phases 1–8 alone is **not** implementation-100.
 
 | Lane | Focus | Status |
 |------|--------|--------|
-| A | Contract repair (state machine, xmlHash provenance, slot identity, approval rollback, disk SHA gate) | Required |
-| B | First procedure RHO0010 (e-tax19 envelope + mapping; e-tax10 retrieved) | Required |
-| C | Mock E2E without hand-placed status | Required |
-| D | Host contract docs; `hostBound: false` on Darwin | Required |
-| E | Honest docs / readiness `experimental` | Required |
-| Cert | COM bind + NTA test + production gate | Out of scope |
+| A | Contract repair (state machine, xmlHash provenance, slot identity, approval rollback, disk SHA gate) | Done |
+| B | First procedure RHO0010 (e-tax19 envelope + mapping; e-tax10 retrieved) | Done (EXPERIMENTAL) |
+| C | Mock E2E without hand-placed status | Done |
+| D | Host contract docs; `hostBound: false` on Darwin | Done |
+| E | Honest docs / readiness `experimental` | Done |
+| Cert C0 | D1–D8 + CERTIFICATION_CHECKLIST | Done |
+| Cert C1 | Windows etax-host bind (T-A1 / T-O1) | Code done · T-O1 operator |
+| Cert C2 | Mapping / inter-form / receipt map (T-A3–T-A5) | Done |
+| Cert C3 | `tests/etax-certification.test.ts` | Done |
+| Cert C4 | NTA transmission + RHO0010 SUPPORTED | Operator (path ready) |
+| Cert C5 | production release + gate + banners | Code done · gate tip false |
+| Cert C6 | CHANGELOG 対応完了宣言 | Blocked on certified |
 
 ---
 
@@ -74,16 +100,39 @@ First OpenOrgOS procedure: **RHO0010** (普通法人の確定申告・青色) �
 
 ---
 
-## SPEC_BLOCKED (must stay honest)
+## SPEC_BLOCKED (must stay honest until certified)
 
-- Full e-tax10 field workbook → complete mapping for every form
-- e-tax08 inter-form rules as loaded data (HOA110 treated as no-dependency for minimal path)
-- Official signature / transport **host bind**
-- e-tax18 receipt field map as OpenOrgOS data
-- NTA transmission test evidence
-- `production_submission_enabled`
+- Full e-tax10 field workbook → complete mapping for every form beyond RHO0010 IT subset
+- Official signature / transport **hostBound** remains false in repo tip until Windows health succeeds
+- NTA transmission test evidence (operator; never invented)
+- `production_submission_enabled` (only via `etax production release --approval-id`)
 
-See also [HOST_CONTRACT.md](HOST_CONTRACT.md).
+See also [HOST_CONTRACT.md](HOST_CONTRACT.md) · [CERTIFICATION_CHECKLIST.md](CERTIFICATION_CHECKLIST.md).
+
+---
+
+## Certification tests
+
+### Automated (T-A*) — `tests/etax-certification.test.ts`
+
+| ID | Test | Pass |
+|----|------|------|
+| T-A1 | `hostBound` contract | official adapter uses host path only when `hostBound`; else SPEC_BLOCKED. Real COM skipped off win32 |
+| T-A2 | mock isolation | mock provider forbidden for `--env test` / `production` |
+| T-A3 | RHO0010 XSD | generator output Layer1 pass (no hand-written XML) |
+| T-A4 | Layer2 | inter-form HOA110 pass |
+| T-A5 | receipt map | e-tax18 YAML extracts receiptNumber from structural fixture |
+| T-A6 | slot / hash | concurrent slot reject; hash mutation invalidates approval |
+| T-A7 | production gate | evidence missing → `certified === false`; temp fixture can be true |
+| T-A8 | `ORGOS_ETAX_PRODUCTION=1` | ignored when gate incomplete |
+| T-A9 | tax-calc boundary | `jp_tax_*` has no submit API |
+| T-A10 | readiness / banner | CERTIFIED banner only when certified |
+
+CI (Darwin/Linux): T-A2–T-A10 + mock E2E. T-A1 COM is `skipIf(!win32 \|\| !hostBound)`.
+
+### Operator (T-O*) — [CERTIFICATION_CHECKLIST.md](CERTIFICATION_CHECKLIST.md)
+
+T-O1 host bind · T-O2 test submit · T-O3 NTA evidence · T-O4 credentials · T-O5 human release · T-O6 banner.
 
 ---
 
@@ -91,9 +140,9 @@ See also [HOST_CONTRACT.md](HOST_CONTRACT.md).
 
 | Document | Role |
 |----------|------|
-| ADR 0078 | Independent `jp_etax` module |
+| ADR 0078 | Independent `jp_etax` · 対応完了 = production-gate certified + RHO0010 SUPPORTED |
 | ADR 0052 / 0051 | Tax-calc modules stay not-for-etax |
-| ADR 0038 | Hash-bound human approval |
+| ADR 0038 | Hash-bound human approval (`etax.return_package` · `etax.production_enable`) |
 | ADR 0014 | No private key / PIN in OrgOS |
 
 Tax-calc files must not gain submit methods.

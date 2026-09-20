@@ -1,6 +1,6 @@
 import type { EtaxProductionGate } from "../../../schemas/etax/production-gate.js";
 import { etaxError } from "../../../schemas/etax/errors.js";
-import { ETAX_PRODUCTION_BANNER } from "./constants.js";
+import { ETAX_PRODUCTION_BANNER, ETAX_PRODUCTION_BANNER_CERTIFIED } from "./constants.js";
 import {
   loadEtaxProductionGate,
   productionSubmitBlockedReasons,
@@ -46,7 +46,7 @@ export function evaluateProductionEnablement(gate = loadEtaxProductionGate()): {
     blockers.length === 0;
 
   return {
-    banner: ETAX_PRODUCTION_BANNER,
+    banner: allRequirements ? ETAX_PRODUCTION_BANNER_CERTIFIED : ETAX_PRODUCTION_BANNER,
     production_submission_enabled: gate.production_submission_enabled && allRequirements,
     certified: allRequirements,
     blockers,
@@ -64,7 +64,8 @@ export function assertProductionEnableRefused(gate = loadEtaxProductionGate()): 
     code: "ETAX_PRODUCTION_ENABLE_REFUSED",
     blocked: "PRODUCTION_DISABLED",
     message:
-      `${ETAX_PRODUCTION_BANNER}. CLI cannot flip production-gate.yaml. ` +
-      `Blockers: ${review.blockers.join("; ") || "(none — human must edit catalog gate)"}`,
+      `${ETAX_PRODUCTION_BANNER}. CLI etax production enable cannot flip the gate. ` +
+      `Use etax production release --approval-id after requirements are met. ` +
+      `Blockers: ${review.blockers.join("; ") || "(none — use production release)"}`,
   });
 }

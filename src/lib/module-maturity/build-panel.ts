@@ -54,7 +54,7 @@ function collectModules(): ModuleMaturityRow[] {
       undefined;
     const risk = enabled && tier !== "production_ready";
     const risk_severity =
-      risk && tier === "skeleton"
+      risk && (tier === "skeleton" || tier === "experimental")
         ? ("skeleton_enabled" as const)
         : risk && tier === "activation_ready"
           ? ("activation_enabled" as const)

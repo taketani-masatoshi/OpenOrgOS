@@ -16,6 +16,7 @@ cli_commands:
   - receipt
   - status
   - production
+  - host
   - transmission-test
 security:
   limits:

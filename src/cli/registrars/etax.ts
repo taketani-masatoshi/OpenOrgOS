@@ -3,7 +3,9 @@ import {
   runEtaxApprove,
   runEtaxApprovePropose,
   runEtaxBuild,
+  runEtaxHostStatus,
   runEtaxProductionEnable,
+  runEtaxProductionRelease,
   runEtaxProductionReview,
   runEtaxReady,
   runEtaxReceipt,
@@ -192,8 +194,27 @@ export function registerEtaxCommandTree(parent: Command): void {
     .action((opts: { json?: boolean }) => runEtaxProductionReview({ json: Boolean(opts.json) }));
   production
     .command("enable")
-    .description("Refused: CLI cannot flip production-gate.yaml")
+    .description("Refused: use production release --approval-id after requirements are met")
     .action(() => runEtaxProductionEnable());
+  production
+    .command("release")
+    .description(
+      "Flip production_submission_enabled after approved etax.production_enable approval (requirements must already be true)",
+    )
+    .requiredOption("--approval-id <id>", "Approved org approval id (APR-*)")
+    .option("--json", "JSON output")
+    .action((opts: { approvalId: string; json?: boolean }) =>
+      runEtaxProductionRelease({ approvalId: opts.approvalId, json: Boolean(opts.json) }),
+    );
+
+  const host = etax.command("host").description("Probe etax-host health (SignToReport / Send / GetResponse)");
+  host
+    .command("status")
+    .description("Show whether the official host process is reachable")
+    .option("--json", "JSON output")
+    .action(async (opts: { json?: boolean }) => {
+      await runEtaxHostStatus({ json: Boolean(opts.json) });
+    });
 
   etax
     .command("transmission-test")

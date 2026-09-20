@@ -10,6 +10,9 @@ export const ETAX_COMPATIBILITY_STATUS =
 export const ETAX_PRODUCTION_BANNER =
   "e-Tax production submission: NOT CERTIFIED / DISABLED";
 
+export const ETAX_PRODUCTION_BANNER_CERTIFIED =
+  "e-Tax production submission: CERTIFIED / ENABLED (RHO0010)";
+
 export const ETAX_SPEC_RELATIVE_DIR =
   "steward/jurisdiction-packs/JP/modules/jp_etax/spec";
 

@@ -24,6 +24,12 @@ export function applyEtaxApproval(approval: OrgApprovalRequest): void {
     });
   }
   const submissionId = approval.subject_ref;
+  if (!submissionId) {
+    throw etaxError({
+      code: "ETAX_ORG_APPROVAL_NO_SUBJECT_REF",
+      message: "e-Tax org approval requires subject_ref = submission id",
+    });
+  }
   const sub = requireSubmission(submissionId);
   const pkg = requireReturnPackage(sub.packageId);
   const bound = parseContentHashMessage(approval.message);

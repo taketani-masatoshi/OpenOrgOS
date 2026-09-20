@@ -86,14 +86,46 @@ export class EtaxOfficialSignatureAdapter implements SignatureProvider {
       platform === "windows"
         ? `COM ${catalog.windows.progid} ${catalog.windows.reportMethod} (${catalog.windows.dll})`
         : `Cocoa ${catalog.cocoa.interface}.${catalog.cocoa.reportMethod} (${catalog.cocoa.framework})`;
-    throw etaxError({
-      code: "ETAX_OFFICIAL_SIGNATURE_HOST_UNBOUND",
-      blocked: "SPEC_BLOCKED",
-      specVersion: catalog.specArtifactId,
-      message:
-        `Official NTA signature host is not bound (hostBound=${catalog.hostBound}). ` +
-        `Catalogued call is ${surface}. ` +
-        "Refusing to invent a CLI, FFI, or homegrown XML-DSig. PIN/password stay on the NTA module / device.",
+
+    if (!catalog.hostBound) {
+      throw etaxError({
+        code: "ETAX_OFFICIAL_SIGNATURE_HOST_UNBOUND",
+        blocked: "SPEC_BLOCKED",
+        specVersion: catalog.specArtifactId,
+        message:
+          `Official NTA signature host is not bound (hostBound=${catalog.hostBound}). ` +
+          `Catalogued call is ${surface}. ` +
+          "Refusing to invent a CLI, FFI, or homegrown XML-DSig. PIN/password stay on the NTA module / device.",
+      });
+    }
+
+    const { getEtaxHostClient } = await import("./host-client.js");
+    const host = getEtaxHostClient();
+    const health = await host.health();
+    if (!health.ok || !health.signatureBound) {
+      throw etaxError({
+        code: "ETAX_OFFICIAL_SIGNATURE_HOST_UNHEALTHY",
+        blocked: "SPEC_BLOCKED",
+        specVersion: catalog.specArtifactId,
+        message:
+          `hostBound=true but etax-host signature is unbound (${health.detail ?? "no detail"}). ` +
+          `Catalogued call is ${surface}.`,
+      });
+    }
+    const signed = await host.signToReport({
+      document: input.document,
+      documentHash: input.documentHash,
+    });
+    return etaxSignatureResultSchema.parse({
+      provider: "official",
+      legal: true,
+      certificateId: signed.certificateId,
+      certificateValid: signed.certificateValid,
+      signingTime: signed.signingTime,
+      documentHash: input.documentHash,
+      signatureHash: signed.signatureHash,
+      moduleId: signed.moduleId,
+      method: signed.method ?? catalog.windows.reportMethod,
     });
   }
 }

@@ -1,11 +1,13 @@
 # e-Tax official host contract (COM / Cocoa)
 
-**Status:** `hostBound: false` on Darwin and in CI · **Date:** 2026-09-21  
+**Status:** catalog tip `hostBound: false` (Darwin/CI) · Windows `tools/etax-host` binds at runtime · **Date:** 2026-09-21  
 **Module:** `jp_etax` · ADR [0078](../adr/0078-etax-integration.md)
 
-This document is the contract for binding NTA-distributed native modules.
-It is **not** an implementation of those modules. OpenOrgOS must not invent
-HTTP endpoints, request IDs, or a homegrown XML-DSig.
+This document is the contract for binding NTA-distributed native modules via the
+**etax-host** JSON-RPC/stdio process. OpenOrgOS must not invent HTTP endpoints,
+request IDs (e.g. sample login `XU00S010` as a filing id), or a homegrown XML-DSig.
+
+Host protocol: `src/lib/etax/host-client.ts` · Windows entry: `tools/etax-host/`.
 
 ## Signature (e-tax05)
 
@@ -47,8 +49,13 @@ Rules:
 | `test` | Official (host required) | Official (host required) |
 | `production` | Official + production-gate | Official + production-gate + NTA evidence |
 
-## Out of scope for implementation-100
+## Operator bind (T-O1)
 
-Binding the Windows COM host, running the NTA transmission test, and flipping
-`production-gate.yaml` are **certification-100** work. Darwin CI keeps
-`hostBound: false`.
+1. Install NTA CLXtxSigner / CLCommunication on Windows
+2. Run `ORGOS_ETAX_HOST_MODE=com node tools/etax-host/etax-host.mjs`
+3. `orgos etax host status` → signatureBound + transportBound
+4. Set catalog `hostBound: true` only after health succeeds (repo tip stays false for Darwin/CI)
+
+## Out of scope for tip / CI
+
+NTA transmission test evidence and flipping `production-gate.yaml` remain **operator certification** work. Darwin CI keeps `hostBound: false`.

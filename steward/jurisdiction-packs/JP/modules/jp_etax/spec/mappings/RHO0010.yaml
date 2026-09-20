@@ -40,9 +40,40 @@ fields:
     xmlLocalName: procedure_CD
     xmlPath: TETSUZUKI.procedure_CD
     required: true
+  # Optional IT children — local names from e-tax19 general/ITdefinition.xsd
+  - sourcePath: it.nozeishaZip
+    xmlLocalName: NOZEISHA_ZIP
+    required: false
+  - sourcePath: it.nozeishaTel
+    xmlLocalName: NOZEISHA_TEL
+    required: false
+  - sourcePath: it.nozeishaNmKn
+    xmlLocalName: NOZEISHA_NM_KN
+    required: false
+  - sourcePath: it.daihyoNm
+    xmlLocalName: DAIHYO_NM
+    required: false
+  - sourcePath: it.daihyoAdr
+    xmlLocalName: DAIHYO_ADR
+    required: false
+  - sourcePath: it.kazeiKikanFrom
+    xmlLocalName: KAZEI_KIKAN_FROM
+    required: false
+  - sourcePath: it.kazeiKikanTo
+    xmlLocalName: KAZEI_KIKAN_TO
+    required: false
+  - sourcePath: it.jigyoNendoFrom
+    xmlLocalName: JIGYO_NENDO_FROM
+    required: false
+  - sourcePath: it.jigyoNendoTo
+    xmlLocalName: JIGYO_NENDO_TO
+    required: false
+  - sourcePath: it.kessanDay
+    xmlLocalName: KESSAN_DAY
+    required: false
 notes: >
   Envelope and element local names extracted from official e-tax19 XSD:
   DATA / RHO0010 / CATALOG / CONTENTS / IT / HOA110 (RHO0010-150.xsd,
   ITdefinition.xsd, HOA110-014.xsd, General FormAttribute).
-  e-tax10 field workbook remains the human-readable field dictionary; this
-  mapping binds only XSD-proven local names. EXPERIMENTAL / not production.
+  Optional IT fields are XSD local names only — values never invented.
+  EXPERIMENTAL / not productionEligible until NTA transmission test.

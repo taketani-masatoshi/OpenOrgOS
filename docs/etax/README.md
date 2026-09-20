@@ -12,6 +12,6 @@
 
 CLI: `orgos etax spec status`
 
-Docs: [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) · [HOST_CONTRACT.md](./HOST_CONTRACT.md) · [THREAT_MODEL.md](./THREAT_MODEL.md) · ADR [0078](../adr/0078-etax-integration.md)
+Docs: [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) · [CERTIFICATION_CHECKLIST.md](./CERTIFICATION_CHECKLIST.md) · [ACCEPTANCE.md](./ACCEPTANCE.md) · [HOST_CONTRACT.md](./HOST_CONTRACT.md) · [THREAT_MODEL.md](./THREAT_MODEL.md) · ADR [0078](../adr/0078-etax-integration.md)
 
-**Not e-Tax対応完了.** Certification requires COM host bind + NTA transmission evidence + production-gate review.
+**Not e-Tax対応完了.** D1–D8 + T-O* evidence required (COM host · NTA transmission · production release).
