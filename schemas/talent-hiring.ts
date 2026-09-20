@@ -205,6 +205,86 @@ export type JobHearingResult =
   | { status: "rejected"; reason: string }
   | { status: "ready"; posting: JobPosting };
 
+/** 求人媒体（タイミー等）で選ばせる受動喫煙区分。自由記述させない。 */
+export const passiveSmokingChoiceIdSchema = z.enum([
+  "indoor_smoke_free",
+  "smoking_room",
+  "heated_tobacco_room",
+  "smoking_allowed_exception",
+  "outdoor_work",
+]);
+
+/** 短期・単発向けの業種・職種ラベル。自由記述させない。 */
+export const jobCategoryChoiceIdSchema = z.enum([
+  "light_work",
+  "warehouse_logistics",
+  "cleaning",
+  "office_assist",
+  "food_service",
+  "other",
+]);
+
+export const worksiteStationSchema = z
+  .object({
+    line: z.string().min(1),
+    station: z.string().min(1),
+    walk_minutes: z.number().int().nonnegative(),
+    exit: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const hiringWorksiteSchema = z
+  .object({
+    worksite_id: z.string().min(1),
+    display_name: z.string().min(1),
+    address: z
+      .object({
+        prefecture: z.string().min(1),
+        city: z.string().min(1),
+        line1: z.string().min(1),
+        building: z.string().min(1).optional(),
+        unit: z.string().min(1).optional(),
+        postal_code: z.string().min(1).optional(),
+      })
+      .strict(),
+    access: z
+      .object({
+        nearest_stations: z.array(worksiteStationSchema).min(1),
+        entry_method: z.string().min(1),
+      })
+      .strict(),
+    passive_smoking_fact: z.string().min(1),
+    passive_smoking_choice: passiveSmokingChoiceIdSchema.optional(),
+    job_category_choice: jobCategoryChoiceIdSchema.optional(),
+    suggested_job_category: jobCategoryChoiceIdSchema.optional(),
+    confirmed_at: dateString.optional(),
+  })
+  .strict();
+
+export type PassiveSmokingChoiceId = z.output<typeof passiveSmokingChoiceIdSchema>;
+export type JobCategoryChoiceId = z.output<typeof jobCategoryChoiceIdSchema>;
+export type HiringWorksite = z.output<typeof hiringWorksiteSchema>;
+
+export interface CatalogChoice<T extends string> {
+  id: T;
+  label: string;
+  hint?: string;
+}
+
+export type WorksiteConfirmResult =
+  | {
+      status: "need_choices";
+      worksite: HiringWorksite;
+      missing: Array<"passive_smoking_choice" | "job_category_choice">;
+      passive_smoking_options: CatalogChoice<PassiveSmokingChoiceId>[];
+      job_category_options: CatalogChoice<JobCategoryChoiceId>[];
+      recommended?: {
+        passive_smoking_choice?: PassiveSmokingChoiceId;
+        job_category_choice?: JobCategoryChoiceId;
+      };
+    }
+  | { status: "ready"; worksite: HiringWorksite };
+
 export const recruitingJobSchema = z
   .object({
     job_id: z.string().min(1),
@@ -213,6 +293,7 @@ export const recruitingJobSchema = z
     director: z.string().min(1),
     candidates: z.array(talentCandidateSchema),
     terms: contractTermsSchema,
+    worksite_id: z.string().min(1).optional(),
     company_readiness: dismissalReadinessLedgerSchema.optional(),
     prerequisites: regularPrerequisitesSchema.optional(),
     proposed_by: z.string().min(1).default("recruiting"),

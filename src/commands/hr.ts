@@ -21,6 +21,10 @@ import {
   prepareDismissalReadinessChecklist,
   writeDismissalReadinessShells,
 } from "../lib/hr/dismissal-readiness.js";
+import {
+  confirmHiringWorksite,
+  writeHiringWorksite,
+} from "../lib/hr/hiring-worksite.js";
 import { loadRecruitingJobFromPath } from "../lib/hr/recruiting-job.js";
 import { runTalentFlow } from "../lib/hr/talent-flow.js";
 import { runTalentPack } from "../lib/hr/talent-pack.js";
@@ -31,10 +35,18 @@ import type {
   EngagementDiscussResult,
   EngagementKind,
   HiringPack,
+  JobCategoryChoiceId,
   JobHearingResult,
   JobPosting,
+  PassiveSmokingChoiceId,
+  WorksiteConfirmResult,
 } from "../../schemas/talent-hiring.js";
-import { engagementKindSchema, jobPostingSchema } from "../../schemas/talent-hiring.js";
+import {
+  engagementKindSchema,
+  jobCategoryChoiceIdSchema,
+  jobPostingSchema,
+  passiveSmokingChoiceIdSchema,
+} from "../../schemas/talent-hiring.js";
 import { getDocsDir } from "../lib/utils.js";
 import { resolveTenantPath } from "../lib/tenant.js";
 
@@ -117,6 +129,31 @@ export function runHrCompetenceCheck(options: { json?: boolean } = {}): void {
 
 export function runHrTalentHear(options: { answers: unknown; json?: boolean }): JobHearingResult {
   const result = hearJobRequest(options.answers);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrWorksiteConfirm(options: {
+  worksite: unknown;
+  passiveSmoking?: string;
+  jobCategory?: string;
+  writePath?: string;
+  json?: boolean;
+}): WorksiteConfirmResult | { status: "rejected"; reason: string } {
+  const choices: {
+    passive_smoking_choice?: PassiveSmokingChoiceId;
+    job_category_choice?: JobCategoryChoiceId;
+  } = {};
+  if (options.passiveSmoking) {
+    choices.passive_smoking_choice = passiveSmokingChoiceIdSchema.parse(options.passiveSmoking);
+  }
+  if (options.jobCategory) {
+    choices.job_category_choice = jobCategoryChoiceIdSchema.parse(options.jobCategory);
+  }
+  const result = confirmHiringWorksite(options.worksite, choices);
+  if (result.status === "ready" && options.writePath) {
+    writeHiringWorksite(options.writePath, result.worksite);
+  }
   if (options.json) console.log(JSON.stringify(result, null, 2));
   return result;
 }

@@ -49,6 +49,7 @@ JD · 候補者パイプライン · 面接調整下書き。
 |------|------|
 | agent_pulse | `orgos agent pulse --agent recruiting` |
 | recruiting_engagement_discuss | `orgos hr talent-discuss`（契約形態の候補と理由。決定・承認しない · `runtime: cli`） |
+| recruiting_worksite_confirm | `orgos hr worksite-confirm`（拠点の調査確認とカタログ選択。自由記述を減らす · `runtime: cli`） |
 | recruiting_talent_pack | `orgos hr talent-pack`（社内職務概要。解雇手順は書かない · `runtime: cli`） |
 | recruiting_talent_flow | `orgos hr talent-flow`（ジョブ YAML から署名待ちまで。承認しない · `runtime: cli`） |
 
@@ -59,9 +60,16 @@ JD · 候補者パイプライン · 面接調整下書き。
 orgos agent readiness --agent recruiting
 orgos agent pulse --agent recruiting
 orgos hr talent-discuss --answers <file> --json
+orgos hr worksite-confirm --worksite <file> --json
 orgos hr talent-pack --posting <file> --engagement fixed_term --director <name> --json
 orgos hr talent-flow --job <file> --json
 ```
+
+## 操作方針（キーボード削減）
+
+- 最寄り駅などは調査して候補を出し、確認後に拠点 YAML へ保存する
+- 受動喫煙・業種など媒体必須項目はカタログから選ばせる（自由記述しない）
+- 同じ拠点の次回求人では保存済み付随情報を再利用する
 
 ## 禁止（採用フロー）
 

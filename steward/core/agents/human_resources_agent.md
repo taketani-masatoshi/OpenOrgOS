@@ -52,6 +52,7 @@
 | hr_headcount | `orgos hr headcount` · `orgos hr headcount --json`（L1 在籍人数 · 氏名非出力） |
 | hr_dismissal_readiness | `orgos hr dismissal-readiness`（対象者決定前の会社側書類準備度。解雇実行しない · `runtime: cli`） |
 | hr_talent_hear | `orgos hr talent-hear`（求人票。年齢・性別拒否 · `runtime: cli`） |
+| recruiting_worksite_confirm | `orgos hr worksite-confirm`（拠点確認・カタログ選択 · `runtime: cli`） |
 | hr_talent_shortlist | `orgos hr talent-shortlist`（実演選考と署名待ち稟議。承認しない · `runtime: cli`） |
 | agent_pulse | `orgos agent pulse --agent human_resources` |
 

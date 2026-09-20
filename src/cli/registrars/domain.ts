@@ -186,6 +186,7 @@ import {
   runHrTalentHear,
   runHrTalentPack,
   runHrTalentShortlist,
+  runHrWorksiteConfirm,
   loadTalentHearAnswers,
   loadRecruitingJobFromPath,
   getDocsDir,
@@ -250,6 +251,56 @@ export function registerDomainCommands(program: Command): void {
       }
       console.log(result.reason);
       process.exitCode = 1;
+    });
+
+  hr.command("worksite-confirm")
+    .description("就業拠点の確認。受動喫煙・業種はカタログ選択。承認・外部掲載はしない")
+    .requiredOption("--worksite <file>", "拠点 YAML")
+    .option("--passive-smoking <id>", "受動喫煙区分のカタログ id")
+    .option("--job-category <id>", "業種・職種のカタログ id")
+    .option("--write <file>", "確定後の書き出し先")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      worksite: string;
+      passiveSmoking?: string;
+      jobCategory?: string;
+      write?: string;
+      json?: boolean;
+    }) => {
+      const result = runHrWorksiteConfirm({
+        worksite: loadTalentHearAnswers(opts.worksite),
+        passiveSmoking: opts.passiveSmoking,
+        jobCategory: opts.jobCategory,
+        writePath: opts.write,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_choices") {
+        console.log("次から番号（id）で選んでください。自由記述は不要です。");
+        if (result.recommended?.passive_smoking_choice) {
+          console.log(`推奨 受動喫煙: ${result.recommended.passive_smoking_choice}`);
+        }
+        if (result.recommended?.job_category_choice) {
+          console.log(`推奨 業種: ${result.recommended.job_category_choice}`);
+        }
+        for (const row of result.passive_smoking_options) {
+          console.log(`- passive_smoking ${row.id}: ${row.label}`);
+        }
+        for (const row of result.job_category_options) {
+          console.log(`- job_category ${row.id}: ${row.label}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`worksite_id: ${result.worksite.worksite_id}`);
+      console.log(`passive_smoking: ${result.worksite.passive_smoking_choice}`);
+      console.log(`job_category: ${result.worksite.job_category_choice}`);
+      if (opts.write) console.log(opts.write);
     });
 
   hr.command("talent-discuss")

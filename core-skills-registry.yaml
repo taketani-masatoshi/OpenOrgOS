@@ -738,6 +738,11 @@ skills:
     runtime: cli
     description: 求人票ヒアリング（年齢・性別拒否）
     agent_id: human_resources
+  - id: recruiting_worksite_confirm
+    file: extension/recruiting_worksite_confirm.md
+    runtime: cli
+    description: 就業拠点の確認（調査→選択→保存。自由記述を減らす）
+    agent_id: recruiting
   - id: hr_talent_shortlist
     file: extension/hr_talent_shortlist.md
     runtime: cli
