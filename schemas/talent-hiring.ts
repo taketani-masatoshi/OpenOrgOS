@@ -14,22 +14,98 @@ export const talentCandidateSchema = z
   })
   .strict();
 
+export const engagementKindSchema = z.enum(["contractor", "fixed_term", "regular"]);
+
 export const contractTermsSchema = z.object({
-  engagement: z.string().min(1),
+  engagement: engagementKindSchema,
   hours: z.number().nonnegative(),
   currency: z.string().min(1),
   max_total: z.number().nonnegative(),
 });
 
+export const noticeProcedureSchema = z.enum(["thirty_day_notice", "notice_allowance"]);
+
+export const laborConditionsSchema = z.object({
+  period_fixed: z.boolean(),
+  wage: z.string().min(1),
+  work_hours: z.string().min(1),
+  workplace: z.string().min(1),
+});
+
+export const regularPrerequisitesSchema = z
+  .object({
+    work_rules_ref: z.string().min(1),
+    dismissal_ground_refs: z.array(z.string().min(1)).min(1),
+    notice_procedure: noticeProcedureSchema,
+    probation_days: z.number().int().nonnegative(),
+    labor_conditions: laborConditionsSchema,
+  })
+  .strict();
+
 export const passKeyApprovalPayloadSchema = z.object({
   rfp_title: z.string().min(1),
   candidate_ids: z.array(z.string().min(1)),
   terms: contractTermsSchema,
+  engagement: engagementKindSchema,
+  prerequisites: z
+    .object({
+      work_rules_ref: z.string().min(1),
+      dismissal_ground_refs: z.array(z.string().min(1)).min(1),
+      notice_procedure: noticeProcedureSchema,
+      probation_days: z.number().int().nonnegative(),
+    })
+    .optional(),
 });
 
+export type EngagementKind = z.output<typeof engagementKindSchema>;
 export type TalentCandidate = z.output<typeof talentCandidateSchema>;
 export type ContractTerms = z.output<typeof contractTermsSchema>;
+export type RegularPrerequisites = z.output<typeof regularPrerequisitesSchema>;
 export type PassKeyApprovalPayload = z.output<typeof passKeyApprovalPayloadSchema>;
+
+export const engagementDiscussAnswersSchema = z
+  .object({
+    company_directs: z.boolean().optional(),
+    fixed_term_days: z.number().int().positive().nullable().optional(),
+    deliverable_only: z.boolean().optional(),
+  })
+  .strict();
+
+export const engagementDiscussQuestionFieldSchema = z.enum([
+  "company_directs",
+  "fixed_term_days",
+  "deliverable_only",
+]);
+
+export type EngagementDiscussAnswers = z.output<typeof engagementDiscussAnswersSchema>;
+export type EngagementDiscussQuestionField = z.output<typeof engagementDiscussQuestionFieldSchema>;
+
+export interface EngagementDiscussQuestion {
+  field: EngagementDiscussQuestionField;
+  prompt: string;
+}
+
+export interface EngagementOption {
+  engagement: EngagementKind;
+  reasons: string[];
+  requires_prerequisites?: boolean;
+}
+
+export type EngagementDiscussResult =
+  | { status: "need_answers"; questions: EngagementDiscussQuestion[] }
+  | { status: "rejected"; reason: string }
+  | {
+      status: "ready";
+      recommended: EngagementKind;
+      options: EngagementOption[];
+    };
+
+export interface HiringPack {
+  engagement: EngagementKind;
+  internal_job_summary: string;
+  exit_name: string;
+  notes: string[];
+}
 
 export const jobHearingAnswersSchema = z
   .object({

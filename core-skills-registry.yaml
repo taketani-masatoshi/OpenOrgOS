@@ -861,6 +861,11 @@ skills:
     runtime: agent
     description: 採用パイプライン
     agent_id: recruiting
+  - id: recruiting_engagement_discuss
+    file: extension/recruiting_engagement_discuss.md
+    runtime: cli
+    description: 契約形態の候補と理由（決定・承認しない）
+    agent_id: recruiting
   - id: recruiting_interview_prep
     file: extension/recruiting_interview_prep.md
     runtime: agent

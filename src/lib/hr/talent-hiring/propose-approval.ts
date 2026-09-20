@@ -2,6 +2,7 @@ import type { OrgApprovalRequest } from "../../../../schemas/org/approval.js";
 import type {
   ContractTerms,
   PassKeyApprovalPayload,
+  RegularPrerequisites,
 } from "../../../../schemas/talent-hiring.js";
 import { proposeOrgApproval } from "../../org/approval/propose.js";
 import {
@@ -14,6 +15,7 @@ export interface ProposeShortTermTalentInput {
   title: string;
   shortlist: Array<{ candidate_id: string }>;
   terms: ContractTerms;
+  prerequisites?: RegularPrerequisites;
   proposedBy: string;
   operatorId: string;
   approverId: string;

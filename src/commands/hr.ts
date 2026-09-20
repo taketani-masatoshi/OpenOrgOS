@@ -15,8 +15,9 @@ import {
   formatTrainingRecordsMarkdown,
 } from "../lib/hr/competence-view.js";
 import { hearJobRequest } from "../lib/hr/talent-hiring/hear-job.js";
+import { recommendEngagement } from "../lib/hr/talent-hiring/recommend-engagement.js";
 import { shortlistForPosting, type TalentShortlistResult } from "../lib/hr/talent-shortlist.js";
-import type { JobHearingResult } from "../../schemas/talent-hiring.js";
+import type { EngagementDiscussResult, JobHearingResult } from "../../schemas/talent-hiring.js";
 import { resolveTenantPath } from "../lib/tenant.js";
 
 export function runHrHeadcount(options?: { json?: boolean }): void {
@@ -102,10 +103,20 @@ export function runHrTalentHear(options: { answers: unknown; json?: boolean }): 
   return result;
 }
 
+export function runHrTalentDiscuss(options: {
+  answers: unknown;
+  json?: boolean;
+}): EngagementDiscussResult {
+  const result = recommendEngagement(options.answers);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
 export function runHrTalentShortlist(options: {
   posting: unknown;
   candidates: unknown;
   terms: unknown;
+  prerequisites?: unknown;
   proposedBy: string;
   operatorId: string;
   approverId: string;

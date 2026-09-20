@@ -7,11 +7,13 @@ import { humanApprovalSubjectDigest } from "../src/lib/org/human-approval-contex
 import { canonicalJson } from "../src/lib/protocol/canonical.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { runHrTalentHear, runHrTalentShortlist } from "../src/commands/hr.js";
+import { runHrTalentDiscuss, runHrTalentHear, runHrTalentShortlist } from "../src/commands/hr.js";
 import {
+  buildHiringPack,
   filterCandidates,
   hearJobRequest,
   proposeShortTermTalentApproval,
+  recommendEngagement,
   type JobPosting,
   type TalentCandidate,
 } from "../src/lib/hr/talent-hiring-pipeline.js";
@@ -124,7 +126,7 @@ describe("proposeShortTermTalentApproval", () => {
       title: "AI advisor",
       shortlist,
       terms: {
-        engagement: "advisor",
+        engagement: "fixed_term",
         hours: 40,
         currency: "JPY",
         max_total: maxTotal,
@@ -186,6 +188,19 @@ const completeHearing = {
   headcount: 1,
   max_hourly_rate: 1500,
   currency: "JPY",
+};
+
+const completeRegularPrerequisites = {
+  work_rules_ref: "docs/company/hr/work-rules.md",
+  dismissal_ground_refs: ["WR-42"],
+  notice_procedure: "thirty_day_notice",
+  probation_days: 90,
+  labor_conditions: {
+    period_fixed: false,
+    wage: "時給1500円",
+    work_hours: "09:00-18:00",
+    workplace: "本社工場",
+  },
 };
 
 describe("hearJobRequest", () => {
@@ -354,5 +369,103 @@ describe("talent shortlist", () => {
     expect(result.settlement_required).toBe(true);
     expect(result.settlement?.challenge_id).toMatch(/^SCH-/);
     expect(result.settlement?.webauthn_challenge.length).toBeGreaterThan(0);
+  });
+
+  it("blocks regular hires when dismissal prerequisites are missing", () => {
+    const before = approvalsSnapshot;
+    const result = runHrTalentShortlist({
+      ...input(100_000),
+      terms: { ...terms, engagement: "regular", max_total: 100_000 },
+    });
+
+    expect(result.status).toBe("need_prerequisites");
+    expect(result).not.toHaveProperty("approval");
+    const after = existsSync(approvalsPath) ? readFileSync(approvalsPath) : null;
+    expect(after).toEqual(before);
+  });
+
+  it("reaches pending approval for regular only when prerequisites are present", () => {
+    const result = runHrTalentShortlist({
+      ...input(100_000),
+      terms: { ...terms, engagement: "regular", max_total: 100_000 },
+      prerequisites: completeRegularPrerequisites,
+    });
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.approval.status).toBe("pending_approval");
+    expect(result.payload.engagement).toBe("regular");
+    expect(result.payload.prerequisites?.work_rules_ref).toBe("docs/company/hr/work-rules.md");
+    expect(result.payload.prerequisites?.dismissal_ground_refs).toEqual(["WR-42"]);
+    expect(JSON.stringify(result.payload)).not.toMatch(/解雇の実行|予告すれば足りる|自由に終了/);
+  });
+});
+
+describe("recommendEngagement", () => {
+  it("recommends fixed_term when the company directs and the term is one month", () => {
+    const result = recommendEngagement({
+      company_directs: true,
+      fixed_term_days: 30,
+      deliverable_only: false,
+    });
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.recommended).toBe("fixed_term");
+    const regular = result.options.find((row) => row.engagement === "regular");
+    expect(regular?.requires_prerequisites).toBe(true);
+  });
+
+  it("recommends contractor when there is no direction and the work is a deliverable", () => {
+    const result = recommendEngagement({
+      company_directs: false,
+      fixed_term_days: null,
+      deliverable_only: true,
+    });
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.recommended).toBe("contractor");
+    expect(result.options.every((row) => row.requires_prerequisites !== true || row.engagement === "regular")).toBe(
+      true,
+    );
+    expect(result.options.find((row) => row.engagement === "contractor")?.requires_prerequisites).toBeFalsy();
+  });
+
+  it("returns the same result from the hr command", () => {
+    const answers = {
+      company_directs: true,
+      fixed_term_days: 30,
+      deliverable_only: false,
+    };
+    expect(runHrTalentDiscuss({ answers })).toEqual(recommendEngagement(answers));
+  });
+});
+
+describe("buildHiringPack", () => {
+  it("names the exit without writing a dismissal procedure", () => {
+    const pack = buildHiringPack({
+      posting: machinePosting,
+      engagement: "regular",
+      director: "現場担当",
+    });
+
+    expect(pack.internal_job_summary).toContain(machinePosting.duties);
+    expect(pack.internal_job_summary).toContain("現場担当");
+    for (const check of machinePosting.checks) {
+      expect(pack.internal_job_summary).toContain(check);
+    }
+    expect(pack.exit_name).toBe("解雇");
+    expect(pack.notes.join("\n")).toContain("事実の記録");
+    expect(pack.notes.join("\n")).not.toMatch(/解雇の実行手順|予告すれば足りる|自由に終了できる/);
+  });
+
+  it("names contractor and fixed_term exits without dismissal prerequisites", () => {
+    expect(
+      buildHiringPack({ posting: machinePosting, engagement: "contractor", director: "なし" }).exit_name,
+    ).toBe("委託契約の終了");
+    expect(
+      buildHiringPack({ posting: machinePosting, engagement: "fixed_term", director: "現場担当" }).exit_name,
+    ).toBe("期間満了・更新しない");
   });
 });

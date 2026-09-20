@@ -180,6 +180,7 @@ import {
   runHrCompetence,
   runHrCompetenceCheck,
   runHrHeadcount,
+  runHrTalentDiscuss,
   runHrTalentHear,
   runHrTalentShortlist,
   loadTalentHearAnswers,
@@ -246,11 +247,38 @@ export function registerDomainCommands(program: Command): void {
       process.exitCode = 1;
     });
 
+  hr.command("talent-discuss")
+    .description("仕事の事実から契約形態の候補と理由を返す。形態の決定はしない")
+    .requiredOption("--answers <file>", "指揮命令・期間・成果物の回答 YAML")
+    .option("--json", "Print JSON")
+    .action((opts: { answers: string; json?: boolean }) => {
+      const result = runHrTalentDiscuss({
+        answers: loadTalentHearAnswers(opts.answers),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "ready") {
+        console.log(`recommended: ${result.recommended}`);
+        for (const row of result.options) {
+          const flag = row.requires_prerequisites ? " (prerequisites)" : "";
+          console.log(`- ${row.engagement}${flag}: ${row.reasons.join("; ")}`);
+        }
+        return;
+      }
+      if (result.status === "need_answers") {
+        for (const item of result.questions) console.log(`- ${item.prompt}`);
+        return;
+      }
+      console.log(result.reason);
+      process.exitCode = 1;
+    });
+
   hr.command("talent-shortlist")
     .description("求人票と実演結果から選考し、署名待ちの稟議まで作る")
     .requiredOption("--posting <file>", "求人票 YAML")
     .requiredOption("--candidates <file>", "候補者 YAML")
-    .requiredOption("--terms <file>", "契約条件 YAML")
+    .requiredOption("--terms <file>", "契約条件 YAML（engagement 必須）")
+    .option("--prerequisites <file>", "regular のときだけ解雇前提 YAML")
     .requiredOption("--operator-id <id>", "操作者 ID")
     .requiredOption("--approver-id <id>", "承認者 ID")
     .requiredOption("--api-origin <url>", "Settlement の API origin")
@@ -260,6 +288,7 @@ export function registerDomainCommands(program: Command): void {
       posting: string;
       candidates: string;
       terms: string;
+      prerequisites?: string;
       operatorId: string;
       approverId: string;
       apiOrigin: string;
@@ -270,6 +299,9 @@ export function registerDomainCommands(program: Command): void {
         posting: loadTalentHearAnswers(opts.posting),
         candidates: loadTalentHearAnswers(opts.candidates),
         terms: loadTalentHearAnswers(opts.terms),
+        prerequisites: opts.prerequisites
+          ? loadTalentHearAnswers(opts.prerequisites)
+          : undefined,
         proposedBy: opts.proposedBy,
         operatorId: opts.operatorId,
         approverId: opts.approverId,
@@ -279,6 +311,11 @@ export function registerDomainCommands(program: Command): void {
       if (opts.json) return;
       if (result.status === "rejected") {
         console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status === "need_prerequisites") {
+        for (const item of result.missing) console.log(`- ${item}`);
         process.exitCode = 1;
         return;
       }
