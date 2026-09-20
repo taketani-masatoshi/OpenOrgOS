@@ -16,8 +16,17 @@ import {
 } from "../lib/hr/competence-view.js";
 import { hearJobRequest } from "../lib/hr/talent-hiring/hear-job.js";
 import { recommendEngagement } from "../lib/hr/talent-hiring/recommend-engagement.js";
+import {
+  evaluateDismissalReadiness,
+  prepareDismissalReadinessChecklist,
+} from "../lib/hr/dismissal-readiness.js";
 import { shortlistForPosting, type TalentShortlistResult } from "../lib/hr/talent-shortlist.js";
-import type { EngagementDiscussResult, JobHearingResult } from "../../schemas/talent-hiring.js";
+import type {
+  DismissalReadinessChecklist,
+  DismissalReadinessResult,
+  EngagementDiscussResult,
+  JobHearingResult,
+} from "../../schemas/talent-hiring.js";
 import { resolveTenantPath } from "../lib/tenant.js";
 
 export function runHrHeadcount(options?: { json?: boolean }): void {
@@ -112,11 +121,31 @@ export function runHrTalentDiscuss(options: {
   return result;
 }
 
+export function runHrDismissalReadiness(options: {
+  ledger: unknown;
+  prepare?: boolean;
+  json?: boolean;
+}): DismissalReadinessResult | (DismissalReadinessResult & { checklist: DismissalReadinessChecklist }) {
+  const result = evaluateDismissalReadiness(options.ledger);
+  if (options.prepare) {
+    const checklist = prepareDismissalReadinessChecklist(options.ledger);
+    const combined =
+      result.status === "ready"
+        ? { ...result, checklist }
+        : { ...result, checklist };
+    if (options.json) console.log(JSON.stringify(combined, null, 2));
+    return combined;
+  }
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
 export function runHrTalentShortlist(options: {
   posting: unknown;
   candidates: unknown;
   terms: unknown;
   prerequisites?: unknown;
+  company_readiness?: unknown;
   proposedBy: string;
   operatorId: string;
   approverId: string;

@@ -50,6 +50,7 @@
 | 手段 | 内容 |
 |------|------|
 | hr_headcount | `orgos hr headcount` · `orgos hr headcount --json`（L1 在籍人数 · 氏名非出力） |
+| hr_dismissal_readiness | `orgos hr dismissal-readiness`（対象者決定前の会社側書類準備度。解雇実行しない · `runtime: cli`） |
 | agent_pulse | `orgos agent pulse --agent human_resources` |
 
 
@@ -58,9 +59,16 @@
 ```bash
 orgos hr headcount
 orgos hr headcount --json
+orgos hr dismissal-readiness --ledger <file> --prepare --json
 orgos agent readiness --agent human_resources
 orgos agent pulse --agent human_resources
 ```
+
+## 禁止（解雇準備）
+
+- 解雇対象者の決定
+- 解雇・懲戒の最終判断
+- 解雇通知や予告手当の本文生成
 
 ## コンテキスト
 

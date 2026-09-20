@@ -728,6 +728,11 @@ skills:
     runtime: agent
     description: 労務コンプライアンス
     agent_id: human_resources
+  - id: hr_dismissal_readiness
+    file: extension/hr_dismissal_readiness.md
+    runtime: cli
+    description: 対象者決定前の解雇準備度評価（実行しない）
+    agent_id: human_resources
   - id: governance_meeting_prep
     file: extension/governance_meeting_prep.md
     runtime: cli

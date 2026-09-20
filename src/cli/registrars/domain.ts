@@ -180,6 +180,7 @@ import {
   runHrCompetence,
   runHrCompetenceCheck,
   runHrHeadcount,
+  runHrDismissalReadiness,
   runHrTalentDiscuss,
   runHrTalentHear,
   runHrTalentShortlist,
@@ -273,12 +274,41 @@ export function registerDomainCommands(program: Command): void {
       process.exitCode = 1;
     });
 
+  hr.command("dismissal-readiness")
+    .description("解雇対象が決まる前の会社側書類準備度を評価する。解雇は実行しない")
+    .requiredOption("--ledger <file>", "会社単位の解雇準備台帳 YAML")
+    .option("--prepare", "不足書類の置き場所チェックリストも出す")
+    .option("--json", "Print JSON")
+    .action((opts: { ledger: string; prepare?: boolean; json?: boolean }) => {
+      const result = runHrDismissalReadiness({
+        ledger: loadTalentHearAnswers(opts.ledger),
+        prepare: Boolean(opts.prepare),
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`score: ${result.score}`);
+      console.log(`verdict: ${result.verdict}`);
+      for (const id of result.missing) console.log(`- missing: ${id}`);
+      if ("checklist" in result && result.checklist) {
+        for (const action of result.checklist.actions) {
+          console.log(`- prepare: ${action.id} -> ${action.ref}`);
+        }
+      }
+      if (!result.documents_present) process.exitCode = 1;
+    });
+
   hr.command("talent-shortlist")
     .description("求人票と実演結果から選考し、署名待ちの稟議まで作る")
     .requiredOption("--posting <file>", "求人票 YAML")
     .requiredOption("--candidates <file>", "候補者 YAML")
     .requiredOption("--terms <file>", "契約条件 YAML（engagement 必須）")
-    .option("--prerequisites <file>", "regular のときだけ解雇前提 YAML")
+    .option("--prerequisites <file>", "regular のときだけ雇入前提 YAML")
+    .option("--company-readiness <file>", "regular のときだけ会社単位の解雇準備台帳 YAML")
     .requiredOption("--operator-id <id>", "操作者 ID")
     .requiredOption("--approver-id <id>", "承認者 ID")
     .requiredOption("--api-origin <url>", "Settlement の API origin")
@@ -289,6 +319,7 @@ export function registerDomainCommands(program: Command): void {
       candidates: string;
       terms: string;
       prerequisites?: string;
+      companyReadiness?: string;
       operatorId: string;
       approverId: string;
       apiOrigin: string;
@@ -301,6 +332,9 @@ export function registerDomainCommands(program: Command): void {
         terms: loadTalentHearAnswers(opts.terms),
         prerequisites: opts.prerequisites
           ? loadTalentHearAnswers(opts.prerequisites)
+          : undefined,
+        company_readiness: opts.companyReadiness
+          ? loadTalentHearAnswers(opts.companyReadiness)
           : undefined,
         proposedBy: opts.proposedBy,
         operatorId: opts.operatorId,

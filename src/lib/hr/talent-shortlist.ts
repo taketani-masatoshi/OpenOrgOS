@@ -6,6 +6,7 @@ import {
   talentCandidateSchema,
   type TalentCandidate,
 } from "../../../schemas/talent-hiring.js";
+import { evaluateDismissalReadiness } from "./dismissal-readiness.js";
 import { filterCandidates } from "./talent-hiring/filter-candidates.js";
 import {
   proposeShortTermTalentApproval,
@@ -24,6 +25,7 @@ export interface TalentShortlistInput {
   candidates: unknown;
   terms: unknown;
   prerequisites?: unknown;
+  company_readiness?: unknown;
   proposedBy: string;
   operatorId: string;
   approverId: string;
@@ -94,6 +96,17 @@ export function shortlistForPosting(input: TalentShortlistInput): TalentShortlis
 
   let prerequisites;
   if (terms.data.engagement === "regular") {
+    const company = evaluateDismissalReadiness(input.company_readiness ?? {});
+    if (company.status === "rejected") {
+      return { status: "rejected", reason: company.reason };
+    }
+    if (!company.documents_present) {
+      return {
+        status: "need_prerequisites",
+        missing: company.missing.map((id) => `company_readiness.${id}`),
+      };
+    }
+
     const missing = missingRegularPrerequisites(input.prerequisites);
     if (missing.length > 0) return { status: "need_prerequisites", missing };
     const parsedPrereqs = regularPrerequisitesSchema.safeParse(input.prerequisites);

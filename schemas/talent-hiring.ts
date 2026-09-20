@@ -107,6 +107,51 @@ export interface HiringPack {
   notes: string[];
 }
 
+export const dismissalReadinessLedgerSchema = z
+  .object({
+    work_rules_ref: z.string().min(1).optional(),
+    dismissal_ground_refs: z.array(z.string().min(1)).optional(),
+    notice_procedure: noticeProcedureSchema.optional(),
+    labor_condition_notice_template_ref: z.string().min(1).optional(),
+    guidance_process_ref: z.string().min(1).optional(),
+    fact_record_policy_ref: z.string().min(1).optional(),
+    probation_policy_ref: z.string().min(1).optional(),
+  })
+  .strict();
+
+export type DismissalReadinessLedger = z.output<typeof dismissalReadinessLedgerSchema>;
+
+export type DismissalReadinessVerdict = "not_ready" | "documents_present";
+
+export interface DismissalReadinessItem {
+  id: string;
+  present: boolean;
+  required: boolean;
+}
+
+export interface DismissalReadinessAction {
+  id: string;
+  ref: string;
+  purpose: string;
+}
+
+export type DismissalReadinessResult =
+  | { status: "rejected"; reason: string }
+  | {
+      status: "ready";
+      score: number;
+      documents_present: boolean;
+      verdict: DismissalReadinessVerdict;
+      items: DismissalReadinessItem[];
+      missing: string[];
+      notes: string[];
+    };
+
+export interface DismissalReadinessChecklist {
+  actions: DismissalReadinessAction[];
+  notes: string[];
+}
+
 export const jobHearingAnswersSchema = z
   .object({
     work_summary: z.string().min(1).optional(),

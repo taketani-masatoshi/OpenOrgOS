@@ -203,6 +203,16 @@ const completeRegularPrerequisites = {
   },
 };
 
+const completeCompanyReadiness = {
+  work_rules_ref: "docs/company/hr/work-rules.md",
+  dismissal_ground_refs: ["WR-42"],
+  notice_procedure: "thirty_day_notice",
+  labor_condition_notice_template_ref: "docs/company/hr/labor-condition-notice.md",
+  guidance_process_ref: "docs/company/hr/guidance-process.md",
+  fact_record_policy_ref: "docs/company/hr/fact-record-policy.md",
+  probation_policy_ref: "docs/company/hr/probation-policy.md",
+};
+
 describe("hearJobRequest", () => {
   it("asks five questions and does not write a posting when nothing is answered", () => {
     const result = hearJobRequest({});
@@ -376,6 +386,7 @@ describe("talent shortlist", () => {
     const result = runHrTalentShortlist({
       ...input(100_000),
       terms: { ...terms, engagement: "regular", max_total: 100_000 },
+      company_readiness: completeCompanyReadiness,
     });
 
     expect(result.status).toBe("need_prerequisites");
@@ -389,6 +400,7 @@ describe("talent shortlist", () => {
       ...input(100_000),
       terms: { ...terms, engagement: "regular", max_total: 100_000 },
       prerequisites: completeRegularPrerequisites,
+      company_readiness: completeCompanyReadiness,
     });
 
     expect(result.status).toBe("ready");
