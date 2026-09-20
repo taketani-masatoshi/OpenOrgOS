@@ -17,8 +17,10 @@ import {
 } from "../src/lib/tenant-git-remote.js";
 import {
   checkTenantBackupForWeekly,
+  collectTenantBackupIntegrityIssues,
   restoreTenantBackup,
   snapshotTenantBackup,
+  tenantBackupRetryHint,
   tenantBackupStampPath,
   type VolumeEncryption,
 } from "../src/lib/tenant-backup.js";
@@ -26,14 +28,19 @@ import {
   runTenantBackupRestore,
   runTenantBackupSnapshot,
   runTenantBackupStatus,
+  runTenantGitRemoteCheck,
 } from "../src/commands/tenant-backup.js";
 import {
+  HA_APPR_ID,
+  HA_APPR_KEY,
   HA_CEO_ID,
   HA_CEO_KEY,
   HA_OP_ID,
   HA_OP_KEY,
   setupTempCompanyEventsTenant,
 } from "./helpers/temp-company-events-tenant.js";
+import { setTenantId } from "../src/lib/tenant.js";
+import { refreshOrgOsPaths } from "../src/lib/orgos-paths.js";
 
 const roots: string[] = [];
 const quiet = { volumeProbe: (): VolumeEncryption => "unknown" };
@@ -65,7 +72,24 @@ describe("tenant backup", () => {
     mkdirSync(tenantDir, { recursive: true });
     const check = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(check.ok).toBe(true);
+    expect(check.kind).toBe("ok_unconfigured");
     expect(check.message).toContain("未設定");
+    expect(tenantBackupRetryHint(check.kind)).toBeNull();
+    expect(collectTenantBackupIntegrityIssues(tenantDir)).toEqual([]);
+  });
+
+  it("warns on integrity only when a backup target is configured and unhealthy", () => {
+    const root = tempRoot();
+    const tenantDir = join(root, "demo");
+    const nas = join(root, "nas");
+    mkdirSync(join(tenantDir, "data"), { recursive: true });
+    writeTarget(tenantDir, nas);
+    const issues = collectTenantBackupIntegrityIssues(tenantDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.level).toBe("warning");
+    expect(issues[0]?.file).toBe("data/org/backup-target.yaml");
+    expect(tenantBackupRetryHint("stamp_missing")).toBe("orgos tenant backup snapshot");
+    expect(tenantBackupRetryHint("forbidden_remote")).toBe("orgos tenant git-remote check");
   });
 
   it("fails weekly for a date-only stamp, a stale stamp, or a public git remote", () => {
@@ -77,11 +101,13 @@ describe("tenant backup", () => {
     writeTarget(tenantDir, nas);
     const missing = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(missing.ok).toBe(false);
+    expect(missing.kind).toBe("stamp_missing");
 
     mkdirSync(join(tenantDir, "scratch"), { recursive: true });
     writeFileSync(tenantBackupStampPath(tenantDir), "2026-09-01\n");
     const dateOnly = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(dateOnly.ok).toBe(false);
+    expect(dateOnly.kind).toBe("stamp_missing");
     expect(dateOnly.message).toContain("日付だけ");
 
     const snap = snapshotTenantBackup({
@@ -97,6 +123,7 @@ describe("tenant backup", () => {
     writeFileSync(tenantBackupStampPath(tenantDir), stamped);
     const stale = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(stale.ok).toBe(false);
+    expect(stale.kind).toBe("stamp_stale");
     expect(stale.message).toContain("7 日");
     expect(existsSync(snap.archivePath)).toBe(true);
 
@@ -106,6 +133,7 @@ describe("tenant backup", () => {
     );
     const remote = checkTenantBackupForWeekly(tenantDir, new Date("2026-09-21T12:00:00"));
     expect(remote.ok).toBe(false);
+    expect(remote.kind).toBe("forbidden_remote");
     expect(remote.message).toContain("github.com");
   });
 
@@ -127,7 +155,47 @@ describe("tenant backup", () => {
     expect(existsSync(tenantBackupStampPath(tenantDir))).toBe(false);
     const weekly = checkTenantBackupForWeekly(tenantDir);
     expect(weekly.ok).toBe(false);
+    expect(weekly.kind).toBe("forbidden_remote");
     expect(weekly.message).toContain("github.com");
+  });
+
+  it("git-remote check refuses a tenant .git origin on a public forge without yaml", () => {
+    const root = tempRoot();
+    const workspace = join(root, "ws");
+    const tenantDir = join(workspace, "tenants", "acme");
+    mkdirSync(join(tenantDir, "data"), { recursive: true });
+    writeFileSync(
+      join(tenantDir, "tenant.yaml"),
+      "id: acme\nname: Acme\nlifecycle: test\noperation_mode: development\n",
+    );
+    writeFileSync(join(tenantDir, "data", "keep.txt"), "ledger");
+    execFileSync("git", ["init"], { cwd: tenantDir });
+    execFileSync("git", ["remote", "add", "origin", "git@github.com:org/acme.git"], {
+      cwd: tenantDir,
+    });
+
+    const prevWorkspace = process.env.ORGOS_WORKSPACE;
+    const prevTenant = process.env.ORGOS_TENANT;
+    process.env.ORGOS_WORKSPACE = workspace;
+    process.env.ORGOS_TENANT = "acme";
+    refreshOrgOsPaths();
+    setTenantId("acme");
+
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("process.exit");
+    }) as never);
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(() => runTenantGitRemoteCheck()).toThrow("process.exit");
+    expect(err.mock.calls.map((c) => String(c[0])).join("\n")).toContain("github.com");
+    exitSpy.mockRestore();
+    err.mockRestore();
+
+    if (prevWorkspace === undefined) delete process.env.ORGOS_WORKSPACE;
+    else process.env.ORGOS_WORKSPACE = prevWorkspace;
+    if (prevTenant === undefined) delete process.env.ORGOS_TENANT;
+    else process.env.ORGOS_TENANT = prevTenant;
+    refreshOrgOsPaths();
+    setTenantId(prevTenant?.trim() || "mal");
   });
 
   it("snapshots without in-flight drafts and stamps only after tar succeeds", () => {
@@ -401,6 +469,12 @@ describe("tenant backup CLI roles", () => {
   it("lets a ceo reach snapshot, which then stops on a missing target", () => {
     process.env.ORGOS_CLI_OPERATOR_ID = HA_CEO_ID;
     process.env.ORGOS_OPERATOR_KEY = HA_CEO_KEY;
+    expect(deniedMessage()).toContain("退避先が未設定");
+  });
+
+  it("lets an approver reach snapshot, which then stops on a missing target", () => {
+    process.env.ORGOS_CLI_OPERATOR_ID = HA_APPR_ID;
+    process.env.ORGOS_OPERATOR_KEY = HA_APPR_KEY;
     expect(deniedMessage()).toContain("退避先が未設定");
   });
 });

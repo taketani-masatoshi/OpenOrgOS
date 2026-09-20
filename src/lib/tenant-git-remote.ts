@@ -115,14 +115,21 @@ function classifyFileRemote(url: string, depth: number): TenantGitRemoteVerdict 
   };
 }
 
-/** Remotes of a git worktree at the tenant root. Null when that directory is not a repo. */
-export function classifyRepoRemotes(repoPath: string): TenantGitRemoteVerdict | null {
-  if (!existsSync(join(repoPath, ".git"))) return null;
+/** Remotes of a git worktree at the tenant root. */
+export type RepoRemotesCheck =
+  | { state: "absent" }
+  | { state: "ok" }
+  | { state: "forbidden"; verdict: TenantGitRemoteVerdict };
+
+export function classifyRepoRemotes(repoPath: string): RepoRemotesCheck {
+  if (!existsSync(join(repoPath, ".git"))) return { state: "absent" };
   for (const remote of gitRemoteUrls(repoPath)) {
     const verdict = classifyTenantGitRemote(remote);
-    if (verdict.classification === "forbidden") return verdict;
+    if (verdict.classification === "forbidden") {
+      return { state: "forbidden", verdict };
+    }
   }
-  return null;
+  return { state: "ok" };
 }
 
 export function classifyTenantGitRemote(url: string, depth = 0): TenantGitRemoteVerdict {

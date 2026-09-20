@@ -20,6 +20,8 @@ export const HA_RO_ID = "OP-RO";
 export const HA_RO_KEY = "ha-ro-key";
 export const HA_OP_ID = "OP-OPR";
 export const HA_OP_KEY = "ha-opr-key";
+export const HA_APPR_ID = "OP-APPR";
+export const HA_APPR_KEY = "ha-appr-key";
 
 const ORIGINAL_WORKSPACE = getWorkspaceRoot();
 
@@ -95,6 +97,13 @@ export function setupTempCompanyEventsTenant(): {
       "    role: operator",
       "    status: active",
       `    key_hash: ${hashOperatorKey(HA_OP_KEY)}`,
+      `  - operator_id: ${HA_APPR_ID}`,
+      "    display_name: HA Approver",
+      "    role: approver",
+      "    status: active",
+      "    permissions:",
+      "      - chat:approve",
+      `    key_hash: ${hashOperatorKey(HA_APPR_KEY)}`,
       "",
     ].join("\n"),
     "utf8",

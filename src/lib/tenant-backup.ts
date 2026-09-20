@@ -224,8 +224,8 @@ export function snapshotTenantBackup(opts: {
   }
   const target = requireReadyTarget(tenantDir);
   const localGit = classifyRepoRemotes(tenantDir);
-  if (localGit?.classification === "forbidden") {
-    throw new Error(localGit.message);
+  if (localGit.state === "forbidden") {
+    throw new Error(localGit.verdict.message);
   }
   const destination = canonicalPath(target.destination);
   if (sameOrInside(tenantDir, destination) || sameOrInside(destination, tenantDir)) {
@@ -348,34 +348,67 @@ export function tenantBackupStampAgeDays(tenantDir: string, now = new Date()): n
   return stampAgeDays(stamp, now);
 }
 
+export type TenantBackupCheckKind =
+  | "ok_unconfigured"
+  | "ok"
+  | "invalid_config"
+  | "forbidden_remote"
+  | "stamp_missing"
+  | "stamp_mismatch"
+  | "stamp_stale";
+
+export type TenantBackupWeeklyCheck = {
+  ok: boolean;
+  kind: TenantBackupCheckKind;
+  message: string;
+};
+
+export function tenantBackupRetryHint(kind: TenantBackupCheckKind): string | null {
+  if (kind === "ok" || kind === "ok_unconfigured") return null;
+  if (kind === "forbidden_remote") return "orgos tenant git-remote check";
+  return "orgos tenant backup snapshot";
+}
+
+/** Warning-only issues for validate. Empty when backup is unconfigured or healthy. */
+export function collectTenantBackupIntegrityIssues(
+  tenantDir: string,
+  now = new Date(),
+): Array<{ level: "warning"; file: string; message: string }> {
+  const check = checkTenantBackupForWeekly(tenantDir, now);
+  if (check.ok) return [];
+  return [{ level: "warning", file: "data/org/backup-target.yaml", message: check.message }];
+}
+
 export function checkTenantBackupForWeekly(
   tenantDir: string,
   now = new Date(),
-): { ok: boolean; message: string } {
+): TenantBackupWeeklyCheck {
   const loaded = loadBackupTarget(tenantDir);
   if (loaded.state === "missing") {
     return {
       ok: true,
+      kind: "ok_unconfigured",
       message: "テナント退避先が未設定 — NAS スナップショットは任意（data/org/backup-target.yaml）",
     };
   }
   if (loaded.state === "invalid") {
-    return { ok: false, message: loaded.message };
+    return { ok: false, kind: "invalid_config", message: loaded.message };
   }
   if (loaded.target.git_remote) {
     const remote = classifyTenantGitRemote(loaded.target.git_remote);
     if (remote.classification === "forbidden") {
-      return { ok: false, message: remote.message };
+      return { ok: false, kind: "forbidden_remote", message: remote.message };
     }
   }
   const localGit = classifyRepoRemotes(tenantDir);
-  if (localGit?.classification === "forbidden") {
-    return { ok: false, message: localGit.message };
+  if (localGit.state === "forbidden") {
+    return { ok: false, kind: "forbidden_remote", message: localGit.verdict.message };
   }
   const stamp = readTenantBackupStamp(tenantDir);
   if (!stamp) {
     return {
       ok: false,
+      kind: "stamp_missing",
       message:
         "テナント退避のスタンプが無い、または日付だけです — orgos tenant backup snapshot",
     };
@@ -387,6 +420,7 @@ export function checkTenantBackupForWeekly(
   ) {
     return {
       ok: false,
+      kind: "stamp_mismatch",
       message: "テナント退避のスタンプとアーカイブが一致しません — orgos tenant backup snapshot",
     };
   }
@@ -394,9 +428,14 @@ export function checkTenantBackupForWeekly(
   if (age === null || age > TENANT_BACKUP_MAX_AGE_DAYS) {
     return {
       ok: false,
+      kind: "stamp_stale",
       message: `テナント退避が ${age ?? "不明"} 日前 — 7 日を超えています（orgos tenant backup snapshot）`,
     };
   }
   const proof = stamp.encryption === "verified" ? "暗号化を確認" : "暗号化は宣言のみ";
-  return { ok: true, message: `テナント退避 OK（${age} 日前、${proof}）` };
+  return {
+    ok: true,
+    kind: "ok",
+    message: `テナント退避 OK（${age} 日前、${proof}）`,
+  };
 }

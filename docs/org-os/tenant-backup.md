@@ -32,7 +32,7 @@ volume_encrypted: true
 | `orgos tenant backup snapshot` | 一時ファイルへ tar し、成功したあと `0600` で確定する。失敗したら一時ファイルもスタンプも残さない |
 | `orgos tenant backup restore --archive <tar.gz> --into <空の絶対パス>` | メンバーに絶対パスや `..` があれば展開しない。隣の一時ディレクトリで展開し、成功したときだけ指定先と入れ替える |
 
-スナップショットから除くもの: `scratch/aia-runs` と `data/scratch/aia-runs`（作業中の下書き）と `node_modules`。`.git` は復元用に残します。退避先がテナントの中、または親ディレクトリが無い（未マウント）ときは書きません。
+スナップショットから除くもの: 正本の作業場 `data/scratch/aia-runs` と、レガシーの `scratch/aia-runs`、および `node_modules`。`.git` は復元用に残します。退避先がテナントの中、または親ディレクトリが無い（未マウント）ときは書きません。
 
 本番（認証バイパスが無いとき）の snapshot と restore は `ceo` / `approver` だけが実行できます。status と `git-remote check` は読み取りのままです。
 
@@ -42,7 +42,7 @@ volume_encrypted: true
 
 ## 履歴のリモート
 
-`orgos tenant git-remote check` は `git_remote`（または `--url`）を分類します。製品リポジトリの origin は見ません。テナント直下に `.git` があるときは、その remote も同じ規則で見ます。一つでも公開フォージなら snapshot を拒否し、週次も失敗します。
+`orgos tenant git-remote check` は `git_remote`（または `--url`）を分類します。製品リポジトリの origin は見ません。`--url` が無いときは yaml の `git_remote` に加え、テナント直下の `.git` remote も同じ規則で見ます。一つでも公開フォージなら snapshot を拒否し、週次も失敗します。
 
 - 許可: `file://`、ssh（`ssh://` または `git@host:path`）、公開フォージ以外の `https` / `http`
 - 拒否: `github.com` · `gitlab.com` · `bitbucket.org` と、そのサブドメイン（`ssh.github.com` など）。末尾のドットは外してから判定する。scheme は問わない

@@ -65,7 +65,7 @@ import { collectIrIntegrityIssues } from "./investor-relations/integrity.js";
 import { collectCustomerSuccessIntegrityIssues } from "./customer-success/integrity.js";
 import { collectAnalyticsIntegrityIssues } from "./analytics/integrity.js";
 import { collectRosterPayrollConsistencyIssues } from "./hr/roster-payroll-consistency.js";
-import { checkTenantBackupForWeekly, loadBackupTarget } from "./tenant-backup.js";
+import { collectTenantBackupIntegrityIssues } from "./tenant-backup.js";
 import { getDataDir, getTenantDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
@@ -744,12 +744,8 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   }
 
-  const tenantBackup = loadBackupTarget(getTenantDir());
-  if (tenantBackup.state !== "missing") {
-    const check = checkTenantBackupForWeekly(getTenantDir());
-    if (!check.ok) {
-      push("warning", "data/org/backup-target.yaml", check.message);
-    }
+  for (const issue of collectTenantBackupIntegrityIssues(getTenantDir())) {
+    push(issue.level, issue.file, issue.message);
   }
 
   const hasExecutiveData = executiveYaml.some((name) =>

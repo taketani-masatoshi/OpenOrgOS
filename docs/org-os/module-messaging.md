@@ -21,7 +21,7 @@
 |------|------|
 | `tenants/{id}/data/org/module-messages/registry.yaml` | メタデータ一覧（推奨） |
 | `tenants/{id}/data/org/module-messages/{message_id}.yaml` | 個別メッセージ（任意分割） |
-| 添付 | `scratch/aia-runs/{run_id}/…` のみ（L2 禁止） |
+| 添付 | `data/scratch/aia-runs/{run_id}/…` のみ（L2 禁止） |
 
 ## ModuleMessage（要約）
 

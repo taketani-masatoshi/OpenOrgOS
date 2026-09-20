@@ -8,7 +8,7 @@ import { ROOT_DIR } from "../lib/tenant.js";
 import { listWorkOrders, runEscalation } from "../lib/escalate.js";
 import { listAuditEvents } from "../lib/audit-log.js";
 import { checkExecutiveBackupForWeekly } from "../lib/executive-backup.js";
-import { checkTenantBackupForWeekly } from "../lib/tenant-backup.js";
+import { checkTenantBackupForWeekly, tenantBackupRetryHint } from "../lib/tenant-backup.js";
 import { runJpBankCorporatePipelineCashflow } from "../lib/jp-bank-corporate/pipeline.js";
 import { ORGOS_TENANT_ENV, LEGACY_TENANT_ENV } from "../lib/orgos-cli.js";
 import { runEventsChainAttest } from "./company-events.js";
@@ -184,19 +184,14 @@ export function runPipelineWeekly(options: PipelineRunOptions = {}): void {
   const tenantBackup = checkTenantBackupForWeekly(getTenantDir());
   console.log(tenantBackup.ok ? `✓ ${tenantBackup.message}` : `⚠ ${tenantBackup.message}`);
   if (!tenantBackup.ok) {
-    const publicRemote = tenantBackup.message.includes("使えません");
+    const retry = tenantBackupRetryHint(tenantBackup.kind) ?? "orgos tenant backup snapshot";
     recordPipelineFailure(failures, "tenant backup", tenantBackup.message);
     escalatePipelineFailure({
       pipeline: "weekly",
       step: "tenant backup",
       message: tenantBackup.message,
       tenant: options.tenant,
-      requirements: [
-        `Investigate: ${tenantBackup.message}`,
-        publicRemote
-          ? "Retry: orgos tenant git-remote check"
-          : "Retry: orgos tenant backup snapshot",
-      ],
+      requirements: [`Investigate: ${tenantBackup.message}`, `Retry: ${retry}`],
     });
   }
 

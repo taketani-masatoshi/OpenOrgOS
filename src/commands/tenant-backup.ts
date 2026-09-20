@@ -8,7 +8,7 @@ import {
   tenantBackupStampAgeDays,
   loadBackupTarget,
 } from "../lib/tenant-backup.js";
-import { classifyTenantGitRemote } from "../lib/tenant-git-remote.js";
+import { classifyRepoRemotes, classifyTenantGitRemote } from "../lib/tenant-git-remote.js";
 
 function emit(json: boolean, payload: unknown, lines: string[]): void {
   if (json) {
@@ -39,6 +39,7 @@ export function runTenantBackupStatus(opts: { json?: boolean } = {}): void {
   const loaded = loadBackupTarget(tenantDir);
   const payload = {
     ok: check.ok,
+    kind: check.kind,
     configured: loaded.state !== "missing",
     age_days: tenantBackupStampAgeDays(tenantDir),
     destination: loaded.state === "ready" ? loaded.target.destination : null,
@@ -88,31 +89,71 @@ export function runTenantBackupRestore(opts: {
 
 export function runTenantGitRemoteCheck(opts: { url?: string; json?: boolean } = {}): void {
   const explicit = opts.url?.trim();
-  let url = explicit;
-  if (!url) {
-    const loaded = loadBackupTarget(getTenantDir());
-    if (loaded.state === "invalid") fail(loaded.message);
-    if (loaded.state === "missing" || !loaded.target.git_remote) {
-      emit(Boolean(opts.json), { ok: true, configured: false, message: "git_remote は未設定です" }, [
-        "✓ git_remote は未設定です。設定するときは NAS の file://、社内 ssh、または公開フォージ以外の https にしてください。",
-      ]);
-      return;
-    }
-    url = loaded.target.git_remote;
+  if (explicit) {
+    emitGitRemoteVerdict(explicit, opts.json);
+    return;
   }
+
+  const tenantDir = getTenantDir();
+  const loaded = loadBackupTarget(tenantDir);
+  if (loaded.state === "invalid") fail(loaded.message);
+
+  const yamlRemote =
+    loaded.state === "ready" && loaded.target.git_remote ? loaded.target.git_remote : null;
+  const localGit = classifyRepoRemotes(tenantDir);
+
+  if (!yamlRemote && localGit.state === "absent") {
+    emit(Boolean(opts.json), { ok: true, configured: false, message: "git_remote は未設定です" }, [
+      "✓ git_remote は未設定です。設定するときは NAS の file://、社内 ssh、または公開フォージ以外の https にしてください。",
+    ]);
+    return;
+  }
+
+  if (localGit.state === "forbidden") {
+    emitGitRemoteFail(localGit.verdict, opts.json, yamlRemote);
+  }
+
+  if (yamlRemote) {
+    emitGitRemoteVerdict(yamlRemote, opts.json);
+    return;
+  }
+
+  emit(
+    Boolean(opts.json),
+    {
+      ok: true,
+      configured: true,
+      source: "tenant_git",
+      classification: "nas",
+      message: "テナント直下の .git remote は公開フォージではありません",
+    },
+    ["✓ テナント直下の .git remote は公開フォージではありません"],
+  );
+}
+
+function emitGitRemoteFail(
+  verdict: { classification: string; host: string | null; message: string },
+  json: boolean | undefined,
+  url: string | null,
+): never {
+  const payload = { ok: false, url, ...verdict };
+  if (json) {
+    console.log(JSON.stringify(payload, null, 2));
+    process.exit(1);
+  }
+  fail(verdict.message);
+}
+
+function emitGitRemoteVerdict(url: string, json: boolean | undefined): void {
   const verdict = classifyTenantGitRemote(url);
   const ok = verdict.classification === "nas";
   const payload = { ok, url, ...verdict };
   if (verdict.classification === "unverified") {
-    emit(Boolean(opts.json), payload, [`⚠ ${verdict.message}`]);
+    emit(Boolean(json), payload, [`⚠ ${verdict.message}`]);
     return;
   }
   if (!ok) {
-    if (opts.json) {
-      console.log(JSON.stringify(payload, null, 2));
-      process.exit(1);
-    }
-    fail(verdict.message);
+    emitGitRemoteFail(verdict, json, url);
   }
-  emit(Boolean(opts.json), payload, [`✓ ${verdict.message}`]);
+  emit(Boolean(json), payload, [`✓ ${verdict.message}`]);
 }
