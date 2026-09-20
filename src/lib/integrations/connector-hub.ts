@@ -43,6 +43,22 @@ export function sovereignLocalConfigured(
   return false;
 }
 
+/** Console wording. Flag-off and stubs must not read as success. */
+export function connectorStatusLabel(
+  card: Pick<
+    ConnectorCard,
+    "inclusion" | "platform_ready" | "usable" | "connected" | "expired" | "fallback_configured"
+  >,
+): string {
+  if (card.inclusion === "stub_unconfirmed") return "未出荷（スタブ・外へは出しません）";
+  if (!card.platform_ready) return "未出荷（接続は閉じています）";
+  if (card.inclusion === "confirmed_live" && card.usable) return "疎通確認済み";
+  if (card.connected && card.expired) return "接続済み（期限切れ）";
+  if (card.connected) return "接続済み";
+  if (card.fallback_configured) return "簡易接続（webhook / PAT）";
+  return "未接続";
+}
+
 export function connectorPlatformReadiness(
   provider: ConnectorProvider,
 ): ConnectorPlatformReadiness {
@@ -74,6 +90,8 @@ export interface ConnectorCard extends ConnectorStatus {
   platform_detail: string;
   /** True when the console can act (send / push / upload) right now. */
   usable: boolean;
+  /** Server wording. Flag-off and stubs are never success. */
+  status_label: string;
 }
 
 export function buildConnectorCard(
@@ -85,6 +103,15 @@ export function buildConnectorCard(
   const status = readConnectorStatus(provider, fallbackConfigured(provider));
   const inclusion = provider === "ox" ? (oxInclusion ?? effectiveOxInclusion(loadProbeResult())) : entry.inclusion;
   const localReady = inclusion === "confirmed_live" && sovereignLocalConfigured(provider);
+  const usable = (status.connected && !status.expired) || status.fallback_configured || localReady;
+  const card = {
+    inclusion,
+    platform_ready: platform.ready,
+    usable,
+    connected: status.connected,
+    expired: status.expired,
+    fallback_configured: status.fallback_configured,
+  };
   return {
     ...status,
     label: entry.label,
@@ -93,7 +120,8 @@ export function buildConnectorCard(
     inclusion,
     platform_ready: platform.ready,
     platform_detail: platform.detail,
-    usable: (status.connected && !status.expired) || status.fallback_configured || localReady,
+    usable,
+    status_label: connectorStatusLabel(card),
   };
 }
 

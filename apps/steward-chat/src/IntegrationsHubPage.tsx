@@ -17,7 +17,8 @@ import {
 import { OpsPage } from "./OpsPage";
 
 function statusLabel(card: ConnectorCard): string {
-  if (card.inclusion === "stub_unconfirmed") return "未確定・出荷待ち";
+  if (card.inclusion === "stub_unconfirmed") return "未出荷（スタブ・外へは出しません）";
+  if (!card.platform_ready) return "未出荷（接続は閉じています）";
   if (card.inclusion === "confirmed_live" && card.usable) return "疎通確認済み";
   if (card.connected && card.expired) return "接続済み（期限切れ）";
   if (card.connected) return "接続済み";
@@ -109,7 +110,7 @@ export function IntegrationsHubPage() {
       <>
         <h2 className="section-title">{c.label}</h2>
         <p className="ops-page-meta">
-          {statusLabel(c)}
+          {c.status_label ?? statusLabel(c)}
           {c.account_label ? ` · ${c.account_label}` : ""}
         </p>
         {!c.platform_ready && <p className="ops-page-meta">{c.platform_detail}</p>}

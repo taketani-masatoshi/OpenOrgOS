@@ -16,7 +16,7 @@
 
 Open-Xchange は公開 CE イメージが取れるまでスタブで、外へ出さない。Windows は Docker Desktop 上の検証クライアントとして第一級。Keycloak は OIDC discovery のみで、Community SSO は置き換えない。
 
-秘書メール（intake / correspondence send）は `MailPort` 経由。Gmail は互換実装、Open-Xchange は同じ口のスタブ。送信承認は従来どおり `chat:approve`。件数だけの L1 要約は `orgos mail intake sync --nextcloud-l1` で Nextcloud の allowlist へ任意写しできる（メール本文は出さない）。
+秘書メール（intake / correspondence send）は `MailPort` 経由。Gmail は互換実装。一般 SMTP 送信は `smtpMailPort`（受信 IMAP は Port 外）。Open-Xchange は `confirmed_live` のときだけ App Suite HTTP を使い、それ以外は外へ出さない。送信承認は従来どおり `chat:approve`。件数だけの L1 要約は `orgos mail intake sync --nextcloud-l1` または `orgos mail outbound correspondence draft --nextcloud-l1` で Nextcloud の allowlist へ任意写しできる（メール本文は出さない）。コンソールの未出荷とスタブは成功表示にしない。
 
 OAuth は Community が仲介し、トークンは gitignore 下のテナント records に入る。
 

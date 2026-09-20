@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 589
-  static_test_cases: 2691
-  tiered_execution_total: 589
+  vitest_total: 590
+  static_test_cases: 2699
+  tiered_execution_total: 590
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -1650,6 +1650,10 @@ tests:
     kind: unit
     domain: P01_kernel
   ooo-score.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  opendesk-api-contract.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

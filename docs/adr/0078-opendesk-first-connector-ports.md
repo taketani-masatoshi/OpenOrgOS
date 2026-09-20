@@ -53,13 +53,12 @@ Core は Unlicense。AGPL / GPL の上流ソースは同梱しない。compose �
 
 ### 5. 秘書メールは MailPort
 
-Secretary の受信・送信は `MailPort`（`fetchSince` / `sendMime`）を経由する。Gmail は互換実装。Open-Xchange は同じ口のスタブで、`inclusion !== confirmed_live` のときネットワークへ出ない。IMAP / SMTP は当面 Port 外。送信の最終承認は従来どおり `send-gate` と `chat:approve`。L1 の triage 件数要約は任意で Nextcloud allowlist へ写せる（`orgos mail intake sync --nextcloud-l1`）。
+Secretary の受信・送信は `MailPort`（`fetchSince` / `sendMime`）を経由する。Gmail は互換実装。一般の SMTP 送信（Xserver を含むが専用コードは無い）は `smtpMailPort`。受信の IMAP は Port 外。Open-Xchange は同じ口で、`inclusion !== confirmed_live` のときネットワークへ出ない。`confirmed_live` のときだけ App Suite の login / mail fetch / mail send と calendar ping を行う。送信の最終承認は従来どおり `send-gate` と `chat:approve`。L1 の triage 件数要約は任意で Nextcloud allowlist へ写せる（`orgos mail intake sync --nextcloud-l1` と `orgos mail outbound correspondence draft --nextcloud-l1`）。失敗と未設定スキップは別のログにする。コンソールは出荷フラグが閉じているカードとスタブを成功と表示しない。
 
 ### 6. 今回やらないこと
 
 次はゲートとして残す。この変更では実装しない。
 
-- Open-Xchange のメールとカレンダーの実 HTTP。公開 CE イメージが無認証で取れるまでスタブのまま
 - 公式 Helmfile / Kubernetes スイートの同梱と、このリポジトリ上での再現。回帰 CI（`.github/workflows/opendesk-verify.yml`）は ubuntu x64 で同じ公開 API を再実行するだけである。出荷前に、人が x64 の Community Edition へ `ORGOS_*_BASE_URL` を向ける
 - 出荷フラグ（`connector_matrix` など）を立てること。既定は false。ローカル疎通では `platform_ready` を立てない。フラグを変えるのは人間
 - Keycloak でのユーザー作成、Nubus（OpenLDAP）、Community SSO の置き換え。Keycloak は OIDC discovery のみ
@@ -77,7 +76,7 @@ Secretary の受信・送信は `MailPort`（`fetchSince` / `sendMime`）を経�
 
 - 公式 openDesk クラスタそのものは再現しない。顧客環境へ `base_url` を向ける
 - Synapse の signing key 生成はイメージ内の Python に依存する
-- OX の実 Mail/Calendar API は probe 成功まで未接続
+- OX の実 HTTP はコードされているが、公開 CE イメージの probe が成功するまで実行されない
 
 ## 関連
 

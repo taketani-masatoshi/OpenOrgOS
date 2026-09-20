@@ -2638,6 +2638,7 @@ export interface ConnectorCard {
   usable: boolean;
   platform_ready: boolean;
   platform_detail: string;
+  status_label?: string;
   settings: {
     default_channel_id?: string;
     default_channel_name?: string;

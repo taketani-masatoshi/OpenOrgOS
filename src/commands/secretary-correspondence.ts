@@ -44,10 +44,11 @@ export interface CorrespondenceDraftCliOptions {
   operator?: string;
   noApproval?: boolean;
   noCcDefaults?: boolean;
+  nextcloudL1?: boolean;
   json?: boolean;
 }
 
-export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): void {
+export async function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): Promise<void> {
   if (!opts.body && !opts.bodyFile) {
     console.error("Provide --body or --body-file");
     process.exit(1);
@@ -87,8 +88,14 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
 
   auditCliMutation(CORRESPONDENCE_CLI.draft, draft.draft_id);
 
+  const nextcloudL1 = opts.nextcloudL1
+    ? await (
+        await import("../lib/integrations/secretary-l1-mirror.js")
+      ).mirrorSecretaryL1ToNextcloud()
+    : undefined;
+
   if (opts.json) {
-    console.log(JSON.stringify({ draft, approvalId }, null, 2));
+    console.log(JSON.stringify({ draft, approvalId, nextcloud_l1: nextcloudL1 }, null, 2));
     return;
   }
 
@@ -110,6 +117,10 @@ export function runCorrespondenceDraft(opts: CorrespondenceDraftCliOptions): voi
       console.log("⚠ メール初期設定が未完了です。実送信前に:");
       console.log(`  orgos ${CORRESPONDENCE_CLI.setupGuide}`);
     }
+  }
+  if (nextcloudL1) {
+    const { formatSecretaryL1MirrorLine } = await import("../lib/integrations/secretary-l1-mirror.js");
+    console.log(`  ${formatSecretaryL1MirrorLine(nextcloudL1)}`);
   }
 }
 

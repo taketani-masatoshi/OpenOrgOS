@@ -391,6 +391,7 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--operator <id>", "Proposed-by operator id")
     .option("--no-approval", "Skip approval proposal (testing only)")
     .option("--no-cc-defaults", "Skip automatic oversight CC (CEO 等)")
+    .option("--nextcloud-l1", "Optionally copy a counts-only L1 note to Nextcloud")
     .option("--json", "JSON output")
     .action((opts) => runCorrespondenceDraft(opts));
 
@@ -782,6 +783,7 @@ export function registerExecutiveCommands(program: Command): void {
     .option("--operator <id>", "Proposed-by operator id")
     .option("--no-approval", "Skip approval proposal (testing only)")
     .option("--no-cc-defaults", "Skip automatic oversight CC (CEO 等)")
+    .option("--nextcloud-l1", "Optionally copy a counts-only L1 note to Nextcloud")
     .option("--json", "JSON output")
     .action((opts) => runCorrespondenceDraft(opts));
   outboundCorrespondence

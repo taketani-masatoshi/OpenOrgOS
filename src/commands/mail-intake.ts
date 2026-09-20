@@ -122,11 +122,10 @@ export async function runMailIntakeSync(opts: {
     );
   }
   if (nextcloudL1) {
-    console.log(
-      nextcloudL1.ok
-        ? `Nextcloud L1 mirror: ${nextcloudL1.reason}`
-        : `Nextcloud L1 mirror skipped: ${nextcloudL1.reason}`,
+    const { formatSecretaryL1MirrorLine } = await import(
+      "../lib/integrations/secretary-l1-mirror.js"
     );
+    console.log(formatSecretaryL1MirrorLine(nextcloudL1));
   }
 }
 

@@ -1008,7 +1008,7 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       await runSlackNotifySkill({ id: opts.id, dryRun: opts.dryRun });
       break;
     case "correspondence-draft":
-      runCorrespondenceDraft({
+      await runCorrespondenceDraft({
         channel: opts.channel,
         to: opts.to,
         subject: opts.subject,

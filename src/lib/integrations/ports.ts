@@ -63,7 +63,8 @@ export interface MailSendResult extends PortResult {
 }
 
 export interface MailPort {
-  provider: ConnectorProvider;
+  /** `smtp` is generic AUTH LOGIN, not a connector catalog provider. */
+  provider: ConnectorProvider | "smtp";
   ping(input?: { dryRun?: boolean }): Promise<PortResult>;
   /** Receive sync. Callers write vault files; the port does not. */
   fetchSince(input?: MailFetchSinceInput): Promise<MailFetchResult>;

@@ -13,6 +13,14 @@ import type { PortResult } from "./ports.js";
 
 export const SECRETARY_L1_NOTE_PATH = "opendesk-verify/secretary-l1-note.txt";
 
+export function formatSecretaryL1MirrorLine(result: PortResult): string {
+  if (result.ok) return `Nextcloud L1 mirror: ${result.reason}`;
+  if (result.reason.includes("未設定") || result.reason.includes("スキップ")) {
+    return `Nextcloud L1 mirror skipped: ${result.reason}`;
+  }
+  return `Nextcloud L1 mirror failed: ${result.reason}`;
+}
+
 /** Build a short L1 summary line — counts only, no subjects or bodies. */
 export function buildSecretaryL1Note(opts?: {
   now?: string;

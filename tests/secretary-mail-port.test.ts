@@ -92,4 +92,68 @@ describe("secretary MailPort", () => {
     expect(calls.some((c) => c.includes("MKCOL") && c.includes("opendesk-verify"))).toBe(true);
     expect(calls.some((c) => c.includes("PUT") && c.includes(SECRETARY_L1_NOTE_PATH))).toBe(true);
   });
+
+  it("fetches and sends Open-Xchange mail only after inclusion is confirmed_live", async () => {
+    const calls: string[] = [];
+    const fetchImpl = (async (url: string | URL, init?: RequestInit) => {
+      const href = String(url);
+      calls.push(`${init?.method ?? "GET"} ${href}`);
+      if (href.includes("action=login")) {
+        return new Response(JSON.stringify({ session: "s1" }), { status: 200 });
+      }
+      if (href.includes("action=all")) {
+        return new Response(JSON.stringify({ data: [[101, "hello", 1]] }), { status: 200 });
+      }
+      if (href.includes("action=get")) {
+        return new Response(
+          JSON.stringify({
+            data: {
+              id: 101,
+              subject: "hello",
+              from: [{ address: "a@example.com" }],
+              to: [{ address: "b@example.com" }],
+              source: "From: a@example.com\r\n\r\nbody",
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      if (href.includes("action=send")) {
+        return new Response(JSON.stringify({ data: { id: "sent-ox" } }), { status: 200 });
+      }
+      return new Response("nope", { status: 404 });
+    }) as typeof fetch;
+
+    const port = oxMailPort(
+      "confirmed_live",
+      { baseUrl: "http://ox.local", user: "u", password: "p" },
+      fetchImpl,
+    );
+    const fetched = await port.fetchSince();
+    expect(fetched.ok).toBe(true);
+    expect(fetched.messages?.[0]?.mime).toContain("body");
+    expect(calls.some((c) => c.includes("/appsuite/api/mail?action=all"))).toBe(true);
+
+    const sent = await port.sendMime({ mime: "From: u\r\nTo: b@example.com\r\nSubject: hi\r\n\r\nbody" });
+    expect(sent.ok).toBe(true);
+    expect(sent.messageId).toBe("sent-ox");
+    expect(calls.some((c) => c.startsWith("POST") && c.includes("action=send"))).toBe(true);
+
+    const { oxCalendarPort } = await import("../src/lib/integrations/sovereign/ox-client.js");
+    const calendar = oxCalendarPort(
+      "confirmed_live",
+      { baseUrl: "http://ox.local", user: "u", password: "p" },
+      fetchImpl,
+    );
+    expect((await calendar.ping()).ok).toBe(true);
+    expect(calls.some((c) => c.includes("/appsuite/api/calendar?action=all"))).toBe(true);
+  });
+
+  it("does not call Open-Xchange calendar while the image is unconfirmed", async () => {
+    const { oxCalendarPort } = await import("../src/lib/integrations/sovereign/ox-client.js");
+    const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }));
+    const calendar = oxCalendarPort("stub_unconfirmed", { baseUrl: "http://ox.local" }, fetchImpl as typeof fetch);
+    expect((await calendar.ping()).ok).toBe(false);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
 });

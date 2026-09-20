@@ -37,7 +37,7 @@ export ORGOS_KEYCLOAK_REALM=master
 
 ## OX
 
-`probe` が無認証で CE イメージを引けたときだけ `inclusion` が `confirmed_live` になります。引けなければスタブのまま、`--groupware` は使いません。2026-09-20 の確認では `registry.opencode.de` が無認証を拒否し、メールとカレンダーは未接続です。スタブはネットワークへ出ません。
+`probe` が無認証で CE イメージを引けたときだけ `inclusion` が `confirmed_live` になります。引けなければスタブのまま、`--groupware` は使いません。2026-09-20 の確認では `registry.opencode.de` が無認証を拒否しています。スタブはネットワークへ出ません。`confirmed_live` になったときだけメールの fetch/send と calendar ping が App Suite HTTP を呼びます。
 
 ## ゲート
 
@@ -48,7 +48,7 @@ export ORGOS_KEYCLOAK_REALM=master
 - `connector_matrix` などの出荷フラグは既定 false です。ローカル疎通ではコンソール接続（`platform_ready`）は開きません。フラグを変えるのは人間です
 - Keycloak は OIDC discovery のみです。ユーザー作成、Nubus、Community SSO の置き換えはしません
 - 人の画面は Steward Chat のままです。Element、OpenProject、Jitsi、Collabora は入れません
-- 秘書メールは Core の `MailPort` 経由です。Gmail は互換、OX はスタブ。L1 件数要約は `orgos mail intake sync --nextcloud-l1`
+- 秘書メールは Core の `MailPort` 経由です。Gmail は互換、一般 SMTP 送信は `smtpMailPort`、OX は `confirmed_live` のときだけ HTTP です。L1 件数要約は `orgos mail intake sync --nextcloud-l1` または下書き作成の `--nextcloud-l1` です
 
 ## 境界
 
