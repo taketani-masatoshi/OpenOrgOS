@@ -69,7 +69,14 @@ export function backfillJournalTaxCategories(input?: {
   });
 
   if (!input?.dryRun && updatedEntries > 0) {
-    saveJournalEntries({ ...file, entries: nextEntries }, { mode: "migration" });
+    const previous = process.env.ORGOS_ALLOW_JOURNAL_MIGRATION;
+    process.env.ORGOS_ALLOW_JOURNAL_MIGRATION = "1";
+    try {
+      saveJournalEntries({ ...file, entries: nextEntries }, { mode: "migration" });
+    } finally {
+      if (previous == null) delete process.env.ORGOS_ALLOW_JOURNAL_MIGRATION;
+      else process.env.ORGOS_ALLOW_JOURNAL_MIGRATION = previous;
+    }
   }
 
   return {

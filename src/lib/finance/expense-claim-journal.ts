@@ -12,6 +12,7 @@ import type { ExpenseClaimAllocation } from "../../../schemas/finance/expense-cl
 import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { assertJournalWriteAllowed } from "./journal-write-guard.js";
 import { assertMonthUnlockedForDate } from "./period-lock.js";
+import { assertJournalPostGuards } from "./journal-post-guards.js";
 import { getClock } from "../runtime-context.js";
 
 const JOURNAL_REL = "finance/journal-entries.yaml";
@@ -43,6 +44,11 @@ export function saveJournalEntries(
   opts?: { mode?: "migration" },
 ): void {
   assertJournalWriteAllowed();
+  if (opts?.mode === "migration" && process.env.ORGOS_ALLOW_JOURNAL_MIGRATION !== "1") {
+    throw new Error(
+      "journal migration rewrite requires ORGOS_ALLOW_JOURNAL_MIGRATION=1",
+    );
+  }
   if (opts?.mode !== "migration") {
     const existing = loadJournalEntries();
     if (existing.entries.length > 0) {
@@ -82,6 +88,7 @@ export function appendJournalEntry(
       meta?.postedBy ??
       (entry.source?.kind === "manual" ? entry.source.authorized_by : "system"),
   });
+  assertJournalPostGuards(enriched);
   if (existing) {
     const core = (e: JournalEntry) => ({
       occurred_at: e.occurred_at,
@@ -90,6 +97,7 @@ export function appendJournalEntry(
       lines: e.lines,
       evidence_refs: e.evidence_refs,
       reversal_of: e.reversal_of,
+      reversed_source_kind: e.reversed_source_kind,
     });
     if (JSON.stringify(core(existing)) === JSON.stringify(core(enriched))) {
       return existing;

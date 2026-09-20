@@ -48,10 +48,17 @@ export function seedLedgerDemoYear(input?: {
   }
 
   if (input?.force && existing > 0) {
-    saveJournalEntries(
-      { version: 1, entries: [] },
-      { mode: "migration" },
-    );
+    const previous = process.env.ORGOS_ALLOW_JOURNAL_MIGRATION;
+    process.env.ORGOS_ALLOW_JOURNAL_MIGRATION = "1";
+    try {
+      saveJournalEntries(
+        { version: 1, entries: [] },
+        { mode: "migration" },
+      );
+    } finally {
+      if (previous == null) delete process.env.ORGOS_ALLOW_JOURNAL_MIGRATION;
+      else process.env.ORGOS_ALLOW_JOURNAL_MIGRATION = previous;
+    }
   }
 
   ensureLedgerDemoChartOfAccounts();
