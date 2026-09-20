@@ -174,7 +174,7 @@ export class AiaScheduler {
         module_id: moduleId,
         work_order_id: req.work_order_id,
         state: "queued",
-        workspace_relpath: `scratch/aia-runs/${req.run_id}`,
+        workspace_relpath: `data/scratch/aia-runs/${req.run_id}`,
         queued_at: now,
         fail_reason: blockReason,
       };
@@ -211,7 +211,7 @@ export class AiaScheduler {
   }
 
   private admitNow(req: AiaAdmissionRequest, moduleId?: string): AiaAdmissionResult {
-    const workspaceRel = `scratch/aia-runs/${req.run_id}`;
+    const workspaceRel = `data/scratch/aia-runs/${req.run_id}`;
     ensureAiaRunWorkspace(req.run_id);
     const now = new Date().toISOString();
     const run: AiaRunRecord = {

@@ -386,7 +386,7 @@ npm run orgos -- io status
 1. **Primary エージェントが優先**（Step 3 権限表）
 2. 跨領域（例: CTR-003 按分）→ Finance 主導 · Property Rental + Compliance レビュー
 3. 解決不能 → Executive が人間に判断材料を提示（両案 + 影響）
-4. **並列 AIA（ADR 0040）:** Primary Folders への並列直書は禁止。中間成果は `scratch/aia-runs/{run_id}/`。SSOT 確定は CAS / 単一 writer / Integration merge（[aia-workspace-isolation.md](../../docs/org-os/aia-workspace-isolation.md)）
+4. **並列 AIA（ADR 0040）:** Primary Folders への並列直書は禁止。中間成果は `data/scratch/aia-runs/{run_id}/`。SSOT 確定は CAS / 単一 writer / Integration merge（[aia-workspace-isolation.md](../../docs/org-os/aia-workspace-isolation.md)）
 
 ### 4.5 機械メッセージ（ModuleMessage）
 
