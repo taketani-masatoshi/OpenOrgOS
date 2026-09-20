@@ -169,15 +169,21 @@ entries:
     );
   });
 
-  it("does not lock when bank statements are absent", () => {
+  it("skips bank reconciliation and locks when no bank file exists", () => {
     useFinanceFixtureTenant();
     lockPrior();
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(existsSync(bankPath())).toBe(false);
-    expect(closed.evaluation.items.find((item) => item.id === "bank-imported")?.level).toBe(
-      "error",
-    );
-    expect(closed.locked).toBe(false);
+    expect(closed.evaluation.items.find((item) => item.id === "bank-imported")).toMatchObject({
+      pass: true,
+      level: "skip",
+    });
+    expect(closed.locked).toBe(true);
+    expect(loadPeriodLocks().locks.at(-1)?.evidence).toMatchObject({
+      version: 1,
+      algorithm: "sha256",
+      can_lock: true,
+    });
   });
 
   it("refuses lock when the bank statement file cannot be read", () => {
@@ -213,7 +219,7 @@ entries:
     expect(closed.locked).toBe(true);
   });
 
-  it("does not lock when monthly YAML and journals differ", () => {
+  it("warns but locks when monthly YAML and journals differ", () => {
     useFinanceFixtureTenant();
     lockPrior();
     writeBank(`
@@ -233,10 +239,11 @@ entries:
       ],
     });
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
-    expect(closed.evaluation.errors.some((error) => error.startsWith("monthly-reconcile"))).toBe(
+    expect(closed.evaluation.warnings.some((warning) => warning.startsWith("monthly-reconcile"))).toBe(
       true,
     );
-    expect(closed.locked).toBe(false);
+    expect(closed.evaluation.errors.some((error) => error.startsWith("monthly-reconcile"))).toBe(false);
+    expect(closed.locked).toBe(true);
   });
 
   it("does not lock when a control account has an unassigned balance", () => {
@@ -479,7 +486,7 @@ entries:
     }
   });
 
-  it("does not lock when the month has no monthly plan", () => {
+  it("warns but locks when the month has no monthly plan", () => {
     useFinanceFixtureTenant();
     lockPrior();
     writeBank(`
@@ -498,10 +505,11 @@ entries:
     const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(september.locked).toBe(true);
     const october = closeAccountingMonth({ month: "2026-10", operatorId: OPERATOR });
-    expect(october.evaluation.errors.some((error) => error.includes("monthly plan not imported"))).toBe(
+    expect(october.evaluation.warnings.some((warning) => warning.includes("monthly plan not imported"))).toBe(
       true,
     );
-    expect(october.locked).toBe(false);
+    expect(october.evaluation.errors.some((error) => error.includes("monthly plan not imported"))).toBe(false);
+    expect(october.locked).toBe(true);
   });
 
   it("carries the locked month balance into the next month", () => {

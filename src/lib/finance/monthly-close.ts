@@ -1,12 +1,15 @@
 /**
  * Monthly accounting close — one gate for CLI and Workbench.
  * Lock only when error-level gates pass.
- * A month without bank rows or a monthly plan cannot lock.
+ * A missing bank file is skipped. An existing unreadable/empty file blocks close.
+ * Monthly-plan reconciliation is advisory and never blocks the ledger close.
  */
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { runValidateReport } from "../../commands/validate.js";
+import type { ValidateReport } from "../../commands/validate.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { getDataDir } from "../utils.js";
 import { buildConsumptionTaxSummary } from "./consumption-tax.js";
@@ -27,6 +30,7 @@ import { subsidiaryLedgerIntegrityIssues } from "./ledger/subsidiary-ledger.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { computePayrollMonth } from "./payroll-jp.js";
 import { isMonthLocked, lockMonth } from "./period-lock.js";
+import type { PeriodLockEvidence } from "../../../schemas/finance/period-lock.js";
 
 const SKIP_MPL_EXPENSE = new Set(["depreciation", "loan_payment", "capex"]);
 
@@ -94,15 +98,12 @@ function monthlyPlPosted(month: string): boolean {
 
 function depreciationPosted(month: string): boolean {
   return loadJournalEntries().entries.some(
-    (entry) =>
-      entry.source?.kind === "depreciation" && entry.source.period === month,
+    (entry) => entry.source?.kind === "depreciation" && entry.source.period === month,
   );
 }
 
 function payrollPosted(month: string): boolean {
-  return loadJournalEntries().entries.some(
-    (entry) => entry.entry_id === `JE-PAYROLL-${month}`,
-  );
+  return loadJournalEntries().entries.some((entry) => entry.entry_id === `JE-PAYROLL-${month}`);
 }
 
 function previousMonth(month: string): string {
@@ -122,6 +123,63 @@ function bankRowsForMonth(month: string): number | "missing" | "unreadable" {
   const lite = loadBankStatementsLite();
   if (!lite) return "unreadable";
   return lite.entries.filter((row) => row.date.slice(0, 7) === month).length;
+}
+
+function stableValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, nested]) => [key, stableValue(nested)]),
+    );
+  }
+  return value;
+}
+
+function sha256(value: unknown): string {
+  return createHash("sha256")
+    .update(JSON.stringify(stableValue(value)))
+    .digest("hex");
+}
+
+export function monthlyJournalSnapshotHash(month: string): string {
+  return sha256(
+    loadJournalEntries().entries.filter(
+      (entry) =>
+        entry.occurred_at.startsWith(month) &&
+        !(entry.source?.kind === "closing" && entry.source.adjustment_id === "pl-transfer"),
+    ),
+  );
+}
+
+export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): PeriodLockEvidence {
+  if (!evaluation.can_lock) {
+    throw new Error(`Cannot capture close evidence for ${evaluation.month}: close gates failed`);
+  }
+  const rows = bankRowsForMonth(evaluation.month);
+  const bankSnapshot = {
+    state: rows,
+    unmatched:
+      typeof rows === "number" && rows > 0 ? unmatchedBankCountForMonth(evaluation.month) : null,
+  };
+  const trial = buildTrialBalance({ asOf: evaluation.as_of });
+  const gateResults = evaluation.items.map(({ id, pass, level, detail }) => ({
+    id,
+    pass,
+    level,
+    ...(detail ? { detail } : {}),
+  }));
+  return {
+    version: 1,
+    algorithm: "sha256",
+    journal_entries_sha256: monthlyJournalSnapshotHash(evaluation.month),
+    bank_reconciliation_sha256: sha256(bankSnapshot),
+    trial_balance_sha256: sha256(trial),
+    gate_results_sha256: sha256(gateResults),
+    can_lock: true,
+    gate_results: gateResults,
+  };
 }
 
 function missingTaxCategories(month: string): string[] {
@@ -211,9 +269,7 @@ export function unmatchedBankCountForMonth(month: string): number | null {
   const lite = loadBankStatementsLite();
   if (!lite) return Number.POSITIVE_INFINITY;
   return lite.entries.filter(
-    (row) =>
-      row.date.slice(0, 7) === month &&
-      (!row.status || row.status === "unmatched"),
+    (row) => row.date.slice(0, 7) === month && (!row.status || row.status === "unmatched"),
   ).length;
 }
 
@@ -241,7 +297,11 @@ function optionalGate(
 
 export function evaluateMonthlyCloseGates(
   month: string,
-  opts?: { requireDepreciation?: boolean; requirePayroll?: boolean },
+  opts?: {
+    requireDepreciation?: boolean;
+    requirePayroll?: boolean;
+    validateReport?: ValidateReport;
+  },
 ): MonthlyCloseEvaluation {
   monthKey(month);
   const asOf = lastDayOfMonth(month);
@@ -339,24 +399,15 @@ export function evaluateMonthlyCloseGates(
   );
 
   const rows = bankRowsForMonth(month);
-  if (rows === "missing" || rows === 0) {
+  if (rows === "missing") {
+    items.push(gate("bank-imported", "銀行明細を取込済み", true, "skip", "no bank file"));
+    items.push(gate("bank-unmatched", "銀行明細の未消込なし", true, "skip", "no bank file"));
+  } else if (rows === 0) {
     items.push(
-      gate(
-        "bank-imported",
-        "銀行明細を取込済み",
-        false,
-        "error",
-        rows === "missing" ? "bank statements not imported" : "no bank rows for month",
-      ),
+      gate("bank-imported", "銀行明細を取込済み", false, "error", "no bank rows for month"),
     );
     items.push(
-      gate(
-        "bank-unmatched",
-        "銀行明細の未消込なし",
-        false,
-        "error",
-        rows === "missing" ? "bank statements not imported" : "no bank rows for month",
-      ),
+      gate("bank-unmatched", "銀行明細の未消込なし", false, "error", "no bank rows for month"),
     );
   } else if (rows === "unreadable") {
     items.push(
@@ -393,12 +444,9 @@ export function evaluateMonthlyCloseGates(
   }
   items.push(gate("consumption-tax", "消費税集計", taxPass, "error", taxDetail));
 
-  const validate = runValidateReport({ warnings: true });
+  const validate = opts?.validateReport ?? runValidateReport({ warnings: true });
   const validateErrors = validate.issues
-    .filter(
-      (issue) =>
-        issue.severity === "error" && issue.path.includes("data/finance/"),
-    )
+    .filter((issue) => issue.severity === "error" && issue.path.includes("data/finance/"))
     .map((issue) => `${issue.path}: ${issue.message}`);
   items.push(
     gate(
@@ -406,9 +454,7 @@ export function evaluateMonthlyCloseGates(
       "帳簿整合性チェック",
       validateErrors.length === 0,
       "error",
-      validateErrors.length === 0
-        ? "ok"
-        : `${validateErrors.length} errors`,
+      validateErrors.length === 0 ? "ok" : `${validateErrors.length} errors`,
     ),
   );
 
@@ -418,15 +464,14 @@ export function evaluateMonthlyCloseGates(
     ? "monthly plan not imported"
     : reconcile.balanced
       ? "balanced"
-      : reconcile.diffs
-          .map((diff) => `${diff.category} delta ${diff.delta_yen}`)
-          .join("; ") || "variance";
+      : reconcile.diffs.map((diff) => `${diff.category} delta ${diff.delta_yen}`).join("; ") ||
+        "variance";
   items.push(
     gate(
       "monthly-reconcile",
       "月次YAML突合",
       Boolean(plan) && reconcile.balanced,
-      "error",
+      "warning",
       reconcileDetail,
     ),
   );
@@ -454,10 +499,7 @@ function postCloseAdjustments(month: string): string[] {
   const posted: string[] = [];
   const asOf = lastDayOfMonth(month);
   for (const adjustment of coa.monthly_close_adjustments ?? []) {
-    const amount = resolveCloseAdjustmentAmountFromCoa(
-      adjustment.amount_source,
-      month,
-    );
+    const amount = resolveCloseAdjustmentAmountFromCoa(adjustment.amount_source, month);
     if (amount <= 0) continue;
     const entryId = `JE-CLOSE-${month}-${adjustment.trigger}`.toUpperCase();
     appendJournalEntry({
@@ -537,6 +579,7 @@ export function closeAccountingMonth(input: {
   operatorId: string;
   postDepreciation?: boolean;
   postPayroll?: boolean;
+  validateReport?: ValidateReport;
 }): MonthlyCloseResult {
   monthKey(input.month);
   const posted = isMonthLocked(input.month)
@@ -548,6 +591,7 @@ export function closeAccountingMonth(input: {
   const evaluation = evaluateMonthlyCloseGates(input.month, {
     requireDepreciation: input.postDepreciation,
     requirePayroll: input.postPayroll,
+    validateReport: input.validateReport,
   });
   let locked = isMonthLocked(input.month);
   if (evaluation.can_lock && !locked) {
@@ -555,6 +599,7 @@ export function closeAccountingMonth(input: {
       month: input.month,
       lockedBy: input.operatorId,
       reason: "finances close",
+      evidence: buildMonthlyCloseEvidence(evaluation),
     });
     locked = true;
   }
