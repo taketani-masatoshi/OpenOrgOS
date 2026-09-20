@@ -1,9 +1,13 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createCompanyEvent, loadCompanyEvents } from "../company-events.js";
 import { validateCompanyEventChainWithRegistry } from "../company-events-chain.js";
+import { pinCompanyEventChainTail, verifyCompanyEventsWitnessPin } from "../company-events-witness-pin.js";
+import { getCliOperatorContext } from "../console-auth/cli-operator.js";
+import { requireOperatorPermission } from "../console-auth/operator-rbac.js";
 import { loadTaxProfile } from "../data.js";
-import { getDataDir } from "../utils.js";
+import { getDataDir, resolveTenantPath } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 
 export type ConsumptionTaxAdvisorDecision = "approved" | "rejected";
@@ -46,8 +50,13 @@ export function verifyConsumptionTaxAdvisorReviewAudit(
   const registry = loadCompanyEvents();
   const chain = validateCompanyEventChainWithRegistry(registry);
   if (!chain.ok) return { ok: false, reason: "company event chain invalid" };
+  const witness = verifyCompanyEventsWitnessPin();
+  if (!witness.ok) return { ok: false, reason: `company event witness invalid: ${witness.code}` };
   const event = registry.events.find((row) => row.id === payload.audit_event_id);
   if (!event) return { ok: false, reason: "advisor review audit event not found" };
+  if (!event.chain_seq || !witness.pin || witness.pin.chain_tail_seq < event.chain_seq) {
+    return { ok: false, reason: "advisor review event is not covered by the witness pin" };
+  }
   if (event.kind !== "compliance" || event.title !== eventTitle(payload)) {
     return { ok: false, reason: "advisor review audit event payload mismatch" };
   }
@@ -55,8 +64,16 @@ export function verifyConsumptionTaxAdvisorReviewAudit(
 }
 
 export function recordConsumptionTaxAdvisorReview(
-  payload: ConsumptionTaxAdvisorReviewPayload,
+  input: Omit<ConsumptionTaxAdvisorReviewPayload, "evidence_sha256"> & { evidence_sha256?: string },
 ): { audit_event_id: string } {
+  const auth = getCliOperatorContext();
+  if (!auth) throw new Error("advisor review requires an authenticated operator context");
+  requireOperatorPermission(auth, "chat:approve");
+  if (auth.record.operator_id !== input.reviewer_ref) throw new Error("reviewer_ref must match the authenticated operator");
+  const evidencePath = resolveTenantPath(input.evidence_ref);
+  const evidenceSha256 = createHash("sha256").update(readFileSync(evidencePath)).digest("hex");
+  if (input.evidence_sha256 && input.evidence_sha256 !== evidenceSha256) throw new Error("advisor review evidence SHA-256 mismatch");
+  const payload: ConsumptionTaxAdvisorReviewPayload = { ...input, evidence_sha256: evidenceSha256 };
   const profile = loadTaxProfile() as Record<string, unknown> & {
     consumption_tax?: Record<string, unknown> & { advisor_reviews?: Array<Record<string, unknown>> };
   };
@@ -80,6 +97,7 @@ export function recordConsumptionTaxAdvisorReview(
       },
       notes: `Consumption-tax advisor decision: ${payload.status}. Evidence: ${payload.evidence_ref}`,
     });
+  pinCompanyEventChainTail({ hubId: "consumption-tax-advisor-review" });
   profile.consumption_tax.advisor_reviews = [...current, { ...payload, audit_event_id: event.id }];
   writeYamlFileAtomic(join(getDataDir(), "finance", "tax-profile.yaml"), profile);
   return { audit_event_id: event.id };

@@ -101,7 +101,7 @@
 
 年度間調整は `fixed-assets.yaml` の各資産にある `consumption_tax` と `disposed_on`、および `inventory.yaml` の年度末行にある `consumption_tax_adjustment` を正本として自動生成する。取得年度と通算期間の課税売上割合は仕訳の課税売上・輸出免税売上・非課税売上から算出する。`tax-profile.yaml` 内の従来の調整明細は移行互換用とし、同じ資産IDまたは棚卸証憑参照が台帳から生成された場合は二重計上しない。
 
-固定資産に消費税属性がない場合は `consumption_tax_review: not_applicable` の明示がない限り年度間調整を未確認としてブロックする。税務専門家の確認は `recordConsumptionTaxAdvisorReview` を経由し、対象年度、状態、確認者、確認日時、証憑参照とSHA-256、計算SHA-256を保存する。同時に承認内容全体のダイジェストをCompany Eventのハッシュチェーンへ追記する。申告ドラフトは計算ハッシュ、監査イベント、チェーン整合を再検証し、手入力した承認、同年度の重複、改変後の承認を拒否する。自動テストやAIは実運用テナントの `approved` を生成しない。
+固定資産に消費税属性がない場合は `consumption_tax_review: not_applicable` の明示がない限り年度間調整を未確認としてブロックする。税務専門家の確認は `recordConsumptionTaxAdvisorReview` を経由し、認証済み操作者の `chat:approve` 権限と `reviewer_ref` の一致を必須とする。証憑SHA-256は参照ファイルから算出し、対象年度、状態、確認者、確認日時、証憑参照、計算SHA-256とともに保存する。同時に承認内容全体のダイジェストをCompany Eventのハッシュチェーンへ追記し、その先端をWitness pinおよび署名可能なProtocol Auditへ固定する。申告ドラフトは計算ハッシュ、監査イベント、チェーン、承認イベントを包含するWitness pinを再検証し、手入力した承認、同年度の重複、証憑不一致、改変後の承認を拒否する。自動テストやAIは実運用テナントの `approved` を生成しない。
 
 法定計算の回帰検証は国税庁の簡易課税複数事業例、中間申告、調整対象固定資産、棚卸資産の各公開資料を固定値テストの根拠とする。根拠URLと照合日は `JP_CONSUMPTION_TAX_POLICY.verified_against` に記録する。この自動照合は税務専門家による個別事実認定・申告レビューを代替しない。
 

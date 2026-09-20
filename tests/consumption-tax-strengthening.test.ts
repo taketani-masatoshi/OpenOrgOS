@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { appendJournalEntry } from "../src/lib/finance/expense-claim-journal.js";
@@ -9,6 +10,7 @@ import { resetFixtureJournalEntries, useFinanceFixtureTenant } from "./helpers/f
 import { getDataDir } from "../src/lib/utils.js";
 import { recordConsumptionTaxAdvisorReview, verifyConsumptionTaxAdvisorReviewAudit } from "../src/lib/finance/consumption-tax-advisor-review.js";
 import { setupTempCompanyEventsTenant } from "./helpers/temp-company-events-tenant.js";
+import { setCliOperatorContext } from "../src/lib/console-auth/cli-operator.js";
 
 describe("consumption tax strengthening", () => {
   beforeEach(() => resetFixtureJournalEntries());
@@ -483,20 +485,24 @@ describe("consumption tax strengthening", () => {
       const financeDir = join(getDataDir(), "finance");
       mkdirSync(financeDir, { recursive: true });
       writeFileSync(join(financeDir, "tax-profile.yaml"), `entity:\n  name: Audit Fixture KK\n  type: 株式会社\nfiscal_year:\n  end_month: 1\nconsumption_tax:\n  status: 課税事業者\n  method: standard\ncorporate_tax: {}\n`, "utf-8");
+      const evidencePath = join(isolated.dir, "tenants", isolated.tenantId, "docs", "advisor-review.txt");
+      writeFileSync(evidencePath, "reviewed", "utf-8");
+      setCliOperatorContext({ record: { operator_id: "advisor:licensed-001", display_name: "Advisor", seat_kind: "standard", role: "approver", status: "active" }, permissions: ["chat:approve"] });
       const payload = {
         fiscal_year: "FY2026",
         status: "approved" as const,
         reviewer_ref: "advisor:licensed-001",
         reviewed_at: "2027-03-01T00:00:00.000Z",
-        evidence_ref: "review:FY2026",
-        evidence_sha256: "b".repeat(64),
+        evidence_ref: "docs/advisor-review.txt",
         calculation_sha256: "c".repeat(64),
       };
       const recorded = recordConsumptionTaxAdvisorReview(payload);
-      expect(verifyConsumptionTaxAdvisorReviewAudit({ ...payload, ...recorded })).toEqual({ ok: true });
+      const evidence_sha256 = createHash("sha256").update("reviewed").digest("hex");
+      expect(verifyConsumptionTaxAdvisorReviewAudit({ ...payload, evidence_sha256, ...recorded })).toEqual({ ok: true });
       expect(() => recordConsumptionTaxAdvisorReview(payload)).toThrow(/already recorded/);
     } finally {
       isolated.restore();
+      setCliOperatorContext(undefined);
       useFinanceFixtureTenant();
     }
   });
