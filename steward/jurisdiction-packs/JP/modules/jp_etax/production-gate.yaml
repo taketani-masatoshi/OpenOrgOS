@@ -1,0 +1,14 @@
+schema_version: 1
+production_submission_enabled: false
+requirements:
+  ksk2_spec_registered: false
+  xml_schema_validation_proven: false
+  integration_tests_passed: false
+  nta_transmission_test_completed: false
+  production_credentials_configured: false
+  orgos_human_approval_recorded: false
+  production_feature_gate_released: false
+nta_transmission_test:
+  completed: false
+  evidence_path: null
+  completed_at: null

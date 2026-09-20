@@ -1,0 +1,18 @@
+id: jp_etax
+required_seeds: []
+activation_seeds:
+  - packages.yaml.example
+  - submissions.yaml.example
+notes: skeleton — NTA e-Tax KSK2 integration. EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION. Tax calculation stays in jp_tax_* modules (ADR 0078).
+cli_commands:
+  - spec
+  - build
+  - validate
+  - approve
+  - sign
+  - submit
+  - receipt
+  - status
+security:
+  limits:
+    concurrent_jobs: 1

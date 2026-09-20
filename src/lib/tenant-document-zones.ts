@@ -63,6 +63,7 @@ export const MODULE_DEFAULT_DOCS_ROOT: Record<string, string> = {
   jp_women_empowerment: "docs/compliance/declarations/",
   jp_privacy_policy: "docs/compliance/privacy/",
   jp_consumption_refund: "docs/company/tax/refund/",
+  jp_etax: "docs/company/tax/etax/",
 };
 
 const PROPERTY_MODULE_AGENTS = new Set(["rental", "hospitality", "property_management"]);

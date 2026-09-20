@@ -5,7 +5,7 @@
 ## 目的
 
 法人の **申告準備**（正データ整備 · 期限可視化 · 税理士引き渡し）を決定論 CLI + YAML 正本で支える。  
-**e-Tax / eLTAX への本番提出はスコープ外**（税理士 · 代表の権限）。
+**e-Tax / eLTAX への本番提出は税計算モジュールのスコープ外**（税理士 · 代表の権限）。送信は独立モジュール `jp_etax`（ADR 0078）のみ。従来モジュールは `not-for-etax` のまま。
 
 ## 責務境界
 
@@ -96,13 +96,13 @@ orgos validate
 | 固定資産台帳（人向け） | `docs/finance/fixed-asset-register.md` |
 | Agent 要約 | `docs/reports/agent-summaries/tax/` |
 
-## 将来接続（Phase 5 — ADR 0052）
+## 将来接続（Phase 5 — ADR 0052 · 送信は ADR 0078）
 
 | サブ | 内容 | 状態 |
 |------|------|------|
 | 5a | 会計 SoT（試算表 · 月次整合） | Phase 3 進行中 |
-| 5b | 申告書 XML / 別表ドラフト | defer |
-| 5c | e-Tax / eLTAX 本番提出 | **スコープ外**（人間/税理士） |
+| 5b | 申告書 XML / 別表ドラフト | handoff のみ · `not-for-etax` |
+| 5c | e-Tax / eLTAX 本番提出 | **税計算モジュールからは非対応。** 専用 `jp_etax` のみ（KSK2 · production disabled until NTA test） |
 | 5d | 宿泊税 `mode: from_ledger` | defer · 設計 stub ADR 0052 |
 
 ```yaml
@@ -123,3 +123,4 @@ amount:
 - ADR [0046-tax-obligation-rhythm-engine.md](../adr/0046-tax-obligation-rhythm-engine.md)
 - ADR [0051-jp-tax-skills-cli-only.md](../adr/0051-jp-tax-skills-cli-only.md)
 - ADR [0052-tax-filing-phase5-deferred.md](../adr/0052-tax-filing-phase5-deferred.md)
+- ADR [0078-etax-integration.md](../adr/0078-etax-integration.md)

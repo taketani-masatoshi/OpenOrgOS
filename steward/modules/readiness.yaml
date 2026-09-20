@@ -121,15 +121,19 @@ modules:
   jp_tax_corporate:
     tier: activation_ready
     notes: 法人税申告準備 · operations tax-corporate CLI（calendar/gaps/depreciation）· ADR 0046 ·
-      申告 XML/e-Tax は未対応のため production_ready ではない
+      申告 XML ドラフトは not-for-etax。e-Tax 送信は jp_etax 専用モジュール（ADR 0078）
+  jp_etax:
+    tier: skeleton
+    notes: NTA e-Tax KSK2 integration. EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION.
+      Tax calculation is out of scope (ADR 0078).
   jp_tax_consumption:
     tier: activation_ready
     notes: 消費税区分チェック · operations tax-consumption CLI（check/calc/eligibility）·
       申告提出は未対応のため production_ready ではない
   jp_consumption_refund:
     tier: activation_ready
-    notes: 消費税還付 CLAIM · pack · 入金仕訳。e-Tax は未対応のため
-      production_ready ではない。mal は点数目的で有効化しない
+    notes: 消費税還付 CLAIM · pack · 入金仕訳。e-Tax 送信は jp_etax 専用（ADR 0078）。
+      本モジュールは送信しない。mal は点数目的で有効化しない
   jp_invoice_qualified:
     tier: activation_ready
     notes: インボイス登録整合 · operations invoice-qualified CLI（registration/issue-check）

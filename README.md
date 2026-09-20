@@ -140,6 +140,20 @@ npm run weekly     # check + pipeline run weekly
 
 ---
 
+## e-Tax
+
+| Item | Value |
+|------|--------|
+| e-Tax compatibility status | **EXPERIMENTAL / NOT FOR PRODUCTION ETAX SUBMISSION** |
+| KSK2 spec version | `KSK2-2026-08-28` (reception start 2026-09-24) |
+| Supported procedures | none (fail-closed until 手続一覧 is unpacked) |
+| Test status | Phase 1 local tests only. NTA transmission test **not** run |
+| Production status | `e-Tax production submission: NOT CERTIFIED / DISABLED` |
+
+Tax calculation modules remain `not-for-etax`. Transmission, if ever enabled, is only `orgos etax` / `jp_etax` (ADR 0078). Details: [docs/etax/README.md](docs/etax/README.md)
+
+---
+
 ## Cursor / Agent
 
 **コア Agent + 業務モジュール:** [steward/core/agents/00-このフォルダについて.md](steward/core/agents/00-このフォルダについて.md)

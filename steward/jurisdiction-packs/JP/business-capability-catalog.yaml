@@ -526,6 +526,18 @@ modules:
     priority: P0
     official_urls:
       - https://www.nta.go.jp/
+  - id: jp_etax
+    name_ja: 国税庁 e-Tax 連携（KSK2）
+    status: partial
+    tier: skeleton
+    pack: jurisdiction-packs/JP
+    agent_proxy: tax
+    categories:
+      - tax_finance
+    priority: P1
+    official_urls:
+      - https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo3.htm
+      - https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo.htm
   - id: jp_tax_consumption
     name_ja: 消費税申告
     status: partial
@@ -1210,9 +1222,9 @@ summary:
     total: 13
   modules:
     implemented: 21
-    partial: 16
+    partial: 17
     planned: 9
-    total: 46
+    total: 47
   skills:
     implemented: 16
     partial: 16
@@ -1222,4 +1234,5 @@ summary:
     - human_resources Agent 未実装（就業規則 · 社保 · 給与）
     - jp_statutory_meetings モジュール未実装
     - jp_social_insurance · jp_payroll モジュールは集計 CLI まで実装（申告提出は未実装）
-    - 税務モジュールは skeleton — 申告書 XML · e-Tax 提出は未実装（tax-filing-spec 参照）
+    - 税務モジュールは skeleton — 申告準備 XML は not-for-etax。e-Tax 送信は jp_etax（ADR 0078）で
+      Phase 1 · production disabled

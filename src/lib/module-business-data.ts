@@ -26,6 +26,7 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
   jp_medical_device: "data/medical-device",
   jp_permit_registry: "data/permit-registry",
   jp_consumption_refund: "data/tax",
+  jp_etax: "data/etax",
 };
 
 export function isModuleEnabled(moduleId: string): boolean {

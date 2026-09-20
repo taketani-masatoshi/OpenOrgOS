@@ -3,15 +3,15 @@
 
 version: 2
 stats:
-  vitest_total: 605
-  static_test_cases: 2777
-  tiered_execution_total: 605
-  catalog_total: 46
-  catalog_cli_registered: 47
+  vitest_total: 609
+  static_test_cases: 2796
+  tiered_execution_total: 609
+  catalog_total: 47
+  catalog_cli_registered: 48
   catalog_gap: 0
   catalog_dedicated: 30
   catalog_bundled: 9
-  catalog_only: 7
+  catalog_only: 8
 platform_domains:
   P01_kernel:
     layer: 1
@@ -141,6 +141,12 @@ catalog_modules:
     tests:
       - jp-corporate-registration.test.ts
       - mal-module-cli-contract.test.ts
+  jp_etax:
+    tier: skeleton
+    coverage_tier: catalog_only
+    cli: true
+    tests:
+      - catalog/jp-etax.test.ts
   jp_inspection:
     tier: activation_ready
     coverage_tier: dedicated
@@ -604,6 +610,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  bookkeeping-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   broker.test.ts:
     axis: platform
     kind: unit
@@ -673,6 +683,11 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  catalog/jp-etax.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - jp_etax
   catalog/jp-inspection.test.ts:
     axis: catalog
     kind: unit
@@ -1108,6 +1123,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  etax-phase1.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   executive-cli.test.ts:
     axis: platform
     kind: unit
@@ -1136,6 +1155,10 @@ tests:
     axis: contract
     kind: contract
   extension-skill-runners.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  final-accounts-close.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

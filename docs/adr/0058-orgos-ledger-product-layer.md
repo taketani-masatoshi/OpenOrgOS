@@ -16,7 +16,7 @@
 2. **ホスティング:** 顧客 1 社 = `tenants/{id}` workspace + 専用コンテナ（共有マルチテナントは P3 以降）。
 3. **正本:** 既存 YAML GL（`journal-entries.yaml`）を維持。製品層はプロビジョン・課金・UI シェル・コンプライアンス API を追加する。
 4. **電子帳簿:** 製品必須機能。検索 API · 訂正削除履歴（逆仕訳）· 監査 trail · `orgos validate` ゲート。
-5. **e-Tax:** `jp_tax_corporate` / Phase 5 モジュール。Ledger SKU の同梱必須条件にしない。
+5. **e-Tax:** 独立モジュール `jp_etax`（ADR 0078）。Ledger SKU の同梱必須条件にしない。従来 `jp_tax_*` からは送信しない。
 6. **文書正本:** `docs/product/`（販売 Runbook · セキュリティ · 価格 · 法務ドラフト）。
 
 ## Consequences

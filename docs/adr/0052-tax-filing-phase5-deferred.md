@@ -1,6 +1,6 @@
 # ADR 0052: Tax Filing Phase 5 — e-Tax · Return XML · Lodging Ledger
 
-**Status:** Accepted · **Date:** 2026-08-24 · **Updated:** 2026-08-29
+**Status:** Accepted · **Date:** 2026-08-24 · **Updated:** 2026-09-20
 
 ## Context
 
@@ -18,7 +18,7 @@ Phase 5 を **3 サブフェーズ** で defer し、トリガー条件を明文
 | **5c** | e-Tax / eLTAX 本番提出 | 5b + 代表/税理士署名 | 人間のみ |
 | **5d** | 宿泊税 `obligation_rhythms` `from_ledger` | **実装済** — `lodgingTaxFromLedger` が `data/operations/lodging-tax.yaml` assessments を読む | Dev |
 
-**OrgOS は 5c の実行を実装しない** — 提出は税理士ワークフロー外注。
+**OrgOS tax-prep modules do not implement 5c.** Transmission, if ever enabled, is only via the dedicated `jp_etax` module (ADR 0078), after NTA KSK2 transmission test and production-gate review. Advisor handoff XML remains `not-for-etax`.
 
 ## Lodging tax ledger（5d）
 
@@ -33,4 +33,5 @@ Phase 5 を **3 サブフェーズ** で defer し、トリガー条件を明文
 ## Related
 
 - ADR [0051-jp-tax-skills-cli-only.md](./0051-jp-tax-skills-cli-only.md) — Phase 2 完了（mal module 有効化）
+- ADR [0078-etax-integration.md](./0078-etax-integration.md) — 専用 e-Tax module（KSK2）。従来モジュールからは非対応
 - [tax-filing-spec.md](../org-os/tax-filing-spec.md)

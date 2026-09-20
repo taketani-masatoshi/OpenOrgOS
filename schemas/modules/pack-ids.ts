@@ -15,6 +15,7 @@ export const JP_PACK_MODULE_IDS = [
   "jp_inspection",
   "jp_bank_corporate",
   "jp_tax_corporate",
+  "jp_etax",
   "jp_tax_consumption",
   "jp_consumption_refund",
   "jp_invoice_qualified",

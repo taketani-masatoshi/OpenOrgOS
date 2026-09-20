@@ -36,7 +36,7 @@
 
 ## 禁止
 
-- e-Tax 自動提出
+- e-Tax 自動提出（送信は独立モジュール `jp_etax` · ADR 0078。Tax Agent は計算・handoff まで）
 - 税理士判断の代替
 
 ## 目的
