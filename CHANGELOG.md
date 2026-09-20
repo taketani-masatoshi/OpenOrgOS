@@ -15,6 +15,10 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **Drive の配達名** — アップロードするファイル名を `AIA-` で始め、説明に「写し。正本ではない」を付ける。削除も、Drive から正本へ戻す取り込みもしない。
 - **連携ハブの置き場説明** — コンソール `/?integrations=1` に「このマシン（最新）· NAS（復元）· Git（NAS 上の履歴。GitHub には実テナントを出さない）· Drive（AIA 成果物の配達口）」を明示。Drive は社員ファイルを消さない写しで、正本はテナント YAML / MD。セットアップ画面からも同じ説明でハブへ送る。
 
+### Changed
+
+- **ADR 0052** — 「e-Tax を実装しない」を 5c（認証 · 署名 · 本番送信）に限定。提出用データの出力と公開仕様へのフォーマット寄せは 5b。
+
 ### Fixed
 
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。

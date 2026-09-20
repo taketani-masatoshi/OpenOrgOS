@@ -198,7 +198,7 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 ## 禁止
 
-- e-Tax 自動提出
+- e-Tax 自動提出（ADR 0052 の 5c。提出用 XML の出力は 5b）
 - 税理士判断の代替
 
 ## 目的
