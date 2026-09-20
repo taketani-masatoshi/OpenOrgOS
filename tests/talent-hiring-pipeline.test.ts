@@ -7,182 +7,84 @@ import { humanApprovalSubjectDigest } from "../src/lib/org/human-approval-contex
 import { canonicalJson } from "../src/lib/protocol/canonical.js";
 import { setTenantId } from "../src/lib/tenant.js";
 import { getDataDir } from "../src/lib/utils.js";
-import { runHrTalentHear } from "../src/commands/hr.js";
+import { runHrTalentHear, runHrTalentShortlist } from "../src/commands/hr.js";
 import {
   filterCandidates,
-  generateRFP,
   hearJobRequest,
   proposeShortTermTalentApproval,
-  type ProjectRequirement,
-  type RfpEnricher,
-  type StructuredRFP,
+  type JobPosting,
   type TalentCandidate,
 } from "../src/lib/hr/talent-hiring-pipeline.js";
-
-const requirement: ProjectRequirement = {
-  summary: "AIモデルの精度向上のためのアドバイザーが欲しい",
-  domain: "ml",
-  budget: { max_hourly_rate: 15_000, currency: "JPY" },
-  duration_days: 30,
-  must_have_skills: ["python", "ml"],
-};
 
 function payloadDigest(payload: unknown): string {
   return createHash("sha256").update(canonicalJson(payload)).digest("hex");
 }
 
-describe("generateRFP", () => {
-  it("builds a structured RFP from a project requirement", () => {
-    const rfp = generateRFP(requirement);
+const passed = {
+  learns_procedure: true,
+  follows_any_supervisor: true,
+  adapts_to_one_change: true,
+  reports_exceptions: true,
+  safe_workwear: true,
+};
 
-    expect(rfp.title).toBe(requirement.summary);
-    expect(rfp.scope).toContain(requirement.summary);
-    expect(rfp.scope).toContain(requirement.domain);
-    expect(rfp.scope).toContain(String(requirement.duration_days));
-    expect(rfp.selection_criteria).toEqual(requirement.must_have_skills);
-    expect(rfp.budget).toEqual(requirement.budget);
-    expect(rfp.must_have_skills).toEqual(requirement.must_have_skills);
-    expect(rfp.min_years).toBe(0);
-  });
+function trialCandidate(
+  candidateId: string,
+  hourlyRate: number,
+  overrides: Partial<TalentCandidate> = {},
+): TalentCandidate {
+  return {
+    candidate_id: candidateId,
+    display_name: `仮名${candidateId}`,
+    hourly_rate: hourlyRate,
+    ...passed,
+    ...overrides,
+  };
+}
 
-  it("applies a mock enricher without calling an external API", () => {
-    const enricher: RfpEnricher = {
-      enrich(input) {
-        expect(input).toEqual(requirement);
-        return {
-          title: "Enriched AI advisor",
-          selection_criteria: ["peer-reviewed", "production"],
-          min_years: 8,
-        };
-      },
-    };
-
-    const rfp = generateRFP(requirement, { enricher });
-
-    expect(rfp.title).toBe("Enriched AI advisor");
-    expect(rfp.selection_criteria).toEqual(["peer-reviewed", "production"]);
-    expect(rfp.min_years).toBe(8);
-    expect(rfp.budget).toEqual(requirement.budget);
-    expect(rfp.must_have_skills).toEqual(requirement.must_have_skills);
-    expect(rfp.scope).toContain(requirement.summary);
-  });
-});
+const machinePosting: JobPosting = {
+  title: "新しい機械で軽い動作を繰り返す",
+  starts_on: "2026-10-01",
+  duration_days: 30,
+  headcount: 2,
+  max_hourly_rate: 1500,
+  currency: "JPY",
+  duties: "新しい機械で軽い動作を繰り返す",
+  checks: [
+    "説明のあと、手順を一人で1サイクル完了できる",
+    "指示者の年齢や役職に関係なく、担当者の指示どおりに動ける",
+    "作業中の手順変更1つに合わせられる",
+    "わからないことと異常をその場で報告できる",
+    "指定の服装で、髪・爪・装飾が作業の妨げにならない",
+  ],
+  body: "求人票",
+};
 
 describe("filterCandidates", () => {
-  const rfp: StructuredRFP = {
-    title: requirement.summary!,
-    scope: "scope",
-    selection_criteria: ["python", "ml"],
-    budget: { max_hourly_rate: 15_000, currency: "JPY" },
-    must_have_skills: ["python", "ml"],
-    min_years: 5,
-  };
-
-  const candidates: TalentCandidate[] = [
-    {
-      candidate_id: "C-030",
-      display_name: "仮名C",
-      skills: ["python", "ml", "nlp"],
-      years: 9,
-      hourly_rate: 14_000,
-    },
-    {
-      candidate_id: "C-010",
-      display_name: "仮名A",
-      skills: ["python", "ml"],
-      years: 8,
-      hourly_rate: 10_000,
-    },
-    {
-      candidate_id: "C-020",
-      display_name: "仮名B",
-      skills: ["python", "ml"],
-      years: 8,
-      hourly_rate: 9_000,
-    },
-    {
-      candidate_id: "C-040",
-      display_name: "仮名D",
-      skills: ["python"],
-      years: 12,
-      hourly_rate: 8_000,
-    },
-    {
-      candidate_id: "C-050",
-      display_name: "仮名E",
-      skills: ["python", "ml"],
-      years: 10,
-      hourly_rate: 16_000,
-    },
-    {
-      candidate_id: "C-060",
-      display_name: "仮名F",
-      skills: ["python", "ml"],
-      years: 4,
-      hourly_rate: 8_000,
-    },
-    {
-      candidate_id: "C-070",
-      display_name: "仮名G",
-      skills: ["ml", "python"],
-      years: 5,
-      hourly_rate: 15_000,
-    },
+  const candidates = [
+    trialCandidate("C-030", 1400),
+    trialCandidate("C-010", 1000),
+    trialCandidate("C-020", 900),
+    trialCandidate("C-015", 900),
+    trialCandidate("C-040", 800, { learns_procedure: false }),
+    trialCandidate("C-050", 1600),
   ];
 
-  it("drops candidates who miss a required skill, exceed budget, or lack years", () => {
-    const shortlist = filterCandidates(rfp, candidates, 10);
-    const ids = shortlist.map((row) => row.candidate_id);
+  it("keeps only candidates who pass every check within the hourly cap, cheapest first", () => {
+    const shortlist = filterCandidates(machinePosting, candidates);
 
-    expect(ids).toEqual(["C-030", "C-010", "C-020", "C-070"]);
-    expect(shortlist.map((row) => row.score)).toEqual([11, 10, 10, 7]);
+    expect(shortlist.map((row) => row.candidate_id)).toEqual(["C-015", "C-020"]);
   });
 
-  it("keeps only the top N and breaks score ties by candidate_id", () => {
-    const shortlist = filterCandidates(rfp, candidates, 2);
-
-    expect(shortlist.map((row) => row.candidate_id)).toEqual(["C-030", "C-010"]);
-  });
-
-  it("returns an empty list for no candidates or topN of zero", () => {
-    expect(filterCandidates(rfp, [], 3)).toEqual([]);
-    expect(filterCandidates(rfp, candidates, 0)).toEqual([]);
-  });
-
-  it("returns every eligible candidate when topN exceeds the shortlist", () => {
-    expect(filterCandidates(rfp, candidates, 99)).toHaveLength(4);
+  it("returns an empty list when nobody is eligible", () => {
+    expect(filterCandidates(machinePosting, [trialCandidate("C-040", 800, { learns_procedure: false })])).toEqual(
+      [],
+    );
   });
 });
 
 describe("proposeShortTermTalentApproval", () => {
-  const rfp: StructuredRFP = {
-    title: "AI advisor",
-    scope: "scope",
-    selection_criteria: ["python"],
-    budget: { max_hourly_rate: 15_000, currency: "JPY" },
-    must_have_skills: ["python"],
-    min_years: 0,
-  };
-  const shortlist = filterCandidates(
-    rfp,
-    [
-      {
-        candidate_id: "C-002",
-        display_name: "仮名B",
-        skills: ["python"],
-        years: 3,
-        hourly_rate: 10_000,
-      },
-      {
-        candidate_id: "C-001",
-        display_name: "仮名A",
-        skills: ["python"],
-        years: 6,
-        hourly_rate: 12_000,
-      },
-    ],
-    2,
-  );
+  const shortlist = [trialCandidate("C-001", 12_000), trialCandidate("C-002", 10_000)];
   const actors = {
     proposedBy: "recruiting",
     operatorId: "OP-001",
@@ -219,7 +121,7 @@ describe("proposeShortTermTalentApproval", () => {
 
   function propose(maxTotal: number) {
     return proposeShortTermTalentApproval({
-      rfp,
+      title: "AI advisor",
       shortlist,
       terms: {
         engagement: "advisor",
@@ -242,7 +144,7 @@ describe("proposeShortTermTalentApproval", () => {
     expect(result.approval.subject_type).toBe("short_term_talent");
     expect(result.approval.scope).toBe("internal");
     expect(result.payload.candidate_ids).toEqual(["C-001", "C-002"]);
-    expect(result.payload.rfp_title).toBe(rfp.title);
+    expect(result.payload.rfp_title).toBe("AI advisor");
     expect(JSON.stringify(result.payload)).not.toContain("仮名");
     expect(result.payload_hash).toBe(payloadDigest(result.payload));
     expect(result.approval.subject_ref).toBe(result.payload_hash);
@@ -363,5 +265,94 @@ describe("hearJobRequest", () => {
 
   it("returns the same result from the hr command", () => {
     expect(runHrTalentHear({ answers: completeHearing })).toEqual(hearJobRequest(completeHearing));
+  });
+});
+
+describe("talent shortlist", () => {
+  const actors = {
+    proposedBy: "recruiting",
+    operatorId: "OP-001",
+    approverId: "APR-001",
+    apiOrigin: "http://127.0.0.1:9470",
+  };
+  const candidates = [trialCandidate("C-010", 1000), trialCandidate("C-020", 900)];
+  const terms = {
+    engagement: "fixed_term",
+    hours: 40,
+    currency: "JPY",
+    max_total: 100_000,
+  };
+
+  let prevStepUp: string | undefined;
+  let prevStore: string | undefined;
+  let challengeDir: string;
+  let approvalsPath: string;
+  let approvalsSnapshot: Buffer | null = null;
+
+  beforeEach(() => {
+    challengeDir = mkdtempSync(join(tmpdir(), "orgos-talent-shortlist-"));
+    prevStepUp = process.env.ORGOS_SETTLEMENT_STEPUP;
+    prevStore = process.env.ORGOS_SETTLEMENT_CHALLENGE_STORE;
+    process.env.ORGOS_SETTLEMENT_STEPUP = "1";
+    process.env.ORGOS_SETTLEMENT_CHALLENGE_STORE = join(challengeDir, "challenges.json");
+    setTenantId("mal");
+    approvalsPath = join(getDataDir(), "org/pending-approvals.yaml");
+    approvalsSnapshot = existsSync(approvalsPath) ? readFileSync(approvalsPath) : null;
+  });
+
+  afterEach(() => {
+    if (approvalsSnapshot) writeFileSync(approvalsPath, approvalsSnapshot);
+    else if (existsSync(approvalsPath)) rmSync(approvalsPath, { force: true });
+    if (prevStepUp === undefined) delete process.env.ORGOS_SETTLEMENT_STEPUP;
+    else process.env.ORGOS_SETTLEMENT_STEPUP = prevStepUp;
+    if (prevStore === undefined) delete process.env.ORGOS_SETTLEMENT_CHALLENGE_STORE;
+    else process.env.ORGOS_SETTLEMENT_CHALLENGE_STORE = prevStore;
+    rmSync(challengeDir, { recursive: true, force: true });
+  });
+
+  function input(maxTotal: number, rows: unknown = candidates) {
+    return {
+      posting: { ...machinePosting, headcount: 1 },
+      candidates: rows,
+      terms: { ...terms, max_total: maxTotal },
+      ...actors,
+    };
+  }
+
+  it("refuses age, gender, or birth date before proposing an approval", () => {
+    const before = approvalsSnapshot;
+    for (const rows of [
+      [{ ...trialCandidate("C-010", 1000), age: 50 }],
+      [{ ...trialCandidate("C-010", 1000), gender: "female" }],
+      [{ ...trialCandidate("C-010", 1000), birth_date: "1970-01-01" }],
+    ]) {
+      const result = runHrTalentShortlist(input(100_000, rows));
+      expect(result.status).toBe("rejected");
+      expect(result).not.toHaveProperty("approval");
+    }
+    const after = existsSync(approvalsPath) ? readFileSync(approvalsPath) : null;
+    expect(after).toEqual(before);
+  });
+
+  it("returns the shortlist and skips settlement at or under the tier A cap", () => {
+    const result = runHrTalentShortlist(input(100_000));
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.shortlist.map((row) => row.candidate_id)).toEqual(["C-020"]);
+    expect(result.approval.status).toBe("pending_approval");
+    expect(result.settlement_required).toBe(false);
+    expect(result.settlement).toBeUndefined();
+  });
+
+  it("mints a settlement challenge above the tier A cap", () => {
+    const result = runHrTalentShortlist(input(100_001));
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.approval.status).toBe("pending_approval");
+    expect(result.settlement_required).toBe(true);
+    expect(result.settlement?.challenge_id).toMatch(/^SCH-/);
+    expect(result.settlement?.webauthn_challenge.length).toBeGreaterThan(0);
   });
 });

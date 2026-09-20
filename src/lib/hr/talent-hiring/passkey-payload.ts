@@ -1,18 +1,14 @@
 import { createHash } from "node:crypto";
-import type {
-  ContractTerms,
-  PassKeyApprovalPayload,
-  StructuredRFP,
-} from "../../../../schemas/talent-hiring.js";
+import type { ContractTerms, PassKeyApprovalPayload } from "../../../../schemas/talent-hiring.js";
 import { canonicalJson } from "../../protocol/canonical.js";
 
 export function talentApprovalPayload(input: {
-  rfp: StructuredRFP;
+  title: string;
   shortlist: Array<{ candidate_id: string }>;
   terms: ContractTerms;
 }): PassKeyApprovalPayload {
   return {
-    rfp_title: input.rfp.title,
+    rfp_title: input.title,
     candidate_ids: input.shortlist.map((candidate) => candidate.candidate_id),
     terms: input.terms,
   };

@@ -15,6 +15,7 @@ import {
   formatTrainingRecordsMarkdown,
 } from "../lib/hr/competence-view.js";
 import { hearJobRequest } from "../lib/hr/talent-hiring/hear-job.js";
+import { shortlistForPosting, type TalentShortlistResult } from "../lib/hr/talent-shortlist.js";
 import type { JobHearingResult } from "../../schemas/talent-hiring.js";
 import { resolveTenantPath } from "../lib/tenant.js";
 
@@ -97,6 +98,21 @@ export function runHrCompetenceCheck(options: { json?: boolean } = {}): void {
 
 export function runHrTalentHear(options: { answers: unknown; json?: boolean }): JobHearingResult {
   const result = hearJobRequest(options.answers);
+  if (options.json) console.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+export function runHrTalentShortlist(options: {
+  posting: unknown;
+  candidates: unknown;
+  terms: unknown;
+  proposedBy: string;
+  operatorId: string;
+  approverId: string;
+  apiOrigin: string;
+  json?: boolean;
+}): TalentShortlistResult {
+  const result = shortlistForPosting(options);
   if (options.json) console.log(JSON.stringify(result, null, 2));
   return result;
 }

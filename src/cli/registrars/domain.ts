@@ -181,6 +181,7 @@ import {
   runHrCompetenceCheck,
   runHrHeadcount,
   runHrTalentHear,
+  runHrTalentShortlist,
   loadTalentHearAnswers,
   type CompetenceView,
 } from "../../commands/hr.js";
@@ -243,6 +244,47 @@ export function registerDomainCommands(program: Command): void {
       }
       console.log(result.reason);
       process.exitCode = 1;
+    });
+
+  hr.command("talent-shortlist")
+    .description("求人票と実演結果から選考し、署名待ちの稟議まで作る")
+    .requiredOption("--posting <file>", "求人票 YAML")
+    .requiredOption("--candidates <file>", "候補者 YAML")
+    .requiredOption("--terms <file>", "契約条件 YAML")
+    .requiredOption("--operator-id <id>", "操作者 ID")
+    .requiredOption("--approver-id <id>", "承認者 ID")
+    .requiredOption("--api-origin <url>", "Settlement の API origin")
+    .option("--proposed-by <id>", "起票者", "recruiting")
+    .option("--json", "Print JSON")
+    .action((opts: {
+      posting: string;
+      candidates: string;
+      terms: string;
+      operatorId: string;
+      approverId: string;
+      apiOrigin: string;
+      proposedBy: string;
+      json?: boolean;
+    }) => {
+      const result = runHrTalentShortlist({
+        posting: loadTalentHearAnswers(opts.posting),
+        candidates: loadTalentHearAnswers(opts.candidates),
+        terms: loadTalentHearAnswers(opts.terms),
+        proposedBy: opts.proposedBy,
+        operatorId: opts.operatorId,
+        approverId: opts.approverId,
+        apiOrigin: opts.apiOrigin,
+        json: Boolean(opts.json),
+      });
+      if (opts.json) return;
+      if (result.status === "rejected") {
+        console.log(result.reason);
+        process.exitCode = 1;
+        return;
+      }
+      for (const row of result.shortlist) console.log(row.candidate_id);
+      console.log(result.approval.status);
+      if (result.settlement) console.log(result.settlement.challenge_id);
     });
 
   const competence = hr

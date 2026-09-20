@@ -2,8 +2,6 @@ import type { OrgApprovalRequest } from "../../../../schemas/org/approval.js";
 import type {
   ContractTerms,
   PassKeyApprovalPayload,
-  ScoredCandidate,
-  StructuredRFP,
 } from "../../../../schemas/talent-hiring.js";
 import { proposeOrgApproval } from "../../org/approval/propose.js";
 import {
@@ -13,8 +11,8 @@ import {
 import { payloadHash, talentApprovalPayload } from "./passkey-payload.js";
 
 export interface ProposeShortTermTalentInput {
-  rfp: StructuredRFP;
-  shortlist: ScoredCandidate[];
+  title: string;
+  shortlist: Array<{ candidate_id: string }>;
   terms: ContractTerms;
   proposedBy: string;
   operatorId: string;
@@ -49,7 +47,7 @@ export function proposeShortTermTalentApproval(
     subjectType: "short_term_talent",
     proposedBy: input.proposedBy,
     subjectRef: hash,
-    message: input.rfp.title,
+    message: input.title,
     amount: { value: input.terms.max_total, currency: input.terms.currency },
   });
 
