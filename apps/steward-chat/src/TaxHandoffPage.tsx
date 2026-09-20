@@ -3,6 +3,7 @@ import { useCopy } from "@ops-shared/define-copy";
 import {
   fetchTaxCalendar,
   fetchTaxConsumption,
+  fetchTaxConsumptionFilingDraft,
   fetchTaxGaps,
   fetchTaxPayrollYea,
   fetchTaxReadiness,
@@ -49,6 +50,9 @@ export function TaxHandoffPage() {
   const [consumptionIssues, setConsumptionIssues] = useState<
     Array<{ severity: string; message: string }>
   >([]);
+  const [consumptionFiling, setConsumptionFiling] = useState<Awaited<
+    ReturnType<typeof fetchTaxConsumptionFilingDraft>
+  > | null>(null);
   const [payMonth, setPayMonth] = useState("2026-08");
   const [payGross, setPayGross] = useState("300000");
   const [payDependents, setPayDependents] = useState("0");
@@ -90,6 +94,9 @@ export function TaxHandoffPage() {
         setConsumptionIssues(r.issues);
       })
       .catch(() => setConsumption(null));
+    void fetchTaxConsumptionFilingDraft()
+      .then(setConsumptionFiling)
+      .catch(() => setConsumptionFiling(null));
   }, []);
 
   async function run<T>(fn: () => Promise<T>, okMsg: (result: T) => string) {
@@ -163,6 +170,38 @@ export function TaxHandoffPage() {
             ))}
           </ul>
         ) : null}
+      </section>
+
+      <section className="ops-card">
+        <h2 className="section-title">消費税申告準備</h2>
+        {consumptionFiling ? (
+          <>
+            <p className="ops-page-meta" role="status">
+              {consumptionFiling.fiscal_year} · {consumptionFiling.status} · {consumptionFiling.calculation_method}
+              {" · "}差引 {consumptionFiling.net_tax_yen.toLocaleString("ja-JP")} 円
+              {" · "}残額 {consumptionFiling.remaining_yen.toLocaleString("ja-JP")} 円
+            </p>
+            <p>
+              <span className="badge warn">{consumptionFiling.submission}</span>{" "}
+              税理士確認: {consumptionFiling.advisor_review.status}
+            </p>
+            <ul>
+              {consumptionFiling.schedules.map((schedule) => (
+                <li key={schedule.id}>
+                  {schedule.complete ? "完了" : "未完了"} · {schedule.id}
+                </li>
+              ))}
+              {consumptionFiling.blockers.map((blocker) => (
+                <li key={`blocker-${blocker}`}>[blocking] {blocker}</li>
+              ))}
+              {consumptionFiling.warnings.map((warning) => (
+                <li key={`warning-${warning}`}>[warning] {warning}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="muted">申告準備データを取得できません</p>
+        )}
       </section>
 
       <section className="ops-card">

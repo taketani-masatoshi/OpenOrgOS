@@ -2563,6 +2563,33 @@ export async function fetchTaxConsumption(): Promise<{
   return chatApi("/chat/v1/tax/consumption");
 }
 
+export type ConsumptionTaxFilingDraft = {
+  ok: boolean;
+  fiscal_year: string;
+  status: "ready_for_advisor_review" | "blocked";
+  submission: "not-for-etax";
+  calculation_method: "standard" | "simplified" | "two_tenths";
+  net_tax_yen: number;
+  remitted_yen: number;
+  remaining_yen: number;
+  blockers: string[];
+  warnings: string[];
+  schedules: Array<{ id: string; complete: boolean }>;
+  advisor_review: {
+    status: "pending" | "approved" | "rejected";
+    reviewer_ref?: string;
+    reviewed_at?: string;
+    evidence_ref?: string;
+  };
+};
+
+export async function fetchTaxConsumptionFilingDraft(
+  fiscalYear?: string,
+): Promise<ConsumptionTaxFilingDraft> {
+  const query = fiscalYear ? `?fiscal_year=${encodeURIComponent(fiscalYear)}` : "";
+  return chatApi(`/chat/v1/tax/consumption-filing-draft${query}`);
+}
+
 export async function postTaxPayrollCalc(input: {
   month: string;
   gross_yen: number;

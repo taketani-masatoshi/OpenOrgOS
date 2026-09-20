@@ -1,0 +1,34 @@
+{
+  "as_of": "2026-04-01",
+  "sources": [
+    "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6609.htm",
+    "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6401.htm",
+    "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6405.htm"
+  ],
+  "interim_frequency": [
+    { "prior_national_tax_yen": 480000, "expected": "none" },
+    { "prior_national_tax_yen": 480001, "expected": "annual_1" },
+    { "prior_national_tax_yen": 4000000, "expected": "annual_1" },
+    { "prior_national_tax_yen": 4000001, "expected": "annual_3" },
+    { "prior_national_tax_yen": 48000000, "expected": "annual_3" },
+    { "prior_national_tax_yen": 48000001, "expected": "annual_11" }
+  ],
+  "filing_rates": [
+    {
+      "label": "standard-rate-only",
+      "taxable_sales_10_yen": 10000000,
+      "taxable_sales_8_yen": 0,
+      "expected_national_yen": 780000,
+      "expected_local_yen": 220000,
+      "expected_combined_yen": 1000000
+    },
+    {
+      "label": "reduced-rate-only",
+      "taxable_sales_10_yen": 0,
+      "taxable_sales_8_yen": 10000000,
+      "expected_national_yen": 624000,
+      "expected_local_yen": 176000,
+      "expected_combined_yen": 800000
+    }
+  ]
+}

@@ -61,6 +61,7 @@ describe("steward chat tax and payroll HTTP", () => {
       "/chat/v1/tax/calendar",
       "/chat/v1/tax/gaps",
       "/chat/v1/tax/consumption",
+      "/chat/v1/tax/consumption-filing-draft",
       "/chat/v1/tax/payroll-yea",
     ]) {
       const res = await fetch(`${baseUrl}${path}`);
@@ -119,6 +120,27 @@ describe("steward chat tax and payroll HTTP", () => {
     });
     expect(res.status, await res.clone().text()).toBe(200);
     expect(((await res.json()) as { ok: boolean }).ok).toBe(true);
+  });
+
+  it("exposes an advisor-reviewable consumption-tax filing draft", async () => {
+    const cookie = await login();
+    const res = await fetch(`${baseUrl}/chat/v1/tax/consumption-filing-draft?fiscal_year=FY2026`, {
+      headers: { Cookie: cookie },
+    });
+    expect(res.status, await res.clone().text()).toBe(200);
+    const body = (await res.json()) as {
+      ok: boolean;
+      submission: string;
+      status: string;
+      blockers: string[];
+      schedules: Array<{ id: string; complete: boolean }>;
+      advisor_review: { status: string };
+    };
+    expect(body.ok).toBe(true);
+    expect(body.submission).toBe("not-for-etax");
+    expect(["blocked", "ready_for_advisor_review"]).toContain(body.status);
+    expect(body.schedules.some((row) => row.id === "advisor-review")).toBe(true);
+    expect(["pending", "approved", "rejected"]).toContain(body.advisor_review.status);
   });
 
   it("computes a payroll month deterministically from rates", async () => {

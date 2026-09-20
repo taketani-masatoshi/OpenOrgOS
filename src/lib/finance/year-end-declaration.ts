@@ -11,6 +11,7 @@ import {
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import { evaluateInventoryCloseGate } from "./monthly-close.js";
 import { readYearEndDeclaration } from "./year-end-file.js";
+import { buildConsumptionTaxFilingDraft } from "./consumption-tax-filing.js";
 
 export { readYearEndDeclaration, yearEndDeclarationPath } from "./year-end-file.js";
 
@@ -48,6 +49,11 @@ export function evaluateYearEndDeclaration(fiscalYear: string): { errors: string
     if (!posted) errors.push(`accrual not posted ${line.id}`);
   }
 
+  if (declaration.value.consumption_tax !== "exempt") {
+    const filing = buildConsumptionTaxFilingDraft(fiscalYear);
+    errors.push(...filing.blockers.map((issue) => `consumption tax: ${issue}`));
+    if (declaration.value.consumption_tax === "settled" && filing.remaining_yen !== 0) errors.push(`consumption tax settlement mismatch ${filing.remaining_yen} yen`);
+  }
   if (declaration.value.consumption_tax === "settled") {
     let payable: string | undefined;
     let receivable: string | undefined;
@@ -68,7 +74,7 @@ export function evaluateYearEndDeclaration(fiscalYear: string): { errors: string
       }
       return entry.lines.some((line) => codes.has(line.account_code));
     });
-    if (!settled) errors.push("consumption tax settlement missing");
+    if (!settled) errors.push("consumption tax settlement journal missing");
   }
 
   return { errors };

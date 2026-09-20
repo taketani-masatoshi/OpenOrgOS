@@ -15,7 +15,7 @@ export const yearEndDeclarationSchema = z.object({
     z.object({ status: z.literal("none") }),
     z.object({ status: z.literal("disclosed"), text: z.string().min(1) }),
   ]),
-  consumption_tax: z.enum(["exempt", "settled"]),
+  consumption_tax: z.enum(["exempt", "calculated", "settled"]),
 });
 
 export type YearEndDeclaration = z.output<typeof yearEndDeclarationSchema>;

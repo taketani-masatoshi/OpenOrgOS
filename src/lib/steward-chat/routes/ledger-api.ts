@@ -11,6 +11,10 @@ import { buildLedgerWorkbench } from "../../finance/ledger/workbench.js";
 import { reverseJournalEntry } from "../../finance/journal-reverse.js";
 import { appendJournalEntry } from "../../finance/expense-claim-journal.js";
 import { lockMonth, unlockMonth } from "../../finance/period-lock.js";
+import {
+  buildMonthlyCloseEvidence,
+  evaluateMonthlyCloseGates,
+} from "../../finance/monthly-close.js";
 import { lastDayOfMonth } from "../../finance/fiscal-year.js";
 import { postDepreciationJournalEntries } from "../../finance/depreciation.js";
 import {
@@ -190,21 +194,21 @@ export async function handleLedgerApi(
         return true;
       }
       if (action === "lock") {
-        if (body.require_checklist === true || body.require_checklist === 1) {
-          const checklist = buildMonthCloseChecklist(month);
-          if (!checklist.ready) {
-            json(res, 422, {
-              ok: false,
-              error: "month-close checklist not ready",
-              checklist,
-            });
-            return true;
-          }
+        const checklist = buildMonthCloseChecklist(month);
+        const evaluation = evaluateMonthlyCloseGates(month);
+        if (!evaluation.can_lock) {
+          json(res, 422, {
+            ok: false,
+            error: "month-close checklist not ready",
+            checklist,
+          });
+          return true;
         }
         lockMonth({
           month,
           lockedBy: actor.operator_id,
           reason: typeof body.reason === "string" ? body.reason : undefined,
+          evidence: buildMonthlyCloseEvidence(evaluation),
         });
         appendChatAudit({
           action: "ledger_period_lock",
@@ -281,6 +285,8 @@ export async function handleLedgerApi(
         period,
         obligation,
         authorizedBy: actor.operator_id,
+        filingKind: body.filing_kind === "interim" || body.filing_kind === "final" ? body.filing_kind : undefined,
+        taxFiscalYear: typeof body.tax_fiscal_year === "string" ? body.tax_fiscal_year.trim() : undefined,
       });
       json(res, 200, {
         ok: true,

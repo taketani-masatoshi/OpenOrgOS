@@ -96,6 +96,11 @@ export function setTenantId(id: string): void {
   _tenantId = assertValidTenantId(id);
 }
 
+/** Clear the process-default tenant before switching workspace roots. */
+export function clearTenantId(): void {
+  _tenantId = null;
+}
+
 /** Run `fn` with a request-scoped tenant (safe under concurrent Wire + Chat). */
 export function runWithTenantId<T>(tenantId: string, fn: () => T): T {
   return tenantAls.run(assertValidTenantId(tenantId), fn);

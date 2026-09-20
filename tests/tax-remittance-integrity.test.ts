@@ -49,6 +49,8 @@ describe("tax remittance integrity", () => {
     postRemittanceJournalEntry({
       period: "2026-09",
       obligation: "consumption_tax",
+      filingKind: "final",
+      taxFiscalYear: "FY2026",
       authorizedBy: "OP-TEST",
       occurredAt: "2026-09-20T00:00:00.000Z",
     });

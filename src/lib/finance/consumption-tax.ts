@@ -12,9 +12,13 @@ import {
 import { loadChartOfAccounts, loadTaxProfile } from "../data.js";
 import { loadJournalEntries } from "./expense-claim-journal.js";
 import type { TaxCategory } from "../../../schemas/finance/journal-entry.js";
+import {
+  JP_CONSUMPTION_TAX_POLICY,
+  resolveTransitionalInvoiceCredit,
+} from "./consumption-tax-policy.js";
 
-const TAX_RATE_10 = 0.1;
-const TAX_RATE_8 = 0.08;
+const TAX_RATE_10 = JP_CONSUMPTION_TAX_POLICY.rates.taxable_10.total_rate_pct / 100;
+const TAX_RATE_8 = JP_CONSUMPTION_TAX_POLICY.rates.taxable_8.total_rate_pct / 100;
 
 function taxFromBase(base: number, rate: number): number {
   return Math.floor(base * rate);
@@ -37,18 +41,32 @@ export function monthlyPlTaxCategory(
   return "taxable_10";
 }
 
-type TaxProfileConsumptionSlice = {
+export type TaxProfileConsumptionSlice = {
   /** Other jurisdiction slices are ignored here. */
   [key: string]: unknown;
   consumption_tax?: {
     status?: string;
     method?: ConsumptionTaxMethod;
     deemed_purchase_rate_pct?: number;
+    simplified_multiple_business?: boolean;
+    simplified_75_rule?: boolean;
+    simplified_election_filed_on?: string;
+    simplified_election_effective_from?: string;
+    business_operator_kind?: "domestic" | "foreign";
+    permanent_establishment_in_japan?: boolean;
     base_period_sales_threshold?: number;
     base_period_sales_jpy?: number;
     invoice_registered?: boolean;
     invoice_registration_number?: string;
     invoice_exempt_reconciled_basis?: string;
+    specific_period_sales_jpy?: number;
+    specific_period_payroll_jpy?: number;
+    opening_capital_jpy?: number;
+    taxable_entity_election?: boolean;
+    invoice_registration_effective_date?: string;
+    taxpayer_basis?: string;
+    purchase_allocation_method?: "individual" | "proportional" | "full_credit_95_rule";
+    taxable_sales_ratio_override_pct?: number;
   };
 };
 
@@ -56,45 +74,194 @@ function emptyJournalTotals() {
   return {
     sales10: 0,
     sales8: 0,
+    outputTax10: 0,
+    outputTax8: 0,
     purchases10: 0,
     purchases8: 0,
     exemptSales: 0,
+    nonTaxableSales: 0,
     taxFreeSales: 0,
+    inputTaxTaxableOnly: 0,
+    inputTaxCommon: 0,
+    inputTaxNonTaxable: 0,
+    inputTaxGross: 0,
+    outputTaxDeductions: 0,
+    outputTaxAdditions: 0,
+    reverseChargeTax: 0,
+    reverseChargeTaxableOnly: 0,
+    reverseChargeCommon: 0,
+    reverseChargeNonTaxable: 0,
+    importNationalTax: 0,
+    importLocalTax: 0,
+    simplifiedBusinessOutputTax: Object.fromEntries(
+      ["type_1", "type_2", "type_3", "type_4", "type_5", "type_6", "unclassified"].map((key) => [key, 0]),
+    ) as Record<string, number>,
+    transactions: 0,
+    issues: [] as Array<{ severity: "error" | "warning"; code: string; message: string }>,
   };
 }
 
-function aggregateFromJournal(period: string): ReturnType<typeof emptyJournalTotals> {
+function roundedTax(base: number, ratePct: number, method: "floor" | "round" | "ceil" = "floor"): number {
+  const raw = (base * ratePct) / 100;
+  return method === "ceil" ? Math.ceil(raw) : method === "round" ? Math.round(raw) : Math.floor(raw);
+}
+
+function invoiceDeduction(input: {
+  status: string | undefined;
+  occurredOn: string;
+}): { pct: number; issue?: { severity: "error" | "warning"; code: string; message: string } } {
+  if (input.status === "qualified") return { pct: 100 };
+  if (input.status === "exempt_supplier") return { pct: 0 };
+  if (!input.status || input.status === "unknown") {
+    return {
+      pct: 0,
+      issue: {
+        severity: "warning",
+        code: "invoice_status_missing",
+        message: "invoice status missing or unknown; input tax credit set to zero pending evidence",
+      },
+    };
+  }
+  const transition = resolveTransitionalInvoiceCredit(
+    input.status as "nonqualified_80" | "nonqualified_50",
+    input.occurredOn,
+  );
+  if (!transition.valid) {
+    return {
+      pct: 0,
+      issue: {
+        severity: "error",
+        code: "invoice_transitional_period_mismatch",
+        message: `${input.status} is not valid on ${input.occurredOn}`,
+      },
+    };
+  }
+  return { pct: transition.credit_pct };
+}
+
+function aggregateFromJournal(input: {
+  period: string;
+  from?: string;
+  to?: string;
+  strict?: boolean;
+}): ReturnType<typeof emptyJournalTotals> {
   const totals = emptyJournalTotals();
   try {
     const coa = loadChartOfAccounts();
     const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
     for (const raw of loadJournalEntries().entries) {
+      const rawOccurredAt = typeof raw.occurred_at === "string" ? raw.occurred_at : "";
+      const occurredOn = rawOccurredAt.slice(0, 10);
+      if (input.from && input.to) {
+        if (occurredOn < input.from || occurredOn > input.to) continue;
+      } else if (!rawOccurredAt.startsWith(input.period)) continue;
       const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
-      if (!entry.occurred_at.startsWith(period)) continue;
       for (const line of entry.lines) {
         if (!line.tax_category) continue;
         const account = accountByCode.get(line.account_code);
         if (!account) continue;
-        if (account.type !== "revenue" && account.type !== "expense") continue;
+        if (
+          line.tax_adjustment &&
+          account.type === "revenue" &&
+          (line.tax_category === "taxable_10" || line.tax_category === "taxable_8")
+        ) {
+          const rate = line.tax_category === "taxable_8" ? 8 : 10;
+          const amount = line.debit_yen || line.credit_yen;
+          const adjustmentTax = line.tax_amount_yen ?? (line.tax_basis === "inclusive" ? splitInclusiveConsumptionTax(amount, rate).tax_yen : roundedTax(amount, rate, line.tax_rounding));
+          if (line.tax_adjustment === "bad_debt_recovery") {
+            totals.outputTaxAdditions += adjustmentTax;
+          } else {
+            totals.outputTaxDeductions += adjustmentTax;
+          }
+          if (!line.original_entry_id) totals.issues.push({ severity: "error", code: "tax_adjustment_source_missing", message: `${entry.entry_id}/${line.account_code}: original_entry_id is required for ${line.tax_adjustment}` });
+          if (line.tax_adjustment === "bad_debt" && entry.evidence_refs.length === 0) totals.issues.push({ severity: "error", code: "bad_debt_evidence_missing", message: `${entry.entry_id}: bad debt evidence is required` });
+          continue;
+        }
+        const isSale = account.type === "revenue" && line.credit_yen > 0;
+        const isPurchase = account.normal_balance === "debit" && line.debit_yen > 0;
+        if (!isSale && !isPurchase) continue;
         const amount = line.debit_yen || line.credit_yen;
-        if (account.type === "revenue" && line.tax_category === "exempt") {
+        if (isSale && line.tax_category === "exempt") {
           totals.exemptSales += amount;
         }
-        if (account.type === "revenue" && line.tax_category === "tax_free") {
+        if (isSale && line.tax_category === "non_taxable") totals.nonTaxableSales += amount;
+        if (isSale && line.tax_category === "tax_free") {
           totals.taxFreeSales += amount;
         }
+        const rate = line.tax_category === "taxable_8" ? 8 : 10;
+        const taxableBase = line.tax_basis === "inclusive"
+          ? splitInclusiveConsumptionTax(amount, rate).net_yen
+          : amount;
         if (line.tax_category === "taxable_10") {
-          if (account.type === "expense") totals.purchases10 += amount;
-          if (account.type === "revenue") totals.sales10 += amount;
+          if (isPurchase) totals.purchases10 += taxableBase;
+          if (isSale) totals.sales10 += taxableBase;
         }
         if (line.tax_category === "taxable_8") {
-          if (account.type === "expense") totals.purchases8 += amount;
-          if (account.type === "revenue") totals.sales8 += amount;
+          if (isPurchase) totals.purchases8 += taxableBase;
+          if (isSale) totals.sales8 += taxableBase;
+        }
+        if (isSale && (line.tax_category === "taxable_10" || line.tax_category === "taxable_8")) {
+          const saleTax = line.tax_amount_yen ?? (line.tax_basis === "inclusive" ? splitInclusiveConsumptionTax(amount, rate).tax_yen : roundedTax(amount, rate, line.tax_rounding));
+          if (line.tax_category === "taxable_8") totals.outputTax8 += saleTax;
+          else totals.outputTax10 += saleTax;
+          totals.simplifiedBusinessOutputTax[line.simplified_business_type ?? "unclassified"] += saleTax;
+        }
+        if (isPurchase && (line.tax_category === "taxable_10" || line.tax_category === "taxable_8")) {
+          totals.transactions += 1;
+          const documentedTax = line.tax_amount_yen ?? (line.tax_basis === "inclusive" ? splitInclusiveConsumptionTax(amount, rate).tax_yen : roundedTax(amount, rate, line.tax_rounding));
+          totals.inputTaxGross += documentedTax;
+          if (line.tax_transaction === "import") {
+            const importTax = (line.import_national_tax_yen ?? 0) + (line.import_local_tax_yen ?? 0);
+            const complete = Boolean(
+              line.import_date && line.customs_declaration_ref &&
+              line.customs_payment_evidence_ref && line.customs_evidence_ref &&
+              line.import_national_tax_yen != null && line.import_local_tax_yen != null,
+            );
+            const deductible = complete ? importTax : 0;
+            totals.inputTaxGross += importTax - documentedTax;
+            totals.importNationalTax += line.import_national_tax_yen ?? 0;
+            totals.importLocalTax += line.import_local_tax_yen ?? 0;
+            const use = line.purchase_use ?? "common";
+            if (use === "taxable_only") totals.inputTaxTaxableOnly += deductible;
+            else if (use === "non_taxable_only") totals.inputTaxNonTaxable += deductible;
+            else totals.inputTaxCommon += deductible;
+            if (!complete) totals.issues.push({ severity: "error", code: "import_customs_evidence_missing", message: `${entry.entry_id}/${line.account_code}: import input credit requires import date, declaration, permit/payment evidence, and separate national/local tax amounts` });
+            if (line.import_date && entry.occurred_at.slice(0, 10) !== line.import_date) totals.issues.push({ severity: "warning", code: "import_date_differs_from_journal", message: `${entry.entry_id}/${line.account_code}: import date differs from journal date` });
+            if (!line.purchase_use) totals.issues.push({ severity: "warning", code: "purchase_use_missing", message: `${entry.entry_id}/${line.account_code}: purchase use missing; treated as common` });
+            continue;
+          }
+          if (line.tax_transaction === "reverse_charge") {
+            if (line.tax_amount_yen == null) totals.issues.push({ severity: "error", code: "reverse_charge_tax_missing", message: `${entry.entry_id}/${line.account_code}: reverse charge requires tax_amount_yen` });
+            const reverseTax = line.tax_amount_yen ?? 0;
+            totals.reverseChargeTax += reverseTax;
+            const use = line.purchase_use ?? "common";
+            if (use === "taxable_only") totals.reverseChargeTaxableOnly += reverseTax;
+            else if (use === "non_taxable_only") totals.reverseChargeNonTaxable += reverseTax;
+            else totals.reverseChargeCommon += reverseTax;
+            if (!line.purchase_use) totals.issues.push({ severity: "warning", code: "purchase_use_missing", message: `${entry.entry_id}/${line.account_code}: purchase use missing; treated as common` });
+            continue;
+          }
+          const deduction = invoiceDeduction({
+            status: line.invoice_status,
+            occurredOn: entry.occurred_at.slice(0, 10),
+          });
+          const deductible = Math.floor((documentedTax * deduction.pct) / 100);
+          const use = line.purchase_use ?? "common";
+          if (use === "taxable_only") totals.inputTaxTaxableOnly += deductible;
+          else if (use === "non_taxable_only") totals.inputTaxNonTaxable += deductible;
+          else totals.inputTaxCommon += deductible;
+          if (deduction.issue) totals.issues.push({
+            ...deduction.issue,
+            message: `${entry.entry_id}/${line.account_code}: ${deduction.issue.message}`,
+          });
+          if (!line.purchase_use) totals.issues.push({ severity: "warning", code: "purchase_use_missing", message: `${entry.entry_id}/${line.account_code}: purchase use missing; treated as common` });
         }
       }
     }
-  } catch {
-    /* journal / CoA optional for manual calc */
+  } catch (error) {
+    if (input.strict) throw error;
+    /* Journal / CoA remain optional only for explicit/manual preview calculations. */
+    return emptyJournalTotals();
   }
   return totals;
 }
@@ -119,11 +286,21 @@ export function resolveDeemedPurchaseRatePct(
 
 export function buildConsumptionTaxSummary(input: {
   period: string;
+  /** Optional inclusive range. Used by statutory filing so allocation is applied once per tax period. */
+  from?: string;
+  to?: string;
+  strict?: boolean;
   manual?: Partial<ConsumptionTaxPeriod>;
   method?: ConsumptionTaxMethod;
   deemedPurchaseRatePct?: number;
+  /** Deterministic override for tests and offline calculation. Runtime defaults to tenant tax-profile. */
+  profile?: TaxProfileConsumptionSlice;
 }): ConsumptionTaxSummary {
-  const journal = aggregateFromJournal(input.period);
+  const journal = aggregateFromJournal(input);
+  let profile = input.profile;
+  if (!profile) {
+    try { profile = loadTaxProfile() as TaxProfileConsumptionSlice; } catch { profile = undefined; }
+  }
   const periodInput = {
     period: input.period,
     taxable_sales_10_yen:
@@ -141,33 +318,87 @@ export function buildConsumptionTaxSummary(input: {
       input.manual?.transitional_deduction_rate_pct,
   };
 
-  const output10 = taxFromBase(periodInput.taxable_sales_10_yen, TAX_RATE_10);
-  const output8 = taxFromBase(periodInput.taxable_sales_8_yen, TAX_RATE_8);
-  const outputTax = output10 + output8;
+  const output10 = input.manual?.taxable_sales_10_yen == null && journal.sales10 > 0
+    ? journal.outputTax10
+    : taxFromBase(periodInput.taxable_sales_10_yen, TAX_RATE_10);
+  const output8 = input.manual?.taxable_sales_8_yen == null && journal.sales8 > 0
+    ? journal.outputTax8
+    : taxFromBase(periodInput.taxable_sales_8_yen, TAX_RATE_8);
+  const method = resolveConsumptionTaxMethod(profile, input.method);
   const input10 = taxFromBase(periodInput.taxable_purchases_10_yen, TAX_RATE_10);
   const input8 = taxFromBase(periodInput.taxable_purchases_8_yen, TAX_RATE_8);
-  let actualInput = input10 + input8;
+  const grossInput = journal.transactions > 0 ? journal.inputTaxGross : input10 + input8;
+  const invoiceEligibleInput =
+    journal.inputTaxTaxableOnly + journal.inputTaxCommon + journal.inputTaxNonTaxable;
+  const salesNumerator = periodInput.taxable_sales_10_yen + periodInput.taxable_sales_8_yen + periodInput.tax_free_sales_yen;
+  const salesDenominator = salesNumerator + periodInput.exempt_sales_yen + journal.nonTaxableSales;
+  const ratioPct = profile?.consumption_tax?.taxable_sales_ratio_override_pct ?? (salesDenominator > 0 ? (salesNumerator / salesDenominator) * 100 : 100);
+  const reverseChargeApplies = method === "standard" && ratioPct < 95;
+  const reverseChargeOutput = reverseChargeApplies ? journal.reverseChargeTax : 0;
+  const outputTax = output10 + output8 + journal.outputTaxAdditions - journal.outputTaxDeductions + reverseChargeOutput;
+  const allocation = profile?.consumption_tax?.purchase_allocation_method ?? "individual";
+  const fullCreditEligible = salesNumerator <= 500_000_000 && ratioPct >= 95;
+  let actualInput = journal.transactions > 0
+    ? journal.inputTaxTaxableOnly + Math.floor((journal.inputTaxCommon * ratioPct) / 100)
+    : grossInput;
+  if (allocation === "full_credit_95_rule" && fullCreditEligible) {
+    actualInput = journal.transactions > 0 ? invoiceEligibleInput : grossInput;
+  }
+  if (allocation === "full_credit_95_rule" && !fullCreditEligible) {
+    journal.issues.push({
+      severity: "error",
+      code: "full_credit_95_rule_ineligible",
+      message: `full-credit rule requires taxable sales of 500,000,000 yen or less and a taxable-sales ratio of at least 95% (sales=${salesNumerator}, ratio=${ratioPct})`,
+    });
+  }
+  if (allocation === "proportional") {
+    actualInput = Math.floor(
+      ((journal.transactions > 0 ? invoiceEligibleInput : grossInput) * ratioPct) / 100,
+    );
+  }
   if (periodInput.transitional_deduction_rate_pct) {
     actualInput = Math.floor(
       (actualInput * periodInput.transitional_deduction_rate_pct) / 100,
     );
   }
   actualInput -= periodInput.non_deductible_purchase_tax_yen;
+  if (reverseChargeApplies) {
+    actualInput += journal.reverseChargeTaxableOnly + Math.floor((journal.reverseChargeCommon * ratioPct) / 100);
+  }
   actualInput = Math.max(0, actualInput);
 
-  const method = input.method ?? "standard";
   let deductibleInput = actualInput;
   let deemedRate: DeemedPurchaseRatePct | undefined;
   if (method === "simplified") {
+    if (profile?.consumption_tax?.simplified_multiple_business) {
+      const buckets = journal.simplifiedBusinessOutputTax;
+      const classifiedTotal = Object.entries(buckets).filter(([key]) => key !== "unclassified").reduce((sum, [, value]) => sum + value, 0);
+      if (buckets.unclassified > 0) journal.issues.push({ severity: "error", code: "simplified_business_type_missing", message: "multiple-business simplified tax requires simplified_business_type on every taxable sale" });
+      const rates: Record<string, number> = { type_1: 90, type_2: 80, type_3: 70, type_4: 60, type_5: 50, type_6: 40 };
+      const ranked = Object.entries(buckets).filter(([key, value]) => key !== "unclassified" && value > 0).sort((a, b) => b[1] - a[1]);
+      let deemed = Object.entries(buckets).filter(([key]) => key !== "unclassified").reduce((sum, [key, value]) => sum + Math.floor((value * rates[key]) / 100), 0);
+      if (profile.consumption_tax.simplified_75_rule && classifiedTotal > 0 && ranked[0]) {
+        if ((ranked[0][1] / classifiedTotal) * 100 >= 75) {
+          deemed = Math.floor((classifiedTotal * rates[ranked[0][0]]) / 100);
+        } else if (ranked.length >= 3 && ((ranked[0][1] + ranked[1][1]) / classifiedTotal) * 100 >= 75) {
+          const highRate = Math.max(rates[ranked[0][0]], rates[ranked[1][0]]);
+          const lowRate = Math.min(rates[ranked[0][0]], rates[ranked[1][0]]);
+          const highKey = rates[ranked[0][0]] === highRate ? ranked[0][0] : ranked[1][0];
+          deemed = Math.floor((buckets[highKey] * highRate) / 100) + Math.floor(((classifiedTotal - buckets[highKey]) * lowRate) / 100);
+        }
+      }
+      deductibleInput = deemed;
+    } else {
     deemedRate =
       input.manual?.deemed_purchase_rate_pct ??
-      resolveDeemedPurchaseRatePct(undefined, input.deemedPurchaseRatePct);
+      resolveDeemedPurchaseRatePct(profile, input.deemedPurchaseRatePct);
     if (!deemedRate) {
       throw new Error(
         "simplified calc requires deemed_purchase_rate_pct (40/50/60/70/80/90)",
       );
     }
     deductibleInput = Math.floor((outputTax * deemedRate) / 100);
+    }
   }
 
   const net = outputTax - deductibleInput;
@@ -184,6 +415,16 @@ export function buildConsumptionTaxSummary(input: {
     exempt_sales_yen: periodInput.exempt_sales_yen,
     tax_free_sales_yen: periodInput.tax_free_sales_yen,
     deemed_purchase_rate_pct: deemedRate,
+    taxable_sales_ratio_pct: Math.round(ratioPct * 100) / 100,
+    gross_input_tax_yen: grossInput,
+    non_deductible_input_tax_yen: Math.max(0, grossInput - deductibleInput),
+    transaction_count: journal.transactions,
+    output_tax_adjustment_yen: journal.outputTaxDeductions - journal.outputTaxAdditions,
+    reverse_charge_tax_yen: reverseChargeOutput,
+    import_national_tax_yen: journal.importNationalTax,
+    import_local_tax_yen: journal.importLocalTax,
+    simplified_business_breakdown: method === "simplified" && profile?.consumption_tax?.simplified_multiple_business ? journal.simplifiedBusinessOutputTax : undefined,
+    issues: journal.issues,
     lines: [
       {
         tax_category: "taxable_10",
@@ -203,6 +444,8 @@ export function buildConsumptionTaxSummary(input: {
         tax_yen: 0,
         direction: "sales",
       },
+      { tax_category: "exempt", base_yen: periodInput.exempt_sales_yen, tax_yen: 0, direction: "sales" },
+      { tax_category: "non_taxable", base_yen: journal.nonTaxableSales, tax_yen: 0, direction: "sales" },
       {
         tax_category: "taxable_10",
         base_yen: periodInput.taxable_purchases_10_yen,
@@ -258,6 +501,7 @@ export type ConsumptionTaxCheckResult = {
   threshold_jpy: number;
   base_period_sales_jpy: number | null;
   invoice_registered: boolean;
+  taxpayer_basis?: string;
   issues: ConsumptionTaxCheckIssue[];
 };
 
@@ -270,8 +514,11 @@ export function assessConsumptionTaxProfile(
     ct?.base_period_sales_threshold ?? JP_CONSUMPTION_TAX_EXEMPT_THRESHOLD_JPY;
   const baseSales = ct?.base_period_sales_jpy ?? null;
   const taxableBySales =
-    baseSales != null ? baseSales >= threshold : null;
+    baseSales != null ? baseSales > threshold : null;
   const invoiceRegistered = Boolean(ct?.invoice_registered);
+  const specificPeriodTaxable = ct?.specific_period_sales_jpy != null && ct?.specific_period_payroll_jpy != null && ct.specific_period_sales_jpy > threshold && ct.specific_period_payroll_jpy > threshold;
+  const capitalTaxable = (ct?.opening_capital_jpy ?? 0) >= threshold;
+  const legallyTaxable = taxableBySales === true || specificPeriodTaxable || capitalTaxable || ct?.taxable_entity_election === true || (invoiceRegistered && Boolean(ct?.invoice_registration_effective_date));
   const issues: ConsumptionTaxCheckIssue[] = [];
 
   if (status === "TBD") {
@@ -288,7 +535,7 @@ export function assessConsumptionTaxProfile(
       code: "base_period_missing",
       message: "基準期間課税売上（base_period_sales_jpy）が未設定",
     });
-  } else if (taxableBySales === false && status.includes("課税")) {
+  } else if (taxableBySales === false && status.includes("課税") && !legallyTaxable) {
     issues.push({
       severity: "warning",
       code: "sales_vs_status",
@@ -301,6 +548,10 @@ export function assessConsumptionTaxProfile(
       message: `基準期間売上 ${baseSales.toLocaleString("ja-JP")} 円は閾値以上だが status が免税を示す`,
     });
   }
+
+  if (!ct?.taxpayer_basis) issues.push({ severity: "warning", code: "taxpayer_basis_missing", message: "課税・免税判定根拠が未設定（申告準備ではblocking）" });
+  if (invoiceRegistered && !ct?.invoice_registration_effective_date) issues.push({ severity: "warning", code: "invoice_effective_date_missing", message: "インボイス登録の効力発生日が未設定（申告準備ではblocking）" });
+  if (ct?.method === "standard" && !ct.purchase_allocation_method) issues.push({ severity: "warning", code: "purchase_allocation_missing", message: "本則課税の仕入税額控除方式が未設定（申告準備ではblocking）" });
 
   if (
     invoiceRegistered &&
@@ -337,6 +588,7 @@ export function assessConsumptionTaxProfile(
     threshold_jpy: threshold,
     base_period_sales_jpy: baseSales,
     invoice_registered: invoiceRegistered,
+    taxpayer_basis: ct?.taxpayer_basis,
     issues,
   };
 }

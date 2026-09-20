@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateString, monthString } from "../common.js";
+import { dateString } from "../common.js";
 export const taxProfileEntitySchema = z.object({
   name: z.string().min(1),
   type: z.string().min(1),
@@ -30,6 +30,21 @@ export const taxProfileConsumptionTaxSchema = z.object({
       z.literal(90),
     ])
     .optional(),
+  /** 複数事業を営む場合、売上行の simplified_business_type で区分する。 */
+  simplified_multiple_business: z.boolean().optional(),
+  /** 売上割合75%以上の特例を適用する。 */
+  simplified_75_rule: z.boolean().optional(),
+  /** 簡易課税制度選択届出書の提出日。 */
+  simplified_election_filed_on: dateString.optional(),
+  /** 簡易課税制度を適用する最初の課税期間の開始日。 */
+  simplified_election_effective_from: dateString.optional(),
+  simplified_election_filing_basis: z.enum(["normal", "invoice_registration_transition", "relief_following_period", "disaster_exception"]).optional(),
+  simplified_election_filing_due_on: dateString.optional(),
+  simplified_election_evidence_ref: z.string().min(1).optional(),
+  /** 国内事業者か国外事業者か。簡易課税の資格判定では必須。 */
+  business_operator_kind: z.enum(["domestic", "foreign"]).optional(),
+  /** 国外事業者が課税期間初日に国内PEを有するか。 */
+  permanent_establishment_in_japan: z.boolean().optional(),
   options: z.array(z.string()).optional(),
   invoice_registration_number: z.string().optional(),
   invoice_registered: z.boolean().optional(),
@@ -58,6 +73,63 @@ export const taxProfileConsumptionTaxSchema = z.object({
    * 未設定で invoice_registered=true + 免税 のとき warning。
    */
   invoice_exempt_reconciled_basis: z.string().optional(),
+  specific_period_sales_jpy: z.number().int().nonnegative().optional(),
+  specific_period_payroll_jpy: z.number().int().nonnegative().optional(),
+  incorporation_date: dateString.optional(),
+  opening_capital_jpy: z.number().int().nonnegative().optional(),
+  taxable_entity_election: z.boolean().optional(),
+  invoice_registration_effective_date: dateString.optional(),
+  taxpayer_basis: z.enum(["base_period", "specific_period", "new_entity_capital", "election", "invoice_registration", "exempt"]).optional(),
+  purchase_allocation_method: z.enum(["individual", "proportional", "full_credit_95_rule"]).optional(),
+  purchase_allocation_history: z.array(z.object({
+    method: z.enum(["individual", "proportional"]),
+    effective_from: dateString,
+    evidence_ref: z.string().min(1),
+  })).optional(),
+  taxable_sales_ratio_override_pct: z.number().min(0).max(100).optional(),
+  interim_filing_frequency: z.enum(["none", "annual_1", "annual_3", "annual_11"]).optional(),
+  prior_period_national_tax_yen: z.number().int().nonnegative().optional(),
+  voluntary_interim_filing: z.boolean().optional(),
+  small_business_relief: z.enum(["two_tenths"]).optional(),
+  pre_registration_exempt: z.boolean().optional(),
+  shortened_tax_period: z.boolean().optional(),
+  fixed_asset_adjustments: z.array(z.object({
+    asset_id: z.string().min(1),
+    acquisition_fiscal_year: z.string().regex(/^FY\d{4}$/),
+    adjustment_fiscal_year: z.string().regex(/^FY\d{4}$/),
+    tax_exclusive_cost_yen: z.number().int().min(1_000_000),
+    acquisition_input_tax_yen: z.number().int().nonnegative(),
+    acquisition_taxable_sales_ratio_pct: z.number().min(0).max(100),
+    cumulative_taxable_sales_ratio_pct: z.number().min(0).max(100),
+    held_at_adjustment_period_end: z.boolean(),
+    allocation_method: z.literal("proportional"),
+    evidence_ref: z.string().min(1),
+  })).optional(),
+  inventory_tax_adjustments: z.array(z.object({
+    adjustment_fiscal_year: z.string().regex(/^FY\d{4}$/),
+    direction: z.enum(["exempt_to_taxable", "taxable_to_exempt"]),
+    input_tax_yen: z.number().int().nonnegative(),
+    inventory_record_ref: z.string().min(1),
+  })).optional(),
+  high_value_assets: z.array(z.object({
+    asset_id: z.string().min(1),
+    acquired_on: dateString,
+    tax_exclusive_cost_yen: z.number().int().min(10_000_000),
+    kind: z.enum(["fixed_asset", "inventory", "imported_inventory", "self_constructed"]),
+    restriction_end_fiscal_year: z.string().regex(/^FY\d{4}$/),
+    evidence_ref: z.string().min(1),
+  })).optional(),
+  advisor_reviews: z.array(z.object({
+    fiscal_year: z.string().regex(/^FY\d{4}$/),
+    status: z.enum(["pending", "approved", "rejected"]),
+    reviewer_ref: z.string().min(1).optional(),
+    reviewed_at: z.string().datetime().optional(),
+    evidence_ref: z.string().min(1).optional(),
+  }).superRefine((review, ctx) => {
+    if (review.status === "approved" && (!review.reviewer_ref || !review.reviewed_at || !review.evidence_ref)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "approved advisor review requires reviewer_ref, reviewed_at, and evidence_ref" });
+    }
+  })).optional(),
   notes: z.string().optional(),
 });
 

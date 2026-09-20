@@ -22,7 +22,6 @@ import {
 import { backfillJournalTaxCategories } from "../lib/finance/journal-tax-backfill.js";
 import { backfillJournalAuditTrail } from "../lib/finance/journal-audit-backfill.js";
 import { postDepreciationJournalEntries } from "../lib/finance/depreciation.js";
-import { lastDayOfMonth } from "../lib/finance/fiscal-year.js";
 import {
   postMonthlyPlJournalEntries,
   postRemittanceJournalEntry,
@@ -40,6 +39,10 @@ import { buildBalanceSheet } from "../lib/finance/ledger/balance-sheet.js";
 import { buildSubsidiaryLedger } from "../lib/finance/ledger/subsidiary-ledger.js";
 import { reverseJournalEntry } from "../lib/finance/journal-reverse.js";
 import { lockMonth, unlockMonth } from "../lib/finance/period-lock.js";
+import {
+  buildMonthlyCloseEvidence,
+  evaluateMonthlyCloseGates,
+} from "../lib/finance/monthly-close.js";
 import {
   buildElectronicLedgerComplianceReport,
   searchElectronicLedger,
@@ -88,6 +91,8 @@ export function runLedgerPost(opts: {
   month?: string;
   operatorId?: string;
   obligation?: string;
+  filingKind?: "interim" | "final";
+  taxFiscalYear?: string;
   counterparty?: string;
   amount?: string;
   fromCalendar?: string;
@@ -98,6 +103,8 @@ export function runLedgerPost(opts: {
       month: opts.month,
       operatorId: opts.operatorId,
       obligation: opts.obligation,
+      filingKind: opts.filingKind,
+      taxFiscalYear: opts.taxFiscalYear,
       counterparty: opts.counterparty,
       amount: opts.amount,
       fromCalendar: opts.fromCalendar,
@@ -136,6 +143,8 @@ export function runLedgerPostSource(opts: {
   month?: string;
   operatorId?: string;
   obligation?: string;
+  filingKind?: "interim" | "final";
+  taxFiscalYear?: string;
   counterparty?: string;
   amount?: string;
   fromCalendar?: string;
@@ -205,6 +214,8 @@ export function runLedgerPostSource(opts: {
       period,
       obligation,
       authorizedBy: auth.record.operator_id,
+      filingKind: opts.filingKind,
+      taxFiscalYear: opts.taxFiscalYear,
     });
     if (!posted) {
       console.log(`✓ remittance ${obligation} ${period}: nothing to settle`);
@@ -539,10 +550,15 @@ export function runLedgerPeriodLock(opts: {
     command: "ledger period lock",
     permission: "finance:reconcile",
   });
+  const evaluation = evaluateMonthlyCloseGates(opts.month);
+  if (!evaluation.can_lock) {
+    throw new Error(`Period ${opts.month} close gates failed: ${evaluation.errors.join("; ")}`);
+  }
   const entry = lockMonth({
     month: opts.month,
     lockedBy: auth.record.operator_id,
     reason: opts.reason,
+    evidence: buildMonthlyCloseEvidence(evaluation),
   });
   auditCliMutation("ledger period lock", entry.month);
   console.log(`✓ locked period ${entry.month}`);

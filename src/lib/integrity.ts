@@ -65,7 +65,7 @@ import { collectIrIntegrityIssues } from "./investor-relations/integrity.js";
 import { collectCustomerSuccessIntegrityIssues } from "./customer-success/integrity.js";
 import { collectAnalyticsIntegrityIssues } from "./analytics/integrity.js";
 import { collectRosterPayrollConsistencyIssues } from "./hr/roster-payroll-consistency.js";
-import { getDataDir, readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
+import { readYamlFile, getClassificationRegistryYaml, resolveTenantPath, SCRATCH_DIR } from "./utils.js";
 import {
   listOperationsModules,
   resolveModuleSecretsPath,
@@ -401,7 +401,7 @@ export function validateJpBankCorporateIntegrity(
 }
 
 function runJpBankCorporateIntegrityChecks(): IntegrityIssue[] {
-  let enabled = false;
+  let enabled: boolean;
   try {
     enabled = loadModulesFile().modules.some(
       (mod) =>
@@ -633,7 +633,6 @@ export function runIntegrityChecks(): IntegrityIssue[] {
 
   for (const mod of listOperationsModules()) {
     const publicRel = mod.operationsPublic;
-    const publicFile = publicRel ?? `module:${mod.moduleId}:operations_public`;
     if (publicRel) {
       try {
         const ops = readYamlFile(resolveTenantPath(publicRel), facilityPublicSchema);
@@ -784,7 +783,10 @@ export function runIntegrityChecks(): IntegrityIssue[] {
     }
   }
 
-  if (process.platform === "darwin") {
+  if (
+    process.platform === "darwin" &&
+    process.env.ORGOS_VALIDATE_SKIP_SYSTEM_BACKUP_CHECK !== "1"
+  ) {
     try {
       const out = execFileSync("tmutil", ["latestbackup"], { encoding: "utf-8" }).trim();
       if (out) {

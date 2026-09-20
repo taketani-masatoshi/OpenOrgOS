@@ -15,60 +15,79 @@ const DEMO_ACCOUNTS: Array<Record<string, unknown>> = [
     code: "1100",
     name: "現金及び預金",
     type: "asset",
+    bs_class: "current",
+    cf_role: "cash",
     normal_balance: "debit",
   },
   {
     code: "1150",
     name: "売掛金",
     type: "asset",
+    bs_class: "current",
+    cf_role: "receivable",
     normal_balance: "debit",
   },
   {
     code: "1290",
     name: "減価償却累計額",
     type: "asset_contra",
+    bs_class: "noncurrent",
+    cf_role: "fixed_asset",
     normal_balance: "credit",
   },
   {
     code: "2110",
     name: "買掛金",
     type: "liability",
+    bs_class: "current",
+    cf_role: "payable",
     normal_balance: "credit",
   },
   {
     code: "2120",
     name: "預り金-源泉所得税",
     type: "liability",
+    bs_class: "current",
+    cf_role: "payable",
     normal_balance: "credit",
   },
   {
     code: "2130",
     name: "預り金-社会保険料",
     type: "liability",
+    bs_class: "current",
+    cf_role: "payable",
     normal_balance: "credit",
   },
   {
     code: "2140",
     name: "未払給与",
     type: "liability",
+    bs_class: "current",
+    cf_role: "payable",
     normal_balance: "credit",
   },
   {
     code: "2160",
     name: "仮受消費税",
     type: "liability",
+    bs_class: "current",
+    cf_role: "payable",
     normal_balance: "credit",
   },
   {
     code: "2170",
     name: "仮払消費税",
     type: "asset",
+    bs_class: "current",
+    cf_role: "receivable",
     normal_balance: "debit",
   },
   {
     code: "3200",
     name: "繰越利益剰余金",
     type: "equity",
+    cf_role: "equity",
     normal_balance: "credit",
   },
   {
@@ -135,6 +154,7 @@ export function ensureLedgerDemoTaxProfile(): void {
     ct.status = "免税事業者";
     ct.invoice_registered = false;
     ct.base_period_sales_jpy = ct.base_period_sales_jpy ?? 0;
+    ct.taxpayer_basis = ct.taxpayer_basis ?? "exempt";
     raw.consumption_tax = ct;
   }
   const corp = (raw.corporate_tax ?? {}) as Record<string, unknown>;
@@ -167,9 +187,16 @@ export function ensureLedgerDemoChartOfAccounts(): ChartOfAccounts {
     ),
   );
   for (const account of DEMO_ACCOUNTS) {
-    if (!codes.has(account.code as string)) {
+    const existing = (raw.accounts ?? []).find(
+      (row: { code?: string }) => row.code === account.code,
+    );
+    if (!existing) {
       raw.accounts = [...(raw.accounts ?? []), account];
       codes.add(account.code as string);
+    } else {
+      for (const [key, value] of Object.entries(account)) {
+        if (existing[key] == null) existing[key] = value;
+      }
     }
   }
 

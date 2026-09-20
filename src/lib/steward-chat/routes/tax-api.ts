@@ -29,6 +29,7 @@ import {
 import { buildTaxCalendarPortfolio } from "../../finance/tax-calendar-portfolio.js";
 import { summarizeTaxFilingGaps, tryLoadTaxFilingGaps } from "../../finance/tax-filing-gaps.js";
 import { runConsumptionTaxCheck } from "../../finance/consumption-tax.js";
+import { buildConsumptionTaxFilingDraft } from "../../finance/consumption-tax-filing.js";
 import { computePayrollMonth } from "../../finance/payroll-jp.js";
 
 function json(res: ServerResponse, status: number, body: unknown): void {
@@ -225,6 +226,18 @@ export async function handleTaxApi(
         ok: false,
         error: error instanceof Error ? error.message : String(error),
       });
+    }
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/consumption-filing-draft" && method === "GET") {
+    if (!requireChatPermission(user, "chat:read", res)) return true;
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const fiscalYear = url.searchParams.get("fiscal_year") ?? resolveDefaultFiscalYear();
+      json(res, 200, { ok: true, ...buildConsumptionTaxFilingDraft(fiscalYear) });
+    } catch (error) {
+      json(res, 422, { ok: false, error: error instanceof Error ? error.message : String(error) });
     }
     return true;
   }

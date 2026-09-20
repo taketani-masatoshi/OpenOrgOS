@@ -3,9 +3,11 @@ import {
   existsSync,
   mkdirSync,
   openSync,
+  readFileSync,
   renameSync,
   unlinkSync,
   writeFileSync,
+  writeSync,
 } from "node:fs";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -70,8 +72,23 @@ export function withYamlFileLock<T>(
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
       fd = openSync(lockPath, "wx", 0o600);
+      writeSync(fd, JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() }));
       break;
     } catch {
+      if (existsSync(lockPath)) {
+        try {
+          const owner = JSON.parse(readFileSync(lockPath, "utf-8")) as { pid?: number };
+          if (Number.isInteger(owner.pid) && owner.pid! > 0) {
+            try {
+              process.kill(owner.pid!, 0);
+            } catch (probeError) {
+              if ((probeError as NodeJS.ErrnoException).code === "ESRCH") unlinkSync(lockPath);
+            }
+          }
+        } catch {
+          // Legacy/partial locks stay conservative and expire through operator repair.
+        }
+      }
       if (attempt === retries) throw new YamlFileBusyError(path);
       sleepMs(retryDelayMs);
     }

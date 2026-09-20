@@ -38,6 +38,7 @@ import {
   tryLoadTaxFilingGaps,
 } from "../lib/finance/tax-filing-gaps.js";
 import { currentDate } from "../lib/utils.js";
+import { buildConsumptionTaxFilingDraft } from "../lib/finance/consumption-tax-filing.js";
 
 export function runTaxCalendar(opts?: { today?: string; json?: boolean }): void {
   const today = opts?.today ?? currentDate();
@@ -180,6 +181,16 @@ export function runTaxConsumptionEligibility(opts: {
     return;
   }
   console.log(formatConsumptionTaxEligibilityMarkdown(eligibility));
+}
+
+export function runTaxConsumptionFilingDraft(opts: { fiscalYear: string; json?: boolean }): void {
+  const draft = buildConsumptionTaxFilingDraft(opts.fiscalYear);
+  if (opts.json) return console.log(JSON.stringify(draft, null, 2));
+  console.log(`# 消費税申告準備 ${draft.fiscal_year}`);
+  console.log(`status: ${draft.status} · submission: ${draft.submission}`);
+  console.log(`差引税額: ${draft.net_tax_yen.toLocaleString("ja-JP")} 円 · 納付済: ${draft.remitted_yen.toLocaleString("ja-JP")} 円 · 残額: ${draft.remaining_yen.toLocaleString("ja-JP")} 円`);
+  for (const issue of draft.blockers) console.log(`- [blocking] ${issue}`);
+  for (const issue of draft.warnings) console.log(`- [warning] ${issue}`);
 }
 
 export function runTaxInvoiceRegistrationCheck(opts?: { json?: boolean }): void {

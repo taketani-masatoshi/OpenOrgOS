@@ -20,6 +20,22 @@ export const journalEntryLineSchema = z.object({
   source_bank_account_id: z.string().min(1).optional(),
   tax_category: taxCategorySchema.optional(),
   tax_rate_pct: z.number().min(0).max(100).optional(),
+  /** Amount basis when tax_amount_yen is omitted. Legacy lines are tax-exclusive. */
+  tax_basis: z.enum(["exclusive", "inclusive"]).optional(),
+  tax_amount_yen: z.number().int().nonnegative().optional(),
+  tax_transaction: z.enum(["domestic", "import", "reverse_charge"]).optional(),
+  customs_evidence_ref: z.string().min(1).optional(),
+  import_date: z.string().date().optional(),
+  customs_declaration_ref: z.string().min(1).optional(),
+  customs_payment_evidence_ref: z.string().min(1).optional(),
+  import_national_tax_yen: z.number().int().nonnegative().optional(),
+  import_local_tax_yen: z.number().int().nonnegative().optional(),
+  simplified_business_type: z.enum(["type_1", "type_2", "type_3", "type_4", "type_5", "type_6"]).optional(),
+  invoice_status: z.enum(["qualified", "nonqualified_80", "nonqualified_50", "exempt_supplier", "unknown"]).optional(),
+  purchase_use: z.enum(["taxable_only", "common", "non_taxable_only"]).optional(),
+  tax_rounding: z.enum(["floor", "round", "ceil"]).optional(),
+  tax_adjustment: z.enum(["sales_return", "sales_discount", "sales_rebate", "bad_debt", "bad_debt_recovery"]).optional(),
+  original_entry_id: z.string().regex(/^JE-[A-Z0-9-]+$/).optional(),
 });
 
 const expenseClaimId = z.string().regex(/^ECL-\d{8}-\d{3}$/);
@@ -56,6 +72,8 @@ export const journalSourceSchema = z.discriminatedUnion("kind", [
     kind: z.literal("remittance"),
     period: monthString,
     obligation: z.enum(["withholding", "social_insurance", "consumption_tax"]),
+    filing_kind: z.enum(["interim", "final"]).optional(),
+    tax_fiscal_year: z.string().regex(/^FY\d{4}$/).optional(),
   }),
   z.object({
     kind: z.literal("dividend"),

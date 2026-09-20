@@ -22,10 +22,7 @@ import {
   syncControlPlaneFromProductTenants,
 } from "../lib/product/ledger-control-plane.js";
 import { buildOnboardingReport } from "../lib/product/ledger-onboarding.js";
-import {
-  buildAccountantFleetSnapshot,
-  buildOpsDashboardSnapshot,
-} from "../lib/product/ledger-ops-dashboard.js";
+import { buildOpsDashboardSnapshot } from "../lib/product/ledger-ops-dashboard.js";
 import { buildBillingIssuesReport } from "../lib/product/ledger-billing-issues.js";
 import { restoreLedgerTenantArchive, validateLedgerProductTenant } from "../lib/product/ledger-tenant-restore.js";
 import { offboardLedgerTenant, purgeDueLedgerTenants } from "../lib/product/ledger-tenant-offboard.js";
@@ -42,7 +39,7 @@ import {
 import { attestLegalDocumentation } from "../lib/product/ledger-legal-attestation.js";
 import type { LedgerPlanId } from "../../schemas/product/ledger-product.js";
 import { join } from "node:path";
-import { getInstallRoot, getTenantsDir } from "../lib/orgos-paths.js";
+import { getInstallRoot } from "../lib/orgos-paths.js";
 
 export function runLedgerProductPlans(): void {
   console.log(JSON.stringify({ plans: listLedgerPlans() }, null, 2));
@@ -193,7 +190,7 @@ export function runLedgerProductReadiness(opts?: {
       return;
     }
     console.log(
-      `Accounting commercial readiness: ${report.score}/100 (gate ~${report.gate_estimate})`,
+      `Accounting scoped readiness: ${report.score}/100 (gate ~${report.gate_estimate}; statutory filing excluded)`,
     );
     for (const check of report.checks.filter((row) => row.weight > 0)) {
       console.log(

@@ -73,6 +73,7 @@ import {
   runTaxConsumptionCalc,
   runTaxConsumptionCheck,
   runTaxConsumptionEligibility,
+  runTaxConsumptionFilingDraft,
   runTaxDepreciation,
   runTaxGaps,
   runTaxHandoff,
@@ -1022,6 +1023,12 @@ export function registerDomainCommands(program: Command): void {
       deemedRate?: number;
       json?: boolean;
     }) => runTaxConsumptionEligibility(opts));
+  tax
+    .command("consumption-filing-draft")
+    .description("Build advisor-review consumption-tax workpaper (not an e-Tax return)")
+    .requiredOption("--fiscal-year <FY####>", "Fiscal year")
+    .option("--json", "Print JSON")
+    .action((opts: { fiscalYear: string; json?: boolean }) => runTaxConsumptionFilingDraft(opts));
 
   tax
     .command("invoice-registration")
@@ -1365,6 +1372,8 @@ export function registerDomainCommands(program: Command): void {
     .option("--source <kind>", "Automated source (depreciation | monthly-pl | remittance | ar-receipt | ap-payment | payroll-payment)")
     .option("--month <YYYY-MM>", "Period for automated source")
     .option("--obligation <kind>", "Remittance: withholding | social_insurance | consumption_tax")
+    .option("--filing-kind <kind>", "Consumption tax remittance: interim | final")
+    .option("--tax-fiscal-year <FY####>", "Consumption tax return fiscal year")
     .option("--from-calendar <row-id>", "Remittance: derive obligation/period from tax calendar row")
     .option("--counterparty <id>", "AR/AP counterparty or property id")
     .option("--amount <yen>", "AR receipt / AP payment / payroll-payment amount")
@@ -1374,6 +1383,8 @@ export function registerDomainCommands(program: Command): void {
       source?: string;
       month?: string;
       obligation?: string;
+      filingKind?: "interim" | "final";
+      taxFiscalYear?: string;
       fromCalendar?: string;
       counterparty?: string;
       amount?: string;

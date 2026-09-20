@@ -12,6 +12,7 @@ import { buildTrialBalance } from "../finance/ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
 import { resolveDefaultFiscalYear, fiscalYearEndDate, resolveCompanyFiscalYearEndMonth } from "../finance/fiscal-year.js";
 import { buildPayrollYearEndReadiness } from "../finance/payroll-bonus-yea.js";
+import { buildConsumptionTaxFilingDraft } from "../finance/consumption-tax-filing.js";
 
 export type TaxHandoffPackage = {
   fiscal_year: string;
@@ -56,6 +57,41 @@ export function buildTaxHandoffPackage(input?: {
   const tbPath = join(packageDir, "trial-balance.json");
   writeFileSync(tbPath, JSON.stringify(tb, null, 2), "utf-8");
 
+  let consumptionTax: unknown;
+  try {
+    consumptionTax = buildConsumptionTaxFilingDraft(fiscalYear);
+  } catch (error) {
+    consumptionTax = { error: error instanceof Error ? error.message : String(error) };
+  }
+  const consumptionTaxPath = join(packageDir, "consumption-tax-filing-draft.json");
+  writeFileSync(consumptionTaxPath, JSON.stringify(consumptionTax, null, 2), "utf-8");
+
+  const advisorReviewPath = join(packageDir, "advisor-review-checklist.md");
+  writeFileSync(
+    advisorReviewPath,
+    [
+      `# 税務専門家レビュー — ${fiscalYear}`,
+      "",
+      "この記録は自動承認されません。確認者本人が根拠資料とともに記入してください。",
+      "",
+      "- [ ] 課税事業者区分・課税期間",
+      "- [ ] 税率区分・課税標準・端数処理",
+      "- [ ] 仕入税額控除・インボイス経過措置",
+      "- [ ] 課税売上割合・95%ルール・5億円基準",
+      "- [ ] 簡易課税・2割特例・複数事業区分",
+      "- [ ] 輸入消費税・中間納付・年度間調整",
+      "- [ ] 売上返品・値引き・貸倒れ調整",
+      "",
+      "確認者参照:",
+      "確認日時:",
+      "証憑参照:",
+      "結論: approved / rejected",
+      "",
+      "承認後は同じ値を tax-profile.yaml の consumption_tax.advisor_reviews に記録します。",
+    ].join("\n"),
+    "utf-8",
+  );
+
   const notePath = join(packageDir, "README.md");
   let yeaNote = "";
   try {
@@ -80,6 +116,8 @@ export function buildTaxHandoffPackage(input?: {
       "",
       `- XML draft: \`${xml.relative_path}\``,
       `- generated_at: ${getClock().now().toISOString()}`,
+      "- consumption-tax filing draft: `consumption-tax-filing-draft.json`",
+      "- advisor review: `advisor-review-checklist.md`",
       yeaNote,
       "## 提出について",
       "",
@@ -112,6 +150,8 @@ export function buildTaxHandoffPackage(input?: {
     files: [
       readinessPath,
       tbPath,
+      consumptionTaxPath,
+      advisorReviewPath,
       notePath,
       xmlCopy,
       zipPath,

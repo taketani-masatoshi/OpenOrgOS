@@ -22,14 +22,20 @@ describe("accounting readiness", () => {
     const report = buildAccountingReadinessReport();
     expect(report.mode).toBe("accounting");
     expect(report.max_score).toBe(100);
+    expect(report.acceptance.isolated).toBe(true);
+    expect(report.scope.excluded).toContain("e-Tax / eLTAXへの提出");
     const total = report.checks
       .filter((row) => row.weight > 0)
       .reduce((sum, row) => sum + row.weight, 0);
     expect(total).toBe(100);
-    expect(report.checks.find((row) => row.id === "accounting-module")?.pass).toBe(
-      true,
-    );
+    expect(report.checks.find((row) => row.id === "runtime-journal")?.pass).toBe(true);
+    expect(report.checks.find((row) => row.id === "runtime-bank-reconcile")?.pass).toBe(true);
+    expect(report.checks.find((row) => row.id === "runtime-monthly-close")?.pass).toBe(true);
+    const annualClose = report.checks.find((row) => row.id === "runtime-annual-close");
+    expect(annualClose?.pass, annualClose?.detail).toBe(true);
+    const consumptionTax = report.checks.find((row) => row.id === "runtime-consumption-tax");
+    expect(consumptionTax?.pass, consumptionTax?.detail).toBe(true);
     // Without pilots in empty workspace, runtime health checks fail → non-100
     expect(report.score).toBeLessThan(100);
-  });
+  }, 120_000);
 });

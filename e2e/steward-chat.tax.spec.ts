@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { loginConsole } from "./helpers/console-login";
 import { loginApi } from "./helpers/api-login";
 
 /**
@@ -9,12 +8,19 @@ import { loginApi } from "./helpers/api-login";
  */
 test.describe("steward chat tax and payroll", () => {
   test("tax handoff page opens for an operator", async ({ page }) => {
-    await loginConsole(page);
     const res = await page.goto("/?tax=1");
     expect(res?.status()).toBeLessThan(400);
+    const operator = page.locator("#orgos-login-operator");
+    await expect(operator).toBeVisible({ timeout: 20_000 });
+    await operator.fill("OP-001");
+    await page.locator("#orgos-login-password").fill("orgos-dev");
+    await page.locator("#orgos-login-submit").click();
     await expect(page.getByRole("navigation", { name: "Operator Console" })).toBeVisible({
       timeout: 15_000,
     });
+    await expect(page.getByRole("heading", { name: "消費税申告準備" })).toBeVisible();
+    await expect(page.getByText(/not-for-etax/)).toBeVisible();
+    await expect(page.getByText(/税理士確認:/)).toBeVisible();
   });
 
   test("the handoff never claims to submit to e-Tax", async ({ request }) => {
@@ -54,6 +60,16 @@ test.describe("steward chat tax and payroll", () => {
     await loginApi(request);
     const res = await request.get("/chat/v1/tax/consumption");
     expect(res.status(), await res.text()).toBe(200);
+  });
+
+  test("consumption tax filing draft exposes blockers and advisor review", async ({ request }) => {
+    await loginApi(request);
+    const res = await request.get("/chat/v1/tax/consumption-filing-draft?fiscal_year=FY2026");
+    expect(res.status(), await res.text()).toBe(200);
+    const body = await res.json();
+    expect(body.submission).toBe("not-for-etax");
+    expect(Array.isArray(body.blockers)).toBe(true);
+    expect(body.schedules).toContainEqual(expect.objectContaining({ id: "advisor-review" }));
   });
 
   test("year-end readiness is readable and a bonus draft needs its inputs", async ({ request }) => {

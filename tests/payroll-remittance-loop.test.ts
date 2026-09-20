@@ -94,6 +94,8 @@ describe("payroll and statutory remittance loop", () => {
     const posted = postRemittanceJournalEntry({
       period: "2026-09",
       obligation: "consumption_tax",
+      filingKind: "final",
+      taxFiscalYear: "FY2026",
       authorizedBy: "OP-TEST",
     });
     expect(posted).toBeTruthy();

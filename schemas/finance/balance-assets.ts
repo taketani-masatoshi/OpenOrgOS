@@ -55,6 +55,15 @@ export const fixedAssetSchema = z
     fy_depreciation_jpy: z.number().nonnegative().optional(),
     accumulated_depreciation: z.number().nonnegative(),
     book_value: z.number().nonnegative(),
+    disposed_on: dateString.optional(),
+    consumption_tax: z.object({
+      tax_exclusive_cost_yen: z.number().int().nonnegative(),
+      acquisition_input_tax_yen: z.number().int().nonnegative(),
+      allocation_method: z.literal("proportional"),
+      acquisition_taxable_sales_ratio_pct: z.number().min(0).max(100).optional(),
+      evidence_ref: z.string().min(1),
+    }).optional(),
+    consumption_tax_review: z.enum(["metadata_recorded", "not_applicable"]).optional(),
     expense_plan_line_id: z.string().nullable().optional(),
     /** yojitsu plan line match — segment name (exact). */
     yojitsu_segment: z.string().optional(),

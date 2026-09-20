@@ -1,4 +1,4 @@
-import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
+import { appendJournalEntry } from "./expense-claim-journal.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
@@ -405,7 +405,6 @@ export function postSalesInvoiceJournalEntry(input: {
   authorizedBy: string;
   propertyId?: string;
 }): string | null {
-  const period = input.occurredAt.slice(0, 7);
   const skip = shouldSkipInvoiceJournal({
     invoiceId: input.invoiceId,
     propertyId: input.propertyId,
@@ -500,7 +499,13 @@ export function postRemittanceJournalEntry(input: {
   period: string;
   obligation: RemittanceObligation;
   authorizedBy: string;
+  filingKind?: "interim" | "final";
+  taxFiscalYear?: string;
 }): string | null {
+  if (input.obligation === "consumption_tax") {
+    if (!input.filingKind) throw new Error("consumption tax remittance requires filingKind");
+    if (!/^FY\d{4}$/.test(input.taxFiscalYear ?? "")) throw new Error("consumption tax remittance requires taxFiscalYear FY####");
+  }
   const accounts = resolveJournalSourceAccounts();
   const asOf = lastDayOfMonth(input.period);
   const occurredAt = `${asOf}T15:00:00.000Z`;
@@ -594,6 +599,8 @@ export function postRemittanceJournalEntry(input: {
       kind: "remittance",
       period: input.period,
       obligation: input.obligation,
+      filing_kind: input.filingKind,
+      tax_fiscal_year: input.taxFiscalYear,
     },
     evidence_refs: [`remittance:${input.obligation}:${input.period}`],
     lines,
