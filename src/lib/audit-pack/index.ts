@@ -26,9 +26,20 @@ const AUDIT_ID_KEYS = [
 
 const AUDIT_BODY_KEYS = ["body", "documentBody", "text", "content", "accountNumber"] as const;
 
-function pathForRef(kind: string, id: string): string | null {
-  if (kind === "contractId") return join(getDataDir(), "contracts", `${id}.yaml`);
-  if (kind === "journalEntryId") return join(getDataDir(), "finance", "journal-entries.yaml");
+/** Absolute path + tenant-relative ref when a file SoT exists for this link kind. */
+function pathForRef(kind: string, id: string): { abs: string; rel: string } | null {
+  if (kind === "contractId") {
+    return {
+      abs: join(getDataDir(), "contracts", `${id}.yaml`),
+      rel: `data/contracts/${id}.yaml`,
+    };
+  }
+  if (kind === "journalEntryId") {
+    return {
+      abs: join(getDataDir(), "finance", "journal-entries.yaml"),
+      rel: "data/finance/journal-entries.yaml",
+    };
+  }
   return null;
 }
 
@@ -38,8 +49,10 @@ export function buildAuditPackIndex(
   version: 1;
   samples: AuditSampleRef[];
   missing_refs: string[];
+  inputs_ref: string[];
 } {
   const missing_refs: string[] = [];
+  const inputs = new Set<string>();
   return {
     version: 1,
     samples: samples.map((sample) => {
@@ -56,18 +69,20 @@ export function buildAuditPackIndex(
         if (typeof value === "string") {
           indexed[key] = value;
           const candidate = pathForRef(key, value);
-          if (candidate && !existsSync(candidate)) {
-            missing_refs.push(`${sample.sampleId}:${key}:${value}`);
+          if (candidate) {
+            if (existsSync(candidate.abs)) inputs.add(candidate.rel);
+            else missing_refs.push(`${sample.sampleId}:${key}:${value}`);
           }
         }
       }
       return indexed;
     }),
     missing_refs,
+    inputs_ref: [...inputs],
   };
 }
 
-/** One pack document. Ids only. */
+/** One pack document. Ids only. Depth L2 when a tenant SoT file was found. */
 export function renderAuditPack(
   samples: Array<AuditSampleRef & Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -75,7 +90,8 @@ export function renderAuditPack(
   return flattenProposeReport(
     makeProposeReport({
       kind: "audit-pack",
-      depth: "L1",
+      depth: index.inputs_ref.length > 0 ? "L2" : "L1",
+      inputs_ref: index.inputs_ref,
       human_gate: { apply: "human" },
       payload: {
         version: index.version,

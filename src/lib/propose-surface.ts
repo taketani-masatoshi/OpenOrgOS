@@ -24,7 +24,12 @@ export {
   scanFollowups,
   type DueItem,
 } from "./propose/followup.js";
-export { renderBottleneckReport, scanBottlenecks, type StuckItem } from "./propose/bottleneck.js";
+export {
+  renderBottleneckReport,
+  scanBottlenecks,
+  stuckItemsFromPendingApprovals,
+  type StuckItem,
+} from "./propose/bottleneck.js";
 export {
   loadInvoiceTextInput,
   matchRegistration,
@@ -63,7 +68,12 @@ export {
   proposeReorder,
   renderStockReorderReport,
 } from "./propose/stock.js";
-export { analyzeFieldTime, renderFieldAnalyticsReport } from "./propose/analytics.js";
+export {
+  analyzeFieldTime,
+  renderFieldAnalyticsReport,
+  timeRowsFromFieldOpsJobs,
+  type FieldTimeRow,
+} from "./propose/analytics.js";
 export { issuePortalGrant, renderPortalGrant } from "./propose/portal.js";
 export {
   issueTrackingUrl,
@@ -96,3 +106,5 @@ export {
 } from "./propose/expense.js";
 export { proposePayrollTransfer, renderPayrollTransferReport } from "./propose/payroll.js";
 export { proposeAiaCycle, renderAiaCycleReport } from "./propose/aia.js";
+export { renderTowerClassifyReport } from "./propose/tower.js";
+export { renderJsoxEvaluateReport, renderJsoxStatusReport } from "./propose/jsox.js";

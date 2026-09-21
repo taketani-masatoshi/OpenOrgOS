@@ -14,6 +14,14 @@ All notable changes to OrgOS Operator Layer are documented here.
 - **現場 IF の文字起こしファイルと在庫プレビュー** — `field-ops interface` が UTF-8 報告ファイルを読み、retail 在庫から減算案（`stockPreview`）を出す。ライブ STT・実減算は出さない。
 - **現場割当の jobs/staff 台帳** — `field-ops dispatch propose` が `data/field_ops/jobs.yaml` と `staff.yaml` からスキル・通過点・負荷で割当案を出す。GPS 軌跡とルート最適化は出さない。
 - **経費 intake の claims 台帳突合** — `expense-intake` が `data/finance/expense-claims.yaml` の status / amount を解決する。写真バイトと自動承認は出さない。
+- **trace bridge の chain id 突合** — `trace bridge` が `company-events-chain.jsonl` の event_id 有無を `in_chain` / `missing_refs` にする。chain 書き込みは出さない。
+- **Dispatch Tower の ProposeReport** — `tower classify --report` が registry 参照つき `tower-classify-report` を出す。割当・実行は出さない。
+- **J-SOX の ProposeReport** — `operations jsox status|gaps|evaluate --report` が `jsox-*-report` を出す。finance 自己評価拒否と報告書・EDINET 非提出を維持。
+- **bottleneck の pending-approvals 突合** — `bottleneck scan` が `--items` 省略時に `data/org/pending-approvals.yaml` の `pending_approval` を読む。自動通知は出さない。
+- **audit pack の契約・仕訳 SoT 突合** — `audit pack` が存在する `data/contracts/*.yaml` / `journal-entries.yaml` を `inputs_ref` にし depth L2 にする。本文コピーは出さない。
+- **field analytics の jobs 台帳突合** — `field-ops analytics` が `--rows` 省略時に `data/field_ops/jobs.yaml` の work/travel minutes を読む。残業指示は出さない。
+- **field IF の jobId 台帳突合** — `field-ops interface|intake` が `jobs.yaml` の jobId 有無を `jobFound` / `missing_refs` にする。写真・音声バイトと常駐ボットは出さない。
+- **コネクタ／台帳のみの完了線（ADR 0081）** — 方針内はテキスト・台帳代替の ProposeReport（L2）まで。ライブ OCR / STT / NTA は別コネクタ隔離、GPS · 地図タイルは永久拒否。当該枠は未実装キューではない。
 - **Propose 面の深度（depth）二軸** — doctrine の「完成」は無人実行をしない完了線のまま。実装厚みは `depth: L0|L1|L2` で併記する（完成 ≠ L2）。共通 `ProposeReport` envelope（`schemas/propose-report.ts` · `makeProposeReport`）を全 `render*` に適用。field IF は `renderFieldInterfaceReport` 正本、intake / job complete はエイリアス。Wave 1 で失注 / followup / BANT / 見積 / 在庫 / 資金繰り / P/L / 給与 / AIA をテナント SoT に接続。Wave 2 で dispatch 負荷スコア、SoD pending-approvals、audit/trace `missing_refs`、invoice テキストファイル、HR 手順 YAML。テスト: `propose-report-schema` · `propose-depth`。
 - **未実装 12 件を提案まで置く** — 監査パック、SoD（発注者≠検収者）、プロジェクト P/L、followup / bottleneck scan、`field_ops` · `client_portal` · `hr_lifecycle`、請求 fixture intake、BANT 候補、在庫減算・発注の提案、現場の時間集計、会社イベント chain への digest index、資金繰りの日次系列、見積 PDF 下書き、失注フォロー文案。送信・振込・自動承認・ステージ適用は人間のまま。`can_approve` と `can_execute` は true にしない。ADR 0079
 - **部分 24 件を方針の内側の 100 点まで上げる** — 文案・索引・配賦・日次資金・見積 PDF・ステージ提案・SoD の宣言組・閲覧許可・在庫の人間 apply・現場テキスト・退社手順・chain 下書き・AIA 提案一覧。無人送信、自動振込、自動承認、ライブ外部 API、GPS 軌跡は入れない。

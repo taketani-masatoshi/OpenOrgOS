@@ -4,20 +4,23 @@ import {
   formatJsoxStatus,
   jsoxEvaluate,
   jsoxGaps,
-  jsoxStatus,
   loadJsoxItgc,
   loadJsoxProcesses,
   loadJsoxScope,
 } from "../../../../../../src/lib/jsox.js";
+import {
+  renderJsoxEvaluateReport,
+  renderJsoxStatusReport,
+} from "../../../../../../src/lib/propose/jsox.js";
 
 export const MODULE_ID = "jp_jsox";
 
 function printGaps(opts: SkillRunOptions): void {
-  const gaps = jsoxGaps();
   if (opts.json) {
-    console.log(JSON.stringify({ gaps }, null, 2));
+    console.log(JSON.stringify(renderJsoxStatusReport(), null, 2));
     return;
   }
+  const gaps = jsoxGaps();
   console.log("# J-SOX gaps\n");
   if (gaps.length === 0) console.log("ギャップなし");
   else for (const g of gaps) console.log(`- ${g}`);
@@ -41,11 +44,11 @@ function printScope(opts: SkillRunOptions): void {
 
 function printEvaluate(opts: SkillRunOptions & { operatorId?: string }): void {
   const operatorId = opts.operatorId ?? "unknown";
-  const result = jsoxEvaluate(operatorId);
   if (opts.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify(renderJsoxEvaluateReport(operatorId), null, 2));
     return;
   }
+  const result = jsoxEvaluate(operatorId);
   if (result.refused) {
     console.log(`拒否: ${result.refused}`);
   } else {
@@ -64,9 +67,10 @@ export const jp_jsoxCli: ModuleCliBundle = {
     cmd
       .command("status")
       .description("評価範囲と記録の概況")
-      .option("--json", "JSON")
-      .action((opts: { json?: boolean }) => {
-        if (opts.json) console.log(JSON.stringify(jsoxStatus(), null, 2));
+      .option("--json", "JSON ProposeReport")
+      .option("--report", "Alias for --json ProposeReport")
+      .action((opts: { json?: boolean; report?: boolean }) => {
+        if (opts.json || opts.report) console.log(JSON.stringify(renderJsoxStatusReport(), null, 2));
         else console.log(formatJsoxStatus());
       });
 
@@ -79,15 +83,21 @@ export const jp_jsoxCli: ModuleCliBundle = {
     cmd
       .command("gaps")
       .description("評価ギャップ")
-      .option("--json", "JSON")
-      .action((opts: { json?: boolean }) => printGaps(opts));
+      .option("--json", "JSON ProposeReport")
+      .option("--report", "Alias for --json ProposeReport")
+      .action((opts: { json?: boolean; report?: boolean }) =>
+        printGaps({ ...opts, json: Boolean(opts.json || opts.report) }),
+      );
 
     cmd
       .command("evaluate")
       .description("評価を実施（finance の自己評価は拒否）")
       .option("--operator-id <id>", "実施者")
-      .option("--json", "JSON")
-      .action((opts: { json?: boolean; operatorId?: string }) => printEvaluate(opts));
+      .option("--json", "JSON ProposeReport")
+      .option("--report", "Alias for --json ProposeReport")
+      .action((opts: { json?: boolean; report?: boolean; operatorId?: string }) =>
+        printEvaluate({ ...opts, json: Boolean(opts.json || opts.report) }),
+      );
   },
   skillHandlers: {
     jsox_scope: (opts) => printScope(opts),

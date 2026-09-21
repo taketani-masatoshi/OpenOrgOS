@@ -2958,7 +2958,10 @@ export function registerOrchestrationCommands(program: Command): void {
     .description("Deterministic work_kind classification")
     .requiredOption("--text <text>", "CEO chat message")
     .option("--json", "JSON output")
-    .action((opts) => runTowerClassify({ text: opts.text, json: opts.json }));
+    .option("--report", "ProposeReport envelope (does not assign)")
+    .action((opts) =>
+      runTowerClassify({ text: opts.text, json: opts.json, report: opts.report }),
+    );
   towerCmd
     .command("inventory")
     .description("AIA roster/runtime and human capacity load")

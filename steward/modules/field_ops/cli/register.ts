@@ -125,10 +125,14 @@ export const fieldOpsCli: ModuleCliBundle = {
 
     field
       .command("analytics")
-      .description("Summarize job time and write an improvement note")
-      .requiredOption("--rows <json>", "JSON array of {staffId,minutes,travelMinutes}")
-      .action((opts: { rows: string }) => {
-        printJson(renderFieldAnalyticsReport(JSON.parse(opts.rows) as never));
+      .description("Summarize job time and write an improvement note. No overtime orders")
+      .option("--rows <json>", "JSON array of {staffId,minutes,travelMinutes} (omit to read jobs.yaml)")
+      .action((opts: { rows?: string }) => {
+        printJson(
+          renderFieldAnalyticsReport(
+            opts.rows ? (JSON.parse(opts.rows) as never) : undefined,
+          ),
+        );
       });
   },
 };

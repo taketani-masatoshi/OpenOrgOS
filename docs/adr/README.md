@@ -66,6 +66,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0077](0077-workflow-structure-discussion-gate.md) | Workflow 構成議論ゲート（evaluate · WFS · APR） | Accepted |
 | [0079](0079-module-ai-permission-declaration.md) | モジュールの AI 権限は manifest で宣言し registrar で強制する | Accepted |
 | [0080](0080-catalog-id-materialism.md) | カタログ id は実体のあるものだけ置く（core-ids の整理） | Accepted |
+| [0081](0081-connector-ledger-only-completion-line.md) | コネクタ／台帳のみ機能の完了線（オフライン代替まで · ライブ外部は隔離） | Accepted |
 
 ## 新規 ADR
 

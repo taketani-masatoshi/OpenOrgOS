@@ -16,6 +16,7 @@ import {
   renderSodReport,
   renderStockReorderReport,
   scanSilentDeals,
+  renderBottleneckReport,
 } from "../src/lib/propose-surface.js";
 
 const deal = (partial: Partial<SalesDeal> & Pick<SalesDeal, "id" | "stage">): SalesDeal =>
@@ -153,5 +154,16 @@ describe("propose depth / SoT", () => {
     expect(report.ok).toBe(false);
     expect(report.substitute).toBeNull();
     expect(report.human_gate).toMatchObject({ apply: "human" });
+  });
+
+  it("bottleneck hand items stay L1 and unsent", () => {
+    const report = renderBottleneckReport(
+      [{ id: "J1", ownerId: "OP-1", waitingSince: "2026-09-01", kind: "job" }],
+      "2026-09-21",
+      3,
+    );
+    expect(report.depth).toBe("L1");
+    expect(report.notified).toBe(false);
+    expect(report.inputs_ref).toEqual([]);
   });
 });

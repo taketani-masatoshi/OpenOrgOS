@@ -16,6 +16,9 @@ export const fieldOpsJobSchema = z.object({
   waypoint: z.string().min(1).optional(),
   /** Required for dispatch proposals from the ledger. */
   skill: z.string().min(1).optional(),
+  /** Optional minutes for field analytics (no GPS). */
+  work_minutes: z.number().int().min(0).optional(),
+  travel_minutes: z.number().int().min(0).optional(),
 });
 
 export const fieldOpsJobsFileSchema = z.object({

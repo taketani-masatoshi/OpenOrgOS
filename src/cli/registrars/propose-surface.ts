@@ -60,11 +60,17 @@ export function registerProposeSurfaceCommands(program: Command): void {
     .command("bottleneck")
     .description("Stuck-work scan")
     .command("scan")
-    .requiredOption("--items <json>", "JSON array of {id,ownerId,waitingSince,kind}")
+    .option("--items <json>", "JSON array of {id,ownerId,waitingSince,kind} (omit to read pending-approvals)")
     .requiredOption("--as-of <date>", "YYYY-MM-DD")
     .option("--stuck-days <n>", "Minimum days", (value) => Number(value), 3)
-    .action((opts: { items: string; asOf: string; stuckDays: number }) => {
-      printJson(renderBottleneckReport(readJson(opts.items), opts.asOf, opts.stuckDays));
+    .action((opts: { items?: string; asOf: string; stuckDays: number }) => {
+      printJson(
+        renderBottleneckReport(
+          opts.items ? readJson(opts.items) : undefined,
+          opts.asOf,
+          opts.stuckDays,
+        ),
+      );
     });
 
   program

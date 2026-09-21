@@ -134,8 +134,58 @@ describe("hundred point inside doctrine", () => {
       { staffId: "ST-1", minutes: 30, travelMinutes: 40 },
     ]);
     expect(report.kind).toBe("field-analytics-report");
+    expect(report.depth).toBe("L1");
     expect(report.ordered).toBe(false);
     expect(report.travelMinutes).toBe(40);
+  });
+
+  it("field analytics reads work/travel minutes from jobs when rows omitted", async () => {
+    const { mkdirSync, rmSync, writeFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { getTenantsDir, setTenantId } = await import("../src/lib/tenant.js");
+    const tenant = `field-analytics-${process.pid}`;
+    const tenantDir = join(getTenantsDir(), tenant);
+    mkdirSync(join(tenantDir, "data", "field_ops"), { recursive: true });
+    writeFileSync(
+      join(tenantDir, "tenant.yaml"),
+      `id: ${tenant}\nname: field analytics fixture\nlifecycle: test\noperation_mode: development\njurisdiction: JP\n`,
+      "utf-8",
+    );
+    writeFileSync(
+      join(tenantDir, "data", "field_ops", "jobs.yaml"),
+      [
+        "version: 1",
+        "jobs:",
+        "  - id: JOB-1",
+        "    assignee_id: ST-1",
+        "    work_minutes: 30",
+        "    travel_minutes: 40",
+        "  - id: JOB-2",
+        "    assignee_id: ST-1",
+        "    work_minutes: 20",
+        "    travel_minutes: 10",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+    const prev = process.env.ORGOS_TENANT;
+    try {
+      process.env.ORGOS_TENANT = tenant;
+      setTenantId(tenant);
+      const report = renderFieldAnalyticsReport();
+      expect(report.kind).toBe("field-analytics-report");
+      expect(report.depth).toBe("L2");
+      expect(report.inputs_ref).toContain("data/field_ops/jobs.yaml");
+      expect(report.totalMinutes).toBe(50);
+      expect(report.travelMinutes).toBe(50);
+      expect(report.ordered).toBe(false);
+      expect(report.rowCount).toBe(1);
+    } finally {
+      rmSync(tenantDir, { recursive: true, force: true });
+      if (prev === undefined) delete process.env.ORGOS_TENANT;
+      else process.env.ORGOS_TENANT = prev;
+      setTenantId(prev?.trim() || "mal");
+    }
   });
 
   it("bottleneck notice is not sent", () => {
@@ -152,8 +202,66 @@ describe("hundred point inside doctrine", () => {
       3,
     );
     expect(report.kind).toBe("bottleneck-report");
+    expect(report.depth).toBe("L1");
     expect(report.notified).toBe(false);
     expect(report.items[0]?.stuckDays).toBe(20);
+  });
+
+  it("bottleneck reads pending-approvals when items are omitted", async () => {
+    const { mkdirSync, rmSync, writeFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { getTenantsDir, setTenantId } = await import("../src/lib/tenant.js");
+    const tenant = `bn-pending-${process.pid}`;
+    const tenantDir = join(getTenantsDir(), tenant);
+    mkdirSync(join(tenantDir, "data", "org"), { recursive: true });
+    writeFileSync(
+      join(tenantDir, "tenant.yaml"),
+      `id: ${tenant}\nname: bottleneck fixture\nlifecycle: test\noperation_mode: development\njurisdiction: JP\n`,
+      "utf-8",
+    );
+    writeFileSync(
+      join(tenantDir, "data", "org", "pending-approvals.yaml"),
+      [
+        "approvals:",
+        "  - approval_id: APR-20260901-001",
+        "    scope: internal",
+        "    status: pending_approval",
+        "    proposed_at: 2026-09-01T00:00:00.000Z",
+        "    proposed_by: ops",
+        "    subject_type: expense.claim",
+        "    approver_id: CEO",
+        "  - approval_id: APR-20260920-001",
+        "    scope: internal",
+        "    status: completed",
+        "    proposed_at: 2026-08-01T00:00:00.000Z",
+        "    proposed_by: ops",
+        "    subject_type: expense.claim",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+    const prev = process.env.ORGOS_TENANT;
+    try {
+      process.env.ORGOS_TENANT = tenant;
+      setTenantId(tenant);
+      const report = renderBottleneckReport(undefined, "2026-09-21", 3);
+      expect(report.kind).toBe("bottleneck-report");
+      expect(report.depth).toBe("L2");
+      expect(report.inputs_ref).toContain("data/org/pending-approvals.yaml");
+      expect(report.notified).toBe(false);
+      expect(report.items).toHaveLength(1);
+      expect(report.items[0]).toMatchObject({
+        id: "APR-20260901-001",
+        ownerId: "CEO",
+        stuckDays: 20,
+        kind: "approval",
+      });
+    } finally {
+      rmSync(tenantDir, { recursive: true, force: true });
+      if (prev === undefined) delete process.env.ORGOS_TENANT;
+      else process.env.ORGOS_TENANT = prev;
+      setTenantId(prev?.trim() || "mal");
+    }
   });
 
   it("audit pack refuses a body and requires one link id", () => {
@@ -164,23 +272,59 @@ describe("hundred point inside doctrine", () => {
     const pack = renderAuditPack([
       {
         sampleId: "S1",
-        contractId: "CTR-1",
         invoiceId: "INV-1",
         transferRef: "TR-1",
-        journalEntryId: "JE-1",
       },
     ]);
     expect(pack.kind).toBe("audit-pack");
+    expect(pack.depth).toBe("L1");
+    expect(pack.inputs_ref).toEqual([]);
     expect(pack.samples).toEqual([
       {
         sampleId: "S1",
-        contractId: "CTR-1",
         invoiceId: "INV-1",
         transferRef: "TR-1",
-        journalEntryId: "JE-1",
       },
     ]);
     expect(JSON.stringify(pack)).not.toContain("secret");
+  });
+
+  it("audit pack depth L2 when contract or journal SoT exists", async () => {
+    const { mkdirSync, rmSync, writeFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { getTenantsDir, setTenantId } = await import("../src/lib/tenant.js");
+    const tenant = `audit-pack-${process.pid}`;
+    const tenantDir = join(getTenantsDir(), tenant);
+    mkdirSync(join(tenantDir, "data", "contracts"), { recursive: true });
+    mkdirSync(join(tenantDir, "data", "finance"), { recursive: true });
+    writeFileSync(
+      join(tenantDir, "tenant.yaml"),
+      `id: ${tenant}\nname: audit pack fixture\nlifecycle: test\noperation_mode: development\njurisdiction: JP\n`,
+      "utf-8",
+    );
+    writeFileSync(join(tenantDir, "data", "contracts", "CTR-AUDIT.yaml"), "id: CTR-AUDIT\n", "utf-8");
+    writeFileSync(join(tenantDir, "data", "finance", "journal-entries.yaml"), "entries: []\n", "utf-8");
+    const prev = process.env.ORGOS_TENANT;
+    try {
+      process.env.ORGOS_TENANT = tenant;
+      setTenantId(tenant);
+      const pack = renderAuditPack([
+        { sampleId: "S1", contractId: "CTR-AUDIT", journalEntryId: "JE-1" },
+      ]);
+      expect(pack.depth).toBe("L2");
+      expect(pack.inputs_ref).toEqual(
+        expect.arrayContaining([
+          "data/contracts/CTR-AUDIT.yaml",
+          "data/finance/journal-entries.yaml",
+        ]),
+      );
+      expect(pack.missing_refs).toEqual([]);
+    } finally {
+      rmSync(tenantDir, { recursive: true, force: true });
+      if (prev === undefined) delete process.env.ORGOS_TENANT;
+      else process.env.ORGOS_TENANT = prev;
+      setTenantId(prev?.trim() || "mal");
+    }
   });
 
   it("payroll proposal matches a dry-run broker transfer and does not file tax", () => {
@@ -500,14 +644,31 @@ describe("hundred point inside doctrine", () => {
   });
 
   it("field interface previews stock from an on-hand map without deducting", async () => {
-    const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+    const { mkdtempSync, writeFileSync, rmSync, mkdirSync } = await import("node:fs");
     const { join } = await import("node:path");
     const { tmpdir } = await import("node:os");
+    const { getTenantsDir, setTenantId } = await import("../src/lib/tenant.js");
     const { loadFieldReportText, renderFieldInterfaceReport: render } = await import(
       "../src/lib/propose/job-complete.js"
     );
     const dir = mkdtempSync(join(tmpdir(), "orgos-field-"));
+    const tenant = `field-if-${process.pid}`;
+    const tenantDir = join(getTenantsDir(), tenant);
+    mkdirSync(join(tenantDir, "data", "field_ops"), { recursive: true });
+    writeFileSync(
+      join(tenantDir, "tenant.yaml"),
+      `id: ${tenant}\nname: field if fixture\nlifecycle: test\noperation_mode: development\njurisdiction: JP\n`,
+      "utf-8",
+    );
+    writeFileSync(
+      join(tenantDir, "data", "field_ops", "jobs.yaml"),
+      "version: 1\njobs:\n  - id: JOB-1\n    assignee_id: ST-9\n    eta: \"12:00\"\n",
+      "utf-8",
+    );
+    const prev = process.env.ORGOS_TENANT;
     try {
+      process.env.ORGOS_TENANT = tenant;
+      setTenantId(tenant);
       const path = join(dir, "report.txt");
       writeFileSync(path, "sku:PART-1 qty:2\n", "utf8");
       expect(loadFieldReportText(path).inputs_ref).toEqual([path]);
@@ -518,6 +679,9 @@ describe("hundred point inside doctrine", () => {
         onHandBySku: { "PART-1": 5 },
       });
       expect(report.depth).toBe("L2");
+      expect(report.jobFound).toBe(true);
+      expect(report.assigneeId).toBe("ST-9");
+      expect(report.inputs_ref).toEqual(expect.arrayContaining([path, "data/field_ops/jobs.yaml"]));
       expect(report.stockPreview).toEqual({
         sku: "PART-1",
         onHand: 5,
@@ -526,11 +690,22 @@ describe("hundred point inside doctrine", () => {
       });
       expect(report.stockDeducted).toBe(false);
       expect(report.liveSpeechToText).toBe(false);
+      const missing = render({
+        channel: "text",
+        jobId: "JOB-MISSING",
+        text: "done",
+      });
+      expect(missing.jobFound).toBe(false);
+      expect(missing.missing_refs).toContain("job:JOB-MISSING");
       const wav = join(dir, "note.wav");
       writeFileSync(wav, "x", "utf8");
       expect(() => loadFieldReportText(wav)).toThrow(/audio STT/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
+      rmSync(tenantDir, { recursive: true, force: true });
+      if (prev === undefined) delete process.env.ORGOS_TENANT;
+      else process.env.ORGOS_TENANT = prev;
+      setTenantId(prev?.trim() || "mal");
     }
   });
 
@@ -698,6 +873,27 @@ describe("hundred point inside doctrine", () => {
     expect(report.singleGiantLog).toBe(false);
     expect(report.index).toHaveLength(2);
     expect(report.index[0]?.digest).toMatch(/^[a-f0-9]{64}$/);
+    expect(typeof report.index[0]?.in_chain).toBe("boolean");
+  });
+
+  it("trace bridge marks chain membership without writing the chain", async () => {
+    const { loadCompanyEventChain } = await import("../src/lib/company-events-chain.js");
+    const { existsSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { getDataDir } = await import("../src/lib/utils.js");
+    const chainPath = join(getDataDir(), "company-events-chain.jsonl");
+    if (!existsSync(chainPath)) return;
+    const links = loadCompanyEventChain();
+    const known = links[0]?.event_id;
+    if (!known) return;
+    const report = renderTraceBridgeReport([{ kind: "transfer", id: known }]);
+    expect(report.depth).toBe("L2");
+    expect(report.inputs_ref).toContain("data/company-events-chain.jsonl");
+    expect(report.index[0]?.in_chain).toBe(true);
+    expect(report.wroteChain).toBe(false);
+    const missing = renderTraceBridgeReport([{ kind: "transfer", id: "EVT-missing-trace-id" }]);
+    expect(missing.index[0]?.in_chain).toBe(false);
+    expect(missing.missing_refs).toContain("chain:EVT-missing-trace-id");
   });
 
   it("aia cycle lists proposals and does not loop or execute", () => {
@@ -718,5 +914,37 @@ describe("hundred point inside doctrine", () => {
     expect(report.kind).toBe("aia-cycle-report");
     expect(report.looping).toBe(false);
     expect(report.executed).toBe(false);
+  });
+
+  it("tower classify report wraps registry classification without assigning", async () => {
+    const { renderTowerClassifyReport } = await import("../src/lib/propose/tower.js");
+    const report = renderTowerClassifyReport("この稟議を承認して");
+    expect(report.kind).toBe("tower-classify-report");
+    expect(report.depth).toBe("L2");
+    expect(report.inputs_ref).toContain("steward/core/dispatch-tower/registry.yaml");
+    expect(report.human_gate).toMatchObject({ apply: "human" });
+    expect(report.applied).toBe(false);
+    expect(report.assigned).toBe(false);
+    expect(report.classification.kind).toBe("judgment");
+  });
+
+  it("jsox status/evaluate reports wrap SoT without filing or signing", async () => {
+    const { renderJsoxEvaluateReport, renderJsoxStatusReport } = await import(
+      "../src/lib/propose/jsox.js"
+    );
+    const status = renderJsoxStatusReport();
+    expect(status.kind).toBe("jsox-status-report");
+    expect(status.human_gate).toMatchObject({ apply: "human" });
+    expect(status.internalControlReport).toBe(false);
+    expect(status.edinetFiled).toBe(false);
+    expect(status.status).toBeTruthy();
+    expect(Array.isArray(status.gaps)).toBe(true);
+
+    const evaluate = renderJsoxEvaluateReport("OP-UNKNOWN");
+    expect(evaluate.kind).toBe("jsox-evaluate-report");
+    expect(evaluate.signed).toBe(false);
+    expect(evaluate.internalControlReport).toBe(false);
+    expect(evaluate.edinetFiled).toBe(false);
+    expect(evaluate.ok).toBe(false);
   });
 });

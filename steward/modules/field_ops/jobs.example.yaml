@@ -8,9 +8,13 @@ jobs:
     status: enroute
     waypoint: site-a
     skill: electric
+    work_minutes: 90
+    travel_minutes: 20
   - id: JOB-002
     assignee_id: ST-002
     eta: "16:30"
     status: departed
     waypoint: site-b
     skill: plumbing
+    work_minutes: 45
+    travel_minutes: 30

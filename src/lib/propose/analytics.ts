@@ -1,8 +1,9 @@
+import { loadFieldOpsJobs } from "./field-ops-ledger.js";
 import { makeProposeReport, flattenProposeReport } from "./report.js";
 
-export function analyzeFieldTime(
-  rows: Array<{ staffId: string; minutes: number; travelMinutes: number }>,
-): {
+export type FieldTimeRow = { staffId: string; minutes: number; travelMinutes: number };
+
+export function analyzeFieldTime(rows: FieldTimeRow[]): {
   totalMinutes: number;
   travelMinutes: number;
   suggestion: string;
@@ -22,21 +23,59 @@ export function analyzeFieldTime(
   };
 }
 
-/** One report. Does not issue overtime orders. */
-export function renderFieldAnalyticsReport(
-  rows: Array<{ staffId: string; minutes: number; travelMinutes: number }>,
-): Record<string, unknown> {
-  const analysis = analyzeFieldTime(rows);
+/** Aggregate optional work/travel minutes from field_ops jobs by assignee. */
+export function timeRowsFromFieldOpsJobs(): {
+  rows: FieldTimeRow[];
+  inputs_ref: string[];
+} {
+  const loaded = loadFieldOpsJobs();
+  const byStaff = new Map<string, FieldTimeRow>();
+  for (const job of loaded.jobs) {
+    if (!job.assignee_id) continue;
+    const minutes = job.work_minutes ?? 0;
+    const travelMinutes = job.travel_minutes ?? 0;
+    if (minutes === 0 && travelMinutes === 0) continue;
+    const current = byStaff.get(job.assignee_id) ?? {
+      staffId: job.assignee_id,
+      minutes: 0,
+      travelMinutes: 0,
+    };
+    current.minutes += minutes;
+    current.travelMinutes += travelMinutes;
+    byStaff.set(job.assignee_id, current);
+  }
+  const rows = [...byStaff.values()];
+  return {
+    rows,
+    inputs_ref: rows.length > 0 ? loaded.inputs_ref : [],
+  };
+}
+
+/**
+ * One report. Reads field_ops/jobs.yaml when rows are omitted.
+ * Does not issue overtime orders.
+ */
+export function renderFieldAnalyticsReport(rows?: FieldTimeRow[]): Record<string, unknown> {
+  const inputs_ref: string[] = [];
+  let source = rows;
+  if (!source) {
+    const loaded = timeRowsFromFieldOpsJobs();
+    source = loaded.rows;
+    inputs_ref.push(...loaded.inputs_ref);
+  }
+  const analysis = analyzeFieldTime(source);
   return flattenProposeReport(
     makeProposeReport({
       kind: "field-analytics-report",
-      depth: "L1",
+      depth: inputs_ref.length > 0 ? "L2" : "L1",
+      inputs_ref,
       human_gate: { apply: "human" },
       payload: {
         totalMinutes: analysis.totalMinutes,
         travelMinutes: analysis.travelMinutes,
         suggestion: analysis.suggestion,
         ordered: false,
+        rowCount: source.length,
       },
     }),
   );

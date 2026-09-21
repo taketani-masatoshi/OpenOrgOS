@@ -8,8 +8,18 @@ import {
   loadTowerPlan,
   saveTowerPlan,
 } from "../lib/dispatch-tower/assign.js";
+import { renderTowerClassifyReport } from "../lib/propose/tower.js";
 
-export function runTowerClassify(opts: { text: string; json?: boolean }): void {
+export function runTowerClassify(opts: {
+  text: string;
+  json?: boolean;
+  report?: boolean;
+}): void {
+  if (opts.report) {
+    const report = renderTowerClassifyReport(opts.text);
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
   const classification = classifyWork(opts.text);
   if (opts.json) {
     console.log(JSON.stringify({ ok: true, classification }, null, 2));

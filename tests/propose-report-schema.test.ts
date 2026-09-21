@@ -27,6 +27,9 @@ import {
   renderStockReorderReport,
   renderTraceBridgeReport,
   renderTrackingStatus,
+  renderTowerClassifyReport,
+  renderJsoxEvaluateReport,
+  renderJsoxStatusReport,
 } from "../src/lib/propose-surface.js";
 
 const catalog = {
@@ -125,6 +128,9 @@ describe("propose report schema", () => {
         personRef: "PER-1",
         esignCaseId: "ESIGN-1",
       }),
+      renderTowerClassifyReport("この稟議を承認して"),
+      renderJsoxStatusReport(),
+      renderJsoxEvaluateReport("OP-UNKNOWN"),
     ];
     for (const sample of samples) {
       assertEnvelopeShape(sample);

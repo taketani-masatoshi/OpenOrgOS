@@ -4,6 +4,10 @@ import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { assessRequirementCoverage } from "../src/lib/iso-requirements.js";
 import { jsoxEvaluate, jsoxGaps, jsoxStatus } from "../src/lib/jsox.js";
+import {
+  renderJsoxEvaluateReport,
+  renderJsoxStatusReport,
+} from "../src/lib/propose/jsox.js";
 import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js";
 import { getTenantsDir, setTenantId } from "../src/lib/tenant.js";
 
@@ -84,5 +88,34 @@ describe("jp_jsox", () => {
     const result = jsoxEvaluate("OP-FIN");
     expect(result.ok).toBe(false);
     expect(result.refused).toMatch(/finance/);
+  });
+
+  it("emits ProposeReport for status and evaluate without filing", () => {
+    const status = renderJsoxStatusReport();
+    expect(status.kind).toBe("jsox-status-report");
+    expect(status.depth).toBe("L2");
+    expect(status.inputs_ref).toEqual(
+      expect.arrayContaining([
+        "data/jp-jsox/scope.yaml",
+        "data/jp-jsox/processes.yaml",
+        "data/jp-jsox/itgc.yaml",
+      ]),
+    );
+    expect(status.internalControlReport).toBe(false);
+    expect(status.edinetFiled).toBe(false);
+
+    writeFileSync(
+      join(tenantDir, "data", "org", "operators.yaml"),
+      `version: "1"\noperators:\n  - operator_id: OP-FIN\n    display_name: 経理\n    role: operator\n    status: active\n    allowed_agents: [finance]\n`,
+      "utf-8",
+    );
+    clearOperatorsRegistryCacheForTests();
+    const evaluate = renderJsoxEvaluateReport("OP-FIN");
+    expect(evaluate.kind).toBe("jsox-evaluate-report");
+    expect(evaluate.ok).toBe(false);
+    expect(String(evaluate.refused)).toMatch(/finance/);
+    expect(evaluate.signed).toBe(false);
+    expect(evaluate.internalControlReport).toBe(false);
+    expect(evaluate.edinetFiled).toBe(false);
   });
 });
