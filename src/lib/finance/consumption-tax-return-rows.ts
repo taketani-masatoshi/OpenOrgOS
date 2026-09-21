@@ -105,7 +105,7 @@ export function sumConsumptionTaxReturnBases(summaries: SummarySlice[]): {
   if (summaries.some((summary) => summary.method !== "standard")) {
     return { method: "simplified", bases: {} };
   }
-  const bases: Record<ConsumptionTaxReturnInputKey, number> = {
+  const bases = {
     taxable_sales_10_yen: 0,
     taxable_sales_8_yen: 0,
     taxable_purchases_10_yen: 0,
@@ -196,7 +196,12 @@ export function formatConsumptionTaxReturnRows(result: ConsumptionTaxReturnRows)
 }
 
 function addSummaryBases(
-  bases: Record<ConsumptionTaxReturnInputKey, number>,
+  bases: {
+    taxable_sales_10_yen: number;
+    taxable_sales_8_yen: number;
+    taxable_purchases_10_yen: number;
+    taxable_purchases_8_yen: number;
+  },
   summary: SummarySlice
 ): void {
   for (const line of summary.lines) {
@@ -433,7 +438,7 @@ function collectReturnFacts(
   entries: unknown[],
   months: Set<string>
 ): { bases: ConsumptionTaxReturnBases; purchases: ConsumptionTaxPurchaseContext } {
-  const bases: Record<ConsumptionTaxReturnInputKey, number> = {
+  const bases = {
     taxable_sales_10_yen: 0,
     taxable_sales_8_yen: 0,
     taxable_purchases_10_yen: 0,

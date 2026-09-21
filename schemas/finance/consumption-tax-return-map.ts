@@ -6,6 +6,10 @@ export const consumptionTaxReturnInputKeySchema = z.enum([
   "taxable_sales_8_yen",
   "taxable_purchases_10_yen",
   "taxable_purchases_8_yen",
+  "excess_adjustment_yen",
+  "return_tax_yen",
+  "bad_debt_yen",
+  "interim_payment_yen",
 ]);
 
 export const consumptionTaxReturnSourceSchema = z.discriminatedUnion("kind", [

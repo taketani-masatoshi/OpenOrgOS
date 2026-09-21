@@ -174,6 +174,66 @@ rows:
     transform:
       op: identity
 
+  - id: return_page1_3
+    sheet: return_page1
+    line: "③"
+    label_ja: 控除過大調整税額
+    required: true
+    source:
+      kind: input
+      key: excess_adjustment_yen
+    transform:
+      op: identity
+
+  - id: return_page1_5
+    sheet: return_page1
+    line: "⑤"
+    label_ja: 返還等対価に係る税額
+    required: true
+    source:
+      kind: input
+      key: return_tax_yen
+    transform:
+      op: identity
+
+  - id: return_page1_6
+    sheet: return_page1
+    line: "⑥"
+    label_ja: 貸倒れに係る税額
+    required: true
+    source:
+      kind: input
+      key: bad_debt_yen
+    transform:
+      op: identity
+
+  - id: return_page1_7
+    sheet: return_page1
+    line: "⑦"
+    label_ja: 控除税額小計
+    required: true
+    source:
+      kind: rows
+      ids:
+        - return_page1_4
+        - return_page1_5
+        - return_page1_6
+    transform:
+      op: sum
+
+  - id: internal_gross
+    sheet: internal
+    line: gross
+    label_ja: 消費税額と控除過大調整（出力しない）
+    required: false
+    source:
+      kind: rows
+      ids:
+        - return_page1_2
+        - return_page1_3
+    transform:
+      op: sum
+
   - id: internal_net
     sheet: internal
     line: net
@@ -182,8 +242,8 @@ rows:
     source:
       kind: rows
       ids:
-        - return_page1_2
-        - return_page1_4
+        - internal_gross
+        - return_page1_7
     transform:
       op: subtract
 
@@ -199,6 +259,55 @@ rows:
       op: floor_if_nonnegative
       unit_yen: 100
 
+  - id: schedule_1_3_11
+    sheet: schedule_1_3
+    line: "⑪"
+    label_ja: 地方消費税の課税標準となる消費税額
+    required: true
+    source:
+      kind: row
+      id: return_page1_9
+    transform:
+      op: identity
+
+  - id: schedule_1_3_13
+    sheet: schedule_1_3
+    line: "⑬"
+    label_ja: 譲渡割額
+    required: true
+    source:
+      kind: row
+      id: schedule_1_3_11
+    transform:
+      op: signed_rate_then_payable_floor
+      numerator: 22
+      denominator: 78
+      payable_unit_yen: 100
+
+  - id: return_page1_10
+    sheet: return_page1
+    line: "⑩"
+    label_ja: 中間納付税額
+    required: true
+    source:
+      kind: input
+      key: interim_payment_yen
+    transform:
+      op: identity
+
+  - id: return_page1_11
+    sheet: return_page1
+    line: "⑪"
+    label_ja: 納付税額
+    required: true
+    source:
+      kind: rows
+      ids:
+        - return_page1_9
+        - return_page1_10
+    transform:
+      op: subtract
+
   - id: return_page1_18
     sheet: return_page1
     line: "⑱"
@@ -206,7 +315,7 @@ rows:
     required: true
     source:
       kind: row
-      id: return_page1_9
+      id: schedule_1_3_11
     transform:
       op: identity
 
@@ -217,12 +326,9 @@ rows:
     required: true
     source:
       kind: row
-      id: return_page1_18
+      id: schedule_1_3_13
     transform:
-      op: signed_rate_then_payable_floor
-      numerator: 22
-      denominator: 78
-      payable_unit_yen: 100
+      op: identity
 
   - id: excluded_simplified
     sheet: excluded

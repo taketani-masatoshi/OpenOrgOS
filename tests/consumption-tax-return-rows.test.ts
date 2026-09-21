@@ -17,20 +17,36 @@ const REQUIRED_ROW_IDS = [
   "schedule_1_3_tax_10",
   "schedule_2_3_credit",
   "schedule_1_3_credit",
+  "schedule_1_3_11",
+  "schedule_1_3_13",
   "return_page2_base_8",
   "return_page2_base_10",
   "return_page2_base",
   "return_page1_1",
   "return_page1_2",
+  "return_page1_3",
   "return_page1_4",
+  "return_page1_5",
+  "return_page1_6",
+  "return_page1_7",
   "return_page1_9",
+  "return_page1_10",
+  "return_page1_11",
   "return_page1_18",
   "return_page1_20",
 ] as const;
 
+const NONE_FACTS = {
+  excess_adjustment_yen: 0,
+  return_tax_yen: 0,
+  bad_debt_yen: 0,
+  interim_payment_yen: 0,
+} as const;
+
 const FULL_BASES: ConsumptionTaxReturnBases = {
   taxable_sales_10_yen: 1_234_567,
   taxable_sales_8_yen: 890_123,
+  ...NONE_FACTS,
 };
 
 const FULL_PURCHASES: ConsumptionTaxPurchaseContext = {
@@ -83,11 +99,14 @@ describe("consumption tax return row mapping", () => {
       kind: "row",
       id: "return_page2_base",
     });
-    expect(mapping.rows.find((row) => row.id === "return_page1_20")?.transform).toEqual({
+    expect(mapping.rows.find((row) => row.id === "schedule_1_3_13")?.transform).toEqual({
       op: "signed_rate_then_payable_floor",
       numerator: 22,
       denominator: 78,
       payable_unit_yen: 100,
+    });
+    expect(mapping.rows.find((row) => row.id === "return_page1_20")?.transform).toEqual({
+      op: "identity",
     });
     expect(mapping.rows.some((row) => row.line.includes("差引前"))).toBe(false);
   });
@@ -132,12 +151,13 @@ describe("consumption tax return row mapping", () => {
     );
     expect(amount(result.rows, "return_page1_2")).toBe(96_252 + 55_536);
     expect(amount(result.rows, "return_page1_9")).toBe(133_000);
+    expect(amount(result.rows, "return_page1_7")).toBe(deductible);
+    expect(amount(result.rows, "return_page1_3")).toBe(0);
+    expect(amount(result.rows, "return_page1_11")).toBe(133_000);
+    expect(amount(result.rows, "schedule_1_3_11")).toBe(133_000);
     expect(amount(result.rows, "return_page1_18")).toBe(133_000);
+    expect(amount(result.rows, "schedule_1_3_13")).toBe(37_500);
     expect(amount(result.rows, "return_page1_20")).toBe(37_500);
-    expect(result.rows.find((row) => row.line === "③")).toBeUndefined();
-    expect(
-      result.rows.find((row) => row.line === "⑥" && row.sheet === "return_page1")
-    ).toBeUndefined();
   });
 
   it("floors each rate to 1,000 yen before summing", () => {
@@ -164,6 +184,7 @@ describe("consumption tax return row mapping", () => {
       bases: {
         taxable_sales_10_yen: 1_000,
         taxable_sales_8_yen: 0,
+        ...NONE_FACTS,
       },
       purchases: {
         ratio: { taxable_yen: 10000, total_yen: 10000 },
@@ -195,6 +216,20 @@ describe("consumption tax return row mapping", () => {
     expect(amount(result.rows, "return_page1_1")).toBeNull();
     expect(result.rows.find((row) => row.id === "return_page2_base_8")?.row_status).toBe("blocked");
     expect(amount(result.rows, "return_page2_base_10")).toBe(1_000);
+  });
+
+  it("does not treat a missing adjustment fact as zero", () => {
+    const result = projectConsumptionTaxReturnRows({
+      mapping,
+      bases: {
+        taxable_sales_10_yen: 1_500,
+        taxable_sales_8_yen: 1_500,
+      },
+      purchases: { lines: [] },
+    });
+    expect(result.status).toBe("blocked");
+    expect(amount(result.rows, "return_page1_3")).toBeNull();
+    expect(result.rows.find((row) => row.id === "return_page1_3")?.row_status).toBe("blocked");
   });
 
   it("does not fill return rows for simplified tax", () => {

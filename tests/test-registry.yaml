@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 608
-  static_test_cases: 2796
-  tiered_execution_total: 608
+  vitest_total: 610
+  static_test_cases: 2802
+  tiered_execution_total: 610
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -902,6 +902,14 @@ tests:
     kind: unit
     catalog_ids:
       - jp_consumption_refund
+  consumption-tax-return-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  consumption-tax-return-rows.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   context-manifest.test.ts:
     axis: platform
     kind: unit
