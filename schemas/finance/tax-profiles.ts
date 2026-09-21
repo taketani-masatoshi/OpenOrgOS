@@ -78,9 +78,14 @@ export const taxProfileCorporateTaxSchema = z.object({
   estimated_tax_basis: z.string().optional(),
   notes: z.string().optional(),
   /** Account whose fiscal-year balance is entertainment expense. Not a hardcoded code. */
-  entertainment_account_code: z.string().regex(/^\d{4}$/).optional(),
+  entertainment_account_code: z
+    .string()
+    .regex(/^\d{4}$/)
+    .optional(),
   /** Deductible cap in yen. The excess over this cap is an add-back. Not a statutory table. */
   entertainment_cap_yen: z.number().int().nonnegative().optional(),
+  /** 適用除外。true のとき軽減税率も19%も計算せず、法人税額は出さない。 */
+  reduced_rate_excluded: z.boolean().optional(),
 });
 
 export const taxProfileFilingCalendarItemSchema = z.object({
