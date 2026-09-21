@@ -10,7 +10,8 @@ npm run orgos -- skills run jp-consumption-tax-return
 npm run orgos -- operations tax-consumption check
 npm run orgos -- operations tax-consumption calc --period YYYY-MM
 npm run orgos -- operations tax-consumption eligibility --period YYYY-MM
+npm run orgos -- tax consumption-return-rows --fiscal-year YYYY
 ```
 
-申告書は生成しません（区分チェック · 仕訳集計 · 還付候補判定のみ）。
+公式様式と e-Tax は出さない。10%/8% 集計は対応表で第一表・付表の行に載せる（提出しない）。
 還付申請パックは `jp_consumption_refund`。
