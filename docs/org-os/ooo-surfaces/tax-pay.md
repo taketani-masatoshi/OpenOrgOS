@@ -4,7 +4,7 @@
 **採点:** `docs/org-os/ooo-capability-items.yaml` の OOO-15〜OOO-23
 
 申告・給与・領収書・経費精算。ここは**計算が毎回同じ答えを返すこと**と、
-**提出は人間がすること**の2点が要件で、自動提出は範囲外。
+**外部送信はユーザ承認後だけ**の2点が要件で、自動提出は範囲外。
 
 ## 経路と必要権限
 
@@ -17,6 +17,7 @@
 | `POST /chat/v1/tax/handoff` | `chat:ask` | 税理士への引渡し ZIP の要求 |
 | `POST /chat/v1/tax/payroll-calc` | `chat:ask` | 料率に基づく給与計算 |
 | `POST /chat/v1/tax/xml-draft` | `finance:reconcile` | 申告書 XML / 別表ドラフト |
+| `POST /chat/v1/tax/etax-send` | `chat:approve` | e-Tax / API 形式の承認後送信ゲート |
 | `POST /chat/v1/tax/bonus-draft` | `finance:reconcile` | 賞与ドラフト |
 | `POST /chat/v1/tax/bonus-post` | `finance:reconcile` | 給与・賞与仕訳の起票 |
 | `POST /chat/v1/tax/yea/ready` | `finance:reconcile` | 年末調整の確定ドラフト |

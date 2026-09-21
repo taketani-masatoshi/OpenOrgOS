@@ -17,7 +17,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 
-- **ADR 0052** — e-Tax は内部の決算・税務申告書を正本に e-Tax / API 形式まで整備し、ユーザ承認後の外部送信を許容する。ポータルの自前実装と承認なし自動送信はしない。製品 SKU · 規約 · mal 税務メモも同じ境界に揃える。
+- **ADR 0052** — e-Tax は内部の決算・税務申告書を正本に e-Tax / API 形式まで整備し、ユーザ承認後の外部送信を許容する。境界の正本は税モジュール（`etax-filing-boundary`）。テナントデータは検証用フィクスチャであり、実装を歪めない。
 
 ### Fixed
 

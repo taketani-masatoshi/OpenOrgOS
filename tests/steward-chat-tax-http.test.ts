@@ -5,7 +5,7 @@ import { setTenantId } from "../src/lib/tenant.js";
 
 /**
  * Tax and payroll over HTTP. Two properties matter here and neither is visible
- * from the CLI: the module never claims to submit to e-Tax / eLTAX (ADR 0052),
+ * from the CLI: an unapproved handoff is not a live e-Tax filing (ADR 0052),
  * and anything that writes into the tenant sits behind `finance:reconcile`
  * rather than the read tier.
  */
@@ -68,15 +68,36 @@ describe("steward chat tax and payroll HTTP", () => {
     }
   });
 
-  it("states that filing is a handoff, never a submission", async () => {
+  it("states that an unapproved handoff is not a live filing", async () => {
     const cookie = await login();
     const res = await fetch(`${baseUrl}/chat/v1/tax/handoff`, {
       headers: { Cookie: cookie },
     });
     expect(res.status, await res.clone().text()).toBe(200);
-    const body = (await res.json()) as { ok: boolean; submission: string };
+    const body = (await res.json()) as {
+      ok: boolean;
+      submission: string;
+      send_requires_approval?: boolean;
+    };
     expect(body.ok).toBe(true);
     expect(body.submission).toBe("not-for-etax");
+    expect(body.send_requires_approval).toBe(true);
+  });
+
+  it("refuses e-Tax send without approve permission", async () => {
+    const cookie = await login("OP-002");
+    process.env.ORGOS_PROD = "1";
+    const res = await post("/chat/v1/tax/etax-send", cookie, {});
+    expect(res.status, await res.clone().text()).toBe(403);
+  });
+
+  it("authorizes e-Tax send for an approver session", async () => {
+    const cookie = await login();
+    const res = await post("/chat/v1/tax/etax-send", cookie, {});
+    expect(res.status, await res.clone().text()).toBe(200);
+    const body = (await res.json()) as { ok: boolean; submission: string };
+    expect(body.ok).toBe(true);
+    expect(body.submission).toBe("approved-to-submit");
   });
 
   it("expands the filing calendar and the gaps beside it", async () => {

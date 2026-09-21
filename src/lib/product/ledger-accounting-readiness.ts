@@ -176,15 +176,15 @@ export function buildAccountingReadinessChecks(): AccountingReadinessCheck[] {
     {
       id: "tax-handoff",
       gate: "A2",
-      label: "Tax handoff package (no e-Tax submit CTA)",
+      label: "Tax handoff package (draft until approved send)",
       weight: 6,
       pass:
-        fileExists("src/lib/tax/tax-handoff-package.ts") &&
-        sourceIncludes("src/lib/tax/tax-handoff-package.ts", [
-          "not-for-etax",
+        fileExists("src/lib/tax/etax-filing-boundary.ts") &&
+        sourceIncludes("src/lib/tax/etax-filing-boundary.ts", [
+          "authorizeEtaxExternalSend",
         ]) &&
         sourceIncludes("apps/steward-chat/src/TaxHandoffPage.tsx", [
-          "e-Tax 提出不可",
+          "自動送信しない",
         ]),
     },
     {

@@ -1,7 +1,8 @@
 /**
  * JP corporate tax return XML draft (ADR 0052 Phase 5b).
  *
- * Purpose: advisor handoff package — NOT e-Tax / eLTAX submission (5c is human-only).
+ * Built from internal books (GL · tax-profile). Unapproved output is
+ * `not-for-etax`. External send is a separate 5c gate after user approval.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,6 +17,7 @@ import { buildBalanceSheet } from "./ledger/balance-sheet.js";
 import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
+import { ETAX_DRAFT_SUBMISSION } from "../tax/etax-filing-boundary.js";
 
 export type CorporateTaxXmlDraft = {
   fiscal_year: string;
@@ -23,7 +25,7 @@ export type CorporateTaxXmlDraft = {
   xml: string;
   relative_path: string;
   absolute_path: string;
-  submission: "not-for-etax";
+  submission: typeof ETAX_DRAFT_SUBMISSION;
 };
 
 function escapeXml(value: string): string {
@@ -101,12 +103,12 @@ export function buildCorporateTaxXmlDraft(input?: {
   xmlns="urn:openorgos:jp-tax-corporate:draft:1"
   schemaVersion="1"
   purpose="advisor-handoff-draft"
-  submission="not-for-etax"
+  submission="${ETAX_DRAFT_SUBMISSION}"
   generatedAt="${escapeXml(generatedAt)}"
 >
   <Disclaimer>
-    This file is an OrgOS Ledger draft for tax-advisor handoff (ADR 0052 Phase 5b).
-    It is not an official e-Tax / NTA return XML and must not be submitted as-is.
+    OrgOS draft from internal books (ADR 0052 Phase 5b). Official schema alignment continues.
+    External send requires user approval (5c). Do not treat this file as a live filing.
   </Disclaimer>
   <Entity>
     <LegalName>${escapeXml(company.name)}</LegalName>
@@ -153,7 +155,7 @@ export function buildCorporateTaxXmlDraft(input?: {
   <Completeness>
     <Filled>entity,statements,betsu-4-estimate,betsu-5-equity</Filled>
     <AdvisorPending>add_backs,subtractions,retained_breakdown,official_form_mapping</AdvisorPending>
-    <Submission>not-for-etax</Submission>
+    <Submission>${ETAX_DRAFT_SUBMISSION}</Submission>
   </Completeness>
 </OrgOSCorporateTaxDraft>
 `;
@@ -164,7 +166,7 @@ export function buildCorporateTaxXmlDraft(input?: {
     as_of: asOf,
     xml,
     relative_path,
-    submission: "not-for-etax",
+    submission: ETAX_DRAFT_SUBMISSION,
   };
 }
 

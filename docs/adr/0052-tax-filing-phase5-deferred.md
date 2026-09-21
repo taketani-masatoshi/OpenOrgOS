@@ -43,6 +43,7 @@ OrgOS は **e-Tax / eLTAX ポータルそのもの**（独自のログイン画�
 - 5b 以降は新指標 `tax filing export readiness`（将来 ADR）を検討 — 本 ADR では定義しない。
 - mal `modules.yaml` JP tax 4 件有効化（Phase 4）は 5b の前提データ整備とは独立。
 - 製品 SKU は「提出を含まない」とは書かない。書くなら「内部正本 → 形式整備 → 承認後送信。自動送信はしない」。
+- テナント YAML / 税務メモはモジュールを検証するためのフィクスチャである。境界の正本は `jp_tax_corporate` と `src/lib/tax/etax-filing-boundary.ts` であり、テナント文面で実装を歪めない。
 
 ## Related
 
