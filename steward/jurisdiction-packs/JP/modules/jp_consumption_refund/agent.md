@@ -27,7 +27,7 @@ orgos operations consumption-refund receive --id CLAIM-YYYY-MM-principle_net --b
 
 - 還付額の invent
 - 簡易課税還付の自動許可
-- e-Tax 送信
+- e-Tax 送信（ADR 0052 の 5c）
 - クレーム金額の上書き
 - 口座番号の記録（`bank_account_id` のみ）
 - 実在法人名の seed 記載
