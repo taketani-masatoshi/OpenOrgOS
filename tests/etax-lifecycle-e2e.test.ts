@@ -38,6 +38,7 @@ function rhoPayload() {
       procedureCd: "RHO0010",
       sakuseiDay: "2026-03-31",
     },
+    hoa110: { teishutsuDay: "2026-03-31" },
   };
 }
 

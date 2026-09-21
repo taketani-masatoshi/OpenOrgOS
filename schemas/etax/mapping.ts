@@ -12,6 +12,25 @@ export const etaxFieldMapEntrySchema = z.object({
   required: z.boolean(),
 });
 
+export const etaxFormBodyFieldSchema = z.object({
+  sourcePath: z.string().min(1),
+  xmlLocalName: z.string().min(1),
+  xmlPath: z.string().min(1),
+  required: z.boolean(),
+  /** IDREF into the IT block. Local names come from the official XSD, not invented labels. */
+  kind: z.literal("idref"),
+  idref: z.string().min(1),
+});
+
+export const etaxFormMapSchema = z.object({
+  formId: z.string().min(1),
+  element: z.string().min(1),
+  fields: z.array(etaxFormBodyFieldSchema),
+});
+
+export type EtaxFormBodyField = z.output<typeof etaxFormBodyFieldSchema>;
+export type EtaxFormMap = z.output<typeof etaxFormMapSchema>;
+
 export const etaxEnvelopeSchema = z.object({
   rootElement: z.literal("DATA"),
   targetNamespace: z.string().url(),
@@ -44,6 +63,8 @@ export const etaxProcedureMappingSchema = z.object({
   specArtifactId: z.string().min(1),
   envelope: etaxEnvelopeSchema.optional(),
   fields: z.array(etaxFieldMapEntrySchema),
+  /** Registered form bodies. Unlisted forms stay SPEC_BLOCKED. */
+  forms: z.array(etaxFormMapSchema).default([]),
   notes: z.string(),
 });
 

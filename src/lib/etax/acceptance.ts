@@ -154,6 +154,7 @@ export function evaluateD2(): DxResult {
               procedureCd: "RHO0010",
               sakuseiDay: "2026-03-31",
             },
+            hoa110: { teishutsuDay: "2026-03-31" },
           },
           createdBy: "acceptance",
           specVersion: "KSK2-2026-08-28",

@@ -51,7 +51,7 @@ export function registerEtaxCommandTree(parent: Command): void {
     .description("Retrieve listed KSK2 CABs into gitignored spec/vendor and record SHA-256")
     .option(
       "--ids <csv>",
-      "Comma-separated artifact ids (default: e-tax01,03,07,08,10,18,19)"
+      "Comma-separated artifact ids (default: e-tax01,03,04,05,07,08,10,18,19)"
     )
     .option("--no-unpack", "Hash only; do not unpack")
     .option("--force", "Re-download even if the CAB is already present")

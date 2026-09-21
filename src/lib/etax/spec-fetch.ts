@@ -24,12 +24,19 @@ import { etaxSpecManifestPath, loadEtaxSpecManifest } from "./spec-registry.js";
 const PHASE2_DEFAULT_IDS = [
   "e-tax01",
   "e-tax03",
+  "e-tax04",
+  "e-tax05",
   "e-tax07",
   "e-tax08",
   "e-tax10",
   "e-tax18",
   "e-tax19",
 ] as const;
+
+/** Default `orgos etax spec fetch` ids. Must cover ETAX_REQUIRED_SPEC_ARTIFACT_IDS. */
+export function defaultEtaxSpecFetchIds(): readonly string[] {
+  return PHASE2_DEFAULT_IDS;
+}
 
 
 export function resolveOfficialXsd(relativePath: string): string {

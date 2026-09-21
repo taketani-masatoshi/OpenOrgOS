@@ -55,6 +55,7 @@ function rhoPayload(extra?: Record<string, string>) {
       sakuseiDay: "2026-03-31",
       ...extra,
     },
+    hoa110: { teishutsuDay: "2026-03-31" },
   };
 }
 

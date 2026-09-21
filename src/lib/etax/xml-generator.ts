@@ -1,6 +1,8 @@
 import type { ReturnPackage } from "../../../schemas/etax/return-package.js";
-import type { EtaxProcedureMapping } from "../../../schemas/etax/mapping.js";
+import type { EtaxFormMap, EtaxProcedureMapping } from "../../../schemas/etax/mapping.js";
+import { ELTAX_PACKAGE_SCHEMA } from "../../../schemas/efiling/filing.js";
 import { etaxError } from "../../../schemas/etax/errors.js";
+import { gregorianToEtaxYmd } from "./era-date.js";
 import { loadProcedureMapping } from "./xml-mapper.js";
 
 function readPayloadPath(payload: unknown, path: string): unknown {
@@ -45,6 +47,18 @@ function fieldByLocalName(mapping: EtaxProcedureMapping, localName: string): str
  * Missing required payload values fail closed — values are never invented.
  */
 export function generateOfficialXml(pkg: ReturnPackage): string {
+  const payloadRecord = pkg.payload;
+  if (
+    payloadRecord &&
+    typeof payloadRecord === "object" &&
+    (payloadRecord as { schema?: string }).schema === ELTAX_PACKAGE_SCHEMA
+  ) {
+    throw etaxError({
+      code: "ETAX_XML_ELTAX_REJECTED",
+      blocked: "SPEC_BLOCKED",
+      message: "eLTAX package cannot be prepared as official e-Tax XML",
+    });
+  }
   const mapping = loadProcedureMapping(pkg.procedureCode);
   if (!mapping) {
     throw etaxError({
@@ -106,6 +120,10 @@ function buildDataEnvelopeXml(pkg: ReturnPackage, mapping: EtaxProcedureMapping)
     });
   }
 
+  const formMap = (mapping.forms ?? []).find((row) => row.element === form.element);
+  const teishutsu = renderTeishutsuDay(payload, formMap);
+  const formBody = renderFormElement(form, env, sakuseiDay, formMap, payload);
+
   // All local names below are taken from official RHO0010 / HOA110 / ITdefinition XSD.
   const optionalItLocals = new Set([
     "NOZEISHA_ZIP",
@@ -147,15 +165,124 @@ function buildDataEnvelopeXml(pkg: ReturnPackage, mapping: EtaxProcedureMapping)
     `        <NOZEISHA_NM ID="n2">${escapeXml(nozeishaNm)}</NOZEISHA_NM>`,
     `        <NOZEISHA_ADR ID="n3">${escapeXml(nozeishaAdr)}</NOZEISHA_ADR>`,
     ...optionalItLines,
+    ...(teishutsu ? [teishutsu] : []),
     `        <TETSUZUKI ID="t1">`,
     `          <procedure_CD>${escapeXml(procedureCd)}</procedure_CD>`,
     `        </TETSUZUKI>`,
     `      </IT>`,
-    `      <${form.element} VR="${escapeXml(form.version)}" softNM="${escapeXml(env.softNM)}" sakuseiNM="${escapeXml(env.sakuseiNM)}" sakuseiDay="${escapeXml(sakuseiDay)}"/>`,
+      formBody,
     `    </CONTENTS>`,
     `  </${env.procedureElement}>`,
     `</DATA>`,
     ``,
   ];
   return lines.join("\n");
+}
+
+function renderTeishutsuDay(payload: unknown, formMap: EtaxFormMap | undefined): string | undefined {
+  const field = formMap?.fields.find((row) => row.kind === "idref" && row.idref === "TEISYUTSU_DAY");
+  if (!field) return undefined;
+  const raw = readPayloadPath(payload, field.sourcePath);
+  if (typeof raw !== "string" || raw.trim() === "") {
+    if (field.required) {
+      throw etaxError({
+        code: "ETAX_XML_FIELD_MISSING",
+        blocked: "SPEC_BLOCKED",
+        field: field.sourcePath,
+        message: `Required form field ${field.sourcePath} (${field.xmlLocalName}) is missing or empty`,
+      });
+    }
+    return undefined;
+  }
+  const ymd = gregorianToEtaxYmd(raw);
+  return [
+    `        <TEISYUTSU_DAY ID="TEISYUTSU_DAY">`,
+    `          <gen:era>${ymd.era}</gen:era>`,
+    `          <gen:yy>${ymd.yy}</gen:yy>`,
+    `          <gen:mm>${ymd.mm}</gen:mm>`,
+    `          <gen:dd>${ymd.dd}</gen:dd>`,
+    `        </TEISYUTSU_DAY>`,
+  ].join("\n");
+}
+
+function renderFormElement(
+  form: { element: string; version: string },
+  env: { softNM: string; sakuseiNM: string },
+  sakuseiDay: string,
+  formMap: EtaxFormMap | undefined,
+  payload: unknown,
+): string {
+  if (!formMap || formMap.fields.length === 0) {
+    throw etaxError({
+      code: "ETAX_XML_FORM_BODY_UNREGISTERED",
+      blocked: "SPEC_BLOCKED",
+      field: form.element,
+      message: `Refusing an empty ${form.element} tag. Register form body fields from the official XSD before generating.`,
+    });
+  }
+  for (const field of formMap.fields) {
+    if (!field.required) continue;
+    const raw = readPayloadPath(payload, field.sourcePath);
+    if (typeof raw !== "string" || raw.trim() === "") {
+      throw etaxError({
+        code: "ETAX_XML_FIELD_MISSING",
+        blocked: "SPEC_BLOCKED",
+        field: field.sourcePath,
+        message: `Required form field ${field.sourcePath} (${field.xmlLocalName}) is missing or empty`,
+      });
+    }
+  }
+  const sections = new Map<string, string[]>();
+  for (const field of formMap.fields) {
+    const [parent, leaf] = field.xmlPath.split(".");
+    if (!parent || !leaf) {
+      throw etaxError({
+        code: "ETAX_XML_FORM_PATH",
+        blocked: "SPEC_BLOCKED",
+        field: field.xmlPath,
+        message: `Form field xmlPath must be parent.leaf, got ${field.xmlPath}`,
+      });
+    }
+    const rows = sections.get(parent) ?? [];
+    rows.push(`          <${leaf} IDREF="${escapeXml(field.idref)}"/>`);
+    sections.set(parent, rows);
+  }
+  const body = [...sections.entries()].flatMap(([parent, leaves]) => [
+    `        <${parent}>`,
+    ...leaves,
+    `        </${parent}>`,
+  ]);
+  return [
+    `      <${form.element} VR="${escapeXml(form.version)}" softNM="${escapeXml(env.softNM)}" sakuseiNM="${escapeXml(env.sakuseiNM)}" sakuseiDay="${escapeXml(sakuseiDay)}">`,
+    ...body,
+    `      </${form.element}>`,
+  ].join("\n");
+}
+
+/** Fail closed for forms or fields that are not in the registered mapping. */
+export function assertRegisteredFormField(
+  procedureCode: string,
+  formId: string,
+  xmlLocalName?: string,
+): void {
+  const mapping = loadProcedureMapping(procedureCode);
+  const form = mapping?.forms?.find((row) => row.formId === formId);
+  if (!form) {
+    throw etaxError({
+      code: "ETAX_XML_FORM_UNREGISTERED",
+      blocked: "SPEC_BLOCKED",
+      field: formId,
+      message: `Form ${formId} is not registered for ${procedureCode}. Refusing to invent fields.`,
+    });
+  }
+  if (!xmlLocalName) return;
+  const field = form.fields.find((row) => row.xmlLocalName === xmlLocalName);
+  if (!field) {
+    throw etaxError({
+      code: "ETAX_XML_FIELD_UNREGISTERED",
+      blocked: "SPEC_BLOCKED",
+      field: xmlLocalName,
+      message: `Field ${xmlLocalName} is not registered on ${formId}. Refusing to invent a value.`,
+    });
+  }
 }

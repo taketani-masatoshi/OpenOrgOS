@@ -71,6 +71,18 @@ fields:
   - sourcePath: it.kessanDay
     xmlLocalName: KESSAN_DAY
     required: false
+forms:
+  - formId: HOA110
+    element: HOA110
+    fields:
+      # AAA00010 / TEISYUTSU_DAY are local names from e-tax19 HOA110-014.xsd and ITdefinition.xsd.
+      # The value is an IDREF, not an invented amount. Other 別表 stay unregistered.
+      - sourcePath: hoa110.teishutsuDay
+        xmlLocalName: AAA00010
+        xmlPath: AAA00000.AAA00010
+        required: true
+        kind: idref
+        idref: TEISYUTSU_DAY
 notes: >
   Envelope and element local names extracted from official e-tax19 XSD:
   DATA / RHO0010 / CATALOG / CONTENTS / IT / HOA110 (RHO0010-150.xsd,
