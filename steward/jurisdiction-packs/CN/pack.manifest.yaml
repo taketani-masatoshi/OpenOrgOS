@@ -20,6 +20,7 @@ legal_system:
 regulations_catalog: regulations/catalog.yaml
 regulations_templates_dir: regulations/templates
 tax_profile_schema: corporate
+indirect_tax_family: vat_credit
 
 corporate_core:
   officer_comp: REG-CN-001

@@ -4,7 +4,8 @@ import YAML from "yaml";
 import { z } from "zod";
 import type { FixedAsset } from "../../../schemas/finance/types.js";
 import { loadFixedAssets } from "../data.js";
-import { ROOT_DIR } from "../utils.js";
+import { getResolvedJurisdiction } from "../jurisdiction.js";
+import { getInstallRoot } from "../orgos-paths.js";
 import { appendJournalEntry } from "./expense-claim-journal.js";
 import { lastDayOfMonth } from "./fiscal-year.js";
 import { resolveJournalSourceAccounts } from "./journal-source-accounts.js";
@@ -38,19 +39,19 @@ export type DepreciationScheduleLine = {
 };
 
 function readRatesFile(): z.output<typeof depreciationRatesSchema> {
-  const path = join(
-    ROOT_DIR,
-    "steward/jurisdiction-packs/JP/seed/depreciation-rates-2026.yaml",
-  );
-  if (!existsSync(path)) {
-    return depreciationRatesSchema.parse({
-      version: 1,
-      declining_balance_rates: [],
-    });
+  const empty = depreciationRatesSchema.parse({
+    version: 1,
+    declining_balance_rates: [],
+  });
+  let path: string;
+  try {
+    const { pack } = getResolvedJurisdiction();
+    path = join(getInstallRoot(), pack.pack_root, "seed/depreciation-rates-2026.yaml");
+  } catch {
+    return empty;
   }
-  return depreciationRatesSchema.parse(
-    YAML.parse(readFileSync(path, "utf-8")) as unknown,
-  );
+  if (!existsSync(path)) return empty;
+  return depreciationRatesSchema.parse(YAML.parse(readFileSync(path, "utf-8")) as unknown);
 }
 
 function monthsInService(asset: FixedAsset, period: string): boolean {

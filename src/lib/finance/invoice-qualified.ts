@@ -3,6 +3,7 @@
  */
 import { loadTaxProfile } from "../data.js";
 import type { ConsumptionTaxCheckIssue } from "./consumption-tax.js";
+import { assertJpTaxProfile } from "./indirect-tax/port.js";
 
 /** T + 13 digits (適格請求書発行事業者登録番号). */
 export const JP_INVOICE_REGISTRATION_NUMBER_PATTERN = /^T\d{13}$/;
@@ -29,6 +30,7 @@ function profileSlice(): TaxProfileInvoiceSlice {
 export function assessInvoiceRegistration(
   profile: TaxProfileInvoiceSlice = profileSlice(),
 ): InvoiceAssessmentResult {
+  assertJpTaxProfile();
   const ct = profile.consumption_tax;
   const registered = Boolean(ct?.invoice_registered);
   const number = ct?.invoice_registration_number?.trim() ?? null;
@@ -94,6 +96,7 @@ export type QualifiedInvoiceIssuanceResult = InvoiceAssessmentResult & {
 export function assessQualifiedInvoiceIssuance(
   profile: TaxProfileInvoiceSlice = profileSlice(),
 ): QualifiedInvoiceIssuanceResult {
+  assertJpTaxProfile();
   const base = assessInvoiceRegistration(profile);
   const issues = [...base.issues.filter((i) => i.code !== "ok")];
   const ct = profile.consumption_tax;

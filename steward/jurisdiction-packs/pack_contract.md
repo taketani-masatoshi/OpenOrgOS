@@ -51,6 +51,7 @@
 | `regulations_catalog` | pack root **相対** |
 | `regulations_templates_dir` | pack root **相対** |
 | `tax_profile_schema` | `jp` · `us` · `corporate` |
+| `indirect_tax_family` | `vat_credit` · `sales_tax` · `single_stage` · `none`。seed の `type` 文字列では分岐しない |
 | `corporate_core` | 旅費等の REG id 写像 |
 | `declaration_modules` | pack 内 `modules/` の id 一覧（任意） |
 
