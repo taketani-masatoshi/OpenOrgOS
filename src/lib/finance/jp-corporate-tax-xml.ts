@@ -16,7 +16,12 @@ import { buildBalanceSheet } from "./ledger/balance-sheet.js";
 import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
-import { evaluateTaxAdjustment } from "./tax-adjustment.js";
+import {
+  CORPORATE_TAX_FORM_EDITION,
+  evaluateTaxAdjustment,
+  type OfficialAnnexLine,
+  type TaxAdjustmentWorksheet,
+} from "./tax-adjustment.js";
 
 export type CorporateTaxXmlDraft = {
   fiscal_year: string;
@@ -55,10 +60,40 @@ function loadCorporateTaxSlice(): {
   }
 }
 
-export function buildCorporateTaxXmlDraft(input?: {
-  fiscalYear?: string;
-  asOf?: string;
-}): Omit<CorporateTaxXmlDraft, "relative_path" | "absolute_path"> & {
+function annexBlock(
+  form: string,
+  label: string,
+  lines: OfficialAnnexLine[],
+  pending: string | null
+): string {
+  const header = `<Annex form="${escapeXml(form)}" edition="${CORPORATE_TAX_FORM_EDITION}" label="${escapeXml(label)}">`;
+  if (pending != null) {
+    return `${header}
+    <AdvisorPending>${escapeXml(pending)}</AdvisorPending>
+  </Annex>`;
+  }
+  const body = lines
+    .map((line) => {
+      const column = line.col ? ` col="${line.col}"` : "";
+      return `    <Line form="${escapeXml(line.form)}" row="${line.row}"${column} label="${escapeXml(line.label)}">${line.amount_yen}</Line>`;
+    })
+    .join("\n");
+  return `${header}
+${body}
+  </Annex>`;
+}
+
+function advisorPending(worksheet: TaxAdjustmentWorksheet): string {
+  if (!worksheet.can_compute) return worksheet.errors.join(",");
+  const pending = ["unused_statutory_rows"];
+  if (worksheet.corporate_tax_yen == null) pending.unshift("corporate_tax_unresolved");
+  return pending.join(",");
+}
+
+export function buildCorporateTaxXmlDraft(input?: { fiscalYear?: string; asOf?: string }): Omit<
+  CorporateTaxXmlDraft,
+  "relative_path" | "absolute_path"
+> & {
   relative_path: string;
 } {
   const company = loadCompany();
@@ -97,39 +132,45 @@ export function buildCorporateTaxXmlDraft(input?: {
   const corp = loadCorporateTaxSlice();
   const generatedAt = getClock().now().toISOString();
   const worksheet = evaluateTaxAdjustment(fiscalYear);
-  const annex = worksheet.can_compute
-    ? `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
-    <Line code="current_net_income" label="当期純利益">${worksheet.starting_profit_yen}</Line>
-    <Line code="add_backs" label="加算">${worksheet.additions_yen}</Line>
-    <Line code="subtractions" label="減算">${worksheet.subtractions_yen}</Line>
-    <Line code="taxable_income_estimate" label="課税所得">${worksheet.taxable_income_yen}</Line>
-  </AnnexDraft>`
-    : `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
-    <AdvisorPending>${escapeXml(worksheet.errors.join(","))}</AdvisorPending>
-  </AnnexDraft>`;
-  const roll = worksheet.retained_rollforward;
-  const betsu5 = roll
-    ? `<AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益剰余金">
-    <Line code="opening_retained" label="期首利益剰余金">${roll.opening_yen}</Line>
-    <Line code="net_income" label="当期純利益">${roll.net_income_yen}</Line>
-    <Line code="dividends" label="配当">${roll.dividend_yen}</Line>
-    <Line code="capital" label="資本取引">${roll.capital_yen}</Line>
-    <Line code="closing_retained" label="期末利益剰余金">${roll.closing_yen}</Line>
-  </AnnexDraft>`
-    : `<AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益剰余金">
-    <AdvisorPending>${escapeXml(worksheet.errors.join(","))}</AdvisorPending>
-  </AnnexDraft>`;
-  const completenessFilled = worksheet.can_compute
-    ? "entity,statements,betsu-4,betsu-5-retained"
-    : "entity,statements";
-  const completenessPending = worksheet.can_compute
-    ? "official_form_mapping"
-    : escapeXml(worksheet.errors.join(","));
+  const pending = advisorPending(worksheet);
+  const annexPending = worksheet.can_compute ? null : pending;
+  const annex4 = annexBlock(
+    "別表四",
+    "所得の金額の計算に関する明細書",
+    worksheet.official_lines.filter((line) => line.form === "別表四"),
+    annexPending
+  );
+  const annex5 = annexBlock(
+    "別表五（一）",
+    "利益積立金額及び資本金等の額の計算に関する明細書",
+    worksheet.official_lines.filter((line) => line.form === "別表五（一）"),
+    annexPending
+  );
+  const annex1 = annexBlock(
+    "別表一",
+    "各事業年度の所得に係る申告書",
+    worksheet.official_lines.filter((line) => line.form === "別表一"),
+    annexPending
+  );
+  const leafLines = worksheet.official_lines.filter((line) => line.form === "別表一次葉");
+  const annexLeaf =
+    leafLines.length > 0 ? annexBlock("別表一次葉", "法人税額の計算", leafLines, null) : "";
+  const filled = ["entity", "statements"];
+  if (worksheet.can_compute) filled.push("betsu-4", "betsu-5-retained");
+  if (worksheet.corporate_tax_yen != null) filled.push("betsu-1");
+  const corporateTax =
+    worksheet.corporate_tax_yen != null
+      ? `<CorporateTaxYen>${worksheet.corporate_tax_yen}</CorporateTaxYen>`
+      : "";
+  const profileEstimate =
+    corp.estimated_tax_fy2026 != null
+      ? `<ProfileEstimateYen purpose="comparison-only">${corp.estimated_tax_fy2026}</ProfileEstimateYen>`
+      : "";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <OrgOSCorporateTaxDraft
   xmlns="urn:openorgos:jp-tax-corporate:draft:1"
-  schemaVersion="1"
+  schemaVersion="2"
   purpose="advisor-handoff-draft"
   submission="not-for-etax"
   generatedAt="${escapeXml(generatedAt)}"
@@ -163,18 +204,17 @@ export function buildCorporateTaxXmlDraft(input?: {
   </Statements>
   <CorporateTaxPrep>
     <EstimatedTaxStatus>${escapeXml(corp.estimated_tax_status ?? "unknown")}</EstimatedTaxStatus>
-    ${
-      corp.estimated_tax_fy2026 != null
-        ? `<EstimatedTaxYen>${corp.estimated_tax_fy2026}</EstimatedTaxYen>`
-        : ""
-    }
+    ${corporateTax}
+    ${profileEstimate}
     ${corp.notes ? `<Notes>${escapeXml(corp.notes)}</Notes>` : ""}
   </CorporateTaxPrep>
-  ${annex}
-  ${betsu5}
+  ${annex4}
+  ${annex5}
+  ${annex1}
+  ${annexLeaf}
   <Completeness>
-    <Filled>${completenessFilled}</Filled>
-    <AdvisorPending>${completenessPending}</AdvisorPending>
+    <Filled>${filled.join(",")}</Filled>
+    <AdvisorPending>${escapeXml(pending)}</AdvisorPending>
     <Submission>not-for-etax</Submission>
   </Completeness>
 </OrgOSCorporateTaxDraft>
