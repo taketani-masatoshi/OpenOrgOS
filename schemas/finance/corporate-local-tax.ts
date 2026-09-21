@@ -28,6 +28,8 @@ export const corporateLocalTaxCalculationSchema = z.object({
   municipality_code: z.string().min(1),
   fiscal_year_end: z.string().date(),
   national_corporate_tax_yen: z.number().int().nonnegative(),
+  prefectural_corporate_tax_base_yen: z.number().int().nonnegative().optional(),
+  municipal_corporate_tax_base_yen: z.number().int().nonnegative().optional(),
   taxable_income_yen: z.number().int().nonnegative(),
   prefectural_resident_tax_yen: z.number().int().nonnegative(),
   municipal_resident_tax_yen: z.number().int().nonnegative(),

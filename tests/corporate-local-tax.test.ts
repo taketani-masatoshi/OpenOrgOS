@@ -49,16 +49,44 @@ describe("corporate local tax calculation", () => {
     else process.env.ORGOS_LOCAL_TAX_CATALOG_PUBLIC_KEY_PEM = priorKey;
   });
   it("apportions multiple establishments, losses, external-standard tax, and interim payments", () => {
+    const evidencePath = join(root, "local-tax-evidence.txt");
+    writeFileSync(evidencePath, "approved statutory allocation and adjustment evidence");
+    const evidenceSha256 = createHash("sha256").update("approved statutory allocation and adjustment evidence").digest("hex");
+    const weight = (value: number, criterion: string) => ({ weight: value, criterion, evidencePath, evidenceSha256 });
+    const amount = (amountYen: number) => ({ amountYen, fiscalYearEnd: "2027-03-31", evidencePath, evidenceSha256,
+      ledgerEvidencePath: evidencePath, ledgerEvidenceSha256: evidenceSha256,
+      approvedBy: "OP-001", approvedAt: "2027-04-15T00:00:00.000Z" });
     const result = calculateCorporateLocalTaxReturn({
       establishments: [
-        { establishmentId: "TOKYO", profile, sourceDocumentPath, apportionmentWeight: 3 },
-        { establishmentId: "OSAKA", profile: { ...profile, id: "fixture-rate-osaka", municipality_code: "27100" }, sourceDocumentPath, apportionmentWeight: 1 },
+        { establishmentId: "TOKYO", profile, sourceDocumentPath, apportionment: {
+          enterpriseIncome: weight(3, "employees"), prefecturalResidentTax: weight(1, "employees"), municipalResidentTax: weight(4, "employees"),
+        } },
+        { establishmentId: "OSAKA", profile: { ...profile, id: "fixture-rate-osaka", municipality_code: "27100" }, sourceDocumentPath, apportionment: {
+          enterpriseIncome: weight(1, "employees"), prefecturalResidentTax: weight(3, "employees"), municipalResidentTax: weight(1, "employees"),
+        } },
       ],
       trustedProfileIds: [profile.id, "fixture-rate-osaka"], fiscalYearEnd: "2027-03-31",
       nationalCorporateTaxYen: 1_000_000, taxableIncomeBeforeLossYen: 5_000_000,
-      lossCarryforwardYen: 1_000_000, externalStandardTaxYen: 25_000, interimPaymentsYen: 100_000,
+      lossCarryforward: amount(1_000_000), externalStandardTax: amount(25_000), interimPayments: [amount(100_000)],
     });
     expect(result.allocations.map((row) => row.apportioned_income_yen)).toEqual([3_000_000, 1_000_000]);
+    expect(result.allocations.map((row) => row.prefectural_tax_base_yen)).toEqual([250_000, 750_000]);
+    expect(result.allocations.map((row) => row.municipal_tax_base_yen)).toEqual([800_000, 200_000]);
     expect(result.filingBalanceYen).toBe(result.assessedTotalYen - 100_000);
+  });
+  it("rejects tampered adjustment evidence", () => {
+    const evidencePath = join(root, "tampered-adjustment.txt");
+    writeFileSync(evidencePath, "actual");
+    expect(() => calculateCorporateLocalTaxReturn({ establishments: [{ establishmentId: "TOKYO", profile, sourceDocumentPath,
+      apportionment: {
+        enterpriseIncome: { criterion: "employees", weight: 1, evidencePath, evidenceSha256: createHash("sha256").update("actual").digest("hex") },
+        prefecturalResidentTax: { criterion: "employees", weight: 1, evidencePath, evidenceSha256: createHash("sha256").update("actual").digest("hex") },
+        municipalResidentTax: { criterion: "employees", weight: 1, evidencePath, evidenceSha256: createHash("sha256").update("actual").digest("hex") },
+      } }], trustedProfileIds: [profile.id], fiscalYearEnd: "2027-03-31", nationalCorporateTaxYen: 1,
+      taxableIncomeBeforeLossYen: 1, interimPayments: [{ amountYen: 1, fiscalYearEnd: "2027-03-31", evidencePath,
+        evidenceSha256: "0".repeat(64), ledgerEvidencePath: evidencePath,
+        ledgerEvidenceSha256: createHash("sha256").update("actual").digest("hex"),
+        approvedBy: "OP-001", approvedAt: "2027-04-15T00:00:00.000Z" }],
+    })).toThrow(/evidence hash mismatch/);
   });
 });

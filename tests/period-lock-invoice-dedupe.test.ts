@@ -6,7 +6,12 @@ import {
   unlockMonth,
   resetPeriodLocksForTests,
   savePeriodLocks,
+  attestLegacyPeriodLock,
+  legacyPeriodLockAttestationRef,
 } from "../src/lib/finance/period-lock.js";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { getDataDir } from "../src/lib/utils.js";
 import {
   postMonthlyPlJournalEntries,
   postSalesInvoiceJournalEntry,
@@ -54,6 +59,17 @@ describe("period-locks append-only", () => {
     expect(locks[0]?.event_sha256).toMatch(/^[a-f0-9]{64}$/);
     expect(locks[1]?.previous_event_sha256).toBe(locks[0]?.event_sha256);
     expect(periodLockIntegrityIssues()).toEqual([]);
+  });
+
+  it("requires finance authority before a legacy lock can be re-attested", () => {
+    writeFileSync(join(getDataDir(), "finance", "period-locks.yaml"),
+      'version: 1\nlocks:\n  - month: "2026-09"\n    status: locked\n    at: "2026-10-01T00:00:00.000Z"\n    by: LEGACY\n', "utf8");
+    const subjectRef = legacyPeriodLockAttestationRef("2026-09");
+    expect(() => attestLegacyPeriodLock({ month: "2026-09", operatorId: "OP-READONLY", reason: "migration",
+      approval: { approval_id: "APR-20261001-001", scope: "internal", status: "approved", proposed_at: "2026-10-01T00:00:00.000Z",
+        proposed_by: "OP-001", subject_type: "finance.period-lock-attestation", subject_ref: subjectRef },
+      humanContext: {} as never,
+    })).toThrow(/lacks finance:reconcile/);
   });
 });
 

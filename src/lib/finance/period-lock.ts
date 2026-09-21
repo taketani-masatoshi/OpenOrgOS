@@ -9,6 +9,12 @@ import {
 } from "../../../schemas/finance/period-lock.js";
 import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
+import { findOperatorById } from "../org/operators.js";
+import { operatorHasPermission } from "../console-auth/operator-rbac.js";
+import { assertHumanApprovalContext } from "../org/human-approval-context.js";
+import type { HumanApprovalContext } from "../../../schemas/org/human-approval-context.js";
+import type { OrgApprovalRequest } from "../../../schemas/org/approval.js";
+import { createCompanyEvent, listCompanyEvents } from "../company-events.js";
 
 const REL = "finance/period-locks.yaml";
 
@@ -77,6 +83,7 @@ export function assertPeriodLocksAppendOnly(
       || a.sequence !== b.sequence
       || a.previous_event_sha256 !== b.previous_event_sha256
       || a.event_sha256 !== b.event_sha256
+      || a.company_event_id !== b.company_event_id
     ) {
       throw new Error(
         `period-locks.yaml is append-only: historical row ${i} (${a.month}) was modified`,
@@ -154,11 +161,19 @@ export function unlockMonth(input: {
   return entry;
 }
 
-/** Re-attest legacy lock rows without deleting or rewriting history. */
+export function legacyPeriodLockAttestationRef(month: string, entry = latestLockForMonth(month)): string {
+  if (!entry || entry.status !== "locked") throw new Error(`Legacy period ${month} is not locked`);
+  const canonical = Object.fromEntries(Object.entries(entry).filter(([key]) => key !== "event_sha256"));
+  return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+}
+
+/** Re-attest legacy rows through the same human authority boundary as other financial approvals. */
 export function attestLegacyPeriodLock(input: {
   month: string;
-  attestedBy: string;
+  operatorId: string;
   reason: string;
+  approval: OrgApprovalRequest;
+  humanContext: HumanApprovalContext;
   attestedAt?: string;
 }): PeriodLockEntry {
   if (!input.reason.trim()) throw new Error("Legacy period-lock attestation requires a reason");
@@ -166,13 +181,31 @@ export function attestLegacyPeriodLock(input: {
   const latest = latestLockForMonth(input.month, file);
   if (!latest || latest.status !== "locked") throw new Error(`Legacy period ${input.month} is not locked`);
   if (latest.sequence && latest.event_sha256) return latest;
+  const subjectRef = legacyPeriodLockAttestationRef(input.month, latest);
+  if (input.approval.subject_type !== "finance.period-lock-attestation" || input.approval.subject_ref !== subjectRef) {
+    throw new Error("human approval is not bound to this legacy period lock");
+  }
+  const operator = findOperatorById(input.operatorId);
+  if (!operatorHasPermission(operator, "finance:reconcile")) throw new Error("operator lacks finance:reconcile for period-lock attestation");
+  assertHumanApprovalContext({ context: input.humanContext, approval: input.approval, operatorId: input.operatorId });
+  const eventSlug = `period-lock-attestation-${input.month}`;
+  const existingEvent = listCompanyEvents({ includeVoided: true }).find((event) =>
+    event.notes?.includes(`legacy_lock_sha256=${subjectRef}`));
+  const companyEventId = existingEvent?.id ?? createCompanyEvent({
+    kind: "finance",
+    title: `Period lock attestation ${input.month}`,
+    slug: eventSlug,
+    related: { application_id: input.approval.approval_id },
+    notes: `month=${input.month}\nlegacy_lock_sha256=${subjectRef}\noperator_id=${input.operatorId}\napproval_id=${input.approval.approval_id}`,
+  }).id;
   const entry = chainedEntry(periodLockEntrySchema.omit({ sequence: true, previous_event_sha256: true, event_sha256: true }).parse({
     month: input.month,
     status: "locked",
     at: input.attestedAt ?? new Date().toISOString(),
-    by: input.attestedBy,
+    by: input.operatorId,
     reason: `legacy-attestation: ${input.reason.trim()}`,
     evidence: latest.evidence,
+    company_event_id: companyEventId,
   }), file.locks);
   file.locks.push(entry);
   savePeriodLocks(file);

@@ -8,6 +8,7 @@ import { lastDayOfMonth } from "../src/lib/finance/fiscal-year.js";
 import { reverseJournalEntry } from "../src/lib/finance/journal-reverse.js";
 import { buildBalanceSheet } from "../src/lib/finance/ledger/balance-sheet.js";
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
+import { bankControlIntegrityIssuesAt } from "../src/lib/finance/ledger/control-reconcile.js";
 import { subsidiaryLedgerIntegrityIssues } from "../src/lib/finance/ledger/subsidiary-ledger.js";
 import {
   closeAccountingMonth,
@@ -252,6 +253,32 @@ entries:
     expect(imported?.pass).toBe(false);
     expect(imported?.level).toBe("error");
     expect(evaluation.can_lock).toBe(false);
+  });
+
+  it("rejects reused, mismatched, and out-of-period bank entries", () => {
+    useFinanceFixtureTenant();
+    writeBank(`
+entries:
+  - id: BS-2026-09-1
+    date: "2026-09-10"
+    direction: inflow
+    amount: 1000
+    status: matched
+  - id: BS-2026-10-1
+    date: "2026-10-10"
+    direction: inflow
+    amount: 1
+    status: matched
+`);
+    const data = YAML.parse(readFileSync(bankPath(), "utf8")) as any;
+    data.entries[0].account_id = "BANK-WRONG";
+    data.import_batches[0].entry_ids.push("BS-2026-10-1");
+    data.import_batches.push({ ...data.import_batches[0], id: "BATCH-DUPLICATE" });
+    writeFileSync(bankPath(), YAML.stringify(data), "utf8");
+    const messages = bankControlIntegrityIssuesAt("2026-09-30").map((issue) => issue.message);
+    expect(messages.some((message) => message.includes("is reused"))).toBe(true);
+    expect(messages.some((message) => message.includes("does not match entry"))).toBe(true);
+    expect(messages.some((message) => message.includes("out-of-period"))).toBe(true);
   });
 
   it("ignores unmatched bank rows that belong to a later month", () => {

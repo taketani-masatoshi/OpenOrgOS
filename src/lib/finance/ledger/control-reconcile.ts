@@ -28,22 +28,50 @@ export function bankControlIntegrityIssuesAt(asOf: string): ControlReconcileIssu
   const monthEntries = bank.entries.filter((entry) => entry.date.slice(0, 7) === month && entry.status !== "voided");
   const batches = bank.import_batches.filter((batch) => batch.period_end === asOf);
   if (batches.length === 0) return [{ level: "error", message: `bank-statements has no balance-certified import batch ending ${asOf}` }];
-  const covered = new Set(batches.flatMap((batch) => batch.entry_ids));
-  const uncovered = monthEntries.filter((entry) => !covered.has(entry.id));
-  if (uncovered.length > 0) return [{ level: "error", message: `bank-statements has ${uncovered.length} month rows outside a balance-certified batch` }];
+  const allActiveEntries = new Map(bank.entries.filter((entry) => entry.status !== "voided").map((entry) => [entry.id, entry]));
+  const entryBatch = new Map<string, string>();
+  const covered = new Set<string>();
   const issues: ControlReconcileIssue[] = [];
+  for (const batch of batches) {
+    for (const id of batch.entry_ids) {
+      const prior = entryBatch.get(id);
+      if (prior) issues.push({ level: "error", message: `bank statement entry ${id} is reused by batches ${prior} and ${batch.id}` });
+      else entryBatch.set(id, batch.id);
+      covered.add(id);
+      const entry = allActiveEntries.get(id);
+      if (!entry) {
+        issues.push({ level: "error", message: `bank import batch ${batch.id} references missing or voided entry ${id}` });
+        continue;
+      }
+      if (entry.date.slice(0, 7) !== month || entry.date < (batch.period_start ?? `${month}-01`) || entry.date > asOf) {
+        issues.push({ level: "error", message: `bank import batch ${batch.id} contains out-of-period entry ${id} (${entry.date})` });
+      }
+      if (entry.account_id !== batch.account_id) {
+        issues.push({ level: "error", message: `bank import batch ${batch.id} account ${batch.account_id ?? "missing"} does not match entry ${id} account ${entry.account_id ?? "missing"}` });
+      }
+    }
+  }
+  const uncovered = monthEntries.filter((entry) => !covered.has(entry.id));
+  if (uncovered.length > 0) issues.push({ level: "error", message: `bank-statements has ${uncovered.length} month rows outside a balance-certified batch` });
   const closingByChart = new Map<string, number>();
   for (const batch of batches) {
     if (batch.opening_balance == null || batch.closing_balance == null || !batch.account_id) {
       issues.push({ level: "error", message: `bank import batch ${batch.id} lacks account/opening/closing balance` });
       continue;
     }
-    const entries = monthEntries.filter((entry) => batch.entry_ids.includes(entry.id));
+    if (!batch.period_start || batch.period_start.slice(0, 7) !== month || batch.period_start > asOf) {
+      issues.push({ level: "error", message: `bank import batch ${batch.id} has an invalid period_start for ${month}` });
+    }
+    const entries = batch.entry_ids.map((id) => allActiveEntries.get(id)).filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+    const charts = new Set(entries.map((entry) => entry.chart_account_id).filter((value): value is string => Boolean(value)));
+    if (charts.size !== 1 || entries.some((entry) => !entry.chart_account_id)) {
+      issues.push({ level: "error", message: `bank import batch ${batch.id} must map every entry to exactly one chart account` });
+    }
     const movement = entries.reduce((sum, entry) => sum + (entry.direction === "inflow" ? entry.amount : -entry.amount), 0);
     if (batch.opening_balance + movement !== batch.closing_balance) {
       issues.push({ level: "error", message: `bank import batch ${batch.id}: opening + movement != closing` });
     }
-    const chart = entries.find((entry) => entry.chart_account_id)?.chart_account_id ?? resolveJournalSourceAccounts().bank_control;
+    const chart = [...charts][0] ?? resolveJournalSourceAccounts().bank_control;
     closingByChart.set(chart, (closingByChart.get(chart) ?? 0) + batch.closing_balance);
   }
   const opening = loadOpeningBalances();
