@@ -1,12 +1,11 @@
 /**
- * Month-close checklist for Workbench — unmatched bank, unlocked period, validate.
+ * Month-close checklist for Workbench.
+ * `ready` matches evaluateMonthlyCloseGates().can_lock (period lock is separate).
+ * Missing bank file is not a lock blocker and is represented as a skipped gate.
  */
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { runValidateReport } from "../../commands/validate.js";
 import { listBankReconciliationWorkbench } from "../finance/bank-reconcile-apply.js";
+import { evaluateMonthlyCloseGates } from "../finance/monthly-close.js";
 import { latestLockForMonth } from "../finance/period-lock.js";
-import { getDataDir } from "../utils.js";
 import { getClock } from "../runtime-context.js";
 
 export type MonthCloseCheckItem = {
@@ -65,87 +64,59 @@ function currentMonthKey(): string {
 
 export function buildMonthCloseChecklist(month?: string): MonthCloseChecklist {
   const target = month && /^\d{4}-\d{2}$/.test(month) ? month : currentMonthKey();
-  const bankPath = join(getDataDir(), "finance", "bank-statements.yaml");
-  const bankImported = existsSync(bankPath);
-  const workbench = bankImported
-    ? listBankReconciliationWorkbench()
-    : { unmatched_count: 0, unmatched: [], proposals: [] };
+  const evaluation = evaluateMonthlyCloseGates(target);
   const lock = latestLockForMonth(target);
   const locked = lock?.status === "locked";
-  const validate = runValidateReport({ warnings: true });
-  const integrityErrors = validate.issues
-    .filter((i) => i.severity === "error")
-    .slice(0, 12)
-    .map((e) => `${e.path}: ${e.message}`);
+  const integrityErrors = evaluation.validate_errors.slice(0, 12);
   const fixHints = buildFixHints(integrityErrors);
+  const bankImported = evaluation.items.find((item) => item.id === "bank-imported");
+  const bankMissing = bankImported?.level === "skip";
+  const workbench = bankMissing
+    ? { unmatched_count: 0, unmatched: [], proposals: [] }
+    : listBankReconciliationWorkbench(evaluation.as_of);
+  const unmatchedSamples = workbench.unmatched
+    .filter((row) => row.date.slice(0, 7) === target)
+    .slice(0, 5)
+    .map((row) => {
+      const proposal = workbench.proposals.find(
+        (item) => item.bank_statement_id === row.id,
+      );
+      return {
+        bank_statement_id: row.id,
+        amount: row.amount,
+        description: `${row.date} ${row.direction}`,
+        ...(proposal ? { suggested_ar_ap_id: proposal.ar_ap_id } : {}),
+      };
+    });
 
-  const unmatchedSamples = workbench.unmatched.slice(0, 5).map((row) => {
-    const proposal = workbench.proposals.find(
-      (p) => p.bank_statement_id === row.id,
-    );
-    return {
-      bank_statement_id: row.id,
-      amount: row.amount,
-      description: `${row.date} ${row.direction}`,
-      ...(proposal ? { suggested_ar_ap_id: proposal.ar_ap_id } : {}),
-    };
+  const items: MonthCloseCheckItem[] = evaluation.items.map((item) => ({
+    id: item.id,
+    label: item.label,
+    pass: item.pass,
+    detail: item.detail,
+    scroll_target:
+      item.id === "bank-imported" || item.id === "bank-unmatched"
+        ? item.pass || item.level === "skip"
+          ? undefined
+          : "sectionReconcile"
+        : item.pass || item.level !== "error"
+          ? undefined
+          : "sectionClose",
+  }));
+  items.push({
+    id: "period-locked",
+    label: `期間 ${target} がロック済み`,
+    pass: locked,
+    detail: locked ? `locked by ${lock?.by ?? "?"}` : "unlocked",
+    actions: locked ? undefined : ["チェック完了後に期間ロックを実行"],
+    scroll_target: locked ? undefined : "sectionClose",
   });
-
-  const items: MonthCloseCheckItem[] = [
-    {
-      id: "bank-imported",
-      label: "銀行明細を取込済み",
-      pass: bankImported,
-      detail: bankImported ? "ok" : "bank statements not imported",
-      actions: bankImported ? undefined : ["消込セクションで CSV を取込"],
-      scroll_target: bankImported ? undefined : "sectionReconcile",
-    },
-    {
-      id: "bank-unmatched",
-      label: "銀行明細の未消込なし",
-      pass: bankImported && workbench.unmatched_count === 0,
-      detail: bankImported
-        ? `${workbench.unmatched_count} unmatched`
-        : "bank statements not imported",
-      actions:
-        bankImported && workbench.unmatched_count > 0
-          ? ["未消込明細を確認し、消込を承認"]
-          : undefined,
-      scroll_target:
-        bankImported && workbench.unmatched_count > 0
-          ? "sectionReconcile"
-          : undefined,
-    },
-    {
-      id: "period-locked",
-      label: `期間 ${target} がロック済み`,
-      pass: locked,
-      detail: locked ? `locked by ${lock?.by ?? "?"}` : "unlocked",
-      actions: locked ? undefined : ["チェック完了後に期間ロックを実行"],
-      scroll_target: locked ? undefined : "sectionClose",
-    },
-    {
-      id: "validate",
-      label: "帳簿整合性チェック",
-      pass: validate.ok,
-      detail: validate.ok
-        ? "ok"
-        : `${validate.error_count} errors — 下記を解消`,
-      actions: validate.ok ? undefined : ["整合性エラーとヒントを確認"],
-      scroll_target: validate.ok ? undefined : "sectionClose",
-    },
-  ];
-
-  const checklistComplete =
-    items.find((i) => i.id === "bank-imported")!.pass &&
-    items.find((i) => i.id === "bank-unmatched")!.pass &&
-    items.find((i) => i.id === "validate")!.pass;
 
   return {
     month: target,
     checked_at: getClock().now().toISOString(),
-    ready: checklistComplete,
-    checklist_complete: checklistComplete,
+    ready: evaluation.can_lock,
+    checklist_complete: evaluation.can_lock,
     period_locked: locked,
     items,
     integrity_errors: integrityErrors,

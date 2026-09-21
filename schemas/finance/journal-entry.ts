@@ -20,6 +20,12 @@ export const journalEntryLineSchema = z.object({
   source_bank_account_id: z.string().min(1).optional(),
   tax_category: taxCategorySchema.optional(),
   tax_rate_pct: z.number().min(0).max(100).optional(),
+  tax_amount_yen: z.number().int().nonnegative().optional(),
+  invoice_status: z
+    .enum(["qualified", "nonqualified_80", "nonqualified_50", "exempt_supplier", "unknown"])
+    .optional(),
+  purchase_use: z.enum(["taxable_only", "common", "non_taxable_only"]).optional(),
+  tax_rounding: z.enum(["floor", "round", "ceil"]).optional(),
 });
 
 const expenseClaimId = z.string().regex(/^ECL-\d{8}-\d{3}$/);
@@ -56,6 +62,14 @@ export const journalSourceSchema = z.discriminatedUnion("kind", [
     kind: z.literal("remittance"),
     period: monthString,
     obligation: z.enum(["withholding", "social_insurance", "consumption_tax"]),
+  }),
+  z.object({
+    kind: z.literal("dividend"),
+    period: monthString,
+  }),
+  z.object({
+    kind: z.literal("capital"),
+    period: monthString,
   }),
   z.object({
     kind: z.literal("consumption_tax_refund"),
@@ -108,6 +122,8 @@ export const journalEntrySchema = z
     posted_at: z.string().datetime().optional(),
     posted_by: z.string().min(1).optional(),
     reversal_of: z.string().regex(/^JE-[A-Z0-9-]+$/).optional(),
+    /** Original source.kind when this entry reverses another. */
+    reversed_source_kind: z.string().min(1).optional(),
     evidence_refs: z.array(z.string().min(1)).min(1),
     lines: z.array(journalEntryLineSchema).min(2),
   })
@@ -131,18 +147,6 @@ export const journalEntrySchema = z
           message: "source conflicts with legacy claim_id/event",
         });
       }
-    }
-    const legacyOnly = hasLegacy && !hasSource;
-    if (hasSource && !legacyOnly) {
-      entry.lines.forEach((line, index) => {
-        if (!line.tax_category) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["lines", index, "tax_category"],
-            message: "tax_category is required for source-based entries",
-          });
-        }
-      });
     }
   });
 

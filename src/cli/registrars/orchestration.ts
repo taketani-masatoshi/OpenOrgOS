@@ -2369,6 +2369,102 @@ export function registerOrchestrationCommands(program: Command): void {
         json: opts.json,
       });
     });
+
+  const workflowCmd = program
+    .command("workflow")
+    .description("Workflow canvas SSOT · evaluate · WFS structure proposals");
+  workflowCmd
+    .command("list")
+    .description("List workflows under data/org/workflows/")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkflowList } = await import("../../commands/workflow.js");
+      runWorkflowList({ json: opts.json });
+    });
+  workflowCmd
+    .command("get")
+    .description("Load a workflow SSOT YAML")
+    .requiredOption("--id <workflow_id>", "Workflow id (e.g. WF-system-map)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkflowGet } = await import("../../commands/workflow.js");
+      runWorkflowGet({ id: opts.id, json: opts.json });
+    });
+  workflowCmd
+    .command("render")
+    .description("Project SSOT to json | table | mermaid (read-only)")
+    .requiredOption("--id <workflow_id>", "Workflow id (e.g. WF-system-map)")
+    .requiredOption("--format <format>", "json | table | mermaid")
+    .action(async (opts) => {
+      const format = String(opts.format).toLowerCase();
+      if (format !== "json" && format !== "table" && format !== "mermaid") {
+        console.error("--format must be json, table, or mermaid");
+        process.exitCode = 1;
+        return;
+      }
+      const { runWorkflowRender } = await import("../../commands/workflow.js");
+      runWorkflowRender({ id: opts.id, format });
+    });
+  workflowCmd
+    .command("evaluate")
+    .description("Deterministic evaluate of a draft (no YAML write)")
+    .option("--file <path>", "Draft YAML or JSON")
+    .option("--id <workflow_id>", "Evaluate existing SSOT")
+    .option("--llm-file <path>", "Optional LLM proposal overlay (fixture / model output)")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkflowEvaluate } = await import("../../commands/workflow.js");
+      runWorkflowEvaluate({
+        file: opts.file,
+        id: opts.id,
+        llmFile: opts.llmFile,
+        json: opts.json,
+      });
+    });
+  const workflowChangeCmd = workflowCmd
+    .command("change")
+    .description("Workflow structure change proposals (WFS)");
+  workflowChangeCmd
+    .command("validate")
+    .description("Validate WFS proposal file(s)")
+    .option("--file <path>", "Single proposal YAML")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkflowChangeValidate } = await import("../../commands/workflow.js");
+      runWorkflowChangeValidate({ file: opts.file, json: opts.json });
+    });
+  workflowChangeCmd
+    .command("propose")
+    .description("Record a WFS proposal (no SSOT mutation)")
+    .requiredOption("--file <path>", "Change input YAML (draft · proposed · findings)")
+    .requiredOption("--approval <id>", "APR id from `org approval propose`")
+    .requiredOption("--operator <id>", "Operator proposing the change")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkflowChangePropose } = await import("../../commands/workflow.js");
+      runWorkflowChangePropose({
+        file: opts.file,
+        approval: opts.approval,
+        operator: opts.operator,
+        json: opts.json,
+      });
+    });
+  workflowChangeCmd
+    .command("apply")
+    .description("Apply approved WFS proposal to data/org/workflows/")
+    .requiredOption("--file <path>", "Proposal YAML")
+    .requiredOption("--operator <id>", "Operator applying the change")
+    .option("--dry-run", "Compute hashes without writing")
+    .option("--json", "JSON output")
+    .action(async (opts) => {
+      const { runWorkflowChangeApply } = await import("../../commands/workflow.js");
+      runWorkflowChangeApply({
+        file: opts.file,
+        operator: opts.operator,
+        dryRun: Boolean(opts.dryRun),
+        json: opts.json,
+      });
+    });
   const orgApprovalCmd = orgCmd.command("approval").description("Internal human approval (scope: internal)");
   orgApprovalCmd
     .command("propose")

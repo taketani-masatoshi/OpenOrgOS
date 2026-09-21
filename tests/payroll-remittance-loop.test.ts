@@ -101,5 +101,8 @@ describe("payroll and statutory remittance loop", () => {
     const after = buildTrialBalance({ asOf: "2026-09-30" });
     expect(Math.abs(after.rows.find((r) => r.account_code === "2160")?.balance_yen ?? 0)).toBe(0);
     expect(Math.abs(after.rows.find((r) => r.account_code === "2170")?.balance_yen ?? 0)).toBe(0);
+    const beforeMonthEnd = buildTrialBalance({ asOf: "2026-09-28" });
+    expect(Math.abs(beforeMonthEnd.rows.find((r) => r.account_code === "2160")?.balance_yen ?? 0)).toBe(0);
+    expect(Math.abs(beforeMonthEnd.rows.find((r) => r.account_code === "2170")?.balance_yen ?? 0)).toBe(0);
   });
 });

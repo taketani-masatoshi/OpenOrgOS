@@ -7,6 +7,7 @@ import {
   splitInclusiveConsumptionTax,
 } from "./consumption-tax.js";
 import type { TaxCategory } from "../../../schemas/finance/journal-entry.js";
+import { lastDayOfMonth } from "./fiscal-year.js";
 import {
   shouldSkipInvoiceJournal,
 } from "./ledger/invoice-mpl-dedupe.js";
@@ -203,7 +204,7 @@ export function postMonthlyPlJournalEntries(input: {
     const taxCategory = monthlyPlTaxCategory("revenue", bucket.category);
     appendJournalEntry({
       entry_id: entryId,
-      occurred_at: `${input.period}-28T12:00:00.000Z`,
+      occurred_at: `${lastDayOfMonth(input.period)}T12:00:00.000Z`,
       description: `Monthly P/L revenue ${bucket.category} ${input.period}`,
       source: {
         kind: "closing",
@@ -233,7 +234,7 @@ export function postMonthlyPlJournalEntries(input: {
     const taxCategory = monthlyPlTaxCategory("expense", bucket.category);
     appendJournalEntry({
       entry_id: entryId,
-      occurred_at: `${input.period}-28T12:00:00.000Z`,
+      occurred_at: `${lastDayOfMonth(input.period)}T12:00:00.000Z`,
       description: `Monthly P/L expense ${bucket.category} ${input.period}`,
       source: {
         kind: "closing",
@@ -501,7 +502,8 @@ export function postRemittanceJournalEntry(input: {
   authorizedBy: string;
 }): string | null {
   const accounts = resolveJournalSourceAccounts();
-  const asOf = `${input.period}-31`;
+  const asOf = lastDayOfMonth(input.period);
+  const occurredAt = `${asOf}T15:00:00.000Z`;
   const trial = buildTrialBalance({ asOf });
   const cash = accounts.bank_control;
   const entryId = `JE-REMIT-${input.obligation.replace(/_/g, "-").toUpperCase()}-${input.period}`;
@@ -586,7 +588,7 @@ export function postRemittanceJournalEntry(input: {
 
   appendJournalEntry({
     entry_id: entryId,
-    occurred_at: `${input.period}-28T15:00:00.000Z`,
+    occurred_at: occurredAt,
     description: `Remittance ${input.obligation} ${input.period}`,
     source: {
       kind: "remittance",
@@ -606,7 +608,8 @@ export function postPayrollPaymentJournalEntry(input: {
   amountYen?: number;
 }): string | null {
   const accounts = resolveJournalSourceAccounts();
-  const asOf = `${input.period}-31`;
+  const asOf = lastDayOfMonth(input.period);
+  const occurredAt = `${asOf}T16:00:00.000Z`;
   const trial = buildTrialBalance({ asOf });
   const payable =
     trial.rows.find((row) => row.account_code === accounts.payroll_payable)
@@ -616,7 +619,7 @@ export function postPayrollPaymentJournalEntry(input: {
   const entryId = `JE-PAYROLL-PAY-${input.period}`;
   appendJournalEntry({
     entry_id: entryId,
-    occurred_at: `${input.period}-28T16:00:00.000Z`,
+    occurred_at: occurredAt,
     description: `Payroll payment ${input.period}`,
     source: { kind: "payroll", period: input.period },
     evidence_refs: [`payroll-payment:${input.period}`],

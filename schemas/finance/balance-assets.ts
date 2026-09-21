@@ -44,6 +44,10 @@ export const fixedAssetSchema = z
     useful_life_assumption: z.string().optional(),
     depreciation_method: depreciationMethodTax,
     annual_depreciation: z.number().nonnegative(),
+    /** When set, do not post monthly depreciation. The amount is an immediate expense, not a statute lookup. */
+    small_amount: z.boolean().optional(),
+    /** Tax depreciation for the year. Book depreciation above this is an add-back. Not a statutory limit table. */
+    tax_depreciation_yen: z.number().nonnegative().optional(),
     /**
      * Current FY depreciation amount for expense-plan / yojitsu reconcile.
      * Prefer over accumulated_depreciation heuristics when set.

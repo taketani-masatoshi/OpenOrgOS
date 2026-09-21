@@ -23,6 +23,7 @@ import { clearOperatorsRegistryCacheForTests } from "../src/lib/org/operators.js
 import { resetStripeSecretsHydrationForTest } from "../src/lib/product/stripe-secrets-store.js";
 import { clearWireGovernanceCacheForTests } from "../src/lib/jurisdiction/wire-governance/index.js";
 import { ROOT_DIR } from "../src/lib/tenant.js";
+import { assertDisposableTestWorkspace } from "./helpers/test-workspace-guard.js";
 
 /** Operational tenants whose committed protocol config must survive E2E demos. */
 const OPERATIONAL_PROTOCOL_TENANTS = ["mal", "southwood", "aiac"] as const;
@@ -340,6 +341,10 @@ function overlayOrgChartFixtures(): void {
     if (existsSync(histSrc)) {
       cpSync(histSrc, join(destDir, "org-chart-history"), { recursive: true, force: true });
     }
+    const workflowsSrc = join(srcDir, "workflows");
+    if (existsSync(workflowsSrc)) {
+      cpSync(workflowsSrc, join(destDir, "workflows"), { recursive: true, force: true });
+    }
   }
 }
 
@@ -417,6 +422,7 @@ function resetStripeSecretsStore(): void {
 }
 
 beforeAll(() => {
+  assertDisposableTestWorkspace(ROOT_DIR);
   warnOnConcurrentRuns(pruneOrphanSnapshots());
   buildFixtureSnapshot();
   cleanGeneratedAgentMissions();

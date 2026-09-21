@@ -6,6 +6,7 @@
   "workspaces": [
     "apps/steward-chat",
     "apps/wire-console",
+    "apps/module-flow",
     "packages/*"
   ],
   "bin": {
@@ -18,6 +19,7 @@
     "validate": "node --import tsx src/cli.ts validate",
     "validate:demo": "node --import tsx src/cli.ts --tenant demo validate",
     "check:canonical-writes": "node --import tsx scripts/check-canonical-writes.ts",
+    "check:tenant-tip": "bash scripts/check-tenant-tip.sh",
     "check": "npm run validate && npm run check:canonical-writes && npm run orgos -- --tenant demo validate && npm run orgos -- --tenant demo events validate && npm run orgos -- --tenant acme validate && npm run orgos -- --tenant us-demo validate && npm run orgos -- --tenant sg-demo validate && npm run orgos -- --tenant ee-demo validate && npm run orgos -- --tenant hk-demo validate && npm run orgos -- --tenant au-demo validate && npm run orgos -- --tenant tw-demo validate && npm run orgos -- --tenant my-demo validate && npm run orgos -- --tenant cn-demo validate && npm run orgos -- --tenant ae-demo validate && npm run orgos -- --tenant ru-demo validate && npm run orgos -- --tenant eu-demo validate && npm run validate:protocol:tenants && npm run orgos -- modules check --all && npm run orgos -- classification check && npm run agent:pipeline:check",
     "validate:protocol:tenants": "node --import tsx scripts/validate-protocol-tenants.ts",
     "daily": "npm run check && npm run orgos -- pipeline run daily",
@@ -78,6 +80,8 @@
     "proposal3:party-relay": "node --import tsx scripts/run-proposal3-party-relay.ts",
     "demo:standalone-org": "node --import tsx scripts/seed-standalone-org-demo.ts",
     "demo:mal-standalone": "node --import tsx scripts/seed-mal-standalone-demo.ts",
+    "module-flow:dev": "npm run dev -w @orgos/module-flow",
+    "module-flow:build": "npm run build -w @orgos/module-flow",
     "wire-console:dev": "npm run dev -w @orgos/wire-console",
     "wire-console:build": "npm run build -w @orgos/wire-console",
     "wire-console:smoke": "npm run wire-console:build && playwright test e2e/wire-console.smoke.spec.ts && playwright test e2e/wire-console-webauthn.smoke.spec.ts --config=playwright.webauthn.config.ts && playwright test e2e/wire-console-oidc.smoke.spec.ts --config=playwright.oidc.config.ts",

@@ -22,25 +22,25 @@ describe("stripe webhook lifecycle", () => {
     refreshOrgOsPaths();
   });
 
-  it("handles invoice.payment_failed as past_due when tenant known", () => {
+  it("handles invoice.payment_failed as past_due when tenant known", async () => {
     const event: StripeWebhookEvent = {
       type: "invoice.payment_failed",
       data: { object: { customer: "cus_unknown" } },
     };
-    const result = handleStripeWebhookEvent(event);
+    const result = await handleStripeWebhookEvent(event);
     expect(result.handled).toBe(false);
   });
 
-  it("handles subscription deleted event shape", () => {
+  it("handles subscription deleted event shape", async () => {
     const event: StripeWebhookEvent = {
       type: "customer.subscription.deleted",
       data: { object: { customer: "cus_unknown", status: "canceled" } },
     };
-    const result = handleStripeWebhookEvent(event);
+    const result = await handleStripeWebhookEvent(event);
     expect(result.handled).toBe(false);
   });
 
-  it("updates subscription status for a provisioned tenant", () => {
+  it("updates subscription status for a provisioned tenant", async () => {
     workspace = mkdtempSync(join(tmpdir(), "stripe-webhook-"));
     process.env.ORGOS_WORKSPACE = workspace;
     refreshOrgOsPaths();
@@ -57,7 +57,7 @@ describe("stripe webhook lifecycle", () => {
       type: "invoice.payment_failed",
       data: { object: { customer: "cus_hook_001" } },
     };
-    expect(handleStripeWebhookEvent(failed)).toMatchObject({
+    expect(await handleStripeWebhookEvent(failed)).toMatchObject({
       handled: true,
       tenant_id: "stripe-hook-001",
       action: "past_due",
@@ -68,7 +68,7 @@ describe("stripe webhook lifecycle", () => {
       type: "invoice.paid",
       data: { object: { customer: "cus_hook_001" } },
     };
-    expect(handleStripeWebhookEvent(paid)).toMatchObject({
+    expect(await handleStripeWebhookEvent(paid)).toMatchObject({
       handled: true,
       action: "active",
     });
@@ -79,7 +79,7 @@ describe("stripe webhook lifecycle", () => {
       type: "customer.subscription.deleted",
       data: { object: { customer: "cus_hook_001", status: "canceled" } },
     };
-    expect(handleStripeWebhookEvent(deleted)).toMatchObject({
+    expect(await handleStripeWebhookEvent(deleted)).toMatchObject({
       handled: true,
       action: "subscription_cancelled",
     });

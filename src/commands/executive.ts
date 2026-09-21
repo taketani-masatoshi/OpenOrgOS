@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { calendarFileSchema, tasksFileSchema } from "../../schemas/executive.js";
+import { calendarFileSchema } from "../../schemas/executive.js";
 import {
   detectCalendarConflicts,
   filterEventsInRange,
@@ -15,6 +15,14 @@ import { pushCalendarToGoogle } from "../lib/google-calendar-push.js";
 import { pullCalendarFromGoogle, yamlOnlyFutureEvents } from "../lib/google-calendar-pull.js";
 import { currentDate, writeMarkdownReport, writeYamlFile, getExecutiveDir } from "../lib/utils.js";
 import { auditCliMutation, requireCliDataWrite } from "../lib/console-auth/cli-operator.js";
+import { archiveCancelledTasks, closeTask, upsertTask } from "../lib/tasks/store.js";
+import { buildTaskView } from "../lib/tasks/task-view.js";
+import {
+  importP0Register,
+  intakeFromApproval,
+  intakeFromTriage,
+  intakeFromWorkOrder,
+} from "../lib/tasks/intake.js";
 
 export async function runExecutiveCalendarPush(opts: {
   from?: string;
@@ -245,15 +253,7 @@ export function runExecutiveTasksArchive(opts: { dryRun?: boolean }): void {
     console.error("data/executive/tasks.yaml 未作成");
     process.exit(1);
   }
-  const file = loadExecutiveTasks();
-  let count = 0;
-  const tasks = file.tasks.map((t) => {
-    if (t.status === "cancelled") {
-      count++;
-      return { ...t, status: "archived" as const };
-    }
-    return t;
-  });
+  const count = archiveCancelledTasks({ dryRun: opts.dryRun });
   if (count === 0) {
     console.log("✓ cancelled タスクなし — 移行不要");
     return;
@@ -263,9 +263,142 @@ export function runExecutiveTasksArchive(opts: { dryRun?: boolean }): void {
     return;
   }
   requireCliDataWrite({ command: "executive tasks archive", permission: "escalate:plan" });
-  writeYamlFile(tasksPath, tasksFileSchema.parse({ ...file, tasks }));
   auditCliMutation("executive tasks archive", String(count));
   console.log(`✓ ${count} 件を archived に移行（Secretary 一覧から非表示）`);
+}
+
+export function runExecutiveTasksList(opts: {
+  priority?: string;
+  status?: string;
+  json?: boolean;
+}): void {
+  const view = buildTaskView();
+  let tasks = view.tasks;
+  if (opts.priority) {
+    tasks = tasks.filter((t) => t.priority === opts.priority);
+  }
+  if (opts.status) {
+    tasks = tasks.filter((t) => t.status === opts.status);
+  }
+  if (opts.json) {
+    console.log(JSON.stringify({ tasks, candidates: view.candidates, counts: view.counts }, null, 2));
+    return;
+  }
+  console.log(
+    `open=${view.counts.open} p0=${view.counts.p0} p1=${view.counts.p1} candidates=${view.counts.candidates}`,
+  );
+  for (const t of tasks) {
+    const due = t.due ? ` due=${t.due}` : "";
+    console.log(
+      `${t.id} [${t.priority}/${t.status}] ${t.title}${due}`,
+    );
+  }
+  if (view.candidates.length > 0) {
+    console.log("");
+    console.log(`## candidates (${view.candidates.length})`);
+    for (const c of view.candidates.slice(0, 20)) {
+      console.log(`${c.kind}:${c.id} [${c.priority}] ${c.title}`);
+    }
+  }
+}
+
+export function runExecutiveTasksAdd(opts: {
+  title: string;
+  due?: string;
+  priority?: string;
+  property?: string;
+  module?: string;
+  json?: boolean;
+}): void {
+  requireCliDataWrite({ command: "executive tasks add", permission: "escalate:plan" });
+  const task = upsertTask({
+    title: opts.title,
+    due: opts.due ?? null,
+    priority: (opts.priority as "p0" | "p1" | "p2" | "p3" | undefined) ?? "p2",
+    property_id: opts.property,
+    module_id: opts.module,
+    origin: { kind: "manual", captured_at: new Date().toISOString() },
+  });
+  auditCliMutation("executive tasks add", task.id);
+  if (opts.json) {
+    console.log(JSON.stringify(task, null, 2));
+    return;
+  }
+  console.log(`✓ ${task.id} ${task.title}`);
+}
+
+export function runExecutiveTasksClose(opts: {
+  id: string;
+  notes?: string;
+  cancel?: boolean;
+  json?: boolean;
+}): void {
+  requireCliDataWrite({ command: "executive tasks close", permission: "escalate:plan" });
+  const task = closeTask(opts.id, {
+    notes: opts.notes,
+    status: opts.cancel ? "cancelled" : "done",
+  });
+  auditCliMutation("executive tasks close", task.id);
+  if (opts.json) {
+    console.log(JSON.stringify(task, null, 2));
+    return;
+  }
+  console.log(`✓ ${task.id} → ${task.status}`);
+}
+
+export function runExecutiveTasksIntake(opts: {
+  triage?: string;
+  workOrder?: string;
+  approval?: string;
+  json?: boolean;
+}): void {
+  const flags = [opts.triage, opts.workOrder, opts.approval].filter(Boolean);
+  if (flags.length !== 1) {
+    console.error("Specify exactly one of --triage / --work-order / --approval");
+    process.exit(1);
+  }
+  requireCliDataWrite({ command: "executive tasks intake", permission: "escalate:plan" });
+  let task;
+  if (opts.triage) task = intakeFromTriage(opts.triage);
+  else if (opts.workOrder) task = intakeFromWorkOrder(opts.workOrder);
+  else task = intakeFromApproval(opts.approval!);
+  auditCliMutation("executive tasks intake", task.id);
+  if (opts.json) {
+    console.log(JSON.stringify(task, null, 2));
+    return;
+  }
+  console.log(`✓ ${task.id} from candidate → ${task.title}`);
+}
+
+export function runExecutiveTasksImportP0(opts: {
+  file?: string;
+  write?: boolean;
+  dryRun?: boolean;
+  json?: boolean;
+}): void {
+  const write = opts.write === true && opts.dryRun !== true;
+  if (write) {
+    requireCliDataWrite({
+      command: "executive tasks import-p0",
+      permission: "escalate:plan",
+    });
+  }
+  const result = importP0Register({ file: opts.file, write });
+  if (write) {
+    auditCliMutation("executive tasks import-p0", String(result.written.length));
+  }
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(
+    write
+      ? `✓ wrote ${result.written.length} (skipped ${result.skipped}) from ${result.drafts.length} open checklist items`
+      : `(dry-run) ${result.drafts.length} open checklist items — pass --write to import`,
+  );
+  for (const d of result.drafts.slice(0, 30)) {
+    console.log(`[${d.priority}] ${d.title}`);
+  }
 }
 
 export function runExecutiveBrief(opts: {

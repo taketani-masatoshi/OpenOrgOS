@@ -11,13 +11,14 @@ Accepted (2026-08-24)
 ## Decision
 
 1. **`data/finance/period-locks.yaml`** — 月次ロック正本。
-2. **`finances close --month` 成功時**（trial + reconcile balanced）に自動ロック。
+2. **`finances close --month` は統一ゲート通過時に自動ロックする。** 試算表・貸借対照表・補助元帳統制・`data/finance/` の validate error 0・必要な自動仕訳（減価償却・給与発生・月次損益）が揃っていること。銀行明細ファイルがある月は、その月の未消込が 0 件であること。ファイルが無い月は銀行ゲートをスキップする。月次 YAML 突合の不一致は警告であり、ロックを止めない。
 3. **`appendJournalEntry`** — ロック済み `occurred_at` を拒否。
-4. **訂正は `orgos ledger reverse --entry-id` のみ** — 元仕訳を反転する新仕訳。
+4. **訂正は逆仕訳の append のみ** — 元仕訳は残す。ロック済み月へは append できないので、先に理由付き unlock し、同月日付の逆仕訳を書いてから再ロックする。
 5. **`orgos ledger period unlock`** — `finance:reconcile` 権限 + 監査ログ。
 
 ## Consequences
 
 - 仕訳に `posted_at` / `posted_by` / `reversal_of` を追加。
 - `saveJournalEntries` 直接書換は禁止（append のみ）。
+- ロック済み月への起票（通常仕訳も逆仕訳の append も）は拒否する。訂正は `orgos ledger period unlock --reason` のあと、同月の逆仕訳を append し、ゲートを満たして再ロックする。
 - 電子帳簿保存法の法令要件（検索・タイムスタンプ局）は別 ADR / フェーズ。

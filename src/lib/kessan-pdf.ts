@@ -22,6 +22,7 @@ import {
   writePdfToFile,
   type PdfTableRow,
 } from "./pdf.js";
+import { buildIndividualNotes } from "./finance/ledger/balance-sheet.js";
 import { ensurePdfOutputDir, formatCurrency, formatJapaneseDate } from "./utils.js";
 
 export interface KessanReportInput {
@@ -188,12 +189,11 @@ export async function generateKessanPdf(
   const notes = [
     ...(yojitsu.closing?.notes ? [yojitsu.closing.notes.trim()] : []),
     ...(input.noteRows ?? []),
+    ...buildIndividualNotes({ fiscalYear: input.fiscalYear }),
   ].filter(Boolean);
-  if (notes.length > 0) {
-    pdfSection(w, `${surplusIndex + 2}. 注記`);
-    for (const note of notes) {
-      pdfParagraph(w, note);
-    }
+  pdfSection(w, `${surplusIndex + 2}. 注記`);
+  for (const note of notes) {
+    pdfParagraph(w, note);
   }
 
   const reps = (company.directors ?? [])

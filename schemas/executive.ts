@@ -66,6 +66,30 @@ export const taskCategory = z.enum([
   "external",
 ]);
 
+export const taskOriginKind = z.enum([
+  "manual",
+  "mail",
+  "work_order",
+  "approval",
+  "p0_register",
+  "module",
+]);
+
+export const taskOriginSchema = z.object({
+  kind: taskOriginKind,
+  /** triage id / handoff id / approval id / P0 heading slug */
+  ref: z.string().optional(),
+  captured_at: datetimeString.optional(),
+});
+
+export const taskLinksSchema = z.object({
+  draft_id: z.string().optional(),
+  triage_id: z.string().optional(),
+  work_order_id: z.string().optional(),
+  approval_id: z.string().optional(),
+  asana_task_gid: z.string().optional(),
+});
+
 export const executiveTaskSchema = z.object({
   id: z.string().regex(/^TASK-\d{3,}$/),
   title: z.string().min(1),
@@ -74,7 +98,17 @@ export const executiveTaskSchema = z.object({
   status: taskStatus.default("open"),
   category: taskCategory.default("business"),
   delegated_to: z.string().nullable().optional(),
+  /** @deprecated Prefer `origin`; kept for backward compatibility. */
   source: z.string().optional(),
+  origin: taskOriginSchema.optional(),
+  links: taskLinksSchema.default({}),
+  /** Catalog module id (rental / hospitality / jp_tax_corporate …). */
+  module_id: z.string().optional(),
+  /** Property id (PROP-001 / PROP-002 …). */
+  property_id: z.string().optional(),
+  next_action: z.string().optional(),
+  blocked_on: z.string().optional(),
+  updated_at: datetimeString.optional(),
 });
 
 export const tasksFileSchema = z.object({
@@ -187,6 +221,10 @@ export type CalendarEvent = z.output<typeof calendarEventSchema>;
 export type CalendarFile = z.output<typeof calendarFileSchema>;
 export type ExecutiveTask = z.output<typeof executiveTaskSchema>;
 export type TasksFile = z.output<typeof tasksFileSchema>;
+export type TaskOrigin = z.output<typeof taskOriginSchema>;
+export type TaskLinks = z.output<typeof taskLinksSchema>;
+export type TaskPriority = z.output<typeof taskPriority>;
+export type TaskStatus = z.output<typeof taskStatus>;
 export type OneOnOne = z.output<typeof oneOnOneSchema>;
 export type OneOnOnesFile = z.output<typeof oneOnOnesFileSchema>;
 export type ExternalContact = z.output<typeof externalContactSchema>;

@@ -70,6 +70,11 @@ export const expenseClaimAllocationSchema = z.object({
   /** Optional zero-based receipt line mapping for deterministic category checks. */
   line_index: z.number().int().nonnegative().optional(),
   description: z.string().min(1).optional(),
+  tax_category: z.enum(["taxable_10", "taxable_8", "exempt", "non_taxable", "out_of_scope", "tax_free"]).optional(),
+  tax_amount_yen: z.number().int().nonnegative().optional(),
+  invoice_status: z.enum(["qualified", "nonqualified_80", "nonqualified_50", "exempt_supplier", "unknown"]).optional(),
+  purchase_use: z.enum(["taxable_only", "common", "non_taxable_only"]).optional(),
+  tax_rounding: z.enum(["floor", "round", "ceil"]).optional(),
 });
 
 export const expenseClaimInvoiceVerificationSchema = z.object({

@@ -17,15 +17,23 @@ export function reverseJournalEntry(input: {
   if (!original) {
     throw new Error(`Journal entry not found: ${input.entryId}`);
   }
+  const already = file.entries.find((row) => row.reversal_of === input.entryId);
+  if (already) {
+    throw new Error(
+      `Journal entry ${input.entryId} already reversed by ${already.entry_id}`,
+    );
+  }
   const parsed = journalEntrySchema.parse(normalizeJournalEntry(original));
+  const sourceKind = parsed.source?.kind ?? "manual";
   const reversalId =
     input.reversalEntryId ?? `${input.entryId}-REV-${Date.now()}`;
   return journalEntrySchema.parse({
     entry_id: reversalId,
     occurred_at: input.occurredAt ?? getClock().now().toISOString(),
-    description: `Reversal of ${input.entryId}`,
+    description: `Reversal of ${input.entryId} (${sourceKind})`,
     source: { kind: "manual", authorized_by: input.authorizedBy },
     reversal_of: input.entryId,
+    reversed_source_kind: sourceKind,
     evidence_refs: [`reversal:${input.entryId}`],
     posted_by: input.authorizedBy,
     lines: parsed.lines.map((line) => ({

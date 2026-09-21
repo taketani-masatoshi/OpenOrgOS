@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · accounting
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-30 · **Tenant:** mal
+> **Generated:** 2026-09-19 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent accounting`
 
 ---
@@ -222,7 +222,7 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 ## ワークフロー（月次締め後）
 
 1. `orgos finances close --month YYYY-MM -o YYYY-MM-close.md`
-2. `orgos ledger trial-balance --as-of YYYY-MM-28`
+2. `orgos ledger trial-balance --as-of YYYY-MM-DD`（対象月の末日。`28` だと月末仕訳が落ちる）
 3. `orgos ledger monthly-reconcile --month YYYY-MM`
 4. `orgos jp bank calendar validate`
 5. `orgos validate`

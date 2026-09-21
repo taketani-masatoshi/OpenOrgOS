@@ -37,13 +37,16 @@ function signedBalance(
 export function buildTrialBalance(input?: {
   asOf?: string;
   coa?: ChartOfAccounts;
+  /** When false, ignore opening-balances.yaml and sum journals through asOf only. */
+  includeOpening?: boolean;
 }): TrialBalanceReport {
   const asOf = input?.asOf ?? new Date().toISOString().slice(0, 10);
   const coa = input?.coa ?? loadChartOfAccounts();
   const issues: string[] = [];
   const totals = new Map<string, { debit: number; credit: number }>();
 
-  const opening = loadOpeningBalances();
+  const useOpening = input?.includeOpening !== false;
+  const opening = useOpening ? loadOpeningBalances() : null;
   const openingAsOf = opening?.as_of;
   const includeOpening = Boolean(opening && openingAsOf && asOf >= openingAsOf);
 
@@ -72,11 +75,15 @@ export function buildTrialBalance(input?: {
 
   const accountByCode = new Map(coa.accounts.map((a) => [a.code, a]));
   const rows: TrialBalanceRow[] = [];
+  let unknownDebit = 0;
+  let unknownCredit = 0;
 
   for (const [accountCode, amount] of totals) {
     const account = accountByCode.get(accountCode);
     if (!account) {
       issues.push(`Unknown account code in journal: ${accountCode}`);
+      unknownDebit += amount.debit;
+      unknownCredit += amount.credit;
       continue;
     }
     rows.push({
@@ -94,13 +101,13 @@ export function buildTrialBalance(input?: {
   }
 
   rows.sort((a, b) => a.account_code.localeCompare(b.account_code));
-  const debit_total_yen = rows.reduce((sum, row) => sum + row.debit_total_yen, 0);
-  const credit_total_yen = rows.reduce(
-    (sum, row) => sum + row.credit_total_yen,
-    0,
-  );
-  const balanced = debit_total_yen === credit_total_yen;
-  if (!balanced) {
+  const debit_total_yen =
+    rows.reduce((sum, row) => sum + row.debit_total_yen, 0) + unknownDebit;
+  const credit_total_yen =
+    rows.reduce((sum, row) => sum + row.credit_total_yen, 0) + unknownCredit;
+  const hasUnknown = issues.some((issue) => issue.includes("Unknown account"));
+  const balanced = debit_total_yen === credit_total_yen && !hasUnknown;
+  if (debit_total_yen !== credit_total_yen) {
     issues.push(
       `Trial balance not balanced: debit=${debit_total_yen} credit=${credit_total_yen}`,
     );

@@ -7,6 +7,7 @@ import {
   type PeriodLocksFile,
 } from "../../../schemas/finance/period-lock.js";
 import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
+import { writeYamlFileAtomic } from "../yaml-atomic.js";
 
 const REL = "finance/period-locks.yaml";
 
@@ -23,11 +24,9 @@ export function loadPeriodLocks(): PeriodLocksFile {
 }
 
 export function savePeriodLocks(file: PeriodLocksFile): void {
-  const previous = existsSync(path())
-    ? readYamlFile(path(), periodLocksFileSchema)
-    : null;
+  const previous = existsSync(path()) ? readYamlFile(path(), periodLocksFileSchema) : null;
   assertPeriodLocksAppendOnly(file, previous);
-  writeYamlFile(path(), periodLocksFileSchema.parse(file));
+  writeYamlFileAtomic(path(), periodLocksFileSchema.parse(file));
 }
 
 /** Past lock rows are immutable; only append new lock/unlock records. */
@@ -37,9 +36,7 @@ export function assertPeriodLocksAppendOnly(
 ): void {
   if (!previous) return;
   if (next.locks.length < previous.locks.length) {
-    throw new Error(
-      "period-locks.yaml is append-only: cannot remove historical lock rows",
-    );
+    throw new Error("period-locks.yaml is append-only: cannot remove historical lock rows");
   }
   for (let i = 0; i < previous.locks.length; i++) {
     const a = previous.locks[i]!;
@@ -49,7 +46,8 @@ export function assertPeriodLocksAppendOnly(
       a.status !== b.status ||
       a.at !== b.at ||
       a.by !== b.by ||
-      (a.reason ?? "") !== (b.reason ?? "")
+      (a.reason ?? "") !== (b.reason ?? "") ||
+      JSON.stringify(a.evidence ?? null) !== JSON.stringify(b.evidence ?? null)
     ) {
       throw new Error(
         `period-locks.yaml is append-only: historical row ${i} (${a.month}) was modified`,
@@ -82,6 +80,7 @@ export function lockMonth(input: {
   lockedBy: string;
   reason?: string;
   lockedAt?: string;
+  evidence?: PeriodLockEntry["evidence"];
 }): PeriodLockEntry {
   const file = loadPeriodLocks();
   const latest = latestLockForMonth(input.month, file);
@@ -92,6 +91,7 @@ export function lockMonth(input: {
     at: input.lockedAt ?? new Date().toISOString(),
     by: input.lockedBy,
     reason: input.reason,
+    evidence: input.evidence,
   });
   file.locks.push(entry);
   savePeriodLocks(file);
@@ -140,9 +140,7 @@ export function periodLockIntegrityIssues(): string[] {
   for (const lock of file.locks) {
     const prev = lastAtByMonth.get(lock.month);
     if (prev && lock.at < prev) {
-      issues.push(
-        `period lock ${lock.month}: non-monotonic at (${prev} → ${lock.at})`,
-      );
+      issues.push(`period lock ${lock.month}: non-monotonic at (${prev} → ${lock.at})`);
     }
     lastAtByMonth.set(lock.month, lock.at);
   }

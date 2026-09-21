@@ -40,6 +40,10 @@ import { buildSubsidiaryLedger } from "../lib/finance/ledger/subsidiary-ledger.j
 import { reverseJournalEntry } from "../lib/finance/journal-reverse.js";
 import { lockMonth, unlockMonth } from "../lib/finance/period-lock.js";
 import {
+  buildMonthlyCloseEvidence,
+  evaluateMonthlyCloseGates,
+} from "../lib/finance/monthly-close.js";
+import {
   buildElectronicLedgerComplianceReport,
   searchElectronicLedger,
 } from "../lib/finance/ledger/electronic-ledger.js";
@@ -250,7 +254,7 @@ export function runLedgerPostSource(opts: {
       `${opts.source === "ar-receipt" ? "AR" : "AP"}-${opts.counterparty}-${stamp}-${amountYen}`
         .toUpperCase()
         .replace(/[^A-Z0-9-]/g, "-");
-    const occurredAt = `${opts.month}-28T12:00:00.000Z`;
+    const occurredAt = `${lastDayOfMonth(opts.month)}T12:00:00.000Z`;
     const posted =
       opts.source === "ar-receipt"
         ? postArReceiptJournalEntry({
@@ -538,10 +542,15 @@ export function runLedgerPeriodLock(opts: {
     command: "ledger period lock",
     permission: "finance:reconcile",
   });
+  const evaluation = evaluateMonthlyCloseGates(opts.month);
+  if (!evaluation.can_lock) {
+    throw new Error(`Period ${opts.month} close gates failed: ${evaluation.errors.join("; ")}`);
+  }
   const entry = lockMonth({
     month: opts.month,
     lockedBy: auth.record.operator_id,
     reason: opts.reason,
+    evidence: buildMonthlyCloseEvidence(evaluation),
   });
   auditCliMutation("ledger period lock", entry.month);
   console.log(`✓ locked period ${entry.month}`);

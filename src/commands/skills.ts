@@ -48,6 +48,7 @@ import {
 } from "../lib/company-events-attestation.js";
 import { runExpenseClaimList } from "./expense-claim.js";
 import { runFinancesClose } from "./finances-close.js";
+import { lastDayOfMonth } from "../lib/finance/fiscal-year.js";
 import {
   runLedgerExport,
   runLedgerMonthlyReconcile,
@@ -319,6 +320,12 @@ export const SKILL_COMMANDS = [
     skill: "change_apply",
     agent: "Operations",
     description: "変更提案の dry-run / apply",
+  },
+  {
+    id: "workflow-evaluate",
+    skill: "workflow_evaluate",
+    agent: "Operations",
+    description: "ワークフロー構成案の決定論評価",
   },
   {
     id: "hr-headcount",
@@ -717,7 +724,8 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
     }
     case "trial-balance": {
       const month = opts.month ?? currentDate().slice(0, 7);
-      runLedgerTrialBalance({ asOf: `${month}-28`, json: opts.json });
+      const asOf = lastDayOfMonth(month);
+      runLedgerTrialBalance({ asOf, json: opts.json });
       runLedgerMonthlyReconcile({ month, json: opts.json });
       break;
     }
@@ -726,7 +734,7 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       runLedgerExport({
         template: "journal-csv",
         from: month ? `${month}-01` : undefined,
-        to: month ? `${month}-31` : undefined,
+        to: month ? lastDayOfMonth(month) : undefined,
         output: opts.output,
         dryRun: opts.dryRun,
       });
@@ -736,7 +744,7 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
       const month = opts.month ?? currentDate().slice(0, 7);
       runLedgerExport({
         template: "trial-balance-csv",
-        asOf: `${month}-28`,
+        asOf: lastDayOfMonth(month),
         output: opts.output,
         dryRun: opts.dryRun,
       });
@@ -815,6 +823,30 @@ async function executeCoreSkillCommand(id: string, opts: SkillRunOptions): Promi
         dryRun: !opts.write,
         json: opts.json,
       });
+      break;
+    }
+    case "workflow-evaluate": {
+      const { runWorkflowEvaluate } = await import("./workflow.js");
+      const { writeFileSync, mkdtempSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const { tmpdir } = await import("node:os");
+      if (opts.body) {
+        const dir = mkdtempSync(join(tmpdir(), "orgos-wf-eval-"));
+        let raw: unknown;
+        try {
+          raw = JSON.parse(opts.body);
+        } catch {
+          const YAML = (await import("yaml")).default;
+          raw = YAML.parse(opts.body);
+        }
+        const file = join(dir, "draft.json");
+        writeFileSync(file, JSON.stringify(raw));
+        runWorkflowEvaluate({ file, json: opts.json ?? true });
+      } else if (opts.id) {
+        runWorkflowEvaluate({ id: opts.id, json: opts.json ?? true });
+      } else {
+        throw new Error("workflow-evaluate requires --id <workflow_id> or --body <document>");
+      }
       break;
     }
     case "hr-headcount":

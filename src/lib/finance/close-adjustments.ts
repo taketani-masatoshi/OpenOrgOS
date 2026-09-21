@@ -7,6 +7,10 @@ export function resolveCloseAdjustmentAmount(
   month: string,
 ): number {
   const parts = amountSource.trim().split(/\s+/);
+  const named = /^(?:yen|fixed|accrual|prepaid|provision)$/;
+  if (parts[0] && named.test(parts[0]) && parts[1] && /^\d+$/.test(parts[1])) {
+    return Number(parts[1]);
+  }
   if (parts[0] === "fixed-assets" && parts.length >= 3) {
     const assetId = parts[1];
     const field = parts[2];

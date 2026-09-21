@@ -8,6 +8,8 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
+- **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。
 - **テナント退避の弱点を閉じる** — 週次の再実行指示は `kind` で選び、文言に依存しない。validate warning と週次 Work Order（連鎖再署名なし）をテストで固定する。`git-remote check` はテナント直下の `.git` も見る。approver も snapshot できる。Run workspace の正本表記は `data/scratch/aia-runs`（退避はレガシー `scratch/aia-runs` も除外）。[tenant-backup.md](docs/org-os/tenant-backup.md)
 - **テナント退避を隣の仕組みに合わせる** — 実行中の `data/scratch/aia-runs` も tar から除く。validate は退避先が設定済みで週次条件を外れたときだけ warning（未設定は黙る）。週次の作業指示は `orgos tenant backup snapshot` で、連鎖の再署名は書かない。連携ハブは説明のままで退避を実行しない。テナント直下の `.git` が公開フォージなら snapshot を拒否する。本番の snapshot / restore は ceo / approver。[tenant-backup.md](docs/org-os/tenant-backup.md)
 - **テナント退避の穴** — 公開フォージはサブドメインと末尾ドットも含めて拒否し、届く `file://` は中の git remote を見る。未マウントは未検査で、週次は設定済みの公開リモートだけ失敗にする。アーカイブは一時ファイルから `0600` で確定し、同じ秒でも上書きしない。復元は `..` と絶対パスを拒み、失敗しても指定先を空のままにする。スタンプは日付・パス・バイト数・sha256 が実体と一致したときだけ週次を通し、日付だけは通さない。ボリュームが非暗号化と読めたときだけ snapshot を拒否し、読めない先は `declared` のまま検証済みとは書かない。[tenant-backup.md](docs/org-os/tenant-backup.md)
@@ -17,6 +19,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Fixed
 
+- Steward Chat のログイン待ちが `customers/nav` 経由で毎回 `buildAgentModuleInventory()`（モジュール成熟度の全件算出）を呼んで数秒〜ハングしていた問題を修正。ナビ判定は modules.yaml / roster の軽量読取だけにする。
 - AIA の `workspace_relpath` と folder access の表記を、実装どおり `data/scratch/aia-runs` に揃えた。
 - 補助元帳の突合が GL カットオーバーを無視し、期首日を過ぎると AR/AP の統制勘定と補助元帳が必ず不一致になっていた問題を修正。試算表と同じ期首基準で集計する。
 

@@ -1603,3 +1603,16 @@ routes:
     match:
       keywords: [医療機器, QMS, GVP, 薬事, 製造販売, 有害事象, ISO 13485]
       paths: [docs/medical-device/, data/medical-device/]
+
+  - id: workflow-evaluate
+    description: ワークフロー評価 · workflow-evaluate
+    agent: operations
+    skill: workflow_evaluate
+    priority: 60
+    resource_paths:
+      - data/workflow/
+    match:
+      keywords:
+        - ワークフロー評価
+        - workflow-evaluate
+      paths: []

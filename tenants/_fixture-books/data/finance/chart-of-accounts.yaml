@@ -9,34 +9,46 @@ accounts:
   - code: "1100"
     name: 現金及び預金
     type: asset
+    bs_class: current
+    cf_role: cash
     normal_balance: debit
     data_source: data/finance/cash-balance.yaml
   - code: "1200"
     name: 建物
     type: asset
+    bs_class: noncurrent
+    cf_role: fixed_asset
     normal_balance: debit
     data_source: data/finance/fixed-assets.yaml
     filter: category=建物
   - code: "1210"
     name: 土地
     type: asset
+    bs_class: noncurrent
+    cf_role: fixed_asset
     normal_balance: debit
     data_source: data/finance/fixed-assets.yaml
     filter: category=土地
   - code: "1290"
     name: 減価償却累計額
     type: asset_contra
+    bs_class: noncurrent
+    cf_role: fixed_asset
     normal_balance: credit
     data_source: data/finance/fixed-assets.yaml
     field: accumulated_depreciation
   - code: "1150"
     name: 売掛金
     type: asset
+    bs_class: current
+    cf_role: receivable
     normal_balance: debit
     note: 請求発行・入金消込の AR 科目
   - code: "1300"
     name: 役員貸付金
     type: asset
+    bs_class: noncurrent
+    cf_role: receivable
     normal_balance: debit
     data_source: data/finance/loans.yaml
     note: 貸付対象者は負債科目（役員借入金）と相殺せず別管理（税理士確認）
@@ -45,42 +57,58 @@ accounts:
   - code: "2100"
     name: 役員借入金
     type: liability
+    bs_class: noncurrent
+    cf_role: loan
     normal_balance: credit
     data_source: data/finance/loans.yaml
     note: 無利息役員貸付 LOAN-001/002。みなし利息調整は tax-profile 参照
   - code: "2120"
     name: 預り金-源泉所得税
     type: liability
+    bs_class: current
+    cf_role: payable
     normal_balance: credit
     note: 給与源泉徴収
   - code: "2130"
     name: 預り金-社会保険料
     type: liability
+    bs_class: current
+    cf_role: payable
     normal_balance: credit
     note: 健保・厚年・雇用（労働者負担分）
   - code: "2140"
     name: 未払給与
     type: liability
+    bs_class: current
+    cf_role: payable
     normal_balance: credit
     note: 給与支払未払
   - code: "2160"
     name: 仮受消費税
     type: liability
+    bs_class: current
+    cf_role: payable
     normal_balance: credit
     note: 請求書発行時の消費税相当額
   - code: "2110"
     name: 買掛金
     type: liability
+    bs_class: current
+    cf_role: payable
     normal_balance: credit
     note: 仕入・外注の AP 統制勘定
   - code: "2165"
     name: 宿泊税預り金
     type: liability
+    bs_class: current
+    cf_role: payable
     normal_balance: credit
     note: 都条例に基づく宿泊税特別徴収
   - code: "2170"
     name: 仮払消費税
     type: asset
+    bs_class: current
+    cf_role: receivable
     normal_balance: debit
     note: 仕入税額（控除対象）
 
@@ -88,12 +116,14 @@ accounts:
   - code: "3100"
     name: 資本金
     type: equity
+    cf_role: equity
     normal_balance: credit
     data_source: data/finance/tax-profile.yaml
     field: corporate_tax.capital_stock
   - code: "3200"
     name: 繰越利益剰余金
     type: equity
+    cf_role: equity
     normal_balance: credit
     data_source: data/finance/tax-profile.yaml
     field: corporate_tax.prior_retained_earnings

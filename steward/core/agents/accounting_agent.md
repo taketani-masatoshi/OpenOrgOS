@@ -60,7 +60,7 @@
 ## ワークフロー（月次締め後）
 
 1. `orgos finances close --month YYYY-MM -o YYYY-MM-close.md`
-2. `orgos ledger trial-balance --as-of YYYY-MM-28`
+2. `orgos ledger trial-balance --as-of YYYY-MM-DD`（対象月の末日。`28` だと月末仕訳が落ちる）
 3. `orgos ledger monthly-reconcile --month YYYY-MM`
 4. `orgos jp bank calendar validate`
 5. `orgos validate`

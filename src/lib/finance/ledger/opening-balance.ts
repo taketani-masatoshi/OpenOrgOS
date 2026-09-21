@@ -98,3 +98,68 @@ export function openingBalanceIntegrityIssues(): string[] {
   }
   return issues;
 }
+
+/**
+ * Opening lines must match the journal-only trial balance at opening.as_of
+ * for balance-sheet accounts (P/L accounts are excluded from openings).
+ */
+export function openingBalancesReconcileIssues(): string[] {
+  const file = loadOpeningBalances();
+  if (!file) return [];
+  const issues = openingBalanceIntegrityIssues();
+  const books = buildTrialBalance({ asOf: file.as_of, includeOpening: false });
+  const expectedLines = books.rows
+    .filter((row) => row.balance_yen !== 0)
+    .map((row) => {
+      if (row.normal_balance === "debit") {
+        return row.balance_yen >= 0
+          ? {
+              account_code: row.account_code,
+              debit_yen: row.balance_yen,
+              credit_yen: 0,
+            }
+          : {
+              account_code: row.account_code,
+              debit_yen: 0,
+              credit_yen: -row.balance_yen,
+            };
+      }
+      return row.balance_yen >= 0
+        ? {
+            account_code: row.account_code,
+            debit_yen: 0,
+            credit_yen: row.balance_yen,
+          }
+        : {
+            account_code: row.account_code,
+            debit_yen: -row.balance_yen,
+            credit_yen: 0,
+          };
+    });
+  const actual = new Map(
+    file.lines.map((line) => [
+      line.account_code,
+      { debit: line.debit_yen, credit: line.credit_yen },
+    ]),
+  );
+  const expected = new Map(
+    expectedLines.map((line) => [
+      line.account_code,
+      { debit: line.debit_yen, credit: line.credit_yen },
+    ]),
+  );
+  for (const [code, want] of expected) {
+    const got = actual.get(code) ?? { debit: 0, credit: 0 };
+    if (got.debit !== want.debit || got.credit !== want.credit) {
+      issues.push(
+        `opening ${code}: books debit=${want.debit}/credit=${want.credit} opening debit=${got.debit}/credit=${got.credit}`,
+      );
+    }
+  }
+  for (const [code, got] of actual) {
+    if (!expected.has(code) && (got.debit !== 0 || got.credit !== 0)) {
+      issues.push(`opening ${code}: not present in books at ${file.as_of}`);
+    }
+  }
+  return issues;
+}

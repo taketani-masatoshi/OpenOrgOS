@@ -12,6 +12,7 @@ import type { ExpenseClaimAllocation } from "../../../schemas/finance/expense-cl
 import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { assertJournalWriteAllowed } from "./journal-write-guard.js";
 import { assertMonthUnlockedForDate } from "./period-lock.js";
+import { assertJournalPostGuards } from "./journal-post-guards.js";
 import { getClock } from "../runtime-context.js";
 
 const JOURNAL_REL = "finance/journal-entries.yaml";
@@ -43,6 +44,11 @@ export function saveJournalEntries(
   opts?: { mode?: "migration" },
 ): void {
   assertJournalWriteAllowed();
+  if (opts?.mode === "migration" && process.env.ORGOS_ALLOW_JOURNAL_MIGRATION !== "1") {
+    throw new Error(
+      "journal migration rewrite requires ORGOS_ALLOW_JOURNAL_MIGRATION=1",
+    );
+  }
   if (opts?.mode !== "migration") {
     const existing = loadJournalEntries();
     if (existing.entries.length > 0) {
@@ -55,12 +61,23 @@ export function saveJournalEntries(
   writeYamlFile(journalEntriesPath(), journalEntriesFileSchema.parse(file));
 }
 
+function isAnnualPlTransfer(entry: JournalEntry): boolean {
+  const source = entry.source;
+  return (
+    source?.kind === "closing" &&
+    source.adjustment_id === "pl-transfer" &&
+    /^JE-CLOSE-FY\d{4}-PL-TRANSFER$/.test(entry.entry_id)
+  );
+}
+
 export function appendJournalEntry(
   entry: JournalEntry,
-  meta?: { postedBy?: string; postedAt?: string },
+  meta?: { postedBy?: string; postedAt?: string; allowAnnualPlTransfer?: boolean },
 ): JournalEntry {
   assertJournalWriteAllowed();
-  assertMonthUnlockedForDate(entry.occurred_at);
+  if (!(meta?.allowAnnualPlTransfer && isAnnualPlTransfer(entry))) {
+    assertMonthUnlockedForDate(entry.occurred_at);
+  }
   const file = loadJournalEntries();
   const existing = file.entries.find((row) => row.entry_id === entry.entry_id);
   const enriched = journalEntrySchema.parse({
@@ -71,6 +88,7 @@ export function appendJournalEntry(
       meta?.postedBy ??
       (entry.source?.kind === "manual" ? entry.source.authorized_by : "system"),
   });
+  assertJournalPostGuards(enriched);
   if (existing) {
     const core = (e: JournalEntry) => ({
       occurred_at: e.occurred_at,
@@ -79,6 +97,7 @@ export function appendJournalEntry(
       lines: e.lines,
       evidence_refs: e.evidence_refs,
       reversal_of: e.reversal_of,
+      reversed_source_kind: e.reversed_source_kind,
     });
     if (JSON.stringify(core(existing)) === JSON.stringify(core(enriched))) {
       return existing;
@@ -119,6 +138,11 @@ export function postExpenseClaimJournal(input: {
           credit_yen: 0,
           org_unit_id: allocation.org_unit_id,
           person_id: allocation.person_id,
+          tax_category: allocation.tax_category,
+          tax_amount_yen: allocation.tax_amount_yen,
+          invoice_status: allocation.invoice_status,
+          purchase_use: allocation.purchase_use,
+          tax_rounding: allocation.tax_rounding,
         })),
         {
           account_code: accounting.payable_account_code,

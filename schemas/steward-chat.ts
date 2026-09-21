@@ -288,6 +288,8 @@ export const chatAuditActionSchema = z.enum([
   "correspondence_send",
   "org_chart_change_propose",
   "org_chart_change_apply",
+  "workflow_structure_propose",
+  "workflow_structure_apply",
   "mail_gmail_connect",
   "mail_gmail_disconnect",
   "mail_config_update",

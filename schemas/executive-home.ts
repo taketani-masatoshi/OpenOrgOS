@@ -20,6 +20,8 @@ export const executiveAttentionKindSchema = z.enum([
   "ceo_question",
   "approval",
   "wire",
+  "task",
+  "property",
 ]);
 
 export const executiveAttentionItemSchema = z.object({
@@ -61,6 +63,30 @@ export const executiveHomeSchema = z.object({
   company_name: z.string(),
   attention: z.array(executiveAttentionItemSchema),
   attention_count: z.number().int().nonnegative(),
+  /** MAL morning lanes — secretary / property / task counts (L1). */
+  lanes: z
+    .object({
+      secretary_href: z.string(),
+      properties_href: z.string(),
+      wire_href: z.string().default("/wire/"),
+      modules_href: z.string().default("/modules/"),
+      tasks_p0: z.number().int().nonnegative(),
+      tasks_open: z.number().int().nonnegative(),
+      mail_action_required: z.number().int().nonnegative(),
+      approvals_pending: z.number().int().nonnegative(),
+      property_due_p0: z.number().int().nonnegative(),
+      wire_pending: z.number().int().nonnegative().default(0),
+      modules_unset: z.number().int().nonnegative().default(0),
+      properties: z.array(
+        z.object({
+          property_id: z.string(),
+          name: z.string(),
+          due_p0: z.number().int().nonnegative(),
+          href: z.string(),
+        }),
+      ),
+    })
+    .optional(),
   gaps: z.array(executiveGapRowSchema),
   gap_summary: z.object({
     green: z.number().int().nonnegative(),

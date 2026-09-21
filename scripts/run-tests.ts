@@ -5,7 +5,10 @@ import {
   writeTestSuiteFailed,
   writeTestSuitePassed,
 } from "../src/lib/protocol/test-suite-status.js";
+import { ROOT_DIR } from "../src/lib/tenant.js";
+import { assertDisposableTestWorkspace } from "../tests/helpers/test-workspace-guard.js";
 
+assertDisposableTestWorkspace(ROOT_DIR);
 clearTestSuiteStatus();
 const vitestArgs = ["vitest", "run", ...process.argv.slice(2)];
 const result = spawnSync("npx", vitestArgs, { stdio: "inherit", env: process.env });

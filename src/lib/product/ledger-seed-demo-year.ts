@@ -4,28 +4,23 @@
  * Account codes are resolved from COA / journal_source_accounts (never orphan fixed codes).
  */
 import { appendJournalEntry, loadJournalEntries, saveJournalEntries } from "../finance/expense-claim-journal.js";
-import { resolveCompanyFiscalYearEndMonth } from "../finance/fiscal-year.js";
-import { getClock } from "../runtime-context.js";
+import {
+  fiscalYearStartMonth,
+  resolveCompanyFiscalYearEndMonth,
+} from "../finance/fiscal-year.js";
 import {
   ensureLedgerDemoChartOfAccounts,
   resolveDemoYearAccountCodes,
 } from "./ledger-coa-ensure.js";
 
 function monthKeysForFiscalYear(fyLabel: string, yearEndMonth: number): string[] {
-  const match = fyLabel.match(/(\d{4})/);
-  const endYear = match ? Number(match[1]) : getClock().now().getUTCFullYear();
-  const startMonth = (yearEndMonth % 12) + 1;
-  const startYear = startMonth === 1 ? endYear : endYear - 1;
   const months: string[] = [];
-  let y = startYear;
-  let m = startMonth;
+  let cursor = fiscalYearStartMonth(fyLabel, yearEndMonth);
   for (let i = 0; i < 12; i += 1) {
-    months.push(`${y}-${String(m).padStart(2, "0")}`);
-    m += 1;
-    if (m > 12) {
-      m = 1;
-      y += 1;
-    }
+    months.push(cursor);
+    const [year, month] = cursor.split("-").map(Number);
+    const next = new Date(year!, month!, 1);
+    cursor = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
   }
   return months;
 }
@@ -53,10 +48,17 @@ export function seedLedgerDemoYear(input?: {
   }
 
   if (input?.force && existing > 0) {
-    saveJournalEntries(
-      { version: 1, entries: [] },
-      { mode: "migration" },
-    );
+    const previous = process.env.ORGOS_ALLOW_JOURNAL_MIGRATION;
+    process.env.ORGOS_ALLOW_JOURNAL_MIGRATION = "1";
+    try {
+      saveJournalEntries(
+        { version: 1, entries: [] },
+        { mode: "migration" },
+      );
+    } finally {
+      if (previous == null) delete process.env.ORGOS_ALLOW_JOURNAL_MIGRATION;
+      else process.env.ORGOS_ALLOW_JOURNAL_MIGRATION = previous;
+    }
   }
 
   ensureLedgerDemoChartOfAccounts();

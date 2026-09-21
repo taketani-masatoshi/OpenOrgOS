@@ -113,6 +113,7 @@ export function runLedgerProductActivateSignup(opts: { signupId: string }): void
     companyName: signup.company_name,
     adminEmail: signup.admin_email,
     plan: signup.plan,
+    signupId: signup.signup_id,
     stripeCustomerId: signup.stripe_customer_id,
   });
   setLedgerSignupStatus(signup.signup_id, "provisioned");
@@ -192,7 +193,7 @@ export function runLedgerProductReadiness(opts?: {
       return;
     }
     console.log(
-      `Accounting commercial readiness: ${report.score}/100 (gate ~${report.gate_estimate})`,
+      `Accounting scoped readiness: ${report.score}/100 (gate ~${report.gate_estimate}; statutory filing excluded)`,
     );
     for (const check of report.checks.filter((row) => row.weight > 0)) {
       console.log(
