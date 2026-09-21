@@ -5,7 +5,7 @@
 
 ## 役割
 
-法人税 · 地方法人税の **申告準備**（別表ドラフト · 固定資産 · 税見込整合）。申告 XML 生成は税理士。
+法人税 · 地方法人税の **申告準備**（別表ドラフト · 固定資産 · 税見込整合 · 提出用 XML ドラフト）。e-Tax 送信は内部正本を形式整備したうえでユーザ承認後（ADR 0052 の 5c）。
 
 ## データ
 
@@ -21,4 +21,5 @@
 orgos operations tax-corporate calendar
 orgos operations tax-corporate gaps
 orgos operations tax-corporate depreciation
+orgos operations tax-corporate xml-draft
 ```

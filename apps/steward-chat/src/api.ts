@@ -2006,6 +2006,7 @@ export interface TaxReadinessReport {
     module: string;
     registered: boolean;
     xml_draft: boolean;
+    send_gate: boolean;
     note: string;
   };
   ready_for_handoff: boolean;
@@ -2306,7 +2307,7 @@ export async function fetchTaxReadiness(): Promise<{
   ready_for_handoff: boolean;
   note: string;
   boundary: string;
-  etax_module: { xml_draft: boolean; note: string };
+  etax_module: { xml_draft: boolean; send_gate: boolean; note: string };
 }> {
   return chatApi("/chat/v1/tax/readiness");
 }

@@ -1,7 +1,7 @@
 # OrgOS Agent Pack · tax
 
 > **Tool-neutral** — Claude Projects · ChatGPT · Cline · Aider · Continue · Open WebUI 等に貼付 / 添付
-> **Generated:** 2026-08-30 · **Tenant:** mal
+> **Generated:** 2026-09-21 · **Tenant:** mal
 > **Regenerate:** `orgos operator export --agent tax`
 
 ---
@@ -198,7 +198,7 @@ Full rule: `steward/rules/local-llm-error-fallback.md` · ADR 0061
 
 ## 禁止
 
-- e-Tax 自動提出
+- e-Tax 自動提出（承認なし）。提出用データの形式整備は 5b。外部送信はユーザ承認後のみ（ADR 0052 の 5c）
 - 税理士判断の代替
 
 ## 目的

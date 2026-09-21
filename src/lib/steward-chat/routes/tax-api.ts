@@ -1,6 +1,6 @@
 /**
  * Tax module HTTP API — separated from Ledger accounting workbench.
- * Submission to e-Tax/eLTAX is never performed here (ADR 0052 Phase 5c).
+ * Drafts are 5b. External send is 5c and requires human approval.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { WireConsoleUser } from "../../wire-console/auth/session.js";
@@ -12,6 +12,11 @@ import {
   buildTaxHandoffPackage,
   taxModuleBoundaryNote,
 } from "../../tax/tax-handoff-package.js";
+import {
+  ETAX_DRAFT_SUBMISSION,
+  EtaxSendNotApprovedError,
+  authorizeEtaxExternalSend,
+} from "../../tax/etax-filing-boundary.js";
 import {
   buildPayrollYearEndReadiness,
   computeBonusDraft,
@@ -38,7 +43,7 @@ function json(res: ServerResponse, status: number, body: unknown): void {
 
 /**
  * GET  /chat/v1/tax/readiness | /handoff | /payroll-yea | /calendar | /gaps | /consumption
- * POST /chat/v1/tax/xml-draft | /handoff | /bonus-draft | /yea/ready | /yea/compute | /payroll-calc
+ * POST /chat/v1/tax/xml-draft | /handoff | /etax-send | /bonus-draft | /yea/ready | /yea/compute | /payroll-calc
  */
 export async function handleTaxApi(
   req: IncomingMessage,
@@ -119,8 +124,28 @@ export async function handleTaxApi(
       ok: true,
       boundary: taxModuleBoundaryNote(),
       readiness: buildTaxReadinessReport(),
-      submission: "not-for-etax",
+      submission: ETAX_DRAFT_SUBMISSION,
+      send_requires_approval: true,
     });
+    return true;
+  }
+
+  if (pathname === "/chat/v1/tax/etax-send" && method === "POST") {
+    if (!requireChatPermission(user, "chat:approve", res)) return true;
+    try {
+      const authorized = authorizeEtaxExternalSend({ humanApproved: true });
+      json(res, 200, {
+        ok: true,
+        ...authorized,
+        boundary: taxModuleBoundaryNote(),
+      });
+    } catch (error) {
+      const status = error instanceof EtaxSendNotApprovedError ? 403 : 422;
+      json(res, status, {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
     return true;
   }
 

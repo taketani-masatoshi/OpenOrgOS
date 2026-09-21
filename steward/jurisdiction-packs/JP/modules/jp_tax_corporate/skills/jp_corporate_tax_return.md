@@ -10,6 +10,7 @@ npm run orgos -- skills run jp-corporate-tax-return
 npm run orgos -- operations tax-corporate calendar
 npm run orgos -- operations tax-corporate gaps
 npm run orgos -- operations tax-corporate depreciation
+npm run orgos -- operations tax-corporate xml-draft
 ```
 
-申告書 XML は生成しません（税理士受け渡し用カレンダー · ギャップ · 減価償却検算）。
+本 Skill はカレンダー · ギャップ · 減価償却検算。提出用 XML ドラフトは `xml-draft`（ADR 0052 の 5b）。外部送信はユーザ承認後のみ（5c）。

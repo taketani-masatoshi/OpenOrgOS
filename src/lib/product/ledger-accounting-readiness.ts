@@ -1,6 +1,7 @@
 /**
  * Accounting commercial readiness — distinct from product (P0–P4) and ops commercial (C0–C3).
- * Measures: healthy books, bank reconcile, month close, dencho basic, tax handoff (no e-Tax submit).
+ * Measures: healthy books, bank reconcile, month close, dencho basic,
+ * tax handoff (draft from books · send after approval).
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -176,15 +177,15 @@ export function buildAccountingReadinessChecks(): AccountingReadinessCheck[] {
     {
       id: "tax-handoff",
       gate: "A2",
-      label: "Tax handoff package (no e-Tax submit CTA)",
+      label: "Tax handoff package (draft until approved send)",
       weight: 6,
       pass:
-        fileExists("src/lib/tax/tax-handoff-package.ts") &&
-        sourceIncludes("src/lib/tax/tax-handoff-package.ts", [
-          "not-for-etax",
+        fileExists("src/lib/tax/etax-filing-boundary.ts") &&
+        sourceIncludes("src/lib/tax/etax-filing-boundary.ts", [
+          "authorizeEtaxExternalSend",
         ]) &&
         sourceIncludes("apps/steward-chat/src/TaxHandoffPage.tsx", [
-          "e-Tax 提出不可",
+          "自動送信しない",
         ]),
     },
     {

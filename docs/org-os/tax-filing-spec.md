@@ -4,18 +4,18 @@
 
 ## 目的
 
-法人の **申告準備**（正データ整備 · 期限可視化 · 税理士引き渡し）を決定論 CLI + YAML 正本で支える。  
-**e-Tax / eLTAX への本番提出はスコープ外**（税理士 · 代表の権限）。
+法人の **申告準備**（正データ整備 · 期限可視化 · 税理士引き渡し · 提出用データ出力）を決定論 CLI + YAML 正本で支える。  
+e-Tax / eLTAX 提出は、内部の決算・税務申告書を正本として e-Tax 形式または API 連携形式まで整備し、ユーザ承認後に外部送信する（ADR 0052）。承認なしの自動送信はしない。
 
 ## 責務境界
 
 | 主体 | 責務 |
 |------|------|
-| **Tax Agent** | `docs/company/tax/**` · 申告ドラフト · チェックリスト生成 |
+| **Tax Agent** | `docs/company/tax/**` · 申告ドラフト · チェックリスト · 提出用データ出力（5b） · 承認後送信の下書き（5c） |
 | **Finance Agent** | 数値 SoT（GL · 月次 · 固定資産 YAML） |
 | **Accounting** | 仕訳 · 総勘定元帳（`orgos ledger` · ADR 0041 ネイティブ GL） |
 | **Compliance** | インボイス制度 · 規程整合 |
-| **人間 / 税理士** | 区分確定 · 申告書 XML · 電子署名 |
+| **人間 / 税理士** | 区分確定 · 電子署名 · 外部送信の承認（5c ゲート） |
 
 ## データ正本
 
@@ -49,6 +49,12 @@
 
 税理士確定額の **上書き禁止**。差異は warning のみ。
 
+## 税務調整（別表四相当）100点
+
+100点は、当期純利益に人が渡した確定の加算・減算だけを載せて課税所得見積を出すこと（`buildCorporateTaxAdjustments`）。`pending` は課税所得に入れず残す。行が無いときは調整なしと明示する。
+
+分母外: 国税庁公式XMLスキーマ、e-Tax相手方への実送信、みなし利息や交際費の要否判断、別表五の内訳。
+
 ## CLI
 
 ```bash
@@ -66,7 +72,7 @@ orgos skills run tax-filing-prep
 orgos validate
 ```
 
-`orgos tax readiness` は **agent-readiness とは別指標**（7 軸 · 申告準備の実務深度）。e-Tax / 申告書 XML は分母外。  
+`orgos tax readiness` は **agent-readiness とは別指標**（7 軸 · 決算・納税の実務到達度）。公式スキーマ完全準拠と相手方実送信クライアントは分母外。5b ドラフトと 5c 承認ゲートはモジュール到達として併記する。  
 **`advisor_pending`**（deferred · tax_advisor）を併記 — 機械 100% でも税理士回答待ちなら `filing_ready: false`。
 
 ## 固定資産 · 当期計上
@@ -101,12 +107,12 @@ orgos validate
 | サブ | 内容 | 状態 |
 |------|------|------|
 | 5a | 会計 SoT（試算表 · 月次整合） | Phase 3 進行中 |
-| 5b | 申告書 XML / 別表ドラフト | defer |
-| 5c | e-Tax / eLTAX 本番提出 | **スコープ外**（人間/税理士） |
-| 5d | 宿泊税 `mode: from_ledger` | defer · 設計 stub ADR 0052 |
+| 5b | 提出用データ出力（XML / 別表 · 公開仕様へのフォーマット寄せ） | **実装済（handoff ドラフト）** · 公式スキーマ準拠は継続 |
+| 5c | e-Tax / eLTAX 外部送信（ユーザ承認後） | **承認ゲート必須**（自動送信はしない） |
+| 5d | 宿泊税 `mode: from_ledger` | **実装済** |
 
 ```yaml
-# 5d 将来 — obligation_rhythms
+# 5d — obligation_rhythms
 amount:
   mode: from_ledger
   ledger_ref: data/operations/lodging-tax.yaml
@@ -117,7 +123,7 @@ amount:
 
 ## 関連
 
-- [consumption-tax-refund-spec.md](./consumption-tax-refund-spec.md) — 還付は集計と手続を分離（ADR 0056）。R0–R3 実装済み。e-Tax はしない
+- [consumption-tax-refund-spec.md](./consumption-tax-refund-spec.md) — 還付は集計と手続を分離（ADR 0056）。R0–R3 実装済み。e-Tax 送信はユーザ承認後のみ（0052 5c）
 - [jp-bank-corporate-cashflow-spec.md](./jp-bank-corporate-cashflow-spec.md) — `calendar import --from tax`
 - [expense-claim-spec.md](./expense-claim-spec.md) — 適格請求書 QR
 - ADR [0046-tax-obligation-rhythm-engine.md](../adr/0046-tax-obligation-rhythm-engine.md)

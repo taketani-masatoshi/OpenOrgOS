@@ -11,6 +11,7 @@ export type TaxModuleReadiness = {
   module: "jp_tax_corporate";
   registered: boolean;
   xml_draft: boolean;
+  send_gate: boolean;
   path: string;
   note: string;
 };
@@ -33,6 +34,9 @@ export function buildTaxReadinessReport(): TaxReadinessReport {
   const xmlDraft = existsSync(
     join(getInstallRoot(), "src/lib/finance/jp-corporate-tax-xml.ts"),
   );
+  const sendGate = existsSync(
+    join(getInstallRoot(), "src/lib/tax/etax-filing-boundary.ts"),
+  );
   const statutory = [
     ...statutoryFilingReadinessIssues(),
     ...consumptionTaxReadinessIssues(),
@@ -44,12 +48,13 @@ export function buildTaxReadinessReport(): TaxReadinessReport {
       module: "jp_tax_corporate",
       registered,
       xml_draft: xmlDraft,
+      send_gate: sendGate,
       path: modulePath,
-      note: "Phase 5b XML draft for advisor handoff; 5c e-Tax submit is human-only (ADR 0052)",
+      note: "5b draft from internal books; 5c send after user approval (ADR 0052)",
     },
     statutory_issues: statutory,
     ready_for_handoff: blocking.length === 0 && xmlDraft,
     note:
-      "P4: orgos operations tax-corporate xml-draft · submission remains outside OrgOS",
+      "P4: xml-draft from books · etax-send requires chat:approve · official transport deferred",
   };
 }

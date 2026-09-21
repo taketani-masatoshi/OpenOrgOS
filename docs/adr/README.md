@@ -38,7 +38,7 @@ OpenOrgOS の **主要なアーキテクチャ判断** を記録する。正本�
 | [0045](0045-company-events-chain-trust-anchor.md) | 会社イベントチェーン内部トラストアンカー（records_audit hardening） | Accepted |
 | [0046](0046-tax-obligation-rhythm-engine.md) | 税務 obligation rhythm エンジン · 概算金額方針 | Accepted |
 | [0051](0051-jp-tax-skills-cli-only.md) | JP tax skill CLI-only · tax readiness 指標分離 | Accepted |
-| [0052](0052-tax-filing-phase5-deferred.md) | e-Tax / XML / 宿泊税 ledger — Phase 5 defer ロードマップ | Proposed |
+| [0052](0052-tax-filing-phase5-deferred.md) | e-Tax / XML / 宿泊税 ledger — 5b 形式整備 · 5c 承認後送信 | Accepted |
 | [0046](0046-analytics-metric-catalog-ssot.md) | Analytics メトリクス Catalog SSOT（resolver · KPI 定義） | Accepted |
 | [0047](0047-sales-line-deterministic-stack.md) | 営業ライン決定論スタック（pipeline CLI · fact provider · validate） | Accepted |
 | [0048](0048-investor-relations-ssot.md) | 自社 IR SSOT（cap table · 開示カレンダー · investor_relations モジュール） | Accepted |

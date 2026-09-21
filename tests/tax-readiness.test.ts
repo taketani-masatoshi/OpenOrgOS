@@ -4,7 +4,10 @@ import {
   assessInvoiceRegistration,
   assessQualifiedInvoiceIssuance,
 } from "../src/lib/finance/invoice-qualified.js";
-import { computeTaxReadiness } from "../src/lib/finance/tax-readiness.js";
+import {
+  computeTaxReadiness,
+  formatTaxReadinessMarkdown,
+} from "../src/lib/finance/tax-readiness.js";
 import { resolveRegisteredSkillInvocation } from "../src/commands/skills.js";
 import { setTenantId } from "../src/lib/tenant.js";
 
@@ -51,7 +54,15 @@ describe("tax readiness", () => {
     expect(result.max).toBe(100);
     expect(result.pct).toBeGreaterThanOrEqual(0);
     expect(result.pct).toBeLessThanOrEqual(100);
-    expect(result.out_of_scope).toContain("e-Tax / eLTAX 本番提出");
+    expect(result.out_of_scope).toContain(
+      "国税庁公式スキーマ完全準拠と相手方実送信クライアント",
+    );
+    expect(result.practice.xml_draft).toBe("implemented");
+    expect(result.practice.send_gate).toBe("implemented");
+    expect(result.practice.official_transport).toBe("deferred");
+    expect(formatTaxReadinessMarkdown(result)).toContain(
+      "決算・納税の実務到達度",
+    );
   });
 
   it("mal machine score 100% with advisor_pending visible", () => {

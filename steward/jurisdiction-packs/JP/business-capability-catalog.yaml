@@ -1222,4 +1222,4 @@ summary:
     - human_resources Agent 未実装（就業規則 · 社保 · 給与）
     - jp_statutory_meetings モジュール未実装
     - jp_social_insurance · jp_payroll モジュールは集計 CLI まで実装（申告提出は未実装）
-    - 税務モジュールは skeleton — 申告書 XML · e-Tax 提出は未実装（tax-filing-spec 参照）
+    - 税務モジュールは申告準備 + XML ドラフト（5b）+ 承認後送信ゲート（5c）。公式スキーマ / 相手方クライアントは継続（tax-filing-spec · ADR 0052）

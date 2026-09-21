@@ -1,7 +1,8 @@
 /**
  * JP corporate tax return XML draft (ADR 0052 Phase 5b).
  *
- * Purpose: advisor handoff package — NOT e-Tax / eLTAX submission (5c is human-only).
+ * Built from internal books (GL · tax-profile). Unapproved output is
+ * `not-for-etax`. External send is a separate 5c gate after user approval.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,6 +17,9 @@ import { buildBalanceSheet } from "./ledger/balance-sheet.js";
 import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
+import { ETAX_DRAFT_SUBMISSION } from "../tax/etax-filing-boundary.js";
+import { buildCorporateTaxAdjustments } from "./corporate-tax-adjustments.js";
+import type { CorporateTaxAdjustmentLine } from "../../../schemas/finance/tax-adjustments.js";
 
 export type CorporateTaxXmlDraft = {
   fiscal_year: string;
@@ -23,7 +27,7 @@ export type CorporateTaxXmlDraft = {
   xml: string;
   relative_path: string;
   absolute_path: string;
-  submission: "not-for-etax";
+  submission: typeof ETAX_DRAFT_SUBMISSION;
 };
 
 function escapeXml(value: string): string {
@@ -39,6 +43,7 @@ function loadCorporateTaxSlice(): {
   estimated_tax_status?: string;
   estimated_tax_fy2026?: number;
   notes?: string;
+  adjustments?: CorporateTaxAdjustmentLine[];
 } {
   try {
     const profile = loadTaxProfile() as {
@@ -46,6 +51,7 @@ function loadCorporateTaxSlice(): {
         estimated_tax_status?: string;
         estimated_tax_fy2026?: number;
         notes?: string;
+        adjustments?: CorporateTaxAdjustmentLine[];
       };
     };
     return profile.corporate_tax ?? {};
@@ -57,6 +63,7 @@ function loadCorporateTaxSlice(): {
 export function buildCorporateTaxXmlDraft(input?: {
   fiscalYear?: string;
   asOf?: string;
+  lines?: CorporateTaxAdjustmentLine[];
 }): Omit<CorporateTaxXmlDraft, "relative_path" | "absolute_path"> & {
   relative_path: string;
 } {
@@ -95,18 +102,27 @@ export function buildCorporateTaxXmlDraft(input?: {
   }
   const corp = loadCorporateTaxSlice();
   const generatedAt = getClock().now().toISOString();
+  const adjustments = buildCorporateTaxAdjustments({
+    netIncomeYen: sheet.net_income_yen,
+    lines: input?.lines ?? corp.adjustments ?? [],
+  });
+  const pending = [
+    ...adjustments.advisor_pending,
+    "retained_breakdown",
+    "official_form_mapping",
+  ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <OrgOSCorporateTaxDraft
   xmlns="urn:openorgos:jp-tax-corporate:draft:1"
   schemaVersion="1"
   purpose="advisor-handoff-draft"
-  submission="not-for-etax"
+  submission="${ETAX_DRAFT_SUBMISSION}"
   generatedAt="${escapeXml(generatedAt)}"
 >
   <Disclaimer>
-    This file is an OrgOS Ledger draft for tax-advisor handoff (ADR 0052 Phase 5b).
-    It is not an official e-Tax / NTA return XML and must not be submitted as-is.
+    OrgOS draft from internal books (ADR 0052 Phase 5b). Official schema alignment continues.
+    External send requires user approval (5c). Do not treat this file as a live filing.
   </Disclaimer>
   <Entity>
     <LegalName>${escapeXml(company.name)}</LegalName>
@@ -140,11 +156,12 @@ export function buildCorporateTaxXmlDraft(input?: {
     }
     ${corp.notes ? `<Notes>${escapeXml(corp.notes)}</Notes>` : ""}
   </CorporateTaxPrep>
-  <AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算（概算）">
-    <Line code="current_net_income" label="当期純利益">${sheet.net_income_yen}</Line>
-    <Line code="add_backs" label="加算（税理士確定）">0</Line>
-    <Line code="subtractions" label="減算（税理士確定）">0</Line>
-    <Line code="taxable_income_estimate" label="課税所得の見積">${sheet.net_income_yen}</Line>
+  <AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
+    <Line code="current_net_income" label="当期純利益">${adjustments.net_income_yen}</Line>
+    <AdjustmentsAbsent>${adjustments.adjustments_absent ? "true" : "false"}</AdjustmentsAbsent>
+    <Line code="add_backs" label="加算">${adjustments.add_backs_yen}</Line>
+    <Line code="subtractions" label="減算">${adjustments.subtractions_yen}</Line>
+    <Line code="taxable_income_estimate" label="課税所得の見積">${adjustments.taxable_income_yen}</Line>
   </AnnexDraft>
   <AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益積立金（概算）">
     <Line code="total_equity" label="純資産合計">${sheet.total_equity_yen}</Line>
@@ -152,8 +169,8 @@ export function buildCorporateTaxXmlDraft(input?: {
   </AnnexDraft>
   <Completeness>
     <Filled>entity,statements,betsu-4-estimate,betsu-5-equity</Filled>
-    <AdvisorPending>add_backs,subtractions,retained_breakdown,official_form_mapping</AdvisorPending>
-    <Submission>not-for-etax</Submission>
+    <AdvisorPending>${escapeXml(pending.join(","))}</AdvisorPending>
+    <Submission>${ETAX_DRAFT_SUBMISSION}</Submission>
   </Completeness>
 </OrgOSCorporateTaxDraft>
 `;
@@ -164,7 +181,7 @@ export function buildCorporateTaxXmlDraft(input?: {
     as_of: asOf,
     xml,
     relative_path,
-    submission: "not-for-etax",
+    submission: ETAX_DRAFT_SUBMISSION,
   };
 }
 

@@ -1,12 +1,16 @@
 /**
  * Tax module handoff package (accounting → tax separation).
- * e-Tax / eLTAX production submit remains human-only (ADR 0052 Phase 5c).
+ * Draft is 5b from internal books. External send is 5c after approval.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { getDocsDir } from "../utils.js";
 import { writeCorporateTaxXmlDraft } from "../finance/jp-corporate-tax-xml.js";
+import {
+  ETAX_DRAFT_SUBMISSION,
+  taxModuleBoundaryNote,
+} from "./etax-filing-boundary.js";
 import { buildTaxReadinessReport } from "../product/ledger-tax-readiness.js";
 import { buildTrialBalance } from "../finance/ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
@@ -18,7 +22,7 @@ export type TaxHandoffPackage = {
   package_dir: string;
   zip_path: string;
   files: string[];
-  submission: "not-for-etax";
+  submission: typeof ETAX_DRAFT_SUBMISSION;
   note: string;
 };
 
@@ -76,14 +80,14 @@ export function buildTaxHandoffPackage(input?: {
     [
       `# 税務 handoff — ${fiscalYear}`,
       "",
-      "本パッケージは顧問税理士向けです。**e-Tax / eLTAX への本番提出は含みません**（ADR 0052）。",
+      taxModuleBoundaryNote(),
       "",
       `- XML draft: \`${xml.relative_path}\``,
       `- generated_at: ${getClock().now().toISOString()}`,
       yeaNote,
       "## 提出について",
       "",
-      "提出は税務モジュール外の人間オペレーションです。OrgOS Ledger（会計）は帳簿・試算表・XML ドラフトまでを提供します。",
+      "未承認のドラフトは live filing ではない。内部正本から e-Tax / API 形式へ寄せたあと、ユーザ承認で外部送信する。",
       "",
     ].join("\n"),
     "utf-8",
@@ -116,11 +120,9 @@ export function buildTaxHandoffPackage(input?: {
       xmlCopy,
       zipPath,
     ],
-    submission: "not-for-etax",
-    note: "Advisor handoff only — e-Tax submit is outside OrgOS Ledger",
+    submission: ETAX_DRAFT_SUBMISSION,
+    note: taxModuleBoundaryNote(),
   };
 }
 
-export function taxModuleBoundaryNote(): string {
-  return "Tax filing (e-Tax/eLTAX) belongs to jp_tax_corporate module handoff; Ledger product does not submit returns.";
-}
+export { taxModuleBoundaryNote } from "./etax-filing-boundary.js";

@@ -8,7 +8,7 @@
 - OpenOrgOS **Core** は組織間プロトコルであり SaaS 製品ではない（`docs/org-os/openorgos-core-philosophy.md`）。
 - Steward 参照実装の GL・監査・Operator Console は **帳簿モジュール**として 90 点帯に到達した。
 - 法人向けに **他社へ販売**するには、Core と分離した **製品層（Product Layer）** が必要。
-- 日本法人向け販売では **電子帳簿保存法** が必須。e-Tax / 法定申告 XML は **別モジュール**（ADR 0052 ロードマップ）とする。
+- 日本法人向け販売では **電子帳簿保存法** が必須。e-Tax は内部決算・申告書を正本に形式整備し、ユーザ承認後の外部送信を許容する（ADR 0052）。Ledger SKU の同梱必須にはしない。
 
 ## Decision
 
@@ -16,7 +16,7 @@
 2. **ホスティング:** 顧客 1 社 = `tenants/{id}` workspace + 専用コンテナ（共有マルチテナントは P3 以降）。
 3. **正本:** 既存 YAML GL（`journal-entries.yaml`）を維持。製品層はプロビジョン・課金・UI シェル・コンプライアンス API を追加する。
 4. **電子帳簿:** 製品必須機能。検索 API · 訂正削除履歴（逆仕訳）· 監査 trail · `orgos validate` ゲート。
-5. **e-Tax:** `jp_tax_corporate` / Phase 5 モジュール。Ledger SKU の同梱必須条件にしない。
+5. **e-Tax:** `jp_tax_corporate` / Phase 5。内部正本 → e-Tax / API 形式 → ユーザ承認後送信。Ledger SKU の同梱必須条件にしない。
 6. **文書正本:** `docs/product/`（販売 Runbook · セキュリティ · 価格 · 法務ドラフト）。
 
 ## Consequences
@@ -37,4 +37,4 @@
 
 - [docs/product/README.md](../product/README.md)
 - [ADR 0041](0041-gl-native-ledger.md) · [ADR 0054](0054-period-lock-reverse-only.md)
-- [ADR 0052](0052-tax-filing-phase5-deferred.md)（e-Tax defer）
+- [ADR 0052](0052-tax-filing-phase5-deferred.md)（e-Tax 形式整備 · 承認後送信）

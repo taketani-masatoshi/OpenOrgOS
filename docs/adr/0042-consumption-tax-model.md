@@ -12,4 +12,4 @@ Accepted · 2026-08-24
 
 ## Out of scope
 
-- 申告書 XML · e-Tax 提出
+- e-Tax / eLTAX の自動送信。提出用 XML の出力は 5b。承認後送信は 5c

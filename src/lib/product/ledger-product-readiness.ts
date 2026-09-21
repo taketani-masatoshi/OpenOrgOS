@@ -169,7 +169,7 @@ export function buildProductReadinessReport(
       label: "Corporate tax XML draft (5b handoff)",
       weight: 2,
       pass: fileExists("src/lib/finance/jp-corporate-tax-xml.ts"),
-      detail: "Advisor handoff only — not e-Tax submit",
+      detail: "Internal-books draft (5b). Send after approval (5c).",
     },
     {
       id: "ledger-tenants",

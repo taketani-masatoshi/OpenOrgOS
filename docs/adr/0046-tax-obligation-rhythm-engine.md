@@ -13,7 +13,7 @@
 2. **`buildTaxCalendarPortfolio`**（`src/lib/finance/tax-calendar-portfolio.ts`）が rhythm を展開し、概算金額を付与する。
 3. **税額計算は概算に留める** — `rough` / `budget` / `ledger` の 3 段階。法人税確定 · 消費税申告書の自動算定は行わない。
 4. **`tax-filing-gaps.yaml`** は operator overlay。engine 自動生成は将来拡張とし、現状は briefing / pulse / `orgos tax gaps` で消費する。
-5. **e-Tax 提出禁止** — Agent / Skill / CLI いずれも本番提出 API を持たない。
+5. **e-Tax 自動送信禁止** — Agent / Skill / CLI は承認なしで本番送信しない（ADR 0052 の 5c）。提出用データの出力と公開仕様へのフォーマット寄せは 5b。承認後の外部送信は許容する。
 
 ## Consequences
 

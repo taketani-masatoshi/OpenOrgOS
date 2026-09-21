@@ -17,7 +17,7 @@ import { STEWARD_COPY } from "./steward-copy";
 
 /**
  * Tax module surface — accounting workbench links here.
- * e-Tax production submit is never offered.
+ * Unapproved drafts are not live filings. External send needs user approval.
  */
 export function TaxHandoffPage() {
   const copy = useCopy(STEWARD_COPY);
@@ -109,12 +109,12 @@ export function TaxHandoffPage() {
   return (
     <OpsPage
       title={copy.tax}
-      lead="会計（帳簿）から分離した申告・給与年末の handoff です。e-Tax / eLTAX への本番提出は行いません（ADR 0052）。"
+      lead="会計（帳簿）から分離した申告・給与年末の handoff です。内部正本から e-Tax / API 形式まで整備し、外部送信はユーザ承認後のみです（ADR 0052）。"
       error={error}
       className="tax-handoff-page"
     >
       <p>
-        <span className="badge warn">e-Tax 提出不可</span>
+        <span className="badge warn">未承認 · 自動送信しない</span>
       </p>
       {message && <p className="ops-page-meta">{message}</p>}
 
@@ -203,7 +203,7 @@ export function TaxHandoffPage() {
         </div>
         {lastHandoffPath && (
           <p className="ops-page-meta">
-            出力パス: <code>{lastHandoffPath}</code>（e-Tax 提出不可）
+            出力パス: <code>{lastHandoffPath}</code>（未承認ドラフト。送信は承認後）
           </p>
         )}
       </section>

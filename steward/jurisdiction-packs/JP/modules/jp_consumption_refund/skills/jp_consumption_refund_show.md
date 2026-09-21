@@ -10,4 +10,4 @@ npm run orgos -- skills run jp-consumption-refund-show
 npm run orgos -- operations consumption-refund show
 ```
 
-提出は人間。e-Tax は実行しません。
+提出は人間承認後。e-Tax 自動送信はしない（ADR 0052 の 5c）。
