@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 609
-  static_test_cases: 2794
-  tiered_execution_total: 609
+  vitest_total: 610
+  static_test_cases: 2795
+  tiered_execution_total: 610
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -797,6 +797,10 @@ tests:
   community-readiness.test.ts:
     axis: meta
     kind: meta
+  companies-act-score-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   companies-act-statements.test.ts:
     axis: platform
     kind: unit

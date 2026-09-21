@@ -24,6 +24,7 @@ import {
 } from "./pdf.js";
 import { buildIndividualNotes } from "./finance/ledger/balance-sheet.js";
 import { buildSurplusDisposalParagraph } from "./finance/ledger/financial-statement-disclosures.js";
+import { buildStatutoryStatements } from "./finance/ledger/statutory-statements.js";
 import { ensurePdfOutputDir, formatCurrency, formatJapaneseDate } from "./utils.js";
 
 export interface KessanReportInput {
@@ -161,36 +162,50 @@ export async function generateKessanPdf(
     pdfMutedNote(w, "※ 本報告書の数値は月次実績の再構成に基づきます。税理士確認後に確定版へ更新してください。");
   }
 
-  let section = 1;
-  if (input.bsRows && input.bsRows.length > 0) {
-    pdfSection(w, `${section}. 貸借対照表`);
-    pdfTable(w, input.bsRows);
+  if (yojitsu.closing?.basis === "gl") {
+    const statutory = buildStatutoryStatements(input.fiscalYear);
+    pdfSection(w, "貸借対照表");
+    pdfTable(w, statutory.bsRows);
+    pdfSection(w, "損益計算書");
+    pdfTable(w, statutory.plRows);
+    pdfSection(w, "株主資本等変動計算書");
+    pdfTable(w, statutory.equityRows);
+    pdfSection(w, "個別注記表");
+    for (const note of statutory.noteLines) pdfParagraph(w, note);
+    pdfSection(w, "剰余金の処分");
+    pdfParagraph(w, statutory.surplusText);
+  } else {
+    let section = 1;
+    if (input.bsRows && input.bsRows.length > 0) {
+      pdfSection(w, `${section}. 貸借対照表`);
+      pdfTable(w, input.bsRows);
+      section += 1;
+    }
+
+    pdfSection(w, `${section}. 損益計算書`);
+    pdfTable(w, input.plRows ?? buildKessanPlRows(yojitsu));
     section += 1;
-  }
 
-  pdfSection(w, `${section}. 損益計算書`);
-  pdfTable(w, input.plRows ?? buildKessanPlRows(yojitsu));
-  section += 1;
+    if (input.equityRows && input.equityRows.length > 0) {
+      pdfSection(w, `${section}. 株主資本等変動計算書`);
+      pdfTable(w, input.equityRows);
+      section += 1;
+    }
 
-  if (input.equityRows && input.equityRows.length > 0) {
-    pdfSection(w, `${section}. 株主資本等変動計算書`);
-    pdfTable(w, input.equityRows);
+    const notes = (input.noteRows ?? buildIndividualNotes({ fiscalYear: input.fiscalYear })).filter(Boolean);
+    pdfSection(w, `${section}. 個別注記表`);
+    for (const note of notes) {
+      pdfParagraph(w, note);
+    }
     section += 1;
-  }
 
-  const notes = (input.noteRows ?? buildIndividualNotes({ fiscalYear: input.fiscalYear })).filter(Boolean);
-  pdfSection(w, `${section}. 個別注記表`);
-  for (const note of notes) {
-    pdfParagraph(w, note);
+    const surplus = buildSurplusDisposalParagraph(input.fiscalYear);
+    pdfSection(w, `${section}. 剰余金の処分`);
+    pdfParagraph(
+      w,
+      surplus.text || "剰余金の処分: 宣言または仕訳が不足しています（年度宣言を確認してください）。",
+    );
   }
-  section += 1;
-
-  const surplus = buildSurplusDisposalParagraph(input.fiscalYear);
-  pdfSection(w, `${section}. 剰余金の処分`);
-  pdfParagraph(
-    w,
-    surplus.text || "剰余金の処分: 宣言または仕訳が不足しています（年度宣言を確認してください）。",
-  );
 
   const reps = (company.directors ?? [])
     .filter((d) => d.role?.includes("代表"))

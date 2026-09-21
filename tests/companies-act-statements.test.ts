@@ -60,7 +60,12 @@ describe("companies act statements", () => {
     writeYearEnd("none");
     const pack = buildCompaniesActStatementPack(FISCAL_YEAR);
     expect(pack.rows.map((row) => row.id)).toEqual(COMPANIES_ACT_LINE_MAP.map((line) => line.id));
-    expect(pack.rows.every((row) => row.filled)).toBe(true);
+    expect(pack.bs_rows.map((row) => row.label)).toEqual(
+      expect.arrayContaining(["流動資産", "固定資産", "流動負債", "固定負債", "資本金", "資本剰余金", "利益剰余金"]),
+    );
+    expect(pack.pl_rows.map((row) => row.label)).toEqual(
+      expect.arrayContaining(["特別利益", "特別損失"]),
+    );
 
     const coa = loadChartOfAccounts();
     const trial = buildTrialBalance({ asOf: pack.as_of, coa });

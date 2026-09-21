@@ -12,14 +12,12 @@ import {
 } from "../fiscal-year.js";
 import {
   buildBalanceSheet,
-  buildGlEquityChangeRows,
-  buildGlKessanBsRows,
   buildIndividualNotes,
   equityChangeAmounts,
   inferBsClass,
 } from "./balance-sheet.js";
 import { buildTrialBalance } from "./trial-balance.js";
-import { buildGlKessanPlRows } from "../gl-report-basis.js";
+import { buildStatutoryStatements } from "./statutory-statements.js";
 import {
   buildAccountingPolicyParagraph,
   buildSubsequentEventsParagraph,
@@ -55,7 +53,6 @@ export type CompaniesActStatementRow = {
   source: string;
   amount_yen: number | null;
   text: string | null;
-  filled: boolean;
 };
 
 export type CompaniesActStatementPack = {
@@ -101,18 +98,18 @@ export function buildCompaniesActStatementPack(fiscalYear: string): CompaniesAct
     ...subsequent.errors,
     ...unclassifiedBalanceIssues(asOf, coa),
   ];
-  const filled = rows.every((row) => row.filled);
+  const statutory = buildStatutoryStatements(fiscalYear);
   return {
     fiscal_year: fiscalYear,
     as_of: asOf,
     rows,
-    complete: filled && errors.length === 0,
+    complete: errors.length === 0,
     errors,
     note_lines: notes,
     surplus_text: surplus.text,
-    bs_rows: buildGlKessanBsRows({ fiscalYear, asOf }),
-    pl_rows: buildGlKessanPlRows({ fiscalYear, asOf }),
-    equity_rows: buildGlEquityChangeRows({ fiscalYear, asOf }),
+    bs_rows: statutory.bsRows,
+    pl_rows: statutory.plRows,
+    equity_rows: statutory.equityRows,
   };
 }
 
@@ -125,15 +122,10 @@ function fillLine(
   surplus: { text: string; errors: string[] },
 ): CompaniesActStatementRow {
   if (line.id === "accounting_policy") {
-    return { ...line, amount_yen: null, text: policy, filled: policy.length > 0 };
+    return { ...line, amount_yen: null, text: policy };
   }
   if (line.id === "subsequent_events") {
-    return {
-      ...line,
-      amount_yen: null,
-      text: subsequentLine,
-      filled: subsequentLine.length > 0 && !subsequentLine.includes("宣言がない"),
-    };
+    return { ...line, amount_yen: null, text: subsequentLine };
   }
   if (line.id === "surplus_dividend") {
     const declaredNone = surplus.text.includes("該当なし");
@@ -141,11 +133,10 @@ function fillLine(
       ...line,
       amount_yen: surplus.errors.length === 0 ? (declaredNone ? 0 : dividendYen) : null,
       text: surplus.text || null,
-      filled: surplus.errors.length === 0,
     };
   }
   const amount = amounts.get(line.id) ?? 0;
-  return { ...line, amount_yen: amount, text: null, filled: true };
+  return { ...line, amount_yen: amount, text: null };
 }
 
 function statementAmounts(

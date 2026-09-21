@@ -178,7 +178,10 @@ export function buildGlKessanBsRows(input?: {
         return account ? inferBsClass(account) === cls : false;
       },
     );
-    if (lines.length === 0) return;
+    if (lines.length === 0) {
+      rows.push({ label: title, amount: 0, variant: "total" });
+      return;
+    }
     rows.push({ label: title, amount: "", variant: "section" });
     for (const line of lines) {
       rows.push({
