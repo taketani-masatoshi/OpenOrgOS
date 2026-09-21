@@ -1,5 +1,5 @@
 import { describe, expect, it, afterEach } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
@@ -55,12 +55,17 @@ describe("customer UX paths", () => {
     setTenantId(id);
   }
 
-  it("skips bank reconciliation when the tenant has no bank file", () => {
+  it("skips bank reconciliation when bank tracking is declared none", () => {
     provisionTemp("cux-cl-001");
+    writeFileSync(
+      join(getDataDir(), "finance", "bank-account.yaml"),
+      "version: 1\nstatus: none\n",
+      "utf-8",
+    );
     const checklist = buildMonthCloseChecklist("2026-06");
     expect(checklist.items.find((i) => i.id === "bank-imported")).toMatchObject({
       pass: true,
-      detail: "no bank file",
+      detail: "bank tracking none",
     });
     expect(Array.isArray(checklist.integrity_errors)).toBe(true);
   });

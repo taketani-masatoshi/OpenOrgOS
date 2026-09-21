@@ -550,7 +550,7 @@ export function runLedgerPeriodLock(opts: {
     month: opts.month,
     lockedBy: auth.record.operator_id,
     reason: opts.reason,
-    evidence: buildMonthlyCloseEvidence(evaluation),
+    evidence: buildMonthlyCloseEvidence(evaluation, auth.record.operator_id),
   });
   auditCliMutation("ledger period lock", entry.month);
   console.log(`✓ locked period ${entry.month}`);

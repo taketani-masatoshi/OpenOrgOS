@@ -21,6 +21,7 @@ import {
 } from "../src/lib/finance/gl-report-basis.js";
 import {
   applyFixtureStatementRoles,
+  fixturePeriodLockEvidence,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -71,7 +72,11 @@ describe("period lock", () => {
 
   it("blocks journal posts to locked months", () => {
     useFinanceFixtureTenant();
-    lockMonth({ month: "2026-09", lockedBy: "test" });
+    lockMonth({
+      month: "2026-09",
+      lockedBy: "test",
+      evidence: fixturePeriodLockEvidence("test"),
+    });
     expect(isMonthLocked("2026-09")).toBe(true);
     expect(() =>
       appendJournalEntry({
@@ -90,7 +95,11 @@ describe("period lock", () => {
 
   it("keeps unlock history instead of deleting the lock row", () => {
     useFinanceFixtureTenant();
-    lockMonth({ month: "2026-09", lockedBy: "test" });
+    lockMonth({
+      month: "2026-09",
+      lockedBy: "test",
+      evidence: fixturePeriodLockEvidence("test"),
+    });
     unlockMonth({ month: "2026-09", unlockedBy: "approver", reason: "late invoice" });
     expect(isMonthLocked("2026-09")).toBe(false);
     const file = loadPeriodLocks();

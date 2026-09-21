@@ -20,6 +20,7 @@ import {
   postBonusDraftJournal,
 } from "../src/lib/finance/payroll-bonus-yea.js";
 import { ensureLedgerDemoChartOfAccounts } from "../src/lib/product/ledger-coa-ensure.js";
+import { fixturePeriodLockEvidence } from "./helpers/finance-fixture.js";
 
 describe("accounting commercial paths", () => {
   const env = { ...process.env };
@@ -87,7 +88,11 @@ describe("accounting commercial paths", () => {
     provisionTemp("acct-close-001");
     ensureLedgerDemoChartOfAccounts();
     seedLedgerDemoYear({ fiscalYear: "FY2026", force: true });
-    lockMonth({ month: "2026-04", lockedBy: "OP-TEST" });
+    lockMonth({
+      month: "2026-04",
+      lockedBy: "OP-TEST",
+      evidence: fixturePeriodLockEvidence("OP-TEST"),
+    });
     const checklist = buildMonthCloseChecklist("2026-04");
     expect(checklist.items.some((row) => row.id === "period-locked" && row.pass)).toBe(
       true,

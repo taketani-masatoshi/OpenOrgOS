@@ -10,6 +10,7 @@ export const periodLockEvidenceSchema = z.object({
   bank_reconciliation_sha256: z.string().regex(/^[a-f0-9]{64}$/),
   trial_balance_sha256: z.string().regex(/^[a-f0-9]{64}$/),
   gate_results_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  operator_sha256: z.string().regex(/^[a-f0-9]{64}$/),
   can_lock: z.literal(true),
   gate_results: z.array(
     z.object({

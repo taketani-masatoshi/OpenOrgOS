@@ -5,17 +5,18 @@
 
 ## 目的
 
-指定月の総勘定元帳を締め、統一ゲートを満たしたときだけ期間ロックする。実績の正本は `journal-entries.yaml`（ADR 0053）。月次 YAML は計画・突合メモであり、不一致は警告であってロック条件ではない。
+指定月の総勘定元帳を締め、統一ゲートを満たしたときだけ期間ロックする。実績の正本は `journal-entries.yaml`（ADR 0053）。銀行明細は `bank-account.yaml` が `none` でなければ必須。月次 YAML がある月は突合不一致でロック不可、無い月だけ plan 未取込 warning。
 
 ## 入力
 
 - `data/finance/journal-entries.yaml`
 - `data/finance/opening-balances.yaml`
 - `data/finance/chart-of-accounts.yaml`
-- `data/finance/monthly/{YYYY-MM}.yaml`（月次損益の起票元。突合は警告）
+- `data/finance/monthly/{YYYY-MM}.yaml`（月次損益の起票元。ファイルがある月は突合不一致でロック不可）
 - `data/finance/fixed-assets.yaml`（減価償却がある月）
 - `data/finance/payroll.yaml`（給与発生がある月）
-- `data/finance/bank-statements.yaml`（ファイルがある月だけ、当月未消込ゼロ）
+- `data/finance/bank-account.yaml`（`none` / `active`）
+- `data/finance/bank-statements.yaml`（`active` のとき必須・当月未消込ゼロ・GL 突合）
 
 ## 出力
 

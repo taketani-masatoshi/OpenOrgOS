@@ -3,7 +3,12 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runValidateReport } from "../src/commands/validate.js";
 import { appendJournalEntry, loadJournalEntries } from "../src/lib/finance/expense-claim-journal.js";
-import { lastDayOfMonth } from "../src/lib/finance/fiscal-year.js";
+import {
+  fiscalYearStartMonth,
+  lastDayOfMonth,
+  resolveCompanyFiscalYearEndMonth,
+  resolveFiscalYear,
+} from "../src/lib/finance/fiscal-year.js";
 import { reverseJournalEntry } from "../src/lib/finance/journal-reverse.js";
 import { buildBalanceSheet } from "../src/lib/finance/ledger/balance-sheet.js";
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
@@ -13,11 +18,12 @@ import {
   evaluateMonthlyCloseGates,
 } from "../src/lib/finance/monthly-close.js";
 import { buildConsumptionTaxSummary } from "../src/lib/finance/consumption-tax.js";
-import { isMonthLocked, loadPeriodLocks, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
+import { isMonthLocked, loadPeriodLocks, unlockMonth } from "../src/lib/finance/period-lock.js";
 import { buildMonthCloseChecklist } from "../src/lib/product/ledger-month-close-checklist.js";
-import { getDataDir } from "../src/lib/utils.js";
+import { addMonths, getDataDir } from "../src/lib/utils.js";
 import {
   applyFixtureStatementRoles,
+  injectJournalEntryViaMigration,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -29,16 +35,43 @@ function bankPath(): string {
   return join(getDataDir(), "finance", "bank-statements.yaml");
 }
 
+function bankAccountPath(): string {
+  return join(getDataDir(), "finance", "bank-account.yaml");
+}
+
 function writeBank(yaml: string): void {
   writeFileSync(bankPath(), `${yaml.trim()}\n`, "utf-8");
+}
+
+function writeBankAccount(status: "none" | "active"): void {
+  writeFileSync(bankAccountPath(), `version: 1\nstatus: ${status}\n`, "utf-8");
 }
 
 function removeBank(): void {
   if (existsSync(bankPath())) unlinkSync(bankPath());
 }
 
+function removeBankAccount(): void {
+  if (existsSync(bankAccountPath())) unlinkSync(bankAccountPath());
+}
+
+function closeMonthsThrough(month: string): void {
+  writeBankAccount("none");
+  removeBank();
+  const endMonth = resolveCompanyFiscalYearEndMonth();
+  const fiscalYear = resolveFiscalYear(endMonth, month);
+  let cursor = fiscalYearStartMonth(fiscalYear, endMonth);
+  while (cursor <= month) {
+    const result = closeAccountingMonth({ month: cursor, operatorId: OPERATOR });
+    if (!result.locked) {
+      throw new Error(`${cursor}: ${result.evaluation.errors.join("; ")}`);
+    }
+    cursor = addMonths(cursor, 1);
+  }
+}
+
 function lockPrior(): void {
-  lockMonth({ month: "2026-08", lockedBy: OPERATOR, reason: "prior month" });
+  closeMonthsThrough("2026-08");
 }
 
 function manualEntry(input: {
@@ -67,24 +100,19 @@ describe("monthly close acceptance", () => {
     resetFixtureJournalEntries();
     applyFixtureStatementRoles();
     removeBank();
+    removeBankAccount();
+    writeBankAccount("none");
   });
 
   afterEach(() => {
     removeBank();
+    removeBankAccount();
     resetFixtureJournalEntries();
   });
 
   it("closes 2026-09 when journals, statements, subsidiary and validate pass", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const asOf = lastDayOfMonth(MONTH);
     const first = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(first.ok).toBe(true);
@@ -136,9 +164,12 @@ entries:
 
   it("does not lock when the trial balance does not balance", () => {
     useFinanceFixtureTenant();
-    manualEntry({
-      entryId: "JE-UNKNOWN-ACCOUNT",
-      occurredAt: "2026-09-15T00:00:00.000Z",
+    injectJournalEntryViaMigration({
+      entry_id: "JE-UNKNOWN-ACCOUNT",
+      occurred_at: "2026-09-15T00:00:00.000Z",
+      description: "JE-UNKNOWN-ACCOUNT",
+      source: { kind: "manual", authorized_by: OPERATOR },
+      evidence_refs: ["test:JE-UNKNOWN-ACCOUNT"],
       lines: [
         { account_code: "9999", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
         { account_code: "1100", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" },
@@ -154,6 +185,7 @@ entries:
 
   it("does not lock when the close month has unmatched bank rows", () => {
     useFinanceFixtureTenant();
+    writeBankAccount("active");
     writeBank(`
 entries:
   - id: BS-OPEN
@@ -169,9 +201,10 @@ entries:
     );
   });
 
-  it("skips bank reconciliation and locks when no bank file exists", () => {
+  it("skips bank reconciliation and locks when bank tracking is none", () => {
     useFinanceFixtureTenant();
     lockPrior();
+    writeBankAccount("none");
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(existsSync(bankPath())).toBe(false);
     expect(closed.evaluation.items.find((item) => item.id === "bank-imported")).toMatchObject({
@@ -188,6 +221,7 @@ entries:
 
   it("refuses lock when the bank statement file cannot be read", () => {
     useFinanceFixtureTenant();
+    writeBankAccount("active");
     writeBank("entries: [broken");
     const evaluation = evaluateMonthlyCloseGates(MONTH);
     const imported = evaluation.items.find((item) => item.id === "bank-imported");
@@ -199,6 +233,7 @@ entries:
   it("ignores unmatched bank rows that belong to a later month", () => {
     useFinanceFixtureTenant();
     lockPrior();
+    writeBankAccount("none");
     writeBank(`
 entries:
   - id: BS-THIS
@@ -219,17 +254,9 @@ entries:
     expect(closed.locked).toBe(true);
   });
 
-  it("warns but locks when monthly YAML and journals differ", () => {
+  it("does not lock when monthly YAML and journals differ", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     manualEntry({
       entryId: "JE-EXTRA-RENT",
       occurredAt: "2026-09-12T00:00:00.000Z",
@@ -239,18 +266,20 @@ entries:
       ],
     });
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
-    expect(closed.evaluation.warnings.some((warning) => warning.startsWith("monthly-reconcile"))).toBe(
+    expect(closed.evaluation.errors.some((error) => error.startsWith("monthly-reconcile"))).toBe(
       true,
     );
-    expect(closed.evaluation.errors.some((error) => error.startsWith("monthly-reconcile"))).toBe(false);
-    expect(closed.locked).toBe(true);
+    expect(closed.locked).toBe(false);
   });
 
   it("does not lock when a control account has an unassigned balance", () => {
     useFinanceFixtureTenant();
-    manualEntry({
-      entryId: "JE-UNASSIGNED-AR",
-      occurredAt: "2026-09-11T00:00:00.000Z",
+    injectJournalEntryViaMigration({
+      entry_id: "JE-UNASSIGNED-AR",
+      occurred_at: "2026-09-11T00:00:00.000Z",
+      description: "JE-UNASSIGNED-AR",
+      source: { kind: "manual", authorized_by: OPERATOR },
+      evidence_refs: ["test:JE-UNASSIGNED-AR"],
       lines: [
         { account_code: "1150", debit_yen: 500, credit_yen: 0, tax_category: "out_of_scope" },
         { account_code: "4100", debit_yen: 0, credit_yen: 500, tax_category: "non_taxable" },
@@ -264,14 +293,6 @@ entries:
   it("corrects a locked month only after a reasoned unlock, then re-locks", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     manualEntry({
       entryId: "JE-BS-ONLY",
       occurredAt: "2026-09-11T00:00:00.000Z",
@@ -331,16 +352,9 @@ entries:
   it("keeps an existing lock when a later gate failure is found", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.locked).toBe(true);
+    writeBankAccount("active");
     writeBank(`
 entries:
   - id: BS-LATE
@@ -362,14 +376,6 @@ entries:
 
   it("does not lock the next month when the previous month is unlocked", () => {
     useFinanceFixtureTenant();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(closed.evaluation.errors.some((error) => error.startsWith("prior-month-locked"))).toBe(
       true,
@@ -380,15 +386,7 @@ entries:
   it("does not lock when a revenue line has no tax category", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
-    appendJournalEntry({
+    injectJournalEntryViaMigration({
       entry_id: "JE-NO-TAX",
       occurred_at: "2026-09-12T00:00:00.000Z",
       description: "missing category",
@@ -410,14 +408,6 @@ entries:
   it("posts a specified accrual and ignores a zero adjustment", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const chartPath = join(getDataDir(), "finance", "chart-of-accounts.yaml");
     const original = readFileSync(chartPath, "utf-8");
     writeFileSync(
@@ -438,14 +428,6 @@ entries:
   it("does not lock when inventory does not match the books", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const inventoryPath = join(getDataDir(), "finance", "inventory.yaml");
     writeFileSync(
       inventoryPath,
@@ -465,21 +447,15 @@ entries:
   it("does not post monthly depreciation for a small-amount asset", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const assetPath = join(getDataDir(), "finance", "fixed-assets.yaml");
     const original = readFileSync(assetPath, "utf-8");
     writeFileSync(assetPath, original.replace("id: ASSET-001\n", "id: ASSET-001\n    small_amount: true\n"));
     try {
       closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
       expect(
-        loadJournalEntries().entries.some((entry) => entry.entry_id.includes("ASSET-001")),
+        loadJournalEntries().entries.some(
+          (entry) => entry.entry_id === `JE-DEP-ASSET-001-${MONTH}`,
+        ),
       ).toBe(false);
     } finally {
       writeFileSync(assetPath, original);
@@ -489,19 +465,6 @@ entries:
   it("warns but locks when the month has no monthly plan", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-  - id: BS-2026-10-1
-    date: "2026-10-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(september.locked).toBe(true);
     const october = closeAccountingMonth({ month: "2026-10", operatorId: OPERATOR });
@@ -515,14 +478,6 @@ entries:
   it("carries the locked month balance into the next month", () => {
     useFinanceFixtureTenant();
     lockPrior();
-    writeBank(`
-entries:
-  - id: BS-2026-09-1
-    date: "2026-09-10"
-    direction: inflow
-    amount: 1000
-    status: matched
-`);
     const september = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
     expect(september.locked).toBe(true);
     const asOf = lastDayOfMonth(MONTH);

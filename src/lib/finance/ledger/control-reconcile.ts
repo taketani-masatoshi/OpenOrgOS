@@ -191,3 +191,32 @@ export function controlAccountIntegrityIssues(): ControlReconcileIssue[] {
 
   return issues;
 }
+
+/** Month statement net vs GL movement. Missing bank as_of does not skip the comparison. */
+export function monthBankControlDeltaMismatch(month: string): string | null {
+  let code: string;
+  try {
+    const resolved = resolveJournalSourceAccounts().bank_control;
+    if (!resolved) return "bank control account missing";
+    code = resolved;
+  } catch (error) {
+    return error instanceof Error ? error.message : "bank control account missing";
+  }
+  const [year, monthNumber] = month.split("-").map(Number);
+  const prevDate = new Date(year!, monthNumber! - 2, 1);
+  const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
+  const end = `${month}-${String(new Date(year!, monthNumber!, 0).getDate()).padStart(2, "0")}`;
+  const prevEnd = `${prevMonth}-${String(new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 0).getDate()).padStart(2, "0")}`;
+  const glDelta = tbBalance(code, end) - tbBalance(code, prevEnd);
+  const bank = loadBankStatementsLite();
+  if (!bank) return "bank statements missing";
+  let net = 0;
+  for (const row of bank.entries) {
+    if (row.date.slice(0, 7) !== month) continue;
+    net += row.direction === "inflow" ? row.amount : -row.amount;
+  }
+  if (glDelta !== net) {
+    return `bank ${code}: GL delta ${glDelta} != statement net ${net} (as_of ignored)`;
+  }
+  return null;
+}

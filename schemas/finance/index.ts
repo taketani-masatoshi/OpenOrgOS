@@ -20,6 +20,7 @@ export * from "./invoice-registration-catalog.js";
 export * from "./employee-reimbursement-payable.js";
 export * from "./journal-entry.js";
 export * from "./opening-balances.js";
+export * from "./bank-account.js";
 export * from "./expense-evidence.js";
 export * from "./property-scenarios.js";
 export * from "./types.js";

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -10,6 +11,17 @@ import { getDataDir, readYamlFile, writeYamlFile } from "../utils.js";
 import { writeYamlFileAtomic } from "../yaml-atomic.js";
 
 const REL = "finance/period-locks.yaml";
+
+let evidenceChecker: (() => string[]) | null = null;
+
+/** Registered by monthly close so integrity can recompute evidence without an import cycle. */
+export function registerPeriodLockEvidenceChecker(checker: () => string[]): void {
+  evidenceChecker = checker;
+}
+
+export function operatorEvidenceHash(operatorId: string): string {
+  return createHash("sha256").update(operatorId).digest("hex");
+}
 
 function path(): string {
   return join(getDataDir(), REL);
@@ -82,9 +94,20 @@ export function lockMonth(input: {
   lockedAt?: string;
   evidence?: PeriodLockEntry["evidence"];
 }): PeriodLockEntry {
+  if (!input.evidence) {
+    throw new Error("lockMonth requires close evidence");
+  }
+  if (input.evidence.operator_sha256 !== operatorEvidenceHash(input.lockedBy)) {
+    throw new Error("lock evidence operator mismatch");
+  }
   const file = loadPeriodLocks();
   const latest = latestLockForMonth(input.month, file);
-  if (latest?.status === "locked") return latest;
+  if (latest?.status === "locked") {
+    if (!latest.evidence) {
+      throw new Error("existing lock has no evidence");
+    }
+    return latest;
+  }
   const entry = periodLockEntrySchema.parse({
     month: input.month,
     status: "locked",
@@ -144,6 +167,7 @@ export function periodLockIntegrityIssues(): string[] {
     }
     lastAtByMonth.set(lock.month, lock.at);
   }
+  if (evidenceChecker) issues.push(...evidenceChecker());
   return issues;
 }
 

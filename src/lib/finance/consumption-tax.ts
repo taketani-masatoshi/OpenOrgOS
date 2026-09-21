@@ -117,6 +117,59 @@ export function resolveDeemedPurchaseRatePct(
   return parsed.success ? parsed.data : undefined;
 }
 
+export function consumptionTaxLineIssues(period: string): ConsumptionTaxSummary["issues"] {
+  const issues: ConsumptionTaxSummary["issues"] = [];
+  for (const entry of loadJournalEntries().entries) {
+    if (!entry.occurred_at.startsWith(period)) continue;
+    for (const line of entry.lines) {
+      const baseYen = line.debit_yen || line.credit_yen;
+      if (
+        line.tax_category === "taxable_10" &&
+        line.tax_rate_pct != null &&
+        line.tax_rate_pct !== 10
+      ) {
+        issues.push({
+          severity: "error",
+          code: "tax_rate_mismatch",
+          message: `${entry.entry_id}: taxable_10 rate ${line.tax_rate_pct}`,
+        });
+      }
+      if (
+        line.tax_category === "taxable_8" &&
+        line.tax_rate_pct != null &&
+        line.tax_rate_pct !== 8
+      ) {
+        issues.push({
+          severity: "error",
+          code: "tax_rate_mismatch",
+          message: `${entry.entry_id}: taxable_8 rate ${line.tax_rate_pct}`,
+        });
+      }
+      if (line.tax_category === "taxable_10" && line.tax_amount_yen != null) {
+        const expected = taxFromBase(baseYen, TAX_RATE_10);
+        if (line.tax_amount_yen !== expected) {
+          issues.push({
+            severity: "error",
+            code: "tax_amount_mismatch",
+            message: `${entry.entry_id}: taxable_10 tax ${line.tax_amount_yen} != ${expected}`,
+          });
+        }
+      }
+      if (line.tax_category === "taxable_8" && line.tax_amount_yen != null) {
+        const expected = taxFromBase(baseYen, TAX_RATE_8);
+        if (line.tax_amount_yen !== expected) {
+          issues.push({
+            severity: "error",
+            code: "tax_amount_mismatch",
+            message: `${entry.entry_id}: taxable_8 tax ${line.tax_amount_yen} != ${expected}`,
+          });
+        }
+      }
+    }
+  }
+  return issues;
+}
+
 export function buildConsumptionTaxSummary(input: {
   period: string;
   manual?: Partial<ConsumptionTaxPeriod>;
@@ -216,6 +269,7 @@ export function buildConsumptionTaxSummary(input: {
         direction: "purchase",
       },
     ],
+    issues: consumptionTaxLineIssues(input.period),
   };
 }
 

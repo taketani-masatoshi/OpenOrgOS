@@ -16,6 +16,7 @@ import {
 } from "../src/lib/finance/expense-claim-journal.js";
 import { invoiceMplDuplicateIssues } from "../src/lib/finance/ledger/invoice-mpl-dedupe.js";
 import {
+  fixturePeriodLockEvidence,
   resetFixtureJournalEntries,
   useFinanceFixtureTenant,
 } from "./helpers/finance-fixture.js";
@@ -30,7 +31,11 @@ describe("period-locks append-only", () => {
   });
 
   it("rejects mutation of historical lock rows", () => {
-    lockMonth({ month: "2026-09", lockedBy: "OP-TEST" });
+    lockMonth({
+      month: "2026-09",
+      lockedBy: "OP-TEST",
+      evidence: fixturePeriodLockEvidence("OP-TEST"),
+    });
     const file = loadPeriodLocks();
     expect(file.locks).toHaveLength(1);
     file.locks[0]!.by = "TAMPERED";
@@ -38,7 +43,11 @@ describe("period-locks append-only", () => {
   });
 
   it("allows unlock as append", () => {
-    lockMonth({ month: "2026-09", lockedBy: "OP-TEST" });
+    lockMonth({
+      month: "2026-09",
+      lockedBy: "OP-TEST",
+      evidence: fixturePeriodLockEvidence("OP-TEST"),
+    });
     unlockMonth({ month: "2026-09", unlockedBy: "OP-TEST", reason: "fix" });
     expect(loadPeriodLocks().locks).toHaveLength(2);
   });
@@ -158,6 +167,7 @@ describe("invoice vs JE-MPL dedupe", () => {
           debit_yen: 110000,
           credit_yen: 0,
           tax_category: "out_of_scope",
+          counterparty_id: "PROP-001",
         },
         {
           account_code: "4100",

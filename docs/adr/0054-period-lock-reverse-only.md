@@ -11,7 +11,7 @@ Accepted (2026-08-24)
 ## Decision
 
 1. **`data/finance/period-locks.yaml`** — 月次ロック正本。
-2. **`finances close --month` は統一ゲート通過時に自動ロックする。** 試算表・貸借対照表・補助元帳統制・`data/finance/` の validate error 0・必要な自動仕訳（減価償却・給与発生・月次損益）が揃っていること。銀行明細ファイルがある月は、その月の未消込が 0 件であること。ファイルが無い月は銀行ゲートをスキップする。月次 YAML 突合の不一致は警告であり、ロックを止めない。
+2. **`finances close --month` は統一ゲート通過時に自動ロックする。** 試算表・貸借対照表・補助元帳統制・`data/finance/` の validate error 0・必要な自動仕訳（減価償却・給与発生・月次損益）が揃っていること。`bank-account.yaml` で `status: none` 以外（active）のときは `bank-statements.yaml` が必要で未消込 0。`status: none` のときだけ銀行ゲートをスキップする。`monthly/{YYYY-MM}.yaml` がある月は突合不一致でロックを止め、無い月だけ「plan not imported」を warning とする。
 3. **`appendJournalEntry`** — ロック済み `occurred_at` を拒否。
 4. **訂正は逆仕訳の append のみ** — 元仕訳は残す。ロック済み月へは append できないので、先に理由付き unlock し、同月日付の逆仕訳を書いてから再ロックする。
 5. **`orgos ledger period unlock`** — `finance:reconcile` 権限 + 監査ログ。

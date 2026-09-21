@@ -1,7 +1,7 @@
 /**
  * Month-close checklist for Workbench.
  * `ready` matches evaluateMonthlyCloseGates().can_lock (period lock is separate).
- * Missing bank file is not a lock blocker and is represented as a skipped gate.
+ * Bank tracking none skips bank gates; active requires statements and tie-out.
  */
 import { listBankReconciliationWorkbench } from "../finance/bank-reconcile-apply.js";
 import { evaluateMonthlyCloseGates } from "../finance/monthly-close.js";

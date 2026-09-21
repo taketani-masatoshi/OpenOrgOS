@@ -16,7 +16,12 @@ import { resolveCompanyFiscalYearEndMonth } from "../src/lib/finance/fiscal-year
 import { buildTrialBalance } from "../src/lib/finance/ledger/trial-balance.js";
 import { loadOpeningBalances } from "../src/lib/finance/ledger/opening-balance.js";
 import { closeAccountingMonth } from "../src/lib/finance/monthly-close.js";
-import { isMonthLocked, lockMonth, unlockMonth } from "../src/lib/finance/period-lock.js";
+import {
+  isMonthLocked,
+  loadPeriodLocks,
+  savePeriodLocks,
+  unlockMonth,
+} from "../src/lib/finance/period-lock.js";
 import { getDataDir } from "../src/lib/utils.js";
 import { openingBalancesSchema } from "../schemas/finance/opening-balances.js";
 import { parse as parseYaml } from "yaml";
@@ -40,6 +45,7 @@ function seedCloseInputs(months: string[]): void {
         `  - id: BS-${month}\n    date: "${month}-10"\n    direction: inflow\n    amount: 1\n    status: matched`,
     )
     .join("\n");
+  writeFileSync(join(finance, "bank-account.yaml"), "version: 1\nstatus: none\n");
   writeFileSync(join(finance, "bank-statements.yaml"), `entries:\n${rows}\n`);
   writeFileSync(
     join(finance, `year-end.${FY}.yaml`),
@@ -115,6 +121,8 @@ describe("annual close acceptance", () => {
     }
     const bank = join(getDataDir(), "finance", "bank-statements.yaml");
     if (existsSync(bank)) unlinkSync(bank);
+    const bankAccount = join(getDataDir(), "finance", "bank-account.yaml");
+    if (existsSync(bankAccount)) unlinkSync(bankAccount);
     extraMonthly = [];
     removeOpeningProposals();
     resetFixtureJournalEntries();
@@ -297,32 +305,15 @@ describe("annual close acceptance", () => {
       unlockedBy: OPERATOR,
       reason: "inject imbalance",
     });
-    appendJournalEntry({
-      entry_id: "JE-BAD-TB",
-      occurred_at: `${finalMonth}-15T00:00:00.000Z`,
-      description: "unknown account",
-      source: { kind: "manual", authorized_by: OPERATOR },
-      evidence_refs: ["test:bad-tb"],
-      lines: [
-        {
-          account_code: "9999",
-          debit_yen: 100,
-          credit_yen: 0,
-          tax_category: "out_of_scope",
-        },
-        {
-          account_code: "1100",
-          debit_yen: 0,
-          credit_yen: 100,
-          tax_category: "out_of_scope",
-        },
-      ],
-    });
-    lockMonth({
+    const locks = loadPeriodLocks();
+    locks.locks.push({
       month: finalMonth,
-      lockedBy: OPERATOR,
-      reason: "relock unbalanced",
+      status: "locked",
+      at: new Date().toISOString(),
+      by: OPERATOR,
+      reason: "relock without evidence",
     });
+    savePeriodLocks(locks);
     const live = readFileSync(join(getDataDir(), "finance", "opening-balances.yaml"), "utf-8");
     const before = loadJournalEntries().entries.map((entry) => entry.entry_id);
     const closed = closeAccountingYear({

@@ -83,14 +83,9 @@ export function runIsolatedAccountingAcceptance(): AccountingAcceptanceResult {
     if (!result.bank_reconcile.pass) return result;
 
     const months = listFiscalYearMonths(fiscalYear, resolveCompanyFiscalYearEndMonth());
-    writeYamlFileAtomic(join(getDataDir(), "finance", "bank-statements.yaml"), {
-      entries: months.map((month, index) => ({
-        id: `BS-ACCEPTANCE-${String(index + 1).padStart(2, "0")}`,
-        date: `${month}-15`,
-        direction: "inflow",
-        amount: 1,
-        status: "matched",
-      })),
+    writeYamlFileAtomic(join(getDataDir(), "finance", "bank-account.yaml"), {
+      version: 1,
+      status: "none",
     });
     const monthly = months.map((month) =>
       closeAccountingMonth({

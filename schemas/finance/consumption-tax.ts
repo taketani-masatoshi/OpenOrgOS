@@ -55,6 +55,15 @@ export const consumptionTaxSummarySchema = z.object({
       direction: z.enum(["sales", "purchase"]),
     }),
   ),
+  issues: z
+    .array(
+      z.object({
+        severity: z.enum(["error", "warning"]),
+        code: z.string().min(1),
+        message: z.string().min(1),
+      }),
+    )
+    .default([]),
 });
 
 export const consumptionTaxEligibilityLineSchema = z.object({
