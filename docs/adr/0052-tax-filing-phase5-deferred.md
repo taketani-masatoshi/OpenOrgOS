@@ -7,7 +7,7 @@
 税務モジュール 100 点化（Phase 0–4）完了後、`orgos tax readiness` は **申告準備基盤** の深度を測る。  
 以下 3 件は **意図的に分母外**（ADR 0051 · `tax-filing-spec.md`）だが、第9期申告（2027-03-31）に向けたロードマップとして順序を固定する。
 
-「OrgOS は e-Tax を実装しない」は **提出クライアントを作らない** という意味である。提出用データの出力と、公開仕様へのフォーマット準拠までを捨てる意味ではない。
+「OrgOS は e-Tax を実装しない」は **e-Tax ポータルそのものを自前実装しない** という意味である。内部の決算・税務申告書を正本に、e-Tax 形式 / API 連携形式まで整備し、ユーザ承認後に外部送信することは製品範囲である。
 
 ## Decision
 
@@ -16,25 +16,22 @@ Phase 5 を **3 サブフェーズ** で defer し、トリガー条件を明文
 | サブ | 内容 | トリガー | 担当 |
 |------|------|----------|------|
 | **5a** | 会計 SoT 完成（試算表 · 仕訳 · 月次整合） | Phase 3 完了 · 税理士 B/S 確定 | Accounting |
-| **5b** | 提出用データ出力（申告書 XML / 別表ドラフト · 公開仕様へのフォーマット寄せ） | **実装済（handoff ドラフト）** — `writeCorporateTaxXmlDraft` · 別表四/五相当の Completeness。公式スキーマ準拠は継続 | Dev + 税理士 |
-| **5c** | e-Tax / eLTAX 本番提出（認証 · 署名 · 送信） | 5b + 代表/税理士署名 | 人間のみ |
+| **5b** | 提出用データ出力（内部決算・申告書を正本に、e-Tax / API 形式へ寄せる） | **実装済（handoff ドラフト）** — `writeCorporateTaxXmlDraft` · 別表四/五相当の Completeness。公式スキーマ準拠は継続 | Dev + 税理士 |
+| **5c** | e-Tax / eLTAX 外部送信（ユーザ承認後） | 5b + HumanApprovalContext（代表 / 承認者） | 人間承認 + OrgOS 送信経路 |
 | **5d** | 宿泊税 `obligation_rhythms` `from_ledger` | **実装済** — `lodgingTaxFromLedger` が `data/operations/lodging-tax.yaml` assessments を読む | Dev |
 
 ### 境界 — e-Tax を「実装しない」の意味
 
-OrgOS は **e-Tax / eLTAX そのもの** を実装しない。提出の実行主体は税理士 / 代表。handoff は常に `submission: "not-for-etax"` を付ける。
+OrgOS は **e-Tax / eLTAX ポータルそのもの**（独自のログイン画面 · 証明書ストアの再実装）を作らない。提出データの正本は内部の決算・税務申告書である。送信はユーザ承認をゲートにする（ADR 0038 HumanApprovalContext）。LLM / MCP は承認を実行しない。
 
-| する（5b） | しない（5c） |
+| する | しない |
 |------|------|
-| e-Tax / eLTAX に提出するデータの出力（XML · 別表 · 添付パック） | e-Tax / eLTAX クライアント、ポータル、ログイン |
-| 国税庁等が公開する提出データ仕様・API スキーマがある場合、**そのフォーマットに合わせる** | 電子証明書 · 電子署名 · 本番送信 API の呼び出し |
-| 税理士が e-Tax クライアントへ取り込むファイルの生成 | OrgOS から税務署へ直接申告する経路 |
+| 内部の決算・税務申告書を参照した提出用データの出力（XML · 別表 · 添付パック） | 内部正本と無関係な申告データの invent |
+| 公開された提出データ仕様・API スキーマへのフォーマット準拠 | e-Tax / eLTAX ポータルの自前再実装 |
+| ユーザ（代表 / 承認者）承認後の外部送信 | 承認を経ない自動送信 |
+| 税理士が検算・取り込むファイルの生成 | LLM / MCP 名義での送信 |
 
-フォーマット準拠は「提出可能データの準備」であり、「提出の実行」ではない。送信エンドポイントを叩くことは、公式 API であっても 5c であり実装しない。
-
-現行 `writeCorporateTaxXmlDraft` は OrgOS 内部ドラフト（`OrgOSCorporateTaxDraft`）である。公開仕様への寄せは 5b の継続作業であり、5c への進出ではない。
-
-**OrgOS は 5c の実行を実装しない** — 提出は税理士ワークフロー外注。
+現行 `writeCorporateTaxXmlDraft` は OrgOS 内部ドラフト（`OrgOSCorporateTaxDraft`、`submission: "not-for-etax"`）である。公開仕様への寄せは 5b の継続作業。承認後送信の実装は 5c であり、handoff が未承認のまま送信してはならない。
 
 ## Lodging tax ledger（5d）
 
@@ -45,9 +42,10 @@ OrgOS は **e-Tax / eLTAX そのもの** を実装しない。提出の実行主
 - `tax readiness` 100% は **5a 以前** で達成可能（ギャップ deferred · 機械 warning 解消）。
 - 5b 以降は新指標 `tax filing export readiness`（将来 ADR）を検討 — 本 ADR では定義しない。
 - mal `modules.yaml` JP tax 4 件有効化（Phase 4）は 5b の前提データ整備とは独立。
-- 「e-Tax を実装しない」と書いてある箇所は、本境界（5c 禁止 · 5b 出力可）を指す。XML 出力まで捨てると読んではならない。
+- 製品 SKU は「提出を含まない」とは書かない。書くなら「内部正本 → 形式整備 → 承認後送信。自動送信はしない」。
 
 ## Related
 
 - ADR [0051-jp-tax-skills-cli-only.md](./0051-jp-tax-skills-cli-only.md) — Phase 2 完了（mal module 有効化）
+- ADR [0038-human-approval-context.md](./0038-human-approval-context.md) — 5c の承認ゲート
 - [tax-filing-spec.md](../org-os/tax-filing-spec.md)

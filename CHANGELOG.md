@@ -17,7 +17,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Changed
 
-- **ADR 0052** — 「e-Tax を実装しない」を 5c（認証 · 署名 · 本番送信）に限定。提出用データの出力と公開仕様へのフォーマット寄せは 5b。Skill / readiness / capability catalog の同趣旨の一文も揃える。
+- **ADR 0052** — e-Tax は内部の決算・税務申告書を正本に e-Tax / API 形式まで整備し、ユーザ承認後の外部送信を許容する。ポータルの自前実装と承認なし自動送信はしない。製品 SKU · 規約 · mal 税務メモも同じ境界に揃える。
 
 ### Fixed
 

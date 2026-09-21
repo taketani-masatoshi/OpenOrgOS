@@ -13,4 +13,4 @@ npm run orgos -- operations tax-corporate depreciation
 npm run orgos -- operations tax-corporate xml-draft
 ```
 
-本 Skill はカレンダー · ギャップ · 減価償却検算。提出用 XML ドラフトは `xml-draft`（ADR 0052 の 5b）。e-Tax 本番提出は 5c（人間 / 税理士）。
+本 Skill はカレンダー · ギャップ · 減価償却検算。提出用 XML ドラフトは `xml-draft`（ADR 0052 の 5b）。外部送信はユーザ承認後のみ（5c）。

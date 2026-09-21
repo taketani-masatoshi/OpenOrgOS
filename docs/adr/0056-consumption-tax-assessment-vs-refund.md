@@ -68,7 +68,7 @@ Cash / GL（入金）            accounting 仕訳 ＋ finance / treasury
 
 ### 5. 提出は ADR 0052 を維持
 
-OrgOS は e-Tax / eLTAX の本番提出を実行しない（ADR 0052 の 5c）。提出用 XML の出力と公開仕様へのフォーマット寄せは 5b。Fulfilment の終端は `ready_to_file` と、人間が書いた `filed_by_human` 記録まで。
+OrgOS は e-Tax / eLTAX を承認なしで送信しない（ADR 0052 の 5c）。提出用 XML の出力と公開仕様へのフォーマット寄せは 5b。承認後の外部送信を許容する。Fulfilment の終端は `ready_to_file` と、承認済み送信または人間が書いた `filed_by_human` 記録。
 
 ### 6. 段階
 
@@ -78,7 +78,7 @@ OrgOS は e-Tax / eLTAX の本番提出を実行しない（ADR 0052 の 5c）�
 | **R1** | 方式・みなし仕入率・輸出割合の eligibility | 同上 · tax-profile 拡張 |
 | **R2** | `jp_consumption_refund` 新設（CLAIM · pack · ゲート） | 新モジュール |
 | **R3（実装済）** | 入金仕訳と CLAIM 由来の還付入金予定（カレンダー） | accounting + tax-profile |
-| **R4** | XML 出力は 5b · e-Tax 送信はしない | —（0052） |
+| **R4** | XML 出力は 5b · e-Tax 送信はユーザ承認後（0052 5c） | — |
 
 mal に R2 を点数目的で有効化しない。実クレームが起きたときだけ tenant ON。
 

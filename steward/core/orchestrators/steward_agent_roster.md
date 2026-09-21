@@ -64,7 +64,7 @@ Steward Agent は **正データを編集せず**、本カタログに従い **�
 | **human_resources** | 労務 · 社保 · 就業規則。**給与 SoT は Finance と協調** | 採用進捗 · 36協定 · 社保届ドラフト | Operations の HR テンプレ | 解雇 · 採用決定 |
 | **corporate_governance** | 株総 · 取締役会 · 議事録 · 招集 | 開催期限 · 議案ドラフト | Secretary（日程のみ） | 決議 · 公告 |
 | **accounting** | **請求 · 支払 · 仕訳 · インボイス実務** | 未請求 · 未払 · 月次実務 | Finance（予実） | 振込実行 |
-| **tax** | 法人税 · 消費税 · **申告サイクル** | 申告期限 · 添付不足 | Finance（数値） | e-Tax 提出 |
+| **tax** | 法人税 · 消費税 · **申告サイクル** | 申告期限 · 添付不足 | Finance（数値） | e-Tax 自動送信 |
 
 **Steward 向け早見:** 数値の「意味」を聞く → **finance** · 請求書を出す → **accounting** · 申告書 → **tax** · 株総準備 → **corporate_governance**
 

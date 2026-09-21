@@ -121,14 +121,14 @@ modules:
   jp_tax_corporate:
     tier: activation_ready
     notes: 法人税申告準備 · operations tax-corporate CLI（calendar/gaps/depreciation/xml-draft）· ADR 0046 ·
-      提出用 XML ドラフトは 5b。e-Tax 本番提出は未対応のため production_ready ではない
+      提出用 XML ドラフトは 5b。承認後の外部送信（5c）は未配線のため production_ready ではない
   jp_tax_consumption:
     tier: activation_ready
     notes: 消費税区分チェック · operations tax-consumption CLI（check/calc/eligibility）·
       申告提出は未対応のため production_ready ではない
   jp_consumption_refund:
     tier: activation_ready
-    notes: 消費税還付 CLAIM · pack · 入金仕訳。e-Tax 本番提出は未対応（ADR 0052 の 5c）のため
+    notes: 消費税還付 CLAIM · pack · 入金仕訳。e-Tax 承認後送信（ADR 0052 の 5c）は未配線のため
       production_ready ではない。mal は点数目的で有効化しない
   jp_invoice_qualified:
     tier: activation_ready

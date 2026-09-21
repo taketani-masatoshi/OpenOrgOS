@@ -12,4 +12,4 @@ Accepted · 2026-08-24
 
 ## Out of scope
 
-- e-Tax / eLTAX 本番提出（ADR 0052 の 5c）。提出用 XML の出力は 5b
+- e-Tax / eLTAX の自動送信。提出用 XML の出力は 5b。承認後送信は 5c

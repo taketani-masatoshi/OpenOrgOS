@@ -23,7 +23,7 @@
 
 | モジュール | 内容 |
 |-----------|------|
-| **税務** `/?tax=1` · `orgos tax package` | 法人税 XML 正本 · 顧問 handoff ZIP · **e-Tax 提出は人間のみ（ADR 0052）** |
+| **税務** `/?tax=1` · `orgos tax package` | 内部決算・申告書を正本に e-Tax / API 形式まで整備 · **ユーザ承認後の外部送信を許容（ADR 0052）** |
 | 給与・賞与・年末調整 | `jp_payroll` · `/chat/v1/tax/bonus-draft` · YEA skeleton（完全自動化は Phase 4+） |
 
 ## ドキュメント一覧
@@ -50,7 +50,7 @@
 |--------|-----|------|
 | **製品** | `orgos ledger product readiness` | 製品層 P0–P4（実装・パイロット骨格） |
 | **課金運用 commercial** | `orgos ledger product readiness --commercial` | 有料顧客受入 C0–C3（課金 live・復旧 drill・監視等）。`legal-signed` は人手 |
-| **経理商用** | `orgos ledger product readiness --accounting` | 通年帳簿・銀行消込・月次締め・電帳法基本・税務 handoff（e-Tax 提出なし） |
+| **経理商用** | `orgos ledger product readiness --accounting` | 通年帳簿・銀行消込・月次締め・電帳法基本・税務 handoff（e-Tax / API 形式整備 · 承認後送信） |
 
 | フェーズ | 目標 | ゲート |
 |----------|------|--------|

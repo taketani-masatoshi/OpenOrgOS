@@ -21,4 +21,4 @@ Accepted (2026-08-24)
 
 - `variance.ts` · dashboard · finance-briefing · report は GL 由来へ付け替え。
 - mal 等の既存 yojitsu `summary` 実績値は計画メモとして残るが権威を持たない。
-- e-Tax / eLTAX 本番提出はスコープ外。提出用 XML の出力は ADR 0052 の 5b。
+- e-Tax / eLTAX の自動送信はスコープ外。提出用 XML の出力は 5b。ユーザ承認後の外部送信は ADR 0052 の 5c。
