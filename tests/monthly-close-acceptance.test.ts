@@ -273,7 +273,7 @@ entries:
     const data = YAML.parse(readFileSync(bankPath(), "utf8")) as any;
     data.entries[0].account_id = "BANK-WRONG";
     data.import_batches[0].entry_ids.push("BS-2026-10-1");
-    data.import_batches.push({ ...data.import_batches[0], id: "BATCH-DUPLICATE" });
+    data.import_batches.push({ ...data.import_batches[0], id: "BATCH-DUPLICATE", period_start: "2026-10-01", period_end: "2026-10-31" });
     writeFileSync(bankPath(), YAML.stringify(data), "utf8");
     const messages = bankControlIntegrityIssuesAt("2026-09-30").map((issue) => issue.message);
     expect(messages.some((message) => message.includes("is reused"))).toBe(true);

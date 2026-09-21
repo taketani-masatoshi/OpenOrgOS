@@ -27,16 +27,23 @@ export function bankControlIntegrityIssuesAt(asOf: string): ControlReconcileIssu
   const month = asOf.slice(0, 7);
   const monthEntries = bank.entries.filter((entry) => entry.date.slice(0, 7) === month && entry.status !== "voided");
   const batches = bank.import_batches.filter((batch) => batch.period_end === asOf);
-  if (batches.length === 0) return [{ level: "error", message: `bank-statements has no balance-certified import batch ending ${asOf}` }];
   const allActiveEntries = new Map(bank.entries.filter((entry) => entry.status !== "voided").map((entry) => [entry.id, entry]));
   const entryBatch = new Map<string, string>();
   const covered = new Set<string>();
   const issues: ControlReconcileIssue[] = [];
-  for (const batch of batches) {
+  for (const batch of bank.import_batches) {
     for (const id of batch.entry_ids) {
       const prior = entryBatch.get(id);
       if (prior) issues.push({ level: "error", message: `bank statement entry ${id} is reused by batches ${prior} and ${batch.id}` });
       else entryBatch.set(id, batch.id);
+    }
+  }
+  if (batches.length === 0) {
+    issues.push({ level: "error", message: `bank-statements has no balance-certified import batch ending ${asOf}` });
+    return issues;
+  }
+  for (const batch of batches) {
+    for (const id of batch.entry_ids) {
       covered.add(id);
       const entry = allActiveEntries.get(id);
       if (!entry) {
