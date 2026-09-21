@@ -1,6 +1,6 @@
 /**
- * Statutory readiness without e-Tax filing (ADR 0052 Phase 5).
- * Assessment · remittance · payroll payable — not XML / 申告送信.
+ * Statutory readiness for close and remittance (ADR 0052).
+ * Assessment · remittance · payroll payable. Official NTA transport is deferred.
  */
 import { loadJournalEntries } from "./expense-claim-journal.js";
 import { runConsumptionTaxCheck } from "./consumption-tax.js";
@@ -17,7 +17,7 @@ const CONSUMPTION_TAX_ERROR_CODES = new Set([
   "tax_profile_missing",
 ]);
 
-/** Consumption tax assessment gaps (e-Tax export is out of scope). */
+/** Consumption tax assessment gaps (official NTA transport is deferred). */
 export function consumptionTaxReadinessIssues(): StatutoryReadinessIssue[] {
   const issues: StatutoryReadinessIssue[] = [];
   try {

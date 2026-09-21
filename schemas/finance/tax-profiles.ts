@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { dateString, monthString } from "../common.js";
+import { corporateTaxAdjustmentLinesSchema } from "./tax-adjustments.js";
 export const taxProfileEntitySchema = z.object({
   name: z.string().min(1),
   type: z.string().min(1),
@@ -77,6 +78,8 @@ export const taxProfileCorporateTaxSchema = z.object({
    */
   estimated_tax_basis: z.string().optional(),
   notes: z.string().optional(),
+  /** 別表四相当。未設定は調整行なし。判断はここに人が書く。 */
+  adjustments: corporateTaxAdjustmentLinesSchema.optional(),
 });
 
 export const taxProfileFilingCalendarItemSchema = z.object({

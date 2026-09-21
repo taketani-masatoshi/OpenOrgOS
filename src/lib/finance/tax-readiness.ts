@@ -1,6 +1,7 @@
 /**
- * Tax module readiness — practical depth score (distinct from agent-readiness %).
- * e-Tax / return XML generation are out of scope and excluded from the denominator.
+ * Tax module readiness — 決算・納税の実務到達度 (distinct from agent-readiness %).
+ * Official NTA schema / counterpart transport stay out of the 7-axis denominator.
+ * 5b draft + 5c approval gate are module facts, not tenant-memo facts.
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -54,6 +55,12 @@ export type TaxReadinessResult = {
   deferred: number;
   /** true when advisor_pending === 0 and no open blocking/warning */
   filing_ready: boolean;
+  /** 決算・納税の実務到達（7軸スコアとは別。モジュール実装の到達） */
+  practice: {
+    xml_draft: "implemented";
+    send_gate: "implemented";
+    official_transport: "deferred";
+  };
 };
 
 function scoreDataSot(): TaxReadinessAxis {
@@ -235,18 +242,23 @@ export function computeTaxReadiness(): TaxReadinessResult {
     axes,
     gaps,
     out_of_scope: [
-      "e-Tax / eLTAX 本番提出",
-      "申告書 XML の行政提出（ドラフト生成は可）",
+      "e-Tax / eLTAX ポータルの自前実装",
+      "国税庁公式スキーマ完全準拠と相手方実送信クライアント",
     ],
     advisor_pending,
     deferred,
     filing_ready,
+    practice: {
+      xml_draft: "implemented",
+      send_gate: "implemented",
+      official_transport: "deferred",
+    },
   };
 }
 
 export function formatTaxReadinessMarkdown(result: TaxReadinessResult): string {
   const lines = [
-    "# Tax Readiness — 税務モジュール実務深度",
+    "# Tax Readiness — 決算・納税の実務到達度",
     "",
     `**${result.pct}%**（${result.total}/${result.max}）— 機械指標 · agent-readiness とは別`,
     "",
@@ -264,7 +276,11 @@ export function formatTaxReadinessMarkdown(result: TaxReadinessResult): string {
   for (const a of result.axes) {
     lines.push(`| ${a.label} | ${a.score}/${a.max} | ${a.detail} |`);
   }
-  lines.push("", "## スコープ外（分母に含めない）", "");
+  lines.push("", "## モジュール到達（ADR 0052）", "");
+  lines.push(`- 5b 内部正本からの提出用ドラフト: **${result.practice.xml_draft}**`);
+  lines.push(`- 5c ユーザ承認後の外部送信ゲート: **${result.practice.send_gate}**`);
+  lines.push(`- 公式スキーマ / 相手方実送信クライアント: **${result.practice.official_transport}**`);
+  lines.push("", "## スコープ外（7軸の分母に含めない）", "");
   for (const item of result.out_of_scope) {
     lines.push(`- ${item}`);
   }

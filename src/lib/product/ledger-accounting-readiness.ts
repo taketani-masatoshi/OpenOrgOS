@@ -1,6 +1,7 @@
 /**
  * Accounting commercial readiness — distinct from product (P0–P4) and ops commercial (C0–C3).
- * Measures: healthy books, bank reconcile, month close, dencho basic, tax handoff (no e-Tax submit).
+ * Measures: healthy books, bank reconcile, month close, dencho basic,
+ * tax handoff (draft from books · send after approval).
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
