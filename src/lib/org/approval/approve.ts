@@ -48,6 +48,7 @@ import {
   applyMedicalDeviceApproval,
   isMedicalDeviceApprovalSubject,
 } from "../../medical-device/approvals.js";
+import { assertPurchaserIsNotAcceptor } from "../sod.js";
 
 /** Wire / expenditure ban self-approval. tenant.config is a CEO inbox confirmation of the same person's toggle. */
 export function isSelfApprovalBannedSubject(subjectType: string): boolean {
@@ -238,6 +239,7 @@ export function approveOrgApproval(opts: ApproveOrgApprovalOptions): ApproveOrgA
 
     assertApproverIdentityBound(opts.approverId, opts.operatorId);
     assertNotSelfApproval(approval, opts.approverId, opts.operatorId);
+    assertPurchaserIsNotAcceptor(approval);
     assertHumanApprovalContext({
       context: opts.humanContext,
       approval,

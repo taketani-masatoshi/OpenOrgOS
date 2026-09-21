@@ -43,6 +43,25 @@ export const retailStoreCli: ModuleCliBundle = {
         },
       }
     );
+    const retail = ctx.operationsCmd.commands.find((cmd) => cmd.name() === "retail");
+    retail
+      ?.command("consume-propose")
+      .description("Propose a stock decrement. Does not write on-hand")
+      .requiredOption("--sku <id>", "SKU id")
+      .requiredOption("--qty <n>", "Quantity", (value) => Number(value))
+      .requiredOption("--on-hand <n>", "Current on-hand", (value) => Number(value))
+      .action(async (opts: { sku: string; qty: number; onHand: number }) => {
+        const { proposeConsumption } = await import("../../../../src/lib/propose-surface.js");
+        console.log(JSON.stringify(proposeConsumption(opts.sku, opts.qty, opts.onHand)));
+      });
+    retail
+      ?.command("reorder-propose")
+      .description("Propose reorders for low stock. Does not send to a supplier")
+      .requiredOption("--skus <json>", "JSON array of {id,stock_qty,threshold}")
+      .action(async (opts: { skus: string }) => {
+        const { proposeReorder } = await import("../../../../src/lib/propose-surface.js");
+        console.log(JSON.stringify(proposeReorder(JSON.parse(opts.skus) as never)));
+      });
   },
   skillHandlers: {
     retail_store_margin: (opts) =>

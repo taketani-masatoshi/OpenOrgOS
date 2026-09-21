@@ -3,6 +3,7 @@ import { registerPlatformCommands } from "../cli/registrars/platform.js";
 import { registerOrchestrationCommands } from "../cli/registrars/orchestration.js";
 import { registerExecutiveCommands } from "../cli/registrars/executive.js";
 import { registerDomainCommands } from "../cli/registrars/domain.js";
+import { registerProposeSurfaceCommands } from "../cli/registrars/propose-surface.js";
 
 /** Build the OrgOS commander tree for catalog and contract tests. */
 export function buildOrgOsCommandProgram(): Command {
@@ -11,5 +12,6 @@ export function buildOrgOsCommandProgram(): Command {
   registerPlatformCommands(program);
   registerOrchestrationCommands(program);
   registerExecutiveCommands(program);
+  registerProposeSurfaceCommands(program);
   return program;
 }

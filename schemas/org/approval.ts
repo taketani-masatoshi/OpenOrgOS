@@ -50,6 +50,10 @@ export const orgApprovalRequestSchema = z
     human_review_confirmed_at: z.string().optional(),
     /** operator registry id that recorded human approval (ceo/approver) */
     approved_by_operator_id: z.string().optional(),
+    /** SoD: the person who placed the order. Must differ from acceptor_id. */
+    purchaser_id: z.string().min(1).optional(),
+    /** SoD: the person who accepts the order. Must differ from purchaser_id. */
+    acceptor_id: z.string().min(1).optional(),
     audit_event_id: z.string().uuid().optional(),
     wire: orgWireOutboundDetailsSchema.optional(),
   })

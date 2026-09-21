@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **未実装 12 件を提案まで置く** — 監査パック、SoD（発注者≠検収者）、プロジェクト P/L、followup / bottleneck scan、`field_ops` · `client_portal` · `hr_lifecycle`、請求 fixture intake、BANT 候補、在庫減算・発注の提案、現場の時間集計、会社イベント chain への digest index、資金繰りの日次系列、見積 PDF 下書き、失注フォロー文案。送信・振込・自動承認・ステージ適用は人間のまま。`can_approve` と `can_execute` は true にしない。ADR 0079
 - **モジュール AI 権限の未宣言を失敗にする** — `security.ai` の 6 キーが YAML に無い、または `can_approve` / `can_execute` が true のモジュールは `orgos modules check` と `orgos platform extension-check`（`doctrine:module-ai`）が拒否する。zod の既定値では未宣言を隠せない。新規モジュールの雛形にも同じ宣言を入れる。ADR 0079
 - **モジュールの AI 権限を宣言にする** — `module.manifest.yaml` の `security.ai` を 46 件すべてで明示。`can_approve` と `can_execute` は全件 false、`can_propose` は観測可能な根拠のある 16 件のみ true。`security:` が無かった 19 件に `limits.concurrent_jobs` を補う（core 2 · JP pack 1）。強制は registrar と capability 解決に置き、モジュール側のコードは触らない。ADR 0079 · [ai-permission-declaration.md](steward/rules/ai-permission-declaration.md)
 - **カタログ id は実体のあるものだけ置く** — `org_pdf_sign` · `document_attestation` · `iso_cms` · `receipt_qr` を `CORE_BUSINESS_MODULE_IDS` から外し、`pdf_esign` を実体化する方針を決定（本変更は決定と宣言のみ。core-ids の編集は次段）。ADR 0080

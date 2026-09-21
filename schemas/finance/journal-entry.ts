@@ -15,6 +15,7 @@ export const journalEntryLineSchema = z.object({
   debit_yen: z.number().int().nonnegative().default(0),
   credit_yen: z.number().int().nonnegative().default(0),
   org_unit_id: z.string().min(1).optional(),
+  project_code: z.string().min(1).optional(),
   person_id: z.string().min(1).optional(),
   counterparty_id: z.string().min(1).optional(),
   source_bank_account_id: z.string().min(1).optional(),

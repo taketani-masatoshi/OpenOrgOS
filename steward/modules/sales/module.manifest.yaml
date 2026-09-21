@@ -24,6 +24,8 @@ cli_commands:
   - demo
   - draft
   - crm-dashboard
+  - bant
+  - lost-deal-draft
 notes: production_ready — pipeline · outbound · inbound · CRM wave 2b (write CLI + Console)
 security:
   ai:

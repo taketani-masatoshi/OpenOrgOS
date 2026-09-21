@@ -80,6 +80,15 @@ modules:
     tier: activation_ready
     notes: 国民 eID 署名（DigiDoc · SiVa）· operations esign CLI。SiVa / sidecar
       の外部依存があるため production_ready ではない。ADR 0014 · ADR 0080
+  field_ops:
+    tier: activation_ready
+    notes: ジョブ割当・完了・動態分析は提案まで。GPS 軌跡は台帳に書かない
+  client_portal:
+    tier: activation_ready
+    notes: 閲覧リンクは契約 id・請求 id・発注 status。追跡は担当と ETA。本文と地図タイルは出さない
+  hr_lifecycle:
+    tier: activation_ready
+    notes: 入退社の手順台帳と pdf_esign への handoff。マイナンバーと口座番号は書かない
   jp_carbon_neutral_2050:
     tier: production_ready
     notes: 2050 CN 宣言 · action-plan · REG-014 · activation seeds 完備

@@ -52,6 +52,9 @@ import { clinicCli } from "../../steward/modules/clinic/cli/register.js";
 import { educationCli } from "../../steward/modules/education/cli/register.js";
 import { eventSpaceCli } from "../../steward/modules/event_space/cli/register.js";
 import { pdfEsignCli } from "../../steward/modules/pdf_esign/cli/register.js";
+import { fieldOpsCli } from "../../steward/modules/field_ops/cli/register.js";
+import { clientPortalCli } from "../../steward/modules/client_portal/cli/register.js";
+import { hrLifecycleCli } from "../../steward/modules/hr_lifecycle/cli/register.js";
 
 const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   travelBookingCli,
@@ -80,6 +83,9 @@ const MODULE_CLI_BUNDLES: ModuleCliBundle[] = [
   educationCli,
   eventSpaceCli,
   pdfEsignCli,
+  fieldOpsCli,
+  clientPortalCli,
+  hrLifecycleCli,
   jp_subsidy_applicationCli,
   jp_trademark_applicationCli,
   jp_corporate_registrationCli,

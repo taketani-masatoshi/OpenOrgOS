@@ -3,13 +3,13 @@
 
 version: 2
 stats:
-  vitest_total: 609
-  static_test_cases: 2809
-  tiered_execution_total: 609
-  catalog_total: 47
-  catalog_cli_registered: 47
+  vitest_total: 610
+  static_test_cases: 2820
+  tiered_execution_total: 610
+  catalog_total: 50
+  catalog_cli_registered: 50
   catalog_gap: 0
-  catalog_dedicated: 31
+  catalog_dedicated: 34
   catalog_bundled: 9
   catalog_only: 7
 platform_domains:
@@ -28,6 +28,12 @@ platform_domains:
   P06_agent_workflow:
     layer: 4
 catalog_modules:
+  client_portal:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - propose-surface.test.ts
   clinic:
     tier: production_ready
     coverage_tier: dedicated
@@ -80,6 +86,12 @@ catalog_modules:
     tests:
       - catalog/event-space.test.ts
       - sector-module-cli-contract.test.ts
+  field_ops:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - propose-surface.test.ts
   hospitality:
     tier: production_ready
     coverage_tier: full
@@ -93,6 +105,12 @@ catalog_modules:
       - module-compliance-onboard.test.ts
       - permit-opening-gate.test.ts
       - required-compliance.test.ts
+  hr_lifecycle:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - propose-surface.test.ts
   investor_relations:
     tier: production_ready
     coverage_tier: dedicated
@@ -1946,6 +1964,13 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  propose-surface.test.ts:
+    axis: catalog
+    kind: unit
+    catalog_ids:
+      - field_ops
+      - client_portal
+      - hr_lifecycle
   protocol-api-server.test.ts:
     axis: platform
     kind: server

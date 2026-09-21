@@ -483,6 +483,24 @@ function registerSalesOperationsCommands(operationsCmd: Command): void {
 
   const quote = sales.command("quote").description("Quote mutations");
   quote
+    .command("render")
+    .description("Render a quote PDF draft. Sending stays on chat:approve")
+    .requiredOption("--quote-id <id>", "Quote id")
+    .requiredOption("--title <text>", "Title")
+    .requiredOption("--amount-yen <n>", "Amount yen", (value) => Number(value))
+    .option("--out <path>", "Write the PDF here")
+    .action(async (opts: { quoteId: string; title: string; amountYen: number; out?: string }) => {
+      const { writeFileSync } = await import("node:fs");
+      const { renderQuotePdf } = await import("../../../../src/lib/propose-surface.js");
+      const pdf = await renderQuotePdf({
+        quoteId: opts.quoteId,
+        title: opts.title,
+        amountYen: opts.amountYen,
+      });
+      if (opts.out) writeFileSync(opts.out, pdf);
+      console.log(JSON.stringify({ quoteId: opts.quoteId, bytes: pdf.length, sent: false }));
+    });
+  quote
     .command("create")
     .description("Create quote for deal")
     .requiredOption("--deal-id <id>", "DEAL id")
@@ -590,6 +608,26 @@ function registerSalesOperationsCommands(operationsCmd: Command): void {
       });
     });
 
+  sales
+    .command("bant")
+    .description("BANT candidates from a transcript fixture. Stage apply is human")
+    .requiredOption("--transcript <text>", "Transcript text")
+    .action(async (opts: { transcript: string }) => {
+      const { extractBant } = await import("../../../../src/lib/propose-surface.js");
+      console.log(JSON.stringify(extractBant(opts.transcript)));
+    });
+
+  sales
+    .command("lost-deal-draft")
+    .description("Draft a follow-up for a silent deal. Does not push")
+    .requiredOption("--deal <id>", "Deal id")
+    .requiredOption("--silent-days <n>", "Days without movement", (value) => Number(value))
+    .action(async (opts: { deal: string; silentDays: number }) => {
+      const { draftLostDealFollowup } = await import("../../../../src/lib/propose-surface.js");
+      console.log(
+        JSON.stringify(draftLostDealFollowup({ dealId: opts.deal, silentDays: opts.silentDays })),
+      );
+    });
 }
 
 export const salesCli: ModuleCliBundle = {

@@ -8,6 +8,7 @@ import { registerPlatformCommands } from "./cli/registrars/platform.js";
 import { registerOrchestrationCommands } from "./cli/registrars/orchestration.js";
 import { registerExecutiveCommands } from "./cli/registrars/executive.js";
 import { registerDomainCommands } from "./cli/registrars/domain.js";
+import { registerProposeSurfaceCommands } from "./cli/registrars/propose-surface.js";
 import {
   maybeWarnLegacyCli,
   ORGOS_CLI_NAME,
@@ -36,6 +37,7 @@ registerDomainCommands(program);
 registerPlatformCommands(program);
 registerOrchestrationCommands(program);
 registerExecutiveCommands(program);
+registerProposeSurfaceCommands(program);
 
 program.hook("preAction", (thisCommand) => {
   const opts = thisCommand.optsWithGlobals() as {

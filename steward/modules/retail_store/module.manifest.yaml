@@ -10,12 +10,14 @@ cli_commands:
   - show
   - validate
   - margin
+  - consume-propose
+  - reorder-propose
 security:
   ai:
     can_observe: true
     can_analyze: true
     can_draft: true
-    can_propose: false
+    can_propose: true
     can_approve: false
     can_execute: false
   limits:
