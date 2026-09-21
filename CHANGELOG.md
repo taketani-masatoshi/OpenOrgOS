@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **会社法の計算書類** — 注記と剰余金処分を台帳と年度宣言から一意に出し、貸借対照表・損益計算書・株主資本等変動を対応表の行で組む。予実 YAML が無くても GL から決算レポートを組める。税額 XML と年度決算ゲートは変えない。
 - **間接税の法域ポート** — 帳簿エンジンは共通のまま、月次締めの消費税ゲートは pack の `indirect_tax_family` 経由。日本の消費税計算は `JP` + `vat_credit` だけ。他法域は日本の税率・税区分必須・別表・適格請求書チェックを走らせない。減価償却率表は pack seed にあるときだけ読む。ADR 0078。
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)
 - **Workflow 互換投影** — 同一 `WorkflowDocument` から表 / Mermaid / React Flow を切替表示（既定は表+JSON）。`orgos workflow render --format json|table|mermaid`。RF はキャンバスモードのみマウント。

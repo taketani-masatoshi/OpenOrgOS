@@ -75,6 +75,10 @@
 
 法人税等の計上、申告、利益処分は年度決算の条件にしない。
 
+## 計算書類
+
+会社法の計算書類（貸借対照表・損益計算書・株主資本等変動計算書・個別注記表）と剰余金の処分は、総勘定元帳と `data/finance/year-end.FY####.yaml` から組む。表示科目は `src/lib/finance/ledger/companies-act-statement-map.ts` の対応表（`bs_class` · `equity_class` · `statement_section` · 剰余金宣言 · 注記）が正本である。注記本文は `financial-statement-disclosures` だけが出す。利益処分の仕訳は自動起票しない。剰余金処分の宣言が無い計算書類は未完だが、年度決算ゲートには加えない。税額の XML は計算書類の入力にしない。予実 YAML が無くても `report kessan --basis gl` は元帳から組む。
+
 消費税は `orgos tax consumption-filing-draft --fiscal-year FY####` で税率別集計、課税売上割合、仕入控除、経過措置、中間納付、残額を税理士確認用に出力する。出力は `not-for-etax` であり、公式申告書または電子提出データではない。年度末宣言を `settled` とする場合、申告準備計算と納付仕訳の差額が 0 でなければ年度決算を拒否する。
 
 ## 税務調整
