@@ -1,6 +1,6 @@
 # e-Tax Integration — Implementation Plan
 
-**Status:** Implementation-100 achieved (mock) · Certification lane in progress · production **DISABLED** · **NOT e-Tax対応完了**  
+**Status:** Mechanism score M1–M13 · Certification lane (D1–D8) not met · production **NOT CERTIFIED / DISABLED** · **NOT e-Tax対応完了**  
 **Date:** 2026-09-21 · **ADR:** [0078](../adr/0078-etax-integration.md)  
 **Operator checklist:** [CERTIFICATION_CHECKLIST.md](CERTIFICATION_CHECKLIST.md)
 
@@ -29,12 +29,29 @@ This document is the scorecard for `jp_etax`. It must not claim e-Tax certificat
 
 ## 100-point definition (two lanes)
 
-### Implementation-100 (achieved)
+Lane 1 is **機構100点** (M1–M13). It is what `orgos efiling score` reports. Lane 1 green is **not** e-Tax対応完了.
 
-- CLI / library path can reach `DRAFT → … → RECEIVED_BY_ETAX` on `--env mock` **without hand-placed status or hand-written xmlHash**
-- Official XML for the first procedure comes only from a registered mapping YAML + KSK2 XSD
-- Production stays `NOT CERTIFIED / DISABLED`; env vars cannot enable it
-- Docs, readiness, and tests state the same facts
+Lane 2 remains D1–D8 in [ACCEPTANCE.md](./ACCEPTANCE.md). Windows COM, NTA transmission evidence, and human production release stay outside the mechanism score.
+
+### Mechanism score (M1–M13)
+
+| ID | Pass when |
+|----|-----------|
+| M1 | e-Tax and eLTAX mock lifecycles reach receipt without a hand-placed status or hash |
+| M2 | HOA110 body fields come from mapping YAML and pass official XSD. Empty `<HOA110 .../>` is rejected. Missing XSD is `SPEC_BLOCKED`, not a pass |
+| M3 | Unregistered forms and fields fail closed |
+| M4 | CI installs xmllint. Missing CAB asserts `SPEC_BLOCKED` instead of `skipIf` |
+| M5 | `evaluateTaxAdjustment` feeds a ReturnPackage with `corporate_tax_xml_draft` provenance |
+| M6 | In-flight recovery: found / not_found / unknown |
+| M7 | Slot + idempotency key + package hash, stale write rejected |
+| M8 | Amended/corrected require the original receipt and do not overwrite it |
+| M9 | Evidence hashes, 10-year retention, legal hold cannot be released |
+| M10 | Secrets stay out of child env, logs, and unpinned executables |
+| M11 | Production stays fail-closed. `ORGOS_ETAX_PRODUCTION=1` does not enable it |
+| M12 | e-Tax and eLTAX stores, specs, transports, and signatures do not cross. eLTAX procedures stay UNSUPPORTED |
+| M13 | readiness, ToS, commercial declaration, and CHANGELOG say **not certified / production DISABLED** |
+
+`evaluateImplementationScore().ok === true` only when every row passes. A missing workbook or XSD leaves M2 `SPEC_BLOCKED` and the score below 13. Do not write e-Tax対応完了 in CHANGELOG from this score.
 
 ### Certification-100 / 対応完了 (D1–D8)
 

@@ -8,7 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
-- **e-Tax D1–D8 実オペレータ受け入れ** — `orgos etax acceptance report` · B層 `tests/etax-d1-d8-acceptance.test.ts`（`ETAX_D18_ACCEPTANCE=1`）。`host bind` · transmission-test record · `procedure promote-rho0010` · `product-copy sync` は証跡/ゲート条件を満たすまで拒否。tip は未 certified。**e-Tax対応完了ではない（オペレータ未達）。** [ACCEPTANCE.md](docs/etax/ACCEPTANCE.md)
+- **電子提出の機構スコア（M1–M13）** — `orgos efiling score`。e-Tax と eLTAX のチャネル分離、送信中断復旧、訂正申告、証跡保存、HOA110 本体の mapping 生成。本番提出は **NOT CERTIFIED / DISABLED** のまま。**e-Tax対応完了ではない。** D1–D8 は別レーン。
 - **e-Tax 認証レーン（対応完了の定義・ホスト・自動テスト）** — D1–D8 と [CERTIFICATION_CHECKLIST.md](docs/etax/CERTIFICATION_CHECKLIST.md)（T-O*）。Windows `tools/etax-host`（SignToReport / Send / GetResponse、JSON-RPC/stdio）。e-tax18 `receipt-mapping.yaml` · e-tax08 inter-form 正式行 · RHO0010 IT 任意フィールド拡充。`tests/etax-certification.test.ts`（T-A1–T-A10）。`orgos etax production release --approval-id`（`etax.production_enable`）と `etax host status`。本番 gate tip は false のまま。**e-Tax対応完了ではない**（NTA 送信試験・human release·RHO0010 SUPPORTED 後に宣言）。ADR 0078
 - **e-Tax 実装100（契約修復 · RHO0010 · mock E2E）** — 状態機械と CLI 経路を一致（`validateAndAdvance` · xmlHash provenance · filing slot 重複検出 · org approval の etax 適用+rollback）。第一手続 `RHO0010` を公式 XSD 由来 mapping で生成し Layer 1 通過。mock で RECEIVED_BY_ETAX まで手置き xmlHash なし。COM ホストは未接続（[HOST_CONTRACT.md](docs/etax/HOST_CONTRACT.md)）。本番・NTA 送信試験は未実施。**e-Tax対応完了ではない。** ADR 0078
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)

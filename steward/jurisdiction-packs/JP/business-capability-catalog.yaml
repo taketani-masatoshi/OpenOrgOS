@@ -538,6 +538,17 @@ modules:
     official_urls:
       - https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo3.htm
       - https://www.e-tax.nta.go.jp/shiyo/ksk2/ksk2_shiyo.htm
+  - id: jp_eltax
+    name_ja: 地方税 eLTAX 連携
+    status: partial
+    tier: skeleton
+    pack: jurisdiction-packs/JP
+    agent_proxy: tax
+    categories:
+      - tax_finance
+    priority: P1
+    official_urls:
+      - https://www.eltax.lta.go.jp/
   - id: jp_tax_consumption
     name_ja: 消費税申告
     status: partial

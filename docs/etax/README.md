@@ -7,7 +7,7 @@
 | e-Tax compatibility status | Experimental. Not certified. Production submit disabled. |
 | KSK2 spec version | `KSK2-2026-08-28` (listing). Reception start 2026-09-24. |
 | Supported procedures | **RHO0010** = `EXPERIMENTAL` (`productionEligible: false`). All others UNSUPPORTED. |
-| Test status | Implementation-100 local/mock E2E. No NTA transmission test. |
+| Test status | Mechanism score M1–M13 (`orgos efiling score`). Not NTA certification. |
 | Production status | `e-Tax production submission: NOT CERTIFIED / DISABLED` |
 
 CLI: `orgos etax spec status`

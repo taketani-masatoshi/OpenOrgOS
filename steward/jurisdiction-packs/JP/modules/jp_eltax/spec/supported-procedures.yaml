@@ -1,0 +1,5 @@
+schema_version: 1
+channel: eltax
+defaultSupport: UNSUPPORTED
+procedures: []
+notes: All eLTAX procedures are UNSUPPORTED. Do not reuse e-Tax procedure codes.

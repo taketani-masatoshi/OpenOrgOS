@@ -126,8 +126,13 @@ modules:
     tier: experimental
     notes: >
       NTA e-Tax KSK2 integration (ADR 0078). EXPERIMENTAL / NOT FOR PRODUCTION.
-      First procedure RHO0010 mock path only. Production gate disabled.
-      Tax calculation remains out of scope.
+      Mechanism score is orgos efiling score (M1–M13). Production submission is
+      NOT CERTIFIED / DISABLED. Tax calculation remains out of scope.
+  jp_eltax:
+    tier: experimental
+    notes: >
+      eLTAX channel (local tax). Lifecycle parity with jp_etax, procedures
+      UNSUPPORTED, production NOT CERTIFIED / DISABLED. Not an e-Tax certification.
   jp_tax_consumption:
     tier: activation_ready
     notes: 消費税区分チェック · operations tax-consumption CLI（check/calc/eligibility）·

@@ -431,7 +431,7 @@ export function evaluateImplementationScore(): ImplementationScore {
   };
 }
 
-}
+function scoreCreate(idempotencyKey: string) {
   return {
     id: "EFILING-score",
     packageId: "PKG-score",

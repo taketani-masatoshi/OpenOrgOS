@@ -27,6 +27,7 @@ export const MODULE_DEFAULT_DATA_ROOT: Record<string, string> = {
   jp_permit_registry: "data/permit-registry",
   jp_consumption_refund: "data/tax",
   jp_etax: "data/etax",
+  jp_eltax: "data/eltax",
 };
 
 export function isModuleEnabled(moduleId: string): boolean {
