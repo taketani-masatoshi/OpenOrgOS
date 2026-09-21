@@ -1,0 +1,32 @@
+as_of: "2026-09-01"
+currency: JPY
+entries:
+  - id: AR-FIX-001
+    kind: ar
+    amount: 480000
+    booked_date: "2026-08-05"
+    due_date: "2026-09-05"
+    counterparty: サンプル物販株式会社
+    description: フィクスチャ月次売上
+    # account_id is L2: present here so the Today context can be asserted to omit it.
+    account_id: BANK-901
+    status: open
+    source: ar-ap
+  - id: AR-FIX-002
+    kind: ar
+    amount: 120000
+    booked_date: "2026-08-01"
+    due_date: "2026-08-25"
+    counterparty: 山田太郎
+    description: 役員貸付の返済入金
+    status: open
+    source: ar-ap
+  - id: AP-FIX-001
+    kind: ap
+    amount: 90000
+    booked_date: "2026-08-10"
+    due_date: "2026-09-10"
+    counterparty: サンプル保守サービス
+    description: フィクスチャ保守費
+    status: open
+    source: ar-ap

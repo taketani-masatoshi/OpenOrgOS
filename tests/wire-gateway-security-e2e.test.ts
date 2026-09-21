@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,6 +25,12 @@ function openssl(cwd: string, ...args: string[]): void {
   execFileSync("openssl", args, { cwd, stdio: "ignore" });
 }
 
+function writeExtFile(dir: string, name: string, contents: string): string {
+  const path = join(dir, name);
+  writeFileSync(path, contents);
+  return path;
+}
+
 function generateTlsFixtures(dir: string): {
   ca: string;
   serverCert: string;
@@ -44,14 +50,16 @@ function generateTlsFixtures(dir: string): {
     "req", "-newkey", "rsa:2048", "-nodes",
     "-keyout", "server.key", "-out", "server.csr", "-subj", "/CN=127.0.0.1"
   );
+  // OpenSSL 3 cannot read -extfile from /dev/stdin, so pass a real file.
+  const serverExt = writeExtFile(dir, "server.ext", "subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\n");
   execFileSync(
     "openssl",
     [
       "x509", "-req", "-in", "server.csr", "-CA", "ca.crt", "-CAkey", "ca.key",
       "-CAcreateserial", "-out", "server.crt", "-days", "1",
-      "-extfile", "/dev/stdin",
+      "-extfile", serverExt,
     ],
-    { cwd: dir, input: "subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\n", stdio: ["pipe", "ignore", "ignore"] }
+    { cwd: dir, stdio: ["ignore", "ignore", "ignore"] }
   );
 
   for (const [name, uri] of [
@@ -63,18 +71,15 @@ function generateTlsFixtures(dir: string): {
       "req", "-newkey", "rsa:2048", "-nodes",
       "-keyout", `${name}.key`, "-out", `${name}.csr`, "-subj", `/CN=${name}`
     );
+    const ext = writeExtFile(dir, `${name}.ext`, `subjectAltName=URI:${uri}\nextendedKeyUsage=clientAuth\n`);
     execFileSync(
       "openssl",
       [
         "x509", "-req", "-in", `${name}.csr`, "-CA", "ca.crt", "-CAkey", "ca.key",
         "-CAserial", "ca.srl", "-out", `${name}.crt`, "-days", "1",
-        "-extfile", "/dev/stdin",
+        "-extfile", ext,
       ],
-      {
-        cwd: dir,
-        input: `subjectAltName=URI:${uri}\nextendedKeyUsage=clientAuth\n`,
-        stdio: ["pipe", "ignore", "ignore"],
-      }
+      { cwd: dir, stdio: ["ignore", "ignore", "ignore"] }
     );
   }
 

@@ -1,0 +1,20 @@
+currency: JPY
+status: draft
+summary:
+  total_debt: 0
+  loan_count: 0
+  interest_bearing_debt: 0
+  bank_borrowing: 0
+loans: []
+future_bank_borrowing:
+  planned: false
+  amount: 0
+scenarios:
+  - id: base
+    name: ベース
+    repayments: []
+dscr:
+  targets:
+    minimum: 1.2
+    warning: 1.0
+notes: debt plan skeleton

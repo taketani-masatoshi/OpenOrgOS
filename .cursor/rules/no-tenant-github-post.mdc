@@ -22,6 +22,10 @@ alwaysApply: true
 - `*.example` / `*.example.yaml`
 - `.gitignore` 済みの運用ファイルは tip に載せない（tracked のまま残っていたら `git rm --cached`）
 
+## 検査
+
+`npm run check:tenant-tip`（CI の `validate` でも実行）。clone 直後に `scripts/install-hooks.sh` を1回実行すると pre-commit / pre-push でも止まる。
+
 ## 履歴
 
 過去コミットに残る秘密の history rewrite はしない。先端から外し、再発を `.gitignore` で止める。

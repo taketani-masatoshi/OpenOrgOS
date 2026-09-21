@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+root="$(git rev-parse --show-toplevel)"
+exec bash "$root/scripts/check-tenant-tip.sh"

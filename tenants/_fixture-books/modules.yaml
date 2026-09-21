@@ -1,0 +1,9 @@
+# Fixture tenant: no business module is active. The schema requires at least one
+# entry, so a single disabled module stands in — tests that only need the
+# company/finance fixtures must not pull in module data roots.
+modules:
+  - id: membership
+    enabled: false
+    agent: membership
+    data_root: data/membership/
+    summary_dir: agent-summaries/membership/
