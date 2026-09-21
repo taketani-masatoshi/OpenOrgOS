@@ -25,6 +25,16 @@ export const consumptionTaxReturnTransformSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("floor_unit"), unit_yen: z.number().int().positive() }).strict(),
   z
     .object({
+      op: z.literal("inclusive_rollback_floor"),
+      inclusive_numerator: z.union([z.literal(108), z.literal(110)]),
+      inclusive_denominator: z.literal(100),
+      rollback_numerator: z.literal(100),
+      rollback_denominator: z.union([z.literal(108), z.literal(110)]),
+      unit_yen: z.literal(1000),
+    })
+    .strict(),
+  z
+    .object({
       op: z.literal("rate_floor"),
       numerator: z.number().int().positive(),
       denominator: z.number().int().positive(),
@@ -159,6 +169,22 @@ function assertRowShape(
         code: z.ZodIssueCode.custom,
         path: ["rows"],
         message: `${row.id} references missing row ${id}`,
+      });
+    }
+  }
+  if (row.transform.op === "inclusive_rollback_floor") {
+    if (row.source.kind !== "input") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rows"],
+        message: `${row.id} rolls a tax-exclusive input back to inclusive once`,
+      });
+    }
+    if (row.transform.rollback_denominator !== row.transform.inclusive_numerator) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rows"],
+        message: `${row.id} must not apply the rollback ratio twice`,
       });
     }
   }

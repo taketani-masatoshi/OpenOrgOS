@@ -28,7 +28,12 @@ import {
 const MAPPING_RELATIVE =
   "steward/jurisdiction-packs/JP/modules/jp_tax_consumption/spec/return-form-mapping.yaml";
 
-export type ConsumptionTaxReturnBases = Partial<Record<ConsumptionTaxReturnInputKey, number>>;
+/** Explicit 該当なし is zero. A missing adjustment fact is not. */
+export type ConsumptionTaxReturnFact = number | "該当なし";
+
+export type ConsumptionTaxReturnBases = Partial<
+  Record<ConsumptionTaxReturnInputKey, ConsumptionTaxReturnFact>
+>;
 
 export type ConsumptionTaxPurchaseLine = {
   occurred_on: string;
@@ -296,7 +301,7 @@ function sourceAmounts(
   bases: ConsumptionTaxReturnBases,
   filled: Map<string, number | null>
 ): number[] | null {
-  if (row.source.kind === "input") return oneInput(bases[row.source.key]);
+  if (row.source.kind === "input") return oneInput(row.source.key, bases[row.source.key]);
   const ids = dependencyIds(row);
   const amounts: number[] = [];
   for (const id of ids) {
@@ -307,8 +312,19 @@ function sourceAmounts(
   return amounts;
 }
 
-function oneInput(amount: number | undefined): number[] | null {
-  if (amount === undefined || !Number.isInteger(amount) || amount < 0) return null;
+const ADJUSTMENT_INPUTS = new Set<ConsumptionTaxReturnInputKey>([
+  "excess_adjustment_yen",
+  "return_tax_yen",
+  "bad_debt_yen",
+  "interim_payment_yen",
+]);
+
+function oneInput(
+  key: ConsumptionTaxReturnInputKey,
+  amount: ConsumptionTaxReturnFact | undefined
+): number[] | null {
+  if (amount === "該当なし") return ADJUSTMENT_INPUTS.has(key) ? [0] : null;
+  if (typeof amount !== "number" || !Number.isInteger(amount) || amount < 0) return null;
   return [amount];
 }
 
@@ -317,6 +333,7 @@ function applyTransform(row: ConsumptionTaxReturnMapRow, values: number[]): numb
   const first = values[0] ?? 0;
   if (transform.op === "identity") return first;
   if (transform.op === "floor_unit") return floorTo(first, transform.unit_yen);
+  if (transform.op === "inclusive_rollback_floor") return inclusiveRollbackFloor(first, transform);
   if (transform.op === "rate_floor") {
     return Math.floor((first * transform.numerator) / transform.denominator);
   }
@@ -339,6 +356,24 @@ function signedRateThenPayableFloor(
   const magnitude = Math.floor((Math.abs(value) * transform.numerator) / transform.denominator);
   const rated = sign * magnitude;
   return rated >= 0 ? floorTo(rated, transform.payable_unit_yen) : rated;
+}
+
+function inclusiveRollbackFloor(
+  exclusive: number,
+  transform: {
+    inclusive_numerator: number;
+    inclusive_denominator: number;
+    rollback_numerator: number;
+    rollback_denominator: number;
+    unit_yen: number;
+  }
+): number {
+  const rolled =
+    (BigInt(exclusive) *
+      BigInt(transform.inclusive_numerator) *
+      BigInt(transform.rollback_numerator)) /
+    (BigInt(transform.inclusive_denominator) * BigInt(transform.rollback_denominator));
+  return floorTo(Number(rolled), transform.unit_yen);
 }
 
 function floorTo(value: number, unit: number): number {

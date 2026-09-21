@@ -1,6 +1,6 @@
 # 法人・本則・割戻し・一般用の公表欄対応。電子申告の手続や様式定義は持たない。
 # 欄番号の出典: 国税庁「消費税及び地方消費税の申告書（一般用）の書き方」（令和7年11月作成）
-# 集計キーは税抜本体。課税標準は税率ごとに千円未満切捨ててから足す。税込の割戻しはしない。
+# 仕訳の本体が税抜なら、①-1 は一度税込へ戻してから 100/108 または 100/110 を一回だけ掛け、千円未満を切捨てる。
 id: jp-consumption-return-general-standard-reiwa7-2025-11
 form: 法人・本則・割戻し・一般用
 source_label: 国税庁 消費税及び地方消費税の申告書（一般用）の書き方（令和7年11月作成）
@@ -42,7 +42,11 @@ rows:
       kind: input
       key: taxable_sales_8_yen
     transform:
-      op: floor_unit
+      op: inclusive_rollback_floor
+      inclusive_numerator: 108
+      inclusive_denominator: 100
+      rollback_numerator: 100
+      rollback_denominator: 108
       unit_yen: 1000
 
   - id: schedule_1_3_base_10
@@ -54,7 +58,11 @@ rows:
       kind: input
       key: taxable_sales_10_yen
     transform:
-      op: floor_unit
+      op: inclusive_rollback_floor
+      inclusive_numerator: 110
+      inclusive_denominator: 100
+      rollback_numerator: 100
+      rollback_denominator: 110
       unit_yen: 1000
 
   - id: schedule_1_3_tax_8

@@ -232,6 +232,40 @@ describe("consumption tax return row mapping", () => {
     expect(result.rows.find((row) => row.id === "return_page1_3")?.row_status).toBe("blocked");
   });
 
+  it("treats explicit not-applicable adjustment facts as zero", () => {
+    const sales = {
+      taxable_sales_10_yen: 1_500,
+      taxable_sales_8_yen: 1_500,
+    };
+    const explicitZero = projectConsumptionTaxReturnRows({
+      mapping,
+      bases: { ...sales, ...NONE_FACTS },
+      purchases: { lines: [] },
+    });
+    const notApplicable = projectConsumptionTaxReturnRows({
+      mapping,
+      bases: {
+        ...sales,
+        excess_adjustment_yen: "該当なし",
+        return_tax_yen: "該当なし",
+        bad_debt_yen: "該当なし",
+        interim_payment_yen: "該当なし",
+      },
+      purchases: { lines: [] },
+    });
+    expect(notApplicable.status).toBe("ready_for_advisor_review");
+    expect(amount(notApplicable.rows, "return_page1_3")).toBe(0);
+    for (const id of [
+      "return_page1_7",
+      "return_page1_9",
+      "return_page1_11",
+      "return_page1_18",
+      "return_page1_20",
+    ]) {
+      expect(amount(notApplicable.rows, id), id).toBe(amount(explicitZero.rows, id));
+    }
+  });
+
   it("does not fill return rows for simplified tax", () => {
     const result = projectConsumptionTaxReturnRows({
       mapping,
