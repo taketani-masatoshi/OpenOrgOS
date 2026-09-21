@@ -30,6 +30,7 @@ import {
   type ModuleSecuritySection,
 } from "../../schemas/module-security-manifest.js";
 import { grantedCapabilitiesFromSecurity } from "./module-capability.js";
+import { validateModuleAiDeclaration } from "./module-ai-declaration.js";
 
 export const MODULES_FILE = "modules.yaml";
 export { STEWARD_MODULES_DIR } from "./steward-paths.js";
@@ -518,6 +519,16 @@ export function resolveModuleGrantedCapabilities(catalogId: string): Set<string>
   return grantedCapabilitiesFromSecurity(resolveModuleSecurity(catalogId));
 }
 
+/** Raw manifest `security` block. Zod defaults must not hide a missing declaration. */
+export function moduleAiDeclarationIssues(catalogId: string): string[] {
+  const loc = resolveModuleLocation(catalogId);
+  if (!loc) return ["missing module.manifest.yaml"];
+  const path = join(loc.rootDir, "module.manifest.yaml");
+  if (!existsSync(path)) return ["missing module.manifest.yaml"];
+  const raw = YAML.parse(readFileSync(path, "utf-8")) as { security?: unknown } | null;
+  return validateModuleAiDeclaration(raw?.security);
+}
+
 export interface ModuleCheckIssue {
   moduleId: string;
   message: string;
@@ -565,6 +576,11 @@ function checkModuleSkeleton(catalogId: string): ModuleCheckIssue[] {
       moduleId: catalogId,
       message: `missing agent.md for module "${catalogId}"`,
     });
+  }
+
+  for (const message of moduleAiDeclarationIssues(catalogId)) {
+    if (message === "missing module.manifest.yaml") continue;
+    issues.push({ moduleId: catalogId, message });
   }
 
   return issues;

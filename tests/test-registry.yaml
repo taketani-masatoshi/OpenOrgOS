@@ -3,13 +3,13 @@
 
 version: 2
 stats:
-  vitest_total: 608
-  static_test_cases: 2802
-  tiered_execution_total: 608
-  catalog_total: 46
+  vitest_total: 609
+  static_test_cases: 2809
+  tiered_execution_total: 609
+  catalog_total: 47
   catalog_cli_registered: 47
   catalog_gap: 0
-  catalog_dedicated: 30
+  catalog_dedicated: 31
   catalog_bundled: 9
   catalog_only: 7
 platform_domains:
@@ -268,6 +268,12 @@ catalog_modules:
     tests:
       - catalog/bundled-modules-contract.test.ts
       - wave-modules-cli.test.ts
+  pdf_esign:
+    tier: activation_ready
+    coverage_tier: dedicated
+    cli: true
+    tests:
+      - pdf-esign-digidoc.test.ts
   professional_services:
     tier: production_ready
     coverage_tier: bundled
@@ -1645,6 +1651,9 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  module-ai-declaration.test.ts:
+    axis: contract
+    kind: contract
   module-compliance-onboard.test.ts:
     axis: catalog
     kind: unit
@@ -1862,9 +1871,10 @@ tests:
     kind: unit
     domain: P01_kernel
   pdf-esign-digidoc.test.ts:
-    axis: platform
+    axis: catalog
     kind: unit
-    domain: P01_kernel
+    catalog_ids:
+      - pdf_esign
   peer-contact-policy.test.ts:
     axis: platform
     kind: unit

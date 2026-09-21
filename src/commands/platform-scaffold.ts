@@ -71,6 +71,14 @@ function scaffoldModule(id: string): { path: string; content: string } {
     "agent: " + id,
     "data_root: data/" + id.replace(/_/g, "-") + "/",
     "docs_root: docs/" + id.replace(/_/g, "-") + "/",
+    "security:",
+    "  ai:",
+    "    can_observe: true",
+    "    can_analyze: true",
+    "    can_draft: true",
+    "    can_propose: false",
+    "    can_approve: false",
+    "    can_execute: false",
     "",
   ].join("\n");
   return { path, content };

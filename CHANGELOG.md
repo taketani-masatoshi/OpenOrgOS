@@ -8,6 +8,7 @@ All notable changes to OrgOS Operator Layer are documented here.
 
 ### Added
 
+- **モジュール AI 権限の未宣言を失敗にする** — `security.ai` の 6 キーが YAML に無い、または `can_approve` / `can_execute` が true のモジュールは `orgos modules check` と `orgos platform extension-check`（`doctrine:module-ai`）が拒否する。zod の既定値では未宣言を隠せない。新規モジュールの雛形にも同じ宣言を入れる。ADR 0079
 - **モジュールの AI 権限を宣言にする** — `module.manifest.yaml` の `security.ai` を 46 件すべてで明示。`can_approve` と `can_execute` は全件 false、`can_propose` は観測可能な根拠のある 16 件のみ true。`security:` が無かった 19 件に `limits.concurrent_jobs` を補う（core 2 · JP pack 1）。強制は registrar と capability 解決に置き、モジュール側のコードは触らない。ADR 0079 · [ai-permission-declaration.md](steward/rules/ai-permission-declaration.md)
 - **カタログ id は実体のあるものだけ置く** — `org_pdf_sign` · `document_attestation` · `iso_cms` · `receipt_qr` を `CORE_BUSINESS_MODULE_IDS` から外し、`pdf_esign` を実体化する方針を決定（本変更は決定と宣言のみ。core-ids の編集は次段）。ADR 0080
 - **Workflow 構成議論ゲート** — キャンバスは正本ではなく議論面。`data/org/workflows/` SSOT · 決定論 evaluate · WFS 提案（APR `workflow.structure`）· `chat:approve` 適用。ADR 0077 · [workflow-canvas.md](docs/org-os/workflow-canvas.md)

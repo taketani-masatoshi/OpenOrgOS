@@ -135,6 +135,7 @@ const CONTRACT_FILES = new Set([
   "legacy-webhook-sunset.test.ts",
   "extensibility-contract.test.ts",
   "modules.test.ts",
+  "module-ai-declaration.test.ts",
   "readiness.test.ts",
   "module-production-tier.test.ts",
   "testing-registry.test.ts",

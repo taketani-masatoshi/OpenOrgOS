@@ -14,6 +14,7 @@ import {
   validateCliCommandCatalog,
 } from "./cli-command-catalog.js";
 import { validateLegacyWebhookSunset } from "./protocol/legacy-webhook-sunset.js";
+import { listCatalogModuleIds, moduleAiDeclarationIssues } from "./modules.js";
 import { ROOT_DIR } from "./tenant.js";
 
 export interface PlatformExtensionCheck {
@@ -90,6 +91,15 @@ export function runPlatformExtensionChecks(): PlatformExtensionCheck[] {
     id: "registry:verify",
     ok: registryIssues.length === 0,
     detail: registryIssues.length === 0 ? "OK" : `${registryIssues.length} issue(s)`,
+  });
+
+  const aiIssues = listCatalogModuleIds().flatMap((id) =>
+    moduleAiDeclarationIssues(id).map((message) => `${id}: ${message}`)
+  );
+  checks.push({
+    id: "doctrine:module-ai",
+    ok: aiIssues.length === 0,
+    detail: aiIssues.length === 0 ? "security.ai declared" : aiIssues.join("; "),
   });
 
   return checks;
