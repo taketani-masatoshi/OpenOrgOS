@@ -1,0 +1,109 @@
+# 期待円は手計算のリテラル。投影結果を書き戻さない。
+cases:
+  - id: mixed-rates
+    citation: hand-check
+    bases:
+      taxable_sales_10_yen: 1234567
+      taxable_sales_8_yen: 890123
+    purchases:
+      taxable_sales_yen: 2124690
+      ratio:
+        taxable_yen: 10000
+        total_yen: 10000
+      lines:
+        - occurred_on: "2026-04-01"
+          tax_category: taxable_10
+          base_yen: 200000
+          invoice_status: qualified
+          purchase_use: taxable_only
+        - occurred_on: "2026-04-01"
+          tax_category: taxable_8
+          base_yen: 50000
+          invoice_status: qualified
+          purchase_use: taxable_only
+    expect:
+      - sheet: return_page2
+        line: "⑥"
+        amount_yen: 1234000
+      - sheet: return_page2
+        line: "⑤"
+        amount_yen: 890000
+      - sheet: return_page1
+        line: "①"
+        amount_yen: 2124000
+      - sheet: schedule_1_3
+        line: "②B"
+        amount_yen: 96252
+      - sheet: schedule_1_3
+        line: "②A"
+        amount_yen: 55536
+      - sheet: return_page1
+        line: "②"
+        amount_yen: 151788
+      - sheet: schedule_2_3
+        line: "㉖"
+        amount_yen: 18720
+      - sheet: return_page1
+        line: "④"
+        amount_yen: 18720
+      - sheet: return_page1
+        line: "⑨"
+        amount_yen: 133000
+      - sheet: return_page1
+        line: "⑱"
+        amount_yen: 133000
+      - sheet: return_page1
+        line: "⑳"
+        amount_yen: 37500
+  - id: journal-chain
+    citation: hand-check
+    bases:
+      taxable_sales_10_yen: 1500
+      taxable_sales_8_yen: 1500
+    purchases:
+      taxable_sales_yen: 3000
+      ratio:
+        taxable_yen: 10000
+        total_yen: 10000
+      lines:
+        - occurred_on: "2026-06-15"
+          tax_category: taxable_10
+          base_yen: 1000
+          invoice_status: qualified
+          purchase_use: taxable_only
+        - occurred_on: "2026-06-15"
+          tax_category: taxable_8
+          base_yen: 1000
+          invoice_status: qualified
+          purchase_use: taxable_only
+    expect:
+      - sheet: return_page2
+        line: "⑥"
+        amount_yen: 1000
+      - sheet: return_page2
+        line: "⑤"
+        amount_yen: 1000
+      - sheet: return_page1
+        line: "①"
+        amount_yen: 2000
+      - sheet: schedule_1_3
+        line: "②B"
+        amount_yen: 78
+      - sheet: schedule_1_3
+        line: "②A"
+        amount_yen: 62
+      - sheet: return_page1
+        line: "②"
+        amount_yen: 140
+      - sheet: schedule_2_3
+        line: "㉖"
+        amount_yen: 140
+      - sheet: return_page1
+        line: "④"
+        amount_yen: 140
+      - sheet: return_page1
+        line: "⑨"
+        amount_yen: 0
+      - sheet: return_page1
+        line: "⑳"
+        amount_yen: 0

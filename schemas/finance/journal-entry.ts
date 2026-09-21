@@ -22,7 +22,14 @@ export const journalEntryLineSchema = z.object({
   tax_rate_pct: z.number().min(0).max(100).optional(),
   tax_amount_yen: z.number().int().nonnegative().optional(),
   invoice_status: z
-    .enum(["qualified", "nonqualified_80", "nonqualified_50", "exempt_supplier", "unknown"])
+    .enum([
+      "qualified",
+      "nonqualified_80",
+      "nonqualified_70",
+      "nonqualified_50",
+      "exempt_supplier",
+      "unknown",
+    ])
     .optional(),
   purchase_use: z.enum(["taxable_only", "common", "non_taxable_only"]).optional(),
   tax_rounding: z.enum(["floor", "round", "ceil"]).optional(),
@@ -82,7 +89,7 @@ export type JournalSource = z.output<typeof journalSourceSchema>;
 
 function balanceRefine(
   entry: { lines: Array<{ debit_yen: number; credit_yen: number }> },
-  ctx: z.RefinementCtx,
+  ctx: z.RefinementCtx
 ): void {
   const debit = entry.lines.reduce((sum, line) => sum + line.debit_yen, 0);
   const credit = entry.lines.reduce((sum, line) => sum + line.credit_yen, 0);
@@ -115,13 +122,14 @@ export const journalEntrySchema = z
     /** @deprecated use source.kind=expense_claim */
     claim_id: expenseClaimId.optional(),
     /** @deprecated use source.event */
-    event: z
-      .enum(["expense_claim_posted", "expense_claim_reimbursed"])
-      .optional(),
+    event: z.enum(["expense_claim_posted", "expense_claim_reimbursed"]).optional(),
     source: journalSourceSchema.optional(),
     posted_at: z.string().datetime().optional(),
     posted_by: z.string().min(1).optional(),
-    reversal_of: z.string().regex(/^JE-[A-Z0-9-]+$/).optional(),
+    reversal_of: z
+      .string()
+      .regex(/^JE-[A-Z0-9-]+$/)
+      .optional(),
     /** Original source.kind when this entry reverses another. */
     reversed_source_kind: z.string().min(1).optional(),
     evidence_refs: z.array(z.string().min(1)).min(1),
@@ -167,7 +175,7 @@ export function normalizeJournalSource(entry: {
 }
 
 export function normalizeJournalEntry<T extends z.input<typeof journalEntrySchema>>(
-  entry: T,
+  entry: T
 ): T & { source?: JournalSource } {
   const source = normalizeJournalSource(entry);
   if (!source) return entry;
@@ -182,15 +190,10 @@ export const journalEntriesFileSchema = z.object({
 export const expenseClaimAccountingSchema = z.object({
   version: z.literal(1).default(1),
   payable_account_code: z.string().regex(/^\d{4}$/),
-  bank_control_accounts: z.record(
-    z.string().min(1),
-    z.string().regex(/^\d{4}$/),
-  ),
+  bank_control_accounts: z.record(z.string().min(1), z.string().regex(/^\d{4}$/)),
 });
 
 export type JournalEntry = z.output<typeof journalEntrySchema>;
 export type JournalEntriesFile = z.output<typeof journalEntriesFileSchema>;
-export type ExpenseClaimAccounting = z.output<
-  typeof expenseClaimAccountingSchema
->;
+export type ExpenseClaimAccounting = z.output<typeof expenseClaimAccountingSchema>;
 export type TaxCategory = z.output<typeof taxCategorySchema>;

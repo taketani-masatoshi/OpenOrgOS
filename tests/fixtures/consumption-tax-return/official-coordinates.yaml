@@ -1,0 +1,123 @@
+# 試験側の公表欄。対応表はこの一覧に合わせる。対応表から写さない。
+source_label: 国税庁 消費税及び地方消費税の申告書（一般用）の書き方（令和7年11月作成）
+rows:
+  - sheet: schedule_1_3
+    line: "①-1A"
+    label_ja: 課税資産の譲渡等の対価の額（6.24%適用分）
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第二表。6.24%適用分⑤は付表1-3の①－１Ａ欄
+  - sheet: schedule_1_3
+    line: "①-1B"
+    label_ja: 課税資産の譲渡等の対価の額（7.8%適用分）
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第二表。7.8%適用分⑥は付表1-3の①－１Ｂ欄
+  - sheet: schedule_1_3
+    line: "②A"
+    label_ja: 消費税額（6.24%適用分）
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第二表。6.24%適用分⑮は付表1-3の②Ａ欄
+  - sheet: schedule_1_3
+    line: "②B"
+    label_ja: 消費税額（7.8%適用分）
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第二表。7.8%適用分⑯は付表1-3の②Ｂ欄
+  - sheet: schedule_1_3
+    line: "④"
+    label_ja: 控除対象仕入税額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）付表1-3。控除対象仕入税額④は付表2-3の㉖欄。第一表④へ転記
+  - sheet: schedule_2_3
+    line: "㉖"
+    label_ja: 差引・控除対象仕入税額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）付表2-3。差引・控除対象仕入税額㉖を付表1-3の④欄へ記載
+  - sheet: return_page2
+    line: "⑤"
+    label_ja: 課税標準額（6.24%適用分）
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第二表。課税標準額の6.24%適用分⑤
+  - sheet: return_page2
+    line: "⑥"
+    label_ja: 課税標準額（7.8%適用分）
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第二表。課税標準額の7.8%適用分⑥
+  - sheet: return_page2
+    line: "①"
+    label_ja: 課税標準額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第二表。課税標準額①は付表1-3の①Ｃ欄
+  - sheet: return_page1
+    line: "①"
+    label_ja: 課税標準額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。課税標準額①は第二表①欄
+  - sheet: return_page1
+    line: "②"
+    label_ja: 消費税額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。消費税額②は第二表⑪欄
+  - sheet: return_page1
+    line: "④"
+    label_ja: 控除対象仕入税額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。控除対象仕入税額④は付表1-3の④Ｃ欄
+  - sheet: return_page1
+    line: "⑨"
+    label_ja: 差引税額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）付表1-3。差引税額⑨は②＋③－⑦の百円未満切捨て。第一表⑨へ転記
+  - sheet: return_page1
+    line: "⑱"
+    label_ja: 地方消費税の課税標準となる消費税額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。地方消費税の課税標準となる消費税額⑱は付表1-3の⑪欄
+  - sheet: return_page1
+    line: "⑳"
+    label_ja: 譲渡割額
+    required: true
+    status: verified
+    citation: 国税庁 申告書（一般用）の書き方（令和7年11月作成）第一表。譲渡割額の納税額⑳は付表1-3の⑬欄
+  - sheet: return_page1
+    line: "③"
+    label_ja: 控除過大調整税額
+    required: false
+    status: unverified
+    citation: ""
+  - sheet: return_page1
+    line: "⑥"
+    label_ja: 貸倒れに係る税額
+    required: false
+    status: unverified
+    citation: ""
+  - sheet: return_page1
+    line: "⑦"
+    label_ja: 控除税額小計
+    required: false
+    status: unverified
+    citation: ""
+  - sheet: return_page1
+    line: "⑩"
+    label_ja: 中間納付税額
+    required: false
+    status: unverified
+    citation: ""
+  - sheet: return_page1
+    line: "⑪"
+    label_ja: 納付税額
+    required: false
+    status: unverified
+    citation: ""

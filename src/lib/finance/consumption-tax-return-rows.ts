@@ -10,10 +10,15 @@ import {
   type ConsumptionTaxReturnMapRow,
   type ConsumptionTaxReturnRows,
 } from "../../../schemas/finance/consumption-tax-return-map.js";
+import {
+  journalEntrySchema,
+  normalizeJournalEntry,
+} from "../../../schemas/finance/journal-entry.js";
+import { loadChartOfAccounts, loadTaxProfile } from "../data.js";
 import { getInstallRoot } from "../orgos-paths.js";
 import { readYamlFile } from "../utils.js";
-import { loadTaxProfile } from "../data.js";
-import { buildConsumptionTaxSummary, resolveConsumptionTaxMethod } from "./consumption-tax.js";
+import { resolveConsumptionTaxMethod } from "./consumption-tax.js";
+import { loadJournalEntries } from "./expense-claim-journal.js";
 import {
   fiscalYearEndDate,
   fiscalYearStartMonth,
@@ -24,6 +29,27 @@ const MAPPING_RELATIVE =
   "steward/jurisdiction-packs/JP/modules/jp_tax_consumption/spec/return-form-mapping.yaml";
 
 export type ConsumptionTaxReturnBases = Partial<Record<ConsumptionTaxReturnInputKey, number>>;
+
+export type ConsumptionTaxPurchaseLine = {
+  occurred_on: string;
+  tax_category: "taxable_10" | "taxable_8";
+  base_yen: number;
+  invoice_status?:
+    | "qualified"
+    | "nonqualified_80"
+    | "nonqualified_70"
+    | "nonqualified_50"
+    | "exempt_supplier"
+    | "unknown";
+  purchase_use?: "taxable_only" | "common" | "non_taxable_only";
+};
+
+/** Ratio is taxable_yen / total_yen. Cap is tax-exclusive taxable sales, not the floored base. */
+export type ConsumptionTaxPurchaseContext = {
+  lines: ConsumptionTaxPurchaseLine[];
+  ratio?: { taxable_yen: number; total_yen: number };
+  taxable_sales_yen?: number;
+};
 
 export type ConsumptionTaxReturnMethod = "standard" | "simplified" | "unavailable";
 
@@ -93,6 +119,7 @@ export function sumConsumptionTaxReturnBases(summaries: SummarySlice[]): {
 
 export function projectConsumptionTaxReturnRows(input: {
   bases?: ConsumptionTaxReturnBases;
+  purchases?: ConsumptionTaxPurchaseContext;
   method?: ConsumptionTaxReturnMethod;
   mapping?: ConsumptionTaxReturnMap;
   fiscalYear?: string;
@@ -104,10 +131,10 @@ export function projectConsumptionTaxReturnRows(input: {
   const filled = new Map<string, number | null>();
   const blockers = [...(input.blockers ?? [])];
   if (method !== "standard") blockers.push("standard method required");
-  const rows = orderedRows(mapping.rows).map((row) =>
-    projectRow(row, bases, method, filled, blockers)
+  const projected = orderedRows(mapping.rows).map((row) =>
+    projectRow(row, bases, input.purchases, method, mapping, filled, blockers)
   );
-  const status = rows.some((row) => row.required && row.row_status !== "filled")
+  const status = projected.some((row) => row.required && row.row_status !== "filled")
     ? "blocked"
     : "ready_for_advisor_review";
   return consumptionTaxReturnRowsSchema.parse({
@@ -118,7 +145,7 @@ export function projectConsumptionTaxReturnRows(input: {
     source_label: mapping.source_label,
     disclaimer: mapping.disclaimer,
     blockers,
-    rows,
+    rows: projected.filter((row) => row.sheet !== "internal"),
   });
 }
 
@@ -136,14 +163,12 @@ export function buildFiscalYearConsumptionTaxReturnRows(
     });
   }
   const months = fiscalYearMonths(normalized, resolveCompanyFiscalYearEndMonth());
-  const summaries = months.map((period) =>
-    buildConsumptionTaxSummary({ period, method: "standard" })
-  );
-  const summed = sumConsumptionTaxReturnBases(summaries);
+  const facts = collectReturnFacts(loadJournalEntries().entries, new Set(months));
   return projectConsumptionTaxReturnRows({
     fiscalYear: normalized,
-    method: summed.method,
-    bases: summed.bases,
+    method: "standard",
+    bases: facts.bases,
+    purchases: facts.purchases,
   });
 }
 
@@ -229,7 +254,9 @@ function orderedRows(rows: ConsumptionTaxReturnMapRow[]): ConsumptionTaxReturnMa
 function projectRow(
   row: ConsumptionTaxReturnMapRow,
   bases: ConsumptionTaxReturnBases,
+  purchases: ConsumptionTaxPurchaseContext | undefined,
   method: ConsumptionTaxReturnMethod,
+  mapping: ConsumptionTaxReturnMap,
   filled: Map<string, number | null>,
   blockers: string[]
 ): ConsumptionTaxReturnRows["rows"][number] {
@@ -240,6 +267,13 @@ function projectRow(
   if (method !== "standard") {
     filled.set(row.id, null);
     return rowResult(row, "blocked", null);
+  }
+  if (row.transform.op === "purchase_credit") {
+    const credit = purchaseCredit(mapping, bases, purchases);
+    filled.set(row.id, credit.amount);
+    if (credit.amount === null && row.required)
+      blockers.push(credit.reason ?? `${row.id} is not filled`);
+    return rowResult(row, credit.amount === null ? "blocked" : "filled", credit.amount);
   }
   const amounts = sourceAmounts(row, bases, filled);
   if (!amounts) {
@@ -326,4 +360,141 @@ function amountCell(status: "filled" | "blocked" | "out_of_scope", amount: numbe
   if (status === "out_of_scope") return "対象外";
   if (status === "blocked" || amount === null) return "未充足";
   return String(amount);
+}
+
+function purchaseCredit(
+  mapping: ConsumptionTaxReturnMap,
+  bases: ConsumptionTaxReturnBases,
+  purchases: ConsumptionTaxPurchaseContext | undefined
+): { amount: number | null; reason?: string } {
+  const lines = purchases?.lines ?? [];
+  if (!purchases) return { amount: null, reason: "purchase lines are missing" };
+  if (lines.length === 0) return { amount: 0 };
+  const salesYen = purchases.taxable_sales_yen ?? salesYenFromBases(bases);
+  if (salesYen === null) return { amount: null, reason: "taxable sales cap is missing" };
+  const ratio = purchases.ratio;
+  if (
+    !ratio ||
+    !Number.isInteger(ratio.taxable_yen) ||
+    !Number.isInteger(ratio.total_yen) ||
+    ratio.total_yen <= 0
+  ) {
+    return { amount: null, reason: "taxable sales ratio is missing" };
+  }
+  let total = 0;
+  for (const line of lines) {
+    const lineCredit = onePurchaseCredit(mapping, line, salesYen, ratio);
+    if (lineCredit === null) return { amount: null, reason: "purchase credit is blocked" };
+    total += lineCredit;
+  }
+  return { amount: total };
+}
+
+function salesYenFromBases(bases: ConsumptionTaxReturnBases): number | null {
+  const ten = bases.taxable_sales_10_yen;
+  const eight = bases.taxable_sales_8_yen;
+  if (!Number.isInteger(ten) || !Number.isInteger(eight) || ten! < 0 || eight! < 0) return null;
+  return ten! + eight!;
+}
+
+function onePurchaseCredit(
+  mapping: ConsumptionTaxReturnMap,
+  line: ConsumptionTaxPurchaseLine,
+  salesYen: number,
+  ratio: { taxable_yen: number; total_yen: number }
+): number | null {
+  if (!Number.isInteger(line.base_yen) || line.base_yen < 0) return null;
+  if (line.base_yen === 0) return 0;
+  if (
+    !line.invoice_status ||
+    line.invoice_status === "unknown" ||
+    line.invoice_status === "exempt_supplier"
+  ) {
+    return null;
+  }
+  if (line.purchase_use !== "taxable_only") return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(line.occurred_on)) return null;
+  const rate = mapping.national_rates[line.tax_category];
+  const national = Math.floor((line.base_yen * rate.numerator) / rate.denominator);
+  if (line.invoice_status === "qualified") {
+    const rule = mapping.full_purchase_credit;
+    const ratioOk = ratio.taxable_yen * 10000 >= ratio.total_yen * rule.min_ratio_bp;
+    if (!ratioOk || salesYen > rule.max_taxable_sales_yen) return null;
+    return national;
+  }
+  const band = mapping.transitional_nonqualified.find(
+    (candidate) => line.occurred_on >= candidate.from && line.occurred_on <= candidate.through
+  );
+  if (!band || band.invoice_status !== line.invoice_status) return null;
+  return Math.floor((national * band.numerator) / band.denominator);
+}
+
+function collectReturnFacts(
+  entries: unknown[],
+  months: Set<string>
+): { bases: ConsumptionTaxReturnBases; purchases: ConsumptionTaxPurchaseContext } {
+  const bases: Record<ConsumptionTaxReturnInputKey, number> = {
+    taxable_sales_10_yen: 0,
+    taxable_sales_8_yen: 0,
+    taxable_purchases_10_yen: 0,
+    taxable_purchases_8_yen: 0,
+  };
+  let exemptSales = 0;
+  let taxFreeSales = 0;
+  const lines: ConsumptionTaxPurchaseLine[] = [];
+  let coa: ReturnType<typeof loadChartOfAccounts>;
+  try {
+    coa = loadChartOfAccounts();
+  } catch {
+    return {
+      bases,
+      purchases: { lines, taxable_sales_yen: 0 },
+    };
+  }
+  const accountByCode = new Map(coa.accounts.map((account) => [account.code, account]));
+  for (const raw of entries) {
+    const entry = journalEntrySchema.parse(normalizeJournalEntry(raw));
+    const month = entry.occurred_at.slice(0, 7);
+    if (!months.has(month)) continue;
+    for (const line of entry.lines) {
+      if (!line.tax_category) continue;
+      const account = accountByCode.get(line.account_code);
+      if (!account || (account.type !== "revenue" && account.type !== "expense")) continue;
+      const amount = line.debit_yen || line.credit_yen;
+      if (account.type === "revenue" && line.tax_category === "taxable_10")
+        bases.taxable_sales_10_yen += amount;
+      if (account.type === "revenue" && line.tax_category === "taxable_8")
+        bases.taxable_sales_8_yen += amount;
+      if (account.type === "revenue" && line.tax_category === "exempt") exemptSales += amount;
+      if (account.type === "revenue" && line.tax_category === "tax_free") taxFreeSales += amount;
+      if (
+        account.type === "expense" &&
+        (line.tax_category === "taxable_10" || line.tax_category === "taxable_8")
+      ) {
+        const key =
+          line.tax_category === "taxable_10"
+            ? "taxable_purchases_10_yen"
+            : "taxable_purchases_8_yen";
+        bases[key] += amount;
+        lines.push({
+          occurred_on: entry.occurred_at.slice(0, 10),
+          tax_category: line.tax_category,
+          base_yen: amount,
+          invoice_status: line.invoice_status,
+          purchase_use: line.purchase_use,
+        });
+      }
+    }
+  }
+  const taxable = bases.taxable_sales_10_yen + bases.taxable_sales_8_yen;
+  const numerator = taxable + taxFreeSales;
+  const denominator = numerator + exemptSales;
+  return {
+    bases,
+    purchases: {
+      lines,
+      taxable_sales_yen: taxable,
+      ratio: denominator > 0 ? { taxable_yen: numerator, total_yen: denominator } : undefined,
+    },
+  };
 }

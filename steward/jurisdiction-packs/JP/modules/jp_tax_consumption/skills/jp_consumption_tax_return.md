@@ -13,5 +13,5 @@ npm run orgos -- operations tax-consumption eligibility --period YYYY-MM
 npm run orgos -- tax consumption-return-rows --fiscal-year YYYY
 ```
 
-公式様式と e-Tax は出さない。10%/8% 集計は対応表で第一表・付表の行に載せる（提出しない）。
+公表欄の対応。提出しない。10% と 8% の税抜本体を、書き方で確認した第一表・第二表・付表の欄へ載せる。e-Tax は出さない。
 還付申請パックは `jp_consumption_refund`。

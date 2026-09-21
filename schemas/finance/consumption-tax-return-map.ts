@@ -12,6 +12,7 @@ export const consumptionTaxReturnSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("input"), key: consumptionTaxReturnInputKeySchema }).strict(),
   z.object({ kind: z.literal("row"), id: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("rows"), ids: z.array(z.string().min(1)).min(1) }).strict(),
+  z.object({ kind: z.literal("purchase_lines") }).strict(),
   z.object({ kind: z.literal("none") }).strict(),
 ]);
 
@@ -41,18 +42,33 @@ export const consumptionTaxReturnTransformSchema = z.discriminatedUnion("op", [
       payable_unit_yen: z.number().int().positive(),
     })
     .strict(),
+  z.object({ op: z.literal("purchase_credit") }).strict(),
   z.object({ op: z.literal("out_of_scope") }).strict(),
 ]);
 
 export const consumptionTaxReturnMapRowSchema = z
   .object({
     id: z.string().min(1),
-    sheet: z.enum(["return_page2", "return_page1", "schedule_1_3", "schedule_2_3", "excluded"]),
+    sheet: z.enum([
+      "return_page2",
+      "return_page1",
+      "schedule_1_3",
+      "schedule_2_3",
+      "internal",
+      "excluded",
+    ]),
     line: z.string().min(1),
     label_ja: z.string().min(1),
     required: z.boolean(),
     source: consumptionTaxReturnSourceSchema,
     transform: consumptionTaxReturnTransformSchema,
+  })
+  .strict();
+
+const positiveRateSchema = z
+  .object({
+    numerator: z.number().int().positive(),
+    denominator: z.number().int().positive(),
   })
   .strict();
 
@@ -63,6 +79,31 @@ export const consumptionTaxReturnMapSchema = z
     source_label: z.string().min(1),
     submission: z.literal("not-for-etax"),
     disclaimer: z.string().min(1),
+    national_rates: z
+      .object({
+        taxable_10: positiveRateSchema,
+        taxable_8: positiveRateSchema,
+      })
+      .strict(),
+    full_purchase_credit: z
+      .object({
+        min_ratio_bp: z.number().int().positive(),
+        max_taxable_sales_yen: z.number().int().positive(),
+      })
+      .strict(),
+    transitional_nonqualified: z
+      .array(
+        z
+          .object({
+            from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+            through: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+            numerator: z.number().int().positive(),
+            denominator: z.number().int().positive(),
+            invoice_status: z.enum(["nonqualified_80", "nonqualified_70", "nonqualified_50"]),
+          })
+          .strict()
+      )
+      .min(1),
     rows: z.array(consumptionTaxReturnMapRowSchema).min(1),
   })
   .strict()
@@ -116,6 +157,20 @@ function assertRowShape(
         message: `${row.id} references missing row ${id}`,
       });
     }
+  }
+  if (row.transform.op === "purchase_credit" && row.source.kind !== "purchase_lines") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["rows"],
+      message: `${row.id} purchase credit reads purchase lines`,
+    });
+  }
+  if (row.source.kind === "purchase_lines" && row.transform.op !== "purchase_credit") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["rows"],
+      message: `${row.id} purchase lines only feed purchase credit`,
+    });
   }
   if (row.transform.op === "out_of_scope") {
     if (row.required || row.source.kind !== "none") {

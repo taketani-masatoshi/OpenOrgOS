@@ -1,28 +1,42 @@
-# 法人・本則・割戻し・一般用の行対応。電子申告の手続や様式定義は持たない。
-# 出典ラベル: 国税庁 法人用 申告書（一般用）の書き方（令和7年11月）
-# 集計キーは税抜本体。課税標準は税率ごとに千円未満切捨ててから足す。
+# 法人・本則・割戻し・一般用の公表欄対応。電子申告の手続や様式定義は持たない。
+# 欄番号の出典: 国税庁「消費税及び地方消費税の申告書（一般用）の書き方」（令和7年11月作成）
+# 集計キーは税抜本体。課税標準は税率ごとに千円未満切捨ててから足す。税込の割戻しはしない。
 id: jp-consumption-return-general-standard-reiwa7-2025-11
 form: 法人・本則・割戻し・一般用
-source_label: 国税庁 法人用 申告書（一般用）の書き方（令和7年11月）
+source_label: 国税庁 消費税及び地方消費税の申告書（一般用）の書き方（令和7年11月作成）
 submission: not-for-etax
 disclaimer: 提出しない。公式の申告書でも e-Tax 用データでもない。
+national_rates:
+  taxable_10:
+    numerator: 78
+    denominator: 1000
+  taxable_8:
+    numerator: 624
+    denominator: 10000
+full_purchase_credit:
+  min_ratio_bp: 9500
+  max_taxable_sales_yen: 500000000
+transitional_nonqualified:
+  - from: "2023-10-01"
+    through: "2026-09-30"
+    numerator: 80
+    denominator: 100
+    invoice_status: nonqualified_80
+  - from: "2026-10-01"
+    through: "2028-09-30"
+    numerator: 70
+    denominator: 100
+    invoice_status: nonqualified_70
+  - from: "2028-10-01"
+    through: "9999-12-31"
+    numerator: 50
+    denominator: 100
+    invoice_status: nonqualified_50
 rows:
-  - id: return_page2_base_10
-    sheet: return_page2
-    line: "10%"
-    label_ja: 課税標準額（10%）
-    required: true
-    source:
-      kind: input
-      key: taxable_sales_10_yen
-    transform:
-      op: floor_unit
-      unit_yen: 1000
-
-  - id: return_page2_base_8
-    sheet: return_page2
-    line: "8%"
-    label_ja: 課税標準額（8%）
+  - id: schedule_1_3_base_8
+    sheet: schedule_1_3
+    line: "①-1A"
+    label_ja: 課税資産の譲渡等の対価の額（6.24%適用分）
     required: true
     source:
       kind: input
@@ -31,118 +45,112 @@ rows:
       op: floor_unit
       unit_yen: 1000
 
-  - id: schedule_2_3_input_10
-    sheet: schedule_2_3
-    line: "7.8%"
-    label_ja: 課税仕入れに係る消費税額（7.8%）
-    required: false
+  - id: schedule_1_3_base_10
+    sheet: schedule_1_3
+    line: "①-1B"
+    label_ja: 課税資産の譲渡等の対価の額（7.8%適用分）
+    required: true
     source:
       kind: input
-      key: taxable_purchases_10_yen
+      key: taxable_sales_10_yen
     transform:
-      op: rate_floor
-      numerator: 78
-      denominator: 1000
+      op: floor_unit
+      unit_yen: 1000
 
-  - id: schedule_2_3_input_8
-    sheet: schedule_2_3
-    line: "6.24%"
-    label_ja: 課税仕入れに係る消費税額（6.24%）
-    required: false
+  - id: schedule_1_3_tax_8
+    sheet: schedule_1_3
+    line: "②A"
+    label_ja: 消費税額（6.24%適用分）
+    required: true
     source:
-      kind: input
-      key: taxable_purchases_8_yen
+      kind: row
+      id: schedule_1_3_base_8
     transform:
       op: rate_floor
       numerator: 624
       denominator: 10000
 
-  - id: schedule_2_3_deductible
+  - id: schedule_1_3_tax_10
+    sheet: schedule_1_3
+    line: "②B"
+    label_ja: 消費税額（7.8%適用分）
+    required: true
+    source:
+      kind: row
+      id: schedule_1_3_base_10
+    transform:
+      op: rate_floor
+      numerator: 78
+      denominator: 1000
+
+  - id: schedule_2_3_credit
     sheet: schedule_2_3
-    line: 控除対象仕入税額
+    line: "㉖"
+    label_ja: 差引・控除対象仕入税額
+    required: true
+    source:
+      kind: purchase_lines
+    transform:
+      op: purchase_credit
+
+  - id: schedule_1_3_credit
+    sheet: schedule_1_3
+    line: "④"
     label_ja: 控除対象仕入税額
     required: true
     source:
-      kind: rows
-      ids:
-        - schedule_2_3_input_10
-        - schedule_2_3_input_8
-    transform:
-      op: sum
-
-  - id: schedule_1_3_base_10
-    sheet: schedule_1_3
-    line: "10%"
-    label_ja: 税率別課税標準（10%）
-    required: true
-    source:
       kind: row
-      id: return_page2_base_10
+      id: schedule_2_3_credit
     transform:
       op: identity
 
-  - id: schedule_1_3_base_8
-    sheet: schedule_1_3
-    line: "8%"
-    label_ja: 税率別課税標準（8%）
+  - id: return_page2_base_8
+    sheet: return_page2
+    line: "⑤"
+    label_ja: 課税標準額（6.24%適用分）
     required: true
     source:
       kind: row
-      id: return_page2_base_8
+      id: schedule_1_3_base_8
     transform:
       op: identity
 
-  - id: schedule_1_3_national_output_10
-    sheet: schedule_1_3
-    line: "7.8%"
-    label_ja: 国税の売上税額（10%・7.8/100）
+  - id: return_page2_base_10
+    sheet: return_page2
+    line: "⑥"
+    label_ja: 課税標準額（7.8%適用分）
     required: true
     source:
       kind: row
-      id: return_page2_base_10
-    transform:
-      op: rate_floor
-      numerator: 78
-      denominator: 1000
-
-  - id: schedule_1_3_national_output_8
-    sheet: schedule_1_3
-    line: "6.24%"
-    label_ja: 国税の売上税額（8%・6.24/100）
-    required: true
-    source:
-      kind: row
-      id: return_page2_base_8
-    transform:
-      op: rate_floor
-      numerator: 624
-      denominator: 10000
-
-  - id: schedule_1_3_input_credit
-    sheet: schedule_1_3
-    line: 控除対象仕入税額
-    label_ja: 仕入控除の転記
-    required: true
-    source:
-      kind: row
-      id: schedule_2_3_deductible
+      id: schedule_1_3_base_10
     transform:
       op: identity
 
-  - id: return_page1_line_1
-    sheet: return_page1
+  - id: return_page2_base
+    sheet: return_page2
     line: "①"
     label_ja: 課税標準額
     required: true
     source:
       kind: rows
       ids:
-        - return_page2_base_10
         - return_page2_base_8
+        - return_page2_base_10
     transform:
       op: sum
 
-  - id: return_page1_line_2
+  - id: return_page1_1
+    sheet: return_page1
+    line: "①"
+    label_ja: 課税標準額
+    required: true
+    source:
+      kind: row
+      id: return_page2_base
+    transform:
+      op: identity
+
+  - id: return_page1_2
     sheet: return_page1
     line: "②"
     label_ja: 消費税額
@@ -150,75 +158,66 @@ rows:
     source:
       kind: rows
       ids:
-        - schedule_1_3_national_output_10
-        - schedule_1_3_national_output_8
+        - schedule_1_3_tax_8
+        - schedule_1_3_tax_10
     transform:
       op: sum
 
-  - id: return_page1_line_3
-    sheet: return_page1
-    line: "③"
-    label_ja: 控除過大調整税額
-    required: false
-    source:
-      kind: none
-    transform:
-      op: out_of_scope
-
-  - id: return_page1_line_4
+  - id: return_page1_4
     sheet: return_page1
     line: "④"
-    label_ja: 控除税額
+    label_ja: 控除対象仕入税額
     required: true
     source:
       kind: row
-      id: schedule_1_3_input_credit
+      id: schedule_1_3_credit
     transform:
       op: identity
 
-  - id: return_page1_line_5_raw
-    sheet: return_page1
-    line: "⑤差引前"
-    label_ja: 差引税額（切捨前）
+  - id: internal_net
+    sheet: internal
+    line: net
+    label_ja: 差引（切捨前・出力しない）
     required: false
     source:
       kind: rows
       ids:
-        - return_page1_line_2
-        - return_page1_line_4
+        - return_page1_2
+        - return_page1_4
     transform:
       op: subtract
 
-  - id: return_page1_line_5
+  - id: return_page1_9
     sheet: return_page1
-    line: "⑤"
+    line: "⑨"
     label_ja: 差引税額
     required: true
     source:
       kind: row
-      id: return_page1_line_5_raw
+      id: internal_net
     transform:
       op: floor_if_nonnegative
       unit_yen: 100
 
-  - id: return_page1_line_6
+  - id: return_page1_18
     sheet: return_page1
-    line: "⑥"
-    label_ja: 中間納付税額
-    required: false
-    source:
-      kind: none
-    transform:
-      op: out_of_scope
-
-  - id: return_page1_local
-    sheet: return_page1
-    line: 地方消費税
-    label_ja: 地方消費税（差引税額×22/78）
+    line: "⑱"
+    label_ja: 地方消費税の課税標準となる消費税額
     required: true
     source:
       kind: row
-      id: return_page1_line_5
+      id: return_page1_9
+    transform:
+      op: identity
+
+  - id: return_page1_20
+    sheet: return_page1
+    line: "⑳"
+    label_ja: 譲渡割額
+    required: true
+    source:
+      kind: row
+      id: return_page1_18
     transform:
       op: signed_rate_then_payable_floor
       numerator: 22

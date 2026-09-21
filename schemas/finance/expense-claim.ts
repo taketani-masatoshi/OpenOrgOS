@@ -70,9 +70,20 @@ export const expenseClaimAllocationSchema = z.object({
   /** Optional zero-based receipt line mapping for deterministic category checks. */
   line_index: z.number().int().nonnegative().optional(),
   description: z.string().min(1).optional(),
-  tax_category: z.enum(["taxable_10", "taxable_8", "exempt", "non_taxable", "out_of_scope", "tax_free"]).optional(),
+  tax_category: z
+    .enum(["taxable_10", "taxable_8", "exempt", "non_taxable", "out_of_scope", "tax_free"])
+    .optional(),
   tax_amount_yen: z.number().int().nonnegative().optional(),
-  invoice_status: z.enum(["qualified", "nonqualified_80", "nonqualified_50", "exempt_supplier", "unknown"]).optional(),
+  invoice_status: z
+    .enum([
+      "qualified",
+      "nonqualified_80",
+      "nonqualified_70",
+      "nonqualified_50",
+      "exempt_supplier",
+      "unknown",
+    ])
+    .optional(),
   purchase_use: z.enum(["taxable_only", "common", "non_taxable_only"]).optional(),
   tax_rounding: z.enum(["floor", "round", "ceil"]).optional(),
 });
@@ -153,10 +164,7 @@ export const expenseClaimSchema = z
   })
   .superRefine((claim, ctx) => {
     if (!claim.allocations?.length) return;
-    const sum = claim.allocations.reduce(
-      (total, allocation) => total + allocation.amount_yen,
-      0,
-    );
+    const sum = claim.allocations.reduce((total, allocation) => total + allocation.amount_yen, 0);
     if (sum !== claim.amount_yen) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -176,26 +184,18 @@ export const expenseClaimsFileSchema = z.object({
 
 export type ExpenseClaimStatus = z.output<typeof expenseClaimStatusSchema>;
 export type ExpenseClaimGate = z.output<typeof expenseClaimGateSchema>;
-export type ExpenseClaimIssuerRef = z.output<
-  typeof expenseClaimIssuerRefSchema
->;
-export type ExpenseClaimReimbursement = z.output<
-  typeof expenseClaimReimbursementSchema
->;
-export type ExpenseClaimAllocation = z.output<
-  typeof expenseClaimAllocationSchema
->;
+export type ExpenseClaimIssuerRef = z.output<typeof expenseClaimIssuerRefSchema>;
+export type ExpenseClaimReimbursement = z.output<typeof expenseClaimReimbursementSchema>;
+export type ExpenseClaimAllocation = z.output<typeof expenseClaimAllocationSchema>;
 export type ExpenseClaim = z.output<typeof expenseClaimSchema>;
 export type ExpenseClaimsFile = z.output<typeof expenseClaimsFileSchema>;
 
 /** Department-head / CEO gate for personal envelope overage (≤¥100,000). */
 export const EXPENSE_CLAIM_MANAGER_SUBJECT = "expense.claim.manager";
 /** REG-004 A representative approval for an ordinary claimant. */
-export const EXPENSE_CLAIM_REPRESENTATIVE_SUBJECT =
-  "expense.claim.representative";
+export const EXPENSE_CLAIM_REPRESENTATIVE_SUBJECT = "expense.claim.representative";
 /** REG-005 exception for claims submitted after 30 calendar days. */
-export const EXPENSE_CLAIM_LATE_EXCEPTION_SUBJECT =
-  "expense.claim.late_exception";
+export const EXPENSE_CLAIM_LATE_EXCEPTION_SUBJECT = "expense.claim.late_exception";
 /** REG-004 ringi path for expenses over ¥100,000 (tier B/C). */
 export const EXPENSE_CLAIM_RINGI_SUBJECT = "expense.claim.ringi";
 /** REG-004 C board evidence path for expenses over ¥1,000,000. */
