@@ -24,10 +24,10 @@ export type FilingLookup = {
  * not_found returns the filing to SIGNED so the same idempotency key can resend.
  * unknown does not advance state. found stores the receipt.
  */
-export function recoverInFlightFiling<T extends InFlightFiling>(
-  record: T,
-  lookup: FilingLookup,
-): { record: T; escalate: boolean; resendAllowed: boolean } {
+export function recoverInFlightFiling(
+  record: InFlightFiling,
+  lookup: FilingLookup
+): { record: InFlightFiling; escalate: boolean; resendAllowed: boolean } {
   const inFlight = record.status === "SUBMITTED" || record.status === "TRANSPORT_ERROR";
   if (!inFlight) return { record, escalate: false, resendAllowed: false };
   const started = [...record.attempts].reverse().find((row) => row.outcome === "started");
@@ -39,7 +39,9 @@ export function recoverInFlightFiling<T extends InFlightFiling>(
   }
   if (lookup.status === "not_found") {
     const attempts = record.attempts.map((row) =>
-      row === started ? { ...row, outcome: "failed" as const, detail: "receipt lookup confirmed not found" } : row,
+      row === started
+        ? { ...row, outcome: "failed" as const, detail: "receipt lookup confirmed not found" }
+        : row
     );
     return {
       record: {
@@ -53,10 +55,13 @@ export function recoverInFlightFiling<T extends InFlightFiling>(
     };
   }
   if (!lookup.receiptNumber) {
-    throw filingError("EFILING_RECOVERY_RECEIPT_MISSING", "found lookup did not include a receipt number");
+    throw filingError(
+      "EFILING_RECOVERY_RECEIPT_MISSING",
+      "found lookup did not include a receipt number"
+    );
   }
   const attempts = record.attempts.map((row) =>
-    row === started ? { ...row, outcome: "received" as const } : row,
+    row === started ? { ...row, outcome: "received" as const } : row
   );
   return {
     record: {

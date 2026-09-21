@@ -6,22 +6,30 @@ import { FilingStore } from "../src/lib/efiling/store.js";
 
 describe("efiling amended and corrected filings", () => {
   it("requires a prior receipt for amended and corrected, and forbids one on original", () => {
-    expect(() => assertFilingKind({ filingKind: "amended" })).toThrow(/prior receipt/);
-    expect(() => assertFilingKind({ filingKind: "corrected" })).toThrow(/prior receipt/);
-    expect(() => assertFilingKind({ filingKind: "original", priorReceiptNumber: "RCPT" })).toThrow(/must not/);
-    expect(() => assertFilingKind({ filingKind: "amended", priorReceiptNumber: "RCPT" })).not.toThrow();
+    expect(() => assertFilingKind({ filingKind: "amended" })).toThrow(/receipt number/);
+    expect(() => assertFilingKind({ filingKind: "corrected" })).toThrow(/receipt number/);
+    expect(() => assertFilingKind({ filingKind: "original", priorReceiptNumber: "RCPT" })).toThrow(
+      /must not/
+    );
+    expect(() =>
+      assertFilingKind({ filingKind: "amended", priorReceiptNumber: "RCPT" })
+    ).not.toThrow();
   });
 
   it("binds the prior receipt into the hash and audit, without overwriting the original", () => {
     const originalHash = hashFilingContent(base());
-    const amendedHash = hashFilingContent({ ...base(), filingKind: "amended", priorReceiptNumber: "RCPT-1" });
+    const amendedHash = hashFilingContent({
+      ...base(),
+      filingKind: "amended",
+      priorReceiptNumber: "RCPT-1",
+    });
     expect(amendedHash).not.toBe(originalHash);
     expect(() =>
       assertAuditBindsPriorReceipt({
         filingKind: "amended",
         priorReceiptNumber: "RCPT-1",
         auditRows: [{ priorReceiptNumber: "OTHER" }],
-      }),
+      })
     ).toThrow(/audit/);
 
     const store = new FilingStore({ channel: "etax", now: "2026-09-21T00:00:00.000Z" });

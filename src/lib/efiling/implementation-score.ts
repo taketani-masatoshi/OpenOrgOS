@@ -4,7 +4,11 @@ import {
   implementationScoreItemIds,
   type ImplementationScoreItemId,
 } from "../../../schemas/efiling/filing.js";
-import { ELTAX_PACKAGE_SCHEMA, ETAX_PACKAGE_SCHEMA } from "../../../schemas/efiling/filing.js";
+import {
+  ELTAX_PACKAGE_SCHEMA,
+  ETAX_PACKAGE_SCHEMA,
+  type FilingPackageSchemaId,
+} from "../../../schemas/efiling/filing.js";
 import { FilingException } from "./errors.js";
 import { assertFilingKind } from "./amendment.js";
 import { assertTransportChannel, assertSignatureChannel, assertSpecChannel } from "./channel.js";
@@ -42,11 +46,18 @@ export type ImplementationScore = {
   productionSubmission: "NOT CERTIFIED / DISABLED";
 };
 
-function item(id: ImplementationScoreItemId, pass: boolean, reason: string): ImplementationScoreItem {
+function item(
+  id: ImplementationScoreItemId,
+  pass: boolean,
+  reason: string
+): ImplementationScoreItem {
   return { id, pass, reason: pass ? "ok" : reason };
 }
 
-function probe(id: ImplementationScoreItemId, fn: () => string | undefined): ImplementationScoreItem {
+function probe(
+  id: ImplementationScoreItemId,
+  fn: () => string | undefined
+): ImplementationScoreItem {
   try {
     const reason = fn();
     return item(id, !reason, reason ?? "ok");
@@ -81,7 +92,7 @@ function rhoPackage() {
       },
       specVersion: "KSK2-2026-08-28",
     },
-    { id: "ETAX-PKG-score-m2", now: "2026-09-21T00:00:00.000Z" },
+    { id: "ETAX-PKG-score-m2", now: "2026-09-21T00:00:00.000Z" }
   );
 }
 
@@ -145,7 +156,8 @@ export function evaluateImplementationScore(): ImplementationScore {
         assertRegisteredFormField("RHO0010", "HOA110", "NOT_A_FIELD");
         return "unregistered field was accepted";
       } catch (error) {
-        if (!(error instanceof Error) || !("etax" in error)) return "unregistered field did not fail closed";
+        if (!(error instanceof Error) || !("etax" in error))
+          return "unregistered field did not fail closed";
       }
       return undefined;
     }),
@@ -154,7 +166,8 @@ export function evaluateImplementationScore(): ImplementationScore {
       if (!workflow.includes("libxml2-utils")) return "CI does not install xmllint";
       for (const relative of ["tests/etax-phase2.test.ts", "tests/etax-lifecycle-e2e.test.ts"]) {
         const source = readRepo(relative);
-        if (source.includes("skipIf(!hasOfficial")) return `${relative} still skips official XSD silently`;
+        if (source.includes("skipIf(!hasOfficial"))
+          return `${relative} still skips official XSD silently`;
         if (!source.includes("SPEC_BLOCKED")) return `${relative} does not assert SPEC_BLOCKED`;
       }
       const pkg = rhoPackage();
@@ -162,7 +175,8 @@ export function evaluateImplementationScore(): ImplementationScore {
       const report = validateEtaxDocument({ pkg, xml, env: "mock" });
       const structural = report.layers.find((row) => row.layer === "structural");
       if (!officialXsdAvailable()) {
-        if (structural?.status !== "SPEC_BLOCKED") return "missing CAB did not surface SPEC_BLOCKED";
+        if (structural?.status !== "SPEC_BLOCKED")
+          return "missing CAB did not surface SPEC_BLOCKED";
       } else if (structural?.status === "fail") {
         return `structural validation failed: ${structural.detail}`;
       }
@@ -170,7 +184,8 @@ export function evaluateImplementationScore(): ImplementationScore {
     }),
     probe("M5", () => {
       const bridge = readRepo("src/lib/etax/return-package-from-accounting.ts");
-      if (!bridge.includes("evaluateTaxAdjustment")) return "accounting bridge does not read evaluateTaxAdjustment";
+      if (!bridge.includes("evaluateTaxAdjustment"))
+        return "accounting bridge does not read evaluateTaxAdjustment";
       const first = returnPackageFromTaxAdjustment({
         worksheet: { fiscal_year: "FY2026", as_of: "2026-03-31", taxable_income_yen: 10 },
         taxpayer: {
@@ -203,7 +218,8 @@ export function evaluateImplementationScore(): ImplementationScore {
         now: "2026-09-21T00:00:00.000Z",
         id: "ETAX-PKG-score-m5",
       });
-      if (first.contentHash !== again.contentHash) return "accounting bridge hash is not deterministic";
+      if (first.contentHash !== again.contentHash)
+        return "accounting bridge hash is not deterministic";
       if (!first.sourceReferences.some((row) => row.kind === "corporate_tax_xml_draft")) {
         return "sourceReferences missing corporate_tax_xml_draft";
       }
@@ -216,9 +232,11 @@ export function evaluateImplementationScore(): ImplementationScore {
         attempts: [{ requestId: "req-1", outcome: "started" as const }],
       };
       const unknown = recoverInFlightFiling(base, { status: "unknown" });
-      if (unknown.record.status !== "SUBMITTED" || !unknown.escalate) return "unknown lookup advanced state";
+      if (unknown.record.status !== "SUBMITTED" || !unknown.escalate)
+        return "unknown lookup advanced state";
       const missing = recoverInFlightFiling(base, { status: "not_found" });
-      if (missing.record.status !== "SIGNED" || !missing.resendAllowed) return "not_found did not allow resend";
+      if (missing.record.status !== "SIGNED" || !missing.resendAllowed)
+        return "not_found did not allow resend";
       const found = recoverInFlightFiling(base, { status: "found", receiptNumber: "RCPT-1" });
       if (found.record.status !== "RECEIVED_BY_ETAX" || found.record.receiptNumber !== "RCPT-1") {
         return "found lookup did not store the receipt";
@@ -259,7 +277,8 @@ export function evaluateImplementationScore(): ImplementationScore {
         assertFilingKind({ filingKind: "original", priorReceiptNumber: "RCPT" });
         return "original filing accepted a prior receipt";
       } catch (error) {
-        if (!(error instanceof FilingException)) return "original prior-receipt check did not fail closed";
+        if (!(error instanceof FilingException))
+          return "original prior-receipt check did not fail closed";
       }
       const store = new FilingStore({ channel: "etax", now: "2026-09-21T00:00:00.000Z" });
       const original = store.create(scoreCreate("idem-original"));
@@ -275,15 +294,23 @@ export function evaluateImplementationScore(): ImplementationScore {
       if (!amended.audit.every((row) => row.priorReceiptNumber === "RCPT-ORIG")) {
         return "audit row is not bound to the prior receipt";
       }
-      if (amended.contentHash === original.contentHash) return "amendment did not change the package hash";
+      if (amended.contentHash === original.contentHash)
+        return "amendment did not change the package hash";
       return undefined;
     }),
     probe("M9", () => {
-      const store = new FilingStore({ channel: "etax", now: "2026-09-21T00:00:00.000Z", retentionYears: 10 });
+      const store = new FilingStore({
+        channel: "etax",
+        now: "2026-09-21T00:00:00.000Z",
+        retentionYears: 10,
+      });
       const created = store.create(scoreCreate("idem-m9"));
       if (!created.retentionUntil.startsWith("2036-")) return "default retention is not 10 years";
       try {
-        store.save({ ...created, legalHold: true, retentionUntil: "2030-01-01" }, created.writeRevision);
+        store.save(
+          { ...created, legalHold: true, retentionUntil: "2030-01-01" },
+          created.writeRevision
+        );
         return "retention was shortened";
       } catch (error) {
         if (!(error instanceof FilingException)) return "retention shorten was not rejected";
@@ -309,7 +336,7 @@ export function evaluateImplementationScore(): ImplementationScore {
       }
       const env = buildFilingChildEnv(
         { ...process.env, LD_PRELOAD: "/tmp/x", NODE_OPTIONS: "--inspect" },
-        { FOO: "bar" },
+        { FOO: "bar" }
       );
       if ("LD_PRELOAD" in env || "NODE_OPTIONS" in env) return "blocked child env keys were kept";
       try {
@@ -330,7 +357,8 @@ export function evaluateImplementationScore(): ImplementationScore {
         new FilingStore({ channel: "etax", production: true, encryptedStorage: false });
         return "production store started without encrypted storage";
       } catch (error) {
-        if (!(error instanceof FilingException)) return "encrypted storage gate did not fail closed";
+        if (!(error instanceof FilingException))
+          return "encrypted storage gate did not fail closed";
       }
       try {
         assertMockProviderForbidden("production");
@@ -341,7 +369,8 @@ export function evaluateImplementationScore(): ImplementationScore {
       const previous = process.env.ORGOS_ETAX_PRODUCTION;
       process.env.ORGOS_ETAX_PRODUCTION = "1";
       try {
-        if (evaluateProductionEnablement().certified) return "ORGOS_ETAX_PRODUCTION enabled production";
+        if (evaluateProductionEnablement().certified)
+          return "ORGOS_ETAX_PRODUCTION enabled production";
       } finally {
         if (previous === undefined) delete process.env.ORGOS_ETAX_PRODUCTION;
         else process.env.ORGOS_ETAX_PRODUCTION = previous;
@@ -390,7 +419,9 @@ export function evaluateImplementationScore(): ImplementationScore {
       } catch (error) {
         if (!(error instanceof FilingException)) return "eLTAX procedure gate failed open";
       }
-      if (ELTAX_PACKAGE_SCHEMA === ETAX_PACKAGE_SCHEMA) return "package schemas are not distinct";
+      if (String(ELTAX_PACKAGE_SCHEMA) === String(ETAX_PACKAGE_SCHEMA)) {
+        return "package schemas are not distinct";
+      }
       return undefined;
     }),
     probe("M13", () => {
@@ -407,8 +438,10 @@ export function evaluateImplementationScore(): ImplementationScore {
       if (!commercial.includes("含みません") && !commercial.includes("DISABLED")) {
         return "commercial declaration still omits the e-Tax exclusion";
       }
-      if (changelog.includes("e-Tax対応完了（RHO0010）")) return "CHANGELOG claims e-Tax certification";
-      if (evaluateProductionEnablement().certified) return "lane 2 certification is true on an uncertified tip";
+      if (changelog.includes("e-Tax対応完了（RHO0010）"))
+        return "CHANGELOG claims e-Tax certification";
+      if (evaluateProductionEnablement().certified)
+        return "lane 2 certification is true on an uncertified tip";
       if (!existsSync(join(getInstallRoot(), "docs/etax/IMPLEMENTATION_PLAN.md"))) {
         return "implementation plan is missing";
       }
@@ -431,7 +464,19 @@ export function evaluateImplementationScore(): ImplementationScore {
   };
 }
 
-function scoreCreate(idempotencyKey: string) {
+function scoreCreate(idempotencyKey: string): {
+  id: string;
+  packageId: string;
+  taxpayerId: string;
+  procedureCode: string;
+  taxYear: string;
+  revision: number;
+  payload: { marker: string };
+  sourceReferences: never[];
+  specVersion: string;
+  idempotencyKey: string;
+  schema: FilingPackageSchemaId;
+} {
   return {
     id: "EFILING-score",
     packageId: "PKG-score",

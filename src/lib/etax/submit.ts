@@ -4,15 +4,14 @@ import { etaxError } from "../../../schemas/etax/errors.js";
 import { assertProductionSubmitAllowed } from "./production-gate.js";
 import { transitionStatus } from "./state-machine.js";
 import type { EtaxSubmissionRecord } from "./store.js";
-import {
-  createTransportAdapter,
-  resolveTransportProviderId,
-} from "./transport.js";
+import { createTransportAdapter, resolveTransportProviderId } from "./transport.js";
+import type { FilingLookup } from "../efiling/recovery.js";
+import { recoverInFlightFiling } from "../efiling/recovery.js";
 import type { ReceiptResult, SignedSubmission, SubmissionResult } from "./adapters.js";
 
 export function markReadyToSubmit(
   sub: EtaxSubmissionRecord,
-  env: EtaxEnvironment,
+  env: EtaxEnvironment
 ): EtaxSubmissionRecord {
   if (sub.status !== "SIGNED") {
     throw etaxError({
@@ -147,6 +146,10 @@ export async function pullReceipt(opts: {
   }
   const provider = resolveTransportProviderId(opts.env, opts.provider);
   const receipt = await createTransportAdapter(provider).getReceipt(opts.sub.id);
+  if (receipt.errorCode === "NOT_FOUND" || receipt.status === "UNKNOWN") {
+    const recovered = recoverInterruptedSubmission(opts.sub, receipt);
+    return { submission: recovered.submission, receipt };
+  }
   const nextStatus =
     receipt.status === "RECEIVED_BY_ETAX" || receipt.status === "REJECTED_BY_ETAX"
       ? transitionStatus("SUBMITTED", receipt.status)
@@ -160,5 +163,37 @@ export async function pullReceipt(opts: {
       receiptHash: receipt.responseHash,
     },
     receipt,
+  };
+}
+
+/** Map an in-flight receipt lookup onto found / not_found / unknown without inventing a receipt. */
+export function recoverInterruptedSubmission(
+  sub: EtaxSubmissionRecord,
+  receipt: ReceiptResult
+): { submission: EtaxSubmissionRecord; escalate: boolean; resendAllowed: boolean } {
+  const lookup: FilingLookup =
+    receipt.errorCode === "NOT_FOUND"
+      ? { status: "not_found" }
+      : receipt.status === "RECEIVED_BY_ETAX" && receipt.receiptNumber
+        ? { status: "found", receiptNumber: receipt.receiptNumber }
+        : { status: "unknown" };
+  const recovered = recoverInFlightFiling(
+    {
+      status: sub.status,
+      requestId: sub.requestId,
+      receiptNumber: sub.receiptNumber,
+      attempts: [{ requestId: sub.requestId ?? sub.id, outcome: "started" }],
+    },
+    lookup
+  );
+  return {
+    submission: {
+      ...sub,
+      status: recovered.record.status,
+      requestId: recovered.record.requestId,
+      receiptNumber: recovered.record.receiptNumber,
+    },
+    escalate: recovered.escalate,
+    resendAllowed: recovered.resendAllowed,
   };
 }

@@ -144,7 +144,7 @@ function buildDataEnvelopeXml(pkg: ReturnPackage, mapping: EtaxProcedureMapping)
     const value = readPayloadPath(payload, field.sourcePath);
     if (typeof value !== "string" || value.trim() === "") continue;
     optionalItLines.push(
-      `        <${field.xmlLocalName} ID="o${optionalItLines.length + 1}">${escapeXml(value.trim())}</${field.xmlLocalName}>`,
+      `        <${field.xmlLocalName} ID="o${optionalItLines.length + 1}">${escapeXml(value.trim())}</${field.xmlLocalName}>`
     );
   }
 
@@ -161,16 +161,16 @@ function buildDataEnvelopeXml(pkg: ReturnPackage, mapping: EtaxProcedureMapping)
     `          <gen:zeimusho_CD>${escapeXml(zeimushoCd)}</gen:zeimusho_CD>`,
     `          <gen:zeimusho_NM>${escapeXml(zeimushoNm)}</gen:zeimusho_NM>`,
     `        </ZEIMUSHO>`,
+    ...(teishutsu ? [teishutsu] : []),
     `        <NOZEISHA_ID ID="n1">${escapeXml(nozeishaId)}</NOZEISHA_ID>`,
     `        <NOZEISHA_NM ID="n2">${escapeXml(nozeishaNm)}</NOZEISHA_NM>`,
     `        <NOZEISHA_ADR ID="n3">${escapeXml(nozeishaAdr)}</NOZEISHA_ADR>`,
     ...optionalItLines,
-    ...(teishutsu ? [teishutsu] : []),
     `        <TETSUZUKI ID="t1">`,
     `          <procedure_CD>${escapeXml(procedureCd)}</procedure_CD>`,
     `        </TETSUZUKI>`,
     `      </IT>`,
-      formBody,
+    formBody,
     `    </CONTENTS>`,
     `  </${env.procedureElement}>`,
     `</DATA>`,
@@ -179,8 +179,13 @@ function buildDataEnvelopeXml(pkg: ReturnPackage, mapping: EtaxProcedureMapping)
   return lines.join("\n");
 }
 
-function renderTeishutsuDay(payload: unknown, formMap: EtaxFormMap | undefined): string | undefined {
-  const field = formMap?.fields.find((row) => row.kind === "idref" && row.idref === "TEISYUTSU_DAY");
+function renderTeishutsuDay(
+  payload: unknown,
+  formMap: EtaxFormMap | undefined
+): string | undefined {
+  const field = formMap?.fields.find(
+    (row) => row.kind === "idref" && row.idref === "TEISYUTSU_DAY"
+  );
   if (!field) return undefined;
   const raw = readPayloadPath(payload, field.sourcePath);
   if (typeof raw !== "string" || raw.trim() === "") {
@@ -210,7 +215,7 @@ function renderFormElement(
   env: { softNM: string; sakuseiNM: string },
   sakuseiDay: string,
   formMap: EtaxFormMap | undefined,
-  payload: unknown,
+  payload: unknown
 ): string {
   if (!formMap || formMap.fields.length === 0) {
     throw etaxError({
@@ -263,7 +268,7 @@ function renderFormElement(
 export function assertRegisteredFormField(
   procedureCode: string,
   formId: string,
-  xmlLocalName?: string,
+  xmlLocalName?: string
 ): void {
   const mapping = loadProcedureMapping(procedureCode);
   const form = mapping?.forms?.find((row) => row.formId === formId);

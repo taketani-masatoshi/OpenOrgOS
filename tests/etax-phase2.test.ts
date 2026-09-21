@@ -88,7 +88,7 @@ describe("etax official KSK2 XSD (local vendor)", () => {
           createdBy: "test",
           specVersion: "KSK2-2026-08-28",
         },
-        { id: "ETAX-PKG-phase2-blocked", now: "2026-09-21T00:00:00.000Z" },
+        { id: "ETAX-PKG-phase2-blocked", now: "2026-09-21T00:00:00.000Z" }
       );
       const report = validateEtaxDocument({
         pkg,
@@ -100,7 +100,7 @@ describe("etax official KSK2 XSD (local vendor)", () => {
     }
     const result = validateXmlAgainstXsd(
       `<?xml version="1.0" encoding="UTF-8"?><not-nta/>`,
-      officialTek,
+      officialTek
     );
     expect(result.ok).toBe(false);
   });
@@ -128,7 +128,7 @@ describe("etax official KSK2 XSD (local vendor)", () => {
           createdBy: "test",
           specVersion: "KSK2-2026-08-28",
         },
-        { id: "ETAX-PKG-phase2-wrap", now: "2026-09-21T00:00:00.000Z" },
+        { id: "ETAX-PKG-phase2-wrap", now: "2026-09-21T00:00:00.000Z" }
       );
       const report = validateEtaxDocument({
         pkg,
@@ -138,12 +138,12 @@ describe("etax official KSK2 XSD (local vendor)", () => {
       expect(report.layers.find((row) => row.layer === "structural")?.status).toBe("SPEC_BLOCKED");
       return;
     }
-      const dir = mkdtempSync(join(tmpdir(), "orgos-etax-xsd-"));
-      try {
-        const wrapper = join(dir, "wrapper.xsd");
-        writeFileSync(
-          wrapper,
-          `<?xml version="1.0" encoding="UTF-8"?>
+    const dir = mkdtempSync(join(tmpdir(), "orgos-etax-xsd-"));
+    try {
+      const wrapper = join(dir, "wrapper.xsd");
+      writeFileSync(
+        wrapper,
+        `<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
   <xsd:include schemaLocation="${officialTek}"/>
   <xsd:element name="OrgOSTestRoot">
@@ -153,18 +153,17 @@ describe("etax official KSK2 XSD (local vendor)", () => {
   </xsd:element>
 </xsd:schema>
 `,
-          "utf-8"
-        );
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        "utf-8"
+      );
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <OrgOSTestRoot>
   <TEK000 VR="1.0" fid="COZ020" softNM="OrgOS" sakuseiNM="phase2-local-test" sakuseiDay="2026-09-20"/>
 </OrgOSTestRoot>
 `;
-        const result = validateXmlAgainstXsd(xml, wrapper);
-        expect(result).toEqual({ ok: true });
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
+      const result = validateXmlAgainstXsd(xml, wrapper);
+      expect(result).toEqual({ ok: true });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });
