@@ -49,6 +49,12 @@
 
 税理士確定額の **上書き禁止**。差異は warning のみ。
 
+## 税務調整（別表四相当）100点
+
+100点は、当期純利益に人が渡した確定の加算・減算だけを載せて課税所得見積を出すこと（`buildCorporateTaxAdjustments`）。`pending` は課税所得に入れず残す。行が無いときは調整なしと明示する。
+
+分母外: 国税庁公式XMLスキーマ、e-Tax相手方への実送信、みなし利息や交際費の要否判断、別表五の内訳。
+
 ## CLI
 
 ```bash
@@ -66,7 +72,7 @@ orgos skills run tax-filing-prep
 orgos validate
 ```
 
-`orgos tax readiness` は **agent-readiness とは別指標**（7 軸 · 申告準備の実務深度）。e-Tax / 申告書 XML は分母外。  
+`orgos tax readiness` は **agent-readiness とは別指標**（7 軸 · 申告準備の実務深度）。e-Tax / 申告書 XML は分母外。
 **`advisor_pending`**（deferred · tax_advisor）を併記 — 機械 100% でも税理士回答待ちなら `filing_ready: false`。
 
 ## 固定資産 · 当期計上

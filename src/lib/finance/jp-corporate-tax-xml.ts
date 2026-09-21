@@ -16,6 +16,8 @@ import { buildBalanceSheet } from "./ledger/balance-sheet.js";
 import { buildGlProfitLossSummary } from "./gl-report-basis.js";
 import { buildTrialBalance } from "./ledger/trial-balance.js";
 import { getClock } from "../runtime-context.js";
+import type { CorporateTaxAdjustmentLine } from "../../../schemas/finance/tax-adjustments.js";
+import { buildCorporateTaxAdjustments } from "./corporate-tax-adjustments.js";
 import { evaluateTaxAdjustment } from "./tax-adjustment.js";
 
 export type CorporateTaxXmlDraft = {
@@ -40,6 +42,7 @@ function loadCorporateTaxSlice(): {
   estimated_tax_status?: string;
   estimated_tax_fy2026?: number;
   notes?: string;
+  adjustments?: CorporateTaxAdjustmentLine[];
 } {
   try {
     const profile = loadTaxProfile() as {
@@ -47,6 +50,7 @@ function loadCorporateTaxSlice(): {
         estimated_tax_status?: string;
         estimated_tax_fy2026?: number;
         notes?: string;
+        adjustments?: CorporateTaxAdjustmentLine[];
       };
     };
     return profile.corporate_tax ?? {};
@@ -58,6 +62,7 @@ function loadCorporateTaxSlice(): {
 export function buildCorporateTaxXmlDraft(input?: {
   fiscalYear?: string;
   asOf?: string;
+  lines?: CorporateTaxAdjustmentLine[];
 }): Omit<CorporateTaxXmlDraft, "relative_path" | "absolute_path"> & {
   relative_path: string;
 } {
@@ -97,14 +102,32 @@ export function buildCorporateTaxXmlDraft(input?: {
   const corp = loadCorporateTaxSlice();
   const generatedAt = getClock().now().toISOString();
   const worksheet = evaluateTaxAdjustment(fiscalYear);
-  const annex = worksheet.can_compute
-    ? `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
+  const explicitLines = input?.lines;
+  const adjustments =
+    explicitLines != null
+      ? buildCorporateTaxAdjustments({
+          netIncomeYen: sheet.net_income_yen,
+          lines: explicitLines,
+        })
+      : null;
+  const annex =
+    adjustments != null
+      ? `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
+    <Line code="current_net_income" label="当期純利益">${adjustments.net_income_yen}</Line>
+    <AdjustmentsAbsent>${adjustments.adjustments_absent ? "true" : "false"}</AdjustmentsAbsent>
+    <Line code="add_backs" label="加算">${adjustments.add_backs_yen}</Line>
+    <Line code="subtractions" label="減算">${adjustments.subtractions_yen}</Line>
+    <Line code="taxable_income_estimate" label="課税所得の見積">${adjustments.taxable_income_yen}</Line>
+  </AnnexDraft>`
+      : worksheet.can_compute
+        ? `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
     <Line code="current_net_income" label="当期純利益">${worksheet.starting_profit_yen}</Line>
+    <AdjustmentsAbsent>${worksheet.lines.length === 0 ? "true" : "false"}</AdjustmentsAbsent>
     <Line code="add_backs" label="加算">${worksheet.additions_yen}</Line>
     <Line code="subtractions" label="減算">${worksheet.subtractions_yen}</Line>
     <Line code="taxable_income_estimate" label="課税所得">${worksheet.taxable_income_yen}</Line>
   </AnnexDraft>`
-    : `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
+        : `<AnnexDraft id="betsu-4-like" label="別表四相当・所得の金額の計算">
     <AdvisorPending>${escapeXml(worksheet.errors.join(","))}</AdvisorPending>
   </AnnexDraft>`;
   const roll = worksheet.retained_rollforward;
@@ -119,12 +142,16 @@ export function buildCorporateTaxXmlDraft(input?: {
     : `<AnnexDraft id="betsu-5-1-like" label="別表五（一）相当・利益剰余金">
     <AdvisorPending>${escapeXml(worksheet.errors.join(","))}</AdvisorPending>
   </AnnexDraft>`;
-  const completenessFilled = worksheet.can_compute
-    ? "entity,statements,betsu-4,betsu-5-retained"
-    : "entity,statements";
-  const completenessPending = worksheet.can_compute
-    ? "official_form_mapping"
-    : escapeXml(worksheet.errors.join(","));
+  const completenessFilled =
+    adjustments != null || worksheet.can_compute
+      ? "entity,statements,betsu-4,betsu-5-retained"
+      : "entity,statements";
+  const completenessPending =
+    adjustments != null
+      ? escapeXml([...adjustments.advisor_pending, "official_form_mapping"].join(","))
+      : worksheet.can_compute
+        ? "official_form_mapping"
+        : escapeXml(worksheet.errors.join(","));
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <OrgOSCorporateTaxDraft

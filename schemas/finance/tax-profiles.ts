@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { dateString, monthString } from "../common.js";
+import { corporateTaxAdjustmentLinesSchema } from "./tax-adjustments.js";
 export const taxProfileEntitySchema = z.object({
   name: z.string().min(1),
   type: z.string().min(1),
@@ -81,6 +82,8 @@ export const taxProfileCorporateTaxSchema = z.object({
   entertainment_account_code: z.string().regex(/^\d{4}$/).optional(),
   /** Deductible cap in yen. The excess over this cap is an add-back. Not a statutory table. */
   entertainment_cap_yen: z.number().int().nonnegative().optional(),
+  /** 別表四相当。未設定は調整行なし。判断はここに人が書く。 */
+  adjustments: corporateTaxAdjustmentLinesSchema.optional(),
 });
 
 export const taxProfileFilingCalendarItemSchema = z.object({
