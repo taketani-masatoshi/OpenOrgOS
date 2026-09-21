@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "server_id": "ooo-standards-watch",
+  "entries": [
+    {"standard_id":"ISO-3166","title":"Country codes","authority":"ISO","official_sources":["https://www.iso.org/iso-3166-country-codes.html"],"auxiliary_sources":["https://www.un.org/","https://unlocode.unece.org/"],"cadence":"weekly","priority":"high","scope":"common","auto_apply":false,"notify_on":["new-release","amendment","withdrawal","source-unavailable"]},
+    {"standard_id":"ISO-4217","title":"Currency codes","authority":"ISO","official_sources":["https://www.iso.org/iso-4217-currency-codes.html"],"auxiliary_sources":["https://www.swift.com/"],"cadence":"weekly","priority":"high","scope":"finance","auto_apply":false,"notify_on":["new-release","amendment","withdrawal","source-unavailable"]},
+    {"standard_id":"ISO-20022","title":"Financial messages","authority":"ISO","official_sources":["https://www.iso.org/standard/20022-1"],"auxiliary_sources":["https://www.swift.com/standards/iso-20022"],"cadence":"weekly","priority":"critical","scope":"finance","auto_apply":false,"notify_on":["new-release","amendment","withdrawal","source-unavailable"]},
+    {"standard_id":"JP-POSTAL","title":"Japan postal data","authority":"Japan Post","official_sources":["https://www.post.japanpost.jp/service/search/zipcode/download/"],"auxiliary_sources":["https://www.j-lis.go.jp/"],"cadence":"monthly","priority":"normal","scope":"jp-module","auto_apply":true,"notify_on":["new-release","amendment","source-unavailable"]},
+    {"standard_id":"JIS-X0401-0402","title":"Japanese prefecture and municipality codes","authority":"JSA","official_sources":["https://webdesk.jsa.or.jp/"],"auxiliary_sources":["https://www.e-stat.go.jp/","https://www.j-lis.go.jp/"],"cadence":"monthly","priority":"high","scope":"jp-module","auto_apply":false,"notify_on":["new-release","amendment","withdrawal","source-unavailable"]},
+    {"standard_id":"PMBOK","title":"Project management standard","authority":"PMI","official_sources":["https://www.pmi.org/standards/pmbok"],"auxiliary_sources":[],"cadence":"monthly","priority":"normal","scope":"governance","auto_apply":false,"notify_on":["new-release","amendment","withdrawal","source-unavailable"]}
+  ]
+}

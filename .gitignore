@@ -18,6 +18,10 @@ tests/.fixture-restore.lock/
 services/siva/
 # L2 mail credentials written by the setup wizard at the repo root
 /records/
+# External finance account credentials and OAuth/Webhook secrets.
+tenants/*/data/external-finance/accounts.private.json
+tenants/*/data/external-finance/outbox.jsonl
+tenants/*/data/external-finance/transactions.jsonl
 # Runtime founder Passkey bearer links and transient webhook locks
 /product-fleet/welcome-pending/
 /product-fleet/.welcome-delivery-locks/
