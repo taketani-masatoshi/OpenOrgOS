@@ -85,9 +85,24 @@ ${body}
 
 function advisorPending(worksheet: TaxAdjustmentWorksheet): string {
   if (!worksheet.can_compute) return worksheet.errors.join(",");
-  const pending = ["unused_statutory_rows"];
-  if (worksheet.corporate_tax_yen == null) pending.unshift("corporate_tax_unresolved");
-  return pending.join(",");
+  return [...worksheet.official_pending, "unused_statutory_rows"].join(",");
+}
+
+function annexOrPending(
+  form: string,
+  label: string,
+  lines: OfficialAnnexLine[],
+  worksheet: TaxAdjustmentWorksheet
+): string {
+  if (!worksheet.can_compute) {
+    return annexBlock(form, label, [], worksheet.errors.join(",") || "uncomputed");
+  }
+  if (lines.length > 0) return annexBlock(form, label, lines, null);
+  if (form === "別表五（一）") return annexBlock(form, label, [], "capital_unmapped");
+  const reason =
+    worksheet.official_pending.filter((item) => item !== "capital_unmapped").join(",") ||
+    "official_rows_withheld";
+  return annexBlock(form, label, [], reason);
 }
 
 export function buildCorporateTaxXmlDraft(input?: { fiscalYear?: string; asOf?: string }): Omit<
@@ -133,30 +148,23 @@ export function buildCorporateTaxXmlDraft(input?: { fiscalYear?: string; asOf?: 
   const generatedAt = getClock().now().toISOString();
   const worksheet = evaluateTaxAdjustment(fiscalYear);
   const pending = advisorPending(worksheet);
-  const annexPending = worksheet.can_compute ? null : pending;
-  const annex4 = annexBlock(
-    "別表四",
-    "所得の金額の計算に関する明細書",
-    worksheet.official_lines.filter((line) => line.form === "別表四"),
-    annexPending
-  );
-  const annex5 = annexBlock(
+  const betsu4Lines = worksheet.official_lines.filter((line) => line.form === "別表四");
+  const betsu5Lines = worksheet.official_lines.filter((line) => line.form === "別表五（一）");
+  const betsu1Lines = worksheet.official_lines.filter((line) => line.form === "別表一");
+  const annex4 = annexOrPending("別表四", "所得の金額の計算に関する明細書", betsu4Lines, worksheet);
+  const annex5 = annexOrPending(
     "別表五（一）",
     "利益積立金額及び資本金等の額の計算に関する明細書",
-    worksheet.official_lines.filter((line) => line.form === "別表五（一）"),
-    annexPending
+    betsu5Lines,
+    worksheet
   );
-  const annex1 = annexBlock(
-    "別表一",
-    "各事業年度の所得に係る申告書",
-    worksheet.official_lines.filter((line) => line.form === "別表一"),
-    annexPending
-  );
+  const annex1 = annexOrPending("別表一", "各事業年度の所得に係る申告書", betsu1Lines, worksheet);
   const leafLines = worksheet.official_lines.filter((line) => line.form === "別表一次葉");
   const annexLeaf =
     leafLines.length > 0 ? annexBlock("別表一次葉", "法人税額の計算", leafLines, null) : "";
   const filled = ["entity", "statements"];
-  if (worksheet.can_compute) filled.push("betsu-4", "betsu-5-retained");
+  if (betsu4Lines.some((line) => line.row === "52")) filled.push("betsu-4");
+  if (betsu5Lines.some((line) => line.row === "31")) filled.push("betsu-5-retained");
   if (worksheet.corporate_tax_yen != null) filled.push("betsu-1");
   const corporateTax =
     worksheet.corporate_tax_yen != null

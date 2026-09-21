@@ -75,8 +75,10 @@ describe("tax adjustment acceptance", () => {
       const sheet = evaluateTaxAdjustment(FY);
       expect(sheet.can_compute).toBe(true);
       expect(sheet.additions_yen).toBe(60);
-      expect(sheet.subtractions_yen).toBe(5);
-      expect(sheet.taxable_income_yen).toBe((sheet.starting_profit_yen ?? 0) + 55);
+      expect(sheet.subtractions_yen).toBe(0);
+      expect(sheet.taxable_income_yen).toBeNull();
+      expect(sheet.corporate_tax_yen).toBeNull();
+      expect(sheet.official_pending).toContain("unmapped_explicit_line");
       expect(sheet.lines.find((line) => line.asset_id)?.row).toBeUndefined();
       expect(sheet.lines.find((line) => line.id === "ADJ-1")?.row).toBeUndefined();
       expect(
@@ -85,16 +87,18 @@ describe("tax adjustment acceptance", () => {
       expect(
         sheet.official_lines.find((line) => line.form === "別表四" && line.row === "8")?.amount_yen
       ).toBe(20);
-      expect(
-        sheet.official_lines.find((line) => line.form === "別表四" && line.row === "52")?.amount_yen
-      ).toBe(sheet.taxable_income_yen);
+      expect(sheet.official_lines.some((line) => line.row === "11" || line.row === "52")).toBe(
+        false
+      );
       expect(loadJournalEntries().entries.length).toBe(count);
       const again = evaluateTaxAdjustment(FY);
       expect(again.taxable_income_yen).toBe(sheet.taxable_income_yen);
       expect(loadJournalEntries().entries.length).toBe(count);
 
       const draft = buildCorporateTaxXmlDraft({ fiscalYear: FY, asOf: sheet.as_of });
-      expect(draft.xml).toContain('<Line form="別表四" row="11" label="加算小計">60</Line>');
+      expect(draft.xml).not.toContain('row="11"');
+      expect(draft.xml).not.toContain('row="52"');
+      expect(draft.xml).toContain('row="6"');
       expect(draft.xml).not.toContain("加算（税理士確定）");
       expect(draft.xml).not.toContain('id="betsu-4-like"');
       expect(draft.xml).not.toContain("taxable_income_estimate");
@@ -225,7 +229,7 @@ describe("tax adjustment acceptance", () => {
           { account_code: "9999", debit_yen: 10, credit_yen: 0, tax_category: "out_of_scope" },
           { account_code: "1100", debit_yen: 0, credit_yen: 10, tax_category: "out_of_scope" },
         ],
-      }),
+      })
     ).toThrow(/Unknown account code/);
   });
 
@@ -287,7 +291,7 @@ describe("tax adjustment acceptance", () => {
     resetFixtureJournalEntries();
     writeFileSync(
       join(getDataDir(), "finance", "tax-adjustments.yaml"),
-      `fiscal_year: ${FY}\nlines:\n  - id: ADJ-LOSS\n    kind: subtract\n    amount_yen: 5\n    label: other\n`
+      `fiscal_year: ${FY}\nlines:\n  - id: ADJ-LOSS\n    kind: subtract\n    amount_yen: 5\n    form_row: "14"\n    label: dividends\n`
     );
     const sheet = evaluateTaxAdjustment(FY);
     expect(sheet.can_compute).toBe(true);
@@ -353,6 +357,223 @@ describe("tax adjustment acceptance", () => {
       expect(draft.xml).not.toContain("<EstimatedTaxYen>");
       expect(draft.xml).not.toContain("official_form_mapping");
       expect(draft.xml).not.toContain('id="betsu-4-like"');
+    } finally {
+      restore(profilePath, profileOriginal);
+    }
+  });
+
+  it("reconciles numbered annex rows and withholds totals for an unmapped line", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    writeFileSync(
+      join(getDataDir(), "finance", "tax-adjustments.yaml"),
+      `fiscal_year: ${FY}\nlines:\n  - id: ADJ-MAPPED\n    kind: add\n    amount_yen: 100\n    form_row: "7"\n    label: officers\n`
+    );
+    const mapped = evaluateTaxAdjustment(FY);
+    const amount = (row: string) =>
+      mapped.official_lines.find((line) => line.form === "別表四" && line.row === row)?.amount_yen;
+    expect(amount("11")).toBe(100);
+    expect(amount("23")).toBe((mapped.starting_profit_yen ?? 0) + 100);
+    expect(amount("52")).toBe(amount("23"));
+    expect(mapped.official_lines.some((line) => line.row === "27" || line.row === "24")).toBe(
+      false
+    );
+    const row25 = mapped.official_lines.filter(
+      (line) => line.form === "別表五（一）" && line.row === "25"
+    );
+    const row31 = mapped.official_lines.filter(
+      (line) => line.form === "別表五（一）" && line.row === "31"
+    );
+    expect(row25.find((line) => line.col === "4")?.amount_yen).toBe(
+      (row25.find((line) => line.col === "1")?.amount_yen ?? 0) -
+        (row25.find((line) => line.col === "2")?.amount_yen ?? 0) +
+        (row25.find((line) => line.col === "3")?.amount_yen ?? 0)
+    );
+    expect(row31.find((line) => line.col === "4")?.amount_yen).toBe(
+      row25.find((line) => line.col === "4")?.amount_yen
+    );
+
+    writeFileSync(
+      join(getDataDir(), "finance", "tax-adjustments.yaml"),
+      `fiscal_year: ${FY}\nlines:\n  - id: ADJ-BARE\n    kind: subtract\n    amount_yen: 5\n    label: bare\n`
+    );
+    const bare = evaluateTaxAdjustment(FY);
+    expect(bare.official_lines.some((line) => line.row === "11" || line.row === "52")).toBe(false);
+    expect(bare.corporate_tax_yen).toBeNull();
+  });
+
+  it("omits schedule 5 when retained earnings include a capital movement", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    appendJournalEntry({
+      entry_id: "JE-CAP",
+      occurred_at: "2026-09-20T00:00:00.000Z",
+      description: "capital",
+      source: { kind: "capital", period: "2026-09" },
+      evidence_refs: ["test:cap"],
+      lines: [
+        { account_code: "1100", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "3200", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" },
+      ],
+    });
+    const sheet = evaluateTaxAdjustment(FY);
+    expect(sheet.can_compute).toBe(true);
+    expect(sheet.retained_rollforward?.capital_yen).not.toBe(0);
+    expect(sheet.official_lines.some((line) => line.form === "別表五（一）")).toBe(false);
+    const draft = buildCorporateTaxXmlDraft({ fiscalYear: FY, asOf: sheet.as_of });
+    expect(draft.xml).toContain("capital_unmapped");
+    expect(draft.xml).not.toContain('row="25"');
+  });
+
+  it("truncates the national tax base and the tax", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    appendJournalEntry({
+      entry_id: "JE-REV-SMALL",
+      occurred_at: "2026-09-12T00:00:00.000Z",
+      description: "revenue",
+      source: { kind: "manual", authorized_by: "OP-TEST" },
+      evidence_refs: ["test:small"],
+      lines: [
+        { account_code: "1100", debit_yen: 1500, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "4100", debit_yen: 0, credit_yen: 1500, tax_category: "non_taxable" },
+      ],
+    });
+    expect(evaluateTaxAdjustment(FY).corporate_tax_yen).toBe(100);
+    resetFixtureJournalEntries();
+    appendJournalEntry({
+      entry_id: "JE-REV-TINY",
+      occurred_at: "2026-09-12T00:00:00.000Z",
+      description: "revenue",
+      source: { kind: "manual", authorized_by: "OP-TEST" },
+      evidence_refs: ["test:tiny"],
+      lines: [
+        { account_code: "1100", debit_yen: 999, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "4100", debit_yen: 0, credit_yen: 999, tax_category: "non_taxable" },
+      ],
+    });
+    expect(evaluateTaxAdjustment(FY).corporate_tax_yen).toBe(0);
+  });
+
+  it("uses the full rate above 100 million yen of capital and withholds the reduced bracket", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    const profilePath = join(getDataDir(), "finance", "tax-profile.yaml");
+    const profileOriginal = readFileSync(profilePath, "utf-8");
+    writeFileSync(
+      profilePath,
+      profileOriginal.replace("capital_stock: 1000000\n", "capital_stock: 100000001\n")
+    );
+    try {
+      appendJournalEntry({
+        entry_id: "JE-REV-LARGE",
+        occurred_at: "2026-09-12T00:00:00.000Z",
+        description: "revenue",
+        source: { kind: "manual", authorized_by: "OP-TEST" },
+        evidence_refs: ["test:large"],
+        lines: [
+          {
+            account_code: "1100",
+            debit_yen: 10_000_000,
+            credit_yen: 0,
+            tax_category: "out_of_scope",
+          },
+          {
+            account_code: "4100",
+            debit_yen: 0,
+            credit_yen: 10_000_000,
+            tax_category: "non_taxable",
+          },
+        ],
+      });
+      const sheet = evaluateTaxAdjustment(FY);
+      expect(sheet.corporate_tax_yen).toBe(2_320_000);
+      expect(sheet.official_lines.some((line) => line.row === "74")).toBe(false);
+    } finally {
+      restore(profilePath, profileOriginal);
+    }
+  });
+
+  it("prorates the reduced bracket for a six-month period", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    const profilePath = join(getDataDir(), "finance", "tax-profile.yaml");
+    const profileOriginal = readFileSync(profilePath, "utf-8");
+    writeFileSync(
+      profilePath,
+      profileOriginal.replace('period_from: "2026-02-01"\n', 'period_from: "2026-08-01"\n')
+    );
+    try {
+      appendJournalEntry({
+        entry_id: "JE-REV-SHORT",
+        occurred_at: "2026-09-12T00:00:00.000Z",
+        description: "revenue",
+        source: { kind: "manual", authorized_by: "OP-TEST" },
+        evidence_refs: ["test:short"],
+        lines: [
+          {
+            account_code: "1100",
+            debit_yen: 10_000_000,
+            credit_yen: 0,
+            tax_category: "out_of_scope",
+          },
+          {
+            account_code: "4100",
+            debit_yen: 0,
+            credit_yen: 10_000_000,
+            tax_category: "non_taxable",
+          },
+        ],
+      });
+      const sheet = evaluateTaxAdjustment(FY);
+      expect(sheet.corporate_tax_yen).toBe(1_992_000);
+      expect(sheet.official_lines.find((line) => line.row === "74")?.amount_yen).toBe(4_000_000);
+    } finally {
+      restore(profilePath, profileOriginal);
+    }
+  });
+
+  it("does not compute a rate when the reduced rate is excluded", () => {
+    useFinanceFixtureTenant();
+    resetFixtureJournalEntries();
+    const profilePath = join(getDataDir(), "finance", "tax-profile.yaml");
+    const profileOriginal = readFileSync(profilePath, "utf-8");
+    writeFileSync(
+      profilePath,
+      profileOriginal.replace(
+        "capital_stock: 1000000\n",
+        "capital_stock: 1000000\n  reduced_rate_excluded: true\n"
+      )
+    );
+    try {
+      appendJournalEntry({
+        entry_id: "JE-REV-EXCLUDED",
+        occurred_at: "2026-09-12T00:00:00.000Z",
+        description: "revenue",
+        source: { kind: "manual", authorized_by: "OP-TEST" },
+        evidence_refs: ["test:excluded"],
+        lines: [
+          {
+            account_code: "1100",
+            debit_yen: 10_000_000,
+            credit_yen: 0,
+            tax_category: "out_of_scope",
+          },
+          {
+            account_code: "4100",
+            debit_yen: 0,
+            credit_yen: 10_000_000,
+            tax_category: "non_taxable",
+          },
+        ],
+      });
+      const sheet = evaluateTaxAdjustment(FY);
+      expect(sheet.taxable_income_yen).toBe(10_000_000);
+      expect(sheet.corporate_tax_yen).toBeNull();
+      expect(sheet.official_lines.some((line) => line.row === "2" && line.form === "別表一")).toBe(
+        false
+      );
+      expect(sheet.official_pending).toContain("reduced_rate_excluded");
     } finally {
       restore(profilePath, profileOriginal);
     }
