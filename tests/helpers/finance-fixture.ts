@@ -45,6 +45,12 @@ const STATEMENT_ROLES: Record<string, readonly [string | null, string]> = {
  */
 export function applyFixtureStatementRoles(): void {
   useFinanceFixtureTenant();
+  const taxPath = join(getTenantDir(), "data/finance/tax-profile.yaml");
+  if (existsSync(taxPath)) {
+    let tax = readFileSync(taxPath, "utf-8");
+    if (!tax.includes("taxpayer_basis:")) tax = tax.replace("  invoice_registered: true", "  invoice_registered: true\n  invoice_registration_effective_date: \"2023-10-01\"\n  taxpayer_basis: base_period");
+    writeFileSync(taxPath, tax, "utf-8");
+  }
   const path = join(getTenantDir(), "data/finance/chart-of-accounts.yaml");
   if (!existsSync(path)) return;
   const lines = readFileSync(path, "utf-8").split("\n");

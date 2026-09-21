@@ -298,6 +298,14 @@ describe("annual close acceptance", () => {
       unlockedBy: OPERATOR,
       reason: "inject imbalance",
     });
+    appendJournalEntry({
+      entry_id: "JE-BAD-TB", occurred_at: `${finalMonth}-15T00:00:00.000Z`, description: "unknown account",
+      source: { kind: "manual", authorized_by: OPERATOR }, evidence_refs: ["test:bad-tb"],
+      lines: [
+        { account_code: "9999", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
+        { account_code: "1100", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" },
+      ],
+    });
     lockMonth({
       month: finalMonth,
       lockedBy: OPERATOR,

@@ -134,16 +134,20 @@ entries:
     expect(checklist.ready).toBe(true);
   });
 
-  it("rejects unknown accounts before they can corrupt the trial balance", () => {
+  it("does not lock when the trial balance does not balance", () => {
     useFinanceFixtureTenant();
-    expect(() => manualEntry({
+    manualEntry({
       entryId: "JE-UNKNOWN-ACCOUNT",
       occurredAt: "2026-09-15T00:00:00.000Z",
       lines: [
         { account_code: "9999", debit_yen: 100, credit_yen: 0, tax_category: "out_of_scope" },
         { account_code: "1100", debit_yen: 0, credit_yen: 100, tax_category: "out_of_scope" },
       ],
-    })).toThrow(/Unknown account code/);
+    });
+    const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(closed.locked).toBe(false);
+    expect(closed.ok).toBe(false);
+    expect(closed.evaluation.errors.some((error) => error.startsWith("trial-balance"))).toBe(true);
   });
 
   it("does not lock when the close month has unmatched bank rows", () => {
@@ -258,16 +262,19 @@ entries:
     expect(closed.locked).toBe(true);
   });
 
-  it("rejects an unassigned control-account balance before close", () => {
+  it("does not lock when a control account has an unassigned balance", () => {
     useFinanceFixtureTenant();
-    expect(() => manualEntry({
+    manualEntry({
       entryId: "JE-UNASSIGNED-AR",
       occurredAt: "2026-09-11T00:00:00.000Z",
       lines: [
         { account_code: "1150", debit_yen: 500, credit_yen: 0, tax_category: "out_of_scope" },
         { account_code: "4100", debit_yen: 0, credit_yen: 500, tax_category: "non_taxable" },
       ],
-    })).toThrow(/counterparty_id required/);
+    });
+    const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(closed.locked).toBe(false);
+    expect(closed.evaluation.errors.some((error) => error.startsWith("subsidiary"))).toBe(true);
   });
 
   it("corrects a locked month only after a reasoned unlock, then re-locks", () => {
@@ -386,7 +393,7 @@ entries:
     expect(closed.locked).toBe(false);
   });
 
-  it("rejects a revenue line without a tax category before close", () => {
+  it("does not lock when a revenue line has no tax category", () => {
     useFinanceFixtureTenant();
     lockPrior();
     writeBank(`
@@ -397,7 +404,7 @@ entries:
     amount: 1000
     status: matched
 `);
-    expect(() => appendJournalEntry({
+    appendJournalEntry({
       entry_id: "JE-NO-TAX",
       occurred_at: "2026-09-12T00:00:00.000Z",
       description: "missing category",
@@ -408,7 +415,10 @@ entries:
         { account_code: "1100", debit_yen: 50, credit_yen: 0 },
         { account_code: "4100", debit_yen: 0, credit_yen: 50 },
       ],
-    })).toThrow(/tax_category required/);
+    });
+    const closed = closeAccountingMonth({ month: MONTH, operatorId: OPERATOR });
+    expect(closed.evaluation.errors.some((error) => error.startsWith("consumption-tax"))).toBe(true);
+    expect(closed.locked).toBe(false);
   });
 
   it("posts a specified accrual and ignores a zero adjustment", () => {
