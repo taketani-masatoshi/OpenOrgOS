@@ -65,20 +65,79 @@ describe("etax official KSK2 XSD (local vendor)", () => {
   const officialTek = join(officialXsdRoot(), "general/TEK000-001.xsd");
   const hasOfficial = existsSync(officialTek);
 
-  it.skipIf(!hasOfficial || !xmlLintAvailable())(
-    "rejects a non-NTA instance against official TEK000 schema",
-    () => {
-      const result = validateXmlAgainstXsd(
-        `<?xml version="1.0" encoding="UTF-8"?><not-nta/>`,
-        officialTek
+  it("rejects a non-NTA instance against official TEK000 schema, or reports SPEC_BLOCKED", () => {
+    if (!hasOfficial || !xmlLintAvailable()) {
+      const pkg = createReturnPackage(
+        {
+          taxpayerId: "TP-P2",
+          procedureCode: "RHO0010",
+          taxYear: "FY2026",
+          revision: 0,
+          payload: {
+            it: {
+              zeimushoCd: "01101",
+              zeimushoNm: "麹町",
+              nozeishaId: "0000000000000001",
+              nozeishaNm: "テスト株式会社",
+              nozeishaAdr: "東京都千代田区",
+              procedureCd: "RHO0010",
+              sakuseiDay: "2026-03-31",
+            },
+            hoa110: { teishutsuDay: "2026-03-31" },
+          },
+          createdBy: "test",
+          specVersion: "KSK2-2026-08-28",
+        },
+        { id: "ETAX-PKG-phase2-blocked", now: "2026-09-21T00:00:00.000Z" },
       );
-      expect(result.ok).toBe(false);
+      const report = validateEtaxDocument({
+        pkg,
+        xml: `<?xml version="1.0" encoding="UTF-8"?><DATA/>`,
+        env: "mock",
+      });
+      expect(report.layers.find((row) => row.layer === "structural")?.status).toBe("SPEC_BLOCKED");
+      return;
     }
-  );
+    const result = validateXmlAgainstXsd(
+      `<?xml version="1.0" encoding="UTF-8"?><not-nta/>`,
+      officialTek,
+    );
+    expect(result.ok).toBe(false);
+  });
 
-  it.skipIf(!hasOfficial || !xmlLintAvailable())(
-    "accepts a minimal instance of the official TEK000 group via an OrgOS test wrapper",
-    () => {
+  it("accepts a minimal instance of the official TEK000 group via an OrgOS test wrapper", () => {
+    if (!hasOfficial || !xmlLintAvailable()) {
+      const pkg = createReturnPackage(
+        {
+          taxpayerId: "TP-P2B",
+          procedureCode: "RHO0010",
+          taxYear: "FY2026",
+          revision: 0,
+          payload: {
+            it: {
+              zeimushoCd: "01101",
+              zeimushoNm: "麹町",
+              nozeishaId: "0000000000000001",
+              nozeishaNm: "テスト株式会社",
+              nozeishaAdr: "東京都千代田区",
+              procedureCd: "RHO0010",
+              sakuseiDay: "2026-03-31",
+            },
+            hoa110: { teishutsuDay: "2026-03-31" },
+          },
+          createdBy: "test",
+          specVersion: "KSK2-2026-08-28",
+        },
+        { id: "ETAX-PKG-phase2-wrap", now: "2026-09-21T00:00:00.000Z" },
+      );
+      const report = validateEtaxDocument({
+        pkg,
+        xml: `<?xml version="1.0" encoding="UTF-8"?><DATA/>`,
+        env: "mock",
+      });
+      expect(report.layers.find((row) => row.layer === "structural")?.status).toBe("SPEC_BLOCKED");
+      return;
+    }
       const dir = mkdtempSync(join(tmpdir(), "orgos-etax-xsd-"));
       try {
         const wrapper = join(dir, "wrapper.xsd");
@@ -107,7 +166,7 @@ describe("etax official KSK2 XSD (local vendor)", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     }
-  );
+  });
 });
 
 describe("etax mapper remains fail-closed without field maps", () => {

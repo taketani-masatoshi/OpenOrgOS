@@ -59,9 +59,10 @@ export function validateEtaxDocument(opts: {
         });
       }
     } catch (error) {
+      const blocked = error instanceof EtaxException && error.etax.blocked === "SPEC_BLOCKED";
       layers.push({
         layer: "structural",
-        status: "fail",
+        status: blocked ? "SPEC_BLOCKED" : "fail",
         detail: error instanceof Error ? error.message : String(error),
       });
     }

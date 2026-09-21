@@ -43,10 +43,8 @@ function rhoPayload() {
 }
 
 describe("etax RHO0010 official XML (Lane B)", () => {
-  it.skipIf(!hasOfficial || !xmlLintAvailable())(
-    "generates DATA/RHO0010/HOA110 from mapping and passes official XSD",
-    () => {
-      const pkg = createReturnPackage(
+  it("generates DATA/RHO0010/HOA110 from mapping and passes official XSD, or reports SPEC_BLOCKED", () => {
+    const pkg = createReturnPackage(
         {
           taxpayerId: "TP-E2E-1",
           procedureCode: "RHO0010",
@@ -59,6 +57,11 @@ describe("etax RHO0010 official XML (Lane B)", () => {
         { id: "ETAX-PKG-rho-e2e", now: "2026-09-21T00:00:00.000Z" },
       );
       const xml = generateOfficialXml(pkg);
+      if (!hasOfficial || !xmlLintAvailable()) {
+        const report = validateEtaxDocument({ pkg, xml, env: "mock" });
+        expect(report.layers.find((row) => row.layer === "structural")?.status).toBe("SPEC_BLOCKED");
+        return;
+      }
       expect(xml).toContain("<DATA ");
       expect(xml).toContain("<RHO0010 ");
       expect(xml).toContain("<HOA110 ");
@@ -70,15 +73,12 @@ describe("etax RHO0010 official XML (Lane B)", () => {
       const report = validateEtaxDocument({ pkg, xml, env: "mock" });
       expect(report.ok).toBe(true);
       expect(report.layers.every((row) => row.status === "pass")).toBe(true);
-    },
-  );
+  });
 });
 
 describe("etax mock lifecycle without hand-placed xmlHash (Lane C)", () => {
-  it.skipIf(!hasOfficial || !xmlLintAvailable())(
-    "GENERATED → BUSINESS_RULE_VALID → APPROVED → SIGNED → RECEIVED_BY_ETAX",
-    async () => {
-      const pkg = createReturnPackage(
+  it("GENERATED → BUSINESS_RULE_VALID → APPROVED → SIGNED → RECEIVED_BY_ETAX", async () => {
+    const pkg = createReturnPackage(
         {
           taxpayerId: "TP-E2E-2",
           procedureCode: "RHO0010",
@@ -91,6 +91,11 @@ describe("etax mock lifecycle without hand-placed xmlHash (Lane C)", () => {
         { id: "ETAX-PKG-rho-life", now: "2026-09-21T00:00:00.000Z" },
       );
       const xml = generateOfficialXml(pkg);
+      if (!hasOfficial || !xmlLintAvailable()) {
+        const blocked = validateEtaxDocument({ pkg, xml, env: "mock" });
+        expect(blocked.layers.find((row) => row.layer === "structural")?.status).toBe("SPEC_BLOCKED");
+        return;
+      }
       const xmlHash = xmlContentHash(xml);
       const document = Buffer.from(xml, "utf-8");
 
@@ -156,8 +161,7 @@ describe("etax mock lifecycle without hand-placed xmlHash (Lane C)", () => {
       expect(received.submission.status).toBe("RECEIVED_BY_ETAX");
       expect(received.receipt.receiptNumber?.startsWith("MOCK-NOT-NTA-")).toBe(true);
       expect(() => replayIfAlreadySent(received.submission)).toThrow(/RECEIVED_BY_ETAX/);
-    },
-  );
+  });
 
   it("READY_TO_SUBMIT can transition to TRANSPORT_ERROR", () => {
     expect(transitionStatus("READY_TO_SUBMIT", "TRANSPORT_ERROR")).toBe("TRANSPORT_ERROR");
