@@ -50,7 +50,7 @@ export function hashFilingContent(input: {
       specVersion: input.specVersion,
       filingKind: input.filingKind ?? "original",
       priorReceiptNumber: input.priorReceiptNumber ?? null,
-    }),
+    })
   );
 }
 
@@ -61,6 +61,6 @@ export function filingSlotKey(input: {
   revision: number;
 }): string {
   return filingSha256Hex(
-    [input.taxpayerId, input.procedureCode, input.taxYear, String(input.revision)].join("|"),
+    [input.taxpayerId, input.procedureCode, input.taxYear, String(input.revision)].join("|")
   );
 }

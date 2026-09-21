@@ -2,7 +2,10 @@ import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { assertCertifiedCommand, buildFilingChildEnv } from "../src/lib/efiling/certified-adapter.js";
+import {
+  assertCertifiedCommand,
+  buildFilingChildEnv,
+} from "../src/lib/efiling/certified-adapter.js";
 import { redactFilingRecord } from "../src/lib/efiling/redact.js";
 
 describe("efiling secrets", () => {
@@ -18,7 +21,7 @@ describe("efiling secrets", () => {
   it("drops loader and node option overrides", () => {
     const env = buildFilingChildEnv(
       { PATH: "/usr/bin", LD_PRELOAD: "/tmp/x", NODE_OPTIONS: "--inspect" },
-      { FOO: "bar" },
+      { FOO: "bar" }
     );
     expect(env.LD_PRELOAD).toBeUndefined();
     expect(env.NODE_OPTIONS).toBeUndefined();
@@ -34,7 +37,7 @@ describe("efiling secrets", () => {
         executableSha256: "deadbeef",
         evidencePath: path,
         evidenceSha256: "deadbeef",
-      }),
+      })
     ).toThrow(/SHA-256/);
   });
 

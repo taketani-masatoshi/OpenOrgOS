@@ -18,7 +18,11 @@ function sha256File(path: string): `sha256:${string}` {
   return filingSha256Digest(readFileSync(path));
 }
 
-function assertFileHash(path: string | undefined, expected: string | undefined, label: string): string[] {
+function assertFileHash(
+  path: string | undefined,
+  expected: string | undefined,
+  label: string
+): string[] {
   if (!path && !expected) return [];
   if (!path || !expected) return [`${label} path and hash must both be present`];
   if (!existsSync(path)) return [`${label} file is missing`];
@@ -36,7 +40,10 @@ export function verifyFilingEvidence(record: FilingEvidence): { ok: boolean; err
   for (const attachment of record.attachments ?? []) {
     errors.push(...assertFileHash(attachment.path, attachment.sha256, "attachment"));
   }
-  if ((record.status === "RECEIVED_BY_ETAX" || record.status === "REJECTED_BY_ETAX") && !record.xtxSha256) {
+  if (
+    (record.status === "RECEIVED_BY_ETAX" || record.status === "REJECTED_BY_ETAX") &&
+    !record.xtxSha256
+  ) {
     errors.push("terminal filing requires a receipt xtx hash");
   }
   return { ok: errors.length === 0, errors };

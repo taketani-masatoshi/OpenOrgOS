@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EtaxException } from "../schemas/etax/errors.js";
 import { createReturnPackage } from "../src/lib/etax/return-package.js";
-import {
-  assertRegisteredFormField,
-  generateOfficialXml,
-} from "../src/lib/etax/xml-generator.js";
+import { assertRegisteredFormField, generateOfficialXml } from "../src/lib/etax/xml-generator.js";
 import { officialXsdAvailable } from "../src/lib/etax/spec-paths.js";
 import { resolveOfficialXsd } from "../src/lib/etax/spec-fetch.js";
 import { validateXmlAgainstXsd, xmlLintAvailable } from "../src/lib/etax/xml-validate.js";
@@ -25,7 +22,9 @@ describe("HOA110 body mapping", () => {
     pkg.payload = { ...(pkg.payload as object), hoa110: {} };
     expect(() => generateOfficialXml(pkg)).toThrow(EtaxException);
     expect(() => assertRegisteredFormField("RHO0010", "HOA410")).toThrow(EtaxException);
-    expect(() => assertRegisteredFormField("RHO0010", "HOA110", "NOT_A_FIELD")).toThrow(EtaxException);
+    expect(() => assertRegisteredFormField("RHO0010", "HOA110", "NOT_A_FIELD")).toThrow(
+      EtaxException
+    );
   });
 
   it("passes official XSD when the CAB is present, otherwise SPEC_BLOCKED", () => {
@@ -69,6 +68,6 @@ function packageFor() {
       },
       specVersion: "KSK2-2026-08-28",
     },
-    { id: "ETAX-PKG-hoa110", now: "2026-09-21T00:00:00.000Z" },
+    { id: "ETAX-PKG-hoa110", now: "2026-09-21T00:00:00.000Z" }
   );
 }

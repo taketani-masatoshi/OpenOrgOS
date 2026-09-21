@@ -14,12 +14,15 @@ export function assertFilingHumanApproval(input: {
   packageSha256: string;
 }): void {
   if (input.approval.subject_type !== EFILING_APPROVAL_SUBJECT) {
-    throw filingError("EFILING_APPROVAL_SUBJECT", "approval subject_type must be efiling.submission");
+    throw filingError(
+      "EFILING_APPROVAL_SUBJECT",
+      "approval subject_type must be efiling.submission"
+    );
   }
   if (input.approval.subject_ref !== input.packageSha256) {
     throw filingError(
       "EFILING_APPROVAL_SUBJECT_REF",
-      "approval subject_ref must equal the package SHA-256",
+      "approval subject_ref must equal the package SHA-256"
     );
   }
   const operator = findOperatorById(input.operatorId);

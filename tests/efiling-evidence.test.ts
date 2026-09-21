@@ -61,9 +61,11 @@ describe("efiling evidence and retention", () => {
     });
     expect(created.retentionUntil.startsWith("2036-")).toBe(true);
     expect(() =>
-      store.save({ ...created, retentionUntil: "2027-01-01" }, created.writeRevision),
+      store.save({ ...created, retentionUntil: "2027-01-01" }, created.writeRevision)
     ).toThrow(/shortened/);
     const held = store.save({ ...created, legalHold: true }, created.writeRevision);
-    expect(() => store.save({ ...held, legalHold: false }, held.writeRevision)).toThrow(/legal_hold/);
+    expect(() => store.save({ ...held, legalHold: false }, held.writeRevision)).toThrow(
+      /legal_hold/
+    );
   });
 });

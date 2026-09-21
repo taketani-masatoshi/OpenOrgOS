@@ -24,7 +24,7 @@ export function transitionFilingStatus(from: FilingStatus, to: FilingStatus): Fi
   if (!canTransitionFiling(from, to)) {
     throw filingError(
       "EFILING_ILLEGAL_STATUS_TRANSITION",
-      `Illegal filing transition ${from} → ${to}`,
+      `Illegal filing transition ${from} → ${to}`
     );
   }
   return to;
@@ -35,7 +35,7 @@ export function invalidateFilingAfterContentChange(current: FilingStatus): Filin
   if (current === "RECEIVED_BY_ETAX" || current === "REJECTED_BY_ETAX") {
     throw filingError(
       "EFILING_IMMUTABLE_AFTER_RECEIPT",
-      `Cannot mutate a ${current} filing; open a new revision`,
+      `Cannot mutate a ${current} filing; open a new revision`
     );
   }
   return "DRAFT";

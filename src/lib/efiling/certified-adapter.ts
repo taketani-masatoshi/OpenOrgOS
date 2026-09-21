@@ -27,7 +27,7 @@ export type CertifiedCommand = {
 
 export function assertCertifiedAdapter(
   adapter: object,
-  opts?: { allowUncertifiedTestDouble?: boolean },
+  opts?: { allowUncertifiedTestDouble?: boolean }
 ): void {
   if (opts?.allowUncertifiedTestDouble) return;
   const marked = (adapter as Record<symbol, unknown>)[certifiedAdapter];
@@ -35,7 +35,7 @@ export function assertCertifiedAdapter(
     throw filingError(
       "EFILING_UNCERTIFIED_ADAPTER",
       "adapter is not a hash-certified filing adapter",
-      "SPEC_BLOCKED",
+      "SPEC_BLOCKED"
     );
   }
 }
@@ -54,28 +54,34 @@ export function assertCertifiedCommand(command: CertifiedCommand): void {
     throw filingError("EFILING_COMMAND_PATH", "certified command paths must be absolute");
   }
   if (!existsSync(command.executable) || !existsSync(command.evidencePath)) {
-    throw filingError("EFILING_COMMAND_MISSING", "certified command executable or evidence is missing");
+    throw filingError(
+      "EFILING_COMMAND_MISSING",
+      "certified command executable or evidence is missing"
+    );
   }
   if (sha256File(command.executable) !== command.executableSha256) {
-    throw filingError("EFILING_COMMAND_HASH", "certified executable SHA-256 does not match the pin");
+    throw filingError(
+      "EFILING_COMMAND_HASH",
+      "certified executable SHA-256 does not match the pin"
+    );
   }
   if (sha256File(command.evidencePath) !== command.evidenceSha256) {
-    throw filingError("EFILING_COMMAND_EVIDENCE_HASH", "certification evidence SHA-256 does not match the pin");
+    throw filingError(
+      "EFILING_COMMAND_EVIDENCE_HASH",
+      "certification evidence SHA-256 does not match the pin"
+    );
   }
 }
 
 export function buildFilingChildEnv(
   parent: NodeJS.ProcessEnv,
-  extra: Record<string, string>,
+  extra: Record<string, string>
 ): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
   if (parent.PATH) env.PATH = parent.PATH;
   for (const [key, value] of Object.entries(extra)) {
     if (SECRET_ENV_PATTERN.test(key)) {
-      throw filingError(
-        "EFILING_SECRET_ENV",
-        `refusing secret child environment name ${key}`,
-      );
+      throw filingError("EFILING_SECRET_ENV", `refusing secret child environment name ${key}`);
     }
     if (BLOCKED_ENV_KEYS.has(key)) continue;
     env[key] = value;
@@ -88,7 +94,7 @@ export function buildFilingChildEnv(
 export function runCertifiedCommand(
   command: CertifiedCommand,
   args: string[],
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { status: number | null; stdout: string; stderr: string } {
   assertCertifiedCommand(command);
   const result = spawnSync(command.executable, args, {

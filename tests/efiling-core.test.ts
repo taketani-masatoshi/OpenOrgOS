@@ -38,7 +38,9 @@ describe("efiling core lifecycle and idempotency", () => {
     const store = new FilingStore({ channel: "etax", now: "2026-09-21T00:00:00.000Z" });
     const created = store.create(row("a", "key"));
     expect(store.create(row("a", "key")).id).toBe(created.id);
-    expect(() => store.create({ ...row("a", "key"), payload: { n: 2 } })).toThrow(/different package/);
+    expect(() => store.create({ ...row("a", "key"), payload: { n: 2 } })).toThrow(
+      /different package/
+    );
     expect(() => store.save(created, 99)).toThrow(/stale/);
   });
 });

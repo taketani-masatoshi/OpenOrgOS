@@ -16,7 +16,7 @@ export function registerEfilingCommands(program: Command): void {
         console.log(JSON.stringify(score, null, 2));
       } else {
         console.log(
-          `mechanism ${score.passed}/${score.total} · production ${score.productionSubmission} · lane2 certified ${score.lane2Certified}`,
+          `mechanism ${score.passed}/${score.total} · production ${score.productionSubmission} · lane2 certified ${score.lane2Certified}`
         );
         for (const row of score.items) {
           console.log(`${row.id} ${row.pass ? "pass" : "fail"} ${row.reason}`);

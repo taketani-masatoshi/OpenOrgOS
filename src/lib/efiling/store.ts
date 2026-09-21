@@ -8,7 +8,11 @@ import { DEFAULT_RETENTION_YEARS } from "../../../schemas/efiling/filing.js";
 import { assertFilingKind } from "./amendment.js";
 import { filingError } from "./errors.js";
 import { filingSha256Digest, filingSlotKey, hashFilingContent } from "./hash.js";
-import { assertIdempotentPackage, assertSlotAvailable, assertWriteRevision } from "./idempotency.js";
+import {
+  assertIdempotentPackage,
+  assertSlotAvailable,
+  assertWriteRevision,
+} from "./idempotency.js";
 import { assertRetentionChange, retentionUntilDate } from "./retention.js";
 import type { FilingAttempt } from "./recovery.js";
 import { schemaForChannel } from "./channel.js";
@@ -79,7 +83,7 @@ export class FilingStore {
       throw filingError(
         "EFILING_ENCRYPTED_STORAGE_REQUIRED",
         "production filing state requires encrypted storage",
-        "PRODUCTION_DISABLED",
+        "PRODUCTION_DISABLED"
       );
     }
     assertChannelRoot(opts.channel, opts.rootPath);
@@ -108,7 +112,7 @@ export class FilingStore {
       throw filingError(
         "EFILING_CHANNEL_SCHEMA",
         `${input.schema} cannot be stored on the ${this.channel} channel`,
-        "SPEC_BLOCKED",
+        "SPEC_BLOCKED"
       );
     }
     const filingKind = input.filingKind ?? "original";
@@ -124,10 +128,10 @@ export class FilingStore {
       filingKind,
       priorReceiptNumber: input.priorReceiptNumber,
     });
-    const packageSha256 = filingSha256Digest(
-      JSON.stringify({ contentHash, schema: input.schema }),
+    const packageSha256 = filingSha256Digest(JSON.stringify({ contentHash, schema: input.schema }));
+    const existing = [...this.rows.values()].find(
+      (row) => row.idempotencyKey === input.idempotencyKey
     );
-    const existing = [...this.rows.values()].find((row) => row.idempotencyKey === input.idempotencyKey);
     const decision = assertIdempotentPackage({
       existing,
       idempotencyKey: input.idempotencyKey,
@@ -141,7 +145,7 @@ export class FilingStore {
       revision: input.revision,
     });
     assertSlotAvailable(
-      [...this.rows.values()].some((row) => row.slotKey === slotKey && ACTIVE.has(row.status)),
+      [...this.rows.values()].some((row) => row.slotKey === slotKey && ACTIVE.has(row.status))
     );
     const record: FilingRecord = {
       id: input.id,
@@ -189,7 +193,11 @@ export class FilingStore {
     const current = this.get(next.id);
     assertWriteRevision(expectedWriteRevision, current.writeRevision);
     if (next.legalHold === false && current.legalHold) {
-      assertRetentionChange({ legalHold: true, currentUntil: current.retentionUntil, releaseHold: true });
+      assertRetentionChange({
+        legalHold: true,
+        currentUntil: current.retentionUntil,
+        releaseHold: true,
+      });
     }
     assertRetentionChange({
       legalHold: current.legalHold,
@@ -209,14 +217,14 @@ function assertChannelRoot(channel: FilingChannel, rootPath: string | undefined)
     throw filingError(
       "EFILING_CHANNEL_ROOT",
       "eLTAX state cannot be stored under an etax path",
-      "SPEC_BLOCKED",
+      "SPEC_BLOCKED"
     );
   }
   if (channel === "etax" && segments.includes("eltax")) {
     throw filingError(
       "EFILING_CHANNEL_ROOT",
       "e-Tax state cannot be stored under an eltax path",
-      "SPEC_BLOCKED",
+      "SPEC_BLOCKED"
     );
   }
 }

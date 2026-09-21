@@ -3,15 +3,18 @@ import { FilingException } from "../src/lib/efiling/errors.js";
 import { assertMockProviderForbidden } from "../src/lib/efiling/lifecycle.js";
 import { FilingStore } from "../src/lib/efiling/store.js";
 import { evaluateProductionEnablement } from "../src/lib/etax/production-review.js";
-import { EFILING_APPROVAL_SUBJECT, assertFilingHumanApproval } from "../src/lib/efiling/approval.js";
+import {
+  EFILING_APPROVAL_SUBJECT,
+  assertFilingHumanApproval,
+} from "../src/lib/efiling/approval.js";
 
 describe("efiling production fail-closed", () => {
   it("refuses a production store without an encrypted-storage declaration", () => {
     expect(() => new FilingStore({ channel: "etax", production: true })).toThrow(
-      /encrypted storage/,
+      /encrypted storage/
     );
     expect(
-      () => new FilingStore({ channel: "etax", production: true, encryptedStorage: true }),
+      () => new FilingStore({ channel: "etax", production: true, encryptedStorage: true })
     ).not.toThrow();
   });
 
@@ -40,7 +43,7 @@ describe("efiling production fail-closed", () => {
           status: "approved",
         } as never,
         context: {} as never,
-      }),
+      })
     ).toThrow(/subject_ref/);
   });
 });

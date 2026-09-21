@@ -40,7 +40,7 @@ export function runMockFilingLifecycle(input: {
     throw filingError(
       "EFILING_MOCK_PROCEDURE",
       "mock lifecycle only accepts the internal EFILING-MOCK procedure",
-      "SPEC_BLOCKED",
+      "SPEC_BLOCKED"
     );
   }
   const store = new FilingStore({
@@ -66,7 +66,7 @@ export function runMockFilingLifecycle(input: {
   for (const next of MOCK_STEPS) {
     record = store.save(
       { ...record, status: transitionFilingStatus(record.status, next) },
-      record.writeRevision,
+      record.writeRevision
     );
   }
   const requestId = `mock-req-${input.id}`;
@@ -77,7 +77,7 @@ export function runMockFilingLifecycle(input: {
       requestId,
       attempts: [...record.attempts, { requestId, outcome: "started" }],
     },
-    record.writeRevision,
+    record.writeRevision
   );
   const receiptNumber = `MOCK-NOT-NTA-${input.channel}-${input.id}`;
   record = store.save(
@@ -86,10 +86,10 @@ export function runMockFilingLifecycle(input: {
       status: transitionFilingStatus(record.status, "RECEIVED_BY_ETAX"),
       receiptNumber,
       attempts: record.attempts.map((row) =>
-        row.requestId === requestId ? { ...row, outcome: "received" as const } : row,
+        row.requestId === requestId ? { ...row, outcome: "received" as const } : row
       ),
     },
-    record.writeRevision,
+    record.writeRevision
   );
   return record;
 }
@@ -99,7 +99,7 @@ export function assertMockProviderForbidden(environment: "mock" | "test" | "prod
     throw filingError(
       "EFILING_MOCK_FORBIDDEN",
       `mock provider is forbidden for --env ${environment}`,
-      "PRODUCTION_DISABLED",
+      "PRODUCTION_DISABLED"
     );
   }
 }

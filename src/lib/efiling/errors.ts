@@ -13,7 +13,7 @@ export class FilingException extends Error {
 export function filingError(
   code: string,
   message: string,
-  blocked?: FilingException["blocked"],
+  blocked?: FilingException["blocked"]
 ): FilingException {
   return new FilingException(code, message, blocked);
 }

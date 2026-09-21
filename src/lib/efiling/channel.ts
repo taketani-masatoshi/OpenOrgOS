@@ -16,22 +16,28 @@ export function channelForSchema(schema: string): FilingChannel | undefined {
   return undefined;
 }
 
-export function assertTransportChannel(transportChannel: FilingChannel, packageChannel: FilingChannel): void {
+export function assertTransportChannel(
+  transportChannel: FilingChannel,
+  packageChannel: FilingChannel
+): void {
   if (transportChannel !== packageChannel) {
     throw filingError(
       "EFILING_TRANSPORT_CHANNEL",
       `${transportChannel} transport cannot send a ${packageChannel} package`,
-      "SPEC_BLOCKED",
+      "SPEC_BLOCKED"
     );
   }
 }
 
-export function assertSignatureChannel(signatureChannel: FilingChannel, packageChannel: FilingChannel): void {
+export function assertSignatureChannel(
+  signatureChannel: FilingChannel,
+  packageChannel: FilingChannel
+): void {
   if (signatureChannel !== packageChannel) {
     throw filingError(
       "EFILING_SIGNATURE_CHANNEL",
       `${signatureChannel} signature catalog cannot sign a ${packageChannel} package`,
-      "SPEC_BLOCKED",
+      "SPEC_BLOCKED"
     );
   }
 }
@@ -41,7 +47,7 @@ export function assertSpecChannel(specChannel: FilingChannel, packageChannel: Fi
     throw filingError(
       "EFILING_SPEC_CHANNEL",
       `${specChannel} specification registry cannot describe a ${packageChannel} package`,
-      "SPEC_BLOCKED",
+      "SPEC_BLOCKED"
     );
   }
 }

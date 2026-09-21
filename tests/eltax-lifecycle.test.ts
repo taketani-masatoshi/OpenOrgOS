@@ -34,7 +34,7 @@ describe("eLTAX channel parity and isolation", () => {
 
   it("refuses cross-channel store, spec, transport, and signature", () => {
     expect(() => new FilingStore({ channel: "eltax", rootPath: "/var/etax/state" })).toThrow(
-      FilingException,
+      FilingException
     );
     const store = new FilingStore({ channel: "eltax", now: "2026-09-21T00:00:00.000Z" });
     expect(() =>
@@ -50,7 +50,7 @@ describe("eLTAX channel parity and isolation", () => {
         specVersion: "test",
         idempotencyKey: "cross",
         schema: ETAX_PACKAGE_SCHEMA,
-      }),
+      })
     ).toThrow(/cannot be stored/);
     expect(() => assertTransportChannel("etax", "eltax")).toThrow(FilingException);
     expect(() => assertSignatureChannel("eltax", "etax")).toThrow(FilingException);
@@ -68,7 +68,7 @@ describe("eLTAX channel parity and isolation", () => {
         payload: { schema: ELTAX_PACKAGE_SCHEMA },
         specVersion: "KSK2-2026-08-28",
       },
-      { id: "ETAX-PKG-eltax-reject", now: "2026-09-21T00:00:00.000Z" },
+      { id: "ETAX-PKG-eltax-reject", now: "2026-09-21T00:00:00.000Z" }
     );
     expect(() => generateOfficialXml(pkg)).toThrow(/eLTAX/);
   });

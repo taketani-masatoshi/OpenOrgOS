@@ -38,7 +38,6 @@ export function defaultEtaxSpecFetchIds(): readonly string[] {
   return PHASE2_DEFAULT_IDS;
 }
 
-
 export function resolveOfficialXsd(relativePath: string): string {
   const dest = join(officialXsdRoot(), relativePath);
   if (!existsSync(dest)) {

@@ -31,7 +31,7 @@ export function returnPackageFromTaxAdjustment(input: {
       fiscal_year: input.worksheet.fiscal_year,
       as_of: input.worksheet.as_of,
       taxable_income_yen: input.worksheet.taxable_income_yen,
-    }),
+    })
   );
   return createReturnPackage(
     {
@@ -61,7 +61,7 @@ export function returnPackageFromTaxAdjustment(input: {
         },
       ],
     },
-    { now: input.now, id: input.id },
+    { now: input.now, id: input.id }
   );
 }
 
