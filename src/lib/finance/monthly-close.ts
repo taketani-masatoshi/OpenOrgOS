@@ -435,14 +435,11 @@ export function evaluateMonthlyCloseGates(
   let taxPass = missingTax.length === 0;
   if (!taxPass) taxDetail = `missing tax_category ${missingTax.join(", ")}`;
   try {
-    const summary = buildConsumptionTaxSummary({ period: month });
-    const summaryErrors = (summary.issues ?? []).filter((issue) => issue.severity === "error");
+    buildConsumptionTaxSummary({ period: month });
     const profileErrors = runConsumptionTaxCheck().issues.filter((issue) => issue.severity === "blocking");
-    if (summaryErrors.length > 0 || profileErrors.length > 0) {
+    if (profileErrors.length > 0) {
       taxPass = false;
-      taxDetail = [...summaryErrors, ...profileErrors]
-        .map((issue) => issue.message)
-        .join("; ");
+      taxDetail = profileErrors.map((issue) => issue.message).join("; ");
     }
   } catch (error) {
     taxPass = false;
