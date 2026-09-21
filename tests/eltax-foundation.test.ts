@@ -40,7 +40,10 @@ describe("eLTAX submission separation", () => {
     const accepted = await sendEltaxSubmission({ store, submissionId: signed.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send(input) { return { requestId: input.requestId, status: "accepted", localReceiptNumber: "LOCAL-RCPT-1" }; } } });
     expect(accepted.local_receipt_number).toBe("LOCAL-RCPT-1");
     expect(accepted).not.toHaveProperty("receipt");
+    expect(store.verifyAudit()).toEqual([]);
     expect(await recoverInterruptedEltaxSubmission({ store, submissionId: accepted.submission_id, transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).toEqual(accepted);
+    const prod = new EltaxSubmissionStore(join(root, "eltax-production"), 10, { production: true, encryptedStorage: true });
+    await expect(sendEltaxSubmission({ store: prod, submissionId: "never", transport: { channel: "eltax", name: "fixture", certified: true, async send() { throw new Error("unused"); } } })).rejects.toThrow("production eLTAX send is not enabled");
     const catalog: EtaxSpecCatalog = {
       schema: "orgos.jp.etax-spec-catalog.v1", updated_at: "2026-09-21T00:00:00.000Z",
       entries: [{

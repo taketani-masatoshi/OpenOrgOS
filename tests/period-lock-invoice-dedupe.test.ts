@@ -38,6 +38,13 @@ describe("period-locks append-only", () => {
     expect(() => savePeriodLocks(file)).toThrow(/append-only/);
   });
 
+  it("rejects mutation of the historical event hash", () => {
+    lockMonth({ month: "2026-09", lockedBy: "OP-TEST" });
+    const file = loadPeriodLocks();
+    file.locks[0]!.event_sha256 = "0".repeat(64);
+    expect(() => savePeriodLocks(file)).toThrow(/append-only|integrity/);
+  });
+
   it("allows unlock as append", () => {
     lockMonth({ month: "2026-09", lockedBy: "OP-TEST" });
     unlockMonth({ month: "2026-09", unlockedBy: "OP-TEST", reason: "fix" });

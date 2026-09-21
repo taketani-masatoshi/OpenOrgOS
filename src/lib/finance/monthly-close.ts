@@ -196,10 +196,13 @@ export function monthlyJournalSnapshotHash(month: string): string {
 
 export function monthlyBankReconciliationSnapshotHash(month: string): string {
   const rows = bankRowsForMonth(month);
-  const bank = loadBankStatementsLite();
-  const entries = bank?.entries
-    .filter((row) => row.date.slice(0, 7) === month)
-    .sort((a, b) => a.id.localeCompare(b.id)) ?? [];
+  let entries: unknown[] = [];
+  if (bankFileExists()) {
+    const raw = YAML.parse(readFileSync(join(getDataDir(), "finance", "bank-statements.yaml"), "utf8")) as { entries?: Array<Record<string, unknown>> };
+    entries = (raw.entries ?? [])
+      .filter((row) => typeof row.date === "string" && row.date.slice(0, 7) === month)
+      .sort((a, b) => String(a.id ?? "").localeCompare(String(b.id ?? "")));
+  }
   return sha256({
     state: rows,
     entries,

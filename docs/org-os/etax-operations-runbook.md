@@ -41,3 +41,6 @@
 ## eLTAX
 
 地方税は`src/lib/finance/eltax.ts`の独立スキーマとtransportを使う。e-TaxパッケージをeLTAX adapterへ渡すことはできない。
+提出は prepare → approve → sign → sending → received/accepted/rejected の状態遷移を通し、`sending`中断時は受付照会後にだけ再送する。
+本番は暗号化保管と、公式仕様・電子証明書・接続試験を完了した`officialIntegrationReady`の両方が必要である。未完了時は送信を拒否する。
+法人住民税・法人事業税は`corporate-local-tax.ts`で計算するが、税率をコードへ固定しない。自治体コード、適用期間、公式資料URL・SHA-256を持つ認証済み税率プロファイルを必須とする。

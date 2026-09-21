@@ -335,7 +335,7 @@ describe("annual close acceptance", () => {
     lockPreparedYear();
     const bankPath = join(getDataDir(), "finance", "bank-statements.yaml");
     const bank = readFileSync(bankPath, "utf-8");
-    writeFileSync(bankPath, bank.replace("status: matched", "status: unmatched"), "utf-8");
+    writeFileSync(bankPath, bank.replace("amount: 1", "amount: 2"), "utf-8");
 
     const evaluation = evaluateAnnualCloseGates(FY);
     expect(evaluation.can_close).toBe(false);

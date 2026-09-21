@@ -49,6 +49,7 @@ export const CANONICAL_WRITE_BASELINE: CanonicalWriteBaselineEntry[] = [
   { file: "src/lib/document-io.ts", symbol: "renameSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/finance/jp-corporate-tax-xml.ts", symbol: "writeFileSync", count: 1, note: "pending migration to wrapCanonicalWrite / writeYamlFile / writeTrackedFile" },
   { file: "src/lib/finance/etax-command-adapters.ts", symbol: "writeFileSync", count: 1, note: "0600 temporary request for a hash-certified external e-Tax module; securely removed after execution" },
+  { file: "src/lib/finance/eltax.ts", symbol: "appendFileSync", count: 1, note: "eLTAX audit chain in the submission directory, not a Company Event" },
   { file: "src/lib/finance/eltax.ts", symbol: "renameSync", count: 1, note: "atomic replace of eLTAX runtime submission state, separate from e-Tax storage" },
   { file: "src/lib/finance/eltax.ts", symbol: "writeFileSync", count: 1, note: "eLTAX runtime submission JSON in its own directory, not an e-Tax package" },
   { file: "src/lib/finance/etax.ts", symbol: "renameSync", count: 1, note: "atomic replace of e-Tax runtime submission state in configured encrypted storage" },

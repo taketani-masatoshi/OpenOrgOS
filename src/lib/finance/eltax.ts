@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, sep } from "node:path";
 import {
   eltaxOfficialPackageSchema,
@@ -48,9 +48,11 @@ function atomicJsonWrite(path: string, value: unknown): void {
 /** Local-tax submissions stay in their own directory and schema. This is not an eLTAX filing client. */
 export class EltaxSubmissionStore {
   readonly production: boolean;
-  constructor(private readonly root: string, private readonly retentionYears = 10, security?: { production?: boolean; encryptedStorage?: boolean }) {
+  readonly officialIntegrationReady: boolean;
+  constructor(private readonly root: string, private readonly retentionYears = 10, security?: { production?: boolean; encryptedStorage?: boolean; officialIntegrationReady?: boolean }) {
     if (root.split(sep).includes("etax")) throw new Error("eLTAX state cannot use an e-Tax directory");
     this.production = security?.production === true;
+    this.officialIntegrationReady = security?.officialIntegrationReady === true;
     if (this.production && !security?.encryptedStorage) throw new Error("production eLTAX state requires encrypted storage");
   }
   private path(id: string) { return join(this.root, `${assertSubmissionId(id)}.json`); }
@@ -76,6 +78,7 @@ export class EltaxSubmissionStore {
         idempotency_key: idempotencyKey, status: "prepared", package: parsedPackage, attempts: [], retention_until: retention.toISOString().slice(0, 10), legal_hold: false, created_at: now, updated_at: now,
       });
       atomicJsonWrite(this.path(record.submission_id), record);
+      this.appendAudit(record);
       return record;
     });
   }
@@ -97,6 +100,7 @@ export class EltaxSubmissionStore {
         local_receipt_number: localReceiptNumber ?? record.local_receipt_number,
       });
       atomicJsonWrite(this.path(parsed.submission_id), parsed);
+      this.appendAudit(parsed);
       return parsed;
     });
   }
@@ -107,8 +111,30 @@ export class EltaxSubmissionStore {
       if (current.legal_hold && !record.legal_hold) throw new Error("eLTAX legal hold cannot be cleared");
       if (record.retention_until < current.retention_until) throw new Error("eLTAX retention cannot be shortened");
       const parsed = eltaxSubmissionRecordSchema.parse({ ...record, revision: record.revision + 1, updated_at: getClock().nowIso() });
-      atomicJsonWrite(this.path(parsed.submission_id), parsed); return parsed;
+      atomicJsonWrite(this.path(parsed.submission_id), parsed);
+      this.appendAudit(parsed);
+      return parsed;
     });
+  }
+  private appendAudit(record: EltaxSubmissionRecord): void {
+    mkdirSync(this.root, { recursive: true });
+    const auditPath = join(this.root, "audit.jsonl");
+    const rows = existsSync(auditPath) ? readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean) : [];
+    const previous = rows.length > 0 ? JSON.parse(rows.at(-1)!) as { row_sha256: string } : null;
+    const base = { seq: rows.length + 1, prev_sha256: previous?.row_sha256 ?? "0".repeat(64), submission_id: record.submission_id, revision: record.revision, status: record.status, payload_sha256: record.package.payload_sha256, receipt: record.local_receipt_number ?? null };
+    appendFileSync(auditPath, `${JSON.stringify({ ...base, row_sha256: sha256(JSON.stringify(base)) })}\n`, { encoding: "utf8", mode: 0o600 });
+  }
+  verifyAudit(): string[] {
+    const auditPath = join(this.root, "audit.jsonl");
+    if (!existsSync(auditPath)) return [];
+    const issues: string[] = []; let previous = "0".repeat(64);
+    for (const [index, line] of readFileSync(auditPath, "utf8").trim().split("\n").filter(Boolean).entries()) {
+      const row = JSON.parse(line) as Record<string, unknown> & { prev_sha256: string; row_sha256: string };
+      const { row_sha256, ...base } = row;
+      if (row.prev_sha256 !== previous || row_sha256 !== sha256(JSON.stringify(base))) issues.push(`eLTAX audit chain mismatch at ${index + 1}`);
+      previous = row_sha256;
+    }
+    return issues;
   }
 }
 
@@ -129,6 +155,7 @@ export async function signEltaxSubmission(input: { store: EltaxSubmissionStore; 
 }
 
 export async function sendEltaxSubmission(input: { store: EltaxSubmissionStore; submissionId: string; transport: EltaxTransport }): Promise<EltaxSubmissionRecord> {
+  if (input.store.production && !input.store.officialIntegrationReady) throw new Error("production eLTAX send is not enabled");
   let record = input.store.get(input.submissionId);
   if (record.status !== "signed" || !record.signature || !input.transport.certified) throw new Error("eLTAX submission requires a signature and certified transport");
   const signature = record.signature;
