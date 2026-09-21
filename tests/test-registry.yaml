@@ -3,9 +3,9 @@
 
 version: 2
 stats:
-  vitest_total: 605
-  static_test_cases: 2777
-  tiered_execution_total: 605
+  vitest_total: 608
+  static_test_cases: 2789
+  tiered_execution_total: 608
   catalog_total: 46
   catalog_cli_registered: 47
   catalog_gap: 0
@@ -604,6 +604,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  bookkeeping-acceptance.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   broker.test.ts:
     axis: platform
     kind: unit
@@ -1139,6 +1143,10 @@ tests:
     axis: platform
     kind: unit
     domain: P01_kernel
+  final-accounts-close.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
   finance-accounting.test.ts:
     axis: platform
     kind: unit
@@ -1286,6 +1294,10 @@ tests:
     kind: unit
     domain: P04_wire_stack
   human-approval-context.test.ts:
+    axis: platform
+    kind: unit
+    domain: P01_kernel
+  indirect-tax-port.test.ts:
     axis: platform
     kind: unit
     domain: P01_kernel

@@ -11,7 +11,7 @@ import YAML from "yaml";
 import { runValidateReport } from "../../commands/validate.js";
 import { loadChartOfAccounts, loadMonthlyFinances, loadPayroll } from "../data.js";
 import { getDataDir } from "../utils.js";
-import { buildConsumptionTaxSummary, runConsumptionTaxCheck } from "./consumption-tax.js";
+import { evaluateIndirectTaxClose } from "./indirect-tax/port.js";
 import { resolveCloseAdjustmentAmountFromCoa } from "./close-adjustments.js";
 import { buildDepreciationSchedule, postDepreciationJournalEntries } from "./depreciation.js";
 import { appendJournalEntry, loadJournalEntries } from "./expense-claim-journal.js";
@@ -179,24 +179,6 @@ export function buildMonthlyCloseEvidence(evaluation: MonthlyCloseEvaluation): P
     can_lock: true,
     gate_results: gateResults,
   };
-}
-
-function missingTaxCategories(month: string): string[] {
-  const types = new Map(
-    loadChartOfAccounts().accounts.map((account) => [account.code, account.type]),
-  );
-  const missing: string[] = [];
-  for (const entry of loadJournalEntries().entries) {
-    if (!entry.occurred_at.startsWith(month)) continue;
-    for (const line of entry.lines) {
-      const type = types.get(line.account_code);
-      if (type !== "revenue" && type !== "expense") continue;
-      if (!line.tax_category) {
-        missing.push(`${entry.entry_id}:${line.account_code}`);
-      }
-    }
-  }
-  return missing;
 }
 
 export function evaluateInventoryCloseGate(month: string, asOf: string): MonthlyCloseGate {
@@ -430,25 +412,10 @@ export function evaluateMonthlyCloseGates(
 
   items.push(evaluateInventoryCloseGate(month, asOf));
 
-  const missingTax = missingTaxCategories(month);
-  let taxDetail = "ok";
-  let taxPass = missingTax.length === 0;
-  if (!taxPass) taxDetail = `missing tax_category ${missingTax.join(", ")}`;
-  try {
-    const summary = buildConsumptionTaxSummary({ period: month });
-    const summaryErrors = (summary.issues ?? []).filter((issue) => issue.severity === "error");
-    const profileErrors = runConsumptionTaxCheck().issues.filter((issue) => issue.severity === "blocking");
-    if (summaryErrors.length > 0 || profileErrors.length > 0) {
-      taxPass = false;
-      taxDetail = [...summaryErrors, ...profileErrors]
-        .map((issue) => issue.message)
-        .join("; ");
-    }
-  } catch (error) {
-    taxPass = false;
-    taxDetail = error instanceof Error ? error.message : String(error);
-  }
-  items.push(gate("consumption-tax", "消費税集計", taxPass, "error", taxDetail));
+  const indirectTax = evaluateIndirectTaxClose(month);
+  items.push(
+    gate("consumption-tax", indirectTax.label, indirectTax.pass, "error", indirectTax.detail),
+  );
 
   // Always re-validate live finance data. Callers must not inject a report.
   const validate = runValidateReport({ warnings: true });
